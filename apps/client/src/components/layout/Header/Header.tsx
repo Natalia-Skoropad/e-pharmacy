@@ -2,8 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 import { ButtonLink, Container, Logo } from '@/components/common';
+import BurgerButton from '@/components/layout/BurgerButton';
+import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
 
 import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
 import { ROUTES } from '@/lib/constants/routes';
@@ -14,6 +17,15 @@ import css from './Header.module.css';
 
 function Header() {
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleToggleMobileMenu = () => {
+    setIsMobileMenuOpen((prev) => !prev);
+  };
+
+  const handleCloseMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <header className={css.header}>
@@ -49,7 +61,17 @@ function Header() {
             Register
           </ButtonLink>
         </div>
+
+        <BurgerButton
+          isOpen={isMobileMenuOpen}
+          onClick={handleToggleMobileMenu}
+        />
       </Container>
+
+      <MobileOffcanvas
+        isOpen={isMobileMenuOpen}
+        onClose={handleCloseMobileMenu}
+      />
     </header>
   );
 }
