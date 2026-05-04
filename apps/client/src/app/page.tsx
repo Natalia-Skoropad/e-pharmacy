@@ -1,6 +1,6 @@
 import type { EntityId } from '@e-pharmacy/types';
 
-import { ButtonLink, Container, Logo, SvgIcon } from '@/components/common';
+import { ButtonLink, Container, SvgIcon } from '@/components/common';
 
 import { HOME_DESCRIPTION, HOME_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
@@ -24,8 +24,6 @@ function HomePage() {
     <main className={css.page}>
       <section className={css.hero} aria-labelledby="home-title">
         <Container>
-          <Logo className={css.logo} />
-
           <p className={css.kicker}>Customer storefront</p>
 
           <h1 className={css.title} id="home-title">
