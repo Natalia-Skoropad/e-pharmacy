@@ -1,6 +1,7 @@
 export type EntityId = string;
-
 export type ISODateString = string;
+
+//===================================================================
 
 export type PaginationMeta = {
   page: number;
@@ -8,6 +9,8 @@ export type PaginationMeta = {
   total: number;
   totalPages: number;
 };
+
+//===================================================================
 
 export type PaginatedResponse<TItem> = {
   items: TItem[];

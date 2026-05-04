@@ -6,8 +6,12 @@ import { cn } from '@/lib/utils';
 
 import css from './Button.module.css';
 
+//===================================================================
+
 type ButtonLinkVariant = 'primary' | 'secondary' | 'ghost';
 type ButtonLinkSize = 'sm' | 'md' | 'lg';
+
+//===================================================================
 
 type ButtonLinkProps = {
   children: ReactNode;
@@ -16,6 +20,8 @@ type ButtonLinkProps = {
   fullWidth?: boolean;
   className?: string;
 } & ComponentPropsWithoutRef<typeof Link>;
+
+//===================================================================
 
 function ButtonLink({
   children,

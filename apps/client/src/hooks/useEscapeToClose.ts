@@ -1,9 +1,13 @@
 import { useEffect } from 'react';
 
+//===================================================================
+
 type UseEscapeToCloseParams = {
   isOpen: boolean;
   onClose: () => void;
 };
+
+//===================================================================
 
 export function useEscapeToClose({
   isOpen,

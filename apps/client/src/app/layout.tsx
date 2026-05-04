@@ -12,6 +12,8 @@ import {
 
 import './globals.css';
 
+//===================================================================
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -46,9 +48,13 @@ export const metadata: Metadata = {
   },
 };
 
+//===================================================================
+
 type RootLayoutProps = Readonly<{
   children: React.ReactNode;
 }>;
+
+//===================================================================
 
 function RootLayout({ children }: RootLayoutProps) {
   return (

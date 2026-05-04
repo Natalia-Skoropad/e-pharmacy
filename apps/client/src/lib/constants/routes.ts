@@ -1,5 +1,7 @@
 import { ROUTE_SEGMENTS } from '@e-pharmacy/config';
 
+//===================================================================
+
 export const ROUTES = {
   HOME: '/',
   STORES: `/${ROUTE_SEGMENTS.stores}`,

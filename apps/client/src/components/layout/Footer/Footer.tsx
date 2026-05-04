@@ -9,7 +9,11 @@ import {
 
 import css from './Footer.module.css';
 
+//===================================================================
+
 const currentYear = new Date().getFullYear();
+
+//===================================================================
 
 function Footer() {
   return (

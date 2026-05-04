@@ -1,8 +1,12 @@
 import { useCallback } from 'react';
 
+//===================================================================
+
 type UseBackdropClickParams = {
   onClose: () => void;
 };
+
+//===================================================================
 
 export function useBackdropClick({ onClose }: UseBackdropClickParams) {
   return useCallback(

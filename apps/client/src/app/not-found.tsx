@@ -2,6 +2,8 @@ import { StatusPage } from '@/components/common';
 
 import { ROUTES } from '@/lib/constants/routes';
 
+//===================================================================
+
 function NotFoundPage() {
   return (
     <StatusPage

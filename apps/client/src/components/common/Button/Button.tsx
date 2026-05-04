@@ -4,8 +4,12 @@ import { cn } from '@/lib/utils';
 
 import css from './Button.module.css';
 
+//===================================================================
+
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
+
+//===================================================================
 
 type ButtonProps = {
   children: ReactNode;
@@ -14,6 +18,8 @@ type ButtonProps = {
   fullWidth?: boolean;
   className?: string;
 } & ButtonHTMLAttributes<HTMLButtonElement>;
+
+//===================================================================
 
 function Button({
   children,

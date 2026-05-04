@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 
 import css from './Container.module.css';
 
+//===================================================================
+
 type ContainerOwnProps<TElement extends ElementType> = {
   as?: TElement;
   children: ReactNode;
@@ -13,6 +15,8 @@ type ContainerOwnProps<TElement extends ElementType> = {
 type ContainerProps<TElement extends ElementType> =
   ContainerOwnProps<TElement> &
     Omit<ComponentPropsWithoutRef<TElement>, keyof ContainerOwnProps<TElement>>;
+
+//===================================================================
 
 function Container<TElement extends ElementType = 'div'>({
   as,

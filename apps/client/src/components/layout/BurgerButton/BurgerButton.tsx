@@ -2,10 +2,14 @@ import SvgIcon from '@/components/common/SvgIcon';
 
 import css from './BurgerButton.module.css';
 
+//===================================================================
+
 type BurgerButtonProps = {
   isOpen: boolean;
   onClick: () => void;
 };
+
+//===================================================================
 
 function BurgerButton({ isOpen, onClick }: BurgerButtonProps) {
   return (

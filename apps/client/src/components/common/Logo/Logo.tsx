@@ -8,9 +8,13 @@ import { cn } from '@/lib/utils';
 
 import css from './Logo.module.css';
 
+//===================================================================
+
 type LogoProps = {
   className?: string;
 };
+
+//===================================================================
 
 function Logo({ className }: LogoProps) {
   return (

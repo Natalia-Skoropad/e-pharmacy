@@ -1,5 +1,7 @@
 import { ROUTES } from './routes';
 
+//===================================================================
+
 export const CLIENT_NAV_LINKS = [
   {
     label: 'Home',
@@ -14,6 +16,8 @@ export const CLIENT_NAV_LINKS = [
     href: ROUTES.MEDICINE_STORE,
   },
 ] as const;
+
+//===================================================================
 
 export const CLIENT_FOOTER_LINKS = [
   {

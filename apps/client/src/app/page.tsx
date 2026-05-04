@@ -9,13 +9,19 @@ import { createPageMetadata } from '@/lib/seo';
 
 import css from './page.module.css';
 
+//===================================================================
+
 export const metadata = createPageMetadata({
   title: HOME_TITLE,
   description: HOME_DESCRIPTION,
   path: '/',
 });
 
+//===================================================================
+
 const DEMO_PRODUCT_ID: EntityId = 'demo-product-001';
+
+//===================================================================
 
 function HomePage() {
   const demoProductUrl = buildProductPath('Demo Medicine', DEMO_PRODUCT_ID);

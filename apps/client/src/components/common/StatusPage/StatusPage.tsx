@@ -4,6 +4,8 @@ import { ROUTES } from '@/lib/constants/routes';
 
 import css from './StatusPage.module.css';
 
+//===================================================================
+
 type StatusPageProps = {
   eyebrow?: string;
   title: string;
@@ -13,6 +15,8 @@ type StatusPageProps = {
   secondaryActionLabel?: string;
   secondaryActionHref?: string;
 };
+
+//===================================================================
 
 function StatusPage({
   eyebrow = 'E-PHARMACY',

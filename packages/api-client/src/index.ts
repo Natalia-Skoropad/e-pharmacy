@@ -3,9 +3,13 @@ export type ApiErrorResponse = {
   statusCode?: number;
 };
 
+//===================================================================
+
 export type ApiSuccessResponse<TData> = {
   data: TData;
 };
+
+//===================================================================
 
 export const API_HEADERS = {
   json: {

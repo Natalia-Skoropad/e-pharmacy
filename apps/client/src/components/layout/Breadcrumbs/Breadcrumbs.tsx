@@ -4,9 +4,13 @@ import type { BreadcrumbItem } from '@/types/breadcrumbs';
 
 import css from './Breadcrumbs.module.css';
 
+//===================================================================
+
 type BreadcrumbsProps = {
   items: BreadcrumbItem[];
 };
+
+//===================================================================
 
 function Breadcrumbs({ items }: BreadcrumbsProps) {
   if (items.length === 0) return null;

@@ -7,10 +7,14 @@ import { Container } from '@/components/common';
 
 import css from './error.module.css';
 
+//===================================================================
+
 type ErrorPageProps = {
   error: Error & { digest?: string };
   reset: () => void;
 };
+
+//===================================================================
 
 function ErrorPage({ error, reset }: ErrorPageProps) {
   useEffect(() => {

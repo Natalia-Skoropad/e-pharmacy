@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 
+//===================================================================
+
 export function useBodyScrollLock(isLocked: boolean): void {
   useEffect(() => {
     if (!isLocked) return;

@@ -5,12 +5,16 @@ import { cn } from '@/lib/utils';
 
 import css from './SvgIcon.module.css';
 
+//===================================================================
+
 type SvgIconProps = {
   name: string;
   size?: number;
   className?: string;
   title?: string;
 } & Omit<SVGProps<SVGSVGElement>, 'width' | 'height' | 'children'>;
+
+//===================================================================
 
 function SvgIcon({
   name,

@@ -5,7 +5,10 @@ import {
   DEFAULT_OG_IMAGE_ALT,
   SITE_NAME,
 } from '@/lib/constants/metadata';
+
 import { createAbsoluteUrl } from '@/lib/seo/url';
+
+//===================================================================
 
 type CreatePageMetadataParams = {
   title: string;
@@ -15,6 +18,8 @@ type CreatePageMetadataParams = {
   imageAlt?: string;
   noIndex?: boolean;
 };
+
+//===================================================================
 
 export function createPageMetadata({
   title,

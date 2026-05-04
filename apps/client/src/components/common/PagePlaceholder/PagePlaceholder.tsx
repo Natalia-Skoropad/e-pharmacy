@@ -7,11 +7,15 @@ import type { BreadcrumbItem } from '@/types/breadcrumbs';
 
 import css from './PagePlaceholder.module.css';
 
+//===================================================================
+
 type PagePlaceholderProps = {
   title: string;
   text: string;
   breadcrumbs: BreadcrumbItem[];
 };
+
+//===================================================================
 
 function PagePlaceholder({ title, text, breadcrumbs }: PagePlaceholderProps) {
   return (

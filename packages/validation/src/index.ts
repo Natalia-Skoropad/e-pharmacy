@@ -7,4 +7,6 @@ export const VALIDATION_LIMITS = {
   searchMax: 80,
 } as const;
 
+//===================================================================
+
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

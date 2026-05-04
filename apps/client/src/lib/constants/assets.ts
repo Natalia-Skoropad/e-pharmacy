@@ -3,6 +3,8 @@ export const ASSETS = {
   defaultOgImage: '/og-image.png',
 } as const;
 
+//===================================================================
+
 export const IMAGE_DIRS = {
   common: '/images/common',
   home: '/images/home',

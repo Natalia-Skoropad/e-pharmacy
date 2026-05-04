@@ -15,10 +15,14 @@ import { cn } from '@/lib/utils';
 
 import css from './MobileOffcanvas.module.css';
 
+//===================================================================
+
 type MobileOffcanvasProps = {
   isOpen: boolean;
   onClose: () => void;
 };
+
+//===================================================================
 
 function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
   const pathname = usePathname();

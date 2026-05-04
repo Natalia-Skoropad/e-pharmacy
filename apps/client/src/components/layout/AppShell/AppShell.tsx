@@ -5,9 +5,13 @@ import Header from '@/components/layout/Header';
 
 import css from './AppShell.module.css';
 
+//===================================================================
+
 type AppShellProps = {
   children: ReactNode;
 };
+
+//===================================================================
 
 function AppShell({ children }: AppShellProps) {
   return (

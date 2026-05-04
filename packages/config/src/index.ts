@@ -4,6 +4,8 @@ export const APP_NAMES = {
   admin: 'E-PHARMACY Admin',
 } as const;
 
+//===================================================================
+
 export const ROUTE_SEGMENTS = {
   stores: 'stores',
   medicineStore: 'medicine-store',
