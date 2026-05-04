@@ -1,0 +1,38 @@
+.breadcrumbs {
+  margin-bottom: 24px;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fz-14);
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+.item:not(:last-child)::after {
+  color: var(--color-text-muted);
+  content: '/';
+}
+
+.link {
+  color: var(--color-text-secondary);
+  transition: color var(--transition-base);
+}
+
+.link:hover,
+.link:focus-visible {
+  color: var(--color-accent);
+}
+
+.current {
+  color: var(--color-text-primary);
+}
