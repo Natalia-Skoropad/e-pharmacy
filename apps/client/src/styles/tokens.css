@@ -1,0 +1,77 @@
+:root {
+  /* Colors */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-background: #f7f8fa;
+  --color-surface: #ffffff;
+
+  --color-text-primary: #1d1e21;
+  --color-text-secondary: #6a6f7a;
+  --color-text-muted: #8a8f98;
+
+  --color-accent: #59b17a;
+  --color-accent-hover: #3f945f;
+  --color-accent-light: #eaf7ef;
+
+  --color-border: rgba(29, 30, 33, 0.1);
+  --color-overlay: rgba(29, 30, 33, 0.4);
+
+  --color-error: #d32f2f;
+  --color-success: #2e7d32;
+  --color-warning: #f59e0b;
+
+  /* Typography */
+  --font-main: Arial, Helvetica, sans-serif;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semi-bold: 600;
+  --fw-bold: 700;
+
+  --fz-12: 12px;
+  --fz-14: 14px;
+  --fz-16: 16px;
+  --fz-18: 18px;
+  --fz-20: 20px;
+  --fz-24: 24px;
+  --fz-28: 28px;
+  --fz-32: 32px;
+  --fz-40: 40px;
+  --fz-48: 48px;
+  --fz-56: 56px;
+  --fz-64: 64px;
+
+  --lh-base: 1.5;
+  --lh-heading: 1.1;
+
+  --ls-tight: -0.02em;
+  --ls-wide: 0.08em;
+
+  /* Layout */
+  --container-max: 1280px;
+  --container-padding-mobile: 20px;
+  --container-padding-tablet: 32px;
+  --container-padding-desktop: 40px;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-card: 0 8px 32px rgba(29, 30, 33, 0.08);
+  --shadow-modal: 0 20px 60px rgba(29, 30, 33, 0.2);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+
+  /* Z-index */
+  --z-header: 100;
+  --z-overlay: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+}
