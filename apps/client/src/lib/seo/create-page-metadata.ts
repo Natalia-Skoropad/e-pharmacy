@@ -5,6 +5,7 @@ import {
   DEFAULT_OG_IMAGE_ALT,
   SITE_NAME,
 } from '@/lib/constants/metadata';
+import { createAbsoluteUrl } from '@/lib/seo/url';
 
 type CreatePageMetadataParams = {
   title: string;
@@ -23,6 +24,8 @@ export function createPageMetadata({
   imageAlt = DEFAULT_OG_IMAGE_ALT,
   noIndex = false,
 }: CreatePageMetadataParams): Metadata {
+  const absoluteUrl = createAbsoluteUrl(path);
+
   return {
     title,
     description,
@@ -34,7 +37,7 @@ export function createPageMetadata({
       siteName: SITE_NAME,
       title: `${title} | ${SITE_NAME}`,
       description,
-      url: path,
+      url: absoluteUrl,
       images: [
         {
           url: image,
