@@ -39,6 +39,19 @@
   color: var(--color-text-secondary);
 }
 
+.note {
+  max-width: 640px;
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.note span {
+  font-weight: var(--fw-medium);
+  color: var(--color-accent);
+}
+
 @media only screen and (min-width: 768px) {
   .hero {
     padding-block: 96px;

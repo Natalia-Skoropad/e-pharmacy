@@ -1,7 +1,14 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  transpilePackages: [
+    '@e-pharmacy/api-client',
+    '@e-pharmacy/config',
+    '@e-pharmacy/types',
+    '@e-pharmacy/ui',
+    '@e-pharmacy/utils',
+    '@e-pharmacy/validation',
+  ],
 };
 
 export default nextConfig;

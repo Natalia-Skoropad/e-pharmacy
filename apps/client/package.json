@@ -10,6 +10,12 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@e-pharmacy/api-client": "workspace:*",
+    "@e-pharmacy/config": "workspace:*",
+    "@e-pharmacy/types": "workspace:*",
+    "@e-pharmacy/ui": "workspace:*",
+    "@e-pharmacy/utils": "workspace:*",
+    "@e-pharmacy/validation": "workspace:*",
     "next": "16.2.4",
     "react": "19.2.4",
     "react-dom": "19.2.4"
