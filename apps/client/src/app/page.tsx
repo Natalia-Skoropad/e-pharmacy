@@ -1,29 +1,28 @@
-import type { Metadata } from 'next';
-
 import type { EntityId } from '@e-pharmacy/types';
-import { buildSlugId } from '@e-pharmacy/utils';
+
+import Container from '@/components/common/Container';
 
 import { HOME_DESCRIPTION, HOME_TITLE } from '@/lib/constants/metadata';
+import { buildProductPath } from '@/lib/routes';
+import { createPageMetadata } from '@/lib/seo';
 
 import css from './page.module.css';
 
-export const metadata: Metadata = {
+export const metadata = createPageMetadata({
   title: HOME_TITLE,
   description: HOME_DESCRIPTION,
-  alternates: {
-    canonical: '/',
-  },
-};
+  path: '/',
+});
 
 const DEMO_PRODUCT_ID: EntityId = 'demo-product-001';
 
 function HomePage() {
-  const demoProductUrl = `/${buildSlugId('Demo Medicine', DEMO_PRODUCT_ID)}`;
+  const demoProductUrl = buildProductPath('Demo Medicine', DEMO_PRODUCT_ID);
 
   return (
     <main className={css.page}>
       <section className={css.hero} aria-labelledby="home-title">
-        <div className={css.container}>
+        <Container>
           <p className={css.kicker}>Customer storefront</p>
 
           <h1 className={css.title} id="home-title">
@@ -37,9 +36,9 @@ function HomePage() {
           </p>
 
           <p className={css.note}>
-            Shared URL helper check: <span>{demoProductUrl}</span>
+            Product URL pattern check: <span>{demoProductUrl}</span>
           </p>
-        </div>
+        </Container>
       </section>
     </main>
   );

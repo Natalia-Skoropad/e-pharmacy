@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import AppShell from '@/components/layout/AppShell';
+
 import {
   DEFAULT_OG_IMAGE,
   DEFAULT_OG_IMAGE_ALT,
@@ -9,8 +11,6 @@ import {
 } from '@/lib/constants/metadata';
 
 import './globals.css';
-
-//===================================================================
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -42,18 +42,16 @@ export const metadata: Metadata = {
   },
 };
 
-//===================================================================
-
 type RootLayoutProps = Readonly<{
   children: React.ReactNode;
 }>;
 
-//===================================================================
-
 function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="uk">
-      <body>{children}</body>
+      <body>
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }

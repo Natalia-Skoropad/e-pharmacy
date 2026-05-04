@@ -7,11 +7,6 @@
   padding-block: 64px;
 }
 
-.container {
-  width: min(100% - 40px, 1120px);
-  margin-inline: auto;
-}
-
 .kicker {
   margin: 0 0 12px;
   font-size: 14px;
