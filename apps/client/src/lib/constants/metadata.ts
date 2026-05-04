@@ -42,3 +42,7 @@ export const REGISTER_DESCRIPTION =
 export const PROFILE_TITLE = 'Profile';
 export const PROFILE_DESCRIPTION =
   'Manage your E-PHARMACY customer profile and account details.';
+
+export const NOT_FOUND_TITLE = 'Page Not Found';
+export const NOT_FOUND_DESCRIPTION =
+  'The requested E-PHARMACY page could not be found.';
