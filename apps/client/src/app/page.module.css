@@ -7,6 +7,10 @@
   padding-block: 64px;
 }
 
+.logo {
+  margin-bottom: 40px;
+}
+
 .kicker {
   margin-bottom: 12px;
   font-size: var(--fz-14);
@@ -34,9 +38,16 @@
   color: var(--color-text-secondary);
 }
 
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 32px;
+}
+
 .note {
   max-width: 640px;
-  margin-top: 16px;
+  margin-top: 24px;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-text-muted);
@@ -54,6 +65,11 @@
 
   .title {
     font-size: var(--fz-56);
+  }
+
+  .actions {
+    flex-direction: row;
+    align-items: center;
   }
 }
 
