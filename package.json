@@ -5,9 +5,13 @@
   "description": "E-PHARMACY monorepo: client storefront, vendor cabinet, admin dashboard and shared API.",
   "scripts": {
     "dev": "turbo dev",
+    "dev:client": "pnpm --filter @e-pharmacy/client dev",
     "build": "turbo build",
+    "build:client": "pnpm --filter @e-pharmacy/client build",
     "lint": "turbo lint",
+    "lint:client": "pnpm --filter @e-pharmacy/client lint",
     "type-check": "turbo type-check",
+    "type-check:client": "pnpm --filter @e-pharmacy/client type-check",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
