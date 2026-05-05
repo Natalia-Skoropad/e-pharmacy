@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 
+import { env } from './config/env';
 import { errorMiddleware } from './middlewares/error.middleware';
 import { notFoundMiddleware } from './middlewares/notFound.middleware';
 import { routes } from './routes';
@@ -16,7 +17,14 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: true,
+    origin(origin, callback) {
+      if (!origin || env.CLIENT_ORIGINS.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS blocked origin: ${origin}`));
+    },
     credentials: true,
   })
 );

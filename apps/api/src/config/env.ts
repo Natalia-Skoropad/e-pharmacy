@@ -49,10 +49,26 @@ function getRequiredEnv(name: string): string {
 
 //===============================================================
 
+function getClientOrigins(): string[] {
+  const value = process.env.CLIENT_ORIGINS;
+
+  if (!value) {
+    return ['http://localhost:3000'];
+  }
+
+  return value
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+//===============================================================
+
 export const env = {
   NODE_ENV: getNodeEnv(),
   PORT: getPort(),
   MONGODB_URI: getRequiredEnv('MONGODB_URI'),
   JWT_SECRET: getRequiredEnv('JWT_SECRET'),
   JWT_EXPIRES_IN: (process.env.JWT_EXPIRES_IN || '7d') as StringValue,
+  CLIENT_ORIGINS: getClientOrigins(),
 } as const;

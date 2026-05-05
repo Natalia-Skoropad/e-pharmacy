@@ -9,6 +9,7 @@ import {
 } from '../services/auth.service';
 
 import type { LoginInput, RegisterInput } from '../types/auth';
+import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
 
@@ -17,8 +18,9 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
 
   const data = await registerUserService(input);
 
-  res.status(HTTP_STATUS.CREATED).json({
-    status: 'success',
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.CREATED,
     message: API_MESSAGES.USER_REGISTERED,
     data,
   });
@@ -31,8 +33,9 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
 
   const data = await loginUserService(input);
 
-  res.status(HTTP_STATUS.OK).json({
-    status: 'success',
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
     message: API_MESSAGES.USER_LOGGED_IN,
     data,
   });
@@ -41,8 +44,9 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
 //===============================================================
 
 export function getCurrentUser(req: Request, res: Response): void {
-  res.status(HTTP_STATUS.OK).json({
-    status: 'success',
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
     data: {
       user: req.user,
     },
@@ -52,8 +56,9 @@ export function getCurrentUser(req: Request, res: Response): void {
 //===============================================================
 
 export function logoutUser(_req: Request, res: Response): void {
-  res.status(HTTP_STATUS.OK).json({
-    status: 'success',
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
     message: API_MESSAGES.USER_LOGGED_OUT,
   });
 }
@@ -61,8 +66,9 @@ export function logoutUser(_req: Request, res: Response): void {
 //===============================================================
 
 export function getCustomerOnlyTest(req: Request, res: Response): void {
-  res.status(HTTP_STATUS.OK).json({
-    status: 'success',
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
     message: 'Customer route is available',
     data: {
       user: req.user,
@@ -73,8 +79,9 @@ export function getCustomerOnlyTest(req: Request, res: Response): void {
 //===============================================================
 
 export function getVendorOnlyTest(req: Request, res: Response): void {
-  res.status(HTTP_STATUS.OK).json({
-    status: 'success',
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
     message: 'Vendor route is available',
     data: {
       user: req.user,
@@ -85,8 +92,9 @@ export function getVendorOnlyTest(req: Request, res: Response): void {
 //===============================================================
 
 export function getAdminOnlyTest(req: Request, res: Response): void {
-  res.status(HTTP_STATUS.OK).json({
-    status: 'success',
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
     message: 'Admin route is available',
     data: {
       user: req.user,
