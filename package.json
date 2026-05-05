@@ -6,12 +6,15 @@
   "scripts": {
     "dev": "turbo dev",
     "dev:client": "pnpm --filter @e-pharmacy/client dev",
+    "dev:api": "pnpm --filter @e-pharmacy/api dev",
     "build": "turbo build",
     "build:client": "pnpm --filter @e-pharmacy/client build",
+    "build:api": "pnpm --filter @e-pharmacy/api build",
     "lint": "turbo lint",
     "lint:client": "pnpm --filter @e-pharmacy/client lint",
     "type-check": "turbo type-check",
     "type-check:client": "pnpm --filter @e-pharmacy/client type-check",
+    "type-check:api": "pnpm --filter @e-pharmacy/api type-check",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
