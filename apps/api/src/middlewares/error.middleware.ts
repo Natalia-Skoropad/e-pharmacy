@@ -29,8 +29,11 @@ export const errorMiddleware: ErrorRequestHandler = (
   const message =
     error instanceof Error ? error.message : API_MESSAGES.INTERNAL_SERVER_ERROR;
 
-  res.status(status).json({
+  const responseBody = {
     status: 'error',
     message,
-  });
+    ...(isHttpError(error) && error.details ? { details: error.details } : {}),
+  };
+
+  res.status(status).json(responseBody);
 };
