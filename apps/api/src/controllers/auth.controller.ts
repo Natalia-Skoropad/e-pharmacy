@@ -57,3 +57,39 @@ export function logoutUser(_req: Request, res: Response): void {
     message: API_MESSAGES.USER_LOGGED_OUT,
   });
 }
+
+//===============================================================
+
+export function getCustomerOnlyTest(req: Request, res: Response): void {
+  res.status(HTTP_STATUS.OK).json({
+    status: 'success',
+    message: 'Customer route is available',
+    data: {
+      user: req.user,
+    },
+  });
+}
+
+//===============================================================
+
+export function getVendorOnlyTest(req: Request, res: Response): void {
+  res.status(HTTP_STATUS.OK).json({
+    status: 'success',
+    message: 'Vendor route is available',
+    data: {
+      user: req.user,
+    },
+  });
+}
+
+//===============================================================
+
+export function getAdminOnlyTest(req: Request, res: Response): void {
+  res.status(HTTP_STATUS.OK).json({
+    status: 'success',
+    message: 'Admin route is available',
+    data: {
+      user: req.user,
+    },
+  });
+}

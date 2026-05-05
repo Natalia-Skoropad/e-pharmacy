@@ -15,4 +15,6 @@ export const API_MESSAGES = {
   INVALID_TOKEN: 'Authorization token is invalid',
   USER_NOT_FOUND: 'User not found',
   USER_BLOCKED: 'User is blocked',
+
+  FORBIDDEN_ROLE: 'You do not have permission to access this resource',
 } as const;
