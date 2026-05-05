@@ -3,6 +3,7 @@ import type { ErrorRequestHandler } from 'express';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
 import type { HttpError } from '../types/errors';
+import { isDuplicateEmailError } from '../utils/mongoError';
 
 //===============================================================
 
@@ -22,6 +23,15 @@ export const errorMiddleware: ErrorRequestHandler = (
   res,
   _next
 ) => {
+  if (isDuplicateEmailError(error)) {
+    res.status(HTTP_STATUS.CONFLICT).json({
+      status: 'error',
+      message: API_MESSAGES.EMAIL_IN_USE,
+    });
+
+    return;
+  }
+
   const status = isHttpError(error)
     ? error.status
     : HTTP_STATUS.INTERNAL_SERVER_ERROR;

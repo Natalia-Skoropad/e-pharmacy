@@ -12,25 +12,9 @@ import type {
 
 import { httpError } from '../utils/httpError';
 import { signToken } from '../utils/jwt';
+import { isDuplicateEmailError } from '../utils/mongoError';
 import { comparePassword, hashPassword } from '../utils/password';
-
-//===============================================================
-
-type UserDocument = InstanceType<typeof User>;
-
-//===============================================================
-
-function toAuthUserResponse(user: UserDocument): AuthUserResponse {
-  return {
-    id: String(user._id),
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    status: user.status,
-    phone: user.phone,
-    avatarUrl: user.avatarUrl,
-  };
-}
+import { toAuthUserResponse } from '../utils/userResponse';
 
 //===============================================================
 
@@ -45,23 +29,31 @@ export async function registerUserService(
 
   const hashedPassword = await hashPassword(input.password);
 
-  const user = await User.create({
-    name: input.name,
-    email: input.email,
-    password: hashedPassword,
-    role: input.role || USER_ROLES.CUSTOMER,
-    phone: input.phone,
-  });
+  try {
+    const user = await User.create({
+      name: input.name,
+      email: input.email,
+      password: hashedPassword,
+      role: input.role || USER_ROLES.CUSTOMER,
+      phone: input.phone,
+    });
 
-  const token = signToken({
-    userId: String(user._id),
-    role: user.role,
-  });
+    const token = signToken({
+      userId: String(user._id),
+      role: user.role,
+    });
 
-  return {
-    user: toAuthUserResponse(user),
-    token,
-  };
+    return {
+      user: toAuthUserResponse(user),
+      token,
+    };
+  } catch (error) {
+    if (isDuplicateEmailError(error)) {
+      throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
+    }
+
+    throw error;
+  }
 }
 
 //===============================================================

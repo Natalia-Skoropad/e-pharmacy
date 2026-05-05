@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import helmet from 'helmet';
 
 import { errorMiddleware } from './middlewares/error.middleware';
 import { notFoundMiddleware } from './middlewares/notFound.middleware';
@@ -10,6 +11,8 @@ import { routes } from './routes';
 export const app = express();
 
 //===============================================================
+
+app.use(helmet());
 
 app.use(
   cors({
