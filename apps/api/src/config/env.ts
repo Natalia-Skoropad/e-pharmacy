@@ -36,7 +36,20 @@ function getPort(): number {
 
 //===============================================================
 
+function getRequiredEnv(name: string): string {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`${name} is required`);
+  }
+
+  return value;
+}
+
+//===============================================================
+
 export const env = {
   NODE_ENV: getNodeEnv(),
   PORT: getPort(),
+  MONGODB_URI: getRequiredEnv('MONGODB_URI'),
 } as const;

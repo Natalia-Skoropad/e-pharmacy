@@ -20,6 +20,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+apps/*/.env
+apps/*/.env.local
+apps/*/.env.*.local
+
 # system
 .DS_Store
 Thumbs.db

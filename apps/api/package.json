@@ -12,7 +12,8 @@
   "dependencies": {
     "cors": "latest",
     "dotenv": "latest",
-    "express": "latest"
+    "express": "latest",
+    "mongoose": "^9.6.1"
   },
   "devDependencies": {
     "@types/cors": "latest",
