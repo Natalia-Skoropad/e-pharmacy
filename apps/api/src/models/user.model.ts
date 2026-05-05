@@ -69,8 +69,4 @@ const userSchema = new Schema<UserEntity>(
 
 //===============================================================
 
-userSchema.index({ email: 1 }, { unique: true });
-
-//===============================================================
-
 export const User = models.User || model<UserEntity>('User', userSchema);
