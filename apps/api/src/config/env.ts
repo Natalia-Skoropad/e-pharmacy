@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import type { StringValue } from 'ms';
 
 dotenv.config();
 
@@ -52,4 +53,6 @@ export const env = {
   NODE_ENV: getNodeEnv(),
   PORT: getPort(),
   MONGODB_URI: getRequiredEnv('MONGODB_URI'),
+  JWT_SECRET: getRequiredEnv('JWT_SECRET'),
+  JWT_EXPIRES_IN: (process.env.JWT_EXPIRES_IN || '7d') as StringValue,
 } as const;

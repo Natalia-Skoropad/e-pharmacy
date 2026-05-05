@@ -21,3 +21,7 @@ export const USER_NAME_MAX_LENGTH = 64;
 
 export const EMAIL_MAX_LENGTH = 254;
 export const PHONE_MAX_LENGTH = 20;
+
+//===============================================================
+
+export const PASSWORD_SALT_ROUNDS = 10;
