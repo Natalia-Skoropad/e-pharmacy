@@ -5,6 +5,7 @@
   "description": "Shared backend API for E-PHARMACY apps.",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "seed": "tsx src/scripts/seed.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit"
