@@ -2,20 +2,20 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 
 import { Button } from '@/components/common';
 import { useAuth } from '@/components/providers';
 
+import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
+import { getSafeRedirectPath } from '@/lib/routes';
 import {
   REGISTER_INITIAL_VALUES,
   validateRegisterForm,
   type RegisterFormErrors,
   type RegisterFormValues,
 } from '@/lib/validations';
-
-import { getAuthErrorMessage } from '@/lib/auth';
 
 import css from './RegisterForm.module.css';
 
@@ -25,7 +25,7 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { register, isAuthenticated, isAuthReady } = useAuth();
+  const { register, isAuthReady } = useAuth();
 
   const [values, setValues] = useState<RegisterFormValues>(
     REGISTER_INITIAL_VALUES
@@ -34,21 +34,7 @@ function RegisterForm() {
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const redirectTo = useMemo(() => {
-    const redirect = searchParams.get('redirect');
-
-    if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) {
-      return ROUTES.PROFILE;
-    }
-
-    return redirect;
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (!isAuthReady || !isAuthenticated) return;
-
-    router.replace(redirectTo);
-  }, [isAuthReady, isAuthenticated, redirectTo, router]);
+  const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
 
   const handleChange =
     (field: keyof RegisterFormValues) =>
