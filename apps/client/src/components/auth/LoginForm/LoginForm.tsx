@@ -43,7 +43,7 @@ function LoginForm() {
   const redirectTo = useMemo(() => {
     const redirect = searchParams.get('redirect');
 
-    if (!redirect || !redirect.startsWith('/')) {
+    if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) {
       return ROUTES.PROFILE;
     }
 

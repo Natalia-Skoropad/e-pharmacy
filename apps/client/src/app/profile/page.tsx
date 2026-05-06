@@ -1,3 +1,4 @@
+import { ProtectedRoute } from '@/components/auth';
 import { PagePlaceholder } from '@/components/common';
 
 import { PROFILE_DESCRIPTION, PROFILE_TITLE } from '@/lib/constants/metadata';
@@ -17,11 +18,13 @@ export const metadata = createPageMetadata({
 
 function ProfilePage() {
   return (
-    <PagePlaceholder
-      title={PROFILE_TITLE}
-      text={PROFILE_DESCRIPTION}
-      breadcrumbs={createBreadcrumbs(PROFILE_TITLE)}
-    />
+    <ProtectedRoute>
+      <PagePlaceholder
+        title={PROFILE_TITLE}
+        text={PROFILE_DESCRIPTION}
+        breadcrumbs={createBreadcrumbs(PROFILE_TITLE)}
+      />
+    </ProtectedRoute>
   );
 }
 
