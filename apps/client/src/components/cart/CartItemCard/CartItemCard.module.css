@@ -1,0 +1,129 @@
+.card {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.imageWrap {
+  position: relative;
+  width: 96px;
+  min-height: 96px;
+  overflow: hidden;
+  background-color: var(--color-accent-light);
+  border-radius: var(--radius-lg);
+}
+
+.image {
+  object-fit: cover;
+}
+
+.imageFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  color: var(--color-accent);
+}
+
+.content {
+  min-width: 0;
+}
+
+.head {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: var(--fz-18);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.storeName {
+  margin-top: 4px;
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  color: var(--color-text-muted);
+}
+
+.price {
+  font-size: var(--fz-20);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.footer {
+  display: grid;
+  gap: 14px;
+}
+
+.quantity {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.quantityButton {
+  min-width: 36px;
+  border: 0;
+  border-radius: 0;
+}
+
+.quantityValue {
+  min-width: 36px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media only screen and (min-width: 768px) {
+  .card {
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .imageWrap,
+  .imageFallback {
+    width: 120px;
+    min-height: 120px;
+  }
+
+  .head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .price {
+    text-align: right;
+  }
+
+  .footer {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .actions {
+    justify-content: flex-end;
+  }
+}

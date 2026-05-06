@@ -155,16 +155,10 @@
 }
 
 .actions {
+  flex-direction: row;
+  align-items: center;
   display: flex;
-  flex-direction: column;
   gap: 12px;
-}
-
-.note {
-  margin-top: 14px;
-  font-size: var(--fz-12);
-  line-height: var(--lh-base);
-  color: var(--color-text-muted);
 }
 
 .reviewsSection {

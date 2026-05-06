@@ -1,5 +1,6 @@
 import Image from 'next/image';
 
+import { AddToCartButton } from '@/components/cart';
 import { ButtonLink, Container, SvgIcon } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import ProductReviewsList from '@/components/product-details/ProductReviewsList';
@@ -149,17 +150,15 @@ function ProductDetailsPageContent({
                 <p className={css.price}>{formatPrice(product.price)}</p>
 
                 <div className={css.actions}>
-                  <ButtonLink href={ROUTES.CART}>Add to cart soon</ButtonLink>
+                  <AddToCartButton
+                    productId={product.id}
+                    disabled={!product.inStock}
+                  />
 
                   <ButtonLink href={storeHref} variant="secondary">
                     View pharmacy
                   </ButtonLink>
                 </div>
-
-                <p className={css.note}>
-                  Cart actions will be connected in the next cart integration
-                  stage.
-                </p>
               </div>
             </div>
           </div>

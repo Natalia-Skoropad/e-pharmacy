@@ -1,8 +1,7 @@
 import { ProtectedRoute } from '@/components/auth';
-import { PagePlaceholder } from '@/components/common';
+import { CartPageContent } from '@/components/cart';
 
 import { CART_DESCRIPTION, CART_TITLE } from '@/lib/constants/metadata';
-import { createBreadcrumbs } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
 
 //===================================================================
@@ -19,11 +18,7 @@ export const metadata = createPageMetadata({
 function CartPage() {
   return (
     <ProtectedRoute>
-      <PagePlaceholder
-        title={CART_TITLE}
-        text={CART_DESCRIPTION}
-        breadcrumbs={createBreadcrumbs(CART_TITLE)}
-      />
+      <CartPageContent />
     </ProtectedRoute>
   );
 }
