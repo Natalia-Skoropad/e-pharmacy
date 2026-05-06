@@ -1,4 +1,4 @@
-import { PagePlaceholder } from '@/components/common';
+import { AuthFormShell, RegisterForm } from '@/components/auth';
 
 import { REGISTER_DESCRIPTION, REGISTER_TITLE } from '@/lib/constants/metadata';
 import { createBreadcrumbs } from '@/lib/routes';
@@ -17,11 +17,13 @@ export const metadata = createPageMetadata({
 
 function RegisterPage() {
   return (
-    <PagePlaceholder
+    <AuthFormShell
       title={REGISTER_TITLE}
       text={REGISTER_DESCRIPTION}
       breadcrumbs={createBreadcrumbs(REGISTER_TITLE)}
-    />
+    >
+      <RegisterForm />
+    </AuthFormShell>
   );
 }
 
