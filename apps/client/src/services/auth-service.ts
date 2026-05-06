@@ -1,4 +1,4 @@
-import { ApiError, apiRequest } from '@/lib/api';
+import { apiRequest, getResponseData } from '@/lib/api';
 import { API_ROUTES } from '@/lib/constants/api-routes';
 
 import type {
@@ -8,16 +8,6 @@ import type {
   LoginPayload,
   RegisterPayload,
 } from '@/types';
-
-//===================================================================
-
-function getResponseData<TData>(response: ApiSuccessResponse<TData>): TData {
-  if (!response.data) {
-    throw new ApiError('API response data is missing', 500, response);
-  }
-
-  return response.data;
-}
 
 //===================================================================
 
