@@ -1,4 +1,4 @@
-import { PagePlaceholder } from '@/components/common';
+import { AuthFormShell, LoginForm } from '@/components/auth';
 
 import { LOGIN_DESCRIPTION, LOGIN_TITLE } from '@/lib/constants/metadata';
 import { createBreadcrumbs } from '@/lib/routes';
@@ -17,11 +17,13 @@ export const metadata = createPageMetadata({
 
 function LoginPage() {
   return (
-    <PagePlaceholder
+    <AuthFormShell
       title={LOGIN_TITLE}
       text={LOGIN_DESCRIPTION}
       breadcrumbs={createBreadcrumbs(LOGIN_TITLE)}
-    />
+    >
+      <LoginForm />
+    </AuthFormShell>
   );
 }
 

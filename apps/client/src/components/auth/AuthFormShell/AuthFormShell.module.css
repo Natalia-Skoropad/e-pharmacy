@@ -1,0 +1,87 @@
+.page {
+  min-height: 100%;
+  background-color: var(--color-background);
+}
+
+.section {
+  padding-block: 32px 64px;
+}
+
+.grid {
+  display: grid;
+  gap: 28px;
+  margin-top: 32px;
+}
+
+.content {
+  max-width: 560px;
+}
+
+.kicker {
+  margin-bottom: 12px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: 1.4;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.title {
+  font-size: var(--fz-40);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+  letter-spacing: var(--ls-tight);
+}
+
+.text {
+  margin-top: 16px;
+  font-size: var(--fz-16);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.card {
+  width: 100%;
+  padding: 24px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+@media only screen and (min-width: 768px) {
+  .section {
+    padding-block: 40px 96px;
+  }
+
+  .grid {
+    gap: 40px;
+    margin-top: 40px;
+  }
+
+  .title {
+    font-size: var(--fz-48);
+  }
+
+  .card {
+    padding: 32px;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .section {
+    padding-block: 48px 120px;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr) 460px;
+    align-items: start;
+    gap: 80px;
+  }
+
+  .title {
+    font-size: var(--fz-56);
+  }
+}
