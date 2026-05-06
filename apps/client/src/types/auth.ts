@@ -1,0 +1,41 @@
+export type UserRole = 'customer' | 'vendor' | 'admin';
+
+export type UserStatus = 'active' | 'blocked';
+
+//===================================================================
+
+export type AuthUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  phone?: string;
+  avatarUrl?: string;
+};
+
+//===================================================================
+
+export type AuthResponse = {
+  user: AuthUser;
+  token: string;
+};
+
+export type CurrentUserResponse = {
+  user: AuthUser;
+};
+
+//===================================================================
+
+export type RegisterPayload = {
+  name: string;
+  email: string;
+  password: string;
+  role?: Extract<UserRole, 'customer' | 'vendor'>;
+  phone?: string;
+};
+
+export type LoginPayload = {
+  email: string;
+  password: string;
+};
