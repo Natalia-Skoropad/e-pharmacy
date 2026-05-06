@@ -17,4 +17,7 @@ export const API_MESSAGES = {
   USER_BLOCKED: 'User is blocked',
 
   FORBIDDEN_ROLE: 'You do not have permission to access this resource',
+
+  STORE_NOT_FOUND: 'Store not found',
+  PRODUCT_NOT_FOUND: 'Product not found',
 } as const;
