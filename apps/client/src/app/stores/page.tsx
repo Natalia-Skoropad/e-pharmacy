@@ -1,8 +1,12 @@
-import { PagePlaceholder } from '@/components/common';
+import { StoresPageContent } from '@/components/stores';
 
 import { STORES_DESCRIPTION, STORES_TITLE } from '@/lib/constants/metadata';
-import { createBreadcrumbs } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
+import { getStores } from '@/services';
+
+//===================================================================
+
+export const dynamic = 'force-dynamic';
 
 //===================================================================
 
@@ -14,12 +18,16 @@ export const metadata = createPageMetadata({
 
 //===================================================================
 
-function StoresPage() {
+async function StoresPage() {
+  const storesData = await getStores({ page: 1, perPage: 12 }).catch(
+    () => null
+  );
+
   return (
-    <PagePlaceholder
-      title={STORES_TITLE}
-      text={STORES_DESCRIPTION}
-      breadcrumbs={createBreadcrumbs(STORES_TITLE)}
+    <StoresPageContent
+      stores={storesData?.items ?? []}
+      total={storesData?.total ?? 0}
+      isUnavailable={!storesData}
     />
   );
 }
