@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-import { ButtonLink, Logo, SvgIcon } from '@/components/common';
+import { Button, ButtonLink, Logo, SvgIcon } from '@/components/common';
+import { useAuth } from '@/components/providers';
 
 import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
 
@@ -26,8 +27,21 @@ type MobileOffcanvasProps = {
 
 function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
   const pathname = usePathname();
+  const { isAuthenticated, isAuthReady, user, logout } = useAuth();
+
+  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
   const handleBackdropClick = useBackdropClick({ onClose });
+
+  const handleLogout = async () => {
+    try {
+      setIsLogoutLoading(true);
+      await logout();
+      onClose();
+    } finally {
+      setIsLogoutLoading(false);
+    }
+  };
 
   useEscapeToClose({ isOpen, onClose });
   useBodyScrollLock(isOpen);
@@ -83,13 +97,34 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
         </nav>
 
         <div className={css.actions}>
-          <ButtonLink href={ROUTES.LOGIN} variant="ghost" fullWidth>
-            Log in
-          </ButtonLink>
+          {isAuthReady && isAuthenticated ? (
+            <>
+              <ButtonLink href={ROUTES.PROFILE} variant="ghost" fullWidth>
+                {user?.name ?? 'Profile'}
+              </ButtonLink>
 
-          <ButtonLink href={ROUTES.REGISTER} fullWidth>
-            Register
-          </ButtonLink>
+              <Button
+                variant="secondary"
+                fullWidth
+                disabled={isLogoutLoading}
+                onClick={handleLogout}
+              >
+                {isLogoutLoading ? 'Logging out...' : 'Log out'}
+              </Button>
+            </>
+          ) : null}
+
+          {isAuthReady && !isAuthenticated ? (
+            <>
+              <ButtonLink href={ROUTES.LOGIN} variant="ghost" fullWidth>
+                Log in
+              </ButtonLink>
+
+              <ButtonLink href={ROUTES.REGISTER} fullWidth>
+                Register
+              </ButtonLink>
+            </>
+          ) : null}
         </div>
       </aside>
     </div>

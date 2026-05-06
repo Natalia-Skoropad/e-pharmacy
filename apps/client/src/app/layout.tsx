@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import AppShell from '@/components/layout/AppShell';
+import { AuthProvider } from '@/components/providers';
 
 import {
   DEFAULT_OG_IMAGE,
@@ -60,7 +61,9 @@ function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="uk">
       <body>
-        <AppShell>{children}</AppShell>
+        <AuthProvider>
+          <AppShell>{children}</AppShell>
+        </AuthProvider>
       </body>
     </html>
   );
