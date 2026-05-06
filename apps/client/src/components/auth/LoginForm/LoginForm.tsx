@@ -15,21 +15,9 @@ import {
   type LoginFormValues,
 } from '@/lib/validations';
 
+import { getAuthErrorMessage } from '@/lib/auth';
+
 import css from './LoginForm.module.css';
-
-//===================================================================
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof TypeError && error.message === 'Failed to fetch') {
-    return 'Cannot connect to the server. Please check that the API is running.';
-  }
-
-  if (error instanceof Error && error.message.trim()) {
-    return error.message;
-  }
-
-  return 'Something went wrong. Please try again.';
-}
 
 //===================================================================
 
@@ -97,7 +85,7 @@ function LoginForm() {
 
       router.replace(redirectTo);
     } catch (error) {
-      setSubmitError(getErrorMessage(error));
+      setSubmitError(getAuthErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }

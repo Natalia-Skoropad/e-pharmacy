@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { Button, ButtonLink, Container, Logo } from '@/components/common';
@@ -20,6 +20,8 @@ import css from './Header.module.css';
 
 function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+
   const { isAuthenticated, isAuthReady, user, logout } = useAuth();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -37,6 +39,7 @@ function Header() {
     try {
       setIsLogoutLoading(true);
       await logout();
+      router.replace(ROUTES.HOME);
     } finally {
       setIsLogoutLoading(false);
     }
@@ -68,6 +71,10 @@ function Header() {
         </nav>
 
         <div className={css.actions}>
+          {!isAuthReady ? (
+            <div className={css.authSkeleton} aria-hidden="true" />
+          ) : null}
+
           {isAuthReady && isAuthenticated ? (
             <>
               <ButtonLink href={ROUTES.PROFILE} variant="ghost" size="sm">

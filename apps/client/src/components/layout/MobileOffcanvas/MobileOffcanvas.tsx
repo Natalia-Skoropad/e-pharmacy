@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Button, ButtonLink, Logo, SvgIcon } from '@/components/common';
@@ -27,6 +27,8 @@ type MobileOffcanvasProps = {
 
 function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
   const { isAuthenticated, isAuthReady, user, logout } = useAuth();
 
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
@@ -38,6 +40,7 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
       setIsLogoutLoading(true);
       await logout();
       onClose();
+      router.replace(ROUTES.HOME);
     } finally {
       setIsLogoutLoading(false);
     }
@@ -97,6 +100,10 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
         </nav>
 
         <div className={css.actions}>
+          {!isAuthReady ? (
+            <div className={css.authSkeleton} aria-hidden="true" />
+          ) : null}
+
           {isAuthReady && isAuthenticated ? (
             <>
               <ButtonLink href={ROUTES.PROFILE} variant="ghost" fullWidth>
