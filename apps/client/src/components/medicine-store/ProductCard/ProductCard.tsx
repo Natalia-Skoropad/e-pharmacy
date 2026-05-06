@@ -1,6 +1,8 @@
 import Image from 'next/image';
 
-import { SvgIcon } from '@/components/common';
+import { ButtonLink, SvgIcon } from '@/components/common';
+
+import { buildProductPath } from '@/lib/routes';
 
 import type { Product } from '@/types';
 
@@ -38,6 +40,8 @@ function formatPrice(price: number): string {
 function ProductCard({ product }: ProductCardProps) {
   const ratingLabel =
     typeof product.rating === 'number' ? product.rating.toFixed(1) : 'New';
+
+  const productHref = buildProductPath(product.name, product.id);
 
   return (
     <article
@@ -111,11 +115,17 @@ function ProductCard({ product }: ProductCardProps) {
         </dl>
 
         <div className={css.footer}>
-          <p className={css.price}>{formatPrice(product.price)}</p>
+          <div>
+            <p className={css.price}>{formatPrice(product.price)}</p>
 
-          {product.storeName ? (
-            <p className={css.storeName}>{product.storeName}</p>
-          ) : null}
+            {product.storeName ? (
+              <p className={css.storeName}>{product.storeName}</p>
+            ) : null}
+          </div>
+
+          <ButtonLink className={css.detailsLink} href={productHref} size="sm">
+            Details
+          </ButtonLink>
         </div>
       </div>
     </article>
