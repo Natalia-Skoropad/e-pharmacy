@@ -114,7 +114,6 @@ const productSchema = new Schema<ProductEntity>(
       type: Schema.Types.ObjectId,
       ref: 'Store',
       required: true,
-      index: true,
     },
 
     storeName: {

@@ -1,64 +1,63 @@
 import type { NextFunction, Request, Response } from 'express';
-import type { z } from 'zod';
+import { ZodError, type ZodType } from 'zod';
 
-import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { formatZodError } from '../utils/formatZodError';
+import { API_MESSAGES } from '../constants/messages';
+import type { ValidationErrorDetails } from '../types/errors';
 import { httpError } from '../utils/httpError';
 
 //===============================================================
 
-type ValidationSchemas = {
-  body?: z.ZodType;
-  params?: z.ZodType;
-  query?: z.ZodType;
+type ValidateSchemas = {
+  body?: ZodType;
+  params?: ZodType;
+  query?: ZodType;
 };
 
 //===============================================================
 
-export function validate(schemas: ValidationSchemas) {
+function getValidationErrorDetails(
+  error: unknown
+): ValidationErrorDetails | undefined {
+  if (!(error instanceof ZodError)) {
+    return undefined;
+  }
+
+  return error.issues.reduce<ValidationErrorDetails>((acc, issue) => {
+    const field = issue.path.length > 0 ? issue.path.join('.') : 'root';
+
+    acc[field] = [...(acc[field] ?? []), issue.message];
+
+    return acc;
+  }, {});
+}
+
+//===============================================================
+
+export function validate(schemas: ValidateSchemas) {
   return (req: Request, _res: Response, next: NextFunction): void => {
-    const bodyResult = schemas.body?.safeParse(req.body);
-    const paramsResult = schemas.params?.safeParse(req.params);
-    const queryResult = schemas.query?.safeParse(req.query);
+    try {
+      if (schemas.body) {
+        schemas.body.parse(req.body);
+      }
 
-    const errors = [bodyResult, paramsResult, queryResult].filter(
-      (result) => result && !result.success
-    );
+      if (schemas.params) {
+        schemas.params.parse(req.params);
+      }
 
-    if (errors.length > 0) {
-      const details = errors.reduce((acc, result) => {
-        if (!result || result.success) return acc;
+      if (schemas.query) {
+        schemas.query.parse(req.query);
+      }
 
-        return {
-          ...acc,
-          ...formatZodError(result.error),
-        };
-      }, {});
-
+      next();
+    } catch (error) {
       next(
         httpError(
           HTTP_STATUS.BAD_REQUEST,
           API_MESSAGES.VALIDATION_ERROR,
-          details
+          getValidationErrorDetails(error)
         )
       );
-
-      return;
     }
-
-    if (bodyResult?.success) {
-      req.body = bodyResult.data;
-    }
-
-    if (paramsResult?.success) {
-      req.params = paramsResult.data as Request['params'];
-    }
-
-    if (queryResult?.success) {
-      req.query = queryResult.data as Request['query'];
-    }
-
-    next();
   };
 }

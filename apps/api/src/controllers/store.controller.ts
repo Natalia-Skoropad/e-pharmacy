@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { storesQuerySchema } from '../schemas/store.schema';
 import {
   getStoreDetailsService,
   getStoresService,
@@ -16,14 +17,8 @@ type StoreParams = {
 //===============================================================
 
 export async function getStores(req: Request, res: Response): Promise<void> {
-  const data = await getStoresService(
-    req.query as unknown as {
-      page: number;
-      perPage: number;
-      keyword?: string;
-      city?: string;
-    }
-  );
+  const query = storesQuerySchema.parse(req.query);
+  const data = await getStoresService(query);
 
   sendSuccessResponse({
     res,
