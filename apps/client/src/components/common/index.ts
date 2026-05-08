@@ -15,3 +15,5 @@ export { default as Tabs } from './Tabs';
 export type { TabItem } from './Tabs';
 export { default as Toast } from './Toast';
 export { default as VisuallyHidden } from './VisuallyHidden';
+export { default as SearchInput } from './SearchInput';
+export { default as SelectField } from './SelectField';

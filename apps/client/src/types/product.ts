@@ -14,6 +14,7 @@ export type ProductOffer = {
   storeCity?: string;
   storeAddress?: string;
   storePhone?: string;
+  storeImageUrl?: string;
   storeRating?: number;
   storeReviewsCount?: number;
   price: number;

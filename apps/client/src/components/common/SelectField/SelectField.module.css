@@ -1,0 +1,119 @@
+.field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  color: var(--color-text-primary);
+}
+
+.selectRoot {
+  position: relative;
+  min-width: 0;
+}
+
+.trigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: var(--fz-16);
+  line-height: var(--lh-base);
+  color: var(--color-text-primary);
+  text-align: left;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  outline: none;
+  box-shadow: none;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.trigger:hover,
+.trigger:focus-visible,
+.triggerOpen {
+  background-color: var(--color-surface);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px rgba(89, 177, 122, 0.12);
+}
+
+.triggerText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition:
+    color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.chevronOpen {
+  color: var(--color-accent);
+  transform: rotate(180deg);
+}
+
+.options {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 4px;
+  max-height: 260px;
+  padding: 8px;
+  overflow-y: auto;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
+}
+
+.option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 12px;
+  font-size: var(--fz-15);
+  line-height: var(--lh-base);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  border-radius: 14px;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.option:hover,
+.option:focus-visible {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+}
+
+.optionSelected {
+  font-weight: var(--fw-medium);
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+}
+
+.checkIcon {
+  color: var(--color-accent);
+}

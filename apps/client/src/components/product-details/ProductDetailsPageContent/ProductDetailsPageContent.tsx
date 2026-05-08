@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pill, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 
 import {
   Button,
@@ -10,14 +10,18 @@ import {
   Container,
   DeliveryInfoCard,
   FavoriteToggleButton,
+  LazyLoadButton,
   PaymentInfoCard,
   QuantityCounter,
   RatingSummary,
+  SearchInput,
+  SelectField,
   SvgIcon,
   Tabs,
   Toast,
   type TabItem,
 } from '@/components/common';
+
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import ProductReviewsList from '@/components/product-details/ProductReviewsList';
 import { useAuth } from '@/components/providers';
@@ -47,19 +51,20 @@ import css from './ProductDetailsPageContent.module.css';
 //===================================================================
 
 type ProductTab = 'about' | 'prices' | 'characteristics' | 'reviews';
+type OfferSort = 'price-asc' | 'price-desc' | 'rating-desc' | 'rating-asc';
 
 type ProductDetailsPageContentProps = {
   product: Product;
   reviews: ProductReview[];
   reviewsTotal: number;
-  contextStoreId?: string;
   areReviewsUnavailable?: boolean;
 };
 
 //===================================================================
 
-const REVIEW_MAX_LENGTH = 200;
+const REVIEW_MAX_LENGTH = 500;
 const REVIEW_MIN_LENGTH = 10;
+const OFFERS_PER_PAGE = 10;
 
 const REVIEW_REGEX = /^[A-Za-z0-9\s.,!?;:'"()\-]+$/;
 
@@ -71,6 +76,13 @@ const CATEGORY_LABELS: Record<Product['category'], string> = {
   'medical-devices': 'Medical devices',
   other: 'Other',
 };
+
+const OFFER_SORT_OPTIONS: { value: OfferSort; label: string }[] = [
+  { value: 'price-asc', label: 'Price: low to high' },
+  { value: 'price-desc', label: 'Price: high to low' },
+  { value: 'rating-desc', label: 'Rating: high to low' },
+  { value: 'rating-asc', label: 'Rating: low to high' },
+];
 
 //===================================================================
 
@@ -114,6 +126,17 @@ function getStoreHref(storeId: string): string {
   return `${ROUTES.MEDICINE_STORE}?storeId=${storeId}`;
 }
 
+function getOfferAddress(offer: ProductOffer): string {
+  return [offer.storeCity, offer.storeAddress].filter(Boolean).join(', ');
+}
+
+function getLongDescription(product: Product): string {
+  return (
+    product.description ??
+    `${product.name} is available in the E-PHARMACY catalog with clear information about dosage, manufacturer, package details, pharmacy prices, customer reviews, and availability. Use this page to compare offers from different pharmacies, check the product characteristics, and choose the most suitable pharmacy before adding the product to your cart.`
+  );
+}
+
 //===================================================================
 
 function ProductDetailsPageContent({
@@ -134,6 +157,11 @@ function ProductDetailsPageContent({
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(0);
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
+
+  const [storeNameQuery, setStoreNameQuery] = useState('');
+  const [storeAddressQuery, setStoreAddressQuery] = useState('');
+  const [offerSort, setOfferSort] = useState<OfferSort>('price-asc');
+  const [visibleOffersCount, setVisibleOffersCount] = useState(OFFERS_PER_PAGE);
 
   const tabs = useMemo<TabItem<ProductTab>[]>(
     () => [
@@ -156,6 +184,42 @@ function ProductDetailsPageContent({
   }`;
 
   const priceRangeLabel = formatPriceRange(product.offers);
+  const longDescription = getLongDescription(product);
+
+  const filteredOffers = useMemo(() => {
+    const normalizedNameQuery = storeNameQuery.trim().toLowerCase();
+    const normalizedAddressQuery = storeAddressQuery.trim().toLowerCase();
+
+    return [...product.offers]
+      .filter((offer) => {
+        const nameMatches = offer.storeName
+          .toLowerCase()
+          .includes(normalizedNameQuery);
+
+        const addressMatches = getOfferAddress(offer)
+          .toLowerCase()
+          .includes(normalizedAddressQuery);
+
+        return nameMatches && addressMatches;
+      })
+      .sort((a, b) => {
+        if (offerSort === 'price-asc') {
+          return a.price - b.price;
+        }
+
+        if (offerSort === 'price-desc') {
+          return b.price - a.price;
+        }
+
+        if (offerSort === 'rating-desc') {
+          return (b.storeRating ?? 0) - (a.storeRating ?? 0);
+        }
+
+        return (a.storeRating ?? 0) - (b.storeRating ?? 0);
+      });
+  }, [offerSort, product.offers, storeAddressQuery, storeNameQuery]);
+
+  const visibleOffers = filteredOffers.slice(0, visibleOffersCount);
 
   const isReviewValid =
     reviewText.trim().length >= REVIEW_MIN_LENGTH &&
@@ -168,6 +232,21 @@ function ProductDetailsPageContent({
     setToastMessage('');
     window.setTimeout(() => setToastMessage(message), 0);
   }, []);
+
+  const handleStoreNameQueryChange = (value: string) => {
+    setStoreNameQuery(value);
+    setVisibleOffersCount(OFFERS_PER_PAGE);
+  };
+
+  const handleStoreAddressQueryChange = (value: string) => {
+    setStoreAddressQuery(value);
+    setVisibleOffersCount(OFFERS_PER_PAGE);
+  };
+
+  const handleOfferSortChange = (value: OfferSort) => {
+    setOfferSort(value);
+    setVisibleOffersCount(OFFERS_PER_PAGE);
+  };
 
   useEffect(() => {
     if (!toastMessage) return;
@@ -375,18 +454,17 @@ function ProductDetailsPageContent({
             ]}
           />
 
+          <h1 className="visually-hidden" id="product-title">
+            Buy {product.name} online — compare pharmacy prices and product
+            details
+          </h1>
+
           <Tabs
             items={tabs}
             activeValue={activeTab}
             ariaLabel="Product information tabs"
             onChange={setActiveTab}
           />
-
-          {activeTab !== 'about' ? (
-            <h1 className="visually-hidden" id="product-title">
-              {product.name}
-            </h1>
-          ) : null}
 
           {activeTab === 'about' ? (
             <div className={css.grid}>
@@ -405,10 +483,6 @@ function ProductDetailsPageContent({
                     <SvgIcon name="icon-shopping-cart" size={52} />
                   </div>
                 )}
-
-                <span className={css.stockBadge}>
-                  {product.inStock ? 'In stock' : 'Out of stock'}
-                </span>
               </div>
 
               <div className={css.content}>
@@ -426,9 +500,7 @@ function ProductDetailsPageContent({
                   />
                 </div>
 
-                <h1 className={css.title} id="product-title">
-                  {product.name}
-                </h1>
+                <h2 className={css.title}>{product.name}</h2>
 
                 <RatingSummary
                   className={css.ratingRow}
@@ -468,38 +540,76 @@ function ProductDetailsPageContent({
           <Container>
             {activeTab === 'prices' ? (
               <div className={css.panel}>
-                <h2 className={css.panelTitle}>
-                  Prices in pharmacies ({product.foundInStoresCount})
-                </h2>
+                <div className={css.sectionHeader}>
+                  <div>
+                    <h2 className={css.panelTitle}>
+                      Prices in pharmacies ({product.foundInStoresCount})
+                    </h2>
 
-                <ul className={css.offersList}>
-                  {product.offers.map((offer) => {
-                    const cartItem = getOfferCartItem(
-                      cart,
-                      product.id,
-                      offer.storeId
-                    );
+                    <p className={css.resultCount}>
+                      {filteredOffers.length > 0
+                        ? `Showing ${visibleOffers.length} of ${filteredOffers.length} pharmacies`
+                        : 'No pharmacies match your search'}
+                    </p>
+                  </div>
+                </div>
 
-                    return (
+                <div className={css.offerControls}>
+                  <SearchInput
+                    id="pharmacy-name-search"
+                    label="Search by pharmacy"
+                    value={storeNameQuery}
+                    placeholder="Enter pharmacy name"
+                    onChange={handleStoreNameQueryChange}
+                  />
+
+                  <SearchInput
+                    id="pharmacy-address-search"
+                    label="Search by address"
+                    value={storeAddressQuery}
+                    placeholder="Enter city or address"
+                    onChange={handleStoreAddressQueryChange}
+                  />
+
+                  <SelectField
+                    id="pharmacy-sort"
+                    label="Sort pharmacies"
+                    value={offerSort}
+                    options={OFFER_SORT_OPTIONS}
+                    onChange={handleOfferSortChange}
+                  />
+                </div>
+
+                {visibleOffers.length > 0 ? (
+                  <ul className={css.offersList}>
+                    {visibleOffers.map((offer) => (
                       <li className={css.offerItem} key={offer.storeId}>
                         <article className={css.offerCard}>
                           <div className={css.offerMain}>
-                            <Pill
-                              className={css.offerIcon}
-                              size={22}
-                              aria-hidden="true"
-                            />
+                            <div className={css.offerImageWrap}>
+                              {offer.storeImageUrl ? (
+                                <Image
+                                  className={css.offerImage}
+                                  src={offer.storeImageUrl}
+                                  alt={`${offer.storeName} pharmacy`}
+                                  fill
+                                  sizes="88px"
+                                />
+                              ) : (
+                                <SvgIcon name="icon-shopping-cart" size={32} />
+                              )}
+                            </div>
 
-                            <div>
+                            <div className={css.offerInfo}>
                               <h3 className={css.offerTitle}>
                                 {offer.storeName}
                               </h3>
 
-                              <p className={css.offerAddress}>
-                                {[offer.storeCity, offer.storeAddress]
-                                  .filter(Boolean)
-                                  .join(', ')}
-                              </p>
+                              {getOfferAddress(offer) ? (
+                                <p className={css.offerAddress}>
+                                  {getOfferAddress(offer)}
+                                </p>
+                              ) : null}
 
                               {offer.storePhone ? (
                                 <p className={css.offerPhone}>
@@ -523,13 +633,6 @@ function ProductDetailsPageContent({
 
                             {renderQuantityControl(offer)}
 
-                            <p className={css.totalLine}>
-                              Selected total:{' '}
-                              <b>
-                                {formatPrice(getOfferTotal(cartItem, offer))}
-                              </b>
-                            </p>
-
                             <p className={css.cartNote}>
                               Product stays in the cart for 3 days and is
                               removed if the order is not confirmed.
@@ -544,9 +647,25 @@ function ProductDetailsPageContent({
                           </div>
                         </article>
                       </li>
-                    );
-                  })}
-                </ul>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className={css.emptyPanel}>
+                    <h3 className={css.emptyTitle}>No pharmacies found</h3>
+                    <p className={css.emptyText}>
+                      Try changing the pharmacy name or address search.
+                    </p>
+                  </div>
+                )}
+
+                <LazyLoadButton
+                  visibleCount={visibleOffersCount}
+                  totalCount={filteredOffers.length}
+                  label="Show more pharmacies"
+                  onLoadMore={() =>
+                    setVisibleOffersCount((count) => count + OFFERS_PER_PAGE)
+                  }
+                />
 
                 {!isAuthenticated && isAuthReady ? (
                   <p className={css.authNote}>
@@ -588,10 +707,16 @@ function ProductDetailsPageContent({
                   </div>
                 </dl>
 
-                <p className={css.description}>
-                  {product.description ??
-                    'Detailed characteristics will be added later.'}
-                </p>
+                <div className={css.descriptionBlock}>
+                  <p>{longDescription}</p>
+                  <p>
+                    Before purchasing, compare pharmacy prices, check the
+                    available quantity, read customer reviews, and make sure the
+                    selected offer matches your needs. Information on this page
+                    helps customers quickly understand the product, its main
+                    properties, and where it can be bought online.
+                  </p>
+                </div>
               </div>
             ) : null}
 
@@ -602,7 +727,13 @@ function ProductDetailsPageContent({
                   <p className={css.resultCount}>{reviewsCountLabel}</p>
                 </div>
 
-                <form className={css.reviewForm} action={handleReviewSubmit}>
+                <form
+                  className={css.reviewForm}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void handleReviewSubmit();
+                  }}
+                >
                   <div>
                     <label className={css.reviewLabel} htmlFor="product-review">
                       Your review
@@ -613,7 +744,7 @@ function ProductDetailsPageContent({
                       className={css.reviewTextarea}
                       value={reviewText}
                       maxLength={REVIEW_MAX_LENGTH}
-                      placeholder="Write 10–200 characters using latin letters."
+                      placeholder="Write 10–500 characters using latin letters."
                       onChange={(event) =>
                         handleReviewTextChange(event.target.value)
                       }
@@ -649,6 +780,7 @@ function ProductDetailsPageContent({
                   <div className={css.reviewActions}>
                     <Button
                       type="submit"
+                      className={css.reviewSubmitButton}
                       disabled={
                         !isReviewValid ||
                         isReviewSubmitting ||

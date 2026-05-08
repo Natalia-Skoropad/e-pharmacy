@@ -4,13 +4,17 @@
 }
 
 .hero {
-  padding-block: 32px 40px;
+  padding-block: 32px 72px;
 }
 
 .grid {
   display: grid;
   gap: 28px;
-  margin-top: 28px;
+  margin-top: 32px;
+}
+
+.tabSection {
+  padding-bottom: 72px;
 }
 
 .imageCard {
@@ -35,20 +39,6 @@
   color: var(--color-accent);
 }
 
-.stockBadge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  padding: 8px 14px;
-  font-size: var(--fz-12);
-  font-weight: var(--fw-medium);
-  line-height: 1;
-  color: var(--color-accent);
-  background-color: var(--color-white);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-card);
-}
-
 .content {
   min-width: 0;
 }
@@ -61,8 +51,7 @@
   margin-bottom: 12px;
 }
 
-.category,
-.sectionKicker {
+.category {
   font-size: var(--fz-12);
   font-weight: var(--fw-medium);
   line-height: 1.3;
@@ -120,19 +109,7 @@
   margin-top: 35px;
 }
 
-.cartNote,
-.authNote,
-.counter,
-.message {
-  margin-top: 8px;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
-}
-
-.panel,
-.offerCard,
-.reviewForm {
+.panel {
   padding: 20px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -140,31 +117,11 @@
   box-shadow: var(--shadow-card);
 }
 
-.quantityBlock {
-  display: grid;
-  gap: 8px;
-}
-
-.totalLine {
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
-}
-
-.authNote {
-  color: var(--color-error);
-}
-
-.message {
-  width: fit-content;
-  padding: 10px 14px;
-  color: var(--color-accent);
-  background-color: var(--color-accent-light);
-  border-radius: var(--radius-md);
-}
-
-.tabSection {
-  padding-block: 24px 72px;
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .panelTitle {
@@ -173,82 +130,6 @@
   line-height: var(--lh-heading);
   color: var(--color-text-primary);
   letter-spacing: var(--ls-tight);
-}
-
-.description {
-  max-width: 760px;
-  margin-top: 16px;
-  font-size: var(--fz-16);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
-}
-
-.details {
-  display: grid;
-  gap: 10px;
-  max-width: 680px;
-  margin-top: 20px;
-}
-
-.offersList {
-  display: grid;
-  gap: 16px;
-  margin-top: 20px;
-}
-
-.offerCard {
-  display: grid;
-  gap: 18px;
-  box-shadow: none;
-}
-
-.offerMain {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-}
-
-.offerIcon {
-  color: var(--color-accent);
-}
-
-.offerTitle {
-  font-size: var(--fz-18);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-heading);
-  color: var(--color-text-primary);
-}
-
-.offerAddress,
-.offerPhone {
-  margin-top: 4px;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
-}
-
-.offerRating {
-  margin-top: 8px;
-}
-
-.offerAside {
-  display: grid;
-  gap: 12px;
-  justify-items: start;
-}
-
-.offerPrice {
-  font-size: var(--fz-32);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-heading);
-  color: var(--color-text-primary);
-}
-
-.sectionHeader {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
 }
 
 .resultCount {
@@ -262,11 +143,159 @@
   border-radius: var(--radius-pill);
 }
 
+.offerControls {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.offersList {
+  display: grid;
+  gap: 16px;
+}
+
+.offerItem {
+  min-width: 0;
+}
+
+.offerCard {
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.offerMain {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  min-width: 0;
+}
+
+.offerImageWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.offerImage {
+  object-fit: cover;
+}
+
+.offerInfo {
+  min-width: 0;
+}
+
+.offerTitle {
+  font-size: var(--fz-18);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.offerAddress,
+.offerPhone {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.offerRating {
+  margin-top: 8px;
+}
+
+.offerAside {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  min-width: 0;
+}
+
+.offerPrice {
+  font-size: var(--fz-32);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.quantityBlock {
+  display: grid;
+  gap: 8px;
+}
+
+.totalLine,
+.cartNote,
+.authNote,
+.counter {
+  margin-top: 8px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.authNote {
+  color: var(--color-error);
+}
+
+.emptyPanel {
+  padding: 24px;
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.emptyTitle {
+  font-size: var(--fz-20);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.emptyText {
+  margin-top: 8px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.details {
+  display: grid;
+  gap: 10px;
+  max-width: 680px;
+  margin-top: 20px;
+}
+
+.descriptionBlock {
+  display: grid;
+  gap: 14px;
+  max-width: 860px;
+  margin-top: 22px;
+  font-size: var(--fz-16);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
 .reviewForm {
   display: grid;
   gap: 16px;
+  padding: 20px;
   margin-bottom: 24px;
-  box-shadow: none;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
 }
 
 .reviewLabel {
@@ -280,11 +309,11 @@
 
 .reviewTextarea {
   width: 100%;
-  min-height: 120px;
+  min-height: 150px;
   padding: 14px 16px;
   font: inherit;
   color: var(--color-text-primary);
-  resize: vertical;
+  resize: none;
   background-color: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -314,12 +343,9 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
-}
-
-.starButton svg,
-.starButtonActive svg {
   color: var(--color-warning);
+  border-radius: 50%;
+  transition: background-color var(--transition-base);
 }
 
 .starButtonActive svg {
@@ -334,10 +360,12 @@
 }
 
 .reviewActions {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 10px;
-  align-items: flex-start;
+}
+
+.reviewSubmitButton {
+  width: 100%;
 }
 
 .notice {
@@ -353,12 +381,16 @@
 
 @media only screen and (min-width: 768px) {
   .hero {
-    padding-block: 40px 56px;
+    padding-block: 40px 80px;
   }
 
   .grid {
     gap: 36px;
     margin-top: 36px;
+  }
+
+  .tabSection {
+    padding-bottom: 80px;
   }
 
   .imageCard,
@@ -370,9 +402,8 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .offerCard {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
+  .panel {
+    padding: 24px;
   }
 
   .sectionHeader {
@@ -386,24 +417,55 @@
     font-size: var(--fz-32);
   }
 
-  .reviewActions {
-    flex-direction: row;
+  .offerControls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .offerCard {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, auto);
     align-items: center;
+    gap: 24px;
+  }
+
+  .offerMain {
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .offerImageWrap {
+    width: 88px;
+    height: 88px;
+  }
+
+  .offerAside {
+    justify-items: start;
+  }
+
+  .reviewSubmitButton {
+    width: fit-content;
+    min-width: 220px;
   }
 }
 
-@media only screen and (min-width: 1440px) {
-  .hero {
-    padding-block: 48px 64px;
+@media only screen and (min-width: 1024px) {
+  .offerControls {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .grid {
-    grid-template-columns: 520px minmax(0, 1fr);
-    align-items: start;
-  }
+  @media only screen and (min-width: 1440px) {
+    .hero {
+      padding-block: 48px 88px;
+    }
 
-  .imageCard,
-  .imageFallback {
-    min-height: 520px;
+    .grid {
+      grid-template-columns: 520px minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .imageCard,
+    .imageFallback {
+      min-height: 520px;
+    }
   }
 }
