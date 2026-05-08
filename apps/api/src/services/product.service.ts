@@ -91,6 +91,7 @@ function serializeOffer(offer: ProductOfferEntity): ProductOfferResponseDto {
     ...(offer.storeCity ? { storeCity: offer.storeCity } : {}),
     ...(offer.storeAddress ? { storeAddress: offer.storeAddress } : {}),
     ...(offer.storePhone ? { storePhone: offer.storePhone } : {}),
+    ...(offer.storeImageUrl ? { storeImageUrl: offer.storeImageUrl } : {}),
     ...(typeof offer.storeRating === 'number'
       ? { storeRating: offer.storeRating }
       : {}),

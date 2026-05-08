@@ -58,11 +58,12 @@ type ProductDetailsPageContentProps = {
   reviews: ProductReview[];
   reviewsTotal: number;
   areReviewsUnavailable?: boolean;
+  contextStoreId?: string;
 };
 
 //===================================================================
 
-const REVIEW_MAX_LENGTH = 500;
+const REVIEW_MAX_LENGTH = 200;
 const REVIEW_MIN_LENGTH = 10;
 const OFFERS_PER_PAGE = 10;
 
@@ -144,6 +145,7 @@ function ProductDetailsPageContent({
   reviews,
   reviewsTotal,
   areReviewsUnavailable = false,
+  contextStoreId,
 }: ProductDetailsPageContentProps) {
   const { token, isAuthenticated, isAuthReady } = useAuth();
 
@@ -162,6 +164,7 @@ function ProductDetailsPageContent({
   const [storeAddressQuery, setStoreAddressQuery] = useState('');
   const [offerSort, setOfferSort] = useState<OfferSort>('price-asc');
   const [visibleOffersCount, setVisibleOffersCount] = useState(OFFERS_PER_PAGE);
+  const [isOffersLoadingMore, setIsOffersLoadingMore] = useState(false);
   const [areOfferFiltersOpen, setAreOfferFiltersOpen] = useState(false);
 
   const tabs = useMemo<TabItem<ProductTab>[]>(
@@ -204,6 +207,11 @@ function ProductDetailsPageContent({
         return nameMatches && addressMatches;
       })
       .sort((a, b) => {
+        if (contextStoreId) {
+          if (a.storeId === contextStoreId) return -1;
+          if (b.storeId === contextStoreId) return 1;
+        }
+
         if (offerSort === 'price-asc') {
           return a.price - b.price;
         }
@@ -218,7 +226,7 @@ function ProductDetailsPageContent({
 
         return (a.storeRating ?? 0) - (b.storeRating ?? 0);
       });
-  }, [offerSort, product.offers, storeAddressQuery, storeNameQuery]);
+  }, [contextStoreId, offerSort, product.offers, storeAddressQuery, storeNameQuery]);
 
   const visibleOffers = filteredOffers.slice(0, visibleOffersCount);
 
@@ -247,6 +255,15 @@ function ProductDetailsPageContent({
   const handleOfferSortChange = (value: OfferSort) => {
     setOfferSort(value);
     setVisibleOffersCount(OFFERS_PER_PAGE);
+  };
+
+  const handleLoadMoreOffers = () => {
+    setIsOffersLoadingMore(true);
+
+    window.setTimeout(() => {
+      setVisibleOffersCount((count) => count + OFFERS_PER_PAGE);
+      setIsOffersLoadingMore(false);
+    }, 250);
   };
 
   useEffect(() => {
@@ -628,7 +645,8 @@ function ProductDetailsPageContent({
                                   src={offer.storeImageUrl}
                                   alt={`${offer.storeName} pharmacy`}
                                   fill
-                                  sizes="88px"
+                                  sizes="380px"
+                                  quality={90}
                                 />
                               ) : (
                                 <SvgIcon name="icon-shopping-cart" size={32} />
@@ -695,12 +713,11 @@ function ProductDetailsPageContent({
                 )}
 
                 <LazyLoadButton
-                  visibleCount={visibleOffersCount}
+                  visibleCount={visibleOffers.length}
                   totalCount={filteredOffers.length}
                   label="Show more pharmacies"
-                  onLoadMore={() =>
-                    setVisibleOffersCount((count) => count + OFFERS_PER_PAGE)
-                  }
+                  isLoading={isOffersLoadingMore}
+                  onLoadMore={handleLoadMoreOffers}
                 />
               </div>
             ) : null}
@@ -774,7 +791,7 @@ function ProductDetailsPageContent({
                       className={css.reviewTextarea}
                       value={reviewText}
                       maxLength={REVIEW_MAX_LENGTH}
-                      placeholder="Write 10–500 characters using latin letters."
+                      placeholder="Write 10–200 characters using latin letters."
                       onChange={(event) =>
                         handleReviewTextChange(event.target.value)
                       }

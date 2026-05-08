@@ -221,8 +221,8 @@
   display: none;
   align-items: center;
   justify-content: center;
-  width: 88px;
-  height: 88px;
+  width: 220px;
+  height: 160px;
   overflow: hidden;
   color: var(--color-accent);
   background-color: var(--color-accent-light);
@@ -444,7 +444,7 @@
   }
 
   .offerTitle {
-    font-size: 22;
+    font-size: 22px;
   }
 
   .imageCard,
@@ -531,13 +531,17 @@
   }
 
   .offerMain {
-    grid-template-columns: 88px minmax(0, 1fr);
-    gap: 18px;
-    align-items: start;
+    grid-template-columns: 380px minmax(0, 1fr);
+    gap: 30px;
+    align-items: center;
   }
 
   .offerImageWrap {
     display: flex;
+    width: 100%;
+    height: auto;
+    min-height: 260px;
+    aspect-ratio: 380 / 260;
   }
 
   .offerLink {

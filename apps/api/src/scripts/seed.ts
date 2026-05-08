@@ -6,6 +6,36 @@ import { Store } from '../models/store.model';
 
 //===============================================================
 
+const STORE_IMAGE_URLS = [
+  'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1200&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1576602976047-174e57a47881?q=80&w=1200&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=1200&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1585435557343-3b348031e799?q=80&w=1200&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?q=80&w=1200&auto=format&fit=crop',
+];
+
+const REVIEW_AUTHORS = [
+  'Natalia',
+  'Olena',
+  'Iryna',
+  'Andrii',
+  'Maksym',
+  'Sofia',
+  'Dmytro',
+  'Kateryna',
+  'Yuliia',
+  'Roman',
+];
+
+const REVIEW_COMMENTS = [
+  'Fast pickup and clear product information.',
+  'Good service and helpful pharmacy staff.',
+  'The product matched the description.',
+  'Ordering was simple and convenient.',
+  'Nice price compared with nearby pharmacies.',
+  'Everything was packed well and ready on time.',
+];
+
 const seedStores = [
   {
     name: 'Green Pharmacy',
@@ -14,8 +44,7 @@ const seedStores = [
     phone: '+380441112233',
     email: 'green.pharmacy@example.com',
     rating: 4.8,
-    imageUrl:
-      'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1200&auto=format&fit=crop',
+    imageUrl: STORE_IMAGE_URLS[0],
     description:
       'A modern pharmacy with a wide range of medicines, vitamins, and healthcare products.',
     isActive: true,
@@ -27,8 +56,7 @@ const seedStores = [
     phone: '+380322223344',
     email: 'health.plus@example.com',
     rating: 4.6,
-    imageUrl:
-      'https://images.unsplash.com/photo-1576602976047-174e57a47881?q=80&w=1200&auto=format&fit=crop',
+    imageUrl: STORE_IMAGE_URLS[1],
     description:
       'Friendly local pharmacy focused on daily healthcare, hygiene, and wellness.',
     isActive: true,
@@ -40,12 +68,28 @@ const seedStores = [
     phone: '+380487778899',
     email: 'family.med@example.com',
     rating: 4.7,
-    imageUrl:
-      'https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=1200&auto=format&fit=crop',
+    imageUrl: STORE_IMAGE_URLS[2],
     description:
       'Family-oriented pharmacy with essential medicines and personal care products.',
     isActive: true,
   },
+  ...Array.from({ length: 22 }, (_, index) => {
+    const branchNumber = index + 1;
+    const cities = ['Kyiv', 'Lviv', 'Odesa', 'Dnipro', 'Kharkiv'];
+    const city = cities[index % cities.length];
+
+    return {
+      name: `E-Pharmacy Branch ${branchNumber}`,
+      address: `${branchNumber + 10} Wellness Avenue`,
+      city,
+      phone: `+38050${String(1000000 + branchNumber).padStart(7, '0')}`,
+      email: `branch.${branchNumber}@e-pharmacy.example.com`,
+      rating: Number((4.1 + (index % 8) * 0.1).toFixed(1)),
+      imageUrl: STORE_IMAGE_URLS[index % STORE_IMAGE_URLS.length],
+      description: `E-Pharmacy branch in ${city} with everyday medicines and healthcare products.`,
+      isActive: true,
+    };
+  }),
 ];
 
 //===============================================================
@@ -57,6 +101,7 @@ type SeedStoreDocument = {
   city?: string;
   phone?: string;
   rating?: number;
+  imageUrl?: string;
 };
 
 //===============================================================
@@ -76,7 +121,12 @@ function getStoreByName(
 
 //===============================================================
 
-function createOffer(store: SeedStoreDocument & { city?: string; address?: string; phone?: string; rating?: number }, price: number, totalQuantity: number, reservedQuantity = 0) {
+function createOffer(
+  store: SeedStoreDocument,
+  price: number,
+  totalQuantity: number,
+  reservedQuantity = 0
+) {
   const activeQuantity = Math.max(totalQuantity - reservedQuantity, 0);
 
   return {
@@ -85,8 +135,9 @@ function createOffer(store: SeedStoreDocument & { city?: string; address?: strin
     storeCity: store.city,
     storeAddress: store.address,
     storePhone: store.phone,
+    storeImageUrl: store.imageUrl,
     storeRating: store.rating,
-    storeReviewsCount: 12,
+    storeReviewsCount: 12 + (price % 9),
     price,
     totalQuantity,
     activeQuantity,
@@ -95,12 +146,30 @@ function createOffer(store: SeedStoreDocument & { city?: string; address?: strin
   };
 }
 
+function createModeratedReview(index: number) {
+  return {
+    userName: REVIEW_AUTHORS[index % REVIEW_AUTHORS.length],
+    rating: (index % 5) + 1,
+    comment: REVIEW_COMMENTS[index % REVIEW_COMMENTS.length],
+    isModerated: true,
+    moderatedAt: new Date(`2026-04-${String(1 + (index % 25)).padStart(2, '0')}T10:00:00.000Z`),
+    createdAt: new Date(`2026-04-${String(1 + (index % 25)).padStart(2, '0')}T09:00:00.000Z`),
+  };
+}
+
+function createModeratedReviews(count: number) {
+  return Array.from({ length: count }, (_, index) =>
+    createModeratedReview(index)
+  );
+}
+
 //===============================================================
 
 function createSeedProducts(stores: SeedStoreDocument[]) {
   const greenPharmacy = getStoreByName(stores, 'Green Pharmacy');
   const healthPlus = getStoreByName(stores, 'Health Plus');
   const familyMed = getStoreByName(stores, 'Family Med');
+  const firstTwentyFiveStores = stores.slice(0, 25);
 
   return [
     {
@@ -126,24 +195,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       inStock: true,
       rating: 4.7,
       reviewsCount: 2,
-      reviews: [
-        {
-          userName: 'Natalia',
-          rating: 5,
-          comment: 'Good basic medicine, fast pickup from the pharmacy.',
-          isModerated: true,
-          moderatedAt: new Date('2026-04-13T10:00:00.000Z'),
-          createdAt: new Date('2026-04-10T10:00:00.000Z'),
-        },
-        {
-          userName: 'Olena',
-          rating: 4,
-          comment: 'Clear description and normal price.',
-          isModerated: true,
-          moderatedAt: new Date('2026-04-14T12:30:00.000Z'),
-          createdAt: new Date('2026-04-12T12:30:00.000Z'),
-        },
-      ],
+      reviews: createModeratedReviews(2),
     },
     {
       name: 'Vitamin C 1000 mg',
@@ -167,16 +219,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       inStock: true,
       rating: 4.5,
       reviewsCount: 1,
-      reviews: [
-        {
-          userName: 'Iryna',
-          rating: 5,
-          comment: 'Nice packaging and easy ordering.',
-          isModerated: true,
-          moderatedAt: new Date('2026-04-15T09:15:00.000Z'),
-          createdAt: new Date('2026-04-14T09:15:00.000Z'),
-        },
-      ],
+      reviews: createModeratedReviews(1),
     },
     {
       name: 'Digital Thermometer',
@@ -196,16 +239,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       inStock: true,
       rating: 4.4,
       reviewsCount: 1,
-      reviews: [
-        {
-          userName: 'Andrii',
-          rating: 4,
-          comment: 'Works well and was available in stock.',
-          isModerated: true,
-          moderatedAt: new Date('2026-04-17T14:45:00.000Z'),
-          createdAt: new Date('2026-04-16T14:45:00.000Z'),
-        },
-      ],
+      reviews: createModeratedReviews(1),
     },
     {
       name: 'Ibuprofen 200 mg',
@@ -270,6 +304,72 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       rating: 4.2,
       reviewsCount: 0,
       reviews: [],
+    },
+    {
+      name: 'Cold Relief Capsules',
+      slug: 'cold-relief-capsules',
+      article: 'MED-COLD-SOLD',
+      description:
+        'Cold relief capsules. This demo product has customer reviews but is currently unavailable in all pharmacies.',
+      category: 'medicine',
+      price: 0,
+      imageUrl:
+        'https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?q=80&w=1200&auto=format&fit=crop',
+      manufacturer: 'CareLabs',
+      dosage: '250 mg',
+      packageQuantity: '12 capsules',
+      offers: [],
+      inStock: false,
+      rating: 4.6,
+      reviewsCount: 4,
+      reviews: createModeratedReviews(4),
+    },
+    {
+      name: 'Magnesium Complex 400 mg',
+      slug: 'magnesium-complex-400-mg',
+      article: 'VIT-MAG-400',
+      description:
+        'Magnesium complex supplement. This demo product has many reviews to test lazy loading in the reviews tab.',
+      category: 'vitamins',
+      price: 210,
+      imageUrl:
+        'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?q=80&w=1200&auto=format&fit=crop',
+      manufacturer: 'VitaLife',
+      dosage: '400 mg',
+      packageQuantity: '60 tablets',
+      storeId: greenPharmacy._id,
+      storeName: greenPharmacy.name,
+      offers: [
+        createOffer(greenPharmacy, 210, 55, 5),
+        createOffer(healthPlus, 224, 34, 4),
+      ],
+      inStock: true,
+      rating: 4.4,
+      reviewsCount: 25,
+      reviews: createModeratedReviews(25),
+    },
+    {
+      name: 'Omega 3 Fish Oil',
+      slug: 'omega-3-fish-oil',
+      article: 'VIT-OMEGA-25',
+      description:
+        'Omega 3 supplement. This demo product is available in 25 pharmacies to test lazy loading in the prices tab.',
+      category: 'vitamins',
+      price: 185,
+      imageUrl:
+        'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?q=80&w=1200&auto=format&fit=crop',
+      manufacturer: 'Nordic Care',
+      dosage: '1000 mg',
+      packageQuantity: '90 capsules',
+      storeId: firstTwentyFiveStores[0]._id,
+      storeName: firstTwentyFiveStores[0].name,
+      offers: firstTwentyFiveStores.map((store, index) =>
+        createOffer(store, 185 + index * 3, 24 + index, index % 4)
+      ),
+      inStock: true,
+      rating: 4.5,
+      reviewsCount: 3,
+      reviews: createModeratedReviews(3),
     },
   ];
 }

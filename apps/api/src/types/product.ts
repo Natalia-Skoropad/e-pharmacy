@@ -30,6 +30,7 @@ export type ProductOfferEntity = {
   storeCity?: string;
   storeAddress?: string;
   storePhone?: string;
+  storeImageUrl?: string;
   storeRating?: number;
   storeReviewsCount?: number;
   price: number;
@@ -71,6 +72,7 @@ export type ProductOfferResponseDto = {
   storeCity?: string;
   storeAddress?: string;
   storePhone?: string;
+  storeImageUrl?: string;
   storeRating?: number;
   storeReviewsCount?: number;
   price: number;

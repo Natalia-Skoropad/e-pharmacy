@@ -90,6 +90,12 @@ const productOfferSchema = new Schema(
       default: undefined,
     },
 
+    storeImageUrl: {
+      type: String,
+      trim: true,
+      default: undefined,
+    },
+
     storeRating: {
       type: Number,
       min: 0,
