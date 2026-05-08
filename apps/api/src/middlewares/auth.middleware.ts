@@ -42,3 +42,28 @@ export async function authenticate(
     next(httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_TOKEN));
   }
 }
+
+//===============================================================
+
+export async function optionalAuthenticate(
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const token = getTokenFromHeader(req.headers.authorization);
+
+    if (!token) {
+      next();
+      return;
+    }
+
+    const payload = verifyToken(token);
+    const user = await getUserByIdService(payload.userId);
+
+    req.user = user;
+    next();
+  } catch {
+    next();
+  }
+}

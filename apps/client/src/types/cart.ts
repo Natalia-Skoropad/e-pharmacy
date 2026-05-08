@@ -1,14 +1,17 @@
-import type { Product } from './products';
+import type { Product } from './product';
 
 //===================================================================
 
 export type CartItem = {
   id: string;
   productId: string;
+  storeId: string;
   product: Product;
+  storeName: string;
   quantity: number;
   price: number;
   totalPrice: number;
+  expiresAt: string;
 };
 
 //===================================================================
@@ -29,6 +32,7 @@ export type CartResponse = {
 
 export type AddCartItemPayload = {
   productId: string;
+  storeId: string;
   quantity: number;
 };
 

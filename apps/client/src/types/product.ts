@@ -8,10 +8,28 @@ export type ProductCategory =
 
 //===================================================================
 
+export type ProductOffer = {
+  storeId: string;
+  storeName: string;
+  storeCity?: string;
+  storeAddress?: string;
+  storePhone?: string;
+  storeRating?: number;
+  storeReviewsCount?: number;
+  price: number;
+  totalQuantity: number;
+  activeQuantity: number;
+  reservedQuantity: number;
+  inStock: boolean;
+};
+
+//===================================================================
+
 export type Product = {
   id: string;
   name: string;
   slug?: string;
+  article: string;
   description?: string;
   category: ProductCategory;
   price: number;
@@ -19,11 +37,14 @@ export type Product = {
   manufacturer?: string;
   dosage?: string;
   packageQuantity?: string;
-  storeId: string;
+  storeId?: string;
   storeName?: string;
+  foundInStoresCount: number;
+  offers: ProductOffer[];
   inStock: boolean;
   rating?: number;
   reviewsCount?: number;
+  isFavorite?: boolean;
 };
 
 //===================================================================
@@ -71,4 +92,24 @@ export type ProductDetailsResponse = {
 export type ProductReviewsResponse = {
   items: ProductReview[];
   total: number;
+};
+
+//===================================================================
+
+export type CreateProductReviewPayload = {
+  rating: number;
+  comment: string;
+};
+
+//===================================================================
+
+export type CreateProductReviewResponse = {
+  message: string;
+};
+
+//===================================================================
+
+export type ToggleFavoriteProductResponse = {
+  isFavorite: boolean;
+  message: string;
 };

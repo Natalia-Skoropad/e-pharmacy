@@ -60,6 +60,12 @@ const userSchema = new Schema<UserEntity>(
       trim: true,
       default: undefined,
     },
+
+    favoriteProductIds: {
+      type: [Schema.Types.ObjectId],
+      ref: 'Product',
+      default: [],
+    },
   },
   {
     timestamps: true,

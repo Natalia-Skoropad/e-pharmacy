@@ -16,4 +16,5 @@ export type UserEntity = {
   status: UserStatus;
   phone?: string;
   avatarUrl?: string;
+  favoriteProductIds?: string[];
 };

@@ -20,6 +20,7 @@ export const PRODUCT_SORT_OPTIONS = [
 
 //===============================================================
 
+const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
 const perPageSchema = z.coerce.number().int().min(1).max(50).default(12);
 
@@ -30,10 +31,7 @@ export const productsQuerySchema = z.object({
   perPage: perPageSchema,
   keyword: z.string().trim().max(80).optional(),
   category: z.enum(PRODUCT_CATEGORIES).optional(),
-  storeId: z
-    .string()
-    .regex(/^[a-f\d]{24}$/i, 'Store ID must be valid')
-    .optional(),
+  storeId: mongoIdSchema.optional(),
   minPrice: z.coerce.number().min(0).optional(),
   maxPrice: z.coerce.number().min(0).optional(),
   inStock: z.coerce.boolean().optional(),
@@ -43,5 +41,25 @@ export const productsQuerySchema = z.object({
 //===============================================================
 
 export const productIdParamsSchema = z.object({
-  productId: z.string().regex(/^[a-f\d]{24}$/i, 'Product ID must be valid'),
+  productId: mongoIdSchema,
+});
+
+export const productStoreParamsSchema = z.object({
+  productId: mongoIdSchema,
+  storeId: mongoIdSchema,
+});
+
+//===============================================================
+
+export const createProductReviewSchema = z.object({
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z
+    .string()
+    .trim()
+    .min(10)
+    .max(200)
+    .regex(
+      /^[A-Za-z0-9\s.,!?;:'"()\-]+$/,
+      'Review may contain only latin letters, numbers, spaces and basic punctuation'
+    ),
 });

@@ -6,6 +6,12 @@ import type { ProductEntity } from '../types/product';
 
 const productReviewSchema = new Schema(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
     userName: {
       type: String,
       required: [true, 'User name is required'],
@@ -24,7 +30,19 @@ const productReviewSchema = new Schema(
       type: String,
       required: [true, 'Review comment is required'],
       trim: true,
-      maxlength: [1000, 'Review comment must be at most 1000 characters'],
+      minlength: [10, 'Review comment must be at least 10 characters'],
+      maxlength: [200, 'Review comment must be at most 200 characters'],
+    },
+
+    isModerated: {
+      type: Boolean,
+      default: false,
+      required: true,
+    },
+
+    moderatedAt: {
+      type: Date,
+      default: undefined,
     },
 
     createdAt: {
@@ -34,6 +52,92 @@ const productReviewSchema = new Schema(
   },
   {
     _id: true,
+    id: false,
+  }
+);
+
+//===============================================================
+
+const productOfferSchema = new Schema(
+  {
+    storeId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Store',
+      required: true,
+    },
+
+    storeName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    storeCity: {
+      type: String,
+      trim: true,
+      default: undefined,
+    },
+
+    storeAddress: {
+      type: String,
+      trim: true,
+      default: undefined,
+    },
+
+    storePhone: {
+      type: String,
+      trim: true,
+      default: undefined,
+    },
+
+    storeRating: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 0,
+    },
+
+    storeReviewsCount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+
+    price: {
+      type: Number,
+      required: [true, 'Offer price is required'],
+      min: 0,
+    },
+
+    totalQuantity: {
+      type: Number,
+      min: 0,
+      default: 0,
+      required: true,
+    },
+
+    activeQuantity: {
+      type: Number,
+      min: 0,
+      default: 0,
+      required: true,
+    },
+
+    reservedQuantity: {
+      type: Number,
+      min: 0,
+      default: 0,
+      required: true,
+    },
+
+    inStock: {
+      type: Boolean,
+      default: true,
+      required: true,
+    },
+  },
+  {
+    _id: false,
     id: false,
   }
 );
@@ -54,6 +158,14 @@ const productSchema = new Schema<ProductEntity>(
       trim: true,
       lowercase: true,
       default: undefined,
+    },
+
+    article: {
+      type: String,
+      required: [true, 'Product article is required'],
+      trim: true,
+      uppercase: true,
+      maxlength: [40, 'Product article must be at most 40 characters'],
     },
 
     description: {
@@ -79,8 +191,8 @@ const productSchema = new Schema<ProductEntity>(
 
     price: {
       type: Number,
-      required: [true, 'Price is required'],
       min: 0,
+      default: undefined,
     },
 
     imageUrl: {
@@ -113,13 +225,18 @@ const productSchema = new Schema<ProductEntity>(
     storeId: {
       type: Schema.Types.ObjectId,
       ref: 'Store',
-      required: true,
+      default: undefined,
     },
 
     storeName: {
       type: String,
       trim: true,
       default: undefined,
+    },
+
+    offers: {
+      type: [productOfferSchema],
+      default: [],
     },
 
     inStock: {
@@ -158,9 +275,12 @@ productSchema.index({
   name: 'text',
   description: 'text',
   manufacturer: 'text',
+  article: 'text',
 });
+productSchema.index({ article: 1 }, { unique: true });
 productSchema.index({ category: 1 });
 productSchema.index({ storeId: 1 });
+productSchema.index({ 'offers.storeId': 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ rating: -1 });
 productSchema.index({ createdAt: -1 });

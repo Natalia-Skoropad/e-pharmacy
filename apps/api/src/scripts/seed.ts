@@ -53,6 +53,10 @@ const seedStores = [
 type SeedStoreDocument = {
   _id: Types.ObjectId;
   name: string;
+  address?: string;
+  city?: string;
+  phone?: string;
+  rating?: number;
 };
 
 //===============================================================
@@ -72,6 +76,27 @@ function getStoreByName(
 
 //===============================================================
 
+function createOffer(store: SeedStoreDocument & { city?: string; address?: string; phone?: string; rating?: number }, price: number, totalQuantity: number, reservedQuantity = 0) {
+  const activeQuantity = Math.max(totalQuantity - reservedQuantity, 0);
+
+  return {
+    storeId: store._id,
+    storeName: store.name,
+    storeCity: store.city,
+    storeAddress: store.address,
+    storePhone: store.phone,
+    storeRating: store.rating,
+    storeReviewsCount: 12,
+    price,
+    totalQuantity,
+    activeQuantity,
+    reservedQuantity,
+    inStock: activeQuantity > 0,
+  };
+}
+
+//===============================================================
+
 function createSeedProducts(stores: SeedStoreDocument[]) {
   const greenPharmacy = getStoreByName(stores, 'Green Pharmacy');
   const healthPlus = getStoreByName(stores, 'Health Plus');
@@ -81,6 +106,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
     {
       name: 'Paracetamol 500 mg',
       slug: 'paracetamol-500-mg',
+      article: 'MED-PAR-500',
       description:
         'Common pain relief and fever reducer. Use only according to the instructions.',
       category: 'medicine',
@@ -92,6 +118,11 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       packageQuantity: '20 tablets',
       storeId: greenPharmacy._id,
       storeName: greenPharmacy.name,
+      offers: [
+        createOffer(greenPharmacy, 79, 100, 10),
+        createOffer(healthPlus, 84, 60, 5),
+        createOffer(familyMed, 82, 40, 0),
+      ],
       inStock: true,
       rating: 4.7,
       reviewsCount: 2,
@@ -100,12 +131,16 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
           userName: 'Natalia',
           rating: 5,
           comment: 'Good basic medicine, fast pickup from the pharmacy.',
+          isModerated: true,
+          moderatedAt: new Date('2026-04-13T10:00:00.000Z'),
           createdAt: new Date('2026-04-10T10:00:00.000Z'),
         },
         {
           userName: 'Olena',
           rating: 4,
           comment: 'Clear description and normal price.',
+          isModerated: true,
+          moderatedAt: new Date('2026-04-14T12:30:00.000Z'),
           createdAt: new Date('2026-04-12T12:30:00.000Z'),
         },
       ],
@@ -113,6 +148,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
     {
       name: 'Vitamin C 1000 mg',
       slug: 'vitamin-c-1000-mg',
+      article: 'VIT-C-1000',
       description:
         'Vitamin C supplement for daily wellness support. Follow package instructions.',
       category: 'vitamins',
@@ -124,6 +160,10 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       packageQuantity: '30 tablets',
       storeId: greenPharmacy._id,
       storeName: greenPharmacy.name,
+      offers: [
+        createOffer(greenPharmacy, 145, 42, 2),
+        createOffer(familyMed, 151, 26, 0),
+      ],
       inStock: true,
       rating: 4.5,
       reviewsCount: 1,
@@ -132,6 +172,8 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
           userName: 'Iryna',
           rating: 5,
           comment: 'Nice packaging and easy ordering.',
+          isModerated: true,
+          moderatedAt: new Date('2026-04-15T09:15:00.000Z'),
           createdAt: new Date('2026-04-14T09:15:00.000Z'),
         },
       ],
@@ -139,6 +181,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
     {
       name: 'Digital Thermometer',
       slug: 'digital-thermometer',
+      article: 'DEV-THERMO-01',
       description:
         'Electronic thermometer for quick body temperature measurement.',
       category: 'medical-devices',
@@ -149,6 +192,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       packageQuantity: '1 device',
       storeId: healthPlus._id,
       storeName: healthPlus.name,
+      offers: [createOffer(healthPlus, 229, 18, 1)],
       inStock: true,
       rating: 4.4,
       reviewsCount: 1,
@@ -157,6 +201,8 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
           userName: 'Andrii',
           rating: 4,
           comment: 'Works well and was available in stock.',
+          isModerated: true,
+          moderatedAt: new Date('2026-04-17T14:45:00.000Z'),
           createdAt: new Date('2026-04-16T14:45:00.000Z'),
         },
       ],
@@ -164,6 +210,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
     {
       name: 'Ibuprofen 200 mg',
       slug: 'ibuprofen-200-mg',
+      article: 'MED-IBU-200',
       description:
         'Pain relief medicine. Read instructions and consult a specialist if needed.',
       category: 'medicine',
@@ -175,6 +222,10 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       packageQuantity: '20 tablets',
       storeId: healthPlus._id,
       storeName: healthPlus.name,
+      offers: [
+        createOffer(healthPlus, 96, 35, 3),
+        createOffer(greenPharmacy, 101, 28, 0),
+      ],
       inStock: true,
       rating: 4.6,
       reviewsCount: 0,
@@ -183,6 +234,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
     {
       name: 'Antiseptic Spray',
       slug: 'antiseptic-spray',
+      article: 'HYG-SPRAY-100',
       description:
         'Antiseptic spray for external use. Suitable for home first-aid kits.',
       category: 'hygiene',
@@ -193,6 +245,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       packageQuantity: '100 ml',
       storeId: familyMed._id,
       storeName: familyMed.name,
+      offers: [createOffer(familyMed, 118, 50, 7)],
       inStock: true,
       rating: 4.3,
       reviewsCount: 0,
@@ -201,6 +254,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
     {
       name: 'Moisturizing Hand Cream',
       slug: 'moisturizing-hand-cream',
+      article: 'BEAUTY-HAND-75',
       description:
         'Daily moisturizing cream for dry hands and sensitive skin care.',
       category: 'beauty',
@@ -211,6 +265,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       packageQuantity: '75 ml',
       storeId: familyMed._id,
       storeName: familyMed.name,
+      offers: [createOffer(familyMed, 132, 0, 0)],
       inStock: false,
       rating: 4.2,
       reviewsCount: 0,

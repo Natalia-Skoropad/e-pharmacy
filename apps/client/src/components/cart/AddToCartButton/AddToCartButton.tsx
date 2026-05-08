@@ -16,6 +16,7 @@ import css from './AddToCartButton.module.css';
 
 type AddToCartButtonProps = {
   productId: string;
+  storeId?: string;
   disabled?: boolean;
 };
 
@@ -23,6 +24,7 @@ type AddToCartButtonProps = {
 
 function AddToCartButton({
   productId,
+  storeId,
   disabled = false,
 }: AddToCartButtonProps) {
   const router = useRouter();
@@ -40,6 +42,11 @@ function AddToCartButton({
       return;
     }
 
+    if (!storeId) {
+      setMessage('Choose a pharmacy before adding product to cart');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setMessage('');
@@ -47,6 +54,7 @@ function AddToCartButton({
       await addCartItem(
         {
           productId,
+          storeId,
           quantity: 1,
         },
         token
@@ -64,7 +72,7 @@ function AddToCartButton({
     <div className={css.wrap}>
       <Button
         type="button"
-        disabled={disabled || isSubmitting || !isAuthReady}
+        disabled={disabled || isSubmitting || !isAuthReady || !storeId}
         onClick={handleAddToCart}
       >
         {isSubmitting ? 'Adding...' : 'Add to cart'}

@@ -1,0 +1,33 @@
+.ratingSummary {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+}
+
+.md {
+  font-size: var(--fz-16);
+}
+
+.sm {
+  font-size: var(--fz-14);
+}
+
+.rating {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  font-weight: var(--fw-medium);
+  line-height: 1;
+  color: var(--color-text-primary);
+}
+
+.rating svg {
+  color: var(--color-warning);
+}
+
+.reviewsCount {
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-muted);
+}

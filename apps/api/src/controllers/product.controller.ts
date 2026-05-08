@@ -1,11 +1,16 @@
 import type { Request, Response } from 'express';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { productsQuerySchema } from '../schemas/product.schema';
 import {
+  createProductReviewSchema,
+  productsQuerySchema,
+} from '../schemas/product.schema';
+import {
+  createProductReviewService,
   getProductDetailsService,
   getProductReviewsService,
   getProductsService,
+  toggleFavoriteProductService,
 } from '../services/product.service';
 import { sendSuccessResponse } from '../utils/apiResponse';
 
@@ -19,7 +24,7 @@ type ProductParams = {
 
 export async function getProducts(req: Request, res: Response): Promise<void> {
   const query = productsQuerySchema.parse(req.query);
-  const data = await getProductsService(query);
+  const data = await getProductsService(query, req.user?.id);
 
   sendSuccessResponse({
     res,
@@ -36,7 +41,7 @@ export async function getProductDetails(
 ): Promise<void> {
   const { productId } = req.params as ProductParams;
 
-  const data = await getProductDetailsService(productId);
+  const data = await getProductDetailsService(productId, req.user?.id);
 
   sendSuccessResponse({
     res,
@@ -54,6 +59,46 @@ export async function getProductReviews(
   const { productId } = req.params as ProductParams;
 
   const data = await getProductReviewsService(productId);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function createProductReview(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { productId } = req.params as ProductParams;
+  const body = createProductReviewSchema.parse(req.body);
+
+  const data = await createProductReviewService(productId, {
+    userId: req.user?.id ?? '',
+    userName: req.user?.name ?? 'Customer',
+    rating: body.rating,
+    comment: body.comment,
+  });
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.CREATED,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function toggleFavoriteProduct(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { productId } = req.params as ProductParams;
+
+  const data = await toggleFavoriteProductService(productId, req.user?.id ?? '');
 
   sendSuccessResponse({
     res,

@@ -15,6 +15,7 @@ export const API_ROUTES = {
     list: '/products',
     details: (productId: string) => `/products/${productId}`,
     reviews: (productId: string) => `/products/${productId}/reviews`,
+    favorite: (productId: string) => `/products/${productId}/favorite`,
   },
 
   cart: {

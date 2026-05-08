@@ -16,6 +16,9 @@ type ProductDetailsPageProps = {
   params: Promise<{
     productSlug: string;
   }>;
+  searchParams?: Promise<{
+    storeId?: string;
+  }>;
 };
 
 //===================================================================
@@ -55,7 +58,7 @@ export async function generateMetadata({
     title: product.name,
     description:
       product.description ??
-      `Buy ${product.name} online from E-PHARMACY. Check price, availability, dosage, manufacturer, and product details.`,
+      `Buy ${product.name} online from E-PHARMACY. Check pharmacy prices, availability, dosage, manufacturer, and product details.`,
     path: buildProductPath(product.name, product.id),
     image: product.imageUrl,
     imageAlt: product.name,
@@ -64,8 +67,12 @@ export async function generateMetadata({
 
 //===================================================================
 
-async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
+async function ProductDetailsPage({
+  params,
+  searchParams,
+}: ProductDetailsPageProps) {
   const { productSlug } = await params;
+  const resolvedSearchParams = await searchParams;
   const productId = getIdFromSlugId(productSlug);
 
   if (!productId) notFound();
@@ -82,6 +89,7 @@ async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
       product={productData.product}
       reviews={reviewsData?.items ?? []}
       reviewsTotal={reviewsData?.total ?? 0}
+      contextStoreId={resolvedSearchParams?.storeId}
       areReviewsUnavailable={!reviewsData}
     />
   );
