@@ -41,10 +41,7 @@ function ProductCard({ product }: ProductCardProps) {
   const ratingLabel =
     typeof product.rating === 'number' ? product.rating.toFixed(1) : 'New';
 
-  const baseProductHref = buildProductPath(product.name, product.id);
-  const productHref = product.storeId
-    ? `${baseProductHref}?storeId=${product.storeId}`
-    : baseProductHref;
+  const productHref = buildProductPath(product.name, product.id);
 
   return (
     <article

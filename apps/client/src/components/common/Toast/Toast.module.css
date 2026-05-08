@@ -1,6 +1,6 @@
 .toast {
   position: fixed;
-  top: 20px;
+  top: 80px;
   left: 50%;
   z-index: var(--z-toast);
   width: min(calc(100% - 40px), 420px);
@@ -27,5 +27,17 @@
   to {
     opacity: 1;
     transform: translate(-50%, 0);
+  }
+}
+
+@media only screen and (min-width: 768px) {
+  .toast {
+    left: 67%;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .toast {
+    left: 72%;
   }
 }

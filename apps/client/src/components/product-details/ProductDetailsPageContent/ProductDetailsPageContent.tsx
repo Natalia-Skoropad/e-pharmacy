@@ -598,11 +598,7 @@ function ProductDetailsPageContent({
             {activeTab === 'reviews' ? (
               <div className={css.panel}>
                 <div className={css.sectionHeader}>
-                  <div>
-                    <p className={css.sectionKicker}>Customer feedback</p>
-                    <h2 className={css.panelTitle}>Reviews ({reviewsTotal})</h2>
-                  </div>
-
+                  <h2 className={css.panelTitle}>Reviews ({reviewsTotal})</h2>
                   <p className={css.resultCount}>{reviewsCountLabel}</p>
                 </div>
 
