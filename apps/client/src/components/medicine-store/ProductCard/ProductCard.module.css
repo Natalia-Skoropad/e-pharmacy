@@ -28,18 +28,11 @@
   color: var(--color-accent);
 }
 
-.stockBadge {
+.favoriteWrap {
   position: absolute;
   top: 14px;
   right: 14px;
-  padding: 7px 12px;
-  font-size: var(--fz-12);
-  font-weight: var(--fw-medium);
-  line-height: 1;
-  color: var(--color-accent);
-  background-color: var(--color-white);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-card);
+  z-index: 1;
 }
 
 .content {
@@ -52,12 +45,13 @@
 .metaRow {
   display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 14px;
 }
 
 .category {
+  min-width: 0;
   font-size: var(--fz-12);
   font-weight: var(--fw-medium);
   line-height: 1.3;
@@ -66,19 +60,11 @@
   letter-spacing: var(--ls-wide);
 }
 
-.rating {
-  display: inline-flex;
+.ratingSummary {
   flex-shrink: 0;
-  gap: 4px;
-  align-items: center;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  line-height: 1;
-  color: var(--color-text-primary);
-}
-
-.rating svg {
-  color: var(--color-warning);
+  justify-content: flex-end;
+  max-width: 155px;
+  text-align: right;
 }
 
 .title {
@@ -88,36 +74,26 @@
   color: var(--color-text-primary);
 }
 
-.description {
-  display: -webkit-box;
-  margin-top: 12px;
-  overflow: hidden;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-}
-
-.details {
+.summaryList {
   display: grid;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 18px;
 }
 
-.detailItem {
+.summaryItem {
   display: flex;
-  gap: 8px;
+  gap: 16px;
+  align-items: center;
   justify-content: space-between;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
 }
 
-.detailItem dt {
+.summaryItem dt {
   color: var(--color-text-muted);
 }
 
-.detailItem dd {
+.summaryItem dd {
   font-weight: var(--fw-medium);
   color: var(--color-text-primary);
   text-align: right;
@@ -126,26 +102,17 @@
 .footer {
   display: flex;
   gap: 16px;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   margin-top: auto;
-  padding-top: 20px;
+  padding-top: 24px;
 }
 
 .price {
-  font-size: var(--fz-24);
+  font-size: var(--fz-18);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
-  color: var(--color-text-primary);
-}
-
-.storeName {
-  max-width: 160px;
-  margin-top: 4px;
-  font-size: var(--fz-12);
-  font-weight: var(--fw-medium);
-  line-height: 1.3;
-  color: var(--color-text-muted);
+  color: var(--color-accent);
 }
 
 .detailsLink {
@@ -155,5 +122,9 @@
 @media only screen and (min-width: 768px) {
   .content {
     padding: 24px;
+  }
+
+  .price {
+    font-size: var(--fz-20);
   }
 }

@@ -1,10 +1,22 @@
-import Image from 'next/image';
+'use client';
 
-import { ButtonLink, SvgIcon } from '@/components/common';
+import Image from 'next/image';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import {
+  ButtonLink,
+  FavoriteToggleButton,
+  RatingSummary,
+  SvgIcon,
+  Toast,
+} from '@/components/common';
+import { useAuth } from '@/components/providers';
 
 import { buildProductPath } from '@/lib/routes';
 
-import type { Product } from '@/types';
+import { getProductDetails, toggleFavoriteProduct } from '@/services';
+
+import type { Product, ProductOffer } from '@/types';
 
 import css from './ProductCard.module.css';
 
@@ -28,26 +40,110 @@ const CATEGORY_LABELS: Record<Product['category'], string> = {
 //===================================================================
 
 function formatPrice(price: number): string {
-  return new Intl.NumberFormat('uk-UA', {
-    style: 'currency',
-    currency: 'UAH',
+  return `${new Intl.NumberFormat('uk-UA', {
     maximumFractionDigits: 0,
-  }).format(price);
+  }).format(price)} грн`;
+}
+
+function formatPriceRange(offers: ProductOffer[]): string {
+  const availableOffers = offers.filter((offer) =>
+    Number.isFinite(offer.price)
+  );
+
+  if (availableOffers.length === 0) return 'No pharmacy prices yet';
+
+  const prices = availableOffers.map((offer) => offer.price);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+
+  if (minPrice === maxPrice) return formatPrice(minPrice);
+
+  return `${formatPrice(minPrice)} — ${formatPrice(maxPrice)}`;
+}
+
+function getStoresCountLabel(count: number): string {
+  return `${count} ${count === 1 ? 'pharmacy' : 'pharmacies'}`;
 }
 
 //===================================================================
 
 function ProductCard({ product }: ProductCardProps) {
-  const ratingLabel =
-    typeof product.rating === 'number' ? product.rating.toFixed(1) : 'New';
+  const { token, isAuthenticated, isAuthReady } = useAuth();
+
+  const [toastMessage, setToastMessage] = useState('');
+  const [isFavorite, setIsFavorite] = useState(Boolean(product.isFavorite));
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
   const productHref = buildProductPath(product.name, product.id);
+
+  const priceRangeLabel = useMemo(
+    () => formatPriceRange(product.offers),
+    [product.offers]
+  );
+
+  const showToast = useCallback((message: string) => {
+    setToastMessage('');
+    window.setTimeout(() => setToastMessage(message), 0);
+  }, []);
+
+  useEffect(() => {
+    if (!toastMessage) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setToastMessage('');
+    }, 3000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toastMessage]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) return;
+
+    let isMounted = true;
+
+    getProductDetails(product.id, token)
+      .then((response) => {
+        if (isMounted) setIsFavorite(Boolean(response.product.isFavorite));
+      })
+      .catch(() => undefined);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, product.id, token]);
+
+  const handleFavoriteClick = async () => {
+    if (!isAuthReady) return;
+
+    if (!isAuthenticated || !token) {
+      showToast('Please log in to add products to favorites.');
+      return;
+    }
+
+    try {
+      setIsFavoriteLoading(true);
+      const response = await toggleFavoriteProduct(product.id, token);
+
+      setIsFavorite(response.isFavorite);
+      showToast(
+        response.isFavorite
+          ? 'Product was added to favorites.'
+          : 'Product was removed from favorites.'
+      );
+    } catch {
+      showToast('Could not update favorites.');
+    } finally {
+      setIsFavoriteLoading(false);
+    }
+  };
 
   return (
     <article
       className={css.card}
       aria-labelledby={`product-${product.id}-title`}
     >
+      <Toast message={toastMessage} isVisible={Boolean(toastMessage)} />
+
       <div className={css.imageWrap}>
         {product.imageUrl ? (
           <Image
@@ -63,9 +159,15 @@ function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        <span className={css.stockBadge}>
-          {product.inStock ? 'In stock' : 'Out of stock'}
-        </span>
+        <div className={css.favoriteWrap}>
+          <FavoriteToggleButton
+            isActive={isFavorite}
+            disabled={isFavoriteLoading || !isAuthReady}
+            onClick={handleFavoriteClick}
+            activeLabel="Remove product from favorites"
+            inactiveLabel="Add product to favorites"
+          />
+        </div>
       </div>
 
       <div className={css.content}>
@@ -74,54 +176,32 @@ function ProductCard({ product }: ProductCardProps) {
             {CATEGORY_LABELS[product.category]}
           </span>
 
-          <span
-            className={css.rating}
-            aria-label={`Product rating ${ratingLabel}`}
-          >
-            <SvgIcon name="icon-star" size={16} />
-            {ratingLabel}
-          </span>
+          <RatingSummary
+            className={css.ratingSummary}
+            rating={product.rating}
+            reviewsCount={product.reviewsCount ?? 0}
+            size="sm"
+          />
         </div>
 
         <h3 className={css.title} id={`product-${product.id}-title`}>
           {product.name}
         </h3>
 
-        {product.description ? (
-          <p className={css.description}>{product.description}</p>
-        ) : null}
+        <dl className={css.summaryList}>
+          <div className={css.summaryItem}>
+            <dt>Article</dt>
+            <dd>{product.article}</dd>
+          </div>
 
-        <dl className={css.details}>
-          {product.manufacturer ? (
-            <div className={css.detailItem}>
-              <dt>Manufacturer</dt>
-              <dd>{product.manufacturer}</dd>
-            </div>
-          ) : null}
-
-          {product.dosage ? (
-            <div className={css.detailItem}>
-              <dt>Dosage</dt>
-              <dd>{product.dosage}</dd>
-            </div>
-          ) : null}
-
-          {product.packageQuantity ? (
-            <div className={css.detailItem}>
-              <dt>Package</dt>
-              <dd>{product.packageQuantity}</dd>
-            </div>
-          ) : null}
+          <div className={css.summaryItem}>
+            <dt>Found in pharmacies</dt>
+            <dd>{getStoresCountLabel(product.foundInStoresCount)}</dd>
+          </div>
         </dl>
 
         <div className={css.footer}>
-          <div>
-            <p className={css.price}>{formatPrice(product.price)}</p>
-
-            {product.storeName ? (
-              <p className={css.storeName}>{product.storeName}</p>
-            ) : null}
-          </div>
+          <p className={css.price}>{priceRangeLabel}</p>
 
           <ButtonLink className={css.detailsLink} href={productHref} size="sm">
             Details
