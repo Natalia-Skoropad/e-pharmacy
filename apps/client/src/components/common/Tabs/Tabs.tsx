@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useId, useRef, useState } from 'react';
+
 import css from './Tabs.module.css';
 
 //===================================================================
@@ -18,29 +20,118 @@ type TabsProps<TValue extends string = string> = {
 
 //===================================================================
 
+const MOBILE_VISIBLE_TABS_COUNT = 1;
+
+//===================================================================
+
 function Tabs<TValue extends string = string>({
   items,
   activeValue,
   ariaLabel,
   onChange,
 }: TabsProps<TValue>) {
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const moreMenuId = useId();
+
+  const moreMobileItems = items.slice(MOBILE_VISIBLE_TABS_COUNT);
+
+  const hasMoreMobileItems = moreMobileItems.length > 0;
+  const isMoreActive = moreMobileItems.some(
+    (item) => item.value === activeValue
+  );
+
+  useEffect(() => {
+    if (!isMoreOpen) return;
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (!tabsRef.current?.contains(event.target as Node)) {
+        setIsMoreOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMoreOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleDocumentClick);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isMoreOpen]);
+
+  const handleTabClick = (value: TValue) => {
+    onChange(value);
+    setIsMoreOpen(false);
+  };
+
   return (
-    <nav className={css.tabs} aria-label={ariaLabel}>
-      {items.map((item) => {
+    <nav className={css.tabs} aria-label={ariaLabel} ref={tabsRef}>
+      {items.map((item, index) => {
         const isActive = item.value === activeValue;
+        const isHiddenOnMobile = index >= MOBILE_VISIBLE_TABS_COUNT;
 
         return (
           <button
-            className={isActive ? css.tabActive : css.tab}
+            className={`${isActive ? css.tabActive : css.tab} ${
+              isHiddenOnMobile ? css.tabDesktopOnly : ''
+            }`}
             key={item.value}
             type="button"
             aria-current={isActive ? 'page' : undefined}
-            onClick={() => onChange(item.value)}
+            onClick={() => handleTabClick(item.value)}
           >
             {item.label}
           </button>
         );
       })}
+
+      {hasMoreMobileItems ? (
+        <div className={css.moreWrap}>
+          <button
+            className={`${isMoreActive ? css.tabActive : css.tab} ${
+              css.moreButton
+            }`}
+            type="button"
+            aria-label="Відкрити інші вкладки"
+            aria-haspopup="menu"
+            aria-expanded={isMoreOpen}
+            aria-controls={moreMenuId}
+            onClick={() => setIsMoreOpen((prev) => !prev)}
+          >
+            <span className={css.moreIcon} aria-hidden="true">
+              ...
+            </span>
+          </button>
+
+          {isMoreOpen ? (
+            <div className={css.moreMenu} id={moreMenuId} role="menu">
+              {moreMobileItems.map((item) => {
+                const isActive = item.value === activeValue;
+
+                return (
+                  <button
+                    className={isActive ? css.moreItemActive : css.moreItem}
+                    key={item.value}
+                    type="button"
+                    role="menuitem"
+                    aria-current={isActive ? 'page' : undefined}
+                    onClick={() => handleTabClick(item.value)}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </nav>
   );
 }

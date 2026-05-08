@@ -1,6 +1,6 @@
 .field {
   display: grid;
-  gap: 8px;
+  gap: 5px;
   min-width: 0;
 }
 
@@ -9,6 +9,7 @@
   font-weight: var(--fw-medium);
   line-height: var(--lh-base);
   color: var(--color-text-primary);
+  opacity: 0.5;
 }
 
 .inputWrap {
@@ -26,6 +27,13 @@
     border-color var(--transition-base),
     box-shadow var(--transition-base),
     background-color var(--transition-base);
+}
+
+.inputWrap:hover,
+.inputWrap:focus-visible {
+  background-color: var(--color-surface);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px rgba(89, 177, 122, 0.12);
 }
 
 .inputWrap:focus-within {

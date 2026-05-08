@@ -1,9 +1,9 @@
 .toast {
   position: fixed;
   top: 80px;
-  left: 50%;
+  left: 53%;
   z-index: var(--z-toast);
-  width: min(calc(100% - 40px), 420px);
+  min-width: 300px;
   padding: 14px 18px;
   font-size: var(--fz-14);
   font-weight: var(--fw-medium);
@@ -32,12 +32,12 @@
 
 @media only screen and (min-width: 768px) {
   .toast {
-    left: 67%;
+    left: 69%;
   }
 }
 
 @media only screen and (min-width: 1440px) {
   .toast {
-    left: 72%;
+    left: 77%;
   }
 }

@@ -1,4 +1,4 @@
-import { SvgIcon } from '@/components/common';
+import { Star } from 'lucide-react';
 
 import type { ProductReview } from '@/types';
 
@@ -48,11 +48,8 @@ function ProductReviewsList({ reviews }: ProductReviewsListProps) {
                 </time>
               </div>
 
-              <span
-                className={css.rating}
-                aria-label={`Review rating ${review.rating}`}
-              >
-                <SvgIcon name="icon-star" size={16} />
+              <span className={css.rating}>
+                <Star className={css.star} name="icon-star" size={16} />
                 {review.rating}
               </span>
             </div>

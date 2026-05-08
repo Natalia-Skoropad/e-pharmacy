@@ -9,6 +9,7 @@
   font-weight: var(--fw-medium);
   line-height: var(--lh-base);
   color: var(--color-text-primary);
+  opacity: 0.5;
 }
 
 .selectRoot {

@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Star } from 'lucide-react';
+import { ChevronDown, ChevronUp, Filter, Star } from 'lucide-react';
 
 import {
   Button,
@@ -162,6 +162,7 @@ function ProductDetailsPageContent({
   const [storeAddressQuery, setStoreAddressQuery] = useState('');
   const [offerSort, setOfferSort] = useState<OfferSort>('price-asc');
   const [visibleOffersCount, setVisibleOffersCount] = useState(OFFERS_PER_PAGE);
+  const [areOfferFiltersOpen, setAreOfferFiltersOpen] = useState(false);
 
   const tabs = useMemo<TabItem<ProductTab>[]>(
     () => [
@@ -543,7 +544,7 @@ function ProductDetailsPageContent({
                 <div className={css.sectionHeader}>
                   <div>
                     <h2 className={css.panelTitle}>
-                      Prices in pharmacies ({product.foundInStoresCount})
+                      Pharmacies ({product.foundInStoresCount})
                     </h2>
 
                     <p className={css.resultCount}>
@@ -551,10 +552,44 @@ function ProductDetailsPageContent({
                         ? `Showing ${visibleOffers.length} of ${filteredOffers.length} pharmacies`
                         : 'No pharmacies match your search'}
                     </p>
+
+                    {!isAuthenticated && isAuthReady ? (
+                      <p className={css.authNote}>
+                        Only logged-in users can order and buy products.
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 
-                <div className={css.offerControls}>
+                <button
+                  className={css.filtersToggle}
+                  type="button"
+                  aria-expanded={areOfferFiltersOpen}
+                  aria-controls="pharmacy-filters"
+                  onClick={() => setAreOfferFiltersOpen((isOpen) => !isOpen)}
+                >
+                  <span className={css.filtersToggleText}>
+                    <Filter size={18} aria-hidden="true" />
+                    {areOfferFiltersOpen
+                      ? 'Сховати фільтри'
+                      : 'Показати фільтри'}
+                  </span>
+
+                  {areOfferFiltersOpen ? (
+                    <ChevronUp size={20} aria-hidden="true" />
+                  ) : (
+                    <ChevronDown size={20} aria-hidden="true" />
+                  )}
+                </button>
+
+                <div
+                  className={
+                    areOfferFiltersOpen
+                      ? `${css.offerControls} ${css.offerControlsOpen}`
+                      : css.offerControls
+                  }
+                  id="pharmacy-filters"
+                >
                   <SearchInput
                     id="pharmacy-name-search"
                     label="Search by pharmacy"
@@ -639,6 +674,7 @@ function ProductDetailsPageContent({
                             </p>
 
                             <ButtonLink
+                              className={css.offerLink}
                               href={getStoreHref(offer.storeId)}
                               variant="secondary"
                             >
@@ -666,12 +702,6 @@ function ProductDetailsPageContent({
                     setVisibleOffersCount((count) => count + OFFERS_PER_PAGE)
                   }
                 />
-
-                {!isAuthenticated && isAuthReady ? (
-                  <p className={css.authNote}>
-                    Only logged-in users can order and buy products.
-                  </p>
-                ) : null}
               </div>
             ) : null}
 
