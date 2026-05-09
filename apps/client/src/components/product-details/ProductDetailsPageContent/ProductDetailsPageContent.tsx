@@ -124,7 +124,7 @@ function getOfferTotal(cartItem: CartItem | null, offer: ProductOffer): number {
 }
 
 function getStoreHref(storeId: string): string {
-  return `${ROUTES.MEDICINE_STORE}?storeId=${storeId}`;
+  return `${ROUTES.MEDICINES_CATALOG}?storeId=${storeId}`;
 }
 
 function getOfferAddress(offer: ProductOffer): string {
@@ -467,7 +467,7 @@ function ProductDetailsPageContent({
           <Breadcrumbs
             items={[
               { label: 'Home', href: ROUTES.HOME },
-              { label: 'Medicines catalog', href: ROUTES.MEDICINE_STORE },
+              { label: 'Medicines catalog', href: ROUTES.MEDICINES_CATALOG },
               { label: product.name },
             ]}
           />

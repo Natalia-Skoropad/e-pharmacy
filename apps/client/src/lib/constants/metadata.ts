@@ -33,6 +33,10 @@ export const MEDICINE_STORE_TITLE = 'Medicine Store';
 export const MEDICINE_STORE_DESCRIPTION =
   'Browse medicines, compare available products, and prepare your online pharmacy order.';
 
+export const MEDICINES_CATALOG_TITLE = 'Medicines Catalog';
+export const MEDICINES_CATALOG_DESCRIPTION =
+  'Search medicines by name or article, filter products by category and pharmacy availability, and compare trusted online pharmacy offers.';
+
 //===================================================================
 
 export const CART_TITLE = 'Cart';

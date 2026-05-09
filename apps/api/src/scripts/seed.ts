@@ -171,7 +171,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
   const familyMed = getStoreByName(stores, 'Family Med');
   const firstTwentyFiveStores = stores.slice(0, 25);
 
-  return [
+  const highlightedProducts = [
     {
       name: 'Paracetamol 500 mg',
       slug: 'paracetamol-500-mg',
@@ -372,6 +372,87 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       reviews: createModeratedReviews(3),
     },
   ];
+
+  const productNames = [
+    'Allergy Relief Tablets',
+    'Calcium D3 Complex',
+    'Zinc Immune Support',
+    'Nasal Spray Gentle',
+    'Cough Syrup Herbal',
+    'Electrolyte Powder',
+    'First Aid Bandages',
+    'Face Cleansing Gel',
+    'Hand Sanitizer Aloe',
+    'Blood Pressure Monitor',
+    'Pulse Oximeter',
+    'Vitamin D3 2000 IU',
+    'Probiotic Daily Capsules',
+    'Eye Drops Comfort',
+    'Throat Lozenges Honey',
+    'Baby Skin Cream',
+    'Sunscreen SPF 50',
+    'Medical Face Masks',
+    'Elastic Bandage',
+    'Glucose Test Strips',
+  ];
+
+  const categories = [
+    'medicine',
+    'vitamins',
+    'beauty',
+    'hygiene',
+    'medical-devices',
+    'other',
+  ] as const;
+
+  const productImageUrls = [
+    'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1550572017-edd951b55104?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1584634731339-252c581abfc5?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?q=80&w=1200&auto=format&fit=crop',
+  ];
+
+  const generatedProducts = Array.from({ length: 91 }, (_, index) => {
+    const productNumber = index + 10;
+    const category = categories[index % categories.length];
+    const name = `${productNames[index % productNames.length]} ${productNumber}`;
+    const price = 65 + ((index * 17) % 420);
+    const selectedStores = stores.slice(index % 5, (index % 5) + 3);
+    const offers = selectedStores.map((store, offerIndex) =>
+      createOffer(
+        store,
+        price + offerIndex * 9,
+        index % 7 === 0 ? 0 : 18 + index + offerIndex,
+        index % 7 === 0 ? 0 : offerIndex
+      )
+    );
+    const isAvailable = offers.some((offer) => offer.inStock);
+    const reviewsCount = index % 9;
+
+    return {
+      name,
+      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+      article: `DEMO-${String(productNumber).padStart(3, '0')}`,
+      description: `Demo catalog product ${productNumber} for testing filters, sorting, pagination, and product cards.`,
+      category,
+      price: isAvailable ? price : 0,
+      imageUrl: productImageUrls[index % productImageUrls.length],
+      manufacturer: ['MedCare', 'VitaLife', 'HealthTech', 'CleanMed', 'SoftCare'][index % 5],
+      dosage: category === 'medicine' || category === 'vitamins' ? `${100 + (index % 9) * 50} mg` : undefined,
+      packageQuantity: category === 'medical-devices' ? '1 device' : `${10 + (index % 6) * 10} pcs`,
+      storeId: offers[0]?.storeId,
+      storeName: offers[0]?.storeName,
+      offers,
+      inStock: isAvailable,
+      rating: Number((3.1 + (index % 20) * 0.09).toFixed(1)),
+      reviewsCount,
+      reviews: createModeratedReviews(reviewsCount),
+    };
+  });
+
+  return [...highlightedProducts, ...generatedProducts];
 }
 
 //===============================================================

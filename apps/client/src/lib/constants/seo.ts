@@ -5,7 +5,7 @@ import { ROUTES } from './routes';
 export const INDEXABLE_ROUTES = [
   ROUTES.HOME,
   ROUTES.STORES,
-  ROUTES.MEDICINE_STORE,
+  ROUTES.MEDICINES_CATALOG,
 ] as const;
 
 //===================================================================

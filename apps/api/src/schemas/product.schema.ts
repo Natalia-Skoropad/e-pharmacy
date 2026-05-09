@@ -15,6 +15,9 @@ export const PRODUCT_SORT_OPTIONS = [
   'price-asc',
   'price-desc',
   'rating-desc',
+  'rating-asc',
+  'name-asc',
+  'name-desc',
   'newest',
 ] as const;
 
@@ -30,11 +33,20 @@ export const productsQuerySchema = z.object({
   page: positivePageSchema,
   perPage: perPageSchema,
   keyword: z.string().trim().max(80).optional(),
+  nameKeyword: z.string().trim().max(80).optional(),
+  articleKeyword: z.string().trim().max(80).optional(),
   category: z.enum(PRODUCT_CATEGORIES).optional(),
   storeId: mongoIdSchema.optional(),
   minPrice: z.coerce.number().min(0).optional(),
   maxPrice: z.coerce.number().min(0).optional(),
-  inStock: z.coerce.boolean().optional(),
+  inStock: z
+    .preprocess((value) => {
+      if (value === 'true') return true;
+      if (value === 'false') return false;
+
+      return value;
+    }, z.boolean())
+    .optional(),
   sort: z.enum(PRODUCT_SORT_OPTIONS).optional(),
 });
 

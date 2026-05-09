@@ -20,12 +20,21 @@ type ProductsQuery = {
   page: number;
   perPage: number;
   keyword?: string;
+  nameKeyword?: string;
+  articleKeyword?: string;
   category?: ProductCategory;
   storeId?: string;
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
-  sort?: 'price-asc' | 'price-desc' | 'rating-desc' | 'newest';
+  sort?:
+    | 'price-asc'
+    | 'price-desc'
+    | 'rating-desc'
+    | 'rating-asc'
+    | 'name-asc'
+    | 'name-desc'
+    | 'newest';
 };
 
 type CreateReviewInput = {
@@ -249,6 +258,15 @@ function getSort(sort?: ProductsQuery['sort']): ProductSortOption {
     case 'rating-desc':
       return { rating: -1, reviewsCount: -1 };
 
+    case 'rating-asc':
+      return { rating: 1, reviewsCount: 1 };
+
+    case 'name-asc':
+      return { name: 1 };
+
+    case 'name-desc':
+      return { name: -1 };
+
     case 'newest':
     default:
       return { createdAt: -1 };
@@ -265,6 +283,8 @@ export async function getProductsService(
     page,
     perPage,
     keyword,
+    nameKeyword,
+    articleKeyword,
     category,
     storeId,
     minPrice,
@@ -284,6 +304,14 @@ export async function getProductsService(
         { article: new RegExp(keyword, 'i') },
       ],
     });
+  }
+
+  if (nameKeyword) {
+    andFilters.push({ name: new RegExp(nameKeyword, 'i') });
+  }
+
+  if (articleKeyword) {
+    andFilters.push({ article: new RegExp(articleKeyword, 'i') });
   }
 
   if (category) {

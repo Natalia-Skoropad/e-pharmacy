@@ -64,12 +64,21 @@ export type ProductsQueryParams = {
   page?: number;
   perPage?: number;
   keyword?: string;
+  nameKeyword?: string;
+  articleKeyword?: string;
   category?: ProductCategory;
   storeId?: string;
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
-  sort?: 'price-asc' | 'price-desc' | 'rating-desc' | 'newest';
+  sort?:
+    | 'price-asc'
+    | 'price-desc'
+    | 'rating-desc'
+    | 'rating-asc'
+    | 'name-asc'
+    | 'name-desc'
+    | 'newest';
 };
 
 //===================================================================

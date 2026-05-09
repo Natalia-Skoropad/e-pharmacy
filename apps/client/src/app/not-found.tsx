@@ -13,7 +13,7 @@ function NotFoundPage() {
       primaryActionLabel="Back to home"
       primaryActionHref={ROUTES.HOME}
       secondaryActionLabel="View medicine catalog"
-      secondaryActionHref={ROUTES.MEDICINE_STORE}
+      secondaryActionHref={ROUTES.MEDICINES_CATALOG}
     />
   );
 }

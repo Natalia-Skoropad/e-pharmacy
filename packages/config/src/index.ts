@@ -9,6 +9,7 @@ export const APP_NAMES = {
 export const ROUTE_SEGMENTS = {
   stores: 'stores',
   medicineStore: 'medicine-store',
+  medicinesCatalog: 'medicines-catalog',
   cart: 'cart',
   checkout: 'checkout',
   login: 'login',

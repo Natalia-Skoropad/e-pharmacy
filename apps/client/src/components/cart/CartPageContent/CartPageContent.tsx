@@ -166,7 +166,7 @@ function CartPageContent() {
                 Add medicines from the catalog and they will appear here.
               </p>
 
-              <ButtonLink href={ROUTES.MEDICINE_STORE}>
+              <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
                 Browse medicines
               </ButtonLink>
             </div>

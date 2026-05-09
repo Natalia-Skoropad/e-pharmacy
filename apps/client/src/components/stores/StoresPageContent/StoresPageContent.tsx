@@ -44,7 +44,7 @@ function StoresPageContent({
               <p className={css.text}>{STORES_DESCRIPTION}</p>
 
               <div className={css.actions}>
-                <ButtonLink href={ROUTES.MEDICINE_STORE}>
+                <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
                   Browse medicines
                 </ButtonLink>
               </div>

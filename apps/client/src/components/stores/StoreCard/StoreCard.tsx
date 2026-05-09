@@ -17,7 +17,7 @@ type StoreCardProps = {
 //===================================================================
 
 function StoreCard({ store }: StoreCardProps) {
-  const medicineStoreHref = `${ROUTES.MEDICINE_STORE}?storeId=${store.id}`;
+  const medicineStoreHref = `${ROUTES.MEDICINES_CATALOG}?storeId=${store.id}`;
   const ratingLabel = store.rating ? store.rating.toFixed(1) : 'New';
 
   return (

@@ -45,7 +45,7 @@ function HomePage() {
           <div className={css.actions}>
             <ButtonLink href={ROUTES.STORES}>View stores</ButtonLink>
 
-            <ButtonLink href={ROUTES.MEDICINE_STORE} variant="secondary">
+            <ButtonLink href={ROUTES.MEDICINES_CATALOG} variant="secondary">
               Medicine catalog
               <SvgIcon name="icon-arrow-right" size={18} />
             </ButtonLink>

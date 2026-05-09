@@ -6,6 +6,7 @@ export { default as FavoriteToggleButton } from './FavoriteToggleButton';
 export { default as LazyLoadButton } from './LazyLoadButton';
 export { default as Logo } from './Logo';
 export { default as PagePlaceholder } from './PagePlaceholder';
+export { default as Pagination } from './Pagination';
 export { default as PaymentInfoCard } from './PaymentInfoCard';
 export { default as QuantityCounter } from './QuantityCounter';
 export { default as RatingSummary } from './RatingSummary';

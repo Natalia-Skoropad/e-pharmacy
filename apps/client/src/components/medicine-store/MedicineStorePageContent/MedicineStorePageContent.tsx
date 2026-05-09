@@ -1,122 +1,88 @@
-import { ButtonLink, Container, SvgIcon } from '@/components/common';
+import { Container, Pagination } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
+import MedicinesCatalogFiltersForm from '@/components/medicine-store/MedicinesCatalogFiltersForm';
 import ProductsList from '@/components/medicine-store/ProductsList';
 
 import {
-  MEDICINE_STORE_DESCRIPTION,
-  MEDICINE_STORE_TITLE,
+  MEDICINES_CATALOG_DESCRIPTION,
+  MEDICINES_CATALOG_TITLE,
 } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
-import { createBreadcrumbs } from '@/lib/routes';
+import type { MedicinesCatalogFilters } from '@/lib/catalog/medicines-catalog';
 
-import type { Product, Store } from '@/types';
+import type { Product } from '@/types';
 
 import css from './MedicineStorePageContent.module.css';
 
 //===================================================================
 
 type MedicineStorePageContentProps = {
-  store: Store | null;
   products: Product[];
   total: number;
-  isFilteredByStore: boolean;
+  totalPages: number;
+  filters: MedicinesCatalogFilters;
   isUnavailable?: boolean;
 };
 
 //===================================================================
 
+function buildCatalogHref(filters: MedicinesCatalogFilters, page: number) {
+  const searchParams = new URLSearchParams();
+
+  if (filters.storeId) searchParams.set('storeId', filters.storeId);
+  if (filters.name) searchParams.set('name', filters.name);
+  if (filters.article) searchParams.set('article', filters.article);
+  if (filters.category !== 'all') searchParams.set('category', filters.category);
+  if (filters.availability !== 'all') {
+    searchParams.set('availability', filters.availability);
+  }
+  if (filters.sort !== 'newest') searchParams.set('sort', filters.sort);
+  if (page > 1) searchParams.set('page', String(page));
+
+  const queryString = searchParams.toString();
+
+  return queryString
+    ? `${ROUTES.MEDICINES_CATALOG}?${queryString}`
+    : ROUTES.MEDICINES_CATALOG;
+}
+
+//===================================================================
+
 function MedicineStorePageContent({
-  store,
   products,
   total,
-  isFilteredByStore,
+  totalPages,
+  filters,
   isUnavailable = false,
 }: MedicineStorePageContentProps) {
-  const title = store?.name ?? MEDICINE_STORE_TITLE;
-  const description = store?.description ?? MEDICINE_STORE_DESCRIPTION;
   const productsCountLabel = total === 1 ? '1 product' : `${total} products`;
 
   return (
     <main className={css.page}>
-      <section className={css.hero} aria-labelledby="medicine-store-title">
-        <Container>
-          <Breadcrumbs
-            items={
-              store
-                ? [
-                    { label: 'Home', href: ROUTES.HOME },
-                    { label: 'Pharmacy Stores', href: ROUTES.STORES },
-                    { label: store.name },
-                  ]
-                : createBreadcrumbs(MEDICINE_STORE_TITLE)
-            }
-          />
-
-          <div className={css.heroGrid}>
-            <div className={css.heroContent}>
-              <p className={css.kicker}>
-                {store ? 'Selected pharmacy' : 'Medicine catalog'}
-              </p>
-
-              <h1 className={css.title} id="medicine-store-title">
-                {title}
-              </h1>
-
-              <p className={css.text}>{description}</p>
-
-              {store ? (
-                <div className={css.storeInfo} aria-label="Pharmacy contacts">
-                  <p className={css.storeInfoItem}>
-                    <SvgIcon name="icon-map-pin" size={18} />
-                    {store.address}
-                  </p>
-
-                  {store.phone ? (
-                    <a
-                      className={css.storeInfoItem}
-                      href={`tel:${store.phone}`}
-                    >
-                      <SvgIcon name="icon-phone" size={18} />
-                      {store.phone}
-                    </a>
-                  ) : null}
-                </div>
-              ) : null}
-
-              <div className={css.actions}>
-                <ButtonLink href={ROUTES.STORES} variant="secondary">
-                  Choose another pharmacy
-                </ButtonLink>
-              </div>
-            </div>
-
-            <div className={css.summaryCard} aria-label="Products summary">
-              <span className={css.summaryValue}>{productsCountLabel}</span>
-              <span className={css.summaryText}>
-                {store
-                  ? 'available in this pharmacy'
-                  : 'available in the catalog'}
-              </span>
-            </div>
-          </div>
-        </Container>
-      </section>
-
       <section className={css.productsSection} aria-labelledby="products-title">
         <Container>
+          <Breadcrumbs
+            items={[
+              { label: 'Home', href: ROUTES.HOME },
+              { label: 'Medicines catalog' },
+            ]}
+          />
+
           <div className={css.sectionHeader}>
             <div>
-              <p className={css.sectionKicker}>
-                {isFilteredByStore ? 'Store medicines' : 'All medicines'}
-              </p>
+              <p className={css.sectionKicker}>Medicines catalog</p>
 
-              <h2 className={css.sectionTitle} id="products-title">
-                Available medicines
-              </h2>
+              <h1 className={css.sectionTitle} id="products-title">
+                {MEDICINES_CATALOG_TITLE}
+              </h1>
+
+              <p className={css.sectionText}>{MEDICINES_CATALOG_DESCRIPTION}</p>
             </div>
 
             <p className={css.resultCount}>{productsCountLabel}</p>
           </div>
+
+          <MedicinesCatalogFiltersForm filters={filters} />
 
           {isUnavailable ? (
             <div className={css.notice} role="status">
@@ -126,6 +92,13 @@ function MedicineStorePageContent({
           ) : null}
 
           <ProductsList products={products} />
+
+          <Pagination
+            currentPage={filters.page}
+            totalPages={totalPages}
+            getPageHref={(page) => buildCatalogHref(filters, page)}
+            ariaLabel="Medicines catalog pagination"
+          />
         </Container>
       </section>
     </main>
