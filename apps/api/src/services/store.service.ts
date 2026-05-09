@@ -73,7 +73,7 @@ export async function getStoresService(query: StoresQuery) {
 
   const [stores, total] = await Promise.all([
     Store.find(filter)
-      .sort({ rating: -1, name: 1 })
+      .sort({ name: 1 })
       .skip(skip)
       .limit(perPage)
       .lean<StoreDocument[]>(),

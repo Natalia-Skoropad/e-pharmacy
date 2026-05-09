@@ -13,8 +13,8 @@ import {
 } from '@/components/common';
 
 import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
-import { ROUTES } from '@/lib/constants/routes';
 import {
+  buildMedicinesCatalogPath,
   getMedicinesCatalogActiveFiltersCount,
   type MedicinesCatalogFilters,
   type ProductAvailabilityFilter,
@@ -47,36 +47,18 @@ const SEARCH_UPDATE_DELAY = 450;
 
 //===================================================================
 
-function buildCatalogHref(filters: CatalogHrefFilters) {
-  const searchParams = new URLSearchParams();
-
-  if (filters.storeId) searchParams.set('storeId', filters.storeId);
-  if (filters.name) searchParams.set('name', filters.name.trim());
-  if (filters.article) searchParams.set('article', filters.article.trim());
-  if (filters.category !== 'all')
-    searchParams.set('category', filters.category);
-  if (filters.availability !== 'all') {
-    searchParams.set('availability', filters.availability);
-  }
-  if (filters.sort !== 'newest') searchParams.set('sort', filters.sort);
-  if (filters.page && filters.page > 1)
-    searchParams.set('page', String(filters.page));
-
-  const queryString = searchParams.toString();
-
-  return queryString
-    ? `${ROUTES.MEDICINES_CATALOG}?${queryString}`
-    : ROUTES.MEDICINES_CATALOG;
+function buildCatalogHref(filters: CatalogHrefFilters, stores: Store[]) {
+  return buildMedicinesCatalogPath(filters, stores);
 }
 
-function createResetFiltersHref(filters: MedicinesCatalogFilters) {
+function createResetFiltersHref(filters: MedicinesCatalogFilters, stores: Store[]) {
   return buildCatalogHref({
     name: '',
     article: '',
     category: 'all',
     availability: 'all',
     sort: filters.sort,
-  });
+  }, stores);
 }
 
 //===================================================================
@@ -104,7 +86,7 @@ function MedicinesCatalogFiltersForm({
 
   const activeFiltersCount = getMedicinesCatalogActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
-  const resetHref = createResetFiltersHref(filters);
+  const resetHref = createResetFiltersHref(filters, stores);
 
   const storeOptions = useMemo(
     () => [
@@ -124,23 +106,27 @@ function MedicinesCatalogFiltersForm({
       }
 
       router.replace(
-        buildCatalogHref({
-          ...filters,
-          name: trimmedName,
-          article: trimmedArticle,
-          page: 1,
-        }),
+        buildCatalogHref(
+          {
+            ...filters,
+            name: trimmedName,
+            article: trimmedArticle,
+            page: 1,
+          },
+          stores
+        ),
         { scroll: false }
       );
     }, SEARCH_UPDATE_DELAY);
 
     return () => window.clearTimeout(timeoutId);
-  }, [article, filters, name, router]);
+  }, [article, filters, name, router, stores]);
 
   const updateCatalog = (nextFilters: CatalogHrefFilters) => {
-    router.replace(buildCatalogHref({ ...nextFilters, page: 1 }), {
+    router.replace(buildCatalogHref({ ...nextFilters, page: 1 }, stores), {
       scroll: false,
     });
+    setIsFiltersOpen(false);
   };
 
   const handleCategoryChange = (category: ProductCategoryFilter) => {
@@ -299,6 +285,7 @@ function MedicinesCatalogFiltersForm({
               <ResetFiltersButton
                 className={css.offcanvasReset}
                 href={resetHref}
+                onClick={() => setIsFiltersOpen(false)}
               />
             ) : null}
           </aside>

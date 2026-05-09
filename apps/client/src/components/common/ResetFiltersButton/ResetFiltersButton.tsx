@@ -9,6 +9,7 @@ type ResetFiltersButtonProps = {
   href: string;
   className?: string;
   isVisible?: boolean;
+  onClick?: () => void;
 };
 
 //===================================================================
@@ -17,6 +18,7 @@ function ResetFiltersButton({
   href,
   className,
   isVisible = true,
+  onClick,
 }: ResetFiltersButtonProps) {
   return (
     <Link
@@ -24,6 +26,7 @@ function ResetFiltersButton({
       href={href}
       aria-hidden={!isVisible}
       tabIndex={isVisible ? undefined : -1}
+      onClick={onClick}
     >
       Reset filters
     </Link>

@@ -228,6 +228,7 @@ function serializeProduct(
   favoriteProductIds = new Set<string>()
 ): ProductResponseDto {
   const offers = getOffers(product);
+  const availableOffers = offers.filter((offer) => offer.inStock);
   const productId = product._id.toString();
   const firstOffer = offers[0];
 
@@ -250,9 +251,9 @@ function serializeProduct(
       : {}),
     ...(firstOffer ? { storeId: firstOffer.storeId } : {}),
     ...(firstOffer ? { storeName: firstOffer.storeName } : {}),
-    foundInStoresCount: offers.length,
+    foundInStoresCount: availableOffers.length,
     offers,
-    inStock: offers.some((offer) => offer.inStock),
+    inStock: availableOffers.length > 0,
     ...(averageRating !== null ? { rating: averageRating } : {}),
     reviewsCount: moderatedReviews.length,
     isFavorite: favoriteProductIds.has(productId),
@@ -298,6 +299,48 @@ function getSort(sort?: ProductsQuery['sort']): ProductSortOption {
     case 'newest':
     default:
       return { createdAt: -1 };
+  }
+}
+
+//===============================================================
+
+
+function sortSerializedProducts(
+  products: ProductResponseDto[],
+  sort?: ProductsQuery['sort']
+): ProductResponseDto[] {
+  const sortedProducts = [...products];
+
+  switch (sort) {
+    case 'rating-desc':
+      return sortedProducts.sort((a, b) => {
+        const ratingDiff = (b.rating ?? 0) - (a.rating ?? 0);
+
+        return ratingDiff || (b.reviewsCount ?? 0) - (a.reviewsCount ?? 0);
+      });
+
+    case 'rating-asc':
+      return sortedProducts.sort((a, b) => {
+        const ratingDiff = (a.rating ?? 0) - (b.rating ?? 0);
+
+        return ratingDiff || (a.reviewsCount ?? 0) - (b.reviewsCount ?? 0);
+      });
+
+    case 'name-asc':
+      return sortedProducts.sort((a, b) => a.name.localeCompare(b.name, 'en'));
+
+    case 'name-desc':
+      return sortedProducts.sort((a, b) => b.name.localeCompare(a.name, 'en'));
+
+    case 'price-asc':
+      return sortedProducts.sort((a, b) => a.price - b.price);
+
+    case 'price-desc':
+      return sortedProducts.sort((a, b) => b.price - a.price);
+
+    case 'newest':
+    default:
+      return sortedProducts;
   }
 }
 
@@ -361,10 +404,6 @@ export async function getProductsService(
     });
   }
 
-  if (typeof inStock === 'boolean') {
-    andFilters.push({ inStock });
-  }
-
   if (typeof minPrice === 'number' || typeof maxPrice === 'number') {
     andFilters.push({
       price: {
@@ -376,26 +415,32 @@ export async function getProductsService(
 
   const filter = andFilters.length > 0 ? { $and: andFilters } : {};
 
-  const skip = (page - 1) * perPage;
-
-  const [products, total, favoriteProductIds] = await Promise.all([
+  const [products, favoriteProductIds] = await Promise.all([
     Product.find(filter)
       .sort(getSort(sort))
-      .skip(skip)
-      .limit(perPage)
       .lean<ProductDocument[]>(),
-    Product.countDocuments(filter),
     getFavoriteProductIds(userId),
   ]);
 
+  const serializedProducts = products.map((product: ProductDocument) =>
+    serializeProduct(product, favoriteProductIds)
+  );
+
+  const productsByAvailability =
+    typeof inStock === 'boolean'
+      ? serializedProducts.filter((product) => product.inStock === inStock)
+      : serializedProducts;
+
+  const sortedProducts = sortSerializedProducts(productsByAvailability, sort);
+  const skip = (page - 1) * perPage;
+  const paginatedProducts = sortedProducts.slice(skip, skip + perPage);
+
   return {
-    items: products.map((product: ProductDocument) =>
-      serializeProduct(product, favoriteProductIds)
-    ),
-    total,
+    items: paginatedProducts,
+    total: sortedProducts.length,
     page,
     perPage,
-    totalPages: Math.ceil(total / perPage),
+    totalPages: Math.ceil(sortedProducts.length / perPage),
   };
 }
 

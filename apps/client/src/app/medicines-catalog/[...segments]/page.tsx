@@ -2,13 +2,14 @@ import { MedicineStorePageContent } from '@/components/medicine-store';
 
 import {
   buildMedicinesCatalogApiParams,
+  buildMedicinesCatalogPath,
   FALLBACK_PRODUCT_FILTER_OPTIONS,
   getMedicinesCatalogDescription,
   getMedicinesCatalogTitle,
   isMedicinesCatalogNoIndex,
-  parseMedicinesCatalogSearchParams,
+  parseMedicinesCatalogSegments,
   sortStoresByName,
-  type MedicinesCatalogSearchParams,
+  type MedicinesCatalogRouteParams,
 } from '@/lib/catalog/medicines-catalog';
 import { createPageMetadata } from '@/lib/seo';
 
@@ -17,7 +18,7 @@ import { getProductFilters, getProducts, getStores } from '@/services';
 //===================================================================
 
 type MedicinesCatalogPageProps = {
-  searchParams?: Promise<MedicinesCatalogSearchParams>;
+  params?: Promise<MedicinesCatalogRouteParams>;
 };
 
 //===================================================================
@@ -26,10 +27,8 @@ export const dynamic = 'force-dynamic';
 
 //===================================================================
 
-export async function generateMetadata({
-  searchParams,
-}: MedicinesCatalogPageProps) {
-  const filters = parseMedicinesCatalogSearchParams(await searchParams);
+export async function generateMetadata({ params }: MedicinesCatalogPageProps) {
+  const filters = parseMedicinesCatalogSegments(await params);
 
   const storesData = await getStores({ page: 1, perPage: 100 }).catch(() => null);
   const selectedStore = storesData?.items.find(
@@ -47,17 +46,15 @@ export async function generateMetadata({
   return createPageMetadata({
     title: getMedicinesCatalogTitle(filters, seoContext),
     description: getMedicinesCatalogDescription(filters, seoContext),
-    path: '/medicines-catalog',
+    path: buildMedicinesCatalogPath(filters, storesData?.items ?? []),
     noIndex: isMedicinesCatalogNoIndex(filters),
   });
 }
 
 //===================================================================
 
-async function MedicinesCatalogPage({
-  searchParams,
-}: MedicinesCatalogPageProps) {
-  const filters = parseMedicinesCatalogSearchParams(await searchParams);
+async function MedicinesCatalogSegmentsPage({ params }: MedicinesCatalogPageProps) {
+  const filters = parseMedicinesCatalogSegments(await params);
 
   const [productsData, storesData, filterOptionsData] = await Promise.all([
     getProducts(buildMedicinesCatalogApiParams(filters)).catch(() => null),
@@ -82,4 +79,4 @@ async function MedicinesCatalogPage({
   );
 }
 
-export default MedicinesCatalogPage;
+export default MedicinesCatalogSegmentsPage;

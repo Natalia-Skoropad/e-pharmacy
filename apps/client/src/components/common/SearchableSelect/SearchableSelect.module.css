@@ -63,6 +63,11 @@
   appearance: none;
 }
 
+.input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 .input::placeholder {
   color: var(--color-text-muted);
 }

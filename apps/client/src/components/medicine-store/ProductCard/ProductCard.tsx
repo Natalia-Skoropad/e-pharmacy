@@ -46,8 +46,8 @@ function formatPrice(price: number): string {
 }
 
 function formatPriceRange(offers: ProductOffer[]): string {
-  const availableOffers = offers.filter((offer) =>
-    Number.isFinite(offer.price)
+  const availableOffers = offers.filter(
+    (offer) => offer.inStock && Number.isFinite(offer.price)
   );
 
   if (availableOffers.length === 0) return 'No pharmacy prices yet';

@@ -4,6 +4,7 @@ import MedicinesCatalogFiltersForm from '@/components/medicine-store/MedicinesCa
 import ProductsList from '@/components/medicine-store/ProductsList';
 
 import {
+  buildMedicinesCatalogPath,
   getMedicinesCatalogDescription,
   getMedicinesCatalogSeoTextParts,
   getMedicinesCatalogTitle,
@@ -31,25 +32,12 @@ type MedicineStorePageContentProps = {
 
 //===================================================================
 
-function buildCatalogHref(filters: MedicinesCatalogFilters, page: number) {
-  const searchParams = new URLSearchParams();
-
-  if (filters.storeId) searchParams.set('storeId', filters.storeId);
-  if (filters.name) searchParams.set('name', filters.name);
-  if (filters.article) searchParams.set('article', filters.article);
-  if (filters.category !== 'all')
-    searchParams.set('category', filters.category);
-  if (filters.availability !== 'all') {
-    searchParams.set('availability', filters.availability);
-  }
-  if (filters.sort !== 'newest') searchParams.set('sort', filters.sort);
-  if (page > 1) searchParams.set('page', String(page));
-
-  const queryString = searchParams.toString();
-
-  return queryString
-    ? `${ROUTES.MEDICINES_CATALOG}?${queryString}`
-    : ROUTES.MEDICINES_CATALOG;
+function buildCatalogHref(
+  filters: MedicinesCatalogFilters,
+  page: number,
+  stores: Store[]
+) {
+  return buildMedicinesCatalogPath({ ...filters, page }, stores);
 }
 
 function createSeoContext(
@@ -93,7 +81,16 @@ function MedicineStorePageContent({
       <section className={css.productsSection} aria-labelledby="products-title">
         <Container>
           <Breadcrumbs
-            items={[{ label: 'Home', href: ROUTES.HOME }, { label: pageTitle }]}
+            items={[
+              { label: 'Home', href: ROUTES.HOME },
+              { label: 'Medicine catalog', href: ROUTES.MEDICINES_CATALOG },
+              ...(filters.category !== 'all' && seoContext.categoryLabel
+                ? [{ label: seoContext.categoryLabel }]
+                : []),
+              ...(filters.storeId && seoContext.storeName
+                ? [{ label: seoContext.storeName }]
+                : []),
+            ]}
           />
 
           <div className={css.sectionHeader}>
@@ -121,7 +118,7 @@ function MedicineStorePageContent({
           <Pagination
             currentPage={filters.page}
             totalPages={totalPages}
-            getPageHref={(page) => buildCatalogHref(filters, page)}
+            getPageHref={(page) => buildCatalogHref(filters, page, stores)}
             ariaLabel="Medicines catalog pagination"
           />
 
