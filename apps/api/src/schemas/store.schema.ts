@@ -11,7 +11,12 @@ export const storesQuerySchema = z.object({
   page: positivePageSchema,
   perPage: perPageSchema,
   keyword: z.string().trim().max(80).optional(),
+  nameKeyword: z.string().trim().max(80).optional(),
+  addressKeyword: z.string().trim().max(80).optional(),
   city: z.string().trim().max(80).optional(),
+  sort: z
+    .enum(['newest', 'rating-desc', 'rating-asc', 'name-asc', 'name-desc'])
+    .default('newest'),
 });
 
 //===============================================================

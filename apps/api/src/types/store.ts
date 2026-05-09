@@ -29,5 +29,6 @@ export type StoreResponseDto = {
   rating?: number;
   imageUrl?: string;
   description?: string;
+  availableProductsCount: number;
   isActive: boolean;
 };

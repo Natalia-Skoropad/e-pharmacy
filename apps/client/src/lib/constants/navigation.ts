@@ -8,7 +8,7 @@ export const CLIENT_NAV_LINKS = [
     href: ROUTES.HOME,
   },
   {
-    label: 'Stores',
+    label: 'Pharmacy stores',
     href: ROUTES.STORES,
   },
   {

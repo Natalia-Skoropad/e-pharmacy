@@ -1,4 +1,4 @@
-import { MedicineStorePageContent } from '@/components/medicine-store';
+import { MedicineStorePageContent } from '@/components/medicines-catalog';
 
 import {
   buildMedicinesCatalogApiParams,
@@ -30,7 +30,9 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata({ params }: MedicinesCatalogPageProps) {
   const filters = parseMedicinesCatalogSegments(await params);
 
-  const storesData = await getStores({ page: 1, perPage: 100 }).catch(() => null);
+  const storesData = await getStores({ page: 1, perPage: 100 }).catch(
+    () => null
+  );
   const selectedStore = storesData?.items.find(
     (store) => store.id === filters.storeId
   );
@@ -53,7 +55,9 @@ export async function generateMetadata({ params }: MedicinesCatalogPageProps) {
 
 //===================================================================
 
-async function MedicinesCatalogSegmentsPage({ params }: MedicinesCatalogPageProps) {
+async function MedicinesCatalogSegmentsPage({
+  params,
+}: MedicinesCatalogPageProps) {
   const filters = parseMedicinesCatalogSegments(await params);
 
   const [productsData, storesData, filterOptionsData] = await Promise.all([

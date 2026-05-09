@@ -8,8 +8,13 @@ export type Store = {
   rating?: number;
   imageUrl?: string;
   description?: string;
+  availableProductsCount?: number;
   isActive: boolean;
 };
+
+//===================================================================
+
+export type StoresSortFilter = 'newest' | 'rating-desc' | 'rating-asc' | 'name-asc' | 'name-desc';
 
 //===================================================================
 

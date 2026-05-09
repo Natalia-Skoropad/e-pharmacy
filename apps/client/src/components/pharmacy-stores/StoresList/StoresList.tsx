@@ -1,4 +1,4 @@
-import StoreCard from '@/components/stores/StoreCard';
+import StoreCard from '@/components/pharmacy-stores/StoreCard';
 
 import type { Store } from '@/types';
 

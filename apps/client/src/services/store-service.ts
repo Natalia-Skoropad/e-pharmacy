@@ -5,6 +5,7 @@ import type {
   ApiSuccessResponse,
   StoreDetailsResponse,
   StoresResponse,
+  StoresSortFilter,
 } from '@/types';
 
 //===================================================================
@@ -13,7 +14,10 @@ type StoresQueryParams = {
   page?: number;
   perPage?: number;
   keyword?: string;
+  nameKeyword?: string;
+  addressKeyword?: string;
   city?: string;
+  sort?: StoresSortFilter;
 };
 
 //===================================================================

@@ -1,0 +1,273 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Filter } from 'lucide-react';
+
+import {
+  CloseIconButton,
+  ResetFiltersButton,
+  SearchableSelect,
+  SearchInput,
+  SelectField,
+} from '@/components/common';
+
+import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
+import {
+  buildPharmacyStoresPath,
+  getPharmacyStoresActiveFiltersCount,
+  PHARMACY_STORES_SORT_OPTIONS,
+  type PharmacyStoresFilters,
+} from '@/lib/catalog/pharmacy-stores-catalog';
+
+import type { StoresSortFilter } from '@/types';
+
+import css from './StoresCatalogFiltersForm.module.css';
+
+//===================================================================
+
+type CitySelectValue = 'all' | string;
+
+type StoresCatalogFiltersFormProps = {
+  filters: PharmacyStoresFilters;
+  cityOptions: string[];
+  storesCountLabel: string;
+};
+
+type StoresHrefFilters = Omit<PharmacyStoresFilters, 'page'> & {
+  page?: number;
+};
+
+//===================================================================
+
+const SEARCH_UPDATE_DELAY = 450;
+const SEARCH_MAX_LENGTH = 80;
+
+//===================================================================
+
+function sanitizeTextSearch(value: string): string {
+  return value.replace(/[^A-Za-z0-9 .-]/g, '');
+}
+
+function buildStoresHref(filters: StoresHrefFilters) {
+  return buildPharmacyStoresPath(filters);
+}
+
+function createResetFiltersHref(filters: PharmacyStoresFilters) {
+  return buildStoresHref({
+    name: '',
+    address: '',
+    city: '',
+    sort: filters.sort,
+  });
+}
+
+//===================================================================
+
+function StoresCatalogFiltersForm({
+  filters,
+  cityOptions,
+  storesCountLabel,
+}: StoresCatalogFiltersFormProps) {
+  const router = useRouter();
+
+  const [name, setName] = useState(filters.name);
+  const [address, setAddress] = useState(filters.address);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  useBodyScrollLock(isFiltersOpen);
+  useEscapeToClose({
+    isOpen: isFiltersOpen,
+    onClose: () => setIsFiltersOpen(false),
+  });
+
+  const handleBackdropClick = useBackdropClick({
+    onClose: () => setIsFiltersOpen(false),
+  });
+
+  const activeFiltersCount = getPharmacyStoresActiveFiltersCount(filters);
+  const hasActiveFilters = activeFiltersCount > 0;
+  const resetHref = createResetFiltersHref(filters);
+
+  const citySelectOptions = useMemo(
+    () => [
+      { value: 'all', label: 'All cities' },
+      ...cityOptions.map((city) => ({ value: city, label: city })),
+    ],
+    [cityOptions]
+  );
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      const trimmedName = name.trim();
+      const trimmedAddress = address.trim();
+
+      if (trimmedName === filters.name && trimmedAddress === filters.address) {
+        return;
+      }
+
+      router.replace(
+        buildStoresHref({
+          ...filters,
+          name: trimmedName,
+          address: trimmedAddress,
+          page: 1,
+        }),
+        { scroll: false }
+      );
+    }, SEARCH_UPDATE_DELAY);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [address, filters, name, router]);
+
+  const updateStoresCatalog = (nextFilters: StoresHrefFilters) => {
+    router.replace(buildStoresHref({ ...nextFilters, page: 1 }), {
+      scroll: false,
+    });
+
+    setIsFiltersOpen(false);
+  };
+
+  const handleCityChange = (city: CitySelectValue) => {
+    updateStoresCatalog({
+      ...filters,
+      city: city === 'all' ? '' : city,
+    });
+  };
+
+  const handleSortChange = (sort: StoresSortFilter) => {
+    updateStoresCatalog({ ...filters, sort });
+  };
+
+  const renderFiltersControls = (idSuffix: string) => (
+    <SearchableSelect
+      id={`stores-city-${idSuffix}`}
+      label="City"
+      value={filters.city || 'all'}
+      options={citySelectOptions}
+      placeholder="All cities"
+      emptyMessage="No cities found"
+      isActive={Boolean(filters.city)}
+      maxLength={SEARCH_MAX_LENGTH}
+      sanitizeQuery={sanitizeTextSearch}
+      onChange={handleCityChange}
+    />
+  );
+
+  return (
+    <>
+      <div className={css.searchCard}>
+        <div className={css.searchGrid}>
+          <SearchInput
+            id="stores-name-search"
+            label="Search by name"
+            value={name}
+            placeholder="Pharmacy name"
+            isActive={Boolean(filters.name)}
+            maxLength={SEARCH_MAX_LENGTH}
+            sanitizeValue={sanitizeTextSearch}
+            onChange={setName}
+          />
+
+          <SearchInput
+            id="stores-address-search"
+            label="Search by address"
+            value={address}
+            placeholder="Address"
+            isActive={Boolean(filters.address)}
+            maxLength={SEARCH_MAX_LENGTH}
+            sanitizeValue={sanitizeTextSearch}
+            onChange={setAddress}
+          />
+
+          <div className={css.desktopFilters}>{renderFiltersControls('desktop')}</div>
+
+          <div className={css.desktopResetSlot}>
+            <ResetFiltersButton href={resetHref} isVisible={hasActiveFilters} />
+          </div>
+        </div>
+      </div>
+
+      <div className={css.catalogToolbar}>
+        <p className={css.resultCount}>{storesCountLabel}</p>
+
+        <button
+          className={css.filterButton}
+          type="button"
+          onClick={() => setIsFiltersOpen(true)}
+        >
+          <Filter size={18} aria-hidden="true" />
+          <span>Filters</span>
+
+          {activeFiltersCount ? (
+            <span className={css.filterBadge}>{activeFiltersCount}</span>
+          ) : null}
+        </button>
+
+        <div className={css.desktopSort}>
+          <SelectField
+            id="stores-sort-desktop"
+            label="Sort by"
+            value={filters.sort}
+            options={PHARMACY_STORES_SORT_OPTIONS}
+            isActive={filters.sort !== 'newest'}
+            onChange={handleSortChange}
+          />
+        </div>
+      </div>
+
+      {isFiltersOpen ? (
+        <div
+          className={css.offcanvasBackdrop}
+          role="presentation"
+          onMouseDown={handleBackdropClick}
+        >
+          <aside
+            className={css.offcanvas}
+            aria-labelledby="stores-filters-title"
+            aria-modal="true"
+            role="dialog"
+          >
+            <div className={css.offcanvasHeader}>
+              <div>
+                <p className={css.offcanvasKicker}>Stores</p>
+
+                <h2 className={css.offcanvasTitle} id="stores-filters-title">
+                  Filters and sorting
+                </h2>
+              </div>
+
+              <CloseIconButton
+                label="Close filters"
+                onClick={() => setIsFiltersOpen(false)}
+              />
+            </div>
+
+            <div className={css.offcanvasControls}>
+              {renderFiltersControls('mobile')}
+
+              <SelectField
+                id="stores-sort-mobile"
+                label="Sort by"
+                value={filters.sort}
+                options={PHARMACY_STORES_SORT_OPTIONS}
+                isActive={filters.sort !== 'newest'}
+                onChange={handleSortChange}
+              />
+            </div>
+
+            {hasActiveFilters ? (
+              <ResetFiltersButton
+                className={css.offcanvasReset}
+                href={resetHref}
+                onClick={() => setIsFiltersOpen(false)}
+              />
+            ) : null}
+          </aside>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+export default StoresCatalogFiltersForm;

@@ -1,4 +1,4 @@
-import { MedicineStorePageContent } from '@/components/medicine-store';
+import { MedicineStorePageContent } from '@/components/medicines-catalog';
 
 import {
   buildMedicinesCatalogApiParams,
@@ -31,7 +31,9 @@ export async function generateMetadata({
 }: MedicinesCatalogPageProps) {
   const filters = parseMedicinesCatalogSearchParams(await searchParams);
 
-  const storesData = await getStores({ page: 1, perPage: 100 }).catch(() => null);
+  const storesData = await getStores({ page: 1, perPage: 100 }).catch(
+    () => null
+  );
   const selectedStore = storesData?.items.find(
     (store) => store.id === filters.storeId
   );

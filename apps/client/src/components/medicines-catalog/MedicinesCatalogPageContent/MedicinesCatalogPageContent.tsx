@@ -1,7 +1,7 @@
 import { Container, Pagination } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
-import MedicinesCatalogFiltersForm from '@/components/medicine-store/MedicinesCatalogFiltersForm';
-import ProductsList from '@/components/medicine-store/ProductsList';
+import MedicinesCatalogFiltersForm from '@/components/medicines-catalog/MedicinesCatalogFiltersForm';
+import ProductsList from '@/components/medicines-catalog/ProductsList';
 
 import {
   buildMedicinesCatalogPath,
@@ -16,7 +16,7 @@ import { ROUTES } from '@/lib/constants/routes';
 
 import type { Product, ProductFilterOptionsResponse, Store } from '@/types';
 
-import css from './MedicineStorePageContent.module.css';
+import css from './MedicinesCatalogPageContent.module.css';
 
 //===================================================================
 
@@ -123,7 +123,10 @@ function MedicineStorePageContent({
           />
 
           {showSeoText ? (
-            <section className={css.seoCard} aria-labelledby="catalog-seo-title">
+            <section
+              className={css.seoCard}
+              aria-labelledby="catalog-seo-title"
+            >
               <h2 className={css.seoTitle} id="catalog-seo-title">
                 Compare trusted pharmacy offers in one place
               </h2>

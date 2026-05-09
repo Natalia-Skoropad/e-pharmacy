@@ -1,4 +1,4 @@
-import ProductCard from '@/components/medicine-store/ProductCard';
+import ProductCard from '@/components/medicines-catalog/ProductCard';
 
 import type { Product } from '@/types';
 
