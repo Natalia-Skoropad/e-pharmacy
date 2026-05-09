@@ -66,6 +66,7 @@ type ProductDetailsPageContentProps = {
 const REVIEW_MAX_LENGTH = 200;
 const REVIEW_MIN_LENGTH = 10;
 const OFFERS_PER_PAGE = 10;
+const SEARCH_MAX_LENGTH = 80;
 
 const REVIEW_REGEX = /^[A-Za-z0-9\s.,!?;:'"()\-]+$/;
 
@@ -84,6 +85,12 @@ const OFFER_SORT_OPTIONS: { value: OfferSort; label: string }[] = [
   { value: 'rating-desc', label: 'Rating: high to low' },
   { value: 'rating-asc', label: 'Rating: low to high' },
 ];
+
+//===================================================================
+
+function sanitizeOfferSearch(value: string): string {
+  return value.replace(/[^A-Za-z0-9 .-]/g, '');
+}
 
 //===================================================================
 
@@ -226,7 +233,13 @@ function ProductDetailsPageContent({
 
         return (a.storeRating ?? 0) - (b.storeRating ?? 0);
       });
-  }, [contextStoreId, offerSort, product.offers, storeAddressQuery, storeNameQuery]);
+  }, [
+    contextStoreId,
+    offerSort,
+    product.offers,
+    storeAddressQuery,
+    storeNameQuery,
+  ]);
 
   const visibleOffers = filteredOffers.slice(0, visibleOffersCount);
 
@@ -612,6 +625,8 @@ function ProductDetailsPageContent({
                     label="Search by pharmacy"
                     value={storeNameQuery}
                     placeholder="Enter pharmacy name"
+                    maxLength={SEARCH_MAX_LENGTH}
+                    sanitizeValue={sanitizeOfferSearch}
                     onChange={handleStoreNameQueryChange}
                   />
 
@@ -620,6 +635,8 @@ function ProductDetailsPageContent({
                     label="Search by address"
                     value={storeAddressQuery}
                     placeholder="Enter city or address"
+                    maxLength={SEARCH_MAX_LENGTH}
+                    sanitizeValue={sanitizeOfferSearch}
                     onChange={handleStoreAddressQueryChange}
                   />
 

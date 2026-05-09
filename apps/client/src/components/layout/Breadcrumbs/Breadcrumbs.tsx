@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Home } from 'lucide-react';
 
 import type { BreadcrumbItem } from '@/types/breadcrumbs';
 
@@ -19,17 +20,35 @@ function Breadcrumbs({ items }: BreadcrumbsProps) {
     <nav className={css.breadcrumbs} aria-label="Breadcrumb">
       <ol className={css.list}>
         {items.map(({ label, href }, index) => {
+          const isFirst = index === 0;
           const isLast = index === items.length - 1;
+          const itemKey = `${label}-${href ?? 'current'}-${index}`;
 
           return (
-            <li className={css.item} key={`${label}-${index}`}>
+            <li className={css.item} key={itemKey}>
               {href && !isLast ? (
                 <Link className={css.link} href={href}>
-                  {label}
+                  {isFirst ? (
+                    <Home
+                      className={css.homeIcon}
+                      size={16}
+                      aria-hidden="true"
+                    />
+                  ) : null}
+
+                  <span>{label}</span>
                 </Link>
               ) : (
                 <span className={css.current} aria-current="page">
-                  {label}
+                  {isFirst ? (
+                    <Home
+                      className={css.homeIcon}
+                      size={16}
+                      aria-hidden="true"
+                    />
+                  ) : null}
+
+                  <span>{label}</span>
                 </span>
               )}
             </li>

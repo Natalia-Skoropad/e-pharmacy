@@ -43,7 +43,8 @@ export type ProductCategoryFilter =
 export type ProductAvailabilityFilter =
   ProductFilterOptionsResponse['availability'][number]['value'];
 
-export type ProductSortFilter = ProductFilterOptionsResponse['sort'][number]['value'];
+export type ProductSortFilter =
+  ProductFilterOptionsResponse['sort'][number]['value'];
 
 export type MedicinesCatalogSeoContext = {
   categoryLabel?: string;
@@ -90,7 +91,9 @@ const SORT_VALUES = FALLBACK_PRODUCT_FILTER_OPTIONS.sort.map(
 
 //===================================================================
 
-function isProductCategoryFilter(value?: string): value is ProductCategoryFilter {
+function isProductCategoryFilter(
+  value?: string
+): value is ProductCategoryFilter {
   return CATEGORY_VALUES.includes(value as ProductCategoryFilter);
 }
 
@@ -104,8 +107,22 @@ function isProductSortFilter(value?: string): value is ProductSortFilter {
   return SORT_VALUES.includes(value as ProductSortFilter);
 }
 
-function sanitizeTextParam(value?: string): string {
-  return value?.trim().slice(0, 80) ?? '';
+function sanitizeNameParam(value?: string): string {
+  return (
+    value
+      ?.trim()
+      .replace(/[^A-Za-z0-9 .-]/g, '')
+      .slice(0, 80) ?? ''
+  );
+}
+
+function sanitizeArticleParam(value?: string): string {
+  return (
+    value
+      ?.trim()
+      .replace(/[^A-Za-z0-9.-]/g, '')
+      .slice(0, 80) ?? ''
+  );
 }
 
 function isValidObjectId(value?: string): value is string {
@@ -137,8 +154,12 @@ function slugify(value: string): string {
     .slice(0, 80);
 }
 
-function deslugify(value: string): string {
-  return value.replace(/-/g, ' ').trim().slice(0, 80);
+function deslugifyNameSegment(value: string): string {
+  return sanitizeNameParam(value.replace(/-/g, ' '));
+}
+
+function deslugifyArticleSegment(value: string): string {
+  return sanitizeArticleParam(value);
 }
 
 function getStoreSegment(storeId: string, stores: Store[]): string {
@@ -158,9 +179,11 @@ export function parseMedicinesCatalogSearchParams(
   params: MedicinesCatalogSearchParams = {}
 ): MedicinesCatalogFilters {
   return {
-    name: sanitizeTextParam(params.name),
-    article: sanitizeTextParam(params.article),
-    category: isProductCategoryFilter(params.category) ? params.category : 'all',
+    name: sanitizeNameParam(params.name),
+    article: sanitizeArticleParam(params.article),
+    category: isProductCategoryFilter(params.category)
+      ? params.category
+      : 'all',
     availability: isProductAvailabilityFilter(params.availability)
       ? params.availability
       : 'all',
@@ -212,12 +235,14 @@ export function parseMedicinesCatalogSegments(
     }
 
     if (segment.startsWith('search-name-')) {
-      filters.name = deslugify(segment.replace('search-name-', ''));
+      filters.name = deslugifyNameSegment(segment.replace('search-name-', ''));
       continue;
     }
 
     if (segment.startsWith('article-')) {
-      filters.article = deslugify(segment.replace('article-', ''));
+      filters.article = deslugifyArticleSegment(
+        segment.replace('article-', '')
+      );
       continue;
     }
 
@@ -267,7 +292,9 @@ export function buildMedicinesCatalogPath(
     segments.push(`page-${filters.page}`);
   }
 
-  return segments.length ? `/medicines-catalog/${segments.join('/')}` : '/medicines-catalog';
+  return segments.length
+    ? `/medicines-catalog/${segments.join('/')}`
+    : '/medicines-catalog';
 }
 
 export function buildMedicinesCatalogApiParams(

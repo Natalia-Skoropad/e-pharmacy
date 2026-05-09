@@ -88,7 +88,6 @@ type ProductDocument = {
   createdAt: Date;
 };
 
-
 //===============================================================
 
 const PRODUCT_FILTER_OPTIONS: ProductFilterOptionsResponseDto = {
@@ -230,7 +229,7 @@ function serializeProduct(
   const offers = getOffers(product);
   const availableOffers = offers.filter((offer) => offer.inStock);
   const productId = product._id.toString();
-  const firstOffer = offers[0];
+  const firstOffer = availableOffers[0];
 
   const moderatedReviews = getModeratedReviews(product);
   const averageRating = getAverageRating(moderatedReviews);
@@ -252,7 +251,7 @@ function serializeProduct(
     ...(firstOffer ? { storeId: firstOffer.storeId } : {}),
     ...(firstOffer ? { storeName: firstOffer.storeName } : {}),
     foundInStoresCount: availableOffers.length,
-    offers,
+    offers: availableOffers,
     inStock: availableOffers.length > 0,
     ...(averageRating !== null ? { rating: averageRating } : {}),
     reviewsCount: moderatedReviews.length,
@@ -303,7 +302,6 @@ function getSort(sort?: ProductsQuery['sort']): ProductSortOption {
 }
 
 //===============================================================
-
 
 function sortSerializedProducts(
   products: ProductResponseDto[],
@@ -396,10 +394,20 @@ export async function getProductsService(
   }
 
   if (storeId) {
+    const storeObjectId = new Types.ObjectId(storeId);
+
     andFilters.push({
       $or: [
-        { storeId: new Types.ObjectId(storeId) },
-        { 'offers.storeId': new Types.ObjectId(storeId) },
+        { storeId: storeObjectId, inStock: true },
+        {
+          offers: {
+            $elemMatch: {
+              storeId: storeObjectId,
+              inStock: true,
+              activeQuantity: { $gt: 0 },
+            },
+          },
+        },
       ],
     });
   }
@@ -416,9 +424,7 @@ export async function getProductsService(
   const filter = andFilters.length > 0 ? { $and: andFilters } : {};
 
   const [products, favoriteProductIds] = await Promise.all([
-    Product.find(filter)
-      .sort(getSort(sort))
-      .lean<ProductDocument[]>(),
+    Product.find(filter).sort(getSort(sort)).lean<ProductDocument[]>(),
     getFavoriteProductIds(userId),
   ]);
 

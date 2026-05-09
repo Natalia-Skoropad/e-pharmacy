@@ -11,6 +11,8 @@ type SearchInputProps = {
   value: string;
   placeholder?: string;
   isActive?: boolean;
+  maxLength?: number;
+  sanitizeValue?: (value: string) => string;
   onChange: (value: string) => void;
 };
 
@@ -22,8 +24,16 @@ function SearchInput({
   value,
   placeholder,
   isActive = false,
+  maxLength = 80,
+  sanitizeValue,
   onChange,
 }: SearchInputProps) {
+  const handleChange = (nextValue: string) => {
+    const sanitizedValue = sanitizeValue ? sanitizeValue(nextValue) : nextValue;
+
+    onChange(sanitizedValue.slice(0, maxLength));
+  };
+
   return (
     <label className={css.field} htmlFor={id}>
       <span className={css.label}>{label}</span>
@@ -38,7 +48,8 @@ function SearchInput({
           value={value}
           placeholder={placeholder}
           autoComplete="off"
-          onChange={(event) => onChange(event.target.value)}
+          maxLength={maxLength}
+          onChange={(event) => handleChange(event.target.value)}
         />
 
         {value ? (

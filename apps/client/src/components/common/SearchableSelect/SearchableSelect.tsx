@@ -21,6 +21,8 @@ type SearchableSelectProps<TValue extends string = string> = {
   placeholder?: string;
   emptyMessage?: string;
   isActive?: boolean;
+  maxLength?: number;
+  sanitizeQuery?: (value: string) => string;
   onChange: (value: TValue) => void;
 };
 
@@ -34,6 +36,8 @@ function SearchableSelect<TValue extends string = string>({
   placeholder = 'Search option',
   emptyMessage = 'No options found',
   isActive = false,
+  maxLength = 80,
+  sanitizeQuery,
   onChange,
 }: SearchableSelectProps<TValue>) {
   const generatedId = useId();
@@ -47,7 +51,7 @@ function SearchableSelect<TValue extends string = string>({
   const [query, setQuery] = useState('');
 
   const selectedOption = options.find((option) => option.value === value);
-  const inputValue = isOpen ? query : selectedOption?.label ?? '';
+  const inputValue = isOpen ? query : (selectedOption?.label ?? '');
 
   const filteredOptions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -99,7 +103,9 @@ function SearchableSelect<TValue extends string = string>({
   };
 
   const handleInputChange = (nextQuery: string) => {
-    setQuery(nextQuery);
+    const sanitizedQuery = sanitizeQuery ? sanitizeQuery(nextQuery) : nextQuery;
+
+    setQuery(sanitizedQuery.slice(0, maxLength));
     setIsOpen(true);
   };
 
@@ -140,6 +146,7 @@ function SearchableSelect<TValue extends string = string>({
             value={inputValue}
             placeholder={placeholder}
             autoComplete="off"
+            maxLength={maxLength}
             aria-autocomplete="list"
             aria-expanded={isOpen}
             aria-controls={listboxId}

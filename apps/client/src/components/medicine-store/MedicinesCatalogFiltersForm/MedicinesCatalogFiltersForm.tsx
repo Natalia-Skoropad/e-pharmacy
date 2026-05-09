@@ -44,6 +44,17 @@ type CatalogHrefFilters = Omit<MedicinesCatalogFilters, 'page'> & {
 //===================================================================
 
 const SEARCH_UPDATE_DELAY = 450;
+const SEARCH_MAX_LENGTH = 80;
+
+//===================================================================
+
+function sanitizeArticleSearch(value: string): string {
+  return value.replace(/[^A-Za-z0-9.-]/g, '');
+}
+
+function sanitizeTextSearch(value: string): string {
+  return value.replace(/[^A-Za-z0-9 .-]/g, '');
+}
 
 //===================================================================
 
@@ -51,14 +62,20 @@ function buildCatalogHref(filters: CatalogHrefFilters, stores: Store[]) {
   return buildMedicinesCatalogPath(filters, stores);
 }
 
-function createResetFiltersHref(filters: MedicinesCatalogFilters, stores: Store[]) {
-  return buildCatalogHref({
-    name: '',
-    article: '',
-    category: 'all',
-    availability: 'all',
-    sort: filters.sort,
-  }, stores);
+function createResetFiltersHref(
+  filters: MedicinesCatalogFilters,
+  stores: Store[]
+) {
+  return buildCatalogHref(
+    {
+      name: '',
+      article: '',
+      category: 'all',
+      availability: 'all',
+      sort: filters.sort,
+    },
+    stores
+  );
 }
 
 //===================================================================
@@ -80,6 +97,7 @@ function MedicinesCatalogFiltersForm({
     isOpen: isFiltersOpen,
     onClose: () => setIsFiltersOpen(false),
   });
+
   const handleBackdropClick = useBackdropClick({
     onClose: () => setIsFiltersOpen(false),
   });
@@ -126,6 +144,7 @@ function MedicinesCatalogFiltersForm({
     router.replace(buildCatalogHref({ ...nextFilters, page: 1 }, stores), {
       scroll: false,
     });
+
     setIsFiltersOpen(false);
   };
 
@@ -178,6 +197,8 @@ function MedicinesCatalogFiltersForm({
         placeholder="All pharmacies"
         emptyMessage="No pharmacies found"
         isActive={Boolean(filters.storeId)}
+        maxLength={SEARCH_MAX_LENGTH}
+        sanitizeQuery={sanitizeTextSearch}
         onChange={handleStoreChange}
       />
     </>
@@ -193,6 +214,8 @@ function MedicinesCatalogFiltersForm({
             value={name}
             placeholder="Product name"
             isActive={Boolean(filters.name)}
+            maxLength={SEARCH_MAX_LENGTH}
+            sanitizeValue={sanitizeTextSearch}
             onChange={setName}
           />
 
@@ -202,6 +225,8 @@ function MedicinesCatalogFiltersForm({
             value={article}
             placeholder="Article"
             isActive={Boolean(filters.article)}
+            maxLength={SEARCH_MAX_LENGTH}
+            sanitizeValue={sanitizeArticleSearch}
             onChange={setArticle}
           />
 
@@ -225,6 +250,7 @@ function MedicinesCatalogFiltersForm({
         >
           <Filter size={18} aria-hidden="true" />
           <span>Filters</span>
+
           {activeFiltersCount ? (
             <span className={css.filterBadge}>{activeFiltersCount}</span>
           ) : null}
@@ -257,6 +283,7 @@ function MedicinesCatalogFiltersForm({
             <div className={css.offcanvasHeader}>
               <div>
                 <p className={css.offcanvasKicker}>Catalog</p>
+
                 <h2 className={css.offcanvasTitle} id="catalog-filters-title">
                   Filters and sorting
                 </h2>

@@ -13,18 +13,31 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   font-size: var(--fz-14);
   line-height: 1.4;
   color: var(--color-text-muted);
 }
 
 .item:not(:last-child)::after {
-  color: var(--color-text-muted);
-  content: '/';
+  width: 4px;
+  height: 4px;
+  flex: 0 0 auto;
+  background-color: currentColor;
+  border-radius: 50%;
+  content: '';
+}
+
+.link,
+.current {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
 }
 
 .link {
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
   transition: color var(--transition-base);
 }
 
@@ -35,4 +48,8 @@
 
 .current {
   color: var(--color-text-primary);
+}
+
+.homeIcon {
+  flex: 0 0 auto;
 }
