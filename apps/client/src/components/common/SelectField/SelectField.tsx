@@ -18,6 +18,7 @@ type SelectFieldProps<TValue extends string> = {
   label: string;
   value: TValue;
   options: SelectOption<TValue>[];
+  isActive?: boolean;
   onChange: (value: TValue) => void;
 };
 
@@ -28,6 +29,7 @@ function SelectField<TValue extends string>({
   label,
   value,
   options,
+  isActive = false,
   onChange,
 }: SelectFieldProps<TValue>) {
   const generatedId = useId();
@@ -77,7 +79,11 @@ function SelectField<TValue extends string>({
       <div className={css.selectRoot}>
         <button
           id={buttonId}
-          className={clsx(css.trigger, isOpen && css.triggerOpen)}
+          className={clsx(
+            css.trigger,
+            isOpen && css.triggerOpen,
+            isActive && css.triggerActive
+          )}
           type="button"
           aria-haspopup="listbox"
           aria-expanded={isOpen}

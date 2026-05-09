@@ -1,19 +1,16 @@
 import { MedicineStorePageContent } from '@/components/medicine-store';
 
-import {
-  MEDICINES_CATALOG_DESCRIPTION,
-  MEDICINES_CATALOG_TITLE,
-} from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
 import {
   buildMedicinesCatalogApiParams,
-  hasActiveMedicinesCatalogFilters,
+  getMedicinesCatalogDescription,
+  getMedicinesCatalogTitle,
   parseMedicinesCatalogSearchParams,
   type MedicinesCatalogSearchParams,
 } from '@/lib/catalog/medicines-catalog';
 import { createPageMetadata } from '@/lib/seo';
 
-import { getProducts } from '@/services';
+import { getProducts, getStores } from '@/services';
 
 //===================================================================
 
@@ -31,27 +28,40 @@ export async function generateMetadata({
   searchParams,
 }: MedicinesCatalogPageProps) {
   const filters = parseMedicinesCatalogSearchParams(await searchParams);
-  const hasActiveFilters = hasActiveMedicinesCatalogFilters(filters);
+  const noIndex =
+    filters.page > 1 ||
+    filters.sort !== 'newest' ||
+    Boolean(filters.name) ||
+    Boolean(filters.article) ||
+    Boolean(filters.storeId);
 
   return createPageMetadata({
-    title: MEDICINES_CATALOG_TITLE,
-    description: MEDICINES_CATALOG_DESCRIPTION,
+    title: getMedicinesCatalogTitle(filters),
+    description: getMedicinesCatalogDescription(filters),
     path: ROUTES.MEDICINES_CATALOG,
-    noIndex: hasActiveFilters,
+    noIndex,
   });
 }
 
 //===================================================================
 
-async function MedicinesCatalogPage({ searchParams }: MedicinesCatalogPageProps) {
+async function MedicinesCatalogPage({
+  searchParams,
+}: MedicinesCatalogPageProps) {
   const filters = parseMedicinesCatalogSearchParams(await searchParams);
-  const productsData = await getProducts(
-    buildMedicinesCatalogApiParams(filters)
-  ).catch(() => null);
+
+  const [productsData, storesData] = await Promise.all([
+    getProducts(buildMedicinesCatalogApiParams(filters)).catch(() => null),
+    getStores({ page: 1, perPage: 100 }).catch(() => null),
+  ]);
+
+  const activeStores =
+    storesData?.items.filter((store) => store.isActive) ?? [];
 
   return (
     <MedicineStorePageContent
       products={productsData?.items ?? []}
+      stores={activeStores}
       total={productsData?.total ?? 0}
       totalPages={productsData?.totalPages ?? 0}
       filters={filters}

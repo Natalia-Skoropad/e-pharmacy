@@ -57,10 +57,6 @@
   white-space: nowrap;
 }
 
-.triggerActive .chevron {
-  color: var(--color-accent);
-}
-
 .chevron {
   flex-shrink: 0;
   color: var(--color-text-muted);
@@ -69,26 +65,69 @@
     transform var(--transition-base);
 }
 
+.triggerActive .chevron,
 .chevronOpen {
   color: var(--color-accent);
+}
+
+.chevronOpen {
   transform: rotate(180deg);
 }
 
-.options {
+.dropdown {
   position: absolute;
-  z-index: 20;
+  z-index: 30;
   top: calc(100% + 8px);
   right: 0;
   left: 0;
   display: grid;
-  gap: 4px;
-  max-height: 260px;
+  gap: 8px;
   padding: 8px;
-  overflow-y: auto;
   background-color: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: 18px;
   box-shadow: var(--shadow-card);
+}
+
+.searchBox {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 40px;
+  padding-inline: 12px;
+  color: var(--color-text-muted);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.searchInput {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  font: inherit;
+  font-size: var(--fz-14);
+  color: var(--color-text-primary);
+  background-color: transparent;
+  border: 0;
+  outline: none;
+  appearance: none;
+}
+
+.searchInput::-webkit-search-decoration,
+.searchInput::-webkit-search-cancel-button,
+.searchInput::-webkit-search-results-button,
+.searchInput::-webkit-search-results-decoration {
+  display: none;
+  appearance: none;
+}
+
+.options {
+  display: grid;
+  gap: 4px;
+  max-height: 230px;
+  overflow-y: auto;
 }
 
 .option {
@@ -109,17 +148,22 @@
 }
 
 .option:hover,
-.option:focus-visible {
+.option:focus-visible,
+.optionSelected {
   color: var(--color-accent);
   background-color: var(--color-accent-light);
 }
 
 .optionSelected {
   font-weight: var(--fw-medium);
-  color: var(--color-accent);
-  background-color: var(--color-accent-light);
 }
 
 .checkIcon {
   color: var(--color-accent);
+}
+
+.empty {
+  padding: 12px;
+  font-size: var(--fz-14);
+  color: var(--color-text-muted);
 }

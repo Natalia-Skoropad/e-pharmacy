@@ -1,4 +1,5 @@
 import { Search, X } from 'lucide-react';
+import clsx from 'clsx';
 
 import css from './SearchInput.module.css';
 
@@ -9,6 +10,7 @@ type SearchInputProps = {
   label: string;
   value: string;
   placeholder?: string;
+  isActive?: boolean;
   onChange: (value: string) => void;
 };
 
@@ -19,13 +21,14 @@ function SearchInput({
   label,
   value,
   placeholder,
+  isActive = false,
   onChange,
 }: SearchInputProps) {
   return (
     <label className={css.field} htmlFor={id}>
       <span className={css.label}>{label}</span>
 
-      <span className={css.inputWrap}>
+      <span className={clsx(css.inputWrap, isActive && css.inputWrapActive)}>
         <Search className={css.icon} size={18} aria-hidden="true" />
 
         <input

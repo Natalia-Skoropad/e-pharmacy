@@ -4,13 +4,14 @@ import MedicinesCatalogFiltersForm from '@/components/medicine-store/MedicinesCa
 import ProductsList from '@/components/medicine-store/ProductsList';
 
 import {
-  MEDICINES_CATALOG_DESCRIPTION,
-  MEDICINES_CATALOG_TITLE,
-} from '@/lib/constants/metadata';
+  getMedicinesCatalogDescription,
+  getMedicinesCatalogTitle,
+  shouldShowMedicinesCatalogSeoText,
+  type MedicinesCatalogFilters,
+} from '@/lib/catalog/medicines-catalog';
 import { ROUTES } from '@/lib/constants/routes';
-import type { MedicinesCatalogFilters } from '@/lib/catalog/medicines-catalog';
 
-import type { Product } from '@/types';
+import type { Product, Store } from '@/types';
 
 import css from './MedicineStorePageContent.module.css';
 
@@ -18,6 +19,7 @@ import css from './MedicineStorePageContent.module.css';
 
 type MedicineStorePageContentProps = {
   products: Product[];
+  stores: Store[];
   total: number;
   totalPages: number;
   filters: MedicinesCatalogFilters;
@@ -32,7 +34,8 @@ function buildCatalogHref(filters: MedicinesCatalogFilters, page: number) {
   if (filters.storeId) searchParams.set('storeId', filters.storeId);
   if (filters.name) searchParams.set('name', filters.name);
   if (filters.article) searchParams.set('article', filters.article);
-  if (filters.category !== 'all') searchParams.set('category', filters.category);
+  if (filters.category !== 'all')
+    searchParams.set('category', filters.category);
   if (filters.availability !== 'all') {
     searchParams.set('availability', filters.availability);
   }
@@ -50,39 +53,36 @@ function buildCatalogHref(filters: MedicinesCatalogFilters, page: number) {
 
 function MedicineStorePageContent({
   products,
+  stores,
   total,
   totalPages,
   filters,
   isUnavailable = false,
 }: MedicineStorePageContentProps) {
   const productsCountLabel = total === 1 ? '1 product' : `${total} products`;
+  const pageTitle = getMedicinesCatalogTitle(filters);
+  const pageDescription = getMedicinesCatalogDescription(filters);
+  const showSeoText = shouldShowMedicinesCatalogSeoText(filters);
 
   return (
     <main className={css.page}>
       <section className={css.productsSection} aria-labelledby="products-title">
         <Container>
           <Breadcrumbs
-            items={[
-              { label: 'Home', href: ROUTES.HOME },
-              { label: 'Medicines catalog' },
-            ]}
+            items={[{ label: 'Home', href: ROUTES.HOME }, { label: pageTitle }]}
           />
 
           <div className={css.sectionHeader}>
-            <div>
-              <p className={css.sectionKicker}>Medicines catalog</p>
-
-              <h1 className={css.sectionTitle} id="products-title">
-                {MEDICINES_CATALOG_TITLE}
-              </h1>
-
-              <p className={css.sectionText}>{MEDICINES_CATALOG_DESCRIPTION}</p>
-            </div>
-
-            <p className={css.resultCount}>{productsCountLabel}</p>
+            <h1 className={css.sectionTitle} id="products-title">
+              {pageTitle}
+            </h1>
           </div>
 
-          <MedicinesCatalogFiltersForm filters={filters} />
+          <MedicinesCatalogFiltersForm
+            filters={filters}
+            stores={stores}
+            productsCountLabel={productsCountLabel}
+          />
 
           {isUnavailable ? (
             <div className={css.notice} role="status">
@@ -99,6 +99,10 @@ function MedicineStorePageContent({
             getPageHref={(page) => buildCatalogHref(filters, page)}
             ariaLabel="Medicines catalog pagination"
           />
+
+          {showSeoText ? (
+            <p className={css.sectionText}>{pageDescription}</p>
+          ) : null}
         </Container>
       </section>
     </main>

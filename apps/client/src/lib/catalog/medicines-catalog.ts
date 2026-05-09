@@ -2,7 +2,7 @@ import type { ProductCategory, ProductsQueryParams } from '@/types';
 
 //===================================================================
 
-export const MEDICINES_CATALOG_PER_PAGE = 20;
+export const MEDICINES_CATALOG_PER_PAGE = 24;
 
 //===================================================================
 
@@ -133,16 +133,87 @@ export function buildMedicinesCatalogApiParams(
   };
 }
 
+export function getMedicinesCatalogActiveFiltersCount(
+  filters: MedicinesCatalogFilters
+): number {
+  return [
+    filters.name,
+    filters.article,
+    filters.category !== 'all',
+    filters.availability !== 'all',
+    Boolean(filters.storeId),
+  ].filter(Boolean).length;
+}
+
 export function hasActiveMedicinesCatalogFilters(
   filters: MedicinesCatalogFilters
 ): boolean {
-  return Boolean(
-    filters.name ||
-      filters.article ||
-      filters.category !== 'all' ||
-      filters.availability !== 'all' ||
-      filters.sort !== 'newest' ||
-      Boolean(filters.storeId) ||
-      filters.page > 1
+  return getMedicinesCatalogActiveFiltersCount(filters) > 0;
+}
+
+export function hasActiveMedicinesCatalogState(
+  filters: MedicinesCatalogFilters
+): boolean {
+  return (
+    hasActiveMedicinesCatalogFilters(filters) ||
+    filters.sort !== 'newest' ||
+    filters.page > 1
+  );
+}
+
+export function getMedicinesCatalogTitle(filters: MedicinesCatalogFilters) {
+  const categoryLabel = PRODUCT_CATEGORY_OPTIONS.find(
+    (option) => option.value === filters.category
+  )?.label;
+
+  if (filters.name) return `Search results for ${filters.name}`;
+  if (filters.article) return `Medicine article ${filters.article}`;
+  if (filters.category !== 'all' && categoryLabel) {
+    return `${categoryLabel} catalog`;
+  }
+  if (filters.availability === 'in-stock') return 'Available medicines catalog';
+  if (filters.availability === 'out-of-stock') {
+    return 'Unavailable medicines catalog';
+  }
+
+  return 'Medicines Catalog';
+}
+
+export function getMedicinesCatalogDescription(filters: MedicinesCatalogFilters) {
+  if (filters.name) {
+    return `Browse medicine search results for ${filters.name}, compare pharmacy availability, ratings, and product details online.`;
+  }
+
+  if (filters.article) {
+    return `Find medicine by article ${filters.article}, check pharmacy availability, and compare trusted online pharmacy offers.`;
+  }
+
+  if (filters.category !== 'all') {
+    const categoryLabel = PRODUCT_CATEGORY_OPTIONS.find(
+      (option) => option.value === filters.category
+    )?.label.toLowerCase();
+
+    return `Browse ${categoryLabel} products, compare availability in active pharmacies, and choose trusted online pharmacy offers.`;
+  }
+
+  if (filters.availability === 'in-stock') {
+    return 'Browse medicines that are currently available in pharmacies and compare trusted online pharmacy offers.';
+  }
+
+  if (filters.availability === 'out-of-stock') {
+    return 'Browse medicines that are not currently available in pharmacies and check product details or reviews.';
+  }
+
+  return 'Search medicines by name or article, filter products by category and pharmacy availability, and compare trusted online pharmacy offers.';
+}
+
+export function shouldShowMedicinesCatalogSeoText(
+  filters: MedicinesCatalogFilters
+): boolean {
+  return (
+    filters.page === 1 &&
+    !filters.name &&
+    !filters.article &&
+    filters.sort === 'newest'
   );
 }
