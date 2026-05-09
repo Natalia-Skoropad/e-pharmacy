@@ -163,7 +163,7 @@
   }
 
   .searchGrid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
     align-items: end;
   }
 
@@ -173,7 +173,6 @@
 
   .desktopResetSlot {
     display: flex;
-    grid-column: 5;
     justify-content: flex-end;
     min-height: 44px;
     margin-top: 4px;

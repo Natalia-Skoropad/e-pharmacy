@@ -106,6 +106,30 @@ export type ProductResponseDto = {
   isFavorite?: boolean;
 };
 
+
+//===============================================================
+
+export type ProductFilterOptionDto<TValue extends string = string> = {
+  value: TValue;
+  label: string;
+};
+
+//===============================================================
+
+export type ProductFilterOptionsResponseDto = {
+  categories: ProductFilterOptionDto<'all' | ProductCategory>[];
+  availability: ProductFilterOptionDto<'all' | 'in-stock' | 'out-of-stock'>[];
+  sort: ProductFilterOptionDto<
+    | 'price-asc'
+    | 'price-desc'
+    | 'rating-desc'
+    | 'rating-asc'
+    | 'name-asc'
+    | 'name-desc'
+    | 'newest'
+  >[];
+};
+
 //===============================================================
 
 export type ProductReviewResponseDto = {

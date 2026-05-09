@@ -13,6 +13,7 @@ export const API_ROUTES = {
 
   products: {
     list: '/products',
+    filters: '/products/filters',
     details: (productId: string) => `/products/${productId}`,
     reviews: (productId: string) => `/products/${productId}/reviews`,
     favorite: (productId: string) => `/products/${productId}/favorite`,

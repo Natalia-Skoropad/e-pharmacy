@@ -1,4 +1,8 @@
-import type { ProductCategory, ProductsQueryParams } from '@/types';
+import type {
+  ProductCategory,
+  ProductFilterOptionsResponse,
+  ProductsQueryParams,
+} from '@/types';
 
 //===================================================================
 
@@ -6,39 +10,45 @@ export const MEDICINES_CATALOG_PER_PAGE = 24;
 
 //===================================================================
 
-export const PRODUCT_CATEGORY_OPTIONS = [
-  { value: 'all', label: 'All categories' },
-  { value: 'medicine', label: 'Medicine' },
-  { value: 'vitamins', label: 'Vitamins' },
-  { value: 'beauty', label: 'Beauty' },
-  { value: 'hygiene', label: 'Hygiene' },
-  { value: 'medical-devices', label: 'Medical devices' },
-  { value: 'other', label: 'Other' },
-] as const;
-
-export const PRODUCT_AVAILABILITY_OPTIONS = [
-  { value: 'all', label: 'All products' },
-  { value: 'in-stock', label: 'Available in pharmacies' },
-  { value: 'out-of-stock', label: 'Not available in pharmacies' },
-] as const;
-
-export const PRODUCT_SORT_OPTIONS = [
-  { value: 'newest', label: 'Newest first' },
-  { value: 'rating-desc', label: 'Rating: highest first' },
-  { value: 'rating-asc', label: 'Rating: lowest first' },
-  { value: 'name-asc', label: 'Name: A to Z' },
-  { value: 'name-desc', label: 'Name: Z to A' },
-] as const;
+export const FALLBACK_PRODUCT_FILTER_OPTIONS: ProductFilterOptionsResponse = {
+  categories: [
+    { value: 'all', label: 'All categories' },
+    { value: 'medicine', label: 'Medicine' },
+    { value: 'vitamins', label: 'Vitamins' },
+    { value: 'beauty', label: 'Beauty' },
+    { value: 'hygiene', label: 'Hygiene' },
+    { value: 'medical-devices', label: 'Medical devices' },
+    { value: 'other', label: 'Other' },
+  ],
+  availability: [
+    { value: 'all', label: 'All products' },
+    { value: 'in-stock', label: 'Available in pharmacies' },
+    { value: 'out-of-stock', label: 'Not available in pharmacies' },
+  ],
+  sort: [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'rating-desc', label: 'Rating: highest first' },
+    { value: 'rating-asc', label: 'Rating: lowest first' },
+    { value: 'name-asc', label: 'Name: A to Z' },
+    { value: 'name-desc', label: 'Name: Z to A' },
+  ],
+};
 
 //===================================================================
 
 export type ProductCategoryFilter =
-  (typeof PRODUCT_CATEGORY_OPTIONS)[number]['value'];
+  ProductFilterOptionsResponse['categories'][number]['value'];
 
 export type ProductAvailabilityFilter =
-  (typeof PRODUCT_AVAILABILITY_OPTIONS)[number]['value'];
+  ProductFilterOptionsResponse['availability'][number]['value'];
 
-export type ProductSortFilter = (typeof PRODUCT_SORT_OPTIONS)[number]['value'];
+export type ProductSortFilter =
+  ProductFilterOptionsResponse['sort'][number]['value'];
+
+export type MedicinesCatalogSeoContext = {
+  categoryLabel?: string;
+  storeName?: string;
+};
 
 //===================================================================
 
@@ -64,18 +74,30 @@ export type MedicinesCatalogFilters = {
 
 //===================================================================
 
+const CATEGORY_VALUES = FALLBACK_PRODUCT_FILTER_OPTIONS.categories.map(
+  (option) => option.value
+);
+const AVAILABILITY_VALUES = FALLBACK_PRODUCT_FILTER_OPTIONS.availability.map(
+  (option) => option.value
+);
+const SORT_VALUES = FALLBACK_PRODUCT_FILTER_OPTIONS.sort.map(
+  (option) => option.value
+);
+
+//===================================================================
+
 function isProductCategoryFilter(value?: string): value is ProductCategoryFilter {
-  return PRODUCT_CATEGORY_OPTIONS.some((option) => option.value === value);
+  return CATEGORY_VALUES.includes(value as ProductCategoryFilter);
 }
 
 function isProductAvailabilityFilter(
   value?: string
 ): value is ProductAvailabilityFilter {
-  return PRODUCT_AVAILABILITY_OPTIONS.some((option) => option.value === value);
+  return AVAILABILITY_VALUES.includes(value as ProductAvailabilityFilter);
 }
 
 function isProductSortFilter(value?: string): value is ProductSortFilter {
-  return PRODUCT_SORT_OPTIONS.some((option) => option.value === value);
+  return SORT_VALUES.includes(value as ProductSortFilter);
 }
 
 function sanitizeTextParam(value?: string): string {
@@ -90,6 +112,15 @@ function parsePage(value?: string): number {
   const page = Number(value);
 
   return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
+function getCategoryLabel(filters: MedicinesCatalogFilters, fallback?: string) {
+  return (
+    fallback ??
+    FALLBACK_PRODUCT_FILTER_OPTIONS.categories.find(
+      (option) => option.value === filters.category
+    )?.label
+  );
 }
 
 //===================================================================
@@ -161,59 +192,86 @@ export function hasActiveMedicinesCatalogState(
   );
 }
 
-export function getMedicinesCatalogTitle(filters: MedicinesCatalogFilters) {
-  const categoryLabel = PRODUCT_CATEGORY_OPTIONS.find(
-    (option) => option.value === filters.category
-  )?.label;
-
-  if (filters.name) return `Search results for ${filters.name}`;
-  if (filters.article) return `Medicine article ${filters.article}`;
-  if (filters.category !== 'all' && categoryLabel) {
-    return `${categoryLabel} catalog`;
-  }
-  if (filters.availability === 'in-stock') return 'Available medicines catalog';
-  if (filters.availability === 'out-of-stock') {
-    return 'Unavailable medicines catalog';
-  }
-
-  return 'Medicines Catalog';
+export function isMedicinesCatalogNoIndex(
+  filters: MedicinesCatalogFilters
+): boolean {
+  return (
+    filters.page > 1 ||
+    filters.sort !== 'newest' ||
+    Boolean(filters.name) ||
+    Boolean(filters.article) ||
+    filters.availability !== 'all'
+  );
 }
 
-export function getMedicinesCatalogDescription(filters: MedicinesCatalogFilters) {
-  if (filters.name) {
-    return `Browse medicine search results for ${filters.name}, compare pharmacy availability, ratings, and product details online.`;
+export function getMedicinesCatalogTitle(
+  filters: MedicinesCatalogFilters,
+  context: MedicinesCatalogSeoContext = {}
+) {
+  const categoryLabel = getCategoryLabel(filters, context.categoryLabel);
+
+  if (filters.category !== 'all' && context.storeName && categoryLabel) {
+    return `Choose ${categoryLabel.toLowerCase()} from ${context.storeName}`;
   }
 
-  if (filters.article) {
-    return `Find medicine by article ${filters.article}, check pharmacy availability, and compare trusted online pharmacy offers.`;
+  if (filters.category !== 'all' && categoryLabel) {
+    return `Choose trusted ${categoryLabel.toLowerCase()} online`;
+  }
+
+  if (context.storeName) {
+    return `Choose medicines from ${context.storeName}`;
+  }
+
+  return 'Medicine catalog';
+}
+
+export function getMedicinesCatalogDescription(
+  filters: MedicinesCatalogFilters,
+  context: MedicinesCatalogSeoContext = {}
+) {
+  const categoryLabel = getCategoryLabel(filters, context.categoryLabel);
+  const categoryText =
+    filters.category !== 'all' && categoryLabel
+      ? categoryLabel.toLowerCase()
+      : 'medicines';
+
+  if (filters.category !== 'all' && context.storeName) {
+    return `Explore ${categoryText} from ${context.storeName}, compare availability, ratings, and details, then choose the right online pharmacy offer with confidence.`;
   }
 
   if (filters.category !== 'all') {
-    const categoryLabel = PRODUCT_CATEGORY_OPTIONS.find(
-      (option) => option.value === filters.category
-    )?.label.toLowerCase();
-
-    return `Browse ${categoryLabel} products, compare availability in active pharmacies, and choose trusted online pharmacy offers.`;
+    return `Explore ${categoryText}, compare availability in active pharmacies, review ratings and product details, and choose a trusted online pharmacy offer.`;
   }
 
-  if (filters.availability === 'in-stock') {
-    return 'Browse medicines that are currently available in pharmacies and compare trusted online pharmacy offers.';
+  if (context.storeName) {
+    return `Browse medicines from ${context.storeName}, compare prices, availability, ratings, and product details before choosing a trusted online pharmacy offer.`;
   }
 
-  if (filters.availability === 'out-of-stock') {
-    return 'Browse medicines that are not currently available in pharmacies and check product details or reviews.';
-  }
+  return 'Search medicines by name or article, filter products by category and pharmacy, compare ratings and availability, and choose trusted online pharmacy offers.';
+}
 
-  return 'Search medicines by name or article, filter products by category and pharmacy availability, and compare trusted online pharmacy offers.';
+export function getMedicinesCatalogSeoTextParts(
+  filters: MedicinesCatalogFilters,
+  context: MedicinesCatalogSeoContext = {}
+): string[] {
+  const categoryLabel = getCategoryLabel(filters, context.categoryLabel);
+  const categoryText =
+    filters.category !== 'all' && categoryLabel
+      ? categoryLabel.toLowerCase()
+      : 'medicines';
+  const pharmacyText = context.storeName ?? 'active online pharmacies';
+
+  return [
+    'Find the right',
+    categoryText,
+    'without opening a dozen tabs. In the E-PHARMACY catalog, you can compare products from',
+    pharmacyText,
+    'check availability, review ratings, and move to the product details when something looks promising. Use the filters to narrow the list by category or pharmacy, search by name or article, and choose the offer that fits your needs faster. Calm, clear, and pharmacy-shopping friendly — almost like a tiny assistant in a white coat. Perfect for quick comparison before adding products to your cart.',
+  ];
 }
 
 export function shouldShowMedicinesCatalogSeoText(
   filters: MedicinesCatalogFilters
 ): boolean {
-  return (
-    filters.page === 1 &&
-    !filters.name &&
-    !filters.article &&
-    filters.sort === 'newest'
-  );
+  return !isMedicinesCatalogNoIndex(filters);
 }

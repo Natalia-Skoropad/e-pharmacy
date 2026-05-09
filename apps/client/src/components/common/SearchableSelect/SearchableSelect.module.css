@@ -17,97 +17,45 @@
   min-width: 0;
 }
 
-.trigger {
+.combobox {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
   width: 100%;
   min-height: 48px;
-  padding: 0 16px;
-  font: inherit;
-  font-size: var(--fz-16);
-  line-height: var(--lh-base);
-  color: var(--color-text-primary);
-  text-align: left;
+  padding-inline: 16px 8px;
+  color: var(--color-text-muted);
   background-color: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
-  outline: none;
-  box-shadow: none;
   transition:
     border-color var(--transition-base),
     box-shadow var(--transition-base),
     background-color var(--transition-base);
 }
 
-.trigger:hover,
-.trigger:focus-visible,
-.triggerOpen,
-.triggerActive {
+.combobox:hover,
+.combobox:focus-within,
+.comboboxOpen,
+.comboboxActive {
   background-color: var(--color-surface);
   border-color: var(--color-accent);
   box-shadow: 0 0 0 4px rgba(89, 177, 122, 0.12);
 }
 
-.triggerText {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.chevron {
+.searchIcon {
   flex-shrink: 0;
-  color: var(--color-text-muted);
-  transition:
-    color var(--transition-base),
-    transform var(--transition-base);
+  color: currentColor;
 }
 
-.triggerActive .chevron,
-.chevronOpen {
-  color: var(--color-accent);
-}
-
-.chevronOpen {
-  transform: rotate(180deg);
-}
-
-.dropdown {
-  position: absolute;
-  z-index: 30;
-  top: calc(100% + 8px);
-  right: 0;
-  left: 0;
-  display: grid;
-  gap: 8px;
-  padding: 8px;
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: 18px;
-  box-shadow: var(--shadow-card);
-}
-
-.searchBox {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 8px;
-  align-items: center;
-  min-height: 40px;
-  padding-inline: 12px;
-  color: var(--color-text-muted);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-}
-
-.searchInput {
+.input {
   width: 100%;
   min-width: 0;
   padding: 0;
   font: inherit;
-  font-size: var(--fz-14);
+  font-size: var(--fz-16);
+  line-height: var(--lh-base);
   color: var(--color-text-primary);
   background-color: transparent;
   border: 0;
@@ -115,19 +63,65 @@
   appearance: none;
 }
 
-.searchInput::-webkit-search-decoration,
-.searchInput::-webkit-search-cancel-button,
-.searchInput::-webkit-search-results-button,
-.searchInput::-webkit-search-results-decoration {
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input::-webkit-search-decoration,
+.input::-webkit-search-cancel-button,
+.input::-webkit-search-results-button,
+.input::-webkit-search-results-decoration {
   display: none;
   appearance: none;
 }
 
+.toggleButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--color-text-muted);
+  background-color: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.toggleButton:hover,
+.toggleButton:focus-visible,
+.comboboxActive .toggleButton,
+.comboboxOpen .toggleButton {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+}
+
+.chevron {
+  transition: transform var(--transition-base);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
 .options {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
   display: grid;
   gap: 4px;
-  max-height: 230px;
+  max-height: 260px;
+  padding: 8px;
   overflow-y: auto;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
 }
 
 .option {

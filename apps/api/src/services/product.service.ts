@@ -8,6 +8,7 @@ import { httpError } from '../utils/httpError';
 
 import type {
   ProductCategory,
+  ProductFilterOptionsResponseDto,
   ProductOfferEntity,
   ProductOfferResponseDto,
   ProductResponseDto,
@@ -85,6 +86,33 @@ type ProductDocument = {
   reviewsCount?: number;
   reviews?: ProductReviewDocument[];
   createdAt: Date;
+};
+
+
+//===============================================================
+
+const PRODUCT_FILTER_OPTIONS: ProductFilterOptionsResponseDto = {
+  categories: [
+    { value: 'all', label: 'All categories' },
+    { value: 'medicine', label: 'Medicine' },
+    { value: 'vitamins', label: 'Vitamins' },
+    { value: 'beauty', label: 'Beauty' },
+    { value: 'hygiene', label: 'Hygiene' },
+    { value: 'medical-devices', label: 'Medical devices' },
+    { value: 'other', label: 'Other' },
+  ],
+  availability: [
+    { value: 'all', label: 'All products' },
+    { value: 'in-stock', label: 'Available in pharmacies' },
+    { value: 'out-of-stock', label: 'Not available in pharmacies' },
+  ],
+  sort: [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'rating-desc', label: 'Rating: highest first' },
+    { value: 'rating-asc', label: 'Rating: lowest first' },
+    { value: 'name-asc', label: 'Name: A to Z' },
+    { value: 'name-desc', label: 'Name: Z to A' },
+  ],
 };
 
 //===============================================================
@@ -271,6 +299,12 @@ function getSort(sort?: ProductsQuery['sort']): ProductSortOption {
     default:
       return { createdAt: -1 };
   }
+}
+
+//===============================================================
+
+export function getProductFiltersService(): ProductFilterOptionsResponseDto {
+  return PRODUCT_FILTER_OPTIONS;
 }
 
 //===============================================================

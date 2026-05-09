@@ -8,6 +8,7 @@ import {
 import {
   createProductReviewService,
   getProductDetailsService,
+  getProductFiltersService,
   getProductReviewsService,
   getProductsService,
   toggleFavoriteProductService,
@@ -19,6 +20,21 @@ import { sendSuccessResponse } from '../utils/apiResponse';
 type ProductParams = {
   productId: string;
 };
+
+//===============================================================
+
+export async function getProductFilters(
+  _req: Request,
+  res: Response
+): Promise<void> {
+  const data = getProductFiltersService();
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
 
 //===============================================================
 

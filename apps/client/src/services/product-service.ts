@@ -6,6 +6,7 @@ import type {
   CreateProductReviewPayload,
   CreateProductReviewResponse,
   ProductDetailsResponse,
+  ProductFilterOptionsResponse,
   ProductReviewsResponse,
   ProductsQueryParams,
   ProductsResponse,
@@ -22,6 +23,16 @@ export async function getProducts(
   const response = await apiRequest<ApiSuccessResponse<ProductsResponse>>(
     `${API_ROUTES.products.list}${queryString}`
   );
+
+  return getResponseData(response);
+}
+
+//===================================================================
+
+export async function getProductFilters(): Promise<ProductFilterOptionsResponse> {
+  const response = await apiRequest<
+    ApiSuccessResponse<ProductFilterOptionsResponse>
+  >(API_ROUTES.products.filters);
 
   return getResponseData(response);
 }

@@ -5,13 +5,15 @@ import ProductsList from '@/components/medicine-store/ProductsList';
 
 import {
   getMedicinesCatalogDescription,
+  getMedicinesCatalogSeoTextParts,
   getMedicinesCatalogTitle,
   shouldShowMedicinesCatalogSeoText,
   type MedicinesCatalogFilters,
+  type MedicinesCatalogSeoContext,
 } from '@/lib/catalog/medicines-catalog';
 import { ROUTES } from '@/lib/constants/routes';
 
-import type { Product, Store } from '@/types';
+import type { Product, ProductFilterOptionsResponse, Store } from '@/types';
 
 import css from './MedicineStorePageContent.module.css';
 
@@ -20,6 +22,7 @@ import css from './MedicineStorePageContent.module.css';
 type MedicineStorePageContentProps = {
   products: Product[];
   stores: Store[];
+  filterOptions: ProductFilterOptionsResponse;
   total: number;
   totalPages: number;
   filters: MedicinesCatalogFilters;
@@ -49,20 +52,41 @@ function buildCatalogHref(filters: MedicinesCatalogFilters, page: number) {
     : ROUTES.MEDICINES_CATALOG;
 }
 
+function createSeoContext(
+  filters: MedicinesCatalogFilters,
+  stores: Store[],
+  filterOptions: ProductFilterOptionsResponse
+): MedicinesCatalogSeoContext {
+  const selectedStore = filters.storeId
+    ? stores.find((store) => store.id === filters.storeId)
+    : undefined;
+  const selectedCategory = filterOptions.categories.find(
+    (option) => option.value === filters.category
+  );
+
+  return {
+    ...(selectedStore ? { storeName: selectedStore.name } : {}),
+    ...(selectedCategory ? { categoryLabel: selectedCategory.label } : {}),
+  };
+}
+
 //===================================================================
 
 function MedicineStorePageContent({
   products,
   stores,
+  filterOptions,
   total,
   totalPages,
   filters,
   isUnavailable = false,
 }: MedicineStorePageContentProps) {
   const productsCountLabel = total === 1 ? '1 product' : `${total} products`;
-  const pageTitle = getMedicinesCatalogTitle(filters);
-  const pageDescription = getMedicinesCatalogDescription(filters);
+  const seoContext = createSeoContext(filters, stores, filterOptions);
+  const pageTitle = getMedicinesCatalogTitle(filters, seoContext);
+  const pageDescription = getMedicinesCatalogDescription(filters, seoContext);
   const showSeoText = shouldShowMedicinesCatalogSeoText(filters);
+  const seoTextParts = getMedicinesCatalogSeoTextParts(filters, seoContext);
 
   return (
     <main className={css.page}>
@@ -81,6 +105,7 @@ function MedicineStorePageContent({
           <MedicinesCatalogFiltersForm
             filters={filters}
             stores={stores}
+            filterOptions={filterOptions}
             productsCountLabel={productsCountLabel}
           />
 
@@ -101,7 +126,21 @@ function MedicineStorePageContent({
           />
 
           {showSeoText ? (
-            <p className={css.sectionText}>{pageDescription}</p>
+            <section className={css.seoCard} aria-labelledby="catalog-seo-title">
+              <h2 className={css.seoTitle} id="catalog-seo-title">
+                Compare trusted pharmacy offers in one place
+              </h2>
+
+              <p className={css.sectionText}>
+                {seoTextParts[0]}{' '}
+                <strong className={css.seoAccent}>{seoTextParts[1]}</strong>{' '}
+                {seoTextParts[2]}{' '}
+                <strong className={css.seoAccent}>{seoTextParts[3]}</strong>,{' '}
+                {seoTextParts[4]}
+              </p>
+
+              <p className={css.visuallyHidden}>{pageDescription}</p>
+            </section>
           ) : null}
         </Container>
       </section>

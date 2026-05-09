@@ -81,6 +81,22 @@ export type ProductsQueryParams = {
     | 'newest';
 };
 
+
+//===================================================================
+
+export type ProductFilterOption<TValue extends string = string> = {
+  value: TValue;
+  label: string;
+};
+
+//===================================================================
+
+export type ProductFilterOptionsResponse = {
+  categories: ProductFilterOption<'all' | ProductCategory>[];
+  availability: ProductFilterOption<'all' | 'in-stock' | 'out-of-stock'>[];
+  sort: ProductFilterOption<NonNullable<ProductsQueryParams['sort']>>[];
+};
+
 //===================================================================
 
 export type ProductsResponse = {

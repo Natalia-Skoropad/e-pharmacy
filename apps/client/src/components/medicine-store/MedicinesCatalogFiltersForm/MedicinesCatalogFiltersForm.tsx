@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Filter } from 'lucide-react';
 
 import {
@@ -15,16 +16,13 @@ import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
 import { ROUTES } from '@/lib/constants/routes';
 import {
   getMedicinesCatalogActiveFiltersCount,
-  PRODUCT_AVAILABILITY_OPTIONS,
-  PRODUCT_CATEGORY_OPTIONS,
-  PRODUCT_SORT_OPTIONS,
   type MedicinesCatalogFilters,
   type ProductAvailabilityFilter,
   type ProductCategoryFilter,
   type ProductSortFilter,
 } from '@/lib/catalog/medicines-catalog';
 
-import type { Store } from '@/types';
+import type { ProductFilterOptionsResponse, Store } from '@/types';
 
 import css from './MedicinesCatalogFiltersForm.module.css';
 
@@ -35,6 +33,7 @@ type StoreSelectValue = 'all' | string;
 type MedicinesCatalogFiltersFormProps = {
   filters: MedicinesCatalogFilters;
   stores: Store[];
+  filterOptions: ProductFilterOptionsResponse;
   productsCountLabel: string;
 };
 
@@ -85,8 +84,11 @@ function createResetFiltersHref(filters: MedicinesCatalogFilters) {
 function MedicinesCatalogFiltersForm({
   filters,
   stores,
+  filterOptions,
   productsCountLabel,
 }: MedicinesCatalogFiltersFormProps) {
+  const router = useRouter();
+
   const [name, setName] = useState(filters.name);
   const [article, setArticle] = useState(filters.article);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -121,19 +123,24 @@ function MedicinesCatalogFiltersForm({
         return;
       }
 
-      window.location.href = buildCatalogHref({
-        ...filters,
-        name: trimmedName,
-        article: trimmedArticle,
-        page: 1,
-      });
+      router.replace(
+        buildCatalogHref({
+          ...filters,
+          name: trimmedName,
+          article: trimmedArticle,
+          page: 1,
+        }),
+        { scroll: false }
+      );
     }, SEARCH_UPDATE_DELAY);
 
     return () => window.clearTimeout(timeoutId);
-  }, [article, filters, name]);
+  }, [article, filters, name, router]);
 
   const updateCatalog = (nextFilters: CatalogHrefFilters) => {
-    window.location.href = buildCatalogHref({ ...nextFilters, page: 1 });
+    router.replace(buildCatalogHref({ ...nextFilters, page: 1 }), {
+      scroll: false,
+    });
   };
 
   const handleCategoryChange = (category: ProductCategoryFilter) => {
@@ -163,7 +170,7 @@ function MedicinesCatalogFiltersForm({
         id={`catalog-category-${idSuffix}`}
         label="Category"
         value={filters.category}
-        options={[...PRODUCT_CATEGORY_OPTIONS]}
+        options={filterOptions.categories}
         isActive={filters.category !== 'all'}
         onChange={handleCategoryChange}
       />
@@ -172,7 +179,7 @@ function MedicinesCatalogFiltersForm({
         id={`catalog-availability-${idSuffix}`}
         label="Availability"
         value={filters.availability}
-        options={[...PRODUCT_AVAILABILITY_OPTIONS]}
+        options={filterOptions.availability}
         isActive={filters.availability !== 'all'}
         onChange={handleAvailabilityChange}
       />
@@ -182,7 +189,7 @@ function MedicinesCatalogFiltersForm({
         label="Pharmacy"
         value={filters.storeId ?? 'all'}
         options={storeOptions}
-        searchPlaceholder="Search pharmacy"
+        placeholder="All pharmacies"
         emptyMessage="No pharmacies found"
         isActive={Boolean(filters.storeId)}
         onChange={handleStoreChange}
@@ -242,7 +249,7 @@ function MedicinesCatalogFiltersForm({
             id="catalog-sort-desktop"
             label="Sort by"
             value={filters.sort}
-            options={[...PRODUCT_SORT_OPTIONS]}
+            options={filterOptions.sort}
             isActive={filters.sort !== 'newest'}
             onChange={handleSortChange}
           />
@@ -282,7 +289,7 @@ function MedicinesCatalogFiltersForm({
                 id="catalog-sort-mobile"
                 label="Sort by"
                 value={filters.sort}
-                options={[...PRODUCT_SORT_OPTIONS]}
+                options={filterOptions.sort}
                 isActive={filters.sort !== 'newest'}
                 onChange={handleSortChange}
               />

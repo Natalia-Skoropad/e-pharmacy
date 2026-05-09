@@ -19,7 +19,6 @@ type SearchableSelectProps<TValue extends string = string> = {
   value: TValue;
   options: SearchableSelectOption<TValue>[];
   placeholder?: string;
-  searchPlaceholder?: string;
   emptyMessage?: string;
   isActive?: boolean;
   onChange: (value: TValue) => void;
@@ -32,24 +31,23 @@ function SearchableSelect<TValue extends string = string>({
   label,
   value,
   options,
-  placeholder = 'Select option',
-  searchPlaceholder = 'Search',
+  placeholder = 'Search option',
   emptyMessage = 'No options found',
   isActive = false,
   onChange,
 }: SearchableSelectProps<TValue>) {
   const generatedId = useId();
-  const buttonId = id ?? generatedId;
-  const searchId = `${buttonId}-search`;
-  const listboxId = `${buttonId}-listbox`;
+  const inputId = id ?? generatedId;
+  const listboxId = `${inputId}-listbox`;
 
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const searchRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
 
   const selectedOption = options.find((option) => option.value === value);
+  const inputValue = isOpen ? query : selectedOption?.label ?? '';
 
   const filteredOptions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -75,12 +73,12 @@ function SearchableSelect<TValue extends string = string>({
       if (event.key === 'Escape') {
         setIsOpen(false);
         setQuery('');
+        inputRef.current?.blur();
       }
     };
 
     document.addEventListener('mousedown', handleDocumentClick);
     document.addEventListener('keydown', handleEscape);
-    searchRef.current?.focus();
 
     return () => {
       document.removeEventListener('mousedown', handleDocumentClick);
@@ -88,95 +86,123 @@ function SearchableSelect<TValue extends string = string>({
     };
   }, [isOpen]);
 
+  const openSelect = () => {
+    setIsOpen(true);
+    setQuery('');
+  };
+
   const handleSelect = (nextValue: TValue) => {
     onChange(nextValue);
     setIsOpen(false);
     setQuery('');
+    inputRef.current?.blur();
+  };
+
+  const handleInputChange = (nextQuery: string) => {
+    setQuery(nextQuery);
+    setIsOpen(true);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && filteredOptions[0]) {
+      event.preventDefault();
+      handleSelect(filteredOptions[0].value);
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setIsOpen(true);
+    }
   };
 
   return (
     <div className={css.field} ref={rootRef}>
-      <span className={css.label} id={`${buttonId}-label`}>
+      <label className={css.label} htmlFor={inputId}>
         {label}
-      </span>
+      </label>
 
       <div className={css.selectRoot}>
-        <button
-          id={buttonId}
+        <div
           className={clsx(
-            css.trigger,
-            isOpen && css.triggerOpen,
-            isActive && css.triggerActive
+            css.combobox,
+            isOpen && css.comboboxOpen,
+            isActive && css.comboboxActive
           )}
-          type="button"
-          aria-haspopup="listbox"
-          aria-expanded={isOpen}
-          aria-labelledby={`${buttonId}-label ${buttonId}`}
-          aria-controls={listboxId}
-          onClick={() => setIsOpen((current) => !current)}
         >
-          <span className={css.triggerText}>
-            {selectedOption?.label ?? placeholder}
-          </span>
+          <Search className={css.searchIcon} size={18} aria-hidden="true" />
 
-          <ChevronDown
-            className={clsx(css.chevron, isOpen && css.chevronOpen)}
-            size={18}
-            aria-hidden="true"
+          <input
+            id={inputId}
+            ref={inputRef}
+            className={css.input}
+            type="search"
+            role="combobox"
+            value={inputValue}
+            placeholder={placeholder}
+            autoComplete="off"
+            aria-autocomplete="list"
+            aria-expanded={isOpen}
+            aria-controls={listboxId}
+            aria-haspopup="listbox"
+            onFocus={openSelect}
+            onChange={(event) => handleInputChange(event.target.value)}
+            onKeyDown={handleKeyDown}
           />
-        </button>
+
+          <button
+            className={css.toggleButton}
+            type="button"
+            aria-label={isOpen ? 'Close options' : 'Open options'}
+            aria-expanded={isOpen}
+            aria-controls={listboxId}
+            onClick={() => {
+              setIsOpen((current) => !current);
+              inputRef.current?.focus();
+            }}
+          >
+            <ChevronDown
+              className={clsx(css.chevron, isOpen && css.chevronOpen)}
+              size={18}
+              aria-hidden="true"
+            />
+          </button>
+        </div>
 
         {isOpen ? (
-          <div className={css.dropdown}>
-            <label className={css.searchBox} htmlFor={searchId}>
-              <Search className={css.searchIcon} size={16} aria-hidden="true" />
-              <input
-                id={searchId}
-                ref={searchRef}
-                className={css.searchInput}
-                type="search"
-                value={query}
-                placeholder={searchPlaceholder}
-                autoComplete="off"
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </label>
+          <ul
+            className={css.options}
+            id={listboxId}
+            role="listbox"
+            aria-label={label}
+          >
+            {filteredOptions.length ? (
+              filteredOptions.map((option) => {
+                const isSelected = option.value === value;
 
-            <ul
-              className={css.options}
-              id={listboxId}
-              role="listbox"
-              aria-labelledby={`${buttonId}-label`}
-              tabIndex={-1}
-            >
-              {filteredOptions.length ? (
-                filteredOptions.map((option) => {
-                  const isSelected = option.value === value;
+                return (
+                  <li
+                    className={clsx(
+                      css.option,
+                      isSelected && css.optionSelected
+                    )}
+                    key={option.value}
+                    role="option"
+                    aria-selected={isSelected}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => handleSelect(option.value)}
+                  >
+                    <span>{option.label}</span>
 
-                  return (
-                    <li
-                      className={clsx(
-                        css.option,
-                        isSelected && css.optionSelected
-                      )}
-                      key={option.value}
-                      role="option"
-                      aria-selected={isSelected}
-                      onClick={() => handleSelect(option.value)}
-                    >
-                      <span>{option.label}</span>
-
-                      {isSelected ? (
-                        <Check className={css.checkIcon} size={16} aria-hidden />
-                      ) : null}
-                    </li>
-                  );
-                })
-              ) : (
-                <li className={css.empty}>{emptyMessage}</li>
-              )}
-            </ul>
-          </div>
+                    {isSelected ? (
+                      <Check className={css.checkIcon} size={16} aria-hidden />
+                    ) : null}
+                  </li>
+                );
+              })
+            ) : (
+              <li className={css.empty}>{emptyMessage}</li>
+            )}
+          </ul>
         ) : null}
       </div>
     </div>
