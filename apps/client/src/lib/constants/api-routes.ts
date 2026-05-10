@@ -9,6 +9,8 @@ export const API_ROUTES = {
   stores: {
     list: '/stores',
     details: (storeId: string) => `/stores/${storeId}`,
+    reviews: (storeId: string) => `/stores/${storeId}/reviews`,
+    favorite: (storeId: string) => `/stores/${storeId}/favorite`,
   },
 
   products: {

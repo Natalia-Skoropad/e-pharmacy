@@ -9,12 +9,29 @@ export type Store = {
   imageUrl?: string;
   description?: string;
   availableProductsCount?: number;
+  reviewsCount?: number;
+  isFavorite?: boolean;
   isActive: boolean;
 };
 
 //===================================================================
 
-export type StoresSortFilter = 'newest' | 'rating-desc' | 'rating-asc' | 'name-asc' | 'name-desc';
+export type StoreReview = {
+  id: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+};
+
+//===================================================================
+
+export type StoresSortFilter =
+  | 'newest'
+  | 'rating-desc'
+  | 'rating-asc'
+  | 'name-asc'
+  | 'name-desc';
 
 //===================================================================
 
@@ -30,4 +47,31 @@ export type StoresResponse = {
 
 export type StoreDetailsResponse = {
   store: Store;
+};
+
+//===================================================================
+
+export type StoreReviewsResponse = {
+  items: StoreReview[];
+  total: number;
+};
+
+//===================================================================
+
+export type CreateStoreReviewPayload = {
+  rating: number;
+  comment: string;
+};
+
+//===================================================================
+
+export type CreateStoreReviewResponse = {
+  message: string;
+};
+
+//===================================================================
+
+export type ToggleFavoriteStoreResponse = {
+  isFavorite: boolean;
+  message: string;
 };

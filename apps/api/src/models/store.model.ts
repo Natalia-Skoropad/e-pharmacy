@@ -4,6 +4,61 @@ import type { StoreEntity } from '../types/store';
 
 //===============================================================
 
+
+const storeReviewSchema = new Schema(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
+    userName: {
+      type: String,
+      required: [true, 'User name is required'],
+      trim: true,
+      maxlength: [80, 'User name must be at most 80 characters'],
+    },
+
+    rating: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5,
+    },
+
+    comment: {
+      type: String,
+      required: [true, 'Review comment is required'],
+      trim: true,
+      minlength: [10, 'Review comment must be at least 10 characters'],
+      maxlength: [500, 'Review comment must be at most 500 characters'],
+    },
+
+    isModerated: {
+      type: Boolean,
+      default: false,
+      required: true,
+    },
+
+    moderatedAt: {
+      type: Date,
+      default: undefined,
+    },
+
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    _id: true,
+    id: false,
+  }
+);
+
+//===============================================================
+
 const storeSchema = new Schema<StoreEntity>(
   {
     name: {
@@ -65,6 +120,17 @@ const storeSchema = new Schema<StoreEntity>(
       type: Boolean,
       default: true,
       required: true,
+    },
+
+    reviewsCount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+
+    reviews: {
+      type: [storeReviewSchema],
+      default: [],
     },
 
     ownerId: {

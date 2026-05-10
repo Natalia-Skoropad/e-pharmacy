@@ -66,7 +66,6 @@ const cartSchema = new Schema<CartEntity>(
 
 //===============================================================
 
-cartSchema.index({ userId: 1 });
 cartSchema.index({ 'items.expiresAt': 1 });
 cartSchema.index({ 'items.productId': 1, 'items.storeId': 1 });
 

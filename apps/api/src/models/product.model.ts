@@ -31,7 +31,7 @@ const productReviewSchema = new Schema(
       required: [true, 'Review comment is required'],
       trim: true,
       minlength: [10, 'Review comment must be at least 10 characters'],
-      maxlength: [200, 'Review comment must be at most 200 characters'],
+      maxlength: [500, 'Review comment must be at most 500 characters'],
     },
 
     isModerated: {

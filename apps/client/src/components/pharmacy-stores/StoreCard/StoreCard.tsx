@@ -1,10 +1,15 @@
-import Image from 'next/image';
-import { MapPin, Phone, ShoppingBag, Star } from 'lucide-react';
+'use client';
 
-import { ButtonLink, SvgIcon } from '@/components/common';
+import Image from 'next/image';
+import { useCallback, useEffect, useState } from 'react';
+import { MapPin, MessageSquareText, Phone, ShoppingBag, Star } from 'lucide-react';
+
+import { ButtonLink, FavoriteToggleButton, SvgIcon, Toast } from '@/components/common';
+import { useAuth } from '@/components/providers';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 import { ROUTES } from '@/lib/constants/routes';
+import { getStoreDetails, toggleFavoriteStore } from '@/services';
 
 import type { Store } from '@/types';
 
@@ -32,9 +37,19 @@ function getProductsCountLabel(count = 0): string {
   return `${count} ${count === 1 ? 'product' : 'products'} available`;
 }
 
+function getReviewsCountLabel(count = 0): string {
+  return `${count} ${count === 1 ? 'review' : 'reviews'}`;
+}
+
 //===================================================================
 
 function StoreCard({ store }: StoreCardProps) {
+  const { token, isAuthenticated, isAuthReady } = useAuth();
+
+  const [isFavorite, setIsFavorite] = useState(Boolean(store.isFavorite));
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
   const medicinesHref = buildMedicinesCatalogPath(
     { storeId: store.id },
     [store]
@@ -42,8 +57,64 @@ function StoreCard({ store }: StoreCardProps) {
   const storeHref = `${ROUTES.STORES}/${slugify(store.name)}-${store.id}`;
   const ratingLabel = store.rating ? store.rating.toFixed(1) : 'New';
 
+  const showToast = useCallback((message: string) => {
+    setToastMessage('');
+    window.setTimeout(() => setToastMessage(message), 0);
+  }, []);
+
+  useEffect(() => {
+    if (!toastMessage) return;
+
+    const timeoutId = window.setTimeout(() => setToastMessage(''), 3000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toastMessage]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) return;
+
+    let isMounted = true;
+
+    getStoreDetails(store.id, token)
+      .then((response) => {
+        if (isMounted) setIsFavorite(Boolean(response.store.isFavorite));
+      })
+      .catch(() => undefined);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, store.id, token]);
+
+  const handleFavoriteClick = async () => {
+    if (!isAuthReady) return;
+
+    if (!isAuthenticated || !token) {
+      showToast('Please log in to add pharmacies to favorites.');
+      return;
+    }
+
+    try {
+      setIsFavoriteLoading(true);
+      const response = await toggleFavoriteStore(store.id, token);
+
+      setIsFavorite(response.isFavorite);
+      showToast(
+        response.isFavorite
+          ? 'Pharmacy was added to favorites.'
+          : 'Pharmacy was removed from favorites.'
+      );
+    } catch {
+      showToast('Could not update pharmacy favorites.');
+    } finally {
+      setIsFavoriteLoading(false);
+    }
+  };
+
   return (
     <article className={css.card} aria-labelledby={`store-${store.id}-title`}>
+      <Toast message={toastMessage} isVisible={Boolean(toastMessage)} />
+
       <div className={css.imageWrap}>
         {store.imageUrl ? (
           <Image
@@ -64,13 +135,23 @@ function StoreCard({ store }: StoreCardProps) {
         <div className={css.metaRow}>
           {store.city ? <span className={css.city}>{store.city}</span> : null}
 
-          <span
-            className={css.rating}
-            aria-label={`Store rating ${ratingLabel}`}
-          >
-            <Star size={15} aria-hidden="true" />
-            {ratingLabel}
-          </span>
+          <div className={css.actionsRow}>
+            <span
+              className={css.rating}
+              aria-label={`Store rating ${ratingLabel}`}
+            >
+              <Star size={15} aria-hidden="true" />
+              {ratingLabel}
+            </span>
+
+            <FavoriteToggleButton
+              isActive={isFavorite}
+              disabled={isFavoriteLoading || !isAuthReady}
+              onClick={handleFavoriteClick}
+              activeLabel="Remove pharmacy from favorites"
+              inactiveLabel="Add pharmacy to favorites"
+            />
+          </div>
         </div>
 
         <h2 className={css.title} id={`store-${store.id}-title`}>
@@ -106,6 +187,14 @@ function StoreCard({ store }: StoreCardProps) {
               <span>Medicines</span>
             </dt>
             <dd>{getProductsCountLabel(store.availableProductsCount)}</dd>
+          </div>
+
+          <div className={css.summaryItem}>
+            <dt>
+              <MessageSquareText size={18} aria-hidden="true" />
+              <span>Reviews</span>
+            </dt>
+            <dd>{getReviewsCountLabel(store.reviewsCount)}</dd>
           </div>
         </dl>
 

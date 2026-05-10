@@ -66,6 +66,12 @@ const userSchema = new Schema<UserEntity>(
       ref: 'Product',
       default: [],
     },
+
+    favoriteStoreIds: {
+      type: [Schema.Types.ObjectId],
+      ref: 'Store',
+      default: [],
+    },
   },
   {
     timestamps: true,

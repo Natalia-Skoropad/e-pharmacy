@@ -24,3 +24,19 @@ export const storesQuerySchema = z.object({
 export const storeIdParamsSchema = z.object({
   storeId: z.string().regex(/^[a-f\d]{24}$/i, 'Store ID must be valid'),
 });
+
+
+//===============================================================
+
+export const createStoreReviewSchema = z.object({
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z
+    .string()
+    .trim()
+    .min(10)
+    .max(500)
+    .regex(
+      /^[A-Za-z0-9\s.,!?;:'"()\-]+$/,
+      'Review may contain only latin letters, numbers, spaces and basic punctuation'
+    ),
+});

@@ -69,7 +69,7 @@ export const createProductReviewSchema = z.object({
     .string()
     .trim()
     .min(10)
-    .max(200)
+    .max(500)
     .regex(
       /^[A-Za-z0-9\s.,!?;:'"()\-]+$/,
       'Review may contain only latin letters, numbers, spaces and basic punctuation'

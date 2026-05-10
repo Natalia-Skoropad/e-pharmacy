@@ -6,14 +6,6 @@ import { Store } from '../models/store.model';
 
 //===============================================================
 
-const STORE_IMAGE_URLS = [
-  'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1576602976047-174e57a47881?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1585435557343-3b348031e799?q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?q=80&w=1200&auto=format&fit=crop',
-];
-
 const REVIEW_AUTHORS = [
   'Natalia',
   'Olena',
@@ -25,72 +17,99 @@ const REVIEW_AUTHORS = [
   'Kateryna',
   'Yuliia',
   'Roman',
+  'Anna',
+  'Viktor',
+  'Maria',
+  'Taras',
+  'Nina',
 ];
 
 const REVIEW_COMMENTS = [
-  'Fast pickup and clear product information.',
-  'Good service and helpful pharmacy staff.',
-  'The product matched the description.',
-  'Ordering was simple and convenient.',
-  'Nice price compared with nearby pharmacies.',
-  'Everything was packed well and ready on time.',
+  'The order was processed quickly, the product page had clear details, and the pharmacy staff explained the pickup process very politely. I liked that the information about availability matched the real stock, so there were no surprises when I arrived. Packaging was neat, the receipt was ready, and the overall experience felt reliable. This is exactly the kind of service I want to see in an online pharmacy catalog when comparing offers, prices, and nearby stores before making a purchase.',
+  'I was checking several options and this one looked the most convenient because the description, price, rating, and pharmacy information were easy to understand. The product was prepared on time, the staff answered my questions calmly, and the checkout flow felt simple. Long reviews like this are helpful for testing the layout too: the card should stay readable, the spacing should not collapse, and the text should wrap naturally without breaking the design on mobile, tablet, or desktop screens.',
+  'Very good experience from search to pickup. The catalog helped me compare similar products, the rating looked realistic, and the pharmacy page showed useful address and phone details. The item was available exactly as shown, which is important when someone needs medicine quickly. I also liked that the review section is not too cramped, because longer feedback gives more context and makes the interface feel closer to a real marketplace with many active customers.',
+  'The product name, package size, and price were clear, and the pharmacy had enough stock when I came to collect the order. I usually pay attention to reviews before choosing a store, so it is useful to see detailed feedback instead of one short sentence. This comment intentionally has many words to check how five hundred character reviews behave inside cards, lists, tabs, lazy loading blocks, and responsive layouts without creating awkward gaps or visual noise.',
 ];
 
-const seedStores = [
-  {
-    name: 'Green Pharmacy',
-    address: '15 Khreshchatyk Street',
-    city: 'Kyiv',
-    phone: '+380441112233',
-    email: 'green.pharmacy@example.com',
-    rating: 4.8,
-    imageUrl: STORE_IMAGE_URLS[0],
-    description:
-      'A modern pharmacy with a wide range of medicines, vitamins, and healthcare products.',
-    isActive: true,
-  },
-  {
-    name: 'Health Plus',
-    address: '42 Soborna Avenue',
-    city: 'Lviv',
-    phone: '+380322223344',
-    email: 'health.plus@example.com',
-    rating: 4.6,
-    imageUrl: STORE_IMAGE_URLS[1],
-    description:
-      'Friendly local pharmacy focused on daily healthcare, hygiene, and wellness.',
-    isActive: true,
-  },
-  {
-    name: 'Family Med',
-    address: '8 Central Street',
-    city: 'Odesa',
-    phone: '+380487778899',
-    email: 'family.med@example.com',
-    rating: 4.7,
-    imageUrl: STORE_IMAGE_URLS[2],
-    description:
-      'Family-oriented pharmacy with essential medicines and personal care products.',
-    isActive: true,
-  },
-  ...Array.from({ length: 22 }, (_, index) => {
-    const branchNumber = index + 1;
-    const cities = ['Kyiv', 'Lviv', 'Odesa', 'Dnipro', 'Kharkiv'];
-    const city = cities[index % cities.length];
-
-    return {
-      name: `E-Pharmacy Branch ${branchNumber}`,
-      address: `${branchNumber + 10} Wellness Avenue`,
-      city,
-      phone: `+38050${String(1000000 + branchNumber).padStart(7, '0')}`,
-      email: `branch.${branchNumber}@e-pharmacy.example.com`,
-      rating: Number((4.1 + (index % 8) * 0.1).toFixed(1)),
-      imageUrl: STORE_IMAGE_URLS[index % STORE_IMAGE_URLS.length],
-      description: `E-Pharmacy branch in ${city} with everyday medicines and healthcare products.`,
-      isActive: true,
-    };
-  }),
+const CITIES = [
+  'Kyiv',
+  'Lviv',
+  'Odesa',
+  'Dnipro',
+  'Kharkiv',
+  'Vinnytsia',
+  'Chernihiv',
+  'Poltava',
+  'Rivne',
+  'Ternopil',
+  'Ivano-Frankivsk',
+  'Uzhhorod',
+  'Cherkasy',
+  'Zhytomyr',
 ];
+
+const STORE_BRANDS = [
+  'DobroMed Pharmacy',
+  'Apteka Zdorovia',
+  'Family Health Pharmacy',
+  'CityMed Pharmacy',
+  'MedService 24',
+  'VitaLine Pharmacy',
+  'Pulse Pharmacy',
+  'CarePoint Pharmacy',
+  'Health Bridge Pharmacy',
+  'Nova Apteka',
+  'Wellness Hub Pharmacy',
+  'MedComfort Pharmacy',
+  'PharmaPlus',
+  'Daily Care Pharmacy',
+  'SafeDose Pharmacy',
+  'Pharmacy Near You',
+];
+
+const STREETS = [
+  'Central Street',
+  'Soborna Avenue',
+  'Shevchenka Street',
+  'Independence Avenue',
+  'Peace Street',
+  'European Square',
+  'Medical Lane',
+  'Hospitalna Street',
+  'University Avenue',
+  'Green Boulevard',
+];
+
+const PRODUCT_BLUEPRINTS = [
+  ['Paracetamol Forte 500 mg tablets', 'medicine', 'MedCare', '500 mg', '20 tablets'],
+  ['Ibuprofen Rapid 200 mg capsules', 'medicine', 'PharmaLine', '200 mg', '20 capsules'],
+  ['Loratadine Allergy Relief 10 mg tablets', 'medicine', 'AllergoHelp', '10 mg', '10 tablets'],
+  ['Drotaverine Comfort 40 mg tablets', 'medicine', 'CareLabs', '40 mg', '24 tablets'],
+  ['Ambroxol Cough Syrup 30 mg bottle', 'medicine', 'BronchoCare', '30 mg/5 ml', '100 ml'],
+  ['Vitamin C Plus Zinc effervescent tablets', 'vitamins', 'VitaLife', '1000 mg', '20 tablets'],
+  ['Vitamin D3 Daily 2000 IU softgels', 'vitamins', 'SunVita', '2000 IU', '60 softgels'],
+  ['Magnesium B6 Complex tablets', 'vitamins', 'NeuroVita', '400 mg', '60 tablets'],
+  ['Omega 3 Premium fish oil capsules', 'vitamins', 'Nordic Care', '1000 mg', '90 capsules'],
+  ['Probiotic Balance capsules', 'vitamins', 'GutCare', '10 billion CFU', '30 capsules'],
+  ['Digital Thermometer Flex Tip', 'medical-devices', 'HealthTech', undefined, '1 device'],
+  ['Automatic Blood Pressure Monitor', 'medical-devices', 'CardioCheck', undefined, '1 device'],
+  ['Pulse Oximeter Finger Monitor', 'medical-devices', 'OxyCare', undefined, '1 device'],
+  ['Nebulizer Compact Home Care', 'medical-devices', 'BreathWell', undefined, '1 device'],
+  ['Glucose Test Strips Universal', 'medical-devices', 'GlucoSafe', undefined, '50 strips'],
+  ['Antiseptic Spray Chlorhexidine', 'hygiene', 'CleanMed', undefined, '100 ml'],
+  ['Medical Face Masks three layer', 'hygiene', 'SafeMask', undefined, '50 masks'],
+  ['Hand Sanitizer Aloe Vera', 'hygiene', 'CleanHands', undefined, '250 ml'],
+  ['Sterile Bandage Set', 'hygiene', 'FirstAid', undefined, '10 pcs'],
+  ['Saline Nasal Spray Gentle', 'hygiene', 'NasoCare', undefined, '50 ml'],
+  ['Moisturizing Hand Cream Urea', 'beauty', 'SoftCare', undefined, '75 ml'],
+  ['Sunscreen SPF 50 Sensitive Skin', 'beauty', 'DermaSun', undefined, '100 ml'],
+  ['Lip Balm Panthenol Repair', 'beauty', 'DermaSoft', undefined, '4.8 g'],
+  ['Face Cleansing Gel Sensitive', 'beauty', 'SkinBalance', undefined, '200 ml'],
+  ['Thermal Water Spray', 'beauty', 'AquaDerm', undefined, '150 ml'],
+  ['First Aid Travel Kit', 'other', 'TravelMed', undefined, '1 kit'],
+  ['Reusable Hot and Cold Gel Pack', 'other', 'ComfortAid', undefined, '1 pack'],
+  ['Pill Organizer Weekly Box', 'other', 'DailyDose', undefined, '1 organizer'],
+] as const;
 
 //===============================================================
 
@@ -106,20 +125,37 @@ type SeedStoreDocument = {
 
 //===============================================================
 
-function getStoreByName(
-  stores: SeedStoreDocument[],
-  name: string
-): SeedStoreDocument {
-  const store = stores.find((item) => item.name === name);
-
-  if (!store) {
-    throw new Error(`Seed store "${name}" was not created`);
-  }
-
-  return store;
+function createImageUrl(type: 'product' | 'store', index: number): string {
+  return `https://picsum.photos/seed/e-pharmacy-${type}-${index}/1200/900`;
 }
 
-//===============================================================
+function createSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function createModeratedReview(index: number, preferredRating?: number) {
+  return {
+    userName: REVIEW_AUTHORS[index % REVIEW_AUTHORS.length],
+    rating: preferredRating ?? ((index % 5) + 1),
+    comment: REVIEW_COMMENTS[index % REVIEW_COMMENTS.length],
+    isModerated: true,
+    moderatedAt: new Date(
+      `2026-04-${String(1 + (index % 25)).padStart(2, '0')}T10:00:00.000Z`
+    ),
+    createdAt: new Date(
+      `2026-04-${String(1 + (index % 25)).padStart(2, '0')}T09:00:00.000Z`
+    ),
+  };
+}
+
+function createModeratedReviews(count: number, ratingBase = 4) {
+  return Array.from({ length: count }, (_, index) =>
+    createModeratedReview(index, Math.min(5, ratingBase + (index % 2)))
+  );
+}
 
 function createOffer(
   store: SeedStoreDocument,
@@ -137,7 +173,7 @@ function createOffer(
     storePhone: store.phone,
     storeImageUrl: store.imageUrl,
     storeRating: store.rating,
-    storeReviewsCount: 12 + (price % 9),
+    storeReviewsCount: 18 + (price % 17),
     price,
     totalQuantity,
     activeQuantity,
@@ -146,313 +182,79 @@ function createOffer(
   };
 }
 
-function createModeratedReview(index: number) {
-  return {
-    userName: REVIEW_AUTHORS[index % REVIEW_AUTHORS.length],
-    rating: (index % 5) + 1,
-    comment: REVIEW_COMMENTS[index % REVIEW_COMMENTS.length],
-    isModerated: true,
-    moderatedAt: new Date(`2026-04-${String(1 + (index % 25)).padStart(2, '0')}T10:00:00.000Z`),
-    createdAt: new Date(`2026-04-${String(1 + (index % 25)).padStart(2, '0')}T09:00:00.000Z`),
-  };
-}
+function createSeedStores() {
+  return Array.from({ length: 98 }, (_, index) => {
+    const storeNumber = index + 1;
+    const city = CITIES[index % CITIES.length];
+    const brand = STORE_BRANDS[index % STORE_BRANDS.length];
+    const street = STREETS[index % STREETS.length];
+    const reviewsCount = index < 34 ? 26 + (index % 9) : 6 + (index % 18);
 
-function createModeratedReviews(count: number) {
-  return Array.from({ length: count }, (_, index) =>
-    createModeratedReview(index)
-  );
+    return {
+      name: `${brand} ${city} ${storeNumber}`,
+      address: `${12 + index} ${street}`,
+      city,
+      phone: `+380${String(501000000 + storeNumber).padStart(9, '0')}`,
+      email: `store.${storeNumber}@e-pharmacy.example.com`,
+      rating: Number((4 + (index % 10) * 0.1).toFixed(1)),
+      imageUrl: createImageUrl('store', storeNumber),
+      description: `${brand} in ${city} offers everyday medicines, vitamins, medical devices, hygiene products, and quick online reservation for local customers.`,
+      isActive: true,
+      reviewsCount,
+      reviews: createModeratedReviews(reviewsCount, 4),
+    };
+  });
 }
-
-//===============================================================
 
 function createSeedProducts(stores: SeedStoreDocument[]) {
-  const greenPharmacy = getStoreByName(stores, 'Green Pharmacy');
-  const healthPlus = getStoreByName(stores, 'Health Plus');
-  const familyMed = getStoreByName(stores, 'Family Med');
-  const firstTwentyFiveStores = stores.slice(0, 25);
-
-  const highlightedProducts = [
-    {
-      name: 'Paracetamol 500 mg',
-      slug: 'paracetamol-500-mg',
-      article: 'MED-PAR-500',
-      description:
-        'Common pain relief and fever reducer. Use only according to the instructions.',
-      category: 'medicine',
-      price: 79,
-      imageUrl:
-        'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=1200&auto=format&fit=crop',
-      manufacturer: 'MedCare',
-      dosage: '500 mg',
-      packageQuantity: '20 tablets',
-      storeId: greenPharmacy._id,
-      storeName: greenPharmacy.name,
-      offers: [
-        createOffer(greenPharmacy, 79, 100, 10),
-        createOffer(healthPlus, 84, 60, 5),
-        createOffer(familyMed, 82, 40, 0),
-      ],
-      inStock: true,
-      rating: 4.7,
-      reviewsCount: 2,
-      reviews: createModeratedReviews(2),
-    },
-    {
-      name: 'Vitamin C 1000 mg',
-      slug: 'vitamin-c-1000-mg',
-      article: 'VIT-C-1000',
-      description:
-        'Vitamin C supplement for daily wellness support. Follow package instructions.',
-      category: 'vitamins',
-      price: 145,
-      imageUrl:
-        'https://images.unsplash.com/photo-1550572017-edd951b55104?q=80&w=1200&auto=format&fit=crop',
-      manufacturer: 'VitaLife',
-      dosage: '1000 mg',
-      packageQuantity: '30 tablets',
-      storeId: greenPharmacy._id,
-      storeName: greenPharmacy.name,
-      offers: [
-        createOffer(greenPharmacy, 145, 42, 2),
-        createOffer(familyMed, 151, 26, 0),
-      ],
-      inStock: true,
-      rating: 4.5,
-      reviewsCount: 1,
-      reviews: createModeratedReviews(1),
-    },
-    {
-      name: 'Digital Thermometer',
-      slug: 'digital-thermometer',
-      article: 'DEV-THERMO-01',
-      description:
-        'Electronic thermometer for quick body temperature measurement.',
-      category: 'medical-devices',
-      price: 229,
-      imageUrl:
-        'https://images.unsplash.com/photo-1583912267550-d44c808ac112?q=80&w=1200&auto=format&fit=crop',
-      manufacturer: 'HealthTech',
-      packageQuantity: '1 device',
-      storeId: healthPlus._id,
-      storeName: healthPlus.name,
-      offers: [createOffer(healthPlus, 229, 18, 1)],
-      inStock: true,
-      rating: 4.4,
-      reviewsCount: 1,
-      reviews: createModeratedReviews(1),
-    },
-    {
-      name: 'Ibuprofen 200 mg',
-      slug: 'ibuprofen-200-mg',
-      article: 'MED-IBU-200',
-      description:
-        'Pain relief medicine. Read instructions and consult a specialist if needed.',
-      category: 'medicine',
-      price: 96,
-      imageUrl:
-        'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?q=80&w=1200&auto=format&fit=crop',
-      manufacturer: 'PharmaLine',
-      dosage: '200 mg',
-      packageQuantity: '20 tablets',
-      storeId: healthPlus._id,
-      storeName: healthPlus.name,
-      offers: [
-        createOffer(healthPlus, 96, 35, 3),
-        createOffer(greenPharmacy, 101, 28, 0),
-      ],
-      inStock: true,
-      rating: 4.6,
-      reviewsCount: 0,
-      reviews: [],
-    },
-    {
-      name: 'Antiseptic Spray',
-      slug: 'antiseptic-spray',
-      article: 'HYG-SPRAY-100',
-      description:
-        'Antiseptic spray for external use. Suitable for home first-aid kits.',
-      category: 'hygiene',
-      price: 118,
-      imageUrl:
-        'https://images.unsplash.com/photo-1584634731339-252c581abfc5?q=80&w=1200&auto=format&fit=crop',
-      manufacturer: 'CleanMed',
-      packageQuantity: '100 ml',
-      storeId: familyMed._id,
-      storeName: familyMed.name,
-      offers: [createOffer(familyMed, 118, 50, 7)],
-      inStock: true,
-      rating: 4.3,
-      reviewsCount: 0,
-      reviews: [],
-    },
-    {
-      name: 'Moisturizing Hand Cream',
-      slug: 'moisturizing-hand-cream',
-      article: 'BEAUTY-HAND-75',
-      description:
-        'Daily moisturizing cream for dry hands and sensitive skin care.',
-      category: 'beauty',
-      price: 132,
-      imageUrl:
-        'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?q=80&w=1200&auto=format&fit=crop',
-      manufacturer: 'SoftCare',
-      packageQuantity: '75 ml',
-      storeId: familyMed._id,
-      storeName: familyMed.name,
-      offers: [createOffer(familyMed, 132, 0, 0)],
-      inStock: false,
-      rating: 4.2,
-      reviewsCount: 0,
-      reviews: [],
-    },
-    {
-      name: 'Cold Relief Capsules',
-      slug: 'cold-relief-capsules',
-      article: 'MED-COLD-SOLD',
-      description:
-        'Cold relief capsules. This demo product has customer reviews but is currently unavailable in all pharmacies.',
-      category: 'medicine',
-      price: 0,
-      imageUrl:
-        'https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?q=80&w=1200&auto=format&fit=crop',
-      manufacturer: 'CareLabs',
-      dosage: '250 mg',
-      packageQuantity: '12 capsules',
-      offers: [],
-      inStock: false,
-      rating: 4.6,
-      reviewsCount: 4,
-      reviews: createModeratedReviews(4),
-    },
-    {
-      name: 'Magnesium Complex 400 mg',
-      slug: 'magnesium-complex-400-mg',
-      article: 'VIT-MAG-400',
-      description:
-        'Magnesium complex supplement. This demo product has many reviews to test lazy loading in the reviews tab.',
-      category: 'vitamins',
-      price: 210,
-      imageUrl:
-        'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?q=80&w=1200&auto=format&fit=crop',
-      manufacturer: 'VitaLife',
-      dosage: '400 mg',
-      packageQuantity: '60 tablets',
-      storeId: greenPharmacy._id,
-      storeName: greenPharmacy.name,
-      offers: [
-        createOffer(greenPharmacy, 210, 55, 5),
-        createOffer(healthPlus, 224, 34, 4),
-      ],
-      inStock: true,
-      rating: 4.4,
-      reviewsCount: 25,
-      reviews: createModeratedReviews(25),
-    },
-    {
-      name: 'Omega 3 Fish Oil',
-      slug: 'omega-3-fish-oil',
-      article: 'VIT-OMEGA-25',
-      description:
-        'Omega 3 supplement. This demo product is available in 25 pharmacies to test lazy loading in the prices tab.',
-      category: 'vitamins',
-      price: 185,
-      imageUrl:
-        'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?q=80&w=1200&auto=format&fit=crop',
-      manufacturer: 'Nordic Care',
-      dosage: '1000 mg',
-      packageQuantity: '90 capsules',
-      storeId: firstTwentyFiveStores[0]._id,
-      storeName: firstTwentyFiveStores[0].name,
-      offers: firstTwentyFiveStores.map((store, index) =>
-        createOffer(store, 185 + index * 3, 24 + index, index % 4)
-      ),
-      inStock: true,
-      rating: 4.5,
-      reviewsCount: 3,
-      reviews: createModeratedReviews(3),
-    },
-  ];
-
-  const productNames = [
-    'Allergy Relief Tablets',
-    'Calcium D3 Complex',
-    'Zinc Immune Support',
-    'Nasal Spray Gentle',
-    'Cough Syrup Herbal',
-    'Electrolyte Powder',
-    'First Aid Bandages',
-    'Face Cleansing Gel',
-    'Hand Sanitizer Aloe',
-    'Blood Pressure Monitor',
-    'Pulse Oximeter',
-    'Vitamin D3 2000 IU',
-    'Probiotic Daily Capsules',
-    'Eye Drops Comfort',
-    'Throat Lozenges Honey',
-    'Baby Skin Cream',
-    'Sunscreen SPF 50',
-    'Medical Face Masks',
-    'Elastic Bandage',
-    'Glucose Test Strips',
-  ];
-
-  const categories = [
-    'medicine',
-    'vitamins',
-    'beauty',
-    'hygiene',
-    'medical-devices',
-    'other',
-  ] as const;
-
-  const productImageUrls = [
-    'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=1200&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1550572017-edd951b55104?q=80&w=1200&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?q=80&w=1200&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1584634731339-252c581abfc5?q=80&w=1200&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?q=80&w=1200&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?q=80&w=1200&auto=format&fit=crop',
-  ];
-
-  const generatedProducts = Array.from({ length: 91 }, (_, index) => {
-    const productNumber = index + 10;
-    const category = categories[index % categories.length];
-    const name = `${productNames[index % productNames.length]} ${productNumber}`;
-    const price = 65 + ((index * 17) % 420);
-    const selectedStores = stores.slice(index % 5, (index % 5) + 3);
-    const offers = selectedStores.map((store, offerIndex) =>
-      createOffer(
-        store,
-        price + offerIndex * 9,
-        index % 7 === 0 ? 0 : 18 + index + offerIndex,
-        index % 7 === 0 ? 0 : offerIndex
-      )
+  return Array.from({ length: 126 }, (_, index) => {
+    const productNumber = index + 1;
+    const [baseName, category, manufacturer, dosage, packageQuantity] =
+      PRODUCT_BLUEPRINTS[index % PRODUCT_BLUEPRINTS.length];
+    const name = `${baseName} ${productNumber > PRODUCT_BLUEPRINTS.length ? `№${productNumber}` : ''}`.trim();
+    const isPremium = index % 6 === 0 || index % 11 === 0;
+    const basePrice = isPremium
+      ? 1050 + ((index * 137) % 2450)
+      : 75 + ((index * 29) % 780);
+    const offersCount = index % 10 === 0 ? 25 : 2 + (index % 5);
+    const selectedStores = Array.from({ length: offersCount }, (_, offerIndex) =>
+      stores[(index * 3 + offerIndex) % stores.length]
     );
-    const isAvailable = offers.some((offer) => offer.inStock);
-    const reviewsCount = index % 9;
+    const isSoldOut = index % 17 === 0;
+    const offers = isSoldOut
+      ? []
+      : selectedStores.map((store, offerIndex) =>
+          createOffer(
+            store,
+            basePrice + offerIndex * (7 + (index % 5)),
+            12 + ((index + offerIndex) % 48),
+            offerIndex % 4
+          )
+        );
+    const reviewsCount =
+      index < 38 ? 18 + (index % 16) : index % 4 === 0 ? 10 + (index % 8) : index % 9;
+    const rating = Number((4 + (index % 11) * 0.09).toFixed(1));
 
     return {
       name,
-      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-      article: `DEMO-${String(productNumber).padStart(3, '0')}`,
-      description: `Demo catalog product ${productNumber} for testing filters, sorting, pagination, and product cards.`,
+      slug: createSlug(name),
+      article: `EPH-${String(productNumber).padStart(4, '0')}`,
+      description: `${name} is a realistic demo catalog item for testing product cards, price formatting, long review text, filters, sorting, pharmacy availability, and responsive catalog layouts.`,
       category,
-      price: isAvailable ? price : 0,
-      imageUrl: productImageUrls[index % productImageUrls.length],
-      manufacturer: ['MedCare', 'VitaLife', 'HealthTech', 'CleanMed', 'SoftCare'][index % 5],
-      dosage: category === 'medicine' || category === 'vitamins' ? `${100 + (index % 9) * 50} mg` : undefined,
-      packageQuantity: category === 'medical-devices' ? '1 device' : `${10 + (index % 6) * 10} pcs`,
+      price: offers.length > 0 ? basePrice : 0,
+      imageUrl: createImageUrl('product', productNumber),
+      manufacturer,
+      dosage,
+      packageQuantity,
       storeId: offers[0]?.storeId,
       storeName: offers[0]?.storeName,
       offers,
-      inStock: isAvailable,
-      rating: Number((3.1 + (index % 20) * 0.09).toFixed(1)),
+      inStock: offers.some((offer) => offer.inStock),
+      rating,
       reviewsCount,
-      reviews: createModeratedReviews(reviewsCount),
+      reviews: createModeratedReviews(reviewsCount, 4),
     };
   });
-
-  return [...highlightedProducts, ...generatedProducts];
 }
 
 //===============================================================
@@ -467,7 +269,7 @@ async function seedDatabase(): Promise<void> {
   await Promise.all([Store.deleteMany({}), Product.deleteMany({})]);
 
   const createdStores = (await Store.insertMany(
-    seedStores
+    createSeedStores()
   )) as SeedStoreDocument[];
 
   const seedProducts = createSeedProducts(createdStores);

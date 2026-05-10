@@ -63,7 +63,7 @@ type ProductDetailsPageContentProps = {
 
 //===================================================================
 
-const REVIEW_MAX_LENGTH = 200;
+const REVIEW_MAX_LENGTH = 500;
 const REVIEW_MIN_LENGTH = 10;
 const OFFERS_PER_PAGE = 10;
 const SEARCH_MAX_LENGTH = 80;
@@ -808,7 +808,7 @@ function ProductDetailsPageContent({
                       className={css.reviewTextarea}
                       value={reviewText}
                       maxLength={REVIEW_MAX_LENGTH}
-                      placeholder="Write 10–200 characters using latin letters."
+                      placeholder="Write 10–500 characters using latin letters."
                       onChange={(event) =>
                         handleReviewTextChange(event.target.value)
                       }
