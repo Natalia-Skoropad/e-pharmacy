@@ -154,3 +154,21 @@ export function getPharmacyStoresDescription(
 
   return 'Find active E-PHARMACY pharmacy stores, compare ratings, addresses, phone numbers, and available medicines before choosing where to shop.';
 }
+
+export function getPharmacyStoresSeoTextParts(
+  filters: PharmacyStoresFilters
+): string[] {
+  const cityText = filters.city ? `pharmacies in ${filters.city}` : 'active pharmacy stores';
+
+  return [
+    'Choose trusted',
+    cityText,
+    'without bouncing between random tabs. In the E-PHARMACY pharmacy catalog, you can compare store ratings, addresses, contact details, and the number of medicines available before opening a pharmacy page. Use search by name or address, select a city, sort the list, and then move straight to the medicines from the store that looks right. Simple, tidy, and much less dramatic than hunting for a pharmacy at 22:59.',
+  ];
+}
+
+export function shouldShowPharmacyStoresSeoText(
+  filters: PharmacyStoresFilters
+): boolean {
+  return !isPharmacyStoresNoIndex(filters);
+}

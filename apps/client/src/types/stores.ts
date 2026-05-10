@@ -5,6 +5,7 @@ export type Store = {
   city?: string;
   phone?: string;
   email?: string;
+  workingHours?: string;
   rating?: number;
   imageUrl?: string;
   description?: string;

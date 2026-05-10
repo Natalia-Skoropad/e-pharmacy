@@ -2,13 +2,18 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
-import { MapPin, MessageSquareText, Phone, ShoppingBag, Star } from 'lucide-react';
 
-import { ButtonLink, FavoriteToggleButton, SvgIcon, Toast } from '@/components/common';
+import {
+  ButtonLink,
+  FavoriteToggleButton,
+  RatingSummary,
+  SvgIcon,
+  Toast,
+} from '@/components/common';
 import { useAuth } from '@/components/providers';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
-import { ROUTES } from '@/lib/constants/routes';
+import { buildStorePath } from '@/lib/routes';
 import { getStoreDetails, toggleFavoriteStore } from '@/services';
 
 import type { Store } from '@/types';
@@ -23,22 +28,8 @@ type StoreCardProps = {
 
 //===================================================================
 
-function slugify(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80);
-}
-
 function getProductsCountLabel(count = 0): string {
   return `${count} ${count === 1 ? 'product' : 'products'} available`;
-}
-
-function getReviewsCountLabel(count = 0): string {
-  return `${count} ${count === 1 ? 'review' : 'reviews'}`;
 }
 
 //===================================================================
@@ -50,12 +41,10 @@ function StoreCard({ store }: StoreCardProps) {
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
-  const medicinesHref = buildMedicinesCatalogPath(
-    { storeId: store.id },
-    [store]
-  );
-  const storeHref = `${ROUTES.STORES}/${slugify(store.name)}-${store.id}`;
-  const ratingLabel = store.rating ? store.rating.toFixed(1) : 'New';
+  const medicinesHref = buildMedicinesCatalogPath({ storeId: store.id }, [
+    store,
+  ]);
+  const storeHref = buildStorePath(store.name, store.id);
 
   const showToast = useCallback((message: string) => {
     setToastMessage('');
@@ -129,29 +118,28 @@ function StoreCard({ store }: StoreCardProps) {
             <SvgIcon name="icon-map-pin" size={34} />
           </div>
         )}
+
+        <div className={css.favoriteWrap}>
+          <FavoriteToggleButton
+            isActive={isFavorite}
+            disabled={isFavoriteLoading || !isAuthReady}
+            onClick={handleFavoriteClick}
+            activeLabel="Remove pharmacy from favorites"
+            inactiveLabel="Add pharmacy to favorites"
+          />
+        </div>
       </div>
 
       <div className={css.content}>
         <div className={css.metaRow}>
           {store.city ? <span className={css.city}>{store.city}</span> : null}
 
-          <div className={css.actionsRow}>
-            <span
-              className={css.rating}
-              aria-label={`Store rating ${ratingLabel}`}
-            >
-              <Star size={15} aria-hidden="true" />
-              {ratingLabel}
-            </span>
-
-            <FavoriteToggleButton
-              isActive={isFavorite}
-              disabled={isFavoriteLoading || !isAuthReady}
-              onClick={handleFavoriteClick}
-              activeLabel="Remove pharmacy from favorites"
-              inactiveLabel="Add pharmacy to favorites"
-            />
-          </div>
+          <RatingSummary
+            className={css.ratingSummary}
+            rating={store.rating}
+            reviewsCount={store.reviewsCount ?? 0}
+            size="sm"
+          />
         </div>
 
         <h2 className={css.title} id={`store-${store.id}-title`}>
@@ -160,19 +148,13 @@ function StoreCard({ store }: StoreCardProps) {
 
         <dl className={css.summaryList}>
           <div className={css.summaryItem}>
-            <dt>
-              <MapPin size={18} aria-hidden="true" />
-              <span>Address</span>
-            </dt>
+            <dt>Address</dt>
             <dd>{store.address}</dd>
           </div>
 
           {store.phone ? (
             <div className={css.summaryItem}>
-              <dt>
-                <Phone size={18} aria-hidden="true" />
-                <span>Phone</span>
-              </dt>
+              <dt>Phone</dt>
               <dd>
                 <a className={css.phoneLink} href={`tel:${store.phone}`}>
                   {store.phone}
@@ -182,24 +164,18 @@ function StoreCard({ store }: StoreCardProps) {
           ) : null}
 
           <div className={css.summaryItem}>
-            <dt>
-              <ShoppingBag size={18} aria-hidden="true" />
-              <span>Medicines</span>
-            </dt>
+            <dt>Medicines</dt>
             <dd>{getProductsCountLabel(store.availableProductsCount)}</dd>
-          </div>
-
-          <div className={css.summaryItem}>
-            <dt>
-              <MessageSquareText size={18} aria-hidden="true" />
-              <span>Reviews</span>
-            </dt>
-            <dd>{getReviewsCountLabel(store.reviewsCount)}</dd>
           </div>
         </dl>
 
         <div className={css.footer}>
-          <ButtonLink className={css.detailsLink} href={storeHref} size="sm">
+          <ButtonLink
+            className={css.detailsLink}
+            href={storeHref}
+            size="sm"
+            variant="secondary"
+          >
             Store details
           </ButtonLink>
 

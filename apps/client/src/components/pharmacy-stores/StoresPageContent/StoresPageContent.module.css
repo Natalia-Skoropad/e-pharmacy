@@ -30,6 +30,28 @@
   letter-spacing: var(--ls-tight);
 }
 
+
+.seoAccent {
+  display: inline;
+  padding-inline: 5px;
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border-radius: 8px;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
 .notice {
   padding: 14px 16px;
   margin-bottom: 20px;

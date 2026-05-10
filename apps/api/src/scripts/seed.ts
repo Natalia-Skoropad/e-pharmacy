@@ -243,6 +243,7 @@ function createSeedStores() {
       city,
       phone: `+380${String(501000000 + storeNumber).padStart(9, '0')}`,
       email: `store.${storeNumber}@e-pharmacy.example.com`,
+      workingHours: 'Mon–Fri 08:00–21:00, Sat–Sun 09:00–18:00',
       rating: Number((4 + (index % 10) * 0.1).toFixed(1)),
       imageUrl: createStoreImageUrl(index),
       description: `${brand} in ${city} offers everyday medicines, vitamins, medical devices, hygiene products, and quick online reservation for local customers.`,

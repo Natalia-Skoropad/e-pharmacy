@@ -20,6 +20,7 @@ export type StoreEntity = {
   city?: string;
   phone?: string;
   email?: string;
+  workingHours?: string;
   rating?: number;
   imageUrl?: string;
   description?: string;
@@ -40,6 +41,7 @@ export type StoreResponseDto = {
   city?: string;
   phone?: string;
   email?: string;
+  workingHours?: string;
   rating?: number;
   imageUrl?: string;
   description?: string;

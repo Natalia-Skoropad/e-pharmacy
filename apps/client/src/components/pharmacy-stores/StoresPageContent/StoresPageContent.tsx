@@ -6,7 +6,9 @@ import { StoresCatalogFiltersForm } from '@/components/pharmacy-stores/StoresCat
 import {
   buildPharmacyStoresPath,
   getPharmacyStoresDescription,
+  getPharmacyStoresSeoTextParts,
   getPharmacyStoresTitle,
+  shouldShowPharmacyStoresSeoText,
   type PharmacyStoresFilters,
 } from '@/lib/catalog/pharmacy-stores-catalog';
 import { ROUTES } from '@/lib/constants/routes';
@@ -45,6 +47,8 @@ function StoresPageContent({
   const storesCountLabel = total === 1 ? '1 store' : `${total} stores`;
   const pageTitle = getPharmacyStoresTitle(filters);
   const pageDescription = getPharmacyStoresDescription(filters);
+  const showSeoText = shouldShowPharmacyStoresSeoText(filters);
+  const seoTextParts = getPharmacyStoresSeoTextParts(filters);
 
   return (
     <main className={css.page}>
@@ -86,13 +90,21 @@ function StoresPageContent({
             ariaLabel="Pharmacy stores pagination"
           />
 
-          <section className={css.seoCard} aria-labelledby="stores-seo-title">
-            <h2 className={css.seoTitle} id="stores-seo-title">
-              Choose a trusted pharmacy before you order
-            </h2>
+          {showSeoText ? (
+            <section className={css.seoCard} aria-labelledby="stores-seo-title">
+              <h2 className={css.seoTitle} id="stores-seo-title">
+                Choose a trusted pharmacy before you order
+              </h2>
 
-            <p className={css.sectionText}>{pageDescription}</p>
-          </section>
+              <p className={css.sectionText}>
+                {seoTextParts[0]}{' '}
+                <strong className={css.seoAccent}>{seoTextParts[1]}</strong>{' '}
+                {seoTextParts[2]}
+              </p>
+
+              <p className={css.visuallyHidden}>{pageDescription}</p>
+            </section>
+          ) : null}
         </Container>
       </section>
     </main>

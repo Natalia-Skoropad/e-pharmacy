@@ -128,6 +128,7 @@ function serializeStore(
     ...(store.city ? { city: store.city } : {}),
     ...(store.phone ? { phone: store.phone } : {}),
     ...(store.email ? { email: store.email } : {}),
+    ...(store.workingHours ? { workingHours: store.workingHours } : {}),
     ...(averageRating !== null
       ? { rating: averageRating }
       : typeof store.rating === 'number'

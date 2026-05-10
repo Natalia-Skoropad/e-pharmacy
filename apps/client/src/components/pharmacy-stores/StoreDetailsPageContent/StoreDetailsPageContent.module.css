@@ -97,6 +97,10 @@
   color: var(--color-text-muted);
 }
 
+.summaryItem dt svg {
+  flex-shrink: 0;
+}
+
 .summaryItem dd {
   max-width: 58%;
   font-weight: var(--fw-medium);
@@ -114,15 +118,8 @@
   color: var(--color-accent);
 }
 
-.description {
-  margin-top: 24px;
-  font-size: var(--fz-16);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
-}
-
 .link {
-  width: fit-content;
+  width: 100%;
   margin-top: 28px;
 }
 
@@ -146,6 +143,13 @@
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
   color: var(--color-text-primary);
+}
+
+.descriptionText {
+  max-width: 860px;
+  font-size: var(--fz-16);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
 }
 
 .resultCount,
@@ -186,7 +190,9 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   outline: none;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .reviewTextarea:focus {
@@ -223,7 +229,10 @@
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
-  transition: color var(--transition-base), border-color var(--transition-base), background-color var(--transition-base);
+  transition:
+    color var(--transition-base),
+    border-color var(--transition-base),
+    background-color var(--transition-base);
 }
 
 .starButtonActive {
@@ -263,9 +272,14 @@
   .reviewSubmitButton {
     width: fit-content;
   }
+
+  .link {
+    width: 400px;
+    margin-left: auto;
+  }
 }
 
-@media only screen and (min-width: 1024px) {
+@media only screen and (min-width: 1440px) {
   .grid {
     grid-template-columns: minmax(360px, 520px) minmax(0, 1fr);
     gap: 40px;

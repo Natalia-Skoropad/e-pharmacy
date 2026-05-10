@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MapPin, Phone, ShoppingBag, Star } from 'lucide-react';
+import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 
 import {
   ButtonLink,
@@ -20,7 +20,11 @@ import { useAuth } from '@/components/providers';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 import { ROUTES } from '@/lib/constants/routes';
-import { createStoreReview, getStoreDetails, toggleFavoriteStore } from '@/services';
+import {
+  createStoreReview,
+  getStoreDetails,
+  toggleFavoriteStore,
+} from '@/services';
 
 import type { Store, StoreReview } from '@/types';
 
@@ -28,7 +32,7 @@ import css from './StoreDetailsPageContent.module.css';
 
 //===================================================================
 
-type StoreTab = 'about' | 'reviews';
+type StoreTab = 'details' | 'about' | 'reviews';
 
 type StoreDetailsPageContentProps = {
   store: Store;
@@ -53,11 +57,8 @@ function getReviewsCountLabel(count = 0): string {
   return count === 1 ? '1 review' : `${count} reviews`;
 }
 
-function getStoreDescription(store: Store): string {
-  return (
-    store.description ??
-    `${store.name} is an online pharmacy store in the E-PHARMACY catalog. Customers can check address, phone number, rating, available medicines, and reviews before choosing where to reserve products.`
-  );
+function getStoreWorkingHours(workingHours?: string): string {
+  return workingHours || 'Mon–Fri 08:00–21:00, Sat–Sun 09:00–18:00';
 }
 
 //===================================================================
@@ -70,7 +71,7 @@ function StoreDetailsPageContent({
 }: StoreDetailsPageContentProps) {
   const { token, isAuthenticated, isAuthReady } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<StoreTab>('about');
+  const [activeTab, setActiveTab] = useState<StoreTab>('details');
   const [isFavorite, setIsFavorite] = useState(Boolean(store.isFavorite));
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -80,14 +81,17 @@ function StoreDetailsPageContent({
 
   const tabs = useMemo<TabItem<StoreTab>[]>(
     () => [
+      { value: 'details', label: 'Details' },
       { value: 'about', label: 'About pharmacy' },
       { value: 'reviews', label: `Reviews (${reviewsTotal})` },
     ],
     [reviewsTotal]
   );
 
-  const medicinesHref = buildMedicinesCatalogPath({ storeId: store.id }, [store]);
-  const ratingLabel = store.rating ? store.rating.toFixed(1) : 'New';
+  const medicinesHref = buildMedicinesCatalogPath({ storeId: store.id }, [
+    store,
+  ]);
+
   const reviewsCountLabel = getReviewsCountLabel(reviewsTotal);
   const isReviewValid =
     reviewText.trim().length >= REVIEW_MIN_LENGTH &&
@@ -206,7 +210,7 @@ function StoreDetailsPageContent({
             onChange={setActiveTab}
           />
 
-          {activeTab === 'about' ? (
+          {activeTab === 'details' ? (
             <div className={css.grid}>
               <div className={css.imageCard}>
                 {store.imageUrl ? (
@@ -267,24 +271,36 @@ function StoreDetailsPageContent({
                     </div>
                   ) : null}
 
+                  {store.email ? (
+                    <div className={css.summaryItem}>
+                      <dt>
+                        <Mail size={18} aria-hidden="true" />
+                        Email
+                      </dt>
+                      <dd>
+                        <a href={`mailto:${store.email}`}>{store.email}</a>
+                      </dd>
+                    </div>
+                  ) : null}
+
+                  <div className={css.summaryItem}>
+                    <dt>
+                      <Clock size={18} aria-hidden="true" />
+                      Working hours
+                    </dt>
+                    <dd>{getStoreWorkingHours(store.workingHours)}</dd>
+                  </div>
+
                   <div className={css.summaryItem}>
                     <dt>
                       <ShoppingBag size={18} aria-hidden="true" />
                       Medicines
                     </dt>
-                    <dd>{getProductsCountLabel(store.availableProductsCount)}</dd>
-                  </div>
-
-                  <div className={css.summaryItem}>
-                    <dt>
-                      <Star size={18} aria-hidden="true" />
-                      Rating
-                    </dt>
-                    <dd>{ratingLabel}</dd>
+                    <dd>
+                      {getProductsCountLabel(store.availableProductsCount)}
+                    </dd>
                   </div>
                 </dl>
-
-                <p className={css.description}>{getStoreDescription(store)}</p>
 
                 <ButtonLink className={css.link} href={medicinesHref}>
                   View medicines from this pharmacy
@@ -294,6 +310,24 @@ function StoreDetailsPageContent({
           ) : null}
         </Container>
       </section>
+
+
+      {activeTab === 'about' ? (
+        <section className={css.tabSection} aria-live="polite">
+          <Container>
+            <div className={css.panel}>
+              <div className={css.sectionHeader}>
+                <h2 className={css.panelTitle}>About {store.name}</h2>
+              </div>
+
+              <p className={css.descriptionText}>
+                {store.description ??
+                  `${store.name} is an active E-PHARMACY partner in ${store.city ?? 'your city'}. Here you can compare available medicines, check contact details, review customer feedback, and move to the medicines catalog filtered by this pharmacy. The store card keeps the important information in one place, so choosing a pharmacy feels less like detective work and more like a normal shopping flow.`}
+              </p>
+            </div>
+          </Container>
+        </section>
+      ) : null}
 
       {activeTab === 'reviews' ? (
         <section className={css.tabSection} aria-live="polite">

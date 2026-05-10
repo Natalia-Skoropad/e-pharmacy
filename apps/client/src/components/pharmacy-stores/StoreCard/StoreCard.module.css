@@ -28,6 +28,13 @@
   color: var(--color-accent);
 }
 
+.favoriteWrap {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+}
+
 .content {
   display: flex;
   flex: 1;
@@ -53,24 +60,11 @@
   letter-spacing: var(--ls-wide);
 }
 
-.rating {
-  display: inline-flex;
+.ratingSummary {
   flex-shrink: 0;
-  gap: 4px;
-  align-items: center;
-  min-height: 30px;
-  padding: 6px 10px;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  line-height: 1;
-  color: var(--color-text-primary);
-  background-color: var(--color-accent-light);
-  border-radius: var(--radius-pill);
-}
-
-.rating svg {
-  color: var(--color-warning);
-  fill: currentColor;
+  justify-content: flex-end;
+  max-width: 155px;
+  text-align: right;
 }
 
 .title {
@@ -82,32 +76,27 @@
 
 .summaryList {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   margin-top: 18px;
 }
 
 .summaryItem {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
 }
 
 .summaryItem dt {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
   color: var(--color-text-muted);
-}
-
-.summaryItem dt svg {
-  flex-shrink: 0;
-  color: var(--color-text-primary);
 }
 
 .summaryItem dd {
   font-weight: var(--fw-medium);
   color: var(--color-text-primary);
+  text-align: right;
 }
 
 .phoneLink {
@@ -121,7 +110,6 @@
 
 .footer {
   display: flex;
-  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   justify-content: space-between;
@@ -137,11 +125,4 @@
   .content {
     padding: 24px;
   }
-}
-
-.actionsRow {
-  display: flex;
-  flex-shrink: 0;
-  gap: 8px;
-  align-items: center;
 }

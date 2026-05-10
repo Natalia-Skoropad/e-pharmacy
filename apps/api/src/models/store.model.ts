@@ -96,6 +96,13 @@ const storeSchema = new Schema<StoreEntity>(
       default: undefined,
     },
 
+    workingHours: {
+      type: String,
+      trim: true,
+      maxlength: [120, 'Working hours must be at most 120 characters'],
+      default: undefined,
+    },
+
     rating: {
       type: Number,
       min: 0,
