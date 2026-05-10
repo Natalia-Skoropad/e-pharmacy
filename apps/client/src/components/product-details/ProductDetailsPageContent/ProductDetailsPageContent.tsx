@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Filter, Star } from 'lucide-react';
+import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 
 import {
   Button,
@@ -14,7 +14,9 @@ import {
   PaymentInfoCard,
   QuantityCounter,
   RatingSummary,
+  ReviewsSection,
   SearchInput,
+  SearchableSelect,
   SelectField,
   SvgIcon,
   Tabs,
@@ -23,8 +25,9 @@ import {
 } from '@/components/common';
 
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
-import ProductReviewsList from '@/components/product-details/ProductReviewsList';
 import { useAuth } from '@/components/providers';
+
+import { buildSlugId } from '@e-pharmacy/utils';
 
 import { ROUTES } from '@/lib/constants/routes';
 
@@ -51,7 +54,14 @@ import css from './ProductDetailsPageContent.module.css';
 //===================================================================
 
 type ProductTab = 'about' | 'prices' | 'characteristics' | 'reviews';
-type OfferSort = 'price-asc' | 'price-desc' | 'rating-desc' | 'rating-asc';
+type OfferSort =
+  | 'newest'
+  | 'price-asc'
+  | 'price-desc'
+  | 'rating-desc'
+  | 'rating-asc'
+  | 'name-asc'
+  | 'name-desc';
 
 type ProductDetailsPageContentProps = {
   product: Product;
@@ -80,10 +90,13 @@ const CATEGORY_LABELS: Record<Product['category'], string> = {
 };
 
 const OFFER_SORT_OPTIONS: { value: OfferSort; label: string }[] = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'rating-desc', label: 'Rating: highest first' },
+  { value: 'rating-asc', label: 'Rating: lowest first' },
+  { value: 'name-asc', label: 'Name: A to Z' },
+  { value: 'name-desc', label: 'Name: Z to A' },
   { value: 'price-asc', label: 'Price: low to high' },
   { value: 'price-desc', label: 'Price: high to low' },
-  { value: 'rating-desc', label: 'Rating: high to low' },
-  { value: 'rating-asc', label: 'Rating: low to high' },
 ];
 
 //===================================================================
@@ -130,12 +143,24 @@ function getOfferTotal(cartItem: CartItem | null, offer: ProductOffer): number {
   return (cartItem?.quantity ?? 0) * offer.price;
 }
 
-function getStoreHref(storeId: string): string {
-  return `${ROUTES.MEDICINES_CATALOG}?storeId=${storeId}`;
+function getStoreHref(offer: ProductOffer): string {
+  return `${ROUTES.STORES}/${buildSlugId(offer.storeName, offer.storeId)}`;
 }
 
 function getOfferAddress(offer: ProductOffer): string {
   return [offer.storeCity, offer.storeAddress].filter(Boolean).join(', ');
+}
+
+function sortOfferCities(cities: string[]): string[] {
+  return [...cities].sort((a, b) => a.localeCompare(b, 'en'));
+}
+
+function getUniqueOfferCities(offers: ProductOffer[]): string[] {
+  const cities = offers
+    .map((offer) => offer.storeCity?.trim())
+    .filter((city): city is string => Boolean(city));
+
+  return sortOfferCities([...new Set(cities)]);
 }
 
 function getLongDescription(product: Product): string {
@@ -156,12 +181,15 @@ function ProductDetailsPageContent({
 }: ProductDetailsPageContentProps) {
   const { token, isAuthenticated, isAuthReady } = useAuth();
 
+  const [productDetails, setProductDetails] = useState(product);
   const [activeTab, setActiveTab] = useState<ProductTab>('about');
   const [cart, setCart] = useState<Cart | null>(null);
   const [toastMessage, setToastMessage] = useState('');
   const [isFavorite, setIsFavorite] = useState(Boolean(product.isFavorite));
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const [updatingStoreId, setUpdatingStoreId] = useState<string | null>(null);
+  const [pendingRemoveOffer, setPendingRemoveOffer] =
+    useState<ProductOffer | null>(null);
 
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(0);
@@ -169,7 +197,8 @@ function ProductDetailsPageContent({
 
   const [storeNameQuery, setStoreNameQuery] = useState('');
   const [storeAddressQuery, setStoreAddressQuery] = useState('');
-  const [offerSort, setOfferSort] = useState<OfferSort>('price-asc');
+  const [cityFilter, setCityFilter] = useState('all');
+  const [offerSort, setOfferSort] = useState<OfferSort>('newest');
   const [visibleOffersCount, setVisibleOffersCount] = useState(OFFERS_PER_PAGE);
   const [isOffersLoadingMore, setIsOffersLoadingMore] = useState(false);
   const [areOfferFiltersOpen, setAreOfferFiltersOpen] = useState(false);
@@ -179,30 +208,42 @@ function ProductDetailsPageContent({
       { value: 'about', label: 'About product' },
       {
         value: 'prices',
-        label: `Prices in pharmacies (${product.foundInStoresCount})`,
+        label: `Prices in pharmacies (${productDetails.foundInStoresCount})`,
       },
       { value: 'characteristics', label: 'Characteristics' },
       { value: 'reviews', label: `Reviews (${reviewsTotal})` },
     ],
-    [product.foundInStoresCount, reviewsTotal]
+    [productDetails.foundInStoresCount, reviewsTotal]
   );
 
   const reviewsCountLabel =
     reviewsTotal === 1 ? '1 review' : `${reviewsTotal} reviews`;
 
-  const storesCountLabel = `${product.foundInStoresCount} ${
-    product.foundInStoresCount === 1 ? 'pharmacy' : 'pharmacies'
+  const storesCountLabel = `${productDetails.foundInStoresCount} ${
+    productDetails.foundInStoresCount === 1 ? 'pharmacy' : 'pharmacies'
   }`;
 
-  const priceRangeLabel = formatPriceRange(product.offers);
-  const longDescription = getLongDescription(product);
+  const priceRangeLabel = formatPriceRange(productDetails.offers);
+  const longDescription = getLongDescription(productDetails);
+
+  const cityOptions = useMemo(
+    () => [
+      { value: 'all', label: 'All cities' },
+      ...getUniqueOfferCities(productDetails.offers).map((city) => ({
+        value: city,
+        label: city,
+      })),
+    ],
+    [productDetails.offers]
+  );
 
   const filteredOffers = useMemo(() => {
     const normalizedNameQuery = storeNameQuery.trim().toLowerCase();
     const normalizedAddressQuery = storeAddressQuery.trim().toLowerCase();
 
-    return [...product.offers]
-      .filter((offer) => {
+    return productDetails.offers
+      .map((offer, index) => ({ offer, index }))
+      .filter(({ offer }) => {
         const nameMatches = offer.storeName
           .toLowerCase()
           .includes(normalizedNameQuery);
@@ -211,32 +252,53 @@ function ProductDetailsPageContent({
           .toLowerCase()
           .includes(normalizedAddressQuery);
 
-        return nameMatches && addressMatches;
+        const cityMatches =
+          cityFilter === 'all' || offer.storeCity?.trim() === cityFilter;
+
+        return nameMatches && addressMatches && cityMatches;
       })
       .sort((a, b) => {
+        if (a.offer.storeIsFavorite !== b.offer.storeIsFavorite) {
+          return a.offer.storeIsFavorite ? -1 : 1;
+        }
+
         if (contextStoreId) {
-          if (a.storeId === contextStoreId) return -1;
-          if (b.storeId === contextStoreId) return 1;
+          if (a.offer.storeId === contextStoreId) return -1;
+          if (b.offer.storeId === contextStoreId) return 1;
         }
 
         if (offerSort === 'price-asc') {
-          return a.price - b.price;
+          return a.offer.price - b.offer.price;
         }
 
         if (offerSort === 'price-desc') {
-          return b.price - a.price;
+          return b.offer.price - a.offer.price;
         }
 
         if (offerSort === 'rating-desc') {
-          return (b.storeRating ?? 0) - (a.storeRating ?? 0);
+          return (b.offer.storeRating ?? 0) - (a.offer.storeRating ?? 0);
         }
 
-        return (a.storeRating ?? 0) - (b.storeRating ?? 0);
-      });
+        if (offerSort === 'rating-asc') {
+          return (a.offer.storeRating ?? 0) - (b.offer.storeRating ?? 0);
+        }
+
+        if (offerSort === 'name-asc') {
+          return a.offer.storeName.localeCompare(b.offer.storeName, 'en');
+        }
+
+        if (offerSort === 'name-desc') {
+          return b.offer.storeName.localeCompare(a.offer.storeName, 'en');
+        }
+
+        return a.index - b.index;
+      })
+      .map(({ offer }) => offer);
   }, [
+    cityFilter,
     contextStoreId,
     offerSort,
-    product.offers,
+    productDetails.offers,
     storeAddressQuery,
     storeNameQuery,
   ]);
@@ -262,6 +324,11 @@ function ProductDetailsPageContent({
 
   const handleStoreAddressQueryChange = (value: string) => {
     setStoreAddressQuery(value);
+    setVisibleOffersCount(OFFERS_PER_PAGE);
+  };
+
+  const handleCityFilterChange = (value: string) => {
+    setCityFilter(value);
     setVisibleOffersCount(OFFERS_PER_PAGE);
   };
 
@@ -294,9 +361,12 @@ function ProductDetailsPageContent({
 
     let isMounted = true;
 
-    getProductDetails(product.id, token)
+    getProductDetails(productDetails.id, token)
       .then((response) => {
-        if (isMounted) setIsFavorite(Boolean(response.product.isFavorite));
+        if (isMounted) {
+          setProductDetails(response.product);
+          setIsFavorite(Boolean(response.product.isFavorite));
+        }
       })
       .catch(() => undefined);
 
@@ -311,7 +381,7 @@ function ProductDetailsPageContent({
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, product.id, showToast, token]);
+  }, [isAuthenticated, productDetails.id, showToast, token]);
 
   const refreshCart = async () => {
     if (!token) return;
@@ -330,7 +400,7 @@ function ProductDetailsPageContent({
 
     try {
       setIsFavoriteLoading(true);
-      const response = await toggleFavoriteProduct(product.id, token);
+      const response = await toggleFavoriteProduct(productDetails.id, token);
 
       setIsFavorite(response.isFavorite);
       showToast(
@@ -350,7 +420,7 @@ function ProductDetailsPageContent({
 
     try {
       setUpdatingStoreId(offer.storeId);
-      const cartItem = getOfferCartItem(cart, product.id, offer.storeId);
+      const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
 
       if (cartItem) {
         await updateCartItem(
@@ -360,7 +430,7 @@ function ProductDetailsPageContent({
         );
       } else {
         await addCartItem(
-          { productId: product.id, storeId: offer.storeId, quantity: 1 },
+          { productId: productDetails.id, storeId: offer.storeId, quantity: 1 },
           token
         );
       }
@@ -374,21 +444,12 @@ function ProductDetailsPageContent({
     }
   };
 
-  const handleRemoveUnit = async (offer: ProductOffer) => {
+  const removeOfferUnit = async (offer: ProductOffer) => {
     if (!isAuthenticated || !token) return;
 
-    const cartItem = getOfferCartItem(cart, product.id, offer.storeId);
+    const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
 
     if (!cartItem) return;
-
-    const shouldRemove =
-      cartItem.quantity === 1
-        ? window.confirm(
-            'Are you sure you want to remove this product from the order?'
-          )
-        : true;
-
-    if (!shouldRemove) return;
 
     try {
       setUpdatingStoreId(offer.storeId);
@@ -409,7 +470,23 @@ function ProductDetailsPageContent({
       showToast('Could not remove product from the order.');
     } finally {
       setUpdatingStoreId(null);
+      setPendingRemoveOffer(null);
     }
+  };
+
+  const handleRemoveUnit = (offer: ProductOffer) => {
+    if (!isAuthenticated || !token) return;
+
+    const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
+
+    if (!cartItem) return;
+
+    if (cartItem.quantity === 1) {
+      setPendingRemoveOffer(offer);
+      return;
+    }
+
+    void removeOfferUnit(offer);
   };
 
   const handleReviewTextChange = (value: string) => {
@@ -425,7 +502,7 @@ function ProductDetailsPageContent({
       setIsReviewSubmitting(true);
 
       await createProductReview(
-        product.id,
+        productDetails.id,
         {
           rating: reviewRating,
           comment: reviewText.trim(),
@@ -444,7 +521,7 @@ function ProductDetailsPageContent({
   };
 
   const renderQuantityControl = (offer: ProductOffer) => {
-    const cartItem = getOfferCartItem(cart, product.id, offer.storeId);
+    const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
     const quantity = cartItem?.quantity ?? 0;
     const isDisabled =
       !isAuthReady ||
@@ -481,13 +558,13 @@ function ProductDetailsPageContent({
             items={[
               { label: 'Home', href: ROUTES.HOME },
               { label: 'Medicines catalog', href: ROUTES.MEDICINES_CATALOG },
-              { label: product.name },
+              { label: productDetails.name },
             ]}
           />
 
           <h1 className="visually-hidden" id="product-title">
-            Buy {product.name} online — compare pharmacy prices and product
-            details
+            Buy {productDetails.name} online — compare pharmacy prices and
+            product details
           </h1>
 
           <Tabs
@@ -500,11 +577,11 @@ function ProductDetailsPageContent({
           {activeTab === 'about' ? (
             <div className={css.grid}>
               <div className={css.imageCard}>
-                {product.imageUrl ? (
+                {productDetails.imageUrl ? (
                   <Image
                     className={css.image}
-                    src={product.imageUrl}
-                    alt={product.name}
+                    src={productDetails.imageUrl}
+                    alt={productDetails.name}
                     fill
                     priority
                     sizes="(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 520px"
@@ -519,7 +596,7 @@ function ProductDetailsPageContent({
               <div className={css.content}>
                 <div className={css.topLine}>
                   <p className={css.category}>
-                    {CATEGORY_LABELS[product.category]}
+                    {CATEGORY_LABELS[productDetails.category]}
                   </p>
 
                   <FavoriteToggleButton
@@ -531,18 +608,18 @@ function ProductDetailsPageContent({
                   />
                 </div>
 
-                <h2 className={css.title}>{product.name}</h2>
+                <h2 className={css.title}>{productDetails.name}</h2>
 
                 <RatingSummary
                   className={css.ratingRow}
-                  rating={product.rating}
+                  rating={productDetails.rating}
                   reviewsCount={reviewsTotal}
                 />
 
                 <dl className={css.summaryList}>
                   <div className={css.summaryItem}>
                     <dt>Article</dt>
-                    <dd>{product.article}</dd>
+                    <dd>{productDetails.article}</dd>
                   </div>
 
                   <div className={css.summaryItem}>
@@ -560,6 +637,14 @@ function ProductDetailsPageContent({
                   <DeliveryInfoCard />
                   <PaymentInfoCard />
                 </div>
+
+                <Button
+                  className={css.buyButton}
+                  type="button"
+                  onClick={() => setActiveTab('prices')}
+                >
+                  Buy product
+                </Button>
               </div>
             </div>
           ) : null}
@@ -574,7 +659,7 @@ function ProductDetailsPageContent({
                 <div className={css.sectionHeader}>
                   <div>
                     <h2 className={css.panelTitle}>
-                      Pharmacies ({product.foundInStoresCount})
+                      Pharmacies ({productDetails.foundInStoresCount})
                     </h2>
 
                     <p className={css.resultCount}>
@@ -600,9 +685,7 @@ function ProductDetailsPageContent({
                 >
                   <span className={css.filtersToggleText}>
                     <Filter size={18} aria-hidden="true" />
-                    {areOfferFiltersOpen
-                      ? 'Сховати фільтри'
-                      : 'Показати фільтри'}
+                    {areOfferFiltersOpen ? 'Hide filters' : 'Show filters'}
                   </span>
 
                   {areOfferFiltersOpen ? (
@@ -640,9 +723,20 @@ function ProductDetailsPageContent({
                     onChange={handleStoreAddressQueryChange}
                   />
 
+                  <SearchableSelect
+                    id="pharmacy-city-filter"
+                    label="City"
+                    value={cityFilter}
+                    options={cityOptions}
+                    placeholder="All cities"
+                    isActive={cityFilter !== 'all'}
+                    sanitizeQuery={sanitizeOfferSearch}
+                    onChange={handleCityFilterChange}
+                  />
+
                   <SelectField
                     id="pharmacy-sort"
-                    label="Sort pharmacies"
+                    label="Sort by"
                     value={offerSort}
                     options={OFFER_SORT_OPTIONS}
                     onChange={handleOfferSortChange}
@@ -656,6 +750,12 @@ function ProductDetailsPageContent({
                         <article className={css.offerCard}>
                           <div className={css.offerMain}>
                             <div className={css.offerImageWrap}>
+                              {offer.storeIsFavorite ? (
+                                <span className={css.favoriteStoreBadge}>
+                                  Favorite pharmacy
+                                </span>
+                              ) : null}
+
                               {offer.storeImageUrl ? (
                                 <Image
                                   className={css.offerImage}
@@ -710,7 +810,7 @@ function ProductDetailsPageContent({
 
                             <ButtonLink
                               className={css.offerLink}
-                              href={getStoreHref(offer.storeId)}
+                              href={getStoreHref(offer)}
                               variant="secondary"
                             >
                               View pharmacy
@@ -744,30 +844,30 @@ function ProductDetailsPageContent({
                 <h2 className={css.panelTitle}>Characteristics</h2>
 
                 <dl className={css.details}>
-                  {product.manufacturer ? (
+                  {productDetails.manufacturer ? (
                     <div className={css.detailItem}>
                       <dt>Manufacturer</dt>
-                      <dd>{product.manufacturer}</dd>
+                      <dd>{productDetails.manufacturer}</dd>
                     </div>
                   ) : null}
 
-                  {product.dosage ? (
+                  {productDetails.dosage ? (
                     <div className={css.detailItem}>
                       <dt>Dosage</dt>
-                      <dd>{product.dosage}</dd>
+                      <dd>{productDetails.dosage}</dd>
                     </div>
                   ) : null}
 
-                  {product.packageQuantity ? (
+                  {productDetails.packageQuantity ? (
                     <div className={css.detailItem}>
                       <dt>Package</dt>
-                      <dd>{product.packageQuantity}</dd>
+                      <dd>{productDetails.packageQuantity}</dd>
                     </div>
                   ) : null}
 
                   <div className={css.detailItem}>
                     <dt>Category</dt>
-                    <dd>{CATEGORY_LABELS[product.category]}</dd>
+                    <dd>{CATEGORY_LABELS[productDetails.category]}</dd>
                   </div>
                 </dl>
 
@@ -791,90 +891,64 @@ function ProductDetailsPageContent({
                   <p className={css.resultCount}>{reviewsCountLabel}</p>
                 </div>
 
-                <form
-                  className={css.reviewForm}
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void handleReviewSubmit();
-                  }}
-                >
-                  <div>
-                    <label className={css.reviewLabel} htmlFor="product-review">
-                      Your review
-                    </label>
-
-                    <textarea
-                      id="product-review"
-                      className={css.reviewTextarea}
-                      value={reviewText}
-                      maxLength={REVIEW_MAX_LENGTH}
-                      placeholder="Write 10–500 characters using latin letters."
-                      onChange={(event) =>
-                        handleReviewTextChange(event.target.value)
-                      }
-                    />
-
-                    <p className={css.counter}>
-                      {reviewText.length}/{REVIEW_MAX_LENGTH}
-                    </p>
-                  </div>
-
-                  <fieldset className={css.ratingFieldset}>
-                    <legend className={css.reviewLabel}>Rating</legend>
-
-                    <div className={css.ratingButtons}>
-                      {[1, 2, 3, 4, 5].map((rating) => (
-                        <button
-                          className={
-                            reviewRating >= rating
-                              ? css.starButtonActive
-                              : css.starButton
-                          }
-                          key={rating}
-                          type="button"
-                          onClick={() => setReviewRating(rating)}
-                          aria-label={`Set rating ${rating}`}
-                        >
-                          <Star size={20} aria-hidden="true" />
-                        </button>
-                      ))}
-                    </div>
-                  </fieldset>
-
-                  <div className={css.reviewActions}>
-                    <Button
-                      type="submit"
-                      className={css.reviewSubmitButton}
-                      disabled={
-                        !isReviewValid ||
-                        isReviewSubmitting ||
-                        !isAuthenticated ||
-                        !isAuthReady
-                      }
-                    >
-                      {isReviewSubmitting ? 'Sending...' : 'Send review'}
-                    </Button>
-
-                    {!isAuthenticated && isAuthReady ? (
-                      <p className={css.authNote}>
-                        Only logged-in users can submit reviews.
-                      </p>
-                    ) : null}
-                  </div>
-                </form>
-
-                {areReviewsUnavailable ? (
-                  <div className={css.notice} role="status">
-                    Reviews are temporarily unavailable. Please check that the
-                    backend API is running.
-                  </div>
-                ) : null}
-
-                <ProductReviewsList reviews={reviews} />
+                <ReviewsSection
+                  reviews={reviews}
+                  reviewText={reviewText}
+                  reviewRating={reviewRating}
+                  isReviewValid={isReviewValid}
+                  isReviewSubmitting={isReviewSubmitting}
+                  isAuthenticated={isAuthenticated}
+                  isAuthReady={isAuthReady}
+                  isUnavailable={areReviewsUnavailable}
+                  emptyText="Product reviews will appear here after customers share their feedback."
+                  textareaId="product-review"
+                  maxLength={REVIEW_MAX_LENGTH}
+                  onReviewTextChange={handleReviewTextChange}
+                  onReviewRatingChange={setReviewRating}
+                  onReviewSubmit={() => void handleReviewSubmit()}
+                />
               </div>
             ) : null}
           </Container>
         </section>
+      ) : null}
+      {pendingRemoveOffer ? (
+        <div className={css.modalOverlay} role="presentation">
+          <div
+            className={css.confirmModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-product-title"
+          >
+            <h2 className={css.confirmTitle} id="remove-product-title">
+              Remove product from order?
+            </h2>
+
+            <p className={css.confirmText}>
+              This is the last unit of {productDetails.name} from{' '}
+              {pendingRemoveOffer.storeName}. It will be removed from the cart.
+            </p>
+
+            <div className={css.confirmActions}>
+              <Button
+                type="button"
+                disabled={updatingStoreId === pendingRemoveOffer.storeId}
+                onClick={() => void removeOfferUnit(pendingRemoveOffer)}
+              >
+                Remove
+              </Button>
+
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={updatingStoreId === pendingRemoveOffer.storeId}
+                onClick={() => setPendingRemoveOffer(null)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
       ) : null}
     </main>
   );

@@ -22,3 +22,5 @@ export { default as CloseIconButton } from './CloseIconButton';
 export { default as ResetFiltersButton } from './ResetFiltersButton';
 export { default as SearchableSelect } from './SearchableSelect';
 export type { SearchableSelectOption } from './SearchableSelect';
+export { default as ReviewsSection } from './ReviewsSection';
+export type { ReviewItem } from './ReviewsSection';

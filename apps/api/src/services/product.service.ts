@@ -49,6 +49,7 @@ type CreateReviewInput = {
 
 type FavoriteUserDocument = {
   favoriteProductIds?: Array<Types.ObjectId | string>;
+  favoriteStoreIds?: Array<Types.ObjectId | string>;
 };
 
 //===============================================================
@@ -120,9 +121,14 @@ type ProductSortOption = Record<string, 1 | -1>;
 
 //===============================================================
 
-function serializeOffer(offer: ProductOfferEntity): ProductOfferResponseDto {
+function serializeOffer(
+  offer: ProductOfferEntity,
+  favoriteStoreIds = new Set<string>()
+): ProductOfferResponseDto {
+  const storeId = offer.storeId.toString();
+
   return {
-    storeId: offer.storeId.toString(),
+    storeId,
     storeName: offer.storeName,
     ...(offer.storeCity ? { storeCity: offer.storeCity } : {}),
     ...(offer.storeAddress ? { storeAddress: offer.storeAddress } : {}),
@@ -134,6 +140,7 @@ function serializeOffer(offer: ProductOfferEntity): ProductOfferResponseDto {
     ...(typeof offer.storeReviewsCount === 'number'
       ? { storeReviewsCount: offer.storeReviewsCount }
       : {}),
+    storeIsFavorite: favoriteStoreIds.has(storeId),
     price: offer.price,
     totalQuantity: offer.totalQuantity,
     activeQuantity: offer.activeQuantity,
@@ -162,9 +169,12 @@ function getLegacyOffer(
 
 //===============================================================
 
-function getOffers(product: ProductDocument): ProductOfferResponseDto[] {
+function getOffers(
+  product: ProductDocument,
+  favoriteStoreIds = new Set<string>()
+): ProductOfferResponseDto[] {
   const serializedOffers = (product.offers ?? []).map((offer) =>
-    serializeOffer(offer)
+    serializeOffer(offer, favoriteStoreIds)
   );
 
   if (serializedOffers.length > 0) return serializedOffers;
@@ -200,6 +210,18 @@ async function getFavoriteProductIds(userId?: string): Promise<Set<string>> {
   return new Set(favoriteProductIds.map((id) => id.toString()));
 }
 
+async function getFavoriteStoreIds(userId?: string): Promise<Set<string>> {
+  if (!userId) return new Set();
+
+  const user = await User.findById(userId)
+    .select('favoriteStoreIds')
+    .lean<FavoriteUserDocument | null>();
+
+  const favoriteStoreIds = user?.favoriteStoreIds ?? [];
+
+  return new Set(favoriteStoreIds.map((id) => id.toString()));
+}
+
 //===============================================================
 
 function getModeratedReviews(
@@ -224,9 +246,10 @@ function getAverageRating(reviews: ProductReviewDocument[]): number | null {
 
 function serializeProduct(
   product: ProductDocument,
-  favoriteProductIds = new Set<string>()
+  favoriteProductIds = new Set<string>(),
+  favoriteStoreIds = new Set<string>()
 ): ProductResponseDto {
-  const offers = getOffers(product);
+  const offers = getOffers(product, favoriteStoreIds);
   const availableOffers = offers.filter((offer) => offer.inStock);
   const productId = product._id.toString();
   const firstOffer = availableOffers[0];
@@ -423,13 +446,14 @@ export async function getProductsService(
 
   const filter = andFilters.length > 0 ? { $and: andFilters } : {};
 
-  const [products, favoriteProductIds] = await Promise.all([
+  const [products, favoriteProductIds, favoriteStoreIds] = await Promise.all([
     Product.find(filter).sort(getSort(sort)).lean<ProductDocument[]>(),
     getFavoriteProductIds(userId),
+    getFavoriteStoreIds(userId),
   ]);
 
   const serializedProducts = products.map((product: ProductDocument) =>
-    serializeProduct(product, favoriteProductIds)
+    serializeProduct(product, favoriteProductIds, favoriteStoreIds)
   );
 
   const productsByAvailability =
@@ -456,9 +480,10 @@ export async function getProductDetailsService(
   productId: string,
   userId?: string
 ) {
-  const [product, favoriteProductIds] = await Promise.all([
+  const [product, favoriteProductIds, favoriteStoreIds] = await Promise.all([
     Product.findById(productId).lean<ProductDocument | null>(),
     getFavoriteProductIds(userId),
+    getFavoriteStoreIds(userId),
   ]);
 
   if (!product) {
@@ -466,7 +491,7 @@ export async function getProductDetailsService(
   }
 
   return {
-    product: serializeProduct(product, favoriteProductIds),
+    product: serializeProduct(product, favoriteProductIds, favoriteStoreIds),
   };
 }
 

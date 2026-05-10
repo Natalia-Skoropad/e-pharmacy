@@ -1,0 +1,191 @@
+.reviewForm {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.reviewLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  color: var(--color-accent);
+}
+
+.reviewTextarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 14px 16px;
+  font: inherit;
+  color: var(--color-text-primary);
+  resize: none;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.reviewTextarea:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px rgb(89 177 122 / 15%);
+}
+
+.ratingFieldset {
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.ratingButtons {
+  display: flex;
+  gap: 4px;
+}
+
+.starButton,
+.starButtonActive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--color-warning);
+  border-radius: 50%;
+  transition: background-color var(--transition-base);
+}
+
+.starButtonActive svg {
+  fill: currentColor;
+}
+
+.starButton:hover,
+.starButton:focus-visible,
+.starButtonActive:hover,
+.starButtonActive:focus-visible {
+  background-color: var(--color-accent-light);
+}
+
+.reviewActions {
+  display: grid;
+  gap: 10px;
+}
+
+.reviewSubmitButton {
+  width: 100%;
+}
+
+.authNote,
+.counter,
+.notice {
+  margin-top: 8px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.authNote {
+  color: var(--color-error);
+}
+
+.notice {
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  color: var(--color-warning);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.empty {
+  padding: 24px;
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.emptyTitle {
+  font-size: var(--fz-20);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.emptyText {
+  margin-top: 8px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.list {
+  display: grid;
+  gap: 14px;
+}
+
+.card {
+  padding: 18px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.author {
+  font-size: var(--fz-16);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.date {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  color: var(--color-text-muted);
+}
+
+.rating {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+  color: var(--color-text-primary);
+  background-color: var(--color-accent-light);
+  border-radius: var(--radius-pill);
+}
+
+.star {
+  color: var(--color-warning);
+  fill: currentColor;
+}
+
+.comment {
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+@media only screen and (min-width: 768px) {
+  .reviewSubmitButton {
+    width: fit-content;
+    min-width: 220px;
+  }
+}

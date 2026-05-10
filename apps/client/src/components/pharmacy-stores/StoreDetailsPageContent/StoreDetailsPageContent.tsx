@@ -5,18 +5,17 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MapPin, Phone, ShoppingBag, Star } from 'lucide-react';
 
 import {
-  Button,
   ButtonLink,
   Container,
   FavoriteToggleButton,
   RatingSummary,
+  ReviewsSection,
   SvgIcon,
   Tabs,
   Toast,
   type TabItem,
 } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
-import ProductReviewsList from '@/components/product-details/ProductReviewsList';
 import { useAuth } from '@/components/providers';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
@@ -305,86 +304,22 @@ function StoreDetailsPageContent({
                 <p className={css.resultCount}>{reviewsCountLabel}</p>
               </div>
 
-              <form
-                className={css.reviewForm}
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void handleReviewSubmit();
-                }}
-              >
-                <div>
-                  <label className={css.reviewLabel} htmlFor="store-review">
-                    Your review
-                  </label>
-
-                  <textarea
-                    id="store-review"
-                    className={css.reviewTextarea}
-                    value={reviewText}
-                    maxLength={REVIEW_MAX_LENGTH}
-                    placeholder="Write 10–500 characters using latin letters."
-                    onChange={(event) =>
-                      handleReviewTextChange(event.target.value)
-                    }
-                  />
-
-                  <p className={css.counter}>
-                    {reviewText.length}/{REVIEW_MAX_LENGTH}
-                  </p>
-                </div>
-
-                <fieldset className={css.ratingFieldset}>
-                  <legend className={css.reviewLabel}>Rating</legend>
-
-                  <div className={css.ratingButtons}>
-                    {[1, 2, 3, 4, 5].map((rating) => (
-                      <button
-                        className={
-                          reviewRating >= rating
-                            ? css.starButtonActive
-                            : css.starButton
-                        }
-                        key={rating}
-                        type="button"
-                        onClick={() => setReviewRating(rating)}
-                        aria-label={`Set rating ${rating}`}
-                      >
-                        <Star size={20} aria-hidden="true" />
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
-
-                <div className={css.reviewActions}>
-                  <Button
-                    type="submit"
-                    className={css.reviewSubmitButton}
-                    disabled={
-                      !isReviewValid ||
-                      isReviewSubmitting ||
-                      !isAuthenticated ||
-                      !isAuthReady
-                    }
-                  >
-                    {isReviewSubmitting ? 'Sending...' : 'Send review'}
-                  </Button>
-
-                  {!isAuthenticated && isAuthReady ? (
-                    <p className={css.authNote}>
-                      Only logged-in users can submit reviews.
-                    </p>
-                  ) : null}
-                </div>
-              </form>
-
-              {areReviewsUnavailable ? (
-                <div className={css.notice} role="status">
-                  Reviews are temporarily unavailable. Please check that the
-                  backend API is running.
-                </div>
-              ) : null}
-
-              <ProductReviewsList reviews={reviews} />
+              <ReviewsSection
+                reviews={reviews}
+                reviewText={reviewText}
+                reviewRating={reviewRating}
+                isReviewValid={isReviewValid}
+                isReviewSubmitting={isReviewSubmitting}
+                isAuthenticated={isAuthenticated}
+                isAuthReady={isAuthReady}
+                isUnavailable={areReviewsUnavailable}
+                emptyText="Pharmacy reviews will appear here after customers share their feedback."
+                textareaId="store-review"
+                maxLength={REVIEW_MAX_LENGTH}
+                onReviewTextChange={handleReviewTextChange}
+                onReviewRatingChange={setReviewRating}
+                onReviewSubmit={() => void handleReviewSubmit()}
+              />
             </div>
           </Container>
         </section>

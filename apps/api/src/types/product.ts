@@ -75,6 +75,7 @@ export type ProductOfferResponseDto = {
   storeImageUrl?: string;
   storeRating?: number;
   storeReviewsCount?: number;
+  storeIsFavorite?: boolean;
   price: number;
   totalQuantity: number;
   activeQuantity: number;
