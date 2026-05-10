@@ -125,8 +125,58 @@ type SeedStoreDocument = {
 
 //===============================================================
 
-function createImageUrl(type: 'product' | 'store', index: number): string {
-  return `https://picsum.photos/seed/e-pharmacy-${type}-${index}/1200/900`;
+const PRODUCT_IMAGE_KEYWORDS: Record<string, string> = {
+  paracetamol: 'medicine,tablets',
+  ibuprofen: 'medicine,capsules',
+  loratadine: 'allergy,medicine',
+  drotaverine: 'medicine,tablets',
+  ambroxol: 'cough,syrup,medicine',
+  vitamin: 'vitamins,supplements',
+  magnesium: 'magnesium,vitamins',
+  omega: 'fish-oil,capsules',
+  probiotic: 'probiotic,capsules',
+  thermometer: 'digital-thermometer,medical',
+  pressure: 'blood-pressure-monitor,medical',
+  oximeter: 'pulse-oximeter,medical',
+  nebulizer: 'nebulizer,medical',
+  glucose: 'glucose-meter,medical',
+  antiseptic: 'antiseptic,spray',
+  masks: 'medical-mask',
+  sanitizer: 'hand-sanitizer',
+  bandage: 'bandage,first-aid',
+  saline: 'nasal-spray,medicine',
+  cream: 'hand-cream,skincare',
+  sunscreen: 'sunscreen,skincare',
+  balm: 'lip-balm,skincare',
+  cleansing: 'face-cleanser,skincare',
+  thermal: 'thermal-water,skincare',
+  kit: 'first-aid-kit',
+  gel: 'gel-pack,medical',
+  organizer: 'pill-organizer',
+};
+
+function createPhotoUrl(keywords: string, index: number): string {
+  const normalizedKeywords = keywords
+    .toLowerCase()
+    .replace(/[^a-z0-9, -]+/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-?, -?/g, ',')
+    .replace(/^-|-$/g, '');
+
+  return `https://loremflickr.com/1200/900/${normalizedKeywords}?lock=${index}`;
+}
+
+function createProductImageUrl(productName: string, index: number): string {
+  const normalizedName = productName.toLowerCase();
+  const matchedKeyword = Object.entries(PRODUCT_IMAGE_KEYWORDS).find(([namePart]) =>
+    normalizedName.includes(namePart)
+  );
+
+  return createPhotoUrl(matchedKeyword?.[1] ?? 'pharmacy,medicine', 1000 + index);
+}
+
+function createStoreImageUrl(city: string, index: number): string {
+  return createPhotoUrl(`pharmacy,drugstore,${city}`, 3000 + index);
 }
 
 function createSlug(value: string): string {
@@ -197,7 +247,7 @@ function createSeedStores() {
       phone: `+380${String(501000000 + storeNumber).padStart(9, '0')}`,
       email: `store.${storeNumber}@e-pharmacy.example.com`,
       rating: Number((4 + (index % 10) * 0.1).toFixed(1)),
-      imageUrl: createImageUrl('store', storeNumber),
+      imageUrl: createStoreImageUrl(city, storeNumber),
       description: `${brand} in ${city} offers everyday medicines, vitamins, medical devices, hygiene products, and quick online reservation for local customers.`,
       isActive: true,
       reviewsCount,
@@ -242,7 +292,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       description: `${name} is a realistic demo catalog item for testing product cards, price formatting, long review text, filters, sorting, pharmacy availability, and responsive catalog layouts.`,
       category,
       price: offers.length > 0 ? basePrice : 0,
-      imageUrl: createImageUrl('product', productNumber),
+      imageUrl: createProductImageUrl(name, productNumber),
       manufacturer,
       dosage,
       packageQuantity,
