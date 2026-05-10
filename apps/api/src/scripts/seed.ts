@@ -81,34 +81,36 @@ const STREETS = [
 ];
 
 const PRODUCT_BLUEPRINTS = [
-  ['Paracetamol Forte 500 mg tablets', 'medicine', 'MedCare', '500 mg', '20 tablets'],
-  ['Ibuprofen Rapid 200 mg capsules', 'medicine', 'PharmaLine', '200 mg', '20 capsules'],
-  ['Loratadine Allergy Relief 10 mg tablets', 'medicine', 'AllergoHelp', '10 mg', '10 tablets'],
-  ['Drotaverine Comfort 40 mg tablets', 'medicine', 'CareLabs', '40 mg', '24 tablets'],
-  ['Ambroxol Cough Syrup 30 mg bottle', 'medicine', 'BronchoCare', '30 mg/5 ml', '100 ml'],
-  ['Vitamin C Plus Zinc effervescent tablets', 'vitamins', 'VitaLife', '1000 mg', '20 tablets'],
-  ['Vitamin D3 Daily 2000 IU softgels', 'vitamins', 'SunVita', '2000 IU', '60 softgels'],
-  ['Magnesium B6 Complex tablets', 'vitamins', 'NeuroVita', '400 mg', '60 tablets'],
-  ['Omega 3 Premium fish oil capsules', 'vitamins', 'Nordic Care', '1000 mg', '90 capsules'],
-  ['Probiotic Balance capsules', 'vitamins', 'GutCare', '10 billion CFU', '30 capsules'],
-  ['Digital Thermometer Flex Tip', 'medical-devices', 'HealthTech', undefined, '1 device'],
-  ['Automatic Blood Pressure Monitor', 'medical-devices', 'CardioCheck', undefined, '1 device'],
-  ['Pulse Oximeter Finger Monitor', 'medical-devices', 'OxyCare', undefined, '1 device'],
-  ['Nebulizer Compact Home Care', 'medical-devices', 'BreathWell', undefined, '1 device'],
-  ['Glucose Test Strips Universal', 'medical-devices', 'GlucoSafe', undefined, '50 strips'],
-  ['Antiseptic Spray Chlorhexidine', 'hygiene', 'CleanMed', undefined, '100 ml'],
-  ['Medical Face Masks three layer', 'hygiene', 'SafeMask', undefined, '50 masks'],
-  ['Hand Sanitizer Aloe Vera', 'hygiene', 'CleanHands', undefined, '250 ml'],
-  ['Sterile Bandage Set', 'hygiene', 'FirstAid', undefined, '10 pcs'],
-  ['Saline Nasal Spray Gentle', 'hygiene', 'NasoCare', undefined, '50 ml'],
-  ['Moisturizing Hand Cream Urea', 'beauty', 'SoftCare', undefined, '75 ml'],
-  ['Sunscreen SPF 50 Sensitive Skin', 'beauty', 'DermaSun', undefined, '100 ml'],
-  ['Lip Balm Panthenol Repair', 'beauty', 'DermaSoft', undefined, '4.8 g'],
-  ['Face Cleansing Gel Sensitive', 'beauty', 'SkinBalance', undefined, '200 ml'],
-  ['Thermal Water Spray', 'beauty', 'AquaDerm', undefined, '150 ml'],
-  ['First Aid Travel Kit', 'other', 'TravelMed', undefined, '1 kit'],
-  ['Reusable Hot and Cold Gel Pack', 'other', 'ComfortAid', undefined, '1 pack'],
-  ['Pill Organizer Weekly Box', 'other', 'DailyDose', undefined, '1 organizer'],
+  ['Aspirin', 'medicine', 'Square', '500 mg', '№30 (10x3)', '/images/seed/products/product-001.png'],
+  ['Paracetamol', 'medicine', 'Acme', '500 mg', '№20 (10x2)', '/images/seed/products/product-002.png'],
+  ['Ibuprofen', 'medicine', 'Beximco', '200 mg', '№28 (14x2)', '/images/seed/products/product-003.png'],
+  ['Acetaminophen', 'hygiene', 'ACI', '500 mg', '№10', '/images/seed/products/product-004.png'],
+  ['Naproxen', 'beauty', 'Uniliver', '250 mg', '№60', '/images/seed/products/product-005.png'],
+  ['Loratadine', 'medicine', 'Square', '10 mg', '№100', '/images/seed/products/product-006.png'],
+  ['Atorvastatin', 'medicine', 'Acme', '20 mg', '№30 (10x3)', '/images/seed/products/product-007.png'],
+  ['Omeprazole', 'medicine', 'Beximco', '20 mg', '№20 (10x2)', '/images/seed/products/product-008.png'],
+  ['Simvastatin', 'hygiene', 'ACI', '20 mg', '№28 (14x2)', '/images/seed/products/product-009.png'],
+  ['Metformin', 'beauty', 'Uniliver', '500 mg', '№10', '/images/seed/products/product-010.png'],
+  ['Warfarin', 'medicine', 'Square', '5 mg', '№60', '/images/seed/products/product-011.png'],
+  ['Fluoxetine', 'medicine', 'Acme', '20 mg', '№100', '/images/seed/products/product-012.png'],
+  ['Lisinopril', 'medicine', 'Beximco', '10 mg', '№30 (10x3)', '/images/seed/products/product-013.png'],
+  ['Metoprolol', 'hygiene', 'ACI', '50 mg', '№20 (10x2)', '/images/seed/products/product-014.png'],
+  ['Amlodipine', 'beauty', 'Uniliver', '5 mg', '№28 (14x2)', '/images/seed/products/product-015.png'],
+  ['Citalopram', 'medicine', 'Square', '20 mg', '№10', '/images/seed/products/product-016.png'],
+  ['Metronidazole', 'medicine', 'Acme', '500 mg', '№60', '/images/seed/products/product-017.png'],
+  ['Carvedilol', 'medicine', 'Beximco', '12.5 mg', '№100', '/images/seed/products/product-018.png'],
+  ['Clopidogrel', 'hygiene', 'ACI', '75 mg', '№30 (10x3)', '/images/seed/products/product-019.png'],
+  ['Levothyroxine', 'beauty', 'Uniliver', '50 mcg', '№20 (10x2)', '/images/seed/products/product-020.png'],
+  ['Ramipril', 'medicine', 'Square', '5 mg', '№28 (14x2)', '/images/seed/products/product-021.png'],
+  ['Amitriptyline', 'medicine', 'Acme', '25 mg', '№10', '/images/seed/products/product-022.png'],
+  ['Losartan', 'medicine', 'Beximco', '50 mg', '№60', '/images/seed/products/product-023.png'],
+  ['Montelukast', 'hygiene', 'ACI', '10 mg', '№100', '/images/seed/products/product-024.png'],
+  ['Hydrochlorothiazide', 'beauty', 'Uniliver', '25 mg', '№30 (10x3)', '/images/seed/products/product-025.png'],
+  ['Meloxicam', 'medicine', 'Square', '15 mg', '№20 (10x2)', '/images/seed/products/product-026.png'],
+  ['Amlodipine', 'medicine', 'Acme', '5 mg', '№28 (14x2)', '/images/seed/products/product-027.png'],
+  ['Citalopram', 'medicine', 'Beximco', '20 mg', '№10', '/images/seed/products/product-028.png'],
+  ['Atorvastatin', 'hygiene', 'ACI', '20 mg', '№60', '/images/seed/products/product-029.png'],
+  ['Warfarin', 'beauty', 'Uniliver', '5 mg', '№100', '/images/seed/products/product-030.png'],
 ] as const;
 
 //===============================================================
@@ -125,58 +127,53 @@ type SeedStoreDocument = {
 
 //===============================================================
 
-const PRODUCT_IMAGE_KEYWORDS: Record<string, string> = {
-  paracetamol: 'medicine,tablets',
-  ibuprofen: 'medicine,capsules',
-  loratadine: 'allergy,medicine',
-  drotaverine: 'medicine,tablets',
-  ambroxol: 'cough,syrup,medicine',
-  vitamin: 'vitamins,supplements',
-  magnesium: 'magnesium,vitamins',
-  omega: 'fish-oil,capsules',
-  probiotic: 'probiotic,capsules',
-  thermometer: 'digital-thermometer,medical',
-  pressure: 'blood-pressure-monitor,medical',
-  oximeter: 'pulse-oximeter,medical',
-  nebulizer: 'nebulizer,medical',
-  glucose: 'glucose-meter,medical',
-  antiseptic: 'antiseptic,spray',
-  masks: 'medical-mask',
-  sanitizer: 'hand-sanitizer',
-  bandage: 'bandage,first-aid',
-  saline: 'nasal-spray,medicine',
-  cream: 'hand-cream,skincare',
-  sunscreen: 'sunscreen,skincare',
-  balm: 'lip-balm,skincare',
-  cleansing: 'face-cleanser,skincare',
-  thermal: 'thermal-water,skincare',
-  kit: 'first-aid-kit',
-  gel: 'gel-pack,medical',
-  organizer: 'pill-organizer',
-};
+const STORE_IMAGE_URLS = [
+  '/images/seed/stores/store-001.png',
+  '/images/seed/stores/store-002.png',
+  '/images/seed/stores/store-003.png',
+  '/images/seed/stores/store-004.png',
+  '/images/seed/stores/store-005.png',
+  '/images/seed/stores/store-006.png',
+  '/images/seed/stores/store-007.png',
+  '/images/seed/stores/store-008.png',
+  '/images/seed/stores/store-009.png',
+  '/images/seed/stores/store-010.png',
+  '/images/seed/stores/store-011.png',
+  '/images/seed/stores/store-012.png',
+  '/images/seed/stores/store-013.png',
+  '/images/seed/stores/store-014.png',
+  '/images/seed/stores/store-015.png',
+  '/images/seed/stores/store-016.png',
+  '/images/seed/stores/store-017.png',
+  '/images/seed/stores/store-018.png',
+  '/images/seed/stores/store-019.png',
+  '/images/seed/stores/store-020.png',
+] as const;
 
-function createPhotoUrl(keywords: string, index: number): string {
-  const normalizedKeywords = keywords
-    .toLowerCase()
-    .replace(/[^a-z0-9, -]+/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-?, -?/g, ',')
-    .replace(/^-|-$/g, '');
-
-  return `https://loremflickr.com/1200/900/${normalizedKeywords}?lock=${index}`;
+function createStoreImageUrl(index: number): string {
+  return STORE_IMAGE_URLS[index % STORE_IMAGE_URLS.length];
 }
 
-function createProductImageUrl(productName: string, index: number): string {
-  const normalizedName = productName.toLowerCase();
-  const matchedKeyword = Object.entries(PRODUCT_IMAGE_KEYWORDS).find(([namePart]) =>
-    normalizedName.includes(namePart)
-  );
+function createProductName(
+  baseName: string,
+  manufacturer: string,
+  dosage?: string,
+  packageQuantity?: string,
+  variantIndex = 0
+): string {
+  const safeDosage = dosage ?? '20 mg';
+  const safePackageQuantity = packageQuantity ?? '№30';
+  const normalizedManufacturer = manufacturer.replace(/\s+/g, '-');
 
-  return createPhotoUrl(matchedKeyword?.[1] ?? 'pharmacy,medicine', 1000 + index);
-}
+  const variants = [
+    baseName,
+    `${baseName} ${safeDosage} ${safePackageQuantity}`,
+    `${baseName}-${normalizedManufacturer}`,
+    `${baseName} ${safeDosage} ${normalizedManufacturer}`,
+    `${baseName} Max ${safeDosage} №60`,
+  ];
 
-function createStoreImageUrl(city: string, index: number): string {
-  return createPhotoUrl(`pharmacy,drugstore,${city}`, 3000 + index);
+  return variants[variantIndex % variants.length];
 }
 
 function createSlug(value: string): string {
@@ -247,7 +244,7 @@ function createSeedStores() {
       phone: `+380${String(501000000 + storeNumber).padStart(9, '0')}`,
       email: `store.${storeNumber}@e-pharmacy.example.com`,
       rating: Number((4 + (index % 10) * 0.1).toFixed(1)),
-      imageUrl: createStoreImageUrl(city, storeNumber),
+      imageUrl: createStoreImageUrl(index),
       description: `${brand} in ${city} offers everyday medicines, vitamins, medical devices, hygiene products, and quick online reservation for local customers.`,
       isActive: true,
       reviewsCount,
@@ -259,9 +256,16 @@ function createSeedStores() {
 function createSeedProducts(stores: SeedStoreDocument[]) {
   return Array.from({ length: 126 }, (_, index) => {
     const productNumber = index + 1;
-    const [baseName, category, manufacturer, dosage, packageQuantity] =
+    const [baseName, category, manufacturer, dosage, packageQuantity, imageUrl] =
       PRODUCT_BLUEPRINTS[index % PRODUCT_BLUEPRINTS.length];
-    const name = `${baseName} ${productNumber > PRODUCT_BLUEPRINTS.length ? `№${productNumber}` : ''}`.trim();
+    const variantIndex = Math.floor(index / PRODUCT_BLUEPRINTS.length);
+    const name = createProductName(
+      baseName,
+      manufacturer,
+      dosage,
+      packageQuantity,
+      variantIndex
+    );
     const isPremium = index % 6 === 0 || index % 11 === 0;
     const basePrice = isPremium
       ? 1050 + ((index * 137) % 2450)
@@ -292,7 +296,7 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       description: `${name} is a realistic demo catalog item for testing product cards, price formatting, long review text, filters, sorting, pharmacy availability, and responsive catalog layouts.`,
       category,
       price: offers.length > 0 ? basePrice : 0,
-      imageUrl: createProductImageUrl(name, productNumber),
+      imageUrl,
       manufacturer,
       dosage,
       packageQuantity,
