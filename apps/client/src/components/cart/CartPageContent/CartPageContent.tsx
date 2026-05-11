@@ -11,6 +11,7 @@ import {
 import {
   Button,
   ButtonLink,
+  ConfirmActionModal,
   Container,
   LoadingSpinner,
   RatingSummary,
@@ -375,38 +376,13 @@ function CartPageContent() {
           ) : null}
 
           {pendingAction ? (
-            <div className={css.confirmBackdrop} role="presentation">
-              <div
-                className={css.confirmDialog}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="cart-confirm-title"
-              >
-                <h2 className={css.confirmTitle} id="cart-confirm-title">
-                  Confirm removing
-                </h2>
-                <p className={css.confirmText}>{pendingActionText}</p>
-                <div className={css.confirmActions}>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={isUpdating}
-                    onClick={() => setPendingAction(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    className={css.confirmDangerButton}
-                    type="button"
-                    variant="ghost"
-                    disabled={isUpdating}
-                    onClick={() => void handleConfirmPendingAction()}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <ConfirmActionModal
+              title="Confirm removing"
+              text={pendingActionText}
+              isLoading={isUpdating}
+              onConfirm={() => void handleConfirmPendingAction()}
+              onCancel={() => setPendingAction(null)}
+            />
           ) : null}
         </Container>
       </section>

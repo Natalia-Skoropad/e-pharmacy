@@ -32,7 +32,7 @@ import css from './StoreDetailsPageContent.module.css';
 
 //===================================================================
 
-type StoreTab = 'details' | 'about' | 'reviews';
+type StoreTab = 'details' | 'payment' | 'about' | 'reviews';
 
 type StoreDetailsPageContentProps = {
   store: Store;
@@ -82,15 +82,26 @@ function StoreDetailsPageContent({
   const tabs = useMemo<TabItem<StoreTab>[]>(
     () => [
       { value: 'details', label: 'Details' },
+      ...(isAuthenticated
+        ? [{ value: 'payment' as const, label: 'Payment details' }]
+        : []),
       { value: 'about', label: 'About pharmacy' },
       { value: 'reviews', label: `Reviews (${reviewsTotal})` },
     ],
-    [reviewsTotal]
+    [isAuthenticated, reviewsTotal]
   );
 
   const medicinesHref = buildMedicinesCatalogPath({ storeId: store.id }, [
     store,
   ]);
+
+  const bankDetails = store.bankDetails ?? {
+    recipientName: `${store.name} LLC`,
+    taxId: '12345678',
+    iban: 'UA123456789012345678901234567',
+    bankName: 'JSC PrivatBank',
+    paymentPurpose: `Payment for E-PHARMACY order from ${store.name}`,
+  };
 
   const reviewsCountLabel = getReviewsCountLabel(reviewsTotal);
   const isReviewValid =
@@ -327,6 +338,38 @@ function StoreDetailsPageContent({
         </Container>
       </section>
 
+      {activeTab === 'payment' && isAuthenticated ? (
+        <section className={css.tabSection} aria-live="polite">
+          <Container>
+            <div className={css.panel}>
+              <h2 className={css.panelTitle}>Payment details</h2>
+
+              <dl className={css.paymentList}>
+                <div>
+                  <dt>Recipient</dt>
+                  <dd>{bankDetails.recipientName}</dd>
+                </div>
+                <div>
+                  <dt>EDRPOU / Tax ID</dt>
+                  <dd>{bankDetails.taxId}</dd>
+                </div>
+                <div>
+                  <dt>IBAN</dt>
+                  <dd>{bankDetails.iban}</dd>
+                </div>
+                <div>
+                  <dt>Bank</dt>
+                  <dd>{bankDetails.bankName}</dd>
+                </div>
+                <div>
+                  <dt>Payment purpose</dt>
+                  <dd>{bankDetails.paymentPurpose}</dd>
+                </div>
+              </dl>
+            </div>
+          </Container>
+        </section>
+      ) : null}
 
       {activeTab === 'about' ? (
         <section className={css.tabSection} aria-live="polite">

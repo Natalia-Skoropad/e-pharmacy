@@ -2,7 +2,17 @@
 
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Clock, Copy, CreditCard, Mail, MapPin, Phone, Truck, Wallet } from 'lucide-react';
+import {
+  Clock,
+  Copy,
+  CreditCard,
+  Info,
+  Mail,
+  MapPin,
+  Phone,
+  Truck,
+  Wallet,
+} from 'lucide-react';
 
 import {
   Button,
@@ -16,6 +26,18 @@ import { useAuth } from '@/components/providers';
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
+import {
+  CUSTOMER_ADDRESS_MAX_LENGTH,
+  CUSTOMER_ADDRESS_MIN_LENGTH,
+  CUSTOMER_NAME_MAX_LENGTH,
+  CUSTOMER_PHONE_MAX_LENGTH,
+  getCustomerAddressError,
+  getCustomerNameError,
+  getCustomerPhoneError,
+  sanitizeCustomerAddress,
+  sanitizeCustomerName,
+  sanitizeCustomerPhone,
+} from '@/lib/validations';
 
 import { getCart, getStoreDetails, removeCartItem } from '@/services';
 
@@ -56,10 +78,6 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
   { label: CHECKOUT_TITLE },
 ];
 
-const LATIN_ADDRESS_PATTERN = /^[A-Za-z0-9\s.,'’/#-]+$/;
-const ADDRESS_MAX_LENGTH = 200;
-const ADDRESS_MIN_LENGTH = 20;
-
 //===================================================================
 
 function formatPrice(price: number): string {
@@ -96,26 +114,6 @@ function groupCartByStore(cart: Cart): StoreOrderGroup[] {
   return [...groups.values()];
 }
 
-function sanitizeLatinAddress(value: string): string {
-  return value.replace(/[^A-Za-z0-9\s.,'’/#-]/g, '').slice(0, ADDRESS_MAX_LENGTH);
-}
-
-function getAddressError(address: string): string {
-  const trimmedAddress = address.trim();
-
-  if (trimmedAddress.length === 0) return '';
-
-  if (trimmedAddress.length < ADDRESS_MIN_LENGTH) {
-    return `Address must be at least ${ADDRESS_MIN_LENGTH} characters.`;
-  }
-
-  if (!LATIN_ADDRESS_PATTERN.test(trimmedAddress)) {
-    return 'Use Latin letters, numbers, spaces, comma, dot, slash, apostrophe, # or hyphen.';
-  }
-
-  return '';
-}
-
 function getStoreEmail(store?: Store | null): string {
   return store?.email ?? 'pharmacy@example.com';
 }
@@ -149,7 +147,7 @@ function getBankDetails(store?: Store | null): CheckoutBankDetails {
 //===================================================================
 
 function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const searchParams = useSearchParams();
   const queryStoreId = searchParams.get('storeId');
   const selectedStoreIdFromRoute = checkoutStoreId ?? queryStoreId;
@@ -180,13 +178,18 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     );
   }, [selectedStoreIdFromRoute, orderGroups]);
 
-  const addressError = getAddressError(deliveryAddress);
+  const nameError = getCustomerNameError(recipientName);
+  const phoneError = getCustomerPhoneError(recipientPhone);
+  const addressError = getCustomerAddressError(deliveryAddress);
   const isPostDeliveryValid =
     deliveryMethod === 'pickup' ||
     (recipientName.trim().length >= 2 &&
-      recipientPhone.trim().length >= 6 &&
-      deliveryAddress.trim().length >= ADDRESS_MIN_LENGTH &&
-      deliveryAddress.trim().length <= ADDRESS_MAX_LENGTH &&
+      recipientName.trim().length <= CUSTOMER_NAME_MAX_LENGTH &&
+      recipientPhone.trim().length === CUSTOMER_PHONE_MAX_LENGTH &&
+      deliveryAddress.trim().length >= CUSTOMER_ADDRESS_MIN_LENGTH &&
+      deliveryAddress.trim().length <= CUSTOMER_ADDRESS_MAX_LENGTH &&
+      !nameError &&
+      !phoneError &&
       !addressError);
 
   const canSubmit =
@@ -259,10 +262,24 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     };
   }, [selectedOrderGroup, token]);
 
+  useEffect(() => {
+    setRecipientName(user?.name ?? '');
+    setRecipientPhone(user?.phone ?? '');
+    setDeliveryAddress(user?.address ?? '');
+  }, [user]);
+
+  const handleRecipientNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setRecipientName(sanitizeCustomerName(event.target.value));
+  };
+
+  const handleRecipientPhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setRecipientPhone(sanitizeCustomerPhone(event.target.value));
+  };
+
   const handleDeliveryAddressChange = (
-    event: ChangeEvent<HTMLInputElement>
+    event: ChangeEvent<HTMLTextAreaElement>
   ) => {
-    setDeliveryAddress(sanitizeLatinAddress(event.target.value));
+    setDeliveryAddress(sanitizeCustomerAddress(event.target.value));
   };
 
   const handleCopyEmail = async () => {
@@ -331,9 +348,8 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
             <div className={css.success} role="status">
               <h2 className={css.successTitle}>{successMessage}</h2>
               <p className={css.successText}>
-                The pharmacy will check the invoice and contact you if anything needs
-                a tiny detective moment. Paperwork goblin has been politely escorted
-                to the backend queue.
+                The pharmacy will check the invoice and contact you if any order
+                details need confirmation.
               </p>
               <div className={css.successActions}>
                 <ButtonLink href={ROUTES.CART} variant="secondary">
@@ -397,12 +413,16 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                         <div className={css.infoCard}>
                           <h3 className={css.infoTitle}>Pharmacy details</h3>
                           {isStoreLoading ? (
-                            <p className={css.mutedText}>Loading pharmacy details...</p>
+                            <p className={css.mutedText}>
+                              Loading pharmacy details...
+                            </p>
                           ) : null}
                           <ul className={css.iconList}>
                             <li>
                               <Phone size={18} aria-hidden="true" />
-                              <a href={`tel:${getStorePhone(store)}`}>{getStorePhone(store)}</a>
+                              <a href={`tel:${getStorePhone(store)}`}>
+                                {getStorePhone(store)}
+                              </a>
                             </li>
                             <li>
                               <Clock size={18} aria-hidden="true" />
@@ -423,11 +443,23 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                                 value={recipientName}
                                 placeholder="Your name"
                                 autoComplete="name"
-                                maxLength={80}
-                                onChange={(event) =>
-                                  setRecipientName(event.target.value)
-                                }
+                                maxLength={CUSTOMER_NAME_MAX_LENGTH}
+                                aria-invalid={Boolean(nameError)}
+                                aria-describedby="recipient-name-meta"
+                                onChange={handleRecipientNameChange}
                               />
+                              <span
+                                className={css.fieldMeta}
+                                id="recipient-name-meta"
+                              >
+                                <span>
+                                  {recipientName.length}/
+                                  {CUSTOMER_NAME_MAX_LENGTH}
+                                </span>
+                                <span className={css.errorText}>
+                                  {nameError}
+                                </span>
+                              </span>
                             </label>
 
                             <label className={css.field}>
@@ -436,48 +468,68 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                                 value={recipientPhone}
                                 placeholder="+380..."
                                 autoComplete="tel"
-                                maxLength={32}
-                                onChange={(event) =>
-                                  setRecipientPhone(event.target.value)
-                                }
+                                maxLength={CUSTOMER_PHONE_MAX_LENGTH}
+                                aria-invalid={Boolean(phoneError)}
+                                aria-describedby="recipient-phone-meta"
+                                onChange={handleRecipientPhoneChange}
                               />
+                              <span
+                                className={css.fieldMeta}
+                                id="recipient-phone-meta"
+                              >
+                                <span>
+                                  {recipientPhone.length}/
+                                  {CUSTOMER_PHONE_MAX_LENGTH}
+                                </span>
+                                <span className={css.errorText}>
+                                  {phoneError}
+                                </span>
+                              </span>
                             </label>
 
                             <label className={css.fieldWide}>
                               <span>Delivery address / post office</span>
-                              <input
+                              <textarea
                                 value={deliveryAddress}
                                 placeholder="Example: 12 Central Street, Nova Poshta office #5, Kyiv"
                                 autoComplete="street-address"
-                                maxLength={ADDRESS_MAX_LENGTH}
+                                maxLength={CUSTOMER_ADDRESS_MAX_LENGTH}
                                 aria-invalid={Boolean(addressError)}
-                                aria-describedby={
-                                  addressError ? 'delivery-address-error' : undefined
-                                }
+                                aria-describedby="delivery-address-meta"
                                 onChange={handleDeliveryAddressChange}
                               />
+                              <span
+                                className={css.fieldMeta}
+                                id="delivery-address-meta"
+                              >
+                                <span>
+                                  {deliveryAddress.length}/
+                                  {CUSTOMER_ADDRESS_MAX_LENGTH}
+                                </span>
+                                <span className={css.errorText}>
+                                  {addressError}
+                                </span>
+                              </span>
                             </label>
                           </div>
 
-                          <div className={css.fieldMeta}>
-                            <span>
-                              {deliveryAddress.length}/{ADDRESS_MAX_LENGTH}
-                            </span>
-                            {addressError ? (
-                              <span className={css.errorText} id="delivery-address-error">
-                                {addressError}
-                              </span>
-                            ) : null}
-                          </div>
+                          <div className={css.deliveryNotes}>
+                            <div className={css.noteCard}>
+                              <Truck size={18} aria-hidden="true" />
+                              <p>
+                                After confirmation, the pharmacy will contact
+                                you to confirm or clarify the delivery address.
+                              </p>
+                            </div>
 
-                          <div className={css.noteCard}>
-                            <Truck size={18} aria-hidden="true" />
-                            <p>
-                              After confirmation, the pharmacy will contact you to
-                              confirm or clarify the delivery address. Delivery is not
-                              included in the product price, and the carrier will announce
-                              the delivery cost separately.
-                            </p>
+                            <div className={css.noteCardAccent}>
+                              <Info size={18} aria-hidden="true" />
+                              <p>
+                                Delivery is not included in the product price.
+                                The carrier will announce the delivery cost
+                                separately.
+                              </p>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -513,11 +565,12 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                       {paymentMethod === 'cash' ? (
                         <div className={css.infoCard}>
                           <Wallet size={20} aria-hidden="true" />
-                          <h3 className={css.infoTitle}>Pay when everything is ready</h3>
+                          <h3 className={css.infoTitle}>
+                            Pay when everything is ready
+                          </h3>
                           <p className={css.mutedText}>
-                            Cash is paid during pickup or delivery. No secret pharmacy
-                            treasure map needed — just keep the invoice amount nearby and
-                            the medicines will not have to practice waiting patiently.
+                            Cash is paid during pickup or delivery. Please keep
+                            the invoice amount ready when you receive the order.
                           </p>
                         </div>
                       ) : (
@@ -550,8 +603,8 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                           <div className={css.emailNote}>
                             <Mail size={18} aria-hidden="true" />
                             <p>
-                              After payment, send the receipt to the pharmacy email for
-                              faster processing.
+                              After payment, send the receipt to the pharmacy
+                              email for faster processing.
                             </p>
                             <button
                               className={css.copyButton}
@@ -578,10 +631,16 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                   <label className={css.fieldWide}>
                     <span>Comment for pharmacy</span>
                     <textarea
+                      className={css.commentTextarea}
                       value={comment}
                       maxLength={240}
+                      placeholder="Add details for the pharmacy if needed"
                       onChange={(event) => setComment(event.target.value)}
                     />
+                    <span className={css.fieldMeta}>
+                      <span>{comment.length}/240</span>
+                      <span className={css.errorText} />
+                    </span>
                   </label>
                 </section>
               </div>

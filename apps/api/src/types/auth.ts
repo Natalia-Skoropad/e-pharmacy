@@ -18,6 +18,7 @@ export type AuthUserResponse = {
   role: UserRole;
   status: UserStatus;
   phone?: string;
+  address?: string;
   avatarUrl?: string;
 };
 

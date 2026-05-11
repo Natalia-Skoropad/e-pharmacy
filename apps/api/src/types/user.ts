@@ -15,6 +15,7 @@ export type UserEntity = {
   role: UserRole;
   status: UserStatus;
   phone?: string;
+  address?: string;
   avatarUrl?: string;
   favoriteProductIds?: string[];
   favoriteStoreIds?: string[];

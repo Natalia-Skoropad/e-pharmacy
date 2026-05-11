@@ -36,6 +36,7 @@ export async function registerUserService(
       password: hashedPassword,
       role: input.role || USER_ROLES.CUSTOMER,
       phone: input.phone,
+      address: input.address,
     });
 
     const token = signToken({

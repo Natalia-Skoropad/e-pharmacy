@@ -11,7 +11,11 @@ import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
 import { getSafeRedirectPath } from '@/lib/routes';
 import {
+  CUSTOMER_NAME_MAX_LENGTH,
+  CUSTOMER_PHONE_MAX_LENGTH,
   REGISTER_INITIAL_VALUES,
+  sanitizeCustomerName,
+  sanitizeCustomerPhone,
   validateRegisterForm,
   type RegisterFormErrors,
   type RegisterFormValues,
@@ -39,9 +43,17 @@ function RegisterForm() {
   const handleChange =
     (field: keyof RegisterFormValues) =>
     (event: ChangeEvent<HTMLInputElement>) => {
+      const rawValue = event.target.value;
+      const nextValue =
+        field === 'name'
+          ? sanitizeCustomerName(rawValue)
+          : field === 'phone'
+            ? sanitizeCustomerPhone(rawValue)
+            : rawValue;
+
       setValues((prev) => ({
         ...prev,
-        [field]: event.target.value,
+        [field]: nextValue,
       }));
 
       setErrors((prev) => ({
@@ -106,17 +118,20 @@ function RegisterForm() {
             value={values.name}
             placeholder="Your name"
             autoComplete="name"
-            maxLength={64}
+            maxLength={CUSTOMER_NAME_MAX_LENGTH}
             aria-invalid={Boolean(errors.name)}
-            aria-describedby={errors.name ? 'register-name-error' : undefined}
+            aria-describedby="register-name-error"
             onChange={handleChange('name')}
           />
 
-          {errors.name ? (
+          <div className={css.fieldMeta}>
             <p className={css.error} id="register-name-error">
-              {errors.name}
+              {errors.name ?? ''}
             </p>
-          ) : null}
+            <span className={css.counter}>
+              {values.name.length}/{CUSTOMER_NAME_MAX_LENGTH}
+            </span>
+          </div>
         </div>
 
         <div className={css.field}>
@@ -158,17 +173,20 @@ function RegisterForm() {
             value={values.phone}
             placeholder="+380..."
             autoComplete="tel"
-            maxLength={20}
+            maxLength={CUSTOMER_PHONE_MAX_LENGTH}
             aria-invalid={Boolean(errors.phone)}
-            aria-describedby={errors.phone ? 'register-phone-error' : undefined}
+            aria-describedby="register-phone-error"
             onChange={handleChange('phone')}
           />
 
-          {errors.phone ? (
+          <div className={css.fieldMeta}>
             <p className={css.error} id="register-phone-error">
-              {errors.phone}
+              {errors.phone ?? ''}
             </p>
-          ) : null}
+            <span className={css.counter}>
+              {values.phone.length}/{CUSTOMER_PHONE_MAX_LENGTH}
+            </span>
+          </div>
         </div>
 
         <div className={css.field}>

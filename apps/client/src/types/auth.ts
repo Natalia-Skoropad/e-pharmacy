@@ -11,6 +11,7 @@ export type AuthUser = {
   role: UserRole;
   status: UserStatus;
   phone?: string;
+  address?: string;
   avatarUrl?: string;
 };
 
@@ -33,6 +34,7 @@ export type RegisterPayload = {
   password: string;
   role?: Extract<UserRole, 'customer' | 'vendor'>;
   phone?: string;
+  address?: string;
 };
 
 export type LoginPayload = {

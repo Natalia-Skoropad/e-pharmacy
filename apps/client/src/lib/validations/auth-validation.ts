@@ -3,9 +3,11 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 64;
 const USER_NAME_MIN_LENGTH = 2;
-const USER_NAME_MAX_LENGTH = 64;
+const USER_NAME_MAX_LENGTH = 20;
 const EMAIL_MAX_LENGTH = 254;
-const PHONE_MAX_LENGTH = 20;
+const PHONE_MAX_LENGTH = 13;
+const NAME_REGEX = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/;
+const PHONE_REGEX = /^\+380\d{9}$/;
 
 //===================================================================
 
@@ -87,6 +89,8 @@ export function validateRegisterForm(
     errors.name = `Name must be at least ${USER_NAME_MIN_LENGTH} characters`;
   } else if (name.length > USER_NAME_MAX_LENGTH) {
     errors.name = `Name must be at most ${USER_NAME_MAX_LENGTH} characters`;
+  } else if (!NAME_REGEX.test(name)) {
+    errors.name = 'Use only Latin letters, spaces, apostrophe or hyphen';
   }
 
   if (!email) {
@@ -97,7 +101,9 @@ export function validateRegisterForm(
     errors.email = `Email must be at most ${EMAIL_MAX_LENGTH} characters`;
   }
 
-  if (phone && phone.length > PHONE_MAX_LENGTH) {
+  if (phone && !PHONE_REGEX.test(phone)) {
+    errors.phone = 'Enter phone in format +380XXXXXXXXX';
+  } else if (phone && phone.length > PHONE_MAX_LENGTH) {
     errors.phone = `Phone must be at most ${PHONE_MAX_LENGTH} characters`;
   }
 

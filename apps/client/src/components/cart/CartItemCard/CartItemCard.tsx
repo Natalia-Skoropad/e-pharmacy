@@ -34,10 +34,10 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
-function formatStockLabel(stockQuantity: number): string {
-  return stockQuantity === 1
+function formatStockLabel(availableQuantity: number): string {
+  return availableQuantity === 1
     ? '1 item available in this pharmacy'
-    : `${stockQuantity} items available in this pharmacy`;
+    : `${availableQuantity} items available in this pharmacy`;
 }
 
 //===================================================================
@@ -50,7 +50,7 @@ function CartItemCard({
 }: CartItemCardProps) {
   const productHref = buildProductPath(item.product.name, item.product.id);
   const stockQuantity = item.stockQuantity ?? item.quantity;
-  const canIncrease = item.quantity < stockQuantity;
+  const availableQuantity = Math.max(stockQuantity - item.quantity, 0);
 
   return (
     <article className={css.card} aria-labelledby={`cart-item-${item.id}`}>
@@ -92,7 +92,7 @@ function CartItemCard({
             <QuantityCounter
               value={item.quantity}
               min={1}
-              max={stockQuantity}
+              max={item.quantity + availableQuantity}
               disabled={isUpdating}
               isLoading={isUpdating}
               ariaLabel={`Quantity controls for ${item.product.name}`}
@@ -100,7 +100,7 @@ function CartItemCard({
               onIncrement={() => onQuantityChange(item.id, item.quantity + 1)}
             />
 
-            <p className={css.stock}>{formatStockLabel(stockQuantity)}</p>
+            <p className={css.stock}>{formatStockLabel(availableQuantity)}</p>
           </div>
 
           <div className={css.actions}>

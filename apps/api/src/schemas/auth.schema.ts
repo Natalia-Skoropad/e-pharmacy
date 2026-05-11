@@ -51,6 +51,8 @@ const phoneSchema = z
   .max(PHONE_MAX_LENGTH, `Phone must be at most ${PHONE_MAX_LENGTH} characters`)
   .optional();
 
+const addressSchema = z.string().trim().min(10).max(200).optional();
+
 //===============================================================
 
 export const registerSchema = z.object({
@@ -67,6 +69,7 @@ export const registerSchema = z.object({
     .default(USER_ROLES.CUSTOMER),
 
   phone: phoneSchema,
+  address: addressSchema,
 });
 
 //===============================================================

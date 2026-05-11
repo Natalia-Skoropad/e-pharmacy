@@ -10,8 +10,8 @@
 
 .imageWrap {
   position: relative;
-  width: 96px;
-  min-height: 96px;
+  width: 140px;
+  height: 140px;
   overflow: hidden;
   background-color: var(--color-accent-light);
   border-radius: var(--radius-lg);
@@ -70,9 +70,9 @@
 
 .stock {
   max-width: 220px;
-  font-size: var(--fz-12);
+  font-size: var(--fz-14);
   line-height: var(--lh-base);
-  color: var(--color-text-muted);
+  color: var(--color-accent);
 }
 
 .actions {
@@ -95,15 +95,15 @@
 
 @media only screen and (min-width: 768px) {
   .card {
-    grid-template-columns: 120px minmax(0, 1fr);
+    grid-template-columns: 140px minmax(0, 1fr);
     gap: 20px;
     padding: 20px;
   }
 
   .imageWrap,
   .imageFallback {
-    width: 120px;
-    min-height: 120px;
+    width: 140px;
+    height: 140px;
   }
 
   .head {
@@ -121,6 +121,34 @@
   }
 
   .actions {
+    justify-content: flex-end;
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  .card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .imageWrap,
+  .imageFallback {
+    width: 100%;
+    min-height: 220px;
+  }
+
+  .image {
+    object-fit: contain;
+  }
+
+  .actions,
+  .actions > * {
+    width: 100%;
+  }
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1439px) {
+  .actions {
+    flex-wrap: nowrap;
     justify-content: flex-end;
   }
 }

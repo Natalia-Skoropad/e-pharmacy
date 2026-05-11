@@ -214,8 +214,8 @@
 }
 
 .fieldWide textarea {
-  min-height: 120px;
-  resize: vertical;
+  min-height: 150px;
+  resize: none;
 }
 
 .field input:hover,
@@ -390,5 +390,57 @@
   .grid {
     grid-template-columns: minmax(0, 1fr) 360px;
     align-items: start;
+  }
+}
+
+.deliveryNotes {
+  display: grid;
+  gap: 10px;
+}
+
+.noteCardAccent {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 16px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-primary);
+  background-color: rgba(89, 177, 122, 0.14);
+  border: 1px solid rgba(89, 177, 122, 0.32);
+  border-radius: var(--radius-lg);
+}
+
+.noteCardAccent svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--color-accent);
+}
+
+.commentTextarea {
+  min-height: 150px;
+  resize: none !important;
+}
+
+.field input[aria-invalid='true'],
+.fieldWide textarea[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.fieldMeta {
+  min-height: 18px;
+}
+
+.errorText:empty::before {
+  content: '\00a0';
+}
+
+@media only screen and (min-width: 768px) {
+  .fieldsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .optionsGrid {
+    max-width: 340px;
   }
 }

@@ -12,6 +12,7 @@ import type { ProductEntity, ProductOfferEntity } from '../types/product';
 //===============================================================
 
 const CART_ITEM_TTL_DAYS = 3;
+const MAX_CART_INVOICES = 15;
 
 //===============================================================
 
@@ -234,6 +235,20 @@ export async function addCartItemService(
       expiresAt: getCartItemExpiresAt(),
     };
   } else {
+    const invoiceStoreIds = new Set(
+      cart.items.map((item) => item.storeId.toString())
+    );
+
+    if (
+      !invoiceStoreIds.has(input.storeId) &&
+      invoiceStoreIds.size >= MAX_CART_INVOICES
+    ) {
+      throw httpError(
+        HTTP_STATUS.BAD_REQUEST,
+        'You cannot add more than 15 invoices to the cart. Confirm previous invoices to continue shopping.'
+      );
+    }
+
     cart.items.push({
       _id: new Types.ObjectId(),
       productId: new Types.ObjectId(input.productId),

@@ -1,5 +1,6 @@
 import { apiRequest, getResponseData } from '@/lib/api';
 import { API_ROUTES } from '@/lib/constants/api-routes';
+import { dispatchCartUpdated } from '@/lib/cart-events';
 
 import type {
   AddCartItemPayload,
@@ -7,6 +8,21 @@ import type {
   CartResponse,
   UpdateCartItemPayload,
 } from '@/types';
+
+//===================================================================
+
+function getCartResponseData(
+  response: ApiSuccessResponse<CartResponse>,
+  shouldNotify = false
+): CartResponse {
+  const data = getResponseData(response);
+
+  if (shouldNotify) {
+    dispatchCartUpdated(data.cart);
+  }
+
+  return data;
+}
 
 //===================================================================
 
@@ -18,7 +34,7 @@ export async function getCart(authToken: string): Promise<CartResponse> {
     }
   );
 
-  return getResponseData(response);
+  return getCartResponseData(response);
 }
 
 //===================================================================
@@ -36,7 +52,7 @@ export async function addCartItem(
     }
   );
 
-  return getResponseData(response);
+  return getCartResponseData(response, true);
 }
 
 //===================================================================
@@ -55,7 +71,7 @@ export async function updateCartItem(
     }
   );
 
-  return getResponseData(response);
+  return getCartResponseData(response, true);
 }
 
 //===================================================================
@@ -72,7 +88,7 @@ export async function removeCartItem(
     }
   );
 
-  return getResponseData(response);
+  return getCartResponseData(response, true);
 }
 
 //===================================================================
@@ -86,5 +102,5 @@ export async function clearCart(authToken: string): Promise<CartResponse> {
     }
   );
 
-  return getResponseData(response);
+  return getCartResponseData(response, true);
 }

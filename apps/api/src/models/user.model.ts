@@ -55,6 +55,13 @@ const userSchema = new Schema<UserEntity>(
       default: undefined,
     },
 
+    address: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Address must be at most 200 characters'],
+      default: undefined,
+    },
+
     avatarUrl: {
       type: String,
       trim: true,

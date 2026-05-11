@@ -25,7 +25,7 @@ export const PRODUCT_SORT_OPTIONS = [
 
 const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
-const perPageSchema = z.coerce.number().int().min(1).max(50).default(12);
+const perPageSchema = z.coerce.number().int().min(1).max(200).default(12);
 
 //===============================================================
 

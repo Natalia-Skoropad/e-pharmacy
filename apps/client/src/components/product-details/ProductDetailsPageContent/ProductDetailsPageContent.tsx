@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import {
   Button,
   ButtonLink,
+  ConfirmActionModal,
   Container,
   DeliveryInfoCard,
   FavoriteToggleButton,
@@ -25,6 +26,7 @@ import {
 } from '@/components/common';
 
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
+import { ApiError } from '@/lib/api';
 import { useAuth } from '@/components/providers';
 
 import { ROUTES } from '@/lib/constants/routes';
@@ -142,6 +144,19 @@ function getOfferTotal(cartItem: CartItem | null, offer: ProductOffer): number {
   return (cartItem?.quantity ?? 0) * offer.price;
 }
 
+function getAvailableOfferQuantity(
+  offer: ProductOffer,
+  cartItem: CartItem | null
+): number {
+  return Math.max(offer.activeQuantity - (cartItem?.quantity ?? 0), 0);
+}
+
+function formatAvailableQuantity(quantity: number): string {
+  return quantity === 1
+    ? '1 item available in this pharmacy'
+    : `${quantity} items available in this pharmacy`;
+}
+
 function getStoreHref(offer: ProductOffer): string {
   return buildStorePath(offer.storeName, offer.storeId);
 }
@@ -189,6 +204,7 @@ function ProductDetailsPageContent({
   const [updatingStoreId, setUpdatingStoreId] = useState<string | null>(null);
   const [pendingRemoveOffer, setPendingRemoveOffer] =
     useState<ProductOffer | null>(null);
+  const [invoiceLimitMessage, setInvoiceLimitMessage] = useState('');
 
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(0);
@@ -436,8 +452,14 @@ function ProductDetailsPageContent({
 
       await refreshCart();
       showToast('One product unit was added to the order.');
-    } catch {
-      showToast('Could not add product to the order.');
+    } catch (error) {
+      if (error instanceof ApiError && error.message.includes('15 invoices')) {
+        setInvoiceLimitMessage(
+          'You cannot add more than 15 invoices to your cart. Please confirm the previous ones to continue shopping'
+        );
+      } else {
+        showToast('Could not add product to the order.');
+      }
     } finally {
       setUpdatingStoreId(null);
     }
@@ -522,6 +544,7 @@ function ProductDetailsPageContent({
   const renderQuantityControl = (offer: ProductOffer) => {
     const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
     const quantity = cartItem?.quantity ?? 0;
+    const availableQuantity = getAvailableOfferQuantity(offer, cartItem);
     const isDisabled =
       !isAuthReady ||
       !isAuthenticated ||
@@ -532,7 +555,7 @@ function ProductDetailsPageContent({
       <div className={css.quantityBlock}>
         <QuantityCounter
           value={quantity}
-          max={offer.activeQuantity}
+          max={quantity + availableQuantity}
           disabled={isDisabled}
           isLoading={updatingStoreId === offer.storeId}
           ariaLabel="Product quantity controls"
@@ -543,6 +566,12 @@ function ProductDetailsPageContent({
         <p className={css.totalLine}>
           Total: <b>{formatPrice(getOfferTotal(cartItem, offer))}</b>
         </p>
+
+        {isAuthenticated ? (
+          <p className={css.stockLine}>
+            {formatAvailableQuantity(availableQuantity)}
+          </p>
+        ) : null}
       </div>
     );
   };
@@ -759,7 +788,7 @@ function ProductDetailsPageContent({
                                   className={css.offerImage}
                                   src={offer.storeImageUrl}
                                   alt={`${offer.storeName} pharmacy`}
-                                  sizes="380px"
+                                  sizes="500px"
                                   quality={90}
                                 />
                               ) : (
@@ -909,43 +938,25 @@ function ProductDetailsPageContent({
           </Container>
         </section>
       ) : null}
+      {invoiceLimitMessage ? (
+        <ConfirmActionModal
+          title="Cart invoice limit"
+          text={invoiceLimitMessage}
+          confirmLabel="Got it"
+          cancelLabel="Close"
+          onConfirm={() => setInvoiceLimitMessage('')}
+          onCancel={() => setInvoiceLimitMessage('')}
+        />
+      ) : null}
+
       {pendingRemoveOffer ? (
-        <div className={css.modalOverlay} role="presentation">
-          <div
-            className={css.confirmModal}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="remove-product-title"
-          >
-            <h2 className={css.confirmTitle} id="remove-product-title">
-              Remove product from order?
-            </h2>
-
-            <p className={css.confirmText}>
-              This is the last unit of {productDetails.name} from{' '}
-              {pendingRemoveOffer.storeName}. It will be removed from the cart.
-            </p>
-
-            <div className={css.confirmActions}>
-              <Button
-                type="button"
-                disabled={updatingStoreId === pendingRemoveOffer.storeId}
-                onClick={() => void removeOfferUnit(pendingRemoveOffer)}
-              >
-                Remove
-              </Button>
-
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={updatingStoreId === pendingRemoveOffer.storeId}
-                onClick={() => setPendingRemoveOffer(null)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ConfirmActionModal
+          title="Remove product from order?"
+          text={`This is the last unit of ${productDetails.name} from ${pendingRemoveOffer.storeName}. It will be removed from the cart.`}
+          isLoading={updatingStoreId === pendingRemoveOffer.storeId}
+          onConfirm={() => void removeOfferUnit(pendingRemoveOffer)}
+          onCancel={() => setPendingRemoveOffer(null)}
+        />
       ) : null}
     </main>
   );

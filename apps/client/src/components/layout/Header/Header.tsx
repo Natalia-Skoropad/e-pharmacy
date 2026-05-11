@@ -15,6 +15,7 @@ import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
 import { ROUTES } from '@/lib/constants/routes';
 import { isActiveRoute } from '@/lib/routes';
 import { cn } from '@/lib/utils';
+import { CART_UPDATED_EVENT, type CartUpdatedEventDetail } from '@/lib/cart-events';
 import { getCart } from '@/services';
 
 import css from './Header.module.css';
@@ -33,7 +34,10 @@ function Header() {
   const visibleCartItemsCount = isAuthenticated && token ? cartItemsCount : 0;
 
   useEffect(() => {
-    if (!isAuthenticated || !token) return;
+    if (!isAuthenticated || !token) {
+      setCartItemsCount(0);
+      return;
+    }
 
     let isMounted = true;
 
@@ -49,6 +53,20 @@ function Header() {
       isMounted = false;
     };
   }, [isAuthenticated, token, pathname]);
+
+  useEffect(() => {
+    const handleCartUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<CartUpdatedEventDetail>).detail;
+
+      setCartItemsCount(detail?.totalItems ?? 0);
+    };
+
+    window.addEventListener(CART_UPDATED_EVENT, handleCartUpdated);
+
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, handleCartUpdated);
+    };
+  }, []);
 
   const handleToggleMobileMenu = () => {
     setIsMobileMenuOpen((prev) => !prev);

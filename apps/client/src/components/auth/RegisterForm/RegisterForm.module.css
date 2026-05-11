@@ -110,3 +110,18 @@
 .link:focus-visible {
   color: var(--color-accent-hover);
 }
+
+
+.fieldMeta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  min-height: 18px;
+}
+
+.counter {
+  font-size: var(--fz-12);
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}

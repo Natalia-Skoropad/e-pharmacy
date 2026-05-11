@@ -535,7 +535,7 @@
     display: flex;
     width: 100%;
     height: auto;
-    min-height: 260px;
+    min-height: 280px;
     aspect-ratio: 380 / 260;
   }
 
@@ -623,4 +623,10 @@
   .offerControls {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
+
+.stockLine {
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-accent);
 }

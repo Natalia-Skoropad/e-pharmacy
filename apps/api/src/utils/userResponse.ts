@@ -17,6 +17,7 @@ export function toAuthUserResponse(user: UserDocument): AuthUserResponse {
     role: user.role,
     status: user.status,
     phone: user.phone,
+    address: user.address,
     avatarUrl: user.avatarUrl,
   };
 }

@@ -6,6 +6,7 @@ import { ShoppingCart } from 'lucide-react';
 import {
   Button,
   CloseIconButton,
+  ConfirmActionModal,
   LoadingSpinner,
   SearchInput,
   ShimmerImage,
@@ -13,6 +14,7 @@ import {
 } from '@/components/common';
 
 import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
+import { ApiError } from '@/lib/api';
 import { addCartItem, getProducts } from '@/services';
 
 import type { Cart, Product, ProductCategory } from '@/types';
@@ -111,6 +113,7 @@ function ContinueShoppingModal({
     null
   );
   const [error, setError] = useState('');
+  const [invoiceLimitMessage, setInvoiceLimitMessage] = useState('');
 
   useBodyScrollLock(true);
   useEscapeToClose({ isOpen: true, onClose });
@@ -211,15 +214,29 @@ function ContinueShoppingModal({
       );
 
       onCartChange(response.cart);
-    } catch {
-      setError('Could not add this product to the invoice.');
+    } catch (error) {
+      if (error instanceof ApiError && error.message.includes('15 invoices')) {
+        setInvoiceLimitMessage(
+          'You cannot add more than 15 invoices to your cart. Please confirm the previous ones to continue shopping'
+        );
+      } else {
+        setError(
+          error instanceof ApiError
+            ? error.message
+            : 'Could not add this product to the invoice.'
+        );
+      }
     } finally {
       setIsAddingProductId(null);
     }
   };
 
   return (
-    <div className={css.backdrop} role="presentation" onMouseDown={handleBackdropMouseDown}>
+    <div
+      className={css.backdrop}
+      role="presentation"
+      onMouseDown={handleBackdropMouseDown}
+    >
       <div
         className={css.dialog}
         role="dialog"
@@ -253,9 +270,14 @@ function ContinueShoppingModal({
         </div>
 
         {categoryOptions.length > 0 ? (
-          <div className={css.categories} aria-label="Product categories in this pharmacy">
+          <div
+            className={css.categories}
+            aria-label="Product categories in this pharmacy"
+          >
             <button
-              className={selectedCategory === 'all' ? css.categoryActive : css.category}
+              className={
+                selectedCategory === 'all' ? css.categoryActive : css.category
+              }
               type="button"
               onClick={() => setSelectedCategory('all')}
             >
@@ -264,7 +286,11 @@ function ContinueShoppingModal({
 
             {categoryOptions.map((category) => (
               <button
-                className={selectedCategory === category.value ? css.categoryActive : css.category}
+                className={
+                  selectedCategory === category.value
+                    ? css.categoryActive
+                    : css.category
+                }
                 type="button"
                 key={category.value}
                 onClick={() => setSelectedCategory(category.value)}
@@ -295,7 +321,8 @@ function ContinueShoppingModal({
               {products.map((product) => {
                 const isInCart = cartProductIds.has(product.id);
                 const isAdding = isAddingProductId === product.id;
-                const categoryLabel = CATEGORY_LABELS[product.category] ?? product.category;
+                const categoryLabel =
+                  CATEGORY_LABELS[product.category] ?? product.category;
 
                 return (
                   <li className={css.productItem} key={product.id}>
@@ -308,7 +335,10 @@ function ContinueShoppingModal({
                           sizes="72px"
                         />
                       ) : (
-                        <div className={css.productImageFallback} aria-hidden="true">
+                        <div
+                          className={css.productImageFallback}
+                          aria-hidden="true"
+                        >
                           <SvgIcon name="icon-shopping-cart" size={24} />
                         </div>
                       )}
@@ -318,11 +348,15 @@ function ContinueShoppingModal({
                       <h3 className={css.productName}>{product.name}</h3>
                       <p className={css.productMeta}>{categoryLabel}</p>
                       {product.manufacturer ? (
-                        <p className={css.productManufacturer}>{product.manufacturer}</p>
+                        <p className={css.productManufacturer}>
+                          {product.manufacturer}
+                        </p>
                       ) : null}
                     </div>
 
-                    <p className={css.productPrice}>{formatPrice(getStoreProductPrice(product, storeId))}</p>
+                    <p className={css.productPrice}>
+                      {formatPrice(getStoreProductPrice(product, storeId))}
+                    </p>
 
                     <Button
                       className={isInCart ? css.inCartButton : css.addButton}
@@ -348,6 +382,17 @@ function ContinueShoppingModal({
           ) : null}
         </div>
       </div>
+
+      {invoiceLimitMessage ? (
+        <ConfirmActionModal
+          title="Cart invoice limit"
+          text={invoiceLimitMessage}
+          confirmLabel="Got it"
+          cancelLabel="Close"
+          onConfirm={() => setInvoiceLimitMessage('')}
+          onCancel={() => setInvoiceLimitMessage('')}
+        />
+      ) : null}
     </div>
   );
 }
