@@ -7,7 +7,7 @@ import { Store } from '../models/store.model';
 import { User } from '../models/user.model';
 import { httpError } from '../utils/httpError';
 
-import type { StoreResponseDto, StoreReviewResponseDto } from '../types/store';
+import type { StoreBankDetails, StoreResponseDto, StoreReviewResponseDto } from '../types/store';
 
 //===============================================================
 
@@ -53,6 +53,7 @@ type StoreDocument = {
   phone?: string;
   email?: string;
   workingHours?: string;
+  bankDetails?: StoreBankDetails;
   rating?: number;
   imageUrl?: string;
   description?: string;
@@ -93,6 +94,18 @@ function getModeratedStoreReviews(store: StoreDocument): StoreReviewDocument[] {
   return (store.reviews ?? []).filter((review) => review.isModerated);
 }
 
+function getFallbackBankDetails(storeName: string): StoreBankDetails {
+  return {
+    recipientName: `LLC ${storeName}`,
+    taxId: '12345678',
+    iban: 'UA123456789012345678901234567',
+    bankName: 'JSC PrivatBank',
+    paymentPurpose: `Payment for E-PHARMACY invoice from ${storeName}`,
+  };
+}
+
+//===============================================================
+
 function getAverageRating(reviews: StoreReviewDocument[]): number | null {
   if (reviews.length === 0) return null;
 
@@ -130,6 +143,7 @@ function serializeStore(
     ...(store.phone ? { phone: store.phone } : {}),
     ...(store.email ? { email: store.email } : {}),
     ...(store.workingHours ? { workingHours: store.workingHours } : {}),
+    bankDetails: store.bankDetails ?? getFallbackBankDetails(store.name),
     ...(averageRating !== null
       ? { rating: averageRating }
       : typeof store.rating === 'number'

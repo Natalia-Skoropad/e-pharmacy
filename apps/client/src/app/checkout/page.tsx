@@ -2,6 +2,7 @@ import { ProtectedRoute } from '@/components/auth';
 import { CheckoutPageContent } from '@/components/cart';
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/constants/metadata';
+import { ROUTES } from '@/lib/constants/routes';
 import { createPageMetadata } from '@/lib/seo';
 
 //===================================================================
@@ -9,7 +10,7 @@ import { createPageMetadata } from '@/lib/seo';
 export const metadata = createPageMetadata({
   title: CHECKOUT_TITLE,
   description: CHECKOUT_DESCRIPTION,
-  path: '/checkout',
+  path: ROUTES.CHECKOUT,
   noIndex: true,
 });
 

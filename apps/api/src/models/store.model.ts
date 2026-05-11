@@ -20,6 +20,7 @@ const storeReviewSchema = new Schema(
       maxlength: [80, 'User name must be at most 80 characters'],
     },
 
+
     rating: {
       type: Number,
       required: true,
@@ -101,6 +102,45 @@ const storeSchema = new Schema<StoreEntity>(
       trim: true,
       maxlength: [120, 'Working hours must be at most 120 characters'],
       default: undefined,
+    },
+
+
+    bankDetails: {
+      recipientName: {
+        type: String,
+        required: [true, 'Bank recipient name is required'],
+        trim: true,
+        maxlength: [160, 'Bank recipient name must be at most 160 characters'],
+      },
+
+      taxId: {
+        type: String,
+        required: [true, 'Bank tax ID is required'],
+        trim: true,
+        match: [/^\d{8}(?:\d{2})?$/, 'Bank tax ID must contain 8 or 10 digits'],
+      },
+
+      iban: {
+        type: String,
+        required: [true, 'IBAN is required'],
+        trim: true,
+        uppercase: true,
+        match: [/^UA[A-Z0-9]{27}$/, 'IBAN must start with UA and contain 29 characters'],
+      },
+
+      bankName: {
+        type: String,
+        required: [true, 'Bank name is required'],
+        trim: true,
+        maxlength: [120, 'Bank name must be at most 120 characters'],
+      },
+
+      paymentPurpose: {
+        type: String,
+        required: [true, 'Payment purpose is required'],
+        trim: true,
+        maxlength: [220, 'Payment purpose must be at most 220 characters'],
+      },
     },
 
     rating: {

@@ -12,15 +12,6 @@
   margin-bottom: 32px;
 }
 
-.kicker {
-  margin-bottom: 12px;
-  font-size: var(--fz-12);
-  font-weight: var(--fw-medium);
-  color: var(--color-accent);
-  text-transform: uppercase;
-  letter-spacing: var(--ls-wide);
-}
-
 .title {
   font-size: var(--fz-40);
   font-weight: var(--fw-bold);
@@ -102,24 +93,91 @@
   color: var(--color-text-primary);
 }
 
-.optionsGrid,
-.fieldsGrid,
-.bankDetails {
+.choiceGrid {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
-.optionCard {
-  display: flex;
+.optionsGrid,
+.fieldsGrid,
+.bankList,
+.iconList {
+  display: grid;
+  gap: 12px;
+}
+
+.detailsPanel {
+  min-width: 0;
+}
+
+.infoCard,
+.bankCard,
+.noteCard,
+.invoiceCard {
+  display: grid;
   gap: 10px;
-  align-items: center;
-  padding: 14px 16px;
-  font-size: var(--fz-16);
-  color: var(--color-text-primary);
-  cursor: pointer;
+  padding: 16px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
   background-color: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+}
+
+.infoCard > svg,
+.bankCard > svg {
+  color: var(--color-accent);
+}
+
+.infoTitle,
+.invoiceCard h3 {
+  font-size: var(--fz-16);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.mutedText {
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.iconList {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.iconList li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.iconList svg,
+.noteCard svg,
+.emailNote svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--color-accent);
+}
+
+.iconList a {
+  color: var(--color-text-primary);
+  transition: color var(--transition-base);
+}
+
+.iconList a:hover,
+.iconList a:focus-visible {
+  color: var(--color-accent);
+}
+
+.deliveryFields {
+  display: grid;
+  gap: 12px;
 }
 
 .field,
@@ -135,18 +193,24 @@
 .fieldWide input,
 .fieldWide textarea {
   width: 100%;
-  min-height: 46px;
-  padding: 12px 14px;
+  min-height: 48px;
+  padding: 12px 16px;
   font: inherit;
   font-weight: var(--fw-regular);
   color: var(--color-text-primary);
-  background-color: var(--color-white);
+  background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   outline: none;
   transition:
     border-color var(--transition-base),
     box-shadow var(--transition-base);
+}
+
+.field input::placeholder,
+.fieldWide input::placeholder,
+.fieldWide textarea::placeholder {
+  color: var(--color-text-muted);
 }
 
 .fieldWide textarea {
@@ -154,31 +218,116 @@
   resize: vertical;
 }
 
+.field input:hover,
+.fieldWide input:hover,
+.fieldWide textarea:hover,
 .field input:focus,
 .fieldWide input:focus,
 .fieldWide textarea:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 4px rgb(89 177 122 / 15%);
 }
 
-.bankCard,
-.invoiceCard {
-  display: grid;
-  gap: 6px;
-  padding: 14px;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
+.field input:focus,
+.fieldWide input:focus,
+.fieldWide textarea:focus {
+  box-shadow: 0 0 0 4px rgba(89, 177, 122, 0.16);
+}
+
+.fieldWide input[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.fieldMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  justify-content: space-between;
+  font-size: var(--fz-12);
+  color: var(--color-text-muted);
+}
+
+.errorText {
+  color: var(--color-error);
+}
+
+.noteCard {
+  grid-template-columns: auto minmax(0, 1fr);
+  background-color: rgba(89, 177, 122, 0.08);
+  border-color: rgba(89, 177, 122, 0.18);
+}
+
+.bankList {
+  gap: 10px;
+}
+
+.bankList div,
+.totalList div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.bankList dt {
   color: var(--color-text-secondary);
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
 }
 
-.bankCard h3,
-.invoiceCard h3 {
-  font-size: var(--fz-16);
-  font-weight: var(--fw-bold);
+.bankList dd {
+  max-width: 62%;
+  font-weight: var(--fw-medium);
   color: var(--color-text-primary);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.emailNote {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.emailNote p,
+.emailNote .copyButton,
+.emailNote .copiedText {
+  grid-column: 2;
+}
+
+.copyButton {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-self: start;
+  max-width: 100%;
+  padding: 8px 10px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  color: var(--color-accent);
+  cursor: pointer;
+  background-color: rgba(89, 177, 122, 0.1);
+  border: 1px solid rgba(89, 177, 122, 0.18);
+  border-radius: var(--radius-md);
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.copyButton:hover,
+.copyButton:focus-visible {
+  background-color: rgba(89, 177, 122, 0.16);
+  border-color: rgba(89, 177, 122, 0.35);
+}
+
+.copyButton span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copiedText {
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  color: var(--color-accent);
 }
 
 .summary {
@@ -201,9 +350,6 @@
 }
 
 .totalList div {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
   font-size: var(--fz-16);
   color: var(--color-text-secondary);
 }
@@ -222,8 +368,9 @@
     font-size: var(--fz-56);
   }
 
-  .fieldsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .choiceGrid {
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    align-items: start;
   }
 
   .fieldWide {

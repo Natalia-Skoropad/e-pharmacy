@@ -1,3 +1,13 @@
+export type StoreBankDetails = {
+  recipientName: string;
+  taxId: string;
+  iban: string;
+  bankName: string;
+  paymentPurpose: string;
+};
+
+//===================================================================
+
 export type Store = {
   id: string;
   name: string;
@@ -6,6 +16,7 @@ export type Store = {
   phone?: string;
   email?: string;
   workingHours?: string;
+  bankDetails?: StoreBankDetails;
   rating?: number;
   imageUrl?: string;
   description?: string;

@@ -14,6 +14,16 @@ export type StoreReviewEntity = {
 
 //===============================================================
 
+export type StoreBankDetails = {
+  recipientName: string;
+  taxId: string;
+  iban: string;
+  bankName: string;
+  paymentPurpose: string;
+};
+
+//===============================================================
+
 export type StoreEntity = {
   name: string;
   address: string;
@@ -21,6 +31,7 @@ export type StoreEntity = {
   phone?: string;
   email?: string;
   workingHours?: string;
+  bankDetails: StoreBankDetails;
   rating?: number;
   imageUrl?: string;
   description?: string;
@@ -42,6 +53,7 @@ export type StoreResponseDto = {
   phone?: string;
   email?: string;
   workingHours?: string;
+  bankDetails: StoreBankDetails;
   rating?: number;
   imageUrl?: string;
   description?: string;

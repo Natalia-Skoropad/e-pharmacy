@@ -1,24 +1,25 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Clock, Copy, CreditCard, Mail, MapPin, Phone, Truck, Wallet } from 'lucide-react';
 
 import {
   Button,
   ButtonLink,
   Container,
   LoadingSpinner,
+  RadioOption,
 } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useAuth } from '@/components/providers';
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
-import { createBreadcrumbs } from '@/lib/routes';
 
-import { getCart, removeCartItem } from '@/services';
+import { getCart, getStoreDetails, removeCartItem } from '@/services';
 
-import type { Cart } from '@/types';
+import type { BreadcrumbItem, Cart, Store } from '@/types';
 
 import css from './CheckoutPageContent.module.css';
 
@@ -35,6 +36,12 @@ type StoreOrderGroup = {
   totalPrice: number;
 };
 
+type CheckoutPageContentProps = {
+  checkoutStoreId?: string;
+};
+
+type CheckoutBankDetails = NonNullable<Store['bankDetails']>;
+
 //===================================================================
 
 const EMPTY_CART: Cart = {
@@ -42,6 +49,16 @@ const EMPTY_CART: Cart = {
   totalItems: 0,
   totalPrice: 0,
 };
+
+const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
+  { label: 'Home', href: ROUTES.HOME },
+  { label: 'Cart', href: ROUTES.CART },
+  { label: CHECKOUT_TITLE },
+];
+
+const LATIN_ADDRESS_PATTERN = /^[A-Za-z0-9\s.,'’/#-]+$/;
+const ADDRESS_MAX_LENGTH = 200;
+const ADDRESS_MIN_LENGTH = 20;
 
 //===================================================================
 
@@ -79,14 +96,66 @@ function groupCartByStore(cart: Cart): StoreOrderGroup[] {
   return [...groups.values()];
 }
 
+function sanitizeLatinAddress(value: string): string {
+  return value.replace(/[^A-Za-z0-9\s.,'’/#-]/g, '').slice(0, ADDRESS_MAX_LENGTH);
+}
+
+function getAddressError(address: string): string {
+  const trimmedAddress = address.trim();
+
+  if (trimmedAddress.length === 0) return '';
+
+  if (trimmedAddress.length < ADDRESS_MIN_LENGTH) {
+    return `Address must be at least ${ADDRESS_MIN_LENGTH} characters.`;
+  }
+
+  if (!LATIN_ADDRESS_PATTERN.test(trimmedAddress)) {
+    return 'Use Latin letters, numbers, spaces, comma, dot, slash, apostrophe, # or hyphen.';
+  }
+
+  return '';
+}
+
+function getStoreEmail(store?: Store | null): string {
+  return store?.email ?? 'pharmacy@example.com';
+}
+
+function getStorePhone(store?: Store | null): string {
+  return store?.phone ?? '+380 50 100 00 00';
+}
+
+function getStoreWorkingHours(store?: Store | null): string {
+  return store?.workingHours ?? 'Mon–Fri 08:00–21:00, Sat–Sun 09:00–18:00';
+}
+
+function getStoreAddress(store?: Store | null): string {
+  if (!store) return 'Address will be confirmed by the pharmacy.';
+
+  return [store.address, store.city].filter(Boolean).join(', ');
+}
+
+function getBankDetails(store?: Store | null): CheckoutBankDetails {
+  return (
+    store?.bankDetails ?? {
+      recipientName: `${store?.name ?? 'E-PHARMACY partner'} LLC`,
+      taxId: '12345678',
+      iban: 'UA123456789012345678901234567',
+      bankName: 'JSC PrivatBank',
+      paymentPurpose: `Payment for E-PHARMACY invoice from ${store?.name ?? 'pharmacy'}`,
+    }
+  );
+}
+
 //===================================================================
 
-function CheckoutPageContent() {
+function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const { token } = useAuth();
   const searchParams = useSearchParams();
-  const checkoutStoreId = searchParams.get('storeId');
+  const queryStoreId = searchParams.get('storeId');
+  const selectedStoreIdFromRoute = checkoutStoreId ?? queryStoreId;
 
   const [cart, setCart] = useState<Cart>(EMPTY_CART);
+  const [store, setStore] = useState<Store | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>('pickup');
@@ -94,9 +163,11 @@ function CheckoutPageContent() {
   const [recipientPhone, setRecipientPhone] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [comment, setComment] = useState('');
+  const [copiedEmail, setCopiedEmail] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isStoreLoading, setIsStoreLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const orderGroups = useMemo(() => groupCartByStore(cart), [cart]);
@@ -104,19 +175,24 @@ function CheckoutPageContent() {
     if (orderGroups.length === 0) return null;
 
     return (
-      orderGroups.find((group) => group.storeId === checkoutStoreId) ??
+      orderGroups.find((group) => group.storeId === selectedStoreIdFromRoute) ??
       orderGroups[0]
     );
-  }, [checkoutStoreId, orderGroups]);
+  }, [selectedStoreIdFromRoute, orderGroups]);
 
+  const addressError = getAddressError(deliveryAddress);
   const isPostDeliveryValid =
     deliveryMethod === 'pickup' ||
     (recipientName.trim().length >= 2 &&
       recipientPhone.trim().length >= 6 &&
-      deliveryAddress.trim().length >= 8);
+      deliveryAddress.trim().length >= ADDRESS_MIN_LENGTH &&
+      deliveryAddress.trim().length <= ADDRESS_MAX_LENGTH &&
+      !addressError);
 
   const canSubmit =
     Boolean(selectedOrderGroup) && isPostDeliveryValid && !isSubmitting;
+  const storeEmail = getStoreEmail(store);
+  const bankDetails = getBankDetails(store);
 
   useEffect(() => {
     let isMounted = true;
@@ -149,6 +225,56 @@ function CheckoutPageContent() {
     };
   }, [token]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchStore() {
+      if (!selectedOrderGroup) return;
+
+      try {
+        setIsStoreLoading(true);
+        const response = await getStoreDetails(
+          selectedOrderGroup.storeId,
+          token ?? undefined
+        );
+
+        if (!isMounted) return;
+
+        setStore(response.store);
+      } catch {
+        if (!isMounted) return;
+
+        setStore(null);
+      } finally {
+        if (!isMounted) return;
+
+        setIsStoreLoading(false);
+      }
+    }
+
+    void fetchStore();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedOrderGroup, token]);
+
+  const handleDeliveryAddressChange = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    setDeliveryAddress(sanitizeLatinAddress(event.target.value));
+  };
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(storeEmail);
+      setCopiedEmail(true);
+      window.setTimeout(() => setCopiedEmail(false), 1800);
+    } catch {
+      setCopiedEmail(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!token || !canSubmit) return;
 
@@ -180,7 +306,7 @@ function CheckoutPageContent() {
     <main className={css.page}>
       <section className={css.section} aria-labelledby="checkout-title">
         <Container>
-          <Breadcrumbs items={createBreadcrumbs(CHECKOUT_TITLE)} />
+          <Breadcrumbs items={CHECKOUT_BREADCRUMBS} />
 
           <div className={css.hero}>
             <h1 className={css.title} id="checkout-title">
@@ -205,9 +331,9 @@ function CheckoutPageContent() {
             <div className={css.success} role="status">
               <h2 className={css.successTitle}>{successMessage}</h2>
               <p className={css.successText}>
-                Later this order should be visible in the customer profile and
-                in the matching pharmacy cabinet. Tiny paperwork goblin: paused
-                until the real backend order endpoint is connected.
+                The pharmacy will check the invoice and contact you if anything needs
+                a tiny detective moment. Paperwork goblin has been politely escorted
+                to the backend queue.
               </p>
               <div className={css.successActions}>
                 <ButtonLink href={ROUTES.CART} variant="secondary">
@@ -247,66 +373,116 @@ function CheckoutPageContent() {
                     Delivery method
                   </h2>
 
-                  <div className={css.optionsGrid}>
-                    <label className={css.optionCard}>
-                      <input
-                        type="radio"
+                  <div className={css.choiceGrid}>
+                    <div className={css.optionsGrid}>
+                      <RadioOption
                         name="delivery"
                         value="pickup"
                         checked={deliveryMethod === 'pickup'}
-                        onChange={() => setDeliveryMethod('pickup')}
+                        label="Pickup from pharmacy"
+                        onChange={setDeliveryMethod}
                       />
-                      <span>Pickup from pharmacy</span>
-                    </label>
 
-                    <label className={css.optionCard}>
-                      <input
-                        type="radio"
+                      <RadioOption
                         name="delivery"
                         value="post"
                         checked={deliveryMethod === 'post'}
-                        onChange={() => setDeliveryMethod('post')}
+                        label="Post delivery"
+                        onChange={setDeliveryMethod}
                       />
-                      <span>Post delivery</span>
-                    </label>
-                  </div>
-
-                  {deliveryMethod === 'post' ? (
-                    <div className={css.fieldsGrid}>
-                      <label className={css.field}>
-                        <span>Recipient name</span>
-                        <input
-                          value={recipientName}
-                          maxLength={80}
-                          onChange={(event) =>
-                            setRecipientName(event.target.value)
-                          }
-                        />
-                      </label>
-
-                      <label className={css.field}>
-                        <span>Recipient phone</span>
-                        <input
-                          value={recipientPhone}
-                          maxLength={32}
-                          onChange={(event) =>
-                            setRecipientPhone(event.target.value)
-                          }
-                        />
-                      </label>
-
-                      <label className={css.fieldWide}>
-                        <span>Delivery address / post office</span>
-                        <input
-                          value={deliveryAddress}
-                          maxLength={160}
-                          onChange={(event) =>
-                            setDeliveryAddress(event.target.value)
-                          }
-                        />
-                      </label>
                     </div>
-                  ) : null}
+
+                    <div className={css.detailsPanel}>
+                      {deliveryMethod === 'pickup' ? (
+                        <div className={css.infoCard}>
+                          <h3 className={css.infoTitle}>Pharmacy details</h3>
+                          {isStoreLoading ? (
+                            <p className={css.mutedText}>Loading pharmacy details...</p>
+                          ) : null}
+                          <ul className={css.iconList}>
+                            <li>
+                              <Phone size={18} aria-hidden="true" />
+                              <a href={`tel:${getStorePhone(store)}`}>{getStorePhone(store)}</a>
+                            </li>
+                            <li>
+                              <Clock size={18} aria-hidden="true" />
+                              <span>{getStoreWorkingHours(store)}</span>
+                            </li>
+                            <li>
+                              <MapPin size={18} aria-hidden="true" />
+                              <span>{getStoreAddress(store)}</span>
+                            </li>
+                          </ul>
+                        </div>
+                      ) : (
+                        <div className={css.deliveryFields}>
+                          <div className={css.fieldsGrid}>
+                            <label className={css.field}>
+                              <span>Name</span>
+                              <input
+                                value={recipientName}
+                                placeholder="Your name"
+                                autoComplete="name"
+                                maxLength={80}
+                                onChange={(event) =>
+                                  setRecipientName(event.target.value)
+                                }
+                              />
+                            </label>
+
+                            <label className={css.field}>
+                              <span>Phone</span>
+                              <input
+                                value={recipientPhone}
+                                placeholder="+380..."
+                                autoComplete="tel"
+                                maxLength={32}
+                                onChange={(event) =>
+                                  setRecipientPhone(event.target.value)
+                                }
+                              />
+                            </label>
+
+                            <label className={css.fieldWide}>
+                              <span>Delivery address / post office</span>
+                              <input
+                                value={deliveryAddress}
+                                placeholder="Example: 12 Central Street, Nova Poshta office #5, Kyiv"
+                                autoComplete="street-address"
+                                maxLength={ADDRESS_MAX_LENGTH}
+                                aria-invalid={Boolean(addressError)}
+                                aria-describedby={
+                                  addressError ? 'delivery-address-error' : undefined
+                                }
+                                onChange={handleDeliveryAddressChange}
+                              />
+                            </label>
+                          </div>
+
+                          <div className={css.fieldMeta}>
+                            <span>
+                              {deliveryAddress.length}/{ADDRESS_MAX_LENGTH}
+                            </span>
+                            {addressError ? (
+                              <span className={css.errorText} id="delivery-address-error">
+                                {addressError}
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <div className={css.noteCard}>
+                            <Truck size={18} aria-hidden="true" />
+                            <p>
+                              After confirmation, the pharmacy will contact you to
+                              confirm or clarify the delivery address. Delivery is not
+                              included in the product price, and the carrier will announce
+                              the delivery cost separately.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </section>
 
                 <section className={css.card} aria-labelledby="payment-title">
@@ -314,44 +490,85 @@ function CheckoutPageContent() {
                     Payment method
                   </h2>
 
-                  <div className={css.optionsGrid}>
-                    <label className={css.optionCard}>
-                      <input
-                        type="radio"
+                  <div className={css.choiceGrid}>
+                    <div className={css.optionsGrid}>
+                      <RadioOption
                         name="payment"
                         value="cash"
                         checked={paymentMethod === 'cash'}
-                        onChange={() => setPaymentMethod('cash')}
+                        label="Cash on pickup / delivery"
+                        onChange={setPaymentMethod}
                       />
-                      <span>Cash on pickup / delivery</span>
-                    </label>
 
-                    <label className={css.optionCard}>
-                      <input
-                        type="radio"
+                      <RadioOption
                         name="payment"
                         value="bank-transfer"
                         checked={paymentMethod === 'bank-transfer'}
-                        onChange={() => setPaymentMethod('bank-transfer')}
+                        label="Bank transfer"
+                        onChange={setPaymentMethod}
                       />
-                      <span>Bank transfer</span>
-                    </label>
-                  </div>
-
-                  {paymentMethod === 'bank-transfer' ? (
-                    <div className={css.bankDetails}>
-                      {[selectedOrderGroup].map((group) => (
-                        <div className={css.bankCard} key={group.storeId}>
-                          <h3>{group.storeName}</h3>
-                          <p>Recipient: {group.storeName} LLC</p>
-                          <p>
-                            IBAN: UA00 0000 0000 0000 {group.storeId.slice(-8)}
-                          </p>
-                          <p>Payment purpose: E-PHARMACY order</p>
-                        </div>
-                      ))}
                     </div>
-                  ) : null}
+
+                    <div className={css.detailsPanel}>
+                      {paymentMethod === 'cash' ? (
+                        <div className={css.infoCard}>
+                          <Wallet size={20} aria-hidden="true" />
+                          <h3 className={css.infoTitle}>Pay when everything is ready</h3>
+                          <p className={css.mutedText}>
+                            Cash is paid during pickup or delivery. No secret pharmacy
+                            treasure map needed — just keep the invoice amount nearby and
+                            the medicines will not have to practice waiting patiently.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className={css.bankCard}>
+                          <CreditCard size={20} aria-hidden="true" />
+                          <h3 className={css.infoTitle}>Bank details</h3>
+                          <dl className={css.bankList}>
+                            <div>
+                              <dt>Recipient</dt>
+                              <dd>{bankDetails.recipientName}</dd>
+                            </div>
+                            <div>
+                              <dt>EDRPOU / Tax ID</dt>
+                              <dd>{bankDetails.taxId}</dd>
+                            </div>
+                            <div>
+                              <dt>IBAN</dt>
+                              <dd>{bankDetails.iban}</dd>
+                            </div>
+                            <div>
+                              <dt>Bank</dt>
+                              <dd>{bankDetails.bankName}</dd>
+                            </div>
+                            <div>
+                              <dt>Payment purpose</dt>
+                              <dd>{bankDetails.paymentPurpose}</dd>
+                            </div>
+                          </dl>
+
+                          <div className={css.emailNote}>
+                            <Mail size={18} aria-hidden="true" />
+                            <p>
+                              After payment, send the receipt to the pharmacy email for
+                              faster processing.
+                            </p>
+                            <button
+                              className={css.copyButton}
+                              type="button"
+                              onClick={() => void handleCopyEmail()}
+                            >
+                              <span>{storeEmail}</span>
+                              <Copy size={16} aria-hidden="true" />
+                            </button>
+                            {copiedEmail ? (
+                              <span className={css.copiedText}>Copied</span>
+                            ) : null}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </section>
 
                 <section className={css.card} aria-labelledby="comment-title">

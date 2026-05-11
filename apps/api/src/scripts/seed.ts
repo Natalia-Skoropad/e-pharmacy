@@ -123,6 +123,13 @@ type SeedStoreDocument = {
   phone?: string;
   rating?: number;
   imageUrl?: string;
+  bankDetails?: {
+    recipientName: string;
+    taxId: string;
+    iban: string;
+    bankName: string;
+    paymentPurpose: string;
+  };
 };
 
 //===============================================================
@@ -229,6 +236,20 @@ function createOffer(
   };
 }
 
+
+function createBankDetails(storeName: string, storeNumber: number) {
+  const taxId = String(30000000 + storeNumber).padStart(8, '0');
+  const ibanTail = String(100000000000000000000000000 + storeNumber).slice(0, 27);
+
+  return {
+    recipientName: `LLC ${storeName}`,
+    taxId,
+    iban: `UA${ibanTail}`,
+    bankName: storeNumber % 2 === 0 ? 'JSC PrivatBank' : 'JSC Oschadbank',
+    paymentPurpose: `Payment for E-PHARMACY invoice from ${storeName}`,
+  };
+}
+
 function createSeedStores() {
   return Array.from({ length: 98 }, (_, index) => {
     const storeNumber = index + 1;
@@ -237,13 +258,16 @@ function createSeedStores() {
     const street = STREETS[index % STREETS.length];
     const reviewsCount = index < 34 ? 26 + (index % 9) : 6 + (index % 18);
 
+    const storeName = `${brand} ${city} ${storeNumber}`;
+
     return {
-      name: `${brand} ${city} ${storeNumber}`,
+      name: storeName,
       address: `${12 + index} ${street}`,
       city,
       phone: `+380${String(501000000 + storeNumber).padStart(9, '0')}`,
       email: `store.${storeNumber}@e-pharmacy.example.com`,
       workingHours: 'Mon–Fri 08:00–21:00, Sat–Sun 09:00–18:00',
+      bankDetails: createBankDetails(storeName, storeNumber),
       rating: Number((4 + (index % 10) * 0.1).toFixed(1)),
       imageUrl: createStoreImageUrl(index),
       description: `${brand} in ${city} offers everyday medicines, vitamins, medical devices, hygiene products, and quick online reservation for local customers.`,

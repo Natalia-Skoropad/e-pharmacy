@@ -1,6 +1,6 @@
 import { Button, ButtonLink } from '@/components/common';
 
-import { ROUTES } from '@/lib/constants/routes';
+import { buildCheckoutPath } from '@/lib/checkout';
 
 import css from './CartSummary.module.css';
 
@@ -8,6 +8,7 @@ import css from './CartSummary.module.css';
 
 type CartSummaryProps = {
   storeId: string;
+  storeName?: string | null;
   totalItems: number;
   totalPrice: number;
   isUpdating?: boolean;
@@ -28,6 +29,7 @@ function formatPrice(price: number): string {
 
 function CartSummary({
   storeId,
+  storeName,
   totalItems,
   totalPrice,
   isUpdating = false,
@@ -52,7 +54,7 @@ function CartSummary({
       </dl>
 
       <div className={css.actions}>
-        <ButtonLink href={`${ROUTES.CHECKOUT}?storeId=${storeId}`} fullWidth>
+        <ButtonLink href={buildCheckoutPath(storeName, storeId)} fullWidth>
           Confirm order
         </ButtonLink>
 
