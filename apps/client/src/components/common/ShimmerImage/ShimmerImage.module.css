@@ -1,0 +1,73 @@
+.wrap {
+  position: absolute;
+  inset: 0;
+
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.img {
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  overflow: hidden;
+  background: var(--color-accent-light);
+  opacity: 1;
+  transition: opacity 0.25s ease;
+
+  pointer-events: none;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+
+  transform: translateX(-60%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.72),
+    transparent
+  );
+
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.skeletonOff {
+  opacity: 0;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-60%);
+  }
+
+  100% {
+    transform: translateX(60%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .img {
+    transition: none;
+  }
+
+  .skeleton::after {
+    animation: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wrap:hover .img {
+    transform: scale(1.04);
+  }
+}

@@ -1,12 +1,12 @@
 'use client';
 
-import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 
 import {
   ButtonLink,
   FavoriteToggleButton,
   RatingSummary,
+  ShimmerImage,
   SvgIcon,
   Toast,
 } from '@/components/common';
@@ -106,11 +106,10 @@ function StoreCard({ store }: StoreCardProps) {
 
       <div className={css.imageWrap}>
         {store.imageUrl ? (
-          <Image
+          <ShimmerImage
             className={css.image}
             src={store.imageUrl}
             alt={`${store.name} pharmacy storefront`}
-            fill
             sizes="(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 33vw"
           />
         ) : (

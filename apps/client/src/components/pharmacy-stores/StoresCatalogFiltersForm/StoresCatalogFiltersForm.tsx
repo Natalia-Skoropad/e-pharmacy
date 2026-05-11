@@ -180,10 +180,19 @@ function StoresCatalogFiltersForm({
             onChange={setAddress}
           />
 
-          <div className={css.desktopFilters}>{renderFiltersControls('desktop')}</div>
+          <div className={css.desktopFilters}>
+            {renderFiltersControls('desktop')}
+          </div>
 
           <div className={css.desktopResetSlot}>
-            <ResetFiltersButton href={resetHref} isVisible={hasActiveFilters} />
+            <ResetFiltersButton
+              href={resetHref}
+              isVisible={hasActiveFilters}
+              onClick={() => {
+                setName('');
+                setAddress('');
+              }}
+            />
           </div>
         </div>
       </div>
@@ -260,7 +269,11 @@ function StoresCatalogFiltersForm({
               <ResetFiltersButton
                 className={css.offcanvasReset}
                 href={resetHref}
-                onClick={() => setIsFiltersOpen(false)}
+                onClick={() => {
+                  setName('');
+                  setAddress('');
+                  setIsFiltersOpen(false);
+                }}
               />
             ) : null}
           </aside>

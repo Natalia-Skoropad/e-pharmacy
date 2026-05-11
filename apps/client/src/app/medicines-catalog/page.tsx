@@ -2,6 +2,7 @@ import { MedicineStorePageContent } from '@/components/medicines-catalog';
 
 import {
   buildMedicinesCatalogApiParams,
+  buildMedicinesCatalogPath,
   FALLBACK_PRODUCT_FILTER_OPTIONS,
   getMedicinesCatalogDescription,
   getMedicinesCatalogTitle,
@@ -46,11 +47,15 @@ export async function generateMetadata({
     ...(categoryLabel ? { categoryLabel } : {}),
   };
 
+  const productsData = await getProducts(buildMedicinesCatalogApiParams(filters)).catch(
+    () => null
+  );
+
   return createPageMetadata({
     title: getMedicinesCatalogTitle(filters, seoContext),
     description: getMedicinesCatalogDescription(filters, seoContext),
-    path: '/medicines-catalog',
-    noIndex: isMedicinesCatalogNoIndex(filters),
+    path: buildMedicinesCatalogPath(filters, storesData?.items ?? []),
+    noIndex: isMedicinesCatalogNoIndex(filters) || productsData?.total === 0,
   });
 }
 

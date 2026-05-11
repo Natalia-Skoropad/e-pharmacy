@@ -73,7 +73,7 @@ function MedicineStorePageContent({
   const seoContext = createSeoContext(filters, stores, filterOptions);
   const pageTitle = getMedicinesCatalogTitle(filters, seoContext);
   const pageDescription = getMedicinesCatalogDescription(filters, seoContext);
-  const showSeoText = shouldShowMedicinesCatalogSeoText(filters);
+  const showSeoText = total > 0 && shouldShowMedicinesCatalogSeoText(filters);
   const seoTextParts = getMedicinesCatalogSeoTextParts(filters, seoContext);
 
   return (

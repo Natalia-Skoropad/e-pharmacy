@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 
@@ -10,6 +9,7 @@ import {
   FavoriteToggleButton,
   RatingSummary,
   ReviewsSection,
+  ShimmerImage,
   SvgIcon,
   Tabs,
   Toast,
@@ -154,6 +154,17 @@ function StoreDetailsPageContent({
     }
   };
 
+  const handleEmailCopy = async () => {
+    if (!store.email) return;
+
+    try {
+      await navigator.clipboard.writeText(store.email);
+      showToast('Email copied.');
+    } catch {
+      showToast('Could not copy email.');
+    }
+  };
+
   const handleReviewTextChange = (value: string) => {
     if (value.length > REVIEW_MAX_LENGTH) return;
 
@@ -214,11 +225,10 @@ function StoreDetailsPageContent({
             <div className={css.grid}>
               <div className={css.imageCard}>
                 {store.imageUrl ? (
-                  <Image
+                  <ShimmerImage
                     className={css.image}
                     src={store.imageUrl}
                     alt={`${store.name} pharmacy storefront`}
-                    fill
                     priority
                     sizes="(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 520px"
                   />
@@ -278,7 +288,13 @@ function StoreDetailsPageContent({
                         Email
                       </dt>
                       <dd>
-                        <a href={`mailto:${store.email}`}>{store.email}</a>
+                        <button
+                          className={css.copyEmailButton}
+                          type="button"
+                          onClick={handleEmailCopy}
+                        >
+                          {store.email}
+                        </button>
                       </dd>
                     </div>
                   ) : null}
@@ -322,7 +338,7 @@ function StoreDetailsPageContent({
 
               <p className={css.descriptionText}>
                 {store.description ??
-                  `${store.name} is an active E-PHARMACY partner in ${store.city ?? 'your city'}. Here you can compare available medicines, check contact details, review customer feedback, and move to the medicines catalog filtered by this pharmacy. The store card keeps the important information in one place, so choosing a pharmacy feels less like detective work and more like a normal shopping flow.`}
+                  `${store.name} is an active E-PHARMACY partner in ${store.city ?? 'your city'}, created for customers who want to compare medicines calmly before placing an order. The pharmacy page brings together the most useful details: address, phone, email, working hours, rating, customer reviews, and a direct catalog link with medicines from this exact store. You can quickly check whether the needed product is available, compare offers, and decide whether pickup or delivery will be more convenient. The store keeps product information clear, so customers do not have to jump between random tabs, screenshots, and notes. Reviews help you understand service quality, while the catalog filter helps you move from pharmacy details straight to the right medicine list. It is a practical page for everyday orders, urgent purchases, planned family medicine refills, and simple price comparison. In short, ${store.name} works like a tidy digital pharmacy counter: all important information is visible, the next action is obvious, and the shopping flow stays friendly instead of turning into a mini quest with a white coat.`}
               </p>
             </div>
           </Container>

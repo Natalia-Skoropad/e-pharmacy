@@ -61,8 +61,8 @@
 .secondary:hover:not(:disabled),
 .secondary:focus-visible:not(:disabled) {
   color: var(--color-white);
-  background-color: var(--color-accent);
-  border-color: var(--color-accent);
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
 }
 
 .ghost {

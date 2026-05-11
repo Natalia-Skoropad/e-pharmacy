@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 
@@ -18,6 +17,7 @@ import {
   SearchInput,
   SearchableSelect,
   SelectField,
+  ShimmerImage,
   SvgIcon,
   Tabs,
   Toast,
@@ -27,9 +27,8 @@ import {
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useAuth } from '@/components/providers';
 
-import { buildSlugId } from '@e-pharmacy/utils';
-
 import { ROUTES } from '@/lib/constants/routes';
+import { buildStorePath } from '@/lib/routes';
 
 import {
   addCartItem,
@@ -144,7 +143,7 @@ function getOfferTotal(cartItem: CartItem | null, offer: ProductOffer): number {
 }
 
 function getStoreHref(offer: ProductOffer): string {
-  return `${ROUTES.STORES}/${buildSlugId(offer.storeName, offer.storeId)}`;
+  return buildStorePath(offer.storeName, offer.storeId);
 }
 
 function getOfferAddress(offer: ProductOffer): string {
@@ -578,11 +577,10 @@ function ProductDetailsPageContent({
             <div className={css.grid}>
               <div className={css.imageCard}>
                 {productDetails.imageUrl ? (
-                  <Image
+                  <ShimmerImage
                     className={css.image}
                     src={productDetails.imageUrl}
                     alt={productDetails.name}
-                    fill
                     priority
                     sizes="(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 520px"
                   />
@@ -757,11 +755,10 @@ function ProductDetailsPageContent({
                               ) : null}
 
                               {offer.storeImageUrl ? (
-                                <Image
+                                <ShimmerImage
                                   className={css.offerImage}
                                   src={offer.storeImageUrl}
                                   alt={`${offer.storeName} pharmacy`}
-                                  fill
                                   sizes="380px"
                                   quality={90}
                                 />

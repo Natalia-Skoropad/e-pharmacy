@@ -24,3 +24,5 @@ export { default as SearchableSelect } from './SearchableSelect';
 export type { SearchableSelectOption } from './SearchableSelect';
 export { default as ReviewsSection } from './ReviewsSection';
 export type { ReviewItem } from './ReviewsSection';
+
+export { default as ShimmerImage } from './ShimmerImage';

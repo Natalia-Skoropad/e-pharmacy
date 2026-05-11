@@ -48,7 +48,6 @@
   gap: 16px;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
 }
 
 .kicker {
@@ -70,7 +69,7 @@
 }
 
 .ratingRow {
-  margin-top: 18px;
+  margin-top: 10px;
 }
 
 .summaryList {
@@ -120,7 +119,7 @@
 
 .link {
   width: 100%;
-  margin-top: 28px;
+  margin-top: 20px;
 }
 
 .panel {
@@ -274,7 +273,8 @@
   }
 
   .link {
-    width: 400px;
+    display: block;
+    width: 305px;
     margin-left: auto;
   }
 }
@@ -293,4 +293,21 @@
   .title {
     font-size: var(--fz-40);
   }
+}
+
+.copyEmailButton {
+  padding: 0;
+  font: inherit;
+  font-weight: var(--fw-medium);
+  color: inherit;
+  text-align: right;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: color var(--transition-base);
+}
+
+.copyEmailButton:hover,
+.copyEmailButton:focus-visible {
+  color: var(--color-accent);
 }

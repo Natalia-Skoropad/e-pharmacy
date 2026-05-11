@@ -47,7 +47,7 @@ function StoresPageContent({
   const storesCountLabel = total === 1 ? '1 store' : `${total} stores`;
   const pageTitle = getPharmacyStoresTitle(filters);
   const pageDescription = getPharmacyStoresDescription(filters);
-  const showSeoText = shouldShowPharmacyStoresSeoText(filters);
+  const showSeoText = total > 0 && shouldShowPharmacyStoresSeoText(filters);
   const seoTextParts = getPharmacyStoresSeoTextParts(filters);
 
   return (

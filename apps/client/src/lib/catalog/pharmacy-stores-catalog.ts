@@ -27,6 +27,10 @@ export type PharmacyStoresSearchParams = {
   page?: string;
 };
 
+export type PharmacyStoresRouteParams = {
+  segments?: string[];
+};
+
 export type PharmacyStoresFilters = {
   name: string;
   address: string;
@@ -69,6 +73,20 @@ function parsePage(value?: string): number {
   return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
+function slugify(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
+function deslugifyTextSegment(value: string): string {
+  return sanitizeTextParam(value.replace(/-/g, ' '));
+}
+
 //===================================================================
 
 export function sortCities(cities: string[]): string[] {
@@ -95,20 +113,64 @@ export function parsePharmacyStoresSearchParams(
   };
 }
 
+export function parsePharmacyStoresSegments(
+  params: PharmacyStoresRouteParams = {}
+): PharmacyStoresFilters {
+  const filters: PharmacyStoresFilters = {
+    name: '',
+    address: '',
+    city: '',
+    sort: 'newest',
+    page: 1,
+  };
+
+  for (const segment of params.segments ?? []) {
+    if (segment.startsWith('search-name-')) {
+      filters.name = deslugifyTextSegment(segment.replace('search-name-', ''));
+      continue;
+    }
+
+    if (segment.startsWith('address-')) {
+      filters.address = deslugifyTextSegment(segment.replace('address-', ''));
+      continue;
+    }
+
+    if (segment.startsWith('city-')) {
+      filters.city = deslugifyTextSegment(segment.replace('city-', ''));
+      continue;
+    }
+
+    if (segment.startsWith('sort-')) {
+      const sort = segment.replace('sort-', '');
+
+      if (isStoresSortFilter(sort)) filters.sort = sort;
+      continue;
+    }
+
+    if (segment.startsWith('page-')) {
+      filters.page = parsePage(segment.replace('page-', ''));
+    }
+  }
+
+  return filters;
+}
+
 export function buildPharmacyStoresPath(
   filters: Partial<PharmacyStoresFilters>
 ): string {
-  const params = new URLSearchParams();
+  const segments: string[] = [];
 
-  if (filters.name) params.set('name', filters.name);
-  if (filters.address) params.set('address', filters.address);
-  if (filters.city) params.set('city', filters.city);
-  if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort);
-  if (filters.page && filters.page > 1) params.set('page', String(filters.page));
+  if (filters.name) segments.push(`search-name-${slugify(filters.name)}`);
+  if (filters.address) segments.push(`address-${slugify(filters.address)}`);
+  if (filters.city) segments.push(`city-${slugify(filters.city)}`);
+  if (filters.sort && filters.sort !== 'newest') {
+    segments.push(`sort-${filters.sort}`);
+  }
+  if (filters.page && filters.page > 1) segments.push(`page-${filters.page}`);
 
-  const queryString = params.toString();
-
-  return queryString ? `/pharmacy-stores?${queryString}` : '/pharmacy-stores';
+  return segments.length > 0
+    ? `/pharmacy-stores/${segments.join('/')}`
+    : '/pharmacy-stores';
 }
 
 export function buildPharmacyStoresApiParams(

@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+import { ShoppingCart } from 'lucide-react';
 
 import { Button, ButtonLink, Container, Logo } from '@/components/common';
 import BurgerButton from '@/components/layout/BurgerButton';
@@ -13,6 +15,7 @@ import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
 import { ROUTES } from '@/lib/constants/routes';
 import { isActiveRoute } from '@/lib/routes';
 import { cn } from '@/lib/utils';
+import { getCart } from '@/services';
 
 import css from './Header.module.css';
 
@@ -22,10 +25,32 @@ function Header() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const { isAuthenticated, isAuthReady, user, logout } = useAuth();
+  const { token, isAuthenticated, isAuthReady, user, logout } = useAuth();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
+  const [cartItemsCount, setCartItemsCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      setCartItemsCount(0);
+      return;
+    }
+
+    let isMounted = true;
+
+    getCart(token)
+      .then((response) => {
+        if (isMounted) setCartItemsCount(response.cart.totalItems);
+      })
+      .catch(() => {
+        if (isMounted) setCartItemsCount(0);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, token, pathname]);
 
   const handleToggleMobileMenu = () => {
     setIsMobileMenuOpen((prev) => !prev);
@@ -71,6 +96,20 @@ function Header() {
         </nav>
 
         <div className={css.actions}>
+          {isAuthReady ? (
+            <ButtonLink
+              className={css.cartLink}
+              href={ROUTES.CART}
+              variant="ghost"
+              size="sm"
+              aria-label={`Cart with ${cartItemsCount} items`}
+            >
+              <ShoppingCart size={18} aria-hidden="true" />
+              <span className={css.cartText}>Cart</span>
+              <span className={css.cartCount}>{cartItemsCount}</span>
+            </ButtonLink>
+          ) : null}
+
           {!isAuthReady ? (
             <div className={css.authSkeleton} aria-hidden="true" />
           ) : null}
@@ -104,6 +143,19 @@ function Header() {
             </>
           ) : null}
         </div>
+
+        {isAuthReady ? (
+          <ButtonLink
+            className={css.mobileCartLink}
+            href={ROUTES.CART}
+            variant="ghost"
+            size="sm"
+            aria-label={`Cart with ${cartItemsCount} items`}
+          >
+            <ShoppingCart size={18} aria-hidden="true" />
+            <span className={css.cartCount}>{cartItemsCount}</span>
+          </ButtonLink>
+        ) : null}
 
         <BurgerButton
           isOpen={isMobileMenuOpen}

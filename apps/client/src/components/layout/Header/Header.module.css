@@ -104,3 +104,44 @@
     gap: 12px;
   }
 }
+
+.cartLink {
+  position: relative;
+  gap: 6px;
+}
+
+.cartText {
+  display: none;
+}
+
+.cartCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 6px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+  color: var(--color-white);
+  background-color: var(--color-accent);
+  border-radius: var(--radius-pill);
+}
+
+@media only screen and (min-width: 1440px) {
+  .cartText {
+    display: inline;
+  }
+}
+
+.mobileCartLink {
+  display: inline-flex;
+  margin-left: auto;
+}
+
+@media only screen and (min-width: 1440px) {
+  .mobileCartLink {
+    display: none;
+  }
+}

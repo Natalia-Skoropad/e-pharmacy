@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { CartItemCard, CartSummary } from '@/components/cart';
-import { ButtonLink, Container } from '@/components/common';
+import { Button, ButtonLink, Container } from '@/components/common';
 import { useAuth } from '@/components/providers';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
@@ -35,6 +35,12 @@ function CartPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    | { type: 'item'; itemId: string }
+    | { type: 'store'; storeId: string; storeName: string }
+    | { type: 'clear' }
+    | null
+  >(null);
 
   const isUpdating = Boolean(updatingItemId) || isClearing;
 
@@ -126,6 +132,75 @@ function CartPageContent() {
     return `${cart.totalItems} items`;
   }, [cart.totalItems]);
 
+  const groupedCartItems = useMemo(() => {
+    const groups = new Map<string, { storeId: string; storeName: string; items: Cart['items'] }>();
+
+    for (const item of cart.items) {
+      const currentGroup = groups.get(item.storeId);
+
+      if (currentGroup) {
+        currentGroup.items.push(item);
+        continue;
+      }
+
+      groups.set(item.storeId, {
+        storeId: item.storeId,
+        storeName: item.storeName || item.product.storeName || 'Pharmacy order',
+        items: [item],
+      });
+    }
+
+    return [...groups.values()];
+  }, [cart.items]);
+
+  const handleRemoveStore = async (storeId: string) => {
+    if (!token) return;
+
+    try {
+      setIsClearing(true);
+      setError('');
+
+      const storeItems = cart.items.filter((item) => item.storeId === storeId);
+      let nextCart = cart;
+
+      for (const item of storeItems) {
+        const response = await removeCartItem(item.id, token);
+        nextCart = response.cart;
+      }
+
+      setCart(nextCart);
+    } catch {
+      setError('Could not remove pharmacy order.');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  const handleConfirmPendingAction = async () => {
+    if (!pendingAction) return;
+
+    if (pendingAction.type === 'item') {
+      await handleRemove(pendingAction.itemId);
+    }
+
+    if (pendingAction.type === 'store') {
+      await handleRemoveStore(pendingAction.storeId);
+    }
+
+    if (pendingAction.type === 'clear') {
+      await handleClear();
+    }
+
+    setPendingAction(null);
+  };
+
+  const pendingActionText =
+    pendingAction?.type === 'item'
+      ? 'Remove this product from the cart?'
+      : pendingAction?.type === 'store'
+        ? `Remove the whole order from ${pendingAction.storeName}?`
+        : 'Clear the whole cart?';
+
   return (
     <main className={css.page}>
       <section className={css.section} aria-labelledby="cart-title">
@@ -174,15 +249,46 @@ function CartPageContent() {
 
           {cart.items.length > 0 ? (
             <div className={css.grid}>
-              <ul className={css.list}>
-                {cart.items.map((item) => (
-                  <li key={item.id}>
-                    <CartItemCard
-                      item={item}
-                      isUpdating={updatingItemId === item.id}
-                      onQuantityChange={handleQuantityChange}
-                      onRemove={handleRemove}
-                    />
+              <ul className={css.groupList}>
+                {groupedCartItems.map((group) => (
+                  <li className={css.storeGroup} key={group.storeId}>
+                    <div className={css.storeGroupHead}>
+                      <div>
+                        <p className={css.groupKicker}>Pharmacy invoice</p>
+                        <h2 className={css.storeGroupTitle}>{group.storeName}</h2>
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={isUpdating}
+                        onClick={() =>
+                          setPendingAction({
+                            type: 'store',
+                            storeId: group.storeId,
+                            storeName: group.storeName,
+                          })
+                        }
+                      >
+                        Remove invoice
+                      </Button>
+                    </div>
+
+                    <ul className={css.list}>
+                      {group.items.map((item) => (
+                        <li key={item.id}>
+                          <CartItemCard
+                            item={item}
+                            isUpdating={updatingItemId === item.id}
+                            onQuantityChange={handleQuantityChange}
+                            onRemove={(itemId) =>
+                              setPendingAction({ type: 'item', itemId })
+                            }
+                          />
+                        </li>
+                      ))}
+                    </ul>
                   </li>
                 ))}
               </ul>
@@ -190,8 +296,41 @@ function CartPageContent() {
               <CartSummary
                 cart={cart}
                 isUpdating={isUpdating}
-                onClear={handleClear}
+                onClear={() => setPendingAction({ type: 'clear' })}
               />
+            </div>
+          ) : null}
+
+          {pendingAction ? (
+            <div className={css.confirmBackdrop} role="presentation">
+              <div
+                className={css.confirmDialog}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="cart-confirm-title"
+              >
+                <h2 className={css.confirmTitle} id="cart-confirm-title">
+                  Confirm action
+                </h2>
+                <p className={css.confirmText}>{pendingActionText}</p>
+                <div className={css.confirmActions}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={isUpdating}
+                    onClick={() => setPendingAction(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={isUpdating}
+                    onClick={() => void handleConfirmPendingAction()}
+                  >
+                    Confirm
+                  </Button>
+                </div>
+              </div>
             </div>
           ) : null}
         </Container>

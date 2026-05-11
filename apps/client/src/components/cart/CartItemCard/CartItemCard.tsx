@@ -1,8 +1,6 @@
 'use client';
 
-import Image from 'next/image';
-
-import { Button, ButtonLink, SvgIcon } from '@/components/common';
+import { Button, ButtonLink, ShimmerImage, SvgIcon } from '@/components/common';
 
 import { buildProductPath } from '@/lib/routes';
 
@@ -44,12 +42,11 @@ function CartItemCard({
     <article className={css.card} aria-labelledby={`cart-item-${item.id}`}>
       <div className={css.imageWrap}>
         {item.product.imageUrl ? (
-          <Image
+          <ShimmerImage
             className={css.image}
             src={item.product.imageUrl}
             alt={item.product.name}
-            fill
-            sizes="96px"
+            sizes="120px"
           />
         ) : (
           <div className={css.imageFallback} aria-hidden="true">

@@ -45,11 +45,15 @@ export async function generateMetadata({ params }: MedicinesCatalogPageProps) {
     ...(categoryLabel ? { categoryLabel } : {}),
   };
 
+  const productsData = await getProducts(buildMedicinesCatalogApiParams(filters)).catch(
+    () => null
+  );
+
   return createPageMetadata({
     title: getMedicinesCatalogTitle(filters, seoContext),
     description: getMedicinesCatalogDescription(filters, seoContext),
     path: buildMedicinesCatalogPath(filters, storesData?.items ?? []),
-    noIndex: isMedicinesCatalogNoIndex(filters),
+    noIndex: isMedicinesCatalogNoIndex(filters) || productsData?.total === 0,
   });
 }
 

@@ -1,8 +1,7 @@
 import { ProtectedRoute } from '@/components/auth';
-import { PagePlaceholder } from '@/components/common';
+import { CheckoutPageContent } from '@/components/cart';
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/constants/metadata';
-import { createBreadcrumbs } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
 
 //===================================================================
@@ -19,11 +18,7 @@ export const metadata = createPageMetadata({
 function CheckoutPage() {
   return (
     <ProtectedRoute>
-      <PagePlaceholder
-        title={CHECKOUT_TITLE}
-        text={CHECKOUT_DESCRIPTION}
-        breadcrumbs={createBreadcrumbs(CHECKOUT_TITLE)}
-      />
+      <CheckoutPageContent />
     </ProtectedRoute>
   );
 }
