@@ -6,7 +6,6 @@
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
 }
 
 .imageWrap {
@@ -47,7 +46,7 @@
   color: var(--color-text-primary);
 }
 
-.storeName {
+.reviews {
   margin-top: 4px;
   font-size: var(--fz-12);
   line-height: var(--lh-base);
@@ -94,6 +93,18 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.removeButton {
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+}
+
+.removeButton:hover:not(:disabled),
+.removeButton:focus-visible:not(:disabled) {
+  color: var(--color-white);
+  background-color: var(--color-error);
+  border-color: var(--color-error);
 }
 
 @media only screen and (min-width: 768px) {

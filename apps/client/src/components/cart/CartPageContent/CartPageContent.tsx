@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { CartItemCard, CartSummary } from '@/components/cart';
+import {
+  CartItemCard,
+  CartSummary,
+  ContinueShoppingModal,
+} from '@/components/cart';
+
 import { Button, ButtonLink, Container } from '@/components/common';
 import { useAuth } from '@/components/providers';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
@@ -19,11 +24,50 @@ import css from './CartPageContent.module.css';
 
 //===================================================================
 
+type StoreCartGroup = {
+  storeId: string;
+  storeName: string;
+  items: Cart['items'];
+  totalItems: number;
+  totalPrice: number;
+};
+
+//===================================================================
+
 const EMPTY_CART: Cart = {
   items: [],
   totalItems: 0,
   totalPrice: 0,
 };
+
+//===================================================================
+
+function groupCartItemsByStore(items: Cart['items']): StoreCartGroup[] {
+  const groups = new Map<string, StoreCartGroup>();
+
+  for (const item of items) {
+    const storeName =
+      item.storeName || item.product.storeName || 'Pharmacy order';
+    const currentGroup = groups.get(item.storeId);
+
+    if (currentGroup) {
+      currentGroup.items.push(item);
+      currentGroup.totalItems += item.quantity;
+      currentGroup.totalPrice += item.totalPrice;
+      continue;
+    }
+
+    groups.set(item.storeId, {
+      storeId: item.storeId,
+      storeName,
+      items: [item],
+      totalItems: item.quantity,
+      totalPrice: item.totalPrice,
+    });
+  }
+
+  return [...groups.values()];
+}
 
 //===================================================================
 
@@ -35,6 +79,8 @@ function CartPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState(false);
+  const [continueShoppingStore, setContinueShoppingStore] =
+    useState<StoreCartGroup | null>(null);
   const [pendingAction, setPendingAction] = useState<
     | { type: 'item'; itemId: string }
     | { type: 'store'; storeId: string; storeName: string }
@@ -132,26 +178,10 @@ function CartPageContent() {
     return `${cart.totalItems} items`;
   }, [cart.totalItems]);
 
-  const groupedCartItems = useMemo(() => {
-    const groups = new Map<string, { storeId: string; storeName: string; items: Cart['items'] }>();
-
-    for (const item of cart.items) {
-      const currentGroup = groups.get(item.storeId);
-
-      if (currentGroup) {
-        currentGroup.items.push(item);
-        continue;
-      }
-
-      groups.set(item.storeId, {
-        storeId: item.storeId,
-        storeName: item.storeName || item.product.storeName || 'Pharmacy order',
-        items: [item],
-      });
-    }
-
-    return [...groups.values()];
-  }, [cart.items]);
+  const groupedCartItems = useMemo(
+    () => groupCartItemsByStore(cart.items),
+    [cart.items]
+  );
 
   const handleRemoveStore = async (storeId: string) => {
     if (!token) return;
@@ -170,7 +200,7 @@ function CartPageContent() {
 
       setCart(nextCart);
     } catch {
-      setError('Could not remove pharmacy order.');
+      setError('Could not remove pharmacy invoice.');
     } finally {
       setIsClearing(false);
     }
@@ -196,9 +226,9 @@ function CartPageContent() {
 
   const pendingActionText =
     pendingAction?.type === 'item'
-      ? 'Remove this product from the cart?'
+      ? 'Remove this product from the invoice?'
       : pendingAction?.type === 'store'
-        ? `Remove the whole order from ${pendingAction.storeName}?`
+        ? `Remove the whole invoice from ${pendingAction.storeName}?`
         : 'Clear the whole cart?';
 
   return (
@@ -209,8 +239,6 @@ function CartPageContent() {
 
           <div className={css.hero}>
             <div>
-              <p className={css.kicker}>Shopping cart</p>
-
               <h1 className={css.title} id="cart-title">
                 {CART_TITLE}
               </h1>
@@ -248,57 +276,75 @@ function CartPageContent() {
           ) : null}
 
           {cart.items.length > 0 ? (
-            <div className={css.grid}>
-              <ul className={css.groupList}>
-                {groupedCartItems.map((group) => (
-                  <li className={css.storeGroup} key={group.storeId}>
-                    <div className={css.storeGroupHead}>
-                      <div>
-                        <p className={css.groupKicker}>Pharmacy invoice</p>
-                        <h2 className={css.storeGroupTitle}>{group.storeName}</h2>
+            <ul className={css.groupList}>
+              {groupedCartItems.map((group) => (
+                <li className={css.invoice} key={group.storeId}>
+                  <div className={css.invoiceGrid}>
+                    <div className={css.invoiceMain}>
+                      <div className={css.storeGroupHead}>
+                        <div>
+                          <p className={css.groupKicker}>Pharmacy invoice</p>
+                          <h2 className={css.storeGroupTitle}>
+                            {group.storeName}
+                          </h2>
+                        </div>
+
+                        <Button
+                          className={css.dangerButton}
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={isUpdating}
+                          onClick={() =>
+                            setPendingAction({
+                              type: 'store',
+                              storeId: group.storeId,
+                              storeName: group.storeName,
+                            })
+                          }
+                        >
+                          Remove invoice
+                        </Button>
                       </div>
 
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={isUpdating}
-                        onClick={() =>
-                          setPendingAction({
-                            type: 'store',
-                            storeId: group.storeId,
-                            storeName: group.storeName,
-                          })
-                        }
-                      >
-                        Remove invoice
-                      </Button>
+                      <ul className={css.list}>
+                        {group.items.map((item) => (
+                          <li key={item.id}>
+                            <CartItemCard
+                              item={item}
+                              isUpdating={updatingItemId === item.id}
+                              onQuantityChange={handleQuantityChange}
+                              onRemove={(itemId) =>
+                                setPendingAction({ type: 'item', itemId })
+                              }
+                            />
+                          </li>
+                        ))}
+                      </ul>
                     </div>
 
-                    <ul className={css.list}>
-                      {group.items.map((item) => (
-                        <li key={item.id}>
-                          <CartItemCard
-                            item={item}
-                            isUpdating={updatingItemId === item.id}
-                            onQuantityChange={handleQuantityChange}
-                            onRemove={(itemId) =>
-                              setPendingAction({ type: 'item', itemId })
-                            }
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-              </ul>
+                    <CartSummary
+                      storeId={group.storeId}
+                      totalItems={group.totalItems}
+                      totalPrice={group.totalPrice}
+                      isUpdating={isUpdating}
+                      onContinueShopping={() => setContinueShoppingStore(group)}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
-              <CartSummary
-                cart={cart}
-                isUpdating={isUpdating}
-                onClear={() => setPendingAction({ type: 'clear' })}
-              />
-            </div>
+          {continueShoppingStore && token ? (
+            <ContinueShoppingModal
+              storeId={continueShoppingStore.storeId}
+              storeName={continueShoppingStore.storeName}
+              cartItems={cart.items}
+              authToken={token}
+              onClose={() => setContinueShoppingStore(null)}
+              onCartChange={setCart}
+            />
           ) : null}
 
           {pendingAction ? (
@@ -310,7 +356,7 @@ function CartPageContent() {
                 aria-labelledby="cart-confirm-title"
               >
                 <h2 className={css.confirmTitle} id="cart-confirm-title">
-                  Confirm action
+                  Confirm removing
                 </h2>
                 <p className={css.confirmText}>{pendingActionText}</p>
                 <div className={css.confirmActions}>
@@ -323,11 +369,13 @@ function CartPageContent() {
                     Cancel
                   </Button>
                   <Button
+                    className={css.confirmDangerButton}
                     type="button"
+                    variant="ghost"
                     disabled={isUpdating}
                     onClick={() => void handleConfirmPendingAction()}
                   >
-                    Confirm
+                    Remove
                   </Button>
                 </div>
               </div>

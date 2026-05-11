@@ -30,12 +30,10 @@ function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
+  const visibleCartItemsCount = isAuthenticated && token ? cartItemsCount : 0;
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
-      setCartItemsCount(0);
-      return;
-    }
+    if (!isAuthenticated || !token) return;
 
     let isMounted = true;
 
@@ -102,11 +100,11 @@ function Header() {
               href={ROUTES.CART}
               variant="ghost"
               size="sm"
-              aria-label={`Cart with ${cartItemsCount} items`}
+              aria-label={`Cart with ${visibleCartItemsCount} items`}
             >
               <ShoppingCart size={18} aria-hidden="true" />
               <span className={css.cartText}>Cart</span>
-              <span className={css.cartCount}>{cartItemsCount}</span>
+              <span className={css.cartCount}>{visibleCartItemsCount}</span>
             </ButtonLink>
           ) : null}
 
@@ -150,10 +148,10 @@ function Header() {
             href={ROUTES.CART}
             variant="ghost"
             size="sm"
-            aria-label={`Cart with ${cartItemsCount} items`}
+            aria-label={`Cart with ${visibleCartItemsCount} items`}
           >
             <ShoppingCart size={18} aria-hidden="true" />
-            <span className={css.cartCount}>{cartItemsCount}</span>
+            <span className={css.cartCount}>{visibleCartItemsCount}</span>
           </ButtonLink>
         ) : null}
 

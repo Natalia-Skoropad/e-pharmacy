@@ -2,16 +2,16 @@ import { Button, ButtonLink } from '@/components/common';
 
 import { ROUTES } from '@/lib/constants/routes';
 
-import type { Cart } from '@/types';
-
 import css from './CartSummary.module.css';
 
 //===================================================================
 
 type CartSummaryProps = {
-  cart: Cart;
+  storeId: string;
+  totalItems: number;
+  totalPrice: number;
   isUpdating?: boolean;
-  onClear: () => void;
+  onContinueShopping: () => void;
 };
 
 //===================================================================
@@ -26,45 +26,44 @@ function formatPrice(price: number): string {
 
 //===================================================================
 
-function CartSummary({ cart, isUpdating = false, onClear }: CartSummaryProps) {
-  const isEmpty = cart.items.length === 0;
-
+function CartSummary({
+  storeId,
+  totalItems,
+  totalPrice,
+  isUpdating = false,
+  onContinueShopping,
+}: CartSummaryProps) {
   return (
-    <aside className={css.card} aria-labelledby="cart-summary-title">
-      <h2 className={css.title} id="cart-summary-title">
+    <aside className={css.card} aria-labelledby={`cart-summary-${storeId}`}>
+      <h2 className={css.title} id={`cart-summary-${storeId}`}>
         Order summary
       </h2>
 
       <dl className={css.list}>
         <div className={css.row}>
           <dt>Items</dt>
-          <dd>{cart.totalItems}</dd>
+          <dd>{totalItems}</dd>
         </div>
 
         <div className={css.row}>
           <dt>Total</dt>
-          <dd>{formatPrice(cart.totalPrice)}</dd>
+          <dd>{formatPrice(totalPrice)}</dd>
         </div>
       </dl>
 
       <div className={css.actions}>
-        <ButtonLink
-          href={ROUTES.CHECKOUT}
-          fullWidth
-          aria-disabled={isEmpty}
-          tabIndex={isEmpty ? -1 : undefined}
-        >
-          Continue to checkout
+        <ButtonLink href={ROUTES.CHECKOUT} fullWidth>
+          Confirm order
         </ButtonLink>
 
         <Button
           type="button"
           variant="ghost"
           fullWidth
-          disabled={isEmpty || isUpdating}
-          onClick={onClear}
+          disabled={isUpdating}
+          onClick={onContinueShopping}
         >
-          Clear cart
+          Continue shopping
         </Button>
       </div>
     </aside>

@@ -4,13 +4,13 @@
 }
 
 .section {
-  padding-block: 32px 72px;
+  padding-block: 20px 72px;
 }
 
 .hero {
   display: grid;
   gap: 18px;
-  margin-top: 32px;
+  margin-top: 20px;
   margin-bottom: 32px;
 }
 
@@ -89,62 +89,30 @@
   color: var(--color-text-secondary);
 }
 
-.grid {
+.groupList {
   display: grid;
   gap: 24px;
 }
 
-.list {
-  display: grid;
-  gap: 16px;
+.invoice {
+  padding: 12px;
+  border-radius: calc(var(--radius-xl) + 4px);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
-@media only screen and (min-width: 768px) {
-  .section {
-    padding-block: 40px 96px;
-  }
-
-  .hero {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-    margin-top: 40px;
-    margin-bottom: 40px;
-  }
-
-  .title {
-    font-size: var(--fz-56);
-  }
-
-  .text {
-    font-size: var(--fz-18);
-  }
-
-  .empty {
-    padding: 32px;
-  }
-}
-
-@media only screen and (min-width: 1440px) {
-  .section {
-    padding-block: 48px 120px;
-  }
-
-  .title {
-    font-size: var(--fz-64);
-  }
-
-  .grid {
-    grid-template-columns: minmax(0, 1fr) 360px;
-    align-items: start;
-  }
-}
-
-.groupList {
+.invoiceGrid {
   display: grid;
   gap: 18px;
 }
 
-.storeGroup {
+.invoiceMain {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.list {
   display: grid;
   gap: 14px;
 }
@@ -178,6 +146,21 @@
   color: var(--color-text-primary);
 }
 
+.dangerButton,
+.confirmDangerButton {
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+}
+
+.dangerButton:hover:not(:disabled),
+.dangerButton:focus-visible:not(:disabled),
+.confirmDangerButton:hover:not(:disabled),
+.confirmDangerButton:focus-visible:not(:disabled) {
+  color: var(--color-white);
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+}
+
 .confirmBackdrop {
   position: fixed;
   inset: 0;
@@ -186,11 +169,11 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background-color: rgba(18, 20, 23, 0.42);
+  background-color: rgba(18, 20, 23, 0.46);
 }
 
 .confirmDialog {
-  width: min(100%, 420px);
+  width: min(100%, 440px);
   padding: 24px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -219,6 +202,33 @@
 }
 
 @media only screen and (min-width: 768px) {
+  .section {
+    padding-block: 20px 96px;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    margin-top: 40px;
+    margin-bottom: 40px;
+  }
+
+  .title {
+    font-size: var(--fz-56);
+  }
+
+  .text {
+    font-size: var(--fz-18);
+  }
+
+  .empty {
+    padding: 32px;
+  }
+
+  .invoice {
+    padding: 14px;
+  }
+
   .storeGroupHead {
     flex-direction: row;
     align-items: center;
@@ -227,5 +237,20 @@
 
   .confirmActions {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .section {
+    padding-block: 20px 120px;
+  }
+
+  .title {
+    font-size: var(--fz-64);
+  }
+
+  .invoiceGrid {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    align-items: start;
   }
 }

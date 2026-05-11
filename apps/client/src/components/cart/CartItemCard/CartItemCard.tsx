@@ -27,6 +27,14 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
+function formatReviewsCount(reviewsCount?: number): string {
+  const count = reviewsCount ?? 0;
+
+  if (count === 1) return '1 review';
+
+  return `${count} reviews`;
+}
+
 //===================================================================
 
 function CartItemCard({
@@ -62,9 +70,7 @@ function CartItemCard({
               {item.product.name}
             </h2>
 
-            {item.product.storeName ? (
-              <p className={css.storeName}>{item.product.storeName}</p>
-            ) : null}
+            <p className={css.reviews}>{formatReviewsCount(item.product.reviewsCount)}</p>
           </div>
 
           <p className={css.price}>{formatPrice(item.totalPrice)}</p>
@@ -101,10 +107,11 @@ function CartItemCard({
 
           <div className={css.actions}>
             <ButtonLink href={productHref} variant="secondary" size="sm">
-              Details
+              Product details
             </ButtonLink>
 
             <Button
+              className={css.removeButton}
               type="button"
               variant="ghost"
               size="sm"
