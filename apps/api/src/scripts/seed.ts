@@ -276,14 +276,27 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       stores[(index * 3 + offerIndex) % stores.length]
     );
     const isSoldOut = index % 17 === 0;
-    const offers = isSoldOut
+    const richStockStores = index < 115 ? stores.slice(0, 10) : [];
+    const mergedStores = [
+      ...richStockStores,
+      ...selectedStores.filter(
+        (store) =>
+          !richStockStores.some(
+            (richStore) => richStore._id.toString() === store._id.toString()
+          )
+      ),
+    ];
+    const shouldForceRichStock = index < 115;
+    const offers = isSoldOut && !shouldForceRichStock
       ? []
-      : selectedStores.map((store, offerIndex) =>
+      : mergedStores.map((store, offerIndex) =>
           createOffer(
             store,
             basePrice + offerIndex * (7 + (index % 5)),
-            12 + ((index + offerIndex) % 48),
-            offerIndex % 4
+            shouldForceRichStock && offerIndex < 10
+              ? 40 + ((index + offerIndex) % 35)
+              : 12 + ((index + offerIndex) % 48),
+            shouldForceRichStock && offerIndex < 10 ? 0 : offerIndex % 4
           )
         );
     const reviewsCount =

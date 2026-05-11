@@ -5,6 +5,7 @@ export { default as DeliveryInfoCard } from './DeliveryInfoCard';
 export { default as FavoriteToggleButton } from './FavoriteToggleButton';
 export { default as LazyLoadButton } from './LazyLoadButton';
 export { default as Logo } from './Logo';
+export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as PagePlaceholder } from './PagePlaceholder';
 export { default as Pagination } from './Pagination';
 export { default as PaymentInfoCard } from './PaymentInfoCard';

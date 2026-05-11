@@ -8,13 +8,19 @@ import {
   ContinueShoppingModal,
 } from '@/components/cart';
 
-import { Button, ButtonLink, Container } from '@/components/common';
+import {
+  Button,
+  ButtonLink,
+  Container,
+  LoadingSpinner,
+  RatingSummary,
+} from '@/components/common';
 import { useAuth } from '@/components/providers';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
 import { CART_DESCRIPTION, CART_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
-import { createBreadcrumbs } from '@/lib/routes';
+import { buildStorePath, createBreadcrumbs } from '@/lib/routes';
 
 import { clearCart, getCart, removeCartItem, updateCartItem } from '@/services';
 
@@ -30,6 +36,8 @@ type StoreCartGroup = {
   items: Cart['items'];
   totalItems: number;
   totalPrice: number;
+  storeRating?: number;
+  storeReviewsCount?: number;
 };
 
 //===================================================================
@@ -63,6 +71,8 @@ function groupCartItemsByStore(items: Cart['items']): StoreCartGroup[] {
       items: [item],
       totalItems: item.quantity,
       totalPrice: item.totalPrice,
+      storeRating: item.storeRating,
+      storeReviewsCount: item.storeReviewsCount,
     });
   }
 
@@ -250,8 +260,8 @@ function CartPageContent() {
           </div>
 
           {isLoading ? (
-            <div className={css.status} role="status">
-              Loading cart...
+            <div className={css.status}>
+              <LoadingSpinner label="Loading pharmacy invoices..." />
             </div>
           ) : null}
 
@@ -287,9 +297,25 @@ function CartPageContent() {
                           <h2 className={css.storeGroupTitle}>
                             {group.storeName}
                           </h2>
+
+                          <RatingSummary
+                            className={css.storeRating}
+                            rating={group.storeRating}
+                            reviewsCount={group.storeReviewsCount ?? 0}
+                            size="sm"
+                          />
                         </div>
 
-                        <Button
+                        <div className={css.storeActions}>
+                          <ButtonLink
+                            href={buildStorePath(group.storeName, group.storeId)}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            Pharmacy details
+                          </ButtonLink>
+
+                          <Button
                           className={css.dangerButton}
                           type="button"
                           variant="ghost"
@@ -305,6 +331,7 @@ function CartPageContent() {
                         >
                           Remove invoice
                         </Button>
+                        </div>
                       </div>
 
                       <ul className={css.list}>

@@ -169,6 +169,13 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
         storeId: item.storeId.toString(),
         product: productDto,
         storeName: offer.storeName,
+        ...(typeof offer.storeRating === 'number'
+          ? { storeRating: offer.storeRating }
+          : {}),
+        ...(typeof offer.storeReviewsCount === 'number'
+          ? { storeReviewsCount: offer.storeReviewsCount }
+          : {}),
+        stockQuantity: offer.activeQuantity,
         quantity: item.quantity,
         price: item.price,
         totalPrice: item.quantity * item.price,

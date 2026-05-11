@@ -8,6 +8,9 @@ export type CartItem = {
   storeId: string;
   product: Product;
   storeName: string;
+  storeRating?: number;
+  storeReviewsCount?: number;
+  stockQuantity: number;
   quantity: number;
   price: number;
   totalPrice: number;

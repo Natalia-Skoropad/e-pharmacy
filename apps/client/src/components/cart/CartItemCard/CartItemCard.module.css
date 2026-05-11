@@ -46,11 +46,8 @@
   color: var(--color-text-primary);
 }
 
-.reviews {
-  margin-top: 4px;
-  font-size: var(--fz-12);
-  line-height: var(--lh-base);
-  color: var(--color-text-muted);
+.rating {
+  margin-top: 6px;
 }
 
 .price {
@@ -65,28 +62,17 @@
   gap: 14px;
 }
 
-.quantity {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
+.quantityBlock {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
 }
 
-.quantityButton {
-  min-width: 36px;
-  border: 0;
-  border-radius: 0;
-}
-
-.quantityValue {
-  min-width: 36px;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  line-height: 1;
-  color: var(--color-text-primary);
-  text-align: center;
+.stock {
+  max-width: 220px;
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  color: var(--color-text-muted);
 }
 
 .actions {

@@ -64,6 +64,10 @@
   color: var(--color-text-secondary);
 }
 
+.status > div {
+  min-height: 260px;
+}
+
 .notice {
   margin-bottom: 20px;
   color: var(--color-error);
@@ -144,6 +148,17 @@
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
   color: var(--color-text-primary);
+}
+
+.storeRating {
+  margin-top: 8px;
+}
+
+.storeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
 }
 
 .dangerButton,
@@ -235,8 +250,13 @@
     padding: 18px 20px;
   }
 
+  .storeActions {
+    justify-content: flex-end;
+  }
+
   .confirmActions {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, auto);
+    justify-content: end;
   }
 }
 

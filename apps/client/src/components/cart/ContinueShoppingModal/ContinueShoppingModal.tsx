@@ -1,10 +1,18 @@
 'use client';
 
 import { useEffect, useId, useMemo, useState } from 'react';
-import { Search, ShoppingCart, X } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 
-import { Button, ShimmerImage, SvgIcon } from '@/components/common';
+import {
+  Button,
+  CloseIconButton,
+  LoadingSpinner,
+  SearchInput,
+  ShimmerImage,
+  SvgIcon,
+} from '@/components/common';
 
+import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
 import { addCartItem, getProducts } from '@/services';
 
 import type { Cart, Product, ProductCategory } from '@/types';
@@ -38,7 +46,8 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
   other: 'Other',
 };
 
-const PRODUCTS_LIMIT = 30;
+const PRODUCTS_LIMIT = 150;
+const CATEGORY_PRODUCTS_LIMIT = 200;
 
 //===================================================================
 
@@ -71,6 +80,12 @@ function getUniqueCategoryOptions(products: Product[]): CategoryOption[] {
     .sort((a, b) => a.label.localeCompare(b.label));
 }
 
+function formatProductsCount(total: number): string {
+  return total === 1
+    ? '1 available product in this pharmacy'
+    : `${total} available products in this pharmacy`;
+}
+
 //===================================================================
 
 function ContinueShoppingModal({
@@ -85,12 +100,22 @@ function ContinueShoppingModal({
   const searchId = useId();
 
   const [searchValue, setSearchValue] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<
+    ProductCategory | 'all'
+  >('all');
   const [categoryProducts, setCategoryProducts] = useState<Product[]>([]);
+  const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAddingProductId, setIsAddingProductId] = useState<string | null>(null);
+  const [isAddingProductId, setIsAddingProductId] = useState<string | null>(
+    null
+  );
   const [error, setError] = useState('');
+
+  useBodyScrollLock(true);
+  useEscapeToClose({ isOpen: true, onClose });
+
+  const handleBackdropMouseDown = useBackdropClick({ onClose });
 
   const categoryOptions = useMemo(
     () => getUniqueCategoryOptions(categoryProducts),
@@ -106,20 +131,6 @@ function ContinueShoppingModal({
   }, [cartItems, storeId]);
 
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
-    }
-
-    document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [onClose]);
-
-  useEffect(() => {
     let isMounted = true;
 
     async function fetchStoreCategories() {
@@ -127,13 +138,14 @@ function ContinueShoppingModal({
         const response = await getProducts({
           storeId,
           page: 1,
-          perPage: 100,
+          perPage: CATEGORY_PRODUCTS_LIMIT,
           inStock: true,
         });
 
         if (!isMounted) return;
 
         setCategoryProducts(response.items);
+        setAvailableProductsCount(response.total);
       } catch {
         if (!isMounted) return;
 
@@ -207,13 +219,12 @@ function ContinueShoppingModal({
   };
 
   return (
-    <div className={css.backdrop} role="presentation" onMouseDown={onClose}>
+    <div className={css.backdrop} role="presentation" onMouseDown={handleBackdropMouseDown}>
       <div
         className={css.dialog}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        onMouseDown={(event) => event.stopPropagation()}
       >
         <div className={css.head}>
           <div>
@@ -223,23 +234,23 @@ function ContinueShoppingModal({
             </h2>
           </div>
 
-          <button className={css.closeButton} type="button" onClick={onClose} aria-label="Close modal">
-            <X size={28} aria-hidden="true" />
-          </button>
+          <CloseIconButton className={css.closeButton} onClick={onClose} />
         </div>
 
-        <label className={css.searchField} htmlFor={searchId}>
-          <Search className={css.searchIcon} size={28} aria-hidden="true" />
-          <input
+        <div className={css.searchBlock}>
+          <SearchInput
             id={searchId}
-            type="search"
+            label="Search products"
             value={searchValue}
             placeholder="Add one more product"
-            autoComplete="off"
-            maxLength={80}
-            onChange={(event) => setSearchValue(event.target.value)}
+            isActive={Boolean(searchValue)}
+            onChange={setSearchValue}
           />
-        </label>
+
+          <p className={css.availableCount}>
+            {formatProductsCount(availableProductsCount)}
+          </p>
+        </div>
 
         {categoryOptions.length > 0 ? (
           <div className={css.categories} aria-label="Product categories in this pharmacy">
@@ -272,9 +283,7 @@ function ContinueShoppingModal({
 
         <div className={css.results}>
           {isLoading ? (
-            <p className={css.status} role="status">
-              Loading pharmacy products...
-            </p>
+            <LoadingSpinner label="Loading pharmacy products..." />
           ) : null}
 
           {!isLoading && products.length === 0 ? (
@@ -286,6 +295,7 @@ function ContinueShoppingModal({
               {products.map((product) => {
                 const isInCart = cartProductIds.has(product.id);
                 const isAdding = isAddingProductId === product.id;
+                const categoryLabel = CATEGORY_LABELS[product.category] ?? product.category;
 
                 return (
                   <li className={css.productItem} key={product.id}>
@@ -306,8 +316,9 @@ function ContinueShoppingModal({
 
                     <div className={css.productInfo}>
                       <h3 className={css.productName}>{product.name}</h3>
+                      <p className={css.productMeta}>{categoryLabel}</p>
                       {product.manufacturer ? (
-                        <p className={css.productMeta}>{product.manufacturer}</p>
+                        <p className={css.productManufacturer}>{product.manufacturer}</p>
                       ) : null}
                     </div>
 

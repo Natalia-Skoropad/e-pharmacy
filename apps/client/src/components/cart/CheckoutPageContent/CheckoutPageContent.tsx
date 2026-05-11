@@ -1,8 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
-import { Button, ButtonLink, Container } from '@/components/common';
+import {
+  Button,
+  ButtonLink,
+  Container,
+  LoadingSpinner,
+} from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useAuth } from '@/components/providers';
 
@@ -10,7 +16,7 @@ import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
 import { createBreadcrumbs } from '@/lib/routes';
 
-import { clearCart, getCart } from '@/services';
+import { getCart, removeCartItem } from '@/services';
 
 import type { Cart } from '@/types';
 
@@ -77,10 +83,11 @@ function groupCartByStore(cart: Cart): StoreOrderGroup[] {
 
 function CheckoutPageContent() {
   const { token } = useAuth();
+  const searchParams = useSearchParams();
+  const checkoutStoreId = searchParams.get('storeId');
 
   const [cart, setCart] = useState<Cart>(EMPTY_CART);
-  const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethod>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>('pickup');
   const [recipientName, setRecipientName] = useState('');
@@ -93,6 +100,14 @@ function CheckoutPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const orderGroups = useMemo(() => groupCartByStore(cart), [cart]);
+  const selectedOrderGroup = useMemo(() => {
+    if (orderGroups.length === 0) return null;
+
+    return (
+      orderGroups.find((group) => group.storeId === checkoutStoreId) ??
+      orderGroups[0]
+    );
+  }, [checkoutStoreId, orderGroups]);
 
   const isPostDeliveryValid =
     deliveryMethod === 'pickup' ||
@@ -100,7 +115,8 @@ function CheckoutPageContent() {
       recipientPhone.trim().length >= 6 &&
       deliveryAddress.trim().length >= 8);
 
-  const canSubmit = cart.items.length > 0 && isPostDeliveryValid && !isSubmitting;
+  const canSubmit =
+    Boolean(selectedOrderGroup) && isPostDeliveryValid && !isSubmitting;
 
   useEffect(() => {
     let isMounted = true;
@@ -140,13 +156,18 @@ function CheckoutPageContent() {
       setIsSubmitting(true);
       setError('');
 
-      await clearCart(token);
+      if (!selectedOrderGroup) return;
 
-      setCart(EMPTY_CART);
+      let nextCart = cart;
+
+      for (const item of selectedOrderGroup.items) {
+        const response = await removeCartItem(item.id, token);
+        nextCart = response.cart;
+      }
+
+      setCart(nextCart);
       setSuccessMessage(
-        `Order accepted. ${orderGroups.length} pharmacy invoice${
-          orderGroups.length === 1 ? '' : 's'
-        } created with status “Accepted”.`
+        `Invoice from ${selectedOrderGroup.storeName} accepted with status “Accepted”.`
       );
     } catch {
       setError('Could not confirm order.');
@@ -162,7 +183,6 @@ function CheckoutPageContent() {
           <Breadcrumbs items={createBreadcrumbs(CHECKOUT_TITLE)} />
 
           <div className={css.hero}>
-            <p className={css.kicker}>Checkout</p>
             <h1 className={css.title} id="checkout-title">
               {CHECKOUT_TITLE}
             </h1>
@@ -170,8 +190,8 @@ function CheckoutPageContent() {
           </div>
 
           {isLoading ? (
-            <div className={css.status} role="status">
-              Loading checkout...
+            <div className={css.status}>
+              <LoadingSpinner label="Loading checkout invoice..." />
             </div>
           ) : null}
 
@@ -189,9 +209,15 @@ function CheckoutPageContent() {
                 in the matching pharmacy cabinet. Tiny paperwork goblin: paused
                 until the real backend order endpoint is connected.
               </p>
-              <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
-                Back to catalog
-              </ButtonLink>
+              <div className={css.successActions}>
+                <ButtonLink href={ROUTES.CART} variant="secondary">
+                  Back to cart
+                </ButtonLink>
+
+                <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
+                  Back to catalog
+                </ButtonLink>
+              </div>
             </div>
           ) : null}
 
@@ -201,13 +227,19 @@ function CheckoutPageContent() {
               <p className={css.emptyText}>
                 Add medicines first, then checkout will form pharmacy invoices.
               </p>
-              <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
-                Browse medicines
-              </ButtonLink>
+              <div className={css.successActions}>
+                <ButtonLink href={ROUTES.CART} variant="secondary">
+                  Back to cart
+                </ButtonLink>
+
+                <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
+                  Browse medicines
+                </ButtonLink>
+              </div>
             </div>
           ) : null}
 
-          {cart.items.length > 0 ? (
+          {!successMessage && selectedOrderGroup ? (
             <div className={css.grid}>
               <div className={css.leftColumn}>
                 <section className={css.card} aria-labelledby="delivery-title">
@@ -308,11 +340,13 @@ function CheckoutPageContent() {
 
                   {paymentMethod === 'bank-transfer' ? (
                     <div className={css.bankDetails}>
-                      {orderGroups.map((group) => (
+                      {[selectedOrderGroup].map((group) => (
                         <div className={css.bankCard} key={group.storeId}>
                           <h3>{group.storeName}</h3>
                           <p>Recipient: {group.storeName} LLC</p>
-                          <p>IBAN: UA00 0000 0000 0000 {group.storeId.slice(-8)}</p>
+                          <p>
+                            IBAN: UA00 0000 0000 0000 {group.storeId.slice(-8)}
+                          </p>
                           <p>Payment purpose: E-PHARMACY order</p>
                         </div>
                       ))}
@@ -337,15 +371,17 @@ function CheckoutPageContent() {
 
               <aside className={css.summary} aria-labelledby="summary-title">
                 <h2 className={css.cardTitle} id="summary-title">
-                  Pharmacy invoices
+                  Pharmacy invoice
                 </h2>
 
                 <ul className={css.invoiceList}>
-                  {orderGroups.map((group) => (
+                  {[selectedOrderGroup].map((group) => (
                     <li className={css.invoiceCard} key={group.storeId}>
                       <h3>{group.storeName}</h3>
                       <p>{group.totalItems} items</p>
-                      <p className={css.invoiceTotal}>{formatPrice(group.totalPrice)}</p>
+                      <p className={css.invoiceTotal}>
+                        {formatPrice(group.totalPrice)}
+                      </p>
                     </li>
                   ))}
                 </ul>
@@ -353,11 +389,11 @@ function CheckoutPageContent() {
                 <dl className={css.totalList}>
                   <div>
                     <dt>Total items</dt>
-                    <dd>{cart.totalItems}</dd>
+                    <dd>{selectedOrderGroup.totalItems}</dd>
                   </div>
                   <div>
                     <dt>Total</dt>
-                    <dd>{formatPrice(cart.totalPrice)}</dd>
+                    <dd>{formatPrice(selectedOrderGroup.totalPrice)}</dd>
                   </div>
                 </dl>
 
@@ -367,7 +403,7 @@ function CheckoutPageContent() {
                   disabled={!canSubmit}
                   onClick={() => void handleSubmit()}
                 >
-                  {isSubmitting ? 'Confirming...' : 'Confirm order'}
+                  {isSubmitting ? 'Confirming...' : 'Confirm invoice'}
                 </Button>
               </aside>
             </div>

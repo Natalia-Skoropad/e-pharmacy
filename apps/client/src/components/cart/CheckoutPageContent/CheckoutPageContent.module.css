@@ -4,11 +4,11 @@
 }
 
 .section {
-  padding-block: 32px 72px;
+  padding-block: 20px 72px;
 }
 
 .hero {
-  margin-top: 32px;
+  margin-top: 20px;
   margin-bottom: 32px;
 }
 
@@ -60,6 +60,12 @@
   display: grid;
   gap: 16px;
   justify-items: start;
+}
+
+.successActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .successTitle,
@@ -209,7 +215,7 @@
 
 @media only screen and (min-width: 768px) {
   .section {
-    padding-block: 40px 96px;
+    padding-block: 20px 96px;
   }
 
   .title {
@@ -227,7 +233,7 @@
 
 @media only screen and (min-width: 1440px) {
   .section {
-    padding-block: 48px 120px;
+    padding-block: 20px 120px;
   }
 
   .title {

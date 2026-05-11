@@ -1,6 +1,13 @@
 'use client';
 
-import { Button, ButtonLink, ShimmerImage, SvgIcon } from '@/components/common';
+import {
+  Button,
+  ButtonLink,
+  QuantityCounter,
+  RatingSummary,
+  ShimmerImage,
+  SvgIcon,
+} from '@/components/common';
 
 import { buildProductPath } from '@/lib/routes';
 
@@ -27,12 +34,10 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
-function formatReviewsCount(reviewsCount?: number): string {
-  const count = reviewsCount ?? 0;
-
-  if (count === 1) return '1 review';
-
-  return `${count} reviews`;
+function formatStockLabel(stockQuantity: number): string {
+  return stockQuantity === 1
+    ? '1 item available in this pharmacy'
+    : `${stockQuantity} items available in this pharmacy`;
 }
 
 //===================================================================
@@ -44,7 +49,8 @@ function CartItemCard({
   onRemove,
 }: CartItemCardProps) {
   const productHref = buildProductPath(item.product.name, item.product.id);
-  const canDecrease = item.quantity > 1;
+  const stockQuantity = item.stockQuantity ?? item.quantity;
+  const canIncrease = item.quantity < stockQuantity;
 
   return (
     <article className={css.card} aria-labelledby={`cart-item-${item.id}`}>
@@ -70,39 +76,31 @@ function CartItemCard({
               {item.product.name}
             </h2>
 
-            <p className={css.reviews}>{formatReviewsCount(item.product.reviewsCount)}</p>
+            <RatingSummary
+              className={css.rating}
+              rating={item.product.rating}
+              reviewsCount={item.product.reviewsCount ?? 0}
+              size="sm"
+            />
           </div>
 
           <p className={css.price}>{formatPrice(item.totalPrice)}</p>
         </div>
 
         <div className={css.footer}>
-          <div className={css.quantity} aria-label="Quantity controls">
-            <Button
-              className={css.quantityButton}
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={!canDecrease || isUpdating}
-              aria-label="Decrease quantity"
-              onClick={() => onQuantityChange(item.id, item.quantity - 1)}
-            >
-              −
-            </Button>
-
-            <span className={css.quantityValue}>{item.quantity}</span>
-
-            <Button
-              className={css.quantityButton}
-              type="button"
-              variant="ghost"
-              size="sm"
+          <div className={css.quantityBlock}>
+            <QuantityCounter
+              value={item.quantity}
+              min={1}
+              max={stockQuantity}
               disabled={isUpdating}
-              aria-label="Increase quantity"
-              onClick={() => onQuantityChange(item.id, item.quantity + 1)}
-            >
-              +
-            </Button>
+              isLoading={isUpdating}
+              ariaLabel={`Quantity controls for ${item.product.name}`}
+              onDecrement={() => onQuantityChange(item.id, item.quantity - 1)}
+              onIncrement={() => onQuantityChange(item.id, item.quantity + 1)}
+            />
+
+            <p className={css.stock}>{formatStockLabel(stockQuantity)}</p>
           </div>
 
           <div className={css.actions}>

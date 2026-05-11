@@ -52,7 +52,7 @@ function CartSummary({
       </dl>
 
       <div className={css.actions}>
-        <ButtonLink href={ROUTES.CHECKOUT} fullWidth>
+        <ButtonLink href={`${ROUTES.CHECKOUT}?storeId=${storeId}`} fullWidth>
           Confirm order
         </ButtonLink>
 

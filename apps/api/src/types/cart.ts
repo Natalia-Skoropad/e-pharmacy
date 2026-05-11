@@ -31,6 +31,9 @@ export type CartItemResponseDto = {
   storeId: string;
   product: ProductResponseDto;
   storeName: string;
+  storeRating?: number;
+  storeReviewsCount?: number;
+  stockQuantity: number;
   quantity: number;
   price: number;
   totalPrice: number;
