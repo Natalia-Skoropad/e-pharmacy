@@ -283,7 +283,6 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     };
   }, [selectedOrderGroup, token]);
 
-
   const handleRecipientNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setRecipientName(sanitizeCustomerName(event.target.value));
   };
@@ -488,7 +487,8 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                                   onChange={handleRecipientNameChange}
                                 />
                                 <span className={css.inputCounter}>
-                                  {recipientNameValue.length}/{CUSTOMER_NAME_MAX_LENGTH}
+                                  {recipientNameValue.length}/
+                                  {CUSTOMER_NAME_MAX_LENGTH}
                                 </span>
                                 <span
                                   className={css.errorText}
@@ -513,7 +513,8 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                                   onChange={handleRecipientPhoneChange}
                                 />
                                 <span className={css.inputCounter}>
-                                  {recipientPhoneValue.length}/{CUSTOMER_PHONE_MAX_LENGTH}
+                                  {recipientPhoneValue.length}/
+                                  {CUSTOMER_PHONE_MAX_LENGTH}
                                 </span>
                                 <span
                                   className={css.errorText}
@@ -544,7 +545,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                                   {CUSTOMER_ADDRESS_MAX_LENGTH}
                                 </span>
                                 <span
-                                  className={css.errorText}
+                                  className={css.errorTextTextarea}
                                   id="delivery-address-error"
                                   aria-live="polite"
                                 >

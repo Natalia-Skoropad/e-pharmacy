@@ -288,6 +288,27 @@
 .errorText {
   position: absolute;
   left: 16px;
+  bottom: -10px;
+  z-index: 2;
+  max-width: calc(100% - 32px);
+  padding-inline: 8px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-regular);
+  line-height: 18px;
+  color: var(--color-error);
+  white-space: nowrap;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  opacity: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.errorTextTextarea {
+  position: absolute;
+  left: 16px;
   bottom: -2px;
   z-index: 2;
   max-width: calc(100% - 32px);
@@ -306,7 +327,8 @@
   pointer-events: none;
 }
 
-.errorText:empty {
+.errorText:empty,
+.errorTextTextarea:empty {
   opacity: 0;
 }
 
@@ -499,7 +521,6 @@
     max-width: 340px;
   }
 }
-
 
 @media only screen and (max-width: 767.98px) {
   .successActions {

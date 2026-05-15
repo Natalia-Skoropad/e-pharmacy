@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { Camera, Heart, ImageOff, KeyRound, PackageCheck, Store, UserRound } from 'lucide-react';
+import { Camera, Heart, ImageOff, KeyRound, Store } from 'lucide-react';
 
-import { Button, ButtonLink, Container } from '@/components/common';
+import { Button, ButtonLink, Container, Tabs } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useAuth } from '@/components/providers';
 
@@ -12,9 +12,11 @@ import { ROUTES } from '@/lib/constants/routes';
 import { createBreadcrumbs } from '@/lib/routes';
 import {
   CUSTOMER_ADDRESS_MAX_LENGTH,
-  CUSTOMER_ADDRESS_MIN_LENGTH,
   CUSTOMER_NAME_MAX_LENGTH,
   CUSTOMER_PHONE_MAX_LENGTH,
+  getCustomerAddressError,
+  getCustomerNameError,
+  getCustomerPhoneError,
   sanitizeCustomerAddress,
   sanitizeCustomerName,
   sanitizeCustomerPhone,
@@ -38,14 +40,18 @@ type PasswordFormValues = {
   newPassword: string;
 };
 
-const TABS: Array<{ value: ProfileTab; label: string; icon: typeof UserRound }> = [
-  { value: 'data', label: 'My data', icon: UserRound },
-  { value: 'orders', label: 'My orders', icon: PackageCheck },
-  { value: 'favorite-products', label: 'Favorite products', icon: Heart },
-  { value: 'favorite-stores', label: 'Favorite stores', icon: Store },
+const TABS: Array<{
+  value: ProfileTab;
+  label: string;
+}> = [
+  { value: 'data', label: 'My data' },
+  { value: 'orders', label: 'My orders' },
+  { value: 'favorite-products', label: 'Favorite products' },
+  { value: 'favorite-stores', label: 'Favorite stores' },
 ];
 
 const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MAX_LENGTH = 64;
 const AVATAR_MAX_SIZE_BYTES = 800_000;
 
 //===================================================================
@@ -76,29 +82,52 @@ function getInitials(name: string): string {
 
 //===================================================================
 
+function getPasswordError(value: string): string {
+  if (!value) return '';
+
+  if (value.length < PASSWORD_MIN_LENGTH) {
+    return `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
+  }
+
+  if (value.length > PASSWORD_MAX_LENGTH) {
+    return `Password must be at most ${PASSWORD_MAX_LENGTH} characters`;
+  }
+
+  return '';
+}
+
+//===================================================================
+
 function getProfileErrors(values: ProfileFormValues) {
   const errors: Partial<Record<keyof ProfileFormValues, string>> = {};
   const name = values.name.trim();
-  const phone = values.phone.trim();
-  const address = values.address.trim();
 
-  if (!name) errors.name = 'Name is required';
-  else if (name.length < 2) errors.name = 'Name must be at least 2 characters';
-  else if (name.length > CUSTOMER_NAME_MAX_LENGTH) {
-    errors.name = `Name must be at most ${CUSTOMER_NAME_MAX_LENGTH} characters`;
+  if (!name) {
+    errors.name = 'Name is required';
+  } else {
+    const nameError = getCustomerNameError(values.name);
+    if (nameError) errors.name = nameError;
   }
 
-  if (phone && phone.length !== CUSTOMER_PHONE_MAX_LENGTH) {
-    errors.phone = 'Enter phone in format +380XXXXXXXXX';
-  }
+  const phoneError = getCustomerPhoneError(values.phone);
+  const addressError = getCustomerAddressError(values.address);
 
-  if (address && address.length < CUSTOMER_ADDRESS_MIN_LENGTH) {
-    errors.address = `Address must be at least ${CUSTOMER_ADDRESS_MIN_LENGTH} characters`;
-  } else if (address.length > CUSTOMER_ADDRESS_MAX_LENGTH) {
-    errors.address = `Address must be at most ${CUSTOMER_ADDRESS_MAX_LENGTH} characters`;
-  }
+  if (phoneError) errors.phone = phoneError;
+  if (addressError) errors.address = addressError;
 
   return errors;
+}
+
+//===================================================================
+
+function readImageAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error('Could not read image file'));
+    reader.readAsDataURL(file);
+  });
 }
 
 //===================================================================
@@ -122,16 +151,20 @@ function ProfilePageContent() {
   const [error, setError] = useState('');
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
+  const [isAvatarSaving, setIsAvatarSaving] = useState(false);
 
   useEffect(() => {
     if (!user) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProfileValues({
       name: user.name ?? '',
       phone: user.phone ?? '',
       address: user.address ?? '',
     });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAvatarPreview(user.avatarUrl ?? null);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAvatarChanged(false);
   }, [user]);
 
@@ -139,10 +172,25 @@ function ProfilePageContent() {
     () => getProfileErrors(profileValues),
     [profileValues]
   );
+  const passwordErrors = useMemo(() => {
+    const currentPasswordError =
+      passwordValues.newPassword && !passwordValues.currentPassword
+        ? 'Current password is required'
+        : '';
+    const newPasswordError = getPasswordError(passwordValues.newPassword);
+
+    return {
+      currentPassword: currentPasswordError,
+      newPassword: newPasswordError,
+    };
+  }, [passwordValues]);
+
   const canSaveProfile = Object.keys(profileErrors).length === 0;
   const canSavePassword =
     passwordValues.currentPassword.trim().length > 0 &&
-    passwordValues.newPassword.length >= PASSWORD_MIN_LENGTH;
+    passwordValues.newPassword.length > 0 &&
+    !passwordErrors.currentPassword &&
+    !passwordErrors.newPassword;
 
   if (!user) {
     return (
@@ -181,7 +229,29 @@ function ProfilePageContent() {
     }));
   };
 
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const saveAvatar = async (avatarUrl: string | null) => {
+    if (!token) return;
+
+    try {
+      setIsAvatarSaving(true);
+      setFeedback('');
+      setError('');
+
+      await updateCurrentUser({ avatarUrl }, token);
+      await refreshCurrentUser();
+      setAvatarChanged(false);
+      setFeedback(
+        avatarUrl ? 'Profile photo was updated.' : 'Profile photo was removed.'
+      );
+    } catch {
+      setError('Could not update profile photo.');
+      setAvatarPreview(user.avatarUrl ?? null);
+    } finally {
+      setIsAvatarSaving(false);
+    }
+  };
+
+  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file) return;
@@ -196,19 +266,18 @@ function ProfilePageContent() {
       return;
     }
 
-    const reader = new FileReader();
+    try {
+      const nextAvatar = await readImageAsDataUrl(file);
 
-    reader.onload = () => {
-      setAvatarPreview(String(reader.result));
+      setAvatarPreview(nextAvatar);
       setAvatarChanged(true);
-      setFeedback('');
-      setError('');
-    };
-
-    reader.readAsDataURL(file);
+      await saveAvatar(nextAvatar);
+    } catch {
+      setError('Could not read profile photo.');
+    }
   };
 
-  const handleRemoveAvatar = () => {
+  const handleRemoveAvatar = async () => {
     setAvatarPreview(null);
     setAvatarChanged(true);
     setFeedback('');
@@ -217,6 +286,8 @@ function ProfilePageContent() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+
+    await saveAvatar(null);
   };
 
   const handleSaveProfile = async () => {
@@ -246,6 +317,18 @@ function ProfilePageContent() {
     }
   };
 
+  const handlePasswordChange = (
+    field: keyof PasswordFormValues,
+    value: string
+  ) => {
+    setFeedback('');
+    setError('');
+    setPasswordValues((prev) => ({
+      ...prev,
+      [field]: value.slice(0, PASSWORD_MAX_LENGTH),
+    }));
+  };
+
   const handleSavePassword = async () => {
     if (!token || !canSavePassword) return;
 
@@ -258,7 +341,9 @@ function ProfilePageContent() {
       setPasswordValues({ currentPassword: '', newPassword: '' });
       setFeedback('Password was changed.');
     } catch {
-      setError('Could not change password. Check the current password and try again.');
+      setError(
+        'Could not change password. Check the current password and try again.'
+      );
     } finally {
       setIsPasswordSaving(false);
     }
@@ -270,22 +355,14 @@ function ProfilePageContent() {
         <Container>
           <Breadcrumbs items={createBreadcrumbs(PROFILE_TITLE)} />
 
-          <div className={css.header}>
-            <div>
-              <p className={css.kicker}>Personal account</p>
+          <div>
+            <h1 className={css.title} id="profile-title">
+              {PROFILE_TITLE}
+            </h1>
 
-              <h1 className={css.title} id="profile-title">
-                {PROFILE_TITLE}
-              </h1>
-
-              <p className={css.text}>
-                View your account details, orders, favorites and profile photo.
-              </p>
-            </div>
-
-            <ButtonLink href={ROUTES.HOME} variant="secondary">
-              Back to home
-            </ButtonLink>
+            <p className={css.text}>
+              View your account details, orders, favorites and profile photo.
+            </p>
           </div>
 
           <div className={css.profileShell}>
@@ -317,58 +394,51 @@ function ProfilePageContent() {
             </aside>
 
             <div className={css.contentCard}>
-              <div className={css.tabs} role="tablist" aria-label="Profile sections">
-                {TABS.map(({ value, label, icon: Icon }) => (
-                  <button
-                    className={activeTab === value ? css.tabActive : css.tab}
-                    key={value}
-                    type="button"
-                    role="tab"
-                    aria-selected={activeTab === value}
-                    onClick={() => setActiveTab(value)}
-                  >
-                    <Icon size={18} aria-hidden="true" />
-                    {label}
-                  </button>
-                ))}
-              </div>
+              <Tabs
+                items={TABS}
+                activeValue={activeTab}
+                ariaLabel="Profile sections"
+                mobileVisibleCount={2}
+                onChange={setActiveTab}
+              />
 
               {feedback ? <p className={css.feedback}>{feedback}</p> : null}
-              {error ? <p className={css.error} role="alert">{error}</p> : null}
+              {error ? (
+                <p className={css.error} role="alert">
+                  {error}
+                </p>
+              ) : null}
 
               {activeTab === 'data' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <section className={css.panelSection} aria-labelledby="personal-data-title">
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="personal-data-title">
-                        My data
-                      </h2>
-                      <p className={css.panelText}>
-                        Update contact details so the pharmacy can reach you without detective work.
-                      </p>
-                    </div>
-
+                  <section
+                    className={css.panelSection}
+                    aria-labelledby="personal-data-title"
+                  >
                     <div className={css.avatarActions}>
                       <input
                         ref={fileInputRef}
                         className={css.fileInput}
                         type="file"
                         accept="image/*"
-                        onChange={handleAvatarChange}
+                        onChange={(event) => void handleAvatarChange(event)}
                       />
                       <Button
                         type="button"
                         variant="secondary"
+                        disabled={isAvatarSaving}
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <Camera size={18} aria-hidden="true" />
-                        Add / change photo
+                        {isAvatarSaving
+                          ? 'Updating photo...'
+                          : 'Add / change photo'}
                       </Button>
                       <Button
                         type="button"
                         variant="ghost"
-                        disabled={!avatarPreview}
-                        onClick={handleRemoveAvatar}
+                        disabled={!avatarPreview || isAvatarSaving}
+                        onClick={() => void handleRemoveAvatar()}
                       >
                         <ImageOff size={18} aria-hidden="true" />
                         Remove photo
@@ -377,64 +447,96 @@ function ProfilePageContent() {
 
                     <div className={css.formGrid}>
                       <label className={css.field}>
-                        <span>Name</span>
-                        <input
-                          value={profileValues.name}
-                          maxLength={CUSTOMER_NAME_MAX_LENGTH}
-                          aria-invalid={Boolean(profileErrors.name)}
-                          onChange={(event) =>
-                            handleProfileChange(
-                              'name',
-                              sanitizeCustomerName(event.target.value)
-                            )
-                          }
-                        />
-                        {profileErrors.name ? (
-                          <small>{profileErrors.name}</small>
-                        ) : null}
+                        <span className={css.fieldLabel}>Name</span>
+                        <span className={css.controlWrap}>
+                          <input
+                            value={profileValues.name}
+                            maxLength={CUSTOMER_NAME_MAX_LENGTH}
+                            aria-invalid={Boolean(profileErrors.name)}
+                            aria-describedby="profile-name-error"
+                            onChange={(event) =>
+                              handleProfileChange(
+                                'name',
+                                sanitizeCustomerName(event.target.value)
+                              )
+                            }
+                          />
+                          <span className={css.inputCounter}>
+                            {profileValues.name.length}/
+                            {CUSTOMER_NAME_MAX_LENGTH}
+                          </span>
+                          <span
+                            className={css.errorText}
+                            id="profile-name-error"
+                            aria-live="polite"
+                          >
+                            {profileErrors.name}
+                          </span>
+                        </span>
                       </label>
 
                       <label className={css.field}>
-                        <span>Email</span>
-                        <input value={user.email} disabled />
-                      </label>
-
-                      <label className={css.field}>
-                        <span>Phone</span>
-                        <input
-                          value={profileValues.phone}
-                          placeholder="+380XXXXXXXXX"
-                          maxLength={CUSTOMER_PHONE_MAX_LENGTH}
-                          aria-invalid={Boolean(profileErrors.phone)}
-                          onChange={(event) =>
-                            handleProfileChange(
-                              'phone',
-                              sanitizeCustomerPhone(event.target.value)
-                            )
-                          }
-                        />
-                        {profileErrors.phone ? (
-                          <small>{profileErrors.phone}</small>
-                        ) : null}
+                        <span className={css.fieldLabel}>Phone</span>
+                        <span className={css.controlWrap}>
+                          <input
+                            value={profileValues.phone}
+                            placeholder="+380XXXXXXXXX"
+                            autoComplete="tel"
+                            maxLength={CUSTOMER_PHONE_MAX_LENGTH}
+                            aria-invalid={Boolean(profileErrors.phone)}
+                            aria-describedby="profile-phone-error"
+                            onChange={(event) =>
+                              handleProfileChange(
+                                'phone',
+                                sanitizeCustomerPhone(event.target.value)
+                              )
+                            }
+                          />
+                          <span className={css.inputCounter}>
+                            {profileValues.phone.length}/
+                            {CUSTOMER_PHONE_MAX_LENGTH}
+                          </span>
+                          <span
+                            className={css.errorText}
+                            id="profile-phone-error"
+                            aria-live="polite"
+                          >
+                            {profileErrors.phone}
+                          </span>
+                        </span>
                       </label>
 
                       <label className={css.fieldWide}>
-                        <span>Address</span>
-                        <textarea
-                          value={profileValues.address}
-                          maxLength={CUSTOMER_ADDRESS_MAX_LENGTH}
-                          placeholder="Add delivery address"
-                          aria-invalid={Boolean(profileErrors.address)}
-                          onChange={(event) =>
-                            handleProfileChange(
-                              'address',
-                              sanitizeCustomerAddress(event.target.value)
-                            )
-                          }
-                        />
-                        {profileErrors.address ? (
-                          <small>{profileErrors.address}</small>
-                        ) : null}
+                        <span className={css.fieldLabel}>
+                          Delivery address / post office
+                        </span>
+                        <span className={css.controlWrap}>
+                          <textarea
+                            value={profileValues.address}
+                            maxLength={CUSTOMER_ADDRESS_MAX_LENGTH}
+                            placeholder="Add delivery address"
+                            autoComplete="street-address"
+                            aria-invalid={Boolean(profileErrors.address)}
+                            aria-describedby="profile-address-error"
+                            onChange={(event) =>
+                              handleProfileChange(
+                                'address',
+                                sanitizeCustomerAddress(event.target.value)
+                              )
+                            }
+                          />
+                          <span className={css.textareaCounter}>
+                            {profileValues.address.length}/
+                            {CUSTOMER_ADDRESS_MAX_LENGTH}
+                          </span>
+                          <span
+                            className={css.errorTextTextarea}
+                            id="profile-address-error"
+                            aria-live="polite"
+                          >
+                            {profileErrors.address}
+                          </span>
+                        </span>
                       </label>
                     </div>
 
@@ -447,50 +549,83 @@ function ProfilePageContent() {
                     </Button>
                   </section>
 
-                  <section className={css.panelSection} aria-labelledby="password-title">
+                  <section
+                    className={css.panelSection}
+                    aria-labelledby="password-title"
+                  >
                     <div className={css.panelHeader}>
                       <h2 className={css.panelTitle} id="password-title">
                         Change password
                       </h2>
                       <p className={css.panelText}>
-                        Keep your account locked tighter than grandma’s medicine cabinet.
+                        Keep your account more securely locked.
                       </p>
                     </div>
 
                     <div className={css.formGrid}>
                       <label className={css.field}>
-                        <span>Current password</span>
-                        <input
-                          type="password"
-                          value={passwordValues.currentPassword}
-                          autoComplete="current-password"
-                          onChange={(event) =>
-                            setPasswordValues((prev) => ({
-                              ...prev,
-                              currentPassword: event.target.value,
-                            }))
-                          }
-                        />
+                        <span className={css.fieldLabel}>Current password</span>
+                        <span className={css.controlWrap}>
+                          <input
+                            type="password"
+                            value={passwordValues.currentPassword}
+                            autoComplete="current-password"
+                            maxLength={PASSWORD_MAX_LENGTH}
+                            aria-invalid={Boolean(
+                              passwordErrors.currentPassword
+                            )}
+                            aria-describedby="current-password-error"
+                            onChange={(event) =>
+                              handlePasswordChange(
+                                'currentPassword',
+                                event.target.value
+                              )
+                            }
+                          />
+                          <span className={css.inputCounter}>
+                            {passwordValues.currentPassword.length}/
+                            {PASSWORD_MAX_LENGTH}
+                          </span>
+                          <span
+                            className={css.errorText}
+                            id="current-password-error"
+                            aria-live="polite"
+                          >
+                            {passwordErrors.currentPassword}
+                          </span>
+                        </span>
                       </label>
 
                       <label className={css.field}>
-                        <span>New password</span>
-                        <input
-                          type="password"
-                          value={passwordValues.newPassword}
-                          autoComplete="new-password"
-                          minLength={PASSWORD_MIN_LENGTH}
-                          onChange={(event) =>
-                            setPasswordValues((prev) => ({
-                              ...prev,
-                              newPassword: event.target.value,
-                            }))
-                          }
-                        />
-                        {passwordValues.newPassword &&
-                        passwordValues.newPassword.length < PASSWORD_MIN_LENGTH ? (
-                          <small>Password must be at least 8 characters</small>
-                        ) : null}
+                        <span className={css.fieldLabel}>New password</span>
+                        <span className={css.controlWrap}>
+                          <input
+                            type="password"
+                            value={passwordValues.newPassword}
+                            autoComplete="new-password"
+                            minLength={PASSWORD_MIN_LENGTH}
+                            maxLength={PASSWORD_MAX_LENGTH}
+                            aria-invalid={Boolean(passwordErrors.newPassword)}
+                            aria-describedby="new-password-error"
+                            onChange={(event) =>
+                              handlePasswordChange(
+                                'newPassword',
+                                event.target.value
+                              )
+                            }
+                          />
+                          <span className={css.inputCounter}>
+                            {passwordValues.newPassword.length}/
+                            {PASSWORD_MAX_LENGTH}
+                          </span>
+                          <span
+                            className={css.errorText}
+                            id="new-password-error"
+                            aria-live="polite"
+                          >
+                            {passwordErrors.newPassword}
+                          </span>
+                        </span>
                       </label>
                     </div>
 
@@ -521,7 +656,9 @@ function ProfilePageContent() {
                       </thead>
                       <tbody>
                         <tr>
-                          <td colSpan={4}>Orders will appear here after checkout.</td>
+                          <td colSpan={4}>
+                            Orders will appear here after checkout.
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -536,7 +673,9 @@ function ProfilePageContent() {
                   <p className={css.panelText}>
                     Products you mark as favorite will be collected here.
                   </p>
-                  <ButtonLink href={ROUTES.MEDICINES_CATALOG}>Browse medicines</ButtonLink>
+                  <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
+                    Browse medicines
+                  </ButtonLink>
                 </div>
               ) : null}
 
@@ -547,7 +686,9 @@ function ProfilePageContent() {
                   <p className={css.panelText}>
                     Favorite pharmacies will be shown here for quick reorders.
                   </p>
-                  <ButtonLink href={ROUTES.STORES}>Browse pharmacies</ButtonLink>
+                  <ButtonLink href={ROUTES.STORES}>
+                    Browse pharmacies
+                  </ButtonLink>
                 </div>
               ) : null}
             </div>

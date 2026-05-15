@@ -16,6 +16,7 @@ type TabsProps<TValue extends string = string> = {
   activeValue: TValue;
   ariaLabel: string;
   onChange: (value: TValue) => void;
+  mobileVisibleCount?: number;
 };
 
 //===================================================================
@@ -29,13 +30,14 @@ function Tabs<TValue extends string = string>({
   activeValue,
   ariaLabel,
   onChange,
+  mobileVisibleCount = MOBILE_VISIBLE_TABS_COUNT,
 }: TabsProps<TValue>) {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   const tabsRef = useRef<HTMLDivElement>(null);
   const moreMenuId = useId();
 
-  const moreMobileItems = items.slice(MOBILE_VISIBLE_TABS_COUNT);
+  const moreMobileItems = items.slice(mobileVisibleCount);
 
   const hasMoreMobileItems = moreMobileItems.length > 0;
   const isMoreActive = moreMobileItems.some(
@@ -75,7 +77,7 @@ function Tabs<TValue extends string = string>({
     <nav className={css.tabs} aria-label={ariaLabel} ref={tabsRef}>
       {items.map((item, index) => {
         const isActive = item.value === activeValue;
-        const isHiddenOnMobile = index >= MOBILE_VISIBLE_TABS_COUNT;
+        const isHiddenOnMobile = index >= mobileVisibleCount;
 
         return (
           <button

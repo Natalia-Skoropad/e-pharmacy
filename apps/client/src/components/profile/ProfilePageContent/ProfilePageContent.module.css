@@ -4,7 +4,7 @@
 }
 
 .section {
-  padding-block: 32px 64px;
+  padding-block: 20px 64px;
 }
 
 .header {
@@ -142,48 +142,6 @@
   padding: 18px;
 }
 
-.tabs {
-  display: flex;
-  gap: 8px;
-  padding-bottom: 12px;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.tab,
-.tabActive {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 42px;
-  padding: 10px 14px;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  line-height: 1.2;
-  white-space: nowrap;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  transition:
-    color var(--transition-base),
-    background-color var(--transition-base),
-    border-color var(--transition-base);
-}
-
-.tab {
-  color: var(--color-text-secondary);
-  background-color: var(--color-background);
-}
-
-.tab:hover,
-.tab:focus-visible,
-.tabActive {
-  color: var(--color-accent);
-  background-color: rgba(89, 177, 122, 0.1);
-  border-color: rgba(89, 177, 122, 0.35);
-}
-
 .feedback,
 .error {
   margin-top: 16px;
@@ -268,15 +226,26 @@
   color: var(--color-text-primary);
 }
 
+.fieldLabel {
+  line-height: var(--lh-base);
+}
+
+.controlWrap {
+  position: relative;
+  display: block;
+  min-width: 0;
+  margin-bottom: 12px;
+}
+
 .field input,
 .fieldWide textarea {
   width: 100%;
   min-height: 48px;
-  padding: 12px 16px;
+  padding: 12px 64px 12px 16px;
   font: inherit;
   font-weight: var(--fw-regular);
   color: var(--color-text-primary);
-  background-color: var(--color-background);
+  background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   outline: none;
@@ -286,17 +255,19 @@
     background-color var(--transition-base);
 }
 
-.field input:disabled {
-  color: var(--color-text-secondary);
-  background-color: rgba(18, 20, 23, 0.04);
+.field input::placeholder,
+.fieldWide textarea::placeholder {
+  color: var(--color-text-muted);
 }
 
 .fieldWide textarea {
-  min-height: 120px;
-  resize: vertical;
+  min-height: 150px;
+  padding-right: 18px;
+  padding-bottom: 34px;
+  resize: none;
 }
 
-.field input:hover:not(:disabled),
+.field input:hover,
 .fieldWide textarea:hover,
 .field input:focus,
 .fieldWide textarea:focus {
@@ -310,15 +281,71 @@
 
 .field input[aria-invalid='true'],
 .fieldWide textarea[aria-invalid='true'] {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
   border-color: var(--color-error);
+  box-shadow: none;
 }
 
-.field small,
-.fieldWide small {
+.field input[aria-invalid='true']:focus,
+.fieldWide textarea[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 4px rgba(255, 83, 83, 0.12);
+}
+
+.inputCounter,
+.textareaCounter {
+  position: absolute;
+  z-index: 1;
   font-size: var(--fz-12);
   font-weight: var(--fw-regular);
-  line-height: 1.4;
+  line-height: 1;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.inputCounter {
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+}
+
+.textareaCounter {
+  right: 16px;
+  bottom: 12px;
+}
+
+.errorText,
+.errorTextTextarea {
+  position: absolute;
+  left: 16px;
+  z-index: 2;
+  max-width: calc(100% - 32px);
+  padding-inline: 8px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-regular);
+  line-height: 18px;
   color: var(--color-error);
+  white-space: nowrap;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  opacity: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.errorText {
+  bottom: -10px;
+}
+
+.errorTextTextarea {
+  bottom: -2px;
+}
+
+.errorText:empty,
+.errorTextTextarea:empty {
+  opacity: 0;
 }
 
 .tableWrap {
@@ -384,7 +411,7 @@
 
 @media only screen and (min-width: 768px) {
   .section {
-    padding-block: 40px 96px;
+    padding-block: 20px 96px;
   }
 
   .header {
@@ -420,7 +447,7 @@
 
 @media only screen and (min-width: 1440px) {
   .section {
-    padding-block: 48px 120px;
+    padding-block: 20px 120px;
   }
 
   .title {
@@ -436,4 +463,26 @@
   .contentCard {
     padding: 32px;
   }
+}
+
+/* Profile overflow safety */
+.sidebar,
+.nameBlock,
+.name,
+.email,
+.compactDetails,
+.compactDetails div,
+.compactDetails dd {
+  min-width: 0;
+}
+
+.name,
+.email,
+.compactDetails dd {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.compactDetails dd {
+  text-align: right;
 }
