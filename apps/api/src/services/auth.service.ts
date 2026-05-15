@@ -117,17 +117,31 @@ export async function updateUserProfileService(
   input: UpdateProfileInput
 ): Promise<AuthUserResponse> {
   const update: Record<string, unknown> = {};
+  const unset: Record<string, ''> = {};
 
   if (typeof input.name === 'string') update.name = input.name;
-  if (typeof input.phone === 'string') update.phone = input.phone || undefined;
-  if (typeof input.address === 'string') {
-    update.address = input.address || undefined;
-  }
-  if ('avatarUrl' in input) {
-    update.avatarUrl = input.avatarUrl || undefined;
+
+  if (typeof input.phone === 'string') {
+    if (input.phone) update.phone = input.phone;
+    else unset.phone = '';
   }
 
-  const user = await User.findByIdAndUpdate(userId, update, {
+  if (typeof input.address === 'string') {
+    if (input.address) update.address = input.address;
+    else unset.address = '';
+  }
+
+  if ('avatarUrl' in input) {
+    if (input.avatarUrl) update.avatarUrl = input.avatarUrl;
+    else unset.avatarUrl = '';
+  }
+
+  const updateQuery: Record<string, unknown> = {};
+
+  if (Object.keys(update).length > 0) updateQuery.$set = update;
+  if (Object.keys(unset).length > 0) updateQuery.$unset = unset;
+
+  const user = await User.findByIdAndUpdate(userId, updateQuery, {
     new: true,
     runValidators: true,
   });

@@ -13,6 +13,7 @@ type ConfirmActionModalProps = {
   confirmLabel?: string;
   cancelLabel?: string;
   isLoading?: boolean;
+  confirmButtonClassName?: string;
   onConfirm: () => void;
   onCancel: () => void;
 };
@@ -25,6 +26,7 @@ function ConfirmActionModal({
   confirmLabel = 'Remove',
   cancelLabel = 'Cancel',
   isLoading = false,
+  confirmButtonClassName,
   onConfirm,
   onCancel,
 }: ConfirmActionModalProps) {
@@ -34,7 +36,11 @@ function ConfirmActionModal({
   const handleBackdropMouseDown = useBackdropClick({ onClose: onCancel });
 
   return (
-    <div className={css.backdrop} role="presentation" onMouseDown={handleBackdropMouseDown}>
+    <div
+      className={css.backdrop}
+      role="presentation"
+      onMouseDown={handleBackdropMouseDown}
+    >
       <div
         className={css.dialog}
         role="dialog"
@@ -50,6 +56,7 @@ function ConfirmActionModal({
         <div className={css.actions}>
           <Button
             type="button"
+            className={confirmButtonClassName}
             disabled={isLoading}
             onClick={onConfirm}
           >

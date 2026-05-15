@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Camera, Heart, ImageOff, KeyRound, Store } from 'lucide-react';
 
-import { Button, ButtonLink, Container, Tabs } from '@/components/common';
+import { Button, ButtonLink, ConfirmActionModal, Container, Tabs } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
+import { ProductCard } from '@/components/medicines-catalog';
+import { StoreCard } from '@/components/pharmacy-stores';
 import { useAuth } from '@/components/providers';
 
 import { PROFILE_TITLE } from '@/lib/constants/metadata';
@@ -21,7 +23,14 @@ import {
   sanitizeCustomerName,
   sanitizeCustomerPhone,
 } from '@/lib/validations';
-import { updateCurrentUser, updateCurrentUserPassword } from '@/services';
+import {
+  getProducts,
+  getStores,
+  updateCurrentUser,
+  updateCurrentUserPassword,
+} from '@/services';
+
+import type { Product, Store as PharmacyStore } from '@/types';
 
 import css from './ProfilePageContent.module.css';
 
@@ -147,6 +156,14 @@ function ProfilePageContent() {
   });
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarChanged, setAvatarChanged] = useState(false);
+  const [isRemoveAvatarConfirmOpen, setIsRemoveAvatarConfirmOpen] =
+    useState(false);
+  const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
+  const [favoriteStores, setFavoriteStores] = useState<PharmacyStore[]>([]);
+  const [favoritesError, setFavoritesError] = useState('');
+  const [isFavoriteProductsLoading, setIsFavoriteProductsLoading] =
+    useState(false);
+  const [isFavoriteStoresLoading, setIsFavoriteStoresLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
   const [isProfileSaving, setIsProfileSaving] = useState(false);
@@ -191,6 +208,63 @@ function ProfilePageContent() {
     passwordValues.newPassword.length > 0 &&
     !passwordErrors.currentPassword &&
     !passwordErrors.newPassword;
+
+
+  useEffect(() => {
+    if (activeTab !== 'favorite-products' || !token) return;
+
+    let isMounted = true;
+
+    setIsFavoriteProductsLoading(true);
+    setFavoritesError('');
+
+    getProducts({ perPage: 200, sort: 'name-asc' }, token)
+      .then((response) => {
+        if (isMounted) {
+          setFavoriteProducts(
+            response.items.filter((product) => Boolean(product.isFavorite))
+          );
+        }
+      })
+      .catch(() => {
+        if (isMounted) setFavoritesError('Could not load favorite products.');
+      })
+      .finally(() => {
+        if (isMounted) setIsFavoriteProductsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab, token]);
+
+  useEffect(() => {
+    if (activeTab !== 'favorite-stores' || !token) return;
+
+    let isMounted = true;
+
+    setIsFavoriteStoresLoading(true);
+    setFavoritesError('');
+
+    getStores({ perPage: 200, sort: 'name-asc' }, token)
+      .then((response) => {
+        if (isMounted) {
+          setFavoriteStores(
+            response.items.filter((store) => Boolean(store.isFavorite))
+          );
+        }
+      })
+      .catch(() => {
+        if (isMounted) setFavoritesError('Could not load favorite stores.');
+      })
+      .finally(() => {
+        if (isMounted) setIsFavoriteStoresLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab, token]);
 
   if (!user) {
     return (
@@ -282,6 +356,7 @@ function ProfilePageContent() {
     setAvatarChanged(true);
     setFeedback('');
     setError('');
+    setIsRemoveAvatarConfirmOpen(false);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -367,13 +442,46 @@ function ProfilePageContent() {
 
           <div className={css.profileShell}>
             <aside className={css.sidebar} aria-label="Profile summary">
-              <div className={css.avatar} aria-hidden="true">
-                {avatarPreview ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className={css.avatarImage} src={avatarPreview} alt="" />
-                ) : (
-                  <span>{getInitials(user.name)}</span>
-                )}
+              <div className={css.avatarArea}>
+                <div className={css.avatar} aria-hidden="true">
+                  {avatarPreview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className={css.avatarImage} src={avatarPreview} alt="" />
+                  ) : (
+                    <span>{getInitials(user.name)}</span>
+                  )}
+                </div>
+
+                <div className={css.avatarActions}>
+                  <input
+                    ref={fileInputRef}
+                    className={css.fileInput}
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => void handleAvatarChange(event)}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={isAvatarSaving}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Camera size={16} aria-hidden="true" />
+                    {isAvatarSaving ? 'Updating...' : 'Add / change photo'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={css.dangerButton}
+                    disabled={!avatarPreview || isAvatarSaving}
+                    onClick={() => setIsRemoveAvatarConfirmOpen(true)}
+                  >
+                    <ImageOff size={16} aria-hidden="true" />
+                    Remove photo
+                  </Button>
+                </div>
               </div>
 
               <div className={css.nameBlock}>
@@ -415,34 +523,13 @@ function ProfilePageContent() {
                     className={css.panelSection}
                     aria-labelledby="personal-data-title"
                   >
-                    <div className={css.avatarActions}>
-                      <input
-                        ref={fileInputRef}
-                        className={css.fileInput}
-                        type="file"
-                        accept="image/*"
-                        onChange={(event) => void handleAvatarChange(event)}
-                      />
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        disabled={isAvatarSaving}
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Camera size={18} aria-hidden="true" />
-                        {isAvatarSaving
-                          ? 'Updating photo...'
-                          : 'Add / change photo'}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        disabled={!avatarPreview || isAvatarSaving}
-                        onClick={() => void handleRemoveAvatar()}
-                      >
-                        <ImageOff size={18} aria-hidden="true" />
-                        Remove photo
-                      </Button>
+                    <div className={css.panelHeader}>
+                      <h2 className={css.panelTitle} id="personal-data-title">
+                        Personal data
+                      </h2>
+                      <p className={css.panelText}>
+                        Keep your contact details ready for fast checkout.
+                      </p>
                     </div>
 
                     <div className={css.formGrid}>
@@ -667,34 +754,98 @@ function ProfilePageContent() {
               ) : null}
 
               {activeTab === 'favorite-products' ? (
-                <div className={css.emptyState} role="tabpanel">
-                  <Heart size={28} aria-hidden="true" />
-                  <h2 className={css.panelTitle}>Favorite products</h2>
-                  <p className={css.panelText}>
-                    Products you mark as favorite will be collected here.
-                  </p>
-                  <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
-                    Browse medicines
-                  </ButtonLink>
+                <div className={css.tabPanel} role="tabpanel">
+                  <div className={css.panelHeader}>
+                    <h2 className={css.panelTitle}>Favorite products</h2>
+                    <p className={css.panelText}>
+                      Products you mark with a heart are collected here.
+                    </p>
+                  </div>
+
+                  {favoritesError ? (
+                    <p className={css.error} role="alert">
+                      {favoritesError}
+                    </p>
+                  ) : null}
+
+                  {isFavoriteProductsLoading ? (
+                    <p className={css.panelText}>Loading favorite products...</p>
+                  ) : favoriteProducts.length > 0 ? (
+                    <div className={css.favoritesGrid}>
+                      {favoriteProducts.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={css.emptyState}>
+                      <Heart size={28} aria-hidden="true" />
+                      <p className={css.panelText}>
+                        No favorite products yet. The shelf is waiting — very
+                        politely.
+                      </p>
+                      <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
+                        Browse medicines
+                      </ButtonLink>
+                    </div>
+                  )}
                 </div>
               ) : null}
 
               {activeTab === 'favorite-stores' ? (
-                <div className={css.emptyState} role="tabpanel">
-                  <Store size={28} aria-hidden="true" />
-                  <h2 className={css.panelTitle}>Favorite stores</h2>
-                  <p className={css.panelText}>
-                    Favorite pharmacies will be shown here for quick reorders.
-                  </p>
-                  <ButtonLink href={ROUTES.STORES}>
-                    Browse pharmacies
-                  </ButtonLink>
+                <div className={css.tabPanel} role="tabpanel">
+                  <div className={css.panelHeader}>
+                    <h2 className={css.panelTitle}>Favorite stores</h2>
+                    <p className={css.panelText}>
+                      Pharmacies you mark with a heart are saved here for quick
+                      access.
+                    </p>
+                  </div>
+
+                  {favoritesError ? (
+                    <p className={css.error} role="alert">
+                      {favoritesError}
+                    </p>
+                  ) : null}
+
+                  {isFavoriteStoresLoading ? (
+                    <p className={css.panelText}>Loading favorite stores...</p>
+                  ) : favoriteStores.length > 0 ? (
+                    <div className={css.favoritesGrid}>
+                      {favoriteStores.map((store) => (
+                        <StoreCard key={store.id} store={store} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={css.emptyState}>
+                      <Store size={28} aria-hidden="true" />
+                      <p className={css.panelText}>
+                        No favorite pharmacies yet. Hearts are still available,
+                        no prescription needed.
+                      </p>
+                      <ButtonLink href={ROUTES.STORES}>
+                        Browse pharmacies
+                      </ButtonLink>
+                    </div>
+                  )}
                 </div>
               ) : null}
             </div>
           </div>
         </Container>
       </section>
+
+      {isRemoveAvatarConfirmOpen ? (
+        <ConfirmActionModal
+          title="Remove profile photo?"
+          text="This photo will be removed from your account. Are you sure?"
+          confirmLabel={isAvatarSaving ? 'Removing...' : 'Remove photo'}
+          cancelLabel="Keep photo"
+          isLoading={isAvatarSaving}
+          confirmButtonClassName={css.dangerConfirmButton}
+          onConfirm={() => void handleRemoveAvatar()}
+          onCancel={() => setIsRemoveAvatarConfirmOpen(false)}
+        />
+      ) : null}
     </main>
   );
 }
