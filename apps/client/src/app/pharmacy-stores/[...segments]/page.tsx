@@ -7,6 +7,7 @@ import {
   getPharmacyStoresTitle,
   getUniqueStoreCities,
   isPharmacyStoresNoIndex,
+  normalizePharmacyStoresFiltersCity,
   parsePharmacyStoresSegments,
   type PharmacyStoresRouteParams,
 } from '@/lib/catalog/pharmacy-stores-catalog';
@@ -29,10 +30,17 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata({
   params,
 }: PharmacyStoresSegmentsPageProps) {
-  const filters = parsePharmacyStoresSegments(await params);
-  const storesData = await getStores(buildPharmacyStoresApiParams(filters)).catch(
+  const parsedFilters = parsePharmacyStoresSegments(await params);
+  const allStoresData = await getStores({ page: 1, perPage: 100 }).catch(
     () => null
   );
+  const filters = normalizePharmacyStoresFiltersCity(
+    parsedFilters,
+    getUniqueStoreCities(allStoresData?.items ?? [])
+  );
+  const storesData = await getStores(
+    buildPharmacyStoresApiParams(filters)
+  ).catch(() => null);
 
   return createPageMetadata({
     title: getPharmacyStoresTitle(filters),
@@ -47,14 +55,22 @@ export async function generateMetadata({
 async function PharmacyStoresSegmentsPage({
   params,
 }: PharmacyStoresSegmentsPageProps) {
-  const filters = parsePharmacyStoresSegments(await params);
+  const parsedFilters = parsePharmacyStoresSegments(await params);
 
-  const [storesData, allStoresData] = await Promise.all([
-    getStores(buildPharmacyStoresApiParams(filters)).catch(() => null),
-    getStores({ page: 1, perPage: 100, sort: 'name-asc' }).catch(() => null),
-  ]);
-
+  const allStoresData = await getStores({
+    page: 1,
+    perPage: 100,
+    sort: 'name-asc',
+  }).catch(() => null);
   const cityOptions = getUniqueStoreCities(allStoresData?.items ?? []);
+  const filters = normalizePharmacyStoresFiltersCity(
+    parsedFilters,
+    cityOptions
+  );
+
+  const storesData = await getStores(
+    buildPharmacyStoresApiParams(filters)
+  ).catch(() => null);
 
   return (
     <StoresPageContent

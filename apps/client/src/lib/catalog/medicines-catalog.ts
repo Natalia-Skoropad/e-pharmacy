@@ -175,6 +175,20 @@ export function sortStoresByName(stores: Store[]): Store[] {
   return [...stores].sort((a, b) => a.name.localeCompare(b.name, 'en'));
 }
 
+export function getProductFilterOptionsForProducts(
+  filterOptions: ProductFilterOptionsResponse,
+  products: Array<{ category: ProductCategory }>
+): ProductFilterOptionsResponse {
+  const activeCategories = new Set(products.map((product) => product.category));
+
+  return {
+    ...filterOptions,
+    categories: filterOptions.categories.filter(
+      (option) => option.value === 'all' || activeCategories.has(option.value)
+    ),
+  };
+}
+
 export function parseMedicinesCatalogSearchParams(
   params: MedicinesCatalogSearchParams = {}
 ): MedicinesCatalogFilters {

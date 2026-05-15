@@ -87,6 +87,21 @@ function deslugifyTextSegment(value: string): string {
   return sanitizeTextParam(value.replace(/-/g, ' '));
 }
 
+function normalizeCityKey(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function capitalizeWord(value: string): string {
+  return value ? value[0].toUpperCase() + value.slice(1).toLowerCase() : '';
+}
+
+function formatCityFallback(value: string): string {
+  return value
+    .split(/([ -]+)/)
+    .map((part) => (/^[A-Za-z]+$/.test(part) ? capitalizeWord(part) : part))
+    .join('');
+}
+
 //===================================================================
 
 export function sortCities(cities: string[]): string[] {
@@ -99,6 +114,30 @@ export function getUniqueStoreCities(stores: Store[]): string[] {
     .filter((city): city is string => Boolean(city));
 
   return sortCities([...new Set(cities)]);
+}
+
+export function resolveStoreCity(value: string, cities: string[]): string {
+  const sanitizedCity = sanitizeTextParam(value);
+  if (!sanitizedCity) return '';
+
+  const normalizedCity = normalizeCityKey(sanitizedCity);
+  const matchedCity = cities.find(
+    (city) => normalizeCityKey(city) === normalizedCity
+  );
+
+  return matchedCity ?? formatCityFallback(sanitizedCity);
+}
+
+export function normalizePharmacyStoresFiltersCity(
+  filters: PharmacyStoresFilters,
+  cities: string[]
+): PharmacyStoresFilters {
+  if (!filters.city) return filters;
+
+  return {
+    ...filters,
+    city: resolveStoreCity(filters.city, cities),
+  };
 }
 
 export function parsePharmacyStoresSearchParams(

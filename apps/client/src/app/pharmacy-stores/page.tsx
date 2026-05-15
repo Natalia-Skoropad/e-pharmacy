@@ -7,6 +7,7 @@ import {
   getPharmacyStoresTitle,
   getUniqueStoreCities,
   isPharmacyStoresNoIndex,
+  normalizePharmacyStoresFiltersCity,
   parsePharmacyStoresSearchParams,
   type PharmacyStoresSearchParams,
 } from '@/lib/catalog/pharmacy-stores-catalog';
@@ -29,11 +30,18 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata({
   searchParams,
 }: PharmacyStoresPageProps) {
-  const filters = parsePharmacyStoresSearchParams(await searchParams);
-
-  const storesData = await getStores(buildPharmacyStoresApiParams(filters)).catch(
+  const parsedFilters = parsePharmacyStoresSearchParams(await searchParams);
+  const allStoresData = await getStores({ page: 1, perPage: 100 }).catch(
     () => null
   );
+  const filters = normalizePharmacyStoresFiltersCity(
+    parsedFilters,
+    getUniqueStoreCities(allStoresData?.items ?? [])
+  );
+
+  const storesData = await getStores(
+    buildPharmacyStoresApiParams(filters)
+  ).catch(() => null);
 
   return createPageMetadata({
     title: getPharmacyStoresTitle(filters),
@@ -46,14 +54,22 @@ export async function generateMetadata({
 //===================================================================
 
 async function PharmacyStoresPage({ searchParams }: PharmacyStoresPageProps) {
-  const filters = parsePharmacyStoresSearchParams(await searchParams);
+  const parsedFilters = parsePharmacyStoresSearchParams(await searchParams);
 
-  const [storesData, allStoresData] = await Promise.all([
-    getStores(buildPharmacyStoresApiParams(filters)).catch(() => null),
-    getStores({ page: 1, perPage: 100, sort: 'name-asc' }).catch(() => null),
-  ]);
-
+  const allStoresData = await getStores({
+    page: 1,
+    perPage: 100,
+    sort: 'name-asc',
+  }).catch(() => null);
   const cityOptions = getUniqueStoreCities(allStoresData?.items ?? []);
+  const filters = normalizePharmacyStoresFiltersCity(
+    parsedFilters,
+    cityOptions
+  );
+
+  const storesData = await getStores(
+    buildPharmacyStoresApiParams(filters)
+  ).catch(() => null);
 
   return (
     <StoresPageContent

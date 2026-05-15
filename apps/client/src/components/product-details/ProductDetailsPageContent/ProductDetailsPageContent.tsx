@@ -144,13 +144,6 @@ function getOfferTotal(cartItem: CartItem | null, offer: ProductOffer): number {
   return (cartItem?.quantity ?? 0) * offer.price;
 }
 
-function getAvailableOfferQuantity(
-  offer: ProductOffer,
-  cartItem: CartItem | null
-): number {
-  return Math.max(offer.activeQuantity - (cartItem?.quantity ?? 0), 0);
-}
-
 function formatAvailableQuantity(quantity: number): string {
   return quantity === 1
     ? '1 item available in this pharmacy'
@@ -544,7 +537,6 @@ function ProductDetailsPageContent({
   const renderQuantityControl = (offer: ProductOffer) => {
     const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
     const quantity = cartItem?.quantity ?? 0;
-    const availableQuantity = getAvailableOfferQuantity(offer, cartItem);
     const isDisabled =
       !isAuthReady ||
       !isAuthenticated ||
@@ -555,7 +547,7 @@ function ProductDetailsPageContent({
       <div className={css.quantityBlock}>
         <QuantityCounter
           value={quantity}
-          max={quantity + availableQuantity}
+          max={offer.activeQuantity}
           disabled={isDisabled}
           isLoading={updatingStoreId === offer.storeId}
           ariaLabel="Product quantity controls"
@@ -569,7 +561,7 @@ function ProductDetailsPageContent({
 
         {isAuthenticated ? (
           <p className={css.stockLine}>
-            {formatAvailableQuantity(availableQuantity)}
+            {formatAvailableQuantity(offer.activeQuantity)}
           </p>
         ) : null}
       </div>

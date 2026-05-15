@@ -17,10 +17,14 @@
   color: var(--color-accent);
 }
 
+.textareaWrap {
+  position: relative;
+}
+
 .reviewTextarea {
   width: 100%;
   min-height: 150px;
-  padding: 14px 16px;
+  padding: 14px 16px 34px;
   font: inherit;
   color: var(--color-text-primary);
   resize: none;
@@ -86,6 +90,14 @@
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
+}
+
+.counter {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  margin-top: 0;
+  pointer-events: none;
 }
 
 .authNote {

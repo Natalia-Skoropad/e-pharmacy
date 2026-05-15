@@ -4,6 +4,7 @@ import {
   buildMedicinesCatalogApiParams,
   buildMedicinesCatalogPath,
   FALLBACK_PRODUCT_FILTER_OPTIONS,
+  getProductFilterOptionsForProducts,
   getMedicinesCatalogDescription,
   getMedicinesCatalogTitle,
   isMedicinesCatalogNoIndex,
@@ -47,9 +48,9 @@ export async function generateMetadata({
     ...(categoryLabel ? { categoryLabel } : {}),
   };
 
-  const productsData = await getProducts(buildMedicinesCatalogApiParams(filters)).catch(
-    () => null
-  );
+  const productsData = await getProducts(
+    buildMedicinesCatalogApiParams(filters)
+  ).catch(() => null);
 
   return createPageMetadata({
     title: getMedicinesCatalogTitle(filters, seoContext),
@@ -66,11 +67,13 @@ async function MedicinesCatalogPage({
 }: MedicinesCatalogPageProps) {
   const filters = parseMedicinesCatalogSearchParams(await searchParams);
 
-  const [productsData, storesData, filterOptionsData] = await Promise.all([
-    getProducts(buildMedicinesCatalogApiParams(filters)).catch(() => null),
-    getStores({ page: 1, perPage: 100 }).catch(() => null),
-    getProductFilters().catch(() => FALLBACK_PRODUCT_FILTER_OPTIONS),
-  ]);
+  const [productsData, storesData, filterOptionsData, allProductsData] =
+    await Promise.all([
+      getProducts(buildMedicinesCatalogApiParams(filters)).catch(() => null),
+      getStores({ page: 1, perPage: 100 }).catch(() => null),
+      getProductFilters().catch(() => FALLBACK_PRODUCT_FILTER_OPTIONS),
+      getProducts({ page: 1, perPage: 1000 }).catch(() => null),
+    ]);
 
   const activeStores = sortStoresByName(
     storesData?.items.filter((store) => store.isActive) ?? []
@@ -80,7 +83,10 @@ async function MedicinesCatalogPage({
     <MedicineStorePageContent
       products={productsData?.items ?? []}
       stores={activeStores}
-      filterOptions={filterOptionsData}
+      filterOptions={getProductFilterOptionsForProducts(
+        filterOptionsData,
+        allProductsData?.items ?? []
+      )}
       total={productsData?.total ?? 0}
       totalPages={productsData?.totalPages ?? 0}
       filters={filters}

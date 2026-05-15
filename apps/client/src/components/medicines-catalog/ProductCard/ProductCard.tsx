@@ -58,7 +58,7 @@ function formatPriceRange(offers: ProductOffer[]): string {
 
   if (minPrice === maxPrice) return formatPrice(minPrice);
 
-  return `${formatPrice(minPrice)} — ${formatPrice(maxPrice)}`;
+  return `${formatPrice(minPrice)} – ${formatPrice(maxPrice)}`;
 }
 
 function getStoresCountLabel(count: number): string {

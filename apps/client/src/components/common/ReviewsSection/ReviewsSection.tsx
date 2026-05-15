@@ -104,18 +104,20 @@ function ReviewsSection({
             Your review
           </label>
 
-          <textarea
-            id={textareaId}
-            className={css.reviewTextarea}
-            value={reviewText}
-            maxLength={maxLength}
-            placeholder="Write 10–500 characters using latin letters."
-            onChange={(event) => onReviewTextChange(event.target.value)}
-          />
+          <div className={css.textareaWrap}>
+            <textarea
+              id={textareaId}
+              className={css.reviewTextarea}
+              value={reviewText}
+              maxLength={maxLength}
+              placeholder="Write 10–500 characters using latin letters."
+              onChange={(event) => onReviewTextChange(event.target.value)}
+            />
 
-          <p className={css.counter}>
-            {reviewText.length}/{maxLength}
-          </p>
+            <p className={css.counter}>
+              {reviewText.length}/{maxLength}
+            </p>
+          </div>
         </div>
 
         <fieldset className={css.ratingFieldset}>
