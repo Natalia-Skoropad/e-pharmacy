@@ -16,12 +16,14 @@ import type {
 //===================================================================
 
 export async function getProducts(
-  params: ProductsQueryParams = {}
+  params: ProductsQueryParams = {},
+  authToken?: string
 ): Promise<ProductsResponse> {
   const queryString = buildQueryString(params);
 
   const response = await apiRequest<ApiSuccessResponse<ProductsResponse>>(
-    `${API_ROUTES.products.list}${queryString}`
+    `${API_ROUTES.products.list}${queryString}`,
+    authToken ? { authToken } : undefined
   );
 
   return getResponseData(response);

@@ -13,6 +13,25 @@
   margin-top: 32px;
 }
 
+
+.hero {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.heroBadge,
+.countBadge {
+  width: fit-content;
+  padding: 8px 14px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border-radius: var(--radius-pill);
+}
+
 .kicker {
   margin-bottom: 12px;
   font-size: var(--fz-14);
@@ -45,8 +64,12 @@
 
 .profileShell {
   display: grid;
-  gap: 20px;
+  gap: 18px;
   margin-top: 32px;
+  padding: 12px;
+  background-color: var(--color-surface);
+  border-radius: calc(var(--radius-xl) + 4px);
+  box-shadow: var(--shadow-card);
 }
 
 .sidebar,
@@ -55,15 +78,19 @@
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
+}
+
+.emptyCard {
   box-shadow: var(--shadow-card);
 }
 
 .sidebar {
   display: grid;
-  gap: 18px;
+  gap: 20px;
   align-content: start;
   justify-items: start;
-  padding: 24px;
+  padding: 20px;
+  box-shadow: none;
 }
 
 .avatarArea {
@@ -147,6 +174,7 @@
 .contentCard {
   min-width: 0;
   padding: 18px;
+  box-shadow: none;
 }
 
 .feedback,
@@ -223,9 +251,37 @@
   border-color: var(--color-error);
 }
 
+.favoritesHeader {
+  display: grid;
+  gap: 16px;
+}
+
 .favoritesGrid {
   display: grid;
   gap: 18px;
+}
+
+.emptyIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border-radius: 50%;
+}
+
+.emptyCopy {
+  display: grid;
+  gap: 8px;
+}
+
+.emptyTitle {
+  font-size: var(--fz-20);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
 }
 
 
@@ -414,11 +470,10 @@
 
 .emptyState {
   justify-items: start;
-  padding-top: 24px;
-}
-
-.emptyState svg {
-  color: var(--color-accent);
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(89, 177, 122, 0.10), rgba(255, 255, 255, 0));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
 }
 
 .emptyCard {
@@ -451,12 +506,24 @@
     margin-top: 40px;
   }
 
+  .hero {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    margin-top: 40px;
+  }
+
+  .favoritesHeader {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
   .title {
     font-size: var(--fz-48);
   }
 
   .profileShell {
-    gap: 24px;
+    gap: 18px;
+    padding: 14px;
   }
 
   .sidebar {
@@ -499,7 +566,7 @@
   .profileShell {
     grid-template-columns: 320px minmax(0, 1fr);
     align-items: start;
-    gap: 32px;
+    gap: 18px;
     margin-top: 40px;
   }
 
@@ -513,7 +580,7 @@
   }
 
   .favoritesGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .contentCard {

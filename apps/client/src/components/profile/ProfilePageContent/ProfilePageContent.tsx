@@ -62,6 +62,7 @@ const TABS: Array<{
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 64;
 const AVATAR_MAX_SIZE_BYTES = 800_000;
+const FAVORITES_PER_PAGE = 100;
 
 //===================================================================
 
@@ -128,6 +129,69 @@ function getProfileErrors(values: ProfileFormValues) {
 }
 
 //===================================================================
+
+
+//===================================================================
+
+async function getFavoriteProducts(authToken: string): Promise<Product[]> {
+  const firstPage = await getProducts(
+    { page: 1, perPage: FAVORITES_PER_PAGE, sort: 'name-asc' },
+    authToken
+  );
+  const pages = [firstPage];
+
+  if (firstPage.totalPages > 1) {
+    const nextPages = await Promise.all(
+      Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
+        getProducts(
+          {
+            page: index + 2,
+            perPage: FAVORITES_PER_PAGE,
+            sort: 'name-asc',
+          },
+          authToken
+        )
+      )
+    );
+
+    pages.push(...nextPages);
+  }
+
+  return pages.flatMap((page) =>
+    page.items.filter((product) => Boolean(product.isFavorite))
+  );
+}
+
+//===================================================================
+
+async function getFavoriteStores(authToken: string): Promise<PharmacyStore[]> {
+  const firstPage = await getStores(
+    { page: 1, perPage: FAVORITES_PER_PAGE, sort: 'name-asc' },
+    authToken
+  );
+  const pages = [firstPage];
+
+  if (firstPage.totalPages > 1) {
+    const nextPages = await Promise.all(
+      Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
+        getStores(
+          {
+            page: index + 2,
+            perPage: FAVORITES_PER_PAGE,
+            sort: 'name-asc',
+          },
+          authToken
+        )
+      )
+    );
+
+    pages.push(...nextPages);
+  }
+
+  return pages.flatMap((page) =>
+    page.items.filter((store) => Boolean(store.isFavorite))
+  );
+}
 
 function readImageAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -218,13 +282,9 @@ function ProfilePageContent() {
     setIsFavoriteProductsLoading(true);
     setFavoritesError('');
 
-    getProducts({ perPage: 200, sort: 'name-asc' }, token)
-      .then((response) => {
-        if (isMounted) {
-          setFavoriteProducts(
-            response.items.filter((product) => Boolean(product.isFavorite))
-          );
-        }
+    getFavoriteProducts(token)
+      .then((products) => {
+        if (isMounted) setFavoriteProducts(products);
       })
       .catch(() => {
         if (isMounted) setFavoritesError('Could not load favorite products.');
@@ -246,13 +306,9 @@ function ProfilePageContent() {
     setIsFavoriteStoresLoading(true);
     setFavoritesError('');
 
-    getStores({ perPage: 200, sort: 'name-asc' }, token)
-      .then((response) => {
-        if (isMounted) {
-          setFavoriteStores(
-            response.items.filter((store) => Boolean(store.isFavorite))
-          );
-        }
+    getFavoriteStores(token)
+      .then((stores) => {
+        if (isMounted) setFavoriteStores(stores);
       })
       .catch(() => {
         if (isMounted) setFavoritesError('Could not load favorite stores.');
@@ -430,14 +486,18 @@ function ProfilePageContent() {
         <Container>
           <Breadcrumbs items={createBreadcrumbs(PROFILE_TITLE)} />
 
-          <div>
-            <h1 className={css.title} id="profile-title">
-              {PROFILE_TITLE}
-            </h1>
+          <div className={css.hero}>
+            <div>
+              <h1 className={css.title} id="profile-title">
+                {PROFILE_TITLE}
+              </h1>
 
-            <p className={css.text}>
-              View your account details, orders, favorites and profile photo.
-            </p>
+              <p className={css.text}>
+                View your account details, orders, favorites and profile photo.
+              </p>
+            </div>
+
+            <span className={css.heroBadge}>Personal account</span>
           </div>
 
           <div className={css.profileShell}>
@@ -755,11 +815,18 @@ function ProfilePageContent() {
 
               {activeTab === 'favorite-products' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <div className={css.panelHeader}>
-                    <h2 className={css.panelTitle}>Favorite products</h2>
-                    <p className={css.panelText}>
-                      Products you mark with a heart are collected here.
-                    </p>
+                  <div className={css.favoritesHeader}>
+                    <div className={css.panelHeader}>
+                      <h2 className={css.panelTitle}>Favorite products</h2>
+                      <p className={css.panelText}>
+                        Products you mark with a heart are collected here.
+                      </p>
+                    </div>
+
+                    <span className={css.countBadge}>
+                      {favoriteProducts.length}{' '}
+                      {favoriteProducts.length === 1 ? 'item' : 'items'}
+                    </span>
                   </div>
 
                   {favoritesError ? (
@@ -778,11 +845,16 @@ function ProfilePageContent() {
                     </div>
                   ) : (
                     <div className={css.emptyState}>
-                      <Heart size={28} aria-hidden="true" />
-                      <p className={css.panelText}>
-                        No favorite products yet. The shelf is waiting — very
-                        politely.
-                      </p>
+                      <span className={css.emptyIcon} aria-hidden="true">
+                        <Heart size={30} />
+                      </span>
+                      <div className={css.emptyCopy}>
+                        <h3 className={css.emptyTitle}>No favorite products yet</h3>
+                        <p className={css.panelText}>
+                          Tap the heart on a medicine card, and it will wait here
+                          nicely — no shelf drama included.
+                        </p>
+                      </div>
                       <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
                         Browse medicines
                       </ButtonLink>
@@ -793,12 +865,19 @@ function ProfilePageContent() {
 
               {activeTab === 'favorite-stores' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <div className={css.panelHeader}>
-                    <h2 className={css.panelTitle}>Favorite stores</h2>
-                    <p className={css.panelText}>
-                      Pharmacies you mark with a heart are saved here for quick
-                      access.
-                    </p>
+                  <div className={css.favoritesHeader}>
+                    <div className={css.panelHeader}>
+                      <h2 className={css.panelTitle}>Favorite stores</h2>
+                      <p className={css.panelText}>
+                        Pharmacies you mark with a heart are saved here for quick
+                        access.
+                      </p>
+                    </div>
+
+                    <span className={css.countBadge}>
+                      {favoriteStores.length}{' '}
+                      {favoriteStores.length === 1 ? 'store' : 'stores'}
+                    </span>
                   </div>
 
                   {favoritesError ? (
@@ -817,11 +896,16 @@ function ProfilePageContent() {
                     </div>
                   ) : (
                     <div className={css.emptyState}>
-                      <Store size={28} aria-hidden="true" />
-                      <p className={css.panelText}>
-                        No favorite pharmacies yet. Hearts are still available,
-                        no prescription needed.
-                      </p>
+                      <span className={css.emptyIcon} aria-hidden="true">
+                        <Store size={30} />
+                      </span>
+                      <div className={css.emptyCopy}>
+                        <h3 className={css.emptyTitle}>No favorite pharmacies yet</h3>
+                        <p className={css.panelText}>
+                          Mark a pharmacy with a heart, and it will stay here for
+                          quick access — loyal as a tiny green assistant.
+                        </p>
+                      </div>
                       <ButtonLink href={ROUTES.STORES}>
                         Browse pharmacies
                       </ButtonLink>
@@ -841,7 +925,6 @@ function ProfilePageContent() {
           confirmLabel={isAvatarSaving ? 'Removing...' : 'Remove photo'}
           cancelLabel="Keep photo"
           isLoading={isAvatarSaving}
-          confirmButtonClassName={css.dangerConfirmButton}
           onConfirm={() => void handleRemoveAvatar()}
           onCancel={() => setIsRemoveAvatarConfirmOpen(false)}
         />
