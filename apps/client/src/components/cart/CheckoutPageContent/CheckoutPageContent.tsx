@@ -144,6 +144,23 @@ function getBankDetails(store?: Store | null): CheckoutBankDetails {
   );
 }
 
+function getStockValidationError(group: StoreOrderGroup): string {
+  const unavailableItems = group.items.filter(
+    (item) => item.stockQuantity <= 0 || item.quantity > item.stockQuantity
+  );
+
+  if (unavailableItems.length === 0) return '';
+
+  const productNames = unavailableItems
+    .map((item) => item.product.name)
+    .slice(0, 3)
+    .join(', ');
+
+  return `Sorry, we cannot confirm this invoice right now. While you were placing the order, ${productNames} ${
+    unavailableItems.length === 1 ? 'was' : 'were'
+  } reserved by another customer. Please update the cart and choose the available quantity again.`;
+}
+
 //===================================================================
 
 function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
@@ -157,9 +174,9 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>('pickup');
-  const [recipientName, setRecipientName] = useState('');
-  const [recipientPhone, setRecipientPhone] = useState('');
-  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [recipientName, setRecipientName] = useState<string | null>(null);
+  const [recipientPhone, setRecipientPhone] = useState<string | null>(null);
+  const [deliveryAddress, setDeliveryAddress] = useState<string | null>(null);
   const [comment, setComment] = useState('');
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [error, setError] = useState('');
@@ -178,16 +195,20 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     );
   }, [selectedStoreIdFromRoute, orderGroups]);
 
-  const nameError = getCustomerNameError(recipientName);
-  const phoneError = getCustomerPhoneError(recipientPhone);
-  const addressError = getCustomerAddressError(deliveryAddress);
+  const recipientNameValue = recipientName ?? user?.name ?? '';
+  const recipientPhoneValue = recipientPhone ?? user?.phone ?? '';
+  const deliveryAddressValue = deliveryAddress ?? user?.address ?? '';
+
+  const nameError = getCustomerNameError(recipientNameValue);
+  const phoneError = getCustomerPhoneError(recipientPhoneValue);
+  const addressError = getCustomerAddressError(deliveryAddressValue);
   const isPostDeliveryValid =
     deliveryMethod === 'pickup' ||
-    (recipientName.trim().length >= 2 &&
-      recipientName.trim().length <= CUSTOMER_NAME_MAX_LENGTH &&
-      recipientPhone.trim().length === CUSTOMER_PHONE_MAX_LENGTH &&
-      deliveryAddress.trim().length >= CUSTOMER_ADDRESS_MIN_LENGTH &&
-      deliveryAddress.trim().length <= CUSTOMER_ADDRESS_MAX_LENGTH &&
+    (recipientNameValue.trim().length >= 2 &&
+      recipientNameValue.trim().length <= CUSTOMER_NAME_MAX_LENGTH &&
+      recipientPhoneValue.trim().length === CUSTOMER_PHONE_MAX_LENGTH &&
+      deliveryAddressValue.trim().length >= CUSTOMER_ADDRESS_MIN_LENGTH &&
+      deliveryAddressValue.trim().length <= CUSTOMER_ADDRESS_MAX_LENGTH &&
       !nameError &&
       !phoneError &&
       !addressError);
@@ -262,11 +283,6 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     };
   }, [selectedOrderGroup, token]);
 
-  useEffect(() => {
-    setRecipientName(user?.name ?? '');
-    setRecipientPhone(user?.phone ?? '');
-    setDeliveryAddress(user?.address ?? '');
-  }, [user]);
 
   const handleRecipientNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setRecipientName(sanitizeCustomerName(event.target.value));
@@ -301,16 +317,38 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
 
       if (!selectedOrderGroup) return;
 
-      let nextCart = cart;
+      const latestCartResponse = await getCart(token);
+      const latestGroups = groupCartByStore(latestCartResponse.cart);
+      const latestOrderGroup = latestGroups.find(
+        (group) => group.storeId === selectedOrderGroup.storeId
+      );
 
-      for (const item of selectedOrderGroup.items) {
+      if (!latestOrderGroup) {
+        setCart(latestCartResponse.cart);
+        setError(
+          'Sorry, we cannot confirm this invoice right now. While you were placing the order, these products were reserved by another customer. Please update the cart and try again.'
+        );
+        return;
+      }
+
+      const stockError = getStockValidationError(latestOrderGroup);
+
+      if (stockError) {
+        setCart(latestCartResponse.cart);
+        setError(stockError);
+        return;
+      }
+
+      let nextCart = latestCartResponse.cart;
+
+      for (const item of latestOrderGroup.items) {
         const response = await removeCartItem(item.id, token);
         nextCart = response.cart;
       }
 
       setCart(nextCart);
       setSuccessMessage(
-        `Invoice from ${selectedOrderGroup.storeName} accepted with status “Accepted”.`
+        `Invoice from ${latestOrderGroup.storeName} accepted with status “Accepted”.`
       );
     } catch {
       setError('Could not confirm order.');
@@ -438,75 +476,78 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                         <div className={css.deliveryFields}>
                           <div className={css.fieldsGrid}>
                             <label className={css.field}>
-                              <span>Name</span>
-                              <input
-                                value={recipientName}
-                                placeholder="Your name"
-                                autoComplete="name"
-                                maxLength={CUSTOMER_NAME_MAX_LENGTH}
-                                aria-invalid={Boolean(nameError)}
-                                aria-describedby="recipient-name-meta"
-                                onChange={handleRecipientNameChange}
-                              />
-                              <span
-                                className={css.fieldMeta}
-                                id="recipient-name-meta"
-                              >
-                                <span>
-                                  {recipientName.length}/
-                                  {CUSTOMER_NAME_MAX_LENGTH}
+                              <span className={css.fieldLabel}>Name</span>
+                              <span className={css.controlWrap}>
+                                <input
+                                  value={recipientNameValue}
+                                  placeholder="Your name"
+                                  autoComplete="name"
+                                  maxLength={CUSTOMER_NAME_MAX_LENGTH}
+                                  aria-invalid={Boolean(nameError)}
+                                  aria-describedby="recipient-name-error"
+                                  onChange={handleRecipientNameChange}
+                                />
+                                <span className={css.inputCounter}>
+                                  {recipientNameValue.length}/{CUSTOMER_NAME_MAX_LENGTH}
                                 </span>
-                                <span className={css.errorText}>
+                                <span
+                                  className={css.errorText}
+                                  id="recipient-name-error"
+                                  aria-live="polite"
+                                >
                                   {nameError}
                                 </span>
                               </span>
                             </label>
 
                             <label className={css.field}>
-                              <span>Phone</span>
-                              <input
-                                value={recipientPhone}
-                                placeholder="+380..."
-                                autoComplete="tel"
-                                maxLength={CUSTOMER_PHONE_MAX_LENGTH}
-                                aria-invalid={Boolean(phoneError)}
-                                aria-describedby="recipient-phone-meta"
-                                onChange={handleRecipientPhoneChange}
-                              />
-                              <span
-                                className={css.fieldMeta}
-                                id="recipient-phone-meta"
-                              >
-                                <span>
-                                  {recipientPhone.length}/
-                                  {CUSTOMER_PHONE_MAX_LENGTH}
+                              <span className={css.fieldLabel}>Phone</span>
+                              <span className={css.controlWrap}>
+                                <input
+                                  value={recipientPhoneValue}
+                                  placeholder="+380..."
+                                  autoComplete="tel"
+                                  maxLength={CUSTOMER_PHONE_MAX_LENGTH}
+                                  aria-invalid={Boolean(phoneError)}
+                                  aria-describedby="recipient-phone-error"
+                                  onChange={handleRecipientPhoneChange}
+                                />
+                                <span className={css.inputCounter}>
+                                  {recipientPhoneValue.length}/{CUSTOMER_PHONE_MAX_LENGTH}
                                 </span>
-                                <span className={css.errorText}>
+                                <span
+                                  className={css.errorText}
+                                  id="recipient-phone-error"
+                                  aria-live="polite"
+                                >
                                   {phoneError}
                                 </span>
                               </span>
                             </label>
 
                             <label className={css.fieldWide}>
-                              <span>Delivery address / post office</span>
-                              <textarea
-                                value={deliveryAddress}
-                                placeholder="Example: 12 Central Street, Nova Poshta office #5, Kyiv"
-                                autoComplete="street-address"
-                                maxLength={CUSTOMER_ADDRESS_MAX_LENGTH}
-                                aria-invalid={Boolean(addressError)}
-                                aria-describedby="delivery-address-meta"
-                                onChange={handleDeliveryAddressChange}
-                              />
-                              <span
-                                className={css.fieldMeta}
-                                id="delivery-address-meta"
-                              >
-                                <span>
-                                  {deliveryAddress.length}/
+                              <span className={css.fieldLabel}>
+                                Delivery address / post office
+                              </span>
+                              <span className={css.controlWrap}>
+                                <textarea
+                                  value={deliveryAddressValue}
+                                  placeholder="Example: 12 Central Street, Nova Poshta office #5, Kyiv"
+                                  autoComplete="street-address"
+                                  maxLength={CUSTOMER_ADDRESS_MAX_LENGTH}
+                                  aria-invalid={Boolean(addressError)}
+                                  aria-describedby="delivery-address-error"
+                                  onChange={handleDeliveryAddressChange}
+                                />
+                                <span className={css.textareaCounter}>
+                                  {deliveryAddressValue.length}/
                                   {CUSTOMER_ADDRESS_MAX_LENGTH}
                                 </span>
-                                <span className={css.errorText}>
+                                <span
+                                  className={css.errorText}
+                                  id="delivery-address-error"
+                                  aria-live="polite"
+                                >
                                   {addressError}
                                 </span>
                               </span>
@@ -629,17 +670,18 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                     Order comment
                   </h2>
                   <label className={css.fieldWide}>
-                    <span>Comment for pharmacy</span>
-                    <textarea
-                      className={css.commentTextarea}
-                      value={comment}
-                      maxLength={240}
-                      placeholder="Add details for the pharmacy if needed"
-                      onChange={(event) => setComment(event.target.value)}
-                    />
-                    <span className={css.fieldMeta}>
-                      <span>{comment.length}/240</span>
-                      <span className={css.errorText} />
+                    <span className={css.fieldLabel}>Comment for pharmacy</span>
+                    <span className={css.controlWrap}>
+                      <textarea
+                        className={css.commentTextarea}
+                        value={comment}
+                        maxLength={240}
+                        placeholder="Add details for the pharmacy if needed"
+                        onChange={(event) => setComment(event.target.value)}
+                      />
+                      <span className={css.textareaCounter}>
+                        {comment.length}/240
+                      </span>
                     </span>
                   </label>
                 </section>
