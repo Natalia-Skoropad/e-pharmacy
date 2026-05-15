@@ -93,6 +93,10 @@
   color: var(--color-text-secondary);
 }
 
+.emptyButton {
+  width: fit-content;
+}
+
 .groupList {
   display: grid;
   gap: 24px;
@@ -128,6 +132,10 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 16px;
+}
+
+.storeInfo {
+  min-width: 0;
 }
 
 .groupKicker {
@@ -242,12 +250,14 @@
   }
 
   .storeGroupHead {
-    flex-direction: row;
-    align-items: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
     padding: 18px 20px;
   }
 
   .storeActions {
+    flex: 0 0 auto;
     justify-content: flex-end;
   }
 
@@ -273,6 +283,7 @@
 }
 
 @media only screen and (max-width: 767px) {
+  .emptyButton,
   .storeActions,
   .storeActions > * {
     width: 100%;

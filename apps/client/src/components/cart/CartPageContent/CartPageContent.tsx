@@ -280,7 +280,10 @@ function CartPageContent() {
                 Add medicines from the catalog and they will appear here.
               </p>
 
-              <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
+              <ButtonLink
+                className={css.emptyButton}
+                href={ROUTES.MEDICINES_CATALOG}
+              >
                 Browse medicines
               </ButtonLink>
             </div>
@@ -293,7 +296,7 @@ function CartPageContent() {
                   <div className={css.invoiceGrid}>
                     <div className={css.invoiceMain}>
                       <div className={css.storeGroupHead}>
-                        <div>
+                        <div className={css.storeInfo}>
                           <p className={css.groupKicker}>Pharmacy invoice</p>
                           <h2 className={css.storeGroupTitle}>
                             {group.storeName}
@@ -317,21 +320,21 @@ function CartPageContent() {
                           </ButtonLink>
 
                           <Button
-                          className={css.dangerButton}
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={isUpdating}
-                          onClick={() =>
-                            setPendingAction({
-                              type: 'store',
-                              storeId: group.storeId,
-                              storeName: group.storeName,
-                            })
-                          }
-                        >
-                          Remove invoice
-                        </Button>
+                            className={css.dangerButton}
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={isUpdating}
+                            onClick={() =>
+                              setPendingAction({
+                                type: 'store',
+                                storeId: group.storeId,
+                                storeName: group.storeName,
+                              })
+                            }
+                          >
+                            Remove invoice
+                          </Button>
                         </div>
                       </div>
 

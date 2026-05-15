@@ -34,10 +34,10 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
-function formatStockLabel(availableQuantity: number): string {
-  return availableQuantity === 1
+function formatStockLabel(stockQuantity: number): string {
+  return stockQuantity === 1
     ? '1 item available in this pharmacy'
-    : `${availableQuantity} items available in this pharmacy`;
+    : `${stockQuantity} items available in this pharmacy`;
 }
 
 //===================================================================
@@ -49,8 +49,10 @@ function CartItemCard({
   onRemove,
 }: CartItemCardProps) {
   const productHref = buildProductPath(item.product.name, item.product.id);
-  const stockQuantity = item.stockQuantity ?? item.quantity;
-  const availableQuantity = Math.max(stockQuantity - item.quantity, 0);
+  const stockQuantity = Math.max(
+    item.stockQuantity ?? item.quantity,
+    item.quantity
+  );
 
   return (
     <article className={css.card} aria-labelledby={`cart-item-${item.id}`}>
@@ -60,7 +62,7 @@ function CartItemCard({
             className={css.image}
             src={item.product.imageUrl}
             alt={item.product.name}
-            sizes="120px"
+            sizes="(max-width: 767px) calc(100vw - 88px), 140px"
           />
         ) : (
           <div className={css.imageFallback} aria-hidden="true">
@@ -92,7 +94,7 @@ function CartItemCard({
             <QuantityCounter
               value={item.quantity}
               min={1}
-              max={item.quantity + availableQuantity}
+              max={stockQuantity}
               disabled={isUpdating}
               isLoading={isUpdating}
               ariaLabel={`Quantity controls for ${item.product.name}`}
@@ -100,7 +102,7 @@ function CartItemCard({
               onIncrement={() => onQuantityChange(item.id, item.quantity + 1)}
             />
 
-            <p className={css.stock}>{formatStockLabel(availableQuantity)}</p>
+            <p className={css.stock}>{formatStockLabel(stockQuantity)}</p>
           </div>
 
           <div className={css.actions}>
