@@ -4,6 +4,7 @@ export const API_ROUTES = {
     login: '/auth/login',
     logout: '/auth/logout',
     current: '/auth/current',
+    password: '/auth/current/password',
   },
 
   stores: {

@@ -7,6 +7,8 @@ import type {
   CurrentUserResponse,
   LoginPayload,
   RegisterPayload,
+  UpdatePasswordPayload,
+  UpdateProfilePayload,
 } from '@/types';
 
 //===================================================================
@@ -59,6 +61,38 @@ export async function getCurrentUser(
 export async function logoutUser(authToken: string): Promise<void> {
   await apiRequest<ApiSuccessResponse>(API_ROUTES.auth.logout, {
     method: 'POST',
+    authToken,
+  });
+}
+
+
+//===================================================================
+
+export async function updateCurrentUser(
+  payload: UpdateProfilePayload,
+  authToken: string
+): Promise<CurrentUserResponse> {
+  const response = await apiRequest<ApiSuccessResponse<CurrentUserResponse>>(
+    API_ROUTES.auth.current,
+    {
+      method: 'PATCH',
+      body: payload,
+      authToken,
+    }
+  );
+
+  return getResponseData(response);
+}
+
+//===================================================================
+
+export async function updateCurrentUserPassword(
+  payload: UpdatePasswordPayload,
+  authToken: string
+): Promise<void> {
+  await apiRequest<ApiSuccessResponse>(API_ROUTES.auth.password, {
+    method: 'PATCH',
+    body: payload,
     authToken,
   });
 }

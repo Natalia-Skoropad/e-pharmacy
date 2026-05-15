@@ -22,6 +22,21 @@ import css from './Header.module.css';
 
 //===================================================================
 
+
+function getUserInitials(name?: string | null): string {
+  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) return 'U';
+
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+}
+
+//===================================================================
+
 function Header() {
   const pathname = usePathname();
   const router = useRouter();
@@ -132,8 +147,21 @@ function Header() {
 
           {isAuthReady && isAuthenticated ? (
             <>
-              <ButtonLink href={ROUTES.PROFILE} variant="ghost" size="sm">
-                {user?.name ?? 'Profile'}
+              <ButtonLink
+                className={css.profileLink}
+                href={ROUTES.PROFILE}
+                variant="ghost"
+                size="sm"
+              >
+                <span className={css.userAvatar} aria-hidden="true">
+                  {user?.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={user.avatarUrl} alt="" />
+                  ) : (
+                    getUserInitials(user?.name)
+                  )}
+                </span>
+                <span className={css.profileName}>{user?.name ?? 'Profile'}</span>
               </ButtonLink>
 
               <Button

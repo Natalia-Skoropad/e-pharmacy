@@ -10,12 +10,19 @@ import {
   loginUser,
   logoutUser,
   registerUser,
+  updateCurrentUser,
+  updateCurrentUserPassword,
 } from '../controllers/auth.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
 import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
-import { loginSchema, registerSchema } from '../schemas/auth.schema';
+import {
+  loginSchema,
+  registerSchema,
+  updatePasswordSchema,
+  updateProfileSchema,
+} from '../schemas/auth.schema';
 import { ctrlWrapper } from '../utils/ctrlWrapper';
 
 //===============================================================
@@ -41,6 +48,25 @@ authRoutes.post(
 );
 
 authRoutes.get('/current', authenticate, ctrlWrapper(getCurrentUser));
+
+
+authRoutes.patch(
+  '/current',
+  authenticate,
+  validate({
+    body: updateProfileSchema,
+  }),
+  ctrlWrapper(updateCurrentUser)
+);
+
+authRoutes.patch(
+  '/current/password',
+  authenticate,
+  validate({
+    body: updatePasswordSchema,
+  }),
+  ctrlWrapper(updateCurrentUserPassword)
+);
 
 authRoutes.post('/logout', authenticate, ctrlWrapper(logoutUser));
 

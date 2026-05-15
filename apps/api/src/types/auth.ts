@@ -1,6 +1,11 @@
 import type { z } from 'zod';
 
-import type { loginSchema, registerSchema } from '../schemas/auth.schema';
+import type {
+  loginSchema,
+  registerSchema,
+  updatePasswordSchema,
+  updateProfileSchema,
+} from '../schemas/auth.schema';
 import type { UserRole, UserStatus } from './user';
 
 //===============================================================
@@ -8,6 +13,8 @@ import type { UserRole, UserStatus } from './user';
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 export type LoginInput = z.infer<typeof loginSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type UpdatePasswordInput = z.infer<typeof updatePasswordSchema>;
 
 //===============================================================
 
@@ -27,4 +34,11 @@ export type AuthUserResponse = {
 export type AuthResponse = {
   user: AuthUserResponse;
   token: string;
+};
+
+
+//===============================================================
+
+export type CurrentUserResponse = {
+  user: AuthUserResponse;
 };

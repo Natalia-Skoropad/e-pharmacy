@@ -6,9 +6,16 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import {
   loginUserService,
   registerUserService,
+  updateUserPasswordService,
+  updateUserProfileService,
 } from '../services/auth.service';
 
-import type { LoginInput, RegisterInput } from '../types/auth';
+import type {
+  LoginInput,
+  RegisterInput,
+  UpdatePasswordInput,
+  UpdateProfileInput,
+} from '../types/auth';
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
@@ -54,6 +61,51 @@ export function getCurrentUser(req: Request, res: Response): void {
 }
 
 //===============================================================
+
+
+
+//===============================================================
+
+export async function updateCurrentUser(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const input = req.body as UpdateProfileInput;
+  const userId = req.user?.id;
+
+  if (!userId) return;
+
+  const user = await updateUserProfileService(userId, input);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    message: 'Profile was updated successfully.',
+    data: {
+      user,
+    },
+  });
+}
+
+//===============================================================
+
+export async function updateCurrentUserPassword(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const input = req.body as UpdatePasswordInput;
+  const userId = req.user?.id;
+
+  if (!userId) return;
+
+  await updateUserPasswordService(userId, input);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    message: 'Password was updated successfully.',
+  });
+}
 
 export function logoutUser(_req: Request, res: Response): void {
   sendSuccessResponse({

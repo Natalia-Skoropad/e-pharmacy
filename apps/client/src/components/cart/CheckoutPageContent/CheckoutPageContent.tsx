@@ -675,12 +675,12 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                       <textarea
                         className={css.commentTextarea}
                         value={comment}
-                        maxLength={240}
+                        maxLength={500}
                         placeholder="Add details for the pharmacy if needed"
                         onChange={(event) => setComment(event.target.value)}
                       />
                       <span className={css.textareaCounter}>
-                        {comment.length}/240
+                        {comment.length}/500
                       </span>
                     </span>
                   </label>

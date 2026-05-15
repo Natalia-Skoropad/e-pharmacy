@@ -41,3 +41,18 @@ export type LoginPayload = {
   email: string;
   password: string;
 };
+
+
+//===================================================================
+
+export type UpdateProfilePayload = {
+  name?: string;
+  phone?: string;
+  address?: string;
+  avatarUrl?: string | null;
+};
+
+export type UpdatePasswordPayload = {
+  currentPassword: string;
+  newPassword: string;
+};

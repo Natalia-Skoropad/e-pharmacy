@@ -288,7 +288,7 @@
 .errorText {
   position: absolute;
   left: 16px;
-  bottom: -10px;
+  bottom: -2px;
   z-index: 2;
   max-width: calc(100% - 32px);
   padding-inline: 8px;
@@ -473,9 +473,7 @@
 }
 
 .noteCardAccent {
-  color: var(--color-text-primary);
-  background-color: rgba(89, 177, 122, 0.14);
-  border-color: rgba(89, 177, 122, 0.32);
+  color: var(--color-text-secondary);
 }
 
 .noteCard svg,
@@ -494,8 +492,22 @@
   .fieldsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
+@media only screen and (min-width: 1440px) {
   .optionsGrid {
     max-width: 340px;
+  }
+}
+
+
+@media only screen and (max-width: 767.98px) {
+  .successActions {
+    width: 100%;
+  }
+
+  .successActions > * {
+    width: 100%;
+    justify-content: center;
   }
 }

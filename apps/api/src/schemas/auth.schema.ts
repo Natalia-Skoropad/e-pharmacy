@@ -53,6 +53,14 @@ const phoneSchema = z
 
 const addressSchema = z.string().trim().min(10).max(200).optional();
 
+
+const avatarUrlSchema = z
+  .string()
+  .trim()
+  .max(1200000, 'Avatar image is too large')
+  .optional()
+  .nullable();
+
 //===============================================================
 
 export const registerSchema = z.object({
@@ -77,4 +85,25 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, 'Password is required'),
+});
+
+
+//===============================================================
+
+export const updateProfileSchema = z
+  .object({
+    name: nameSchema.optional(),
+    phone: phoneSchema,
+    address: z.string().trim().min(10).max(200).optional().or(z.literal('')),
+    avatarUrl: avatarUrlSchema,
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field is required',
+  });
+
+//===============================================================
+
+export const updatePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: passwordSchema,
 });

@@ -8,6 +8,8 @@ import type {
   AuthUserResponse,
   LoginInput,
   RegisterInput,
+  UpdatePasswordInput,
+  UpdateProfileInput,
 } from '../types/auth';
 
 import { httpError } from '../utils/httpError';
@@ -105,4 +107,59 @@ export async function getUserByIdService(
   }
 
   return toAuthUserResponse(user);
+}
+
+
+//===============================================================
+
+export async function updateUserProfileService(
+  userId: string,
+  input: UpdateProfileInput
+): Promise<AuthUserResponse> {
+  const update: Record<string, unknown> = {};
+
+  if (typeof input.name === 'string') update.name = input.name;
+  if (typeof input.phone === 'string') update.phone = input.phone || undefined;
+  if (typeof input.address === 'string') {
+    update.address = input.address || undefined;
+  }
+  if ('avatarUrl' in input) {
+    update.avatarUrl = input.avatarUrl || undefined;
+  }
+
+  const user = await User.findByIdAndUpdate(userId, update, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!user) {
+    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.USER_NOT_FOUND);
+  }
+
+  return toAuthUserResponse(user);
+}
+
+//===============================================================
+
+export async function updateUserPasswordService(
+  userId: string,
+  input: UpdatePasswordInput
+): Promise<void> {
+  const user = await User.findById(userId).select('+password');
+
+  if (!user) {
+    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.USER_NOT_FOUND);
+  }
+
+  const isCurrentPasswordValid = await comparePassword(
+    input.currentPassword,
+    user.password
+  );
+
+  if (!isCurrentPasswordValid) {
+    throw httpError(HTTP_STATUS.UNAUTHORIZED, 'Current password is incorrect');
+  }
+
+  user.password = await hashPassword(input.newPassword);
+  await user.save();
 }
