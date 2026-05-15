@@ -4,6 +4,7 @@ import {
   buildMedicinesCatalogApiParams,
   buildMedicinesCatalogPath,
   FALLBACK_PRODUCT_FILTER_OPTIONS,
+  MEDICINES_CATALOG_CATEGORY_OPTIONS_LIMIT,
   getProductFilterOptionsForProducts,
   getMedicinesCatalogDescription,
   getMedicinesCatalogTitle,
@@ -72,7 +73,10 @@ async function MedicinesCatalogPage({
       getProducts(buildMedicinesCatalogApiParams(filters)).catch(() => null),
       getStores({ page: 1, perPage: 100 }).catch(() => null),
       getProductFilters().catch(() => FALLBACK_PRODUCT_FILTER_OPTIONS),
-      getProducts({ page: 1, perPage: 1000 }).catch(() => null),
+      getProducts({
+        page: 1,
+        perPage: MEDICINES_CATALOG_CATEGORY_OPTIONS_LIMIT,
+      }).catch(() => null),
     ]);
 
   const activeStores = sortStoresByName(

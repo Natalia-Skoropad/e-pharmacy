@@ -8,6 +8,7 @@ import type {
 //===================================================================
 
 export const MEDICINES_CATALOG_PER_PAGE = 24;
+export const MEDICINES_CATALOG_CATEGORY_OPTIONS_LIMIT = 200;
 
 //===================================================================
 
