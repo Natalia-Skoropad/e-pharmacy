@@ -1,9 +1,10 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  z-index: var(--z-overlay);
+  z-index: calc(var(--z-overlay) + 20);
   pointer-events: none;
   background-color: var(--color-overlay);
+  touch-action: none;
   opacity: 0;
   transition: opacity var(--transition-base);
 }
@@ -21,6 +22,7 @@
   flex-direction: column;
   width: min(100%, 340px);
   height: 100dvh;
+  max-height: 100dvh;
   padding: 20px;
   overflow-y: auto;
   background-color: var(--color-surface);

@@ -1,13 +1,13 @@
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 20;
 
-const PASSWORD_MIN_LENGTH = 8;
-const PASSWORD_MAX_LENGTH = 64;
-const USER_NAME_MIN_LENGTH = 2;
-const USER_NAME_MAX_LENGTH = 20;
-const EMAIL_MAX_LENGTH = 254;
-const PHONE_MAX_LENGTH = 13;
+export const USER_NAME_MIN_LENGTH = 2;
+export const USER_NAME_MAX_LENGTH = 20;
+
+export const EMAIL_MAX_LENGTH = 64;
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_REGEX = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/;
-const PHONE_REGEX = /^\+380\d{9}$/;
 
 //===================================================================
 
@@ -19,9 +19,11 @@ export type LoginFormValues = {
 export type RegisterFormValues = {
   name: string;
   email: string;
-  phone: string;
   password: string;
-  confirmPassword: string;
+};
+
+export type ForgotPasswordFormValues = {
+  email: string;
 };
 
 //===================================================================
@@ -30,6 +32,10 @@ export type LoginFormErrors = Partial<Record<keyof LoginFormValues, string>>;
 
 export type RegisterFormErrors = Partial<
   Record<keyof RegisterFormValues, string>
+>;
+
+export type ForgotPasswordFormErrors = Partial<
+  Record<keyof ForgotPasswordFormValues, string>
 >;
 
 //===================================================================
@@ -42,24 +48,42 @@ export const LOGIN_INITIAL_VALUES: LoginFormValues = {
 export const REGISTER_INITIAL_VALUES: RegisterFormValues = {
   name: '',
   email: '',
-  phone: '',
   password: '',
-  confirmPassword: '',
 };
+
+export const FORGOT_PASSWORD_INITIAL_VALUES: ForgotPasswordFormValues = {
+  email: '',
+};
+
+//===================================================================
+
+export function sanitizeEmail(value: string): string {
+  return value.trimStart().replace(/\s/g, '').slice(0, EMAIL_MAX_LENGTH);
+}
+
+export function getEmailError(value: string): string {
+  const email = value.trim();
+
+  if (!email) return 'Email is required';
+
+  if (email.length > EMAIL_MAX_LENGTH) {
+    return `Email must be at most ${EMAIL_MAX_LENGTH} characters`;
+  }
+
+  if (!EMAIL_REGEX.test(email)) return 'Enter a valid email address';
+
+  return '';
+}
 
 //===================================================================
 
 export function validateLoginForm(values: LoginFormValues): LoginFormErrors {
   const errors: LoginFormErrors = {};
 
-  const email = values.email.trim();
+  const emailError = getEmailError(values.email);
   const password = values.password.trim();
 
-  if (!email) {
-    errors.email = 'Email is required';
-  } else if (!EMAIL_REGEX.test(email)) {
-    errors.email = 'Enter a valid email address';
-  }
+  if (emailError) errors.email = emailError;
 
   if (!password) {
     errors.password = 'Password is required';
@@ -78,10 +102,8 @@ export function validateRegisterForm(
   const errors: RegisterFormErrors = {};
 
   const name = values.name.trim();
-  const email = values.email.trim();
-  const phone = values.phone.trim();
+  const emailError = getEmailError(values.email);
   const password = values.password;
-  const confirmPassword = values.confirmPassword;
 
   if (!name) {
     errors.name = 'Name is required';
@@ -93,19 +115,7 @@ export function validateRegisterForm(
     errors.name = 'Use only Latin letters, spaces, apostrophe or hyphen';
   }
 
-  if (!email) {
-    errors.email = 'Email is required';
-  } else if (!EMAIL_REGEX.test(email)) {
-    errors.email = 'Enter a valid email address';
-  } else if (email.length > EMAIL_MAX_LENGTH) {
-    errors.email = `Email must be at most ${EMAIL_MAX_LENGTH} characters`;
-  }
-
-  if (phone && !PHONE_REGEX.test(phone)) {
-    errors.phone = 'Enter phone in format +380XXXXXXXXX';
-  } else if (phone && phone.length > PHONE_MAX_LENGTH) {
-    errors.phone = `Phone must be at most ${PHONE_MAX_LENGTH} characters`;
-  }
+  if (emailError) errors.email = emailError;
 
   if (!password) {
     errors.password = 'Password is required';
@@ -115,11 +125,18 @@ export function validateRegisterForm(
     errors.password = `Password must be at most ${PASSWORD_MAX_LENGTH} characters`;
   }
 
-  if (!confirmPassword) {
-    errors.confirmPassword = 'Please confirm your password';
-  } else if (confirmPassword !== password) {
-    errors.confirmPassword = 'Passwords do not match';
-  }
+  return errors;
+}
+
+//===================================================================
+
+export function validateForgotPasswordForm(
+  values: ForgotPasswordFormValues
+): ForgotPasswordFormErrors {
+  const errors: ForgotPasswordFormErrors = {};
+  const emailError = getEmailError(values.email);
+
+  if (emailError) errors.email = emailError;
 
   return errors;
 }

@@ -28,8 +28,17 @@
 }
 
 .field {
+  position: relative;
   display: grid;
   gap: 8px;
+  padding-bottom: 18px;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .label {
@@ -39,10 +48,14 @@
   color: var(--color-text-primary);
 }
 
+.inputWrap {
+  position: relative;
+}
+
 .input {
   width: 100%;
   min-height: 48px;
-  padding: 12px 16px;
+  padding: 12px 74px 12px 16px;
   font-size: var(--fz-16);
   line-height: 1.4;
   color: var(--color-text-primary);
@@ -72,20 +85,75 @@
   border-color: var(--color-error);
 }
 
+.inputCounter,
+.passwordCounter {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  font-size: var(--fz-12);
+  line-height: 1;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.passwordCounter {
+  right: 46px;
+}
+
+.eyeButton {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--color-text-muted);
+  background-color: transparent;
+  border: none;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  transition: color var(--transition-base);
+}
+
+.eyeButton:hover,
+.eyeButton:focus-visible {
+  color: var(--color-accent);
+}
+
 .error {
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  max-width: calc(100% - 32px);
+  padding-inline: 8px;
   font-size: var(--fz-12);
   line-height: 1.4;
   color: var(--color-error);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-pill);
 }
 
-.submitError {
+.submitError,
+.successMessage {
   padding: 12px 14px;
   font-size: var(--fz-14);
   line-height: 1.4;
+  border-radius: var(--radius-md);
+}
+
+.submitError {
   color: var(--color-error);
   background-color: rgba(211, 47, 47, 0.08);
   border: 1px solid rgba(211, 47, 47, 0.18);
-  border-radius: var(--radius-md);
+}
+
+.successMessage {
+  color: var(--color-accent);
+  background-color: rgba(89, 177, 122, 0.1);
+  border: 1px solid rgba(89, 177, 122, 0.18);
 }
 
 .footerText {
@@ -95,13 +163,26 @@
   text-align: center;
 }
 
-.link {
+.link,
+.textButton {
   font-weight: var(--fw-medium);
   color: var(--color-accent);
   transition: color var(--transition-base);
 }
 
+.textButton {
+  justify-self: center;
+  padding: 0;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  text-align: center;
+  background: transparent;
+  border: none;
+}
+
 .link:hover,
-.link:focus-visible {
+.link:focus-visible,
+.textButton:hover,
+.textButton:focus-visible {
   color: var(--color-accent-hover);
 }

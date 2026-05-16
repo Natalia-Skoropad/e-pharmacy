@@ -5,6 +5,7 @@ import type {
   ApiSuccessResponse,
   AuthResponse,
   CurrentUserResponse,
+  ForgotPasswordPayload,
   LoginPayload,
   RegisterPayload,
   UpdatePasswordPayload,
@@ -39,6 +40,18 @@ export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
   );
 
   return getResponseData(response);
+}
+
+
+//===================================================================
+
+export async function requestPasswordReset(
+  payload: ForgotPasswordPayload
+): Promise<void> {
+  await apiRequest<ApiSuccessResponse>(API_ROUTES.auth.forgotPassword, {
+    method: 'POST',
+    body: payload,
+  });
 }
 
 //===================================================================

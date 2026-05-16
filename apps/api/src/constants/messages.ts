@@ -8,6 +8,7 @@ export const API_MESSAGES = {
   USER_REGISTERED: 'User registered successfully',
   USER_LOGGED_IN: 'User logged in successfully',
   USER_LOGGED_OUT: 'User logged out successfully',
+  PASSWORD_RESET_EMAIL_SENT: 'Password recovery instructions were sent if this email exists.',
 
   EMAIL_IN_USE: 'Email is already in use',
   INVALID_CREDENTIALS: 'Email or password is invalid',

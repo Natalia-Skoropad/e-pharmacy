@@ -9,6 +9,7 @@ import {
   getVendorOnlyTest,
   loginUser,
   logoutUser,
+  requestPasswordReset,
   registerUser,
   updateCurrentUser,
   updateCurrentUserPassword,
@@ -18,6 +19,7 @@ import { authenticate } from '../middlewares/auth.middleware';
 import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
 import {
+  forgotPasswordSchema,
   loginSchema,
   registerSchema,
   updatePasswordSchema,
@@ -45,6 +47,15 @@ authRoutes.post(
     body: loginSchema,
   }),
   ctrlWrapper(loginUser)
+);
+
+
+authRoutes.post(
+  '/forgot-password',
+  validate({
+    body: forgotPasswordSchema,
+  }),
+  ctrlWrapper(requestPasswordReset)
 );
 
 authRoutes.get('/current', authenticate, ctrlWrapper(getCurrentUser));

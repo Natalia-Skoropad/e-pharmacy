@@ -6,6 +6,7 @@ import { User } from '../models/user.model';
 import type {
   AuthResponse,
   AuthUserResponse,
+  ForgotPasswordInput,
   LoginInput,
   RegisterInput,
   UpdatePasswordInput,
@@ -89,6 +90,23 @@ export async function loginUserService(
     user: toAuthUserResponse(user),
     token,
   };
+}
+
+
+//===============================================================
+
+export async function requestPasswordResetService(
+  input: ForgotPasswordInput
+): Promise<void> {
+  const user = await User.findOne({ email: input.email });
+
+  if (!user || user.status === USER_STATUSES.BLOCKED) {
+    return;
+  }
+
+  // The endpoint intentionally returns the same success response for existing
+  // and missing emails. SMTP delivery can be plugged in here without changing
+  // the client contract.
 }
 
 //===============================================================

@@ -4,13 +4,12 @@
 }
 
 .section {
-  padding-block: 32px 64px;
+  padding-block: 20px 60px;
 }
 
 .grid {
   display: grid;
   gap: 28px;
-  margin-top: 32px;
 }
 
 .content {
@@ -53,12 +52,11 @@
 
 @media only screen and (min-width: 768px) {
   .section {
-    padding-block: 40px 96px;
+    padding-block: 20px 100px;
   }
 
   .grid {
     gap: 40px;
-    margin-top: 40px;
   }
 
   .title {
@@ -71,10 +69,6 @@
 }
 
 @media only screen and (min-width: 1440px) {
-  .section {
-    padding-block: 48px 120px;
-  }
-
   .grid {
     grid-template-columns: minmax(0, 1fr) 460px;
     align-items: start;

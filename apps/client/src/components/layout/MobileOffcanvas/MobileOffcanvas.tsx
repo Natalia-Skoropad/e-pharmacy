@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { X } from 'lucide-react';
 
@@ -35,6 +36,7 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
   const { isAuthenticated, isAuthReady, user, logout } = useAuth();
 
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const handleBackdropClick = useBackdropClick({ onClose });
 
@@ -53,13 +55,17 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
   useBodyScrollLock(isOpen);
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (previousPathnameRef.current === pathname) return;
 
     previousPathnameRef.current = pathname;
     onClose();
   }, [pathname, onClose]);
 
-  return (
+  const offcanvas = (
     <div
       className={cn(css.backdrop, isOpen && css.open)}
       aria-hidden={!isOpen}
@@ -140,6 +146,10 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
       </aside>
     </div>
   );
+
+  if (!isMounted || !isOpen) return null;
+
+  return createPortal(offcanvas, document.body);
 }
 
 export default MobileOffcanvas;

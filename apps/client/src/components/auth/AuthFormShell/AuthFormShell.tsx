@@ -32,8 +32,6 @@ function AuthFormShell({
 
           <div className={css.grid}>
             <div className={css.content}>
-              <p className={css.kicker}>E-PHARMACY</p>
-
               <h1 className={css.title} id="auth-page-title">
                 {title}
               </h1>

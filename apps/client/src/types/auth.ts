@@ -42,6 +42,10 @@ export type LoginPayload = {
   password: string;
 };
 
+export type ForgotPasswordPayload = {
+  email: string;
+};
+
 
 //===================================================================
 

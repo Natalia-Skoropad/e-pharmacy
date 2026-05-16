@@ -6,11 +6,13 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import {
   loginUserService,
   registerUserService,
+  requestPasswordResetService,
   updateUserPasswordService,
   updateUserProfileService,
 } from '../services/auth.service';
 
 import type {
+  ForgotPasswordInput,
   LoginInput,
   RegisterInput,
   UpdatePasswordInput,
@@ -45,6 +47,24 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
     statusCode: HTTP_STATUS.OK,
     message: API_MESSAGES.USER_LOGGED_IN,
     data,
+  });
+}
+
+
+//===============================================================
+
+export async function requestPasswordReset(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const input = req.body as ForgotPasswordInput;
+
+  await requestPasswordResetService(input);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    message: API_MESSAGES.PASSWORD_RESET_EMAIL_SENT,
   });
 }
 

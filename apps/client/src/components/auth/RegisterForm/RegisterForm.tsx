@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, type ChangeEvent } from 'react';
 
+import { Eye, EyeOff } from 'lucide-react';
+
 import { Button } from '@/components/common';
 import { useAuth } from '@/components/providers';
 
@@ -12,10 +14,11 @@ import { ROUTES } from '@/lib/constants/routes';
 import { getSafeRedirectPath } from '@/lib/routes';
 import {
   CUSTOMER_NAME_MAX_LENGTH,
-  CUSTOMER_PHONE_MAX_LENGTH,
+  EMAIL_MAX_LENGTH,
+  PASSWORD_MAX_LENGTH,
   REGISTER_INITIAL_VALUES,
   sanitizeCustomerName,
-  sanitizeCustomerPhone,
+  sanitizeEmail,
   validateRegisterForm,
   type RegisterFormErrors,
   type RegisterFormValues,
@@ -37,6 +40,7 @@ function RegisterForm() {
   const [errors, setErrors] = useState<RegisterFormErrors>({});
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
 
@@ -47,8 +51,8 @@ function RegisterForm() {
       const nextValue =
         field === 'name'
           ? sanitizeCustomerName(rawValue)
-          : field === 'phone'
-            ? sanitizeCustomerPhone(rawValue)
+          : field === 'email'
+            ? sanitizeEmail(rawValue)
             : rawValue;
 
       setValues((prev) => ({
@@ -74,8 +78,6 @@ function RegisterForm() {
       return;
     }
 
-    const phone = values.phone.trim();
-
     try {
       setIsSubmitting(true);
       setSubmitError('');
@@ -84,7 +86,6 @@ function RegisterForm() {
         name: values.name.trim(),
         email: values.email.trim(),
         password: values.password,
-        phone: phone || undefined,
       });
 
       router.replace(redirectTo);
@@ -97,41 +98,34 @@ function RegisterForm() {
 
   return (
     <form className={css.form} noValidate onSubmit={handleSubmit}>
-      <div className={css.head}>
-        <h2 className={css.title}>Create account</h2>
-        <p className={css.text}>
-          Register to save your profile and manage your pharmacy orders.
-        </p>
-      </div>
-
       <div className={css.fields}>
         <div className={css.field}>
           <label className={css.label} htmlFor="register-name">
             Name
           </label>
 
-          <input
-            className={css.input}
-            id="register-name"
-            name="name"
-            type="text"
-            value={values.name}
-            placeholder="Your name"
-            autoComplete="name"
-            maxLength={CUSTOMER_NAME_MAX_LENGTH}
-            aria-invalid={Boolean(errors.name)}
-            aria-describedby="register-name-error"
-            onChange={handleChange('name')}
-          />
-
-          <div className={css.fieldMeta}>
-            <p className={css.error} id="register-name-error">
-              {errors.name ?? ''}
-            </p>
-            <span className={css.counter}>
+          <div className={css.inputWrap}>
+            <input
+              className={css.input}
+              id="register-name"
+              name="name"
+              type="text"
+              value={values.name}
+              placeholder="Your name"
+              autoComplete="name"
+              maxLength={CUSTOMER_NAME_MAX_LENGTH}
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby="register-name-error"
+              onChange={handleChange('name')}
+            />
+            <span className={css.inputCounter} aria-hidden="true">
               {values.name.length}/{CUSTOMER_NAME_MAX_LENGTH}
             </span>
           </div>
+
+          <p className={css.error} id="register-name-error">
+            {errors.name ?? ''}
+          </p>
         </div>
 
         <div className={css.field}>
@@ -139,54 +133,28 @@ function RegisterForm() {
             Email
           </label>
 
-          <input
-            className={css.input}
-            id="register-email"
-            name="email"
-            type="email"
-            value={values.email}
-            placeholder="example@mail.com"
-            autoComplete="email"
-            maxLength={254}
-            aria-invalid={Boolean(errors.email)}
-            aria-describedby={errors.email ? 'register-email-error' : undefined}
-            onChange={handleChange('email')}
-          />
-
-          {errors.email ? (
-            <p className={css.error} id="register-email-error">
-              {errors.email}
-            </p>
-          ) : null}
-        </div>
-
-        <div className={css.field}>
-          <label className={css.label} htmlFor="register-phone">
-            Phone <span className={css.optional}>(optional)</span>
-          </label>
-
-          <input
-            className={css.input}
-            id="register-phone"
-            name="phone"
-            type="tel"
-            value={values.phone}
-            placeholder="+380..."
-            autoComplete="tel"
-            maxLength={CUSTOMER_PHONE_MAX_LENGTH}
-            aria-invalid={Boolean(errors.phone)}
-            aria-describedby="register-phone-error"
-            onChange={handleChange('phone')}
-          />
-
-          <div className={css.fieldMeta}>
-            <p className={css.error} id="register-phone-error">
-              {errors.phone ?? ''}
-            </p>
-            <span className={css.counter}>
-              {values.phone.length}/{CUSTOMER_PHONE_MAX_LENGTH}
+          <div className={css.inputWrap}>
+            <input
+              className={css.input}
+              id="register-email"
+              name="email"
+              type="email"
+              value={values.email}
+              placeholder="example@mail.com"
+              autoComplete="email"
+              maxLength={EMAIL_MAX_LENGTH}
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby="register-email-error"
+              onChange={handleChange('email')}
+            />
+            <span className={css.inputCounter} aria-hidden="true">
+              {values.email.length}/{EMAIL_MAX_LENGTH}
             </span>
           </div>
+
+          <p className={css.error} id="register-email-error">
+            {errors.email ?? ''}
+          </p>
         </div>
 
         <div className={css.field}>
@@ -194,57 +162,40 @@ function RegisterForm() {
             Password
           </label>
 
-          <input
-            className={css.input}
-            id="register-password"
-            name="password"
-            type="password"
-            value={values.password}
-            placeholder="Create password"
-            autoComplete="new-password"
-            maxLength={64}
-            aria-invalid={Boolean(errors.password)}
-            aria-describedby={
-              errors.password ? 'register-password-error' : undefined
-            }
-            onChange={handleChange('password')}
-          />
+          <div className={css.inputWrap}>
+            <input
+              className={css.input}
+              id="register-password"
+              name="password"
+              type={isPasswordVisible ? 'text' : 'password'}
+              value={values.password}
+              placeholder="Create password"
+              autoComplete="new-password"
+              maxLength={PASSWORD_MAX_LENGTH}
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby="register-password-error"
+              onChange={handleChange('password')}
+            />
+            <span className={css.passwordCounter} aria-hidden="true">
+              {values.password.length}/{PASSWORD_MAX_LENGTH}
+            </span>
+            <button
+              className={css.eyeButton}
+              type="button"
+              aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
+              onClick={() => setIsPasswordVisible((prev) => !prev)}
+            >
+              {isPasswordVisible ? (
+                <EyeOff size={18} aria-hidden="true" />
+              ) : (
+                <Eye size={18} aria-hidden="true" />
+              )}
+            </button>
+          </div>
 
-          {errors.password ? (
-            <p className={css.error} id="register-password-error">
-              {errors.password}
-            </p>
-          ) : null}
-        </div>
-
-        <div className={css.field}>
-          <label className={css.label} htmlFor="register-confirm-password">
-            Confirm password
-          </label>
-
-          <input
-            className={css.input}
-            id="register-confirm-password"
-            name="confirmPassword"
-            type="password"
-            value={values.confirmPassword}
-            placeholder="Repeat password"
-            autoComplete="new-password"
-            maxLength={64}
-            aria-invalid={Boolean(errors.confirmPassword)}
-            aria-describedby={
-              errors.confirmPassword
-                ? 'register-confirm-password-error'
-                : undefined
-            }
-            onChange={handleChange('confirmPassword')}
-          />
-
-          {errors.confirmPassword ? (
-            <p className={css.error} id="register-confirm-password-error">
-              {errors.confirmPassword}
-            </p>
-          ) : null}
+          <p className={css.error} id="register-password-error">
+            {errors.password ?? ''}
+          </p>
         </div>
       </div>
 
