@@ -24,6 +24,8 @@ import css from './ProductCard.module.css';
 
 type ProductCardProps = {
   product: Product;
+  onFavoriteChange?: (productId: string, isFavorite: boolean) => void;
+  skipFavoriteRefresh?: boolean;
 };
 
 //===================================================================
@@ -67,7 +69,11 @@ function getStoresCountLabel(count: number): string {
 
 //===================================================================
 
-function ProductCard({ product }: ProductCardProps) {
+function ProductCard({
+  product,
+  onFavoriteChange,
+  skipFavoriteRefresh = false,
+}: ProductCardProps) {
   const { token, isAuthenticated, isAuthReady } = useAuth();
 
   const [toastMessage, setToastMessage] = useState('');
@@ -97,7 +103,7 @@ function ProductCard({ product }: ProductCardProps) {
   }, [toastMessage]);
 
   useEffect(() => {
-    if (!isAuthenticated || !token) return;
+    if (skipFavoriteRefresh || !isAuthenticated || !token) return;
 
     let isMounted = true;
 
@@ -110,7 +116,7 @@ function ProductCard({ product }: ProductCardProps) {
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, product.id, token]);
+  }, [isAuthenticated, product.id, skipFavoriteRefresh, token]);
 
   const handleFavoriteClick = async () => {
     if (!isAuthReady) return;
@@ -125,6 +131,7 @@ function ProductCard({ product }: ProductCardProps) {
       const response = await toggleFavoriteProduct(product.id, token);
 
       setIsFavorite(response.isFavorite);
+      onFavoriteChange?.(product.id, response.isFavorite);
       showToast(
         response.isFavorite
           ? 'Product was added to favorites.'

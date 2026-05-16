@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
-import { StatusPage } from '@/components/common';
+import { LoadingSpinner, StatusPage } from '@/components/common';
 import { useAuth } from '@/components/providers';
 
 import { getSafeRedirectPath } from '@/lib/routes';
@@ -31,13 +31,7 @@ function GuestOnlyRoute({ children }: GuestOnlyRouteProps) {
   }, [isAuthReady, isAuthenticated, redirectTo, router]);
 
   if (!isAuthReady) {
-    return (
-      <StatusPage
-        title="Checking your session"
-        text="Please wait while we verify your account access."
-        primaryActionLabel="Back to home"
-      />
-    );
+    return <LoadingSpinner label="Checking your session..." />;
   }
 
   if (isAuthenticated) {

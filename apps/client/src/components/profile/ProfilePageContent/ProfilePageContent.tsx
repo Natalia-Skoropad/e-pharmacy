@@ -3,7 +3,14 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Camera, Heart, ImageOff, KeyRound, Store } from 'lucide-react';
 
-import { Button, ButtonLink, ConfirmActionModal, Container, Tabs } from '@/components/common';
+import {
+  Button,
+  ButtonLink,
+  ConfirmActionModal,
+  Container,
+  LoadingSpinner,
+  Tabs,
+} from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { ProductCard } from '@/components/medicines-catalog';
 import { StoreCard } from '@/components/pharmacy-stores';
@@ -49,7 +56,7 @@ type PasswordFormValues = {
   newPassword: string;
 };
 
-const TABS: Array<{
+const BASE_TABS: Array<{
   value: ProfileTab;
   label: string;
 }> = [
@@ -129,7 +136,6 @@ function getProfileErrors(values: ProfileFormValues) {
 }
 
 //===================================================================
-
 
 //===================================================================
 
@@ -224,12 +230,14 @@ function ProfilePageContent() {
     useState(false);
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
   const [favoriteStores, setFavoriteStores] = useState<PharmacyStore[]>([]);
-  const [favoritesError, setFavoritesError] = useState('');
+  const [favoriteProductsError, setFavoriteProductsError] = useState('');
+  const [favoriteStoresError, setFavoriteStoresError] = useState('');
   const [isFavoriteProductsLoading, setIsFavoriteProductsLoading] =
     useState(false);
   const [isFavoriteStoresLoading, setIsFavoriteStoresLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isAvatarSaving, setIsAvatarSaving] = useState(false);
@@ -237,16 +245,23 @@ function ProfilePageContent() {
   useEffect(() => {
     if (!user) return;
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setProfileValues({
-      name: user.name ?? '',
-      phone: user.phone ?? '',
-      address: user.address ?? '',
+    let isMounted = true;
+
+    void Promise.resolve().then(() => {
+      if (!isMounted) return;
+
+      setProfileValues({
+        name: user.name ?? '',
+        phone: user.phone ?? '',
+        address: user.address ?? '',
+      });
+      setAvatarPreview(user.avatarUrl ?? null);
+      setAvatarChanged(false);
     });
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAvatarPreview(user.avatarUrl ?? null);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAvatarChanged(false);
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const profileErrors = useMemo(
@@ -273,54 +288,72 @@ function ProfilePageContent() {
     !passwordErrors.currentPassword &&
     !passwordErrors.newPassword;
 
+  const tabItems = useMemo(
+    () =>
+      BASE_TABS.map((tab) => {
+        if (tab.value === 'favorite-products') {
+          return {
+            ...tab,
+            label: `${tab.label} (${favoriteProducts.length})`,
+          };
+        }
+
+        if (tab.value === 'favorite-stores') {
+          return {
+            ...tab,
+            label: `${tab.label} (${favoriteStores.length})`,
+          };
+        }
+
+        return tab;
+      }),
+    [favoriteProducts.length, favoriteStores.length]
+  );
 
   useEffect(() => {
-    if (activeTab !== 'favorite-products' || !token) return;
+    if (!token) return;
 
     let isMounted = true;
 
-    setIsFavoriteProductsLoading(true);
-    setFavoritesError('');
+    const loadFavorites = async () => {
+      await Promise.resolve();
 
-    getFavoriteProducts(token)
-      .then((products) => {
-        if (isMounted) setFavoriteProducts(products);
-      })
-      .catch(() => {
-        if (isMounted) setFavoritesError('Could not load favorite products.');
-      })
-      .finally(() => {
-        if (isMounted) setIsFavoriteProductsLoading(false);
-      });
+      if (!isMounted) return;
+
+      setIsFavoriteProductsLoading(true);
+      setIsFavoriteStoresLoading(true);
+      setFavoriteProductsError('');
+      setFavoriteStoresError('');
+
+      const [productsResult, storesResult] = await Promise.allSettled([
+        getFavoriteProducts(token),
+        getFavoriteStores(token),
+      ]);
+
+      if (!isMounted) return;
+
+      if (productsResult.status === 'fulfilled') {
+        setFavoriteProducts(productsResult.value);
+      } else {
+        setFavoriteProductsError('Could not load favorite products.');
+      }
+
+      if (storesResult.status === 'fulfilled') {
+        setFavoriteStores(storesResult.value);
+      } else {
+        setFavoriteStoresError('Could not load favorite stores.');
+      }
+
+      setIsFavoriteProductsLoading(false);
+      setIsFavoriteStoresLoading(false);
+    };
+
+    void loadFavorites();
 
     return () => {
       isMounted = false;
     };
-  }, [activeTab, token]);
-
-  useEffect(() => {
-    if (activeTab !== 'favorite-stores' || !token) return;
-
-    let isMounted = true;
-
-    setIsFavoriteStoresLoading(true);
-    setFavoritesError('');
-
-    getFavoriteStores(token)
-      .then((stores) => {
-        if (isMounted) setFavoriteStores(stores);
-      })
-      .catch(() => {
-        if (isMounted) setFavoritesError('Could not load favorite stores.');
-      })
-      .finally(() => {
-        if (isMounted) setIsFavoriteStoresLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activeTab, token]);
+  }, [token]);
 
   if (!user) {
     return (
@@ -453,7 +486,7 @@ function ProfilePageContent() {
     value: string
   ) => {
     setFeedback('');
-    setError('');
+    setPasswordError('');
     setPasswordValues((prev) => ({
       ...prev,
       [field]: value.slice(0, PASSWORD_MAX_LENGTH),
@@ -466,13 +499,13 @@ function ProfilePageContent() {
     try {
       setIsPasswordSaving(true);
       setFeedback('');
-      setError('');
+      setPasswordError('');
 
       await updateCurrentUserPassword(passwordValues, token);
       setPasswordValues({ currentPassword: '', newPassword: '' });
       setFeedback('Password was changed.');
     } catch {
-      setError(
+      setPasswordError(
         'Could not change password. Check the current password and try again.'
       );
     } finally {
@@ -486,18 +519,14 @@ function ProfilePageContent() {
         <Container>
           <Breadcrumbs items={createBreadcrumbs(PROFILE_TITLE)} />
 
-          <div className={css.hero}>
-            <div>
-              <h1 className={css.title} id="profile-title">
-                {PROFILE_TITLE}
-              </h1>
+          <div>
+            <h1 className={css.title} id="profile-title">
+              {PROFILE_TITLE}
+            </h1>
 
-              <p className={css.text}>
-                View your account details, orders, favorites and profile photo.
-              </p>
-            </div>
-
-            <span className={css.heroBadge}>Personal account</span>
+            <p className={css.text}>
+              View your account details, orders, favorites and profile photo.
+            </p>
           </div>
 
           <div className={css.profileShell}>
@@ -506,7 +535,11 @@ function ProfilePageContent() {
                 <div className={css.avatar} aria-hidden="true">
                   {avatarPreview ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img className={css.avatarImage} src={avatarPreview} alt="" />
+                    <img
+                      className={css.avatarImage}
+                      src={avatarPreview}
+                      alt=""
+                    />
                   ) : (
                     <span>{getInitials(user.name)}</span>
                   )}
@@ -563,15 +596,17 @@ function ProfilePageContent() {
 
             <div className={css.contentCard}>
               <Tabs
-                items={TABS}
+                items={tabItems}
                 activeValue={activeTab}
                 ariaLabel="Profile sections"
                 mobileVisibleCount={2}
                 onChange={setActiveTab}
               />
 
-              {feedback ? <p className={css.feedback}>{feedback}</p> : null}
-              {error ? (
+              {activeTab === 'data' && feedback ? (
+                <p className={css.feedback}>{feedback}</p>
+              ) : null}
+              {activeTab === 'data' && error ? (
                 <p className={css.error} role="alert">
                   {error}
                 </p>
@@ -776,6 +811,12 @@ function ProfilePageContent() {
                       </label>
                     </div>
 
+                    {passwordError ? (
+                      <p className={css.passwordError} role="alert">
+                        {passwordError}
+                      </p>
+                    ) : null}
+
                     <Button
                       type="button"
                       disabled={!canSavePassword || isPasswordSaving}
@@ -829,18 +870,29 @@ function ProfilePageContent() {
                     </span>
                   </div>
 
-                  {favoritesError ? (
+                  {favoriteProductsError ? (
                     <p className={css.error} role="alert">
-                      {favoritesError}
+                      {favoriteProductsError}
                     </p>
                   ) : null}
 
                   {isFavoriteProductsLoading ? (
-                    <p className={css.panelText}>Loading favorite products...</p>
+                    <LoadingSpinner label="Loading favorite products..." />
                   ) : favoriteProducts.length > 0 ? (
                     <div className={css.favoritesGrid}>
                       {favoriteProducts.map((product) => (
-                        <ProductCard key={product.id} product={product} />
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          skipFavoriteRefresh
+                          onFavoriteChange={(productId, isFavoriteProduct) => {
+                            if (isFavoriteProduct) return;
+
+                            setFavoriteProducts((prev) =>
+                              prev.filter((item) => item.id !== productId)
+                            );
+                          }}
+                        />
                       ))}
                     </div>
                   ) : (
@@ -849,10 +901,12 @@ function ProfilePageContent() {
                         <Heart size={30} />
                       </span>
                       <div className={css.emptyCopy}>
-                        <h3 className={css.emptyTitle}>No favorite products yet</h3>
+                        <h3 className={css.emptyTitle}>
+                          No favorite products yet
+                        </h3>
                         <p className={css.panelText}>
-                          Tap the heart on a medicine card, and it will wait here
-                          nicely — no shelf drama included.
+                          Tap the heart on a medicine card, and it will wait
+                          here nicely — no shelf drama included.
                         </p>
                       </div>
                       <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
@@ -869,8 +923,8 @@ function ProfilePageContent() {
                     <div className={css.panelHeader}>
                       <h2 className={css.panelTitle}>Favorite stores</h2>
                       <p className={css.panelText}>
-                        Pharmacies you mark with a heart are saved here for quick
-                        access.
+                        Pharmacies you mark with a heart are saved here for
+                        quick access.
                       </p>
                     </div>
 
@@ -880,18 +934,29 @@ function ProfilePageContent() {
                     </span>
                   </div>
 
-                  {favoritesError ? (
+                  {favoriteStoresError ? (
                     <p className={css.error} role="alert">
-                      {favoritesError}
+                      {favoriteStoresError}
                     </p>
                   ) : null}
 
                   {isFavoriteStoresLoading ? (
-                    <p className={css.panelText}>Loading favorite stores...</p>
+                    <LoadingSpinner label="Loading favorite stores..." />
                   ) : favoriteStores.length > 0 ? (
                     <div className={css.favoritesGrid}>
                       {favoriteStores.map((store) => (
-                        <StoreCard key={store.id} store={store} />
+                        <StoreCard
+                          key={store.id}
+                          store={store}
+                          skipFavoriteRefresh
+                          onFavoriteChange={(storeId, isFavoriteStore) => {
+                            if (isFavoriteStore) return;
+
+                            setFavoriteStores((prev) =>
+                              prev.filter((item) => item.id !== storeId)
+                            );
+                          }}
+                        />
                       ))}
                     </div>
                   ) : (
@@ -900,10 +965,12 @@ function ProfilePageContent() {
                         <Store size={30} />
                       </span>
                       <div className={css.emptyCopy}>
-                        <h3 className={css.emptyTitle}>No favorite pharmacies yet</h3>
+                        <h3 className={css.emptyTitle}>
+                          No favorite pharmacies yet
+                        </h3>
                         <p className={css.panelText}>
-                          Mark a pharmacy with a heart, and it will stay here for
-                          quick access — loyal as a tiny green assistant.
+                          Mark a pharmacy with a heart, and it will stay here
+                          for quick access — loyal as a tiny green assistant.
                         </p>
                       </div>
                       <ButtonLink href={ROUTES.STORES}>

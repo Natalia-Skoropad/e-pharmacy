@@ -24,6 +24,8 @@ import css from './StoreCard.module.css';
 
 type StoreCardProps = {
   store: Store;
+  onFavoriteChange?: (storeId: string, isFavorite: boolean) => void;
+  skipFavoriteRefresh?: boolean;
 };
 
 //===================================================================
@@ -34,7 +36,11 @@ function getProductsCountLabel(count = 0): string {
 
 //===================================================================
 
-function StoreCard({ store }: StoreCardProps) {
+function StoreCard({
+  store,
+  onFavoriteChange,
+  skipFavoriteRefresh = false,
+}: StoreCardProps) {
   const { token, isAuthenticated, isAuthReady } = useAuth();
 
   const [isFavorite, setIsFavorite] = useState(Boolean(store.isFavorite));
@@ -60,7 +66,7 @@ function StoreCard({ store }: StoreCardProps) {
   }, [toastMessage]);
 
   useEffect(() => {
-    if (!isAuthenticated || !token) return;
+    if (skipFavoriteRefresh || !isAuthenticated || !token) return;
 
     let isMounted = true;
 
@@ -73,7 +79,7 @@ function StoreCard({ store }: StoreCardProps) {
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, store.id, token]);
+  }, [isAuthenticated, skipFavoriteRefresh, store.id, token]);
 
   const handleFavoriteClick = async () => {
     if (!isAuthReady) return;
@@ -88,6 +94,7 @@ function StoreCard({ store }: StoreCardProps) {
       const response = await toggleFavoriteStore(store.id, token);
 
       setIsFavorite(response.isFavorite);
+      onFavoriteChange?.(store.id, response.isFavorite);
       showToast(
         response.isFavorite
           ? 'Pharmacy was added to favorites.'
@@ -178,8 +185,12 @@ function StoreCard({ store }: StoreCardProps) {
             Store details
           </ButtonLink>
 
-          <ButtonLink className={css.detailsLink} href={medicinesHref} size="sm">
-            View medicines
+          <ButtonLink
+            className={css.detailsLink}
+            href={medicinesHref}
+            size="sm"
+          >
+            Medicines
           </ButtonLink>
         </div>
       </div>
