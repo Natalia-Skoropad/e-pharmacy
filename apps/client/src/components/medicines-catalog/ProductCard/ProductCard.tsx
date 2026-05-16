@@ -24,8 +24,8 @@ import css from './ProductCard.module.css';
 
 type ProductCardProps = {
   product: Product;
-  onFavoriteChange?: (productId: string, isFavorite: boolean) => void;
   skipFavoriteRefresh?: boolean;
+  onFavoriteChange?: (productId: string, isFavorite: boolean) => void;
 };
 
 //===================================================================
@@ -71,8 +71,8 @@ function getStoresCountLabel(count: number): string {
 
 function ProductCard({
   product,
-  onFavoriteChange,
   skipFavoriteRefresh = false,
+  onFavoriteChange,
 }: ProductCardProps) {
   const { token, isAuthenticated, isAuthReady } = useAuth();
 

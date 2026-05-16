@@ -24,8 +24,8 @@ import css from './StoreCard.module.css';
 
 type StoreCardProps = {
   store: Store;
-  onFavoriteChange?: (storeId: string, isFavorite: boolean) => void;
   skipFavoriteRefresh?: boolean;
+  onFavoriteChange?: (storeId: string, isFavorite: boolean) => void;
 };
 
 //===================================================================
@@ -38,8 +38,8 @@ function getProductsCountLabel(count = 0): string {
 
 function StoreCard({
   store,
-  onFavoriteChange,
   skipFavoriteRefresh = false,
+  onFavoriteChange,
 }: StoreCardProps) {
   const { token, isAuthenticated, isAuthReady } = useAuth();
 
@@ -185,12 +185,8 @@ function StoreCard({
             Store details
           </ButtonLink>
 
-          <ButtonLink
-            className={css.detailsLink}
-            href={medicinesHref}
-            size="sm"
-          >
-            Medicines
+          <ButtonLink className={css.detailsLink} href={medicinesHref} size="sm">
+            View medicines
           </ButtonLink>
         </div>
       </div>

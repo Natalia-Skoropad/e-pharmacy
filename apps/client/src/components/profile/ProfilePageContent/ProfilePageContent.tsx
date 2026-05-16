@@ -1,6 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from 'react';
 import { Camera, Heart, ImageOff, KeyRound, Store } from 'lucide-react';
 
 import {
@@ -56,7 +63,7 @@ type PasswordFormValues = {
   newPassword: string;
 };
 
-const BASE_TABS: Array<{
+const TABS: Array<{
   value: ProfileTab;
   label: string;
 }> = [
@@ -70,6 +77,7 @@ const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 64;
 const AVATAR_MAX_SIZE_BYTES = 800_000;
 const FAVORITES_PER_PAGE = 100;
+const FAVORITES_VISIBLE_STEP = 16;
 
 //===================================================================
 
@@ -230,14 +238,24 @@ function ProfilePageContent() {
     useState(false);
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
   const [favoriteStores, setFavoriteStores] = useState<PharmacyStore[]>([]);
-  const [favoriteProductsError, setFavoriteProductsError] = useState('');
-  const [favoriteStoresError, setFavoriteStoresError] = useState('');
+  const [favoritesError, setFavoritesError] = useState('');
+  const [favoriteProductsCount, setFavoriteProductsCount] = useState<
+    number | null
+  >(null);
+  const [favoriteStoresCount, setFavoriteStoresCount] = useState<number | null>(
+    null
+  );
+  const [favoriteProductsVisibleCount, setFavoriteProductsVisibleCount] =
+    useState(FAVORITES_VISIBLE_STEP);
+  const [favoriteStoresVisibleCount, setFavoriteStoresVisibleCount] = useState(
+    FAVORITES_VISIBLE_STEP
+  );
   const [isFavoriteProductsLoading, setIsFavoriteProductsLoading] =
     useState(false);
   const [isFavoriteStoresLoading, setIsFavoriteStoresLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const [passwordSubmitError, setPasswordSubmitError] = useState('');
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isAvatarSaving, setIsAvatarSaving] = useState(false);
@@ -245,11 +263,7 @@ function ProfilePageContent() {
   useEffect(() => {
     if (!user) return;
 
-    let isMounted = true;
-
-    void Promise.resolve().then(() => {
-      if (!isMounted) return;
-
+    const timeoutId = window.setTimeout(() => {
       setProfileValues({
         name: user.name ?? '',
         phone: user.phone ?? '',
@@ -257,11 +271,9 @@ function ProfilePageContent() {
       });
       setAvatarPreview(user.avatarUrl ?? null);
       setAvatarChanged(false);
-    });
+    }, 0);
 
-    return () => {
-      isMounted = false;
-    };
+    return () => window.clearTimeout(timeoutId);
   }, [user]);
 
   const profileErrors = useMemo(
@@ -288,72 +300,100 @@ function ProfilePageContent() {
     !passwordErrors.currentPassword &&
     !passwordErrors.newPassword;
 
-  const tabItems = useMemo(
+  const tabs = useMemo(
     () =>
-      BASE_TABS.map((tab) => {
+      TABS.map((tab) => {
         if (tab.value === 'favorite-products') {
           return {
             ...tab,
-            label: `${tab.label} (${favoriteProducts.length})`,
+            label:
+              favoriteProductsCount === null
+                ? tab.label
+                : `${tab.label} (${favoriteProductsCount})`,
           };
         }
 
         if (tab.value === 'favorite-stores') {
           return {
             ...tab,
-            label: `${tab.label} (${favoriteStores.length})`,
+            label:
+              favoriteStoresCount === null
+                ? tab.label
+                : `${tab.label} (${favoriteStoresCount})`,
           };
         }
 
         return tab;
       }),
-    [favoriteProducts.length, favoriteStores.length]
+    [favoriteProductsCount, favoriteStoresCount]
   );
+
+  const visibleFavoriteProducts = useMemo(
+    () => favoriteProducts.slice(0, favoriteProductsVisibleCount),
+    [favoriteProducts, favoriteProductsVisibleCount]
+  );
+  const visibleFavoriteStores = useMemo(
+    () => favoriteStores.slice(0, favoriteStoresVisibleCount),
+    [favoriteStores, favoriteStoresVisibleCount]
+  );
+  const hiddenFavoriteProductsCount = Math.max(
+    favoriteProducts.length - visibleFavoriteProducts.length,
+    0
+  );
+  const hiddenFavoriteStoresCount = Math.max(
+    favoriteStores.length - visibleFavoriteStores.length,
+    0
+  );
+
+  const loadFavoriteProducts = useCallback(async (authToken: string) => {
+    try {
+      setIsFavoriteProductsLoading(true);
+      setFavoritesError('');
+
+      const products = await getFavoriteProducts(authToken);
+
+      setFavoriteProducts(products);
+      setFavoriteProductsCount(products.length);
+    } catch {
+      setFavoritesError('Could not load favorite products.');
+      setFavoriteProductsCount(0);
+    } finally {
+      setIsFavoriteProductsLoading(false);
+    }
+  }, []);
+
+  const loadFavoriteStores = useCallback(async (authToken: string) => {
+    try {
+      setIsFavoriteStoresLoading(true);
+      setFavoritesError('');
+
+      const stores = await getFavoriteStores(authToken);
+
+      setFavoriteStores(stores);
+      setFavoriteStoresCount(stores.length);
+    } catch {
+      setFavoritesError('Could not load favorite stores.');
+      setFavoriteStoresCount(0);
+    } finally {
+      setIsFavoriteStoresLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!token) return;
 
-    let isMounted = true;
+    void loadFavoriteProducts(token);
+    void loadFavoriteStores(token);
+  }, [loadFavoriteProducts, loadFavoriteStores, token]);
 
-    const loadFavorites = async () => {
-      await Promise.resolve();
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setFavoriteProductsVisibleCount(FAVORITES_VISIBLE_STEP);
+      setFavoriteStoresVisibleCount(FAVORITES_VISIBLE_STEP);
+    }, 0);
 
-      if (!isMounted) return;
-
-      setIsFavoriteProductsLoading(true);
-      setIsFavoriteStoresLoading(true);
-      setFavoriteProductsError('');
-      setFavoriteStoresError('');
-
-      const [productsResult, storesResult] = await Promise.allSettled([
-        getFavoriteProducts(token),
-        getFavoriteStores(token),
-      ]);
-
-      if (!isMounted) return;
-
-      if (productsResult.status === 'fulfilled') {
-        setFavoriteProducts(productsResult.value);
-      } else {
-        setFavoriteProductsError('Could not load favorite products.');
-      }
-
-      if (storesResult.status === 'fulfilled') {
-        setFavoriteStores(storesResult.value);
-      } else {
-        setFavoriteStoresError('Could not load favorite stores.');
-      }
-
-      setIsFavoriteProductsLoading(false);
-      setIsFavoriteStoresLoading(false);
-    };
-
-    void loadFavorites();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [token]);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeTab]);
 
   if (!user) {
     return (
@@ -486,7 +526,7 @@ function ProfilePageContent() {
     value: string
   ) => {
     setFeedback('');
-    setPasswordError('');
+    setPasswordSubmitError('');
     setPasswordValues((prev) => ({
       ...prev,
       [field]: value.slice(0, PASSWORD_MAX_LENGTH),
@@ -499,13 +539,13 @@ function ProfilePageContent() {
     try {
       setIsPasswordSaving(true);
       setFeedback('');
-      setPasswordError('');
+      setPasswordSubmitError('');
 
       await updateCurrentUserPassword(passwordValues, token);
       setPasswordValues({ currentPassword: '', newPassword: '' });
       setFeedback('Password was changed.');
     } catch {
-      setPasswordError(
+      setPasswordSubmitError(
         'Could not change password. Check the current password and try again.'
       );
     } finally {
@@ -596,17 +636,15 @@ function ProfilePageContent() {
 
             <div className={css.contentCard}>
               <Tabs
-                items={tabItems}
+                items={tabs}
                 activeValue={activeTab}
                 ariaLabel="Profile sections"
                 mobileVisibleCount={2}
                 onChange={setActiveTab}
               />
 
-              {activeTab === 'data' && feedback ? (
-                <p className={css.feedback}>{feedback}</p>
-              ) : null}
-              {activeTab === 'data' && error ? (
+              {feedback ? <p className={css.feedback}>{feedback}</p> : null}
+              {error ? (
                 <p className={css.error} role="alert">
                   {error}
                 </p>
@@ -811,9 +849,9 @@ function ProfilePageContent() {
                       </label>
                     </div>
 
-                    {passwordError ? (
-                      <p className={css.passwordError} role="alert">
-                        {passwordError}
+                    {passwordSubmitError ? (
+                      <p className={css.error} role="alert">
+                        {passwordSubmitError}
                       </p>
                     ) : null}
 
@@ -865,36 +903,60 @@ function ProfilePageContent() {
                     </div>
 
                     <span className={css.countBadge}>
-                      {favoriteProducts.length}{' '}
-                      {favoriteProducts.length === 1 ? 'item' : 'items'}
+                      {favoriteProductsCount ?? favoriteProducts.length}{' '}
+                      {(favoriteProductsCount ?? favoriteProducts.length) === 1
+                        ? 'item'
+                        : 'items'}
                     </span>
                   </div>
 
-                  {favoriteProductsError ? (
+                  {favoritesError ? (
                     <p className={css.error} role="alert">
-                      {favoriteProductsError}
+                      {favoritesError}
                     </p>
                   ) : null}
 
                   {isFavoriteProductsLoading ? (
                     <LoadingSpinner label="Loading favorite products..." />
                   ) : favoriteProducts.length > 0 ? (
-                    <div className={css.favoritesGrid}>
-                      {favoriteProducts.map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          skipFavoriteRefresh
-                          onFavoriteChange={(productId, isFavoriteProduct) => {
-                            if (isFavoriteProduct) return;
+                    <>
+                      <div className={css.favoritesGrid}>
+                        {visibleFavoriteProducts.map((product) => (
+                          <ProductCard
+                            key={product.id}
+                            product={product}
+                            skipFavoriteRefresh
+                            onFavoriteChange={(productId, isFavoriteProduct) => {
+                              if (isFavoriteProduct) return;
 
-                            setFavoriteProducts((prev) =>
-                              prev.filter((item) => item.id !== productId)
-                            );
-                          }}
-                        />
-                      ))}
-                    </div>
+                              setFavoriteProducts((prev) => {
+                                const nextProducts = prev.filter(
+                                  (item) => item.id !== productId
+                                );
+                                setFavoriteProductsCount(nextProducts.length);
+
+                                return nextProducts;
+                              });
+                            }}
+                          />
+                        ))}
+                      </div>
+
+                      {hiddenFavoriteProductsCount > 0 ? (
+                        <Button
+                          className={css.showMoreButton}
+                          type="button"
+                          variant="secondary"
+                          onClick={() =>
+                            setFavoriteProductsVisibleCount(
+                              (prev) => prev + FAVORITES_VISIBLE_STEP
+                            )
+                          }
+                        >
+                          Show more medicines ({hiddenFavoriteProductsCount})
+                        </Button>
+                      ) : null}
+                    </>
                   ) : (
                     <div className={css.emptyState}>
                       <span className={css.emptyIcon} aria-hidden="true">
@@ -929,36 +991,60 @@ function ProfilePageContent() {
                     </div>
 
                     <span className={css.countBadge}>
-                      {favoriteStores.length}{' '}
-                      {favoriteStores.length === 1 ? 'store' : 'stores'}
+                      {favoriteStoresCount ?? favoriteStores.length}{' '}
+                      {(favoriteStoresCount ?? favoriteStores.length) === 1
+                        ? 'store'
+                        : 'stores'}
                     </span>
                   </div>
 
-                  {favoriteStoresError ? (
+                  {favoritesError ? (
                     <p className={css.error} role="alert">
-                      {favoriteStoresError}
+                      {favoritesError}
                     </p>
                   ) : null}
 
                   {isFavoriteStoresLoading ? (
                     <LoadingSpinner label="Loading favorite stores..." />
                   ) : favoriteStores.length > 0 ? (
-                    <div className={css.favoritesGrid}>
-                      {favoriteStores.map((store) => (
-                        <StoreCard
-                          key={store.id}
-                          store={store}
-                          skipFavoriteRefresh
-                          onFavoriteChange={(storeId, isFavoriteStore) => {
-                            if (isFavoriteStore) return;
+                    <>
+                      <div className={css.favoritesGrid}>
+                        {visibleFavoriteStores.map((store) => (
+                          <StoreCard
+                            key={store.id}
+                            store={store}
+                            skipFavoriteRefresh
+                            onFavoriteChange={(storeId, isFavoriteStore) => {
+                              if (isFavoriteStore) return;
 
-                            setFavoriteStores((prev) =>
-                              prev.filter((item) => item.id !== storeId)
-                            );
-                          }}
-                        />
-                      ))}
-                    </div>
+                              setFavoriteStores((prev) => {
+                                const nextStores = prev.filter(
+                                  (item) => item.id !== storeId
+                                );
+                                setFavoriteStoresCount(nextStores.length);
+
+                                return nextStores;
+                              });
+                            }}
+                          />
+                        ))}
+                      </div>
+
+                      {hiddenFavoriteStoresCount > 0 ? (
+                        <Button
+                          className={css.showMoreButton}
+                          type="button"
+                          variant="secondary"
+                          onClick={() =>
+                            setFavoriteStoresVisibleCount(
+                              (prev) => prev + FAVORITES_VISIBLE_STEP
+                            )
+                          }
+                        >
+                          Show more pharmacies ({hiddenFavoriteStoresCount})
+                        </Button>
+                      ) : null}
+                    </>
                   ) : (
                     <div className={css.emptyState}>
                       <span className={css.emptyIcon} aria-hidden="true">
