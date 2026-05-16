@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Clock,
   Copy,
   CreditCard,
   Info,
   Mail,
+  ShieldAlert,
   MapPin,
   Phone,
   Truck,
@@ -40,6 +41,7 @@ import {
 } from '@/lib/validations';
 
 import { getCart, getStoreDetails, removeCartItem } from '@/services';
+import { buildCustomerOrderPath, saveCustomerOrder } from '@/lib/orders';
 
 import type { BreadcrumbItem, Cart, Store } from '@/types';
 
@@ -165,6 +167,7 @@ function getStockValidationError(group: StoreOrderGroup): string {
 
 function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const { token, user } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const queryStoreId = searchParams.get('storeId');
   const selectedStoreIdFromRoute = checkoutStoreId ?? queryStoreId;
@@ -180,7 +183,6 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const [comment, setComment] = useState('');
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isStoreLoading, setIsStoreLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -338,6 +340,17 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
         return;
       }
 
+      const order = saveCustomerOrder({
+        storeId: latestOrderGroup.storeId,
+        storeName: latestOrderGroup.storeName,
+        store,
+        items: latestOrderGroup.items,
+        totalItems: latestOrderGroup.totalItems,
+        totalPrice: latestOrderGroup.totalPrice,
+        paymentMethod,
+        deliveryMethod,
+        comment,
+      });
       let nextCart = latestCartResponse.cart;
 
       for (const item of latestOrderGroup.items) {
@@ -346,15 +359,23 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
       }
 
       setCart(nextCart);
-      setSuccessMessage(
-        `Invoice from ${latestOrderGroup.storeName} accepted with status “Accepted”.`
-      );
+      router.push(buildCustomerOrderPath(order));
     } catch {
       setError('Could not confirm order.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const nonReturnableNotice = (
+    <div className={css.policyNotice}>
+      <ShieldAlert size={20} aria-hidden="true" />
+      <p>
+        Medicines and pharmacy products are non-returnable and non-exchangeable
+        after confirmation. Please check the invoice carefully before payment.
+      </p>
+    </div>
+  );
 
   return (
     <main className={css.page}>
@@ -381,26 +402,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
             </div>
           ) : null}
 
-          {successMessage ? (
-            <div className={css.success} role="status">
-              <h2 className={css.successTitle}>{successMessage}</h2>
-              <p className={css.successText}>
-                The pharmacy will check the invoice and contact you if any order
-                details need confirmation.
-              </p>
-              <div className={css.successActions}>
-                <ButtonLink href={ROUTES.CART} variant="secondary">
-                  Back to cart
-                </ButtonLink>
-
-                <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
-                  Back to catalog
-                </ButtonLink>
-              </div>
-            </div>
-          ) : null}
-
-          {!isLoading && !successMessage && cart.items.length === 0 ? (
+          {!isLoading && cart.items.length === 0 ? (
             <div className={css.empty}>
               <h2 className={css.emptyTitle}>Your cart is empty</h2>
               <p className={css.emptyText}>
@@ -418,7 +420,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
             </div>
           ) : null}
 
-          {!successMessage && selectedOrderGroup ? (
+          {selectedOrderGroup ? (
             <div className={css.grid}>
               <div className={css.leftColumn}>
                 <section className={css.card} aria-labelledby="delivery-title">
@@ -704,6 +706,8 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                     </li>
                   ))}
                 </ul>
+
+                {nonReturnableNotice}
 
                 <dl className={css.totalList}>
                   <div>

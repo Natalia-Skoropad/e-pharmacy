@@ -532,3 +532,21 @@
     justify-content: center;
   }
 }
+
+.policyNotice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+  background-color: var(--color-accent-light);
+  border: 1px solid rgba(89, 177, 122, 0.22);
+  border-radius: var(--radius-lg);
+}
+
+.policyNotice svg {
+  flex: 0 0 auto;
+  color: var(--color-accent);
+}

@@ -8,6 +8,7 @@ import {
   useState,
   type ChangeEvent,
 } from 'react';
+import Link from 'next/link';
 import { Camera, Heart, ImageOff, KeyRound, Store } from 'lucide-react';
 
 import {
@@ -43,6 +44,11 @@ import {
   updateCurrentUser,
   updateCurrentUserPassword,
 } from '@/services';
+import {
+  buildCustomerOrderPath,
+  getCustomerOrders,
+  type CustomerOrder,
+} from '@/lib/orders';
 
 import type { Product, Store as PharmacyStore } from '@/types';
 
@@ -92,6 +98,33 @@ function formatUserStatus(status: string): string {
 }
 
 //===================================================================
+
+
+//===================================================================
+
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(value));
+}
+
+//===================================================================
+
+function formatPrice(price: number): string {
+  return new Intl.NumberFormat('uk-UA', {
+    style: 'currency',
+    currency: 'UAH',
+    maximumFractionDigits: 0,
+  }).format(price);
+}
+
+//===================================================================
+
+function formatOrderStatus(status: CustomerOrder['status']): string {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -236,6 +269,7 @@ function ProfilePageContent() {
   const [avatarChanged, setAvatarChanged] = useState(false);
   const [isRemoveAvatarConfirmOpen, setIsRemoveAvatarConfirmOpen] =
     useState(false);
+  const [orders, setOrders] = useState<CustomerOrder[]>(() => getCustomerOrders());
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
   const [favoriteStores, setFavoriteStores] = useState<PharmacyStore[]>([]);
   const [favoritesError, setFavoritesError] = useState('');
@@ -382,14 +416,29 @@ function ProfilePageContent() {
   useEffect(() => {
     if (!token) return;
 
-    void loadFavoriteProducts(token);
-    void loadFavoriteStores(token);
+    const timeoutId = window.setTimeout(() => {
+      void loadFavoriteProducts(token);
+      void loadFavoriteStores(token);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadFavoriteProducts, loadFavoriteStores, token]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setFavoriteProductsVisibleCount(FAVORITES_VISIBLE_STEP);
       setFavoriteStoresVisibleCount(FAVORITES_VISIBLE_STEP);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [activeTab]);
+
+
+  useEffect(() => {
+    if (activeTab !== 'orders') return;
+
+    const timeoutId = window.setTimeout(() => {
+      setOrders(getCustomerOrders());
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
@@ -874,18 +923,42 @@ function ProfilePageContent() {
                     <table className={css.ordersTable}>
                       <thead>
                         <tr>
-                          <th>Order</th>
+                          <th>Date</th>
+                          <th>Order number</th>
                           <th>Pharmacy</th>
+                          <th>Order amount</th>
                           <th>Status</th>
-                          <th>Total</th>
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td colSpan={4}>
-                            Orders will appear here after checkout.
-                          </td>
-                        </tr>
+                        {orders.length > 0 ? (
+                          orders.map((order) => (
+                            <tr key={order.id}>
+                              <td>{formatDate(order.createdAt)}</td>
+                              <td>
+                                <Link
+                                  className={css.orderLink}
+                                  href={buildCustomerOrderPath(order)}
+                                >
+                                  {order.orderNumber}
+                                </Link>
+                              </td>
+                              <td>{order.storeName}</td>
+                              <td>{formatPrice(order.totalPrice)}</td>
+                              <td>
+                                <span className={css.statusBadge}>
+                                  {formatOrderStatus(order.status)}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5}>
+                              Orders will appear here after checkout.
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>

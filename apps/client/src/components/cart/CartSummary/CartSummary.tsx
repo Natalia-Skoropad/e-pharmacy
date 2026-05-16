@@ -1,3 +1,5 @@
+import { ShieldAlert } from 'lucide-react';
+
 import { Button, ButtonLink } from '@/components/common';
 
 import { buildCheckoutPath } from '@/lib/checkout';
@@ -52,6 +54,11 @@ function CartSummary({
           <dd>{formatPrice(totalPrice)}</dd>
         </div>
       </dl>
+
+      <div className={css.policyNotice}>
+        <ShieldAlert size={18} aria-hidden="true" />
+        <p>Medicines are non-returnable and non-exchangeable after order confirmation.</p>
+      </div>
 
       <div className={css.actions}>
         <ButtonLink href={buildCheckoutPath(storeName, storeId)} fullWidth>

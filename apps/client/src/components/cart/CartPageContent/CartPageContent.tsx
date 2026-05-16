@@ -356,6 +356,7 @@ function CartPageContent() {
 
                     <CartSummary
                       storeId={group.storeId}
+                      storeName={group.storeName}
                       totalItems={group.totalItems}
                       totalPrice={group.totalPrice}
                       isUpdating={isUpdating}
