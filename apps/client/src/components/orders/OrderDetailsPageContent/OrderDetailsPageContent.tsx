@@ -1,13 +1,23 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, CreditCard, Hash, PackageCheck, Store, Truck } from 'lucide-react';
+import { CalendarDays, CreditCard, PackageCheck, Truck } from 'lucide-react';
 
-import { ButtonLink, Container, RatingSummary, ShimmerImage, SvgIcon } from '@/components/common';
+import {
+  ButtonLink,
+  Container,
+  RatingSummary,
+  ShimmerImage,
+  SvgIcon,
+} from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
 import { ROUTES } from '@/lib/constants/routes';
-import { getCustomerOrder, getOrderIdFromPathParam, type CustomerOrder } from '@/lib/orders';
+import {
+  getCustomerOrder,
+  getOrderIdFromPathParam,
+  type CustomerOrder,
+} from '@/lib/orders';
 
 import type { BreadcrumbItem } from '@/types';
 
@@ -44,7 +54,9 @@ function formatDate(value: string): string {
 //===================================================================
 
 function formatPaymentMethod(method: CustomerOrder['paymentMethod']): string {
-  return method === 'bank-transfer' ? 'Bank transfer' : 'Cash on pickup / delivery';
+  return method === 'bank-transfer'
+    ? 'Bank transfer'
+    : 'Cash on pickup / delivery';
 }
 
 //===================================================================
@@ -104,8 +116,13 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
           <Container>
             <Breadcrumbs items={breadcrumbs} />
             <div className={css.emptyCard}>
-              <h1 className={css.title} id="order-title">Order was not found</h1>
-              <p className={css.text}>This private order is not available in the current browser storage.</p>
+              <h1 className={css.title} id="order-title">
+                Order was not found
+              </h1>
+              <p className={css.text}>
+                This private order is not available in the current browser
+                storage.
+              </p>
               <ButtonLink href={ROUTES.PROFILE}>Back to profile</ButtonLink>
             </div>
           </Container>
@@ -122,12 +139,17 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
 
           <div className={css.hero}>
             <div>
-              <p className={css.kicker}>Private order</p>
-              <h1 className={css.title} id="order-title">Order {order.orderNumber}</h1>
-              <p className={css.text}>Review the confirmed pharmacy invoice and order details.</p>
+              <h1 className={css.title} id="order-title">
+                Order {order.orderNumber}
+              </h1>
+              <p className={css.text}>
+                Review the confirmed pharmacy invoice and order details.
+              </p>
             </div>
 
-            <span className={css.statusBadge}>{formatStatus(order.status)}</span>
+            <span className={css.statusBadge}>
+              {formatStatus(order.status)}
+            </span>
           </div>
 
           <div className={css.orderShell}>
@@ -136,8 +158,14 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                 <div className={css.storeHead}>
                   <div>
                     <p className={css.kicker}>Pharmacy invoice</p>
-                    <h2 className={css.storeTitle} id="invoice-title">{order.storeName}</h2>
-                    <RatingSummary rating={order.storeRating} reviewsCount={order.storeReviewsCount ?? 0} size="sm" />
+                    <h2 className={css.storeTitle} id="invoice-title">
+                      {order.storeName}
+                    </h2>
+                    <RatingSummary
+                      rating={order.storeRating}
+                      reviewsCount={order.storeReviewsCount ?? 0}
+                      size="sm"
+                    />
                   </div>
                 </div>
 
@@ -146,7 +174,12 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                     <li className={css.itemCard} key={item.id}>
                       <div className={css.imageWrap}>
                         {item.imageUrl ? (
-                          <ShimmerImage className={css.image} src={item.imageUrl} alt={item.name} sizes="(max-width: 767px) 120px, 140px" />
+                          <ShimmerImage
+                            className={css.image}
+                            src={item.imageUrl}
+                            alt={item.name}
+                            sizes="(max-width: 767px) 120px, 140px"
+                          />
                         ) : (
                           <div className={css.imageFallback} aria-hidden="true">
                             <SvgIcon name="icon-shopping-cart" size={28} />
@@ -158,12 +191,20 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                         <div className={css.itemHead}>
                           <div>
                             <h3 className={css.itemTitle}>{item.name}</h3>
-                            <RatingSummary rating={item.rating} reviewsCount={item.reviewsCount ?? 0} size="sm" />
+                            <RatingSummary
+                              rating={item.rating}
+                              reviewsCount={item.reviewsCount ?? 0}
+                              size="sm"
+                            />
                           </div>
-                          <p className={css.itemPrice}>{formatPrice(item.totalPrice)}</p>
+                          <p className={css.itemPrice}>
+                            {formatPrice(item.totalPrice)}
+                          </p>
                         </div>
 
-                        <p className={css.quantityText}>Purchased quantity: <strong>{item.quantity}</strong></p>
+                        <p className={css.quantityText}>
+                          Purchased quantity: <strong>{item.quantity}</strong>
+                        </p>
                       </div>
                     </li>
                   ))}
@@ -172,31 +213,34 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
             </div>
 
             <aside className={css.summary} aria-labelledby="summary-title">
-              <h2 className={css.summaryTitle} id="summary-title">Order details</h2>
+              <h2 className={css.summaryTitle} id="summary-title">
+                Order details
+              </h2>
 
               <dl className={css.detailsList}>
                 <div>
-                  <dt><CalendarDays size={16} aria-hidden="true" /> Date</dt>
+                  <dt>
+                    <CalendarDays size={16} aria-hidden="true" /> Date
+                  </dt>
                   <dd>{formatDate(order.createdAt)}</dd>
                 </div>
                 <div>
-                  <dt><Hash size={16} aria-hidden="true" /> Order number</dt>
-                  <dd>{order.orderNumber}</dd>
-                </div>
-                <div>
-                  <dt><CreditCard size={16} aria-hidden="true" /> Payment method</dt>
+                  <dt>
+                    <CreditCard size={16} aria-hidden="true" /> Payment method
+                  </dt>
                   <dd>{formatPaymentMethod(order.paymentMethod)}</dd>
                 </div>
                 <div>
-                  <dt><Truck size={16} aria-hidden="true" /> Delivery method</dt>
+                  <dt>
+                    <Truck size={16} aria-hidden="true" /> Delivery method
+                  </dt>
                   <dd>{formatDeliveryMethod(order.deliveryMethod)}</dd>
                 </div>
+
                 <div>
-                  <dt><Store size={16} aria-hidden="true" /> Pharmacy</dt>
-                  <dd>{order.storeName}</dd>
-                </div>
-                <div>
-                  <dt><PackageCheck size={16} aria-hidden="true" /> Items</dt>
+                  <dt>
+                    <PackageCheck size={16} aria-hidden="true" /> Items
+                  </dt>
                   <dd>{order.totalItems}</dd>
                 </div>
                 <div>
