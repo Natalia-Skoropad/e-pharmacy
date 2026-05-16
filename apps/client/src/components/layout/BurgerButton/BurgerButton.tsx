@@ -23,7 +23,7 @@ function BurgerButton({ isOpen, onClick }: BurgerButtonProps) {
       aria-controls="mobile-navigation"
       onClick={onClick}
     >
-      <Icon size={24} aria-hidden="true" strokeWidth={2} />
+      <Icon size={24} strokeWidth={2} aria-hidden="true" />
     </button>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ShoppingCart } from 'lucide-react';
 
@@ -15,15 +15,13 @@ import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
 import { ROUTES } from '@/lib/constants/routes';
 import { isActiveRoute } from '@/lib/routes';
 import { cn } from '@/lib/utils';
-import {
-  CART_UPDATED_EVENT,
-  type CartUpdatedEventDetail,
-} from '@/lib/cart-events';
+import { CART_UPDATED_EVENT, type CartUpdatedEventDetail } from '@/lib/cart-events';
 import { getCart } from '@/services';
 
 import css from './Header.module.css';
 
 //===================================================================
+
 
 function getUserInitials(name?: string | null): string {
   const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
@@ -51,10 +49,7 @@ function Header() {
   const visibleCartItemsCount = isAuthenticated && token ? cartItemsCount : 0;
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
-      setCartItemsCount(0);
-      return;
-    }
+    if (!isAuthenticated || !token) return;
 
     let isMounted = true;
 
@@ -85,13 +80,13 @@ function Header() {
     };
   }, []);
 
-  const handleToggleMobileMenu = useCallback(() => {
+  const handleToggleMobileMenu = () => {
     setIsMobileMenuOpen((prev) => !prev);
-  }, []);
+  };
 
-  const handleCloseMobileMenu = useCallback(() => {
+  const handleCloseMobileMenu = () => {
     setIsMobileMenuOpen(false);
-  }, []);
+  };
 
   const handleLogout = async () => {
     try {
@@ -163,9 +158,7 @@ function Header() {
                     getUserInitials(user?.name)
                   )}
                 </span>
-                <span className={css.profileName}>
-                  {user?.name ?? 'Profile'}
-                </span>
+                <span className={css.profileName}>{user?.name ?? 'Profile'}</span>
               </ButtonLink>
 
               <Button

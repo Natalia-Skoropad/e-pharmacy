@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { X } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+
+import { X } from 'lucide-react';
 
 import { Button, ButtonLink, Logo } from '@/components/common';
 import { useAuth } from '@/components/providers';
@@ -29,11 +30,11 @@ type MobileOffcanvasProps = {
 function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const previousPathnameRef = useRef(pathname);
 
   const { isAuthenticated, isAuthReady, user, logout } = useAuth();
 
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
-  const previousPathnameRef = useRef(pathname);
 
   const handleBackdropClick = useBackdropClick({ onClose });
 
@@ -55,8 +56,8 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
     if (previousPathnameRef.current === pathname) return;
 
     previousPathnameRef.current = pathname;
-    if (isOpen) onClose();
-  }, [isOpen, onClose, pathname]);
+    onClose();
+  }, [pathname, onClose]);
 
   return (
     <div
@@ -78,7 +79,7 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
             aria-label="Close menu"
             onClick={onClose}
           >
-            <X size={24} aria-hidden="true" />
+            <X size={24} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
 
