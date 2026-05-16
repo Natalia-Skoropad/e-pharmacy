@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import clsx from 'clsx';
 import { Home } from 'lucide-react';
 
 import type { BreadcrumbItem } from '@/types/breadcrumbs';
@@ -9,52 +10,47 @@ import css from './Breadcrumbs.module.css';
 
 type BreadcrumbsProps = {
   items: BreadcrumbItem[];
+  className?: string;
 };
 
 //===================================================================
 
-function Breadcrumbs({ items }: BreadcrumbsProps) {
-  if (items.length === 0) return null;
+function Breadcrumbs({ items, className }: BreadcrumbsProps) {
+  if (!items?.length) return null;
 
   return (
-    <nav className={css.breadcrumbs} aria-label="Breadcrumb">
-      <ol className={css.list}>
-        {items.map(({ label, href }, index) => {
-          const isFirst = index === 0;
-          const isLast = index === items.length - 1;
-          const itemKey = `${label}-${href ?? 'current'}-${index}`;
+    <nav className={clsx(css.nav, className)} aria-label="Breadcrumbs">
+      <ul className={css.list}>
+        {items.map((item, idx) => {
+          const isLast = idx === items.length - 1;
+          const isLink = Boolean(item.href) && !isLast;
 
           return (
-            <li className={css.item} key={itemKey}>
-              {href && !isLast ? (
-                <Link className={css.link} href={href}>
-                  {isFirst ? (
-                    <Home
-                      className={css.homeIcon}
-                      size={16}
-                      aria-hidden="true"
-                    />
-                  ) : null}
-
-                  <span>{label}</span>
+            <li key={`${item.label}-${idx}`} className={css.item}>
+              {idx === 0 && item.href && !isLast ? (
+                <Link href={item.href} className={css.link}>
+                  <Home size={16} className={css.homeIcon} aria-hidden="true" />
+                  <span className={css.linkText}>{item.label}</span>
+                </Link>
+              ) : isLink ? (
+                <Link href={item.href!} className={css.link}>
+                  <span className={css.linkText}>{item.label}</span>
                 </Link>
               ) : (
                 <span className={css.current} aria-current="page">
-                  {isFirst ? (
-                    <Home
-                      className={css.homeIcon}
-                      size={16}
-                      aria-hidden="true"
-                    />
-                  ) : null}
-
-                  <span>{label}</span>
+                  {item.label}
                 </span>
               )}
+
+              {!isLast ? (
+                <span className={css.sep} aria-hidden="true">
+                  /
+                </span>
+              ) : null}
             </li>
           );
         })}
-      </ol>
+      </ul>
     </nav>
   );
 }

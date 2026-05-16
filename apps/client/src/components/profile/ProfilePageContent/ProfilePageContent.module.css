@@ -430,6 +430,15 @@
   opacity: 0;
 }
 
+
+.ordersHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .tableWrap {
   max-width: 100%;
   overflow-x: auto;

@@ -1,4 +1,4 @@
-import SvgIcon from '@/components/common/SvgIcon';
+import { Menu, X } from 'lucide-react';
 
 import css from './BurgerButton.module.css';
 
@@ -12,6 +12,8 @@ type BurgerButtonProps = {
 //===================================================================
 
 function BurgerButton({ isOpen, onClick }: BurgerButtonProps) {
+  const Icon = isOpen ? X : Menu;
+
   return (
     <button
       className={css.button}
@@ -21,7 +23,7 @@ function BurgerButton({ isOpen, onClick }: BurgerButtonProps) {
       aria-controls="mobile-navigation"
       onClick={onClick}
     >
-      <SvgIcon name={isOpen ? 'icon-close' : 'icon-menu'} size={24} />
+      <Icon size={24} aria-hidden="true" strokeWidth={2} />
     </button>
   );
 }

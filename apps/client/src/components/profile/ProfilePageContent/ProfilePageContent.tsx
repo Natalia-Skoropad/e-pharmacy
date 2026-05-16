@@ -84,6 +84,7 @@ const PASSWORD_MAX_LENGTH = 64;
 const AVATAR_MAX_SIZE_BYTES = 800_000;
 const FAVORITES_PER_PAGE = 100;
 const FAVORITES_VISIBLE_STEP = 16;
+const ORDERS_VISIBLE_STEP = 15;
 
 //===================================================================
 
@@ -270,6 +271,9 @@ function ProfilePageContent() {
   const [isRemoveAvatarConfirmOpen, setIsRemoveAvatarConfirmOpen] =
     useState(false);
   const [orders, setOrders] = useState<CustomerOrder[]>(() => getCustomerOrders());
+  const [ordersVisibleCount, setOrdersVisibleCount] = useState(
+    ORDERS_VISIBLE_STEP
+  );
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
   const [favoriteStores, setFavoriteStores] = useState<PharmacyStore[]>([]);
   const [favoritesError, setFavoritesError] = useState('');
@@ -357,10 +361,23 @@ function ProfilePageContent() {
           };
         }
 
+        if (tab.value === 'orders') {
+          return {
+            ...tab,
+            label: `${tab.label} (${orders.length})`,
+          };
+        }
+
         return tab;
       }),
-    [favoriteProductsCount, favoriteStoresCount]
+    [favoriteProductsCount, favoriteStoresCount, orders.length]
   );
+
+  const visibleOrders = useMemo(
+    () => orders.slice(0, ordersVisibleCount),
+    [orders, ordersVisibleCount]
+  );
+  const hiddenOrdersCount = Math.max(orders.length - visibleOrders.length, 0);
 
   const visibleFavoriteProducts = useMemo(
     () => favoriteProducts.slice(0, favoriteProductsVisibleCount),
@@ -426,6 +443,7 @@ function ProfilePageContent() {
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
+      setOrdersVisibleCount(ORDERS_VISIBLE_STEP);
       setFavoriteProductsVisibleCount(FAVORITES_VISIBLE_STEP);
       setFavoriteStoresVisibleCount(FAVORITES_VISIBLE_STEP);
     }, 0);
@@ -918,7 +936,13 @@ function ProfilePageContent() {
 
               {activeTab === 'orders' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <h2 className={css.panelTitle}>My orders</h2>
+                  <div className={css.ordersHeader}>
+                    <h2 className={css.panelTitle}>My orders</h2>
+                    <span className={css.countBadge}>
+                      {orders.length} {orders.length === 1 ? 'order' : 'orders'}
+                    </span>
+                  </div>
+
                   <div className={css.tableWrap}>
                     <table className={css.ordersTable}>
                       <thead>
@@ -932,7 +956,7 @@ function ProfilePageContent() {
                       </thead>
                       <tbody>
                         {orders.length > 0 ? (
-                          orders.map((order) => (
+                          visibleOrders.map((order) => (
                             <tr key={order.id}>
                               <td>{formatDate(order.createdAt)}</td>
                               <td>
@@ -962,6 +986,21 @@ function ProfilePageContent() {
                       </tbody>
                     </table>
                   </div>
+
+                  {hiddenOrdersCount > 0 ? (
+                    <Button
+                      className={css.showMoreButton}
+                      type="button"
+                      variant="secondary"
+                      onClick={() =>
+                        setOrdersVisibleCount(
+                          (prev) => prev + ORDERS_VISIBLE_STEP
+                        )
+                      }
+                    >
+                      Show more orders ({hiddenOrdersCount})
+                    </Button>
+                  ) : null}
                 </div>
               ) : null}
 

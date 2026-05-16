@@ -13,6 +13,7 @@ import {
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
 import { ROUTES } from '@/lib/constants/routes';
+import { buildProductPath, buildStorePath } from '@/lib/routes';
 import {
   getCustomerOrder,
   getOrderIdFromPathParam,
@@ -131,6 +132,8 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     );
   }
 
+  const storeHref = buildStorePath(order.storeName, order.storeId);
+
   return (
     <main className={css.page}>
       <section className={css.section} aria-labelledby="order-title">
@@ -167,6 +170,15 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                       size="sm"
                     />
                   </div>
+
+                  <ButtonLink
+                    className={css.storeDetailsLink}
+                    href={storeHref}
+                    variant="secondary"
+                    size="sm"
+                  >
+                    Pharmacy details
+                  </ButtonLink>
                 </div>
 
                 <ul className={css.itemList}>
@@ -202,9 +214,20 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                           </p>
                         </div>
 
-                        <p className={css.quantityText}>
-                          Purchased quantity: <strong>{item.quantity}</strong>
-                        </p>
+                        <div className={css.itemFooter}>
+                          <p className={css.quantityText}>
+                            Purchased quantity: <strong>{item.quantity}</strong>
+                          </p>
+
+                          <ButtonLink
+                            className={css.productDetailsLink}
+                            href={buildProductPath(item.name, item.productId)}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            Product details
+                          </ButtonLink>
+                        </div>
                       </div>
                     </li>
                   ))}

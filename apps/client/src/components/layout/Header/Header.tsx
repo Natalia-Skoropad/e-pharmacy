@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { ShoppingCart } from 'lucide-react';
 
@@ -15,13 +15,15 @@ import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
 import { ROUTES } from '@/lib/constants/routes';
 import { isActiveRoute } from '@/lib/routes';
 import { cn } from '@/lib/utils';
-import { CART_UPDATED_EVENT, type CartUpdatedEventDetail } from '@/lib/cart-events';
+import {
+  CART_UPDATED_EVENT,
+  type CartUpdatedEventDetail,
+} from '@/lib/cart-events';
 import { getCart } from '@/services';
 
 import css from './Header.module.css';
 
 //===================================================================
-
 
 function getUserInitials(name?: string | null): string {
   const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
@@ -83,13 +85,13 @@ function Header() {
     };
   }, []);
 
-  const handleToggleMobileMenu = () => {
+  const handleToggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
-  };
+  }, []);
 
-  const handleCloseMobileMenu = () => {
+  const handleCloseMobileMenu = useCallback(() => {
     setIsMobileMenuOpen(false);
-  };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -127,7 +129,7 @@ function Header() {
         </nav>
 
         <div className={css.actions}>
-          {isAuthReady ? (
+          {isAuthReady && isAuthenticated ? (
             <ButtonLink
               className={css.cartLink}
               href={ROUTES.CART}
@@ -161,7 +163,9 @@ function Header() {
                     getUserInitials(user?.name)
                   )}
                 </span>
-                <span className={css.profileName}>{user?.name ?? 'Profile'}</span>
+                <span className={css.profileName}>
+                  {user?.name ?? 'Profile'}
+                </span>
               </ButtonLink>
 
               <Button
@@ -188,7 +192,7 @@ function Header() {
           ) : null}
         </div>
 
-        {isAuthReady ? (
+        {isAuthReady && isAuthenticated ? (
           <ButtonLink
             className={css.mobileCartLink}
             href={ROUTES.CART}
