@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, type ChangeEvent } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Eye, EyeOff } from 'lucide-react';
 
-import { Button } from '@/components/common';
+import { Button, Toast } from '@/components/common';
 import { useAuth } from '@/components/providers';
 
 import { getAuthErrorMessage } from '@/lib/auth';
@@ -31,15 +31,20 @@ import css from './LoginForm.module.css';
 
 //===================================================================
 
-type AuthMode = 'login' | 'forgot-password';
+export type AuthMode = 'login' | 'forgot-password';
 
-function LoginForm() {
+type LoginFormProps = {
+  mode?: AuthMode;
+  onModeChange?: (mode: AuthMode) => void;
+};
+
+function LoginForm({ mode: controlledMode, onModeChange }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const { login, isAuthReady } = useAuth();
 
-  const [mode, setMode] = useState<AuthMode>('login');
+  const [internalMode, setInternalMode] = useState<AuthMode>('login');
   const [values, setValues] = useState<LoginFormValues>(LOGIN_INITIAL_VALUES);
   const [forgotValues, setForgotValues] = useState<ForgotPasswordFormValues>(
     FORGOT_PASSWORD_INITIAL_VALUES
@@ -48,12 +53,38 @@ function LoginForm() {
   const [forgotErrors, setForgotErrors] = useState<ForgotPasswordFormErrors>(
     {}
   );
-  const [submitError, setSubmitError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVariant, setToastVariant] = useState<'success' | 'error'>(
+    'success'
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
+
+  const mode = controlledMode ?? internalMode;
+  const loginFormIsValid = Object.keys(validateLoginForm(values)).length === 0;
+  const forgotPasswordFormIsValid =
+    Object.keys(validateForgotPasswordForm(forgotValues)).length === 0;
+
+  const showToast = (message: string, variant: 'success' | 'error') => {
+    setToastMessage('');
+    setToastVariant(variant);
+    window.setTimeout(() => setToastMessage(message), 0);
+  };
+
+  const changeMode = (nextMode: AuthMode) => {
+    setInternalMode(nextMode);
+    onModeChange?.(nextMode);
+  };
+
+  useEffect(() => {
+    if (!toastMessage) return undefined;
+
+    const timeoutId = window.setTimeout(() => setToastMessage(''), 3000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toastMessage]);
 
   const handleChange =
     (field: keyof LoginFormValues) =>
@@ -73,18 +104,16 @@ function LoginForm() {
         [field]: undefined,
       }));
 
-      setSubmitError('');
-      setSuccessMessage('');
+      setToastMessage('');
     };
 
   const handleForgotEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
     setForgotValues({ email: sanitizeEmail(event.target.value) });
     setForgotErrors({});
-    setSubmitError('');
-    setSuccessMessage('');
+    setToastMessage('');
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextErrors = validateLoginForm(values);
@@ -96,8 +125,7 @@ function LoginForm() {
 
     try {
       setIsSubmitting(true);
-      setSubmitError('');
-      setSuccessMessage('');
+      setToastMessage('');
 
       await login({
         email: values.email.trim(),
@@ -106,14 +134,14 @@ function LoginForm() {
 
       router.replace(redirectTo);
     } catch (error) {
-      setSubmitError(getAuthErrorMessage(error));
+      showToast(getAuthErrorMessage(error), 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleForgotPasswordSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
+    event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
 
@@ -126,16 +154,16 @@ function LoginForm() {
 
     try {
       setIsSubmitting(true);
-      setSubmitError('');
-      setSuccessMessage('');
+      setToastMessage('');
 
       await requestPasswordReset({ email: forgotValues.email.trim() });
 
-      setSuccessMessage(
-        'If this email exists, password recovery instructions were sent to it.'
+      showToast(
+        'If this email exists, password recovery instructions were sent to it.',
+        'success'
       );
     } catch (error) {
-      setSubmitError(getAuthErrorMessage(error));
+      showToast(getAuthErrorMessage(error), 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -179,19 +207,17 @@ function LoginForm() {
           </div>
         </div>
 
-        {submitError ? (
-          <p className={css.submitError} role="alert">
-            {submitError}
-          </p>
-        ) : null}
+        <Toast
+          message={toastMessage}
+          isVisible={Boolean(toastMessage)}
+          variant={toastVariant}
+        />
 
-        {successMessage ? (
-          <p className={css.successMessage} role="status">
-            {successMessage}
-          </p>
-        ) : null}
-
-        <Button type="submit" fullWidth disabled={isSubmitting || !isAuthReady}>
+        <Button
+          type="submit"
+          fullWidth
+          disabled={isSubmitting || !isAuthReady || !forgotPasswordFormIsValid}
+        >
           {isSubmitting ? 'Sending...' : 'Send instructions'}
         </Button>
 
@@ -199,9 +225,8 @@ function LoginForm() {
           className={css.textButton}
           type="button"
           onClick={() => {
-            setMode('login');
-            setSubmitError('');
-            setSuccessMessage('');
+            changeMode('login');
+            setToastMessage('');
           }}
         >
           Back to log in
@@ -252,10 +277,9 @@ function LoginForm() {
               className={css.textButton}
               type="button"
               onClick={() => {
-                setMode('forgot-password');
+                changeMode('forgot-password');
                 setForgotValues({ email: values.email });
-                setSubmitError('');
-                setSuccessMessage('');
+                setToastMessage('');
               }}
             >
               Forgot password?
@@ -299,13 +323,17 @@ function LoginForm() {
         </div>
       </div>
 
-      {submitError ? (
-        <p className={css.submitError} role="alert">
-          {submitError}
-        </p>
-      ) : null}
+      <Toast
+        message={toastMessage}
+        isVisible={Boolean(toastMessage)}
+        variant={toastVariant}
+      />
 
-      <Button type="submit" fullWidth disabled={isSubmitting || !isAuthReady}>
+      <Button
+        type="submit"
+        fullWidth
+        disabled={isSubmitting || !isAuthReady || !loginFormIsValid}
+      >
         {isSubmitting ? 'Logging in...' : 'Log in'}
       </Button>
 

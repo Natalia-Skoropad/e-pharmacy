@@ -6,9 +6,12 @@ import css from './Toast.module.css';
 
 //===================================================================
 
+type ToastVariant = 'info' | 'success' | 'error';
+
 type ToastProps = {
   message: string;
   isVisible: boolean;
+  variant?: ToastVariant;
 };
 
 declare global {
@@ -48,7 +51,7 @@ function removeToast(id: string) {
 
 //===================================================================
 
-function Toast({ message, isVisible }: ToastProps) {
+function Toast({ message, isVisible, variant = 'info' }: ToastProps) {
   const reactId = useId();
   const toastId = useMemo(() => `toast-${reactId}`, [reactId]);
   const [stackIndex, setStackIndex] = useState(0);
@@ -77,9 +80,12 @@ function Toast({ message, isVisible }: ToastProps) {
   return (
     <div
       className={css.toast}
-      style={{ '--toast-offset': `${Math.max(stackIndex, 0) * 64}px` } as CSSProperties}
-      role="status"
-      aria-live="polite"
+      style={
+        { '--toast-offset': `${Math.max(stackIndex, 0) * 64}px` } as CSSProperties
+      }
+      role={variant === 'error' ? 'alert' : 'status'}
+      aria-live={variant === 'error' ? 'assertive' : 'polite'}
+      data-variant={variant}
     >
       {message}
     </div>

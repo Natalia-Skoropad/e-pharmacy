@@ -18,6 +18,18 @@
   animation: toastIn var(--transition-base);
 }
 
+.toast[data-variant='success'] {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border-color: rgba(89, 177, 122, 0.25);
+}
+
+.toast[data-variant='error'] {
+  color: var(--color-error);
+  background-color: color-mix(in srgb, var(--color-error) 8%, var(--color-white));
+  border-color: rgba(211, 47, 47, 0.22);
+}
+
 @keyframes toastIn {
   from {
     opacity: 0;

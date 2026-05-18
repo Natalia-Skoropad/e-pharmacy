@@ -1,6 +1,10 @@
 import { AuthFormShell, GuestOnlyRoute, RegisterForm } from '@/components/auth';
 
-import { REGISTER_DESCRIPTION, REGISTER_TITLE } from '@/lib/constants/metadata';
+import {
+  REGISTER_BENEFITS,
+  REGISTER_DESCRIPTION,
+  REGISTER_TITLE,
+} from '@/lib/constants/metadata';
 import { createBreadcrumbs } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
 
@@ -21,6 +25,7 @@ function RegisterPage() {
       <AuthFormShell
         title={REGISTER_TITLE}
         text={REGISTER_DESCRIPTION}
+        descriptionItems={[...REGISTER_BENEFITS]}
         breadcrumbs={createBreadcrumbs(REGISTER_TITLE)}
       >
         <RegisterForm />

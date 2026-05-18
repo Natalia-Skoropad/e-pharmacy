@@ -28,10 +28,8 @@
 }
 
 .field {
-  position: relative;
   display: grid;
   gap: 8px;
-  padding-bottom: 18px;
 }
 
 .labelRow {
@@ -124,16 +122,12 @@
 }
 
 .error {
-  position: absolute;
-  bottom: 0;
-  left: 16px;
-  max-width: calc(100% - 32px);
-  padding-inline: 8px;
+  min-height: 17px;
+  margin-top: -4px;
+  padding-left: 16px;
   font-size: var(--fz-12);
   line-height: 1.4;
   color: var(--color-error);
-  background-color: var(--color-surface);
-  border-radius: var(--radius-pill);
 }
 
 .submitError,

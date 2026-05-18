@@ -53,13 +53,35 @@ export const CHECKOUT_DESCRIPTION =
 
 export const LOGIN_TITLE = 'Log In';
 export const LOGIN_DESCRIPTION =
-  'Log in to your E-PHARMACY account to manage your orders and profile.';
+  'Access your E-PHARMACY account to track orders, manage saved medicines, and keep your delivery details ready for the next checkout.';
+
+export const LOGIN_BENEFITS = [
+  'Track pharmacy orders without digging through emails like a detective with a tiny magnifying glass.',
+  'Keep your profile, delivery address, and contact details ready for faster checkout.',
+  'Return to favorites, cart items, and personal pharmacy history in a few clicks.',
+] as const;
+
+export const PASSWORD_RECOVERY_TITLE = 'Recover password';
+export const PASSWORD_RECOVERY_DESCRIPTION =
+  'Enter the email linked to your E-PHARMACY account. If we find it, we will send safe recovery instructions without showing account details on the page.';
+
+export const PASSWORD_RECOVERY_BENEFITS = [
+  'Use the email from your account, and we will handle the rest quietly and securely.',
+  'For privacy, the page shows the same result even if an email is not registered.',
+  'After recovery, come back and continue managing orders, favorites, and checkout details.',
+] as const;
 
 //===================================================================
 
 export const REGISTER_TITLE = 'Register';
 export const REGISTER_DESCRIPTION =
-  'Create an E-PHARMACY account to save your profile and manage online pharmacy orders.';
+  'Create your E-PHARMACY account to save checkout details, manage pharmacy orders, and keep favorite medicines close at hand.';
+
+export const REGISTER_BENEFITS = [
+  'Save your profile once and use it again at checkout instead of typing the same details forever.',
+  'Collect favorite medicines and pharmacies in one calm place — no browser-tab jungle required.',
+  'View order history and quickly return to the pharmacies and products you need.',
+] as const;
 
 //===================================================================
 

@@ -12,6 +12,7 @@ import css from './AuthFormShell.module.css';
 type AuthFormShellProps = {
   title: string;
   text: string;
+  descriptionItems?: string[];
   breadcrumbs: BreadcrumbItem[];
   children: ReactNode;
 };
@@ -22,6 +23,7 @@ function AuthFormShell({
   title,
   text,
   breadcrumbs,
+  descriptionItems = [],
   children,
 }: AuthFormShellProps) {
   return (
@@ -37,6 +39,16 @@ function AuthFormShell({
               </h1>
 
               <p className={css.text}>{text}</p>
+
+              {descriptionItems.length > 0 ? (
+                <ul className={css.list} aria-label="Page benefits">
+                  {descriptionItems.map((item) => (
+                    <li className={css.item} key={item}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
 
             <div className={css.card}>{children}</div>
