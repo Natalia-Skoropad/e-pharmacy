@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import clsx from 'clsx';
 
 import css from './HomeReviewsSlider.module.css';
@@ -10,6 +10,7 @@ import css from './HomeReviewsSlider.module.css';
 
 type Review = {
   name: string;
+  rating: number;
   text: string;
 };
 
@@ -52,6 +53,14 @@ function HomeReviewsSlider({ reviews }: HomeReviewsSliderProps) {
                   {review.name.charAt(0)}
                 </div>
                 <h3>{review.name}</h3>
+                <div
+                  className={css.rating}
+                  aria-label={`Rating ${review.rating} out of 5`}
+                >
+                  <Star size={17} aria-hidden="true" />
+                  <strong>{review.rating.toFixed(1)}</strong>
+                  <span>/ 5</span>
+                </div>
                 <p>{review.text}</p>
               </div>
             </article>

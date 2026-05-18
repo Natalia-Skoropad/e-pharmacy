@@ -93,7 +93,7 @@ function HomeFeatureCards() {
         {FEATURE_CARDS.map(({ icon: Icon, ...feature }) => (
           <article className={css.featureCard} key={feature.title}>
             <span className={css.iconWrap} aria-hidden="true">
-              <Icon size={20} />
+              <Icon size={26} />
             </span>
             <h3>{feature.title}</h3>
             <p>{feature.text}</p>
