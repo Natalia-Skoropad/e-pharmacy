@@ -11,6 +11,7 @@ import {
   logoutUser,
   requestPasswordReset,
   registerUser,
+  resetPassword,
   updateCurrentUser,
   updateCurrentUserPassword,
 } from '../controllers/auth.controller';
@@ -22,6 +23,7 @@ import {
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
+  resetPasswordSchema,
   updatePasswordSchema,
   updateProfileSchema,
 } from '../schemas/auth.schema';
@@ -56,6 +58,14 @@ authRoutes.post(
     body: forgotPasswordSchema,
   }),
   ctrlWrapper(requestPasswordReset)
+);
+
+authRoutes.post(
+  '/reset-password',
+  validate({
+    body: resetPasswordSchema,
+  }),
+  ctrlWrapper(resetPassword)
 );
 
 authRoutes.get('/current', authenticate, ctrlWrapper(getCurrentUser));

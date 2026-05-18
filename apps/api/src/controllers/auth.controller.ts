@@ -7,6 +7,7 @@ import {
   loginUserService,
   registerUserService,
   requestPasswordResetService,
+  resetPasswordService,
   updateUserPasswordService,
   updateUserProfileService,
 } from '../services/auth.service';
@@ -14,6 +15,7 @@ import {
 import type {
   ForgotPasswordInput,
   LoginInput,
+  ResetPasswordInput,
   RegisterInput,
   UpdatePasswordInput,
   UpdateProfileInput,
@@ -69,6 +71,21 @@ export async function requestPasswordReset(
 }
 
 //===============================================================
+
+
+//===============================================================
+
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+  const input = req.body as ResetPasswordInput;
+
+  await resetPasswordService(input);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    message: API_MESSAGES.PASSWORD_RESET_SUCCESS,
+  });
+}
 
 export function getCurrentUser(req: Request, res: Response): void {
   sendSuccessResponse({

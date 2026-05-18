@@ -6,6 +6,7 @@ export const API_ROUTES = {
     current: '/auth/current',
     password: '/auth/current/password',
     forgotPassword: '/auth/forgot-password',
+    resetPassword: '/auth/reset-password',
   },
 
   stores: {

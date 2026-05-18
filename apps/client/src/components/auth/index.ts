@@ -5,3 +5,5 @@ export { default as ProtectedRoute } from './ProtectedRoute';
 export { default as RegisterForm } from './RegisterForm';
 export { default as LoginPageContent } from './LoginPageContent';
 export { default as PasswordRecoveryForm } from './PasswordRecoveryForm';
+
+export { default as ResetPasswordForm } from './ResetPasswordForm';

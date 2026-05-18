@@ -79,6 +79,18 @@ const userSchema = new Schema<UserEntity>(
       ref: 'Store',
       default: [],
     },
+
+    resetPasswordTokenHash: {
+      type: String,
+      select: false,
+      default: undefined,
+    },
+
+    resetPasswordExpiresAt: {
+      type: Date,
+      select: false,
+      default: undefined,
+    },
   },
   {
     timestamps: true,

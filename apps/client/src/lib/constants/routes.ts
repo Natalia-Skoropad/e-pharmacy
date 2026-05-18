@@ -12,5 +12,6 @@ export const ROUTES = {
   LOGIN: `/${ROUTE_SEGMENTS.login}`,
   REGISTER: `/${ROUTE_SEGMENTS.register}`,
   PASSWORD_RECOVERY: `/${ROUTE_SEGMENTS.passwordRecovery}`,
+  RESET_PASSWORD: '/reset-password',
   PROFILE: `/${ROUTE_SEGMENTS.profile}`,
 } as const;

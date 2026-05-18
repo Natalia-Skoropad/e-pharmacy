@@ -71,4 +71,7 @@ export const env = {
   JWT_SECRET: getRequiredEnv('JWT_SECRET'),
   JWT_EXPIRES_IN: (process.env.JWT_EXPIRES_IN || '7d') as StringValue,
   CLIENT_ORIGINS: getClientOrigins(),
+  CLIENT_APP_URL: process.env.CLIENT_APP_URL || 'http://localhost:3000',
+  PASSWORD_RESET_TOKEN_EXPIRES_MINUTES: Number(process.env.PASSWORD_RESET_TOKEN_EXPIRES_MINUTES || 30),
+  PASSWORD_RESET_EMAIL_WEBHOOK_URL: process.env.PASSWORD_RESET_EMAIL_WEBHOOK_URL,
 } as const;

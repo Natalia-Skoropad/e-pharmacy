@@ -3,8 +3,6 @@
 import Link from 'next/link';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 
-import { Eye, EyeOff } from 'lucide-react';
-
 import { Button, Toast } from '@/components/common';
 import { useAuth } from '@/components/providers';
 
@@ -13,7 +11,6 @@ import { ROUTES } from '@/lib/constants/routes';
 import {
   EMAIL_MAX_LENGTH,
   FORGOT_PASSWORD_INITIAL_VALUES,
-  PASSWORD_MAX_LENGTH,
   sanitizeEmail,
   validateForgotPasswordForm,
   type ForgotPasswordFormErrors,
@@ -40,9 +37,6 @@ function PasswordRecoveryForm() {
     'success'
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
-    useState(false);
 
   const formIsValid =
     Object.keys(validateForgotPasswordForm(values)).length === 0;
@@ -61,25 +55,17 @@ function PasswordRecoveryForm() {
     return () => window.clearTimeout(timeoutId);
   }, [toastMessage]);
 
-  const handleChange =
-    (field: keyof ForgotPasswordFormValues) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const nextValue =
-        field === 'email'
-          ? sanitizeEmail(event.target.value)
-          : event.target.value;
-
-      const nextValues = {
-        ...values,
-        [field]: nextValue,
-      };
-      const nextErrors = validateForgotPasswordForm(nextValues);
-
-      setValues(nextValues);
-      setTouchedFields((prev) => ({ ...prev, [field]: true }));
-      setErrors((prev: ForgotPasswordFormErrors) => ({ ...prev, [field]: nextErrors[field] }));
-      setToastMessage('');
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextValues = {
+      email: sanitizeEmail(event.target.value),
     };
+    const nextErrors = validateForgotPasswordForm(nextValues);
+
+    setValues(nextValues);
+    setTouchedFields({ email: true });
+    setErrors((prev) => ({ ...prev, email: nextErrors.email }));
+    setToastMessage('');
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -87,7 +73,7 @@ function PasswordRecoveryForm() {
     const nextErrors = validateForgotPasswordForm(values);
 
     if (Object.keys(nextErrors).length > 0) {
-      setTouchedFields({ email: true, password: true, confirmPassword: true });
+      setTouchedFields({ email: true });
       setErrors(nextErrors);
       return;
     }
@@ -98,13 +84,15 @@ function PasswordRecoveryForm() {
 
       await requestPasswordReset({
         email: values.email.trim(),
-        newPassword: values.password,
       });
 
       setValues(FORGOT_PASSWORD_INITIAL_VALUES);
       setTouchedFields({});
       setErrors({});
-      showToast('Password was updated successfully. You can log in now.', 'success');
+      showToast(
+        'If an account with that email exists, you will receive password reset instructions shortly. Please check your inbox.',
+        'success'
+      );
     } catch (error) {
       showToast(getAuthErrorMessage(error), 'error');
     } finally {
@@ -132,7 +120,7 @@ function PasswordRecoveryForm() {
               maxLength={EMAIL_MAX_LENGTH}
               aria-invalid={Boolean(touchedFields.email && errors.email)}
               aria-describedby="recovery-email-error"
-              onChange={handleChange('email')}
+              onChange={handleChange}
             />
             <span className={css.inputCounter} aria-hidden="true">
               {values.email.length}/{EMAIL_MAX_LENGTH}
@@ -141,94 +129,6 @@ function PasswordRecoveryForm() {
 
           <p className={css.error} id="recovery-email-error">
             {touchedFields.email ? (errors.email ?? '') : ''}
-          </p>
-        </div>
-
-        <div className={css.field}>
-          <label className={css.label} htmlFor="recovery-password">
-            New password
-          </label>
-
-          <div className={css.inputWrap}>
-            <input
-              className={css.input}
-              id="recovery-password"
-              name="password"
-              type={isPasswordVisible ? 'text' : 'password'}
-              value={values.password}
-              placeholder="Create new password"
-              autoComplete="new-password"
-              maxLength={PASSWORD_MAX_LENGTH}
-              aria-invalid={Boolean(touchedFields.password && errors.password)}
-              aria-describedby="recovery-password-error"
-              onChange={handleChange('password')}
-            />
-            <span className={css.passwordCounter} aria-hidden="true">
-              {values.password.length}/{PASSWORD_MAX_LENGTH}
-            </span>
-            <button
-              className={css.eyeButton}
-              type="button"
-              aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
-              onClick={() => setIsPasswordVisible((prev) => !prev)}
-            >
-              {isPasswordVisible ? (
-                <EyeOff size={18} aria-hidden="true" />
-              ) : (
-                <Eye size={18} aria-hidden="true" />
-              )}
-            </button>
-          </div>
-
-          <p className={css.error} id="recovery-password-error">
-            {touchedFields.password ? (errors.password ?? '') : ''}
-          </p>
-        </div>
-
-        <div className={css.field}>
-          <label className={css.label} htmlFor="recovery-confirm-password">
-            Confirm password
-          </label>
-
-          <div className={css.inputWrap}>
-            <input
-              className={css.input}
-              id="recovery-confirm-password"
-              name="confirmPassword"
-              type={isConfirmPasswordVisible ? 'text' : 'password'}
-              value={values.confirmPassword}
-              placeholder="Repeat new password"
-              autoComplete="new-password"
-              maxLength={PASSWORD_MAX_LENGTH}
-              aria-invalid={Boolean(
-                touchedFields.confirmPassword && errors.confirmPassword
-              )}
-              aria-describedby="recovery-confirm-password-error"
-              onChange={handleChange('confirmPassword')}
-            />
-            <span className={css.passwordCounter} aria-hidden="true">
-              {values.confirmPassword.length}/{PASSWORD_MAX_LENGTH}
-            </span>
-            <button
-              className={css.eyeButton}
-              type="button"
-              aria-label={
-                isConfirmPasswordVisible ? 'Hide password' : 'Show password'
-              }
-              onClick={() => setIsConfirmPasswordVisible((prev) => !prev)}
-            >
-              {isConfirmPasswordVisible ? (
-                <EyeOff size={18} aria-hidden="true" />
-              ) : (
-                <Eye size={18} aria-hidden="true" />
-              )}
-            </button>
-          </div>
-
-          <p className={css.error} id="recovery-confirm-password-error">
-            {touchedFields.confirmPassword
-              ? (errors.confirmPassword ?? '')
-              : ''}
           </p>
         </div>
       </div>
@@ -244,7 +144,7 @@ function PasswordRecoveryForm() {
         fullWidth
         disabled={isSubmitting || !isAuthReady || !formIsValid}
       >
-        {isSubmitting ? 'Updating password...' : 'Update password'}
+        {isSubmitting ? 'Sending reset link...' : 'Send reset link'}
       </Button>
 
       <p className={css.footerText}>

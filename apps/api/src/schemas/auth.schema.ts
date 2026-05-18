@@ -91,6 +91,10 @@ export const loginSchema = z.object({
 
 export const forgotPasswordSchema = z.object({
   email: emailSchema,
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().trim().min(32, 'Reset token is required'),
   newPassword: passwordSchema,
 });
 

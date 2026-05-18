@@ -24,12 +24,14 @@
 
 .fields {
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
 
 .field {
+  position: relative;
   display: grid;
   gap: 8px;
+  padding-bottom: 12px;
 }
 
 .labelRow {
@@ -80,7 +82,14 @@
 }
 
 .input[aria-invalid='true'] {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
   border-color: var(--color-error);
+  box-shadow: none;
+}
+
+.input[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 4px rgba(255, 83, 83, 0.12);
 }
 
 .inputCounter,
@@ -122,12 +131,28 @@
 }
 
 .error {
-  min-height: 17px;
-  margin-top: -4px;
-  padding-left: 16px;
+  position: absolute;
+  left: 16px;
+  bottom: 0;
+  z-index: 2;
+  max-width: calc(100% - 32px);
+  padding-inline: 8px;
   font-size: var(--fz-12);
-  line-height: 1.4;
+  font-weight: var(--fw-regular);
+  line-height: 18px;
   color: var(--color-error);
+  white-space: nowrap;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  opacity: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.error:empty {
+  opacity: 0;
 }
 
 .submitError,

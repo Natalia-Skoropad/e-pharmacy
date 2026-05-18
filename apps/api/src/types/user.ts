@@ -19,4 +19,6 @@ export type UserEntity = {
   avatarUrl?: string;
   favoriteProductIds?: string[];
   favoriteStoreIds?: string[];
+  resetPasswordTokenHash?: string;
+  resetPasswordExpiresAt?: Date;
 };

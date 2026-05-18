@@ -10,6 +10,7 @@
 .grid {
   display: grid;
   gap: 28px;
+  margin-top: 50px;
 }
 
 .content {

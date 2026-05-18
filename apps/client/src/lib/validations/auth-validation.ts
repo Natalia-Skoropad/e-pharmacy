@@ -27,6 +27,9 @@ export type RegisterFormValues = {
 
 export type ForgotPasswordFormValues = {
   email: string;
+};
+
+export type ResetPasswordFormValues = {
   password: string;
   confirmPassword: string;
 };
@@ -41,6 +44,10 @@ export type RegisterFormErrors = Partial<
 
 export type ForgotPasswordFormErrors = Partial<
   Record<keyof ForgotPasswordFormValues, string>
+>;
+
+export type ResetPasswordFormErrors = Partial<
+  Record<keyof ResetPasswordFormValues, string>
 >;
 
 //===================================================================
@@ -58,6 +65,9 @@ export const REGISTER_INITIAL_VALUES: RegisterFormValues = {
 
 export const FORGOT_PASSWORD_INITIAL_VALUES: ForgotPasswordFormValues = {
   email: '',
+};
+
+export const RESET_PASSWORD_INITIAL_VALUES: ResetPasswordFormValues = {
   password: '',
   confirmPassword: '',
 };
@@ -152,9 +162,21 @@ export function validateForgotPasswordForm(
   const errors: ForgotPasswordFormErrors = {};
 
   const emailError = getEmailError(values.email);
-  const passwordError = getPasswordError(values.password);
 
   if (emailError) errors.email = emailError;
+
+  return errors;
+}
+
+//===================================================================
+
+export function validateResetPasswordForm(
+  values: ResetPasswordFormValues
+): ResetPasswordFormErrors {
+  const errors: ResetPasswordFormErrors = {};
+
+  const passwordError = getPasswordError(values.password);
+
   if (passwordError) errors.password = passwordError;
 
   if (!values.confirmPassword) {
