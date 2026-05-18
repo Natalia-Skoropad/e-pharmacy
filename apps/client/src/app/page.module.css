@@ -86,6 +86,10 @@
   margin-top: 32px;
 }
 
+.actions a {
+  width: 100%;
+}
+
 .heroMedia {
   position: relative;
   min-height: 280px;
@@ -172,9 +176,7 @@
   color: var(--color-text-secondary);
 }
 
-.storePreviewGrid,
-.featuresGrid,
-.reviewsGrid {
+.storePreviewGrid {
   display: grid;
   gap: 16px;
   margin-top: 32px;
@@ -259,6 +261,22 @@
   border-radius: var(--radius-pill);
 }
 
+.storeLink {
+  position: absolute;
+  right: 24px;
+  bottom: 18px;
+}
+
+.sectionAction {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.sectionAction a {
+  width: 100%;
+}
+
 .splitGrid,
 .benefitsGrid {
   display: grid;
@@ -321,18 +339,22 @@
   color: rgba(255, 255, 255, 0.78);
 }
 
+.bannerContent a {
+  width: 100%;
+}
+
 .bannerMedia {
   position: relative;
   min-height: 240px;
   overflow: hidden;
-  background-color: rgba(255, 255, 255, 0.14);
+  background-color: #4fa56d;
   border-radius: var(--radius-lg);
 }
 
 .bannerImage {
   object-fit: cover;
+  object-position: center;
 }
-
 .benefitsList {
   display: grid;
   gap: 14px;
@@ -347,10 +369,17 @@
   color: var(--color-text-secondary);
 }
 
-.benefitsList svg {
+.benefitIcon {
+  display: inline-flex;
   flex-shrink: 0;
-  margin-top: 3px;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-top: -1px;
   color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border-radius: 50%;
 }
 
 .featureCard {
@@ -408,8 +437,12 @@
   }
 
   .actions {
-    flex-direction: row;
-    align-items: center;
+    max-width: 360px;
+  }
+
+  .sectionAction a,
+  .bannerContent a {
+    width: fit-content;
   }
 
   .heroMedia {
@@ -417,13 +450,8 @@
   }
 
   .statsList,
-  .storePreviewGrid,
-  .reviewsGrid {
+  .storePreviewGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .featuresGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .splitGrid,
@@ -484,10 +512,18 @@
     font-size: var(--fz-48);
   }
 
-  .storePreviewGrid,
-  .featuresGrid,
-  .reviewsGrid {
+  .storePreviewGrid {
     gap: 24px;
+  }
+
+  .actions {
+    max-width: none;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .actions a {
+    width: fit-content;
   }
 
   .banner {

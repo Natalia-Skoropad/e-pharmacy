@@ -20,7 +20,7 @@ function Footer() {
     <footer className={css.footer}>
       <Container className={css.container}>
         <div className={css.brand}>
-          <Logo />
+          <Logo className={css.footerLogo} />
 
           <p className={css.text}>
             E-PHARMACY helps customers explore pharmacy stores, find medicines,

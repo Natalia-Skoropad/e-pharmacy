@@ -1,14 +1,22 @@
 import Image from 'next/image';
+import { Heart, MapPin, ReceiptText, SearchCheck, ShieldCheck } from 'lucide-react';
 
 import { ButtonLink, Container, SvgIcon } from '@/components/common';
+import { HomeFeatureCards, HomeReviewsSlider } from '@/components/home';
 
 import { HOME_DESCRIPTION, HOME_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
+import { buildStorePath } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
+import { getStores } from '@/services/store-service';
+
+import type { Store } from '@/types';
 
 import css from './page.module.css';
 
 //===================================================================
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = createPageMetadata({
   title: HOME_TITLE,
@@ -18,6 +26,8 @@ export const metadata = createPageMetadata({
 
 //===================================================================
 
+const HOME_STORES_LIMIT = 6;
+
 const STATS = [
   { value: '126+', label: 'medicines in catalog' },
   { value: '98+', label: 'trusted pharmacy stores' },
@@ -25,9 +35,26 @@ const STATS = [
 ] as const;
 
 const BENEFITS = [
-  'Compare prices and availability across nearby pharmacies.',
-  'Save favorite medicines and stores in your personal account.',
-  'Review every pharmacy invoice separately before checkout.',
+  {
+    text: 'Compare prices and availability across nearby pharmacies.',
+    icon: SearchCheck,
+  },
+  {
+    text: 'Save favorite medicines and stores in your personal account.',
+    icon: Heart,
+  },
+  {
+    text: 'Review every pharmacy invoice separately before checkout.',
+    icon: ReceiptText,
+  },
+  {
+    text: 'Choose pickup or post delivery for each confirmed order.',
+    icon: MapPin,
+  },
+  {
+    text: 'Keep profile details, delivery address, and order history together.',
+    icon: ShieldCheck,
+  },
 ] as const;
 
 const STEPS = [
@@ -45,25 +72,6 @@ const STEPS = [
   },
 ] as const;
 
-const FEATURE_CARDS = [
-  {
-    title: 'Smart catalog',
-    text: 'Fast medicine search, category filters, availability filters, and sorting for everyday health essentials.',
-  },
-  {
-    title: 'Pharmacy profiles',
-    text: 'Store contacts, working hours, reviews, payment details, and products are collected on clear pages.',
-  },
-  {
-    title: 'Personal cabinet',
-    text: 'Profile details, avatar, delivery information, favorites, and order history stay close at hand.',
-  },
-  {
-    title: 'Separated invoices',
-    text: 'Cart items are grouped by pharmacy, so every order block has its own total and checkout flow.',
-  },
-] as const;
-
 const REVIEWS = [
   {
     name: 'Maria Tkachenko',
@@ -77,11 +85,53 @@ const REVIEWS = [
     name: 'Natalia Chatuk',
     text: 'Favorite stores and order history are exactly what I need when buying the same medicines again.',
   },
+  {
+    name: 'Olena Voronina',
+    text: 'I liked that I could compare pharmacy offers before adding anything to the cart. It feels calm and predictable.',
+  },
+  {
+    name: 'Andriy Melnyk',
+    text: 'The profile page saves time because repeat orders and favorite pharmacies are not hiding in a digital jungle.',
+  },
+  {
+    name: 'Iryna Sokolova',
+    text: 'The checkout is clear: pickup details, delivery fields, and pharmacy totals are shown exactly where I expect them.',
+  },
+  {
+    name: 'Dmytro Kovalenko',
+    text: 'I use the pharmacy pages to check contacts, hours, ratings, and payment details before placing an order.',
+  },
+  {
+    name: 'Kateryna Bondar',
+    text: 'Search by medicine article is a small thing, but it makes buying the right item much safer and faster.',
+  },
+  {
+    name: 'Viktor Shevchenko',
+    text: 'The cart grouping by pharmacy is great. Each invoice has its own total, so nothing turns into spreadsheet soup.',
+  },
 ] as const;
 
 //===================================================================
 
-function HomePage() {
+function shuffleStores(stores: Store[]): Store[] {
+  return [...stores].sort(() => Math.random() - 0.5);
+}
+
+async function getRandomStores(): Promise<Store[]> {
+  try {
+    const response = await getStores({ page: 1, perPage: 98 });
+
+    return shuffleStores(response.items).slice(0, HOME_STORES_LIMIT);
+  } catch {
+    return [];
+  }
+}
+
+//===================================================================
+
+async function HomePage() {
+  const randomStores = await getRandomStores();
+
   return (
     <main className={css.page}>
       <section className={css.hero} aria-labelledby="home-title">
@@ -107,7 +157,6 @@ function HomePage() {
 
                 <ButtonLink href={ROUTES.STORES} variant="secondary" size="lg">
                   View pharmacies
-                  <SvgIcon name="icon-map-pin" size={18} />
                 </ButtonLink>
               </div>
             </div>
@@ -145,29 +194,47 @@ function HomePage() {
           <div className={css.sectionHead}>
             <p className={css.kicker}>Medicine stores</p>
             <h2 className={css.sectionTitle} id="stores-title">
-              Find a trusted pharmacy near you
+              Discover random trusted pharmacies today
             </h2>
             <p className={css.sectionText}>
-              Browse pharmacy stores, check ratings, contacts, addresses,
-              working hours, and open the exact store page before ordering.
+              Every visit shows a fresh mix of pharmacy cards, so customers can
+              explore new stores, compare ratings, and open the right pharmacy
+              page before ordering.
             </p>
           </div>
 
-          <div className={css.storePreviewGrid}>
-            {['Wellness Hub', 'Green Care', 'Health Point'].map(
-              (name, index) => (
-                <article className={css.storeCard} key={name}>
+          {randomStores.length > 0 ? (
+            <div className={css.storePreviewGrid}>
+              {randomStores.map((store) => (
+                <article className={css.storeCard} key={store.id}>
                   <div>
-                    <h3>{name}</h3>
-                    <p>{['Kyiv', 'Lviv', 'Odesa'][index]}</p>
+                    <h3>{store.name}</h3>
+                    <p>{store.city ?? store.address}</p>
                   </div>
                   <span className={css.rating}>
-                    <SvgIcon name="icon-star" size={16} /> {5 - index}
+                    <SvgIcon name="icon-star" size={16} />{' '}
+                    {(store.rating ?? 0).toFixed(1)}
                   </span>
-                  <span className={css.status}>Open</span>
+                  <span className={css.status}>
+                    {store.isActive ? 'Open' : 'Closed'}
+                  </span>
+                  <ButtonLink
+                    className={css.storeLink}
+                    href={buildStorePath(store.name, store.id)}
+                    variant="secondary"
+                    size="sm"
+                  >
+                    View pharmacy
+                  </ButtonLink>
                 </article>
-              )
-            )}
+              ))}
+            </div>
+          ) : null}
+
+          <div className={css.sectionAction}>
+            <ButtonLink href={ROUTES.STORES} variant="secondary">
+              View all pharmacies
+            </ButtonLink>
           </div>
         </Container>
       </section>
@@ -239,10 +306,12 @@ function HomePage() {
             </div>
 
             <ul className={css.benefitsList}>
-              {BENEFITS.map((benefit) => (
-                <li key={benefit}>
-                  <SvgIcon name="icon-lightning" size={18} />
-                  {benefit}
+              {BENEFITS.map(({ text, icon: Icon }) => (
+                <li key={text}>
+                  <span className={css.benefitIcon} aria-hidden="true">
+                    <Icon size={18} />
+                  </span>
+                  {text}
                 </li>
               ))}
             </ul>
@@ -259,17 +328,7 @@ function HomePage() {
             </h2>
           </div>
 
-          <div className={css.featuresGrid}>
-            {FEATURE_CARDS.map((feature) => (
-              <article className={css.featureCard} key={feature.title}>
-                <span aria-hidden="true">
-                  <SvgIcon name="icon-lightning" size={18} />
-                </span>
-                <h3>{feature.title}</h3>
-                <p>{feature.text}</p>
-              </article>
-            ))}
-          </div>
+          <HomeFeatureCards />
         </Container>
       </section>
 
@@ -282,17 +341,7 @@ function HomePage() {
             </h2>
           </div>
 
-          <div className={css.reviewsGrid}>
-            {REVIEWS.map((review) => (
-              <article className={css.reviewCard} key={review.name}>
-                <div className={css.avatar} aria-hidden="true">
-                  {review.name.charAt(0)}
-                </div>
-                <h3>{review.name}</h3>
-                <p>{review.text}</p>
-              </article>
-            ))}
-          </div>
+          <HomeReviewsSlider reviews={REVIEWS} />
         </Container>
       </section>
     </main>

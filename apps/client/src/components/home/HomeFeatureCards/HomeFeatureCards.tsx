@@ -1,0 +1,132 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Building2,
+  ClipboardList,
+  PackageSearch,
+  ShoppingCart,
+  type LucideIcon,
+} from 'lucide-react';
+
+import { Button, ButtonLink, Toast } from '@/components/common';
+import { useAuth } from '@/components/providers';
+
+import { ROUTES } from '@/lib/constants/routes';
+
+import css from './HomeFeatureCards.module.css';
+
+//===================================================================
+
+type FeatureCard = {
+  title: string;
+  text: string;
+  href: string;
+  buttonLabel: string;
+  isProtected?: boolean;
+  icon: LucideIcon;
+};
+
+const FEATURE_CARDS: FeatureCard[] = [
+  {
+    title: 'Smart catalog',
+    text: 'Fast medicine search, category filters, availability filters, and sorting for everyday health essentials.',
+    href: ROUTES.MEDICINES_CATALOG,
+    buttonLabel: 'Open catalog',
+    icon: PackageSearch,
+  },
+  {
+    title: 'Pharmacy profiles',
+    text: 'Store contacts, working hours, reviews, payment details, and products are collected on clear pages.',
+    href: ROUTES.STORES,
+    buttonLabel: 'View pharmacies',
+    icon: Building2,
+  },
+  {
+    title: 'Personal cabinet',
+    text: 'Profile details, avatar, delivery information, favorites, and order history stay close at hand.',
+    href: ROUTES.PROFILE,
+    buttonLabel: 'Open profile',
+    isProtected: true,
+    icon: ClipboardList,
+  },
+  {
+    title: 'Separated invoices',
+    text: 'Cart items are grouped by pharmacy, so every order block has its own total and checkout flow.',
+    href: ROUTES.CART,
+    buttonLabel: 'Open cart',
+    isProtected: true,
+    icon: ShoppingCart,
+  },
+];
+
+//===================================================================
+
+function HomeFeatureCards() {
+  const router = useRouter();
+  const { isAuthenticated, isAuthReady } = useAuth();
+  const [toastMessage, setToastMessage] = useState('');
+
+  useEffect(() => {
+    if (!toastMessage) return undefined;
+
+    const timeoutId = window.setTimeout(() => setToastMessage(''), 5000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toastMessage]);
+
+  const handleProtectedClick = (href: string) => {
+    if (!isAuthReady) return;
+
+    if (!isAuthenticated) {
+      setToastMessage('Please log in to open this private page.');
+      return;
+    }
+
+    router.push(href);
+  };
+
+  return (
+    <>
+      <div className={css.featuresGrid}>
+        {FEATURE_CARDS.map(({ icon: Icon, ...feature }) => (
+          <article className={css.featureCard} key={feature.title}>
+            <span className={css.iconWrap} aria-hidden="true">
+              <Icon size={20} />
+            </span>
+            <h3>{feature.title}</h3>
+            <p>{feature.text}</p>
+
+            {feature.isProtected ? (
+              <Button
+                className={css.featureAction}
+                type="button"
+                variant="secondary"
+                onClick={() => handleProtectedClick(feature.href)}
+              >
+                {feature.buttonLabel}
+              </Button>
+            ) : (
+              <ButtonLink
+                className={css.featureAction}
+                href={feature.href}
+                variant="secondary"
+              >
+                {feature.buttonLabel}
+              </ButtonLink>
+            )}
+          </article>
+        ))}
+      </div>
+
+      <Toast
+        message={toastMessage}
+        isVisible={Boolean(toastMessage)}
+        variant="error"
+      />
+    </>
+  );
+}
+
+export default HomeFeatureCards;
