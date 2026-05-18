@@ -4,6 +4,9 @@ export const PASSWORD_MAX_LENGTH = 20;
 export const USER_NAME_MIN_LENGTH = 2;
 export const USER_NAME_MAX_LENGTH = 20;
 
+export const CUSTOMER_NAME_MIN_LENGTH = USER_NAME_MIN_LENGTH;
+export const CUSTOMER_NAME_MAX_LENGTH = USER_NAME_MAX_LENGTH;
+
 export const EMAIL_MAX_LENGTH = 64;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -63,6 +66,13 @@ export const FORGOT_PASSWORD_INITIAL_VALUES: ForgotPasswordFormValues = {
 
 export function sanitizeEmail(value: string): string {
   return value.trimStart().replace(/\s/g, '').slice(0, EMAIL_MAX_LENGTH);
+}
+
+export function sanitizeCustomerName(value: string): string {
+  return value
+    .replace(/[^A-Za-z '\-]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .slice(0, CUSTOMER_NAME_MAX_LENGTH);
 }
 
 export function getEmailError(value: string): string {

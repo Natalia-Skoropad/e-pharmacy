@@ -22,7 +22,7 @@ import {
   validateRegisterForm,
   type RegisterFormErrors,
   type RegisterFormValues,
-} from '@/lib/validations';
+} from '@/lib/validations/auth-validation';
 
 import css from './RegisterForm.module.css';
 
@@ -85,7 +85,7 @@ function RegisterForm() {
 
       setValues(nextValues);
       setTouchedFields((prev) => ({ ...prev, [field]: true }));
-      setErrors((prev) => ({ ...prev, [field]: nextErrors[field] }));
+      setErrors((prev: RegisterFormErrors) => ({ ...prev, [field]: nextErrors[field] }));
       setToastMessage('');
     };
 

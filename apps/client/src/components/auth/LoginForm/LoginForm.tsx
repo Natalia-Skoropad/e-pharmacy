@@ -20,7 +20,7 @@ import {
   validateLoginForm,
   type LoginFormErrors,
   type LoginFormValues,
-} from '@/lib/validations';
+} from '@/lib/validations/auth-validation';
 
 import css from './LoginForm.module.css';
 
@@ -77,7 +77,7 @@ function LoginForm() {
 
       setValues(nextValues);
       setTouchedFields((prev) => ({ ...prev, [field]: true }));
-      setErrors((prev) => ({ ...prev, [field]: nextErrors[field] }));
+      setErrors((prev: LoginFormErrors) => ({ ...prev, [field]: nextErrors[field] }));
       setToastMessage('');
     };
 

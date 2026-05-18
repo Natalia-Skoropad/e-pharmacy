@@ -18,7 +18,7 @@ import {
   validateForgotPasswordForm,
   type ForgotPasswordFormErrors,
   type ForgotPasswordFormValues,
-} from '@/lib/validations';
+} from '@/lib/validations/auth-validation';
 import { requestPasswordReset } from '@/services';
 
 import css from '../LoginForm/LoginForm.module.css';
@@ -77,7 +77,7 @@ function PasswordRecoveryForm() {
 
       setValues(nextValues);
       setTouchedFields((prev) => ({ ...prev, [field]: true }));
-      setErrors((prev) => ({ ...prev, [field]: nextErrors[field] }));
+      setErrors((prev: ForgotPasswordFormErrors) => ({ ...prev, [field]: nextErrors[field] }));
       setToastMessage('');
     };
 
@@ -104,10 +104,7 @@ function PasswordRecoveryForm() {
       setValues(FORGOT_PASSWORD_INITIAL_VALUES);
       setTouchedFields({});
       setErrors({});
-      showToast(
-        'Password was updated successfully. You can log in now.',
-        'success'
-      );
+      showToast('Password was updated successfully. You can log in now.', 'success');
     } catch (error) {
       showToast(getAuthErrorMessage(error), 'error');
     } finally {
