@@ -64,14 +64,34 @@ function getClientOrigins(): string[] {
 
 //===============================================================
 
+function getOptionalNumberEnv(name: string, fallback: number): number {
+  const value = process.env[name];
+
+  if (!value) return fallback;
+
+  const numberValue = Number(value);
+
+  if (!Number.isInteger(numberValue) || numberValue <= 0) {
+    throw new Error(`${name} must be a positive number`);
+  }
+
+  return numberValue;
+}
+
+//===============================================================
+
 export const env = {
   NODE_ENV: getNodeEnv(),
   PORT: getPort(),
   MONGODB_URI: getRequiredEnv('MONGODB_URI'),
   JWT_SECRET: getRequiredEnv('JWT_SECRET'),
   JWT_EXPIRES_IN: (process.env.JWT_EXPIRES_IN || '7d') as StringValue,
+  JWT_RESET_EXPIRES_IN: (process.env.JWT_RESET_EXPIRES_IN || '15m') as StringValue,
   CLIENT_ORIGINS: getClientOrigins(),
   CLIENT_APP_URL: process.env.CLIENT_APP_URL || 'http://localhost:3000',
-  PASSWORD_RESET_TOKEN_EXPIRES_MINUTES: Number(process.env.PASSWORD_RESET_TOKEN_EXPIRES_MINUTES || 30),
-  PASSWORD_RESET_EMAIL_WEBHOOK_URL: process.env.PASSWORD_RESET_EMAIL_WEBHOOK_URL,
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: getOptionalNumberEnv('SMTP_PORT', 587),
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASSWORD: process.env.SMTP_PASSWORD,
+  SMTP_FROM: process.env.SMTP_FROM,
 } as const;

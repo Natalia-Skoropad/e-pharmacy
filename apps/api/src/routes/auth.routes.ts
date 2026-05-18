@@ -61,6 +61,14 @@ authRoutes.post(
 );
 
 authRoutes.post(
+  '/request-reset-email',
+  validate({
+    body: forgotPasswordSchema,
+  }),
+  ctrlWrapper(requestPasswordReset)
+);
+
+authRoutes.post(
   '/reset-password',
   validate({
     body: resetPasswordSchema,

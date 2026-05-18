@@ -1,5 +1,3 @@
-import { createHash, randomBytes } from 'node:crypto';
-
 import { env } from '../config/env';
 import { USER_ROLES, USER_STATUSES } from '../constants/auth';
 import { API_MESSAGES } from '../constants/messages';
@@ -18,7 +16,7 @@ import type {
 } from '../types/auth';
 
 import { httpError } from '../utils/httpError';
-import { signToken } from '../utils/jwt';
+import { signPasswordResetToken, signToken, verifyPasswordResetToken } from '../utils/jwt';
 import { isDuplicateEmailError } from '../utils/mongoError';
 import { comparePassword, hashPassword } from '../utils/password';
 import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
@@ -100,10 +98,6 @@ export async function loginUserService(
 
 //===============================================================
 
-function hashResetToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex');
-}
-
 function buildPasswordResetUrl(token: string): string {
   const url = new URL('/reset-password', env.CLIENT_APP_URL);
 
@@ -112,29 +106,28 @@ function buildPasswordResetUrl(token: string): string {
   return url.toString();
 }
 
+//===============================================================
+
 export async function requestPasswordResetService(
   input: ForgotPasswordInput
 ): Promise<void> {
-  const user = await User.findOne({ email: input.email }).select(
-    '+resetPasswordTokenHash +resetPasswordExpiresAt'
-  );
+  const user = await User.findOne({ email: input.email });
 
+  // Anti user enumeration: the controller returns the same 200 response
+  // whether the account exists or not.
   if (!user || user.status === USER_STATUSES.BLOCKED) {
     return;
   }
 
-  const token = randomBytes(32).toString('hex');
-  const tokenHash = hashResetToken(token);
-  const expiresInMs = env.PASSWORD_RESET_TOKEN_EXPIRES_MINUTES * 60 * 1000;
-
-  user.resetPasswordTokenHash = tokenHash;
-  user.resetPasswordExpiresAt = new Date(Date.now() + expiresInMs);
-
-  await user.save();
+  const resetToken = signPasswordResetToken({
+    sub: String(user._id),
+    email: user.email,
+  });
 
   await sendPasswordResetEmail({
     to: user.email,
-    resetUrl: buildPasswordResetUrl(token),
+    name: user.name,
+    resetUrl: buildPasswordResetUrl(resetToken),
   });
 }
 
@@ -143,12 +136,12 @@ export async function requestPasswordResetService(
 export async function resetPasswordService(
   input: ResetPasswordInput
 ): Promise<void> {
-  const tokenHash = hashResetToken(input.token);
+  const payload = verifyPasswordResetToken(input.token);
 
   const user = await User.findOne({
-    resetPasswordTokenHash: tokenHash,
-    resetPasswordExpiresAt: { $gt: new Date() },
-  }).select('+password +resetPasswordTokenHash +resetPasswordExpiresAt');
+    _id: payload.sub,
+    email: payload.email,
+  }).select('+password');
 
   if (!user || user.status === USER_STATUSES.BLOCKED) {
     throw httpError(
@@ -158,8 +151,6 @@ export async function resetPasswordService(
   }
 
   user.password = await hashPassword(input.newPassword);
-  user.resetPasswordTokenHash = undefined;
-  user.resetPasswordExpiresAt = undefined;
 
   await user.save();
 }

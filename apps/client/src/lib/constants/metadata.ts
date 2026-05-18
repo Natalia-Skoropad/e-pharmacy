@@ -68,6 +68,13 @@ export const PASSWORD_RECOVERY_BENEFITS = [
   'Use the email linked to your account and set a new password that meets the security requirements.',
 ] as const;
 
+export const RESET_PASSWORD_TITLE = 'Reset password';
+
+export const RESET_PASSWORD_BENEFITS = [
+  'Create a new secure password from the email reset link.',
+  'After changing the password, sign in again with your updated credentials.',
+] as const;
+
 //===================================================================
 
 export const REGISTER_TITLE = 'Register';
