@@ -91,6 +91,7 @@ export const loginSchema = z.object({
 
 export const forgotPasswordSchema = z.object({
   email: emailSchema,
+  newPassword: passwordSchema,
 });
 
 

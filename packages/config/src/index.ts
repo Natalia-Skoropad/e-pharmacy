@@ -14,5 +14,6 @@ export const ROUTE_SEGMENTS = {
   checkout: 'checkout',
   login: 'login',
   register: 'register',
+  passwordRecovery: 'password-recovery',
   profile: 'profile',
 } as const;

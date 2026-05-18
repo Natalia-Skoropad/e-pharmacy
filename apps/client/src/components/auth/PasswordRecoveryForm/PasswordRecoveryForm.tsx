@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Eye, EyeOff } from 'lucide-react';
@@ -11,35 +10,30 @@ import { useAuth } from '@/components/providers';
 
 import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
-import { getSafeRedirectPath } from '@/lib/routes';
 import {
-  CUSTOMER_NAME_MAX_LENGTH,
   EMAIL_MAX_LENGTH,
+  FORGOT_PASSWORD_INITIAL_VALUES,
   PASSWORD_MAX_LENGTH,
-  REGISTER_INITIAL_VALUES,
-  sanitizeCustomerName,
   sanitizeEmail,
-  validateRegisterForm,
-  type RegisterFormErrors,
-  type RegisterFormValues,
+  validateForgotPasswordForm,
+  type ForgotPasswordFormErrors,
+  type ForgotPasswordFormValues,
 } from '@/lib/validations';
+import { requestPasswordReset } from '@/services';
 
-import css from './RegisterForm.module.css';
+import css from '../LoginForm/LoginForm.module.css';
 
 //===================================================================
 
-function RegisterForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+function PasswordRecoveryForm() {
+  const { isAuthReady } = useAuth();
 
-  const { register, isAuthReady } = useAuth();
-
-  const [values, setValues] = useState<RegisterFormValues>(
-    REGISTER_INITIAL_VALUES
+  const [values, setValues] = useState<ForgotPasswordFormValues>(
+    FORGOT_PASSWORD_INITIAL_VALUES
   );
-  const [errors, setErrors] = useState<RegisterFormErrors>({});
+  const [errors, setErrors] = useState<ForgotPasswordFormErrors>({});
   const [touchedFields, setTouchedFields] = useState<
-    Partial<Record<keyof RegisterFormValues, boolean>>
+    Partial<Record<keyof ForgotPasswordFormValues, boolean>>
   >({});
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>(
@@ -47,10 +41,11 @@ function RegisterForm() {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
+    useState(false);
 
-  const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
-  const registerFormIsValid =
-    Object.keys(validateRegisterForm(values)).length === 0;
+  const formIsValid =
+    Object.keys(validateForgotPasswordForm(values)).length === 0;
 
   const showToast = (message: string, variant: 'success' | 'error') => {
     setToastMessage('');
@@ -61,27 +56,24 @@ function RegisterForm() {
   useEffect(() => {
     if (!toastMessage) return undefined;
 
-    const timeoutId = window.setTimeout(() => setToastMessage(''), 3000);
+    const timeoutId = window.setTimeout(() => setToastMessage(''), 5000);
 
     return () => window.clearTimeout(timeoutId);
   }, [toastMessage]);
 
   const handleChange =
-    (field: keyof RegisterFormValues) =>
+    (field: keyof ForgotPasswordFormValues) =>
     (event: ChangeEvent<HTMLInputElement>) => {
-      const rawValue = event.target.value;
       const nextValue =
-        field === 'name'
-          ? sanitizeCustomerName(rawValue)
-          : field === 'email'
-            ? sanitizeEmail(rawValue)
-            : rawValue;
+        field === 'email'
+          ? sanitizeEmail(event.target.value)
+          : event.target.value;
 
       const nextValues = {
         ...values,
         [field]: nextValue,
       };
-      const nextErrors = validateRegisterForm(nextValues);
+      const nextErrors = validateForgotPasswordForm(nextValues);
 
       setValues(nextValues);
       setTouchedFields((prev) => ({ ...prev, [field]: true }));
@@ -92,10 +84,10 @@ function RegisterForm() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const nextErrors = validateRegisterForm(values);
+    const nextErrors = validateForgotPasswordForm(values);
 
     if (Object.keys(nextErrors).length > 0) {
-      setTouchedFields({ name: true, email: true, password: true });
+      setTouchedFields({ email: true, password: true, confirmPassword: true });
       setErrors(nextErrors);
       return;
     }
@@ -104,13 +96,18 @@ function RegisterForm() {
       setIsSubmitting(true);
       setToastMessage('');
 
-      await register({
-        name: values.name.trim(),
+      await requestPasswordReset({
         email: values.email.trim(),
-        password: values.password,
+        newPassword: values.password,
       });
 
-      router.replace(redirectTo);
+      setValues(FORGOT_PASSWORD_INITIAL_VALUES);
+      setTouchedFields({});
+      setErrors({});
+      showToast(
+        'Password was updated successfully. You can log in now.',
+        'success'
+      );
     } catch (error) {
       showToast(getAuthErrorMessage(error), 'error');
     } finally {
@@ -122,43 +119,14 @@ function RegisterForm() {
     <form className={css.form} noValidate onSubmit={handleSubmit}>
       <div className={css.fields}>
         <div className={css.field}>
-          <label className={css.label} htmlFor="register-name">
-            Name
-          </label>
-
-          <div className={css.inputWrap}>
-            <input
-              className={css.input}
-              id="register-name"
-              name="name"
-              type="text"
-              value={values.name}
-              placeholder="Your name"
-              autoComplete="name"
-              maxLength={CUSTOMER_NAME_MAX_LENGTH}
-              aria-invalid={Boolean(touchedFields.name && errors.name)}
-              aria-describedby="register-name-error"
-              onChange={handleChange('name')}
-            />
-            <span className={css.inputCounter} aria-hidden="true">
-              {values.name.length}/{CUSTOMER_NAME_MAX_LENGTH}
-            </span>
-          </div>
-
-          <p className={css.error} id="register-name-error">
-            {touchedFields.name ? (errors.name ?? '') : ''}
-          </p>
-        </div>
-
-        <div className={css.field}>
-          <label className={css.label} htmlFor="register-email">
+          <label className={css.label} htmlFor="recovery-email">
             Email
           </label>
 
           <div className={css.inputWrap}>
             <input
               className={css.input}
-              id="register-email"
+              id="recovery-email"
               name="email"
               type="email"
               value={values.email}
@@ -166,7 +134,7 @@ function RegisterForm() {
               autoComplete="email"
               maxLength={EMAIL_MAX_LENGTH}
               aria-invalid={Boolean(touchedFields.email && errors.email)}
-              aria-describedby="register-email-error"
+              aria-describedby="recovery-email-error"
               onChange={handleChange('email')}
             />
             <span className={css.inputCounter} aria-hidden="true">
@@ -174,28 +142,28 @@ function RegisterForm() {
             </span>
           </div>
 
-          <p className={css.error} id="register-email-error">
+          <p className={css.error} id="recovery-email-error">
             {touchedFields.email ? (errors.email ?? '') : ''}
           </p>
         </div>
 
         <div className={css.field}>
-          <label className={css.label} htmlFor="register-password">
-            Password
+          <label className={css.label} htmlFor="recovery-password">
+            New password
           </label>
 
           <div className={css.inputWrap}>
             <input
               className={css.input}
-              id="register-password"
+              id="recovery-password"
               name="password"
               type={isPasswordVisible ? 'text' : 'password'}
               value={values.password}
-              placeholder="Create password"
+              placeholder="Create new password"
               autoComplete="new-password"
               maxLength={PASSWORD_MAX_LENGTH}
               aria-invalid={Boolean(touchedFields.password && errors.password)}
-              aria-describedby="register-password-error"
+              aria-describedby="recovery-password-error"
               onChange={handleChange('password')}
             />
             <span className={css.passwordCounter} aria-hidden="true">
@@ -215,8 +183,55 @@ function RegisterForm() {
             </button>
           </div>
 
-          <p className={css.error} id="register-password-error">
+          <p className={css.error} id="recovery-password-error">
             {touchedFields.password ? (errors.password ?? '') : ''}
+          </p>
+        </div>
+
+        <div className={css.field}>
+          <label className={css.label} htmlFor="recovery-confirm-password">
+            Confirm password
+          </label>
+
+          <div className={css.inputWrap}>
+            <input
+              className={css.input}
+              id="recovery-confirm-password"
+              name="confirmPassword"
+              type={isConfirmPasswordVisible ? 'text' : 'password'}
+              value={values.confirmPassword}
+              placeholder="Repeat new password"
+              autoComplete="new-password"
+              maxLength={PASSWORD_MAX_LENGTH}
+              aria-invalid={Boolean(
+                touchedFields.confirmPassword && errors.confirmPassword
+              )}
+              aria-describedby="recovery-confirm-password-error"
+              onChange={handleChange('confirmPassword')}
+            />
+            <span className={css.passwordCounter} aria-hidden="true">
+              {values.confirmPassword.length}/{PASSWORD_MAX_LENGTH}
+            </span>
+            <button
+              className={css.eyeButton}
+              type="button"
+              aria-label={
+                isConfirmPasswordVisible ? 'Hide password' : 'Show password'
+              }
+              onClick={() => setIsConfirmPasswordVisible((prev) => !prev)}
+            >
+              {isConfirmPasswordVisible ? (
+                <EyeOff size={18} aria-hidden="true" />
+              ) : (
+                <Eye size={18} aria-hidden="true" />
+              )}
+            </button>
+          </div>
+
+          <p className={css.error} id="recovery-confirm-password-error">
+            {touchedFields.confirmPassword
+              ? (errors.confirmPassword ?? '')
+              : ''}
           </p>
         </div>
       </div>
@@ -230,13 +245,13 @@ function RegisterForm() {
       <Button
         type="submit"
         fullWidth
-        disabled={isSubmitting || !isAuthReady || !registerFormIsValid}
+        disabled={isSubmitting || !isAuthReady || !formIsValid}
       >
-        {isSubmitting ? 'Creating account...' : 'Create account'}
+        {isSubmitting ? 'Updating password...' : 'Update password'}
       </Button>
 
       <p className={css.footerText}>
-        Already have an account?{' '}
+        Remember your password?{' '}
         <Link className={css.link} href={ROUTES.LOGIN}>
           Log in
         </Link>
@@ -245,4 +260,4 @@ function RegisterForm() {
   );
 }
 
-export default RegisterForm;
+export default PasswordRecoveryForm;

@@ -44,6 +44,7 @@ export type LoginPayload = {
 
 export type ForgotPasswordPayload = {
   email: string;
+  newPassword: string;
 };
 
 

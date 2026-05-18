@@ -56,19 +56,16 @@ export const LOGIN_DESCRIPTION =
   'Access your E-PHARMACY account to track orders, manage saved medicines, and keep your delivery details ready for the next checkout.';
 
 export const LOGIN_BENEFITS = [
-  'Track pharmacy orders without digging through emails like a detective with a tiny magnifying glass.',
-  'Keep your profile, delivery address, and contact details ready for faster checkout.',
-  'Return to favorites, cart items, and personal pharmacy history in a few clicks.',
+  'Track your orders, profile details, delivery information, and saved account data in one secure place.',
+  'Return to your cart, favorite medicines, and trusted pharmacies faster after signing in.',
 ] as const;
 
 export const PASSWORD_RECOVERY_TITLE = 'Recover password';
 export const PASSWORD_RECOVERY_DESCRIPTION =
-  'Enter the email linked to your E-PHARMACY account. If we find it, we will send safe recovery instructions without showing account details on the page.';
+  'Restore access to your E-PHARMACY account by entering your account email and creating a new password.';
 
 export const PASSWORD_RECOVERY_BENEFITS = [
-  'Use the email from your account, and we will handle the rest quietly and securely.',
-  'For privacy, the page shows the same result even if an email is not registered.',
-  'After recovery, come back and continue managing orders, favorites, and checkout details.',
+  'Use the email linked to your account and set a new password that meets the security requirements.',
 ] as const;
 
 //===================================================================
@@ -78,12 +75,10 @@ export const REGISTER_DESCRIPTION =
   'Create your E-PHARMACY account to save checkout details, manage pharmacy orders, and keep favorite medicines close at hand.';
 
 export const REGISTER_BENEFITS = [
-  'Save your profile once and use it again at checkout instead of typing the same details forever.',
-  'Collect favorite medicines and pharmacies in one calm place — no browser-tab jungle required.',
-  'View order history and quickly return to the pharmacies and products you need.',
+  'Save your profile details once and use them again during checkout.',
+  'Keep favorite medicines and pharmacies organized in your personal account.',
+  'View your order history and quickly return to the products and pharmacies you use most.',
 ] as const;
-
-//===================================================================
 
 export const PROFILE_TITLE = 'Profile';
 export const PROFILE_DESCRIPTION =

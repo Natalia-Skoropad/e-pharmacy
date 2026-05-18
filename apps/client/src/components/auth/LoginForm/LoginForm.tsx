@@ -14,45 +14,29 @@ import { ROUTES } from '@/lib/constants/routes';
 import { getSafeRedirectPath } from '@/lib/routes';
 import {
   EMAIL_MAX_LENGTH,
-  FORGOT_PASSWORD_INITIAL_VALUES,
   LOGIN_INITIAL_VALUES,
   PASSWORD_MAX_LENGTH,
   sanitizeEmail,
-  validateForgotPasswordForm,
   validateLoginForm,
-  type ForgotPasswordFormErrors,
-  type ForgotPasswordFormValues,
   type LoginFormErrors,
   type LoginFormValues,
 } from '@/lib/validations';
-import { requestPasswordReset } from '@/services';
 
 import css from './LoginForm.module.css';
 
 //===================================================================
 
-export type AuthMode = 'login' | 'forgot-password';
-
-type LoginFormProps = {
-  mode?: AuthMode;
-  onModeChange?: (mode: AuthMode) => void;
-};
-
-function LoginForm({ mode: controlledMode, onModeChange }: LoginFormProps) {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const { login, isAuthReady } = useAuth();
 
-  const [internalMode, setInternalMode] = useState<AuthMode>('login');
   const [values, setValues] = useState<LoginFormValues>(LOGIN_INITIAL_VALUES);
-  const [forgotValues, setForgotValues] = useState<ForgotPasswordFormValues>(
-    FORGOT_PASSWORD_INITIAL_VALUES
-  );
   const [errors, setErrors] = useState<LoginFormErrors>({});
-  const [forgotErrors, setForgotErrors] = useState<ForgotPasswordFormErrors>(
-    {}
-  );
+  const [touchedFields, setTouchedFields] = useState<
+    Partial<Record<keyof LoginFormValues, boolean>>
+  >({});
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>(
     'success'
@@ -61,21 +45,12 @@ function LoginForm({ mode: controlledMode, onModeChange }: LoginFormProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
-
-  const mode = controlledMode ?? internalMode;
   const loginFormIsValid = Object.keys(validateLoginForm(values)).length === 0;
-  const forgotPasswordFormIsValid =
-    Object.keys(validateForgotPasswordForm(forgotValues)).length === 0;
 
   const showToast = (message: string, variant: 'success' | 'error') => {
     setToastMessage('');
     setToastVariant(variant);
     window.setTimeout(() => setToastMessage(message), 0);
-  };
-
-  const changeMode = (nextMode: AuthMode) => {
-    setInternalMode(nextMode);
-    onModeChange?.(nextMode);
   };
 
   useEffect(() => {
@@ -94,24 +69,17 @@ function LoginForm({ mode: controlledMode, onModeChange }: LoginFormProps) {
           ? sanitizeEmail(event.target.value)
           : event.target.value;
 
-      setValues((prev) => ({
-        ...prev,
+      const nextValues = {
+        ...values,
         [field]: nextValue,
-      }));
+      };
+      const nextErrors = validateLoginForm(nextValues);
 
-      setErrors((prev) => ({
-        ...prev,
-        [field]: undefined,
-      }));
-
+      setValues(nextValues);
+      setTouchedFields((prev) => ({ ...prev, [field]: true }));
+      setErrors((prev) => ({ ...prev, [field]: nextErrors[field] }));
       setToastMessage('');
     };
-
-  const handleForgotEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setForgotValues({ email: sanitizeEmail(event.target.value) });
-    setForgotErrors({});
-    setToastMessage('');
-  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -119,6 +87,7 @@ function LoginForm({ mode: controlledMode, onModeChange }: LoginFormProps) {
     const nextErrors = validateLoginForm(values);
 
     if (Object.keys(nextErrors).length > 0) {
+      setTouchedFields({ email: true, password: true });
       setErrors(nextErrors);
       return;
     }
@@ -140,101 +109,6 @@ function LoginForm({ mode: controlledMode, onModeChange }: LoginFormProps) {
     }
   };
 
-  const handleForgotPasswordSubmit = async (
-    event: FormEvent<HTMLFormElement>
-  ) => {
-    event.preventDefault();
-
-    const nextErrors = validateForgotPasswordForm(forgotValues);
-
-    if (Object.keys(nextErrors).length > 0) {
-      setForgotErrors(nextErrors);
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      setToastMessage('');
-
-      await requestPasswordReset({ email: forgotValues.email.trim() });
-
-      showToast(
-        'If this email exists, password recovery instructions were sent to it.',
-        'success'
-      );
-    } catch (error) {
-      showToast(getAuthErrorMessage(error), 'error');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (mode === 'forgot-password') {
-    return (
-      <form
-        className={css.form}
-        noValidate
-        onSubmit={handleForgotPasswordSubmit}
-      >
-        <div className={css.fields}>
-          <div className={css.field}>
-            <label className={css.label} htmlFor="forgot-email">
-              Email
-            </label>
-
-            <div className={css.inputWrap}>
-              <input
-                className={css.input}
-                id="forgot-email"
-                name="email"
-                type="email"
-                value={forgotValues.email}
-                placeholder="example@mail.com"
-                autoComplete="email"
-                maxLength={EMAIL_MAX_LENGTH}
-                aria-invalid={Boolean(forgotErrors.email)}
-                aria-describedby="forgot-email-error"
-                onChange={handleForgotEmailChange}
-              />
-              <span className={css.inputCounter} aria-hidden="true">
-                {forgotValues.email.length}/{EMAIL_MAX_LENGTH}
-              </span>
-            </div>
-
-            <p className={css.error} id="forgot-email-error">
-              {forgotErrors.email ?? ''}
-            </p>
-          </div>
-        </div>
-
-        <Toast
-          message={toastMessage}
-          isVisible={Boolean(toastMessage)}
-          variant={toastVariant}
-        />
-
-        <Button
-          type="submit"
-          fullWidth
-          disabled={isSubmitting || !isAuthReady || !forgotPasswordFormIsValid}
-        >
-          {isSubmitting ? 'Sending...' : 'Send instructions'}
-        </Button>
-
-        <button
-          className={css.textButton}
-          type="button"
-          onClick={() => {
-            changeMode('login');
-            setToastMessage('');
-          }}
-        >
-          Back to log in
-        </button>
-      </form>
-    );
-  }
-
   return (
     <form className={css.form} noValidate onSubmit={handleSubmit}>
       <div className={css.fields}>
@@ -253,7 +127,7 @@ function LoginForm({ mode: controlledMode, onModeChange }: LoginFormProps) {
               placeholder="example@mail.com"
               autoComplete="email"
               maxLength={EMAIL_MAX_LENGTH}
-              aria-invalid={Boolean(errors.email)}
+              aria-invalid={Boolean(touchedFields.email && errors.email)}
               aria-describedby="login-email-error"
               onChange={handleChange('email')}
             />
@@ -263,7 +137,7 @@ function LoginForm({ mode: controlledMode, onModeChange }: LoginFormProps) {
           </div>
 
           <p className={css.error} id="login-email-error">
-            {errors.email ?? ''}
+            {touchedFields.email ? (errors.email ?? '') : ''}
           </p>
         </div>
 
@@ -273,17 +147,9 @@ function LoginForm({ mode: controlledMode, onModeChange }: LoginFormProps) {
               Password
             </label>
 
-            <button
-              className={css.textButton}
-              type="button"
-              onClick={() => {
-                changeMode('forgot-password');
-                setForgotValues({ email: values.email });
-                setToastMessage('');
-              }}
-            >
+            <Link className={css.textButton} href={ROUTES.PASSWORD_RECOVERY}>
               Forgot password?
-            </button>
+            </Link>
           </div>
 
           <div className={css.inputWrap}>
@@ -296,7 +162,7 @@ function LoginForm({ mode: controlledMode, onModeChange }: LoginFormProps) {
               placeholder="Enter your password"
               autoComplete="current-password"
               maxLength={PASSWORD_MAX_LENGTH}
-              aria-invalid={Boolean(errors.password)}
+              aria-invalid={Boolean(touchedFields.password && errors.password)}
               aria-describedby="login-password-error"
               onChange={handleChange('password')}
             />
@@ -318,7 +184,7 @@ function LoginForm({ mode: controlledMode, onModeChange }: LoginFormProps) {
           </div>
 
           <p className={css.error} id="login-password-error">
-            {errors.password ?? ''}
+            {touchedFields.password ? (errors.password ?? '') : ''}
           </p>
         </div>
       </div>

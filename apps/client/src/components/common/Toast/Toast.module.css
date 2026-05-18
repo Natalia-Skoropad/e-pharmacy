@@ -3,43 +3,64 @@
   top: calc(84px + var(--toast-offset, 0px));
   right: max(20px, calc((100vw - var(--container-max)) / 2 + var(--container-padding-desktop)));
   z-index: var(--z-toast);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  min-width: 260px;
+  max-width: 360px;
   width: min(360px, calc(100vw - 40px));
-  min-height: 52px;
-  padding: 14px 18px;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-base);
-  color: var(--color-accent);
-  text-align: center;
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-card);
-  animation: toastIn var(--transition-base);
+
+  padding: 12px 14px;
+  background-color: var(--color-surface);
+  border: 1px solid rgba(18, 20, 23, 0.08);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 26px rgba(18, 20, 23, 0.08);
+  animation: pop 160ms ease;
 }
 
-.toast[data-variant='success'] {
-  color: var(--color-accent);
-  background-color: var(--color-accent-light);
-  border-color: rgba(89, 177, 122, 0.25);
-}
-
-.toast[data-variant='error'] {
-  color: var(--color-error);
-  background-color: color-mix(in srgb, var(--color-error) 8%, var(--color-white));
-  border-color: rgba(211, 47, 47, 0.22);
-}
-
-@keyframes toastIn {
+@keyframes pop {
   from {
-    opacity: 0;
-    transform: translateY(-12px);
+    opacity: 0.2;
+    transform: translateY(-6px);
   }
 
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.message {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: var(--fz-14);
+  line-height: 1.35;
+  color: var(--color-text-primary);
+}
+
+.success {
+  border-color: rgba(89, 177, 122, 0.22);
+}
+
+.success .dot {
+  background-color: var(--color-accent);
+}
+
+.error {
+  border-color: rgba(211, 47, 47, 0.22);
+}
+
+.error .dot {
+  background-color: var(--color-error);
 }
 
 @media only screen and (max-width: 767.98px) {

@@ -98,15 +98,18 @@ export async function loginUserService(
 export async function requestPasswordResetService(
   input: ForgotPasswordInput
 ): Promise<void> {
-  const user = await User.findOne({ email: input.email });
+  const user = await User.findOne({ email: input.email }).select('+password');
 
-  if (!user || user.status === USER_STATUSES.BLOCKED) {
-    return;
+  if (!user) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.USER_NOT_FOUND);
   }
 
-  // The endpoint intentionally returns the same success response for existing
-  // and missing emails. SMTP delivery can be plugged in here without changing
-  // the client contract.
+  if (user.status === USER_STATUSES.BLOCKED) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.USER_BLOCKED);
+  }
+
+  user.password = await hashPassword(input.newPassword);
+  await user.save();
 }
 
 //===============================================================

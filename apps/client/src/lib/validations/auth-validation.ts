@@ -24,6 +24,8 @@ export type RegisterFormValues = {
 
 export type ForgotPasswordFormValues = {
   email: string;
+  password: string;
+  confirmPassword: string;
 };
 
 //===================================================================
@@ -53,6 +55,8 @@ export const REGISTER_INITIAL_VALUES: RegisterFormValues = {
 
 export const FORGOT_PASSWORD_INITIAL_VALUES: ForgotPasswordFormValues = {
   email: '',
+  password: '',
+  confirmPassword: '',
 };
 
 //===================================================================
@@ -75,21 +79,30 @@ export function getEmailError(value: string): string {
   return '';
 }
 
+export function getPasswordError(value: string): string {
+  if (!value) return 'Password is required';
+
+  if (value.length < PASSWORD_MIN_LENGTH) {
+    return `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
+  }
+
+  if (value.length > PASSWORD_MAX_LENGTH) {
+    return `Password must be at most ${PASSWORD_MAX_LENGTH} characters`;
+  }
+
+  return '';
+}
+
 //===================================================================
 
 export function validateLoginForm(values: LoginFormValues): LoginFormErrors {
   const errors: LoginFormErrors = {};
 
   const emailError = getEmailError(values.email);
-  const password = values.password.trim();
+  const passwordError = getPasswordError(values.password.trim());
 
   if (emailError) errors.email = emailError;
-
-  if (!password) {
-    errors.password = 'Password is required';
-  } else if (password.length < PASSWORD_MIN_LENGTH) {
-    errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
-  }
+  if (passwordError) errors.password = passwordError;
 
   return errors;
 }
@@ -103,7 +116,7 @@ export function validateRegisterForm(
 
   const name = values.name.trim();
   const emailError = getEmailError(values.email);
-  const password = values.password;
+  const passwordError = getPasswordError(values.password);
 
   if (!name) {
     errors.name = 'Name is required';
@@ -116,14 +129,7 @@ export function validateRegisterForm(
   }
 
   if (emailError) errors.email = emailError;
-
-  if (!password) {
-    errors.password = 'Password is required';
-  } else if (password.length < PASSWORD_MIN_LENGTH) {
-    errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
-  } else if (password.length > PASSWORD_MAX_LENGTH) {
-    errors.password = `Password must be at most ${PASSWORD_MAX_LENGTH} characters`;
-  }
+  if (passwordError) errors.password = passwordError;
 
   return errors;
 }
@@ -134,9 +140,18 @@ export function validateForgotPasswordForm(
   values: ForgotPasswordFormValues
 ): ForgotPasswordFormErrors {
   const errors: ForgotPasswordFormErrors = {};
+
   const emailError = getEmailError(values.email);
+  const passwordError = getPasswordError(values.password);
 
   if (emailError) errors.email = emailError;
+  if (passwordError) errors.password = passwordError;
+
+  if (!values.confirmPassword) {
+    errors.confirmPassword = 'Confirm password is required';
+  } else if (values.confirmPassword !== values.password) {
+    errors.confirmPassword = 'Passwords do not match';
+  }
 
   return errors;
 }

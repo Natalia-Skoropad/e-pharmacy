@@ -10,8 +10,11 @@ type ToastVariant = 'info' | 'success' | 'error';
 
 type ToastProps = {
   message: string;
-  isVisible: boolean;
+  isVisible?: boolean;
   variant?: ToastVariant;
+  type?: Extract<ToastVariant, 'success' | 'error'>;
+  onClose?: () => void;
+  duration?: number;
 };
 
 declare global {
@@ -22,6 +25,7 @@ declare global {
 }
 
 const TOAST_STACK_EVENT = 'e-pharmacy-toast-stack-change';
+const DEFAULT_TOAST_DURATION = 5000;
 
 function getToastEventTarget(): EventTarget {
   window.__ePharmacyToastEventTarget ??= new EventTarget();
@@ -51,13 +55,23 @@ function removeToast(id: string) {
 
 //===================================================================
 
-function Toast({ message, isVisible, variant = 'info' }: ToastProps) {
+function Toast({
+  message,
+  isVisible = true,
+  variant,
+  type,
+  onClose,
+  duration = DEFAULT_TOAST_DURATION,
+}: ToastProps) {
   const reactId = useId();
   const toastId = useMemo(() => `toast-${reactId}`, [reactId]);
   const [stackIndex, setStackIndex] = useState(0);
 
+  const resolvedVariant = type ?? variant ?? 'success';
+  const shouldShow = Boolean(isVisible && message);
+
   useEffect(() => {
-    if (!isVisible || !message) return undefined;
+    if (!shouldShow) return undefined;
 
     const updateStackIndex = () => {
       setStackIndex((window.__ePharmacyToastIds ?? []).indexOf(toastId));
@@ -73,21 +87,31 @@ function Toast({ message, isVisible, variant = 'info' }: ToastProps) {
       target.removeEventListener(TOAST_STACK_EVENT, updateStackIndex);
       removeToast(toastId);
     };
-  }, [isVisible, message, toastId]);
+  }, [shouldShow, toastId]);
 
-  if (!isVisible || !message) return null;
+  useEffect(() => {
+    if (!shouldShow || !onClose) return undefined;
+
+    const timeoutId = window.setTimeout(onClose, duration);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [duration, onClose, shouldShow]);
+
+  if (!shouldShow) return null;
 
   return (
     <div
-      className={css.toast}
+      className={`${css.toast} ${
+        resolvedVariant === 'error' ? css.error : css.success
+      }`}
       style={
         { '--toast-offset': `${Math.max(stackIndex, 0) * 64}px` } as CSSProperties
       }
-      role={variant === 'error' ? 'alert' : 'status'}
-      aria-live={variant === 'error' ? 'assertive' : 'polite'}
-      data-variant={variant}
+      role={resolvedVariant === 'error' ? 'alert' : 'status'}
+      aria-live={resolvedVariant === 'error' ? 'assertive' : 'polite'}
     >
-      {message}
+      <span className={css.dot} aria-hidden="true" />
+      <p className={css.message}>{message}</p>
     </div>
   );
 }
