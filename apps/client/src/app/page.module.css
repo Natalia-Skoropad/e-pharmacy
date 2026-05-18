@@ -356,41 +356,42 @@
   object-position: center;
 }
 
-.benefitsIntro {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  min-height: 430px;
-  padding: 28px;
-  overflow: hidden;
-  color: var(--color-white);
-  background:
-    radial-gradient(circle at 86% 92%, rgba(255, 255, 255, 0.16), transparent 30%),
-    linear-gradient(145deg, #5ab37c 0%, #419664 100%);
-  border-radius: var(--radius-xl);
+.benefitsPanel {
+  display: grid;
+  gap: 18px;
 }
 
-.benefitsIntro::after {
+.benefitsAccentCard {
+  position: relative;
+  overflow: hidden;
+  padding: 28px;
+  color: var(--color-white);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(255, 255, 255, 0.24), transparent 28%),
+    linear-gradient(135deg, #59b17a 0%, #3f945f 100%);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 48px rgba(63, 148, 95, 0.22);
+}
+
+.benefitsAccentCard::after {
   content: '';
   position: absolute;
-  right: -70px;
-  bottom: -86px;
-  width: 230px;
-  height: 230px;
-  background: url('/images/common/two-pills.png') center / contain no-repeat;
-  opacity: 0.12;
-  transform: rotate(-18deg);
+  right: -34px;
+  bottom: -54px;
+  width: 170px;
+  height: 170px;
+  background: url('/images/common/white-round-pill.png') center / contain no-repeat;
+  opacity: 0.14;
 }
 
 .benefitsBadge {
-  z-index: 1;
+  display: inline-flex;
   width: fit-content;
   margin-bottom: 18px;
-  padding: 8px 18px;
+  padding: 8px 14px;
   font-size: var(--fz-12);
   font-weight: var(--fw-medium);
-  line-height: 1.2;
+  line-height: 1;
   color: var(--color-accent);
   text-transform: uppercase;
   letter-spacing: var(--ls-wide);
@@ -398,44 +399,56 @@
   border-radius: var(--radius-pill);
 }
 
-.benefitsTitle {
+.benefitsAccentCard strong {
   position: relative;
   z-index: 1;
-  max-width: 430px;
-  font-size: var(--fz-28);
+  display: block;
+  max-width: 620px;
+  font-size: var(--fz-24);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
-  color: var(--color-white);
-  letter-spacing: var(--ls-tight);
 }
 
-.benefitsIntro p {
+.benefitsAccentCard p {
   position: relative;
   z-index: 1;
-  max-width: 430px;
-  margin-top: 18px;
-  font-size: var(--fz-16);
+  max-width: 560px;
+  margin-top: 14px;
+  font-size: var(--fz-15);
   line-height: var(--lh-base);
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.benefitsContent {
-  align-self: center;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .benefitsList {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .benefitsList li {
-  display: grid;
-  grid-template-columns: auto 1fr;
+  display: flex;
   gap: 14px;
-  padding: 18px;
+  align-items: flex-start;
+  padding: 16px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 30px rgba(29, 30, 33, 0.05);
+}
+
+.benefitsList strong {
+  display: block;
+  font-size: var(--fz-16);
+  font-weight: var(--fw-bold);
+  line-height: 1.3;
+  color: var(--color-text-primary);
+}
+
+.benefitsList small {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
 }
 
 .benefitIcon {
@@ -443,25 +456,11 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   color: var(--color-accent);
   background-color: var(--color-accent-light);
   border-radius: 50%;
-}
-
-.benefitsList h3 {
-  font-size: var(--fz-18);
-  font-weight: var(--fw-bold);
-  line-height: 1.3;
-  color: var(--color-text-primary);
-}
-
-.benefitsList p {
-  margin-top: 6px;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
 }
 
 .featureCard {
@@ -602,8 +601,20 @@
   }
 
   .benefitsGrid {
-    grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.2fr);
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: center;
+  }
+
+  .benefitsPanel {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
     align-items: stretch;
+  }
+
+  .benefitsAccentCard {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100%;
   }
 
   .actions {

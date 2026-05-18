@@ -306,31 +306,37 @@ async function HomePage() {
       <section className={css.section} aria-labelledby="benefits-title">
         <Container>
           <div className={css.benefitsGrid}>
-            <div className={css.benefitsIntro}>
-              <span className={css.benefitsBadge}>One account</span>
-              <h2 className={css.benefitsTitle} id="benefits-title">
-                Search, compare, save, and confirm orders without losing
-                important details.
+            <div>
+              <p className={css.kicker}>Why customers use it</p>
+              <h2 className={css.sectionTitle} id="benefits-title">
+                Everything important stays organized
               </h2>
-              <p>
-                E-PHARMACY keeps medicine search, pharmacy choice, cart
-                invoices, profile data, and order history connected in one clear
-                flow.
-              </p>
             </div>
 
-            <div className={css.benefitsContent}>
-              <p className={css.kicker}>Why customers use it</p>
+            <div className={css.benefitsPanel}>
+              <div className={css.benefitsAccentCard}>
+                <span className={css.benefitsBadge}>One account</span>
+                <strong>
+                  Search, compare, save, and confirm orders without losing
+                  important details.
+                </strong>
+                <p>
+                  E-PHARMACY keeps medicine search, pharmacy choice, cart
+                  invoices, profile data, and order history connected in one
+                  clear flow.
+                </p>
+              </div>
+
               <ul className={css.benefitsList}>
                 {BENEFITS.map(({ title, text, icon: Icon }) => (
                   <li key={title}>
                     <span className={css.benefitIcon} aria-hidden="true">
                       <Icon size={22} />
                     </span>
-                    <div>
-                      <h3>{title}</h3>
-                      <p>{text}</p>
-                    </div>
+                    <span>
+                      <strong>{title}</strong>
+                      <small>{text}</small>
+                    </span>
                   </li>
                 ))}
               </ul>

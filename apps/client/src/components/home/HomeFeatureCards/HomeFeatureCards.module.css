@@ -13,7 +13,11 @@
   overflow: hidden;
   color: var(--color-white);
   background:
-    radial-gradient(circle at 90% 100%, rgba(255, 255, 255, 0.16), transparent 30%),
+    radial-gradient(
+      circle at 90% 100%,
+      rgba(255, 255, 255, 0.16),
+      transparent 30%
+    ),
     linear-gradient(145deg, #5ab37c 0%, #419664 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-xl);
@@ -105,7 +109,6 @@
 
   .featureAction {
     width: 190px;
-    margin-top: auto;
     padding-top: 12px;
     padding-bottom: 12px;
   }

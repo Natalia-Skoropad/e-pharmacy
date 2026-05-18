@@ -15,7 +15,7 @@ type Review = {
 };
 
 type HomeReviewsSliderProps = {
-  reviews: Review[];
+  reviews: readonly Review[];
 };
 
 //===================================================================
