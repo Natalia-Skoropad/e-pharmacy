@@ -53,11 +53,8 @@ function HomeReviewsSlider({ reviews }: HomeReviewsSliderProps) {
                   {review.name.charAt(0)}
                 </div>
                 <h3>{review.name}</h3>
-                <div
-                  className={css.rating}
-                  aria-label={`Rating ${review.rating} out of 5`}
-                >
-                  <Star size={17} aria-hidden="true" />
+                <div className={css.rating} aria-label={`${review.rating} out of 5`}>
+                  <Star size={16} aria-hidden="true" />
                   <strong>{review.rating.toFixed(1)}</strong>
                   <span>/ 5</span>
                 </div>

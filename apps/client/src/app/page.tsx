@@ -3,14 +3,15 @@ import { Heart, MapPin, ReceiptText, SearchCheck, ShieldCheck } from 'lucide-rea
 
 import { ButtonLink, Container } from '@/components/common';
 import { HomeFeatureCards, HomeReviewsSlider } from '@/components/home';
+import { ProductCard } from '@/components/medicines-catalog';
 import { StoreCard } from '@/components/pharmacy-stores';
 
 import { HOME_DESCRIPTION, HOME_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
 import { createPageMetadata } from '@/lib/seo';
-import { getStores } from '@/services/store-service';
+import { getProducts, getStores } from '@/services';
 
-import type { Store } from '@/types';
+import type { Product, Store } from '@/types';
 
 import css from './page.module.css';
 
@@ -26,7 +27,7 @@ export const metadata = createPageMetadata({
 
 //===================================================================
 
-const HOME_STORES_LIMIT = 3;
+const HOME_PREVIEW_LIMIT = 6;
 
 const STATS = [
   { value: '126+', label: 'medicines in catalog' },
@@ -36,28 +37,28 @@ const STATS = [
 
 const BENEFITS = [
   {
-    title: 'Compare offers',
-    text: 'Check prices, ratings, and product availability before choosing a pharmacy.',
+    title: 'Compare before you order',
+    text: 'Check prices, ratings, store contacts, and available products before choosing a pharmacy.',
     icon: SearchCheck,
   },
   {
-    title: 'Save essentials',
-    text: 'Keep favorite medicines and trusted stores close in your personal account.',
+    title: 'Keep favorites nearby',
+    text: 'Save medicines and pharmacy stores in your account so repeat purchases take less time.',
     icon: Heart,
   },
   {
     title: 'Control every invoice',
-    text: 'Review pharmacy totals separately, so each order block stays clear.',
+    text: 'Cart items are grouped by pharmacy, with a clear total and checkout flow for each order block.',
     icon: ReceiptText,
   },
   {
-    title: 'Choose delivery type',
-    text: 'Switch between pickup and post delivery with the right details shown instantly.',
+    title: 'Choose convenient delivery',
+    text: 'Pick up an order from the pharmacy or add post delivery details during confirmation.',
     icon: MapPin,
   },
   {
-    title: 'Keep history together',
-    text: 'Profile details, delivery address, favorites, and orders stay in one organized place.',
+    title: 'Return to order history',
+    text: 'Profile details, delivery address, favorite items, and confirmed orders stay connected.',
     icon: ShieldCheck,
   },
 ] as const;
@@ -86,65 +87,66 @@ const REVIEWS = [
   {
     name: 'Sergey Rybachok',
     rating: 4.8,
-    text: 'Separate pharmacy invoices made the cart much easier to understand. When medicines come from different stores, each block has its own total, available quantity, and checkout flow. I always know what I am ordering from each pharmacy and do not have to recalculate the final price manually.',
+    text: 'Separate pharmacy invoices make the cart much easier to understand. I can see which items belong to which pharmacy, review every total separately, and move to checkout without guessing where the final sum came from. The flow feels clear even when I add products from several stores at once.',
   },
   {
     name: 'Natalia Chatuk',
     rating: 4.6,
-    text: 'Favorite stores and order history are exactly what I need when buying the same medicines again. I can return to pharmacies I already trust, check previous orders, update profile information, and keep delivery details ready for the next checkout. The whole flow feels organized and calm.',
+    text: 'Favorite stores and order history are exactly what I need when buying the same medicines again. I do not have to search from the beginning every time. The profile keeps useful information close, and the pharmacy cards show enough details to choose a familiar store quickly.',
   },
   {
     name: 'Olena Voronina',
     rating: 4.9,
-    text: 'I liked that I could compare pharmacy offers before adding anything to the cart. The product page shows useful details, prices in pharmacies, reviews, and availability, so it is much easier to choose the right option. The interface does not feel overloaded, even when there is a lot of information.',
+    text: 'I liked that I could compare pharmacy offers before adding anything to the cart. The product page shows prices, ratings, and availability, so the purchase feels calm and predictable. It is especially useful when the same medicine is available in several pharmacies with different prices.',
   },
   {
     name: 'Andriy Melnyk',
     rating: 4.4,
-    text: 'The profile page saves time because repeat orders, favorite medicines, favorite pharmacies, and delivery information are kept together. I also like that pharmacy cards show ratings and review counts right away. It gives enough context to choose a store confidently before opening the full page.',
+    text: 'The profile page saves time because repeat orders, delivery details, and favorite pharmacies are not hiding somewhere in a digital jungle. I can return to the information I need, update personal details, and check previous orders without feeling lost in the interface.',
   },
   {
     name: 'Iryna Sokolova',
     rating: 4.7,
-    text: 'The checkout is clear: pickup details, delivery fields, pharmacy totals, and order comments are placed where I expect them. I can see the pharmacy information before confirming and choose the delivery method that fits the order. It reduces mistakes and makes online ordering feel safer.',
+    text: 'The checkout is clear: pickup details, delivery fields, pharmacy totals, and order comments are shown exactly where I expect them. I also like that each pharmacy order is handled separately, because it makes confirmation more transparent and easier to review before submitting.',
   },
   {
     name: 'Dmytro Kovalenko',
-    rating: 4.2,
-    text: 'I use pharmacy pages to check contacts, working hours, ratings, available medicines, and payment details before placing an order. It is convenient that the store page and medicine catalog are connected, so I can move from a pharmacy to its products without losing context.',
+    rating: 4.5,
+    text: 'I use pharmacy pages to check contacts, working hours, ratings, available products, and payment details before placing an order. The store card gives a quick overview, and the detail page has enough information to understand whether the pharmacy is the right choice for my order.',
   },
   {
     name: 'Kateryna Bondar',
-    rating: 4.5,
-    text: 'Search by medicine article is a small feature, but it makes buying the right item much safer and faster. When names are similar, the article helps avoid confusion. Combined with category filters and pharmacy availability, it turns a stressful search into a much clearer process.',
+    rating: 4.2,
+    text: 'Search by medicine article is a small feature, but it makes buying the correct item much safer and faster. When a medicine has a similar name or package, the article helps me avoid mistakes. The category filters and product cards also make the catalog easier to scan.',
   },
   {
     name: 'Viktor Shevchenko',
-    rating: 4.3,
-    text: 'The cart grouping by pharmacy is great. Each invoice has its own total, its own products, and its own confirmation flow, so nothing gets mixed together. I can add more medicines from the selected pharmacy and still understand exactly what will be ordered from that store.',
+    rating: 4.8,
+    text: 'The cart grouping by pharmacy is great. Each invoice has its own products, total, and checkout action, so the page never turns into a messy spreadsheet. I can continue shopping inside one pharmacy, add missing items, and still keep the order structure clean.',
   },
 ] as const;
 
 //===================================================================
 
-function getFeaturedStoresList(stores: Store[]): Store[] {
-  return [...stores]
-    .sort((firstStore, secondStore) => {
-      const secondRating = secondStore.rating ?? 0;
-      const firstRating = firstStore.rating ?? 0;
-
-      if (secondRating !== firstRating) return secondRating - firstRating;
-
-      return (secondStore.reviewsCount ?? 0) - (firstStore.reviewsCount ?? 0);
-    })
-    .slice(0, HOME_STORES_LIMIT);
+function shuffleItems<TItem>(items: TItem[]): TItem[] {
+  return [...items].sort(() => Math.random() - 0.5);
 }
 
-async function getFeaturedStores(): Promise<Store[]> {
+async function getRandomStores(): Promise<Store[]> {
   try {
     const response = await getStores({ page: 1, perPage: 98 });
 
-    return getFeaturedStoresList(response.items);
+    return shuffleItems(response.items).slice(0, HOME_PREVIEW_LIMIT);
+  } catch {
+    return [];
+  }
+}
+
+async function getRandomProducts(): Promise<Product[]> {
+  try {
+    const response = await getProducts({ page: 1, perPage: 126 });
+
+    return shuffleItems(response.items).slice(0, HOME_PREVIEW_LIMIT);
   } catch {
     return [];
   }
@@ -153,7 +155,10 @@ async function getFeaturedStores(): Promise<Store[]> {
 //===================================================================
 
 async function HomePage() {
-  const featuredStores = await getFeaturedStores();
+  const [randomStores, randomProducts] = await Promise.all([
+    getRandomStores(),
+    getRandomProducts(),
+  ]);
 
   return (
     <main className={css.page}>
@@ -217,18 +222,18 @@ async function HomePage() {
           <div className={css.sectionHead}>
             <p className={css.kicker}>Medicine stores</p>
             <h2 className={css.sectionTitle} id="stores-title">
-              Find a pharmacy you can trust for today’s order
+              Find a trusted pharmacy for your order
             </h2>
             <p className={css.sectionText}>
-              Explore verified pharmacy pages, compare ratings and reviews,
-              check available medicines, and open the store that fits your order
-              best.
+              Explore pharmacy stores, compare ratings, check contacts and
+              available medicines, then open the store that feels right before
+              placing an order.
             </p>
           </div>
 
-          {featuredStores.length > 0 ? (
-            <div className={css.storePreviewGrid}>
-              {featuredStores.map((store) => (
+          {randomStores.length > 0 ? (
+            <div className={css.previewGrid}>
+              {randomStores.map((store) => (
                 <StoreCard key={store.id} store={store} skipFavoriteRefresh />
               ))}
             </div>
@@ -301,41 +306,68 @@ async function HomePage() {
       <section className={css.section} aria-labelledby="benefits-title">
         <Container>
           <div className={css.benefitsGrid}>
-            <div>
-              <p className={css.kicker}>Why customers use it</p>
-              <h2 className={css.sectionTitle} id="benefits-title">
-                Everything important stays organized
+            <div className={css.benefitsIntro}>
+              <span className={css.benefitsBadge}>One account</span>
+              <h2 className={css.benefitsTitle} id="benefits-title">
+                Search, compare, save, and confirm orders without losing
+                important details.
               </h2>
+              <p>
+                E-PHARMACY keeps medicine search, pharmacy choice, cart
+                invoices, profile data, and order history connected in one clear
+                flow.
+              </p>
             </div>
 
-            <div className={css.benefitsPanel}>
-              <div className={css.benefitsAccentCard}>
-                <span className={css.benefitsBadge}>One account</span>
-                <strong>
-                  Search, compare, save, and confirm orders without losing
-                  important details.
-                </strong>
-                <p>
-                  E-PHARMACY keeps medicine search, pharmacy choice, cart
-                  invoices, profile data, and order history connected in one
-                  clear flow.
-                </p>
-              </div>
-
+            <div className={css.benefitsContent}>
+              <p className={css.kicker}>Why customers use it</p>
               <ul className={css.benefitsList}>
                 {BENEFITS.map(({ title, text, icon: Icon }) => (
                   <li key={title}>
                     <span className={css.benefitIcon} aria-hidden="true">
                       <Icon size={22} />
                     </span>
-                    <span>
-                      <strong>{title}</strong>
-                      <small>{text}</small>
-                    </span>
+                    <div>
+                      <h3>{title}</h3>
+                      <p>{text}</p>
+                    </div>
                   </li>
                 ))}
               </ul>
             </div>
+          </div>
+        </Container>
+      </section>
+
+      <section className={css.section} aria-labelledby="products-title">
+        <Container>
+          <div className={css.sectionHead}>
+            <p className={css.kicker}>Medicine catalog</p>
+            <h2 className={css.sectionTitle} id="products-title">
+              Browse medicines available in pharmacies
+            </h2>
+            <p className={css.sectionText}>
+              Open product cards, compare prices in pharmacies, check ratings,
+              and add the right medicine to your cart from the catalog.
+            </p>
+          </div>
+
+          {randomProducts.length > 0 ? (
+            <div className={css.previewGrid}>
+              {randomProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  skipFavoriteRefresh
+                />
+              ))}
+            </div>
+          ) : null}
+
+          <div className={css.sectionAction}>
+            <ButtonLink href={ROUTES.MEDICINES_CATALOG} variant="secondary">
+              View all medicines
+            </ButtonLink>
           </div>
         </Container>
       </section>
@@ -353,7 +385,7 @@ async function HomePage() {
         </Container>
       </section>
 
-      <section className={css.reviewsSection} aria-labelledby="reviews-title">
+      <section className={css.section} aria-labelledby="reviews-title">
         <Container>
           <div className={css.sectionHead}>
             <p className={css.kicker}>Customer reviews</p>
