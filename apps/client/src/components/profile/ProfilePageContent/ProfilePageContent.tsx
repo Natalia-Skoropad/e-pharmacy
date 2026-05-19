@@ -451,14 +451,16 @@ function ProfilePageContent() {
 
 
   useEffect(() => {
-    if (activeTab !== 'orders' || !token) return;
+    const authToken = token;
+
+    if (activeTab !== 'orders' || !authToken) return;
 
     let isMounted = true;
 
     async function loadOrders() {
       try {
         setIsOrdersLoading(true);
-        const response = await getOrders(token);
+        const response = await getOrders(authToken);
 
         if (!isMounted) return;
 

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "seed": "tsx src/scripts/seed.ts",
-    "build": "tsc && mkdir -p dist/templates && cp -R src/templates/. dist/templates/",
+    "build": "tsc && node src/scripts/copy-templates.mjs",
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit"
   },

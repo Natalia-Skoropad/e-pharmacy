@@ -222,13 +222,15 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const bankDetails = getBankDetails(store);
 
   useEffect(() => {
+    const authToken = token;
+
     let isMounted = true;
 
     async function fetchCart() {
-      if (!token) return;
+      if (!authToken) return;
 
       try {
-        const response = await getCart(token);
+        const response = await getCart(authToken);
 
         if (!isMounted) return;
 
@@ -311,7 +313,9 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   };
 
   const handleSubmit = async () => {
-    if (!token || !canSubmit) return;
+    const authToken = token;
+
+    if (!authToken || !canSubmit) return;
 
     try {
       setIsSubmitting(true);
@@ -319,7 +323,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
 
       if (!selectedOrderGroup) return;
 
-      const latestCartResponse = await getCart(token);
+      const latestCartResponse = await getCart(authToken);
       const latestGroups = groupCartByStore(latestCartResponse.cart);
       const latestOrderGroup = latestGroups.find(
         (group) => group.storeId === selectedOrderGroup.storeId
@@ -357,9 +361,9 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
             : {}),
           ...(comment.trim() ? { comment: comment.trim() } : {}),
         },
-        token
+        authToken
       );
-      const nextCartResponse = await getCart(token);
+      const nextCartResponse = await getCart(authToken);
 
       setCart(nextCartResponse.cart);
       dispatchCartUpdated(nextCartResponse.cart);

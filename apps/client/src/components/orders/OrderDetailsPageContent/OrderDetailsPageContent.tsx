@@ -80,15 +80,17 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const cleanOrderId = getOrderIdFromPathParam(orderId);
 
   useEffect(() => {
+    const authToken = token;
+
     let isMounted = true;
 
     async function fetchOrder() {
-      if (!token) return;
+      if (!authToken) return;
 
       try {
         setIsLoaded(false);
         setError('');
-        const response = await getOrderDetails(cleanOrderId, token);
+        const response = await getOrderDetails(cleanOrderId, authToken);
 
         if (!isMounted) return;
 
