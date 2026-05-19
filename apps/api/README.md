@@ -1,0 +1,460 @@
+# E-PHARMACY API
+
+> A shared backend API for the E-PHARMACY ecosystem: customer storefront, vendor cabinet, and admin dashboard.
+
+## Overview
+
+**E-PHARMACY API** is the single shared backend for the whole E-PHARMACY monorepo.
+
+It currently supports the completed customer client app and is designed to be extended with vendor and admin backend modules in the next stages.
+
+The API provides:
+
+- authentication and authorization foundation
+- user profile management
+- password recovery through email
+- pharmacy stores catalog data
+- medicines catalog data
+- product and pharmacy reviews
+- favorites
+- cart management
+- checkout and order creation
+- role-based access readiness for customer, vendor, and admin flows
+
+> Current status: the API is ready for the customer client release. Vendor and admin backend functionality will be added to this same API, not as separate duplicated backends.
+
+---
+
+## Ecosystem Role
+
+E-PHARMACY is built as one ecosystem with several applications:
+
+```txt
+apps/client  -> customer storefront
+apps/vendor  -> pharmacy/vendor cabinet
+apps/admin   -> admin dashboard
+apps/api     -> one shared backend API
+```
+
+The backend is intentionally shared because all apps work with the same domain data: users, roles, pharmacies, products, carts, orders, suppliers, customers, statistics, and moderation flows.
+
+Future vendor and admin development will extend the current API with additional modules instead of creating separate backend copies.
+
+---
+
+## Features
+
+### Authentication and users
+
+- user registration
+- user login
+- current user endpoint
+- logout
+- profile update
+- password update
+- password reset request
+- password reset through email token
+- JWT-based authentication
+- secure cookie helper utilities
+- role-based middleware foundation
+
+### Password recovery
+
+- reset email request endpoint
+- rate limiting for password reset actions
+- reset token validation
+- email template support
+- SMTP integration through Nodemailer
+
+### Stores
+
+- pharmacy stores catalog
+- filters for stores
+- store details
+- store reviews
+- authenticated store review creation
+- favorite store toggle
+
+### Products
+
+- medicines catalog
+- product filters
+- product details
+- product reviews
+- authenticated product review creation
+- favorite product toggle
+- admin-ready review moderation endpoint
+
+### Cart
+
+- authenticated cart access
+- add item to cart
+- update item quantity
+- remove item from cart
+- clear cart
+- server-side cart model
+
+### Orders
+
+- checkout endpoint
+- authenticated order history
+- single order details
+- order persistence in MongoDB
+- customer address and comment support for confirmed orders
+
+### API quality and safety
+
+- request validation with Zod
+- centralized error handling
+- not-found middleware
+- controller wrapper utility
+- rate limiting
+- CORS configuration
+- Helmet security middleware
+- MongoDB duplicate error handling
+- typed Express request extensions
+
+---
+
+## Tech Stack
+
+### Backend
+
+- **Node.js**
+- **Express**
+- **TypeScript**
+- **MongoDB**
+- **Mongoose**
+
+### Authentication and security
+
+- **jsonwebtoken**
+- **bcryptjs**
+- **helmet**
+- **cors**
+- **express-rate-limit**
+
+### Validation and email
+
+- **Zod**
+- **Nodemailer**
+- **Handlebars**
+
+### Monorepo tooling
+
+- **pnpm workspaces**
+- **Turborepo**
+- shared validation package
+
+---
+
+## Project Structure
+
+```txt
+apps/api/
+  src/
+    config/
+      env.ts
+    constants/
+      auth.ts
+      httpStatus.ts
+      messages.ts
+    controllers/
+      auth.controller.ts
+      cart.controller.ts
+      health.controller.ts
+      order.controller.ts
+      product.controller.ts
+      store.controller.ts
+    db/
+      connectDB.ts
+    middlewares/
+      auth.middleware.ts
+      error.middleware.ts
+      notFound.middleware.ts
+      rateLimit.middleware.ts
+      role.middleware.ts
+      validate.middleware.ts
+    models/
+      cart.model.ts
+      order.model.ts
+      product.model.ts
+      store.model.ts
+      user.model.ts
+    routes/
+      auth.routes.ts
+      cart.routes.ts
+      health.routes.ts
+      index.ts
+      order.routes.ts
+      product.routes.ts
+      store.routes.ts
+    schemas/
+      auth.schema.ts
+      cart.schema.ts
+      health.schema.ts
+      order.schema.ts
+      product.schema.ts
+      store.schema.ts
+    scripts/
+      seed.ts
+      copy-templates.mjs
+    services/
+      auth.service.ts
+      cart.service.ts
+      order.service.ts
+      product.service.ts
+      store.service.ts
+    templates/
+      reset-password-email.html
+    types/
+    utils/
+    app.ts
+    server.ts
+```
+
+---
+
+## API Areas
+
+### Health
+
+```txt
+GET  /health
+POST /health/echo
+```
+
+### Auth
+
+```txt
+POST  /auth/register
+POST  /auth/login
+POST  /auth/forgot-password
+POST  /auth/request-reset-email
+POST  /auth/reset-password
+GET   /auth/current
+PATCH /auth/current
+PATCH /auth/current/password
+POST  /auth/logout
+```
+
+Temporary role-test routes are also present during the architecture stage:
+
+```txt
+GET /auth/test/customer
+GET /auth/test/vendor
+GET /auth/test/admin
+```
+
+These are intended for development checks and can be removed or moved when real customer, vendor, and admin modules are completed.
+
+### Stores
+
+```txt
+GET   /stores
+GET   /stores/filters
+GET   /stores/:storeId
+GET   /stores/:storeId/reviews
+POST  /stores/:storeId/reviews
+PATCH /stores/:storeId/favorite
+```
+
+### Products
+
+```txt
+GET   /products
+GET   /products/filters
+GET   /products/:productId
+GET   /products/:productId/reviews
+POST  /products/:productId/reviews
+PATCH /products/:productId/reviews/:reviewId/moderation
+PATCH /products/:productId/favorite
+```
+
+### Cart
+
+```txt
+GET    /cart
+POST   /cart/items
+PATCH  /cart/items/:cartItemId
+DELETE /cart/items/:cartItemId
+DELETE /cart/clear
+```
+
+### Orders
+
+```txt
+POST /orders/checkout
+GET  /orders
+GET  /orders/:orderId
+```
+
+---
+
+## Environment Variables
+
+Create an `.env` file inside `apps/api`.
+
+```env
+NODE_ENV=development
+PORT=4000
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/e-pharmacy?retryWrites=true&w=majority
+
+JWT_SECRET=your-super-secret-jwt-key
+JWT_EXPIRES_IN=7d
+JWT_RESET_EXPIRES_IN=15m
+
+CLIENT_ORIGINS=http://localhost:3000
+CLIENT_APP_URL=http://localhost:3000
+
+SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=587
+SMTP_USER=<your-smtp-user>
+SMTP_PASSWORD=<your-smtp-password>
+SMTP_FROM="E-PHARMACY <no-reply@your-domain.com>"
+
+AUTH_COOKIE_DOMAIN=
+AUTH_COOKIE_SAME_SITE=lax
+```
+
+For production, update MongoDB, JWT, SMTP, CORS, cookie, and client URL values.
+
+---
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Natalia-Skoropad/e-pharmacy
+cd e-pharmacy
+```
+
+### 2. Install dependencies
+
+```bash
+pnpm install
+```
+
+### 3. Add environment variables
+
+Create `apps/api/.env` and add the required variables.
+
+### 4. Seed the database
+
+```bash
+pnpm seed:api
+```
+
+### 5. Start the API
+
+```bash
+pnpm dev:api
+```
+
+### 6. Check API health
+
+```txt
+http://localhost:4000/health
+```
+
+---
+
+## Available Scripts
+
+From the monorepo root:
+
+```bash
+pnpm dev:api
+pnpm seed:api
+pnpm build:api
+pnpm type-check:api
+pnpm check:api
+```
+
+From `apps/api`:
+
+```bash
+pnpm dev
+pnpm seed
+pnpm build
+pnpm start
+pnpm type-check
+pnpm lint
+```
+
+---
+
+## Future Development
+
+The API will be expanded for the next E-PHARMACY apps.
+
+### Vendor backend modules planned
+
+- vendor shop creation and editing
+- vendor-owned medicine CRUD
+- shop statistics
+- client goods modal data
+- vendor order visibility
+- pharmacy cabinet permissions
+
+### Admin backend modules planned
+
+- admin dashboard statistics
+- orders management
+- products management
+- customers management
+- suppliers CRUD
+- moderation workflows
+- admin-only filters and tables
+
+The current API already includes role-based middleware and shared models to support this direction.
+
+---
+
+## Deployment Notes
+
+Before deploying the API, run:
+
+```bash
+pnpm check:api
+```
+
+Recommended production checklist:
+
+- set production `MONGODB_URI`
+- set strong `JWT_SECRET`
+- configure SMTP credentials
+- configure allowed `CLIENT_ORIGINS`
+- choose proper `AUTH_COOKIE_SAME_SITE`
+- set `AUTH_COOKIE_DOMAIN` only when needed
+- verify password reset email links
+- verify checkout creates real MongoDB orders
+
+---
+
+## Highlights
+
+What makes this API especially interesting:
+
+- one shared backend for a multi-app pharmacy ecosystem
+- customer-ready auth, products, stores, cart, and orders modules
+- prepared role foundation for vendor and admin flows
+- typed validation-first architecture
+- secure password recovery flow through email
+- reusable service/controller/middleware structure
+- MongoDB persistence for customer-facing business data
+
+---
+
+## Author
+
+**Nataliia Skoropad**  
+Full-stack Developer  
+Backend development, API architecture, frontend integration, UI/UX flow planning, and user experience improvements
+
+---
+
+## License
+
+This project is created for educational and portfolio purposes.
