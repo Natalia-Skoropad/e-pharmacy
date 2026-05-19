@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
@@ -34,6 +34,82 @@ type CartDocument = {
 type ProductDocument = ProductEntity & {
   _id: Types.ObjectId;
 };
+
+//===============================================================
+
+async function reserveProductOffer(
+  productId: string | Types.ObjectId,
+  storeId: string | Types.ObjectId,
+  quantity: number,
+  session?: mongoose.ClientSession
+): Promise<void> {
+  const result = await Product.updateOne(
+    {
+      _id: productId,
+      offers: {
+        $elemMatch: {
+          storeId,
+          activeQuantity: { $gte: quantity },
+          inStock: true,
+        },
+      },
+    },
+    {
+      $inc: {
+        'offers.$.activeQuantity': -quantity,
+        'offers.$.reservedQuantity': quantity,
+      },
+    },
+    { session }
+  );
+
+  if (result.modifiedCount !== 1) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'Product quantity is no longer available. Please refresh the cart and try again.'
+    );
+  }
+}
+
+//===============================================================
+
+async function releaseProductOffer(
+  productId: string | Types.ObjectId,
+  storeId: string | Types.ObjectId,
+  quantity: number,
+  session?: mongoose.ClientSession,
+  strict = true
+): Promise<void> {
+  const result = await Product.updateOne(
+    {
+      _id: productId,
+      offers: {
+        $elemMatch: {
+          storeId,
+          reservedQuantity: { $gte: quantity },
+        },
+      },
+    },
+    {
+      $inc: {
+        'offers.$.activeQuantity': quantity,
+        'offers.$.reservedQuantity': -quantity,
+      },
+      $set: {
+        'offers.$.inStock': true,
+      },
+    },
+    { session }
+  );
+
+  if (strict && result.modifiedCount !== 1) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'Product reservation could not be released. Please refresh the cart and try again.'
+    );
+  }
+}
+
 
 //===============================================================
 
@@ -89,12 +165,17 @@ async function getProductOfferOrThrow(productId: string, storeId: string) {
 
 //===============================================================
 
-async function getCartDocument(userId: string): Promise<CartDocument> {
+async function getCartDocument(
+  userId: string,
+  session?: mongoose.ClientSession
+): Promise<CartDocument> {
   const cart = await Cart.findOneAndUpdate(
     { userId },
     { $setOnInsert: { userId, items: [] } },
     { new: true, upsert: true }
-  ).lean<CartDocument | null>();
+  )
+    .session(session ?? null)
+    .lean<CartDocument | null>();
 
   if (!cart) {
     throw httpError(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Cart was not created');
@@ -103,7 +184,25 @@ async function getCartDocument(userId: string): Promise<CartDocument> {
   const activeItems = removeExpiredItems(cart.items ?? []);
 
   if (activeItems.length !== cart.items.length) {
-    await Cart.updateOne({ userId }, { $set: { items: activeItems } });
+    const expiredItems = cart.items.filter(
+      (item) => item.expiresAt.getTime() <= Date.now()
+    );
+
+    for (const item of expiredItems) {
+      await releaseProductOffer(
+        item.productId,
+        item.storeId,
+        item.quantity,
+        session,
+        false
+      );
+    }
+
+    await Cart.updateOne(
+      { userId },
+      { $set: { items: activeItems } },
+      { session }
+    );
 
     return {
       ...cart,
@@ -176,7 +275,7 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
         ...(typeof offer.storeReviewsCount === 'number'
           ? { storeReviewsCount: offer.storeReviewsCount }
           : {}),
-        stockQuantity: offer.activeQuantity,
+        stockQuantity: offer.activeQuantity + item.quantity,
         quantity: item.quantity,
         price: item.price,
         totalPrice: item.quantity * item.price,
@@ -208,60 +307,90 @@ export async function addCartItemService(
   userId: string,
   input: { productId: string; storeId: string; quantity: number }
 ) {
-  const cart = await getCartDocument(userId);
-  const { offer } = await getProductOfferOrThrow(
-    input.productId,
-    input.storeId
-  );
+  const session = await mongoose.startSession();
 
-  const itemIndex = cart.items.findIndex(
-    (item) =>
-      item.productId.toString() === input.productId &&
-      item.storeId.toString() === input.storeId
-  );
-
-  if (itemIndex >= 0) {
-    const currentItem = cart.items[itemIndex];
-
-    const nextQuantity = Math.min(
-      currentItem.quantity + input.quantity,
-      offer.activeQuantity
-    );
-
-    cart.items[itemIndex] = {
-      ...currentItem,
-      quantity: nextQuantity,
-      price: offer.price,
-      expiresAt: getCartItemExpiresAt(),
-    };
-  } else {
-    const invoiceStoreIds = new Set(
-      cart.items.map((item) => item.storeId.toString())
-    );
-
-    if (
-      !invoiceStoreIds.has(input.storeId) &&
-      invoiceStoreIds.size >= MAX_CART_INVOICES
-    ) {
-      throw httpError(
-        HTTP_STATUS.BAD_REQUEST,
-        'You cannot add more than 15 invoices to the cart. Confirm previous invoices to continue shopping.'
+  try {
+    await session.withTransaction(async () => {
+      const cart = await getCartDocument(userId, session);
+      const { offer } = await getProductOfferOrThrow(
+        input.productId,
+        input.storeId
       );
-    }
 
-    cart.items.push({
-      _id: new Types.ObjectId(),
-      productId: new Types.ObjectId(input.productId),
-      storeId: new Types.ObjectId(input.storeId),
-      quantity: Math.min(input.quantity, offer.activeQuantity),
-      price: offer.price,
-      expiresAt: getCartItemExpiresAt(),
+      const itemIndex = cart.items.findIndex(
+        (item) =>
+          item.productId.toString() === input.productId &&
+          item.storeId.toString() === input.storeId
+      );
+
+      const quantityToReserve = Math.min(input.quantity, offer.activeQuantity);
+
+      if (quantityToReserve < 1) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Product quantity is no longer available. Please refresh the cart and try again.'
+        );
+      }
+
+      await reserveProductOffer(
+        input.productId,
+        input.storeId,
+        quantityToReserve,
+        session
+      );
+
+      if (itemIndex >= 0) {
+        const currentItem = cart.items[itemIndex];
+
+        cart.items[itemIndex] = {
+          ...currentItem,
+          quantity: currentItem.quantity + quantityToReserve,
+          price: offer.price,
+          expiresAt: getCartItemExpiresAt(),
+        };
+      } else {
+        const invoiceStoreIds = new Set(
+          cart.items.map((item) => item.storeId.toString())
+        );
+
+        if (
+          !invoiceStoreIds.has(input.storeId) &&
+          invoiceStoreIds.size >= MAX_CART_INVOICES
+        ) {
+          await releaseProductOffer(
+            input.productId,
+            input.storeId,
+            quantityToReserve,
+            session
+          );
+
+          throw httpError(
+            HTTP_STATUS.BAD_REQUEST,
+            'You cannot add more than 15 invoices to the cart. Confirm previous invoices to continue shopping.'
+          );
+        }
+
+        cart.items.push({
+          _id: new Types.ObjectId(),
+          productId: new Types.ObjectId(input.productId),
+          storeId: new Types.ObjectId(input.storeId),
+          quantity: quantityToReserve,
+          price: offer.price,
+          expiresAt: getCartItemExpiresAt(),
+        });
+      }
+
+      await Cart.updateOne(
+        { userId },
+        { $set: { items: cart.items } },
+        { session }
+      );
     });
+
+    return getCartService(userId);
+  } finally {
+    await session.endSession();
   }
-
-  await Cart.updateOne({ userId }, { $set: { items: cart.items } });
-
-  return getCartService(userId);
 }
 
 //===============================================================
@@ -271,33 +400,86 @@ export async function updateCartItemService(
   cartItemId: string,
   quantity: number
 ) {
-  const cart = await getCartDocument(userId);
+  const session = await mongoose.startSession();
 
-  const itemIndex = cart.items.findIndex(
-    (cartItem) => cartItem._id.toString() === cartItemId
-  );
+  try {
+    await session.withTransaction(async () => {
+      const cart = await getCartDocument(userId, session);
 
-  if (itemIndex < 0) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Cart item not found');
+      const itemIndex = cart.items.findIndex(
+        (cartItem) => cartItem._id.toString() === cartItemId
+      );
+
+      if (itemIndex < 0) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, 'Cart item not found');
+      }
+
+      const currentItem = cart.items[itemIndex];
+      const product = await Product.findById(currentItem.productId)
+        .session(session)
+        .lean<ProductDocument | null>();
+
+      if (!product) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+      }
+
+      const offer = findProductOffer(product, currentItem.storeId.toString());
+
+      if (!offer) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'Product is unavailable in this pharmacy'
+        );
+      }
+
+      const nextQuantity = Math.max(1, quantity);
+      const delta = nextQuantity - currentItem.quantity;
+
+      if (delta > 0) {
+        const quantityToReserve = Math.min(delta, offer.activeQuantity);
+
+        if (quantityToReserve !== delta) {
+          throw httpError(
+            HTTP_STATUS.CONFLICT,
+            'Requested quantity is no longer available. Please refresh the cart and try again.'
+          );
+        }
+
+        await reserveProductOffer(
+          currentItem.productId,
+          currentItem.storeId,
+          delta,
+          session
+        );
+      }
+
+      if (delta < 0) {
+        await releaseProductOffer(
+          currentItem.productId,
+          currentItem.storeId,
+          Math.abs(delta),
+          session
+        );
+      }
+
+      cart.items[itemIndex] = {
+        ...currentItem,
+        quantity: nextQuantity,
+        price: offer.price,
+        expiresAt: getCartItemExpiresAt(),
+      };
+
+      await Cart.updateOne(
+        { userId },
+        { $set: { items: cart.items } },
+        { session }
+      );
+    });
+
+    return getCartService(userId);
+  } finally {
+    await session.endSession();
   }
-
-  const currentItem = cart.items[itemIndex];
-
-  const { offer } = await getProductOfferOrThrow(
-    currentItem.productId.toString(),
-    currentItem.storeId.toString()
-  );
-
-  cart.items[itemIndex] = {
-    ...currentItem,
-    quantity: Math.min(quantity, offer.activeQuantity),
-    price: offer.price,
-    expiresAt: getCartItemExpiresAt(),
-  };
-
-  await Cart.updateOne({ userId }, { $set: { items: cart.items } });
-
-  return getCartService(userId);
 }
 
 //===============================================================
@@ -306,13 +488,37 @@ export async function removeCartItemService(
   userId: string,
   cartItemId: string
 ) {
-  const cart = await getCartDocument(userId);
+  const session = await mongoose.startSession();
 
-  const items = cart.items.filter((item) => item._id.toString() !== cartItemId);
+  try {
+    await session.withTransaction(async () => {
+      const cart = await getCartDocument(userId, session);
+      const removedItem = cart.items.find(
+        (item) => item._id.toString() === cartItemId
+      );
 
-  await Cart.updateOne({ userId }, { $set: { items } });
+      if (!removedItem) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, 'Cart item not found');
+      }
 
-  return getCartService(userId);
+      await releaseProductOffer(
+        removedItem.productId,
+        removedItem.storeId,
+        removedItem.quantity,
+        session
+      );
+
+      const items = cart.items.filter(
+        (item) => item._id.toString() !== cartItemId
+      );
+
+      await Cart.updateOne({ userId }, { $set: { items } }, { session });
+    });
+
+    return getCartService(userId);
+  } finally {
+    await session.endSession();
+  }
 }
 
 //===============================================================
@@ -322,23 +528,68 @@ export async function removeCartProductOfferService(
   productId: string,
   storeId: string
 ) {
-  const cart = await getCartDocument(userId);
+  const session = await mongoose.startSession();
 
-  const items = cart.items.filter(
-    (item) =>
-      item.productId.toString() !== productId ||
-      item.storeId.toString() !== storeId
-  );
+  try {
+    await session.withTransaction(async () => {
+      const cart = await getCartDocument(userId, session);
+      const removedItems = cart.items.filter(
+        (item) =>
+          item.productId.toString() === productId &&
+          item.storeId.toString() === storeId
+      );
 
-  await Cart.updateOne({ userId }, { $set: { items } });
+      for (const item of removedItems) {
+        await releaseProductOffer(
+          item.productId,
+          item.storeId,
+          item.quantity,
+          session
+        );
+      }
 
-  return getCartService(userId);
+      const items = cart.items.filter(
+        (item) =>
+          item.productId.toString() !== productId ||
+          item.storeId.toString() !== storeId
+      );
+
+      await Cart.updateOne({ userId }, { $set: { items } }, { session });
+    });
+
+    return getCartService(userId);
+  } finally {
+    await session.endSession();
+  }
 }
 
 //===============================================================
 
 export async function clearCartService(userId: string) {
-  await Cart.updateOne({ userId }, { $set: { items: [] } }, { upsert: true });
+  const session = await mongoose.startSession();
 
-  return getCartService(userId);
+  try {
+    await session.withTransaction(async () => {
+      const cart = await getCartDocument(userId, session);
+
+      for (const item of cart.items) {
+        await releaseProductOffer(
+          item.productId,
+          item.storeId,
+          item.quantity,
+          session
+        );
+      }
+
+      await Cart.updateOne(
+        { userId },
+        { $set: { items: [] } },
+        { upsert: true, session }
+      );
+    });
+
+    return getCartService(userId);
+  } finally {
+    await session.endSession();
+  }
 }

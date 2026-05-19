@@ -11,16 +11,14 @@ import {
   SvgIcon,
 } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
+import { useAuth } from '@/components/providers';
 
 import { ROUTES } from '@/lib/constants/routes';
 import { buildProductPath, buildStorePath } from '@/lib/routes';
-import {
-  getCustomerOrder,
-  getOrderIdFromPathParam,
-  type CustomerOrder,
-} from '@/lib/orders';
+import { getOrderIdFromPathParam } from '@/lib/orders';
+import { getOrderDetails } from '@/services';
 
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, CustomerOrder } from '@/types';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -75,18 +73,44 @@ function formatStatus(status: CustomerOrder['status']): string {
 //===================================================================
 
 function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
+  const { token } = useAuth();
   const [order, setOrder] = useState<CustomerOrder | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [error, setError] = useState('');
   const cleanOrderId = getOrderIdFromPathParam(orderId);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setOrder(getCustomerOrder(cleanOrderId));
-      setIsLoaded(true);
-    }, 0);
+    let isMounted = true;
 
-    return () => window.clearTimeout(timeoutId);
-  }, [cleanOrderId]);
+    async function fetchOrder() {
+      if (!token) return;
+
+      try {
+        setIsLoaded(false);
+        setError('');
+        const response = await getOrderDetails(cleanOrderId, token);
+
+        if (!isMounted) return;
+
+        setOrder(response.order);
+      } catch {
+        if (!isMounted) return;
+
+        setOrder(null);
+        setError('Order was not found or is not available for this account.');
+      } finally {
+        if (!isMounted) return;
+
+        setIsLoaded(true);
+      }
+    }
+
+    void fetchOrder();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [cleanOrderId, token]);
 
   const breadcrumbs = useMemo<BreadcrumbItem[]>(
     () => [
@@ -121,8 +145,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                 Order was not found
               </h1>
               <p className={css.text}>
-                This private order is not available in the current browser
-                storage.
+                {error || 'This private order is not available for this account.'}
               </p>
               <ButtonLink href={ROUTES.PROFILE}>Back to profile</ButtonLink>
             </div>

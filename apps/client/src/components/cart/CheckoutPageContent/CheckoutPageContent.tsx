@@ -40,8 +40,9 @@ import {
   sanitizeCustomerPhone,
 } from '@/lib/validations';
 
-import { getCart, getStoreDetails, removeCartItem } from '@/services';
-import { buildCustomerOrderPath, saveCustomerOrder } from '@/lib/orders';
+import { checkoutOrder, getCart, getStoreDetails } from '@/services';
+import { dispatchCartUpdated } from '@/lib/cart-events';
+import { buildCustomerOrderPath } from '@/lib/orders';
 
 import type { BreadcrumbItem, Cart, Store } from '@/types';
 
@@ -340,26 +341,29 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
         return;
       }
 
-      const order = saveCustomerOrder({
-        storeId: latestOrderGroup.storeId,
-        storeName: latestOrderGroup.storeName,
-        store,
-        items: latestOrderGroup.items,
-        totalItems: latestOrderGroup.totalItems,
-        totalPrice: latestOrderGroup.totalPrice,
-        paymentMethod,
-        deliveryMethod,
-        comment,
-      });
-      let nextCart = latestCartResponse.cart;
+      const response = await checkoutOrder(
+        {
+          storeId: latestOrderGroup.storeId,
+          paymentMethod,
+          deliveryMethod,
+          ...(deliveryMethod === 'post'
+            ? {
+                deliveryDetails: {
+                  recipientName: recipientNameValue.trim(),
+                  recipientPhone: recipientPhoneValue.trim(),
+                  address: deliveryAddressValue.trim(),
+                },
+              }
+            : {}),
+          ...(comment.trim() ? { comment: comment.trim() } : {}),
+        },
+        token
+      );
+      const nextCartResponse = await getCart(token);
 
-      for (const item of latestOrderGroup.items) {
-        const response = await removeCartItem(item.id, token);
-        nextCart = response.cart;
-      }
-
-      setCart(nextCart);
-      router.push(buildCustomerOrderPath(order));
+      setCart(nextCartResponse.cart);
+      dispatchCartUpdated(nextCartResponse.cart);
+      router.push(buildCustomerOrderPath(response.order));
     } catch {
       setError('Could not confirm order.');
     } finally {

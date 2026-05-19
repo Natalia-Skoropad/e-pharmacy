@@ -39,18 +39,15 @@ import {
   sanitizeCustomerPhone,
 } from '@/lib/validations';
 import {
+  getOrders,
   getProducts,
   getStores,
   updateCurrentUser,
   updateCurrentUserPassword,
 } from '@/services';
-import {
-  buildCustomerOrderPath,
-  getCustomerOrders,
-  type CustomerOrder,
-} from '@/lib/orders';
+import { buildCustomerOrderPath } from '@/lib/orders';
 
-import type { Product, Store as PharmacyStore } from '@/types';
+import type { CustomerOrder, Product, Store as PharmacyStore } from '@/types';
 
 import css from './ProfilePageContent.module.css';
 
@@ -270,7 +267,7 @@ function ProfilePageContent() {
   const [avatarChanged, setAvatarChanged] = useState(false);
   const [isRemoveAvatarConfirmOpen, setIsRemoveAvatarConfirmOpen] =
     useState(false);
-  const [orders, setOrders] = useState<CustomerOrder[]>(() => getCustomerOrders());
+  const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [ordersVisibleCount, setOrdersVisibleCount] = useState(
     ORDERS_VISIBLE_STEP
   );
@@ -291,6 +288,7 @@ function ProfilePageContent() {
   const [isFavoriteProductsLoading, setIsFavoriteProductsLoading] =
     useState(false);
   const [isFavoriteStoresLoading, setIsFavoriteStoresLoading] = useState(false);
+  const [isOrdersLoading, setIsOrdersLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
   const [passwordSubmitError, setPasswordSubmitError] = useState('');
@@ -453,14 +451,35 @@ function ProfilePageContent() {
 
 
   useEffect(() => {
-    if (activeTab !== 'orders') return;
+    if (activeTab !== 'orders' || !token) return;
 
-    const timeoutId = window.setTimeout(() => {
-      setOrders(getCustomerOrders());
-    }, 0);
+    let isMounted = true;
 
-    return () => window.clearTimeout(timeoutId);
-  }, [activeTab]);
+    async function loadOrders() {
+      try {
+        setIsOrdersLoading(true);
+        const response = await getOrders(token);
+
+        if (!isMounted) return;
+
+        setOrders(response.items);
+      } catch {
+        if (!isMounted) return;
+
+        setOrders([]);
+      } finally {
+        if (!isMounted) return;
+
+        setIsOrdersLoading(false);
+      }
+    }
+
+    void loadOrders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab, token]);
 
   if (!user) {
     return (
@@ -955,7 +974,11 @@ function ProfilePageContent() {
                         </tr>
                       </thead>
                       <tbody>
-                        {orders.length > 0 ? (
+                        {isOrdersLoading ? (
+                          <tr>
+                            <td colSpan={5}>Loading orders...</td>
+                          </tr>
+                        ) : orders.length > 0 ? (
                           visibleOrders.map((order) => (
                             <tr key={order.id}>
                               <td>{formatDate(order.createdAt)}</td>

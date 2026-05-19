@@ -4,3 +4,4 @@ export type * from './breadcrumbs';
 export type * from './cart';
 export type * from './product';
 export type * from './stores';
+export type * from './order';
