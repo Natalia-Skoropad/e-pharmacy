@@ -451,7 +451,7 @@ function ProfilePageContent() {
 
 
   useEffect(() => {
-    const authToken = token;
+    const authToken = token ?? '';
 
     if (activeTab !== 'orders' || !authToken) return;
 
