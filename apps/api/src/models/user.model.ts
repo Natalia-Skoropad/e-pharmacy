@@ -18,9 +18,7 @@ const userSchema = new Schema<UserEntity>(
       required: [true, 'Name is required'],
       trim: true,
       maxlength: [
-        ADDRESS_MAX_LENGTH,
-  AVATAR_URL_MAX_LENGTH,
-  USER_NAME_MAX_LENGTH,
+        USER_NAME_MAX_LENGTH,
         `Name must be at most ${USER_NAME_MAX_LENGTH} characters`,
       ],
     },
