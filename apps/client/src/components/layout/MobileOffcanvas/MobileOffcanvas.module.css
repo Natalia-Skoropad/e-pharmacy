@@ -101,20 +101,21 @@
   padding-top: 32px;
 }
 
-.actions a,
-.actions button {
+.actions :is(a, button),
+.actions :is(a, button):hover,
+.actions :is(a, button):focus-visible {
   color: var(--color-white);
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
-.actions a:hover,
-.actions a:focus-visible,
-.actions button:hover,
-.actions button:focus-visible {
-  color: var(--color-white);
-  background-color: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.42);
+.actions :is(a, button) {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.actions :is(a, button):hover,
+.actions :is(a, button):focus-visible {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.48);
 }
 
 .authSkeleton {

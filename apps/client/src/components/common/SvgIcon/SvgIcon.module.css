@@ -1,4 +1,5 @@
 .icon {
   flex-shrink: 0;
   color: currentColor;
+  fill: currentColor;
 }

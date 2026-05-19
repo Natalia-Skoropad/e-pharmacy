@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { ChevronRight, Plus } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 import { Container } from '@/components/common';
 
@@ -100,7 +100,6 @@ function InfoPage({
                 <section className={css.section} key={section.title}>
                   <div className={css.sectionHead}>
                     <h2>{`${index + 1}. ${section.title}`}</h2>
-                    <Plus size={30} aria-hidden="true" />
                   </div>
 
                   <div className={css.sectionBody}>
