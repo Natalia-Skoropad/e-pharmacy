@@ -25,7 +25,10 @@
   max-height: 100dvh;
   padding: 20px;
   overflow-y: auto;
-  background-color: var(--color-surface);
+  color: var(--color-white);
+  background:
+    radial-gradient(circle at 80% 12%, rgba(255, 255, 255, 0.18), transparent 27%),
+    linear-gradient(160deg, #59b17a 0%, #3f945f 100%);
   box-shadow: var(--shadow-modal);
   transform: translateX(100%);
   transition: transform var(--transition-base);
@@ -50,9 +53,9 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  color: var(--color-text-primary);
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
+  color: var(--color-white);
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--radius-pill);
   transition:
     color var(--transition-base),
@@ -62,9 +65,8 @@
 
 .closeButton:hover,
 .closeButton:focus-visible {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
-  background-color: rgba(89, 177, 122, 0.1);
+  border-color: rgba(255, 255, 255, 0.55);
+  background-color: rgba(255, 255, 255, 0.16);
 }
 
 .nav {
@@ -73,7 +75,7 @@
 
 .navList {
   display: grid;
-  gap: 40px;
+  gap: 26px;
 }
 
 .navLink {
@@ -82,14 +84,14 @@
   font-size: var(--fz-18);
   font-weight: var(--fw-medium);
   line-height: 1.4;
-  color: var(--color-text-primary);
+  color: rgba(255, 255, 255, 0.82);
   transition: color var(--transition-base);
 }
 
 .navLink:hover,
 .navLink:focus-visible,
 .navLink.active {
-  color: var(--color-accent);
+  color: var(--color-white);
 }
 
 .actions {
@@ -99,15 +101,31 @@
   padding-top: 32px;
 }
 
+.actions a,
+.actions button {
+  color: var(--color-white);
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.actions a:hover,
+.actions a:focus-visible,
+.actions button:hover,
+.actions button:focus-visible {
+  color: var(--color-white);
+  background-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.42);
+}
+
 .authSkeleton {
   width: 100%;
   height: 48px;
   border-radius: 999px;
   background: linear-gradient(
     90deg,
-    var(--color-border) 0%,
-    var(--color-surface) 50%,
-    var(--color-border) 100%
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.1) 100%
   );
   background-size: 200% 100%;
   animation: auth-skeleton-pulse 1.4s ease-in-out infinite;

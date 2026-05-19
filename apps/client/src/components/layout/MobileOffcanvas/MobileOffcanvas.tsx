@@ -77,7 +77,7 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
         aria-label="Mobile navigation"
       >
         <div className={css.head}>
-          <Logo />
+          <Logo variant="white" />
 
           <button
             className={css.closeButton}

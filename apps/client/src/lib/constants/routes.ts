@@ -14,4 +14,8 @@ export const ROUTES = {
   PASSWORD_RECOVERY: `/${ROUTE_SEGMENTS.passwordRecovery}`,
   RESET_PASSWORD: '/reset-password',
   PROFILE: `/${ROUTE_SEGMENTS.profile}`,
+  DELIVERY_PAYMENT: '/delivery-and-payment',
+  RETURN_POLICY: '/return-policy',
+  USER_AGREEMENT: '/user-agreement',
+  PERSONAL_DATA_NOTICE: '/personal-data-notice',
 } as const;

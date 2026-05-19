@@ -10,17 +10,24 @@ import css from './Logo.module.css';
 
 //===================================================================
 
+type LogoVariant = 'green' | 'white';
+
 type LogoProps = {
   className?: string;
+  variant?: LogoVariant;
 };
 
 //===================================================================
 
-function Logo({ className }: LogoProps) {
+function Logo({ className, variant = 'green' }: LogoProps) {
   return (
-    <Link className={cn(css.logo, className)} href={ROUTES.HOME}>
+    <Link
+      className={cn(css.logo, css[variant], className)}
+      href={ROUTES.HOME}
+      aria-label={`${SITE_NAME} home`}
+    >
       <span className={css.iconWrap} aria-hidden="true">
-        <SvgIcon name="icon-logo-cross" size={18} />
+        <SvgIcon name="icon-logo" size={22} />
       </span>
 
       <span className={css.text}>{SITE_NAME}</span>

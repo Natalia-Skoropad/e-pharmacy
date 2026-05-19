@@ -68,7 +68,7 @@
 }
 
 .authSkeleton {
-  width: 176px;
+  width: 300px;
   height: 40px;
   border-radius: 999px;
   background: linear-gradient(
@@ -145,7 +145,6 @@
     display: none;
   }
 }
-
 
 .profileLink {
   gap: 8px;

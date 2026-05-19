@@ -19,17 +19,25 @@ export const CLIENT_NAV_LINKS = [
 
 //===================================================================
 
-export const CLIENT_FOOTER_LINKS = [
+export const INFO_NAV_LINKS = [
   {
-    label: 'Cart',
-    href: ROUTES.CART,
+    label: 'Personal data notice',
+    href: ROUTES.PERSONAL_DATA_NOTICE,
   },
   {
-    label: 'Checkout',
-    href: ROUTES.CHECKOUT,
+    label: 'User agreement',
+    href: ROUTES.USER_AGREEMENT,
   },
   {
-    label: 'Profile',
-    href: ROUTES.PROFILE,
+    label: 'Delivery and payment',
+    href: ROUTES.DELIVERY_PAYMENT,
+  },
+  {
+    label: 'Return policy',
+    href: ROUTES.RETURN_POLICY,
   },
 ] as const;
+
+//===================================================================
+
+export const CLIENT_FOOTER_LINKS = INFO_NAV_LINKS;

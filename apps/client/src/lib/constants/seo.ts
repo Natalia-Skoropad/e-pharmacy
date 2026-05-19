@@ -6,6 +6,10 @@ export const INDEXABLE_ROUTES = [
   ROUTES.HOME,
   ROUTES.STORES,
   ROUTES.MEDICINES_CATALOG,
+  ROUTES.DELIVERY_PAYMENT,
+  ROUTES.RETURN_POLICY,
+  ROUTES.USER_AGREEMENT,
+  ROUTES.PERSONAL_DATA_NOTICE,
 ] as const;
 
 //===================================================================
