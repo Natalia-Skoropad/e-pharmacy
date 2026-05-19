@@ -29,3 +29,5 @@ export type { ReviewItem } from './ReviewsSection';
 export { default as ShimmerImage } from './ShimmerImage';
 export * from './RadioOption';
 export { default as ConfirmActionModal } from './ConfirmActionModal';
+
+export { ModalBase, ModalRoot } from '@/components/modals';

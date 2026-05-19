@@ -1,9 +1,14 @@
 import { z } from 'zod';
 
+import { isDataUrl, VALIDATION_LIMITS } from '@e-pharmacy/validation';
+
 import {
   EMAIL_MAX_LENGTH,
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
+  ADDRESS_MAX_LENGTH,
+  ADDRESS_MIN_LENGTH,
+  AVATAR_URL_MAX_LENGTH,
   PHONE_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_NAME_MIN_LENGTH,
@@ -51,13 +56,19 @@ const phoneSchema = z
   .max(PHONE_MAX_LENGTH, `Phone must be at most ${PHONE_MAX_LENGTH} characters`)
   .optional();
 
-const addressSchema = z.string().trim().min(10).max(200).optional();
-
+const addressSchema = z
+  .string()
+  .trim()
+  .min(ADDRESS_MIN_LENGTH)
+  .max(ADDRESS_MAX_LENGTH)
+  .optional();
 
 const avatarUrlSchema = z
   .string()
   .trim()
-  .max(1200000, 'Avatar image is too large')
+  .url('Avatar must be a valid image URL')
+  .max(AVATAR_URL_MAX_LENGTH, `Avatar URL must be at most ${AVATAR_URL_MAX_LENGTH} characters`)
+  .refine((value) => !isDataUrl(value), 'Avatar must be stored as a URL, not a base64 Data URL')
   .optional()
   .nullable();
 
@@ -105,7 +116,13 @@ export const updateProfileSchema = z
   .object({
     name: nameSchema.optional(),
     phone: phoneSchema,
-    address: z.string().trim().min(10).max(200).optional().or(z.literal('')),
+    address: z
+      .string()
+      .trim()
+      .min(ADDRESS_MIN_LENGTH)
+      .max(ADDRESS_MAX_LENGTH)
+      .optional()
+      .or(z.literal('')),
     avatarUrl: avatarUrlSchema,
   })
   .refine((data) => Object.keys(data).length > 0, {

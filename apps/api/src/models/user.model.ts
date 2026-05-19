@@ -1,6 +1,8 @@
 import { Schema, model, models } from 'mongoose';
 
 import {
+  ADDRESS_MAX_LENGTH,
+  AVATAR_URL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_ROLES,
   USER_STATUSES,
@@ -16,7 +18,9 @@ const userSchema = new Schema<UserEntity>(
       required: [true, 'Name is required'],
       trim: true,
       maxlength: [
-        USER_NAME_MAX_LENGTH,
+        ADDRESS_MAX_LENGTH,
+  AVATAR_URL_MAX_LENGTH,
+  USER_NAME_MAX_LENGTH,
         `Name must be at most ${USER_NAME_MAX_LENGTH} characters`,
       ],
     },
@@ -58,13 +62,20 @@ const userSchema = new Schema<UserEntity>(
     address: {
       type: String,
       trim: true,
-      maxlength: [200, 'Address must be at most 200 characters'],
+      maxlength: [
+        ADDRESS_MAX_LENGTH,
+        `Address must be at most ${ADDRESS_MAX_LENGTH} characters`,
+      ],
       default: undefined,
     },
 
     avatarUrl: {
       type: String,
       trim: true,
+      maxlength: [
+        AVATAR_URL_MAX_LENGTH,
+        `Avatar URL must be at most ${AVATAR_URL_MAX_LENGTH} characters`,
+      ],
       default: undefined,
     },
 

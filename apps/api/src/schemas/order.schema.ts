@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { VALIDATION_LIMITS } from '@e-pharmacy/validation';
+
 //===============================================================
 
 const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
@@ -17,12 +19,12 @@ export const checkoutOrderSchema = z
     deliveryMethod: z.enum(['pickup', 'post']),
     deliveryDetails: z
       .object({
-        recipientName: z.string().trim().min(2).max(80).optional(),
-        recipientPhone: z.string().trim().min(10).max(30).optional(),
-        address: z.string().trim().min(5).max(160).optional(),
+        recipientName: z.string().trim().min(VALIDATION_LIMITS.nameMin).max(VALIDATION_LIMITS.nameMax).optional(),
+        recipientPhone: z.string().trim().min(VALIDATION_LIMITS.phoneMin).max(VALIDATION_LIMITS.phoneMax).optional(),
+        address: z.string().trim().min(VALIDATION_LIMITS.addressMin).max(VALIDATION_LIMITS.addressMax).optional(),
       })
       .optional(),
-    comment: z.string().trim().max(500).optional(),
+    comment: z.string().trim().max(VALIDATION_LIMITS.orderCommentMax).optional(),
   })
   .superRefine((value, ctx) => {
     if (value.deliveryMethod !== 'post') return;

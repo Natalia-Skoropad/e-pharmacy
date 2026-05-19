@@ -1,6 +1,6 @@
 export const ASSETS = {
   iconsSprite: '/icons/sprite.svg',
-  defaultOgImage: '/og-image.png',
+  defaultOgImage: '/og/default-og.svg',
 } as const;
 
 //===================================================================

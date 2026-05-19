@@ -35,6 +35,7 @@ type SitemapEntry = {
 
 const PRODUCT_SITEMAP_PER_PAGE = 200;
 const STORE_SITEMAP_PER_PAGE = 100;
+const SITEMAP_REVALIDATE_SECONDS = 3600;
 
 //===================================================================
 
@@ -49,7 +50,7 @@ async function fetchSitemapPage<TItem>(
 ): Promise<SitemapApiResponse<TItem> | null> {
   try {
     const response = await fetch(createApiUrl(path), {
-      cache: 'no-store',
+      next: { revalidate: SITEMAP_REVALIDATE_SECONDS },
     });
 
     if (!response.ok) return null;

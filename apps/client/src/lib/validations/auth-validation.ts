@@ -1,16 +1,15 @@
-export const PASSWORD_MIN_LENGTH = 8;
-export const PASSWORD_MAX_LENGTH = 20;
+import { EMAIL_PATTERN, NAME_PATTERN, VALIDATION_LIMITS } from '@e-pharmacy/validation';
 
-export const USER_NAME_MIN_LENGTH = 2;
-export const USER_NAME_MAX_LENGTH = 20;
+export const PASSWORD_MIN_LENGTH = VALIDATION_LIMITS.passwordMin;
+export const PASSWORD_MAX_LENGTH = VALIDATION_LIMITS.passwordMax;
+
+export const USER_NAME_MIN_LENGTH = VALIDATION_LIMITS.nameMin;
+export const USER_NAME_MAX_LENGTH = VALIDATION_LIMITS.nameMax;
 
 export const CUSTOMER_NAME_MIN_LENGTH = USER_NAME_MIN_LENGTH;
 export const CUSTOMER_NAME_MAX_LENGTH = USER_NAME_MAX_LENGTH;
 
-export const EMAIL_MAX_LENGTH = 64;
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const NAME_REGEX = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/;
+export const EMAIL_MAX_LENGTH = VALIDATION_LIMITS.emailMax;
 
 //===================================================================
 
@@ -94,7 +93,7 @@ export function getEmailError(value: string): string {
     return `Email must be at most ${EMAIL_MAX_LENGTH} characters`;
   }
 
-  if (!EMAIL_REGEX.test(email)) return 'Enter a valid email address';
+  if (!EMAIL_PATTERN.test(email)) return 'Enter a valid email address';
 
   return '';
 }
@@ -144,7 +143,7 @@ export function validateRegisterForm(
     errors.name = `Name must be at least ${USER_NAME_MIN_LENGTH} characters`;
   } else if (name.length > USER_NAME_MAX_LENGTH) {
     errors.name = `Name must be at most ${USER_NAME_MAX_LENGTH} characters`;
-  } else if (!NAME_REGEX.test(name)) {
+  } else if (!NAME_PATTERN.test(name)) {
     errors.name = 'Use only Latin letters, spaces, apostrophe or hyphen';
   }
 

@@ -13,7 +13,7 @@ import {
   SvgIcon,
 } from '@/components/common';
 
-import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
+import { ModalBase, ModalRoot } from '@/components/modals';
 import { ApiError } from '@/lib/api';
 import { addCartItem, getProducts } from '@/services';
 
@@ -114,11 +114,6 @@ function ContinueShoppingModal({
   );
   const [error, setError] = useState('');
   const [invoiceLimitMessage, setInvoiceLimitMessage] = useState('');
-
-  useBodyScrollLock(true);
-  useEscapeToClose({ isOpen: true, onClose });
-
-  const handleBackdropMouseDown = useBackdropClick({ onClose });
 
   const categoryOptions = useMemo(
     () => getUniqueCategoryOptions(categoryProducts),
@@ -232,16 +227,12 @@ function ContinueShoppingModal({
   };
 
   return (
-    <div
-      className={css.backdrop}
-      role="presentation"
-      onMouseDown={handleBackdropMouseDown}
-    >
-      <div
-        className={css.dialog}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
+    <ModalRoot>
+      <ModalBase
+        className={css.backdrop}
+        dialogClassName={css.dialog}
+        labelledBy={titleId}
+        onClose={onClose}
       >
         <div className={css.head}>
           <div>
@@ -381,7 +372,7 @@ function ContinueShoppingModal({
             </ul>
           ) : null}
         </div>
-      </div>
+      </ModalBase>
 
       {invoiceLimitMessage ? (
         <ConfirmActionModal
@@ -393,7 +384,7 @@ function ContinueShoppingModal({
           onCancel={() => setInvoiceLimitMessage('')}
         />
       ) : null}
-    </div>
+    </ModalRoot>
   );
 }
 

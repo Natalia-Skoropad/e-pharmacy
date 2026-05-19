@@ -1,7 +1,7 @@
 'use client';
 
 import Button from '../Button';
-import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
+import { ModalBase, ModalRoot } from '@/components/modals';
 
 import css from './ConfirmActionModal.module.css';
 
@@ -30,22 +30,11 @@ function ConfirmActionModal({
   onConfirm,
   onCancel,
 }: ConfirmActionModalProps) {
-  useBodyScrollLock(true);
-  useEscapeToClose({ isOpen: true, onClose: onCancel });
-
-  const handleBackdropMouseDown = useBackdropClick({ onClose: onCancel });
-
   return (
-    <div
-      className={css.backdrop}
-      role="presentation"
-      onMouseDown={handleBackdropMouseDown}
-    >
-      <div
-        className={css.dialog}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="confirm-action-title"
+    <ModalRoot>
+      <ModalBase
+        labelledBy="confirm-action-title"
+        onClose={onCancel}
       >
         <h2 className={css.title} id="confirm-action-title">
           {title}
@@ -72,8 +61,8 @@ function ConfirmActionModal({
             {cancelLabel}
           </Button>
         </div>
-      </div>
-    </div>
+      </ModalBase>
+    </ModalRoot>
   );
 }
 

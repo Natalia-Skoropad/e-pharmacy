@@ -1,15 +1,22 @@
-export const CUSTOMER_NAME_MIN_LENGTH = 2;
-export const CUSTOMER_NAME_MAX_LENGTH = 20;
-export const CUSTOMER_PHONE_MIN_LENGTH = 13;
-export const CUSTOMER_PHONE_MAX_LENGTH = 13;
-export const CUSTOMER_ADDRESS_MIN_LENGTH = 10;
-export const CUSTOMER_ADDRESS_MAX_LENGTH = 200;
+import {
+  ADDRESS_PATTERN,
+  NAME_PATTERN,
+  PHONE_PATTERN,
+  VALIDATION_LIMITS,
+} from '@e-pharmacy/validation';
+
+export const CUSTOMER_NAME_MIN_LENGTH = VALIDATION_LIMITS.nameMin;
+export const CUSTOMER_NAME_MAX_LENGTH = VALIDATION_LIMITS.nameMax;
+export const CUSTOMER_PHONE_MIN_LENGTH = VALIDATION_LIMITS.phoneMin;
+export const CUSTOMER_PHONE_MAX_LENGTH = VALIDATION_LIMITS.phoneMax;
+export const CUSTOMER_ADDRESS_MIN_LENGTH = VALIDATION_LIMITS.addressMin;
+export const CUSTOMER_ADDRESS_MAX_LENGTH = VALIDATION_LIMITS.addressMax;
 
 //===================================================================
 
-export const CUSTOMER_NAME_REGEX = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/;
-export const CUSTOMER_PHONE_REGEX = /^\+380\d{9}$/;
-export const CUSTOMER_ADDRESS_REGEX = /^[A-Za-z0-9\s.,'’/#-]+$/;
+export const CUSTOMER_NAME_REGEX = NAME_PATTERN;
+export const CUSTOMER_PHONE_REGEX = PHONE_PATTERN;
+export const CUSTOMER_ADDRESS_REGEX = ADDRESS_PATTERN;
 
 //===================================================================
 

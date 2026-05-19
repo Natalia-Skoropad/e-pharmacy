@@ -1,3 +1,5 @@
+import { VALIDATION_LIMITS } from '@e-pharmacy/validation';
+
 export const USER_ROLES = {
   CUSTOMER: 'customer',
   VENDOR: 'vendor',
@@ -13,14 +15,20 @@ export const USER_STATUSES = {
 
 //===============================================================
 
-export const PASSWORD_MIN_LENGTH = 8;
-export const PASSWORD_MAX_LENGTH = 20;
+//===============================================================
 
-export const USER_NAME_MIN_LENGTH = 2;
-export const USER_NAME_MAX_LENGTH = 20;
+export const PASSWORD_MIN_LENGTH = VALIDATION_LIMITS.passwordMin;
+export const PASSWORD_MAX_LENGTH = VALIDATION_LIMITS.passwordMax;
 
-export const EMAIL_MAX_LENGTH = 64;
-export const PHONE_MAX_LENGTH = 20;
+export const USER_NAME_MIN_LENGTH = VALIDATION_LIMITS.nameMin;
+export const USER_NAME_MAX_LENGTH = VALIDATION_LIMITS.nameMax;
+
+export const EMAIL_MAX_LENGTH = VALIDATION_LIMITS.emailMax;
+export const PHONE_MIN_LENGTH = VALIDATION_LIMITS.phoneMin;
+export const PHONE_MAX_LENGTH = VALIDATION_LIMITS.phoneMax;
+export const ADDRESS_MIN_LENGTH = VALIDATION_LIMITS.addressMin;
+export const ADDRESS_MAX_LENGTH = VALIDATION_LIMITS.addressMax;
+export const AVATAR_URL_MAX_LENGTH = VALIDATION_LIMITS.avatarUrlMax;
 
 //===============================================================
 

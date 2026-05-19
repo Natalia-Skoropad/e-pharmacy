@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { REVIEW_COMMENT_PATTERN, VALIDATION_LIMITS } from '@e-pharmacy/validation';
+
 //===============================================================
 
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
@@ -33,10 +35,10 @@ export const createStoreReviewSchema = z.object({
   comment: z
     .string()
     .trim()
-    .min(10)
-    .max(500)
+    .min(VALIDATION_LIMITS.reviewCommentMin)
+    .max(VALIDATION_LIMITS.reviewCommentMax)
     .regex(
-      /^[A-Za-z0-9\s.,!?;:'"()\-]+$/,
+      REVIEW_COMMENT_PATTERN,
       'Review may contain only latin letters, numbers, spaces and basic punctuation'
     ),
 });

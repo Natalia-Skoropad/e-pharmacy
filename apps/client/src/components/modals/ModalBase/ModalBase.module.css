@@ -1,0 +1,21 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--modal-z-index, 1000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--modal-padding, 20px);
+  background-color: var(--modal-backdrop, rgb(18 20 23 / 55%));
+}
+
+.dialog {
+  width: min(100%, var(--modal-width, 560px));
+  max-height: var(--modal-max-height, none);
+  padding: var(--modal-dialog-padding, 24px);
+  overflow: var(--modal-overflow, visible);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}

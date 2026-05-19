@@ -1,15 +1,8 @@
 'use client';
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ChangeEvent,
-} from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Camera, Heart, ImageOff, KeyRound, Store } from 'lucide-react';
+import { Heart, ImageOff, KeyRound, Store } from 'lucide-react';
 
 import {
   Button,
@@ -31,6 +24,8 @@ import {
   CUSTOMER_ADDRESS_MAX_LENGTH,
   CUSTOMER_NAME_MAX_LENGTH,
   CUSTOMER_PHONE_MAX_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
   getCustomerAddressError,
   getCustomerNameError,
   getCustomerPhoneError,
@@ -76,9 +71,6 @@ const TABS: Array<{
   { value: 'favorite-stores', label: 'Favorite stores' },
 ];
 
-const PASSWORD_MIN_LENGTH = 8;
-const PASSWORD_MAX_LENGTH = 64;
-const AVATAR_MAX_SIZE_BYTES = 800_000;
 const FAVORITES_PER_PAGE = 100;
 const FAVORITES_VISIBLE_STEP = 16;
 const ORDERS_VISIBLE_STEP = 15;
@@ -238,21 +230,10 @@ async function getFavoriteStores(authToken: string): Promise<PharmacyStore[]> {
   );
 }
 
-function readImageAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error('Could not read image file'));
-    reader.readAsDataURL(file);
-  });
-}
-
 //===================================================================
 
 function ProfilePageContent() {
   const { token, user, refreshCurrentUser } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
   const [profileValues, setProfileValues] = useState<ProfileFormValues>({
     name: '',
@@ -542,42 +523,12 @@ function ProfilePageContent() {
     }
   };
 
-  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setError('Please choose an image file.');
-      return;
-    }
-
-    if (file.size > AVATAR_MAX_SIZE_BYTES) {
-      setError('Avatar image must be up to 800 KB.');
-      return;
-    }
-
-    try {
-      const nextAvatar = await readImageAsDataUrl(file);
-
-      setAvatarPreview(nextAvatar);
-      setAvatarChanged(true);
-      await saveAvatar(nextAvatar);
-    } catch {
-      setError('Could not read profile photo.');
-    }
-  };
-
   const handleRemoveAvatar = async () => {
     setAvatarPreview(null);
     setAvatarChanged(true);
     setFeedback('');
     setError('');
     setIsRemoveAvatarConfirmOpen(false);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
 
     await saveAvatar(null);
   };
@@ -674,23 +625,11 @@ function ProfilePageContent() {
                 </div>
 
                 <div className={css.avatarActions}>
-                  <input
-                    ref={fileInputRef}
-                    className={css.fileInput}
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => void handleAvatarChange(event)}
-                  />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    disabled={isAvatarSaving}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Camera size={16} aria-hidden="true" />
-                    {isAvatarSaving ? 'Updating...' : 'Add / change photo'}
-                  </Button>
+                  <p className={css.avatarHint}>
+                    Profile photos should be stored in CDN/storage and saved as
+                    a URL. Base64 uploads are disabled to keep the user document
+                    lightweight.
+                  </p>
                   <Button
                     type="button"
                     variant="ghost"

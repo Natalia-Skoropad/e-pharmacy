@@ -23,7 +23,7 @@ import css from './page.module.css';
 
 //===================================================================
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata = createPageMetadata({
   title: HOME_TITLE,
