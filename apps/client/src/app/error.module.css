@@ -8,8 +8,8 @@
 .hero {
   display: flex;
   align-items: center;
-  min-height: calc(100dvh - 64px);
-  padding-block: 56px;
+  min-height: calc(100dvh - 100px);
+  padding-block: 30px;
 }
 
 .heroGrid {
@@ -21,7 +21,11 @@
   overflow: hidden;
   color: var(--color-white);
   background:
-    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.22), transparent 28%),
+    radial-gradient(
+      circle at 82% 18%,
+      rgba(255, 255, 255, 0.22),
+      transparent 28%
+    ),
     linear-gradient(135deg, #59b17a 0%, #3f945f 100%);
   border-radius: var(--radius-xl);
   box-shadow: 0 24px 68px rgba(63, 148, 95, 0.2);
@@ -108,7 +112,11 @@
   min-height: 320px;
   overflow: hidden;
   background:
-    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.34), transparent 30%),
+    radial-gradient(
+      circle at 16% 18%,
+      rgba(255, 255, 255, 0.34),
+      transparent 30%
+    ),
     rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: var(--radius-xl);
@@ -129,17 +137,31 @@
 
 @media only screen and (min-width: 768px) {
   .hero {
-    padding-block: 76px;
+    padding-block: 30px;
   }
 
   .heroGrid {
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 38%);
+    padding: 42px;
+  }
+
+  .visualCard {
+    min-height: 340px;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .hero {
+    padding-block: 30px;
+  }
+
+  .heroGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(420px, 38%);
     align-items: center;
-    padding: 52px;
+    padding: 64px;
   }
 
   .title {
-    font-size: var(--fz-56);
+    font-size: var(--fz-64);
   }
 
   .actions {
@@ -150,24 +172,6 @@
   .actions button,
   .actions a {
     width: fit-content;
-  }
-
-  .visualCard {
-    min-height: 390px;
-  }
-}
-
-@media only screen and (min-width: 1440px) {
-  .hero {
-    padding-block: 92px;
-  }
-
-  .heroGrid {
-    padding: 64px;
-  }
-
-  .title {
-    font-size: var(--fz-64);
   }
 
   .visualCard {

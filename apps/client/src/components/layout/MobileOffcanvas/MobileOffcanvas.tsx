@@ -36,7 +36,6 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
   const { isAuthenticated, isAuthReady, user, logout } = useAuth();
 
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
 
   const handleBackdropClick = useBackdropClick({ onClose });
 
@@ -54,9 +53,6 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
   useEscapeToClose({ isOpen, onClose });
   useBodyScrollLock(isOpen);
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   useEffect(() => {
     if (previousPathnameRef.current === pathname) return;
@@ -157,9 +153,11 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
     </div>
   );
 
-  if (!isMounted || !isOpen) return null;
+  const portalRoot = typeof document === 'undefined' ? null : document.body;
 
-  return createPortal(offcanvas, document.body);
+  if (!isOpen || !portalRoot) return null;
+
+  return createPortal(offcanvas, portalRoot);
 }
 
 export default MobileOffcanvas;

@@ -26,11 +26,7 @@
   padding: 28px;
   color: var(--color-white);
   background:
-    radial-gradient(
-      circle at 90% 0%,
-      rgba(255, 255, 255, 0.2),
-      transparent 28%
-    ),
+    radial-gradient(circle at 90% 0%, rgba(255, 255, 255, 0.2), transparent 28%),
     linear-gradient(135deg, #59b17a 0%, #3f945f 100%);
   border-radius: var(--radius-xl);
   box-shadow: 0 20px 48px rgba(63, 148, 95, 0.18);
@@ -108,7 +104,7 @@
 
   .grid {
     gap: 40px;
-    max-width: 704px;
+    max-width: 760px;
   }
 
   .content {
@@ -127,10 +123,10 @@
 
 @media only screen and (min-width: 1440px) {
   .grid {
-    grid-template-columns: minmax(0, 1fr) 460px;
+    grid-template-columns: minmax(0, 1fr) 520px;
     align-items: stretch;
     max-width: none;
-    gap: 20px;
+    gap: 70px;
   }
 
   .content {

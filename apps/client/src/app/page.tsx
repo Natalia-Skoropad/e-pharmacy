@@ -1,5 +1,11 @@
 import Image from 'next/image';
-import { Heart, MapPin, ReceiptText, SearchCheck, ShieldCheck } from 'lucide-react';
+import {
+  Heart,
+  MapPin,
+  ReceiptText,
+  SearchCheck,
+  ShieldCheck,
+} from 'lucide-react';
 
 import { ButtonLink, Container } from '@/components/common';
 import { HomeFeatureCards, HomeReviewsSlider } from '@/components/home';
@@ -202,7 +208,6 @@ async function HomePage() {
           </div>
         </Container>
       </section>
-
       <section className={css.statsSection} aria-label="E-PHARMACY highlights">
         <Container>
           <ul className={css.statsList}>
@@ -216,7 +221,6 @@ async function HomePage() {
           </ul>
         </Container>
       </section>
-
       <section className={css.section} aria-labelledby="stores-title">
         <Container>
           <div className={css.sectionHead}>
@@ -246,7 +250,6 @@ async function HomePage() {
           </div>
         </Container>
       </section>
-
       <section className={css.section} aria-labelledby="steps-title">
         <Container>
           <div className={css.splitGrid}>
@@ -271,7 +274,6 @@ async function HomePage() {
           </div>
         </Container>
       </section>
-
       <section className={css.bannerSection} aria-labelledby="banner-title">
         <Container>
           <div className={css.banner}>
@@ -302,7 +304,6 @@ async function HomePage() {
           </div>
         </Container>
       </section>
-
       <section className={css.section} aria-labelledby="benefits-title">
         <Container>
           <div className={css.benefitsGrid}>
@@ -344,7 +345,6 @@ async function HomePage() {
           </div>
         </Container>
       </section>
-
       <section className={css.section} aria-labelledby="products-title">
         <Container>
           <div className={css.sectionHead}>
@@ -377,7 +377,6 @@ async function HomePage() {
           </div>
         </Container>
       </section>
-
       <section className={css.section} aria-labelledby="features-title">
         <Container>
           <div className={css.sectionHead}>
@@ -390,7 +389,6 @@ async function HomePage() {
           <HomeFeatureCards />
         </Container>
       </section>
-
       <section className={css.section} aria-labelledby="reviews-title">
         <Container>
           <div className={css.sectionHead}>

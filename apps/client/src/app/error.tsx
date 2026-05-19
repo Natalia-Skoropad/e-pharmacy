@@ -54,7 +54,7 @@ function ErrorPage({ error, reset }: ErrorPageProps) {
             <div className={css.visualCard} aria-hidden="true">
               <div className={css.imageWrap}>
                 <Image
-                  src="/images/common/two-pills.png"
+                  src="/images/home/three-pills.png"
                   alt=""
                   fill
                   sizes="(min-width: 1440px) 420px, (min-width: 768px) 38vw, 260px"
