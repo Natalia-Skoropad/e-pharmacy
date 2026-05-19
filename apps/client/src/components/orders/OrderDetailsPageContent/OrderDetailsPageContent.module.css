@@ -295,3 +295,34 @@
     top: 96px;
   }
 }
+
+.commentCard {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background-color: var(--color-accent-light);
+  border: 1px solid rgba(89, 177, 122, 0.25);
+  border-radius: var(--radius-lg);
+}
+
+.commentTitle {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  color: var(--color-accent);
+}
+
+.commentText {
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.commentTitle svg {
+  flex: 0 0 auto;
+}

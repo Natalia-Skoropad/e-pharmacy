@@ -1,7 +1,16 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, CreditCard, PackageCheck, Truck } from 'lucide-react';
+import {
+  CalendarDays,
+  CreditCard,
+  MapPin,
+  MessageSquareText,
+  PackageCheck,
+  Phone,
+  Truck,
+  UserRound,
+} from 'lucide-react';
 
 import {
   ButtonLink,
@@ -158,6 +167,8 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   }
 
   const storeHref = buildStorePath(order.storeName, order.storeId);
+  const hasDeliveryDetails =
+    order.deliveryMethod === 'post' && Boolean(order.deliveryDetails);
 
   return (
     <main className={css.page}>
@@ -285,6 +296,33 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                   <dd>{formatDeliveryMethod(order.deliveryMethod)}</dd>
                 </div>
 
+                {hasDeliveryDetails && order.deliveryDetails?.recipientName ? (
+                  <div>
+                    <dt>
+                      <UserRound size={16} aria-hidden="true" /> Recipient
+                    </dt>
+                    <dd>{order.deliveryDetails.recipientName}</dd>
+                  </div>
+                ) : null}
+
+                {hasDeliveryDetails && order.deliveryDetails?.recipientPhone ? (
+                  <div>
+                    <dt>
+                      <Phone size={16} aria-hidden="true" /> Recipient phone
+                    </dt>
+                    <dd>{order.deliveryDetails.recipientPhone}</dd>
+                  </div>
+                ) : null}
+
+                {hasDeliveryDetails && order.deliveryDetails?.address ? (
+                  <div>
+                    <dt>
+                      <MapPin size={16} aria-hidden="true" /> Delivery address
+                    </dt>
+                    <dd>{order.deliveryDetails.address}</dd>
+                  </div>
+                ) : null}
+
                 <div>
                   <dt>
                     <PackageCheck size={16} aria-hidden="true" /> Items
@@ -296,6 +334,15 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                   <dd>{formatPrice(order.totalPrice)}</dd>
                 </div>
               </dl>
+
+              {order.comment ? (
+                <div className={css.commentCard}>
+                  <h3 className={css.commentTitle}>
+                    <MessageSquareText size={16} aria-hidden="true" /> Order comment
+                  </h3>
+                  <p className={css.commentText}>{order.comment}</p>
+                </div>
+              ) : null}
             </aside>
           </div>
         </Container>
