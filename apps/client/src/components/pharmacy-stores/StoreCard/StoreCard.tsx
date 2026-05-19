@@ -10,7 +10,7 @@ import {
   SvgIcon,
   Toast,
 } from '@/components/common';
-import { useAuth } from '@/components/providers';
+import { useAuth } from '@/providers';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 import { buildStorePath } from '@/lib/routes';

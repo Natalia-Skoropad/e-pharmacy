@@ -89,6 +89,7 @@ export const env = {
   JWT_RESET_EXPIRES_IN: (process.env.JWT_RESET_EXPIRES_IN || '15m') as StringValue,
   CLIENT_ORIGINS: getClientOrigins(),
   CLIENT_APP_URL: process.env.CLIENT_APP_URL || 'http://localhost:3000',
+  AUTH_COOKIE_DOMAIN: process.env.AUTH_COOKIE_DOMAIN,
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: getOptionalNumberEnv('SMTP_PORT', 587),
   SMTP_USER: process.env.SMTP_USER,

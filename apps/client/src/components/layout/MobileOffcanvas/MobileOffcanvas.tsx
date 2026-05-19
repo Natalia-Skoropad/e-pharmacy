@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 import { Button, ButtonLink, Logo } from '@/components/common';
-import { useAuth } from '@/components/providers';
+import { useAuth } from '@/providers';
 
 import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
 

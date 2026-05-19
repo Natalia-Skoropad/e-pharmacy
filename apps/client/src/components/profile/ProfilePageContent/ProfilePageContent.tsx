@@ -22,7 +22,7 @@ import {
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { ProductCard } from '@/components/medicines-catalog';
 import { StoreCard } from '@/components/pharmacy-stores';
-import { useAuth } from '@/components/providers';
+import { useAuth } from '@/providers';
 
 import { PROFILE_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';

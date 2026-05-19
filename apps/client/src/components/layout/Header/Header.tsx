@@ -9,7 +9,7 @@ import { ShoppingCart } from 'lucide-react';
 import { Button, ButtonLink, Container, Logo } from '@/components/common';
 import BurgerButton from '@/components/layout/BurgerButton';
 import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
-import { useAuth } from '@/components/providers';
+import { useAuth } from '@/providers';
 
 import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
 import { ROUTES } from '@/lib/constants/routes';

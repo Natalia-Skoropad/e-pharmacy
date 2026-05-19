@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import { ApiError } from '@/lib/api';
 import { Button, ConfirmActionModal } from '@/components/common';
-import { useAuth } from '@/components/providers';
+import { useAuth } from '@/providers';
 
 import { ROUTES } from '@/lib/constants/routes';
 

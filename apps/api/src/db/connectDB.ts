@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 import { env } from '../config/env';
+import { logger } from '../utils/logger';
 
 //===============================================================
 
@@ -8,12 +9,12 @@ export async function connectDB(): Promise<void> {
   try {
     await mongoose.connect(env.MONGODB_URI);
 
-    console.log('MongoDB connected successfully');
+    logger.info('MongoDB connected successfully');
   } catch (error) {
-    console.error('MongoDB connection failed');
+    logger.error('MongoDB connection failed');
 
     if (error instanceof Error) {
-      console.error(error.message);
+      logger.error(error.message);
     }
 
     process.exit(1);

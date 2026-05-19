@@ -11,7 +11,7 @@ import {
   SvgIcon,
 } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
-import { useAuth } from '@/components/providers';
+import { useAuth } from '@/providers';
 
 import { ROUTES } from '@/lib/constants/routes';
 import { buildProductPath, buildStorePath } from '@/lib/routes';

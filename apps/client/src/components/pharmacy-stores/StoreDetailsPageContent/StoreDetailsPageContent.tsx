@@ -16,7 +16,7 @@ import {
   type TabItem,
 } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
-import { useAuth } from '@/components/providers';
+import { useAuth } from '@/providers';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 import { ROUTES } from '@/lib/constants/routes';

@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 
 import { env } from '../config/env';
 import { httpError } from './httpError';
+import { logger } from './logger';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
 //===============================================================
@@ -37,7 +38,7 @@ const transporter = hasSmtpConfig()
 
 export async function sendEmail(options: SendEmailOptions): Promise<void> {
   if (!transporter || !env.SMTP_FROM) {
-    console.info('[email:local-preview]', {
+    logger.info('[email:local-preview]', {
       from: env.SMTP_FROM || 'not-configured',
       ...options,
     });
@@ -50,7 +51,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
       ...options,
     });
   } catch (error) {
-    console.error('Email sending failed', error);
+    logger.error('Email sending failed', error);
     throw httpError(
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
       'Failed to send the email, please try again later.'

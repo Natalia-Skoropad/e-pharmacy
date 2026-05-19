@@ -16,7 +16,7 @@ import {
   LoadingSpinner,
   RatingSummary,
 } from '@/components/common';
-import { useAuth } from '@/components/providers';
+import { useAuth } from '@/providers';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
 import { CART_DESCRIPTION, CART_TITLE } from '@/lib/constants/metadata';

@@ -21,6 +21,7 @@ import type {
   UpdateProfileInput,
 } from '../types/auth';
 import { sendSuccessResponse } from '../utils/apiResponse';
+import { clearAuthCookie, setAuthCookie } from '../utils/authCookie';
 
 //===============================================================
 
@@ -28,6 +29,8 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
   const input = req.body as RegisterInput;
 
   const data = await registerUserService(input);
+
+  setAuthCookie(res, data.token);
 
   sendSuccessResponse({
     res,
@@ -43,6 +46,8 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
   const input = req.body as LoginInput;
 
   const data = await loginUserService(input);
+
+  setAuthCookie(res, data.token);
 
   sendSuccessResponse({
     res,
@@ -145,6 +150,8 @@ export async function updateCurrentUserPassword(
 }
 
 export function logoutUser(_req: Request, res: Response): void {
+  clearAuthCookie(res);
+
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.OK,

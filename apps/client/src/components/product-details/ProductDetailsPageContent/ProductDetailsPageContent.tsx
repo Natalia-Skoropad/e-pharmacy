@@ -27,7 +27,7 @@ import {
 
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { ApiError } from '@/lib/api';
-import { useAuth } from '@/components/providers';
+import { useAuth } from '@/providers';
 
 import { ROUTES } from '@/lib/constants/routes';
 import { buildStorePath } from '@/lib/routes';

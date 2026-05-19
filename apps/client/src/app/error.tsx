@@ -1,8 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect } from 'react';
-
 import { Button, ButtonLink, Container } from '@/components/common';
 
 import { ROUTES } from '@/lib/constants/routes';
@@ -18,10 +16,8 @@ type ErrorPageProps = {
 
 //===================================================================
 
-function ErrorPage({ error, reset }: ErrorPageProps) {
-  useEffect(() => {
-    console.error(error);
-  }, [error]);
+function ErrorPage({ error: _error, reset }: ErrorPageProps) {
+  void _error;
 
   return (
     <main className={css.page}>

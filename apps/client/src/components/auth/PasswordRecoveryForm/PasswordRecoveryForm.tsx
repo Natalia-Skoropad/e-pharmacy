@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Button, Toast } from '@/components/common';
-import { useAuth } from '@/components/providers';
+import { useAuth } from '@/providers';
 
 import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';

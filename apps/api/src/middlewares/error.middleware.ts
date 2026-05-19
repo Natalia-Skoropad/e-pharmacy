@@ -17,12 +17,10 @@ function isHttpError(error: unknown): error is HttpError {
 
 //===============================================================
 
-export const errorMiddleware: ErrorRequestHandler = (
-  error,
-  _req,
-  res,
-  _next
-) => {
+export const errorMiddleware: ErrorRequestHandler = (error, req, res, next) => {
+  void req;
+  void next;
+
   if (isDuplicateEmailError(error)) {
     res.status(HTTP_STATUS.CONFLICT).json({
       status: 'error',

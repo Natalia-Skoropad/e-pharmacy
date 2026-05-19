@@ -17,7 +17,10 @@
     "type-check:client": "pnpm --filter @e-pharmacy/client type-check",
     "type-check:api": "pnpm --filter @e-pharmacy/api type-check",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check:before-deploy": "pnpm lint && pnpm type-check && pnpm build",
+    "check:client": "pnpm --filter @e-pharmacy/client lint && pnpm --filter @e-pharmacy/client type-check && pnpm --filter @e-pharmacy/client build",
+    "check:api": "pnpm --filter @e-pharmacy/api lint && pnpm --filter @e-pharmacy/api type-check && pnpm --filter @e-pharmacy/api build"
   },
   "devDependencies": {
     "turbo": "latest",

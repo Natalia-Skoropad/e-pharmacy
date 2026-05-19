@@ -17,7 +17,12 @@ import {
   getCurrentUser,
 } from '@/services';
 
-import { getAuthToken, removeAuthToken, setAuthToken } from '@/lib/auth';
+import {
+  AUTH_SESSION_READY_TOKEN,
+  getAuthToken,
+  removeAuthToken,
+  setAuthToken,
+} from '@/lib/auth';
 
 import type {
   AuthResponse,
@@ -61,7 +66,7 @@ function AuthProvider({ children }: AuthProviderProps) {
 
   const applyAuthResponse = useCallback((response: AuthResponse) => {
     setAuthToken(response.token);
-    setToken(response.token);
+    setToken(AUTH_SESSION_READY_TOKEN);
     setUser(response.user);
     setStatus('authenticated');
   }, []);
@@ -86,7 +91,7 @@ function AuthProvider({ children }: AuthProviderProps) {
 
       const response = await getCurrentUser(savedToken);
 
-      setToken(savedToken);
+      setToken(AUTH_SESSION_READY_TOKEN);
       setUser(response.user);
       setStatus('authenticated');
 
@@ -150,7 +155,7 @@ function AuthProvider({ children }: AuthProviderProps) {
 
         if (!isMounted) return;
 
-        setToken(savedToken);
+        setToken(AUTH_SESSION_READY_TOKEN);
         setUser(response.user);
         setStatus('authenticated');
       } catch {

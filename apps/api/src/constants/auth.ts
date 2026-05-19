@@ -25,3 +25,7 @@ export const PHONE_MAX_LENGTH = 20;
 //===============================================================
 
 export const PASSWORD_SALT_ROUNDS = 10;
+
+//===============================================================
+
+export const AUTH_COOKIE_NAME = 'e_pharmacy_auth_token';

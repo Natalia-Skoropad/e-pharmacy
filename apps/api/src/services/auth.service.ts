@@ -1,3 +1,5 @@
+import { createHash, randomBytes } from 'node:crypto';
+
 import { env } from '../config/env';
 import { USER_ROLES, USER_STATUSES } from '../constants/auth';
 import { API_MESSAGES } from '../constants/messages';
@@ -16,7 +18,7 @@ import type {
 } from '../types/auth';
 
 import { httpError } from '../utils/httpError';
-import { signPasswordResetToken, signToken, verifyPasswordResetToken } from '../utils/jwt';
+import { signToken } from '../utils/jwt';
 import { isDuplicateEmailError } from '../utils/mongoError';
 import { comparePassword, hashPassword } from '../utils/password';
 import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
@@ -108,6 +110,46 @@ function buildPasswordResetUrl(token: string): string {
 
 //===============================================================
 
+function createPasswordResetToken(): string {
+  return randomBytes(32).toString('hex');
+}
+
+//===============================================================
+
+function hashPasswordResetToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+//===============================================================
+
+function parseResetTokenTtlMs(value: string): number {
+  const match = value.trim().match(/^(\d+)(s|m|h|d)?$/i);
+
+  if (!match) return 15 * 60 * 1000;
+
+  const amount = Number(match[1]);
+  const unit = (match[2] || 'm').toLowerCase();
+
+  const multipliers: Record<string, number> = {
+    s: 1000,
+    m: 60 * 1000,
+    h: 60 * 60 * 1000,
+    d: 24 * 60 * 60 * 1000,
+  };
+
+  return amount * (multipliers[unit] || multipliers.m);
+}
+
+//===============================================================
+
+function getPasswordResetExpiresAt(): Date {
+  return new Date(
+    Date.now() + parseResetTokenTtlMs(String(env.JWT_RESET_EXPIRES_IN))
+  );
+}
+
+//===============================================================
+
 export async function requestPasswordResetService(
   input: ForgotPasswordInput
 ): Promise<void> {
@@ -119,10 +161,12 @@ export async function requestPasswordResetService(
     return;
   }
 
-  const resetToken = signPasswordResetToken({
-    sub: String(user._id),
-    email: user.email,
-  });
+  const resetToken = createPasswordResetToken();
+
+  user.resetPasswordTokenHash = hashPasswordResetToken(resetToken);
+  user.resetPasswordExpiresAt = getPasswordResetExpiresAt();
+
+  await user.save();
 
   await sendPasswordResetEmail({
     to: user.email,
@@ -136,12 +180,12 @@ export async function requestPasswordResetService(
 export async function resetPasswordService(
   input: ResetPasswordInput
 ): Promise<void> {
-  const payload = verifyPasswordResetToken(input.token);
+  const tokenHash = hashPasswordResetToken(input.token);
 
   const user = await User.findOne({
-    _id: payload.sub,
-    email: payload.email,
-  }).select('+password');
+    resetPasswordTokenHash: tokenHash,
+    resetPasswordExpiresAt: { $gt: new Date() },
+  }).select('+password +resetPasswordTokenHash +resetPasswordExpiresAt');
 
   if (!user || user.status === USER_STATUSES.BLOCKED) {
     throw httpError(
@@ -151,6 +195,8 @@ export async function resetPasswordService(
   }
 
   user.password = await hashPassword(input.newPassword);
+  user.resetPasswordTokenHash = undefined;
+  user.resetPasswordExpiresAt = undefined;
 
   await user.save();
 }

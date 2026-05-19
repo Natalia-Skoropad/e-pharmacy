@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import AppShell from '@/components/layout/AppShell';
-import { AuthProvider } from '@/components/providers';
+import { AuthProvider } from '@/providers';
 
 import {
   DEFAULT_OG_IMAGE,

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 import { Button, ButtonLink, Toast } from '@/components/common';
-import { useAuth } from '@/components/providers';
+import { useAuth } from '@/providers';
 
 import { ROUTES } from '@/lib/constants/routes';
 

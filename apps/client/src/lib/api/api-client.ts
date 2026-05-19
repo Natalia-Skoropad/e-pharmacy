@@ -1,3 +1,4 @@
+import { AUTH_SESSION_READY_TOKEN } from '@/lib/auth';
 import { CLIENT_ENV } from '@/lib/constants/env';
 
 import { ApiError } from './api-error';
@@ -30,12 +31,15 @@ export async function apiRequest<TData>(
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...(authToken && authToken !== AUTH_SESSION_READY_TOKEN
+        ? { Authorization: `Bearer ${authToken}` }
+        : {}),
       ...headers,
     },
     body: body ? JSON.stringify(body) : undefined,
     cache,
     next,
+    credentials: 'include',
   });
 
   const payload = await parseJsonSafe<TData>(response);
