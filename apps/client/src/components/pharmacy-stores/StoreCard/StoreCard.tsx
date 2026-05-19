@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   ButtonLink,
@@ -8,9 +8,9 @@ import {
   RatingSummary,
   ShimmerImage,
   SvgIcon,
-  Toast,
 } from '@/components/common';
 import { useAuth } from '@/providers';
+import { useToast } from '@/hooks';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 import { buildStorePath } from '@/lib/routes';
@@ -42,28 +42,15 @@ function StoreCard({
   onFavoriteChange,
 }: StoreCardProps) {
   const { token, isAuthenticated, isAuthReady } = useAuth();
+  const toast = useToast();
 
   const [isFavorite, setIsFavorite] = useState(Boolean(store.isFavorite));
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
 
   const medicinesHref = buildMedicinesCatalogPath({ storeId: store.id }, [
     store,
   ]);
   const storeHref = buildStorePath(store.name, store.id);
-
-  const showToast = useCallback((message: string) => {
-    setToastMessage('');
-    window.setTimeout(() => setToastMessage(message), 0);
-  }, []);
-
-  useEffect(() => {
-    if (!toastMessage) return;
-
-    const timeoutId = window.setTimeout(() => setToastMessage(''), 3000);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [toastMessage]);
 
   useEffect(() => {
     if (skipFavoriteRefresh || !isAuthenticated || !token) return;
@@ -85,7 +72,7 @@ function StoreCard({
     if (!isAuthReady) return;
 
     if (!isAuthenticated || !token) {
-      showToast('Please log in to add pharmacies to favorites.');
+      toast.info('Please log in to add pharmacies to favorites.');
       return;
     }
 
@@ -95,13 +82,13 @@ function StoreCard({
 
       setIsFavorite(response.isFavorite);
       onFavoriteChange?.(store.id, response.isFavorite);
-      showToast(
+      toast.success(
         response.isFavorite
           ? 'Pharmacy was added to favorites.'
           : 'Pharmacy was removed from favorites.'
       );
     } catch {
-      showToast('Could not update pharmacy favorites.');
+      toast.error('Could not update pharmacy favorites.');
     } finally {
       setIsFavoriteLoading(false);
     }
@@ -109,8 +96,6 @@ function StoreCard({
 
   return (
     <article className={css.card} aria-labelledby={`store-${store.id}-title`}>
-      <Toast message={toastMessage} isVisible={Boolean(toastMessage)} />
-
       <div className={css.imageWrap}>
         {store.imageUrl ? (
           <ShimmerImage
@@ -185,7 +170,11 @@ function StoreCard({
             Store details
           </ButtonLink>
 
-          <ButtonLink className={css.detailsLink} href={medicinesHref} size="sm">
+          <ButtonLink
+            className={css.detailsLink}
+            href={medicinesHref}
+            size="sm"
+          >
             View medicines
           </ButtonLink>
         </div>

@@ -2,10 +2,8 @@ import { MedicineStorePageContent } from '@/components/medicines-catalog';
 
 import {
   buildMedicinesCatalogApiParams,
-  buildMedicinesCatalogPath,
+  buildMedicinesCatalogCanonicalPath,
   FALLBACK_PRODUCT_FILTER_OPTIONS,
-  MEDICINES_CATALOG_CATEGORY_OPTIONS_LIMIT,
-  getProductFilterOptionsForProducts,
   getMedicinesCatalogDescription,
   getMedicinesCatalogTitle,
   isMedicinesCatalogNoIndex,
@@ -56,7 +54,7 @@ export async function generateMetadata({
   return createPageMetadata({
     title: getMedicinesCatalogTitle(filters, seoContext),
     description: getMedicinesCatalogDescription(filters, seoContext),
-    path: buildMedicinesCatalogPath(filters, storesData?.items ?? []),
+    path: buildMedicinesCatalogCanonicalPath(filters, storesData?.items ?? []),
     noIndex: isMedicinesCatalogNoIndex(filters) || productsData?.total === 0,
   });
 }
@@ -68,16 +66,11 @@ async function MedicinesCatalogPage({
 }: MedicinesCatalogPageProps) {
   const filters = parseMedicinesCatalogSearchParams(await searchParams);
 
-  const [productsData, storesData, filterOptionsData, allProductsData] =
-    await Promise.all([
-      getProducts(buildMedicinesCatalogApiParams(filters)).catch(() => null),
-      getStores({ page: 1, perPage: 100 }).catch(() => null),
-      getProductFilters().catch(() => FALLBACK_PRODUCT_FILTER_OPTIONS),
-      getProducts({
-        page: 1,
-        perPage: MEDICINES_CATALOG_CATEGORY_OPTIONS_LIMIT,
-      }).catch(() => null),
-    ]);
+  const [productsData, storesData, filterOptionsData] = await Promise.all([
+    getProducts(buildMedicinesCatalogApiParams(filters)).catch(() => null),
+    getStores({ page: 1, perPage: 100 }).catch(() => null),
+    getProductFilters().catch(() => FALLBACK_PRODUCT_FILTER_OPTIONS),
+  ]);
 
   const activeStores = sortStoresByName(
     storesData?.items.filter((store) => store.isActive) ?? []
@@ -87,10 +80,7 @@ async function MedicinesCatalogPage({
     <MedicineStorePageContent
       products={productsData?.items ?? []}
       stores={activeStores}
-      filterOptions={getProductFilterOptionsForProducts(
-        filterOptionsData,
-        allProductsData?.items ?? []
-      )}
+      filterOptions={filterOptionsData}
       total={productsData?.total ?? 0}
       totalPages={productsData?.totalPages ?? 0}
       filters={filters}

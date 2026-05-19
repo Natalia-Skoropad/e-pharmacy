@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Eye, EyeOff } from 'lucide-react';
 
-import { Button, Toast } from '@/components/common';
+import { Button } from '@/components/common';
 import { useAuth } from '@/providers';
+import { useToast } from '@/hooks';
 
 import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
@@ -33,6 +34,7 @@ function RegisterForm() {
   const searchParams = useSearchParams();
 
   const { register, isAuthReady } = useAuth();
+  const toast = useToast();
 
   const [values, setValues] = useState<RegisterFormValues>(
     REGISTER_INITIAL_VALUES
@@ -41,30 +43,12 @@ function RegisterForm() {
   const [touchedFields, setTouchedFields] = useState<
     Partial<Record<keyof RegisterFormValues, boolean>>
   >({});
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastVariant, setToastVariant] = useState<'success' | 'error'>(
-    'success'
-  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
   const registerFormIsValid =
     Object.keys(validateRegisterForm(values)).length === 0;
-
-  const showToast = (message: string, variant: 'success' | 'error') => {
-    setToastMessage('');
-    setToastVariant(variant);
-    window.setTimeout(() => setToastMessage(message), 0);
-  };
-
-  useEffect(() => {
-    if (!toastMessage) return undefined;
-
-    const timeoutId = window.setTimeout(() => setToastMessage(''), 3000);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [toastMessage]);
 
   const handleChange =
     (field: keyof RegisterFormValues) =>
@@ -85,8 +69,10 @@ function RegisterForm() {
 
       setValues(nextValues);
       setTouchedFields((prev) => ({ ...prev, [field]: true }));
-      setErrors((prev: RegisterFormErrors) => ({ ...prev, [field]: nextErrors[field] }));
-      setToastMessage('');
+      setErrors((prev: RegisterFormErrors) => ({
+        ...prev,
+        [field]: nextErrors[field],
+      }));
     };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -102,7 +88,6 @@ function RegisterForm() {
 
     try {
       setIsSubmitting(true);
-      setToastMessage('');
 
       await register({
         name: values.name.trim(),
@@ -112,7 +97,7 @@ function RegisterForm() {
 
       router.replace(redirectTo);
     } catch (error) {
-      showToast(getAuthErrorMessage(error), 'error');
+      toast.error(getAuthErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -220,12 +205,6 @@ function RegisterForm() {
           </p>
         </div>
       </div>
-
-      <Toast
-        message={toastMessage}
-        isVisible={Boolean(toastMessage)}
-        variant={toastVariant}
-      />
 
       <Button
         type="submit"

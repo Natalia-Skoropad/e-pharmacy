@@ -58,6 +58,15 @@ export const productIdParamsSchema = z.object({
   productId: mongoIdSchema,
 });
 
+export const productReviewParamsSchema = z.object({
+  productId: mongoIdSchema,
+  reviewId: mongoIdSchema,
+});
+
+export const moderateProductReviewSchema = z.object({
+  status: z.enum(['approved', 'rejected']),
+});
+
 export const productStoreParamsSchema = z.object({
   productId: mongoIdSchema,
   storeId: mongoIdSchema,

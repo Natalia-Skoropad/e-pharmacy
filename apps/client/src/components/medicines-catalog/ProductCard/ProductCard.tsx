@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   ButtonLink,
@@ -8,9 +8,9 @@ import {
   RatingSummary,
   ShimmerImage,
   SvgIcon,
-  Toast,
 } from '@/components/common';
 import { useAuth } from '@/providers';
+import { useToast } from '@/hooks';
 
 import { buildProductPath } from '@/lib/routes';
 
@@ -75,8 +75,8 @@ function ProductCard({
   onFavoriteChange,
 }: ProductCardProps) {
   const { token, isAuthenticated, isAuthReady } = useAuth();
+  const toast = useToast();
 
-  const [toastMessage, setToastMessage] = useState('');
   const [isFavorite, setIsFavorite] = useState(Boolean(product.isFavorite));
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
@@ -86,21 +86,6 @@ function ProductCard({
     () => formatPriceRange(product.offers),
     [product.offers]
   );
-
-  const showToast = useCallback((message: string) => {
-    setToastMessage('');
-    window.setTimeout(() => setToastMessage(message), 0);
-  }, []);
-
-  useEffect(() => {
-    if (!toastMessage) return;
-
-    const timeoutId = window.setTimeout(() => {
-      setToastMessage('');
-    }, 3000);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [toastMessage]);
 
   useEffect(() => {
     if (skipFavoriteRefresh || !isAuthenticated || !token) return;
@@ -122,7 +107,7 @@ function ProductCard({
     if (!isAuthReady) return;
 
     if (!isAuthenticated || !token) {
-      showToast('Please log in to add products to favorites.');
+      toast.info('Please log in to add products to favorites.');
       return;
     }
 
@@ -132,13 +117,13 @@ function ProductCard({
 
       setIsFavorite(response.isFavorite);
       onFavoriteChange?.(product.id, response.isFavorite);
-      showToast(
+      toast.success(
         response.isFavorite
           ? 'Product was added to favorites.'
           : 'Product was removed from favorites.'
       );
     } catch {
-      showToast('Could not update favorites.');
+      toast.error('Could not update favorites.');
     } finally {
       setIsFavoriteLoading(false);
     }
@@ -149,8 +134,6 @@ function ProductCard({
       className={css.card}
       aria-labelledby={`product-${product.id}-title`}
     >
-      <Toast message={toastMessage} isVisible={Boolean(toastMessage)} />
-
       <div className={css.imageWrap}>
         {product.imageUrl ? (
           <ShimmerImage

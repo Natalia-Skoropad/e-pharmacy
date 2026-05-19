@@ -17,6 +17,7 @@ import {
 } from '../controllers/auth.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
+import { authRateLimit, passwordResetRateLimit } from '../middlewares/rateLimit.middleware';
 import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
 import {
@@ -37,6 +38,7 @@ export const authRoutes = Router();
 
 authRoutes.post(
   '/register',
+  authRateLimit,
   validate({
     body: registerSchema,
   }),
@@ -45,6 +47,7 @@ authRoutes.post(
 
 authRoutes.post(
   '/login',
+  authRateLimit,
   validate({
     body: loginSchema,
   }),
@@ -54,6 +57,7 @@ authRoutes.post(
 
 authRoutes.post(
   '/forgot-password',
+  passwordResetRateLimit,
   validate({
     body: forgotPasswordSchema,
   }),
@@ -62,6 +66,7 @@ authRoutes.post(
 
 authRoutes.post(
   '/request-reset-email',
+  passwordResetRateLimit,
   validate({
     body: forgotPasswordSchema,
   }),
@@ -70,6 +75,7 @@ authRoutes.post(
 
 authRoutes.post(
   '/reset-password',
+  passwordResetRateLimit,
   validate({
     body: resetPasswordSchema,
   }),

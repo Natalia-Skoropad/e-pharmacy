@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Heart, ImageOff, KeyRound, Store } from 'lucide-react';
 
 import {
+  AvatarImage,
   Button,
   ButtonLink,
   ConfirmActionModal,
@@ -88,7 +89,6 @@ function formatUserStatus(status: string): string {
 }
 
 //===================================================================
-
 
 //===================================================================
 
@@ -249,9 +249,8 @@ function ProfilePageContent() {
   const [isRemoveAvatarConfirmOpen, setIsRemoveAvatarConfirmOpen] =
     useState(false);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
-  const [ordersVisibleCount, setOrdersVisibleCount] = useState(
-    ORDERS_VISIBLE_STEP
-  );
+  const [ordersVisibleCount, setOrdersVisibleCount] =
+    useState(ORDERS_VISIBLE_STEP);
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
   const [favoriteStores, setFavoriteStores] = useState<PharmacyStore[]>([]);
   const [favoritesError, setFavoritesError] = useState('');
@@ -429,7 +428,6 @@ function ProfilePageContent() {
 
     return () => window.clearTimeout(timeoutId);
   }, [activeTab]);
-
 
   useEffect(() => {
     const authToken = token ?? '';
@@ -613,11 +611,9 @@ function ProfilePageContent() {
               <div className={css.avatarArea}>
                 <div className={css.avatar} aria-hidden="true">
                   {avatarPreview ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <AvatarImage
                       className={css.avatarImage}
                       src={avatarPreview}
-                      alt=""
                     />
                   ) : (
                     <span>{getInitials(user.name)}</span>
@@ -1002,7 +998,10 @@ function ProfilePageContent() {
                             key={product.id}
                             product={product}
                             skipFavoriteRefresh
-                            onFavoriteChange={(productId, isFavoriteProduct) => {
+                            onFavoriteChange={(
+                              productId,
+                              isFavoriteProduct
+                            ) => {
                               if (isFavoriteProduct) return;
 
                               setFavoriteProducts((prev) => {

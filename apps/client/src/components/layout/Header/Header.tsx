@@ -6,7 +6,13 @@ import { useEffect, useId, useState } from 'react';
 
 import { ShoppingCart } from 'lucide-react';
 
-import { Button, ButtonLink, Container, Logo } from '@/components/common';
+import {
+  AvatarImage,
+  Button,
+  ButtonLink,
+  Container,
+  Logo,
+} from '@/components/common';
 import BurgerButton from '@/components/layout/BurgerButton';
 import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
 import { useAuth } from '@/providers';
@@ -24,7 +30,6 @@ import { getCart } from '@/services';
 import css from './Header.module.css';
 
 //===================================================================
-
 
 function getUserInitials(name?: string | null): string {
   const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
@@ -156,13 +161,14 @@ function Header() {
               >
                 <span className={css.userAvatar} aria-hidden="true">
                   {user?.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={user.avatarUrl} alt="" />
+                    <AvatarImage src={user.avatarUrl} />
                   ) : (
                     getUserInitials(user?.name)
                   )}
                 </span>
-                <span className={css.profileName}>{user?.name ?? 'Profile'}</span>
+                <span className={css.profileName}>
+                  {user?.name ?? 'Profile'}
+                </span>
               </ButtonLink>
 
               <Button

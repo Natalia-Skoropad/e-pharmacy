@@ -9,6 +9,7 @@ import {
   toggleFavoriteStore,
 } from '../controllers/store.controller';
 import { authenticate, optionalAuthenticate } from '../middlewares/auth.middleware';
+import { reviewRateLimit } from '../middlewares/rateLimit.middleware';
 import { validate } from '../middlewares/validate.middleware';
 import {
   createStoreReviewSchema,
@@ -45,6 +46,7 @@ storeRoutes.get(
 
 storeRoutes.post(
   '/:storeId/reviews',
+  reviewRateLimit,
   authenticate,
   validate({
     params: storeIdParamsSchema,

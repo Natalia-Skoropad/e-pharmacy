@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Eye, EyeOff } from 'lucide-react';
 
-import { Button, Toast } from '@/components/common';
+import { Button } from '@/components/common';
 import { useAuth } from '@/providers';
+import { useToast } from '@/hooks';
 
 import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
@@ -31,6 +32,7 @@ type ResetPasswordFormProps = {
 //===================================================================
 
 function ResetPasswordForm({ token }: ResetPasswordFormProps) {
+  const toast = useToast();
   const router = useRouter();
   const { isAuthReady } = useAuth();
 
@@ -41,10 +43,6 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const [touchedFields, setTouchedFields] = useState<
     Partial<Record<keyof ResetPasswordFormValues, boolean>>
   >({});
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastVariant, setToastVariant] = useState<'success' | 'error'>(
-    'success'
-  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -54,20 +52,6 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const formIsValid =
     Boolean(token) &&
     Object.keys(validateResetPasswordForm(values)).length === 0;
-
-  const showToast = (message: string, variant: 'success' | 'error') => {
-    setToastMessage('');
-    setToastVariant(variant);
-    window.setTimeout(() => setToastMessage(message), 0);
-  };
-
-  useEffect(() => {
-    if (!toastMessage) return undefined;
-
-    const timeoutId = window.setTimeout(() => setToastMessage(''), 5000);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [toastMessage]);
 
   const handleChange =
     (field: keyof ResetPasswordFormValues) =>
@@ -81,7 +65,6 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       setValues(nextValues);
       setTouchedFields((prev) => ({ ...prev, [field]: true }));
       setErrors((prev) => ({ ...prev, [field]: nextErrors[field] }));
-      setToastMessage('');
     };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -97,7 +80,6 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
     try {
       setIsSubmitting(true);
-      setToastMessage('');
 
       await resetPassword({
         token,
@@ -108,9 +90,9 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       setValues(RESET_PASSWORD_INITIAL_VALUES);
       setTouchedFields({});
       setErrors({});
-      showToast('Password changed successfully.', 'success');
+      toast.success('Password changed successfully.');
     } catch (error) {
-      showToast(getAuthErrorMessage(error), 'error');
+      toast.error(getAuthErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -127,12 +109,6 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             password and continue using E-PHARMACY.
           </p>
         </div>
-
-        <Toast
-          message={toastMessage}
-          isVisible={Boolean(toastMessage)}
-          variant={toastVariant}
-        />
 
         <Button
           type="button"
@@ -242,12 +218,6 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           </p>
         </div>
       </div>
-
-      <Toast
-        message={toastMessage}
-        isVisible={Boolean(toastMessage)}
-        variant={toastVariant}
-      />
 
       <Button
         type="submit"

@@ -8,7 +8,6 @@ import type {
 //===================================================================
 
 export const MEDICINES_CATALOG_PER_PAGE = 24;
-export const MEDICINES_CATALOG_CATEGORY_OPTIONS_LIMIT = 200;
 
 //===================================================================
 
@@ -176,20 +175,6 @@ export function sortStoresByName(stores: Store[]): Store[] {
   return [...stores].sort((a, b) => a.name.localeCompare(b.name, 'en'));
 }
 
-export function getProductFilterOptionsForProducts(
-  filterOptions: ProductFilterOptionsResponse,
-  products: Array<{ category: ProductCategory }>
-): ProductFilterOptionsResponse {
-  const activeCategories = new Set(products.map((product) => product.category));
-
-  return {
-    ...filterOptions,
-    categories: filterOptions.categories.filter(
-      (option) => option.value === 'all' || activeCategories.has(option.value)
-    ),
-  };
-}
-
 export function parseMedicinesCatalogSearchParams(
   params: MedicinesCatalogSearchParams = {}
 ): MedicinesCatalogFilters {
@@ -271,7 +256,7 @@ export function parseMedicinesCatalogSegments(
   return filters;
 }
 
-export function buildMedicinesCatalogPath(
+export function buildMedicinesCatalogIndexedPath(
   filters: Partial<MedicinesCatalogFilters>,
   stores: Store[] = []
 ): string {
@@ -285,31 +270,72 @@ export function buildMedicinesCatalogPath(
     segments.push(getStoreSegment(filters.storeId, stores));
   }
 
-  if (filters.availability && filters.availability !== 'all') {
-    segments.push(`availability-${filters.availability}`);
-  }
-
-  if (filters.name) {
-    const nameSlug = slugify(filters.name);
-    if (nameSlug) segments.push(`search-name-${nameSlug}`);
-  }
-
-  if (filters.article) {
-    const articleSlug = slugify(filters.article);
-    if (articleSlug) segments.push(`article-${articleSlug}`);
-  }
-
-  if (filters.sort && filters.sort !== 'newest') {
-    segments.push(`sort-${filters.sort}`);
-  }
-
-  if (filters.page && filters.page > 1) {
-    segments.push(`page-${filters.page}`);
-  }
-
   return segments.length
     ? `/medicines-catalog/${segments.join('/')}`
     : '/medicines-catalog';
+}
+
+export function buildMedicinesCatalogPath(
+  filters: Partial<MedicinesCatalogFilters>,
+  stores: Store[] = []
+): string {
+  const path = buildMedicinesCatalogIndexedPath(filters, stores);
+  const params = new URLSearchParams();
+
+  if (filters.name) params.set('name', filters.name);
+  if (filters.article) params.set('article', filters.article);
+
+  if (filters.availability && filters.availability !== 'all') {
+    params.set('availability', filters.availability);
+  }
+
+  if (filters.sort && filters.sort !== 'newest') {
+    params.set('sort', filters.sort);
+  }
+
+  if (filters.page && filters.page > 1) {
+    params.set('page', String(filters.page));
+  }
+
+  const query = params.toString();
+
+  return query ? `${path}?${query}` : path;
+}
+
+export function buildMedicinesCatalogCanonicalPath(
+  filters: MedicinesCatalogFilters,
+  stores: Store[] = []
+): string {
+  return isMedicinesCatalogNoIndex(filters)
+    ? buildMedicinesCatalogIndexedPath(filters, stores)
+    : buildMedicinesCatalogPath(filters, stores);
+}
+
+export function hasLegacyMedicinesCatalogSegments(
+  params: MedicinesCatalogRouteParams = {}
+): boolean {
+  return (params.segments ?? []).some(
+    (segment) =>
+      segment.startsWith('availability-') ||
+      segment.startsWith('sort-') ||
+      segment.startsWith('search-name-') ||
+      segment.startsWith('article-') ||
+      segment.startsWith('page-')
+  );
+}
+
+export function mergeMedicinesCatalogFilters(
+  routeFilters: MedicinesCatalogFilters,
+  queryFilters: MedicinesCatalogFilters
+): MedicinesCatalogFilters {
+  return {
+    ...routeFilters,
+    name: queryFilters.name,
+    article: queryFilters.article,
+    availability: queryFilters.availability,
+    sort: queryFilters.sort,
+    page: queryFilters.page,
+  };
 }
 
 export function buildMedicinesCatalogApiParams(

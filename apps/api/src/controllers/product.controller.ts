@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import {
   createProductReviewSchema,
+  moderateProductReviewSchema,
   productsQuerySchema,
 } from '../schemas/product.schema';
 import {
@@ -11,6 +12,7 @@ import {
   getProductFiltersService,
   getProductReviewsService,
   getProductsService,
+  moderateProductReviewService,
   toggleFavoriteProductService,
 } from '../services/product.service';
 import { sendSuccessResponse } from '../utils/apiResponse';
@@ -27,7 +29,7 @@ export async function getProductFilters(
   _req: Request,
   res: Response
 ): Promise<void> {
-  const data = getProductFiltersService();
+  const data = await getProductFiltersService();
 
   sendSuccessResponse({
     res,
@@ -102,6 +104,31 @@ export async function createProductReview(
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.CREATED,
+    data,
+  });
+}
+
+//===============================================================
+
+
+export async function moderateProductReview(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { productId, reviewId } = req.params as ProductParams & {
+    reviewId: string;
+  };
+  const body = moderateProductReviewSchema.parse(req.body);
+
+  const data = await moderateProductReviewService(
+    productId,
+    reviewId,
+    body.status
+  );
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
     data,
   });
 }

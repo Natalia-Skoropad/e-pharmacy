@@ -1,3 +1,4 @@
+export { default as AvatarImage } from './AvatarImage';
 export { default as Button } from './Button';
 export { ButtonLink } from './Button';
 export { default as Container } from './Container';
@@ -16,6 +17,7 @@ export { default as SvgIcon } from './SvgIcon';
 export { default as Tabs } from './Tabs';
 export type { TabItem } from './Tabs';
 export { default as Toast } from './Toast';
+export { default as ToastProvider } from './ToastProvider';
 export { default as VisuallyHidden } from './VisuallyHidden';
 export { default as SearchInput } from './SearchInput';
 export { default as SelectField } from './SelectField';

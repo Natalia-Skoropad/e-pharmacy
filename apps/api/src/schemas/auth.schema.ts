@@ -80,12 +80,10 @@ export const registerSchema = z.object({
   password: passwordSchema,
 
   /**
-   * For now we allow only customer/vendor self-registration.
-   * Admin users should be created manually or through a protected admin flow later.
+   * Public registration is intentionally customer-only. Vendor/admin accounts
+   * must be created through a protected approval flow, not by user payload.
    */
-  role: z
-    .enum([USER_ROLES.CUSTOMER, USER_ROLES.VENDOR])
-    .default(USER_ROLES.CUSTOMER),
+  role: z.literal(USER_ROLES.CUSTOMER).default(USER_ROLES.CUSTOMER),
 
   phone: phoneSchema,
   address: addressSchema,

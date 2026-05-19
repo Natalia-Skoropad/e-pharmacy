@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
 
-import { Button, Toast } from '@/components/common';
+import { Button } from '@/components/common';
 import { useAuth } from '@/providers';
+import { useToast } from '@/hooks';
 
 import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
@@ -23,6 +24,7 @@ import css from '../LoginForm/LoginForm.module.css';
 //===================================================================
 
 function PasswordRecoveryForm() {
+  const toast = useToast();
   const { isAuthReady } = useAuth();
 
   const [values, setValues] = useState<ForgotPasswordFormValues>(
@@ -32,28 +34,10 @@ function PasswordRecoveryForm() {
   const [touchedFields, setTouchedFields] = useState<
     Partial<Record<keyof ForgotPasswordFormValues, boolean>>
   >({});
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastVariant, setToastVariant] = useState<'success' | 'error'>(
-    'success'
-  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formIsValid =
     Object.keys(validateForgotPasswordForm(values)).length === 0;
-
-  const showToast = (message: string, variant: 'success' | 'error') => {
-    setToastMessage('');
-    setToastVariant(variant);
-    window.setTimeout(() => setToastMessage(message), 0);
-  };
-
-  useEffect(() => {
-    if (!toastMessage) return undefined;
-
-    const timeoutId = window.setTimeout(() => setToastMessage(''), 5000);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [toastMessage]);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const nextValues = {
@@ -64,7 +48,6 @@ function PasswordRecoveryForm() {
     setValues(nextValues);
     setTouchedFields({ email: true });
     setErrors((prev) => ({ ...prev, email: nextErrors.email }));
-    setToastMessage('');
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -80,7 +63,6 @@ function PasswordRecoveryForm() {
 
     try {
       setIsSubmitting(true);
-      setToastMessage('');
 
       await requestPasswordReset({
         email: values.email.trim(),
@@ -89,12 +71,11 @@ function PasswordRecoveryForm() {
       setValues(FORGOT_PASSWORD_INITIAL_VALUES);
       setTouchedFields({});
       setErrors({});
-      showToast(
-        'If an account with that email exists, you will receive password reset instructions shortly. Please check your inbox.',
-        'success'
+      toast.success(
+        'If an account with that email exists, you will receive password reset instructions shortly. Please check your inbox.'
       );
     } catch (error) {
-      showToast(getAuthErrorMessage(error), 'error');
+      toast.error(getAuthErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -132,12 +113,6 @@ function PasswordRecoveryForm() {
           </p>
         </div>
       </div>
-
-      <Toast
-        message={toastMessage}
-        isVisible={Boolean(toastMessage)}
-        variant={toastVariant}
-      />
 
       <Button
         type="submit"

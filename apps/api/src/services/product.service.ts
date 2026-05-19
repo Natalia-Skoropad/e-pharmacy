@@ -91,16 +91,19 @@ type ProductDocument = {
 
 //===============================================================
 
-const PRODUCT_FILTER_OPTIONS: ProductFilterOptionsResponseDto = {
-  categories: [
-    { value: 'all', label: 'All categories' },
-    { value: 'medicine', label: 'Medicine' },
-    { value: 'vitamins', label: 'Vitamins' },
-    { value: 'beauty', label: 'Beauty' },
-    { value: 'hygiene', label: 'Hygiene' },
-    { value: 'medical-devices', label: 'Medical devices' },
-    { value: 'other', label: 'Other' },
-  ],
+const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
+  medicine: 'Medicine',
+  vitamins: 'Vitamins',
+  beauty: 'Beauty',
+  hygiene: 'Hygiene',
+  'medical-devices': 'Medical devices',
+  other: 'Other',
+};
+
+const PRODUCT_FILTER_BASE_OPTIONS: Omit<
+  ProductFilterOptionsResponseDto,
+  'categories'
+> = {
   availability: [
     { value: 'all', label: 'All products' },
     { value: 'in-stock', label: 'Available in pharmacies' },
@@ -367,8 +370,24 @@ function sortSerializedProducts(
 
 //===============================================================
 
-export function getProductFiltersService(): ProductFilterOptionsResponseDto {
-  return PRODUCT_FILTER_OPTIONS;
+export async function getProductFiltersService(): Promise<ProductFilterOptionsResponseDto> {
+  const categories = (await Product.distinct('category')) as ProductCategory[];
+  const activeCategories = categories
+    .filter((category) => category in PRODUCT_CATEGORY_LABELS)
+    .sort((a, b) =>
+      PRODUCT_CATEGORY_LABELS[a].localeCompare(PRODUCT_CATEGORY_LABELS[b], 'en')
+    );
+
+  return {
+    categories: [
+      { value: 'all', label: 'All categories' },
+      ...activeCategories.map((category) => ({
+        value: category,
+        label: PRODUCT_CATEGORY_LABELS[category],
+      })),
+    ],
+    ...PRODUCT_FILTER_BASE_OPTIONS,
+  };
 }
 
 //===============================================================
@@ -625,5 +644,60 @@ export async function toggleFavoriteProductService(
   return {
     isFavorite: true,
     message: 'Product was added to favorites.',
+  };
+}
+
+
+//===============================================================
+
+export async function moderateProductReviewService(
+  productId: string,
+  reviewId: string,
+  status: 'approved' | 'rejected'
+) {
+  const moderatedAt = new Date();
+  const updateResult = await Product.updateOne(
+    { _id: productId, 'reviews._id': reviewId },
+    {
+      $set: {
+        'reviews.$.isModerated': status === 'approved',
+        'reviews.$.moderatedAt': moderatedAt,
+      },
+    }
+  );
+
+  if (updateResult.matchedCount === 0) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product review was not found.');
+  }
+
+  const product = await Product.findById(productId)
+    .select('reviews')
+    .lean<ProductDocument | null>();
+
+  if (!product) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+  }
+
+  const moderatedReviews = getModeratedReviews(product);
+  const averageRating = getAverageRating(moderatedReviews) ?? 0;
+
+  await Product.updateOne(
+    { _id: productId },
+    {
+      $set: {
+        rating: averageRating,
+        reviewsCount: moderatedReviews.length,
+      },
+    }
+  );
+
+  return {
+    message:
+      status === 'approved'
+        ? 'Product review was approved.'
+        : 'Product review was rejected.',
+    rating: averageRating,
+    reviewsCount: moderatedReviews.length,
+    moderatedAt: moderatedAt.toISOString(),
   };
 }
