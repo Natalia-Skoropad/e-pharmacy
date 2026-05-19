@@ -2,7 +2,7 @@
 
 > A responsive customer storefront for browsing pharmacy stores, finding medicines, managing a cart, and creating online orders.
 
-![E-PHARMACY client cover](./public/readme/home-page.jpg)
+![E-PHARMACY client cover](./public/og/og-cover.jpg)
 
 ## Overview
 
