@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { isDataUrl, VALIDATION_LIMITS } from '@e-pharmacy/validation';
+import { isDataUrl } from '@e-pharmacy/validation';
 
 import {
   EMAIL_MAX_LENGTH,
