@@ -6,6 +6,7 @@ dotenv.config();
 //===============================================================
 
 type NodeEnv = 'development' | 'test' | 'production';
+type AuthCookieSameSite = 'lax' | 'strict' | 'none';
 
 //===============================================================
 
@@ -17,6 +18,18 @@ function getNodeEnv(): NodeEnv {
   }
 
   return 'development';
+}
+
+//===============================================================
+
+function getAuthCookieSameSite(): AuthCookieSameSite {
+  const value = process.env.AUTH_COOKIE_SAME_SITE || 'lax';
+
+  if (value === 'lax' || value === 'strict' || value === 'none') {
+    return value;
+  }
+
+  throw new Error('AUTH_COOKIE_SAME_SITE must be lax, strict, or none');
 }
 
 //===============================================================
@@ -90,6 +103,7 @@ export const env = {
   CLIENT_ORIGINS: getClientOrigins(),
   CLIENT_APP_URL: process.env.CLIENT_APP_URL || 'http://localhost:3000',
   AUTH_COOKIE_DOMAIN: process.env.AUTH_COOKIE_DOMAIN,
+  AUTH_COOKIE_SAME_SITE: getAuthCookieSameSite(),
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: getOptionalNumberEnv('SMTP_PORT', 587),
   SMTP_USER: process.env.SMTP_USER,

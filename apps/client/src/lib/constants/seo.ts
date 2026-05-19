@@ -17,9 +17,17 @@ export const INDEXABLE_ROUTES = [
 export const NOINDEX_ROUTES = [
   ROUTES.CART,
   ROUTES.CHECKOUT,
+  `${ROUTES.CHECKOUT}/:path*`,
   ROUTES.LOGIN,
   ROUTES.REGISTER,
+  ROUTES.PASSWORD_RECOVERY,
+  ROUTES.RESET_PASSWORD,
   ROUTES.PROFILE,
+  `${ROUTES.PROFILE}/:path*`,
+  '/admin',
+  '/admin/:path*',
+  '/vendor',
+  '/vendor/:path*',
 ] as const;
 
 //===================================================================

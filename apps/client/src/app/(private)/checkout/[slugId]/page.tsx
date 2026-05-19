@@ -4,6 +4,7 @@ import { ProtectedRoute } from '@/components/auth';
 import { CheckoutPageContent } from '@/components/cart';
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/constants/metadata';
+import { ROUTES } from '@/lib/constants/routes';
 import { getIdFromSlugId } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
 
@@ -19,11 +20,15 @@ type CheckoutStorePageProps = {
 
 //===================================================================
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata({
+  params,
+}: CheckoutStorePageProps): Promise<Metadata> {
+  const { slugId } = await params;
+
   return createPageMetadata({
     title: CHECKOUT_TITLE,
     description: CHECKOUT_DESCRIPTION,
-    path: '/checkout',
+    path: `${ROUTES.CHECKOUT}/${slugId}`,
     noIndex: true,
   });
 }

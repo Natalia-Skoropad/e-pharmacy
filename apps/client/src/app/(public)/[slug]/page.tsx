@@ -3,8 +3,11 @@ import { notFound } from 'next/navigation';
 import { StoreDetailsPageContent } from '@/components/pharmacy-stores';
 import { ProductDetailsPageContent } from '@/components/product-details';
 
-import { getIdFromSlugId } from '@/lib/routes';
-import { buildProductPath, buildStorePath } from '@/lib/routes';
+import {
+  buildProductPath,
+  buildStorePath,
+  getIdFromSlugId,
+} from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
 
 import {
@@ -15,6 +18,7 @@ import {
 } from '@/services';
 
 import type { Metadata } from 'next';
+import type { Product, Store } from '@/types';
 
 //===================================================================
 
@@ -27,9 +31,76 @@ type DetailsPageProps = {
   }>;
 };
 
+type ResolvedDetailsEntity =
+  | {
+      type: 'product';
+      product: Product;
+    }
+  | {
+      type: 'store';
+      store: Store;
+    }
+  | null;
+
 //===================================================================
 
 export const dynamic = 'force-dynamic';
+
+//===================================================================
+
+function removeLeadingSlash(path: string): string {
+  return path.startsWith('/') ? path.slice(1) : path;
+}
+
+//===================================================================
+
+function isProductCanonicalSlug(slug: string, product: Product): boolean {
+  return (
+    slug === removeLeadingSlash(buildProductPath(product.name, product.id))
+  );
+}
+
+//===================================================================
+
+function isStoreCanonicalSlug(slug: string, store: Store): boolean {
+  return slug === removeLeadingSlash(buildStorePath(store.name, store.id));
+}
+
+//===================================================================
+
+async function resolveDetailsEntity(
+  slug: string
+): Promise<ResolvedDetailsEntity> {
+  const entityId = getIdFromSlugId(slug);
+
+  if (!entityId) return null;
+
+  const [productData, storeData] = await Promise.all([
+    getProductDetails(entityId).catch(() => null),
+    getStoreDetails(entityId).catch(() => null),
+  ]);
+
+  const product = productData?.product;
+  const store = storeData?.store;
+
+  if (product && isProductCanonicalSlug(slug, product)) {
+    return { type: 'product', product };
+  }
+
+  if (store && isStoreCanonicalSlug(slug, store)) {
+    return { type: 'store', store };
+  }
+
+  if (product && !store) {
+    return { type: 'product', product };
+  }
+
+  if (store && !product) {
+    return { type: 'store', store };
+  }
+
+  return null;
+}
 
 //===================================================================
 
@@ -37,21 +108,11 @@ export async function generateMetadata({
   params,
 }: DetailsPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const entityId = getIdFromSlugId(slug);
+  const entity = await resolveDetailsEntity(slug);
 
-  if (!entityId) {
-    return createPageMetadata({
-      title: 'Page Not Found',
-      description: 'The requested page could not be found.',
-      path: `/${slug}`,
-      noIndex: true,
-    });
-  }
+  if (entity?.type === 'product') {
+    const { product } = entity;
 
-  const productData = await getProductDetails(entityId).catch(() => null);
-  const product = productData?.product;
-
-  if (product) {
     return createPageMetadata({
       title: product.name,
       description:
@@ -63,10 +124,9 @@ export async function generateMetadata({
     });
   }
 
-  const storeData = await getStoreDetails(entityId).catch(() => null);
-  const store = storeData?.store;
+  if (entity?.type === 'store') {
+    const { store } = entity;
 
-  if (store) {
     return createPageMetadata({
       title: `${store.name} pharmacy details`,
       description:
@@ -91,18 +151,18 @@ export async function generateMetadata({
 async function DetailsPage({ params, searchParams }: DetailsPageProps) {
   const { slug } = await params;
   const resolvedSearchParams = await searchParams;
-  const entityId = getIdFromSlugId(slug);
+  const entity = await resolveDetailsEntity(slug);
 
-  if (!entityId) notFound();
+  if (!entity) notFound();
 
-  const productData = await getProductDetails(entityId).catch(() => null);
-
-  if (productData?.product) {
-    const reviewsData = await getProductReviews(entityId).catch(() => null);
+  if (entity.type === 'product') {
+    const reviewsData = await getProductReviews(entity.product.id).catch(
+      () => null
+    );
 
     return (
       <ProductDetailsPageContent
-        product={productData.product}
+        product={entity.product}
         reviews={reviewsData?.items ?? []}
         reviewsTotal={reviewsData?.total ?? 0}
         contextStoreId={resolvedSearchParams?.storeId}
@@ -111,17 +171,13 @@ async function DetailsPage({ params, searchParams }: DetailsPageProps) {
     );
   }
 
-  const storeData = await getStoreDetails(entityId).catch(() => null);
-
-  if (!storeData?.store) notFound();
-
-  const reviewsData = await getStoreReviews(entityId).catch(() => null);
+  const reviewsData = await getStoreReviews(entity.store.id).catch(() => null);
 
   return (
     <StoreDetailsPageContent
-      store={storeData.store}
+      store={entity.store}
       reviews={reviewsData?.items ?? []}
-      reviewsTotal={reviewsData?.total ?? storeData.store.reviewsCount ?? 0}
+      reviewsTotal={reviewsData?.total ?? entity.store.reviewsCount ?? 0}
       areReviewsUnavailable={!reviewsData}
     />
   );
