@@ -45,6 +45,22 @@ export type StoreEntity = {
 
 //===============================================================
 
+export type StoreFilterOptionDto<TValue extends string = string> = {
+  value: TValue;
+  label: string;
+};
+
+//===============================================================
+
+export type StoreFilterOptionsResponseDto = {
+  cities: StoreFilterOptionDto[];
+  sort: StoreFilterOptionDto<
+    'newest' | 'rating-desc' | 'rating-asc' | 'name-asc' | 'name-desc'
+  >[];
+};
+
+//===============================================================
+
 export type StoreResponseDto = {
   id: string;
   name: string;

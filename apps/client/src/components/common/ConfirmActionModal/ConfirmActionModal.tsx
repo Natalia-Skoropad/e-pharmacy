@@ -1,5 +1,7 @@
 'use client';
 
+import { useId } from 'react';
+
 import Button from '../Button';
 import { ModalBase, ModalRoot } from '@/components/modals';
 
@@ -12,6 +14,7 @@ type ConfirmActionModalProps = {
   text: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  isOpen?: boolean;
   isLoading?: boolean;
   confirmButtonClassName?: string;
   onConfirm: () => void;
@@ -25,18 +28,20 @@ function ConfirmActionModal({
   text,
   confirmLabel = 'Remove',
   cancelLabel = 'Cancel',
+  isOpen = true,
   isLoading = false,
   confirmButtonClassName,
   onConfirm,
   onCancel,
 }: ConfirmActionModalProps) {
+  const titleId = useId();
+
+  if (!isOpen) return null;
+
   return (
     <ModalRoot>
-      <ModalBase
-        labelledBy="confirm-action-title"
-        onClose={onCancel}
-      >
-        <h2 className={css.title} id="confirm-action-title">
+      <ModalBase isOpen={isOpen} labelledBy={titleId} onClose={onCancel}>
+        <h2 className={css.title} id={titleId}>
           {title}
         </h2>
 

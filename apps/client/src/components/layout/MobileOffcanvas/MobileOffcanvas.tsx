@@ -22,13 +22,14 @@ import css from './MobileOffcanvas.module.css';
 //===================================================================
 
 type MobileOffcanvasProps = {
+  id: string;
   isOpen: boolean;
   onClose: () => void;
 };
 
 //===================================================================
 
-function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
+function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
   const pathname = usePathname();
   const router = useRouter();
   const previousPathnameRef = useRef(pathname);
@@ -53,7 +54,6 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
   useEscapeToClose({ isOpen, onClose });
   useBodyScrollLock(isOpen);
 
-
   useEffect(() => {
     if (previousPathnameRef.current === pathname) return;
 
@@ -67,11 +67,7 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
       aria-hidden={!isOpen}
       onClick={handleBackdropClick}
     >
-      <aside
-        className={css.panel}
-        id="mobile-navigation"
-        aria-label="Mobile navigation"
-      >
+      <aside className={css.panel} id={id} aria-label="Mobile navigation">
         <div className={css.head}>
           <Logo variant="white" />
 

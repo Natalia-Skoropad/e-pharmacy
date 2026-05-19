@@ -5,7 +5,6 @@ import {
   buildPharmacyStoresPath,
   getPharmacyStoresDescription,
   getPharmacyStoresTitle,
-  getUniqueStoreCities,
   isPharmacyStoresNoIndex,
   normalizePharmacyStoresFiltersCity,
   parsePharmacyStoresSegments,
@@ -13,7 +12,7 @@ import {
 } from '@/lib/catalog/pharmacy-stores-catalog';
 import { createPageMetadata } from '@/lib/seo';
 
-import { getStores } from '@/services';
+import { getStoreFilters, getStores } from '@/services';
 
 //===================================================================
 
@@ -31,12 +30,10 @@ export async function generateMetadata({
   params,
 }: PharmacyStoresSegmentsPageProps) {
   const parsedFilters = parsePharmacyStoresSegments(await params);
-  const allStoresData = await getStores({ page: 1, perPage: 100 }).catch(
-    () => null
-  );
+  const storeFiltersData = await getStoreFilters().catch(() => null);
   const filters = normalizePharmacyStoresFiltersCity(
     parsedFilters,
-    getUniqueStoreCities(allStoresData?.items ?? [])
+    storeFiltersData?.cities.map((city) => city.value) ?? []
   );
   const storesData = await getStores(
     buildPharmacyStoresApiParams(filters)
@@ -57,12 +54,8 @@ async function PharmacyStoresSegmentsPage({
 }: PharmacyStoresSegmentsPageProps) {
   const parsedFilters = parsePharmacyStoresSegments(await params);
 
-  const allStoresData = await getStores({
-    page: 1,
-    perPage: 100,
-    sort: 'name-asc',
-  }).catch(() => null);
-  const cityOptions = getUniqueStoreCities(allStoresData?.items ?? []);
+  const storeFiltersData = await getStoreFilters().catch(() => null);
+  const cityOptions = storeFiltersData?.cities.map((city) => city.value) ?? [];
   const filters = normalizePharmacyStoresFiltersCity(
     parsedFilters,
     cityOptions

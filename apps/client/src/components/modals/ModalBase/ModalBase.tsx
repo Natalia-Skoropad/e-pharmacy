@@ -11,6 +11,7 @@ import css from './ModalBase.module.css';
 
 type ModalBaseProps = {
   children: ReactNode;
+  isOpen?: boolean;
   labelledBy?: string;
   className?: string;
   dialogClassName?: string;
@@ -24,6 +25,7 @@ type ModalBaseProps = {
 
 function ModalBase({
   children,
+  isOpen = true,
   labelledBy,
   className,
   dialogClassName,
@@ -38,8 +40,10 @@ function ModalBase({
     onClose: closeOnBackdrop ? onClose : () => {},
   });
 
-  useBodyScrollLock(true);
-  useEscapeToClose({ isOpen: closeOnEscape, onClose });
+  useBodyScrollLock(isOpen);
+  useEscapeToClose({ isOpen: isOpen && closeOnEscape, onClose });
+
+  if (!isOpen) return null;
 
   return (
     <div

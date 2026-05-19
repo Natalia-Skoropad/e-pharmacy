@@ -444,33 +444,56 @@ export async function getProductsService(
     });
   }
 
-  const filter = andFilters.length > 0 ? { $and: andFilters } : {};
+  const availableProductFilter = {
+    $or: [
+      {
+        offers: {
+          $elemMatch: {
+            inStock: true,
+            activeQuantity: { $gt: 0 },
+          },
+        },
+      },
+      {
+        $and: [
+          { storeId: { $exists: true, $ne: null } },
+          { inStock: true },
+        ],
+      },
+    ],
+  };
 
-  const [products, favoriteProductIds, favoriteStoreIds] = await Promise.all([
-    Product.find(filter).sort(getSort(sort)).lean<ProductDocument[]>(),
-    getFavoriteProductIds(userId),
-    getFavoriteStoreIds(userId),
-  ]);
+  if (typeof inStock === 'boolean') {
+    andFilters.push(
+      inStock ? availableProductFilter : { $nor: [availableProductFilter] }
+    );
+  }
+
+  const filter = andFilters.length > 0 ? { $and: andFilters } : {};
+  const skip = (page - 1) * perPage;
+
+  const [products, total, favoriteProductIds, favoriteStoreIds] =
+    await Promise.all([
+      Product.find(filter)
+        .sort(getSort(sort))
+        .skip(skip)
+        .limit(perPage)
+        .lean<ProductDocument[]>(),
+      Product.countDocuments(filter),
+      getFavoriteProductIds(userId),
+      getFavoriteStoreIds(userId),
+    ]);
 
   const serializedProducts = products.map((product: ProductDocument) =>
     serializeProduct(product, favoriteProductIds, favoriteStoreIds)
   );
 
-  const productsByAvailability =
-    typeof inStock === 'boolean'
-      ? serializedProducts.filter((product) => product.inStock === inStock)
-      : serializedProducts;
-
-  const sortedProducts = sortSerializedProducts(productsByAvailability, sort);
-  const skip = (page - 1) * perPage;
-  const paginatedProducts = sortedProducts.slice(skip, skip + perPage);
-
   return {
-    items: paginatedProducts,
-    total: sortedProducts.length,
+    items: sortSerializedProducts(serializedProducts, sort),
+    total,
     page,
     perPage,
-    totalPages: Math.ceil(sortedProducts.length / perPage),
+    totalPages: Math.ceil(total / perPage),
   };
 }
 

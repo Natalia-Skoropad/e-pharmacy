@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import { ButtonLink, Container } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
@@ -18,16 +20,18 @@ type PagePlaceholderProps = {
 //===================================================================
 
 function PagePlaceholder({ title, text, breadcrumbs }: PagePlaceholderProps) {
+  const titleId = useId();
+
   return (
     <main className={css.page}>
-      <section className={css.section} aria-labelledby="page-title">
+      <section className={css.section} aria-labelledby={titleId}>
         <Container>
           <Breadcrumbs items={breadcrumbs} />
 
           <div className={css.card}>
             <p className={css.kicker}>E-PHARMACY</p>
 
-            <h1 className={css.title} id="page-title">
+            <h1 className={css.title} id={titleId}>
               {title}
             </h1>
 

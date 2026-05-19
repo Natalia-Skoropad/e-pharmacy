@@ -134,25 +134,29 @@ const REVIEWS = [
 
 //===================================================================
 
-function shuffleItems<TItem>(items: TItem[]): TItem[] {
-  return [...items].sort(() => Math.random() - 0.5);
-}
-
-async function getRandomStores(): Promise<Store[]> {
+async function getFeaturedStores(): Promise<Store[]> {
   try {
-    const response = await getStores({ page: 1, perPage: 98 });
+    const response = await getStores({
+      page: 1,
+      perPage: HOME_PREVIEW_LIMIT,
+      sort: 'rating-desc',
+    });
 
-    return shuffleItems(response.items).slice(0, HOME_PREVIEW_LIMIT);
+    return response.items;
   } catch {
     return [];
   }
 }
 
-async function getRandomProducts(): Promise<Product[]> {
+async function getFeaturedProducts(): Promise<Product[]> {
   try {
-    const response = await getProducts({ page: 1, perPage: 126 });
+    const response = await getProducts({
+      page: 1,
+      perPage: HOME_PREVIEW_LIMIT,
+      sort: 'rating-desc',
+    });
 
-    return shuffleItems(response.items).slice(0, HOME_PREVIEW_LIMIT);
+    return response.items;
   } catch {
     return [];
   }
@@ -161,9 +165,9 @@ async function getRandomProducts(): Promise<Product[]> {
 //===================================================================
 
 async function HomePage() {
-  const [randomStores, randomProducts] = await Promise.all([
-    getRandomStores(),
-    getRandomProducts(),
+  const [featuredStores, featuredProducts] = await Promise.all([
+    getFeaturedStores(),
+    getFeaturedProducts(),
   ]);
 
   return (
@@ -235,9 +239,9 @@ async function HomePage() {
             </p>
           </div>
 
-          {randomStores.length > 0 ? (
+          {featuredStores.length > 0 ? (
             <div className={css.previewGrid}>
-              {randomStores.map((store) => (
+              {featuredStores.map((store) => (
                 <StoreCard key={store.id} store={store} skipFavoriteRefresh />
               ))}
             </div>
@@ -358,9 +362,9 @@ async function HomePage() {
             </p>
           </div>
 
-          {randomProducts.length > 0 ? (
+          {featuredProducts.length > 0 ? (
             <div className={css.previewGrid}>
-              {randomProducts.map((product) => (
+              {featuredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}

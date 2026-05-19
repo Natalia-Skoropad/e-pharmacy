@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 
 import { Container } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
@@ -26,15 +26,17 @@ function AuthFormShell({
   descriptionItems = [],
   children,
 }: AuthFormShellProps) {
+  const titleId = useId();
+
   return (
     <main className={css.page}>
-      <section className={css.section} aria-labelledby="auth-page-title">
+      <section className={css.section} aria-labelledby={titleId}>
         <Container>
           <Breadcrumbs items={breadcrumbs} />
 
           <div className={css.grid}>
             <div className={css.content}>
-              <h1 className={css.title} id="auth-page-title">
+              <h1 className={css.title} id={titleId}>
                 {title}
               </h1>
 

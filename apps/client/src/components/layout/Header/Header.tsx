@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 import { ShoppingCart } from 'lucide-react';
 
@@ -15,7 +15,10 @@ import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
 import { ROUTES } from '@/lib/constants/routes';
 import { isActiveRoute } from '@/lib/routes';
 import { cn } from '@/lib/utils';
-import { CART_UPDATED_EVENT, type CartUpdatedEventDetail } from '@/lib/cart-events';
+import {
+  CART_UPDATED_EVENT,
+  type CartUpdatedEventDetail,
+} from '@/lib/cart-events';
 import { getCart } from '@/services';
 
 import css from './Header.module.css';
@@ -40,6 +43,7 @@ function getUserInitials(name?: string | null): string {
 function Header() {
   const pathname = usePathname();
   const router = useRouter();
+  const mobileNavigationId = useId();
 
   const { token, isAuthenticated, isAuthReady, user, logout } = useAuth();
 
@@ -199,12 +203,14 @@ function Header() {
         ) : null}
 
         <BurgerButton
+          controlsId={mobileNavigationId}
           isOpen={isMobileMenuOpen}
           onClick={handleToggleMobileMenu}
         />
       </Container>
 
       <MobileOffcanvas
+        id={mobileNavigationId}
         isOpen={isMobileMenuOpen}
         onClose={handleCloseMobileMenu}
       />

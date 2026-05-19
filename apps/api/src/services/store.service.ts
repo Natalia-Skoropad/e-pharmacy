@@ -7,7 +7,12 @@ import { Store } from '../models/store.model';
 import { User } from '../models/user.model';
 import { httpError } from '../utils/httpError';
 
-import type { StoreBankDetails, StoreResponseDto, StoreReviewResponseDto } from '../types/store';
+import type {
+  StoreBankDetails,
+  StoreFilterOptionsResponseDto,
+  StoreResponseDto,
+  StoreReviewResponseDto,
+} from '../types/store';
 
 //===============================================================
 
@@ -67,6 +72,16 @@ type StoreProductsCount = {
   _id: Types.ObjectId;
   count: number;
 };
+
+//===============================================================
+
+const STORE_SORT_OPTIONS: StoreFilterOptionsResponseDto['sort'] = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'rating-desc', label: 'Rating: highest first' },
+  { value: 'rating-asc', label: 'Rating: lowest first' },
+  { value: 'name-asc', label: 'Name: A to Z' },
+  { value: 'name-desc', label: 'Name: Z to A' },
+];
 
 //===============================================================
 
@@ -202,6 +217,27 @@ async function getFavoriteStoreIds(userId?: string): Promise<Set<string>> {
   const favoriteStoreIds = user?.favoriteStoreIds ?? [];
 
   return new Set(favoriteStoreIds.map((id) => id.toString()));
+}
+
+
+//===============================================================
+
+export async function getStoreFiltersService(): Promise<StoreFilterOptionsResponseDto> {
+  const cities = (await Store.distinct('city', { isActive: true })) as string[];
+  const normalizedCities = cities
+    .filter(
+      (city): city is string =>
+        typeof city === 'string' && city.trim().length > 0
+    )
+    .map((city) => city.trim());
+  const uniqueCities = [...new Set(normalizedCities)].sort((a, b) =>
+    a.localeCompare(b, 'en')
+  );
+
+  return {
+    cities: uniqueCities.map((city) => ({ value: city, label: city })),
+    sort: STORE_SORT_OPTIONS,
+  };
 }
 
 //===============================================================

@@ -57,6 +57,23 @@ export type StoresResponse = {
 
 //===================================================================
 
+export type StoreFilterOption = {
+  value: string;
+  label: string;
+};
+
+//===================================================================
+
+export type StoreFilterOptionsResponse = {
+  cities: StoreFilterOption[];
+  sort: Array<{
+    value: StoresSortFilter;
+    label: string;
+  }>;
+};
+
+//===================================================================
+
 export type StoreDetailsResponse = {
   store: Store;
 };

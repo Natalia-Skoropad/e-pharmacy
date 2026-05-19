@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import Image from 'next/image';
 
 import { ButtonLink, Container } from '@/components/common';
@@ -29,15 +31,17 @@ function StatusPage({
   secondaryActionLabel,
   secondaryActionHref,
 }: StatusPageProps) {
+  const titleId = useId();
+
   return (
     <main className={css.page}>
-      <section className={css.hero} aria-labelledby="status-title">
+      <section className={css.hero} aria-labelledby={titleId}>
         <Container>
           <div className={css.heroGrid}>
             <div className={css.content}>
               <p className={css.statusCode}>{eyebrow}</p>
 
-              <h1 className={css.title} id="status-title">
+              <h1 className={css.title} id={titleId}>
                 {title}
               </h1>
 

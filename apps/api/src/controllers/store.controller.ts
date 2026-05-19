@@ -8,6 +8,7 @@ import {
 import {
   createStoreReviewService,
   getStoreDetailsService,
+  getStoreFiltersService,
   getStoreReviewsService,
   getStoresService,
   toggleFavoriteStoreService,
@@ -25,6 +26,22 @@ type StoreParams = {
 export async function getStores(req: Request, res: Response): Promise<void> {
   const query = storesQuerySchema.parse(req.query);
   const data = await getStoresService(query, req.user?.id);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+
+//===============================================================
+
+export async function getStoreFilters(
+  _req: Request,
+  res: Response
+): Promise<void> {
+  const data = await getStoreFiltersService();
 
   sendSuccessResponse({
     res,

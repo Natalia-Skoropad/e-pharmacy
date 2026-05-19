@@ -11,6 +11,7 @@ export const API_ROUTES = {
 
   stores: {
     list: '/stores',
+    filters: '/stores/filters',
     details: (storeId: string) => `/stores/${storeId}`,
     reviews: (storeId: string) => `/stores/${storeId}/reviews`,
     favorite: (storeId: string) => `/stores/${storeId}/favorite`,

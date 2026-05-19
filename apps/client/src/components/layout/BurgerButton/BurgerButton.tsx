@@ -6,12 +6,13 @@ import css from './BurgerButton.module.css';
 
 type BurgerButtonProps = {
   isOpen: boolean;
+  controlsId: string;
   onClick: () => void;
 };
 
 //===================================================================
 
-function BurgerButton({ isOpen, onClick }: BurgerButtonProps) {
+function BurgerButton({ controlsId, isOpen, onClick }: BurgerButtonProps) {
   const Icon = isOpen ? X : Menu;
 
   return (
@@ -20,7 +21,7 @@ function BurgerButton({ isOpen, onClick }: BurgerButtonProps) {
       type="button"
       aria-label={isOpen ? 'Close menu' : 'Open menu'}
       aria-expanded={isOpen}
-      aria-controls="mobile-navigation"
+      aria-controls={controlsId}
       onClick={onClick}
     >
       <Icon size={24} strokeWidth={2} aria-hidden="true" />

@@ -6,6 +6,7 @@ import type {
   CreateStoreReviewPayload,
   CreateStoreReviewResponse,
   StoreDetailsResponse,
+  StoreFilterOptionsResponse,
   StoreReviewsResponse,
   StoresResponse,
   StoresSortFilter,
@@ -36,6 +37,17 @@ export async function getStores(
     `${API_ROUTES.stores.list}${queryString}`,
     authToken ? { authToken } : undefined
   );
+
+  return getResponseData(response);
+}
+
+
+//===================================================================
+
+export async function getStoreFilters(): Promise<StoreFilterOptionsResponse> {
+  const response = await apiRequest<
+    ApiSuccessResponse<StoreFilterOptionsResponse>
+  >(API_ROUTES.stores.filters);
 
   return getResponseData(response);
 }

@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   createStoreReview,
   getStoreDetails,
+  getStoreFilters,
   getStoreReviews,
   getStores,
   toggleFavoriteStore,
@@ -30,6 +31,9 @@ storeRoutes.get(
   }),
   ctrlWrapper(getStores)
 );
+
+
+storeRoutes.get('/filters', ctrlWrapper(getStoreFilters));
 
 storeRoutes.get(
   '/:storeId/reviews',
