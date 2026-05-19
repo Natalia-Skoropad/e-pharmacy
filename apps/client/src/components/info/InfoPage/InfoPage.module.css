@@ -1,5 +1,5 @@
 .page {
-  padding-block: 40px 64px;
+  padding-block: 20px 64px;
   background:
     radial-gradient(circle at 8% 0%, rgba(89, 177, 122, 0.16), transparent 28%),
     var(--color-background);
@@ -202,7 +202,7 @@
 
 @media only screen and (min-width: 768px) {
   .page {
-    padding-block: 56px 80px;
+    padding-block: 20px 80px;
   }
 
   .highlights {

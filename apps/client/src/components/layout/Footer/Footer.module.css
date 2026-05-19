@@ -154,7 +154,13 @@
   }
 
   .mainNav {
-    justify-self: center;
+    justify-self: end;
+    text-align: right;
+  }
+
+  .mainList,
+  .infoList {
+    align-items: flex-end;
   }
 
   .socialList {
@@ -170,7 +176,8 @@
   }
 
   .infoNav {
-    justify-self: center;
+    justify-self: end;
+    text-align: right;
   }
 }
 
@@ -189,8 +196,14 @@
     max-width: 460px;
   }
 
+  .mainNav {
+    justify-self: center;
+    text-align: center;
+  }
+
   .mainList,
   .infoList {
+    align-items: center;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;

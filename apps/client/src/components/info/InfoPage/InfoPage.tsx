@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
 import { Container } from '@/components/common';
+import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
 import { INFO_NAV_LINKS } from '@/lib/constants/navigation';
+import { createBreadcrumbs } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
 import css from './InfoPage.module.css';
@@ -43,6 +45,8 @@ function InfoPage({
   return (
     <main className={css.page}>
       <Container>
+        <Breadcrumbs items={createBreadcrumbs(title)} />
+
         <div className={css.layout}>
           <aside className={css.sidebar} aria-label="Information pages">
             <nav>

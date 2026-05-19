@@ -347,7 +347,7 @@
   position: relative;
   min-height: 240px;
   overflow: hidden;
-  background-color: #4fa56d;
+  background-color: transparent;
   border-radius: var(--radius-lg);
 }
 

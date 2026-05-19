@@ -101,21 +101,60 @@
   padding-top: 32px;
 }
 
-.actions :is(a, button),
-.actions :is(a, button):hover,
-.actions :is(a, button):focus-visible {
+.actions :is(a, button) {
+  min-height: 52px;
+  border-radius: var(--radius-pill);
+}
+
+.actions :is(a, button):not(.loginLink):not(.registerLink),
+.actions :is(a, button):not(.loginLink):not(.registerLink):hover,
+.actions :is(a, button):not(.loginLink):not(.registerLink):focus-visible {
   color: var(--color-white);
   border-color: rgba(255, 255, 255, 0.22);
 }
 
-.actions :is(a, button) {
+.actions :is(a, button):not(.loginLink):not(.registerLink) {
   background-color: rgba(255, 255, 255, 0.08);
 }
 
-.actions :is(a, button):hover,
-.actions :is(a, button):focus-visible {
+.actions :is(a, button):not(.loginLink):not(.registerLink):hover,
+.actions :is(a, button):not(.loginLink):not(.registerLink):focus-visible {
   background-color: rgba(255, 255, 255, 0.18);
   border-color: rgba(255, 255, 255, 0.48);
+}
+
+.actions .loginLink,
+.actions .loginLink:hover,
+.actions .loginLink:focus-visible {
+  color: var(--color-white);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.actions .loginLink {
+  background-color: rgba(63, 148, 95, 0.52);
+}
+
+.actions .loginLink:hover,
+.actions .loginLink:focus-visible {
+  background-color: rgba(63, 148, 95, 0.72);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.actions .registerLink,
+.actions .registerLink:hover,
+.actions .registerLink:focus-visible {
+  color: var(--color-accent);
+  border-color: rgba(255, 255, 255, 0.92);
+}
+
+.actions .registerLink {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.actions .registerLink:hover,
+.actions .registerLink:focus-visible {
+  color: var(--color-accent-hover);
+  background-color: var(--color-white);
 }
 
 .authSkeleton {

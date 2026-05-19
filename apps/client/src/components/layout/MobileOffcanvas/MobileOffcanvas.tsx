@@ -133,11 +133,21 @@ function MobileOffcanvas({ isOpen, onClose }: MobileOffcanvasProps) {
 
           {isAuthReady && !isAuthenticated ? (
             <>
-              <ButtonLink href={ROUTES.LOGIN} variant="ghost" fullWidth>
+              <ButtonLink
+                className={css.loginLink}
+                href={ROUTES.LOGIN}
+                variant="primary"
+                fullWidth
+              >
                 Log in
               </ButtonLink>
 
-              <ButtonLink href={ROUTES.REGISTER} fullWidth>
+              <ButtonLink
+                className={css.registerLink}
+                href={ROUTES.REGISTER}
+                variant="secondary"
+                fullWidth
+              >
                 Register
               </ButtonLink>
             </>
