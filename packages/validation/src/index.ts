@@ -12,7 +12,7 @@ export const VALIDATION_LIMITS = {
   reviewCommentMin: 10,
   reviewCommentMax: 500,
   orderCommentMax: 500,
-  avatarUrlMax: 2048,
+  avatarUrlMax: 700000,
 } as const;
 
 //===================================================================
@@ -22,9 +22,15 @@ export const NAME_PATTERN = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/;
 export const PHONE_PATTERN = /^\+380\d{9}$/;
 export const ADDRESS_PATTERN = /^[A-Za-z0-9\s.,'’/#-]+$/;
 export const REVIEW_COMMENT_PATTERN = /^[A-Za-z0-9\s.,!?;:'"()\-]+$/;
+export const AVATAR_DATA_URL_PATTERN =
+  /^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 
 //===================================================================
 
 export function isDataUrl(value: string): boolean {
   return value.trim().toLowerCase().startsWith('data:');
+}
+
+export function isAvatarDataUrl(value: string): boolean {
+  return AVATAR_DATA_URL_PATTERN.test(value.trim());
 }

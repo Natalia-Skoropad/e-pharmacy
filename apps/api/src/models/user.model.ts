@@ -72,7 +72,7 @@ const userSchema = new Schema<UserEntity>(
       trim: true,
       maxlength: [
         AVATAR_URL_MAX_LENGTH,
-        `Avatar URL must be at most ${AVATAR_URL_MAX_LENGTH} characters`,
+        `Avatar image must be at most ${AVATAR_URL_MAX_LENGTH} characters`,
       ],
       default: undefined,
     },

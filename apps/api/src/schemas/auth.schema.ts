@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { isDataUrl } from '@e-pharmacy/validation';
+import { isAvatarDataUrl } from '@e-pharmacy/validation';
 
 import {
   EMAIL_MAX_LENGTH,
@@ -66,9 +66,21 @@ const addressSchema = z
 const avatarUrlSchema = z
   .string()
   .trim()
-  .url('Avatar must be a valid image URL')
-  .max(AVATAR_URL_MAX_LENGTH, `Avatar URL must be at most ${AVATAR_URL_MAX_LENGTH} characters`)
-  .refine((value) => !isDataUrl(value), 'Avatar must be stored as a URL, not a base64 Data URL')
+  .max(
+    AVATAR_URL_MAX_LENGTH,
+    `Avatar image must be at most ${AVATAR_URL_MAX_LENGTH} characters`
+  )
+  .refine((value) => {
+    if (isAvatarDataUrl(value)) return true;
+
+    try {
+      const parsedUrl = new URL(value);
+
+      return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }, 'Avatar must be a valid image URL or JPG/PNG/WEBP upload')
   .optional()
   .nullable();
 

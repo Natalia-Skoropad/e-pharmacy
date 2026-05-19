@@ -21,3 +21,31 @@ E-PHARMACY is a monorepo for an online pharmacy ecosystem.
 ## First deliverable
 
 The first complete deliverable is `apps/client`: the public customer storefront.
+
+## Current status before deploy
+
+- `apps/client` is the current deploy target and contains the finished customer storefront flow.
+- `apps/api` is the shared backend used by the client and already keeps future vendor/admin modules in mind.
+- `apps/vendor` and `apps/admin` are placeholders for the next stage; they are intentionally not finished in this release.
+- Private/customer-only routes are excluded from sitemap/robots: cart, checkout, profile, auth pages, vendor, and admin.
+
+## Local environment checklist
+
+Use these values for local development:
+
+```env
+AUTH_COOKIE_SAME_SITE=lax
+CLIENT_ORIGINS=http://localhost:3000
+CLIENT_APP_URL=http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
+```
+
+Before final deploy, run:
+
+```bash
+pnpm lint
+pnpm type-check
+pnpm build
+pnpm check:before-deploy
+```
+

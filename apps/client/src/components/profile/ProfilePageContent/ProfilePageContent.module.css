@@ -232,6 +232,16 @@
   gap: 10px;
 }
 
+.avatarInput {
+  display: none;
+}
+
+.avatarButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .avatarHint {
   max-width: 280px;
   padding: 10px 12px;
@@ -496,6 +506,8 @@
 @media only screen and (max-width: 767.98px) {
   .avatarActions,
   .avatarActions > *,
+  .avatarButtons,
+  .avatarButtons > *,
   .panelSection > button,
   .emptyState > a {
     width: 100%;

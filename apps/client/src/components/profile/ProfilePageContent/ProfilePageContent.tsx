@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import Link from 'next/link';
-import { Heart, ImageOff, KeyRound, Store } from 'lucide-react';
+import { Heart, ImageOff, KeyRound, Store, Upload } from 'lucide-react';
 
 import {
   AvatarImage,
@@ -75,6 +76,12 @@ const TABS: Array<{
 const FAVORITES_PER_PAGE = 100;
 const FAVORITES_VISIBLE_STEP = 16;
 const ORDERS_VISIBLE_STEP = 15;
+const AVATAR_MAX_FILE_SIZE = 450 * 1024;
+const AVATAR_ALLOWED_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+] as const;
 
 //===================================================================
 
@@ -114,6 +121,40 @@ function formatPrice(price: number): string {
 
 function formatOrderStatus(status: CustomerOrder['status']): string {
   return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+//===================================================================
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error('Could not read selected image.'));
+    };
+
+    reader.onerror = () => reject(new Error('Could not read selected image.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+//===================================================================
+
+function getAvatarFileError(file: File): string {
+  if (!AVATAR_ALLOWED_TYPES.includes(file.type as (typeof AVATAR_ALLOWED_TYPES)[number])) {
+    return 'Please choose a JPG, PNG, or WEBP image.';
+  }
+
+  if (file.size > AVATAR_MAX_FILE_SIZE) {
+    return 'Profile photo must be up to 450 KB.';
+  }
+
+  return '';
 }
 
 function getInitials(name: string): string {
@@ -234,6 +275,7 @@ async function getFavoriteStores(authToken: string): Promise<PharmacyStore[]> {
 
 function ProfilePageContent() {
   const { token, user, refreshCurrentUser } = useAuth();
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
   const [profileValues, setProfileValues] = useState<ProfileFormValues>({
     name: '',
@@ -432,7 +474,10 @@ function ProfilePageContent() {
   useEffect(() => {
     const authToken = token ?? '';
 
-    if (activeTab !== 'orders' || !authToken) return;
+    if (!authToken) {
+      setOrders([]);
+      return;
+    }
 
     let isMounted = true;
 
@@ -460,7 +505,7 @@ function ProfilePageContent() {
     return () => {
       isMounted = false;
     };
-  }, [activeTab, token]);
+  }, [token]);
 
   if (!user) {
     return (
@@ -529,6 +574,37 @@ function ProfilePageContent() {
     setIsRemoveAvatarConfirmOpen(false);
 
     await saveAvatar(null);
+  };
+
+  const handleAvatarFileChange = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) return;
+
+    const fileError = getAvatarFileError(file);
+
+    if (fileError) {
+      setFeedback('');
+      setError(fileError);
+      return;
+    }
+
+    try {
+      setFeedback('');
+      setError('');
+
+      const dataUrl = await readFileAsDataUrl(file);
+      setAvatarPreview(dataUrl);
+      setAvatarChanged(true);
+      await saveAvatar(dataUrl);
+    } catch {
+      setError('Could not upload profile photo.');
+      setAvatarPreview(user.avatarUrl ?? null);
+      setAvatarChanged(false);
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -621,22 +697,44 @@ function ProfilePageContent() {
                 </div>
 
                 <div className={css.avatarActions}>
+                  <input
+                    ref={avatarInputRef}
+                    className={css.avatarInput}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    aria-label="Upload profile photo"
+                    onChange={(event) => void handleAvatarFileChange(event)}
+                  />
+
                   <p className={css.avatarHint}>
-                    Profile photos should be stored in CDN/storage and saved as
-                    a URL. Base64 uploads are disabled to keep the user document
-                    lightweight.
+                    Upload a lightweight JPG, PNG, or WEBP image up to 450 KB.
+                    The photo is saved to your profile right away.
                   </p>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className={css.dangerButton}
-                    disabled={!avatarPreview || isAvatarSaving}
-                    onClick={() => setIsRemoveAvatarConfirmOpen(true)}
-                  >
-                    <ImageOff size={16} aria-hidden="true" />
-                    Remove photo
-                  </Button>
+
+                  <div className={css.avatarButtons}>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      disabled={isAvatarSaving}
+                      onClick={() => avatarInputRef.current?.click()}
+                    >
+                      <Upload size={16} aria-hidden="true" />
+                      {isAvatarSaving ? 'Saving...' : 'Upload photo'}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className={css.dangerButton}
+                      disabled={!avatarPreview || isAvatarSaving}
+                      onClick={() => setIsRemoveAvatarConfirmOpen(true)}
+                    >
+                      <ImageOff size={16} aria-hidden="true" />
+                      Remove photo
+                    </Button>
+                  </div>
                 </div>
               </div>
 
