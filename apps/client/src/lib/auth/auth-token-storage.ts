@@ -60,7 +60,7 @@ export function getAuthToken(): string | null {
 
 //===================================================================
 
-export function setAuthToken(_token: string): void {
+export function setAuthToken(): void {
   if (!canUseDocumentCookie()) return;
 
   setClientCookie(AUTH_READY_COOKIE_NAME, '1');

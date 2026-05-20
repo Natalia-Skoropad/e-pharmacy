@@ -64,7 +64,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   const [status, setStatus] = useState<AuthStatus>('loading');
 
   const applyAuthResponse = useCallback((response: AuthResponse) => {
-    setAuthToken(response.token);
+    setAuthToken();
     setToken(response.token);
     setUser(response.user);
     setStatus('authenticated');

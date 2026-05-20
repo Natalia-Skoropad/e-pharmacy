@@ -4,7 +4,6 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 const BACKEND_AUTH_COOKIE_NAME = 'e_pharmacy_auth_token';
 const AUTH_READY_COOKIE_NAME = 'e_pharmacy_auth_ready';
-const AUTH_FALLBACK_TOKEN_COOKIE_NAME = 'e_pharmacy_client_auth_token';
 const LOGIN_PATH = '/login';
 const PRIVATE_PATHS = ['/cart', '/checkout', '/profile'];
 
@@ -21,8 +20,7 @@ function isPrivatePath(pathname: string): boolean {
 function hasAuthSession(request: NextRequest): boolean {
   return Boolean(
     request.cookies.get(BACKEND_AUTH_COOKIE_NAME)?.value ||
-      request.cookies.get(AUTH_READY_COOKIE_NAME)?.value ||
-      request.cookies.get(AUTH_FALLBACK_TOKEN_COOKIE_NAME)?.value
+      request.cookies.get(AUTH_READY_COOKIE_NAME)?.value
   );
 }
 

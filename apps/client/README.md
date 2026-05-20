@@ -215,11 +215,12 @@ apps/client/
         reset-password/
         medicines-catalog/
         pharmacy-stores/
+        products/[slugId]/
+        pharmacies/[slugId]/
         delivery-and-payment/
         return-policy/
         user-agreement/
         personal-data-notice/
-        [slug]/
       error.tsx
       layout.tsx
       not-found.tsx

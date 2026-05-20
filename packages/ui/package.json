@@ -9,7 +9,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
+    "lint": "pnpm --workspace-root exec eslint \"packages/ui/src/**/*.{ts,tsx}\" --max-warnings=0",
     "type-check": "tsc --noEmit"
   },
   "peerDependencies": {
