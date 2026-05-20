@@ -1,5 +1,6 @@
 .footer {
   position: relative;
+  min-height: 580px;
   margin-top: auto;
   padding-block: 44px 34px;
   overflow: hidden;
@@ -139,6 +140,7 @@
 
 @media only screen and (min-width: 768px) {
   .footer {
+    min-height: 406px;
     padding-block: 54px 40px;
   }
 
@@ -183,6 +185,7 @@
 
 @media only screen and (min-width: 1440px) {
   .footer {
+    min-height: 282px;
     padding-block: 64px 44px;
   }
 
