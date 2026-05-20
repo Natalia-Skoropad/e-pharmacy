@@ -1,4 +1,1 @@
-@import '../styles/tokens.css';
-@import '../styles/reset.css';
-@import '../styles/base.css';
-@import '../styles/utilities.css';
+/* Global styles are imported directly in layout.tsx to avoid CSS @import waterfalls. */

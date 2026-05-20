@@ -69,10 +69,12 @@ function StatusPage({
                 <Image
                   src="/images/home/three-pills.png"
                   alt=""
-                  fill
+                  width={749}
+                  height={508}
                   sizes="(min-width: 1440px) 420px, (min-width: 768px) 38vw, 260px"
                   className={css.image}
                   priority
+                  fetchPriority="high"
                 />
               </div>
             </div>

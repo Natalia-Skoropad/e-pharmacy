@@ -11,6 +11,10 @@ import {
   SITE_URL,
 } from '@/lib/constants/metadata';
 
+import '@/styles/tokens.css';
+import '@/styles/reset.css';
+import '@/styles/base.css';
+import '@/styles/utilities.css';
 import './globals.css';
 
 //===================================================================

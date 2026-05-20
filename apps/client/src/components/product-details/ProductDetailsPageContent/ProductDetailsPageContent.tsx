@@ -603,6 +603,7 @@ function ProductDetailsPageContent({
                     src={productDetails.imageUrl}
                     alt={productDetails.name}
                     priority
+                    fetchPriority="high"
                     sizes="(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 520px"
                   />
                 ) : (

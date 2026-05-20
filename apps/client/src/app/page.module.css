@@ -91,12 +91,23 @@
 }
 
 .heroMedia {
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: 280px;
 }
 
-.heroImage,
+.heroImage {
+  width: min(100%, 560px);
+  height: auto;
+  aspect-ratio: 749 / 508;
+  object-fit: contain;
+}
+
 .bannerImage {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 600 / 406;
   object-fit: contain;
 }
 
@@ -344,7 +355,9 @@
 }
 
 .bannerMedia {
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: 240px;
   overflow: hidden;
   background-color: transparent;

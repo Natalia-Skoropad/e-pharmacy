@@ -122,9 +122,15 @@
 .imageWrap {
   position: absolute;
   inset: 18px 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .image {
+  width: min(100%, 420px);
+  height: auto;
+  aspect-ratio: 749 / 508;
   object-fit: contain;
   transform: rotate(-4deg) scale(1.04);
   filter: drop-shadow(0 28px 30px rgba(29, 30, 33, 0.16));

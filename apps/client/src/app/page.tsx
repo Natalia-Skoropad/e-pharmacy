@@ -115,32 +115,21 @@ const REVIEWS = [
     rating: 4.7,
     text: 'The checkout is clear: pickup details, delivery fields, pharmacy totals, and order comments are shown exactly where I expect them. I also like that each pharmacy order is handled separately, because it makes confirmation more transparent and easier to review before submitting.',
   },
-  {
-    name: 'Dmytro Kovalenko',
-    rating: 4.5,
-    text: 'I use pharmacy pages to check contacts, working hours, ratings, available products, and payment details before placing an order. The store card gives a quick overview, and the detail page has enough information to understand whether the pharmacy is the right choice for my order.',
-  },
-  {
-    name: 'Kateryna Bondar',
-    rating: 4.2,
-    text: 'Search by medicine article is a small feature, but it makes buying the correct item much safer and faster. When a medicine has a similar name or package, the article helps me avoid mistakes. The category filters and product cards also make the catalog easier to scan.',
-  },
-  {
-    name: 'Viktor Shevchenko',
-    rating: 4.8,
-    text: 'The cart grouping by pharmacy is great. Each invoice has its own products, total, and checkout action, so the page never turns into a messy spreadsheet. I can continue shopping inside one pharmacy, add missing items, and still keep the order structure clean.',
-  },
 ] as const;
 
 //===================================================================
 
 async function getFeaturedStores(): Promise<Store[]> {
   try {
-    const response = await getStores({
-      page: 1,
-      perPage: HOME_PREVIEW_LIMIT,
-      sort: 'rating-desc',
-    });
+    const response = await getStores(
+      {
+        page: 1,
+        perPage: HOME_PREVIEW_LIMIT,
+        sort: 'rating-desc',
+      },
+      undefined,
+      { cache: 'force-cache', next: { revalidate } }
+    );
 
     return response.items;
   } catch {
@@ -150,11 +139,15 @@ async function getFeaturedStores(): Promise<Store[]> {
 
 async function getFeaturedProducts(): Promise<Product[]> {
   try {
-    const response = await getProducts({
-      page: 1,
-      perPage: HOME_PREVIEW_LIMIT,
-      sort: 'rating-desc',
-    });
+    const response = await getProducts(
+      {
+        page: 1,
+        perPage: HOME_PREVIEW_LIMIT,
+        sort: 'rating-desc',
+      },
+      undefined,
+      { cache: 'force-cache', next: { revalidate } }
+    );
 
     return response.items;
   } catch {
@@ -203,8 +196,10 @@ async function HomePage() {
               <Image
                 src="/images/home/three-pills.png"
                 alt=""
-                fill
+                width={749}
+                height={508}
                 priority
+                fetchPriority="high"
                 sizes="(min-width: 1440px) 560px, (min-width: 768px) 48vw, 100vw"
                 className={css.heroImage}
               />
@@ -300,7 +295,9 @@ async function HomePage() {
               <Image
                 src="/images/home/girl-holding-pills-in-her-hands.png"
                 alt="Customer holding medicine and using a phone"
-                fill
+                width={600}
+                height={406}
+                loading="lazy"
                 sizes="(min-width: 1440px) 520px, (min-width: 768px) 46vw, 100vw"
                 className={css.bannerImage}
               />

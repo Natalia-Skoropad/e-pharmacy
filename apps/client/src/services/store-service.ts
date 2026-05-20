@@ -1,4 +1,9 @@
-import { apiRequest, buildQueryString, getResponseData } from '@/lib/api';
+import {
+  apiRequest,
+  buildQueryString,
+  getResponseData,
+  type RequestOptions,
+} from '@/lib/api';
 import { API_ROUTES } from '@/lib/constants/api-routes';
 
 import type {
@@ -29,13 +34,14 @@ type StoresQueryParams = {
 
 export async function getStores(
   params: StoresQueryParams = {},
-  authToken?: string
+  authToken?: string,
+  requestOptions?: RequestOptions
 ): Promise<StoresResponse> {
   const queryString = buildQueryString(params);
 
   const response = await apiRequest<ApiSuccessResponse<StoresResponse>>(
     `${API_ROUTES.stores.list}${queryString}`,
-    authToken ? { authToken } : undefined
+    authToken || requestOptions ? { ...requestOptions, authToken } : undefined
   );
 
   return getResponseData(response);
@@ -44,10 +50,12 @@ export async function getStores(
 
 //===================================================================
 
-export async function getStoreFilters(): Promise<StoreFilterOptionsResponse> {
+export async function getStoreFilters(
+  requestOptions?: RequestOptions
+): Promise<StoreFilterOptionsResponse> {
   const response = await apiRequest<
     ApiSuccessResponse<StoreFilterOptionsResponse>
-  >(API_ROUTES.stores.filters);
+  >(API_ROUTES.stores.filters, requestOptions);
 
   return getResponseData(response);
 }
@@ -56,11 +64,12 @@ export async function getStoreFilters(): Promise<StoreFilterOptionsResponse> {
 
 export async function getStoreDetails(
   storeId: string,
-  authToken?: string
+  authToken?: string,
+  requestOptions?: RequestOptions
 ): Promise<StoreDetailsResponse> {
   const response = await apiRequest<ApiSuccessResponse<StoreDetailsResponse>>(
     API_ROUTES.stores.details(storeId),
-    authToken ? { authToken } : undefined
+    authToken || requestOptions ? { ...requestOptions, authToken } : undefined
   );
 
   return getResponseData(response);
@@ -69,10 +78,12 @@ export async function getStoreDetails(
 //===================================================================
 
 export async function getStoreReviews(
-  storeId: string
+  storeId: string,
+  requestOptions?: RequestOptions
 ): Promise<StoreReviewsResponse> {
   const response = await apiRequest<ApiSuccessResponse<StoreReviewsResponse>>(
-    API_ROUTES.stores.reviews(storeId)
+    API_ROUTES.stores.reviews(storeId),
+    requestOptions
   );
 
   return getResponseData(response);
