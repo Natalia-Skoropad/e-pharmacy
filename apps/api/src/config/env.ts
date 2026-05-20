@@ -10,6 +10,18 @@ type AuthCookieSameSite = 'lax' | 'strict' | 'none';
 
 //===============================================================
 
+const LOCAL_CLIENT_URL = 'http://localhost:3000';
+const PRODUCTION_CLIENT_URL = 'https://e-pharmacy-client-ten.vercel.app';
+const CLIENT_ORIGIN_ENV_NAMES = [
+  'CLIENT_ORIGINS',
+  'CORS_ORIGIN',
+  'CLIENT_URL',
+  'FRONTEND_URL',
+  'FRONTEND_DOMAIN',
+] as const;
+
+//===============================================================
+
 function getNodeEnv(): NodeEnv {
   const value = process.env.NODE_ENV || 'development';
 
@@ -22,8 +34,14 @@ function getNodeEnv(): NodeEnv {
 
 //===============================================================
 
+const NODE_ENV = getNodeEnv();
+
+//===============================================================
+
 function getAuthCookieSameSite(): AuthCookieSameSite {
-  const value = process.env.AUTH_COOKIE_SAME_SITE || 'lax';
+  const value =
+    process.env.AUTH_COOKIE_SAME_SITE ||
+    (NODE_ENV === 'production' ? 'none' : 'lax');
 
   if (value === 'lax' || value === 'strict' || value === 'none') {
     return value;
@@ -62,17 +80,41 @@ function getRequiredEnv(name: string): string {
 
 //===============================================================
 
+function getFallbackClientUrl(): string {
+  return NODE_ENV === 'production' ? PRODUCTION_CLIENT_URL : LOCAL_CLIENT_URL;
+}
+
+//===============================================================
+
+function getEnvValue(names: readonly string[]): string | undefined {
+  return names.map((name) => process.env[name]).find(Boolean);
+}
+
+//===============================================================
+
 function getClientOrigins(): string[] {
-  const value = process.env.CLIENT_ORIGINS;
+  const value = getEnvValue(CLIENT_ORIGIN_ENV_NAMES);
 
   if (!value) {
-    return ['http://localhost:3000'];
+    return [getFallbackClientUrl()];
   }
 
   return value
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+}
+
+//===============================================================
+
+function getClientAppUrl(): string {
+  return (
+    process.env.CLIENT_APP_URL ||
+    process.env.CLIENT_URL ||
+    process.env.FRONTEND_URL ||
+    process.env.FRONTEND_DOMAIN ||
+    getFallbackClientUrl()
+  );
 }
 
 //===============================================================
@@ -94,14 +136,14 @@ function getOptionalNumberEnv(name: string, fallback: number): number {
 //===============================================================
 
 export const env = {
-  NODE_ENV: getNodeEnv(),
+  NODE_ENV,
   PORT: getPort(),
   MONGODB_URI: getRequiredEnv('MONGODB_URI'),
   JWT_SECRET: getRequiredEnv('JWT_SECRET'),
   JWT_EXPIRES_IN: (process.env.JWT_EXPIRES_IN || '7d') as StringValue,
   JWT_RESET_EXPIRES_IN: (process.env.JWT_RESET_EXPIRES_IN || '15m') as StringValue,
   CLIENT_ORIGINS: getClientOrigins(),
-  CLIENT_APP_URL: process.env.CLIENT_APP_URL || 'http://localhost:3000',
+  CLIENT_APP_URL: getClientAppUrl(),
   AUTH_COOKIE_DOMAIN: process.env.AUTH_COOKIE_DOMAIN,
   AUTH_COOKIE_SAME_SITE: getAuthCookieSameSite(),
   SMTP_HOST: process.env.SMTP_HOST,
