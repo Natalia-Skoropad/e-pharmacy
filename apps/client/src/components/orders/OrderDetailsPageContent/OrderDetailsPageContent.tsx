@@ -15,6 +15,7 @@ import {
 import {
   ButtonLink,
   Container,
+  LoadingSpinner,
   RatingSummary,
   ShimmerImage,
   SvgIcon,
@@ -133,16 +134,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   );
 
   if (!isLoaded) {
-    return (
-      <main className={css.page}>
-        <section className={css.section} aria-labelledby="order-title">
-          <Container>
-            <Breadcrumbs items={breadcrumbs} />
-            <div className={css.statusCard}>Loading order details...</div>
-          </Container>
-        </section>
-      </main>
-    );
+    return <LoadingSpinner label="Loading order details..." />;
   }
 
   if (!order) {

@@ -473,13 +473,20 @@ function ProfilePageContent() {
 
   useEffect(() => {
     const authToken = token ?? '';
+    let isMounted = true;
 
     if (!authToken) {
-      setOrders([]);
-      return;
-    }
+      const timeoutId = window.setTimeout(() => {
+        if (isMounted) {
+          setOrders([]);
+        }
+      }, 0);
 
-    let isMounted = true;
+      return () => {
+        isMounted = false;
+        window.clearTimeout(timeoutId);
+      };
+    }
 
     async function loadOrders() {
       try {

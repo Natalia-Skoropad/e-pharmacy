@@ -3,7 +3,6 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
-import { LoadingSpinner, StatusPage } from '@/components/common';
 import { useAuth } from '@/providers';
 
 import { getSafeRedirectPath } from '@/lib/routes';
@@ -30,19 +29,8 @@ function GuestOnlyRoute({ children }: GuestOnlyRouteProps) {
     router.replace(redirectTo);
   }, [isAuthReady, isAuthenticated, redirectTo, router]);
 
-  if (!isAuthReady) {
-    return <LoadingSpinner label="Checking your session..." />;
-  }
-
-  if (isAuthenticated) {
-    return (
-      <StatusPage
-        title="You are already logged in"
-        text="We are redirecting you to your account."
-        primaryActionLabel="Go to profile"
-        primaryActionHref={redirectTo}
-      />
-    );
+  if (!isAuthReady || isAuthenticated) {
+    return null;
   }
 
   return children;

@@ -3,7 +3,6 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
-import { LoadingSpinner, StatusPage } from '@/components/common';
 import { useAuth } from '@/providers';
 
 import { buildLoginRedirectPath } from '@/lib/routes';
@@ -32,19 +31,8 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
     router.replace(buildLoginRedirectPath(currentPath));
   }, [isAuthReady, isAuthenticated, pathname, router, searchParams]);
 
-  if (!isAuthReady) {
-    return <LoadingSpinner label="Checking your session..." />;
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <StatusPage
-        title="Login required"
-        text="You need to log in to access this page."
-        primaryActionLabel="Go to login"
-        primaryActionHref={buildLoginRedirectPath(pathname)}
-      />
-    );
+  if (!isAuthReady || !isAuthenticated) {
+    return null;
   }
 
   return children;
