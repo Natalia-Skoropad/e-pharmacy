@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import { env } from '../config/env';
 import { USER_ROLES } from '../constants/auth';
 
 import {
@@ -105,26 +106,26 @@ authRoutes.patch(
 
 authRoutes.post('/logout', authenticate, ctrlWrapper(logoutUser));
 
-// Temporary role test routes.
-// They will be removed or moved when real customer/vendor/admin modules appear.
+// Temporary role test routes are available only outside production.
+if (env.NODE_ENV !== 'production') {
+  authRoutes.get(
+    '/test/customer',
+    authenticate,
+    authorizeRoles(USER_ROLES.CUSTOMER),
+    ctrlWrapper(getCustomerOnlyTest)
+  );
 
-authRoutes.get(
-  '/test/customer',
-  authenticate,
-  authorizeRoles(USER_ROLES.CUSTOMER),
-  ctrlWrapper(getCustomerOnlyTest)
-);
+  authRoutes.get(
+    '/test/vendor',
+    authenticate,
+    authorizeRoles(USER_ROLES.VENDOR),
+    ctrlWrapper(getVendorOnlyTest)
+  );
 
-authRoutes.get(
-  '/test/vendor',
-  authenticate,
-  authorizeRoles(USER_ROLES.VENDOR),
-  ctrlWrapper(getVendorOnlyTest)
-);
-
-authRoutes.get(
-  '/test/admin',
-  authenticate,
-  authorizeRoles(USER_ROLES.ADMIN),
-  ctrlWrapper(getAdminOnlyTest)
-);
+  authRoutes.get(
+    '/test/admin',
+    authenticate,
+    authorizeRoles(USER_ROLES.ADMIN),
+    ctrlWrapper(getAdminOnlyTest)
+  );
+}

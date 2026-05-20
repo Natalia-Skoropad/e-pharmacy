@@ -8,12 +8,21 @@ importers:
 
   .:
     devDependencies:
+      eslint:
+        specifier: ^9
+        version: 9.39.4(jiti@2.6.1)
       prettier:
         specifier: latest
         version: 3.8.3
       turbo:
         specifier: latest
         version: 2.9.8
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      typescript-eslint:
+        specifier: ^8.48.0
+        version: 8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
 
   apps/api:
     dependencies:

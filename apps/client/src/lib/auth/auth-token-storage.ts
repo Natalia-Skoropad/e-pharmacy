@@ -1,7 +1,6 @@
 export const AUTH_SESSION_READY_TOKEN = 'cookie-auth-session';
 
 const AUTH_READY_COOKIE_NAME = 'e_pharmacy_auth_ready';
-const AUTH_FALLBACK_TOKEN_COOKIE_NAME = 'e_pharmacy_client_auth_token';
 const AUTH_COOKIE_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 
 //===================================================================
@@ -54,10 +53,6 @@ function removeClientCookie(name: string): void {
 //===================================================================
 
 export function getAuthToken(): string | null {
-  const fallbackToken = getCookieValue(AUTH_FALLBACK_TOKEN_COOKIE_NAME);
-
-  if (fallbackToken) return fallbackToken;
-
   const hasAuthReadyCookie = Boolean(getCookieValue(AUTH_READY_COOKIE_NAME));
 
   return hasAuthReadyCookie ? AUTH_SESSION_READY_TOKEN : null;
@@ -65,11 +60,10 @@ export function getAuthToken(): string | null {
 
 //===================================================================
 
-export function setAuthToken(token: string): void {
+export function setAuthToken(_token: string): void {
   if (!canUseDocumentCookie()) return;
 
   setClientCookie(AUTH_READY_COOKIE_NAME, '1');
-  setClientCookie(AUTH_FALLBACK_TOKEN_COOKIE_NAME, token);
 }
 
 //===================================================================
@@ -78,5 +72,4 @@ export function removeAuthToken(): void {
   if (!canUseDocumentCookie()) return;
 
   removeClientCookie(AUTH_READY_COOKIE_NAME);
-  removeClientCookie(AUTH_FALLBACK_TOKEN_COOKIE_NAME);
 }

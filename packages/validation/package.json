@@ -8,7 +8,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "echo \"No lint configured for @e-pharmacy/validation yet\"",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
