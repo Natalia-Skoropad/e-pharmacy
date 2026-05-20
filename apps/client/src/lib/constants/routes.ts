@@ -5,8 +5,10 @@ import { ROUTE_SEGMENTS } from '@e-pharmacy/config';
 export const ROUTES = {
   HOME: '/',
   STORES: `/${ROUTE_SEGMENTS.stores}`,
+  PHARMACY_DETAILS: `/${ROUTE_SEGMENTS.pharmacyDetails}`,
   MEDICINE_STORE: `/${ROUTE_SEGMENTS.medicineStore}`,
   MEDICINES_CATALOG: `/${ROUTE_SEGMENTS.medicinesCatalog}`,
+  PRODUCT_DETAILS: `/${ROUTE_SEGMENTS.productDetails}`,
   CART: `/${ROUTE_SEGMENTS.cart}`,
   CHECKOUT: `/${ROUTE_SEGMENTS.checkout}`,
   LOGIN: `/${ROUTE_SEGMENTS.login}`,
