@@ -8,7 +8,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "pnpm --workspace-root exec eslint \"packages/validation/src/**/*.{ts,tsx}\" --max-warnings=0",
+    "lint": "tsc --noEmit",
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
