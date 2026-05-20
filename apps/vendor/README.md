@@ -33,7 +33,7 @@ apps/admin   -> admin dashboard
 apps/api     -> one shared backend API
 ```
 
-The vendor cabinet will use the same shared backend API, shared types, shared validation, and shared UI patterns where possible.
+The vendor cabinet will use the same shared backend API, shared types, shared validation, and shared UI patterns where possible. The completed client app already defines many reusable patterns for forms, modals, protected layouts, empty states, and API integration, so the vendor app should extend the ecosystem instead of starting from a blank pharmacy shelf.
 
 ---
 
@@ -246,7 +246,7 @@ What will make this app especially interesting:
 
 **Nataliia Skoropad**  
 Full-stack Developer  
-Backend development, frontend development, UI/UX design, responsive layout, and user experience improvements
+Backend development, Frontend development, UI/UX design
 
 ---
 

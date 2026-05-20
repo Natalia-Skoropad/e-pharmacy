@@ -319,6 +319,13 @@ AUTH_COOKIE_SAME_SITE=lax
 
 For production, update MongoDB, JWT, SMTP, CORS, cookie, and client URL values.
 
+Current deployed client/API pair:
+
+```env
+CLIENT_ORIGINS=https://e-pharmacy-client-ten.vercel.app
+CLIENT_APP_URL=https://e-pharmacy-client-ten.vercel.app
+```
+
 ---
 
 ## Getting Started
@@ -428,6 +435,7 @@ Recommended production checklist:
 - configure allowed `CLIENT_ORIGINS`
 - choose proper `AUTH_COOKIE_SAME_SITE`
 - set `AUTH_COOKIE_DOMAIN` only when needed
+- verify deployed CORS allows the production client origin
 - verify password reset email links
 - verify checkout creates real MongoDB orders
 
@@ -451,7 +459,7 @@ What makes this API especially interesting:
 
 **Nataliia Skoropad**  
 Full-stack Developer  
-Backend development, API architecture, frontend integration, UI/UX flow planning, and user experience improvements
+Backend development, Frontend development, UI/UX design
 
 ---
 

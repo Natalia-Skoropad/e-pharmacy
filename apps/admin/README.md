@@ -34,7 +34,7 @@ apps/admin   -> admin dashboard
 apps/api     -> one shared backend API
 ```
 
-The admin panel will use the same shared backend API and the same shared packages for types, validation, configuration, utilities, and UI patterns where possible.
+The admin panel will use the same shared backend API and the same shared packages for types, validation, configuration, utilities, and UI patterns where possible. It should reuse the ecosystem foundation created by the client and vendor apps instead of duplicating API, validation, and UI logic.
 
 ---
 
@@ -268,7 +268,7 @@ What will make this app especially interesting:
 
 **Nataliia Skoropad**  
 Full-stack Developer  
-Backend development, frontend development, UI/UX design, responsive layout, and user experience improvements
+Backend development, Frontend development, UI/UX design
 
 ---
 
