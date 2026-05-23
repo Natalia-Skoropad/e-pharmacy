@@ -26,9 +26,9 @@ function ProductsList({ products }: ProductsListProps) {
   }
 
   return (
-    <div className={css.list} role="list">
+    <div className={css.list}>
       {products.map((product) => (
-        <div className={css.item} key={product.id} role="listitem">
+        <div className={css.item} key={product.id}>
           <ProductCard product={product} />
         </div>
       ))}
