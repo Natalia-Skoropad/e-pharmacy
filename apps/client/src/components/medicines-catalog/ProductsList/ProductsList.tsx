@@ -26,13 +26,13 @@ function ProductsList({ products }: ProductsListProps) {
   }
 
   return (
-    <ul className={css.list}>
+    <div className={css.list} role="list">
       {products.map((product) => (
-        <li className={css.item} key={product.id}>
+        <div className={css.item} key={product.id} role="listitem">
           <ProductCard product={product} />
-        </li>
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }
 

@@ -173,9 +173,9 @@ function ProductCard({
           />
         </div>
 
-        <h3 className={css.title} id={`product-${product.id}-title`}>
+        <h2 className={css.title} id={`product-${product.id}-title`}>
           {product.name}
-        </h3>
+        </h2>
 
         <dl className={css.summaryList}>
           <div className={css.summaryItem}>
