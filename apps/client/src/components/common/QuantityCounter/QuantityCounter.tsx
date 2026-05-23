@@ -32,7 +32,7 @@ function QuantityCounter({
   const isDisabled = disabled || isLoading;
 
   return (
-    <div className={css.control} aria-label={ariaLabel}>
+    <div className={css.control} role="group" aria-label={ariaLabel}>
       <button
         className={css.button}
         type="button"

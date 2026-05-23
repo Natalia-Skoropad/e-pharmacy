@@ -53,7 +53,11 @@ function HomeReviewsSlider({ reviews }: HomeReviewsSliderProps) {
                   {review.name.charAt(0)}
                 </div>
                 <h3>{review.name}</h3>
-                <div className={css.rating} aria-label={`${review.rating} out of 5`}>
+                <div
+                  className={css.rating}
+                  role="img"
+                  aria-label={`${review.rating} out of 5`}
+                >
                   <Star size={16} aria-hidden="true" />
                   <strong>{review.rating.toFixed(1)}</strong>
                   <span>/ 5</span>
@@ -75,7 +79,11 @@ function HomeReviewsSlider({ reviews }: HomeReviewsSliderProps) {
           <ChevronLeft size={22} aria-hidden="true" />
         </button>
 
-        <div className={css.pagination} aria-label="Reviews pagination">
+        <div
+          className={css.pagination}
+          role="group"
+          aria-label="Reviews pagination"
+        >
           {reviews.map((review, index) => (
             <button
               className={clsx(css.dot, index === activeIndex && css.dotActive)}

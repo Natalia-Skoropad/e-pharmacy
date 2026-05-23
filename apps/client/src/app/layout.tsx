@@ -63,7 +63,7 @@ type RootLayoutProps = Readonly<{
 
 function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="uk">
+    <html lang="en">
       <body>
         <ToastProvider>
           <AuthProvider>

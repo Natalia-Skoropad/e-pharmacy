@@ -175,7 +175,7 @@ function StoreCard({
             href={medicinesHref}
             size="sm"
           >
-            View medicines
+            Medicines
           </ButtonLink>
         </div>
       </div>

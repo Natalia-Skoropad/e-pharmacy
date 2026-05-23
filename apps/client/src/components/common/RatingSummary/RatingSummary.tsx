@@ -34,7 +34,11 @@ function RatingSummary({
         .join(' ')}
     >
       {ratingLabel ? (
-        <span className={css.rating} aria-label={`Rating ${ratingLabel}`}>
+        <span
+          className={css.rating}
+          role="img"
+          aria-label={`Rating ${ratingLabel}`}
+        >
           <Star size={size === 'sm' ? 16 : 18} aria-hidden="true" />
           {ratingLabel}
         </span>
