@@ -14,6 +14,7 @@ export { default as RatingSummary } from './RatingSummary';
 export { default as StatusPage } from './StatusPage';
 export { default as SvgIcon } from './SvgIcon';
 export { default as Tabs } from './Tabs';
+export { default as TextActionButton } from './TextActionButton';
 export type { TabItem } from './Tabs';
 export { default as Toast } from './Toast';
 export { default as SearchInput } from './SearchInput';

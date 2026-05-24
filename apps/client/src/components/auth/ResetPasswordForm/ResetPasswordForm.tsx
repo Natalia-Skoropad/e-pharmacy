@@ -1,12 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Eye, EyeOff } from 'lucide-react';
 
-import { Button } from '@/components/common';
+import { Button, TextActionButton } from '@/components/common';
 import { useAuth } from '@/providers';
 import { useToast } from '@/hooks';
 
@@ -133,6 +132,9 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         <div className={css.field}>
           <label className={css.label} htmlFor="reset-password">
             New password
+            <span className={css.requiredMark} aria-hidden="true">
+              *
+            </span>
           </label>
 
           <div className={css.inputWrap}>
@@ -174,6 +176,9 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         <div className={css.field}>
           <label className={css.label} htmlFor="reset-confirm-password">
             Confirm password
+            <span className={css.requiredMark} aria-hidden="true">
+              *
+            </span>
           </label>
 
           <div className={css.inputWrap}>
@@ -229,9 +234,9 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
       <p className={css.footerText}>
         Need a fresh link?{' '}
-        <Link className={css.link} href={ROUTES.PASSWORD_RECOVERY}>
+        <TextActionButton href={ROUTES.PASSWORD_RECOVERY}>
           Send reset link again
-        </Link>
+        </TextActionButton>
       </p>
     </form>
   );

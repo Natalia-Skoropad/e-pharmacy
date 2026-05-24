@@ -42,10 +42,17 @@
 }
 
 .label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
   font-size: var(--fz-14);
   font-weight: var(--fw-medium);
   line-height: 1.4;
   color: var(--color-text-primary);
+}
+
+.requiredMark {
+  color: var(--color-error);
 }
 
 .inputWrap {
@@ -180,28 +187,4 @@
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
   text-align: center;
-}
-
-.link,
-.textButton {
-  font-weight: var(--fw-medium);
-  color: var(--color-accent);
-  transition: color var(--transition-base);
-}
-
-.textButton {
-  justify-self: center;
-  padding: 0;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  text-align: center;
-  background: transparent;
-  border: none;
-}
-
-.link:hover,
-.link:focus-visible,
-.textButton:hover,
-.textButton:focus-visible {
-  color: var(--color-accent-hover);
 }

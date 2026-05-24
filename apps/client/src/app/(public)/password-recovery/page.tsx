@@ -1,14 +1,12 @@
-import {
-  AuthFormShell,
-  GuestOnlyRoute,
-  PasswordRecoveryForm,
-} from '@/components/auth';
+import { AuthFormShell, PasswordRecoveryForm } from '@/components/auth';
+import { GuestOnlyRoute } from '@/routes';
 
 import {
   PASSWORD_RECOVERY_BENEFITS,
   PASSWORD_RECOVERY_DESCRIPTION,
   PASSWORD_RECOVERY_TITLE,
 } from '@/lib/constants/metadata';
+
 import { ROUTES } from '@/lib/constants/routes';
 import { createBreadcrumbs } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';

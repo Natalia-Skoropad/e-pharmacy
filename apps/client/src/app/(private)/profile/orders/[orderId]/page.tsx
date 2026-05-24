@@ -1,4 +1,4 @@
-import { ProtectedRoute } from '@/components/auth';
+import { ProtectedRoute } from '@/routes';
 import { OrderDetailsPageContent } from '@/components/orders';
 
 import { createPageMetadata } from '@/lib/seo';

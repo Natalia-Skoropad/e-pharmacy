@@ -1,8 +1,5 @@
-import {
-  AuthFormShell,
-  GuestOnlyRoute,
-  ResetPasswordForm,
-} from '@/components/auth';
+import { AuthFormShell, ResetPasswordForm } from '@/components/auth';
+import { GuestOnlyRoute } from '@/routes';
 
 import {
   PASSWORD_RECOVERY_DESCRIPTION,

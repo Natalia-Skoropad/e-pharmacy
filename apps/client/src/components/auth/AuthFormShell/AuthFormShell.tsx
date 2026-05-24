@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { useId, type ReactNode } from 'react';
 
 import { Container } from '@/components/common';
@@ -19,13 +20,7 @@ type AuthFormShellProps = {
 
 //===================================================================
 
-function AuthFormShell({
-  title,
-  text,
-  breadcrumbs,
-  descriptionItems = [],
-  children,
-}: AuthFormShellProps) {
+function AuthFormShell({ title, text, breadcrumbs, children }: AuthFormShellProps) {
   const titleId = useId();
 
   return (
@@ -35,25 +30,30 @@ function AuthFormShell({
           <Breadcrumbs items={breadcrumbs} />
 
           <div className={css.grid}>
-            <div className={css.content}>
-              <h1 className={css.title} id={titleId}>
-                {title}
-              </h1>
-
-              <p className={css.text}>{text}</p>
-
-              {descriptionItems.length > 0 ? (
-                <ul className={css.list} aria-label="Page benefits">
-                  {descriptionItems.map((item) => (
-                    <li className={css.item} key={item}>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+            <div className={css.illustration} aria-hidden="true">
+              <Image
+                className={css.image}
+                src="/images/auth/authorization.png"
+                alt=""
+                fill
+                priority
+                fetchPriority="high"
+                sizes="(min-width: 1440px) 700px, (min-width: 768px) 704px, calc(100vw - 40px)"
+              />
             </div>
 
-            <div className={css.card}>{children}</div>
+            <div className={css.card}>
+              <div className={css.cardInner}>
+                <div className={css.head}>
+                  <h1 className={css.title} id={titleId}>
+                    {title}
+                  </h1>
+                  <p className={css.text}>{text}</p>
+                </div>
+
+                {children}
+              </div>
+            </div>
           </div>
         </Container>
       </section>

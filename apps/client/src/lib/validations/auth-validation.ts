@@ -1,4 +1,9 @@
-import { EMAIL_PATTERN, NAME_PATTERN, VALIDATION_LIMITS } from '@e-pharmacy/validation';
+import {
+  EMAIL_PATTERN,
+  NAME_PATTERN,
+  PHONE_PATTERN,
+  VALIDATION_LIMITS,
+} from '@e-pharmacy/validation';
 
 export const PASSWORD_MIN_LENGTH = VALIDATION_LIMITS.passwordMin;
 export const PASSWORD_MAX_LENGTH = VALIDATION_LIMITS.passwordMax;
@@ -11,6 +16,8 @@ export const CUSTOMER_NAME_MAX_LENGTH = USER_NAME_MAX_LENGTH;
 
 export const EMAIL_MAX_LENGTH = VALIDATION_LIMITS.emailMax;
 
+export const CUSTOMER_PHONE_MAX_LENGTH = VALIDATION_LIMITS.phoneMax;
+
 //===================================================================
 
 export type LoginFormValues = {
@@ -21,6 +28,7 @@ export type LoginFormValues = {
 export type RegisterFormValues = {
   name: string;
   email: string;
+  phone: string;
   password: string;
 };
 
@@ -59,6 +67,7 @@ export const LOGIN_INITIAL_VALUES: LoginFormValues = {
 export const REGISTER_INITIAL_VALUES: RegisterFormValues = {
   name: '',
   email: '',
+  phone: '',
   password: '',
 };
 
@@ -82,6 +91,17 @@ export function sanitizeCustomerName(value: string): string {
     .replace(/[^A-Za-z '\-]/g, '')
     .replace(/\s{2,}/g, ' ')
     .slice(0, CUSTOMER_NAME_MAX_LENGTH);
+}
+
+export function sanitizeCustomerPhone(value: string): string {
+  const hasPlus = value.trim().startsWith('+');
+  const digits = value.replace(/\D/g, '').slice(0, 12);
+
+  if (hasPlus || digits.startsWith('380')) {
+    return `+${digits}`.slice(0, CUSTOMER_PHONE_MAX_LENGTH);
+  }
+
+  return digits.slice(0, CUSTOMER_PHONE_MAX_LENGTH);
 }
 
 export function getEmailError(value: string): string {
@@ -135,6 +155,7 @@ export function validateRegisterForm(
 
   const name = values.name.trim();
   const emailError = getEmailError(values.email);
+  const phone = values.phone.trim();
   const passwordError = getPasswordError(values.password);
 
   if (!name) {
@@ -148,6 +169,13 @@ export function validateRegisterForm(
   }
 
   if (emailError) errors.email = emailError;
+
+  if (!phone) {
+    errors.phone = 'Phone is required';
+  } else if (!PHONE_PATTERN.test(phone)) {
+    errors.phone = 'Enter phone in format +380XXXXXXXXX';
+  }
+
   if (passwordError) errors.password = passwordError;
 
   return errors;

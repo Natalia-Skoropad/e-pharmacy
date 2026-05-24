@@ -1,9 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
-import { Button } from '@/components/common';
+import { Button, TextActionButton } from '@/components/common';
 import { useAuth } from '@/providers';
 import { useToast } from '@/hooks';
 
@@ -87,6 +86,9 @@ function PasswordRecoveryForm() {
         <div className={css.field}>
           <label className={css.label} htmlFor="recovery-email">
             Email
+            <span className={css.requiredMark} aria-hidden="true">
+              *
+            </span>
           </label>
 
           <div className={css.inputWrap}>
@@ -124,9 +126,7 @@ function PasswordRecoveryForm() {
 
       <p className={css.footerText}>
         Remember your password?{' '}
-        <Link className={css.link} href={ROUTES.LOGIN}>
-          Log in
-        </Link>
+        <TextActionButton href={ROUTES.LOGIN}>Log in</TextActionButton>
       </p>
     </form>
   );

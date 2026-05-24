@@ -1,4 +1,4 @@
-import { ProtectedRoute } from '@/components/auth';
+import { ProtectedRoute } from '@/routes';
 import { CheckoutPageContent } from '@/components/cart';
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/constants/metadata';

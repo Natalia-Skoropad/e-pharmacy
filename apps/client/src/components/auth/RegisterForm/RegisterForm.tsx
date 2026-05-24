@@ -1,12 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Eye, EyeOff } from 'lucide-react';
 
-import { Button } from '@/components/common';
+import { Button, TextActionButton } from '@/components/common';
 import { useAuth } from '@/providers';
 import { useToast } from '@/hooks';
 
@@ -15,10 +14,12 @@ import { ROUTES } from '@/lib/constants/routes';
 import { getSafeRedirectPath } from '@/lib/routes';
 import {
   CUSTOMER_NAME_MAX_LENGTH,
+  CUSTOMER_PHONE_MAX_LENGTH,
   EMAIL_MAX_LENGTH,
   PASSWORD_MAX_LENGTH,
   REGISTER_INITIAL_VALUES,
   sanitizeCustomerName,
+  sanitizeCustomerPhone,
   sanitizeEmail,
   validateRegisterForm,
   type RegisterFormErrors,
@@ -59,7 +60,9 @@ function RegisterForm() {
           ? sanitizeCustomerName(rawValue)
           : field === 'email'
             ? sanitizeEmail(rawValue)
-            : rawValue;
+            : field === 'phone'
+              ? sanitizeCustomerPhone(rawValue)
+              : rawValue;
 
       const nextValues = {
         ...values,
@@ -81,7 +84,7 @@ function RegisterForm() {
     const nextErrors = validateRegisterForm(values);
 
     if (Object.keys(nextErrors).length > 0) {
-      setTouchedFields({ name: true, email: true, password: true });
+      setTouchedFields({ name: true, email: true, phone: true, password: true });
       setErrors(nextErrors);
       return;
     }
@@ -92,6 +95,7 @@ function RegisterForm() {
       await register({
         name: values.name.trim(),
         email: values.email.trim(),
+        phone: values.phone.trim(),
         password: values.password,
       });
 
@@ -109,6 +113,9 @@ function RegisterForm() {
         <div className={css.field}>
           <label className={css.label} htmlFor="register-name">
             Name
+            <span className={css.requiredMark} aria-hidden="true">
+              *
+            </span>
           </label>
 
           <div className={css.inputWrap}>
@@ -138,6 +145,9 @@ function RegisterForm() {
         <div className={css.field}>
           <label className={css.label} htmlFor="register-email">
             Email
+            <span className={css.requiredMark} aria-hidden="true">
+              *
+            </span>
           </label>
 
           <div className={css.inputWrap}>
@@ -165,8 +175,43 @@ function RegisterForm() {
         </div>
 
         <div className={css.field}>
+          <label className={css.label} htmlFor="register-phone">
+            Phone
+            <span className={css.requiredMark} aria-hidden="true">
+              *
+            </span>
+          </label>
+
+          <div className={css.inputWrap}>
+            <input
+              className={css.input}
+              id="register-phone"
+              name="phone"
+              type="tel"
+              value={values.phone}
+              placeholder="+380XXXXXXXXX"
+              autoComplete="tel"
+              maxLength={CUSTOMER_PHONE_MAX_LENGTH}
+              aria-invalid={Boolean(touchedFields.phone && errors.phone)}
+              aria-describedby="register-phone-error"
+              onChange={handleChange('phone')}
+            />
+            <span className={css.inputCounter} aria-hidden="true">
+              {values.phone.length}/{CUSTOMER_PHONE_MAX_LENGTH}
+            </span>
+          </div>
+
+          <p className={css.error} id="register-phone-error">
+            {touchedFields.phone ? (errors.phone ?? '') : ''}
+          </p>
+        </div>
+
+        <div className={css.field}>
           <label className={css.label} htmlFor="register-password">
             Password
+            <span className={css.requiredMark} aria-hidden="true">
+              *
+            </span>
           </label>
 
           <div className={css.inputWrap}>
@@ -216,9 +261,7 @@ function RegisterForm() {
 
       <p className={css.footerText}>
         Already have an account?{' '}
-        <Link className={css.link} href={ROUTES.LOGIN}>
-          Log in
-        </Link>
+        <TextActionButton href={ROUTES.LOGIN}>Log in</TextActionButton>
       </p>
     </form>
   );

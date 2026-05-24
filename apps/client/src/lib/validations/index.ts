@@ -1,4 +1,5 @@
 export {
+  CUSTOMER_PHONE_MAX_LENGTH,
   EMAIL_MAX_LENGTH,
   FORGOT_PASSWORD_INITIAL_VALUES,
   LOGIN_INITIAL_VALUES,
@@ -10,6 +11,7 @@ export {
   USER_NAME_MIN_LENGTH,
   getEmailError,
   getPasswordError,
+  sanitizeCustomerPhone,
   sanitizeEmail,
   validateForgotPasswordForm,
   validateLoginForm,
@@ -32,7 +34,6 @@ export {
   CUSTOMER_NAME_MAX_LENGTH,
   CUSTOMER_NAME_MIN_LENGTH,
   CUSTOMER_NAME_REGEX,
-  CUSTOMER_PHONE_MAX_LENGTH,
   CUSTOMER_PHONE_MIN_LENGTH,
   CUSTOMER_PHONE_REGEX,
   getCustomerAddressError,
@@ -40,5 +41,4 @@ export {
   getCustomerPhoneError,
   sanitizeCustomerAddress,
   sanitizeCustomerName,
-  sanitizeCustomerPhone,
 } from './customer-fields';

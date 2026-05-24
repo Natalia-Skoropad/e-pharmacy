@@ -1,4 +1,5 @@
-import { AuthFormShell, GuestOnlyRoute, RegisterForm } from '@/components/auth';
+import { AuthFormShell, RegisterForm } from '@/components/auth';
+import { GuestOnlyRoute } from '@/routes';
 
 import {
   REGISTER_BENEFITS,

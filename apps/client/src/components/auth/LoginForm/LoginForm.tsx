@@ -1,12 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Eye, EyeOff } from 'lucide-react';
 
-import { Button } from '@/components/common';
+import { Button, TextActionButton } from '@/components/common';
 import { useAuth } from '@/providers';
 import { useToast } from '@/hooks';
 
@@ -100,6 +99,9 @@ function LoginForm() {
         <div className={css.field}>
           <label className={css.label} htmlFor="login-email">
             Email
+            <span className={css.requiredMark} aria-hidden="true">
+              *
+            </span>
           </label>
 
           <div className={css.inputWrap}>
@@ -130,11 +132,14 @@ function LoginForm() {
           <div className={css.labelRow}>
             <label className={css.label} htmlFor="login-password">
               Password
+              <span className={css.requiredMark} aria-hidden="true">
+                *
+              </span>
             </label>
 
-            <Link className={css.textButton} href={ROUTES.PASSWORD_RECOVERY}>
+            <TextActionButton href={ROUTES.PASSWORD_RECOVERY}>
               Forgot password?
-            </Link>
+            </TextActionButton>
           </div>
 
           <div className={css.inputWrap}>
@@ -184,9 +189,7 @@ function LoginForm() {
 
       <p className={css.footerText}>
         Don&apos;t have an account yet?{' '}
-        <Link className={css.link} href={ROUTES.REGISTER}>
-          Register
-        </Link>
+        <TextActionButton href={ROUTES.REGISTER}>Register</TextActionButton>
       </p>
     </form>
   );
