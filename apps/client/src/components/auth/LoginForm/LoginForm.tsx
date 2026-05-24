@@ -3,9 +3,14 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
-import { Eye, EyeOff } from 'lucide-react';
-
 import { Button, TextActionButton } from '@/components/common';
+
+import {
+  AuthFieldsGroup,
+  EmailInput,
+  PasswordInput,
+} from '@/components/auth/AuthFields';
+
 import { useAuth } from '@/providers';
 import { useToast } from '@/hooks';
 
@@ -13,9 +18,7 @@ import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
 import { getSafeRedirectPath } from '@/lib/routes';
 import {
-  EMAIL_MAX_LENGTH,
   LOGIN_INITIAL_VALUES,
-  PASSWORD_MAX_LENGTH,
   sanitizeEmail,
   validateLoginForm,
   type LoginFormErrors,
@@ -95,89 +98,33 @@ function LoginForm() {
 
   return (
     <form className={css.form} noValidate onSubmit={handleSubmit}>
-      <div className={css.fields}>
-        <div className={css.field}>
-          <label className={css.label} htmlFor="login-email">
-            Email
-            <span className={css.requiredMark} aria-hidden="true">
-              *
-            </span>
-          </label>
+      <AuthFieldsGroup>
+        <EmailInput
+          id="login-email"
+          name="email"
+          value={values.email}
+          error={errors.email}
+          isTouched={touchedFields.email}
+          onChange={handleChange('email')}
+        />
 
-          <div className={css.inputWrap}>
-            <input
-              className={css.input}
-              id="login-email"
-              name="email"
-              type="email"
-              value={values.email}
-              placeholder="example@mail.com"
-              autoComplete="email"
-              maxLength={EMAIL_MAX_LENGTH}
-              aria-invalid={Boolean(touchedFields.email && errors.email)}
-              aria-describedby="login-email-error"
-              onChange={handleChange('email')}
-            />
-            <span className={css.inputCounter} aria-hidden="true">
-              {values.email.length}/{EMAIL_MAX_LENGTH}
-            </span>
-          </div>
-
-          <p className={css.error} id="login-email-error">
-            {touchedFields.email ? (errors.email ?? '') : ''}
-          </p>
-        </div>
-
-        <div className={css.field}>
-          <div className={css.labelRow}>
-            <label className={css.label} htmlFor="login-password">
-              Password
-              <span className={css.requiredMark} aria-hidden="true">
-                *
-              </span>
-            </label>
-
+        <PasswordInput
+          id="login-password"
+          name="password"
+          value={values.password}
+          autoComplete="current-password"
+          error={errors.password}
+          isTouched={touchedFields.password}
+          isVisible={isPasswordVisible}
+          labelAction={
             <TextActionButton href={ROUTES.PASSWORD_RECOVERY}>
               Forgot password?
             </TextActionButton>
-          </div>
-
-          <div className={css.inputWrap}>
-            <input
-              className={css.input}
-              id="login-password"
-              name="password"
-              type={isPasswordVisible ? 'text' : 'password'}
-              value={values.password}
-              placeholder="Enter your password"
-              autoComplete="current-password"
-              maxLength={PASSWORD_MAX_LENGTH}
-              aria-invalid={Boolean(touchedFields.password && errors.password)}
-              aria-describedby="login-password-error"
-              onChange={handleChange('password')}
-            />
-            <span className={css.passwordCounter} aria-hidden="true">
-              {values.password.length}/{PASSWORD_MAX_LENGTH}
-            </span>
-            <button
-              className={css.eyeButton}
-              type="button"
-              aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
-              onClick={() => setIsPasswordVisible((prev) => !prev)}
-            >
-              {isPasswordVisible ? (
-                <EyeOff size={18} aria-hidden="true" />
-              ) : (
-                <Eye size={18} aria-hidden="true" />
-              )}
-            </button>
-          </div>
-
-          <p className={css.error} id="login-password-error">
-            {touchedFields.password ? (errors.password ?? '') : ''}
-          </p>
-        </div>
-      </div>
+          }
+          onChange={handleChange('password')}
+          onToggleVisibility={() => setIsPasswordVisible((prev) => !prev)}
+        />
+      </AuthFieldsGroup>
 
       <Button
         type="submit"

@@ -1,38 +1,40 @@
-import { AuthFormShell, RegisterForm } from '@/components/auth';
+import { AuthFormShell, LoginForm } from '@/components/auth';
 import { GuestOnlyRoute } from '@/routes';
 
 import {
-  REGISTER_BENEFITS,
-  REGISTER_DESCRIPTION,
-  REGISTER_TITLE,
+  LOGIN_BENEFITS,
+  LOGIN_DESCRIPTION,
+  LOGIN_TITLE,
 } from '@/lib/constants/metadata';
+
+import { ROUTES } from '@/lib/constants/routes';
 import { createBreadcrumbs } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
 
 //===================================================================
 
 export const metadata = createPageMetadata({
-  title: REGISTER_TITLE,
-  description: REGISTER_DESCRIPTION,
-  path: '/register',
+  title: LOGIN_TITLE,
+  description: LOGIN_DESCRIPTION,
+  path: ROUTES.LOGIN,
   noIndex: true,
 });
 
 //===================================================================
 
-function RegisterPage() {
+function LoginPage() {
   return (
     <GuestOnlyRoute>
       <AuthFormShell
-        title={REGISTER_TITLE}
-        text={REGISTER_DESCRIPTION}
-        descriptionItems={[...REGISTER_BENEFITS]}
-        breadcrumbs={createBreadcrumbs(REGISTER_TITLE)}
+        title={LOGIN_TITLE}
+        text={LOGIN_DESCRIPTION}
+        descriptionItems={[...LOGIN_BENEFITS]}
+        breadcrumbs={createBreadcrumbs(LOGIN_TITLE)}
       >
-        <RegisterForm />
+        <LoginForm />
       </AuthFormShell>
     </GuestOnlyRoute>
   );
 }
 
-export default RegisterPage;
+export default LoginPage;

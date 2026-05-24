@@ -1,27 +1,3 @@
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.head {
-  display: grid;
-  gap: 8px;
-}
-
-.title {
-  font-size: var(--fz-24);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-heading);
-  color: var(--color-text-primary);
-}
-
-.text {
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
-}
-
 .fields {
   display: grid;
   gap: 14px;
@@ -160,31 +136,4 @@
 
 .error:empty {
   opacity: 0;
-}
-
-.submitError,
-.successMessage {
-  padding: 12px 14px;
-  font-size: var(--fz-14);
-  line-height: 1.4;
-  border-radius: var(--radius-md);
-}
-
-.submitError {
-  color: var(--color-error);
-  background-color: rgba(211, 47, 47, 0.08);
-  border: 1px solid rgba(211, 47, 47, 0.18);
-}
-
-.successMessage {
-  color: var(--color-accent);
-  background-color: rgba(89, 177, 122, 0.1);
-  border: 1px solid rgba(89, 177, 122, 0.18);
-}
-
-.footerText {
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
-  text-align: center;
 }

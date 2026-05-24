@@ -1,0 +1,20 @@
+import type { ChangeEventHandler, ReactNode } from 'react';
+
+export type AuthFieldBaseProps = {
+  id: string;
+  name: string;
+  value: string;
+  error?: string;
+  isTouched?: boolean;
+  required?: boolean;
+  onChange: ChangeEventHandler<HTMLInputElement>;
+};
+
+export type PasswordFieldProps = AuthFieldBaseProps & {
+  label?: string;
+  placeholder?: string;
+  autoComplete: 'current-password' | 'new-password';
+  isVisible: boolean;
+  labelAction?: ReactNode;
+  onToggleVisibility: () => void;
+};

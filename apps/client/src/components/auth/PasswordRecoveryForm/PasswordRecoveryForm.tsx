@@ -3,13 +3,13 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Button, TextActionButton } from '@/components/common';
+import { AuthFieldsGroup, EmailInput } from '@/components/auth/AuthFields';
 import { useAuth } from '@/providers';
 import { useToast } from '@/hooks';
 
 import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
 import {
-  EMAIL_MAX_LENGTH,
   FORGOT_PASSWORD_INITIAL_VALUES,
   sanitizeEmail,
   validateForgotPasswordForm,
@@ -82,39 +82,16 @@ function PasswordRecoveryForm() {
 
   return (
     <form className={css.form} noValidate onSubmit={handleSubmit}>
-      <div className={css.fields}>
-        <div className={css.field}>
-          <label className={css.label} htmlFor="recovery-email">
-            Email
-            <span className={css.requiredMark} aria-hidden="true">
-              *
-            </span>
-          </label>
-
-          <div className={css.inputWrap}>
-            <input
-              className={css.input}
-              id="recovery-email"
-              name="email"
-              type="email"
-              value={values.email}
-              placeholder="example@mail.com"
-              autoComplete="email"
-              maxLength={EMAIL_MAX_LENGTH}
-              aria-invalid={Boolean(touchedFields.email && errors.email)}
-              aria-describedby="recovery-email-error"
-              onChange={handleChange}
-            />
-            <span className={css.inputCounter} aria-hidden="true">
-              {values.email.length}/{EMAIL_MAX_LENGTH}
-            </span>
-          </div>
-
-          <p className={css.error} id="recovery-email-error">
-            {touchedFields.email ? (errors.email ?? '') : ''}
-          </p>
-        </div>
-      </div>
+      <AuthFieldsGroup>
+        <EmailInput
+          id="recovery-email"
+          name="email"
+          value={values.email}
+          error={errors.email}
+          isTouched={touchedFields.email}
+          onChange={handleChange}
+        />
+      </AuthFieldsGroup>
 
       <Button
         type="submit"

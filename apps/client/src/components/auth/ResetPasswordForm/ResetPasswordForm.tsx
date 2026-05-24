@@ -3,16 +3,14 @@
 import { useRouter } from 'next/navigation';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
-import { Eye, EyeOff } from 'lucide-react';
-
 import { Button, TextActionButton } from '@/components/common';
+import { AuthFieldsGroup, PasswordInput } from '@/components/auth/AuthFields';
 import { useAuth } from '@/providers';
 import { useToast } from '@/hooks';
 
 import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
 import {
-  PASSWORD_MAX_LENGTH,
   RESET_PASSWORD_INITIAL_VALUES,
   validateResetPasswordForm,
   type ResetPasswordFormErrors,
@@ -128,101 +126,37 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         </p>
       ) : null}
 
-      <div className={css.fields}>
-        <div className={css.field}>
-          <label className={css.label} htmlFor="reset-password">
-            New password
-            <span className={css.requiredMark} aria-hidden="true">
-              *
-            </span>
-          </label>
+      <AuthFieldsGroup>
+        <PasswordInput
+          id="reset-password"
+          name="password"
+          label="New password"
+          value={values.password}
+          placeholder="Create new password"
+          autoComplete="new-password"
+          error={errors.password}
+          isTouched={touchedFields.password}
+          isVisible={isPasswordVisible}
+          onChange={handleChange('password')}
+          onToggleVisibility={() => setIsPasswordVisible((prev) => !prev)}
+        />
 
-          <div className={css.inputWrap}>
-            <input
-              className={css.input}
-              id="reset-password"
-              name="password"
-              type={isPasswordVisible ? 'text' : 'password'}
-              value={values.password}
-              placeholder="Create new password"
-              autoComplete="new-password"
-              maxLength={PASSWORD_MAX_LENGTH}
-              aria-invalid={Boolean(touchedFields.password && errors.password)}
-              aria-describedby="reset-password-error"
-              onChange={handleChange('password')}
-            />
-            <span className={css.passwordCounter} aria-hidden="true">
-              {values.password.length}/{PASSWORD_MAX_LENGTH}
-            </span>
-            <button
-              className={css.eyeButton}
-              type="button"
-              aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
-              onClick={() => setIsPasswordVisible((prev) => !prev)}
-            >
-              {isPasswordVisible ? (
-                <EyeOff size={18} aria-hidden="true" />
-              ) : (
-                <Eye size={18} aria-hidden="true" />
-              )}
-            </button>
-          </div>
-
-          <p className={css.error} id="reset-password-error">
-            {touchedFields.password ? (errors.password ?? '') : ''}
-          </p>
-        </div>
-
-        <div className={css.field}>
-          <label className={css.label} htmlFor="reset-confirm-password">
-            Confirm password
-            <span className={css.requiredMark} aria-hidden="true">
-              *
-            </span>
-          </label>
-
-          <div className={css.inputWrap}>
-            <input
-              className={css.input}
-              id="reset-confirm-password"
-              name="confirmPassword"
-              type={isConfirmPasswordVisible ? 'text' : 'password'}
-              value={values.confirmPassword}
-              placeholder="Repeat new password"
-              autoComplete="new-password"
-              maxLength={PASSWORD_MAX_LENGTH}
-              aria-invalid={Boolean(
-                touchedFields.confirmPassword && errors.confirmPassword
-              )}
-              aria-describedby="reset-confirm-password-error"
-              onChange={handleChange('confirmPassword')}
-            />
-            <span className={css.passwordCounter} aria-hidden="true">
-              {values.confirmPassword.length}/{PASSWORD_MAX_LENGTH}
-            </span>
-            <button
-              className={css.eyeButton}
-              type="button"
-              aria-label={
-                isConfirmPasswordVisible ? 'Hide password' : 'Show password'
-              }
-              onClick={() => setIsConfirmPasswordVisible((prev) => !prev)}
-            >
-              {isConfirmPasswordVisible ? (
-                <EyeOff size={18} aria-hidden="true" />
-              ) : (
-                <Eye size={18} aria-hidden="true" />
-              )}
-            </button>
-          </div>
-
-          <p className={css.error} id="reset-confirm-password-error">
-            {touchedFields.confirmPassword
-              ? (errors.confirmPassword ?? '')
-              : ''}
-          </p>
-        </div>
-      </div>
+        <PasswordInput
+          id="reset-confirm-password"
+          name="confirmPassword"
+          label="Confirm password"
+          value={values.confirmPassword}
+          placeholder="Repeat new password"
+          autoComplete="new-password"
+          error={errors.confirmPassword}
+          isTouched={touchedFields.confirmPassword}
+          isVisible={isConfirmPasswordVisible}
+          onChange={handleChange('confirmPassword')}
+          onToggleVisibility={() =>
+            setIsConfirmPasswordVisible((prev) => !prev)
+          }
+        />
+      </AuthFieldsGroup>
 
       <Button
         type="submit"

@@ -6,6 +6,7 @@ import {
   RESET_PASSWORD_BENEFITS,
   RESET_PASSWORD_TITLE,
 } from '@/lib/constants/metadata';
+
 import { ROUTES } from '@/lib/constants/routes';
 import { createBreadcrumbs } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
