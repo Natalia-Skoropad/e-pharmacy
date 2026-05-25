@@ -1,5 +1,7 @@
 import type { ChangeEventHandler, ReactNode } from 'react';
 
+//===================================================================
+
 export type AuthFieldBaseProps = {
   id: string;
   name: string;
@@ -8,6 +10,10 @@ export type AuthFieldBaseProps = {
   isTouched?: boolean;
   required?: boolean;
   onChange: ChangeEventHandler<HTMLInputElement>;
+};
+
+export type AddressFieldProps = Omit<AuthFieldBaseProps, 'onChange'> & {
+  onChange: ChangeEventHandler<HTMLTextAreaElement>;
 };
 
 export type PasswordFieldProps = AuthFieldBaseProps & {

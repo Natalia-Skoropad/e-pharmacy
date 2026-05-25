@@ -2,26 +2,8 @@
 
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  Clock,
-  Copy,
-  CreditCard,
-  Info,
-  Mail,
-  ShieldAlert,
-  MapPin,
-  Phone,
-  Truck,
-  Wallet,
-} from 'lucide-react';
 
-import {
-  Button,
-  ButtonLink,
-  Container,
-  LoadingSpinner,
-  RadioOption,
-} from '@/components/common';
+import { ButtonLink, Container, LoadingSpinner } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useAuth } from '@/providers';
 
@@ -41,26 +23,31 @@ import {
 } from '@/lib/validations';
 
 import { checkoutOrder, getCart, getStoreDetails } from '@/services';
-import { formatPrice } from '@/lib/formatters';
 import { dispatchCartUpdated } from '@/lib/cart-events';
 import { buildCustomerOrderPath } from '@/lib/orders';
 
+import CheckoutDeliveryMethod from '../CheckoutDeliveryMethod';
+import CheckoutInvoicePanel from '../CheckoutInvoicePanel';
+import CheckoutPaymentMethod from '../CheckoutPaymentMethod';
+import {
+  getStockValidationError,
+  getStoreAddress,
+  getStoreBankDetails,
+  getStoreEmail,
+  getStorePhone,
+  getStoreWorkingHours,
+  groupCartByStore,
+} from '@/lib/checkout';
+
 import type { BreadcrumbItem, Cart, Store } from '@/types';
+import type {
+  CheckoutDeliveryMethod as DeliveryMethod,
+  CheckoutPaymentMethod as PaymentMethod,
+} from '@/types/checkout';
 
 import css from './CheckoutPageContent.module.css';
 
 //===================================================================
-
-type PaymentMethod = 'cash' | 'bank-transfer';
-type DeliveryMethod = 'pickup' | 'post';
-
-type StoreOrderGroup = {
-  storeId: string;
-  storeName: string;
-  items: Cart['items'];
-  totalItems: number;
-  totalPrice: number;
-};
 
 type CheckoutPageContentProps = {
   checkoutStoreId?: string;
@@ -79,76 +66,6 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
   { label: 'Cart', href: ROUTES.CART },
   { label: CHECKOUT_TITLE },
 ];
-
-//===================================================================
-
-function groupCartByStore(cart: Cart): StoreOrderGroup[] {
-  const groups = new Map<string, StoreOrderGroup>();
-
-  for (const item of cart.items) {
-    const storeName = item.storeName || item.product.storeName || 'Pharmacy';
-    const group = groups.get(item.storeId);
-
-    if (group) {
-      group.items.push(item);
-      group.totalItems += item.quantity;
-      group.totalPrice += item.totalPrice;
-      continue;
-    }
-
-    groups.set(item.storeId, {
-      storeId: item.storeId,
-      storeName,
-      items: [item],
-      totalItems: item.quantity,
-      totalPrice: item.totalPrice,
-    });
-  }
-
-  return [...groups.values()];
-}
-
-function getStoreEmail(store?: Store | null): string {
-  return store?.email?.trim() ?? '';
-}
-
-function getStorePhone(store?: Store | null): string {
-  return store?.phone?.trim() ?? '';
-}
-
-function getStoreWorkingHours(store?: Store | null): string {
-  return store?.workingHours?.trim() ?? '';
-}
-
-function getStoreAddress(store?: Store | null): string {
-  if (!store) return '';
-
-  return [store.address, store.city]
-    .map((part) => part?.trim())
-    .filter(Boolean)
-    .join(', ');
-}
-
-function getStoreBankDetails(store?: Store | null): Store['bankDetails'] | null {
-  return store?.bankDetails ?? null;
-}
-
-function getStockValidationError(group: StoreOrderGroup): string {
-  const unavailableItems = group.items.filter(
-    (item) => item.stockQuantity <= 0 || item.quantity > item.stockQuantity
-  );
-
-  if (unavailableItems.length === 0) return '';
-
-  const productNames = unavailableItems
-    .map((item) => item.product.name)
-    .slice(0, 3)
-    .join(', ');
-
-  return `Sorry, we cannot confirm this invoice right now. While you were placing the order, ${productNames} ${
-    unavailableItems.length === 1 ? 'was' : 'were'
-  } reserved by another customer. Please update the cart and choose the available quantity again.`;
-}
 
 //===================================================================
 
@@ -374,16 +291,6 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     }
   };
 
-  const nonReturnableNotice = (
-    <div className={css.policyNotice}>
-      <ShieldAlert size={20} aria-hidden="true" />
-      <p>
-        Medicines and pharmacy products are non-returnable and non-exchangeable
-        after confirmation. Please check the invoice carefully before payment.
-      </p>
-    </div>
-  );
-
   return (
     <main className={css.page}>
       <section className={css.section} aria-labelledby="checkout-title">
@@ -409,364 +316,112 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
             </div>
           ) : null}
 
-          {!isLoading && cart.items.length === 0 ? (
-            <div className={css.empty}>
-              <h2 className={css.emptyTitle}>Your cart is empty</h2>
-              <p className={css.emptyText}>
-                Add medicines first, then checkout will form pharmacy invoices.
-              </p>
-              <div className={css.successActions}>
-                <ButtonLink href={ROUTES.CART} variant="secondary">
-                  Back to cart
-                </ButtonLink>
-
-                <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
-                  Browse medicines
-                </ButtonLink>
-              </div>
-            </div>
-          ) : null}
+          {!isLoading && cart.items.length === 0 ? <CheckoutEmptyState /> : null}
 
           {selectedOrderGroup ? (
             <div className={css.grid}>
               <div className={css.leftColumn}>
-                <section className={css.card} aria-labelledby="delivery-title">
-                  <h2 className={css.cardTitle} id="delivery-title">
-                    Delivery method
-                  </h2>
+                <CheckoutDeliveryMethod
+                  deliveryMethod={deliveryMethod}
+                  recipientNameValue={recipientNameValue}
+                  recipientPhoneValue={recipientPhoneValue}
+                  deliveryAddressValue={deliveryAddressValue}
+                  nameError={nameError}
+                  phoneError={phoneError}
+                  addressError={addressError}
+                  isStoreLoading={isStoreLoading}
+                  hasStoreContactDetails={hasStoreContactDetails}
+                  storePhone={storePhone}
+                  storeWorkingHours={storeWorkingHours}
+                  storeAddress={storeAddress}
+                  onDeliveryMethodChange={setDeliveryMethod}
+                  onRecipientNameChange={handleRecipientNameChange}
+                  onRecipientPhoneChange={handleRecipientPhoneChange}
+                  onDeliveryAddressChange={handleDeliveryAddressChange}
+                />
 
-                  <div className={css.choiceGrid}>
-                    <div className={css.optionsGrid}>
-                      <RadioOption
-                        name="delivery"
-                        value="pickup"
-                        checked={deliveryMethod === 'pickup'}
-                        label="Pickup from pharmacy"
-                        onChange={setDeliveryMethod}
-                      />
+                <CheckoutPaymentMethod
+                  paymentMethod={paymentMethod}
+                  bankDetails={bankDetails}
+                  storeEmail={storeEmail}
+                  copiedEmail={copiedEmail}
+                  onPaymentMethodChange={setPaymentMethod}
+                  onCopyEmail={() => void handleCopyEmail()}
+                />
 
-                      <RadioOption
-                        name="delivery"
-                        value="post"
-                        checked={deliveryMethod === 'post'}
-                        label="Post delivery"
-                        onChange={setDeliveryMethod}
-                      />
-                    </div>
-
-                    <div className={css.detailsPanel}>
-                      {deliveryMethod === 'pickup' ? (
-                        <div className={css.infoCard}>
-                          <h3 className={css.infoTitle}>Pharmacy details</h3>
-                          {isStoreLoading ? (
-                            <p className={css.mutedText}>
-                              Loading pharmacy details...
-                            </p>
-                          ) : null}
-                          {hasStoreContactDetails ? (
-                            <ul className={css.iconList}>
-                              {storePhone ? (
-                                <li>
-                                  <Phone size={18} aria-hidden="true" />
-                                  <a href={`tel:${storePhone}`}>{storePhone}</a>
-                                </li>
-                              ) : null}
-
-                              {storeWorkingHours ? (
-                                <li>
-                                  <Clock size={18} aria-hidden="true" />
-                                  <span>{storeWorkingHours}</span>
-                                </li>
-                              ) : null}
-
-                              {storeAddress ? (
-                                <li>
-                                  <MapPin size={18} aria-hidden="true" />
-                                  <span>{storeAddress}</span>
-                                </li>
-                              ) : null}
-                            </ul>
-                          ) : null}
-
-                          {!isStoreLoading && !hasStoreContactDetails ? (
-                            <p className={css.mutedText}>
-                              Pharmacy contact details are unavailable right
-                              now.
-                            </p>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <div className={css.deliveryFields}>
-                          <div className={css.fieldsGrid}>
-                            <label className={css.field}>
-                              <span className={css.fieldLabel}>Name</span>
-                              <span className={css.controlWrap}>
-                                <input
-                                  value={recipientNameValue}
-                                  placeholder="Your name"
-                                  autoComplete="name"
-                                  maxLength={CUSTOMER_NAME_MAX_LENGTH}
-                                  aria-invalid={Boolean(nameError)}
-                                  aria-describedby="recipient-name-error"
-                                  onChange={handleRecipientNameChange}
-                                />
-                                <span className={css.inputCounter}>
-                                  {recipientNameValue.length}/
-                                  {CUSTOMER_NAME_MAX_LENGTH}
-                                </span>
-                                <span
-                                  className={css.errorText}
-                                  id="recipient-name-error"
-                                  aria-live="polite"
-                                >
-                                  {nameError}
-                                </span>
-                              </span>
-                            </label>
-
-                            <label className={css.field}>
-                              <span className={css.fieldLabel}>Phone</span>
-                              <span className={css.controlWrap}>
-                                <input
-                                  value={recipientPhoneValue}
-                                  placeholder="+380..."
-                                  autoComplete="tel"
-                                  maxLength={CUSTOMER_PHONE_MAX_LENGTH}
-                                  aria-invalid={Boolean(phoneError)}
-                                  aria-describedby="recipient-phone-error"
-                                  onChange={handleRecipientPhoneChange}
-                                />
-                                <span className={css.inputCounter}>
-                                  {recipientPhoneValue.length}/
-                                  {CUSTOMER_PHONE_MAX_LENGTH}
-                                </span>
-                                <span
-                                  className={css.errorText}
-                                  id="recipient-phone-error"
-                                  aria-live="polite"
-                                >
-                                  {phoneError}
-                                </span>
-                              </span>
-                            </label>
-
-                            <label className={css.fieldWide}>
-                              <span className={css.fieldLabel}>
-                                Delivery address / post office
-                              </span>
-                              <span className={css.controlWrap}>
-                                <textarea
-                                  value={deliveryAddressValue}
-                                  placeholder="Example: 12 Central Street, Nova Poshta office #5, Kyiv"
-                                  autoComplete="street-address"
-                                  maxLength={CUSTOMER_ADDRESS_MAX_LENGTH}
-                                  aria-invalid={Boolean(addressError)}
-                                  aria-describedby="delivery-address-error"
-                                  onChange={handleDeliveryAddressChange}
-                                />
-                                <span className={css.textareaCounter}>
-                                  {deliveryAddressValue.length}/
-                                  {CUSTOMER_ADDRESS_MAX_LENGTH}
-                                </span>
-                                <span
-                                  className={css.errorTextTextarea}
-                                  id="delivery-address-error"
-                                  aria-live="polite"
-                                >
-                                  {addressError}
-                                </span>
-                              </span>
-                            </label>
-                          </div>
-
-                          <div className={css.deliveryNotes}>
-                            <div className={css.noteCard}>
-                              <Truck size={18} aria-hidden="true" />
-                              <p>
-                                After confirmation, the pharmacy will contact
-                                you to confirm or clarify the delivery address.
-                              </p>
-                            </div>
-
-                            <div className={css.noteCardAccent}>
-                              <Info size={18} aria-hidden="true" />
-                              <p>
-                                Delivery is not included in the product price.
-                                The carrier will announce the delivery cost
-                                separately.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </section>
-
-                <section className={css.card} aria-labelledby="payment-title">
-                  <h2 className={css.cardTitle} id="payment-title">
-                    Payment method
-                  </h2>
-
-                  <div className={css.choiceGrid}>
-                    <div className={css.optionsGrid}>
-                      <RadioOption
-                        name="payment"
-                        value="cash"
-                        checked={paymentMethod === 'cash'}
-                        label="Cash on pickup / delivery"
-                        onChange={setPaymentMethod}
-                      />
-
-                      <RadioOption
-                        name="payment"
-                        value="bank-transfer"
-                        checked={paymentMethod === 'bank-transfer'}
-                        label="Bank transfer"
-                        disabled={!bankDetails}
-                        onChange={setPaymentMethod}
-                      />
-                    </div>
-
-                    <div className={css.detailsPanel}>
-                      {paymentMethod === 'cash' ? (
-                        <div className={css.infoCard}>
-                          <Wallet size={20} aria-hidden="true" />
-                          <h3 className={css.infoTitle}>
-                            Pay when everything is ready
-                          </h3>
-                          <p className={css.mutedText}>
-                            Cash is paid during pickup or delivery. Please keep
-                            the invoice amount ready when you receive the order.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className={css.bankCard}>
-                          <CreditCard size={20} aria-hidden="true" />
-                          <h3 className={css.infoTitle}>Bank details</h3>
-
-                          {bankDetails ? (
-                            <dl className={css.bankList}>
-                              <div>
-                                <dt>Recipient</dt>
-                                <dd>{bankDetails.recipientName}</dd>
-                              </div>
-                              <div>
-                                <dt>EDRPOU / Tax ID</dt>
-                                <dd>{bankDetails.taxId}</dd>
-                              </div>
-                              <div>
-                                <dt>IBAN</dt>
-                                <dd>{bankDetails.iban}</dd>
-                              </div>
-                              <div>
-                                <dt>Bank</dt>
-                                <dd>{bankDetails.bankName}</dd>
-                              </div>
-                              <div>
-                                <dt>Payment purpose</dt>
-                                <dd>{bankDetails.paymentPurpose}</dd>
-                              </div>
-                            </dl>
-                          ) : (
-                            <p className={css.mutedText}>
-                              Bank transfer is unavailable because the pharmacy
-                              has not provided bank details yet.
-                            </p>
-                          )}
-
-                          {bankDetails && storeEmail ? (
-                            <div className={css.emailNote}>
-                              <Mail size={18} aria-hidden="true" />
-                              <p>
-                                After payment, send the receipt to the pharmacy
-                                email for faster processing.
-                              </p>
-                              <button
-                                className={css.copyButton}
-                                type="button"
-                                onClick={() => void handleCopyEmail()}
-                              >
-                                <span>{storeEmail}</span>
-                                <Copy size={16} aria-hidden="true" />
-                              </button>
-                              {copiedEmail ? (
-                                <span className={css.copiedText}>Copied</span>
-                              ) : null}
-                            </div>
-                          ) : null}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </section>
-
-                <section className={css.card} aria-labelledby="comment-title">
-                  <h2 className={css.cardTitle} id="comment-title">
-                    Order comment
-                  </h2>
-                  <label className={css.fieldWide}>
-                    <span className={css.fieldLabel}>Comment for pharmacy</span>
-                    <span className={css.controlWrap}>
-                      <textarea
-                        className={css.commentTextarea}
-                        value={comment}
-                        maxLength={500}
-                        placeholder="Add details for the pharmacy if needed"
-                        onChange={(event) => setComment(event.target.value)}
-                      />
-                      <span className={css.textareaCounter}>
-                        {comment.length}/500
-                      </span>
-                    </span>
-                  </label>
-                </section>
+                <OrderCommentCard value={comment} onChange={setComment} />
               </div>
 
-              <aside className={css.summary} aria-labelledby="summary-title">
-                <h2 className={css.cardTitle} id="summary-title">
-                  Pharmacy invoice
-                </h2>
-
-                <ul className={css.invoiceList}>
-                  {[selectedOrderGroup].map((group) => (
-                    <li className={css.invoiceCard} key={group.storeId}>
-                      <h3>{group.storeName}</h3>
-                      <p>{group.totalItems} items</p>
-                      <p className={css.invoiceTotal}>
-                        {formatPrice(group.totalPrice)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-
-                {nonReturnableNotice}
-
-                <dl className={css.totalList}>
-                  <div>
-                    <dt>Total items</dt>
-                    <dd>{selectedOrderGroup.totalItems}</dd>
-                  </div>
-                  <div>
-                    <dt>Total</dt>
-                    <dd>{formatPrice(selectedOrderGroup.totalPrice)}</dd>
-                  </div>
-                </dl>
-
-                <Button
-                  type="button"
-                  fullWidth
-                  disabled={!canSubmit}
-                  onClick={() => void handleSubmit()}
-                >
-                  {isSubmitting ? 'Confirming...' : 'Confirm invoice'}
-                </Button>
-              </aside>
+              <CheckoutInvoicePanel
+                orderGroup={selectedOrderGroup}
+                canSubmit={canSubmit}
+                isSubmitting={isSubmitting}
+                onSubmit={() => void handleSubmit()}
+              />
             </div>
           ) : null}
         </Container>
       </section>
     </main>
+  );
+}
+
+
+//===================================================================
+
+const COMMENT_MAX_LENGTH = 500;
+
+function CheckoutEmptyState() {
+  return (
+    <div className={css.empty}>
+      <h2 className={css.emptyTitle}>Your cart is empty</h2>
+      <p className={css.emptyText}>
+        Add medicines first, then checkout will form pharmacy invoices.
+      </p>
+      <div className={css.emptyActions}>
+        <ButtonLink href={ROUTES.CART} variant="secondary">
+          Back to cart
+        </ButtonLink>
+
+        <ButtonLink href={ROUTES.MEDICINES_CATALOG}>Browse medicines</ButtonLink>
+      </div>
+    </div>
+  );
+}
+
+//===================================================================
+
+type OrderCommentCardProps = {
+  value: string;
+  onChange: (value: string) => void;
+};
+
+function OrderCommentCard({ value, onChange }: OrderCommentCardProps) {
+  const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(event.target.value);
+  };
+
+  return (
+    <section className={css.card} aria-labelledby="comment-title">
+      <h2 className={css.cardTitle} id="comment-title">
+        Order comment
+      </h2>
+      <label className={css.commentField}>
+        <span className={css.commentLabel}>Comment for pharmacy</span>
+        <span className={css.commentControlWrap}>
+          <textarea
+            className={css.commentTextarea}
+            value={value}
+            maxLength={COMMENT_MAX_LENGTH}
+            placeholder="Add details for the pharmacy if needed"
+            onChange={handleChange}
+          />
+          <span className={css.commentCounter}>
+            {value.length}/{COMMENT_MAX_LENGTH}
+          </span>
+        </span>
+      </label>
+    </section>
   );
 }
 

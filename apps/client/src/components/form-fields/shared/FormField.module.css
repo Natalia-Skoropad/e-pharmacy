@@ -30,7 +30,8 @@
   position: relative;
 }
 
-.input {
+.input,
+.textarea {
   width: 100%;
   min-height: 48px;
   padding: 12px 74px 12px 16px;
@@ -46,32 +47,46 @@
     box-shadow var(--transition-base);
 }
 
-.input::placeholder {
+.textarea {
+  min-height: 150px;
+  padding-right: 18px;
+  padding-bottom: 34px;
+  resize: none;
+}
+
+.input::placeholder,
+.textarea::placeholder {
   color: var(--color-text-muted);
 }
 
 .input:hover,
-.input:focus {
+.input:focus,
+.textarea:hover,
+.textarea:focus {
   border-color: var(--color-accent);
 }
 
-.input:focus {
+.input:focus,
+.textarea:focus {
   box-shadow: 0 0 0 4px var(--color-accent-shadow);
 }
 
-.input[aria-invalid='true'] {
+.input[aria-invalid='true'],
+.textarea[aria-invalid='true'] {
   color: var(--color-text-primary);
   background-color: var(--color-surface);
   border-color: var(--color-error);
   box-shadow: none;
 }
 
-.input[aria-invalid='true']:focus {
+.input[aria-invalid='true']:focus,
+.textarea[aria-invalid='true']:focus {
   box-shadow: 0 0 0 4px var(--color-error-shadow);
 }
 
 .inputCounter,
-.passwordCounter {
+.passwordCounter,
+.textareaCounter {
   position: absolute;
   top: 50%;
   right: 16px;
@@ -84,6 +99,12 @@
 
 .passwordCounter {
   right: 46px;
+}
+
+.textareaCounter {
+  top: auto;
+  bottom: 12px;
+  transform: none;
 }
 
 .eyeButton {
@@ -111,7 +132,7 @@
 .error {
   position: absolute;
   left: 16px;
-  bottom: 2;
+  bottom: 2px;
   z-index: 2;
   max-width: calc(100% - 32px);
   padding-inline: 8px;

@@ -2,4 +2,3 @@ export { default as CartItemCard } from './CartItemCard';
 export { default as ContinueShoppingModal } from './ContinueShoppingModal';
 export { default as CartPageContent } from './CartPageContent';
 export { default as CartSummary } from './CartSummary';
-export { default as CartInvoiceLimitModal } from './CartInvoiceLimitModal';

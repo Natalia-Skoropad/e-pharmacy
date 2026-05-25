@@ -32,3 +32,4 @@ export * from './RadioOption';
 export { default as ConfirmActionModal } from './ConfirmActionModal';
 
 export { ModalBase, ModalRoot } from '@/components/modals';
+export { default as CartInvoiceLimitModal } from './CartInvoiceLimitModal';

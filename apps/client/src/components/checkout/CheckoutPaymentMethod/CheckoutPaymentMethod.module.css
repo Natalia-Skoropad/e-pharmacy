@@ -1,0 +1,147 @@
+.card {
+  padding: 20px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.title {
+  margin-bottom: 18px;
+  font-size: var(--fz-24);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.choiceGrid,
+.optionsGrid,
+.bankList {
+  display: grid;
+  gap: 12px;
+}
+
+.detailsPanel {
+  min-width: 0;
+}
+
+.infoCard,
+.bankCard {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.infoCard > svg,
+.bankCard > svg {
+  color: var(--color-accent);
+}
+
+.infoTitle {
+  font-size: var(--fz-16);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.mutedText {
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.bankList {
+  gap: 10px;
+}
+
+.bankList div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.bankList dt {
+  color: var(--color-text-secondary);
+}
+
+.bankList dd {
+  max-width: 62%;
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.emailNote {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.emailNote svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--color-accent);
+}
+
+.emailNote p,
+.emailNote .copyButton,
+.emailNote .copiedText {
+  grid-column: 2;
+}
+
+.copyButton {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-self: start;
+  max-width: 100%;
+  padding: 8px 10px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  color: var(--color-accent);
+  cursor: pointer;
+  background-color: rgba(89, 177, 122, 0.1);
+  border: 1px solid rgba(89, 177, 122, 0.18);
+  border-radius: var(--radius-md);
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.copyButton:hover,
+.copyButton:focus-visible {
+  background-color: rgba(89, 177, 122, 0.16);
+  border-color: rgba(89, 177, 122, 0.35);
+}
+
+.copyButton span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copiedText {
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  color: var(--color-accent);
+}
+
+@media only screen and (min-width: 1440px) {
+  .choiceGrid {
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .optionsGrid {
+    max-width: 340px;
+  }
+}

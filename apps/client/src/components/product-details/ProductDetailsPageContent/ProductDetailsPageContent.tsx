@@ -26,7 +26,7 @@ import {
   type TabItem,
 } from '@/components/common';
 
-import { CartInvoiceLimitModal } from '@/components/cart';
+import { CartInvoiceLimitModal } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useAuth } from '@/providers';
 

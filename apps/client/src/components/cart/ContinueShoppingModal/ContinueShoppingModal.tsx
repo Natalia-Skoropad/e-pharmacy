@@ -10,13 +10,13 @@ import {
   SearchInput,
   ShimmerImage,
   SvgIcon,
+  CartInvoiceLimitModal,
 } from '@/components/common';
 
-import CartInvoiceLimitModal from '../CartInvoiceLimitModal';
 import { ModalBase, ModalRoot } from '@/components/modals';
 import { addCartItem, getProducts } from '@/services';
 import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
-import { formatPrice } from '@/lib/formatters';
+import { formatPrice, formatStockLabel } from '@/lib/formatters';
 
 import type { Cart, Product, ProductCategory } from '@/types';
 
@@ -73,12 +73,6 @@ function getUniqueCategoryOptions(products: Product[]): CategoryOption[] {
       label: CATEGORY_LABELS[category] ?? category,
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
-}
-
-function formatProductsCount(total: number): string {
-  return total === 1
-    ? '1 available product in this pharmacy'
-    : `${total} available products in this pharmacy`;
 }
 
 //===================================================================
@@ -243,7 +237,7 @@ function ContinueShoppingModal({
           />
 
           <p className={css.availableCount}>
-            {formatProductsCount(availableProductsCount)}
+            {formatStockLabel(availableProductsCount)}
           </p>
         </div>
 
