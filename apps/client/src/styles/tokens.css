@@ -13,12 +13,20 @@
   --color-accent: #59b17a;
   --color-accent-hover: #3f945f;
   --color-accent-light: #eaf7ef;
+  --color-accent-shadow: rgba(89, 177, 122, 0.16);
 
   --color-border: rgba(29, 30, 33, 0.1);
   --color-overlay: rgba(29, 30, 33, 0.4);
 
   --color-error: #d32f2f;
+  --color-error-soft: rgba(211, 47, 47, 0.08);
+  --color-error-border: rgba(211, 47, 47, 0.18);
+  --color-error-shadow: rgba(255, 83, 83, 0.12);
+
   --color-success: #2e7d32;
+  --color-success-soft: rgba(89, 177, 122, 0.1);
+  --color-success-border: rgba(89, 177, 122, 0.18);
+
   --color-warning: #f59e0b;
 
   /* Typography */

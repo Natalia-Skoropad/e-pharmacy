@@ -9,14 +9,14 @@ import {
   NameInput,
   PasswordInput,
   PhoneInput,
-  AuthFieldsGroup,
-} from '@/components/auth/AuthFields';
+} from '@/components/form-fields';
 import { useAuth } from '@/providers';
 import { useToast } from '@/hooks';
 
 import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
 import { getSafeRedirectPath } from '@/lib/routes';
+
 import {
   REGISTER_INITIAL_VALUES,
   sanitizeCustomerName,
@@ -27,7 +27,7 @@ import {
   type RegisterFormValues,
 } from '@/lib/validations/auth-validation';
 
-import css from '../LoginForm/LoginForm.module.css';
+import css from '../shared/AuthForm.module.css';
 
 //===================================================================
 
@@ -85,7 +85,12 @@ function RegisterForm() {
     const nextErrors = validateRegisterForm(values);
 
     if (Object.keys(nextErrors).length > 0) {
-      setTouchedFields({ name: true, email: true, phone: true, password: true });
+      setTouchedFields({
+        name: true,
+        email: true,
+        phone: true,
+        password: true,
+      });
       setErrors(nextErrors);
       return;
     }
@@ -110,7 +115,7 @@ function RegisterForm() {
 
   return (
     <form className={css.form} noValidate onSubmit={handleSubmit}>
-      <AuthFieldsGroup>
+      <div className={css.fields}>
         <NameInput
           id="register-name"
           name="name"
@@ -150,7 +155,7 @@ function RegisterForm() {
           onChange={handleChange('password')}
           onToggleVisibility={() => setIsPasswordVisible((prev) => !prev)}
         />
-      </AuthFieldsGroup>
+      </div>
 
       <Button
         type="submit"

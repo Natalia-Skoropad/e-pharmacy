@@ -5,11 +5,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Button, TextActionButton } from '@/components/common';
 
-import {
-  AuthFieldsGroup,
-  EmailInput,
-  PasswordInput,
-} from '@/components/auth/AuthFields';
+import { EmailInput, PasswordInput } from '@/components/form-fields';
 
 import { useAuth } from '@/providers';
 import { useToast } from '@/hooks';
@@ -17,6 +13,7 @@ import { useToast } from '@/hooks';
 import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
 import { getSafeRedirectPath } from '@/lib/routes';
+
 import {
   LOGIN_INITIAL_VALUES,
   sanitizeEmail,
@@ -25,7 +22,7 @@ import {
   type LoginFormValues,
 } from '@/lib/validations/auth-validation';
 
-import css from './LoginForm.module.css';
+import css from '../shared/AuthForm.module.css';
 
 //===================================================================
 
@@ -98,7 +95,7 @@ function LoginForm() {
 
   return (
     <form className={css.form} noValidate onSubmit={handleSubmit}>
-      <AuthFieldsGroup>
+      <div className={css.fields}>
         <EmailInput
           id="login-email"
           name="email"
@@ -124,7 +121,7 @@ function LoginForm() {
           onChange={handleChange('password')}
           onToggleVisibility={() => setIsPasswordVisible((prev) => !prev)}
         />
-      </AuthFieldsGroup>
+      </div>
 
       <Button
         type="submit"

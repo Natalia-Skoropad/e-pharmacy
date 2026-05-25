@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import css from './AuthField.module.css';
+import css from './FormField.module.css';
 
 //===================================================================
 

@@ -1,12 +1,12 @@
-import { EMAIL_MAX_LENGTH } from '@/lib/validations/auth-validation';
+import { CUSTOMER_NAME_MAX_LENGTH } from '@/lib/validations/auth-validation';
 
-import AuthFieldLayout from './AuthFieldLayout';
-import type { AuthFieldBaseProps } from './types';
-import css from './AuthField.module.css';
+import AuthFieldLayout from '../shared/FormFieldLayout';
+import type { AuthFieldBaseProps } from '@/types/form-fields';
+import css from '../shared/FormField.module.css';
 
 //===================================================================
 
-function EmailInput({
+function NameInput({
   id,
   name,
   value,
@@ -18,7 +18,7 @@ function EmailInput({
   return (
     <AuthFieldLayout
       id={id}
-      label="Email"
+      label="Name"
       required={required}
       error={error}
       isTouched={isTouched}
@@ -28,21 +28,21 @@ function EmailInput({
           className={css.input}
           id={id}
           name={name}
-          type="email"
+          type="text"
           value={value}
-          placeholder="example@mail.com"
-          autoComplete="email"
-          maxLength={EMAIL_MAX_LENGTH}
+          placeholder="Your name"
+          autoComplete="name"
+          maxLength={CUSTOMER_NAME_MAX_LENGTH}
           aria-invalid={Boolean(isTouched && error)}
           aria-describedby={`${id}-error`}
           onChange={onChange}
         />
         <span className={css.inputCounter} aria-hidden="true">
-          {value.length}/{EMAIL_MAX_LENGTH}
+          {value.length}/{CUSTOMER_NAME_MAX_LENGTH}
         </span>
       </div>
     </AuthFieldLayout>
   );
 }
 
-export default EmailInput;
+export default NameInput;

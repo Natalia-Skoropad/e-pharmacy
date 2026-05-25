@@ -4,21 +4,23 @@ import { useRouter } from 'next/navigation';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Button, TextActionButton } from '@/components/common';
-import { AuthFieldsGroup, PasswordInput } from '@/components/auth/AuthFields';
+import { PasswordInput } from '@/components/form-fields';
 import { useAuth } from '@/providers';
 import { useToast } from '@/hooks';
 
 import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
+
 import {
   RESET_PASSWORD_INITIAL_VALUES,
   validateResetPasswordForm,
   type ResetPasswordFormErrors,
   type ResetPasswordFormValues,
 } from '@/lib/validations/auth-validation';
+
 import { resetPassword } from '@/services';
 
-import css from '../LoginForm/LoginForm.module.css';
+import css from '../shared/AuthForm.module.css';
 
 //===================================================================
 
@@ -126,7 +128,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         </p>
       ) : null}
 
-      <AuthFieldsGroup>
+      <div className={css.fields}>
         <PasswordInput
           id="reset-password"
           name="password"
@@ -156,7 +158,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             setIsConfirmPasswordVisible((prev) => !prev)
           }
         />
-      </AuthFieldsGroup>
+      </div>
 
       <Button
         type="submit"
