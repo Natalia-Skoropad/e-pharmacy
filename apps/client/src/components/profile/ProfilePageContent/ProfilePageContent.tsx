@@ -21,6 +21,7 @@ import { useAuth } from '@/providers';
 
 import { PROFILE_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
+import { formatPrice } from '@/lib/formatters';
 import { createBreadcrumbs } from '@/lib/routes';
 import {
   CUSTOMER_ADDRESS_MAX_LENGTH,
@@ -97,24 +98,12 @@ function formatUserStatus(status: string): string {
 
 //===================================================================
 
-//===================================================================
-
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat('en-GB', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
   }).format(new Date(value));
-}
-
-//===================================================================
-
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat('uk-UA', {
-    style: 'currency',
-    currency: 'UAH',
-    maximumFractionDigits: 0,
-  }).format(price);
 }
 
 //===================================================================
@@ -206,8 +195,6 @@ function getProfileErrors(values: ProfileFormValues) {
 
   return errors;
 }
-
-//===================================================================
 
 //===================================================================
 

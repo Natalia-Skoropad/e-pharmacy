@@ -24,6 +24,7 @@ import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useAuth } from '@/providers';
 
 import { ROUTES } from '@/lib/constants/routes';
+import { formatPrice } from '@/lib/formatters';
 import { buildProductPath, buildStorePath } from '@/lib/routes';
 import { getOrderIdFromPathParam } from '@/lib/orders';
 import { getOrderDetails } from '@/services';
@@ -37,16 +38,6 @@ import css from './OrderDetailsPageContent.module.css';
 type OrderDetailsPageContentProps = {
   orderId: string;
 };
-
-//===================================================================
-
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat('uk-UA', {
-    style: 'currency',
-    currency: 'UAH',
-    maximumFractionDigits: 0,
-  }).format(price);
-}
 
 //===================================================================
 

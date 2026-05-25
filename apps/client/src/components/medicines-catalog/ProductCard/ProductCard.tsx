@@ -12,6 +12,7 @@ import {
 import { useAuth } from '@/providers';
 import { useToast } from '@/hooks';
 
+import { formatPrice } from '@/lib/formatters';
 import { buildProductPath } from '@/lib/routes';
 
 import { getProductDetails, toggleFavoriteProduct } from '@/services';
@@ -40,12 +41,6 @@ const CATEGORY_LABELS: Record<Product['category'], string> = {
 };
 
 //===================================================================
-
-function formatPrice(price: number): string {
-  return `${new Intl.NumberFormat('uk-UA', {
-    maximumFractionDigits: 0,
-  }).format(price)} грн`;
-}
 
 function formatPriceRange(offers: ProductOffer[]): string {
   const availableOffers = offers.filter(

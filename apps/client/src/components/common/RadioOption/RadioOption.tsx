@@ -11,6 +11,7 @@ type RadioOptionProps<TValue extends string> = {
   label: string;
   onChange: (value: TValue) => void;
   className?: string;
+  disabled?: boolean;
 };
 
 //===================================================================
@@ -22,15 +23,17 @@ function RadioOption<TValue extends string>({
   label,
   onChange,
   className,
+  disabled = false,
 }: RadioOptionProps<TValue>) {
   return (
-    <label className={clsx(css.option, className)}>
+    <label className={clsx(css.option, disabled && css.optionDisabled, className)}>
       <input
         className={css.input}
         type="radio"
         name={name}
         value={value}
         checked={checked}
+        disabled={disabled}
         onChange={() => onChange(value)}
       />
       <span className={css.control} aria-hidden="true" />

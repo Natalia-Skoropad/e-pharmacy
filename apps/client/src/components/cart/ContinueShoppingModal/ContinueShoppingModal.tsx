@@ -6,16 +6,17 @@ import { ShoppingCart } from 'lucide-react';
 import {
   Button,
   CloseIconButton,
-  ConfirmActionModal,
   LoadingSpinner,
   SearchInput,
   ShimmerImage,
   SvgIcon,
 } from '@/components/common';
 
+import CartInvoiceLimitModal from '../CartInvoiceLimitModal';
 import { ModalBase, ModalRoot } from '@/components/modals';
-import { ApiError } from '@/lib/api';
 import { addCartItem, getProducts } from '@/services';
+import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
+import { formatPrice } from '@/lib/formatters';
 
 import type { Cart, Product, ProductCategory } from '@/types';
 
@@ -52,14 +53,6 @@ const PRODUCTS_LIMIT = 150;
 const CATEGORY_PRODUCTS_LIMIT = 200;
 
 //===================================================================
-
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat('uk-UA', {
-    style: 'currency',
-    currency: 'UAH',
-    maximumFractionDigits: 2,
-  }).format(price);
-}
 
 function getStoreProductPrice(product: Product, storeId: string): number {
   const storeOffer = product.offers?.find((offer) => offer.storeId === storeId);
@@ -210,16 +203,10 @@ function ContinueShoppingModal({
 
       onCartChange(response.cart);
     } catch (error) {
-      if (error instanceof ApiError && error.message.includes('15 invoices')) {
-        setInvoiceLimitMessage(
-          'You cannot add more than 15 invoices to your cart. Please confirm the previous ones to continue shopping'
-        );
+      if (isCartInvoiceLimitError(error)) {
+        setInvoiceLimitMessage('limit');
       } else {
-        setError(
-          error instanceof ApiError
-            ? error.message
-            : 'Could not add this product to the invoice.'
-        );
+        setError('Could not add this product to the invoice.');
       }
     } finally {
       setIsAddingProductId(null);
@@ -375,14 +362,7 @@ function ContinueShoppingModal({
       </ModalBase>
 
       {invoiceLimitMessage ? (
-        <ConfirmActionModal
-          title="Cart invoice limit"
-          text={invoiceLimitMessage}
-          confirmLabel="Got it"
-          cancelLabel="Close"
-          onConfirm={() => setInvoiceLimitMessage('')}
-          onCancel={() => setInvoiceLimitMessage('')}
-        />
+        <CartInvoiceLimitModal onClose={() => setInvoiceLimitMessage('')} />
       ) : null}
     </ModalRoot>
   );

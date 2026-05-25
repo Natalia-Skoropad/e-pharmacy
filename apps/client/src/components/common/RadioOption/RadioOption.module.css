@@ -79,3 +79,14 @@
   line-height: 1.4;
   color: var(--color-text-primary);
 }
+
+
+.optionDisabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.optionDisabled:hover {
+  background-color: var(--color-background);
+  border-color: var(--color-border);
+}

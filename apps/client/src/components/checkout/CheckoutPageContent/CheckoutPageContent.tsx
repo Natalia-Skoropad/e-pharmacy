@@ -41,6 +41,7 @@ import {
 } from '@/lib/validations';
 
 import { checkoutOrder, getCart, getStoreDetails } from '@/services';
+import { formatPrice } from '@/lib/formatters';
 import { dispatchCartUpdated } from '@/lib/cart-events';
 import { buildCustomerOrderPath } from '@/lib/orders';
 
@@ -65,8 +66,6 @@ type CheckoutPageContentProps = {
   checkoutStoreId?: string;
 };
 
-type CheckoutBankDetails = NonNullable<Store['bankDetails']>;
-
 //===================================================================
 
 const EMPTY_CART: Cart = {
@@ -82,14 +81,6 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
 ];
 
 //===================================================================
-
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat('uk-UA', {
-    style: 'currency',
-    currency: 'UAH',
-    maximumFractionDigits: 0,
-  }).format(price);
-}
 
 function groupCartByStore(cart: Cart): StoreOrderGroup[] {
   const groups = new Map<string, StoreOrderGroup>();
@@ -118,33 +109,28 @@ function groupCartByStore(cart: Cart): StoreOrderGroup[] {
 }
 
 function getStoreEmail(store?: Store | null): string {
-  return store?.email ?? 'pharmacy@example.com';
+  return store?.email?.trim() ?? '';
 }
 
 function getStorePhone(store?: Store | null): string {
-  return store?.phone ?? '+380 50 100 00 00';
+  return store?.phone?.trim() ?? '';
 }
 
 function getStoreWorkingHours(store?: Store | null): string {
-  return store?.workingHours ?? 'Mon–Fri 08:00–21:00, Sat–Sun 09:00–18:00';
+  return store?.workingHours?.trim() ?? '';
 }
 
 function getStoreAddress(store?: Store | null): string {
-  if (!store) return 'Address will be confirmed by the pharmacy.';
+  if (!store) return '';
 
-  return [store.address, store.city].filter(Boolean).join(', ');
+  return [store.address, store.city]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(', ');
 }
 
-function getBankDetails(store?: Store | null): CheckoutBankDetails {
-  return (
-    store?.bankDetails ?? {
-      recipientName: `${store?.name ?? 'E-PHARMACY partner'} LLC`,
-      taxId: '12345678',
-      iban: 'UA123456789012345678901234567',
-      bankName: 'JSC PrivatBank',
-      paymentPurpose: `Payment for E-PHARMACY invoice from ${store?.name ?? 'pharmacy'}`,
-    }
-  );
+function getStoreBankDetails(store?: Store | null): Store['bankDetails'] | null {
+  return store?.bankDetails ?? null;
 }
 
 function getStockValidationError(group: StoreOrderGroup): string {
@@ -216,10 +202,21 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
       !phoneError &&
       !addressError);
 
+  const bankDetails = getStoreBankDetails(store);
+  const canUseSelectedPayment =
+    paymentMethod !== 'bank-transfer' || Boolean(bankDetails);
   const canSubmit =
-    Boolean(selectedOrderGroup) && isPostDeliveryValid && !isSubmitting;
+    Boolean(selectedOrderGroup) &&
+    isPostDeliveryValid &&
+    canUseSelectedPayment &&
+    !isSubmitting;
   const storeEmail = getStoreEmail(store);
-  const bankDetails = getBankDetails(store);
+  const storePhone = getStorePhone(store);
+  const storeWorkingHours = getStoreWorkingHours(store);
+  const storeAddress = getStoreAddress(store);
+  const hasStoreContactDetails = Boolean(
+    storePhone || storeWorkingHours || storeAddress
+  );
 
   useEffect(() => {
     const authToken = token;
@@ -304,6 +301,8 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
 
   const handleCopyEmail = async () => {
     try {
+      if (!storeEmail) return;
+
       await navigator.clipboard.writeText(storeEmail);
       setCopiedEmail(true);
       window.setTimeout(() => setCopiedEmail(false), 1800);
@@ -464,22 +463,37 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                               Loading pharmacy details...
                             </p>
                           ) : null}
-                          <ul className={css.iconList}>
-                            <li>
-                              <Phone size={18} aria-hidden="true" />
-                              <a href={`tel:${getStorePhone(store)}`}>
-                                {getStorePhone(store)}
-                              </a>
-                            </li>
-                            <li>
-                              <Clock size={18} aria-hidden="true" />
-                              <span>{getStoreWorkingHours(store)}</span>
-                            </li>
-                            <li>
-                              <MapPin size={18} aria-hidden="true" />
-                              <span>{getStoreAddress(store)}</span>
-                            </li>
-                          </ul>
+                          {hasStoreContactDetails ? (
+                            <ul className={css.iconList}>
+                              {storePhone ? (
+                                <li>
+                                  <Phone size={18} aria-hidden="true" />
+                                  <a href={`tel:${storePhone}`}>{storePhone}</a>
+                                </li>
+                              ) : null}
+
+                              {storeWorkingHours ? (
+                                <li>
+                                  <Clock size={18} aria-hidden="true" />
+                                  <span>{storeWorkingHours}</span>
+                                </li>
+                              ) : null}
+
+                              {storeAddress ? (
+                                <li>
+                                  <MapPin size={18} aria-hidden="true" />
+                                  <span>{storeAddress}</span>
+                                </li>
+                              ) : null}
+                            </ul>
+                          ) : null}
+
+                          {!isStoreLoading && !hasStoreContactDetails ? (
+                            <p className={css.mutedText}>
+                              Pharmacy contact details are unavailable right
+                              now.
+                            </p>
+                          ) : null}
                         </div>
                       ) : (
                         <div className={css.deliveryFields}>
@@ -609,6 +623,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                         value="bank-transfer"
                         checked={paymentMethod === 'bank-transfer'}
                         label="Bank transfer"
+                        disabled={!bankDetails}
                         onChange={setPaymentMethod}
                       />
                     </div>
@@ -629,47 +644,57 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                         <div className={css.bankCard}>
                           <CreditCard size={20} aria-hidden="true" />
                           <h3 className={css.infoTitle}>Bank details</h3>
-                          <dl className={css.bankList}>
-                            <div>
-                              <dt>Recipient</dt>
-                              <dd>{bankDetails.recipientName}</dd>
-                            </div>
-                            <div>
-                              <dt>EDRPOU / Tax ID</dt>
-                              <dd>{bankDetails.taxId}</dd>
-                            </div>
-                            <div>
-                              <dt>IBAN</dt>
-                              <dd>{bankDetails.iban}</dd>
-                            </div>
-                            <div>
-                              <dt>Bank</dt>
-                              <dd>{bankDetails.bankName}</dd>
-                            </div>
-                            <div>
-                              <dt>Payment purpose</dt>
-                              <dd>{bankDetails.paymentPurpose}</dd>
-                            </div>
-                          </dl>
 
-                          <div className={css.emailNote}>
-                            <Mail size={18} aria-hidden="true" />
-                            <p>
-                              After payment, send the receipt to the pharmacy
-                              email for faster processing.
+                          {bankDetails ? (
+                            <dl className={css.bankList}>
+                              <div>
+                                <dt>Recipient</dt>
+                                <dd>{bankDetails.recipientName}</dd>
+                              </div>
+                              <div>
+                                <dt>EDRPOU / Tax ID</dt>
+                                <dd>{bankDetails.taxId}</dd>
+                              </div>
+                              <div>
+                                <dt>IBAN</dt>
+                                <dd>{bankDetails.iban}</dd>
+                              </div>
+                              <div>
+                                <dt>Bank</dt>
+                                <dd>{bankDetails.bankName}</dd>
+                              </div>
+                              <div>
+                                <dt>Payment purpose</dt>
+                                <dd>{bankDetails.paymentPurpose}</dd>
+                              </div>
+                            </dl>
+                          ) : (
+                            <p className={css.mutedText}>
+                              Bank transfer is unavailable because the pharmacy
+                              has not provided bank details yet.
                             </p>
-                            <button
-                              className={css.copyButton}
-                              type="button"
-                              onClick={() => void handleCopyEmail()}
-                            >
-                              <span>{storeEmail}</span>
-                              <Copy size={16} aria-hidden="true" />
-                            </button>
-                            {copiedEmail ? (
-                              <span className={css.copiedText}>Copied</span>
-                            ) : null}
-                          </div>
+                          )}
+
+                          {bankDetails && storeEmail ? (
+                            <div className={css.emailNote}>
+                              <Mail size={18} aria-hidden="true" />
+                              <p>
+                                After payment, send the receipt to the pharmacy
+                                email for faster processing.
+                              </p>
+                              <button
+                                className={css.copyButton}
+                                type="button"
+                                onClick={() => void handleCopyEmail()}
+                              >
+                                <span>{storeEmail}</span>
+                                <Copy size={16} aria-hidden="true" />
+                              </button>
+                              {copiedEmail ? (
+                                <span className={css.copiedText}>Copied</span>
+                              ) : null}
+                            </div>
+                          ) : null}
                         </div>
                       )}
                     </div>

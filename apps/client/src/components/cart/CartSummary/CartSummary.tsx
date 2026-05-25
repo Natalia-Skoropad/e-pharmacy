@@ -3,6 +3,7 @@ import { ShieldAlert } from 'lucide-react';
 import { Button, ButtonLink } from '@/components/common';
 
 import { buildCheckoutPath } from '@/lib/checkout';
+import { formatPrice } from '@/lib/formatters';
 
 import css from './CartSummary.module.css';
 
@@ -16,16 +17,6 @@ type CartSummaryProps = {
   isUpdating?: boolean;
   onContinueShopping: () => void;
 };
-
-//===================================================================
-
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat('uk-UA', {
-    style: 'currency',
-    currency: 'UAH',
-    maximumFractionDigits: 0,
-  }).format(price);
-}
 
 //===================================================================
 
@@ -57,7 +48,10 @@ function CartSummary({
 
       <div className={css.policyNotice}>
         <ShieldAlert size={18} aria-hidden="true" />
-        <p>Medicines are non-returnable and non-exchangeable after order confirmation.</p>
+        <p>
+          Medicines are non-returnable and non-exchangeable after order
+          confirmation.
+        </p>
       </div>
 
       <div className={css.actions}>

@@ -5,10 +5,12 @@ import {
   ButtonLink,
   QuantityCounter,
   RatingSummary,
+  StockAvailability,
   ShimmerImage,
   SvgIcon,
 } from '@/components/common';
 
+import { formatPrice } from '@/lib/formatters';
 import { buildProductPath } from '@/lib/routes';
 
 import type { CartItem } from '@/types';
@@ -23,22 +25,6 @@ type CartItemCardProps = {
   onQuantityChange: (cartItemId: string, quantity: number) => void;
   onRemove: (cartItemId: string) => void;
 };
-
-//===================================================================
-
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat('uk-UA', {
-    style: 'currency',
-    currency: 'UAH',
-    maximumFractionDigits: 0,
-  }).format(price);
-}
-
-function formatStockLabel(stockQuantity: number): string {
-  return stockQuantity === 1
-    ? '1 item available in this pharmacy'
-    : `${stockQuantity} items available in this pharmacy`;
-}
 
 //===================================================================
 
@@ -102,7 +88,10 @@ function CartItemCard({
               onIncrement={() => onQuantityChange(item.id, item.quantity + 1)}
             />
 
-            <p className={css.stock}>{formatStockLabel(stockQuantity)}</p>
+            <StockAvailability
+              className={css.stock}
+              stockQuantity={stockQuantity}
+            />
           </div>
 
           <div className={css.actions}>

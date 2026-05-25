@@ -57,12 +57,6 @@ function getReviewsCountLabel(count = 0): string {
   return count === 1 ? '1 review' : `${count} reviews`;
 }
 
-function getStoreWorkingHours(workingHours?: string): string {
-  return workingHours || 'Mon–Fri 08:00–21:00, Sat–Sun 09:00–18:00';
-}
-
-//===================================================================
-
 function StoreDetailsPageContent({
   store,
   reviews,
@@ -95,13 +89,8 @@ function StoreDetailsPageContent({
     store,
   ]);
 
-  const bankDetails = store.bankDetails ?? {
-    recipientName: `${store.name} LLC`,
-    taxId: '12345678',
-    iban: 'UA123456789012345678901234567',
-    bankName: 'JSC PrivatBank',
-    paymentPurpose: `Payment for E-PHARMACY order from ${store.name}`,
-  };
+  const bankDetails = store.bankDetails ?? null;
+  const workingHours = store.workingHours?.trim() ?? '';
 
   const reviewsCountLabel = getReviewsCountLabel(reviewsTotal);
   const isReviewValid =
@@ -311,13 +300,15 @@ function StoreDetailsPageContent({
                     </div>
                   ) : null}
 
-                  <div className={css.summaryItem}>
-                    <dt>
-                      <Clock size={18} aria-hidden="true" />
-                      Working hours
-                    </dt>
-                    <dd>{getStoreWorkingHours(store.workingHours)}</dd>
-                  </div>
+                  {workingHours ? (
+                    <div className={css.summaryItem}>
+                      <dt>
+                        <Clock size={18} aria-hidden="true" />
+                        Working hours
+                      </dt>
+                      <dd>{workingHours}</dd>
+                    </div>
+                  ) : null}
 
                   <div className={css.summaryItem}>
                     <dt>
@@ -345,28 +336,35 @@ function StoreDetailsPageContent({
             <div className={css.panel}>
               <h2 className={css.panelTitle}>Payment details</h2>
 
-              <dl className={css.paymentList}>
-                <div>
-                  <dt>Recipient</dt>
-                  <dd>{bankDetails.recipientName}</dd>
-                </div>
-                <div>
-                  <dt>EDRPOU / Tax ID</dt>
-                  <dd>{bankDetails.taxId}</dd>
-                </div>
-                <div>
-                  <dt>IBAN</dt>
-                  <dd>{bankDetails.iban}</dd>
-                </div>
-                <div>
-                  <dt>Bank</dt>
-                  <dd>{bankDetails.bankName}</dd>
-                </div>
-                <div>
-                  <dt>Payment purpose</dt>
-                  <dd>{bankDetails.paymentPurpose}</dd>
-                </div>
-              </dl>
+              {bankDetails ? (
+                <dl className={css.paymentList}>
+                  <div>
+                    <dt>Recipient</dt>
+                    <dd>{bankDetails.recipientName}</dd>
+                  </div>
+                  <div>
+                    <dt>EDRPOU / Tax ID</dt>
+                    <dd>{bankDetails.taxId}</dd>
+                  </div>
+                  <div>
+                    <dt>IBAN</dt>
+                    <dd>{bankDetails.iban}</dd>
+                  </div>
+                  <div>
+                    <dt>Bank</dt>
+                    <dd>{bankDetails.bankName}</dd>
+                  </div>
+                  <div>
+                    <dt>Payment purpose</dt>
+                    <dd>{bankDetails.paymentPurpose}</dd>
+                  </div>
+                </dl>
+              ) : (
+                <p className={css.notice}>
+                  Bank details are unavailable because the pharmacy has not
+                  provided them yet.
+                </p>
+              )}
             </div>
           </Container>
         </section>

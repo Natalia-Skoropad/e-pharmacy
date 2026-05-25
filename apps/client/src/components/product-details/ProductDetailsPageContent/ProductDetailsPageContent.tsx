@@ -15,6 +15,7 @@ import {
   QuantityCounter,
   RatingSummary,
   ReviewsSection,
+  StockAvailability,
   SearchInput,
   SearchableSelect,
   SelectField,
@@ -25,11 +26,13 @@ import {
   type TabItem,
 } from '@/components/common';
 
+import { CartInvoiceLimitModal } from '@/components/cart';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
-import { ApiError } from '@/lib/api';
 import { useAuth } from '@/providers';
 
 import { ROUTES } from '@/lib/constants/routes';
+import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
+import { formatPrice } from '@/lib/formatters';
 import { buildStorePath } from '@/lib/routes';
 
 import {
@@ -108,14 +111,6 @@ function sanitizeOfferSearch(value: string): string {
 
 //===================================================================
 
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat('uk-UA', {
-    style: 'currency',
-    currency: 'UAH',
-    maximumFractionDigits: 0,
-  }).format(price);
-}
-
 function formatPriceRange(offers: ProductOffer[]): string {
   if (offers.length === 0) return 'No pharmacy prices yet';
 
@@ -142,12 +137,6 @@ function getOfferCartItem(
 
 function getOfferTotal(cartItem: CartItem | null, offer: ProductOffer): number {
   return (cartItem?.quantity ?? 0) * offer.price;
-}
-
-function formatAvailableQuantity(quantity: number): string {
-  return quantity === 1
-    ? '1 item available in this pharmacy'
-    : `${quantity} items available in this pharmacy`;
 }
 
 function getStoreHref(offer: ProductOffer): string {
@@ -446,10 +435,8 @@ function ProductDetailsPageContent({
       await refreshCart();
       showToast('One product unit was added to the order.');
     } catch (error) {
-      if (error instanceof ApiError && error.message.includes('15 invoices')) {
-        setInvoiceLimitMessage(
-          'You cannot add more than 15 invoices to your cart. Please confirm the previous ones to continue shopping'
-        );
+      if (isCartInvoiceLimitError(error)) {
+        setInvoiceLimitMessage('limit');
       } else {
         showToast('Could not add product to the order.');
       }
@@ -560,9 +547,10 @@ function ProductDetailsPageContent({
         </p>
 
         {isAuthenticated ? (
-          <p className={css.stockLine}>
-            {formatAvailableQuantity(offer.activeQuantity)}
-          </p>
+          <StockAvailability
+            className={css.stockLine}
+            stockQuantity={offer.activeQuantity}
+          />
         ) : null}
       </div>
     );
@@ -932,14 +920,7 @@ function ProductDetailsPageContent({
         </section>
       ) : null}
       {invoiceLimitMessage ? (
-        <ConfirmActionModal
-          title="Cart invoice limit"
-          text={invoiceLimitMessage}
-          confirmLabel="Got it"
-          cancelLabel="Close"
-          onConfirm={() => setInvoiceLimitMessage('')}
-          onCancel={() => setInvoiceLimitMessage('')}
-        />
+        <CartInvoiceLimitModal onClose={() => setInvoiceLimitMessage('')} />
       ) : null}
 
       {pendingRemoveOffer ? (
