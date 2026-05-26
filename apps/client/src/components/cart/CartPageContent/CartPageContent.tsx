@@ -16,15 +16,14 @@ import {
   LoadingSpinner,
   RatingSummary,
 } from '@/components/common';
-import { useAuth } from '@/providers';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
 import { CART_DESCRIPTION, CART_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
 import { buildStorePath, createBreadcrumbs } from '@/lib/routes';
 
+import { useAuth } from '@/providers';
 import { clearCart, getCart, removeCartItem, updateCartItem } from '@/services';
-
 import type { Cart } from '@/types';
 
 import css from './CartPageContent.module.css';
@@ -312,7 +311,10 @@ function CartPageContent() {
 
                         <div className={css.storeActions}>
                           <ButtonLink
-                            href={buildStorePath(group.storeName, group.storeId)}
+                            href={buildStorePath(
+                              group.storeName,
+                              group.storeId
+                            )}
                             variant="secondary"
                             size="sm"
                           >

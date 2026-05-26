@@ -3,12 +3,29 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import CheckoutDeliveryMethod from '../CheckoutDeliveryMethod';
+import CheckoutInvoicePanel from '../CheckoutInvoicePanel';
+import CheckoutPaymentMethod from '../CheckoutPaymentMethod';
+
 import { ButtonLink, Container, LoadingSpinner } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
-import { useAuth } from '@/providers';
+
+import { dispatchCartUpdated } from '@/lib/cart/cart-events';
+
+import {
+  getStockValidationError,
+  getStoreAddress,
+  getStoreBankDetails,
+  getStoreEmail,
+  getStorePhone,
+  getStoreWorkingHours,
+  groupCartByStore,
+} from '@/lib/checkout';
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
+import { buildCustomerOrderPath } from '@/lib/orders';
+
 import {
   CUSTOMER_ADDRESS_MAX_LENGTH,
   CUSTOMER_ADDRESS_MIN_LENGTH,
@@ -22,22 +39,8 @@ import {
   sanitizeCustomerPhone,
 } from '@/lib/validations';
 
+import { useAuth } from '@/providers';
 import { checkoutOrder, getCart, getStoreDetails } from '@/services';
-import { dispatchCartUpdated } from '@/lib/cart-events';
-import { buildCustomerOrderPath } from '@/lib/orders';
-
-import CheckoutDeliveryMethod from '../CheckoutDeliveryMethod';
-import CheckoutInvoicePanel from '../CheckoutInvoicePanel';
-import CheckoutPaymentMethod from '../CheckoutPaymentMethod';
-import {
-  getStockValidationError,
-  getStoreAddress,
-  getStoreBankDetails,
-  getStoreEmail,
-  getStorePhone,
-  getStoreWorkingHours,
-  groupCartByStore,
-} from '@/lib/checkout';
 
 import type { BreadcrumbItem, Cart, Store } from '@/types';
 import type {
@@ -316,7 +319,9 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
             </div>
           ) : null}
 
-          {!isLoading && cart.items.length === 0 ? <CheckoutEmptyState /> : null}
+          {!isLoading && cart.items.length === 0 ? (
+            <CheckoutEmptyState />
+          ) : null}
 
           {selectedOrderGroup ? (
             <div className={css.grid}>
@@ -366,7 +371,6 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   );
 }
 
-
 //===================================================================
 
 const COMMENT_MAX_LENGTH = 500;
@@ -383,7 +387,9 @@ function CheckoutEmptyState() {
           Back to cart
         </ButtonLink>
 
-        <ButtonLink href={ROUTES.MEDICINES_CATALOG}>Browse medicines</ButtonLink>
+        <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
+          Browse medicines
+        </ButtonLink>
       </div>
     </div>
   );

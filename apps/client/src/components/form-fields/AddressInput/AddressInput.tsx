@@ -1,7 +1,8 @@
-import { CUSTOMER_ADDRESS_MAX_LENGTH } from '@/lib/validations';
-
 import FormFieldLayout from '../shared/FormFieldLayout';
+
+import { CUSTOMER_ADDRESS_MAX_LENGTH } from '@/lib/validations';
 import type { AddressFieldProps } from '@/types/form-fields';
+
 import css from '../shared/FormField.module.css';
 
 //===================================================================

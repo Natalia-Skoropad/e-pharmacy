@@ -27,17 +27,16 @@
 }
 
 .skeleton::after {
-  content: '';
   position: absolute;
   inset: 0;
-
-  transform: translateX(-60%);
+  content: '';
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.72),
+    var(--color-shimmer-highlight),
     transparent
   );
+  transform: translateX(-60%);
 
   animation: shimmer 1.2s ease-in-out infinite;
 }

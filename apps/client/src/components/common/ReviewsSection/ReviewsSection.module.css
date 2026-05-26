@@ -32,12 +32,14 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   outline: none;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .reviewTextarea:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 4px rgb(89 177 122 / 15%);
+  box-shadow: var(--shadow-accent-ring-strong);
 }
 
 .ratingFieldset {

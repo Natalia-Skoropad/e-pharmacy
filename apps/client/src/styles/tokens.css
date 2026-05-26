@@ -13,9 +13,12 @@
   --color-accent: #59b17a;
   --color-accent-hover: #3f945f;
   --color-accent-light: #eaf7ef;
-  --color-accent-shadow: rgba(89, 177, 122, 0.16);
+  --color-accent-soft: rgba(89, 177, 122, 0.04);
+  --color-accent-selected: rgba(89, 177, 122, 0.1);
+  --color-accent-border-strong: rgba(89, 177, 122, 0.55);
 
   --color-border: rgba(29, 30, 33, 0.1);
+  --color-border-strong: rgba(29, 30, 33, 0.18);
   --color-overlay: rgba(29, 30, 33, 0.4);
 
   --color-error: #d32f2f;
@@ -29,6 +32,8 @@
 
   --color-warning: #f59e0b;
 
+  --color-shimmer-highlight: rgba(255, 255, 255, 0.72);
+
   /* Typography */
   --font-main: Arial, Helvetica, sans-serif;
 
@@ -39,6 +44,7 @@
 
   --fz-12: 12px;
   --fz-14: 14px;
+  --fz-15: 15px;
   --fz-16: 16px;
   --fz-18: 18px;
   --fz-20: 20px;
@@ -72,6 +78,9 @@
   /* Shadows */
   --shadow-card: 0 8px 32px rgba(29, 30, 33, 0.08);
   --shadow-modal: 0 20px 60px rgba(29, 30, 33, 0.2);
+  --shadow-accent-ring: 0 0 0 4px rgba(89, 177, 122, 0.12);
+  --shadow-accent-ring-md: 0 0 0 4px rgba(89, 177, 122, 0.14);
+  --shadow-accent-ring-strong: 0 0 0 4px rgba(89, 177, 122, 0.15);
 
   /* Transitions */
   --transition-fast: 150ms ease;

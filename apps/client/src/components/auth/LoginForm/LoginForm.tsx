@@ -1,15 +1,12 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button, TextActionButton } from '@/components/common';
-
 import { EmailInput, PasswordInput } from '@/components/form-fields';
 
-import { useAuth } from '@/providers';
 import { useToast } from '@/hooks';
-
 import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
 import { getSafeRedirectPath } from '@/lib/routes';
@@ -21,6 +18,8 @@ import {
   type LoginFormErrors,
   type LoginFormValues,
 } from '@/lib/validations/auth-validation';
+
+import { useAuth } from '@/providers';
 
 import css from '../shared/AuthForm.module.css';
 

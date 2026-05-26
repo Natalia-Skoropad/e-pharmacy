@@ -1,9 +1,9 @@
 import { Eye, EyeOff } from 'lucide-react';
 
-import { PASSWORD_MAX_LENGTH } from '@/lib/validations/auth-validation';
-
 import AuthFieldLayout from '../shared/FormFieldLayout';
+import { PASSWORD_MAX_LENGTH } from '@/lib/validations/auth-validation';
 import type { PasswordFieldProps } from '@/types/form-fields';
+
 import css from '../shared/FormField.module.css';
 
 //===================================================================

@@ -4,9 +4,8 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Button, TextActionButton } from '@/components/common';
 import { EmailInput } from '@/components/form-fields';
-import { useAuth } from '@/providers';
-import { useToast } from '@/hooks';
 
+import { useToast } from '@/hooks';
 import { getAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/constants/routes';
 
@@ -18,6 +17,7 @@ import {
   type ForgotPasswordFormValues,
 } from '@/lib/validations/auth-validation';
 
+import { useAuth } from '@/providers';
 import { requestPasswordReset } from '@/services';
 
 import css from '../shared/AuthForm.module.css';

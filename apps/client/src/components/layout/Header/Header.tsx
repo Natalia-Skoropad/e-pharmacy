@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils';
 import {
   CART_UPDATED_EVENT,
   type CartUpdatedEventDetail,
-} from '@/lib/cart-events';
+} from '@/lib/cart/cart-events';
 import { getCart } from '@/services';
 
 import css from './Header.module.css';

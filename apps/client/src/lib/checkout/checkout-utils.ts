@@ -29,6 +29,8 @@ export function groupCartByStore(cart: Cart): CheckoutStoreOrderGroup[] {
   return [...groups.values()];
 }
 
+//===================================================================
+
 export function getStoreEmail(store?: Store | null): string {
   return store?.email?.trim() ?? '';
 }
@@ -55,6 +57,8 @@ export function getStoreBankDetails(
 ): Store['bankDetails'] | null {
   return store?.bankDetails ?? null;
 }
+
+//===================================================================
 
 export function getStockValidationError(
   group: CheckoutStoreOrderGroup

@@ -1,6 +1,6 @@
 import { apiRequest, getResponseData } from '@/lib/api';
 import { API_ROUTES } from '@/lib/constants/api-routes';
-import { dispatchCartUpdated } from '@/lib/cart-events';
+import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 
 import type {
   AddCartItemPayload,

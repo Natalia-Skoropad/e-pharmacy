@@ -17,6 +17,8 @@ function getReviewsLabel(reviewsCount: number): string {
   return reviewsCount === 1 ? '1 review' : `${reviewsCount} reviews`;
 }
 
+//===================================================================
+
 function RatingSummary({
   rating,
   reviewsCount,

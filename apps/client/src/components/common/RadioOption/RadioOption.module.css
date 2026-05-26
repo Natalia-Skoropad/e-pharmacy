@@ -16,8 +16,8 @@
 }
 
 .option:hover {
-  border-color: rgba(89, 177, 122, 0.55);
-  background-color: rgba(89, 177, 122, 0.04);
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-accent-border-strong);
 }
 
 .input {
@@ -36,9 +36,9 @@
   flex: 0 0 auto;
   width: 18px;
   height: 18px;
+  background-color: var(--color-surface);
   border: 1.5px solid var(--color-border-strong, var(--color-border));
   border-radius: 50%;
-  background-color: var(--color-surface);
   transition:
     border-color var(--transition-base),
     box-shadow var(--transition-base),
@@ -49,8 +49,8 @@
   position: absolute;
   inset: 4px;
   content: '';
-  border-radius: 50%;
   background-color: var(--color-accent);
+  border-radius: 50%;
   opacity: 0;
   transform: scale(0.55);
   transition:
@@ -59,9 +59,9 @@
 }
 
 .input:checked + .control {
+  background-color: var(--color-accent-selected);
   border-color: var(--color-accent);
-  background-color: rgba(89, 177, 122, 0.1);
-  box-shadow: 0 0 0 4px rgba(89, 177, 122, 0.14);
+  box-shadow: var(--shadow-accent-ring-md);
 }
 
 .input:checked + .control::after {
@@ -79,7 +79,6 @@
   line-height: 1.4;
   color: var(--color-text-primary);
 }
-
 
 .optionDisabled {
   cursor: not-allowed;

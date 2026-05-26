@@ -12,12 +12,12 @@ import {
   SvgIcon,
   CartInvoiceLimitModal,
 } from '@/components/common';
-
 import { ModalBase, ModalRoot } from '@/components/modals';
-import { addCartItem, getProducts } from '@/services';
+
 import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
 import { formatPrice, formatStockLabel } from '@/lib/formatters';
 
+import { addCartItem, getProducts } from '@/services';
 import type { Cart, Product, ProductCategory } from '@/types';
 
 import css from './ContinueShoppingModal.module.css';

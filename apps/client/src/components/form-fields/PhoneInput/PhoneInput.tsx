@@ -1,7 +1,8 @@
-import { CUSTOMER_PHONE_MAX_LENGTH } from '@/lib/validations/auth-validation';
-
 import AuthFieldLayout from '../shared/FormFieldLayout';
+
+import { CUSTOMER_PHONE_MAX_LENGTH } from '@/lib/validations/auth-validation';
 import type { AuthFieldBaseProps } from '@/types/form-fields';
+
 import css from '../shared/FormField.module.css';
 
 //===================================================================

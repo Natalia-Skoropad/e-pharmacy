@@ -20,5 +20,5 @@
   color: var(--color-accent);
   background-color: var(--color-accent-light);
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 4px rgba(89, 177, 122, 0.12);
+  box-shadow: var(--shadow-accent-ring);
 }

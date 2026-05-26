@@ -1,6 +1,5 @@
-import Link from 'next/link';
-
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
 

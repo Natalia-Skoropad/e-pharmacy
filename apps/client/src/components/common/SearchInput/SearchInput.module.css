@@ -30,17 +30,12 @@
 }
 
 .inputWrap:hover,
-.inputWrap:focus-visible {
-  background-color: var(--color-surface);
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 4px rgba(89, 177, 122, 0.12);
-}
-
+.inputWrap:focus-visible,
 .inputWrap:focus-within,
 .inputWrapActive {
   background-color: var(--color-surface);
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 4px rgba(89, 177, 122, 0.12);
+  box-shadow: var(--shadow-accent-ring);
 }
 
 .icon {

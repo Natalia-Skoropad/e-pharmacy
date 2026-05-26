@@ -41,7 +41,7 @@
 .comboboxActive {
   background-color: var(--color-surface);
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 4px rgba(89, 177, 122, 0.12);
+  box-shadow: var(--shadow-accent-ring);
 }
 
 .searchIcon {
@@ -57,10 +57,10 @@
   font-size: var(--fz-16);
   line-height: var(--lh-base);
   color: var(--color-text-primary);
+  appearance: none;
   background-color: transparent;
   border: 0;
   outline: none;
-  appearance: none;
 }
 
 .input:focus {

@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import { useId, type ReactNode } from 'react';
+import Image from 'next/image';
 
 import { Container } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
@@ -20,7 +20,12 @@ type AuthFormShellProps = {
 
 //===================================================================
 
-function AuthFormShell({ title, text, breadcrumbs, children }: AuthFormShellProps) {
+function AuthFormShell({
+  title,
+  text,
+  breadcrumbs,
+  children,
+}: AuthFormShellProps) {
   const titleId = useId();
 
   return (
