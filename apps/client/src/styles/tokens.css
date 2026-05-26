@@ -14,9 +14,13 @@
   --color-accent-hover: #3f945f;
   --color-accent-light: #eaf7ef;
   --color-accent-soft: rgba(89, 177, 122, 0.04);
+  --color-accent-tint: rgba(89, 177, 122, 0.08);
   --color-accent-selected: rgba(89, 177, 122, 0.1);
+  --color-accent-hover-soft: rgba(89, 177, 122, 0.16);
   --color-accent-bg-radial: rgba(89, 177, 122, 0.14);
+  --color-accent-border: rgba(89, 177, 122, 0.18);
   --color-accent-border-soft: rgba(89, 177, 122, 0.22);
+  --color-accent-border-hover: rgba(89, 177, 122, 0.35);
   --color-accent-border-strong: rgba(89, 177, 122, 0.55);
 
   --color-border: rgba(29, 30, 33, 0.1);

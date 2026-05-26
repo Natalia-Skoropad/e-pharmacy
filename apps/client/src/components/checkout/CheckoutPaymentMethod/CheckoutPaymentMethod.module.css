@@ -108,8 +108,8 @@
   font-weight: var(--fw-medium);
   color: var(--color-accent);
   cursor: pointer;
-  background-color: rgba(89, 177, 122, 0.1);
-  border: 1px solid rgba(89, 177, 122, 0.18);
+  background-color: var(--color-accent-selected);
+  border: 1px solid var(--color-accent-border);
   border-radius: var(--radius-md);
   transition:
     background-color var(--transition-base),
@@ -118,8 +118,8 @@
 
 .copyButton:hover,
 .copyButton:focus-visible {
-  background-color: rgba(89, 177, 122, 0.16);
-  border-color: rgba(89, 177, 122, 0.35);
+  background-color: var(--color-accent-hover-soft);
+  border-color: var(--color-accent-border-hover);
 }
 
 .copyButton span {
