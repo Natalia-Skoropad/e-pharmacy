@@ -99,11 +99,22 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const selectedOrderGroup = useMemo(() => {
     if (orderGroups.length === 0) return null;
 
-    return (
-      orderGroups.find((group) => group.storeId === selectedStoreIdFromRoute) ??
-      orderGroups[0]
-    );
+    if (selectedStoreIdFromRoute) {
+      return (
+        orderGroups.find((group) => group.storeId === selectedStoreIdFromRoute) ??
+        null
+      );
+    }
+
+    return orderGroups.length === 1 ? orderGroups[0] : null;
   }, [selectedStoreIdFromRoute, orderGroups]);
+
+  const shouldSelectInvoice =
+    !isLoading && cart.items.length > 0 && !selectedOrderGroup;
+
+  const selectInvoiceMessage = selectedStoreIdFromRoute
+    ? 'This pharmacy invoice is not available in your cart anymore. Please return to the cart and choose an active invoice.'
+    : 'You have several pharmacy invoices in your cart. Please choose the invoice you want to confirm from the cart page.';
 
   const recipientNameValue = recipientName ?? user?.name ?? '';
   const recipientPhoneValue = recipientPhone ?? user?.phone ?? '';
@@ -176,7 +187,11 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     let isMounted = true;
 
     async function fetchStore() {
-      if (!selectedOrderGroup) return;
+      if (!selectedOrderGroup) {
+        setStore(null);
+        setIsStoreLoading(false);
+        return;
+      }
 
       try {
         setIsStoreLoading(true);
@@ -328,6 +343,10 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
             <CheckoutEmptyState />
           ) : null}
 
+          {shouldSelectInvoice ? (
+            <CheckoutSelectInvoiceState message={selectInvoiceMessage} />
+          ) : null}
+
           {selectedOrderGroup ? (
             <div className={css.grid}>
               <div className={css.leftColumn}>
@@ -384,6 +403,20 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
         </Container>
       </section>
     </main>
+  );
+}
+
+//===================================================================
+
+function CheckoutSelectInvoiceState({ message }: { message: string }) {
+  return (
+    <div className={css.empty}>
+      <h2 className={css.emptyTitle}>Choose a pharmacy invoice</h2>
+      <p className={css.emptyText}>{message}</p>
+      <div className={css.emptyActions}>
+        <ButtonLink href={ROUTES.CART}>Back to cart</ButtonLink>
+      </div>
+    </div>
   );
 }
 

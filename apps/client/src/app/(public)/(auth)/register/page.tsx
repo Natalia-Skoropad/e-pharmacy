@@ -1,5 +1,4 @@
 import { AuthFormShell, RegisterForm } from '@/components/auth';
-import { GuestOnlyRoute } from '@/routes';
 
 import {
   REGISTER_BENEFITS,
@@ -10,6 +9,8 @@ import {
 import { ROUTES } from '@/lib/constants/routes';
 import { createBreadcrumbs } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
+
+import { GuestOnlyRoute } from '@/routes';
 
 //===================================================================
 

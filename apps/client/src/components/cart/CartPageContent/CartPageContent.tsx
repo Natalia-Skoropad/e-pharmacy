@@ -18,6 +18,7 @@ import {
 } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
+import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { CART_DESCRIPTION, CART_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
 import { buildStorePath, createBreadcrumbs } from '@/lib/routes';
@@ -79,6 +80,29 @@ function groupCartItemsByStore(items: Cart['items']): StoreCartGroup[] {
   return [...groups.values()];
 }
 
+
+function getCartWithUpdatedQuantity(
+  cart: Cart,
+  cartItemId: string,
+  quantity: number
+): Cart {
+  const nextItems = cart.items.map((item) => {
+    if (item.id !== cartItemId) return item;
+
+    return {
+      ...item,
+      quantity,
+      totalPrice: item.price * quantity,
+    };
+  });
+
+  return {
+    items: nextItems,
+    totalItems: nextItems.reduce((total, item) => total + item.quantity, 0),
+    totalPrice: nextItems.reduce((total, item) => total + item.totalPrice, 0),
+  };
+}
+
 //===================================================================
 
 function CartPageContent() {
@@ -134,6 +158,16 @@ function CartPageContent() {
   const handleQuantityChange = async (cartItemId: string, quantity: number) => {
     if (!token || quantity < 1) return;
 
+    const previousCart = cart;
+    const optimisticCart = getCartWithUpdatedQuantity(
+      previousCart,
+      cartItemId,
+      quantity
+    );
+
+    setCart(optimisticCart);
+    dispatchCartUpdated(optimisticCart);
+
     try {
       setUpdatingItemId(cartItemId);
       setError('');
@@ -142,6 +176,8 @@ function CartPageContent() {
 
       setCart(response.cart);
     } catch {
+      setCart(previousCart);
+      dispatchCartUpdated(previousCart);
       setError('Could not update cart item.');
     } finally {
       setUpdatingItemId(null);

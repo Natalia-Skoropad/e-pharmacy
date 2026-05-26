@@ -1,12 +1,13 @@
 import { notFound } from 'next/navigation';
 
-import { ProtectedRoute } from '@/routes';
 import { CheckoutPageContent } from '@/components/checkout';
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
 import { getIdFromSlugId } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
+
+import { ProtectedRoute } from '@/routes';
 
 import type { Metadata } from 'next';
 

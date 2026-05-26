@@ -380,12 +380,6 @@ function ProductDetailsPageContent({
     };
   }, [isAuthenticated, productDetails.id, showToast, token]);
 
-  const refreshCart = async () => {
-    if (!token) return;
-
-    const response = await getCart(token);
-    setCart(response.cart);
-  };
 
   const handleFavoriteClick = async () => {
     if (!isAuthReady) return;
@@ -419,20 +413,18 @@ function ProductDetailsPageContent({
       setUpdatingStoreId(offer.storeId);
       const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
 
-      if (cartItem) {
-        await updateCartItem(
-          cartItem.id,
-          { quantity: cartItem.quantity + 1 },
-          token
-        );
-      } else {
-        await addCartItem(
-          { productId: productDetails.id, storeId: offer.storeId, quantity: 1 },
-          token
-        );
-      }
+      const response = cartItem
+        ? await updateCartItem(
+            cartItem.id,
+            { quantity: cartItem.quantity + 1 },
+            token
+          )
+        : await addCartItem(
+            { productId: productDetails.id, storeId: offer.storeId, quantity: 1 },
+            token
+          );
 
-      await refreshCart();
+      setCart(response.cart);
       showToast('One product unit was added to the order.');
     } catch (error) {
       if (isCartInvoiceLimitError(error)) {
@@ -455,17 +447,15 @@ function ProductDetailsPageContent({
     try {
       setUpdatingStoreId(offer.storeId);
 
-      if (cartItem.quantity === 1) {
-        await removeCartItem(cartItem.id, token);
-      } else {
-        await updateCartItem(
-          cartItem.id,
-          { quantity: cartItem.quantity - 1 },
-          token
-        );
-      }
+      const response = cartItem.quantity === 1
+        ? await removeCartItem(cartItem.id, token)
+        : await updateCartItem(
+            cartItem.id,
+            { quantity: cartItem.quantity - 1 },
+            token
+          );
 
-      await refreshCart();
+      setCart(response.cart);
       showToast('One product unit was removed from the order.');
     } catch {
       showToast('Could not remove product from the order.');
