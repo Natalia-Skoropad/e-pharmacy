@@ -1,7 +1,7 @@
 .backdrop {
   --modal-z-index: 220;
   --modal-padding: 16px;
-  --modal-backdrop: rgba(18, 20, 23, 0.48);
+  --modal-backdrop: var(--color-backdrop-strong);
   --modal-width: 680px;
   --modal-max-height: min(88vh, 760px);
   --modal-dialog-padding: 20px;
@@ -94,7 +94,10 @@
   font-weight: var(--fw-medium);
   line-height: 1.2;
   border-radius: var(--radius-pill);
-  transition: color var(--transition-base), background-color var(--transition-base), border-color var(--transition-base);
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base);
 }
 
 .category {

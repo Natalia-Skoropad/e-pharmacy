@@ -15,11 +15,13 @@
   --color-accent-light: #eaf7ef;
   --color-accent-soft: rgba(89, 177, 122, 0.04);
   --color-accent-selected: rgba(89, 177, 122, 0.1);
+  --color-accent-border-soft: rgba(89, 177, 122, 0.22);
   --color-accent-border-strong: rgba(89, 177, 122, 0.55);
 
   --color-border: rgba(29, 30, 33, 0.1);
   --color-border-strong: rgba(29, 30, 33, 0.18);
   --color-overlay: rgba(29, 30, 33, 0.4);
+  --color-backdrop-strong: rgba(18, 20, 23, 0.48);
 
   --color-error: #d32f2f;
   --color-error-soft: rgba(211, 47, 47, 0.08);
