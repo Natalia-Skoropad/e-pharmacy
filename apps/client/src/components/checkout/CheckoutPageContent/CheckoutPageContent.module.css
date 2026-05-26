@@ -84,67 +84,6 @@
   margin-bottom: 18px;
 }
 
-.commentField {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  color: var(--color-text-primary);
-}
-
-.commentLabel {
-  line-height: var(--lh-base);
-}
-
-.commentControlWrap {
-  position: relative;
-  display: block;
-  min-width: 0;
-}
-
-.commentTextarea {
-  width: 100%;
-  min-height: 150px;
-  padding: 12px 18px 34px 16px;
-  font: inherit;
-  font-weight: var(--fw-regular);
-  color: var(--color-text-primary);
-  resize: none;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  outline: none;
-  transition:
-    border-color var(--transition-base),
-    box-shadow var(--transition-base),
-    background-color var(--transition-base);
-}
-
-.commentTextarea::placeholder {
-  color: var(--color-text-muted);
-}
-
-.commentTextarea:hover,
-.commentTextarea:focus {
-  border-color: var(--color-accent);
-}
-
-.commentTextarea:focus {
-  box-shadow: 0 0 0 4px var(--color-accent-shadow);
-}
-
-.commentCounter {
-  position: absolute;
-  right: 16px;
-  bottom: 12px;
-  z-index: 1;
-  font-size: var(--fz-12);
-  font-weight: var(--fw-regular);
-  line-height: 1;
-  color: var(--color-text-muted);
-  pointer-events: none;
-}
 
 @media only screen and (min-width: 768px) {
   .section {

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import clsx from 'clsx';
 
 import css from './FormField.module.css';
 
@@ -10,6 +11,8 @@ type AuthFieldLayoutProps = {
   required?: boolean;
   labelAction?: ReactNode;
   children: ReactNode;
+  className?: string;
+  errorClassName?: string;
   error?: string;
   isTouched?: boolean;
 };
@@ -22,13 +25,15 @@ function AuthFieldLayout({
   required = true,
   labelAction,
   children,
+  className,
+  errorClassName,
   error,
   isTouched,
 }: AuthFieldLayoutProps) {
   const errorId = `${id}-error`;
 
   return (
-    <div className={css.field}>
+    <div className={clsx(css.field, className)}>
       <div className={labelAction ? css.labelRow : undefined}>
         <label className={css.label} htmlFor={id}>
           {label}
@@ -44,7 +49,7 @@ function AuthFieldLayout({
 
       {children}
 
-      <p className={css.error} id={errorId}>
+      <p className={clsx(css.error, errorClassName)} id={errorId}>
         {isTouched ? (error ?? '') : ''}
       </p>
     </div>

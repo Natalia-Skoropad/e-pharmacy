@@ -150,6 +150,10 @@
   pointer-events: none;
 }
 
+.addressError {
+  bottom: 10px;
+}
+
 .error:empty {
   opacity: 0;
 }

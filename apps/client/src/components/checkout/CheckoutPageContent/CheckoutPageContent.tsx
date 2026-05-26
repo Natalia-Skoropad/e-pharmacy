@@ -8,6 +8,7 @@ import CheckoutInvoicePanel from '../CheckoutInvoicePanel';
 import CheckoutPaymentMethod from '../CheckoutPaymentMethod';
 
 import { ButtonLink, Container, LoadingSpinner } from '@/components/common';
+import { CommentInput } from '@/components/form-fields';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
@@ -219,6 +220,10 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     setDeliveryAddress(sanitizeCustomerAddress(event.target.value));
   };
 
+  const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setComment(event.target.value);
+  };
+
   const handleCopyEmail = async () => {
     try {
       if (!storeEmail) return;
@@ -354,7 +359,18 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                   onCopyEmail={() => void handleCopyEmail()}
                 />
 
-                <OrderCommentCard value={comment} onChange={setComment} />
+                <section className={css.card} aria-labelledby="comment-title">
+                  <h2 className={css.cardTitle} id="comment-title">
+                    Order comment
+                  </h2>
+
+                  <CommentInput
+                    id="order-comment"
+                    name="comment"
+                    value={comment}
+                    onChange={handleCommentChange}
+                  />
+                </section>
               </div>
 
               <CheckoutInvoicePanel
@@ -373,8 +389,6 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
 
 //===================================================================
 
-const COMMENT_MAX_LENGTH = 500;
-
 function CheckoutEmptyState() {
   return (
     <div className={css.empty}>
@@ -392,42 +406,6 @@ function CheckoutEmptyState() {
         </ButtonLink>
       </div>
     </div>
-  );
-}
-
-//===================================================================
-
-type OrderCommentCardProps = {
-  value: string;
-  onChange: (value: string) => void;
-};
-
-function OrderCommentCard({ value, onChange }: OrderCommentCardProps) {
-  const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    onChange(event.target.value);
-  };
-
-  return (
-    <section className={css.card} aria-labelledby="comment-title">
-      <h2 className={css.cardTitle} id="comment-title">
-        Order comment
-      </h2>
-      <label className={css.commentField}>
-        <span className={css.commentLabel}>Comment for pharmacy</span>
-        <span className={css.commentControlWrap}>
-          <textarea
-            className={css.commentTextarea}
-            value={value}
-            maxLength={COMMENT_MAX_LENGTH}
-            placeholder="Add details for the pharmacy if needed"
-            onChange={handleChange}
-          />
-          <span className={css.commentCounter}>
-            {value.length}/{COMMENT_MAX_LENGTH}
-          </span>
-        </span>
-      </label>
-    </section>
   );
 }
 

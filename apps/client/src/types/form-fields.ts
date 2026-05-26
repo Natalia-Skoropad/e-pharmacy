@@ -16,6 +16,14 @@ export type AddressFieldProps = Omit<AuthFieldBaseProps, 'onChange'> & {
   onChange: ChangeEventHandler<HTMLTextAreaElement>;
 };
 
+
+export type CommentFieldProps = Omit<AuthFieldBaseProps, 'onChange'> & {
+  label?: string;
+  placeholder?: string;
+  maxLength?: number;
+  onChange: ChangeEventHandler<HTMLTextAreaElement>;
+};
+
 export type PasswordFieldProps = AuthFieldBaseProps & {
   label?: string;
   placeholder?: string;
