@@ -15,10 +15,12 @@
   --color-accent-light: #eaf7ef;
   --color-accent-soft: rgba(89, 177, 122, 0.04);
   --color-accent-selected: rgba(89, 177, 122, 0.1);
+  --color-accent-bg-radial: rgba(89, 177, 122, 0.14);
   --color-accent-border-soft: rgba(89, 177, 122, 0.22);
   --color-accent-border-strong: rgba(89, 177, 122, 0.55);
 
   --color-border: rgba(29, 30, 33, 0.1);
+  --color-border-soft: rgba(18, 20, 23, 0.08);
   --color-border-strong: rgba(29, 30, 33, 0.18);
   --color-overlay: rgba(29, 30, 33, 0.4);
   --color-backdrop-strong: rgba(18, 20, 23, 0.48);
@@ -26,15 +28,49 @@
   --color-error: #d32f2f;
   --color-error-soft: rgba(211, 47, 47, 0.08);
   --color-error-border: rgba(211, 47, 47, 0.18);
+  --color-error-border-medium: rgba(211, 47, 47, 0.22);
   --color-error-shadow: rgba(255, 83, 83, 0.12);
 
   --color-success: #2e7d32;
   --color-success-soft: rgba(89, 177, 122, 0.1);
   --color-success-border: rgba(89, 177, 122, 0.18);
+  --color-success-border-medium: rgba(89, 177, 122, 0.22);
 
   --color-warning: #f59e0b;
 
+  --color-white-alpha-10: rgba(255, 255, 255, 0.1);
+  --color-white-alpha-14: rgba(255, 255, 255, 0.14);
+  --color-white-alpha-22: rgba(255, 255, 255, 0.22);
+  --color-white-alpha-28: rgba(255, 255, 255, 0.28);
+  --color-white-alpha-34: rgba(255, 255, 255, 0.34);
+  --color-white-alpha-82: rgba(255, 255, 255, 0.82);
+
   --color-shimmer-highlight: rgba(255, 255, 255, 0.72);
+
+  /* Gradients */
+  --gradient-accent: linear-gradient(
+    135deg,
+    var(--color-accent) 0%,
+    var(--color-accent-hover) 100%
+  );
+
+  --gradient-status-page-bg: radial-gradient(
+    circle at 8% 0%,
+    var(--color-accent-bg-radial),
+    transparent 28%
+  );
+
+  --gradient-status-hero-light: radial-gradient(
+    circle at 82% 18%,
+    var(--color-white-alpha-22),
+    transparent 28%
+  );
+
+  --gradient-status-visual-light: radial-gradient(
+    circle at 16% 18%,
+    var(--color-white-alpha-34),
+    transparent 30%
+  );
 
   /* Typography */
   --font-main: Arial, Helvetica, sans-serif;
@@ -80,6 +116,13 @@
   /* Shadows */
   --shadow-card: 0 8px 32px rgba(29, 30, 33, 0.08);
   --shadow-modal: 0 20px 60px rgba(29, 30, 33, 0.2);
+
+  --shadow-toast: 0 10px 26px rgba(18, 20, 23, 0.08);
+  --shadow-status-hero: 0 24px 68px rgba(63, 148, 95, 0.2);
+  --shadow-status-card: 0 24px 60px rgba(29, 30, 33, 0.14);
+  --shadow-status-code: 0 18px 42px rgba(29, 30, 33, 0.16);
+  --shadow-status-image: 0 28px 30px rgba(29, 30, 33, 0.16);
+
   --shadow-accent-ring: 0 0 0 4px rgba(89, 177, 122, 0.12);
   --shadow-accent-ring-md: 0 0 0 4px rgba(89, 177, 122, 0.14);
   --shadow-accent-ring-strong: 0 0 0 4px rgba(89, 177, 122, 0.15);

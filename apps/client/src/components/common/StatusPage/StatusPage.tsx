@@ -1,9 +1,7 @@
 import { useId } from 'react';
-
 import Image from 'next/image';
 
 import { ButtonLink, Container } from '@/components/common';
-
 import { ROUTES } from '@/lib/constants/routes';
 
 import css from './StatusPage.module.css';

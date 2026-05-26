@@ -17,6 +17,8 @@ type ToastProps = {
   duration?: number;
 };
 
+//===================================================================
+
 declare global {
   interface Window {
     __ePharmacyToastIds?: string[];
@@ -24,8 +26,12 @@ declare global {
   }
 }
 
+//===================================================================
+
 const TOAST_STACK_EVENT = 'e-pharmacy-toast-stack-change';
 const DEFAULT_TOAST_DURATION = 5000;
+
+//===================================================================
 
 function getToastEventTarget(): EventTarget {
   window.__ePharmacyToastEventTarget ??= new EventTarget();
@@ -105,7 +111,9 @@ function Toast({
         resolvedVariant === 'error' ? css.error : css.success
       }`}
       style={
-        { '--toast-offset': `${Math.max(stackIndex, 0) * 64}px` } as CSSProperties
+        {
+          '--toast-offset': `${Math.max(stackIndex, 0) * 64}px`,
+        } as CSSProperties
       }
       role={resolvedVariant === 'error' ? 'alert' : 'status'}
       aria-live={resolvedVariant === 'error' ? 'assertive' : 'polite'}

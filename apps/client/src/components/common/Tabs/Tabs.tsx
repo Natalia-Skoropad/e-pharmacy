@@ -101,7 +101,7 @@ function Tabs<TValue extends string = string>({
               css.moreButton
             }`}
             type="button"
-            aria-label="Відкрити інші вкладки"
+            aria-label="Open other tabs"
             aria-haspopup="menu"
             aria-expanded={isMoreOpen}
             aria-controls={moreMenuId}
