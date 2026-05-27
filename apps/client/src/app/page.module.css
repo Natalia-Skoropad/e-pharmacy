@@ -1,6 +1,6 @@
 .page {
   min-height: 100%;
-  background: linear-gradient(180deg, #edf7f1 0%, var(--color-background) 34%);
+  background: var(--gradient-page-bg);
 }
 
 .hero {
@@ -8,17 +8,15 @@
   overflow: hidden;
   padding-block: 56px 72px;
   color: var(--color-white);
-  background:
-    radial-gradient(circle at 78% 20%, rgba(255, 255, 255, 0.22), transparent 26%),
-    linear-gradient(135deg, #59b17a 0%, #3f945f 100%);
+  background: var(--gradient-hero);
 }
 
 .hero::before,
 .hero::after {
   content: '';
   position: absolute;
-  border-radius: 999px;
-  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-white-alpha-10);
   pointer-events: none;
 }
 
@@ -59,7 +57,7 @@
 
 .hero .kicker,
 .banner .kicker {
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--color-white-alpha-78);
 }
 
 .heroTitle {
@@ -76,7 +74,7 @@
   margin-top: 20px;
   font-size: var(--fz-18);
   line-height: var(--lh-base);
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--color-white-alpha-78);
 }
 
 .actions {
@@ -199,7 +197,7 @@
 .stepCard {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  box-shadow: 0 16px 40px rgba(29, 30, 33, 0.06);
+  box-shadow: var(--shadow-card-lg);
 }
 
 .storeCard {
@@ -327,9 +325,7 @@
   padding: 28px;
   overflow: hidden;
   color: var(--color-white);
-  background:
-    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.16), transparent 28%),
-    linear-gradient(135deg, #59b17a 0%, #3f945f 100%);
+  background: var(--gradient-banner);
   border-radius: var(--radius-xl);
 }
 
@@ -347,7 +343,7 @@
   margin-bottom: 24px;
   font-size: var(--fz-16);
   line-height: var(--lh-base);
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--color-white-alpha-78);
 }
 
 .bannerContent a {
@@ -379,11 +375,9 @@
   overflow: hidden;
   padding: 28px;
   color: var(--color-white);
-  background:
-    radial-gradient(circle at 88% 0%, rgba(255, 255, 255, 0.24), transparent 28%),
-    linear-gradient(135deg, #59b17a 0%, #3f945f 100%);
+  background: var(--gradient-benefits-card);
   border-radius: var(--radius-xl);
-  box-shadow: 0 20px 48px rgba(63, 148, 95, 0.22);
+  box-shadow: var(--shadow-accent-card-strong);
 }
 
 .benefitsAccentCard::after {
@@ -393,7 +387,8 @@
   bottom: -54px;
   width: 170px;
   height: 170px;
-  background: url('/images/common/white-round-pill.png') center / contain no-repeat;
+  background: url('/images/common/white-round-pill.png') center / contain
+    no-repeat;
   opacity: 0.14;
 }
 
@@ -408,7 +403,7 @@
   color: var(--color-accent);
   text-transform: uppercase;
   letter-spacing: var(--ls-wide);
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: var(--color-white-alpha-90);
   border-radius: var(--radius-pill);
 }
 
@@ -429,7 +424,7 @@
   margin-top: 14px;
   font-size: var(--fz-15);
   line-height: var(--lh-base);
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-white-alpha-80);
 }
 
 .benefitsList {
@@ -445,7 +440,7 @@
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 12px 30px rgba(29, 30, 33, 0.05);
+  box-shadow: var(--shadow-card-soft);
 }
 
 .benefitsList strong {
@@ -513,7 +508,7 @@
   color: var(--color-white);
   background-color: var(--color-accent);
   border-radius: 50%;
-  box-shadow: 0 10px 24px rgba(89, 177, 122, 0.28);
+  box-shadow: var(--shadow-accent-avatar);
 }
 
 @media only screen and (min-width: 768px) {

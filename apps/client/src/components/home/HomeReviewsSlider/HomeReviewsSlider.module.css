@@ -59,7 +59,7 @@
   font-size: var(--fz-14);
   line-height: 1.2;
   color: var(--color-text-muted);
-  background-color: #fff7e6;
+  background-color: var(--color-warning-light);
   border-radius: var(--radius-pill);
 }
 
@@ -125,15 +125,15 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .dot::before {
   width: 9px;
   height: 9px;
   content: '';
-  background-color: rgba(89, 177, 122, 0.28);
-  border-radius: 999px;
+  background-color: var(--color-accent-dot);
+  border-radius: var(--radius-pill);
   transition:
     width var(--transition-base),
     background-color var(--transition-base);
