@@ -3,18 +3,16 @@
   min-height: 580px;
   padding-block: 44px 34px;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.82);
-  background:
-    radial-gradient(circle at 50% 105%, rgba(255, 255, 255, 0.14), transparent 21%),
-    linear-gradient(135deg, #59b17a 0%, #3f945f 100%);
+  color: var(--color-white-alpha-82);
+  background: var(--gradient-footer);
 }
 
 .footer::before,
 .footer::after {
   position: absolute;
   content: '';
-  border-radius: 999px;
-  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-white-alpha-10);
   pointer-events: none;
 }
 
@@ -75,7 +73,7 @@
   font-size: var(--fz-16);
   font-weight: var(--fw-medium);
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.86);
+  color: var(--color-white-alpha-82);
   transition: color var(--transition-base);
 }
 
@@ -99,8 +97,8 @@
   width: 42px;
   height: 42px;
   color: var(--color-white);
-  background-color: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background-color: var(--color-white-alpha-10);
+  border: 1px solid var(--color-white-alpha-20);
   border-radius: var(--radius-sm);
   transition:
     background-color var(--transition-base),
@@ -109,7 +107,7 @@
 
 .socialLink:hover,
 .socialLink:focus-visible {
-  background-color: rgba(255, 255, 255, 0.16);
+  background-color: var(--color-white-alpha-16);
   transform: translateY(-2px);
 }
 
@@ -119,13 +117,13 @@
   gap: 18px;
   padding-top: 24px;
   text-align: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-top: 1px solid var(--color-white-alpha-20);
 }
 
 .copy {
   font-size: var(--fz-14);
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.76);
+  color: var(--color-white-alpha-78);
 }
 
 .infoList {
@@ -134,7 +132,7 @@
 
 .infoLink {
   font-size: var(--fz-14);
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--color-white-alpha-78);
 }
 
 @media only screen and (min-width: 768px) {
@@ -156,12 +154,13 @@
 
   .mainNav {
     justify-self: end;
-    text-align: right;
+    min-width: 220px;
+    text-align: center;
   }
 
   .mainList,
   .infoList {
-    align-items: flex-end;
+    align-items: center;
   }
 
   .socialList {
@@ -178,7 +177,8 @@
 
   .infoNav {
     justify-self: end;
-    text-align: right;
+    min-width: 220px;
+    text-align: center;
   }
 }
 
@@ -200,6 +200,7 @@
 
   .mainNav {
     justify-self: center;
+    min-width: 0;
     text-align: center;
   }
 
@@ -223,5 +224,7 @@
 
   .infoNav {
     justify-self: end;
+    min-width: 0;
+    text-align: right;
   }
 }

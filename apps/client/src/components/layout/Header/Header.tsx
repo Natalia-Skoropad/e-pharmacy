@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
-
 import { ShoppingCart } from 'lucide-react';
 
 import {
@@ -13,18 +12,21 @@ import {
   Container,
   Logo,
 } from '@/components/common';
+
 import BurgerButton from '@/components/layout/BurgerButton';
 import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
-import { useAuth } from '@/providers';
 
 import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
 import { ROUTES } from '@/lib/constants/routes';
 import { isActiveRoute } from '@/lib/routes';
 import { cn } from '@/lib/utils';
+
 import {
   CART_UPDATED_EVENT,
   type CartUpdatedEventDetail,
 } from '@/lib/cart/cart-events';
+
+import { useAuth } from '@/providers';
 import { getCart } from '@/services';
 
 import css from './Header.module.css';

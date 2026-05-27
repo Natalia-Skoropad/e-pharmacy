@@ -1,21 +1,19 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { X } from 'lucide-react';
-
-import { Button, ButtonLink, Logo } from '@/components/common';
-import { useAuth } from '@/providers';
-
+import { Button, ButtonLink, CloseIconButton, Logo } from '@/components/common';
 import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
 
 import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
 import { ROUTES } from '@/lib/constants/routes';
 import { isActiveRoute } from '@/lib/routes';
 import { cn } from '@/lib/utils';
+
+import { useAuth } from '@/providers';
 
 import css from './MobileOffcanvas.module.css';
 
@@ -35,9 +33,7 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
   const previousPathnameRef = useRef(pathname);
 
   const { isAuthenticated, isAuthReady, user, logout } = useAuth();
-
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
-
   const handleBackdropClick = useBackdropClick({ onClose });
 
   const handleLogout = async () => {
@@ -71,14 +67,12 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
         <div className={css.head}>
           <Logo variant="white" />
 
-          <button
+          <CloseIconButton
             className={css.closeButton}
-            type="button"
-            aria-label="Close menu"
+            variant="light"
+            label="Close menu"
             onClick={onClose}
-          >
-            <X size={24} strokeWidth={2} aria-hidden="true" />
-          </button>
+          />
         </div>
 
         <nav className={css.nav} aria-label="Mobile main navigation">
@@ -150,7 +144,6 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
   );
 
   const portalRoot = typeof document === 'undefined' ? null : document.body;
-
   if (!isOpen || !portalRoot) return null;
 
   return createPortal(offcanvas, portalRoot);
