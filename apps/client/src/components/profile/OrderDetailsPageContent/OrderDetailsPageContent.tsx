@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+
 import {
   CalendarDays,
   CreditCard,
@@ -20,15 +21,16 @@ import {
   ShimmerImage,
   SvgIcon,
 } from '@/components/common';
+
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
-import { useAuth } from '@/providers';
 
 import { ROUTES } from '@/lib/constants/routes';
 import { formatOrderDateTime, formatPrice } from '@/lib/formatters';
 import { buildProductPath, buildStorePath } from '@/lib/routes';
 import { getOrderIdFromPathParam } from '@/lib/orders';
-import { getOrderDetails } from '@/services';
 
+import { useAuth } from '@/providers';
+import { getOrderDetails } from '@/services';
 import type { BreadcrumbItem, CustomerOrder } from '@/types';
 
 import css from './OrderDetailsPageContent.module.css';
@@ -122,13 +124,16 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
         <section className={css.section} aria-labelledby="order-title">
           <Container>
             <Breadcrumbs items={breadcrumbs} />
+
             <div className={css.emptyCard}>
               <h1 className={css.title} id="order-title">
                 Order was not found
               </h1>
               <p className={css.text}>
-                {error || 'This private order is not available for this account.'}
+                {error ||
+                  'This private order is not available for this account.'}
               </p>
+
               <ButtonLink href={ROUTES.PROFILE}>Back to profile</ButtonLink>
             </div>
           </Container>
@@ -171,6 +176,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                     <h2 className={css.storeTitle} id="invoice-title">
                       {order.storeName}
                     </h2>
+
                     <RatingSummary
                       rating={order.storeRating}
                       reviewsCount={order.storeReviewsCount ?? 0}
@@ -309,7 +315,8 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
               {order.comment ? (
                 <div className={css.commentCard}>
                   <h3 className={css.commentTitle}>
-                    <MessageSquareText size={16} aria-hidden="true" /> Order comment
+                    <MessageSquareText size={16} aria-hidden="true" /> Order
+                    comment
                   </h3>
                   <p className={css.commentText}>{order.comment}</p>
                 </div>

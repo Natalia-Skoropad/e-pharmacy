@@ -14,21 +14,24 @@ import {
   LoadingSpinner,
   Tabs,
 } from '@/components/common';
+
 import {
   AddressInput,
   NameInput,
   PasswordInput,
   PhoneInput,
 } from '@/components/form-fields';
+
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { ProductCard } from '@/components/medicines-catalog';
 import { StoreCard } from '@/components/pharmacy-stores';
-import { useAuth } from '@/providers';
 
 import { PROFILE_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
 import { formatPrice, formatShortDate } from '@/lib/formatters';
+import { buildCustomerOrderPath } from '@/lib/orders';
 import { createBreadcrumbs } from '@/lib/routes';
+
 import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
@@ -39,6 +42,9 @@ import {
   sanitizeCustomerName,
   sanitizeCustomerPhone,
 } from '@/lib/validations';
+
+import { useAuth } from '@/providers';
+
 import {
   getOrders,
   getProducts,
@@ -46,7 +52,6 @@ import {
   updateCurrentUser,
   updateCurrentUserPassword,
 } from '@/services';
-import { buildCustomerOrderPath } from '@/lib/orders';
 
 import type { CustomerOrder, Product, Store as PharmacyStore } from '@/types';
 
@@ -81,11 +86,7 @@ const FAVORITES_PER_PAGE = 100;
 const FAVORITES_VISIBLE_STEP = 16;
 const ORDERS_VISIBLE_STEP = 15;
 const AVATAR_MAX_FILE_SIZE = 450 * 1024;
-const AVATAR_ALLOWED_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-] as const;
+const AVATAR_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 
 //===================================================================
 

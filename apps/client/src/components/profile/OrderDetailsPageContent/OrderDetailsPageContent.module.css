@@ -71,10 +71,14 @@
 }
 
 .summary {
-  box-shadow: var(--shadow-card);
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  padding: 20px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
 }
 
 .invoice {
@@ -176,13 +180,6 @@
   color: var(--color-text-secondary);
 }
 
-.summary {
-  display: grid;
-  gap: 18px;
-  align-content: start;
-  padding: 20px;
-}
-
 .detailsList {
   display: grid;
   gap: 14px;
@@ -214,12 +211,12 @@
 }
 
 .detailsList dd {
+  margin-inline-start: 0;
   font-size: var(--fz-15);
   font-weight: var(--fw-bold);
   line-height: var(--lh-base);
   color: var(--color-text-primary);
   overflow-wrap: anywhere;
-  margin-inline-start: 0;
 }
 
 .statusCard,
@@ -232,6 +229,37 @@
   box-shadow: var(--shadow-card);
 }
 
+.commentCard {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: var(--radius-lg);
+}
+
+.commentTitle {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  color: var(--color-accent);
+}
+
+.commentTitle svg {
+  flex: 0 0 auto;
+}
+
+.commentText {
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
 @media only screen and (min-width: 768px) {
   .section {
     padding-block: 20px 96px;
@@ -242,10 +270,7 @@
     padding: 18px 20px;
   }
 
-  .storeDetailsLink {
-    justify-self: end;
-  }
-
+  .storeDetailsLink,
   .productDetailsLink {
     justify-self: end;
   }
@@ -253,7 +278,6 @@
   .hero {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
-
     margin-bottom: 40px;
   }
 
@@ -269,8 +293,8 @@
   .imageWrap,
   .imageFallback {
     width: 140px;
-    min-height: 140px;
     height: 140px;
+    min-height: 140px;
   }
 
   .itemHead {
@@ -294,35 +318,4 @@
     position: sticky;
     top: 96px;
   }
-}
-
-.commentCard {
-  display: grid;
-  gap: 10px;
-  padding: 14px;
-  background-color: var(--color-accent-light);
-  border: 1px solid rgba(89, 177, 122, 0.25);
-  border-radius: var(--radius-lg);
-}
-
-.commentTitle {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-base);
-  color: var(--color-accent);
-}
-
-.commentText {
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-
-.commentTitle svg {
-  flex: 0 0 auto;
 }

@@ -1,4 +1,3 @@
-import { ProtectedRoute } from '@/routes';
 import { OrderDetailsPageContent } from '@/components/profile';
 
 import {
@@ -8,6 +7,8 @@ import {
 
 import { ROUTES } from '@/lib/constants/routes';
 import { createPageMetadata } from '@/lib/seo';
+
+import { ProtectedRoute } from '@/routes';
 
 //===================================================================
 
