@@ -14,6 +14,7 @@ function NameInput({
   error,
   isTouched,
   required = true,
+  className,
   onChange,
 }: AuthFieldBaseProps) {
   return (
@@ -21,6 +22,7 @@ function NameInput({
       id={id}
       label="Name"
       required={required}
+      className={className}
       error={error}
       isTouched={isTouched}
     >

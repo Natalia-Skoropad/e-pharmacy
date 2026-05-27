@@ -9,13 +9,13 @@ export type AuthFieldBaseProps = {
   error?: string;
   isTouched?: boolean;
   required?: boolean;
+  className?: string;
   onChange: ChangeEventHandler<HTMLInputElement>;
 };
 
 export type AddressFieldProps = Omit<AuthFieldBaseProps, 'onChange'> & {
   onChange: ChangeEventHandler<HTMLTextAreaElement>;
 };
-
 
 export type CommentFieldProps = Omit<AuthFieldBaseProps, 'onChange'> & {
   label?: string;

@@ -17,6 +17,7 @@ function CommentInput({
   error,
   isTouched,
   required = false,
+  className,
   label = 'Comment for pharmacy',
   placeholder = 'Add details for the pharmacy if needed',
   maxLength = COMMENT_MAX_LENGTH,
@@ -27,6 +28,7 @@ function CommentInput({
       id={id}
       label={label}
       required={required}
+      className={className}
       error={error}
       isTouched={isTouched}
     >

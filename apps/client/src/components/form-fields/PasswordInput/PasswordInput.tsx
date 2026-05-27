@@ -18,6 +18,7 @@ function PasswordInput({
   error,
   isTouched,
   required = true,
+  className,
   isVisible,
   labelAction,
   onChange,
@@ -28,6 +29,7 @@ function PasswordInput({
       id={id}
       label={label}
       required={required}
+      className={className}
       labelAction={labelAction}
       error={error}
       isTouched={isTouched}

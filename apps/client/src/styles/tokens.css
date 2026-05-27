@@ -26,6 +26,7 @@
   --color-accent-border-hover: rgba(89, 177, 122, 0.35);
   --color-accent-border-strong: rgba(89, 177, 122, 0.55);
   --color-accent-dot: rgba(89, 177, 122, 0.28);
+  --color-accent-shadow: rgba(89, 177, 122, 0.16);
 
   --color-accent-hover-alpha-52: rgba(63, 148, 95, 0.52);
   --color-accent-hover-alpha-72: rgba(63, 148, 95, 0.72);

@@ -24,7 +24,7 @@ import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useAuth } from '@/providers';
 
 import { ROUTES } from '@/lib/constants/routes';
-import { formatPrice } from '@/lib/formatters';
+import { formatOrderDateTime, formatPrice } from '@/lib/formatters';
 import { buildProductPath, buildStorePath } from '@/lib/routes';
 import { getOrderIdFromPathParam } from '@/lib/orders';
 import { getOrderDetails } from '@/services';
@@ -38,18 +38,6 @@ import css from './OrderDetailsPageContent.module.css';
 type OrderDetailsPageContentProps = {
   orderId: string;
 };
-
-//===================================================================
-
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
-}
 
 //===================================================================
 
@@ -264,7 +252,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                   <dt>
                     <CalendarDays size={16} aria-hidden="true" /> Date
                   </dt>
-                  <dd>{formatDate(order.createdAt)}</dd>
+                  <dd>{formatOrderDateTime(order.createdAt)}</dd>
                 </div>
                 <div>
                   <dt>

@@ -14,6 +14,12 @@ import {
   LoadingSpinner,
   Tabs,
 } from '@/components/common';
+import {
+  AddressInput,
+  NameInput,
+  PasswordInput,
+  PhoneInput,
+} from '@/components/form-fields';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { ProductCard } from '@/components/medicines-catalog';
 import { StoreCard } from '@/components/pharmacy-stores';
@@ -21,12 +27,9 @@ import { useAuth } from '@/providers';
 
 import { PROFILE_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
-import { formatPrice } from '@/lib/formatters';
+import { formatPrice, formatShortDate } from '@/lib/formatters';
 import { createBreadcrumbs } from '@/lib/routes';
 import {
-  CUSTOMER_ADDRESS_MAX_LENGTH,
-  CUSTOMER_NAME_MAX_LENGTH,
-  CUSTOMER_PHONE_MAX_LENGTH,
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   getCustomerAddressError,
@@ -98,16 +101,6 @@ function formatUserStatus(status: string): string {
 
 //===================================================================
 
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value));
-}
-
-//===================================================================
-
 function formatOrderStatus(status: CustomerOrder['status']): string {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
@@ -135,7 +128,11 @@ function readFileAsDataUrl(file: File): Promise<string> {
 //===================================================================
 
 function getAvatarFileError(file: File): string {
-  if (!AVATAR_ALLOWED_TYPES.includes(file.type as (typeof AVATAR_ALLOWED_TYPES)[number])) {
+  if (
+    !AVATAR_ALLOWED_TYPES.includes(
+      file.type as (typeof AVATAR_ALLOWED_TYPES)[number]
+    )
+  ) {
     return 'Please choose a JPG, PNG, or WEBP image.';
   }
 
@@ -273,6 +270,9 @@ function ProfilePageContent() {
     currentPassword: '',
     newPassword: '',
   });
+  const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] =
+    useState(false);
+  const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarChanged, setAvatarChanged] = useState(false);
   const [isRemoveAvatarConfirmOpen, setIsRemoveAvatarConfirmOpen] =
@@ -781,98 +781,50 @@ function ProfilePageContent() {
                     </div>
 
                     <div className={css.formGrid}>
-                      <label className={css.field}>
-                        <span className={css.fieldLabel}>Name</span>
-                        <span className={css.controlWrap}>
-                          <input
-                            value={profileValues.name}
-                            maxLength={CUSTOMER_NAME_MAX_LENGTH}
-                            aria-invalid={Boolean(profileErrors.name)}
-                            aria-describedby="profile-name-error"
-                            onChange={(event) =>
-                              handleProfileChange(
-                                'name',
-                                sanitizeCustomerName(event.target.value)
-                              )
-                            }
-                          />
-                          <span className={css.inputCounter}>
-                            {profileValues.name.length}/
-                            {CUSTOMER_NAME_MAX_LENGTH}
-                          </span>
-                          <span
-                            className={css.errorText}
-                            id="profile-name-error"
-                            aria-live="polite"
-                          >
-                            {profileErrors.name}
-                          </span>
-                        </span>
-                      </label>
+                      <NameInput
+                        id="profile-name"
+                        name="name"
+                        value={profileValues.name}
+                        error={profileErrors.name}
+                        isTouched
+                        onChange={(event) =>
+                          handleProfileChange(
+                            'name',
+                            sanitizeCustomerName(event.target.value)
+                          )
+                        }
+                      />
 
-                      <label className={css.field}>
-                        <span className={css.fieldLabel}>Phone</span>
-                        <span className={css.controlWrap}>
-                          <input
-                            value={profileValues.phone}
-                            placeholder="+380XXXXXXXXX"
-                            autoComplete="tel"
-                            maxLength={CUSTOMER_PHONE_MAX_LENGTH}
-                            aria-invalid={Boolean(profileErrors.phone)}
-                            aria-describedby="profile-phone-error"
-                            onChange={(event) =>
-                              handleProfileChange(
-                                'phone',
-                                sanitizeCustomerPhone(event.target.value)
-                              )
-                            }
-                          />
-                          <span className={css.inputCounter}>
-                            {profileValues.phone.length}/
-                            {CUSTOMER_PHONE_MAX_LENGTH}
-                          </span>
-                          <span
-                            className={css.errorText}
-                            id="profile-phone-error"
-                            aria-live="polite"
-                          >
-                            {profileErrors.phone}
-                          </span>
-                        </span>
-                      </label>
+                      <PhoneInput
+                        id="profile-phone"
+                        name="phone"
+                        value={profileValues.phone}
+                        error={profileErrors.phone}
+                        isTouched
+                        required={false}
+                        onChange={(event) =>
+                          handleProfileChange(
+                            'phone',
+                            sanitizeCustomerPhone(event.target.value)
+                          )
+                        }
+                      />
 
-                      <label className={css.fieldWide}>
-                        <span className={css.fieldLabel}>
-                          Delivery address / post office
-                        </span>
-                        <span className={css.controlWrap}>
-                          <textarea
-                            value={profileValues.address}
-                            maxLength={CUSTOMER_ADDRESS_MAX_LENGTH}
-                            placeholder="Add delivery address"
-                            autoComplete="street-address"
-                            aria-invalid={Boolean(profileErrors.address)}
-                            aria-describedby="profile-address-error"
-                            onChange={(event) =>
-                              handleProfileChange(
-                                'address',
-                                sanitizeCustomerAddress(event.target.value)
-                              )
-                            }
-                          />
-                          <span className={css.textareaCounter}>
-                            {profileValues.address.length}/
-                            {CUSTOMER_ADDRESS_MAX_LENGTH}
-                          </span>
-                          <span
-                            className={css.errorTextTextarea}
-                            id="profile-address-error"
-                            aria-live="polite"
-                          >
-                            {profileErrors.address}
-                          </span>
-                        </span>
-                      </label>
+                      <AddressInput
+                        id="profile-address"
+                        name="address"
+                        className={css.fieldWide}
+                        value={profileValues.address}
+                        error={profileErrors.address}
+                        isTouched
+                        required={false}
+                        onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+                          handleProfileChange(
+                            'address',
+                            sanitizeCustomerAddress(event.target.value)
+                          )
+                        }
+                      />
                     </div>
 
                     <Button
@@ -898,70 +850,45 @@ function ProfilePageContent() {
                     </div>
 
                     <div className={css.formGrid}>
-                      <label className={css.field}>
-                        <span className={css.fieldLabel}>Current password</span>
-                        <span className={css.controlWrap}>
-                          <input
-                            type="password"
-                            value={passwordValues.currentPassword}
-                            autoComplete="current-password"
-                            maxLength={PASSWORD_MAX_LENGTH}
-                            aria-invalid={Boolean(
-                              passwordErrors.currentPassword
-                            )}
-                            aria-describedby="current-password-error"
-                            onChange={(event) =>
-                              handlePasswordChange(
-                                'currentPassword',
-                                event.target.value
-                              )
-                            }
-                          />
-                          <span className={css.inputCounter}>
-                            {passwordValues.currentPassword.length}/
-                            {PASSWORD_MAX_LENGTH}
-                          </span>
-                          <span
-                            className={css.errorText}
-                            id="current-password-error"
-                            aria-live="polite"
-                          >
-                            {passwordErrors.currentPassword}
-                          </span>
-                        </span>
-                      </label>
+                      <PasswordInput
+                        id="current-password"
+                        name="currentPassword"
+                        label="Current password"
+                        value={passwordValues.currentPassword}
+                        autoComplete="current-password"
+                        error={passwordErrors.currentPassword}
+                        isTouched
+                        isVisible={isCurrentPasswordVisible}
+                        onChange={(event) =>
+                          handlePasswordChange(
+                            'currentPassword',
+                            event.target.value
+                          )
+                        }
+                        onToggleVisibility={() =>
+                          setIsCurrentPasswordVisible((isVisible) => !isVisible)
+                        }
+                      />
 
-                      <label className={css.field}>
-                        <span className={css.fieldLabel}>New password</span>
-                        <span className={css.controlWrap}>
-                          <input
-                            type="password"
-                            value={passwordValues.newPassword}
-                            autoComplete="new-password"
-                            minLength={PASSWORD_MIN_LENGTH}
-                            maxLength={PASSWORD_MAX_LENGTH}
-                            aria-invalid={Boolean(passwordErrors.newPassword)}
-                            aria-describedby="new-password-error"
-                            onChange={(event) =>
-                              handlePasswordChange(
-                                'newPassword',
-                                event.target.value
-                              )
-                            }
-                          />
-                          <span className={css.inputCounter}>
-                            {passwordValues.newPassword.length}/
-                            {PASSWORD_MAX_LENGTH}
-                          </span>
-                          <span
-                            className={css.errorText}
-                            id="new-password-error"
-                            aria-live="polite"
-                          >
-                            {passwordErrors.newPassword}
-                          </span>
-                        </span>
-                      </label>
+                      <PasswordInput
+                        id="new-password"
+                        name="newPassword"
+                        label="New password"
+                        value={passwordValues.newPassword}
+                        autoComplete="new-password"
+                        error={passwordErrors.newPassword}
+                        isTouched
+                        isVisible={isNewPasswordVisible}
+                        onChange={(event) =>
+                          handlePasswordChange(
+                            'newPassword',
+                            event.target.value
+                          )
+                        }
+                        onToggleVisibility={() =>
+                          setIsNewPasswordVisible((isVisible) => !isVisible)
+                        }
+                      />
                     </div>
 
                     {passwordSubmitError ? (
@@ -1010,7 +937,7 @@ function ProfilePageContent() {
                         ) : orders.length > 0 ? (
                           visibleOrders.map((order) => (
                             <tr key={order.id}>
-                              <td>{formatDate(order.createdAt)}</td>
+                              <td>{formatShortDate(order.createdAt)}</td>
                               <td>
                                 <Link
                                   className={css.orderLink}

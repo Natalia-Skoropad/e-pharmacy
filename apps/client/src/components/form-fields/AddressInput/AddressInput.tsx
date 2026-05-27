@@ -14,6 +14,7 @@ function AddressInput({
   error,
   isTouched,
   required = true,
+  className,
   onChange,
 }: AddressFieldProps) {
   return (
@@ -21,6 +22,7 @@ function AddressInput({
       id={id}
       label="Delivery address / post office"
       required={required}
+      className={className}
       error={error}
       errorClassName={css.addressError}
       isTouched={isTouched}

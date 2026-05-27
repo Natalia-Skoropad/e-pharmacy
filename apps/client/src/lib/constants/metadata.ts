@@ -91,6 +91,10 @@ export const PROFILE_TITLE = 'Profile';
 export const PROFILE_DESCRIPTION =
   'Manage your E-PHARMACY customer profile and account details.';
 
+export const ORDER_DETAILS_TITLE = 'Order details';
+export const ORDER_DETAILS_DESCRIPTION =
+  'View a private E-PHARMACY customer order in your profile.';
+
 //===================================================================
 
 export const NOT_FOUND_TITLE = 'Page Not Found';

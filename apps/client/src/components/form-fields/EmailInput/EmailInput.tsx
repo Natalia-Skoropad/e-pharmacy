@@ -14,6 +14,7 @@ function EmailInput({
   error,
   isTouched,
   required = true,
+  className,
   onChange,
 }: AuthFieldBaseProps) {
   return (
@@ -21,6 +22,7 @@ function EmailInput({
       id={id}
       label="Email"
       required={required}
+      className={className}
       error={error}
       isTouched={isTouched}
     >

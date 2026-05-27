@@ -1,3 +1,5 @@
+import { ROUTES } from '@/lib/constants/routes';
+
 import type { CustomerOrder } from '@/types';
 
 //===================================================================
@@ -10,7 +12,7 @@ export function buildCustomerOrderPath(
     .replaceAll(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
-  return `/profile/orders/${safeNumber}--${order.id}`;
+  return `${ROUTES.PROFILE}/orders/${safeNumber}--${order.id}`;
 }
 
 //===================================================================

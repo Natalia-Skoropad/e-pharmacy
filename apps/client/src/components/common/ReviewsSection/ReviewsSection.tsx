@@ -6,6 +6,8 @@ import { Star } from 'lucide-react';
 import Button from '@/components/common/Button';
 import LazyLoadButton from '@/components/common/LazyLoadButton';
 
+import { formatReviewDate } from '@/lib/formatters';
+
 import css from './ReviewsSection.module.css';
 
 //===================================================================
@@ -42,16 +44,6 @@ type ReviewsSectionProps = {
 
 const DEFAULT_VISIBLE_REVIEWS_COUNT = 10;
 const REVIEWS_LOAD_DELAY_MS = 250;
-
-//===================================================================
-
-function formatReviewDate(value: string): string {
-  return new Intl.DateTimeFormat('uk-UA', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value));
-}
 
 //===================================================================
 

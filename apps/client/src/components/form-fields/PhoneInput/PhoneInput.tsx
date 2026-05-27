@@ -14,6 +14,7 @@ function PhoneInput({
   error,
   isTouched,
   required = true,
+  className,
   onChange,
 }: AuthFieldBaseProps) {
   return (
@@ -21,6 +22,7 @@ function PhoneInput({
       id={id}
       label="Phone"
       required={required}
+      className={className}
       error={error}
       isTouched={isTouched}
     >
