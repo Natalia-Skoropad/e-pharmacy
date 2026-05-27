@@ -1,5 +1,4 @@
 import Link from 'next/link';
-
 import { ChevronRight } from 'lucide-react';
 
 import { Container } from '@/components/common';
@@ -75,7 +74,9 @@ function InfoPage({
             <header className={css.header}>
               <p className={css.kicker}>E-PHARMACY information</p>
               <h1 className={css.title}>{title}</h1>
-              {updatedAt ? <p className={css.updated}>Updated {updatedAt}</p> : null}
+              {updatedAt ? (
+                <p className={css.updated}>Updated {updatedAt}</p>
+              ) : null}
               <p className={css.description}>{description}</p>
             </header>
 
