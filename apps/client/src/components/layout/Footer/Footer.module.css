@@ -70,11 +70,37 @@
 
 .mainLink,
 .infoLink {
-  font-size: var(--fz-16);
+  position: relative;
+  display: inline-flex;
+  padding-block: 6px;
   font-weight: var(--fw-medium);
   line-height: 1.45;
   color: var(--color-white-alpha-82);
   transition: color var(--transition-base);
+}
+
+.mainLink {
+  font-size: var(--fz-16);
+}
+
+.infoLink {
+  font-size: var(--fz-14);
+  color: var(--color-white-alpha-78);
+}
+
+.mainLink::after,
+.infoLink::after {
+  position: absolute;
+  right: 0;
+  bottom: 1px;
+  left: 0;
+  height: 2px;
+  content: '';
+  background-color: currentColor;
+  border-radius: var(--radius-pill);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--transition-base);
 }
 
 .mainLink:hover,
@@ -82,6 +108,14 @@
 .infoLink:hover,
 .infoLink:focus-visible {
   color: var(--color-white);
+}
+
+.mainLink:hover::after,
+.mainLink:focus-visible::after,
+.infoLink:hover::after,
+.infoLink:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left;
 }
 
 .socialList {
@@ -130,55 +164,56 @@
   gap: 12px;
 }
 
-.infoLink {
-  font-size: var(--fz-14);
-  color: var(--color-white-alpha-78);
-}
-
 @media only screen and (min-width: 768px) {
   .footer {
     min-height: 406px;
     padding-block: 54px 40px;
   }
 
+  .container {
+    gap: 36px;
+  }
+
   .topRow {
-    grid-template-columns: minmax(260px, 1fr) minmax(220px, auto);
-    align-items: start;
-    column-gap: 48px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 22px 48px;
   }
 
   .brand {
+    grid-column: 1 / -1;
     justify-items: start;
     text-align: left;
   }
 
   .mainNav {
-    justify-self: end;
-    min-width: 220px;
-    text-align: center;
+    min-width: 0;
   }
 
   .mainList,
   .infoList {
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
-  }
-
-  .socialList {
     justify-content: flex-start;
   }
 
+  .mainList {
+    gap: 14px 28px;
+  }
+
+  .socialList {
+    justify-content: flex-end;
+  }
+
   .bottomRow {
-    grid-template-columns: minmax(260px, 1fr) minmax(220px, auto);
-    align-items: start;
     justify-items: start;
-    column-gap: 48px;
+    gap: 10px;
     text-align: left;
   }
 
-  .infoNav {
-    justify-self: end;
-    min-width: 220px;
-    text-align: center;
+  .infoList {
+    gap: 10px 28px;
   }
 }
 
@@ -195,22 +230,17 @@
   }
 
   .brand {
+    grid-column: auto;
     max-width: 460px;
   }
 
   .mainNav {
     justify-self: center;
-    min-width: 0;
-    text-align: center;
   }
 
   .mainList,
   .infoList {
-    align-items: center;
-    flex-direction: row;
-    flex-wrap: wrap;
     justify-content: center;
-    gap: 14px 28px;
   }
 
   .socialList {
@@ -220,11 +250,11 @@
   .bottomRow {
     grid-template-columns: minmax(360px, 1fr) auto;
     align-items: center;
+    gap: 48px;
   }
 
   .infoNav {
     justify-self: end;
-    min-width: 0;
     text-align: right;
   }
 }

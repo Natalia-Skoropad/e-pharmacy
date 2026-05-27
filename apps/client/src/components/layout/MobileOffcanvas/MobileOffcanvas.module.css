@@ -60,8 +60,10 @@
 }
 
 .navLink {
+  position: relative;
   display: inline-flex;
   width: fit-content;
+  padding-block: 6px;
   font-size: var(--fz-18);
   font-weight: var(--fw-medium);
   line-height: 1.4;
@@ -69,10 +71,31 @@
   transition: color var(--transition-base);
 }
 
+.navLink::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  content: '';
+  background-color: currentColor;
+  border-radius: var(--radius-pill);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--transition-base);
+}
+
 .navLink:hover,
 .navLink:focus-visible,
 .navLink.active {
   color: var(--color-white);
+}
+
+.navLink:hover::after,
+.navLink:focus-visible::after,
+.navLink.active::after {
+  transform: scaleX(1);
+  transform-origin: left;
 }
 
 .actions {
