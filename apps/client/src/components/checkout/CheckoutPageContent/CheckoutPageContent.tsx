@@ -1,31 +1,32 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useMemo, useState, type ChangeEvent } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 import CheckoutDeliveryMethod from '../CheckoutDeliveryMethod';
 import CheckoutInvoicePanel from '../CheckoutInvoicePanel';
 import CheckoutPaymentMethod from '../CheckoutPaymentMethod';
 
+import { useCheckoutCart } from '../hooks/useCheckoutCart';
+import { useCheckoutStore } from '../hooks/useCheckoutStore';
+import { useCheckoutSubmit } from '../hooks/useCheckoutSubmit';
+
 import { ButtonLink, Container, LoadingSpinner } from '@/components/common';
 import { CommentInput } from '@/components/form-fields';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
-import { dispatchCartUpdated } from '@/lib/cart/cart-events';
+import { groupCartByStore } from '@/lib/cart/cart-groups';
 
 import {
-  getStockValidationError,
   getStoreAddress,
   getStoreBankDetails,
   getStoreEmail,
   getStorePhone,
   getStoreWorkingHours,
-  groupCartByStore,
 } from '@/lib/checkout';
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
-import { buildCustomerOrderPath } from '@/lib/orders';
 
 import {
   CUSTOMER_ADDRESS_MAX_LENGTH,
@@ -41,9 +42,9 @@ import {
 } from '@/lib/validations';
 
 import { useAuth } from '@/providers';
-import { checkoutOrder, getCart, getStoreDetails } from '@/services';
 
-import type { BreadcrumbItem, Cart, Store } from '@/types';
+import type { BreadcrumbItem } from '@/types';
+
 import type {
   CheckoutDeliveryMethod as DeliveryMethod,
   CheckoutPaymentMethod as PaymentMethod,
@@ -59,12 +60,6 @@ type CheckoutPageContentProps = {
 
 //===================================================================
 
-const EMPTY_CART: Cart = {
-  items: [],
-  totalItems: 0,
-  totalPrice: 0,
-};
-
 const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
   { label: 'Home', href: ROUTES.HOME },
   { label: 'Cart', href: ROUTES.CART },
@@ -75,13 +70,10 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
 
 function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const { token, user } = useAuth();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const queryStoreId = searchParams.get('storeId');
   const selectedStoreIdFromRoute = checkoutStoreId ?? queryStoreId;
 
-  const [cart, setCart] = useState<Cart>(EMPTY_CART);
-  const [store, setStore] = useState<Store | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>('pickup');
@@ -90,10 +82,8 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const [deliveryAddress, setDeliveryAddress] = useState<string | null>(null);
   const [comment, setComment] = useState('');
   const [copiedEmail, setCopiedEmail] = useState(false);
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isStoreLoading, setIsStoreLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { cart, error, isLoading, setCart, setError } = useCheckoutCart(token);
 
   const orderGroups = useMemo(() => groupCartByStore(cart), [cart]);
   const selectedOrderGroup = useMemo(() => {
@@ -101,13 +91,16 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
 
     if (selectedStoreIdFromRoute) {
       return (
-        orderGroups.find((group) => group.storeId === selectedStoreIdFromRoute) ??
-        null
+        orderGroups.find(
+          (group) => group.storeId === selectedStoreIdFromRoute
+        ) ?? null
       );
     }
 
     return orderGroups.length === 1 ? orderGroups[0] : null;
   }, [selectedStoreIdFromRoute, orderGroups]);
+
+  const { store, isStoreLoading } = useCheckoutStore(selectedOrderGroup, token);
 
   const shouldSelectInvoice =
     !isLoading && cart.items.length > 0 && !selectedOrderGroup;
@@ -137,11 +130,6 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const bankDetails = getStoreBankDetails(store);
   const canUseSelectedPayment =
     paymentMethod !== 'bank-transfer' || Boolean(bankDetails);
-  const canSubmit =
-    Boolean(selectedOrderGroup) &&
-    isPostDeliveryValid &&
-    canUseSelectedPayment &&
-    !isSubmitting;
   const storeEmail = getStoreEmail(store);
   const storePhone = getStorePhone(store);
   const storeWorkingHours = getStoreWorkingHours(store);
@@ -150,76 +138,22 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     storePhone || storeWorkingHours || storeAddress
   );
 
-  useEffect(() => {
-    const authToken = token;
+  const canSubmit =
+    Boolean(selectedOrderGroup) && isPostDeliveryValid && canUseSelectedPayment;
 
-    let isMounted = true;
-
-    async function fetchCart() {
-      if (!authToken) return;
-
-      try {
-        const response = await getCart(authToken);
-
-        if (!isMounted) return;
-
-        setCart(response.cart);
-        setError('');
-      } catch {
-        if (!isMounted) return;
-
-        setError('Could not load checkout data.');
-      } finally {
-        if (!isMounted) return;
-
-        setIsLoading(false);
-      }
-    }
-
-    void fetchCart();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [token]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function fetchStore() {
-      if (!selectedOrderGroup) {
-        setStore(null);
-        setIsStoreLoading(false);
-        return;
-      }
-
-      try {
-        setIsStoreLoading(true);
-        const response = await getStoreDetails(
-          selectedOrderGroup.storeId,
-          token ?? undefined
-        );
-
-        if (!isMounted) return;
-
-        setStore(response.store);
-      } catch {
-        if (!isMounted) return;
-
-        setStore(null);
-      } finally {
-        if (!isMounted) return;
-
-        setIsStoreLoading(false);
-      }
-    }
-
-    void fetchStore();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedOrderGroup, token]);
+  const { isSubmitting, handleSubmit } = useCheckoutSubmit({
+    token,
+    selectedOrderGroup,
+    paymentMethod,
+    deliveryMethod,
+    recipientNameValue,
+    recipientPhoneValue,
+    deliveryAddressValue,
+    comment,
+    canSubmit,
+    setCart,
+    setError,
+  });
 
   const handleRecipientNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setRecipientName(sanitizeCustomerName(event.target.value));
@@ -248,69 +182,6 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
       window.setTimeout(() => setCopiedEmail(false), 1800);
     } catch {
       setCopiedEmail(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    const authToken = token;
-
-    if (!authToken || !canSubmit) return;
-
-    try {
-      setIsSubmitting(true);
-      setError('');
-
-      if (!selectedOrderGroup) return;
-
-      const latestCartResponse = await getCart(authToken);
-      const latestGroups = groupCartByStore(latestCartResponse.cart);
-      const latestOrderGroup = latestGroups.find(
-        (group) => group.storeId === selectedOrderGroup.storeId
-      );
-
-      if (!latestOrderGroup) {
-        setCart(latestCartResponse.cart);
-        setError(
-          'Sorry, we cannot confirm this invoice right now. While you were placing the order, these products were reserved by another customer. Please update the cart and try again.'
-        );
-        return;
-      }
-
-      const stockError = getStockValidationError(latestOrderGroup);
-
-      if (stockError) {
-        setCart(latestCartResponse.cart);
-        setError(stockError);
-        return;
-      }
-
-      const response = await checkoutOrder(
-        {
-          storeId: latestOrderGroup.storeId,
-          paymentMethod,
-          deliveryMethod,
-          ...(deliveryMethod === 'post'
-            ? {
-                deliveryDetails: {
-                  recipientName: recipientNameValue.trim(),
-                  recipientPhone: recipientPhoneValue.trim(),
-                  address: deliveryAddressValue.trim(),
-                },
-              }
-            : {}),
-          ...(comment.trim() ? { comment: comment.trim() } : {}),
-        },
-        authToken
-      );
-      const nextCartResponse = await getCart(authToken);
-
-      setCart(nextCartResponse.cart);
-      dispatchCartUpdated(nextCartResponse.cart);
-      router.push(buildCustomerOrderPath(response.order));
-    } catch {
-      setError('Could not confirm order.');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -394,7 +265,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
 
               <CheckoutInvoicePanel
                 orderGroup={selectedOrderGroup}
-                canSubmit={canSubmit}
+                canSubmit={canSubmit && !isSubmitting}
                 isSubmitting={isSubmitting}
                 onSubmit={() => void handleSubmit()}
               />

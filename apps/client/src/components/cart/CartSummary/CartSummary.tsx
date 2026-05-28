@@ -1,8 +1,6 @@
 import { ShieldAlert } from 'lucide-react';
 
 import { Button, ButtonLink } from '@/components/common';
-
-import { buildCheckoutPath } from '@/lib/checkout';
 import { formatPrice } from '@/lib/formatters';
 
 import css from './CartSummary.module.css';
@@ -11,9 +9,9 @@ import css from './CartSummary.module.css';
 
 type CartSummaryProps = {
   storeId: string;
-  storeName?: string | null;
   totalItems: number;
   totalPrice: number;
+  checkoutPath: string;
   isUpdating?: boolean;
   onContinueShopping: () => void;
 };
@@ -22,9 +20,9 @@ type CartSummaryProps = {
 
 function CartSummary({
   storeId,
-  storeName,
   totalItems,
   totalPrice,
+  checkoutPath,
   isUpdating = false,
   onContinueShopping,
 }: CartSummaryProps) {
@@ -55,7 +53,7 @@ function CartSummary({
       </div>
 
       <div className={css.actions}>
-        <ButtonLink href={buildCheckoutPath(storeName, storeId)} fullWidth>
+        <ButtonLink href={checkoutPath} fullWidth>
           Confirm order
         </ButtonLink>
 

@@ -20,6 +20,14 @@ import {
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
+
+import {
+  getCartInvoicePath,
+  getCartInvoiceTotal,
+  groupCartItemsByStore,
+  type CartStoreGroup,
+} from '@/lib/cart/cart-groups';
+
 import { CART_DESCRIPTION, CART_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
 import { buildStorePath, createBreadcrumbs } from '@/lib/routes';
@@ -32,18 +40,6 @@ import css from './CartPageContent.module.css';
 
 //===================================================================
 
-type StoreCartGroup = {
-  storeId: string;
-  storeName: string;
-  items: Cart['items'];
-  totalItems: number;
-  totalPrice: number;
-  storeRating?: number;
-  storeReviewsCount?: number;
-};
-
-//===================================================================
-
 const EMPTY_CART: Cart = {
   items: [],
   totalItems: 0,
@@ -51,35 +47,6 @@ const EMPTY_CART: Cart = {
 };
 
 //===================================================================
-
-function groupCartItemsByStore(items: Cart['items']): StoreCartGroup[] {
-  const groups = new Map<string, StoreCartGroup>();
-
-  for (const item of items) {
-    const storeName =
-      item.storeName || item.product.storeName || 'Pharmacy order';
-    const currentGroup = groups.get(item.storeId);
-
-    if (currentGroup) {
-      currentGroup.items.push(item);
-      currentGroup.totalItems += item.quantity;
-      currentGroup.totalPrice += item.totalPrice;
-      continue;
-    }
-
-    groups.set(item.storeId, {
-      storeId: item.storeId,
-      storeName,
-      items: [item],
-      totalItems: item.quantity,
-      totalPrice: item.totalPrice,
-      storeRating: item.storeRating,
-      storeReviewsCount: item.storeReviewsCount,
-    });
-  }
-
-  return [...groups.values()];
-}
 
 function getCartWithUpdatedQuantity(
   cart: Cart,
@@ -114,7 +81,7 @@ function CartPageContent() {
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState(false);
   const [continueShoppingStore, setContinueShoppingStore] =
-    useState<StoreCartGroup | null>(null);
+    useState<CartStoreGroup | null>(null);
   const [pendingAction, setPendingAction] = useState<
     | { type: 'item'; itemId: string }
     | { type: 'store'; storeId: string; storeName: string }
@@ -394,9 +361,9 @@ function CartPageContent() {
 
                     <CartSummary
                       storeId={group.storeId}
-                      storeName={group.storeName}
                       totalItems={group.totalItems}
-                      totalPrice={group.totalPrice}
+                      totalPrice={getCartInvoiceTotal(group)}
+                      checkoutPath={getCartInvoicePath(group)}
                       isUpdating={isUpdating}
                       onContinueShopping={() => setContinueShoppingStore(group)}
                     />

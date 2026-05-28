@@ -1,33 +1,5 @@
-import type { Cart, Store } from '@/types';
+import type { Store } from '@/types';
 import type { CheckoutStoreOrderGroup } from '@/types/checkout';
-
-//===================================================================
-
-export function groupCartByStore(cart: Cart): CheckoutStoreOrderGroup[] {
-  const groups = new Map<string, CheckoutStoreOrderGroup>();
-
-  for (const item of cart.items) {
-    const storeName = item.storeName || item.product.storeName || 'Pharmacy';
-    const group = groups.get(item.storeId);
-
-    if (group) {
-      group.items.push(item);
-      group.totalItems += item.quantity;
-      group.totalPrice += item.totalPrice;
-      continue;
-    }
-
-    groups.set(item.storeId, {
-      storeId: item.storeId,
-      storeName,
-      items: [item],
-      totalItems: item.quantity,
-      totalPrice: item.totalPrice,
-    });
-  }
-
-  return [...groups.values()];
-}
 
 //===================================================================
 

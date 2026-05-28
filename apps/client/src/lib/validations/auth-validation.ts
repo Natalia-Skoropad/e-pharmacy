@@ -1,8 +1,12 @@
 import {
-  EMAIL_PATTERN,
-  NAME_PATTERN,
-  PHONE_PATTERN,
   VALIDATION_LIMITS,
+  buildEmailError,
+  buildNameError,
+  buildPasswordError,
+  buildPhoneError,
+  sanitizeEmail as sanitizeSharedEmail,
+  sanitizeName,
+  sanitizePhone,
 } from '@e-pharmacy/validation';
 
 export const PASSWORD_MIN_LENGTH = VALIDATION_LIMITS.passwordMin;
@@ -82,55 +86,12 @@ export const RESET_PASSWORD_INITIAL_VALUES: ResetPasswordFormValues = {
 
 //===================================================================
 
-export function sanitizeEmail(value: string): string {
-  return value.trimStart().replace(/\s/g, '').slice(0, EMAIL_MAX_LENGTH);
-}
+export const sanitizeEmail = sanitizeSharedEmail;
+export const sanitizeCustomerName = sanitizeName;
+export const sanitizeCustomerPhone = sanitizePhone;
 
-export function sanitizeCustomerName(value: string): string {
-  return value
-    .replace(/[^A-Za-z '\-]/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .slice(0, CUSTOMER_NAME_MAX_LENGTH);
-}
-
-export function sanitizeCustomerPhone(value: string): string {
-  const hasPlus = value.trim().startsWith('+');
-  const digits = value.replace(/\D/g, '').slice(0, 12);
-
-  if (hasPlus || digits.startsWith('380')) {
-    return `+${digits}`.slice(0, CUSTOMER_PHONE_MAX_LENGTH);
-  }
-
-  return digits.slice(0, CUSTOMER_PHONE_MAX_LENGTH);
-}
-
-export function getEmailError(value: string): string {
-  const email = value.trim();
-
-  if (!email) return 'Email is required';
-
-  if (email.length > EMAIL_MAX_LENGTH) {
-    return `Email must be at most ${EMAIL_MAX_LENGTH} characters`;
-  }
-
-  if (!EMAIL_PATTERN.test(email)) return 'Enter a valid email address';
-
-  return '';
-}
-
-export function getPasswordError(value: string): string {
-  if (!value) return 'Password is required';
-
-  if (value.length < PASSWORD_MIN_LENGTH) {
-    return `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
-  }
-
-  if (value.length > PASSWORD_MAX_LENGTH) {
-    return `Password must be at most ${PASSWORD_MAX_LENGTH} characters`;
-  }
-
-  return '';
-}
+export const getEmailError = buildEmailError;
+export const getPasswordError = buildPasswordError;
 
 //===================================================================
 
@@ -153,29 +114,14 @@ export function validateRegisterForm(
 ): RegisterFormErrors {
   const errors: RegisterFormErrors = {};
 
-  const name = values.name.trim();
   const emailError = getEmailError(values.email);
-  const phone = values.phone.trim();
+  const nameError = buildNameError(values.name, { required: true });
+  const phoneError = buildPhoneError(values.phone, { required: true });
   const passwordError = getPasswordError(values.password);
 
-  if (!name) {
-    errors.name = 'Name is required';
-  } else if (name.length < USER_NAME_MIN_LENGTH) {
-    errors.name = `Name must be at least ${USER_NAME_MIN_LENGTH} characters`;
-  } else if (name.length > USER_NAME_MAX_LENGTH) {
-    errors.name = `Name must be at most ${USER_NAME_MAX_LENGTH} characters`;
-  } else if (!NAME_PATTERN.test(name)) {
-    errors.name = 'Use only Latin letters, spaces, apostrophe or hyphen';
-  }
-
+  if (nameError) errors.name = nameError;
   if (emailError) errors.email = emailError;
-
-  if (!phone) {
-    errors.phone = 'Phone is required';
-  } else if (!PHONE_PATTERN.test(phone)) {
-    errors.phone = 'Enter phone in format +380XXXXXXXXX';
-  }
-
+  if (phoneError) errors.phone = phoneError;
   if (passwordError) errors.password = passwordError;
 
   return errors;
