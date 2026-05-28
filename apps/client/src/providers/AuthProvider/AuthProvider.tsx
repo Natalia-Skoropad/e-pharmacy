@@ -18,9 +18,9 @@ import {
 } from '@/services';
 
 import {
-  getAuthToken,
-  removeAuthToken,
-  setAuthToken,
+  getAuthSessionMarker,
+  removeAuthSessionMarker,
+  setAuthSessionMarker,
 } from '@/lib/auth/auth-token-storage';
 
 import type {
@@ -36,6 +36,8 @@ type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
 type AuthContextValue = {
   user: AuthUser | null;
+  sessionMarker: string | null;
+  /** @deprecated Use sessionMarker. It is not a real JWT token. */
   token: string | null;
   status: AuthStatus;
   isAuthenticated: boolean;
@@ -60,27 +62,27 @@ type AuthProviderProps = {
 
 function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [sessionMarker, setSessionMarker] = useState<string | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
 
   const applyAuthResponse = useCallback((response: AuthResponse) => {
-    setAuthToken();
-    setToken(response.token);
+    setAuthSessionMarker();
+    setSessionMarker(getAuthSessionMarker());
     setUser(response.user);
     setStatus('authenticated');
   }, []);
 
   const clearAuthState = useCallback(() => {
-    removeAuthToken();
-    setToken(null);
+    removeAuthSessionMarker();
+    setSessionMarker(null);
     setUser(null);
     setStatus('unauthenticated');
   }, []);
 
   const refreshCurrentUser = useCallback(async () => {
-    const savedToken = getAuthToken();
+    const savedSessionMarker = getAuthSessionMarker();
 
-    if (!savedToken) {
+    if (!savedSessionMarker) {
       clearAuthState();
       return null;
     }
@@ -88,9 +90,9 @@ function AuthProvider({ children }: AuthProviderProps) {
     try {
       setStatus('loading');
 
-      const response = await getCurrentUser(savedToken);
+      const response = await getCurrentUser();
 
-      setToken(savedToken);
+      setSessionMarker(savedSessionMarker);
       setUser(response.user);
       setStatus('authenticated');
 
@@ -124,24 +126,24 @@ function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const logout = useCallback(async () => {
-    const currentToken = token ?? getAuthToken();
+    const currentSessionMarker = sessionMarker ?? getAuthSessionMarker();
 
     try {
-      if (currentToken) {
-        await logoutUser(currentToken);
+      if (currentSessionMarker) {
+        await logoutUser();
       }
     } finally {
       clearAuthState();
     }
-  }, [clearAuthState, token]);
+  }, [clearAuthState, sessionMarker]);
 
   useEffect(() => {
     let isMounted = true;
 
     async function bootstrapAuth() {
-      const savedToken = getAuthToken();
+      const savedSessionMarker = getAuthSessionMarker();
 
-      if (!savedToken) {
+      if (!savedSessionMarker) {
         if (isMounted) {
           setStatus('unauthenticated');
         }
@@ -150,11 +152,11 @@ function AuthProvider({ children }: AuthProviderProps) {
       }
 
       try {
-        const response = await getCurrentUser(savedToken);
+        const response = await getCurrentUser();
 
         if (!isMounted) return;
 
-        setToken(savedToken);
+        setSessionMarker(savedSessionMarker);
         setUser(response.user);
         setStatus('authenticated');
       } catch {
@@ -174,7 +176,8 @@ function AuthProvider({ children }: AuthProviderProps) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      token,
+      sessionMarker,
+      token: sessionMarker,
       status,
       isAuthenticated: status === 'authenticated',
       isAuthReady: status !== 'loading',
@@ -183,7 +186,7 @@ function AuthProvider({ children }: AuthProviderProps) {
       logout,
       refreshCurrentUser,
     }),
-    [login, logout, refreshCurrentUser, register, status, token, user]
+    [login, logout, refreshCurrentUser, register, sessionMarker, status, user]
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;

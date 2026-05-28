@@ -68,14 +68,9 @@ export async function resetPassword(
 
 //===================================================================
 
-export async function getCurrentUser(
-  authToken: string
-): Promise<CurrentUserResponse> {
+export async function getCurrentUser(): Promise<CurrentUserResponse> {
   const response = await apiRequest<ApiSuccessResponse<CurrentUserResponse>>(
-    API_ROUTES.auth.current,
-    {
-      authToken,
-    }
+    API_ROUTES.auth.current
   );
 
   return getResponseData(response);
@@ -83,10 +78,9 @@ export async function getCurrentUser(
 
 //===================================================================
 
-export async function logoutUser(authToken: string): Promise<void> {
+export async function logoutUser(): Promise<void> {
   await apiRequest<ApiSuccessResponse>(API_ROUTES.auth.logout, {
     method: 'POST',
-    authToken,
   });
 }
 

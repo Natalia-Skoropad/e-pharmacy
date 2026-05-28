@@ -1,4 +1,4 @@
-export const AUTH_SESSION_READY_TOKEN = 'cookie-auth-session';
+export const AUTH_SESSION_MARKER = 'cookie-auth-session';
 
 // Client-readable marker only. It helps the UI know that a cookie auth flow
 // was started, but it is not a security token and must not be used as a
@@ -55,15 +55,15 @@ function removeClientCookie(name: string): void {
 
 //===================================================================
 
-export function getAuthToken(): string | null {
+export function getAuthSessionMarker(): string | null {
   const hasAuthReadyCookie = Boolean(getCookieValue(AUTH_READY_COOKIE_NAME));
 
-  return hasAuthReadyCookie ? AUTH_SESSION_READY_TOKEN : null;
+  return hasAuthReadyCookie ? AUTH_SESSION_MARKER : null;
 }
 
 //===================================================================
 
-export function setAuthToken(): void {
+export function setAuthSessionMarker(): void {
   if (!canUseDocumentCookie()) return;
 
   setClientCookie(AUTH_READY_COOKIE_NAME, '1');
@@ -71,8 +71,14 @@ export function setAuthToken(): void {
 
 //===================================================================
 
-export function removeAuthToken(): void {
+export function removeAuthSessionMarker(): void {
   if (!canUseDocumentCookie()) return;
 
   removeClientCookie(AUTH_READY_COOKIE_NAME);
 }
+
+// Backward-compatible aliases. Prefer the sessionMarker names in new code.
+export const AUTH_SESSION_READY_TOKEN = AUTH_SESSION_MARKER;
+export const getAuthToken = getAuthSessionMarker;
+export const setAuthToken = setAuthSessionMarker;
+export const removeAuthToken = removeAuthSessionMarker;

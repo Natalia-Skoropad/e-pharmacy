@@ -7,6 +7,10 @@ import { isDuplicateEmailError } from '../utils/mongoError';
 
 //===============================================================
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+//===============================================================
+
 function isHttpError(error: unknown): error is HttpError {
   return (
     error instanceof Error &&
@@ -35,12 +39,19 @@ export const errorMiddleware: ErrorRequestHandler = (error, req, res, next) => {
     : HTTP_STATUS.INTERNAL_SERVER_ERROR;
 
   const message =
-    error instanceof Error ? error.message : API_MESSAGES.INTERNAL_SERVER_ERROR;
+    isHttpError(error) || !isProduction
+      ? error instanceof Error
+        ? error.message
+        : API_MESSAGES.INTERNAL_SERVER_ERROR
+      : API_MESSAGES.INTERNAL_SERVER_ERROR;
 
   const responseBody = {
     status: 'error',
     message,
     ...(isHttpError(error) && error.details ? { details: error.details } : {}),
+    ...(!isProduction && error instanceof Error && error.stack
+      ? { stack: error.stack }
+      : {}),
   };
 
   res.status(status).json(responseBody);
