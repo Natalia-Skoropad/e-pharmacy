@@ -15,7 +15,6 @@ import '@/styles/tokens.css';
 import '@/styles/reset.css';
 import '@/styles/base.css';
 import '@/styles/utilities.css';
-import './globals.css';
 
 //===================================================================
 
@@ -25,11 +24,13 @@ export const metadata: Metadata = {
     default: SITE_NAME,
     template: `%s | ${SITE_NAME}`,
   },
+
   description: HOME_DESCRIPTION,
   applicationName: SITE_NAME,
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
+
   openGraph: {
     type: 'website',
     siteName: SITE_NAME,
@@ -45,6 +46,7 @@ export const metadata: Metadata = {
       },
     ],
   },
+
   twitter: {
     card: 'summary_large_image',
     title: SITE_NAME,

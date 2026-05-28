@@ -1,11 +1,11 @@
 'use client';
 
 import Image from 'next/image';
-import { Button, ButtonLink, Container } from '@/components/common';
 
+import { Button, ButtonLink, Container } from '@/components/common';
 import { ROUTES } from '@/lib/constants/routes';
 
-import css from './error.module.css';
+import css from './status-page.module.css';
 
 //===================================================================
 

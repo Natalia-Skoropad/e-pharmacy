@@ -13,7 +13,6 @@ export { default as UserBadge } from './UserBadge';
 export { default as PaymentInfoCard } from './PaymentInfoCard';
 export { default as QuantityCounter } from './QuantityCounter';
 export { default as RatingSummary } from './RatingSummary';
-export { default as StatusPage } from './StatusPage';
 export { default as StockAvailability } from './StockAvailability';
 export { default as SvgIcon } from './SvgIcon';
 export { default as Tabs } from './Tabs';
