@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import mongoose, { Types } from 'mongoose';
 
 import { API_MESSAGES } from '../constants/messages';
@@ -61,23 +62,34 @@ function findProductOffer(
 
 //===============================================================
 
-function createOrderNumber(): string {
-  const date = new Date();
-  const datePart = new Intl.DateTimeFormat('uk-UA', {
-    year: '2-digit',
-    month: '2-digit',
-    day: '2-digit',
-  })
-    .format(date)
-    .replaceAll('.', '');
-  const randomPart = Math.floor(1000 + Math.random() * 9000);
-
-  return `EP-${datePart}-${randomPart}`;
+function padDatePart(value: number): string {
+  return value.toString().padStart(2, '0');
 }
 
 //===============================================================
 
-function getStoreAddress(storeSnapshot: OrderEntity['storeSnapshot']): string | undefined {
+function createOrderNumber(): string {
+  const date = new Date();
+  const datePart = [
+    padDatePart(date.getDate()),
+    padDatePart(date.getMonth() + 1),
+    date.getFullYear().toString().slice(-2),
+  ].join('');
+  const timePart = [
+    padDatePart(date.getHours()),
+    padDatePart(date.getMinutes()),
+    padDatePart(date.getSeconds()),
+  ].join('');
+  const randomPart = randomBytes(3).toString('hex').toUpperCase();
+
+  return `EP-${datePart}-${timePart}-${randomPart}`;
+}
+
+//===============================================================
+
+function getStoreAddress(
+  storeSnapshot: OrderEntity['storeSnapshot']
+): string | undefined {
   const address = [storeSnapshot.address, storeSnapshot.city]
     .filter(Boolean)
     .join(', ');
@@ -100,8 +112,12 @@ function serializeOrder(order: OrderDocument): OrderResponseDto {
     ...(typeof order.storeSnapshot.reviewsCount === 'number'
       ? { storeReviewsCount: order.storeSnapshot.reviewsCount }
       : {}),
-    ...(order.storeSnapshot.phone ? { storePhone: order.storeSnapshot.phone } : {}),
-    ...(order.storeSnapshot.email ? { storeEmail: order.storeSnapshot.email } : {}),
+    ...(order.storeSnapshot.phone
+      ? { storePhone: order.storeSnapshot.phone }
+      : {}),
+    ...(order.storeSnapshot.email
+      ? { storeEmail: order.storeSnapshot.email }
+      : {}),
     ...(getStoreAddress(order.storeSnapshot)
       ? { storeAddress: getStoreAddress(order.storeSnapshot) }
       : {}),
@@ -110,7 +126,9 @@ function serializeOrder(order: OrderDocument): OrderResponseDto {
     status: order.status,
     paymentMethod: order.paymentMethod,
     deliveryMethod: order.deliveryMethod,
-    ...(order.deliveryDetails ? { deliveryDetails: order.deliveryDetails } : {}),
+    ...(order.deliveryDetails
+      ? { deliveryDetails: order.deliveryDetails }
+      : {}),
     ...(order.comment ? { comment: order.comment } : {}),
     ...(order.storeSnapshot.bankDetails
       ? { bankDetails: order.storeSnapshot.bankDetails }
@@ -185,7 +203,9 @@ export async function checkoutOrderService(
     let createdOrder: OrderDocument | null = null;
 
     await session.withTransaction(async () => {
-      const cart = await Cart.findOne({ userId }).session(session).lean<CartDocument | null>();
+      const cart = await Cart.findOne({ userId })
+        .session(session)
+        .lean<CartDocument | null>();
 
       if (!cart) {
         throw httpError(HTTP_STATUS.BAD_REQUEST, 'Cart is empty');
@@ -226,7 +246,10 @@ export async function checkoutOrderService(
         const product = productMap.get(cartItem.productId.toString());
 
         if (!product) {
-          throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+          throw httpError(
+            HTTP_STATUS.NOT_FOUND,
+            API_MESSAGES.PRODUCT_NOT_FOUND
+          );
         }
 
         const offer = findProductOffer(product, input.storeId);
@@ -252,7 +275,9 @@ export async function checkoutOrderService(
             ...(product.slug ? { slug: product.slug } : {}),
             article: product.article,
             ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
-            ...(typeof product.rating === 'number' ? { rating: product.rating } : {}),
+            ...(typeof product.rating === 'number'
+              ? { rating: product.rating }
+              : {}),
             ...(typeof product.reviewsCount === 'number'
               ? { reviewsCount: product.reviewsCount }
               : {}),
@@ -263,7 +288,10 @@ export async function checkoutOrderService(
         });
       }
 
-      const totalItems = orderItems.reduce((sum, item) => sum + item.quantity, 0);
+      const totalItems = orderItems.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+      );
       const totalPrice = orderItems.reduce(
         (sum, item) => sum + item.totalPrice,
         0
@@ -281,7 +309,9 @@ export async function checkoutOrderService(
               ...(store.phone ? { phone: store.phone } : {}),
               ...(store.email ? { email: store.email } : {}),
               ...(store.imageUrl ? { imageUrl: store.imageUrl } : {}),
-              ...(typeof store.rating === 'number' ? { rating: store.rating } : {}),
+              ...(typeof store.rating === 'number'
+                ? { rating: store.rating }
+                : {}),
               ...(typeof store.reviewsCount === 'number'
                 ? { reviewsCount: store.reviewsCount }
                 : {}),
@@ -317,7 +347,10 @@ export async function checkoutOrderService(
     });
 
     if (!createdOrder) {
-      throw httpError(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Order was not created');
+      throw httpError(
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        'Order was not created'
+      );
     }
 
     return { order: serializeOrder(createdOrder) };
@@ -328,7 +361,9 @@ export async function checkoutOrderService(
 
 //===============================================================
 
-export async function getOrdersService(userId: string): Promise<OrdersResponseDto> {
+export async function getOrdersService(
+  userId: string
+): Promise<OrdersResponseDto> {
   const orders = await Order.find({ userId })
     .sort({ createdAt: -1 })
     .lean<OrderDocument[]>();
@@ -345,7 +380,10 @@ export async function getOrderByIdService(
   userId: string,
   orderId: string
 ): Promise<{ order: OrderResponseDto }> {
-  const order = await Order.findOne({ _id: orderId, userId }).lean<OrderDocument | null>();
+  const order = await Order.findOne({
+    _id: orderId,
+    userId,
+  }).lean<OrderDocument | null>();
 
   if (!order) {
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');

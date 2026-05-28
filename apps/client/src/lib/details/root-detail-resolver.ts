@@ -26,6 +26,26 @@ export type RootDetail = ProductRootDetail | StoreRootDetail;
 
 //===================================================================
 
+const RESERVED_ROOT_SLUGS = new Set([
+  'cart',
+  'checkout',
+  'profile',
+  'login',
+  'register',
+  'pharmacy-stores',
+  'medicines-catalog',
+  'delivery-and-payment',
+  'return-policy',
+]);
+
+//===================================================================
+
+function isReservedRootSlug(slugId: string): boolean {
+  return RESERVED_ROOT_SLUGS.has(slugId.toLowerCase());
+}
+
+//===================================================================
+
 function createProductRootDetail(
   slugId: string,
   product: Product
@@ -58,6 +78,8 @@ function createStoreRootDetail(slugId: string, store: Store): StoreRootDetail {
 export async function resolveRootDetailBySlugId(
   slugId: string
 ): Promise<RootDetail | null> {
+  if (isReservedRootSlug(slugId)) return null;
+
   const [product, store] = await Promise.all([
     getProductBySlugId(slugId),
     getStoreBySlugId(slugId),

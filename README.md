@@ -97,14 +97,31 @@ AUTH_COOKIE_SAME_SITE=lax
 
 ## Production environment checklist
 
+### API / Render
+
+For separate deployed frontend/backend domains, use `AUTH_COOKIE_SAME_SITE=none`.
+This is required so browser requests from the Vercel client can include the API httpOnly auth cookie.
+
 ```env
+NODE_ENV=production
 CLIENT_ORIGINS=https://e-pharmacy-client-ten.vercel.app
 CLIENT_APP_URL=https://e-pharmacy-client-ten.vercel.app
+AUTH_COOKIE_DOMAIN=
+AUTH_COOKIE_SAME_SITE=none
+```
+
+Also configure production MongoDB, JWT, SMTP, and other API secrets in the API hosting provider.
+
+### Client / Vercel
+
+```env
 NEXT_PUBLIC_SITE_URL=https://e-pharmacy-client-ten.vercel.app
 NEXT_PUBLIC_API_BASE_URL=https://e-pharmacy-api-pbaz.onrender.com
 ```
 
-Also configure production MongoDB, JWT, SMTP, CORS, and cookie settings in the API hosting provider.
+### Auth guard note
+
+When the client and API are deployed on separate domains, the Next proxy on the client domain cannot read the API httpOnly cookie. In this deployment mode, private pages rely on the client auth bootstrap calling `getCurrentUser()` with `credentials: 'include'`. A full server/proxy guard requires a shared parent domain or a BFF/API proxy through Next.
 
 ## Getting Started
 

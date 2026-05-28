@@ -10,10 +10,12 @@ const AUTH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 //===============================================================
 
 function getAuthCookieOptions(): CookieOptions {
+  const requiresSecureCookie =
+    env.NODE_ENV === 'production' || env.AUTH_COOKIE_SAME_SITE === 'none';
+
   return {
     httpOnly: true,
-    secure:
-      env.NODE_ENV === 'production' || env.AUTH_COOKIE_SAME_SITE === 'none',
+    secure: requiresSecureCookie,
     sameSite: env.AUTH_COOKIE_SAME_SITE,
     path: '/',
     ...(env.AUTH_COOKIE_DOMAIN ? { domain: env.AUTH_COOKIE_DOMAIN } : {}),
