@@ -1,17 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import Link from 'next/link';
-import { Heart, ImageOff, KeyRound, Store, Upload } from 'lucide-react';
+import { Heart, KeyRound, Store } from 'lucide-react';
 
 import {
-  AvatarImage,
   Button,
   ButtonLink,
-  ConfirmActionModal,
   Container,
   LoadingSpinner,
+  ProfilePhotoCard,
   Tabs,
 } from '@/components/common';
 
@@ -30,7 +29,7 @@ import { PROFILE_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
 import { formatPrice, formatShortDate } from '@/lib/formatters';
 import { buildCustomerOrderPath } from '@/lib/orders';
-import { createBreadcrumbs } from '@/lib/routes';
+import { buildStorePath, createBreadcrumbs } from '@/lib/routes';
 
 import {
   PASSWORD_MAX_LENGTH,
@@ -72,6 +71,8 @@ type PasswordFormValues = {
   newPassword: string;
 };
 
+//===================================================================
+
 const TABS: Array<{
   value: ProfileTab;
   label: string;
@@ -85,8 +86,6 @@ const TABS: Array<{
 const FAVORITES_PER_PAGE = 100;
 const FAVORITES_VISIBLE_STEP = 16;
 const ORDERS_VISIBLE_STEP = 15;
-const AVATAR_MAX_FILE_SIZE = 450 * 1024;
-const AVATAR_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 
 //===================================================================
 
@@ -94,66 +93,12 @@ function formatUserRole(role: string): string {
   return role.charAt(0).toUpperCase() + role.slice(1);
 }
 
-//===================================================================
-
 function formatUserStatus(status: string): string {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
-//===================================================================
-
 function formatOrderStatus(status: CustomerOrder['status']): string {
   return status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-//===================================================================
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result);
-        return;
-      }
-
-      reject(new Error('Could not read selected image.'));
-    };
-
-    reader.onerror = () => reject(new Error('Could not read selected image.'));
-    reader.readAsDataURL(file);
-  });
-}
-
-//===================================================================
-
-function getAvatarFileError(file: File): string {
-  if (
-    !AVATAR_ALLOWED_TYPES.includes(
-      file.type as (typeof AVATAR_ALLOWED_TYPES)[number]
-    )
-  ) {
-    return 'Please choose a JPG, PNG, or WEBP image.';
-  }
-
-  if (file.size > AVATAR_MAX_FILE_SIZE) {
-    return 'Profile photo must be up to 450 KB.';
-  }
-
-  return '';
-}
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) return 'U';
-
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
 }
 
 //===================================================================
@@ -260,7 +205,6 @@ async function getFavoriteStores(authToken: string): Promise<PharmacyStore[]> {
 
 function ProfilePageContent() {
   const { token, user, refreshCurrentUser } = useAuth();
-  const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
   const [profileValues, setProfileValues] = useState<ProfileFormValues>({
     name: '',
@@ -275,9 +219,6 @@ function ProfilePageContent() {
     useState(false);
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarChanged, setAvatarChanged] = useState(false);
-  const [isRemoveAvatarConfirmOpen, setIsRemoveAvatarConfirmOpen] =
-    useState(false);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [ordersVisibleCount, setOrdersVisibleCount] =
     useState(ORDERS_VISIBLE_STEP);
@@ -316,7 +257,6 @@ function ProfilePageContent() {
         address: user.address ?? '',
       });
       setAvatarPreview(user.avatarUrl ?? null);
-      setAvatarChanged(false);
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
@@ -539,66 +479,32 @@ function ProfilePageContent() {
     }));
   };
 
-  const saveAvatar = async (avatarUrl: string | null) => {
+  const handleAvatarError = (message: string) => {
+    setFeedback('');
+    setError(message);
+  };
+
+  const handleAvatarChange = async (avatarUrl: string | null) => {
     if (!token) return;
+
+    const previousAvatarUrl = avatarPreview;
 
     try {
       setIsAvatarSaving(true);
       setFeedback('');
       setError('');
+      setAvatarPreview(avatarUrl);
 
       await updateCurrentUser({ avatarUrl }, token);
       await refreshCurrentUser();
-      setAvatarChanged(false);
       setFeedback(
         avatarUrl ? 'Profile photo was updated.' : 'Profile photo was removed.'
       );
     } catch {
       setError('Could not update profile photo.');
-      setAvatarPreview(user.avatarUrl ?? null);
+      setAvatarPreview(previousAvatarUrl);
     } finally {
       setIsAvatarSaving(false);
-    }
-  };
-
-  const handleRemoveAvatar = async () => {
-    setAvatarPreview(null);
-    setAvatarChanged(true);
-    setFeedback('');
-    setError('');
-    setIsRemoveAvatarConfirmOpen(false);
-
-    await saveAvatar(null);
-  };
-
-  const handleAvatarFileChange = async (
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-
-    if (!file) return;
-
-    const fileError = getAvatarFileError(file);
-
-    if (fileError) {
-      setFeedback('');
-      setError(fileError);
-      return;
-    }
-
-    try {
-      setFeedback('');
-      setError('');
-
-      const dataUrl = await readFileAsDataUrl(file);
-      setAvatarPreview(dataUrl);
-      setAvatarChanged(true);
-      await saveAvatar(dataUrl);
-    } catch {
-      setError('Could not upload profile photo.');
-      setAvatarPreview(user.avatarUrl ?? null);
-      setAvatarChanged(false);
     }
   };
 
@@ -615,12 +521,10 @@ function ProfilePageContent() {
           name: profileValues.name.trim(),
           phone: profileValues.phone.trim(),
           address: profileValues.address.trim(),
-          ...(avatarChanged ? { avatarUrl: avatarPreview } : {}),
         },
         token
       );
       await refreshCurrentUser();
-      setAvatarChanged(false);
       setFeedback('Profile data was updated.');
     } catch {
       setError('Could not update profile data.');
@@ -679,59 +583,13 @@ function ProfilePageContent() {
 
           <div className={css.profileShell}>
             <aside className={css.sidebar} aria-label="Profile summary">
-              <div className={css.avatarArea}>
-                <div className={css.avatar} aria-hidden="true">
-                  {avatarPreview ? (
-                    <AvatarImage
-                      className={css.avatarImage}
-                      src={avatarPreview}
-                    />
-                  ) : (
-                    <span>{getInitials(user.name)}</span>
-                  )}
-                </div>
-
-                <div className={css.avatarActions}>
-                  <input
-                    ref={avatarInputRef}
-                    className={css.avatarInput}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    aria-label="Upload profile photo"
-                    onChange={(event) => void handleAvatarFileChange(event)}
-                  />
-
-                  <p className={css.avatarHint}>
-                    Upload a lightweight JPG, PNG, or WEBP image up to 450 KB.
-                    The photo is saved to your profile right away.
-                  </p>
-
-                  <div className={css.avatarButtons}>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      disabled={isAvatarSaving}
-                      onClick={() => avatarInputRef.current?.click()}
-                    >
-                      <Upload size={16} aria-hidden="true" />
-                      {isAvatarSaving ? 'Saving...' : 'Upload photo'}
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className={css.dangerButton}
-                      disabled={!avatarPreview || isAvatarSaving}
-                      onClick={() => setIsRemoveAvatarConfirmOpen(true)}
-                    >
-                      <ImageOff size={16} aria-hidden="true" />
-                      Remove photo
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <ProfilePhotoCard
+                name={user.name}
+                avatarUrl={avatarPreview}
+                isSaving={isAvatarSaving}
+                onChange={handleAvatarChange}
+                onError={handleAvatarError}
+              />
 
               <div className={css.nameBlock}>
                 <h2 className={css.name}>{user.name}</h2>
@@ -947,7 +805,17 @@ function ProfilePageContent() {
                                   {order.orderNumber}
                                 </Link>
                               </td>
-                              <td>{order.storeName}</td>
+                              <td>
+                                <Link
+                                  className={css.storeLink}
+                                  href={buildStorePath(
+                                    order.storeName,
+                                    order.storeId
+                                  )}
+                                >
+                                  {order.storeName}
+                                </Link>
+                              </td>
                               <td>{formatPrice(order.totalPrice)}</td>
                               <td>
                                 <span className={css.statusBadge}>
@@ -1165,18 +1033,6 @@ function ProfilePageContent() {
           </div>
         </Container>
       </section>
-
-      {isRemoveAvatarConfirmOpen ? (
-        <ConfirmActionModal
-          title="Remove profile photo?"
-          text="This photo will be removed from your account. Are you sure?"
-          confirmLabel={isAvatarSaving ? 'Removing...' : 'Remove photo'}
-          cancelLabel="Keep photo"
-          isLoading={isAvatarSaving}
-          onConfirm={() => void handleRemoveAvatar()}
-          onCancel={() => setIsRemoveAvatarConfirmOpen(false)}
-        />
-      ) : null}
     </main>
   );
 }

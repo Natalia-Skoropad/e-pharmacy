@@ -5,13 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 
-import {
-  AvatarImage,
-  Button,
-  ButtonLink,
-  Container,
-  Logo,
-} from '@/components/common';
+import { Button, ButtonLink, Container, Logo, UserBadge } from '@/components/common';
 
 import BurgerButton from '@/components/layout/BurgerButton';
 import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
@@ -30,20 +24,6 @@ import { useAuth } from '@/providers';
 import { getCart } from '@/services';
 
 import css from './Header.module.css';
-
-//===================================================================
-
-function getUserInitials(name?: string | null): string {
-  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) return 'U';
-
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
-}
 
 //===================================================================
 
@@ -155,23 +135,12 @@ function Header() {
 
           {isAuthReady && isAuthenticated ? (
             <>
-              <ButtonLink
+              <UserBadge
                 className={css.profileLink}
                 href={ROUTES.PROFILE}
-                variant="ghost"
-                size="sm"
-              >
-                <span className={css.userAvatar} aria-hidden="true">
-                  {user?.avatarUrl ? (
-                    <AvatarImage src={user.avatarUrl} />
-                  ) : (
-                    getUserInitials(user?.name)
-                  )}
-                </span>
-                <span className={css.profileName}>
-                  {user?.name ?? 'Profile'}
-                </span>
-              </ButtonLink>
+                name={user?.name}
+                avatarUrl={user?.avatarUrl}
+              />
 
               <Button
                 variant="secondary"

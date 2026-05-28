@@ -5,7 +5,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 
-import { Button, ButtonLink, CloseIconButton, Logo } from '@/components/common';
+import {
+  Button,
+  ButtonLink,
+  CloseIconButton,
+  Logo,
+  UserBadge,
+} from '@/components/common';
 import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
 
 import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
@@ -102,9 +108,13 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
 
           {isAuthReady && isAuthenticated ? (
             <>
-              <ButtonLink href={ROUTES.PROFILE} variant="ghost" fullWidth>
-                {user?.name ?? 'Profile'}
-              </ButtonLink>
+              <UserBadge
+                href={ROUTES.PROFILE}
+                name={user?.name}
+                avatarUrl={user?.avatarUrl}
+                variant="dark"
+                onClick={onClose}
+              />
 
               <Button
                 variant="secondary"
