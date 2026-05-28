@@ -66,7 +66,7 @@
   color: var(--color-accent);
   background-color: var(--color-accent-light);
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 4px rgba(89, 177, 122, 0.12);
+  box-shadow: var(--shadow-accent-ring);
 }
 
 .filterBadge {
@@ -93,7 +93,7 @@
   inset: 0;
   display: flex;
   justify-content: flex-end;
-  background-color: rgba(18, 20, 23, 0.35);
+  background-color: var(--color-overlay);
 }
 
 .offcanvas {

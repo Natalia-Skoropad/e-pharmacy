@@ -279,8 +279,7 @@
 
 .totalLine,
 .cartNote,
-.authNote,
-.counter {
+.authNote {
   margin-top: 8px;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
@@ -337,95 +336,35 @@
   color: var(--color-text-secondary);
 }
 
-.reviewForm {
-  display: grid;
-  gap: 16px;
-  padding: 20px;
-  margin-bottom: 24px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+.buyButton {
+  width: 100%;
+  margin-top: 28px;
 }
 
-.reviewLabel {
-  display: block;
-  margin-bottom: 8px;
-  font-size: var(--fz-14);
+.favoriteStoreBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+  max-width: calc(100% - 20px);
+  padding: 8px 12px;
+  overflow: hidden;
+  font-size: var(--fz-12);
   font-weight: var(--fw-medium);
+  line-height: 1.2;
+  color: var(--color-accent);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-card);
+}
+
+.stockLine {
+  font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-accent);
-}
-
-.reviewTextarea {
-  width: 100%;
-  min-height: 150px;
-  padding: 14px 16px;
-  font: inherit;
-  color: var(--color-text-primary);
-  resize: none;
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  outline: none;
-  transition: border-color var(--transition-base);
-}
-
-.reviewTextarea:focus {
-  border-color: var(--color-accent);
-}
-
-.ratingFieldset {
-  padding: 0;
-  margin: 0;
-  border: 0;
-}
-
-.ratingButtons {
-  display: flex;
-  gap: 4px;
-}
-
-.starButton,
-.starButtonActive {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  color: var(--color-warning);
-  border-radius: 50%;
-  transition: background-color var(--transition-base);
-}
-
-.starButtonActive svg {
-  fill: currentColor;
-}
-
-.starButton:hover,
-.starButton:focus-visible,
-.starButtonActive:hover,
-.starButtonActive:focus-visible {
-  background-color: var(--color-accent-light);
-}
-
-.reviewActions {
-  display: grid;
-  gap: 10px;
-}
-
-.reviewSubmitButton {
-  width: 100%;
-}
-
-.notice {
-  padding: 14px 16px;
-  margin-bottom: 20px;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-warning);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
 }
 
 @media only screen and (min-width: 768px) {
@@ -443,7 +382,7 @@
   }
 
   .offerTitle {
-    font-size: 22px;
+    font-size: var(--fz-22);
   }
 
   .imageCard,
@@ -485,9 +424,10 @@
     justify-items: start;
   }
 
-  .reviewSubmitButton {
-    width: fit-content;
-    min-width: 220px;
+  .buyButton {
+    display: block;
+    width: calc((100% - 16px) / 2);
+    margin-left: auto;
   }
 }
 
@@ -512,7 +452,7 @@
 
   .offerControls {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     align-items: end;
   }
 
@@ -542,91 +482,4 @@
   .offerLink {
     width: fit-content;
   }
-}
-
-.buyButton {
-  margin-top: 28px;
-  width: 100%;
-}
-
-.favoriteStoreBadge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 1;
-  max-width: calc(100% - 20px);
-  padding: 8px 12px;
-  overflow: hidden;
-  font-size: var(--fz-12);
-  font-weight: var(--fw-medium);
-  line-height: 1.2;
-  color: var(--color-accent);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  background-color: var(--color-white);
-  border: 1px solid var(--color-accent);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-card);
-}
-
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background-color: rgb(18 20 23 / 55%);
-}
-
-.confirmModal {
-  width: min(100%, 560px);
-  padding: 24px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
-}
-
-.confirmTitle {
-  font-size: var(--fz-24);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-heading);
-  color: var(--color-text-primary);
-}
-
-.confirmText {
-  margin-top: 12px;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
-}
-
-.confirmActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 24px;
-}
-
-@media only screen and (min-width: 768px) {
-  .buyButton {
-    display: block;
-    width: calc((100% - 16px) / 2);
-    margin-left: auto;
-  }
-}
-
-@media only screen and (min-width: 1440px) {
-  .offerControls {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-.stockLine {
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-accent);
 }

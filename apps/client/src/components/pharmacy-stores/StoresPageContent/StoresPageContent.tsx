@@ -102,7 +102,7 @@ function StoresPageContent({
                 {seoTextParts[2]}
               </p>
 
-              <p className={css.visuallyHidden}>{pageDescription}</p>
+              <p className="visually-hidden">{pageDescription}</p>
             </section>
           ) : null}
         </Container>
