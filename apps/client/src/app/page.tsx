@@ -128,8 +128,10 @@ async function getFeaturedStores(): Promise<Store[]> {
         perPage: HOME_PREVIEW_LIMIT,
         sort: 'rating-desc',
       },
-      undefined,
-      { cache: 'force-cache', next: { revalidate } }
+      {
+        cache: 'force-cache',
+        next: { revalidate },
+      }
     );
 
     return response.items;
@@ -146,8 +148,10 @@ async function getFeaturedProducts(): Promise<Product[]> {
         perPage: HOME_PREVIEW_LIMIT,
         sort: 'rating-desc',
       },
-      undefined,
-      { cache: 'force-cache', next: { revalidate } }
+      {
+        cache: 'force-cache',
+        next: { revalidate },
+      }
     );
 
     return response.items;

@@ -6,8 +6,8 @@ import { useEffect } from 'react';
 
 type UseFavoriteRefreshParams = {
   isEnabled: boolean;
-  token: string | null;
-  refreshFavorite: (token: string) => Promise<boolean>;
+  sessionMarker: string | null;
+  refreshFavorite: () => Promise<boolean>;
   onRefresh: (isFavorite: boolean) => void;
 };
 
@@ -15,16 +15,16 @@ type UseFavoriteRefreshParams = {
 
 export function useFavoriteRefresh({
   isEnabled,
-  token,
+  sessionMarker,
   refreshFavorite,
   onRefresh,
 }: UseFavoriteRefreshParams): void {
   useEffect(() => {
-    if (!isEnabled || !token) return;
+    if (!isEnabled || !sessionMarker) return;
 
     let isMounted = true;
 
-    refreshFavorite(token)
+    refreshFavorite()
       .then((isFavorite) => {
         if (isMounted) onRefresh(isFavorite);
       })
@@ -33,5 +33,5 @@ export function useFavoriteRefresh({
     return () => {
       isMounted = false;
     };
-  }, [isEnabled, onRefresh, refreshFavorite, token]);
+  }, [isEnabled, onRefresh, refreshFavorite, sessionMarker]);
 }

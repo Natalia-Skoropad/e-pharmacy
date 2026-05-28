@@ -139,7 +139,7 @@ function ProductDetailsPageContent({
   areReviewsUnavailable = false,
   contextStoreId,
 }: ProductDetailsPageContentProps) {
-  const { token, isAuthenticated, isAuthReady } = useAuth();
+  const { sessionMarker, isAuthenticated, isAuthReady } = useAuth();
 
   const [productDetails, setProductDetails] = useState(product);
   const [activeTab, setActiveTab] = useState<ProductTab>('about');
@@ -310,17 +310,16 @@ function ProductDetailsPageContent({
     handleReviewRatingChange,
     handleReviewSubmit,
   } = useReviewForm({
-    createReview: (payload, currentToken) =>
-      createProductReview(productDetails.id, payload, currentToken),
+    createReview: (payload) => createProductReview(productDetails.id, payload),
     notifier: toast,
   });
 
   useEffect(() => {
-    if (!isAuthenticated || !token) return;
+    if (!isAuthenticated || !sessionMarker) return;
 
     let isMounted = true;
 
-    getProductDetails(productDetails.id, token)
+    getProductDetails(productDetails.id)
       .then((response) => {
         if (isMounted) {
           setProductDetails(response.product);
@@ -329,7 +328,7 @@ function ProductDetailsPageContent({
       })
       .catch(() => undefined);
 
-    getCart(token)
+    getCart()
       .then((response) => {
         if (isMounted) setCart(response.cart);
       })
@@ -340,10 +339,10 @@ function ProductDetailsPageContent({
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, productDetails.id, setIsFavorite, toast, token]);
+  }, [isAuthenticated, productDetails.id, setIsFavorite, toast, sessionMarker]);
 
   const handleAddUnit = async (offer: ProductOffer) => {
-    if (!isAuthenticated || !token) return;
+    if (!isAuthenticated || !sessionMarker) return;
 
     try {
       setUpdatingStoreId(offer.storeId);
@@ -353,7 +352,6 @@ function ProductDetailsPageContent({
         ? await updateCartItem(
             cartItem.id,
             { quantity: cartItem.quantity + 1 },
-            token
           )
         : await addCartItem(
             {
@@ -361,7 +359,6 @@ function ProductDetailsPageContent({
               storeId: offer.storeId,
               quantity: 1,
             },
-            token
           );
 
       setCart(response.cart);
@@ -378,7 +375,7 @@ function ProductDetailsPageContent({
   };
 
   const removeOfferUnit = async (offer: ProductOffer) => {
-    if (!isAuthenticated || !token) return;
+    if (!isAuthenticated || !sessionMarker) return;
 
     const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
 
@@ -389,11 +386,10 @@ function ProductDetailsPageContent({
 
       const response =
         cartItem.quantity === 1
-          ? await removeCartItem(cartItem.id, token)
+          ? await removeCartItem(cartItem.id)
           : await updateCartItem(
               cartItem.id,
-              { quantity: cartItem.quantity - 1 },
-              token
+              { quantity: cartItem.quantity - 1 }
             );
 
       setCart(response.cart);
@@ -407,7 +403,7 @@ function ProductDetailsPageContent({
   };
 
   const handleRemoveUnit = (offer: ProductOffer) => {
-    if (!isAuthenticated || !token) return;
+    if (!isAuthenticated || !sessionMarker) return;
 
     const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
 

@@ -76,9 +76,3 @@ export function removeAuthSessionMarker(): void {
 
   removeClientCookie(AUTH_READY_COOKIE_NAME);
 }
-
-// Backward-compatible aliases. Prefer the sessionMarker names in new code.
-export const AUTH_SESSION_READY_TOKEN = AUTH_SESSION_MARKER;
-export const getAuthToken = getAuthSessionMarker;
-export const setAuthToken = setAuthSessionMarker;
-export const removeAuthToken = removeAuthSessionMarker;

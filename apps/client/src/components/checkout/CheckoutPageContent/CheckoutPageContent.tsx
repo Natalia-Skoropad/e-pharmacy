@@ -69,7 +69,7 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
 //===================================================================
 
 function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
-  const { token, user } = useAuth();
+  const { sessionMarker, user } = useAuth();
   const searchParams = useSearchParams();
   const queryStoreId = searchParams.get('storeId');
   const selectedStoreIdFromRoute = checkoutStoreId ?? queryStoreId;
@@ -83,7 +83,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const [comment, setComment] = useState('');
   const [copiedEmail, setCopiedEmail] = useState(false);
 
-  const { cart, error, isLoading, setCart, setError } = useCheckoutCart(token);
+  const { cart, error, isLoading, setCart, setError } = useCheckoutCart(sessionMarker);
 
   const orderGroups = useMemo(() => groupCartByStore(cart), [cart]);
   const selectedOrderGroup = useMemo(() => {
@@ -100,7 +100,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     return orderGroups.length === 1 ? orderGroups[0] : null;
   }, [selectedStoreIdFromRoute, orderGroups]);
 
-  const { store, isStoreLoading } = useCheckoutStore(selectedOrderGroup, token);
+  const { store, isStoreLoading } = useCheckoutStore(selectedOrderGroup);
 
   const shouldSelectInvoice =
     !isLoading && cart.items.length > 0 && !selectedOrderGroup;
@@ -142,7 +142,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     Boolean(selectedOrderGroup) && isPostDeliveryValid && canUseSelectedPayment;
 
   const { isSubmitting, handleSubmit } = useCheckoutSubmit({
-    token,
+    sessionMarker,
     selectedOrderGroup,
     paymentMethod,
     deliveryMethod,

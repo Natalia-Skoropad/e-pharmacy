@@ -133,10 +133,9 @@ function getProfileErrors(values: ProfileFormValues) {
 
 //===================================================================
 
-async function getFavoriteProducts(authToken: string): Promise<Product[]> {
+async function getFavoriteProducts(): Promise<Product[]> {
   const firstPage = await getProducts(
     { page: 1, perPage: FAVORITES_PER_PAGE, sort: 'name-asc' },
-    authToken
   );
   const pages = [firstPage];
 
@@ -148,8 +147,7 @@ async function getFavoriteProducts(authToken: string): Promise<Product[]> {
             page: index + 2,
             perPage: FAVORITES_PER_PAGE,
             sort: 'name-asc',
-          },
-          authToken
+          }
         )
       )
     );
@@ -164,10 +162,9 @@ async function getFavoriteProducts(authToken: string): Promise<Product[]> {
 
 //===================================================================
 
-async function getFavoriteStores(authToken: string): Promise<PharmacyStore[]> {
+async function getFavoriteStores(): Promise<PharmacyStore[]> {
   const firstPage = await getStores(
     { page: 1, perPage: FAVORITES_PER_PAGE, sort: 'name-asc' },
-    authToken
   );
   const pages = [firstPage];
 
@@ -179,8 +176,7 @@ async function getFavoriteStores(authToken: string): Promise<PharmacyStore[]> {
             page: index + 2,
             perPage: FAVORITES_PER_PAGE,
             sort: 'name-asc',
-          },
-          authToken
+          }
         )
       )
     );
@@ -196,7 +192,7 @@ async function getFavoriteStores(authToken: string): Promise<PharmacyStore[]> {
 //===================================================================
 
 function ProfilePageContent() {
-  const { token, user, refreshCurrentUser } = useAuth();
+  const { sessionMarker, user, refreshCurrentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
   const [profileValues, setProfileValues] = useState<ProfileFormValues>({
     name: '',
@@ -336,12 +332,12 @@ function ProfilePageContent() {
     0
   );
 
-  const loadFavoriteProducts = useCallback(async (authToken: string) => {
+  const loadFavoriteProducts = useCallback(async () => {
     try {
       setIsFavoriteProductsLoading(true);
       setFavoritesError('');
 
-      const products = await getFavoriteProducts(authToken);
+      const products = await getFavoriteProducts();
 
       setFavoriteProducts(products);
       setFavoriteProductsCount(products.length);
@@ -353,12 +349,12 @@ function ProfilePageContent() {
     }
   }, []);
 
-  const loadFavoriteStores = useCallback(async (authToken: string) => {
+  const loadFavoriteStores = useCallback(async () => {
     try {
       setIsFavoriteStoresLoading(true);
       setFavoritesError('');
 
-      const stores = await getFavoriteStores(authToken);
+      const stores = await getFavoriteStores();
 
       setFavoriteStores(stores);
       setFavoriteStoresCount(stores.length);
@@ -371,15 +367,15 @@ function ProfilePageContent() {
   }, []);
 
   useEffect(() => {
-    if (!token) return;
+    if (!sessionMarker) return;
 
     const timeoutId = window.setTimeout(() => {
-      void loadFavoriteProducts(token);
-      void loadFavoriteStores(token);
+      void loadFavoriteProducts();
+      void loadFavoriteStores();
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [loadFavoriteProducts, loadFavoriteStores, token]);
+  }, [loadFavoriteProducts, loadFavoriteStores, sessionMarker]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -392,10 +388,9 @@ function ProfilePageContent() {
   }, [activeTab]);
 
   useEffect(() => {
-    const authToken = token ?? '';
     let isMounted = true;
 
-    if (!authToken) {
+    if (!sessionMarker) {
       const timeoutId = window.setTimeout(() => {
         if (isMounted) {
           setOrders([]);
@@ -411,7 +406,7 @@ function ProfilePageContent() {
     async function loadOrders() {
       try {
         setIsOrdersLoading(true);
-        const response = await getOrders(authToken);
+        const response = await getOrders();
 
         if (!isMounted) return;
 
@@ -432,7 +427,7 @@ function ProfilePageContent() {
     return () => {
       isMounted = false;
     };
-  }, [token]);
+  }, [sessionMarker]);
 
   if (!user) {
     return (
@@ -477,7 +472,7 @@ function ProfilePageContent() {
   };
 
   const handleAvatarChange = async (avatarUrl: string | null) => {
-    if (!token) return;
+    if (!sessionMarker) return;
 
     const previousAvatarUrl = avatarPreview;
 
@@ -487,7 +482,7 @@ function ProfilePageContent() {
       setError('');
       setAvatarPreview(avatarUrl);
 
-      await updateCurrentUser({ avatarUrl }, token);
+      await updateCurrentUser({ avatarUrl });
       await refreshCurrentUser();
       setFeedback(
         avatarUrl ? 'Profile photo was updated.' : 'Profile photo was removed.'
@@ -501,7 +496,7 @@ function ProfilePageContent() {
   };
 
   const handleSaveProfile = async () => {
-    if (!token || !canSaveProfile) return;
+    if (!sessionMarker || !canSaveProfile) return;
 
     try {
       setIsProfileSaving(true);
@@ -513,8 +508,7 @@ function ProfilePageContent() {
           name: profileValues.name.trim(),
           phone: profileValues.phone.trim(),
           address: profileValues.address.trim(),
-        },
-        token
+        }
       );
       await refreshCurrentUser();
       setFeedback('Profile data was updated.');
@@ -538,14 +532,14 @@ function ProfilePageContent() {
   };
 
   const handleSavePassword = async () => {
-    if (!token || !canSavePassword) return;
+    if (!sessionMarker || !canSavePassword) return;
 
     try {
       setIsPasswordSaving(true);
       setFeedback('');
       setPasswordSubmitError('');
 
-      await updateCurrentUserPassword(passwordValues, token);
+      await updateCurrentUserPassword(passwordValues);
       setPasswordValues({ currentPassword: '', newPassword: '' });
       setFeedback('Password was changed.');
     } catch {

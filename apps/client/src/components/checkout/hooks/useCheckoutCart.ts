@@ -13,23 +13,22 @@ const EMPTY_CART: Cart = {
 
 //===================================================================
 
-export function useCheckoutCart(token: string | null | undefined) {
+export function useCheckoutCart(sessionMarker: string | null | undefined) {
   const [cart, setCart] = useState<Cart>(EMPTY_CART);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const authToken = token;
     let isMounted = true;
 
     async function fetchCart() {
-      if (!authToken) {
+      if (!sessionMarker) {
         setIsLoading(false);
         return;
       }
 
       try {
-        const response = await getCart(authToken);
+        const response = await getCart();
 
         if (!isMounted) return;
 
@@ -51,7 +50,7 @@ export function useCheckoutCart(token: string | null | undefined) {
     return () => {
       isMounted = false;
     };
-  }, [token]);
+  }, [sessionMarker]);
 
   return {
     cart,

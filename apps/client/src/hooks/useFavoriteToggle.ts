@@ -24,7 +24,7 @@ type UseFavoriteToggleParams<TId extends string> = {
   addedMessage: string;
   removedMessage: string;
   errorMessage: string;
-  toggleFavorite: (id: TId, token: string) => Promise<FavoriteResponse>;
+  toggleFavorite: (id: TId) => Promise<FavoriteResponse>;
   onFavoriteChange?: (id: TId, isFavorite: boolean) => void;
 };
 
@@ -41,7 +41,7 @@ export function useFavoriteToggle<TId extends string>({
   toggleFavorite,
   onFavoriteChange,
 }: UseFavoriteToggleParams<TId>) {
-  const { token, isAuthenticated, isAuthReady } = useAuth();
+  const { sessionMarker, isAuthenticated, isAuthReady } = useAuth();
 
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
@@ -49,14 +49,14 @@ export function useFavoriteToggle<TId extends string>({
   const handleFavoriteClick = async () => {
     if (!isAuthReady) return;
 
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated || !sessionMarker) {
       notifier.info(loginMessage);
       return;
     }
 
     try {
       setIsFavoriteLoading(true);
-      const response = await toggleFavorite(id, token);
+      const response = await toggleFavorite(id);
 
       setIsFavorite(response.isFavorite);
       onFavoriteChange?.(id, response.isFavorite);

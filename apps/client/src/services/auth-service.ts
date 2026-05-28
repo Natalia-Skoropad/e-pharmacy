@@ -43,7 +43,6 @@ export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
   return getResponseData(response);
 }
 
-
 //===================================================================
 
 export async function requestPasswordReset(
@@ -84,19 +83,16 @@ export async function logoutUser(): Promise<void> {
   });
 }
 
-
 //===================================================================
 
 export async function updateCurrentUser(
-  payload: UpdateProfilePayload,
-  authToken: string
+  payload: UpdateProfilePayload
 ): Promise<CurrentUserResponse> {
   const response = await apiRequest<ApiSuccessResponse<CurrentUserResponse>>(
     API_ROUTES.auth.current,
     {
       method: 'PATCH',
       body: payload,
-      authToken,
     }
   );
 
@@ -106,12 +102,10 @@ export async function updateCurrentUser(
 //===================================================================
 
 export async function updateCurrentUserPassword(
-  payload: UpdatePasswordPayload,
-  authToken: string
+  payload: UpdatePasswordPayload
 ): Promise<void> {
   await apiRequest<ApiSuccessResponse>(API_ROUTES.auth.password, {
     method: 'PATCH',
     body: payload,
-    authToken,
   });
 }

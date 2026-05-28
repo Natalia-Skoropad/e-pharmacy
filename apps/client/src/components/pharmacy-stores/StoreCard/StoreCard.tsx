@@ -35,7 +35,7 @@ function StoreCard({
   skipFavoriteRefresh = false,
   onFavoriteChange,
 }: StoreCardProps) {
-  const { token, isAuthenticated } = useAuth();
+  const { sessionMarker, isAuthenticated } = useAuth();
   const toast = useToast();
 
   const {
@@ -64,7 +64,7 @@ function StoreCard({
   useStoreFavoriteRefresh({
     id: store.id,
     isEnabled: !skipFavoriteRefresh && isAuthenticated,
-    token,
+    sessionMarker,
     onRefresh: setIsFavorite,
   });
 

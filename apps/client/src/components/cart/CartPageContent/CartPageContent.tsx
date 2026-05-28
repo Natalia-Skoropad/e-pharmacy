@@ -73,7 +73,7 @@ function getCartWithUpdatedQuantity(
 //===================================================================
 
 function CartPageContent() {
-  const { token } = useAuth();
+  const { sessionMarker } = useAuth();
 
   const [cart, setCart] = useState<Cart>(EMPTY_CART);
   const [error, setError] = useState('');
@@ -95,10 +95,10 @@ function CartPageContent() {
     let isMounted = true;
 
     async function fetchCart() {
-      if (!token) return;
+      if (!sessionMarker) return;
 
       try {
-        const response = await getCart(token);
+        const response = await getCart();
 
         if (!isMounted) return;
 
@@ -120,10 +120,10 @@ function CartPageContent() {
     return () => {
       isMounted = false;
     };
-  }, [token]);
+  }, [sessionMarker]);
 
   const handleQuantityChange = async (cartItemId: string, quantity: number) => {
-    if (!token || quantity < 1) return;
+    if (!sessionMarker || quantity < 1) return;
 
     const previousCart = cart;
     const optimisticCart = getCartWithUpdatedQuantity(
@@ -139,7 +139,7 @@ function CartPageContent() {
       setUpdatingItemId(cartItemId);
       setError('');
 
-      const response = await updateCartItem(cartItemId, { quantity }, token);
+      const response = await updateCartItem(cartItemId, { quantity });
 
       setCart(response.cart);
     } catch {
@@ -152,13 +152,13 @@ function CartPageContent() {
   };
 
   const handleRemove = async (cartItemId: string) => {
-    if (!token) return;
+    if (!sessionMarker) return;
 
     try {
       setUpdatingItemId(cartItemId);
       setError('');
 
-      const response = await removeCartItem(cartItemId, token);
+      const response = await removeCartItem(cartItemId);
 
       setCart(response.cart);
     } catch {
@@ -169,13 +169,13 @@ function CartPageContent() {
   };
 
   const handleClear = async () => {
-    if (!token) return;
+    if (!sessionMarker) return;
 
     try {
       setIsClearing(true);
       setError('');
 
-      const response = await clearCart(token);
+      const response = await clearCart();
 
       setCart(response.cart);
     } catch {
@@ -197,7 +197,7 @@ function CartPageContent() {
   );
 
   const handleRemoveStore = async (storeId: string) => {
-    if (!token) return;
+    if (!sessionMarker) return;
 
     try {
       setIsClearing(true);
@@ -207,7 +207,7 @@ function CartPageContent() {
       let nextCart = cart;
 
       for (const item of storeItems) {
-        const response = await removeCartItem(item.id, token);
+        const response = await removeCartItem(item.id);
         nextCart = response.cart;
       }
 
@@ -373,12 +373,11 @@ function CartPageContent() {
             </ul>
           ) : null}
 
-          {continueShoppingStore && token ? (
+          {continueShoppingStore && sessionMarker ? (
             <ContinueShoppingModal
               storeId={continueShoppingStore.storeId}
               storeName={continueShoppingStore.storeName}
               cartItems={cart.items}
-              authToken={token}
               onClose={() => setContinueShoppingStore(null)}
               onCartChange={setCart}
             />

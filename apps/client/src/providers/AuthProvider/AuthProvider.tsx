@@ -37,8 +37,6 @@ type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 type AuthContextValue = {
   user: AuthUser | null;
   sessionMarker: string | null;
-  /** @deprecated Use sessionMarker. It is not a real JWT token. */
-  token: string | null;
   status: AuthStatus;
   isAuthenticated: boolean;
   isAuthReady: boolean;
@@ -177,7 +175,6 @@ function AuthProvider({ children }: AuthProviderProps) {
     () => ({
       user,
       sessionMarker,
-      token: sessionMarker,
       status,
       isAuthenticated: status === 'authenticated',
       isAuthReady: status !== 'loading',

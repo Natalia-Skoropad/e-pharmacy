@@ -32,19 +32,19 @@ function Header() {
   const router = useRouter();
   const mobileNavigationId = useId();
 
-  const { token, isAuthenticated, isAuthReady, user, logout } = useAuth();
+  const { sessionMarker, isAuthenticated, isAuthReady, user, logout } = useAuth();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
-  const visibleCartItemsCount = isAuthenticated && token ? cartItemsCount : 0;
+  const visibleCartItemsCount = isAuthenticated && sessionMarker ? cartItemsCount : 0;
 
   useEffect(() => {
-    if (!isAuthenticated || !token) return;
+    if (!isAuthenticated || !sessionMarker) return;
 
     let isMounted = true;
 
-    getCart(token)
+    getCart()
       .then((response) => {
         if (isMounted) setCartItemsCount(response.cart.totalItems);
       })
@@ -55,7 +55,7 @@ function Header() {
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, token, pathname]);
+  }, [isAuthenticated, sessionMarker, pathname]);
 
   useEffect(() => {
     const handleCartUpdated = (event: Event) => {

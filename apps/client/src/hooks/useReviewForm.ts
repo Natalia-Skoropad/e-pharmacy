@@ -18,7 +18,7 @@ type ReviewNotifier = {
 };
 
 type UseReviewFormParams = {
-  createReview: (payload: ReviewPayload, token: string) => Promise<unknown>;
+  createReview: (payload: ReviewPayload) => Promise<unknown>;
   notifier?: ReviewNotifier;
   showToast?: (message: string) => void;
 };
@@ -30,7 +30,7 @@ export function useReviewForm({
   notifier,
   showToast,
 }: UseReviewFormParams) {
-  const { token, isAuthenticated } = useAuth();
+  const { sessionMarker, isAuthenticated } = useAuth();
 
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(0);
@@ -66,18 +66,15 @@ export function useReviewForm({
   };
 
   const handleReviewSubmit = async () => {
-    if (!isValid || !isAuthenticated || !token) return;
+    if (!isValid || !isAuthenticated || !sessionMarker) return;
 
     try {
       setIsReviewSubmitting(true);
 
-      await createReview(
-        {
-          rating: reviewRating,
-          comment: reviewText.trim(),
-        },
-        token
-      );
+      await createReview({
+        rating: reviewRating,
+        comment: reviewText.trim(),
+      });
 
       setReviewText('');
       setReviewRating(0);

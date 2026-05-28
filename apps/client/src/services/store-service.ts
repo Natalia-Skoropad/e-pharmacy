@@ -4,6 +4,7 @@ import {
   getResponseData,
   type RequestOptions,
 } from '@/lib/api';
+
 import { API_ROUTES } from '@/lib/constants/api-routes';
 
 import type {
@@ -34,19 +35,17 @@ type StoresQueryParams = {
 
 export async function getStores(
   params: StoresQueryParams = {},
-  authToken?: string,
   requestOptions?: RequestOptions
 ): Promise<StoresResponse> {
   const queryString = buildQueryString(params);
 
   const response = await apiRequest<ApiSuccessResponse<StoresResponse>>(
     `${API_ROUTES.stores.list}${queryString}`,
-    authToken || requestOptions ? { ...requestOptions, authToken } : undefined
+    requestOptions
   );
 
   return getResponseData(response);
 }
-
 
 //===================================================================
 
@@ -64,12 +63,11 @@ export async function getStoreFilters(
 
 export async function getStoreDetails(
   storeId: string,
-  authToken?: string,
   requestOptions?: RequestOptions
 ): Promise<StoreDetailsResponse> {
   const response = await apiRequest<ApiSuccessResponse<StoreDetailsResponse>>(
     API_ROUTES.stores.details(storeId),
-    authToken || requestOptions ? { ...requestOptions, authToken } : undefined
+    requestOptions
   );
 
   return getResponseData(response);
@@ -93,15 +91,13 @@ export async function getStoreReviews(
 
 export async function createStoreReview(
   storeId: string,
-  payload: CreateStoreReviewPayload,
-  authToken: string
+  payload: CreateStoreReviewPayload
 ): Promise<CreateStoreReviewResponse> {
   const response = await apiRequest<
     ApiSuccessResponse<CreateStoreReviewResponse>
   >(API_ROUTES.stores.reviews(storeId), {
     method: 'POST',
     body: payload,
-    authToken,
   });
 
   return getResponseData(response);
@@ -110,14 +106,12 @@ export async function createStoreReview(
 //===================================================================
 
 export async function toggleFavoriteStore(
-  storeId: string,
-  authToken: string
+  storeId: string
 ): Promise<ToggleFavoriteStoreResponse> {
   const response = await apiRequest<
     ApiSuccessResponse<ToggleFavoriteStoreResponse>
   >(API_ROUTES.stores.favorite(storeId), {
     method: 'PATCH',
-    authToken,
   });
 
   return getResponseData(response);

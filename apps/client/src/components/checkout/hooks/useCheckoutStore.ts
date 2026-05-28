@@ -7,8 +7,7 @@ import type { CheckoutStoreOrderGroup } from '@/types/checkout';
 //===================================================================
 
 export function useCheckoutStore(
-  selectedOrderGroup: CheckoutStoreOrderGroup | null,
-  token: string | null | undefined
+  selectedOrderGroup: CheckoutStoreOrderGroup | null
 ) {
   const [store, setStore] = useState<Store | null>(null);
   const [isStoreLoading, setIsStoreLoading] = useState(false);
@@ -25,10 +24,7 @@ export function useCheckoutStore(
 
       try {
         setIsStoreLoading(true);
-        const response = await getStoreDetails(
-          selectedOrderGroup.storeId,
-          token ?? undefined
-        );
+        const response = await getStoreDetails(selectedOrderGroup.storeId);
 
         if (!isMounted) return;
 
@@ -49,7 +45,7 @@ export function useCheckoutStore(
     return () => {
       isMounted = false;
     };
-  }, [selectedOrderGroup, token]);
+  }, [selectedOrderGroup]);
 
   return {
     store,

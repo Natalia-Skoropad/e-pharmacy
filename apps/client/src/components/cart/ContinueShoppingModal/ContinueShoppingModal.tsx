@@ -28,7 +28,6 @@ type ContinueShoppingModalProps = {
   storeId: string;
   storeName: string;
   cartItems: Cart['items'];
-  authToken: string;
   onClose: () => void;
   onCartChange: (cart: Cart) => void;
 };
@@ -81,7 +80,6 @@ function ContinueShoppingModal({
   storeId,
   storeName,
   cartItems,
-  authToken,
   onClose,
   onCartChange,
 }: ContinueShoppingModalProps) {
@@ -192,7 +190,6 @@ function ContinueShoppingModal({
           storeId,
           quantity: 1,
         },
-        authToken
       );
 
       onCartChange(response.cart);

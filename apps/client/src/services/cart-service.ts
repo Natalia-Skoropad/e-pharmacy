@@ -26,12 +26,9 @@ function getCartResponseData(
 
 //===================================================================
 
-export async function getCart(authToken: string): Promise<CartResponse> {
+export async function getCart(): Promise<CartResponse> {
   const response = await apiRequest<ApiSuccessResponse<CartResponse>>(
-    API_ROUTES.cart.current,
-    {
-      authToken,
-    }
+    API_ROUTES.cart.current
   );
 
   return getCartResponseData(response);
@@ -40,15 +37,13 @@ export async function getCart(authToken: string): Promise<CartResponse> {
 //===================================================================
 
 export async function addCartItem(
-  payload: AddCartItemPayload,
-  authToken: string
+  payload: AddCartItemPayload
 ): Promise<CartResponse> {
   const response = await apiRequest<ApiSuccessResponse<CartResponse>>(
     API_ROUTES.cart.addItem,
     {
       method: 'POST',
       body: payload,
-      authToken,
     }
   );
 
@@ -59,15 +54,13 @@ export async function addCartItem(
 
 export async function updateCartItem(
   cartItemId: string,
-  payload: UpdateCartItemPayload,
-  authToken: string
+  payload: UpdateCartItemPayload
 ): Promise<CartResponse> {
   const response = await apiRequest<ApiSuccessResponse<CartResponse>>(
     API_ROUTES.cart.updateItem(cartItemId),
     {
       method: 'PATCH',
       body: payload,
-      authToken,
     }
   );
 
@@ -77,14 +70,12 @@ export async function updateCartItem(
 //===================================================================
 
 export async function removeCartItem(
-  cartItemId: string,
-  authToken: string
+  cartItemId: string
 ): Promise<CartResponse> {
   const response = await apiRequest<ApiSuccessResponse<CartResponse>>(
     API_ROUTES.cart.removeItem(cartItemId),
     {
       method: 'DELETE',
-      authToken,
     }
   );
 
@@ -93,12 +84,11 @@ export async function removeCartItem(
 
 //===================================================================
 
-export async function clearCart(authToken: string): Promise<CartResponse> {
+export async function clearCart(): Promise<CartResponse> {
   const response = await apiRequest<ApiSuccessResponse<CartResponse>>(
     API_ROUTES.cart.clear,
     {
       method: 'DELETE',
-      authToken,
     }
   );
 

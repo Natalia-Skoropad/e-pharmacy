@@ -62,24 +62,22 @@ function formatDeliveryMethod(method: CustomerOrder['deliveryMethod']): string {
 //===================================================================
 
 function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
-  const { token } = useAuth();
+  const { sessionMarker } = useAuth();
   const [order, setOrder] = useState<CustomerOrder | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState('');
   const cleanOrderId = getOrderIdFromPathParam(orderId);
 
   useEffect(() => {
-    const authToken = token;
-
     let isMounted = true;
 
     async function fetchOrder() {
-      if (!authToken) return;
+      if (!sessionMarker) return;
 
       try {
         setIsLoaded(false);
         setError('');
-        const response = await getOrderDetails(cleanOrderId, authToken);
+        const response = await getOrderDetails(cleanOrderId);
 
         if (!isMounted) return;
 
@@ -101,7 +99,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     return () => {
       isMounted = false;
     };
-  }, [cleanOrderId, token]);
+  }, [cleanOrderId, sessionMarker]);
 
   const breadcrumbs = useMemo<BreadcrumbItem[]>(
     () => [

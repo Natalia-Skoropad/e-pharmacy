@@ -17,7 +17,7 @@ import type {
 //===================================================================
 
 type UseCheckoutSubmitParams = {
-  token: string | null | undefined;
+  sessionMarker: string | null | undefined;
   selectedOrderGroup: CheckoutStoreOrderGroup | null;
   paymentMethod: CheckoutPaymentMethod;
   deliveryMethod: CheckoutDeliveryMethod;
@@ -33,7 +33,7 @@ type UseCheckoutSubmitParams = {
 //===================================================================
 
 export function useCheckoutSubmit({
-  token,
+  sessionMarker,
   selectedOrderGroup,
   paymentMethod,
   deliveryMethod,
@@ -49,9 +49,7 @@ export function useCheckoutSubmit({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    const authToken = token;
-
-    if (!authToken || !canSubmit || isSubmitting) return;
+    if (!sessionMarker || !canSubmit || isSubmitting) return;
 
     try {
       setIsSubmitting(true);
@@ -59,7 +57,7 @@ export function useCheckoutSubmit({
 
       if (!selectedOrderGroup) return;
 
-      const latestCartResponse = await getCart(authToken);
+      const latestCartResponse = await getCart();
       const latestGroups = groupCartByStore(latestCartResponse.cart);
       const latestOrderGroup = latestGroups.find(
         (group) => group.storeId === selectedOrderGroup.storeId
@@ -96,10 +94,9 @@ export function useCheckoutSubmit({
               }
             : {}),
           ...(comment.trim() ? { comment: comment.trim() } : {}),
-        },
-        authToken
+        }
       );
-      const nextCartResponse = await getCart(authToken);
+      const nextCartResponse = await getCart();
 
       setCart(nextCartResponse.cart);
       dispatchCartUpdated(nextCartResponse.cart);

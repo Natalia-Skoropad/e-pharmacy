@@ -12,15 +12,13 @@ import type {
 //===================================================================
 
 export async function checkoutOrder(
-  payload: CheckoutOrderPayload,
-  authToken: string
+  payload: CheckoutOrderPayload
 ): Promise<CheckoutOrderResponse> {
   const response = await apiRequest<ApiSuccessResponse<CheckoutOrderResponse>>(
     API_ROUTES.orders.checkout,
     {
       method: 'POST',
       body: payload,
-      authToken,
     }
   );
 
@@ -29,12 +27,9 @@ export async function checkoutOrder(
 
 //===================================================================
 
-export async function getOrders(authToken: string): Promise<OrdersResponse> {
+export async function getOrders(): Promise<OrdersResponse> {
   const response = await apiRequest<ApiSuccessResponse<OrdersResponse>>(
-    API_ROUTES.orders.list,
-    {
-      authToken,
-    }
+    API_ROUTES.orders.list
   );
 
   return getResponseData(response);
@@ -43,14 +38,10 @@ export async function getOrders(authToken: string): Promise<OrdersResponse> {
 //===================================================================
 
 export async function getOrderDetails(
-  orderId: string,
-  authToken: string
+  orderId: string
 ): Promise<OrderDetailsResponse> {
   const response = await apiRequest<ApiSuccessResponse<OrderDetailsResponse>>(
     API_ROUTES.orders.details(orderId),
-    {
-      authToken,
-    }
   );
 
   return getResponseData(response);

@@ -1,4 +1,3 @@
-import { AUTH_SESSION_MARKER } from '@/lib/auth';
 import { CLIENT_ENV } from '@/lib/constants/env';
 
 import { ApiError } from './api-error';
@@ -24,19 +23,12 @@ export async function apiRequest<TData>(
     headers,
     cache = 'no-store',
     next,
-    authSession,
-    authToken,
   }: ApiRequestConfig = {}
 ): Promise<TData> {
-  const authCredential = authToken ?? authSession;
-
   const response = await fetch(createApiUrl(path), {
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...(authCredential && authCredential !== AUTH_SESSION_MARKER
-        ? { Authorization: `Bearer ${authCredential}` }
-        : {}),
       ...headers,
     },
     body: body ? JSON.stringify(body) : undefined,

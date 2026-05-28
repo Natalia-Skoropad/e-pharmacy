@@ -59,7 +59,7 @@ function StoreDetailsPageContent({
   reviewsTotal,
   areReviewsUnavailable = false,
 }: StoreDetailsPageContentProps) {
-  const { token, isAuthenticated, isAuthReady } = useAuth();
+  const { sessionMarker, isAuthenticated, isAuthReady } = useAuth();
 
   const [activeTab, setActiveTab] = useState<StoreTab>('details');
   const toast = useToast();
@@ -100,7 +100,7 @@ function StoreDetailsPageContent({
   useStoreFavoriteRefresh({
     id: store.id,
     isEnabled: isAuthenticated,
-    token,
+    sessionMarker,
     onRefresh: setIsFavorite,
   });
 
@@ -113,8 +113,7 @@ function StoreDetailsPageContent({
     handleReviewRatingChange,
     handleReviewSubmit,
   } = useReviewForm({
-    createReview: (payload, currentToken) =>
-      createStoreReview(store.id, payload, currentToken),
+    createReview: (payload) => createStoreReview(store.id, payload),
     notifier: toast,
   });
 
