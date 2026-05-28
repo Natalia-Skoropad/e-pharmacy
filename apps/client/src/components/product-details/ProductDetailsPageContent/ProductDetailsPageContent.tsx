@@ -29,11 +29,17 @@ import {
 import { CartInvoiceLimitModal } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useAuth } from '@/providers';
+import { useFavoriteToggle, useReviewForm } from '@/hooks';
 
 import { ROUTES } from '@/lib/constants/routes';
 import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
-import { formatPrice } from '@/lib/formatters';
+import {
+  formatPharmaciesCount,
+  formatPrice,
+  formatReviewsCount,
+} from '@/lib/formatters';
 import { buildStorePath } from '@/lib/routes';
+import { REVIEW_MAX_LENGTH } from '@/lib/reviews';
 
 import {
   addCartItem,
@@ -77,12 +83,8 @@ type ProductDetailsPageContentProps = {
 
 //===================================================================
 
-const REVIEW_MAX_LENGTH = 500;
-const REVIEW_MIN_LENGTH = 10;
 const OFFERS_PER_PAGE = 10;
 const SEARCH_MAX_LENGTH = 80;
-
-const REVIEW_REGEX = /^[A-Za-z0-9\s.,!?;:'"()\-]+$/;
 
 const CATEGORY_LABELS: Record<Product['category'], string> = {
   medicine: 'Medicine',
@@ -181,16 +183,10 @@ function ProductDetailsPageContent({
   const [activeTab, setActiveTab] = useState<ProductTab>('about');
   const [cart, setCart] = useState<Cart | null>(null);
   const [toastMessage, setToastMessage] = useState('');
-  const [isFavorite, setIsFavorite] = useState(Boolean(product.isFavorite));
-  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const [updatingStoreId, setUpdatingStoreId] = useState<string | null>(null);
   const [pendingRemoveOffer, setPendingRemoveOffer] =
     useState<ProductOffer | null>(null);
   const [invoiceLimitMessage, setInvoiceLimitMessage] = useState('');
-
-  const [reviewText, setReviewText] = useState('');
-  const [reviewRating, setReviewRating] = useState(0);
-  const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
 
   const [storeNameQuery, setStoreNameQuery] = useState('');
   const [storeAddressQuery, setStoreAddressQuery] = useState('');
@@ -213,12 +209,10 @@ function ProductDetailsPageContent({
     [productDetails.foundInStoresCount, reviewsTotal]
   );
 
-  const reviewsCountLabel =
-    reviewsTotal === 1 ? '1 review' : `${reviewsTotal} reviews`;
-
-  const storesCountLabel = `${productDetails.foundInStoresCount} ${
-    productDetails.foundInStoresCount === 1 ? 'pharmacy' : 'pharmacies'
-  }`;
+  const reviewsCountLabel = formatReviewsCount(reviewsTotal);
+  const storesCountLabel = formatPharmaciesCount(
+    productDetails.foundInStoresCount
+  );
 
   const priceRangeLabel = formatPriceRange(productDetails.offers);
   const longDescription = getLongDescription(productDetails);
@@ -302,13 +296,6 @@ function ProductDetailsPageContent({
 
   const visibleOffers = filteredOffers.slice(0, visibleOffersCount);
 
-  const isReviewValid =
-    reviewText.trim().length >= REVIEW_MIN_LENGTH &&
-    reviewText.trim().length <= REVIEW_MAX_LENGTH &&
-    REVIEW_REGEX.test(reviewText.trim()) &&
-    reviewRating >= 1 &&
-    reviewRating <= 5;
-
   const showToast = useCallback((message: string) => {
     setToastMessage('');
     window.setTimeout(() => setToastMessage(message), 0);
@@ -353,6 +340,40 @@ function ProductDetailsPageContent({
     return () => window.clearTimeout(timeoutId);
   }, [toastMessage]);
 
+  const {
+    isFavorite,
+    isFavoriteLoading,
+    handleFavoriteClick,
+    setIsFavorite,
+  } = useFavoriteToggle({
+    id: productDetails.id,
+    initialIsFavorite: Boolean(product.isFavorite),
+    notifier: {
+      info: showToast,
+      success: showToast,
+      error: showToast,
+    },
+    loginMessage: 'Please log in to add products to favorites.',
+    addedMessage: 'Product was added to favorites.',
+    removedMessage: 'Product was removed from favorites.',
+    errorMessage: 'Could not update favorites.',
+    toggleFavorite: toggleFavoriteProduct,
+  });
+
+  const {
+    reviewText,
+    reviewRating,
+    isReviewValid,
+    isReviewSubmitting,
+    handleReviewTextChange,
+    handleReviewRatingChange,
+    handleReviewSubmit,
+  } = useReviewForm({
+    createReview: (payload, currentToken) =>
+      createProductReview(productDetails.id, payload, currentToken),
+    showToast,
+  });
+
   useEffect(() => {
     if (!isAuthenticated || !token) return;
 
@@ -378,33 +399,8 @@ function ProductDetailsPageContent({
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, productDetails.id, showToast, token]);
+  }, [isAuthenticated, productDetails.id, setIsFavorite, showToast, token]);
 
-
-  const handleFavoriteClick = async () => {
-    if (!isAuthReady) return;
-
-    if (!isAuthenticated || !token) {
-      showToast('Please log in to add products to favorites.');
-      return;
-    }
-
-    try {
-      setIsFavoriteLoading(true);
-      const response = await toggleFavoriteProduct(productDetails.id, token);
-
-      setIsFavorite(response.isFavorite);
-      showToast(
-        response.isFavorite
-          ? 'Product was added to favorites.'
-          : 'Product was removed from favorites.'
-      );
-    } catch {
-      showToast('Could not update favorites.');
-    } finally {
-      setIsFavoriteLoading(false);
-    }
-  };
 
   const handleAddUnit = async (offer: ProductOffer) => {
     if (!isAuthenticated || !token) return;
@@ -478,37 +474,6 @@ function ProductDetailsPageContent({
     }
 
     void removeOfferUnit(offer);
-  };
-
-  const handleReviewTextChange = (value: string) => {
-    if (value.length > REVIEW_MAX_LENGTH) return;
-
-    setReviewText(value);
-  };
-
-  const handleReviewSubmit = async () => {
-    if (!isReviewValid || !isAuthenticated || !token) return;
-
-    try {
-      setIsReviewSubmitting(true);
-
-      await createProductReview(
-        productDetails.id,
-        {
-          rating: reviewRating,
-          comment: reviewText.trim(),
-        },
-        token
-      );
-
-      setReviewText('');
-      setReviewRating(0);
-      showToast('Review was accepted and will be visible after moderation.');
-    } catch {
-      showToast('Could not submit review.');
-    } finally {
-      setIsReviewSubmitting(false);
-    }
   };
 
   const renderQuantityControl = (offer: ProductOffer) => {
@@ -901,7 +866,7 @@ function ProductDetailsPageContent({
                   textareaId="product-review"
                   maxLength={REVIEW_MAX_LENGTH}
                   onReviewTextChange={handleReviewTextChange}
-                  onReviewRatingChange={setReviewRating}
+                  onReviewRatingChange={handleReviewRatingChange}
                   onReviewSubmit={() => void handleReviewSubmit()}
                 />
               </div>

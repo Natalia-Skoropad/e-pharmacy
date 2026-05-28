@@ -5,6 +5,7 @@ import { Star } from 'lucide-react';
 
 import Button from '@/components/common/Button';
 import LazyLoadButton from '@/components/common/LazyLoadButton';
+import { CommentInput } from '@/components/form-fields';
 
 import { formatReviewDate } from '@/lib/formatters';
 
@@ -91,26 +92,16 @@ function ReviewsSection({
           onReviewSubmit();
         }}
       >
-        <div>
-          <label className={css.reviewLabel} htmlFor={textareaId}>
-            Your review
-          </label>
-
-          <div className={css.textareaWrap}>
-            <textarea
-              id={textareaId}
-              className={css.reviewTextarea}
-              value={reviewText}
-              maxLength={maxLength}
-              placeholder="Write 10–500 characters using latin letters."
-              onChange={(event) => onReviewTextChange(event.target.value)}
-            />
-
-            <p className={css.counter}>
-              {reviewText.length}/{maxLength}
-            </p>
-          </div>
-        </div>
+        <CommentInput
+          id={textareaId}
+          name="review"
+          label="Your review"
+          value={reviewText}
+          required
+          maxLength={maxLength}
+          placeholder="Write 10–500 characters using latin letters."
+          onChange={(event) => onReviewTextChange(event.target.value)}
+        />
 
         <fieldset className={css.ratingFieldset}>
           <legend className={css.reviewLabel}>Rating</legend>

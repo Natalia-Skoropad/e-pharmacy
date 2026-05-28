@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import {
   ButtonLink,
@@ -9,14 +9,14 @@ import {
   ShimmerImage,
   SvgIcon,
 } from '@/components/common';
-import { useAuth } from '@/providers';
-import { useToast } from '@/hooks';
 
-import { formatPrice } from '@/lib/formatters';
+import { useFavoriteRefresh, useFavoriteToggle, useToast } from '@/hooks';
+
+import { formatPharmaciesCount, formatPrice } from '@/lib/formatters';
 import { buildProductPath } from '@/lib/routes';
 
+import { useAuth } from '@/providers';
 import { getProductDetails, toggleFavoriteProduct } from '@/services';
-
 import type { Product, ProductOffer } from '@/types';
 
 import css from './ProductCard.module.css';
@@ -58,10 +58,6 @@ function formatPriceRange(offers: ProductOffer[]): string {
   return `${formatPrice(minPrice)} – ${formatPrice(maxPrice)}`;
 }
 
-function getStoresCountLabel(count: number): string {
-  return `${count} ${count === 1 ? 'pharmacy' : 'pharmacies'}`;
-}
-
 //===================================================================
 
 function ProductCard({
@@ -69,11 +65,26 @@ function ProductCard({
   skipFavoriteRefresh = false,
   onFavoriteChange,
 }: ProductCardProps) {
-  const { token, isAuthenticated, isAuthReady } = useAuth();
+  const { token, isAuthenticated } = useAuth();
   const toast = useToast();
 
-  const [isFavorite, setIsFavorite] = useState(Boolean(product.isFavorite));
-  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+  const {
+    isAuthReady,
+    isFavorite,
+    isFavoriteLoading,
+    handleFavoriteClick,
+    setIsFavorite,
+  } = useFavoriteToggle({
+    id: product.id,
+    initialIsFavorite: Boolean(product.isFavorite),
+    notifier: toast,
+    loginMessage: 'Please log in to add products to favorites.',
+    addedMessage: 'Product was added to favorites.',
+    removedMessage: 'Product was removed from favorites.',
+    errorMessage: 'Could not update favorites.',
+    toggleFavorite: toggleFavoriteProduct,
+    onFavoriteChange,
+  });
 
   const productHref = buildProductPath(product.name, product.id);
 
@@ -82,47 +93,21 @@ function ProductCard({
     [product.offers]
   );
 
-  useEffect(() => {
-    if (skipFavoriteRefresh || !isAuthenticated || !token) return;
+  const refreshFavorite = useCallback(
+    async (currentToken: string) => {
+      const response = await getProductDetails(product.id, currentToken);
 
-    let isMounted = true;
+      return Boolean(response.product.isFavorite);
+    },
+    [product.id]
+  );
 
-    getProductDetails(product.id, token)
-      .then((response) => {
-        if (isMounted) setIsFavorite(Boolean(response.product.isFavorite));
-      })
-      .catch(() => undefined);
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isAuthenticated, product.id, skipFavoriteRefresh, token]);
-
-  const handleFavoriteClick = async () => {
-    if (!isAuthReady) return;
-
-    if (!isAuthenticated || !token) {
-      toast.info('Please log in to add products to favorites.');
-      return;
-    }
-
-    try {
-      setIsFavoriteLoading(true);
-      const response = await toggleFavoriteProduct(product.id, token);
-
-      setIsFavorite(response.isFavorite);
-      onFavoriteChange?.(product.id, response.isFavorite);
-      toast.success(
-        response.isFavorite
-          ? 'Product was added to favorites.'
-          : 'Product was removed from favorites.'
-      );
-    } catch {
-      toast.error('Could not update favorites.');
-    } finally {
-      setIsFavoriteLoading(false);
-    }
-  };
+  useFavoriteRefresh({
+    isEnabled: !skipFavoriteRefresh && isAuthenticated,
+    token,
+    refreshFavorite,
+    onRefresh: setIsFavorite,
+  });
 
   return (
     <article
@@ -180,7 +165,7 @@ function ProductCard({
 
           <div className={css.summaryItem}>
             <dt>Found in pharmacies</dt>
-            <dd>{getStoresCountLabel(product.foundInStoresCount)}</dd>
+            <dd>{formatPharmaciesCount(product.foundInStoresCount)}</dd>
           </div>
         </dl>
 

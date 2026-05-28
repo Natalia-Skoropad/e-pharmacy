@@ -10,8 +10,8 @@ import {
   parsePharmacyStoresSegments,
   type PharmacyStoresRouteParams,
 } from '@/lib/catalog/pharmacy-stores-catalog';
-import { createPageMetadata } from '@/lib/seo';
 
+import { createPageMetadata } from '@/lib/seo';
 import { getStoreFilters, getStores } from '@/services';
 
 //===================================================================
@@ -31,10 +31,12 @@ export async function generateMetadata({
 }: PharmacyStoresSegmentsPageProps) {
   const parsedFilters = parsePharmacyStoresSegments(await params);
   const storeFiltersData = await getStoreFilters().catch(() => null);
+
   const filters = normalizePharmacyStoresFiltersCity(
     parsedFilters,
     storeFiltersData?.cities.map((city) => city.value) ?? []
   );
+
   const storesData = await getStores(
     buildPharmacyStoresApiParams(filters)
   ).catch(() => null);
@@ -56,6 +58,7 @@ async function PharmacyStoresSegmentsPage({
 
   const storeFiltersData = await getStoreFilters().catch(() => null);
   const cityOptions = storeFiltersData?.cities.map((city) => city.value) ?? [];
+
   const filters = normalizePharmacyStoresFiltersCity(
     parsedFilters,
     cityOptions
