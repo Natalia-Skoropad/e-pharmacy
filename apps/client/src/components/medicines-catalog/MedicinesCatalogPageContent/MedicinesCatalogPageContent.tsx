@@ -12,6 +12,7 @@ import {
   type MedicinesCatalogFilters,
   type MedicinesCatalogSeoContext,
 } from '@/lib/catalog/medicines-catalog';
+
 import { ROUTES } from '@/lib/constants/routes';
 
 import type { Product, ProductFilterOptionsResponse, Store } from '@/types';

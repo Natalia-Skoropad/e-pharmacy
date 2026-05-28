@@ -13,6 +13,7 @@ import {
 } from '@/components/common';
 
 import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
+
 import {
   buildMedicinesCatalogPath,
   getMedicinesCatalogActiveFiltersCount,
@@ -21,6 +22,11 @@ import {
   type ProductCategoryFilter,
   type ProductSortFilter,
 } from '@/lib/catalog/medicines-catalog';
+
+import {
+  sanitizeCatalogArticleSearch,
+  sanitizeCatalogTextSearch,
+} from '@/lib/catalog/search-sanitizers';
 
 import type { ProductFilterOptionsResponse, Store } from '@/types';
 
@@ -45,16 +51,6 @@ type CatalogHrefFilters = Omit<MedicinesCatalogFilters, 'page'> & {
 
 const SEARCH_UPDATE_DELAY = 450;
 const SEARCH_MAX_LENGTH = 80;
-
-//===================================================================
-
-function sanitizeArticleSearch(value: string): string {
-  return value.replace(/[^A-Za-z0-9.-]/g, '');
-}
-
-function sanitizeTextSearch(value: string): string {
-  return value.replace(/[^A-Za-z0-9 .-]/g, '');
-}
 
 //===================================================================
 
@@ -93,6 +89,7 @@ function MedicinesCatalogFiltersForm({
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   useBodyScrollLock(isFiltersOpen);
+
   useEscapeToClose({
     isOpen: isFiltersOpen,
     onClose: () => setIsFiltersOpen(false),
@@ -198,7 +195,7 @@ function MedicinesCatalogFiltersForm({
         emptyMessage="No pharmacies found"
         isActive={Boolean(filters.storeId)}
         maxLength={SEARCH_MAX_LENGTH}
-        sanitizeQuery={sanitizeTextSearch}
+        sanitizeQuery={sanitizeCatalogTextSearch}
         onChange={handleStoreChange}
       />
     </>
@@ -215,7 +212,7 @@ function MedicinesCatalogFiltersForm({
             placeholder="Product name"
             isActive={Boolean(filters.name)}
             maxLength={SEARCH_MAX_LENGTH}
-            sanitizeValue={sanitizeTextSearch}
+            sanitizeValue={sanitizeCatalogTextSearch}
             onChange={setName}
           />
 
@@ -226,7 +223,7 @@ function MedicinesCatalogFiltersForm({
             placeholder="Article"
             isActive={Boolean(filters.article)}
             maxLength={SEARCH_MAX_LENGTH}
-            sanitizeValue={sanitizeArticleSearch}
+            sanitizeValue={sanitizeCatalogArticleSearch}
             onChange={setArticle}
           />
 

@@ -12,12 +12,13 @@ import {
 
 import { useFavoriteRefresh, useFavoriteToggle, useToast } from '@/hooks';
 
-import { formatPharmaciesCount, formatPrice } from '@/lib/formatters';
+import { formatPharmaciesCount, formatPriceRange } from '@/lib/formatters';
+import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
 import { buildProductPath } from '@/lib/routes';
 
 import { useAuth } from '@/providers';
 import { getProductDetails, toggleFavoriteProduct } from '@/services';
-import type { Product, ProductOffer } from '@/types';
+import type { Product } from '@/types';
 
 import css from './ProductCard.module.css';
 
@@ -28,35 +29,6 @@ type ProductCardProps = {
   skipFavoriteRefresh?: boolean;
   onFavoriteChange?: (productId: string, isFavorite: boolean) => void;
 };
-
-//===================================================================
-
-const CATEGORY_LABELS: Record<Product['category'], string> = {
-  medicine: 'Medicine',
-  vitamins: 'Vitamins',
-  beauty: 'Beauty',
-  hygiene: 'Hygiene',
-  'medical-devices': 'Medical devices',
-  other: 'Other',
-};
-
-//===================================================================
-
-function formatPriceRange(offers: ProductOffer[]): string {
-  const availableOffers = offers.filter(
-    (offer) => offer.inStock && Number.isFinite(offer.price)
-  );
-
-  if (availableOffers.length === 0) return 'No pharmacy prices yet';
-
-  const prices = availableOffers.map((offer) => offer.price);
-  const minPrice = Math.min(...prices);
-  const maxPrice = Math.max(...prices);
-
-  if (minPrice === maxPrice) return formatPrice(minPrice);
-
-  return `${formatPrice(minPrice)} – ${formatPrice(maxPrice)}`;
-}
 
 //===================================================================
 
@@ -142,7 +114,7 @@ function ProductCard({
       <div className={css.content}>
         <div className={css.metaRow}>
           <span className={css.category}>
-            {CATEGORY_LABELS[product.category]}
+            {formatProductCategoryLabel(product.category)}
           </span>
 
           <RatingSummary

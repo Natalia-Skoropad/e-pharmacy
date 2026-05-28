@@ -36,8 +36,11 @@ import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
 import {
   formatPharmaciesCount,
   formatPrice,
+  formatPriceRange,
   formatReviewsCount,
 } from '@/lib/formatters';
+import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
+import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';
 import { buildStorePath } from '@/lib/routes';
 import { REVIEW_MAX_LENGTH } from '@/lib/reviews';
 
@@ -86,15 +89,6 @@ type ProductDetailsPageContentProps = {
 const OFFERS_PER_PAGE = 10;
 const SEARCH_MAX_LENGTH = 80;
 
-const CATEGORY_LABELS: Record<Product['category'], string> = {
-  medicine: 'Medicine',
-  vitamins: 'Vitamins',
-  beauty: 'Beauty',
-  hygiene: 'Hygiene',
-  'medical-devices': 'Medical devices',
-  other: 'Other',
-};
-
 const OFFER_SORT_OPTIONS: { value: OfferSort; label: string }[] = [
   { value: 'newest', label: 'Newest first' },
   { value: 'rating-desc', label: 'Rating: highest first' },
@@ -106,24 +100,6 @@ const OFFER_SORT_OPTIONS: { value: OfferSort; label: string }[] = [
 ];
 
 //===================================================================
-
-function sanitizeOfferSearch(value: string): string {
-  return value.replace(/[^A-Za-z0-9 .-]/g, '');
-}
-
-//===================================================================
-
-function formatPriceRange(offers: ProductOffer[]): string {
-  if (offers.length === 0) return 'No pharmacy prices yet';
-
-  const prices = offers.map((offer) => offer.price);
-  const minPrice = Math.min(...prices);
-  const maxPrice = Math.max(...prices);
-
-  if (minPrice === maxPrice) return formatPrice(minPrice);
-
-  return `${formatPrice(minPrice)} — ${formatPrice(maxPrice)}`;
-}
 
 function getOfferCartItem(
   cart: Cart | null,
@@ -559,7 +535,7 @@ function ProductDetailsPageContent({
               <div className={css.content}>
                 <div className={css.topLine}>
                   <p className={css.category}>
-                    {CATEGORY_LABELS[productDetails.category]}
+                    {formatProductCategoryLabel(productDetails.category)}
                   </p>
 
                   <FavoriteToggleButton
@@ -672,7 +648,7 @@ function ProductDetailsPageContent({
                     value={storeNameQuery}
                     placeholder="Enter pharmacy name"
                     maxLength={SEARCH_MAX_LENGTH}
-                    sanitizeValue={sanitizeOfferSearch}
+                    sanitizeValue={sanitizeCatalogTextSearch}
                     onChange={handleStoreNameQueryChange}
                   />
 
@@ -682,7 +658,7 @@ function ProductDetailsPageContent({
                     value={storeAddressQuery}
                     placeholder="Enter city or address"
                     maxLength={SEARCH_MAX_LENGTH}
-                    sanitizeValue={sanitizeOfferSearch}
+                    sanitizeValue={sanitizeCatalogTextSearch}
                     onChange={handleStoreAddressQueryChange}
                   />
 
@@ -693,7 +669,7 @@ function ProductDetailsPageContent({
                     options={cityOptions}
                     placeholder="All cities"
                     isActive={cityFilter !== 'all'}
-                    sanitizeQuery={sanitizeOfferSearch}
+                    sanitizeQuery={sanitizeCatalogTextSearch}
                     onChange={handleCityFilterChange}
                   />
 
@@ -829,7 +805,7 @@ function ProductDetailsPageContent({
 
                   <div className={css.detailItem}>
                     <dt>Category</dt>
-                    <dd>{CATEGORY_LABELS[productDetails.category]}</dd>
+                    <dd>{formatProductCategoryLabel(productDetails.category)}</dd>
                   </div>
                 </dl>
 

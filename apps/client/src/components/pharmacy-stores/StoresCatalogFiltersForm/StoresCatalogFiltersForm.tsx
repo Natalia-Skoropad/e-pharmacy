@@ -20,6 +20,7 @@ import {
   PHARMACY_STORES_SORT_OPTIONS,
   type PharmacyStoresFilters,
 } from '@/lib/catalog/pharmacy-stores-catalog';
+import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';
 
 import type { StoresSortFilter } from '@/types';
 
@@ -45,10 +46,6 @@ const SEARCH_UPDATE_DELAY = 450;
 const SEARCH_MAX_LENGTH = 80;
 
 //===================================================================
-
-function sanitizeTextSearch(value: string): string {
-  return value.replace(/[^A-Za-z0-9 .-]/g, '');
-}
 
 function buildStoresHref(filters: StoresHrefFilters) {
   return buildPharmacyStoresPath(filters);
@@ -77,6 +74,7 @@ function StoresCatalogFiltersForm({
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   useBodyScrollLock(isFiltersOpen);
+
   useEscapeToClose({
     isOpen: isFiltersOpen,
     onClose: () => setIsFiltersOpen(false),
@@ -150,7 +148,7 @@ function StoresCatalogFiltersForm({
       emptyMessage="No cities found"
       isActive={Boolean(filters.city)}
       maxLength={SEARCH_MAX_LENGTH}
-      sanitizeQuery={sanitizeTextSearch}
+      sanitizeQuery={sanitizeCatalogTextSearch}
       onChange={handleCityChange}
     />
   );
@@ -166,7 +164,7 @@ function StoresCatalogFiltersForm({
             placeholder="Pharmacy name"
             isActive={Boolean(filters.name)}
             maxLength={SEARCH_MAX_LENGTH}
-            sanitizeValue={sanitizeTextSearch}
+            sanitizeValue={sanitizeCatalogTextSearch}
             onChange={setName}
           />
 
@@ -177,7 +175,7 @@ function StoresCatalogFiltersForm({
             placeholder="Address"
             isActive={Boolean(filters.address)}
             maxLength={SEARCH_MAX_LENGTH}
-            sanitizeValue={sanitizeTextSearch}
+            sanitizeValue={sanitizeCatalogTextSearch}
             onChange={setAddress}
           />
 

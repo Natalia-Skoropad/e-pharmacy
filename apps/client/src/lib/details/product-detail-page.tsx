@@ -1,4 +1,4 @@
-import { ProductDetailsPageContent } from '@/components/product-details';
+import { ProductDetailsPageContent } from '@/components/medicines-catalog';
 
 import { buildProductPath, getIdFromSlugId } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
