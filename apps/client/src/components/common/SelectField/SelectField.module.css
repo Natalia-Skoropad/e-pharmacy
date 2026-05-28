@@ -109,7 +109,8 @@
 }
 
 .option:hover,
-.option:focus-visible {
+.option:focus-visible,
+.optionActive {
   color: var(--color-accent);
   background-color: var(--color-accent-light);
 }

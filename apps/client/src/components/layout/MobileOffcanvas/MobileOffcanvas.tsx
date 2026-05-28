@@ -12,7 +12,13 @@ import {
   Logo,
   UserBadge,
 } from '@/components/common';
-import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
+
+import {
+  useBackdropClick,
+  useBodyScrollLock,
+  useEscapeToClose,
+  useFocusTrap,
+} from '@/hooks';
 
 import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
 import { ROUTES } from '@/lib/constants/routes';
@@ -37,6 +43,7 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
   const pathname = usePathname();
   const router = useRouter();
   const previousPathnameRef = useRef(pathname);
+  const panelRef = useRef<HTMLElement | null>(null);
 
   const { isAuthenticated, isAuthReady, user, logout } = useAuth();
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
@@ -55,6 +62,7 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
 
   useEscapeToClose({ isOpen, onClose });
   useBodyScrollLock(isOpen);
+  useFocusTrap({ isOpen, containerRef: panelRef });
 
   useEffect(() => {
     if (previousPathnameRef.current === pathname) return;
@@ -69,7 +77,18 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
       aria-hidden={!isOpen}
       onClick={handleBackdropClick}
     >
-      <aside className={css.panel} id={id} aria-label="Mobile navigation">
+      <aside
+        ref={panelRef}
+        className={css.panel}
+        id={id}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`${id}-title`}
+        tabIndex={-1}
+      >
+        <h2 className="visually-hidden" id={`${id}-title`}>
+          Mobile navigation
+        </h2>
         <div className={css.head}>
           <Logo variant="white" />
 

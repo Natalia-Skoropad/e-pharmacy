@@ -1,8 +1,13 @@
 'use client';
 
-import { type CSSProperties, type ReactNode, useId } from 'react';
+import { type CSSProperties, type ReactNode, useId, useRef } from 'react';
 
-import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
+import {
+  useBackdropClick,
+  useBodyScrollLock,
+  useEscapeToClose,
+  useFocusTrap,
+} from '@/hooks';
 import { cn } from '@/lib/utils';
 
 import css from './ModalBase.module.css';
@@ -36,12 +41,14 @@ function ModalBase({
 }: ModalBaseProps) {
   const fallbackTitleId = useId();
   const titleId = labelledBy ?? fallbackTitleId;
+  const dialogRef = useRef<HTMLDivElement | null>(null);
   const handleBackdropMouseDown = useBackdropClick({
     onClose: closeOnBackdrop ? onClose : () => {},
   });
 
   useBodyScrollLock(isOpen);
   useEscapeToClose({ isOpen: isOpen && closeOnEscape, onClose });
+  useFocusTrap({ isOpen, containerRef: dialogRef });
 
   if (!isOpen) return null;
 
@@ -53,10 +60,12 @@ function ModalBase({
       onMouseDown={handleBackdropMouseDown}
     >
       <div
+        ref={dialogRef}
         className={cn(css.dialog, dialogClassName)}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        tabIndex={-1}
       >
         {children}
       </div>

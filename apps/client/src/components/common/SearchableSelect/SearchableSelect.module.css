@@ -148,6 +148,7 @@
 
 .option:hover,
 .option:focus-visible,
+.optionActive,
 .optionSelected {
   color: var(--color-accent);
   background-color: var(--color-accent-light);

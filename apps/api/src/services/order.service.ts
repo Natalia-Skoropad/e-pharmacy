@@ -1,4 +1,3 @@
-import { randomBytes } from 'crypto';
 import mongoose, { Types } from 'mongoose';
 
 import { API_MESSAGES } from '../constants/messages';
@@ -10,6 +9,7 @@ import { Store } from '../models/store.model';
 import { httpError } from '../utils/httpError';
 
 import type { CheckoutOrderInput } from '../schemas/order.schema';
+
 import type {
   OrderEntity,
   OrderItemEntity,
@@ -69,21 +69,21 @@ function padDatePart(value: number): string {
 
 //===============================================================
 
-function createOrderNumber(): string {
+function createOrderNumber(orderId: Types.ObjectId): string {
   const date = new Date();
   const datePart = [
-    padDatePart(date.getDate()),
+    date.getFullYear(),
     padDatePart(date.getMonth() + 1),
-    date.getFullYear().toString().slice(-2),
+    padDatePart(date.getDate()),
   ].join('');
   const timePart = [
     padDatePart(date.getHours()),
     padDatePart(date.getMinutes()),
     padDatePart(date.getSeconds()),
   ].join('');
-  const randomPart = randomBytes(3).toString('hex').toUpperCase();
+  const orderIdPart = orderId.toString().slice(-8).toUpperCase();
 
-  return `EP-${datePart}-${timePart}-${randomPart}`;
+  return `EP-${datePart}-${timePart}-${orderIdPart}`;
 }
 
 //===============================================================
@@ -298,9 +298,12 @@ export async function checkoutOrderService(
         0
       );
 
+      const orderId = new Types.ObjectId();
+
       const order = await Order.create(
         [
           {
+            _id: orderId,
             userId: new Types.ObjectId(userId),
             storeId: store._id,
             storeSnapshot: {
@@ -328,7 +331,7 @@ export async function checkoutOrderService(
               : {}),
             ...(input.comment ? { comment: input.comment } : {}),
             status: 'accepted',
-            orderNumber: createOrderNumber(),
+            orderNumber: createOrderNumber(orderId),
           },
         ],
         { session }

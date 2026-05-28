@@ -1,8 +1,15 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
+
+import { useListboxNavigation } from '@/hooks';
+
+import {
+  isListboxOpenKey,
+  isListboxSelectKey,
+} from '@/lib/a11y/listbox-keyboard';
 
 import css from './SelectField.module.css';
 
@@ -40,6 +47,17 @@ function SelectField<TValue extends string>({
   const [isOpen, setIsOpen] = useState(false);
 
   const selectedOption = options.find((option) => option.value === value);
+  const selectedIndex = useMemo(
+    () =>
+      Math.max(
+        0,
+        options.findIndex((option) => option.value === value)
+      ),
+    [options, value]
+  );
+  const { activeIndex, moveActiveIndex, resetActiveIndex, setActiveIndex } =
+    useListboxNavigation(options.length, selectedIndex);
+  const activeOption = options[activeIndex];
 
   useEffect(() => {
     if (!isOpen) return;
@@ -50,24 +68,55 @@ function SelectField<TValue extends string>({
       }
     };
 
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false);
-      }
-    };
-
     document.addEventListener('mousedown', handleDocumentClick);
-    document.addEventListener('keydown', handleEscape);
 
     return () => {
       document.removeEventListener('mousedown', handleDocumentClick);
-      document.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen]);
+
+  const openSelect = () => {
+    resetActiveIndex(selectedIndex);
+    setIsOpen(true);
+  };
 
   const handleSelect = (nextValue: TValue) => {
     onChange(nextValue);
     setIsOpen(false);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (isListboxOpenKey(event.key)) {
+      event.preventDefault();
+
+      if (!isOpen) {
+        openSelect();
+        return;
+      }
+
+      moveActiveIndex(event.key === 'ArrowDown' ? 1 : -1);
+      return;
+    }
+
+    if (isListboxSelectKey(event.key)) {
+      event.preventDefault();
+
+      if (!isOpen) {
+        openSelect();
+        return;
+      }
+
+      if (activeOption) {
+        handleSelect(activeOption.value);
+      }
+
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setIsOpen(false);
+    }
   };
 
   return (
@@ -88,8 +137,16 @@ function SelectField<TValue extends string>({
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           aria-labelledby={`${buttonId}-label ${buttonId}`}
-          aria-controls={listboxId}
-          onClick={() => setIsOpen((current) => !current)}
+          aria-controls={isOpen ? listboxId : undefined}
+          onClick={() => {
+            if (isOpen) {
+              setIsOpen(false);
+              return;
+            }
+
+            openSelect();
+          }}
+          onKeyDown={handleKeyDown}
         >
           <span className={css.triggerText}>{selectedOption?.label}</span>
 
@@ -108,15 +165,22 @@ function SelectField<TValue extends string>({
             aria-labelledby={`${buttonId}-label`}
             tabIndex={-1}
           >
-            {options.map((option) => {
+            {options.map((option, index) => {
               const isSelected = option.value === value;
+              const isOptionActive = index === activeIndex;
 
               return (
                 <li
-                  className={clsx(css.option, isSelected && css.optionSelected)}
+                  className={clsx(
+                    css.option,
+                    isOptionActive && css.optionActive,
+                    isSelected && css.optionSelected
+                  )}
+                  id={`${listboxId}-option-${option.value}`}
                   key={option.value}
                   role="option"
                   aria-selected={isSelected}
+                  onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => handleSelect(option.value)}
                 >
                   <span>{option.label}</span>

@@ -4,6 +4,9 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import clsx from 'clsx';
 
+import { useListboxNavigation } from '@/hooks';
+import { isListboxOpenKey } from '@/lib/a11y/listbox-keyboard';
+
 import css from './SearchableSelect.module.css';
 
 //===================================================================
@@ -50,6 +53,7 @@ function SearchableSelect<TValue extends string = string>({
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
 
+
   const selectedOption = options.find((option) => option.value === value);
   const inputValue = isOpen ? query : (selectedOption?.label ?? '');
 
@@ -63,6 +67,17 @@ function SearchableSelect<TValue extends string = string>({
     );
   }, [options, query]);
 
+  const {
+    activeIndex,
+    moveActiveIndex,
+    resetActiveIndex,
+    setActiveIndex,
+  } = useListboxNavigation(filteredOptions.length);
+  const activeOption = filteredOptions[activeIndex];
+  const activeOptionId = activeOption
+    ? `${listboxId}-option-${activeOption.value}`
+    : undefined;
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -73,32 +88,27 @@ function SearchableSelect<TValue extends string = string>({
       }
     };
 
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false);
-        setQuery('');
-        inputRef.current?.blur();
-      }
-    };
-
     document.addEventListener('mousedown', handleDocumentClick);
-    document.addEventListener('keydown', handleEscape);
 
     return () => {
       document.removeEventListener('mousedown', handleDocumentClick);
-      document.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen]);
+
+  const closeSelect = () => {
+    setIsOpen(false);
+    setQuery('');
+  };
 
   const openSelect = () => {
     setIsOpen(true);
     setQuery('');
+    resetActiveIndex(0);
   };
 
   const handleSelect = (nextValue: TValue) => {
     onChange(nextValue);
-    setIsOpen(false);
-    setQuery('');
+    closeSelect();
     inputRef.current?.blur();
   };
 
@@ -106,18 +116,37 @@ function SearchableSelect<TValue extends string = string>({
     const sanitizedQuery = sanitizeQuery ? sanitizeQuery(nextQuery) : nextQuery;
 
     setQuery(sanitizedQuery.slice(0, maxLength));
+    resetActiveIndex(0);
     setIsOpen(true);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && filteredOptions[0]) {
+    if (isListboxOpenKey(event.key)) {
       event.preventDefault();
-      handleSelect(filteredOptions[0].value);
+
+      if (!isOpen) {
+        setIsOpen(true);
+        return;
+      }
+
+      moveActiveIndex(event.key === 'ArrowDown' ? 1 : -1);
+      return;
     }
 
-    if (event.key === 'ArrowDown') {
+    if (event.key === 'Enter') {
       event.preventDefault();
-      setIsOpen(true);
+
+      if (activeOption) {
+        handleSelect(activeOption.value);
+      }
+
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeSelect();
+      inputRef.current?.blur();
     }
   };
 
@@ -149,8 +178,9 @@ function SearchableSelect<TValue extends string = string>({
             maxLength={maxLength}
             aria-autocomplete="list"
             aria-expanded={isOpen}
-            aria-controls={listboxId}
+            aria-controls={isOpen ? listboxId : undefined}
             aria-haspopup="listbox"
+            aria-activedescendant={isOpen ? activeOptionId : undefined}
             onFocus={openSelect}
             onChange={(event) => handleInputChange(event.target.value)}
             onKeyDown={handleKeyDown}
@@ -161,9 +191,14 @@ function SearchableSelect<TValue extends string = string>({
             type="button"
             aria-label={isOpen ? 'Close options' : 'Open options'}
             aria-expanded={isOpen}
-            aria-controls={listboxId}
+            aria-controls={isOpen ? listboxId : undefined}
             onClick={() => {
-              setIsOpen((current) => !current);
+              if (isOpen) {
+                closeSelect();
+              } else {
+                openSelect();
+              }
+
               inputRef.current?.focus();
             }}
           >
@@ -183,18 +218,22 @@ function SearchableSelect<TValue extends string = string>({
             aria-label={label}
           >
             {filteredOptions.length ? (
-              filteredOptions.map((option) => {
+              filteredOptions.map((option, index) => {
                 const isSelected = option.value === value;
+                const isOptionActive = index === activeIndex;
 
                 return (
                   <li
                     className={clsx(
                       css.option,
+                      isOptionActive && css.optionActive,
                       isSelected && css.optionSelected
                     )}
+                    id={`${listboxId}-option-${option.value}`}
                     key={option.value}
                     role="option"
                     aria-selected={isSelected}
+                    onMouseEnter={() => setActiveIndex(index)}
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => handleSelect(option.value)}
                   >

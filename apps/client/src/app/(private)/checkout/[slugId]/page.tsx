@@ -44,9 +44,11 @@ async function CheckoutStorePage({ params }: CheckoutStorePageProps) {
     notFound();
   }
 
+  const selectedStoreId = checkoutStoreId as string;
+
   return (
     <ProtectedRoute>
-      <CheckoutPageContent checkoutStoreId={checkoutStoreId} />
+      <CheckoutPageContent checkoutStoreId={selectedStoreId} />
     </ProtectedRoute>
   );
 }
