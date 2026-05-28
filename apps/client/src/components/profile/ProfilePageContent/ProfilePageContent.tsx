@@ -27,7 +27,13 @@ import { StoreCard } from '@/components/pharmacy-stores';
 
 import { PROFILE_TITLE } from '@/lib/constants/metadata';
 import { ROUTES } from '@/lib/constants/routes';
-import { formatPrice, formatShortDate } from '@/lib/formatters';
+
+import {
+  formatCapitalizedLabel,
+  formatPrice,
+  formatShortDate,
+} from '@/lib/formatters';
+
 import { buildCustomerOrderPath } from '@/lib/orders';
 import { buildStorePath, createBreadcrumbs } from '@/lib/routes';
 
@@ -86,20 +92,6 @@ const TABS: Array<{
 const FAVORITES_PER_PAGE = 100;
 const FAVORITES_VISIBLE_STEP = 16;
 const ORDERS_VISIBLE_STEP = 15;
-
-//===================================================================
-
-function formatUserRole(role: string): string {
-  return role.charAt(0).toUpperCase() + role.slice(1);
-}
-
-function formatUserStatus(status: string): string {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-function formatOrderStatus(status: CustomerOrder['status']): string {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
 
 //===================================================================
 
@@ -599,11 +591,11 @@ function ProfilePageContent() {
               <dl className={css.compactDetails}>
                 <div>
                   <dt>Role</dt>
-                  <dd>{formatUserRole(user.role)}</dd>
+                  <dd>{formatCapitalizedLabel(user.role)}</dd>
                 </div>
                 <div>
                   <dt>Status</dt>
-                  <dd>{formatUserStatus(user.status)}</dd>
+                  <dd>{formatCapitalizedLabel(user.status)}</dd>
                 </div>
               </dl>
             </aside>
@@ -819,7 +811,7 @@ function ProfilePageContent() {
                               <td>{formatPrice(order.totalPrice)}</td>
                               <td>
                                 <span className={css.statusBadge}>
-                                  {formatOrderStatus(order.status)}
+                                  {formatCapitalizedLabel(order.status)}
                                 </span>
                               </td>
                             </tr>

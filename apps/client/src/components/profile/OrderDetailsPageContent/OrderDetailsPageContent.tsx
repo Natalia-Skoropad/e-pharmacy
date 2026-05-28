@@ -25,7 +25,13 @@ import {
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
 import { ROUTES } from '@/lib/constants/routes';
-import { formatOrderDateTime, formatPrice } from '@/lib/formatters';
+
+import {
+  formatCapitalizedLabel,
+  formatOrderDateTime,
+  formatPrice,
+} from '@/lib/formatters';
+
 import { buildProductPath, buildStorePath } from '@/lib/routes';
 import { getOrderIdFromPathParam } from '@/lib/orders';
 
@@ -49,16 +55,8 @@ function formatPaymentMethod(method: CustomerOrder['paymentMethod']): string {
     : 'Cash on pickup / delivery';
 }
 
-//===================================================================
-
 function formatDeliveryMethod(method: CustomerOrder['deliveryMethod']): string {
   return method === 'post' ? 'Post delivery' : 'Pickup from pharmacy';
-}
-
-//===================================================================
-
-function formatStatus(status: CustomerOrder['status']): string {
-  return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 //===================================================================
@@ -163,7 +161,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
             </div>
 
             <span className={css.statusBadge}>
-              {formatStatus(order.status)}
+              {formatCapitalizedLabel(order.status)}
             </span>
           </div>
 

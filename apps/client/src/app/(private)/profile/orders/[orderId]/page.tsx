@@ -20,12 +20,16 @@ type OrderDetailsPageProps = {
 
 //===================================================================
 
-export const metadata = createPageMetadata({
-  title: ORDER_DETAILS_TITLE,
-  description: ORDER_DETAILS_DESCRIPTION,
-  path: `${ROUTES.PROFILE}/orders`,
-  noIndex: true,
-});
+export async function generateMetadata({ params }: OrderDetailsPageProps) {
+  const { orderId } = await params;
+
+  return createPageMetadata({
+    title: ORDER_DETAILS_TITLE,
+    description: ORDER_DETAILS_DESCRIPTION,
+    path: `${ROUTES.PROFILE}/orders/${orderId}`,
+    noIndex: true,
+  });
+}
 
 //===================================================================
 

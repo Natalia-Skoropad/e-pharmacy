@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import AvatarImage from '@/components/common/AvatarImage';
+import { formatInitials } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 
 import css from './UserBadge.module.css';
@@ -20,20 +21,6 @@ type UserBadgeProps = {
 
 //===================================================================
 
-function getUserInitials(name?: string | null): string {
-  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) return 'U';
-
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
-}
-
-//===================================================================
-
 function UserBadge({
   name,
   avatarUrl,
@@ -45,7 +32,7 @@ function UserBadge({
   const content = (
     <>
       <span className={css.avatar} aria-hidden="true">
-        {avatarUrl ? <AvatarImage src={avatarUrl} /> : getUserInitials(name)}
+        {avatarUrl ? <AvatarImage src={avatarUrl} /> : formatInitials(name)}
       </span>
       <span className={css.name}>{name ?? 'Profile'}</span>
     </>

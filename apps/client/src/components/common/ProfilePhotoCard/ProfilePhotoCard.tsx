@@ -7,6 +7,7 @@ import { ImageOff, Upload } from 'lucide-react';
 import AvatarImage from '@/components/common/AvatarImage';
 import Button from '@/components/common/Button';
 import ConfirmActionModal from '@/components/common/ConfirmActionModal';
+import { formatInitials } from '@/lib/formatters';
 
 import css from './ProfilePhotoCard.module.css';
 
@@ -24,20 +25,6 @@ type ProfilePhotoCardProps = {
   onChange: (avatarUrl: string | null) => Promise<void> | void;
   onError?: (message: string) => void;
 };
-
-//===================================================================
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) return 'U';
-
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
-}
 
 //===================================================================
 
@@ -121,7 +108,7 @@ function ProfilePhotoCard({
         {avatarUrl ? (
           <AvatarImage className={css.avatarImage} src={avatarUrl} />
         ) : (
-          <span>{getInitials(name)}</span>
+          <span>{formatInitials(name)}</span>
         )}
       </div>
 
