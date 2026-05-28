@@ -2,3 +2,4 @@ export { default as MedicineStorePageContent } from './MedicinesCatalogPageConte
 export { default as ProductCard } from './ProductCard';
 export { default as ProductsList } from './ProductsList';
 export { default as MedicinesCatalogFiltersForm } from './MedicinesCatalogFiltersForm';
+export { default as ProductDetailsPageContent } from './ProductDetailsPageContent';
