@@ -12,14 +12,24 @@ type ReviewPayload = {
   comment: string;
 };
 
+type ReviewNotifier = {
+  success: (message: string) => void;
+  error: (message: string) => void;
+};
+
 type UseReviewFormParams = {
   createReview: (payload: ReviewPayload, token: string) => Promise<unknown>;
-  showToast: (message: string) => void;
+  notifier?: ReviewNotifier;
+  showToast?: (message: string) => void;
 };
 
 //===================================================================
 
-export function useReviewForm({ createReview, showToast }: UseReviewFormParams) {
+export function useReviewForm({
+  createReview,
+  notifier,
+  showToast,
+}: UseReviewFormParams) {
   const { token, isAuthenticated } = useAuth();
 
   const [reviewText, setReviewText] = useState('');
@@ -30,6 +40,24 @@ export function useReviewForm({ createReview, showToast }: UseReviewFormParams) 
     () => isReviewValid(reviewText, reviewRating),
     [reviewRating, reviewText]
   );
+
+  const notifySuccess = (message: string) => {
+    if (notifier) {
+      notifier.success(message);
+      return;
+    }
+
+    showToast?.(message);
+  };
+
+  const notifyError = (message: string) => {
+    if (notifier) {
+      notifier.error(message);
+      return;
+    }
+
+    showToast?.(message);
+  };
 
   const handleReviewTextChange = (value: string) => {
     if (value.length > REVIEW_MAX_LENGTH) return;
@@ -53,9 +81,9 @@ export function useReviewForm({ createReview, showToast }: UseReviewFormParams) 
 
       setReviewText('');
       setReviewRating(0);
-      showToast('Review was accepted and will be visible after moderation.');
+      notifySuccess('Review was accepted and will be visible after moderation.');
     } catch {
-      showToast('Could not submit review.');
+      notifyError('Could not submit review.');
     } finally {
       setIsReviewSubmitting(false);
     }

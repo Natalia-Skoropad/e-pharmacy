@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 
 import {
@@ -22,25 +22,34 @@ import {
   ShimmerImage,
   SvgIcon,
   Tabs,
-  Toast,
   type TabItem,
 } from '@/components/common';
 
 import { CartInvoiceLimitModal } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useAuth } from '@/providers';
-import { useFavoriteToggle, useReviewForm } from '@/hooks';
+import { useFavoriteToggle, useReviewForm, useToast } from '@/hooks';
 
 import { ROUTES } from '@/lib/constants/routes';
+import { CATALOG_SEARCH_MAX_LENGTH } from '@/lib/constants/catalog-controls';
 import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
+
 import {
   formatPharmaciesCount,
   formatPrice,
   formatPriceRange,
   formatReviewsCount,
 } from '@/lib/formatters';
+
 import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
 import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';
+
+import {
+  PRODUCT_OFFER_SORT_OPTIONS,
+  PRODUCT_OFFERS_PER_PAGE,
+  type ProductOfferSort,
+} from '@/lib/catalog/product-offers';
+
 import { buildStorePath } from '@/lib/routes';
 import { REVIEW_MAX_LENGTH } from '@/lib/reviews';
 
@@ -67,14 +76,6 @@ import css from './ProductDetailsPageContent.module.css';
 //===================================================================
 
 type ProductTab = 'about' | 'prices' | 'characteristics' | 'reviews';
-type OfferSort =
-  | 'newest'
-  | 'price-asc'
-  | 'price-desc'
-  | 'rating-desc'
-  | 'rating-asc'
-  | 'name-asc'
-  | 'name-desc';
 
 type ProductDetailsPageContentProps = {
   product: Product;
@@ -83,21 +84,6 @@ type ProductDetailsPageContentProps = {
   areReviewsUnavailable?: boolean;
   contextStoreId?: string;
 };
-
-//===================================================================
-
-const OFFERS_PER_PAGE = 10;
-const SEARCH_MAX_LENGTH = 80;
-
-const OFFER_SORT_OPTIONS: { value: OfferSort; label: string }[] = [
-  { value: 'newest', label: 'Newest first' },
-  { value: 'rating-desc', label: 'Rating: highest first' },
-  { value: 'rating-asc', label: 'Rating: lowest first' },
-  { value: 'name-asc', label: 'Name: A to Z' },
-  { value: 'name-desc', label: 'Name: Z to A' },
-  { value: 'price-asc', label: 'Price: low to high' },
-  { value: 'price-desc', label: 'Price: high to low' },
-];
 
 //===================================================================
 
@@ -158,7 +144,7 @@ function ProductDetailsPageContent({
   const [productDetails, setProductDetails] = useState(product);
   const [activeTab, setActiveTab] = useState<ProductTab>('about');
   const [cart, setCart] = useState<Cart | null>(null);
-  const [toastMessage, setToastMessage] = useState('');
+  const toast = useToast();
   const [updatingStoreId, setUpdatingStoreId] = useState<string | null>(null);
   const [pendingRemoveOffer, setPendingRemoveOffer] =
     useState<ProductOffer | null>(null);
@@ -167,8 +153,10 @@ function ProductDetailsPageContent({
   const [storeNameQuery, setStoreNameQuery] = useState('');
   const [storeAddressQuery, setStoreAddressQuery] = useState('');
   const [cityFilter, setCityFilter] = useState('all');
-  const [offerSort, setOfferSort] = useState<OfferSort>('newest');
-  const [visibleOffersCount, setVisibleOffersCount] = useState(OFFERS_PER_PAGE);
+  const [offerSort, setOfferSort] = useState<ProductOfferSort>('newest');
+  const [visibleOffersCount, setVisibleOffersCount] = useState(
+    PRODUCT_OFFERS_PER_PAGE
+  );
   const [isOffersLoadingMore, setIsOffersLoadingMore] = useState(false);
   const [areOfferFiltersOpen, setAreOfferFiltersOpen] = useState(false);
 
@@ -272,69 +260,46 @@ function ProductDetailsPageContent({
 
   const visibleOffers = filteredOffers.slice(0, visibleOffersCount);
 
-  const showToast = useCallback((message: string) => {
-    setToastMessage('');
-    window.setTimeout(() => setToastMessage(message), 0);
-  }, []);
-
   const handleStoreNameQueryChange = (value: string) => {
     setStoreNameQuery(value);
-    setVisibleOffersCount(OFFERS_PER_PAGE);
+    setVisibleOffersCount(PRODUCT_OFFERS_PER_PAGE);
   };
 
   const handleStoreAddressQueryChange = (value: string) => {
     setStoreAddressQuery(value);
-    setVisibleOffersCount(OFFERS_PER_PAGE);
+    setVisibleOffersCount(PRODUCT_OFFERS_PER_PAGE);
   };
 
   const handleCityFilterChange = (value: string) => {
     setCityFilter(value);
-    setVisibleOffersCount(OFFERS_PER_PAGE);
+    setVisibleOffersCount(PRODUCT_OFFERS_PER_PAGE);
   };
 
-  const handleOfferSortChange = (value: OfferSort) => {
+  const handleOfferSortChange = (value: ProductOfferSort) => {
     setOfferSort(value);
-    setVisibleOffersCount(OFFERS_PER_PAGE);
+    setVisibleOffersCount(PRODUCT_OFFERS_PER_PAGE);
   };
 
   const handleLoadMoreOffers = () => {
     setIsOffersLoadingMore(true);
 
     window.setTimeout(() => {
-      setVisibleOffersCount((count) => count + OFFERS_PER_PAGE);
+      setVisibleOffersCount((count) => count + PRODUCT_OFFERS_PER_PAGE);
       setIsOffersLoadingMore(false);
     }, 250);
   };
 
-  useEffect(() => {
-    if (!toastMessage) return;
-
-    const timeoutId = window.setTimeout(() => {
-      setToastMessage('');
-    }, 3000);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [toastMessage]);
-
-  const {
-    isFavorite,
-    isFavoriteLoading,
-    handleFavoriteClick,
-    setIsFavorite,
-  } = useFavoriteToggle({
-    id: productDetails.id,
-    initialIsFavorite: Boolean(product.isFavorite),
-    notifier: {
-      info: showToast,
-      success: showToast,
-      error: showToast,
-    },
-    loginMessage: 'Please log in to add products to favorites.',
-    addedMessage: 'Product was added to favorites.',
-    removedMessage: 'Product was removed from favorites.',
-    errorMessage: 'Could not update favorites.',
-    toggleFavorite: toggleFavoriteProduct,
-  });
+  const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
+    useFavoriteToggle({
+      id: productDetails.id,
+      initialIsFavorite: Boolean(product.isFavorite),
+      notifier: toast,
+      loginMessage: 'Please log in to add products to favorites.',
+      addedMessage: 'Product was added to favorites.',
+      removedMessage: 'Product was removed from favorites.',
+      errorMessage: 'Could not update favorites.',
+      toggleFavorite: toggleFavoriteProduct,
+    });
 
   const {
     reviewText,
@@ -347,7 +312,7 @@ function ProductDetailsPageContent({
   } = useReviewForm({
     createReview: (payload, currentToken) =>
       createProductReview(productDetails.id, payload, currentToken),
-    showToast,
+    notifier: toast,
   });
 
   useEffect(() => {
@@ -369,14 +334,13 @@ function ProductDetailsPageContent({
         if (isMounted) setCart(response.cart);
       })
       .catch(() => {
-        if (isMounted) showToast('Could not load cart data.');
+        if (isMounted) toast.error('Could not load cart data.');
       });
 
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, productDetails.id, setIsFavorite, showToast, token]);
-
+  }, [isAuthenticated, productDetails.id, setIsFavorite, toast, token]);
 
   const handleAddUnit = async (offer: ProductOffer) => {
     if (!isAuthenticated || !token) return;
@@ -392,17 +356,21 @@ function ProductDetailsPageContent({
             token
           )
         : await addCartItem(
-            { productId: productDetails.id, storeId: offer.storeId, quantity: 1 },
+            {
+              productId: productDetails.id,
+              storeId: offer.storeId,
+              quantity: 1,
+            },
             token
           );
 
       setCart(response.cart);
-      showToast('One product unit was added to the order.');
+      toast.success('One product unit was added to the order.');
     } catch (error) {
       if (isCartInvoiceLimitError(error)) {
         setInvoiceLimitMessage('limit');
       } else {
-        showToast('Could not add product to the order.');
+        toast.error('Could not add product to the order.');
       }
     } finally {
       setUpdatingStoreId(null);
@@ -419,18 +387,19 @@ function ProductDetailsPageContent({
     try {
       setUpdatingStoreId(offer.storeId);
 
-      const response = cartItem.quantity === 1
-        ? await removeCartItem(cartItem.id, token)
-        : await updateCartItem(
-            cartItem.id,
-            { quantity: cartItem.quantity - 1 },
-            token
-          );
+      const response =
+        cartItem.quantity === 1
+          ? await removeCartItem(cartItem.id, token)
+          : await updateCartItem(
+              cartItem.id,
+              { quantity: cartItem.quantity - 1 },
+              token
+            );
 
       setCart(response.cart);
-      showToast('One product unit was removed from the order.');
+      toast.success('One product unit was removed from the order.');
     } catch {
-      showToast('Could not remove product from the order.');
+      toast.error('Could not remove product from the order.');
     } finally {
       setUpdatingStoreId(null);
       setPendingRemoveOffer(null);
@@ -489,8 +458,6 @@ function ProductDetailsPageContent({
 
   return (
     <main className={css.page}>
-      <Toast message={toastMessage} isVisible={Boolean(toastMessage)} />
-
       <section className={css.hero} aria-labelledby="product-title">
         <Container>
           <Breadcrumbs
@@ -647,7 +614,7 @@ function ProductDetailsPageContent({
                     label="Search by pharmacy"
                     value={storeNameQuery}
                     placeholder="Enter pharmacy name"
-                    maxLength={SEARCH_MAX_LENGTH}
+                    maxLength={CATALOG_SEARCH_MAX_LENGTH}
                     sanitizeValue={sanitizeCatalogTextSearch}
                     onChange={handleStoreNameQueryChange}
                   />
@@ -657,7 +624,7 @@ function ProductDetailsPageContent({
                     label="Search by address"
                     value={storeAddressQuery}
                     placeholder="Enter city or address"
-                    maxLength={SEARCH_MAX_LENGTH}
+                    maxLength={CATALOG_SEARCH_MAX_LENGTH}
                     sanitizeValue={sanitizeCatalogTextSearch}
                     onChange={handleStoreAddressQueryChange}
                   />
@@ -677,7 +644,7 @@ function ProductDetailsPageContent({
                     id="pharmacy-sort"
                     label="Sort by"
                     value={offerSort}
-                    options={OFFER_SORT_OPTIONS}
+                    options={PRODUCT_OFFER_SORT_OPTIONS}
                     onChange={handleOfferSortChange}
                   />
                 </div>
@@ -805,7 +772,9 @@ function ProductDetailsPageContent({
 
                   <div className={css.detailItem}>
                     <dt>Category</dt>
-                    <dd>{formatProductCategoryLabel(productDetails.category)}</dd>
+                    <dd>
+                      {formatProductCategoryLabel(productDetails.category)}
+                    </dd>
                   </div>
                 </dl>
 

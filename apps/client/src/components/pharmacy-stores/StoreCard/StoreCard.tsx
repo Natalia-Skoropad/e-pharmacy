@@ -1,7 +1,5 @@
 'use client';
 
-import { useCallback } from 'react';
-
 import {
   ButtonLink,
   FavoriteToggleButton,
@@ -10,14 +8,14 @@ import {
   SvgIcon,
 } from '@/components/common';
 
-import { useFavoriteRefresh, useFavoriteToggle, useToast } from '@/hooks';
+import { useFavoriteToggle, useStoreFavoriteRefresh, useToast } from '@/hooks';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 import { buildStorePath } from '@/lib/routes';
 import { formatAvailableProductsCount } from '@/lib/formatters';
 
 import { useAuth } from '@/providers';
-import { getStoreDetails, toggleFavoriteStore } from '@/services';
+import { toggleFavoriteStore } from '@/services';
 import type { Store } from '@/types';
 
 import css from './StoreCard.module.css';
@@ -63,19 +61,10 @@ function StoreCard({
   ]);
   const storeHref = buildStorePath(store.name, store.id);
 
-  const refreshFavorite = useCallback(
-    async (currentToken: string) => {
-      const response = await getStoreDetails(store.id, currentToken);
-
-      return Boolean(response.store.isFavorite);
-    },
-    [store.id]
-  );
-
-  useFavoriteRefresh({
+  useStoreFavoriteRefresh({
+    id: store.id,
     isEnabled: !skipFavoriteRefresh && isAuthenticated,
     token,
-    refreshFavorite,
     onRefresh: setIsFavorite,
   });
 

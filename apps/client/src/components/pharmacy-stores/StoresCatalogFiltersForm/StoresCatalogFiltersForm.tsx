@@ -15,13 +15,18 @@ import {
 import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
 
 import {
+  CATALOG_SEARCH_MAX_LENGTH,
+  CATALOG_SEARCH_UPDATE_DELAY,
+} from '@/lib/constants/catalog-controls';
+
+import {
   buildPharmacyStoresPath,
   getPharmacyStoresActiveFiltersCount,
   PHARMACY_STORES_SORT_OPTIONS,
   type PharmacyStoresFilters,
 } from '@/lib/catalog/pharmacy-stores-catalog';
-import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';
 
+import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';
 import type { StoresSortFilter } from '@/types';
 
 import css from './StoresCatalogFiltersForm.module.css';
@@ -39,11 +44,6 @@ type StoresCatalogFiltersFormProps = {
 type StoresHrefFilters = Omit<PharmacyStoresFilters, 'page'> & {
   page?: number;
 };
-
-//===================================================================
-
-const SEARCH_UPDATE_DELAY = 450;
-const SEARCH_MAX_LENGTH = 80;
 
 //===================================================================
 
@@ -114,7 +114,7 @@ function StoresCatalogFiltersForm({
         }),
         { scroll: false }
       );
-    }, SEARCH_UPDATE_DELAY);
+    }, CATALOG_SEARCH_UPDATE_DELAY);
 
     return () => window.clearTimeout(timeoutId);
   }, [address, filters, name, router]);
@@ -147,7 +147,7 @@ function StoresCatalogFiltersForm({
       placeholder="All cities"
       emptyMessage="No cities found"
       isActive={Boolean(filters.city)}
-      maxLength={SEARCH_MAX_LENGTH}
+      maxLength={CATALOG_SEARCH_MAX_LENGTH}
       sanitizeQuery={sanitizeCatalogTextSearch}
       onChange={handleCityChange}
     />
@@ -163,7 +163,7 @@ function StoresCatalogFiltersForm({
             value={name}
             placeholder="Pharmacy name"
             isActive={Boolean(filters.name)}
-            maxLength={SEARCH_MAX_LENGTH}
+            maxLength={CATALOG_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogTextSearch}
             onChange={setName}
           />
@@ -174,7 +174,7 @@ function StoresCatalogFiltersForm({
             value={address}
             placeholder="Address"
             isActive={Boolean(filters.address)}
-            maxLength={SEARCH_MAX_LENGTH}
+            maxLength={CATALOG_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogTextSearch}
             onChange={setAddress}
           />

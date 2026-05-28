@@ -15,6 +15,11 @@ import {
 import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
 
 import {
+  CATALOG_SEARCH_MAX_LENGTH,
+  CATALOG_SEARCH_UPDATE_DELAY,
+} from '@/lib/constants/catalog-controls';
+
+import {
   buildMedicinesCatalogPath,
   getMedicinesCatalogActiveFiltersCount,
   type MedicinesCatalogFilters,
@@ -46,11 +51,6 @@ type MedicinesCatalogFiltersFormProps = {
 type CatalogHrefFilters = Omit<MedicinesCatalogFilters, 'page'> & {
   page?: number;
 };
-
-//===================================================================
-
-const SEARCH_UPDATE_DELAY = 450;
-const SEARCH_MAX_LENGTH = 80;
 
 //===================================================================
 
@@ -132,7 +132,7 @@ function MedicinesCatalogFiltersForm({
         ),
         { scroll: false }
       );
-    }, SEARCH_UPDATE_DELAY);
+    }, CATALOG_SEARCH_UPDATE_DELAY);
 
     return () => window.clearTimeout(timeoutId);
   }, [article, filters, name, router, stores]);
@@ -194,7 +194,7 @@ function MedicinesCatalogFiltersForm({
         placeholder="All pharmacies"
         emptyMessage="No pharmacies found"
         isActive={Boolean(filters.storeId)}
-        maxLength={SEARCH_MAX_LENGTH}
+        maxLength={CATALOG_SEARCH_MAX_LENGTH}
         sanitizeQuery={sanitizeCatalogTextSearch}
         onChange={handleStoreChange}
       />
@@ -211,7 +211,7 @@ function MedicinesCatalogFiltersForm({
             value={name}
             placeholder="Product name"
             isActive={Boolean(filters.name)}
-            maxLength={SEARCH_MAX_LENGTH}
+            maxLength={CATALOG_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogTextSearch}
             onChange={setName}
           />
@@ -222,7 +222,7 @@ function MedicinesCatalogFiltersForm({
             value={article}
             placeholder="Article"
             isActive={Boolean(filters.article)}
-            maxLength={SEARCH_MAX_LENGTH}
+            maxLength={CATALOG_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogArticleSearch}
             onChange={setArticle}
           />

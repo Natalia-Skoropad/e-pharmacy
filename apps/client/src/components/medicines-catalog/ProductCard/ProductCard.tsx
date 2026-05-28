@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import {
   ButtonLink,
@@ -10,14 +10,14 @@ import {
   SvgIcon,
 } from '@/components/common';
 
-import { useFavoriteRefresh, useFavoriteToggle, useToast } from '@/hooks';
+import { useFavoriteToggle, useProductFavoriteRefresh, useToast } from '@/hooks';
 
 import { formatPharmaciesCount, formatPriceRange } from '@/lib/formatters';
 import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
 import { buildProductPath } from '@/lib/routes';
 
 import { useAuth } from '@/providers';
-import { getProductDetails, toggleFavoriteProduct } from '@/services';
+import { toggleFavoriteProduct } from '@/services';
 import type { Product } from '@/types';
 
 import css from './ProductCard.module.css';
@@ -65,19 +65,10 @@ function ProductCard({
     [product.offers]
   );
 
-  const refreshFavorite = useCallback(
-    async (currentToken: string) => {
-      const response = await getProductDetails(product.id, currentToken);
-
-      return Boolean(response.product.isFavorite);
-    },
-    [product.id]
-  );
-
-  useFavoriteRefresh({
+  useProductFavoriteRefresh({
+    id: product.id,
     isEnabled: !skipFavoriteRefresh && isAuthenticated,
     token,
-    refreshFavorite,
     onRefresh: setIsFavorite,
   });
 

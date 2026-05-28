@@ -16,6 +16,7 @@ import {
   LoadingSpinner,
   RatingSummary,
 } from '@/components/common';
+
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
@@ -79,7 +80,6 @@ function groupCartItemsByStore(items: Cart['items']): StoreCartGroup[] {
 
   return [...groups.values()];
 }
-
 
 function getCartWithUpdatedQuantity(
   cart: Cart,

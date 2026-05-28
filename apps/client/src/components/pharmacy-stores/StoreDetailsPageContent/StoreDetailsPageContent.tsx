@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 
 import {
@@ -12,13 +12,17 @@ import {
   ShimmerImage,
   SvgIcon,
   Tabs,
-  Toast,
   type TabItem,
 } from '@/components/common';
 
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
-import { useAuth } from '@/providers';
-import { useFavoriteRefresh, useFavoriteToggle, useReviewForm } from '@/hooks';
+
+import {
+  useFavoriteToggle,
+  useReviewForm,
+  useStoreFavoriteRefresh,
+  useToast,
+} from '@/hooks';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 import { ROUTES } from '@/lib/constants/routes';
@@ -30,12 +34,8 @@ import {
 
 import { REVIEW_MAX_LENGTH } from '@/lib/reviews';
 
-import {
-  createStoreReview,
-  getStoreDetails,
-  toggleFavoriteStore,
-} from '@/services';
-
+import { useAuth } from '@/providers';
+import { createStoreReview, toggleFavoriteStore } from '@/services';
 import type { Store, StoreReview } from '@/types';
 
 import css from './StoreDetailsPageContent.module.css';
@@ -62,7 +62,7 @@ function StoreDetailsPageContent({
   const { token, isAuthenticated, isAuthReady } = useAuth();
 
   const [activeTab, setActiveTab] = useState<StoreTab>('details');
-  const [toastMessage, setToastMessage] = useState('');
+  const toast = useToast();
 
   const tabs = useMemo<TabItem<StoreTab>[]>(
     () => [
@@ -85,28 +85,11 @@ function StoreDetailsPageContent({
 
   const reviewsCountLabel = formatReviewsCount(reviewsTotal);
 
-  const showToast = useCallback((message: string) => {
-    setToastMessage('');
-    window.setTimeout(() => setToastMessage(message), 0);
-  }, []);
-
-  useEffect(() => {
-    if (!toastMessage) return;
-
-    const timeoutId = window.setTimeout(() => setToastMessage(''), 3000);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [toastMessage]);
-
   const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
     useFavoriteToggle({
       id: store.id,
       initialIsFavorite: Boolean(store.isFavorite),
-      notifier: {
-        info: showToast,
-        success: showToast,
-        error: showToast,
-      },
+      notifier: toast,
       loginMessage: 'Please log in to add pharmacies to favorites.',
       addedMessage: 'Pharmacy was added to favorites.',
       removedMessage: 'Pharmacy was removed from favorites.',
@@ -114,19 +97,10 @@ function StoreDetailsPageContent({
       toggleFavorite: toggleFavoriteStore,
     });
 
-  const refreshFavorite = useCallback(
-    async (currentToken: string) => {
-      const response = await getStoreDetails(store.id, currentToken);
-
-      return Boolean(response.store.isFavorite);
-    },
-    [store.id]
-  );
-
-  useFavoriteRefresh({
+  useStoreFavoriteRefresh({
+    id: store.id,
     isEnabled: isAuthenticated,
     token,
-    refreshFavorite,
     onRefresh: setIsFavorite,
   });
 
@@ -141,7 +115,7 @@ function StoreDetailsPageContent({
   } = useReviewForm({
     createReview: (payload, currentToken) =>
       createStoreReview(store.id, payload, currentToken),
-    showToast,
+    notifier: toast,
   });
 
   const handleEmailCopy = async () => {
@@ -149,16 +123,14 @@ function StoreDetailsPageContent({
 
     try {
       await navigator.clipboard.writeText(store.email);
-      showToast('Email copied.');
+      toast.success('Email copied.');
     } catch {
-      showToast('Could not copy email.');
+      toast.error('Could not copy email.');
     }
   };
 
   return (
     <main className={css.page}>
-      <Toast message={toastMessage} isVisible={Boolean(toastMessage)} />
-
       <section className={css.hero} aria-labelledby="store-title">
         <Container>
           <Breadcrumbs
