@@ -139,6 +139,7 @@ function StoreDetailsPageContent({
               { label: 'Pharmacy stores', href: ROUTES.STORES },
               { label: store.name },
             ]}
+            includeStructuredData
           />
 
           <h1 className="visually-hidden" id="store-title">

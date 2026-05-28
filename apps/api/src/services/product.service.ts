@@ -87,6 +87,7 @@ type ProductDocument = {
   reviewsCount?: number;
   reviews?: ProductReviewDocument[];
   createdAt: Date;
+  updatedAt: Date;
 };
 
 //===============================================================
@@ -282,6 +283,7 @@ function serializeProduct(
     ...(averageRating !== null ? { rating: averageRating } : {}),
     reviewsCount: moderatedReviews.length,
     isFavorite: favoriteProductIds.has(productId),
+    updatedAt: product.updatedAt.toISOString(),
   };
 }
 

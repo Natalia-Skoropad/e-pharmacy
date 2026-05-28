@@ -35,12 +35,13 @@ export function createPageMetadata({
     title,
     description,
     alternates: {
-      canonical: path,
+      canonical: absoluteUrl,
     },
+
     openGraph: {
       type: 'website',
       siteName: SITE_NAME,
-      title: `${title} | ${SITE_NAME}`,
+      title,
       description,
       url: absoluteUrl,
       images: [
@@ -52,12 +53,14 @@ export function createPageMetadata({
         },
       ],
     },
+
     twitter: {
       card: 'summary_large_image',
-      title: `${title} | ${SITE_NAME}`,
+      title,
       description,
       images: [image],
     },
+
     robots: noIndex
       ? {
           index: false,

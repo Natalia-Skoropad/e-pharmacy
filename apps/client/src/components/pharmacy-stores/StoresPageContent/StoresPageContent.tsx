@@ -60,6 +60,7 @@ function StoresPageContent({
               { label: 'Pharmacy stores', href: ROUTES.STORES },
               ...(filters.city ? [{ label: filters.city }] : []),
             ]}
+            includeStructuredData={showSeoText}
           />
 
           <div className={css.sectionHeader}>

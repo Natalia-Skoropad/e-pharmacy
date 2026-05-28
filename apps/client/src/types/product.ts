@@ -47,6 +47,7 @@ export type Product = {
   rating?: number;
   reviewsCount?: number;
   isFavorite?: boolean;
+  updatedAt?: string;
 };
 
 //===================================================================

@@ -105,6 +105,7 @@ export type ProductResponseDto = {
   rating?: number;
   reviewsCount?: number;
   isFavorite?: boolean;
+  updatedAt?: string;
 };
 
 

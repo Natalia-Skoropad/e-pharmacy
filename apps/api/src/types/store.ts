@@ -77,6 +77,7 @@ export type StoreResponseDto = {
   reviewsCount: number;
   isFavorite: boolean;
   isActive: boolean;
+  updatedAt?: string;
 };
 
 

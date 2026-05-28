@@ -32,5 +32,18 @@ export const NOINDEX_ROUTES = [
 
 //===================================================================
 
+export const ROBOTS_DISALLOW_ROUTES = [
+  ROUTES.CART,
+  ROUTES.CHECKOUT,
+  ROUTES.LOGIN,
+  ROUTES.REGISTER,
+  ROUTES.PASSWORD_RECOVERY,
+  ROUTES.RESET_PASSWORD,
+  ROUTES.PROFILE,
+  '/admin',
+  '/vendor',
+] as const;
+
+//===================================================================
+
 export const SITEMAP_STATIC_ROUTES = INDEXABLE_ROUTES;
-export const ROBOTS_DISALLOW_ROUTES = NOINDEX_ROUTES;

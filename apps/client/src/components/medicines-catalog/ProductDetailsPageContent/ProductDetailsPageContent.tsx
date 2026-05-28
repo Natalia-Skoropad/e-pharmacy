@@ -466,6 +466,7 @@ function ProductDetailsPageContent({
               { label: 'Medicines catalog', href: ROUTES.MEDICINES_CATALOG },
               { label: productDetails.name },
             ]}
+            includeStructuredData
           />
 
           <h1 className="visually-hidden" id="product-title">

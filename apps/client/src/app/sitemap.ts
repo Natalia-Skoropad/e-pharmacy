@@ -18,17 +18,20 @@ type SitemapProduct = {
   id: string;
   name: string;
   inStock?: boolean;
+  updatedAt?: string;
 };
 
 type SitemapStore = {
   id: string;
   name: string;
   isActive?: boolean;
+  updatedAt?: string;
 };
 
 type SitemapEntry = {
   path: string;
   priority: number;
+  lastModified?: Date;
 };
 
 //===================================================================
@@ -41,6 +44,16 @@ const SITEMAP_REVALIDATE_SECONDS = 3600;
 
 function createApiUrl(path: string): string {
   return new URL(path, CLIENT_ENV.apiBaseUrl).toString();
+}
+
+//===================================================================
+
+function parseSitemapDate(value?: string): Date | undefined {
+  if (!value) return undefined;
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
 //===================================================================
@@ -106,6 +119,7 @@ async function getDynamicSitemapEntries(): Promise<SitemapEntry[]> {
     .map((product) => ({
       path: buildProductPath(product.name, product.id),
       priority: 0.7,
+      lastModified: parseSitemapDate(product.updatedAt),
     }));
 
   const storeEntries = stores
@@ -113,6 +127,7 @@ async function getDynamicSitemapEntries(): Promise<SitemapEntry[]> {
     .map((store) => ({
       path: buildStorePath(store.name, store.id),
       priority: 0.7,
+      lastModified: parseSitemapDate(store.updatedAt),
     }));
 
   return [...productEntries, ...storeEntries];
@@ -121,10 +136,11 @@ async function getDynamicSitemapEntries(): Promise<SitemapEntry[]> {
 //===================================================================
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
+  const fallbackLastModified = new Date();
   const staticEntries = SITEMAP_STATIC_ROUTES.map((route) => ({
     path: route,
     priority: route === '/' ? 1 : 0.8,
+    lastModified: fallbackLastModified,
   }));
 
   const dynamicEntries = await getDynamicSitemapEntries();
@@ -136,7 +152,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return Array.from(entriesByPath.values()).map((entry) => ({
     url: createAbsoluteUrl(entry.path),
-    lastModified: now,
+    lastModified: entry.lastModified ?? fallbackLastModified,
     changeFrequency: entry.path === '/' ? 'weekly' : 'daily',
     priority: entry.priority,
   }));

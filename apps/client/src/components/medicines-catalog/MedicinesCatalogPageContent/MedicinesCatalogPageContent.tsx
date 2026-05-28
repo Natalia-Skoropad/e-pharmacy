@@ -83,7 +83,7 @@ function MedicineStorePageContent({
           <Breadcrumbs
             items={[
               { label: 'Home', href: ROUTES.HOME },
-              { label: 'Medicine catalog', href: ROUTES.MEDICINES_CATALOG },
+              { label: 'Medicines catalog', href: ROUTES.MEDICINES_CATALOG },
               ...(filters.category !== 'all' && seoContext.categoryLabel
                 ? [{ label: seoContext.categoryLabel }]
                 : []),
@@ -91,6 +91,7 @@ function MedicineStorePageContent({
                 ? [{ label: seoContext.storeName }]
                 : []),
             ]}
+            includeStructuredData={showSeoText}
           />
 
           <div className={css.sectionHeader}>

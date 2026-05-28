@@ -24,6 +24,7 @@ export type Store = {
   reviewsCount?: number;
   isFavorite?: boolean;
   isActive: boolean;
+  updatedAt?: string;
 };
 
 //===================================================================

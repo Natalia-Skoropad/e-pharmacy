@@ -66,6 +66,7 @@ type StoreDocument = {
   reviews?: StoreReviewDocument[];
   isActive: boolean;
   createdAt: Date;
+  updatedAt: Date;
 };
 
 type StoreProductsCount = {
@@ -170,6 +171,7 @@ function serializeStore(
     reviewsCount: moderatedReviews.length,
     isFavorite: favoriteStoreIds.has(storeId),
     isActive: store.isActive,
+    updatedAt: store.updatedAt.toISOString(),
   };
 }
 

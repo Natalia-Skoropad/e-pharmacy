@@ -36,6 +36,12 @@ const RESERVED_ROOT_SLUGS = new Set([
   'medicines-catalog',
   'delivery-and-payment',
   'return-policy',
+  'user-agreement',
+  'personal-data-notice',
+  'password-recovery',
+  'reset-password',
+  'admin',
+  'vendor',
 ]);
 
 //===================================================================
