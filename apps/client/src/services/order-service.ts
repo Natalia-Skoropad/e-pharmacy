@@ -1,5 +1,5 @@
-import { apiRequest, getResponseData } from '@/lib/api';
-import { API_ROUTES } from '@/lib/constants/api-routes';
+import { getResponseData, localApiRequest } from '@/lib/api';
+import { CLIENT_API_ROUTES } from '@/lib/constants/client-api-routes';
 
 import type {
   ApiSuccessResponse,
@@ -14,13 +14,12 @@ import type {
 export async function checkoutOrder(
   payload: CheckoutOrderPayload
 ): Promise<CheckoutOrderResponse> {
-  const response = await apiRequest<ApiSuccessResponse<CheckoutOrderResponse>>(
-    API_ROUTES.orders.checkout,
-    {
-      method: 'POST',
-      body: payload,
-    }
-  );
+  const response = await localApiRequest<
+    ApiSuccessResponse<CheckoutOrderResponse>
+  >(CLIENT_API_ROUTES.orders.checkout, {
+    method: 'POST',
+    body: payload,
+  });
 
   return getResponseData(response);
 }
@@ -28,8 +27,8 @@ export async function checkoutOrder(
 //===================================================================
 
 export async function getOrders(): Promise<OrdersResponse> {
-  const response = await apiRequest<ApiSuccessResponse<OrdersResponse>>(
-    API_ROUTES.orders.list
+  const response = await localApiRequest<ApiSuccessResponse<OrdersResponse>>(
+    CLIENT_API_ROUTES.orders.list
   );
 
   return getResponseData(response);
@@ -40,9 +39,9 @@ export async function getOrders(): Promise<OrdersResponse> {
 export async function getOrderDetails(
   orderId: string
 ): Promise<OrderDetailsResponse> {
-  const response = await apiRequest<ApiSuccessResponse<OrderDetailsResponse>>(
-    API_ROUTES.orders.details(orderId),
-  );
+  const response = await localApiRequest<
+    ApiSuccessResponse<OrderDetailsResponse>
+  >(CLIENT_API_ROUTES.orders.details(orderId));
 
   return getResponseData(response);
 }

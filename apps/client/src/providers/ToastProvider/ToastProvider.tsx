@@ -8,11 +8,11 @@ import {
   type ReactNode,
 } from 'react';
 
-import Toast from '@/components/common/Toast';
+import Toast, { type ToastVariant } from '@/components/common/Toast';
+
+export type { ToastVariant };
 
 //===================================================================
-
-export type ToastVariant = 'success' | 'error' | 'info';
 
 type ToastItem = {
   id: string;
@@ -41,6 +41,7 @@ type ToastProviderProps = {
 //===================================================================
 
 const DEFAULT_TOAST_DURATION = 5000;
+const MAX_VISIBLE_TOASTS = 4;
 
 export const ToastContext = createContext<ToastContextValue | null>(null);
 
@@ -58,17 +59,28 @@ function ToastProvider({ children }: ToastProviderProps) {
   }, []);
 
   const show = useCallback((toast: ToastInput) => {
-    const id = createToastId();
+    const message = toast.message.trim();
 
-    setToasts((prev) => [
-      ...prev,
-      {
-        id,
-        message: toast.message,
-        variant: toast.variant ?? 'success',
-        duration: toast.duration ?? DEFAULT_TOAST_DURATION,
-      },
-    ]);
+    if (!message) return;
+
+    const id = createToastId();
+    const variant = toast.variant ?? 'success';
+
+    setToasts((prev) => {
+      const withoutDuplicate = prev.filter(
+        (item) => !(item.message === message && item.variant === variant)
+      );
+
+      return [
+        ...withoutDuplicate,
+        {
+          id,
+          message,
+          variant,
+          duration: toast.duration ?? DEFAULT_TOAST_DURATION,
+        },
+      ].slice(-MAX_VISIBLE_TOASTS);
+    });
   }, []);
 
   const value = useMemo<ToastContextValue>(
@@ -87,12 +99,13 @@ function ToastProvider({ children }: ToastProviderProps) {
     <ToastContext.Provider value={value}>
       {children}
 
-      {toasts.map((toast) => (
+      {toasts.map((toast, index) => (
         <Toast
           key={toast.id}
           message={toast.message}
           variant={toast.variant}
           duration={toast.duration}
+          offsetIndex={index}
           onClose={() => removeToast(toast.id)}
         />
       ))}

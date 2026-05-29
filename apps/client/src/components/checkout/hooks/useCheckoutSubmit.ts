@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { groupCartByStore } from '@/lib/cart/cart-groups';
 import { getStockValidationError } from '@/lib/checkout';
+import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
 import { buildCustomerOrderPath } from '@/lib/orders';
 import { checkoutOrder, getCart } from '@/services';
 import type { Cart } from '@/types';
@@ -65,9 +66,7 @@ export function useCheckoutSubmit({
 
       if (!latestOrderGroup) {
         setCart(latestCartResponse.cart);
-        setError(
-          'Sorry, we cannot confirm this invoice right now. While you were placing the order, these products were reserved by another customer. Please update the cart and try again.'
-        );
+        setError(APP_ERROR_MESSAGES.checkout.staleInvoice);
         return;
       }
 
@@ -101,8 +100,12 @@ export function useCheckoutSubmit({
       setCart(nextCartResponse.cart);
       dispatchCartUpdated(nextCartResponse.cart);
       router.push(buildCustomerOrderPath(response.order));
-    } catch {
-      setError('Could not confirm order.');
+    } catch (error) {
+      setError(
+        getAppErrorMessage(error, {
+          fallback: APP_ERROR_MESSAGES.checkout.confirm,
+        })
+      );
     } finally {
       setIsSubmitting(false);
     }

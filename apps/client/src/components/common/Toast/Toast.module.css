@@ -9,10 +9,10 @@
   gap: 10px;
 
   min-width: 260px;
-  max-width: 360px;
-  width: min(360px, calc(100vw - 40px));
+  max-width: 380px;
+  width: min(380px, calc(100vw - 40px));
 
-  padding: 12px 14px;
+  padding: 12px 12px 12px 14px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-md);
@@ -47,6 +47,32 @@
   color: var(--color-text-primary);
 }
 
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  padding: 0;
+
+  color: var(--color-text-secondary);
+  background-color: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.closeButton:hover,
+.closeButton:focus-visible {
+  color: var(--color-text-primary);
+  background-color: var(--color-background-soft);
+}
+
 .success {
   border-color: var(--color-success-border-medium);
 }
@@ -61,6 +87,14 @@
 
 .error .dot {
   background-color: var(--color-error);
+}
+
+.info {
+  border-color: var(--color-border-medium);
+}
+
+.info .dot {
+  background-color: var(--color-text-secondary);
 }
 
 @media only screen and (max-width: 767.98px) {

@@ -29,6 +29,7 @@ import {
 } from '@/lib/cart/cart-groups';
 
 import { CART_DESCRIPTION, CART_TITLE } from '@/lib/constants/metadata';
+import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
 import { ROUTES } from '@/lib/constants/routes';
 import { buildStorePath, createBreadcrumbs } from '@/lib/routes';
 
@@ -104,10 +105,12 @@ function CartPageContent() {
 
         setCart(response.cart);
         setError('');
-      } catch {
+      } catch (error) {
         if (!isMounted) return;
 
-        setError('Could not load your cart. Please check the backend API.');
+        setError(
+          getAppErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.load })
+        );
       } finally {
         if (!isMounted) return;
 
@@ -143,10 +146,12 @@ function CartPageContent() {
 
       setCart(response.cart);
       dispatchCartUpdated(response.cart);
-    } catch {
+    } catch (error) {
       setCart(previousCart);
       dispatchCartUpdated(previousCart);
-      setError('Could not update cart item.');
+      setError(
+        getAppErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.update })
+      );
     } finally {
       setUpdatingItemId(null);
     }
@@ -162,8 +167,10 @@ function CartPageContent() {
       const response = await removeCartItem(cartItemId);
 
       setCart(response.cart);
-    } catch {
-      setError('Could not remove cart item.');
+    } catch (error) {
+      setError(
+        getAppErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.remove })
+      );
     } finally {
       setUpdatingItemId(null);
     }
@@ -179,8 +186,10 @@ function CartPageContent() {
       const response = await clearCart();
 
       setCart(response.cart);
-    } catch {
-      setError('Could not clear cart.');
+    } catch (error) {
+      setError(
+        getAppErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.clear })
+      );
     } finally {
       setIsClearing(false);
     }
@@ -213,8 +222,12 @@ function CartPageContent() {
       }
 
       setCart(nextCart);
-    } catch {
-      setError('Could not remove pharmacy invoice.');
+    } catch (error) {
+      setError(
+        getAppErrorMessage(error, {
+          fallback: APP_ERROR_MESSAGES.cart.removeInvoice,
+        })
+      );
     } finally {
       setIsClearing(false);
     }

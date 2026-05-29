@@ -1,17 +1,9 @@
-import { CLIENT_ENV } from '@/lib/constants/env';
-
 import { ApiError } from './api-error';
+import { createApiUrl } from './api-url';
 import { getApiErrorMessage } from './get-api-error-message';
 import { parseJsonSafe } from './parse-json-safe';
+import { prepareRequestBody } from './request-body';
 import type { ApiRequestConfig } from './types';
-
-//===================================================================
-
-function createApiUrl(path: string): string {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-
-  return new URL(normalizedPath, CLIENT_ENV.apiBaseUrl).toString();
-}
 
 //===================================================================
 
@@ -23,18 +15,23 @@ export async function apiRequest<TData>(
     headers,
     cache = 'no-store',
     next,
+    credentials = 'include',
+    signal,
+    baseUrl,
   }: ApiRequestConfig = {}
 ): Promise<TData> {
-  const response = await fetch(createApiUrl(path), {
+  const url = createApiUrl(path, baseUrl);
+  const requestHeaders = new Headers(headers);
+  const requestBody = prepareRequestBody(body, requestHeaders);
+
+  const response = await fetch(url, {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
+    headers: requestHeaders,
+    body: requestBody,
     cache,
     next,
-    credentials: 'include',
+    credentials,
+    signal,
   });
 
   const payload = await parseJsonSafe<TData>(response);
@@ -43,7 +40,8 @@ export async function apiRequest<TData>(
     throw new ApiError(
       getApiErrorMessage(payload, response.statusText),
       response.status,
-      payload
+      payload,
+      { url, method }
     );
   }
 

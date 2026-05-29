@@ -1,4 +1,6 @@
 export const API_ROUTES = {
+  health: '/health',
+
   auth: {
     register: '/auth/register',
     login: '/auth/login',

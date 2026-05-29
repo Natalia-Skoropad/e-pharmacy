@@ -1,11 +1,13 @@
 import {
-  apiRequest,
+  bffApiRequest,
   buildQueryString,
   getResponseData,
+  localApiRequest,
   type RequestOptions,
 } from '@/lib/api';
 
 import { API_ROUTES } from '@/lib/constants/api-routes';
+import { CLIENT_API_ROUTES } from '@/lib/constants/client-api-routes';
 
 import type {
   ApiSuccessResponse,
@@ -27,8 +29,9 @@ export async function getProducts(
 ): Promise<ProductsResponse> {
   const queryString = buildQueryString(params);
 
-  const response = await apiRequest<ApiSuccessResponse<ProductsResponse>>(
+  const response = await bffApiRequest<ApiSuccessResponse<ProductsResponse>>(
     `${API_ROUTES.products.list}${queryString}`,
+    `${CLIENT_API_ROUTES.products.list}${queryString}`,
     requestOptions
   );
 
@@ -40,9 +43,13 @@ export async function getProducts(
 export async function getProductFilters(
   requestOptions?: RequestOptions
 ): Promise<ProductFilterOptionsResponse> {
-  const response = await apiRequest<
+  const response = await bffApiRequest<
     ApiSuccessResponse<ProductFilterOptionsResponse>
-  >(API_ROUTES.products.filters, requestOptions);
+  >(
+    API_ROUTES.products.filters,
+    CLIENT_API_ROUTES.products.filters,
+    requestOptions
+  );
 
   return getResponseData(response);
 }
@@ -53,8 +60,9 @@ export async function getProductDetails(
   productId: string,
   requestOptions?: RequestOptions
 ): Promise<ProductDetailsResponse> {
-  const response = await apiRequest<ApiSuccessResponse<ProductDetailsResponse>>(
+  const response = await bffApiRequest<ApiSuccessResponse<ProductDetailsResponse>>(
     API_ROUTES.products.details(productId),
+    CLIENT_API_ROUTES.products.details(productId),
     requestOptions
   );
 
@@ -67,8 +75,9 @@ export async function getProductReviews(
   productId: string,
   requestOptions?: RequestOptions
 ): Promise<ProductReviewsResponse> {
-  const response = await apiRequest<ApiSuccessResponse<ProductReviewsResponse>>(
+  const response = await bffApiRequest<ApiSuccessResponse<ProductReviewsResponse>>(
     API_ROUTES.products.reviews(productId),
+    CLIENT_API_ROUTES.products.reviews(productId),
     requestOptions
   );
 
@@ -81,9 +90,9 @@ export async function createProductReview(
   productId: string,
   payload: CreateProductReviewPayload
 ): Promise<CreateProductReviewResponse> {
-  const response = await apiRequest<
+  const response = await localApiRequest<
     ApiSuccessResponse<CreateProductReviewResponse>
-  >(API_ROUTES.products.reviews(productId), {
+  >(CLIENT_API_ROUTES.products.reviews(productId), {
     method: 'POST',
     body: payload,
   });
@@ -96,9 +105,9 @@ export async function createProductReview(
 export async function toggleFavoriteProduct(
   productId: string
 ): Promise<ToggleFavoriteProductResponse> {
-  const response = await apiRequest<
+  const response = await localApiRequest<
     ApiSuccessResponse<ToggleFavoriteProductResponse>
-  >(API_ROUTES.products.favorite(productId), {
+  >(CLIENT_API_ROUTES.products.favorite(productId), {
     method: 'PATCH',
   });
 

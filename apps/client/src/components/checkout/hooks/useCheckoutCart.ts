@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
 import { getCart } from '@/services';
 import type { Cart } from '@/types';
 
@@ -34,10 +35,12 @@ export function useCheckoutCart(sessionMarker: string | null | undefined) {
 
         setCart(response.cart);
         setError('');
-      } catch {
+      } catch (error) {
         if (!isMounted) return;
 
-        setError('Could not load checkout data.');
+        setError(
+          getAppErrorMessage(error, { fallback: APP_ERROR_MESSAGES.checkout.load })
+        );
       } finally {
         if (!isMounted) return;
 

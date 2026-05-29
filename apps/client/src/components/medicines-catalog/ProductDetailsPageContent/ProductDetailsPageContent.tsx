@@ -34,6 +34,7 @@ import { ROUTES } from '@/lib/constants/routes';
 import { CATALOG_SEARCH_MAX_LENGTH } from '@/lib/constants/catalog-controls';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
+import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
 
 import {
   formatPharmaciesCount,
@@ -359,8 +360,14 @@ function ProductDetailsPageContent({
       .then((response) => {
         if (isMounted) setCart(response.cart);
       })
-      .catch(() => {
-        if (isMounted) toast.error('Could not load cart data.');
+      .catch((error) => {
+        if (isMounted) {
+          toast.error(
+            getAppErrorMessage(error, {
+              fallback: APP_ERROR_MESSAGES.products.loadCart,
+            })
+          );
+        }
       });
 
     return () => {
@@ -408,7 +415,11 @@ function ProductDetailsPageContent({
       if (isCartInvoiceLimitError(error)) {
         setInvoiceLimitMessage('limit');
       } else {
-        toast.error('Could not add product to the order.');
+        toast.error(
+          getAppErrorMessage(error, {
+            fallback: APP_ERROR_MESSAGES.products.addToCart,
+          })
+        );
       }
     } finally {
       setUpdatingStoreId(null);
@@ -447,12 +458,16 @@ function ProductDetailsPageContent({
       setCart(response.cart);
       dispatchCartUpdated(response.cart);
       toast.success('One product unit was removed from the order.');
-    } catch {
+    } catch (error) {
       if (previousCart) {
         setCart(previousCart);
         dispatchCartUpdated(previousCart);
       }
-      toast.error('Could not remove product from the order.');
+      toast.error(
+        getAppErrorMessage(error, {
+          fallback: APP_ERROR_MESSAGES.products.removeFromCart,
+        })
+      );
     } finally {
       setUpdatingStoreId(null);
       setPendingRemoveOffer(null);

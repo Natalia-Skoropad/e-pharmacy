@@ -1,10 +1,8 @@
-export const AUTH_SESSION_MARKER = 'cookie-auth-session';
-
-// Client-readable marker only. It helps the UI know that a cookie auth flow
-// was started, but it is not a security token and must not be used as a
-// server/proxy authorization source.
-const AUTH_READY_COOKIE_NAME = 'e_pharmacy_auth_ready';
-const AUTH_COOKIE_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+import {
+  AUTH_COOKIE_MAX_AGE_SECONDS,
+  AUTH_READY_COOKIE_NAME,
+  AUTH_SESSION_MARKER,
+} from './auth-session';
 
 //===================================================================
 

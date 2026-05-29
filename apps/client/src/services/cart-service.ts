@@ -1,6 +1,6 @@
-import { apiRequest, getResponseData } from '@/lib/api';
-import { API_ROUTES } from '@/lib/constants/api-routes';
+import { getResponseData, localApiRequest } from '@/lib/api';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
+import { CLIENT_API_ROUTES } from '@/lib/constants/client-api-routes';
 
 import type {
   AddCartItemPayload,
@@ -27,8 +27,8 @@ function getCartResponseData(
 //===================================================================
 
 export async function getCart(): Promise<CartResponse> {
-  const response = await apiRequest<ApiSuccessResponse<CartResponse>>(
-    API_ROUTES.cart.current
+  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
+    CLIENT_API_ROUTES.cart.current
   );
 
   return getCartResponseData(response);
@@ -39,8 +39,8 @@ export async function getCart(): Promise<CartResponse> {
 export async function addCartItem(
   payload: AddCartItemPayload
 ): Promise<CartResponse> {
-  const response = await apiRequest<ApiSuccessResponse<CartResponse>>(
-    API_ROUTES.cart.addItem,
+  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
+    CLIENT_API_ROUTES.cart.addItem,
     {
       method: 'POST',
       body: payload,
@@ -56,8 +56,8 @@ export async function updateCartItem(
   cartItemId: string,
   payload: UpdateCartItemPayload
 ): Promise<CartResponse> {
-  const response = await apiRequest<ApiSuccessResponse<CartResponse>>(
-    API_ROUTES.cart.updateItem(cartItemId),
+  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
+    CLIENT_API_ROUTES.cart.updateItem(cartItemId),
     {
       method: 'PATCH',
       body: payload,
@@ -69,11 +69,9 @@ export async function updateCartItem(
 
 //===================================================================
 
-export async function removeCartItem(
-  cartItemId: string
-): Promise<CartResponse> {
-  const response = await apiRequest<ApiSuccessResponse<CartResponse>>(
-    API_ROUTES.cart.removeItem(cartItemId),
+export async function removeCartItem(cartItemId: string): Promise<CartResponse> {
+  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
+    CLIENT_API_ROUTES.cart.removeItem(cartItemId),
     {
       method: 'DELETE',
     }
@@ -85,8 +83,8 @@ export async function removeCartItem(
 //===================================================================
 
 export async function clearCart(): Promise<CartResponse> {
-  const response = await apiRequest<ApiSuccessResponse<CartResponse>>(
-    API_ROUTES.cart.clear,
+  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
+    CLIENT_API_ROUTES.cart.clear,
     {
       method: 'DELETE',
     }
