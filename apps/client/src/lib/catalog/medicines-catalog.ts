@@ -301,27 +301,34 @@ export function buildMedicinesCatalogPath(
   filters: Partial<MedicinesCatalogFilters>,
   stores: Store[] = []
 ): string {
-  const path = buildMedicinesCatalogIndexedPath(filters, stores);
-  const params = new URLSearchParams();
+  const segments: string[] = [];
 
-  if (filters.name) params.set('name', filters.name);
-  if (filters.article) params.set('article', filters.article);
+  if (filters.name) segments.push(`search-name-${slugify(filters.name)}`);
+  if (filters.article) segments.push(`article-${slugify(filters.article)}`);
+
+  if (filters.category && filters.category !== 'all') {
+    segments.push(`category-${filters.category}`);
+  }
 
   if (filters.availability && filters.availability !== 'all') {
-    params.set('availability', filters.availability);
+    segments.push(`availability-${filters.availability}`);
+  }
+
+  if (filters.storeId) {
+    segments.push(getStoreSegment(filters.storeId, stores));
   }
 
   if (filters.sort && filters.sort !== 'newest') {
-    params.set('sort', filters.sort);
+    segments.push(`sort-${filters.sort}`);
   }
 
   if (filters.page && filters.page > 1) {
-    params.set('page', String(filters.page));
+    segments.push(`page-${filters.page}`);
   }
 
-  const query = params.toString();
-
-  return query ? `${path}?${query}` : path;
+  return segments.length
+    ? `/medicines-catalog/${segments.join('/')}`
+    : '/medicines-catalog';
 }
 
 //===================================================================
@@ -338,15 +345,24 @@ export function buildMedicinesCatalogCanonicalPath(
 //===================================================================
 
 export function hasLegacyMedicinesCatalogSegments(
-  params: MedicinesCatalogRouteParams = {}
+  _params: MedicinesCatalogRouteParams = {}
 ): boolean {
-  return (params.segments ?? []).some(
-    (segment) =>
-      segment.startsWith('availability-') ||
-      segment.startsWith('sort-') ||
-      segment.startsWith('search-name-') ||
-      segment.startsWith('article-') ||
-      segment.startsWith('page-')
+  return false;
+}
+
+//===================================================================
+
+export function hasLegacyMedicinesCatalogSearchParams(
+  params: MedicinesCatalogSearchParams = {}
+): boolean {
+  return Boolean(
+    params.name ||
+      params.article ||
+      params.category ||
+      params.availability ||
+      params.sort ||
+      params.page ||
+      params.storeId
   );
 }
 
@@ -358,11 +374,17 @@ export function mergeMedicinesCatalogFilters(
 ): MedicinesCatalogFilters {
   return {
     ...routeFilters,
-    name: queryFilters.name,
-    article: queryFilters.article,
-    availability: queryFilters.availability,
-    sort: queryFilters.sort,
-    page: queryFilters.page,
+    ...(queryFilters.name ? { name: queryFilters.name } : {}),
+    ...(queryFilters.article ? { article: queryFilters.article } : {}),
+    ...(queryFilters.category !== 'all'
+      ? { category: queryFilters.category }
+      : {}),
+    ...(queryFilters.availability !== 'all'
+      ? { availability: queryFilters.availability }
+      : {}),
+    ...(queryFilters.storeId ? { storeId: queryFilters.storeId } : {}),
+    ...(queryFilters.sort !== 'newest' ? { sort: queryFilters.sort } : {}),
+    ...(queryFilters.page > 1 ? { page: queryFilters.page } : {}),
   };
 }
 

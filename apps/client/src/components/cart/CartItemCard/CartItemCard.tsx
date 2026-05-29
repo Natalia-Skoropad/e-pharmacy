@@ -79,7 +79,6 @@ function CartItemCard({
               value={item.quantity}
               min={1}
               max={stockQuantity}
-              disabled={isUpdating}
               isLoading={isUpdating}
               ariaLabel={`Quantity controls for ${item.product.name}`}
               onDecrement={() => onQuantityChange(item.id, item.quantity - 1)}

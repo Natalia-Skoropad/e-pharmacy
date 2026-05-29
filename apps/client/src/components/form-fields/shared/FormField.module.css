@@ -68,9 +68,7 @@
 
 .input:focus,
 .textarea:focus {
-  box-shadow:
-    0 0 0 1px var(--color-accent),
-    0 0 0 4px var(--color-accent-shadow);
+  box-shadow: var(--shadow-accent-ring);
 }
 
 .input[aria-invalid='true'],
@@ -83,9 +81,7 @@
 
 .input[aria-invalid='true']:focus,
 .textarea[aria-invalid='true']:focus {
-  box-shadow:
-    0 0 0 1px var(--color-error),
-    0 0 0 4px var(--color-error-shadow);
+  box-shadow: none;
 }
 
 .inputCounter,

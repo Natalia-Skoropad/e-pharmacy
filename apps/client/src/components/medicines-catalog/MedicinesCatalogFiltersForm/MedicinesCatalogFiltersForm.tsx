@@ -84,8 +84,20 @@ function MedicinesCatalogFiltersForm({
 }: MedicinesCatalogFiltersFormProps) {
   const router = useRouter();
 
-  const [name, setName] = useState(filters.name);
-  const [article, setArticle] = useState(filters.article);
+  const [searchDraft, setSearchDraft] = useState(() => ({
+    name: filters.name,
+    article: filters.article,
+    sourceName: filters.name,
+    sourceArticle: filters.article,
+  }));
+
+  const name =
+    searchDraft.sourceName === filters.name ? searchDraft.name : filters.name;
+  const article =
+    searchDraft.sourceArticle === filters.article
+      ? searchDraft.article
+      : filters.article;
+
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   useBodyScrollLock(isFiltersOpen);
@@ -136,6 +148,33 @@ function MedicinesCatalogFiltersForm({
 
     return () => window.clearTimeout(timeoutId);
   }, [article, filters, name, router, stores]);
+
+  const handleNameChange = (nextName: string) => {
+    setSearchDraft({
+      name: nextName,
+      article,
+      sourceName: filters.name,
+      sourceArticle: filters.article,
+    });
+  };
+
+  const handleArticleChange = (nextArticle: string) => {
+    setSearchDraft({
+      name,
+      article: nextArticle,
+      sourceName: filters.name,
+      sourceArticle: filters.article,
+    });
+  };
+
+  const handleResetFilters = () => {
+    setSearchDraft({
+      name: '',
+      article: '',
+      sourceName: '',
+      sourceArticle: '',
+    });
+  };
 
   const updateCatalog = (nextFilters: CatalogHrefFilters) => {
     router.replace(buildCatalogHref({ ...nextFilters, page: 1 }, stores), {
@@ -213,7 +252,7 @@ function MedicinesCatalogFiltersForm({
             isActive={Boolean(filters.name)}
             maxLength={CATALOG_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogTextSearch}
-            onChange={setName}
+            onChange={handleNameChange}
           />
 
           <SearchInput
@@ -224,7 +263,7 @@ function MedicinesCatalogFiltersForm({
             isActive={Boolean(filters.article)}
             maxLength={CATALOG_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogArticleSearch}
-            onChange={setArticle}
+            onChange={handleArticleChange}
           />
 
           <div className={css.desktopFilters}>
@@ -232,7 +271,11 @@ function MedicinesCatalogFiltersForm({
           </div>
 
           <div className={css.desktopResetSlot}>
-            <ResetFiltersButton href={resetHref} isVisible={hasActiveFilters} />
+            <ResetFiltersButton
+              href={resetHref}
+              isVisible={hasActiveFilters}
+              onClick={handleResetFilters}
+            />
           </div>
         </div>
       </div>
@@ -309,7 +352,10 @@ function MedicinesCatalogFiltersForm({
               <ResetFiltersButton
                 className={css.offcanvasReset}
                 href={resetHref}
-                onClick={() => setIsFiltersOpen(false)}
+                onClick={() => {
+                  handleResetFilters();
+                  setIsFiltersOpen(false);
+                }}
               />
             ) : null}
           </aside>

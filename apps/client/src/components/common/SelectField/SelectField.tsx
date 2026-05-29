@@ -9,7 +9,7 @@ import { useListboxNavigation } from '@/hooks';
 import {
   isListboxOpenKey,
   isListboxSelectKey,
-} from '@/lib/a11y/listbox-keyboard';
+} from '@/lib/accessibility/listbox-keyboard';
 
 import css from './SelectField.module.css';
 

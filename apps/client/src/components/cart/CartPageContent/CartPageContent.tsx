@@ -142,6 +142,7 @@ function CartPageContent() {
       const response = await updateCartItem(cartItemId, { quantity });
 
       setCart(response.cart);
+      dispatchCartUpdated(response.cart);
     } catch {
       setCart(previousCart);
       dispatchCartUpdated(previousCart);

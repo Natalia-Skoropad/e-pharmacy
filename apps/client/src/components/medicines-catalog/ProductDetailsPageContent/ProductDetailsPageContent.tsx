@@ -32,6 +32,7 @@ import { useFavoriteToggle, useReviewForm, useToast } from '@/hooks';
 
 import { ROUTES } from '@/lib/constants/routes';
 import { CATALOG_SEARCH_MAX_LENGTH } from '@/lib/constants/catalog-controls';
+import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
 
 import {
@@ -99,9 +100,35 @@ function getOfferCartItem(
   );
 }
 
+//===================================================================
+
 function getOfferTotal(cartItem: CartItem | null, offer: ProductOffer): number {
   return (cartItem?.quantity ?? 0) * offer.price;
 }
+
+function getCartWithUpdatedOfferQuantity(
+  cart: Cart,
+  cartItemId: string,
+  quantity: number
+): Cart {
+  const nextItems = cart.items.map((item) => {
+    if (item.id !== cartItemId) return item;
+
+    return {
+      ...item,
+      quantity,
+      totalPrice: item.price * quantity,
+    };
+  });
+
+  return {
+    items: nextItems,
+    totalItems: nextItems.reduce((total, item) => total + item.quantity, 0),
+    totalPrice: nextItems.reduce((total, item) => total + item.totalPrice, 0),
+  };
+}
+
+//===================================================================
 
 function getStoreHref(offer: ProductOffer): string {
   return buildStorePath(offer.storeName, offer.storeId);
@@ -344,26 +371,40 @@ function ProductDetailsPageContent({
   const handleAddUnit = async (offer: ProductOffer) => {
     if (!isAuthenticated || !sessionMarker) return;
 
+    const previousCart = cart;
+    const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
+    const nextQuantity = (cartItem?.quantity ?? 0) + 1;
+
+    if (cartItem && previousCart) {
+      const optimisticCart = getCartWithUpdatedOfferQuantity(
+        previousCart,
+        cartItem.id,
+        nextQuantity
+      );
+
+      setCart(optimisticCart);
+      dispatchCartUpdated(optimisticCart);
+    }
+
     try {
       setUpdatingStoreId(offer.storeId);
-      const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
 
       const response = cartItem
-        ? await updateCartItem(
-            cartItem.id,
-            { quantity: cartItem.quantity + 1 },
-          )
-        : await addCartItem(
-            {
-              productId: productDetails.id,
-              storeId: offer.storeId,
-              quantity: 1,
-            },
-          );
+        ? await updateCartItem(cartItem.id, { quantity: nextQuantity })
+        : await addCartItem({
+            productId: productDetails.id,
+            storeId: offer.storeId,
+            quantity: 1,
+          });
 
       setCart(response.cart);
+      dispatchCartUpdated(response.cart);
       toast.success('One product unit was added to the order.');
     } catch (error) {
+      if (previousCart) {
+        setCart(previousCart);
+        dispatchCartUpdated(previousCart);
+      }
       if (isCartInvoiceLimitError(error)) {
         setInvoiceLimitMessage('limit');
       } else {
@@ -381,20 +422,36 @@ function ProductDetailsPageContent({
 
     if (!cartItem) return;
 
+    const previousCart = cart;
+    const nextQuantity = cartItem.quantity - 1;
+
+    if (previousCart && nextQuantity > 0) {
+      const optimisticCart = getCartWithUpdatedOfferQuantity(
+        previousCart,
+        cartItem.id,
+        nextQuantity
+      );
+
+      setCart(optimisticCart);
+      dispatchCartUpdated(optimisticCart);
+    }
+
     try {
       setUpdatingStoreId(offer.storeId);
 
       const response =
         cartItem.quantity === 1
           ? await removeCartItem(cartItem.id)
-          : await updateCartItem(
-              cartItem.id,
-              { quantity: cartItem.quantity - 1 }
-            );
+          : await updateCartItem(cartItem.id, { quantity: nextQuantity });
 
       setCart(response.cart);
+      dispatchCartUpdated(response.cart);
       toast.success('One product unit was removed from the order.');
     } catch {
+      if (previousCart) {
+        setCart(previousCart);
+        dispatchCartUpdated(previousCart);
+      }
       toast.error('Could not remove product from the order.');
     } finally {
       setUpdatingStoreId(null);
@@ -420,11 +477,7 @@ function ProductDetailsPageContent({
   const renderQuantityControl = (offer: ProductOffer) => {
     const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
     const quantity = cartItem?.quantity ?? 0;
-    const isDisabled =
-      !isAuthReady ||
-      !isAuthenticated ||
-      !offer.inStock ||
-      updatingStoreId === offer.storeId;
+    const isDisabled = !isAuthReady || !isAuthenticated || !offer.inStock;
 
     return (
       <div className={css.quantityBlock}>

@@ -5,7 +5,7 @@ import { Check, ChevronDown, Search } from 'lucide-react';
 import clsx from 'clsx';
 
 import { useListboxNavigation } from '@/hooks';
-import { isListboxOpenKey } from '@/lib/a11y/listbox-keyboard';
+import { isListboxOpenKey } from '@/lib/accessibility/listbox-keyboard';
 
 import css from './SearchableSelect.module.css';
 

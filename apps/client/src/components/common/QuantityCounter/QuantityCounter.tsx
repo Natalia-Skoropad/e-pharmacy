@@ -27,14 +27,17 @@ function QuantityCounter({
   onIncrement,
   onDecrement,
 }: QuantityCounterProps) {
-  const isDisabled = disabled || isLoading;
-
   return (
-    <div className={css.control} role="group" aria-label={ariaLabel}>
+    <div
+      className={css.control}
+      role="group"
+      aria-label={ariaLabel}
+      aria-busy={isLoading || undefined}
+    >
       <button
         className={css.button}
         type="button"
-        disabled={isDisabled || value <= min}
+        disabled={disabled || value <= min}
         onClick={onDecrement}
         aria-label="Decrease quantity"
       >
@@ -48,7 +51,7 @@ function QuantityCounter({
       <button
         className={css.button}
         type="button"
-        disabled={isDisabled || value >= max}
+        disabled={disabled || value >= max}
         onClick={onIncrement}
         aria-label="Increase quantity"
       >

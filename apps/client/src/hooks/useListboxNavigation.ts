@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import {
   getBoundedIndex,
   getNextLoopedIndex,
-} from '@/lib/a11y/listbox-keyboard';
+} from '@/lib/accessibility/listbox-keyboard';
 
 //===================================================================
 
