@@ -1,5 +1,6 @@
+import { bffApiRequest } from '@/lib/api/bff-api';
+
 import {
-  bffApiRequest,
   buildQueryString,
   getResponseData,
   localApiRequest,
@@ -60,7 +61,9 @@ export async function getProductDetails(
   productId: string,
   requestOptions?: RequestOptions
 ): Promise<ProductDetailsResponse> {
-  const response = await bffApiRequest<ApiSuccessResponse<ProductDetailsResponse>>(
+  const response = await bffApiRequest<
+    ApiSuccessResponse<ProductDetailsResponse>
+  >(
     API_ROUTES.products.details(productId),
     CLIENT_API_ROUTES.products.details(productId),
     requestOptions
@@ -75,7 +78,9 @@ export async function getProductReviews(
   productId: string,
   requestOptions?: RequestOptions
 ): Promise<ProductReviewsResponse> {
-  const response = await bffApiRequest<ApiSuccessResponse<ProductReviewsResponse>>(
+  const response = await bffApiRequest<
+    ApiSuccessResponse<ProductReviewsResponse>
+  >(
     API_ROUTES.products.reviews(productId),
     CLIENT_API_ROUTES.products.reviews(productId),
     requestOptions

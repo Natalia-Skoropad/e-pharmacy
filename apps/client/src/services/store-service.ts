@@ -1,5 +1,6 @@
+import { bffApiRequest } from '@/lib/api/bff-api';
+
 import {
-  bffApiRequest,
   buildQueryString,
   getResponseData,
   localApiRequest,
@@ -57,7 +58,11 @@ export async function getStoreFilters(
 ): Promise<StoreFilterOptionsResponse> {
   const response = await bffApiRequest<
     ApiSuccessResponse<StoreFilterOptionsResponse>
-  >(API_ROUTES.stores.filters, CLIENT_API_ROUTES.stores.filters, requestOptions);
+  >(
+    API_ROUTES.stores.filters,
+    CLIENT_API_ROUTES.stores.filters,
+    requestOptions
+  );
 
   return getResponseData(response);
 }
@@ -68,7 +73,9 @@ export async function getStoreDetails(
   storeId: string,
   requestOptions?: RequestOptions
 ): Promise<StoreDetailsResponse> {
-  const response = await bffApiRequest<ApiSuccessResponse<StoreDetailsResponse>>(
+  const response = await bffApiRequest<
+    ApiSuccessResponse<StoreDetailsResponse>
+  >(
     API_ROUTES.stores.details(storeId),
     CLIENT_API_ROUTES.stores.details(storeId),
     requestOptions
@@ -83,7 +90,9 @@ export async function getStoreReviews(
   storeId: string,
   requestOptions?: RequestOptions
 ): Promise<StoreReviewsResponse> {
-  const response = await bffApiRequest<ApiSuccessResponse<StoreReviewsResponse>>(
+  const response = await bffApiRequest<
+    ApiSuccessResponse<StoreReviewsResponse>
+  >(
     API_ROUTES.stores.reviews(storeId),
     CLIENT_API_ROUTES.stores.reviews(storeId),
     requestOptions
@@ -98,13 +107,12 @@ export async function createStoreReview(
   storeId: string,
   payload: CreateStoreReviewPayload
 ): Promise<CreateStoreReviewResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<CreateStoreReviewResponse>>(
-    CLIENT_API_ROUTES.stores.reviews(storeId),
-    {
-      method: 'POST',
-      body: payload,
-    }
-  );
+  const response = await localApiRequest<
+    ApiSuccessResponse<CreateStoreReviewResponse>
+  >(CLIENT_API_ROUTES.stores.reviews(storeId), {
+    method: 'POST',
+    body: payload,
+  });
 
   return getResponseData(response);
 }

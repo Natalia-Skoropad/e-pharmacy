@@ -1,5 +1,4 @@
 export { ApiError, isApiError } from './api-error';
-export { bffApiRequest } from './bff-api';
 export { getResponseData } from './get-response-data';
 export { localApiRequest } from './local-api';
 
