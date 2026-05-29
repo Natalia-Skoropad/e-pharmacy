@@ -1,6 +1,8 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import { type NextRequest } from 'next/server';
 
 import { createApiUrl } from './api-url';
+import { createProxyHeaders } from './proxy-headers';
+import { createProxyResponse } from './proxy-response';
 
 //===================================================================
 
@@ -17,17 +19,6 @@ type PublicBackendProxyOptions = {
 
 //===================================================================
 
-function createPublicProxyHeaders(request: NextRequest): Headers {
-  const headers = new Headers();
-  const accept = request.headers.get('accept');
-
-  if (accept) headers.set('Accept', accept);
-
-  return headers;
-}
-
-//===================================================================
-
 function createBackendPathWithSearch(
   backendPath: string,
   request: NextRequest
@@ -39,27 +30,8 @@ function createBackendPathWithSearch(
 
 //===================================================================
 
-async function createPublicProxyResponse(
-  response: Response,
-  revalidate: number
-): Promise<NextResponse> {
-  const contentType = response.headers.get('content-type');
-  const body = await response.text();
-
-  const nextResponse = new NextResponse(body || null, {
-    status: response.status,
-  });
-
-  if (contentType) {
-    nextResponse.headers.set('Content-Type', contentType);
-  }
-
-  nextResponse.headers.set(
-    'Cache-Control',
-    `public, s-maxage=${revalidate}, stale-while-revalidate=${STALE_WHILE_REVALIDATE_SECONDS}`
-  );
-
-  return nextResponse;
+function createPublicCacheControl(revalidate: number): string {
+  return `public, s-maxage=${revalidate}, stale-while-revalidate=${STALE_WHILE_REVALIDATE_SECONDS}`;
 }
 
 //===================================================================
@@ -72,15 +44,22 @@ export async function proxyPublicBackendRequest({
   backendPath,
   request,
   revalidate = DEFAULT_PUBLIC_REVALIDATE_SECONDS,
-}: PublicBackendProxyOptions): Promise<NextResponse> {
+}: PublicBackendProxyOptions) {
   const pathWithSearch = createBackendPathWithSearch(backendPath, request);
 
   const response = await fetch(createApiUrl(pathWithSearch), {
     method: 'GET',
-    headers: createPublicProxyHeaders(request),
+    headers: createProxyHeaders(request, {
+      forwardAccept: true,
+      forwardContentType: false,
+      forwardCookie: false,
+    }),
     cache: 'force-cache',
     next: { revalidate },
   });
 
-  return createPublicProxyResponse(response, revalidate);
+  return createProxyResponse(response, {
+    cacheControl: createPublicCacheControl(revalidate),
+    copySetCookie: false,
+  });
 }

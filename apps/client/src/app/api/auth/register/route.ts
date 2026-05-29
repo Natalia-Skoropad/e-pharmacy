@@ -8,5 +8,6 @@ export async function POST(request: NextRequest) {
   return proxyAuthRequest({
     request,
     backendPath: AUTH_PROXY_ROUTES.register,
+    markerAction: 'set',
   });
 }

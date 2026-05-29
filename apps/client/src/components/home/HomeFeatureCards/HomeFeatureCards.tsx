@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -11,8 +10,9 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { Button, ButtonLink, Toast } from '@/components/common';
+import { Button, ButtonLink } from '@/components/common';
 
+import { useToast } from '@/hooks';
 import { ROUTES } from '@/lib/constants/routes';
 import { useAuth } from '@/providers';
 
@@ -67,21 +67,13 @@ const FEATURE_CARDS: FeatureCard[] = [
 function HomeFeatureCards() {
   const router = useRouter();
   const { isAuthenticated, isAuthReady } = useAuth();
-  const [toastMessage, setToastMessage] = useState('');
-
-  useEffect(() => {
-    if (!toastMessage) return undefined;
-
-    const timeoutId = window.setTimeout(() => setToastMessage(''), 5000);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [toastMessage]);
+  const toast = useToast();
 
   const handleProtectedClick = (href: string) => {
     if (!isAuthReady) return;
 
     if (!isAuthenticated) {
-      setToastMessage('Please log in to open this private page.');
+      toast.error('Please log in to open this private page.');
       return;
     }
 
@@ -89,44 +81,36 @@ function HomeFeatureCards() {
   };
 
   return (
-    <>
-      <div className={css.featuresGrid}>
-        {FEATURE_CARDS.map(({ icon: Icon, ...feature }) => (
-          <article className={css.featureCard} key={feature.title}>
-            <span className={css.iconWrap} aria-hidden="true">
-              <Icon size={26} />
-            </span>
-            <h3>{feature.title}</h3>
-            <p>{feature.text}</p>
+    <div className={css.featuresGrid}>
+      {FEATURE_CARDS.map(({ icon: Icon, ...feature }) => (
+        <article className={css.featureCard} key={feature.title}>
+          <span className={css.iconWrap} aria-hidden="true">
+            <Icon size={26} />
+          </span>
+          <h3>{feature.title}</h3>
+          <p>{feature.text}</p>
 
-            {feature.isProtected ? (
-              <Button
-                className={css.featureAction}
-                type="button"
-                variant="secondary"
-                onClick={() => handleProtectedClick(feature.href)}
-              >
-                {feature.buttonLabel}
-              </Button>
-            ) : (
-              <ButtonLink
-                className={css.featureAction}
-                href={feature.href}
-                variant="secondary"
-              >
-                {feature.buttonLabel}
-              </ButtonLink>
-            )}
-          </article>
-        ))}
-      </div>
-
-      <Toast
-        message={toastMessage}
-        isVisible={Boolean(toastMessage)}
-        variant="error"
-      />
-    </>
+          {feature.isProtected ? (
+            <Button
+              className={css.featureAction}
+              type="button"
+              variant="secondary"
+              onClick={() => handleProtectedClick(feature.href)}
+            >
+              {feature.buttonLabel}
+            </Button>
+          ) : (
+            <ButtonLink
+              className={css.featureAction}
+              href={feature.href}
+              variant="secondary"
+            >
+              {feature.buttonLabel}
+            </ButtonLink>
+          )}
+        </article>
+      ))}
+    </div>
   );
 }
 

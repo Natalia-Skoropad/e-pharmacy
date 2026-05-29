@@ -1,70 +1,59 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import { type NextRequest, type NextResponse } from 'next/server';
+
+import {
+  AUTH_COOKIE_MAX_AGE_SECONDS,
+  AUTH_READY_COOKIE_NAME,
+} from '@/lib/auth/auth-session';
 
 import { API_ROUTES } from '@/lib/constants/api-routes';
+
 import { createApiUrl } from './api-url';
+import { createProxyHeaders, getProxyBody } from './proxy-headers';
+import { createProxyResponse } from './proxy-response';
+import type { HttpMethod } from './types';
 
 //===================================================================
+
+type AuthMarkerAction = 'set' | 'delete';
 
 type AuthProxyOptions = {
   backendPath: string;
   request: NextRequest;
-  method?: 'GET' | 'POST' | 'PATCH';
+  method?: Extract<HttpMethod, 'GET' | 'POST' | 'PATCH'>;
+  markerAction?: AuthMarkerAction;
 };
 
 //===================================================================
 
-function createProxyHeaders(request: NextRequest): Headers {
-  const headers = new Headers();
-  const contentType = request.headers.get('content-type');
-  const cookie = request.headers.get('cookie');
-
-  if (contentType) headers.set('Content-Type', contentType);
-  if (cookie) headers.set('Cookie', cookie);
-
-  return headers;
+function isSecureRequest(request: NextRequest): boolean {
+  return request.nextUrl.protocol === 'https:';
 }
 
 //===================================================================
 
-async function getProxyBody(
+function syncAuthMarkerCookie(
+  nextResponse: NextResponse,
   request: NextRequest,
-  method: AuthProxyOptions['method']
-): Promise<string | undefined> {
-  if (method === 'GET') return undefined;
+  action?: AuthMarkerAction
+): void {
+  if (!action) return;
 
-  const body = await request.text();
-
-  return body || undefined;
-}
-
-//===================================================================
-
-function copyAuthCookie(source: Response, target: NextResponse): void {
-  const setCookie = source.headers.get('set-cookie');
-
-  if (!setCookie) return;
-
-  target.headers.set('set-cookie', setCookie);
-}
-
-//===================================================================
-
-async function createProxyResponse(response: Response): Promise<NextResponse> {
-  const contentType = response.headers.get('content-type');
-  const body = await response.text();
-
-  const nextResponse = new NextResponse(body || null, {
-    status: response.status,
-  });
-
-  if (contentType) {
-    nextResponse.headers.set('Content-Type', contentType);
+  if (action === 'delete') {
+    nextResponse.cookies.set(AUTH_READY_COOKIE_NAME, '', {
+      path: '/',
+      maxAge: 0,
+      sameSite: 'lax',
+      secure: isSecureRequest(request),
+    });
+    return;
   }
 
-  nextResponse.headers.set('Cache-Control', 'no-store');
-  copyAuthCookie(response, nextResponse);
-
-  return nextResponse;
+  nextResponse.cookies.set(AUTH_READY_COOKIE_NAME, '1', {
+    path: '/',
+    maxAge: AUTH_COOKIE_MAX_AGE_SECONDS,
+    sameSite: 'lax',
+    secure: isSecureRequest(request),
+  });
 }
 
 //===================================================================
@@ -73,7 +62,8 @@ export async function proxyAuthRequest({
   backendPath,
   request,
   method = 'POST',
-}: AuthProxyOptions): Promise<NextResponse> {
+  markerAction,
+}: AuthProxyOptions) {
   const response = await fetch(createApiUrl(backendPath), {
     method,
     headers: createProxyHeaders(request),
@@ -82,7 +72,15 @@ export async function proxyAuthRequest({
     credentials: 'include',
   });
 
-  return createProxyResponse(response);
+  const nextResponse = await createProxyResponse(response, {
+    cacheControl: 'no-store',
+  });
+
+  if (response.ok || markerAction === 'delete') {
+    syncAuthMarkerCookie(nextResponse, request, markerAction);
+  }
+
+  return nextResponse;
 }
 
 //===================================================================

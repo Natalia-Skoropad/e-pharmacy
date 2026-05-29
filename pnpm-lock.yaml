@@ -96,9 +96,6 @@ importers:
 
   apps/client:
     dependencies:
-      '@e-pharmacy/api-client':
-        specifier: workspace:*
-        version: link:../../packages/api-client
       '@e-pharmacy/config':
         specifier: workspace:*
         version: link:../../packages/config

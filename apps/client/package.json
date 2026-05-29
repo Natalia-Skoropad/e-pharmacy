@@ -10,7 +10,6 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@e-pharmacy/api-client": "workspace:*",
     "@e-pharmacy/config": "workspace:*",
     "@e-pharmacy/types": "workspace:*",
     "@e-pharmacy/ui": "workspace:*",
