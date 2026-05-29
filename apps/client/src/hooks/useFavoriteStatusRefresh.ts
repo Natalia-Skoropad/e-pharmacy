@@ -2,9 +2,8 @@
 
 import { useCallback } from 'react';
 
-import { getProductDetails, getStoreDetails } from '@/services';
-
 import { useFavoriteRefresh } from './useFavoriteRefresh';
+import { getProductDetails, getStoreDetails } from '@/services';
 
 //===================================================================
 
@@ -23,14 +22,11 @@ export function useProductFavoriteRefresh({
   sessionMarker,
   onRefresh,
 }: UseFavoriteStatusRefreshParams): void {
-  const refreshFavorite = useCallback(
-    async () => {
-      const response = await getProductDetails(id);
+  const refreshFavorite = useCallback(async () => {
+    const response = await getProductDetails(id);
 
-      return Boolean(response.product.isFavorite);
-    },
-    [id]
-  );
+    return Boolean(response.product.isFavorite);
+  }, [id]);
 
   useFavoriteRefresh({
     isEnabled,
@@ -46,14 +42,11 @@ export function useStoreFavoriteRefresh({
   sessionMarker,
   onRefresh,
 }: UseFavoriteStatusRefreshParams): void {
-  const refreshFavorite = useCallback(
-    async () => {
-      const response = await getStoreDetails(id);
+  const refreshFavorite = useCallback(async () => {
+    const response = await getStoreDetails(id);
 
-      return Boolean(response.store.isFavorite);
-    },
-    [id]
-  );
+    return Boolean(response.store.isFavorite);
+  }, [id]);
 
   useFavoriteRefresh({
     isEnabled,

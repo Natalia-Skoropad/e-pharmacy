@@ -13,6 +13,8 @@ export function isListboxSelectKey(key: string) {
   );
 }
 
+//===================================================================
+
 export function getNextLoopedIndex({
   currentIndex,
   direction,
@@ -31,6 +33,8 @@ export function getNextLoopedIndex({
 
   return nextIndex;
 }
+
+//===================================================================
 
 export function getBoundedIndex(index: number, itemsCount: number) {
   if (itemsCount <= 0) return 0;

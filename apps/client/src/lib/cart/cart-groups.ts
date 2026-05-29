@@ -44,6 +44,8 @@ export function groupCartItemsByStore(items: Cart['items']): CartStoreGroup[] {
   return [...groups.values()];
 }
 
+//===================================================================
+
 export function groupCartByStore(cart: Cart): CartStoreGroup[] {
   return groupCartItemsByStore(cart.items);
 }

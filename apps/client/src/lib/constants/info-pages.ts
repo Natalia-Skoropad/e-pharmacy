@@ -57,6 +57,8 @@ export const DELIVERY_PAYMENT_INFO = {
   ],
 } as const;
 
+//===================================================================
+
 export const RETURN_POLICY_INFO = {
   path: ROUTES.RETURN_POLICY,
   title: 'Return Policy',
@@ -94,6 +96,8 @@ export const RETURN_POLICY_INFO = {
     },
   ],
 } as const;
+
+//===================================================================
 
 export const USER_AGREEMENT_INFO = {
   path: ROUTES.USER_AGREEMENT,
@@ -153,6 +157,8 @@ export const USER_AGREEMENT_INFO = {
     },
   ],
 } as const;
+
+//===================================================================
 
 export const PERSONAL_DATA_NOTICE_INFO = {
   path: ROUTES.PERSONAL_DATA_NOTICE,

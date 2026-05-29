@@ -6,7 +6,6 @@ import { CLIENT_ENV } from './env';
 //===================================================================
 
 export const SITE_NAME = APP_NAMES.client;
-
 export const SITE_URL = CLIENT_ENV.siteUrl;
 
 //===================================================================
@@ -32,6 +31,8 @@ export const STORES_DESCRIPTION =
 export const MEDICINE_STORE_TITLE = 'Medicine Store';
 export const MEDICINE_STORE_DESCRIPTION =
   'Browse medicines, compare available products, and prepare your online pharmacy order.';
+
+//===================================================================
 
 export const MEDICINES_CATALOG_TITLE = 'Medicines Catalog';
 export const MEDICINES_CATALOG_DESCRIPTION =
@@ -60,6 +61,8 @@ export const LOGIN_BENEFITS = [
   'Return to your cart, favorite medicines, and trusted pharmacies faster after signing in.',
 ] as const;
 
+//===================================================================
+
 export const PASSWORD_RECOVERY_TITLE = 'Recover password';
 export const PASSWORD_RECOVERY_DESCRIPTION =
   'Restore access to your E-PHARMACY account by entering your account email and creating a new password.';
@@ -67,6 +70,8 @@ export const PASSWORD_RECOVERY_DESCRIPTION =
 export const PASSWORD_RECOVERY_BENEFITS = [
   'Use the email linked to your account and set a new password that meets the security requirements.',
 ] as const;
+
+//===================================================================
 
 export const RESET_PASSWORD_TITLE = 'Reset password';
 
@@ -86,6 +91,8 @@ export const REGISTER_BENEFITS = [
   'Keep favorite medicines and pharmacies organized in your personal account.',
   'View your order history and quickly return to the products and pharmacies you use most.',
 ] as const;
+
+//===================================================================
 
 export const PROFILE_TITLE = 'Profile';
 export const PROFILE_DESCRIPTION =

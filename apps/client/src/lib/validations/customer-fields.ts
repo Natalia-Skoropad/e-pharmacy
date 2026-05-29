@@ -11,6 +11,8 @@ import {
   sanitizePhone,
 } from '@e-pharmacy/validation';
 
+//===================================================================
+
 export const CUSTOMER_NAME_MIN_LENGTH = VALIDATION_LIMITS.nameMin;
 export const CUSTOMER_NAME_MAX_LENGTH = VALIDATION_LIMITS.nameMax;
 export const CUSTOMER_PHONE_MIN_LENGTH = VALIDATION_LIMITS.phoneMin;

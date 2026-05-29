@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
-import { useAuth } from '@/providers';
 import { isReviewValid, REVIEW_MAX_LENGTH } from '@/lib/reviews';
+import { useAuth } from '@/providers';
 
 //===================================================================
 
@@ -78,7 +78,9 @@ export function useReviewForm({
 
       setReviewText('');
       setReviewRating(0);
-      notifySuccess('Review was accepted and will be visible after moderation.');
+      notifySuccess(
+        'Review was accepted and will be visible after moderation.'
+      );
     } catch {
       notifyError('Could not submit review.');
     } finally {

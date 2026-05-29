@@ -46,6 +46,8 @@ export type ProductAvailabilityFilter =
 export type ProductSortFilter =
   ProductFilterOptionsResponse['sort'][number]['value'];
 
+//===================================================================
+
 export type MedicinesCatalogSeoContext = {
   categoryLabel?: string;
   storeName?: string;
@@ -107,6 +109,8 @@ function isProductSortFilter(value?: string): value is ProductSortFilter {
   return SORT_VALUES.includes(value as ProductSortFilter);
 }
 
+//===================================================================
+
 function sanitizeNameParam(value?: string): string {
   return (
     value
@@ -129,11 +133,15 @@ function isValidObjectId(value?: string): value is string {
   return Boolean(value && /^[a-f\d]{24}$/i.test(value));
 }
 
+//===================================================================
+
 function parsePage(value?: string): number {
   const page = Number(value);
 
   return Number.isInteger(page) && page > 0 ? page : 1;
 }
+
+//===================================================================
 
 function getCategoryLabel(filters: MedicinesCatalogFilters, fallback?: string) {
   return (
@@ -143,6 +151,8 @@ function getCategoryLabel(filters: MedicinesCatalogFilters, fallback?: string) {
     )?.label
   );
 }
+
+//===================================================================
 
 function slugify(value: string): string {
   return value
@@ -154,6 +164,8 @@ function slugify(value: string): string {
     .slice(0, 80);
 }
 
+//===================================================================
+
 function deslugifyNameSegment(value: string): string {
   return sanitizeNameParam(value.replace(/-/g, ' '));
 }
@@ -161,6 +173,8 @@ function deslugifyNameSegment(value: string): string {
 function deslugifyArticleSegment(value: string): string {
   return sanitizeArticleParam(value);
 }
+
+//===================================================================
 
 function getStoreSegment(storeId: string, stores: Store[]): string {
   const store = stores.find((item) => item.id === storeId);
@@ -174,6 +188,8 @@ function getStoreSegment(storeId: string, stores: Store[]): string {
 export function sortStoresByName(stores: Store[]): Store[] {
   return [...stores].sort((a, b) => a.name.localeCompare(b.name, 'en'));
 }
+
+//===================================================================
 
 export function parseMedicinesCatalogSearchParams(
   params: MedicinesCatalogSearchParams = {}
@@ -192,6 +208,8 @@ export function parseMedicinesCatalogSearchParams(
     ...(isValidObjectId(params.storeId) ? { storeId: params.storeId } : {}),
   };
 }
+
+//===================================================================
 
 export function parseMedicinesCatalogSegments(
   params: MedicinesCatalogRouteParams = {}
@@ -256,6 +274,8 @@ export function parseMedicinesCatalogSegments(
   return filters;
 }
 
+//===================================================================
+
 export function buildMedicinesCatalogIndexedPath(
   filters: Partial<MedicinesCatalogFilters>,
   stores: Store[] = []
@@ -274,6 +294,8 @@ export function buildMedicinesCatalogIndexedPath(
     ? `/medicines-catalog/${segments.join('/')}`
     : '/medicines-catalog';
 }
+
+//===================================================================
 
 export function buildMedicinesCatalogPath(
   filters: Partial<MedicinesCatalogFilters>,
@@ -302,6 +324,8 @@ export function buildMedicinesCatalogPath(
   return query ? `${path}?${query}` : path;
 }
 
+//===================================================================
+
 export function buildMedicinesCatalogCanonicalPath(
   filters: MedicinesCatalogFilters,
   stores: Store[] = []
@@ -310,6 +334,8 @@ export function buildMedicinesCatalogCanonicalPath(
     ? buildMedicinesCatalogIndexedPath(filters, stores)
     : buildMedicinesCatalogPath(filters, stores);
 }
+
+//===================================================================
 
 export function hasLegacyMedicinesCatalogSegments(
   params: MedicinesCatalogRouteParams = {}
@@ -324,6 +350,8 @@ export function hasLegacyMedicinesCatalogSegments(
   );
 }
 
+//===================================================================
+
 export function mergeMedicinesCatalogFilters(
   routeFilters: MedicinesCatalogFilters,
   queryFilters: MedicinesCatalogFilters
@@ -337,6 +365,8 @@ export function mergeMedicinesCatalogFilters(
     page: queryFilters.page,
   };
 }
+
+//===================================================================
 
 export function buildMedicinesCatalogApiParams(
   filters: MedicinesCatalogFilters
@@ -359,6 +389,8 @@ export function buildMedicinesCatalogApiParams(
   };
 }
 
+//===================================================================
+
 export function getMedicinesCatalogActiveFiltersCount(
   filters: MedicinesCatalogFilters
 ): number {
@@ -370,6 +402,8 @@ export function getMedicinesCatalogActiveFiltersCount(
     Boolean(filters.storeId),
   ].filter(Boolean).length;
 }
+
+//===================================================================
 
 export function hasActiveMedicinesCatalogFilters(
   filters: MedicinesCatalogFilters
@@ -387,6 +421,8 @@ export function hasActiveMedicinesCatalogState(
   );
 }
 
+//===================================================================
+
 export function isMedicinesCatalogNoIndex(
   filters: MedicinesCatalogFilters
 ): boolean {
@@ -398,6 +434,8 @@ export function isMedicinesCatalogNoIndex(
     filters.availability !== 'all'
   );
 }
+
+//===================================================================
 
 export function getMedicinesCatalogTitle(
   filters: MedicinesCatalogFilters,
@@ -419,6 +457,8 @@ export function getMedicinesCatalogTitle(
 
   return 'Medicine catalog';
 }
+
+//===================================================================
 
 export function getMedicinesCatalogDescription(
   filters: MedicinesCatalogFilters,
@@ -445,6 +485,8 @@ export function getMedicinesCatalogDescription(
   return 'Search medicines by name or article, filter products by category and pharmacy, compare ratings and availability, and choose trusted online pharmacy offers.';
 }
 
+//===================================================================
+
 export function getMedicinesCatalogSeoTextParts(
   filters: MedicinesCatalogFilters,
   context: MedicinesCatalogSeoContext = {}
@@ -464,6 +506,8 @@ export function getMedicinesCatalogSeoTextParts(
     'check availability, review ratings, and move to the product details when something looks promising. Use the filters to narrow the list by category or pharmacy, search by name or article, and choose the offer that fits your needs faster. Calm, clear, and pharmacy-shopping friendly — almost like a tiny assistant in a white coat. Perfect for quick comparison before adding products to your cart.',
   ];
 }
+
+//===================================================================
 
 export function shouldShowMedicinesCatalogSeoText(
   filters: MedicinesCatalogFilters

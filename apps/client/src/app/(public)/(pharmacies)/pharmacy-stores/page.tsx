@@ -11,6 +11,7 @@ import {
   type PharmacyStoresSearchParams,
 } from '@/lib/catalog/pharmacy-stores-catalog';
 
+import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api';
 import { createPageMetadata } from '@/lib/seo';
 import { getStoreFilters, getStores } from '@/services';
 
@@ -30,7 +31,10 @@ export async function generateMetadata({
   searchParams,
 }: PharmacyStoresPageProps) {
   const parsedFilters = parsePharmacyStoresSearchParams(await searchParams);
-  const storeFiltersData = await getStoreFilters().catch(() => null);
+
+  const storeFiltersData = await getStoreFilters(
+    PUBLIC_API_CACHE_OPTIONS
+  ).catch(() => null);
 
   const filters = normalizePharmacyStoresFiltersCity(
     parsedFilters,
@@ -38,7 +42,8 @@ export async function generateMetadata({
   );
 
   const storesData = await getStores(
-    buildPharmacyStoresApiParams(filters)
+    buildPharmacyStoresApiParams(filters),
+    PUBLIC_API_CACHE_OPTIONS
   ).catch(() => null);
 
   return createPageMetadata({
@@ -54,7 +59,10 @@ export async function generateMetadata({
 async function PharmacyStoresPage({ searchParams }: PharmacyStoresPageProps) {
   const parsedFilters = parsePharmacyStoresSearchParams(await searchParams);
 
-  const storeFiltersData = await getStoreFilters().catch(() => null);
+  const storeFiltersData = await getStoreFilters(
+    PUBLIC_API_CACHE_OPTIONS
+  ).catch(() => null);
+
   const cityOptions = storeFiltersData?.cities.map((city) => city.value) ?? [];
 
   const filters = normalizePharmacyStoresFiltersCity(
@@ -63,7 +71,8 @@ async function PharmacyStoresPage({ searchParams }: PharmacyStoresPageProps) {
   );
 
   const storesData = await getStores(
-    buildPharmacyStoresApiParams(filters)
+    buildPharmacyStoresApiParams(filters),
+    PUBLIC_API_CACHE_OPTIONS
   ).catch(() => null);
 
   return (

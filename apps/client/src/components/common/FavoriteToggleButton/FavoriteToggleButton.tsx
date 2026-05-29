@@ -1,5 +1,3 @@
-'use client';
-
 import { Heart } from 'lucide-react';
 
 import css from './FavoriteToggleButton.module.css';

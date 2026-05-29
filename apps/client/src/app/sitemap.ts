@@ -39,6 +39,7 @@ type SitemapEntry = {
 const PRODUCT_SITEMAP_PER_PAGE = 200;
 const STORE_SITEMAP_PER_PAGE = 100;
 const SITEMAP_REVALIDATE_SECONDS = 3600;
+const SITEMAP_MAX_PAGES_PER_RESOURCE = 10;
 
 //===================================================================
 
@@ -85,7 +86,10 @@ async function fetchAllSitemapItems<TItem>(
   );
 
   const firstItems = firstPage?.data?.items ?? [];
-  const totalPages = firstPage?.data?.totalPages ?? 1;
+  const totalPages = Math.min(
+    firstPage?.data?.totalPages ?? 1,
+    SITEMAP_MAX_PAGES_PER_RESOURCE
+  );
 
   if (totalPages <= 1) return firstItems;
 

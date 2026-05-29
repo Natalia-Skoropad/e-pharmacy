@@ -151,7 +151,7 @@ pnpm seed:api
 
 ## Quality Checks
 
-Before final deploy, run:
+Before submitting changes or updating deployment, run:
 
 ```bash
 pnpm lint
@@ -170,6 +170,13 @@ pnpm check:api
 ## SEO and indexing overview
 
 The client app uses clean public routes, dynamic metadata, canonical URLs, Open Graph metadata, Twitter card metadata, robots rules, and dynamic sitemap generation. Public catalog and detail routes are indexable, while private/auth/service routes are excluded from sitemap and disallowed in robots.
+
+## Current limitations / Roadmap
+
+- `apps/client` is the completed release target for the current portfolio version.
+- `apps/vendor` and `apps/admin` are roadmap-only applications for now.
+- Auth uses an httpOnly cookie through the shared API; production cross-domain deployment requires `AUTH_COOKIE_SAME_SITE=none`.
+- Sitemap generation is suitable for the current dataset. For a larger production catalog, add a dedicated backend SEO endpoint that returns only sitemap-ready fields.
 
 ## Author
 

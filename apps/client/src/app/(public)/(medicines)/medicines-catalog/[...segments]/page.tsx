@@ -18,6 +18,8 @@ import {
   type MedicinesCatalogRouteParams,
   type MedicinesCatalogSearchParams,
 } from '@/lib/catalog/medicines-catalog';
+
+import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api';
 import { createPageMetadata } from '@/lib/seo';
 
 import { getProductFilters, getProducts, getStores } from '@/services';
@@ -44,12 +46,15 @@ export async function generateMetadata({
     parseMedicinesCatalogSearchParams(await searchParams)
   );
 
-  const storesData = await getStores({ page: 1, perPage: 100 }).catch(
-    () => null
-  );
+  const storesData = await getStores(
+    { page: 1, perPage: 100 },
+    PUBLIC_API_CACHE_OPTIONS
+  ).catch(() => null);
+
   const selectedStore = storesData?.items.find(
     (store) => store.id === filters.storeId
   );
+
   const categoryLabel = FALLBACK_PRODUCT_FILTER_OPTIONS.categories.find(
     (option) => option.value === filters.category
   )?.label;
@@ -60,7 +65,8 @@ export async function generateMetadata({
   };
 
   const productsData = await getProducts(
-    buildMedicinesCatalogApiParams(filters)
+    buildMedicinesCatalogApiParams(filters),
+    PUBLIC_API_CACHE_OPTIONS
   ).catch(() => null);
 
   return createPageMetadata({
@@ -78,6 +84,7 @@ async function MedicinesCatalogSegmentsPage({
   searchParams,
 }: MedicinesCatalogPageProps) {
   const resolvedParams = await params;
+
   const filters = mergeMedicinesCatalogFilters(
     parseMedicinesCatalogSegments(resolvedParams),
     parseMedicinesCatalogSearchParams(await searchParams)
@@ -88,9 +95,18 @@ async function MedicinesCatalogSegmentsPage({
   }
 
   const [productsData, storesData, filterOptionsData] = await Promise.all([
-    getProducts(buildMedicinesCatalogApiParams(filters)).catch(() => null),
-    getStores({ page: 1, perPage: 100 }).catch(() => null),
-    getProductFilters().catch(() => FALLBACK_PRODUCT_FILTER_OPTIONS),
+    getProducts(
+      buildMedicinesCatalogApiParams(filters),
+      PUBLIC_API_CACHE_OPTIONS
+    ).catch(() => null),
+
+    getStores({ page: 1, perPage: 100 }, PUBLIC_API_CACHE_OPTIONS).catch(
+      () => null
+    ),
+
+    getProductFilters(PUBLIC_API_CACHE_OPTIONS).catch(
+      () => FALLBACK_PRODUCT_FILTER_OPTIONS
+    ),
   ]);
 
   const activeStores = sortStoresByName(

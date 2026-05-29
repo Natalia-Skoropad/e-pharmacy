@@ -67,11 +67,15 @@ function sanitizeTextParam(value?: string): string {
   );
 }
 
+//===================================================================
+
 function parsePage(value?: string): number {
   const page = Number(value);
 
   return Number.isInteger(page) && page > 0 ? page : 1;
 }
+
+//===================================================================
 
 function slugify(value: string): string {
   return value
@@ -82,6 +86,8 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 80);
 }
+
+//===================================================================
 
 function deslugifyTextSegment(value: string): string {
   return sanitizeTextParam(value.replace(/-/g, ' '));
@@ -116,6 +122,8 @@ export function getUniqueStoreCities(stores: Store[]): string[] {
   return sortCities([...new Set(cities)]);
 }
 
+//===================================================================
+
 export function resolveStoreCity(value: string, cities: string[]): string {
   const sanitizedCity = sanitizeTextParam(value);
   if (!sanitizedCity) return '';
@@ -127,6 +135,8 @@ export function resolveStoreCity(value: string, cities: string[]): string {
 
   return matchedCity ?? formatCityFallback(sanitizedCity);
 }
+
+//===================================================================
 
 export function normalizePharmacyStoresFiltersCity(
   filters: PharmacyStoresFilters,
@@ -140,6 +150,8 @@ export function normalizePharmacyStoresFiltersCity(
   };
 }
 
+//===================================================================
+
 export function parsePharmacyStoresSearchParams(
   params: PharmacyStoresSearchParams = {}
 ): PharmacyStoresFilters {
@@ -151,6 +163,8 @@ export function parsePharmacyStoresSearchParams(
     page: parsePage(params.page),
   };
 }
+
+//===================================================================
 
 export function parsePharmacyStoresSegments(
   params: PharmacyStoresRouteParams = {}
@@ -194,6 +208,8 @@ export function parsePharmacyStoresSegments(
   return filters;
 }
 
+//===================================================================
+
 export function buildPharmacyStoresPath(
   filters: Partial<PharmacyStoresFilters>
 ): string {
@@ -212,6 +228,8 @@ export function buildPharmacyStoresPath(
     : '/pharmacy-stores';
 }
 
+//===================================================================
+
 export function buildPharmacyStoresApiParams(
   filters: PharmacyStoresFilters
 ): PharmacyStoresApiParams {
@@ -225,13 +243,19 @@ export function buildPharmacyStoresApiParams(
   };
 }
 
+//===================================================================
+
 export function getPharmacyStoresActiveFiltersCount(
   filters: PharmacyStoresFilters
 ): number {
   return [filters.name, filters.address, filters.city].filter(Boolean).length;
 }
 
-export function isPharmacyStoresNoIndex(filters: PharmacyStoresFilters): boolean {
+//===================================================================
+
+export function isPharmacyStoresNoIndex(
+  filters: PharmacyStoresFilters
+): boolean {
   return (
     filters.page > 1 ||
     filters.sort !== 'newest' ||
@@ -240,11 +264,15 @@ export function isPharmacyStoresNoIndex(filters: PharmacyStoresFilters): boolean
   );
 }
 
+//===================================================================
+
 export function getPharmacyStoresTitle(filters: PharmacyStoresFilters): string {
   if (filters.city) return `Choose a pharmacy store in ${filters.city}`;
 
   return 'Pharmacy stores';
 }
+
+//===================================================================
 
 export function getPharmacyStoresDescription(
   filters: PharmacyStoresFilters
@@ -256,10 +284,14 @@ export function getPharmacyStoresDescription(
   return 'Find active E-PHARMACY pharmacy stores, compare ratings, addresses, phone numbers, and available medicines before choosing where to shop.';
 }
 
+//===================================================================
+
 export function getPharmacyStoresSeoTextParts(
   filters: PharmacyStoresFilters
 ): string[] {
-  const cityText = filters.city ? `pharmacies in ${filters.city}` : 'active pharmacy stores';
+  const cityText = filters.city
+    ? `pharmacies in ${filters.city}`
+    : 'active pharmacy stores';
 
   return [
     'Choose trusted',
@@ -267,6 +299,8 @@ export function getPharmacyStoresSeoTextParts(
     'without bouncing between random tabs. In the E-PHARMACY pharmacy catalog, you can compare store ratings, addresses, contact details, and the number of medicines available before opening a pharmacy page. Use search by name or address, select a city, sort the list, and then move straight to the medicines from the store that looks right. Simple, tidy, and much less dramatic than hunting for a pharmacy at 22:59.',
   ];
 }
+
+//===================================================================
 
 export function shouldShowPharmacyStoresSeoText(
   filters: PharmacyStoresFilters

@@ -1,5 +1,3 @@
-'use client';
-
 // User avatars can come from profile storage/CDN URLs that are not always known
 // at build time, so this isolated component keeps the native image exception in
 // one documented place instead of spreading eslint disables across layouts.

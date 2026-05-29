@@ -1,6 +1,7 @@
 import { StoreDetailsPageContent } from '@/components/pharmacy-stores';
 
 import { buildStorePath, getIdFromSlugId } from '@/lib/routes';
+import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api';
 import { createPageMetadata } from '@/lib/seo';
 
 import { getStoreDetails, getStoreReviews } from '@/services';
@@ -15,7 +16,10 @@ export async function getStoreBySlugId(slugId: string): Promise<Store | null> {
 
   if (!storeId) return null;
 
-  const storeData = await getStoreDetails(storeId).catch(() => null);
+  const storeData = await getStoreDetails(
+    storeId,
+    PUBLIC_API_CACHE_OPTIONS
+  ).catch(() => null);
 
   return storeData?.store ?? null;
 }
@@ -37,7 +41,10 @@ export function createStoreDetailMetadata(store: Store): Metadata {
 //===================================================================
 
 export async function renderStoreDetailPage(store: Store) {
-  const reviewsData = await getStoreReviews(store.id).catch(() => null);
+  const reviewsData = await getStoreReviews(
+    store.id,
+    PUBLIC_API_CACHE_OPTIONS
+  ).catch(() => null);
 
   return (
     <StoreDetailsPageContent

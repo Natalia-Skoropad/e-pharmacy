@@ -1,6 +1,7 @@
 import { ProductDetailsPageContent } from '@/components/medicines-catalog';
 
 import { buildProductPath, getIdFromSlugId } from '@/lib/routes';
+import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api';
 import { createPageMetadata } from '@/lib/seo';
 
 import { getProductDetails, getProductReviews } from '@/services';
@@ -23,7 +24,10 @@ export async function getProductBySlugId(
 
   if (!productId) return null;
 
-  const productData = await getProductDetails(productId).catch(() => null);
+  const productData = await getProductDetails(
+    productId,
+    PUBLIC_API_CACHE_OPTIONS
+  ).catch(() => null);
 
   return productData?.product ?? null;
 }
@@ -48,7 +52,10 @@ export async function renderProductDetailPage(
   product: Product,
   searchParams?: ProductDetailSearchParams
 ) {
-  const reviewsData = await getProductReviews(product.id).catch(() => null);
+  const reviewsData = await getProductReviews(
+    product.id,
+    PUBLIC_API_CACHE_OPTIONS
+  ).catch(() => null);
 
   return (
     <ProductDetailsPageContent
