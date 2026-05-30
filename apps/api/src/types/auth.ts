@@ -41,11 +41,14 @@ export type AuthResponse = {
   user: AuthUserResponse;
 };
 
-export type AuthSessionResponse = AuthResponse & {
-  tokens: {
-    accessToken: string;
-    refreshToken: string;
-  };
+export type AuthTokens = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+export type AuthSessionResult = {
+  user: AuthUserResponse;
+  tokens: AuthTokens;
 };
 
 //===============================================================

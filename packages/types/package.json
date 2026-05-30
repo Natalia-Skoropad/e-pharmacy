@@ -2,7 +2,6 @@
   "name": "@e-pharmacy/types",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -13,7 +12,8 @@
     "./store": "./src/store.ts",
     "./cart": "./src/cart.ts",
     "./order": "./src/order.ts",
-    "./vendor": "./src/vendor.ts"
+    "./vendor": "./src/vendor.ts",
+    "./review": "./src/review.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

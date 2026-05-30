@@ -9,8 +9,8 @@ import { Session } from '../models/session.model';
 import { User } from '../models/user.model';
 
 import type {
-  AuthResponse,
-  AuthSessionResponse,
+  AuthSessionResult,
+  AuthTokens,
   AuthUserResponse,
   ForgotPasswordInput,
   LoginInput,
@@ -80,7 +80,7 @@ type UserDocument = HydratedDocument<UserEntity>;
 async function createAuthSession(
   user: UserDocument,
   context?: SessionContext
-): Promise<AuthSessionResponse['tokens']> {
+): Promise<AuthTokens> {
   const refreshToken = createRefreshToken();
   const safeContext = sanitizeSessionContext(context);
 
@@ -104,10 +104,10 @@ async function createAuthSession(
 
 //===============================================================
 
-async function buildAuthSessionResponse(
+async function buildAuthSessionResult(
   user: UserDocument,
   context?: SessionContext
-): Promise<AuthSessionResponse> {
+): Promise<AuthSessionResult> {
   const tokens = await createAuthSession(user, context);
 
   return {
@@ -121,7 +121,7 @@ async function buildAuthSessionResponse(
 export async function registerUserService(
   input: RegisterInput,
   context?: SessionContext
-): Promise<AuthSessionResponse> {
+): Promise<AuthSessionResult> {
   const existingUser = await User.findOne({ email: input.email });
 
   if (existingUser) {
@@ -140,7 +140,7 @@ export async function registerUserService(
       address: input.address,
     });
 
-    return buildAuthSessionResponse(user, context);
+    return buildAuthSessionResult(user, context);
   } catch (error) {
     if (isDuplicateEmailError(error)) {
       throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
@@ -155,7 +155,7 @@ export async function registerUserService(
 export async function loginUserService(
   input: LoginInput,
   context?: SessionContext
-): Promise<AuthSessionResponse> {
+): Promise<AuthSessionResult> {
   const user = await User.findOne({ email: input.email }).select('+password');
 
   if (!user) {
@@ -172,7 +172,7 @@ export async function loginUserService(
     throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_CREDENTIALS);
   }
 
-  return buildAuthSessionResponse(user, context);
+  return buildAuthSessionResult(user, context);
 }
 
 //===============================================================
@@ -180,7 +180,7 @@ export async function loginUserService(
 export async function refreshAuthSessionService(
   refreshToken: string,
   context?: SessionContext
-): Promise<AuthSessionResponse> {
+): Promise<AuthSessionResult> {
   const refreshTokenHash = hashRefreshToken(refreshToken);
 
   const session = await Session.findOne({

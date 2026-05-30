@@ -1,15 +1,21 @@
 export type ApiSuccessResponse<TData = unknown> = {
   status: 'success';
   message?: string;
-  data?: TData;
+  data: TData;
 };
 
 export type ApiErrorResponse = {
-  status?: 'error' | 'fail';
-  message?: string | string[];
-  error?: string;
-  statusCode?: number;
+  status: 'error';
+  message: string;
+  details?: Record<string, string[]>;
 };
+
+export type ApiEmptySuccessResponse = Omit<ApiSuccessResponse<never>, 'data'>;
+
+export type ApiResponse<TData = unknown> =
+  | ApiSuccessResponse<TData>
+  | ApiEmptySuccessResponse
+  | ApiErrorResponse;
 
 export type PaginationMeta = {
   page: number;

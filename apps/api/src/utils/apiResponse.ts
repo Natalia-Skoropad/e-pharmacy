@@ -1,3 +1,8 @@
+import type {
+  ApiEmptySuccessResponse,
+  ApiSuccessResponse,
+} from '@e-pharmacy/types';
+
 import type { Response } from 'express';
 
 //===============================================================
@@ -17,9 +22,17 @@ export function sendSuccessResponse<TData>({
   data,
   message,
 }: SuccessResponseOptions<TData>): void {
-  res.status(statusCode).json({
-    status: 'success',
-    ...(message ? { message } : {}),
-    ...(data ? { data } : {}),
-  });
+  const responseBody: ApiSuccessResponse<TData> | ApiEmptySuccessResponse =
+    data === undefined
+      ? {
+          status: 'success',
+          ...(message ? { message } : {}),
+        }
+      : {
+          status: 'success',
+          ...(message ? { message } : {}),
+          data,
+        };
+
+  res.status(statusCode).json(responseBody);
 }
