@@ -339,6 +339,112 @@ The real authorization boundary remains the API:
 - client-readable marker cookies are not treated as authorization
 - Origin/Referer validation hardens cookie-based non-safe mutations
 
+## Backend Audit Notes
+
+The API is organized as a modular backend foundation:
+
+```txt
+controllers/  -> request orchestration
+services/     -> business logic and database workflows
+models/       -> Mongoose data models
+schemas/      -> Zod request validation
+routes/       -> route definitions
+middlewares/  -> auth, role, validation, rate-limit, origin and error boundaries
+utils/        -> shared backend helpers
+config/       -> environment parsing
+db/           -> MongoDB connection
+```
+
+This keeps business rules out of route files and makes the backend easier to extend with vendor and admin modules later.
+
+## CSRF / Origin Strategy
+
+The current portfolio release uses cookie-based auth, so non-safe browser mutations are protected with an Origin/Referer validation layer.
+
+`validateMutationOrigin` applies to:
+
+```txt
+POST
+PUT
+PATCH
+DELETE
+```
+
+For those methods, the API checks the request `Origin` first and falls back to `Referer`. The detected origin must match `CLIENT_ORIGINS` or `CLIENT_APP_URL`.
+
+This matches the current BFF flow:
+
+```txt
+Browser -> Next.js same-origin /api/* route handlers -> Express API
+```
+
+The Next.js route handlers forward browser `Origin`, `Referer`, and cookies to the backend. The backend still remains the real authorization boundary through `authenticate`; the Origin/Referer check is an additional hardening layer for cookie-based mutations.
+
+For a larger production deployment, CSRF tokens can be added on top of this strategy.
+
+## Cookie Strategy
+
+Auth cookies are created in `src/utils/authCookie.ts` with:
+
+- `httpOnly: true`
+- `secure: true` in production or when `AUTH_COOKIE_SAME_SITE=none`
+- configurable `sameSite`
+- optional `AUTH_COOKIE_DOMAIN`
+- root `path: /`
+
+Recommended modes:
+
+| Deployment model | Recommended cookie setup |
+| --- | --- |
+| Local development | `AUTH_COOKIE_SAME_SITE=lax`, empty `AUTH_COOKIE_DOMAIN` |
+| Vercel client + Render API through Next.js BFF | `AUTH_COOKIE_SAME_SITE=lax`, empty `AUTH_COOKIE_DOMAIN` |
+| Shared parent domain, for example `app.example.com` + `api.example.com` | optional `AUTH_COOKIE_DOMAIN=.example.com`, choose `lax` or `none` based on browser request flow |
+| Direct cross-site browser calls to API | `AUTH_COOKIE_SAME_SITE=none` and secure HTTPS cookies |
+
+The current project should prefer the BFF model instead of direct browser-to-API private calls.
+
+## Cart / Order Reservation Strategy
+
+Cart and checkout are one of the strongest backend areas in this release.
+
+The flow is reservation-aware:
+
+- adding an item to the cart decreases `activeQuantity`
+- adding an item increases `reservedQuantity`
+- removing an item releases the reservation back into active stock
+- expired cart items are removed and their stock reservation is released
+- checkout validates the selected pharmacy invoice
+- checkout converts reserved stock into confirmed order stock changes
+- order data is persisted in MongoDB with customer and delivery details
+
+This makes the cart closer to a real e-commerce flow than a purely client-side basket.
+
+## API Response Contract
+
+Successful responses use the shared helper from `src/utils/apiResponse.ts`:
+
+```json
+{
+  "status": "success",
+  "message": "Optional success message",
+  "data": {}
+}
+```
+
+Error responses are centralized in `src/middlewares/error.middleware.ts`:
+
+```json
+{
+  "status": "error",
+  "message": "Error message",
+  "details": {
+    "field": ["Optional validation message"]
+  }
+}
+```
+
+Production responses hide stack traces. Development responses can include `stack` to speed up debugging. Zod validation errors expose field-level `details`, and duplicate email errors are normalized into a consistent conflict response.
+
 ## Environment Variables
 
 Create an `.env` file inside `apps/api`. The source of truth for API keys is `apps/api/.env.example`.
@@ -448,9 +554,9 @@ pnpm lint
 - Auth uses backend-managed httpOnly cookies.
 - Private customer endpoints are protected with `authenticate` middleware.
 - Role-based middleware exists as a foundation for future customer/vendor/admin boundaries.
-- Cookie-based non-safe mutations are hardened with Origin/Referer validation.
+- Cookie-based non-safe mutations (`POST`, `PUT`, `PATCH`, `DELETE`) are hardened with `validateMutationOrigin`.
 - The same-origin BFF flow allows the browser to avoid direct cross-site private API calls.
-- `AUTH_COOKIE_SAME_SITE=lax` is preferred for the current BFF model.
+- `AUTH_COOKIE_SAME_SITE=lax` is the default and preferred value for the current BFF model.
 - A larger production deployment could add CSRF tokens on top of the current strategy.
 
 ## Future Development
@@ -504,11 +610,11 @@ Recommended production checklist:
 What makes this API especially interesting:
 
 - one shared backend foundation for a multi-app pharmacy ecosystem
-- customer-ready auth, products, stores, reviews, favorites, cart, and orders modules
+- customer-ready auth, products, stores, reviews, favorites, reservation-aware cart, and persisted orders modules
 - prepared role foundation for future vendor and admin flows
 - typed validation-first architecture
 - secure password recovery flow through email
-- cookie-based mutations hardened with client-origin validation
+- cookie-based mutations hardened with Origin/Referer validation
 - reusable service/controller/middleware structure
 - MongoDB persistence for customer-facing business data
 

@@ -143,6 +143,18 @@ Important frontend boundaries documented in the current release:
 - `AuthProvider` is global because header, cart, favorites, protected routes, and customer actions depend on auth state. Its bootstrap stays lightweight: it reads the client-readable session marker first and calls `/api/auth/me` only when that marker exists.
 - The current interface is English, so `html lang="en"` is intentional. Ukrainian localization should be handled as a future i18n task, not as a standalone `lang` change.
 
+## Backend Audit Notes
+
+The backend already follows a production-oriented Express structure instead of a single-file API setup. The current release uses separate `controllers`, `services`, `models`, `schemas`, `routes`, `middlewares`, `utils`, `config`, and `db` folders.
+
+Important backend boundaries documented in the current release:
+
+- Unsafe cookie-based methods (`POST`, `PUT`, `PATCH`, `DELETE`) are hardened with Origin/Referer validation against `CLIENT_ORIGINS` and `CLIENT_APP_URL`.
+- Auth cookies are httpOnly, secure in production, configurable through `AUTH_COOKIE_SAME_SITE`, and can optionally use `AUTH_COOKIE_DOMAIN` for shared parent-domain deployments.
+- The recommended Vercel + Render setup keeps browser private flows same-origin through the Next.js BFF and uses `AUTH_COOKIE_SAME_SITE=lax`.
+- Cart and checkout use reservation-aware stock handling: cart additions reserve available stock, removals and expired cart items release reservations, and checkout converts reservations into confirmed order stock changes.
+- API responses use a consistent JSON contract: successful responses return `status: "success"`, and errors return `status: "error"` with a message and optional validation details.
+
 ## Tech Stack
 
 ### Frontend
@@ -305,7 +317,7 @@ SMTP_PASSWORD=...
 SMTP_FROM="E-PHARMACY <no-reply@your-domain.com>"
 ```
 
-For the current same-origin BFF deployment model, `AUTH_COOKIE_SAME_SITE=lax` is preferred. Use `AUTH_COOKIE_SAME_SITE=none` only when browser code intentionally calls the API directly across sites.
+For the current same-origin BFF deployment model, `AUTH_COOKIE_SAME_SITE=lax` is the recommended default. Use `AUTH_COOKIE_SAME_SITE=none` only when browser code intentionally calls the API directly across sites.
 
 ## Run Locally
 
@@ -383,7 +395,7 @@ Current limitations:
 - Vendor cabinet and admin dashboard are roadmap-only in the current portfolio release.
 - Shared packages are intentionally small and should grow only when real reuse appears.
 - The current sitemap strategy fits the existing dataset. A larger catalog would benefit from a dedicated backend SEO endpoint with sitemap-ready fields.
-- CSRF hardening currently uses same-origin BFF flow plus Origin/Referer validation. A larger production deployment could add CSRF tokens for mutation requests.
+- CSRF hardening currently uses same-origin BFF flow plus Origin/Referer validation for unsafe methods. A larger production deployment could add CSRF tokens for mutation requests.
 
 Roadmap:
 

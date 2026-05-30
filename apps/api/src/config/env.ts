@@ -39,9 +39,7 @@ const NODE_ENV = getNodeEnv();
 //===============================================================
 
 function getAuthCookieSameSite(): AuthCookieSameSite {
-  const value =
-    process.env.AUTH_COOKIE_SAME_SITE ||
-    (NODE_ENV === 'production' ? 'none' : 'lax');
+  const value = process.env.AUTH_COOKIE_SAME_SITE || 'lax';
 
   if (value === 'lax' || value === 'strict' || value === 'none') {
     return value;
