@@ -291,6 +291,51 @@ apps/client/
     types/
 ```
 
+## Frontend Architecture Notes
+
+### Private pages and sitemap boundary
+
+Private customer pages are protected at the UI level and marked with `noIndex: true` metadata:
+
+```txt
+src/app/(private)/cart/page.tsx
+src/app/(private)/checkout/page.tsx
+src/app/(private)/checkout/[slugId]/page.tsx
+src/app/(private)/profile/page.tsx
+src/app/(private)/profile/orders/[orderId]/page.tsx
+```
+
+They are also excluded from `sitemap.ts` because `SITEMAP_STATIC_ROUTES` is derived from `INDEXABLE_ROUTES`. This keeps cart, checkout, profile, and order pages out of public search discovery.
+
+### Dynamic root detail route
+
+The root-level detail route keeps public URLs short and SEO-friendly:
+
+```txt
+src/app/(public)/[slugId]/page.tsx
+```
+
+This route resolves whether the incoming `slugId` belongs to a product or a pharmacy, renders the correct detail page, and permanently redirects legacy or non-canonical URLs to the current canonical root URL.
+
+Legacy detail routes are kept only as redirect entry points:
+
+```txt
+src/app/(public)/(medicines)/products/[slugId]/page.tsx
+src/app/(public)/(pharmacies)/pharmacies/[slugId]/page.tsx
+```
+
+This design gives the portfolio clean URLs, while the README documents the extra maintenance responsibility of resolving two entity types from one root dynamic route. Tiny router detective, very serious hat.
+
+### Auth provider scope
+
+`AuthProvider` is mounted globally because the header, cart, favorites, protected routes, and customer actions all depend on auth state. The bootstrap is intentionally lightweight: it reads the client-readable session marker first and calls `/api/auth/me` only when the marker exists. Public pages can still render server-side content without waiting for private user data.
+
+The marker cookie is not authorization. It only helps redirects and client session bootstrap. Backend `authenticate` middleware and the httpOnly auth cookie remain the real private data boundary.
+
+### HTML language
+
+The current UI copy is English, so `html lang="en"` in `src/app/layout.tsx` is technically correct. If the product is later positioned as a Ukrainian-localized pharmacy experience, the next step should be a planned i18n layer rather than only changing the `lang` value.
+
 ## Main Pages
 
 ### Home

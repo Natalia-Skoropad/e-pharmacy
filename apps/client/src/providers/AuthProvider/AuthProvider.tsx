@@ -34,6 +34,11 @@ import type {
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
+type InitialAuthState = {
+  sessionMarker: string | null;
+  status: AuthStatus;
+};
+
 type AuthContextValue = {
   user: AuthUser | null;
   sessionMarker: string | null;
@@ -58,10 +63,24 @@ type AuthProviderProps = {
 
 //===================================================================
 
+function getInitialAuthState(): InitialAuthState {
+  const savedSessionMarker = getAuthSessionMarker();
+
+  return {
+    sessionMarker: savedSessionMarker,
+    status: savedSessionMarker ? 'loading' : 'unauthenticated',
+  };
+}
+
+//===================================================================
+
 function AuthProvider({ children }: AuthProviderProps) {
+  const [initialAuthState] = useState(getInitialAuthState);
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [sessionMarker, setSessionMarker] = useState<string | null>(null);
-  const [status, setStatus] = useState<AuthStatus>('loading');
+  const [sessionMarker, setSessionMarker] = useState<string | null>(
+    initialAuthState.sessionMarker
+  );
+  const [status, setStatus] = useState<AuthStatus>(initialAuthState.status);
 
   const applyAuthResponse = useCallback((response: AuthResponse) => {
     setAuthSessionMarker();

@@ -53,7 +53,7 @@ The `apps/vendor` and `apps/admin` folders are intentionally present to document
 - responsive public home page
 - pharmacy stores catalog with search, city filtering, sorting, pagination, details, reviews, and favorites
 - medicines catalog with search, category/pharmacy filters, availability filters, sorting, pagination, details, reviews, and favorites
-- root-level SEO-friendly product and pharmacy detail URLs
+- root-level SEO-friendly product and pharmacy detail URLs with product/store resolver and canonical redirects
 - cart grouped by pharmacy invoices
 - checkout with pickup/post delivery details and customer comments
 - persisted customer orders and order details
@@ -131,6 +131,17 @@ Browser -> Next.js same-origin /api/* route handlers -> Express API -> MongoDB
 This applies to auth, cart, checkout, orders, profile updates, password updates, review/favorite mutations, and other customer-only mutations. The backend sets the real httpOnly auth cookie, the Next BFF copies `Set-Cookie` back to the browser response, and later BFF requests forward cookies to the backend.
 
 The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker for redirects and auth bootstrap. It is not an auth token and does not authorize access to backend data. Real private access is controlled by backend middleware.
+
+## Frontend Audit Notes
+
+The customer storefront uses Next.js App Router with clear public/private route groups, route-level metadata, dynamic `robots.ts`, dynamic `sitemap.ts`, canonical detail redirects, BFF route handlers, route guards, reusable components, CSS Modules, and shared accessibility hooks.
+
+Important frontend boundaries documented in the current release:
+
+- Private pages under `apps/client/src/app/(private)` are marked `noIndex: true` and are not included in `sitemap.ts`, because `SITEMAP_STATIC_ROUTES` is derived from `INDEXABLE_ROUTES`.
+- The root dynamic detail route `apps/client/src/app/(public)/[slugId]/page.tsx` resolves products and pharmacies by slug-id, renders the matching detail page, and redirects legacy or non-canonical URLs to canonical root URLs.
+- `AuthProvider` is global because header, cart, favorites, protected routes, and customer actions depend on auth state. Its bootstrap stays lightweight: it reads the client-readable session marker first and calls `/api/auth/me` only when that marker exists.
+- The current interface is English, so `html lang="en"` is intentional. Ukrainian localization should be handled as a future i18n task, not as a standalone `lang` change.
 
 ## Tech Stack
 
