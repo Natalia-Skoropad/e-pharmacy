@@ -6,22 +6,22 @@
 
 ## Overview
 
-**E-PHARMACY Client** is the completed customer-facing application in the E-PHARMACY portfolio release.
+**E-PHARMACY Client** is the customer-facing application of the E-PHARMACY monorepo.
 
 The client app allows customers to:
 
-- explore pharmacy stores in a clean public catalog
+- browse pharmacy stores
 - search, filter, and sort medicines
 - open detailed product and pharmacy pages with SEO-friendly URLs
 - add medicines and pharmacies to favorites
-- add medicines to cart and group cart items by pharmacy invoice
-- complete checkout with pickup or post delivery details
+- manage cart items grouped by pharmacy
+- complete checkout with pickup or delivery details
 - view profile information and confirmed orders
-- submit and read product or pharmacy reviews
+- read and submit product or pharmacy reviews
 
-The project focuses on polished customer UX, route-driven SEO, responsive layouts, reusable UI architecture, and integration with one shared backend API.
+The application focuses on a clean customer experience, responsive layout, reusable UI components, route-driven SEO, and integration with a shared backend API.
 
-> Current status: completed customer storefront for the portfolio release. Vendor and admin applications are roadmap-only and are not implemented in this client app.
+> Current status: the customer storefront is implemented. Vendor and admin applications are separate parts of the monorepo and are described in their own README files.
 
 ## Live Demo
 
@@ -81,56 +81,55 @@ https://e-pharmacy-client-ten.vercel.app
 
 ## Features
 
-### Authentication and protected customer flow
+### Authentication
 
 - customer registration and login
 - logout with session cleanup
 - current user loading
-- protected routes for cart, checkout, profile, and orders
-- guest-only protection for auth pages
+- protected customer routes
+- guest-only auth pages
 - password recovery through email reset flow
-- profile editing and password changing
+- profile editing
+- password changing
 
 ### Pharmacy stores
 
-- public pharmacy stores catalog
+- public pharmacy catalog
 - search by pharmacy name and address
 - city filtering
 - sorting and pagination
-- pharmacy details pages with readable URLs
+- pharmacy details pages
 - pharmacy reviews
 - favorite pharmacy toggle for authenticated users
-- responsive cards for mobile, tablet, and desktop
+- responsive pharmacy cards
 
 ### Medicines catalog
 
-- public medicine catalog
+- public medicines catalog
 - search by product name and article
 - category filtering
 - pharmacy filtering
 - availability filtering
 - sorting by rating and name
 - pagination
-- product details pages with SEO-friendly slugs
-- pharmacy price availability section
+- product details pages
 - product characteristics and reviews
 - favorite medicine toggle for authenticated users
 
 ### Cart and checkout
 
-- add products to cart from product and pharmacy contexts
-- cart grouped by pharmacy invoices
+- adding products to cart
+- cart grouped by pharmacy
 - quantity controls with stock limits
 - invoice-level summaries
-- continue-shopping modal scoped to the selected pharmacy
-- checkout flow with pickup or post delivery
-- confirmed orders saved through the backend
-- delivery address and customer comment stored in confirmed order details
+- checkout with pickup or post delivery
+- order creation through the backend API
+- delivery address and customer comment in order details
 
 ### Profile and orders
 
 - customer profile page
-- editable profile fields
+- editable profile data
 - password changing flow
 - order history
 - detailed order page with pharmacy, products, delivery method, address, comment, and totals
@@ -138,15 +137,15 @@ https://e-pharmacy-client-ten.vercel.app
 ### SEO and routing
 
 - public indexable routes for home, catalogs, detail pages, and information pages
-- clean human-readable URLs for catalog states and root-level detail pages
-- legacy redirects from `/products/[slugId]` and `/pharmacies/[slugId]` to canonical root detail URLs
+- clean URLs for product and pharmacy detail pages
+- legacy redirects to canonical detail URLs
 - dynamic page titles and meta descriptions
-- canonical URLs for indexable and non-indexable catalog states
-- Open Graph metadata with a 1200x630 cover image
+- canonical URLs
+- Open Graph metadata
 - Twitter card metadata
-- dynamic sitemap generation for static pages, active pharmacies, and in-stock products
+- dynamic sitemap generation
 - robots rules for private/auth/service routes
-- noindex logic for search, sorting, pagination, unavailable results, and private pages
+- noindex logic for private pages and low-value catalog states
 - breadcrumbs generated from route data
 - semantic page structure with one clear `h1` per page
 - dedicated not-found and error pages
@@ -154,7 +153,7 @@ https://e-pharmacy-client-ten.vercel.app
 ### UX and interface
 
 - responsive layout for mobile, tablet, and desktop
-- shared header, mobile offcanvas, footer, breadcrumbs, buttons, modals, tabs, forms, toasts, and status pages
+- shared header, mobile menu, footer, breadcrumbs, buttons, modals, tabs, forms, toasts, and status pages
 - shimmer image placeholders
 - loading, empty, success, error, and not-found states
 - reusable filters and search controls
@@ -173,14 +172,14 @@ https://e-pharmacy-client-ten.vercel.app
 
 - **Lucide React**
 - **clsx**
-- lightweight shared UI contracts
+- shared UI contracts
 - shared internal utilities package
 
 ### Data and backend integration
 
 - shared Express/MongoDB backend API
-- same-origin Next.js BFF route handlers for private customer flows
-- lightweight shared API response contracts
+- Next.js same-origin BFF route handlers for private customer flows
+- shared API response contracts
 - shared TypeScript generic types
 - shared validation constants and sanitizers
 
@@ -225,27 +224,10 @@ apps/client/
         [slugId]/
       api/
         auth/
-          login/
-          logout/
-          me/
-          password/
-          register/
-          request-reset-email/
-          reset-password/
         cart/
-          clear/
-          items/[cartItemId]/
         orders/
-          checkout/
-          [orderId]/
         products/
-          [productId]/favorite/
-          [productId]/reviews/
-          filters/
         stores/
-          [storeId]/favorite/
-          [storeId]/reviews/
-          filters/
         health/
       error.tsx
       layout.tsx
@@ -291,51 +273,6 @@ apps/client/
     types/
 ```
 
-## Frontend Architecture Notes
-
-### Private pages and sitemap boundary
-
-Private customer pages are protected at the UI level and marked with `noIndex: true` metadata:
-
-```txt
-src/app/(private)/cart/page.tsx
-src/app/(private)/checkout/page.tsx
-src/app/(private)/checkout/[slugId]/page.tsx
-src/app/(private)/profile/page.tsx
-src/app/(private)/profile/orders/[orderId]/page.tsx
-```
-
-They are also excluded from `sitemap.ts` because `SITEMAP_STATIC_ROUTES` is derived from `INDEXABLE_ROUTES`. This keeps cart, checkout, profile, and order pages out of public search discovery.
-
-### Dynamic root detail route
-
-The root-level detail route keeps public URLs short and SEO-friendly:
-
-```txt
-src/app/(public)/[slugId]/page.tsx
-```
-
-This route resolves whether the incoming `slugId` belongs to a product or a pharmacy, renders the correct detail page, and permanently redirects legacy or non-canonical URLs to the current canonical root URL.
-
-Legacy detail routes are kept only as redirect entry points:
-
-```txt
-src/app/(public)/(medicines)/products/[slugId]/page.tsx
-src/app/(public)/(pharmacies)/pharmacies/[slugId]/page.tsx
-```
-
-This design gives the portfolio clean URLs, while the README documents the extra maintenance responsibility of resolving two entity types from one root dynamic route. Tiny router detective, very serious hat.
-
-### Auth provider scope
-
-`AuthProvider` is mounted globally because the header, cart, favorites, protected routes, and customer actions all depend on auth state. The bootstrap is intentionally lightweight: it reads the client-readable session marker first and calls `/api/auth/me` only when the marker exists. Public pages can still render server-side content without waiting for private user data.
-
-The marker cookie is not authorization. It only helps redirects and client session bootstrap. Backend `authenticate` middleware and the httpOnly auth cookie remain the real private data boundary.
-
-### HTML language
-
-The current UI copy is English, so `html lang="en"` in `src/app/layout.tsx` is technically correct. If the product is later positioned as a Ukrainian-localized pharmacy experience, the next step should be a planned i18n layer rather than only changing the `lang` value.
-
 ## Main Pages
 
 ### Home
@@ -356,7 +293,7 @@ A public catalog for browsing medicines with search, filters, sorting, paginatio
 
 ### Cart
 
-A private customer page where medicines are grouped by pharmacy invoice with stock-aware quantity controls and invoice summaries.
+A private customer page where medicines are grouped by pharmacy with stock-aware quantity controls and invoice summaries.
 
 ### Checkout
 
@@ -372,7 +309,7 @@ Public pages for delivery and payment, return policy, user agreement, and person
 
 ## SEO Details
 
-The client app has a dedicated SEO layer for public pages. The goal is to keep useful customer pages indexable, avoid duplicate catalog URLs, and prevent private or low-value states from entering search results. Tiny SEO janitor, but with a green pharmacy badge.
+The client app has a dedicated SEO layer for public pages. The goal is to keep useful customer pages indexable, avoid duplicate catalog URLs, and prevent private or low-value states from entering search results.
 
 ### SEO architecture
 
@@ -401,7 +338,7 @@ src/lib/details/*                    -> product/pharmacy detail metadata and can
 /{pharmacy-name}-{pharmacyId}
 ```
 
-Dynamic product and pharmacy detail pages are included through sitemap generation when the API returns valid active data.
+Dynamic product and pharmacy detail pages are included in the sitemap when the API returns valid active data.
 
 ### Routes excluded from indexing
 
@@ -445,7 +382,7 @@ If a user opens a detail page with an outdated or incorrect slug, the app resolv
 
 ### Catalog routing
 
-The medicines catalog supports index-friendly route segments for meaningful primary filters:
+The medicines catalog supports readable route segments for meaningful primary filters:
 
 ```txt
 /medicines-catalog
@@ -454,9 +391,9 @@ The medicines catalog supports index-friendly route segments for meaningful prim
 /medicines-catalog/category-antibiotics/pharmacy-wellness-hub-pharmacy-6a01bcd0b2ed6525cedea940
 ```
 
-Search, article search, availability, sorting, and pagination are kept as temporary states and are treated as non-indexable when needed.
+Search, article search, availability, sorting, and pagination are treated as temporary catalog states and are marked as non-indexable when needed.
 
-The pharmacy catalog uses readable route segments:
+The pharmacy catalog also uses readable route segments:
 
 ```txt
 /pharmacy-stores
@@ -471,11 +408,11 @@ City pages can be indexable because they describe stable location-based catalog 
 
 ### Sitemap and robots
 
-`sitemap.ts` generates static public pages and active product/pharmacy detail pages from the API. `robots.ts` allows public pages and disallows private/auth/future dashboard paths while pointing crawlers to `/sitemap.xml`.
+`sitemap.ts` generates static public pages and active product/pharmacy detail pages from the API. `robots.ts` allows public pages and disallows private/auth/dashboard paths while pointing crawlers to `/sitemap.xml`.
 
 ## API Integration
 
-The client communicates with the shared backend API from `apps/api` through two intentional paths:
+The client communicates with the shared backend API from `apps/api` through two paths:
 
 ```txt
 Public/server data -> Express API -> MongoDB
@@ -486,7 +423,7 @@ Public catalog data, SEO metadata, sitemap data, and read-only pages can be load
 
 Auth, cart, checkout, orders, profile updates, password updates, review/favorite mutations, and other customer-only mutations go through the Next.js BFF route handlers under `apps/client/src/app/api/*`.
 
-This BFF layer keeps browser requests same-origin, forwards cookies to the backend, and copies backend `Set-Cookie` headers back to the client response. The backend remains the source of truth for private access through `authenticate` middleware and the real httpOnly auth cookie.
+This BFF layer keeps browser requests same-origin, forwards cookies to the backend, and copies backend `Set-Cookie` headers back to the client response. The backend remains the source of truth for private access through `authenticate` middleware and the httpOnly auth cookie.
 
 The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker for redirects and auth bootstrap. It is not a security token and does not authorize backend data access.
 
@@ -494,9 +431,19 @@ Main API areas used by the client:
 
 - auth: register, login, current user, profile update, password update, password reset, logout
 - stores: catalog, filters, details, reviews, favorites
-- products: catalog, filters, details, reviews, moderation readiness, favorites
+- products: catalog, filters, details, reviews, favorites
 - cart: get cart, add/update/remove item, clear cart
 - orders: checkout, order history, order details
+
+## Performance Notes
+
+- Public catalog pages are rendered on the server and use cached/revalidated public API reads.
+- `apps/client/src/lib/api/cache-options.ts` centralizes public API revalidation settings.
+- `apps/client/src/lib/api/public-backend-proxy.ts` adds cache headers for read-only public proxy responses.
+- `htmlLimitedBots: /.*/` in `next.config.ts` helps SEO validators receive metadata in `<head>`.
+- Remote image patterns are configured in `next.config.ts` for deployed backend image assets.
+- CSS Modules keep component styling scoped.
+- `AuthProvider` checks the client-readable auth marker before calling `/api/auth/me`, so anonymous public pages avoid unnecessary auth bootstrap requests.
 
 ## Environment Variables
 
@@ -509,12 +456,14 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 
 ### Variable reference
 
-| Variable | Used for | Example |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | canonical URLs, metadata, sitemap, robots, absolute public URLs | `http://localhost:3000` |
+| Variable                   | Used for                                                                    | Example                 |
+| -------------------------- | --------------------------------------------------------------------------- | ----------------------- |
+| `NEXT_PUBLIC_SITE_URL`     | canonical URLs, metadata, sitemap, robots, absolute public URLs             | `http://localhost:3000` |
 | `NEXT_PUBLIC_API_BASE_URL` | backend URL used by server-side data fetches and Next.js BFF route handlers | `http://localhost:4000` |
 
-For production, replace these values with the deployed client and API URLs. Client-side private flows should continue to call same-origin `/api/*` routes, while those route handlers use `NEXT_PUBLIC_API_BASE_URL` to reach the backend.
+For production, replace these values with the deployed client and API URLs.
+
+Client-side private flows should continue to call same-origin `/api/*` routes, while those route handlers use `NEXT_PUBLIC_API_BASE_URL` to reach the backend.
 
 The browser should not call private backend mutations directly. Auth, cart, checkout, orders, profile updates, password updates, review/favorite mutations, and logout should keep using the same-origin BFF route handlers.
 
@@ -562,6 +511,14 @@ pnpm lint
 pnpm type-check
 ```
 
+## Security Notes
+
+- Client-side services for private operations call same-origin `/api/*` route handlers instead of writing directly to the external backend URL.
+- Auth tokens are not stored in `localStorage`; the real auth session is represented by backend-managed httpOnly cookies.
+- The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker and is not used to authorize backend data access.
+- `ProtectedRoute` and `GuestOnlyRoute` improve navigation UX, while real authorization stays on the backend.
+- Private pages are marked noindex and are excluded from sitemap generation.
+
 ## Deployment Notes
 
 Before deploying the client, run:
@@ -582,14 +539,13 @@ Recommended production checklist:
 
 ## Highlights
 
-What makes this client app especially interesting:
-
 - full customer storefront flow from catalog discovery to confirmed order
-- clean monorepo architecture with lightweight shared workspace contracts
+- clean monorepo architecture with shared workspace packages
 - SEO-friendly routing for catalogs and detail pages
 - reusable UI system with consistent buttons, cards, modals, tabs, toasts, and forms
 - responsive design across mobile, tablet, and desktop
 - backend-powered cart and order flow through a Next.js BFF layer
+- httpOnly cookie auth without browser-stored tokens
 - thoughtful empty, loading, error, success, and not-found states
 
 ## Author
@@ -597,7 +553,3 @@ What makes this client app especially interesting:
 **Nataliia Skoropad**  
 Full-stack Developer  
 Backend development, Frontend development, UI/UX design
-
-## License
-
-Portfolio customer storefront built with production-oriented e-commerce architecture.

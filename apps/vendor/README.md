@@ -1,137 +1,48 @@
 # E-PHARMACY Vendor
 
-> A planned pharmacy/vendor cabinet for managing pharmacy profile data, medicines, stock, statistics, and customer-related order data.
+Planned pharmacy/vendor cabinet for the E-PHARMACY ecosystem.
 
-## Overview
+## Current Status
 
-**E-PHARMACY Vendor** will be the private workspace for pharmacy owners and pharmacy managers inside the E-PHARMACY ecosystem.
+This app is not implemented yet.
 
-The vendor app is planned as the second major frontend application after the customer client release.
+The current working parts of the project are:
 
-It will allow pharmacy owners to:
+- `apps/client` — customer storefront
+- `apps/api` — shared backend API foundation
+- `packages/*` — lightweight shared workspace packages
 
-- create and manage a pharmacy shop profile
-- edit pharmacy contact and business information
-- add, edit, and delete medicines
-- manage pharmacy-specific product availability and stock
-- review pharmacy product lists
-- view statistics
-- inspect customer goods and order-related data
+This folder is kept as the planned app boundary for future development.
 
-> Current status: roadmap only. The current portfolio release does not include an implemented vendor cabinet yet. This folder is kept in the monorepo to document the planned ecosystem direction and future application boundary.
+## Planned Purpose
 
----
+The vendor app will be a private workspace for pharmacy owners or managers.
 
-## Current Release Boundary
+Planned users will be able to:
 
-Current portfolio release includes:
-
-- completed customer storefront in `apps/client`
-- shared backend API foundation in `apps/api`
-
-Planned after the customer storefront release:
-
-- vendor cabinet implementation
-- vendor shop management
-- vendor medicine CRUD
-- vendor statistics and customer goods workflows
-
-The vendor app should not be reviewed as a completed product yet. It is a roadmap document and architectural placeholder.
-
----
-
-## Ecosystem Role
-
-E-PHARMACY is designed as one connected platform:
-
-```txt
-apps/client  -> customer storefront
-apps/vendor  -> pharmacy/vendor cabinet
-apps/admin   -> admin dashboard
-apps/api     -> one shared backend API
-```
-
-The vendor cabinet will use the same shared backend API and shared workspace packages where they naturally fit. Current shared packages are intentionally lightweight and will grow as real reuse appears. The completed client app already defines many reusable patterns for forms, modals, protected layouts, empty states, and API integration, so the vendor app should extend the ecosystem instead of starting from a blank pharmacy shelf.
-
----
-
-## Planned Features
-
-### Vendor authentication and protection
-
-- vendor login flow
-- protected vendor-only routes
-- role-based access through the shared API and real backend authorization
-- current vendor profile loading
-- redirect protection for unauthorized users
-
-### Pharmacy shop management
-
-- create pharmacy shop profile
-- edit shop details
-- manage shop address, contacts, schedule, and description
-- view public-facing shop preview data
-
-### Medicine management
-
-- add new medicine to the vendor shop
-- edit existing medicine data
-- delete medicine from the vendor shop
-- view all medicines in a vendor table
-- open product details from the cabinet
-- manage availability and active quantity
-
-### Statistics
-
-- pharmacy performance overview
-- product availability metrics
-- customer/order-related metrics
-- dashboard cards and charts where useful
-
-### Customer goods modal
-
-- view customer goods details
-- inspect products connected with customer orders
-- prepare data for future order-management workflows
-
-### UX and interface
-
-- responsive protected layout
-- dashboard-style navigation
-- reusable tables, filters, buttons, forms, modals, and empty states
-- loading, error, success, and not-found states
-- consistent design with the completed client storefront
-
----
+- Create and manage a pharmacy shop profile
+- Edit pharmacy contact and business information
+- Add, edit, and delete medicines
+- Manage product availability and stock
+- View pharmacy-specific product lists
+- View statistics
+- Inspect customer goods/order-related data
 
 ## Planned Tech Stack
 
-### Frontend
+The expected frontend stack is aligned with the client app:
 
-- **Next.js**
-- **React**
-- **TypeScript**
-- **CSS Modules**
+- Next.js
+- React
+- TypeScript
+- CSS Modules
+- Shared workspace packages where reuse is useful
 
-### Shared workspace packages
+The vendor app should use the same shared backend API from `apps/api`. It should not introduce a separate duplicated backend.
 
-- `@e-pharmacy/ui`
-- `@e-pharmacy/types`
-- `@e-pharmacy/api-client`
-- `@e-pharmacy/validation`
-- `@e-pharmacy/config`
-- `@e-pharmacy/utils`
+## Planned Structure
 
-### Backend integration
-
-- shared E-PHARMACY API
-- vendor-protected routes
-- role-based authorization
-- MongoDB-backed shop and product data
-
----
-
-## Planned Project Structure
+The final structure may change during implementation, but the expected direction is:
 
 ```txt
 apps/vendor/
@@ -143,131 +54,37 @@ apps/vendor/
       shop/
       medicines/
       statistics/
-      layout.tsx
-      page.tsx
     components/
-      auth/
-      dashboard/
-      medicines/
-      modals/
-      shop/
-      statistics/
     hooks/
     lib/
-      api/
-      auth/
-      constants/
-      routes/
-      validations/
     providers/
     services/
     styles/
     types/
 ```
 
-The exact structure may change during implementation, but the app will follow the same clean modular approach as the completed client application.
+## Planned Backend Areas
 
----
+The existing API can later be expanded with vendor modules:
 
-## Planned Main Pages
+- Vendor auth/current user
+- Shop create/read/update
+- Vendor-owned product CRUD
+- Shop statistics
+- Customer goods data
+- Vendor order-related data
 
-### Vendor login
+## Local Development
 
-A protected authentication entry point for pharmacy owners and managers.
+There is no runnable vendor app package yet, so there is currently no `pnpm dev:vendor` script.
 
-### Dashboard
-
-A private overview page with key pharmacy metrics, quick links, and status cards.
-
-### Shop profile
-
-A page for creating and editing pharmacy information shown to customers.
-
-### Medicines
-
-A vendor medicine management area with product tables, filters, add/edit/delete actions, and product details.
-
-### Statistics
-
-A page for pharmacy analytics and operational insights.
-
----
-
-## Backend Dependency
-
-The vendor app will be connected to the existing shared API from `apps/api`.
-
-Planned vendor API areas:
-
-- vendor auth and current user
-- shop create/read/update
-- vendor product CRUD
-- shop statistics
-- client goods data
-- vendor order-related data
-
-The backend will be extended inside the same shared API instead of creating a separate vendor backend. Private vendor mutations should follow the same production-oriented pattern as the client app: same-origin BFF routes, httpOnly cookie auth, backend authorization, and Origin/Referer validation.
-
----
-
-## Environment Variables
-
-Environment variables are not required for the current portfolio release because this app is roadmap-only. During implementation, the likely local setup will include:
-
-```env
-NEXT_PUBLIC_SITE_URL=http://localhost:3001
-NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
-```
-
----
-
-## Getting Started
-
-The app is not implemented yet. After development starts, the expected monorepo flow will be:
+When the app is implemented, the expected monorepo flow will be similar to:
 
 ```bash
 pnpm install
 pnpm dev:vendor
 ```
 
-The final scripts will be added when the app package is created.
+## Note
 
----
-
-## Development Notes
-
-Planned implementation priorities:
-
-- create vendor app foundation
-- add protected layout
-- connect auth with shared API roles
-- build shop create/edit flow
-- build medicine CRUD flow
-- add statistics and customer goods modal
-- reuse shared UI and validation wherever possible
-
----
-
-## Highlights
-
-What will make this app especially interesting:
-
-- role-based vendor workspace inside a larger marketplace ecosystem
-- shared backend instead of duplicated API logic
-- reusable form, modal, table, and dashboard patterns
-- pharmacy-specific inventory management
-- foundation for future order-management workflows
-
----
-
-## Author
-
-**Nataliia Skoropad**  
-Full-stack Developer  
-Backend development, Frontend development, UI/UX design
-
----
-
-## License
-
-Portfolio vendor cabinet roadmap for a production-oriented multi-app e-commerce ecosystem.
+This README is intentionally short because the app is roadmap-only. Detailed implementation documentation should be added after real code exists.

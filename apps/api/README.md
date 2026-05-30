@@ -1,162 +1,102 @@
 # E-PHARMACY API
 
-> A shared Express/MongoDB backend API for the E-PHARMACY portfolio release and future ecosystem expansion.
+Shared Express/MongoDB backend API for the E-PHARMACY monorepo. It supports the customer storefront and provides the backend foundation for future vendor and admin modules.
 
-## Overview
+## Current Status
 
-**E-PHARMACY API** is the single shared backend for the E-PHARMACY monorepo.
+Implemented:
 
-It currently supports the completed customer storefront and is designed to be extended with vendor and admin modules in later stages. The current portfolio release should be reviewed as a customer-ready API foundation, not as a completed vendor/admin backend.
+- Customer auth and profile flow
+- Password recovery through email
+- Products and stores catalogs
+- Product and store details
+- Reviews and favorites
+- Cart
+- Checkout and persisted orders
+- Shared validation, middleware, controller, service, and model structure
 
-The API provides:
+Planned:
 
-- customer authentication and authorization foundation
-- user profile management
-- password recovery through email
-- pharmacy stores catalog data
-- medicines catalog data
-- product and pharmacy reviews
-- product and pharmacy favorites
-- cart management
-- checkout and order persistence
-- role-based middleware foundation for future customer, vendor, and admin flows
+- Vendor shop management
+- Vendor medicine CRUD
+- Vendor statistics and customer goods data
+- Admin dashboard statistics
+- Admin products, orders, customers, and suppliers management
 
-> Current status: ready for the customer client release. Vendor and admin backend features are planned future modules that should extend this same API instead of becoming separate duplicated backends.
-
-## Current Release Boundary
-
-Current portfolio release includes:
-
-- customer auth/profile/password recovery
-- public stores and products data
-- reviews and favorites for customer-facing entities
-- cart and checkout
-- persisted customer orders
-- shared middleware/service/controller architecture
-
-Planned only:
-
-- vendor shop management
-- vendor medicine CRUD
-- vendor statistics and client goods workflows
-- admin dashboard statistics
-- admin products/orders/customers/suppliers management
-
-## Ecosystem Role
-
-```txt
-apps/client  -> completed customer storefront
-apps/vendor  -> planned pharmacy/vendor cabinet roadmap only
-apps/admin   -> planned admin dashboard roadmap only
-apps/api     -> one shared backend API foundation
-```
-
-The backend is intentionally shared because all apps work with the same domain data: users, roles, pharmacies, products, carts, orders, suppliers, customers, statistics, and moderation flows.
-
-Future vendor and admin development should extend this API with additional modules rather than create separate backend copies.
+The API is currently customer-ready. Vendor and admin modules are planned extensions.
 
 ## Features
 
-### Authentication and users
+### Auth and users
 
-- user registration
-- user login
-- current user endpoint
-- logout
-- profile update
-- password update
-- password reset request
-- password reset through email token
-- JWT-based authentication
-- httpOnly auth cookie helper utilities
-- role-based middleware foundation
-
-### Password recovery
-
-- reset email request endpoint
-- rate limiting for password reset actions
-- reset token validation
-- email template support
-- SMTP integration through Nodemailer
+- Register customer
+- Login/logout
+- Current user endpoint
+- Profile update
+- Password update
+- Password reset request
+- Password reset with email token
+- JWT auth with backend-managed httpOnly cookies
+- Role middleware foundation
 
 ### Stores
 
-- pharmacy stores catalog
-- filters for stores
-- store details
-- store reviews
-- authenticated store review creation
-- favorite store toggle
+- Store catalog
+- Store filters
+- Store details
+- Store reviews
+- Authenticated store review creation
+- Favorite store toggle
 
 ### Products
 
-- medicines catalog
-- product filters
-- product details
-- product reviews
-- authenticated product review creation
-- favorite product toggle
-- admin-role moderation route foundation for future moderation workflows
+- Product catalog
+- Product filters
+- Product details
+- Product reviews
+- Authenticated product review creation
+- Favorite product toggle
+- Admin-role review moderation route foundation
 
-### Cart
+### Cart and orders
 
-- authenticated cart access
-- add item to cart
-- update item quantity
-- remove item from cart
-- clear cart
-- server-side cart model
-
-### Orders
-
-- checkout endpoint
-- authenticated order history
-- single order details
-- order persistence in MongoDB
-- customer address and comment support for confirmed orders
+- Authenticated cart access
+- Add, update, remove, and clear cart items
+- Reservation-aware stock handling
+- Checkout endpoint
+- Order history
+- Single order details
+- MongoDB order persistence
 
 ### API quality and safety
 
-- request validation with Zod
-- centralized error handling
-- not-found middleware
-- controller wrapper utility
-- rate limiting
-- CORS configuration
-- Helmet security middleware
+- Zod request validation
+- Centralized error handling
+- Not-found middleware
+- Controller wrapper utility
+- Rate limiting
+- Helmet
+- CORS allowlist
 - Origin/Referer validation for non-safe cookie-based mutations
-- MongoDB duplicate error handling
-- typed Express request extensions
+- MongoDB duplicate error normalization
 
 ## Tech Stack
 
-### Backend
-
-- **Node.js**
-- **Express**
-- **TypeScript**
-- **MongoDB**
-- **Mongoose**
-
-### Authentication and security
-
-- **jsonwebtoken**
-- **bcryptjs**
-- **helmet**
-- **cors**
-- **express-rate-limit**
-
-### Validation and email
-
-- **Zod**
-- **Nodemailer**
-- **Handlebars**
-
-### Monorepo tooling
-
-- **pnpm workspaces**
-- **Turborepo**
-- shared validation package for reusable validation constants and sanitizers
+- Node.js
+- Express
+- TypeScript
+- MongoDB
+- Mongoose
+- Zod
+- jsonwebtoken
+- bcryptjs
+- helmet
+- cors
+- express-rate-limit
+- Nodemailer
+- Handlebars
+- pnpm workspaces
+- Turborepo
 
 ## Project Structure
 
@@ -164,83 +104,18 @@ Future vendor and admin development should extend this API with additional modul
 apps/api/
   src/
     config/
-      env.ts
     constants/
-      auth.ts
-      httpStatus.ts
-      messages.ts
     controllers/
-      auth.controller.ts
-      cart.controller.ts
-      health.controller.ts
-      order.controller.ts
-      product.controller.ts
-      store.controller.ts
     db/
-      connectDB.ts
     middlewares/
-      auth.middleware.ts
-      error.middleware.ts
-      notFound.middleware.ts
-      origin.middleware.ts
-      rateLimit.middleware.ts
-      role.middleware.ts
-      validate.middleware.ts
     models/
-      cart.model.ts
-      order.model.ts
-      product.model.ts
-      store.model.ts
-      user.model.ts
     routes/
-      auth.routes.ts
-      cart.routes.ts
-      health.routes.ts
-      index.ts
-      order.routes.ts
-      product.routes.ts
-      store.routes.ts
     schemas/
-      auth.schema.ts
-      cart.schema.ts
-      health.schema.ts
-      order.schema.ts
-      product.schema.ts
-      store.schema.ts
     scripts/
-      copy-templates.mjs
-      seed.ts
     services/
-      auth.service.ts
-      cart.service.ts
-      order.service.ts
-      product.service.ts
-      store.service.ts
     templates/
-      reset-password-email.html
     types/
-      auth.ts
-      cart.ts
-      errors.ts
-      express.ts
-      mongo.ts
-      order.ts
-      product.ts
-      store.ts
-      user.ts
     utils/
-      apiResponse.ts
-      authCookie.ts
-      ctrlWrapper.ts
-      formatZodError.ts
-      httpError.ts
-      jwt.ts
-      logger.ts
-      mongoError.ts
-      password.ts
-      passwordResetEmail.ts
-      sendEmail.ts
-      userResponse.ts
     app.ts
     server.ts
 ```
@@ -268,15 +143,13 @@ PATCH /auth/current/password
 POST  /auth/logout
 ```
 
-Temporary role-test routes are available only outside production:
+Development-only role test routes are available outside production:
 
 ```txt
 GET /auth/test/customer
 GET /auth/test/vendor
 GET /auth/test/admin
 ```
-
-These routes are intended for development checks and can be removed or moved when real customer, vendor, and admin modules are completed.
 
 ### Stores
 
@@ -321,107 +194,30 @@ GET  /orders/:orderId
 
 ## Frontend ↔ Backend Flow
 
-The completed customer storefront uses this API through two intentional paths:
+The customer client uses this API through two paths:
 
 ```txt
 Public/server data -> Express API -> MongoDB
 Browser private flow -> Next.js same-origin /api/* route handlers -> Express API -> MongoDB
 ```
 
-Public catalog, details, SEO metadata, sitemap, and read-only pages may be fetched from the API by Next.js server code.
+The API remains the real authorization boundary. Private data is protected by backend `authenticate` middleware and httpOnly auth cookies.
 
-Private customer flows go through the client BFF route handlers first. The browser calls same-origin `/api/*` routes on the Next.js app, then those handlers call this Express API and forward cookies/headers as needed.
+## Cart / Order Notes
 
-The real authorization boundary remains the API:
+Cart and checkout are backend-driven, not just local frontend state.
 
-- backend sets the httpOnly auth cookie
-- backend `authenticate` middleware protects private data
-- client-readable marker cookies are not treated as authorization
-- Origin/Referer validation hardens cookie-based non-safe mutations
+The current flow tracks active and reserved product quantities:
 
-## Backend Audit Notes
-
-The API is organized as a modular backend foundation:
-
-```txt
-controllers/  -> request orchestration
-services/     -> business logic and database workflows
-models/       -> Mongoose data models
-schemas/      -> Zod request validation
-routes/       -> route definitions
-middlewares/  -> auth, role, validation, rate-limit, origin and error boundaries
-utils/        -> shared backend helpers
-config/       -> environment parsing
-db/           -> MongoDB connection
-```
-
-This keeps business rules out of route files and makes the backend easier to extend with vendor and admin modules later.
-
-## CSRF / Origin Strategy
-
-The current portfolio release uses cookie-based auth, so non-safe browser mutations are protected with an Origin/Referer validation layer.
-
-`validateMutationOrigin` applies to:
-
-```txt
-POST
-PUT
-PATCH
-DELETE
-```
-
-For those methods, the API checks the request `Origin` first and falls back to `Referer`. The detected origin must match `CLIENT_ORIGINS` or `CLIENT_APP_URL`.
-
-This matches the current BFF flow:
-
-```txt
-Browser -> Next.js same-origin /api/* route handlers -> Express API
-```
-
-The Next.js route handlers forward browser `Origin`, `Referer`, and cookies to the backend. The backend still remains the real authorization boundary through `authenticate`; the Origin/Referer check is an additional hardening layer for cookie-based mutations.
-
-For a larger production deployment, CSRF tokens can be added on top of this strategy.
-
-## Cookie Strategy
-
-Auth cookies are created in `src/utils/authCookie.ts` with:
-
-- `httpOnly: true`
-- `secure: true` in production or when `AUTH_COOKIE_SAME_SITE=none`
-- configurable `sameSite`
-- optional `AUTH_COOKIE_DOMAIN`
-- root `path: /`
-
-Recommended modes:
-
-| Deployment model | Recommended cookie setup |
-| --- | --- |
-| Local development | `AUTH_COOKIE_SAME_SITE=lax`, empty `AUTH_COOKIE_DOMAIN` |
-| Vercel client + Render API through Next.js BFF | `AUTH_COOKIE_SAME_SITE=lax`, empty `AUTH_COOKIE_DOMAIN` |
-| Shared parent domain, for example `app.example.com` + `api.example.com` | optional `AUTH_COOKIE_DOMAIN=.example.com`, choose `lax` or `none` based on browser request flow |
-| Direct cross-site browser calls to API | `AUTH_COOKIE_SAME_SITE=none` and secure HTTPS cookies |
-
-The current project should prefer the BFF model instead of direct browser-to-API private calls.
-
-## Cart / Order Reservation Strategy
-
-Cart and checkout are one of the strongest backend areas in this release.
-
-The flow is reservation-aware:
-
-- adding an item to the cart decreases `activeQuantity`
-- adding an item increases `reservedQuantity`
-- removing an item releases the reservation back into active stock
-- expired cart items are removed and their stock reservation is released
-- checkout validates the selected pharmacy invoice
-- checkout converts reserved stock into confirmed order stock changes
-- order data is persisted in MongoDB with customer and delivery details
-
-This makes the cart closer to a real e-commerce flow than a purely client-side basket.
+- Adding an item can reserve available stock
+- Removing an item releases the reservation
+- Expired cart items can release reserved stock
+- Checkout converts reserved items into confirmed order data
+- Orders are persisted in MongoDB with customer and delivery details
 
 ## API Response Contract
 
-Successful responses use the shared helper from `src/utils/apiResponse.ts`:
+Successful responses use:
 
 ```json
 {
@@ -431,23 +227,21 @@ Successful responses use the shared helper from `src/utils/apiResponse.ts`:
 }
 ```
 
-Error responses are centralized in `src/middlewares/error.middleware.ts`:
+Error responses use:
 
 ```json
 {
   "status": "error",
   "message": "Error message",
-  "details": {
-    "field": ["Optional validation message"]
-  }
+  "details": {}
 }
 ```
 
-Production responses hide stack traces. Development responses can include `stack` to speed up debugging. Zod validation errors expose field-level `details`, and duplicate email errors are normalized into a consistent conflict response.
+Validation errors can include field-level details. Production errors hide stack traces.
 
 ## Environment Variables
 
-Create an `.env` file inside `apps/api`. The source of truth for API keys is `apps/api/.env.example`.
+Create `apps/api/.env` using `apps/api/.env.example`.
 
 ```env
 NODE_ENV=development
@@ -471,62 +265,25 @@ AUTH_COOKIE_DOMAIN=
 AUTH_COOKIE_SAME_SITE=lax
 ```
 
-### Variable reference
+For the current Vercel client + Render API setup through the Next.js BFF, `AUTH_COOKIE_SAME_SITE=lax` is the preferred default.
 
-| Variable | Used for | Notes |
-| --- | --- | --- |
-| `NODE_ENV` | runtime mode | `development` or `production` |
-| `PORT` | API port | local default is `4000` |
-| `MONGODB_URI` | MongoDB connection | required for API start and seed scripts |
-| `JWT_SECRET` | signing auth/reset tokens | must be strong in production |
-| `JWT_EXPIRES_IN` | auth token lifetime | current example: `7d` |
-| `JWT_RESET_EXPIRES_IN` | password reset token lifetime | current example: `15m` |
-| `CLIENT_ORIGINS` | allowed frontend origins for CORS and mutation Origin/Referer validation | comma-separated if more than one origin is needed |
-| `CLIENT_APP_URL` | public client URL for password reset links and redirects | should match the deployed client domain |
-| `SMTP_*` | password recovery email delivery | configured through the chosen SMTP provider |
-| `AUTH_COOKIE_DOMAIN` | optional cookie domain | leave empty for separate Vercel + Render domains |
-| `AUTH_COOKIE_SAME_SITE` | cookie same-site mode | `lax` for same-origin BFF flow; `none` only for intentional direct cross-site browser API calls |
+## Run Locally
 
-For production, update MongoDB, JWT, SMTP, CORS, cookie, and client URL values.
-
-When the client uses the Next.js BFF layer, browser mutations stay same-origin on the client domain and the BFF proxies them to this API. In that setup, `AUTH_COOKIE_SAME_SITE=lax` is preferred. Use `AUTH_COOKIE_SAME_SITE=none` only for intentional direct cross-site browser calls to the API.
-
-Current deployed client/API pair:
-
-```env
-CLIENT_ORIGINS=https://e-pharmacy-client-ten.vercel.app
-CLIENT_APP_URL=https://e-pharmacy-client-ten.vercel.app
-```
-
-## Getting Started
+From the monorepo root:
 
 ```bash
-git clone https://github.com/Natalia-Skoropad/e-pharmacy
-cd e-pharmacy
 pnpm install
-```
-
-Create `apps/api/.env` and add the required variables.
-
-Seed the database:
-
-```bash
 pnpm seed:api
-```
-
-Start the API:
-
-```bash
 pnpm dev:api
 ```
 
-Check API health:
+Health check:
 
 ```txt
 http://localhost:4000/health
 ```
 
-## Available Scripts
+## Scripts
 
 From the monorepo root:
 
@@ -549,81 +306,21 @@ pnpm type-check
 pnpm lint
 ```
 
-## Security Notes
-
-- Auth uses backend-managed httpOnly cookies.
-- Private customer endpoints are protected with `authenticate` middleware.
-- Role-based middleware exists as a foundation for future customer/vendor/admin boundaries.
-- Cookie-based non-safe mutations (`POST`, `PUT`, `PATCH`, `DELETE`) are hardened with `validateMutationOrigin`.
-- The same-origin BFF flow allows the browser to avoid direct cross-site private API calls.
-- `AUTH_COOKIE_SAME_SITE=lax` is the default and preferred value for the current BFF model.
-- A larger production deployment could add CSRF tokens on top of the current strategy.
-
-## Future Development
-
-The API will be expanded for the next E-PHARMACY apps.
-
-### Vendor backend modules planned
-
-- vendor shop creation and editing
-- vendor-owned medicine CRUD
-- shop statistics
-- client goods modal data
-- vendor order visibility
-- pharmacy cabinet permissions
-
-### Admin backend modules planned
-
-- admin dashboard statistics
-- orders management
-- products management
-- customers management
-- suppliers CRUD
-- moderation workflows
-- admin-only filters and tables
-
-The current API already includes role-based middleware and shared customer-facing models to support this direction.
-
 ## Deployment Notes
 
-Before deploying the API, run:
+Before deploying:
 
 ```bash
 pnpm check:api
 ```
 
-Recommended production checklist:
+Production checklist:
 
-- set production `MONGODB_URI`
-- set strong `JWT_SECRET`
-- configure SMTP credentials
-- configure allowed `CLIENT_ORIGINS`
-- choose proper `AUTH_COOKIE_SAME_SITE` for the deployment model
-- set `AUTH_COOKIE_DOMAIN` only when needed
-- verify deployed CORS allows the production client origin
-- verify Origin/Referer validation allows the deployed client and blocks unexpected mutation origins
-- verify password reset email links
-- verify checkout creates real MongoDB orders
-
-## Highlights
-
-What makes this API especially interesting:
-
-- one shared backend foundation for a multi-app pharmacy ecosystem
-- customer-ready auth, products, stores, reviews, favorites, reservation-aware cart, and persisted orders modules
-- prepared role foundation for future vendor and admin flows
-- typed validation-first architecture
-- secure password recovery flow through email
-- cookie-based mutations hardened with Origin/Referer validation
-- reusable service/controller/middleware structure
-- MongoDB persistence for customer-facing business data
-
-## Author
-
-**Nataliia Skoropad**  
-Full-stack Developer  
-Backend development, Frontend development, UI/UX design
-
-## License
-
-Portfolio shared backend API built with production-oriented architecture.
+- Set `MONGODB_URI`
+- Set a strong `JWT_SECRET`
+- Configure SMTP credentials
+- Configure `CLIENT_ORIGINS` and `CLIENT_APP_URL`
+- Choose cookie settings for the deployment model
+- Verify CORS and Origin/Referer validation
+- Verify password reset links
+- Verify checkout and order creation

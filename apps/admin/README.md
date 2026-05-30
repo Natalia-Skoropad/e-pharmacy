@@ -1,148 +1,48 @@
 # E-PHARMACY Admin
 
-> A planned administration dashboard for managing the E-PHARMACY ecosystem, including orders, products, customers, suppliers, and platform statistics.
+Planned admin dashboard for the E-PHARMACY ecosystem.
 
-## Overview
+## Current Status
 
-**E-PHARMACY Admin** will be the private administration panel for managing platform-level data across the E-PHARMACY ecosystem.
+This app is not implemented yet.
 
-The admin app is planned after the vendor cabinet is completed.
+The current working parts of the project are:
 
-It will allow administrators to:
+- `apps/client` — customer storefront
+- `apps/api` — shared backend API foundation
+- `packages/*` — lightweight shared workspace packages
 
-- review dashboard statistics
-- manage orders
-- manage products
-- manage customers
-- manage suppliers
-- use filters and tables for operational workflows
-- create and edit products and suppliers through modal forms
-- support moderation and internal management flows
+This folder is kept as the planned app boundary for future development.
 
-> Current status: roadmap only. The current portfolio release does not include an implemented admin dashboard yet. This folder is kept in the monorepo to document the planned ecosystem direction and future application boundary.
+## Planned Purpose
 
----
+The admin app will be a private dashboard for platform-level management.
 
-## Current Release Boundary
+Planned administrators will be able to:
 
-Current portfolio release includes:
-
-- completed customer storefront in `apps/client`
-- shared backend API foundation in `apps/api`
-
-Planned after the customer storefront and vendor cabinet:
-
-- admin dashboard implementation
-- admin order/product/customer/supplier management
-- admin statistics and moderation workflows
-
-The admin app should not be reviewed as a completed product yet. It is a roadmap document and architectural placeholder.
-
----
-
-## Ecosystem Role
-
-E-PHARMACY is designed as one connected multi-app platform:
-
-```txt
-apps/client  -> customer storefront
-apps/vendor  -> pharmacy/vendor cabinet
-apps/admin   -> admin dashboard
-apps/api     -> one shared backend API
-```
-
-The admin panel will use the same shared backend API and shared workspace packages where they naturally fit. Current shared packages are intentionally lightweight and will grow as real reuse appears. It should reuse the ecosystem foundation created by the client and vendor apps instead of duplicating API, validation, and UI logic.
-
----
-
-## Planned Features
-
-### Admin authentication and protection
-
-- admin login flow
-- protected admin-only routes
-- role-based access through the shared API and real backend authorization
-- current admin user loading
-- redirect protection for unauthorized users
-
-### Dashboard
-
-- platform overview cards
-- order statistics
-- product statistics
-- customer statistics
-- supplier statistics
-- quick access to main admin sections
-
-### Orders management
-
-- orders table
-- order filters
-- order pagination
-- order details and status visibility
-- future-ready order lifecycle management
-
-### Products management
-
-- products table
-- filters and search
-- product create modal
-- product edit modal
-- product delete or archive flow
-- product details access
-
-### Customers management
-
-- customers table
-- customer filters
-- customer details readiness
-- order/customer relationship visibility
-
-### Suppliers management
-
-- suppliers table
-- supplier create modal
-- supplier edit modal
-- supplier delete/archive flow
-- supplier filters and pagination
-
-### UX and interface
-
-- admin dashboard layout with header and sidebar
-- reusable tables, filters, pagination, modals, forms, and status states
-- consistent visual system with the client and vendor apps
-- responsive behavior for smaller screens where needed
-
----
+- View dashboard statistics
+- Manage orders
+- Manage products
+- Manage customers
+- Manage suppliers
+- Use filters, tables, pagination, and modal forms
+- Support internal moderation and management workflows
 
 ## Planned Tech Stack
 
-### Frontend
+The expected frontend stack is aligned with the client app:
 
-- **Next.js**
-- **React**
-- **TypeScript**
-- **CSS Modules**
+- Next.js
+- React
+- TypeScript
+- CSS Modules
+- Shared workspace packages where reuse is useful
 
-### Shared workspace packages
+The admin app should use the same shared backend API from `apps/api`. It should not introduce a separate duplicated backend.
 
-- `@e-pharmacy/ui`
-- `@e-pharmacy/types`
-- `@e-pharmacy/api-client`
-- `@e-pharmacy/validation`
-- `@e-pharmacy/config`
-- `@e-pharmacy/utils`
+## Planned Structure
 
-### Backend integration
-
-- shared E-PHARMACY API
-- admin-protected routes
-- role-based authorization
-- MongoDB-backed operational data
-
----
-
-## Planned Project Structure
+The final structure may change during implementation, but the expected direction is:
 
 ```txt
 apps/admin/
@@ -155,140 +55,38 @@ apps/admin/
       products/
       customers/
       suppliers/
-      layout.tsx
-      page.tsx
     components/
-      auth/
-      dashboard/
-      layout/
-      orders/
-      products/
-      customers/
-      suppliers/
-      modals/
-      tables/
     hooks/
     lib/
-      api/
-      auth/
-      constants/
-      routes/
-      validations/
     providers/
     services/
     styles/
     types/
 ```
 
-The exact structure may change during implementation, but the app will follow the same modular and reusable approach used in the completed client app.
+## Planned Backend Areas
 
----
+The existing API can later be expanded with admin modules:
 
-## Planned Main Pages
+- Admin auth/current user
+- Dashboard statistics
+- Orders management
+- Products management
+- Customers management
+- Suppliers CRUD
+- Moderation workflows
 
-### Admin login
+## Local Development
 
-A protected authentication page for platform administrators.
+There is no runnable admin app package yet, so there is currently no `pnpm dev:admin` script.
 
-### Dashboard
-
-A high-level overview of platform metrics, operational counters, and quick admin actions.
-
-### Orders
-
-A management page for reviewing and filtering orders.
-
-### Products
-
-An admin product management page with table, filters, create/edit modals, and pagination.
-
-### Customers
-
-A customer management page for reviewing registered users and related platform data.
-
-### Suppliers
-
-A supplier management page with CRUD-ready table and modal flows.
-
----
-
-## Backend Dependency
-
-The admin app will be connected to the existing shared API from `apps/api`.
-
-Planned admin API areas:
-
-- admin auth and current user
-- dashboard statistics
-- orders management
-- products CRUD
-- customers list and details
-- suppliers CRUD
-- moderation workflows
-
-The backend will be extended inside the same shared API instead of creating a separate admin backend. Private admin mutations should follow the same production-oriented pattern as the client app: same-origin BFF routes, httpOnly cookie auth, backend authorization, and Origin/Referer validation.
-
----
-
-## Environment Variables
-
-Environment variables are not required for the current portfolio release because this app is roadmap-only. During implementation, the likely local setup will include:
-
-```env
-NEXT_PUBLIC_SITE_URL=http://localhost:3002
-NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
-```
-
----
-
-## Getting Started
-
-The app is not implemented yet. After development starts, the expected monorepo flow will be:
+When the app is implemented, the expected monorepo flow will be similar to:
 
 ```bash
 pnpm install
 pnpm dev:admin
 ```
 
-The final scripts will be added when the app package is created.
+## Note
 
----
-
-## Development Notes
-
-Planned implementation priorities:
-
-- create admin app foundation
-- add protected admin layout with sidebar and header
-- connect auth with shared API roles
-- build dashboard statistics
-- build orders table
-- build products CRUD flow
-- build customers and suppliers sections
-- reuse shared UI, types, API client, and validation wherever possible
-
----
-
-## Highlights
-
-What will make this app especially interesting:
-
-- admin dashboard for a multi-app pharmacy ecosystem
-- shared API and lightweight shared workspace contracts instead of duplicated logic
-- table-driven operational workflows
-- reusable modal and form patterns
-- role-based access and protected platform management
-
----
-
-## Author
-
-**Nataliia Skoropad**  
-Full-stack Developer  
-Backend development, Frontend development, UI/UX design
-
----
-
-## License
-
-Portfolio admin dashboard roadmap for a production-oriented multi-app e-commerce ecosystem.
+This README is intentionally short because the app is roadmap-only. Detailed implementation documentation should be added after real code exists.
