@@ -1,6 +1,7 @@
 import type { ApiPaginationResponse } from './api';
 import type { EntityId, ISODateString } from './base';
 import type { ShopStatus } from './auth';
+import type { ReviewModerationStatus } from './review';
 
 //=============================================================================
 
@@ -43,6 +44,22 @@ export type StoreReviewDto = {
   createdAt: ISODateString;
 };
 
+export type PendingStoreReviewDto = {
+  storeId: EntityId;
+  storeName: string;
+  reviewId: EntityId;
+  userName: string;
+  rating: number;
+  comment: string;
+  status: ReviewModerationStatus;
+  createdAt: ISODateString;
+};
+
+export type ModerateStoreReviewPayload = {
+  status: Extract<ReviewModerationStatus, 'approved' | 'rejected'>;
+  reason?: string;
+};
+
 export type StoresSortFilter =
   | 'newest'
   | 'rating-desc'
@@ -64,6 +81,13 @@ export type StoreDetailsResponse = { store: StoreDto };
 
 //=============================================================================
 export type StoreReviewsResponse = { items: StoreReviewDto[]; total: number };
+export type PendingStoreReviewsResponse = {
+  items: PendingStoreReviewDto[];
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
+};
 export type CreateStoreReviewPayload = { rating: number; comment: string };
 export type CreateStoreReviewResponse = { message: string };
 

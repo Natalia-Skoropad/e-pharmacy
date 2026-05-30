@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   createProductReview,
+  getPendingProductReviews,
   moderateProductReview,
   getProductDetails,
   getProductFilters,
@@ -12,17 +13,23 @@ import {
 
 import { USER_ROLES } from '../constants/auth';
 
-import { authenticate, optionalAuthenticate } from '../middlewares/auth.middleware';
+import {
+  authenticate,
+  optionalAuthenticate,
+} from '../middlewares/auth.middleware';
 import { reviewRateLimit } from '../middlewares/rateLimit.middleware';
 import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
+
 import {
   createProductReviewSchema,
   moderateProductReviewSchema,
+  pendingProductReviewsQuerySchema,
   productIdParamsSchema,
   productReviewParamsSchema,
   productsQuerySchema,
 } from '../schemas/product.schema';
+
 import { ctrlWrapper } from '../utils/ctrlWrapper';
 
 //===============================================================
@@ -40,8 +47,17 @@ productRoutes.get(
   ctrlWrapper(getProducts)
 );
 
-
 productRoutes.get('/filters', ctrlWrapper(getProductFilters));
+
+productRoutes.get(
+  '/reviews/pending',
+  authenticate,
+  authorizeRoles(USER_ROLES.ADMIN),
+  validate({
+    query: pendingProductReviewsQuerySchema,
+  }),
+  ctrlWrapper(getPendingProductReviews)
+);
 
 productRoutes.get(
   '/:productId/reviews',
@@ -61,7 +77,6 @@ productRoutes.post(
   }),
   ctrlWrapper(createProductReview)
 );
-
 
 productRoutes.patch(
   '/:productId/reviews/:reviewId/moderation',

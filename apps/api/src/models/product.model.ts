@@ -34,10 +34,31 @@ const productReviewSchema = new Schema(
       maxlength: [500, 'Review comment must be at most 500 characters'],
     },
 
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected', 'reported', 'hidden'],
+      default: 'pending',
+      required: true,
+      index: true,
+    },
+
     isModerated: {
       type: Boolean,
       default: false,
       required: true,
+    },
+
+    moderationReason: {
+      type: String,
+      trim: true,
+      maxlength: [300, 'Moderation reason must be at most 300 characters'],
+      default: undefined,
+    },
+
+    moderatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
     },
 
     moderatedAt: {
@@ -57,6 +78,8 @@ const productReviewSchema = new Schema(
 );
 
 //===============================================================
+
+productReviewSchema.index({ status: 1, createdAt: -1 });
 
 const productOfferSchema = new Schema(
   {

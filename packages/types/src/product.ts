@@ -1,5 +1,6 @@
 import type { ApiPaginationResponse } from './api';
 import type { EntityId, ISODateString } from './base';
+import type { ReviewModerationStatus } from './review';
 
 //=============================================================================
 
@@ -61,6 +62,22 @@ export type ProductReviewDto = {
   createdAt: ISODateString;
 };
 
+export type PendingProductReviewDto = {
+  productId: EntityId;
+  productName: string;
+  reviewId: EntityId;
+  userName: string;
+  rating: number;
+  comment: string;
+  status: ReviewModerationStatus;
+  createdAt: ISODateString;
+};
+
+export type ModerateProductReviewPayload = {
+  status: Extract<ReviewModerationStatus, 'approved' | 'rejected'>;
+  reason?: string;
+};
+
 export type ProductsQueryParams = {
   page?: number;
   perPage?: number;
@@ -105,6 +122,14 @@ export type ProductDetailsResponse = { product: ProductDto };
 export type ProductReviewsResponse = {
   items: ProductReviewDto[];
   total: number;
+};
+
+export type PendingProductReviewsResponse = {
+  items: PendingProductReviewDto[];
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
 };
 
 export type CreateProductReviewPayload = { rating: number; comment: string };

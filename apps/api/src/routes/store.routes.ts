@@ -2,20 +2,32 @@ import { Router } from 'express';
 
 import {
   createStoreReview,
+  getPendingStoreReviews,
   getStoreDetails,
   getStoreFilters,
   getStoreReviews,
   getStores,
+  moderateStoreReview,
   toggleFavoriteStore,
 } from '../controllers/store.controller';
-import { authenticate, optionalAuthenticate } from '../middlewares/auth.middleware';
+import { USER_ROLES } from '../constants/auth';
+import {
+  authenticate,
+  optionalAuthenticate,
+} from '../middlewares/auth.middleware';
 import { reviewRateLimit } from '../middlewares/rateLimit.middleware';
+import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
+
 import {
   createStoreReviewSchema,
+  moderateStoreReviewSchema,
+  pendingStoreReviewsQuerySchema,
   storeIdParamsSchema,
+  storeReviewParamsSchema,
   storesQuerySchema,
 } from '../schemas/store.schema';
+
 import { ctrlWrapper } from '../utils/ctrlWrapper';
 
 //===============================================================
@@ -33,8 +45,17 @@ storeRoutes.get(
   ctrlWrapper(getStores)
 );
 
-
 storeRoutes.get('/filters', ctrlWrapper(getStoreFilters));
+
+storeRoutes.get(
+  '/reviews/pending',
+  authenticate,
+  authorizeRoles(USER_ROLES.ADMIN),
+  validate({
+    query: pendingStoreReviewsQuerySchema,
+  }),
+  ctrlWrapper(getPendingStoreReviews)
+);
 
 storeRoutes.get(
   '/:storeId/reviews',
@@ -53,6 +74,17 @@ storeRoutes.post(
     body: createStoreReviewSchema,
   }),
   ctrlWrapper(createStoreReview)
+);
+
+storeRoutes.patch(
+  '/:storeId/reviews/:reviewId/moderation',
+  authenticate,
+  authorizeRoles(USER_ROLES.ADMIN),
+  validate({
+    params: storeReviewParamsSchema,
+    body: moderateStoreReviewSchema,
+  }),
+  ctrlWrapper(moderateStoreReview)
 );
 
 storeRoutes.patch(

@@ -63,8 +63,14 @@ export const productReviewParamsSchema = z.object({
   reviewId: mongoIdSchema,
 });
 
+export const pendingProductReviewsQuerySchema = z.object({
+  page: positivePageSchema,
+  perPage: perPageSchema,
+});
+
 export const moderateProductReviewSchema = z.object({
   status: z.enum(['approved', 'rejected']),
+  reason: z.string().trim().max(300).optional(),
 });
 
 export const productStoreParamsSchema = z.object({

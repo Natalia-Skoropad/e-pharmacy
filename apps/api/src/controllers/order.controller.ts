@@ -2,11 +2,13 @@ import type { Request, Response } from 'express';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { checkoutOrderSchema } from '../schemas/order.schema';
+
 import {
   checkoutOrderService,
   getOrderByIdService,
   getOrdersService,
 } from '../services/order.service';
+
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
@@ -17,7 +19,10 @@ type OrderParams = {
 
 //===============================================================
 
-export async function checkoutOrder(req: Request, res: Response): Promise<void> {
+export async function checkoutOrder(
+  req: Request,
+  res: Response
+): Promise<void> {
   const body = checkoutOrderSchema.parse(req.body);
   const data = await checkoutOrderService(req.user?.id ?? '', body);
 

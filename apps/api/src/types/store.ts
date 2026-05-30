@@ -8,12 +8,24 @@ export type ShopStatus = (typeof SHOP_STATUSES)[keyof typeof SHOP_STATUSES];
 
 //===============================================================
 
+export type ReviewModerationStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'reported'
+  | 'hidden';
+
+//===============================================================
+
 export type StoreReviewEntity = {
   userId?: Types.ObjectId;
   userName: string;
   rating: number;
   comment: string;
+  status: ReviewModerationStatus;
   isModerated: boolean;
+  moderationReason?: string;
+  moderatedBy?: Types.ObjectId;
   moderatedAt?: Date;
   createdAt: Date;
 };

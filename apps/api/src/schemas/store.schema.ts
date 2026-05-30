@@ -27,6 +27,20 @@ export const storeIdParamsSchema = z.object({
   storeId: z.string().regex(/^[a-f\d]{24}$/i, 'Store ID must be valid'),
 });
 
+export const storeReviewParamsSchema = z.object({
+  storeId: z.string().regex(/^[a-f\d]{24}$/i, 'Store ID must be valid'),
+  reviewId: z.string().regex(/^[a-f\d]{24}$/i, 'Review ID must be valid'),
+});
+
+export const pendingStoreReviewsQuerySchema = z.object({
+  page: positivePageSchema,
+  perPage: perPageSchema,
+});
+
+export const moderateStoreReviewSchema = z.object({
+  status: z.enum(['approved', 'rejected']),
+  reason: z.string().trim().max(300).optional(),
+});
 
 //===============================================================
 

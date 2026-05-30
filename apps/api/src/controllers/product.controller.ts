@@ -4,12 +4,14 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import {
   createProductReviewSchema,
   moderateProductReviewSchema,
+  pendingProductReviewsQuerySchema,
   productsQuerySchema,
 } from '../schemas/product.schema';
 import {
   createProductReviewService,
   getProductDetailsService,
   getProductFiltersService,
+  getPendingProductReviewsService,
   getProductReviewsService,
   getProductsService,
   moderateProductReviewService,
@@ -70,6 +72,23 @@ export async function getProductDetails(
 
 //===============================================================
 
+
+export async function getPendingProductReviews(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const query = pendingProductReviewsQuerySchema.parse(req.query);
+  const data = await getPendingProductReviewsService(query);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
 export async function getProductReviews(
   req: Request,
   res: Response
@@ -120,11 +139,11 @@ export async function moderateProductReview(
   };
   const body = moderateProductReviewSchema.parse(req.body);
 
-  const data = await moderateProductReviewService(
-    productId,
-    reviewId,
-    body.status
-  );
+  const data = await moderateProductReviewService(productId, reviewId, {
+    status: body.status,
+    reason: body.reason,
+    moderatedBy: req.user?.id,
+  });
 
   sendSuccessResponse({
     res,

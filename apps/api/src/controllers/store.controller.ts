@@ -1,18 +1,24 @@
 import type { Request, Response } from 'express';
-
 import { HTTP_STATUS } from '../constants/httpStatus';
+
 import {
   createStoreReviewSchema,
+  moderateStoreReviewSchema,
+  pendingStoreReviewsQuerySchema,
   storesQuerySchema,
 } from '../schemas/store.schema';
+
 import {
   createStoreReviewService,
   getStoreDetailsService,
   getStoreFiltersService,
+  getPendingStoreReviewsService,
   getStoreReviewsService,
   getStoresService,
+  moderateStoreReviewService,
   toggleFavoriteStoreService,
 } from '../services/store.service';
+
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
@@ -33,7 +39,6 @@ export async function getStores(req: Request, res: Response): Promise<void> {
     data,
   });
 }
-
 
 //===============================================================
 
@@ -59,6 +64,22 @@ export async function getStoreDetails(
   const { storeId } = req.params as StoreParams;
 
   const data = await getStoreDetailsService(storeId, req.user?.id);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function getPendingStoreReviews(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const query = pendingStoreReviewsQuerySchema.parse(req.query);
+  const data = await getPendingStoreReviewsService(query);
 
   sendSuccessResponse({
     res,
@@ -103,6 +124,30 @@ export async function createStoreReview(
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.CREATED,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function moderateStoreReview(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { storeId, reviewId } = req.params as StoreParams & {
+    reviewId: string;
+  };
+  const body = moderateStoreReviewSchema.parse(req.body);
+
+  const data = await moderateStoreReviewService(storeId, reviewId, {
+    status: body.status,
+    reason: body.reason,
+    moderatedBy: req.user?.id,
+  });
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
     data,
   });
 }

@@ -32,7 +32,7 @@ export const NOINDEX_ROUTES = [
 
 //===================================================================
 
-export const ROBOTS_DISALLOW_ROUTES = [
+export const ROBOTS_PRIVATE_ROUTE_ROOTS = [
   ROUTES.CART,
   ROUTES.CHECKOUT,
   ROUTES.LOGIN,
@@ -40,9 +40,13 @@ export const ROBOTS_DISALLOW_ROUTES = [
   ROUTES.PASSWORD_RECOVERY,
   ROUTES.RESET_PASSWORD,
   ROUTES.PROFILE,
-  '/admin',
-  '/vendor',
+  ROUTES.ADMIN,
+  ROUTES.VENDOR,
 ] as const;
+
+export const ROBOTS_DISALLOW_ROUTES = ROBOTS_PRIVATE_ROUTE_ROOTS.flatMap(
+  (route) => [route, `${route}/`]
+);
 
 //===================================================================
 

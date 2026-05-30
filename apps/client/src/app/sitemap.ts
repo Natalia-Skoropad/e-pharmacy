@@ -39,7 +39,8 @@ type SitemapEntry = {
 const PRODUCT_SITEMAP_PER_PAGE = 200;
 const STORE_SITEMAP_PER_PAGE = 100;
 const SITEMAP_REVALIDATE_SECONDS = 3600;
-const SITEMAP_MAX_PAGES_PER_RESOURCE = 10;
+const SITEMAP_FETCH_SAFETY_MAX_PAGES = 500;
+const SITEMAP_FETCH_BATCH_SIZE = 20;
 
 //===================================================================
 
@@ -85,26 +86,30 @@ async function fetchAllSitemapItems<TItem>(
     `${resourcePath}?page=1&perPage=${perPage}`
   );
 
-  const firstItems = firstPage?.data?.items ?? [];
+  const allItems = [...(firstPage?.data?.items ?? [])];
   const totalPages = Math.min(
     firstPage?.data?.totalPages ?? 1,
-    SITEMAP_MAX_PAGES_PER_RESOURCE
+    SITEMAP_FETCH_SAFETY_MAX_PAGES
   );
 
-  if (totalPages <= 1) return firstItems;
+  if (totalPages <= 1) return allItems;
 
-  const restPages = await Promise.all(
-    Array.from({ length: totalPages - 1 }, (_, index) =>
-      fetchSitemapPage<TItem>(
-        `${resourcePath}?page=${index + 2}&perPage=${perPage}`
+  for (let pageStart = 2; pageStart <= totalPages; pageStart += SITEMAP_FETCH_BATCH_SIZE) {
+    const pageEnd = Math.min(pageStart + SITEMAP_FETCH_BATCH_SIZE - 1, totalPages);
+    const pages = await Promise.all(
+      Array.from({ length: pageEnd - pageStart + 1 }, (_, index) =>
+        fetchSitemapPage<TItem>(
+          `${resourcePath}?page=${pageStart + index}&perPage=${perPage}`
+        )
       )
-    )
-  );
+    );
 
-  return restPages.reduce<TItem[]>(
-    (items, page) => items.concat(page?.data?.items ?? []),
-    firstItems
-  );
+    pages.forEach((page) => {
+      allItems.push(...(page?.data?.items ?? []));
+    });
+  }
+
+  return allItems;
 }
 
 //===================================================================

@@ -13,6 +13,7 @@ import type {
   StoreFilterOptionsResponseDto,
   StoreResponseDto,
   StoreReviewResponseDto,
+  ReviewModerationStatus,
 } from '../types/store';
 
 //===============================================================
@@ -46,9 +47,28 @@ type StoreReviewDocument = {
   userName: string;
   rating: number;
   comment: string;
+  status?: ReviewModerationStatus;
   isModerated: boolean;
+  moderationReason?: string;
+  moderatedBy?: Types.ObjectId;
   moderatedAt?: Date;
   createdAt: Date;
+};
+
+type PendingStoreReviewResponseDto = {
+  storeId: string;
+  storeName: string;
+  reviewId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  status: ReviewModerationStatus;
+  createdAt: string;
+};
+
+type PendingReviewsQuery = {
+  page: number;
+  perPage: number;
 };
 
 type StoreDocument = {
@@ -109,7 +129,9 @@ function getSort(sort: StoresQuery['sort']): Record<string, 1 | -1> {
 }
 
 function getModeratedStoreReviews(store: StoreDocument): StoreReviewDocument[] {
-  return (store.reviews ?? []).filter((review) => review.isModerated);
+  return (store.reviews ?? []).filter(
+    (review) => review.status === 'approved' || review.isModerated
+  );
 }
 
 //===============================================================
@@ -144,6 +166,26 @@ function serializeStoreReview(
     userName: review.userName,
     rating: review.rating,
     comment: review.comment,
+    createdAt: review.createdAt.toISOString(),
+  };
+}
+
+function isPendingStoreReview(review: StoreReviewDocument): boolean {
+  return review.status === 'pending' || (!review.status && !review.isModerated);
+}
+
+function serializePendingStoreReview(
+  store: Pick<StoreDocument, '_id' | 'name'>,
+  review: StoreReviewDocument
+): PendingStoreReviewResponseDto {
+  return {
+    storeId: store._id.toString(),
+    storeName: store.name,
+    reviewId: review._id.toString(),
+    userName: review.userName,
+    rating: review.rating,
+    comment: review.comment,
+    status: review.status ?? 'pending',
     createdAt: review.createdAt.toISOString(),
   };
 }
@@ -342,7 +384,7 @@ export async function getStoreReviewsService(storeId: string) {
   }
 
   const reviews = (store.reviews ?? [])
-    .filter((review) => review.isModerated)
+    .filter((review) => review.status === 'approved' || review.isModerated)
     .sort((a, b) => {
       const aTime = (a.moderatedAt ?? a.createdAt).getTime();
       const bTime = (b.moderatedAt ?? b.createdAt).getTime();
@@ -377,6 +419,7 @@ export async function createStoreReviewService(
           userName: input.userName,
           rating: input.rating,
           comment: input.comment,
+          status: 'pending',
           isModerated: false,
           createdAt: new Date(),
         },
@@ -386,6 +429,102 @@ export async function createStoreReviewService(
 
   return {
     message: 'Review was accepted and will be visible after moderation.',
+  };
+}
+
+//===============================================================
+
+
+export async function getPendingStoreReviewsService(query: PendingReviewsQuery) {
+  const stores = await Store.find({
+    reviews: { $elemMatch: { $or: [{ status: 'pending' }, { status: { $exists: false }, isModerated: false }] } },
+  })
+    .select('name reviews')
+    .lean<StoreDocument[]>();
+
+  const pendingReviews = stores
+    .flatMap((store) =>
+      (store.reviews ?? [])
+        .filter(isPendingStoreReview)
+        .map((review) => serializePendingStoreReview(store, review))
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+  const start = (query.page - 1) * query.perPage;
+  const items = pendingReviews.slice(start, start + query.perPage);
+
+  return {
+    items,
+    page: query.page,
+    perPage: query.perPage,
+    total: pendingReviews.length,
+    totalPages: Math.ceil(pendingReviews.length / query.perPage),
+  };
+}
+
+//===============================================================
+
+export async function moderateStoreReviewService(
+  storeId: string,
+  reviewId: string,
+  input: {
+    status: Extract<ReviewModerationStatus, 'approved' | 'rejected'>;
+    reason?: string;
+    moderatedBy?: string;
+  }
+) {
+  const moderatedAt = new Date();
+  const updateResult = await Store.updateOne(
+    { _id: storeId, 'reviews._id': reviewId },
+    {
+      $set: {
+        'reviews.$.status': input.status,
+        'reviews.$.isModerated': input.status === 'approved',
+        'reviews.$.moderationReason': input.reason,
+        'reviews.$.moderatedBy': input.moderatedBy
+          ? new Types.ObjectId(input.moderatedBy)
+          : undefined,
+        'reviews.$.moderatedAt': moderatedAt,
+      },
+    }
+  );
+
+  if (updateResult.matchedCount === 0) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Store review was not found.');
+  }
+
+  const store = await Store.findById(storeId)
+    .select('reviews')
+    .lean<StoreDocument | null>();
+
+  if (!store) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.STORE_NOT_FOUND);
+  }
+
+  const moderatedReviews = getModeratedStoreReviews(store);
+  const averageRating = getAverageRating(moderatedReviews) ?? 0;
+
+  await Store.updateOne(
+    { _id: storeId },
+    {
+      $set: {
+        rating: averageRating,
+        reviewsCount: moderatedReviews.length,
+      },
+    }
+  );
+
+  return {
+    message:
+      input.status === 'approved'
+        ? 'Store review was approved.'
+        : 'Store review was rejected.',
+    rating: averageRating,
+    reviewsCount: moderatedReviews.length,
+    moderatedAt: moderatedAt.toISOString(),
   };
 }
 

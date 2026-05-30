@@ -24,9 +24,10 @@ const storeReviewSchema = new Schema(
 
     status: {
       type: String,
-      enum: Object.values(SHOP_STATUSES),
-      default: SHOP_STATUSES.DRAFT,
+      enum: ['pending', 'approved', 'rejected', 'reported', 'hidden'],
+      default: 'pending',
       required: true,
+      index: true,
     },
 
     rating: {
@@ -50,6 +51,19 @@ const storeReviewSchema = new Schema(
       required: true,
     },
 
+    moderationReason: {
+      type: String,
+      trim: true,
+      maxlength: [300, 'Moderation reason must be at most 300 characters'],
+      default: undefined,
+    },
+
+    moderatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
     moderatedAt: {
       type: Date,
       default: undefined,
@@ -67,6 +81,8 @@ const storeReviewSchema = new Schema(
 );
 
 //===============================================================
+
+storeReviewSchema.index({ status: 1, createdAt: -1 });
 
 const storeSchema = new Schema<StoreEntity>(
   {

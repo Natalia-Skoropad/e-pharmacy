@@ -8,7 +8,8 @@ export type StoreReviewEntity = {
   userName: string;
   rating: number;
   comment: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'reported' | 'hidden';
+  moderationReason?: string;
   moderatedBy?: Schema.Types.ObjectId;
   moderatedAt?: Date;
   createdAt: Date;
@@ -52,10 +53,16 @@ const storeReviewSchema = new Schema<StoreReviewEntity>(
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
+      enum: ['pending', 'approved', 'rejected', 'reported', 'hidden'],
       default: 'pending',
       required: true,
       index: true,
+    },
+    moderationReason: {
+      type: String,
+      trim: true,
+      maxlength: [300, 'Moderation reason must be at most 300 characters'],
+      default: undefined,
     },
     moderatedBy: {
       type: Schema.Types.ObjectId,

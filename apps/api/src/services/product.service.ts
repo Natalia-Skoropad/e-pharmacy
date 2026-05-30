@@ -14,6 +14,7 @@ import type {
   ProductOfferResponseDto,
   ProductResponseDto,
   ProductReviewResponseDto,
+  ReviewModerationStatus,
 } from '../types/product';
 
 //===============================================================
@@ -61,9 +62,28 @@ type ProductReviewDocument = {
   userName: string;
   rating: number;
   comment: string;
+  status?: ReviewModerationStatus;
   isModerated: boolean;
+  moderationReason?: string;
+  moderatedBy?: Types.ObjectId;
   moderatedAt?: Date;
   createdAt: Date;
+};
+
+type PendingProductReviewResponseDto = {
+  productId: string;
+  productName: string;
+  reviewId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  status: ReviewModerationStatus;
+  createdAt: string;
+};
+
+type PendingReviewsQuery = {
+  page: number;
+  perPage: number;
 };
 
 //===============================================================
@@ -233,7 +253,8 @@ function getModeratedReviews(
   product: ProductDocument
 ): ProductReviewDocument[] {
   return (product.reviews ?? []).filter(
-    (review: ProductReviewDocument) => review.isModerated
+    (review: ProductReviewDocument) =>
+      review.status === 'approved' || review.isModerated
   );
 }
 
@@ -298,6 +319,26 @@ function serializeReview(
     userName: review.userName,
     rating: review.rating,
     comment: review.comment,
+    createdAt: review.createdAt.toISOString(),
+  };
+}
+
+function isPendingReview(review: ProductReviewDocument): boolean {
+  return review.status === 'pending' || (!review.status && !review.isModerated);
+}
+
+function serializePendingProductReview(
+  product: Pick<ProductDocument, '_id' | 'name'>,
+  review: ProductReviewDocument
+): PendingProductReviewResponseDto {
+  return {
+    productId: product._id.toString(),
+    productName: product.name,
+    reviewId: review._id.toString(),
+    userName: review.userName,
+    rating: review.rating,
+    comment: review.comment,
+    status: review.status ?? 'pending',
     createdAt: review.createdAt.toISOString(),
   };
 }
@@ -552,7 +593,10 @@ export async function getProductReviewsService(productId: string) {
   }
 
   const reviews = (product.reviews ?? [])
-    .filter((review: ProductReviewDocument) => review.isModerated)
+    .filter(
+      (review: ProductReviewDocument) =>
+        review.status === 'approved' || review.isModerated
+    )
     .sort((a: ProductReviewDocument, b: ProductReviewDocument) => {
       const aTime = (a.moderatedAt ?? a.createdAt).getTime();
       const bTime = (b.moderatedAt ?? b.createdAt).getTime();
@@ -589,6 +633,7 @@ export async function createProductReviewService(
           userName: input.userName,
           rating: input.rating,
           comment: input.comment,
+          status: 'pending',
           isModerated: false,
           createdAt: new Date(),
         },
@@ -653,17 +698,61 @@ export async function toggleFavoriteProductService(
 
 //===============================================================
 
+
+export async function getPendingProductReviewsService(
+  query: PendingReviewsQuery
+) {
+  const products = await Product.find({
+    reviews: { $elemMatch: { $or: [{ status: 'pending' }, { status: { $exists: false }, isModerated: false }] } },
+  })
+    .select('name reviews')
+    .lean<ProductDocument[]>();
+
+  const pendingReviews = products
+    .flatMap((product) =>
+      (product.reviews ?? [])
+        .filter(isPendingReview)
+        .map((review) => serializePendingProductReview(product, review))
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+  const start = (query.page - 1) * query.perPage;
+  const items = pendingReviews.slice(start, start + query.perPage);
+
+  return {
+    items,
+    page: query.page,
+    perPage: query.perPage,
+    total: pendingReviews.length,
+    totalPages: Math.ceil(pendingReviews.length / query.perPage),
+  };
+}
+
+//===============================================================
+
 export async function moderateProductReviewService(
   productId: string,
   reviewId: string,
-  status: 'approved' | 'rejected'
+  input: {
+    status: Extract<ReviewModerationStatus, 'approved' | 'rejected'>;
+    reason?: string;
+    moderatedBy?: string;
+  }
 ) {
   const moderatedAt = new Date();
   const updateResult = await Product.updateOne(
     { _id: productId, 'reviews._id': reviewId },
     {
       $set: {
-        'reviews.$.isModerated': status === 'approved',
+        'reviews.$.status': input.status,
+        'reviews.$.isModerated': input.status === 'approved',
+        'reviews.$.moderationReason': input.reason,
+        'reviews.$.moderatedBy': input.moderatedBy
+          ? new Types.ObjectId(input.moderatedBy)
+          : undefined,
         'reviews.$.moderatedAt': moderatedAt,
       },
     }
@@ -696,7 +785,7 @@ export async function moderateProductReviewService(
 
   return {
     message:
-      status === 'approved'
+      input.status === 'approved'
         ? 'Product review was approved.'
         : 'Product review was rejected.',
     rating: averageRating,
