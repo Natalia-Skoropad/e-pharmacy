@@ -319,6 +319,8 @@ AUTH_COOKIE_SAME_SITE=lax
 
 For production, update MongoDB, JWT, SMTP, CORS, cookie, and client URL values.
 
+When the client uses the Next.js BFF layer, browser mutations stay same-origin on the client domain and the BFF proxies them to this API. In that setup, `AUTH_COOKIE_SAME_SITE=lax` is preferred. Use `AUTH_COOKIE_SAME_SITE=none` only for intentional direct cross-site browser calls to the API.
+
 Current deployed client/API pair:
 
 ```env
@@ -433,9 +435,10 @@ Recommended production checklist:
 - set strong `JWT_SECRET`
 - configure SMTP credentials
 - configure allowed `CLIENT_ORIGINS`
-- choose proper `AUTH_COOKIE_SAME_SITE`
+- choose proper `AUTH_COOKIE_SAME_SITE` for the deployment model
 - set `AUTH_COOKIE_DOMAIN` only when needed
 - verify deployed CORS allows the production client origin
+- verify Origin/Referer validation allows the deployed client and blocks unexpected mutation origins
 - verify password reset email links
 - verify checkout creates real MongoDB orders
 
@@ -450,6 +453,7 @@ What makes this API especially interesting:
 - prepared role foundation for vendor and admin flows
 - typed validation-first architecture
 - secure password recovery flow through email
+- cookie-based mutations hardened with client-origin validation
 - reusable service/controller/middleware structure
 - MongoDB persistence for customer-facing business data
 
@@ -465,4 +469,4 @@ Backend development, Frontend development, UI/UX design
 
 ## License
 
-This project is created for educational and portfolio purposes.
+Portfolio shared backend API built with production-oriented architecture.

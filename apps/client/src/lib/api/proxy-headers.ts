@@ -24,10 +24,14 @@ export function createProxyHeaders(
   const accept = request.headers.get('accept');
   const contentType = request.headers.get('content-type');
   const cookie = request.headers.get('cookie');
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
 
   if (forwardAccept && accept) headers.set('Accept', accept);
   if (forwardContentType && contentType) headers.set('Content-Type', contentType);
   if (forwardCookie && cookie) headers.set('Cookie', cookie);
+  if (origin) headers.set('Origin', origin);
+  if (referer) headers.set('Referer', referer);
 
   return headers;
 }

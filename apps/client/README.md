@@ -499,7 +499,18 @@ Public catalog/detail pages use revalidation to keep server-rendered content rea
 
 ## API Integration
 
-The client communicates with the shared backend API from `apps/api`.
+The client communicates with the shared backend API from `apps/api` through two intentional paths:
+
+```txt
+Public/server data -> Express API -> MongoDB
+Browser private flow -> Next.js same-origin /api/* route handlers -> Express API -> MongoDB
+```
+
+Public catalog data, SEO metadata, sitemap data, and read-only pages can be loaded server-side from the backend API. Auth, cart, checkout, orders, profile updates, and other customer-only mutations go through the Next.js BFF route handlers under `apps/client/src/app/api/*`.
+
+This BFF layer keeps browser requests same-origin, forwards cookies to the backend, and copies backend `Set-Cookie` headers back to the client response. The backend remains the source of truth for private access through `authenticate` middleware and the real httpOnly auth cookie.
+
+The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker for redirects and auth bootstrap. It is not a security token and does not authorize backend data access.
 
 Main API areas used by the client:
 
@@ -551,7 +562,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 ```
 
-For production, replace these values with the deployed client and API URLs.
+For production, replace these values with the deployed client and API URLs. Client-side private flows should continue to call same-origin `/api/*` routes, while those route handlers use `NEXT_PUBLIC_API_BASE_URL` to reach the backend.
 
 ---
 
@@ -624,7 +635,8 @@ Recommended production checklist:
 
 - set production `NEXT_PUBLIC_SITE_URL`
 - set production `NEXT_PUBLIC_API_BASE_URL`
-- verify API CORS and cookie settings
+- verify API CORS, cookie, and Origin/Referer settings
+- verify private auth/cart/order flows go through same-origin `/api/*` route handlers
 - verify sitemap and robots rules
 - confirm private routes are not indexed
 - confirm checkout and order creation work with the deployed API
@@ -640,7 +652,7 @@ What makes this client app especially interesting:
 - SEO-friendly routing for catalogs and detail pages
 - reusable UI system with consistent buttons, cards, modals, tabs, toasts, and forms
 - responsive design across mobile, tablet, and desktop
-- backend-powered cart and order flow
+- backend-powered cart and order flow through a Next.js BFF layer
 - thoughtful empty, loading, error, success, and not-found states
 
 ---
@@ -655,4 +667,4 @@ Backend development, Frontend development, UI/UX design
 
 ## License
 
-This project is created for educational and portfolio purposes.
+Portfolio customer storefront built with production-oriented e-commerce architecture.

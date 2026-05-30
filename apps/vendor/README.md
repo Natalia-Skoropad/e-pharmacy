@@ -43,7 +43,7 @@ The vendor cabinet will use the same shared backend API, shared types, shared va
 
 - vendor login flow
 - protected vendor-only routes
-- role-based access through the shared API
+- role-based access through the shared API and real backend authorization
 - current vendor profile loading
 - redirect protection for unauthorized users
 
@@ -188,7 +188,7 @@ Planned vendor API areas:
 - client goods data
 - vendor order-related data
 
-The backend will be extended inside the same shared API instead of creating a separate vendor backend.
+The backend will be extended inside the same shared API instead of creating a separate vendor backend. Private vendor mutations should follow the same production-oriented pattern as the client app: same-origin BFF routes, httpOnly cookie auth, backend authorization, and Origin/Referer validation.
 
 ---
 
@@ -252,4 +252,4 @@ Backend development, Frontend development, UI/UX design
 
 ## License
 
-This project is created for educational and portfolio purposes.
+Portfolio vendor cabinet roadmap for a production-oriented multi-app e-commerce ecosystem.

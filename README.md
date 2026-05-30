@@ -1,6 +1,6 @@
 # E-PHARMACY
 
-E-PHARMACY is a monorepo for an online pharmacy ecosystem. The project is built as one connected platform instead of several duplicated applications: one shared backend API, one MongoDB database, three frontend apps, and shared packages for reusable logic.
+E-PHARMACY is a portfolio full-stack e-commerce project for an online pharmacy ecosystem, built with production-oriented architecture. The project is structured as one connected platform instead of several duplicated applications: one shared backend API, one MongoDB database, three frontend apps, and shared packages for reusable logic.
 
 ## Ecosystem
 
@@ -99,16 +99,23 @@ AUTH_COOKIE_SAME_SITE=lax
 
 ### API / Render
 
-For separate deployed frontend/backend domains, use `AUTH_COOKIE_SAME_SITE=none`.
-This is required so browser requests from the Vercel client can include the API httpOnly auth cookie.
+The deployed client uses a Next.js BFF layer for private customer flows. Browser requests for auth, cart, and orders go to same-origin `/api/*` route handlers first, and those handlers proxy the request to the Express API.
+
+```txt
+Browser -> Next.js same-origin /api/* route handlers -> Express API -> MongoDB
+```
+
+For this architecture, the API still owns authentication and authorization. It sets the real httpOnly auth cookie, the Next BFF copies `Set-Cookie` back to the browser response, and future private requests forward cookies from the BFF to the backend.
 
 ```env
 NODE_ENV=production
 CLIENT_ORIGINS=https://e-pharmacy-client-ten.vercel.app
 CLIENT_APP_URL=https://e-pharmacy-client-ten.vercel.app
 AUTH_COOKIE_DOMAIN=
-AUTH_COOKIE_SAME_SITE=none
+AUTH_COOKIE_SAME_SITE=lax
 ```
+
+`AUTH_COOKIE_SAME_SITE=lax` fits the same-origin BFF flow because the browser communicates with the client domain first. Use `AUTH_COOKIE_SAME_SITE=none` only if the browser is intentionally allowed to call the API directly across different sites.
 
 Also configure production MongoDB, JWT, SMTP, and other API secrets in the API hosting provider.
 
@@ -119,9 +126,13 @@ NEXT_PUBLIC_SITE_URL=https://e-pharmacy-client-ten.vercel.app
 NEXT_PUBLIC_API_BASE_URL=https://e-pharmacy-api-pbaz.onrender.com
 ```
 
-### Auth guard note
+### Client/API request strategy
 
-When the client and API are deployed on separate domains, the Next proxy on the client domain cannot read the API httpOnly cookie. In this deployment mode, private pages rely on the client auth bootstrap calling `getCurrentUser()` with `credentials: 'include'`. A full server/proxy guard requires a shared parent domain or a BFF/API proxy through Next.
+- Public catalog, product, pharmacy, sitemap, and metadata data may be fetched server-side from the shared backend API.
+- Private mutations and customer session flows use the Next BFF: auth, cart, checkout, orders, profile, and password updates.
+- Backend middleware validates the real auth cookie for private data. UI guards and redirects are only user-experience helpers.
+- The client-readable `e_pharmacy_auth_ready` marker cookie is not an auth token. It is used only for route redirects and auth bootstrap convenience.
+- Cookie-based mutations are protected with a same-origin BFF flow and backend Origin/Referer validation for non-safe HTTP methods. For a larger production deployment, this can be extended with CSRF tokens.
 
 ## Getting Started
 
@@ -175,7 +186,7 @@ The client app uses clean public routes, dynamic metadata, canonical URLs, Open 
 
 - `apps/client` is the completed release target for the current portfolio version.
 - `apps/vendor` and `apps/admin` are roadmap-only applications for now.
-- Auth uses an httpOnly cookie through the shared API; production cross-domain deployment requires `AUTH_COOKIE_SAME_SITE=none`.
+- Auth uses an httpOnly cookie issued by the shared API and transported through the client BFF for private same-origin flows.
 - Sitemap generation is suitable for the current dataset. For a larger production catalog, add a dedicated backend SEO endpoint that returns only sitemap-ready fields.
 
 ## Author
@@ -186,4 +197,4 @@ Backend development, Frontend development, UI/UX design
 
 ## License
 
-This project is created for educational and portfolio purposes.
+Portfolio full-stack e-commerce project built with production-oriented architecture.

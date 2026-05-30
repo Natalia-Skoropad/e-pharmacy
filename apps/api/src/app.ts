@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import { env } from './config/env';
 import { errorMiddleware } from './middlewares/error.middleware';
 import { notFoundMiddleware } from './middlewares/notFound.middleware';
+import { validateMutationOrigin } from './middlewares/origin.middleware';
 import { routes } from './routes';
 
 //===============================================================
@@ -28,6 +29,8 @@ app.use(
     credentials: true,
   })
 );
+
+app.use(validateMutationOrigin);
 
 app.use(express.json({ limit: '2mb' }));
 

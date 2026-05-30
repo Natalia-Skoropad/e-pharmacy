@@ -44,7 +44,7 @@ The admin panel will use the same shared backend API and the same shared package
 
 - admin login flow
 - protected admin-only routes
-- role-based access through the shared API
+- role-based access through the shared API and real backend authorization
 - current admin user loading
 - redirect protection for unauthorized users
 
@@ -209,7 +209,7 @@ Planned admin API areas:
 - suppliers CRUD
 - moderation workflows
 
-The backend will be extended inside the same shared API instead of creating a separate admin backend.
+The backend will be extended inside the same shared API instead of creating a separate admin backend. Private admin mutations should follow the same production-oriented pattern as the client app: same-origin BFF routes, httpOnly cookie auth, backend authorization, and Origin/Referer validation.
 
 ---
 
@@ -274,4 +274,4 @@ Backend development, Frontend development, UI/UX design
 
 ## License
 
-This project is created for educational and portfolio purposes.
+Portfolio admin dashboard roadmap for a production-oriented multi-app e-commerce ecosystem.
