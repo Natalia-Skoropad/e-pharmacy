@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
+
 import { CloseIconButton } from './CloseIconButton';
+import styles from './ModalBase.module.css';
+import { joinClassNames } from './classNames';
 
 //=============================================================================
 
@@ -31,15 +34,15 @@ export function ModalBase({
   if (!isOpen) return null;
 
   return (
-    <div className={className} role="presentation">
+    <div className={joinClassNames(styles.root, className)} role="presentation">
       <button
         type="button"
-        className={backdropClassName}
+        className={joinClassNames(styles.backdrop, backdropClassName)}
         aria-label={closeLabel ?? 'Close modal'}
         onClick={onClose}
       />
       <div
-        className={contentClassName}
+        className={joinClassNames(styles.content, contentClassName)}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -50,7 +53,7 @@ export function ModalBase({
             onClick={onClose}
           />
         ) : null}
-        {title ? <h2>{title}</h2> : null}
+        {title ? <h2 className={styles.title}>{title}</h2> : null}
         {children}
       </div>
     </div>

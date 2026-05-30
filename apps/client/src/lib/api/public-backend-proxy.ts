@@ -21,8 +21,6 @@ type PublicBackendProxyOptions = {
 
 //===================================================================
 
-//===================================================================
-
 function createPublicCacheControl(revalidate: number): string {
   return `public, s-maxage=${revalidate}, stale-while-revalidate=${STALE_WHILE_REVALIDATE_SECONDS}`;
 }
@@ -38,7 +36,10 @@ export async function proxyPublicBackendRequest({
   request,
   revalidate = DEFAULT_PUBLIC_REVALIDATE_SECONDS,
 }: PublicBackendProxyOptions) {
-  const pathWithSearch = appendSearchParams(backendPath, request.nextUrl.search);
+  const pathWithSearch = appendSearchParams(
+    backendPath,
+    request.nextUrl.search
+  );
 
   const response = await fetch(createApiUrl(pathWithSearch), {
     method: 'GET',

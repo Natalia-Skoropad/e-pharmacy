@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import { adminRoutes } from './admin.routes';
 import { authRoutes } from './auth.routes';
 import { cartRoutes } from './cart.routes';
 import { healthRoutes } from './health.routes';
@@ -13,6 +14,7 @@ export const routes = Router();
 
 //===============================================================
 
+routes.use('/admin', adminRoutes);
 routes.use('/auth', authRoutes);
 routes.use('/cart', cartRoutes);
 routes.use('/health', healthRoutes);

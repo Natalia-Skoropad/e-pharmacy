@@ -1,5 +1,8 @@
 import type { HTMLAttributes } from 'react';
 
+import styles from './LoadingSpinner.module.css';
+import { joinClassNames } from './classNames';
+
 //=============================================================================
 
 export type LoadingSpinnerProps = HTMLAttributes<HTMLSpanElement> & {
@@ -14,8 +17,13 @@ export function LoadingSpinner({
   ...props
 }: LoadingSpinnerProps) {
   return (
-    <span className={className} role="status" aria-label={label} {...props}>
-      <span aria-hidden="true">⏳</span>
+    <span
+      className={joinClassNames(styles.spinner, className)}
+      role="status"
+      aria-label={label}
+      {...props}
+    >
+      <span className={styles.icon} aria-hidden="true" />
     </span>
   );
 }

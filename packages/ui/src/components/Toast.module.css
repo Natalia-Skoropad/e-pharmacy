@@ -1,0 +1,19 @@
+.toast {
+  border-radius: var(--ui-toast-radius, 12px);
+  padding: var(--ui-toast-padding, 12px 16px);
+  box-shadow: var(--ui-toast-shadow, 0 10px 30px rgba(29, 30, 33, 0.14));
+  background-color: var(--ui-color-surface, #ffffff);
+  color: var(--ui-color-text, #1d1e21);
+}
+
+.success {
+  border-left: 4px solid var(--ui-color-success, #59b17a);
+}
+
+.error {
+  border-left: 4px solid var(--ui-color-danger, #e85050);
+}
+
+.info {
+  border-left: 4px solid var(--ui-color-info, #2f80ed);
+}

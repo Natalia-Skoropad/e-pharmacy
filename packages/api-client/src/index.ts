@@ -98,12 +98,9 @@ export const apiRoutes = {
 
   admin: {
     vendors: '/admin/vendors',
-    approveVendor: (vendorId: EntityId) => `/admin/vendors/${vendorId}/approve`,
-    rejectVendor: (vendorId: EntityId) => `/admin/vendors/${vendorId}/reject`,
-    blockVendor: (vendorId: EntityId) => `/admin/vendors/${vendorId}/block`,
+    vendorStatus: (vendorId: EntityId) => `/admin/vendors/${vendorId}/status`,
     shops: '/admin/shops',
-    approveShop: (shopId: EntityId) => `/admin/shops/${shopId}/approve`,
-    suspendShop: (shopId: EntityId) => `/admin/shops/${shopId}/suspend`,
+    shopStatus: (shopId: EntityId) => `/admin/shops/${shopId}/status`,
   },
 } as const;
 

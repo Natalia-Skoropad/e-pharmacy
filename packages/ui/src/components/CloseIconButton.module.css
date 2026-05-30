@@ -1,0 +1,27 @@
+.button {
+  position: absolute;
+  top: var(--ui-close-button-offset, 16px);
+  right: var(--ui-close-button-offset, 16px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ui-close-button-size, 32px);
+  height: var(--ui-close-button-size, 32px);
+  border: 0;
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--ui-color-text, #1d1e21);
+  font-size: var(--ui-close-button-font-size, 28px);
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--ui-transition, 180ms ease);
+}
+
+.button:hover {
+  background-color: var(--ui-color-surface-muted, #f3f4f6);
+}
+
+.button:focus-visible {
+  outline: var(--ui-focus-outline-width, 3px) solid var(--ui-focus-color, rgba(89, 177, 122, 0.35));
+  outline-offset: var(--ui-focus-outline-offset, 3px);
+}

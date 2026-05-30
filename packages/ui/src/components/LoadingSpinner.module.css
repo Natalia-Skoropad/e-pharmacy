@@ -1,0 +1,22 @@
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ui-spinner-size, 24px);
+  height: var(--ui-spinner-size, 24px);
+}
+
+.icon {
+  width: 100%;
+  height: 100%;
+  border: var(--ui-spinner-border-width, 3px) solid var(--ui-color-border, rgba(29, 30, 33, 0.12));
+  border-top-color: var(--ui-color-primary, #59b17a);
+  border-radius: 50%;
+  animation: ui-spin var(--ui-spinner-duration, 800ms) linear infinite;
+}
+
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

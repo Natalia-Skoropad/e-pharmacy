@@ -1,5 +1,3 @@
-//===================================================================
-
 export function isNativeRequestBody(body: unknown): body is BodyInit {
   if (typeof body === 'string') return true;
   if (body instanceof ArrayBuffer) return true;

@@ -1,5 +1,8 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
+import styles from './Button.module.css';
+import { joinClassNames } from './classNames';
+
 //=============================================================================
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -32,7 +35,12 @@ export function Button({
   return (
     <button
       type={type}
-      className={className}
+      className={joinClassNames(
+        styles.button,
+        styles[size],
+        styles[variant],
+        className
+      )}
       data-size={size}
       data-variant={variant}
       disabled={disabled || isLoading}

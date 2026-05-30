@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
 
+import styles from './Pagination.module.css';
+import { joinClassNames } from './classNames';
+
 //=============================================================================
 
 export type PaginationItem = {
@@ -28,10 +31,10 @@ export function Pagination({
   itemClassName,
 }: PaginationProps) {
   return (
-    <nav className={className} aria-label={ariaLabel}>
-      <ul className={listClassName}>
+    <nav className={joinClassNames(styles.nav, className)} aria-label={ariaLabel}>
+      <ul className={joinClassNames(styles.list, listClassName)}>
         {items.map((item) => (
-          <li key={item.page} className={itemClassName}>
+          <li key={item.page} className={joinClassNames(styles.item, itemClassName)}>
             {item.href && !item.isDisabled && !item.isCurrent ? (
               <a href={item.href}>{item.label ?? item.page}</a>
             ) : (

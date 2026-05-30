@@ -1,4 +1,8 @@
+import { useId } from 'react';
 import type { SelectHTMLAttributes } from 'react';
+
+import styles from './SelectField.module.css';
+import { joinClassNames } from './classNames';
 
 //=============================================================================
 
@@ -16,6 +20,8 @@ export type SelectFieldProps<TValue extends string = string> = Omit<
   options: SelectOption<TValue>[];
   placeholder?: string;
   error?: string;
+  selectClassName?: string;
+  errorClassName?: string;
 };
 
 //=============================================================================
@@ -27,16 +33,20 @@ export function SelectField<TValue extends string = string>({
   error,
   id,
   className,
+  selectClassName,
+  errorClassName,
   ...props
 }: SelectFieldProps<TValue>) {
-  const selectId = id ?? props.name;
-  const errorId = error && selectId ? `${selectId}-error` : undefined;
+  const generatedId = useId();
+  const selectId = id ?? props.name ?? generatedId;
+  const errorId = error ? `${selectId}-error` : undefined;
 
   return (
-    <label className={className} htmlFor={selectId}>
+    <label className={joinClassNames(styles.field, className)} htmlFor={selectId}>
       <span>{label}</span>
       <select
         id={selectId}
+        className={joinClassNames(styles.select, selectClassName)}
         aria-invalid={Boolean(error)}
         aria-describedby={errorId}
         {...props}
@@ -52,7 +62,11 @@ export function SelectField<TValue extends string = string>({
           </option>
         ))}
       </select>
-      {error ? <span id={errorId}>{error}</span> : null}
+      {error ? (
+        <span id={errorId} className={joinClassNames(styles.error, errorClassName)}>
+          {error}
+        </span>
+      ) : null}
     </label>
   );
 }

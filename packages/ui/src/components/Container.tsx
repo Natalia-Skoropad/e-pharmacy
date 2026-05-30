@@ -1,5 +1,8 @@
 import type { ElementType, HTMLAttributes, ReactNode } from 'react';
 
+import styles from './Container.module.css';
+import { joinClassNames } from './classNames';
+
 //=============================================================================
 
 export type ContainerProps<TElement extends ElementType = 'div'> =
@@ -19,7 +22,7 @@ export function Container<TElement extends ElementType = 'div'>({
   const Component = as ?? 'div';
 
   return (
-    <Component className={className} {...props}>
+    <Component className={joinClassNames(styles.container, className)} {...props}>
       {children}
     </Component>
   );
