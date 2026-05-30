@@ -19,7 +19,24 @@ It will allow administrators to:
 - create and edit products and suppliers through modal forms
 - support moderation and internal management flows
 
-> Current status: development will start after the vendor app is completed. The folder currently acts as a placeholder in the monorepo so the final ecosystem architecture stays visible and prepared.
+> Current status: roadmap only. The current portfolio release does not include an implemented admin dashboard yet. This folder is kept in the monorepo to document the planned ecosystem direction and future application boundary.
+
+---
+
+## Current Release Boundary
+
+Current portfolio release includes:
+
+- completed customer storefront in `apps/client`
+- shared backend API foundation in `apps/api`
+
+Planned after the customer storefront and vendor cabinet:
+
+- admin dashboard implementation
+- admin order/product/customer/supplier management
+- admin statistics and moderation workflows
+
+The admin app should not be reviewed as a completed product yet. It is a roadmap document and architectural placeholder.
 
 ---
 
@@ -34,7 +51,7 @@ apps/admin   -> admin dashboard
 apps/api     -> one shared backend API
 ```
 
-The admin panel will use the same shared backend API and the same shared packages for types, validation, configuration, utilities, and UI patterns where possible. It should reuse the ecosystem foundation created by the client and vendor apps instead of duplicating API, validation, and UI logic.
+The admin panel will use the same shared backend API and shared workspace packages where they naturally fit. Current shared packages are intentionally lightweight and will grow as real reuse appears. It should reuse the ecosystem foundation created by the client and vendor apps instead of duplicating API, validation, and UI logic.
 
 ---
 
@@ -215,7 +232,7 @@ The backend will be extended inside the same shared API instead of creating a se
 
 ## Environment Variables
 
-The final variables will be defined during implementation. A likely local setup will include:
+Environment variables are not required for the current portfolio release because this app is roadmap-only. During implementation, the likely local setup will include:
 
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3002
@@ -257,7 +274,7 @@ Planned implementation priorities:
 What will make this app especially interesting:
 
 - admin dashboard for a multi-app pharmacy ecosystem
-- shared API and shared packages instead of duplicated logic
+- shared API and lightweight shared workspace contracts instead of duplicated logic
 - table-driven operational workflows
 - reusable modal and form patterns
 - role-based access and protected platform management

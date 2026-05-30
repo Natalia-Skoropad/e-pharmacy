@@ -18,7 +18,25 @@ It will allow pharmacy owners to:
 - view statistics
 - inspect customer goods and order-related data
 
-> Current status: development is planned to start in the next few days. The folder currently acts as a placeholder in the monorepo so the ecosystem structure is clear from the beginning.
+> Current status: roadmap only. The current portfolio release does not include an implemented vendor cabinet yet. This folder is kept in the monorepo to document the planned ecosystem direction and future application boundary.
+
+---
+
+## Current Release Boundary
+
+Current portfolio release includes:
+
+- completed customer storefront in `apps/client`
+- shared backend API foundation in `apps/api`
+
+Planned after the customer storefront release:
+
+- vendor cabinet implementation
+- vendor shop management
+- vendor medicine CRUD
+- vendor statistics and customer goods workflows
+
+The vendor app should not be reviewed as a completed product yet. It is a roadmap document and architectural placeholder.
 
 ---
 
@@ -33,7 +51,7 @@ apps/admin   -> admin dashboard
 apps/api     -> one shared backend API
 ```
 
-The vendor cabinet will use the same shared backend API, shared types, shared validation, and shared UI patterns where possible. The completed client app already defines many reusable patterns for forms, modals, protected layouts, empty states, and API integration, so the vendor app should extend the ecosystem instead of starting from a blank pharmacy shelf.
+The vendor cabinet will use the same shared backend API and shared workspace packages where they naturally fit. Current shared packages are intentionally lightweight and will grow as real reuse appears. The completed client app already defines many reusable patterns for forms, modals, protected layouts, empty states, and API integration, so the vendor app should extend the ecosystem instead of starting from a blank pharmacy shelf.
 
 ---
 
@@ -194,7 +212,7 @@ The backend will be extended inside the same shared API instead of creating a se
 
 ## Environment Variables
 
-The final variables will be defined during implementation. A likely local setup will include:
+Environment variables are not required for the current portfolio release because this app is roadmap-only. During implementation, the likely local setup will include:
 
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3001

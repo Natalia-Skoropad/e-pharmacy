@@ -180,16 +180,16 @@ https://e-pharmacy-client-ten.vercel.app
 
 - **Lucide React**
 - **clsx**
-- shared internal UI package
+- lightweight shared UI contracts
 - shared internal utilities package
 
 ### Data and backend integration
 
 - shared backend API
-- shared API client package
-- shared TypeScript types
-- shared validation package
-- authenticated requests through the backend API
+- same-origin Next.js BFF route handlers for private customer flows
+- lightweight shared API response contracts
+- shared TypeScript generic types
+- shared validation constants and sanitizers
 
 ### Monorepo tooling
 
@@ -555,14 +555,23 @@ Main API areas used by the client:
 
 ## Environment Variables
 
-Create an `.env.local` file inside `apps/client`.
+Create an `.env.local` file inside `apps/client`. The source of truth for client keys is `apps/client/.env.example`.
 
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 ```
 
+### Variable reference
+
+| Variable | Used for | Example |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | canonical URLs, metadata, sitemap, robots, absolute public URLs | `http://localhost:3000` |
+| `NEXT_PUBLIC_API_BASE_URL` | backend URL used by server-side data fetches and Next.js BFF route handlers | `http://localhost:4000` |
+
 For production, replace these values with the deployed client and API URLs. Client-side private flows should continue to call same-origin `/api/*` routes, while those route handlers use `NEXT_PUBLIC_API_BASE_URL` to reach the backend.
+
+The browser should not call private backend mutations directly. Auth, cart, checkout, orders, profile updates, password updates, and logout should keep using the same-origin BFF route handlers.
 
 ---
 
@@ -648,7 +657,7 @@ Recommended production checklist:
 What makes this client app especially interesting:
 
 - full customer storefront flow from catalog discovery to confirmed order
-- clean monorepo architecture with shared packages
+- clean monorepo architecture with lightweight shared workspace contracts
 - SEO-friendly routing for catalogs and detail pages
 - reusable UI system with consistent buttons, cards, modals, tabs, toasts, and forms
 - responsive design across mobile, tablet, and desktop

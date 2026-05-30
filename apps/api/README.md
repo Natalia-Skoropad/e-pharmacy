@@ -144,7 +144,7 @@ Future vendor and admin development will extend the current API with additional 
 
 - **pnpm workspaces**
 - **Turborepo**
-- shared validation package
+- shared validation package for reusable validation constants and sanitizers
 
 ---
 
@@ -293,7 +293,7 @@ GET  /orders/:orderId
 
 ## Environment Variables
 
-Create an `.env` file inside `apps/api`.
+Create an `.env` file inside `apps/api`. The source of truth for API keys is `apps/api/.env.example`.
 
 ```env
 NODE_ENV=development
@@ -316,6 +316,22 @@ SMTP_FROM="E-PHARMACY <no-reply@your-domain.com>"
 AUTH_COOKIE_DOMAIN=
 AUTH_COOKIE_SAME_SITE=lax
 ```
+
+### Variable reference
+
+| Variable | Used for | Notes |
+| --- | --- | --- |
+| `NODE_ENV` | runtime mode | `development` or `production` |
+| `PORT` | API port | local default is `4000` |
+| `MONGODB_URI` | MongoDB connection | required for API start and seed scripts |
+| `JWT_SECRET` | signing auth/reset tokens | must be strong in production |
+| `JWT_EXPIRES_IN` | auth token lifetime | current example: `7d` |
+| `JWT_RESET_EXPIRES_IN` | password reset token lifetime | current example: `15m` |
+| `CLIENT_ORIGINS` | allowed frontend origins for CORS and mutation Origin/Referer validation | comma-separated if more than one origin is needed |
+| `CLIENT_APP_URL` | public client URL for password reset links and redirects | should match the deployed client domain |
+| `SMTP_*` | password recovery email delivery | configured through the chosen SMTP provider |
+| `AUTH_COOKIE_DOMAIN` | optional cookie domain | leave empty for separate Vercel + Render domains |
+| `AUTH_COOKIE_SAME_SITE` | cookie same-site mode | `lax` for same-origin BFF flow; `none` only for intentional direct cross-site browser API calls |
 
 For production, update MongoDB, JWT, SMTP, CORS, cookie, and client URL values.
 
