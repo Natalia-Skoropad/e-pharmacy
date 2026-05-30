@@ -1,13 +1,38 @@
 # E-PHARMACY
 
-E-PHARMACY is a portfolio full-stack e-commerce project for an online pharmacy ecosystem, built with production-oriented architecture. The project is organized as one connected monorepo instead of duplicated standalone apps: a completed customer storefront, one shared Express/MongoDB API foundation, and planned vendor/admin applications for future expansion.
+E-PHARMACY is a portfolio full-stack e-commerce project for an online pharmacy ecosystem, built with production-oriented architecture and deployment-ready configuration.
 
-## Project Preview
+The current release focuses on a completed customer storefront and a shared Express/MongoDB API foundation. Vendor and admin apps are documented as roadmap-only ecosystem extensions, not as completed production modules.
+
+## Live Demo
 
 **Live client:** https://e-pharmacy-client-ten.vercel.app  
 **Live API:** https://e-pharmacy-api-pbaz.onrender.com
 
-### Screenshots
+## Project Overview
+
+E-PHARMACY is organized as one connected monorepo instead of duplicated standalone applications. The project demonstrates a customer-facing e-commerce flow for pharmacies and medicines, backend persistence, cookie-based authentication, a same-origin Next.js BFF layer for private browser flows, SEO-oriented public pages, and a roadmap for future vendor/admin work.
+
+The main portfolio value is the production-minded architecture: one backend API, one MongoDB database, a customer storefront, shared workspace packages, clear release boundaries, and deployment notes that match the current code.
+
+## Current Portfolio Release
+
+Current portfolio release includes:
+
+- completed customer storefront in `apps/client`
+- shared backend API foundation in `apps/api`
+- MongoDB persistence for users, products, stores, cart, reviews, favorites, and orders
+- same-origin Next.js BFF route handlers for private customer flows
+- production-oriented SEO, auth, cart, checkout, profile, reviews, favorites, and order flows
+
+Planned only:
+
+- `apps/vendor` — pharmacy/vendor cabinet roadmap
+- `apps/admin` — admin dashboard roadmap
+
+The `apps/vendor` and `apps/admin` folders are intentionally present to document the wider ecosystem direction, but they should not be reviewed as completed portfolio applications yet.
+
+## Screenshots
 
 | Home | Medicines catalog | Product details |
 | --- | --- | --- |
@@ -17,22 +42,9 @@ E-PHARMACY is a portfolio full-stack e-commerce project for an online pharmacy e
 | --- | --- | --- |
 | ![Pharmacy catalog](./apps/client/public/readme/pharmacy-catalog.jpg) | ![Cart page](./apps/client/public/readme/cart-page.jpg) | ![Order confirmation page](./apps/client/public/readme/order-confirmation-page.jpg) |
 
-## Current Portfolio Release
-
-Current portfolio release includes:
-
-- completed customer storefront in `apps/client`
-- shared backend API foundation in `apps/api`
-- MongoDB persistence for users, products, stores, cart, reviews, and orders
-- same-origin Next.js BFF layer for private customer flows
-- production-oriented SEO, auth, cart, checkout, and order flows
-
-Planned:
-
-- `apps/vendor` — pharmacy/vendor cabinet roadmap only
-- `apps/admin` — admin dashboard roadmap only
-
-The vendor and admin folders are intentionally present to show the final ecosystem direction, but they are not part of the completed portfolio release yet.
+| Profile | Order details | 404 page |
+| --- | --- | --- |
+| ![Profile page](./apps/client/public/readme/profile-page.jpg) | ![Order details page](./apps/client/public/readme/order-page.jpg) | ![404 page](./apps/client/public/readme/404-page.jpg) |
 
 ## Key Features
 
@@ -41,45 +53,63 @@ The vendor and admin folders are intentionally present to show the final ecosyst
 - responsive public home page
 - pharmacy stores catalog with search, city filtering, sorting, pagination, details, reviews, and favorites
 - medicines catalog with search, category/pharmacy filters, availability filters, sorting, pagination, details, reviews, and favorites
+- root-level SEO-friendly product and pharmacy detail URLs
 - cart grouped by pharmacy invoices
-- checkout with pickup/post delivery data and customer comments
+- checkout with pickup/post delivery details and customer comments
 - persisted customer orders and order details
-- profile editing and password update flow
+- customer profile editing and password update flow
 - password recovery through email reset flow
 - loading, empty, error, not-found, success, and protected-route states
 
-### SEO and routing
+### Auth and private customer flows
 
-- clean public routes and root-level product/pharmacy detail URLs
+- JWT auth stored through backend-managed httpOnly cookies
+- same-origin Next.js BFF proxy for auth/cart/orders/profile mutations
+- backend `authenticate` middleware as the real data access boundary
+- client-readable auth marker used only for UX redirects/session bootstrap
+
+### SEO
+
 - dynamic metadata for public pages
-- Open Graph and Twitter card metadata
 - canonical URL strategy for detail and catalog pages
+- Open Graph and Twitter card metadata
 - robots rules and dynamic sitemap generation
-- noindex rules for private, auth, search, sorting, pagination, and temporary catalog states
+- noindex rules for private, auth, service, search, sorting, pagination, and temporary catalog states
 - breadcrumbs generated from route data
 
 ### Backend foundation
 
 - shared Express API for the ecosystem
 - MongoDB/Mongoose models for customer-facing business data
-- JWT auth stored through httpOnly cookies
-- backend `authenticate` middleware for private data
-- order persistence in MongoDB
-- Zod validation, centralized error handling, rate limiting, Helmet, CORS, and Origin/Referer validation for cookie-based mutations
+- Zod validation and centralized error handling
+- rate limiting, Helmet, CORS, and Origin/Referer validation for cookie-based mutations
+- role middleware foundation for future vendor/admin work
 
-## Architecture Overview
+## Architecture
 
 ```txt
 apps/client  -> completed public customer storefront
-apps/api     -> shared Express/MongoDB backend API
-apps/vendor  -> planned pharmacy/vendor cabinet roadmap
-apps/admin   -> planned admin dashboard roadmap
+apps/api     -> shared Express/MongoDB backend API foundation
+apps/vendor  -> planned pharmacy/vendor cabinet roadmap only
+apps/admin   -> planned admin dashboard roadmap only
 
 packages/*   -> shared workspace packages for reusable contracts,
-                validation, utilities, and project configuration
+                validation, utilities, and project configuration,
+                with room for future expansion
 ```
 
 The project uses one backend API and one MongoDB database. Future vendor and admin modules should extend the same backend instead of creating duplicated APIs.
+
+Shared packages are intentionally lightweight in the current release. They provide reusable contracts, validation helpers, slug utilities, API response types, and project configuration, but they are not presented as a large design system yet.
+
+Current package scope:
+
+- `packages/ui` — shared UI contracts such as button variants and sizes
+- `packages/types` — generic shared TypeScript types
+- `packages/api-client` — shared API response types and request header constants
+- `packages/validation` — shared validation limits, patterns, and sanitizers
+- `packages/config` — shared app names, route segments, and TypeScript configuration
+- `packages/utils` — shared utility helpers such as slug builders
 
 ## Frontend ↔ Backend Flow
 
@@ -98,22 +128,9 @@ Private customer flows use the Next.js BFF layer:
 Browser -> Next.js same-origin /api/* route handlers -> Express API -> MongoDB
 ```
 
-This applies to auth, cart, checkout, orders, profile updates, password updates, and other customer-only mutations. The backend sets the real httpOnly auth cookie, the Next BFF copies `Set-Cookie` back to the browser response, and later BFF requests forward cookies to the backend.
+This applies to auth, cart, checkout, orders, profile updates, password updates, review/favorite mutations, and other customer-only mutations. The backend sets the real httpOnly auth cookie, the Next BFF copies `Set-Cookie` back to the browser response, and later BFF requests forward cookies to the backend.
 
 The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker for redirects and auth bootstrap. It is not an auth token and does not authorize access to backend data. Real private access is controlled by backend middleware.
-
-## Packages
-
-Shared workspace packages currently provide reusable contracts, validation helpers, slug utilities, API response types, and project configuration, with room for future expansion.
-
-Current package scope is intentionally lightweight:
-
-- `packages/ui` — shared UI contracts such as button variants and sizes
-- `packages/types` — generic shared TypeScript types
-- `packages/api-client` — shared API response types and request header constants
-- `packages/validation` — shared validation limits, patterns, and sanitizers
-- `packages/config` — shared app names, route segments, and TypeScript configuration
-- `packages/utils` — shared utility helpers such as slug builders
 
 ## Tech Stack
 
@@ -142,6 +159,100 @@ Current package scope is intentionally lightweight:
 - Turborepo
 - ESLint
 - Prettier
+
+## Project Structure
+
+```txt
+apps/
+  client/
+    public/
+      icons/
+      og/
+      readme/
+    src/
+      app/
+        (private)/
+          cart/
+          checkout/[slugId]/
+          profile/orders/[orderId]/
+        (public)/
+          (auth)/
+          (info)/
+          (medicines)/
+          (pharmacies)/
+          [slugId]/
+        api/
+          auth/
+          cart/
+          orders/
+          products/
+          stores/
+        robots.ts
+        sitemap.ts
+      components/
+        auth/
+        cart/
+        checkout/
+        common/
+        form-fields/
+        home/
+        info/
+        layout/
+        medicines-catalog/
+        modals/
+        pharmacy-stores/
+        profile/
+      hooks/
+      lib/
+        api/
+        auth/
+        cart/
+        catalog/
+        checkout/
+        constants/
+        details/
+        errors/
+        formatters/
+        orders/
+        reviews/
+        routes/
+        seo/
+        utils/
+        validations/
+      providers/
+      services/
+      styles/
+      types/
+
+  api/
+    src/
+      config/
+      constants/
+      controllers/
+      db/
+      middlewares/
+      models/
+      routes/
+      schemas/
+      scripts/
+      services/
+      templates/
+      types/
+      utils/
+      app.ts
+      server.ts
+
+  vendor/   -> roadmap-only README placeholder
+  admin/    -> roadmap-only README placeholder
+
+packages/
+  api-client/
+  config/
+  types/
+  ui/
+  utils/
+  validation/
+```
 
 ## Environment Variables
 
@@ -183,9 +294,9 @@ SMTP_PASSWORD=...
 SMTP_FROM="E-PHARMACY <no-reply@your-domain.com>"
 ```
 
-For the current same-origin BFF deployment model, `AUTH_COOKIE_SAME_SITE=lax` is preferred. Use `AUTH_COOKIE_SAME_SITE=none` only when the browser intentionally calls the API directly across sites.
+For the current same-origin BFF deployment model, `AUTH_COOKIE_SAME_SITE=lax` is preferred. Use `AUTH_COOKIE_SAME_SITE=none` only when browser code intentionally calls the API directly across sites.
 
-## Getting Started
+## Run Locally
 
 ```bash
 git clone https://github.com/Natalia-Skoropad/e-pharmacy
@@ -229,23 +340,41 @@ pnpm check:client
 pnpm check:api
 ```
 
-## Production Notes
+## Deployment Notes
 
-- The customer storefront is the completed portfolio release.
-- Private customer data is protected by backend middleware, not only by UI redirects.
+- Deploy the customer storefront and shared API as the current portfolio release.
+- Configure production `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_API_BASE_URL` for the client.
+- Configure production `MONGODB_URI`, `JWT_SECRET`, SMTP values, `CLIENT_ORIGINS`, `CLIENT_APP_URL`, and cookie settings for the API.
+- Keep private browser mutations on same-origin `/api/*` client routes.
+- Ensure the backend accepts the deployed client origin and blocks unexpected mutation origins.
+- Verify auth, cart, checkout, orders, reviews, favorites, sitemap, robots, and metadata after deployment.
+
+## SEO Notes
+
+- Public catalog and detail pages are indexable when they represent stable content.
+- Private pages, auth pages, checkout/profile/order pages, and future dashboard paths are excluded from indexing.
+- Search, sorting, pagination, unavailable results, and temporary catalog states are noindex to reduce duplicate/thin pages.
+- Product and pharmacy detail pages use canonical root-level URLs.
+- Sitemap generation includes static public pages and active product/pharmacy detail pages returned by the API.
+
+## Security Notes
+
+- Real private access is controlled by backend `authenticate` middleware and httpOnly auth cookies.
+- The `e_pharmacy_auth_ready` marker is only a client-readable UX helper, not authorization.
 - The Next.js BFF keeps private browser mutations same-origin and proxies them to the Express API.
 - Cookie-based mutations are hardened with Origin/Referer validation on the backend.
-- The auth marker cookie is used only for UX redirects and should not be treated as authorization.
-- Public SEO pages are indexable; private/auth/service pages are excluded from sitemap and robots.
+- For larger production deployments, CSRF tokens can be added on top of the current same-origin BFF and Origin/Referer strategy.
 
-## Known Limitations
+## Current Limitations / Roadmap
+
+Current limitations:
 
 - Vendor cabinet and admin dashboard are roadmap-only in the current portfolio release.
-- Shared packages are intentionally small at this stage and are expected to grow as vendor/admin apps are implemented.
-- The current sitemap strategy fits the existing dataset. For a larger catalog, a dedicated backend SEO endpoint with sitemap-ready fields would be better.
+- Shared packages are intentionally small and should grow only when real reuse appears.
+- The current sitemap strategy fits the existing dataset. A larger catalog would benefit from a dedicated backend SEO endpoint with sitemap-ready fields.
 - CSRF hardening currently uses same-origin BFF flow plus Origin/Referer validation. A larger production deployment could add CSRF tokens for mutation requests.
 
-## Roadmap
+Roadmap:
 
 - Implement the vendor cabinet for pharmacy owners
 - Add vendor shop management and medicine CRUD
@@ -259,7 +388,3 @@ pnpm check:api
 **Nataliia Skoropad**  
 Full-stack Developer  
 Backend development, Frontend development, UI/UX design
-
-## License
-
-Portfolio full-stack e-commerce project built with production-oriented architecture.
