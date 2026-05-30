@@ -1,9 +1,14 @@
 import type { Cart } from './cart';
 
+import type {
+  OrderDeliveryMethod,
+  OrderPaymentMethod,
+} from '@e-pharmacy/types';
+
 //===================================================================
 
-export type CheckoutPaymentMethod = 'cash' | 'bank-transfer';
-export type CheckoutDeliveryMethod = 'pickup' | 'post';
+export type CheckoutPaymentMethod = OrderPaymentMethod;
+export type CheckoutDeliveryMethod = OrderDeliveryMethod;
 
 export type CheckoutStoreOrderGroup = {
   storeId: string;

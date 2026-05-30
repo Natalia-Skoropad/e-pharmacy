@@ -1,5 +1,7 @@
 import { type NextRequest } from 'next/server';
 
+import { appendSearchParams } from '@e-pharmacy/api-client';
+
 import { createApiUrl } from './api-url';
 import { createProxyHeaders } from './proxy-headers';
 import { createProxyResponse } from './proxy-response';
@@ -19,15 +21,6 @@ type PublicBackendProxyOptions = {
 
 //===================================================================
 
-function createBackendPathWithSearch(
-  backendPath: string,
-  request: NextRequest
-): string {
-  const search = request.nextUrl.search;
-
-  return search ? `${backendPath}${search}` : backendPath;
-}
-
 //===================================================================
 
 function createPublicCacheControl(revalidate: number): string {
@@ -45,7 +38,7 @@ export async function proxyPublicBackendRequest({
   request,
   revalidate = DEFAULT_PUBLIC_REVALIDATE_SECONDS,
 }: PublicBackendProxyOptions) {
-  const pathWithSearch = createBackendPathWithSearch(backendPath, request);
+  const pathWithSearch = appendSearchParams(backendPath, request.nextUrl.search);
 
   const response = await fetch(createApiUrl(pathWithSearch), {
     method: 'GET',

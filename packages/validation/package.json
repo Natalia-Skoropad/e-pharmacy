@@ -8,6 +8,34 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./limits": {
+      "types": "./dist/limits.d.ts",
+      "default": "./dist/limits.js"
+    },
+    "./patterns": {
+      "types": "./dist/patterns.d.ts",
+      "default": "./dist/patterns.js"
+    },
+    "./sanitizers": {
+      "types": "./dist/sanitizers.d.ts",
+      "default": "./dist/sanitizers.js"
+    },
+    "./messages": {
+      "types": "./dist/messages.d.ts",
+      "default": "./dist/messages.js"
+    },
+    "./errors": {
+      "types": "./dist/errors.d.ts",
+      "default": "./dist/errors.js"
+    },
+    "./assets": {
+      "types": "./dist/assets.d.ts",
+      "default": "./dist/assets.js"
+    },
+    "./zod-schemas": {
+      "types": "./dist/zod-schemas.d.ts",
+      "default": "./dist/zod-schemas.js"
     }
   },
   "files": [

@@ -1,15 +1,16 @@
+import { createBffRoutePair } from './bff';
+
 import type {
-  ApiErrorResponse,
-  ApiSuccessResponse,
   EntityId,
   LoginPayload,
+  ProductsQueryParams,
   RegisterPayload,
   UpdatePasswordPayload,
   UpdateProfilePayload,
-  ProductsQueryParams,
 } from '@e-pharmacy/types';
 
 export type { ApiErrorResponse, ApiSuccessResponse } from '@e-pharmacy/types';
+export * from './bff';
 
 //===================================================================
 
@@ -39,22 +40,22 @@ export function createQueryString(
 //===================================================================
 
 export const apiRoutes = {
+  health: '/health',
+
   auth: {
     register: '/auth/register',
     login: '/auth/login',
-    me: '/auth/me',
-    refresh: '/auth/refresh',
     logout: '/auth/logout',
     logoutAll: '/auth/logout-all',
-    forgotPassword: '/auth/forgot-password',
+    refresh: '/auth/refresh',
+    current: '/auth/current',
+    password: '/auth/current/password',
+    forgotPassword: '/auth/request-reset-email',
     resetPassword: '/auth/reset-password',
-    profile: '/auth/profile',
-    password: '/auth/password',
   },
 
   stores: {
-    list: (params: Record<string, string | number | boolean | undefined> = {}) =>
-      `/stores${createQueryString(params)}`,
+    list: '/stores',
     filters: '/stores/filters',
     details: (storeId: EntityId) => `/stores/${storeId}`,
     reviews: (storeId: EntityId) => `/stores/${storeId}/reviews`,
@@ -62,23 +63,26 @@ export const apiRoutes = {
   },
 
   products: {
-    list: (params: ProductsQueryParams = {}) =>
-      `/products${createQueryString(params)}`,
+    list: '/products',
     filters: '/products/filters',
-    details: (productIdOrSlug: EntityId | string) => `/products/${productIdOrSlug}`,
+    details: (productId: EntityId | string) => `/products/${productId}`,
     reviews: (productId: EntityId) => `/products/${productId}/reviews`,
     favorite: (productId: EntityId) => `/products/${productId}/favorite`,
   },
 
   cart: {
-    root: '/cart',
-    item: (cartItemId: EntityId) => `/cart/items/${cartItemId}`,
+    current: '/cart',
+    addItem: '/cart/items',
+    updateItem: (cartItemId: EntityId) => `/cart/items/${cartItemId}`,
+    removeItem: (cartItemId: EntityId) => `/cart/items/${cartItemId}`,
+    clear: '/cart/clear',
     offer: (productId: EntityId, storeId: EntityId) =>
       `/cart/products/${productId}/stores/${storeId}`,
   },
 
   orders: {
-    root: '/orders',
+    checkout: '/orders/checkout',
+    list: '/orders',
     details: (orderId: EntityId) => `/orders/${orderId}`,
   },
 
@@ -105,9 +109,75 @@ export const apiRoutes = {
 
 //===================================================================
 
+export const clientApiRoutes = {
+  health: '/api/health',
+
+  auth: {
+    register: '/api/auth/register',
+    login: '/api/auth/login',
+    logout: '/api/auth/logout',
+    logoutAll: '/api/auth/logout-all',
+    refresh: '/api/auth/refresh',
+    current: '/api/auth/me',
+    password: '/api/auth/password',
+    forgotPassword: '/api/auth/request-reset-email',
+    resetPassword: '/api/auth/reset-password',
+  },
+
+  stores: {
+    list: '/api/stores',
+    filters: '/api/stores/filters',
+    details: (storeId: EntityId) => `/api/stores/${storeId}`,
+    reviews: (storeId: EntityId) => `/api/stores/${storeId}/reviews`,
+    favorite: (storeId: EntityId) => `/api/stores/${storeId}/favorite`,
+  },
+
+  products: {
+    list: '/api/products',
+    filters: '/api/products/filters',
+    details: (productId: EntityId | string) => `/api/products/${productId}`,
+    reviews: (productId: EntityId) => `/api/products/${productId}/reviews`,
+    favorite: (productId: EntityId) => `/api/products/${productId}/favorite`,
+  },
+
+  cart: {
+    current: '/api/cart',
+    addItem: '/api/cart/items',
+    updateItem: (cartItemId: EntityId) => `/api/cart/items/${cartItemId}`,
+    removeItem: (cartItemId: EntityId) => `/api/cart/items/${cartItemId}`,
+    clear: '/api/cart/clear',
+  },
+
+  orders: {
+    checkout: '/api/orders/checkout',
+    list: '/api/orders',
+    details: (orderId: EntityId) => `/api/orders/${orderId}`,
+  },
+} as const;
+
+//===================================================================
+
+export const routePairs = {
+  auth: {
+    register: createBffRoutePair(apiRoutes.auth.register),
+    login: createBffRoutePair(apiRoutes.auth.login),
+    logout: createBffRoutePair(apiRoutes.auth.logout),
+    logoutAll: createBffRoutePair(apiRoutes.auth.logoutAll),
+    refresh: createBffRoutePair(apiRoutes.auth.refresh),
+    current: {
+      backendPath: apiRoutes.auth.current,
+      clientPath: clientApiRoutes.auth.current,
+    },
+  },
+} as const;
+
+//===================================================================
+
 export type AuthApiPayloadMap = {
   register: RegisterPayload;
   login: LoginPayload;
   updateProfile: UpdateProfilePayload;
   updatePassword: UpdatePasswordPayload;
 };
+
+export type ProductsListPathParams = ProductsQueryParams;

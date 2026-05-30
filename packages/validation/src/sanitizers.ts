@@ -1,0 +1,49 @@
+import { VALIDATION_LIMITS } from './limits';
+
+//=============================================================================
+
+export function sanitizeEmail(value: string): string {
+  return value
+    .trimStart()
+    .replace(/\s/g, '')
+    .slice(0, VALIDATION_LIMITS.emailMax);
+}
+
+//=============================================================================
+
+export function sanitizeName(value: string): string {
+  return value
+    .replace(/[^A-Za-z '-]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .slice(0, VALIDATION_LIMITS.nameMax);
+}
+
+//=============================================================================
+
+export function sanitizePhone(value: string): string {
+  const hasPlus = value.trim().startsWith('+');
+  const digits = value.replace(/\D/g, '').slice(0, 12);
+
+  if (hasPlus || digits.startsWith('380')) {
+    return `+${digits}`.slice(0, VALIDATION_LIMITS.phoneMax);
+  }
+
+  return digits.slice(0, VALIDATION_LIMITS.phoneMax);
+}
+
+//=============================================================================
+
+export function sanitizeAddress(value: string): string {
+  return value
+    .replace(/[^A-Za-z0-9\s.,'’/#-]/g, '')
+    .slice(0, VALIDATION_LIMITS.addressMax);
+}
+
+//=============================================================================
+
+export function normalizeSearchText(value: string): string {
+  return value
+    .trim()
+    .replace(/\s{2,}/g, ' ')
+    .slice(0, VALIDATION_LIMITS.searchMax);
+}

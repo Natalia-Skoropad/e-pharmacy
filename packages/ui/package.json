@@ -6,7 +6,18 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./button": "./src/components/Button.tsx",
+    "./button-link": "./src/components/ButtonLink.tsx",
+    "./close-icon-button": "./src/components/CloseIconButton.tsx",
+    "./container": "./src/components/Container.tsx",
+    "./loading-spinner": "./src/components/LoadingSpinner.tsx",
+    "./modal-base": "./src/components/ModalBase.tsx",
+    "./pagination": "./src/components/Pagination.tsx",
+    "./radio-option": "./src/components/RadioOption.tsx",
+    "./search-input": "./src/components/SearchInput.tsx",
+    "./select-field": "./src/components/SelectField.tsx",
+    "./toast": "./src/components/Toast.tsx"
   },
   "scripts": {
     "lint": "tsc --noEmit",

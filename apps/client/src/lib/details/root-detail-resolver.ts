@@ -1,3 +1,4 @@
+import { isReservedRootSlug } from '@e-pharmacy/config';
 import { buildSlugId } from '@e-pharmacy/utils';
 
 import { buildProductPath, buildStorePath } from '@/lib/routes';
@@ -23,32 +24,6 @@ type StoreRootDetail = {
 };
 
 export type RootDetail = ProductRootDetail | StoreRootDetail;
-
-//===================================================================
-
-const RESERVED_ROOT_SLUGS = new Set([
-  'cart',
-  'checkout',
-  'profile',
-  'login',
-  'register',
-  'pharmacy-stores',
-  'medicines-catalog',
-  'delivery-and-payment',
-  'return-policy',
-  'user-agreement',
-  'personal-data-notice',
-  'password-recovery',
-  'reset-password',
-  'admin',
-  'vendor',
-]);
-
-//===================================================================
-
-function isReservedRootSlug(slugId: string): boolean {
-  return RESERVED_ROOT_SLUGS.has(slugId.toLowerCase());
-}
 
 //===================================================================
 
