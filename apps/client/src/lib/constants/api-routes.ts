@@ -5,6 +5,8 @@ export const API_ROUTES = {
     register: '/auth/register',
     login: '/auth/login',
     logout: '/auth/logout',
+    logoutAll: '/auth/logout-all',
+    refresh: '/auth/refresh',
     current: '/auth/current',
     password: '/auth/current/password',
     forgotPassword: '/auth/request-reset-email',

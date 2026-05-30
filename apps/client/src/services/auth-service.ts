@@ -73,6 +73,19 @@ export async function resetPassword(
 
 //===================================================================
 
+export async function refreshSession(): Promise<CurrentUserResponse> {
+  const response = await localApiRequest<ApiSuccessResponse<CurrentUserResponse>>(
+    CLIENT_API_ROUTES.auth.refresh,
+    {
+      method: 'POST',
+    }
+  );
+
+  return getResponseData(response);
+}
+
+//===================================================================
+
 export async function getCurrentUser(): Promise<CurrentUserResponse> {
   const response = await localApiRequest<ApiSuccessResponse<CurrentUserResponse>>(
     CLIENT_API_ROUTES.auth.current
@@ -85,6 +98,14 @@ export async function getCurrentUser(): Promise<CurrentUserResponse> {
 
 export async function logoutUser(): Promise<void> {
   await localApiRequest<ApiSuccessResponse>(CLIENT_API_ROUTES.auth.logout, {
+    method: 'POST',
+  });
+}
+
+//===================================================================
+
+export async function logoutAllUserSessions(): Promise<void> {
+  await localApiRequest<ApiSuccessResponse>(CLIENT_API_ROUTES.auth.logoutAll, {
     method: 'POST',
   });
 }

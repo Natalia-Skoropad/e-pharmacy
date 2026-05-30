@@ -4,6 +4,7 @@ import type { UserRole, UserStatus } from './user';
 
 declare module 'express' {
   interface Request {
+    authSessionId?: string;
     user?: {
       id: string;
       name: string;

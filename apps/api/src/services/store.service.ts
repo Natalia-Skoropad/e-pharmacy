@@ -6,6 +6,7 @@ import { Product } from '../models/product.model';
 import { Store } from '../models/store.model';
 import { User } from '../models/user.model';
 import { httpError } from '../utils/httpError';
+import { createSafeRegExp } from '../utils/regexp';
 
 import type {
   StoreBankDetails,
@@ -259,15 +260,15 @@ export async function getStoresService(query: StoresQuery, userId?: string) {
     isActive: true,
   };
 
-  if (city) filter.city = new RegExp(city, 'i');
-  if (nameKeyword) filter.name = new RegExp(nameKeyword, 'i');
-  if (addressKeyword) filter.address = new RegExp(addressKeyword, 'i');
+  if (city) filter.city = createSafeRegExp(city);
+  if (nameKeyword) filter.name = createSafeRegExp(nameKeyword);
+  if (addressKeyword) filter.address = createSafeRegExp(addressKeyword);
 
   if (keyword) {
     filter.$or = [
-      { name: new RegExp(keyword, 'i') },
-      { address: new RegExp(keyword, 'i') },
-      { city: new RegExp(keyword, 'i') },
+      { name: createSafeRegExp(keyword) },
+      { address: createSafeRegExp(keyword) },
+      { city: createSafeRegExp(keyword) },
     ];
   }
 

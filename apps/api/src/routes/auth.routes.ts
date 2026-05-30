@@ -9,7 +9,9 @@ import {
   getCustomerOnlyTest,
   getVendorOnlyTest,
   loginUser,
+  logoutAllUserSessions,
   logoutUser,
+  refreshAuthSession,
   requestPasswordReset,
   registerUser,
   resetPassword,
@@ -18,9 +20,13 @@ import {
 } from '../controllers/auth.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
-import { authRateLimit, passwordResetRateLimit } from '../middlewares/rateLimit.middleware';
+import {
+  authRateLimit,
+  passwordResetRateLimit,
+} from '../middlewares/rateLimit.middleware';
 import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
+
 import {
   forgotPasswordSchema,
   loginSchema,
@@ -55,6 +61,7 @@ authRoutes.post(
   ctrlWrapper(loginUser)
 );
 
+authRoutes.post('/refresh', ctrlWrapper(refreshAuthSession));
 
 authRoutes.post(
   '/forgot-password',
@@ -85,7 +92,6 @@ authRoutes.post(
 
 authRoutes.get('/current', authenticate, ctrlWrapper(getCurrentUser));
 
-
 authRoutes.patch(
   '/current',
   authenticate,
@@ -105,6 +111,11 @@ authRoutes.patch(
 );
 
 authRoutes.post('/logout', authenticate, ctrlWrapper(logoutUser));
+authRoutes.post(
+  '/logout-all',
+  authenticate,
+  ctrlWrapper(logoutAllUserSessions)
+);
 
 // Temporary role test routes are available only outside production.
 if (env.NODE_ENV !== 'production') {

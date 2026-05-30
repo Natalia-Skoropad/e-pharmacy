@@ -5,6 +5,8 @@ export const CLIENT_API_ROUTES = {
     register: '/api/auth/register',
     login: '/api/auth/login',
     logout: '/api/auth/logout',
+    logoutAll: '/api/auth/logout-all',
+    refresh: '/api/auth/refresh',
     current: '/api/auth/me',
     password: '/api/auth/password',
     forgotPassword: '/api/auth/request-reset-email',

@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { AUTH_READY_COOKIE_NAME } from '@/lib/auth/auth-session';
+import {
+  ACCESS_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from '@/lib/auth/auth-session';
+
 import { ROUTES } from '@/lib/constants/routes';
 
 //===================================================================
@@ -38,8 +42,11 @@ function isGuestOnlyRoute(pathname: string): boolean {
   );
 }
 
-function hasAuthSessionMarker(request: NextRequest): boolean {
-  return request.cookies.get(AUTH_READY_COOKIE_NAME)?.value === '1';
+function hasServerAuthCookie(request: NextRequest): boolean {
+  return Boolean(
+    request.cookies.get(ACCESS_TOKEN_COOKIE_NAME)?.value ||
+    request.cookies.get(REFRESH_TOKEN_COOKIE_NAME)?.value
+  );
 }
 
 //===================================================================
@@ -91,13 +98,13 @@ function createAuthenticatedRedirect(request: NextRequest): NextResponse {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuthenticated = hasAuthSessionMarker(request);
+  const hasAuthCookie = hasServerAuthCookie(request);
 
-  if (isProtectedRoute(pathname) && !isAuthenticated) {
+  if (isProtectedRoute(pathname) && !hasAuthCookie) {
     return createLoginRedirect(request);
   }
 
-  if (isGuestOnlyRoute(pathname) && isAuthenticated) {
+  if (isGuestOnlyRoute(pathname) && hasAuthCookie) {
     return createAuthenticatedRedirect(request);
   }
 

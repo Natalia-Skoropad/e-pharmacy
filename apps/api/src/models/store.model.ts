@@ -197,6 +197,7 @@ const storeSchema = new Schema<StoreEntity>(
 storeSchema.index({ name: 'text', address: 'text', city: 'text' });
 storeSchema.index({ city: 1 });
 storeSchema.index({ isActive: 1 });
+storeSchema.index({ ownerId: 1, isActive: 1 });
 
 //===============================================================
 

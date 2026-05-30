@@ -89,6 +89,8 @@ export const AUTH_PROXY_ROUTES = {
   register: API_ROUTES.auth.register,
   login: API_ROUTES.auth.login,
   logout: API_ROUTES.auth.logout,
+  logoutAll: API_ROUTES.auth.logoutAll,
+  refresh: API_ROUTES.auth.refresh,
   current: API_ROUTES.auth.current,
   password: API_ROUTES.auth.password,
   forgotPassword: API_ROUTES.auth.forgotPassword,

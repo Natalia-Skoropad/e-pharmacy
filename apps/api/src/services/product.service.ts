@@ -5,6 +5,7 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import { Product } from '../models/product.model';
 import { User } from '../models/user.model';
 import { httpError } from '../utils/httpError';
+import { createSafeRegExp } from '../utils/regexp';
 
 import type {
   ProductCategory,
@@ -417,20 +418,20 @@ export async function getProductsService(
   if (keyword) {
     andFilters.push({
       $or: [
-        { name: new RegExp(keyword, 'i') },
-        { description: new RegExp(keyword, 'i') },
-        { manufacturer: new RegExp(keyword, 'i') },
-        { article: new RegExp(keyword, 'i') },
+        { name: createSafeRegExp(keyword) },
+        { description: createSafeRegExp(keyword) },
+        { manufacturer: createSafeRegExp(keyword) },
+        { article: createSafeRegExp(keyword) },
       ],
     });
   }
 
   if (nameKeyword) {
-    andFilters.push({ name: new RegExp(nameKeyword, 'i') });
+    andFilters.push({ name: createSafeRegExp(nameKeyword) });
   }
 
   if (articleKeyword) {
-    andFilters.push({ article: new RegExp(articleKeyword, 'i') });
+    andFilters.push({ article: createSafeRegExp(articleKeyword) });
   }
 
   if (category) {

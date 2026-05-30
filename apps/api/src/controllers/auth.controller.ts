@@ -1,13 +1,17 @@
 import type { Request, Response } from 'express';
 
+import { REFRESH_TOKEN_COOKIE_NAME } from '../constants/auth';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
 import {
   loginUserService,
+  refreshAuthSessionService,
   registerUserService,
   requestPasswordResetService,
   resetPasswordService,
+  revokeAllUserSessionsService,
+  revokeCurrentSessionService,
   updateUserPasswordService,
   updateUserProfileService,
 } from '../services/auth.service';
@@ -20,23 +24,81 @@ import type {
   UpdatePasswordInput,
   UpdateProfileInput,
 } from '../types/auth';
+
+import type { SessionContext } from '../types/session';
 import { sendSuccessResponse } from '../utils/apiResponse';
-import { clearAuthCookie, setAuthCookie } from '../utils/authCookie';
+import { clearAuthCookies, setAuthCookies } from '../utils/authCookie';
+import { httpError } from '../utils/httpError';
+
+//===============================================================
+
+function getSessionContext(req: Request): SessionContext {
+  const forwardedFor = req.headers['x-forwarded-for'];
+  const ip = Array.isArray(forwardedFor)
+    ? forwardedFor[0]
+    : forwardedFor?.split(',')[0]?.trim() || req.ip;
+
+  const deviceNameHeader = req.headers['x-device-name'];
+  const deviceName = Array.isArray(deviceNameHeader)
+    ? deviceNameHeader[0]
+    : deviceNameHeader;
+
+  return {
+    userAgent: req.headers['user-agent'],
+    ip,
+    deviceName,
+  };
+}
+
+//===============================================================
+
+function getCookieValue(req: Request, name: string): string | null {
+  const cookieHeader = req.headers.cookie;
+
+  if (!cookieHeader) return null;
+
+  const cookies = cookieHeader.split(';').map((cookie) => cookie.trim());
+
+  for (const cookie of cookies) {
+    const [cookieName, ...valueParts] = cookie.split('=');
+
+    if (cookieName === name) {
+      const value = valueParts.join('=');
+      return value ? decodeURIComponent(value) : null;
+    }
+  }
+
+  return null;
+}
+
+//===============================================================
+
+function getRefreshTokenFromCookies(req: Request): string {
+  const refreshToken = getCookieValue(req, REFRESH_TOKEN_COOKIE_NAME);
+
+  if (!refreshToken) {
+    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.AUTH_REQUIRED);
+  }
+
+  return refreshToken;
+}
 
 //===============================================================
 
 export async function registerUser(req: Request, res: Response): Promise<void> {
   const input = req.body as RegisterInput;
 
-  const data = await registerUserService(input);
+  const data = await registerUserService(input, getSessionContext(req));
 
-  setAuthCookie(res, data.token);
+  setAuthCookies(res, data.tokens);
 
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.CREATED,
     message: API_MESSAGES.USER_REGISTERED,
-    data,
+    data: {
+      user: data.user,
+    },
   });
 }
 
@@ -45,18 +107,44 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
 export async function loginUser(req: Request, res: Response): Promise<void> {
   const input = req.body as LoginInput;
 
-  const data = await loginUserService(input);
+  const data = await loginUserService(input, getSessionContext(req));
 
-  setAuthCookie(res, data.token);
+  setAuthCookies(res, data.tokens);
 
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.OK,
     message: API_MESSAGES.USER_LOGGED_IN,
-    data,
+    data: {
+      user: data.user,
+    },
   });
 }
 
+//===============================================================
+
+export async function refreshAuthSession(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const refreshToken = getRefreshTokenFromCookies(req);
+
+  const data = await refreshAuthSessionService(
+    refreshToken,
+    getSessionContext(req)
+  );
+
+  setAuthCookies(res, data.tokens);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    message: 'Session was refreshed successfully.',
+    data: {
+      user: data.user,
+    },
+  });
+}
 
 //===============================================================
 
@@ -77,13 +165,14 @@ export async function requestPasswordReset(
 
 //===============================================================
 
-
-//===============================================================
-
-export async function resetPassword(req: Request, res: Response): Promise<void> {
+export async function resetPassword(
+  req: Request,
+  res: Response
+): Promise<void> {
   const input = req.body as ResetPasswordInput;
 
   await resetPasswordService(input);
+  clearAuthCookies(res);
 
   sendSuccessResponse({
     res,
@@ -91,6 +180,8 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
     message: API_MESSAGES.PASSWORD_RESET_SUCCESS,
   });
 }
+
+//===============================================================
 
 export function getCurrentUser(req: Request, res: Response): void {
   sendSuccessResponse({
@@ -101,10 +192,6 @@ export function getCurrentUser(req: Request, res: Response): void {
     },
   });
 }
-
-//===============================================================
-
-
 
 //===============================================================
 
@@ -141,21 +228,45 @@ export async function updateCurrentUserPassword(
   if (!userId) return;
 
   await updateUserPasswordService(userId, input);
+  clearAuthCookies(res);
 
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.OK,
-    message: 'Password was updated successfully.',
+    message: 'Password was updated successfully. Please sign in again.',
   });
 }
 
-export function logoutUser(_req: Request, res: Response): void {
-  clearAuthCookie(res);
+//===============================================================
+
+export async function logoutUser(req: Request, res: Response): Promise<void> {
+  await revokeCurrentSessionService(req.authSessionId);
+  clearAuthCookies(res);
 
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.OK,
     message: API_MESSAGES.USER_LOGGED_OUT,
+  });
+}
+
+//===============================================================
+
+export async function logoutAllUserSessions(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const userId = req.user?.id;
+
+  if (!userId) return;
+
+  await revokeAllUserSessionsService(userId);
+  clearAuthCookies(res);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    message: 'You have been signed out from all devices.',
   });
 }
 

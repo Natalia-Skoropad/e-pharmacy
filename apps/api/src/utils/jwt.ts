@@ -11,6 +11,7 @@ import { httpError } from './httpError';
 export type JwtPayload = {
   userId: string;
   role: UserRole;
+  sessionId: string;
 };
 
 export type PasswordResetJwtPayload = {

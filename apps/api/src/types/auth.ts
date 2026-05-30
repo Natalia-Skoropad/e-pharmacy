@@ -8,6 +8,7 @@ import type {
   updatePasswordSchema,
   updateProfileSchema,
 } from '../schemas/auth.schema';
+
 import type { UserRole, UserStatus } from './user';
 
 //===============================================================
@@ -37,9 +38,14 @@ export type AuthUserResponse = {
 
 export type AuthResponse = {
   user: AuthUserResponse;
-  token: string;
 };
 
+export type AuthSessionResponse = AuthResponse & {
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
+};
 
 //===============================================================
 

@@ -1,13 +1,16 @@
 import { createHash, randomBytes } from 'node:crypto';
+import type { HydratedDocument } from 'mongoose';
 
 import { env } from '../config/env';
 import { USER_ROLES, USER_STATUSES } from '../constants/auth';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { Session } from '../models/session.model';
 import { User } from '../models/user.model';
 
 import type {
   AuthResponse,
+  AuthSessionResponse,
   AuthUserResponse,
   ForgotPasswordInput,
   LoginInput,
@@ -17,8 +20,12 @@ import type {
   UpdateProfileInput,
 } from '../types/auth';
 
+import type { SessionContext } from '../types/session';
+import type { UserEntity } from '../types/user';
+
 import { httpError } from '../utils/httpError';
 import { signToken } from '../utils/jwt';
+import { parseDurationMs } from '../utils/duration';
 import { isDuplicateEmailError } from '../utils/mongoError';
 import { comparePassword, hashPassword } from '../utils/password';
 import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
@@ -26,9 +33,95 @@ import { toAuthUserResponse } from '../utils/userResponse';
 
 //===============================================================
 
+const REFRESH_TOKEN_BYTES = 64;
+const REFRESH_TOKEN_TTL_MS = parseDurationMs(
+  String(env.REFRESH_TOKEN_EXPIRES_IN),
+  30 * 24 * 60 * 60 * 1000
+);
+
+//===============================================================
+
+function createRefreshToken(): string {
+  return randomBytes(REFRESH_TOKEN_BYTES).toString('hex');
+}
+
+//===============================================================
+
+function hashRefreshToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+//===============================================================
+
+function getRefreshTokenExpiresAt(): Date {
+  return new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
+}
+
+//===============================================================
+
+function sanitizeSessionContext(context?: SessionContext): SessionContext {
+  return {
+    ...(context?.userAgent
+      ? { userAgent: context.userAgent.slice(0, 500) }
+      : {}),
+    ...(context?.ip ? { ip: context.ip.slice(0, 80) } : {}),
+    ...(context?.deviceName
+      ? { deviceName: context.deviceName.slice(0, 120) }
+      : {}),
+  };
+}
+
+//===============================================================
+
+type UserDocument = HydratedDocument<UserEntity>;
+
+//===============================================================
+
+async function createAuthSession(
+  user: UserDocument,
+  context?: SessionContext
+): Promise<AuthSessionResponse['tokens']> {
+  const refreshToken = createRefreshToken();
+  const safeContext = sanitizeSessionContext(context);
+
+  const session = await Session.create({
+    userId: user._id,
+    refreshTokenHash: hashRefreshToken(refreshToken),
+    roleAtLogin: user.role,
+    expiresAt: getRefreshTokenExpiresAt(),
+    lastUsedAt: new Date(),
+    ...safeContext,
+  });
+
+  const accessToken = signToken({
+    userId: String(user._id),
+    role: user.role,
+    sessionId: String(session._id),
+  });
+
+  return { accessToken, refreshToken };
+}
+
+//===============================================================
+
+async function buildAuthSessionResponse(
+  user: UserDocument,
+  context?: SessionContext
+): Promise<AuthSessionResponse> {
+  const tokens = await createAuthSession(user, context);
+
+  return {
+    user: toAuthUserResponse(user),
+    tokens,
+  };
+}
+
+//===============================================================
+
 export async function registerUserService(
-  input: RegisterInput
-): Promise<AuthResponse> {
+  input: RegisterInput,
+  context?: SessionContext
+): Promise<AuthSessionResponse> {
   const existingUser = await User.findOne({ email: input.email });
 
   if (existingUser) {
@@ -47,15 +140,7 @@ export async function registerUserService(
       address: input.address,
     });
 
-    const token = signToken({
-      userId: String(user._id),
-      role: user.role,
-    });
-
-    return {
-      user: toAuthUserResponse(user),
-      token,
-    };
+    return buildAuthSessionResponse(user, context);
   } catch (error) {
     if (isDuplicateEmailError(error)) {
       throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
@@ -68,8 +153,9 @@ export async function registerUserService(
 //===============================================================
 
 export async function loginUserService(
-  input: LoginInput
-): Promise<AuthResponse> {
+  input: LoginInput,
+  context?: SessionContext
+): Promise<AuthSessionResponse> {
   const user = await User.findOne({ email: input.email }).select('+password');
 
   if (!user) {
@@ -86,17 +172,127 @@ export async function loginUserService(
     throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_CREDENTIALS);
   }
 
-  const token = signToken({
+  return buildAuthSessionResponse(user, context);
+}
+
+//===============================================================
+
+export async function refreshAuthSessionService(
+  refreshToken: string,
+  context?: SessionContext
+): Promise<AuthSessionResponse> {
+  const refreshTokenHash = hashRefreshToken(refreshToken);
+
+  const session = await Session.findOne({
+    refreshTokenHash,
+    revokedAt: undefined,
+    expiresAt: { $gt: new Date() },
+  }).select('+refreshTokenHash');
+
+  if (!session) {
+    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_TOKEN);
+  }
+
+  const user = await User.findById(session.userId);
+
+  if (!user) {
+    session.revokedAt = new Date();
+    await session.save();
+
+    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.USER_NOT_FOUND);
+  }
+
+  if (user.status === USER_STATUSES.BLOCKED) {
+    session.revokedAt = new Date();
+    await session.save();
+
+    throw httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.USER_BLOCKED);
+  }
+
+  const nextRefreshToken = createRefreshToken();
+  const safeContext = sanitizeSessionContext(context);
+
+  session.refreshTokenHash = hashRefreshToken(nextRefreshToken);
+  session.lastUsedAt = new Date();
+  session.expiresAt = getRefreshTokenExpiresAt();
+  if (safeContext.userAgent) session.userAgent = safeContext.userAgent;
+  if (safeContext.ip) session.ip = safeContext.ip;
+  if (safeContext.deviceName) session.deviceName = safeContext.deviceName;
+
+  await session.save();
+
+  const accessToken = signToken({
     userId: String(user._id),
     role: user.role,
+    sessionId: String(session._id),
   });
 
   return {
     user: toAuthUserResponse(user),
-    token,
+    tokens: {
+      accessToken,
+      refreshToken: nextRefreshToken,
+    },
   };
 }
 
+//===============================================================
+
+export async function revokeCurrentSessionService(
+  sessionId?: string
+): Promise<void> {
+  if (!sessionId) return;
+
+  await Session.findOneAndUpdate(
+    {
+      _id: sessionId,
+      revokedAt: undefined,
+    },
+    {
+      $set: {
+        revokedAt: new Date(),
+        lastUsedAt: new Date(),
+      },
+    }
+  );
+}
+
+//===============================================================
+
+export async function revokeAllUserSessionsService(
+  userId: string
+): Promise<void> {
+  await Session.updateMany(
+    {
+      userId,
+      revokedAt: undefined,
+    },
+    {
+      $set: {
+        revokedAt: new Date(),
+        lastUsedAt: new Date(),
+      },
+    }
+  );
+}
+
+//===============================================================
+
+export async function assertActiveSessionService(
+  sessionId: string,
+  userId: string
+): Promise<void> {
+  const session = await Session.exists({
+    _id: sessionId,
+    userId,
+    revokedAt: undefined,
+    expiresAt: { $gt: new Date() },
+  });
+
+  if (!session) {
+    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_TOKEN);
+  }
+}
 
 //===============================================================
 
@@ -122,29 +318,10 @@ function hashPasswordResetToken(token: string): string {
 
 //===============================================================
 
-function parseResetTokenTtlMs(value: string): number {
-  const match = value.trim().match(/^(\d+)(s|m|h|d)?$/i);
-
-  if (!match) return 15 * 60 * 1000;
-
-  const amount = Number(match[1]);
-  const unit = (match[2] || 'm').toLowerCase();
-
-  const multipliers: Record<string, number> = {
-    s: 1000,
-    m: 60 * 1000,
-    h: 60 * 60 * 1000,
-    d: 24 * 60 * 60 * 1000,
-  };
-
-  return amount * (multipliers[unit] || multipliers.m);
-}
-
-//===============================================================
-
 function getPasswordResetExpiresAt(): Date {
   return new Date(
-    Date.now() + parseResetTokenTtlMs(String(env.JWT_RESET_EXPIRES_IN))
+    Date.now() +
+      parseDurationMs(String(env.JWT_RESET_EXPIRES_IN), 15 * 60 * 1000)
   );
 }
 
@@ -199,6 +376,7 @@ export async function resetPasswordService(
   user.resetPasswordExpiresAt = undefined;
 
   await user.save();
+  await revokeAllUserSessionsService(String(user._id));
 }
 
 //===============================================================
@@ -218,7 +396,6 @@ export async function getUserByIdService(
 
   return toAuthUserResponse(user);
 }
-
 
 //===============================================================
 
@@ -286,4 +463,5 @@ export async function updateUserPasswordService(
 
   user.password = await hashPassword(input.newPassword);
   await user.save();
+  await revokeAllUserSessionsService(userId);
 }
