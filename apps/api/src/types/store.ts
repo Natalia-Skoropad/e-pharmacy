@@ -1,5 +1,11 @@
 import type { Types } from 'mongoose';
 
+import type { SHOP_STATUSES } from '../constants/auth';
+
+//===============================================================
+
+export type ShopStatus = (typeof SHOP_STATUSES)[keyof typeof SHOP_STATUSES];
+
 //===============================================================
 
 export type StoreReviewEntity = {
@@ -31,7 +37,8 @@ export type StoreEntity = {
   phone?: string;
   email?: string;
   workingHours?: string;
-  bankDetails: StoreBankDetails;
+  bankDetails?: StoreBankDetails;
+  status: ShopStatus;
   rating?: number;
   imageUrl?: string;
   description?: string;
@@ -39,6 +46,10 @@ export type StoreEntity = {
   reviewsCount?: number;
   reviews?: StoreReviewEntity[];
   ownerId?: Types.ObjectId;
+  createdBy?: Types.ObjectId;
+  updatedBy?: Types.ObjectId;
+  approvedBy?: Types.ObjectId;
+  approvedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -69,7 +80,9 @@ export type StoreResponseDto = {
   phone?: string;
   email?: string;
   workingHours?: string;
-  bankDetails: StoreBankDetails;
+  bankDetails?: StoreBankDetails;
+  bankTransferAvailable: boolean;
+  status?: ShopStatus;
   rating?: number;
   imageUrl?: string;
   description?: string;
@@ -79,7 +92,6 @@ export type StoreResponseDto = {
   isActive: boolean;
   updatedAt?: string;
 };
-
 
 //===============================================================
 

@@ -6,6 +6,7 @@ import {
   USER_NAME_MAX_LENGTH,
   USER_ROLES,
   USER_STATUSES,
+  VENDOR_ACCOUNT_STATUSES,
 } from '../constants/auth';
 import type { UserEntity } from '../types/user';
 
@@ -49,6 +50,12 @@ const userSchema = new Schema<UserEntity>(
       enum: Object.values(USER_STATUSES),
       default: USER_STATUSES.ACTIVE,
       required: true,
+    },
+
+    vendorStatus: {
+      type: String,
+      enum: Object.values(VENDOR_ACCOUNT_STATUSES),
+      default: undefined,
     },
 
     phone: {
@@ -100,12 +107,40 @@ const userSchema = new Schema<UserEntity>(
       select: false,
       default: undefined,
     },
+
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
+    approvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
+    approvedAt: {
+      type: Date,
+      default: undefined,
+    },
   },
   {
     timestamps: true,
     versionKey: false,
   }
 );
+
+//===============================================================
+
+userSchema.index({ role: 1, status: 1, vendorStatus: 1 });
+userSchema.index({ approvedBy: 1 });
 
 //===============================================================
 

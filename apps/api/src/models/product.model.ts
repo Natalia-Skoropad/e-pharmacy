@@ -268,6 +268,18 @@ const productSchema = new Schema<ProductEntity>(
       type: [productReviewSchema],
       default: [],
     },
+
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
   },
   {
     timestamps: true,
@@ -291,6 +303,8 @@ productSchema.index({ price: 1 });
 productSchema.index({ rating: -1 });
 productSchema.index({ createdAt: -1 });
 productSchema.index({ inStock: 1 });
+productSchema.index({ createdBy: 1 });
+productSchema.index({ updatedBy: 1 });
 
 //===============================================================
 

@@ -7,6 +7,7 @@ import { Order } from '../models/order.model';
 import { Product } from '../models/product.model';
 import { Store } from '../models/store.model';
 import { httpError } from '../utils/httpError';
+import { commitReservedStock } from './inventory.service';
 
 import type { CheckoutOrderInput } from '../schemas/order.schema';
 
@@ -48,6 +49,20 @@ type StoreDocument = StoreEntity & {
 type OrderDocument = OrderEntity & {
   _id: Types.ObjectId;
 };
+
+//===============================================================
+
+function hasCompleteBankDetails(
+  bankDetails?: import('../types/store').StoreBankDetails
+): boolean {
+  return Boolean(
+    bankDetails?.recipientName &&
+      bankDetails.taxId &&
+      bankDetails.iban &&
+      bankDetails.bankName &&
+      bankDetails.paymentPurpose
+  );
+}
 
 //===============================================================
 
@@ -158,42 +173,6 @@ function serializeOrder(order: OrderDocument): OrderResponseDto {
 
 //===============================================================
 
-async function commitReservedOffer(
-  productId: Types.ObjectId,
-  storeId: Types.ObjectId,
-  quantity: number,
-  session: mongoose.ClientSession
-): Promise<void> {
-  const result = await Product.updateOne(
-    {
-      _id: productId,
-      offers: {
-        $elemMatch: {
-          storeId,
-          reservedQuantity: { $gte: quantity },
-          totalQuantity: { $gte: quantity },
-        },
-      },
-    },
-    {
-      $inc: {
-        'offers.$.reservedQuantity': -quantity,
-        'offers.$.totalQuantity': -quantity,
-      },
-    },
-    { session }
-  );
-
-  if (result.modifiedCount !== 1) {
-    throw httpError(
-      HTTP_STATUS.CONFLICT,
-      'Product reservation is no longer available. Please refresh the cart and try again.'
-    );
-  }
-}
-
-//===============================================================
-
 export async function checkoutOrderService(
   userId: string,
   input: CheckoutOrderInput
@@ -233,6 +212,13 @@ export async function checkoutOrderService(
         throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found');
       }
 
+      if (input.paymentMethod === 'bank-transfer' && !hasCompleteBankDetails(store.bankDetails)) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Bank transfer is unavailable for this pharmacy until bank details are completed.'
+        );
+      }
+
       const productIds = orderCartItems.map((item) => item.productId);
       const products = await Product.find({ _id: { $in: productIds } })
         .session(session)
@@ -262,7 +248,7 @@ export async function checkoutOrderService(
           );
         }
 
-        await commitReservedOffer(
+        await commitReservedStock(
           cartItem.productId,
           cartItem.storeId,
           cartItem.quantity,
@@ -319,7 +305,9 @@ export async function checkoutOrderService(
               ...(typeof store.reviewsCount === 'number'
                 ? { reviewsCount: store.reviewsCount }
                 : {}),
-              ...(store.bankDetails ? { bankDetails: store.bankDetails } : {}),
+              ...(hasCompleteBankDetails(store.bankDetails)
+                ? { bankDetails: store.bankDetails }
+                : {}),
             },
             items: orderItems,
             totalItems,

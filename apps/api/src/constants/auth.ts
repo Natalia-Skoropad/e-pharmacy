@@ -17,6 +17,24 @@ export const USER_STATUSES = {
 
 //===============================================================
 
+export const VENDOR_ACCOUNT_STATUSES = {
+  PENDING: 'pending',
+  ACTIVE: 'active',
+  REJECTED: 'rejected',
+  BLOCKED: 'blocked',
+} as const;
+
+//===============================================================
+
+export const SHOP_STATUSES = {
+  DRAFT: 'draft',
+  PENDING_REVIEW: 'pending_review',
+  ACTIVE: 'active',
+  SUSPENDED: 'suspended',
+} as const;
+
+//===============================================================
+
 export const PASSWORD_MIN_LENGTH = VALIDATION_LIMITS.passwordMin;
 export const PASSWORD_MAX_LENGTH = VALIDATION_LIMITS.passwordMax;
 

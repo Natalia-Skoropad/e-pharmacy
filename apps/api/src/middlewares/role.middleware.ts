@@ -1,7 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { API_MESSAGES } from '../constants/messages';
+import { USER_ROLES, VENDOR_ACCOUNT_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { API_MESSAGES } from '../constants/messages';
+import { User } from '../models/user.model';
 import type { UserRole } from '../types/user';
 import { httpError } from '../utils/httpError';
 
@@ -21,4 +23,41 @@ export function authorizeRoles(...allowedRoles: UserRole[]) {
 
     next();
   };
+}
+
+//===============================================================
+
+export async function requireActiveVendor(
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    if (!req.user) {
+      next(httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.AUTH_REQUIRED));
+      return;
+    }
+
+    if (req.user.role !== USER_ROLES.VENDOR) {
+      next(httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.FORBIDDEN_ROLE));
+      return;
+    }
+
+    const vendor = await User.findOne({
+      _id: req.user.id,
+      role: USER_ROLES.VENDOR,
+      vendorStatus: VENDOR_ACCOUNT_STATUSES.ACTIVE,
+    })
+      .select('_id')
+      .lean<{ _id: unknown } | null>();
+
+    if (!vendor) {
+      next(httpError(HTTP_STATUS.FORBIDDEN, 'Vendor account is not active.'));
+      return;
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
 }

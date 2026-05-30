@@ -23,7 +23,8 @@
     "handlebars": "^4.7.8",
     "nodemailer": "^7.0.6",
     "express-rate-limit": "^8.1.0",
-    "@e-pharmacy/validation": "workspace:*"
+    "@e-pharmacy/validation": "workspace:*",
+    "@e-pharmacy/types": "workspace:*"
   },
   "devDependencies": {
     "@types/cors": "latest",

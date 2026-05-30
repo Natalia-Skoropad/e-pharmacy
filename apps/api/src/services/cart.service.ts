@@ -5,6 +5,7 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import { Cart } from '../models/cart.model';
 import { Product } from '../models/product.model';
 import { httpError } from '../utils/httpError';
+import { releaseOfferStock, reserveOfferStock } from './inventory.service';
 
 import type { CartResponseDto } from '../types/cart';
 import type { ProductEntity, ProductOfferEntity } from '../types/product';
@@ -34,82 +35,6 @@ type CartDocument = {
 type ProductDocument = ProductEntity & {
   _id: Types.ObjectId;
 };
-
-//===============================================================
-
-async function reserveProductOffer(
-  productId: string | Types.ObjectId,
-  storeId: string | Types.ObjectId,
-  quantity: number,
-  session?: mongoose.ClientSession
-): Promise<void> {
-  const result = await Product.updateOne(
-    {
-      _id: productId,
-      offers: {
-        $elemMatch: {
-          storeId,
-          activeQuantity: { $gte: quantity },
-          inStock: true,
-        },
-      },
-    },
-    {
-      $inc: {
-        'offers.$.activeQuantity': -quantity,
-        'offers.$.reservedQuantity': quantity,
-      },
-    },
-    { session }
-  );
-
-  if (result.modifiedCount !== 1) {
-    throw httpError(
-      HTTP_STATUS.CONFLICT,
-      'Product quantity is no longer available. Please refresh the cart and try again.'
-    );
-  }
-}
-
-//===============================================================
-
-async function releaseProductOffer(
-  productId: string | Types.ObjectId,
-  storeId: string | Types.ObjectId,
-  quantity: number,
-  session?: mongoose.ClientSession,
-  strict = true
-): Promise<void> {
-  const result = await Product.updateOne(
-    {
-      _id: productId,
-      offers: {
-        $elemMatch: {
-          storeId,
-          reservedQuantity: { $gte: quantity },
-        },
-      },
-    },
-    {
-      $inc: {
-        'offers.$.activeQuantity': quantity,
-        'offers.$.reservedQuantity': -quantity,
-      },
-      $set: {
-        'offers.$.inStock': true,
-      },
-    },
-    { session }
-  );
-
-  if (strict && result.modifiedCount !== 1) {
-    throw httpError(
-      HTTP_STATUS.CONFLICT,
-      'Product reservation could not be released. Please refresh the cart and try again.'
-    );
-  }
-}
-
 
 //===============================================================
 
@@ -189,7 +114,7 @@ async function getCartDocument(
     );
 
     for (const item of expiredItems) {
-      await releaseProductOffer(
+      await releaseOfferStock(
         item.productId,
         item.storeId,
         item.quantity,
@@ -332,7 +257,7 @@ export async function addCartItemService(
         );
       }
 
-      await reserveProductOffer(
+      await reserveOfferStock(
         input.productId,
         input.storeId,
         quantityToReserve,
@@ -357,7 +282,7 @@ export async function addCartItemService(
           !invoiceStoreIds.has(input.storeId) &&
           invoiceStoreIds.size >= MAX_CART_INVOICES
         ) {
-          await releaseProductOffer(
+          await releaseOfferStock(
             input.productId,
             input.storeId,
             quantityToReserve,
@@ -445,7 +370,7 @@ export async function updateCartItemService(
           );
         }
 
-        await reserveProductOffer(
+        await reserveOfferStock(
           currentItem.productId,
           currentItem.storeId,
           delta,
@@ -454,7 +379,7 @@ export async function updateCartItemService(
       }
 
       if (delta < 0) {
-        await releaseProductOffer(
+        await releaseOfferStock(
           currentItem.productId,
           currentItem.storeId,
           Math.abs(delta),
@@ -501,7 +426,7 @@ export async function removeCartItemService(
         throw httpError(HTTP_STATUS.NOT_FOUND, 'Cart item not found');
       }
 
-      await releaseProductOffer(
+      await releaseOfferStock(
         removedItem.productId,
         removedItem.storeId,
         removedItem.quantity,
@@ -540,7 +465,7 @@ export async function removeCartProductOfferService(
       );
 
       for (const item of removedItems) {
-        await releaseProductOffer(
+        await releaseOfferStock(
           item.productId,
           item.storeId,
           item.quantity,
@@ -573,7 +498,7 @@ export async function clearCartService(userId: string) {
       const cart = await getCartDocument(userId, session);
 
       for (const item of cart.items) {
-        await releaseProductOffer(
+        await releaseOfferStock(
           item.productId,
           item.storeId,
           item.quantity,

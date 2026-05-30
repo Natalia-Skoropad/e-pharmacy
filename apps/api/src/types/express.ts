@@ -1,4 +1,4 @@
-import type { UserRole, UserStatus } from './user';
+import type { UserRole, UserStatus, VendorAccountStatus } from './user';
 
 //===============================================================
 
@@ -11,6 +11,7 @@ declare module 'express' {
       email: string;
       role: UserRole;
       status: UserStatus;
+      vendorStatus?: VendorAccountStatus;
       phone?: string;
       address?: string;
       avatarUrl?: string;

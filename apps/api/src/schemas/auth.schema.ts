@@ -13,6 +13,7 @@ import {
   USER_NAME_MAX_LENGTH,
   USER_NAME_MIN_LENGTH,
   USER_ROLES,
+  VENDOR_ACCOUNT_STATUSES,
 } from '../constants/auth';
 
 //===============================================================
@@ -99,6 +100,24 @@ export const registerSchema = z.object({
 
   phone: phoneSchema,
   address: addressSchema,
+});
+
+
+//===============================================================
+
+export const createVendorUserSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: passwordSchema,
+  phone: phoneSchema,
+  address: addressSchema,
+  vendorStatus: z
+    .enum(Object.values(VENDOR_ACCOUNT_STATUSES))
+    .default(VENDOR_ACCOUNT_STATUSES.PENDING),
+});
+
+export const updateVendorStatusSchema = z.object({
+  vendorStatus: z.enum(Object.values(VENDOR_ACCOUNT_STATUSES)),
 });
 
 //===============================================================

@@ -60,6 +60,8 @@ export type ProductEntity = {
   rating?: number;
   reviewsCount?: number;
   reviews: ProductReviewEntity[];
+  createdBy?: Types.ObjectId;
+  updatedBy?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -107,7 +109,6 @@ export type ProductResponseDto = {
   isFavorite?: boolean;
   updatedAt?: string;
 };
-
 
 //===============================================================
 

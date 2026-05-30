@@ -60,6 +60,7 @@ type StoreDocument = {
   email?: string;
   workingHours?: string;
   bankDetails?: StoreBankDetails;
+  status?: import('../types/store').ShopStatus;
   rating?: number;
   imageUrl?: string;
   description?: string;
@@ -111,14 +112,18 @@ function getModeratedStoreReviews(store: StoreDocument): StoreReviewDocument[] {
   return (store.reviews ?? []).filter((review) => review.isModerated);
 }
 
-function getFallbackBankDetails(storeName: string): StoreBankDetails {
-  return {
-    recipientName: `LLC ${storeName}`,
-    taxId: '12345678',
-    iban: 'UA123456789012345678901234567',
-    bankName: 'JSC PrivatBank',
-    paymentPurpose: `Payment for E-PHARMACY invoice from ${storeName}`,
-  };
+//===============================================================
+
+function hasCompleteBankDetails(
+  bankDetails?: StoreBankDetails
+): bankDetails is StoreBankDetails {
+  return Boolean(
+    bankDetails?.recipientName &&
+      bankDetails.taxId &&
+      bankDetails.iban &&
+      bankDetails.bankName &&
+      bankDetails.paymentPurpose
+  );
 }
 
 //===============================================================
@@ -160,7 +165,11 @@ function serializeStore(
     ...(store.phone ? { phone: store.phone } : {}),
     ...(store.email ? { email: store.email } : {}),
     ...(store.workingHours ? { workingHours: store.workingHours } : {}),
-    bankDetails: store.bankDetails ?? getFallbackBankDetails(store.name),
+    ...(hasCompleteBankDetails(store.bankDetails)
+      ? { bankDetails: store.bankDetails }
+      : {}),
+    bankTransferAvailable: hasCompleteBankDetails(store.bankDetails),
+    ...(store.status ? { status: store.status } : {}),
     ...(averageRating !== null
       ? { rating: averageRating }
       : typeof store.rating === 'number'

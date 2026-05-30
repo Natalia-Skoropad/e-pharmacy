@@ -1,5 +1,6 @@
 import { Schema, model, models } from 'mongoose';
 
+import { SHOP_STATUSES } from '../constants/auth';
 import type { StoreEntity } from '../types/store';
 
 //===============================================================
@@ -20,6 +21,13 @@ const storeReviewSchema = new Schema(
       maxlength: [80, 'User name must be at most 80 characters'],
     },
 
+
+    status: {
+      type: String,
+      enum: Object.values(SHOP_STATUSES),
+      default: SHOP_STATUSES.DRAFT,
+      required: true,
+    },
 
     rating: {
       type: Number,
@@ -108,21 +116,21 @@ const storeSchema = new Schema<StoreEntity>(
     bankDetails: {
       recipientName: {
         type: String,
-        required: [true, 'Bank recipient name is required'],
+        required: false,
         trim: true,
         maxlength: [160, 'Bank recipient name must be at most 160 characters'],
       },
 
       taxId: {
         type: String,
-        required: [true, 'Bank tax ID is required'],
+        required: false,
         trim: true,
         match: [/^\d{8}(?:\d{2})?$/, 'Bank tax ID must contain 8 or 10 digits'],
       },
 
       iban: {
         type: String,
-        required: [true, 'IBAN is required'],
+        required: false,
         trim: true,
         uppercase: true,
         match: [/^UA[A-Z0-9]{27}$/, 'IBAN must start with UA and contain 29 characters'],
@@ -130,17 +138,24 @@ const storeSchema = new Schema<StoreEntity>(
 
       bankName: {
         type: String,
-        required: [true, 'Bank name is required'],
+        required: false,
         trim: true,
         maxlength: [120, 'Bank name must be at most 120 characters'],
       },
 
       paymentPurpose: {
         type: String,
-        required: [true, 'Payment purpose is required'],
+        required: false,
         trim: true,
         maxlength: [220, 'Payment purpose must be at most 220 characters'],
       },
+    },
+
+    status: {
+      type: String,
+      enum: Object.values(SHOP_STATUSES),
+      default: SHOP_STATUSES.DRAFT,
+      required: true,
     },
 
     rating: {
@@ -185,6 +200,29 @@ const storeSchema = new Schema<StoreEntity>(
       ref: 'User',
       default: undefined,
     },
+
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
+    approvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
+    approvedAt: {
+      type: Date,
+      default: undefined,
+    },
   },
   {
     timestamps: true,
@@ -198,6 +236,8 @@ storeSchema.index({ name: 'text', address: 'text', city: 'text' });
 storeSchema.index({ city: 1 });
 storeSchema.index({ isActive: 1 });
 storeSchema.index({ ownerId: 1, isActive: 1 });
+storeSchema.index({ ownerId: 1, status: 1 });
+storeSchema.index({ status: 1, isActive: 1 });
 
 //===============================================================
 

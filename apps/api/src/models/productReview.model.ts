@@ -1,0 +1,78 @@
+import { Schema, model, models } from 'mongoose';
+
+//===============================================================
+
+export type ProductReviewEntity = {
+  productId: Schema.Types.ObjectId;
+  userId?: Schema.Types.ObjectId;
+  userName: string;
+  rating: number;
+  comment: string;
+  status: 'pending' | 'approved' | 'rejected';
+  moderatedBy?: Schema.Types.ObjectId;
+  moderatedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+//===============================================================
+
+const productReviewSchema = new Schema<ProductReviewEntity>(
+  {
+    productId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true,
+      index: true,
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+      index: true,
+    },
+    userName: {
+      type: String,
+      required: [true, 'User name is required'],
+      trim: true,
+      maxlength: [80, 'User name must be at most 80 characters'],
+    },
+    rating: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5,
+    },
+    comment: {
+      type: String,
+      required: [true, 'Review comment is required'],
+      trim: true,
+      minlength: [10, 'Review comment must be at least 10 characters'],
+      maxlength: [500, 'Review comment must be at most 500 characters'],
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+      required: true,
+      index: true,
+    },
+    moderatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+    moderatedAt: {
+      type: Date,
+      default: undefined,
+    },
+  },
+  { timestamps: true, versionKey: false }
+);
+
+productReviewSchema.index({ productId: 1, status: 1, createdAt: -1 });
+productReviewSchema.index({ status: 1, createdAt: -1 });
+
+export const ProductReview =
+  models.ProductReview ||
+  model<ProductReviewEntity>('ProductReview', productReviewSchema);
