@@ -7,6 +7,8 @@ import type { UserRole } from './user';
 export type SessionEntity = {
   userId: Types.ObjectId | string;
   refreshTokenHash: string;
+  previousRefreshTokenHash?: string;
+  previousRefreshTokenValidUntil?: Date;
   userAgent?: string;
   ip?: string;
   deviceName?: string;

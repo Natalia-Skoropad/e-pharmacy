@@ -20,6 +20,17 @@ const sessionSchema = new Schema<SessionEntity>(
       select: false,
     },
 
+    previousRefreshTokenHash: {
+      type: String,
+      select: false,
+      default: undefined,
+    },
+
+    previousRefreshTokenValidUntil: {
+      type: Date,
+      default: undefined,
+    },
+
     userAgent: {
       type: String,
       trim: true,
@@ -75,6 +86,7 @@ const sessionSchema = new Schema<SessionEntity>(
 
 sessionSchema.index({ userId: 1, revokedAt: 1, expiresAt: 1 });
 sessionSchema.index({ refreshTokenHash: 1 }, { unique: true });
+sessionSchema.index({ previousRefreshTokenHash: 1, previousRefreshTokenValidUntil: 1 });
 sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 //===============================================================

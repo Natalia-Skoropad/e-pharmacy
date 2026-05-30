@@ -43,7 +43,7 @@ export type AuthResponse = {
 
 export type AuthTokens = {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
 };
 
 export type AuthSessionResult = {

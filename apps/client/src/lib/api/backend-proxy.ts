@@ -1,5 +1,12 @@
 import { type NextRequest, type NextResponse } from 'next/server';
 
+import {
+  ACCESS_TOKEN_COOKIE_NAME,
+  AUTH_READY_COOKIE_NAME,
+  LEGACY_AUTH_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from '@/lib/auth/auth-session';
+
 import { API_ROUTES } from '@/lib/constants/api-routes';
 
 import { createApiUrl } from './api-url';
@@ -17,6 +24,15 @@ type BackendProxyOptions = {
 
 //===================================================================
 
+function splitSetCookieHeader(value: string): string[] {
+  return value
+    .split(/,(?=\s*[^;,\s]+=)/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+//===================================================================
+
 function getSetCookieHeaders(headers: Headers): string[] {
   const headersWithSetCookie = headers as Headers & {
     getSetCookie?: () => string[];
@@ -27,13 +43,34 @@ function getSetCookieHeaders(headers: Headers): string[] {
 
   const setCookie = headers.get('set-cookie');
 
-  return setCookie ? [setCookie] : [];
+  return setCookie ? splitSetCookieHeader(setCookie) : [];
 }
 
 //===================================================================
 
 function getCookiePairFromSetCookie(setCookie: string): string | null {
-  return setCookie.split(';')[0] || null;
+  return setCookie.split(';')[0]?.trim() || null;
+}
+
+//===================================================================
+
+function parseCookieHeader(cookieHeader: string): Map<string, string> {
+  const cookies = new Map<string, string>();
+
+  cookieHeader
+    .split(';')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .forEach((cookie) => {
+      const [name, ...valueParts] = cookie.split('=');
+      const value = valueParts.join('=');
+
+      if (!name || !value) return;
+
+      cookies.set(name, value);
+    });
+
+  return cookies;
 }
 
 //===================================================================
@@ -42,14 +79,28 @@ function createCookieHeaderWithRefreshCookies(
   request: NextRequest,
   refreshResponse: Response
 ): string | undefined {
-  const currentCookie = request.headers.get('cookie') ?? '';
+  const cookies = parseCookieHeader(request.headers.get('cookie') ?? '');
   const refreshedCookiePairs = getSetCookieHeaders(refreshResponse.headers)
     .map(getCookiePairFromSetCookie)
     .filter(Boolean) as string[];
 
-  if (refreshedCookiePairs.length === 0) return currentCookie || undefined;
+  refreshedCookiePairs.forEach((pair) => {
+    const [name, ...valueParts] = pair.split('=');
+    const value = valueParts.join('=');
 
-  return [currentCookie, ...refreshedCookiePairs].filter(Boolean).join('; ');
+    if (!name || !value) return;
+
+    // Replace stale access/refresh cookies instead of appending duplicates.
+    // Express reads the first cookie with a matching name, so duplicated cookie
+    // names could make the retry keep using an expired access token.
+    cookies.set(name, value);
+  });
+
+  const cookieHeader = Array.from(cookies.entries())
+    .map(([name, value]) => `${name}=${value}`)
+    .join('; ');
+
+  return cookieHeader || undefined;
 }
 
 //===================================================================
@@ -58,6 +109,28 @@ function copyRefreshCookies(refreshResponse: Response, target: NextResponse): vo
   getSetCookieHeaders(refreshResponse.headers).forEach((setCookie) => {
     target.headers.append('set-cookie', setCookie);
   });
+}
+
+//===================================================================
+
+function isSecureRequest(request: NextRequest): boolean {
+  return request.nextUrl.protocol === 'https:';
+}
+
+//===================================================================
+
+function clearClientAuthCookies(target: NextResponse, request: NextRequest): void {
+  const cookieOptions = {
+    path: '/',
+    maxAge: 0,
+    sameSite: 'lax' as const,
+    secure: isSecureRequest(request),
+  };
+
+  target.cookies.set(ACCESS_TOKEN_COOKIE_NAME, '', cookieOptions);
+  target.cookies.set(REFRESH_TOKEN_COOKIE_NAME, '', cookieOptions);
+  target.cookies.set(LEGACY_AUTH_COOKIE_NAME, '', cookieOptions);
+  target.cookies.set(AUTH_READY_COOKIE_NAME, '', cookieOptions);
 }
 
 //===================================================================
@@ -120,9 +193,13 @@ export async function proxyBackendRequest({
   const refreshResponse = await refreshAuthCookies(request);
 
   if (!refreshResponse.ok) {
-    return createProxyResponse(response, {
+    const nextResponse = await createProxyResponse(response, {
       cacheControl: 'no-store',
     });
+
+    clearClientAuthCookies(nextResponse, request);
+
+    return nextResponse;
   }
 
   const cookieHeader = createCookieHeaderWithRefreshCookies(request, refreshResponse);
@@ -139,6 +216,10 @@ export async function proxyBackendRequest({
   });
 
   copyRefreshCookies(refreshResponse, nextResponse);
+
+  if (retryResponse.status === 401) {
+    clearClientAuthCookies(nextResponse, request);
+  }
 
   return nextResponse;
 }

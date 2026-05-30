@@ -59,10 +59,13 @@ export function setRefreshTokenCookie(res: Response, token: string): void {
 
 export function setAuthCookies(
   res: Response,
-  tokens: { accessToken: string; refreshToken: string }
+  tokens: { accessToken: string; refreshToken?: string }
 ): void {
   setAccessTokenCookie(res, tokens.accessToken);
-  setRefreshTokenCookie(res, tokens.refreshToken);
+
+  if (tokens.refreshToken) {
+    setRefreshTokenCookie(res, tokens.refreshToken);
+  }
 }
 
 //===============================================================

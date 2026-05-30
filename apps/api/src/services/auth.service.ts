@@ -39,6 +39,12 @@ const REFRESH_TOKEN_TTL_MS = parseDurationMs(
   30 * 24 * 60 * 60 * 1000
 );
 
+// A small grace window protects refresh-token rotation from parallel browser
+// requests. Without this, two simultaneous BFF requests can both try to refresh
+// the same session; the first request rotates the token, while the second one
+// still carries the previous cookie and would incorrectly log the UI out.
+const REFRESH_TOKEN_REUSE_GRACE_MS = 30 * 1000;
+
 //===============================================================
 
 function createRefreshToken(): string {
@@ -182,12 +188,26 @@ export async function refreshAuthSessionService(
   context?: SessionContext
 ): Promise<AuthSessionResult> {
   const refreshTokenHash = hashRefreshToken(refreshToken);
+  const now = new Date();
 
-  const session = await Session.findOne({
+  let session = await Session.findOne({
     refreshTokenHash,
     revokedAt: undefined,
-    expiresAt: { $gt: new Date() },
-  }).select('+refreshTokenHash');
+    expiresAt: { $gt: now },
+  }).select('+refreshTokenHash +previousRefreshTokenHash');
+
+  let isPreviousRefreshToken = false;
+
+  if (!session) {
+    session = await Session.findOne({
+      previousRefreshTokenHash: refreshTokenHash,
+      previousRefreshTokenValidUntil: { $gt: now },
+      revokedAt: undefined,
+      expiresAt: { $gt: now },
+    }).select('+refreshTokenHash +previousRefreshTokenHash');
+
+    isPreviousRefreshToken = Boolean(session);
+  }
 
   if (!session) {
     throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_TOKEN);
@@ -209,30 +229,39 @@ export async function refreshAuthSessionService(
     throw httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.USER_BLOCKED);
   }
 
-  const nextRefreshToken = createRefreshToken();
   const safeContext = sanitizeSessionContext(context);
 
-  session.refreshTokenHash = hashRefreshToken(nextRefreshToken);
   session.lastUsedAt = new Date();
-  session.expiresAt = getRefreshTokenExpiresAt();
   if (safeContext.userAgent) session.userAgent = safeContext.userAgent;
   if (safeContext.ip) session.ip = safeContext.ip;
   if (safeContext.deviceName) session.deviceName = safeContext.deviceName;
 
-  await session.save();
+  const tokens: AuthTokens = {
+    accessToken: signToken({
+      userId: String(user._id),
+      role: user.role,
+      sessionId: String(session._id),
+    }),
+  };
 
-  const accessToken = signToken({
-    userId: String(user._id),
-    role: user.role,
-    sessionId: String(session._id),
-  });
+  if (!isPreviousRefreshToken) {
+    const nextRefreshToken = createRefreshToken();
+
+    session.previousRefreshTokenHash = session.refreshTokenHash;
+    session.previousRefreshTokenValidUntil = new Date(
+      Date.now() + REFRESH_TOKEN_REUSE_GRACE_MS
+    );
+    session.refreshTokenHash = hashRefreshToken(nextRefreshToken);
+    session.expiresAt = getRefreshTokenExpiresAt();
+
+    tokens.refreshToken = nextRefreshToken;
+  }
+
+  await session.save();
 
   return {
     user: toAuthUserResponse(user),
-    tokens: {
-      accessToken,
-      refreshToken: nextRefreshToken,
-    },
+    tokens,
   };
 }
 

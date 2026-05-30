@@ -1,8 +1,11 @@
 import { type NextRequest, type NextResponse } from 'next/server';
 
 import {
+  ACCESS_TOKEN_COOKIE_NAME,
   AUTH_COOKIE_MAX_AGE_SECONDS,
   AUTH_READY_COOKIE_NAME,
+  LEGACY_AUTH_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
 } from '@/lib/auth/auth-session';
 
 import { API_ROUTES } from '@/lib/constants/api-routes';
@@ -39,12 +42,17 @@ function syncAuthMarkerCookie(
   if (!action) return;
 
   if (action === 'delete') {
-    nextResponse.cookies.set(AUTH_READY_COOKIE_NAME, '', {
+    const cookieOptions = {
       path: '/',
       maxAge: 0,
-      sameSite: 'lax',
+      sameSite: 'lax' as const,
       secure: isSecureRequest(request),
-    });
+    };
+
+    nextResponse.cookies.set(AUTH_READY_COOKIE_NAME, '', cookieOptions);
+    nextResponse.cookies.set(ACCESS_TOKEN_COOKIE_NAME, '', cookieOptions);
+    nextResponse.cookies.set(REFRESH_TOKEN_COOKIE_NAME, '', cookieOptions);
+    nextResponse.cookies.set(LEGACY_AUTH_COOKIE_NAME, '', cookieOptions);
     return;
   }
 
