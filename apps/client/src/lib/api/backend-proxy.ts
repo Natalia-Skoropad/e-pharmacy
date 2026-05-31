@@ -11,12 +11,11 @@ import { API_ROUTES } from '@/lib/constants/api-routes';
 import { createApiUrl } from './api-url';
 
 import {
-  applyAuthTokensFromBody,
   applyBackendAuthCookies,
-  getAuthTokensFromBody,
+  getAuthTokensFromPayload,
   getCookiePairFromSetCookie,
-  getCookiePairsFromAuthTokens,
   getSetCookieHeaders,
+  setFrontendAuthCookiesFromTokens,
 } from './proxy-auth-cookies';
 
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
@@ -54,18 +53,28 @@ function parseCookieHeader(cookieHeader: string): Map<string, string> {
 
 //===================================================================
 
+async function getAuthTokensFromResponse(
+  response: Response
+): Promise<ReturnType<typeof getAuthTokensFromPayload>> {
+  try {
+    const payload = (await response.clone().json()) as unknown;
+
+    return getAuthTokensFromPayload(payload);
+  } catch {
+    return null;
+  }
+}
+
+//===================================================================
+
 async function createCookieHeaderWithRefreshCookies(
   request: NextRequest,
   refreshResponse: Response
 ): Promise<string | undefined> {
   const cookies = parseCookieHeader(request.headers.get('cookie') ?? '');
-  const refreshBody = await refreshResponse.clone().text();
-  const refreshedCookiePairs = [
-    ...getCookiePairsFromAuthTokens(getAuthTokensFromBody(refreshBody)),
-    ...getSetCookieHeaders(refreshResponse.headers)
-      .map(getCookiePairFromSetCookie)
-      .filter((pair): pair is string => Boolean(pair)),
-  ];
+  const refreshedCookiePairs = getSetCookieHeaders(refreshResponse.headers)
+    .map(getCookiePairFromSetCookie)
+    .filter(Boolean) as string[];
 
   refreshedCookiePairs.forEach((pair) => {
     const [name, ...valueParts] = pair.split('=');
@@ -79,6 +88,16 @@ async function createCookieHeaderWithRefreshCookies(
     cookies.set(name, value);
   });
 
+  const tokens = await getAuthTokensFromResponse(refreshResponse);
+
+  if (tokens?.accessToken) {
+    cookies.set(ACCESS_TOKEN_COOKIE_NAME, tokens.accessToken);
+  }
+
+  if (tokens?.refreshToken) {
+    cookies.set(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken);
+  }
+
   const cookieHeader = Array.from(cookies.entries())
     .map(([name, value]) => `${name}=${value}`)
     .join('; ');
@@ -88,12 +107,17 @@ async function createCookieHeaderWithRefreshCookies(
 
 //===================================================================
 
-function copyRefreshCookies(
+async function copyRefreshCookies(
   refreshResponse: Response,
   target: NextResponse,
   request: NextRequest
-): void {
+): Promise<void> {
   applyBackendAuthCookies(refreshResponse, target, request);
+  setFrontendAuthCookiesFromTokens(
+    await getAuthTokensFromResponse(refreshResponse),
+    target,
+    request
+  );
 }
 
 //===================================================================
@@ -123,10 +147,20 @@ function clearClientAuthCookies(
 
 //===================================================================
 
+function createBackendAuthHeaders(request: NextRequest): Headers {
+  const headers = createProxyHeaders(request);
+
+  headers.set('x-e-pharmacy-bff-auth', '1');
+
+  return headers;
+}
+
+//===================================================================
+
 async function refreshAuthCookies(request: NextRequest): Promise<Response> {
   return fetch(createApiUrl(API_ROUTES.auth.refresh), {
     method: 'POST',
-    headers: createProxyHeaders(request),
+    headers: createBackendAuthHeaders(request),
     cache: 'no-store',
     credentials: 'include',
   });
@@ -214,12 +248,7 @@ export async function proxyBackendRequest({
   });
 
   applyBackendAuthCookies(retryResponse, nextResponse, request);
-  copyRefreshCookies(refreshResponse, nextResponse, request);
-  applyAuthTokensFromBody(
-    await refreshResponse.clone().text(),
-    nextResponse,
-    request
-  );
+  await copyRefreshCookies(refreshResponse, nextResponse, request);
 
   if (retryResponse.status === 401) {
     clearClientAuthCookies(nextResponse, request);

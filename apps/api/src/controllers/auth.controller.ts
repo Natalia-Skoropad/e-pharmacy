@@ -17,7 +17,6 @@ import {
 } from '../services/auth.service';
 
 import type {
-  AuthSessionResult,
   ForgotPasswordInput,
   LoginInput,
   ResetPasswordInput,
@@ -54,12 +53,15 @@ function getSessionContext(req: Request): SessionContext {
 //===============================================================
 
 function isBffAuthProxyRequest(req: Request): boolean {
-  return req.headers['x-bff-auth-proxy'] === '1';
+  return req.headers['x-e-pharmacy-bff-auth'] === '1';
 }
 
 //===============================================================
 
-function getAuthResponseData(req: Request, data: AuthSessionResult) {
+function createAuthResponseData(
+  req: Request,
+  data: Awaited<ReturnType<typeof loginUserService>>
+): { user: typeof data.user; tokens?: typeof data.tokens } {
   return {
     user: data.user,
     ...(isBffAuthProxyRequest(req) ? { tokens: data.tokens } : {}),
@@ -113,7 +115,7 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
     res,
     statusCode: HTTP_STATUS.CREATED,
     message: API_MESSAGES.USER_REGISTERED,
-    data: getAuthResponseData(req, data),
+    data: createAuthResponseData(req, data),
   });
 }
 
@@ -130,7 +132,7 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
     res,
     statusCode: HTTP_STATUS.OK,
     message: API_MESSAGES.USER_LOGGED_IN,
-    data: getAuthResponseData(req, data),
+    data: createAuthResponseData(req, data),
   });
 }
 
@@ -164,7 +166,7 @@ export async function refreshAuthSession(
     res,
     statusCode: HTTP_STATUS.OK,
     message: 'Session was refreshed successfully.',
-    data: getAuthResponseData(req, data),
+    data: createAuthResponseData(req, data),
   });
 }
 

@@ -1,4 +1,4 @@
-import { type NextRequest, type NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 import {
   ACCESS_TOKEN_COOKIE_NAME,
@@ -9,16 +9,18 @@ import {
 } from '@/lib/auth/auth-session';
 
 import { API_ROUTES } from '@/lib/constants/api-routes';
+
 import { createApiUrl } from './api-url';
 
 import {
-  applyAuthTokensFromBody,
   applyBackendAuthCookies,
-  removeAuthTokensFromBody,
+  getAuthTokensFromPayload,
+  setFrontendAuthCookiesFromTokens,
+  stripAuthTokensFromPayload,
+  type ProxyAuthTokens,
 } from './proxy-auth-cookies';
 
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
-import { createTextProxyResponse } from './proxy-response';
 import type { HttpMethod } from './types';
 
 //===================================================================
@@ -36,6 +38,20 @@ type AuthProxyOptions = {
 
 function isSecureRequest(request: NextRequest): boolean {
   return request.nextUrl.protocol === 'https:';
+}
+
+//===================================================================
+
+function createBackendAuthHeaders(request: NextRequest): Headers {
+  const headers = createProxyHeaders(request);
+
+  // Internal marker for our Express API. It allows the API to include raw
+  // tokens only in server-to-server responses to this Next.js BFF route. The
+  // BFF immediately moves them into httpOnly frontend cookies and strips them
+  // from the JSON sent to the browser.
+  headers.set('x-e-pharmacy-bff-auth', '1');
+
+  return headers;
 }
 
 //===================================================================
@@ -72,6 +88,44 @@ function syncAuthMarkerCookie(
 
 //===================================================================
 
+async function createSanitizedAuthResponse(
+  response: Response,
+  request: NextRequest
+): Promise<NextResponse> {
+  const contentType = response.headers.get('content-type');
+  const body = await response.text();
+  let tokens: ProxyAuthTokens | null = null;
+  let responseBody: BodyInit | null = body || null;
+
+  if (contentType?.includes('application/json') && body) {
+    try {
+      const payload = JSON.parse(body) as unknown;
+
+      tokens = getAuthTokensFromPayload(payload);
+      responseBody = JSON.stringify(stripAuthTokensFromPayload(payload));
+    } catch {
+      responseBody = body;
+    }
+  }
+
+  const nextResponse = new NextResponse(responseBody, {
+    status: response.status,
+  });
+
+  if (contentType) {
+    nextResponse.headers.set('Content-Type', contentType);
+  }
+
+  nextResponse.headers.set('Cache-Control', 'no-store');
+
+  applyBackendAuthCookies(response, nextResponse, request);
+  setFrontendAuthCookiesFromTokens(tokens, nextResponse, request);
+
+  return nextResponse;
+}
+
+//===================================================================
+
 export async function proxyAuthRequest({
   backendPath,
   request,
@@ -80,21 +134,13 @@ export async function proxyAuthRequest({
 }: AuthProxyOptions) {
   const response = await fetch(createApiUrl(backendPath), {
     method,
-    headers: createProxyHeaders(request),
+    headers: createBackendAuthHeaders(request),
     body: await getProxyBody(request, method),
     cache: 'no-store',
     credentials: 'include',
   });
 
-  const body = await response.text();
-  const safeBody = removeAuthTokensFromBody(body);
-  const nextResponse = createTextProxyResponse(response, safeBody, {
-    cacheControl: 'no-store',
-    copySetCookie: false,
-  });
-
-  applyBackendAuthCookies(response, nextResponse, request);
-  applyAuthTokensFromBody(body, nextResponse, request);
+  const nextResponse = await createSanitizedAuthResponse(response, request);
 
   if (response.ok || markerAction === 'delete') {
     syncAuthMarkerCookie(nextResponse, request, markerAction);
