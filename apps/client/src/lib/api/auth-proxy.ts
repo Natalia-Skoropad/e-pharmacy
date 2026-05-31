@@ -9,11 +9,16 @@ import {
 } from '@/lib/auth/auth-session';
 
 import { API_ROUTES } from '@/lib/constants/api-routes';
-
 import { createApiUrl } from './api-url';
-import { applyBackendAuthCookies } from './proxy-auth-cookies';
+
+import {
+  applyAuthTokensFromBody,
+  applyBackendAuthCookies,
+  removeAuthTokensFromBody,
+} from './proxy-auth-cookies';
+
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
-import { createProxyResponse } from './proxy-response';
+import { createTextProxyResponse } from './proxy-response';
 import type { HttpMethod } from './types';
 
 //===================================================================
@@ -81,12 +86,15 @@ export async function proxyAuthRequest({
     credentials: 'include',
   });
 
-  const nextResponse = await createProxyResponse(response, {
+  const body = await response.text();
+  const safeBody = removeAuthTokensFromBody(body);
+  const nextResponse = createTextProxyResponse(response, safeBody, {
     cacheControl: 'no-store',
     copySetCookie: false,
   });
 
   applyBackendAuthCookies(response, nextResponse, request);
+  applyAuthTokensFromBody(body, nextResponse, request);
 
   if (response.ok || markerAction === 'delete') {
     syncAuthMarkerCookie(nextResponse, request, markerAction);

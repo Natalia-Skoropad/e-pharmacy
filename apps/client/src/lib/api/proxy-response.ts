@@ -40,12 +40,12 @@ function copySetCookieHeader(source: Response, target: NextResponse): void {
 
 //===================================================================
 
-export async function createProxyResponse(
+export function createTextProxyResponse(
   response: Response,
+  body: string,
   { cacheControl, copySetCookie = true }: ProxyResponseOptions
-): Promise<NextResponse> {
+): NextResponse {
   const contentType = response.headers.get('content-type');
-  const body = await response.text();
 
   const nextResponse = new NextResponse(body || null, {
     status: response.status,
@@ -62,4 +62,15 @@ export async function createProxyResponse(
   }
 
   return nextResponse;
+}
+
+//===================================================================
+
+export async function createProxyResponse(
+  response: Response,
+  options: ProxyResponseOptions
+): Promise<NextResponse> {
+  const body = await response.text();
+
+  return createTextProxyResponse(response, body, options);
 }

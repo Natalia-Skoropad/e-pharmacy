@@ -21,6 +21,19 @@ type ParsedSetCookie = {
   expires?: Date;
 };
 
+type AuthTokens = {
+  accessToken?: string;
+  refreshToken?: string;
+};
+
+type AuthPayloadWithTokens = {
+  data?: {
+    tokens?: AuthTokens;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+};
+
 //===================================================================
 
 function splitSetCookieHeader(value: string): string[] {
@@ -93,6 +106,23 @@ function isSecureRequest(request: NextRequest): boolean {
 
 //===================================================================
 
+function setClientAuthCookie(
+  target: NextResponse,
+  request: NextRequest,
+  cookie: ParsedSetCookie
+): void {
+  target.cookies.set(cookie.name, cookie.value, {
+    httpOnly: true,
+    secure: isSecureRequest(request),
+    sameSite: 'lax',
+    path: '/',
+    ...(cookie.maxAge !== undefined ? { maxAge: cookie.maxAge } : {}),
+    ...(cookie.expires ? { expires: cookie.expires } : {}),
+  });
+}
+
+//===================================================================
+
 export function applyBackendAuthCookies(
   source: Response,
   target: NextResponse,
@@ -101,16 +131,83 @@ export function applyBackendAuthCookies(
   getSetCookieHeaders(source.headers)
     .map(parseSetCookie)
     .filter((cookie): cookie is ParsedSetCookie => Boolean(cookie))
-    .forEach((cookie) => {
-      target.cookies.set(cookie.name, cookie.value, {
-        httpOnly: true,
-        secure: isSecureRequest(request),
-        sameSite: 'lax',
-        path: '/',
-        ...(cookie.maxAge !== undefined ? { maxAge: cookie.maxAge } : {}),
-        ...(cookie.expires ? { expires: cookie.expires } : {}),
-      });
+    .forEach((cookie) => setClientAuthCookie(target, request, cookie));
+}
+
+//===================================================================
+
+export function getAuthTokensFromBody(body: string): AuthTokens | null {
+  if (!body) return null;
+
+  try {
+    const payload = JSON.parse(body) as AuthPayloadWithTokens;
+    const tokens = payload.data?.tokens;
+
+    if (!tokens?.accessToken && !tokens?.refreshToken) return null;
+
+    return tokens;
+  } catch {
+    return null;
+  }
+}
+
+//===================================================================
+
+export function removeAuthTokensFromBody(body: string): string {
+  if (!body) return body;
+
+  try {
+    const payload = JSON.parse(body) as AuthPayloadWithTokens;
+
+    if (payload.data?.tokens) {
+      delete payload.data.tokens;
+    }
+
+    return JSON.stringify(payload);
+  } catch {
+    return body;
+  }
+}
+
+//===================================================================
+
+export function getCookiePairsFromAuthTokens(tokens: AuthTokens | null): string[] {
+  if (!tokens) return [];
+
+  return [
+    tokens.accessToken
+      ? `${ACCESS_TOKEN_COOKIE_NAME}=${encodeURIComponent(tokens.accessToken)}`
+      : null,
+    tokens.refreshToken
+      ? `${REFRESH_TOKEN_COOKIE_NAME}=${encodeURIComponent(tokens.refreshToken)}`
+      : null,
+  ].filter((pair): pair is string => Boolean(pair));
+}
+
+//===================================================================
+
+export function applyAuthTokensFromBody(
+  body: string,
+  target: NextResponse,
+  request: NextRequest
+): void {
+  const tokens = getAuthTokensFromBody(body);
+
+  if (!tokens) return;
+
+  if (tokens.accessToken) {
+    setClientAuthCookie(target, request, {
+      name: ACCESS_TOKEN_COOKIE_NAME,
+      value: tokens.accessToken,
     });
+  }
+
+  if (tokens.refreshToken) {
+    setClientAuthCookie(target, request, {
+      name: REFRESH_TOKEN_COOKIE_NAME,
+      value: tokens.refreshToken,
+    });
+  }
 }
 
 //===================================================================

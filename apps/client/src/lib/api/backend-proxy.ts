@@ -11,8 +11,11 @@ import { API_ROUTES } from '@/lib/constants/api-routes';
 import { createApiUrl } from './api-url';
 
 import {
+  applyAuthTokensFromBody,
   applyBackendAuthCookies,
+  getAuthTokensFromBody,
   getCookiePairFromSetCookie,
+  getCookiePairsFromAuthTokens,
   getSetCookieHeaders,
 } from './proxy-auth-cookies';
 
@@ -51,14 +54,18 @@ function parseCookieHeader(cookieHeader: string): Map<string, string> {
 
 //===================================================================
 
-function createCookieHeaderWithRefreshCookies(
+async function createCookieHeaderWithRefreshCookies(
   request: NextRequest,
   refreshResponse: Response
-): string | undefined {
+): Promise<string | undefined> {
   const cookies = parseCookieHeader(request.headers.get('cookie') ?? '');
-  const refreshedCookiePairs = getSetCookieHeaders(refreshResponse.headers)
-    .map(getCookiePairFromSetCookie)
-    .filter(Boolean) as string[];
+  const refreshBody = await refreshResponse.clone().text();
+  const refreshedCookiePairs = [
+    ...getCookiePairsFromAuthTokens(getAuthTokensFromBody(refreshBody)),
+    ...getSetCookieHeaders(refreshResponse.headers)
+      .map(getCookiePairFromSetCookie)
+      .filter((pair): pair is string => Boolean(pair)),
+  ];
 
   refreshedCookiePairs.forEach((pair) => {
     const [name, ...valueParts] = pair.split('=');
@@ -189,7 +196,7 @@ export async function proxyBackendRequest({
     return nextResponse;
   }
 
-  const cookieHeader = createCookieHeaderWithRefreshCookies(
+  const cookieHeader = await createCookieHeaderWithRefreshCookies(
     request,
     refreshResponse
   );
@@ -208,6 +215,11 @@ export async function proxyBackendRequest({
 
   applyBackendAuthCookies(retryResponse, nextResponse, request);
   copyRefreshCookies(refreshResponse, nextResponse, request);
+  applyAuthTokensFromBody(
+    await refreshResponse.clone().text(),
+    nextResponse,
+    request
+  );
 
   if (retryResponse.status === 401) {
     clearClientAuthCookies(nextResponse, request);

@@ -17,6 +17,7 @@ import {
 } from '../services/auth.service';
 
 import type {
+  AuthSessionResult,
   ForgotPasswordInput,
   LoginInput,
   ResetPasswordInput,
@@ -47,6 +48,21 @@ function getSessionContext(req: Request): SessionContext {
     userAgent: req.headers['user-agent'],
     ip,
     deviceName,
+  };
+}
+
+//===============================================================
+
+function isBffAuthProxyRequest(req: Request): boolean {
+  return req.headers['x-bff-auth-proxy'] === '1';
+}
+
+//===============================================================
+
+function getAuthResponseData(req: Request, data: AuthSessionResult) {
+  return {
+    user: data.user,
+    ...(isBffAuthProxyRequest(req) ? { tokens: data.tokens } : {}),
   };
 }
 
@@ -97,9 +113,7 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
     res,
     statusCode: HTTP_STATUS.CREATED,
     message: API_MESSAGES.USER_REGISTERED,
-    data: {
-      user: data.user,
-    },
+    data: getAuthResponseData(req, data),
   });
 }
 
@@ -116,9 +130,7 @@ export async function loginUser(req: Request, res: Response): Promise<void> {
     res,
     statusCode: HTTP_STATUS.OK,
     message: API_MESSAGES.USER_LOGGED_IN,
-    data: {
-      user: data.user,
-    },
+    data: getAuthResponseData(req, data),
   });
 }
 
@@ -152,9 +164,7 @@ export async function refreshAuthSession(
     res,
     statusCode: HTTP_STATUS.OK,
     message: 'Session was refreshed successfully.',
-    data: {
-      user: data.user,
-    },
+    data: getAuthResponseData(req, data),
   });
 }
 

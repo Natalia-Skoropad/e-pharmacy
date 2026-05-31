@@ -73,6 +73,10 @@ export function createProxyHeaders(
   if (origin) headers.set('Origin', origin);
   if (referer) headers.set('Referer', referer);
 
+  // Allows the backend to include raw tokens only in responses meant for the
+  // Next.js BFF. The browser still receives httpOnly same-origin cookies only.
+  headers.set('X-BFF-Auth-Proxy', '1');
+
   return headers;
 }
 
