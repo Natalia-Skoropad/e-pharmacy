@@ -1,10 +1,11 @@
 import type { Request, Response } from 'express';
-
 import { HTTP_STATUS } from '../constants/httpStatus';
+
 import {
   addCartItemSchema,
   updateCartItemSchema,
 } from '../schemas/cart.schema';
+
 import {
   addCartItemService,
   clearCartService,
@@ -12,6 +13,7 @@ import {
   removeCartItemService,
   updateCartItemService,
 } from '../services/cart.service';
+
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================

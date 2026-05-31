@@ -1,12 +1,13 @@
 import type { Request, Response } from 'express';
-
 import { HTTP_STATUS } from '../constants/httpStatus';
+
 import {
   createProductReviewSchema,
   moderateProductReviewSchema,
   pendingProductReviewsQuerySchema,
   productsQuerySchema,
 } from '../schemas/product.schema';
+
 import {
   createProductReviewService,
   getProductDetailsService,
@@ -17,6 +18,7 @@ import {
   moderateProductReviewService,
   toggleFavoriteProductService,
 } from '../services/product.service';
+
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
@@ -71,7 +73,6 @@ export async function getProductDetails(
 }
 
 //===============================================================
-
 
 export async function getPendingProductReviews(
   req: Request,
@@ -129,7 +130,6 @@ export async function createProductReview(
 
 //===============================================================
 
-
 export async function moderateProductReview(
   req: Request,
   res: Response
@@ -160,7 +160,10 @@ export async function toggleFavoriteProduct(
 ): Promise<void> {
   const { productId } = req.params as ProductParams;
 
-  const data = await toggleFavoriteProductService(productId, req.user?.id ?? '');
+  const data = await toggleFavoriteProductService(
+    productId,
+    req.user?.id ?? ''
+  );
 
   sendSuccessResponse({
     res,

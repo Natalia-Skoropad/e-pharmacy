@@ -70,12 +70,9 @@ export function createProxyHeaders(
   if (forwardCookie && cookie) {
     headers.set('Cookie', normalizeCookieHeader(cookie));
   }
+  headers.set('X-E-Pharmacy-Auth-Proxy', 'next-bff');
   if (origin) headers.set('Origin', origin);
   if (referer) headers.set('Referer', referer);
-
-  // Allows the backend to include raw tokens only in responses meant for the
-  // Next.js BFF. The browser still receives httpOnly same-origin cookies only.
-  headers.set('X-BFF-Auth-Proxy', '1');
 
   return headers;
 }

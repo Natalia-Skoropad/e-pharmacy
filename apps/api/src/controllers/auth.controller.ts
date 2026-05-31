@@ -50,10 +50,11 @@ function getSessionContext(req: Request): SessionContext {
   };
 }
 
+
 //===============================================================
 
-function isBffAuthProxyRequest(req: Request): boolean {
-  return req.headers['x-e-pharmacy-bff-auth'] === '1';
+function isNextAuthProxyRequest(req: Request): boolean {
+  return req.headers['x-e-pharmacy-auth-proxy'] === 'next-bff';
 }
 
 //===============================================================
@@ -61,10 +62,13 @@ function isBffAuthProxyRequest(req: Request): boolean {
 function createAuthResponseData(
   req: Request,
   data: Awaited<ReturnType<typeof loginUserService>>
-): { user: typeof data.user; tokens?: typeof data.tokens } {
+): {
+  user: typeof data.user;
+  tokens?: typeof data.tokens;
+} {
   return {
     user: data.user,
-    ...(isBffAuthProxyRequest(req) ? { tokens: data.tokens } : {}),
+    ...(isNextAuthProxyRequest(req) ? { tokens: data.tokens } : {}),
   };
 }
 

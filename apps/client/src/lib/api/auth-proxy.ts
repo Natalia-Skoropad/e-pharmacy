@@ -1,26 +1,15 @@
-import { type NextRequest, NextResponse } from 'next/server';
-
-import {
-  ACCESS_TOKEN_COOKIE_NAME,
-  AUTH_COOKIE_MAX_AGE_SECONDS,
-  AUTH_READY_COOKIE_NAME,
-  LEGACY_AUTH_COOKIE_NAME,
-  REFRESH_TOKEN_COOKIE_NAME,
-} from '@/lib/auth/auth-session';
+import { NextResponse, type NextRequest } from 'next/server';
 
 import { API_ROUTES } from '@/lib/constants/api-routes';
-
 import { createApiUrl } from './api-url';
+import { createProxyHeaders, getProxyBody } from './proxy-headers';
 
 import {
-  applyBackendAuthCookies,
-  getAuthTokensFromPayload,
-  setFrontendAuthCookiesFromTokens,
-  stripAuthTokensFromPayload,
-  type ProxyAuthTokens,
+  clearClientAuthCookies,
+  extractTokensFromResponseBody,
+  setClientAuthCookies,
 } from './proxy-auth-cookies';
 
-import { createProxyHeaders, getProxyBody } from './proxy-headers';
 import type { HttpMethod } from './types';
 
 //===================================================================
@@ -36,79 +25,48 @@ type AuthProxyOptions = {
 
 //===================================================================
 
-function isSecureRequest(request: NextRequest): boolean {
-  return request.nextUrl.protocol === 'https:';
+function splitSetCookieHeader(value: string): string[] {
+  return value
+    .split(/,(?=\s*[^;,\s]+=)/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 //===================================================================
 
-function createBackendAuthHeaders(request: NextRequest): Headers {
-  const headers = createProxyHeaders(request);
+function getSetCookieHeaders(headers: Headers): string[] {
+  const headersWithSetCookie = headers as Headers & {
+    getSetCookie?: () => string[];
+  };
 
-  // Internal marker for our Express API. It allows the API to include raw
-  // tokens only in server-to-server responses to this Next.js BFF route. The
-  // BFF immediately moves them into httpOnly frontend cookies and strips them
-  // from the JSON sent to the browser.
-  headers.set('x-e-pharmacy-bff-auth', '1');
+  const setCookieHeaders = headersWithSetCookie.getSetCookie?.();
+  if (setCookieHeaders?.length) return setCookieHeaders;
 
-  return headers;
+  const setCookie = headers.get('set-cookie');
+
+  return setCookie ? splitSetCookieHeader(setCookie) : [];
 }
 
 //===================================================================
 
-function syncAuthMarkerCookie(
-  nextResponse: NextResponse,
-  request: NextRequest,
-  action?: AuthMarkerAction
-): void {
-  if (!action) return;
-
-  if (action === 'delete') {
-    const cookieOptions = {
-      path: '/',
-      maxAge: 0,
-      sameSite: 'lax' as const,
-      secure: isSecureRequest(request),
-    };
-
-    nextResponse.cookies.set(AUTH_READY_COOKIE_NAME, '', cookieOptions);
-    nextResponse.cookies.set(ACCESS_TOKEN_COOKIE_NAME, '', cookieOptions);
-    nextResponse.cookies.set(REFRESH_TOKEN_COOKIE_NAME, '', cookieOptions);
-    nextResponse.cookies.set(LEGACY_AUTH_COOKIE_NAME, '', cookieOptions);
-    return;
-  }
-
-  nextResponse.cookies.set(AUTH_READY_COOKIE_NAME, '1', {
-    path: '/',
-    maxAge: AUTH_COOKIE_MAX_AGE_SECONDS,
-    sameSite: 'lax',
-    secure: isSecureRequest(request),
+function copySetCookieHeader(source: Response, target: NextResponse): void {
+  getSetCookieHeaders(source.headers).forEach((setCookie) => {
+    target.headers.append('set-cookie', setCookie);
   });
 }
 
 //===================================================================
 
-async function createSanitizedAuthResponse(
+async function createAuthProxyResponse(
   response: Response,
-  request: NextRequest
+  request: NextRequest,
+  markerAction?: AuthMarkerAction
 ): Promise<NextResponse> {
   const contentType = response.headers.get('content-type');
-  const body = await response.text();
-  let tokens: ProxyAuthTokens | null = null;
-  let responseBody: BodyInit | null = body || null;
+  const rawBody = await response.text();
+  const { body, tokens } = extractTokensFromResponseBody(rawBody);
 
-  if (contentType?.includes('application/json') && body) {
-    try {
-      const payload = JSON.parse(body) as unknown;
-
-      tokens = getAuthTokensFromPayload(payload);
-      responseBody = JSON.stringify(stripAuthTokensFromPayload(payload));
-    } catch {
-      responseBody = body;
-    }
-  }
-
-  const nextResponse = new NextResponse(responseBody, {
+  const nextResponse = new NextResponse(body || null, {
     status: response.status,
   });
 
@@ -118,8 +76,19 @@ async function createSanitizedAuthResponse(
 
   nextResponse.headers.set('Cache-Control', 'no-store');
 
-  applyBackendAuthCookies(response, nextResponse, request);
-  setFrontendAuthCookiesFromTokens(tokens, nextResponse, request);
+  // Keep backward compatibility with backend Set-Cookie when it is visible to
+  // the Next runtime, but do not rely on it. On Vercel it can be unavailable
+  // for cross-origin fetch responses, so tokens are also passed in the BFF-only
+  // JSON field and converted to httpOnly frontend-domain cookies below.
+  copySetCookieHeader(response, nextResponse);
+
+  if (response.ok && markerAction === 'set') {
+    setClientAuthCookies(nextResponse, request, tokens);
+  }
+
+  if (markerAction === 'delete') {
+    clearClientAuthCookies(nextResponse, request);
+  }
 
   return nextResponse;
 }
@@ -134,19 +103,12 @@ export async function proxyAuthRequest({
 }: AuthProxyOptions) {
   const response = await fetch(createApiUrl(backendPath), {
     method,
-    headers: createBackendAuthHeaders(request),
+    headers: createProxyHeaders(request),
     body: await getProxyBody(request, method),
     cache: 'no-store',
-    credentials: 'include',
   });
 
-  const nextResponse = await createSanitizedAuthResponse(response, request);
-
-  if (response.ok || markerAction === 'delete') {
-    syncAuthMarkerCookie(nextResponse, request, markerAction);
-  }
-
-  return nextResponse;
+  return createAuthProxyResponse(response, request, markerAction);
 }
 
 //===================================================================

@@ -1,24 +1,16 @@
-import { type NextRequest, type NextResponse } from 'next/server';
-
-import {
-  ACCESS_TOKEN_COOKIE_NAME,
-  AUTH_READY_COOKIE_NAME,
-  LEGACY_AUTH_COOKIE_NAME,
-  REFRESH_TOKEN_COOKIE_NAME,
-} from '@/lib/auth/auth-session';
+import { type NextRequest } from 'next/server';
 
 import { API_ROUTES } from '@/lib/constants/api-routes';
 import { createApiUrl } from './api-url';
+import { createProxyHeaders, getProxyBody } from './proxy-headers';
 
 import {
-  applyBackendAuthCookies,
-  getAuthTokensFromPayload,
-  getCookiePairFromSetCookie,
-  getSetCookieHeaders,
-  setFrontendAuthCookiesFromTokens,
+  clearClientAuthCookies,
+  createCookieHeaderWithTokens,
+  extractTokensFromResponseBody,
+  setClientAuthCookies,
 } from './proxy-auth-cookies';
 
-import { createProxyHeaders, getProxyBody } from './proxy-headers';
 import { createProxyResponse } from './proxy-response';
 import type { HttpMethod } from './types';
 
@@ -32,138 +24,20 @@ type BackendProxyOptions = {
 
 //===================================================================
 
-function parseCookieHeader(cookieHeader: string): Map<string, string> {
-  const cookies = new Map<string, string>();
-
-  cookieHeader
-    .split(';')
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .forEach((cookie) => {
-      const [name, ...valueParts] = cookie.split('=');
-      const value = valueParts.join('=');
-
-      if (!name || !value) return;
-
-      cookies.set(name, value);
-    });
-
-  return cookies;
-}
-
-//===================================================================
-
-async function getAuthTokensFromResponse(
-  response: Response
-): Promise<ReturnType<typeof getAuthTokensFromPayload>> {
-  try {
-    const payload = (await response.clone().json()) as unknown;
-
-    return getAuthTokensFromPayload(payload);
-  } catch {
-    return null;
-  }
-}
-
-//===================================================================
-
-async function createCookieHeaderWithRefreshCookies(
-  request: NextRequest,
-  refreshResponse: Response
-): Promise<string | undefined> {
-  const cookies = parseCookieHeader(request.headers.get('cookie') ?? '');
-  const refreshedCookiePairs = getSetCookieHeaders(refreshResponse.headers)
-    .map(getCookiePairFromSetCookie)
-    .filter(Boolean) as string[];
-
-  refreshedCookiePairs.forEach((pair) => {
-    const [name, ...valueParts] = pair.split('=');
-    const value = valueParts.join('=');
-
-    if (!name || !value) return;
-
-    // Replace stale access/refresh cookies instead of appending duplicates.
-    // Express reads the first cookie with a matching name, so duplicated cookie
-    // names could make the retry keep using an expired access token.
-    cookies.set(name, value);
-  });
-
-  const tokens = await getAuthTokensFromResponse(refreshResponse);
-
-  if (tokens?.accessToken) {
-    cookies.set(ACCESS_TOKEN_COOKIE_NAME, tokens.accessToken);
-  }
-
-  if (tokens?.refreshToken) {
-    cookies.set(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken);
-  }
-
-  const cookieHeader = Array.from(cookies.entries())
-    .map(([name, value]) => `${name}=${value}`)
-    .join('; ');
-
-  return cookieHeader || undefined;
-}
-
-//===================================================================
-
-async function copyRefreshCookies(
-  refreshResponse: Response,
-  target: NextResponse,
-  request: NextRequest
-): Promise<void> {
-  applyBackendAuthCookies(refreshResponse, target, request);
-  setFrontendAuthCookiesFromTokens(
-    await getAuthTokensFromResponse(refreshResponse),
-    target,
-    request
-  );
-}
-
-//===================================================================
-
-function isSecureRequest(request: NextRequest): boolean {
-  return request.nextUrl.protocol === 'https:';
-}
-
-//===================================================================
-
-function clearClientAuthCookies(
-  target: NextResponse,
-  request: NextRequest
-): void {
-  const cookieOptions = {
-    path: '/',
-    maxAge: 0,
-    sameSite: 'lax' as const,
-    secure: isSecureRequest(request),
-  };
-
-  target.cookies.set(ACCESS_TOKEN_COOKIE_NAME, '', cookieOptions);
-  target.cookies.set(REFRESH_TOKEN_COOKIE_NAME, '', cookieOptions);
-  target.cookies.set(LEGACY_AUTH_COOKIE_NAME, '', cookieOptions);
-  target.cookies.set(AUTH_READY_COOKIE_NAME, '', cookieOptions);
-}
-
-//===================================================================
-
-function createBackendAuthHeaders(request: NextRequest): Headers {
-  const headers = createProxyHeaders(request);
-
-  headers.set('x-e-pharmacy-bff-auth', '1');
-
-  return headers;
-}
-
-//===================================================================
-
-async function refreshAuthCookies(request: NextRequest): Promise<Response> {
-  return fetch(createApiUrl(API_ROUTES.auth.refresh), {
+async function refreshAuthCookies(request: NextRequest): Promise<{
+  response: Response;
+  tokens: ReturnType<typeof extractTokensFromResponseBody>['tokens'];
+}> {
+  const response = await fetch(createApiUrl(API_ROUTES.auth.refresh), {
     method: 'POST',
-    headers: createBackendAuthHeaders(request),
+    headers: createProxyHeaders(request),
     cache: 'no-store',
-    credentials: 'include',
   });
+
+  const rawBody = await response.clone().text();
+  const { tokens } = extractTokensFromResponseBody(rawBody);
+
+  return { response, tokens };
 }
 
 //===================================================================
@@ -186,7 +60,6 @@ async function fetchBackend(
     headers,
     body,
     cache: 'no-store',
-    credentials: 'include',
   });
 }
 
@@ -194,9 +67,9 @@ async function fetchBackend(
 
 /**
  * Proxies private same-origin `/api/*` requests to the backend API.
- * It forwards cookies so httpOnly auth can work without exposing tokens
- * to browser JavaScript. If an access token expired but the refresh token is
- * still valid, it refreshes cookies once and retries the original request.
+ * It forwards httpOnly cookies to the backend. If the access token is expired,
+ * it refreshes once through the backend and retries with the fresh token before
+ * returning the response to the browser.
  */
 export async function proxyBackendRequest({
   backendPath,
@@ -207,22 +80,17 @@ export async function proxyBackendRequest({
   const response = await fetchBackend(request, backendPath, method, body);
 
   if (response.status !== 401) {
-    const nextResponse = await createProxyResponse(response, {
+    return createProxyResponse(response, {
       cacheControl: 'no-store',
-      copySetCookie: false,
     });
-
-    applyBackendAuthCookies(response, nextResponse, request);
-
-    return nextResponse;
   }
 
-  const refreshResponse = await refreshAuthCookies(request);
+  const { response: refreshResponse, tokens } =
+    await refreshAuthCookies(request);
 
   if (!refreshResponse.ok) {
     const nextResponse = await createProxyResponse(response, {
       cacheControl: 'no-store',
-      copySetCookie: false,
     });
 
     clearClientAuthCookies(nextResponse, request);
@@ -230,10 +98,7 @@ export async function proxyBackendRequest({
     return nextResponse;
   }
 
-  const cookieHeader = await createCookieHeaderWithRefreshCookies(
-    request,
-    refreshResponse
-  );
+  const cookieHeader = createCookieHeaderWithTokens(request, tokens);
   const retryResponse = await fetchBackend(
     request,
     backendPath,
@@ -244,11 +109,9 @@ export async function proxyBackendRequest({
 
   const nextResponse = await createProxyResponse(retryResponse, {
     cacheControl: 'no-store',
-    copySetCookie: false,
   });
 
-  applyBackendAuthCookies(retryResponse, nextResponse, request);
-  await copyRefreshCookies(refreshResponse, nextResponse, request);
+  setClientAuthCookies(nextResponse, request, tokens);
 
   if (retryResponse.status === 401) {
     clearClientAuthCookies(nextResponse, request);
