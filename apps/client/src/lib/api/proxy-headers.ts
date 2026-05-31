@@ -12,6 +12,44 @@ type ProxyHeadersOptions = {
 
 //===================================================================
 
+const AUTH_COOKIE_NAMES = new Set([
+  'e_pharmacy_access_token',
+  'e_pharmacy_refresh_token',
+  'e_pharmacy_auth_token',
+]);
+
+//===================================================================
+
+function normalizeCookieHeader(cookieHeader: string): string {
+  const cookies = new Map<string, string>();
+
+  cookieHeader
+    .split(';')
+    .map((cookie) => cookie.trim())
+    .filter(Boolean)
+    .forEach((cookie) => {
+      const [name, ...valueParts] = cookie.split('=');
+      const value = valueParts.join('=');
+
+      if (!name || !value) return;
+
+      if (AUTH_COOKIE_NAMES.has(name)) {
+        // Keep the last auth cookie value if the browser sends duplicates.
+        // This prevents stale cookies from shadowing the fresh login/refresh
+        // cookies when the request is proxied to the backend.
+        cookies.delete(name);
+      }
+
+      cookies.set(name, value);
+    });
+
+  return Array.from(cookies.entries())
+    .map(([name, value]) => `${name}=${value}`)
+    .join('; ');
+}
+
+//===================================================================
+
 export function createProxyHeaders(
   request: NextRequest,
   {
@@ -29,7 +67,9 @@ export function createProxyHeaders(
 
   if (forwardAccept && accept) headers.set('Accept', accept);
   if (forwardContentType && contentType) headers.set('Content-Type', contentType);
-  if (forwardCookie && cookie) headers.set('Cookie', cookie);
+  if (forwardCookie && cookie) {
+    headers.set('Cookie', normalizeCookieHeader(cookie));
+  }
   if (origin) headers.set('Origin', origin);
   if (referer) headers.set('Referer', referer);
 

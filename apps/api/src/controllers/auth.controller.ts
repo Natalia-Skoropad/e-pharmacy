@@ -52,35 +52,36 @@ function getSessionContext(req: Request): SessionContext {
 
 //===============================================================
 
-function getCookieValue(req: Request, name: string): string | null {
+function getCookieValues(req: Request, name: string): string[] {
   const cookieHeader = req.headers.cookie;
 
-  if (!cookieHeader) return null;
+  if (!cookieHeader) return [];
 
-  const cookies = cookieHeader.split(';').map((cookie) => cookie.trim());
+  return cookieHeader
+    .split(';')
+    .map((cookie) => cookie.trim())
+    .map((cookie) => {
+      const [cookieName, ...valueParts] = cookie.split('=');
 
-  for (const cookie of cookies) {
-    const [cookieName, ...valueParts] = cookie.split('=');
+      if (cookieName !== name) return null;
 
-    if (cookieName === name) {
       const value = valueParts.join('=');
       return value ? decodeURIComponent(value) : null;
-    }
-  }
-
-  return null;
+    })
+    .filter((value): value is string => Boolean(value))
+    .reverse();
 }
 
 //===============================================================
 
-function getRefreshTokenFromCookies(req: Request): string {
-  const refreshToken = getCookieValue(req, REFRESH_TOKEN_COOKIE_NAME);
+function getRefreshTokensFromCookies(req: Request): string[] {
+  const refreshTokens = getCookieValues(req, REFRESH_TOKEN_COOKIE_NAME);
 
-  if (!refreshToken) {
+  if (!refreshTokens.length) {
     throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.AUTH_REQUIRED);
   }
 
-  return refreshToken;
+  return refreshTokens;
 }
 
 //===============================================================
@@ -127,12 +128,23 @@ export async function refreshAuthSession(
   req: Request,
   res: Response
 ): Promise<void> {
-  const refreshToken = getRefreshTokenFromCookies(req);
+  const refreshTokens = getRefreshTokensFromCookies(req);
+  const context = getSessionContext(req);
+  let data: Awaited<ReturnType<typeof refreshAuthSessionService>> | null = null;
+  let lastError: unknown;
 
-  const data = await refreshAuthSessionService(
-    refreshToken,
-    getSessionContext(req)
-  );
+  for (const refreshToken of refreshTokens) {
+    try {
+      data = await refreshAuthSessionService(refreshToken, context);
+      break;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (!data) {
+    throw lastError;
+  }
 
   setAuthCookies(res, data.tokens);
 

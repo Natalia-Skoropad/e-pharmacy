@@ -21,62 +21,77 @@ function getTokenFromHeader(authHeader?: string): string | null {
 
 //===============================================================
 
-function getCookieValue(cookieHeader: string | undefined, name: string): string | null {
-  if (!cookieHeader) return null;
+function getCookieValues(
+  cookieHeader: string | undefined,
+  name: string
+): string[] {
+  if (!cookieHeader) return [];
 
-  const cookies = cookieHeader.split(';').map((cookie) => cookie.trim());
+  return cookieHeader
+    .split(';')
+    .map((cookie) => cookie.trim())
+    .map((cookie) => {
+      const [cookieName, ...valueParts] = cookie.split('=');
 
-  for (const cookie of cookies) {
-    const [cookieName, ...valueParts] = cookie.split('=');
+      if (cookieName !== name) return null;
 
-    if (cookieName === name) {
       const value = valueParts.join('=');
       return value ? decodeURIComponent(value) : null;
-    }
-  }
-
-  return null;
+    })
+    .filter((value): value is string => Boolean(value));
 }
 
 //===============================================================
 
-function getTokenFromCookie(cookieHeader?: string): string | null {
-  return (
-    getCookieValue(cookieHeader, ACCESS_TOKEN_COOKIE_NAME) ||
-    getCookieValue(cookieHeader, AUTH_COOKIE_NAME)
-  );
+function getTokensFromCookies(cookieHeader?: string): string[] {
+  return [
+    ...getCookieValues(cookieHeader, ACCESS_TOKEN_COOKIE_NAME),
+    ...getCookieValues(cookieHeader, AUTH_COOKIE_NAME),
+  ].reverse();
 }
 
 //===============================================================
 
-function getTokenFromRequest(req: Request): string | null {
-  return (
-    getTokenFromHeader(req.headers.authorization) ||
-    getTokenFromCookie(req.headers.cookie)
-  );
+function getTokensFromRequest(req: Request): string[] {
+  const headerToken = getTokenFromHeader(req.headers.authorization);
+
+  return [
+    ...(headerToken ? [headerToken] : []),
+    ...getTokensFromCookies(req.headers.cookie),
+  ];
 }
 
 //===============================================================
 
 async function authenticateToken(req: Request): Promise<void> {
-  const token = getTokenFromRequest(req);
+  const tokens = getTokensFromRequest(req);
 
-  if (!token) {
+  if (!tokens.length) {
     throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.AUTH_REQUIRED);
   }
 
-  const payload = verifyToken(token);
+  for (const token of tokens) {
+    try {
+      const payload = verifyToken(token);
 
-  if (!payload.sessionId) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_TOKEN);
+      if (!payload.sessionId) continue;
+
+      await assertActiveSessionService(payload.sessionId, payload.userId);
+
+      const user = await getUserByIdService(payload.userId);
+
+      req.authSessionId = payload.sessionId;
+      req.user = user;
+
+      return;
+    } catch {
+      // Keep checking the remaining cookie candidates. Browsers can send
+      // duplicate auth cookies after deployments or domain/path changes, and
+      // the first one can be stale while a later one is valid.
+    }
   }
 
-  await assertActiveSessionService(payload.sessionId, payload.userId);
-
-  const user = await getUserByIdService(payload.userId);
-
-  req.authSessionId = payload.sessionId;
-  req.user = user;
+  throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_TOKEN);
 }
 
 //===============================================================
@@ -103,9 +118,9 @@ export async function optionalAuthenticate(
   next: NextFunction
 ): Promise<void> {
   try {
-    const token = getTokenFromRequest(req);
+    const tokens = getTokensFromRequest(req);
 
-    if (!token) {
+    if (!tokens.length) {
       next();
       return;
     }
