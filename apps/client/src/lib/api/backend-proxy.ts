@@ -8,8 +8,14 @@ import {
 } from '@/lib/auth/auth-session';
 
 import { API_ROUTES } from '@/lib/constants/api-routes';
-
 import { createApiUrl } from './api-url';
+
+import {
+  applyBackendAuthCookies,
+  getCookiePairFromSetCookie,
+  getSetCookieHeaders,
+} from './proxy-auth-cookies';
+
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
 import { createProxyResponse } from './proxy-response';
 import type { HttpMethod } from './types';
@@ -21,36 +27,6 @@ type BackendProxyOptions = {
   request: NextRequest;
   method?: HttpMethod;
 };
-
-//===================================================================
-
-function splitSetCookieHeader(value: string): string[] {
-  return value
-    .split(/,(?=\s*[^;,\s]+=)/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-//===================================================================
-
-function getSetCookieHeaders(headers: Headers): string[] {
-  const headersWithSetCookie = headers as Headers & {
-    getSetCookie?: () => string[];
-  };
-
-  const setCookieHeaders = headersWithSetCookie.getSetCookie?.();
-  if (setCookieHeaders?.length) return setCookieHeaders;
-
-  const setCookie = headers.get('set-cookie');
-
-  return setCookie ? splitSetCookieHeader(setCookie) : [];
-}
-
-//===================================================================
-
-function getCookiePairFromSetCookie(setCookie: string): string | null {
-  return setCookie.split(';')[0]?.trim() || null;
-}
 
 //===================================================================
 
@@ -105,10 +81,12 @@ function createCookieHeaderWithRefreshCookies(
 
 //===================================================================
 
-function copyRefreshCookies(refreshResponse: Response, target: NextResponse): void {
-  getSetCookieHeaders(refreshResponse.headers).forEach((setCookie) => {
-    target.headers.append('set-cookie', setCookie);
-  });
+function copyRefreshCookies(
+  refreshResponse: Response,
+  target: NextResponse,
+  request: NextRequest
+): void {
+  applyBackendAuthCookies(refreshResponse, target, request);
 }
 
 //===================================================================
@@ -119,7 +97,10 @@ function isSecureRequest(request: NextRequest): boolean {
 
 //===================================================================
 
-function clearClientAuthCookies(target: NextResponse, request: NextRequest): void {
+function clearClientAuthCookies(
+  target: NextResponse,
+  request: NextRequest
+): void {
   const cookieOptions = {
     path: '/',
     maxAge: 0,
@@ -185,9 +166,14 @@ export async function proxyBackendRequest({
   const response = await fetchBackend(request, backendPath, method, body);
 
   if (response.status !== 401) {
-    return createProxyResponse(response, {
+    const nextResponse = await createProxyResponse(response, {
       cacheControl: 'no-store',
+      copySetCookie: false,
     });
+
+    applyBackendAuthCookies(response, nextResponse, request);
+
+    return nextResponse;
   }
 
   const refreshResponse = await refreshAuthCookies(request);
@@ -195,6 +181,7 @@ export async function proxyBackendRequest({
   if (!refreshResponse.ok) {
     const nextResponse = await createProxyResponse(response, {
       cacheControl: 'no-store',
+      copySetCookie: false,
     });
 
     clearClientAuthCookies(nextResponse, request);
@@ -202,7 +189,10 @@ export async function proxyBackendRequest({
     return nextResponse;
   }
 
-  const cookieHeader = createCookieHeaderWithRefreshCookies(request, refreshResponse);
+  const cookieHeader = createCookieHeaderWithRefreshCookies(
+    request,
+    refreshResponse
+  );
   const retryResponse = await fetchBackend(
     request,
     backendPath,
@@ -213,9 +203,11 @@ export async function proxyBackendRequest({
 
   const nextResponse = await createProxyResponse(retryResponse, {
     cacheControl: 'no-store',
+    copySetCookie: false,
   });
 
-  copyRefreshCookies(refreshResponse, nextResponse);
+  applyBackendAuthCookies(retryResponse, nextResponse, request);
+  copyRefreshCookies(refreshResponse, nextResponse, request);
 
   if (retryResponse.status === 401) {
     clearClientAuthCookies(nextResponse, request);

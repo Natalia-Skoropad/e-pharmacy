@@ -11,6 +11,7 @@ import {
 import { API_ROUTES } from '@/lib/constants/api-routes';
 
 import { createApiUrl } from './api-url';
+import { applyBackendAuthCookies } from './proxy-auth-cookies';
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
 import { createProxyResponse } from './proxy-response';
 import type { HttpMethod } from './types';
@@ -82,7 +83,10 @@ export async function proxyAuthRequest({
 
   const nextResponse = await createProxyResponse(response, {
     cacheControl: 'no-store',
+    copySetCookie: false,
   });
+
+  applyBackendAuthCookies(response, nextResponse, request);
 
   if (response.ok || markerAction === 'delete') {
     syncAuthMarkerCookie(nextResponse, request, markerAction);
