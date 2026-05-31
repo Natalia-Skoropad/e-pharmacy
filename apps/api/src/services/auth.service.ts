@@ -39,12 +39,6 @@ const REFRESH_TOKEN_TTL_MS = parseDurationMs(
   30 * 24 * 60 * 60 * 1000
 );
 
-// A small grace window protects refresh-token rotation from parallel browser
-// requests. Without this, two simultaneous BFF requests can both try to refresh
-// the same session; the first request rotates the token, while the second one
-// still carries the previous cookie and would incorrectly log the UI out.
-const REFRESH_TOKEN_REUSE_GRACE_MS = 30 * 1000;
-
 //===============================================================
 
 function createRefreshToken(): string {
@@ -196,8 +190,6 @@ export async function refreshAuthSessionService(
     expiresAt: { $gt: now },
   }).select('+refreshTokenHash +previousRefreshTokenHash');
 
-  let isPreviousRefreshToken = false;
-
   if (!session) {
     session = await Session.findOne({
       previousRefreshTokenHash: refreshTokenHash,
@@ -205,8 +197,6 @@ export async function refreshAuthSessionService(
       revokedAt: undefined,
       expiresAt: { $gt: now },
     }).select('+refreshTokenHash +previousRefreshTokenHash');
-
-    isPreviousRefreshToken = Boolean(session);
   }
 
   if (!session) {
@@ -242,20 +232,28 @@ export async function refreshAuthSessionService(
       role: user.role,
       sessionId: String(session._id),
     }),
+    refreshToken,
   };
 
-  if (!isPreviousRefreshToken) {
-    const nextRefreshToken = createRefreshToken();
-
-    session.previousRefreshTokenHash = session.refreshTokenHash;
-    session.previousRefreshTokenValidUntil = new Date(
-      Date.now() + REFRESH_TOKEN_REUSE_GRACE_MS
-    );
-    session.refreshTokenHash = hashRefreshToken(nextRefreshToken);
-    session.expiresAt = getRefreshTokenExpiresAt();
-
-    tokens.refreshToken = nextRefreshToken;
-  }
+  // Keep the refresh token stable for the lifetime of this device session.
+  //
+  // The earlier implementation rotated the refresh token on every refresh and
+  // accepted the previous token only for a short grace window. That is a good
+  // security pattern when the server can safely return the latest raw refresh
+  // token to every parallel request. Here we only store token hashes, so a
+  // parallel request that arrived with the previous token could refresh the
+  // access token but could not receive the already-rotated refresh token.
+  // If that response was the last one applied by the browser, the browser kept
+  // the stale refresh cookie and the next refresh failed with
+  // "Authorization token is invalid".
+  //
+  // A stable per-device refresh token avoids that race and allows the same
+  // account to stay signed in on several devices at the same time. Logout still
+  // revokes only the current session, while logout-all/password reset/password
+  // change revoke all sessions intentionally.
+  session.previousRefreshTokenHash = undefined;
+  session.previousRefreshTokenValidUntil = undefined;
+  session.expiresAt = getRefreshTokenExpiresAt();
 
   await session.save();
 
