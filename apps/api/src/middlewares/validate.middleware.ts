@@ -46,7 +46,11 @@ export function validate(schemas: ValidateSchemas) {
       }
 
       if (schemas.query) {
-        req.query = schemas.query.parse(req.query) as typeof req.query;
+        // Express 5 exposes req.query as a getter-only property. Assigning to it
+        // throws a TypeError, which was converted to a 400 response by this
+        // middleware. We only validate query params here; controllers parse the
+        // original req.query again before passing typed values to services.
+        schemas.query.parse(req.query);
       }
 
       next();

@@ -456,7 +456,7 @@ export async function updateUserProfileService(
   if (Object.keys(unset).length > 0) updateQuery.$unset = unset;
 
   const user = await User.findByIdAndUpdate(userId, updateQuery, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
 

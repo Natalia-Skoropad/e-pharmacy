@@ -97,7 +97,7 @@ async function getCartDocument(
   const cart = await Cart.findOneAndUpdate(
     { userId },
     { $setOnInsert: { userId, items: [] } },
-    { new: true, upsert: true }
+    { returnDocument: 'after', upsert: true }
   )
     .session(session ?? null)
     .lean<CartDocument | null>();

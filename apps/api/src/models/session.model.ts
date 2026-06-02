@@ -61,7 +61,6 @@ const sessionSchema = new Schema<SessionEntity>(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
     },
 
     lastUsedAt: {

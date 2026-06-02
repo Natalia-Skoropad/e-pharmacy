@@ -65,7 +65,7 @@ type RootLayoutProps = Readonly<{
 
 function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body>
         <ToastProvider>
           <AuthProvider>

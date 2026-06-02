@@ -212,7 +212,8 @@ function ProfilePageContent() {
     useState(ORDERS_VISIBLE_STEP);
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
   const [favoriteStores, setFavoriteStores] = useState<PharmacyStore[]>([]);
-  const [favoritesError, setFavoritesError] = useState('');
+  const [favoriteProductsError, setFavoriteProductsError] = useState('');
+  const [favoriteStoresError, setFavoriteStoresError] = useState('');
   const [favoriteProductsCount, setFavoriteProductsCount] = useState<
     number | null
   >(null);
@@ -335,14 +336,14 @@ function ProfilePageContent() {
   const loadFavoriteProducts = useCallback(async () => {
     try {
       setIsFavoriteProductsLoading(true);
-      setFavoritesError('');
+      setFavoriteProductsError('');
 
       const products = await getFavoriteProducts();
 
       setFavoriteProducts(products);
       setFavoriteProductsCount(products.length);
     } catch {
-      setFavoritesError('Could not load favorite products.');
+      setFavoriteProductsError('Could not load favorite products.');
       setFavoriteProductsCount(0);
     } finally {
       setIsFavoriteProductsLoading(false);
@@ -352,14 +353,14 @@ function ProfilePageContent() {
   const loadFavoriteStores = useCallback(async () => {
     try {
       setIsFavoriteStoresLoading(true);
-      setFavoritesError('');
+      setFavoriteStoresError('');
 
       const stores = await getFavoriteStores();
 
       setFavoriteStores(stores);
       setFavoriteStoresCount(stores.length);
     } catch {
-      setFavoritesError('Could not load favorite stores.');
+      setFavoriteStoresError('Could not load favorite stores.');
       setFavoriteStoresCount(0);
     } finally {
       setIsFavoriteStoresLoading(false);
@@ -852,9 +853,9 @@ function ProfilePageContent() {
                     </span>
                   </div>
 
-                  {favoritesError ? (
+                  {favoriteProductsError ? (
                     <p className={css.error} role="alert">
-                      {favoritesError}
+                      {favoriteProductsError}
                     </p>
                   ) : null}
 
@@ -943,9 +944,9 @@ function ProfilePageContent() {
                     </span>
                   </div>
 
-                  {favoritesError ? (
+                  {favoriteStoresError ? (
                     <p className={css.error} role="alert">
-                      {favoritesError}
+                      {favoriteStoresError}
                     </p>
                   ) : null}
 

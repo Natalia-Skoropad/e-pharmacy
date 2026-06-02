@@ -104,7 +104,7 @@ export async function updateVendorStatusByAdminService(
       ...(Object.keys(unset).length > 0 ? { $unset: unset } : {}),
     },
     {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     }
   );
@@ -148,7 +148,7 @@ export async function updateShopStatusByAdminService(
       ...(Object.keys(unset).length > 0 ? { $unset: unset } : {}),
     },
     {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     }
   ).lean();
