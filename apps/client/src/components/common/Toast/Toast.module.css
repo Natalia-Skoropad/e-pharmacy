@@ -90,9 +90,7 @@
 }
 
 .info {
-  background-color: var(--color-info-soft);
   border-color: var(--color-info-border-medium);
-  box-shadow: 0 10px 26px var(--color-info-shadow);
 }
 
 .info .dot {
