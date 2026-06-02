@@ -32,25 +32,11 @@ export async function generateMetadata({
 }: PharmacyStoresPageProps) {
   const parsedFilters = parsePharmacyStoresSearchParams(await searchParams);
 
-  const storeFiltersData = await getStoreFilters(
-    PUBLIC_API_CACHE_OPTIONS
-  ).catch(() => null);
-
-  const filters = normalizePharmacyStoresFiltersCity(
-    parsedFilters,
-    storeFiltersData?.cities.map((city) => city.value) ?? []
-  );
-
-  const storesData = await getStores(
-    buildPharmacyStoresApiParams(filters),
-    PUBLIC_API_CACHE_OPTIONS
-  ).catch(() => null);
-
   return createPageMetadata({
-    title: getPharmacyStoresTitle(filters),
-    description: getPharmacyStoresDescription(filters),
-    path: buildPharmacyStoresPath(filters),
-    noIndex: isPharmacyStoresNoIndex(filters) || storesData?.total === 0,
+    title: getPharmacyStoresTitle(parsedFilters),
+    description: getPharmacyStoresDescription(parsedFilters),
+    path: buildPharmacyStoresPath(parsedFilters),
+    noIndex: isPharmacyStoresNoIndex(parsedFilters),
   });
 }
 

@@ -7,6 +7,14 @@ import type { ApiRequestConfig } from './types';
 
 //===================================================================
 
+const DEFAULT_API_REQUEST_TIMEOUT_MS = 10_000;
+
+function getRequestSignal(signal?: AbortSignal): AbortSignal {
+  return signal ?? AbortSignal.timeout(DEFAULT_API_REQUEST_TIMEOUT_MS);
+}
+
+//===================================================================
+
 export async function apiRequest<TData>(
   path: string,
   {
@@ -31,7 +39,7 @@ export async function apiRequest<TData>(
     cache,
     next,
     credentials,
-    signal,
+    signal: getRequestSignal(signal),
   });
 
   const payload = await parseJsonSafe<TData>(response);

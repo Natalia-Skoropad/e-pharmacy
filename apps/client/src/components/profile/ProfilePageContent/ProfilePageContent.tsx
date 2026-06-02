@@ -134,21 +134,21 @@ function getProfileErrors(values: ProfileFormValues) {
 //===================================================================
 
 async function getFavoriteProducts(): Promise<Product[]> {
-  const firstPage = await getProducts(
-    { page: 1, perPage: FAVORITES_PER_PAGE, sort: 'name-asc' },
-  );
+  const firstPage = await getProducts({
+    page: 1,
+    perPage: FAVORITES_PER_PAGE,
+    sort: 'name-asc',
+  });
   const pages = [firstPage];
 
   if (firstPage.totalPages > 1) {
     const nextPages = await Promise.all(
       Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
-        getProducts(
-          {
-            page: index + 2,
-            perPage: FAVORITES_PER_PAGE,
-            sort: 'name-asc',
-          }
-        )
+        getProducts({
+          page: index + 2,
+          perPage: FAVORITES_PER_PAGE,
+          sort: 'name-asc',
+        })
       )
     );
 
@@ -163,21 +163,21 @@ async function getFavoriteProducts(): Promise<Product[]> {
 //===================================================================
 
 async function getFavoriteStores(): Promise<PharmacyStore[]> {
-  const firstPage = await getStores(
-    { page: 1, perPage: FAVORITES_PER_PAGE, sort: 'name-asc' },
-  );
+  const firstPage = await getStores({
+    page: 1,
+    perPage: FAVORITES_PER_PAGE,
+    sort: 'name-asc',
+  });
   const pages = [firstPage];
 
   if (firstPage.totalPages > 1) {
     const nextPages = await Promise.all(
       Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
-        getStores(
-          {
-            page: index + 2,
-            perPage: FAVORITES_PER_PAGE,
-            sort: 'name-asc',
-          }
-        )
+        getStores({
+          page: index + 2,
+          perPage: FAVORITES_PER_PAGE,
+          sort: 'name-asc',
+        })
       )
     );
 
@@ -503,13 +503,11 @@ function ProfilePageContent() {
       setFeedback('');
       setError('');
 
-      await updateCurrentUser(
-        {
-          name: profileValues.name.trim(),
-          phone: profileValues.phone.trim(),
-          address: profileValues.address.trim(),
-        }
-      );
+      await updateCurrentUser({
+        name: profileValues.name.trim(),
+        phone: profileValues.phone.trim(),
+        address: profileValues.address.trim(),
+      });
       await refreshCurrentUser();
       setFeedback('Profile data was updated.');
     } catch {
@@ -557,15 +555,13 @@ function ProfilePageContent() {
         <Container>
           <Breadcrumbs items={createBreadcrumbs(PROFILE_TITLE)} />
 
-          <div>
-            <h1 className={css.title} id="profile-title">
-              {PROFILE_TITLE}
-            </h1>
+          <h1 className={css.title} id="profile-title">
+            {PROFILE_TITLE}
+          </h1>
 
-            <p className={css.text}>
-              View your account details, orders, favorites and profile photo.
-            </p>
-          </div>
+          <p className={css.text}>
+            View your account details, orders, favorites and profile photo.
+          </p>
 
           <div className={css.profileShell}>
             <aside className={css.sidebar} aria-label="Profile summary">

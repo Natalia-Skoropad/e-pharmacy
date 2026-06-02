@@ -1,3 +1,5 @@
+import { cache } from 'react';
+
 import { isReservedRootSlug } from '@e-pharmacy/config';
 import { buildSlugId } from '@e-pharmacy/utils';
 
@@ -56,7 +58,7 @@ function createStoreRootDetail(slugId: string, store: Store): StoreRootDetail {
 
 //===================================================================
 
-export async function resolveRootDetailBySlugId(
+export const resolveRootDetailBySlugId = cache(async function resolveRootDetailBySlugId(
   slugId: string
 ): Promise<RootDetail | null> {
   if (isReservedRootSlug(slugId)) return null;
@@ -76,4 +78,4 @@ export async function resolveRootDetailBySlugId(
   const exactCanonicalMatch = details.find((detail) => detail.isCanonicalSlug);
 
   return exactCanonicalMatch ?? details[0];
-}
+});

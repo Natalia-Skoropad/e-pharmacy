@@ -46,34 +46,19 @@ export async function generateMetadata({
     parseMedicinesCatalogSearchParams(await searchParams)
   );
 
-  const storesData = await getStores(
-    { page: 1, perPage: 100 },
-    PUBLIC_API_CACHE_OPTIONS
-  ).catch(() => null);
-
-  const selectedStore = storesData?.items.find(
-    (store) => store.id === filters.storeId
-  );
-
   const categoryLabel = FALLBACK_PRODUCT_FILTER_OPTIONS.categories.find(
     (option) => option.value === filters.category
   )?.label;
 
   const seoContext = {
-    ...(selectedStore ? { storeName: selectedStore.name } : {}),
     ...(categoryLabel ? { categoryLabel } : {}),
   };
-
-  const productsData = await getProducts(
-    buildMedicinesCatalogApiParams(filters),
-    PUBLIC_API_CACHE_OPTIONS
-  ).catch(() => null);
 
   return createPageMetadata({
     title: getMedicinesCatalogTitle(filters, seoContext),
     description: getMedicinesCatalogDescription(filters, seoContext),
-    path: buildMedicinesCatalogCanonicalPath(filters, storesData?.items ?? []),
-    noIndex: isMedicinesCatalogNoIndex(filters) || productsData?.total === 0,
+    path: buildMedicinesCatalogCanonicalPath(filters),
+    noIndex: isMedicinesCatalogNoIndex(filters),
   });
 }
 

@@ -148,6 +148,13 @@ function AuthProvider({ children }: AuthProviderProps) {
     let isMounted = true;
 
     async function bootstrapAuth() {
+      if (!getAuthSessionMarker()) {
+        if (!isMounted) return;
+
+        clearAuthState();
+        return;
+      }
+
       try {
         const response = await getCurrentUser();
 

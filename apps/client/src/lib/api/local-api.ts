@@ -6,6 +6,14 @@ import type { ApiRequestConfig } from './types';
 
 //===================================================================
 
+const DEFAULT_LOCAL_API_REQUEST_TIMEOUT_MS = 10_000;
+
+function getRequestSignal(signal?: AbortSignal): AbortSignal {
+  return signal ?? AbortSignal.timeout(DEFAULT_LOCAL_API_REQUEST_TIMEOUT_MS);
+}
+
+//===================================================================
+
 /**
  * Same-origin request helper for Next.js route handlers under `/api/*`.
  * Use it from client components/services when the request must go through
@@ -30,7 +38,7 @@ export async function localApiRequest<TData>(
     headers: requestHeaders,
     body: requestBody,
     cache,
-    signal,
+    signal: getRequestSignal(signal),
     credentials,
   });
 
