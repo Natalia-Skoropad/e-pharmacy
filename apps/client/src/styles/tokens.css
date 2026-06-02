@@ -51,6 +51,12 @@
   --color-warning: #f59e0b;
   --color-warning-light: #fff7e6;
 
+  --color-info: #2563eb;
+  --color-info-soft: rgba(37, 99, 235, 0.08);
+  --color-info-border: rgba(37, 99, 235, 0.18);
+  --color-info-border-medium: rgba(37, 99, 235, 0.28);
+  --color-info-shadow: rgba(37, 99, 235, 0.12);
+
   --color-white-alpha-10: rgba(255, 255, 255, 0.1);
   --color-white-alpha-14: rgba(255, 255, 255, 0.14);
   --color-white-alpha-16: rgba(255, 255, 255, 0.16);
