@@ -17,7 +17,13 @@
     "./radio-option": "./src/components/RadioOption.tsx",
     "./search-input": "./src/components/SearchInput.tsx",
     "./select-field": "./src/components/SelectField.tsx",
-    "./toast": "./src/components/Toast.tsx"
+    "./toast": "./src/components/Toast.tsx",
+    "./styles/*": "./src/styles/*.css",
+    "./feedback": "./src/feedback/index.ts",
+    "./form-fields": "./src/form-fields/index.ts",
+    "./layout": "./src/layout/index.ts",
+    "./modals": "./src/modals/index.ts",
+    "./status-pages": "./src/status-pages/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

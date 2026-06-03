@@ -818,3 +818,31 @@ For each file/component/hook/helper, ask:
    - Keep in `apps/client`.
 
 Small joke, serious rule: if a file says “I am reusable” but secretly imports cart checkout copy, it is not shared — it is just wearing a fake moustache.
+
+## Stage 1 package readiness update
+
+The shared package boundary is prepared for the next migration steps:
+
+| Area | Result | Notes |
+|---|---|---|
+| `packages/hooks` | Created | Public API starts at `@e-pharmacy/hooks`; reusable hooks from `apps/client/src/hooks` should move here during Stage 3. |
+| `packages/auth` | Created | Public API starts at `@e-pharmacy/auth`; currently contains shared auth access config types and is ready for auth core/guards in Stage 12. |
+| `packages/ui` | Expanded package namespaces | Reserved public entry points for `feedback`, `form-fields`, `layout`, `modals`, `status-pages`, and `styles/*`. Existing component exports remain unchanged. |
+| `packages/config` | Expanded package namespaces | Reserved public entry points for `navigation`, `statuses`, `filters`, `permissions`, `seo`, and `route-groups`. Existing `@e-pharmacy/config/routes` export remains backward-compatible. |
+| `packages/api-client` | Expanded package namespaces | Reserved public entry points for `core`, `auth`, `client`, `vendor`, and `admin`. Existing `@e-pharmacy/api-client/bff` export remains unchanged. |
+| Workspace scripts | Added package checks | Root scripts now include `lint:packages` and `type-check:packages` for focused shared-package checks. |
+
+Validation performed for Stage 1:
+
+```bash
+tsc --noEmit -p packages/types/tsconfig.json
+tsc --noEmit -p packages/config/tsconfig.json
+tsc --noEmit -p packages/utils/tsconfig.json
+tsc --noEmit -p packages/api-client/tsconfig.json
+tsc --noEmit -p packages/ui/tsconfig.json
+tsc --noEmit -p packages/validation/tsconfig.json
+tsc --noEmit -p packages/hooks/tsconfig.json
+tsc --noEmit -p packages/auth/tsconfig.json
+```
+
+All package type-checks passed in the prepared workspace. Full monorepo `pnpm` commands were not run in this environment because `pnpm` is not installed here; the package-level TypeScript checks were run with the available `tsc` binary.

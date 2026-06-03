@@ -20,7 +20,9 @@
     "format:check": "prettier --check .",
     "check:before-deploy": "pnpm lint && pnpm type-check && pnpm build",
     "check:client": "pnpm --filter @e-pharmacy/client lint && pnpm --filter @e-pharmacy/client type-check && pnpm --filter @e-pharmacy/client build",
-    "check:api": "pnpm --filter @e-pharmacy/api lint && pnpm --filter @e-pharmacy/api type-check && pnpm --filter @e-pharmacy/api build"
+    "check:api": "pnpm --filter @e-pharmacy/api lint && pnpm --filter @e-pharmacy/api type-check && pnpm --filter @e-pharmacy/api build",
+    "lint:packages": "turbo lint --filter='./packages/*'",
+    "type-check:packages": "turbo type-check --filter='./packages/*'"
   },
   "devDependencies": {
     "turbo": "latest",
