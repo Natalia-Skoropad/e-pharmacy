@@ -2,15 +2,15 @@
 
 import { useId } from 'react';
 
-import Button from '@e-pharmacy/ui/common/Button';
-import { ModalBase } from '@e-pharmacy/ui/common';
-import { ModalRoot } from '@/components/modals';
+import Button from '../../common/Button';
+import ModalBase from '../ModalBase';
+import ModalRoot from '../ModalRoot';
 
-import css from './ConfirmActionModal.module.css';
+import css from './ConfirmationModal.module.css';
 
 //===================================================================
 
-type ConfirmActionModalProps = {
+type ConfirmationModalProps = {
   title: string;
   text: string;
   confirmLabel?: string;
@@ -24,7 +24,7 @@ type ConfirmActionModalProps = {
 
 //===================================================================
 
-function ConfirmActionModal({
+function ConfirmationModal({
   title,
   text,
   confirmLabel = 'Remove',
@@ -34,7 +34,7 @@ function ConfirmActionModal({
   confirmButtonClassName,
   onConfirm,
   onCancel,
-}: ConfirmActionModalProps) {
+}: ConfirmationModalProps) {
   const titleId = useId();
 
   if (!isOpen) return null;
@@ -72,4 +72,4 @@ function ConfirmActionModal({
   );
 }
 
-export default ConfirmActionModal;
+export default ConfirmationModal;

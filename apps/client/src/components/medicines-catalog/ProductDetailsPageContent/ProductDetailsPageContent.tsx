@@ -5,7 +5,8 @@ import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 
 import { Button, ButtonLink, Container, LazyLoadButton, QuantityCounter, RatingSummary, SearchInput, SearchableSelect, SelectField, ShimmerImage, SvgIcon, Tabs } from '@e-pharmacy/ui/common';
 import { type TabItem } from '@e-pharmacy/ui/common';
-import { ConfirmActionModal, DeliveryInfoCard, FavoriteToggleButton, PaymentInfoCard, ReviewsSection, StockAvailability } from '@/components/common';
+import { DeliveryInfoCard, FavoriteToggleButton, PaymentInfoCard, ReviewsSection, StockAvailability } from '@/components/common';
+import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 
 import { CartInvoiceLimitModal } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
@@ -872,7 +873,7 @@ function ProductDetailsPageContent({
       ) : null}
 
       {pendingRemoveOffer ? (
-        <ConfirmActionModal
+        <ConfirmationModal
           title="Remove product from order?"
           text={`This is the last unit of ${productDetails.name} from ${pendingRemoveOffer.storeName}. It will be removed from the cart.`}
           isLoading={updatingStoreId === pendingRemoveOffer.storeId}

@@ -1,4 +1,4 @@
-import { ConfirmActionModal } from '@/components/common';
+import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 
 import {
   CART_INVOICE_LIMIT_ERROR_MESSAGE,
@@ -15,7 +15,7 @@ type CartInvoiceLimitModalProps = {
 
 function CartInvoiceLimitModal({ onClose }: CartInvoiceLimitModalProps) {
   return (
-    <ConfirmActionModal
+    <ConfirmationModal
       title={CART_INVOICE_LIMIT_MODAL_TITLE}
       text={CART_INVOICE_LIMIT_ERROR_MESSAGE}
       confirmLabel="Got it"

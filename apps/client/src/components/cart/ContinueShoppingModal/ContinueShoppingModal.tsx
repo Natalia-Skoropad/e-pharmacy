@@ -5,8 +5,7 @@ import { ShoppingCart } from 'lucide-react';
 
 import { Button, CloseIconButton, LoadingSpinner, SearchInput, ShimmerImage, SvgIcon } from '@e-pharmacy/ui/common';
 import { CartInvoiceLimitModal } from '@/components/common';
-import { ModalBase } from '@e-pharmacy/ui/common';
-import { ModalRoot } from '@/components/modals';
+import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
 
 import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
 import { formatPrice, formatStockLabel } from '@/lib/formatters';

@@ -911,3 +911,21 @@ Validation note for Stage 3: full monorepo `pnpm` commands were not run in this 
 ## Stage 4 base UI components migration update
 
 Moved reusable common UI components from `apps/client/src/components/common` into `packages/ui/src/common` using the same folder-per-component structure as the client app. Removed the unused `packages/ui/src/components` structure. Client imports for migrated components now point to `@e-pharmacy/ui/common` or `@e-pharmacy/ui/common/<ComponentName>`. Components migrated in this stage: Button, ButtonLink, CloseIconButton, Container, LoadingSpinner, Pagination, RadioOption, SearchInput, SelectField, Toast, ModalBase, Logo, LazyLoadButton, ResetFiltersButton, TextActionButton, Tabs, SearchableSelect, QuantityCounter, SvgIcon, UserBadge, AvatarImage, ProfilePhotoCard, RatingSummary, ShimmerImage. Local client component folders for these migrated components should be removed after applying the patch.
+
+## Stage 5 modal system migration update
+
+Reusable modal primitives were moved from common/app-level locations into the shared modal namespace `packages/ui/src/modals`, using one folder per component.
+
+| Area | Result | Notes |
+|---|---|---|
+| `ModalBase` | Moved to `packages/ui/src/modals/ModalBase` | Keeps portal-adjacent dialog shell behavior reusable through `ModalRoot`, backdrop click, Escape close, body scroll lock, and focus trap hooks. |
+| `ModalRoot` | Moved to `packages/ui/src/modals/ModalRoot` | Shared portal target for Client/Vendor/Admin modal systems. |
+| `ConfirmationModal` | Added to `packages/ui/src/modals/ConfirmationModal` | Replaces the old `ConfirmActionModal` naming with a generic shared confirmation primitive. |
+| `ActionChoiceModal` | Added to `packages/ui/src/modals/ActionChoiceModal` | Generic two-action modal prepared for app-specific wrappers and future Vendor/Admin flows. |
+| `apps/client/src/components/common/ConfirmActionModal` | Remove from Client | Client usages now import `ConfirmationModal` from `@e-pharmacy/ui/modals`. |
+| `apps/client/src/components/modals/ModalRoot` | Remove from Client | Client now imports `ModalRoot` from `@e-pharmacy/ui/modals`. |
+| `packages/ui/src/common/ModalBase`, `ModalRoot`, `ConfirmActionModal` | Remove from common | Modal primitives now belong to the `modals` namespace, not `common`. |
+| `ContinueShoppingModal` | Kept in Client as app-specific cart/catalog modal | It contains storefront cart/product fetching logic and should not be moved as a shared modal. It now uses shared `ModalBase` and `ModalRoot`. |
+| `CartInvoiceLimitModal` | Kept in Client as app-specific wrapper | It contains cart invoice copy/constants and now uses shared `ConfirmationModal`. |
+
+After applying this patch, remove the old duplicate modal folders listed in `DELETE_STAGE_5_DUPLICATES.txt`.

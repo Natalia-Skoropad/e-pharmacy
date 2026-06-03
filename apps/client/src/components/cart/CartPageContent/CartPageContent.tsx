@@ -15,7 +15,8 @@ import {
   LoadingSpinner,
   RatingSummary,
 } from '@e-pharmacy/ui/common';
-import { ConfirmActionModal } from '@/components/common';
+
+import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 
@@ -396,7 +397,7 @@ function CartPageContent() {
           ) : null}
 
           {pendingAction ? (
-            <ConfirmActionModal
+            <ConfirmationModal
               title="Confirm removing"
               text={pendingActionText}
               isLoading={isUpdating}

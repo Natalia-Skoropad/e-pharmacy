@@ -6,7 +6,7 @@ import { ImageOff, Upload } from 'lucide-react';
 
 import AvatarImage from '../AvatarImage';
 import Button from '../Button';
-import ConfirmActionModal from '../ConfirmActionModal';
+import { ConfirmationModal } from '../../modals';
 import { formatInitials } from '../../utils/formatInitials';
 
 import css from './ProfilePhotoCard.module.css';
@@ -154,7 +154,7 @@ function ProfilePhotoCard({
       </div>
 
       {isConfirmOpen ? (
-        <ConfirmActionModal
+        <ConfirmationModal
           title="Remove profile photo?"
           text="This photo will be removed from your account. Are you sure?"
           confirmLabel={isSaving ? 'Removing...' : 'Remove photo'}

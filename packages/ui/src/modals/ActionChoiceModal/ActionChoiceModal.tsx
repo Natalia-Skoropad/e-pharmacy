@@ -2,69 +2,72 @@
 
 import { useId } from 'react';
 
-import Button from '../Button';
+import Button from '../../common/Button';
 import ModalBase from '../ModalBase';
 import ModalRoot from '../ModalRoot';
 
-import css from './ConfirmActionModal.module.css';
+import css from './ActionChoiceModal.module.css';
 
 //===================================================================
 
-type ConfirmActionModalProps = {
+type ActionChoiceModalProps = {
   title: string;
-  text: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
+  text?: string;
+  primaryLabel: string;
+  secondaryLabel: string;
   isOpen?: boolean;
   isLoading?: boolean;
-  confirmButtonClassName?: string;
-  onConfirm: () => void;
-  onCancel: () => void;
+  primaryButtonClassName?: string;
+  onPrimaryAction: () => void;
+  onSecondaryAction: () => void;
+  onClose?: () => void;
 };
 
 //===================================================================
 
-function ConfirmActionModal({
+function ActionChoiceModal({
   title,
   text,
-  confirmLabel = 'Remove',
-  cancelLabel = 'Cancel',
+  primaryLabel,
+  secondaryLabel,
   isOpen = true,
   isLoading = false,
-  confirmButtonClassName,
-  onConfirm,
-  onCancel,
-}: ConfirmActionModalProps) {
+  primaryButtonClassName,
+  onPrimaryAction,
+  onSecondaryAction,
+  onClose,
+}: ActionChoiceModalProps) {
   const titleId = useId();
+  const handleClose = onClose ?? onSecondaryAction;
 
   if (!isOpen) return null;
 
   return (
     <ModalRoot>
-      <ModalBase isOpen={isOpen} labelledBy={titleId} onClose={onCancel}>
+      <ModalBase isOpen={isOpen} labelledBy={titleId} onClose={handleClose}>
         <h2 className={css.title} id={titleId}>
           {title}
         </h2>
 
-        <p className={css.text}>{text}</p>
+        {text ? <p className={css.text}>{text}</p> : null}
 
         <div className={css.actions}>
           <Button
             type="button"
-            className={confirmButtonClassName}
+            className={primaryButtonClassName}
             disabled={isLoading}
-            onClick={onConfirm}
+            onClick={onPrimaryAction}
           >
-            {confirmLabel}
+            {primaryLabel}
           </Button>
 
           <Button
             type="button"
             variant="secondary"
             disabled={isLoading}
-            onClick={onCancel}
+            onClick={onSecondaryAction}
           >
-            {cancelLabel}
+            {secondaryLabel}
           </Button>
         </div>
       </ModalBase>
@@ -72,4 +75,4 @@ function ConfirmActionModal({
   );
 }
 
-export default ConfirmActionModal;
+export default ActionChoiceModal;
