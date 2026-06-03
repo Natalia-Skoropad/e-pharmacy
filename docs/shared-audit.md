@@ -846,3 +846,25 @@ tsc --noEmit -p packages/auth/tsconfig.json
 ```
 
 All package type-checks passed in the prepared workspace. Full monorepo `pnpm` commands were not run in this environment because `pnpm` is not installed here; the package-level TypeScript checks were run with the available `tsc` binary.
+
+## Stage 2 shared styles migration update
+
+Shared global styles were moved from the Client app boundary into the UI package boundary.
+
+| Area | Result | Notes |
+|---|---|---|
+| `packages/ui/src/styles/reset.css` | Added | Copied from `apps/client/src/styles/reset.css`; generic reset rules only. |
+| `packages/ui/src/styles/tokens.css` | Added | Copied from `apps/client/src/styles/tokens.css`; tokens are currently generic enough for Client/Vendor/Admin foundation and contain no `--client-*`, `--vendor-*`, `--admin-*`, or cart-panel-only variables. |
+| `packages/ui/src/styles/base.css` | Added | Copied from `apps/client/src/styles/base.css`; body, selection and focus-visible defaults depend only on shared tokens. |
+| `packages/ui/src/styles/utilities.css` | Added | Copied from `apps/client/src/styles/utilities.css`; contains reusable `.container`, `.visually-hidden`, and `.no-scroll` utilities. |
+| `apps/client/src/app/layout.tsx` | Updated | Client now imports global styles from `@e-pharmacy/ui/styles/*` instead of `@/styles/*`. |
+| `packages/ui/package.json` | Updated | CSS subpath export changed to `./styles/*.css` → `./src/styles/*.css`, so imports like `@e-pharmacy/ui/styles/tokens.css` resolve correctly without `.css.css` doubling. |
+| `apps/client/src/styles/*` | Remove from Client after applying patch | These files are now shared-source duplicates and should not remain as active Client-owned style sources. If an app-specific theme layer is needed later, create a new `apps/client/src/styles/theme.css` instead of restoring reset/base/tokens/utilities locally. |
+
+Validation performed for Stage 2:
+
+```bash
+tsc --noEmit -p packages/ui/tsconfig.json
+```
+
+The UI package type-check passed after adding the shared style files. Full monorepo `pnpm` commands were not run in this environment because `pnpm` is not installed here.

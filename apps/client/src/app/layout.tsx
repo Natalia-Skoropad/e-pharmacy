@@ -11,10 +11,10 @@ import {
   SITE_URL,
 } from '@/lib/constants/metadata';
 
-import '@/styles/tokens.css';
-import '@/styles/reset.css';
-import '@/styles/base.css';
-import '@/styles/utilities.css';
+import '@e-pharmacy/ui/styles/tokens.css';
+import '@e-pharmacy/ui/styles/reset.css';
+import '@e-pharmacy/ui/styles/base.css';
+import '@e-pharmacy/ui/styles/utilities.css';
 
 //===================================================================
 

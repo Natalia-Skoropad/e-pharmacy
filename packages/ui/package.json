@@ -18,7 +18,7 @@
     "./search-input": "./src/components/SearchInput.tsx",
     "./select-field": "./src/components/SelectField.tsx",
     "./toast": "./src/components/Toast.tsx",
-    "./styles/*": "./src/styles/*.css",
+    "./styles/*.css": "./src/styles/*.css",
     "./feedback": "./src/feedback/index.ts",
     "./form-fields": "./src/form-fields/index.ts",
     "./layout": "./src/layout/index.ts",

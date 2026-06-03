@@ -1,6 +1,5 @@
 import { Types } from 'mongoose';
 
-import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Product } from '../models/product.model';
 import { Store } from '../models/store.model';
@@ -16,7 +15,10 @@ export async function assertStoreOwner(storeId: string, userId: string) {
   const store = await Store.findOne({ _id: storeId, ownerId: userId });
 
   if (!store) {
-    throw httpError(HTTP_STATUS.FORBIDDEN, 'You do not have access to this store');
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'You do not have access to this store'
+    );
   }
 
   return store;
@@ -24,7 +26,11 @@ export async function assertStoreOwner(storeId: string, userId: string) {
 
 //===============================================================
 
-export async function assertProductOfferOwner(productId: string, storeId: string, userId: string) {
+export async function assertProductOfferOwner(
+  productId: string,
+  storeId: string,
+  userId: string
+) {
   await assertStoreOwner(storeId, userId);
 
   if (!Types.ObjectId.isValid(productId)) {
@@ -37,7 +43,10 @@ export async function assertProductOfferOwner(productId: string, storeId: string
   });
 
   if (!product) {
-    throw httpError(HTTP_STATUS.FORBIDDEN, 'You do not have access to this product offer');
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'You do not have access to this product offer'
+    );
   }
 
   return product;
