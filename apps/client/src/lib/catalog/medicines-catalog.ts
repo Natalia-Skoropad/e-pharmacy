@@ -345,8 +345,10 @@ export function buildMedicinesCatalogCanonicalPath(
 //===================================================================
 
 export function hasLegacyMedicinesCatalogSegments(
-  _params: MedicinesCatalogRouteParams = {}
+  params: MedicinesCatalogRouteParams = {}
 ): boolean {
+  void params;
+
   return false;
 }
 

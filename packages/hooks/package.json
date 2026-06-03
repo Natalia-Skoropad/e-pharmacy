@@ -10,9 +10,15 @@
   },
   "scripts": {
     "lint": "tsc --noEmit",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "peerDependencies": {
+    "react": "19.2.4"
   },
   "devDependencies": {
+    "@types/react": "^19",
+    "react": "19.2.4",
     "typescript": "^5"
   }
 }

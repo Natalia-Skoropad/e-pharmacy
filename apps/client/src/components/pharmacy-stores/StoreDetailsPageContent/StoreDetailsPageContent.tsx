@@ -17,11 +17,12 @@ import {
 
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
+import { useToast } from '@e-pharmacy/hooks';
+
 import {
   useFavoriteToggle,
   useReviewForm,
   useStoreFavoriteRefresh,
-  useToast,
 } from '@/hooks';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';

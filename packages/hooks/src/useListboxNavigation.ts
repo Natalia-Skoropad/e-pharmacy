@@ -1,9 +1,8 @@
+'use client';
+
 import { useCallback, useState } from 'react';
 
-import {
-  getBoundedIndex,
-  getNextLoopedIndex,
-} from '@/lib/accessibility/listbox-keyboard';
+import { getBoundedIndex, getNextLoopedIndex } from './listbox-keyboard';
 
 //===================================================================
 
@@ -17,7 +16,7 @@ export function useListboxNavigation(itemsCount: number, initialIndex = 0) {
 
   const moveActiveIndex = useCallback(
     (direction: 1 | -1) => {
-      setActiveIndex((currentIndex) =>
+      setActiveIndex((currentIndex: number) =>
         getNextLoopedIndex({
           currentIndex,
           direction,

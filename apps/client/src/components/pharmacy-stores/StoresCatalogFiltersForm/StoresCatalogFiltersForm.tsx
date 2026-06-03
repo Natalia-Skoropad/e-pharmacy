@@ -12,7 +12,11 @@ import {
   SelectField,
 } from '@/components/common';
 
-import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@/hooks';
+import {
+  useBackdropClick,
+  useBodyScrollLock,
+  useEscapeToClose,
+} from '@e-pharmacy/hooks';
 
 import {
   CATALOG_SEARCH_MAX_LENGTH,

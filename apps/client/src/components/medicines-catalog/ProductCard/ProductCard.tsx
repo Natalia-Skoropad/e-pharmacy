@@ -10,7 +10,8 @@ import {
   SvgIcon,
 } from '@/components/common';
 
-import { useFavoriteToggle, useProductFavoriteRefresh, useToast } from '@/hooks';
+import { useToast } from '@e-pharmacy/hooks';
+import { useFavoriteToggle, useProductFavoriteRefresh } from '@/hooks';
 
 import { formatPharmaciesCount, formatPriceRange } from '@/lib/formatters';
 import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';

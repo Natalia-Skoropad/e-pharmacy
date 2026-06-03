@@ -12,7 +12,7 @@ import {
 
 import { Button, ButtonLink } from '@/components/common';
 
-import { useToast } from '@/hooks';
+import { useToast } from '@e-pharmacy/hooks';
 import { ROUTES } from '@/lib/constants/routes';
 import { useAuth } from '@/providers';
 

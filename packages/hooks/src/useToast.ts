@@ -2,7 +2,7 @@
 
 import { useContext } from 'react';
 
-import { ToastContext } from '@/providers/ToastProvider';
+import { ToastContext } from './toast-context';
 
 //===================================================================
 

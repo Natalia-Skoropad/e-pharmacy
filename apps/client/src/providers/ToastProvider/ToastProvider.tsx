@@ -1,14 +1,15 @@
 'use client';
 
-import {
-  createContext,
-  useCallback,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 
-import Toast, { type ToastVariant } from '@/components/common/Toast';
+import {
+  ToastContext,
+  type ToastContextValue,
+  type ToastInput,
+  type ToastVariant,
+} from '@e-pharmacy/hooks';
+
+import Toast from '@/components/common/Toast';
 
 export type { ToastVariant };
 
@@ -21,19 +22,6 @@ type ToastItem = {
   duration: number;
 };
 
-type ToastInput = {
-  message: string;
-  variant?: ToastVariant;
-  duration?: number;
-};
-
-type ToastContextValue = {
-  show: (toast: ToastInput) => void;
-  success: (message: string, duration?: number) => void;
-  error: (message: string, duration?: number) => void;
-  info: (message: string, duration?: number) => void;
-};
-
 type ToastProviderProps = {
   children: ReactNode;
 };
@@ -42,10 +30,6 @@ type ToastProviderProps = {
 
 const DEFAULT_TOAST_DURATION = 5000;
 const MAX_VISIBLE_TOASTS = 4;
-
-export const ToastContext = createContext<ToastContextValue | null>(null);
-
-//===================================================================
 
 function createToastId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;

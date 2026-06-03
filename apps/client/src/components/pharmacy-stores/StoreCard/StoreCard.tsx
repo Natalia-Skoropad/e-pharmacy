@@ -8,7 +8,9 @@ import {
   SvgIcon,
 } from '@/components/common';
 
-import { useFavoriteToggle, useStoreFavoriteRefresh, useToast } from '@/hooks';
+import { useToast } from '@e-pharmacy/hooks';
+
+import { useFavoriteToggle, useStoreFavoriteRefresh } from '@/hooks';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 import { buildStorePath } from '@/lib/routes';

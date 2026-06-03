@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@e-pharmacy/config": "workspace:*",
+    "@e-pharmacy/hooks": "workspace:*",
     "@e-pharmacy/api-client": "workspace:*",
     "@e-pharmacy/types": "workspace:*",
     "@e-pharmacy/ui": "workspace:*",

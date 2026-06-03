@@ -18,7 +18,7 @@ import {
   useBodyScrollLock,
   useEscapeToClose,
   useFocusTrap,
-} from '@/hooks';
+} from '@e-pharmacy/hooks';
 
 import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
 import { ROUTES } from '@/lib/constants/routes';

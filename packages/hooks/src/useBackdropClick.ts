@@ -1,4 +1,6 @@
-import { useCallback } from 'react';
+'use client';
+
+import { useCallback, type MouseEvent } from 'react';
 
 //===================================================================
 
@@ -10,7 +12,7 @@ type UseBackdropClickParams = {
 
 export function useBackdropClick({ onClose }: UseBackdropClickParams) {
   return useCallback(
-    (event: React.MouseEvent<HTMLElement>) => {
+    (event: MouseEvent<HTMLElement>) => {
       if (event.target === event.currentTarget) {
         onClose();
       }

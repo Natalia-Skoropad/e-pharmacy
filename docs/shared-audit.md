@@ -868,3 +868,41 @@ tsc --noEmit -p packages/ui/tsconfig.json
 ```
 
 The UI package type-check passed after adding the shared style files. Full monorepo `pnpm` commands were not run in this environment because `pnpm` is not installed here.
+
+
+## Stage 3 shared hooks migration update
+
+Reusable interaction hooks were moved from the Client app boundary into `packages/hooks` and exposed through the public `@e-pharmacy/hooks` API.
+
+| Area | Result | Notes |
+|---|---|---|
+| `useBackdropClick` | Moved to `packages/hooks` | Used by modals, offcanvas, and filter panels. |
+| `useBodyScrollLock` | Moved to `packages/hooks` | Keeps modal/offcanvas scroll-lock behavior reusable across Client/Vendor/Admin. |
+| `useEscapeToClose` | Moved to `packages/hooks` | Used by modal/offcanvas/overlay primitives. |
+| `useFocusTrap` | Moved to `packages/hooks` | Kept generic and DOM-based; no Client business dependency. |
+| `useListboxNavigation` | Moved to `packages/hooks` | Shared keyboard helper exports were added beside the hook because Select/SearchableSelect use the same listbox key logic. |
+| `useToast` | Moved to `packages/hooks` | Toast context and hook now live in `@e-pharmacy/hooks`; the current Client `ToastProvider` imports that context until Stage 6 moves the provider/UI layer. |
+| Client-specific hooks | Kept in `apps/client/src/hooks` | `useFavoriteRefresh`, `useFavoriteStatusRefresh`, `useFavoriteToggle`, and `useReviewForm` remain Client-specific for now because they depend on auth, favorites, reviews, and storefront services. |
+| Client imports | Updated | Shared hooks now import from `@e-pharmacy/hooks`; mixed imports were split so Client-specific hooks still come from `@/hooks`. |
+
+After applying this patch, remove the old shared-hook source duplicates from `apps/client/src/hooks`:
+
+```txt
+apps/client/src/hooks/useBackdropClick.ts
+apps/client/src/hooks/useBodyScrollLock.ts
+apps/client/src/hooks/useEscapeToClose.ts
+apps/client/src/hooks/useFocusTrap.ts
+apps/client/src/hooks/useListboxNavigation.ts
+apps/client/src/hooks/useToast.ts
+```
+
+Keep these Client-specific hooks local for now:
+
+```txt
+apps/client/src/hooks/useFavoriteRefresh.ts
+apps/client/src/hooks/useFavoriteStatusRefresh.ts
+apps/client/src/hooks/useFavoriteToggle.ts
+apps/client/src/hooks/useReviewForm.ts
+```
+
+Validation note for Stage 3: full monorepo `pnpm` commands were not run in this environment because `pnpm` is not installed here. The migration keeps public package imports only and avoids app-to-app or package-to-app imports.

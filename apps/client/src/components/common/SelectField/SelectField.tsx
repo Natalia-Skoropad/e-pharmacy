@@ -4,12 +4,11 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 
-import { useListboxNavigation } from '@/hooks';
-
 import {
   isListboxOpenKey,
   isListboxSelectKey,
-} from '@/lib/accessibility/listbox-keyboard';
+  useListboxNavigation,
+} from '@e-pharmacy/hooks';
 
 import css from './SelectField.module.css';
 

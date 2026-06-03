@@ -28,7 +28,8 @@ import {
 import { CartInvoiceLimitModal } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { useAuth } from '@/providers';
-import { useFavoriteToggle, useReviewForm, useToast } from '@/hooks';
+import { useToast } from '@e-pharmacy/hooks';
+import { useFavoriteToggle, useReviewForm } from '@/hooks';
 
 import { ROUTES } from '@/lib/constants/routes';
 import { CATALOG_SEARCH_MAX_LENGTH } from '@/lib/constants/catalog-controls';

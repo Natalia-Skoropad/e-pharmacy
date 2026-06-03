@@ -7,7 +7,8 @@ import {
   useBodyScrollLock,
   useEscapeToClose,
   useFocusTrap,
-} from '@/hooks';
+} from '@e-pharmacy/hooks';
+
 import { cn } from '@/lib/utils';
 
 import css from './ModalBase.module.css';

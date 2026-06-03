@@ -4,8 +4,10 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import clsx from 'clsx';
 
-import { useListboxNavigation } from '@/hooks';
-import { isListboxOpenKey } from '@/lib/accessibility/listbox-keyboard';
+import {
+  isListboxOpenKey,
+  useListboxNavigation,
+} from '@e-pharmacy/hooks';
 
 import css from './SearchableSelect.module.css';
 
