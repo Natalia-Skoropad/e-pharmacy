@@ -21,7 +21,8 @@ import {
   ShimmerImage,
   SvgIcon,
 } from '@e-pharmacy/ui/common';
-import Breadcrumbs from '@/components/layout/Breadcrumbs';
+
+import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { ROUTES } from '@/lib/constants/routes';
 
 import {

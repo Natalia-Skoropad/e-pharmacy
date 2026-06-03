@@ -1,8 +1,14 @@
 import type { MetadataRoute } from 'next';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
+import { SITE_URL } from '@/lib/constants/metadata';
 import { SITEMAP_STATIC_ROUTES } from '@/lib/constants/seo';
-import { createAbsoluteUrl } from '@/lib/seo';
+import {
+  createSitemapRoutes,
+  createStaticSitemapEntries,
+  dedupeSitemapEntries,
+  parseSitemapDate,
+} from '@e-pharmacy/config/seo';
 import { buildProductPath, buildStorePath } from '@/lib/routes';
 
 //===================================================================
@@ -46,16 +52,6 @@ const SITEMAP_FETCH_BATCH_SIZE = 20;
 
 function createApiUrl(path: string): string {
   return new URL(path, CLIENT_ENV.apiBaseUrl).toString();
-}
-
-//===================================================================
-
-function parseSitemapDate(value?: string): Date | undefined {
-  if (!value) return undefined;
-
-  const date = new Date(value);
-
-  return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
 //===================================================================
@@ -146,23 +142,16 @@ async function getDynamicSitemapEntries(): Promise<SitemapEntry[]> {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fallbackLastModified = new Date();
-  const staticEntries = SITEMAP_STATIC_ROUTES.map((route) => ({
-    path: route,
-    priority: route === '/' ? 1 : 0.8,
-    lastModified: fallbackLastModified,
-  }));
-
+  const staticEntries = createStaticSitemapEntries(
+    SITEMAP_STATIC_ROUTES,
+    fallbackLastModified
+  );
   const dynamicEntries = await getDynamicSitemapEntries();
-  const entriesByPath = new Map<string, SitemapEntry>();
+  const entries = dedupeSitemapEntries([...staticEntries, ...dynamicEntries]);
 
-  [...staticEntries, ...dynamicEntries].forEach((entry) => {
-    entriesByPath.set(entry.path, entry);
-  });
-
-  return Array.from(entriesByPath.values()).map((entry) => ({
-    url: createAbsoluteUrl(entry.path),
-    lastModified: entry.lastModified ?? fallbackLastModified,
-    changeFrequency: entry.path === '/' ? 'weekly' : 'daily',
-    priority: entry.priority,
-  }));
+  return createSitemapRoutes(
+    entries,
+    SITE_URL,
+    fallbackLastModified
+  ) as MetadataRoute.Sitemap;
 }

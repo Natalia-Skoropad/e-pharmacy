@@ -7,3 +7,5 @@ export const APP_NAMES = {
 //===================================================================
 
 export * from './routes';
+
+export * from './seo';

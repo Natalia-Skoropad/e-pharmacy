@@ -14,7 +14,7 @@ import {
   PhoneInput,
 } from '@e-pharmacy/ui/form-fields';
 
-import Breadcrumbs from '@/components/layout/Breadcrumbs';
+import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { ProductCard } from '@/components/medicines-catalog';
 import { StoreCard } from '@/components/pharmacy-stores';
 

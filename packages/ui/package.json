@@ -16,7 +16,9 @@
     "./layout": "./src/layout/index.ts",
     "./modals": "./src/modals/index.ts",
     "./status-pages": "./src/status-pages/index.ts",
-    "./form-fields/*": "./src/form-fields/*/index.ts"
+    "./form-fields/*": "./src/form-fields/*/index.ts",
+    "./layout/*": "./src/layout/*/index.ts",
+    "./status-pages/*": "./src/status-pages/*/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

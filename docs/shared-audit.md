@@ -969,3 +969,63 @@ Notes:
 - Validation logic remains outside UI components; fields only use display limits for `maxLength` and counters.
 - Domain validation schemas stay in `@e-pharmacy/validation` and will be handled more deeply in the dedicated validation migration stage.
 
+
+## Stage 8 layout primitives migration update
+
+Reusable layout primitives were moved to `packages/ui/src/layout` with one folder per component where applicable.
+
+| Entity | Current Client role | Target / Result | Action | Notes |
+|---|---|---|---|---|
+| `Breadcrumbs` | Generic route breadcrumb renderer | `packages/ui/src/layout/Breadcrumbs` | Moved to shared UI | Accepts `items`, optional structured data, and optional `createItemUrl` so apps can provide their own absolute URL builder. |
+| `BurgerButton` | Generic mobile menu trigger | `packages/ui/src/layout/BurgerButton` | Moved to shared UI | Keeps accessible `aria-expanded` / `aria-controls` behavior and configurable labels. |
+| `MobileOffcanvasBase` | Reusable offcanvas behavior | `packages/ui/src/layout/MobileOffcanvasBase` | Added shared base | Owns portal, backdrop click, Escape close, body scroll lock, focus trap, dialog role, and title wiring. |
+| Client `MobileOffcanvas` | Client navigation/auth/cart composition | Stays in `apps/client/src/components/layout/MobileOffcanvas` | App-specific wrapper | Uses shared `MobileOffcanvasBase`, but keeps Client nav items/auth/logout/profile logic local. |
+| `Header` / `Footer` | Client-specific storefront navigation and copy | Stay local | Do not move yet | They depend on Client nav constants, auth, cart count, and storefront wording. |
+| `AppShell` | Composes Client Header/Footer around page content | Stays local | Do not move yet | Current shell is still Client-specific. A generic `AppShellBase` can be added later when Vendor/Admin layouts exist. |
+
+After applying Stage 8, remove old local duplicate folders for `Breadcrumbs` and `BurgerButton` only.
+
+## Stage 8.1 shared status pages update
+
+Shared status page components were extracted into `packages/ui/src/status-pages` with one folder per component.
+
+| Entity | Result | Notes |
+|---|---|---|
+| `StatusPageLayout` | Added to `packages/ui/src/status-pages/StatusPageLayout` | Shared visual layout used by error and not-found pages. |
+| `ErrorPage` | Added to `packages/ui/src/status-pages/ErrorPage` | Client `app/error.tsx` is now a thin Next.js wrapper that passes title/copy/actions. |
+| `NotFoundPage` | Added to `packages/ui/src/status-pages/NotFoundPage` | Client `app/not-found.tsx` is now a thin wrapper with app-specific routes/copy. |
+| `PageLoader` | Added to `packages/ui/src/status-pages/PageLoader` | Client `app/loading.tsx` is now a thin wrapper. It uses a `div`, not an extra `main`, so it does not create duplicate main landmarks. |
+| `status-page.module.css` / `loading.module.css` | Moved into shared status page components | Old app-level CSS files should be removed after applying this patch. |
+
+## Stage 8.2 root layout/page/icon audit update
+
+| File / Folder | Current location | Shared part | App-specific part | Target package | Action | Priority | Notes |
+|---|---|---|---|---|---|---|---|
+| `layout.tsx` | `apps/client/src/app/layout.tsx` | Shared providers already include `ToastProvider` from `@e-pharmacy/ui/feedback`; shared styles imports | Metadata constants, Client auth wrapper, Client shell composition | `packages/ui`, later `packages/auth` | Keep app file as wrapper | High | Do not move Next.js layout file into packages. |
+| `page.tsx` | `apps/client/src/app/page.tsx` | `Container`, `ButtonLink`, cards/sliders may reuse shared UI later | Storefront homepage content and featured products/stores | App-specific | Keep local | High | Vendor root must not copy Client homepage. |
+| `page.module.css` | `apps/client/src/app/page.module.css` | Some hero/status primitives may be reusable later | Storefront homepage layout and marketing sections | App-specific for now | Keep local | Medium | Do not move without Vendor/Admin design needs. |
+| `icon.svg` | `apps/client/src/app/icon.svg` | Source brand asset could later be mirrored into shared assets | Next.js physical app icon file | App asset / optional shared assets later | Keep local | Low | Small file; safe to duplicate per app if needed. |
+
+Vendor routing decision remains:
+
+- `/vendor` redirects to `/vendor/dashboard`.
+- `/vendor/dashboard` is the main Vendor cabinet page.
+
+Admin should follow the same pattern later:
+
+- `/admin` redirects to `/admin/dashboard`.
+- `/admin/dashboard` is the main Admin panel page.
+
+## Stage 8.3 SEO special files update
+
+Shared SEO helpers were added to `packages/config/src/seo`.
+
+| Entity | Result | Notes |
+|---|---|---|
+| `createRobotsConfig` | Added to `packages/config/src/seo/robots.ts` | Client uses indexable public strategy; Vendor/Admin can use noindex private strategy. |
+| Sitemap helpers | Added to `packages/config/src/seo/sitemap.ts` | Includes absolute URL creation, date parsing, static entries, deduplication, and route conversion helpers. |
+| `SEO_STRATEGIES` | Added to `packages/config/src/seo/metadata.ts` | Documents Client/Vendor/Admin indexing strategy in config. |
+| `apps/client/src/app/robots.ts` | Updated | Stays as a Next.js special file, but now delegates robots config building to `@e-pharmacy/config/seo`. |
+| `apps/client/src/app/sitemap.ts` | Updated | Stays as a Next.js special file and keeps Client-specific dynamic product/store fetching, while shared sitemap helper logic lives in config. |
+
+Next.js special files remain in each app. Only reusable builders/components moved to packages.

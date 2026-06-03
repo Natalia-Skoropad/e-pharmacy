@@ -17,7 +17,7 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
-import Breadcrumbs from '@/components/layout/Breadcrumbs';
+import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 
 import {

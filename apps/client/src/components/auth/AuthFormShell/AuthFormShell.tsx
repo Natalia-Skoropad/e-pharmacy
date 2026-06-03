@@ -2,7 +2,7 @@ import { useId, type ReactNode } from 'react';
 import Image from 'next/image';
 
 import { Container } from '@e-pharmacy/ui/common';
-import Breadcrumbs from '@/components/layout/Breadcrumbs';
+import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import type { BreadcrumbItem } from '@/types/breadcrumbs';
 
 import css from './AuthFormShell.module.css';

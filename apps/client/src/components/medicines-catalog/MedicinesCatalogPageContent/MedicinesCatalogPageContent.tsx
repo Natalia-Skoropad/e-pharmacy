@@ -1,5 +1,5 @@
 import { Container, Pagination } from '@e-pharmacy/ui/common';
-import Breadcrumbs from '@/components/layout/Breadcrumbs';
+import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import MedicinesCatalogFiltersForm from '@/components/medicines-catalog/MedicinesCatalogFiltersForm';
 import ProductsList from '@/components/medicines-catalog/ProductsList';
 

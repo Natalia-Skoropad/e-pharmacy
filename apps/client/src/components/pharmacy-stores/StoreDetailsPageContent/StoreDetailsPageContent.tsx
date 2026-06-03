@@ -7,7 +7,7 @@ import { ButtonLink, Container, RatingSummary, ShimmerImage, SvgIcon, Tabs } fro
 import { type TabItem } from '@e-pharmacy/ui/common';
 import { FavoriteToggleButton, ReviewsSection } from '@/components/common';
 
-import Breadcrumbs from '@/components/layout/Breadcrumbs';
+import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 
 import { useToast } from '@e-pharmacy/hooks';
 

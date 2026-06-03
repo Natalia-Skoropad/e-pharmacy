@@ -9,7 +9,7 @@ import { DeliveryInfoCard, FavoriteToggleButton, PaymentInfoCard, ReviewsSection
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 
 import { CartInvoiceLimitModal } from '@/components/common';
-import Breadcrumbs from '@/components/layout/Breadcrumbs';
+import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useAuth } from '@/providers';
 import { useToast } from '@e-pharmacy/hooks';
 import { useFavoriteToggle, useReviewForm } from '@/hooks';

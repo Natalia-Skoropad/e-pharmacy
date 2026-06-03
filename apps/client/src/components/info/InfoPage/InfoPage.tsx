@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
 import { Container } from '@e-pharmacy/ui/common';
-import Breadcrumbs from '@/components/layout/Breadcrumbs';
+import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 
 import { INFO_NAV_LINKS } from '@/lib/constants/navigation';
 import { createBreadcrumbs } from '@/lib/routes';

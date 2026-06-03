@@ -2,22 +2,28 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { ChevronRight, Home } from 'lucide-react';
 
-import { createAbsoluteUrl } from '@/lib/seo/url';
-import type { BreadcrumbItem } from '@/types/breadcrumbs';
-
 import css from './Breadcrumbs.module.css';
 
 //===================================================================
+
+export type BreadcrumbItem = {
+  label: string;
+  href?: string;
+};
 
 type BreadcrumbsProps = {
   items: BreadcrumbItem[];
   className?: string;
   includeStructuredData?: boolean;
+  createItemUrl?: (href: string) => string;
 };
 
 //===================================================================
 
-function createBreadcrumbStructuredData(items: BreadcrumbItem[]) {
+function createBreadcrumbStructuredData(
+  items: BreadcrumbItem[],
+  createItemUrl?: (href: string) => string
+) {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -25,7 +31,7 @@ function createBreadcrumbStructuredData(items: BreadcrumbItem[]) {
       '@type': 'ListItem',
       position: index + 1,
       name: item.label,
-      ...(item.href ? { item: createAbsoluteUrl(item.href) } : {}),
+      ...(item.href && createItemUrl ? { item: createItemUrl(item.href) } : {}),
     })),
   };
 }
@@ -36,6 +42,7 @@ function Breadcrumbs({
   items,
   className,
   includeStructuredData = false,
+  createItemUrl,
 }: BreadcrumbsProps) {
   if (!items?.length) return null;
 
@@ -85,7 +92,9 @@ function Breadcrumbs({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(createBreadcrumbStructuredData(items)),
+            __html: JSON.stringify(
+              createBreadcrumbStructuredData(items, createItemUrl)
+            ),
           }}
         />
       ) : null}

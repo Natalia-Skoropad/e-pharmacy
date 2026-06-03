@@ -1,13 +1,9 @@
-import css from './loading.module.css';
+import { PageLoader } from '@e-pharmacy/ui/status-pages';
 
 //===================================================================
 
 function LoadingPage() {
-  return (
-    <div className={css.page} role="status" aria-label="Loading page">
-      <div className={css.loader} aria-hidden="true" />
-    </div>
-  );
+  return <PageLoader />;
 }
 
 export default LoadingPage;

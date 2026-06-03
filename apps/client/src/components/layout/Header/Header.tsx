@@ -12,7 +12,7 @@ import {
   Logo,
   UserBadge,
 } from '@e-pharmacy/ui/common';
-import BurgerButton from '@/components/layout/BurgerButton';
+import { BurgerButton } from '@e-pharmacy/ui/layout';
 import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
 
 import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
