@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 
-import { Button, ButtonLink, Container } from '@/components/common';
+import { Button, ButtonLink, Container } from '@e-pharmacy/ui/common';
 import { ROUTES } from '@/lib/constants/routes';
 
 import css from './status-page.module.css';

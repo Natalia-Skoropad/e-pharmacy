@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import { Star } from 'lucide-react';
 
-import Button from '@/components/common/Button';
-import LazyLoadButton from '@/components/common/LazyLoadButton';
+import Button from '@e-pharmacy/ui/common/Button';
+import LazyLoadButton from '@e-pharmacy/ui/common/LazyLoadButton';
 import { CommentInput } from '@/components/form-fields';
-
 import { formatReviewDate } from '@/lib/formatters';
 
 import css from './ReviewsSection.module.css';
@@ -67,9 +66,8 @@ function ReviewsSection({
   initialVisibleCount = DEFAULT_VISIBLE_REVIEWS_COUNT,
   step = DEFAULT_VISIBLE_REVIEWS_COUNT,
 }: ReviewsSectionProps) {
-  const [visibleReviewsCount, setVisibleReviewsCount] = useState(
-    initialVisibleCount
-  );
+  const [visibleReviewsCount, setVisibleReviewsCount] =
+    useState(initialVisibleCount);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const visibleReviews = reviews.slice(0, visibleReviewsCount);

@@ -201,6 +201,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@e-pharmacy/hooks':
+        specifier: workspace:*
+        version: link:../hooks
       react:
         specifier: '>=19'
         version: 19.2.4
@@ -214,6 +217,15 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.2.3(@types/react@19.2.14)
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      lucide-react:
+        specifier: ^0.468.0
+        version: 0.468.0(react@19.2.4)
+      next:
+        specifier: 16.2.4
+        version: 16.2.4(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       typescript:
         specifier: ^5
         version: 5.9.3

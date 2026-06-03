@@ -3,27 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 
-import {
-  Button,
-  ButtonLink,
-  ConfirmActionModal,
-  Container,
-  DeliveryInfoCard,
-  FavoriteToggleButton,
-  LazyLoadButton,
-  PaymentInfoCard,
-  QuantityCounter,
-  RatingSummary,
-  ReviewsSection,
-  StockAvailability,
-  SearchInput,
-  SearchableSelect,
-  SelectField,
-  ShimmerImage,
-  SvgIcon,
-  Tabs,
-  type TabItem,
-} from '@/components/common';
+import { Button, ButtonLink, Container, LazyLoadButton, QuantityCounter, RatingSummary, SearchInput, SearchableSelect, SelectField, ShimmerImage, SvgIcon, Tabs } from '@e-pharmacy/ui/common';
+import { type TabItem } from '@e-pharmacy/ui/common';
+import { ConfirmActionModal, DeliveryInfoCard, FavoriteToggleButton, PaymentInfoCard, ReviewsSection, StockAvailability } from '@/components/common';
 
 import { CartInvoiceLimitModal } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';

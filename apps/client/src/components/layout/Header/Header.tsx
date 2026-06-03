@@ -5,8 +5,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 
-import { Button, ButtonLink, Container, Logo, UserBadge } from '@/components/common';
-
+import {
+  Button,
+  ButtonLink,
+  Container,
+  Logo,
+  UserBadge,
+} from '@e-pharmacy/ui/common';
 import BurgerButton from '@/components/layout/BurgerButton';
 import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
 
@@ -32,12 +37,14 @@ function Header() {
   const router = useRouter();
   const mobileNavigationId = useId();
 
-  const { sessionMarker, isAuthenticated, isAuthReady, user, logout } = useAuth();
+  const { sessionMarker, isAuthenticated, isAuthReady, user, logout } =
+    useAuth();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
-  const visibleCartItemsCount = isAuthenticated && sessionMarker ? cartItemsCount : 0;
+  const visibleCartItemsCount =
+    isAuthenticated && sessionMarker ? cartItemsCount : 0;
 
   useEffect(() => {
     if (!isAuthenticated || !sessionMarker) return;

@@ -1,6 +1,6 @@
 import { Copy, CreditCard, Mail, Wallet } from 'lucide-react';
 
-import { RadioOption } from '@/components/common';
+import { RadioOption } from '@e-pharmacy/ui/common';
 import type { Store } from '@/types';
 import type { CheckoutPaymentMethod as PaymentMethod } from '@/types/checkout';
 

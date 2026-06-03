@@ -2,13 +2,8 @@
 
 import { useMemo } from 'react';
 
-import {
-  ButtonLink,
-  FavoriteToggleButton,
-  RatingSummary,
-  ShimmerImage,
-  SvgIcon,
-} from '@/components/common';
+import { ButtonLink, RatingSummary, ShimmerImage, SvgIcon } from '@e-pharmacy/ui/common';
+import { FavoriteToggleButton } from '@/components/common';
 
 import { useToast } from '@e-pharmacy/hooks';
 import { useFavoriteToggle, useProductFavoriteRefresh } from '@/hooks';

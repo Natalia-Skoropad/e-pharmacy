@@ -4,13 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Filter } from 'lucide-react';
 
-import {
-  CloseIconButton,
-  ResetFiltersButton,
-  SearchableSelect,
-  SearchInput,
-  SelectField,
-} from '@/components/common';
+import { CloseIconButton, ResetFiltersButton, SearchableSelect, SearchInput, SelectField } from '@e-pharmacy/ui/common';
 
 import {
   useBackdropClick,

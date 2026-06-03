@@ -5,14 +5,7 @@ import type { ChangeEvent } from 'react';
 import Link from 'next/link';
 import { Heart, KeyRound, Store } from 'lucide-react';
 
-import {
-  Button,
-  ButtonLink,
-  Container,
-  LoadingSpinner,
-  ProfilePhotoCard,
-  Tabs,
-} from '@/components/common';
+import { Button, ButtonLink, Container, LoadingSpinner, ProfilePhotoCard, Tabs } from '@e-pharmacy/ui/common';
 
 import {
   AddressInput,

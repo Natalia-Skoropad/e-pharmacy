@@ -906,3 +906,8 @@ apps/client/src/hooks/useReviewForm.ts
 ```
 
 Validation note for Stage 3: full monorepo `pnpm` commands were not run in this environment because `pnpm` is not installed here. The migration keeps public package imports only and avoids app-to-app or package-to-app imports.
+
+
+## Stage 4 base UI components migration update
+
+Moved reusable common UI components from `apps/client/src/components/common` into `packages/ui/src/common` using the same folder-per-component structure as the client app. Removed the unused `packages/ui/src/components` structure. Client imports for migrated components now point to `@e-pharmacy/ui/common` or `@e-pharmacy/ui/common/<ComponentName>`. Components migrated in this stage: Button, ButtonLink, CloseIconButton, Container, LoadingSpinner, Pagination, RadioOption, SearchInput, SelectField, Toast, ModalBase, Logo, LazyLoadButton, ResetFiltersButton, TextActionButton, Tabs, SearchableSelect, QuantityCounter, SvgIcon, UserBadge, AvatarImage, ProfilePhotoCard, RatingSummary, ShimmerImage. Local client component folders for these migrated components should be removed after applying the patch.

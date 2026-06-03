@@ -11,14 +11,12 @@ import {
 import {
   Button,
   ButtonLink,
-  ConfirmActionModal,
   Container,
   LoadingSpinner,
   RatingSummary,
-} from '@/components/common';
-
+} from '@e-pharmacy/ui/common';
+import { ConfirmActionModal } from '@/components/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
-
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 
 import {

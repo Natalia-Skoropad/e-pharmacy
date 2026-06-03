@@ -2,7 +2,7 @@
 
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
-import { Button, TextActionButton } from '@/components/common';
+import { Button, TextActionButton } from '@e-pharmacy/ui/common';
 import { EmailInput } from '@/components/form-fields';
 
 import { useToast } from '@e-pharmacy/hooks';

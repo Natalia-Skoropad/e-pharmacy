@@ -8,7 +8,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 
-import { ButtonLink, Container } from '@/components/common';
+import { ButtonLink, Container } from '@e-pharmacy/ui/common';
 import { HomeFeatureCards, HomeReviewsSlider } from '@/components/home';
 import { ProductCard } from '@/components/medicines-catalog';
 import { StoreCard } from '@/components/pharmacy-stores';

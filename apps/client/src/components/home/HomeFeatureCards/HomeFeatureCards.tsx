@@ -10,8 +10,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { Button, ButtonLink } from '@/components/common';
-
+import { Button, ButtonLink } from '@e-pharmacy/ui/common';
 import { useToast } from '@e-pharmacy/hooks';
 import { ROUTES } from '@/lib/constants/routes';
 import { useAuth } from '@/providers';

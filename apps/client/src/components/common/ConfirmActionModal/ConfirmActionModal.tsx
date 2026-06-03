@@ -2,8 +2,9 @@
 
 import { useId } from 'react';
 
-import Button from '../Button';
-import { ModalBase, ModalRoot } from '@/components/modals';
+import Button from '@e-pharmacy/ui/common/Button';
+import { ModalBase } from '@e-pharmacy/ui/common';
+import { ModalRoot } from '@/components/modals';
 
 import css from './ConfirmActionModal.module.css';
 

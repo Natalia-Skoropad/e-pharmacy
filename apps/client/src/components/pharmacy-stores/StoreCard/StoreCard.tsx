@@ -2,14 +2,13 @@
 
 import {
   ButtonLink,
-  FavoriteToggleButton,
   RatingSummary,
   ShimmerImage,
   SvgIcon,
-} from '@/components/common';
+} from '@e-pharmacy/ui/common';
+import { FavoriteToggleButton } from '@/components/common';
 
 import { useToast } from '@e-pharmacy/hooks';
-
 import { useFavoriteToggle, useStoreFavoriteRefresh } from '@/hooks';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
@@ -132,7 +131,9 @@ function StoreCard({
 
           <div className={css.summaryItem}>
             <dt>Medicines</dt>
-            <dd>{formatAvailableProductsCount(store.availableProductsCount)}</dd>
+            <dd>
+              {formatAvailableProductsCount(store.availableProductsCount)}
+            </dd>
           </div>
         </dl>
 

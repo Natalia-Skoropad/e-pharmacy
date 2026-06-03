@@ -3,17 +3,9 @@
 import { useMemo, useState } from 'react';
 import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 
-import {
-  ButtonLink,
-  Container,
-  FavoriteToggleButton,
-  RatingSummary,
-  ReviewsSection,
-  ShimmerImage,
-  SvgIcon,
-  Tabs,
-  type TabItem,
-} from '@/components/common';
+import { ButtonLink, Container, RatingSummary, ShimmerImage, SvgIcon, Tabs } from '@e-pharmacy/ui/common';
+import { type TabItem } from '@e-pharmacy/ui/common';
+import { FavoriteToggleButton, ReviewsSection } from '@/components/common';
 
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 

@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react';
 import { Clock, Info, MapPin, Phone, Truck } from 'lucide-react';
 
-import { RadioOption } from '@/components/common';
+import { RadioOption } from '@e-pharmacy/ui/common';
 import { AddressInput, NameInput, PhoneInput } from '@/components/form-fields';
 import type { CheckoutDeliveryMethod as DeliveryMethod } from '@/types/checkout';
 

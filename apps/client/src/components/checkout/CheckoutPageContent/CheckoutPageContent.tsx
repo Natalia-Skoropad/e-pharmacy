@@ -11,10 +11,9 @@ import { useCheckoutCart } from '../hooks/useCheckoutCart';
 import { useCheckoutStore } from '../hooks/useCheckoutStore';
 import { useCheckoutSubmit } from '../hooks/useCheckoutSubmit';
 
-import { ButtonLink, Container, LoadingSpinner } from '@/components/common';
+import { ButtonLink, Container, LoadingSpinner } from '@e-pharmacy/ui/common';
 import { CommentInput } from '@/components/form-fields';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
-
 import { groupCartByStore } from '@/lib/cart/cart-groups';
 
 import {
@@ -83,7 +82,8 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const [comment, setComment] = useState('');
   const [copiedEmail, setCopiedEmail] = useState(false);
 
-  const { cart, error, isLoading, setCart, setError } = useCheckoutCart(sessionMarker);
+  const { cart, error, isLoading, setCart, setError } =
+    useCheckoutCart(sessionMarker);
 
   const orderGroups = useMemo(() => groupCartByStore(cart), [cart]);
   const selectedOrderGroup = useMemo(() => {

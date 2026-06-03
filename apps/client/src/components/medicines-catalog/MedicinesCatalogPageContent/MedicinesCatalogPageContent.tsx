@@ -1,4 +1,4 @@
-import { Container, Pagination } from '@/components/common';
+import { Container, Pagination } from '@e-pharmacy/ui/common';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import MedicinesCatalogFiltersForm from '@/components/medicines-catalog/MedicinesCatalogFiltersForm';
 import ProductsList from '@/components/medicines-catalog/ProductsList';

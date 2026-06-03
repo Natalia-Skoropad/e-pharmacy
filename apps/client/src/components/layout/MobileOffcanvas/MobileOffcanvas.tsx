@@ -11,7 +11,7 @@ import {
   CloseIconButton,
   Logo,
   UserBadge,
-} from '@/components/common';
+} from '@e-pharmacy/ui/common';
 
 import {
   useBackdropClick,
@@ -24,7 +24,6 @@ import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
 import { ROUTES } from '@/lib/constants/routes';
 import { isActiveRoute } from '@/lib/routes';
 import { cn } from '@/lib/utils';
-
 import { useAuth } from '@/providers';
 
 import css from './MobileOffcanvas.module.css';

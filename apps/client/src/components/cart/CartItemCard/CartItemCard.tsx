@@ -3,14 +3,13 @@ import {
   ButtonLink,
   QuantityCounter,
   RatingSummary,
-  StockAvailability,
   ShimmerImage,
   SvgIcon,
-} from '@/components/common';
+} from '@e-pharmacy/ui/common';
+import { StockAvailability } from '@/components/common';
 
 import { formatPrice } from '@/lib/formatters';
 import { buildProductPath } from '@/lib/routes';
-
 import type { CartItem } from '@/types';
 
 import css from './CartItemCard.module.css';

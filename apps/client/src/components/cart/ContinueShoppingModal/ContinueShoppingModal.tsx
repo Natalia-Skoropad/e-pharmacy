@@ -3,16 +3,10 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 
-import {
-  Button,
-  CloseIconButton,
-  LoadingSpinner,
-  SearchInput,
-  ShimmerImage,
-  SvgIcon,
-  CartInvoiceLimitModal,
-} from '@/components/common';
-import { ModalBase, ModalRoot } from '@/components/modals';
+import { Button, CloseIconButton, LoadingSpinner, SearchInput, ShimmerImage, SvgIcon } from '@e-pharmacy/ui/common';
+import { CartInvoiceLimitModal } from '@/components/common';
+import { ModalBase } from '@e-pharmacy/ui/common';
+import { ModalRoot } from '@/components/modals';
 
 import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
 import { formatPrice, formatStockLabel } from '@/lib/formatters';

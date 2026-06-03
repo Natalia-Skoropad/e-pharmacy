@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Facebook, Instagram, Youtube } from 'lucide-react';
 
-import { Container, Logo } from '@/components/common';
+import { Container, Logo } from '@e-pharmacy/ui/common';
 
 import {
   CLIENT_FOOTER_LINKS,
