@@ -32,3 +32,15 @@ export type PasswordFieldProps = AuthFieldBaseProps & {
   labelAction?: ReactNode;
   onToggleVisibility: () => void;
 };
+
+export type FormFieldLayoutProps = {
+  id: string;
+  label: string;
+  required?: boolean;
+  labelAction?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  errorClassName?: string;
+  error?: string;
+  isTouched?: boolean;
+};

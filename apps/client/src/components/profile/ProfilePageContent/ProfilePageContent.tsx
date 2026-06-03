@@ -12,7 +12,7 @@ import {
   NameInput,
   PasswordInput,
   PhoneInput,
-} from '@/components/form-fields';
+} from '@e-pharmacy/ui/form-fields';
 
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { ProductCard } from '@/components/medicines-catalog';

@@ -4,7 +4,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/common';
-import { EmailInput, PasswordInput } from '@/components/form-fields';
+import { EmailInput, PasswordInput } from '@e-pharmacy/ui/form-fields';
 
 import { useToast } from '@e-pharmacy/hooks';
 import { getAuthErrorMessage } from '@/lib/auth';

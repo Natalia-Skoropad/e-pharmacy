@@ -1,25 +1,12 @@
-import type { ReactNode } from 'react';
 import clsx from 'clsx';
+
+import type { FormFieldLayoutProps } from '../types';
 
 import css from './FormField.module.css';
 
 //===================================================================
 
-type AuthFieldLayoutProps = {
-  id: string;
-  label: string;
-  required?: boolean;
-  labelAction?: ReactNode;
-  children: ReactNode;
-  className?: string;
-  errorClassName?: string;
-  error?: string;
-  isTouched?: boolean;
-};
-
-//===================================================================
-
-function AuthFieldLayout({
+function FormFieldLayout({
   id,
   label,
   required = true,
@@ -29,7 +16,7 @@ function AuthFieldLayout({
   errorClassName,
   error,
   isTouched,
-}: AuthFieldLayoutProps) {
+}: FormFieldLayoutProps) {
   const errorId = `${id}-error`;
 
   return (
@@ -56,4 +43,4 @@ function AuthFieldLayout({
   );
 }
 
-export default AuthFieldLayout;
+export default FormFieldLayout;

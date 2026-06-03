@@ -24,7 +24,9 @@ import css from './page.module.css';
 
 //===================================================================
 
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
+
+const HOME_REVALIDATE_SECONDS = 300;
 
 export const metadata = createPageMetadata({
   title: HOME_TITLE,
@@ -130,7 +132,7 @@ async function getFeaturedStores(): Promise<Store[]> {
       },
       {
         cache: 'force-cache',
-        next: { revalidate },
+        next: { revalidate: HOME_REVALIDATE_SECONDS },
       }
     );
 
@@ -150,7 +152,7 @@ async function getFeaturedProducts(): Promise<Product[]> {
       },
       {
         cache: 'force-cache',
-        next: { revalidate },
+        next: { revalidate: HOME_REVALIDATE_SECONDS },
       }
     );
 

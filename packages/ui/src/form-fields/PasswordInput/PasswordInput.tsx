@@ -1,10 +1,10 @@
 import { Eye, EyeOff } from 'lucide-react';
+import FormFieldLayout from '../FormFieldLayout';
+import type { PasswordFieldProps } from '../types';
+import css from '../FormFieldLayout/FormField.module.css';
 
-import AuthFieldLayout from '../shared/FormFieldLayout';
-import { PASSWORD_MAX_LENGTH } from '@/lib/validations/auth-validation';
-import type { PasswordFieldProps } from '@/types/form-fields';
+const PASSWORD_MAX_LENGTH = 20;
 
-import css from '../shared/FormField.module.css';
 
 //===================================================================
 
@@ -25,7 +25,7 @@ function PasswordInput({
   onToggleVisibility,
 }: PasswordFieldProps) {
   return (
-    <AuthFieldLayout
+    <FormFieldLayout
       id={id}
       label={label}
       required={required}
@@ -64,7 +64,7 @@ function PasswordInput({
           )}
         </button>
       </div>
-    </AuthFieldLayout>
+    </FormFieldLayout>
   );
 }
 

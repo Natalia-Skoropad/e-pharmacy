@@ -945,3 +945,27 @@ Toast UI and provider logic were moved from the Client app boundary into the sha
 | `packages/ui/src/feedback` | Public entry updated | `@e-pharmacy/ui/feedback` now exports `Toast`, `ToastProvider`, and `ToastVariant`. |
 
 After applying this patch, remove the old duplicate toast folders listed in `DELETE_STAGE_6_DUPLICATES.txt`.
+
+## Stage 7 update — reusable form fields
+
+Moved reusable form field UI from `apps/client/src/components/form-fields` to `packages/ui/src/form-fields` using the same folder-per-component structure as the client codebase.
+
+Shared form fields now live in:
+
+- `packages/ui/src/form-fields/AddressInput`
+- `packages/ui/src/form-fields/CommentInput`
+- `packages/ui/src/form-fields/EmailInput`
+- `packages/ui/src/form-fields/FormFieldLayout`
+- `packages/ui/src/form-fields/NameInput`
+- `packages/ui/src/form-fields/PasswordInput`
+- `packages/ui/src/form-fields/PhoneInput`
+
+Client usage was switched to `@e-pharmacy/ui/form-fields`.
+The old local `apps/client/src/components/form-fields` folder must be removed after applying this stage to avoid duplicate shared UI.
+
+Notes:
+
+- The fields remain controlled and are not coupled to Formik.
+- Validation logic remains outside UI components; fields only use display limits for `maxLength` and counters.
+- Domain validation schemas stay in `@e-pharmacy/validation` and will be handled more deeply in the dedicated validation migration stage.
+

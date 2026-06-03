@@ -1,9 +1,9 @@
-import FormFieldLayout from '../shared/FormFieldLayout';
+import FormFieldLayout from '../FormFieldLayout';
+import type { AddressFieldProps } from '../types';
+import css from '../FormFieldLayout/FormField.module.css';
 
-import { CUSTOMER_ADDRESS_MAX_LENGTH } from '@/lib/validations';
-import type { AddressFieldProps } from '@/types/form-fields';
+const CUSTOMER_ADDRESS_MAX_LENGTH = 200;
 
-import css from '../shared/FormField.module.css';
 
 //===================================================================
 

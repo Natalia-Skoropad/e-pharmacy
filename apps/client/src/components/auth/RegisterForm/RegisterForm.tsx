@@ -4,12 +4,13 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/common';
+
 import {
   EmailInput,
   NameInput,
   PasswordInput,
   PhoneInput,
-} from '@/components/form-fields';
+} from '@e-pharmacy/ui/form-fields';
 
 import { useToast } from '@e-pharmacy/hooks';
 import { getAuthErrorMessage } from '@/lib/auth';

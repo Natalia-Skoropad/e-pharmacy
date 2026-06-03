@@ -12,7 +12,7 @@ import { useCheckoutStore } from '../hooks/useCheckoutStore';
 import { useCheckoutSubmit } from '../hooks/useCheckoutSubmit';
 
 import { ButtonLink, Container, LoadingSpinner } from '@e-pharmacy/ui/common';
-import { CommentInput } from '@/components/form-fields';
+import { CommentInput } from '@e-pharmacy/ui/form-fields';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { groupCartByStore } from '@/lib/cart/cart-groups';
 

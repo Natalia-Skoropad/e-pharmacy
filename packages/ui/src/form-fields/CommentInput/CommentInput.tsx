@@ -1,8 +1,6 @@
-import FormFieldLayout from '../shared/FormFieldLayout';
-
-import type { CommentFieldProps } from '@/types/form-fields';
-
-import css from '../shared/FormField.module.css';
+import FormFieldLayout from '../FormFieldLayout';
+import type { CommentFieldProps } from '../types';
+import css from '../FormFieldLayout/FormField.module.css';
 
 //===================================================================
 
