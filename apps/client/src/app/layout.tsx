@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 
 import AppShell from '@/components/layout/AppShell';
-import { AuthProvider, ToastProvider } from '@/providers';
+import { AuthProvider } from '@/providers';
+import { ToastProvider } from '@e-pharmacy/ui/feedback';
 
 import {
   DEFAULT_OG_IMAGE,

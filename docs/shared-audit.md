@@ -929,3 +929,19 @@ Reusable modal primitives were moved from common/app-level locations into the sh
 | `CartInvoiceLimitModal` | Kept in Client as app-specific wrapper | It contains cart invoice copy/constants and now uses shared `ConfirmationModal`. |
 
 After applying this patch, remove the old duplicate modal folders listed in `DELETE_STAGE_5_DUPLICATES.txt`.
+
+
+## Stage 6 toast provider and feedback migration update
+
+Toast UI and provider logic were moved from the Client app boundary into the shared UI feedback namespace, using one folder per component.
+
+| Area | Result | Notes |
+|---|---|---|
+| `Toast` | Moved to `packages/ui/src/feedback/Toast` | Toast UI is now part of the shared feedback layer instead of `common`. |
+| `ToastProvider` | Moved to `packages/ui/src/feedback/ToastProvider` | Provider state, duplicate filtering, duration handling, and context wiring are now reusable by Client/Vendor/Admin. |
+| `useToast` | Kept in `packages/hooks` | The hook was already migrated in Stage 3 and remains the shared public hook for apps and packages. |
+| `apps/client/src/providers/ToastProvider` | Remove from Client | Client now imports `ToastProvider` from `@e-pharmacy/ui/feedback`. |
+| `packages/ui/src/common/Toast` | Remove from common | Toast belongs to the feedback namespace, not common. |
+| `packages/ui/src/feedback` | Public entry updated | `@e-pharmacy/ui/feedback` now exports `Toast`, `ToastProvider`, and `ToastVariant`. |
+
+After applying this patch, remove the old duplicate toast folders listed in `DELETE_STAGE_6_DUPLICATES.txt`.

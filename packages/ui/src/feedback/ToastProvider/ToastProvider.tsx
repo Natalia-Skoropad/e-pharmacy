@@ -9,7 +9,7 @@ import {
   type ToastVariant,
 } from '@e-pharmacy/hooks';
 
-import Toast from '@e-pharmacy/ui/common/Toast';
+import Toast from '../Toast';
 
 export type { ToastVariant };
 

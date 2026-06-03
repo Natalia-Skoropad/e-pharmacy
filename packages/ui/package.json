@@ -11,6 +11,7 @@
     "./common/*": "./src/common/*/index.ts",
     "./styles/*.css": "./src/styles/*.css",
     "./feedback": "./src/feedback/index.ts",
+    "./feedback/*": "./src/feedback/*/index.ts",
     "./form-fields": "./src/form-fields/index.ts",
     "./layout": "./src/layout/index.ts",
     "./modals": "./src/modals/index.ts",
