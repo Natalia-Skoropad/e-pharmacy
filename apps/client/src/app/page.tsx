@@ -1,24 +1,8 @@
 import Image from 'next/image';
 
-import {
-  Heart,
-  MapPin,
-  ReceiptText,
-  SearchCheck,
-  ShieldCheck,
-} from 'lucide-react';
+import { Heart, MapPin, ReceiptText, SearchCheck, ShieldCheck, } from 'lucide-react';  import { ButtonLink, Container } from '@e-pharmacy/ui/common'; import { HomeFeatureCards, HomeReviewsSlider } from '@/components/home'; import { ProductCard } from '@/components/medicines-catalog'; import { StoreCard } from '@/components/pharmacy-stores';  import { HOME_DESCRIPTION, HOME_TITLE } from '@e-pharmacy/config/seo'; import { ROUTES } from '@e-pharmacy/config/routes'; import { createPageMetadata } from '@/lib/seo'; import { getProducts, getStores } from '@e-pharmacy/api-client/client';
 
-import { ButtonLink, Container } from '@e-pharmacy/ui/common';
-import { HomeFeatureCards, HomeReviewsSlider } from '@/components/home';
-import { ProductCard } from '@/components/medicines-catalog';
-import { StoreCard } from '@/components/pharmacy-stores';
-
-import { HOME_DESCRIPTION, HOME_TITLE } from '@e-pharmacy/config/seo';
-import { ROUTES } from '@e-pharmacy/config/routes';
-import { createPageMetadata } from '@/lib/seo';
-import { getProducts, getStores } from '@/services';
-
-import type { Product, Store } from '@/types';
+import type { Product, Store } from '@e-pharmacy/types';
 
 import css from './page.module.css';
 

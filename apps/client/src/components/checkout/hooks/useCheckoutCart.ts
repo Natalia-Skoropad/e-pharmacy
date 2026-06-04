@@ -1,8 +1,5 @@
-import { useEffect, useState } from 'react';
-
-import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
-import { getCart } from '@/services';
-import type { Cart } from '@/types';
+import { useEffect, useState } from 'react';  import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors'; import { getCart } from '@e-pharmacy/api-client/client';
+import type { Cart } from '@e-pharmacy/types';
 
 //===================================================================
 

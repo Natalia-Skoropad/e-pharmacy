@@ -33,10 +33,9 @@ import {
 
 import { buildProductPath, buildStorePath } from '@e-pharmacy/config/routes';
 import { getOrderIdFromPathParam } from '@/lib/orders';
-
 import { useAuth } from '@/providers';
-import { getOrderDetails } from '@/services';
-import type { BreadcrumbItem, CustomerOrder } from '@/types';
+import { getOrderDetails } from '@e-pharmacy/api-client/client';
+import type { BreadcrumbItem, CustomerOrder } from '@e-pharmacy/types';
 
 import css from './OrderDetailsPageContent.module.css';
 

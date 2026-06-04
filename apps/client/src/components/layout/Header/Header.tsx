@@ -1,32 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useId, useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
-
-import {
-  Button,
-  ButtonLink,
-  Container,
-  Logo,
-  UserBadge,
-} from '@e-pharmacy/ui/common';
-import { BurgerButton } from '@e-pharmacy/ui/layout';
-import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
-
-import { CLIENT_NAV_LINKS } from '@e-pharmacy/config/navigation';
-import { ROUTES } from '@e-pharmacy/config/routes';
-import { isActiveRoute } from '@e-pharmacy/config/routes';
-import { cn } from '@e-pharmacy/utils/classes';
-
-import {
-  CART_UPDATED_EVENT,
-  type CartUpdatedEventDetail,
-} from '@/lib/cart/cart-events';
-
-import { useAuth } from '@/providers';
-import { getCart } from '@/services';
+import { usePathname, useRouter } from 'next/navigation'; import { useEffect, useId, useState } from 'react'; import { ShoppingCart } from 'lucide-react';  import {   Button, ButtonLink, Container, Logo, UserBadge, } from '@e-pharmacy/ui/common'; import { BurgerButton } from '@e-pharmacy/ui/layout'; import MobileOffcanvas from '@/components/layout/MobileOffcanvas';  import { CLIENT_NAV_LINKS } from '@e-pharmacy/config/navigation'; import { ROUTES } from '@e-pharmacy/config/routes'; import { isActiveRoute } from '@e-pharmacy/config/routes'; import { cn } from '@e-pharmacy/utils/classes';  import {   CART_UPDATED_EVENT, type CartUpdatedEventDetail, } from '@/lib/cart/cart-events';  import { useAuth } from '@/providers'; import { getCart } from '@e-pharmacy/api-client/client';
 
 import css from './Header.module.css';
 

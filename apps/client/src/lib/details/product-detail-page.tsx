@@ -1,13 +1,16 @@
-import { ProductDetailsPageContent } from '@/components/medicines-catalog';
+import type { Metadata } from 'next';
 
+import { ProductDetailsPageContent } from '@/components/medicines-catalog';
 import { buildProductPath, getIdFromSlugId } from '@e-pharmacy/config/routes';
 import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
 import { createPageMetadata } from '@/lib/seo';
 
-import { getProductDetails, getProductReviews } from '@/services';
+import {
+  getProductDetails,
+  getProductReviews,
+} from '@e-pharmacy/api-client/client';
 
-import type { Metadata } from 'next';
-import type { Product } from '@/types';
+import type { Product } from '@e-pharmacy/types';
 
 //===================================================================
 

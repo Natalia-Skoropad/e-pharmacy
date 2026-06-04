@@ -24,9 +24,6 @@ type RootDetailsPageProps = {
 
 //===================================================================
 
-export const revalidate = 300;
-
-//===================================================================
 
 function createProductCanonicalQueryString(storeId?: string): string {
   return storeId ? `?storeId=${encodeURIComponent(storeId)}` : '';

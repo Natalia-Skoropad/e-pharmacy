@@ -42,12 +42,12 @@ import {
 
 import { useAuth } from '@/providers';
 
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem } from '@e-pharmacy/types';
 
 import type {
   CheckoutDeliveryMethod as DeliveryMethod,
   CheckoutPaymentMethod as PaymentMethod,
-} from '@/types/checkout';
+} from '@e-pharmacy/types/checkout';
 
 import css from './CheckoutPageContent.module.css';
 

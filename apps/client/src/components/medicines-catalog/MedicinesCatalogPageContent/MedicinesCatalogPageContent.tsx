@@ -14,7 +14,7 @@ import {
 } from '@/lib/catalog/medicines-catalog';
 
 import { ROUTES } from '@e-pharmacy/config/routes';
-import type { Product, ProductFilterOptionsResponse, Store } from '@/types';
+import type { Product, ProductFilterOptionsResponse, Store } from '@e-pharmacy/types';
 
 import css from './MedicinesCatalogPageContent.module.css';
 

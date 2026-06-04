@@ -1,17 +1,8 @@
 'use client';
 
-import { useEffect, useId, useMemo, useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
-
-import { Button, CloseIconButton, LoadingSpinner, SearchInput, ShimmerImage, SvgIcon } from '@e-pharmacy/ui/common';
-import { CartInvoiceLimitModal } from '@/components/common';
-import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
-
-import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
-import { formatPrice, formatStockLabel } from '@e-pharmacy/utils/formatters';
-
-import { addCartItem, getProducts } from '@/services';
-import type { Cart, Product, ProductCategory } from '@/types';
+import { useEffect, useId, useMemo, useState } from 'react'; import { ShoppingCart } from 'lucide-react';  import { Button, CloseIconButton, LoadingSpinner, SearchInput, ShimmerImage, SvgIcon } from '@e-pharmacy/ui/common'; import { CartInvoiceLimitModal } from '@/components/common'; import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';  import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit'; import { formatPrice, formatStockLabel } from '@e-pharmacy/utils/formatters';  import { getProducts } from '@e-pharmacy/api-client/client';
+import { addCartItem } from '@/services/cart-service';
+import type { Cart, Product, ProductCategory } from '@e-pharmacy/types';
 
 import css from './ContinueShoppingModal.module.css';
 

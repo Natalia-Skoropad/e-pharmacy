@@ -1,6 +1,6 @@
 import { ROUTES } from '@e-pharmacy/config/routes';
 
-import type { CustomerOrder } from '@/types';
+import type { CustomerOrder } from '@e-pharmacy/types';
 
 //===================================================================
 

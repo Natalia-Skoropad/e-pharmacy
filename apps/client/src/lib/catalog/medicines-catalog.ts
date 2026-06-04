@@ -3,7 +3,7 @@ import type {
   ProductFilterOptionsResponse,
   ProductsQueryParams,
   Store,
-} from '@/types';
+} from '@e-pharmacy/types';
 
 //===================================================================
 

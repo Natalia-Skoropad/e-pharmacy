@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server';
 
-import { appendSearchParams } from '../bff';
+import { appendSearchParams } from '../routes';
 
 import {
   ACCESS_TOKEN_COOKIE_NAME,

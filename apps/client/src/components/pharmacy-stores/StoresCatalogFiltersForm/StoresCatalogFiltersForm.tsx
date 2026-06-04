@@ -25,7 +25,7 @@ import {
 } from '@/lib/catalog/pharmacy-stores-catalog';
 
 import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';
-import type { StoresSortFilter } from '@/types';
+import type { StoresSortFilter } from '@e-pharmacy/types';
 
 import css from './StoresCatalogFiltersForm.module.css';
 

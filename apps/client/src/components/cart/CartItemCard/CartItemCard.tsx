@@ -6,11 +6,11 @@ import {
   ShimmerImage,
   SvgIcon,
 } from '@e-pharmacy/ui/common';
-import { StockAvailability } from '@/components/common';
 
+import { StockAvailability } from '@/components/common';
 import { formatPrice } from '@e-pharmacy/utils/formatters';
 import { buildProductPath } from '@e-pharmacy/config/routes';
-import type { CartItem } from '@/types';
+import type { CartItem } from '@e-pharmacy/types';
 
 import css from './CartItemCard.module.css';
 

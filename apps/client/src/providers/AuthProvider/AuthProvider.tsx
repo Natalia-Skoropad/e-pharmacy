@@ -1,14 +1,6 @@
 'use client';
 
-import { AuthProviderCore, useAuth, type AuthProviderServices } from '@e-pharmacy/auth';
-
-import {
-  getCurrentUser,
-  loginUser,
-  logoutUser,
-  refreshSession,
-  registerUser,
-} from '@/services';
+import { AuthProviderCore, useAuth, type AuthProviderServices } from '@e-pharmacy/auth';  import {   getCurrentUser, loginUser, logoutUser, refreshSession, registerUser } from '@e-pharmacy/api-client/client';
 
 import type { ReactNode } from 'react';
 

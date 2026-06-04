@@ -1,4 +1,4 @@
-import type { ProductCategory } from '@/types';
+import type { ProductCategory } from '@e-pharmacy/types';
 
 //===================================================================
 

@@ -1,9 +1,12 @@
 'use client';
 
 import { useCallback } from 'react';
-
 import { useFavoriteRefresh } from './useFavoriteRefresh';
-import { getProductDetails, getStoreDetails } from '@/services';
+
+import {
+  getProductDetails,
+  getStoreDetails,
+} from '@e-pharmacy/api-client/client';
 
 //===================================================================
 

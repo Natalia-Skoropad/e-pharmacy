@@ -1,20 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
-
-import { ButtonLink, RatingSummary, ShimmerImage, SvgIcon } from '@e-pharmacy/ui/common';
-import { FavoriteToggleButton } from '@/components/common';
-
-import { useToast } from '@e-pharmacy/hooks';
-import { useFavoriteToggle, useProductFavoriteRefresh } from '@/hooks';
-
-import { formatPharmaciesCount, formatPriceRange } from '@e-pharmacy/utils/formatters';
-import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
-import { buildProductPath } from '@e-pharmacy/config/routes';
-
-import { useAuth } from '@/providers';
-import { toggleFavoriteProduct } from '@/services';
-import type { Product } from '@/types';
+import { useMemo } from 'react';  import { ButtonLink, RatingSummary, ShimmerImage, SvgIcon } from '@e-pharmacy/ui/common'; import { FavoriteToggleButton } from '@/components/common';  import { useToast } from '@e-pharmacy/hooks'; import { useFavoriteToggle, useProductFavoriteRefresh } from '@/hooks';  import { formatPharmaciesCount, formatPriceRange } from '@e-pharmacy/utils/formatters'; import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels'; import { buildProductPath } from '@e-pharmacy/config/routes';  import { useAuth } from '@/providers'; import { toggleFavoriteProduct } from '@e-pharmacy/api-client/client';
+import type { Product } from '@e-pharmacy/types';
 
 import css from './ProductCard.module.css';
 

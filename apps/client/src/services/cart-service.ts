@@ -12,7 +12,7 @@ import type {
   AddCartItemPayload,
   CartResponse,
   UpdateCartItemPayload,
-} from '@/types';
+} from '@e-pharmacy/types';
 
 //===================================================================
 

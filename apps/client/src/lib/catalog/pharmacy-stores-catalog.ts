@@ -1,4 +1,4 @@
-import type { Store, StoresSortFilter } from '@/types';
+import type { Store, StoresSortFilter } from '@e-pharmacy/types';
 
 //===================================================================
 

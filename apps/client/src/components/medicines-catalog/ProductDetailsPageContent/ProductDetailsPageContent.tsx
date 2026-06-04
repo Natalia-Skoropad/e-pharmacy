@@ -3,17 +3,37 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 
-import { Button, ButtonLink, Container, LazyLoadButton, QuantityCounter, RatingSummary, SearchInput, SearchableSelect, SelectField, ShimmerImage, SvgIcon, Tabs } from '@e-pharmacy/ui/common';
-import { type TabItem } from '@e-pharmacy/ui/common';
-import { DeliveryInfoCard, FavoriteToggleButton, PaymentInfoCard, ReviewsSection, StockAvailability } from '@/components/common';
-import { ConfirmationModal } from '@e-pharmacy/ui/modals';
+import {
+  Button,
+  ButtonLink,
+  Container,
+  LazyLoadButton,
+  QuantityCounter,
+  RatingSummary,
+  SearchInput,
+  SearchableSelect,
+  SelectField,
+  ShimmerImage,
+  SvgIcon,
+  Tabs,
+} from '@e-pharmacy/ui/common';
 
+import { type TabItem } from '@e-pharmacy/ui/common';
+
+import {
+  DeliveryInfoCard,
+  FavoriteToggleButton,
+  PaymentInfoCard,
+  ReviewsSection,
+  StockAvailability,
+} from '@/components/common';
+
+import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { CartInvoiceLimitModal } from '@/components/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useAuth } from '@/providers';
 import { useToast } from '@e-pharmacy/hooks';
 import { useFavoriteToggle, useReviewForm } from '@/hooks';
-
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { CATALOG_SEARCH_MAX_LENGTH } from '@e-pharmacy/config/catalog';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
@@ -40,14 +60,17 @@ import { buildStorePath } from '@e-pharmacy/config/routes';
 import { REVIEW_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 
 import {
-  addCartItem,
   createProductReview,
   getCart,
   getProductDetails,
-  removeCartItem,
   toggleFavoriteProduct,
+} from '@e-pharmacy/api-client/client';
+
+import {
+  addCartItem,
+  removeCartItem,
   updateCartItem,
-} from '@/services';
+} from '@/services/cart-service';
 
 import type {
   Cart,
@@ -55,7 +78,7 @@ import type {
   Product,
   ProductOffer,
   ProductReview,
-} from '@/types';
+} from '@e-pharmacy/types';
 
 import css from './ProductDetailsPageContent.module.css';
 

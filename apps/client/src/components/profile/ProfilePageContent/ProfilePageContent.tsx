@@ -5,7 +5,14 @@ import type { ChangeEvent } from 'react';
 import Link from 'next/link';
 import { Heart, KeyRound, Store } from 'lucide-react';
 
-import { Button, ButtonLink, Container, LoadingSpinner, ProfilePhotoCard, Tabs } from '@e-pharmacy/ui/common';
+import {
+  Button,
+  ButtonLink,
+  Container,
+  LoadingSpinner,
+  ProfilePhotoCard,
+  Tabs,
+} from '@e-pharmacy/ui/common';
 
 import {
   AddressInput,
@@ -17,7 +24,6 @@ import {
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { ProductCard } from '@/components/medicines-catalog';
 import { StoreCard } from '@/components/pharmacy-stores';
-
 import { PROFILE_TITLE } from '@e-pharmacy/config/seo';
 import { ROUTES } from '@e-pharmacy/config/routes';
 
@@ -38,6 +44,7 @@ import {
   sanitizeCustomerName,
   sanitizeCustomerPhone,
 } from '@e-pharmacy/validation/customer';
+
 import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
@@ -51,9 +58,13 @@ import {
   getStores,
   updateCurrentUser,
   updateCurrentUserPassword,
-} from '@/services';
+} from '@e-pharmacy/api-client/client';
 
-import type { CustomerOrder, Product, Store as PharmacyStore } from '@/types';
+import type {
+  CustomerOrder,
+  Product,
+  Store as PharmacyStore,
+} from '@e-pharmacy/types';
 
 import css from './ProfilePageContent.module.css';
 

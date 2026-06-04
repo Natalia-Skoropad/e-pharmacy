@@ -3,7 +3,7 @@ import { Clock, Info, MapPin, Phone, Truck } from 'lucide-react';
 
 import { RadioOption } from '@e-pharmacy/ui/common';
 import { AddressInput, NameInput, PhoneInput } from '@e-pharmacy/ui/form-fields';
-import type { CheckoutDeliveryMethod as DeliveryMethod } from '@/types/checkout';
+import type { CheckoutDeliveryMethod as DeliveryMethod } from '@e-pharmacy/types/checkout';
 
 import css from './CheckoutDeliveryMethod.module.css';
 

@@ -31,7 +31,7 @@ import {
   sanitizeCatalogTextSearch,
 } from '@/lib/catalog/search-sanitizers';
 
-import type { ProductFilterOptionsResponse, Store } from '@/types';
+import type { ProductFilterOptionsResponse, Store } from '@e-pharmacy/types';
 
 import css from './MedicinesCatalogFiltersForm.module.css';
 

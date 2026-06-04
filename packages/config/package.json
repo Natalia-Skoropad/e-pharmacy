@@ -7,17 +7,16 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./assets": "./src/assets.ts",
-    "./catalog": "./src/catalog.ts",
-    "./filters": "./src/filters/index.ts",
-    "./info-pages": "./src/info-pages.ts",
+    "./app": "./src/app/index.ts",
+    "./assets": "./src/assets/index.ts",
+    "./cache": "./src/cache/index.ts",
+    "./catalog": "./src/catalog/index.ts",
+    "./info-pages": "./src/info-pages/index.ts",
     "./navigation": "./src/navigation/index.ts",
-    "./permissions": "./src/permissions/index.ts",
     "./route-groups": "./src/routes/index.ts",
     "./route-segments": "./src/routes/route-segments.ts",
     "./routes": "./src/routes/index.ts",
-    "./seo": "./src/seo/index.ts",
-    "./statuses": "./src/statuses/index.ts"
+    "./seo": "./src/seo/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

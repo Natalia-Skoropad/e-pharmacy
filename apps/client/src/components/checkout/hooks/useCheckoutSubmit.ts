@@ -1,19 +1,11 @@
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-
-import { dispatchCartUpdated } from '@/lib/cart/cart-events';
-import { groupCartByStore } from '@/lib/cart/cart-groups';
-import { getStockValidationError } from '@/lib/checkout';
-import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
-import { buildCustomerOrderPath } from '@/lib/orders';
-import { checkoutOrder, getCart } from '@/services';
-import type { Cart } from '@/types';
+import { useState } from 'react'; import { useRouter } from 'next/navigation';  import { dispatchCartUpdated } from '@/lib/cart/cart-events'; import { groupCartByStore } from '@/lib/cart/cart-groups'; import { getStockValidationError } from '@/lib/checkout'; import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors'; import { buildCustomerOrderPath } from '@/lib/orders'; import { checkoutOrder, getCart } from '@e-pharmacy/api-client/client';
+import type { Cart } from '@e-pharmacy/types';
 
 import type {
   CheckoutDeliveryMethod,
   CheckoutPaymentMethod,
   CheckoutStoreOrderGroup,
-} from '@/types/checkout';
+} from '@e-pharmacy/types/checkout';
 
 //===================================================================
 

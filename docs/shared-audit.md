@@ -1134,3 +1134,26 @@ Stage 12 also fixes the stale `proxy.ts` import from deleted `@/lib/auth/auth-se
 ### Deletion cleanup
 
 After applying this stage, remove `apps/client/src/lib/api` because reusable API core/proxy logic now lives in `packages/api-client`. Keep only client-specific service wrappers where they add UI-side behavior, such as cart update events.
+
+
+## Stage 14 — Types and domain models cleanup
+
+Stage 14 centralizes domain types in `packages/types` and removes client-local type wrappers. The package now exposes real domain subpaths: `api`, `auth`, `cart`, `checkout`, `navigation`, `orders`, `products`, `reviews`, `shared`, `stores`, and `vendor`.
+
+Cleanup rules applied in this stage:
+
+- no flat duplicate type files in `packages/types/src`;
+- no `apps/client/src/types` wrappers;
+- no flat service wrappers in `apps/client/src/services` except the real client-specific `cart-service.ts` with `dispatchCartUpdated` side effect;
+- no implementation code inside package `index.ts` files;
+- no `.gitkeep` placeholder folders in migrated shared packages;
+- `isNonEmptyString` lives only in `packages/utils/src/shared/string.ts`;
+- `normalizeSlugPart` and `buildSlugId` live only in `packages/utils/src/slug/slug-id.ts`;
+- `APP_NAMES` lives only in `packages/config/src/app/app-names.ts`;
+- page revalidation uses `PUBLIC_PAGE_REVALIDATE_SECONDS` from `@e-pharmacy/config/cache`.
+
+Deletion helpers included with the changed-files archive:
+
+- `DELETE_STAGE_14_DUPLICATES.txt`
+- `apply-stage-14-deletions.sh`
+- `apply-stage-14-deletions.ps1`

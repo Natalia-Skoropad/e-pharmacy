@@ -7,16 +7,13 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./bff": "./src/bff.ts",
-    "./routes": "./src/routes.ts",
+    "./bff": "./src/routes/bff-routes.ts",
+    "./routes": "./src/routes/index.ts",
     "./core": "./src/core/index.ts",
     "./core/*": "./src/core/*",
     "./proxy": "./src/proxy/index.ts",
     "./proxy/*": "./src/proxy/*",
-    "./auth": "./src/auth/index.ts",
-    "./client": "./src/client/index.ts",
-    "./vendor": "./src/vendor/index.ts",
-    "./admin": "./src/admin/index.ts"
+    "./client": "./src/client/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

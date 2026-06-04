@@ -7,7 +7,7 @@ import { buildProductPath, buildStorePath } from '@e-pharmacy/config/routes';
 import { getProductBySlugId } from '@/lib/details/product-detail-page';
 import { getStoreBySlugId } from '@/lib/details/store-detail-page';
 
-import type { Product, Store } from '@/types';
+import type { Product, Store } from '@e-pharmacy/types';
 
 //===================================================================
 

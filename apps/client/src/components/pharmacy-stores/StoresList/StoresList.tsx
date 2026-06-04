@@ -1,6 +1,5 @@
 import StoreCard from '@/components/pharmacy-stores/StoreCard';
-
-import type { Store } from '@/types';
+import type { Store } from '@e-pharmacy/types';
 
 import css from './StoresList.module.css';
 

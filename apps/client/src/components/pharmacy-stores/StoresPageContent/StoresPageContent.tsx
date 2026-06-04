@@ -13,7 +13,7 @@ import {
 } from '@/lib/catalog/pharmacy-stores-catalog';
 
 import { ROUTES } from '@e-pharmacy/config/routes';
-import type { Store } from '@/types';
+import type { Store } from '@e-pharmacy/types';
 
 import css from './StoresPageContent.module.css';
 

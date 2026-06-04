@@ -1,0 +1,43 @@
+import type { AuthUser } from '../auth';
+import type { EntityId, ISODateString } from '../shared';
+import type { ProductDto, ProductOfferDto } from '../products';
+import type { StoreDto } from '../stores';
+import type { OrderStatus } from '../orders';
+import type { ShopStatus } from '../auth';
+
+//=============================================================================
+
+export type VendorShopDto = StoreDto & {
+  ownerId: EntityId;
+  status: ShopStatus;
+  createdAt?: ISODateString;
+  approvedBy?: EntityId;
+  approvedAt?: ISODateString;
+};
+
+export type VendorProductDto = ProductDto & {
+  ownedOffer: ProductOfferDto;
+};
+
+export type VendorStatisticsDto = {
+  totalProducts: number;
+  activeProducts: number;
+  reservedItems: number;
+  ordersCount: number;
+  revenue: number;
+};
+
+export type ClientGoodsDto = {
+  orderId: EntityId;
+  productId: EntityId;
+  productName: string;
+  quantity: number;
+  customerName?: string;
+  status: OrderStatus;
+  createdAt: ISODateString;
+};
+
+export type Vendor = AuthUser;
+export type Medicine = ProductDto;
+export type MedicineRequestStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'cancelled';
+export type MedicineRequest = { id: EntityId; medicineId?: EntityId; productName: string; status: MedicineRequestStatus; createdAt: ISODateString; };

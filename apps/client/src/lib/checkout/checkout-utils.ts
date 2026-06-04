@@ -1,5 +1,5 @@
-import type { Store } from '@/types';
-import type { CheckoutStoreOrderGroup } from '@/types/checkout';
+import type { Store } from '@e-pharmacy/types';
+import type { CheckoutStoreOrderGroup } from '@e-pharmacy/types/checkout';
 
 //===================================================================
 

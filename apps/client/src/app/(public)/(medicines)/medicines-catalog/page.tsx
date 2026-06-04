@@ -15,7 +15,7 @@ import {
 import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
 import { createPageMetadata } from '@/lib/seo';
 
-import { getProductFilters, getProducts, getStores } from '@/services';
+import { getProductFilters, getProducts, getStores } from '@e-pharmacy/api-client/client';
 
 //===================================================================
 
@@ -25,9 +25,6 @@ type MedicinesCatalogPageProps = {
 
 //===================================================================
 
-export const revalidate = 300;
-
-//===================================================================
 
 export async function generateMetadata({
   searchParams,
