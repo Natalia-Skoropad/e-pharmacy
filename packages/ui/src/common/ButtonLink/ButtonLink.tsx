@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import Link from 'next/link';
 
-import { cn } from '../../utils/classNames';
+import { cn } from '@e-pharmacy/utils/classes';
 
 import css from '../Button/Button.module.css';
 

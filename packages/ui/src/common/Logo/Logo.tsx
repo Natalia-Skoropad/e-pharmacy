@@ -1,8 +1,7 @@
 import Link from 'next/link';
 
 import SvgIcon from '../SvgIcon';
-
-import { cn } from '../../utils/classNames';
+import { cn } from '@e-pharmacy/utils/classes';
 
 import css from './Logo.module.css';
 

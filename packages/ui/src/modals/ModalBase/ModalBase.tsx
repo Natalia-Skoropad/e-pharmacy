@@ -9,7 +9,7 @@ import {
   useFocusTrap,
 } from '@e-pharmacy/hooks';
 
-import { cn } from '../../utils/classNames';
+import { cn } from '@e-pharmacy/utils/classes';
 
 import css from './ModalBase.module.css';
 

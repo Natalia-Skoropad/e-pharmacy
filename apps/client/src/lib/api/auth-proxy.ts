@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client';
 import { createApiUrl } from './api-url';
+import { copySetCookieHeader } from './proxy-response';
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
 
 import {
@@ -22,38 +23,6 @@ type AuthProxyOptions = {
   method?: Extract<HttpMethod, 'GET' | 'POST' | 'PATCH'>;
   markerAction?: AuthMarkerAction;
 };
-
-//===================================================================
-
-function splitSetCookieHeader(value: string): string[] {
-  return value
-    .split(/,(?=\s*[^;,\s]+=)/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-//===================================================================
-
-function getSetCookieHeaders(headers: Headers): string[] {
-  const headersWithSetCookie = headers as Headers & {
-    getSetCookie?: () => string[];
-  };
-
-  const setCookieHeaders = headersWithSetCookie.getSetCookie?.();
-  if (setCookieHeaders?.length) return setCookieHeaders;
-
-  const setCookie = headers.get('set-cookie');
-
-  return setCookie ? splitSetCookieHeader(setCookie) : [];
-}
-
-//===================================================================
-
-function copySetCookieHeader(source: Response, target: NextResponse): void {
-  getSetCookieHeaders(source.headers).forEach((setCookie) => {
-    target.headers.append('set-cookie', setCookie);
-  });
-}
 
 //===================================================================
 

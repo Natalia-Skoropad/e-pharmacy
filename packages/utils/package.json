@@ -9,7 +9,9 @@
     ".": "./src/index.ts",
     "./formatters": "./src/formatters/index.ts",
     "./classes": "./src/classes/index.ts",
-    "./query": "./src/query/index.ts"
+    "./query": "./src/query/index.ts",
+    "./guards": "./src/guards/index.ts",
+    "./slug": "./src/slug/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

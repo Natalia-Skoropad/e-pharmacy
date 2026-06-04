@@ -9,7 +9,7 @@ type ProxyResponseOptions = {
 
 //===================================================================
 
-function splitSetCookieHeader(value: string): string[] {
+export function splitSetCookieHeader(value: string): string[] {
   return value
     .split(/,(?=\s*[^;,\s]+=)/)
     .map((item) => item.trim())
@@ -18,7 +18,7 @@ function splitSetCookieHeader(value: string): string[] {
 
 //===================================================================
 
-function getSetCookieHeaders(headers: Headers): string[] {
+export function getSetCookieHeaders(headers: Headers): string[] {
   const headersWithSetCookie = headers as Headers & {
     getSetCookie?: () => string[];
   };
@@ -32,7 +32,10 @@ function getSetCookieHeaders(headers: Headers): string[] {
 
 //===================================================================
 
-function copySetCookieHeader(source: Response, target: NextResponse): void {
+export function copySetCookieHeader(
+  source: Response,
+  target: NextResponse
+): void {
   getSetCookieHeaders(source.headers).forEach((setCookie) => {
     target.headers.append('set-cookie', setCookie);
   });

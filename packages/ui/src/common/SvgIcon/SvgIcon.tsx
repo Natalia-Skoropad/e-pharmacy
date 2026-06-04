@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react';
 
-import { cn } from '../../utils/classNames';
+import { cn } from '@e-pharmacy/utils/classes';
 
 import css from './SvgIcon.module.css';
 

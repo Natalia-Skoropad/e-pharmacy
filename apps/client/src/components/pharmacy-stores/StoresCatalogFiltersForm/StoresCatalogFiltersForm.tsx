@@ -45,12 +45,12 @@ type StoresHrefFilters = Omit<PharmacyStoresFilters, 'page'> & {
 
 //===================================================================
 
-function buildStoresHref(filters: StoresHrefFilters) {
+function buildStoresFiltersHref(filters: StoresHrefFilters) {
   return buildPharmacyStoresPath(filters);
 }
 
-function createResetFiltersHref(filters: PharmacyStoresFilters) {
-  return buildStoresHref({
+function createStoresResetFiltersHref(filters: PharmacyStoresFilters) {
+  return buildStoresFiltersHref({
     name: '',
     address: '',
     city: '',
@@ -84,7 +84,7 @@ function StoresCatalogFiltersForm({
 
   const activeFiltersCount = getPharmacyStoresActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
-  const resetHref = createResetFiltersHref(filters);
+  const resetHref = createStoresResetFiltersHref(filters);
 
   const citySelectOptions = useMemo(
     () => [
@@ -104,7 +104,7 @@ function StoresCatalogFiltersForm({
       }
 
       router.replace(
-        buildStoresHref({
+        buildStoresFiltersHref({
           ...filters,
           name: trimmedName,
           address: trimmedAddress,
@@ -118,7 +118,7 @@ function StoresCatalogFiltersForm({
   }, [address, filters, name, router]);
 
   const updateStoresCatalog = (nextFilters: StoresHrefFilters) => {
-    router.replace(buildStoresHref({ ...nextFilters, page: 1 }), {
+    router.replace(buildStoresFiltersHref({ ...nextFilters, page: 1 }), {
       scroll: false,
     });
 

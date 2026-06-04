@@ -1,8 +1,8 @@
 import Link from 'next/link';
 
 import AvatarImage from '../AvatarImage';
-import { formatInitials } from '../../utils/formatInitials';
-import { cn } from '../../utils/classNames';
+import { formatInitials } from '@e-pharmacy/utils/formatters';
+import { cn } from '@e-pharmacy/utils/classes';
 
 import css from './UserBadge.module.css';
 

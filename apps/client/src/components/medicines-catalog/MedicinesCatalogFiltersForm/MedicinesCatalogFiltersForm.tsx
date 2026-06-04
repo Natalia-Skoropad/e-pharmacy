@@ -52,15 +52,17 @@ type CatalogHrefFilters = Omit<MedicinesCatalogFilters, 'page'> & {
 
 //===================================================================
 
-function buildCatalogHref(filters: CatalogHrefFilters, stores: Store[]) {
+function buildMedicinesFiltersHref(filters: CatalogHrefFilters, stores: Store[]) {
   return buildMedicinesCatalogPath(filters, stores);
 }
 
-function createResetFiltersHref(
+//===================================================================
+
+function createMedicinesResetFiltersHref(
   filters: MedicinesCatalogFilters,
   stores: Store[]
 ) {
-  return buildCatalogHref(
+  return buildMedicinesFiltersHref(
     {
       name: '',
       article: '',
@@ -111,7 +113,7 @@ function MedicinesCatalogFiltersForm({
 
   const activeFiltersCount = getMedicinesCatalogActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
-  const resetHref = createResetFiltersHref(filters, stores);
+  const resetHref = createMedicinesResetFiltersHref(filters, stores);
 
   const storeOptions = useMemo(
     () => [
@@ -131,7 +133,7 @@ function MedicinesCatalogFiltersForm({
       }
 
       router.replace(
-        buildCatalogHref(
+        buildMedicinesFiltersHref(
           {
             ...filters,
             name: trimmedName,
@@ -175,7 +177,7 @@ function MedicinesCatalogFiltersForm({
   };
 
   const updateCatalog = (nextFilters: CatalogHrefFilters) => {
-    router.replace(buildCatalogHref({ ...nextFilters, page: 1 }, stores), {
+    router.replace(buildMedicinesFiltersHref({ ...nextFilters, page: 1 }, stores), {
       scroll: false,
     });
 

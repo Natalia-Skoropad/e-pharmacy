@@ -5,7 +5,6 @@ export * from './client-routes';
 export * from './is-active-route';
 export * from './product-routes';
 export * from './route-segments';
-export * from './slug-builder';
 export * from './slug-id';
 export * from './store-routes';
 export * from './vendor-routes';

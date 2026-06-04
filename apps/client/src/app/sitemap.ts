@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
+import { createApiUrl } from '@/lib/api/api-url';
 import { SITEMAP_STATIC_ROUTES } from '@e-pharmacy/config/seo';
 
 import {
@@ -48,12 +49,6 @@ const STORE_SITEMAP_PER_PAGE = 100;
 const SITEMAP_REVALIDATE_SECONDS = 3600;
 const SITEMAP_FETCH_SAFETY_MAX_PAGES = 500;
 const SITEMAP_FETCH_BATCH_SIZE = 20;
-
-//===================================================================
-
-function createApiUrl(path: string): string {
-  return new URL(path, CLIENT_ENV.apiBaseUrl).toString();
-}
 
 //===================================================================
 

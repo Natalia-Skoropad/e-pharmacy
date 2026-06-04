@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
 
-import { cn } from '../../utils/classNames';
+import { cn } from '@e-pharmacy/utils/classes';
 
 import css from './Container.module.css';
 

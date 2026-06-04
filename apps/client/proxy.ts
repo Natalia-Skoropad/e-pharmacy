@@ -5,7 +5,7 @@ import {
   REFRESH_TOKEN_COOKIE_NAME,
 } from '@/lib/auth/auth-session';
 
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { ROUTES, getSafeRedirectPath } from '@e-pharmacy/config/routes';
 
 //===================================================================
 
@@ -59,23 +59,6 @@ function getCurrentPath(request: NextRequest): string {
 
 //===================================================================
 
-function getSafeRedirectPath(
-  redirectPath: string | null,
-  fallbackPath = DEFAULT_AUTHENTICATED_REDIRECT_PATH
-): string {
-  if (
-    !redirectPath ||
-    !redirectPath.startsWith('/') ||
-    redirectPath.startsWith('//')
-  ) {
-    return fallbackPath;
-  }
-
-  return redirectPath;
-}
-
-//===================================================================
-
 function createLoginRedirect(request: NextRequest): NextResponse {
   const redirectUrl = new URL(ROUTES.LOGIN, request.url);
 
@@ -88,7 +71,8 @@ function createLoginRedirect(request: NextRequest): NextResponse {
 
 function createAuthenticatedRedirect(request: NextRequest): NextResponse {
   const redirectPath = getSafeRedirectPath(
-    request.nextUrl.searchParams.get('redirect')
+    request.nextUrl.searchParams.get('redirect'),
+    DEFAULT_AUTHENTICATED_REDIRECT_PATH
   );
 
   return NextResponse.redirect(new URL(redirectPath, request.url));

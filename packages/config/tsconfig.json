@@ -1,5 +1,21 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@e-pharmacy/utils": [
+        "../utils/src/index.ts"
+      ],
+      "@e-pharmacy/utils/*": [
+        "../utils/src/*/index.ts"
+      ]
+    }
+  }
 }

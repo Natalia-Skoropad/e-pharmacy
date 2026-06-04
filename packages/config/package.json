@@ -25,5 +25,8 @@
   },
   "devDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@e-pharmacy/utils": "workspace:*"
   }
 }

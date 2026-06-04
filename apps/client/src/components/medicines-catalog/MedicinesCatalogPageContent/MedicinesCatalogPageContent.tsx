@@ -32,13 +32,15 @@ type MedicineStorePageContentProps = {
 
 //===================================================================
 
-function buildCatalogHref(
+function buildMedicinesPageHref(
   filters: MedicinesCatalogFilters,
   page: number,
   stores: Store[]
 ) {
   return buildMedicinesCatalogPath({ ...filters, page }, stores);
 }
+
+//===================================================================
 
 function createSeoContext(
   filters: MedicinesCatalogFilters,
@@ -119,7 +121,7 @@ function MedicineStorePageContent({
           <Pagination
             currentPage={filters.page}
             totalPages={totalPages}
-            getPageHref={(page) => buildCatalogHref(filters, page, stores)}
+            getPageHref={(page) => buildMedicinesPageHref(filters, page, stores)}
             ariaLabel="Medicines catalog pagination"
           />
 

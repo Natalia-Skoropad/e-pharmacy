@@ -30,7 +30,7 @@ type StoresPageContentProps = {
 
 //===================================================================
 
-function buildStoresHref(filters: PharmacyStoresFilters, page: number) {
+function buildStoresPageHref(filters: PharmacyStoresFilters, page: number) {
   return buildPharmacyStoresPath({ ...filters, page });
 }
 
@@ -87,7 +87,7 @@ function StoresPageContent({
           <Pagination
             currentPage={filters.page}
             totalPages={totalPages}
-            getPageHref={(page) => buildStoresHref(filters, page)}
+            getPageHref={(page) => buildStoresPageHref(filters, page)}
             ariaLabel="Pharmacy stores pagination"
           />
 

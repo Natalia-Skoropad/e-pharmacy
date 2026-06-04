@@ -7,7 +7,7 @@ import { ImageOff, Upload } from 'lucide-react';
 import AvatarImage from '../AvatarImage';
 import Button from '../Button';
 import { ConfirmationModal } from '../../modals';
-import { formatInitials } from '../../utils/formatInitials';
+import { formatInitials } from '@e-pharmacy/utils/formatters';
 
 import css from './ProfilePhotoCard.module.css';
 

@@ -1063,3 +1063,17 @@ After applying Stage 9, remove old duplicated Client constants/routes folders ex
 | createAbsoluteUrl client wrapper | apps/client/src/lib/seo/url.ts | app-specific wrapper over @e-pharmacy/config/seo | Renamed to createClientAbsoluteUrl | Done | Avoids duplicate helper name/responsibility with shared createAbsoluteUrl(path, siteUrl). |
 
 Client local formatter/utils folders should be deleted after applying this stage to avoid duplicated shared logic.
+
+## Stage 10 duplicate cleanup note
+
+After moving formatters and utils, an additional duplicate audit was performed across `apps/client` and `packages`.
+
+Resolved immediately:
+- moved slug helpers out of `packages/utils/src/index.ts` into `packages/utils/src/slug/`;
+- removed duplicate slug implementation from `packages/config/src/routes/slug-builder.ts` and switched config routes to `@e-pharmacy/utils/slug`;
+- removed local `packages/ui/src/utils` helpers in favor of `@e-pharmacy/utils/classes` and `@e-pharmacy/utils/formatters`;
+- reused `createApiUrl`, `getSafeRedirectPath`, and cookie header helpers instead of duplicating them;
+- renamed ambiguous local catalog helper names to domain-specific names;
+- removed the unused duplicate `createQueryString` implementation from `packages/api-client`.
+
+Detailed duplicate list is documented in `docs/duplicate-audit-stage-10.md`.
