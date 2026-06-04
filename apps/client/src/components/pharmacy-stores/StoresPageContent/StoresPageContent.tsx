@@ -12,7 +12,7 @@ import {
   type PharmacyStoresFilters,
 } from '@/lib/catalog/pharmacy-stores-catalog';
 
-import { ROUTES } from '@/lib/constants/routes';
+import { ROUTES } from '@e-pharmacy/config/routes';
 import type { Store } from '@/types';
 
 import css from './StoresPageContent.module.css';

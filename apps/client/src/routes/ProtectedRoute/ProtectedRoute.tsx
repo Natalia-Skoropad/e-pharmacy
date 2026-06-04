@@ -6,7 +6,7 @@ import { useEffect, type ReactNode } from 'react';
 import { LoadingSpinner } from '@e-pharmacy/ui/common';
 import { useAuth } from '@/providers';
 
-import { buildLoginRedirectPath } from '@/lib/routes';
+import { buildLoginRedirectPath } from '@e-pharmacy/config/routes';
 
 //===================================================================
 

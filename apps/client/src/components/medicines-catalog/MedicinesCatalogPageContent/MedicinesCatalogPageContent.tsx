@@ -13,7 +13,7 @@ import {
   type MedicinesCatalogSeoContext,
 } from '@/lib/catalog/medicines-catalog';
 
-import { ROUTES } from '@/lib/constants/routes';
+import { ROUTES } from '@e-pharmacy/config/routes';
 import type { Product, ProductFilterOptionsResponse, Store } from '@/types';
 
 import css from './MedicinesCatalogPageContent.module.css';

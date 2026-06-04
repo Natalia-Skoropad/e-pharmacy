@@ -1,6 +1,6 @@
 import { InfoPage } from '@/components/info';
 
-import { DELIVERY_PAYMENT_INFO } from '@/lib/constants/info-pages';
+import { DELIVERY_PAYMENT_INFO } from '@e-pharmacy/config/info-pages';
 import { createPageMetadata } from '@/lib/seo';
 
 //===================================================================

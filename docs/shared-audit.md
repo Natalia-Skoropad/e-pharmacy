@@ -1029,3 +1029,24 @@ Shared SEO helpers were added to `packages/config/src/seo`.
 | `apps/client/src/app/sitemap.ts` | Updated | Stays as a Next.js special file and keeps Client-specific dynamic product/store fetching, while shared sitemap helper logic lives in config. |
 
 Next.js special files remain in each app. Only reusable builders/components moved to packages.
+
+## Stage 9 routes, navigation, and constants migration update
+
+Reusable route, navigation, SEO, asset, catalog, and info-page constants were moved from `apps/client/src/lib/constants` and `apps/client/src/lib/routes` into `packages/config`.
+
+| Entity | Previous location | Target / Result | Action | Notes |
+|---|---|---|---|---|
+| Client routes | `apps/client/src/lib/constants/routes.ts` | `packages/config/src/routes/client-routes.ts` | Moved to shared config | Client now imports `ROUTES` from `@e-pharmacy/config/routes`. |
+| Route segments / reserved slugs | `packages/config/src/routes.ts` | `packages/config/src/routes/route-segments.ts` plus compatibility `routes.ts` | Reorganized | Keeps root slug protection available from config. |
+| Vendor/Admin route placeholders | Not centralized | `packages/config/src/routes/vendor-routes.ts`, `admin-routes.ts` | Added | Establishes `/vendor -> /vendor/dashboard` and `/admin -> /admin/dashboard` strategy. |
+| Route helpers | `apps/client/src/lib/routes` | `packages/config/src/routes` | Moved | Includes auth redirects, breadcrumbs, active-route checks, slug-id parsing, product/store path builders. |
+| Client navigation | `apps/client/src/lib/constants/navigation.ts` | `packages/config/src/navigation/client-nav.ts` | Moved | Client nav/footer/info links are now shared config. |
+| Vendor/Admin navigation placeholders | Not centralized | `packages/config/src/navigation/vendor-nav.ts`, `admin-nav.ts` | Added | Provides a clear place for future app navigation. |
+| Assets | `apps/client/src/lib/constants/assets.ts` | `packages/config/src/assets.ts` | Moved | Shared sprite and image directory constants. |
+| Catalog controls | `apps/client/src/lib/constants/catalog-controls.ts` | `packages/config/src/catalog.ts` | Moved | Search delay and max length are shared config. |
+| Info pages | `apps/client/src/lib/constants/info-pages.ts` | `packages/config/src/info-pages.ts` | Moved | Legal/info page content can be reused or audited centrally. |
+| Metadata constants | `apps/client/src/lib/constants/metadata.ts` | `packages/config/src/seo/metadata.ts` | Partially moved | Static title/description/OG constants are shared; runtime `CLIENT_ENV` stays app-specific. |
+| SEO route constants | `apps/client/src/lib/constants/seo.ts` | `packages/config/src/seo/client-seo.ts` | Moved | Index/noindex/robots/sitemap static routes are now shared config. |
+| API route constants | `apps/client/src/lib/constants/api-routes.ts`, `client-api-routes.ts` | `@e-pharmacy/api-client` direct imports | Replaced | Client now imports `apiRoutes` and `clientApiRoutes` from the API client package. |
+
+After applying Stage 9, remove old duplicated Client constants/routes folders except `apps/client/src/lib/constants/env.ts`, which remains app-specific because it reads Next.js environment variables.

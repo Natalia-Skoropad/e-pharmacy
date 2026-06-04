@@ -1,6 +1,6 @@
 import { InfoPage } from '@/components/info';
 
-import { USER_AGREEMENT_INFO } from '@/lib/constants/info-pages';
+import { USER_AGREEMENT_INFO } from '@e-pharmacy/config/info-pages';
 import { createPageMetadata } from '@/lib/seo';
 
 //===================================================================

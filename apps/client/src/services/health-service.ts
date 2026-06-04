@@ -1,5 +1,5 @@
 import { getResponseData, localApiRequest } from '@/lib/api';
-import { CLIENT_API_ROUTES } from '@/lib/constants/client-api-routes';
+import { clientApiRoutes as CLIENT_API_ROUTES } from '@e-pharmacy/api-client';
 
 import type { ApiSuccessResponse } from '@/types';
 

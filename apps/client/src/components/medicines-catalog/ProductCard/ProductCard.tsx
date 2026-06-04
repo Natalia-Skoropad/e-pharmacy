@@ -10,7 +10,7 @@ import { useFavoriteToggle, useProductFavoriteRefresh } from '@/hooks';
 
 import { formatPharmaciesCount, formatPriceRange } from '@/lib/formatters';
 import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
-import { buildProductPath } from '@/lib/routes';
+import { buildProductPath } from '@e-pharmacy/config/routes';
 
 import { useAuth } from '@/providers';
 import { toggleFavoriteProduct } from '@/services';

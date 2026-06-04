@@ -5,7 +5,7 @@ import {
   REFRESH_TOKEN_COOKIE_NAME,
 } from '@/lib/auth/auth-session';
 
-import { ROUTES } from '@/lib/constants/routes';
+import { ROUTES } from '@e-pharmacy/config/routes';
 
 //===================================================================
 

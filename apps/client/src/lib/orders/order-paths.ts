@@ -1,4 +1,4 @@
-import { ROUTES } from '@/lib/constants/routes';
+import { ROUTES } from '@e-pharmacy/config/routes';
 
 import type { CustomerOrder } from '@/types';
 

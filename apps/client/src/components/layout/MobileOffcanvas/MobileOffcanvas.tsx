@@ -13,10 +13,9 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { MobileOffcanvasBase } from '@e-pharmacy/ui/layout';
-
-import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
-import { ROUTES } from '@/lib/constants/routes';
-import { isActiveRoute } from '@/lib/routes';
+import { CLIENT_NAV_LINKS } from '@e-pharmacy/config/navigation';
+import { ROUTES } from '@e-pharmacy/config/routes';
+import { isActiveRoute } from '@e-pharmacy/config/routes';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/providers';
 
@@ -50,7 +49,6 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
       setIsLogoutLoading(false);
     }
   };
-
 
   useEffect(() => {
     if (previousPathnameRef.current === pathname) return;

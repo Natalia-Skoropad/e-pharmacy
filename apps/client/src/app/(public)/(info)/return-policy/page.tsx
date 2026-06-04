@@ -1,6 +1,6 @@
 import { InfoPage } from '@/components/info';
 
-import { RETURN_POLICY_INFO } from '@/lib/constants/info-pages';
+import { RETURN_POLICY_INFO } from '@e-pharmacy/config/info-pages';
 import { createPageMetadata } from '@/lib/seo';
 
 //===================================================================

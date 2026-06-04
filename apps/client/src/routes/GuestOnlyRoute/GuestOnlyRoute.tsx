@@ -5,7 +5,7 @@ import { useEffect, type ReactNode } from 'react';
 
 import { useAuth } from '@/providers';
 
-import { getSafeRedirectPath } from '@/lib/routes';
+import { getSafeRedirectPath } from '@e-pharmacy/config/routes';
 
 //===================================================================
 

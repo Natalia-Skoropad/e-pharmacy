@@ -2,15 +2,15 @@ import type { MetadataRoute } from 'next';
 
 import { createRobotsConfig } from '@e-pharmacy/config/seo';
 
-import { ROBOTS_DISALLOW_ROUTES } from '@/lib/constants/seo';
-import { SITE_URL } from '@/lib/constants/metadata';
+import { ROBOTS_DISALLOW_ROUTES } from '@e-pharmacy/config/seo';
+import { CLIENT_ENV } from '@/lib/constants/env';
 
 //===================================================================
 
 export default function robots(): MetadataRoute.Robots {
   return createRobotsConfig({
     app: 'client',
-    siteUrl: SITE_URL,
+    siteUrl: CLIENT_ENV.siteUrl,
     disallowRoutes: ROBOTS_DISALLOW_ROUTES,
   }) as MetadataRoute.Robots;
 }

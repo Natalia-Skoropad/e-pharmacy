@@ -13,8 +13,8 @@ import { HomeFeatureCards, HomeReviewsSlider } from '@/components/home';
 import { ProductCard } from '@/components/medicines-catalog';
 import { StoreCard } from '@/components/pharmacy-stores';
 
-import { HOME_DESCRIPTION, HOME_TITLE } from '@/lib/constants/metadata';
-import { ROUTES } from '@/lib/constants/routes';
+import { HOME_DESCRIPTION, HOME_TITLE } from '@e-pharmacy/config/seo';
+import { ROUTES } from '@e-pharmacy/config/routes';
 import { createPageMetadata } from '@/lib/seo';
 import { getProducts, getStores } from '@/services';
 

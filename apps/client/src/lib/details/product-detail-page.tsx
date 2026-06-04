@@ -1,6 +1,6 @@
 import { ProductDetailsPageContent } from '@/components/medicines-catalog';
 
-import { buildProductPath, getIdFromSlugId } from '@/lib/routes';
+import { buildProductPath, getIdFromSlugId } from '@e-pharmacy/config/routes';
 import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api';
 import { createPageMetadata } from '@/lib/seo';
 

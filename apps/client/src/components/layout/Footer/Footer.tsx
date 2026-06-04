@@ -6,7 +6,7 @@ import { Container, Logo } from '@e-pharmacy/ui/common';
 import {
   CLIENT_FOOTER_LINKS,
   CLIENT_NAV_LINKS,
-} from '@/lib/constants/navigation';
+} from '@e-pharmacy/config/navigation';
 
 import css from './Footer.module.css';
 

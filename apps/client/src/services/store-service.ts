@@ -7,8 +7,8 @@ import {
   type RequestOptions,
 } from '@/lib/api';
 
-import { API_ROUTES } from '@/lib/constants/api-routes';
-import { CLIENT_API_ROUTES } from '@/lib/constants/client-api-routes';
+import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client';
+import { clientApiRoutes as CLIENT_API_ROUTES } from '@e-pharmacy/api-client';
 
 import type {
   ApiSuccessResponse,

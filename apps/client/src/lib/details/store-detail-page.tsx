@@ -1,6 +1,6 @@
 import { StoreDetailsPageContent } from '@/components/pharmacy-stores';
 
-import { buildStorePath, getIdFromSlugId } from '@/lib/routes';
+import { buildStorePath, getIdFromSlugId } from '@e-pharmacy/config/routes';
 import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api';
 import { createPageMetadata } from '@/lib/seo';
 

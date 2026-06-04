@@ -15,9 +15,9 @@ import {
 import { BurgerButton } from '@e-pharmacy/ui/layout';
 import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
 
-import { CLIENT_NAV_LINKS } from '@/lib/constants/navigation';
-import { ROUTES } from '@/lib/constants/routes';
-import { isActiveRoute } from '@/lib/routes';
+import { CLIENT_NAV_LINKS } from '@e-pharmacy/config/navigation';
+import { ROUTES } from '@e-pharmacy/config/routes';
+import { isActiveRoute } from '@e-pharmacy/config/routes';
 import { cn } from '@/lib/utils';
 
 import {

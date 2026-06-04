@@ -1,6 +1,11 @@
-import { ROUTES } from '@/lib/constants/routes';
+import { ROUTES } from './client-routes';
 
-import type { BreadcrumbItem } from '@/types/breadcrumbs';
+//===================================================================
+
+export type BreadcrumbItem = {
+  label: string;
+  href?: string;
+};
 
 //===================================================================
 

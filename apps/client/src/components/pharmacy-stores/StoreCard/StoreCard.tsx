@@ -12,7 +12,7 @@ import { useToast } from '@e-pharmacy/hooks';
 import { useFavoriteToggle, useStoreFavoriteRefresh } from '@/hooks';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
-import { buildStorePath } from '@/lib/routes';
+import { buildStorePath } from '@e-pharmacy/config/routes';
 import { formatAvailableProductsCount } from '@/lib/formatters';
 
 import { useAuth } from '@/providers';

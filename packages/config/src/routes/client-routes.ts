@@ -1,4 +1,4 @@
-import { ROUTE_SEGMENTS } from '@e-pharmacy/config';
+import { ROUTE_SEGMENTS } from './route-segments';
 
 //===================================================================
 

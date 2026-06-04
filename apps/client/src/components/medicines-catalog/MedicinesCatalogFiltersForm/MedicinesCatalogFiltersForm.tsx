@@ -15,7 +15,7 @@ import {
 import {
   CATALOG_SEARCH_MAX_LENGTH,
   CATALOG_SEARCH_UPDATE_DELAY,
-} from '@/lib/constants/catalog-controls';
+} from '@e-pharmacy/config/catalog';
 
 import {
   buildMedicinesCatalogPath,

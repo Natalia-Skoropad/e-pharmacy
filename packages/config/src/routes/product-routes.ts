@@ -1,4 +1,4 @@
-import { buildSlugId } from '@e-pharmacy/utils';
+import { buildRouteSlugId } from './slug-builder';
 
 //===================================================================
 
@@ -6,5 +6,5 @@ import { buildSlugId } from '@e-pharmacy/utils';
 // slugs protected in root-detail-resolver when adding new public pages.
 
 export function buildProductPath(name: string, id: string): string {
-  return `/${buildSlugId(name, id)}`;
+  return `/${buildRouteSlugId(name, id)}`;
 }

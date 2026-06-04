@@ -1,7 +1,7 @@
 import { CheckoutPageContent } from '@/components/checkout';
 
-import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/constants/metadata';
-import { ROUTES } from '@/lib/constants/routes';
+import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@e-pharmacy/config/seo';
+import { ROUTES } from '@e-pharmacy/config/routes';
 import { createPageMetadata } from '@/lib/seo';
 
 import { ProtectedRoute } from '@/routes';

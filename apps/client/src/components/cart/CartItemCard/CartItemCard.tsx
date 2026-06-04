@@ -9,7 +9,7 @@ import {
 import { StockAvailability } from '@/components/common';
 
 import { formatPrice } from '@/lib/formatters';
-import { buildProductPath } from '@/lib/routes';
+import { buildProductPath } from '@e-pharmacy/config/routes';
 import type { CartItem } from '@/types';
 
 import css from './CartItemCard.module.css';

@@ -18,8 +18,8 @@ import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { ProductCard } from '@/components/medicines-catalog';
 import { StoreCard } from '@/components/pharmacy-stores';
 
-import { PROFILE_TITLE } from '@/lib/constants/metadata';
-import { ROUTES } from '@/lib/constants/routes';
+import { PROFILE_TITLE } from '@e-pharmacy/config/seo';
+import { ROUTES } from '@e-pharmacy/config/routes';
 
 import {
   formatCapitalizedLabel,
@@ -28,7 +28,7 @@ import {
 } from '@/lib/formatters';
 
 import { buildCustomerOrderPath } from '@/lib/orders';
-import { buildStorePath, createBreadcrumbs } from '@/lib/routes';
+import { buildStorePath, createBreadcrumbs } from '@e-pharmacy/config/routes';
 
 import {
   PASSWORD_MAX_LENGTH,

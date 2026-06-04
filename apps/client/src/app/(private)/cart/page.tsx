@@ -1,7 +1,7 @@
 import { CartPageContent } from '@/components/cart';
 
-import { CART_DESCRIPTION, CART_TITLE } from '@/lib/constants/metadata';
-import { ROUTES } from '@/lib/constants/routes';
+import { CART_DESCRIPTION, CART_TITLE } from '@e-pharmacy/config/seo';
+import { ROUTES } from '@e-pharmacy/config/routes';
 import { createPageMetadata } from '@/lib/seo';
 
 import { ProtectedRoute } from '@/routes';

@@ -7,14 +7,17 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./routes": "./src/routes.ts",
-    "./navigation": "./src/navigation/index.ts",
-    "./statuses": "./src/statuses/index.ts",
+    "./assets": "./src/assets.ts",
+    "./catalog": "./src/catalog.ts",
     "./filters": "./src/filters/index.ts",
+    "./info-pages": "./src/info-pages.ts",
+    "./navigation": "./src/navigation/index.ts",
     "./permissions": "./src/permissions/index.ts",
+    "./route-groups": "./src/routes/index.ts",
+    "./route-segments": "./src/routes/route-segments.ts",
+    "./routes": "./src/routes/index.ts",
     "./seo": "./src/seo/index.ts",
-    "./route-segments": "./src/routes.ts",
-    "./route-groups": "./src/routes/index.ts"
+    "./statuses": "./src/statuses/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

@@ -12,7 +12,7 @@ import {
 
 import { Button, ButtonLink } from '@e-pharmacy/ui/common';
 import { useToast } from '@e-pharmacy/hooks';
-import { ROUTES } from '@/lib/constants/routes';
+import { ROUTES } from '@e-pharmacy/config/routes';
 import { useAuth } from '@/providers';
 
 import css from './HomeFeatureCards.module.css';

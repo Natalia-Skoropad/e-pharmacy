@@ -1,15 +1,16 @@
 import type { MetadataRoute } from 'next';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
-import { SITE_URL } from '@/lib/constants/metadata';
-import { SITEMAP_STATIC_ROUTES } from '@/lib/constants/seo';
+import { SITEMAP_STATIC_ROUTES } from '@e-pharmacy/config/seo';
+
 import {
   createSitemapRoutes,
   createStaticSitemapEntries,
   dedupeSitemapEntries,
   parseSitemapDate,
 } from '@e-pharmacy/config/seo';
-import { buildProductPath, buildStorePath } from '@/lib/routes';
+
+import { buildProductPath, buildStorePath } from '@e-pharmacy/config/routes';
 
 //===================================================================
 
@@ -90,8 +91,15 @@ async function fetchAllSitemapItems<TItem>(
 
   if (totalPages <= 1) return allItems;
 
-  for (let pageStart = 2; pageStart <= totalPages; pageStart += SITEMAP_FETCH_BATCH_SIZE) {
-    const pageEnd = Math.min(pageStart + SITEMAP_FETCH_BATCH_SIZE - 1, totalPages);
+  for (
+    let pageStart = 2;
+    pageStart <= totalPages;
+    pageStart += SITEMAP_FETCH_BATCH_SIZE
+  ) {
+    const pageEnd = Math.min(
+      pageStart + SITEMAP_FETCH_BATCH_SIZE - 1,
+      totalPages
+    );
     const pages = await Promise.all(
       Array.from({ length: pageEnd - pageStart + 1 }, (_, index) =>
         fetchSitemapPage<TItem>(
@@ -112,15 +120,14 @@ async function fetchAllSitemapItems<TItem>(
 
 async function getDynamicSitemapEntries(): Promise<SitemapEntry[]> {
   const [products, stores] = await Promise.all([
-    fetchAllSitemapItems<SitemapProduct>(
-      '/products',
-      PRODUCT_SITEMAP_PER_PAGE
-    ),
+    fetchAllSitemapItems<SitemapProduct>('/products', PRODUCT_SITEMAP_PER_PAGE),
     fetchAllSitemapItems<SitemapStore>('/stores', STORE_SITEMAP_PER_PAGE),
   ]);
 
   const productEntries = products
-    .filter((product) => product.id && product.name && product.inStock !== false)
+    .filter(
+      (product) => product.id && product.name && product.inStock !== false
+    )
     .map((product) => ({
       path: buildProductPath(product.name, product.id),
       priority: 0.7,
@@ -151,7 +158,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return createSitemapRoutes(
     entries,
-    SITE_URL,
+    CLIENT_ENV.siteUrl,
     fallbackLastModified
   ) as MetadataRoute.Sitemap;
 }

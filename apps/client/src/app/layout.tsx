@@ -9,8 +9,9 @@ import {
   DEFAULT_OG_IMAGE_ALT,
   HOME_DESCRIPTION,
   SITE_NAME,
-  SITE_URL,
-} from '@/lib/constants/metadata';
+} from '@e-pharmacy/config/seo';
+
+import { CLIENT_ENV } from '@/lib/constants/env';
 
 import '@e-pharmacy/ui/styles/tokens.css';
 import '@e-pharmacy/ui/styles/reset.css';
@@ -20,7 +21,7 @@ import '@e-pharmacy/ui/styles/utilities.css';
 //===================================================================
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase: new URL(CLIENT_ENV.siteUrl),
   title: {
     default: SITE_NAME,
     template: `%s | ${SITE_NAME}`,

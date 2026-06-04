@@ -4,8 +4,8 @@ import { ChevronRight } from 'lucide-react';
 import { Container } from '@e-pharmacy/ui/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 
-import { INFO_NAV_LINKS } from '@/lib/constants/navigation';
-import { createBreadcrumbs } from '@/lib/routes';
+import { INFO_NAV_LINKS } from '@e-pharmacy/config/navigation';
+import { createBreadcrumbs } from '@e-pharmacy/config/routes';
 import { cn } from '@/lib/utils';
 
 import css from './InfoPage.module.css';

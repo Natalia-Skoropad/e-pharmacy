@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { API_ROUTES } from '@/lib/constants/api-routes';
+import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client';
 import { createApiUrl } from './api-url';
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
 

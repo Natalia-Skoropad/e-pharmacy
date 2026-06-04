@@ -3,12 +3,17 @@
 import { useMemo, useState } from 'react';
 import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 
-import { ButtonLink, Container, RatingSummary, ShimmerImage, SvgIcon, Tabs } from '@e-pharmacy/ui/common';
+import {
+  ButtonLink,
+  Container,
+  RatingSummary,
+  ShimmerImage,
+  SvgIcon,
+  Tabs,
+} from '@e-pharmacy/ui/common';
 import { type TabItem } from '@e-pharmacy/ui/common';
 import { FavoriteToggleButton, ReviewsSection } from '@/components/common';
-
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-
 import { useToast } from '@e-pharmacy/hooks';
 
 import {
@@ -18,7 +23,7 @@ import {
 } from '@/hooks';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
-import { ROUTES } from '@/lib/constants/routes';
+import { ROUTES } from '@e-pharmacy/config/routes';
 
 import {
   formatAvailableProductsCount,

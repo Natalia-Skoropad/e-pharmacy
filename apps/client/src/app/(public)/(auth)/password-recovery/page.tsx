@@ -4,10 +4,10 @@ import {
   PASSWORD_RECOVERY_BENEFITS,
   PASSWORD_RECOVERY_DESCRIPTION,
   PASSWORD_RECOVERY_TITLE,
-} from '@/lib/constants/metadata';
+} from '@e-pharmacy/config/seo';
 
-import { ROUTES } from '@/lib/constants/routes';
-import { createBreadcrumbs } from '@/lib/routes';
+import { ROUTES } from '@e-pharmacy/config/routes';
+import { createBreadcrumbs } from '@e-pharmacy/config/routes';
 import { createPageMetadata } from '@/lib/seo';
 
 import { GuestOnlyRoute } from '@/routes';

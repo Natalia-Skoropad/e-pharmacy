@@ -1,6 +1,6 @@
 import { getResponseData, localApiRequest } from '@/lib/api';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
-import { CLIENT_API_ROUTES } from '@/lib/constants/client-api-routes';
+import { clientApiRoutes as CLIENT_API_ROUTES } from '@e-pharmacy/api-client';
 
 import type {
   AddCartItemPayload,
