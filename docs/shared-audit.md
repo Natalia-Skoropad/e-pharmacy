@@ -1089,3 +1089,20 @@ Detailed duplicate list is documented in `docs/duplicate-audit-stage-10.md`.
 
 Stage 11 keeps all implementation files inside logical folders. Index files contain re-exports only. Old client validation files are deleted after applying the deletion script.
 
+
+## Stage 12 auth core and guards migration update
+
+Shared auth core and route guards live in `packages/auth`, while Client keeps only thin app-specific wrappers for service wiring and UI fallbacks.
+
+| Entity | Previous / current role | Target / Result | Action | Notes |
+|---|---|---|---|---|
+| `AuthProviderCore` / `useAuth` | Shared auth state, bootstrap, login/register/logout, current user refresh | `packages/auth/src/core` | Shared core | Receives app-provided services, so Client/Vendor/Admin can reuse the same core with different API methods and role rules. |
+| Auth session constants / marker helpers | Previously exposed through local Client auth barrel | `packages/auth/src/session` | Shared session utilities | `proxy.ts` and API proxy helpers import cookie names from shared auth instead of deleted Client auth files. |
+| `ProtectedRoute`, `GuestOnlyRoute`, `RoleProtectedRoute` | Reusable route guard behavior | `packages/auth/src/guards` | Shared guards | Client local route components remain thin wrappers only for Client routes and loading UI. |
+| Auth redirect helpers | Redirect normalization and login redirect building | `packages/auth/src/routing` | Canonical shared implementation | `packages/config/src/routes/auth-routes.ts` re-exports the shared helpers instead of duplicating implementations. |
+| Auth error messages | Shared auth error normalization | `packages/auth/src/errors` | Shared helper | Auth forms import `getAuthErrorMessage` directly from `@e-pharmacy/auth/errors`. |
+| Client `AuthProvider` | Client API services wiring | `apps/client/src/providers/AuthProvider` | Keep as thin wrapper | It provides Client-specific services to `AuthProviderCore`; Vendor/Admin will create their own wrappers. |
+| Client `routes` wrappers | Client-specific route paths/loading fallbacks | `apps/client/src/routes` | Keep as thin wrappers | They wrap shared guards and provide `ROUTES.LOGIN`, `ROUTES.PROFILE`, and `LoadingSpinner`. |
+| `apps/client/src/lib/auth` | Local re-export duplicate | Removed | Delete after applying patch | Client now imports shared auth directly. |
+
+Stage 12 also fixes the stale `proxy.ts` import from deleted `@/lib/auth/auth-session` to `@e-pharmacy/auth/session`.

@@ -71,6 +71,13 @@
       "@e-pharmacy/validation/*": [
         "../../packages/validation/src/*/index.ts",
         "../../packages/validation/src/*.ts"
+      ],
+      "@e-pharmacy/auth": [
+        "../../packages/auth/src/index.ts"
+      ],
+      "@e-pharmacy/auth/*": [
+        "../../packages/auth/src/*/index.ts",
+        "../../packages/auth/src/*.ts"
       ]
     }
   },

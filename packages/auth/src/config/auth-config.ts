@@ -1,5 +1,7 @@
 import type { UserRole } from '@e-pharmacy/types';
 
+//===================================================================
+
 export type AuthAppKind = 'client' | 'vendor' | 'admin';
 
 export type AuthRedirects = {

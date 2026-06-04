@@ -33,7 +33,7 @@ export type RegisterPayload = {
   name: string;
   email: string;
   password: string;
-  role?: Extract<UserRole, 'customer'>;
+  role?: Extract<UserRole, 'customer' | 'vendor'>;
   phone?: string;
   address?: string;
 };

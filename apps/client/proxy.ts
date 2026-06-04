@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
-} from '@/lib/auth/auth-session';
+} from '@e-pharmacy/auth/session';
 
 import { ROUTES, getSafeRedirectPath } from '@e-pharmacy/config/routes';
 

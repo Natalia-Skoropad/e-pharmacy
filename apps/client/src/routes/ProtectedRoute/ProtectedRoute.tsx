@@ -1,12 +1,10 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, type ReactNode } from 'react';
-
+import { ProtectedRoute as SharedProtectedRoute } from '@e-pharmacy/auth';
+import { ROUTES } from '@e-pharmacy/config/routes';
 import { LoadingSpinner } from '@e-pharmacy/ui/common';
-import { useAuth } from '@/providers';
 
-import { buildLoginRedirectPath } from '@e-pharmacy/config/routes';
+import type { ReactNode } from 'react';
 
 //===================================================================
 
@@ -17,30 +15,15 @@ type ProtectedRouteProps = {
 //===================================================================
 
 function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const { isAuthenticated, isAuthReady } = useAuth();
-
-  useEffect(() => {
-    if (!isAuthReady || isAuthenticated) return;
-
-    const queryString = searchParams.toString();
-    const currentPath = queryString ? `${pathname}?${queryString}` : pathname;
-
-    router.replace(buildLoginRedirectPath(currentPath));
-  }, [isAuthReady, isAuthenticated, pathname, router, searchParams]);
-
-  if (!isAuthReady) {
-    return <LoadingSpinner label="Checking your session..." />;
-  }
-
-  if (!isAuthenticated) {
-    return <LoadingSpinner label="Redirecting to login..." />;
-  }
-
-  return children;
+  return (
+    <SharedProtectedRoute
+      loginPath={ROUTES.LOGIN}
+      loadingFallback={<LoadingSpinner label="Checking your session..." />}
+      redirectingFallback={<LoadingSpinner label="Redirecting to login..." />}
+    >
+      {children}
+    </SharedProtectedRoute>
+  );
 }
 
 export default ProtectedRoute;

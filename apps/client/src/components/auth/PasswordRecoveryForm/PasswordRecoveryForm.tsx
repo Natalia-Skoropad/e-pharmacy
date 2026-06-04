@@ -6,7 +6,7 @@ import { Button, TextActionButton } from '@e-pharmacy/ui/common';
 import { EmailInput } from '@e-pharmacy/ui/form-fields';
 
 import { useToast } from '@e-pharmacy/hooks';
-import { getAuthErrorMessage } from '@/lib/auth';
+import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
 import { ROUTES } from '@e-pharmacy/config/routes';
 
 import {
