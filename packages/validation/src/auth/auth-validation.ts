@@ -7,7 +7,9 @@ import {
   sanitizeEmail as sanitizeSharedEmail,
   sanitizeName,
   sanitizePhone,
-} from '@e-pharmacy/validation';
+} from '../shared';
+
+//===================================================================
 
 export const PASSWORD_MIN_LENGTH = VALIDATION_LIMITS.passwordMin;
 export const PASSWORD_MAX_LENGTH = VALIDATION_LIMITS.passwordMax;

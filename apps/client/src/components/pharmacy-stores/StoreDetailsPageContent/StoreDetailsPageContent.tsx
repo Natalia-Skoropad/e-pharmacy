@@ -11,6 +11,7 @@ import {
   SvgIcon,
   Tabs,
 } from '@e-pharmacy/ui/common';
+
 import { type TabItem } from '@e-pharmacy/ui/common';
 import { FavoriteToggleButton, ReviewsSection } from '@/components/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
@@ -30,7 +31,7 @@ import {
   formatReviewsCount,
 } from '@e-pharmacy/utils/formatters';
 
-import { REVIEW_MAX_LENGTH } from '@/lib/reviews';
+import { REVIEW_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 
 import { useAuth } from '@/providers';
 import { createStoreReview, toggleFavoriteStore } from '@/services';

@@ -37,7 +37,7 @@ import {
 } from '@/lib/catalog/product-offers';
 
 import { buildStorePath } from '@e-pharmacy/config/routes';
-import { REVIEW_MAX_LENGTH } from '@/lib/reviews';
+import { REVIEW_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 
 import {
   addCartItem,

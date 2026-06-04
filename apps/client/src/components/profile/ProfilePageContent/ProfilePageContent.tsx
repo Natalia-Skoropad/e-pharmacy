@@ -31,15 +31,17 @@ import { buildCustomerOrderPath } from '@/lib/orders';
 import { buildStorePath, createBreadcrumbs } from '@e-pharmacy/config/routes';
 
 import {
-  PASSWORD_MAX_LENGTH,
-  PASSWORD_MIN_LENGTH,
   getCustomerAddressError,
   getCustomerNameError,
   getCustomerPhoneError,
   sanitizeCustomerAddress,
   sanitizeCustomerName,
   sanitizeCustomerPhone,
-} from '@/lib/validations';
+} from '@e-pharmacy/validation/customer';
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+} from '@e-pharmacy/validation/auth';
 
 import { useAuth } from '@/providers';
 

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { isReviewValid, REVIEW_MAX_LENGTH } from '@/lib/reviews';
+import { isReviewValid, REVIEW_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 import { useAuth } from '@/providers';
 
 //===================================================================

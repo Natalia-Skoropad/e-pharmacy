@@ -15,7 +15,7 @@ import {
   validateForgotPasswordForm,
   type ForgotPasswordFormErrors,
   type ForgotPasswordFormValues,
-} from '@/lib/validations/auth-validation';
+} from '@e-pharmacy/validation/auth';
 
 import { useAuth } from '@/providers';
 import { requestPasswordReset } from '@/services';

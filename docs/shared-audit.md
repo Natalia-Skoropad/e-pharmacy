@@ -1077,3 +1077,15 @@ Resolved immediately:
 - removed the unused duplicate `createQueryString` implementation from `packages/api-client`.
 
 Detailed duplicate list is documented in `docs/duplicate-audit-stage-10.md`.
+
+## Stage 11 validation schemas migration update
+
+| Entity | Previous location | Target location | Action | Priority | Notes |
+|---|---|---|---|---|---|
+| Auth validation | apps/client/src/lib/validations/auth-validation.ts | packages/validation/src/auth/auth-validation.ts | Moved to shared auth validation package entry | High | Client imports from @e-pharmacy/validation/auth |
+| Customer field validation | apps/client/src/lib/validations/customer-fields.ts | packages/validation/src/customer/customer-fields.ts | Moved to shared customer validation package entry | High | Client imports from @e-pharmacy/validation/customer |
+| Review validation | apps/client/src/lib/reviews/review-validation.ts | packages/validation/src/reviews/review-validation.ts | Moved to shared reviews validation package entry | High | Uses shared limits and patterns, no hardcoded duplicate limits |
+| Shared validation primitives | packages/validation/src/*.ts | packages/validation/src/shared/*.ts | Grouped assets/errors/limits/messages/patterns/sanitizers/zod schemas in shared folder | High | Root index only re-exports shared primitives |
+
+Stage 11 keeps all implementation files inside logical folders. Index files contain re-exports only. Old client validation files are deleted after applying the deletion script.
+

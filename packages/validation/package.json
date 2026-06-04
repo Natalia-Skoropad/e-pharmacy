@@ -9,33 +9,49 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "default": "./dist/auth/index.js"
+    },
+    "./customer": {
+      "types": "./dist/customer/index.d.ts",
+      "default": "./dist/customer/index.js"
+    },
+    "./reviews": {
+      "types": "./dist/reviews/index.d.ts",
+      "default": "./dist/reviews/index.js"
+    },
+    "./shared": {
+      "types": "./dist/shared/index.d.ts",
+      "default": "./dist/shared/index.js"
+    },
     "./limits": {
-      "types": "./dist/limits.d.ts",
-      "default": "./dist/limits.js"
+      "types": "./dist/shared/limits.d.ts",
+      "default": "./dist/shared/limits.js"
     },
     "./patterns": {
-      "types": "./dist/patterns.d.ts",
-      "default": "./dist/patterns.js"
+      "types": "./dist/shared/patterns.d.ts",
+      "default": "./dist/shared/patterns.js"
     },
     "./sanitizers": {
-      "types": "./dist/sanitizers.d.ts",
-      "default": "./dist/sanitizers.js"
+      "types": "./dist/shared/sanitizers.d.ts",
+      "default": "./dist/shared/sanitizers.js"
     },
     "./messages": {
-      "types": "./dist/messages.d.ts",
-      "default": "./dist/messages.js"
+      "types": "./dist/shared/messages.d.ts",
+      "default": "./dist/shared/messages.js"
     },
     "./errors": {
-      "types": "./dist/errors.d.ts",
-      "default": "./dist/errors.js"
+      "types": "./dist/shared/errors.d.ts",
+      "default": "./dist/shared/errors.js"
     },
     "./assets": {
-      "types": "./dist/assets.d.ts",
-      "default": "./dist/assets.js"
+      "types": "./dist/shared/assets.d.ts",
+      "default": "./dist/shared/assets.js"
     },
     "./zod-schemas": {
-      "types": "./dist/zod-schemas.d.ts",
-      "default": "./dist/zod-schemas.js"
+      "types": "./dist/shared/zod-schemas.d.ts",
+      "default": "./dist/shared/zod-schemas.js"
     }
   },
   "files": [

@@ -38,7 +38,7 @@ import {
   sanitizeCustomerAddress,
   sanitizeCustomerName,
   sanitizeCustomerPhone,
-} from '@/lib/validations';
+} from '@e-pharmacy/validation/customer';
 
 import { useAuth } from '@/providers';
 

@@ -9,7 +9,7 @@ import {
   sanitizeAddress,
   sanitizeName,
   sanitizePhone,
-} from '@e-pharmacy/validation';
+} from '../shared';
 
 //===================================================================
 

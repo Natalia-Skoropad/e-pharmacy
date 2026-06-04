@@ -25,7 +25,7 @@ import {
   validateRegisterForm,
   type RegisterFormErrors,
   type RegisterFormValues,
-} from '@/lib/validations/auth-validation';
+} from '@e-pharmacy/validation/auth';
 
 import { useAuth } from '@/providers';
 
