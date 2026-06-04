@@ -6,7 +6,7 @@ import {
   SITE_NAME,
 } from '@e-pharmacy/config/seo';
 
-import { createAbsoluteUrl } from '@/lib/seo/url';
+import { createClientAbsoluteUrl } from '@/lib/seo/url';
 
 //===================================================================
 
@@ -29,7 +29,7 @@ export function createPageMetadata({
   imageAlt = DEFAULT_OG_IMAGE_ALT,
   noIndex = false,
 }: CreatePageMetadataParams): Metadata {
-  const absoluteUrl = createAbsoluteUrl(path);
+  const absoluteUrl = createClientAbsoluteUrl(path);
 
   return {
     title,

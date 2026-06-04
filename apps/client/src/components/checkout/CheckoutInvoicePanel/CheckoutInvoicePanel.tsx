@@ -1,7 +1,7 @@
 import { ShieldAlert } from 'lucide-react';
 
 import { Button } from '@e-pharmacy/ui/common';
-import { formatPrice } from '@/lib/formatters';
+import { formatPrice } from '@e-pharmacy/utils/formatters';
 import type { CheckoutStoreOrderGroup } from '@/types/checkout';
 
 import css from './CheckoutInvoicePanel.module.css';

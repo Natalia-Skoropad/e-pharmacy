@@ -25,7 +25,7 @@ import {
   formatCapitalizedLabel,
   formatPrice,
   formatShortDate,
-} from '@/lib/formatters';
+} from '@e-pharmacy/utils/formatters';
 
 import { buildCustomerOrderPath } from '@/lib/orders';
 import { buildStorePath, createBreadcrumbs } from '@e-pharmacy/config/routes';

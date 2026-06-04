@@ -6,7 +6,7 @@ import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 
 import { INFO_NAV_LINKS } from '@e-pharmacy/config/navigation';
 import { createBreadcrumbs } from '@e-pharmacy/config/routes';
-import { cn } from '@/lib/utils';
+import { cn } from '@e-pharmacy/utils/classes';
 
 import css from './InfoPage.module.css';
 

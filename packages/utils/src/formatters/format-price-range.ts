@@ -1,10 +1,15 @@
-import type { ProductOffer } from '@/types';
-
 import { formatPrice } from './format-price';
 
 //===================================================================
 
-export function formatPriceRange(offers: ProductOffer[]): string {
+type PriceOfferLike = {
+  price: number;
+  inStock: boolean;
+};
+
+//===================================================================
+
+export function formatPriceRange(offers: readonly PriceOfferLike[]): string {
   const availableOffers = offers.filter(
     (offer) => offer.inStock && Number.isFinite(offer.price)
   );

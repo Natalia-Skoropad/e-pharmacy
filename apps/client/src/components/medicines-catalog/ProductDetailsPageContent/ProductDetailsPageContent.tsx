@@ -25,7 +25,7 @@ import {
   formatPrice,
   formatPriceRange,
   formatReviewsCount,
-} from '@/lib/formatters';
+} from '@e-pharmacy/utils/formatters';
 
 import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
 import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';

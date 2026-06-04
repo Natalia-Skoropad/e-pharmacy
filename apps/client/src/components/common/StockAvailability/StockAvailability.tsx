@@ -1,4 +1,4 @@
-import { formatStockLabel } from '@/lib/formatters';
+import { formatStockLabel } from '@e-pharmacy/utils/formatters';
 
 //===================================================================
 

@@ -28,7 +28,7 @@ import { ROUTES } from '@e-pharmacy/config/routes';
 import {
   formatAvailableProductsCount,
   formatReviewsCount,
-} from '@/lib/formatters';
+} from '@e-pharmacy/utils/formatters';
 
 import { REVIEW_MAX_LENGTH } from '@/lib/reviews';
 

@@ -18,7 +18,7 @@ import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
 import { CLIENT_NAV_LINKS } from '@e-pharmacy/config/navigation';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { isActiveRoute } from '@e-pharmacy/config/routes';
-import { cn } from '@/lib/utils';
+import { cn } from '@e-pharmacy/utils/classes';
 
 import {
   CART_UPDATED_EVENT,

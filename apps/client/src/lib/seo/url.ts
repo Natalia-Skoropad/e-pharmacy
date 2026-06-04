@@ -1,9 +1,8 @@
+import { createAbsoluteUrl } from '@e-pharmacy/config/seo';
 import { CLIENT_ENV } from '@/lib/constants/env';
 
 //===================================================================
 
-export function createAbsoluteUrl(path: string): string {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-
-  return new URL(normalizedPath, CLIENT_ENV.siteUrl).toString();
+export function createClientAbsoluteUrl(path: string): string {
+  return createAbsoluteUrl(path, CLIENT_ENV.siteUrl);
 }

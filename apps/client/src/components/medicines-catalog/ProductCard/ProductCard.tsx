@@ -8,7 +8,7 @@ import { FavoriteToggleButton } from '@/components/common';
 import { useToast } from '@e-pharmacy/hooks';
 import { useFavoriteToggle, useProductFavoriteRefresh } from '@/hooks';
 
-import { formatPharmaciesCount, formatPriceRange } from '@/lib/formatters';
+import { formatPharmaciesCount, formatPriceRange } from '@e-pharmacy/utils/formatters';
 import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
 import { buildProductPath } from '@e-pharmacy/config/routes';
 

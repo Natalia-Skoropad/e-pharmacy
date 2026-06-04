@@ -1050,3 +1050,16 @@ Reusable route, navigation, SEO, asset, catalog, and info-page constants were mo
 | API route constants | `apps/client/src/lib/constants/api-routes.ts`, `client-api-routes.ts` | `@e-pharmacy/api-client` direct imports | Replaced | Client now imports `apiRoutes` and `clientApiRoutes` from the API client package. |
 
 After applying Stage 9, remove old duplicated Client constants/routes folders except `apps/client/src/lib/constants/env.ts`, which remains app-specific because it reads Next.js environment variables.
+
+## Stage 10 update — shared formatters and utils
+
+| Entity | Previous location | Target location | Action | Status | Notes |
+|---|---|---|---|---|---|
+| formatPrice / formatPriceRange | apps/client/src/lib/formatters | packages/utils/src/formatters | Moved to shared utils package | Done | Product offer input is structural to avoid app-only type dependency. |
+| formatShortDate / formatOrderDateTime / formatReviewDate | apps/client/src/lib/formatters | packages/utils/src/formatters | Moved to shared utils package | Done | Locale/options behavior preserved. |
+| formatInitials / formatCapitalizedLabel / formatStockLabel / count labels | apps/client/src/lib/formatters | packages/utils/src/formatters | Moved to shared utils package | Done | Client imports now use @e-pharmacy/utils/formatters. |
+| cn | apps/client/src/lib/utils | packages/utils/src/classes | Moved to shared utils package | Done | Client imports now use @e-pharmacy/utils/classes. |
+| buildQueryString | apps/client/src/lib/api/build-query-string.ts | packages/utils/src/query | Moved to shared utils package | Done | API services import it from @e-pharmacy/utils/query; local API barrel no longer exports it. |
+| createAbsoluteUrl client wrapper | apps/client/src/lib/seo/url.ts | app-specific wrapper over @e-pharmacy/config/seo | Renamed to createClientAbsoluteUrl | Done | Avoids duplicate helper name/responsibility with shared createAbsoluteUrl(path, siteUrl). |
+
+Client local formatter/utils folders should be deleted after applying this stage to avoid duplicated shared logic.

@@ -8,7 +8,7 @@ import {
 } from '@e-pharmacy/ui/common';
 import { StockAvailability } from '@/components/common';
 
-import { formatPrice } from '@/lib/formatters';
+import { formatPrice } from '@e-pharmacy/utils/formatters';
 import { buildProductPath } from '@e-pharmacy/config/routes';
 import type { CartItem } from '@/types';
 

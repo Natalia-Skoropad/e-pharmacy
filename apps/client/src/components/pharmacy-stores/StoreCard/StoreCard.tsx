@@ -6,14 +6,14 @@ import {
   ShimmerImage,
   SvgIcon,
 } from '@e-pharmacy/ui/common';
-import { FavoriteToggleButton } from '@/components/common';
 
+import { FavoriteToggleButton } from '@/components/common';
 import { useToast } from '@e-pharmacy/hooks';
 import { useFavoriteToggle, useStoreFavoriteRefresh } from '@/hooks';
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 import { buildStorePath } from '@e-pharmacy/config/routes';
-import { formatAvailableProductsCount } from '@/lib/formatters';
+import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
 
 import { useAuth } from '@/providers';
 import { toggleFavoriteStore } from '@/services';

@@ -1,7 +1,7 @@
 import { bffApiRequest } from '@/lib/api/bff-api';
+import { buildQueryString } from '@e-pharmacy/utils/query';
 
 import {
-  buildQueryString,
   getResponseData,
   localApiRequest,
   type RequestOptions,

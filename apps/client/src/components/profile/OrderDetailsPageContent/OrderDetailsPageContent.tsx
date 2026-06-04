@@ -29,7 +29,7 @@ import {
   formatCapitalizedLabel,
   formatOrderDateTime,
   formatPrice,
-} from '@/lib/formatters';
+} from '@e-pharmacy/utils/formatters';
 
 import { buildProductPath, buildStorePath } from '@e-pharmacy/config/routes';
 import { getOrderIdFromPathParam } from '@/lib/orders';
