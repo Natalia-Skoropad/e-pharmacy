@@ -8,7 +8,11 @@
   "exports": {
     ".": "./src/index.ts",
     "./bff": "./src/bff.ts",
+    "./routes": "./src/routes.ts",
     "./core": "./src/core/index.ts",
+    "./core/*": "./src/core/*",
+    "./proxy": "./src/proxy/index.ts",
+    "./proxy/*": "./src/proxy/*",
     "./auth": "./src/auth/index.ts",
     "./client": "./src/client/index.ts",
     "./vendor": "./src/vendor/index.ts",
@@ -19,9 +23,12 @@
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
-    "typescript": "^5"
+    "typescript": "^5",
+    "next": "16.2.4"
   },
   "dependencies": {
-    "@e-pharmacy/types": "workspace:*"
+    "@e-pharmacy/types": "workspace:*",
+    "@e-pharmacy/auth": "workspace:*",
+    "@e-pharmacy/utils": "workspace:*"
   }
 }

@@ -19,7 +19,7 @@ import {
   type MedicinesCatalogSearchParams,
 } from '@/lib/catalog/medicines-catalog';
 
-import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api';
+import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
 import { createPageMetadata } from '@/lib/seo';
 
 import { getProductFilters, getProducts, getStores } from '@/services';

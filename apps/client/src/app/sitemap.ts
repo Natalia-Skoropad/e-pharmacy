@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
-import { createApiUrl } from '@/lib/api/api-url';
+import { createApiUrl } from '@e-pharmacy/api-client/core';
 import { SITEMAP_STATIC_ROUTES } from '@e-pharmacy/config/seo';
 
 import {

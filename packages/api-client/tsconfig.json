@@ -11,6 +11,20 @@
     "paths": {
       "@e-pharmacy/types": [
         "../types/src/index.ts"
+      ],
+      "@e-pharmacy/auth": [
+        "../auth/src/index.ts"
+      ],
+      "@e-pharmacy/auth/*": [
+        "../auth/src/*/index.ts",
+        "../auth/src/*.ts"
+      ],
+      "@e-pharmacy/utils": [
+        "../utils/src/index.ts"
+      ],
+      "@e-pharmacy/utils/*": [
+        "../utils/src/*/index.ts",
+        "../utils/src/*.ts"
       ]
     }
   }

@@ -40,7 +40,7 @@ export async function apiRequest<TData>(
     next,
     credentials,
     signal: getRequestSignal(signal),
-  });
+  } as RequestInit & { next?: ApiRequestConfig['next'] });
 
   const payload = await parseJsonSafe<TData>(response);
 

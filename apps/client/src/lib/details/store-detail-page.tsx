@@ -1,7 +1,7 @@
 import { StoreDetailsPageContent } from '@/components/pharmacy-stores';
 
 import { buildStorePath, getIdFromSlugId } from '@e-pharmacy/config/routes';
-import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api';
+import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
 import { createPageMetadata } from '@/lib/seo';
 
 import { getStoreDetails, getStoreReviews } from '@/services';

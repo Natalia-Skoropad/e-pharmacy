@@ -1106,3 +1106,31 @@ Shared auth core and route guards live in `packages/auth`, while Client keeps on
 | `apps/client/src/lib/auth` | Local re-export duplicate | Removed | Delete after applying patch | Client now imports shared auth directly. |
 
 Stage 12 also fixes the stale `proxy.ts` import from deleted `@/lib/auth/auth-session` to `@e-pharmacy/auth/session`.
+
+## Stage 13 update — API client migration and app/api audit
+
+### API core migration
+
+| Entity | Previous location | Target location | Action | Notes |
+|---|---|---|---|---|
+| ApiError / isApiError | apps/client/src/lib/api/api-error.ts | packages/api-client/src/core/api-error.ts | Moved | Shared request error shape for all apps. |
+| apiRequest / localApiRequest / bffApiRequest / serverApiRequest | apps/client/src/lib/api | packages/api-client/src/core | Moved | Client services and app routes now import from `@e-pharmacy/api-client/core`. |
+| response helpers | apps/client/src/lib/api/get-response-data.ts, get-api-error-message.ts, parse-json-safe.ts | packages/api-client/src/core | Moved | No client-only duplicate remains after deletion script. |
+| request helpers | apps/client/src/lib/api/request-body.ts, cache-options.ts, api-url.ts | packages/api-client/src/core | Moved | `createApiUrl` is now API-client scoped and no longer duplicated in client. |
+| backend proxy helpers | apps/client/src/lib/api/*proxy*.ts | packages/api-client/src/proxy | Moved | Next route handlers stay in app, but proxy logic is shared. |
+| storefront API methods | apps/client/src/services | packages/api-client/src/client | Added shared methods | Client service files are now thin re-export/wrapper files. Cart keeps a client-specific event wrapper only. |
+
+### App API route handlers audit
+
+| API folder | Shared domain? | Shared logic moved | App-specific logic left in app | Target package | Action | Priority | Notes |
+|---|---|---|---|---|---|---|---|
+| api/auth | Yes | auth proxy routing, token extraction, cookie proxy helpers | Next.js route handler files | packages/api-client/proxy, packages/auth | Route handlers are thin wrappers | High | Admin will use login/logout/me/refresh; register remains client/vendor specific. |
+| api/cart | Mostly client-specific | proxy backend request helper | storefront cart route files | packages/api-client/proxy, later packages/types/cart | Keep handlers app-specific | Medium | Vendor/admin do not use customer cart. |
+| api/orders | Yes | proxy backend request helper | role-specific route path mapping | packages/api-client/proxy, later packages/types/orders | Keep thin wrappers | High | Vendor/admin will need role-specific order APIs. |
+| api/products | Yes | public/private proxy helpers | public catalog route files and product review/favorite wrappers | packages/api-client/proxy, packages/api-client/client | Keep thin wrappers | High | Vendor/admin product CRUD will use separate package modules. |
+| api/stores | Yes | public/private proxy helpers | public pharmacy-store route files and review/favorite wrappers | packages/api-client/proxy, packages/api-client/client | Keep thin wrappers | High | Vendor profile/admin pharmacies depend on this domain later. |
+| api/health | Low | public proxy helper | per-app health route | packages/api-client/proxy | Keep simple | Low | No over-engineering. |
+
+### Deletion cleanup
+
+After applying this stage, remove `apps/client/src/lib/api` because reusable API core/proxy logic now lives in `packages/api-client`. Keep only client-specific service wrappers where they add UI-side behavior, such as cart update events.

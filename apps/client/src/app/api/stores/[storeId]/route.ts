@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server';
 
-import { proxyPublicBackendRequest } from '@/lib/api/public-backend-proxy';
+import { proxyPublicBackendRequest } from '@e-pharmacy/api-client/proxy';
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client';
 
 //===================================================================

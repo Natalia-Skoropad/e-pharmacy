@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client';
-import { createApiUrl } from './api-url';
+import { apiRoutes as API_ROUTES } from '../routes';
+import { createApiUrl } from '../core/api-url';
 import { copySetCookieHeader } from './proxy-response';
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
 
@@ -11,7 +11,7 @@ import {
   setClientAuthCookies,
 } from './proxy-auth-cookies';
 
-import type { HttpMethod } from './types';
+import type { HttpMethod } from '../core/types';
 
 //===================================================================
 

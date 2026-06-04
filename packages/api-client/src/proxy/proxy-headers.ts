@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server';
 
-import type { HttpMethod } from './types';
+import type { HttpMethod } from '../core/types';
 
 //===================================================================
 

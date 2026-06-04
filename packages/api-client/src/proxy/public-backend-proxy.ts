@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server';
 
-import { appendSearchParams } from '@e-pharmacy/api-client';
+import { appendSearchParams } from '../bff';
 
 import {
   ACCESS_TOKEN_COOKIE_NAME,
@@ -9,7 +9,7 @@ import {
   REFRESH_TOKEN_COOKIE_NAME,
 } from '@e-pharmacy/auth';
 
-import { createApiUrl } from './api-url';
+import { createApiUrl } from '../core/api-url';
 import { proxyBackendRequest } from './backend-proxy';
 import { createProxyHeaders } from './proxy-headers';
 import { createProxyResponse } from './proxy-response';
@@ -84,7 +84,7 @@ export async function proxyPublicBackendRequest({
     }),
     cache: 'force-cache',
     next: { revalidate },
-  });
+  } as RequestInit & { next?: { revalidate?: number } });
 
   return createProxyResponse(response, {
     cacheControl: createPublicCacheControl(revalidate),

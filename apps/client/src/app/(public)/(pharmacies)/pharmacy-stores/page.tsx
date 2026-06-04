@@ -11,7 +11,7 @@ import {
   type PharmacyStoresSearchParams,
 } from '@/lib/catalog/pharmacy-stores-catalog';
 
-import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api';
+import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
 import { createPageMetadata } from '@/lib/seo';
 import { getStoreFilters, getStores } from '@/services';
 

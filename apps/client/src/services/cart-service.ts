@@ -1,53 +1,37 @@
-import { getResponseData, localApiRequest } from '@/lib/api';
+import {
+  addCartItem as addCartItemRequest,
+  clearCart as clearCartRequest,
+  getCart,
+  removeCartItem as removeCartItemRequest,
+  updateCartItem as updateCartItemRequest,
+} from '@e-pharmacy/api-client/client';
+
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
-import { clientApiRoutes as CLIENT_API_ROUTES } from '@e-pharmacy/api-client';
 
 import type {
   AddCartItemPayload,
-  ApiSuccessResponse,
   CartResponse,
   UpdateCartItemPayload,
 } from '@/types';
 
 //===================================================================
 
-function getCartResponseData(
-  response: ApiSuccessResponse<CartResponse>,
-  shouldNotify = false
-): CartResponse {
-  const data = getResponseData(response);
+function notifyCartUpdated(response: CartResponse): CartResponse {
+  dispatchCartUpdated(response.cart);
 
-  if (shouldNotify) {
-    dispatchCartUpdated(data.cart);
-  }
-
-  return data;
+  return response;
 }
 
 //===================================================================
 
-export async function getCart(): Promise<CartResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.current
-  );
-
-  return getCartResponseData(response);
-}
+export { getCart };
 
 //===================================================================
 
 export async function addCartItem(
   payload: AddCartItemPayload
 ): Promise<CartResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.addItem,
-    {
-      method: 'POST',
-      body: payload,
-    }
-  );
-
-  return getCartResponseData(response, true);
+  return notifyCartUpdated(await addCartItemRequest(payload));
 }
 
 //===================================================================
@@ -56,39 +40,17 @@ export async function updateCartItem(
   cartItemId: string,
   payload: UpdateCartItemPayload
 ): Promise<CartResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.updateItem(cartItemId),
-    {
-      method: 'PATCH',
-      body: payload,
-    }
-  );
-
-  return getCartResponseData(response, true);
+  return notifyCartUpdated(await updateCartItemRequest(cartItemId, payload));
 }
 
 //===================================================================
 
 export async function removeCartItem(cartItemId: string): Promise<CartResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.removeItem(cartItemId),
-    {
-      method: 'DELETE',
-    }
-  );
-
-  return getCartResponseData(response, true);
+  return notifyCartUpdated(await removeCartItemRequest(cartItemId));
 }
 
 //===================================================================
 
 export async function clearCart(): Promise<CartResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.clear,
-    {
-      method: 'DELETE',
-    }
-  );
-
-  return getCartResponseData(response, true);
+  return notifyCartUpdated(await clearCartRequest());
 }

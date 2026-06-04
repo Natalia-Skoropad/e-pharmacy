@@ -1,4 +1,4 @@
-import type { ApiSuccessResponse } from '@/types';
+import type { ApiSuccessResponse } from '@e-pharmacy/types';
 
 import { ApiError } from './api-error';
 

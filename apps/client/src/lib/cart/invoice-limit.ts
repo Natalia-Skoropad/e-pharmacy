@@ -1,4 +1,4 @@
-import { ApiError } from '@/lib/api';
+import { ApiError } from '@e-pharmacy/api-client/core';
 
 //===================================================================
 
