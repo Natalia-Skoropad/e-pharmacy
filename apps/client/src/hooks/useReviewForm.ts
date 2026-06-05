@@ -2,7 +2,11 @@
 
 import { useMemo, useState } from 'react';
 
-import { isReviewValid, REVIEW_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
+import {
+  isReviewValid,
+  USER_REVIEW_COMMENT_MAX_LENGTH,
+} from '@e-pharmacy/validation';
+
 import { useAuth } from '@/providers';
 
 //===================================================================
@@ -60,7 +64,7 @@ export function useReviewForm({
   };
 
   const handleReviewTextChange = (value: string) => {
-    if (value.length > REVIEW_MAX_LENGTH) return;
+    if (value.length > USER_REVIEW_COMMENT_MAX_LENGTH) return;
 
     setReviewText(value);
   };

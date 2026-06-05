@@ -1,28 +1,10 @@
 import {
-  VALIDATION_LIMITS,
+  VALIDATION_MESSAGES,
   buildEmailError,
   buildNameError,
   buildPasswordError,
   buildPhoneError,
-  sanitizeEmail as sanitizeSharedEmail,
-  sanitizeName,
-  sanitizePhone,
 } from '../shared';
-
-//===================================================================
-
-export const PASSWORD_MIN_LENGTH = VALIDATION_LIMITS.passwordMin;
-export const PASSWORD_MAX_LENGTH = VALIDATION_LIMITS.passwordMax;
-
-export const USER_NAME_MIN_LENGTH = VALIDATION_LIMITS.nameMin;
-export const USER_NAME_MAX_LENGTH = VALIDATION_LIMITS.nameMax;
-
-export const CUSTOMER_NAME_MIN_LENGTH = USER_NAME_MIN_LENGTH;
-export const CUSTOMER_NAME_MAX_LENGTH = USER_NAME_MAX_LENGTH;
-
-export const EMAIL_MAX_LENGTH = VALIDATION_LIMITS.emailMax;
-
-export const CUSTOMER_PHONE_MAX_LENGTH = VALIDATION_LIMITS.phoneMax;
 
 //===================================================================
 
@@ -88,20 +70,11 @@ export const RESET_PASSWORD_INITIAL_VALUES: ResetPasswordFormValues = {
 
 //===================================================================
 
-export const sanitizeEmail = sanitizeSharedEmail;
-export const sanitizeCustomerName = sanitizeName;
-export const sanitizeCustomerPhone = sanitizePhone;
-
-export const getEmailError = buildEmailError;
-export const getPasswordError = buildPasswordError;
-
-//===================================================================
-
 export function validateLoginForm(values: LoginFormValues): LoginFormErrors {
   const errors: LoginFormErrors = {};
 
-  const emailError = getEmailError(values.email);
-  const passwordError = getPasswordError(values.password.trim());
+  const emailError = buildEmailError(values.email);
+  const passwordError = buildPasswordError(values.password.trim());
 
   if (emailError) errors.email = emailError;
   if (passwordError) errors.password = passwordError;
@@ -116,10 +89,10 @@ export function validateRegisterForm(
 ): RegisterFormErrors {
   const errors: RegisterFormErrors = {};
 
-  const emailError = getEmailError(values.email);
+  const emailError = buildEmailError(values.email);
   const nameError = buildNameError(values.name, { required: true });
   const phoneError = buildPhoneError(values.phone, { required: true });
-  const passwordError = getPasswordError(values.password);
+  const passwordError = buildPasswordError(values.password);
 
   if (nameError) errors.name = nameError;
   if (emailError) errors.email = emailError;
@@ -136,7 +109,7 @@ export function validateForgotPasswordForm(
 ): ForgotPasswordFormErrors {
   const errors: ForgotPasswordFormErrors = {};
 
-  const emailError = getEmailError(values.email);
+  const emailError = buildEmailError(values.email);
 
   if (emailError) errors.email = emailError;
 
@@ -150,14 +123,14 @@ export function validateResetPasswordForm(
 ): ResetPasswordFormErrors {
   const errors: ResetPasswordFormErrors = {};
 
-  const passwordError = getPasswordError(values.password);
+  const passwordError = buildPasswordError(values.password);
 
   if (passwordError) errors.password = passwordError;
 
   if (!values.confirmPassword) {
-    errors.confirmPassword = 'Confirm password is required';
+    errors.confirmPassword = VALIDATION_MESSAGES.required.confirmPassword;
   } else if (values.confirmPassword !== values.password) {
-    errors.confirmPassword = 'Passwords do not match';
+    errors.confirmPassword = VALIDATION_MESSAGES.format.passwordMatch;
   }
 
   return errors;

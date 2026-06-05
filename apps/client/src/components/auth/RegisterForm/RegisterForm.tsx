@@ -19,13 +19,13 @@ import { getSafeRedirectPath } from '@e-pharmacy/config/routes';
 
 import {
   REGISTER_INITIAL_VALUES,
-  sanitizeCustomerName,
-  sanitizeCustomerPhone,
+  sanitizeName,
+  sanitizePhone,
   sanitizeEmail,
   validateRegisterForm,
   type RegisterFormErrors,
   type RegisterFormValues,
-} from '@e-pharmacy/validation/auth';
+} from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
 
@@ -60,11 +60,11 @@ function RegisterForm() {
       const rawValue = event.target.value;
       const nextValue =
         field === 'name'
-          ? sanitizeCustomerName(rawValue)
+          ? sanitizeName(rawValue)
           : field === 'email'
             ? sanitizeEmail(rawValue)
             : field === 'phone'
-              ? sanitizeCustomerPhone(rawValue)
+              ? sanitizePhone(rawValue)
               : rawValue;
 
       const nextValues = {

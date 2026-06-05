@@ -2,61 +2,22 @@
   "name": "@e-pharmacy/validation",
   "version": "0.1.0",
   "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./auth": {
-      "types": "./dist/auth/index.d.ts",
-      "default": "./dist/auth/index.js"
-    },
-    "./customer": {
-      "types": "./dist/customer/index.d.ts",
-      "default": "./dist/customer/index.js"
-    },
-    "./reviews": {
-      "types": "./dist/reviews/index.d.ts",
-      "default": "./dist/reviews/index.js"
-    },
-    "./shared": {
-      "types": "./dist/shared/index.d.ts",
-      "default": "./dist/shared/index.js"
-    },
-    "./limits": {
-      "types": "./dist/shared/limits.d.ts",
-      "default": "./dist/shared/limits.js"
-    },
-    "./patterns": {
-      "types": "./dist/shared/patterns.d.ts",
-      "default": "./dist/shared/patterns.js"
-    },
-    "./sanitizers": {
-      "types": "./dist/shared/sanitizers.d.ts",
-      "default": "./dist/shared/sanitizers.js"
-    },
-    "./messages": {
-      "types": "./dist/shared/messages.d.ts",
-      "default": "./dist/shared/messages.js"
-    },
-    "./errors": {
-      "types": "./dist/shared/errors.d.ts",
-      "default": "./dist/shared/errors.js"
-    },
-    "./assets": {
-      "types": "./dist/shared/assets.d.ts",
-      "default": "./dist/shared/assets.js"
-    },
-    "./zod-schemas": {
-      "types": "./dist/shared/zod-schemas.d.ts",
-      "default": "./dist/shared/zod-schemas.js"
-    }
+    ".": "./src/index.ts",
+    "./auth": "./src/auth/index.ts",
+    "./customer": "./src/customer/index.ts",
+    "./reviews": "./src/reviews/index.ts",
+    "./shared": "./src/shared/index.ts",
+    "./limits": "./src/shared/limits.ts",
+    "./patterns": "./src/shared/patterns.ts",
+    "./sanitizers": "./src/shared/sanitizers.ts",
+    "./messages": "./src/shared/messages.ts",
+    "./errors": "./src/shared/errors.ts",
+    "./assets": "./src/shared/assets.ts",
+    "./zod-schemas": "./src/shared/zod-schemas.ts"
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "tsc",
     "lint": "tsc --noEmit",

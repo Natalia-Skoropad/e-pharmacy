@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { REVIEW_COMMENT_PATTERN, VALIDATION_LIMITS } from '@e-pharmacy/validation';
+import { sharedReviewCommentSchema, sharedSearchSchema } from '@e-pharmacy/validation';
 
 //===============================================================
 
@@ -34,9 +34,9 @@ const perPageSchema = z.coerce.number().int().min(1).max(200).default(12);
 export const productsQuerySchema = z.object({
   page: positivePageSchema,
   perPage: perPageSchema,
-  keyword: z.string().trim().max(80).optional(),
-  nameKeyword: z.string().trim().max(80).optional(),
-  articleKeyword: z.string().trim().max(80).optional(),
+  keyword: sharedSearchSchema,
+  nameKeyword: sharedSearchSchema,
+  articleKeyword: sharedSearchSchema,
   category: z.enum(PRODUCT_CATEGORIES).optional(),
   storeId: mongoIdSchema.optional(),
   minPrice: z.coerce.number().min(0).optional(),
@@ -82,13 +82,5 @@ export const productStoreParamsSchema = z.object({
 
 export const createProductReviewSchema = z.object({
   rating: z.coerce.number().int().min(1).max(5),
-  comment: z
-    .string()
-    .trim()
-    .min(VALIDATION_LIMITS.reviewCommentMin)
-    .max(VALIDATION_LIMITS.reviewCommentMax)
-    .regex(
-      REVIEW_COMMENT_PATTERN,
-      'Review may contain only latin letters, numbers, spaces and basic punctuation'
-    ),
+  comment: sharedReviewCommentSchema,
 });

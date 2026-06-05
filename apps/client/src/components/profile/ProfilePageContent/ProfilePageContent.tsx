@@ -37,18 +37,16 @@ import { buildCustomerOrderPath } from '@/lib/orders';
 import { buildStorePath, createBreadcrumbs } from '@e-pharmacy/config/routes';
 
 import {
-  getCustomerAddressError,
-  getCustomerNameError,
-  getCustomerPhoneError,
-  sanitizeCustomerAddress,
-  sanitizeCustomerName,
-  sanitizeCustomerPhone,
-} from '@e-pharmacy/validation/customer';
-
-import {
-  PASSWORD_MAX_LENGTH,
-  PASSWORD_MIN_LENGTH,
-} from '@e-pharmacy/validation/auth';
+  buildAddressError,
+  buildNameError,
+  buildPhoneError,
+  sanitizeAddress,
+  sanitizeName,
+  sanitizePhone,
+  USER_PASSWORD_MAX_LENGTH,
+  USER_PASSWORD_MIN_LENGTH,
+  VALIDATION_MESSAGES,
+} from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
 
@@ -104,12 +102,12 @@ const ORDERS_VISIBLE_STEP = 15;
 function getPasswordError(value: string): string {
   if (!value) return '';
 
-  if (value.length < PASSWORD_MIN_LENGTH) {
-    return `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;
+  if (value.length < USER_PASSWORD_MIN_LENGTH) {
+    return VALIDATION_MESSAGES.limits.passwordMin;
   }
 
-  if (value.length > PASSWORD_MAX_LENGTH) {
-    return `Password must be at most ${PASSWORD_MAX_LENGTH} characters`;
+  if (value.length > USER_PASSWORD_MAX_LENGTH) {
+    return VALIDATION_MESSAGES.limits.passwordMax;
   }
 
   return '';
@@ -124,12 +122,12 @@ function getProfileErrors(values: ProfileFormValues) {
   if (!name) {
     errors.name = 'Name is required';
   } else {
-    const nameError = getCustomerNameError(values.name);
+    const nameError = buildNameError(values.name, { trailingDot: true });
     if (nameError) errors.name = nameError;
   }
 
-  const phoneError = getCustomerPhoneError(values.phone);
-  const addressError = getCustomerAddressError(values.address);
+  const phoneError = buildPhoneError(values.phone, { trailingDot: true });
+  const addressError = buildAddressError(values.address, { trailingDot: true });
 
   if (phoneError) errors.phone = phoneError;
   if (addressError) errors.address = addressError;
@@ -532,7 +530,7 @@ function ProfilePageContent() {
     setPasswordSubmitError('');
     setPasswordValues((prev) => ({
       ...prev,
-      [field]: value.slice(0, PASSWORD_MAX_LENGTH),
+      [field]: value.slice(0, USER_PASSWORD_MAX_LENGTH),
     }));
   };
 
@@ -638,7 +636,7 @@ function ProfilePageContent() {
                         onChange={(event) =>
                           handleProfileChange(
                             'name',
-                            sanitizeCustomerName(event.target.value)
+                            sanitizeName(event.target.value)
                           )
                         }
                       />
@@ -653,7 +651,7 @@ function ProfilePageContent() {
                         onChange={(event) =>
                           handleProfileChange(
                             'phone',
-                            sanitizeCustomerPhone(event.target.value)
+                            sanitizePhone(event.target.value)
                           )
                         }
                       />
@@ -669,7 +667,7 @@ function ProfilePageContent() {
                         onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
                           handleProfileChange(
                             'address',
-                            sanitizeCustomerAddress(event.target.value)
+                            sanitizeAddress(event.target.value)
                           )
                         }
                       />

@@ -1,6 +1,14 @@
 import { z } from 'zod';
 
-import { VALIDATION_LIMITS } from '@e-pharmacy/validation';
+import {
+  USER_ADDRESS_MAX_LENGTH,
+  USER_ADDRESS_MIN_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_NAME_MIN_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  USER_PHONE_MIN_LENGTH,
+  sharedOrderCommentSchema,
+} from '@e-pharmacy/validation';
 
 //===============================================================
 
@@ -19,12 +27,27 @@ export const checkoutOrderSchema = z
     deliveryMethod: z.enum(['pickup', 'post']),
     deliveryDetails: z
       .object({
-        recipientName: z.string().trim().min(VALIDATION_LIMITS.nameMin).max(VALIDATION_LIMITS.nameMax).optional(),
-        recipientPhone: z.string().trim().min(VALIDATION_LIMITS.phoneMin).max(VALIDATION_LIMITS.phoneMax).optional(),
-        address: z.string().trim().min(VALIDATION_LIMITS.addressMin).max(VALIDATION_LIMITS.addressMax).optional(),
+        recipientName: z
+          .string()
+          .trim()
+          .min(USER_NAME_MIN_LENGTH)
+          .max(USER_NAME_MAX_LENGTH)
+          .optional(),
+        recipientPhone: z
+          .string()
+          .trim()
+          .min(USER_PHONE_MIN_LENGTH)
+          .max(USER_PHONE_MAX_LENGTH)
+          .optional(),
+        address: z
+          .string()
+          .trim()
+          .min(USER_ADDRESS_MIN_LENGTH)
+          .max(USER_ADDRESS_MAX_LENGTH)
+          .optional(),
       })
       .optional(),
-    comment: z.string().trim().max(VALIDATION_LIMITS.orderCommentMax).optional(),
+    comment: sharedOrderCommentSchema,
   })
   .superRefine((value, ctx) => {
     if (value.deliveryMethod !== 'post') return;

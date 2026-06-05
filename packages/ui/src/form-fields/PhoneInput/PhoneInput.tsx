@@ -1,9 +1,9 @@
+import { USER_PHONE_MAX_LENGTH } from '@e-pharmacy/validation';
+
 import FormFieldLayout from '../FormFieldLayout';
 import type { AuthFieldBaseProps } from '../types';
+
 import css from '../FormFieldLayout/FormField.module.css';
-
-const CUSTOMER_PHONE_MAX_LENGTH = 13;
-
 
 //===================================================================
 
@@ -35,13 +35,13 @@ function PhoneInput({
           value={value}
           placeholder="+380XXXXXXXXX"
           autoComplete="tel"
-          maxLength={CUSTOMER_PHONE_MAX_LENGTH}
+          maxLength={USER_PHONE_MAX_LENGTH}
           aria-invalid={Boolean(isTouched && error)}
           aria-describedby={`${id}-error`}
           onChange={onChange}
         />
         <span className={css.inputCounter} aria-hidden="true">
-          {value.length}/{CUSTOMER_PHONE_MAX_LENGTH}
+          {value.length}/{USER_PHONE_MAX_LENGTH}
         </span>
       </div>
     </FormFieldLayout>

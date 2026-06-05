@@ -57,7 +57,7 @@ import {
 } from '@/lib/catalog/product-offers';
 
 import { buildStorePath } from '@e-pharmacy/config/routes';
-import { REVIEW_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
+import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
 
 import {
   createProductReview,
@@ -881,7 +881,7 @@ function ProductDetailsPageContent({
                   isUnavailable={areReviewsUnavailable}
                   emptyText="Product reviews will appear here after customers share their feedback."
                   textareaId="product-review"
-                  maxLength={REVIEW_MAX_LENGTH}
+                  maxLength={USER_REVIEW_COMMENT_MAX_LENGTH}
                   onReviewTextChange={handleReviewTextChange}
                   onReviewRatingChange={handleReviewRatingChange}
                   onReviewSubmit={() => void handleReviewSubmit()}

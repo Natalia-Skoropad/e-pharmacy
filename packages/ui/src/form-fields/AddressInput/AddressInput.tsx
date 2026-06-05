@@ -1,9 +1,9 @@
+import { USER_ADDRESS_MAX_LENGTH } from '@e-pharmacy/validation';
+
 import FormFieldLayout from '../FormFieldLayout';
 import type { AddressFieldProps } from '../types';
+
 import css from '../FormFieldLayout/FormField.module.css';
-
-const CUSTOMER_ADDRESS_MAX_LENGTH = 200;
-
 
 //===================================================================
 
@@ -35,13 +35,13 @@ function AddressInput({
           value={value}
           placeholder="Example: 12 Central Street, Nova Poshta office #5, Kyiv"
           autoComplete="street-address"
-          maxLength={CUSTOMER_ADDRESS_MAX_LENGTH}
+          maxLength={USER_ADDRESS_MAX_LENGTH}
           aria-invalid={Boolean(isTouched && error)}
           aria-describedby={`${id}-error`}
           onChange={onChange}
         />
         <span className={css.textareaCounter} aria-hidden="true">
-          {value.length}/{CUSTOMER_ADDRESS_MAX_LENGTH}
+          {value.length}/{USER_ADDRESS_MAX_LENGTH}
         </span>
       </div>
     </FormFieldLayout>

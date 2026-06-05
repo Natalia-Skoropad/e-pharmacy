@@ -1,10 +1,9 @@
 import { Eye, EyeOff } from 'lucide-react';
 import FormFieldLayout from '../FormFieldLayout';
 import type { PasswordFieldProps } from '../types';
+import { USER_PASSWORD_MAX_LENGTH } from '@e-pharmacy/validation';
+
 import css from '../FormFieldLayout/FormField.module.css';
-
-const PASSWORD_MAX_LENGTH = 20;
-
 
 //===================================================================
 
@@ -43,13 +42,13 @@ function PasswordInput({
           value={value}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          maxLength={PASSWORD_MAX_LENGTH}
+          maxLength={USER_PASSWORD_MAX_LENGTH}
           aria-invalid={Boolean(isTouched && error)}
           aria-describedby={`${id}-error`}
           onChange={onChange}
         />
         <span className={css.passwordCounter} aria-hidden="true">
-          {value.length}/{PASSWORD_MAX_LENGTH}
+          {value.length}/{USER_PASSWORD_MAX_LENGTH}
         </span>
         <button
           className={css.eyeButton}

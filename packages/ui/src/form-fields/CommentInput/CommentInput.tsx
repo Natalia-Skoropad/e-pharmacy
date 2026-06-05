@@ -1,10 +1,9 @@
+import { USER_ORDER_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
+
 import FormFieldLayout from '../FormFieldLayout';
 import type { CommentFieldProps } from '../types';
+
 import css from '../FormFieldLayout/FormField.module.css';
-
-//===================================================================
-
-const COMMENT_MAX_LENGTH = 500;
 
 //===================================================================
 
@@ -18,7 +17,7 @@ function CommentInput({
   className,
   label = 'Comment for pharmacy',
   placeholder = 'Add details for the pharmacy if needed',
-  maxLength = COMMENT_MAX_LENGTH,
+  maxLength = USER_ORDER_COMMENT_MAX_LENGTH,
   onChange,
 }: CommentFieldProps) {
   return (

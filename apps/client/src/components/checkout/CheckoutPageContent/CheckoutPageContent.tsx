@@ -28,17 +28,18 @@ import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@e-pharmacy/config/seo';
 import { ROUTES } from '@e-pharmacy/config/routes';
 
 import {
-  CUSTOMER_ADDRESS_MAX_LENGTH,
-  CUSTOMER_ADDRESS_MIN_LENGTH,
-  CUSTOMER_NAME_MAX_LENGTH,
-  CUSTOMER_PHONE_MAX_LENGTH,
-  getCustomerAddressError,
-  getCustomerNameError,
-  getCustomerPhoneError,
-  sanitizeCustomerAddress,
-  sanitizeCustomerName,
-  sanitizeCustomerPhone,
-} from '@e-pharmacy/validation/customer';
+  USER_ADDRESS_MAX_LENGTH,
+  USER_ADDRESS_MIN_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_NAME_MIN_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  buildAddressError,
+  buildNameError,
+  buildPhoneError,
+  sanitizeAddress,
+  sanitizeName,
+  sanitizePhone,
+} from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
 
@@ -113,16 +114,17 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const recipientPhoneValue = recipientPhone ?? user?.phone ?? '';
   const deliveryAddressValue = deliveryAddress ?? user?.address ?? '';
 
-  const nameError = getCustomerNameError(recipientNameValue);
-  const phoneError = getCustomerPhoneError(recipientPhoneValue);
-  const addressError = getCustomerAddressError(deliveryAddressValue);
+  const nameError = buildNameError(recipientNameValue, { trailingDot: true });
+  const phoneError = buildPhoneError(recipientPhoneValue, { trailingDot: true });
+  const addressError = buildAddressError(deliveryAddressValue, { trailingDot: true });
+
   const isPostDeliveryValid =
     deliveryMethod === 'pickup' ||
-    (recipientNameValue.trim().length >= 2 &&
-      recipientNameValue.trim().length <= CUSTOMER_NAME_MAX_LENGTH &&
-      recipientPhoneValue.trim().length === CUSTOMER_PHONE_MAX_LENGTH &&
-      deliveryAddressValue.trim().length >= CUSTOMER_ADDRESS_MIN_LENGTH &&
-      deliveryAddressValue.trim().length <= CUSTOMER_ADDRESS_MAX_LENGTH &&
+    (recipientNameValue.trim().length >= USER_NAME_MIN_LENGTH &&
+      recipientNameValue.trim().length <= USER_NAME_MAX_LENGTH &&
+      recipientPhoneValue.trim().length === USER_PHONE_MAX_LENGTH &&
+      deliveryAddressValue.trim().length >= USER_ADDRESS_MIN_LENGTH &&
+      deliveryAddressValue.trim().length <= USER_ADDRESS_MAX_LENGTH &&
       !nameError &&
       !phoneError &&
       !addressError);
@@ -156,17 +158,17 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   });
 
   const handleRecipientNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setRecipientName(sanitizeCustomerName(event.target.value));
+    setRecipientName(sanitizeName(event.target.value));
   };
 
   const handleRecipientPhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setRecipientPhone(sanitizeCustomerPhone(event.target.value));
+    setRecipientPhone(sanitizePhone(event.target.value));
   };
 
   const handleDeliveryAddressChange = (
     event: ChangeEvent<HTMLTextAreaElement>
   ) => {
-    setDeliveryAddress(sanitizeCustomerAddress(event.target.value));
+    setDeliveryAddress(sanitizeAddress(event.target.value));
   };
 
   const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {

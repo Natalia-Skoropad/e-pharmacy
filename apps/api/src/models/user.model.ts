@@ -1,9 +1,13 @@
 import { Schema, model, models } from 'mongoose';
 
 import {
-  ADDRESS_MAX_LENGTH,
-  AVATAR_URL_MAX_LENGTH,
+  USER_ADDRESS_MAX_LENGTH,
+  USER_AVATAR_URL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
+  VALIDATION_MESSAGES,
+} from '@e-pharmacy/validation';
+
+import {
   USER_ROLES,
   USER_STATUSES,
   VENDOR_ACCOUNT_STATUSES,
@@ -16,17 +20,17 @@ const userSchema = new Schema<UserEntity>(
   {
     name: {
       type: String,
-      required: [true, 'Name is required'],
+      required: [true, VALIDATION_MESSAGES.required.name],
       trim: true,
       maxlength: [
         USER_NAME_MAX_LENGTH,
-        `Name must be at most ${USER_NAME_MAX_LENGTH} characters`,
+        VALIDATION_MESSAGES.limits.nameMax,
       ],
     },
 
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: [true, VALIDATION_MESSAGES.required.email],
       unique: true,
       lowercase: true,
       trim: true,
@@ -34,7 +38,7 @@ const userSchema = new Schema<UserEntity>(
 
     password: {
       type: String,
-      required: [true, 'Password is required'],
+      required: [true, VALIDATION_MESSAGES.required.password],
       select: false,
     },
 
@@ -68,8 +72,8 @@ const userSchema = new Schema<UserEntity>(
       type: String,
       trim: true,
       maxlength: [
-        ADDRESS_MAX_LENGTH,
-        `Address must be at most ${ADDRESS_MAX_LENGTH} characters`,
+        USER_ADDRESS_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.addressMax,
       ],
       default: undefined,
     },
@@ -78,8 +82,8 @@ const userSchema = new Schema<UserEntity>(
       type: String,
       trim: true,
       maxlength: [
-        AVATAR_URL_MAX_LENGTH,
-        `Avatar image must be at most ${AVATAR_URL_MAX_LENGTH} characters`,
+        USER_AVATAR_URL_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.avatarMax,
       ],
       default: undefined,
     },

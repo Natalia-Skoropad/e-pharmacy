@@ -1,6 +1,44 @@
 'use client';
 
-import { useMemo, useState } from 'react'; import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';  import {   ButtonLink, Container, RatingSummary, ShimmerImage, SvgIcon, Tabs, } from '@e-pharmacy/ui/common';  import { type TabItem } from '@e-pharmacy/ui/common'; import { FavoriteToggleButton, ReviewsSection } from '@/components/common'; import { Breadcrumbs } from '@e-pharmacy/ui/layout'; import { useToast } from '@e-pharmacy/hooks';  import {   useFavoriteToggle, useReviewForm, useStoreFavoriteRefresh, } from '@/hooks';  import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog'; import { ROUTES } from '@e-pharmacy/config/routes';  import {   formatAvailableProductsCount, formatReviewsCount, } from '@e-pharmacy/utils/formatters';  import { REVIEW_MAX_LENGTH } from '@e-pharmacy/validation/reviews';  import { useAuth } from '@/providers'; import { createStoreReview, toggleFavoriteStore } from '@e-pharmacy/api-client/client';
+import { useMemo, useState } from 'react';
+import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
+
+import {
+  ButtonLink,
+  Container,
+  RatingSummary,
+  ShimmerImage,
+  SvgIcon,
+  Tabs,
+} from '@e-pharmacy/ui/common';
+
+import { type TabItem } from '@e-pharmacy/ui/common';
+import { FavoriteToggleButton, ReviewsSection } from '@/components/common';
+import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { useToast } from '@e-pharmacy/hooks';
+
+import {
+  useFavoriteToggle,
+  useReviewForm,
+  useStoreFavoriteRefresh,
+} from '@/hooks';
+
+import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
+import { ROUTES } from '@e-pharmacy/config/routes';
+
+import {
+  formatAvailableProductsCount,
+  formatReviewsCount,
+} from '@e-pharmacy/utils/formatters';
+
+import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
+import { useAuth } from '@/providers';
+
+import {
+  createStoreReview,
+  toggleFavoriteStore,
+} from '@e-pharmacy/api-client/client';
+
 import type { Store, StoreReview } from '@e-pharmacy/types';
 
 import css from './StoreDetailsPageContent.module.css';
@@ -305,7 +343,7 @@ function StoreDetailsPageContent({
                 isUnavailable={areReviewsUnavailable}
                 emptyText="Pharmacy reviews will appear here after customers share their feedback."
                 textareaId="store-review"
-                maxLength={REVIEW_MAX_LENGTH}
+                maxLength={USER_REVIEW_COMMENT_MAX_LENGTH}
                 onReviewTextChange={handleReviewTextChange}
                 onReviewRatingChange={handleReviewRatingChange}
                 onReviewSubmit={() => void handleReviewSubmit()}

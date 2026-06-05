@@ -1,9 +1,9 @@
+import { USER_EMAIL_MAX_LENGTH } from '@e-pharmacy/validation';
+
 import FormFieldLayout from '../FormFieldLayout';
 import type { AuthFieldBaseProps } from '../types';
+
 import css from '../FormFieldLayout/FormField.module.css';
-
-const EMAIL_MAX_LENGTH = 64;
-
 
 //===================================================================
 
@@ -35,13 +35,13 @@ function EmailInput({
           value={value}
           placeholder="example@mail.com"
           autoComplete="email"
-          maxLength={EMAIL_MAX_LENGTH}
+          maxLength={USER_EMAIL_MAX_LENGTH}
           aria-invalid={Boolean(isTouched && error)}
           aria-describedby={`${id}-error`}
           onChange={onChange}
         />
         <span className={css.inputCounter} aria-hidden="true">
-          {value.length}/{EMAIL_MAX_LENGTH}
+          {value.length}/{USER_EMAIL_MAX_LENGTH}
         </span>
       </div>
     </FormFieldLayout>

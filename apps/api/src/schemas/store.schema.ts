@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { REVIEW_COMMENT_PATTERN, VALIDATION_LIMITS } from '@e-pharmacy/validation';
+import { sharedReviewCommentSchema, sharedSearchSchema } from '@e-pharmacy/validation';
 
 //===============================================================
 
@@ -12,10 +12,10 @@ const perPageSchema = z.coerce.number().int().min(1).max(100).default(12);
 export const storesQuerySchema = z.object({
   page: positivePageSchema,
   perPage: perPageSchema,
-  keyword: z.string().trim().max(80).optional(),
-  nameKeyword: z.string().trim().max(80).optional(),
-  addressKeyword: z.string().trim().max(80).optional(),
-  city: z.string().trim().max(80).optional(),
+  keyword: sharedSearchSchema,
+  nameKeyword: sharedSearchSchema,
+  addressKeyword: sharedSearchSchema,
+  city: sharedSearchSchema,
   sort: z
     .enum(['newest', 'rating-desc', 'rating-asc', 'name-asc', 'name-desc'])
     .default('newest'),
@@ -46,13 +46,5 @@ export const moderateStoreReviewSchema = z.object({
 
 export const createStoreReviewSchema = z.object({
   rating: z.coerce.number().int().min(1).max(5),
-  comment: z
-    .string()
-    .trim()
-    .min(VALIDATION_LIMITS.reviewCommentMin)
-    .max(VALIDATION_LIMITS.reviewCommentMax)
-    .regex(
-      REVIEW_COMMENT_PATTERN,
-      'Review may contain only latin letters, numbers, spaces and basic punctuation'
-    ),
+  comment: sharedReviewCommentSchema,
 });

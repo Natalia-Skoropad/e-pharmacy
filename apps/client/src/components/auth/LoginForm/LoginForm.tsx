@@ -17,7 +17,7 @@ import {
   validateLoginForm,
   type LoginFormErrors,
   type LoginFormValues,
-} from '@e-pharmacy/validation/auth';
+} from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
 
