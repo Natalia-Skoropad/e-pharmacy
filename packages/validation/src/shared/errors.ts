@@ -129,6 +129,15 @@ export function buildPasswordError(value: string): string {
 
 //=============================================================================
 
+export function buildRequiredPasswordError(
+  value: string,
+  message: string = VALIDATION_MESSAGES.required.password
+): string {
+  return value ? '' : message;
+}
+
+//=============================================================================
+
 export function buildAddressError(
   value: string,
   options: { required?: boolean; trailingDot?: boolean } = {}

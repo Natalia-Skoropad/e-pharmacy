@@ -7,20 +7,24 @@ import {
   sharedNameSchema,
   sharedOptionalAddressSchema,
   sharedPasswordSchema,
+  sharedRequiredPasswordSchema,
   sharedPictureUrlSchema,
   sharedRequiredPhoneSchema,
 } from './shared-validation.schema';
 
-import {
-  USER_ROLES,
-  VENDOR_ACCOUNT_STATUSES,
-} from '../constants/auth';
+import { USER_ROLES, VENDOR_ACCOUNT_STATUSES } from '../constants/auth';
 
 //===============================================================
 
 const nameSchema = sharedNameSchema;
 const emailSchema = sharedEmailSchema;
 const passwordSchema = sharedPasswordSchema;
+const requiredPasswordSchema = sharedRequiredPasswordSchema;
+
+const currentPasswordSchema = z
+  .string()
+  .min(1, VALIDATION_MESSAGES.required.currentPassword);
+
 const requiredPhoneSchema = sharedRequiredPhoneSchema;
 const optionalPhoneSchema = sharedRequiredPhoneSchema.optional();
 const optionalAddressSchema = sharedOptionalAddressSchema;
@@ -34,10 +38,12 @@ export const registerSchema = z.object({
   password: passwordSchema,
 
   /**
-   * Public registration is intentionally customer-only. Vendor/admin accounts
-   * must be created through a protected approval flow, not by user payload.
+   * Public registration supports customer accounts now and vendor accounts for
+   * the shared auth flow. Admin accounts must still be created separately.
    */
-  role: z.literal(USER_ROLES.CUSTOMER).default(USER_ROLES.CUSTOMER),
+  role: z
+    .enum([USER_ROLES.CUSTOMER, USER_ROLES.VENDOR])
+    .default(USER_ROLES.CUSTOMER),
 
   phone: requiredPhoneSchema,
   address: optionalAddressSchema,
@@ -64,7 +70,7 @@ export const updateVendorStatusSchema = z.object({
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, VALIDATION_MESSAGES.required.password),
+  password: requiredPasswordSchema,
 });
 
 //===============================================================
@@ -94,8 +100,6 @@ export const updateProfileSchema = z
 //===============================================================
 
 export const updatePasswordSchema = z.object({
-  currentPassword: z
-    .string()
-    .min(1, VALIDATION_MESSAGES.required.currentPassword),
+  currentPassword: currentPasswordSchema,
   newPassword: passwordSchema,
 });

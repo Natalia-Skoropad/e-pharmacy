@@ -70,6 +70,10 @@ export const sharedPasswordSchema = z
   .max(USER_PASSWORD_MAX_LENGTH, VALIDATION_MESSAGES.limits.passwordMax)
   .regex(PASSWORD_PATTERN, VALIDATION_MESSAGES.format.password);
 
+export const sharedRequiredPasswordSchema = z
+  .string()
+  .min(1, VALIDATION_MESSAGES.required.password);
+
 //=============================================================================
 
 export const sharedRequiredAddressSchema = z

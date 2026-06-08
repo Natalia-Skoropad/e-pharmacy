@@ -486,7 +486,7 @@ function ProfilePageContent() {
     setPasswordSubmitError('');
     setPasswordValues((prev) => ({
       ...prev,
-      [field]: sanitizePassword(value),
+      [field]: field === 'newPassword' ? sanitizePassword(value) : value,
     }));
   };
 

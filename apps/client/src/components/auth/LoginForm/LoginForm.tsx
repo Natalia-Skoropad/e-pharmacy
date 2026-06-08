@@ -14,7 +14,6 @@ import { getSafeRedirectPath } from '@e-pharmacy/config/routes';
 import {
   LOGIN_INITIAL_VALUES,
   sanitizeEmail,
-  sanitizePassword,
   validateLoginForm,
   type LoginFormErrors,
   type LoginFormValues,
@@ -50,9 +49,7 @@ function LoginForm() {
     (field: keyof LoginFormValues) =>
     (event: ChangeEvent<HTMLInputElement>) => {
       const nextValue =
-        field === 'email'
-          ? sanitizeEmail(event.target.value)
-          : sanitizePassword(event.target.value);
+        field === 'email' ? sanitizeEmail(event.target.value) : event.target.value;
 
       const nextValues = {
         ...values,

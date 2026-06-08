@@ -1,3 +1,4 @@
+import type { UserRole } from './role';
 import type { AuthUser } from './user';
 
 //===================================================================
@@ -16,6 +17,7 @@ export type RegisterPayload = {
   password: string;
   phone: string;
   address?: string;
+  role?: Extract<UserRole, 'customer' | 'vendor'>;
 };
 
 export type LoginPayload = {

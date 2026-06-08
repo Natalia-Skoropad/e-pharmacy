@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import type { HydratedDocument } from 'mongoose';
 
 import { env } from '../config/env';
-import { USER_ROLES, USER_STATUSES } from '../constants/auth';
+import { USER_ROLES, USER_STATUSES, VENDOR_ACCOUNT_STATUSES } from '../constants/auth';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Session } from '../models/session.model';
@@ -136,6 +136,10 @@ export async function registerUserService(
       email: input.email,
       password: hashedPassword,
       role: input.role || USER_ROLES.CUSTOMER,
+      vendorStatus:
+        input.role === USER_ROLES.VENDOR
+          ? VENDOR_ACCOUNT_STATUSES.PENDING
+          : undefined,
       phone: input.phone,
       address: input.address,
     });

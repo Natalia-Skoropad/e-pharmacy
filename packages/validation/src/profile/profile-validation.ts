@@ -3,6 +3,7 @@ import {
   buildPhoneError,
   buildAddressError,
   buildPasswordError,
+  buildRequiredPasswordError,
   VALIDATION_MESSAGES,
 } from '../shared';
 
@@ -75,12 +76,12 @@ export function validateChangePasswordForm(
 
   if (!currentPassword && !newPassword) return errors;
 
-  if (!currentPassword) {
-    errors.currentPassword = VALIDATION_MESSAGES.required.currentPassword;
-  } else {
-    const currentPasswordError = buildPasswordError(currentPassword);
-    if (currentPasswordError) errors.currentPassword = currentPasswordError;
-  }
+  const currentPasswordError = buildRequiredPasswordError(
+    currentPassword,
+    VALIDATION_MESSAGES.required.currentPassword
+  );
+
+  if (currentPasswordError) errors.currentPassword = currentPasswordError;
 
   const newPasswordError = buildPasswordError(newPassword);
   if (newPasswordError) errors.newPassword = newPasswordError;
