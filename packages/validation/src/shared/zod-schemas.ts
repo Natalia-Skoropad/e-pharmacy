@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-import { isAvatarDataUrl, isHttpUrl } from './assets';
-
 import {
+  MAX_REVIEW_RATING,
+  MIN_REVIEW_RATING,
   USER_ADDRESS_MAX_LENGTH,
   USER_ADDRESS_MIN_LENGTH,
   USER_AVATAR_URL_MAX_LENGTH,
@@ -22,6 +22,8 @@ import { VALIDATION_MESSAGES } from './messages';
 
 import {
   ADDRESS_PATTERN,
+  AVATAR_DATA_URL_PATTERN,
+  AVATAR_HTTP_URL_PATTERN,
   NAME_PATTERN,
   ORDER_COMMENT_PATTERN,
   PASSWORD_PATTERN,
@@ -39,12 +41,16 @@ export const sharedNameSchema = z
   .max(USER_NAME_MAX_LENGTH, VALIDATION_MESSAGES.limits.nameMax)
   .regex(NAME_PATTERN, VALIDATION_MESSAGES.format.name);
 
+//=============================================================================
+
 export const sharedEmailSchema = z
   .string()
   .trim()
   .toLowerCase()
   .email(VALIDATION_MESSAGES.format.emailApi)
   .max(USER_EMAIL_MAX_LENGTH, VALIDATION_MESSAGES.limits.emailMax);
+
+//=============================================================================
 
 export const sharedRequiredPhoneSchema = z
   .string()
@@ -56,17 +62,19 @@ export const sharedRequiredPhoneSchema = z
 export const sharedOptionalPhoneSchema = z
   .union([sharedRequiredPhoneSchema, z.literal('')])
   .optional()
-  .transform((value: string | undefined) =>
-    value === '' ? undefined : value
-  );
+  .transform((value: string | undefined) => (value === '' ? undefined : value));
 
 export const sharedPhoneSchema = sharedOptionalPhoneSchema;
+
+//=============================================================================
 
 export const sharedPasswordSchema = z
   .string()
   .min(USER_PASSWORD_MIN_LENGTH, VALIDATION_MESSAGES.limits.passwordMin)
   .max(USER_PASSWORD_MAX_LENGTH, VALIDATION_MESSAGES.limits.passwordMax)
   .regex(PASSWORD_PATTERN, VALIDATION_MESSAGES.format.password);
+
+//=============================================================================
 
 export const sharedRequiredAddressSchema = z
   .string()
@@ -78,11 +86,11 @@ export const sharedRequiredAddressSchema = z
 export const sharedOptionalAddressSchema = z
   .union([sharedRequiredAddressSchema, z.literal('')])
   .optional()
-  .transform((value: string | undefined) =>
-    value === '' ? undefined : value
-  );
+  .transform((value: string | undefined) => (value === '' ? undefined : value));
 
 export const sharedAddressSchema = sharedOptionalAddressSchema;
+
+//=============================================================================
 
 export const sharedReviewCommentSchema = z
   .string()
@@ -97,6 +105,16 @@ export const sharedReviewCommentSchema = z
   )
   .regex(REVIEW_COMMENT_PATTERN, VALIDATION_MESSAGES.format.reviewComment);
 
+//=============================================================================
+
+export const sharedReviewRatingSchema = z.coerce
+  .number()
+  .int(VALIDATION_MESSAGES.format.reviewRating)
+  .min(MIN_REVIEW_RATING, VALIDATION_MESSAGES.format.reviewRating)
+  .max(MAX_REVIEW_RATING, VALIDATION_MESSAGES.format.reviewRating);
+
+//=============================================================================
+
 export const sharedOrderCommentSchema = z
   .string()
   .trim()
@@ -107,16 +125,7 @@ export const sharedOrderCommentSchema = z
   .regex(ORDER_COMMENT_PATTERN, VALIDATION_MESSAGES.format.orderComment)
   .optional();
 
-export const sharedAvatarUrlSchema = z
-  .string()
-  .trim()
-  .max(USER_AVATAR_URL_MAX_LENGTH, VALIDATION_MESSAGES.limits.avatarPayloadMax)
-  .refine(
-    (value: string) => isAvatarDataUrl(value) || isHttpUrl(value),
-    VALIDATION_MESSAGES.format.avatar
-  )
-  .optional()
-  .nullable();
+//=============================================================================
 
 export const sharedSearchSchema = z
   .string()
@@ -124,3 +133,18 @@ export const sharedSearchSchema = z
   .max(USER_SEARCH_MAX_LENGTH, VALIDATION_MESSAGES.limits.searchMax)
   .regex(SEARCH_TEXT_PATTERN, VALIDATION_MESSAGES.format.search)
   .optional();
+
+//=============================================================================
+
+export const sharedAvatarUrlSchema = z
+  .string()
+  .trim()
+  .max(USER_AVATAR_URL_MAX_LENGTH, VALIDATION_MESSAGES.limits.avatarPayloadMax)
+  .refine(
+    (value: string) =>
+      AVATAR_DATA_URL_PATTERN.test(value) ||
+      AVATAR_HTTP_URL_PATTERN.test(value),
+    VALIDATION_MESSAGES.format.avatar
+  )
+  .optional()
+  .nullable();

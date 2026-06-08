@@ -1,5 +1,13 @@
 import { Schema, model, models } from 'mongoose';
 
+import {
+  MAX_REVIEW_RATING,
+  MIN_REVIEW_RATING,
+  USER_REVIEW_COMMENT_MAX_LENGTH,
+  USER_REVIEW_COMMENT_MIN_LENGTH,
+  VALIDATION_MESSAGES,
+} from '../constants/validation';
+
 import type { ProductEntity } from '../types/product';
 
 //===============================================================
@@ -22,16 +30,22 @@ const productReviewSchema = new Schema(
     rating: {
       type: Number,
       required: true,
-      min: 1,
-      max: 5,
+      min: MIN_REVIEW_RATING,
+      max: MAX_REVIEW_RATING,
     },
 
     comment: {
       type: String,
       required: [true, 'Review comment is required'],
       trim: true,
-      minlength: [10, 'Review comment must be at least 10 characters'],
-      maxlength: [500, 'Review comment must be at most 500 characters'],
+      minlength: [
+        USER_REVIEW_COMMENT_MIN_LENGTH,
+        VALIDATION_MESSAGES.limits.reviewCommentMin,
+      ],
+      maxlength: [
+        USER_REVIEW_COMMENT_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.reviewCommentMax,
+      ],
     },
 
     status: {
@@ -122,7 +136,7 @@ const productOfferSchema = new Schema(
     storeRating: {
       type: Number,
       min: 0,
-      max: 5,
+      max: MAX_REVIEW_RATING,
       default: 0,
     },
 
@@ -277,7 +291,7 @@ const productSchema = new Schema<ProductEntity>(
     rating: {
       type: Number,
       min: 0,
-      max: 5,
+      max: MAX_REVIEW_RATING,
       default: 0,
     },
 

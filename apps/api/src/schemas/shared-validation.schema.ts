@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 import {
   ADDRESS_PATTERN,
+  MAX_REVIEW_RATING,
+  MIN_REVIEW_RATING,
   NAME_PATTERN,
   ORDER_COMMENT_PATTERN,
   PASSWORD_PATTERN,
@@ -88,6 +90,14 @@ export const sharedReviewCommentSchema = z
     VALIDATION_MESSAGES.limits.reviewCommentMax
   )
   .regex(REVIEW_COMMENT_PATTERN, VALIDATION_MESSAGES.format.reviewComment);
+
+export const sharedReviewRatingSchema = z.coerce
+  .number()
+  .int(VALIDATION_MESSAGES.format.reviewRating)
+  .min(MIN_REVIEW_RATING, VALIDATION_MESSAGES.format.reviewRating)
+  .max(MAX_REVIEW_RATING, VALIDATION_MESSAGES.format.reviewRating);
+
+//===============================================================
 
 export const sharedOrderCommentSchema = z
   .string()

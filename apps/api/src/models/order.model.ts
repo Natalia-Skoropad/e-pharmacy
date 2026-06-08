@@ -1,5 +1,7 @@
 import { Schema, model, models } from 'mongoose';
 
+import { MAX_REVIEW_RATING } from '../constants/validation';
+
 import type { OrderEntity } from '../types/order';
 
 //===============================================================
@@ -46,7 +48,7 @@ const orderStoreSnapshotSchema = new Schema(
     rating: {
       type: Number,
       min: 0,
-      max: 5,
+      max: MAX_REVIEW_RATING,
       default: undefined,
     },
 
@@ -101,7 +103,7 @@ const orderProductSnapshotSchema = new Schema(
     rating: {
       type: Number,
       min: 0,
-      max: 5,
+      max: MAX_REVIEW_RATING,
       default: undefined,
     },
 

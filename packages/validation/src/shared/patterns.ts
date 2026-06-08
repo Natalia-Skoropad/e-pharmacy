@@ -8,3 +8,4 @@ export const REVIEW_COMMENT_PATTERN = /^[A-Za-z0-9\s.,!?;:'"()\-]+$/;
 export const ORDER_COMMENT_PATTERN = /^[A-Za-z0-9\s.,!?;:'"()\-]*$/;
 export const AVATAR_DATA_URL_PATTERN =
   /^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+export const AVATAR_HTTP_URL_PATTERN = /^https?:\/\/\S+$/;

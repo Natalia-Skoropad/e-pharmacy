@@ -1,4 +1,4 @@
-import { buildReviewCommentError } from '../shared';
+import { buildReviewCommentError, buildReviewRatingError } from '../shared';
 
 //===================================================================
 
@@ -11,31 +11,10 @@ export type ReviewFormErrors = Partial<Record<keyof ReviewFormValues, string>>;
 
 //===================================================================
 
-const MIN_REVIEW_RATING = 1;
-const MAX_REVIEW_RATING = 5;
-
-//===================================================================
-
 export const REVIEW_INITIAL_VALUES: ReviewFormValues = {
   comment: '',
   rating: 0,
 };
-
-//===================================================================
-
-export function sanitizeReviewComment(value: string): string {
-  return value.replace(/[^A-Za-z0-9\s.,!?;:'"()\-]/g, '');
-}
-
-//===================================================================
-
-export function buildReviewRatingError(value: number): string {
-  return Number.isInteger(value) &&
-    value >= MIN_REVIEW_RATING &&
-    value <= MAX_REVIEW_RATING
-    ? ''
-    : 'Choose a rating from 1 to 5 stars';
-}
 
 //===================================================================
 

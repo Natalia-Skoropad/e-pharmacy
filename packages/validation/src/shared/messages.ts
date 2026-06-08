@@ -1,21 +1,3 @@
-import {
-  USER_ADDRESS_MAX_LENGTH,
-  USER_ADDRESS_MIN_LENGTH,
-  USER_AVATAR_FILE_MAX_SIZE_KB,
-  USER_EMAIL_MAX_LENGTH,
-  USER_NAME_MAX_LENGTH,
-  USER_NAME_MIN_LENGTH,
-  USER_ORDER_COMMENT_MAX_LENGTH,
-  USER_PASSWORD_MAX_LENGTH,
-  USER_PASSWORD_MIN_LENGTH,
-  USER_PHONE_MAX_LENGTH,
-  USER_REVIEW_COMMENT_MAX_LENGTH,
-  USER_REVIEW_COMMENT_MIN_LENGTH,
-  USER_SEARCH_MAX_LENGTH,
-} from './limits';
-
-//=============================================================================
-
 export const VALIDATION_MESSAGES = {
   required: {
     name: 'Name is required',
@@ -42,6 +24,7 @@ export const VALIDATION_MESSAGES = {
       'Use Latin letters, numbers, spaces, comma, dot, slash, apostrophe, # or hyphen',
     reviewComment:
       'Review may contain only Latin letters, numbers, spaces and basic punctuation',
+    reviewRating: 'Choose a rating from 1 to 5 stars',
     orderComment:
       'Order comment may contain only Latin letters, numbers, spaces and basic punctuation',
     avatar: 'Avatar must be a valid image URL or JPG/PNG/WEBP upload',
@@ -50,21 +33,21 @@ export const VALIDATION_MESSAGES = {
   },
 
   limits: {
-    nameMin: `Name must be at least ${USER_NAME_MIN_LENGTH} characters`,
-    nameMax: `Name must be at most ${USER_NAME_MAX_LENGTH} characters`,
-    emailMax: `Email must be at most ${USER_EMAIL_MAX_LENGTH} characters`,
-    phoneMax: `Phone must be at most ${USER_PHONE_MAX_LENGTH} characters`,
-    passwordMin: `Password must be at least ${USER_PASSWORD_MIN_LENGTH} characters`,
-    passwordMax: `Password must be at most ${USER_PASSWORD_MAX_LENGTH} characters`,
-    addressMin: `Address must be at least ${USER_ADDRESS_MIN_LENGTH} characters`,
-    addressMax: `Address must be at most ${USER_ADDRESS_MAX_LENGTH} characters`,
-    searchMax: `Search must be at most ${USER_SEARCH_MAX_LENGTH} characters`,
-    reviewCommentMin: `Review comment must be at least ${USER_REVIEW_COMMENT_MIN_LENGTH} characters`,
-    reviewCommentMax: `Review comment must be at most ${USER_REVIEW_COMMENT_MAX_LENGTH} characters`,
-    orderCommentMax: `Order comment must be at most ${USER_ORDER_COMMENT_MAX_LENGTH} characters`,
+    nameMin: 'Name must be at least 2 characters',
+    nameMax: 'Name must be at most 50 characters',
+    emailMax: 'Email must be at most 64 characters',
+    phoneMax: 'Phone must be at most 13 characters',
+    passwordMin: 'Password must be at least 8 characters',
+    passwordMax: 'Password must be at most 20 characters',
+    addressMin: 'Address must be at least 10 characters',
+    addressMax: 'Address must be at most 200 characters',
+    searchMax: 'Search must be at most 80 characters',
+    reviewCommentMin: 'Review comment must be at least 10 characters',
+    reviewCommentMax: 'Review comment must be at most 500 characters',
+    orderCommentMax: 'Order comment must be at most 500 characters',
     avatarMax: 'Profile photo is too large. Use a smaller image',
     avatarPayloadMax: 'Profile photo is too large. Use an image up to 450 KB',
-    avatarFileSize: `Profile photo must be up to ${USER_AVATAR_FILE_MAX_SIZE_KB} KB`,
+    avatarFileSize: 'Profile photo must be up to 450 KB',
   },
 
   object: {

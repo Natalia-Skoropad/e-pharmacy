@@ -1,10 +1,8 @@
-import {
-  isAvatarAllowedType,
-  isAvatarDataUrl,
-  isHttpUrl,
-} from './assets';
+import { AVATAR_ALLOWED_TYPES } from '../profile-avatar';
 
 import {
+  MAX_REVIEW_RATING,
+  MIN_REVIEW_RATING,
   USER_ADDRESS_MAX_LENGTH,
   USER_ADDRESS_MIN_LENGTH,
   USER_AVATAR_FILE_MAX_SIZE_BYTES,
@@ -22,6 +20,8 @@ import {
 
 import {
   ADDRESS_PATTERN,
+  AVATAR_DATA_URL_PATTERN,
+  AVATAR_HTTP_URL_PATTERN,
   EMAIL_PATTERN,
   NAME_PATTERN,
   ORDER_COMMENT_PATTERN,
@@ -34,46 +34,27 @@ import { VALIDATION_MESSAGES } from './messages';
 
 //=============================================================================
 
-type TextFieldErrorOptions = {
-  required?: boolean;
-  trailingDot?: boolean;
-};
-
-//=============================================================================
-
-function withTrailingDot(message: string, trailingDot?: boolean): string {
-  return trailingDot ? `${message}.` : message;
-}
-
-//=============================================================================
-
 export function buildNameError(
   value: string,
-  options: TextFieldErrorOptions = {}
+  options: { required?: boolean; trailingDot?: boolean } = {}
 ): string {
   const name = value.trim();
 
   if (!name) return options.required ? VALIDATION_MESSAGES.required.name : '';
 
   if (name.length < USER_NAME_MIN_LENGTH) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.limits.nameMin,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.limits.nameMin;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   if (name.length > USER_NAME_MAX_LENGTH) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.limits.nameMax,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.limits.nameMax;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   if (!NAME_PATTERN.test(name)) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.format.name,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.format.name;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   return '';
@@ -99,24 +80,20 @@ export function buildEmailError(value: string): string {
 
 export function buildPhoneError(
   value: string,
-  options: TextFieldErrorOptions = {}
+  options: { required?: boolean; trailingDot?: boolean } = {}
 ): string {
   const phone = value.trim();
 
   if (!phone) return options.required ? VALIDATION_MESSAGES.required.phone : '';
 
   if (phone.length > USER_PHONE_MAX_LENGTH) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.limits.phoneMax,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.limits.phoneMax;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   if (!PHONE_PATTERN.test(phone)) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.format.phone,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.format.phone;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   return '';
@@ -146,7 +123,7 @@ export function buildPasswordError(value: string): string {
 
 export function buildAddressError(
   value: string,
-  options: TextFieldErrorOptions = {}
+  options: { required?: boolean; trailingDot?: boolean } = {}
 ): string {
   const address = value.trim();
 
@@ -155,24 +132,18 @@ export function buildAddressError(
   }
 
   if (address.length < USER_ADDRESS_MIN_LENGTH) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.limits.addressMin,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.limits.addressMin;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   if (address.length > USER_ADDRESS_MAX_LENGTH) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.limits.addressMax,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.limits.addressMax;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   if (!ADDRESS_PATTERN.test(address)) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.format.address,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.format.address;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   return '';
@@ -182,7 +153,7 @@ export function buildAddressError(
 
 export function buildReviewCommentError(
   value: string,
-  options: TextFieldErrorOptions = {}
+  options: { required?: boolean; trailingDot?: boolean } = {}
 ): string {
   const comment = value.trim();
 
@@ -191,24 +162,18 @@ export function buildReviewCommentError(
   }
 
   if (comment.length < USER_REVIEW_COMMENT_MIN_LENGTH) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.limits.reviewCommentMin,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.limits.reviewCommentMin;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   if (comment.length > USER_REVIEW_COMMENT_MAX_LENGTH) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.limits.reviewCommentMax,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.limits.reviewCommentMax;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   if (!REVIEW_COMMENT_PATTERN.test(comment)) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.format.reviewComment,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.format.reviewComment;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   return '';
@@ -216,9 +181,19 @@ export function buildReviewCommentError(
 
 //=============================================================================
 
+export function buildReviewRatingError(value: number): string {
+  return Number.isInteger(value) &&
+    value >= MIN_REVIEW_RATING &&
+    value <= MAX_REVIEW_RATING
+    ? ''
+    : VALIDATION_MESSAGES.format.reviewRating;
+}
+
+//=============================================================================
+
 export function buildOrderCommentError(
   value: string,
-  options: TextFieldErrorOptions = {}
+  options: { required?: boolean; trailingDot?: boolean } = {}
 ): string {
   const comment = value.trim();
 
@@ -227,17 +202,13 @@ export function buildOrderCommentError(
   }
 
   if (comment.length > USER_ORDER_COMMENT_MAX_LENGTH) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.limits.orderCommentMax,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.limits.orderCommentMax;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   if (!ORDER_COMMENT_PATTERN.test(comment)) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.format.orderComment,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.format.orderComment;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   return '';
@@ -246,7 +217,7 @@ export function buildOrderCommentError(
 //=============================================================================
 
 export function buildAvatarFileError(file: File): string {
-  if (!isAvatarAllowedType(file.type)) {
+  if (!AVATAR_ALLOWED_TYPES.includes(file.type as never)) {
     return VALIDATION_MESSAGES.format.avatarFileType;
   }
 
@@ -261,7 +232,7 @@ export function buildAvatarFileError(file: File): string {
 
 export function buildAvatarUrlError(
   value: string,
-  options: TextFieldErrorOptions = {}
+  options: { required?: boolean; trailingDot?: boolean } = {}
 ): string {
   const avatarUrl = value.trim();
 
@@ -270,17 +241,16 @@ export function buildAvatarUrlError(
   }
 
   if (avatarUrl.length > USER_AVATAR_URL_MAX_LENGTH) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.limits.avatarPayloadMax,
-      options.trailingDot
-    );
+    const message = VALIDATION_MESSAGES.limits.avatarPayloadMax;
+    return options.trailingDot ? `${message}.` : message;
   }
 
-  if (!isAvatarDataUrl(avatarUrl) && !isHttpUrl(avatarUrl)) {
-    return withTrailingDot(
-      VALIDATION_MESSAGES.format.avatar,
-      options.trailingDot
-    );
+  if (
+    !AVATAR_DATA_URL_PATTERN.test(avatarUrl) &&
+    !AVATAR_HTTP_URL_PATTERN.test(avatarUrl)
+  ) {
+    const message = VALIDATION_MESSAGES.format.avatar;
+    return options.trailingDot ? `${message}.` : message;
   }
 
   return '';

@@ -18,6 +18,9 @@ export const VALIDATION_LIMITS = {
   reviewCommentMin: 10,
   reviewCommentMax: 500,
 
+  reviewRatingMin: 1,
+  reviewRatingMax: 5,
+
   orderCommentMax: 500,
 
   avatarUrlMax: 700000,
@@ -46,6 +49,9 @@ export const USER_REVIEW_COMMENT_MIN_LENGTH =
   VALIDATION_LIMITS.reviewCommentMin;
 export const USER_REVIEW_COMMENT_MAX_LENGTH =
   VALIDATION_LIMITS.reviewCommentMax;
+
+export const MIN_REVIEW_RATING = VALIDATION_LIMITS.reviewRatingMin;
+export const MAX_REVIEW_RATING = VALIDATION_LIMITS.reviewRatingMax;
 
 export const USER_ORDER_COMMENT_MAX_LENGTH = VALIDATION_LIMITS.orderCommentMax;
 

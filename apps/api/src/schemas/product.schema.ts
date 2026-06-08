@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import {
   sharedReviewCommentSchema,
+  sharedReviewRatingSchema,
   sharedSearchSchema,
 } from './shared-validation.schema';
 
@@ -84,6 +85,6 @@ export const productStoreParamsSchema = z.object({
 //===============================================================
 
 export const createProductReviewSchema = z.object({
-  rating: z.coerce.number().int().min(1).max(5),
+  rating: sharedReviewRatingSchema,
   comment: sharedReviewCommentSchema,
 });
