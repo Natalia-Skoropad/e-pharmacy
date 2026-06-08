@@ -1,12 +1,12 @@
-import { AVATAR_ALLOWED_TYPES } from '../profile-avatar';
+import { PICTURE_ALLOWED_TYPES, isHttpUrl } from '../picture';
 
 import {
   MAX_REVIEW_RATING,
   MIN_REVIEW_RATING,
   USER_ADDRESS_MAX_LENGTH,
   USER_ADDRESS_MIN_LENGTH,
-  USER_AVATAR_FILE_MAX_SIZE_BYTES,
-  USER_AVATAR_URL_MAX_LENGTH,
+  PICTURE_FILE_MAX_SIZE_BYTES,
+  PICTURE_URL_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_NAME_MIN_LENGTH,
@@ -20,8 +20,7 @@ import {
 
 import {
   ADDRESS_PATTERN,
-  AVATAR_DATA_URL_PATTERN,
-  AVATAR_HTTP_URL_PATTERN,
+  PICTURE_DATA_URL_PATTERN,
   EMAIL_PATTERN,
   NAME_PATTERN,
   ORDER_COMMENT_PATTERN,
@@ -31,6 +30,15 @@ import {
 } from './patterns';
 
 import { VALIDATION_MESSAGES } from './messages';
+
+//=============================================================================
+
+function formatValidationMessage(
+  message: string,
+  options: { trailingDot?: boolean } = {}
+): string {
+  return options.trailingDot ? `${message}.` : message;
+}
 
 //=============================================================================
 
@@ -44,17 +52,17 @@ export function buildNameError(
 
   if (name.length < USER_NAME_MIN_LENGTH) {
     const message = VALIDATION_MESSAGES.limits.nameMin;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   if (name.length > USER_NAME_MAX_LENGTH) {
     const message = VALIDATION_MESSAGES.limits.nameMax;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   if (!NAME_PATTERN.test(name)) {
     const message = VALIDATION_MESSAGES.format.name;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   return '';
@@ -88,12 +96,12 @@ export function buildPhoneError(
 
   if (phone.length > USER_PHONE_MAX_LENGTH) {
     const message = VALIDATION_MESSAGES.limits.phoneMax;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   if (!PHONE_PATTERN.test(phone)) {
     const message = VALIDATION_MESSAGES.format.phone;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   return '';
@@ -133,17 +141,17 @@ export function buildAddressError(
 
   if (address.length < USER_ADDRESS_MIN_LENGTH) {
     const message = VALIDATION_MESSAGES.limits.addressMin;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   if (address.length > USER_ADDRESS_MAX_LENGTH) {
     const message = VALIDATION_MESSAGES.limits.addressMax;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   if (!ADDRESS_PATTERN.test(address)) {
     const message = VALIDATION_MESSAGES.format.address;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   return '';
@@ -163,17 +171,17 @@ export function buildReviewCommentError(
 
   if (comment.length < USER_REVIEW_COMMENT_MIN_LENGTH) {
     const message = VALIDATION_MESSAGES.limits.reviewCommentMin;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   if (comment.length > USER_REVIEW_COMMENT_MAX_LENGTH) {
     const message = VALIDATION_MESSAGES.limits.reviewCommentMax;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   if (!REVIEW_COMMENT_PATTERN.test(comment)) {
     const message = VALIDATION_MESSAGES.format.reviewComment;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   return '';
@@ -203,12 +211,12 @@ export function buildOrderCommentError(
 
   if (comment.length > USER_ORDER_COMMENT_MAX_LENGTH) {
     const message = VALIDATION_MESSAGES.limits.orderCommentMax;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   if (!ORDER_COMMENT_PATTERN.test(comment)) {
     const message = VALIDATION_MESSAGES.format.orderComment;
-    return options.trailingDot ? `${message}.` : message;
+    return formatValidationMessage(message, options);
   }
 
   return '';
@@ -216,13 +224,13 @@ export function buildOrderCommentError(
 
 //=============================================================================
 
-export function buildAvatarFileError(file: File): string {
-  if (!AVATAR_ALLOWED_TYPES.includes(file.type as never)) {
-    return VALIDATION_MESSAGES.format.avatarFileType;
+export function buildPictureFileError(file: File): string {
+  if (!PICTURE_ALLOWED_TYPES.includes(file.type as never)) {
+    return VALIDATION_MESSAGES.format.pictureFileType;
   }
 
-  if (file.size > USER_AVATAR_FILE_MAX_SIZE_BYTES) {
-    return VALIDATION_MESSAGES.limits.avatarFileSize;
+  if (file.size > PICTURE_FILE_MAX_SIZE_BYTES) {
+    return VALIDATION_MESSAGES.limits.pictureFileSize;
   }
 
   return '';
@@ -230,27 +238,24 @@ export function buildAvatarFileError(file: File): string {
 
 //=============================================================================
 
-export function buildAvatarUrlError(
+export function buildPictureUrlError(
   value: string,
   options: { required?: boolean; trailingDot?: boolean } = {}
 ): string {
-  const avatarUrl = value.trim();
+  const pictureUrl = value.trim();
 
-  if (!avatarUrl) {
-    return options.required ? VALIDATION_MESSAGES.required.avatar : '';
+  if (!pictureUrl) {
+    return options.required ? VALIDATION_MESSAGES.required.picture : '';
   }
 
-  if (avatarUrl.length > USER_AVATAR_URL_MAX_LENGTH) {
-    const message = VALIDATION_MESSAGES.limits.avatarPayloadMax;
-    return options.trailingDot ? `${message}.` : message;
+  if (pictureUrl.length > PICTURE_URL_MAX_LENGTH) {
+    const message = VALIDATION_MESSAGES.limits.picturePayloadMax;
+    return formatValidationMessage(message, options);
   }
 
-  if (
-    !AVATAR_DATA_URL_PATTERN.test(avatarUrl) &&
-    !AVATAR_HTTP_URL_PATTERN.test(avatarUrl)
-  ) {
-    const message = VALIDATION_MESSAGES.format.avatar;
-    return options.trailingDot ? `${message}.` : message;
+  if (!PICTURE_DATA_URL_PATTERN.test(pictureUrl) && !isHttpUrl(pictureUrl)) {
+    const message = VALIDATION_MESSAGES.format.picture;
+    return formatValidationMessage(message, options);
   }
 
   return '';

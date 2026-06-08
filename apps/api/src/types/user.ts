@@ -10,6 +10,7 @@ import type {
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 export type UserStatus = (typeof USER_STATUSES)[keyof typeof USER_STATUSES];
+
 export type VendorAccountStatus =
   (typeof VENDOR_ACCOUNT_STATUSES)[keyof typeof VENDOR_ACCOUNT_STATUSES];
 
@@ -22,9 +23,9 @@ export type UserEntity = {
   role: UserRole;
   status: UserStatus;
   vendorStatus?: VendorAccountStatus;
-  phone?: string;
+  phone: string;
   address?: string;
-  avatarUrl?: string;
+  pictureUrl?: string;
   favoriteProductIds?: string[];
   favoriteStoreIds?: string[];
   resetPasswordTokenHash?: string;

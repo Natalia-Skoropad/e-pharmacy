@@ -9,7 +9,7 @@
     "./auth": "./src/auth/index.ts",
     "./checkout": "./src/checkout/index.ts",
     "./profile": "./src/profile/index.ts",
-    "./profile-avatar": "./src/profile-avatar/index.ts",
+    "./picture": "./src/picture/index.ts",
     "./reviews": "./src/reviews/index.ts",
     "./shared": "./src/shared/index.ts"
   },

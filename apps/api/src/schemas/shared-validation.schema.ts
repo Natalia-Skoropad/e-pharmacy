@@ -12,7 +12,6 @@ import {
   SEARCH_TEXT_PATTERN,
   USER_ADDRESS_MAX_LENGTH,
   USER_ADDRESS_MIN_LENGTH,
-  USER_AVATAR_URL_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_NAME_MIN_LENGTH,
@@ -20,12 +19,13 @@ import {
   USER_PASSWORD_MAX_LENGTH,
   USER_PASSWORD_MIN_LENGTH,
   USER_PHONE_MAX_LENGTH,
+  PICTURE_URL_MAX_LENGTH,
   USER_REVIEW_COMMENT_MAX_LENGTH,
   USER_REVIEW_COMMENT_MIN_LENGTH,
   USER_SEARCH_MAX_LENGTH,
   VALIDATION_MESSAGES,
-  isAvatarDataUrl,
   isHttpUrl,
+  isPictureDataUrl,
 } from '../constants/validation';
 
 //===============================================================
@@ -41,7 +41,7 @@ export const sharedEmailSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .email(VALIDATION_MESSAGES.format.email)
+  .email(VALIDATION_MESSAGES.format.emailApi)
   .max(USER_EMAIL_MAX_LENGTH, VALIDATION_MESSAGES.limits.emailMax);
 
 export const sharedRequiredPhoneSchema = z
@@ -51,12 +51,7 @@ export const sharedRequiredPhoneSchema = z
   .max(USER_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.limits.phoneMax)
   .regex(PHONE_PATTERN, VALIDATION_MESSAGES.format.phone);
 
-export const sharedOptionalPhoneSchema = z
-  .union([sharedRequiredPhoneSchema, z.literal('')])
-  .optional()
-  .transform((value: string | undefined) =>
-    value === '' ? undefined : value
-  );
+export const sharedPhoneSchema = sharedRequiredPhoneSchema;
 
 export const sharedPasswordSchema = z
   .string()
@@ -74,9 +69,7 @@ export const sharedRequiredAddressSchema = z
 export const sharedOptionalAddressSchema = z
   .union([sharedRequiredAddressSchema, z.literal('')])
   .optional()
-  .transform((value: string | undefined) =>
-    value === '' ? undefined : value
-  );
+  .transform((value: string | undefined) => (value === '' ? undefined : value));
 
 export const sharedReviewCommentSchema = z
   .string()
@@ -109,13 +102,13 @@ export const sharedOrderCommentSchema = z
   .regex(ORDER_COMMENT_PATTERN, VALIDATION_MESSAGES.format.orderComment)
   .optional();
 
-export const sharedAvatarUrlSchema = z
+export const sharedPictureUrlSchema = z
   .string()
   .trim()
-  .max(USER_AVATAR_URL_MAX_LENGTH, VALIDATION_MESSAGES.limits.avatarPayloadMax)
+  .max(PICTURE_URL_MAX_LENGTH, VALIDATION_MESSAGES.limits.picturePayloadMax)
   .refine(
-    (value: string) => isAvatarDataUrl(value) || isHttpUrl(value),
-    VALIDATION_MESSAGES.format.avatar
+    (value: string) => isPictureDataUrl(value) || isHttpUrl(value),
+    VALIDATION_MESSAGES.format.picture
   )
   .optional()
   .nullable();

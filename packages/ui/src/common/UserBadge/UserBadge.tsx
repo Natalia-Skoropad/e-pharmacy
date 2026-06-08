@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import AvatarImage from '../AvatarImage/AvatarImage';
+import PictureUpload from '../PictureUpload/PictureUpload';
 import { formatInitials } from '@e-pharmacy/utils/formatters';
 import { cn } from '@e-pharmacy/utils/classes';
 
@@ -12,7 +12,7 @@ type UserBadgeVariant = 'light' | 'dark';
 
 type UserBadgeProps = {
   name?: string | null;
-  avatarUrl?: string | null;
+  pictureUrl?: string | null;
   href?: string;
   variant?: UserBadgeVariant;
   className?: string;
@@ -23,7 +23,7 @@ type UserBadgeProps = {
 
 function UserBadge({
   name,
-  avatarUrl,
+  pictureUrl,
   href,
   variant = 'light',
   className,
@@ -31,8 +31,8 @@ function UserBadge({
 }: UserBadgeProps) {
   const content = (
     <>
-      <span className={css.avatar} aria-hidden="true">
-        {avatarUrl ? <AvatarImage src={avatarUrl} /> : formatInitials(name)}
+      <span className={css.picture} aria-hidden="true">
+        {pictureUrl ? <PictureUpload src={pictureUrl} /> : formatInitials(name)}
       </span>
       <span className={css.name}>{name ?? 'Profile'}</span>
     </>

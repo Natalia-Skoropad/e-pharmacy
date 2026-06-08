@@ -177,7 +177,7 @@ export const PERSONAL_DATA_NOTICE_INFO = {
     {
       title: 'Personal data that may be processed',
       content: [
-        'The platform may process name, email, phone number, delivery address or post office details, account avatar, favorite items, cart items, order details, and technical data required for security and platform operation.',
+        'The platform may process name, email, phone number, delivery address or post office details, account photo, favorite items, cart items, order details, and technical data required for security and platform operation.',
         'The platform does not ask users to provide unnecessary sensitive information for ordinary shopping flow.',
       ],
     },

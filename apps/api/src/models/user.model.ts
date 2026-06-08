@@ -2,8 +2,9 @@ import { Schema, model, models } from 'mongoose';
 
 import {
   USER_ADDRESS_MAX_LENGTH,
-  USER_AVATAR_URL_MAX_LENGTH,
+  PICTURE_URL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
   VALIDATION_MESSAGES,
 } from '../constants/validation';
 
@@ -62,8 +63,9 @@ const userSchema = new Schema<UserEntity>(
 
     phone: {
       type: String,
+      required: [true, VALIDATION_MESSAGES.required.phone],
       trim: true,
-      default: undefined,
+      maxlength: [USER_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.limits.phoneMax],
     },
 
     address: {
@@ -76,12 +78,12 @@ const userSchema = new Schema<UserEntity>(
       default: undefined,
     },
 
-    avatarUrl: {
+    pictureUrl: {
       type: String,
       trim: true,
       maxlength: [
-        USER_AVATAR_URL_MAX_LENGTH,
-        VALIDATION_MESSAGES.limits.avatarMax,
+        PICTURE_URL_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.pictureMax,
       ],
       default: undefined,
     },

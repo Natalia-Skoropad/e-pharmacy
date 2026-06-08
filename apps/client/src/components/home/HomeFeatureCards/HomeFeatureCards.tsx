@@ -45,7 +45,7 @@ const FEATURE_CARDS: FeatureCard[] = [
   },
   {
     title: 'Personal cabinet',
-    text: 'Profile details, avatar, delivery information, favorites, and order history stay close at hand.',
+    text: 'Profile details, photo, delivery information, favorites, and order history stay close at hand.',
     href: ROUTES.PROFILE,
     buttonLabel: 'Open profile',
     isProtected: true,

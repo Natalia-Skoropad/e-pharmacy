@@ -46,7 +46,7 @@
   border-color: var(--color-white-alpha-48);
 }
 
-.avatar {
+.picture {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
@@ -63,13 +63,13 @@
   border-radius: 50%;
 }
 
-.dark .avatar {
+.dark .picture {
   color: var(--color-white);
   background-color: var(--color-white-alpha-20);
   border-color: var(--color-white-alpha-48);
 }
 
-.avatar img {
+.picture img {
   width: 100%;
   height: 100%;
   object-fit: cover;

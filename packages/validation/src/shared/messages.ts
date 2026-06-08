@@ -9,7 +9,7 @@ export const VALIDATION_MESSAGES = {
     address: 'Address is required',
     reviewComment: 'Review comment is required',
     orderComment: 'Order comment is required',
-    avatar: 'Avatar is required',
+    picture: 'Photo is required',
     resetToken: 'Reset token is required',
   },
 
@@ -27,8 +27,8 @@ export const VALIDATION_MESSAGES = {
     reviewRating: 'Choose a rating from 1 to 5 stars',
     orderComment:
       'Order comment may contain only Latin letters, numbers, spaces and basic punctuation',
-    avatar: 'Avatar must be a valid image URL or JPG/PNG/WEBP upload',
-    avatarFileType: 'Please choose a JPG, PNG, or WEBP image',
+    picture: 'Photo must be a valid image URL or JPG/PNG/WEBP upload',
+    pictureFileType: 'Please choose a JPG, PNG, or WEBP image',
     search: 'Search may contain only allowed text characters',
   },
 
@@ -45,9 +45,9 @@ export const VALIDATION_MESSAGES = {
     reviewCommentMin: 'Review comment must be at least 10 characters',
     reviewCommentMax: 'Review comment must be at most 500 characters',
     orderCommentMax: 'Order comment must be at most 500 characters',
-    avatarMax: 'Profile photo is too large. Use a smaller image',
-    avatarPayloadMax: 'Profile photo is too large. Use an image up to 450 KB',
-    avatarFileSize: 'Profile photo must be up to 450 KB',
+    pictureMax: 'Photo is too large. Use a smaller image',
+    picturePayloadMax: 'Photo is too large. Use an image up to 450 KB',
+    pictureFileSize: 'Photo must be up to 450 KB',
   },
 
   object: {

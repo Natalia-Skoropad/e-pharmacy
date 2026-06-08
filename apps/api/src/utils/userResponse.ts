@@ -19,6 +19,6 @@ export function toAuthUserResponse(user: UserDocument): AuthUserResponse {
     vendorStatus: user.vendorStatus,
     phone: user.phone,
     address: user.address,
-    avatarUrl: user.avatarUrl,
+    pictureUrl: user.pictureUrl,
   };
 }

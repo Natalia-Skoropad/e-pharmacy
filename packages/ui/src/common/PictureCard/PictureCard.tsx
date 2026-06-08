@@ -5,25 +5,25 @@ import type { ChangeEvent } from 'react';
 import { ImageOff, Upload } from 'lucide-react';
 
 import {
-  AVATAR_ACCEPT,
-  buildAvatarFileError,
-  buildAvatarUrlError,
+  PICTURE_ACCEPT,
+  buildPictureFileError,
+  buildPictureUrlError,
 } from '@e-pharmacy/validation';
 
-import AvatarImage from '../AvatarImage/AvatarImage';
+import PictureUpload from '../PictureUpload/PictureUpload';
 import Button from '../Button';
 import { ConfirmationModal } from '../../modals';
 import { formatInitials } from '@e-pharmacy/utils/formatters';
 
-import css from './ProfilePhotoCard.module.css';
+import css from './PictureCard.module.css';
 
 //===================================================================
 
-type ProfilePhotoCardProps = {
+type PictureCardProps = {
   name: string;
-  avatarUrl: string | null;
+  pictureUrl: string | null;
   isSaving?: boolean;
-  onChange: (avatarUrl: string | null) => Promise<void> | void;
+  onChange: (pictureUrl: string | null) => Promise<void> | void;
   onError?: (message: string) => void;
 };
 
@@ -49,13 +49,13 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
 //===================================================================
 
-function ProfilePhotoCard({
+function PictureCard({
   name,
-  avatarUrl,
+  pictureUrl,
   isSaving = false,
   onChange,
   onError,
-}: ProfilePhotoCardProps) {
+}: PictureCardProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
@@ -65,7 +65,7 @@ function ProfilePhotoCard({
 
     if (!file) return;
 
-    const fileError = buildAvatarFileError(file);
+    const fileError = buildPictureFileError(file);
 
     if (fileError) {
       onError?.(fileError);
@@ -74,16 +74,16 @@ function ProfilePhotoCard({
 
     try {
       const dataUrl = await readFileAsDataUrl(file);
-      const avatarUrlError = buildAvatarUrlError(dataUrl);
+      const pictureUrlError = buildPictureUrlError(dataUrl);
 
-      if (avatarUrlError) {
-        onError?.(avatarUrlError);
+      if (pictureUrlError) {
+        onError?.(pictureUrlError);
         return;
       }
 
       await onChange(dataUrl);
     } catch {
-      onError?.('Could not upload profile photo.');
+      onError?.('Could not upload photo.');
     }
   };
 
@@ -94,9 +94,9 @@ function ProfilePhotoCard({
 
   return (
     <div className={css.card}>
-      <div className={css.avatar} aria-hidden="true">
-        {avatarUrl ? (
-          <AvatarImage className={css.avatarImage} src={avatarUrl} />
+      <div className={css.picture} aria-hidden="true">
+        {pictureUrl ? (
+          <PictureUpload className={css.pictureImage} src={pictureUrl} />
         ) : (
           <span>{formatInitials(name)}</span>
         )}
@@ -107,14 +107,14 @@ function ProfilePhotoCard({
           ref={inputRef}
           className={css.input}
           type="file"
-          accept={AVATAR_ACCEPT}
-          aria-label="Upload profile photo"
+          accept={PICTURE_ACCEPT}
+          aria-label="Upload photo"
           onChange={(event) => void handleFileChange(event)}
         />
 
         <p className={css.hint}>
           Upload a lightweight JPG, PNG, or WEBP image up to 450 KB. The photo
-          is saved to your profile right away.
+          is saved right away.
         </p>
 
         <div className={css.buttons}>
@@ -134,7 +134,7 @@ function ProfilePhotoCard({
             variant="ghost"
             size="sm"
             className={css.dangerButton}
-            disabled={!avatarUrl || isSaving}
+            disabled={!pictureUrl || isSaving}
             onClick={() => setIsConfirmOpen(true)}
           >
             <ImageOff size={16} aria-hidden="true" />
@@ -145,8 +145,8 @@ function ProfilePhotoCard({
 
       {isConfirmOpen ? (
         <ConfirmationModal
-          title="Remove profile photo?"
-          text="This photo will be removed from your account. Are you sure?"
+          title="Remove photo?"
+          text="This photo will be removed. Are you sure?"
           confirmLabel={isSaving ? 'Removing...' : 'Remove photo'}
           cancelLabel="Keep photo"
           isLoading={isSaving}
@@ -158,4 +158,4 @@ function ProfilePhotoCard({
   );
 }
 
-export default ProfilePhotoCard;
+export default PictureCard;

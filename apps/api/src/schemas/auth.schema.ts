@@ -3,12 +3,11 @@ import { z } from 'zod';
 import { VALIDATION_MESSAGES } from '../constants/validation';
 
 import {
-  sharedAvatarUrlSchema,
   sharedEmailSchema,
   sharedNameSchema,
   sharedOptionalAddressSchema,
-  sharedOptionalPhoneSchema,
   sharedPasswordSchema,
+  sharedPictureUrlSchema,
   sharedRequiredPhoneSchema,
 } from './shared-validation.schema';
 
@@ -23,9 +22,9 @@ const nameSchema = sharedNameSchema;
 const emailSchema = sharedEmailSchema;
 const passwordSchema = sharedPasswordSchema;
 const requiredPhoneSchema = sharedRequiredPhoneSchema;
-const optionalPhoneSchema = sharedOptionalPhoneSchema;
+const optionalPhoneSchema = sharedRequiredPhoneSchema.optional();
 const optionalAddressSchema = sharedOptionalAddressSchema;
-const avatarUrlSchema = sharedAvatarUrlSchema;
+const pictureUrlSchema = sharedPictureUrlSchema;
 
 //===============================================================
 
@@ -86,7 +85,7 @@ export const updateProfileSchema = z
     name: nameSchema.optional(),
     phone: optionalPhoneSchema,
     address: optionalAddressSchema,
-    avatarUrl: avatarUrlSchema,
+    pictureUrl: pictureUrlSchema,
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: VALIDATION_MESSAGES.object.atLeastOneField,

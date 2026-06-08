@@ -23,7 +23,8 @@ export const VALIDATION_LIMITS = {
 
   orderCommentMax: 500,
 
-  avatarUrlMax: 700000,
+  pictureUrlMax: 700000,
+  pictureFileMaxSizeBytes: 450 * 1024,
 } as const;
 
 //===============================================================
@@ -54,7 +55,12 @@ export const MAX_REVIEW_RATING = VALIDATION_LIMITS.reviewRatingMax;
 
 export const USER_ORDER_COMMENT_MAX_LENGTH = VALIDATION_LIMITS.orderCommentMax;
 
-export const USER_AVATAR_URL_MAX_LENGTH = VALIDATION_LIMITS.avatarUrlMax;
+export const PICTURE_URL_MAX_LENGTH = VALIDATION_LIMITS.pictureUrlMax;
+export const PICTURE_FILE_MAX_SIZE_BYTES =
+  VALIDATION_LIMITS.pictureFileMaxSizeBytes;
+export const USER_PICTURE_FILE_MAX_SIZE_KB = Math.round(
+  PICTURE_FILE_MAX_SIZE_BYTES / 1024
+);
 
 //===============================================================
 
@@ -65,7 +71,7 @@ export const ADDRESS_PATTERN = /^[A-Za-z0-9\s.,'’/#-]+$/;
 export const SEARCH_TEXT_PATTERN = /^[A-Za-z0-9\s.,'’/#-]*$/;
 export const REVIEW_COMMENT_PATTERN = /^[A-Za-z0-9\s.,!?;:'"()\-]+$/;
 export const ORDER_COMMENT_PATTERN = /^[A-Za-z0-9\s.,!?;:'"()\-]*$/;
-export const AVATAR_DATA_URL_PATTERN =
+export const PICTURE_DATA_URL_PATTERN =
   /^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 
 //===============================================================
@@ -77,17 +83,21 @@ export const VALIDATION_MESSAGES = {
     phone: 'Phone is required',
     password: 'Password is required',
     currentPassword: 'Current password is required',
+    confirmPassword: 'Confirm password is required',
     address: 'Address is required',
     reviewComment: 'Review comment is required',
     orderComment: 'Order comment is required',
+    picture: 'Photo is required',
     resetToken: 'Reset token is required',
   },
 
   format: {
     name: 'Use only Latin letters, spaces, apostrophe or hyphen',
-    email: 'Email must be valid',
+    email: 'Enter a valid email address',
+    emailApi: 'Email must be valid',
     phone: 'Enter phone in format +380XXXXXXXXX',
     password: 'Password must not contain spaces',
+    passwordMatch: 'Passwords do not match',
     address:
       'Use Latin letters, numbers, spaces, comma, dot, slash, apostrophe, # or hyphen',
     reviewComment:
@@ -95,7 +105,8 @@ export const VALIDATION_MESSAGES = {
     reviewRating: `Choose a rating from ${MIN_REVIEW_RATING} to ${MAX_REVIEW_RATING} stars`,
     orderComment:
       'Order comment may contain only Latin letters, numbers, spaces and basic punctuation',
-    avatar: 'Avatar must be a valid image URL or JPG/PNG/WEBP upload',
+    picture: 'Photo must be a valid image URL or JPG/PNG/WEBP upload',
+    pictureFileType: 'Please choose a JPG, PNG, or WEBP image',
     search: 'Search may contain only allowed text characters',
   },
 
@@ -112,8 +123,9 @@ export const VALIDATION_MESSAGES = {
     reviewCommentMin: `Review comment must be at least ${USER_REVIEW_COMMENT_MIN_LENGTH} characters`,
     reviewCommentMax: `Review comment must be at most ${USER_REVIEW_COMMENT_MAX_LENGTH} characters`,
     orderCommentMax: `Order comment must be at most ${USER_ORDER_COMMENT_MAX_LENGTH} characters`,
-    avatarMax: 'Profile photo is too large. Use a smaller image',
-    avatarPayloadMax: 'Profile photo is too large. Use an image up to 450 KB',
+    pictureMax: 'Photo is too large. Use a smaller image',
+    picturePayloadMax: 'Photo is too large. Use an image up to 450 KB',
+    pictureFileSize: 'Photo must be up to 450 KB',
   },
 
   object: {
@@ -123,9 +135,11 @@ export const VALIDATION_MESSAGES = {
 
 //===============================================================
 
-export function isAvatarDataUrl(value: string): boolean {
-  return AVATAR_DATA_URL_PATTERN.test(value);
+export function isPictureDataUrl(value: string): boolean {
+  return PICTURE_DATA_URL_PATTERN.test(value);
 }
+
+//===============================================================
 
 export function isHttpUrl(value: string): boolean {
   try {

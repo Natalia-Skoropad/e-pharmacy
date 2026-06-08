@@ -110,7 +110,7 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
             <UserBadge
               href={ROUTES.PROFILE}
               name={user?.name}
-              avatarUrl={user?.avatarUrl}
+              pictureUrl={user?.pictureUrl}
               variant="dark"
               onClick={onClose}
             />

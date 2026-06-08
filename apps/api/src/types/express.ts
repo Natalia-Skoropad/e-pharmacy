@@ -14,7 +14,7 @@ declare module 'express' {
       vendorStatus?: VendorAccountStatus;
       phone?: string;
       address?: string;
-      avatarUrl?: string;
+      pictureUrl?: string;
     };
   }
 }

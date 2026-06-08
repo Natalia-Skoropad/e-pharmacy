@@ -30,9 +30,9 @@ export type AuthUserResponse = {
   role: UserRole;
   status: UserStatus;
   vendorStatus?: VendorAccountStatus;
-  phone?: string;
+  phone: string;
   address?: string;
-  avatarUrl?: string;
+  pictureUrl?: string;
 };
 
 //===============================================================

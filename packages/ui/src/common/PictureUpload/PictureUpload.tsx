@@ -1,10 +1,10 @@
-// User avatars can come from profile storage/CDN URLs that are not always known
+// Uploaded pictures can come from storage/CDN URLs that are not always known
 // at build time, so this isolated component keeps the native image exception in
 // one documented place instead of spreading native images across layouts.
 
 //===================================================================
 
-type AvatarImageProps = {
+type PictureUploadProps = {
   src: string;
   alt?: string;
   className?: string;
@@ -12,8 +12,8 @@ type AvatarImageProps = {
 
 //===================================================================
 
-function AvatarImage({ src, alt = '', className }: AvatarImageProps) {
+function PictureUpload({ src, alt = '', className }: PictureUploadProps) {
   return <img className={className} src={src} alt={alt} />;
 }
 
-export default AvatarImage;
+export default PictureUpload;

@@ -10,7 +10,7 @@ import {
   ButtonLink,
   Container,
   LoadingSpinner,
-  ProfilePhotoCard,
+  PictureCard,
   Tabs,
 } from '@e-pharmacy/ui/common';
 
@@ -160,7 +160,7 @@ function ProfilePageContent() {
     useState(false);
 
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [picturePreview, setPicturePreview] = useState<string | null>(null);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
 
   const [ordersVisibleCount, setOrdersVisibleCount] =
@@ -196,7 +196,7 @@ function ProfilePageContent() {
   const [passwordSubmitError, setPasswordSubmitError] = useState('');
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
-  const [isAvatarSaving, setIsAvatarSaving] = useState(false);
+  const [isPictureSaving, setIsPictureSaving] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -207,7 +207,7 @@ function ProfilePageContent() {
         phone: user.phone ?? '',
         address: user.address ?? '',
       });
-      setAvatarPreview(user.avatarUrl ?? null);
+      setPicturePreview(user.pictureUrl ?? null);
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
@@ -427,32 +427,32 @@ function ProfilePageContent() {
     }));
   };
 
-  const handleAvatarError = (message: string) => {
+  const handlePictureError = (message: string) => {
     setFeedback('');
     setError(message);
   };
 
-  const handleAvatarChange = async (avatarUrl: string | null) => {
+  const handlePictureChange = async (pictureUrl: string | null) => {
     if (!sessionMarker) return;
 
-    const previousAvatarUrl = avatarPreview;
+    const previousPictureUrl = picturePreview;
 
     try {
-      setIsAvatarSaving(true);
+      setIsPictureSaving(true);
       setFeedback('');
       setError('');
-      setAvatarPreview(avatarUrl);
+      setPicturePreview(pictureUrl);
 
-      await updateCurrentUser({ avatarUrl });
+      await updateCurrentUser({ pictureUrl: pictureUrl });
       await refreshCurrentUser();
       setFeedback(
-        avatarUrl ? 'Profile photo was updated.' : 'Profile photo was removed.'
+        pictureUrl ? 'Profile photo was updated.' : 'Profile photo was removed.'
       );
     } catch {
       setError('Could not update profile photo.');
-      setAvatarPreview(previousAvatarUrl);
+      setPicturePreview(previousPictureUrl);
     } finally {
-      setIsAvatarSaving(false);
+      setIsPictureSaving(false);
     }
   };
 
@@ -526,12 +526,12 @@ function ProfilePageContent() {
 
           <div className={css.profileShell}>
             <aside className={css.sidebar} aria-label="Profile summary">
-              <ProfilePhotoCard
+              <PictureCard
                 name={user.name}
-                avatarUrl={avatarPreview}
-                isSaving={isAvatarSaving}
-                onChange={handleAvatarChange}
-                onError={handleAvatarError}
+                pictureUrl={picturePreview}
+                isSaving={isPictureSaving}
+                onChange={handlePictureChange}
+                onError={handlePictureError}
               />
 
               <div className={css.nameBlock}>

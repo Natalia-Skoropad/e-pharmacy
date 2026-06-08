@@ -445,9 +445,9 @@ export async function updateUserProfileService(
     else unset.address = '';
   }
 
-  if ('avatarUrl' in input) {
-    if (input.avatarUrl) update.avatarUrl = input.avatarUrl;
-    else unset.avatarUrl = '';
+  if ('pictureUrl' in input) {
+    if (input.pictureUrl) update.pictureUrl = input.pictureUrl;
+    else unset.pictureUrl = '';
   }
 
   const updateQuery: Record<string, unknown> = {};

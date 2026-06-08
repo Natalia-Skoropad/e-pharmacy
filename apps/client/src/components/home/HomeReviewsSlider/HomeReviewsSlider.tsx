@@ -49,7 +49,7 @@ function HomeReviewsSlider({ reviews }: HomeReviewsSliderProps) {
               aria-hidden={index !== activeIndex}
             >
               <div className={css.reviewCard}>
-                <div className={css.avatar} aria-hidden="true">
+                <div className={css.photo} aria-hidden="true">
                   {review.name.charAt(0)}
                 </div>
                 <h3>{review.name}</h3>

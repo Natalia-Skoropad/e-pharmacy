@@ -5,7 +5,7 @@ import {
   MIN_REVIEW_RATING,
   USER_ADDRESS_MAX_LENGTH,
   USER_ADDRESS_MIN_LENGTH,
-  USER_AVATAR_URL_MAX_LENGTH,
+  PICTURE_URL_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_NAME_MIN_LENGTH,
@@ -18,12 +18,13 @@ import {
   USER_SEARCH_MAX_LENGTH,
 } from './limits';
 
+import { isHttpUrl } from '../picture';
+
 import { VALIDATION_MESSAGES } from './messages';
 
 import {
   ADDRESS_PATTERN,
-  AVATAR_DATA_URL_PATTERN,
-  AVATAR_HTTP_URL_PATTERN,
+  PICTURE_DATA_URL_PATTERN,
   NAME_PATTERN,
   ORDER_COMMENT_PATTERN,
   PASSWORD_PATTERN,
@@ -59,12 +60,7 @@ export const sharedRequiredPhoneSchema = z
   .max(USER_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.limits.phoneMax)
   .regex(PHONE_PATTERN, VALIDATION_MESSAGES.format.phone);
 
-export const sharedOptionalPhoneSchema = z
-  .union([sharedRequiredPhoneSchema, z.literal('')])
-  .optional()
-  .transform((value: string | undefined) => (value === '' ? undefined : value));
-
-export const sharedPhoneSchema = sharedOptionalPhoneSchema;
+export const sharedPhoneSchema = sharedRequiredPhoneSchema;
 
 //=============================================================================
 
@@ -136,15 +132,13 @@ export const sharedSearchSchema = z
 
 //=============================================================================
 
-export const sharedAvatarUrlSchema = z
+export const sharedPictureUrlSchema = z
   .string()
   .trim()
-  .max(USER_AVATAR_URL_MAX_LENGTH, VALIDATION_MESSAGES.limits.avatarPayloadMax)
+  .max(PICTURE_URL_MAX_LENGTH, VALIDATION_MESSAGES.limits.picturePayloadMax)
   .refine(
-    (value: string) =>
-      AVATAR_DATA_URL_PATTERN.test(value) ||
-      AVATAR_HTTP_URL_PATTERN.test(value),
-    VALIDATION_MESSAGES.format.avatar
+    (value: string) => PICTURE_DATA_URL_PATTERN.test(value) || isHttpUrl(value),
+    VALIDATION_MESSAGES.format.picture
   )
   .optional()
   .nullable();

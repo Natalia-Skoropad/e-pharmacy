@@ -23,8 +23,8 @@ export const VALIDATION_LIMITS = {
 
   orderCommentMax: 500,
 
-  avatarUrlMax: 700000,
-  avatarFileMaxSizeBytes: 450 * 1024,
+  pictureUrlMax: 700000,
+  pictureFileMaxSizeBytes: 450 * 1024,
 } as const;
 
 //=============================================================================
@@ -55,9 +55,9 @@ export const MAX_REVIEW_RATING = VALIDATION_LIMITS.reviewRatingMax;
 
 export const USER_ORDER_COMMENT_MAX_LENGTH = VALIDATION_LIMITS.orderCommentMax;
 
-export const USER_AVATAR_URL_MAX_LENGTH = VALIDATION_LIMITS.avatarUrlMax;
-export const USER_AVATAR_FILE_MAX_SIZE_BYTES =
-  VALIDATION_LIMITS.avatarFileMaxSizeBytes;
-export const USER_AVATAR_FILE_MAX_SIZE_KB = Math.round(
-  USER_AVATAR_FILE_MAX_SIZE_BYTES / 1024
+export const PICTURE_URL_MAX_LENGTH = VALIDATION_LIMITS.pictureUrlMax;
+export const PICTURE_FILE_MAX_SIZE_BYTES =
+  VALIDATION_LIMITS.pictureFileMaxSizeBytes;
+export const USER_PICTURE_FILE_MAX_SIZE_KB = Math.round(
+  PICTURE_FILE_MAX_SIZE_BYTES / 1024
 );

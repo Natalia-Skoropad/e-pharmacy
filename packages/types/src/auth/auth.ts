@@ -1,5 +1,4 @@
 import type { AuthUser } from './user';
-import type { UserRole } from './role';
 
 //===================================================================
 
@@ -15,8 +14,7 @@ export type RegisterPayload = {
   name: string;
   email: string;
   password: string;
-  role?: Extract<UserRole, 'customer' | 'vendor'>;
-  phone?: string;
+  phone: string;
   address?: string;
 };
 
@@ -38,7 +36,7 @@ export type UpdateProfilePayload = {
   name?: string;
   phone?: string;
   address?: string;
-  avatarUrl?: string | null;
+  pictureUrl?: string | null;
 };
 
 export type UpdatePasswordPayload = {
