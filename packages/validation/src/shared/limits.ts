@@ -21,6 +21,7 @@ export const VALIDATION_LIMITS = {
   orderCommentMax: 500,
 
   avatarUrlMax: 700000,
+  avatarFileMaxSizeBytes: 450 * 1024,
 } as const;
 
 //=============================================================================
@@ -49,3 +50,8 @@ export const USER_REVIEW_COMMENT_MAX_LENGTH =
 export const USER_ORDER_COMMENT_MAX_LENGTH = VALIDATION_LIMITS.orderCommentMax;
 
 export const USER_AVATAR_URL_MAX_LENGTH = VALIDATION_LIMITS.avatarUrlMax;
+export const USER_AVATAR_FILE_MAX_SIZE_BYTES =
+  VALIDATION_LIMITS.avatarFileMaxSizeBytes;
+export const USER_AVATAR_FILE_MAX_SIZE_KB = Math.round(
+  USER_AVATAR_FILE_MAX_SIZE_BYTES / 1024
+);

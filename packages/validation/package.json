@@ -7,16 +7,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./auth": "./src/auth/index.ts",
-    "./customer": "./src/customer/index.ts",
+    "./profile": "./src/profile/index.ts",
     "./reviews": "./src/reviews/index.ts",
-    "./shared": "./src/shared/index.ts",
-    "./limits": "./src/shared/limits.ts",
-    "./patterns": "./src/shared/patterns.ts",
-    "./sanitizers": "./src/shared/sanitizers.ts",
-    "./messages": "./src/shared/messages.ts",
-    "./errors": "./src/shared/errors.ts",
-    "./assets": "./src/shared/assets.ts",
-    "./zod-schemas": "./src/shared/zod-schemas.ts"
+    "./shared": "./src/shared/index.ts"
   },
   "scripts": {
     "build": "tsc",

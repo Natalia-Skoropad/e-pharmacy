@@ -34,9 +34,11 @@ function LoginForm() {
 
   const [values, setValues] = useState<LoginFormValues>(LOGIN_INITIAL_VALUES);
   const [errors, setErrors] = useState<LoginFormErrors>({});
+
   const [touchedFields, setTouchedFields] = useState<
     Partial<Record<keyof LoginFormValues, boolean>>
   >({});
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -55,6 +57,7 @@ function LoginForm() {
         ...values,
         [field]: nextValue,
       };
+
       const nextErrors = validateLoginForm(nextValues);
 
       setValues(nextValues);

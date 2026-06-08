@@ -29,10 +29,13 @@ function PasswordRecoveryForm() {
   const [values, setValues] = useState<ForgotPasswordFormValues>(
     FORGOT_PASSWORD_INITIAL_VALUES
   );
+
   const [errors, setErrors] = useState<ForgotPasswordFormErrors>({});
+
   const [touchedFields, setTouchedFields] = useState<
     Partial<Record<keyof ForgotPasswordFormValues, boolean>>
   >({});
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formIsValid =
@@ -42,6 +45,7 @@ function PasswordRecoveryForm() {
     const nextValues = {
       email: sanitizeEmail(event.target.value),
     };
+
     const nextErrors = validateForgotPasswordForm(nextValues);
 
     setValues(nextValues);

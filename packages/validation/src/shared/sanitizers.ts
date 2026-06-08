@@ -1,10 +1,9 @@
 import {
-  USER_ADDRESS_MAX_LENGTH,
-  USER_AVATAR_URL_MAX_LENGTH,
-  USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
-  USER_PASSWORD_MAX_LENGTH,
+  USER_EMAIL_MAX_LENGTH,
   USER_PHONE_MAX_LENGTH,
+  USER_ADDRESS_MAX_LENGTH,
+  USER_PASSWORD_MAX_LENGTH,
   USER_SEARCH_MAX_LENGTH,
 } from './limits';
 
@@ -38,12 +37,6 @@ export function sanitizePhone(value: string): string {
 
 //=============================================================================
 
-export function sanitizePassword(value: string): string {
-  return value.replace(/\s/g, '').slice(0, USER_PASSWORD_MAX_LENGTH);
-}
-
-//=============================================================================
-
 export function sanitizeAddress(value: string): string {
   return value
     .replace(/[^A-Za-z0-9\s.,'’/#-]/g, '')
@@ -52,8 +45,8 @@ export function sanitizeAddress(value: string): string {
 
 //=============================================================================
 
-export function sanitizeAvatarUrl(value: string): string {
-  return value.trim().slice(0, USER_AVATAR_URL_MAX_LENGTH);
+export function sanitizePassword(value: string): string {
+  return value.replace(/\s/g, '').slice(0, USER_PASSWORD_MAX_LENGTH);
 }
 
 //=============================================================================

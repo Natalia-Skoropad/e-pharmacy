@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import AvatarImage from '../AvatarImage';
+import AvatarImage from '../AvatarImage/AvatarImage';
 import { formatInitials } from '@e-pharmacy/utils/formatters';
 import { cn } from '@e-pharmacy/utils/classes';
 

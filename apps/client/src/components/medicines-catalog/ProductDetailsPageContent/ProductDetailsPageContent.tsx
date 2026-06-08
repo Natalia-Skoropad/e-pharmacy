@@ -114,6 +114,8 @@ function getOfferTotal(cartItem: CartItem | null, offer: ProductOffer): number {
   return (cartItem?.quantity ?? 0) * offer.price;
 }
 
+//===================================================================
+
 function getCartWithUpdatedOfferQuantity(
   cart: Cart,
   cartItemId: string,

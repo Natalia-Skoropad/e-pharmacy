@@ -7,13 +7,16 @@ import {
   removeCartItem,
   updateCartItem,
 } from '../controllers/cart.controller';
+
 import { authenticate } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validate.middleware';
+
 import {
   addCartItemSchema,
   cartItemParamsSchema,
   updateCartItemSchema,
 } from '../schemas/cart.schema';
+
 import { ctrlWrapper } from '../utils/ctrlWrapper';
 
 //===============================================================

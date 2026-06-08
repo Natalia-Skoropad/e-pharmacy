@@ -1,7 +1,45 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';  import {   CartItemCard, CartSummary, ContinueShoppingModal, } from '@/components/cart';  import {   Button, ButtonLink, Container, LoadingSpinner, RatingSummary, } from '@e-pharmacy/ui/common';  import { ConfirmationModal } from '@e-pharmacy/ui/modals'; import { Breadcrumbs } from '@e-pharmacy/ui/layout'; import { dispatchCartUpdated } from '@/lib/cart/cart-events';  import {   getCartInvoicePath, getCartInvoiceTotal, groupCartItemsByStore, type CartStoreGroup, } from '@/lib/cart/cart-groups';  import { CART_DESCRIPTION, CART_TITLE } from '@e-pharmacy/config/seo'; import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors'; import { ROUTES } from '@e-pharmacy/config/routes'; import { buildStorePath, createBreadcrumbs } from '@e-pharmacy/config/routes';  import { useAuth } from '@/providers'; import { getCart } from '@e-pharmacy/api-client/client';
-import { clearCart, removeCartItem, updateCartItem } from '@/services/cart-service';
+import { useEffect, useMemo, useState } from 'react';
+
+import {
+  CartItemCard,
+  CartSummary,
+  ContinueShoppingModal,
+} from '@/components/cart';
+
+import {
+  Button,
+  ButtonLink,
+  Container,
+  LoadingSpinner,
+  RatingSummary,
+} from '@e-pharmacy/ui/common';
+
+import { ConfirmationModal } from '@e-pharmacy/ui/modals';
+import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { dispatchCartUpdated } from '@/lib/cart/cart-events';
+
+import {
+  getCartInvoicePath,
+  getCartInvoiceTotal,
+  groupCartItemsByStore,
+  type CartStoreGroup,
+} from '@/lib/cart/cart-groups';
+
+import { CART_DESCRIPTION, CART_TITLE } from '@e-pharmacy/config/seo';
+import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
+import { ROUTES } from '@e-pharmacy/config/routes';
+import { buildStorePath, createBreadcrumbs } from '@e-pharmacy/config/routes';
+import { useAuth } from '@/providers';
+import { getCart } from '@e-pharmacy/api-client/client';
+
+import {
+  clearCart,
+  removeCartItem,
+  updateCartItem,
+} from '@/services/cart-service';
+
 import type { Cart } from '@e-pharmacy/types';
 
 import css from './CartPageContent.module.css';
@@ -48,8 +86,10 @@ function CartPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState(false);
+
   const [continueShoppingStore, setContinueShoppingStore] =
     useState<CartStoreGroup | null>(null);
+  
   const [pendingAction, setPendingAction] = useState<
     | { type: 'item'; itemId: string }
     | { type: 'store'; storeId: string; storeName: string }

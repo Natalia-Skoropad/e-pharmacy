@@ -1,7 +1,7 @@
 import {
   USER_ADDRESS_MAX_LENGTH,
   USER_ADDRESS_MIN_LENGTH,
-  USER_AVATAR_URL_MAX_LENGTH,
+  USER_AVATAR_FILE_MAX_SIZE_KB,
   USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_NAME_MIN_LENGTH,
@@ -45,6 +45,7 @@ export const VALIDATION_MESSAGES = {
     orderComment:
       'Order comment may contain only Latin letters, numbers, spaces and basic punctuation',
     avatar: 'Avatar must be a valid image URL or JPG/PNG/WEBP upload',
+    avatarFileType: 'Please choose a JPG, PNG, or WEBP image',
     search: 'Search may contain only allowed text characters',
   },
 
@@ -61,7 +62,9 @@ export const VALIDATION_MESSAGES = {
     reviewCommentMin: `Review comment must be at least ${USER_REVIEW_COMMENT_MIN_LENGTH} characters`,
     reviewCommentMax: `Review comment must be at most ${USER_REVIEW_COMMENT_MAX_LENGTH} characters`,
     orderCommentMax: `Order comment must be at most ${USER_ORDER_COMMENT_MAX_LENGTH} characters`,
-    avatarMax: `Avatar image must be at most ${USER_AVATAR_URL_MAX_LENGTH} characters`,
+    avatarMax: 'Profile photo is too large. Use a smaller image',
+    avatarPayloadMax: 'Profile photo is too large. Use an image up to 450 KB',
+    avatarFileSize: `Profile photo must be up to ${USER_AVATAR_FILE_MAX_SIZE_KB} KB`,
   },
 
   object: {

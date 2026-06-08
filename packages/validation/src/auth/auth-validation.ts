@@ -1,22 +1,22 @@
 import {
-  VALIDATION_MESSAGES,
-  buildEmailError,
   buildNameError,
-  buildPasswordError,
+  buildEmailError,
   buildPhoneError,
+  buildPasswordError,
+  VALIDATION_MESSAGES,
 } from '../shared';
 
 //===================================================================
-
-export type LoginFormValues = {
-  email: string;
-  password: string;
-};
 
 export type RegisterFormValues = {
   name: string;
   email: string;
   phone: string;
+  password: string;
+};
+
+export type LoginFormValues = {
+  email: string;
   password: string;
 };
 
@@ -31,11 +31,11 @@ export type ResetPasswordFormValues = {
 
 //===================================================================
 
-export type LoginFormErrors = Partial<Record<keyof LoginFormValues, string>>;
-
 export type RegisterFormErrors = Partial<
   Record<keyof RegisterFormValues, string>
 >;
+
+export type LoginFormErrors = Partial<Record<keyof LoginFormValues, string>>;
 
 export type ForgotPasswordFormErrors = Partial<
   Record<keyof ForgotPasswordFormValues, string>
@@ -47,15 +47,15 @@ export type ResetPasswordFormErrors = Partial<
 
 //===================================================================
 
-export const LOGIN_INITIAL_VALUES: LoginFormValues = {
-  email: '',
-  password: '',
-};
-
 export const REGISTER_INITIAL_VALUES: RegisterFormValues = {
   name: '',
   email: '',
   phone: '',
+  password: '',
+};
+
+export const LOGIN_INITIAL_VALUES: LoginFormValues = {
+  email: '',
   password: '',
 };
 
@@ -67,6 +67,26 @@ export const RESET_PASSWORD_INITIAL_VALUES: ResetPasswordFormValues = {
   password: '',
   confirmPassword: '',
 };
+
+//===================================================================
+
+export function validateRegisterForm(
+  values: RegisterFormValues
+): RegisterFormErrors {
+  const errors: RegisterFormErrors = {};
+
+  const nameError = buildNameError(values.name, { required: true });
+  const emailError = buildEmailError(values.email);
+  const phoneError = buildPhoneError(values.phone, { required: true });
+  const passwordError = buildPasswordError(values.password);
+
+  if (nameError) errors.name = nameError;
+  if (emailError) errors.email = emailError;
+  if (phoneError) errors.phone = phoneError;
+  if (passwordError) errors.password = passwordError;
+
+  return errors;
+}
 
 //===================================================================
 
@@ -84,33 +104,12 @@ export function validateLoginForm(values: LoginFormValues): LoginFormErrors {
 
 //===================================================================
 
-export function validateRegisterForm(
-  values: RegisterFormValues
-): RegisterFormErrors {
-  const errors: RegisterFormErrors = {};
-
-  const emailError = buildEmailError(values.email);
-  const nameError = buildNameError(values.name, { required: true });
-  const phoneError = buildPhoneError(values.phone, { required: true });
-  const passwordError = buildPasswordError(values.password);
-
-  if (nameError) errors.name = nameError;
-  if (emailError) errors.email = emailError;
-  if (phoneError) errors.phone = phoneError;
-  if (passwordError) errors.password = passwordError;
-
-  return errors;
-}
-
-//===================================================================
-
 export function validateForgotPasswordForm(
   values: ForgotPasswordFormValues
 ): ForgotPasswordFormErrors {
   const errors: ForgotPasswordFormErrors = {};
 
   const emailError = buildEmailError(values.email);
-
   if (emailError) errors.email = emailError;
 
   return errors;
@@ -124,7 +123,6 @@ export function validateResetPasswordForm(
   const errors: ResetPasswordFormErrors = {};
 
   const passwordError = buildPasswordError(values.password);
-
   if (passwordError) errors.password = passwordError;
 
   if (!values.confirmPassword) {

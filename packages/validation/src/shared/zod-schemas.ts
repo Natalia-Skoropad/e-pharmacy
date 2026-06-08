@@ -21,8 +21,11 @@ import {
 import { VALIDATION_MESSAGES } from './messages';
 
 import {
+  ADDRESS_PATTERN,
+  NAME_PATTERN,
   ORDER_COMMENT_PATTERN,
   PASSWORD_PATTERN,
+  PHONE_PATTERN,
   REVIEW_COMMENT_PATTERN,
   SEARCH_TEXT_PATTERN,
 } from './patterns';
@@ -33,7 +36,8 @@ export const sharedNameSchema = z
   .string()
   .trim()
   .min(USER_NAME_MIN_LENGTH, VALIDATION_MESSAGES.limits.nameMin)
-  .max(USER_NAME_MAX_LENGTH, VALIDATION_MESSAGES.limits.nameMax);
+  .max(USER_NAME_MAX_LENGTH, VALIDATION_MESSAGES.limits.nameMax)
+  .regex(NAME_PATTERN, VALIDATION_MESSAGES.format.name);
 
 export const sharedEmailSchema = z
   .string()
@@ -42,11 +46,21 @@ export const sharedEmailSchema = z
   .email(VALIDATION_MESSAGES.format.emailApi)
   .max(USER_EMAIL_MAX_LENGTH, VALIDATION_MESSAGES.limits.emailMax);
 
-export const sharedPhoneSchema = z
+export const sharedRequiredPhoneSchema = z
   .string()
   .trim()
+  .min(1, VALIDATION_MESSAGES.required.phone)
   .max(USER_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.limits.phoneMax)
-  .optional();
+  .regex(PHONE_PATTERN, VALIDATION_MESSAGES.format.phone);
+
+export const sharedOptionalPhoneSchema = z
+  .union([sharedRequiredPhoneSchema, z.literal('')])
+  .optional()
+  .transform((value: string | undefined) =>
+    value === '' ? undefined : value
+  );
+
+export const sharedPhoneSchema = sharedOptionalPhoneSchema;
 
 export const sharedPasswordSchema = z
   .string()
@@ -54,12 +68,21 @@ export const sharedPasswordSchema = z
   .max(USER_PASSWORD_MAX_LENGTH, VALIDATION_MESSAGES.limits.passwordMax)
   .regex(PASSWORD_PATTERN, VALIDATION_MESSAGES.format.password);
 
-export const sharedAddressSchema = z
+export const sharedRequiredAddressSchema = z
   .string()
   .trim()
   .min(USER_ADDRESS_MIN_LENGTH, VALIDATION_MESSAGES.limits.addressMin)
   .max(USER_ADDRESS_MAX_LENGTH, VALIDATION_MESSAGES.limits.addressMax)
-  .optional();
+  .regex(ADDRESS_PATTERN, VALIDATION_MESSAGES.format.address);
+
+export const sharedOptionalAddressSchema = z
+  .union([sharedRequiredAddressSchema, z.literal('')])
+  .optional()
+  .transform((value: string | undefined) =>
+    value === '' ? undefined : value
+  );
+
+export const sharedAddressSchema = sharedOptionalAddressSchema;
 
 export const sharedReviewCommentSchema = z
   .string()
@@ -87,7 +110,7 @@ export const sharedOrderCommentSchema = z
 export const sharedAvatarUrlSchema = z
   .string()
   .trim()
-  .max(USER_AVATAR_URL_MAX_LENGTH, VALIDATION_MESSAGES.limits.avatarMax)
+  .max(USER_AVATAR_URL_MAX_LENGTH, VALIDATION_MESSAGES.limits.avatarPayloadMax)
   .refine(
     (value: string) => isAvatarDataUrl(value) || isHttpUrl(value),
     VALIDATION_MESSAGES.format.avatar

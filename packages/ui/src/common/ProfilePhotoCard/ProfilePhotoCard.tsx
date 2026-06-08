@@ -4,17 +4,18 @@ import { useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { ImageOff, Upload } from 'lucide-react';
 
-import AvatarImage from '../AvatarImage';
+import {
+  AVATAR_ACCEPT,
+  buildAvatarFileError,
+  buildAvatarUrlError,
+} from '@e-pharmacy/validation';
+
+import AvatarImage from '../AvatarImage/AvatarImage';
 import Button from '../Button';
 import { ConfirmationModal } from '../../modals';
 import { formatInitials } from '@e-pharmacy/utils/formatters';
 
 import css from './ProfilePhotoCard.module.css';
-
-//===================================================================
-
-const AVATAR_MAX_FILE_SIZE = 450 * 1024;
-const AVATAR_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 
 //===================================================================
 
@@ -48,24 +49,6 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
 //===================================================================
 
-function getAvatarFileError(file: File): string {
-  if (
-    !AVATAR_ALLOWED_TYPES.includes(
-      file.type as (typeof AVATAR_ALLOWED_TYPES)[number]
-    )
-  ) {
-    return 'Please choose a JPG, PNG, or WEBP image.';
-  }
-
-  if (file.size > AVATAR_MAX_FILE_SIZE) {
-    return 'Profile photo must be up to 450 KB.';
-  }
-
-  return '';
-}
-
-//===================================================================
-
 function ProfilePhotoCard({
   name,
   avatarUrl,
@@ -82,7 +65,7 @@ function ProfilePhotoCard({
 
     if (!file) return;
 
-    const fileError = getAvatarFileError(file);
+    const fileError = buildAvatarFileError(file);
 
     if (fileError) {
       onError?.(fileError);
@@ -91,6 +74,13 @@ function ProfilePhotoCard({
 
     try {
       const dataUrl = await readFileAsDataUrl(file);
+      const avatarUrlError = buildAvatarUrlError(dataUrl);
+
+      if (avatarUrlError) {
+        onError?.(avatarUrlError);
+        return;
+      }
+
       await onChange(dataUrl);
     } catch {
       onError?.('Could not upload profile photo.');
@@ -117,7 +107,7 @@ function ProfilePhotoCard({
           ref={inputRef}
           className={css.input}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept={AVATAR_ACCEPT}
           aria-label="Upload profile photo"
           onChange={(event) => void handleFileChange(event)}
         />

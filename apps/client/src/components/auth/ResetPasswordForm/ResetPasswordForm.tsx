@@ -36,12 +36,15 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     RESET_PASSWORD_INITIAL_VALUES
   );
   const [errors, setErrors] = useState<ResetPasswordFormErrors>({});
+
   const [touchedFields, setTouchedFields] = useState<
     Partial<Record<keyof ResetPasswordFormValues, boolean>>
   >({});
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
     useState(false);
 
@@ -56,6 +59,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         ...values,
         [field]: event.target.value,
       };
+
       const nextErrors = validateResetPasswordForm(nextValues);
 
       setValues(nextValues);

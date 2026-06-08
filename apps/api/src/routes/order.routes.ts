@@ -5,9 +5,13 @@ import {
   getOrderById,
   getOrders,
 } from '../controllers/order.controller';
+
 import { authenticate } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validate.middleware';
-import { checkoutOrderSchema, orderParamsSchema } from '../schemas/order.schema';
+import {
+  checkoutOrderSchema,
+  orderParamsSchema,
+} from '../schemas/order.schema';
 import { ctrlWrapper } from '../utils/ctrlWrapper';
 
 //===============================================================

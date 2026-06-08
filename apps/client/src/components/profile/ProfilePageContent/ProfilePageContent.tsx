@@ -37,15 +37,16 @@ import { buildCustomerOrderPath } from '@/lib/orders';
 import { buildStorePath, createBreadcrumbs } from '@e-pharmacy/config/routes';
 
 import {
-  buildAddressError,
-  buildNameError,
-  buildPhoneError,
+  CHANGE_PASSWORD_INITIAL_VALUES,
+  DATA_PROFILE_INITIAL_VALUES,
   sanitizeAddress,
   sanitizeName,
+  sanitizePassword,
   sanitizePhone,
-  USER_PASSWORD_MAX_LENGTH,
-  USER_PASSWORD_MIN_LENGTH,
-  VALIDATION_MESSAGES,
+  validateChangePasswordForm,
+  validateDataProfileForm,
+  type ChangePasswordFormValues,
+  type DataProfileFormValues,
 } from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
@@ -70,19 +71,6 @@ import css from './ProfilePageContent.module.css';
 
 type ProfileTab = 'data' | 'orders' | 'favorite-products' | 'favorite-stores';
 
-type ProfileFormValues = {
-  name: string;
-  phone: string;
-  address: string;
-};
-
-type PasswordFormValues = {
-  currentPassword: string;
-  newPassword: string;
-};
-
-//===================================================================
-
 const TABS: Array<{
   value: ProfileTab;
   label: string;
@@ -96,44 +84,6 @@ const TABS: Array<{
 const FAVORITES_PER_PAGE = 100;
 const FAVORITES_VISIBLE_STEP = 16;
 const ORDERS_VISIBLE_STEP = 15;
-
-//===================================================================
-
-function getPasswordError(value: string): string {
-  if (!value) return '';
-
-  if (value.length < USER_PASSWORD_MIN_LENGTH) {
-    return VALIDATION_MESSAGES.limits.passwordMin;
-  }
-
-  if (value.length > USER_PASSWORD_MAX_LENGTH) {
-    return VALIDATION_MESSAGES.limits.passwordMax;
-  }
-
-  return '';
-}
-
-//===================================================================
-
-function getProfileErrors(values: ProfileFormValues) {
-  const errors: Partial<Record<keyof ProfileFormValues, string>> = {};
-  const name = values.name.trim();
-
-  if (!name) {
-    errors.name = 'Name is required';
-  } else {
-    const nameError = buildNameError(values.name, { trailingDot: true });
-    if (nameError) errors.name = nameError;
-  }
-
-  const phoneError = buildPhoneError(values.phone, { trailingDot: true });
-  const addressError = buildAddressError(values.address, { trailingDot: true });
-
-  if (phoneError) errors.phone = phoneError;
-  if (addressError) errors.address = addressError;
-
-  return errors;
-}
 
 //===================================================================
 
@@ -198,39 +148,47 @@ async function getFavoriteStores(): Promise<PharmacyStore[]> {
 function ProfilePageContent() {
   const { sessionMarker, user, refreshCurrentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
-  const [profileValues, setProfileValues] = useState<ProfileFormValues>({
-    name: '',
-    phone: '',
-    address: '',
-  });
-  const [passwordValues, setPasswordValues] = useState<PasswordFormValues>({
-    currentPassword: '',
-    newPassword: '',
-  });
+
+  const [profileValues, setProfileValues] = useState<DataProfileFormValues>(
+    DATA_PROFILE_INITIAL_VALUES
+  );
+
+  const [passwordValues, setPasswordValues] =
+    useState<ChangePasswordFormValues>(CHANGE_PASSWORD_INITIAL_VALUES);
+
   const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] =
     useState(false);
+
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
+
   const [ordersVisibleCount, setOrdersVisibleCount] =
     useState(ORDERS_VISIBLE_STEP);
+
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
   const [favoriteStores, setFavoriteStores] = useState<PharmacyStore[]>([]);
   const [favoriteProductsError, setFavoriteProductsError] = useState('');
   const [favoriteStoresError, setFavoriteStoresError] = useState('');
+
   const [favoriteProductsCount, setFavoriteProductsCount] = useState<
     number | null
   >(null);
+
   const [favoriteStoresCount, setFavoriteStoresCount] = useState<number | null>(
     null
   );
+
   const [favoriteProductsVisibleCount, setFavoriteProductsVisibleCount] =
     useState(FAVORITES_VISIBLE_STEP);
+
   const [favoriteStoresVisibleCount, setFavoriteStoresVisibleCount] = useState(
     FAVORITES_VISIBLE_STEP
   );
+
   const [isFavoriteProductsLoading, setIsFavoriteProductsLoading] =
     useState(false);
+
   const [isFavoriteStoresLoading, setIsFavoriteStoresLoading] = useState(false);
   const [isOrdersLoading, setIsOrdersLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
@@ -256,23 +214,17 @@ function ProfilePageContent() {
   }, [user]);
 
   const profileErrors = useMemo(
-    () => getProfileErrors(profileValues),
+    () => validateDataProfileForm(profileValues),
     [profileValues]
   );
-  const passwordErrors = useMemo(() => {
-    const currentPasswordError =
-      passwordValues.newPassword && !passwordValues.currentPassword
-        ? 'Current password is required'
-        : '';
-    const newPasswordError = getPasswordError(passwordValues.newPassword);
 
-    return {
-      currentPassword: currentPasswordError,
-      newPassword: newPasswordError,
-    };
-  }, [passwordValues]);
+  const passwordErrors = useMemo(
+    () => validateChangePasswordForm(passwordValues),
+    [passwordValues]
+  );
 
   const canSaveProfile = Object.keys(profileErrors).length === 0;
+
   const canSavePassword =
     passwordValues.currentPassword.trim().length > 0 &&
     passwordValues.newPassword.length > 0 &&
@@ -318,20 +270,24 @@ function ProfilePageContent() {
     () => orders.slice(0, ordersVisibleCount),
     [orders, ordersVisibleCount]
   );
+
   const hiddenOrdersCount = Math.max(orders.length - visibleOrders.length, 0);
 
   const visibleFavoriteProducts = useMemo(
     () => favoriteProducts.slice(0, favoriteProductsVisibleCount),
     [favoriteProducts, favoriteProductsVisibleCount]
   );
+
   const visibleFavoriteStores = useMemo(
     () => favoriteStores.slice(0, favoriteStoresVisibleCount),
     [favoriteStores, favoriteStoresVisibleCount]
   );
+
   const hiddenFavoriteProductsCount = Math.max(
     favoriteProducts.length - visibleFavoriteProducts.length,
     0
   );
+
   const hiddenFavoriteStoresCount = Math.max(
     favoriteStores.length - visibleFavoriteStores.length,
     0
@@ -459,7 +415,7 @@ function ProfilePageContent() {
   }
 
   const handleProfileChange = (
-    field: keyof ProfileFormValues,
+    field: keyof DataProfileFormValues,
     value: string
   ) => {
     setFeedback('');
@@ -523,14 +479,14 @@ function ProfilePageContent() {
   };
 
   const handlePasswordChange = (
-    field: keyof PasswordFormValues,
+    field: keyof ChangePasswordFormValues,
     value: string
   ) => {
     setFeedback('');
     setPasswordSubmitError('');
     setPasswordValues((prev) => ({
       ...prev,
-      [field]: value.slice(0, USER_PASSWORD_MAX_LENGTH),
+      [field]: sanitizePassword(value),
     }));
   };
 
@@ -543,7 +499,7 @@ function ProfilePageContent() {
       setPasswordSubmitError('');
 
       await updateCurrentUserPassword(passwordValues);
-      setPasswordValues({ currentPassword: '', newPassword: '' });
+      setPasswordValues(CHANGE_PASSWORD_INITIAL_VALUES);
       setFeedback('Password was changed.');
     } catch {
       setPasswordSubmitError(

@@ -1,8 +1,13 @@
-import { isAvatarDataUrl, isHttpUrl } from './assets';
+import {
+  isAvatarAllowedType,
+  isAvatarDataUrl,
+  isHttpUrl,
+} from './assets';
 
 import {
   USER_ADDRESS_MAX_LENGTH,
   USER_ADDRESS_MIN_LENGTH,
+  USER_AVATAR_FILE_MAX_SIZE_BYTES,
   USER_AVATAR_URL_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
@@ -240,6 +245,20 @@ export function buildOrderCommentError(
 
 //=============================================================================
 
+export function buildAvatarFileError(file: File): string {
+  if (!isAvatarAllowedType(file.type)) {
+    return VALIDATION_MESSAGES.format.avatarFileType;
+  }
+
+  if (file.size > USER_AVATAR_FILE_MAX_SIZE_BYTES) {
+    return VALIDATION_MESSAGES.limits.avatarFileSize;
+  }
+
+  return '';
+}
+
+//=============================================================================
+
 export function buildAvatarUrlError(
   value: string,
   options: TextFieldErrorOptions = {}
@@ -252,7 +271,7 @@ export function buildAvatarUrlError(
 
   if (avatarUrl.length > USER_AVATAR_URL_MAX_LENGTH) {
     return withTrailingDot(
-      VALIDATION_MESSAGES.limits.avatarMax,
+      VALIDATION_MESSAGES.limits.avatarPayloadMax,
       options.trailingDot
     );
   }

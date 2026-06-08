@@ -43,10 +43,12 @@ function RegisterForm() {
   const [values, setValues] = useState<RegisterFormValues>(
     REGISTER_INITIAL_VALUES
   );
+
   const [errors, setErrors] = useState<RegisterFormErrors>({});
   const [touchedFields, setTouchedFields] = useState<
     Partial<Record<keyof RegisterFormValues, boolean>>
   >({});
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -71,6 +73,7 @@ function RegisterForm() {
         ...values,
         [field]: nextValue,
       };
+
       const nextErrors = validateRegisterForm(nextValues);
 
       setValues(nextValues);
