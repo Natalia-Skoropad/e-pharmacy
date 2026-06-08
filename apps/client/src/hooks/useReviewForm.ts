@@ -3,8 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import {
-  isReviewValid,
+  REVIEW_INITIAL_VALUES,
   USER_REVIEW_COMMENT_MAX_LENGTH,
+  sanitizeReviewComment,
+  validateReviewForm,
 } from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
@@ -36,14 +38,18 @@ export function useReviewForm({
 }: UseReviewFormParams) {
   const { sessionMarker, isAuthenticated } = useAuth();
 
-  const [reviewText, setReviewText] = useState('');
-  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewText, setReviewText] = useState(REVIEW_INITIAL_VALUES.comment);
+  const [reviewRating, setReviewRating] = useState(
+    REVIEW_INITIAL_VALUES.rating
+  );
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
 
-  const isValid = useMemo(
-    () => isReviewValid(reviewText, reviewRating),
+  const reviewErrors = useMemo(
+    () => validateReviewForm({ comment: reviewText, rating: reviewRating }),
     [reviewRating, reviewText]
   );
+
+  const isValid = Object.keys(reviewErrors).length === 0;
 
   const notifySuccess = (message: string) => {
     if (notifier) {
@@ -64,9 +70,9 @@ export function useReviewForm({
   };
 
   const handleReviewTextChange = (value: string) => {
-    if (value.length > USER_REVIEW_COMMENT_MAX_LENGTH) return;
-
-    setReviewText(value);
+    setReviewText(
+      sanitizeReviewComment(value).slice(0, USER_REVIEW_COMMENT_MAX_LENGTH)
+    );
   };
 
   const handleReviewSubmit = async () => {
@@ -80,8 +86,8 @@ export function useReviewForm({
         comment: reviewText.trim(),
       });
 
-      setReviewText('');
-      setReviewRating(0);
+      setReviewText(REVIEW_INITIAL_VALUES.comment);
+      setReviewRating(REVIEW_INITIAL_VALUES.rating);
       notifySuccess(
         'Review was accepted and will be visible after moderation.'
       );
@@ -95,6 +101,7 @@ export function useReviewForm({
   return {
     reviewText,
     reviewRating,
+    reviewErrors,
     isReviewValid: isValid,
     isReviewSubmitting,
     handleReviewTextChange,

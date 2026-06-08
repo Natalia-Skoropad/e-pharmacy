@@ -5,6 +5,13 @@ import type {
   Store,
 } from '@e-pharmacy/types';
 
+import {
+  parsePositivePageParam,
+  sanitizeCatalogArticleParam,
+  sanitizeCatalogTextParam,
+  slugifyCatalogSegment,
+} from './catalog-param-utils';
+
 //===================================================================
 
 export const MEDICINES_CATALOG_PER_PAGE = 24;
@@ -111,23 +118,8 @@ function isProductSortFilter(value?: string): value is ProductSortFilter {
 
 //===================================================================
 
-function sanitizeNameParam(value?: string): string {
-  return (
-    value
-      ?.trim()
-      .replace(/[^A-Za-z0-9 .-]/g, '')
-      .slice(0, 80) ?? ''
-  );
-}
 
-function sanitizeArticleParam(value?: string): string {
-  return (
-    value
-      ?.trim()
-      .replace(/[^A-Za-z0-9.-]/g, '')
-      .slice(0, 80) ?? ''
-  );
-}
+
 
 function isValidObjectId(value?: string): value is string {
   return Boolean(value && /^[a-f\d]{24}$/i.test(value));
@@ -135,13 +127,6 @@ function isValidObjectId(value?: string): value is string {
 
 //===================================================================
 
-function parsePage(value?: string): number {
-  const page = Number(value);
-
-  return Number.isInteger(page) && page > 0 ? page : 1;
-}
-
-//===================================================================
 
 function getCategoryLabel(filters: MedicinesCatalogFilters, fallback?: string) {
   return (
@@ -154,31 +139,23 @@ function getCategoryLabel(filters: MedicinesCatalogFilters, fallback?: string) {
 
 //===================================================================
 
-function slugify(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80);
-}
+
 
 //===================================================================
 
 function deslugifyNameSegment(value: string): string {
-  return sanitizeNameParam(value.replace(/-/g, ' '));
+  return sanitizeCatalogTextParam(value.replace(/-/g, ' '));
 }
 
 function deslugifyArticleSegment(value: string): string {
-  return sanitizeArticleParam(value);
+  return sanitizeCatalogArticleParam(value);
 }
 
 //===================================================================
 
 function getStoreSegment(storeId: string, stores: Store[]): string {
   const store = stores.find((item) => item.id === storeId);
-  const storeSlug = store ? slugify(store.name) : 'pharmacy';
+  const storeSlug = store ? slugifyCatalogSegment(store.name) : 'pharmacy';
 
   return `pharmacy-${storeSlug}-${storeId}`;
 }
@@ -195,8 +172,8 @@ export function parseMedicinesCatalogSearchParams(
   params: MedicinesCatalogSearchParams = {}
 ): MedicinesCatalogFilters {
   return {
-    name: sanitizeNameParam(params.name),
-    article: sanitizeArticleParam(params.article),
+    name: sanitizeCatalogTextParam(params.name),
+    article: sanitizeCatalogArticleParam(params.article),
     category: isProductCategoryFilter(params.category)
       ? params.category
       : 'all',
@@ -204,7 +181,7 @@ export function parseMedicinesCatalogSearchParams(
       ? params.availability
       : 'all',
     sort: isProductSortFilter(params.sort) ? params.sort : 'newest',
-    page: parsePage(params.page),
+    page: parsePositivePageParam(params.page),
     ...(isValidObjectId(params.storeId) ? { storeId: params.storeId } : {}),
   };
 }
@@ -248,7 +225,7 @@ export function parseMedicinesCatalogSegments(
     }
 
     if (segment.startsWith('page-')) {
-      filters.page = parsePage(segment.replace('page-', ''));
+      filters.page = parsePositivePageParam(segment.replace('page-', ''));
       continue;
     }
 
@@ -303,8 +280,8 @@ export function buildMedicinesCatalogPath(
 ): string {
   const segments: string[] = [];
 
-  if (filters.name) segments.push(`search-name-${slugify(filters.name)}`);
-  if (filters.article) segments.push(`article-${slugify(filters.article)}`);
+  if (filters.name) segments.push(`search-name-${slugifyCatalogSegment(filters.name)}`);
+  if (filters.article) segments.push(`article-${slugifyCatalogSegment(filters.article)}`);
 
   if (filters.category && filters.category !== 'all') {
     segments.push(`category-${filters.category}`);

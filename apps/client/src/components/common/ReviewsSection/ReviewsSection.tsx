@@ -25,6 +25,7 @@ type ReviewsSectionProps = {
   reviewText: string;
   reviewRating: number;
   isReviewValid: boolean;
+  reviewError?: string;
   isReviewSubmitting: boolean;
   isAuthenticated: boolean;
   isAuthReady: boolean;
@@ -52,6 +53,7 @@ function ReviewsSection({
   reviewText,
   reviewRating,
   isReviewValid,
+  reviewError,
   isReviewSubmitting,
   isAuthenticated,
   isAuthReady,
@@ -96,6 +98,8 @@ function ReviewsSection({
           label="Your review"
           value={reviewText}
           required
+          error={reviewError}
+          isTouched={Boolean(reviewText)}
           maxLength={maxLength}
           placeholder="Write 10–500 characters using latin letters."
           onChange={(event) => onReviewTextChange(event.target.value)}

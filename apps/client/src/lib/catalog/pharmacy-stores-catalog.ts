@@ -1,5 +1,11 @@
 import type { Store, StoresSortFilter } from '@e-pharmacy/types';
 
+import {
+  parsePositivePageParam,
+  sanitizeCatalogTextParam,
+  slugifyCatalogSegment,
+} from './catalog-param-utils';
+
 //===================================================================
 
 export const PHARMACY_STORES_PER_PAGE = 12;
@@ -58,39 +64,10 @@ function isStoresSortFilter(value?: string): value is StoresSortFilter {
   return SORT_VALUES.includes(value as StoresSortFilter);
 }
 
-function sanitizeTextParam(value?: string): string {
-  return (
-    value
-      ?.trim()
-      .replace(/[^A-Za-z0-9 .-]/g, '')
-      .slice(0, 80) ?? ''
-  );
-}
-
-//===================================================================
-
-function parsePage(value?: string): number {
-  const page = Number(value);
-
-  return Number.isInteger(page) && page > 0 ? page : 1;
-}
-
-//===================================================================
-
-function slugify(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80);
-}
-
 //===================================================================
 
 function deslugifyTextSegment(value: string): string {
-  return sanitizeTextParam(value.replace(/-/g, ' '));
+  return sanitizeCatalogTextParam(value.replace(/-/g, ' '));
 }
 
 function normalizeCityKey(value: string): string {
@@ -125,7 +102,7 @@ export function getUniqueStoreCities(stores: Store[]): string[] {
 //===================================================================
 
 export function resolveStoreCity(value: string, cities: string[]): string {
-  const sanitizedCity = sanitizeTextParam(value);
+  const sanitizedCity = sanitizeCatalogTextParam(value);
   if (!sanitizedCity) return '';
 
   const normalizedCity = normalizeCityKey(sanitizedCity);
@@ -156,11 +133,11 @@ export function parsePharmacyStoresSearchParams(
   params: PharmacyStoresSearchParams = {}
 ): PharmacyStoresFilters {
   return {
-    name: sanitizeTextParam(params.name),
-    address: sanitizeTextParam(params.address),
-    city: sanitizeTextParam(params.city),
+    name: sanitizeCatalogTextParam(params.name),
+    address: sanitizeCatalogTextParam(params.address),
+    city: sanitizeCatalogTextParam(params.city),
     sort: isStoresSortFilter(params.sort) ? params.sort : 'newest',
-    page: parsePage(params.page),
+    page: parsePositivePageParam(params.page),
   };
 }
 
@@ -201,7 +178,7 @@ export function parsePharmacyStoresSegments(
     }
 
     if (segment.startsWith('page-')) {
-      filters.page = parsePage(segment.replace('page-', ''));
+      filters.page = parsePositivePageParam(segment.replace('page-', ''));
     }
   }
 
@@ -215,9 +192,9 @@ export function buildPharmacyStoresPath(
 ): string {
   const segments: string[] = [];
 
-  if (filters.name) segments.push(`search-name-${slugify(filters.name)}`);
-  if (filters.address) segments.push(`address-${slugify(filters.address)}`);
-  if (filters.city) segments.push(`city-${slugify(filters.city)}`);
+  if (filters.name) segments.push(`search-name-${slugifyCatalogSegment(filters.name)}`);
+  if (filters.address) segments.push(`address-${slugifyCatalogSegment(filters.address)}`);
+  if (filters.city) segments.push(`city-${slugifyCatalogSegment(filters.city)}`);
   if (filters.sort && filters.sort !== 'newest') {
     segments.push(`sort-${filters.sort}`);
   }

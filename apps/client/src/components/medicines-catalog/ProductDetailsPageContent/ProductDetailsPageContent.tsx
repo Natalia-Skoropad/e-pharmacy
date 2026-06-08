@@ -341,6 +341,7 @@ function ProductDetailsPageContent({
   const {
     reviewText,
     reviewRating,
+    reviewErrors,
     isReviewValid,
     isReviewSubmitting,
     handleReviewTextChange,
@@ -877,6 +878,7 @@ function ProductDetailsPageContent({
                   reviewText={reviewText}
                   reviewRating={reviewRating}
                   isReviewValid={isReviewValid}
+                  reviewError={reviewErrors.comment}
                   isReviewSubmitting={isReviewSubmitting}
                   isAuthenticated={isAuthenticated}
                   isAuthReady={isAuthReady}
