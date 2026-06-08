@@ -94,7 +94,7 @@ export function validateLoginForm(values: LoginFormValues): LoginFormErrors {
   const errors: LoginFormErrors = {};
 
   const emailError = buildEmailError(values.email);
-  const passwordError = buildPasswordError(values.password.trim());
+  const passwordError = buildPasswordError(values.password);
 
   if (emailError) errors.email = emailError;
   if (passwordError) errors.password = passwordError;

@@ -1,9 +1,17 @@
-import type {
-  ApiEmptySuccessResponse,
-  ApiSuccessResponse,
-} from '@e-pharmacy/types';
-
 import type { Response } from 'express';
+
+//===============================================================
+
+type ApiSuccessResponse<TData> = {
+  status: 'success';
+  message?: string;
+  data: TData;
+};
+
+type ApiEmptySuccessResponse = {
+  status: 'success';
+  message?: string;
+};
 
 //===============================================================
 

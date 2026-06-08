@@ -22,6 +22,7 @@ import {
   sanitizeName,
   sanitizePhone,
   sanitizeEmail,
+  sanitizePassword,
   validateRegisterForm,
   type RegisterFormErrors,
   type RegisterFormValues,
@@ -67,7 +68,7 @@ function RegisterForm() {
             ? sanitizeEmail(rawValue)
             : field === 'phone'
               ? sanitizePhone(rawValue)
-              : rawValue;
+              : sanitizePassword(rawValue);
 
       const nextValues = {
         ...values,

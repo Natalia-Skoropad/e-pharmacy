@@ -10,6 +10,7 @@ import { ROUTES } from '@e-pharmacy/config/routes';
 
 import {
   RESET_PASSWORD_INITIAL_VALUES,
+  sanitizePassword,
   validateResetPasswordForm,
   type ResetPasswordFormErrors,
   type ResetPasswordFormValues,
@@ -57,7 +58,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     (event: ChangeEvent<HTMLInputElement>) => {
       const nextValues = {
         ...values,
-        [field]: event.target.value,
+        [field]: sanitizePassword(event.target.value),
       };
 
       const nextErrors = validateResetPasswordForm(nextValues);

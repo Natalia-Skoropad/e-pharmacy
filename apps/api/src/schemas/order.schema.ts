@@ -1,14 +1,11 @@
 import { z } from 'zod';
 
 import {
-  USER_ADDRESS_MAX_LENGTH,
-  USER_ADDRESS_MIN_LENGTH,
-  USER_NAME_MAX_LENGTH,
-  USER_NAME_MIN_LENGTH,
-  USER_PHONE_MAX_LENGTH,
-  USER_PHONE_MIN_LENGTH,
   sharedOrderCommentSchema,
-} from '@e-pharmacy/validation';
+  sharedRequiredAddressSchema,
+  sharedRequiredPhoneSchema,
+  sharedNameSchema,
+} from './shared-validation.schema';
 
 //===============================================================
 
@@ -27,24 +24,9 @@ export const checkoutOrderSchema = z
     deliveryMethod: z.enum(['pickup', 'post']),
     deliveryDetails: z
       .object({
-        recipientName: z
-          .string()
-          .trim()
-          .min(USER_NAME_MIN_LENGTH)
-          .max(USER_NAME_MAX_LENGTH)
-          .optional(),
-        recipientPhone: z
-          .string()
-          .trim()
-          .min(USER_PHONE_MIN_LENGTH)
-          .max(USER_PHONE_MAX_LENGTH)
-          .optional(),
-        address: z
-          .string()
-          .trim()
-          .min(USER_ADDRESS_MIN_LENGTH)
-          .max(USER_ADDRESS_MAX_LENGTH)
-          .optional(),
+        recipientName: sharedNameSchema.optional(),
+        recipientPhone: sharedRequiredPhoneSchema.optional(),
+        address: sharedRequiredAddressSchema.optional(),
       })
       .optional(),
     comment: sharedOrderCommentSchema,

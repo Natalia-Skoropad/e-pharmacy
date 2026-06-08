@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-import { sharedReviewCommentSchema, sharedSearchSchema } from '@e-pharmacy/validation';
+import {
+  sharedReviewCommentSchema,
+  sharedSearchSchema,
+} from './shared-validation.schema';
 
 //===============================================================
 

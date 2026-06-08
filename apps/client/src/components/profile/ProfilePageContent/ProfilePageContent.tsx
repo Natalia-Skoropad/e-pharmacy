@@ -226,7 +226,7 @@ function ProfilePageContent() {
   const canSaveProfile = Object.keys(profileErrors).length === 0;
 
   const canSavePassword =
-    passwordValues.currentPassword.trim().length > 0 &&
+    passwordValues.currentPassword.length > 0 &&
     passwordValues.newPassword.length > 0 &&
     !passwordErrors.currentPassword &&
     !passwordErrors.newPassword;

@@ -1,14 +1,16 @@
 import { z } from 'zod';
 
+import { VALIDATION_MESSAGES } from '../constants/validation';
+
 import {
-  VALIDATION_MESSAGES,
-  sharedAddressSchema,
   sharedAvatarUrlSchema,
   sharedEmailSchema,
   sharedNameSchema,
+  sharedOptionalAddressSchema,
+  sharedOptionalPhoneSchema,
   sharedPasswordSchema,
-  sharedPhoneSchema,
-} from '@e-pharmacy/validation';
+  sharedRequiredPhoneSchema,
+} from './shared-validation.schema';
 
 import {
   USER_ROLES,
@@ -20,8 +22,9 @@ import {
 const nameSchema = sharedNameSchema;
 const emailSchema = sharedEmailSchema;
 const passwordSchema = sharedPasswordSchema;
-const phoneSchema = sharedPhoneSchema;
-const addressSchema = sharedAddressSchema;
+const requiredPhoneSchema = sharedRequiredPhoneSchema;
+const optionalPhoneSchema = sharedOptionalPhoneSchema;
+const optionalAddressSchema = sharedOptionalAddressSchema;
 const avatarUrlSchema = sharedAvatarUrlSchema;
 
 //===============================================================
@@ -37,10 +40,9 @@ export const registerSchema = z.object({
    */
   role: z.literal(USER_ROLES.CUSTOMER).default(USER_ROLES.CUSTOMER),
 
-  phone: phoneSchema,
-  address: addressSchema,
+  phone: requiredPhoneSchema,
+  address: optionalAddressSchema,
 });
-
 
 //===============================================================
 
@@ -48,8 +50,8 @@ export const createVendorUserSchema = z.object({
   name: nameSchema,
   email: emailSchema,
   password: passwordSchema,
-  phone: phoneSchema,
-  address: addressSchema,
+  phone: requiredPhoneSchema,
+  address: optionalAddressSchema,
   vendorStatus: z
     .enum(Object.values(VENDOR_ACCOUNT_STATUSES))
     .default(VENDOR_ACCOUNT_STATUSES.PENDING),
@@ -77,14 +79,13 @@ export const resetPasswordSchema = z.object({
   newPassword: passwordSchema,
 });
 
-
 //===============================================================
 
 export const updateProfileSchema = z
   .object({
     name: nameSchema.optional(),
-    phone: phoneSchema,
-    address: addressSchema.or(z.literal('')),
+    phone: optionalPhoneSchema,
+    address: optionalAddressSchema,
     avatarUrl: avatarUrlSchema,
   })
   .refine((data) => Object.keys(data).length > 0, {
@@ -94,6 +95,8 @@ export const updateProfileSchema = z
 //===============================================================
 
 export const updatePasswordSchema = z.object({
-  currentPassword: z.string().min(1, VALIDATION_MESSAGES.required.currentPassword),
+  currentPassword: z
+    .string()
+    .min(1, VALIDATION_MESSAGES.required.currentPassword),
   newPassword: passwordSchema,
 });

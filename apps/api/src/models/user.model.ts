@@ -5,13 +5,14 @@ import {
   USER_AVATAR_URL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   VALIDATION_MESSAGES,
-} from '@e-pharmacy/validation';
+} from '../constants/validation';
 
 import {
   USER_ROLES,
   USER_STATUSES,
   VENDOR_ACCOUNT_STATUSES,
 } from '../constants/auth';
+
 import type { UserEntity } from '../types/user';
 
 //===============================================================
@@ -22,10 +23,7 @@ const userSchema = new Schema<UserEntity>(
       type: String,
       required: [true, VALIDATION_MESSAGES.required.name],
       trim: true,
-      maxlength: [
-        USER_NAME_MAX_LENGTH,
-        VALIDATION_MESSAGES.limits.nameMax,
-      ],
+      maxlength: [USER_NAME_MAX_LENGTH, VALIDATION_MESSAGES.limits.nameMax],
     },
 
     email: {

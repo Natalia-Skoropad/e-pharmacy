@@ -70,7 +70,7 @@ export function validateChangePasswordForm(
   values: ChangePasswordFormValues
 ): ChangePasswordFormErrors {
   const errors: ChangePasswordFormErrors = {};
-  const currentPassword = values.currentPassword.trim();
+  const currentPassword = values.currentPassword;
   const newPassword = values.newPassword;
 
   if (!currentPassword && !newPassword) return errors;
