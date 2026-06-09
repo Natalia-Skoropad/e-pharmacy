@@ -1,6 +1,8 @@
 import { Eye, EyeOff } from 'lucide-react';
-import FormFieldLayout from '../FormFieldLayout';
+
+import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
 import type { PasswordFieldProps } from '../types';
+
 import { USER_PASSWORD_MAX_LENGTH } from '@e-pharmacy/validation';
 
 import css from '../FormFieldLayout/FormField.module.css';
@@ -68,3 +70,5 @@ function PasswordInput({
 }
 
 export default PasswordInput;
+
+export { PasswordInput };

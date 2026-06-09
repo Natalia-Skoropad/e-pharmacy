@@ -18,3 +18,5 @@ function ModalRoot({ children }: ModalRootProps) {
 }
 
 export default ModalRoot;
+
+export { ModalRoot };

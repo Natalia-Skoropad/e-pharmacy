@@ -38,3 +38,5 @@ function BurgerButton({
 }
 
 export default BurgerButton;
+
+export { BurgerButton };

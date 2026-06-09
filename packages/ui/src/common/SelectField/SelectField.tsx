@@ -7,8 +7,9 @@ import clsx from 'clsx';
 import {
   isListboxOpenKey,
   isListboxSelectKey,
-  useListboxNavigation,
-} from '@e-pharmacy/hooks';
+} from '../helpers/listbox-keyboard';
+
+import { useListboxNavigation } from '../helpers/useListboxNavigation';
 
 import css from './SelectField.module.css';
 
@@ -198,3 +199,5 @@ function SelectField<TValue extends string>({
 }
 
 export default SelectField;
+
+export { SelectField };

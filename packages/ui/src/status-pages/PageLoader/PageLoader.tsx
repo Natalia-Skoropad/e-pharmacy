@@ -17,3 +17,5 @@ function PageLoader({ label = 'Loading page' }: PageLoaderProps) {
 }
 
 export default PageLoader;
+
+export { PageLoader };

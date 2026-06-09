@@ -44,3 +44,5 @@ function FormFieldLayout({
 }
 
 export default FormFieldLayout;
+
+export { FormFieldLayout };

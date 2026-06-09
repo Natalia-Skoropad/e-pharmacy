@@ -1,5 +1,4 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-
 import clsx from 'clsx';
 
 import css from './Button.module.css';
@@ -48,3 +47,5 @@ function Button({
 }
 
 export default Button;
+
+export { Button };

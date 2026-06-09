@@ -79,3 +79,5 @@ function StatusPageLayout({
 }
 
 export default StatusPageLayout;
+
+export { StatusPageLayout };

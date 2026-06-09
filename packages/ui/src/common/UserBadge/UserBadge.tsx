@@ -10,6 +10,8 @@ import css from './UserBadge.module.css';
 
 type UserBadgeVariant = 'light' | 'dark';
 
+//===================================================================
+
 type UserBadgeProps = {
   name?: string | null;
   pictureUrl?: string | null;
@@ -52,3 +54,5 @@ function UserBadge({
 }
 
 export default UserBadge;
+
+export { UserBadge };

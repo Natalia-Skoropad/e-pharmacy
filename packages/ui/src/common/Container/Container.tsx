@@ -33,3 +33,5 @@ function Container<TElement extends ElementType = 'div'>({
 }
 
 export default Container;
+
+export { Container };

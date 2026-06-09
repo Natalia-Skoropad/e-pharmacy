@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 import { Button, ButtonLink } from '@e-pharmacy/ui/common';
-import { useToast } from '@e-pharmacy/hooks';
+import { useToast } from '@e-pharmacy/ui/feedback';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { useAuth } from '@/providers';
 

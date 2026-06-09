@@ -151,7 +151,6 @@
   color: var(--color-text-secondary);
 }
 
-.resultCount,
 .notice {
   font-size: var(--fz-14);
   line-height: var(--lh-base);
@@ -208,6 +207,13 @@
 }
 
 @media only screen and (min-width: 768px) {
+  .sectionHeader {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
   .panel {
     padding: 24px;
   }

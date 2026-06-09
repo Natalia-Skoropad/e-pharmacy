@@ -1,6 +1,6 @@
 import { LoaderCircle } from 'lucide-react';
 
-import Button from '../Button';
+import Button from '../Button/Button';
 
 import css from './LazyLoadButton.module.css';
 
@@ -46,3 +46,5 @@ function LazyLoadButton({
 }
 
 export default LazyLoadButton;
+
+export { LazyLoadButton };

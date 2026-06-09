@@ -9,6 +9,7 @@ import {
   Button,
   ButtonLink,
   Container,
+  CountLabel,
   LoadingSpinner,
   PictureCard,
   Tabs,
@@ -775,9 +776,7 @@ function ProfilePageContent() {
                 <div className={css.tabPanel} role="tabpanel">
                   <div className={css.ordersHeader}>
                     <h2 className={css.panelTitle}>My orders</h2>
-                    <span className={css.countBadge}>
-                      {orders.length} {orders.length === 1 ? 'order' : 'orders'}
-                    </span>
+                    <CountLabel visibleCount={orders.length} totalCount={orders.length} singularLabel="order" />
                   </div>
 
                   <div className={css.tableWrap}>
@@ -865,12 +864,11 @@ function ProfilePageContent() {
                       </p>
                     </div>
 
-                    <span className={css.countBadge}>
-                      {favoriteProductsCount ?? favoriteProducts.length}{' '}
-                      {(favoriteProductsCount ?? favoriteProducts.length) === 1
-                        ? 'item'
-                        : 'items'}
-                    </span>
+                    <CountLabel
+                      visibleCount={favoriteProducts.length}
+                      totalCount={favoriteProductsCount ?? favoriteProducts.length}
+                      singularLabel="item"
+                    />
                   </div>
 
                   {favoriteProductsError ? (
@@ -956,12 +954,11 @@ function ProfilePageContent() {
                       </p>
                     </div>
 
-                    <span className={css.countBadge}>
-                      {favoriteStoresCount ?? favoriteStores.length}{' '}
-                      {(favoriteStoresCount ?? favoriteStores.length) === 1
-                        ? 'store'
-                        : 'stores'}
-                    </span>
+                    <CountLabel
+                      visibleCount={favoriteStores.length}
+                      totalCount={favoriteStoresCount ?? favoriteStores.length}
+                      singularLabel="store"
+                    />
                   </div>
 
                   {favoriteStoresError ? (

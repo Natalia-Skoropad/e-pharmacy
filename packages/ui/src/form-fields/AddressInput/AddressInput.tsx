@@ -1,6 +1,6 @@
 import { USER_ADDRESS_MAX_LENGTH } from '@e-pharmacy/validation';
 
-import FormFieldLayout from '../FormFieldLayout';
+import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
 import type { AddressFieldProps } from '../types';
 
 import css from '../FormFieldLayout/FormField.module.css';
@@ -49,3 +49,5 @@ function AddressInput({
 }
 
 export default AddressInput;
+
+export { AddressInput };

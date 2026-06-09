@@ -2,9 +2,9 @@
 
 import { createContext } from 'react';
 
-//===================================================================
+import type { ToastVariant } from '../Toast';
 
-export type ToastVariant = 'success' | 'error' | 'info';
+//===================================================================
 
 export type ToastInput = {
   message: string;

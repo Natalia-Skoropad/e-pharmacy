@@ -46,3 +46,5 @@ function ButtonLink({
 }
 
 export default ButtonLink;
+
+export { ButtonLink };

@@ -12,6 +12,7 @@ import {
   Button,
   ButtonLink,
   Container,
+  CountLabel,
   LoadingSpinner,
   RatingSummary,
 } from '@e-pharmacy/ui/common';
@@ -202,12 +203,6 @@ function CartPageContent() {
     }
   };
 
-  const cartItemsLabel = useMemo(() => {
-    if (cart.totalItems === 1) return '1 item';
-
-    return `${cart.totalItems} items`;
-  }, [cart.totalItems]);
-
   const groupedCartItems = useMemo(
     () => groupCartItemsByStore(cart.items),
     [cart.items]
@@ -280,7 +275,7 @@ function CartPageContent() {
               <p className={css.text}>{CART_DESCRIPTION}</p>
             </div>
 
-            <p className={css.badge}>{cartItemsLabel}</p>
+            <CountLabel visibleCount={cart.totalItems} totalCount={cart.totalItems} singularLabel="item" />
           </div>
 
           {isLoading ? (

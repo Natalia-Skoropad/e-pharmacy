@@ -52,3 +52,5 @@ function RatingSummary({
 }
 
 export default RatingSummary;
+
+export { RatingSummary };

@@ -11,8 +11,8 @@ import {
 } from '@e-pharmacy/validation';
 
 import PictureUpload from '../PictureUpload/PictureUpload';
-import Button from '../Button';
-import { ConfirmationModal } from '../../modals';
+import Button from '../Button/Button';
+import ConfirmationModal from '../../modals/ConfirmationModal/ConfirmationModal';
 import { formatInitials } from '../helpers/format-initials';
 
 import css from './PictureCard.module.css';
@@ -159,3 +159,5 @@ function PictureCard({
 }
 
 export default PictureCard;
+
+export { PictureCard };

@@ -62,3 +62,5 @@ function QuantityCounter({
 }
 
 export default QuantityCounter;
+
+export { QuantityCounter };

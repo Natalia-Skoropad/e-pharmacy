@@ -26,7 +26,9 @@ function RadioOption<TValue extends string>({
   disabled = false,
 }: RadioOptionProps<TValue>) {
   return (
-    <label className={clsx(css.option, disabled && css.optionDisabled, className)}>
+    <label
+      className={clsx(css.option, disabled && css.optionDisabled, className)}
+    >
       <input
         className={css.input}
         type="radio"
@@ -43,3 +45,5 @@ function RadioOption<TValue extends string>({
 }
 
 export default RadioOption;
+
+export { RadioOption };

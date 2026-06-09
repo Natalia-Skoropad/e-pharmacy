@@ -9,7 +9,7 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { FavoriteToggleButton } from '@/components/common';
-import { useToast } from '@e-pharmacy/hooks';
+import { useToast } from '@e-pharmacy/ui/feedback';
 import { useFavoriteToggle, useProductFavoriteRefresh } from '@/hooks';
 
 import {

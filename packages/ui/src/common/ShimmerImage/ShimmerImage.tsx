@@ -56,3 +56,5 @@ function ShimmerImage({
 }
 
 export default ShimmerImage;
+
+export { ShimmerImage };

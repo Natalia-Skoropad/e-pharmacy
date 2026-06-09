@@ -4,10 +4,8 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import clsx from 'clsx';
 
-import {
-  isListboxOpenKey,
-  useListboxNavigation,
-} from '@e-pharmacy/hooks';
+import { isListboxOpenKey } from '../helpers/listbox-keyboard';
+import { useListboxNavigation } from '../helpers/useListboxNavigation';
 
 import css from './SearchableSelect.module.css';
 
@@ -55,7 +53,6 @@ function SearchableSelect<TValue extends string = string>({
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
 
-
   const selectedOption = options.find((option) => option.value === value);
   const inputValue = isOpen ? query : (selectedOption?.label ?? '');
 
@@ -69,12 +66,8 @@ function SearchableSelect<TValue extends string = string>({
     );
   }, [options, query]);
 
-  const {
-    activeIndex,
-    moveActiveIndex,
-    resetActiveIndex,
-    setActiveIndex,
-  } = useListboxNavigation(filteredOptions.length);
+  const { activeIndex, moveActiveIndex, resetActiveIndex, setActiveIndex } =
+    useListboxNavigation(filteredOptions.length);
   const activeOption = filteredOptions[activeIndex];
   const activeOptionId = activeOption
     ? `${listboxId}-option-${activeOption.value}`
@@ -258,3 +251,5 @@ function SearchableSelect<TValue extends string = string>({
 }
 
 export default SearchableSelect;
+
+export { SearchableSelect };

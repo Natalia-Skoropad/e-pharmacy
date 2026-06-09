@@ -7,7 +7,7 @@ import css from './Toast.module.css';
 
 //===================================================================
 
-export type ToastVariant = 'info' | 'success' | 'error';
+export type ToastVariant = 'success' | 'error' | 'info';
 
 type ToastProps = {
   message: string;
@@ -21,7 +21,7 @@ type ToastProps = {
 
 //===================================================================
 
-const DEFAULT_TOAST_DURATION = 5000;
+export const DEFAULT_TOAST_DURATION = 5000;
 
 const TOAST_LABELS: Record<ToastVariant, string> = {
   success: 'Success notification',
@@ -83,3 +83,5 @@ function Toast({
 }
 
 export default Toast;
+
+export { Toast };

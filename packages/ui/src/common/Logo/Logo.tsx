@@ -1,13 +1,15 @@
 import Link from 'next/link';
 import clsx from 'clsx';
 
-import SvgIcon from '../SvgIcon';
+import SvgIcon from '../SvgIcon/SvgIcon';
 
 import css from './Logo.module.css';
 
 //===================================================================
 
 type LogoVariant = 'green' | 'white';
+
+//===================================================================
 
 type LogoProps = {
   className?: string;
@@ -42,3 +44,5 @@ function Logo({
 }
 
 export default Logo;
+
+export { Logo };

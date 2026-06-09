@@ -17,3 +17,5 @@ function PictureUpload({ src, alt = '', className }: PictureUploadProps) {
 }
 
 export default PictureUpload;
+
+export { PictureUpload };

@@ -1,4 +1,4 @@
-export { default as ModalBase } from './ModalBase';
-export { default as ModalRoot } from './ModalRoot';
-export { default as ConfirmationModal } from './ConfirmationModal';
-export { default as ActionChoiceModal } from './ActionChoiceModal';
+export * from './ModalBase';
+export * from './ModalRoot';
+export * from './ConfirmationModal';
+export * from './ActionChoiceModal';

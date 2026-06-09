@@ -1,1 +1,1 @@
-export { default, default as StatusPageLayout } from './StatusPageLayout';
+export * from './StatusPageLayout';

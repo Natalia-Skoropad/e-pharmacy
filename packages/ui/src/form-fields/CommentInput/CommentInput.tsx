@@ -1,6 +1,6 @@
 import { USER_ORDER_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
 
-import FormFieldLayout from '../FormFieldLayout';
+import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
 import type { CommentFieldProps } from '../types';
 
 import css from '../FormFieldLayout/FormField.module.css';
@@ -50,3 +50,5 @@ function CommentInput({
 }
 
 export default CommentInput;
+
+export { CommentInput };

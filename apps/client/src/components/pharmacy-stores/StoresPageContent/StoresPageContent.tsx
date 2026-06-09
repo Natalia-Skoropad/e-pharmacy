@@ -44,7 +44,6 @@ function StoresPageContent({
   cityOptions,
   isUnavailable = false,
 }: StoresPageContentProps) {
-  const storesCountLabel = total === 1 ? '1 store' : `${total} stores`;
   const pageTitle = getPharmacyStoresTitle(filters);
   const pageDescription = getPharmacyStoresDescription(filters);
   const showSeoText = total > 0 && shouldShowPharmacyStoresSeoText(filters);
@@ -72,7 +71,7 @@ function StoresPageContent({
           <StoresCatalogFiltersForm
             filters={filters}
             cityOptions={cityOptions}
-            storesCountLabel={storesCountLabel}
+            storesCount={total}
           />
 
           {isUnavailable ? (

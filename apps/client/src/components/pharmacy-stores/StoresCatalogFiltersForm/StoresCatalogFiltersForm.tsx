@@ -4,7 +4,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Filter } from 'lucide-react';
 
-import { CloseIconButton, ResetFiltersButton, SearchableSelect, SearchInput, SelectField } from '@e-pharmacy/ui/common';
+import {
+  CloseIconButton,
+  CountLabel,
+  ResetFiltersButton,
+  SearchableSelect,
+  SearchInput,
+  SelectField,
+} from '@e-pharmacy/ui/common';
 
 import {
   useBackdropClick,
@@ -36,7 +43,7 @@ type CitySelectValue = 'all' | string;
 type StoresCatalogFiltersFormProps = {
   filters: PharmacyStoresFilters;
   cityOptions: string[];
-  storesCountLabel: string;
+  storesCount: number;
 };
 
 type StoresHrefFilters = Omit<PharmacyStoresFilters, 'page'> & {
@@ -63,7 +70,7 @@ function createStoresResetFiltersHref(filters: PharmacyStoresFilters) {
 function StoresCatalogFiltersForm({
   filters,
   cityOptions,
-  storesCountLabel,
+  storesCount,
 }: StoresCatalogFiltersFormProps) {
   const router = useRouter();
 
@@ -195,7 +202,7 @@ function StoresCatalogFiltersForm({
       </div>
 
       <div className={css.catalogToolbar}>
-        <p className={css.resultCount}>{storesCountLabel}</p>
+        <CountLabel visibleCount={storesCount} totalCount={storesCount} singularLabel="store" />
 
         <button
           className={css.filterButton}

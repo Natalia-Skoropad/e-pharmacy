@@ -1,1 +1,1 @@
-export { default, default as MobileOffcanvasBase } from './MobileOffcanvasBase';
+export * from './MobileOffcanvasBase';

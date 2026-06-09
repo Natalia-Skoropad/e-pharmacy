@@ -2,16 +2,13 @@
 
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 
+import { Toast, DEFAULT_TOAST_DURATION, type ToastVariant } from '../Toast';
+
 import {
   ToastContext,
   type ToastContextValue,
   type ToastInput,
-  type ToastVariant,
-} from '@e-pharmacy/hooks';
-
-import Toast from '../Toast';
-
-export type { ToastVariant };
+} from './toast-context';
 
 //===================================================================
 
@@ -28,12 +25,15 @@ type ToastProviderProps = {
 
 //===================================================================
 
-const DEFAULT_TOAST_DURATION = 5000;
 const MAX_VISIBLE_TOASTS = 4;
+
+//===================================================================
 
 function createToastId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
+
+//===================================================================
 
 function ToastProvider({ children }: ToastProviderProps) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -98,3 +98,6 @@ function ToastProvider({ children }: ToastProviderProps) {
 }
 
 export default ToastProvider;
+
+export { useToast } from './useToast';
+export { ToastProvider };

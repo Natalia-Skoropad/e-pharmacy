@@ -34,3 +34,5 @@ function ResetFiltersButton({
 }
 
 export default ResetFiltersButton;
+
+export { ResetFiltersButton };

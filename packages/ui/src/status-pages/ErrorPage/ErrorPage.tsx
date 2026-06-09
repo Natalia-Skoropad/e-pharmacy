@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, ButtonLink } from '../../common';
-import StatusPageLayout from '../StatusPageLayout';
+import StatusPageLayout from '../StatusPageLayout/StatusPageLayout';
 
 //===================================================================
 
@@ -57,3 +57,5 @@ function ErrorPage({
 }
 
 export default ErrorPage;
+
+export { ErrorPage };

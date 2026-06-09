@@ -71,7 +71,6 @@ function MedicineStorePageContent({
   filters,
   isUnavailable = false,
 }: MedicineStorePageContentProps) {
-  const productsCountLabel = total === 1 ? '1 product' : `${total} products`;
   const seoContext = createSeoContext(filters, stores, filterOptions);
   const pageTitle = getMedicinesCatalogTitle(filters, seoContext);
   const pageDescription = getMedicinesCatalogDescription(filters, seoContext);
@@ -106,7 +105,7 @@ function MedicineStorePageContent({
             filters={filters}
             stores={stores}
             filterOptions={filterOptions}
-            productsCountLabel={productsCountLabel}
+            productsCount={total}
           />
 
           {isUnavailable ? (

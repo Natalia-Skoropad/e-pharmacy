@@ -17,7 +17,10 @@ type TextActionButtonAsButton = TextActionButtonBaseProps &
 
 type TextActionButtonAsLink = TextActionButtonBaseProps &
   LinkProps &
-  Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps | 'className' | 'href'> & {
+  Omit<
+    AnchorHTMLAttributes<HTMLAnchorElement>,
+    keyof LinkProps | 'className' | 'href'
+  > & {
     href: LinkProps['href'];
   };
 
@@ -26,7 +29,7 @@ type TextActionButtonProps = TextActionButtonAsButton | TextActionButtonAsLink;
 //===========================================================================
 
 function isTextActionButtonLink(
-  props: TextActionButtonProps,
+  props: TextActionButtonProps
 ): props is TextActionButtonAsLink {
   return props.href !== undefined;
 }
@@ -58,3 +61,5 @@ function TextActionButton(props: TextActionButtonProps) {
 }
 
 export default TextActionButton;
+
+export { TextActionButton };

@@ -139,3 +139,5 @@ function Tabs<TValue extends string = string>({
 }
 
 export default Tabs;
+
+export { Tabs };

@@ -1,6 +1,6 @@
 import { USER_EMAIL_MAX_LENGTH } from '@e-pharmacy/validation';
 
-import FormFieldLayout from '../FormFieldLayout';
+import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
 import type { AuthFieldBaseProps } from '../types';
 
 import css from '../FormFieldLayout/FormField.module.css';
@@ -49,3 +49,5 @@ function EmailInput({
 }
 
 export default EmailInput;
+
+export { EmailInput };

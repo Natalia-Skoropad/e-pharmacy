@@ -6,6 +6,7 @@ import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 import {
   ButtonLink,
   Container,
+  CountLabel,
   RatingSummary,
   ShimmerImage,
   SvgIcon,
@@ -15,7 +16,7 @@ import {
 import { type TabItem } from '@e-pharmacy/ui/common';
 import { FavoriteToggleButton, ReviewsSection } from '@/components/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { useToast } from '@e-pharmacy/hooks';
+import { useToast } from '@e-pharmacy/ui/feedback';
 
 import {
   useFavoriteToggle,
@@ -26,10 +27,7 @@ import {
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 import { ROUTES } from '@e-pharmacy/config/routes';
 
-import {
-  formatAvailableProductsCount,
-  formatReviewsCount,
-} from '@e-pharmacy/utils/formatters';
+import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
 
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
 import { useAuth } from '@/providers';
@@ -46,6 +44,8 @@ import css from './StoreDetailsPageContent.module.css';
 //===================================================================
 
 type StoreTab = 'details' | 'payment' | 'about' | 'reviews';
+
+//===================================================================
 
 type StoreDetailsPageContentProps = {
   store: Store;
@@ -85,8 +85,6 @@ function StoreDetailsPageContent({
 
   const bankDetails = store.bankDetails ?? null;
   const workingHours = store.workingHours?.trim() ?? '';
-
-  const reviewsCountLabel = formatReviewsCount(reviewsTotal);
 
   const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
     useFavoriteToggle({
@@ -330,8 +328,12 @@ function StoreDetailsPageContent({
           <Container>
             <div className={css.panel}>
               <div className={css.sectionHeader}>
-                <h2 className={css.panelTitle}>Reviews ({reviewsTotal})</h2>
-                <p className={css.resultCount}>{reviewsCountLabel}</p>
+                <h2 className={css.panelTitle}>Reviews</h2>
+                <CountLabel
+                  visibleCount={reviews.length}
+                  totalCount={reviewsTotal}
+                  singularLabel="review"
+                />
               </div>
 
               <ReviewsSection

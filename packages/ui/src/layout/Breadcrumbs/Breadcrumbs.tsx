@@ -103,3 +103,5 @@ function Breadcrumbs({
 }
 
 export default Breadcrumbs;
+
+export { Breadcrumbs };

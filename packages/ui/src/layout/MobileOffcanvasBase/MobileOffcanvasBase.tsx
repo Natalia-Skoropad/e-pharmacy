@@ -75,3 +75,5 @@ function MobileOffcanvasBase({
 }
 
 export default MobileOffcanvasBase;
+
+export { MobileOffcanvasBase };

@@ -7,6 +7,7 @@ import {
   Button,
   ButtonLink,
   Container,
+  CountLabel,
   LazyLoadButton,
   QuantityCounter,
   RatingSummary,
@@ -32,7 +33,7 @@ import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { CartInvoiceLimitModal } from '@/components/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useAuth } from '@/providers';
-import { useToast } from '@e-pharmacy/hooks';
+import { useToast } from '@e-pharmacy/ui/feedback';
 import { useFavoriteToggle, useReviewForm } from '@/hooks';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { CATALOG_SEARCH_MAX_LENGTH } from '@e-pharmacy/config/catalog';
@@ -44,7 +45,6 @@ import {
   formatPharmaciesCount,
   formatPrice,
   formatPriceRange,
-  formatReviewsCount,
 } from '@e-pharmacy/utils/formatters';
 
 import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
@@ -210,7 +210,6 @@ function ProductDetailsPageContent({
     [productDetails.foundInStoresCount, reviewsTotal]
   );
 
-  const reviewsCountLabel = formatReviewsCount(reviewsTotal);
   const storesCountLabel = formatPharmaciesCount(
     productDetails.foundInStoresCount
   );
@@ -640,15 +639,15 @@ function ProductDetailsPageContent({
               <div className={css.panel}>
                 <div className={css.sectionHeader}>
                   <div>
-                    <h2 className={css.panelTitle}>
-                      Pharmacies ({productDetails.foundInStoresCount})
-                    </h2>
+                    <h2 className={css.panelTitle}>Pharmacies</h2>
 
-                    <p className={css.resultCount}>
-                      {filteredOffers.length > 0
-                        ? `Showing ${visibleOffers.length} of ${filteredOffers.length} pharmacies`
-                        : 'No pharmacies match your search'}
-                    </p>
+                    <CountLabel
+                      visibleCount={visibleOffers.length}
+                      totalCount={filteredOffers.length}
+                      singularLabel="pharmacy"
+                      pluralLabel="pharmacies"
+                      emptyLabel="No pharmacies match your search"
+                    />
 
                     {!isAuthenticated && isAuthReady ? (
                       <p className={css.authNote}>
@@ -870,8 +869,8 @@ function ProductDetailsPageContent({
             {activeTab === 'reviews' ? (
               <div className={css.panel}>
                 <div className={css.sectionHeader}>
-                  <h2 className={css.panelTitle}>Reviews ({reviewsTotal})</h2>
-                  <p className={css.resultCount}>{reviewsCountLabel}</p>
+                  <h2 className={css.panelTitle}>Reviews</h2>
+                  <CountLabel visibleCount={reviews.length} totalCount={reviewsTotal} singularLabel="review" />
                 </div>
 
                 <ReviewsSection

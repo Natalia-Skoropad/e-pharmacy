@@ -1,6 +1,7 @@
 'use client';
 
 import { type CSSProperties, type ReactNode, useId, useRef } from 'react';
+import clsx from 'clsx';
 
 import {
   useBackdropClick,
@@ -8,8 +9,6 @@ import {
   useEscapeToClose,
   useFocusTrap,
 } from '@e-pharmacy/hooks';
-
-import clsx from 'clsx';
 
 import css from './ModalBase.module.css';
 
@@ -75,3 +74,5 @@ function ModalBase({
 }
 
 export default ModalBase;
+
+export { ModalBase };

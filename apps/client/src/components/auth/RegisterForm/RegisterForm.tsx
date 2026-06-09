@@ -12,7 +12,7 @@ import {
   PhoneInput,
 } from '@e-pharmacy/ui/form-fields';
 
-import { useToast } from '@e-pharmacy/hooks';
+import { useToast } from '@e-pharmacy/ui/feedback';
 import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { getSafeRedirectPath } from '@e-pharmacy/config/routes';

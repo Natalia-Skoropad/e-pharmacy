@@ -2,9 +2,9 @@
 
 import { useId } from 'react';
 
-import Button from '../../common/Button';
-import ModalBase from '../ModalBase';
-import ModalRoot from '../ModalRoot';
+import Button from '../../common/Button/Button';
+import ModalBase from '../ModalBase/ModalBase';
+import ModalRoot from '../ModalRoot/ModalRoot';
 
 import css from './ActionChoiceModal.module.css';
 
@@ -76,3 +76,5 @@ function ActionChoiceModal({
 }
 
 export default ActionChoiceModal;
+
+export { ActionChoiceModal };

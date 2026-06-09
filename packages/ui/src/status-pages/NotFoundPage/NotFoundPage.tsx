@@ -1,5 +1,5 @@
-import { ButtonLink } from '../../common';
-import StatusPageLayout from '../StatusPageLayout';
+import ButtonLink from '../../common/ButtonLink/ButtonLink';
+import StatusPageLayout from '../StatusPageLayout/StatusPageLayout';
 
 //===================================================================
 
@@ -65,3 +65,5 @@ function NotFoundPage({
 }
 
 export default NotFoundPage;
+
+export { NotFoundPage };

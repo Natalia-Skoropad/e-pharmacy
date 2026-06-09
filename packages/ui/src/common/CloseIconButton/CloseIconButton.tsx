@@ -8,6 +8,8 @@ import css from './CloseIconButton.module.css';
 
 type CloseIconButtonVariant = 'light' | 'dark';
 
+//===================================================================
+
 type CloseIconButtonProps = {
   label?: string;
   className?: string;
@@ -36,3 +38,5 @@ function CloseIconButton({
 }
 
 export default CloseIconButton;
+
+export { CloseIconButton };
