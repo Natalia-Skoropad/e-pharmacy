@@ -40,12 +40,14 @@ type ReviewsSectionProps = {
   onReviewRatingChange: (value: number) => void;
   onReviewSubmit: () => void;
   initialVisibleCount?: number;
+  visibleCount?: number;
   step?: number;
+  onVisibleCountChange?: (value: number) => void;
 };
 
 //===================================================================
 
-const DEFAULT_VISIBLE_REVIEWS_COUNT = 10;
+export const DEFAULT_VISIBLE_REVIEWS_COUNT = 10;
 const REVIEWS_LOAD_DELAY_MS = 250;
 
 //===================================================================
@@ -69,10 +71,14 @@ function ReviewsSection({
   onReviewRatingChange,
   onReviewSubmit,
   initialVisibleCount = DEFAULT_VISIBLE_REVIEWS_COUNT,
+  visibleCount,
   step = DEFAULT_VISIBLE_REVIEWS_COUNT,
+  onVisibleCountChange,
 }: ReviewsSectionProps) {
-  const [visibleReviewsCount, setVisibleReviewsCount] =
+  const [internalVisibleCount, setInternalVisibleCount] =
     useState(initialVisibleCount);
+
+  const visibleReviewsCount = visibleCount ?? internalVisibleCount;
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const visibleReviews = reviews.slice(0, visibleReviewsCount);
@@ -81,7 +87,13 @@ function ReviewsSection({
     setIsLoadingMore(true);
 
     window.setTimeout(() => {
-      setVisibleReviewsCount((count) => count + step);
+      const nextVisibleCount = visibleReviewsCount + step;
+
+      if (onVisibleCountChange) {
+        onVisibleCountChange(nextVisibleCount);
+      } else {
+        setInternalVisibleCount(nextVisibleCount);
+      }
       setIsLoadingMore(false);
     }, REVIEWS_LOAD_DELAY_MS);
   };

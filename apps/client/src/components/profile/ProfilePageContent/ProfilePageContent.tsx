@@ -776,9 +776,9 @@ function ProfilePageContent() {
                   <div className={css.ordersHeader}>
                     <h2 className={css.panelTitle}>My orders</h2>
                     <CountLabel
-                      visibleCount={visibleOrders.length}
-                      totalCount={orders.length}
-                      singularLabel="order"
+                      shown={visibleOrders.length}
+                      total={orders.length}
+                      label="orders"
                     />
                   </div>
 
@@ -868,11 +868,11 @@ function ProfilePageContent() {
                     </div>
 
                     <CountLabel
-                      visibleCount={visibleFavoriteProducts.length}
-                      totalCount={
+                      shown={visibleFavoriteProducts.length}
+                      total={
                         favoriteProductsCount ?? favoriteProducts.length
                       }
-                      singularLabel="item"
+                      label="items"
                     />
                   </div>
 
@@ -960,11 +960,11 @@ function ProfilePageContent() {
                     </div>
 
                     <CountLabel
-                      visibleCount={visibleFavoriteStores.length}
-                      totalCount={
+                      shown={visibleFavoriteStores.length}
+                      total={
                         favoriteStoresCount ?? favoriteStores.length
                       }
-                      singularLabel="store"
+                      label="stores"
                     />
                   </div>
 

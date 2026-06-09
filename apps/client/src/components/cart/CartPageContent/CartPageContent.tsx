@@ -275,7 +275,7 @@ function CartPageContent() {
               <p className={css.text}>{CART_DESCRIPTION}</p>
             </div>
 
-            <CountLabel visibleCount={cart.totalItems} totalCount={cart.totalItems} singularLabel="item" />
+            <CountLabel shown={cart.totalItems} total={cart.totalItems} label="items" />
           </div>
 
           {isLoading ? (

@@ -25,6 +25,7 @@ import {
   DeliveryInfoCard,
   FavoriteToggleButton,
   PaymentInfoCard,
+  DEFAULT_VISIBLE_REVIEWS_COUNT,
   ReviewsSection,
   StockAvailability,
 } from '@/components/common';
@@ -196,6 +197,9 @@ function ProductDetailsPageContent({
   );
   const [isOffersLoadingMore, setIsOffersLoadingMore] = useState(false);
   const [areOfferFiltersOpen, setAreOfferFiltersOpen] = useState(false);
+  const [visibleReviewsCount, setVisibleReviewsCount] = useState(
+    DEFAULT_VISIBLE_REVIEWS_COUNT
+  );
 
   const tabs = useMemo<TabItem<ProductTab>[]>(
     () => [
@@ -642,11 +646,9 @@ function ProductDetailsPageContent({
                     <h2 className={css.panelTitle}>Pharmacies</h2>
 
                     <CountLabel
-                      visibleCount={visibleOffers.length}
-                      totalCount={filteredOffers.length}
-                      singularLabel="pharmacy"
-                      pluralLabel="pharmacies"
-                      emptyLabel="No pharmacies match your search"
+                      shown={visibleOffers.length}
+                      total={filteredOffers.length}
+                      label="pharmacies"
                     />
 
                     {!isAuthenticated && isAuthReady ? (
@@ -870,11 +872,17 @@ function ProductDetailsPageContent({
               <div className={css.panel}>
                 <div className={css.sectionHeader}>
                   <h2 className={css.panelTitle}>Reviews</h2>
-                  <CountLabel visibleCount={reviews.length} totalCount={reviewsTotal} singularLabel="review" />
+                  <CountLabel
+                    shown={Math.min(visibleReviewsCount, reviews.length)}
+                    total={reviewsTotal}
+                    label="reviews"
+                  />
                 </div>
 
                 <ReviewsSection
                   reviews={reviews}
+                  visibleCount={visibleReviewsCount}
+                  onVisibleCountChange={setVisibleReviewsCount}
                   reviewText={reviewText}
                   reviewRating={reviewRating}
                   isReviewValid={isReviewValid}

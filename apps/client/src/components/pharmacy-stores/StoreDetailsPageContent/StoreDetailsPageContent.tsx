@@ -14,7 +14,13 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { type TabItem } from '@e-pharmacy/ui/common';
-import { FavoriteToggleButton, ReviewsSection } from '@/components/common';
+
+import {
+  DEFAULT_VISIBLE_REVIEWS_COUNT,
+  FavoriteToggleButton,
+  ReviewsSection,
+} from '@/components/common';
+
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useToast } from '@e-pharmacy/ui/feedback';
 
@@ -65,6 +71,9 @@ function StoreDetailsPageContent({
   const { sessionMarker, isAuthenticated, isAuthReady } = useAuth();
 
   const [activeTab, setActiveTab] = useState<StoreTab>('details');
+  const [visibleReviewsCount, setVisibleReviewsCount] = useState(
+    DEFAULT_VISIBLE_REVIEWS_COUNT
+  );
   const toast = useToast();
 
   const tabs = useMemo<TabItem<StoreTab>[]>(
@@ -330,14 +339,16 @@ function StoreDetailsPageContent({
               <div className={css.sectionHeader}>
                 <h2 className={css.panelTitle}>Reviews</h2>
                 <CountLabel
-                  visibleCount={reviews.length}
-                  totalCount={reviewsTotal}
-                  singularLabel="review"
+                  shown={Math.min(visibleReviewsCount, reviews.length)}
+                  total={reviewsTotal}
+                  label="reviews"
                 />
               </div>
 
               <ReviewsSection
                 reviews={reviews}
+                visibleCount={visibleReviewsCount}
+                onVisibleCountChange={setVisibleReviewsCount}
                 reviewText={reviewText}
                 reviewRating={reviewRating}
                 isReviewValid={isReviewValid}

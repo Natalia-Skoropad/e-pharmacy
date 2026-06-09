@@ -291,9 +291,9 @@ function MedicinesCatalogFiltersForm({
 
       <div className={css.catalogToolbar}>
         <CountLabel
-          visibleCount={visibleProductsCount}
-          totalCount={productsCount}
-          singularLabel="product"
+          shown={visibleProductsCount}
+          total={productsCount}
+          label="products"
         />
 
         <button
