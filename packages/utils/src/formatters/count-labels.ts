@@ -9,4 +9,3 @@ export function formatAvailableProductsCount(count = 0): string {
 export function formatPharmaciesCount(count = 0): string {
   return formatCount(count, 'pharmacy', 'pharmacies');
 }
-

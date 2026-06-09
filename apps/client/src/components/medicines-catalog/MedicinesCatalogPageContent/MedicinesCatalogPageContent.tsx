@@ -105,6 +105,7 @@ function MedicineStorePageContent({
             filters={filters}
             stores={stores}
             filterOptions={filterOptions}
+            visibleProductsCount={products.length}
             productsCount={total}
           />
 

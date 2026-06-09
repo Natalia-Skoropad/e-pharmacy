@@ -71,6 +71,7 @@ function StoresPageContent({
           <StoresCatalogFiltersForm
             filters={filters}
             cityOptions={cityOptions}
+            visibleStoresCount={stores.length}
             storesCount={total}
           />
 

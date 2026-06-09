@@ -15,14 +15,23 @@ type CountLabelProps = {
 
 //===================================================================
 
-function formatVisibleCount(
+function normalizeCount(count = 0): number {
+  return Math.max(0, count);
+}
+
+//===================================================================
+
+function formatCountLabel(
   visibleCount = 0,
-  totalCount = 0,
+  totalCount = visibleCount,
   singularLabel: string,
   pluralLabel = `${singularLabel}s`
 ): string {
-  const safeTotalCount = Math.max(0, totalCount);
-  const safeVisibleCount = Math.min(Math.max(0, visibleCount), safeTotalCount);
+  const safeTotalCount = normalizeCount(totalCount);
+  const safeVisibleCount = Math.min(
+    normalizeCount(visibleCount),
+    safeTotalCount
+  );
   const label = safeTotalCount === 1 ? singularLabel : pluralLabel;
 
   return `Showing ${safeVisibleCount} of ${safeTotalCount} ${label}`;
@@ -32,17 +41,17 @@ function formatVisibleCount(
 
 function CountLabel({
   visibleCount = 0,
-  totalCount = 0,
+  totalCount = visibleCount,
   singularLabel,
   pluralLabel,
   emptyLabel,
   className,
 }: CountLabelProps) {
-  const safeTotalCount = Math.max(0, totalCount);
+  const safeTotalCount = normalizeCount(totalCount);
   const label =
     safeTotalCount === 0 && emptyLabel
       ? emptyLabel
-      : formatVisibleCount(
+      : formatCountLabel(
           visibleCount,
           safeTotalCount,
           singularLabel,

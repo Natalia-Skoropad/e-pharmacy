@@ -43,6 +43,7 @@ type CitySelectValue = 'all' | string;
 type StoresCatalogFiltersFormProps = {
   filters: PharmacyStoresFilters;
   cityOptions: string[];
+  visibleStoresCount: number;
   storesCount: number;
 };
 
@@ -70,6 +71,7 @@ function createStoresResetFiltersHref(filters: PharmacyStoresFilters) {
 function StoresCatalogFiltersForm({
   filters,
   cityOptions,
+  visibleStoresCount,
   storesCount,
 }: StoresCatalogFiltersFormProps) {
   const router = useRouter();
@@ -202,7 +204,11 @@ function StoresCatalogFiltersForm({
       </div>
 
       <div className={css.catalogToolbar}>
-        <CountLabel visibleCount={storesCount} totalCount={storesCount} singularLabel="store" />
+        <CountLabel
+          visibleCount={visibleStoresCount}
+          totalCount={storesCount}
+          singularLabel="store"
+        />
 
         <button
           className={css.filterButton}

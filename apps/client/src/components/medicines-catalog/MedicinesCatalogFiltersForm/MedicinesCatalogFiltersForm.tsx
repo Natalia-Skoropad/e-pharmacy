@@ -50,6 +50,7 @@ type MedicinesCatalogFiltersFormProps = {
   filters: MedicinesCatalogFilters;
   stores: Store[];
   filterOptions: ProductFilterOptionsResponse;
+  visibleProductsCount: number;
   productsCount: number;
 };
 
@@ -87,6 +88,7 @@ function MedicinesCatalogFiltersForm({
   filters,
   stores,
   filterOptions,
+  visibleProductsCount,
   productsCount,
 }: MedicinesCatalogFiltersFormProps) {
   const router = useRouter();
@@ -288,7 +290,11 @@ function MedicinesCatalogFiltersForm({
       </div>
 
       <div className={css.catalogToolbar}>
-        <CountLabel visibleCount={productsCount} totalCount={productsCount} singularLabel="product" />
+        <CountLabel
+          visibleCount={visibleProductsCount}
+          totalCount={productsCount}
+          singularLabel="product"
+        />
 
         <button
           className={css.filterButton}

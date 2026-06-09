@@ -658,7 +658,6 @@ function ProfilePageContent() {
                         value={profileValues.phone}
                         error={profileErrors.phone}
                         isTouched={Boolean(profileTouchedFields.phone)}
-                        required={false}
                         onChange={(event) =>
                           handleProfileChange(
                             'phone',
@@ -776,7 +775,11 @@ function ProfilePageContent() {
                 <div className={css.tabPanel} role="tabpanel">
                   <div className={css.ordersHeader}>
                     <h2 className={css.panelTitle}>My orders</h2>
-                    <CountLabel visibleCount={orders.length} totalCount={orders.length} singularLabel="order" />
+                    <CountLabel
+                      visibleCount={visibleOrders.length}
+                      totalCount={orders.length}
+                      singularLabel="order"
+                    />
                   </div>
 
                   <div className={css.tableWrap}>
@@ -865,8 +868,10 @@ function ProfilePageContent() {
                     </div>
 
                     <CountLabel
-                      visibleCount={favoriteProducts.length}
-                      totalCount={favoriteProductsCount ?? favoriteProducts.length}
+                      visibleCount={visibleFavoriteProducts.length}
+                      totalCount={
+                        favoriteProductsCount ?? favoriteProducts.length
+                      }
                       singularLabel="item"
                     />
                   </div>
@@ -955,8 +960,10 @@ function ProfilePageContent() {
                     </div>
 
                     <CountLabel
-                      visibleCount={favoriteStores.length}
-                      totalCount={favoriteStoresCount ?? favoriteStores.length}
+                      visibleCount={visibleFavoriteStores.length}
+                      totalCount={
+                        favoriteStoresCount ?? favoriteStores.length
+                      }
                       singularLabel="store"
                     />
                   </div>
