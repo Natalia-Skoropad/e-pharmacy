@@ -37,8 +37,17 @@ import { buildCustomerOrderPath } from '@/lib/orders';
 import { buildStorePath, createBreadcrumbs } from '@e-pharmacy/config/routes';
 
 import {
+  CHANGE_PASSWORD_FORM_FIELDS,
   CHANGE_PASSWORD_INITIAL_VALUES,
+  DATA_PROFILE_FORM_FIELDS,
   DATA_PROFILE_INITIAL_VALUES,
+  hasValidationErrors,
+  isChangePasswordFormDirty,
+  isChangePasswordFormValid,
+  isDataProfileFormDirty,
+  isDataProfileFormValid,
+  markAllFieldsTouched,
+  normalizeDataProfileValues,
   sanitizeAddress,
   sanitizeName,
   sanitizePassword,
@@ -46,7 +55,9 @@ import {
   validateChangePasswordForm,
   validateDataProfileForm,
   type ChangePasswordFormValues,
+  type ChangePasswordTouchedFields,
   type DataProfileFormValues,
+  type DataProfileTouchedFields,
 } from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
@@ -84,20 +95,6 @@ const TABS: Array<{
 const FAVORITES_PER_PAGE = 100;
 const FAVORITES_VISIBLE_STEP = 16;
 const ORDERS_VISIBLE_STEP = 15;
-
-type ProfileTouchedFields = Partial<
-  Record<keyof DataProfileFormValues, boolean>
->;
-
-const PROFILE_FORM_FIELDS: Array<keyof DataProfileFormValues> = [
-  'name',
-  'phone',
-  'address',
-];
-
-function normalizeProfileValue(value: string): string {
-  return value.trim();
-}
 
 //===================================================================
 
@@ -171,10 +168,13 @@ function ProfilePageContent() {
     useState<DataProfileFormValues>(DATA_PROFILE_INITIAL_VALUES);
 
   const [profileTouchedFields, setProfileTouchedFields] =
-    useState<ProfileTouchedFields>({});
+    useState<DataProfileTouchedFields>({});
 
   const [passwordValues, setPasswordValues] =
     useState<ChangePasswordFormValues>(CHANGE_PASSWORD_INITIAL_VALUES);
+
+  const [passwordTouchedFields, setPasswordTouchedFields] =
+    useState<ChangePasswordTouchedFields>({});
 
   const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] =
     useState(false);
@@ -247,19 +247,15 @@ function ProfilePageContent() {
     [passwordValues]
   );
 
-  const profileFormIsValid = Object.keys(profileErrors).length === 0;
+  const profileFormIsValid = isDataProfileFormValid(profileValues);
 
-  const profileFormIsDirty = PROFILE_FORM_FIELDS.some(
-    (field) =>
-      normalizeProfileValue(profileValues[field]) !==
-      normalizeProfileValue(initialProfileValues[field])
+  const profileFormIsDirty = isDataProfileFormDirty(
+    profileValues,
+    initialProfileValues
   );
 
-  const canSavePassword =
-    passwordValues.currentPassword.length > 0 &&
-    passwordValues.newPassword.length > 0 &&
-    !passwordErrors.currentPassword &&
-    !passwordErrors.newPassword;
+  const passwordFormIsDirty = isChangePasswordFormDirty(passwordValues);
+  const passwordFormIsValid = isChangePasswordFormValid(passwordValues);
 
   const tabs = useMemo(
     () =>
@@ -491,20 +487,23 @@ function ProfilePageContent() {
   };
 
   const handleProfileSubmit = async () => {
-    setProfileTouchedFields({ name: true, phone: true, address: true });
+    const nextErrors = validateDataProfileForm(profileValues);
+    setProfileTouchedFields(markAllFieldsTouched(DATA_PROFILE_FORM_FIELDS));
 
-    if (!sessionMarker || !profileFormIsValid || !profileFormIsDirty) return;
+    if (
+      !sessionMarker ||
+      hasValidationErrors(nextErrors) ||
+      !profileFormIsDirty
+    ) {
+      return;
+    }
 
     try {
       setIsProfileSaving(true);
       setFeedback('');
       setError('');
 
-      const nextProfileValues = {
-        name: profileValues.name.trim(),
-        phone: profileValues.phone.trim(),
-        address: profileValues.address.trim(),
-      };
+      const nextProfileValues = normalizeDataProfileValues(profileValues);
 
       await updateCurrentUser(nextProfileValues);
       await refreshCurrentUser();
@@ -524,6 +523,11 @@ function ProfilePageContent() {
   ) => {
     setFeedback('');
     setPasswordSubmitError('');
+    setPasswordTouchedFields((prev) => ({
+      ...prev,
+      [field]: true,
+    }));
+
     setPasswordValues((prev) => ({
       ...prev,
       [field]: field === 'newPassword' ? sanitizePassword(value) : value,
@@ -531,7 +535,16 @@ function ProfilePageContent() {
   };
 
   const handleSavePassword = async () => {
-    if (!sessionMarker || !canSavePassword) return;
+    const nextErrors = validateChangePasswordForm(passwordValues);
+    setPasswordTouchedFields(markAllFieldsTouched(CHANGE_PASSWORD_FORM_FIELDS));
+
+    if (
+      !sessionMarker ||
+      hasValidationErrors(nextErrors) ||
+      !passwordFormIsDirty
+    ) {
+      return;
+    }
 
     try {
       setIsPasswordSaving(true);
@@ -540,6 +553,7 @@ function ProfilePageContent() {
 
       await updateCurrentUserPassword(passwordValues);
       setPasswordValues(CHANGE_PASSWORD_INITIAL_VALUES);
+      setPasswordTouchedFields({});
       setFeedback('Password was changed.');
     } catch {
       setPasswordSubmitError(
@@ -703,7 +717,9 @@ function ProfilePageContent() {
                         value={passwordValues.currentPassword}
                         autoComplete="current-password"
                         error={passwordErrors.currentPassword}
-                        isTouched
+                        isTouched={Boolean(
+                          passwordTouchedFields.currentPassword
+                        )}
                         isVisible={isCurrentPasswordVisible}
                         onChange={(event) =>
                           handlePasswordChange(
@@ -723,7 +739,7 @@ function ProfilePageContent() {
                         value={passwordValues.newPassword}
                         autoComplete="new-password"
                         error={passwordErrors.newPassword}
-                        isTouched
+                        isTouched={Boolean(passwordTouchedFields.newPassword)}
                         isVisible={isNewPasswordVisible}
                         onChange={(event) =>
                           handlePasswordChange(
@@ -745,7 +761,7 @@ function ProfilePageContent() {
 
                     <Button
                       type="button"
-                      disabled={!canSavePassword || isPasswordSaving}
+                      disabled={!passwordFormIsValid || isPasswordSaving}
                       onClick={() => void handleSavePassword()}
                     >
                       <KeyRound size={18} aria-hidden="true" />

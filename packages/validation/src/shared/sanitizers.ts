@@ -1,6 +1,5 @@
 import {
   USER_ADDRESS_MAX_LENGTH,
-  PICTURE_URL_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_ORDER_COMMENT_MAX_LENGTH,
@@ -75,10 +74,4 @@ export function sanitizeReviewComment(value: string): string {
   return value
     .replace(/[^A-Za-z0-9\s.,!?;:'"()\-]/g, '')
     .slice(0, USER_REVIEW_COMMENT_MAX_LENGTH);
-}
-
-//=============================================================================
-
-export function sanitizePictureUrl(value: string): string {
-  return value.trim().slice(0, PICTURE_URL_MAX_LENGTH);
 }

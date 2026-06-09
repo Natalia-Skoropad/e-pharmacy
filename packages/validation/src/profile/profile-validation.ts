@@ -4,7 +4,10 @@ import {
   buildAddressError,
   buildPasswordError,
   buildRequiredPasswordError,
+  isValidationResultValid,
   VALIDATION_MESSAGES,
+  type FormErrors,
+  type FormTouchedFields,
 } from '../shared';
 
 //===================================================================
@@ -22,13 +25,14 @@ export type ChangePasswordFormValues = {
 
 //===================================================================
 
-export type DataProfileFormErrors = Partial<
-  Record<keyof DataProfileFormValues, string>
->;
+export type DataProfileFormErrors = FormErrors<DataProfileFormValues>;
+export type ChangePasswordFormErrors = FormErrors<ChangePasswordFormValues>;
 
-export type ChangePasswordFormErrors = Partial<
-  Record<keyof ChangePasswordFormValues, string>
->;
+//===================================================================
+
+export type DataProfileTouchedFields = FormTouchedFields<DataProfileFormValues>;
+export type ChangePasswordTouchedFields =
+  FormTouchedFields<ChangePasswordFormValues>;
 
 //===================================================================
 
@@ -42,6 +46,68 @@ export const CHANGE_PASSWORD_INITIAL_VALUES: ChangePasswordFormValues = {
   currentPassword: '',
   newPassword: '',
 };
+
+//===================================================================
+
+export const DATA_PROFILE_FORM_FIELDS: Array<keyof DataProfileFormValues> = [
+  'name',
+  'phone',
+  'address',
+];
+
+export const CHANGE_PASSWORD_FORM_FIELDS: Array<
+  keyof ChangePasswordFormValues
+> = ['currentPassword', 'newPassword'];
+
+//===================================================================
+
+export function normalizeDataProfileValue(value: string): string {
+  return value.trim();
+}
+
+export function normalizeDataProfileValues(
+  values: DataProfileFormValues
+): DataProfileFormValues {
+  return {
+    name: normalizeDataProfileValue(values.name),
+    phone: normalizeDataProfileValue(values.phone),
+    address: normalizeDataProfileValue(values.address),
+  };
+}
+
+//===================================================================
+
+export function isDataProfileFormDirty(
+  values: DataProfileFormValues,
+  initialValues: DataProfileFormValues
+): boolean {
+  return DATA_PROFILE_FORM_FIELDS.some(
+    (field) =>
+      normalizeDataProfileValue(values[field]) !==
+      normalizeDataProfileValue(initialValues[field])
+  );
+}
+
+export function isChangePasswordFormDirty(
+  values: ChangePasswordFormValues
+): boolean {
+  return CHANGE_PASSWORD_FORM_FIELDS.some((field) => values[field].length > 0);
+}
+
+//===================================================================
+
+export function isDataProfileFormValid(values: DataProfileFormValues): boolean {
+  return isValidationResultValid(validateDataProfileForm(values));
+}
+
+export function isChangePasswordFormValid(
+  values: ChangePasswordFormValues
+): boolean {
+  return (
+    isChangePasswordFormDirty(values) &&
+    isValidationResultValid(validateChangePasswordForm(values))
+  );
+}
 
 //===================================================================
 

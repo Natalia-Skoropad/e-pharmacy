@@ -111,6 +111,7 @@ function StoreDetailsPageContent({
     reviewText,
     reviewRating,
     reviewErrors,
+    reviewTouchedFields,
     isReviewValid,
     isReviewSubmitting,
     handleReviewTextChange,
@@ -339,6 +340,7 @@ function StoreDetailsPageContent({
                 reviewRating={reviewRating}
                 isReviewValid={isReviewValid}
                 reviewError={reviewErrors.comment}
+                reviewTouchedFields={reviewTouchedFields}
                 isReviewSubmitting={isReviewSubmitting}
                 isAuthenticated={isAuthenticated}
                 isAuthReady={isAuthReady}

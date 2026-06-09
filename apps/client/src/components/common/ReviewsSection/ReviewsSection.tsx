@@ -7,6 +7,7 @@ import Button from '@e-pharmacy/ui/common/Button';
 import LazyLoadButton from '@e-pharmacy/ui/common/LazyLoadButton';
 import { CommentInput } from '@e-pharmacy/ui/form-fields';
 import { formatReviewDate } from '@e-pharmacy/utils/formatters';
+import type { ReviewTouchedFields } from '@e-pharmacy/validation';
 
 import css from './ReviewsSection.module.css';
 
@@ -26,6 +27,7 @@ type ReviewsSectionProps = {
   reviewRating: number;
   isReviewValid: boolean;
   reviewError?: string;
+  reviewTouchedFields: ReviewTouchedFields;
   isReviewSubmitting: boolean;
   isAuthenticated: boolean;
   isAuthReady: boolean;
@@ -54,6 +56,7 @@ function ReviewsSection({
   reviewRating,
   isReviewValid,
   reviewError,
+  reviewTouchedFields,
   isReviewSubmitting,
   isAuthenticated,
   isAuthReady,
@@ -99,7 +102,7 @@ function ReviewsSection({
           value={reviewText}
           required
           error={reviewError}
-          isTouched={Boolean(reviewText)}
+          isTouched={Boolean(reviewTouchedFields.comment)}
           maxLength={maxLength}
           placeholder="Write 10–500 characters using latin letters."
           onChange={(event) => onReviewTextChange(event.target.value)}

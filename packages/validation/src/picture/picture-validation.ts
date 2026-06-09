@@ -6,10 +6,6 @@ export const PICTURE_ALLOWED_TYPES = [
 
 //===================================================================
 
-export type PictureAllowedType = (typeof PICTURE_ALLOWED_TYPES)[number];
-
-//===================================================================
-
 export const PICTURE_ACCEPT = PICTURE_ALLOWED_TYPES.join(',');
 
 //===================================================================

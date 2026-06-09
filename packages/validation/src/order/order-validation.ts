@@ -3,11 +3,16 @@ import {
   buildNameError,
   buildOrderCommentError,
   buildPhoneError,
+  isValidationResultValid,
+  type FormErrors,
+  type FormTouchedFields,
 } from '../shared';
 
 //===================================================================
 
 export type OrderDeliveryMethod = 'pickup' | 'post';
+
+//===================================================================
 
 export type OrderDeliveryFormValues = {
   recipientName: string;
@@ -16,9 +21,12 @@ export type OrderDeliveryFormValues = {
   comment: string;
 };
 
-export type OrderDeliveryFormErrors = Partial<
-  Record<keyof OrderDeliveryFormValues, string>
->;
+//===================================================================
+
+export type OrderDeliveryFormErrors = FormErrors<OrderDeliveryFormValues>;
+
+export type OrderDeliveryTouchedFields =
+  FormTouchedFields<OrderDeliveryFormValues>;
 
 //===================================================================
 
@@ -28,6 +36,9 @@ export const ORDER_DELIVERY_INITIAL_VALUES: OrderDeliveryFormValues = {
   deliveryAddress: '',
   comment: '',
 };
+
+export const ORDER_DELIVERY_FORM_FIELDS: Array<keyof OrderDeliveryFormValues> =
+  ['recipientName', 'recipientPhone', 'deliveryAddress', 'comment'];
 
 //===================================================================
 
@@ -72,8 +83,7 @@ export function isOrderDeliveryFormValid(
   values: OrderDeliveryFormValues,
   deliveryMethod: OrderDeliveryMethod
 ): boolean {
-  return (
-    Object.keys(validateOrderDeliveryForm(values, deliveryMethod)).length ===
-    0
+  return isValidationResultValid(
+    validateOrderDeliveryForm(values, deliveryMethod)
   );
 }

@@ -18,7 +18,11 @@ import { ROUTES } from '@e-pharmacy/config/routes';
 import { getSafeRedirectPath } from '@e-pharmacy/config/routes';
 
 import {
+  REGISTER_FORM_FIELDS,
   REGISTER_INITIAL_VALUES,
+  hasValidationErrors,
+  isRegisterFormValid,
+  markAllFieldsTouched,
   sanitizeName,
   sanitizePhone,
   sanitizeEmail,
@@ -26,6 +30,7 @@ import {
   validateRegisterForm,
   type RegisterFormErrors,
   type RegisterFormValues,
+  type RegisterTouchedFields,
 } from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
@@ -46,16 +51,13 @@ function RegisterForm() {
   );
 
   const [errors, setErrors] = useState<RegisterFormErrors>({});
-  const [touchedFields, setTouchedFields] = useState<
-    Partial<Record<keyof RegisterFormValues, boolean>>
-  >({});
+  const [touchedFields, setTouchedFields] = useState<RegisterTouchedFields>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
-  const registerFormIsValid =
-    Object.keys(validateRegisterForm(values)).length === 0;
+  const registerFormIsValid = isRegisterFormValid(values);
 
   const handleChange =
     (field: keyof RegisterFormValues) =>
@@ -90,13 +92,8 @@ function RegisterForm() {
 
     const nextErrors = validateRegisterForm(values);
 
-    if (Object.keys(nextErrors).length > 0) {
-      setTouchedFields({
-        name: true,
-        email: true,
-        phone: true,
-        password: true,
-      });
+    if (hasValidationErrors(nextErrors)) {
+      setTouchedFields(markAllFieldsTouched(REGISTER_FORM_FIELDS));
       setErrors(nextErrors);
       return;
     }

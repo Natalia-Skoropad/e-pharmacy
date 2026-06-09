@@ -1,4 +1,10 @@
-import { buildReviewCommentError, buildReviewRatingError } from '../shared';
+import {
+  buildReviewCommentError,
+  buildReviewRatingError,
+  isValidationResultValid,
+  type FormErrors,
+  type FormTouchedFields,
+} from '../shared';
 
 //===================================================================
 
@@ -7,7 +13,8 @@ export type ReviewFormValues = {
   rating: number;
 };
 
-export type ReviewFormErrors = Partial<Record<keyof ReviewFormValues, string>>;
+export type ReviewFormErrors = FormErrors<ReviewFormValues>;
+export type ReviewTouchedFields = FormTouchedFields<ReviewFormValues>;
 
 //===================================================================
 
@@ -15,6 +22,11 @@ export const REVIEW_INITIAL_VALUES: ReviewFormValues = {
   comment: '',
   rating: 0,
 };
+
+export const REVIEW_FORM_FIELDS: Array<keyof ReviewFormValues> = [
+  'comment',
+  'rating',
+];
 
 //===================================================================
 
@@ -36,11 +48,5 @@ export function validateReviewForm(values: ReviewFormValues): ReviewFormErrors {
 //===================================================================
 
 export function isReviewFormValid(values: ReviewFormValues): boolean {
-  return Object.keys(validateReviewForm(values)).length === 0;
-}
-
-//===================================================================
-
-export function isReviewValid(text: string, rating: number): boolean {
-  return isReviewFormValid({ comment: text, rating });
+  return isValidationResultValid(validateReviewForm(values));
 }

@@ -4,7 +4,10 @@ import {
   buildPhoneError,
   buildPasswordError,
   buildRequiredPasswordError,
+  isValidationResultValid,
   VALIDATION_MESSAGES,
+  type FormErrors,
+  type FormTouchedFields,
 } from '../shared';
 
 //===================================================================
@@ -32,19 +35,19 @@ export type ResetPasswordFormValues = {
 
 //===================================================================
 
-export type RegisterFormErrors = Partial<
-  Record<keyof RegisterFormValues, string>
->;
+export type RegisterFormErrors = FormErrors<RegisterFormValues>;
+export type LoginFormErrors = FormErrors<LoginFormValues>;
+export type ForgotPasswordFormErrors = FormErrors<ForgotPasswordFormValues>;
+export type ResetPasswordFormErrors = FormErrors<ResetPasswordFormValues>;
 
-export type LoginFormErrors = Partial<Record<keyof LoginFormValues, string>>;
+//===================================================================
 
-export type ForgotPasswordFormErrors = Partial<
-  Record<keyof ForgotPasswordFormValues, string>
->;
-
-export type ResetPasswordFormErrors = Partial<
-  Record<keyof ResetPasswordFormValues, string>
->;
+export type RegisterTouchedFields = FormTouchedFields<RegisterFormValues>;
+export type LoginTouchedFields = FormTouchedFields<LoginFormValues>;
+export type ForgotPasswordTouchedFields =
+  FormTouchedFields<ForgotPasswordFormValues>;
+export type ResetPasswordTouchedFields =
+  FormTouchedFields<ResetPasswordFormValues>;
 
 //===================================================================
 
@@ -68,6 +71,27 @@ export const RESET_PASSWORD_INITIAL_VALUES: ResetPasswordFormValues = {
   password: '',
   confirmPassword: '',
 };
+
+//===================================================================
+
+export const REGISTER_FORM_FIELDS: Array<keyof RegisterFormValues> = [
+  'name',
+  'email',
+  'phone',
+  'password',
+];
+
+export const LOGIN_FORM_FIELDS: Array<keyof LoginFormValues> = [
+  'email',
+  'password',
+];
+
+export const FORGOT_PASSWORD_FORM_FIELDS: Array<
+  keyof ForgotPasswordFormValues
+> = ['email'];
+
+export const RESET_PASSWORD_FORM_FIELDS: Array<keyof ResetPasswordFormValues> =
+  ['password', 'confirmPassword'];
 
 //===================================================================
 
@@ -133,4 +157,29 @@ export function validateResetPasswordForm(
   }
 
   return errors;
+}
+
+//===================================================================
+
+export function isRegisterFormValid(values: RegisterFormValues): boolean {
+  return isValidationResultValid(validateRegisterForm(values));
+}
+
+export function isLoginFormValid(values: LoginFormValues): boolean {
+  return isValidationResultValid(validateLoginForm(values));
+}
+
+export function isForgotPasswordFormValid(
+  values: ForgotPasswordFormValues
+): boolean {
+  return isValidationResultValid(validateForgotPasswordForm(values));
+}
+
+export function isResetPasswordFormValid(
+  values: ResetPasswordFormValues,
+  token?: string
+): boolean {
+  return (
+    Boolean(token) && isValidationResultValid(validateResetPasswordForm(values))
+  );
 }

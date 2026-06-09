@@ -8,11 +8,16 @@ import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
 import { ROUTES } from '@e-pharmacy/config/routes';
 
 import {
+  FORGOT_PASSWORD_FORM_FIELDS,
   FORGOT_PASSWORD_INITIAL_VALUES,
+  hasValidationErrors,
+  isForgotPasswordFormValid,
+  markAllFieldsTouched,
   sanitizeEmail,
   validateForgotPasswordForm,
   type ForgotPasswordFormErrors,
   type ForgotPasswordFormValues,
+  type ForgotPasswordTouchedFields,
 } from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
@@ -32,14 +37,11 @@ function PasswordRecoveryForm() {
 
   const [errors, setErrors] = useState<ForgotPasswordFormErrors>({});
 
-  const [touchedFields, setTouchedFields] = useState<
-    Partial<Record<keyof ForgotPasswordFormValues, boolean>>
-  >({});
+  const [touchedFields, setTouchedFields] =
+    useState<ForgotPasswordTouchedFields>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const formIsValid =
-    Object.keys(validateForgotPasswordForm(values)).length === 0;
+  const formIsValid = isForgotPasswordFormValid(values);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const nextValues = {
@@ -58,8 +60,8 @@ function PasswordRecoveryForm() {
 
     const nextErrors = validateForgotPasswordForm(values);
 
-    if (Object.keys(nextErrors).length > 0) {
-      setTouchedFields({ email: true });
+    if (hasValidationErrors(nextErrors)) {
+      setTouchedFields(markAllFieldsTouched(FORGOT_PASSWORD_FORM_FIELDS));
       setErrors(nextErrors);
       return;
     }

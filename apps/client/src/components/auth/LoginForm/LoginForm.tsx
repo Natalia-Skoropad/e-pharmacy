@@ -12,11 +12,16 @@ import { ROUTES } from '@e-pharmacy/config/routes';
 import { getSafeRedirectPath } from '@e-pharmacy/config/routes';
 
 import {
+  LOGIN_FORM_FIELDS,
   LOGIN_INITIAL_VALUES,
+  hasValidationErrors,
+  isLoginFormValid,
+  markAllFieldsTouched,
   sanitizeEmail,
   validateLoginForm,
   type LoginFormErrors,
   type LoginFormValues,
+  type LoginTouchedFields,
 } from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
@@ -35,21 +40,21 @@ function LoginForm() {
   const [values, setValues] = useState<LoginFormValues>(LOGIN_INITIAL_VALUES);
   const [errors, setErrors] = useState<LoginFormErrors>({});
 
-  const [touchedFields, setTouchedFields] = useState<
-    Partial<Record<keyof LoginFormValues, boolean>>
-  >({});
+  const [touchedFields, setTouchedFields] = useState<LoginTouchedFields>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
-  const loginFormIsValid = Object.keys(validateLoginForm(values)).length === 0;
+  const loginFormIsValid = isLoginFormValid(values);
 
   const handleChange =
     (field: keyof LoginFormValues) =>
     (event: ChangeEvent<HTMLInputElement>) => {
       const nextValue =
-        field === 'email' ? sanitizeEmail(event.target.value) : event.target.value;
+        field === 'email'
+          ? sanitizeEmail(event.target.value)
+          : event.target.value;
 
       const nextValues = {
         ...values,
@@ -71,8 +76,8 @@ function LoginForm() {
 
     const nextErrors = validateLoginForm(values);
 
-    if (Object.keys(nextErrors).length > 0) {
-      setTouchedFields({ email: true, password: true });
+    if (hasValidationErrors(nextErrors)) {
+      setTouchedFields(markAllFieldsTouched(LOGIN_FORM_FIELDS));
       setErrors(nextErrors);
       return;
     }

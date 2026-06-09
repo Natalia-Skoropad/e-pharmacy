@@ -9,11 +9,16 @@ import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
 import { ROUTES } from '@e-pharmacy/config/routes';
 
 import {
+  RESET_PASSWORD_FORM_FIELDS,
   RESET_PASSWORD_INITIAL_VALUES,
+  hasValidationErrors,
+  isResetPasswordFormValid,
+  markAllFieldsTouched,
   sanitizePassword,
   validateResetPasswordForm,
   type ResetPasswordFormErrors,
   type ResetPasswordFormValues,
+  type ResetPasswordTouchedFields,
 } from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
@@ -38,9 +43,8 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   );
   const [errors, setErrors] = useState<ResetPasswordFormErrors>({});
 
-  const [touchedFields, setTouchedFields] = useState<
-    Partial<Record<keyof ResetPasswordFormValues, boolean>>
-  >({});
+  const [touchedFields, setTouchedFields] =
+    useState<ResetPasswordTouchedFields>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -49,9 +53,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
     useState(false);
 
-  const formIsValid =
-    Boolean(token) &&
-    Object.keys(validateResetPasswordForm(values)).length === 0;
+  const formIsValid = isResetPasswordFormValid(values, token);
 
   const handleChange =
     (field: keyof ResetPasswordFormValues) =>
@@ -73,8 +75,8 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
     const nextErrors = validateResetPasswordForm(values);
 
-    if (!token || Object.keys(nextErrors).length > 0) {
-      setTouchedFields({ password: true, confirmPassword: true });
+    if (!token || hasValidationErrors(nextErrors)) {
+      setTouchedFields(markAllFieldsTouched(RESET_PASSWORD_FORM_FIELDS));
       setErrors(nextErrors);
       return;
     }

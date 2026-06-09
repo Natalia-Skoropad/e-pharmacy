@@ -3,8 +3,6 @@ export const VALIDATION_LIMITS = {
   nameMax: 50,
 
   emailMax: 64,
-
-  phoneMin: 13,
   phoneMax: 13,
 
   passwordMin: 8,
@@ -33,8 +31,6 @@ export const USER_NAME_MIN_LENGTH = VALIDATION_LIMITS.nameMin;
 export const USER_NAME_MAX_LENGTH = VALIDATION_LIMITS.nameMax;
 
 export const USER_EMAIL_MAX_LENGTH = VALIDATION_LIMITS.emailMax;
-
-export const USER_PHONE_MIN_LENGTH = VALIDATION_LIMITS.phoneMin;
 export const USER_PHONE_MAX_LENGTH = VALIDATION_LIMITS.phoneMax;
 
 export const USER_PASSWORD_MIN_LENGTH = VALIDATION_LIMITS.passwordMin;
@@ -58,6 +54,3 @@ export const USER_ORDER_COMMENT_MAX_LENGTH = VALIDATION_LIMITS.orderCommentMax;
 export const PICTURE_URL_MAX_LENGTH = VALIDATION_LIMITS.pictureUrlMax;
 export const PICTURE_FILE_MAX_SIZE_BYTES =
   VALIDATION_LIMITS.pictureFileMaxSizeBytes;
-export const PICTURE_FILE_MAX_SIZE_KB = Math.round(
-  PICTURE_FILE_MAX_SIZE_BYTES / 1024
-);

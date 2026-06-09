@@ -40,18 +40,24 @@ import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@e-pharmacy/config/seo';
 import { ROUTES } from '@e-pharmacy/config/routes';
 
 import {
+  ORDER_DELIVERY_INITIAL_VALUES,
+  ORDER_DELIVERY_FORM_FIELDS,
+  hasValidationErrors,
+  isOrderDeliveryFormValid,
+  markAllFieldsTouched,
   sanitizeAddress,
   sanitizeName,
   sanitizeOrderComment,
   sanitizePhone,
   validateOrderDeliveryForm,
+  type OrderDeliveryFormValues,
+  type OrderDeliveryTouchedFields,
 } from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
 import type { BreadcrumbItem } from '@e-pharmacy/types';
 
 import type { CheckoutPaymentMethod as PaymentMethod } from '@e-pharmacy/types/checkout';
-
 import type { OrderDeliveryMethod as DeliveryMethod } from '@e-pharmacy/types/orders';
 
 import css from './CheckoutPageContent.module.css';
@@ -70,10 +76,6 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
   { label: CHECKOUT_TITLE },
 ];
 
-const POST_DELIVERY_FIELDS_ARE_INSTANT_VALIDATED = true;
-
-//===================================================================
-
 function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const { sessionMarker, user } = useAuth();
   const searchParams = useSearchParams();
@@ -85,10 +87,11 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>('pickup');
 
-  const [recipientName, setRecipientName] = useState<string | null>(null);
-  const [recipientPhone, setRecipientPhone] = useState<string | null>(null);
-  const [deliveryAddress, setDeliveryAddress] = useState<string | null>(null);
-  const [comment, setComment] = useState('');
+  const [deliveryDraftValues, setDeliveryDraftValues] =
+    useState<OrderDeliveryFormValues>(ORDER_DELIVERY_INITIAL_VALUES);
+
+  const [deliveryTouchedFields, setDeliveryTouchedFields] =
+    useState<OrderDeliveryTouchedFields>({});
   const [copiedEmail, setCopiedEmail] = useState(false);
 
   const { cart, error, isLoading, setCart, setError } =
@@ -119,26 +122,34 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     ? 'This pharmacy invoice is not available in your cart anymore. Please return to the cart and choose an active invoice.'
     : 'You have several pharmacy invoices in your cart. Please choose the invoice you want to confirm from the cart page.';
 
-  const recipientNameValue = recipientName ?? user?.name ?? '';
-  const recipientPhoneValue = recipientPhone ?? user?.phone ?? '';
-  const deliveryAddressValue = deliveryAddress ?? user?.address ?? '';
-
-  const deliveryFormValues = useMemo(
+  const deliveryValues = useMemo<OrderDeliveryFormValues>(
     () => ({
-      recipientName: recipientNameValue,
-      recipientPhone: recipientPhoneValue,
-      deliveryAddress: deliveryAddressValue,
-      comment,
+      ...deliveryDraftValues,
+      recipientName: deliveryTouchedFields.recipientName
+        ? deliveryDraftValues.recipientName
+        : deliveryDraftValues.recipientName || user?.name || '',
+      recipientPhone: deliveryTouchedFields.recipientPhone
+        ? deliveryDraftValues.recipientPhone
+        : deliveryDraftValues.recipientPhone || user?.phone || '',
+      deliveryAddress: deliveryTouchedFields.deliveryAddress
+        ? deliveryDraftValues.deliveryAddress
+        : deliveryDraftValues.deliveryAddress || user?.address || '',
     }),
-    [comment, deliveryAddressValue, recipientNameValue, recipientPhoneValue]
+    [deliveryDraftValues, deliveryTouchedFields, user]
   );
 
   const deliveryFormErrors = useMemo(
-    () => validateOrderDeliveryForm(deliveryFormValues, deliveryMethod),
-    [deliveryFormValues, deliveryMethod]
+    () => validateOrderDeliveryForm(deliveryValues, deliveryMethod),
+    [deliveryValues, deliveryMethod]
   );
 
-  const isDeliveryFormValid = Object.keys(deliveryFormErrors).length === 0;
+  const isDeliveryFormValid = isOrderDeliveryFormValid(
+    deliveryValues,
+    deliveryMethod
+  );
+
+  const { recipientName, recipientPhone, deliveryAddress, comment } =
+    deliveryValues;
 
   const bankDetails = getStoreBankDetails(store);
 
@@ -161,31 +172,58 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     selectedOrderGroup,
     paymentMethod,
     deliveryMethod,
-    recipientNameValue,
-    recipientPhoneValue,
-    deliveryAddressValue,
+    recipientNameValue: recipientName,
+    recipientPhoneValue: recipientPhone,
+    deliveryAddressValue: deliveryAddress,
     comment,
     canSubmit,
     setCart,
     setError,
   });
 
+  const handleDeliveryFieldChange = (
+    field: keyof OrderDeliveryFormValues,
+    value: string
+  ) => {
+    setDeliveryTouchedFields((prev) => ({
+      ...prev,
+      [field]: true,
+    }));
+
+    setDeliveryDraftValues((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   const handleRecipientNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setRecipientName(sanitizeName(event.target.value));
+    handleDeliveryFieldChange(
+      'recipientName',
+      sanitizeName(event.target.value)
+    );
   };
 
   const handleRecipientPhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setRecipientPhone(sanitizePhone(event.target.value));
+    handleDeliveryFieldChange(
+      'recipientPhone',
+      sanitizePhone(event.target.value)
+    );
   };
 
   const handleDeliveryAddressChange = (
     event: ChangeEvent<HTMLTextAreaElement>
   ) => {
-    setDeliveryAddress(sanitizeAddress(event.target.value));
+    handleDeliveryFieldChange(
+      'deliveryAddress',
+      sanitizeAddress(event.target.value)
+    );
   };
 
   const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    setComment(sanitizeOrderComment(event.target.value));
+    handleDeliveryFieldChange(
+      'comment',
+      sanitizeOrderComment(event.target.value)
+    );
   };
 
   const handleCopyEmail = async () => {
@@ -198,6 +236,24 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     } catch {
       setCopiedEmail(false);
     }
+  };
+
+  const handleCheckoutSubmit = async () => {
+    const nextErrors = validateOrderDeliveryForm(
+      deliveryValues,
+      deliveryMethod
+    );
+
+    if (deliveryMethod === 'post') {
+      setDeliveryTouchedFields((prev) => ({
+        ...prev,
+        ...markAllFieldsTouched(ORDER_DELIVERY_FORM_FIELDS),
+      }));
+    }
+
+    if (hasValidationErrors(nextErrors)) return;
+
+    await handleSubmit();
   };
 
   return (
@@ -262,27 +318,107 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
 
                     <div className={css.deliveryDetailsPanel}>
                       {deliveryMethod === 'pickup' ? (
-                        <PharmacyPickupDetails
-                          isStoreLoading={isStoreLoading}
-                          hasStoreContactDetails={hasStoreContactDetails}
-                          storePhone={storePhone}
-                          storeWorkingHours={storeWorkingHours}
-                          storeAddress={storeAddress}
-                        />
+                        <div className={css.deliveryInfoCard}>
+                          <h3 className={css.deliveryInfoTitle}>
+                            Pharmacy details
+                          </h3>
+
+                          {isStoreLoading ? (
+                            <p className={css.deliveryMutedText}>
+                              Loading pharmacy details...
+                            </p>
+                          ) : null}
+
+                          {hasStoreContactDetails ? (
+                            <ul className={css.deliveryIconList}>
+                              {storePhone ? (
+                                <li>
+                                  <Phone size={18} aria-hidden="true" />
+                                  <a href={`tel:${storePhone}`}>{storePhone}</a>
+                                </li>
+                              ) : null}
+
+                              {storeWorkingHours ? (
+                                <li>
+                                  <Clock size={18} aria-hidden="true" />
+                                  <span>{storeWorkingHours}</span>
+                                </li>
+                              ) : null}
+
+                              {storeAddress ? (
+                                <li>
+                                  <MapPin size={18} aria-hidden="true" />
+                                  <span>{storeAddress}</span>
+                                </li>
+                              ) : null}
+                            </ul>
+                          ) : null}
+
+                          {!isStoreLoading && !hasStoreContactDetails ? (
+                            <p className={css.deliveryMutedText}>
+                              Pharmacy contact details are unavailable right
+                              now.
+                            </p>
+                          ) : null}
+                        </div>
                       ) : (
-                        <PostDeliveryFields
-                          recipientNameValue={recipientNameValue}
-                          recipientPhoneValue={recipientPhoneValue}
-                          deliveryAddressValue={deliveryAddressValue}
-                          nameError={deliveryFormErrors.recipientName ?? ''}
-                          phoneError={deliveryFormErrors.recipientPhone ?? ''}
-                          addressError={
-                            deliveryFormErrors.deliveryAddress ?? ''
-                          }
-                          onRecipientNameChange={handleRecipientNameChange}
-                          onRecipientPhoneChange={handleRecipientPhoneChange}
-                          onDeliveryAddressChange={handleDeliveryAddressChange}
-                        />
+                        <div className={css.deliveryFields}>
+                          <div className={css.deliveryFieldsGrid}>
+                            <NameInput
+                              id="recipient-name"
+                              name="recipientName"
+                              value={recipientName}
+                              error={deliveryFormErrors.recipientName ?? ''}
+                              isTouched={Boolean(
+                                deliveryTouchedFields.recipientName
+                              )}
+                              onChange={handleRecipientNameChange}
+                            />
+
+                            <PhoneInput
+                              id="recipient-phone"
+                              name="recipientPhone"
+                              value={recipientPhone}
+                              error={deliveryFormErrors.recipientPhone ?? ''}
+                              isTouched={Boolean(
+                                deliveryTouchedFields.recipientPhone
+                              )}
+                              onChange={handleRecipientPhoneChange}
+                            />
+
+                            <div className={css.deliveryFieldWide}>
+                              <AddressInput
+                                id="delivery-address"
+                                name="deliveryAddress"
+                                value={deliveryAddress}
+                                error={deliveryFormErrors.deliveryAddress ?? ''}
+                                isTouched={Boolean(
+                                  deliveryTouchedFields.deliveryAddress
+                                )}
+                                onChange={handleDeliveryAddressChange}
+                              />
+                            </div>
+                          </div>
+
+                          <div className={css.deliveryNotes}>
+                            <div className={css.deliveryNoteCard}>
+                              <Truck size={18} aria-hidden="true" />
+                              <p>
+                                After confirmation, the pharmacy will contact
+                                you to confirm or clarify the delivery address.
+                              </p>
+                            </div>
+
+                            <div className={css.deliveryNoteCardAccent}>
+                              <Info size={18} aria-hidden="true" />
+                              <p>
+                                Delivery is not included in the product price.
+                                The carrier will announce the delivery cost
+                                separately.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -307,7 +443,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                     name="comment"
                     value={comment}
                     error={deliveryFormErrors.comment}
-                    isTouched={Boolean(comment)}
+                    isTouched={Boolean(deliveryTouchedFields.comment)}
                     onChange={handleCommentChange}
                   />
                 </section>
@@ -317,155 +453,13 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                 orderGroup={selectedOrderGroup}
                 canSubmit={canSubmit && !isSubmitting}
                 isSubmitting={isSubmitting}
-                onSubmit={() => void handleSubmit()}
+                onSubmit={() => void handleCheckoutSubmit()}
               />
             </div>
           ) : null}
         </Container>
       </section>
     </main>
-  );
-}
-
-//===================================================================
-
-type PharmacyPickupDetailsProps = {
-  isStoreLoading: boolean;
-  hasStoreContactDetails: boolean;
-  storePhone: string;
-  storeWorkingHours: string;
-  storeAddress: string;
-};
-
-//===================================================================
-
-function PharmacyPickupDetails({
-  isStoreLoading,
-  hasStoreContactDetails,
-  storePhone,
-  storeWorkingHours,
-  storeAddress,
-}: PharmacyPickupDetailsProps) {
-  return (
-    <div className={css.deliveryInfoCard}>
-      <h3 className={css.deliveryInfoTitle}>Pharmacy details</h3>
-
-      {isStoreLoading ? (
-        <p className={css.deliveryMutedText}>Loading pharmacy details...</p>
-      ) : null}
-
-      {hasStoreContactDetails ? (
-        <ul className={css.deliveryIconList}>
-          {storePhone ? (
-            <li>
-              <Phone size={18} aria-hidden="true" />
-              <a href={`tel:${storePhone}`}>{storePhone}</a>
-            </li>
-          ) : null}
-
-          {storeWorkingHours ? (
-            <li>
-              <Clock size={18} aria-hidden="true" />
-              <span>{storeWorkingHours}</span>
-            </li>
-          ) : null}
-
-          {storeAddress ? (
-            <li>
-              <MapPin size={18} aria-hidden="true" />
-              <span>{storeAddress}</span>
-            </li>
-          ) : null}
-        </ul>
-      ) : null}
-
-      {!isStoreLoading && !hasStoreContactDetails ? (
-        <p className={css.deliveryMutedText}>
-          Pharmacy contact details are unavailable right now.
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-//===================================================================
-
-type PostDeliveryFieldsProps = {
-  recipientNameValue: string;
-  recipientPhoneValue: string;
-  deliveryAddressValue: string;
-  nameError: string;
-  phoneError: string;
-  addressError: string;
-  onRecipientNameChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  onRecipientPhoneChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  onDeliveryAddressChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
-};
-
-//===================================================================
-
-function PostDeliveryFields({
-  recipientNameValue,
-  recipientPhoneValue,
-  deliveryAddressValue,
-  nameError,
-  phoneError,
-  addressError,
-  onRecipientNameChange,
-  onRecipientPhoneChange,
-  onDeliveryAddressChange,
-}: PostDeliveryFieldsProps) {
-  return (
-    <div className={css.deliveryFields}>
-      <div className={css.deliveryFieldsGrid}>
-        <NameInput
-          id="recipient-name"
-          name="recipientName"
-          value={recipientNameValue}
-          error={nameError}
-          isTouched={POST_DELIVERY_FIELDS_ARE_INSTANT_VALIDATED}
-          onChange={onRecipientNameChange}
-        />
-
-        <PhoneInput
-          id="recipient-phone"
-          name="recipientPhone"
-          value={recipientPhoneValue}
-          error={phoneError}
-          isTouched={POST_DELIVERY_FIELDS_ARE_INSTANT_VALIDATED}
-          onChange={onRecipientPhoneChange}
-        />
-
-        <div className={css.deliveryFieldWide}>
-          <AddressInput
-            id="delivery-address"
-            name="deliveryAddress"
-            value={deliveryAddressValue}
-            error={addressError}
-            isTouched={POST_DELIVERY_FIELDS_ARE_INSTANT_VALIDATED}
-            onChange={onDeliveryAddressChange}
-          />
-        </div>
-      </div>
-
-      <div className={css.deliveryNotes}>
-        <div className={css.deliveryNoteCard}>
-          <Truck size={18} aria-hidden="true" />
-          <p>
-            After confirmation, the pharmacy will contact you to confirm or
-            clarify the delivery address.
-          </p>
-        </div>
-
-        <div className={css.deliveryNoteCardAccent}>
-          <Info size={18} aria-hidden="true" />
-          <p>
-            Delivery is not included in the product price. The carrier will
-            announce the delivery cost separately.
-          </p>
-        </div>
-      </div>
-    </div>
   );
 }
 

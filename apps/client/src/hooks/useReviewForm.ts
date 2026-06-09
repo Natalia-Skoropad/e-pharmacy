@@ -3,9 +3,15 @@
 import { useMemo, useState } from 'react';
 
 import {
+  REVIEW_FORM_FIELDS,
   REVIEW_INITIAL_VALUES,
+  hasValidationErrors,
+  isReviewFormValid,
+  markAllFieldsTouched,
   sanitizeReviewComment,
   validateReviewForm,
+  type ReviewFormValues,
+  type ReviewTouchedFields,
 } from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
@@ -37,18 +43,21 @@ export function useReviewForm({
 }: UseReviewFormParams) {
   const { sessionMarker, isAuthenticated } = useAuth();
 
-  const [reviewText, setReviewText] = useState(REVIEW_INITIAL_VALUES.comment);
-  const [reviewRating, setReviewRating] = useState(
-    REVIEW_INITIAL_VALUES.rating
+  const [reviewValues, setReviewValues] = useState<ReviewFormValues>(
+    REVIEW_INITIAL_VALUES
   );
+
+  const [reviewTouchedFields, setReviewTouchedFields] =
+    useState<ReviewTouchedFields>({});
+
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
 
   const reviewErrors = useMemo(
-    () => validateReviewForm({ comment: reviewText, rating: reviewRating }),
-    [reviewRating, reviewText]
+    () => validateReviewForm(reviewValues),
+    [reviewValues]
   );
 
-  const isValid = Object.keys(reviewErrors).length === 0;
+  const reviewFormIsValid = isReviewFormValid(reviewValues);
 
   const notifySuccess = (message: string) => {
     if (notifier) {
@@ -69,22 +78,36 @@ export function useReviewForm({
   };
 
   const handleReviewTextChange = (value: string) => {
-    setReviewText(sanitizeReviewComment(value));
+    setReviewTouchedFields((prev) => ({ ...prev, comment: true }));
+    setReviewValues((prev) => ({
+      ...prev,
+      comment: sanitizeReviewComment(value),
+    }));
+  };
+
+  const handleReviewRatingChange = (rating: number) => {
+    setReviewTouchedFields((prev) => ({ ...prev, rating: true }));
+    setReviewValues((prev) => ({ ...prev, rating }));
   };
 
   const handleReviewSubmit = async () => {
-    if (!isValid || !isAuthenticated || !sessionMarker) return;
+    const nextErrors = validateReviewForm(reviewValues);
+
+    if (hasValidationErrors(nextErrors) || !isAuthenticated || !sessionMarker) {
+      setReviewTouchedFields(markAllFieldsTouched(REVIEW_FORM_FIELDS));
+      return;
+    }
 
     try {
       setIsReviewSubmitting(true);
 
       await createReview({
-        rating: reviewRating,
-        comment: reviewText.trim(),
+        rating: reviewValues.rating,
+        comment: reviewValues.comment.trim(),
       });
 
-      setReviewText(REVIEW_INITIAL_VALUES.comment);
-      setReviewRating(REVIEW_INITIAL_VALUES.rating);
+      setReviewValues(REVIEW_INITIAL_VALUES);
+      setReviewTouchedFields({});
       notifySuccess(
         'Review was accepted and will be visible after moderation.'
       );
@@ -96,13 +119,15 @@ export function useReviewForm({
   };
 
   return {
-    reviewText,
-    reviewRating,
+    reviewValues,
+    reviewText: reviewValues.comment,
+    reviewRating: reviewValues.rating,
     reviewErrors,
-    isReviewValid: isValid,
+    reviewTouchedFields,
+    isReviewValid: reviewFormIsValid,
     isReviewSubmitting,
     handleReviewTextChange,
-    handleReviewRatingChange: setReviewRating,
+    handleReviewRatingChange,
     handleReviewSubmit,
   };
 }
