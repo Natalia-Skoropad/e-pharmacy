@@ -25,7 +25,6 @@
   },
   "dependencies": {
     "@e-pharmacy/types": "workspace:*",
-    "@e-pharmacy/auth": "workspace:*",
-    "@e-pharmacy/utils": "workspace:*"
+    "@e-pharmacy/auth": "workspace:*"
   }
 }

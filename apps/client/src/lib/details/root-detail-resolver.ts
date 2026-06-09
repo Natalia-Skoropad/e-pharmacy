@@ -1,9 +1,13 @@
 import { cache } from 'react';
 
 import { isReservedRootSlug } from '@e-pharmacy/config';
-import { buildSlugId } from '@e-pharmacy/utils';
 
-import { buildProductPath, buildStorePath } from '@e-pharmacy/config/routes';
+import {
+  buildProductPath,
+  buildSlugId,
+  buildStorePath,
+} from '@e-pharmacy/config/routes';
+
 import { getProductBySlugId } from '@/lib/details/product-detail-page';
 import { getStoreBySlugId } from '@/lib/details/store-detail-page';
 

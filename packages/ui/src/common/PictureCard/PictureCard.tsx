@@ -13,7 +13,7 @@ import {
 import PictureUpload from '../PictureUpload/PictureUpload';
 import Button from '../Button';
 import { ConfirmationModal } from '../../modals';
-import { formatInitials } from '@e-pharmacy/utils/formatters';
+import { formatInitials } from '../helpers/format-initials';
 
 import css from './PictureCard.module.css';
 

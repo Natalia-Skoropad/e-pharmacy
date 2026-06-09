@@ -1,6 +1,5 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from 'react';
-
-import { cn } from '@e-pharmacy/utils/classes';
+import clsx from 'clsx';
 
 import css from './Container.module.css';
 
@@ -27,7 +26,7 @@ function Container<TElement extends ElementType = 'div'>({
   const Component = as || 'div';
 
   return (
-    <Component className={cn(css.container, className)} {...props}>
+    <Component className={clsx(css.container, className)} {...props}>
       {children}
     </Component>
   );

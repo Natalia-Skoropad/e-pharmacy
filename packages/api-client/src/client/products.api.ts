@@ -1,5 +1,5 @@
 import { bffApiRequest } from '../core';
-import { buildQueryString } from '@e-pharmacy/utils/query';
+import { buildQueryString } from '../core/build-query-string';
 
 import {
   getResponseData,

@@ -1,7 +1,7 @@
 import Link from 'next/link';
+import clsx from 'clsx';
 
 import SvgIcon from '../SvgIcon';
-import { cn } from '@e-pharmacy/utils/classes';
 
 import css from './Logo.module.css';
 
@@ -28,7 +28,7 @@ function Logo({
 }: LogoProps) {
   return (
     <Link
-      className={cn(css.logo, css[variant], className)}
+      className={clsx(css.logo, css[variant], className)}
       href={href}
       aria-label={`${label} home`}
     >

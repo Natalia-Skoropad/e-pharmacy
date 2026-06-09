@@ -26,7 +26,6 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@e-pharmacy/utils": "workspace:*",
     "@e-pharmacy/auth": "workspace:*"
   }
 }

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
+import clsx from 'clsx';
 
 import {
   Button,
@@ -18,7 +19,6 @@ import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
 import { CLIENT_NAV_LINKS } from '@e-pharmacy/config/navigation';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { isActiveRoute } from '@e-pharmacy/config/routes';
-import { cn } from '@e-pharmacy/utils/classes';
 
 import {
   CART_UPDATED_EVENT,
@@ -109,7 +109,7 @@ function Header() {
               return (
                 <li key={href}>
                   <Link
-                    className={cn(css.navLink, isActive && css.active)}
+                    className={clsx(css.navLink, isActive && css.active)}
                     href={href}
                     aria-current={isActive ? 'page' : undefined}
                   >

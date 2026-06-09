@@ -1,5 +1,7 @@
 import type { ApiErrorResponse } from './api-error';
 
+//===================================================================
+
 export type ApiSuccessResponse<TData = unknown> = {
   status: 'success';
   message?: string;

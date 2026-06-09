@@ -1,6 +1,5 @@
 import type { SVGProps } from 'react';
-
-import { cn } from '@e-pharmacy/utils/classes';
+import clsx from 'clsx';
 
 import css from './SvgIcon.module.css';
 
@@ -29,7 +28,7 @@ function SvgIcon({
 
   return (
     <svg
-      className={cn(css.icon, className)}
+      className={clsx(css.icon, className)}
       width={size}
       height={size}
       aria-hidden={isHidden}

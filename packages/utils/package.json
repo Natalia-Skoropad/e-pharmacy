@@ -7,11 +7,7 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./formatters": "./src/formatters/index.ts",
-    "./classes": "./src/classes/index.ts",
-    "./query": "./src/query/index.ts",
-    "./shared": "./src/shared/index.ts",
-    "./slug": "./src/slug/index.ts"
+    "./formatters": "./src/formatters/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

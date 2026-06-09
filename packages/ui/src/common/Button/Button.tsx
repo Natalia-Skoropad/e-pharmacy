@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-import { cn } from '@e-pharmacy/utils/classes';
+import clsx from 'clsx';
 
 import css from './Button.module.css';
 
@@ -32,7 +32,7 @@ function Button({
 }: ButtonProps) {
   return (
     <button
-      className={cn(
+      className={clsx(
         css.button,
         css[variant],
         css[size],

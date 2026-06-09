@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import clsx from 'clsx';
 
 import { Container } from '@e-pharmacy/ui/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 
 import { INFO_NAV_LINKS } from '@e-pharmacy/config/navigation';
 import { createBreadcrumbs } from '@e-pharmacy/config/routes';
-import { cn } from '@e-pharmacy/utils/classes';
 
 import css from './InfoPage.module.css';
 
@@ -56,7 +56,7 @@ function InfoPage({
                   return (
                     <li key={link.href}>
                       <Link
-                        className={cn(css.sideLink, isActive && css.active)}
+                        className={clsx(css.sideLink, isActive && css.active)}
                         href={link.href}
                         aria-current={isActive ? 'page' : undefined}
                       >

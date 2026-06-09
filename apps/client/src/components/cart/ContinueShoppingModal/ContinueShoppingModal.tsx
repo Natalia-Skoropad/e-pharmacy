@@ -1,6 +1,22 @@
 'use client';
 
-import { useEffect, useId, useMemo, useState } from 'react'; import { ShoppingCart } from 'lucide-react';  import { Button, CloseIconButton, LoadingSpinner, SearchInput, ShimmerImage, SvgIcon } from '@e-pharmacy/ui/common'; import { CartInvoiceLimitModal } from '@/components/common'; import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';  import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit'; import { formatPrice, formatStockLabel } from '@e-pharmacy/utils/formatters';  import { getProducts } from '@e-pharmacy/api-client/client';
+import { useEffect, useId, useMemo, useState } from 'react';
+import { ShoppingCart } from 'lucide-react';
+
+import {
+  Button,
+  CloseIconButton,
+  LoadingSpinner,
+  SearchInput,
+  ShimmerImage,
+  SvgIcon,
+} from '@e-pharmacy/ui/common';
+
+import { CartInvoiceLimitModal } from '@/components/common';
+import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
+import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
+import { formatPrice, formatStockLabel } from '@e-pharmacy/utils/formatters';
+import { getProducts } from '@e-pharmacy/api-client/client';
 import { addCartItem } from '@/services/cart-service';
 import type { Cart, Product, ProductCategory } from '@e-pharmacy/types';
 
@@ -168,13 +184,11 @@ function ContinueShoppingModal({
       setIsAddingProductId(productId);
       setError('');
 
-      const response = await addCartItem(
-        {
-          productId,
-          storeId,
-          quantity: 1,
-        },
-      );
+      const response = await addCartItem({
+        productId,
+        storeId,
+        quantity: 1,
+      });
 
       onCartChange(response.cart);
     } catch (error) {

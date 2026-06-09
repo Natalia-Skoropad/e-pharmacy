@@ -9,7 +9,7 @@ import {
   useFocusTrap,
 } from '@e-pharmacy/hooks';
 
-import { cn } from '@e-pharmacy/utils/classes';
+import clsx from 'clsx';
 
 import css from './ModalBase.module.css';
 
@@ -55,14 +55,14 @@ function ModalBase({
 
   return (
     <div
-      className={cn(css.backdrop, className)}
+      className={clsx(css.backdrop, className)}
       role="presentation"
       style={style}
       onMouseDown={handleBackdropMouseDown}
     >
       <div
         ref={dialogRef}
-        className={cn(css.dialog, dialogClassName)}
+        className={clsx(css.dialog, dialogClassName)}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

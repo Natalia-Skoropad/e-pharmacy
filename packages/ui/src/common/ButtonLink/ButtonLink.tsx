@@ -1,7 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import Link from 'next/link';
-
-import { cn } from '@e-pharmacy/utils/classes';
+import clsx from 'clsx';
 
 import css from '../Button/Button.module.css';
 
@@ -32,7 +31,7 @@ function ButtonLink({
 }: ButtonLinkProps) {
   return (
     <Link
-      className={cn(
+      className={clsx(
         css.button,
         css[variant],
         css[size],

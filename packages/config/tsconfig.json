@@ -10,12 +10,6 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@e-pharmacy/utils": [
-        "../utils/src/index.ts"
-      ],
-      "@e-pharmacy/utils/*": [
-        "../utils/src/*/index.ts"
-      ],
       "@e-pharmacy/auth": [
         "../auth/src/index.ts"
       ],

@@ -1,4 +1,4 @@
-import { buildSlugId } from '@e-pharmacy/utils/slug';
+import { buildSlugId } from './slug-id';
 
 //===================================================================
 

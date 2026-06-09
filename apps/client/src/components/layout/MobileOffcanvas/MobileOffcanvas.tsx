@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import clsx from 'clsx';
 
 import {
   Button,
@@ -16,7 +17,6 @@ import { MobileOffcanvasBase } from '@e-pharmacy/ui/layout';
 import { CLIENT_NAV_LINKS } from '@e-pharmacy/config/navigation';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { isActiveRoute } from '@e-pharmacy/config/routes';
-import { cn } from '@e-pharmacy/utils/classes';
 import { useAuth } from '@/providers';
 
 import css from './MobileOffcanvas.module.css';
@@ -88,7 +88,7 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
             return (
               <li key={href}>
                 <Link
-                  className={cn(css.navLink, isActive && css.active)}
+                  className={clsx(css.navLink, isActive && css.active)}
                   href={href}
                   aria-current={isActive ? 'page' : undefined}
                 >

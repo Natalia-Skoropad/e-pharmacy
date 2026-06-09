@@ -1,8 +1,8 @@
 import Link from 'next/link';
+import clsx from 'clsx';
 
 import PictureUpload from '../PictureUpload/PictureUpload';
-import { formatInitials } from '@e-pharmacy/utils/formatters';
-import { cn } from '@e-pharmacy/utils/classes';
+import { formatInitials } from '../helpers/format-initials';
 
 import css from './UserBadge.module.css';
 
@@ -38,7 +38,7 @@ function UserBadge({
     </>
   );
 
-  const classNames = cn(css.badge, css[variant], className);
+  const classNames = clsx(css.badge, css[variant], className);
 
   if (href) {
     return (

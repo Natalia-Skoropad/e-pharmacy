@@ -1,11 +1,12 @@
-import { buildSlugId, isNonEmptyString } from '@e-pharmacy/utils';
-
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { ROUTES, buildSlugId } from '@e-pharmacy/config/routes';
 
 //===================================================================
 
-export function buildCheckoutPath(storeName: string | null | undefined, storeId: string): string {
-  const safeStoreName = isNonEmptyString(storeName) ? storeName : 'pharmacy';
+export function buildCheckoutPath(
+  storeName: string | null | undefined,
+  storeId: string
+): string {
+  const safeStoreName = storeName?.trim() ? storeName : 'pharmacy';
 
   return `${ROUTES.CHECKOUT}/${buildSlugId(safeStoreName, storeId)}`;
 }
