@@ -44,16 +44,15 @@ import {
   sanitizeName,
   sanitizeOrderComment,
   sanitizePhone,
-  validateCheckoutDeliveryForm,
+  validateOrderDeliveryForm,
 } from '@e-pharmacy/validation';
 
 import { useAuth } from '@/providers';
 import type { BreadcrumbItem } from '@e-pharmacy/types';
 
-import type {
-  CheckoutDeliveryMethod as DeliveryMethod,
-  CheckoutPaymentMethod as PaymentMethod,
-} from '@e-pharmacy/types/checkout';
+import type { CheckoutPaymentMethod as PaymentMethod } from '@e-pharmacy/types/checkout';
+
+import type { OrderDeliveryMethod as DeliveryMethod } from '@e-pharmacy/types/orders';
 
 import css from './CheckoutPageContent.module.css';
 
@@ -70,6 +69,8 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
   { label: 'Cart', href: ROUTES.CART },
   { label: CHECKOUT_TITLE },
 ];
+
+const POST_DELIVERY_FIELDS_ARE_INSTANT_VALIDATED = true;
 
 //===================================================================
 
@@ -133,7 +134,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   );
 
   const deliveryFormErrors = useMemo(
-    () => validateCheckoutDeliveryForm(deliveryFormValues, deliveryMethod),
+    () => validateOrderDeliveryForm(deliveryFormValues, deliveryMethod),
     [deliveryFormValues, deliveryMethod]
   );
 
@@ -235,24 +236,57 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
           {selectedOrderGroup ? (
             <div className={css.grid}>
               <div className={css.leftColumn}>
-                <DeliveryMethodSection
-                  deliveryMethod={deliveryMethod}
-                  recipientNameValue={recipientNameValue}
-                  recipientPhoneValue={recipientPhoneValue}
-                  deliveryAddressValue={deliveryAddressValue}
-                  nameError={deliveryFormErrors.recipientName ?? ''}
-                  phoneError={deliveryFormErrors.recipientPhone ?? ''}
-                  addressError={deliveryFormErrors.deliveryAddress ?? ''}
-                  isStoreLoading={isStoreLoading}
-                  hasStoreContactDetails={hasStoreContactDetails}
-                  storePhone={storePhone}
-                  storeWorkingHours={storeWorkingHours}
-                  storeAddress={storeAddress}
-                  onDeliveryMethodChange={setDeliveryMethod}
-                  onRecipientNameChange={handleRecipientNameChange}
-                  onRecipientPhoneChange={handleRecipientPhoneChange}
-                  onDeliveryAddressChange={handleDeliveryAddressChange}
-                />
+                <section className={css.card} aria-labelledby="delivery-title">
+                  <h2 className={css.cardTitle} id="delivery-title">
+                    Delivery method
+                  </h2>
+
+                  <div className={css.deliveryChoiceGrid}>
+                    <div className={css.deliveryOptionsGrid}>
+                      <RadioOption
+                        name="delivery"
+                        value="pickup"
+                        checked={deliveryMethod === 'pickup'}
+                        label="Pickup from pharmacy"
+                        onChange={setDeliveryMethod}
+                      />
+
+                      <RadioOption
+                        name="delivery"
+                        value="post"
+                        checked={deliveryMethod === 'post'}
+                        label="Post delivery"
+                        onChange={setDeliveryMethod}
+                      />
+                    </div>
+
+                    <div className={css.deliveryDetailsPanel}>
+                      {deliveryMethod === 'pickup' ? (
+                        <PharmacyPickupDetails
+                          isStoreLoading={isStoreLoading}
+                          hasStoreContactDetails={hasStoreContactDetails}
+                          storePhone={storePhone}
+                          storeWorkingHours={storeWorkingHours}
+                          storeAddress={storeAddress}
+                        />
+                      ) : (
+                        <PostDeliveryFields
+                          recipientNameValue={recipientNameValue}
+                          recipientPhoneValue={recipientPhoneValue}
+                          deliveryAddressValue={deliveryAddressValue}
+                          nameError={deliveryFormErrors.recipientName ?? ''}
+                          phoneError={deliveryFormErrors.recipientPhone ?? ''}
+                          addressError={
+                            deliveryFormErrors.deliveryAddress ?? ''
+                          }
+                          onRecipientNameChange={handleRecipientNameChange}
+                          onRecipientPhoneChange={handleRecipientPhoneChange}
+                          onDeliveryAddressChange={handleDeliveryAddressChange}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </section>
 
                 <CheckoutPaymentMethod
                   paymentMethod={paymentMethod}
@@ -290,100 +324,6 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
         </Container>
       </section>
     </main>
-  );
-}
-
-//===================================================================
-
-type DeliveryMethodSectionProps = {
-  deliveryMethod: DeliveryMethod;
-  recipientNameValue: string;
-  recipientPhoneValue: string;
-  deliveryAddressValue: string;
-  nameError: string;
-  phoneError: string;
-  addressError: string;
-  isStoreLoading: boolean;
-  hasStoreContactDetails: boolean;
-  storePhone: string;
-  storeWorkingHours: string;
-  storeAddress: string;
-  onDeliveryMethodChange: (value: DeliveryMethod) => void;
-  onRecipientNameChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  onRecipientPhoneChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  onDeliveryAddressChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
-};
-
-//===================================================================
-
-function DeliveryMethodSection({
-  deliveryMethod,
-  recipientNameValue,
-  recipientPhoneValue,
-  deliveryAddressValue,
-  nameError,
-  phoneError,
-  addressError,
-  isStoreLoading,
-  hasStoreContactDetails,
-  storePhone,
-  storeWorkingHours,
-  storeAddress,
-  onDeliveryMethodChange,
-  onRecipientNameChange,
-  onRecipientPhoneChange,
-  onDeliveryAddressChange,
-}: DeliveryMethodSectionProps) {
-  return (
-    <section className={css.card} aria-labelledby="delivery-title">
-      <h2 className={css.cardTitle} id="delivery-title">
-        Delivery method
-      </h2>
-
-      <div className={css.deliveryChoiceGrid}>
-        <div className={css.deliveryOptionsGrid}>
-          <RadioOption
-            name="delivery"
-            value="pickup"
-            checked={deliveryMethod === 'pickup'}
-            label="Pickup from pharmacy"
-            onChange={onDeliveryMethodChange}
-          />
-
-          <RadioOption
-            name="delivery"
-            value="post"
-            checked={deliveryMethod === 'post'}
-            label="Post delivery"
-            onChange={onDeliveryMethodChange}
-          />
-        </div>
-
-        <div className={css.deliveryDetailsPanel}>
-          {deliveryMethod === 'pickup' ? (
-            <PharmacyPickupDetails
-              isStoreLoading={isStoreLoading}
-              hasStoreContactDetails={hasStoreContactDetails}
-              storePhone={storePhone}
-              storeWorkingHours={storeWorkingHours}
-              storeAddress={storeAddress}
-            />
-          ) : (
-            <PostDeliveryFields
-              recipientNameValue={recipientNameValue}
-              recipientPhoneValue={recipientPhoneValue}
-              deliveryAddressValue={deliveryAddressValue}
-              nameError={nameError}
-              phoneError={phoneError}
-              addressError={addressError}
-              onRecipientNameChange={onRecipientNameChange}
-              onRecipientPhoneChange={onRecipientPhoneChange}
-              onDeliveryAddressChange={onDeliveryAddressChange}
-            />
-          )}
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -483,7 +423,7 @@ function PostDeliveryFields({
           name="recipientName"
           value={recipientNameValue}
           error={nameError}
-          isTouched
+          isTouched={POST_DELIVERY_FIELDS_ARE_INSTANT_VALIDATED}
           onChange={onRecipientNameChange}
         />
 
@@ -492,7 +432,7 @@ function PostDeliveryFields({
           name="recipientPhone"
           value={recipientPhoneValue}
           error={phoneError}
-          isTouched
+          isTouched={POST_DELIVERY_FIELDS_ARE_INSTANT_VALIDATED}
           onChange={onRecipientPhoneChange}
         />
 
@@ -502,7 +442,7 @@ function PostDeliveryFields({
             name="deliveryAddress"
             value={deliveryAddressValue}
             error={addressError}
-            isTouched
+            isTouched={POST_DELIVERY_FIELDS_ARE_INSTANT_VALIDATED}
             onChange={onDeliveryAddressChange}
           />
         </div>

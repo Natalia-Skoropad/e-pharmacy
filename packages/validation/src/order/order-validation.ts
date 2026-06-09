@@ -7,22 +7,22 @@ import {
 
 //===================================================================
 
-export type CheckoutDeliveryMethod = 'pickup' | 'post';
+export type OrderDeliveryMethod = 'pickup' | 'post';
 
-export type CheckoutDeliveryFormValues = {
+export type OrderDeliveryFormValues = {
   recipientName: string;
   recipientPhone: string;
   deliveryAddress: string;
   comment: string;
 };
 
-export type CheckoutDeliveryFormErrors = Partial<
-  Record<keyof CheckoutDeliveryFormValues, string>
+export type OrderDeliveryFormErrors = Partial<
+  Record<keyof OrderDeliveryFormValues, string>
 >;
 
 //===================================================================
 
-export const CHECKOUT_DELIVERY_INITIAL_VALUES: CheckoutDeliveryFormValues = {
+export const ORDER_DELIVERY_INITIAL_VALUES: OrderDeliveryFormValues = {
   recipientName: '',
   recipientPhone: '',
   deliveryAddress: '',
@@ -31,28 +31,29 @@ export const CHECKOUT_DELIVERY_INITIAL_VALUES: CheckoutDeliveryFormValues = {
 
 //===================================================================
 
-export function validateCheckoutDeliveryForm(
-  values: CheckoutDeliveryFormValues,
-  deliveryMethod: CheckoutDeliveryMethod
-): CheckoutDeliveryFormErrors {
-  const errors: CheckoutDeliveryFormErrors = {};
+export function validateOrderDeliveryForm(
+  values: OrderDeliveryFormValues,
+  deliveryMethod: OrderDeliveryMethod
+): OrderDeliveryFormErrors {
+  const errors: OrderDeliveryFormErrors = {};
 
   const commentError = buildOrderCommentError(values.comment, {
     trailingDot: true,
   });
 
   if (commentError) errors.comment = commentError;
-
   if (deliveryMethod === 'pickup') return errors;
 
   const nameError = buildNameError(values.recipientName, {
     required: true,
     trailingDot: true,
   });
+
   const phoneError = buildPhoneError(values.recipientPhone, {
     required: true,
     trailingDot: true,
   });
+
   const addressError = buildAddressError(values.deliveryAddress, {
     required: true,
     trailingDot: true,
@@ -67,11 +68,12 @@ export function validateCheckoutDeliveryForm(
 
 //===================================================================
 
-export function isCheckoutDeliveryFormValid(
-  values: CheckoutDeliveryFormValues,
-  deliveryMethod: CheckoutDeliveryMethod
+export function isOrderDeliveryFormValid(
+  values: OrderDeliveryFormValues,
+  deliveryMethod: OrderDeliveryMethod
 ): boolean {
   return (
-    Object.keys(validateCheckoutDeliveryForm(values, deliveryMethod)).length === 0
+    Object.keys(validateOrderDeliveryForm(values, deliveryMethod)).length ===
+    0
   );
 }

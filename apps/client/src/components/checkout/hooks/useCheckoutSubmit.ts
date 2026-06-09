@@ -1,11 +1,21 @@
-import { useState } from 'react'; import { useRouter } from 'next/navigation';  import { dispatchCartUpdated } from '@/lib/cart/cart-events'; import { groupCartByStore } from '@/lib/cart/cart-groups'; import { getStockValidationError } from '@/lib/checkout'; import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors'; import { buildCustomerOrderPath } from '@/lib/orders'; import { checkoutOrder, getCart } from '@e-pharmacy/api-client/client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+import { dispatchCartUpdated } from '@/lib/cart/cart-events';
+import { groupCartByStore } from '@/lib/cart/cart-groups';
+import { getStockValidationError } from '@/lib/checkout';
+import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
+import { buildCustomerOrderPath } from '@/lib/orders';
+
+import { checkoutOrder, getCart } from '@e-pharmacy/api-client/client';
 import type { Cart } from '@e-pharmacy/types';
 
 import type {
-  CheckoutDeliveryMethod,
   CheckoutPaymentMethod,
   CheckoutStoreOrderGroup,
 } from '@e-pharmacy/types/checkout';
+
+import type { OrderDeliveryMethod } from '@e-pharmacy/types/orders';
 
 //===================================================================
 
@@ -13,7 +23,7 @@ type UseCheckoutSubmitParams = {
   sessionMarker: string | null | undefined;
   selectedOrderGroup: CheckoutStoreOrderGroup | null;
   paymentMethod: CheckoutPaymentMethod;
-  deliveryMethod: CheckoutDeliveryMethod;
+  deliveryMethod: OrderDeliveryMethod;
   recipientNameValue: string;
   recipientPhoneValue: string;
   deliveryAddressValue: string;
@@ -70,23 +80,21 @@ export function useCheckoutSubmit({
         return;
       }
 
-      const response = await checkoutOrder(
-        {
-          storeId: latestOrderGroup.storeId,
-          paymentMethod,
-          deliveryMethod,
-          ...(deliveryMethod === 'post'
-            ? {
-                deliveryDetails: {
-                  recipientName: recipientNameValue.trim(),
-                  recipientPhone: recipientPhoneValue.trim(),
-                  address: deliveryAddressValue.trim(),
-                },
-              }
-            : {}),
-          ...(comment.trim() ? { comment: comment.trim() } : {}),
-        }
-      );
+      const response = await checkoutOrder({
+        storeId: latestOrderGroup.storeId,
+        paymentMethod,
+        deliveryMethod,
+        ...(deliveryMethod === 'post'
+          ? {
+              deliveryDetails: {
+                recipientName: recipientNameValue.trim(),
+                recipientPhone: recipientPhoneValue.trim(),
+                address: deliveryAddressValue.trim(),
+              },
+            }
+          : {}),
+        ...(comment.trim() ? { comment: comment.trim() } : {}),
+      });
       const nextCartResponse = await getCart();
 
       setCart(nextCartResponse.cart);

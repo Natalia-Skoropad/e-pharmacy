@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 
 import {
   REVIEW_INITIAL_VALUES,
-  USER_REVIEW_COMMENT_MAX_LENGTH,
   sanitizeReviewComment,
   validateReviewForm,
 } from '@e-pharmacy/validation';
@@ -70,9 +69,7 @@ export function useReviewForm({
   };
 
   const handleReviewTextChange = (value: string) => {
-    setReviewText(
-      sanitizeReviewComment(value).slice(0, USER_REVIEW_COMMENT_MAX_LENGTH)
-    );
+    setReviewText(sanitizeReviewComment(value));
   };
 
   const handleReviewSubmit = async () => {

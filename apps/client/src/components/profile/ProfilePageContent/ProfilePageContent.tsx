@@ -85,6 +85,20 @@ const FAVORITES_PER_PAGE = 100;
 const FAVORITES_VISIBLE_STEP = 16;
 const ORDERS_VISIBLE_STEP = 15;
 
+type ProfileTouchedFields = Partial<
+  Record<keyof DataProfileFormValues, boolean>
+>;
+
+const PROFILE_FORM_FIELDS: Array<keyof DataProfileFormValues> = [
+  'name',
+  'phone',
+  'address',
+];
+
+function normalizeProfileValue(value: string): string {
+  return value.trim();
+}
+
 //===================================================================
 
 async function getFavoriteProducts(): Promise<Product[]> {
@@ -153,6 +167,12 @@ function ProfilePageContent() {
     DATA_PROFILE_INITIAL_VALUES
   );
 
+  const [initialProfileValues, setInitialProfileValues] =
+    useState<DataProfileFormValues>(DATA_PROFILE_INITIAL_VALUES);
+
+  const [profileTouchedFields, setProfileTouchedFields] =
+    useState<ProfileTouchedFields>({});
+
   const [passwordValues, setPasswordValues] =
     useState<ChangePasswordFormValues>(CHANGE_PASSWORD_INITIAL_VALUES);
 
@@ -202,11 +222,15 @@ function ProfilePageContent() {
     if (!user) return;
 
     const timeoutId = window.setTimeout(() => {
-      setProfileValues({
+      const nextProfileValues = {
         name: user.name ?? '',
         phone: user.phone ?? '',
         address: user.address ?? '',
-      });
+      };
+
+      setProfileValues(nextProfileValues);
+      setInitialProfileValues(nextProfileValues);
+      setProfileTouchedFields({});
       setPicturePreview(user.pictureUrl ?? null);
     }, 0);
 
@@ -223,7 +247,13 @@ function ProfilePageContent() {
     [passwordValues]
   );
 
-  const canSaveProfile = Object.keys(profileErrors).length === 0;
+  const profileFormIsValid = Object.keys(profileErrors).length === 0;
+
+  const profileFormIsDirty = PROFILE_FORM_FIELDS.some(
+    (field) =>
+      normalizeProfileValue(profileValues[field]) !==
+      normalizeProfileValue(initialProfileValues[field])
+  );
 
   const canSavePassword =
     passwordValues.currentPassword.length > 0 &&
@@ -420,6 +450,10 @@ function ProfilePageContent() {
   ) => {
     setFeedback('');
     setError('');
+    setProfileTouchedFields((prev) => ({
+      ...prev,
+      [field]: true,
+    }));
 
     setProfileValues((prev) => ({
       ...prev,
@@ -456,20 +490,26 @@ function ProfilePageContent() {
     }
   };
 
-  const handleSaveProfile = async () => {
-    if (!sessionMarker || !canSaveProfile) return;
+  const handleProfileSubmit = async () => {
+    setProfileTouchedFields({ name: true, phone: true, address: true });
+
+    if (!sessionMarker || !profileFormIsValid || !profileFormIsDirty) return;
 
     try {
       setIsProfileSaving(true);
       setFeedback('');
       setError('');
 
-      await updateCurrentUser({
+      const nextProfileValues = {
         name: profileValues.name.trim(),
         phone: profileValues.phone.trim(),
         address: profileValues.address.trim(),
-      });
+      };
+
+      await updateCurrentUser(nextProfileValues);
       await refreshCurrentUser();
+      setInitialProfileValues(nextProfileValues);
+      setProfileTouchedFields({});
       setFeedback('Profile data was updated.');
     } catch {
       setError('Could not update profile data.');
@@ -588,7 +628,7 @@ function ProfilePageContent() {
                         name="name"
                         value={profileValues.name}
                         error={profileErrors.name}
-                        isTouched
+                        isTouched={Boolean(profileTouchedFields.name)}
                         onChange={(event) =>
                           handleProfileChange(
                             'name',
@@ -602,7 +642,7 @@ function ProfilePageContent() {
                         name="phone"
                         value={profileValues.phone}
                         error={profileErrors.phone}
-                        isTouched
+                        isTouched={Boolean(profileTouchedFields.phone)}
                         required={false}
                         onChange={(event) =>
                           handleProfileChange(
@@ -618,7 +658,7 @@ function ProfilePageContent() {
                         className={css.fieldWide}
                         value={profileValues.address}
                         error={profileErrors.address}
-                        isTouched
+                        isTouched={Boolean(profileTouchedFields.address)}
                         required={false}
                         onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
                           handleProfileChange(
@@ -631,8 +671,12 @@ function ProfilePageContent() {
 
                     <Button
                       type="button"
-                      disabled={!canSaveProfile || isProfileSaving}
-                      onClick={() => void handleSaveProfile()}
+                      disabled={
+                        !profileFormIsValid ||
+                        !profileFormIsDirty ||
+                        isProfileSaving
+                      }
+                      onClick={() => void handleProfileSubmit()}
                     >
                       {isProfileSaving ? 'Saving...' : 'Save changes'}
                     </Button>

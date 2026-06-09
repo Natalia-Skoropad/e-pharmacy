@@ -58,6 +58,6 @@ export const USER_ORDER_COMMENT_MAX_LENGTH = VALIDATION_LIMITS.orderCommentMax;
 export const PICTURE_URL_MAX_LENGTH = VALIDATION_LIMITS.pictureUrlMax;
 export const PICTURE_FILE_MAX_SIZE_BYTES =
   VALIDATION_LIMITS.pictureFileMaxSizeBytes;
-export const USER_PICTURE_FILE_MAX_SIZE_KB = Math.round(
+export const PICTURE_FILE_MAX_SIZE_KB = Math.round(
   PICTURE_FILE_MAX_SIZE_BYTES / 1024
 );

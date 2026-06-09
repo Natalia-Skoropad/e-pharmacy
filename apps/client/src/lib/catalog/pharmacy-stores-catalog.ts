@@ -192,9 +192,12 @@ export function buildPharmacyStoresPath(
 ): string {
   const segments: string[] = [];
 
-  if (filters.name) segments.push(`search-name-${slugifyCatalogSegment(filters.name)}`);
-  if (filters.address) segments.push(`address-${slugifyCatalogSegment(filters.address)}`);
-  if (filters.city) segments.push(`city-${slugifyCatalogSegment(filters.city)}`);
+  if (filters.name)
+    segments.push(`search-name-${slugifyCatalogSegment(filters.name)}`);
+  if (filters.address)
+    segments.push(`address-${slugifyCatalogSegment(filters.address)}`);
+  if (filters.city)
+    segments.push(`city-${slugifyCatalogSegment(filters.city)}`);
   if (filters.sort && filters.sort !== 'newest') {
     segments.push(`sort-${filters.sort}`);
   }

@@ -19,7 +19,6 @@ import {
 } from './limits';
 
 import { isHttpUrl } from '../picture';
-
 import { VALIDATION_MESSAGES } from './messages';
 
 import {
@@ -53,14 +52,12 @@ export const sharedEmailSchema = z
 
 //=============================================================================
 
-export const sharedRequiredPhoneSchema = z
+export const sharedPhoneSchema = z
   .string()
   .trim()
   .min(1, VALIDATION_MESSAGES.required.phone)
   .max(USER_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.limits.phoneMax)
   .regex(PHONE_PATTERN, VALIDATION_MESSAGES.format.phone);
-
-export const sharedPhoneSchema = sharedRequiredPhoneSchema;
 
 //=============================================================================
 

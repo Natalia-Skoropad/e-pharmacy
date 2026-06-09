@@ -118,15 +118,11 @@ function isProductSortFilter(value?: string): value is ProductSortFilter {
 
 //===================================================================
 
-
-
-
 function isValidObjectId(value?: string): value is string {
   return Boolean(value && /^[a-f\d]{24}$/i.test(value));
 }
 
 //===================================================================
-
 
 function getCategoryLabel(filters: MedicinesCatalogFilters, fallback?: string) {
   return (
@@ -138,8 +134,6 @@ function getCategoryLabel(filters: MedicinesCatalogFilters, fallback?: string) {
 }
 
 //===================================================================
-
-
 
 //===================================================================
 
@@ -280,8 +274,10 @@ export function buildMedicinesCatalogPath(
 ): string {
   const segments: string[] = [];
 
-  if (filters.name) segments.push(`search-name-${slugifyCatalogSegment(filters.name)}`);
-  if (filters.article) segments.push(`article-${slugifyCatalogSegment(filters.article)}`);
+  if (filters.name)
+    segments.push(`search-name-${slugifyCatalogSegment(filters.name)}`);
+  if (filters.article)
+    segments.push(`article-${slugifyCatalogSegment(filters.article)}`);
 
   if (filters.category && filters.category !== 'all') {
     segments.push(`category-${filters.category}`);
@@ -336,12 +332,12 @@ export function hasLegacyMedicinesCatalogSearchParams(
 ): boolean {
   return Boolean(
     params.name ||
-      params.article ||
-      params.category ||
-      params.availability ||
-      params.sort ||
-      params.page ||
-      params.storeId
+    params.article ||
+    params.category ||
+    params.availability ||
+    params.sort ||
+    params.page ||
+    params.storeId
   );
 }
 
