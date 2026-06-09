@@ -160,9 +160,6 @@ importers:
       '@e-pharmacy/types':
         specifier: workspace:*
         version: link:../types
-      '@e-pharmacy/utils':
-        specifier: workspace:*
-        version: link:../utils
     devDependencies:
       next:
         specifier: 16.2.4
@@ -195,9 +192,6 @@ importers:
       '@e-pharmacy/auth':
         specifier: workspace:*
         version: link:../auth
-      '@e-pharmacy/utils':
-        specifier: workspace:*
-        version: link:../utils
     devDependencies:
       typescript:
         specifier: ^5
@@ -229,9 +223,6 @@ importers:
       '@e-pharmacy/validation':
         specifier: workspace:*
         version: link:../validation
-      '@e-pharmacy/utils':
-        specifier: workspace:*
-        version: link:../utils
       react:
         specifier: '>=19'
         version: 19.2.4
