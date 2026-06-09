@@ -121,7 +121,11 @@ export function validateDataProfileForm(
     trailingDot: true,
   });
 
-  const phoneError = buildPhoneError(values.phone, { trailingDot: true });
+  const phoneError = buildPhoneError(values.phone, {
+    required: true,
+    trailingDot: true,
+  });
+
   const addressError = buildAddressError(values.address, { trailingDot: true });
 
   if (nameError) errors.name = nameError;

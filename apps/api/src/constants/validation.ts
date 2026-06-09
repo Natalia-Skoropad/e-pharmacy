@@ -114,6 +114,7 @@ export const VALIDATION_MESSAGES = {
     nameMin: `Name must be at least ${USER_NAME_MIN_LENGTH} characters`,
     nameMax: `Name must be at most ${USER_NAME_MAX_LENGTH} characters`,
     emailMax: `Email must be at most ${USER_EMAIL_MAX_LENGTH} characters`,
+    phoneMin: `Phone must be at least ${USER_PHONE_MIN_LENGTH} characters`,
     phoneMax: `Phone must be at most ${USER_PHONE_MAX_LENGTH} characters`,
     passwordMin: `Password must be at least ${USER_PASSWORD_MIN_LENGTH} characters`,
     passwordMax: `Password must be at most ${USER_PASSWORD_MAX_LENGTH} characters`,

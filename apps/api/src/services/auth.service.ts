@@ -439,10 +439,7 @@ export async function updateUserProfileService(
 
   if (typeof input.name === 'string') update.name = input.name;
 
-  if (typeof input.phone === 'string') {
-    if (input.phone) update.phone = input.phone;
-    else unset.phone = '';
-  }
+  if (typeof input.phone === 'string') update.phone = input.phone;
 
   if (typeof input.address === 'string') {
     if (input.address) update.address = input.address;

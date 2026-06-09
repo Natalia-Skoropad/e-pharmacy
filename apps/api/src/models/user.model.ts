@@ -4,7 +4,9 @@ import {
   USER_ADDRESS_MAX_LENGTH,
   PICTURE_URL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
+  USER_PHONE_MIN_LENGTH,
   USER_PHONE_MAX_LENGTH,
+  PHONE_PATTERN,
   VALIDATION_MESSAGES,
 } from '../constants/validation';
 
@@ -65,7 +67,9 @@ const userSchema = new Schema<UserEntity>(
       type: String,
       required: [true, VALIDATION_MESSAGES.required.phone],
       trim: true,
+      minlength: [USER_PHONE_MIN_LENGTH, VALIDATION_MESSAGES.limits.phoneMin],
       maxlength: [USER_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.limits.phoneMax],
+      match: [PHONE_PATTERN, VALIDATION_MESSAGES.format.phone],
     },
 
     address: {
