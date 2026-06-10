@@ -33,7 +33,7 @@ import {
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { CartInvoiceLimitModal } from '@/components/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { useFavoriteToggle, useReviewForm } from '@/hooks';
 import { ROUTES } from '@e-pharmacy/config/routes';

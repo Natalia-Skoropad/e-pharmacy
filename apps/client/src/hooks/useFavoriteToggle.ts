@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 
 //===================================================================
 

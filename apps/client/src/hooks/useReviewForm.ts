@@ -14,7 +14,7 @@ import {
   type ReviewTouchedFields,
 } from '@e-pharmacy/validation';
 
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 
 //===================================================================
 

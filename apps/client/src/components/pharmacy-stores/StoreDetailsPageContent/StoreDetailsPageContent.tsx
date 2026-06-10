@@ -34,7 +34,7 @@ import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
   createStoreReview,

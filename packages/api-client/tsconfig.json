@@ -9,15 +9,15 @@
   ],
   "compilerOptions": {
     "paths": {
+      "@e-pharmacy/config": [
+        "../config/src/index.ts"
+      ],
+      "@e-pharmacy/config/*": [
+        "../config/src/*/index.ts",
+        "../config/src/*.ts"
+      ],
       "@e-pharmacy/types": [
         "../types/src/index.ts"
-      ],
-      "@e-pharmacy/auth": [
-        "../auth/src/index.ts"
-      ],
-      "@e-pharmacy/auth/*": [
-        "../auth/src/*/index.ts",
-        "../auth/src/*.ts"
       ]
     }
   }

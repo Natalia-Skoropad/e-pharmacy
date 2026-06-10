@@ -7,7 +7,7 @@ import {
   AUTH_READY_COOKIE_NAME,
   LEGACY_AUTH_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
-} from '@e-pharmacy/auth';
+} from '@e-pharmacy/config/shared';
 
 import { createApiUrl } from '../core/api-url';
 import { proxyBackendRequest } from './backend-proxy';

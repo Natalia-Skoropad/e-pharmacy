@@ -1,5 +1,4 @@
 export * from './admin-routes';
-export * from './auth-routes';
 export * from './breadcrumbs';
 export * from './client-routes';
 export * from './is-active-route';

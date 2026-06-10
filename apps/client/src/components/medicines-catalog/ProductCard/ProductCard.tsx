@@ -19,7 +19,7 @@ import {
 
 import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
 import { buildProductPath } from '@e-pharmacy/config/routes';
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 import { toggleFavoriteProduct } from '@e-pharmacy/api-client/client';
 import type { Product } from '@e-pharmacy/types';
 

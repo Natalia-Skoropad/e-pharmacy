@@ -18,6 +18,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@e-pharmacy/config": "workspace:*",
     "@e-pharmacy/types": "workspace:*",
     "react": ">=19"
   },

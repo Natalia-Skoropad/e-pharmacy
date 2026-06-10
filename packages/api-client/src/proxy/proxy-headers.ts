@@ -2,6 +2,12 @@ import { type NextRequest } from 'next/server';
 
 import type { HttpMethod } from '../core/types';
 
+import {
+  ACCESS_TOKEN_COOKIE_NAME,
+  LEGACY_AUTH_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from '@e-pharmacy/config/shared';
+
 //===================================================================
 
 type ProxyHeadersOptions = {
@@ -12,10 +18,10 @@ type ProxyHeadersOptions = {
 
 //===================================================================
 
-const AUTH_COOKIE_NAMES = new Set([
-  'e_pharmacy_access_token',
-  'e_pharmacy_refresh_token',
-  'e_pharmacy_auth_token',
+const AUTH_COOKIE_NAMES = new Set<string>([
+  ACCESS_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+  LEGACY_AUTH_COOKIE_NAME,
 ]);
 
 //===================================================================

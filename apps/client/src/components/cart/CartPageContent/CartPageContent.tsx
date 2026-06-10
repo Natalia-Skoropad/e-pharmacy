@@ -32,7 +32,7 @@ import { CART_DESCRIPTION, CART_TITLE } from '@e-pharmacy/config/seo';
 import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { buildStorePath, createBreadcrumbs } from '@e-pharmacy/config/routes';
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 import { getCart } from '@e-pharmacy/api-client/client';
 
 import {
@@ -91,7 +91,7 @@ function CartPageContent() {
 
   const [continueShoppingStore, setContinueShoppingStore] =
     useState<CartStoreGroup | null>(null);
-  
+
   const [pendingAction, setPendingAction] = useState<
     | { type: 'item'; itemId: string }
     | { type: 'store'; storeId: string; storeName: string }
@@ -279,7 +279,11 @@ function CartPageContent() {
               <p className={css.text}>{CART_DESCRIPTION}</p>
             </div>
 
-            <CountLabel shown={visibleCart.totalItems} total={visibleCart.totalItems} label="items" />
+            <CountLabel
+              shown={visibleCart.totalItems}
+              total={visibleCart.totalItems}
+              label="items"
+            />
           </div>
 
           {shouldShowLoading ? (

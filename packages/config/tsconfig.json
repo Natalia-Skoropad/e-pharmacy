@@ -6,17 +6,5 @@
   "exclude": [
     "node_modules",
     "dist"
-  ],
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@e-pharmacy/auth": [
-        "../auth/src/index.ts"
-      ],
-      "@e-pharmacy/auth/*": [
-        "../auth/src/*/index.ts",
-        "../auth/src/*.ts"
-      ]
-    }
-  }
+  ]
 }

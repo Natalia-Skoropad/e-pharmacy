@@ -33,7 +33,7 @@ import {
 
 import { buildProductPath, buildStorePath } from '@e-pharmacy/config/routes';
 import { getOrderIdFromPathParam } from '@/lib/orders';
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 import { getOrderDetails } from '@e-pharmacy/api-client/client';
 import type { BreadcrumbItem, ClientOrder } from '@e-pharmacy/types';
 

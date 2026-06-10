@@ -9,7 +9,7 @@ import { EmailInput, PasswordInput } from '@e-pharmacy/ui/form-fields';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
 import { ROUTES } from '@e-pharmacy/config/routes';
-import { getSafeRedirectPath } from '@e-pharmacy/config/routes';
+import { getSafeRedirectPath } from '@e-pharmacy/auth/routing';
 
 import {
   LOGIN_FORM_FIELDS,
@@ -24,7 +24,7 @@ import {
   type LoginTouchedFields,
 } from '@e-pharmacy/validation';
 
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 
 import css from '../shared/AuthForm.module.css';
 

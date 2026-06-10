@@ -3,9 +3,10 @@ import { NextResponse, type NextRequest } from 'next/server';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
-} from '@e-pharmacy/auth/session';
+} from '@e-pharmacy/config/shared';
 
-import { ROUTES, getSafeRedirectPath } from '@e-pharmacy/config/routes';
+import { ROUTES } from '@e-pharmacy/config/routes';
+import { getSafeRedirectPath } from '@e-pharmacy/auth/routing';
 
 //===================================================================
 

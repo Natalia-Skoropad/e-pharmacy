@@ -154,9 +154,9 @@ importers:
 
   packages/api-client:
     dependencies:
-      '@e-pharmacy/auth':
+      '@e-pharmacy/config':
         specifier: workspace:*
-        version: link:../auth
+        version: link:../config
       '@e-pharmacy/types':
         specifier: workspace:*
         version: link:../types
@@ -170,6 +170,9 @@ importers:
 
   packages/auth:
     dependencies:
+      '@e-pharmacy/config':
+        specifier: workspace:*
+        version: link:../config
       '@e-pharmacy/types':
         specifier: workspace:*
         version: link:../types
@@ -188,10 +191,6 @@ importers:
         version: 5.9.3
 
   packages/config:
-    dependencies:
-      '@e-pharmacy/auth':
-        specifier: workspace:*
-        version: link:../auth
     devDependencies:
       typescript:
         specifier: ^5

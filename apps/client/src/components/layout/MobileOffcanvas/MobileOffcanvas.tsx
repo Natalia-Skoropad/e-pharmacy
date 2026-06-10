@@ -17,7 +17,7 @@ import { MobileOffcanvasBase } from '@e-pharmacy/ui/layout';
 import { CLIENT_NAV_LINKS } from '@e-pharmacy/config/navigation';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { isActiveRoute } from '@e-pharmacy/config/routes';
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 
 import css from './MobileOffcanvas.module.css';
 

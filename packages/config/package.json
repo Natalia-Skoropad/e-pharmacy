@@ -15,7 +15,8 @@
     "./route-groups": "./src/routes/index.ts",
     "./route-segments": "./src/routes/route-segments.ts",
     "./routes": "./src/routes/index.ts",
-    "./seo": "./src/seo/index.ts"
+    "./seo": "./src/seo/index.ts",
+    "./shared": "./src/shared/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",
@@ -23,8 +24,5 @@
   },
   "devDependencies": {
     "typescript": "^5"
-  },
-  "dependencies": {
-    "@e-pharmacy/auth": "workspace:*"
   }
 }

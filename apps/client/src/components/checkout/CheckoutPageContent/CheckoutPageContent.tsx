@@ -54,7 +54,7 @@ import {
   type OrderDeliveryTouchedFields,
 } from '@e-pharmacy/validation';
 
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 import type { BreadcrumbItem } from '@e-pharmacy/types';
 
 import type { CheckoutPaymentMethod as PaymentMethod } from '@e-pharmacy/types/checkout';
@@ -94,8 +94,10 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     useState<OrderDeliveryTouchedFields>({});
   const [copiedEmail, setCopiedEmail] = useState(false);
 
-  const { cart, error, isLoading, setCart, setError } =
-    useCheckoutCart(isAuthReady, isAuthenticated);
+  const { cart, error, isLoading, setCart, setError } = useCheckoutCart(
+    isAuthReady,
+    isAuthenticated
+  );
 
   const orderGroups = useMemo(() => groupCartByStore(cart), [cart]);
 

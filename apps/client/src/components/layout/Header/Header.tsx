@@ -25,7 +25,7 @@ import {
   type CartUpdatedEventDetail,
 } from '@/lib/cart/cart-events';
 
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 import { getCart } from '@e-pharmacy/api-client/client';
 
 import css from './Header.module.css';

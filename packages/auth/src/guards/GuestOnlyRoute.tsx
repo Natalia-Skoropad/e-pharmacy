@@ -6,13 +6,30 @@ import { useEffect, type ReactNode } from 'react';
 import { useAuth } from '../core/AuthProviderCore';
 import { getSafeRedirectPath } from '../routing/redirects';
 
+import type { AuthUser } from '@e-pharmacy/types';
+
 //===================================================================
+
+export type AuthenticatedRedirectPath = string | ((user: AuthUser) => string);
 
 export type GuestOnlyRouteProps = {
   children: ReactNode;
-  authenticatedRedirectPath?: string;
+  authenticatedRedirectPath?: AuthenticatedRedirectPath;
   loadingFallback?: ReactNode;
 };
+
+//===================================================================
+
+function resolveAuthenticatedRedirectPath(
+  authenticatedRedirectPath: AuthenticatedRedirectPath,
+  user: AuthUser | null
+): string {
+  if (typeof authenticatedRedirectPath === 'string') {
+    return authenticatedRedirectPath;
+  }
+
+  return user ? authenticatedRedirectPath(user) : '/';
+}
 
 //===================================================================
 
@@ -24,18 +41,29 @@ export function GuestOnlyRoute({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { isAuthenticated, isAuthReady } = useAuth();
-
-  const redirectTo = getSafeRedirectPath(
-    searchParams.get('redirect'),
-    authenticatedRedirectPath
-  );
+  const { user, isAuthenticated, isAuthReady } = useAuth();
 
   useEffect(() => {
     if (!isAuthReady || !isAuthenticated) return;
 
+    const fallbackRedirectPath = resolveAuthenticatedRedirectPath(
+      authenticatedRedirectPath,
+      user
+    );
+    const redirectTo = getSafeRedirectPath(
+      searchParams.get('redirect'),
+      fallbackRedirectPath
+    );
+
     router.replace(redirectTo);
-  }, [isAuthReady, isAuthenticated, redirectTo, router]);
+  }, [
+    authenticatedRedirectPath,
+    isAuthReady,
+    isAuthenticated,
+    router,
+    searchParams,
+    user,
+  ]);
 
   if (!isAuthReady) return loadingFallback;
 

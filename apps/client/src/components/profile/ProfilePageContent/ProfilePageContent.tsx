@@ -61,7 +61,7 @@ import {
   type DataProfileTouchedFields,
 } from '@e-pharmacy/validation';
 
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
   getOrders,

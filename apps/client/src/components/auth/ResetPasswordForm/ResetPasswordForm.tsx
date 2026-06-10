@@ -21,7 +21,7 @@ import {
   type ResetPasswordTouchedFields,
 } from '@e-pharmacy/validation';
 
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 import { resetPassword } from '@e-pharmacy/api-client/client';
 import css from '../shared/AuthForm.module.css';
 

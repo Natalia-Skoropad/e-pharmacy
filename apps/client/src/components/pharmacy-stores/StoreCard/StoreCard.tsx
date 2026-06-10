@@ -17,7 +17,7 @@ import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
 
 import { FavoriteToggleButton } from '@/components/common';
 import { useFavoriteToggle, useStoreFavoriteRefresh } from '@/hooks';
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 import type { Store } from '@e-pharmacy/types';
 
 import css from './StoreCard.module.css';

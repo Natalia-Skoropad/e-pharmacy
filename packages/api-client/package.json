@@ -24,7 +24,7 @@
     "next": "16.2.4"
   },
   "dependencies": {
-    "@e-pharmacy/types": "workspace:*",
-    "@e-pharmacy/auth": "workspace:*"
+    "@e-pharmacy/config": "workspace:*",
+    "@e-pharmacy/types": "workspace:*"
   }
 }

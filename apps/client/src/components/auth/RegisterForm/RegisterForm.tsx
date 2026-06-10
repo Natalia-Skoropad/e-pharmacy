@@ -15,7 +15,7 @@ import {
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
 import { ROUTES } from '@e-pharmacy/config/routes';
-import { getSafeRedirectPath } from '@e-pharmacy/config/routes';
+import { getSafeRedirectPath } from '@e-pharmacy/auth/routing';
 
 import {
   REGISTER_FORM_FIELDS,
@@ -33,7 +33,7 @@ import {
   type RegisterTouchedFields,
 } from '@e-pharmacy/validation';
 
-import { useAuth } from '@/providers';
+import { useAuth } from '@e-pharmacy/auth/core';
 
 import css from '../shared/AuthForm.module.css';
 
@@ -168,7 +168,9 @@ function RegisterForm() {
       <Button
         type="submit"
         fullWidth
-        disabled={isSubmitting || !isAuthReady || !register || !registerFormIsValid}
+        disabled={
+          isSubmitting || !isAuthReady || !register || !registerFormIsValid
+        }
       >
         {isSubmitting ? 'Creating account...' : 'Create account'}
       </Button>

@@ -2,7 +2,6 @@
 
 import {
   AuthProviderCore,
-  useAuth,
   type AuthProviderServices,
 } from '@e-pharmacy/auth';
 
@@ -47,5 +46,4 @@ function AuthProvider({ children }: AuthProviderProps) {
   );
 }
 
-export { useAuth };
 export default AuthProvider;

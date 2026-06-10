@@ -1,12 +1,12 @@
 import {
   AUTH_COOKIE_MAX_AGE_SECONDS,
   AUTH_READY_COOKIE_NAME,
-} from './auth-session';
+} from '@e-pharmacy/config/shared';
 
 //===================================================================
 
-function canUseDocumentCookie(): boolean {
-  return typeof document !== 'undefined';
+function canUseBrowserCookies(): boolean {
+  return typeof document !== 'undefined' && typeof window !== 'undefined';
 }
 
 //===================================================================
@@ -18,7 +18,7 @@ function getSecureCookiePart(): string {
 //===================================================================
 
 function getCookieValue(name: string): string | null {
-  if (!canUseDocumentCookie()) return null;
+  if (!canUseBrowserCookies()) return null;
 
   const cookie = document.cookie
     .split(';')
@@ -35,7 +35,7 @@ function getCookieValue(name: string): string | null {
 //===================================================================
 
 function setClientCookie(name: string, value: string): void {
-  if (!canUseDocumentCookie()) return;
+  if (!canUseBrowserCookies()) return;
 
   document.cookie = `${name}=${encodeURIComponent(
     value
@@ -45,7 +45,7 @@ function setClientCookie(name: string, value: string): void {
 //===================================================================
 
 function removeClientCookie(name: string): void {
-  if (!canUseDocumentCookie()) return;
+  if (!canUseBrowserCookies()) return;
 
   document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax${getSecureCookiePart()}`;
 }
@@ -59,7 +59,7 @@ export function getClientAuthSessionHint(): boolean {
 //===================================================================
 
 export function setClientAuthSessionHint(): void {
-  if (!canUseDocumentCookie()) return;
+  if (!canUseBrowserCookies()) return;
 
   setClientCookie(AUTH_READY_COOKIE_NAME, '1');
 }
@@ -67,7 +67,7 @@ export function setClientAuthSessionHint(): void {
 //===================================================================
 
 export function removeClientAuthSessionHint(): void {
-  if (!canUseDocumentCookie()) return;
+  if (!canUseBrowserCookies()) return;
 
   removeClientCookie(AUTH_READY_COOKIE_NAME);
 }
