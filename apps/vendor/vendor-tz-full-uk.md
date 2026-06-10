@@ -77,7 +77,7 @@ Vendor app складається з таких великих блоків:
    - резерв товарів;
    - фіксація цін.
 
-6. **Customers**
+6. **Clients**
    - таблиця власних клієнтів;
    - сторінка одного клієнта;
    - readonly дані клієнта;
@@ -516,7 +516,7 @@ Sidebar — основна desktop-навігація Vendor cabinet.
 ```txt
 Dashboard              /vendor/dashboard
 Orders                 /vendor/orders
-Customers              /vendor/clients
+Clients              /vendor/clients
 Own medicines          /vendor/medicines
 All medicines          /vendor/all-medicines
 Medicine requests      /vendor/medicine-requests
@@ -530,7 +530,7 @@ Active state має працювати для вкладених сторіно�
 Приклади:
 
 - `/vendor/orders` і `/vendor/orders/[orderId]` → active `Orders`;
-- `/vendor/clients` і `/vendor/clients/[clientId]` → active `Customers`;
+- `/vendor/clients` і `/vendor/clients/[clientId]` → active `Clients`;
 - `/vendor/medicine-requests`, `/vendor/medicine-requests/new`, `/vendor/medicine-requests/[requestId]`, `/vendor/medicine-requests/[requestId]/edit` → active `Medicine requests`.
 
 ## 3.6. Sidebar для різних статусів аптеки
@@ -550,7 +550,7 @@ Active state має працювати для вкладених сторіно�
 - створювати заявки;
 - обробляти замовлення.
 
-Сторінки orders/customers/own medicines/requests можуть відкриватися з empty або restricted state.
+Сторінки orders/clients/own medicines/requests можуть відкриватися з empty або restricted state.
 
 ### Active pharmacy
 
@@ -910,7 +910,7 @@ All reviews are moderated in Admin.
 
 Show:
 
-- customer name;
+- client name;
 - rating;
 - date;
 - text;
@@ -999,7 +999,7 @@ Dashboard — головна сторінка Vendor після login.
 Dashboard показує тільки статистику поточної аптеки:
 
 - orders statistics;
-- customers statistics;
+- clients statistics;
 - medicines statistics;
 - medicine requests statistics;
 - quick actions;
@@ -1054,7 +1054,7 @@ Your changes are under moderation. Until Admin reviews them, the Client app show
 Description:
 
 ```txt
-Track orders, customers, medicines, and requests for your pharmacy.
+Track orders, clients, medicines, and requests for your pharmacy.
 ```
 
 ## 5.4. Фільтри Dashboard
@@ -1063,13 +1063,13 @@ Track orders, customers, medicines, and requests for your pharmacy.
 
 Він не впливає на:
 
-- customer statistics;
+- client statistics;
 - medicine statistics;
 - medicine request statistics.
 
 Прибрані показники, які залежали від періоду не в orders block:
 
-- “New customers for selected period”;
+- “New clients for selected period”;
 - “successful sales amount for selected period” in medicines;
 - “rejected orders amount for selected period” in medicines.
 
@@ -1131,18 +1131,18 @@ Click on status card opens orders table with URL filter:
 /vendor/orders/status-rejected
 ```
 
-## 5.6. Customers statistics
+## 5.6. Clients statistics
 
 Показує аналітику по клієнтах, які хоча б один раз створили замовлення на поточну аптеку.
 
 Recommended cards:
 
-- Total customers;
-- Repeat customers;
-- Active customers;
-- Inactive customers.
+- Total clients;
+- Repeat clients;
+- Active clients;
+- Inactive clients.
 
-Не показувати “New customers for selected period”.
+Не показувати “New clients for selected period”.
 
 Click examples:
 
@@ -1155,8 +1155,8 @@ Click examples:
 Empty state:
 
 ```txt
-Your pharmacy has no customers yet.
-Customers will appear after the first orders in your pharmacy.
+Your pharmacy has no clients yet.
+Clients will appear after the first orders in your pharmacy.
 ```
 
 ## 5.7. Medicines statistics
@@ -1271,7 +1271,7 @@ Vendor:
 
 | Status | Color | Description |
 |---|---|---|
-| `new` | blue | Customer confirmed the order |
+| `new` | blue | Client confirmed the order |
 | `in_progress` | yellow | Vendor accepted the order for processing |
 | `successful` | green | Order completed |
 | `rejected` | red | Order rejected by Vendor |
@@ -1385,7 +1385,7 @@ Examples:
 /vendor/orders/status-successful/delivery-pickup
 /vendor/orders/status-in-progress/payment-cash
 /vendor/orders/date-2026-06-01_2026-06-30
-/vendor/orders/customer-john
+/vendor/orders/client-john
 /vendor/orders/order-12345
 ```
 
@@ -1394,7 +1394,7 @@ Pagination і rowsPerPage не змінюють URL.
 Required filters:
 
 - date filter;
-- customer search;
+- client search;
 - order number search;
 - status select;
 - delivery method select;
@@ -1423,10 +1423,10 @@ Search should be case-insensitive and debounced.
 
 - Order number;
 - Order date;
-- Customer;
+- Client;
 - Delivery method;
 - Payment method;
-- Customer comment;
+- Client comment;
 - Total quantity;
 - Total amount;
 - Status.
@@ -1435,7 +1435,7 @@ Order number is global across Admin system.
 
 Click on order number opens order details.
 
-Click on customer opens customer page.
+Click on client opens client page.
 
 Status badge colors must be the same in Client, Vendor and Admin.
 
@@ -1566,14 +1566,14 @@ Options same as Client checkout:
 
 Bank transfer may be disabled if pharmacy has no bank details.
 
-### Customer comment
+### Client comment
 
 Readonly.
 
 If empty:
 
 ```txt
-The customer did not leave a comment.
+The client did not leave a comment.
 ```
 
 ### Vendor comment
@@ -1643,16 +1643,16 @@ Vendor може тільки переглядати клієнтів, які х�
 
 | Status | Color | Description |
 |---|---|---|
-| `active` | green | Customer can use Client cabinet and create orders |
-| `inactive` | red | Customer is blocked or disabled by Admin |
+| `active` | green | Client can use Client cabinet and create orders |
+| `inactive` | red | Client is blocked or disabled by Admin |
 
-For inactive customer, Admin must provide blocking reason.
+For inactive client, Admin must provide blocking reason.
 
-Inactive customer cannot login, create orders, edit profile or leave reviews.
+Inactive client cannot login, create orders, edit profile or leave reviews.
 
-Vendor can still view order history of inactive customers for current pharmacy.
+Vendor can still view order history of inactive clients for current pharmacy.
 
-## 7.3. Vendor customer definition
+## 7.3. Vendor client definition
 
 Власний клієнт Vendor — це клієнт, який хоча б один раз створив замовлення на поточну аптеку.
 
@@ -1666,7 +1666,7 @@ firstOrderAt
 
 Не використовуємо окремо `client.createdAt`, щоб не ускладнювати таблицю і карточку клієнта.
 
-## 7.4. Customers table
+## 7.4. Clients table
 
 Показує тільки власних клієнтів поточної аптеки.
 
@@ -1700,7 +1700,7 @@ Required filters:
 
 - date filter;
 - search by name;
-- search by customer ID;
+- search by client ID;
 - search by email;
 - search by phone;
 - search by address;
@@ -1712,8 +1712,8 @@ Phone search should support search by digits regardless of formatting if possibl
 
 ### Columns
 
-- Customer ID;
-- Customer photo;
+- Client ID;
+- Client photo;
 - First order date;
 - Name;
 - Email;
@@ -1752,19 +1752,19 @@ Pagination and rowsPerPage do not affect URL.
 Loader:
 
 ```txt
-Loading customers...
+Loading clients...
 ```
 
 Empty:
 
 ```txt
-Your pharmacy has no customers yet.
+Your pharmacy has no clients yet.
 ```
 
 Nothing found:
 
 ```txt
-No customers found for the selected filters.
+No clients found for the selected filters.
 ```
 
 Button:
@@ -1773,22 +1773,22 @@ Button:
 Reset filters
 ```
 
-## 7.5. One customer page
+## 7.5. One client page
 
-Shows detailed readonly customer info and customer orders for current pharmacy.
+Shows detailed readonly client info and client orders for current pharmacy.
 
-Accessible only if this customer has at least one order for current pharmacy.
+Accessible only if this client has at least one order for current pharmacy.
 
-If customer does not belong to current pharmacy, show not found or access denied.
+If client does not belong to current pharmacy, show not found or access denied.
 
 ### Top section
 
 - Breadcrumbs;
-- h1: `Customer: {customer.name}`;
+- h1: `Client: {client.name}`;
 - description:
 
 ```txt
-View customer information, statistics, and orders for your pharmacy.
+View client information, statistics, and orders for your pharmacy.
 ```
 
 ### Left info block
@@ -1798,7 +1798,7 @@ Show:
 - photo or fallback avatar;
 - name;
 - first order date;
-- customer ID;
+- client ID;
 - email;
 - phone;
 - address;
@@ -1806,9 +1806,9 @@ Show:
 
 All fields readonly.
 
-### Customer statistics
+### Client statistics
 
-Statistics are calculated only for this customer and current pharmacy.
+Statistics are calculated only for this client and current pharmacy.
 
 Show by order status:
 
@@ -1824,9 +1824,9 @@ For each status:
 
 Rejected amount is shown for analytics, not revenue.
 
-### Customer orders table
+### Client orders table
 
-Shows all customer orders for current pharmacy only.
+Shows all client orders for current pharmacy only.
 
 Filters:
 
@@ -1842,7 +1842,7 @@ Columns:
 - Order date;
 - Delivery method;
 - Payment method;
-- Customer comment;
+- Client comment;
 - Total quantity;
 - Total amount;
 - Status.
@@ -1850,24 +1850,24 @@ Columns:
 States:
 
 ```txt
-This customer has no orders in your pharmacy yet.
+This client has no orders in your pharmacy yet.
 No orders found for the selected filters.
-Could not load customer data. Please try again.
-Customer not found.
+Could not load client data. Please try again.
+Client not found.
 ```
 
-The empty state is mainly defensive, because a customer should only appear in Vendor customers after first order.
+The empty state is mainly defensive, because a client should only appear in Vendor clients after first order.
 
-## 7.6. Customer toasts
+## 7.6. Client toasts
 
-Vendor pages for customers are mostly readonly.
+Vendor pages for clients are mostly readonly.
 
 Toasts may be used for technical actions:
 
 ```txt
-Customer email copied.
-Customer phone copied.
-Customer ID copied.
+Client email copied.
+Client phone copied.
+Client ID copied.
 Could not load data. Please try again.
 ```
 
@@ -2285,7 +2285,7 @@ Columns:
 
 - order number;
 - order date;
-- customer;
+- client;
 - quantity of this medicine;
 - unit price in this order;
 - amount for this medicine;
@@ -2805,7 +2805,7 @@ Routes:
 If route exists but entity does not, use local not found state:
 
 - order not found;
-- customer not found;
+- client not found;
 - medicine not found;
 - request not found.
 
@@ -2841,8 +2841,8 @@ Loading...
 Loading dashboard...
 Loading orders...
 Loading order data...
-Loading customers...
-Loading customer data...
+Loading clients...
+Loading client data...
 Loading medicines...
 Loading requests...
 ```
@@ -2984,14 +2984,14 @@ Store shared domain types:
 
 - UserRole;
 - PharmacyStatus;
-- CustomerStatus;
+- ClientStatus;
 - OrderStatus;
 - MedicineStatus;
 - MedicineRequestStatus;
 - DeliveryMethod;
 - PaymentMethod;
 - Pharmacy;
-- Customer;
+- Client;
 - Order;
 - OrderItem;
 - Medicine;
@@ -3062,7 +3062,7 @@ Shared API clients:
 - vendor profile API;
 - vendor dashboard API;
 - vendor orders API;
-- vendor customers API;
+- vendor clients API;
 - vendor medicines API;
 - vendor medicine requests API.
 
@@ -3088,7 +3088,7 @@ Backend modules needed for Vendor:
 - pharmacy moderation;
 - vendor dashboard;
 - vendor orders;
-- vendor customers;
+- vendor clients;
 - global medicines;
 - pharmacy medicines;
 - stock movement;
@@ -3108,7 +3108,7 @@ Vendor ТЗ логічно ділиться на такі глобальні ч�
 - Pharmacy profile;
 - Dashboard;
 - Orders;
-- Customers;
+- Clients;
 - Medicines;
 - Medicine requests;
 - Service pages/loaders/states;

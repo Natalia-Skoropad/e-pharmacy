@@ -1,4 +1,6 @@
-export type RobotsApp = 'client' | 'vendor' | 'admin';
+import type { AppKey } from '../app';
+
+export type RobotsApp = AppKey;
 
 export type RobotsConfig = {
   rules: {

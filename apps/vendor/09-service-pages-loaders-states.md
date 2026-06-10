@@ -130,8 +130,8 @@ Use shared `LoadingSpinner` for:
 - Dashboard;
 - orders table;
 - one order page;
-- customers table;
-- one customer page;
+  -clients table;
+- one client page;
 - own medicines table;
 - all medicines table;
 - medicine details page;

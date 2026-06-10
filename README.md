@@ -1,6 +1,6 @@
 # E-PHARMACY
 
-E-PHARMACY is a full-stack e-commerce project for an online pharmacy. The project is organized as a monorepo with a customer storefront, a shared backend API, shared workspace packages, and planned app boundaries for vendor and admin panels.
+E-PHARMACY is a full-stack e-commerce project for an online pharmacy. The project is organized as a monorepo with a client storefront, a shared backend API, shared workspace packages, and planned app boundaries for vendor and admin panels.
 
 ## Live Demo
 
@@ -11,7 +11,7 @@ E-PHARMACY is a full-stack e-commerce project for an online pharmacy. The projec
 
 Implemented:
 
-- `apps/client` — customer storefront
+- `apps/client` — client storefront
 - `apps/api` — shared Express/MongoDB API
 - `packages/*` — shared types, utilities, validation, config, and small UI contracts
 
@@ -24,14 +24,14 @@ Vendor and admin folders are kept as planned app boundaries. They are not comple
 
 ## Main Features
 
-### Customer storefront
+### Client storefront
 
 - Home page and public information pages
 - Pharmacy stores catalog with search, filters, sorting, pagination, details, reviews, and favorites
 - Medicines catalog with search, filters, sorting, pagination, product details, reviews, and favorites
 - Cart grouped by pharmacy invoice
-- Checkout with pickup/post delivery details and customer comment
-- Customer profile, password update, order history, and order details
+- Checkout with pickup/post delivery details and client comment
+- Client profile, password update, order history, and order details
 - Password recovery through email reset flow
 - Loading, empty, error, success, not-found, and protected-route states
 
@@ -57,12 +57,12 @@ Vendor and admin folders are kept as planned app boundaries. They are not comple
 
 ## Screenshots
 
-| Home | Medicines catalog | Product details |
-| --- | --- | --- |
+| Home                                                    | Medicines catalog                                                   | Product details                                                       |
+| ------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | ![Home page](./apps/client/public/readme/home-page.jpg) | ![Product catalog](./apps/client/public/readme/product-catalog.jpg) | ![Product details page](./apps/client/public/readme/product-page.jpg) |
 
-| Pharmacy catalog | Cart | Order confirmation |
-| --- | --- | --- |
+| Pharmacy catalog                                                      | Cart                                                    | Order confirmation                                                                  |
+| --------------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | ![Pharmacy catalog](./apps/client/public/readme/pharmacy-catalog.jpg) | ![Cart page](./apps/client/public/readme/cart-page.jpg) | ![Order confirmation page](./apps/client/public/readme/order-confirmation-page.jpg) |
 
 ## Tech Stack
@@ -98,7 +98,7 @@ Vendor and admin folders are kept as planned app boundaries. They are not comple
 
 ```txt
 apps/
-  client/   # customer storefront
+  client/   # client storefront
   api/      # shared backend API
   vendor/   # planned vendor cabinet
   admin/    # planned admin dashboard
@@ -201,6 +201,6 @@ pnpm check:api
 
 ## Implementation Notes
 
-The strongest completed parts of the project are the customer storefront, backend API, SEO routing, cookie-based auth flow, cart/checkout/order logic, and shared monorepo structure.
+The strongest completed parts of the project are the client storefront, backend API, SEO routing, cookie-based auth flow, cart/checkout/order logic, and shared monorepo structure.
 
 Vendor and admin apps are planned ecosystem extensions, not completed modules yet.

@@ -17,7 +17,7 @@ export type RegisterPayload = {
   password: string;
   phone: string;
   address?: string;
-  role?: Extract<UserRole, 'customer' | 'vendor'>;
+  role?: Extract<UserRole, 'client' | 'vendor'>;
 };
 
 export type LoginPayload = {

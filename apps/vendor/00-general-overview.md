@@ -2,12 +2,12 @@
 
 ## 1. Purpose
 
-The Vendor part is the pharmacy cabinet in the E-PHARMACY ecosystem. It allows a pharmacy to manage its own profile, orders, customers, medicines, medicine creation requests, and dashboard statistics.
+The Vendor part is the pharmacy cabinet in the E-PHARMACY ecosystem. It allows a pharmacy to manage its own profile, orders, clients, medicines, medicine creation requests, and dashboard statistics.
 
 The Vendor app works together with:
 
-- **Client** — public storefront where customers browse pharmacies, medicines, cart, checkout, orders, and reviews.
-- **Admin** — back-office where administrators moderate pharmacies, manage global medicines, review requests, view orders, and manage customers.
+- **Client** — public storefront where clients browse pharmacies, medicines, cart, checkout, orders, and reviews.
+- **Admin** — back-office where administrators moderate pharmacies, manage global medicines, review requests, view orders, and manage clients.
 - **API** — shared backend for all apps.
 - **Shared packages** — reusable UI, types, validation, config, API client, and utilities.
 
@@ -18,7 +18,7 @@ At this stage, this Vendor specification is the source of truth for future Vendo
 The Vendor app consists of the following global parts:
 
 1. **Auth and access**
-   - shared login/register/forgot-password pages;
+   - shared login/register/password-recovery pages;
    - pharmacy registration;
    - role-based redirects;
    - access restrictions by pharmacy status.
@@ -34,7 +34,7 @@ The Vendor app consists of the following global parts:
 3. **Dashboard**
    - pharmacy status banner;
    - order statistics;
-   - customer statistics;
+   - client statistics;
    - medicine statistics;
    - medicine request statistics;
    - quick transitions to filtered tables.
@@ -53,11 +53,11 @@ The Vendor app consists of the following global parts:
    - stock reservation and final stock write-off;
    - fixed order prices.
 
-6. **Customers**
-   - own customers table;
-   - one customer page;
-   - readonly customer data;
-   - customer statistics for the current pharmacy only.
+6. **Clients**
+   - own clients table;
+   - one client page;
+   - readonly client data;
+   - client statistics for the current pharmacy only.
 
 7. **Medicines**
    - own medicines table;
@@ -86,8 +86,8 @@ Vendor always sees and works only with the data of the current pharmacy.
 Vendor must not see:
 
 - orders of other pharmacies;
-- customers who never ordered from this pharmacy;
-- orders of a customer from other pharmacies;
+- clients who never ordered from this pharmacy;
+- orders of a client from other pharmacies;
 - pharmacy-specific medicine data of other pharmacies;
 - medicine requests of other pharmacies;
 - Admin-only internal fields;
@@ -97,18 +97,18 @@ Vendor must not see:
 
 ### Client owns
 
-- customer registration;
-- customer profile editing;
+- client registration;
+- client profile editing;
 - cart;
 - checkout;
 - order creation;
-- customer reviews.
+- client reviews.
 
 ### Vendor owns
 
 - own pharmacy profile editing according to status rules;
 - own order processing;
-- own customer list viewing;
+- own client list viewing;
 - own medicines list management;
 - medicine creation request drafts and submissions;
 - own dashboard analytics.
@@ -117,7 +117,7 @@ Vendor must not see:
 
 - pharmacy moderation;
 - pharmacy activation/deactivation;
-- customer blocking/unblocking;
+- client blocking/unblocking;
 - global medicine creation/editing/status changes;
 - medicine request review;
 - review moderation;
@@ -127,13 +127,13 @@ Vendor must not see:
 
 The same colors must be used consistently across Dashboard, tables, details pages, badges, chips, and Admin views.
 
-| Meaning | Color |
-|---|---|
-| New | Blue |
-| In work / On moderation | Yellow |
-| Active / Successful / Approved | Green |
-| Inactive / Rejected | Red |
-| Draft | Gray |
+| Meaning                        | Color  |
+| ------------------------------ | ------ |
+| New                            | Blue   |
+| In work / On moderation        | Yellow |
+| Active / Successful / Approved | Green  |
+| Inactive / Rejected            | Red    |
+| Draft                          | Gray   |
 
 ## 6. Filter URL strategy
 

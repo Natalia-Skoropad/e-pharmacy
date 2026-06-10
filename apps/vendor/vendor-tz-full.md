@@ -2,12 +2,12 @@
 
 ## 1. Purpose
 
-The Vendor part is the pharmacy cabinet in the E-PHARMACY ecosystem. It allows a pharmacy to manage its own profile, orders, customers, medicines, medicine creation requests, and dashboard statistics.
+The Vendor part is the pharmacy cabinet in the E-PHARMACY ecosystem. It allows a pharmacy to manage its own profile, orders, clients, medicines, medicine creation requests, and dashboard statistics.
 
 The Vendor app works together with:
 
-- **Client** — public storefront where customers browse pharmacies, medicines, cart, checkout, orders, and reviews.
-- **Admin** — back-office where administrators moderate pharmacies, manage global medicines, review requests, view orders, and manage customers.
+- **Client** — public storefront where clients browse pharmacies, medicines, cart, checkout, orders, and reviews.
+- **Admin** — back-office where administrators moderate pharmacies, manage global medicines, review requests, view orders, and manage clients.
 - **API** — shared backend for all apps.
 - **Shared packages** — reusable UI, types, validation, config, API client, and utilities.
 
@@ -18,7 +18,7 @@ At this stage, this Vendor specification is the source of truth for future Vendo
 The Vendor app consists of the following global parts:
 
 1. **Auth and access**
-   - shared login/register/forgot-password pages;
+   - shared login/register/password-recovery pages;
    - pharmacy registration;
    - role-based redirects;
    - access restrictions by pharmacy status.
@@ -34,7 +34,7 @@ The Vendor app consists of the following global parts:
 3. **Dashboard**
    - pharmacy status banner;
    - order statistics;
-   - customer statistics;
+   - client statistics;
    - medicine statistics;
    - medicine request statistics;
    - quick transitions to filtered tables.
@@ -53,11 +53,11 @@ The Vendor app consists of the following global parts:
    - stock reservation and final stock write-off;
    - fixed order prices.
 
-6. **Customers**
-   - own customers table;
-   - one customer page;
-   - readonly customer data;
-   - customer statistics for the current pharmacy only.
+6. **Clients**
+   - own clients table;
+   - one client page;
+   - readonly client data;
+   - client statistics for the current pharmacy only.
 
 7. **Medicines**
    - own medicines table;
@@ -86,8 +86,8 @@ Vendor always sees and works only with the data of the current pharmacy.
 Vendor must not see:
 
 - orders of other pharmacies;
-- customers who never ordered from this pharmacy;
-- orders of a customer from other pharmacies;
+- clients who never ordered from this pharmacy;
+- orders of a client from other pharmacies;
 - pharmacy-specific medicine data of other pharmacies;
 - medicine requests of other pharmacies;
 - Admin-only internal fields;
@@ -97,18 +97,18 @@ Vendor must not see:
 
 ### Client owns
 
-- customer registration;
-- customer profile editing;
+- client registration;
+- client profile editing;
 - cart;
 - checkout;
 - order creation;
-- customer reviews.
+- client reviews.
 
 ### Vendor owns
 
 - own pharmacy profile editing according to status rules;
 - own order processing;
-- own customer list viewing;
+- own client list viewing;
 - own medicines list management;
 - medicine creation request drafts and submissions;
 - own dashboard analytics.
@@ -117,7 +117,7 @@ Vendor must not see:
 
 - pharmacy moderation;
 - pharmacy activation/deactivation;
-- customer blocking/unblocking;
+- client blocking/unblocking;
 - global medicine creation/editing/status changes;
 - medicine request review;
 - review moderation;
@@ -217,14 +217,14 @@ Auth pages are shared global system pages, not a part of the `/vendor` route gro
 Shared auth routes:
 
 ```txt
-/auth/register
-/auth/login
-/auth/forgot-password
+/register
+/login
+/password-recovery
 ```
 
 Vendor protected routes start with `/vendor`.
 
-After login, a user with the `pharmacy` role is redirected to:
+After login, a user with the `vendor` role is redirected to:
 
 ```txt
 /vendor/dashboard
@@ -235,23 +235,23 @@ After login, a user with the `pharmacy` role is redirected to:
 The system supports these account roles:
 
 - `client`;
-- `pharmacy`;
+- `vendor`;
 - `admin`.
 
-Email and phone must be unique across all roles. The same email cannot belong to both a customer and a pharmacy. This allows login without a role selector.
+Email and phone must be unique across all roles. The same email cannot belong to both a client and a pharmacy/vendor account. This allows login without a role selector.
 
 ## 3. Register page
 
 The register page allows creating:
 
-- a customer account;
-- a pharmacy account.
+- a client account;
+- a pharmacy/vendor account.
 
-Default selected account type: **Customer**.
+Default selected account type: **Client**.
 
 The page must include an account type selector:
 
-- Customer;
+- Client;
 - Pharmacy.
 
 Recommended UI pattern:
@@ -260,18 +260,18 @@ Recommended UI pattern:
 - segmented control;
 - tabs-like switch.
 
-### Customer registration fields
+### Client registration fields
 
 - name;
 - email;
 - phone;
 - password.
 
-After successful customer registration:
+After successful client registration:
 
-- a customer account is created;
-- customer status becomes `active`;
-- customer can use the Client cabinet and create orders.
+- a client account is created;
+- client status becomes `active`;
+- client can use the Client cabinet and create orders.
 
 ### Pharmacy registration fields
 
@@ -281,7 +281,7 @@ After successful customer registration:
 - password;
 - confirmation documents upload.
 
-After successful pharmacy registration:
+After successful pharmacy/vendor registration:
 
 - a pharmacy account is created;
 - pharmacy status becomes `new`;
@@ -339,7 +339,7 @@ Upload confirmation documents to register a pharmacy account.
 
 ## 5. Login page
 
-The login page is shared for customers, pharmacies, and admins.
+The login page is shared for clients, vendors, and admins.
 
 Fields:
 
@@ -397,7 +397,7 @@ New pharmacy cannot:
 
 ## 8. Forgot password page
 
-The forgot password page is shared for customers, pharmacies, and admins.
+The password recovery page is shared for clients, pharmacies, and admins.
 
 Field:
 
@@ -516,9 +516,9 @@ Important: there must be only one visible `<main>` on the page.
 
 Public layout is used for:
 
-- `/auth/login`;
-- `/auth/register`;
-- `/auth/forgot-password`.
+- `/login`;
+- `/register`;
+- `/password-recovery`.
 
 It may reuse the Client auth layout.
 
@@ -585,7 +585,7 @@ On click:
 
 - perform logout;
 - clear auth/session state;
-- redirect to `/auth/login`;
+- redirect to `/login`;
 - show loading state.
 
 Loading text:
@@ -627,7 +627,7 @@ It is not shown for inactive pharmacies because inactive pharmacies cannot enter
 |---|---|
 | Dashboard | `/vendor/dashboard` |
 | Orders | `/vendor/orders` |
-| Customers | `/vendor/clients` |
+| Clients | `/vendor/clients` |
 | Own medicines | `/vendor/medicines` |
 | All medicines | `/vendor/all-medicines` |
 | Medicine requests | `/vendor/medicine-requests` |
@@ -688,8 +688,8 @@ Example page structure:
 | Pharmacy profile | Home / Dashboard / Pharmacy profile |
 | Orders | Home / Dashboard / Orders |
 | Order details | Home / Dashboard / Orders / Order #12345 |
-| Customers | Home / Dashboard / Customers |
-| Customer details | Home / Dashboard / Customers / Customer name |
+| Clients | Home / Dashboard / Clients |
+| Client details | Home / Dashboard / Clients / Client name |
 | Own medicines | Home / Dashboard / Own medicines |
 | Medicine details | Home / Dashboard / Own medicines / Medicine name |
 | All medicines | Home / Dashboard / All medicines |
@@ -728,6 +728,15 @@ Use shared components wherever possible.
 | `active` | Pharmacy passed moderation and can work | Admin |
 | `on_moderation` | Active pharmacy changed important data and waits for Admin review | System after Vendor submits changes |
 | `inactive` | Pharmacy is blocked or temporarily disabled | Admin |
+
+Vendor UI labels and colors:
+
+| Code | UI label | Color |
+|---|---|---|
+| `new` | Нова | Blue |
+| `active` | Активна | Green |
+| `on_moderation` | На модерації | Yellow |
+| `inactive` | Неактивна | Red |
 
 ## 3. Status behavior
 
@@ -803,7 +812,7 @@ Cannot:
 History is preserved:
 
 - orders;
-- customers;
+- clients;
 - medicines;
 - reviews;
 - statistics.
@@ -1089,7 +1098,7 @@ Use Client review styles where possible.
 
 Show:
 
-- customer name;
+- client name;
 - rating;
 - date;
 - review text;
@@ -1139,7 +1148,7 @@ Dashboard is the main Vendor page after pharmacy login.
 It shows a short overview of the current pharmacy only:
 
 - own order statistics;
-- own customer statistics;
+- own client statistics;
 - own medicine statistics;
 - own medicine request statistics;
 - quick actions;
@@ -1200,7 +1209,7 @@ Dashboard
 Description:
 
 ```txt
-View order, customer, medicine, and request statistics for your pharmacy.
+View order, client, medicine, and request statistics for your pharmacy.
 ```
 
 ## 4. Dashboard filters
@@ -1211,10 +1220,10 @@ These filters affect only order statistics.
 
 They do not affect:
 
-- customer statistics;
+- client statistics;
 - medicine statistics;
 - medicine request statistics;
-- total customers;
+- total clients;
 - total medicines;
 - current stock value;
 - request counts by status.
@@ -1303,22 +1312,22 @@ Examples:
 /vendor/orders/status-rejected
 ```
 
-## 6. Customers statistics
+## 6. Clients statistics
 
-Shows analytics for customers who created at least one order for the current pharmacy.
+Shows analytics for clients who created at least one order for the current pharmacy.
 
-Customers from other pharmacies are not included.
+Clients from other pharmacies are not included.
 
 Recommended cards:
 
-- Total customers;
-- Repeat customers;
-- Active customers;
-- Inactive customers.
+- Total clients;
+- Repeat clients;
+- Active clients;
+- Inactive clients.
 
 Removed from scope:
 
-- New customers by period.
+- New clients by period.
 
 ### Click behavior
 
@@ -1333,13 +1342,13 @@ Examples:
 ### Empty state
 
 ```txt
-Your pharmacy has no customers yet.
+Your pharmacy has no clients yet.
 ```
 
 Additional text:
 
 ```txt
-Customers will appear after the first orders in your pharmacy.
+Clients will appear after the first orders in your pharmacy.
 ```
 
 ## 7. Medicines statistics
@@ -1475,7 +1484,7 @@ Dashboard must not look empty if there is no data.
 Show empty states for:
 
 - no orders;
-- no customers;
+- no clients;
 - no added medicines;
 - no medicine requests.
 
@@ -1499,13 +1508,13 @@ Recommended reusable components:
 
 ## 1. General logic
 
-Orders are created only by customers through the Client checkout.
+Orders are created only by clients through the Client checkout.
 
 Vendor processes only orders that belong to the current pharmacy.
 
 Admin can view orders but does not create or edit them.
 
-After customer confirms checkout:
+After client confirms checkout:
 
 - order is created;
 - order status becomes `new`;
@@ -1517,7 +1526,7 @@ After customer confirms checkout:
 
 | Status | Color | Meaning |
 |---|---|---|
-| `new` | Blue | Order was confirmed by customer |
+| `new` | Blue | Order was confirmed by client |
 | `in_work` | Yellow | Vendor accepted the order for processing |
 | `successful` | Green | Order is completed |
 | `rejected` | Red | Order was rejected by Vendor |
@@ -1616,7 +1625,7 @@ The confirm button is disabled until rejection reason is filled.
 
 ## 5. Stock reservation rules
 
-When order is created by customer:
+When order is created by client:
 
 - medicines are reserved;
 - reserved quantity is not available for other orders;
@@ -1709,7 +1718,7 @@ Pagination and rows-per-page do not change URL.
 Filters:
 
 - date filter;
-- customer search;
+- client search;
 - order number search;
 - status select;
 - delivery method select;
@@ -1762,10 +1771,10 @@ Columns:
 
 - Order number;
 - Order date;
-- Customer;
+- Client;
 - Delivery method;
 - Payment method;
-- Customer comment;
+- Client comment;
 - Total quantity;
 - Total amount;
 - Status.
@@ -1786,11 +1795,11 @@ Sortable.
 
 Date format must be the same in Client, Vendor, and Admin.
 
-### Customer
+### Client
 
-Shows customer name.
+Shows client name.
 
-Click opens customer details page.
+Click opens client details page.
 
 ### Delivery method
 
@@ -1804,7 +1813,7 @@ Shows current payment method.
 
 If Vendor changed payment method in `in_work` status, table shows updated value.
 
-### Customer comment
+### Client comment
 
 Show:
 
@@ -2044,14 +2053,14 @@ Bank transfer
 
 Bank transfer can be disabled if pharmacy has no bank details.
 
-### Customer comment
+### Client comment
 
 Readonly.
 
 Empty text:
 
 ```txt
-Customer did not leave a comment.
+Client did not leave a comment.
 ```
 
 ### Vendor comment
@@ -2110,34 +2119,34 @@ Vendor must not see orders of other pharmacies.
 
 ---
 
-# Vendor Technical Specification — Customers
+# Vendor Technical Specification — Clients
 
 ## 1. General logic
 
-Customers are created only through self-registration in the Client part.
+Clients are created only through self-registration in the Client part.
 
-Admin can edit customers and change customer status.
+Admin can edit clients and change client status.
 
-Vendor cannot create, edit, block, delete, or change customer status.
+Vendor cannot create, edit, block, delete, or change client status.
 
-Vendor can only view customers who created at least one order for the current pharmacy.
+Vendor can only view clients who created at least one order for the current pharmacy.
 
 Vendor cannot see:
 
-- all system customers;
-- customers of other pharmacies;
-- orders of the same customer from other pharmacies.
+- all system clients;
+- clients of other pharmacies;
+- orders of the same client from other pharmacies.
 
-## 2. Customer statuses
+## 2. Client statuses
 
 | Status | Color | Meaning |
 |---|---|---|
-| `active` | Green | Customer can use account and create orders |
-| `inactive` | Red | Customer is blocked or temporarily disabled by Admin |
+| `active` | Green | Client can use account and create orders |
+| `inactive` | Red | Client is blocked or temporarily disabled by Admin |
 
-When Admin sets customer status to `inactive`, Admin must provide a required blocking reason.
+When Admin sets client status to `inactive`, Admin must provide a required blocking reason.
 
-## 3. Active customer
+## 3. Active client
 
 Can:
 
@@ -2149,7 +2158,7 @@ Can:
 
 Can be changed to `inactive` only by Admin.
 
-## 4. Inactive customer
+## 4. Inactive client
 
 Cannot:
 
@@ -2166,23 +2175,23 @@ Login message:
 Your account is temporarily inactive. Please contact administration for details.
 ```
 
-## 5. Own customer definition
+## 5. Own client definition
 
-A Vendor own customer is a customer who created at least one order for the current pharmacy.
+A Vendor own client is a client who created at least one order for the current pharmacy.
 
-Customer appears in Vendor customers table by the date of the first order created for this pharmacy.
+Client appears in Vendor clients table by the date of the first order created for this pharmacy.
 
-The specification uses only one Vendor customer date:
+The specification uses only one Vendor client date:
 
 ```txt
 firstOrderAt
 ```
 
-This date is shown in the customers table and on the customer details page.
+This date is shown in the clients table and on the client details page.
 
-Do not show customer system registration date in Vendor UI in the first version.
+Do not show client system registration date in Vendor UI in the first version.
 
-## 6. Customers table
+## 6. Clients table
 
 Route:
 
@@ -2190,7 +2199,7 @@ Route:
 /vendor/clients
 ```
 
-The table shows only customers who ordered from the current pharmacy.
+The table shows only clients who ordered from the current pharmacy.
 
 Default sorting:
 
@@ -2209,7 +2218,7 @@ Use shared components:
 - `ResetFiltersButton`;
 - `CloseIconButton`.
 
-## 7. Customers table filters
+## 7. Clients table filters
 
 Filters must change URL using clean filter routes.
 
@@ -2227,7 +2236,7 @@ Filters:
 
 - date filter by `firstOrderAt`;
 - search by name;
-- search by customer ID;
+- search by client ID;
 - search by email;
 - search by phone;
 - search by address;
@@ -2248,7 +2257,7 @@ Works by:
 firstOrderAt
 ```
 
-This is the date when the customer first created an order for the current pharmacy.
+This is the date when the client first created an order for the current pharmacy.
 
 ### Status options
 
@@ -2258,11 +2267,11 @@ Active
 Inactive
 ```
 
-## 8. Customers table columns
+## 8. Clients table columns
 
 Columns:
 
-- Customer ID;
+- Client ID;
 - Photo;
 - First order date;
 - Name;
@@ -2273,7 +2282,7 @@ Columns:
 - Successful orders amount for this pharmacy;
 - Status.
 
-### Customer ID
+### Client ID
 
 Global across the Admin system.
 
@@ -2287,7 +2296,7 @@ If photo is missing, show fallback avatar.
 
 ### First order date
 
-Shows when the customer first ordered from the current pharmacy.
+Shows when the client first ordered from the current pharmacy.
 
 Field:
 
@@ -2301,7 +2310,7 @@ Date format must be the same in Vendor, Client, and Admin.
 
 ### Name
 
-Click opens customer details page.
+Click opens client details page.
 
 ### Email, phone, address
 
@@ -2315,13 +2324,13 @@ Not specified
 
 ### Successful orders count
 
-Count only orders of this customer for the current pharmacy with status `successful`.
+Count only orders of this client for the current pharmacy with status `successful`.
 
 Orders from other pharmacies are not counted.
 
 ### Successful orders amount
 
-Sum only successful orders of this customer for the current pharmacy.
+Sum only successful orders of this client for the current pharmacy.
 
 Use fixed order prices.
 
@@ -2332,7 +2341,7 @@ Show badge/chip:
 - Active — green;
 - Inactive — red.
 
-## 9. Customers table pagination
+## 9. Clients table pagination
 
 Use shared `Pagination`.
 
@@ -2354,24 +2363,24 @@ Rows per page options:
 
 Rows-per-page state is local.
 
-## 10. Customers table states
+## 10. Clients table states
 
 Loader:
 
 ```txt
-Loading customers...
+Loading clients...
 ```
 
 Empty state:
 
 ```txt
-Your pharmacy has no customers yet.
+Your pharmacy has no clients yet.
 ```
 
 Nothing found state:
 
 ```txt
-No customers found for the selected filters.
+No clients found for the selected filters.
 ```
 
 Reset button:
@@ -2380,7 +2389,7 @@ Reset button:
 Reset filters
 ```
 
-## 11. One customer page
+## 11. One client page
 
 Route:
 
@@ -2388,13 +2397,13 @@ Route:
 /vendor/clients/[clientId]
 ```
 
-The page shows customer details and customer orders for the current pharmacy only.
+The page shows client details and client orders for the current pharmacy only.
 
-Vendor can only view customer data.
+Vendor can only view client data.
 
 Vendor cannot:
 
-- edit customer name;
+- edit client name;
 - edit email;
 - edit phone;
 - edit address;
@@ -2403,9 +2412,9 @@ Vendor cannot:
 - edit password;
 - edit personal settings.
 
-If customer does not belong to the current pharmacy, show not found or access denied state.
+If client does not belong to the current pharmacy, show not found or access denied state.
 
-## 12. Customer page top section
+## 12. Client page top section
 
 Show:
 
@@ -2416,23 +2425,23 @@ Show:
 Title example:
 
 ```txt
-Customer: John Smith
+Client: John Smith
 ```
 
 Description:
 
 ```txt
-View customer information, statistics, and orders for your pharmacy.
+View client information, statistics, and orders for your pharmacy.
 ```
 
-## 13. Customer info block
+## 13. Client info block
 
 Show:
 
 - photo;
 - name;
 - first order date;
-- customer ID;
+- client ID;
 - email;
 - phone;
 - address;
@@ -2442,9 +2451,9 @@ All fields are readonly.
 
 Use `AvatarImage` for photo.
 
-## 14. Customer statistics
+## 14. Client statistics
 
-Shows order statistics for this customer and current pharmacy only.
+Shows order statistics for this client and current pharmacy only.
 
 Statuses:
 
@@ -2464,9 +2473,9 @@ Rules:
 - amounts use fixed order prices;
 - rejected amount is shown for analytics and is not counted as revenue.
 
-## 15. Customer orders table
+## 15. Client orders table
 
-Shows all orders of this customer for the current pharmacy.
+Shows all orders of this client for the current pharmacy.
 
 Default sorting:
 
@@ -2490,25 +2499,25 @@ Columns:
 - Order date;
 - Delivery method;
 - Payment method;
-- Customer comment;
+- Client comment;
 - Total quantity;
 - Total amount;
 - Status.
 
 Order number opens one order page.
 
-## 16. Customer page states
+## 16. Client page states
 
 Loader:
 
 ```txt
-Loading customer data...
+Loading client data...
 ```
 
 Error state:
 
 ```txt
-Could not load customer data. Please try again.
+Could not load client data. Please try again.
 ```
 
 Button:
@@ -2520,16 +2529,16 @@ Try again
 Not found state:
 
 ```txt
-Customer not found.
+Client not found.
 ```
 
-Customer orders empty state:
+Client orders empty state:
 
 ```txt
-This customer has no orders in your pharmacy yet.
+This client has no orders in your pharmacy yet.
 ```
 
-This state is a fallback only. Normally such customer should not appear in Vendor customers list.
+This state is a fallback only. Normally such client should not appear in Vendor clients list.
 
 Nothing found state:
 
@@ -2543,16 +2552,16 @@ Reset button:
 Reset filters
 ```
 
-## 17. Customer page technical actions
+## 17. Client page technical actions
 
 Toast may be used only for small technical actions, such as copying data.
 
 Examples:
 
 ```txt
-Customer email copied.
-Customer phone copied.
-Customer ID copied.
+Client email copied.
+Client phone copied.
+Client ID copied.
 Could not load data. Please try again.
 ```
 
@@ -3209,7 +3218,7 @@ Columns:
 
 - order number;
 - order date;
-- customer;
+- client;
 - quantity of this medicine;
 - fixed unit price in this order;
 - amount for this medicine;
@@ -3258,7 +3267,7 @@ Vendor cannot:
 
 Show:
 
-- customer name;
+- client name;
 - rating;
 - date;
 - review text.
@@ -3949,7 +3958,7 @@ Back link:
 /vendor/dashboard
 ```
 
-If error page is used inside public auth layout, secondary link may lead to `/auth/login` or `/`.
+If error page is used inside public auth layout, secondary link may lead to `/login` or `/`.
 
 ## 3. 404 page
 
@@ -4010,8 +4019,8 @@ Use shared `LoadingSpinner` for:
 - Dashboard;
 - orders table;
 - one order page;
-- customers table;
-- one customer page;
+- clients table;
+- one client page;
 - own medicines table;
 - all medicines table;
 - medicine details page;
@@ -4098,14 +4107,14 @@ Try again
 Auth routes are global and shared between Client, Vendor, and Admin.
 
 ```txt
-app/auth/login/page.tsx
-app/auth/register/page.tsx
-app/auth/forgot-password/page.tsx
+app/login/page.tsx
+app/register/page.tsx
+app/password-recovery/page.tsx
 ```
 
 These pages are not under `/vendor`.
 
-After login, role `pharmacy` redirects to:
+After login, role `vendor` redirects to:
 
 ```txt
 /vendor/dashboard
@@ -4258,7 +4267,7 @@ This folder contains the improved Vendor technical specification split into glob
 4. `03-pharmacy-profile.md` — pharmacy profile, statuses, tabs, moderation, reviews.
 5. `04-dashboard.md` — Dashboard statistics and dashboard-specific rules.
 6. `05-orders.md` — orders table, order details, statuses, stock reservation, fixed prices.
-7. `06-customers.md` — customers table, customer details, readonly access, first order date.
+7. `06-clients.md` — clients table, client details, readonly access, first order date.
 8. `07-medicines.md` — medicines, all medicines, own medicines, medicine card, stock and price logic.
 9. `08-medicine-requests.md` — medicine creation requests, draft flow, Admin moderation flow.
 10. `09-service-pages-loaders-states.md` — error page, 404, loaders, empty states.
@@ -4269,7 +4278,7 @@ This folder contains the improved Vendor technical specification split into glob
 - Table filters change URL with clean route segments.
 - Pagination and rows-per-page stay in local state.
 - Dashboard year/month filter applies only to Orders statistics.
-- Customer Vendor date is `firstOrderAt` only.
+- Client Vendor date is `firstOrderAt` only.
 - Order final statuses are irreversible in the first version.
 - All medicines have one global status: `new`, `active`, `inactive`.
 - Vendor cannot see medicines with `new` status.

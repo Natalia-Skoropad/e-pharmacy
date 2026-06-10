@@ -5,7 +5,7 @@ import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { groupCartByStore } from '@/lib/cart/cart-groups';
 import { getStockValidationError } from '@/lib/checkout';
 import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
-import { buildCustomerOrderPath } from '@/lib/orders';
+import { buildClientOrderPath } from '@/lib/orders';
 
 import { checkoutOrder, getCart } from '@e-pharmacy/api-client/client';
 import type { Cart } from '@e-pharmacy/types';
@@ -99,7 +99,7 @@ export function useCheckoutSubmit({
 
       setCart(nextCartResponse.cart);
       dispatchCartUpdated(nextCartResponse.cart);
-      router.push(buildCustomerOrderPath(response.order));
+      router.push(buildClientOrderPath(response.order));
     } catch (error) {
       setError(
         getAppErrorMessage(error, {

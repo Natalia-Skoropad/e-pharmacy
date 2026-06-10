@@ -1,31 +1,31 @@
-# Vendor Technical Specification — Customers
+# Vendor Technical Specification — clients
 
 ## 1. General logic
 
-Customers are created only through self-registration in the Client part.
+Clients are created only through self-registration in the Client part.
 
-Admin can edit customers and change customer status.
+Admin can edit clients and change client status.
 
-Vendor cannot create, edit, block, delete, or change customer status.
+Vendor cannot create, edit, block, delete, or change client status.
 
-Vendor can only view customers who created at least one order for the current pharmacy.
+Vendor can only view clients who created at least one order for the current pharmacy.
 
 Vendor cannot see:
 
-- all system customers;
-- customers of other pharmacies;
-- orders of the same customer from other pharmacies.
+- all system clients;
+- clients of other pharmacies;
+- orders of the same client from other pharmacies.
 
-## 2. Customer statuses
+## 2. client statuses
 
-| Status | Color | Meaning |
-|---|---|---|
-| `active` | Green | Customer can use account and create orders |
-| `inactive` | Red | Customer is blocked or temporarily disabled by Admin |
+| Status     | Color | Meaning                                            |
+| ---------- | ----- | -------------------------------------------------- |
+| `active`   | Green | client can use account and create orders           |
+| `inactive` | Red   | client is blocked or temporarily disabled by Admin |
 
-When Admin sets customer status to `inactive`, Admin must provide a required blocking reason.
+When Admin sets client status to `inactive`, Admin must provide a required blocking reason.
 
-## 3. Active customer
+## 3. Active client
 
 Can:
 
@@ -37,7 +37,7 @@ Can:
 
 Can be changed to `inactive` only by Admin.
 
-## 4. Inactive customer
+## 4. Inactive client
 
 Cannot:
 
@@ -54,23 +54,23 @@ Login message:
 Your account is temporarily inactive. Please contact administration for details.
 ```
 
-## 5. Own customer definition
+## 5. Own client definition
 
-A Vendor own customer is a customer who created at least one order for the current pharmacy.
+A Vendor own client is a v who created at least one order for the current pharmacy.
 
-Customer appears in Vendor customers table by the date of the first order created for this pharmacy.
+client appears in Vendor clients table by the date of the first order created for this pharmacy.
 
-The specification uses only one Vendor customer date:
+The specification uses only one Vendor client date:
 
 ```txt
 firstOrderAt
 ```
 
-This date is shown in the customers table and on the customer details page.
+This date is shown in the clients table and on the client details page.
 
-Do not show customer system registration date in Vendor UI in the first version.
+Do not show client system registration date in Vendor UI in the first version.
 
-## 6. Customers table
+## 6. clients table
 
 Route:
 
@@ -78,7 +78,7 @@ Route:
 /vendor/clients
 ```
 
-The table shows only customers who ordered from the current pharmacy.
+The table shows only clients who ordered from the current pharmacy.
 
 Default sorting:
 
@@ -97,7 +97,7 @@ Use shared components:
 - `ResetFiltersButton`;
 - `CloseIconButton`.
 
-## 7. Customers table filters
+## 7. clients table filters
 
 Filters must change URL using clean filter routes.
 
@@ -115,7 +115,7 @@ Filters:
 
 - date filter by `firstOrderAt`;
 - search by name;
-- search by customer ID;
+- search by client ID;
 - search by email;
 - search by phone;
 - search by address;
@@ -136,7 +136,7 @@ Works by:
 firstOrderAt
 ```
 
-This is the date when the customer first created an order for the current pharmacy.
+This is the date when the client first created an order for the current pharmacy.
 
 ### Status options
 
@@ -146,11 +146,11 @@ Active
 Inactive
 ```
 
-## 8. Customers table columns
+## 8. clients table columns
 
 Columns:
 
-- Customer ID;
+- client ID;
 - Photo;
 - First order date;
 - Name;
@@ -161,7 +161,7 @@ Columns:
 - Successful orders amount for this pharmacy;
 - Status.
 
-### Customer ID
+### client ID
 
 Global across the Admin system.
 
@@ -175,7 +175,7 @@ If photo is missing, show fallback avatar.
 
 ### First order date
 
-Shows when the customer first ordered from the current pharmacy.
+Shows when the client first ordered from the current pharmacy.
 
 Field:
 
@@ -189,7 +189,7 @@ Date format must be the same in Vendor, Client, and Admin.
 
 ### Name
 
-Click opens customer details page.
+Click opens client details page.
 
 ### Email, phone, address
 
@@ -203,13 +203,13 @@ Not specified
 
 ### Successful orders count
 
-Count only orders of this customer for the current pharmacy with status `successful`.
+Count only orders of this client for the current pharmacy with status `successful`.
 
 Orders from other pharmacies are not counted.
 
 ### Successful orders amount
 
-Sum only successful orders of this customer for the current pharmacy.
+Sum only successful orders of this client for the current pharmacy.
 
 Use fixed order prices.
 
@@ -220,7 +220,7 @@ Show badge/chip:
 - Active — green;
 - Inactive — red.
 
-## 9. Customers table pagination
+## 9. clients table pagination
 
 Use shared `Pagination`.
 
@@ -242,24 +242,24 @@ Rows per page options:
 
 Rows-per-page state is local.
 
-## 10. Customers table states
+## 10. clients table states
 
 Loader:
 
 ```txt
-Loading customers...
+Loading clients...
 ```
 
 Empty state:
 
 ```txt
-Your pharmacy has no customers yet.
+Your pharmacy has no clients yet.
 ```
 
 Nothing found state:
 
 ```txt
-No customers found for the selected filters.
+No clients found for the selected filters.
 ```
 
 Reset button:
@@ -268,7 +268,7 @@ Reset button:
 Reset filters
 ```
 
-## 11. One customer page
+## 11. One client page
 
 Route:
 
@@ -276,13 +276,13 @@ Route:
 /vendor/clients/[clientId]
 ```
 
-The page shows customer details and customer orders for the current pharmacy only.
+The page shows client details and client orders for the current pharmacy only.
 
-Vendor can only view customer data.
+Vendor can only view client data.
 
 Vendor cannot:
 
-- edit customer name;
+- edit client name;
 - edit email;
 - edit phone;
 - edit address;
@@ -291,9 +291,9 @@ Vendor cannot:
 - edit password;
 - edit personal settings.
 
-If customer does not belong to the current pharmacy, show not found or access denied state.
+If client does not belong to the current pharmacy, show not found or access denied state.
 
-## 12. Customer page top section
+## 12. client page top section
 
 Show:
 
@@ -304,23 +304,23 @@ Show:
 Title example:
 
 ```txt
-Customer: John Smith
+client: John Smith
 ```
 
 Description:
 
 ```txt
-View customer information, statistics, and orders for your pharmacy.
+View client information, statistics, and orders for your pharmacy.
 ```
 
-## 13. Customer info block
+## 13. client info block
 
 Show:
 
 - photo;
 - name;
 - first order date;
-- customer ID;
+- client ID;
 - email;
 - phone;
 - address;
@@ -330,9 +330,9 @@ All fields are readonly.
 
 Use `AvatarImage` for photo.
 
-## 14. Customer statistics
+## 14. client statistics
 
-Shows order statistics for this customer and current pharmacy only.
+Shows order statistics for this client and current pharmacy only.
 
 Statuses:
 
@@ -352,9 +352,9 @@ Rules:
 - amounts use fixed order prices;
 - rejected amount is shown for analytics and is not counted as revenue.
 
-## 15. Customer orders table
+## 15. client orders table
 
-Shows all orders of this customer for the current pharmacy.
+Shows all orders of this client for the current pharmacy.
 
 Default sorting:
 
@@ -378,25 +378,25 @@ Columns:
 - Order date;
 - Delivery method;
 - Payment method;
-- Customer comment;
+- client comment;
 - Total quantity;
 - Total amount;
 - Status.
 
 Order number opens one order page.
 
-## 16. Customer page states
+## 16. client page states
 
 Loader:
 
 ```txt
-Loading customer data...
+Loading client data...
 ```
 
 Error state:
 
 ```txt
-Could not load customer data. Please try again.
+Could not load client data. Please try again.
 ```
 
 Button:
@@ -408,16 +408,16 @@ Try again
 Not found state:
 
 ```txt
-Customer not found.
+client not found.
 ```
 
-Customer orders empty state:
+client orders empty state:
 
 ```txt
-This customer has no orders in your pharmacy yet.
+This client has no orders in your pharmacy yet.
 ```
 
-This state is a fallback only. Normally such customer should not appear in Vendor customers list.
+This state is a fallback only. Normally such client should not appear in Vendor clients list.
 
 Nothing found state:
 
@@ -431,15 +431,15 @@ Reset button:
 Reset filters
 ```
 
-## 17. Customer page technical actions
+## 17. client page technical actions
 
 Toast may be used only for small technical actions, such as copying data.
 
 Examples:
 
 ```txt
-Customer email copied.
-Customer phone copied.
-Customer ID copied.
+client email copied.
+client phone copied.
+client ID copied.
 Could not load data. Please try again.
 ```

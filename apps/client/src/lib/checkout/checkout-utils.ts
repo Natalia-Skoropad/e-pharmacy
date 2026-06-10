@@ -48,5 +48,5 @@ export function getStockValidationError(
 
   return `Sorry, we cannot confirm this invoice right now. While you were placing the order, ${productNames} ${
     unavailableItems.length === 1 ? 'was' : 'were'
-  } reserved by another customer. Please update the cart and choose the available quantity again.`;
+  } reserved by another client. Please update the cart and choose the available quantity again.`;
 }

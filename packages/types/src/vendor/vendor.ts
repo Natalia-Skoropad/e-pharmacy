@@ -32,12 +32,23 @@ export type ClientGoodsDto = {
   productId: EntityId;
   productName: string;
   quantity: number;
-  customerName?: string;
+  clientName?: string;
   status: OrderStatus;
   createdAt: ISODateString;
 };
 
 export type Vendor = AuthUser;
 export type Medicine = ProductDto;
-export type MedicineRequestStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'cancelled';
-export type MedicineRequest = { id: EntityId; medicineId?: EntityId; productName: string; status: MedicineRequestStatus; createdAt: ISODateString; };
+export type MedicineRequestStatus =
+  | 'draft'
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'cancelled';
+export type MedicineRequest = {
+  id: EntityId;
+  medicineId?: EntityId;
+  productName: string;
+  status: MedicineRequestStatus;
+  createdAt: ISODateString;
+};

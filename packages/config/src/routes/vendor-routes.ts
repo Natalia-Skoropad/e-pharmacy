@@ -6,7 +6,7 @@ export const VENDOR_ROUTES = {
   ROOT: `/${ROUTE_SEGMENTS.vendor}`,
   DASHBOARD: `/${ROUTE_SEGMENTS.vendor}/dashboard`,
   ORDERS: `/${ROUTE_SEGMENTS.vendor}/orders`,
-  CUSTOMERS: `/${ROUTE_SEGMENTS.vendor}/customers`,
+  CLIENTS: `/${ROUTE_SEGMENTS.vendor}/clients`,
   MEDICINES: `/${ROUTE_SEGMENTS.vendor}/medicines`,
   MEDICINE_REQUESTS: `/${ROUTE_SEGMENTS.vendor}/medicine-requests`,
   PROFILE: `/${ROUTE_SEGMENTS.vendor}/profile`,

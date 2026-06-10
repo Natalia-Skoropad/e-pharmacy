@@ -46,7 +46,7 @@ const userSchema = new Schema<UserEntity>(
     role: {
       type: String,
       enum: Object.values(USER_ROLES),
-      default: USER_ROLES.CUSTOMER,
+      default: USER_ROLES.CLIENT,
       required: true,
     },
 

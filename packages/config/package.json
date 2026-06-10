@@ -9,7 +9,6 @@
     ".": "./src/index.ts",
     "./app": "./src/app/index.ts",
     "./assets": "./src/assets/index.ts",
-    "./cache": "./src/cache/index.ts",
     "./catalog": "./src/catalog/index.ts",
     "./info-pages": "./src/info-pages/index.ts",
     "./navigation": "./src/navigation/index.ts",

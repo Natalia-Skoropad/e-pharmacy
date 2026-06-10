@@ -34,7 +34,7 @@ import {
   formatShortDate,
 } from '@e-pharmacy/utils/formatters';
 
-import { buildCustomerOrderPath } from '@/lib/orders';
+import { buildClientOrderPath } from '@/lib/orders';
 import { buildStorePath, createBreadcrumbs } from '@e-pharmacy/config/routes';
 
 import {
@@ -72,7 +72,7 @@ import {
 } from '@e-pharmacy/api-client/client';
 
 import type {
-  CustomerOrder,
+  ClientOrder,
   Product,
   Store as PharmacyStore,
 } from '@e-pharmacy/types';
@@ -182,7 +182,7 @@ function ProfilePageContent() {
 
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
-  const [orders, setOrders] = useState<CustomerOrder[]>([]);
+  const [orders, setOrders] = useState<ClientOrder[]>([]);
 
   const [ordersVisibleCount, setOrdersVisibleCount] =
     useState(ORDERS_VISIBLE_STEP);
@@ -805,7 +805,7 @@ function ProfilePageContent() {
                               <td>
                                 <Link
                                   className={css.orderLink}
-                                  href={buildCustomerOrderPath(order)}
+                                  href={buildClientOrderPath(order)}
                                 >
                                   {order.orderNumber}
                                 </Link>
@@ -869,9 +869,7 @@ function ProfilePageContent() {
 
                     <CountLabel
                       shown={visibleFavoriteProducts.length}
-                      total={
-                        favoriteProductsCount ?? favoriteProducts.length
-                      }
+                      total={favoriteProductsCount ?? favoriteProducts.length}
                       label="items"
                     />
                   </div>
@@ -961,9 +959,7 @@ function ProfilePageContent() {
 
                     <CountLabel
                       shown={visibleFavoriteStores.length}
-                      total={
-                        favoriteStoresCount ?? favoriteStores.length
-                      }
+                      total={favoriteStoresCount ?? favoriteStores.length}
                       label="stores"
                     />
                   </div>

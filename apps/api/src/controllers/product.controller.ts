@@ -116,7 +116,7 @@ export async function createProductReview(
 
   const data = await createProductReviewService(productId, {
     userId: req.user?.id ?? '',
-    userName: req.user?.name ?? 'Customer',
+    userName: req.user?.name ?? 'Client',
     rating: body.rating,
     comment: body.comment,
   });

@@ -300,11 +300,11 @@ export async function logoutAllUserSessions(
 
 //===============================================================
 
-export function getCustomerOnlyTest(req: Request, res: Response): void {
+export function getClientOnlyTest(req: Request, res: Response): void {
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.OK,
-    message: 'Customer route is available',
+    message: 'Client route is available',
     data: {
       user: req.user,
     },

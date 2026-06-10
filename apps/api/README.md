@@ -1,12 +1,12 @@
 # E-PHARMACY API
 
-Shared Express/MongoDB backend API for the E-PHARMACY monorepo. It supports the customer storefront and provides the backend foundation for future vendor and admin modules.
+Shared Express/MongoDB backend API for the E-PHARMACY monorepo. It supports the client storefront and provides the backend foundation for future vendor and admin modules.
 
 ## Current Status
 
 Implemented:
 
-- Customer auth and profile flow
+- Client auth and profile flow
 - Password recovery through email
 - Products and stores catalogs
 - Product and store details
@@ -19,17 +19,17 @@ Planned:
 
 - Vendor shop management
 - Vendor medicine CRUD
-- Vendor statistics and customer goods data
+- Vendor statistics and client goods data
 - Admin dashboard statistics
-- Admin products, orders, customers, and suppliers management
+- Admin products, orders, clients, and suppliers management
 
-The API is currently customer-ready. Vendor and admin modules are planned extensions.
+The API is currently client-ready. Vendor and admin modules are planned extensions.
 
 ## Features
 
 ### Auth and users
 
-- Register customer
+- Register client
 - Login/logout
 - Current user endpoint
 - Profile update
@@ -146,7 +146,7 @@ POST  /auth/logout
 Development-only role test routes are available outside production:
 
 ```txt
-GET /auth/test/customer
+GET /auth/test/client
 GET /auth/test/vendor
 GET /auth/test/admin
 ```
@@ -194,7 +194,7 @@ GET  /orders/:orderId
 
 ## Frontend ↔ Backend Flow
 
-The customer client uses this API through two paths:
+The client client uses this API through two paths:
 
 ```txt
 Public/server data -> Express API -> MongoDB
@@ -213,7 +213,7 @@ The current flow tracks active and reserved product quantities:
 - Removing an item releases the reservation
 - Expired cart items can release reserved stock
 - Checkout converts reserved items into confirmed order data
-- Orders are persisted in MongoDB with customer and delivery details
+- Orders are persisted in MongoDB with client and delivery details
 
 ## API Response Contract
 

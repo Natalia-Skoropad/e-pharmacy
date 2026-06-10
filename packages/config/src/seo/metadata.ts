@@ -1,4 +1,6 @@
-export type MetadataApp = 'client' | 'vendor' | 'admin';
+import type { AppKey } from '../app';
+
+export type MetadataApp = AppKey;
 
 export type AppSeoStrategy = {
   app: MetadataApp;
@@ -68,7 +70,7 @@ export const CART_DESCRIPTION =
 
 export const CHECKOUT_TITLE = 'Checkout';
 export const CHECKOUT_DESCRIPTION =
-  'Complete your E-PHARMACY order with customer and delivery details.';
+  'Complete your E-PHARMACY order with client and delivery details.';
 
 //===================================================================
 
@@ -116,11 +118,11 @@ export const REGISTER_BENEFITS = [
 
 export const PROFILE_TITLE = 'Profile';
 export const PROFILE_DESCRIPTION =
-  'Manage your E-PHARMACY customer profile and account details.';
+  'Manage your E-PHARMACY client profile and account details.';
 
 export const ORDER_DETAILS_TITLE = 'Order details';
 export const ORDER_DETAILS_DESCRIPTION =
-  'View a private E-PHARMACY customer order in your profile.';
+  'View a private E-PHARMACY client order in your profile.';
 
 //===================================================================
 

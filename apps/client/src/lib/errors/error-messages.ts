@@ -1,23 +1,27 @@
 export const APP_ERROR_MESSAGES = {
   common: {
     default: 'Something went wrong. Please try again.',
-    network: 'Cannot connect to the server. Please check that the API is running.',
+    network:
+      'Cannot connect to the server. Please check that the API is running.',
     unauthorized: 'Your session has expired. Please sign in again.',
     forbidden: 'You do not have permission to perform this action.',
     notFound: 'Requested resource was not found.',
-    conflict: 'This action conflicts with the current data. Please refresh and try again.',
+    conflict:
+      'This action conflicts with the current data. Please refresh and try again.',
     validation: 'Please check the entered data and try again.',
     server: 'Server error. Please try again later.',
   },
 
   auth: {
-    register: 'Unable to create account. Please check the entered data and try again.',
+    register:
+      'Unable to create account. Please check the entered data and try again.',
     login: 'Unable to sign in. Please check your email and password.',
     logout: 'Unable to sign out. Please try again.',
     current: 'Unable to get current user.',
     password: 'Unable to update password. Please check the entered data.',
     forgotPassword: 'Unable to send reset email. Please try again.',
-    resetPassword: 'Unable to reset password. Please request a new link and try again.',
+    resetPassword:
+      'Unable to reset password. Please request a new link and try again.',
   },
 
   cart: {
@@ -33,7 +37,7 @@ export const APP_ERROR_MESSAGES = {
     load: 'Could not load checkout data.',
     confirm: 'Could not confirm order.',
     staleInvoice:
-      'Sorry, we cannot confirm this invoice right now. While you were placing the order, these products were reserved by another customer. Please update the cart and try again.',
+      'Sorry, we cannot confirm this invoice right now. While you were placing the order, these products were reserved by another client. Please update the cart and try again.',
   },
 
   products: {

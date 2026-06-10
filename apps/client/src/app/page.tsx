@@ -289,7 +289,7 @@ async function HomePage() {
             <div className={css.bannerMedia}>
               <Image
                 src="/images/home/girl-holding-pills-in-her-hands.png"
-                alt="Customer holding medicine and using a phone"
+                alt="Client holding medicine and using a phone"
                 width={600}
                 height={406}
                 loading="lazy"
@@ -305,7 +305,7 @@ async function HomePage() {
         <Container>
           <div className={css.benefitsGrid}>
             <div>
-              <p className={css.kicker}>Why customers use it</p>
+              <p className={css.kicker}>Why clients use it</p>
               <h2 className={css.sectionTitle} id="benefits-title">
                 Everything important stays organized
               </h2>
@@ -392,7 +392,7 @@ async function HomePage() {
       <section className={css.section} aria-labelledby="reviews-title">
         <Container>
           <div className={css.sectionHead}>
-            <p className={css.kicker}>Customer reviews</p>
+            <p className={css.kicker}>Client reviews</p>
             <h2 className={css.sectionTitle} id="reviews-title">
               A calmer way to manage medicines
             </h2>

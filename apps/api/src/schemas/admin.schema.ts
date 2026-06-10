@@ -33,10 +33,10 @@ export const shopIdParamsSchema = z.object({
 
 export const updateAdminShopStatusSchema = z.object({
   status: z.enum([
-    SHOP_STATUSES.DRAFT,
-    SHOP_STATUSES.PENDING_REVIEW,
+    SHOP_STATUSES.NEW,
+    SHOP_STATUSES.ON_MODERATION,
     SHOP_STATUSES.ACTIVE,
-    SHOP_STATUSES.SUSPENDED,
+    SHOP_STATUSES.INACTIVE,
   ]),
 });
 

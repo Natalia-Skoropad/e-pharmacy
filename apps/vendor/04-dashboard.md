@@ -7,7 +7,7 @@ Dashboard is the main Vendor page after pharmacy login.
 It shows a short overview of the current pharmacy only:
 
 - own order statistics;
-- own customer statistics;
+- own client statistics;
 - own medicine statistics;
 - own medicine request statistics;
 - quick actions;
@@ -68,7 +68,7 @@ Dashboard
 Description:
 
 ```txt
-View order, customer, medicine, and request statistics for your pharmacy.
+View order, client, medicine, and request statistics for your pharmacy.
 ```
 
 ## 4. Dashboard filters
@@ -79,10 +79,10 @@ These filters affect only order statistics.
 
 They do not affect:
 
-- customer statistics;
+- client statistics;
 - medicine statistics;
 - medicine request statistics;
-- total customers;
+- total clients;
 - total medicines;
 - current stock value;
 - request counts by status.
@@ -143,12 +143,12 @@ Current medicine price changes do not affect already created orders.
 
 Statuses:
 
-| Status | Color | Shows |
-|---|---|---|
-| New | Blue | count and amount of new orders |
-| In work | Yellow | count and amount of orders in processing |
-| Successful | Green | count and completed sales amount |
-| Rejected | Red | count and rejected order amount for analytics |
+| Status     | Color  | Shows                                         |
+| ---------- | ------ | --------------------------------------------- |
+| New        | Blue   | count and amount of new orders                |
+| In work    | Yellow | count and amount of orders in processing      |
+| Successful | Green  | count and completed sales amount              |
+| Rejected   | Red    | count and rejected order amount for analytics |
 
 Each status card shows:
 
@@ -171,22 +171,22 @@ Examples:
 /vendor/orders/status-rejected
 ```
 
-## 6. Customers statistics
+## 6. Clients statistics
 
-Shows analytics for customers who created at least one order for the current pharmacy.
+Shows analytics for clients who created at least one order for the current pharmacy.
 
-Customers from other pharmacies are not included.
+Clients from other pharmacies are not included.
 
 Recommended cards:
 
-- Total customers;
-- Repeat customers;
-- Active customers;
-- Inactive customers.
+- Total clients;
+- Repeat clients;
+- Active clients;
+- Inactive clients.
 
 Removed from scope:
 
-- New customers by period.
+- New clients by period.
 
 ### Click behavior
 
@@ -201,13 +201,13 @@ Examples:
 ### Empty state
 
 ```txt
-Your pharmacy has no customers yet.
+Your pharmacy has no clients yet.
 ```
 
 Additional text:
 
 ```txt
-Customers will appear after the first orders in your pharmacy.
+Clients will appear after the first orders in your pharmacy.
 ```
 
 ## 7. Medicines statistics
@@ -343,7 +343,7 @@ Dashboard must not look empty if there is no data.
 Show empty states for:
 
 - no orders;
-- no customers;
+- no client;
 - no added medicines;
 - no medicine requests.
 

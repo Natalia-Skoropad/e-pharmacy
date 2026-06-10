@@ -22,11 +22,11 @@ Price and stock quantity are not edited manually in Vendor. They come from an ex
 
 All medicines in the system have one global status, regardless of which table they are shown in.
 
-| Status | Color | Meaning | Visible to Vendor |
-|---|---|---|---|
-| `new` | Blue | Medicine created in Admin but not activated yet | No |
-| `active` | Green | Medicine can be added to pharmacies | Yes |
-| `inactive` | Red | Medicine is temporarily or permanently deactivated by Admin | Yes |
+| Status     | Color | Meaning                                                     | Visible to Vendor |
+| ---------- | ----- | ----------------------------------------------------------- | ----------------- |
+| `new`      | Blue  | Medicine created in Admin but not activated yet             | No                |
+| `active`   | Green | Medicine can be added to pharmacies                         | Yes               |
+| `inactive` | Red   | Medicine is temporarily or permanently deactivated by Admin | Yes               |
 
 The `new` status is visible only to Admin.
 
@@ -647,7 +647,7 @@ Columns:
 
 - order number;
 - order date;
-- customer;
+- client;
 - quantity of this medicine;
 - fixed unit price in this order;
 - amount for this medicine;
@@ -696,7 +696,7 @@ Vendor cannot:
 
 Show:
 
-- customer name;
+- client name;
 - rating;
 - date;
 - review text.

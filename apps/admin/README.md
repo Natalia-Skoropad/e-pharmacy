@@ -8,7 +8,7 @@ This app is not implemented yet.
 
 The current working parts of the project are:
 
-- `apps/client` — customer storefront
+- `apps/client` — client storefront
 - `apps/api` — shared backend API foundation
 - `packages/*` — lightweight shared workspace packages
 
@@ -23,7 +23,7 @@ Planned administrators will be able to:
 - View dashboard statistics
 - Manage orders
 - Manage products
-- Manage customers
+- Manage clients
 - Manage suppliers
 - Use filters, tables, pagination, and modal forms
 - Support internal moderation and management workflows
@@ -53,7 +53,7 @@ apps/admin/
       dashboard/
       orders/
       products/
-      customers/
+      clients/
       suppliers/
     components/
     hooks/
@@ -72,7 +72,7 @@ The existing API can later be expanded with admin modules:
 - Dashboard statistics
 - Orders management
 - Products management
-- Customers management
+- Clients management
 - Suppliers CRUD
 - Moderation workflows
 

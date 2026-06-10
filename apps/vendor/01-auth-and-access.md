@@ -28,20 +28,20 @@ The system supports these account roles:
 - `pharmacy`;
 - `admin`.
 
-Email and phone must be unique across all roles. The same email cannot belong to both a customer and a pharmacy. This allows login without a role selector.
+Email and phone must be unique across all roles. The same email cannot belong to both a client and a pharmacy. This allows login without a role selector.
 
 ## 3. Register page
 
 The register page allows creating:
 
-- a customer account;
+- a client account;
 - a pharmacy account.
 
-Default selected account type: **Customer**.
+Default selected account type: **Client**.
 
 The page must include an account type selector:
 
-- Customer;
+- Client;
 - Pharmacy.
 
 Recommended UI pattern:
@@ -50,18 +50,18 @@ Recommended UI pattern:
 - segmented control;
 - tabs-like switch.
 
-### Customer registration fields
+### Client registration fields
 
 - name;
 - email;
 - phone;
 - password.
 
-After successful customer registration:
+After successful client registration:
 
-- a customer account is created;
-- customer status becomes `active`;
-- customer can use the Client cabinet and create orders.
+- a client account is created;
+- client status becomes `active`;
+- client can use the Client cabinet and create orders.
 
 ### Pharmacy registration fields
 
@@ -129,7 +129,7 @@ Upload confirmation documents to register a pharmacy account.
 
 ## 5. Login page
 
-The login page is shared for customers, pharmacies, and admins.
+The login page is shared for clients, pharmacies, and admins.
 
 Fields:
 
@@ -140,11 +140,11 @@ After successful login, backend returns the user role.
 
 Redirects:
 
-| Role | Redirect |
-|---|---|
-| `client` | `/profile` |
+| Role       | Redirect            |
+| ---------- | ------------------- |
+| `client`   | `/profile`          |
 | `pharmacy` | `/vendor/dashboard` |
-| `admin` | `/admin/dashboard` |
+| `admin`    | `/admin/dashboard`  |
 
 ## 6. Inactive pharmacy login
 
@@ -187,7 +187,7 @@ New pharmacy cannot:
 
 ## 8. Forgot password page
 
-The forgot password page is shared for customers, pharmacies, and admins.
+The forgot password page is shared for clients, pharmacies, and admins.
 
 Field:
 
@@ -207,11 +207,11 @@ Do not reveal whether the email exists in the system.
 
 If an authenticated user opens an auth page, redirect by role:
 
-| Role | Redirect |
-|---|---|
-| `client` | `/profile` |
+| Role       | Redirect            |
+| ---------- | ------------------- |
+| `client`   | `/profile`          |
 | `pharmacy` | `/vendor/dashboard` |
-| `admin` | `/admin/dashboard` |
+| `admin`    | `/admin/dashboard`  |
 
 ## 10. Shared auth components
 

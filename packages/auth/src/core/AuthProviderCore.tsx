@@ -28,6 +28,8 @@ import type {
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
+//===================================================================
+
 export type AuthProviderServices = {
   getCurrentUser: () => Promise<CurrentUserResponse>;
   refreshSession: () => Promise<CurrentUserResponse>;
@@ -61,7 +63,10 @@ export type AuthProviderCoreProps = {
 
 //===================================================================
 
-export function AuthProviderCore({ children, services }: AuthProviderCoreProps) {
+export function AuthProviderCore({
+  children,
+  services,
+}: AuthProviderCoreProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [sessionMarker, setSessionMarker] = useState<string | null>(() =>
     getAuthSessionMarker()

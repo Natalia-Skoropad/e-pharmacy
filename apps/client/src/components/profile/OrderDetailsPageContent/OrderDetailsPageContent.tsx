@@ -35,7 +35,7 @@ import { buildProductPath, buildStorePath } from '@e-pharmacy/config/routes';
 import { getOrderIdFromPathParam } from '@/lib/orders';
 import { useAuth } from '@/providers';
 import { getOrderDetails } from '@e-pharmacy/api-client/client';
-import type { BreadcrumbItem, CustomerOrder } from '@e-pharmacy/types';
+import type { BreadcrumbItem, ClientOrder } from '@e-pharmacy/types';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -47,13 +47,13 @@ type OrderDetailsPageContentProps = {
 
 //===================================================================
 
-function formatPaymentMethod(method: CustomerOrder['paymentMethod']): string {
+function formatPaymentMethod(method: ClientOrder['paymentMethod']): string {
   return method === 'bank-transfer'
     ? 'Bank transfer'
     : 'Cash on pickup / delivery';
 }
 
-function formatDeliveryMethod(method: CustomerOrder['deliveryMethod']): string {
+function formatDeliveryMethod(method: ClientOrder['deliveryMethod']): string {
   return method === 'post' ? 'Post delivery' : 'Pickup from pharmacy';
 }
 
@@ -61,7 +61,7 @@ function formatDeliveryMethod(method: CustomerOrder['deliveryMethod']): string {
 
 function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const { sessionMarker } = useAuth();
-  const [order, setOrder] = useState<CustomerOrder | null>(null);
+  const [order, setOrder] = useState<ClientOrder | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState('');
   const cleanOrderId = getOrderIdFromPathParam(orderId);

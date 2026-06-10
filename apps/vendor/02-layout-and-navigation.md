@@ -45,9 +45,9 @@ Important: there must be only one visible `<main>` on the page.
 
 Public layout is used for:
 
-- `/auth/login`;
-- `/auth/register`;
-- `/auth/forgot-password`.
+- `/login`;
+- `/register`;
+- `/password-recovery`.
 
 It may reuse the Client auth layout.
 
@@ -114,7 +114,7 @@ On click:
 
 - perform logout;
 - clear auth/session state;
-- redirect to `/auth/login`;
+- redirect to `/login`;
 - show loading state.
 
 Loading text:
@@ -152,15 +152,15 @@ It is not shown for inactive pharmacies because inactive pharmacies cannot enter
 
 ### Sidebar links
 
-| Label | Route |
-|---|---|
-| Dashboard | `/vendor/dashboard` |
-| Orders | `/vendor/orders` |
-| Customers | `/vendor/clients` |
-| Own medicines | `/vendor/medicines` |
-| All medicines | `/vendor/all-medicines` |
+| Label             | Route                       |
+| ----------------- | --------------------------- |
+| Dashboard         | `/vendor/dashboard`         |
+| Orders            | `/vendor/orders`            |
+| Clients           | `/vendor/clients`           |
+| Own medicines     | `/vendor/medicines`         |
+| All medicines     | `/vendor/all-medicines`     |
 | Medicine requests | `/vendor/medicine-requests` |
-| Pharmacy profile | `/vendor/profile` |
+| Pharmacy profile  | `/vendor/profile`           |
 
 ### Active state
 
@@ -202,7 +202,9 @@ Example page structure:
   <section className={css.section} aria-labelledby="page-title">
     <Container>
       <Breadcrumbs items={createBreadcrumbs(PAGE_TITLE)} />
-      <h1 id="page-title" className={css.title}>{PAGE_TITLE}</h1>
+      <h1 id="page-title" className={css.title}>
+        {PAGE_TITLE}
+      </h1>
       <p className={css.text}>{PAGE_DESCRIPTION}</p>
     </Container>
   </section>
@@ -211,19 +213,19 @@ Example page structure:
 
 ### Breadcrumb examples
 
-| Page | Breadcrumbs |
-|---|---|
-| Dashboard | Home / Dashboard |
-| Pharmacy profile | Home / Dashboard / Pharmacy profile |
-| Orders | Home / Dashboard / Orders |
-| Order details | Home / Dashboard / Orders / Order #12345 |
-| Customers | Home / Dashboard / Customers |
-| Customer details | Home / Dashboard / Customers / Customer name |
-| Own medicines | Home / Dashboard / Own medicines |
-| Medicine details | Home / Dashboard / Own medicines / Medicine name |
-| All medicines | Home / Dashboard / All medicines |
-| Medicine requests | Home / Dashboard / Medicine requests |
-| Request details | Home / Dashboard / Medicine requests / Request name |
+| Page              | Breadcrumbs                                         |
+| ----------------- | --------------------------------------------------- |
+| Dashboard         | Home / Dashboard                                    |
+| Pharmacy profile  | Home / Dashboard / Pharmacy profile                 |
+| Orders            | Home / Dashboard / Orders                           |
+| Order details     | Home / Dashboard / Orders / Order #12345            |
+| Clients           | Home / Dashboard / Clients                          |
+| Client details    | Home / Dashboard / Clients / Client name            |
+| Own medicines     | Home / Dashboard / Own medicines                    |
+| Medicine details  | Home / Dashboard / Own medicines / Medicine name    |
+| All medicines     | Home / Dashboard / All medicines                    |
+| Medicine requests | Home / Dashboard / Medicine requests                |
+| Request details   | Home / Dashboard / Medicine requests / Request name |
 
 ### Breadcrumb accessibility
 

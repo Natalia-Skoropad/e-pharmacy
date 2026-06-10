@@ -64,7 +64,7 @@ function ReviewsSection({
   isAuthReady,
   isUnavailable = false,
   emptyTitle = 'No reviews yet',
-  emptyText = 'Reviews will appear here after customers share their feedback.',
+  emptyText = 'Reviews will appear here after clients share their feedback.',
   textareaId,
   maxLength,
   onReviewTextChange,

@@ -72,9 +72,4 @@ export type OrderDetailsResponse = {
   order: OrderDto;
 };
 
-export type CustomerOrder = OrderDto;
-export type CustomerOrderItem = OrderItemDto;
-export type CustomerOrderStatus = OrderStatus;
-export type CustomerOrderPaymentMethod = OrderPaymentMethod;
-export type CustomerOrderDeliveryMethod = OrderDeliveryMethod;
-export type CustomerOrderDeliveryDetails = OrderDeliveryDetails;
+export type ClientOrder = OrderDto;

@@ -10,12 +10,12 @@ Use shared components wherever possible.
 
 ## 2. Pharmacy statuses
 
-| Status | Meaning | Who sets it |
-|---|---|---|
-| `new` | Pharmacy registered but has not passed Admin moderation yet | System after registration |
-| `active` | Pharmacy passed moderation and can work | Admin |
+| Status          | Meaning                                                           | Who sets it                         |
+| --------------- | ----------------------------------------------------------------- | ----------------------------------- |
+| `new`           | Pharmacy registered but has not passed Admin moderation yet       | System after registration           |
+| `active`        | Pharmacy passed moderation and can work                           | Admin                               |
 | `on_moderation` | Active pharmacy changed important data and waits for Admin review | System after Vendor submits changes |
-| `inactive` | Pharmacy is blocked or temporarily disabled | Admin |
+| `inactive`      | Pharmacy is blocked or temporarily disabled                       | Admin                               |
 
 ## 3. Status behavior
 
@@ -91,7 +91,7 @@ Cannot:
 History is preserved:
 
 - orders;
-- customers;
+- clients;
 - medicines;
 - reviews;
 - statistics.
@@ -116,10 +116,10 @@ For `on_moderation` status:
 
 Pending data by tab:
 
-| Tab | Pending fields |
-|---|---|
-| Pharmacy data | name, phone, address, working hours |
-| About pharmacy | description |
+| Tab             | Pending fields                                 |
+| --------------- | ---------------------------------------------- |
+| Pharmacy data   | name, phone, address, working hours            |
+| About pharmacy  | description                                    |
 | Payment details | recipient, tax ID, IBAN, bank, payment purpose |
 
 ## 5. Page structure
@@ -239,13 +239,13 @@ Fields:
 
 ### Field rules
 
-| Field | Required for `new` | Required for `active` / `on_moderation` | Moderation for active pharmacy |
-|---|---:|---:|---:|
-| Name | No | Yes | Yes |
-| Phone | Yes | Yes | Yes |
-| Address | No | Yes | Yes |
-| Working hours | No | Yes | Yes |
-| Password | By password rules | By password rules | No |
+| Field         | Required for `new` | Required for `active` / `on_moderation` | Moderation for active pharmacy |
+| ------------- | -----------------: | --------------------------------------: | -----------------------------: |
+| Name          |                 No |                                     Yes |                            Yes |
+| Phone         |                Yes |                                     Yes |                            Yes |
+| Address       |                 No |                                     Yes |                            Yes |
+| Working hours |                 No |                                     Yes |                            Yes |
+| Password      |  By password rules |                       By password rules |                             No |
 
 Phone must be unique across Client, Vendor, and Admin.
 
@@ -277,12 +277,12 @@ Could not change password. Please try again.
 
 ### Save button labels
 
-| Pharmacy status | Button | State |
-|---|---|---|
-| `new` | Save | Enabled only when changed and valid |
-| `active` | Send for moderation | Enabled only when changed and required fields are valid |
-| `on_moderation` | Send for moderation | Disabled; fields disabled |
-| `inactive` | Not available | Cabinet access blocked |
+| Pharmacy status | Button              | State                                                   |
+| --------------- | ------------------- | ------------------------------------------------------- |
+| `new`           | Save                | Enabled only when changed and valid                     |
+| `active`        | Send for moderation | Enabled only when changed and required fields are valid |
+| `on_moderation` | Send for moderation | Disabled; fields disabled                               |
+| `inactive`      | Not available       | Cabinet access blocked                                  |
 
 Every save or send action opens `ConfirmActionModal`.
 
@@ -377,7 +377,7 @@ Use Client review styles where possible.
 
 Show:
 
-- customer name;
+- client name;
 - rating;
 - date;
 - review text;

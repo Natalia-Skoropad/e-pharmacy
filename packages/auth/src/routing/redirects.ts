@@ -23,8 +23,3 @@ export function buildLoginRedirectPath(
 
   return `${loginPath}?redirect=${encodeURIComponent(normalizedPath)}`;
 }
-
-//===================================================================
-
-export const normalizeAuthRedirectPath = getSafeRedirectPath;
-export const createAuthLoginRedirectPath = buildLoginRedirectPath;

@@ -14,7 +14,10 @@ function toObjectId(value: StockTarget): Types.ObjectId {
 
 function assertPositiveQuantity(quantity: number): void {
   if (!Number.isInteger(quantity) || quantity < 1) {
-    throw httpError(HTTP_STATUS.BAD_REQUEST, 'Quantity must be a positive integer.');
+    throw httpError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Quantity must be a positive integer.'
+    );
   }
 }
 
@@ -149,7 +152,10 @@ export async function setVendorOfferStock(
   session?: mongoose.ClientSession
 ): Promise<void> {
   if (!Number.isInteger(nextTotalQuantity) || nextTotalQuantity < 0) {
-    throw httpError(HTTP_STATUS.BAD_REQUEST, 'Stock quantity must be a non-negative integer.');
+    throw httpError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Stock quantity must be a non-negative integer.'
+    );
   }
 
   const product = await Product.findOne(
@@ -168,7 +174,7 @@ export async function setVendorOfferStock(
   if (nextTotalQuantity < reservedQuantity) {
     throw httpError(
       HTTP_STATUS.CONFLICT,
-      'Stock cannot be lower than the quantity already reserved in customer carts.'
+      'Stock cannot be lower than the quantity already reserved in client carts.'
     );
   }
 

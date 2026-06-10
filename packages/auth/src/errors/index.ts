@@ -1,1 +1,1 @@
-export { getAuthErrorMessage } from './auth-error-message';
+export * from './auth-error-message';

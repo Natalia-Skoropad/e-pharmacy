@@ -1,1 +1,0 @@
-export const PUBLIC_PAGE_REVALIDATE_SECONDS = 300;

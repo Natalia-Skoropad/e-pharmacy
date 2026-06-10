@@ -2,13 +2,13 @@
 
 ## 1. General logic
 
-Orders are created only by customers through the Client checkout.
+Orders are created only by clients through the Client checkout.
 
 Vendor processes only orders that belong to the current pharmacy.
 
 Admin can view orders but does not create or edit them.
 
-After customer confirms checkout:
+After client confirms checkout:
 
 - order is created;
 - order status becomes `new`;
@@ -18,12 +18,12 @@ After customer confirms checkout:
 
 ## 2. Order statuses
 
-| Status | Color | Meaning |
-|---|---|---|
-| `new` | Blue | Order was confirmed by customer |
-| `in_work` | Yellow | Vendor accepted the order for processing |
-| `successful` | Green | Order is completed |
-| `rejected` | Red | Order was rejected by Vendor |
+| Status       | Color  | Meaning                                  |
+| ------------ | ------ | ---------------------------------------- |
+| `new`        | Blue   | Order was confirmed by client            |
+| `in_work`    | Yellow | Vendor accepted the order for processing |
+| `successful` | Green  | Order is completed                       |
+| `rejected`   | Red    | Order was rejected by Vendor             |
 
 For `rejected` status, Vendor must provide a required rejection reason.
 
@@ -119,7 +119,7 @@ The confirm button is disabled until rejection reason is filled.
 
 ## 5. Stock reservation rules
 
-When order is created by customer:
+When order is created by client:
 
 - medicines are reserved;
 - reserved quantity is not available for other orders;
@@ -212,7 +212,7 @@ Pagination and rows-per-page do not change URL.
 Filters:
 
 - date filter;
-- customer search;
+- client search;
 - order number search;
 - status select;
 - delivery method select;
@@ -265,10 +265,10 @@ Columns:
 
 - Order number;
 - Order date;
-- Customer;
+- client;
 - Delivery method;
 - Payment method;
-- Customer comment;
+- client comment;
 - Total quantity;
 - Total amount;
 - Status.
@@ -289,11 +289,11 @@ Sortable.
 
 Date format must be the same in Client, Vendor, and Admin.
 
-### Customer
+### client
 
-Shows customer name.
+Shows client name.
 
-Click opens customer details page.
+Click opens client details page.
 
 ### Delivery method
 
@@ -307,7 +307,7 @@ Shows current payment method.
 
 If Vendor changed payment method in `in_work` status, table shows updated value.
 
-### Customer comment
+### client comment
 
 Show:
 
@@ -424,12 +424,12 @@ Created on March 12, 2026
 
 Select shows only allowed next statuses.
 
-| Current status | Available next status |
-|---|---|
-| `new` | `in_work` |
-| `in_work` | `successful`, `rejected` |
-| `successful` | none |
-| `rejected` | none |
+| Current status | Available next status    |
+| -------------- | ------------------------ |
+| `new`          | `in_work`                |
+| `in_work`      | `successful`, `rejected` |
+| `successful`   | none                     |
+| `rejected`     | none                     |
 
 Selecting status opens confirmation modal immediately.
 
@@ -547,14 +547,14 @@ Bank transfer
 
 Bank transfer can be disabled if pharmacy has no bank details.
 
-### Customer comment
+### client comment
 
 Readonly.
 
 Empty text:
 
 ```txt
-Customer did not leave a comment.
+client did not leave a comment.
 ```
 
 ### Vendor comment

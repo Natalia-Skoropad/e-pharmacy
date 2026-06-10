@@ -164,7 +164,7 @@ function getUniqueOfferCities(offers: ProductOffer[]): string[] {
 function getLongDescription(product: Product): string {
   return (
     product.description ??
-    `${product.name} is available in the E-PHARMACY catalog with clear information about dosage, manufacturer, package details, pharmacy prices, customer reviews, and availability. Use this page to compare offers from different pharmacies, check the product characteristics, and choose the most suitable pharmacy before adding the product to your cart.`
+    `${product.name} is available in the E-PHARMACY catalog with clear information about dosage, manufacturer, package details, pharmacy prices, client reviews, and availability. Use this page to compare offers from different pharmacies, check the product characteristics, and choose the most suitable pharmacy before adding the product to your cart.`
   );
 }
 
@@ -859,9 +859,9 @@ function ProductDetailsPageContent({
                   <p>{longDescription}</p>
                   <p>
                     Before purchasing, compare pharmacy prices, check the
-                    available quantity, read customer reviews, and make sure the
+                    available quantity, read client reviews, and make sure the
                     selected offer matches your needs. Information on this page
-                    helps customers quickly understand the product, its main
+                    helps clients quickly understand the product, its main
                     properties, and where it can be bought online.
                   </p>
                 </div>
@@ -892,7 +892,7 @@ function ProductDetailsPageContent({
                   isAuthenticated={isAuthenticated}
                   isAuthReady={isAuthReady}
                   isUnavailable={areReviewsUnavailable}
-                  emptyText="Product reviews will appear here after customers share their feedback."
+                  emptyText="Product reviews will appear here after clients share their feedback."
                   textareaId="product-review"
                   maxLength={USER_REVIEW_COMMENT_MAX_LENGTH}
                   onReviewTextChange={handleReviewTextChange}

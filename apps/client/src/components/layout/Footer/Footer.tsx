@@ -31,8 +31,8 @@ function Footer() {
             <Logo className={css.footerLogo} variant="white" />
 
             <p className={css.text}>
-              E-PHARMACY helps customers explore pharmacy stores, find
-              medicines, and prepare online orders.
+              E-PHARMACY helps clients explore pharmacy stores, find medicines,
+              and prepare online orders.
             </p>
           </div>
 

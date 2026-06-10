@@ -10,7 +10,7 @@ This folder contains the improved Vendor technical specification split into glob
 4. `03-pharmacy-profile.md` — pharmacy profile, statuses, tabs, moderation, reviews.
 5. `04-dashboard.md` — Dashboard statistics and dashboard-specific rules.
 6. `05-orders.md` — orders table, order details, statuses, stock reservation, fixed prices.
-7. `06-customers.md` — customers table, customer details, readonly access, first order date.
+7. `06-clients.md` — clients table, client details, readonly access, first order date.
 8. `07-medicines.md` — medicines, all medicines, own medicines, medicine card, stock and price logic.
 9. `08-medicine-requests.md` — medicine creation requests, draft flow, Admin moderation flow.
 10. `09-service-pages-loaders-states.md` — error page, 404, loaders, empty states.
@@ -21,7 +21,7 @@ This folder contains the improved Vendor technical specification split into glob
 - Table filters change URL with clean route segments.
 - Pagination and rows-per-page stay in local state.
 - Dashboard year/month filter applies only to Orders statistics.
-- Customer Vendor date is `firstOrderAt` only.
+- client Vendor date is `firstOrderAt` only.
 - Order final statuses are irreversible in the first version.
 - All medicines have one global status: `new`, `active`, `inactive`.
 - Vendor cannot see medicines with `new` status.

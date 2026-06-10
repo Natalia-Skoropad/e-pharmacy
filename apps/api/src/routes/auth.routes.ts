@@ -6,7 +6,7 @@ import { USER_ROLES } from '../constants/auth';
 import {
   getAdminOnlyTest,
   getCurrentUser,
-  getCustomerOnlyTest,
+  getClientOnlyTest,
   getVendorOnlyTest,
   loginUser,
   logoutAllUserSessions,
@@ -20,10 +20,12 @@ import {
 } from '../controllers/auth.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
+
 import {
   authRateLimit,
   passwordResetRateLimit,
 } from '../middlewares/rateLimit.middleware';
+
 import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
 
@@ -120,10 +122,10 @@ authRoutes.post(
 // Temporary role test routes are available only outside production.
 if (env.NODE_ENV !== 'production') {
   authRoutes.get(
-    '/test/customer',
+    '/test/client',
     authenticate,
-    authorizeRoles(USER_ROLES.CUSTOMER),
-    ctrlWrapper(getCustomerOnlyTest)
+    authorizeRoles(USER_ROLES.CLIENT),
+    ctrlWrapper(getClientOnlyTest)
   );
 
   authRoutes.get(

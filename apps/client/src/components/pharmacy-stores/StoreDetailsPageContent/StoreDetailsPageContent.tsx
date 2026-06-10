@@ -325,7 +325,7 @@ function StoreDetailsPageContent({
 
               <p className={css.descriptionText}>
                 {store.description ??
-                  `${store.name} is an active E-PHARMACY partner in ${store.city ?? 'your city'}, created for customers who want to compare medicines calmly before placing an order. The pharmacy page brings together the most useful details: address, phone, email, working hours, rating, customer reviews, and a direct catalog link with medicines from this exact store. You can quickly check whether the needed product is available, compare offers, and decide whether pickup or delivery will be more convenient. The store keeps product information clear, so customers do not have to jump between random tabs, screenshots, and notes. Reviews help you understand service quality, while the catalog filter helps you move from pharmacy details straight to the right medicine list. It is a practical page for everyday orders, urgent purchases, planned family medicine refills, and simple price comparison. In short, ${store.name} works like a tidy digital pharmacy counter: all important information is visible, the next action is obvious, and the shopping flow stays friendly instead of turning into a mini quest with a white coat.`}
+                  `${store.name} is an active E-PHARMACY partner in ${store.city ?? 'your city'}, created for clients who want to compare medicines calmly before placing an order. The pharmacy page brings together the most useful details: address, phone, email, working hours, rating, client reviews, and a direct catalog link with medicines from this exact store. You can quickly check whether the needed product is available, compare offers, and decide whether pickup or delivery will be more convenient. The store keeps product information clear, so clients do not have to jump between random tabs, screenshots, and notes. Reviews help you understand service quality, while the catalog filter helps you move from pharmacy details straight to the right medicine list. It is a practical page for everyday orders, urgent purchases, planned family medicine refills, and simple price comparison. In short, ${store.name} works like a tidy digital pharmacy counter: all important information is visible, the next action is obvious, and the shopping flow stays friendly instead of turning into a mini quest with a white coat.`}
               </p>
             </div>
           </Container>
@@ -358,7 +358,7 @@ function StoreDetailsPageContent({
                 isAuthenticated={isAuthenticated}
                 isAuthReady={isAuthReady}
                 isUnavailable={areReviewsUnavailable}
-                emptyText="Pharmacy reviews will appear here after customers share their feedback."
+                emptyText="Pharmacy reviews will appear here after clients share their feedback."
                 textareaId="store-review"
                 maxLength={USER_REVIEW_COMMENT_MAX_LENGTH}
                 onReviewTextChange={handleReviewTextChange}

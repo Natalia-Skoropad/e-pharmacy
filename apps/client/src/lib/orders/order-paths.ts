@@ -1,11 +1,11 @@
 import { ROUTES } from '@e-pharmacy/config/routes';
 
-import type { CustomerOrder } from '@e-pharmacy/types';
+import type { ClientOrder } from '@e-pharmacy/types';
 
 //===================================================================
 
-export function buildCustomerOrderPath(
-  order: Pick<CustomerOrder, 'id' | 'orderNumber'>
+export function buildClientOrderPath(
+  order: Pick<ClientOrder, 'id' | 'orderNumber'>
 ): string {
   const safeNumber = order.orderNumber
     .toLowerCase()

@@ -38,12 +38,12 @@ export const registerSchema = z.object({
   password: passwordSchema,
 
   /**
-   * Public registration supports customer accounts now and vendor accounts for
+   * Public registration supports client accounts now and vendor accounts for
    * the shared auth flow. Admin accounts must still be created separately.
    */
   role: z
-    .enum([USER_ROLES.CUSTOMER, USER_ROLES.VENDOR])
-    .default(USER_ROLES.CUSTOMER),
+    .enum([USER_ROLES.CLIENT, USER_ROLES.VENDOR])
+    .default(USER_ROLES.CLIENT),
 
   phone: requiredPhoneSchema,
   address: optionalAddressSchema,
@@ -59,7 +59,7 @@ export const createVendorUserSchema = z.object({
   address: optionalAddressSchema,
   vendorStatus: z
     .enum(Object.values(VENDOR_ACCOUNT_STATUSES))
-    .default(VENDOR_ACCOUNT_STATUSES.PENDING),
+    .default(VENDOR_ACCOUNT_STATUSES.NEW),
 });
 
 export const updateVendorStatusSchema = z.object({

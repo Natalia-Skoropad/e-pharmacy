@@ -1,5 +1,5 @@
 export const USER_ROLES = {
-  CUSTOMER: 'customer',
+  CLIENT: 'client',
   VENDOR: 'vendor',
   ADMIN: 'admin',
 } as const;
@@ -14,19 +14,19 @@ export const USER_STATUSES = {
 //===============================================================
 
 export const VENDOR_ACCOUNT_STATUSES = {
-  PENDING: 'pending',
+  NEW: 'new',
   ACTIVE: 'active',
-  REJECTED: 'rejected',
-  BLOCKED: 'blocked',
+  ON_MODERATION: 'on_moderation',
+  INACTIVE: 'inactive',
 } as const;
 
 //===============================================================
 
 export const SHOP_STATUSES = {
-  DRAFT: 'draft',
-  PENDING_REVIEW: 'pending_review',
+  NEW: 'new',
   ACTIVE: 'active',
-  SUSPENDED: 'suspended',
+  ON_MODERATION: 'on_moderation',
+  INACTIVE: 'inactive',
 } as const;
 
 //===============================================================

@@ -184,7 +184,7 @@ const storeSchema = new Schema<StoreEntity>(
     status: {
       type: String,
       enum: Object.values(SHOP_STATUSES),
-      default: SHOP_STATUSES.DRAFT,
+      default: SHOP_STATUSES.NEW,
       required: true,
     },
 

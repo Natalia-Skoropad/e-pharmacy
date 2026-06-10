@@ -1,14 +1,14 @@
 # E-PHARMACY Client
 
-> A responsive customer storefront for browsing pharmacy stores, finding medicines, managing a cart, and creating online orders.
+> A responsive client storefront for browsing pharmacy stores, finding medicines, managing a cart, and creating online orders.
 
 ![E-PHARMACY client cover](./public/og/og-cover.jpg)
 
 ## Overview
 
-**E-PHARMACY Client** is the customer-facing application of the E-PHARMACY monorepo.
+**E-PHARMACY Client** is the client-facing application of the E-PHARMACY monorepo.
 
-The client app allows customers to:
+The client app allows clients to:
 
 - browse pharmacy stores
 - search, filter, and sort medicines
@@ -19,9 +19,9 @@ The client app allows customers to:
 - view profile information and confirmed orders
 - read and submit product or pharmacy reviews
 
-The application focuses on a clean customer experience, responsive layout, reusable UI components, route-driven SEO, and integration with a shared backend API.
+The application focuses on a clean client experience, responsive layout, reusable UI components, route-driven SEO, and integration with a shared backend API.
 
-> Current status: the customer storefront is implemented. Vendor and admin applications are separate parts of the monorepo and are described in their own README files.
+> Current status: the client storefront is implemented. Vendor and admin applications are separate parts of the monorepo and are described in their own README files.
 
 ## Live Demo
 
@@ -83,10 +83,10 @@ https://e-pharmacy-client-ten.vercel.app
 
 ### Authentication
 
-- customer registration and login
+- client registration and login
 - logout with session cleanup
 - current user loading
-- protected customer routes
+- protected client routes
 - guest-only auth pages
 - password recovery through email reset flow
 - profile editing
@@ -124,11 +124,11 @@ https://e-pharmacy-client-ten.vercel.app
 - invoice-level summaries
 - checkout with pickup or post delivery
 - order creation through the backend API
-- delivery address and customer comment in order details
+- delivery address and client comment in order details
 
 ### Profile and orders
 
-- customer profile page
+- client profile page
 - editable profile data
 - password changing flow
 - order history
@@ -178,7 +178,7 @@ https://e-pharmacy-client-ten.vercel.app
 ### Data and backend integration
 
 - shared Express/MongoDB backend API
-- Next.js same-origin BFF route handlers for private customer flows
+- Next.js same-origin BFF route handlers for private client flows
 - shared API response contracts
 - shared TypeScript generic types
 - shared validation constants and sanitizers
@@ -277,7 +277,7 @@ apps/client/
 
 ### Home
 
-A public landing page that introduces the service, explains the customer flow, and guides users to pharmacies and medicines.
+A public landing page that introduces the service, explains the client flow, and guides users to pharmacies and medicines.
 
 ### Authentication pages
 
@@ -293,15 +293,15 @@ A public catalog for browsing medicines with search, filters, sorting, paginatio
 
 ### Cart
 
-A private customer page where medicines are grouped by pharmacy with stock-aware quantity controls and invoice summaries.
+A private client page where medicines are grouped by pharmacy with stock-aware quantity controls and invoice summaries.
 
 ### Checkout
 
-A private confirmation flow for creating orders with delivery method selection, customer contact data, address, comment, and backend order saving.
+A private confirmation flow for creating orders with delivery method selection, client contact data, address, comment, and backend order saving.
 
 ### Profile
 
-A private customer account page for profile editing, password changing, and reviewing previous orders.
+A private client account page for profile editing, password changing, and reviewing previous orders.
 
 ### Information pages
 
@@ -309,7 +309,7 @@ Public pages for delivery and payment, return policy, user agreement, and person
 
 ## SEO Details
 
-The client app has a dedicated SEO layer for public pages. The goal is to keep useful customer pages indexable, avoid duplicate catalog URLs, and prevent private or low-value states from entering search results.
+The client app has a dedicated SEO layer for public pages. The goal is to keep useful client pages indexable, avoid duplicate catalog URLs, and prevent private or low-value states from entering search results.
 
 ### SEO architecture
 
@@ -360,7 +360,7 @@ error pages
 not-found pages
 ```
 
-This prevents customer account data, checkout states, auth pages, and future private dashboards from appearing in search results.
+This prevents client account data, checkout states, auth pages, and future private dashboards from appearing in search results.
 
 ### Product and pharmacy detail routes
 
@@ -421,7 +421,7 @@ Browser private flow -> Next.js same-origin /api/* route handlers -> Express API
 
 Public catalog data, SEO metadata, sitemap data, and read-only pages can be loaded server-side from the backend API.
 
-Auth, cart, checkout, orders, profile updates, password updates, review/favorite mutations, and other customer-only mutations go through the Next.js BFF route handlers under `apps/client/src/app/api/*`.
+Auth, cart, checkout, orders, profile updates, password updates, review/favorite mutations, and other client-only mutations go through the Next.js BFF route handlers under `apps/client/src/app/api/*`.
 
 This BFF layer keeps browser requests same-origin, forwards cookies to the backend, and copies backend `Set-Cookie` headers back to the client response. The backend remains the source of truth for private access through `authenticate` middleware and the httpOnly auth cookie.
 
@@ -539,7 +539,7 @@ Recommended production checklist:
 
 ## Highlights
 
-- full customer storefront flow from catalog discovery to confirmed order
+- full client storefront flow from catalog discovery to confirmed order
 - clean monorepo architecture with shared workspace packages
 - SEO-friendly routing for catalogs and detail pages
 - reusable UI system with consistent buttons, cards, modals, tabs, toasts, and forms

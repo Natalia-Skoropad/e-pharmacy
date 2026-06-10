@@ -135,10 +135,10 @@ export async function registerUserService(
       name: input.name,
       email: input.email,
       password: hashedPassword,
-      role: input.role || USER_ROLES.CUSTOMER,
+      role: input.role || USER_ROLES.CLIENT,
       vendorStatus:
         input.role === USER_ROLES.VENDOR
-          ? VENDOR_ACCOUNT_STATUSES.PENDING
+          ? VENDOR_ACCOUNT_STATUSES.NEW
           : undefined,
       phone: input.phone,
       address: input.address,

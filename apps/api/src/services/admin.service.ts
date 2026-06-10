@@ -50,7 +50,7 @@ export async function createVendorUserByAdminService(
       email: input.email,
       password: await hashPassword(input.password),
       role: USER_ROLES.VENDOR,
-      vendorStatus: input.vendorStatus ?? VENDOR_ACCOUNT_STATUSES.PENDING,
+      vendorStatus: input.vendorStatus ?? VENDOR_ACCOUNT_STATUSES.NEW,
       phone: input.phone,
       address: input.address,
       createdBy: adminUserId,
@@ -89,7 +89,7 @@ export async function updateVendorStatusByAdminService(
     set.approvedAt = new Date();
   }
 
-  if (input.vendorStatus === VENDOR_ACCOUNT_STATUSES.REJECTED) {
+  if (input.vendorStatus === VENDOR_ACCOUNT_STATUSES.INACTIVE) {
     unset.approvedBy = '';
     unset.approvedAt = '';
   }
@@ -136,7 +136,7 @@ export async function updateShopStatusByAdminService(
     set.approvedAt = new Date();
   }
 
-  if (input.status === SHOP_STATUSES.DRAFT || input.status === SHOP_STATUSES.PENDING_REVIEW) {
+  if (input.status === SHOP_STATUSES.NEW || input.status === SHOP_STATUSES.ON_MODERATION) {
     unset.approvedBy = '';
     unset.approvedAt = '';
   }

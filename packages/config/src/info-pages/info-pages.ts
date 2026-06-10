@@ -22,36 +22,36 @@ export const DELIVERY_PAYMENT_INFO = {
     {
       title: 'How the service works',
       content: [
-        'E-PHARMACY is an online pharmacy platform that helps customers find medicines, compare pharmacy offers, and prepare online orders. The platform provides information about products, partner pharmacies, prices, availability, ratings, and order details.',
+        'E-PHARMACY is an online pharmacy platform that helps clients find medicines, compare pharmacy offers, and prepare online orders. The platform provides information about products, partner pharmacies, prices, availability, ratings, and order details.',
         'The final sale and product handover are completed by the selected licensed pharmacy. E-PHARMACY helps organize the order flow but does not replace the pharmacy that provides the product.',
       ],
     },
     {
       title: 'Pickup from pharmacy',
       content: [
-        'When pickup is selected, the order is prepared by the chosen pharmacy. The customer can review the pharmacy address, phone number, working hours, and order summary before confirmation.',
-        'The pharmacy may contact the customer to clarify availability, pickup time, or order details.',
+        'When pickup is selected, the order is prepared by the chosen pharmacy. The client can review the pharmacy address, phone number, working hours, and order summary before confirmation.',
+        'The pharmacy may contact the client to clarify availability, pickup time, or order details.',
       ],
     },
     {
       title: 'Postal delivery',
       content: [
-        'Postal delivery can be selected during checkout when the pharmacy supports it. The customer provides name, phone number, delivery address or post office details, and any useful order comment.',
+        'Postal delivery can be selected during checkout when the pharmacy supports it. The client provides name, phone number, delivery address or post office details, and any useful order comment.',
         'The pharmacy confirms the address and delivery details before handing the order to a carrier. Delivery price depends on the selected carrier and pharmacy conditions.',
       ],
     },
     {
       title: 'Payment on receipt',
       content: [
-        'Payment on receipt means the customer pays when the order is received or picked up, according to the payment methods available at the selected pharmacy.',
-        'The customer should check the final amount and product list before payment, especially when the order contains items from more than one pharmacy.',
+        'Payment on receipt means the client pays when the order is received or picked up, according to the payment methods available at the selected pharmacy.',
+        'The client should check the final amount and product list before payment, especially when the order contains items from more than one pharmacy.',
       ],
     },
     {
       title: 'Payment by bank details',
       content: [
         'Some pharmacies can provide bank account details for payment. In this case, the payment information is shown in the pharmacy details or checkout flow when available.',
-        'The payment purpose, recipient, and account details should be copied carefully. If something looks unclear, the customer should contact the pharmacy before paying.',
+        'The payment purpose, recipient, and account details should be copied carefully. If something looks unclear, the client should contact the pharmacy before paying.',
       ],
     },
   ],
@@ -76,8 +76,8 @@ export const RETURN_POLICY_INFO = {
     {
       title: 'Defective or improper-quality product',
       content: [
-        'If the customer discovers a significant defect within the allowed period, the customer should contact the pharmacy where the product was purchased and provide proof of purchase.',
-        'Depending on the situation and applicable law, the customer may request a refund or replacement with the same product or an equivalent product available from the seller.',
+        'If the client discovers a significant defect within the allowed period, the client should contact the pharmacy where the product was purchased and provide proof of purchase.',
+        'Depending on the situation and applicable law, the client may request a refund or replacement with the same product or an equivalent product available from the seller.',
       ],
     },
     {
@@ -91,7 +91,7 @@ export const RETURN_POLICY_INFO = {
       title: 'Where to send the request',
       content: [
         'Return questions should be sent to the pharmacy that supplied the product. The pharmacy is responsible for checking the purchase and explaining the next steps.',
-        'E-PHARMACY can help customers understand where the order was placed, but the final decision belongs to the seller and the applicable legal rules.',
+        'E-PHARMACY can help clients understand where the order was placed, but the final decision belongs to the seller and the applicable legal rules.',
       ],
     },
   ],
@@ -103,13 +103,13 @@ export const USER_AGREEMENT_INFO = {
   path: ROUTES.USER_AGREEMENT,
   title: 'User Agreement',
   description:
-    'These terms explain how customers may use E-PHARMACY, what the platform provides, and which responsibilities belong to users and partner pharmacies.',
+    'These terms explain how clients may use E-PHARMACY, what the platform provides, and which responsibilities belong to users and partner pharmacies.',
   updatedAt: 'May 2026',
   sections: [
     {
       title: 'General terms',
       content: [
-        'This User Agreement applies to the E-PHARMACY website and related customer services. By using the platform, the user confirms that they have read and accepted these terms.',
+        'This User Agreement applies to the E-PHARMACY website and related client services. By using the platform, the user confirms that they have read and accepted these terms.',
         'If the user does not agree with the terms, the user should not use the platform or create an account.',
       ],
     },
@@ -137,15 +137,15 @@ export const USER_AGREEMENT_INFO = {
     {
       title: 'Orders and checkout',
       content: [
-        'An order created through E-PHARMACY is a request sent to the selected pharmacy. The final purchase is completed between the customer and the pharmacy that supplies the product.',
-        'The customer should check product names, quantities, pharmacy address, delivery method, payment method, and contact details before confirming an order.',
+        'An order created through E-PHARMACY is a request sent to the selected pharmacy. The final purchase is completed between the client and the pharmacy that supplies the product.',
+        'The client should check product names, quantities, pharmacy address, delivery method, payment method, and contact details before confirming an order.',
       ],
     },
     {
       title: 'Limitations of liability',
       content: [
         'E-PHARMACY works to keep the platform clear, stable, and helpful, but cannot guarantee that every product or price will remain unchanged at the moment of pharmacy confirmation.',
-        'The platform is not responsible for medical decisions made by users. Customers should follow prescriptions, product instructions, and professional recommendations.',
+        'The platform is not responsible for medical decisions made by users. Clients should follow prescriptions, product instructions, and professional recommendations.',
       ],
     },
     {
@@ -170,8 +170,8 @@ export const PERSONAL_DATA_NOTICE_INFO = {
     {
       title: 'Who controls personal data',
       content: [
-        'E-PHARMACY processes personal data needed to provide customer account features, cart features, checkout, order history, and communication related to orders.',
-        'Partner pharmacies may also process customer data when they receive an order request or provide products and services to the customer.',
+        'E-PHARMACY processes personal data needed to provide client account features, cart features, checkout, order history, and communication related to orders.',
+        'Partner pharmacies may also process client data when they receive an order request or provide products and services to the client.',
       ],
     },
     {
@@ -184,15 +184,15 @@ export const PERSONAL_DATA_NOTICE_INFO = {
     {
       title: 'Why data is processed',
       content: [
-        'Personal data is used to create and protect accounts, save profile details, prepare orders, show order history, manage favorites, contact the customer about an order, and improve platform reliability.',
+        'Personal data is used to create and protect accounts, save profile details, prepare orders, show order history, manage favorites, contact the client about an order, and improve platform reliability.',
         'Technical data can also be used to prevent abuse, protect sessions, and keep the service stable.',
       ],
     },
     {
       title: 'Sharing with partner pharmacies',
       content: [
-        'When a customer confirms an order, the information required to process that order may be shared with the selected pharmacy.',
-        'The pharmacy receives only the data needed for order preparation, confirmation, pickup, delivery, payment, or customer communication.',
+        'When a client confirms an order, the information required to process that order may be shared with the selected pharmacy.',
+        'The pharmacy receives only the data needed for order preparation, confirmation, pickup, delivery, payment, or client communication.',
       ],
     },
     {

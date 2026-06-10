@@ -116,7 +116,7 @@ export async function createStoreReview(
 
   const data = await createStoreReviewService(storeId, {
     userId: req.user?.id ?? '',
-    userName: req.user?.name ?? 'Customer',
+    userName: req.user?.name ?? 'client',
     rating: body.rating,
     comment: body.comment,
   });
