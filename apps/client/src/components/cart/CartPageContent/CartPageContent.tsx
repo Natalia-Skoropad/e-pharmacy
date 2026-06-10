@@ -80,7 +80,8 @@ function getCartWithUpdatedQuantity(
 //===================================================================
 
 function CartPageContent() {
-  const { sessionMarker } = useAuth();
+  const { isAuthenticated, isAuthReady } = useAuth();
+  const canUseCart = isAuthReady && isAuthenticated;
 
   const [cart, setCart] = useState<Cart>(EMPTY_CART);
   const [error, setError] = useState('');
@@ -101,11 +102,11 @@ function CartPageContent() {
   const isUpdating = Boolean(updatingItemId) || isClearing;
 
   useEffect(() => {
+    if (!isAuthReady || !isAuthenticated) return;
+
     let isMounted = true;
 
     async function fetchCart() {
-      if (!sessionMarker) return;
-
       try {
         const response = await getCart();
 
@@ -131,10 +132,10 @@ function CartPageContent() {
     return () => {
       isMounted = false;
     };
-  }, [sessionMarker]);
+  }, [isAuthenticated, isAuthReady]);
 
   const handleQuantityChange = async (cartItemId: string, quantity: number) => {
-    if (!sessionMarker || quantity < 1) return;
+    if (!canUseCart || quantity < 1) return;
 
     const previousCart = cart;
     const optimisticCart = getCartWithUpdatedQuantity(
@@ -166,7 +167,7 @@ function CartPageContent() {
   };
 
   const handleRemove = async (cartItemId: string) => {
-    if (!sessionMarker) return;
+    if (!canUseCart) return;
 
     try {
       setUpdatingItemId(cartItemId);
@@ -185,7 +186,7 @@ function CartPageContent() {
   };
 
   const handleClear = async () => {
-    if (!sessionMarker) return;
+    if (!canUseCart) return;
 
     try {
       setIsClearing(true);
@@ -203,13 +204,16 @@ function CartPageContent() {
     }
   };
 
+  const visibleCart = canUseCart ? cart : EMPTY_CART;
+  const shouldShowLoading = !isAuthReady || (isAuthenticated && isLoading);
+
   const groupedCartItems = useMemo(
-    () => groupCartItemsByStore(cart.items),
-    [cart.items]
+    () => groupCartItemsByStore(visibleCart.items),
+    [visibleCart.items]
   );
 
   const handleRemoveStore = async (storeId: string) => {
-    if (!sessionMarker) return;
+    if (!canUseCart) return;
 
     try {
       setIsClearing(true);
@@ -275,10 +279,10 @@ function CartPageContent() {
               <p className={css.text}>{CART_DESCRIPTION}</p>
             </div>
 
-            <CountLabel shown={cart.totalItems} total={cart.totalItems} label="items" />
+            <CountLabel shown={visibleCart.totalItems} total={visibleCart.totalItems} label="items" />
           </div>
 
-          {isLoading ? (
+          {shouldShowLoading ? (
             <div className={css.status}>
               <LoadingSpinner label="Loading pharmacy invoices..." />
             </div>
@@ -290,7 +294,7 @@ function CartPageContent() {
             </div>
           ) : null}
 
-          {!isLoading && cart.items.length === 0 ? (
+          {!shouldShowLoading && visibleCart.items.length === 0 ? (
             <div className={css.empty}>
               <h2 className={css.emptyTitle}>Your cart is empty</h2>
 
@@ -307,7 +311,7 @@ function CartPageContent() {
             </div>
           ) : null}
 
-          {cart.items.length > 0 ? (
+          {visibleCart.items.length > 0 ? (
             <ul className={css.groupList}>
               {groupedCartItems.map((group) => (
                 <li className={css.invoice} key={group.storeId}>
@@ -389,11 +393,11 @@ function CartPageContent() {
             </ul>
           ) : null}
 
-          {continueShoppingStore && sessionMarker ? (
+          {continueShoppingStore && canUseCart ? (
             <ContinueShoppingModal
               storeId={continueShoppingStore.storeId}
               storeName={continueShoppingStore.storeName}
-              cartItems={cart.items}
+              cartItems={visibleCart.items}
               onClose={() => setContinueShoppingStore(null)}
               onCartChange={setCart}
             />

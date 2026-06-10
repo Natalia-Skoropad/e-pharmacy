@@ -1,6 +1,20 @@
 'use client';
 
-import { AuthProviderCore, useAuth, type AuthProviderServices } from '@e-pharmacy/auth';  import {   getCurrentUser, loginUser, logoutUser, refreshSession, registerUser } from '@e-pharmacy/api-client/client';
+import {
+  AuthProviderCore,
+  useAuth,
+  type AuthProviderServices,
+} from '@e-pharmacy/auth';
+
+import { browserAuthSessionHintStorage } from '@e-pharmacy/auth/session';
+
+import {
+  getCurrentUser,
+  loginUser,
+  logoutUser,
+  refreshSession,
+  registerUser,
+} from '@e-pharmacy/api-client/client';
 
 import type { ReactNode } from 'react';
 
@@ -24,7 +38,10 @@ type AuthProviderProps = {
 
 function AuthProvider({ children }: AuthProviderProps) {
   return (
-    <AuthProviderCore services={clientAuthServices}>
+    <AuthProviderCore
+      {...clientAuthServices}
+      sessionHintStorage={browserAuthSessionHintStorage}
+    >
       {children}
     </AuthProviderCore>
   );

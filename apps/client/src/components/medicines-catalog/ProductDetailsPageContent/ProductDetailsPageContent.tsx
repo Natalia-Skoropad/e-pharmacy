@@ -177,7 +177,7 @@ function ProductDetailsPageContent({
   areReviewsUnavailable = false,
   contextStoreId,
 }: ProductDetailsPageContentProps) {
-  const { sessionMarker, isAuthenticated, isAuthReady } = useAuth();
+  const { isAuthenticated, isAuthReady } = useAuth();
 
   const [productDetails, setProductDetails] = useState(product);
   const [activeTab, setActiveTab] = useState<ProductTab>('about');
@@ -357,7 +357,7 @@ function ProductDetailsPageContent({
   });
 
   useEffect(() => {
-    if (!isAuthenticated || !sessionMarker) return;
+    if (!isAuthReady || !isAuthenticated) return;
 
     let isMounted = true;
 
@@ -387,10 +387,10 @@ function ProductDetailsPageContent({
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, productDetails.id, setIsFavorite, toast, sessionMarker]);
+  }, [isAuthenticated, isAuthReady, productDetails.id, setIsFavorite, toast]);
 
   const handleAddUnit = async (offer: ProductOffer) => {
-    if (!isAuthenticated || !sessionMarker) return;
+    if (!isAuthReady || !isAuthenticated) return;
 
     const previousCart = cart;
     const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
@@ -441,7 +441,7 @@ function ProductDetailsPageContent({
   };
 
   const removeOfferUnit = async (offer: ProductOffer) => {
-    if (!isAuthenticated || !sessionMarker) return;
+    if (!isAuthReady || !isAuthenticated) return;
 
     const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
 
@@ -489,7 +489,7 @@ function ProductDetailsPageContent({
   };
 
   const handleRemoveUnit = (offer: ProductOffer) => {
-    if (!isAuthenticated || !sessionMarker) return;
+    if (!isAuthReady || !isAuthenticated) return;
 
     const cartItem = getOfferCartItem(cart, productDetails.id, offer.storeId);
 

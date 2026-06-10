@@ -41,7 +41,7 @@ export function useReviewForm({
   notifier,
   showToast,
 }: UseReviewFormParams) {
-  const { sessionMarker, isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthReady } = useAuth();
 
   const [reviewValues, setReviewValues] = useState<ReviewFormValues>(
     REVIEW_INITIAL_VALUES
@@ -93,7 +93,7 @@ export function useReviewForm({
   const handleReviewSubmit = async () => {
     const nextErrors = validateReviewForm(reviewValues);
 
-    if (hasValidationErrors(nextErrors) || !isAuthenticated || !sessionMarker) {
+    if (hasValidationErrors(nextErrors) || !isAuthReady || !isAuthenticated) {
       setReviewTouchedFields(markAllFieldsTouched(REVIEW_FORM_FIELDS));
       return;
     }

@@ -92,6 +92,11 @@ function RegisterForm() {
 
     const nextErrors = validateRegisterForm(values);
 
+    if (!register) {
+      toast.error('Registration is not available for this app.');
+      return;
+    }
+
     if (hasValidationErrors(nextErrors)) {
       setTouchedFields(markAllFieldsTouched(REGISTER_FORM_FIELDS));
       setErrors(nextErrors);
@@ -163,7 +168,7 @@ function RegisterForm() {
       <Button
         type="submit"
         fullWidth
-        disabled={isSubmitting || !isAuthReady || !registerFormIsValid}
+        disabled={isSubmitting || !isAuthReady || !register || !registerFormIsValid}
       >
         {isSubmitting ? 'Creating account...' : 'Create account'}
       </Button>

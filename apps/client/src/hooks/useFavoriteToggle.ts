@@ -41,7 +41,7 @@ export function useFavoriteToggle<TId extends string>({
   toggleFavorite,
   onFavoriteChange,
 }: UseFavoriteToggleParams<TId>) {
-  const { sessionMarker, isAuthenticated, isAuthReady } = useAuth();
+  const { isAuthenticated, isAuthReady } = useAuth();
 
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
@@ -49,7 +49,7 @@ export function useFavoriteToggle<TId extends string>({
   const handleFavoriteClick = async () => {
     if (!isAuthReady) return;
 
-    if (!isAuthenticated || !sessionMarker) {
+    if (!isAuthenticated) {
       notifier.info(loginMessage);
       return;
     }

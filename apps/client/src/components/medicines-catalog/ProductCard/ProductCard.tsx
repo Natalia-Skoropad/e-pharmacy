@@ -40,7 +40,7 @@ function ProductCard({
   skipFavoriteRefresh = false,
   onFavoriteChange,
 }: ProductCardProps) {
-  const { sessionMarker, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const toast = useToast();
 
   const {
@@ -70,8 +70,7 @@ function ProductCard({
 
   useProductFavoriteRefresh({
     id: product.id,
-    isEnabled: !skipFavoriteRefresh && isAuthenticated,
-    sessionMarker,
+    isEnabled: !skipFavoriteRefresh && isAuthReady && isAuthenticated,
     onRefresh: setIsFavorite,
   });
 

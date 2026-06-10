@@ -10,11 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import {
-  getAuthSessionMarker,
-  removeAuthSessionMarker,
-  setAuthSessionMarker,
-} from '../session/auth-token-storage';
+import type { AuthSessionHintStorage } from '../session/session-hint-storage';
 
 import type {
   AuthResponse,
@@ -40,12 +36,11 @@ export type AuthProviderServices = {
 
 export type AuthContextValue = {
   user: AuthUser | null;
-  sessionMarker: string | null;
   status: AuthStatus;
   isAuthenticated: boolean;
   isAuthReady: boolean;
-  login: (payload: LoginPayload) => Promise<AuthResponse>;
-  register: (payload: RegisterPayload) => Promise<AuthResponse>;
+  login: (payload: LoginPayload) => Promise<AuthUser | null>;
+  register?: (payload: RegisterPayload) => Promise<AuthUser | null>;
   logout: () => Promise<void>;
   refreshCurrentUser: () => Promise<AuthUser | null>;
 };
@@ -56,110 +51,106 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 //===================================================================
 
-export type AuthProviderCoreProps = {
+export type AuthProviderCoreProps = AuthProviderServices & {
   children: ReactNode;
-  services: AuthProviderServices;
+  sessionHintStorage: AuthSessionHintStorage;
 };
 
 //===================================================================
 
 export function AuthProviderCore({
   children,
-  services,
+  getCurrentUser,
+  refreshSession,
+  login: loginService,
+  register: registerService,
+  logout: logoutService,
+  sessionHintStorage,
 }: AuthProviderCoreProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [sessionMarker, setSessionMarker] = useState<string | null>(() =>
-    getAuthSessionMarker()
-  );
   const [status, setStatus] = useState<AuthStatus>('loading');
 
-  const syncAuthMarker = useCallback(() => {
-    setAuthSessionMarker();
-    setSessionMarker(getAuthSessionMarker());
-  }, []);
+  const { hasHint, setHint, clearHint } = sessionHintStorage;
 
-  const applyAuthResponse = useCallback(
-    (response: AuthResponse) => {
-      syncAuthMarker();
-      setUser(response.user);
+  const applyAuthenticatedUser = useCallback(
+    (nextUser: AuthUser) => {
+      setHint();
+      setUser(nextUser);
       setStatus('authenticated');
     },
-    [syncAuthMarker]
+    [setHint]
   );
 
   const clearAuthState = useCallback(() => {
-    removeAuthSessionMarker();
-    setSessionMarker(null);
+    clearHint();
     setUser(null);
     setStatus('unauthenticated');
-  }, []);
+  }, [clearHint]);
 
-  const refreshCurrentUser = useCallback(async () => {
+  const restoreCurrentUser = useCallback(async () => {
     try {
-      setStatus('loading');
+      const response = await getCurrentUser();
 
-      const response = await services.getCurrentUser();
-
-      syncAuthMarker();
-      setUser(response.user);
-      setStatus('authenticated');
+      applyAuthenticatedUser(response.user);
 
       return response.user;
     } catch {
       try {
-        const response = await services.refreshSession();
+        const response = await refreshSession();
 
-        syncAuthMarker();
-        setUser(response.user);
-        setStatus('authenticated');
+        applyAuthenticatedUser(response.user);
 
         return response.user;
       } catch {
         clearAuthState();
+
         return null;
       }
     }
-  }, [clearAuthState, services, syncAuthMarker]);
+  }, [applyAuthenticatedUser, clearAuthState, getCurrentUser, refreshSession]);
+
+  const refreshCurrentUser = useCallback(async () => {
+    setStatus('loading');
+
+    return restoreCurrentUser();
+  }, [restoreCurrentUser]);
 
   const login = useCallback(
     async (payload: LoginPayload) => {
-      const response = await services.login(payload);
+      const response = await loginService(payload);
 
-      applyAuthResponse(response);
+      applyAuthenticatedUser(response.user);
 
-      return response;
+      return response.user;
     },
-    [applyAuthResponse, services]
+    [applyAuthenticatedUser, loginService]
   );
 
-  const register = useCallback(
-    async (payload: RegisterPayload) => {
-      if (!services.register) {
-        throw new Error('Registration is not available for this app.');
-      }
+  const register = useMemo(() => {
+    if (!registerService) return undefined;
 
-      const response = await services.register(payload);
+    return async (payload: RegisterPayload) => {
+      const response = await registerService(payload);
 
-      applyAuthResponse(response);
+      applyAuthenticatedUser(response.user);
 
-      return response;
-    },
-    [applyAuthResponse, services]
-  );
+      return response.user;
+    };
+  }, [applyAuthenticatedUser, registerService]);
 
   const logout = useCallback(async () => {
     try {
-      await services.logout();
+      await logoutService();
     } finally {
       clearAuthState();
     }
-  }, [clearAuthState, services]);
+  }, [clearAuthState, logoutService]);
 
   useEffect(() => {
     let isMounted = true;
 
     async function bootstrapAuth() {
-      if (!getAuthSessionMarker()) {
+      if (!hasHint()) {
         if (!isMounted) return;
 
         clearAuthState();
@@ -167,22 +158,18 @@ export function AuthProviderCore({
       }
 
       try {
-        const response = await services.getCurrentUser();
+        const response = await getCurrentUser();
 
         if (!isMounted) return;
 
-        syncAuthMarker();
-        setUser(response.user);
-        setStatus('authenticated');
+        applyAuthenticatedUser(response.user);
       } catch {
         try {
-          const response = await services.refreshSession();
+          const response = await refreshSession();
 
           if (!isMounted) return;
 
-          syncAuthMarker();
-          setUser(response.user);
-          setStatus('authenticated');
+          applyAuthenticatedUser(response.user);
         } catch {
           if (!isMounted) return;
 
@@ -196,12 +183,17 @@ export function AuthProviderCore({
     return () => {
       isMounted = false;
     };
-  }, [clearAuthState, services, syncAuthMarker]);
+  }, [
+    applyAuthenticatedUser,
+    clearAuthState,
+    getCurrentUser,
+    hasHint,
+    refreshSession,
+  ]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      sessionMarker,
       status,
       isAuthenticated: status === 'authenticated',
       isAuthReady: status !== 'loading',
@@ -210,7 +202,7 @@ export function AuthProviderCore({
       logout,
       refreshCurrentUser,
     }),
-    [login, logout, refreshCurrentUser, register, sessionMarker, status, user]
+    [login, logout, refreshCurrentUser, register, status, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -60,7 +60,7 @@ function formatDeliveryMethod(method: ClientOrder['deliveryMethod']): string {
 //===================================================================
 
 function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
-  const { sessionMarker } = useAuth();
+  const { isAuthenticated, isAuthReady } = useAuth();
   const [order, setOrder] = useState<ClientOrder | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState('');
@@ -70,7 +70,13 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     let isMounted = true;
 
     async function fetchOrder() {
-      if (!sessionMarker) return;
+      if (!isAuthReady) return;
+
+      if (!isAuthenticated) {
+        setOrder(null);
+        setIsLoaded(true);
+        return;
+      }
 
       try {
         setIsLoaded(false);
@@ -97,7 +103,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     return () => {
       isMounted = false;
     };
-  }, [cleanOrderId, sessionMarker]);
+  }, [cleanOrderId, isAuthenticated, isAuthReady]);
 
   const breadcrumbs = useMemo<BreadcrumbItem[]>(
     () => [

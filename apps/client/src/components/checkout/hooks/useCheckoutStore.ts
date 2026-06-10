@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';  import { getStoreDetails } from '@e-pharmacy/api-client/client';
+import { useEffect, useState } from 'react';
+import { getStoreDetails } from '@e-pharmacy/api-client/client';
 import type { Store } from '@e-pharmacy/types';
+
 import type { CheckoutStoreOrderGroup } from '@e-pharmacy/types/checkout';
 
 //===================================================================

@@ -37,17 +37,16 @@ function Header() {
   const router = useRouter();
   const mobileNavigationId = useId();
 
-  const { sessionMarker, isAuthenticated, isAuthReady, user, logout } =
-    useAuth();
+  const { isAuthenticated, isAuthReady, user, logout } = useAuth();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
   const visibleCartItemsCount =
-    isAuthenticated && sessionMarker ? cartItemsCount : 0;
+    isAuthReady && isAuthenticated ? cartItemsCount : 0;
 
   useEffect(() => {
-    if (!isAuthenticated || !sessionMarker) return;
+    if (!isAuthReady || !isAuthenticated) return;
 
     let isMounted = true;
 
@@ -62,7 +61,7 @@ function Header() {
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, sessionMarker, pathname]);
+  }, [isAuthenticated, isAuthReady, pathname]);
 
   useEffect(() => {
     const handleCartUpdated = (event: Event) => {

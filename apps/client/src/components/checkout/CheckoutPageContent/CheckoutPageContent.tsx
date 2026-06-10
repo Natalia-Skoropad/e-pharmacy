@@ -77,7 +77,7 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
 ];
 
 function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
-  const { sessionMarker, user } = useAuth();
+  const { isAuthenticated, isAuthReady, user } = useAuth();
   const searchParams = useSearchParams();
   const queryStoreId = searchParams.get('storeId');
   const selectedStoreIdFromRoute = checkoutStoreId ?? queryStoreId;
@@ -95,7 +95,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const [copiedEmail, setCopiedEmail] = useState(false);
 
   const { cart, error, isLoading, setCart, setError } =
-    useCheckoutCart(sessionMarker);
+    useCheckoutCart(isAuthReady, isAuthenticated);
 
   const orderGroups = useMemo(() => groupCartByStore(cart), [cart]);
 
@@ -168,7 +168,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     Boolean(selectedOrderGroup) && isDeliveryFormValid && canUseSelectedPayment;
 
   const { isSubmitting, handleSubmit } = useCheckoutSubmit({
-    sessionMarker,
+    isAuthenticated,
     selectedOrderGroup,
     paymentMethod,
     deliveryMethod,

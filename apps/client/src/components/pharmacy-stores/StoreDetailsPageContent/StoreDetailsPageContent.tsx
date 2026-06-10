@@ -32,9 +32,7 @@ import {
 
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 import { ROUTES } from '@e-pharmacy/config/routes';
-
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
-
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
 import { useAuth } from '@/providers';
 
@@ -68,7 +66,7 @@ function StoreDetailsPageContent({
   reviewsTotal,
   areReviewsUnavailable = false,
 }: StoreDetailsPageContentProps) {
-  const { sessionMarker, isAuthenticated, isAuthReady } = useAuth();
+  const { isAuthenticated, isAuthReady } = useAuth();
 
   const [activeTab, setActiveTab] = useState<StoreTab>('details');
   const [visibleReviewsCount, setVisibleReviewsCount] = useState(
@@ -109,8 +107,7 @@ function StoreDetailsPageContent({
 
   useStoreFavoriteRefresh({
     id: store.id,
-    isEnabled: isAuthenticated,
-    sessionMarker,
+    isEnabled: isAuthReady && isAuthenticated,
     onRefresh: setIsFavorite,
   });
 

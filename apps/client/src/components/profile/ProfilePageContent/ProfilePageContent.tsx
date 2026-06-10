@@ -158,7 +158,8 @@ async function getFavoriteStores(): Promise<PharmacyStore[]> {
 //===================================================================
 
 function ProfilePageContent() {
-  const { sessionMarker, user, refreshCurrentUser } = useAuth();
+  const { isAuthenticated, isAuthReady, user, refreshCurrentUser } = useAuth();
+  const canUseAuthFeatures = isAuthReady && isAuthenticated;
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
 
   const [profileValues, setProfileValues] = useState<DataProfileFormValues>(
@@ -355,7 +356,7 @@ function ProfilePageContent() {
   }, []);
 
   useEffect(() => {
-    if (!sessionMarker) return;
+    if (!canUseAuthFeatures) return;
 
     const timeoutId = window.setTimeout(() => {
       void loadFavoriteProducts();
@@ -363,7 +364,7 @@ function ProfilePageContent() {
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [loadFavoriteProducts, loadFavoriteStores, sessionMarker]);
+  }, [canUseAuthFeatures, loadFavoriteProducts, loadFavoriteStores]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -378,7 +379,7 @@ function ProfilePageContent() {
   useEffect(() => {
     let isMounted = true;
 
-    if (!sessionMarker) {
+    if (!canUseAuthFeatures) {
       const timeoutId = window.setTimeout(() => {
         if (isMounted) {
           setOrders([]);
@@ -415,7 +416,7 @@ function ProfilePageContent() {
     return () => {
       isMounted = false;
     };
-  }, [sessionMarker]);
+  }, [canUseAuthFeatures]);
 
   if (!user) {
     return (
@@ -464,7 +465,7 @@ function ProfilePageContent() {
   };
 
   const handlePictureChange = async (pictureUrl: string | null) => {
-    if (!sessionMarker) return;
+    if (!canUseAuthFeatures) return;
 
     const previousPictureUrl = picturePreview;
 
@@ -492,7 +493,7 @@ function ProfilePageContent() {
     setProfileTouchedFields(markAllFieldsTouched(DATA_PROFILE_FORM_FIELDS));
 
     if (
-      !sessionMarker ||
+      !canUseAuthFeatures ||
       hasValidationErrors(nextErrors) ||
       !profileFormIsDirty
     ) {
@@ -540,7 +541,7 @@ function ProfilePageContent() {
     setPasswordTouchedFields(markAllFieldsTouched(CHANGE_PASSWORD_FORM_FIELDS));
 
     if (
-      !sessionMarker ||
+      !canUseAuthFeatures ||
       hasValidationErrors(nextErrors) ||
       !passwordFormIsDirty
     ) {

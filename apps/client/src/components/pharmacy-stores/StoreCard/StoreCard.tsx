@@ -4,12 +4,14 @@ import { toggleFavoriteStore } from '@e-pharmacy/api-client/client';
 import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
 
 import { buildStorePath } from '@e-pharmacy/config/routes';
+
 import {
   ButtonLink,
   RatingSummary,
   ShimmerImage,
   SvgIcon,
 } from '@e-pharmacy/ui/common';
+
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
 
@@ -35,7 +37,7 @@ function StoreCard({
   skipFavoriteRefresh = false,
   onFavoriteChange,
 }: StoreCardProps) {
-  const { sessionMarker, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const toast = useToast();
 
   const {
@@ -63,8 +65,7 @@ function StoreCard({
 
   useStoreFavoriteRefresh({
     id: store.id,
-    isEnabled: !skipFavoriteRefresh && isAuthenticated,
-    sessionMarker,
+    isEnabled: !skipFavoriteRefresh && isAuthReady && isAuthenticated,
     onRefresh: setIsFavorite,
   });
 

@@ -1,7 +1,6 @@
 import {
   AUTH_COOKIE_MAX_AGE_SECONDS,
   AUTH_READY_COOKIE_NAME,
-  AUTH_SESSION_MARKER,
 } from './auth-session';
 
 //===================================================================
@@ -53,15 +52,13 @@ function removeClientCookie(name: string): void {
 
 //===================================================================
 
-export function getAuthSessionMarker(): string | null {
-  const hasAuthReadyCookie = Boolean(getCookieValue(AUTH_READY_COOKIE_NAME));
-
-  return hasAuthReadyCookie ? AUTH_SESSION_MARKER : null;
+export function getClientAuthSessionHint(): boolean {
+  return Boolean(getCookieValue(AUTH_READY_COOKIE_NAME));
 }
 
 //===================================================================
 
-export function setAuthSessionMarker(): void {
+export function setClientAuthSessionHint(): void {
   if (!canUseDocumentCookie()) return;
 
   setClientCookie(AUTH_READY_COOKIE_NAME, '1');
@@ -69,7 +66,7 @@ export function setAuthSessionMarker(): void {
 
 //===================================================================
 
-export function removeAuthSessionMarker(): void {
+export function removeClientAuthSessionHint(): void {
   if (!canUseDocumentCookie()) return;
 
   removeClientCookie(AUTH_READY_COOKIE_NAME);

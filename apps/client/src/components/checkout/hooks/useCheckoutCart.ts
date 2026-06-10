@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react';  import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors'; import { getCart } from '@e-pharmacy/api-client/client';
+import { useEffect, useState } from 'react';
+
+import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
+import { getCart } from '@e-pharmacy/api-client/client';
 import type { Cart } from '@e-pharmacy/types';
 
 //===================================================================
@@ -11,20 +14,17 @@ const EMPTY_CART: Cart = {
 
 //===================================================================
 
-export function useCheckoutCart(sessionMarker: string | null | undefined) {
+export function useCheckoutCart(isAuthReady: boolean, isAuthenticated: boolean) {
   const [cart, setCart] = useState<Cart>(EMPTY_CART);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAuthReady || !isAuthenticated) return;
+
     let isMounted = true;
 
     async function fetchCart() {
-      if (!sessionMarker) {
-        setIsLoading(false);
-        return;
-      }
-
       try {
         const response = await getCart();
 
@@ -36,7 +36,9 @@ export function useCheckoutCart(sessionMarker: string | null | undefined) {
         if (!isMounted) return;
 
         setError(
-          getAppErrorMessage(error, { fallback: APP_ERROR_MESSAGES.checkout.load })
+          getAppErrorMessage(error, {
+            fallback: APP_ERROR_MESSAGES.checkout.load,
+          })
         );
       } finally {
         if (!isMounted) return;
@@ -50,12 +52,14 @@ export function useCheckoutCart(sessionMarker: string | null | undefined) {
     return () => {
       isMounted = false;
     };
-  }, [sessionMarker]);
+  }, [isAuthReady, isAuthenticated]);
+
+  const canUseCart = isAuthReady && isAuthenticated;
 
   return {
-    cart,
-    error,
-    isLoading,
+    cart: canUseCart ? cart : EMPTY_CART,
+    error: canUseCart ? error : '',
+    isLoading: !isAuthReady || (isAuthenticated && isLoading),
     setCart,
     setError,
   };

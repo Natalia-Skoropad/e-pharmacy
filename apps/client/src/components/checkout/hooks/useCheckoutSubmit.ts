@@ -20,7 +20,7 @@ import type { OrderDeliveryMethod } from '@e-pharmacy/types/orders';
 //===================================================================
 
 type UseCheckoutSubmitParams = {
-  sessionMarker: string | null | undefined;
+  isAuthenticated: boolean;
   selectedOrderGroup: CheckoutStoreOrderGroup | null;
   paymentMethod: CheckoutPaymentMethod;
   deliveryMethod: OrderDeliveryMethod;
@@ -36,7 +36,7 @@ type UseCheckoutSubmitParams = {
 //===================================================================
 
 export function useCheckoutSubmit({
-  sessionMarker,
+  isAuthenticated,
   selectedOrderGroup,
   paymentMethod,
   deliveryMethod,
@@ -52,7 +52,7 @@ export function useCheckoutSubmit({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!sessionMarker || !canSubmit || isSubmitting) return;
+    if (!isAuthenticated || !canSubmit || isSubmitting) return;
 
     try {
       setIsSubmitting(true);

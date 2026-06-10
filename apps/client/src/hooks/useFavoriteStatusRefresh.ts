@@ -13,7 +13,6 @@ import {
 type UseFavoriteStatusRefreshParams = {
   id: string;
   isEnabled: boolean;
-  sessionMarker: string | null;
   onRefresh: (isFavorite: boolean) => void;
 };
 
@@ -22,7 +21,6 @@ type UseFavoriteStatusRefreshParams = {
 export function useProductFavoriteRefresh({
   id,
   isEnabled,
-  sessionMarker,
   onRefresh,
 }: UseFavoriteStatusRefreshParams): void {
   const refreshFavorite = useCallback(async () => {
@@ -33,16 +31,16 @@ export function useProductFavoriteRefresh({
 
   useFavoriteRefresh({
     isEnabled,
-    sessionMarker,
     refreshFavorite,
     onRefresh,
   });
 }
 
+//===================================================================
+
 export function useStoreFavoriteRefresh({
   id,
   isEnabled,
-  sessionMarker,
   onRefresh,
 }: UseFavoriteStatusRefreshParams): void {
   const refreshFavorite = useCallback(async () => {
@@ -53,7 +51,6 @@ export function useStoreFavoriteRefresh({
 
   useFavoriteRefresh({
     isEnabled,
-    sessionMarker,
     refreshFavorite,
     onRefresh,
   });
