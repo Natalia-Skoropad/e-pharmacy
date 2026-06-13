@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { USER_ROLES, VENDOR_ACCOUNT_STATUSES } from '../constants/auth';
+import { USER_ROLES, PHARMACY_ACCOUNT_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
 import { User } from '../models/user.model';
@@ -27,7 +27,7 @@ export function authorizeRoles(...allowedRoles: UserRole[]) {
 
 //===============================================================
 
-export async function requireActiveVendor(
+export async function requireActivePharmacy(
   req: Request,
   _res: Response,
   next: NextFunction
@@ -38,21 +38,21 @@ export async function requireActiveVendor(
       return;
     }
 
-    if (req.user.role !== USER_ROLES.VENDOR) {
+    if (req.user.role !== USER_ROLES.PHARMACY) {
       next(httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.FORBIDDEN_ROLE));
       return;
     }
 
-    const vendor = await User.findOne({
+    const pharmacy = await User.findOne({
       _id: req.user.id,
-      role: USER_ROLES.VENDOR,
-      vendorStatus: VENDOR_ACCOUNT_STATUSES.ACTIVE,
+      role: USER_ROLES.PHARMACY,
+      pharmacyStatus: PHARMACY_ACCOUNT_STATUSES.ACTIVE,
     })
       .select('_id')
       .lean<{ _id: unknown } | null>();
 
-    if (!vendor) {
-      next(httpError(HTTP_STATUS.FORBIDDEN, 'Vendor account is not active.'));
+    if (!pharmacy) {
+      next(httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy account is not active.'));
       return;
     }
 

@@ -1,7 +1,7 @@
-# Vendor Technical Specification — українська версія для перевірки
+# Pharmacy Technical Specification — українська версія для перевірки
 
-> Цей документ є українською версією Vendor ТЗ для проєкту **E-PHARMACY**.  
-> Інтерфейс Vendor-частини має бути англійською мовою, тому всі рекомендовані тексти для кнопок, toast, modal, empty/error states залишені англійською.
+> Цей документ є українською версією Pharmacy ТЗ для проєкту **E-PHARMACY**.  
+> Інтерфейс Pharmacy-частини має бути англійською мовою, тому всі рекомендовані тексти для кнопок, toast, modal, empty/error states залишені англійською.
 
 ---
 
@@ -24,22 +24,22 @@
 
 # 1. Загальний опис
 
-## 1.1. Призначення Vendor частини
+## 1.1. Призначення Pharmacy частини
 
-Vendor частина — це особистий кабінет аптеки в екосистемі **E-PHARMACY**. Через Vendor app аптека керує власним профілем, замовленнями, клієнтами, ліками, заявками на створення нових ліків та переглядає статистику.
+Pharmacy частина — це особистий кабінет аптеки в екосистемі **E-PHARMACY**. Через Pharmacy app аптека керує власним профілем, замовленнями, клієнтами, ліками, заявками на створення нових ліків та переглядає статистику.
 
-Vendor працює разом із:
+Pharmacy працює разом із:
 
 - **Client** — публічна частина для покупців: аптеки, каталог ліків, cart, checkout, orders, reviews.
 - **Admin** — адміністративна панель: модерація аптек, глобальні ліки, заявки, клієнти, замовлення, постачальники.
 - **API** — спільний backend для всіх частин системи.
 - **Shared packages** — спільні типи, UI, config, validation, api-client, utils.
 
-На цьому етапі це ТЗ є основним джерелом правди для майбутньої реалізації Vendor частини. Поточний backend/client можуть відрізнятися, але мають поступово приводитися до цієї логіки.
+На цьому етапі це ТЗ є основним джерелом правди для майбутньої реалізації Pharmacy частини. Поточний backend/client можуть відрізнятися, але мають поступово приводитися до цієї логіки.
 
-## 1.2. Глобальні частини Vendor app
+## 1.2. Глобальні частини Pharmacy app
 
-Vendor app складається з таких великих блоків:
+Pharmacy app складається з таких великих блоків:
 
 1. **Auth та доступ**
    - спільні сторінки login/register/forgot-password;
@@ -105,9 +105,9 @@ Vendor app складається з таких великих блоків:
 
 ## 1.3. Головний принцип доступу
 
-Vendor завжди бачить і змінює тільки дані поточної аптеки.
+Pharmacy завжди бачить і змінює тільки дані поточної аптеки.
 
-Vendor не має бачити:
+Pharmacy не має бачити:
 
 - замовлення інших аптек;
 - клієнтів, які ніколи не робили замовлення в цій аптеці;
@@ -128,7 +128,7 @@ Vendor не має бачити:
 - створення замовлення;
 - відгуки клієнтів.
 
-### Vendor відповідає за
+### Pharmacy відповідає за
 
 - редагування власного профілю аптеки за правилами статусу;
 - обробку власних замовлень;
@@ -149,22 +149,22 @@ Vendor не має бачити:
 
 ## 1.5. Правило URL для фільтрів
 
-Для Vendor-таблиць фільтри мають змінювати URL, а pagination / rowsPerPage — ні.
+Для Pharmacy-таблиць фільтри мають змінювати URL, а pagination / rowsPerPage — ні.
 
 Рекомендований формат — path segments, а не query params:
 
 ```txt
-/vendor/orders/status-new
-/vendor/orders/status-successful/delivery-pickup
-/vendor/clients/status-active
-/vendor/medicines/status-active/stock-empty
-/vendor/medicine-requests/status-draft
+/pharmacy/orders/status-new
+/pharmacy/orders/status-successful/delivery-pickup
+/pharmacy/clients/status-active
+/pharmacy/medicines/status-active/stock-empty
+/pharmacy/medicine-requests/status-draft
 ```
 
 Не використовувати для pagination / rowsPerPage:
 
 ```txt
-/vendor/orders?status=new&page=3&limit=50
+/pharmacy/orders?status=new&page=3&limit=50
 ```
 
 ### У URL зберігаються
@@ -190,7 +190,7 @@ Pagination і rowsPerPage зберігаються локально в state.
 
 ## 2.1. Загальна логіка Auth
 
-Auth сторінки є спільними глобальними сторінками системи, а не частиною `/vendor` route group.
+Auth сторінки є спільними глобальними сторінками системи, а не частиною `/pharmacy` route group.
 
 Рекомендовані routes:
 
@@ -200,7 +200,7 @@ Auth сторінки є спільними глобальними сторін�
 /auth/forgot-password
 ```
 
-Vendor protected routes починаються з `/vendor`.
+Pharmacy protected routes починаються з `/pharmacy`.
 
 Після login backend повертає роль користувача:
 
@@ -211,7 +211,7 @@ client | pharmacy | admin
 Redirect після login:
 
 - `client` → `/profile`;
-- `pharmacy` → `/vendor/dashboard`;
+- `pharmacy` → `/pharmacy/dashboard`;
 - `admin` → `/admin/dashboard`.
 
 ## 2.2. Сторінка реєстрації
@@ -257,7 +257,7 @@ Redirect після login:
 
 Після успішної реєстрації створюється Pharmacy акаунт зі статусом `new`.
 
-Аптека може зайти в Vendor cabinet, але не може продавати ліки, додавати ліки до себе або створювати заявки, поки Admin не активує аптеку.
+Аптека може зайти в Pharmacy cabinet, але не може продавати ліки, додавати ліки до себе або створювати заявки, поки Admin не активує аптеку.
 
 ### Supporting documents
 
@@ -297,12 +297,12 @@ UI має показувати:
 Після успішної реєстрації pharmacy redirect:
 
 ```txt
-/vendor/dashboard
+/pharmacy/dashboard
 ```
 
 ## 2.3. Сторінка login
 
-Login сторінка спільна для Client, Vendor і Admin.
+Login сторінка спільна для Client, Pharmacy і Admin.
 
 Поля:
 
@@ -313,7 +313,7 @@ Login сторінка спільна для Client, Vendor і Admin.
 
 ### Login inactive pharmacy
 
-Якщо аптека має статус `inactive`, вхід у Vendor cabinet блокується.
+Якщо аптека має статус `inactive`, вхід у Pharmacy cabinet блокується.
 
 Повідомлення:
 
@@ -325,7 +325,7 @@ Your account is temporarily inactive. Please contact administration for details.
 
 Якщо аптека має статус `new`, login дозволений.
 
-Після входу аптека переходить на `/vendor/dashboard` і бачить banner:
+Після входу аптека переходить на `/pharmacy/dashboard` і бачить banner:
 
 ```txt
 Your pharmacy is not activated yet. Complete the required information and wait for Admin review.
@@ -336,7 +336,7 @@ Your pharmacy is not activated yet. Complete the required information and wait f
 - зайти в кабінет;
 - переглядати власні дані;
 - редагувати власні дані;
-- переглядати всі ліки, доступні Vendor.
+- переглядати всі ліки, доступні Pharmacy.
 
 Нова аптека не може:
 
@@ -346,7 +346,7 @@ Your pharmacy is not activated yet. Complete the required information and wait f
 
 ## 2.4. Forgot password
 
-Сторінка спільна для Client, Vendor і Admin.
+Сторінка спільна для Client, Pharmacy і Admin.
 
 Користувач вводить email. Backend визначає акаунт і надсилає інструкцію, якщо акаунт існує.
 
@@ -363,7 +363,7 @@ If an account with this email exists, we will send password recovery instruction
 Email має бути унікальним у всій системі:
 
 - Client;
-- Vendor;
+- Pharmacy;
 - Admin.
 
 Один email не може бути одночасно акаунтом клієнта й аптеки.
@@ -371,7 +371,7 @@ Email має бути унікальним у всій системі:
 Phone також унікальний у всій системі:
 
 - Client;
-- Vendor;
+- Pharmacy;
 - Admin.
 
 ## 2.6. Auth reusable components
@@ -394,7 +394,7 @@ Auth сторінки мають використовувати спільні �
 
 ## 3.1. Глобальна логіка layout
 
-У Vendor частині мають бути:
+У Pharmacy частині мають бути:
 
 - Header;
 - Sidebar / ліва частина меню;
@@ -403,29 +403,29 @@ Auth сторінки мають використовувати спільні �
 - protected layout для авторизованої аптеки без Footer;
 - public layout для auth сторінок, який може повторювати Client auth layout.
 
-Footer у protected Vendor layout не використовується.
+Footer у protected Pharmacy layout не використовується.
 
 На сторінці має бути тільки один видимий `<main>`.
 
-## 3.2. Protected Vendor layout
+## 3.2. Protected Pharmacy layout
 
-Protected layout використовується для всіх сторінок Vendor cabinet:
+Protected layout використовується для всіх сторінок Pharmacy cabinet:
 
-- `/vendor/dashboard`;
-- `/vendor/profile`;
-- `/vendor/orders`;
-- `/vendor/clients`;
-- `/vendor/medicines`;
-- `/vendor/all-medicines`;
-- `/vendor/medicine-requests`.
+- `/pharmacy/dashboard`;
+- `/pharmacy/profile`;
+- `/pharmacy/orders`;
+- `/pharmacy/clients`;
+- `/pharmacy/medicines`;
+- `/pharmacy/all-medicines`;
+- `/pharmacy/medicine-requests`.
 
 Базова структура:
 
 ```tsx
 <>
-  <VendorHeader />
+  <PharmacyHeader />
   <div className={css.layout}>
-    <VendorSidebar />
+    <PharmacySidebar />
     <main className={css.main}>{children}</main>
   </div>
 </>
@@ -447,9 +447,9 @@ Sidebar у public layout не показується.
 
 ## 3.4. Header
 
-Vendor Header схожий на Client Header, але має іншу навігаційну логіку.
+Pharmacy Header схожий на Client Header, але має іншу навігаційну логіку.
 
-У Vendor Header є:
+У Pharmacy Header є:
 
 - Logo;
 - auth buttons для неавторизованого користувача;
@@ -457,7 +457,7 @@ Vendor Header схожий на Client Header, але має іншу навіг
 - Logout button;
 - Burger button для mobile/tablet.
 
-У Vendor Header немає:
+У Pharmacy Header немає:
 
 - Client desktop navigation;
 - cart button;
@@ -495,13 +495,13 @@ Links:
 
 - pharmacy photo або fallback initials;
 - pharmacy name;
-- link to `/vendor/profile`.
+- link to `/pharmacy/profile`.
 
 Якщо назва довга — обрізати через `text-overflow: ellipsis`.
 
 ## 3.5. Sidebar
 
-Sidebar — основна desktop-навігація Vendor cabinet.
+Sidebar — основна desktop-навігація Pharmacy cabinet.
 
 Показується тільки в protected layout для статусів:
 
@@ -514,13 +514,13 @@ Sidebar — основна desktop-навігація Vendor cabinet.
 ### Navigation links
 
 ```txt
-Dashboard              /vendor/dashboard
-Orders                 /vendor/orders
-Clients              /vendor/clients
-Own medicines          /vendor/medicines
-All medicines          /vendor/all-medicines
-Medicine requests      /vendor/medicine-requests
-Pharmacy profile       /vendor/profile
+Dashboard              /pharmacy/dashboard
+Orders                 /pharmacy/orders
+Clients              /pharmacy/clients
+Own medicines          /pharmacy/medicines
+All medicines          /pharmacy/all-medicines
+Medicine requests      /pharmacy/medicine-requests
+Pharmacy profile       /pharmacy/profile
 ```
 
 ### Active state
@@ -529,9 +529,9 @@ Active state має працювати для вкладених сторіно�
 
 Приклади:
 
-- `/vendor/orders` і `/vendor/orders/[orderId]` → active `Orders`;
-- `/vendor/clients` і `/vendor/clients/[clientId]` → active `Clients`;
-- `/vendor/medicine-requests`, `/vendor/medicine-requests/new`, `/vendor/medicine-requests/[requestId]`, `/vendor/medicine-requests/[requestId]/edit` → active `Medicine requests`.
+- `/pharmacy/orders` і `/pharmacy/orders/[orderId]` → active `Orders`;
+- `/pharmacy/clients` і `/pharmacy/clients/[clientId]` → active `Clients`;
+- `/pharmacy/medicine-requests`, `/pharmacy/medicine-requests/new`, `/pharmacy/medicine-requests/[requestId]`, `/pharmacy/medicine-requests/[requestId]/edit` → active `Medicine requests`.
 
 ## 3.6. Sidebar для різних статусів аптеки
 
@@ -554,7 +554,7 @@ Active state має працювати для вкладених сторіно�
 
 ### Active pharmacy
 
-Має повний доступ до Vendor cabinet.
+Має повний доступ до Pharmacy cabinet.
 
 ### On moderation pharmacy
 
@@ -573,7 +573,7 @@ Mobile menu відкривається через Burger button.
 - Logo;
 - close button;
 - pharmacy info, якщо user авторизований;
-- Vendor navigation links;
+- Pharmacy navigation links;
 - Logout button.
 
 Mobile menu має:
@@ -648,7 +648,7 @@ Pharmacy profile — це сторінка, де аптека перегляда
 - може зайти в кабінет;
 - може переглядати власні дані;
 - може редагувати власні дані без модерації;
-- може переглядати всі ліки, видимі Vendor;
+- може переглядати всі ліки, видимі Pharmacy;
 - не відображається у Client;
 - не може продавати ліки;
 - не може додавати ліки до себе;
@@ -671,11 +671,11 @@ Your pharmacy is not activated yet. Complete the required information and wait f
 - може продавати ліки;
 - може додавати активні ліки до себе;
 - може створювати заявки;
-- може переглядати всі ліки, видимі Vendor;
+- може переглядати всі ліки, видимі Pharmacy;
 - може редагувати власні дані, але важливі зміни проходять модерацію Admin;
 - може бути переведена Admin у `inactive`.
 
-Якщо active pharmacy змінює важливі дані, публічно в Client та в основних даних Vendor/Admin залишаються попередні підтверджені дані, поки Admin не схвалить pending changes.
+Якщо active pharmacy змінює важливі дані, публічно в Client та в основних даних Pharmacy/Admin залишаються попередні підтверджені дані, поки Admin не схвалить pending changes.
 
 ### On moderation
 
@@ -775,8 +775,8 @@ Requirements:
 
 Email:
 
-- readonly in Vendor profile;
-- unique across Client, Vendor and Admin;
+- readonly in Pharmacy profile;
+- unique across Client, Pharmacy and Admin;
 - used for login;
 - shared component/styles with Client/Admin.
 
@@ -801,7 +801,7 @@ Fields:
 ### Phone
 
 - always required;
-- unique across Client, Vendor and Admin;
+- unique across Client, Pharmacy and Admin;
 - change by active pharmacy requires moderation;
 - change by new pharmacy does not require moderation.
 
@@ -897,9 +897,9 @@ Components:
 
 ## 4.10. Tab: Reviews
 
-Vendor can only view pharmacy reviews.
+Pharmacy can only view pharmacy reviews.
 
-Vendor cannot:
+Pharmacy cannot:
 
 - create reviews;
 - edit reviews;
@@ -994,7 +994,7 @@ Each tab shows only its own pending data:
 
 ## 5.1. Загальна логіка
 
-Dashboard — головна сторінка Vendor після login.
+Dashboard — головна сторінка Pharmacy після login.
 
 Dashboard показує тільки статистику поточної аптеки:
 
@@ -1005,7 +1005,7 @@ Dashboard показує тільки статистику поточної ап
 - quick actions;
 - banners by pharmacy status.
 
-Vendor не бачить статистику інших аптек.
+Pharmacy не бачить статистику інших аптек.
 
 Admin має окремий dashboard.
 
@@ -1017,7 +1017,7 @@ Dashboard доступний для:
 - `active`;
 - `on_moderation`.
 
-Для `inactive` login у Vendor cabinet заблокований, тому Dashboard недоступний.
+Для `inactive` login у Pharmacy cabinet заблокований, тому Dashboard недоступний.
 
 ### New pharmacy
 
@@ -1125,10 +1125,10 @@ Select values:
 Click on status card opens orders table with URL filter:
 
 ```txt
-/vendor/orders/status-new
-/vendor/orders/status-in-progress
-/vendor/orders/status-successful
-/vendor/orders/status-rejected
+/pharmacy/orders/status-new
+/pharmacy/orders/status-in-progress
+/pharmacy/orders/status-successful
+/pharmacy/orders/status-rejected
 ```
 
 ## 5.6. Clients statistics
@@ -1147,9 +1147,9 @@ Recommended cards:
 Click examples:
 
 ```txt
-/vendor/clients
-/vendor/clients/status-active
-/vendor/clients/status-inactive
+/pharmacy/clients
+/pharmacy/clients/status-active
+/pharmacy/clients/status-inactive
 ```
 
 Empty state:
@@ -1191,11 +1191,11 @@ availableValue = availableQuantity * currentPrice
 Click examples:
 
 ```txt
-/vendor/medicines
-/vendor/medicines/status-active
-/vendor/medicines/status-inactive
-/vendor/medicines/stock-empty
-/vendor/medicines/stock-available
+/pharmacy/medicines
+/pharmacy/medicines/status-active
+/pharmacy/medicines/status-inactive
+/pharmacy/medicines/stock-empty
+/pharmacy/medicines/stock-available
 ```
 
 Empty state:
@@ -1223,11 +1223,11 @@ View all medicines
 Click examples:
 
 ```txt
-/vendor/medicine-requests/status-draft
-/vendor/medicine-requests/status-new
-/vendor/medicine-requests/status-in-progress
-/vendor/medicine-requests/status-approved
-/vendor/medicine-requests/status-rejected
+/pharmacy/medicine-requests/status-draft
+/pharmacy/medicine-requests/status-new
+/pharmacy/medicine-requests/status-in-progress
+/pharmacy/medicine-requests/status-approved
+/pharmacy/medicine-requests/status-rejected
 ```
 
 Empty state:
@@ -1256,7 +1256,7 @@ Admin:
 - не редагує замовлення;
 - тільки переглядає.
 
-Vendor:
+Pharmacy:
 
 - бачить тільки замовлення своєї аптеки;
 - обробляє замовлення;
@@ -1272,11 +1272,11 @@ Vendor:
 | Status | Color | Description |
 |---|---|---|
 | `new` | blue | Client confirmed the order |
-| `in_progress` | yellow | Vendor accepted the order for processing |
+| `in_progress` | yellow | Pharmacy accepted the order for processing |
 | `successful` | green | Order completed |
-| `rejected` | red | Order rejected by Vendor |
+| `rejected` | red | Order rejected by Pharmacy |
 
-Для `rejected` Vendor обов’язково вказує rejection reason.
+Для `rejected` Pharmacy обов’язково вказує rejection reason.
 
 ## 6.3. Дозволені переходи статусів
 
@@ -1346,11 +1346,11 @@ When order becomes `rejected`:
 - order remains readonly;
 - rejection reason is stored.
 
-If Vendor edits quantities in `in_progress`, reserve must be updated.
+If Pharmacy edits quantities in `in_progress`, reserve must be updated.
 
-If Vendor adds a product in `in_progress`, it is reserved.
+If Pharmacy adds a product in `in_progress`, it is reserved.
 
-If Vendor removes a product in `in_progress`, reserve is cancelled for that product.
+If Pharmacy removes a product in `in_progress`, reserve is cancelled for that product.
 
 ## 6.5. Fixed prices
 
@@ -1358,9 +1358,9 @@ If Vendor removes a product in `in_progress`, reserve is cancelled for that prod
 
 Якщо після створення замовлення поточна ціна змінилася, order item price не змінюється.
 
-Якщо Vendor змінює кількість товару, який уже є в замовленні, ціна одиниці залишається такою, яка була зафіксована для цієї order item.
+Якщо Pharmacy змінює кількість товару, який уже є в замовленні, ціна одиниці залишається такою, яка була зафіксована для цієї order item.
 
-Якщо Vendor додає новий товар, якого раніше не було в замовленні, для нього фіксується поточна ціна на момент додавання.
+Якщо Pharmacy додає новий товар, якого раніше не було в замовленні, для нього фіксується поточна ціна на момент додавання.
 
 ## 6.6. Orders table
 
@@ -1381,12 +1381,12 @@ First row — newest order.
 Examples:
 
 ```txt
-/vendor/orders/status-new
-/vendor/orders/status-successful/delivery-pickup
-/vendor/orders/status-in-progress/payment-cash
-/vendor/orders/date-2026-06-01_2026-06-30
-/vendor/orders/client-john
-/vendor/orders/order-12345
+/pharmacy/orders/status-new
+/pharmacy/orders/status-successful/delivery-pickup
+/pharmacy/orders/status-in-progress/payment-cash
+/pharmacy/orders/date-2026-06-01_2026-06-30
+/pharmacy/orders/client-john
+/pharmacy/orders/order-12345
 ```
 
 Pagination і rowsPerPage не змінюють URL.
@@ -1437,7 +1437,7 @@ Click on order number opens order details.
 
 Click on client opens client page.
 
-Status badge colors must be the same in Client, Vendor and Admin.
+Status badge colors must be the same in Client, Pharmacy and Admin.
 
 ### Pagination
 
@@ -1521,7 +1521,7 @@ For `successful` and `rejected`:
 
 Allowed only for `in_progress`.
 
-Vendor can:
+Pharmacy can:
 
 - increase quantity;
 - decrease quantity;
@@ -1576,7 +1576,7 @@ If empty:
 The client did not leave a comment.
 ```
 
-### Vendor comment
+### Pharmacy comment
 
 Editable only in `in_progress`.
 
@@ -1596,7 +1596,7 @@ Button label:
 Add products
 ```
 
-The old `Continue shopping` label should not be used in Vendor context.
+The old `Continue shopping` label should not be used in Pharmacy context.
 
 Button opens a product selection modal based on own active medicines.
 
@@ -1628,7 +1628,7 @@ Client створюється тільки через самостійну ре�
 
 Admin може редагувати клієнта.
 
-Vendor не може:
+Pharmacy не може:
 
 - створювати клієнтів;
 - редагувати клієнтів;
@@ -1637,7 +1637,7 @@ Vendor не може:
 - видаляти клієнта;
 - бачити замовлення клієнта в інших аптеках.
 
-Vendor може тільки переглядати клієнтів, які хоча б один раз створили замовлення на поточну аптеку.
+Pharmacy може тільки переглядати клієнтів, які хоча б один раз створили замовлення на поточну аптеку.
 
 ## 7.2. Статуси клієнтів
 
@@ -1650,13 +1650,13 @@ For inactive client, Admin must provide blocking reason.
 
 Inactive client cannot login, create orders, edit profile or leave reviews.
 
-Vendor can still view order history of inactive clients for current pharmacy.
+Pharmacy can still view order history of inactive clients for current pharmacy.
 
-## 7.3. Vendor client definition
+## 7.3. Pharmacy client definition
 
-Власний клієнт Vendor — це клієнт, який хоча б один раз створив замовлення на поточну аптеку.
+Власний клієнт Pharmacy — це клієнт, який хоча б один раз створив замовлення на поточну аптеку.
 
-У Vendor таблиці й карточці клієнта використовується одна дата:
+У Pharmacy таблиці й карточці клієнта використовується одна дата:
 
 ```txt
 firstOrderAt
@@ -1685,13 +1685,13 @@ firstOrderAt: desc
 Examples:
 
 ```txt
-/vendor/clients/status-active
-/vendor/clients/status-inactive
-/vendor/clients/date-2026-06-01_2026-06-30
-/vendor/clients/name-john
-/vendor/clients/email-test-example-com
-/vendor/clients/phone-380501234567
-/vendor/clients/address-kyiv
+/pharmacy/clients/status-active
+/pharmacy/clients/status-inactive
+/pharmacy/clients/date-2026-06-01_2026-06-30
+/pharmacy/clients/name-john
+/pharmacy/clients/email-test-example-com
+/pharmacy/clients/phone-380501234567
+/pharmacy/clients/address-kyiv
 ```
 
 Date filter works by `firstOrderAt`.
@@ -1856,11 +1856,11 @@ Could not load client data. Please try again.
 Client not found.
 ```
 
-The empty state is mainly defensive, because a client should only appear in Vendor clients after first order.
+The empty state is mainly defensive, because a client should only appear in Pharmacy clients after first order.
 
 ## 7.6. Client toasts
 
-Vendor pages for clients are mostly readonly.
+Pharmacy pages for clients are mostly readonly.
 
 Toasts may be used for technical actions:
 
@@ -1879,14 +1879,14 @@ Could not load data. Please try again.
 
 Ліки створюються і редагуються тільки в Admin.
 
-Vendor не може:
+Pharmacy не може:
 
 - створювати глобальні ліки напряму;
 - редагувати глобальні дані ліків;
 - вручну редагувати ціну;
 - вручну редагувати кількість на складі.
 
-Vendor може:
+Pharmacy може:
 
 - бачити активні й неактивні ліки;
 - додати активні ліки до своєї аптеки;
@@ -1905,14 +1905,14 @@ Vendor може:
 
 Статус показує поточний статус конкретних ліків, незалежно від таблиці.
 
-Vendor не бачить ліки зі статусом `new`. Цей статус бачить тільки Admin.
+Pharmacy не бачить ліки зі статусом `new`. Цей статус бачить тільки Admin.
 
-Vendor бачить:
+Pharmacy бачить:
 
 - `active` medicines;
 - `inactive` medicines.
 
-Vendor може додати до аптеки тільки `active` medicines.
+Pharmacy може додати до аптеки тільки `active` medicines.
 
 ## 8.3. Global medicine vs pharmacy medicine
 
@@ -1951,11 +1951,11 @@ Fields:
 - addedAt;
 - updatedAt.
 
-Vendor працює саме з pharmacy medicine data, але не редагує global medicine data.
+Pharmacy працює саме з pharmacy medicine data, але не редагує global medicine data.
 
 ## 8.4. Price and stock
 
-Поточна ціна й кількість не редагуються вручну у Vendor.
+Поточна ціна й кількість не редагуються вручну у Pharmacy.
 
 Ці дані приходять зі сторонньої програми через API.
 
@@ -2002,13 +2002,13 @@ addedAt: desc
 Examples:
 
 ```txt
-/vendor/medicines/status-active
-/vendor/medicines/status-inactive
-/vendor/medicines/stock-empty
-/vendor/medicines/stock-available
-/vendor/medicines/category-antibiotics
-/vendor/medicines/name-aspirin
-/vendor/medicines/article-abc123
+/pharmacy/medicines/status-active
+/pharmacy/medicines/status-inactive
+/pharmacy/medicines/stock-empty
+/pharmacy/medicines/stock-available
+/pharmacy/medicines/category-antibiotics
+/pharmacy/medicines/name-aspirin
+/pharmacy/medicines/article-abc123
 ```
 
 Filters:
@@ -2034,7 +2034,7 @@ Filters:
 
 Status is global medicine status: `active` or `inactive`.
 
-Vendor never sees `new` medicines.
+Pharmacy never sees `new` medicines.
 
 ### States
 
@@ -2064,7 +2064,7 @@ No medicines found for the selected filters.
 
 ## 8.7. All medicines table
 
-Показує global medicines з Admin, які Vendor може переглядати:
+Показує global medicines з Admin, які Pharmacy може переглядати:
 
 - active;
 - inactive.
@@ -2078,10 +2078,10 @@ Same as own medicines, але date filter works by global medicine `createdAt`.
 Examples:
 
 ```txt
-/vendor/all-medicines/status-active
-/vendor/all-medicines/status-inactive
-/vendor/all-medicines/category-antibiotics
-/vendor/all-medicines/article-abc123
+/pharmacy/all-medicines/status-active
+/pharmacy/all-medicines/status-inactive
+/pharmacy/all-medicines/category-antibiotics
+/pharmacy/all-medicines/article-abc123
 ```
 
 ### Columns
@@ -2134,7 +2134,7 @@ Could not add medicine. Please try again.
 
 Цю дію можна зробити з таблиці всіх ліків.
 
-Vendor може видалити ліки зі своєї аптеки тільки якщо:
+Pharmacy може видалити ліки зі своєї аптеки тільки якщо:
 
 - ліки були додані до аптеки;
 - по цих ліках ще не було жодного замовлення;
@@ -2162,7 +2162,7 @@ This medicine cannot be removed because it already has related orders.
 
 ## 8.9. Medicine card
 
-Одна карточка ліків використовується незалежно від того, звідки Vendor перейшов:
+Одна карточка ліків використовується незалежно від того, звідки Pharmacy перейшов:
 
 - own medicines;
 - all medicines.
@@ -2183,9 +2183,9 @@ If medicine is added to current pharmacy, show:
 
 If medicine is not added, show only global data and action `Add to pharmacy` if status is active.
 
-Vendor cannot edit global medicine data.
+Pharmacy cannot edit global medicine data.
 
-Vendor cannot manually edit price and quantity.
+Pharmacy cannot manually edit price and quantity.
 
 ### Left block
 
@@ -2268,7 +2268,7 @@ Sources:
 
 - External API;
 - Order;
-- Vendor action;
+- Pharmacy action;
 - System.
 
 Empty:
@@ -2301,7 +2301,7 @@ There are no orders with this medicine yet.
 
 Shows Admin data.
 
-Vendor cannot edit.
+Pharmacy cannot edit.
 
 Style should match Client product card characteristics.
 
@@ -2315,7 +2315,7 @@ Characteristics for this medicine have not been added yet.
 
 Readonly.
 
-Vendor cannot create/edit/delete/moderate reviews.
+Pharmacy cannot create/edit/delete/moderate reviews.
 
 Empty:
 
@@ -2331,9 +2331,9 @@ This medicine has no reviews yet.
 
 Medicine requests потрібні, коли аптека продає ліки, яких ще немає в глобальному Admin catalog.
 
-Vendor не створює global medicine напряму.
+Pharmacy не створює global medicine напряму.
 
-Vendor може:
+Pharmacy може:
 
 - створити draft request;
 - поступово заповнювати дані;
@@ -2354,16 +2354,16 @@ Client не бачить requests.
 
 ## 9.2. Before creating request
 
-Vendor створює request тільки якщо потрібних ліків немає в All medicines table.
+Pharmacy створює request тільки якщо потрібних ліків немає в All medicines table.
 
-Перед створенням request Vendor має перевірити:
+Перед створенням request Pharmacy має перевірити:
 
 - name;
 - article;
 - category;
 - manufacturer, if filter exists.
 
-If medicine already exists and is active, Vendor should add it to pharmacy instead of creating request.
+If medicine already exists and is active, Pharmacy should add it to pharmacy instead of creating request.
 
 If medicine exists but inactive:
 
@@ -2375,8 +2375,8 @@ This medicine already exists in the system, but it is currently inactive. Contac
 
 | Status | Color | Description |
 |---|---|---|
-| `draft` | gray | Vendor created a draft but did not submit it |
-| `new` | blue | Vendor submitted request, Admin has not started review |
+| `draft` | gray | Pharmacy created a draft but did not submit it |
+| `new` | blue | Pharmacy submitted request, Admin has not started review |
 | `in_progress` | yellow | Admin is reviewing the request |
 | `approved` | green | Admin created medicine based on request |
 | `rejected` | red | Admin rejected request |
@@ -2400,12 +2400,12 @@ Admin first moves it to `in_progress`.
 
 Draft:
 
-- visible only to Vendor;
+- visible only to Pharmacy;
 - invisible to Admin;
-- editable by Vendor;
+- editable by Pharmacy;
 - can be saved with partial data;
 - can be submitted to Admin;
-- can be deleted by Vendor if allowed in implementation.
+- can be deleted by Pharmacy if allowed in implementation.
 
 Minimum fields to save draft:
 
@@ -2415,12 +2415,12 @@ Minimum fields to save draft:
 
 ## 9.6. New request
 
-Created when Vendor clicks `Send to moderation`.
+Created when Pharmacy clicks `Send to moderation`.
 
 Request:
 
 - becomes visible to Admin;
-- readonly for Vendor;
+- readonly for Pharmacy;
 - can be moved by Admin to `in_progress`.
 
 ## 9.7. In progress request
@@ -2434,7 +2434,7 @@ Admin can:
 - create medicine;
 - reject request.
 
-Vendor can only view and wait.
+Pharmacy can only view and wait.
 
 ## 9.8. Approved request
 
@@ -2443,8 +2443,8 @@ After approval:
 - global medicine is created;
 - request is linked to created medicine;
 - request stores link to created medicine;
-- Vendor can open created medicine;
-- Vendor can add medicine to pharmacy if it is active.
+- Pharmacy can open created medicine;
+- Pharmacy can add medicine to pharmacy if it is active.
 
 Approval does not automatically add medicine to pharmacy.
 
@@ -2463,7 +2463,7 @@ Possible reasons:
 - duplicate request;
 - other reason.
 
-Vendor sees rejection reason in request card.
+Pharmacy sees rejection reason in request card.
 
 ## 9.10. Requests table
 
@@ -2522,13 +2522,13 @@ Click on name opens request card.
 Examples:
 
 ```txt
-/vendor/medicine-requests/status-draft
-/vendor/medicine-requests/status-new
-/vendor/medicine-requests/status-in-progress
-/vendor/medicine-requests/status-approved
-/vendor/medicine-requests/status-rejected
-/vendor/medicine-requests/category-antibiotics
-/vendor/medicine-requests/article-abc123
+/pharmacy/medicine-requests/status-draft
+/pharmacy/medicine-requests/status-new
+/pharmacy/medicine-requests/status-in-progress
+/pharmacy/medicine-requests/status-approved
+/pharmacy/medicine-requests/status-rejected
+/pharmacy/medicine-requests/category-antibiotics
+/pharmacy/medicine-requests/article-abc123
 ```
 
 Filters:
@@ -2564,8 +2564,8 @@ Reset filters
 Routes:
 
 ```txt
-/vendor/medicine-requests/new
-/vendor/medicine-requests/[requestId]/edit
+/pharmacy/medicine-requests/new
+/pharmacy/medicine-requests/[requestId]/edit
 ```
 
 Modes:
@@ -2599,7 +2599,7 @@ Same main fields as Admin create medicine page:
 - short description;
 - full description;
 - characteristics;
-- Vendor comment;
+- Pharmacy comment;
 - additional files/documents if needed.
 
 ### Required fields for moderation
@@ -2611,7 +2611,7 @@ To send to moderation:
 - category;
 - manufacturer;
 - short description;
-- Vendor comment.
+- Pharmacy comment.
 
 If required fields are missing, button should be disabled or errors should appear after click.
 
@@ -2657,7 +2657,7 @@ Could not send request. Please try again.
 Route:
 
 ```txt
-/vendor/medicine-requests/[requestId]
+/pharmacy/medicine-requests/[requestId]
 ```
 
 Card should look like medicine card.
@@ -2671,7 +2671,7 @@ Show:
 - status;
 - short description;
 - characteristics;
-- Vendor comment;
+- Pharmacy comment;
 - created date;
 - submitted date if submitted;
 - Admin comment;
@@ -2742,7 +2742,7 @@ New draft copies fields from rejected request, but:
 - has new `createdAt`;
 - does not have status history of previous request;
 - does not have `adminRejectReason`;
-- does not have `adminComment`, unless Vendor needs to see it;
+- does not have `adminComment`, unless Pharmacy needs to see it;
 - is not automatically sent to moderation.
 
 ---
@@ -2751,7 +2751,7 @@ New draft copies fields from rejected request, but:
 
 ## 10.1. Error page
 
-Vendor error page should reuse Client error page structure and styles.
+Pharmacy error page should reuse Client error page structure and styles.
 
 Use:
 
@@ -2772,7 +2772,7 @@ Back to dashboard
 Back route:
 
 ```txt
-/vendor/dashboard
+/pharmacy/dashboard
 ```
 
 Accessibility:
@@ -2786,7 +2786,7 @@ Accessibility:
 
 ## 10.2. 404 page
 
-Vendor 404 should reuse Client 404 styles and layout.
+Pharmacy 404 should reuse Client 404 styles and layout.
 
 Actions:
 
@@ -2798,8 +2798,8 @@ View all medicines
 Routes:
 
 ```txt
-/vendor/dashboard
-/vendor/all-medicines
+/pharmacy/dashboard
+/pharmacy/all-medicines
 ```
 
 If route exists but entity does not, use local not found state:
@@ -2809,7 +2809,7 @@ If route exists but entity does not, use local not found state:
 - medicine not found;
 - request not found.
 
-If route does not exist, show general Vendor 404.
+If route does not exist, show general Pharmacy 404.
 
 ## 10.3. LoadingSpinner
 
@@ -2881,19 +2881,19 @@ Every table should have:
 
 ## 11.1. Route principles
 
-- Auth routes are global, not under `/vendor`.
-- Vendor protected routes start with `/vendor`.
+- Auth routes are global, not under `/pharmacy`.
+- Pharmacy protected routes start with `/pharmacy`.
 - Filters use path segments.
 - Pagination and rowsPerPage stay in local state.
 - Breadcrumbs are built from route data.
 - Every page has h1.
-- Protected Vendor layout has no Footer.
+- Protected Pharmacy layout has no Footer.
 - Only one visible `<main>` per page.
 
 ## 11.2. Suggested App Router structure
 
 ```txt
-apps/vendor/app/
+apps/pharmacy/app/
   (auth)/
     auth/
       login/page.tsx
@@ -2901,7 +2901,7 @@ apps/vendor/app/
       forgot-password/page.tsx
       layout.tsx
 
-  vendor/
+  pharmacy/
     layout.tsx
     loading.tsx
     error.tsx
@@ -2955,21 +2955,21 @@ apps/vendor/app/
 Щоб не створювати багато фізичних папок для кожної комбінації фільтрів, можна використати catch-all route:
 
 ```txt
-/vendor/orders/[[...filters]]
-/vendor/clients/[[...filters]]
-/vendor/medicines/[[...filters]]
-/vendor/all-medicines/[[...filters]]
-/vendor/medicine-requests/[[...filters]]
+/pharmacy/orders/[[...filters]]
+/pharmacy/clients/[[...filters]]
+/pharmacy/medicines/[[...filters]]
+/pharmacy/all-medicines/[[...filters]]
+/pharmacy/medicine-requests/[[...filters]]
 ```
 
 Examples:
 
 ```txt
-/vendor/orders/status-new
-/vendor/orders/status-successful/delivery-pickup
-/vendor/clients/status-active
-/vendor/medicines/status-active/stock-empty
-/vendor/medicine-requests/status-draft
+/pharmacy/orders/status-new
+/pharmacy/orders/status-successful/delivery-pickup
+/pharmacy/clients/status-active
+/pharmacy/medicines/status-active/stock-empty
+/pharmacy/medicine-requests/status-draft
 ```
 
 Recommended approach for implementation: catch-all route + filter parser utility.
@@ -3059,36 +3059,36 @@ Shared validation schemas:
 Shared API clients:
 
 - auth API;
-- vendor profile API;
-- vendor dashboard API;
-- vendor orders API;
-- vendor clients API;
-- vendor medicines API;
-- vendor medicine requests API.
+- pharmacy profile API;
+- pharmacy dashboard API;
+- pharmacy orders API;
+- pharmacy clients API;
+- pharmacy medicines API;
+- pharmacy medicine requests API.
 
-## 12.6. apps/vendor
+## 12.6. apps/pharmacy
 
-Vendor-specific logic:
+Pharmacy-specific logic:
 
-- Vendor pages;
-- Vendor layouts;
-- Vendor sidebar/mobile menu;
-- Vendor feature components;
-- Vendor filter parser;
-- Vendor table composition;
-- Vendor access guards;
-- Vendor route metadata.
+- Pharmacy pages;
+- Pharmacy layouts;
+- Pharmacy sidebar/mobile menu;
+- Pharmacy feature components;
+- Pharmacy filter parser;
+- Pharmacy table composition;
+- Pharmacy access guards;
+- Pharmacy route metadata.
 
 ## 12.7. apps/api
 
-Backend modules needed for Vendor:
+Backend modules needed for Pharmacy:
 
 - auth/users;
 - pharmacies;
 - pharmacy moderation;
-- vendor dashboard;
-- vendor orders;
-- vendor clients;
+- pharmacy dashboard;
+- pharmacy orders;
+- pharmacy clients;
 - global medicines;
 - pharmacy medicines;
 - stock movement;
@@ -3101,7 +3101,7 @@ Backend modules needed for Vendor:
 
 # Фінальний висновок
 
-Vendor ТЗ логічно ділиться на такі глобальні частини:
+Pharmacy ТЗ логічно ділиться на такі глобальні частини:
 
 - Auth та доступ;
 - Layout та navigation;
@@ -3124,10 +3124,10 @@ Vendor ТЗ логічно ділиться на такі глобальні ч�
 - status changes to successful/rejected є остаточними й підтверджуються modal;
 - ціна існуючого order item не змінюється при зміні кількості;
 - новий item у замовленні отримує поточну ціну на момент додавання;
-- Vendor не бачить medicines зі статусом `new`;
+- Pharmacy не бачить medicines зі статусом `new`;
 - видалення medicine from pharmacy описано окремо;
 - request flow строгий: Draft → New → In progress → Approved/Rejected;
 - rejected request can create a new draft based on previous data;
-- Auth routes are global, Vendor protected routes start with `/vendor`;
-- protected Vendor layout не має Footer.
+- Auth routes are global, Pharmacy protected routes start with `/pharmacy`;
+- protected Pharmacy layout не має Footer.
 

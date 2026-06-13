@@ -59,19 +59,20 @@ export const apiRoutes = {
     details: (orderId: EntityId) => `/orders/${orderId}`,
   },
 
-  vendor: {
-    shops: '/vendor/shops',
-    shop: (shopId: EntityId) => `/vendor/shops/${shopId}`,
-    products: (shopId: EntityId) => `/vendor/shops/${shopId}/products`,
+  pharmacy: {
+    shops: '/pharmacy/shops',
+    shop: (shopId: EntityId) => `/pharmacy/shops/${shopId}`,
+    products: (shopId: EntityId) => `/pharmacy/shops/${shopId}/products`,
     product: (shopId: EntityId, productId: EntityId) =>
-      `/vendor/shops/${shopId}/products/${productId}`,
-    statistics: (shopId: EntityId) => `/vendor/shops/${shopId}/statistics`,
-    clientGoods: (shopId: EntityId) => `/vendor/shops/${shopId}/client-goods`,
+      `/pharmacy/shops/${shopId}/products/${productId}`,
+    statistics: (shopId: EntityId) => `/pharmacy/shops/${shopId}/statistics`,
+    clientGoods: (shopId: EntityId) => `/pharmacy/shops/${shopId}/client-goods`,
   },
 
   admin: {
-    vendors: '/admin/vendors',
-    vendorStatus: (vendorId: EntityId) => `/admin/vendors/${vendorId}/status`,
+    pharmacies: '/admin/pharmacies',
+    pharmacyStatus: (pharmacyId: EntityId) =>
+      `/admin/pharmacies/${pharmacyId}/status`,
     shops: '/admin/shops',
     shopStatus: (shopId: EntityId) => `/admin/shops/${shopId}/status`,
   },

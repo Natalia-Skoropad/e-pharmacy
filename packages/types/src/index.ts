@@ -8,4 +8,3 @@ export type * from './products';
 export type * from './reviews';
 export type * from './shared';
 export type * from './stores';
-export type * from './vendor';

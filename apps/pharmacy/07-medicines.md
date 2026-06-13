@@ -1,14 +1,14 @@
-# Vendor Technical Specification — Medicines
+# Pharmacy Technical Specification — Medicines
 
 ## 1. General logic
 
 Medicines are created and edited only in Admin.
 
-Vendor cannot create or edit global medicine data directly.
+Pharmacy cannot create or edit global medicine data directly.
 
-Vendor can add existing active Admin medicines to the current pharmacy.
+Pharmacy can add existing active Admin medicines to the current pharmacy.
 
-Vendor works with pharmacy-specific medicine data:
+Pharmacy works with pharmacy-specific medicine data:
 
 - stock quantity;
 - reserved quantity;
@@ -16,21 +16,21 @@ Vendor works with pharmacy-specific medicine data:
 - current price;
 - date added to pharmacy.
 
-Price and stock quantity are not edited manually in Vendor. They come from an external pharmacy system through API.
+Price and stock quantity are not edited manually in Pharmacy. They come from an external pharmacy system through API.
 
 ## 2. Global medicine statuses
 
 All medicines in the system have one global status, regardless of which table they are shown in.
 
-| Status     | Color | Meaning                                                     | Visible to Vendor |
-| ---------- | ----- | ----------------------------------------------------------- | ----------------- |
-| `new`      | Blue  | Medicine created in Admin but not activated yet             | No                |
-| `active`   | Green | Medicine can be added to pharmacies                         | Yes               |
-| `inactive` | Red   | Medicine is temporarily or permanently deactivated by Admin | Yes               |
+| Status     | Color | Meaning                                                     | Visible to Pharmacy |
+| ---------- | ----- | ----------------------------------------------------------- | ------------------- |
+| `new`      | Blue  | Medicine created in Admin but not activated yet             | No                  |
+| `active`   | Green | Medicine can be added to pharmacies                         | Yes                 |
+| `inactive` | Red   | Medicine is temporarily or permanently deactivated by Admin | Yes                 |
 
 The `new` status is visible only to Admin.
 
-Vendor never sees medicines with status `new`.
+Pharmacy never sees medicines with status `new`.
 
 ## 3. Global medicine data
 
@@ -54,7 +54,7 @@ Global data belongs to Admin:
 - createdAt;
 - updatedAt.
 
-Vendor cannot edit these fields.
+Pharmacy cannot edit these fields.
 
 ## 4. Pharmacy medicine data
 
@@ -72,13 +72,13 @@ Fields:
 - addedAt;
 - updatedAt.
 
-Vendor sees and works only with pharmacy medicine data of the current pharmacy.
+Pharmacy sees and works only with pharmacy medicine data of the current pharmacy.
 
 ## 5. Active medicines
 
 Active medicines:
 
-- are visible in Vendor all medicines table;
+- are visible in Pharmacy all medicines table;
 - can be added to current pharmacy;
 - can appear in Client only after being added to at least one active or on-moderation pharmacy;
 - can be changed to inactive only by Admin.
@@ -95,9 +95,9 @@ Medicine appears in Client only if:
 
 Inactive medicines:
 
-- are visible in Vendor all medicines table;
+- are visible in Pharmacy all medicines table;
 - cannot be added to a pharmacy;
-- can be visible in Vendor own medicines if they were previously added;
+- can be visible in Pharmacy own medicines if they were previously added;
 - do not appear in Client;
 - keep order history, statistics, and stock movement history;
 - cannot be added to new orders.
@@ -110,7 +110,7 @@ Admin must provide a required reason when setting medicine status to `inactive`.
 
 `stockQuantity` and `currentPrice` come from an external pharmacy program through API.
 
-Vendor does not manually edit:
+Pharmacy does not manually edit:
 
 - current price;
 - stock quantity.
@@ -152,7 +152,7 @@ When order becomes `rejected`:
 Route:
 
 ```txt
-/vendor/medicines
+/pharmacy/medicines
 ```
 
 Shows only medicines added to the current pharmacy.
@@ -181,10 +181,10 @@ Filters must change URL using clean filter routes.
 Examples:
 
 ```txt
-/vendor/medicines/status-active
-/vendor/medicines/status-inactive
-/vendor/medicines/stock-empty
-/vendor/medicines/status-active/stock-available
+/pharmacy/medicines/status-active
+/pharmacy/medicines/status-inactive
+/pharmacy/medicines/stock-empty
+/pharmacy/medicines/status-active/stock-available
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -262,7 +262,7 @@ stockQuantity
 
 Comes from external API.
 
-Readonly in Vendor.
+Readonly in pharmacy.
 
 ### Reserved quantity
 
@@ -294,7 +294,7 @@ currentPrice
 
 Comes from external API.
 
-Readonly in Vendor.
+Readonly in Pharmacy.
 
 ### Status
 
@@ -340,17 +340,17 @@ Reset filters
 Route:
 
 ```txt
-/vendor/all-medicines
+/pharmacy/all-medicines
 ```
 
-Shows Admin medicines that Vendor can view:
+Shows Admin medicines that Pharmacy can view:
 
 - `active` medicines;
 - `inactive` medicines.
 
 Does not show `new` medicines.
 
-Vendor can add only `active` medicines to own pharmacy.
+Pharmacy can add only `active` medicines to own pharmacy.
 
 Inactive medicines are visible but cannot be added.
 
@@ -367,9 +367,9 @@ medicine.createdAt
 Filter examples:
 
 ```txt
-/vendor/all-medicines/status-active
-/vendor/all-medicines/status-inactive
-/vendor/all-medicines/category-antibiotics
+/pharmacy/all-medicines/status-active
+/pharmacy/all-medicines/status-inactive
+/pharmacy/all-medicines/category-antibiotics
 ```
 
 ## 15. All medicines columns
@@ -445,7 +445,7 @@ until external API synchronization provides real data.
 
 This action is available from the All medicines table.
 
-Vendor can remove medicine from own pharmacy only if:
+Pharmacy can remove medicine from own pharmacy only if:
 
 - medicine was added to the pharmacy;
 - there are no orders with this medicine;
@@ -491,8 +491,8 @@ This medicine cannot be removed because it already has order history.
 Route examples:
 
 ```txt
-/vendor/medicines/[medicineId]
-/vendor/all-medicines/[medicineId]
+/pharmacy/medicines/[medicineId]
+/pharmacy/all-medicines/[medicineId]
 ```
 
 The medicine card is the same regardless of entry point.
@@ -623,7 +623,7 @@ Sources:
 ```txt
 External API
 Order
-Vendor action
+Pharmacy action
 System
 ```
 
@@ -671,7 +671,7 @@ This medicine is not added to your pharmacy, so related orders are unavailable.
 
 Shows characteristics from Admin.
 
-Vendor cannot edit them.
+Pharmacy cannot edit them.
 
 Use the same style as Client product details.
 
@@ -685,9 +685,9 @@ Characteristics for this medicine have not been added yet.
 
 ## 27. Tab: Reviews
 
-Vendor can only view medicine reviews.
+Pharmacy can only view medicine reviews.
 
-Vendor cannot:
+Pharmacy cannot:
 
 - create reviews;
 - edit reviews;
@@ -735,7 +735,7 @@ Not found state:
 Medicine not found.
 ```
 
-Vendor must not see:
+Pharmacy must not see:
 
 - medicines with status `new`;
 - pharmacy-specific medicine data of other pharmacies.

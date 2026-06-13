@@ -13,7 +13,7 @@ import {
 import {
   USER_ROLES,
   USER_STATUSES,
-  VENDOR_ACCOUNT_STATUSES,
+  PHARMACY_ACCOUNT_STATUSES,
 } from '../constants/auth';
 
 import type { UserEntity } from '../types/user';
@@ -57,9 +57,9 @@ const userSchema = new Schema<UserEntity>(
       required: true,
     },
 
-    vendorStatus: {
+    pharmacyStatus: {
       type: String,
-      enum: Object.values(VENDOR_ACCOUNT_STATUSES),
+      enum: Object.values(PHARMACY_ACCOUNT_STATUSES),
       default: undefined,
     },
 
@@ -147,7 +147,7 @@ const userSchema = new Schema<UserEntity>(
 
 //===============================================================
 
-userSchema.index({ role: 1, status: 1, vendorStatus: 1 });
+userSchema.index({ role: 1, status: 1, pharmacyStatus: 1 });
 userSchema.index({ approvedBy: 1 });
 
 //===============================================================

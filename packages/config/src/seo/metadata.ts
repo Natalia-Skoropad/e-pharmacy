@@ -17,8 +17,8 @@ export const SEO_STRATEGIES = {
     privateRoutesNoIndex: true,
   },
 
-  vendor: {
-    app: 'vendor',
+  pharmacy: {
+    app: 'pharmacy',
     shouldIndexPublicPages: false,
     privateRoutesNoIndex: true,
   },

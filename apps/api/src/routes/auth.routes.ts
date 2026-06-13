@@ -7,7 +7,7 @@ import {
   getAdminOnlyTest,
   getCurrentUser,
   getClientOnlyTest,
-  getVendorOnlyTest,
+  getPharmacyOnlyTest,
   loginUser,
   logoutAllUserSessions,
   logoutUser,
@@ -129,10 +129,10 @@ if (env.NODE_ENV !== 'production') {
   );
 
   authRoutes.get(
-    '/test/vendor',
+    '/test/pharmacy',
     authenticate,
-    authorizeRoles(USER_ROLES.VENDOR),
-    ctrlWrapper(getVendorOnlyTest)
+    authorizeRoles(USER_ROLES.PHARMACY),
+    ctrlWrapper(getPharmacyOnlyTest)
   );
 
   authRoutes.get(

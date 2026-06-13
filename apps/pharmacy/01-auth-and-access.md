@@ -1,8 +1,8 @@
-# Vendor Technical Specification — Auth and Access
+# Pharmacy Technical Specification — Auth and Access
 
 ## 1. General auth strategy
 
-Auth pages are shared global system pages, not a part of the `/vendor` route group.
+Auth pages are shared global system pages, not a part of the `/pharmacy` route group.
 
 Shared auth routes:
 
@@ -12,12 +12,12 @@ Shared auth routes:
 /auth/forgot-password
 ```
 
-Vendor protected routes start with `/vendor`.
+Pharmacy protected routes start with `/pharmacy`.
 
 After login, a user with the `pharmacy` role is redirected to:
 
 ```txt
-/vendor/dashboard
+/pharmacy/dashboard
 ```
 
 ## 2. Account types
@@ -75,7 +75,7 @@ After successful pharmacy registration:
 
 - a pharmacy account is created;
 - pharmacy status becomes `new`;
-- pharmacy can enter the Vendor cabinet;
+- pharmacy can enter the Pharmacy cabinet;
 - pharmacy cannot sell medicines, add medicines, or create medicine requests before Admin activation.
 
 ## 4. Pharmacy documents upload
@@ -140,15 +140,15 @@ After successful login, backend returns the user role.
 
 Redirects:
 
-| Role       | Redirect            |
-| ---------- | ------------------- |
-| `client`   | `/profile`          |
-| `pharmacy` | `/vendor/dashboard` |
-| `admin`    | `/admin/dashboard`  |
+| Role       | Redirect              |
+| ---------- | --------------------- |
+| `client`   | `/profile`            |
+| `pharmacy` | `/pharmacy/dashboard` |
+| `admin`    | `/admin/dashboard`    |
 
 ## 6. Inactive pharmacy login
 
-If pharmacy status is `inactive`, Vendor cabinet access is blocked.
+If pharmacy status is `inactive`, Pharmacy cabinet access is blocked.
 
 Message:
 
@@ -163,7 +163,7 @@ If pharmacy status is `new`, login is allowed.
 After login, redirect to:
 
 ```txt
-/vendor/dashboard
+/pharmacy/dashboard
 ```
 
 Show banner:
@@ -177,7 +177,7 @@ New pharmacy can:
 - enter the cabinet;
 - view own data;
 - edit own data without moderation;
-- view all Admin medicines available to Vendor.
+- view all Admin medicines available to Pharmacy.
 
 New pharmacy cannot:
 
@@ -207,11 +207,11 @@ Do not reveal whether the email exists in the system.
 
 If an authenticated user opens an auth page, redirect by role:
 
-| Role       | Redirect            |
-| ---------- | ------------------- |
-| `client`   | `/profile`          |
-| `pharmacy` | `/vendor/dashboard` |
-| `admin`    | `/admin/dashboard`  |
+| Role       | Redirect              |
+| ---------- | --------------------- |
+| `client`   | `/profile`            |
+| `pharmacy` | `/pharmacy/dashboard` |
+| `admin`    | `/admin/dashboard`    |
 
 ## 10. Shared auth components
 

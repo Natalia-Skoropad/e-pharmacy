@@ -26,7 +26,7 @@ export function createRobotsConfig({
   siteUrl,
   disallowRoutes = [],
 }: CreateRobotsConfigParams): RobotsConfig {
-  if (app === 'vendor' || app === 'admin') {
+  if (app === 'pharmacy' || app === 'admin') {
     return {
       rules: {
         userAgent: '*',

@@ -1,21 +1,21 @@
-# Vendor Technical Specification — General Overview
+# Pharmacy Technical Specification — General Overview
 
 ## 1. Purpose
 
-The Vendor part is the pharmacy cabinet in the E-PHARMACY ecosystem. It allows a pharmacy to manage its own profile, orders, clients, medicines, medicine creation requests, and dashboard statistics.
+The Pharmacy part is the pharmacy cabinet in the E-PHARMACY ecosystem. It allows a pharmacy to manage its own profile, orders, clients, medicines, medicine creation requests, and dashboard statistics.
 
-The Vendor app works together with:
+The Pharmacy app works together with:
 
 - **Client** — public storefront where clients browse pharmacies, medicines, cart, checkout, orders, and reviews.
 - **Admin** — back-office where administrators moderate pharmacies, manage global medicines, review requests, view orders, and manage clients.
 - **API** — shared backend for all apps.
 - **Shared packages** — reusable UI, types, validation, config, API client, and utilities.
 
-At this stage, this Vendor specification is the source of truth for future Vendor implementation. Existing backend/client code may need to be gradually aligned with it.
+At this stage, this Pharmacy specification is the source of truth for future Pharmacy implementation. Existing backend/client code may need to be gradually aligned with it.
 
-## 2. Main Vendor areas
+## 2. Main Pharmacy areas
 
-The Vendor app consists of the following global parts:
+The Pharmacy app consists of the following global parts:
 
 1. **Auth and access**
    - shared login/register/password-recovery pages;
@@ -28,7 +28,7 @@ The Vendor app consists of the following global parts:
    - Sidebar;
    - Mobile menu;
    - Breadcrumbs;
-   - protected Vendor layout without Footer;
+   - protected Pharmacy layout without Footer;
    - public auth layout that may reuse the Client auth layout.
 
 3. **Dashboard**
@@ -81,9 +81,9 @@ The Vendor app consists of the following global parts:
 
 ## 3. Core access principle
 
-Vendor always sees and works only with the data of the current pharmacy.
+Pharmacy always sees and works only with the data of the current pharmacy.
 
-Vendor must not see:
+Pharmacy must not see:
 
 - orders of other pharmacies;
 - clients who never ordered from this pharmacy;
@@ -104,7 +104,7 @@ Vendor must not see:
 - order creation;
 - client reviews.
 
-### Vendor owns
+### Pharmacy owns
 
 - own pharmacy profile editing according to status rules;
 - own order processing;
@@ -137,24 +137,24 @@ The same colors must be used consistently across Dashboard, tables, details page
 
 ## 6. Filter URL strategy
 
-Vendor table filters must change the URL. Pagination and rows-per-page must not change the URL.
+Pharmacy table filters must change the URL. Pagination and rows-per-page must not change the URL.
 
 Use clean filter routes instead of query params for table filters.
 
 Recommended examples:
 
 ```txt
-/vendor/orders/status-new
-/vendor/orders/status-successful/delivery-pickup
-/vendor/clients/status-active
-/vendor/medicines/status-active/stock-empty
-/vendor/medicine-requests/status-draft
+/pharmacy/orders/status-new
+/pharmacy/orders/status-successful/delivery-pickup
+/pharmacy/clients/status-active
+/pharmacy/medicines/status-active/stock-empty
+/pharmacy/medicine-requests/status-draft
 ```
 
 Do not use pagination or rows-per-page in the URL:
 
 ```txt
-/vendor/orders?status=new&page=3&limit=50
+/pharmacy/orders?status=new&page=3&limit=50
 ```
 
 ### URL rules
@@ -180,11 +180,11 @@ Keep in local state:
 
 ## 7. Shared UI language
 
-Vendor UI is written in English. All user-facing texts, buttons, toasts, empty states, and modal messages in this specification are provided in English.
+Pharmacy UI is written in English. All user-facing texts, buttons, toasts, empty states, and modal messages in this specification are provided in English.
 
 ## 8. Reusable components
 
-Vendor should reuse existing shared components where possible:
+Pharmacy should reuse existing shared components where possible:
 
 - `Button`;
 - `ButtonLink`;
@@ -202,17 +202,17 @@ Vendor should reuse existing shared components where possible:
 - `RatingSummary`;
 - existing form-field components.
 
-New common components should be created only when the UI pattern will be reused across Client, Vendor, or Admin.
+New common components should be created only when the UI pattern will be reused across Client, Pharmacy, or Admin.
 
 
 
 ---
 
-# Vendor Technical Specification — Auth and Access
+# Pharmacy Technical Specification — Auth and Access
 
 ## 1. General auth strategy
 
-Auth pages are shared global system pages, not a part of the `/vendor` route group.
+Auth pages are shared global system pages, not a part of the `/pharmacy` route group.
 
 Shared auth routes:
 
@@ -222,12 +222,12 @@ Shared auth routes:
 /password-recovery
 ```
 
-Vendor protected routes start with `/vendor`.
+Pharmacy protected routes start with `/pharmacy`.
 
-After login, a user with the `vendor` role is redirected to:
+After login, a user with the `pharmacy` role is redirected to:
 
 ```txt
-/vendor/dashboard
+/pharmacy/dashboard
 ```
 
 ## 2. Account types
@@ -235,17 +235,17 @@ After login, a user with the `vendor` role is redirected to:
 The system supports these account roles:
 
 - `client`;
-- `vendor`;
+- `pharmacy`;
 - `admin`.
 
-Email and phone must be unique across all roles. The same email cannot belong to both a client and a pharmacy/vendor account. This allows login without a role selector.
+Email and phone must be unique across all roles. The same email cannot belong to both a client and a pharmacy/pharmacy account. This allows login without a role selector.
 
 ## 3. Register page
 
 The register page allows creating:
 
 - a client account;
-- a pharmacy/vendor account.
+- a pharmacy/pharmacy account.
 
 Default selected account type: **Client**.
 
@@ -281,11 +281,11 @@ After successful client registration:
 - password;
 - confirmation documents upload.
 
-After successful pharmacy/vendor registration:
+After successful pharmacy/pharmacy registration:
 
 - a pharmacy account is created;
 - pharmacy status becomes `new`;
-- pharmacy can enter the Vendor cabinet;
+- pharmacy can enter the Pharmacy cabinet;
 - pharmacy cannot sell medicines, add medicines, or create medicine requests before Admin activation.
 
 ## 4. Pharmacy documents upload
@@ -339,7 +339,7 @@ Upload confirmation documents to register a pharmacy account.
 
 ## 5. Login page
 
-The login page is shared for clients, vendors, and admins.
+The login page is shared for clients, pharmacies, and admins.
 
 Fields:
 
@@ -353,12 +353,12 @@ Redirects:
 | Role | Redirect |
 |---|---|
 | `client` | `/profile` |
-| `pharmacy` | `/vendor/dashboard` |
+| `pharmacy` | `/pharmacy/dashboard` |
 | `admin` | `/admin/dashboard` |
 
 ## 6. Inactive pharmacy login
 
-If pharmacy status is `inactive`, Vendor cabinet access is blocked.
+If pharmacy status is `inactive`, Pharmacy cabinet access is blocked.
 
 Message:
 
@@ -373,7 +373,7 @@ If pharmacy status is `new`, login is allowed.
 After login, redirect to:
 
 ```txt
-/vendor/dashboard
+/pharmacy/dashboard
 ```
 
 Show banner:
@@ -387,7 +387,7 @@ New pharmacy can:
 - enter the cabinet;
 - view own data;
 - edit own data without moderation;
-- view all Admin medicines available to Vendor.
+- view all Admin medicines available to Pharmacy.
 
 New pharmacy cannot:
 
@@ -420,7 +420,7 @@ If an authenticated user opens an auth page, redirect by role:
 | Role | Redirect |
 |---|---|
 | `client` | `/profile` |
-| `pharmacy` | `/vendor/dashboard` |
+| `pharmacy` | `/pharmacy/dashboard` |
 | `admin` | `/admin/dashboard` |
 
 ## 10. Shared auth components
@@ -469,11 +469,11 @@ Something went wrong. Please try again.
 
 ---
 
-# Vendor Technical Specification — Layout and Navigation
+# Pharmacy Technical Specification — Layout and Navigation
 
-## 1. Vendor layout parts
+## 1. Pharmacy layout parts
 
-Vendor must include:
+Pharmacy must include:
 
 - Header;
 - Sidebar / left navigation;
@@ -482,17 +482,17 @@ Vendor must include:
 - protected layout for authenticated pharmacies without Footer;
 - public layout for auth pages that may reuse the Client auth layout.
 
-Footer is not used in the protected Vendor cabinet.
+Footer is not used in the protected Pharmacy cabinet.
 
-## 2. Protected Vendor layout
+## 2. Protected Pharmacy layout
 
-Protected layout is used for all authenticated Vendor cabinet pages.
+Protected layout is used for all authenticated Pharmacy cabinet pages.
 
 It includes:
 
-- `VendorHeader`;
-- `VendorSidebar` on desktop;
-- `VendorMobileMenu` on mobile/tablet;
+- `PharmacyHeader`;
+- `PharmacySidebar` on desktop;
+- `PharmacyMobileMenu` on mobile/tablet;
 - one visible `main`;
 - page content;
 - Breadcrumbs inside pages before `h1`;
@@ -502,9 +502,9 @@ Recommended structure:
 
 ```tsx
 <>
-  <VendorHeader />
+  <PharmacyHeader />
   <div className={css.layout}>
-    <VendorSidebar />
+    <PharmacySidebar />
     <main className={css.main}>{children}</main>
   </div>
 </>
@@ -524,9 +524,9 @@ It may reuse the Client auth layout.
 
 Sidebar is not shown in public layout.
 
-## 4. Vendor Header
+## 4. Pharmacy Header
 
-Vendor Header is similar to Client Header, but with Vendor-specific navigation logic.
+Pharmacy Header is similar to Client Header, but with Pharmacy-specific navigation logic.
 
 ### Header contains
 
@@ -552,7 +552,7 @@ For authenticated pharmacies:
 - links to Client catalog;
 - links to Pharmacy stores.
 
-Vendor navigation is located in Sidebar / Mobile menu.
+Pharmacy navigation is located in Sidebar / Mobile menu.
 
 ## 5. Pharmacy badge
 
@@ -563,7 +563,7 @@ Show:
 - round pharmacy photo;
 - fallback initials if photo is missing;
 - pharmacy name;
-- link to `/vendor/profile`.
+- link to `/pharmacy/profile`.
 
 Long names must be truncated with `text-overflow: ellipsis`.
 
@@ -611,7 +611,7 @@ It must:
 
 ## 8. Sidebar
 
-Sidebar is the main Vendor navigation on desktop.
+Sidebar is the main Pharmacy navigation on desktop.
 
 It is shown only in protected layout for pharmacies with statuses:
 
@@ -625,13 +625,13 @@ It is not shown for inactive pharmacies because inactive pharmacies cannot enter
 
 | Label | Route |
 |---|---|
-| Dashboard | `/vendor/dashboard` |
-| Orders | `/vendor/orders` |
-| Clients | `/vendor/clients` |
-| Own medicines | `/vendor/medicines` |
-| All medicines | `/vendor/all-medicines` |
-| Medicine requests | `/vendor/medicine-requests` |
-| Pharmacy profile | `/vendor/profile` |
+| Dashboard | `/pharmacy/dashboard` |
+| Orders | `/pharmacy/orders` |
+| Clients | `/pharmacy/clients` |
+| Own medicines | `/pharmacy/medicines` |
+| All medicines | `/pharmacy/all-medicines` |
+| Medicine requests | `/pharmacy/medicine-requests` |
+| Pharmacy profile | `/pharmacy/profile` |
 
 ### Active state
 
@@ -639,8 +639,8 @@ Active state must work for nested pages.
 
 Examples:
 
-- `/vendor/orders` and `/vendor/orders/[orderId]` highlight **Orders**;
-- `/vendor/medicine-requests`, `/vendor/medicine-requests/new`, `/vendor/medicine-requests/[requestId]`, and `/vendor/medicine-requests/[requestId]/edit` highlight **Medicine requests**.
+- `/pharmacy/orders` and `/pharmacy/orders/[orderId]` highlight **Orders**;
+- `/pharmacy/medicine-requests`, `/pharmacy/medicine-requests/new`, `/pharmacy/medicine-requests/[requestId]`, and `/pharmacy/medicine-requests/[requestId]/edit` highlight **Medicine requests**.
 
 ## 9. Sidebar content
 
@@ -662,7 +662,7 @@ Status: New
 
 ## 10. Breadcrumbs
 
-Vendor must reuse the existing Client `Breadcrumbs` component.
+Pharmacy must reuse the existing Client `Breadcrumbs` component.
 
 Breadcrumbs are shown inside `main`, before `h1`.
 
@@ -710,11 +710,11 @@ Breadcrumbs must:
 
 ---
 
-# Vendor Technical Specification — Pharmacy Profile
+# Pharmacy Technical Specification — Pharmacy Profile
 
 ## 1. General logic
 
-Pharmacy profile is the Vendor page where the pharmacy can view and edit its own data according to current pharmacy status.
+Pharmacy profile is the Pharmacy page where the pharmacy can view and edit its own data according to current pharmacy status.
 
 The page should be visually close to the Client profile page but with pharmacy-specific content and rules.
 
@@ -726,10 +726,10 @@ Use shared components wherever possible.
 |---|---|---|
 | `new` | Pharmacy registered but has not passed Admin moderation yet | System after registration |
 | `active` | Pharmacy passed moderation and can work | Admin |
-| `on_moderation` | Active pharmacy changed important data and waits for Admin review | System after Vendor submits changes |
+| `on_moderation` | Active pharmacy changed important data and waits for Admin review | System after Pharmacy submits changes |
 | `inactive` | Pharmacy is blocked or temporarily disabled | Admin |
 
-Vendor UI labels and colors:
+Pharmacy UI labels and colors:
 
 | Code | UI label | Color |
 |---|---|---|
@@ -744,10 +744,10 @@ Vendor UI labels and colors:
 
 Can:
 
-- enter Vendor cabinet;
+- enter Pharmacy cabinet;
 - view own data;
 - edit own data without moderation;
-- view all Vendor-visible medicines from Admin.
+- view all Pharmacy-visible medicines from Admin.
 
 Cannot:
 
@@ -766,26 +766,26 @@ Your pharmacy is not activated yet. Complete the required information and wait f
 
 Can:
 
-- enter Vendor cabinet;
+- enter Pharmacy cabinet;
 - appear in Client;
 - sell medicines;
 - add active Admin medicines to own pharmacy;
 - create medicine requests;
-- view all Vendor-visible medicines from Admin;
+- view all Pharmacy-visible medicines from Admin;
 - edit own data with Admin moderation.
 
-If active pharmacy changes important data, public Client data and approved Vendor/Admin data must remain unchanged until Admin approves pending changes.
+If active pharmacy changes important data, public Client data and approved Pharmacy/Admin data must remain unchanged until Admin approves pending changes.
 
 ### Pharmacy on moderation
 
 Can:
 
-- enter Vendor cabinet;
+- enter Pharmacy cabinet;
 - appear in Client with previous approved data;
 - sell medicines;
 - add active Admin medicines to own pharmacy;
 - create medicine requests;
-- view all Vendor-visible medicines from Admin;
+- view all Pharmacy-visible medicines from Admin;
 - view approved data;
 - view pending moderation data.
 
@@ -803,7 +803,7 @@ Your changes are under moderation. Until Admin reviews them, Client pages show t
 
 Cannot:
 
-- enter Vendor cabinet;
+- enter Pharmacy cabinet;
 - appear in Client;
 - sell medicines;
 - add medicines;
@@ -925,15 +925,15 @@ Component requirements:
 - replace photo;
 - remove photo when allowed by status.
 
-Photo component and validation should be shared between Client, Vendor, and Admin.
+Photo component and validation should be shared between Client, Pharmacy, and Admin.
 
 ## 8. Email
 
 Email:
 
-- is not editable in Vendor profile;
+- is not editable in Pharmacy profile;
 - is shown as readonly;
-- is unique across Client, Vendor, and Admin;
+- is unique across Client, Pharmacy, and Admin;
 - is used for login.
 
 ## 9. Profile tabs
@@ -968,7 +968,7 @@ Fields:
 | Working hours | No | Yes | Yes |
 | Password | By password rules | By password rules | No |
 
-Phone must be unique across Client, Vendor, and Admin.
+Phone must be unique across Client, Pharmacy, and Admin.
 
 Working hours should use a shared common component:
 
@@ -1083,9 +1083,9 @@ Create reusable form-field components:
 
 ## 13. Tab: Reviews
 
-Vendor can only view pharmacy reviews.
+Pharmacy can only view pharmacy reviews.
 
-Vendor cannot:
+Pharmacy cannot:
 
 - create reviews;
 - edit reviews;
@@ -1139,11 +1139,11 @@ Use `ConfirmActionModal` for:
 
 ---
 
-# Vendor Technical Specification — Dashboard
+# Pharmacy Technical Specification — Dashboard
 
 ## 1. General logic
 
-Dashboard is the main Vendor page after pharmacy login.
+Dashboard is the main Pharmacy page after pharmacy login.
 
 It shows a short overview of the current pharmacy only:
 
@@ -1154,7 +1154,7 @@ It shows a short overview of the current pharmacy only:
 - quick actions;
 - warnings or info banners based on pharmacy status.
 
-Vendor must not see statistics of other pharmacies.
+Pharmacy must not see statistics of other pharmacies.
 
 Admin has a separate dashboard.
 
@@ -1166,7 +1166,7 @@ Dashboard is available for pharmacies with statuses:
 - `active`;
 - `on_moderation`.
 
-Dashboard is not available for `inactive` pharmacies because inactive pharmacies cannot enter the Vendor cabinet.
+Dashboard is not available for `inactive` pharmacies because inactive pharmacies cannot enter the Pharmacy cabinet.
 
 ### New pharmacy
 
@@ -1306,10 +1306,10 @@ Clicking a status card opens the Orders table with the corresponding filter in t
 Examples:
 
 ```txt
-/vendor/orders/status-new
-/vendor/orders/status-in-work
-/vendor/orders/status-successful
-/vendor/orders/status-rejected
+/pharmacy/orders/status-new
+/pharmacy/orders/status-in-work
+/pharmacy/orders/status-successful
+/pharmacy/orders/status-rejected
 ```
 
 ## 6. Clients statistics
@@ -1334,9 +1334,9 @@ Removed from scope:
 Examples:
 
 ```txt
-/vendor/clients
-/vendor/clients/status-active
-/vendor/clients/status-inactive
+/pharmacy/clients
+/pharmacy/clients/status-active
+/pharmacy/clients/status-inactive
 ```
 
 ### Empty state
@@ -1392,11 +1392,11 @@ Removed from scope:
 Examples:
 
 ```txt
-/vendor/medicines
-/vendor/medicines/status-active
-/vendor/medicines/status-inactive
-/vendor/medicines/stock-empty
-/vendor/medicines/stock-available
+/pharmacy/medicines
+/pharmacy/medicines/status-active
+/pharmacy/medicines/status-inactive
+/pharmacy/medicines/stock-empty
+/pharmacy/medicines/stock-available
 ```
 
 ### Empty state
@@ -1434,11 +1434,11 @@ Each card shows:
 Examples:
 
 ```txt
-/vendor/medicine-requests/status-draft
-/vendor/medicine-requests/status-new
-/vendor/medicine-requests/status-in-work
-/vendor/medicine-requests/status-approved
-/vendor/medicine-requests/status-rejected
+/pharmacy/medicine-requests/status-draft
+/pharmacy/medicine-requests/status-new
+/pharmacy/medicine-requests/status-in-work
+/pharmacy/medicine-requests/status-approved
+/pharmacy/medicine-requests/status-rejected
 ```
 
 ### Empty state
@@ -1504,13 +1504,13 @@ Recommended reusable components:
 
 ---
 
-# Vendor Technical Specification — Orders
+# Pharmacy Technical Specification — Orders
 
 ## 1. General logic
 
 Orders are created only by clients through the Client checkout.
 
-Vendor processes only orders that belong to the current pharmacy.
+Pharmacy processes only orders that belong to the current pharmacy.
 
 Admin can view orders but does not create or edit them.
 
@@ -1527,11 +1527,11 @@ After client confirms checkout:
 | Status | Color | Meaning |
 |---|---|---|
 | `new` | Blue | Order was confirmed by client |
-| `in_work` | Yellow | Vendor accepted the order for processing |
+| `in_work` | Yellow | Pharmacy accepted the order for processing |
 | `successful` | Green | Order is completed |
-| `rejected` | Red | Order was rejected by Vendor |
+| `rejected` | Red | Order was rejected by Pharmacy |
 
-For `rejected` status, Vendor must provide a required rejection reason.
+For `rejected` status, Pharmacy must provide a required rejection reason.
 
 ## 3. Allowed status transitions
 
@@ -1647,17 +1647,17 @@ When order becomes `rejected`:
 - items become available for other orders;
 - order prices remain unchanged.
 
-If Vendor changes item quantity in `in_work` status:
+If Pharmacy changes item quantity in `in_work` status:
 
 - reservation is recalculated;
 - available stock must be checked.
 
-If Vendor adds a new item in `in_work` status:
+If Pharmacy adds a new item in `in_work` status:
 
 - item is reserved;
 - current price is fixed at the moment of adding.
 
-If Vendor removes an item in `in_work` status:
+If Pharmacy removes an item in `in_work` status:
 
 - reservation for this item is cancelled.
 
@@ -1665,18 +1665,18 @@ If Vendor removes an item in `in_work` status:
 
 The order item price is fixed when the item enters the order.
 
-If Vendor changes quantity for an item that already exists in the order, unit price remains the same as the fixed price of that order item.
+If Pharmacy changes quantity for an item that already exists in the order, unit price remains the same as the fixed price of that order item.
 
-If Vendor adds a new item that was not previously in the order, current price is fixed at the moment of adding.
+If Pharmacy adds a new item that was not previously in the order, current price is fixed at the moment of adding.
 
-Current catalog or Vendor price changes do not affect already created order items.
+Current catalog or Pharmacy price changes do not affect already created order items.
 
 ## 7. Orders table
 
 Route:
 
 ```txt
-/vendor/orders
+/pharmacy/orders
 ```
 
 The table shows only orders of the current pharmacy.
@@ -1705,12 +1705,12 @@ Filters must change URL using clean filter routes.
 Filter examples:
 
 ```txt
-/vendor/orders/status-new
-/vendor/orders/status-in-work
-/vendor/orders/status-successful
-/vendor/orders/status-rejected
-/vendor/orders/status-successful/delivery-pickup
-/vendor/orders/status-in-work/payment-cash
+/pharmacy/orders/status-new
+/pharmacy/orders/status-in-work
+/pharmacy/orders/status-successful
+/pharmacy/orders/status-rejected
+/pharmacy/orders/status-successful/delivery-pickup
+/pharmacy/orders/status-in-work/payment-cash
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -1793,7 +1793,7 @@ Shows order creation date.
 
 Sortable.
 
-Date format must be the same in Client, Vendor, and Admin.
+Date format must be the same in Client, Pharmacy, and Admin.
 
 ### Client
 
@@ -1805,13 +1805,13 @@ Click opens client details page.
 
 Shows current delivery method.
 
-If Vendor changed delivery method in `in_work` status, table shows updated value.
+If Pharmacy changed delivery method in `in_work` status, table shows updated value.
 
 ### Payment method
 
 Shows current payment method.
 
-If Vendor changed payment method in `in_work` status, table shows updated value.
+If Pharmacy changed payment method in `in_work` status, table shows updated value.
 
 ### Client comment
 
@@ -1892,10 +1892,10 @@ Reset filters
 Route:
 
 ```txt
-/vendor/orders/[orderId]
+/pharmacy/orders/[orderId]
 ```
 
-Vendor can edit the order only when status is `in_work`.
+Pharmacy can edit the order only when status is `in_work`.
 
 Readonly statuses:
 
@@ -1988,7 +1988,7 @@ For each item show:
 
 Editing items is available only for `in_work` status.
 
-Vendor can:
+Pharmacy can:
 
 - increase quantity;
 - decrease quantity;
@@ -2013,7 +2013,7 @@ Are you sure you want to remove this item from the order?
 
 Allowed only in `in_work` status.
 
-Vendor can add only medicines that are:
+Pharmacy can add only medicines that are:
 
 - active;
 - in stock;
@@ -2063,7 +2063,7 @@ Empty text:
 Client did not leave a comment.
 ```
 
-### Vendor comment
+### Pharmacy comment
 
 Editable only in `in_work` status.
 
@@ -2083,7 +2083,7 @@ Button label:
 Add products
 ```
 
-This button opens the same selection logic as Client `ContinueShoppingModal`, adapted for Vendor context.
+This button opens the same selection logic as Client `ContinueShoppingModal`, adapted for Pharmacy context.
 
 Enabled only in `in_work` status.
 
@@ -2113,13 +2113,13 @@ Not found state:
 Order not found.
 ```
 
-Vendor must not see orders of other pharmacies.
+Pharmacy must not see orders of other pharmacies.
 
 
 
 ---
 
-# Vendor Technical Specification — Clients
+# Pharmacy Technical Specification — Clients
 
 ## 1. General logic
 
@@ -2127,11 +2127,11 @@ Clients are created only through self-registration in the Client part.
 
 Admin can edit clients and change client status.
 
-Vendor cannot create, edit, block, delete, or change client status.
+Pharmacy cannot create, edit, block, delete, or change client status.
 
-Vendor can only view clients who created at least one order for the current pharmacy.
+Pharmacy can only view clients who created at least one order for the current pharmacy.
 
-Vendor cannot see:
+Pharmacy cannot see:
 
 - all system clients;
 - clients of other pharmacies;
@@ -2177,11 +2177,11 @@ Your account is temporarily inactive. Please contact administration for details.
 
 ## 5. Own client definition
 
-A Vendor own client is a client who created at least one order for the current pharmacy.
+A Pharmacy own client is a client who created at least one order for the current pharmacy.
 
-Client appears in Vendor clients table by the date of the first order created for this pharmacy.
+Client appears in Pharmacy clients table by the date of the first order created for this pharmacy.
 
-The specification uses only one Vendor client date:
+The specification uses only one Pharmacy client date:
 
 ```txt
 firstOrderAt
@@ -2189,14 +2189,14 @@ firstOrderAt
 
 This date is shown in the clients table and on the client details page.
 
-Do not show client system registration date in Vendor UI in the first version.
+Do not show client system registration date in Pharmacy UI in the first version.
 
 ## 6. Clients table
 
 Route:
 
 ```txt
-/vendor/clients
+/pharmacy/clients
 ```
 
 The table shows only clients who ordered from the current pharmacy.
@@ -2225,9 +2225,9 @@ Filters must change URL using clean filter routes.
 Examples:
 
 ```txt
-/vendor/clients/status-active
-/vendor/clients/status-inactive
-/vendor/clients/date-from-2026-01-01/date-to-2026-01-31
+/pharmacy/clients/status-active
+/pharmacy/clients/status-inactive
+/pharmacy/clients/date-from-2026-01-01/date-to-2026-01-31
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -2306,7 +2306,7 @@ firstOrderAt
 
 Sortable.
 
-Date format must be the same in Vendor, Client, and Admin.
+Date format must be the same in Pharmacy, Client, and Admin.
 
 ### Name
 
@@ -2394,14 +2394,14 @@ Reset filters
 Route:
 
 ```txt
-/vendor/clients/[clientId]
+/pharmacy/clients/[clientId]
 ```
 
 The page shows client details and client orders for the current pharmacy only.
 
-Vendor can only view client data.
+Pharmacy can only view client data.
 
-Vendor cannot:
+Pharmacy cannot:
 
 - edit client name;
 - edit email;
@@ -2538,7 +2538,7 @@ Client orders empty state:
 This client has no orders in your pharmacy yet.
 ```
 
-This state is a fallback only. Normally such client should not appear in Vendor clients list.
+This state is a fallback only. Normally such client should not appear in Pharmacy clients list.
 
 Nothing found state:
 
@@ -2569,17 +2569,17 @@ Could not load data. Please try again.
 
 ---
 
-# Vendor Technical Specification — Medicines
+# Pharmacy Technical Specification — Medicines
 
 ## 1. General logic
 
 Medicines are created and edited only in Admin.
 
-Vendor cannot create or edit global medicine data directly.
+Pharmacy cannot create or edit global medicine data directly.
 
-Vendor can add existing active Admin medicines to the current pharmacy.
+Pharmacy can add existing active Admin medicines to the current pharmacy.
 
-Vendor works with pharmacy-specific medicine data:
+Pharmacy works with pharmacy-specific medicine data:
 
 - stock quantity;
 - reserved quantity;
@@ -2587,13 +2587,13 @@ Vendor works with pharmacy-specific medicine data:
 - current price;
 - date added to pharmacy.
 
-Price and stock quantity are not edited manually in Vendor. They come from an external pharmacy system through API.
+Price and stock quantity are not edited manually in Pharmacy. They come from an external pharmacy system through API.
 
 ## 2. Global medicine statuses
 
 All medicines in the system have one global status, regardless of which table they are shown in.
 
-| Status | Color | Meaning | Visible to Vendor |
+| Status | Color | Meaning | Visible to Pharmacy |
 |---|---|---|---|
 | `new` | Blue | Medicine created in Admin but not activated yet | No |
 | `active` | Green | Medicine can be added to pharmacies | Yes |
@@ -2601,7 +2601,7 @@ All medicines in the system have one global status, regardless of which table th
 
 The `new` status is visible only to Admin.
 
-Vendor never sees medicines with status `new`.
+Pharmacy never sees medicines with status `new`.
 
 ## 3. Global medicine data
 
@@ -2625,7 +2625,7 @@ Global data belongs to Admin:
 - createdAt;
 - updatedAt.
 
-Vendor cannot edit these fields.
+Pharmacy cannot edit these fields.
 
 ## 4. Pharmacy medicine data
 
@@ -2643,13 +2643,13 @@ Fields:
 - addedAt;
 - updatedAt.
 
-Vendor sees and works only with pharmacy medicine data of the current pharmacy.
+Pharmacy sees and works only with pharmacy medicine data of the current pharmacy.
 
 ## 5. Active medicines
 
 Active medicines:
 
-- are visible in Vendor all medicines table;
+- are visible in Pharmacy all medicines table;
 - can be added to current pharmacy;
 - can appear in Client only after being added to at least one active or on-moderation pharmacy;
 - can be changed to inactive only by Admin.
@@ -2666,9 +2666,9 @@ Medicine appears in Client only if:
 
 Inactive medicines:
 
-- are visible in Vendor all medicines table;
+- are visible in Pharmacy all medicines table;
 - cannot be added to a pharmacy;
-- can be visible in Vendor own medicines if they were previously added;
+- can be visible in Pharmacy own medicines if they were previously added;
 - do not appear in Client;
 - keep order history, statistics, and stock movement history;
 - cannot be added to new orders.
@@ -2681,7 +2681,7 @@ Admin must provide a required reason when setting medicine status to `inactive`.
 
 `stockQuantity` and `currentPrice` come from an external pharmacy program through API.
 
-Vendor does not manually edit:
+Pharmacy does not manually edit:
 
 - current price;
 - stock quantity.
@@ -2723,7 +2723,7 @@ When order becomes `rejected`:
 Route:
 
 ```txt
-/vendor/medicines
+/pharmacy/medicines
 ```
 
 Shows only medicines added to the current pharmacy.
@@ -2752,10 +2752,10 @@ Filters must change URL using clean filter routes.
 Examples:
 
 ```txt
-/vendor/medicines/status-active
-/vendor/medicines/status-inactive
-/vendor/medicines/stock-empty
-/vendor/medicines/status-active/stock-available
+/pharmacy/medicines/status-active
+/pharmacy/medicines/status-inactive
+/pharmacy/medicines/stock-empty
+/pharmacy/medicines/status-active/stock-available
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -2833,7 +2833,7 @@ stockQuantity
 
 Comes from external API.
 
-Readonly in Vendor.
+Readonly in Pharmacy.
 
 ### Reserved quantity
 
@@ -2865,7 +2865,7 @@ currentPrice
 
 Comes from external API.
 
-Readonly in Vendor.
+Readonly in Pharmacy.
 
 ### Status
 
@@ -2911,17 +2911,17 @@ Reset filters
 Route:
 
 ```txt
-/vendor/all-medicines
+/pharmacy/all-medicines
 ```
 
-Shows Admin medicines that Vendor can view:
+Shows Admin medicines that Pharmacy can view:
 
 - `active` medicines;
 - `inactive` medicines.
 
 Does not show `new` medicines.
 
-Vendor can add only `active` medicines to own pharmacy.
+Pharmacy can add only `active` medicines to own pharmacy.
 
 Inactive medicines are visible but cannot be added.
 
@@ -2938,9 +2938,9 @@ medicine.createdAt
 Filter examples:
 
 ```txt
-/vendor/all-medicines/status-active
-/vendor/all-medicines/status-inactive
-/vendor/all-medicines/category-antibiotics
+/pharmacy/all-medicines/status-active
+/pharmacy/all-medicines/status-inactive
+/pharmacy/all-medicines/category-antibiotics
 ```
 
 ## 15. All medicines columns
@@ -3016,7 +3016,7 @@ until external API synchronization provides real data.
 
 This action is available from the All medicines table.
 
-Vendor can remove medicine from own pharmacy only if:
+Pharmacy can remove medicine from own pharmacy only if:
 
 - medicine was added to the pharmacy;
 - there are no orders with this medicine;
@@ -3062,8 +3062,8 @@ This medicine cannot be removed because it already has order history.
 Route examples:
 
 ```txt
-/vendor/medicines/[medicineId]
-/vendor/all-medicines/[medicineId]
+/pharmacy/medicines/[medicineId]
+/pharmacy/all-medicines/[medicineId]
 ```
 
 The medicine card is the same regardless of entry point.
@@ -3194,7 +3194,7 @@ Sources:
 ```txt
 External API
 Order
-Vendor action
+Pharmacy action
 System
 ```
 
@@ -3242,7 +3242,7 @@ This medicine is not added to your pharmacy, so related orders are unavailable.
 
 Shows characteristics from Admin.
 
-Vendor cannot edit them.
+Pharmacy cannot edit them.
 
 Use the same style as Client product details.
 
@@ -3256,9 +3256,9 @@ Characteristics for this medicine have not been added yet.
 
 ## 27. Tab: Reviews
 
-Vendor can only view medicine reviews.
+Pharmacy can only view medicine reviews.
 
-Vendor cannot:
+Pharmacy cannot:
 
 - create reviews;
 - edit reviews;
@@ -3306,7 +3306,7 @@ Not found state:
 Medicine not found.
 ```
 
-Vendor must not see:
+Pharmacy must not see:
 
 - medicines with status `new`;
 - pharmacy-specific medicine data of other pharmacies.
@@ -3315,7 +3315,7 @@ Vendor must not see:
 
 ---
 
-# Vendor Technical Specification — Medicine Creation Requests
+# Pharmacy Technical Specification — Medicine Creation Requests
 
 ## 1. General logic
 
@@ -3329,9 +3329,9 @@ Examples:
 - medicine already in pharmacy stock but missing in the system;
 - product that must be added to the global E-PHARMACY catalog.
 
-Vendor cannot create global medicines directly.
+Pharmacy cannot create global medicines directly.
 
-Vendor can:
+Pharmacy can:
 
 - create request draft;
 - save draft;
@@ -3363,10 +3363,10 @@ Admin must first move request to `in_work`.
 
 ## 3. Request statuses
 
-| Status | Color | Meaning | Editable by Vendor |
+| Status | Color | Meaning | Editable by Pharmacy |
 |---|---|---|---|
-| `draft` | Gray | Vendor created request but did not send it to Admin | Yes |
-| `new` | Blue | Vendor sent request; Admin has not started review | No |
+| `draft` | Gray | Pharmacy created request but did not send it to Admin | Yes |
+| `new` | Blue | Pharmacy sent request; Admin has not started review | No |
 | `in_work` | Yellow | Admin is checking the request | No |
 | `approved` | Green | Admin created medicine from request | No |
 | `rejected` | Red | Admin rejected request | No |
@@ -3375,7 +3375,7 @@ For `rejected` status, Admin must provide rejection reason.
 
 ## 4. Access rules
 
-Vendor sees only own requests.
+Pharmacy sees only own requests.
 
 Admin sees only requests submitted to moderation:
 
@@ -3384,24 +3384,24 @@ Admin sees only requests submitted to moderation:
 - `approved`;
 - `rejected`.
 
-Admin does not see Vendor drafts.
+Admin does not see Pharmacy drafts.
 
-Vendor cannot see requests of other pharmacies.
+Pharmacy cannot see requests of other pharmacies.
 
 ## 5. Before creating a request
 
-Vendor should create a request only if the needed medicine does not exist in All medicines table.
+Pharmacy should create a request only if the needed medicine does not exist in All medicines table.
 
-Before creating a request, Vendor should check All medicines by:
+Before creating a request, Pharmacy should check All medicines by:
 
 - name;
 - article;
 - category;
 - manufacturer if such filter exists.
 
-If medicine exists and is active, Vendor should add it to own pharmacy instead of creating a request.
+If medicine exists and is active, Pharmacy should add it to own pharmacy instead of creating a request.
 
-If medicine exists but is inactive, Vendor must not create a duplicate.
+If medicine exists but is inactive, Pharmacy must not create a duplicate.
 
 Message:
 
@@ -3422,7 +3422,7 @@ Create request
 Route:
 
 ```txt
-/vendor/medicine-requests/new
+/pharmacy/medicine-requests/new
 ```
 
 Available for pharmacy statuses:
@@ -3452,7 +3452,7 @@ Your account is temporarily inactive. Creating requests is unavailable.
 Route:
 
 ```txt
-/vendor/medicine-requests
+/pharmacy/medicine-requests
 ```
 
 Shows only requests of current pharmacy.
@@ -3478,7 +3478,7 @@ Clicking request name opens request details page.
 Route:
 
 ```txt
-/vendor/medicine-requests/[requestId]
+/pharmacy/medicine-requests/[requestId]
 ```
 
 ## 8. Requests table filters
@@ -3488,11 +3488,11 @@ Filters must change URL using clean filter routes.
 Examples:
 
 ```txt
-/vendor/medicine-requests/status-draft
-/vendor/medicine-requests/status-new
-/vendor/medicine-requests/status-in-work
-/vendor/medicine-requests/status-approved
-/vendor/medicine-requests/status-rejected
+/pharmacy/medicine-requests/status-draft
+/pharmacy/medicine-requests/status-new
+/pharmacy/medicine-requests/status-in-work
+/pharmacy/medicine-requests/status-approved
+/pharmacy/medicine-requests/status-rejected
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -3569,8 +3569,8 @@ Loading requests...
 Routes:
 
 ```txt
-/vendor/medicine-requests/new
-/vendor/medicine-requests/[requestId]/edit
+/pharmacy/medicine-requests/new
+/pharmacy/medicine-requests/[requestId]/edit
 ```
 
 The page should be the same or very close to Admin create medicine page.
@@ -3581,8 +3581,8 @@ Modes:
 
 | Mode | Route | Description |
 |---|---|---|
-| Create mode | `/vendor/medicine-requests/new` | Vendor creates new request |
-| Edit draft mode | `/vendor/medicine-requests/[requestId]/edit` | Vendor edits draft request |
+| Create mode | `/pharmacy/medicine-requests/new` | Pharmacy creates new request |
+| Edit draft mode | `/pharmacy/medicine-requests/[requestId]/edit` | Pharmacy edits draft request |
 | Admin create medicine mode | `/admin/medicine-requests/[requestId]/create-medicine` or `/admin/products/new?requestId={requestId}` | Admin creates medicine from request |
 
 ## 11. Request form fields
@@ -3604,7 +3604,7 @@ Fields:
 - short description;
 - full description;
 - characteristics;
-- Vendor comment;
+- Pharmacy comment;
 - additional files/documents if needed.
 
 ## 12. Required fields for draft
@@ -3615,7 +3615,7 @@ To save draft, require only:
 - article;
 - category.
 
-Vendor can save draft with partially filled data.
+Pharmacy can save draft with partially filled data.
 
 ## 13. Required fields for moderation submission
 
@@ -3626,14 +3626,14 @@ To send request to moderation, require:
 - category;
 - manufacturer;
 - short description;
-- Vendor comment.
+- Pharmacy comment.
 
 If required fields are missing:
 
 - disable Send for moderation button; or
 - show validation errors under fields after click.
 
-## 14. Vendor request buttons
+## 14. Pharmacy request buttons
 
 Buttons:
 
@@ -3668,7 +3668,7 @@ After confirmation:
 
 - request status changes to `new`;
 - request becomes visible to Admin;
-- Vendor can no longer edit it.
+- Pharmacy can no longer edit it.
 
 Modal title:
 
@@ -3702,7 +3702,7 @@ Could not send request. Please try again.
 
 ## 15. Admin request actions
 
-Admin actions are described here only to clarify Vendor flow.
+Admin actions are described here only to clarify Pharmacy flow.
 
 In Admin, request processing should include:
 
@@ -3718,20 +3718,20 @@ When Admin clicks Create medicine:
 - global medicine is created;
 - request status becomes `approved`;
 - request links to the created medicine;
-- Vendor sees link to created medicine.
+- Pharmacy sees link to created medicine.
 
 When Admin rejects request:
 
 - request status becomes `rejected`;
 - rejection reason is required;
-- Vendor sees rejection reason.
+- Pharmacy sees rejection reason.
 
 ## 16. Request details page
 
 Route:
 
 ```txt
-/vendor/medicine-requests/[requestId]
+/pharmacy/medicine-requests/[requestId]
 ```
 
 Request card should look like a medicine card.
@@ -3745,7 +3745,7 @@ Show:
 - request status;
 - short description;
 - characteristics;
-- Vendor comment;
+- Pharmacy comment;
 - created date;
 - sent to moderation date if submitted;
 - Admin comment;
@@ -3763,7 +3763,7 @@ Edit request
 Route:
 
 ```txt
-/vendor/medicine-requests/[requestId]/edit
+/pharmacy/medicine-requests/[requestId]/edit
 ```
 
 Info text:
@@ -3774,7 +3774,7 @@ This is a draft request. It has not been sent to Admin yet.
 
 ## 18. New or In work request details
 
-Vendor cannot edit submitted requests.
+Pharmacy cannot edit submitted requests.
 
 For `new`, show:
 
@@ -3839,7 +3839,7 @@ The new draft copies fields from the rejected request, but:
 - has a new `createdAt`;
 - does not have previous status history;
 - does not have `adminRejectReason`;
-- does not have `adminComment` unless it should be visible to Vendor;
+- does not have `adminComment` unless it should be visible to Pharmacy;
 - is not automatically sent to moderation.
 
 Success toast:
@@ -3850,7 +3850,7 @@ New draft created from rejected request.
 
 ## 22. Request readonly rules
 
-Vendor can edit request only while status is `draft`.
+Pharmacy can edit request only while status is `draft`.
 
 Readonly statuses:
 
@@ -3887,13 +3887,13 @@ Medicine created based on request.
 
 ---
 
-# Vendor Technical Specification — Service Pages, Loaders, and States
+# Pharmacy Technical Specification — Service Pages, Loaders, and States
 
 ## 1. General rule
 
-Vendor service pages and loaders should reuse the Client implementation as much as possible.
+Pharmacy service pages and loaders should reuse the Client implementation as much as possible.
 
-Do not create a separate Vendor design if existing Client status pages can be reused.
+Do not create a separate Pharmacy design if existing Client status pages can be reused.
 
 Reuse:
 
@@ -3905,7 +3905,7 @@ Reuse:
 - `loading.module.css` or shared loader styles;
 - `/images/home/three-pills.png`.
 
-Protected Vendor layout does not show Footer.
+Protected Pharmacy layout does not show Footer.
 
 Every service page must have one visible `<main>`.
 
@@ -3955,7 +3955,7 @@ Back to dashboard
 Back link:
 
 ```txt
-/vendor/dashboard
+/pharmacy/dashboard
 ```
 
 If error page is used inside public auth layout, secondary link may lead to `/login` or `/`.
@@ -3996,8 +3996,8 @@ View all medicines
 Links:
 
 ```txt
-/vendor/dashboard
-/vendor/all-medicines
+/pharmacy/dashboard
+/pharmacy/all-medicines
 ```
 
 ## 4. Route loading page
@@ -4100,11 +4100,11 @@ Try again
 
 ---
 
-# Vendor Technical Specification — Recommended Route Structure
+# Pharmacy Technical Specification — Recommended Route Structure
 
 ## 1. Global auth routes
 
-Auth routes are global and shared between Client, Vendor, and Admin.
+Auth routes are global and shared between Client, Pharmacy, and Admin.
 
 ```txt
 app/login/page.tsx
@@ -4112,68 +4112,68 @@ app/register/page.tsx
 app/password-recovery/page.tsx
 ```
 
-These pages are not under `/vendor`.
+These pages are not under `/pharmacy`.
 
-After login, role `vendor` redirects to:
+After login, role `pharmacy` redirects to:
 
 ```txt
-/vendor/dashboard
+/pharmacy/dashboard
 ```
 
-## 2. Vendor protected routes
+## 2. Pharmacy protected routes
 
 Recommended App Router structure:
 
 ```txt
-app/vendor/(protected)/layout.tsx
-app/vendor/(protected)/loading.tsx
-app/vendor/(protected)/error.tsx
-app/vendor/(protected)/not-found.tsx
+app/pharmacy/(protected)/layout.tsx
+app/pharmacy/(protected)/loading.tsx
+app/pharmacy/(protected)/error.tsx
+app/pharmacy/(protected)/not-found.tsx
 
-app/vendor/(protected)/dashboard/page.tsx
+app/pharmacy/(protected)/dashboard/page.tsx
 
-app/vendor/(protected)/profile/page.tsx
+app/pharmacy/(protected)/profile/page.tsx
 
-app/vendor/(protected)/orders/page.tsx
-app/vendor/(protected)/orders/[orderId]/page.tsx
-app/vendor/(protected)/orders/status-[status]/page.tsx
-app/vendor/(protected)/orders/status-[status]/delivery-[delivery]/page.tsx
-app/vendor/(protected)/orders/status-[status]/payment-[payment]/page.tsx
+app/pharmacy/(protected)/orders/page.tsx
+app/pharmacy/(protected)/orders/[orderId]/page.tsx
+app/pharmacy/(protected)/orders/status-[status]/page.tsx
+app/pharmacy/(protected)/orders/status-[status]/delivery-[delivery]/page.tsx
+app/pharmacy/(protected)/orders/status-[status]/payment-[payment]/page.tsx
 
-app/vendor/(protected)/clients/page.tsx
-app/vendor/(protected)/clients/[clientId]/page.tsx
-app/vendor/(protected)/clients/status-[status]/page.tsx
+app/pharmacy/(protected)/clients/page.tsx
+app/pharmacy/(protected)/clients/[clientId]/page.tsx
+app/pharmacy/(protected)/clients/status-[status]/page.tsx
 
-app/vendor/(protected)/medicines/page.tsx
-app/vendor/(protected)/medicines/[medicineId]/page.tsx
-app/vendor/(protected)/medicines/status-[status]/page.tsx
-app/vendor/(protected)/medicines/stock-[stock]/page.tsx
-app/vendor/(protected)/medicines/status-[status]/stock-[stock]/page.tsx
+app/pharmacy/(protected)/medicines/page.tsx
+app/pharmacy/(protected)/medicines/[medicineId]/page.tsx
+app/pharmacy/(protected)/medicines/status-[status]/page.tsx
+app/pharmacy/(protected)/medicines/stock-[stock]/page.tsx
+app/pharmacy/(protected)/medicines/status-[status]/stock-[stock]/page.tsx
 
-app/vendor/(protected)/all-medicines/page.tsx
-app/vendor/(protected)/all-medicines/[medicineId]/page.tsx
-app/vendor/(protected)/all-medicines/status-[status]/page.tsx
-app/vendor/(protected)/all-medicines/category-[category]/page.tsx
+app/pharmacy/(protected)/all-medicines/page.tsx
+app/pharmacy/(protected)/all-medicines/[medicineId]/page.tsx
+app/pharmacy/(protected)/all-medicines/status-[status]/page.tsx
+app/pharmacy/(protected)/all-medicines/category-[category]/page.tsx
 
-app/vendor/(protected)/medicine-requests/page.tsx
-app/vendor/(protected)/medicine-requests/new/page.tsx
-app/vendor/(protected)/medicine-requests/[requestId]/page.tsx
-app/vendor/(protected)/medicine-requests/[requestId]/edit/page.tsx
-app/vendor/(protected)/medicine-requests/status-[status]/page.tsx
+app/pharmacy/(protected)/medicine-requests/page.tsx
+app/pharmacy/(protected)/medicine-requests/new/page.tsx
+app/pharmacy/(protected)/medicine-requests/[requestId]/page.tsx
+app/pharmacy/(protected)/medicine-requests/[requestId]/edit/page.tsx
+app/pharmacy/(protected)/medicine-requests/status-[status]/page.tsx
 ```
 
 ## 3. Filter route principle
 
-Vendor table filters use clean URL route segments.
+Pharmacy table filters use clean URL route segments.
 
 Examples:
 
 ```txt
-/vendor/orders/status-new
-/vendor/orders/status-successful/delivery-pickup
-/vendor/clients/status-active
-/vendor/medicines/status-active/stock-empty
-/vendor/medicine-requests/status-draft
+/pharmacy/orders/status-new
+/pharmacy/orders/status-successful/delivery-pickup
+/pharmacy/clients/status-active
+/pharmacy/medicines/status-active/stock-empty
+/pharmacy/medicine-requests/status-draft
 ```
 
 Pagination and rows-per-page are local state and are not represented in route segments.
@@ -4185,10 +4185,10 @@ If the number of route segment combinations becomes too large, filters may be ha
 Example:
 
 ```txt
-app/vendor/(protected)/orders/[[...filters]]/page.tsx
-app/vendor/(protected)/clients/[[...filters]]/page.tsx
-app/vendor/(protected)/medicines/[[...filters]]/page.tsx
-app/vendor/(protected)/medicine-requests/[[...filters]]/page.tsx
+app/pharmacy/(protected)/orders/[[...filters]]/page.tsx
+app/pharmacy/(protected)/clients/[[...filters]]/page.tsx
+app/pharmacy/(protected)/medicines/[[...filters]]/page.tsx
+app/pharmacy/(protected)/medicine-requests/[[...filters]]/page.tsx
 ```
 
 This keeps clean URLs while avoiding too many physical route files.
@@ -4198,9 +4198,9 @@ This keeps clean URLs while avoiding too many physical route files.
 Create shared route utilities:
 
 ```txt
-packages/config/vendor-routes.ts
-packages/utils/parseVendorFilters.ts
-packages/utils/buildVendorFilterPath.ts
+packages/config/pharmacy-routes.ts
+packages/utils/parsePharmacyFilters.ts
+packages/utils/buildPharmacyFilterPath.ts
 ```
 
 Responsibilities:
@@ -4216,31 +4216,31 @@ Responsibilities:
 Create constants for all base routes:
 
 ```txt
-VENDOR_DASHBOARD = "/vendor/dashboard"
-VENDOR_PROFILE = "/vendor/profile"
-VENDOR_ORDERS = "/vendor/orders"
-VENDOR_CLIENTS = "/vendor/clients"
-VENDOR_MEDICINES = "/vendor/medicines"
-VENDOR_ALL_MEDICINES = "/vendor/all-medicines"
-VENDOR_MEDICINE_REQUESTS = "/vendor/medicine-requests"
+PHARMACY_DASHBOARD = "/pharmacy/dashboard"
+PHARMACY_PROFILE = "/pharmacy/profile"
+PHARMACY_ORDERS = "/pharmacy/orders"
+PHARMACY_CLIENTS = "/pharmacy/clients"
+PHARMACY_MEDICINES = "/pharmacy/medicines"
+PHARMACY_ALL_MEDICINES = "/pharmacy/all-medicines"
+PHARMACY_MEDICINE_REQUESTS = "/pharmacy/medicine-requests"
 ```
 
 Create builder functions:
 
 ```txt
-getVendorOrderPath(orderId)
-getVendorClientPath(clientId)
-getVendorMedicinePath(medicineId)
-getVendorRequestPath(requestId)
-getVendorOrdersFilterPath(filters)
-getVendorClientsFilterPath(filters)
-getVendorMedicinesFilterPath(filters)
-getVendorRequestsFilterPath(filters)
+getPharmacyOrderPath(orderId)
+getPharmacyClientPath(clientId)
+getPharmacyMedicinePath(medicineId)
+getPharmacyRequestPath(requestId)
+getPharmacyOrdersFilterPath(filters)
+getPharmacyClientsFilterPath(filters)
+getPharmacyMedicinesFilterPath(filters)
+getPharmacyRequestsFilterPath(filters)
 ```
 
 ## 7. Metadata and indexing
 
-Vendor protected pages should be `noindex`.
+Pharmacy protected pages should be `noindex`.
 
 They are private working cabinet pages, not public SEO pages.
 
@@ -4255,13 +4255,13 @@ Each page must still have:
 
 ---
 
-# Vendor Technical Specification — E-PHARMACY
+# Pharmacy Technical Specification — E-PHARMACY
 
-This folder contains the improved Vendor technical specification split into global parts.
+This folder contains the improved Pharmacy technical specification split into global parts.
 
 ## Files
 
-1. `00-general-overview.md` — global Vendor principles, ownership, statuses, filter URL strategy.
+1. `00-general-overview.md` — global Pharmacy principles, ownership, statuses, filter URL strategy.
 2. `01-auth-and-access.md` — shared auth, role redirects, pharmacy registration, inactive access.
 3. `02-layout-and-navigation.md` — Header, Sidebar, Mobile menu, Breadcrumbs, layouts.
 4. `03-pharmacy-profile.md` — pharmacy profile, statuses, tabs, moderation, reviews.
@@ -4278,14 +4278,14 @@ This folder contains the improved Vendor technical specification split into glob
 - Table filters change URL with clean route segments.
 - Pagination and rows-per-page stay in local state.
 - Dashboard year/month filter applies only to Orders statistics.
-- Client Vendor date is `firstOrderAt` only.
+- Client Pharmacy date is `firstOrderAt` only.
 - Order final statuses are irreversible in the first version.
 - All medicines have one global status: `new`, `active`, `inactive`.
-- Vendor cannot see medicines with `new` status.
+- Pharmacy cannot see medicines with `new` status.
 - Medicine removal from pharmacy is explicitly described.
 - Medicine request flow is strict: Draft → New → In work → Approved/Rejected.
-- Auth pages are global, not part of `/vendor` route group.
-- Protected Vendor layout has no Footer.
+- Auth pages are global, not part of `/pharmacy` route group.
+- Protected Pharmacy layout has no Footer.
 
 
 

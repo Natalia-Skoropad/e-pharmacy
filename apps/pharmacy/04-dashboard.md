@@ -1,8 +1,8 @@
-# Vendor Technical Specification — Dashboard
+# Pharmacy Technical Specification — Dashboard
 
 ## 1. General logic
 
-Dashboard is the main Vendor page after pharmacy login.
+Dashboard is the main Pharmacy page after pharmacy login.
 
 It shows a short overview of the current pharmacy only:
 
@@ -13,7 +13,7 @@ It shows a short overview of the current pharmacy only:
 - quick actions;
 - warnings or info banners based on pharmacy status.
 
-Vendor must not see statistics of other pharmacies.
+Pharmacy must not see statistics of other pharmacies.
 
 Admin has a separate dashboard.
 
@@ -25,7 +25,7 @@ Dashboard is available for pharmacies with statuses:
 - `active`;
 - `on_moderation`.
 
-Dashboard is not available for `inactive` pharmacies because inactive pharmacies cannot enter the Vendor cabinet.
+Dashboard is not available for `inactive` pharmacies because inactive pharmacies cannot enter the Pharmacy cabinet.
 
 ### New pharmacy
 
@@ -165,10 +165,10 @@ Clicking a status card opens the Orders table with the corresponding filter in t
 Examples:
 
 ```txt
-/vendor/orders/status-new
-/vendor/orders/status-in-work
-/vendor/orders/status-successful
-/vendor/orders/status-rejected
+/pharmacy/orders/status-new
+/pharmacy/orders/status-in-work
+/pharmacy/orders/status-successful
+/pharmacy/orders/status-rejected
 ```
 
 ## 6. Clients statistics
@@ -193,9 +193,9 @@ Removed from scope:
 Examples:
 
 ```txt
-/vendor/clients
-/vendor/clients/status-active
-/vendor/clients/status-inactive
+/pharmacy/clients
+/pharmacy/clients/status-active
+/pharmacy/clients/status-inactive
 ```
 
 ### Empty state
@@ -251,11 +251,11 @@ Removed from scope:
 Examples:
 
 ```txt
-/vendor/medicines
-/vendor/medicines/status-active
-/vendor/medicines/status-inactive
-/vendor/medicines/stock-empty
-/vendor/medicines/stock-available
+/pharmacy/medicines
+/pharmacy/medicines/status-active
+/pharmacy/medicines/status-inactive
+/pharmacy/medicines/stock-empty
+/pharmacy/medicines/stock-available
 ```
 
 ### Empty state
@@ -293,11 +293,11 @@ Each card shows:
 Examples:
 
 ```txt
-/vendor/medicine-requests/status-draft
-/vendor/medicine-requests/status-new
-/vendor/medicine-requests/status-in-work
-/vendor/medicine-requests/status-approved
-/vendor/medicine-requests/status-rejected
+/pharmacy/medicine-requests/status-draft
+/pharmacy/medicine-requests/status-new
+/pharmacy/medicine-requests/status-in-work
+/pharmacy/medicine-requests/status-approved
+/pharmacy/medicine-requests/status-rejected
 ```
 
 ### Empty state

@@ -3,9 +3,9 @@ import { Router } from 'express';
 import { USER_ROLES } from '../constants/auth';
 
 import {
-  createVendorUserByAdmin,
+  createPharmacyUserByAdmin,
   updateShopStatusByAdmin,
-  updateVendorStatusByAdmin,
+  updatePharmacyStatusByAdmin,
 } from '../controllers/admin.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
@@ -13,11 +13,11 @@ import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
 
 import {
-  createAdminVendorSchema,
+  createAdminPharmacySchema,
   shopIdParamsSchema,
   updateAdminShopStatusSchema,
-  updateAdminVendorStatusSchema,
-  vendorIdParamsSchema,
+  updateAdminPharmacyStatusSchema,
+  pharmacyIdParamsSchema,
 } from '../schemas/admin.schema';
 
 import { ctrlWrapper } from '../utils/ctrlWrapper';
@@ -31,15 +31,18 @@ export const adminRoutes = Router();
 adminRoutes.use(authenticate, authorizeRoles(USER_ROLES.ADMIN));
 
 adminRoutes.post(
-  '/vendors',
-  validate({ body: createAdminVendorSchema }),
-  ctrlWrapper(createVendorUserByAdmin)
+  '/pharmacies',
+  validate({ body: createAdminPharmacySchema }),
+  ctrlWrapper(createPharmacyUserByAdmin)
 );
 
 adminRoutes.patch(
-  '/vendors/:vendorId/status',
-  validate({ params: vendorIdParamsSchema, body: updateAdminVendorStatusSchema }),
-  ctrlWrapper(updateVendorStatusByAdmin)
+  '/pharmacies/:pharmacyId/status',
+  validate({
+    params: pharmacyIdParamsSchema,
+    body: updateAdminPharmacyStatusSchema,
+  }),
+  ctrlWrapper(updatePharmacyStatusByAdmin)
 );
 
 adminRoutes.patch(

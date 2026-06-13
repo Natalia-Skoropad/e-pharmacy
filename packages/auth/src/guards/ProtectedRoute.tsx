@@ -39,7 +39,6 @@ export function ProtectedRoute({
   }, [isAuthReady, isAuthenticated, loginPath, pathname, router, searchParams]);
 
   if (!isAuthReady) return loadingFallback;
-
   if (!isAuthenticated) return redirectingFallback;
 
   return children;

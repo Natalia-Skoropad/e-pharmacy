@@ -3,12 +3,12 @@ import { z } from 'zod';
 import {
   SHOP_STATUSES,
   USER_ROLES,
-  VENDOR_ACCOUNT_STATUSES,
+  PHARMACY_ACCOUNT_STATUSES,
 } from '../constants/auth';
 
 import {
-  createVendorUserSchema,
-  updateVendorStatusSchema,
+  createPharmacyUserSchema,
+  updatePharmacyStatusSchema,
 } from './auth.schema';
 
 //===============================================================
@@ -20,11 +20,11 @@ const objectIdSchema = z
 
 //===============================================================
 
-export const createAdminVendorSchema = createVendorUserSchema;
-export const updateAdminVendorStatusSchema = updateVendorStatusSchema;
+export const createAdminPharmacySchema = createPharmacyUserSchema;
+export const updateAdminPharmacyStatusSchema = updatePharmacyStatusSchema;
 
-export const vendorIdParamsSchema = z.object({
-  vendorId: objectIdSchema,
+export const pharmacyIdParamsSchema = z.object({
+  pharmacyId: objectIdSchema,
 });
 
 export const shopIdParamsSchema = z.object({
@@ -42,5 +42,5 @@ export const updateAdminShopStatusSchema = z.object({
 
 //===============================================================
 
-export const adminOnlyVendorRole = USER_ROLES.VENDOR;
-export const activeVendorStatus = VENDOR_ACCOUNT_STATUSES.ACTIVE;
+export const adminOnlyPharmacyRole = USER_ROLES.PHARMACY;
+export const activePharmacyStatus = PHARMACY_ACCOUNT_STATUSES.ACTIVE;

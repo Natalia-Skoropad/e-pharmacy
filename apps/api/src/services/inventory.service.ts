@@ -145,7 +145,7 @@ export async function commitReservedStock(
 
 //===============================================================
 
-export async function setVendorOfferStock(
+export async function setPharmacyOfferStock(
   productId: StockTarget,
   storeId: StockTarget,
   nextTotalQuantity: number,

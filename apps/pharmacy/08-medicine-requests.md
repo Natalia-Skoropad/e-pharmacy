@@ -1,4 +1,4 @@
-# Vendor Technical Specification — Medicine Creation Requests
+# Pharmacy Technical Specification — Medicine Creation Requests
 
 ## 1. General logic
 
@@ -12,9 +12,9 @@ Examples:
 - medicine already in pharmacy stock but missing in the system;
 - product that must be added to the global E-PHARMACY catalog.
 
-Vendor cannot create global medicines directly.
+Pharmacy cannot create global medicines directly.
 
-Vendor can:
+Pharmacy can:
 
 - create request draft;
 - save draft;
@@ -46,19 +46,19 @@ Admin must first move request to `in_work`.
 
 ## 3. Request statuses
 
-| Status | Color | Meaning | Editable by Vendor |
-|---|---|---|---|
-| `draft` | Gray | Vendor created request but did not send it to Admin | Yes |
-| `new` | Blue | Vendor sent request; Admin has not started review | No |
-| `in_work` | Yellow | Admin is checking the request | No |
-| `approved` | Green | Admin created medicine from request | No |
-| `rejected` | Red | Admin rejected request | No |
+| Status     | Color  | Meaning                                               | Editable by Pharmacy |
+| ---------- | ------ | ----------------------------------------------------- | -------------------- |
+| `draft`    | Gray   | Pharmacy created request but did not send it to Admin | Yes                  |
+| `new`      | Blue   | Pharmacy sent request; Admin has not started review   | No                   |
+| `in_work`  | Yellow | Admin is checking the request                         | No                   |
+| `approved` | Green  | Admin created medicine from request                   | No                   |
+| `rejected` | Red    | Admin rejected request                                | No                   |
 
 For `rejected` status, Admin must provide rejection reason.
 
 ## 4. Access rules
 
-Vendor sees only own requests.
+Pharmacy sees only own requests.
 
 Admin sees only requests submitted to moderation:
 
@@ -67,24 +67,24 @@ Admin sees only requests submitted to moderation:
 - `approved`;
 - `rejected`.
 
-Admin does not see Vendor drafts.
+Admin does not see Pharmacy drafts.
 
-Vendor cannot see requests of other pharmacies.
+Pharmacy cannot see requests of other pharmacies.
 
 ## 5. Before creating a request
 
-Vendor should create a request only if the needed medicine does not exist in All medicines table.
+Pharmacy should create a request only if the needed medicine does not exist in All medicines table.
 
-Before creating a request, Vendor should check All medicines by:
+Before creating a request, Pharmacy should check All medicines by:
 
 - name;
 - article;
 - category;
 - manufacturer if such filter exists.
 
-If medicine exists and is active, Vendor should add it to own pharmacy instead of creating a request.
+If medicine exists and is active, Pharmacy should add it to own pharmacy instead of creating a request.
 
-If medicine exists but is inactive, Vendor must not create a duplicate.
+If medicine exists but is inactive, Pharmacy must not create a duplicate.
 
 Message:
 
@@ -105,7 +105,7 @@ Create request
 Route:
 
 ```txt
-/vendor/medicine-requests/new
+/pharmacy/medicine-requests/new
 ```
 
 Available for pharmacy statuses:
@@ -135,7 +135,7 @@ Your account is temporarily inactive. Creating requests is unavailable.
 Route:
 
 ```txt
-/vendor/medicine-requests
+/pharmacy/medicine-requests
 ```
 
 Shows only requests of current pharmacy.
@@ -161,7 +161,7 @@ Clicking request name opens request details page.
 Route:
 
 ```txt
-/vendor/medicine-requests/[requestId]
+/pharmacy/medicine-requests/[requestId]
 ```
 
 ## 8. Requests table filters
@@ -171,11 +171,11 @@ Filters must change URL using clean filter routes.
 Examples:
 
 ```txt
-/vendor/medicine-requests/status-draft
-/vendor/medicine-requests/status-new
-/vendor/medicine-requests/status-in-work
-/vendor/medicine-requests/status-approved
-/vendor/medicine-requests/status-rejected
+/pharmacy/medicine-requests/status-draft
+/pharmacy/medicine-requests/status-new
+/pharmacy/medicine-requests/status-in-work
+/pharmacy/medicine-requests/status-approved
+/pharmacy/medicine-requests/status-rejected
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -252,8 +252,8 @@ Loading requests...
 Routes:
 
 ```txt
-/vendor/medicine-requests/new
-/vendor/medicine-requests/[requestId]/edit
+/pharmacy/medicine-requests/new
+/pharmacy/medicine-requests/[requestId]/edit
 ```
 
 The page should be the same or very close to Admin create medicine page.
@@ -262,10 +262,10 @@ This allows Admin to use the same structure when creating medicine from request.
 
 Modes:
 
-| Mode | Route | Description |
-|---|---|---|
-| Create mode | `/vendor/medicine-requests/new` | Vendor creates new request |
-| Edit draft mode | `/vendor/medicine-requests/[requestId]/edit` | Vendor edits draft request |
+| Mode                       | Route                                                                                                 | Description                         |
+| -------------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| Create mode                | `/pharmacy/medicine-requests/new`                                                                     | Pharmacy creates new request        |
+| Edit draft mode            | `/pharmacy/medicine-requests/[requestId]/edit`                                                        | Pharmacy edits draft request        |
 | Admin create medicine mode | `/admin/medicine-requests/[requestId]/create-medicine` or `/admin/products/new?requestId={requestId}` | Admin creates medicine from request |
 
 ## 11. Request form fields
@@ -287,7 +287,7 @@ Fields:
 - short description;
 - full description;
 - characteristics;
-- Vendor comment;
+- Pharmacy comment;
 - additional files/documents if needed.
 
 ## 12. Required fields for draft
@@ -298,7 +298,7 @@ To save draft, require only:
 - article;
 - category.
 
-Vendor can save draft with partially filled data.
+Pharmacy can save draft with partially filled data.
 
 ## 13. Required fields for moderation submission
 
@@ -309,14 +309,14 @@ To send request to moderation, require:
 - category;
 - manufacturer;
 - short description;
-- Vendor comment.
+- Pharmacy comment.
 
 If required fields are missing:
 
 - disable Send for moderation button; or
 - show validation errors under fields after click.
 
-## 14. Vendor request buttons
+## 14. Pharmacy request buttons
 
 Buttons:
 
@@ -351,7 +351,7 @@ After confirmation:
 
 - request status changes to `new`;
 - request becomes visible to Admin;
-- Vendor can no longer edit it.
+- Pharmacy can no longer edit it.
 
 Modal title:
 
@@ -385,7 +385,7 @@ Could not send request. Please try again.
 
 ## 15. Admin request actions
 
-Admin actions are described here only to clarify Vendor flow.
+Admin actions are described here only to clarify Pharmacy flow.
 
 In Admin, request processing should include:
 
@@ -401,20 +401,20 @@ When Admin clicks Create medicine:
 - global medicine is created;
 - request status becomes `approved`;
 - request links to the created medicine;
-- Vendor sees link to created medicine.
+- Pharmacy sees link to created medicine.
 
 When Admin rejects request:
 
 - request status becomes `rejected`;
 - rejection reason is required;
-- Vendor sees rejection reason.
+- Pharmacy sees rejection reason.
 
 ## 16. Request details page
 
 Route:
 
 ```txt
-/vendor/medicine-requests/[requestId]
+/pharmacy/medicine-requests/[requestId]
 ```
 
 Request card should look like a medicine card.
@@ -428,7 +428,7 @@ Show:
 - request status;
 - short description;
 - characteristics;
-- Vendor comment;
+- Pharmacy comment;
 - created date;
 - sent to moderation date if submitted;
 - Admin comment;
@@ -446,7 +446,7 @@ Edit request
 Route:
 
 ```txt
-/vendor/medicine-requests/[requestId]/edit
+/pharmacy/medicine-requests/[requestId]/edit
 ```
 
 Info text:
@@ -457,7 +457,7 @@ This is a draft request. It has not been sent to Admin yet.
 
 ## 18. New or In work request details
 
-Vendor cannot edit submitted requests.
+Pharmacy cannot edit submitted requests.
 
 For `new`, show:
 
@@ -522,7 +522,7 @@ The new draft copies fields from the rejected request, but:
 - has a new `createdAt`;
 - does not have previous status history;
 - does not have `adminRejectReason`;
-- does not have `adminComment` unless it should be visible to Vendor;
+- does not have `adminComment` unless it should be visible to Pharmacy;
 - is not automatically sent to moderation.
 
 Success toast:
@@ -533,7 +533,7 @@ New draft created from rejected request.
 
 ## 22. Request readonly rules
 
-Vendor can edit request only while status is `draft`.
+Pharmacy can edit request only while status is `draft`.
 
 Readonly statuses:
 

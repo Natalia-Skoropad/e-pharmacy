@@ -1,21 +1,21 @@
-# Vendor Technical Specification — General Overview
+# Pharmacy Technical Specification — General Overview
 
 ## 1. Purpose
 
-The Vendor part is the pharmacy cabinet in the E-PHARMACY ecosystem. It allows a pharmacy to manage its own profile, orders, clients, medicines, medicine creation requests, and dashboard statistics.
+The Pharmacy part is the pharmacy cabinet in the E-PHARMACY ecosystem. It allows a pharmacy to manage its own profile, orders, clients, medicines, medicine creation requests, and dashboard statistics.
 
-The Vendor app works together with:
+The Pharmacy app works together with:
 
 - **Client** — public storefront where clients browse pharmacies, medicines, cart, checkout, orders, and reviews.
 - **Admin** — back-office where administrators moderate pharmacies, manage global medicines, review requests, view orders, and manage clients.
 - **API** — shared backend for all apps.
 - **Shared packages** — reusable UI, types, validation, config, API client, and utilities.
 
-At this stage, this Vendor specification is the source of truth for future Vendor implementation. Existing backend/client code may need to be gradually aligned with it.
+At this stage, this Pharmacy specification is the source of truth for future Pharmacy implementation. Existing backend/client code may need to be gradually aligned with it.
 
-## 2. Main Vendor areas
+## 2. Main Pharmacy areas
 
-The Vendor app consists of the following global parts:
+The Pharmacy app consists of the following global parts:
 
 1. **Auth and access**
    - shared login/register/password-recovery pages;
@@ -28,7 +28,7 @@ The Vendor app consists of the following global parts:
    - Sidebar;
    - Mobile menu;
    - Breadcrumbs;
-   - protected Vendor layout without Footer;
+   - protected Pharmacy layout without Footer;
    - public auth layout that may reuse the Client auth layout.
 
 3. **Dashboard**
@@ -81,9 +81,9 @@ The Vendor app consists of the following global parts:
 
 ## 3. Core access principle
 
-Vendor always sees and works only with the data of the current pharmacy.
+Pharmacy always sees and works only with the data of the current pharmacy.
 
-Vendor must not see:
+Pharmacy must not see:
 
 - orders of other pharmacies;
 - clients who never ordered from this pharmacy;
@@ -104,7 +104,7 @@ Vendor must not see:
 - order creation;
 - client reviews.
 
-### Vendor owns
+### Pharmacy owns
 
 - own pharmacy profile editing according to status rules;
 - own order processing;
@@ -137,24 +137,24 @@ The same colors must be used consistently across Dashboard, tables, details page
 
 ## 6. Filter URL strategy
 
-Vendor table filters must change the URL. Pagination and rows-per-page must not change the URL.
+Pharmacy table filters must change the URL. Pagination and rows-per-page must not change the URL.
 
 Use clean filter routes instead of query params for table filters.
 
 Recommended examples:
 
 ```txt
-/vendor/orders/status-new
-/vendor/orders/status-successful/delivery-pickup
-/vendor/clients/status-active
-/vendor/medicines/status-active/stock-empty
-/vendor/medicine-requests/status-draft
+/pharmacy/orders/status-new
+/pharmacy/orders/status-successful/delivery-pickup
+/pharmacy/clients/status-active
+/pharmacy/medicines/status-active/stock-empty
+/pharmacy/medicine-requests/status-draft
 ```
 
 Do not use pagination or rows-per-page in the URL:
 
 ```txt
-/vendor/orders?status=new&page=3&limit=50
+/pharmacy/orders?status=new&page=3&limit=50
 ```
 
 ### URL rules
@@ -180,11 +180,11 @@ Keep in local state:
 
 ## 7. Shared UI language
 
-Vendor UI is written in English. All user-facing texts, buttons, toasts, empty states, and modal messages in this specification are provided in English.
+pharmacy UI is written in English. All user-facing texts, buttons, toasts, empty states, and modal messages in this specification are provided in English.
 
 ## 8. Reusable components
 
-Vendor should reuse existing shared components where possible:
+pharmacy should reuse existing shared components where possible:
 
 - `Button`;
 - `ButtonLink`;
@@ -202,4 +202,4 @@ Vendor should reuse existing shared components where possible:
 - `RatingSummary`;
 - existing form-field components.
 
-New common components should be created only when the UI pattern will be reused across Client, Vendor, or Admin.
+New common components should be created only when the UI pattern will be reused across Client, Pharmacy, or Admin.

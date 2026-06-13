@@ -50,7 +50,6 @@ function getSessionContext(req: Request): SessionContext {
   };
 }
 
-
 //===============================================================
 
 function isNextAuthProxyRequest(req: Request): boolean {
@@ -313,11 +312,11 @@ export function getClientOnlyTest(req: Request, res: Response): void {
 
 //===============================================================
 
-export function getVendorOnlyTest(req: Request, res: Response): void {
+export function getPharmacyOnlyTest(req: Request, res: Response): void {
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.OK,
-    message: 'Vendor route is available',
+    message: 'Pharmacy route is available',
     data: {
       user: req.user,
     },

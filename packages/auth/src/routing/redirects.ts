@@ -4,7 +4,6 @@ function containsEncodedSlashOrBackslash(value: string): boolean {
   for (let index = 0; index < 3; index += 1) {
     try {
       const decodedValue = decodeURIComponent(currentValue);
-
       if (decodedValue === currentValue) break;
 
       currentValue = decodedValue;

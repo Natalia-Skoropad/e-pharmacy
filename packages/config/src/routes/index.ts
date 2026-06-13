@@ -6,4 +6,4 @@ export * from './product-routes';
 export * from './route-segments';
 export * from './slug-id';
 export * from './store-routes';
-export * from './vendor-routes';
+export * from './pharmacy-routes';

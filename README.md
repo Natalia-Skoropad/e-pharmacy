@@ -1,6 +1,6 @@
 # E-PHARMACY
 
-E-PHARMACY is a full-stack e-commerce project for an online pharmacy. The project is organized as a monorepo with a client storefront, a shared backend API, shared workspace packages, and planned app boundaries for vendor and admin panels.
+E-PHARMACY is a full-stack e-commerce project for an online pharmacy. The project is organized as a monorepo with a client storefront, a shared backend API, shared workspace packages, and planned app boundaries for pharmacy and admin panels.
 
 ## Live Demo
 
@@ -17,10 +17,10 @@ Implemented:
 
 Planned:
 
-- `apps/vendor` — pharmacy/vendor cabinet
+- `apps/pharmacy` — pharmacy/pharmacy cabinet
 - `apps/admin` — admin dashboard
 
-Vendor and admin folders are kept as planned app boundaries. They are not completed applications yet.
+Pharmacy and admin folders are kept as planned app boundaries. They are not completed applications yet.
 
 ## Main Features
 
@@ -44,7 +44,7 @@ Vendor and admin folders are kept as planned app boundaries. They are not comple
 - Zod validation
 - Centralized error handling
 - Rate limiting, Helmet, CORS, and Origin/Referer validation for cookie-based mutations
-- Role middleware foundation for future vendor/admin work
+- Role middleware foundation for future pharmacy/admin work
 
 ### SEO and routing
 
@@ -100,7 +100,7 @@ Vendor and admin folders are kept as planned app boundaries. They are not comple
 apps/
   client/   # client storefront
   api/      # shared backend API
-  vendor/   # planned vendor cabinet
+  pharmacy/   # planned pharmacy cabinet
   admin/    # planned admin dashboard
 
 packages/
@@ -203,4 +203,4 @@ pnpm check:api
 
 The strongest completed parts of the project are the client storefront, backend API, SEO routing, cookie-based auth flow, cart/checkout/order logic, and shared monorepo structure.
 
-Vendor and admin apps are planned ecosystem extensions, not completed modules yet.
+Pharmacy and admin apps are planned ecosystem extensions, not completed modules yet.

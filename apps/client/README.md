@@ -21,7 +21,7 @@ The client app allows clients to:
 
 The application focuses on a clean client experience, responsive layout, reusable UI components, route-driven SEO, and integration with a shared backend API.
 
-> Current status: the client storefront is implemented. Vendor and admin applications are separate parts of the monorepo and are described in their own README files.
+> Current status: the client storefront is implemented. Pharmacy and admin applications are separate parts of the monorepo and are described in their own README files.
 
 ## Live Demo
 
@@ -354,8 +354,8 @@ Dynamic product and pharmacy detail pages are included in the sitemap when the A
 /reset-password
 /admin
 /admin/*
-/vendor
-/vendor/*
+/pharmacy
+/pharmacy/*
 error pages
 not-found pages
 ```

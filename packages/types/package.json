@@ -16,7 +16,7 @@
     "./reviews": "./src/reviews/index.ts",
     "./shared": "./src/shared/index.ts",
     "./stores": "./src/stores/index.ts",
-    "./vendor": "./src/vendor/index.ts"
+    "./pharmacy": "./src/pharmacy/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

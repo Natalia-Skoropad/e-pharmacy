@@ -1,6 +1,6 @@
 export const APP_NAMES = {
   client: 'E-PHARMACY',
-  vendor: 'E-PHARMACY Vendor',
+  pharmacy: 'E-PHARMACY Pharmacy',
   admin: 'E-PHARMACY Admin',
 } as const;
 

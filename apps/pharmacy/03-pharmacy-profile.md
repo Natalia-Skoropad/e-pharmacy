@@ -1,8 +1,8 @@
-# Vendor Technical Specification — Pharmacy Profile
+# pharmacy Technical Specification — Pharmacy Profile
 
 ## 1. General logic
 
-Pharmacy profile is the Vendor page where the pharmacy can view and edit its own data according to current pharmacy status.
+Pharmacy profile is the Pharmacy page where the pharmacy can view and edit its own data according to current pharmacy status.
 
 The page should be visually close to the Client profile page but with pharmacy-specific content and rules.
 
@@ -10,12 +10,12 @@ Use shared components wherever possible.
 
 ## 2. Pharmacy statuses
 
-| Status          | Meaning                                                           | Who sets it                         |
-| --------------- | ----------------------------------------------------------------- | ----------------------------------- |
-| `new`           | Pharmacy registered but has not passed Admin moderation yet       | System after registration           |
-| `active`        | Pharmacy passed moderation and can work                           | Admin                               |
-| `on_moderation` | Active pharmacy changed important data and waits for Admin review | System after Vendor submits changes |
-| `inactive`      | Pharmacy is blocked or temporarily disabled                       | Admin                               |
+| Status          | Meaning                                                           | Who sets it                           |
+| --------------- | ----------------------------------------------------------------- | ------------------------------------- |
+| `new`           | Pharmacy registered but has not passed Admin moderation yet       | System after registration             |
+| `active`        | Pharmacy passed moderation and can work                           | Admin                                 |
+| `on_moderation` | Active pharmacy changed important data and waits for Admin review | System after Pharmacy submits changes |
+| `inactive`      | Pharmacy is blocked or temporarily disabled                       | Admin                                 |
 
 ## 3. Status behavior
 
@@ -23,10 +23,10 @@ Use shared components wherever possible.
 
 Can:
 
-- enter Vendor cabinet;
+- enter Pharmacy cabinet;
 - view own data;
 - edit own data without moderation;
-- view all Vendor-visible medicines from Admin.
+- view all Pharmacy-visible medicines from Admin.
 
 Cannot:
 
@@ -45,26 +45,26 @@ Your pharmacy is not activated yet. Complete the required information and wait f
 
 Can:
 
-- enter Vendor cabinet;
+- enter Pharmacy cabinet;
 - appear in Client;
 - sell medicines;
 - add active Admin medicines to own pharmacy;
 - create medicine requests;
-- view all Vendor-visible medicines from Admin;
+- view all Pharmacy-visible medicines from Admin;
 - edit own data with Admin moderation.
 
-If active pharmacy changes important data, public Client data and approved Vendor/Admin data must remain unchanged until Admin approves pending changes.
+If active pharmacy changes important data, public Client data and approved Pharmacy/Admin data must remain unchanged until Admin approves pending changes.
 
 ### Pharmacy on moderation
 
 Can:
 
-- enter Vendor cabinet;
+- enter Pharmacy cabinet;
 - appear in Client with previous approved data;
 - sell medicines;
 - add active Admin medicines to own pharmacy;
 - create medicine requests;
-- view all Vendor-visible medicines from Admin;
+- view all Pharmacy-visible medicines from Admin;
 - view approved data;
 - view pending moderation data.
 
@@ -82,7 +82,7 @@ Your changes are under moderation. Until Admin reviews them, Client pages show t
 
 Cannot:
 
-- enter Vendor cabinet;
+- enter Pharmacy cabinet;
 - appear in Client;
 - sell medicines;
 - add medicines;
@@ -204,15 +204,15 @@ Component requirements:
 - replace photo;
 - remove photo when allowed by status.
 
-Photo component and validation should be shared between Client, Vendor, and Admin.
+Photo component and validation should be shared between Client, Pharmacy, and Admin.
 
 ## 8. Email
 
 Email:
 
-- is not editable in Vendor profile;
+- is not editable in Pharmacy profile;
 - is shown as readonly;
-- is unique across Client, Vendor, and Admin;
+- is unique across Client, Pharmacy, and Admin;
 - is used for login.
 
 ## 9. Profile tabs
@@ -247,7 +247,7 @@ Fields:
 | Working hours |                 No |                                     Yes |                            Yes |
 | Password      |  By password rules |                       By password rules |                             No |
 
-Phone must be unique across Client, Vendor, and Admin.
+Phone must be unique across Client, Pharmacy, and Admin.
 
 Working hours should use a shared common component:
 
@@ -362,9 +362,9 @@ Create reusable form-field components:
 
 ## 13. Tab: Reviews
 
-Vendor can only view pharmacy reviews.
+Pharmacy can only view pharmacy reviews.
 
-Vendor cannot:
+Pharmacy cannot:
 
 - create reviews;
 - edit reviews;

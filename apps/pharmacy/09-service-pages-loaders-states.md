@@ -1,10 +1,10 @@
-# Vendor Technical Specification — Service Pages, Loaders, and States
+# pharmacy Technical Specification — Service Pages, Loaders, and States
 
 ## 1. General rule
 
-Vendor service pages and loaders should reuse the Client implementation as much as possible.
+pharmacy service pages and loaders should reuse the Client implementation as much as possible.
 
-Do not create a separate Vendor design if existing Client status pages can be reused.
+Do not create a separate pharmacy design if existing Client status pages can be reused.
 
 Reuse:
 
@@ -16,7 +16,7 @@ Reuse:
 - `loading.module.css` or shared loader styles;
 - `/images/home/three-pills.png`.
 
-Protected Vendor layout does not show Footer.
+Protected pharmacy layout does not show Footer.
 
 Every service page must have one visible `<main>`.
 
@@ -66,7 +66,7 @@ Back to dashboard
 Back link:
 
 ```txt
-/vendor/dashboard
+/pharmacy/dashboard
 ```
 
 If error page is used inside public auth layout, secondary link may lead to `/auth/login` or `/`.
@@ -107,8 +107,8 @@ View all medicines
 Links:
 
 ```txt
-/vendor/dashboard
-/vendor/all-medicines
+/pharmacy/dashboard
+/pharmacy/all-medicines
 ```
 
 ## 4. Route loading page

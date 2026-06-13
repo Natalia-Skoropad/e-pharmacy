@@ -66,7 +66,6 @@ export function GuestOnlyRoute({
   ]);
 
   if (!isAuthReady) return loadingFallback;
-
   if (isAuthenticated) return null;
 
   return children;

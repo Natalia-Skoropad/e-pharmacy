@@ -3,7 +3,7 @@ import type { Types } from 'mongoose';
 import type {
   USER_ROLES,
   USER_STATUSES,
-  VENDOR_ACCOUNT_STATUSES,
+  PHARMACY_ACCOUNT_STATUSES,
 } from '../constants/auth';
 
 //===============================================================
@@ -11,8 +11,8 @@ import type {
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 export type UserStatus = (typeof USER_STATUSES)[keyof typeof USER_STATUSES];
 
-export type VendorAccountStatus =
-  (typeof VENDOR_ACCOUNT_STATUSES)[keyof typeof VENDOR_ACCOUNT_STATUSES];
+export type PharmacyAccountStatus =
+  (typeof PHARMACY_ACCOUNT_STATUSES)[keyof typeof PHARMACY_ACCOUNT_STATUSES];
 
 //===============================================================
 
@@ -22,7 +22,7 @@ export type UserEntity = {
   password: string;
   role: UserRole;
   status: UserStatus;
-  vendorStatus?: VendorAccountStatus;
+  pharmacyStatus?: PharmacyAccountStatus;
   phone: string;
   address?: string;
   pictureUrl?: string;

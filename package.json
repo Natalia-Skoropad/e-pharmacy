@@ -2,7 +2,7 @@
   "name": "e-pharmacy",
   "version": "0.1.0",
   "private": true,
-  "description": "E-PHARMACY monorepo: client storefront, vendor cabinet, admin dashboard and shared API.",
+  "description": "E-PHARMACY monorepo: client storefront, pharmacy cabinet, admin dashboard and shared API.",
   "scripts": {
     "dev": "turbo dev",
     "dev:client": "pnpm --filter @e-pharmacy/client dev",

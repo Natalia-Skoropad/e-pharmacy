@@ -2,17 +2,17 @@ import type { Request, Response } from 'express';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
 import {
-  createVendorUserByAdminService,
+  createPharmacyUserByAdminService,
   updateShopStatusByAdminService,
-  updateVendorStatusByAdminService,
+  updatePharmacyStatusByAdminService,
 } from '../services/admin.service';
 
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
 
-type AdminVendorParams = {
-  vendorId: string;
+type AdminPharmacyParams = {
+  pharmacyId: string;
 };
 
 type AdminShopParams = {
@@ -21,7 +21,7 @@ type AdminShopParams = {
 
 //===============================================================
 
-export async function createVendorUserByAdmin(
+export async function createPharmacyUserByAdmin(
   req: Request,
   res: Response
 ): Promise<void> {
@@ -29,19 +29,22 @@ export async function createVendorUserByAdmin(
 
   if (!adminUserId) return;
 
-  const vendor = await createVendorUserByAdminService(req.body, adminUserId);
+  const pharmacy = await createPharmacyUserByAdminService(
+    req.body,
+    adminUserId
+  );
 
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.CREATED,
-    message: 'Vendor account was created successfully.',
-    data: { vendor },
+    message: 'Pharmacy account was created successfully.',
+    data: { pharmacy },
   });
 }
 
 //===============================================================
 
-export async function updateVendorStatusByAdmin(
+export async function updatePharmacyStatusByAdmin(
   req: Request,
   res: Response
 ): Promise<void> {
@@ -49,10 +52,10 @@ export async function updateVendorStatusByAdmin(
 
   if (!adminUserId) return;
 
-  const { vendorId } = req.params as AdminVendorParams;
+  const { pharmacyId } = req.params as AdminPharmacyParams;
 
-  const vendor = await updateVendorStatusByAdminService(
-    vendorId,
+  const pharmacy = await updatePharmacyStatusByAdminService(
+    pharmacyId,
     req.body,
     adminUserId
   );
@@ -60,8 +63,8 @@ export async function updateVendorStatusByAdmin(
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.OK,
-    message: 'Vendor status was updated successfully.',
-    data: { vendor },
+    message: 'Pharmacy status was updated successfully.',
+    data: { pharmacy },
   });
 }
 

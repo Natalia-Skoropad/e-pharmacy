@@ -12,7 +12,7 @@ import {
   sharedRequiredPhoneSchema,
 } from './shared-validation.schema';
 
-import { USER_ROLES, VENDOR_ACCOUNT_STATUSES } from '../constants/auth';
+import { USER_ROLES, PHARMACY_ACCOUNT_STATUSES } from '../constants/auth';
 
 //===============================================================
 
@@ -38,11 +38,11 @@ export const registerSchema = z.object({
   password: passwordSchema,
 
   /**
-   * Public registration supports client accounts now and vendor accounts for
+   * Public registration supports client accounts now and pharmacy accounts for
    * the shared auth flow. Admin accounts must still be created separately.
    */
   role: z
-    .enum([USER_ROLES.CLIENT, USER_ROLES.VENDOR])
+    .enum([USER_ROLES.CLIENT, USER_ROLES.PHARMACY])
     .default(USER_ROLES.CLIENT),
 
   phone: requiredPhoneSchema,
@@ -51,19 +51,19 @@ export const registerSchema = z.object({
 
 //===============================================================
 
-export const createVendorUserSchema = z.object({
+export const createPharmacyUserSchema = z.object({
   name: nameSchema,
   email: emailSchema,
   password: passwordSchema,
   phone: requiredPhoneSchema,
   address: optionalAddressSchema,
-  vendorStatus: z
-    .enum(Object.values(VENDOR_ACCOUNT_STATUSES))
-    .default(VENDOR_ACCOUNT_STATUSES.NEW),
+  pharmacyStatus: z
+    .enum(Object.values(PHARMACY_ACCOUNT_STATUSES))
+    .default(PHARMACY_ACCOUNT_STATUSES.NEW),
 });
 
-export const updateVendorStatusSchema = z.object({
-  vendorStatus: z.enum(Object.values(VENDOR_ACCOUNT_STATUSES)),
+export const updatePharmacyStatusSchema = z.object({
+  pharmacyStatus: z.enum(Object.values(PHARMACY_ACCOUNT_STATUSES)),
 });
 
 //===============================================================

@@ -1,8 +1,8 @@
-# Vendor Technical Specification — Layout and Navigation
+# Pharmacy Technical Specification — Layout and Navigation
 
-## 1. Vendor layout parts
+## 1. Pharmacy layout parts
 
-Vendor must include:
+Pharmacy must include:
 
 - Header;
 - Sidebar / left navigation;
@@ -11,17 +11,17 @@ Vendor must include:
 - protected layout for authenticated pharmacies without Footer;
 - public layout for auth pages that may reuse the Client auth layout.
 
-Footer is not used in the protected Vendor cabinet.
+Footer is not used in the protected Pharmacy cabinet.
 
-## 2. Protected Vendor layout
+## 2. Protected Pharmacy layout
 
-Protected layout is used for all authenticated Vendor cabinet pages.
+Protected layout is used for all authenticated Pharmacy cabinet pages.
 
 It includes:
 
-- `VendorHeader`;
-- `VendorSidebar` on desktop;
-- `VendorMobileMenu` on mobile/tablet;
+- `PharmacyHeader`;
+- `PharmacySidebar` on desktop;
+- `PharmacyMobileMenu` on mobile/tablet;
 - one visible `main`;
 - page content;
 - Breadcrumbs inside pages before `h1`;
@@ -31,9 +31,9 @@ Recommended structure:
 
 ```tsx
 <>
-  <VendorHeader />
+  <PharmacyHeader />
   <div className={css.layout}>
-    <VendorSidebar />
+    <PharmacySidebar />
     <main className={css.main}>{children}</main>
   </div>
 </>
@@ -53,9 +53,9 @@ It may reuse the Client auth layout.
 
 Sidebar is not shown in public layout.
 
-## 4. Vendor Header
+## 4. Pharmacy Header
 
-Vendor Header is similar to Client Header, but with Vendor-specific navigation logic.
+Pharmacy Header is similar to Client Header, but with Pharmacy-specific navigation logic.
 
 ### Header contains
 
@@ -81,7 +81,7 @@ For authenticated pharmacies:
 - links to Client catalog;
 - links to Pharmacy stores.
 
-Vendor navigation is located in Sidebar / Mobile menu.
+Pharmacy navigation is located in Sidebar / Mobile menu.
 
 ## 5. Pharmacy badge
 
@@ -92,7 +92,7 @@ Show:
 - round pharmacy photo;
 - fallback initials if photo is missing;
 - pharmacy name;
-- link to `/vendor/profile`.
+- link to `/pharmacy/profile`.
 
 Long names must be truncated with `text-overflow: ellipsis`.
 
@@ -140,7 +140,7 @@ It must:
 
 ## 8. Sidebar
 
-Sidebar is the main Vendor navigation on desktop.
+Sidebar is the main Pharmacy navigation on desktop.
 
 It is shown only in protected layout for pharmacies with statuses:
 
@@ -152,15 +152,15 @@ It is not shown for inactive pharmacies because inactive pharmacies cannot enter
 
 ### Sidebar links
 
-| Label             | Route                       |
-| ----------------- | --------------------------- |
-| Dashboard         | `/vendor/dashboard`         |
-| Orders            | `/vendor/orders`            |
-| Clients           | `/vendor/clients`           |
-| Own medicines     | `/vendor/medicines`         |
-| All medicines     | `/vendor/all-medicines`     |
-| Medicine requests | `/vendor/medicine-requests` |
-| Pharmacy profile  | `/vendor/profile`           |
+| Label             | Route                         |
+| ----------------- | ----------------------------- |
+| Dashboard         | `/pharmacy/dashboard`         |
+| Orders            | `/pharmacy/orders`            |
+| Clients           | `/pharmacy/clients`           |
+| Own medicines     | `/pharmacy/medicines`         |
+| All medicines     | `/pharmacy/all-medicines`     |
+| Medicine requests | `/pharmacy/medicine-requests` |
+| Pharmacy profile  | `/pharmacy/profile`           |
 
 ### Active state
 
@@ -168,8 +168,8 @@ Active state must work for nested pages.
 
 Examples:
 
-- `/vendor/orders` and `/vendor/orders/[orderId]` highlight **Orders**;
-- `/vendor/medicine-requests`, `/vendor/medicine-requests/new`, `/vendor/medicine-requests/[requestId]`, and `/vendor/medicine-requests/[requestId]/edit` highlight **Medicine requests**.
+- `/pharmacy/orders` and `/pharmacy/orders/[orderId]` highlight **Orders**;
+- `/pharmacy/medicine-requests`, `/pharmacy/medicine-requests/new`, `/pharmacy/medicine-requests/[requestId]`, and `/pharmacy/medicine-requests/[requestId]/edit` highlight **Medicine requests**.
 
 ## 9. Sidebar content
 
@@ -191,7 +191,7 @@ Status: New
 
 ## 10. Breadcrumbs
 
-Vendor must reuse the existing Client `Breadcrumbs` component.
+Pharmacy must reuse the existing Client `Breadcrumbs` component.
 
 Breadcrumbs are shown inside `main`, before `h1`.
 

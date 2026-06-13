@@ -1,6 +1,6 @@
 # E-PHARMACY API
 
-Shared Express/MongoDB backend API for the E-PHARMACY monorepo. It supports the client storefront and provides the backend foundation for future vendor and admin modules.
+Shared Express/MongoDB backend API for the E-PHARMACY monorepo. It supports the client storefront and provides the backend foundation for future pharmacy and admin modules.
 
 ## Current Status
 
@@ -17,13 +17,13 @@ Implemented:
 
 Planned:
 
-- Vendor shop management
-- Vendor medicine CRUD
-- Vendor statistics and client goods data
+- Pharmacy shop management
+- Pharmacy medicine CRUD
+- Pharmacy statistics and client goods data
 - Admin dashboard statistics
 - Admin products, orders, clients, and suppliers management
 
-The API is currently client-ready. Vendor and admin modules are planned extensions.
+The API is currently client-ready. Pharmacy and admin modules are planned extensions.
 
 ## Features
 
@@ -147,7 +147,7 @@ Development-only role test routes are available outside production:
 
 ```txt
 GET /auth/test/client
-GET /auth/test/vendor
+GET /auth/test/pharmacy
 GET /auth/test/admin
 ```
 

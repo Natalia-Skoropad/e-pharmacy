@@ -1,4 +1,4 @@
-# Vendor Technical Specification — clients
+# Pharmacy Technical Specification — clients
 
 ## 1. General logic
 
@@ -6,11 +6,11 @@ Clients are created only through self-registration in the Client part.
 
 Admin can edit clients and change client status.
 
-Vendor cannot create, edit, block, delete, or change client status.
+Pharmacy cannot create, edit, block, delete, or change client status.
 
-Vendor can only view clients who created at least one order for the current pharmacy.
+Pharmacy can only view clients who created at least one order for the current pharmacy.
 
-Vendor cannot see:
+Pharmacy cannot see:
 
 - all system clients;
 - clients of other pharmacies;
@@ -56,11 +56,11 @@ Your account is temporarily inactive. Please contact administration for details.
 
 ## 5. Own client definition
 
-A Vendor own client is a v who created at least one order for the current pharmacy.
+A Pharmacy own client is a v who created at least one order for the current pharmacy.
 
-client appears in Vendor clients table by the date of the first order created for this pharmacy.
+client appears in Pharmacy clients table by the date of the first order created for this pharmacy.
 
-The specification uses only one Vendor client date:
+The specification uses only one Pharmacy client date:
 
 ```txt
 firstOrderAt
@@ -68,14 +68,14 @@ firstOrderAt
 
 This date is shown in the clients table and on the client details page.
 
-Do not show client system registration date in Vendor UI in the first version.
+Do not show client system registration date in Pharmacy UI in the first version.
 
 ## 6. clients table
 
 Route:
 
 ```txt
-/vendor/clients
+/pharmacy/clients
 ```
 
 The table shows only clients who ordered from the current pharmacy.
@@ -104,9 +104,9 @@ Filters must change URL using clean filter routes.
 Examples:
 
 ```txt
-/vendor/clients/status-active
-/vendor/clients/status-inactive
-/vendor/clients/date-from-2026-01-01/date-to-2026-01-31
+/pharmacy/clients/status-active
+/pharmacy/clients/status-inactive
+/pharmacy/clients/date-from-2026-01-01/date-to-2026-01-31
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -185,7 +185,7 @@ firstOrderAt
 
 Sortable.
 
-Date format must be the same in Vendor, Client, and Admin.
+Date format must be the same in Pharmacy, Client, and Admin.
 
 ### Name
 
@@ -273,14 +273,14 @@ Reset filters
 Route:
 
 ```txt
-/vendor/clients/[clientId]
+/pharmacy/clients/[clientId]
 ```
 
 The page shows client details and client orders for the current pharmacy only.
 
-Vendor can only view client data.
+pharmacy can only view client data.
 
-Vendor cannot:
+pharmacy cannot:
 
 - edit client name;
 - edit email;
@@ -417,7 +417,7 @@ client orders empty state:
 This client has no orders in your pharmacy yet.
 ```
 
-This state is a fallback only. Normally such client should not appear in Vendor clients list.
+This state is a fallback only. Normally such client should not appear in pharmacy clients list.
 
 Nothing found state:
 

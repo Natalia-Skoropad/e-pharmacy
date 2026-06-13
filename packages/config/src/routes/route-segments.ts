@@ -15,7 +15,7 @@ export const ROUTE_SEGMENTS = {
   returnPolicy: 'return-policy',
   userAgreement: 'user-agreement',
   personalDataNotice: 'personal-data-notice',
-  vendor: 'vendor',
+  pharmacy: 'pharmacy',
   admin: 'admin',
 } as const;
 
@@ -24,7 +24,7 @@ export const ROUTE_SEGMENTS = {
 /**
  * Root-level product/store SEO URLs live at `/:slugId`.
  * Every real static top-level route must stay here so dynamic details
- * never accidentally capture `/vendor`, `/admin`, legal pages, etc.
+ * never accidentally capture `/pharmacy`, `/admin`, legal pages, etc.
  */
 export const RESERVED_ROOT_SLUGS = [
   ROUTE_SEGMENTS.cart,
@@ -41,7 +41,7 @@ export const RESERVED_ROOT_SLUGS = [
   ROUTE_SEGMENTS.personalDataNotice,
   ROUTE_SEGMENTS.passwordRecovery,
   ROUTE_SEGMENTS.resetPassword,
-  ROUTE_SEGMENTS.vendor,
+  ROUTE_SEGMENTS.pharmacy,
   ROUTE_SEGMENTS.admin,
 ] as const;
 

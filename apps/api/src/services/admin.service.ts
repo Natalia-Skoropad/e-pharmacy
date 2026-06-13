@@ -1,4 +1,9 @@
-import { SHOP_STATUSES, USER_ROLES, VENDOR_ACCOUNT_STATUSES } from '../constants/auth';
+import {
+  SHOP_STATUSES,
+  USER_ROLES,
+  PHARMACY_ACCOUNT_STATUSES,
+} from '../constants/auth';
+
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Store } from '../models/store.model';
@@ -6,7 +11,7 @@ import { User } from '../models/user.model';
 
 import type { AuthUserResponse } from '../types/auth';
 import type { ShopStatus } from '../types/store';
-import type { VendorAccountStatus } from '../types/user';
+import type { PharmacyAccountStatus } from '../types/user';
 
 import { httpError } from '../utils/httpError';
 import { isDuplicateEmailError } from '../utils/mongoError';
@@ -15,17 +20,17 @@ import { toAuthUserResponse } from '../utils/userResponse';
 
 //===============================================================
 
-type CreateAdminVendorInput = {
+type CreateAdminPharmacyInput = {
   name: string;
   email: string;
   password: string;
   phone?: string;
   address?: string;
-  vendorStatus?: VendorAccountStatus;
+  pharmacyStatus?: PharmacyAccountStatus;
 };
 
-type UpdateVendorStatusInput = {
-  vendorStatus: VendorAccountStatus;
+type UpdatePharmacyStatusInput = {
+  pharmacyStatus: PharmacyAccountStatus;
 };
 
 type UpdateShopStatusInput = {
@@ -34,8 +39,8 @@ type UpdateShopStatusInput = {
 
 //===============================================================
 
-export async function createVendorUserByAdminService(
-  input: CreateAdminVendorInput,
+export async function createPharmacyUserByAdminService(
+  input: CreateAdminPharmacyInput,
   adminUserId: string
 ): Promise<AuthUserResponse> {
   const existingUser = await User.findOne({ email: input.email });
@@ -45,22 +50,22 @@ export async function createVendorUserByAdminService(
   }
 
   try {
-    const vendor = await User.create({
+    const pharmacy = await User.create({
       name: input.name,
       email: input.email,
       password: await hashPassword(input.password),
-      role: USER_ROLES.VENDOR,
-      vendorStatus: input.vendorStatus ?? VENDOR_ACCOUNT_STATUSES.NEW,
+      role: USER_ROLES.PHARMACY,
+      pharmacyStatus: input.pharmacyStatus ?? PHARMACY_ACCOUNT_STATUSES.NEW,
       phone: input.phone,
       address: input.address,
       createdBy: adminUserId,
       updatedBy: adminUserId,
-      ...(input.vendorStatus === VENDOR_ACCOUNT_STATUSES.ACTIVE
+      ...(input.pharmacyStatus === PHARMACY_ACCOUNT_STATUSES.ACTIVE
         ? { approvedBy: adminUserId, approvedAt: new Date() }
         : {}),
     });
 
-    return toAuthUserResponse(vendor);
+    return toAuthUserResponse(pharmacy);
   } catch (error) {
     if (isDuplicateEmailError(error)) {
       throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
@@ -72,32 +77,32 @@ export async function createVendorUserByAdminService(
 
 //===============================================================
 
-export async function updateVendorStatusByAdminService(
-  vendorId: string,
-  input: UpdateVendorStatusInput,
+export async function updatePharmacyStatusByAdminService(
+  pharmacyId: string,
+  input: UpdatePharmacyStatusInput,
   adminUserId: string
 ): Promise<AuthUserResponse> {
   const set: Record<string, unknown> = {
-    vendorStatus: input.vendorStatus,
+    pharmacyStatus: input.pharmacyStatus,
     updatedBy: adminUserId,
   };
 
   const unset: Record<string, ''> = {};
 
-  if (input.vendorStatus === VENDOR_ACCOUNT_STATUSES.ACTIVE) {
+  if (input.pharmacyStatus === PHARMACY_ACCOUNT_STATUSES.ACTIVE) {
     set.approvedBy = adminUserId;
     set.approvedAt = new Date();
   }
 
-  if (input.vendorStatus === VENDOR_ACCOUNT_STATUSES.INACTIVE) {
+  if (input.pharmacyStatus === PHARMACY_ACCOUNT_STATUSES.INACTIVE) {
     unset.approvedBy = '';
     unset.approvedAt = '';
   }
 
-  const vendor = await User.findOneAndUpdate(
+  const pharmacy = await User.findOneAndUpdate(
     {
-      _id: vendorId,
-      role: USER_ROLES.VENDOR,
+      _id: pharmacyId,
+      role: USER_ROLES.PHARMACY,
     },
     {
       $set: set,
@@ -109,11 +114,11 @@ export async function updateVendorStatusByAdminService(
     }
   );
 
-  if (!vendor) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Vendor account was not found.');
+  if (!pharmacy) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy account was not found.');
   }
 
-  return toAuthUserResponse(vendor);
+  return toAuthUserResponse(pharmacy);
 }
 
 //===============================================================
@@ -136,7 +141,10 @@ export async function updateShopStatusByAdminService(
     set.approvedAt = new Date();
   }
 
-  if (input.status === SHOP_STATUSES.NEW || input.status === SHOP_STATUSES.ON_MODERATION) {
+  if (
+    input.status === SHOP_STATUSES.NEW ||
+    input.status === SHOP_STATUSES.ON_MODERATION
+  ) {
     unset.approvedBy = '';
     unset.approvedAt = '';
   }

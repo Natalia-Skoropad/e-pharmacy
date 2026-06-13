@@ -7,7 +7,7 @@ import type { ShopStatus } from '../auth';
 
 //=============================================================================
 
-export type VendorShopDto = StoreDto & {
+export type PharmacyShopDto = StoreDto & {
   ownerId: EntityId;
   status: ShopStatus;
   createdAt?: ISODateString;
@@ -15,11 +15,11 @@ export type VendorShopDto = StoreDto & {
   approvedAt?: ISODateString;
 };
 
-export type VendorProductDto = ProductDto & {
+export type PharmacyProductDto = ProductDto & {
   ownedOffer: ProductOfferDto;
 };
 
-export type VendorStatisticsDto = {
+export type PharmacyStatisticsDto = {
   totalProducts: number;
   activeProducts: number;
   reservedItems: number;
@@ -37,7 +37,7 @@ export type ClientGoodsDto = {
   createdAt: ISODateString;
 };
 
-export type Vendor = AuthUser;
+export type Pharmacy = AuthUser;
 export type Medicine = ProductDto;
 export type MedicineRequestStatus =
   | 'draft'

@@ -26,8 +26,8 @@ export const NOINDEX_ROUTES = [
   `${ROUTES.PROFILE}/:path*`,
   '/admin',
   '/admin/:path*',
-  '/vendor',
-  '/vendor/:path*',
+  '/pharmacy',
+  '/pharmacy/:path*',
 ] as const;
 
 //===================================================================
@@ -41,7 +41,7 @@ export const ROBOTS_PRIVATE_ROUTE_ROOTS = [
   ROUTES.RESET_PASSWORD,
   ROUTES.PROFILE,
   ROUTES.ADMIN,
-  ROUTES.VENDOR,
+  ROUTES.PHARMACY,
 ] as const;
 
 export const ROBOTS_DISALLOW_ROUTES = ROBOTS_PRIVATE_ROUTE_ROOTS.flatMap(

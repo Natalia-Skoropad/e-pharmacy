@@ -36,9 +36,7 @@ export function RoleProtectedRoute({
   const searchParams = useSearchParams();
 
   const { isAuthenticated, isAuthReady, user } = useAuth();
-  const hasAllowedRole = Boolean(
-    user && allowedRoles.includes(user.role)
-  );
+  const hasAllowedRole = Boolean(user && allowedRoles.includes(user.role));
 
   useEffect(() => {
     if (!isAuthReady) return;
@@ -66,9 +64,7 @@ export function RoleProtectedRoute({
   ]);
 
   if (!isAuthReady) return loadingFallback;
-
   if (!isAuthenticated) return redirectingFallback;
-
   if (!hasAllowedRole) return forbiddenFallback;
 
   return children;

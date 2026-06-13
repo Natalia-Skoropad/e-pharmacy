@@ -1,6 +1,6 @@
 export const USER_ROLES = {
   CLIENT: 'client',
-  VENDOR: 'vendor',
+  PHARMACY: 'pharmacy',
   ADMIN: 'admin',
 } as const;
 
@@ -13,7 +13,7 @@ export const USER_STATUSES = {
 
 //===============================================================
 
-export const VENDOR_ACCOUNT_STATUSES = {
+export const PHARMACY_ACCOUNT_STATUSES = {
   NEW: 'new',
   ACTIVE: 'active',
   ON_MODERATION: 'on_moderation',

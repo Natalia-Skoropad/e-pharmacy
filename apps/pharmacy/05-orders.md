@@ -1,10 +1,10 @@
-# Vendor Technical Specification — Orders
+# Pharmacy Technical Specification — Orders
 
 ## 1. General logic
 
 Orders are created only by clients through the Client checkout.
 
-Vendor processes only orders that belong to the current pharmacy.
+Pharmacy processes only orders that belong to the current pharmacy.
 
 Admin can view orders but does not create or edit them.
 
@@ -18,14 +18,14 @@ After client confirms checkout:
 
 ## 2. Order statuses
 
-| Status       | Color  | Meaning                                  |
-| ------------ | ------ | ---------------------------------------- |
-| `new`        | Blue   | Order was confirmed by client            |
-| `in_work`    | Yellow | Vendor accepted the order for processing |
-| `successful` | Green  | Order is completed                       |
-| `rejected`   | Red    | Order was rejected by Vendor             |
+| Status       | Color  | Meaning                                    |
+| ------------ | ------ | ------------------------------------------ |
+| `new`        | Blue   | Order was confirmed by client              |
+| `in_work`    | Yellow | Pharmacy accepted the order for processing |
+| `successful` | Green  | Order is completed                         |
+| `rejected`   | Red    | Order was rejected by Pharmacy             |
 
-For `rejected` status, Vendor must provide a required rejection reason.
+For `rejected` status, Pharmacy must provide a required rejection reason.
 
 ## 3. Allowed status transitions
 
@@ -141,17 +141,17 @@ When order becomes `rejected`:
 - items become available for other orders;
 - order prices remain unchanged.
 
-If Vendor changes item quantity in `in_work` status:
+If Pharmacy changes item quantity in `in_work` status:
 
 - reservation is recalculated;
 - available stock must be checked.
 
-If Vendor adds a new item in `in_work` status:
+If Pharmacy adds a new item in `in_work` status:
 
 - item is reserved;
 - current price is fixed at the moment of adding.
 
-If Vendor removes an item in `in_work` status:
+If Pharmacy removes an item in `in_work` status:
 
 - reservation for this item is cancelled.
 
@@ -159,18 +159,18 @@ If Vendor removes an item in `in_work` status:
 
 The order item price is fixed when the item enters the order.
 
-If Vendor changes quantity for an item that already exists in the order, unit price remains the same as the fixed price of that order item.
+If Pharmacy changes quantity for an item that already exists in the order, unit price remains the same as the fixed price of that order item.
 
-If Vendor adds a new item that was not previously in the order, current price is fixed at the moment of adding.
+If Pharmacy adds a new item that was not previously in the order, current price is fixed at the moment of adding.
 
-Current catalog or Vendor price changes do not affect already created order items.
+Current catalog or Pharmacy price changes do not affect already created order items.
 
 ## 7. Orders table
 
 Route:
 
 ```txt
-/vendor/orders
+/pharmacy/orders
 ```
 
 The table shows only orders of the current pharmacy.
@@ -199,12 +199,12 @@ Filters must change URL using clean filter routes.
 Filter examples:
 
 ```txt
-/vendor/orders/status-new
-/vendor/orders/status-in-work
-/vendor/orders/status-successful
-/vendor/orders/status-rejected
-/vendor/orders/status-successful/delivery-pickup
-/vendor/orders/status-in-work/payment-cash
+/pharmacy/orders/status-new
+/pharmacy/orders/status-in-work
+/pharmacy/orders/status-successful
+/pharmacy/orders/status-rejected
+/pharmacy/orders/status-successful/delivery-pickup
+/pharmacy/orders/status-in-work/payment-cash
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -287,7 +287,7 @@ Shows order creation date.
 
 Sortable.
 
-Date format must be the same in Client, Vendor, and Admin.
+Date format must be the same in Client, Pharmacy, and Admin.
 
 ### client
 
@@ -299,13 +299,13 @@ Click opens client details page.
 
 Shows current delivery method.
 
-If Vendor changed delivery method in `in_work` status, table shows updated value.
+If Pharmacy changed delivery method in `in_work` status, table shows updated value.
 
 ### Payment method
 
 Shows current payment method.
 
-If Vendor changed payment method in `in_work` status, table shows updated value.
+If Pharmacy changed payment method in `in_work` status, table shows updated value.
 
 ### client comment
 
@@ -386,10 +386,10 @@ Reset filters
 Route:
 
 ```txt
-/vendor/orders/[orderId]
+/pharmacy/orders/[orderId]
 ```
 
-Vendor can edit the order only when status is `in_work`.
+Pharmacy can edit the order only when status is `in_work`.
 
 Readonly statuses:
 
@@ -482,7 +482,7 @@ For each item show:
 
 Editing items is available only for `in_work` status.
 
-Vendor can:
+Pharmacy can:
 
 - increase quantity;
 - decrease quantity;
@@ -507,7 +507,7 @@ Are you sure you want to remove this item from the order?
 
 Allowed only in `in_work` status.
 
-Vendor can add only medicines that are:
+Pharmacy can add only medicines that are:
 
 - active;
 - in stock;
@@ -557,7 +557,7 @@ Empty text:
 client did not leave a comment.
 ```
 
-### Vendor comment
+### Pharmacy comment
 
 Editable only in `in_work` status.
 
@@ -577,7 +577,7 @@ Button label:
 Add products
 ```
 
-This button opens the same selection logic as Client `ContinueShoppingModal`, adapted for Vendor context.
+This button opens the same selection logic as Client `ContinueShoppingModal`, adapted for Pharmacy context.
 
 Enabled only in `in_work` status.
 
@@ -607,4 +607,4 @@ Not found state:
 Order not found.
 ```
 
-Vendor must not see orders of other pharmacies.
+Pharmacy must not see orders of other pharmacies.

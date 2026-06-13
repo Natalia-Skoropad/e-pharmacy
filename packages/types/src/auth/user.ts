@@ -1,5 +1,5 @@
 import type { EntityId } from '../shared';
-import type { UserRole, UserStatus, VendorAccountStatus } from './role';
+import type { UserRole, UserStatus, PharmacyAccountStatus } from './role';
 
 //===================================================================
 
@@ -9,7 +9,7 @@ export type AuthUser = {
   email: string;
   role: UserRole;
   status: UserStatus;
-  vendorStatus?: VendorAccountStatus;
+  pharmacyStatus?: PharmacyAccountStatus;
   phone: string;
   address?: string;
   pictureUrl?: string;
