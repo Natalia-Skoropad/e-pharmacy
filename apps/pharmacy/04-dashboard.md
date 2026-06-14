@@ -8,8 +8,8 @@ It shows a short overview of the current pharmacy only:
 
 - own order statistics;
 - own client statistics;
-- own medicine statistics;
-- own medicine request statistics;
+- own product statistics;
+- own product request statistics;
 - quick actions;
 - warnings or info banners based on pharmacy status.
 
@@ -29,12 +29,12 @@ Dashboard is not available for `inactive` pharmacies because inactive pharmacies
 
 ### New pharmacy
 
-Dashboard shows limited statistics because the pharmacy cannot yet sell medicines, add medicines, or create medicine requests.
+Dashboard shows limited statistics because the pharmacy cannot yet sell products, add products, or create product requests.
 
 Banner:
 
 ```txt
-Your pharmacy is not activated yet. After Admin review, you will be able to sell medicines, add products, and create medicine requests.
+Your pharmacy is not activated yet. After Admin review, you will be able to sell products, add products, and create product requests.
 ```
 
 ### Active pharmacy
@@ -68,7 +68,7 @@ Dashboard
 Description:
 
 ```txt
-View order, client, medicine, and request statistics for your pharmacy.
+View order, client, product, and request statistics for your pharmacy.
 ```
 
 ## 4. Dashboard filters
@@ -80,10 +80,10 @@ These filters affect only order statistics.
 They do not affect:
 
 - client statistics;
-- medicine statistics;
-- medicine request statistics;
+- product statistics;
+- product request statistics;
 - total clients;
-- total medicines;
+- total products;
 - current stock value;
 - request counts by status.
 
@@ -139,7 +139,7 @@ Shows count and total amount of current pharmacy orders for the selected year/mo
 
 The amount is calculated from prices fixed in orders.
 
-Current medicine price changes do not affect already created orders.
+Current product price changes do not affect already created orders.
 
 Statuses:
 
@@ -210,20 +210,20 @@ Additional text:
 Clients will appear after the first orders in your pharmacy.
 ```
 
-## 7. Medicines statistics
+## 7. Products statistics
 
-Shows analytics only for medicines added to the current pharmacy.
+Shows analytics only for products added to the current pharmacy.
 
-Global Admin medicines that are not added to the current pharmacy are not included.
+Global Admin products that are not added to the current pharmacy are not included.
 
 Cards:
 
-- Total medicines in pharmacy;
-- Active medicines;
-- Inactive medicines;
-- Medicines in stock;
-- Out of stock medicines;
-- Reserved medicines.
+- Total products in pharmacy;
+- Active products;
+- Inactive products;
+- products in stock;
+- Out of stock products;
+- Reserved products.
 
 ### Financial cards
 
@@ -251,26 +251,26 @@ Removed from scope:
 Examples:
 
 ```txt
-/pharmacy/medicines
-/pharmacy/medicines/status-active
-/pharmacy/medicines/status-inactive
-/pharmacy/medicines/stock-empty
-/pharmacy/medicines/stock-available
+/pharmacy/products
+/pharmacy/products/status-active
+/pharmacy/products/status-inactive
+/pharmacy/products/stock-empty
+/pharmacy/products/stock-available
 ```
 
 ### Empty state
 
 ```txt
-Your pharmacy has no added medicines yet.
+Your pharmacy has no added products yet.
 ```
 
 Button:
 
 ```txt
-View all medicines
+View all products
 ```
 
-## 8. Medicine request statistics
+## 8. Product request statistics
 
 Shows only requests created by the current pharmacy.
 
@@ -293,17 +293,17 @@ Each card shows:
 Examples:
 
 ```txt
-/pharmacy/medicine-requests/status-draft
-/pharmacy/medicine-requests/status-new
-/pharmacy/medicine-requests/status-in-work
-/pharmacy/medicine-requests/status-approved
-/pharmacy/medicine-requests/status-rejected
+/pharmacy/product-requests/status-draft
+/pharmacy/product-requests/status-new
+/pharmacy/product-requests/status-in-work
+/pharmacy/product-requests/status-approved
+/pharmacy/product-requests/status-rejected
 ```
 
 ### Empty state
 
 ```txt
-Your pharmacy has no medicine creation requests yet.
+Your pharmacy has no product creation requests yet.
 ```
 
 Button:
@@ -344,8 +344,8 @@ Show empty states for:
 
 - no orders;
 - no client;
-- no added medicines;
-- no medicine requests.
+- no added products;
+- no product requests.
 
 ## 10. Reusable dashboard components
 

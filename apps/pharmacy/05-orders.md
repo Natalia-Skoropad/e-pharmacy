@@ -12,7 +12,7 @@ After client confirms checkout:
 
 - order is created;
 - order status becomes `new`;
-- ordered medicines are reserved in stock;
+- ordered products are reserved in stock;
 - order cannot be deleted;
 - prices are fixed in the order.
 
@@ -68,7 +68,7 @@ Complete order?
 Message:
 
 ```txt
-This action will mark the order as completed and permanently write off the reserved medicines from stock. This status change cannot be reverted.
+This action will mark the order as completed and permanently write off the reserved products from stock. This status change cannot be reverted.
 ```
 
 Confirm button:
@@ -94,7 +94,7 @@ Reject order?
 Message:
 
 ```txt
-This action will reject the order and return reserved medicines to available stock. This status change cannot be reverted.
+This action will reject the order and return reserved products to available stock. This status change cannot be reverted.
 ```
 
 Textarea label:
@@ -121,23 +121,23 @@ The confirm button is disabled until rejection reason is filled.
 
 When order is created by client:
 
-- medicines are reserved;
+- products are reserved;
 - reserved quantity is not available for other orders;
 - order status is `new`.
 
 In statuses `new` and `in_work`:
 
-- medicines remain reserved.
+- products remain reserved.
 
 When order becomes `successful`:
 
-- reserved medicines are permanently written off from stock;
+- reserved products are permanently written off from stock;
 - order is completed;
 - total order amount remains fixed.
 
 When order becomes `rejected`:
 
-- reserved medicines return to available stock;
+- reserved products return to available stock;
 - items become available for other orders;
 - order prices remain unchanged.
 
@@ -487,7 +487,7 @@ Pharmacy can:
 - increase quantity;
 - decrease quantity;
 - remove item;
-- add a new item from own active medicines.
+- add a new item from own active products.
 
 Rules:
 
@@ -507,7 +507,7 @@ Are you sure you want to remove this item from the order?
 
 Allowed only in `in_work` status.
 
-Pharmacy can add only medicines that are:
+Pharmacy can add only products that are:
 
 - active;
 - in stock;

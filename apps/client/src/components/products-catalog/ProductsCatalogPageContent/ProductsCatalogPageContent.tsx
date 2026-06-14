@@ -1,52 +1,56 @@
 import { Container, Pagination } from '@e-pharmacy/ui/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import MedicinesCatalogFiltersForm from '@/components/medicines-catalog/MedicinesCatalogFiltersForm';
-import ProductsList from '@/components/medicines-catalog/ProductsList';
+import ProductsCatalogFiltersForm from '@/components/products-catalog/ProductsCatalogFiltersForm';
+import ProductsList from '@/components/products-catalog/ProductsList';
 
 import {
-  buildMedicinesCatalogPath,
-  getMedicinesCatalogDescription,
-  getMedicinesCatalogSeoTextParts,
-  getMedicinesCatalogTitle,
-  shouldShowMedicinesCatalogSeoText,
-  type MedicinesCatalogFilters,
-  type MedicinesCatalogSeoContext,
-} from '@/lib/catalog/medicines-catalog';
+  buildProductsCatalogPath,
+  getProductsCatalogDescription,
+  getProductsCatalogSeoTextParts,
+  getProductsCatalogTitle,
+  shouldShowProductsCatalogSeoText,
+  type ProductsCatalogFilters,
+  type ProductsCatalogSeoContext,
+} from '@/lib/catalog/products-catalog';
 
 import { ROUTES } from '@e-pharmacy/config/routes';
-import type { Product, ProductFilterOptionsResponse, Store } from '@e-pharmacy/types';
+import type {
+  Product,
+  ProductFilterOptionsResponse,
+  Store,
+} from '@e-pharmacy/types';
 
-import css from './MedicinesCatalogPageContent.module.css';
+import css from './ProductsCatalogPageContent.module.css';
 
 //===================================================================
 
-type MedicineStorePageContentProps = {
+type ProductStorePageContentProps = {
   products: Product[];
   stores: Store[];
   filterOptions: ProductFilterOptionsResponse;
   total: number;
   totalPages: number;
-  filters: MedicinesCatalogFilters;
+  filters: ProductsCatalogFilters;
   isUnavailable?: boolean;
 };
 
 //===================================================================
 
-function buildMedicinesPageHref(
-  filters: MedicinesCatalogFilters,
+function buildProductsPageHref(
+  filters: ProductsCatalogFilters,
   page: number,
   stores: Store[]
 ) {
-  return buildMedicinesCatalogPath({ ...filters, page }, stores);
+  return buildProductsCatalogPath({ ...filters, page }, stores);
 }
 
 //===================================================================
 
 function createSeoContext(
-  filters: MedicinesCatalogFilters,
+  filters: ProductsCatalogFilters,
   stores: Store[],
   filterOptions: ProductFilterOptionsResponse
-): MedicinesCatalogSeoContext {
+): ProductsCatalogSeoContext {
   const selectedStore = filters.storeId
     ? stores.find((store) => store.id === filters.storeId)
     : undefined;
@@ -62,7 +66,7 @@ function createSeoContext(
 
 //===================================================================
 
-function MedicineStorePageContent({
+function ProductStorePageContent({
   products,
   stores,
   filterOptions,
@@ -70,12 +74,12 @@ function MedicineStorePageContent({
   totalPages,
   filters,
   isUnavailable = false,
-}: MedicineStorePageContentProps) {
+}: ProductStorePageContentProps) {
   const seoContext = createSeoContext(filters, stores, filterOptions);
-  const pageTitle = getMedicinesCatalogTitle(filters, seoContext);
-  const pageDescription = getMedicinesCatalogDescription(filters, seoContext);
-  const showSeoText = total > 0 && shouldShowMedicinesCatalogSeoText(filters);
-  const seoTextParts = getMedicinesCatalogSeoTextParts(filters, seoContext);
+  const pageTitle = getProductsCatalogTitle(filters, seoContext);
+  const pageDescription = getProductsCatalogDescription(filters, seoContext);
+  const showSeoText = total > 0 && shouldShowProductsCatalogSeoText(filters);
+  const seoTextParts = getProductsCatalogSeoTextParts(filters, seoContext);
 
   return (
     <main className={css.page}>
@@ -84,7 +88,7 @@ function MedicineStorePageContent({
           <Breadcrumbs
             items={[
               { label: 'Home', href: ROUTES.HOME },
-              { label: 'Medicines catalog', href: ROUTES.MEDICINES_CATALOG },
+              { label: 'Products catalog', href: ROUTES.PRODUCTS_CATALOG },
               ...(filters.category !== 'all' && seoContext.categoryLabel
                 ? [{ label: seoContext.categoryLabel }]
                 : []),
@@ -101,7 +105,7 @@ function MedicineStorePageContent({
             </h1>
           </div>
 
-          <MedicinesCatalogFiltersForm
+          <ProductsCatalogFiltersForm
             filters={filters}
             stores={stores}
             filterOptions={filterOptions}
@@ -111,7 +115,7 @@ function MedicineStorePageContent({
 
           {isUnavailable ? (
             <div className={css.notice} role="status">
-              Medicines are temporarily unavailable. Please check that the
+              Products are temporarily unavailable. Please check that the
               backend API is running.
             </div>
           ) : null}
@@ -121,8 +125,8 @@ function MedicineStorePageContent({
           <Pagination
             currentPage={filters.page}
             totalPages={totalPages}
-            getPageHref={(page) => buildMedicinesPageHref(filters, page, stores)}
-            ariaLabel="Medicines catalog pagination"
+            getPageHref={(page) => buildProductsPageHref(filters, page, stores)}
+            ariaLabel="Products catalog pagination"
           />
 
           {showSeoText ? (
@@ -151,4 +155,4 @@ function MedicineStorePageContent({
   );
 }
 
-export default MedicineStorePageContent;
+export default ProductStorePageContent;

@@ -1,4 +1,4 @@
-import ProductCard from '@/components/medicines-catalog/ProductCard';
+import ProductCard from '@/components/products-catalog/ProductCard';
 
 import type { Product } from '@e-pharmacy/types';
 
@@ -16,7 +16,7 @@ function ProductsList({ products }: ProductsListProps) {
   if (products.length === 0) {
     return (
       <div className={css.empty}>
-        <h2 className={css.emptyTitle}>No medicines found</h2>
+        <h2 className={css.emptyTitle}>No products found</h2>
         <p className={css.emptyText}>
           Products will appear here after they are added to the selected
           pharmacy store.

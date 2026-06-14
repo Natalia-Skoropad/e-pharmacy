@@ -1,14 +1,14 @@
-# Pharmacy Technical Specification — Medicines
+# Pharmacy Technical Specification — Products
 
 ## 1. General logic
 
-Medicines are created and edited only in Admin.
+Products are created and edited only in Admin.
 
-Pharmacy cannot create or edit global medicine data directly.
+Pharmacy cannot create or edit global product data directly.
 
-Pharmacy can add existing active Admin medicines to the current pharmacy.
+Pharmacy can add existing active Admin products to the current pharmacy.
 
-Pharmacy works with pharmacy-specific medicine data:
+Pharmacy works with pharmacy-specific product data:
 
 - stock quantity;
 - reserved quantity;
@@ -18,25 +18,25 @@ Pharmacy works with pharmacy-specific medicine data:
 
 Price and stock quantity are not edited manually in Pharmacy. They come from an external pharmacy system through API.
 
-## 2. Global medicine statuses
+## 2. Global product statuses
 
-All medicines in the system have one global status, regardless of which table they are shown in.
+All products in the system have one global status, regardless of which table they are shown in.
 
 | Status     | Color | Meaning                                                     | Visible to Pharmacy |
 | ---------- | ----- | ----------------------------------------------------------- | ------------------- |
-| `new`      | Blue  | Medicine created in Admin but not activated yet             | No                  |
-| `active`   | Green | Medicine can be added to pharmacies                         | Yes                 |
-| `inactive` | Red   | Medicine is temporarily or permanently deactivated by Admin | Yes                 |
+| `new`      | Blue  | Product created in Admin but not activated yet             | No                  |
+| `active`   | Green | Product can be added to pharmacies                         | Yes                 |
+| `inactive` | Red   | Product is temporarily or permanently deactivated by Admin | Yes                 |
 
 The `new` status is visible only to Admin.
 
-Pharmacy never sees medicines with status `new`.
+Pharmacy never sees products with status `new`.
 
-## 3. Global medicine data
+## 3. Global product data
 
 Global data belongs to Admin:
 
-- medicine ID;
+- product ID;
 - article;
 - name;
 - category;
@@ -56,14 +56,14 @@ Global data belongs to Admin:
 
 Pharmacy cannot edit these fields.
 
-## 4. Pharmacy medicine data
+## 4. Pharmacy product data
 
-A pharmacy medicine is a relation between pharmacy and global medicine.
+A pharmacy product is a relation between pharmacy and global product.
 
 Fields:
 
-- pharmacyMedicineId;
-- medicineId;
+- pharmacyProductId;
+- productId;
 - pharmacyId;
 - stockQuantity;
 - reservedQuantity;
@@ -72,39 +72,39 @@ Fields:
 - addedAt;
 - updatedAt.
 
-Pharmacy sees and works only with pharmacy medicine data of the current pharmacy.
+Pharmacy sees and works only with pharmacy product data of the current pharmacy.
 
-## 5. Active medicines
+## 5. Active products
 
-Active medicines:
+Active products:
 
-- are visible in Pharmacy all medicines table;
+- are visible in Pharmacy all products table;
 - can be added to current pharmacy;
 - can appear in Client only after being added to at least one active or on-moderation pharmacy;
 - can be changed to inactive only by Admin.
 
-Medicine appears in Client only if:
+Product appears in Client only if:
 
-- medicine status is `active`;
+- product status is `active`;
 - pharmacy status is `active` or `on_moderation`;
-- medicine is added to this pharmacy;
-- pharmacy medicine relation is not removed or blocked;
+- product is added to this pharmacy;
+- pharmacy product relation is not removed or blocked;
 - available quantity allows purchase.
 
-## 6. Inactive medicines
+## 6. Inactive products
 
-Inactive medicines:
+Inactive products:
 
-- are visible in Pharmacy all medicines table;
+- are visible in Pharmacy all products table;
 - cannot be added to a pharmacy;
-- can be visible in Pharmacy own medicines if they were previously added;
+- can be visible in Pharmacy own products if they were previously added;
 - do not appear in Client;
 - keep order history, statistics, and stock movement history;
 - cannot be added to new orders.
 
-If inactive medicine already exists in old orders, it remains in order history.
+If inactive product already exists in old orders, it remains in order history.
 
-Admin must provide a required reason when setting medicine status to `inactive`.
+Admin must provide a required reason when setting product status to `inactive`.
 
 ## 7. Price and stock synchronization
 
@@ -117,8 +117,8 @@ Pharmacy does not manually edit:
 
 System must also send external API information about:
 
-- sold medicines;
-- reserved medicines;
+- sold products;
+- reserved products;
 - cancelled reservations;
 - returned stock after rejected orders.
 
@@ -147,15 +147,15 @@ When order becomes `rejected`:
 
 - reserved quantity returns to available stock.
 
-## 9. Own medicines table
+## 9. Own products table
 
 Route:
 
 ```txt
-/pharmacy/medicines
+/pharmacy/products
 ```
 
-Shows only medicines added to the current pharmacy.
+Shows only products added to the current pharmacy.
 
 Default sorting:
 
@@ -174,17 +174,17 @@ Use shared components:
 - `ResetFiltersButton`;
 - `CloseIconButton`.
 
-## 10. Own medicines filters
+## 10. Own products filters
 
 Filters must change URL using clean filter routes.
 
 Examples:
 
 ```txt
-/pharmacy/medicines/status-active
-/pharmacy/medicines/status-inactive
-/pharmacy/medicines/stock-empty
-/pharmacy/medicines/status-active/stock-available
+/pharmacy/products/status-active
+/pharmacy/products/status-inactive
+/pharmacy/products/stock-empty
+/pharmacy/products/status-active/stock-available
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -206,7 +206,7 @@ Active
 Inactive
 ```
 
-## 11. Own medicines columns
+## 11. Own products columns
 
 Columns:
 
@@ -225,7 +225,7 @@ Columns:
 Field:
 
 ```txt
-pharmacyMedicine.addedAt
+pharmacyProduct.addedAt
 ```
 
 Sortable.
@@ -235,7 +235,7 @@ Sortable.
 Field:
 
 ```txt
-medicine.article
+product.article
 ```
 
 Global and unique across Admin system.
@@ -247,10 +247,10 @@ Sortable.
 Field:
 
 ```txt
-medicine.name
+product.name
 ```
 
-Click opens medicine details page.
+Click opens product details page.
 
 ### Stock quantity
 
@@ -282,7 +282,7 @@ Formula:
 availableQuantity = stockQuantity - reservedQuantity
 ```
 
-If `availableQuantity = 0`, medicine is not available for new orders and cannot be purchased in Client.
+If `availableQuantity = 0`, product is not available for new orders and cannot be purchased in Client.
 
 ### Current price
 
@@ -298,35 +298,35 @@ Readonly in Pharmacy.
 
 ### Status
 
-Shows the global medicine status:
+Shows the global product status:
 
 - Active — green;
 - Inactive — red.
 
-## 12. Own medicines table states
+## 12. Own products table states
 
 Loader:
 
 ```txt
-Loading medicines...
+Loading products...
 ```
 
 Empty state:
 
 ```txt
-Your pharmacy has no added medicines yet.
+Your pharmacy has no added products yet.
 ```
 
 Button:
 
 ```txt
-View all medicines
+View all products
 ```
 
 Nothing found state:
 
 ```txt
-No medicines found for the selected filters.
+No products found for the selected filters.
 ```
 
 Reset button:
@@ -335,44 +335,44 @@ Reset button:
 Reset filters
 ```
 
-## 13. All medicines table
+## 13. All products table
 
 Route:
 
 ```txt
-/pharmacy/all-medicines
+/pharmacy/all-products
 ```
 
-Shows Admin medicines that Pharmacy can view:
+Shows Admin products that Pharmacy can view:
 
-- `active` medicines;
-- `inactive` medicines.
+- `active` products;
+- `inactive` products.
 
-Does not show `new` medicines.
+Does not show `new` products.
 
-Pharmacy can add only `active` medicines to own pharmacy.
+Pharmacy can add only `active` products to own pharmacy.
 
-Inactive medicines are visible but cannot be added.
+Inactive products are visible but cannot be added.
 
-## 14. All medicines filters
+## 14. All products filters
 
-Same as own medicines table.
+Same as own products table.
 
-Date filter works by global medicine creation date in Admin:
+Date filter works by global product creation date in Admin:
 
 ```txt
-medicine.createdAt
+product.createdAt
 ```
 
 Filter examples:
 
 ```txt
-/pharmacy/all-medicines/status-active
-/pharmacy/all-medicines/status-inactive
-/pharmacy/all-medicines/category-antibiotics
+/pharmacy/all-products/status-active
+/pharmacy/all-products/status-inactive
+/pharmacy/all-products/category-antibiotics
 ```
 
-## 15. All medicines columns
+## 15. All products columns
 
 Columns:
 
@@ -384,51 +384,51 @@ Columns:
 - Added to my pharmacy;
 - Action.
 
-## 16. All medicines actions
+## 16. All products actions
 
-For active medicines not added to current pharmacy:
+For active products not added to current pharmacy:
 
 ```txt
 Add to pharmacy
 ```
 
-For active medicines already added:
+For active products already added:
 
 ```txt
 Added to your pharmacy
 ```
 
-For inactive medicines:
+For inactive products:
 
 ```txt
 Unavailable
 ```
 
-Adding medicine opens `ConfirmActionModal`.
+Adding product opens `ConfirmActionModal`.
 
 Modal text:
 
 ```txt
-Are you sure you want to add this medicine to your pharmacy?
+Are you sure you want to add this product to your pharmacy?
 ```
 
 Success toast:
 
 ```txt
-Medicine added to your pharmacy.
+Product added to your pharmacy.
 ```
 
 Error toasts:
 
 ```txt
-This medicine is already added to your pharmacy.
-Inactive medicines cannot be added to a pharmacy.
-Could not add medicine. Please try again.
+This product is already added to your pharmacy.
+Inactive products cannot be added to a pharmacy.
+Could not add product. Please try again.
 ```
 
-## 17. Initial pharmacy medicine values
+## 17. Initial pharmacy product values
 
-When medicine is added to pharmacy, create pharmacy-medicine relation.
+When product is added to pharmacy, create pharmacy-product relation.
 
 Initial values may be:
 
@@ -441,14 +441,14 @@ currentPrice: null or 0
 
 until external API synchronization provides real data.
 
-## 18. Removing medicine from own pharmacy
+## 18. Removing product from own pharmacy
 
-This action is available from the All medicines table.
+This action is available from the All products table.
 
-Pharmacy can remove medicine from own pharmacy only if:
+Pharmacy can remove product from own pharmacy only if:
 
-- medicine was added to the pharmacy;
-- there are no orders with this medicine;
+- product was added to the pharmacy;
+- there are no orders with this product;
 - `reservedQuantity = 0`;
 - `stockQuantity = 0` or data has not yet been synchronized from external API;
 - pharmacy status is `active` or `on_moderation`.
@@ -458,48 +458,48 @@ Before removal, open `ConfirmActionModal`.
 Modal title:
 
 ```txt
-Remove medicine from pharmacy?
+Remove product from pharmacy?
 ```
 
 Modal message:
 
 ```txt
-This medicine will be removed from your pharmacy list. You can do this only if the medicine has no orders, no reserved quantity, and no stock quantity.
+This product will be removed from your pharmacy list. You can do this only if the product has no orders, no reserved quantity, and no stock quantity.
 ```
 
 Confirm button:
 
 ```txt
-Remove medicine
+Remove product
 ```
 
 After removal:
 
-- `pharmacyMedicine` relation is deleted; or
-- `pharmacyMedicine` receives `status="removed"`.
+- `pharmacyProduct` relation is deleted; or
+- `pharmacyProduct` receives `status="removed"`.
 
-If there are any orders with this medicine, removal is not available.
+If there are any orders with this product, removal is not available.
 
 Disabled explanation:
 
 ```txt
-This medicine cannot be removed because it already has order history.
+This product cannot be removed because it already has order history.
 ```
 
-## 19. Medicine details page
+## 19. Product details page
 
 Route examples:
 
 ```txt
-/pharmacy/medicines/[medicineId]
-/pharmacy/all-medicines/[medicineId]
+/pharmacy/products/[productId]
+/pharmacy/all-products/[productId]
 ```
 
-The medicine card is the same regardless of entry point.
+The product card is the same regardless of entry point.
 
-If medicine is added to current pharmacy, show:
+If product is added to current pharmacy, show:
 
-- global medicine data;
+- global product data;
 - pharmacy-specific data;
 - stock;
 - reserves;
@@ -510,29 +510,29 @@ If medicine is added to current pharmacy, show:
 - characteristics;
 - reviews.
 
-If medicine is not added to current pharmacy, show only global data and Add to pharmacy action if medicine is active.
+If product is not added to current pharmacy, show only global data and Add to pharmacy action if product is active.
 
-## 20. Medicine details top section
+## 20. Product details top section
 
 Show:
 
 - Breadcrumbs;
-- medicine name;
+- product name;
 - short description.
 
-Description if medicine is added:
+Description if product is added:
 
 ```txt
-View medicine details, stock, reserves, price, and sales statistics for your pharmacy.
+View product details, stock, reserves, price, and sales statistics for your pharmacy.
 ```
 
-Description if medicine is not added:
+Description if product is not added:
 
 ```txt
-View medicine details and add it to your pharmacy if it is available.
+View product details and add it to your pharmacy if it is available.
 ```
 
-## 21. Medicine summary block
+## 21. Product summary block
 
 Show:
 
@@ -546,13 +546,13 @@ Show:
 - Admin creation date;
 - date added to pharmacy if added.
 
-If medicine is not added:
+If product is not added:
 
 ```txt
-This medicine is not added to your pharmacy yet.
+This product is not added to your pharmacy yet.
 ```
 
-## 22. Medicine details tabs
+## 22. Product details tabs
 
 Use shared `Tabs`.
 
@@ -564,7 +564,7 @@ Tabs:
 - Characteristics;
 - Reviews.
 
-If medicine is not added:
+If product is not added:
 
 - Statistics shows empty state;
 - Stock movement shows empty state;
@@ -574,7 +574,7 @@ If medicine is not added:
 
 ## 23. Tab: Statistics
 
-Available only for medicines added to current pharmacy.
+Available only for products added to current pharmacy.
 
 Show:
 
@@ -591,12 +591,12 @@ Data is counted only for current pharmacy.
 Empty state if not added:
 
 ```txt
-This medicine is not added to your pharmacy, so statistics are unavailable.
+This product is not added to your pharmacy, so statistics are unavailable.
 ```
 
 ## 24. Tab: Stock movement
 
-Shows history of medicine quantity and price events.
+Shows history of product quantity and price events.
 
 Event types:
 
@@ -636,21 +636,21 @@ Stock movement history is empty.
 If not added:
 
 ```txt
-This medicine is not added to your pharmacy, so stock movement is unavailable.
+This product is not added to your pharmacy, so stock movement is unavailable.
 ```
 
 ## 25. Tab: Related orders
 
-Shows orders of current pharmacy that include this medicine.
+Shows orders of current pharmacy that include this product.
 
 Columns:
 
 - order number;
 - order date;
 - client;
-- quantity of this medicine;
+- quantity of this product;
 - fixed unit price in this order;
-- amount for this medicine;
+- amount for this product;
 - order status.
 
 Order number opens order details page.
@@ -658,13 +658,13 @@ Order number opens order details page.
 Empty state:
 
 ```txt
-There are no orders with this medicine yet.
+There are no orders with this product yet.
 ```
 
 If not added:
 
 ```txt
-This medicine is not added to your pharmacy, so related orders are unavailable.
+This product is not added to your pharmacy, so related orders are unavailable.
 ```
 
 ## 26. Tab: Characteristics
@@ -680,12 +680,12 @@ Show only existing fields. Do not render empty rows.
 Empty state:
 
 ```txt
-Characteristics for this medicine have not been added yet.
+Characteristics for this product have not been added yet.
 ```
 
 ## 27. Tab: Reviews
 
-Pharmacy can only view medicine reviews.
+Pharmacy can only view product reviews.
 
 Pharmacy cannot:
 
@@ -706,21 +706,21 @@ Load more with `LazyLoadButton`.
 Empty state:
 
 ```txt
-This medicine has no reviews yet.
+This product has no reviews yet.
 ```
 
-## 28. Medicine details states
+## 28. Product details states
 
 Loader:
 
 ```txt
-Loading medicine data...
+Loading product data...
 ```
 
 Error state:
 
 ```txt
-Could not load medicine data. Please try again.
+Could not load product data. Please try again.
 ```
 
 Button:
@@ -732,10 +732,10 @@ Try again
 Not found state:
 
 ```txt
-Medicine not found.
+Product not found.
 ```
 
 Pharmacy must not see:
 
-- medicines with status `new`;
-- pharmacy-specific medicine data of other pharmacies.
+- products with status `new`;
+- pharmacy-specific product data of other pharmacies.

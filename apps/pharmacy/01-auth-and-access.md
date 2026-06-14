@@ -76,7 +76,7 @@ After successful pharmacy registration:
 - a pharmacy account is created;
 - pharmacy status becomes `new`;
 - pharmacy can enter the Pharmacy cabinet;
-- pharmacy cannot sell medicines, add medicines, or create medicine requests before Admin activation.
+- pharmacy cannot sell products, add products, or create product requests before Admin activation.
 
 ## 4. Pharmacy documents upload
 
@@ -93,7 +93,7 @@ Confirmation documents
 Description:
 
 ```txt
-Upload documents confirming that your pharmacy is allowed to sell medicines. Admin will review these documents before activating your pharmacy account.
+Upload documents confirming that your pharmacy is allowed to sell products. Admin will review these documents before activating your pharmacy account.
 ```
 
 The exact list of required legal documents should be clarified separately.
@@ -177,13 +177,13 @@ New pharmacy can:
 - enter the cabinet;
 - view own data;
 - edit own data without moderation;
-- view all Admin medicines available to Pharmacy.
+- view all Admin products available to Pharmacy.
 
 New pharmacy cannot:
 
-- sell medicines;
-- add medicines to own pharmacy;
-- create medicine creation requests.
+- sell products;
+- add products to own pharmacy;
+- create product creation requests.
 
 ## 8. Forgot password page
 

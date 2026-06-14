@@ -541,7 +541,7 @@ function ProductDetailsPageContent({
           <Breadcrumbs
             items={[
               { label: 'Home', href: ROUTES.HOME },
-              { label: 'Medicines catalog', href: ROUTES.MEDICINES_CATALOG },
+              { label: 'Products catalog', href: ROUTES.PRODUCTS_CATALOG },
               { label: productDetails.name },
             ]}
             includeStructuredData

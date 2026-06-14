@@ -26,14 +26,14 @@ Can:
 - enter Pharmacy cabinet;
 - view own data;
 - edit own data without moderation;
-- view all Pharmacy-visible medicines from Admin.
+- view all Pharmacy-visible products from Admin.
 
 Cannot:
 
 - appear in Client;
-- sell medicines;
-- add medicines to own pharmacy;
-- create medicine requests.
+- sell products;
+- add products to own pharmacy;
+- create product requests.
 
 Banner:
 
@@ -47,10 +47,10 @@ Can:
 
 - enter Pharmacy cabinet;
 - appear in Client;
-- sell medicines;
-- add active Admin medicines to own pharmacy;
-- create medicine requests;
-- view all Pharmacy-visible medicines from Admin;
+- sell products;
+- add active Admin products to own pharmacy;
+- create product requests;
+- view all Pharmacy-visible products from Admin;
 - edit own data with Admin moderation.
 
 If active pharmacy changes important data, public Client data and approved Pharmacy/Admin data must remain unchanged until Admin approves pending changes.
@@ -61,10 +61,10 @@ Can:
 
 - enter Pharmacy cabinet;
 - appear in Client with previous approved data;
-- sell medicines;
-- add active Admin medicines to own pharmacy;
-- create medicine requests;
-- view all Pharmacy-visible medicines from Admin;
+- sell products;
+- add active Admin products to own pharmacy;
+- create product requests;
+- view all Pharmacy-visible products from Admin;
 - view approved data;
 - view pending moderation data.
 
@@ -84,15 +84,15 @@ Cannot:
 
 - enter Pharmacy cabinet;
 - appear in Client;
-- sell medicines;
-- add medicines;
-- create medicine requests.
+- sell products;
+- add products;
+- create product requests.
 
 History is preserved:
 
 - orders;
 - clients;
-- medicines;
+- products;
 - reviews;
 - statistics.
 

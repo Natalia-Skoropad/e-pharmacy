@@ -22,7 +22,7 @@ export const DELIVERY_PAYMENT_INFO = {
     {
       title: 'How the service works',
       content: [
-        'E-PHARMACY is an online pharmacy platform that helps clients find medicines, compare pharmacy offers, and prepare online orders. The platform provides information about products, partner pharmacies, prices, availability, ratings, and order details.',
+        'E-PHARMACY is an online pharmacy platform that helps clients find products, compare pharmacy offers, and prepare online orders. The platform provides information about products, partner pharmacies, prices, availability, ratings, and order details.',
         'The final sale and product handover are completed by the selected licensed pharmacy. E-PHARMACY helps organize the order flow but does not replace the pharmacy that provides the product.',
       ],
     },
@@ -63,13 +63,13 @@ export const RETURN_POLICY_INFO = {
   path: ROUTES.RETURN_POLICY,
   title: 'Return Policy',
   description:
-    'Read the main return rules for medicines and medical goods ordered through the E-PHARMACY platform.',
+    'Read the main return rules for products and medical goods ordered through the E-PHARMACY platform.',
   updatedAt: 'May 2026',
   sections: [
     {
-      title: 'Medicines and medical goods',
+      title: 'Products and medical goods',
       content: [
-        'Medicines and medical-purpose goods of proper quality are usually not subject to return after purchase from a pharmacy. This rule exists because such products require strict storage, safety, and quality control conditions.',
+        'Products and medical-purpose goods of proper quality are usually not subject to return after purchase from a pharmacy. This rule exists because such products require strict storage, safety, and quality control conditions.',
         'If a product was properly supplied by the pharmacy and has no confirmed defect, the pharmacy may refuse a return according to applicable rules for pharmaceutical products.',
       ],
     },
@@ -84,7 +84,7 @@ export const RETURN_POLICY_INFO = {
       title: 'Documents needed for a return request',
       content: [
         'To review a return request, the pharmacy may ask for the fiscal receipt, order details, product packaging, and documents confirming the issue with the product.',
-        'For medicines, an expert conclusion from the competent quality-control authority may be required to confirm improper quality.',
+        'For products, an expert conclusion from the competent quality-control authority may be required to confirm improper quality.',
       ],
     },
     {
@@ -116,7 +116,7 @@ export const USER_AGREEMENT_INFO = {
     {
       title: 'Purpose of the platform',
       content: [
-        'E-PHARMACY is an information and order-preparation service. It helps users search for medicines, view pharmacy information, compare offers, add products to cart, and prepare checkout details.',
+        'E-PHARMACY is an information and order-preparation service. It helps users search for products, view pharmacy information, compare offers, add products to cart, and prepare checkout details.',
         'The platform is not a medical consultation service and does not replace professional advice from a doctor or pharmacist.',
       ],
     },
@@ -130,7 +130,7 @@ export const USER_AGREEMENT_INFO = {
     {
       title: 'User account',
       content: [
-        'A user may create an account to manage profile information, favorite medicines, favorite pharmacies, cart items, and order history.',
+        'A user may create an account to manage profile information, favorite products, favorite pharmacies, cart items, and order history.',
         'The user is responsible for keeping login details secure and for providing accurate contact information during checkout.',
       ],
     },

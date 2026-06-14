@@ -34,7 +34,7 @@ export const SEO_STRATEGIES = {
 
 export const HOME_TITLE = 'Online Pharmacy Store';
 export const HOME_DESCRIPTION =
-  'Order medicines online, explore trusted pharmacy stores, and manage your health essentials with E-PHARMACY.';
+  'Order products online, explore trusted pharmacy stores, and manage your health essentials with E-PHARMACY.';
 
 //===================================================================
 
@@ -52,19 +52,19 @@ export const STORES_DESCRIPTION =
 
 export const MEDICINE_STORE_TITLE = 'Medicine Store';
 export const MEDICINE_STORE_DESCRIPTION =
-  'Browse medicines, compare available products, and prepare your online pharmacy order.';
+  'Browse products, compare available products, and prepare your online pharmacy order.';
 
 //===================================================================
 
-export const MEDICINES_CATALOG_TITLE = 'Medicines Catalog';
-export const MEDICINES_CATALOG_DESCRIPTION =
-  'Search medicines by name or article, filter products by category and pharmacy availability, and compare trusted online pharmacy offers.';
+export const PRODUCTS_CATALOG_TITLE = 'Products Catalog';
+export const PRODUCTS_CATALOG_DESCRIPTION =
+  'Search products by name or article, filter products by category and pharmacy availability, and compare trusted online pharmacy offers.';
 
 //===================================================================
 
 export const CART_TITLE = 'Cart';
 export const CART_DESCRIPTION =
-  'Review selected medicines and prepare your order in the E-PHARMACY cart.';
+  'Review selected products and prepare your order in the E-PHARMACY cart.';
 
 //===================================================================
 
@@ -76,11 +76,11 @@ export const CHECKOUT_DESCRIPTION =
 
 export const LOGIN_TITLE = 'Log In';
 export const LOGIN_DESCRIPTION =
-  'Access your E-PHARMACY account to track orders, manage saved medicines, and keep your delivery details ready for the next checkout.';
+  'Access your E-PHARMACY account to track orders, manage saved products, and keep your delivery details ready for the next checkout.';
 
 export const LOGIN_BENEFITS = [
   'Track your orders, profile details, delivery information, and saved account data in one secure place.',
-  'Return to your cart, favorite medicines, and trusted pharmacies faster after signing in.',
+  'Return to your cart, favorite products, and trusted pharmacies faster after signing in.',
 ] as const;
 
 //===================================================================
@@ -106,11 +106,11 @@ export const RESET_PASSWORD_BENEFITS = [
 
 export const REGISTER_TITLE = 'Register';
 export const REGISTER_DESCRIPTION =
-  'Create your E-PHARMACY account to save checkout details, manage pharmacy orders, and keep favorite medicines close at hand.';
+  'Create your E-PHARMACY account to save checkout details, manage pharmacy orders, and keep favorite products close at hand.';
 
 export const REGISTER_BENEFITS = [
   'Save your profile details once and use them again during checkout.',
-  'Keep favorite medicines and pharmacies organized in your personal account.',
+  'Keep favorite products and pharmacies organized in your personal account.',
   'View your order history and quickly return to the products and pharmacies you use most.',
 ] as const;
 

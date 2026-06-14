@@ -11,8 +11,8 @@ This folder contains the improved pharmacy technical specification split into gl
 5. `04-dashboard.md` — Dashboard statistics and dashboard-specific rules.
 6. `05-orders.md` — orders table, order details, statuses, stock reservation, fixed prices.
 7. `06-clients.md` — clients table, client details, readonly access, first order date.
-8. `07-medicines.md` — medicines, all medicines, own medicines, medicine card, stock and price logic.
-9. `08-medicine-requests.md` — medicine creation requests, draft flow, Admin moderation flow.
+8. `07-products.md` — products, all products, own products, product card, stock and price logic.
+9. `08-product-requests.md` — product creation requests, draft flow, Admin moderation flow.
 10. `09-service-pages-loaders-states.md` — error page, 404, loaders, empty states.
 11. `10-route-structure.md` — recommended Next.js App Router structure and clean filter routes.
 
@@ -23,9 +23,9 @@ This folder contains the improved pharmacy technical specification split into gl
 - Dashboard year/month filter applies only to Orders statistics.
 - client pharmacy date is `firstOrderAt` only.
 - Order final statuses are irreversible in the first version.
-- All medicines have one global status: `new`, `active`, `inactive`.
-- pharmacy cannot see medicines with `new` status.
-- Medicine removal from pharmacy is explicitly described.
-- Medicine request flow is strict: Draft → New → In work → Approved/Rejected.
+- All products have one global status: `new`, `active`, `inactive`.
+- pharmacy cannot see products with `new` status.
+- Product removal from pharmacy is explicitly described.
+- Product request flow is strict: Draft → New → In work → Approved/Rejected.
 - Auth pages are global, not part of `/pharmacy` route group.
 - Protected pharmacy layout has no Footer.

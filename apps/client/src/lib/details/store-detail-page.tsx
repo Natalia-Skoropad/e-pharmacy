@@ -34,7 +34,7 @@ export function createStoreDetailMetadata(store: Store): Metadata {
     title: `${store.name} pharmacy details`,
     description:
       store.description ??
-      `View ${store.name} address, phone number, email, working hours, rating, reviews, and available medicines on E-PHARMACY.`,
+      `View ${store.name} address, phone number, email, working hours, rating, reviews, and available products on E-PHARMACY.`,
     path: buildStorePath(store.name, store.id),
     image: store.imageUrl,
     imageAlt: `${store.name} pharmacy storefront`,

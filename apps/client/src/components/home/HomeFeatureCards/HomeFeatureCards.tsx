@@ -31,8 +31,8 @@ type FeatureCard = {
 const FEATURE_CARDS: FeatureCard[] = [
   {
     title: 'Smart catalog',
-    text: 'Fast medicine search, category filters, availability filters, and sorting for everyday health essentials.',
-    href: ROUTES.MEDICINES_CATALOG,
+    text: 'Fast product search, category filters, availability filters, and sorting for everyday health essentials.',
+    href: ROUTES.PRODUCTS_CATALOG,
     buttonLabel: 'Open catalog',
     icon: PackageSearch,
   },

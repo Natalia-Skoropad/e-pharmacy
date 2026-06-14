@@ -2,12 +2,12 @@
 
 ## 1. Purpose
 
-The Pharmacy part is the pharmacy cabinet in the E-PHARMACY ecosystem. It allows a pharmacy to manage its own profile, orders, clients, medicines, medicine creation requests, and dashboard statistics.
+The Pharmacy part is the pharmacy cabinet in the E-PHARMACY ecosystem. It allows a pharmacy to manage its own profile, orders, clients, products, product creation requests, and dashboard statistics.
 
 The Pharmacy app works together with:
 
-- **Client** — public storefront where clients browse pharmacies, medicines, cart, checkout, orders, and reviews.
-- **Admin** — back-office where administrators moderate pharmacies, manage global medicines, review requests, view orders, and manage clients.
+- **Client** — public storefront where clients browse pharmacies, products, cart, checkout, orders, and reviews.
+- **Admin** — back-office where administrators moderate pharmacies, manage global products, review requests, view orders, and manage clients.
 - **API** — shared backend for all apps.
 - **Shared packages** — reusable UI, types, validation, config, API client, and utilities.
 
@@ -35,8 +35,8 @@ The Pharmacy app consists of the following global parts:
    - pharmacy status banner;
    - order statistics;
    - client statistics;
-   - medicine statistics;
-   - medicine request statistics;
+   - product statistics;
+   - product request statistics;
    - quick transitions to filtered tables.
 
 4. **Pharmacy profile**
@@ -59,14 +59,14 @@ The Pharmacy app consists of the following global parts:
    - readonly client data;
    - client statistics for the current pharmacy only.
 
-7. **Medicines**
-   - own medicines table;
-   - all medicines table;
-   - one medicine card;
-   - global medicine data from Admin;
-   - pharmacy-specific medicine stock and price data.
+7. **products**
+   - own products table;
+   - all products table;
+   - one product card;
+   - global product data from Admin;
+   - pharmacy-specific product stock and price data.
 
-8. **Medicine creation requests**
+8. **Product creation requests**
    - requests table;
    - create/edit request page;
    - request details page;
@@ -88,10 +88,10 @@ Pharmacy must not see:
 - orders of other pharmacies;
 - clients who never ordered from this pharmacy;
 - orders of a client from other pharmacies;
-- pharmacy-specific medicine data of other pharmacies;
-- medicine requests of other pharmacies;
+- pharmacy-specific product data of other pharmacies;
+- product requests of other pharmacies;
 - Admin-only internal fields;
-- medicines with the global status `new`.
+- products with the global status `new`.
 
 ## 4. Main data ownership rules
 
@@ -109,8 +109,8 @@ Pharmacy must not see:
 - own pharmacy profile editing according to status rules;
 - own order processing;
 - own client list viewing;
-- own medicines list management;
-- medicine creation request drafts and submissions;
+- own products list management;
+- product creation request drafts and submissions;
 - own dashboard analytics.
 
 ### Admin owns
@@ -118,8 +118,8 @@ Pharmacy must not see:
 - pharmacy moderation;
 - pharmacy activation/deactivation;
 - client blocking/unblocking;
-- global medicine creation/editing/status changes;
-- medicine request review;
+- global product creation/editing/status changes;
+- product request review;
 - review moderation;
 - global system overview.
 
@@ -147,8 +147,8 @@ Recommended examples:
 /pharmacy/orders/status-new
 /pharmacy/orders/status-successful/delivery-pickup
 /pharmacy/clients/status-active
-/pharmacy/medicines/status-active/stock-empty
-/pharmacy/medicine-requests/status-draft
+/pharmacy/products/status-active/stock-empty
+/pharmacy/product-requests/status-draft
 ```
 
 Do not use pagination or rows-per-page in the URL:

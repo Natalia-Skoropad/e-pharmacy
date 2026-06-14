@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { ProductDetailsPageContent } from '@/components/medicines-catalog';
+import { ProductDetailsPageContent } from '@/components/products-catalog';
 import { buildProductPath, getIdFromSlugId } from '@e-pharmacy/config/routes';
 import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
 import { createPageMetadata } from '@/lib/seo';

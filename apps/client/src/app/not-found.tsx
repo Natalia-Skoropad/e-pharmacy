@@ -7,11 +7,11 @@ function AppNotFound() {
   return (
     <NotFoundPage
       title="Page not found"
-      description="The link may be outdated, moved, or typed with a tiny typo. Go back home or open the medicine catalog to continue shopping safely."
+      description="The link may be outdated, moved, or typed with a tiny typo. Go back home or open the product catalog to continue shopping safely."
       homeHref={ROUTES.HOME}
       secondaryAction={{
-        href: ROUTES.MEDICINES_CATALOG,
-        label: 'View medicine catalog',
+        href: ROUTES.PRODUCTS_CATALOG,
+        label: 'View product catalog',
         variant: 'secondary',
       }}
     />

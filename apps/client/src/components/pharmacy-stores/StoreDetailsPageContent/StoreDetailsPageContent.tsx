@@ -30,7 +30,7 @@ import {
   useStoreFavoriteRefresh,
 } from '@/hooks';
 
-import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
+import { buildProductsCatalogPath } from '@/lib/catalog/products-catalog';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
@@ -86,9 +86,7 @@ function StoreDetailsPageContent({
     [isAuthenticated, reviewsTotal]
   );
 
-  const medicinesHref = buildMedicinesCatalogPath({ storeId: store.id }, [
-    store,
-  ]);
+  const productsHref = buildProductsCatalogPath({ storeId: store.id }, [store]);
 
   const bankDetails = store.bankDetails ?? null;
   const workingHours = store.workingHours?.trim() ?? '';
@@ -151,7 +149,7 @@ function StoreDetailsPageContent({
           />
 
           <h1 className="visually-hidden" id="store-title">
-            {store.name} pharmacy store — address, medicines and reviews
+            {store.name} pharmacy store — address, products and reviews
           </h1>
 
           <Tabs
@@ -253,7 +251,7 @@ function StoreDetailsPageContent({
                   <div className={css.summaryItem}>
                     <dt>
                       <ShoppingBag size={18} aria-hidden="true" />
-                      Medicines
+                      Products
                     </dt>
                     <dd>
                       {formatAvailableProductsCount(
@@ -263,8 +261,8 @@ function StoreDetailsPageContent({
                   </div>
                 </dl>
 
-                <ButtonLink className={css.link} href={medicinesHref}>
-                  View medicines from this pharmacy
+                <ButtonLink className={css.link} href={productsHref}>
+                  View products from this pharmacy
                 </ButtonLink>
               </div>
             </div>
@@ -322,7 +320,7 @@ function StoreDetailsPageContent({
 
               <p className={css.descriptionText}>
                 {store.description ??
-                  `${store.name} is an active E-PHARMACY partner in ${store.city ?? 'your city'}, created for clients who want to compare medicines calmly before placing an order. The pharmacy page brings together the most useful details: address, phone, email, working hours, rating, client reviews, and a direct catalog link with medicines from this exact store. You can quickly check whether the needed product is available, compare offers, and decide whether pickup or delivery will be more convenient. The store keeps product information clear, so clients do not have to jump between random tabs, screenshots, and notes. Reviews help you understand service quality, while the catalog filter helps you move from pharmacy details straight to the right medicine list. It is a practical page for everyday orders, urgent purchases, planned family medicine refills, and simple price comparison. In short, ${store.name} works like a tidy digital pharmacy counter: all important information is visible, the next action is obvious, and the shopping flow stays friendly instead of turning into a mini quest with a white coat.`}
+                  `${store.name} is an active E-PHARMACY partner in ${store.city ?? 'your city'}, created for clients who want to compare products calmly before placing an order. The pharmacy page brings together the most useful details: address, phone, email, working hours, rating, client reviews, and a direct catalog link with products from this exact store. You can quickly check whether the needed product is available, compare offers, and decide whether pickup or delivery will be more convenient. The store keeps product information clear, so clients do not have to jump between random tabs, screenshots, and notes. Reviews help you understand service quality, while the catalog filter helps you move from pharmacy details straight to the right product list. It is a practical page for everyday orders, urgent purchases, planned family medicine refills, and simple price comparison. In short, ${store.name} works like a tidy digital pharmacy counter: all important information is visible, the next action is obvious, and the shopping flow stays friendly instead of turning into a mini quest with a white coat.`}
               </p>
             </div>
           </Container>

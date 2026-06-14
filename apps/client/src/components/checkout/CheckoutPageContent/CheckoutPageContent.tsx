@@ -486,16 +486,14 @@ function CheckoutEmptyState() {
     <div className={css.empty}>
       <h2 className={css.emptyTitle}>Your cart is empty</h2>
       <p className={css.emptyText}>
-        Add medicines first, then checkout will form pharmacy invoices.
+        Add products first, then checkout will form pharmacy invoices.
       </p>
       <div className={css.emptyActions}>
         <ButtonLink href={ROUTES.CART} variant="secondary">
           Back to cart
         </ButtonLink>
 
-        <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
-          Browse medicines
-        </ButtonLink>
+        <ButtonLink href={ROUTES.PRODUCTS_CATALOG}>Browse products</ButtonLink>
       </div>
     </div>
   );

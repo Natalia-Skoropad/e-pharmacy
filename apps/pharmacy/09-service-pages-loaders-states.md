@@ -94,21 +94,21 @@ Page not found
 Text:
 
 ```txt
-The link may be outdated, moved, or typed with a small typo. Go back to dashboard or open medicines to continue working with your pharmacy cabinet.
+The link may be outdated, moved, or typed with a small typo. Go back to dashboard or open products to continue working with your pharmacy cabinet.
 ```
 
 Buttons:
 
 ```txt
 Back to dashboard
-View all medicines
+View all products
 ```
 
 Links:
 
 ```txt
 /pharmacy/dashboard
-/pharmacy/all-medicines
+/pharmacy/all-products
 ```
 
 ## 4. Route loading page
@@ -132,9 +132,9 @@ Use shared `LoadingSpinner` for:
 - one order page;
   -clients table;
 - one client page;
-- own medicines table;
-- all medicines table;
-- medicine details page;
+- own products table;
+- all products table;
+- product details page;
 - requests table;
 - request details page;
 - create/edit request page;

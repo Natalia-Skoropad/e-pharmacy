@@ -36,9 +36,8 @@ function CheckoutInvoicePanel({
       <div className={css.policyNotice}>
         <ShieldAlert size={20} aria-hidden="true" />
         <p>
-          Medicines and pharmacy products are non-returnable and
-          non-exchangeable after confirmation. Please check the invoice
-          carefully before payment.
+          Pharmacy products are non-returnable and non-exchangeable after
+          confirmation. Please check the invoice carefully before payment.
         </p>
       </div>
 

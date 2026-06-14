@@ -18,7 +18,7 @@ Implemented:
 Planned:
 
 - Pharmacy shop management
-- Pharmacy medicine CRUD
+- Pharmacy product CRUD
 - Pharmacy statistics and client goods data
 - Admin dashboard statistics
 - Admin products, orders, clients, and suppliers management

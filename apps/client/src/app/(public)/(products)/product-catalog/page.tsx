@@ -1,35 +1,38 @@
-import { MedicineStorePageContent } from '@/components/medicines-catalog';
+import { ProductStorePageContent } from '@/components/products-catalog';
 
 import {
-  buildMedicinesCatalogApiParams,
-  buildMedicinesCatalogCanonicalPath,
+  buildProductsCatalogApiParams,
+  buildProductsCatalogCanonicalPath,
   FALLBACK_PRODUCT_FILTER_OPTIONS,
-  getMedicinesCatalogDescription,
-  getMedicinesCatalogTitle,
-  isMedicinesCatalogNoIndex,
-  parseMedicinesCatalogSearchParams,
+  getProductsCatalogDescription,
+  getProductsCatalogTitle,
+  isProductsCatalogNoIndex,
+  parseProductsCatalogSearchParams,
   sortStoresByName,
-  type MedicinesCatalogSearchParams,
-} from '@/lib/catalog/medicines-catalog';
+  type ProductsCatalogSearchParams,
+} from '@/lib/catalog/products-catalog';
 
 import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
 import { createPageMetadata } from '@/lib/seo';
 
-import { getProductFilters, getProducts, getStores } from '@e-pharmacy/api-client/client';
+import {
+  getProductFilters,
+  getProducts,
+  getStores,
+} from '@e-pharmacy/api-client/client';
 
 //===================================================================
 
-type MedicinesCatalogPageProps = {
-  searchParams?: Promise<MedicinesCatalogSearchParams>;
+type ProductsCatalogPageProps = {
+  searchParams?: Promise<ProductsCatalogSearchParams>;
 };
 
 //===================================================================
 
-
 export async function generateMetadata({
   searchParams,
-}: MedicinesCatalogPageProps) {
-  const filters = parseMedicinesCatalogSearchParams(await searchParams);
+}: ProductsCatalogPageProps) {
+  const filters = parseProductsCatalogSearchParams(await searchParams);
 
   const categoryLabel = FALLBACK_PRODUCT_FILTER_OPTIONS.categories.find(
     (option) => option.value === filters.category
@@ -40,23 +43,21 @@ export async function generateMetadata({
   };
 
   return createPageMetadata({
-    title: getMedicinesCatalogTitle(filters, seoContext),
-    description: getMedicinesCatalogDescription(filters, seoContext),
-    path: buildMedicinesCatalogCanonicalPath(filters),
-    noIndex: isMedicinesCatalogNoIndex(filters),
+    title: getProductsCatalogTitle(filters, seoContext),
+    description: getProductsCatalogDescription(filters, seoContext),
+    path: buildProductsCatalogCanonicalPath(filters),
+    noIndex: isProductsCatalogNoIndex(filters),
   });
 }
 
 //===================================================================
 
-async function MedicinesCatalogPage({
-  searchParams,
-}: MedicinesCatalogPageProps) {
-  const filters = parseMedicinesCatalogSearchParams(await searchParams);
+async function ProductsCatalogPage({ searchParams }: ProductsCatalogPageProps) {
+  const filters = parseProductsCatalogSearchParams(await searchParams);
 
   const [productsData, storesData, filterOptionsData] = await Promise.all([
     getProducts(
-      buildMedicinesCatalogApiParams(filters),
+      buildProductsCatalogApiParams(filters),
       PUBLIC_API_CACHE_OPTIONS
     ).catch(() => null),
 
@@ -74,7 +75,7 @@ async function MedicinesCatalogPage({
   );
 
   return (
-    <MedicineStorePageContent
+    <ProductStorePageContent
       products={productsData?.items ?? []}
       stores={activeStores}
       filterOptions={filterOptionsData}
@@ -86,4 +87,4 @@ async function MedicinesCatalogPage({
   );
 }
 
-export default MedicinesCatalogPage;
+export default ProductsCatalogPage;

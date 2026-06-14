@@ -23,7 +23,7 @@ import {
 } from '@e-pharmacy/ui/form-fields';
 
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { ProductCard } from '@/components/medicines-catalog';
+import { ProductCard } from '@/components/products-catalog';
 import { StoreCard } from '@/components/pharmacy-stores';
 import { PROFILE_TITLE } from '@e-pharmacy/config/seo';
 import { ROUTES } from '@e-pharmacy/config/routes';
@@ -921,7 +921,7 @@ function ProfilePageContent() {
                             )
                           }
                         >
-                          Show more medicines ({hiddenFavoriteProductsCount})
+                          Show more products ({hiddenFavoriteProductsCount})
                         </Button>
                       ) : null}
                     </>
@@ -935,12 +935,12 @@ function ProfilePageContent() {
                           No favorite products yet
                         </h3>
                         <p className={css.panelText}>
-                          Tap the heart on a medicine card, and it will wait
-                          here nicely — no shelf drama included.
+                          Tap the heart on a product card, and it will wait here
+                          nicely — no shelf drama included.
                         </p>
                       </div>
-                      <ButtonLink href={ROUTES.MEDICINES_CATALOG}>
-                        Browse medicines
+                      <ButtonLink href={ROUTES.PRODUCTS_CATALOG}>
+                        Browse products
                       </ButtonLink>
                     </div>
                   )}

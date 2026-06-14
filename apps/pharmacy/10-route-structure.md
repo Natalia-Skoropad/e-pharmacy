@@ -42,22 +42,22 @@ app/pharmacy/(protected)/clients/page.tsx
 app/pharmacy/(protected)/clients/[clientId]/page.tsx
 app/pharmacy/(protected)/clients/status-[status]/page.tsx
 
-app/pharmacy/(protected)/medicines/page.tsx
-app/pharmacy/(protected)/medicines/[medicineId]/page.tsx
-app/pharmacy/(protected)/medicines/status-[status]/page.tsx
-app/pharmacy/(protected)/medicines/stock-[stock]/page.tsx
-app/pharmacy/(protected)/medicines/status-[status]/stock-[stock]/page.tsx
+app/pharmacy/(protected)/products/page.tsx
+app/pharmacy/(protected)/products/[productId]/page.tsx
+app/pharmacy/(protected)/products/status-[status]/page.tsx
+app/pharmacy/(protected)/products/stock-[stock]/page.tsx
+app/pharmacy/(protected)/products/status-[status]/stock-[stock]/page.tsx
 
-app/pharmacy/(protected)/all-medicines/page.tsx
-app/pharmacy/(protected)/all-medicines/[medicineId]/page.tsx
-app/pharmacy/(protected)/all-medicines/status-[status]/page.tsx
-app/pharmacy/(protected)/all-medicines/category-[category]/page.tsx
+app/pharmacy/(protected)/all-products/page.tsx
+app/pharmacy/(protected)/all-products/[productId]/page.tsx
+app/pharmacy/(protected)/all-products/status-[status]/page.tsx
+app/pharmacy/(protected)/all-products/category-[category]/page.tsx
 
-app/pharmacy/(protected)/medicine-requests/page.tsx
-app/pharmacy/(protected)/medicine-requests/new/page.tsx
-app/pharmacy/(protected)/medicine-requests/[requestId]/page.tsx
-app/pharmacy/(protected)/medicine-requests/[requestId]/edit/page.tsx
-app/pharmacy/(protected)/medicine-requests/status-[status]/page.tsx
+app/pharmacy/(protected)/product-requests/page.tsx
+app/pharmacy/(protected)/product-requests/new/page.tsx
+app/pharmacy/(protected)/product-requests/[requestId]/page.tsx
+app/pharmacy/(protected)/product-requests/[requestId]/edit/page.tsx
+app/pharmacy/(protected)/product-requests/status-[status]/page.tsx
 ```
 
 ## 3. Filter route principle
@@ -70,8 +70,8 @@ Examples:
 /pharmacy/orders/status-new
 /pharmacy/orders/status-successful/delivery-pickup
 /pharmacy/clients/status-active
-/pharmacy/medicines/status-active/stock-empty
-/pharmacy/medicine-requests/status-draft
+/pharmacy/products/status-active/stock-empty
+/pharmacy/product-requests/status-draft
 ```
 
 Pagination and rows-per-page are local state and are not represented in route segments.
@@ -85,8 +85,8 @@ Example:
 ```txt
 app/pharmacy/(protected)/orders/[[...filters]]/page.tsx
 app/pharmacy/(protected)/clients/[[...filters]]/page.tsx
-app/pharmacy/(protected)/medicines/[[...filters]]/page.tsx
-app/pharmacy/(protected)/medicine-requests/[[...filters]]/page.tsx
+app/pharmacy/(protected)/products/[[...filters]]/page.tsx
+app/pharmacy/(protected)/product-requests/[[...filters]]/page.tsx
 ```
 
 This keeps clean URLs while avoiding too many physical route files.
@@ -118,9 +118,9 @@ PHARMACY_DASHBOARD = "/pharmacy/dashboard"
 PHARMACY_PROFILE = "/pharmacy/profile"
 PHARMACY_ORDERS = "/pharmacy/orders"
 PHARMACY_CLIENTS = "/pharmacy/clients"
-PHARMACY_MEDICINES = "/pharmacy/medicines"
-PHARMACY_ALL_MEDICINES = "/pharmacy/all-medicines"
-PHARMACY_MEDICINE_REQUESTS = "/pharmacy/medicine-requests"
+PHARMACY_PRODUCTS = "/pharmacy/products"
+PHARMACY_ALL_PRODUCTS = "/pharmacy/all-products"
+PHARMACY_PRODUCT_REQUESTS = "/pharmacy/product-requests"
 ```
 
 Create builder functions:
@@ -128,11 +128,11 @@ Create builder functions:
 ```txt
 getPharmacyOrderPath(orderId)
 getPharmacyClientPath(clientId)
-getPharmacyMedicinePath(medicineId)
+getPharmacyProductPath(productId)
 getPharmacyRequestPath(requestId)
 getPharmacyOrdersFilterPath(filters)
 getPharmacyClientsFilterPath(filters)
-getPharmacyMedicinesFilterPath(filters)
+getPharmacyProductsFilterPath(filters)
 getPharmacyRequestsFilterPath(filters)
 ```
 

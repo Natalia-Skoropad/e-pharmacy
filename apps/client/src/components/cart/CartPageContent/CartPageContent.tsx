@@ -303,14 +303,14 @@ function CartPageContent() {
               <h2 className={css.emptyTitle}>Your cart is empty</h2>
 
               <p className={css.emptyText}>
-                Add medicines from the catalog and they will appear here.
+                Add products from the catalog and they will appear here.
               </p>
 
               <ButtonLink
                 className={css.emptyButton}
-                href={ROUTES.MEDICINES_CATALOG}
+                href={ROUTES.PRODUCTS_CATALOG}
               >
-                Browse medicines
+                Browse products
               </ButtonLink>
             </div>
           ) : null}

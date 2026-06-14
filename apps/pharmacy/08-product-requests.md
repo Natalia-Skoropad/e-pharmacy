@@ -1,18 +1,18 @@
-# Pharmacy Technical Specification — Medicine Creation Requests
+# Pharmacy Technical Specification — Product Creation Requests
 
 ## 1. General logic
 
-Medicine creation requests are used when a pharmacy sells or plans to sell a medicine that does not yet exist in the global Admin medicine catalog.
+Product creation requests are used when a pharmacy sells or plans to sell a product that does not yet exist in the global Admin product catalog.
 
 Examples:
 
 - new product;
 - imported product;
-- rare medicine;
-- medicine already in pharmacy stock but missing in the system;
+- rare product;
+- product already in pharmacy stock but missing in the system;
 - product that must be added to the global E-PHARMACY catalog.
 
-Pharmacy cannot create global medicines directly.
+Pharmacy cannot create global products directly.
 
 Pharmacy can:
 
@@ -26,10 +26,10 @@ Admin can:
 - view submitted requests;
 - move request to In work;
 - complete or correct data;
-- create global medicine from request;
+- create global product from request;
 - reject request with reason.
 
-Client does not see medicine requests.
+Client does not see product requests.
 
 ## 2. Request status flow
 
@@ -51,7 +51,7 @@ Admin must first move request to `in_work`.
 | `draft`    | Gray   | Pharmacy created request but did not send it to Admin | Yes                  |
 | `new`      | Blue   | Pharmacy sent request; Admin has not started review   | No                   |
 | `in_work`  | Yellow | Admin is checking the request                         | No                   |
-| `approved` | Green  | Admin created medicine from request                   | No                   |
+| `approved` | Green  | Admin created product from request                   | No                   |
 | `rejected` | Red    | Admin rejected request                                | No                   |
 
 For `rejected` status, Admin must provide rejection reason.
@@ -73,23 +73,23 @@ Pharmacy cannot see requests of other pharmacies.
 
 ## 5. Before creating a request
 
-Pharmacy should create a request only if the needed medicine does not exist in All medicines table.
+Pharmacy should create a request only if the needed product does not exist in All products table.
 
-Before creating a request, Pharmacy should check All medicines by:
+Before creating a request, Pharmacy should check All products by:
 
 - name;
 - article;
 - category;
 - manufacturer if such filter exists.
 
-If medicine exists and is active, Pharmacy should add it to own pharmacy instead of creating a request.
+If product exists and is active, Pharmacy should add it to own pharmacy instead of creating a request.
 
-If medicine exists but is inactive, Pharmacy must not create a duplicate.
+If product exists but is inactive, Pharmacy must not create a duplicate.
 
 Message:
 
 ```txt
-This medicine already exists in the system but is currently inactive. Please contact Admin or wait for activation.
+This product already exists in the system but is currently inactive. Please contact Admin or wait for activation.
 ```
 
 ## 6. Create request button
@@ -105,7 +105,7 @@ Create request
 Route:
 
 ```txt
-/pharmacy/medicine-requests/new
+/pharmacy/product-requests/new
 ```
 
 Available for pharmacy statuses:
@@ -135,7 +135,7 @@ Your account is temporarily inactive. Creating requests is unavailable.
 Route:
 
 ```txt
-/pharmacy/medicine-requests
+/pharmacy/product-requests
 ```
 
 Shows only requests of current pharmacy.
@@ -146,7 +146,7 @@ Default sorting:
 createdAt: desc
 ```
 
-The table should be visually close to All medicines table.
+The table should be visually close to All products table.
 
 Columns:
 
@@ -161,7 +161,7 @@ Clicking request name opens request details page.
 Route:
 
 ```txt
-/pharmacy/medicine-requests/[requestId]
+/pharmacy/product-requests/[requestId]
 ```
 
 ## 8. Requests table filters
@@ -171,11 +171,11 @@ Filters must change URL using clean filter routes.
 Examples:
 
 ```txt
-/pharmacy/medicine-requests/status-draft
-/pharmacy/medicine-requests/status-new
-/pharmacy/medicine-requests/status-in-work
-/pharmacy/medicine-requests/status-approved
-/pharmacy/medicine-requests/status-rejected
+/pharmacy/product-requests/status-draft
+/pharmacy/product-requests/status-new
+/pharmacy/product-requests/status-in-work
+/pharmacy/product-requests/status-approved
+/pharmacy/product-requests/status-rejected
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -220,7 +220,7 @@ Rows per page options:
 Empty state:
 
 ```txt
-Your pharmacy has no medicine creation requests yet.
+Your pharmacy has no product creation requests yet.
 ```
 
 Empty state button:
@@ -252,27 +252,27 @@ Loading requests...
 Routes:
 
 ```txt
-/pharmacy/medicine-requests/new
-/pharmacy/medicine-requests/[requestId]/edit
+/pharmacy/product-requests/new
+/pharmacy/product-requests/[requestId]/edit
 ```
 
-The page should be the same or very close to Admin create medicine page.
+The page should be the same or very close to Admin create product page.
 
-This allows Admin to use the same structure when creating medicine from request.
+This allows Admin to use the same structure when creating product from request.
 
 Modes:
 
 | Mode                       | Route                                                                                                 | Description                         |
 | -------------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| Create mode                | `/pharmacy/medicine-requests/new`                                                                     | Pharmacy creates new request        |
-| Edit draft mode            | `/pharmacy/medicine-requests/[requestId]/edit`                                                        | Pharmacy edits draft request        |
-| Admin create medicine mode | `/admin/medicine-requests/[requestId]/create-medicine` or `/admin/products/new?requestId={requestId}` | Admin creates medicine from request |
+| Create mode                | `/pharmacy/product-requests/new`                                                                     | Pharmacy creates new request        |
+| Edit draft mode            | `/pharmacy/product-requests/[requestId]/edit`                                                        | Pharmacy edits draft request        |
+| Admin create product mode | `/admin/product-requests/[requestId]/create-product` or `/admin/products/new?requestId={requestId}` | Admin creates product from request |
 
 ## 11. Request form fields
 
 Fields:
 
-- medicine image;
+- product image;
 - name;
 - article;
 - category;
@@ -390,18 +390,18 @@ Admin actions are described here only to clarify Pharmacy flow.
 In Admin, request processing should include:
 
 - Move to In work;
-- Create medicine;
+- Create product;
 - Reject request;
 - Save changes.
 
-Admin can complete or correct data before creating medicine.
+Admin can complete or correct data before creating product.
 
-When Admin clicks Create medicine:
+When Admin clicks Create product:
 
-- global medicine is created;
+- global product is created;
 - request status becomes `approved`;
-- request links to the created medicine;
-- Pharmacy sees link to created medicine.
+- request links to the created product;
+- Pharmacy sees link to created product.
 
 When Admin rejects request:
 
@@ -414,10 +414,10 @@ When Admin rejects request:
 Route:
 
 ```txt
-/pharmacy/medicine-requests/[requestId]
+/pharmacy/product-requests/[requestId]
 ```
 
-Request card should look like a medicine card.
+Request card should look like a product card.
 
 Show:
 
@@ -433,7 +433,7 @@ Show:
 - sent to moderation date if submitted;
 - Admin comment;
 - rejection reason if rejected;
-- link to created medicine if approved.
+- link to created product if approved.
 
 ## 17. Draft request details
 
@@ -446,7 +446,7 @@ Edit request
 Route:
 
 ```txt
-/pharmacy/medicine-requests/[requestId]/edit
+/pharmacy/product-requests/[requestId]/edit
 ```
 
 Info text:
@@ -478,22 +478,22 @@ Do not show Edit request button.
 Show block:
 
 ```txt
-Admin created a medicine based on this request.
+Admin created a product based on this request.
 ```
 
 Actions:
 
 ```txt
-View medicine
+View product
 Add to pharmacy
 ```
 
-`Add to pharmacy` is shown only if created medicine is active and not yet added to current pharmacy.
+`Add to pharmacy` is shown only if created product is active and not yet added to current pharmacy.
 
 If already added:
 
 ```txt
-This medicine is already added to your pharmacy.
+This product is already added to your pharmacy.
 ```
 
 ## 20. Rejected request details
@@ -503,7 +503,7 @@ Show rejection reason.
 Example:
 
 ```txt
-Rejection reason: This medicine already exists in the system.
+Rejection reason: This product already exists in the system.
 ```
 
 Show optional button:
@@ -563,5 +563,5 @@ Request sent for Admin moderation.
 Could not save draft. Please try again.
 Could not send request. Please try again.
 New draft created from rejected request.
-Medicine created based on request.
+Product created based on request.
 ```

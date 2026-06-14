@@ -83,14 +83,14 @@ Pharmacy app складається з таких великих блоків:
    - readonly дані клієнта;
    - статистика клієнта тільки в межах поточної аптеки.
 
-7. **Medicines**
+7. **Products**
    - таблиця власних ліків;
    - таблиця всіх ліків;
    - карточка ліків;
    - глобальні дані ліків з Admin;
    - аптечні залишки, резерви та ціна.
 
-8. **Medicine creation requests**
+8. **Product creation requests**
    - таблиця заявок;
    - створення/редагування заявки;
    - карточка заявки;
@@ -157,8 +157,8 @@ Pharmacy не має бачити:
 /pharmacy/orders/status-new
 /pharmacy/orders/status-successful/delivery-pickup
 /pharmacy/clients/status-active
-/pharmacy/medicines/status-active/stock-empty
-/pharmacy/medicine-requests/status-draft
+/pharmacy/products/status-active/stock-empty
+/pharmacy/product-requests/status-draft
 ```
 
 Не використовувати для pagination / rowsPerPage:
@@ -290,7 +290,7 @@ UI має показувати:
 Рекомендовані тексти:
 
 - Block title: `Supporting documents`
-- Description: `Upload documents proving that your pharmacy is allowed to sell medicines. Admin will review them before activating your pharmacy account.`
+- Description: `Upload documents proving that your pharmacy is allowed to sell products. Admin will review them before activating your pharmacy account.`
 - Error: `Upload supporting documents to register a pharmacy account.`
 - Success toast: `Pharmacy account created. Please wait for Admin review.`
 
@@ -415,9 +415,9 @@ Protected layout використовується для всіх сторіно
 - `/pharmacy/profile`;
 - `/pharmacy/orders`;
 - `/pharmacy/clients`;
-- `/pharmacy/medicines`;
-- `/pharmacy/all-medicines`;
-- `/pharmacy/medicine-requests`.
+- `/pharmacy/products`;
+- `/pharmacy/all-products`;
+- `/pharmacy/product-requests`.
 
 Базова структура:
 
@@ -517,9 +517,9 @@ Sidebar — основна desktop-навігація Pharmacy cabinet.
 Dashboard              /pharmacy/dashboard
 Orders                 /pharmacy/orders
 Clients              /pharmacy/clients
-Own medicines          /pharmacy/medicines
-All medicines          /pharmacy/all-medicines
-Medicine requests      /pharmacy/medicine-requests
+Own products          /pharmacy/products
+All products          /pharmacy/all-products
+Product requests      /pharmacy/product-requests
 Pharmacy profile       /pharmacy/profile
 ```
 
@@ -531,7 +531,7 @@ Active state має працювати для вкладених сторіно�
 
 - `/pharmacy/orders` і `/pharmacy/orders/[orderId]` → active `Orders`;
 - `/pharmacy/clients` і `/pharmacy/clients/[clientId]` → active `Clients`;
-- `/pharmacy/medicine-requests`, `/pharmacy/medicine-requests/new`, `/pharmacy/medicine-requests/[requestId]`, `/pharmacy/medicine-requests/[requestId]/edit` → active `Medicine requests`.
+- `/pharmacy/product-requests`, `/pharmacy/product-requests/new`, `/pharmacy/product-requests/[requestId]`, `/pharmacy/product-requests/[requestId]/edit` → active `Product requests`.
 
 ## 3.6. Sidebar для різних статусів аптеки
 
@@ -541,7 +541,7 @@ Active state має працювати для вкладених сторіно�
 
 - Dashboard;
 - Pharmacy profile;
-- All medicines.
+- All products.
 
 Не може:
 
@@ -550,7 +550,7 @@ Active state має працювати для вкладених сторіно�
 - створювати заявки;
 - обробляти замовлення.
 
-Сторінки orders/clients/own medicines/requests можуть відкриватися з empty або restricted state.
+Сторінки orders/clients/own products/requests можуть відкриватися з empty або restricted state.
 
 ### Active pharmacy
 
@@ -1000,8 +1000,8 @@ Dashboard показує тільки статистику поточної ап
 
 - orders statistics;
 - clients statistics;
-- medicines statistics;
-- medicine requests statistics;
+- products statistics;
+- product requests statistics;
 - quick actions;
 - banners by pharmacy status.
 
@@ -1026,7 +1026,7 @@ Dashboard доступний для:
 Banner:
 
 ```txt
-Your pharmacy is not activated yet. After Admin review, you will be able to sell medicines, add products, and create medicine requests.
+Your pharmacy is not activated yet. After Admin review, you will be able to sell products, add products, and create product requests.
 ```
 
 ### Active pharmacy
@@ -1054,7 +1054,7 @@ Your changes are under moderation. Until Admin reviews them, the Client app show
 Description:
 
 ```txt
-Track orders, clients, medicines, and requests for your pharmacy.
+Track orders, clients, products, and requests for your pharmacy.
 ```
 
 ## 5.4. Фільтри Dashboard
@@ -1064,14 +1064,14 @@ Track orders, clients, medicines, and requests for your pharmacy.
 Він не впливає на:
 
 - client statistics;
-- medicine statistics;
-- medicine request statistics.
+- product statistics;
+- product request statistics.
 
 Прибрані показники, які залежали від періоду не в orders block:
 
 - “New clients for selected period”;
-- “successful sales amount for selected period” in medicines;
-- “rejected orders amount for selected period” in medicines.
+- “successful sales amount for selected period” in products;
+- “rejected orders amount for selected period” in products.
 
 ### Orders year filter
 
@@ -1159,18 +1159,18 @@ Your pharmacy has no clients yet.
 Clients will appear after the first orders in your pharmacy.
 ```
 
-## 5.7. Medicines statistics
+## 5.7. Products statistics
 
 Показує аналітику по ліках, доданих до поточної аптеки.
 
 Recommended cards:
 
-- Total medicines in pharmacy;
-- Active medicines;
-- Inactive medicines;
-- Medicines in stock;
-- Out of stock medicines;
-- Reserved medicines.
+- Total products in pharmacy;
+- Active products;
+- Inactive products;
+- Products in stock;
+- Out of stock products;
+- Reserved products.
 
 Financial cards:
 
@@ -1191,26 +1191,26 @@ availableValue = availableQuantity * currentPrice
 Click examples:
 
 ```txt
-/pharmacy/medicines
-/pharmacy/medicines/status-active
-/pharmacy/medicines/status-inactive
-/pharmacy/medicines/stock-empty
-/pharmacy/medicines/stock-available
+/pharmacy/products
+/pharmacy/products/status-active
+/pharmacy/products/status-inactive
+/pharmacy/products/stock-empty
+/pharmacy/products/stock-available
 ```
 
 Empty state:
 
 ```txt
-Your pharmacy has no added medicines yet.
+Your pharmacy has no added products yet.
 ```
 
 Button:
 
 ```txt
-View all medicines
+View all products
 ```
 
-## 5.8. Medicine requests statistics
+## 5.8. Product requests statistics
 
 Показує кількість заявок поточної аптеки за статусами:
 
@@ -1223,17 +1223,17 @@ View all medicines
 Click examples:
 
 ```txt
-/pharmacy/medicine-requests/status-draft
-/pharmacy/medicine-requests/status-new
-/pharmacy/medicine-requests/status-in-progress
-/pharmacy/medicine-requests/status-approved
-/pharmacy/medicine-requests/status-rejected
+/pharmacy/product-requests/status-draft
+/pharmacy/product-requests/status-new
+/pharmacy/product-requests/status-in-progress
+/pharmacy/product-requests/status-approved
+/pharmacy/product-requests/status-rejected
 ```
 
 Empty state:
 
 ```txt
-Your pharmacy has no medicine creation requests yet.
+Your pharmacy has no product creation requests yet.
 ```
 
 Button:
@@ -1309,13 +1309,13 @@ rejected → successful
 Recommended modal text for successful:
 
 ```txt
-This action will mark the order as successful and write off reserved medicines from stock. This status change is final and cannot be undone.
+This action will mark the order as successful and write off reserved products from stock. This status change is final and cannot be undone.
 ```
 
 Recommended modal text for rejected:
 
 ```txt
-This action will reject the order and return reserved medicines to available stock. This status change is final and cannot be undone.
+This action will reject the order and return reserved products to available stock. This status change is final and cannot be undone.
 ```
 
 For rejection, modal includes required textarea:
@@ -1330,19 +1330,19 @@ Confirm button disabled until reason is filled.
 
 При створенні замовлення клієнтом товари резервуються.
 
-Reserved medicines are unavailable for other orders.
+Reserved products are unavailable for other orders.
 
-Statuses `new` and `in_progress` keep medicines reserved.
+Statuses `new` and `in_progress` keep products reserved.
 
 When order becomes `successful`:
 
-- reserved medicines are finally written off from stock;
+- reserved products are finally written off from stock;
 - order is completed;
 - order total is fixed.
 
 When order becomes `rejected`:
 
-- reserved medicines are returned to available stock;
+- reserved products are returned to available stock;
 - order remains readonly;
 - rejection reason is stored.
 
@@ -1526,7 +1526,7 @@ Pharmacy can:
 - increase quantity;
 - decrease quantity;
 - remove item;
-- add a new item from own active medicines.
+- add a new item from own active products.
 
 Rules:
 
@@ -1598,7 +1598,7 @@ Add products
 
 The old `Continue shopping` label should not be used in Pharmacy context.
 
-Button opens a product selection modal based on own active medicines.
+Button opens a product selection modal based on own active products.
 
 Button disabled unless order status is `in_progress`.
 
@@ -1899,9 +1899,9 @@ Pharmacy може:
 
 | Status | Color | Description |
 |---|---|---|
-| `new` | blue | Medicine created in Admin but not activated yet |
-| `active` | green | Medicine is active and can be added to a pharmacy |
-| `inactive` | red | Medicine is deactivated by Admin |
+| `new` | blue | Product created in Admin but not activated yet |
+| `active` | green | Product is active and can be added to a pharmacy |
+| `inactive` | red | Product is deactivated by Admin |
 
 Статус показує поточний статус конкретних ліків, незалежно від таблиці.
 
@@ -1909,20 +1909,20 @@ Pharmacy не бачить ліки зі статусом `new`. Цей стат
 
 Pharmacy бачить:
 
-- `active` medicines;
-- `inactive` medicines.
+- `active` products;
+- `inactive` products.
 
-Pharmacy може додати до аптеки тільки `active` medicines.
+Pharmacy може додати до аптеки тільки `active` products.
 
-## 8.3. Global medicine vs pharmacy medicine
+## 8.3. Global product vs pharmacy product
 
-### Global medicine
+### Global product
 
 Створює і редагує Admin.
 
 Fields:
 
-- medicineId;
+- productId;
 - article;
 - name;
 - category;
@@ -1935,14 +1935,14 @@ Fields:
 - createdAt;
 - updatedAt.
 
-### Pharmacy medicine
+### Pharmacy product
 
 Зв’язок між аптекою та глобальними ліками.
 
 Fields:
 
-- pharmacyMedicineId;
-- medicineId;
+- pharmacyProductId;
+- productId;
 - pharmacyId;
 - stockQuantity;
 - reservedQuantity;
@@ -1951,7 +1951,7 @@ Fields:
 - addedAt;
 - updatedAt.
 
-Pharmacy працює саме з pharmacy medicine data, але не редагує global medicine data.
+Pharmacy працює саме з pharmacy product data, але не редагує global product data.
 
 ## 8.4. Price and stock
 
@@ -1961,8 +1961,8 @@ Pharmacy працює саме з pharmacy medicine data, але не редаг
 
 External API також має отримувати інформацію про:
 
-- sold medicines;
-- reserved medicines;
+- sold products;
+- reserved products;
 - cancelled reserves;
 - returned stock after rejected orders.
 
@@ -1985,7 +1985,7 @@ availableQuantity = stockQuantity - reservedQuantity
 
 If availableQuantity = 0, product is unavailable for new orders and should not be purchasable in Client.
 
-## 8.6. Own medicines table
+## 8.6. Own products table
 
 Показує тільки ліки, додані до поточної аптеки.
 
@@ -2002,13 +2002,13 @@ addedAt: desc
 Examples:
 
 ```txt
-/pharmacy/medicines/status-active
-/pharmacy/medicines/status-inactive
-/pharmacy/medicines/stock-empty
-/pharmacy/medicines/stock-available
-/pharmacy/medicines/category-antibiotics
-/pharmacy/medicines/name-aspirin
-/pharmacy/medicines/article-abc123
+/pharmacy/products/status-active
+/pharmacy/products/status-inactive
+/pharmacy/products/stock-empty
+/pharmacy/products/stock-available
+/pharmacy/products/category-antibiotics
+/pharmacy/products/name-aspirin
+/pharmacy/products/article-abc123
 ```
 
 Filters:
@@ -2032,39 +2032,39 @@ Filters:
 - Current price;
 - Status.
 
-Status is global medicine status: `active` or `inactive`.
+Status is global product status: `active` or `inactive`.
 
-Pharmacy never sees `new` medicines.
+Pharmacy never sees `new` products.
 
 ### States
 
 Loader:
 
 ```txt
-Loading medicines...
+Loading products...
 ```
 
 Empty:
 
 ```txt
-Your pharmacy has no added medicines yet.
+Your pharmacy has no added products yet.
 ```
 
 Button:
 
 ```txt
-View all medicines
+View all products
 ```
 
 Nothing found:
 
 ```txt
-No medicines found for the selected filters.
+No products found for the selected filters.
 ```
 
-## 8.7. All medicines table
+## 8.7. All products table
 
-Показує global medicines з Admin, які Pharmacy може переглядати:
+Показує global products з Admin, які Pharmacy може переглядати:
 
 - active;
 - inactive.
@@ -2073,15 +2073,15 @@ No medicines found for the selected filters.
 
 ### Filters
 
-Same as own medicines, але date filter works by global medicine `createdAt`.
+Same as own products, але date filter works by global product `createdAt`.
 
 Examples:
 
 ```txt
-/pharmacy/all-medicines/status-active
-/pharmacy/all-medicines/status-inactive
-/pharmacy/all-medicines/category-antibiotics
-/pharmacy/all-medicines/article-abc123
+/pharmacy/all-products/status-active
+/pharmacy/all-products/status-inactive
+/pharmacy/all-products/category-antibiotics
+/pharmacy/all-products/article-abc123
 ```
 
 ### Columns
@@ -2096,19 +2096,19 @@ Examples:
 
 ### Action
 
-For active medicine not added to current pharmacy:
+For active product not added to current pharmacy:
 
 ```txt
 Add to pharmacy
 ```
 
-For active medicine already added:
+For active product already added:
 
 ```txt
 Already added
 ```
 
-For inactive medicine:
+For inactive product:
 
 ```txt
 Unavailable
@@ -2119,18 +2119,18 @@ Add action opens ConfirmActionModal.
 Success toast:
 
 ```txt
-Medicine added to your pharmacy.
+Product added to your pharmacy.
 ```
 
 Error toasts:
 
 ```txt
-This medicine is already added to your pharmacy.
-Inactive medicines cannot be added to a pharmacy.
-Could not add medicine. Please try again.
+This product is already added to your pharmacy.
+Inactive products cannot be added to a pharmacy.
+Could not add product. Please try again.
 ```
 
-## 8.8. Removing medicine from pharmacy
+## 8.8. Removing product from pharmacy
 
 Цю дію можна зробити з таблиці всіх ліків.
 
@@ -2147,29 +2147,29 @@ Pharmacy може видалити ліки зі своєї аптеки тіл�
 Modal text:
 
 ```txt
-Are you sure you want to remove this medicine from your pharmacy?
+Are you sure you want to remove this product from your pharmacy?
 ```
 
-Після видалення `pharmacyMedicine` зв’язок видаляється або отримує `status="removed"`.
+Після видалення `pharmacyProduct` зв’язок видаляється або отримує `status="removed"`.
 
 Якщо по ліках уже були замовлення, видалення недоступне.
 
 Disabled explanation:
 
 ```txt
-This medicine cannot be removed because it already has related orders.
+This product cannot be removed because it already has related orders.
 ```
 
-## 8.9. Medicine card
+## 8.9. Product card
 
 Одна карточка ліків використовується незалежно від того, звідки Pharmacy перейшов:
 
-- own medicines;
-- all medicines.
+- own products;
+- all products.
 
-If medicine is added to current pharmacy, show:
+If product is added to current pharmacy, show:
 
-- global medicine data;
+- global product data;
 - pharmacy-specific data;
 - stock;
 - reserved quantity;
@@ -2181,9 +2181,9 @@ If medicine is added to current pharmacy, show:
 - characteristics;
 - reviews.
 
-If medicine is not added, show only global data and action `Add to pharmacy` if status is active.
+If product is not added, show only global data and action `Add to pharmacy` if status is active.
 
-Pharmacy cannot edit global medicine data.
+Pharmacy cannot edit global product data.
 
 Pharmacy cannot manually edit price and quantity.
 
@@ -2191,7 +2191,7 @@ Pharmacy cannot manually edit price and quantity.
 
 Show:
 
-- medicine image;
+- product image;
 - name;
 - current price if added;
 - rating + reviews count;
@@ -2204,7 +2204,7 @@ Show:
 If not added:
 
 ```txt
-This medicine is not added to your pharmacy yet.
+This product is not added to your pharmacy yet.
 ```
 
 ### Tabs
@@ -2215,7 +2215,7 @@ This medicine is not added to your pharmacy yet.
 - Characteristics;
 - Reviews.
 
-If medicine is not added:
+If product is not added:
 
 - Statistics — empty state;
 - Stock movement — empty state;
@@ -2237,7 +2237,7 @@ Show:
 Empty:
 
 ```txt
-This medicine is not added to your pharmacy, so statistics are unavailable.
+This product is not added to your pharmacy, so statistics are unavailable.
 ```
 
 ### Stock movement tab
@@ -2279,22 +2279,22 @@ Stock movement history is empty.
 
 ### Related orders tab
 
-Shows only current pharmacy orders that include this medicine.
+Shows only current pharmacy orders that include this product.
 
 Columns:
 
 - order number;
 - order date;
 - client;
-- quantity of this medicine;
+- quantity of this product;
 - unit price in this order;
-- amount for this medicine;
+- amount for this product;
 - order status.
 
 Empty:
 
 ```txt
-There are no orders with this medicine yet.
+There are no orders with this product yet.
 ```
 
 ### Characteristics tab
@@ -2308,7 +2308,7 @@ Style should match Client product card characteristics.
 If no characteristics:
 
 ```txt
-Characteristics for this medicine have not been added yet.
+Characteristics for this product have not been added yet.
 ```
 
 ### Reviews tab
@@ -2320,7 +2320,7 @@ Pharmacy cannot create/edit/delete/moderate reviews.
 Empty:
 
 ```txt
-This medicine has no reviews yet.
+This product has no reviews yet.
 ```
 
 ---
@@ -2329,9 +2329,9 @@ This medicine has no reviews yet.
 
 ## 9.1. Загальна логіка
 
-Medicine requests потрібні, коли аптека продає ліки, яких ще немає в глобальному Admin catalog.
+Product requests потрібні, коли аптека продає ліки, яких ще немає в глобальному Admin catalog.
 
-Pharmacy не створює global medicine напряму.
+Pharmacy не створює global product напряму.
 
 Pharmacy може:
 
@@ -2341,20 +2341,20 @@ Pharmacy може:
 - надіслати заявку на модерацію;
 - переглядати статус заявки;
 - створити нову чернетку на основі відхиленої заявки;
-- додати створені ліки до аптеки після approval, якщо medicine active.
+- додати створені ліки до аптеки після approval, якщо product active.
 
 Admin:
 
 - бачить тільки submitted requests;
 - переводить request у `in_progress`;
-- створює medicine на основі request;
+- створює product на основі request;
 - або відхиляє request із причиною.
 
 Client не бачить requests.
 
 ## 9.2. Before creating request
 
-Pharmacy створює request тільки якщо потрібних ліків немає в All medicines table.
+Pharmacy створює request тільки якщо потрібних ліків немає в All products table.
 
 Перед створенням request Pharmacy має перевірити:
 
@@ -2363,12 +2363,12 @@ Pharmacy створює request тільки якщо потрібних лік�
 - category;
 - manufacturer, if filter exists.
 
-If medicine already exists and is active, Pharmacy should add it to pharmacy instead of creating request.
+If product already exists and is active, Pharmacy should add it to pharmacy instead of creating request.
 
-If medicine exists but inactive:
+If product exists but inactive:
 
 ```txt
-This medicine already exists in the system, but it is currently inactive. Contact Admin or wait for activation.
+This product already exists in the system, but it is currently inactive. Contact Admin or wait for activation.
 ```
 
 ## 9.3. Request statuses
@@ -2378,7 +2378,7 @@ This medicine already exists in the system, but it is currently inactive. Contac
 | `draft` | gray | Pharmacy created a draft but did not submit it |
 | `new` | blue | Pharmacy submitted request, Admin has not started review |
 | `in_progress` | yellow | Admin is reviewing the request |
-| `approved` | green | Admin created medicine based on request |
+| `approved` | green | Admin created product based on request |
 | `rejected` | red | Admin rejected request |
 
 For rejected request, rejection reason is required.
@@ -2431,7 +2431,7 @@ Admin can:
 
 - verify data;
 - fix incomplete/incorrect fields;
-- create medicine;
+- create product;
 - reject request.
 
 Pharmacy can only view and wait.
@@ -2440,13 +2440,13 @@ Pharmacy can only view and wait.
 
 After approval:
 
-- global medicine is created;
-- request is linked to created medicine;
-- request stores link to created medicine;
-- Pharmacy can open created medicine;
-- Pharmacy can add medicine to pharmacy if it is active.
+- global product is created;
+- request is linked to created product;
+- request stores link to created product;
+- Pharmacy can open created product;
+- Pharmacy can add product to pharmacy if it is active.
 
-Approval does not automatically add medicine to pharmacy.
+Approval does not automatically add product to pharmacy.
 
 ## 9.9. Rejected request
 
@@ -2454,7 +2454,7 @@ Admin must provide rejection reason.
 
 Possible reasons:
 
-- medicine already exists;
+- product already exists;
 - insufficient information;
 - incorrect name;
 - incorrect article;
@@ -2522,13 +2522,13 @@ Click on name opens request card.
 Examples:
 
 ```txt
-/pharmacy/medicine-requests/status-draft
-/pharmacy/medicine-requests/status-new
-/pharmacy/medicine-requests/status-in-progress
-/pharmacy/medicine-requests/status-approved
-/pharmacy/medicine-requests/status-rejected
-/pharmacy/medicine-requests/category-antibiotics
-/pharmacy/medicine-requests/article-abc123
+/pharmacy/product-requests/status-draft
+/pharmacy/product-requests/status-new
+/pharmacy/product-requests/status-in-progress
+/pharmacy/product-requests/status-approved
+/pharmacy/product-requests/status-rejected
+/pharmacy/product-requests/category-antibiotics
+/pharmacy/product-requests/article-abc123
 ```
 
 Filters:
@@ -2544,7 +2544,7 @@ Filters:
 Empty:
 
 ```txt
-Your pharmacy has no medicine creation requests yet.
+Your pharmacy has no product creation requests yet.
 ```
 
 Nothing found:
@@ -2564,8 +2564,8 @@ Reset filters
 Routes:
 
 ```txt
-/pharmacy/medicine-requests/new
-/pharmacy/medicine-requests/[requestId]/edit
+/pharmacy/product-requests/new
+/pharmacy/product-requests/[requestId]/edit
 ```
 
 Modes:
@@ -2573,16 +2573,16 @@ Modes:
 - Create mode;
 - Edit draft mode.
 
-Admin may have a separate create medicine mode:
+Admin may have a separate create product mode:
 
 ```txt
-/admin/medicine-requests/[requestId]/create-medicine
+/admin/product-requests/[requestId]/create-product
 /admin/products/new/request-[requestId]
 ```
 
 ### Fields
 
-Same main fields as Admin create medicine page:
+Same main fields as Admin create product page:
 
 - image;
 - name;
@@ -2657,10 +2657,10 @@ Could not send request. Please try again.
 Route:
 
 ```txt
-/pharmacy/medicine-requests/[requestId]
+/pharmacy/product-requests/[requestId]
 ```
 
-Card should look like medicine card.
+Card should look like product card.
 
 Show:
 
@@ -2676,7 +2676,7 @@ Show:
 - submitted date if submitted;
 - Admin comment;
 - rejection reason if rejected;
-- link to created medicine if approved.
+- link to created product if approved.
 
 ### Draft card
 
@@ -2708,20 +2708,20 @@ Admin is reviewing this request.
 Show block:
 
 ```txt
-Admin created a medicine based on this request.
+Admin created a product based on this request.
 ```
 
 Actions:
 
 ```txt
-Open medicine
+Open product
 Add to pharmacy
 ```
 
 If already added:
 
 ```txt
-This medicine is already added to your pharmacy.
+This product is already added to your pharmacy.
 ```
 
 ### Rejected
@@ -2792,21 +2792,21 @@ Actions:
 
 ```txt
 Back to dashboard
-View all medicines
+View all products
 ```
 
 Routes:
 
 ```txt
 /pharmacy/dashboard
-/pharmacy/all-medicines
+/pharmacy/all-products
 ```
 
 If route exists but entity does not, use local not found state:
 
 - order not found;
 - client not found;
-- medicine not found;
+- product not found;
 - request not found.
 
 If route does not exist, show general Pharmacy 404.
@@ -2843,7 +2843,7 @@ Loading orders...
 Loading order data...
 Loading clients...
 Loading client data...
-Loading medicines...
+Loading products...
 Loading requests...
 ```
 
@@ -2926,20 +2926,20 @@ apps/pharmacy/app/
       status-[status]/page.tsx
       date-[dateRange]/page.tsx
 
-    medicines/
+    products/
       page.tsx
-      [medicineId]/page.tsx
+      [productId]/page.tsx
       status-[status]/page.tsx
       stock-[stock]/page.tsx
       category-[category]/page.tsx
 
-    all-medicines/
+    all-products/
       page.tsx
-      [medicineId]/page.tsx
+      [productId]/page.tsx
       status-[status]/page.tsx
       category-[category]/page.tsx
 
-    medicine-requests/
+    product-requests/
       page.tsx
       new/page.tsx
       [requestId]/page.tsx
@@ -2957,9 +2957,9 @@ apps/pharmacy/app/
 ```txt
 /pharmacy/orders/[[...filters]]
 /pharmacy/clients/[[...filters]]
-/pharmacy/medicines/[[...filters]]
-/pharmacy/all-medicines/[[...filters]]
-/pharmacy/medicine-requests/[[...filters]]
+/pharmacy/products/[[...filters]]
+/pharmacy/all-products/[[...filters]]
+/pharmacy/product-requests/[[...filters]]
 ```
 
 Examples:
@@ -2968,8 +2968,8 @@ Examples:
 /pharmacy/orders/status-new
 /pharmacy/orders/status-successful/delivery-pickup
 /pharmacy/clients/status-active
-/pharmacy/medicines/status-active/stock-empty
-/pharmacy/medicine-requests/status-draft
+/pharmacy/products/status-active/stock-empty
+/pharmacy/product-requests/status-draft
 ```
 
 Recommended approach for implementation: catch-all route + filter parser utility.
@@ -2986,17 +2986,17 @@ Store shared domain types:
 - PharmacyStatus;
 - ClientStatus;
 - OrderStatus;
-- MedicineStatus;
-- MedicineRequestStatus;
+- ProductStatus;
+- ProductRequestStatus;
 - DeliveryMethod;
 - PaymentMethod;
 - Pharmacy;
 - Client;
 - Order;
 - OrderItem;
-- Medicine;
-- PharmacyMedicine;
-- MedicineRequest;
+- Product;
+- PharmacyProduct;
+- ProductRequest;
 - PaginationParams;
 - Filter params.
 
@@ -3012,7 +3012,7 @@ Store constants:
 - date formats;
 - rows per page options;
 - file upload limits;
-- medicine categories if static;
+- product categories if static;
 - delivery/payment options.
 
 ## 12.3. packages/ui
@@ -3051,8 +3051,8 @@ Shared validation schemas:
 - pharmacy profile;
 - payment details;
 - order editing;
-- medicine request draft;
-- medicine request submit.
+- product request draft;
+- product request submit.
 
 ## 12.5. packages/api-client
 
@@ -3063,8 +3063,8 @@ Shared API clients:
 - pharmacy dashboard API;
 - pharmacy orders API;
 - pharmacy clients API;
-- pharmacy medicines API;
-- pharmacy medicine requests API.
+- pharmacy products API;
+- pharmacy product requests API.
 
 ## 12.6. apps/pharmacy
 
@@ -3089,10 +3089,10 @@ Backend modules needed for Pharmacy:
 - pharmacy dashboard;
 - pharmacy orders;
 - pharmacy clients;
-- global medicines;
-- pharmacy medicines;
+- global products;
+- pharmacy products;
 - stock movement;
-- medicine requests;
+- product requests;
 - reviews;
 - file uploads;
 - external stock/price sync.
@@ -3109,8 +3109,8 @@ Pharmacy ТЗ логічно ділиться на такі глобальні �
 - Dashboard;
 - Orders;
 - Clients;
-- Medicines;
-- Medicine requests;
+- Products;
+- Product requests;
 - Service pages/loaders/states;
 - Routes/shared packages.
 
@@ -3124,8 +3124,8 @@ Pharmacy ТЗ логічно ділиться на такі глобальні �
 - status changes to successful/rejected є остаточними й підтверджуються modal;
 - ціна існуючого order item не змінюється при зміні кількості;
 - новий item у замовленні отримує поточну ціну на момент додавання;
-- Pharmacy не бачить medicines зі статусом `new`;
-- видалення medicine from pharmacy описано окремо;
+- Pharmacy не бачить products зі статусом `new`;
+- видалення product from pharmacy описано окремо;
 - request flow строгий: Draft → New → In progress → Approved/Rejected;
 - rejected request can create a new draft based on previous data;
 - Auth routes are global, Pharmacy protected routes start with `/pharmacy`;

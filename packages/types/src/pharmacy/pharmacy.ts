@@ -38,17 +38,18 @@ export type ClientGoodsDto = {
 };
 
 export type Pharmacy = AuthUser;
-export type Medicine = ProductDto;
-export type MedicineRequestStatus =
+
+export type ProductRequestStatus =
   | 'draft'
   | 'pending'
   | 'approved'
   | 'rejected'
   | 'cancelled';
-export type MedicineRequest = {
+
+export type ProductRequest = {
   id: EntityId;
-  medicineId?: EntityId;
+  productId?: EntityId;
   productName: string;
-  status: MedicineRequestStatus;
+  status: ProductRequestStatus;
   createdAt: ISODateString;
 };

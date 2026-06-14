@@ -1,6 +1,6 @@
 # E-PHARMACY Client
 
-> A responsive client storefront for browsing pharmacy stores, finding medicines, managing a cart, and creating online orders.
+> A responsive client storefront for browsing pharmacy stores, finding products, managing a cart, and creating online orders.
 
 ![E-PHARMACY client cover](./public/og/og-cover.jpg)
 
@@ -11,9 +11,9 @@
 The client app allows clients to:
 
 - browse pharmacy stores
-- search, filter, and sort medicines
+- search, filter, and sort products
 - open detailed product and pharmacy pages with SEO-friendly URLs
-- add medicines and pharmacies to favorites
+- add products and pharmacies to favorites
 - manage cart items grouped by pharmacy
 - complete checkout with pickup or delivery details
 - view profile information and confirmed orders
@@ -47,9 +47,9 @@ https://e-pharmacy-client-ten.vercel.app
 
 ![Pharmacy details page](./public/readme/pharmacy-page.jpg)
 
-### Medicines catalog
+### Products catalog
 
-![Medicines catalog](./public/readme/product-catalog.jpg)
+![Products catalog](./public/readme/product-catalog.jpg)
 
 ### Product details page
 
@@ -103,9 +103,9 @@ https://e-pharmacy-client-ten.vercel.app
 - favorite pharmacy toggle for authenticated users
 - responsive pharmacy cards
 
-### Medicines catalog
+### Products catalog
 
-- public medicines catalog
+- public products catalog
 - search by product name and article
 - category filtering
 - pharmacy filtering
@@ -114,7 +114,7 @@ https://e-pharmacy-client-ten.vercel.app
 - pagination
 - product details pages
 - product characteristics and reviews
-- favorite medicine toggle for authenticated users
+- favorite product toggle for authenticated users
 
 ### Cart and checkout
 
@@ -215,8 +215,8 @@ apps/client/
           personal-data-notice/
           return-policy/
           user-agreement/
-        (medicines)/
-          medicines-catalog/[[...segments]]
+        (products)/
+          products-catalog/[[...segments]]
           products/[slugId]/
         (pharmacies)/
           pharmacy-stores/[[...segments]]
@@ -245,7 +245,7 @@ apps/client/
       home/
       info/
       layout/
-      medicines-catalog/
+      products-catalog/
       modals/
       pharmacy-stores/
       profile/
@@ -277,7 +277,7 @@ apps/client/
 
 ### Home
 
-A public landing page that introduces the service, explains the client flow, and guides users to pharmacies and medicines.
+A public landing page that introduces the service, explains the client flow, and guides users to pharmacies and products.
 
 ### Authentication pages
 
@@ -287,13 +287,13 @@ Registration, login, password recovery, and reset-password pages with validation
 
 A public catalog for browsing pharmacies with search, city filtering, sorting, pagination, favorite actions, reviews, and detail pages.
 
-### Medicines catalog
+### Products catalog
 
-A public catalog for browsing medicines with search, filters, sorting, pagination, product cards, reviews, and detailed product pages.
+A public catalog for browsing products with search, filters, sorting, pagination, product cards, reviews, and detailed product pages.
 
 ### Cart
 
-A private client page where medicines are grouped by pharmacy with stock-aware quantity controls and invoice summaries.
+A private client page where products are grouped by pharmacy with stock-aware quantity controls and invoice summaries.
 
 ### Checkout
 
@@ -329,7 +329,7 @@ src/lib/details/*                    -> product/pharmacy detail metadata and can
 ```txt
 /
 /pharmacy-stores
-/medicines-catalog
+/products-catalog
 /delivery-and-payment
 /return-policy
 /user-agreement
@@ -382,13 +382,13 @@ If a user opens a detail page with an outdated or incorrect slug, the app resolv
 
 ### Catalog routing
 
-The medicines catalog supports readable route segments for meaningful primary filters:
+The products catalog supports readable route segments for meaningful primary filters:
 
 ```txt
-/medicines-catalog
-/medicines-catalog/category-antibiotics
-/medicines-catalog/pharmacy-wellness-hub-pharmacy-6a01bcd0b2ed6525cedea940
-/medicines-catalog/category-antibiotics/pharmacy-wellness-hub-pharmacy-6a01bcd0b2ed6525cedea940
+/products-catalog
+/products-catalog/category-antibiotics
+/products-catalog/pharmacy-wellness-hub-pharmacy-6a01bcd0b2ed6525cedea940
+/products-catalog/category-antibiotics/pharmacy-wellness-hub-pharmacy-6a01bcd0b2ed6525cedea940
 ```
 
 Search, article search, availability, sorting, and pagination are treated as temporary catalog states and are marked as non-indexable when needed.

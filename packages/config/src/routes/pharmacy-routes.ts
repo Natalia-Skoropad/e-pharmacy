@@ -7,7 +7,7 @@ export const PHARMACY_ROUTES = {
   DASHBOARD: `/${ROUTE_SEGMENTS.pharmacy}/dashboard`,
   ORDERS: `/${ROUTE_SEGMENTS.pharmacy}/orders`,
   CLIENTS: `/${ROUTE_SEGMENTS.pharmacy}/clients`,
-  MEDICINES: `/${ROUTE_SEGMENTS.pharmacy}/medicines`,
-  MEDICINE_REQUESTS: `/${ROUTE_SEGMENTS.pharmacy}/medicine-requests`,
+  PRODUCTS: `/${ROUTE_SEGMENTS.pharmacy}/products`,
+  PRODUCT_REQUESTS: `/${ROUTE_SEGMENTS.pharmacy}/product-requests`,
   PROFILE: `/${ROUTE_SEGMENTS.pharmacy}/profile`,
 } as const;

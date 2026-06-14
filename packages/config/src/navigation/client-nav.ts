@@ -12,8 +12,8 @@ export const CLIENT_NAV_LINKS = [
     href: ROUTES.STORES,
   },
   {
-    label: 'Medicines catalog',
-    href: ROUTES.MEDICINES_CATALOG,
+    label: 'products catalog',
+    href: ROUTES.PRODUCTS_CATALOG,
   },
 ] as const;
 

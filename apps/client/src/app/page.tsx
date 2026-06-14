@@ -1,7 +1,22 @@
 import Image from 'next/image';
 
-import { Heart, MapPin, ReceiptText, SearchCheck, ShieldCheck, } from 'lucide-react';  import { ButtonLink, Container } from '@e-pharmacy/ui/common'; import { HomeFeatureCards, HomeReviewsSlider } from '@/components/home'; import { ProductCard } from '@/components/medicines-catalog'; import { StoreCard } from '@/components/pharmacy-stores';  import { HOME_DESCRIPTION, HOME_TITLE } from '@e-pharmacy/config/seo'; import { ROUTES } from '@e-pharmacy/config/routes'; import { createPageMetadata } from '@/lib/seo'; import { getProducts, getStores } from '@e-pharmacy/api-client/client';
+import {
+  Heart,
+  MapPin,
+  ReceiptText,
+  SearchCheck,
+  ShieldCheck,
+} from 'lucide-react';
 
+import { ButtonLink, Container } from '@e-pharmacy/ui/common';
+import { HomeFeatureCards, HomeReviewsSlider } from '@/components/home';
+import { ProductCard } from '@/components/products-catalog';
+import { StoreCard } from '@/components/pharmacy-stores';
+
+import { HOME_DESCRIPTION, HOME_TITLE } from '@e-pharmacy/config/seo';
+import { ROUTES } from '@e-pharmacy/config/routes';
+import { createPageMetadata } from '@/lib/seo';
+import { getProducts, getStores } from '@e-pharmacy/api-client/client';
 import type { Product, Store } from '@e-pharmacy/types';
 
 import css from './page.module.css';
@@ -23,7 +38,7 @@ export const metadata = createPageMetadata({
 const HOME_PREVIEW_LIMIT = 6;
 
 const STATS = [
-  { value: '126+', label: 'medicines in catalog' },
+  { value: '126+', label: 'products in catalog' },
   { value: '98+', label: 'trusted pharmacy stores' },
   { value: '24/7', label: 'online order access' },
 ] as const;
@@ -36,7 +51,7 @@ const BENEFITS = [
   },
   {
     title: 'Keep favorites nearby',
-    text: 'Save medicines and pharmacy stores in your account so repeat purchases take less time.',
+    text: 'Save products and pharmacy stores in your account so repeat purchases take less time.',
     icon: Heart,
   },
   {
@@ -58,7 +73,7 @@ const BENEFITS = [
 
 const STEPS = [
   {
-    title: 'Find medicines',
+    title: 'Find products',
     text: 'Search by name or article, filter by category, and open detailed product information.',
   },
   {
@@ -75,7 +90,7 @@ const REVIEWS = [
   {
     name: 'Maria Tkachenko',
     rating: 5,
-    text: 'The catalog feels simple and reliable. I found the medicine by name, checked which pharmacies had it available, compared ratings, and opened the store page before ordering. It is helpful that every pharmacy has its own details, contacts, and product list, because I can make a decision without jumping between different tabs.',
+    text: 'The catalog feels simple and reliable. I found the product by name, checked which pharmacies had it available, compared ratings, and opened the store page before ordering. It is helpful that every pharmacy has its own details, contacts, and product list, because I can make a decision without jumping between different tabs.',
   },
   {
     name: 'Sergey Rybachok',
@@ -85,12 +100,12 @@ const REVIEWS = [
   {
     name: 'Natalia Chatuk',
     rating: 4.6,
-    text: 'Favorite stores and order history are exactly what I need when buying the same medicines again. I do not have to search from the beginning every time. The profile keeps useful information close, and the pharmacy cards show enough details to choose a familiar store quickly.',
+    text: 'Favorite stores and order history are exactly what I need when buying the same products again. I do not have to search from the beginning every time. The profile keeps useful information close, and the pharmacy cards show enough details to choose a familiar store quickly.',
   },
   {
     name: 'Olena Voronina',
     rating: 4.9,
-    text: 'I liked that I could compare pharmacy offers before adding anything to the cart. The product page shows prices, ratings, and availability, so the purchase feels calm and predictable. It is especially useful when the same medicine is available in several pharmacies with different prices.',
+    text: 'I liked that I could compare pharmacy offers before adding anything to the cart. The product page shows prices, ratings, and availability, so the purchase feels calm and predictable. It is especially useful when the same product is available in several pharmacies with different prices.',
   },
   {
     name: 'Andriy Melnyk',
@@ -167,14 +182,14 @@ async function HomePage() {
               </h1>
 
               <p className={css.heroText}>
-                Order medicines online, compare pharmacy offers, manage your
-                cart by store, and keep health essentials organized in one calm
+                Order products online, compare pharmacy offers, manage your cart
+                by store, and keep health essentials organized in one calm
                 digital place.
               </p>
 
               <div className={css.actions}>
-                <ButtonLink href={ROUTES.MEDICINES_CATALOG} size="lg">
-                  Buy medicine
+                <ButtonLink href={ROUTES.PRODUCTS_CATALOG} size="lg">
+                  Buy product
                 </ButtonLink>
 
                 <ButtonLink href={ROUTES.STORES} variant="secondary" size="lg">
@@ -216,14 +231,14 @@ async function HomePage() {
       <section className={css.section} aria-labelledby="stores-title">
         <Container>
           <div className={css.sectionHead}>
-            <p className={css.kicker}>Medicine stores</p>
+            <p className={css.kicker}>Pharmacies</p>
             <h2 className={css.sectionTitle} id="stores-title">
               Find a trusted pharmacy for your order
             </h2>
             <p className={css.sectionText}>
-              Explore pharmacy stores, compare ratings, check contacts and
-              available medicines, then open the store that feels right before
-              placing an order.
+              Explore pharmacies, compare ratings, check contacts and available
+              products, then open the store that feels right before placing an
+              order.
             </p>
           </div>
 
@@ -274,14 +289,14 @@ async function HomePage() {
             <div className={css.bannerContent}>
               <p className={css.kicker}>Quick online orders</p>
               <h2 className={css.bannerTitle} id="banner-title">
-                Add the medicines you need online now
+                Add the products you need online now
               </h2>
               <p>
                 Build your cart by pharmacy, control available quantities, and
                 prepare pickup or post delivery without the usual pharmacy-queue
                 side quest.
               </p>
-              <ButtonLink href={ROUTES.MEDICINES_CATALOG} variant="secondary">
+              <ButtonLink href={ROUTES.PRODUCTS_CATALOG} variant="secondary">
                 Browse catalog
               </ButtonLink>
             </div>
@@ -289,7 +304,7 @@ async function HomePage() {
             <div className={css.bannerMedia}>
               <Image
                 src="/images/home/girl-holding-pills-in-her-hands.png"
-                alt="Client holding medicine and using a phone"
+                alt="Client holding pills and using a phone"
                 width={600}
                 height={406}
                 loading="lazy"
@@ -319,7 +334,7 @@ async function HomePage() {
                   important details.
                 </strong>
                 <p>
-                  E-PHARMACY keeps medicine search, pharmacy choice, cart
+                  E-PHARMACY keeps product search, pharmacy choice, cart
                   invoices, profile data, and order history connected in one
                   clear flow.
                 </p>
@@ -346,13 +361,13 @@ async function HomePage() {
       <section className={css.section} aria-labelledby="products-title">
         <Container>
           <div className={css.sectionHead}>
-            <p className={css.kicker}>Medicine catalog</p>
+            <p className={css.kicker}>Product catalog</p>
             <h2 className={css.sectionTitle} id="products-title">
-              Browse medicines available in pharmacies
+              Browse products available in pharmacies
             </h2>
             <p className={css.sectionText}>
               Open product cards, compare prices in pharmacies, check ratings,
-              and add the right medicine to your cart from the catalog.
+              and add the right product to your cart from the catalog.
             </p>
           </div>
 
@@ -369,8 +384,8 @@ async function HomePage() {
           ) : null}
 
           <div className={css.sectionAction}>
-            <ButtonLink href={ROUTES.MEDICINES_CATALOG} variant="secondary">
-              View all medicines
+            <ButtonLink href={ROUTES.PRODUCTS_CATALOG} variant="secondary">
+              View all products
             </ButtonLink>
           </div>
         </Container>
@@ -394,7 +409,7 @@ async function HomePage() {
           <div className={css.sectionHead}>
             <p className={css.kicker}>Client reviews</p>
             <h2 className={css.sectionTitle} id="reviews-title">
-              A calmer way to manage medicines
+              A calmer way to manage products
             </h2>
           </div>
 

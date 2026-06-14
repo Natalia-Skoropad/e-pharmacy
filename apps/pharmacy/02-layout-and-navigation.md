@@ -152,15 +152,15 @@ It is not shown for inactive pharmacies because inactive pharmacies cannot enter
 
 ### Sidebar links
 
-| Label             | Route                         |
-| ----------------- | ----------------------------- |
-| Dashboard         | `/pharmacy/dashboard`         |
-| Orders            | `/pharmacy/orders`            |
-| Clients           | `/pharmacy/clients`           |
-| Own medicines     | `/pharmacy/medicines`         |
-| All medicines     | `/pharmacy/all-medicines`     |
-| Medicine requests | `/pharmacy/medicine-requests` |
-| Pharmacy profile  | `/pharmacy/profile`           |
+| Label            | Route                        |
+| ---------------- | ---------------------------- |
+| Dashboard        | `/pharmacy/dashboard`        |
+| Orders           | `/pharmacy/orders`           |
+| Clients          | `/pharmacy/clients`          |
+| Own products     | `/pharmacy/products`         |
+| All products     | `/pharmacy/all-products`     |
+| Product requests | `/pharmacy/product-requests` |
+| Pharmacy profile | `/pharmacy/profile`          |
 
 ### Active state
 
@@ -169,7 +169,7 @@ Active state must work for nested pages.
 Examples:
 
 - `/pharmacy/orders` and `/pharmacy/orders/[orderId]` highlight **Orders**;
-- `/pharmacy/medicine-requests`, `/pharmacy/medicine-requests/new`, `/pharmacy/medicine-requests/[requestId]`, and `/pharmacy/medicine-requests/[requestId]/edit` highlight **Medicine requests**.
+- `/pharmacy/product-requests`, `/pharmacy/product-requests/new`, `/pharmacy/product-requests/[requestId]`, and `/pharmacy/product-requests/[requestId]/edit` highlight **Product requests**.
 
 ## 9. Sidebar content
 
@@ -213,19 +213,19 @@ Example page structure:
 
 ### Breadcrumb examples
 
-| Page              | Breadcrumbs                                         |
-| ----------------- | --------------------------------------------------- |
-| Dashboard         | Home / Dashboard                                    |
-| Pharmacy profile  | Home / Dashboard / Pharmacy profile                 |
-| Orders            | Home / Dashboard / Orders                           |
-| Order details     | Home / Dashboard / Orders / Order #12345            |
-| Clients           | Home / Dashboard / Clients                          |
-| Client details    | Home / Dashboard / Clients / Client name            |
-| Own medicines     | Home / Dashboard / Own medicines                    |
-| Medicine details  | Home / Dashboard / Own medicines / Medicine name    |
-| All medicines     | Home / Dashboard / All medicines                    |
-| Medicine requests | Home / Dashboard / Medicine requests                |
-| Request details   | Home / Dashboard / Medicine requests / Request name |
+| Page             | Breadcrumbs                                        |
+| ---------------- | -------------------------------------------------- |
+| Dashboard        | Home / Dashboard                                   |
+| Pharmacy profile | Home / Dashboard / Pharmacy profile                |
+| Orders           | Home / Dashboard / Orders                          |
+| Order details    | Home / Dashboard / Orders / Order #12345           |
+| Clients          | Home / Dashboard / Clients                         |
+| Client details   | Home / Dashboard / Clients / Client name           |
+| Own products     | Home / Dashboard / Own products                    |
+| Product details  | Home / Dashboard / Own products / Product name     |
+| All products     | Home / Dashboard / All products                    |
+| Product requests | Home / Dashboard / Product requests                |
+| Request details  | Home / Dashboard / product requests / Request name |
 
 ### Breadcrumb accessibility
 

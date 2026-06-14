@@ -2,12 +2,12 @@
 
 ## 1. Purpose
 
-The Pharmacy part is the pharmacy cabinet in the E-PHARMACY ecosystem. It allows a pharmacy to manage its own profile, orders, clients, medicines, medicine creation requests, and dashboard statistics.
+The Pharmacy part is the pharmacy cabinet in the E-PHARMACY ecosystem. It allows a pharmacy to manage its own profile, orders, clients, products, product creation requests, and dashboard statistics.
 
 The Pharmacy app works together with:
 
-- **Client** — public storefront where clients browse pharmacies, medicines, cart, checkout, orders, and reviews.
-- **Admin** — back-office where administrators moderate pharmacies, manage global medicines, review requests, view orders, and manage clients.
+- **Client** — public storefront where clients browse pharmacies, products, cart, checkout, orders, and reviews.
+- **Admin** — back-office where administrators moderate pharmacies, manage global products, review requests, view orders, and manage clients.
 - **API** — shared backend for all apps.
 - **Shared packages** — reusable UI, types, validation, config, API client, and utilities.
 
@@ -35,8 +35,8 @@ The Pharmacy app consists of the following global parts:
    - pharmacy status banner;
    - order statistics;
    - client statistics;
-   - medicine statistics;
-   - medicine request statistics;
+   - product statistics;
+   - product request statistics;
    - quick transitions to filtered tables.
 
 4. **Pharmacy profile**
@@ -59,14 +59,14 @@ The Pharmacy app consists of the following global parts:
    - readonly client data;
    - client statistics for the current pharmacy only.
 
-7. **Medicines**
-   - own medicines table;
-   - all medicines table;
-   - one medicine card;
-   - global medicine data from Admin;
-   - pharmacy-specific medicine stock and price data.
+7. **Products**
+   - own products table;
+   - all products table;
+   - one product card;
+   - global product data from Admin;
+   - pharmacy-specific product stock and price data.
 
-8. **Medicine creation requests**
+8. **Product creation requests**
    - requests table;
    - create/edit request page;
    - request details page;
@@ -88,10 +88,10 @@ Pharmacy must not see:
 - orders of other pharmacies;
 - clients who never ordered from this pharmacy;
 - orders of a client from other pharmacies;
-- pharmacy-specific medicine data of other pharmacies;
-- medicine requests of other pharmacies;
+- pharmacy-specific product data of other pharmacies;
+- product requests of other pharmacies;
 - Admin-only internal fields;
-- medicines with the global status `new`.
+- products with the global status `new`.
 
 ## 4. Main data ownership rules
 
@@ -109,8 +109,8 @@ Pharmacy must not see:
 - own pharmacy profile editing according to status rules;
 - own order processing;
 - own client list viewing;
-- own medicines list management;
-- medicine creation request drafts and submissions;
+- own products list management;
+- product creation request drafts and submissions;
 - own dashboard analytics.
 
 ### Admin owns
@@ -118,8 +118,8 @@ Pharmacy must not see:
 - pharmacy moderation;
 - pharmacy activation/deactivation;
 - client blocking/unblocking;
-- global medicine creation/editing/status changes;
-- medicine request review;
+- global product creation/editing/status changes;
+- product request review;
 - review moderation;
 - global system overview.
 
@@ -147,8 +147,8 @@ Recommended examples:
 /pharmacy/orders/status-new
 /pharmacy/orders/status-successful/delivery-pickup
 /pharmacy/clients/status-active
-/pharmacy/medicines/status-active/stock-empty
-/pharmacy/medicine-requests/status-draft
+/pharmacy/products/status-active/stock-empty
+/pharmacy/product-requests/status-draft
 ```
 
 Do not use pagination or rows-per-page in the URL:
@@ -286,7 +286,7 @@ After successful pharmacy/pharmacy registration:
 - a pharmacy account is created;
 - pharmacy status becomes `new`;
 - pharmacy can enter the Pharmacy cabinet;
-- pharmacy cannot sell medicines, add medicines, or create medicine requests before Admin activation.
+- pharmacy cannot sell products, add products, or create product requests before Admin activation.
 
 ## 4. Pharmacy documents upload
 
@@ -303,7 +303,7 @@ Confirmation documents
 Description:
 
 ```txt
-Upload documents confirming that your pharmacy is allowed to sell medicines. Admin will review these documents before activating your pharmacy account.
+Upload documents confirming that your pharmacy is allowed to sell products. Admin will review these documents before activating your pharmacy account.
 ```
 
 The exact list of required legal documents should be clarified separately.
@@ -387,13 +387,13 @@ New pharmacy can:
 - enter the cabinet;
 - view own data;
 - edit own data without moderation;
-- view all Admin medicines available to Pharmacy.
+- view all Admin products available to Pharmacy.
 
 New pharmacy cannot:
 
-- sell medicines;
-- add medicines to own pharmacy;
-- create medicine creation requests.
+- sell products;
+- add products to own pharmacy;
+- create product creation requests.
 
 ## 8. Forgot password page
 
@@ -628,9 +628,9 @@ It is not shown for inactive pharmacies because inactive pharmacies cannot enter
 | Dashboard | `/pharmacy/dashboard` |
 | Orders | `/pharmacy/orders` |
 | Clients | `/pharmacy/clients` |
-| Own medicines | `/pharmacy/medicines` |
-| All medicines | `/pharmacy/all-medicines` |
-| Medicine requests | `/pharmacy/medicine-requests` |
+| Own products | `/pharmacy/products` |
+| All products | `/pharmacy/all-products` |
+| Product requests | `/pharmacy/product-requests` |
 | Pharmacy profile | `/pharmacy/profile` |
 
 ### Active state
@@ -640,7 +640,7 @@ Active state must work for nested pages.
 Examples:
 
 - `/pharmacy/orders` and `/pharmacy/orders/[orderId]` highlight **Orders**;
-- `/pharmacy/medicine-requests`, `/pharmacy/medicine-requests/new`, `/pharmacy/medicine-requests/[requestId]`, and `/pharmacy/medicine-requests/[requestId]/edit` highlight **Medicine requests**.
+- `/pharmacy/product-requests`, `/pharmacy/product-requests/new`, `/pharmacy/product-requests/[requestId]`, and `/pharmacy/product-requests/[requestId]/edit` highlight **Product requests**.
 
 ## 9. Sidebar content
 
@@ -690,11 +690,11 @@ Example page structure:
 | Order details | Home / Dashboard / Orders / Order #12345 |
 | Clients | Home / Dashboard / Clients |
 | Client details | Home / Dashboard / Clients / Client name |
-| Own medicines | Home / Dashboard / Own medicines |
-| Medicine details | Home / Dashboard / Own medicines / Medicine name |
-| All medicines | Home / Dashboard / All medicines |
-| Medicine requests | Home / Dashboard / Medicine requests |
-| Request details | Home / Dashboard / Medicine requests / Request name |
+| Own products | Home / Dashboard / Own products |
+| Product details | Home / Dashboard / Own products / Product name |
+| All products | Home / Dashboard / All products |
+| Product requests | Home / Dashboard / Product requests |
+| Request details | Home / Dashboard / Product requests / Request name |
 
 ### Breadcrumb accessibility
 
@@ -747,14 +747,14 @@ Can:
 - enter Pharmacy cabinet;
 - view own data;
 - edit own data without moderation;
-- view all Pharmacy-visible medicines from Admin.
+- view all Pharmacy-visible products from Admin.
 
 Cannot:
 
 - appear in Client;
-- sell medicines;
-- add medicines to own pharmacy;
-- create medicine requests.
+- sell products;
+- add products to own pharmacy;
+- create product requests.
 
 Banner:
 
@@ -768,10 +768,10 @@ Can:
 
 - enter Pharmacy cabinet;
 - appear in Client;
-- sell medicines;
-- add active Admin medicines to own pharmacy;
-- create medicine requests;
-- view all Pharmacy-visible medicines from Admin;
+- sell products;
+- add active Admin products to own pharmacy;
+- create product requests;
+- view all Pharmacy-visible products from Admin;
 - edit own data with Admin moderation.
 
 If active pharmacy changes important data, public Client data and approved Pharmacy/Admin data must remain unchanged until Admin approves pending changes.
@@ -782,10 +782,10 @@ Can:
 
 - enter Pharmacy cabinet;
 - appear in Client with previous approved data;
-- sell medicines;
-- add active Admin medicines to own pharmacy;
-- create medicine requests;
-- view all Pharmacy-visible medicines from Admin;
+- sell products;
+- add active Admin products to own pharmacy;
+- create product requests;
+- view all Pharmacy-visible products from Admin;
 - view approved data;
 - view pending moderation data.
 
@@ -805,15 +805,15 @@ Cannot:
 
 - enter Pharmacy cabinet;
 - appear in Client;
-- sell medicines;
-- add medicines;
-- create medicine requests.
+- sell products;
+- add products;
+- create product requests.
 
 History is preserved:
 
 - orders;
 - clients;
-- medicines;
+- products;
 - reviews;
 - statistics.
 
@@ -1149,8 +1149,8 @@ It shows a short overview of the current pharmacy only:
 
 - own order statistics;
 - own client statistics;
-- own medicine statistics;
-- own medicine request statistics;
+- own product statistics;
+- own product request statistics;
 - quick actions;
 - warnings or info banners based on pharmacy status.
 
@@ -1170,12 +1170,12 @@ Dashboard is not available for `inactive` pharmacies because inactive pharmacies
 
 ### New pharmacy
 
-Dashboard shows limited statistics because the pharmacy cannot yet sell medicines, add medicines, or create medicine requests.
+Dashboard shows limited statistics because the pharmacy cannot yet sell products, add products, or create product requests.
 
 Banner:
 
 ```txt
-Your pharmacy is not activated yet. After Admin review, you will be able to sell medicines, add products, and create medicine requests.
+Your pharmacy is not activated yet. After Admin review, you will be able to sell products, add products, and create product requests.
 ```
 
 ### Active pharmacy
@@ -1209,7 +1209,7 @@ Dashboard
 Description:
 
 ```txt
-View order, client, medicine, and request statistics for your pharmacy.
+View order, client, product, and request statistics for your pharmacy.
 ```
 
 ## 4. Dashboard filters
@@ -1221,10 +1221,10 @@ These filters affect only order statistics.
 They do not affect:
 
 - client statistics;
-- medicine statistics;
-- medicine request statistics;
+- product statistics;
+- product request statistics;
 - total clients;
-- total medicines;
+- total products;
 - current stock value;
 - request counts by status.
 
@@ -1280,7 +1280,7 @@ Shows count and total amount of current pharmacy orders for the selected year/mo
 
 The amount is calculated from prices fixed in orders.
 
-Current medicine price changes do not affect already created orders.
+Current product price changes do not affect already created orders.
 
 Statuses:
 
@@ -1351,20 +1351,20 @@ Additional text:
 Clients will appear after the first orders in your pharmacy.
 ```
 
-## 7. Medicines statistics
+## 7. Products statistics
 
-Shows analytics only for medicines added to the current pharmacy.
+Shows analytics only for products added to the current pharmacy.
 
-Global Admin medicines that are not added to the current pharmacy are not included.
+Global Admin products that are not added to the current pharmacy are not included.
 
 Cards:
 
-- Total medicines in pharmacy;
-- Active medicines;
-- Inactive medicines;
-- Medicines in stock;
-- Out of stock medicines;
-- Reserved medicines.
+- Total products in pharmacy;
+- Active products;
+- Inactive products;
+- Products in stock;
+- Out of stock products;
+- Reserved products.
 
 ### Financial cards
 
@@ -1392,26 +1392,26 @@ Removed from scope:
 Examples:
 
 ```txt
-/pharmacy/medicines
-/pharmacy/medicines/status-active
-/pharmacy/medicines/status-inactive
-/pharmacy/medicines/stock-empty
-/pharmacy/medicines/stock-available
+/pharmacy/products
+/pharmacy/products/status-active
+/pharmacy/products/status-inactive
+/pharmacy/products/stock-empty
+/pharmacy/products/stock-available
 ```
 
 ### Empty state
 
 ```txt
-Your pharmacy has no added medicines yet.
+Your pharmacy has no added products yet.
 ```
 
 Button:
 
 ```txt
-View all medicines
+View all products
 ```
 
-## 8. Medicine request statistics
+## 8. Product request statistics
 
 Shows only requests created by the current pharmacy.
 
@@ -1434,17 +1434,17 @@ Each card shows:
 Examples:
 
 ```txt
-/pharmacy/medicine-requests/status-draft
-/pharmacy/medicine-requests/status-new
-/pharmacy/medicine-requests/status-in-work
-/pharmacy/medicine-requests/status-approved
-/pharmacy/medicine-requests/status-rejected
+/pharmacy/product-requests/status-draft
+/pharmacy/product-requests/status-new
+/pharmacy/product-requests/status-in-work
+/pharmacy/product-requests/status-approved
+/pharmacy/product-requests/status-rejected
 ```
 
 ### Empty state
 
 ```txt
-Your pharmacy has no medicine creation requests yet.
+Your pharmacy has no product creation requests yet.
 ```
 
 Button:
@@ -1485,8 +1485,8 @@ Show empty states for:
 
 - no orders;
 - no clients;
-- no added medicines;
-- no medicine requests.
+- no added products;
+- no product requests.
 
 ## 10. Reusable dashboard components
 
@@ -1518,7 +1518,7 @@ After client confirms checkout:
 
 - order is created;
 - order status becomes `new`;
-- ordered medicines are reserved in stock;
+- ordered products are reserved in stock;
 - order cannot be deleted;
 - prices are fixed in the order.
 
@@ -1574,7 +1574,7 @@ Complete order?
 Message:
 
 ```txt
-This action will mark the order as completed and permanently write off the reserved medicines from stock. This status change cannot be reverted.
+This action will mark the order as completed and permanently write off the reserved products from stock. This status change cannot be reverted.
 ```
 
 Confirm button:
@@ -1600,7 +1600,7 @@ Reject order?
 Message:
 
 ```txt
-This action will reject the order and return reserved medicines to available stock. This status change cannot be reverted.
+This action will reject the order and return reserved products to available stock. This status change cannot be reverted.
 ```
 
 Textarea label:
@@ -1627,23 +1627,23 @@ The confirm button is disabled until rejection reason is filled.
 
 When order is created by client:
 
-- medicines are reserved;
+- products are reserved;
 - reserved quantity is not available for other orders;
 - order status is `new`.
 
 In statuses `new` and `in_work`:
 
-- medicines remain reserved.
+- products remain reserved.
 
 When order becomes `successful`:
 
-- reserved medicines are permanently written off from stock;
+- reserved products are permanently written off from stock;
 - order is completed;
 - total order amount remains fixed.
 
 When order becomes `rejected`:
 
-- reserved medicines return to available stock;
+- reserved products return to available stock;
 - items become available for other orders;
 - order prices remain unchanged.
 
@@ -1993,7 +1993,7 @@ Pharmacy can:
 - increase quantity;
 - decrease quantity;
 - remove item;
-- add a new item from own active medicines.
+- add a new item from own active products.
 
 Rules:
 
@@ -2013,7 +2013,7 @@ Are you sure you want to remove this item from the order?
 
 Allowed only in `in_work` status.
 
-Pharmacy can add only medicines that are:
+Pharmacy can add only products that are:
 
 - active;
 - in stock;
@@ -2569,17 +2569,17 @@ Could not load data. Please try again.
 
 ---
 
-# Pharmacy Technical Specification — Medicines
+# Pharmacy Technical Specification — Products
 
 ## 1. General logic
 
-Medicines are created and edited only in Admin.
+Products are created and edited only in Admin.
 
-Pharmacy cannot create or edit global medicine data directly.
+Pharmacy cannot create or edit global product data directly.
 
-Pharmacy can add existing active Admin medicines to the current pharmacy.
+Pharmacy can add existing active Admin products to the current pharmacy.
 
-Pharmacy works with pharmacy-specific medicine data:
+Pharmacy works with pharmacy-specific product data:
 
 - stock quantity;
 - reserved quantity;
@@ -2589,25 +2589,25 @@ Pharmacy works with pharmacy-specific medicine data:
 
 Price and stock quantity are not edited manually in Pharmacy. They come from an external pharmacy system through API.
 
-## 2. Global medicine statuses
+## 2. Global product statuses
 
-All medicines in the system have one global status, regardless of which table they are shown in.
+All products in the system have one global status, regardless of which table they are shown in.
 
 | Status | Color | Meaning | Visible to Pharmacy |
 |---|---|---|---|
-| `new` | Blue | Medicine created in Admin but not activated yet | No |
-| `active` | Green | Medicine can be added to pharmacies | Yes |
-| `inactive` | Red | Medicine is temporarily or permanently deactivated by Admin | Yes |
+| `new` | Blue | Product created in Admin but not activated yet | No |
+| `active` | Green | Product can be added to pharmacies | Yes |
+| `inactive` | Red | Product is temporarily or permanently deactivated by Admin | Yes |
 
 The `new` status is visible only to Admin.
 
-Pharmacy never sees medicines with status `new`.
+Pharmacy never sees products with status `new`.
 
-## 3. Global medicine data
+## 3. Global product data
 
 Global data belongs to Admin:
 
-- medicine ID;
+- product ID;
 - article;
 - name;
 - category;
@@ -2627,14 +2627,14 @@ Global data belongs to Admin:
 
 Pharmacy cannot edit these fields.
 
-## 4. Pharmacy medicine data
+## 4. Pharmacy product data
 
-A pharmacy medicine is a relation between pharmacy and global medicine.
+A pharmacy product is a relation between pharmacy and global product.
 
 Fields:
 
-- pharmacyMedicineId;
-- medicineId;
+- pharmacyProductId;
+- productId;
 - pharmacyId;
 - stockQuantity;
 - reservedQuantity;
@@ -2643,39 +2643,39 @@ Fields:
 - addedAt;
 - updatedAt.
 
-Pharmacy sees and works only with pharmacy medicine data of the current pharmacy.
+Pharmacy sees and works only with pharmacy product data of the current pharmacy.
 
-## 5. Active medicines
+## 5. Active products
 
-Active medicines:
+Active products:
 
-- are visible in Pharmacy all medicines table;
+- are visible in Pharmacy all products table;
 - can be added to current pharmacy;
 - can appear in Client only after being added to at least one active or on-moderation pharmacy;
 - can be changed to inactive only by Admin.
 
-Medicine appears in Client only if:
+Product appears in Client only if:
 
-- medicine status is `active`;
+- product status is `active`;
 - pharmacy status is `active` or `on_moderation`;
-- medicine is added to this pharmacy;
-- pharmacy medicine relation is not removed or blocked;
+- product is added to this pharmacy;
+- pharmacy product relation is not removed or blocked;
 - available quantity allows purchase.
 
-## 6. Inactive medicines
+## 6. Inactive products
 
-Inactive medicines:
+Inactive products:
 
-- are visible in Pharmacy all medicines table;
+- are visible in Pharmacy all products table;
 - cannot be added to a pharmacy;
-- can be visible in Pharmacy own medicines if they were previously added;
+- can be visible in Pharmacy own products if they were previously added;
 - do not appear in Client;
 - keep order history, statistics, and stock movement history;
 - cannot be added to new orders.
 
-If inactive medicine already exists in old orders, it remains in order history.
+If inactive product already exists in old orders, it remains in order history.
 
-Admin must provide a required reason when setting medicine status to `inactive`.
+Admin must provide a required reason when setting product status to `inactive`.
 
 ## 7. Price and stock synchronization
 
@@ -2688,8 +2688,8 @@ Pharmacy does not manually edit:
 
 System must also send external API information about:
 
-- sold medicines;
-- reserved medicines;
+- sold products;
+- reserved products;
 - cancelled reservations;
 - returned stock after rejected orders.
 
@@ -2718,15 +2718,15 @@ When order becomes `rejected`:
 
 - reserved quantity returns to available stock.
 
-## 9. Own medicines table
+## 9. Own products table
 
 Route:
 
 ```txt
-/pharmacy/medicines
+/pharmacy/products
 ```
 
-Shows only medicines added to the current pharmacy.
+Shows only products added to the current pharmacy.
 
 Default sorting:
 
@@ -2745,17 +2745,17 @@ Use shared components:
 - `ResetFiltersButton`;
 - `CloseIconButton`.
 
-## 10. Own medicines filters
+## 10. Own products filters
 
 Filters must change URL using clean filter routes.
 
 Examples:
 
 ```txt
-/pharmacy/medicines/status-active
-/pharmacy/medicines/status-inactive
-/pharmacy/medicines/stock-empty
-/pharmacy/medicines/status-active/stock-available
+/pharmacy/products/status-active
+/pharmacy/products/status-inactive
+/pharmacy/products/stock-empty
+/pharmacy/products/status-active/stock-available
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -2777,7 +2777,7 @@ Active
 Inactive
 ```
 
-## 11. Own medicines columns
+## 11. Own products columns
 
 Columns:
 
@@ -2796,7 +2796,7 @@ Columns:
 Field:
 
 ```txt
-pharmacyMedicine.addedAt
+pharmacyProduct.addedAt
 ```
 
 Sortable.
@@ -2806,7 +2806,7 @@ Sortable.
 Field:
 
 ```txt
-medicine.article
+product.article
 ```
 
 Global and unique across Admin system.
@@ -2818,10 +2818,10 @@ Sortable.
 Field:
 
 ```txt
-medicine.name
+product.name
 ```
 
-Click opens medicine details page.
+Click opens product details page.
 
 ### Stock quantity
 
@@ -2853,7 +2853,7 @@ Formula:
 availableQuantity = stockQuantity - reservedQuantity
 ```
 
-If `availableQuantity = 0`, medicine is not available for new orders and cannot be purchased in Client.
+If `availableQuantity = 0`, product is not available for new orders and cannot be purchased in Client.
 
 ### Current price
 
@@ -2869,35 +2869,35 @@ Readonly in Pharmacy.
 
 ### Status
 
-Shows the global medicine status:
+Shows the global product status:
 
 - Active — green;
 - Inactive — red.
 
-## 12. Own medicines table states
+## 12. Own products table states
 
 Loader:
 
 ```txt
-Loading medicines...
+Loading products...
 ```
 
 Empty state:
 
 ```txt
-Your pharmacy has no added medicines yet.
+Your pharmacy has no added products yet.
 ```
 
 Button:
 
 ```txt
-View all medicines
+View all products
 ```
 
 Nothing found state:
 
 ```txt
-No medicines found for the selected filters.
+No products found for the selected filters.
 ```
 
 Reset button:
@@ -2906,44 +2906,44 @@ Reset button:
 Reset filters
 ```
 
-## 13. All medicines table
+## 13. All products table
 
 Route:
 
 ```txt
-/pharmacy/all-medicines
+/pharmacy/all-products
 ```
 
-Shows Admin medicines that Pharmacy can view:
+Shows Admin products that Pharmacy can view:
 
-- `active` medicines;
-- `inactive` medicines.
+- `active` products;
+- `inactive` products.
 
-Does not show `new` medicines.
+Does not show `new` products.
 
-Pharmacy can add only `active` medicines to own pharmacy.
+Pharmacy can add only `active` products to own pharmacy.
 
-Inactive medicines are visible but cannot be added.
+Inactive products are visible but cannot be added.
 
-## 14. All medicines filters
+## 14. All products filters
 
-Same as own medicines table.
+Same as own products table.
 
-Date filter works by global medicine creation date in Admin:
+Date filter works by global product creation date in Admin:
 
 ```txt
-medicine.createdAt
+product.createdAt
 ```
 
 Filter examples:
 
 ```txt
-/pharmacy/all-medicines/status-active
-/pharmacy/all-medicines/status-inactive
-/pharmacy/all-medicines/category-antibiotics
+/pharmacy/all-products/status-active
+/pharmacy/all-products/status-inactive
+/pharmacy/all-products/category-antibiotics
 ```
 
-## 15. All medicines columns
+## 15. All products columns
 
 Columns:
 
@@ -2955,51 +2955,51 @@ Columns:
 - Added to my pharmacy;
 - Action.
 
-## 16. All medicines actions
+## 16. All products actions
 
-For active medicines not added to current pharmacy:
+For active products not added to current pharmacy:
 
 ```txt
 Add to pharmacy
 ```
 
-For active medicines already added:
+For active products already added:
 
 ```txt
 Added to your pharmacy
 ```
 
-For inactive medicines:
+For inactive products:
 
 ```txt
 Unavailable
 ```
 
-Adding medicine opens `ConfirmActionModal`.
+Adding product opens `ConfirmActionModal`.
 
 Modal text:
 
 ```txt
-Are you sure you want to add this medicine to your pharmacy?
+Are you sure you want to add this product to your pharmacy?
 ```
 
 Success toast:
 
 ```txt
-Medicine added to your pharmacy.
+Product added to your pharmacy.
 ```
 
 Error toasts:
 
 ```txt
-This medicine is already added to your pharmacy.
-Inactive medicines cannot be added to a pharmacy.
-Could not add medicine. Please try again.
+This product is already added to your pharmacy.
+Inactive products cannot be added to a pharmacy.
+Could not add product. Please try again.
 ```
 
-## 17. Initial pharmacy medicine values
+## 17. Initial pharmacy product values
 
-When medicine is added to pharmacy, create pharmacy-medicine relation.
+When product is added to pharmacy, create pharmacy-product relation.
 
 Initial values may be:
 
@@ -3012,14 +3012,14 @@ currentPrice: null or 0
 
 until external API synchronization provides real data.
 
-## 18. Removing medicine from own pharmacy
+## 18. Removing product from own pharmacy
 
-This action is available from the All medicines table.
+This action is available from the All products table.
 
-Pharmacy can remove medicine from own pharmacy only if:
+Pharmacy can remove product from own pharmacy only if:
 
-- medicine was added to the pharmacy;
-- there are no orders with this medicine;
+- product was added to the pharmacy;
+- there are no orders with this product;
 - `reservedQuantity = 0`;
 - `stockQuantity = 0` or data has not yet been synchronized from external API;
 - pharmacy status is `active` or `on_moderation`.
@@ -3029,48 +3029,48 @@ Before removal, open `ConfirmActionModal`.
 Modal title:
 
 ```txt
-Remove medicine from pharmacy?
+Remove product from pharmacy?
 ```
 
 Modal message:
 
 ```txt
-This medicine will be removed from your pharmacy list. You can do this only if the medicine has no orders, no reserved quantity, and no stock quantity.
+This product will be removed from your pharmacy list. You can do this only if the product has no orders, no reserved quantity, and no stock quantity.
 ```
 
 Confirm button:
 
 ```txt
-Remove medicine
+Remove product
 ```
 
 After removal:
 
-- `pharmacyMedicine` relation is deleted; or
-- `pharmacyMedicine` receives `status="removed"`.
+- `pharmacyProduct` relation is deleted; or
+- `pharmacyProduct` receives `status="removed"`.
 
-If there are any orders with this medicine, removal is not available.
+If there are any orders with this product, removal is not available.
 
 Disabled explanation:
 
 ```txt
-This medicine cannot be removed because it already has order history.
+This product cannot be removed because it already has order history.
 ```
 
-## 19. Medicine details page
+## 19. Product details page
 
 Route examples:
 
 ```txt
-/pharmacy/medicines/[medicineId]
-/pharmacy/all-medicines/[medicineId]
+/pharmacy/products/[productId]
+/pharmacy/all-products/[productId]
 ```
 
-The medicine card is the same regardless of entry point.
+The product card is the same regardless of entry point.
 
-If medicine is added to current pharmacy, show:
+If product is added to current pharmacy, show:
 
-- global medicine data;
+- global product data;
 - pharmacy-specific data;
 - stock;
 - reserves;
@@ -3081,29 +3081,29 @@ If medicine is added to current pharmacy, show:
 - characteristics;
 - reviews.
 
-If medicine is not added to current pharmacy, show only global data and Add to pharmacy action if medicine is active.
+If product is not added to current pharmacy, show only global data and Add to pharmacy action if product is active.
 
-## 20. Medicine details top section
+## 20. Product details top section
 
 Show:
 
 - Breadcrumbs;
-- medicine name;
+- product name;
 - short description.
 
-Description if medicine is added:
+Description if product is added:
 
 ```txt
-View medicine details, stock, reserves, price, and sales statistics for your pharmacy.
+View product details, stock, reserves, price, and sales statistics for your pharmacy.
 ```
 
-Description if medicine is not added:
+Description if product is not added:
 
 ```txt
-View medicine details and add it to your pharmacy if it is available.
+View product details and add it to your pharmacy if it is available.
 ```
 
-## 21. Medicine summary block
+## 21. Product summary block
 
 Show:
 
@@ -3117,13 +3117,13 @@ Show:
 - Admin creation date;
 - date added to pharmacy if added.
 
-If medicine is not added:
+If product is not added:
 
 ```txt
-This medicine is not added to your pharmacy yet.
+This product is not added to your pharmacy yet.
 ```
 
-## 22. Medicine details tabs
+## 22. Product details tabs
 
 Use shared `Tabs`.
 
@@ -3135,7 +3135,7 @@ Tabs:
 - Characteristics;
 - Reviews.
 
-If medicine is not added:
+If product is not added:
 
 - Statistics shows empty state;
 - Stock movement shows empty state;
@@ -3145,7 +3145,7 @@ If medicine is not added:
 
 ## 23. Tab: Statistics
 
-Available only for medicines added to current pharmacy.
+Available only for products added to current pharmacy.
 
 Show:
 
@@ -3162,12 +3162,12 @@ Data is counted only for current pharmacy.
 Empty state if not added:
 
 ```txt
-This medicine is not added to your pharmacy, so statistics are unavailable.
+This product is not added to your pharmacy, so statistics are unavailable.
 ```
 
 ## 24. Tab: Stock movement
 
-Shows history of medicine quantity and price events.
+Shows history of product quantity and price events.
 
 Event types:
 
@@ -3207,21 +3207,21 @@ Stock movement history is empty.
 If not added:
 
 ```txt
-This medicine is not added to your pharmacy, so stock movement is unavailable.
+This product is not added to your pharmacy, so stock movement is unavailable.
 ```
 
 ## 25. Tab: Related orders
 
-Shows orders of current pharmacy that include this medicine.
+Shows orders of current pharmacy that include this product.
 
 Columns:
 
 - order number;
 - order date;
 - client;
-- quantity of this medicine;
+- quantity of this product;
 - fixed unit price in this order;
-- amount for this medicine;
+- amount for this product;
 - order status.
 
 Order number opens order details page.
@@ -3229,13 +3229,13 @@ Order number opens order details page.
 Empty state:
 
 ```txt
-There are no orders with this medicine yet.
+There are no orders with this product yet.
 ```
 
 If not added:
 
 ```txt
-This medicine is not added to your pharmacy, so related orders are unavailable.
+This product is not added to your pharmacy, so related orders are unavailable.
 ```
 
 ## 26. Tab: Characteristics
@@ -3251,12 +3251,12 @@ Show only existing fields. Do not render empty rows.
 Empty state:
 
 ```txt
-Characteristics for this medicine have not been added yet.
+Characteristics for this product have not been added yet.
 ```
 
 ## 27. Tab: Reviews
 
-Pharmacy can only view medicine reviews.
+Pharmacy can only view product reviews.
 
 Pharmacy cannot:
 
@@ -3277,21 +3277,21 @@ Load more with `LazyLoadButton`.
 Empty state:
 
 ```txt
-This medicine has no reviews yet.
+This product has no reviews yet.
 ```
 
-## 28. Medicine details states
+## 28. Product details states
 
 Loader:
 
 ```txt
-Loading medicine data...
+Loading product data...
 ```
 
 Error state:
 
 ```txt
-Could not load medicine data. Please try again.
+Could not load product data. Please try again.
 ```
 
 Button:
@@ -3303,33 +3303,33 @@ Try again
 Not found state:
 
 ```txt
-Medicine not found.
+Product not found.
 ```
 
 Pharmacy must not see:
 
-- medicines with status `new`;
-- pharmacy-specific medicine data of other pharmacies.
+- products with status `new`;
+- pharmacy-specific product data of other pharmacies.
 
 
 
 ---
 
-# Pharmacy Technical Specification — Medicine Creation Requests
+# Pharmacy Technical Specification — Product Creation Requests
 
 ## 1. General logic
 
-Medicine creation requests are used when a pharmacy sells or plans to sell a medicine that does not yet exist in the global Admin medicine catalog.
+Product creation requests are used when a pharmacy sells or plans to sell a product that does not yet exist in the global Admin product catalog.
 
 Examples:
 
 - new product;
 - imported product;
-- rare medicine;
-- medicine already in pharmacy stock but missing in the system;
+- rare product;
+- product already in pharmacy stock but missing in the system;
 - product that must be added to the global E-PHARMACY catalog.
 
-Pharmacy cannot create global medicines directly.
+Pharmacy cannot create global products directly.
 
 Pharmacy can:
 
@@ -3343,10 +3343,10 @@ Admin can:
 - view submitted requests;
 - move request to In work;
 - complete or correct data;
-- create global medicine from request;
+- create global product from request;
 - reject request with reason.
 
-Client does not see medicine requests.
+Client does not see product requests.
 
 ## 2. Request status flow
 
@@ -3368,7 +3368,7 @@ Admin must first move request to `in_work`.
 | `draft` | Gray | Pharmacy created request but did not send it to Admin | Yes |
 | `new` | Blue | Pharmacy sent request; Admin has not started review | No |
 | `in_work` | Yellow | Admin is checking the request | No |
-| `approved` | Green | Admin created medicine from request | No |
+| `approved` | Green | Admin created product from request | No |
 | `rejected` | Red | Admin rejected request | No |
 
 For `rejected` status, Admin must provide rejection reason.
@@ -3390,23 +3390,23 @@ Pharmacy cannot see requests of other pharmacies.
 
 ## 5. Before creating a request
 
-Pharmacy should create a request only if the needed medicine does not exist in All medicines table.
+Pharmacy should create a request only if the needed product does not exist in All products table.
 
-Before creating a request, Pharmacy should check All medicines by:
+Before creating a request, Pharmacy should check All products by:
 
 - name;
 - article;
 - category;
 - manufacturer if such filter exists.
 
-If medicine exists and is active, Pharmacy should add it to own pharmacy instead of creating a request.
+If product exists and is active, Pharmacy should add it to own pharmacy instead of creating a request.
 
-If medicine exists but is inactive, Pharmacy must not create a duplicate.
+If product exists but is inactive, Pharmacy must not create a duplicate.
 
 Message:
 
 ```txt
-This medicine already exists in the system but is currently inactive. Please contact Admin or wait for activation.
+This product already exists in the system but is currently inactive. Please contact Admin or wait for activation.
 ```
 
 ## 6. Create request button
@@ -3422,7 +3422,7 @@ Create request
 Route:
 
 ```txt
-/pharmacy/medicine-requests/new
+/pharmacy/product-requests/new
 ```
 
 Available for pharmacy statuses:
@@ -3452,7 +3452,7 @@ Your account is temporarily inactive. Creating requests is unavailable.
 Route:
 
 ```txt
-/pharmacy/medicine-requests
+/pharmacy/product-requests
 ```
 
 Shows only requests of current pharmacy.
@@ -3463,7 +3463,7 @@ Default sorting:
 createdAt: desc
 ```
 
-The table should be visually close to All medicines table.
+The table should be visually close to All products table.
 
 Columns:
 
@@ -3478,7 +3478,7 @@ Clicking request name opens request details page.
 Route:
 
 ```txt
-/pharmacy/medicine-requests/[requestId]
+/pharmacy/product-requests/[requestId]
 ```
 
 ## 8. Requests table filters
@@ -3488,11 +3488,11 @@ Filters must change URL using clean filter routes.
 Examples:
 
 ```txt
-/pharmacy/medicine-requests/status-draft
-/pharmacy/medicine-requests/status-new
-/pharmacy/medicine-requests/status-in-work
-/pharmacy/medicine-requests/status-approved
-/pharmacy/medicine-requests/status-rejected
+/pharmacy/product-requests/status-draft
+/pharmacy/product-requests/status-new
+/pharmacy/product-requests/status-in-work
+/pharmacy/product-requests/status-approved
+/pharmacy/product-requests/status-rejected
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -3537,7 +3537,7 @@ Rows per page options:
 Empty state:
 
 ```txt
-Your pharmacy has no medicine creation requests yet.
+Your pharmacy has no product creation requests yet.
 ```
 
 Empty state button:
@@ -3569,27 +3569,27 @@ Loading requests...
 Routes:
 
 ```txt
-/pharmacy/medicine-requests/new
-/pharmacy/medicine-requests/[requestId]/edit
+/pharmacy/product-requests/new
+/pharmacy/product-requests/[requestId]/edit
 ```
 
-The page should be the same or very close to Admin create medicine page.
+The page should be the same or very close to Admin create product page.
 
-This allows Admin to use the same structure when creating medicine from request.
+This allows Admin to use the same structure when creating product from request.
 
 Modes:
 
 | Mode | Route | Description |
 |---|---|---|
-| Create mode | `/pharmacy/medicine-requests/new` | Pharmacy creates new request |
-| Edit draft mode | `/pharmacy/medicine-requests/[requestId]/edit` | Pharmacy edits draft request |
-| Admin create medicine mode | `/admin/medicine-requests/[requestId]/create-medicine` or `/admin/products/new?requestId={requestId}` | Admin creates medicine from request |
+| Create mode | `/pharmacy/product-requests/new` | Pharmacy creates new request |
+| Edit draft mode | `/pharmacy/product-requests/[requestId]/edit` | Pharmacy edits draft request |
+| Admin create product mode | `/admin/product-requests/[requestId]/create-product` or `/admin/products/new?requestId={requestId}` | Admin creates product from request |
 
 ## 11. Request form fields
 
 Fields:
 
-- medicine image;
+- product image;
 - name;
 - article;
 - category;
@@ -3707,18 +3707,18 @@ Admin actions are described here only to clarify Pharmacy flow.
 In Admin, request processing should include:
 
 - Move to In work;
-- Create medicine;
+- Create product;
 - Reject request;
 - Save changes.
 
-Admin can complete or correct data before creating medicine.
+Admin can complete or correct data before creating product.
 
-When Admin clicks Create medicine:
+When Admin clicks Create product:
 
-- global medicine is created;
+- global product is created;
 - request status becomes `approved`;
-- request links to the created medicine;
-- Pharmacy sees link to created medicine.
+- request links to the created product;
+- Pharmacy sees link to created product.
 
 When Admin rejects request:
 
@@ -3731,10 +3731,10 @@ When Admin rejects request:
 Route:
 
 ```txt
-/pharmacy/medicine-requests/[requestId]
+/pharmacy/product-requests/[requestId]
 ```
 
-Request card should look like a medicine card.
+Request card should look like a product card.
 
 Show:
 
@@ -3750,7 +3750,7 @@ Show:
 - sent to moderation date if submitted;
 - Admin comment;
 - rejection reason if rejected;
-- link to created medicine if approved.
+- link to created product if approved.
 
 ## 17. Draft request details
 
@@ -3763,7 +3763,7 @@ Edit request
 Route:
 
 ```txt
-/pharmacy/medicine-requests/[requestId]/edit
+/pharmacy/product-requests/[requestId]/edit
 ```
 
 Info text:
@@ -3795,22 +3795,22 @@ Do not show Edit request button.
 Show block:
 
 ```txt
-Admin created a medicine based on this request.
+Admin created a product based on this request.
 ```
 
 Actions:
 
 ```txt
-View medicine
+View product
 Add to pharmacy
 ```
 
-`Add to pharmacy` is shown only if created medicine is active and not yet added to current pharmacy.
+`Add to pharmacy` is shown only if created product is active and not yet added to current pharmacy.
 
 If already added:
 
 ```txt
-This medicine is already added to your pharmacy.
+This product is already added to your pharmacy.
 ```
 
 ## 20. Rejected request details
@@ -3820,7 +3820,7 @@ Show rejection reason.
 Example:
 
 ```txt
-Rejection reason: This medicine already exists in the system.
+Rejection reason: This product already exists in the system.
 ```
 
 Show optional button:
@@ -3880,7 +3880,7 @@ Request sent for Admin moderation.
 Could not save draft. Please try again.
 Could not send request. Please try again.
 New draft created from rejected request.
-Medicine created based on request.
+Product created based on request.
 ```
 
 
@@ -3983,21 +3983,21 @@ Page not found
 Text:
 
 ```txt
-The link may be outdated, moved, or typed with a small typo. Go back to dashboard or open medicines to continue working with your pharmacy cabinet.
+The link may be outdated, moved, or typed with a small typo. Go back to dashboard or open products to continue working with your pharmacy cabinet.
 ```
 
 Buttons:
 
 ```txt
 Back to dashboard
-View all medicines
+View all products
 ```
 
 Links:
 
 ```txt
 /pharmacy/dashboard
-/pharmacy/all-medicines
+/pharmacy/all-products
 ```
 
 ## 4. Route loading page
@@ -4021,9 +4021,9 @@ Use shared `LoadingSpinner` for:
 - one order page;
 - clients table;
 - one client page;
-- own medicines table;
-- all medicines table;
-- medicine details page;
+- own products table;
+- all products table;
+- product details page;
 - requests table;
 - request details page;
 - create/edit request page;
@@ -4144,22 +4144,22 @@ app/pharmacy/(protected)/clients/page.tsx
 app/pharmacy/(protected)/clients/[clientId]/page.tsx
 app/pharmacy/(protected)/clients/status-[status]/page.tsx
 
-app/pharmacy/(protected)/medicines/page.tsx
-app/pharmacy/(protected)/medicines/[medicineId]/page.tsx
-app/pharmacy/(protected)/medicines/status-[status]/page.tsx
-app/pharmacy/(protected)/medicines/stock-[stock]/page.tsx
-app/pharmacy/(protected)/medicines/status-[status]/stock-[stock]/page.tsx
+app/pharmacy/(protected)/products/page.tsx
+app/pharmacy/(protected)/products/[productId]/page.tsx
+app/pharmacy/(protected)/products/status-[status]/page.tsx
+app/pharmacy/(protected)/products/stock-[stock]/page.tsx
+app/pharmacy/(protected)/products/status-[status]/stock-[stock]/page.tsx
 
-app/pharmacy/(protected)/all-medicines/page.tsx
-app/pharmacy/(protected)/all-medicines/[medicineId]/page.tsx
-app/pharmacy/(protected)/all-medicines/status-[status]/page.tsx
-app/pharmacy/(protected)/all-medicines/category-[category]/page.tsx
+app/pharmacy/(protected)/all-products/page.tsx
+app/pharmacy/(protected)/all-products/[productId]/page.tsx
+app/pharmacy/(protected)/all-products/status-[status]/page.tsx
+app/pharmacy/(protected)/all-products/category-[category]/page.tsx
 
-app/pharmacy/(protected)/medicine-requests/page.tsx
-app/pharmacy/(protected)/medicine-requests/new/page.tsx
-app/pharmacy/(protected)/medicine-requests/[requestId]/page.tsx
-app/pharmacy/(protected)/medicine-requests/[requestId]/edit/page.tsx
-app/pharmacy/(protected)/medicine-requests/status-[status]/page.tsx
+app/pharmacy/(protected)/product-requests/page.tsx
+app/pharmacy/(protected)/product-requests/new/page.tsx
+app/pharmacy/(protected)/product-requests/[requestId]/page.tsx
+app/pharmacy/(protected)/product-requests/[requestId]/edit/page.tsx
+app/pharmacy/(protected)/product-requests/status-[status]/page.tsx
 ```
 
 ## 3. Filter route principle
@@ -4172,8 +4172,8 @@ Examples:
 /pharmacy/orders/status-new
 /pharmacy/orders/status-successful/delivery-pickup
 /pharmacy/clients/status-active
-/pharmacy/medicines/status-active/stock-empty
-/pharmacy/medicine-requests/status-draft
+/pharmacy/products/status-active/stock-empty
+/pharmacy/product-requests/status-draft
 ```
 
 Pagination and rows-per-page are local state and are not represented in route segments.
@@ -4187,8 +4187,8 @@ Example:
 ```txt
 app/pharmacy/(protected)/orders/[[...filters]]/page.tsx
 app/pharmacy/(protected)/clients/[[...filters]]/page.tsx
-app/pharmacy/(protected)/medicines/[[...filters]]/page.tsx
-app/pharmacy/(protected)/medicine-requests/[[...filters]]/page.tsx
+app/pharmacy/(protected)/products/[[...filters]]/page.tsx
+app/pharmacy/(protected)/product-requests/[[...filters]]/page.tsx
 ```
 
 This keeps clean URLs while avoiding too many physical route files.
@@ -4220,9 +4220,9 @@ PHARMACY_DASHBOARD = "/pharmacy/dashboard"
 PHARMACY_PROFILE = "/pharmacy/profile"
 PHARMACY_ORDERS = "/pharmacy/orders"
 PHARMACY_CLIENTS = "/pharmacy/clients"
-PHARMACY_MEDICINES = "/pharmacy/medicines"
-PHARMACY_ALL_MEDICINES = "/pharmacy/all-medicines"
-PHARMACY_MEDICINE_REQUESTS = "/pharmacy/medicine-requests"
+PHARMACY_PRODUCTS = "/pharmacy/products"
+PHARMACY_ALL_PRODUCTS = "/pharmacy/all-products"
+PHARMACY_PRODUCT_REQUESTS = "/pharmacy/product-requests"
 ```
 
 Create builder functions:
@@ -4230,11 +4230,11 @@ Create builder functions:
 ```txt
 getPharmacyOrderPath(orderId)
 getPharmacyClientPath(clientId)
-getPharmacyMedicinePath(medicineId)
+getPharmacyProductPath(productId)
 getPharmacyRequestPath(requestId)
 getPharmacyOrdersFilterPath(filters)
 getPharmacyClientsFilterPath(filters)
-getPharmacyMedicinesFilterPath(filters)
+getPharmacyProductsFilterPath(filters)
 getPharmacyRequestsFilterPath(filters)
 ```
 
@@ -4268,8 +4268,8 @@ This folder contains the improved Pharmacy technical specification split into gl
 5. `04-dashboard.md` — Dashboard statistics and dashboard-specific rules.
 6. `05-orders.md` — orders table, order details, statuses, stock reservation, fixed prices.
 7. `06-clients.md` — clients table, client details, readonly access, first order date.
-8. `07-medicines.md` — medicines, all medicines, own medicines, medicine card, stock and price logic.
-9. `08-medicine-requests.md` — medicine creation requests, draft flow, Admin moderation flow.
+8. `07-products.md` — products, all products, own products, product card, stock and price logic.
+9. `08-product-requests.md` — product creation requests, draft flow, Admin moderation flow.
 10. `09-service-pages-loaders-states.md` — error page, 404, loaders, empty states.
 11. `10-route-structure.md` — recommended Next.js App Router structure and clean filter routes.
 
@@ -4280,10 +4280,10 @@ This folder contains the improved Pharmacy technical specification split into gl
 - Dashboard year/month filter applies only to Orders statistics.
 - Client Pharmacy date is `firstOrderAt` only.
 - Order final statuses are irreversible in the first version.
-- All medicines have one global status: `new`, `active`, `inactive`.
-- Pharmacy cannot see medicines with `new` status.
-- Medicine removal from pharmacy is explicitly described.
-- Medicine request flow is strict: Draft → New → In work → Approved/Rejected.
+- All products have one global status: `new`, `active`, `inactive`.
+- Pharmacy cannot see products with `new` status.
+- Product removal from pharmacy is explicitly described.
+- Product request flow is strict: Draft → New → In work → Approved/Rejected.
 - Auth pages are global, not part of `/pharmacy` route group.
 - Protected Pharmacy layout has no Footer.
 

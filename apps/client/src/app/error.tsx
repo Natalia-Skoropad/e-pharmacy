@@ -18,7 +18,7 @@ function AppError({ error: _error, reset }: AppErrorProps) {
   return (
     <ErrorPage
       title="Something went wrong, but your route is still safe"
-      description="We could not load this page right now. Try again, or return to a stable section and continue choosing medicines and pharmacies."
+      description="We could not load this page right now. Try again, or return to a stable section and continue choosing products and pharmacies."
       onRetry={reset}
       homeHref={ROUTES.HOME}
     />

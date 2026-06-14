@@ -47,7 +47,7 @@ function CartSummary({
       <div className={css.policyNotice}>
         <ShieldAlert size={18} aria-hidden="true" />
         <p>
-          Medicines are non-returnable and non-exchangeable after order
+          Products are non-returnable and non-exchangeable after order
           confirmation.
         </p>
       </div>

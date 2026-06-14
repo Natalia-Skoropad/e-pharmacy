@@ -25,13 +25,13 @@ import {
 } from '@e-pharmacy/config/catalog';
 
 import {
-  buildMedicinesCatalogPath,
-  getMedicinesCatalogActiveFiltersCount,
-  type MedicinesCatalogFilters,
+  buildProductsCatalogPath,
+  getProductsCatalogActiveFiltersCount,
+  type ProductsCatalogFilters,
   type ProductAvailabilityFilter,
   type ProductCategoryFilter,
   type ProductSortFilter,
-} from '@/lib/catalog/medicines-catalog';
+} from '@/lib/catalog/products-catalog';
 
 import {
   sanitizeCatalogArticleSearch,
@@ -40,37 +40,40 @@ import {
 
 import type { ProductFilterOptionsResponse, Store } from '@e-pharmacy/types';
 
-import css from './MedicinesCatalogFiltersForm.module.css';
+import css from './ProductsCatalogFiltersForm.module.css';
 
 //===================================================================
 
 type StoreSelectValue = 'all' | string;
 
-type MedicinesCatalogFiltersFormProps = {
-  filters: MedicinesCatalogFilters;
+type ProductsCatalogFiltersFormProps = {
+  filters: ProductsCatalogFilters;
   stores: Store[];
   filterOptions: ProductFilterOptionsResponse;
   visibleProductsCount: number;
   productsCount: number;
 };
 
-type CatalogHrefFilters = Omit<MedicinesCatalogFilters, 'page'> & {
+type CatalogHrefFilters = Omit<ProductsCatalogFilters, 'page'> & {
   page?: number;
 };
 
 //===================================================================
 
-function buildMedicinesFiltersHref(filters: CatalogHrefFilters, stores: Store[]) {
-  return buildMedicinesCatalogPath(filters, stores);
+function buildProductsFiltersHref(
+  filters: CatalogHrefFilters,
+  stores: Store[]
+) {
+  return buildProductsCatalogPath(filters, stores);
 }
 
 //===================================================================
 
-function createMedicinesResetFiltersHref(
-  filters: MedicinesCatalogFilters,
+function createProductsResetFiltersHref(
+  filters: ProductsCatalogFilters,
   stores: Store[]
 ) {
-  return buildMedicinesFiltersHref(
+  return buildProductsFiltersHref(
     {
       name: '',
       article: '',
@@ -84,13 +87,13 @@ function createMedicinesResetFiltersHref(
 
 //===================================================================
 
-function MedicinesCatalogFiltersForm({
+function ProductsCatalogFiltersForm({
   filters,
   stores,
   filterOptions,
   visibleProductsCount,
   productsCount,
-}: MedicinesCatalogFiltersFormProps) {
+}: ProductsCatalogFiltersFormProps) {
   const router = useRouter();
 
   const [searchDraft, setSearchDraft] = useState(() => ({
@@ -120,9 +123,9 @@ function MedicinesCatalogFiltersForm({
     onClose: () => setIsFiltersOpen(false),
   });
 
-  const activeFiltersCount = getMedicinesCatalogActiveFiltersCount(filters);
+  const activeFiltersCount = getProductsCatalogActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
-  const resetHref = createMedicinesResetFiltersHref(filters, stores);
+  const resetHref = createProductsResetFiltersHref(filters, stores);
 
   const storeOptions = useMemo(
     () => [
@@ -142,7 +145,7 @@ function MedicinesCatalogFiltersForm({
       }
 
       router.replace(
-        buildMedicinesFiltersHref(
+        buildProductsFiltersHref(
           {
             ...filters,
             name: trimmedName,
@@ -186,9 +189,12 @@ function MedicinesCatalogFiltersForm({
   };
 
   const updateCatalog = (nextFilters: CatalogHrefFilters) => {
-    router.replace(buildMedicinesFiltersHref({ ...nextFilters, page: 1 }, stores), {
-      scroll: false,
-    });
+    router.replace(
+      buildProductsFiltersHref({ ...nextFilters, page: 1 }, stores),
+      {
+        scroll: false,
+      }
+    );
 
     setIsFiltersOpen(false);
   };
@@ -378,4 +384,4 @@ function MedicinesCatalogFiltersForm({
   );
 }
 
-export default MedicinesCatalogFiltersForm;
+export default ProductsCatalogFiltersForm;

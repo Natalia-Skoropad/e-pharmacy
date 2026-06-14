@@ -16,6 +16,21 @@ const nextConfig: NextConfig = {
 
   htmlLimitedBots: /.*/,
 
+  async redirects() {
+    return [
+      {
+        source: '/medicines-catalog/:path*',
+        destination: '/product-catalog/:path*',
+        permanent: true,
+      },
+      {
+        source: '/products-catalog/:path*',
+        destination: '/product-catalog/:path*',
+        permanent: true,
+      },
+    ];
+  },
+
   images: {
     qualities: [75, 90],
     remotePatterns: [

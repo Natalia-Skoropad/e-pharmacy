@@ -1,7 +1,7 @@
 'use client';
 
 import { toggleFavoriteStore } from '@e-pharmacy/api-client/client';
-import { buildMedicinesCatalogPath } from '@/lib/catalog/medicines-catalog';
+import { buildProductsCatalogPath } from '@/lib/catalog/products-catalog';
 
 import { buildStorePath } from '@e-pharmacy/config/routes';
 
@@ -58,9 +58,7 @@ function StoreCard({
     onFavoriteChange,
   });
 
-  const medicinesHref = buildMedicinesCatalogPath({ storeId: store.id }, [
-    store,
-  ]);
+  const productsHref = buildProductsCatalogPath({ storeId: store.id }, [store]);
   const storeHref = buildStorePath(store.name, store.id);
 
   useStoreFavoriteRefresh({
@@ -130,7 +128,7 @@ function StoreCard({
           ) : null}
 
           <div className={css.summaryItem}>
-            <dt>Medicines</dt>
+            <dt>Products</dt>
             <dd>
               {formatAvailableProductsCount(store.availableProductsCount)}
             </dd>
@@ -147,12 +145,8 @@ function StoreCard({
             Store details
           </ButtonLink>
 
-          <ButtonLink
-            className={css.detailsLink}
-            href={medicinesHref}
-            size="sm"
-          >
-            Medicines
+          <ButtonLink className={css.detailsLink} href={productsHref} size="sm">
+            Products
           </ButtonLink>
         </div>
       </div>
