@@ -128,11 +128,11 @@ Create builder functions:
 ```txt
 getPharmacyOrderPath(orderId)
 getPharmacyClientPath(clientId)
-getPharmacyProductPath(productId)
+getProductOfferPath(productId)
 getPharmacyRequestPath(requestId)
 getPharmacyOrdersFilterPath(filters)
 getPharmacyClientsFilterPath(filters)
-getPharmacyProductsFilterPath(filters)
+getProductOffersFilterPath(filters)
 getPharmacyRequestsFilterPath(filters)
 ```
 

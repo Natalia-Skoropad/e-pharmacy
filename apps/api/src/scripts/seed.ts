@@ -3,6 +3,9 @@ import mongoose, { type Types } from 'mongoose';
 import { connectDB } from '../db/connectDB';
 import { Product } from '../models/product.model';
 import { Pharmacy } from '../models/pharmacy.model';
+import { ProductOffer } from '../models/productOffer.model';
+import { ProductReview } from '../models/productReview.model';
+import { PharmacyReview } from '../models/pharmacyReview.model';
 
 //===============================================================
 
@@ -24,12 +27,16 @@ const REVIEW_AUTHORS = [
   'Nina',
 ];
 
+//===============================================================
+
 const REVIEW_COMMENTS = [
   'The order was processed quickly, the product page had clear details, and the pharmacy staff explained the pickup process very politely. I liked that the information about availability matched the real stock, so there were no surprises when I arrived. Packaging was neat, the receipt was ready, and the overall experience felt reliable. This is exactly the kind of service I want to see in an online pharmacy catalog when comparing offers, prices, and nearby pharmacies before making a purchase.',
   'I was checking several options and this one looked the most convenient because the description, price, rating, and pharmacy information were easy to understand. The product was prepared on time, the staff answered my questions calmly, and the checkout flow felt simple. Long reviews like this are helpful for testing the layout too: the card should stay readable, the spacing should not collapse, and the text should wrap naturally without breaking the design on mobile, tablet, or desktop screens.',
   'Very good experience from search to pickup. The catalog helped me compare similar products, the rating looked realistic, and the pharmacy page showed useful address and phone details. The item was available exactly as shown, which is important when someone needs products quickly. I also liked that the review section is not too cramped, because longer feedback gives more context and makes the interface feel closer to a real marketplace with many active clients.',
   'The product name, package size, and price were clear, and the pharmacy had enough stock when I came to collect the order. I usually pay attention to reviews before choosing a pharmacy, so it is useful to see detailed feedback instead of one short sentence. This comment intentionally has many words to check how five hundred character reviews behave inside cards, lists, tabs, lazy loading blocks, and responsive layouts without creating awkward gaps or visual noise.',
 ];
+
+//===============================================================
 
 const CITIES = [
   'Kyiv',
@@ -47,6 +54,8 @@ const CITIES = [
   'Cherkasy',
   'Zhytomyr',
 ];
+
+//===============================================================
 
 const PHARMACY_BRANDS = [
   'DobroMed Pharmacy',
@@ -67,6 +76,8 @@ const PHARMACY_BRANDS = [
   'Pharmacy Near You',
 ];
 
+//===============================================================
+
 const STREETS = [
   'Central Street',
   'Soborna Avenue',
@@ -79,6 +90,8 @@ const STREETS = [
   'University Avenue',
   'Green Boulevard',
 ];
+
+//===============================================================
 
 const PRODUCT_BLUEPRINTS = [
   [
@@ -367,9 +380,13 @@ const PHARMACY_IMAGE_URLS = [
   '/images/seed/pharmacies/pharmacy-020.png',
 ] as const;
 
+//===============================================================
+
 function createPharmacyImageUrl(index: number): string {
   return PHARMACY_IMAGE_URLS[index % PHARMACY_IMAGE_URLS.length];
 }
+
+//===============================================================
 
 function createProductName(
   baseName: string,
@@ -393,6 +410,8 @@ function createProductName(
   return variants[variantIndex % variants.length];
 }
 
+//===============================================================
+
 function createSlug(value: string): string {
   return value
     .toLowerCase()
@@ -400,12 +419,14 @@ function createSlug(value: string): string {
     .replace(/^-|-$/g, '');
 }
 
+//===============================================================
+
 function createModeratedReview(index: number, preferredRating?: number) {
   return {
     userName: REVIEW_AUTHORS[index % REVIEW_AUTHORS.length],
     rating: preferredRating ?? (index % 5) + 1,
     comment: REVIEW_COMMENTS[index % REVIEW_COMMENTS.length],
-    isModerated: true,
+    status: 'approved' as const,
     moderatedAt: new Date(
       `2026-04-${String(1 + (index % 25)).padStart(2, '0')}T10:00:00.000Z`
     ),
@@ -415,11 +436,15 @@ function createModeratedReview(index: number, preferredRating?: number) {
   };
 }
 
+//===============================================================
+
 function createModeratedReviews(count: number, ratingBase = 4) {
   return Array.from({ length: count }, (_, index) =>
     createModeratedReview(index, Math.min(5, ratingBase + (index % 2)))
   );
 }
+
+//===============================================================
 
 function createOffer(
   pharmacy: SeedPharmacyDocument,
@@ -446,6 +471,8 @@ function createOffer(
   };
 }
 
+//===============================================================
+
 function createBankDetails(pharmacyName: string, pharmacyNumber: number) {
   const taxId = String(30000000 + pharmacyNumber).padStart(8, '0');
   const ibanTail = `300001${String(pharmacyNumber).padStart(21, '0')}`;
@@ -458,6 +485,8 @@ function createBankDetails(pharmacyName: string, pharmacyNumber: number) {
     paymentPurpose: `Payment for E-PHARMACY order from ${pharmacyName}`,
   };
 }
+
+//===============================================================
 
 function createSeedPharmacies() {
   return Array.from({ length: 98 }, (_, index) => {
@@ -480,12 +509,16 @@ function createSeedPharmacies() {
       rating: Number((4 + (index % 10) * 0.1).toFixed(1)),
       imageUrl: createPharmacyImageUrl(index),
       description: `${brand} in ${city} offers everyday medicines, vitamins, medical devices, hygiene products, and quick online reservation for local clients.`,
-      isActive: true,
+      ownerId: new mongoose.Types.ObjectId(),
+      managerUserIds: [],
+      status: 'active' as const,
       reviewsCount,
       reviews: createModeratedReviews(reviewsCount, 4),
     };
   });
 }
+
+//===============================================================
 
 function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
   return Array.from({ length: 126 }, (_, index) => {
@@ -513,7 +546,8 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
     const offersCount = index % 10 === 0 ? 25 : 2 + (index % 5);
     const selectedPharmacies = Array.from(
       { length: offersCount },
-      (_, offerIndex) => pharmacies[(index * 3 + offerIndex) % pharmacies.length]
+      (_, offerIndex) =>
+        pharmacies[(index * 3 + offerIndex) % pharmacies.length]
     );
     const isSoldOut = index % 17 === 0;
     const richStockPharmacies = index < 115 ? pharmacies.slice(0, 10) : [];
@@ -522,7 +556,8 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       ...selectedPharmacies.filter(
         (pharmacy) =>
           !richStockPharmacies.some(
-            (richPharmacy) => richPharmacy._id.toString() === pharmacy._id.toString()
+            (richPharmacy) =>
+              richPharmacy._id.toString() === pharmacy._id.toString()
           )
       ),
     ];
@@ -554,6 +589,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       article: `EPH-${String(productNumber).padStart(4, '0')}`,
       description: `${name} is a realistic demo catalog item for testing product cards, price formatting, long review text, filters, sorting, pharmacy availability, and responsive catalog layouts.`,
       category,
+      status: 'active' as const,
       price: offers.length > 0 ? basePrice : 0,
       imageUrl,
       manufacturer,
@@ -579,15 +615,62 @@ async function seedDatabase(): Promise<void> {
 
   await connectDB();
 
-  await Promise.all([Pharmacy.deleteMany({}), Product.deleteMany({})]);
+  await Promise.all([
+    Pharmacy.deleteMany({}),
+    Product.deleteMany({}),
+    ProductOffer.deleteMany({}),
+    ProductReview.deleteMany({}),
+    PharmacyReview.deleteMany({}),
+  ]);
 
+  const pharmacySeeds = createSeedPharmacies();
   const createdPharmacies = (await Pharmacy.insertMany(
-    createSeedPharmacies()
+    pharmacySeeds.map(({ reviews, ...pharmacy }) => {
+      void reviews;
+      return pharmacy;
+    })
   )) as SeedPharmacyDocument[];
 
-  const seedProducts = createSeedProducts(createdPharmacies);
+  await PharmacyReview.insertMany(
+    createdPharmacies.flatMap((pharmacy, index) =>
+      pharmacySeeds[index].reviews.map((review) => ({
+        ...review,
+        pharmacyId: pharmacy._id,
+      }))
+    )
+  );
 
-  await Product.insertMany(seedProducts);
+  const seedProducts = createSeedProducts(createdPharmacies);
+  const createdProducts = await Product.insertMany(
+    seedProducts.map(({ offers, reviews, ...product }) => {
+      void offers;
+      void reviews;
+      return product;
+    })
+  );
+
+  await ProductOffer.insertMany(
+    createdProducts.flatMap((product, index) =>
+      seedProducts[index].offers.map((offer) => ({
+        productId: product._id,
+        pharmacyId: offer.pharmacyId,
+        price: offer.price,
+        totalQuantity: offer.totalQuantity,
+        activeQuantity: offer.activeQuantity,
+        reservedQuantity: offer.reservedQuantity,
+        inStock: offer.inStock,
+      }))
+    )
+  );
+
+  await ProductReview.insertMany(
+    createdProducts.flatMap((product, index) =>
+      seedProducts[index].reviews.map((review) => ({
+        ...review,
+        productId: product._id,
+      }))
+    )
+  );
 
   console.log(`Seed completed: ${createdPharmacies.length} pharmacies created`);
   console.log(`Seed completed: ${seedProducts.length} products created`);

@@ -1,3 +1,5 @@
+> **FUTURE FUNCTIONALITY:** ProductRequest is planned and is not implemented in the current backend. Canonical statuses: `draft`, `on_moderation`, `approved`, `rejected`.
+
 # Pharmacy Technical Specification — українська версія для перевірки
 
 > Цей документ є українською версією Pharmacy ТЗ для проєкту **E-PHARMACY**.  
@@ -509,7 +511,7 @@ Sidebar — основна desktop-навігація Pharmacy cabinet.
 - `active`;
 - `on_moderation`.
 
-Для `inactive` аптеки вхід у кабінет заблокований, тому Sidebar не показується.
+Для `blocked` аптеки вхід у кабінет заблокований, тому Sidebar не показується.
 
 ### Navigation links
 
@@ -551,6 +553,20 @@ Active state має працювати для вкладених сторіно�
 - обробляти замовлення.
 
 Сторінки orders/clients/own products/requests можуть відкриватися з empty або restricted state.
+
+### Pharmacy on verification
+
+Can:
+
+- enter Pharmacy cabinet;
+- view submitted data and verification status.
+
+Cannot:
+
+- appear in Client;
+- sell products;
+- add products;
+- create product requests.
 
 ### Active pharmacy
 
@@ -634,10 +650,11 @@ Pharmacy profile — це сторінка, де аптека перегляда
 
 | Статус | Колір | Опис |
 |---|---|---|
-| `new` | blue | Аптека зареєстрована, але ще не пройшла модерацію |
+| `new` | blue | Аптека зареєстрована, але ще не подала первинні дані на перевірку |
+| `on_verification` | purple | Аптека подала первинні дані на перевірку Admin |
 | `active` | green | Аптека пройшла модерацію і може працювати |
 | `on_moderation` | yellow | Активна аптека змінила важливі дані, які очікують перевірку Admin |
-| `inactive` | red | Аптека заблокована або тимчасово відключена Admin |
+| `blocked` | red | Аптека заблокована або тимчасово відключена Admin |
 
 ## 4.3. Правила статусів аптеки
 
@@ -654,13 +671,23 @@ Pharmacy profile — це сторінка, де аптека перегляда
 - не може додавати ліки до себе;
 - не може створювати заявки;
 - має пройти модерацію Admin;
-- може бути переведена Admin у `active` або `inactive`.
+- може бути переведена Admin у `active` або `blocked`.
 
 Banner:
 
 ```txt
 Your pharmacy is not activated yet. Complete the required information and wait for Admin review.
 ```
+
+### On verification
+
+Аптека:
+
+- може зайти в кабінет;
+- бачить подані первинні дані та статус перевірки;
+- не відображається у Client;
+- не може продавати чи додавати товари;
+- не може створювати заявки.
 
 ### Active
 
@@ -673,7 +700,7 @@ Your pharmacy is not activated yet. Complete the required information and wait f
 - може створювати заявки;
 - може переглядати всі ліки, видимі Pharmacy;
 - може редагувати власні дані, але важливі зміни проходять модерацію Admin;
-- може бути переведена Admin у `inactive`.
+- може бути переведена Admin у `blocked`.
 
 Якщо active pharmacy змінює важливі дані, публічно в Client та в основних даних Pharmacy/Admin залишаються попередні підтверджені дані, поки Admin не схвалить pending changes.
 
@@ -689,7 +716,7 @@ Your pharmacy is not activated yet. Complete the required information and wait f
 - не може повторно редагувати дані, які вже на модерації;
 - бачить approved data;
 - бачить pending moderation data;
-- може бути переведена Admin у `active` після схвалення або `inactive`.
+- може бути переведена Admin у `active` після схвалення або `blocked`.
 
 Banner:
 
@@ -697,7 +724,7 @@ Banner:
 Your changes are under moderation. Until Admin reviews them, the Client app shows the previously approved data.
 ```
 
-### Inactive
+### Blocked
 
 Аптека:
 
@@ -715,7 +742,7 @@ Login message:
 Your account is temporarily blocked. Please contact administration for details.
 ```
 
-Admin має вказати причину блокування при переведенні аптеки в `inactive`.
+Admin має вказати причину блокування при переведенні аптеки в `blocked`.
 
 ## 4.4. Дані profile сторінки
 
@@ -737,7 +764,7 @@ Profile page складається з:
 - rating + reviews count;
 - role: `Pharmacy`;
 - status;
-- status banner для `new`, `on_moderation`, `inactive`.
+- status banner для `new`, `on_moderation`, `blocked`.
 
 Photo helper text:
 
@@ -756,7 +783,7 @@ Upload a lightweight JPG, PNG, or WEBP image up to 450 KB. The photo is saved to
 
 Photo:
 
-- optional for `new` and `inactive`;
+- optional for `new` and `blocked`;
 - required for `active` and `on_moderation`;
 - change for active pharmacy requires Admin moderation;
 - change for new pharmacy does not require moderation.
@@ -793,7 +820,7 @@ Fields:
 
 ### Name
 
-- optional for `new` and `inactive`;
+- optional for `new` and `blocked`;
 - required for `active` and `on_moderation`;
 - change by active pharmacy requires moderation;
 - change by new pharmacy does not require moderation.
@@ -807,7 +834,7 @@ Fields:
 
 ### Address
 
-- optional for `new` and `inactive`;
+- optional for `new` and `blocked`;
 - required for `active` and `on_moderation`;
 - change by active pharmacy requires moderation;
 - change by new pharmacy does not require moderation.
@@ -846,7 +873,7 @@ Field: pharmacy description.
 
 Rules:
 
-- optional for `new` and `inactive`;
+- optional for `new` and `blocked`;
 - required for `active` and `on_moderation`;
 - active pharmacy changes require moderation;
 - new pharmacy changes are saved immediately.
@@ -877,7 +904,7 @@ Fields:
 
 Rules:
 
-- optional for `new` and `inactive`;
+- optional for `new` and `blocked`;
 - required for `active` and `on_moderation`;
 - active pharmacy changes require moderation;
 - new pharmacy changes are saved immediately.
@@ -1167,7 +1194,7 @@ Recommended cards:
 
 - Total products in pharmacy;
 - Active products;
-- Inactive products;
+- Blocked products;
 - Products in stock;
 - Out of stock products;
 - Reserved products.
@@ -1193,7 +1220,7 @@ Click examples:
 ```txt
 /pharmacy/products
 /pharmacy/products/status-active
-/pharmacy/products/status-inactive
+/pharmacy/products/status-blocked
 /pharmacy/products/stock-empty
 /pharmacy/products/stock-available
 ```
@@ -1224,7 +1251,7 @@ Click examples:
 
 ```txt
 /pharmacy/product-requests/status-draft
-/pharmacy/product-requests/status-new
+/pharmacy/product-requests/status-on-moderation
 /pharmacy/product-requests/status-in-progress
 /pharmacy/product-requests/status-approved
 /pharmacy/product-requests/status-rejected
@@ -1901,7 +1928,7 @@ Pharmacy може:
 |---|---|---|
 | `new` | blue | Product created in Admin but not activated yet |
 | `active` | green | Product is active and can be added to a pharmacy |
-| `inactive` | red | Product is deactivated by Admin |
+| `blocked` | red | Product is deactivated by Admin |
 
 Статус показує поточний статус конкретних ліків, незалежно від таблиці.
 
@@ -1910,7 +1937,7 @@ Pharmacy не бачить ліки зі статусом `new`. Цей стат
 Pharmacy бачить:
 
 - `active` products;
-- `inactive` products.
+- `blocked` products.
 
 Pharmacy може додати до аптеки тільки `active` products.
 
@@ -1941,7 +1968,7 @@ Fields:
 
 Fields:
 
-- pharmacyProductId;
+- productOfferId;
 - productId;
 - pharmacyId;
 - stockQuantity;
@@ -2003,7 +2030,7 @@ Examples:
 
 ```txt
 /pharmacy/products/status-active
-/pharmacy/products/status-inactive
+/pharmacy/products/status-blocked
 /pharmacy/products/stock-empty
 /pharmacy/products/stock-available
 /pharmacy/products/category-antibiotics
@@ -2032,7 +2059,7 @@ Filters:
 - Current price;
 - Status.
 
-Status is global product status: `active` or `inactive`.
+Status is global product status: `active` or `blocked`.
 
 Pharmacy never sees `new` products.
 
@@ -2067,7 +2094,7 @@ No products found for the selected filters.
 Показує global products з Admin, які Pharmacy може переглядати:
 
 - active;
-- inactive.
+- blocked.
 
 Не показує `new`.
 
@@ -2079,7 +2106,7 @@ Examples:
 
 ```txt
 /pharmacy/all-products/status-active
-/pharmacy/all-products/status-inactive
+/pharmacy/all-products/status-blocked
 /pharmacy/all-products/category-antibiotics
 /pharmacy/all-products/article-abc123
 ```
@@ -2108,7 +2135,7 @@ For active product already added:
 Already added
 ```
 
-For inactive product:
+For blocked product:
 
 ```txt
 Unavailable
@@ -2126,7 +2153,7 @@ Error toasts:
 
 ```txt
 This product is already added to your pharmacy.
-Inactive products cannot be added to a pharmacy.
+Blocked products cannot be added to a pharmacy.
 Could not add product. Please try again.
 ```
 
@@ -2150,7 +2177,7 @@ Modal text:
 Are you sure you want to remove this product from your pharmacy?
 ```
 
-Після видалення `pharmacyProduct` зв’язок видаляється або отримує `status="removed"`.
+Після видалення `productOffer` зв’язок видаляється або отримує `status="removed"`.
 
 Якщо по ліках уже були замовлення, видалення недоступне.
 
@@ -2365,10 +2392,10 @@ Pharmacy створює request тільки якщо потрібних лік�
 
 If product already exists and is active, Pharmacy should add it to pharmacy instead of creating request.
 
-If product exists but inactive:
+If product exists but blocked:
 
 ```txt
-This product already exists in the system, but it is currently inactive. Contact Admin or wait for activation.
+This product already exists in the system, but it is currently blocked. Contact Admin or wait for activation.
 ```
 
 ## 9.3. Request statuses
@@ -2491,7 +2518,7 @@ Available for pharmacy statuses:
 Disabled for:
 
 - `new`;
-- `inactive`.
+- `blocked`.
 
 New pharmacy explanation:
 
@@ -2523,7 +2550,7 @@ Examples:
 
 ```txt
 /pharmacy/product-requests/status-draft
-/pharmacy/product-requests/status-new
+/pharmacy/product-requests/status-on-moderation
 /pharmacy/product-requests/status-in-progress
 /pharmacy/product-requests/status-approved
 /pharmacy/product-requests/status-rejected
@@ -2995,7 +3022,7 @@ Pharmacy shared domain types:
 - Order;
 - OrderItem;
 - Product;
-- PharmacyProduct;
+- ProductOffer;
 - ProductRequest;
 - PaginationParams;
 - Filter params.

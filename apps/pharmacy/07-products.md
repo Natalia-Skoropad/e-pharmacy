@@ -26,7 +26,7 @@ All products in the system have one global status, regardless of which table the
 | ---------- | ----- | ----------------------------------------------------------- | ------------------- |
 | `new`      | Blue  | Product created in Admin but not activated yet             | No                  |
 | `active`   | Green | Product can be added to pharmacies                         | Yes                 |
-| `inactive` | Red   | Product is temporarily or permanently deactivated by Admin | Yes                 |
+| `blocked` | Red   | Product is temporarily or permanently deactivated by Admin | Yes                 |
 
 The `new` status is visible only to Admin.
 
@@ -62,7 +62,7 @@ A pharmacy product is a relation between pharmacy and global product.
 
 Fields:
 
-- pharmacyProductId;
+- productOfferId;
 - productId;
 - pharmacyId;
 - stockQuantity;
@@ -81,7 +81,7 @@ Active products:
 - are visible in Pharmacy all products table;
 - can be added to current pharmacy;
 - can appear in Client only after being added to at least one active or on-moderation pharmacy;
-- can be changed to inactive only by Admin.
+- can be changed to blocked only by Admin.
 
 Product appears in Client only if:
 
@@ -91,9 +91,9 @@ Product appears in Client only if:
 - pharmacy product relation is not removed or blocked;
 - available quantity allows purchase.
 
-## 6. Inactive products
+## 6. Blocked products
 
-Inactive products:
+Blocked products:
 
 - are visible in Pharmacy all products table;
 - cannot be added to a pharmacy;
@@ -102,9 +102,9 @@ Inactive products:
 - keep order history, statistics, and stock movement history;
 - cannot be added to new orders.
 
-If inactive product already exists in old orders, it remains in order history.
+If blocked product already exists in old orders, it remains in order history.
 
-Admin must provide a required reason when setting product status to `inactive`.
+Admin must provide a required reason when setting product status to `blocked`.
 
 ## 7. Price and stock synchronization
 
@@ -182,7 +182,7 @@ Examples:
 
 ```txt
 /pharmacy/products/status-active
-/pharmacy/products/status-inactive
+/pharmacy/products/status-blocked
 /pharmacy/products/stock-empty
 /pharmacy/products/status-active/stock-available
 ```
@@ -203,7 +203,7 @@ Status options:
 ```txt
 All
 Active
-Inactive
+Blocked
 ```
 
 ## 11. Own products columns
@@ -225,7 +225,7 @@ Columns:
 Field:
 
 ```txt
-pharmacyProduct.addedAt
+productOffer.addedAt
 ```
 
 Sortable.
@@ -301,7 +301,7 @@ Readonly in Pharmacy.
 Shows the global product status:
 
 - Active — green;
-- Inactive — red.
+- Blocked — red.
 
 ## 12. Own products table states
 
@@ -346,13 +346,13 @@ Route:
 Shows Admin products that Pharmacy can view:
 
 - `active` products;
-- `inactive` products.
+- `blocked` products.
 
 Does not show `new` products.
 
 Pharmacy can add only `active` products to own pharmacy.
 
-Inactive products are visible but cannot be added.
+Blocked products are visible but cannot be added.
 
 ## 14. All products filters
 
@@ -368,7 +368,7 @@ Filter examples:
 
 ```txt
 /pharmacy/all-products/status-active
-/pharmacy/all-products/status-inactive
+/pharmacy/all-products/status-blocked
 /pharmacy/all-products/category-antibiotics
 ```
 
@@ -398,7 +398,7 @@ For active products already added:
 Added to your pharmacy
 ```
 
-For inactive products:
+For blocked products:
 
 ```txt
 Unavailable
@@ -422,7 +422,7 @@ Error toasts:
 
 ```txt
 This product is already added to your pharmacy.
-Inactive products cannot be added to a pharmacy.
+Blocked products cannot be added to a pharmacy.
 Could not add product. Please try again.
 ```
 
@@ -475,8 +475,8 @@ Remove product
 
 After removal:
 
-- `pharmacyProduct` relation is deleted; or
-- `pharmacyProduct` receives `status="removed"`.
+- `productOffer` relation is deleted; or
+- `productOffer` receives `status="removed"`.
 
 If there are any orders with this product, removal is not available.
 

@@ -32,7 +32,6 @@ export type Pharmacy = {
   availableProductsCount?: number;
   reviewsCount?: number;
   isFavorite?: boolean;
-  isActive: boolean;
   updatedAt?: ISODateString;
 };
 

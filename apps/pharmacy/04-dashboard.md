@@ -220,7 +220,7 @@ Cards:
 
 - Total products in pharmacy;
 - Active products;
-- Inactive products;
+- Blocked products;
 - products in stock;
 - Out of stock products;
 - Reserved products.
@@ -253,7 +253,7 @@ Examples:
 ```txt
 /pharmacy/products
 /pharmacy/products/status-active
-/pharmacy/products/status-inactive
+/pharmacy/products/status-blocked
 /pharmacy/products/stock-empty
 /pharmacy/products/stock-available
 ```

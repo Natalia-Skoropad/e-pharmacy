@@ -15,6 +15,7 @@ export const USER_STATUSES = {
 
 export const PHARMACY_STATUSES = {
   NEW: 'new',
+  ON_VERIFICATION: 'on_verification',
   ON_MODERATION: 'on_moderation',
   ACTIVE: 'active',
   BLOCKED: 'blocked',

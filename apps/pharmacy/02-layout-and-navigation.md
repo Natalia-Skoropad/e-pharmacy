@@ -148,7 +148,7 @@ It is shown only in protected layout for pharmacies with statuses:
 - `active`;
 - `on_moderation`.
 
-It is not shown for inactive pharmacies because inactive pharmacies cannot enter the cabinet.
+It is not shown for blocked pharmacies because blocked pharmacies cannot enter the cabinet.
 
 ### Sidebar links
 

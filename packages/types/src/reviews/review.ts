@@ -1,6 +1,4 @@
 export type ReviewModerationStatus =
-  | 'pending'
+  | 'on_moderation'
   | 'approved'
-  | 'rejected'
-  | 'reported'
-  | 'hidden';
+  | 'rejected';

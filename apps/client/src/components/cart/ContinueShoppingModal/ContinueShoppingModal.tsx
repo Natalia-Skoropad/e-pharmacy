@@ -53,11 +53,15 @@ const CATEGORY_PRODUCTS_LIMIT = 200;
 
 //===================================================================
 
-function getPharmacyProductPrice(product: Product, pharmacyId: string): number {
-  const pharmacyOffer = product.offers?.find((offer) => offer.pharmacyId === pharmacyId);
+function getProductOfferPrice(product: Product, pharmacyId: string): number {
+  const pharmacyOffer = product.offers?.find(
+    (offer) => offer.pharmacyId === pharmacyId
+  );
 
   return pharmacyOffer?.price ?? product.price;
 }
+
+//===================================================================
 
 function getUniqueCategoryOptions(products: Product[]): CategoryOption[] {
   const categories = new Set<ProductCategory>();
@@ -322,7 +326,7 @@ function ContinueShoppingModal({
                     </div>
 
                     <p className={css.productPrice}>
-                      {formatPrice(getPharmacyProductPrice(product, pharmacyId))}
+                      {formatPrice(getProductOfferPrice(product, pharmacyId))}
                     </p>
 
                     <Button

@@ -23,7 +23,7 @@ This folder contains the improved pharmacy technical specification split into gl
 - Dashboard year/month filter applies only to Orders statistics.
 - client pharmacy date is `firstOrderAt` only.
 - Order final statuses are irreversible in the first version.
-- All products have one global status: `new`, `active`, `inactive`.
+- All products have one global status: `new`, `active`, `blocked`.
 - pharmacy cannot see products with `new` status.
 - Product removal from pharmacy is explicitly described.
 - Product request flow is strict: Draft → New → In work → Approved/Rejected.

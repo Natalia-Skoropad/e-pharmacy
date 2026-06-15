@@ -1,3 +1,5 @@
+> **FUTURE FUNCTIONALITY:** ProductRequest is planned and is not implemented in the current backend. Canonical statuses: `draft`, `on_moderation`, `approved`, `rejected`.
+
 # Pharmacy Technical Specification — General Overview
 
 ## 1. Purpose
@@ -132,7 +134,7 @@ The same colors must be used consistently across Dashboard, tables, details page
 | New | Blue |
 | In work / On moderation | Yellow |
 | Active / Successful / Approved | Green |
-| Inactive / Rejected | Red |
+| Blocked / Rejected | Red |
 | Draft | Gray |
 
 ## 6. Filter URL strategy
@@ -619,7 +621,7 @@ It is shown only in protected layout for pharmacies with statuses:
 - `active`;
 - `on_moderation`.
 
-It is not shown for inactive pharmacies because inactive pharmacies cannot enter the cabinet.
+It is not shown for blocked pharmacies because blocked pharmacies cannot enter the cabinet.
 
 ### Sidebar links
 
@@ -724,7 +726,8 @@ Use shared components wherever possible.
 
 | Status | Meaning | Who sets it |
 |---|---|---|
-| `new` | Pharmacy registered but has not passed Admin moderation yet | System after registration |
+| `new` | Pharmacy registered and has not submitted initial data for verification | System after registration |
+| `on_verification` | Pharmacy submitted its initial data for Admin verification | System after Pharmacy submits initial data |
 | `active` | Pharmacy passed moderation and can work | Admin |
 | `on_moderation` | Active pharmacy changed important data and waits for Admin review | System after Pharmacy submits changes |
 | `blocked` | Pharmacy is blocked or temporarily disabled | Admin |
@@ -734,9 +737,10 @@ Pharmacy UI labels and colors:
 | Code | UI label | Color |
 |---|---|---|
 | `new` | Нова | Blue |
+| `on_verification` | На перевірці | Purple |
 | `active` | Активна | Green |
 | `on_moderation` | На модерації | Yellow |
-| `inactive` | Неактивна | Red |
+| `blocked` | Неактивна | Red |
 
 ## 3. Status behavior
 
@@ -761,6 +765,20 @@ Banner:
 ```txt
 Your pharmacy is not activated yet. Complete the required information and wait for Admin review.
 ```
+
+### Pharmacy on verification
+
+Can:
+
+- enter Pharmacy cabinet;
+- view submitted data and verification status.
+
+Cannot:
+
+- appear in Client;
+- sell products;
+- add products;
+- create product requests.
 
 ### Active pharmacy
 
@@ -882,7 +900,7 @@ Show:
 - rating and reviews count;
 - role: Pharmacy;
 - pharmacy status;
-- status banner for `new`, `on_moderation`, and `inactive`.
+- status banner for `new`, `on_moderation`, and `blocked`.
 
 Use:
 
@@ -900,7 +918,7 @@ Upload a lightweight JPG, PNG, or WEBP image up to 450 KB. The photo is saved to
 
 Photo is:
 
-- optional for `new` and `inactive`;
+- optional for `new` and `blocked`;
 - required for `active` and `on_moderation`.
 
 For active pharmacy, photo change requires Admin moderation.
@@ -1003,7 +1021,7 @@ Could not change password. Please try again.
 | `new` | Save | Enabled only when changed and valid |
 | `active` | Send for moderation | Enabled only when changed and required fields are valid |
 | `on_moderation` | Send for moderation | Disabled; fields disabled |
-| `inactive` | Not available | Cabinet access blocked |
+| `blocked` | Not available | Cabinet access blocked |
 
 Every save or send action opens `ConfirmActionModal`.
 
@@ -1361,7 +1379,7 @@ Cards:
 
 - Total products in pharmacy;
 - Active products;
-- Inactive products;
+- Blocked products;
 - Products in stock;
 - Out of stock products;
 - Reserved products.
@@ -1394,7 +1412,7 @@ Examples:
 ```txt
 /pharmacy/products
 /pharmacy/products/status-active
-/pharmacy/products/status-inactive
+/pharmacy/products/status-blocked
 /pharmacy/products/stock-empty
 /pharmacy/products/stock-available
 ```
@@ -1435,7 +1453,7 @@ Examples:
 
 ```txt
 /pharmacy/product-requests/status-draft
-/pharmacy/product-requests/status-new
+/pharmacy/product-requests/status-on-moderation
 /pharmacy/product-requests/status-in-progress
 /pharmacy/product-requests/status-approved
 /pharmacy/product-requests/status-rejected
@@ -2156,7 +2174,7 @@ Can:
 - view own orders;
 - leave reviews.
 
-Can be changed to `inactive` only by Admin.
+Can be changed to `blocked` only by Admin.
 
 ## 4. Blocked client
 
@@ -2264,7 +2282,7 @@ This is the date when the client first created an order for the current pharmacy
 ```txt
 All
 Active
-Inactive
+Blocked
 ```
 
 ## 8. Clients table columns
@@ -2339,7 +2357,7 @@ Use fixed order prices.
 Show badge/chip:
 
 - Active — green;
-- Inactive — red.
+- Blocked — red.
 
 ## 9. Clients table pagination
 
@@ -2597,7 +2615,7 @@ All products in the system have one global status, regardless of which table the
 |---|---|---|---|
 | `new` | Blue | Product created in Admin but not activated yet | No |
 | `active` | Green | Product can be added to pharmacies | Yes |
-| `inactive` | Red | Product is temporarily or permanently deactivated by Admin | Yes |
+| `blocked` | Red | Product is temporarily or permanently deactivated by Admin | Yes |
 
 The `new` status is visible only to Admin.
 
@@ -2633,7 +2651,7 @@ A pharmacy product is a relation between pharmacy and global product.
 
 Fields:
 
-- pharmacyProductId;
+- productOfferId;
 - productId;
 - pharmacyId;
 - stockQuantity;
@@ -2652,7 +2670,7 @@ Active products:
 - are visible in Pharmacy all products table;
 - can be added to current pharmacy;
 - can appear in Client only after being added to at least one active or on-moderation pharmacy;
-- can be changed to inactive only by Admin.
+- can be changed to blocked only by Admin.
 
 Product appears in Client only if:
 
@@ -2662,9 +2680,9 @@ Product appears in Client only if:
 - pharmacy product relation is not removed or blocked;
 - available quantity allows purchase.
 
-## 6. Inactive products
+## 6. Blocked products
 
-Inactive products:
+Blocked products:
 
 - are visible in Pharmacy all products table;
 - cannot be added to a pharmacy;
@@ -2673,9 +2691,9 @@ Inactive products:
 - keep order history, statistics, and stock movement history;
 - cannot be added to new orders.
 
-If inactive product already exists in old orders, it remains in order history.
+If blocked product already exists in old orders, it remains in order history.
 
-Admin must provide a required reason when setting product status to `inactive`.
+Admin must provide a required reason when setting product status to `blocked`.
 
 ## 7. Price and stock synchronization
 
@@ -2753,7 +2771,7 @@ Examples:
 
 ```txt
 /pharmacy/products/status-active
-/pharmacy/products/status-inactive
+/pharmacy/products/status-blocked
 /pharmacy/products/stock-empty
 /pharmacy/products/status-active/stock-available
 ```
@@ -2774,7 +2792,7 @@ Status options:
 ```txt
 All
 Active
-Inactive
+Blocked
 ```
 
 ## 11. Own products columns
@@ -2796,7 +2814,7 @@ Columns:
 Field:
 
 ```txt
-pharmacyProduct.addedAt
+productOffer.addedAt
 ```
 
 Sortable.
@@ -2872,7 +2890,7 @@ Readonly in Pharmacy.
 Shows the global product status:
 
 - Active — green;
-- Inactive — red.
+- Blocked — red.
 
 ## 12. Own products table states
 
@@ -2917,13 +2935,13 @@ Route:
 Shows Admin products that Pharmacy can view:
 
 - `active` products;
-- `inactive` products.
+- `blocked` products.
 
 Does not show `new` products.
 
 Pharmacy can add only `active` products to own pharmacy.
 
-Inactive products are visible but cannot be added.
+Blocked products are visible but cannot be added.
 
 ## 14. All products filters
 
@@ -2939,7 +2957,7 @@ Filter examples:
 
 ```txt
 /pharmacy/all-products/status-active
-/pharmacy/all-products/status-inactive
+/pharmacy/all-products/status-blocked
 /pharmacy/all-products/category-antibiotics
 ```
 
@@ -2969,7 +2987,7 @@ For active products already added:
 Added to your pharmacy
 ```
 
-For inactive products:
+For blocked products:
 
 ```txt
 Unavailable
@@ -2993,7 +3011,7 @@ Error toasts:
 
 ```txt
 This product is already added to your pharmacy.
-Inactive products cannot be added to a pharmacy.
+Blocked products cannot be added to a pharmacy.
 Could not add product. Please try again.
 ```
 
@@ -3046,8 +3064,8 @@ Remove product
 
 After removal:
 
-- `pharmacyProduct` relation is deleted; or
-- `pharmacyProduct` receives `status="removed"`.
+- `productOffer` relation is deleted; or
+- `productOffer` receives `status="removed"`.
 
 If there are any orders with this product, removal is not available.
 
@@ -3401,12 +3419,12 @@ Before creating a request, Pharmacy should check All products by:
 
 If product exists and is active, Pharmacy should add it to own pharmacy instead of creating a request.
 
-If product exists but is inactive, Pharmacy must not create a duplicate.
+If product exists but is blocked, Pharmacy must not create a duplicate.
 
 Message:
 
 ```txt
-This product already exists in the system but is currently inactive. Please contact Admin or wait for activation.
+This product already exists in the system but is currently blocked. Please contact Admin or wait for activation.
 ```
 
 ## 6. Create request button
@@ -3433,7 +3451,7 @@ Available for pharmacy statuses:
 Disabled for:
 
 - `new`;
-- `inactive`.
+- `blocked`.
 
 Disabled explanation for `new`:
 
@@ -3441,7 +3459,7 @@ Disabled explanation for `new`:
 You will be able to create requests after Admin activates your pharmacy.
 ```
 
-Disabled explanation for `inactive`:
+Disabled explanation for `blocked`:
 
 ```txt
 Your account is temporarily blocked. Creating requests is unavailable.
@@ -3489,7 +3507,7 @@ Examples:
 
 ```txt
 /pharmacy/product-requests/status-draft
-/pharmacy/product-requests/status-new
+/pharmacy/product-requests/status-on-moderation
 /pharmacy/product-requests/status-in-progress
 /pharmacy/product-requests/status-approved
 /pharmacy/product-requests/status-rejected
@@ -3666,7 +3684,7 @@ Validates required fields and opens `ConfirmActionModal`.
 
 After confirmation:
 
-- request status changes to `new`;
+- request status changes to `on_moderation`;
 - request becomes visible to Admin;
 - Pharmacy can no longer edit it.
 
@@ -4230,11 +4248,11 @@ Create builder functions:
 ```txt
 getPharmacyOrderPath(orderId)
 getPharmacyClientPath(clientId)
-getPharmacyProductPath(productId)
+getProductOfferPath(productId)
 getPharmacyRequestPath(requestId)
 getPharmacyOrdersFilterPath(filters)
 getPharmacyClientsFilterPath(filters)
-getPharmacyProductsFilterPath(filters)
+getProductOffersFilterPath(filters)
 getPharmacyRequestsFilterPath(filters)
 ```
 
@@ -4280,7 +4298,7 @@ This folder contains the improved Pharmacy technical specification split into gl
 - Dashboard year/month filter applies only to Orders statistics.
 - Client Pharmacy date is `firstOrderAt` only.
 - Order final statuses are irreversible in the first version.
-- All products have one global status: `new`, `active`, `inactive`.
+- All products have one global status: `new`, `active`, `blocked`.
 - Pharmacy cannot see products with `new` status.
 - Product removal from pharmacy is explicitly described.
 - Product request flow is strict: Draft → New → In work → Approved/Rejected.

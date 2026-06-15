@@ -13,7 +13,6 @@ import {
 import {
   USER_ROLES,
   USER_STATUSES,
-  PHARMACY_STATUSES,
 } from '../constants/auth';
 
 import type { UserEntity } from '../types/user';
@@ -57,11 +56,6 @@ const userSchema = new Schema<UserEntity>(
       required: true,
     },
 
-    pharmacyStatus: {
-      type: String,
-      enum: Object.values(PHARMACY_STATUSES),
-      default: undefined,
-    },
 
     phone: {
       type: String,
@@ -92,17 +86,6 @@ const userSchema = new Schema<UserEntity>(
       default: undefined,
     },
 
-    favoriteProductIds: {
-      type: [Schema.Types.ObjectId],
-      ref: 'Product',
-      default: [],
-    },
-
-    favoritePharmacyIds: {
-      type: [Schema.Types.ObjectId],
-      ref: 'Pharmacy',
-      default: [],
-    },
 
     resetPasswordTokenHash: {
       type: String,
@@ -147,7 +130,7 @@ const userSchema = new Schema<UserEntity>(
 
 //===============================================================
 
-userSchema.index({ role: 1, status: 1, pharmacyStatus: 1 });
+userSchema.index({ role: 1, status: 1 });
 userSchema.index({ approvedBy: 1 });
 
 //===============================================================

@@ -1,3 +1,5 @@
+> **FUTURE FUNCTIONALITY:** ProductRequest is planned and is not implemented in the current backend. Canonical statuses: `draft`, `on_moderation`, `approved`, `rejected`.
+
 # Pharmacy Technical Specification — Product Creation Requests
 
 ## 1. General logic
@@ -84,12 +86,12 @@ Before creating a request, Pharmacy should check All products by:
 
 If product exists and is active, Pharmacy should add it to own pharmacy instead of creating a request.
 
-If product exists but is inactive, Pharmacy must not create a duplicate.
+If product exists but is blocked, Pharmacy must not create a duplicate.
 
 Message:
 
 ```txt
-This product already exists in the system but is currently inactive. Please contact Admin or wait for activation.
+This product already exists in the system but is currently blocked. Please contact Admin or wait for activation.
 ```
 
 ## 6. Create request button
@@ -116,7 +118,7 @@ Available for pharmacy statuses:
 Disabled for:
 
 - `new`;
-- `inactive`.
+- `blocked`.
 
 Disabled explanation for `new`:
 
@@ -124,7 +126,7 @@ Disabled explanation for `new`:
 You will be able to create requests after Admin activates your pharmacy.
 ```
 
-Disabled explanation for `inactive`:
+Disabled explanation for `blocked`:
 
 ```txt
 Your account is temporarily blocked. Creating requests is unavailable.
@@ -172,7 +174,7 @@ Examples:
 
 ```txt
 /pharmacy/product-requests/status-draft
-/pharmacy/product-requests/status-new
+/pharmacy/product-requests/status-on-moderation
 /pharmacy/product-requests/status-in-progress
 /pharmacy/product-requests/status-approved
 /pharmacy/product-requests/status-rejected
@@ -349,7 +351,7 @@ Validates required fields and opens `ConfirmActionModal`.
 
 After confirmation:
 
-- request status changes to `new`;
+- request status changes to `on_moderation`;
 - request becomes visible to Admin;
 - Pharmacy can no longer edit it.
 

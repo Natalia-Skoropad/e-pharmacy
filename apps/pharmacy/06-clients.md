@@ -35,7 +35,7 @@ Can:
 - view own orders;
 - leave reviews.
 
-Can be changed to `inactive` only by Admin.
+Can be changed to `blocked` only by Admin.
 
 ## 4. Blocked client
 
@@ -143,7 +143,7 @@ This is the date when the client first created an order for the current pharmacy
 ```txt
 All
 Active
-Inactive
+Blocked
 ```
 
 ## 8. clients table columns
@@ -218,7 +218,7 @@ Use fixed order prices.
 Show badge/chip:
 
 - Active — green;
-- Inactive — red.
+- Blocked — red.
 
 ## 9. clients table pagination
 

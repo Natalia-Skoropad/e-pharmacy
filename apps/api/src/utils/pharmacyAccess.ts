@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { Product } from '../models/product.model';
+import { ProductOffer } from '../models/productOffer.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { httpError } from './httpError';
 
@@ -12,7 +12,10 @@ export async function assertPharmacyOwner(pharmacyId: string, userId: string) {
     throw httpError(HTTP_STATUS.BAD_REQUEST, 'Invalid id');
   }
 
-  const pharmacy = await Pharmacy.findOne({ _id: pharmacyId, ownerId: userId });
+  const pharmacy = await Pharmacy.findOne({
+    _id: pharmacyId,
+    $or: [{ ownerId: userId }, { managerUserIds: userId }],
+  });
 
   if (!pharmacy) {
     throw httpError(
@@ -37,17 +40,14 @@ export async function assertProductOfferOwner(
     throw httpError(HTTP_STATUS.BAD_REQUEST, 'Invalid id');
   }
 
-  const product = await Product.findOne({
-    _id: productId,
-    'offers.pharmacyId': pharmacyId,
-  });
+  const productOffer = await ProductOffer.findOne({ productId, pharmacyId });
 
-  if (!product) {
+  if (!productOffer) {
     throw httpError(
       HTTP_STATUS.FORBIDDEN,
       'You do not have access to this product offer'
     );
   }
 
-  return product;
+  return productOffer;
 }

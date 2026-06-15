@@ -16,7 +16,6 @@ export function toAuthUserResponse(user: UserDocument): AuthUserResponse {
     email: user.email,
     role: user.role,
     status: user.status,
-    pharmacyStatus: user.pharmacyStatus,
     phone: user.phone,
     address: user.address,
     pictureUrl: user.pictureUrl,

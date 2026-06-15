@@ -132,7 +132,7 @@ The same colors must be used consistently across Dashboard, tables, details page
 | New                            | Blue   |
 | In work / On moderation        | Yellow |
 | Active / Successful / Approved | Green  |
-| Inactive / Rejected            | Red    |
+| Blocked / Rejected            | Red    |
 | Draft                          | Gray   |
 
 ## 6. Filter URL strategy

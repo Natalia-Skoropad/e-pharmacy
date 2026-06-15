@@ -9,7 +9,8 @@
     "build": "tsc && node src/scripts/copy-templates.mjs",
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "migrate:domain": "tsx src/scripts/migrate-domain-entities.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

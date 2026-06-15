@@ -3,15 +3,13 @@ import type { HydratedDocument } from 'mongoose';
 
 import { env } from '../config/env';
 
-import {
-  USER_ROLES,
-  USER_STATUSES,
-  PHARMACY_STATUSES,
-} from '../constants/auth';
+import { USER_ROLES, USER_STATUSES } from '../constants/auth';
 
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Session } from '../models/session.model';
+import { Client } from '../models/client.model';
+import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
 
 import type {
@@ -142,11 +140,23 @@ export async function registerUserService(
       email: input.email,
       password: hashedPassword,
       role: input.role || USER_ROLES.CLIENT,
-      pharmacyStatus:
-        input.role === USER_ROLES.PHARMACY ? PHARMACY_STATUSES.NEW : undefined,
       phone: input.phone,
       address: input.address,
     });
+
+    if (user.role === USER_ROLES.CLIENT) {
+      await Client.create({ userId: user._id });
+    } else if (user.role === USER_ROLES.PHARMACY) {
+      await Pharmacy.create({
+        ownerId: user._id,
+        managerUserIds: [],
+        name: user.name,
+        address: user.address ?? 'Address pending verification',
+        phone: user.phone,
+        email: user.email,
+        status: 'new',
+      });
+    }
 
     return buildAuthSessionResult(user, context);
   } catch (error) {

@@ -16,7 +16,7 @@ export type PharmacyReviewEntity = {
   userName: string;
   rating: number;
   comment: string;
-  status: 'pending' | 'approved' | 'rejected' | 'reported' | 'hidden';
+  status: 'on_moderation' | 'approved' | 'rejected';
   moderationReason?: string;
   moderatedBy?: Schema.Types.ObjectId;
   moderatedAt?: Date;
@@ -67,8 +67,8 @@ const pharmacyReviewSchema = new Schema<PharmacyReviewEntity>(
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'reported', 'hidden'],
-      default: 'pending',
+      enum: ['on_moderation', 'approved', 'rejected'],
+      default: 'on_moderation',
       required: true,
       index: true,
     },

@@ -12,7 +12,8 @@ Use shared components wherever possible.
 
 | Status          | Meaning                                                           | Who sets it                           |
 | --------------- | ----------------------------------------------------------------- | ------------------------------------- |
-| `new`           | Pharmacy registered but has not passed Admin moderation yet       | System after registration             |
+| `new`           | Pharmacy registered and has not submitted initial data            | System after registration             |
+| `on_verification` | Pharmacy submitted initial data for Admin verification          | System after Pharmacy submits data     |
 | `active`        | Pharmacy passed moderation and can work                           | Admin                                 |
 | `on_moderation` | Active pharmacy changed important data and waits for Admin review | System after Pharmacy submits changes |
 | `blocked`      | Pharmacy is blocked or temporarily disabled                       | Admin                                 |
@@ -40,6 +41,20 @@ Banner:
 ```txt
 Your pharmacy is not activated yet. Complete the required information and wait for Admin review.
 ```
+
+### Pharmacy on verification
+
+Can:
+
+- enter Pharmacy cabinet;
+- view submitted data and verification status.
+
+Cannot:
+
+- appear in Client;
+- sell products;
+- add products;
+- create product requests.
 
 ### Active pharmacy
 
@@ -161,7 +176,7 @@ Show:
 - rating and reviews count;
 - role: Pharmacy;
 - pharmacy status;
-- status banner for `new`, `on_moderation`, and `inactive`.
+- status banner for `new`, `on_moderation`, and `blocked`.
 
 Use:
 
@@ -179,7 +194,7 @@ Upload a lightweight JPG, PNG, or WEBP image up to 450 KB. The photo is saved to
 
 Photo is:
 
-- optional for `new` and `inactive`;
+- optional for `new` and `blocked`;
 - required for `active` and `on_moderation`.
 
 For active pharmacy, photo change requires Admin moderation.
@@ -282,7 +297,7 @@ Could not change password. Please try again.
 | `new`           | Save                | Enabled only when changed and valid                     |
 | `active`        | Send for moderation | Enabled only when changed and required fields are valid |
 | `on_moderation` | Send for moderation | Disabled; fields disabled                               |
-| `inactive`      | Not available       | Cabinet access blocked                                  |
+| `blocked`      | Not available       | Cabinet access blocked                                  |
 
 Every save or send action opens `ConfirmActionModal`.
 

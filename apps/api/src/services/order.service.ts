@@ -5,6 +5,7 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import { Cart } from '../models/cart.model';
 import { Order } from '../models/order.model';
 import { Product } from '../models/product.model';
+import { ProductOffer } from '../models/productOffer.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { httpError } from '../utils/httpError';
 import { commitReservedStock } from './inventory.service';
@@ -18,7 +19,7 @@ import type {
   OrdersResponseDto,
 } from '../types/order';
 
-import type { ProductEntity, ProductOfferEntity } from '../types/product';
+import type { ProductEntity } from '../types/product';
 import type { PharmacyEntity } from '../types/pharmacy';
 
 //===============================================================
@@ -57,22 +58,10 @@ function hasCompleteBankDetails(
 ): boolean {
   return Boolean(
     bankDetails?.recipientName &&
-      bankDetails.taxId &&
-      bankDetails.iban &&
-      bankDetails.bankName &&
-      bankDetails.paymentPurpose
-  );
-}
-
-//===============================================================
-
-function findProductOffer(
-  product: ProductDocument,
-  pharmacyId: string
-): ProductOfferEntity | null {
-  return (
-    product.offers?.find((offer) => offer.pharmacyId.toString() === pharmacyId) ??
-    null
+    bankDetails.taxId &&
+    bankDetails.iban &&
+    bankDetails.bankName &&
+    bankDetails.paymentPurpose
   );
 }
 
@@ -208,11 +197,14 @@ export async function checkoutOrderService(
         .session(session)
         .lean<PharmacyDocument | null>();
 
-      if (!pharmacy || !pharmacy.isActive) {
+      if (!pharmacy || !['active', 'on_moderation'].includes(pharmacy.status)) {
         throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found');
       }
 
-      if (input.paymentMethod === 'bank-transfer' && !hasCompleteBankDetails(pharmacy.bankDetails)) {
+      if (
+        input.paymentMethod === 'bank-transfer' &&
+        !hasCompleteBankDetails(pharmacy.bankDetails)
+      ) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
           'Bank transfer is unavailable for this pharmacy until bank details are completed.'
@@ -239,7 +231,12 @@ export async function checkoutOrderService(
           );
         }
 
-        const offer = findProductOffer(product, input.pharmacyId);
+        const offer = await ProductOffer.findOne({
+          productId: cartItem.productId,
+          pharmacyId: input.pharmacyId,
+        })
+          .session(session)
+          .lean();
 
         if (!offer) {
           throw httpError(

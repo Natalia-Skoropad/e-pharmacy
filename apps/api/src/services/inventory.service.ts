@@ -1,16 +1,14 @@
 import mongoose, { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { Product } from '../models/product.model';
+import { ProductOffer } from '../models/productOffer.model';
 import { httpError } from '../utils/httpError';
 
 //===============================================================
 
 type StockTarget = string | Types.ObjectId;
 
-function toObjectId(value: StockTarget): Types.ObjectId {
-  return value instanceof Types.ObjectId ? value : new Types.ObjectId(value);
-}
+//===============================================================
 
 function assertPositiveQuantity(quantity: number): void {
   if (!Number.isInteger(quantity) || quantity < 1) {
@@ -31,32 +29,22 @@ export async function reserveOfferStock(
 ): Promise<void> {
   assertPositiveQuantity(quantity);
 
-  const result = await Product.updateOne(
+  const result = await ProductOffer.updateOne(
     {
-      _id: productId,
-      offers: {
-        $elemMatch: {
-          pharmacyId,
-          activeQuantity: { $gte: quantity },
-          inStock: true,
-        },
-      },
+      productId,
+      pharmacyId,
+      activeQuantity: { $gte: quantity },
+      inStock: true,
     },
-    {
-      $inc: {
-        'offers.$.activeQuantity': -quantity,
-        'offers.$.reservedQuantity': quantity,
-      },
-    },
+    { $inc: { activeQuantity: -quantity, reservedQuantity: quantity } },
     { session }
   );
 
-  if (result.modifiedCount !== 1) {
+  if (result.modifiedCount !== 1)
     throw httpError(
       HTTP_STATUS.CONFLICT,
       'Product quantity is no longer available. Please refresh and try again.'
     );
-  }
 
   await syncOfferAvailability(productId, pharmacyId, session);
 }
@@ -72,35 +60,20 @@ export async function releaseOfferStock(
 ): Promise<void> {
   assertPositiveQuantity(quantity);
 
-  const result = await Product.updateOne(
-    {
-      _id: productId,
-      offers: {
-        $elemMatch: {
-          pharmacyId,
-          reservedQuantity: { $gte: quantity },
-        },
-      },
-    },
-    {
-      $inc: {
-        'offers.$.activeQuantity': quantity,
-        'offers.$.reservedQuantity': -quantity,
-      },
-    },
+  const result = await ProductOffer.updateOne(
+    { productId, pharmacyId, reservedQuantity: { $gte: quantity } },
+    { $inc: { activeQuantity: quantity, reservedQuantity: -quantity } },
     { session }
   );
 
-  if (strict && result.modifiedCount !== 1) {
+  if (strict && result.modifiedCount !== 1)
     throw httpError(
       HTTP_STATUS.CONFLICT,
       'Product reservation could not be released. Please refresh and try again.'
     );
-  }
 
-  if (result.modifiedCount === 1) {
+  if (result.modifiedCount === 1)
     await syncOfferAvailability(productId, pharmacyId, session);
-  }
 }
 
 //===============================================================
@@ -113,32 +86,22 @@ export async function commitReservedStock(
 ): Promise<void> {
   assertPositiveQuantity(quantity);
 
-  const result = await Product.updateOne(
+  const result = await ProductOffer.updateOne(
     {
-      _id: productId,
-      offers: {
-        $elemMatch: {
-          pharmacyId,
-          reservedQuantity: { $gte: quantity },
-          totalQuantity: { $gte: quantity },
-        },
-      },
+      productId,
+      pharmacyId,
+      reservedQuantity: { $gte: quantity },
+      totalQuantity: { $gte: quantity },
     },
-    {
-      $inc: {
-        'offers.$.reservedQuantity': -quantity,
-        'offers.$.totalQuantity': -quantity,
-      },
-    },
+    { $inc: { reservedQuantity: -quantity, totalQuantity: -quantity } },
     { session }
   );
 
-  if (result.modifiedCount !== 1) {
+  if (result.modifiedCount !== 1)
     throw httpError(
       HTTP_STATUS.CONFLICT,
       'Product reservation is no longer available. Please refresh and try again.'
     );
-  }
 
   await syncOfferAvailability(productId, pharmacyId, session);
 }
@@ -151,50 +114,35 @@ export async function setPharmacyOfferStock(
   nextTotalQuantity: number,
   session?: mongoose.ClientSession
 ): Promise<void> {
-  if (!Number.isInteger(nextTotalQuantity) || nextTotalQuantity < 0) {
+  if (!Number.isInteger(nextTotalQuantity) || nextTotalQuantity < 0)
     throw httpError(
       HTTP_STATUS.BAD_REQUEST,
       'Stock quantity must be a non-negative integer.'
     );
-  }
 
-  const product = await Product.findOne(
-    { _id: productId, 'offers.pharmacyId': pharmacyId },
-    { 'offers.$': 1 }
-  )
+  const offer = await ProductOffer.findOne({ productId, pharmacyId })
     .session(session ?? null)
-    .lean<{ offers?: Array<{ reservedQuantity: number }> } | null>();
-
-  const reservedQuantity = product?.offers?.[0]?.reservedQuantity;
-
-  if (reservedQuantity === undefined) {
+    .lean();
+  if (!offer)
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Product offer was not found.');
-  }
-
-  if (nextTotalQuantity < reservedQuantity) {
+  if (nextTotalQuantity < offer.reservedQuantity)
     throw httpError(
       HTTP_STATUS.CONFLICT,
       'Stock cannot be lower than the quantity already reserved in client carts.'
     );
-  }
 
-  const nextActiveQuantity = nextTotalQuantity - reservedQuantity;
-
-  const result = await Product.updateOne(
-    { _id: productId, 'offers.pharmacyId': pharmacyId },
+  const activeQuantity = nextTotalQuantity - offer.reservedQuantity;
+  await ProductOffer.updateOne(
+    { _id: offer._id },
     {
       $set: {
-        'offers.$.totalQuantity': nextTotalQuantity,
-        'offers.$.activeQuantity': nextActiveQuantity,
-        'offers.$.inStock': nextActiveQuantity > 0,
+        totalQuantity: nextTotalQuantity,
+        activeQuantity,
+        inStock: activeQuantity > 0,
       },
     },
     { session }
   );
-
-  if (result.modifiedCount !== 1) {
-    throw httpError(HTTP_STATUS.CONFLICT, 'Product stock was not updated.');
-  }
 }
 
 //===============================================================
@@ -204,22 +152,14 @@ export async function syncOfferAvailability(
   pharmacyId: StockTarget,
   session?: mongoose.ClientSession
 ): Promise<void> {
-  const productObjectId = toObjectId(productId);
-  const pharmacyObjectId = toObjectId(pharmacyId);
-
-  const product = await Product.findOne(
-    { _id: productObjectId, 'offers.pharmacyId': pharmacyObjectId },
-    { 'offers.$': 1 }
-  )
+  const offer = await ProductOffer.findOne({ productId, pharmacyId })
     .session(session ?? null)
-    .lean<{ offers?: Array<{ activeQuantity: number }> } | null>();
+    .lean();
+  if (!offer) return;
 
-  const activeQuantity = product?.offers?.[0]?.activeQuantity;
-  if (activeQuantity === undefined) return;
-
-  await Product.updateOne(
-    { _id: productObjectId, 'offers.pharmacyId': pharmacyObjectId },
-    { $set: { 'offers.$.inStock': activeQuantity > 0 } },
+  await ProductOffer.updateOne(
+    { _id: offer._id },
+    { $set: { inStock: offer.activeQuantity > 0 } },
     { session }
   );
 }

@@ -142,7 +142,7 @@ export async function moderateProductReview(
   const data = await moderateProductReviewService(productId, reviewId, {
     status: body.status,
     reason: body.reason,
-    moderatedBy: req.user?.id,
+    moderatorId: req.user?.id ?? '',
   });
 
   sendSuccessResponse({

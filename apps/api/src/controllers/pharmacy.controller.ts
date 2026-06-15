@@ -142,7 +142,7 @@ export async function moderatePharmacyReview(
   const data = await moderatePharmacyReviewService(pharmacyId, reviewId, {
     status: body.status,
     reason: body.reason,
-    moderatedBy: req.user?.id,
+    moderatorId: req.user?.id ?? '',
   });
 
   sendSuccessResponse({

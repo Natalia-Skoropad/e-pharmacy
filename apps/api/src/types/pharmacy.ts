@@ -1,34 +1,11 @@
 import type { Types } from 'mongoose';
-
 import type { PHARMACY_STATUSES } from '../constants/auth';
 
 //===============================================================
 
-export type PharmacyStatus = (typeof PHARMACY_STATUSES)[keyof typeof PHARMACY_STATUSES];
-
-//===============================================================
-
-export type ReviewModerationStatus =
-  | 'pending'
-  | 'approved'
-  | 'rejected'
-  | 'reported'
-  | 'hidden';
-
-//===============================================================
-
-export type PharmacyReviewEntity = {
-  userId?: Types.ObjectId;
-  userName: string;
-  rating: number;
-  comment: string;
-  status: ReviewModerationStatus;
-  isModerated: boolean;
-  moderationReason?: string;
-  moderatedBy?: Types.ObjectId;
-  moderatedAt?: Date;
-  createdAt: Date;
-};
+export type PharmacyStatus =
+  (typeof PHARMACY_STATUSES)[keyof typeof PHARMACY_STATUSES];
+export type ReviewModerationStatus = 'on_moderation' | 'approved' | 'rejected';
 
 //===============================================================
 
@@ -40,8 +17,6 @@ export type PharmacyBankDetails = {
   paymentPurpose: string;
 };
 
-//===============================================================
-
 export type PharmacyEntity = {
   name: string;
   address: string;
@@ -50,14 +25,14 @@ export type PharmacyEntity = {
   email?: string;
   workingHours?: string;
   bankDetails?: PharmacyBankDetails;
+  license?: string;
   status: PharmacyStatus;
   rating?: number;
   imageUrl?: string;
   description?: string;
-  isActive: boolean;
   reviewsCount?: number;
-  reviews?: PharmacyReviewEntity[];
-  ownerId?: Types.ObjectId;
+  ownerId: Types.ObjectId;
+  managerUserIds: Types.ObjectId[];
   createdBy?: Types.ObjectId;
   updatedBy?: Types.ObjectId;
   approvedBy?: Types.ObjectId;
@@ -66,14 +41,10 @@ export type PharmacyEntity = {
   updatedAt: Date;
 };
 
-//===============================================================
-
 export type PharmacyFilterOptionDto<TValue extends string = string> = {
   value: TValue;
   label: string;
 };
-
-//===============================================================
 
 export type PharmacyFilterOptionsResponseDto = {
   cities: PharmacyFilterOptionDto[];
@@ -81,8 +52,6 @@ export type PharmacyFilterOptionsResponseDto = {
     'newest' | 'rating-desc' | 'rating-asc' | 'name-asc' | 'name-desc'
   >[];
 };
-
-//===============================================================
 
 export type PharmacyResponseDto = {
   id: string;
@@ -94,18 +63,15 @@ export type PharmacyResponseDto = {
   workingHours?: string;
   bankDetails?: PharmacyBankDetails;
   bankTransferAvailable: boolean;
-  status?: PharmacyStatus;
+  status: PharmacyStatus;
   rating?: number;
   imageUrl?: string;
   description?: string;
   availableProductsCount: number;
   reviewsCount: number;
   isFavorite: boolean;
-  isActive: boolean;
   updatedAt?: string;
 };
-
-//===============================================================
 
 export type PharmacyReviewResponseDto = {
   id: string;

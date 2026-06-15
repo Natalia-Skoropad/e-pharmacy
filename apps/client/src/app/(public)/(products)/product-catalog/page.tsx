@@ -71,7 +71,9 @@ async function ProductCatalogPage({ searchParams }: ProductCatalogPageProps) {
   ]);
 
   const activePharmacies = sortPharmaciesByName(
-    pharmaciesData?.items.filter((pharmacy) => pharmacy.isActive) ?? []
+    pharmaciesData?.items.filter((pharmacy) =>
+      pharmacy.status === 'active' || pharmacy.status === 'on_moderation'
+    ) ?? []
   );
 
   return (

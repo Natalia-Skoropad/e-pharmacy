@@ -4,6 +4,8 @@ import type { ReviewModerationStatus } from '../reviews';
 
 //=============================================================================
 
+export type ProductStatus = 'new' | 'active' | 'blocked';
+
 export type ProductCategory =
   | 'medicine'
   | 'vitamins'
@@ -15,6 +17,7 @@ export type ProductCategory =
 //=============================================================================
 
 export type ProductOffer = {
+  id: EntityId;
   pharmacyId: EntityId;
   pharmacyName: string;
   pharmacyCity?: string;
@@ -38,6 +41,7 @@ export type Product = {
   article: string;
   description?: string;
   category: ProductCategory;
+  status: ProductStatus;
   price: number;
   imageUrl?: string;
   manufacturer?: string;

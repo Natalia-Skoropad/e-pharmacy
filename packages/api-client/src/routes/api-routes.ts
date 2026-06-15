@@ -1,5 +1,4 @@
 import { createBffRoutePair } from './bff-routes';
-
 import type { EntityId } from '@e-pharmacy/types';
 
 //===================================================================
@@ -66,12 +65,13 @@ export const apiRoutes = {
     product: (pharmacyId: EntityId, productId: EntityId) =>
       `/pharmacy/${pharmacyId}/products/${productId}`,
     statistics: (pharmacyId: EntityId) => `/pharmacy/${pharmacyId}/statistics`,
-    clientGoods: (pharmacyId: EntityId) => `/pharmacy/${pharmacyId}/client-goods`,
+    clientGoods: (pharmacyId: EntityId) =>
+      `/pharmacy/${pharmacyId}/client-goods`,
   },
 
   admin: {
     pharmacies: '/admin/pharmacies',
-    pharmacyStatus: (pharmacyId: EntityId) =>
+    updatePharmacyStatus: (pharmacyId: EntityId) =>
       `/admin/pharmacies/${pharmacyId}/status`,
   },
 } as const;
@@ -98,7 +98,8 @@ export const clientApiRoutes = {
     filters: '/api/pharmacies/filters',
     details: (pharmacyId: EntityId) => `/api/pharmacies/${pharmacyId}`,
     reviews: (pharmacyId: EntityId) => `/api/pharmacies/${pharmacyId}/reviews`,
-    favorite: (pharmacyId: EntityId) => `/api/pharmacies/${pharmacyId}/favorite`,
+    favorite: (pharmacyId: EntityId) =>
+      `/api/pharmacies/${pharmacyId}/favorite`,
   },
 
   products: {

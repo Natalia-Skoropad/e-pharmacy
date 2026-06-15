@@ -12,45 +12,8 @@ export type ProductCategory =
 
 //===============================================================
 
-export type ReviewModerationStatus =
-  | 'pending'
-  | 'approved'
-  | 'rejected'
-  | 'reported'
-  | 'hidden';
-
-//===============================================================
-
-export type ProductReviewEntity = {
-  userId?: Types.ObjectId;
-  userName: string;
-  rating: number;
-  comment: string;
-  status: ReviewModerationStatus;
-  isModerated: boolean;
-  moderationReason?: string;
-  moderatedBy?: Types.ObjectId;
-  moderatedAt?: Date;
-  createdAt: Date;
-};
-
-//===============================================================
-
-export type ProductOfferEntity = {
-  pharmacyId: Types.ObjectId;
-  pharmacyName: string;
-  pharmacyCity?: string;
-  pharmacyAddress?: string;
-  pharmacyPhone?: string;
-  pharmacyImageUrl?: string;
-  pharmacyRating?: number;
-  pharmacyReviewsCount?: number;
-  price: number;
-  totalQuantity: number;
-  activeQuantity: number;
-  reservedQuantity: number;
-  inStock: boolean;
-};
+export type ProductStatus = 'new' | 'active' | 'blocked';
+export type ReviewModerationStatus = 'on_moderation' | 'approved' | 'rejected';
 
 //===============================================================
 
@@ -60,6 +23,7 @@ export type ProductEntity = {
   article: string;
   description?: string;
   category: ProductCategory;
+  status: ProductStatus;
   price?: number;
   imageUrl?: string;
   manufacturer?: string;
@@ -67,20 +31,30 @@ export type ProductEntity = {
   packageQuantity?: string;
   pharmacyId?: Types.ObjectId;
   pharmacyName?: string;
-  offers: ProductOfferEntity[];
   inStock: boolean;
   rating?: number;
   reviewsCount?: number;
-  reviews: ProductReviewEntity[];
   createdBy?: Types.ObjectId;
   updatedBy?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 };
 
-//===============================================================
+export type ProductOfferEntity = {
+  _id: Types.ObjectId;
+  productId: Types.ObjectId;
+  pharmacyId: Types.ObjectId;
+  price: number;
+  totalQuantity: number;
+  activeQuantity: number;
+  reservedQuantity: number;
+  inStock: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export type ProductOfferResponseDto = {
+  id: string;
   pharmacyId: string;
   pharmacyName: string;
   pharmacyCity?: string;
@@ -97,8 +71,6 @@ export type ProductOfferResponseDto = {
   inStock: boolean;
 };
 
-//===============================================================
-
 export type ProductResponseDto = {
   id: string;
   name: string;
@@ -106,6 +78,7 @@ export type ProductResponseDto = {
   article: string;
   description?: string;
   category: ProductCategory;
+  status: ProductStatus;
   price: number;
   imageUrl?: string;
   manufacturer?: string;
@@ -122,14 +95,10 @@ export type ProductResponseDto = {
   updatedAt?: string;
 };
 
-//===============================================================
-
 export type ProductFilterOptionDto<TValue extends string = string> = {
   value: TValue;
   label: string;
 };
-
-//===============================================================
 
 export type ProductFilterOptionsResponseDto = {
   categories: ProductFilterOptionDto<'all' | ProductCategory>[];
@@ -144,8 +113,6 @@ export type ProductFilterOptionsResponseDto = {
     | 'newest'
   >[];
 };
-
-//===============================================================
 
 export type ProductReviewResponseDto = {
   id: string;

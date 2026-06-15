@@ -1,23 +1,30 @@
 import { Types } from 'mongoose';
 
-import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { API_MESSAGES } from '../constants/messages';
+import { Client } from '../models/client.model';
+import { Pharmacy } from '../models/pharmacy.model';
 import { Product } from '../models/product.model';
-import { User } from '../models/user.model';
-import { httpError } from '../utils/httpError';
-import { createSafeRegExp } from '../utils/regexp';
+import { ProductOffer } from '../models/productOffer.model';
+import { ProductReview } from '../models/productReview.model';
 
 import type {
   ProductCategory,
   ProductFilterOptionsResponseDto,
-  ProductOfferEntity,
+  ProductEntity,
   ProductOfferResponseDto,
   ProductResponseDto,
   ProductReviewResponseDto,
   ReviewModerationStatus,
 } from '../types/product';
 
+import { httpError } from '../utils/httpError';
+import { createSafeRegExp } from '../utils/regexp';
+
 //===============================================================
+
+type ProductDocument = ProductEntity & { _id: Types.ObjectId };
+type ClientFavoritesDocument = { favoriteProductIds: Types.ObjectId[] };
 
 type ProductsQuery = {
   page: number;
@@ -47,30 +54,9 @@ type CreateReviewInput = {
   comment: string;
 };
 
-//===============================================================
+type PendingReviewsQuery = { page: number; perPage: number };
 
-type FavoriteUserDocument = {
-  favoriteProductIds?: Array<Types.ObjectId | string>;
-  favoritePharmacyIds?: Array<Types.ObjectId | string>;
-};
-
-//===============================================================
-
-type ProductReviewDocument = {
-  _id: Types.ObjectId;
-  userId?: Types.ObjectId;
-  userName: string;
-  rating: number;
-  comment: string;
-  status?: ReviewModerationStatus;
-  isModerated: boolean;
-  moderationReason?: string;
-  moderatedBy?: Types.ObjectId;
-  moderatedAt?: Date;
-  createdAt: Date;
-};
-
-type PendingProductReviewResponseDto = {
+type PendingReviewDto = {
   productId: string;
   productName: string;
   reviewId: string;
@@ -79,36 +65,6 @@ type PendingProductReviewResponseDto = {
   comment: string;
   status: ReviewModerationStatus;
   createdAt: string;
-};
-
-type PendingReviewsQuery = {
-  page: number;
-  perPage: number;
-};
-
-//===============================================================
-
-type ProductDocument = {
-  _id: Types.ObjectId;
-  name: string;
-  slug?: string;
-  article?: string;
-  description?: string;
-  category: ProductCategory;
-  price?: number;
-  imageUrl?: string;
-  manufacturer?: string;
-  dosage?: string;
-  packageQuantity?: string;
-  pharmacyId?: Types.ObjectId;
-  pharmacyName?: string;
-  offers?: ProductOfferEntity[];
-  inStock: boolean;
-  rating?: number;
-  reviewsCount?: number;
-  reviews?: ProductReviewDocument[];
-  createdAt: Date;
-  updatedAt: Date;
 };
 
 //===============================================================
@@ -122,315 +78,138 @@ const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
   other: 'Other',
 };
 
-const PRODUCT_FILTER_BASE_OPTIONS: Omit<
-  ProductFilterOptionsResponseDto,
-  'categories'
-> = {
-  availability: [
-    { value: 'all', label: 'All products' },
-    { value: 'in-stock', label: 'Available in pharmacies' },
-    { value: 'out-of-stock', label: 'Not available in pharmacies' },
-  ],
-  sort: [
-    { value: 'newest', label: 'Newest first' },
-    { value: 'rating-desc', label: 'Rating: highest first' },
-    { value: 'rating-asc', label: 'Rating: lowest first' },
-    { value: 'name-asc', label: 'Name: A to Z' },
-    { value: 'name-desc', label: 'Name: Z to A' },
-  ],
-};
-
 //===============================================================
 
-type ProductSortOption = Record<string, 1 | -1>;
+async function getClientFavorites(userId?: string) {
+  if (!userId)
+    return { products: new Set<string>(), pharmacies: new Set<string>() };
 
-//===============================================================
-
-function serializeOffer(
-  offer: ProductOfferEntity,
-  favoritePharmacyIds = new Set<string>()
-): ProductOfferResponseDto {
-  const pharmacyId = offer.pharmacyId.toString();
+  const client = await Client.findOne({ userId }).lean<{
+    favoriteProductIds?: Types.ObjectId[];
+    favoritePharmacyIds?: Types.ObjectId[];
+  } | null>();
 
   return {
-    pharmacyId,
-    pharmacyName: offer.pharmacyName,
-    ...(offer.pharmacyCity ? { pharmacyCity: offer.pharmacyCity } : {}),
-    ...(offer.pharmacyAddress ? { pharmacyAddress: offer.pharmacyAddress } : {}),
-    ...(offer.pharmacyPhone ? { pharmacyPhone: offer.pharmacyPhone } : {}),
-    ...(offer.pharmacyImageUrl ? { pharmacyImageUrl: offer.pharmacyImageUrl } : {}),
-    ...(typeof offer.pharmacyRating === 'number'
-      ? { pharmacyRating: offer.pharmacyRating }
-      : {}),
-    ...(typeof offer.pharmacyReviewsCount === 'number'
-      ? { pharmacyReviewsCount: offer.pharmacyReviewsCount }
-      : {}),
-    pharmacyIsFavorite: favoritePharmacyIds.has(pharmacyId),
-    price: offer.price,
-    totalQuantity: offer.totalQuantity,
-    activeQuantity: offer.activeQuantity,
-    reservedQuantity: offer.reservedQuantity,
-    inStock: offer.inStock && offer.activeQuantity > 0,
+    products: new Set((client?.favoriteProductIds ?? []).map(String)),
+    pharmacies: new Set((client?.favoritePharmacyIds ?? []).map(String)),
   };
 }
 
 //===============================================================
 
-function getLegacyOffer(
-  product: ProductDocument
-): ProductOfferResponseDto | null {
-  if (!product.pharmacyId || typeof product.price !== 'number') return null;
-
-  return {
-    pharmacyId: product.pharmacyId.toString(),
-    pharmacyName: product.pharmacyName ?? 'Pharmacy',
-    price: product.price,
-    totalQuantity: product.inStock ? 100 : 0,
-    activeQuantity: product.inStock ? 100 : 0,
-    reservedQuantity: 0,
-    inStock: product.inStock,
-  };
-}
-
-//===============================================================
-
-function getOffers(
-  product: ProductDocument,
+async function getOffersByProductIds(
+  productIds: Types.ObjectId[],
   favoritePharmacyIds = new Set<string>()
-): ProductOfferResponseDto[] {
-  const serializedOffers = (product.offers ?? []).map((offer) =>
-    serializeOffer(offer, favoritePharmacyIds)
+) {
+  const offers = await ProductOffer.find({
+    productId: { $in: productIds },
+  }).lean();
+  const pharmacyIds = [
+    ...new Set(offers.map((offer) => String(offer.pharmacyId))),
+  ];
+  const pharmacies = await Pharmacy.find({
+    _id: { $in: pharmacyIds },
+    status: { $in: ['active', 'on_moderation'] },
+  }).lean();
+  const pharmacyMap = new Map(
+    pharmacies.map((pharmacy) => [String(pharmacy._id), pharmacy])
   );
+  const result = new Map<string, ProductOfferResponseDto[]>();
 
-  if (serializedOffers.length > 0) return serializedOffers;
-
-  const legacyOffer = getLegacyOffer(product);
-
-  return legacyOffer ? [legacyOffer] : [];
-}
-
-//===============================================================
-
-function getMinPrice(product: ProductDocument): number {
-  const offers = getOffers(product).filter((offer) => offer.inStock);
-
-  if (offers.length > 0) {
-    return Math.min(...offers.map((offer) => offer.price));
+  for (const offer of offers) {
+    const pharmacy = pharmacyMap.get(String(offer.pharmacyId));
+    if (!pharmacy) continue;
+    const item: ProductOfferResponseDto = {
+      id: String(offer._id),
+      pharmacyId: String(pharmacy._id),
+      pharmacyName: pharmacy.name,
+      ...(pharmacy.city ? { pharmacyCity: pharmacy.city } : {}),
+      ...(pharmacy.address ? { pharmacyAddress: pharmacy.address } : {}),
+      ...(pharmacy.phone ? { pharmacyPhone: pharmacy.phone } : {}),
+      ...(pharmacy.imageUrl ? { pharmacyImageUrl: pharmacy.imageUrl } : {}),
+      pharmacyRating: pharmacy.rating ?? 0,
+      pharmacyReviewsCount: pharmacy.reviewsCount ?? 0,
+      pharmacyIsFavorite: favoritePharmacyIds.has(String(pharmacy._id)),
+      price: offer.price,
+      totalQuantity: offer.totalQuantity,
+      activeQuantity: offer.activeQuantity,
+      reservedQuantity: offer.reservedQuantity,
+      inStock: offer.inStock && offer.activeQuantity > 0,
+    };
+    const key = String(offer.productId);
+    result.set(key, [...(result.get(key) ?? []), item]);
   }
-
-  return product.price ?? 0;
-}
-
-//===============================================================
-
-async function getFavoriteProductIds(userId?: string): Promise<Set<string>> {
-  if (!userId) return new Set();
-
-  const user = await User.findById(userId)
-    .select('favoriteProductIds')
-    .lean<FavoriteUserDocument | null>();
-
-  const favoriteProductIds = user?.favoriteProductIds ?? [];
-
-  return new Set(favoriteProductIds.map((id) => id.toString()));
-}
-
-async function getFavoritePharmacyIds(userId?: string): Promise<Set<string>> {
-  if (!userId) return new Set();
-
-  const user = await User.findById(userId)
-    .select('favoritePharmacyIds')
-    .lean<FavoriteUserDocument | null>();
-
-  const favoritePharmacyIds = user?.favoritePharmacyIds ?? [];
-
-  return new Set(favoritePharmacyIds.map((id) => id.toString()));
-}
-
-//===============================================================
-
-function getModeratedReviews(
-  product: ProductDocument
-): ProductReviewDocument[] {
-  return (product.reviews ?? []).filter(
-    (review: ProductReviewDocument) =>
-      review.status === 'approved' || review.isModerated
-  );
-}
-
-//===============================================================
-
-function getAverageRating(reviews: ProductReviewDocument[]): number | null {
-  if (reviews.length === 0) return null;
-
-  const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-
-  return Number((totalRating / reviews.length).toFixed(1));
+  return result;
 }
 
 //===============================================================
 
 function serializeProduct(
   product: ProductDocument,
-  favoriteProductIds = new Set<string>(),
-  favoritePharmacyIds = new Set<string>()
+  offers: ProductOfferResponseDto[],
+  favoriteIds: Set<string>
 ): ProductResponseDto {
-  const offers = getOffers(product, favoritePharmacyIds);
-  const availableOffers = offers.filter((offer) => offer.inStock);
-  const productId = product._id.toString();
-  const firstOffer = availableOffers[0];
-
-  const moderatedReviews = getModeratedReviews(product);
-  const averageRating = getAverageRating(moderatedReviews);
-
+  const available = offers.filter((offer) => offer.inStock);
+  const first = available[0] ?? offers[0];
+  const minPrice = available.length
+    ? Math.min(...available.map((offer) => offer.price))
+    : (product.price ?? 0);
   return {
-    id: productId,
+    id: String(product._id),
     name: product.name,
     ...(product.slug ? { slug: product.slug } : {}),
-    article: product.article ?? `ART-${productId.slice(-6).toUpperCase()}`,
+    article: product.article ?? '',
     ...(product.description ? { description: product.description } : {}),
     category: product.category,
-    price: getMinPrice(product),
+    status: product.status,
+    price: minPrice,
     ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
     ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
     ...(product.dosage ? { dosage: product.dosage } : {}),
     ...(product.packageQuantity
       ? { packageQuantity: product.packageQuantity }
       : {}),
-    ...(firstOffer ? { pharmacyId: firstOffer.pharmacyId } : {}),
-    ...(firstOffer ? { pharmacyName: firstOffer.pharmacyName } : {}),
-    foundInPharmaciesCount: availableOffers.length,
-    offers: availableOffers,
-    inStock: availableOffers.length > 0,
-    ...(averageRating !== null ? { rating: averageRating } : {}),
-    reviewsCount: moderatedReviews.length,
-    isFavorite: favoriteProductIds.has(productId),
-    updatedAt: product.updatedAt.toISOString(),
+    ...(first
+      ? { pharmacyId: first.pharmacyId, pharmacyName: first.pharmacyName }
+      : {}),
+    foundInPharmaciesCount: offers.length,
+    offers,
+    inStock: available.length > 0,
+    rating: product.rating ?? 0,
+    reviewsCount: product.reviewsCount ?? 0,
+    isFavorite: favoriteIds.has(String(product._id)),
+    updatedAt:
+      product.updatedAt?.toISOString?.() ?? String(product.updatedAt ?? ''),
   };
-}
-
-//===============================================================
-
-function serializeReview(
-  review: ProductReviewDocument
-): ProductReviewResponseDto {
-  return {
-    id: review._id.toString(),
-    userName: review.userName,
-    rating: review.rating,
-    comment: review.comment,
-    createdAt: review.createdAt.toISOString(),
-  };
-}
-
-function isPendingReview(review: ProductReviewDocument): boolean {
-  return review.status === 'pending' || (!review.status && !review.isModerated);
-}
-
-function serializePendingProductReview(
-  product: Pick<ProductDocument, '_id' | 'name'>,
-  review: ProductReviewDocument
-): PendingProductReviewResponseDto {
-  return {
-    productId: product._id.toString(),
-    productName: product.name,
-    reviewId: review._id.toString(),
-    userName: review.userName,
-    rating: review.rating,
-    comment: review.comment,
-    status: review.status ?? 'pending',
-    createdAt: review.createdAt.toISOString(),
-  };
-}
-
-//===============================================================
-
-function getSort(sort?: ProductsQuery['sort']): ProductSortOption {
-  switch (sort) {
-    case 'price-asc':
-      return { price: 1 };
-
-    case 'price-desc':
-      return { price: -1 };
-
-    case 'rating-desc':
-      return { rating: -1, reviewsCount: -1 };
-
-    case 'rating-asc':
-      return { rating: 1, reviewsCount: 1 };
-
-    case 'name-asc':
-      return { name: 1 };
-
-    case 'name-desc':
-      return { name: -1 };
-
-    case 'newest':
-    default:
-      return { createdAt: -1 };
-  }
-}
-
-//===============================================================
-
-function sortSerializedProducts(
-  products: ProductResponseDto[],
-  sort?: ProductsQuery['sort']
-): ProductResponseDto[] {
-  const sortedProducts = [...products];
-
-  switch (sort) {
-    case 'rating-desc':
-      return sortedProducts.sort((a, b) => {
-        const ratingDiff = (b.rating ?? 0) - (a.rating ?? 0);
-
-        return ratingDiff || (b.reviewsCount ?? 0) - (a.reviewsCount ?? 0);
-      });
-
-    case 'rating-asc':
-      return sortedProducts.sort((a, b) => {
-        const ratingDiff = (a.rating ?? 0) - (b.rating ?? 0);
-
-        return ratingDiff || (a.reviewsCount ?? 0) - (b.reviewsCount ?? 0);
-      });
-
-    case 'name-asc':
-      return sortedProducts.sort((a, b) => a.name.localeCompare(b.name, 'en'));
-
-    case 'name-desc':
-      return sortedProducts.sort((a, b) => b.name.localeCompare(a.name, 'en'));
-
-    case 'price-asc':
-      return sortedProducts.sort((a, b) => a.price - b.price);
-
-    case 'price-desc':
-      return sortedProducts.sort((a, b) => b.price - a.price);
-
-    case 'newest':
-    default:
-      return sortedProducts;
-  }
 }
 
 //===============================================================
 
 export async function getProductFiltersService(): Promise<ProductFilterOptionsResponseDto> {
-  const categories = (await Product.distinct('category')) as ProductCategory[];
-  const activeCategories = categories
-    .filter((category) => category in PRODUCT_CATEGORY_LABELS)
-    .sort((a, b) =>
-      PRODUCT_CATEGORY_LABELS[a].localeCompare(PRODUCT_CATEGORY_LABELS[b], 'en')
-    );
-
   return {
     categories: [
       { value: 'all', label: 'All categories' },
-      ...activeCategories.map((category) => ({
-        value: category,
-        label: PRODUCT_CATEGORY_LABELS[category],
+      ...Object.entries(PRODUCT_CATEGORY_LABELS).map(([value, label]) => ({
+        value: value as ProductCategory,
+        label,
       })),
     ],
-    ...PRODUCT_FILTER_BASE_OPTIONS,
+
+    availability: [
+      { value: 'all', label: 'All products' },
+      { value: 'in-stock', label: 'Available in pharmacies' },
+      { value: 'out-of-stock', label: 'Not available in pharmacies' },
+    ],
+
+    sort: [
+      { value: 'newest', label: 'Newest first' },
+      { value: 'price-asc', label: 'Price: low to high' },
+      { value: 'price-desc', label: 'Price: high to low' },
+      { value: 'rating-desc', label: 'Rating: highest first' },
+      { value: 'rating-asc', label: 'Rating: lowest first' },
+      { value: 'name-asc', label: 'Name: A to Z' },
+      { value: 'name-desc', label: 'Name: Z to A' },
+    ],
   };
 }
 
@@ -440,123 +219,76 @@ export async function getProductsService(
   query: ProductsQuery,
   userId?: string
 ) {
-  const {
-    page,
-    perPage,
-    keyword,
-    nameKeyword,
-    articleKeyword,
-    category,
-    pharmacyId,
-    minPrice,
-    maxPrice,
-    inStock,
-    sort,
-  } = query;
+  const filter: Record<string, unknown> = { status: 'active' };
+  const keyword = query.keyword?.trim();
+  if (keyword)
+    filter.$or = [
+      { name: createSafeRegExp(keyword) },
+      { article: createSafeRegExp(keyword) },
+      { description: createSafeRegExp(keyword) },
+    ];
 
-  const andFilters: Record<string, unknown>[] = [];
+  if (query.nameKeyword) filter.name = createSafeRegExp(query.nameKeyword);
+  if (query.articleKeyword)
+    filter.article = createSafeRegExp(query.articleKeyword);
+  if (query.category) filter.category = query.category;
 
-  if (keyword) {
-    andFilters.push({
-      $or: [
-        { name: createSafeRegExp(keyword) },
-        { description: createSafeRegExp(keyword) },
-        { manufacturer: createSafeRegExp(keyword) },
-        { article: createSafeRegExp(keyword) },
-      ],
-    });
+  let allowedProductIds: Types.ObjectId[] | undefined;
+  const offerFilter: Record<string, unknown> = {};
+  if (query.pharmacyId) offerFilter.pharmacyId = query.pharmacyId;
+  if (
+    typeof query.minPrice === 'number' ||
+    typeof query.maxPrice === 'number'
+  ) {
+    offerFilter.price = {
+      ...(typeof query.minPrice === 'number' ? { $gte: query.minPrice } : {}),
+      ...(typeof query.maxPrice === 'number' ? { $lte: query.maxPrice } : {}),
+    };
   }
 
-  if (nameKeyword) {
-    andFilters.push({ name: createSafeRegExp(nameKeyword) });
+  if (query.inStock === true) offerFilter.inStock = true;
+  if (query.inStock === false) offerFilter.inStock = false;
+  if (Object.keys(offerFilter).length) {
+    allowedProductIds = await ProductOffer.distinct('productId', offerFilter);
+    filter._id = { $in: allowedProductIds };
   }
 
-  if (articleKeyword) {
-    andFilters.push({ article: createSafeRegExp(articleKeyword) });
-  }
+  const sort: Record<string, 1 | -1> =
+    query.sort === 'name-asc'
+      ? { name: 1 }
+      : query.sort === 'name-desc'
+        ? { name: -1 }
+        : query.sort === 'rating-asc'
+          ? { rating: 1 }
+          : query.sort === 'rating-desc'
+            ? { rating: -1 }
+            : { createdAt: -1 };
+  const skip = (query.page - 1) * query.perPage;
 
-  if (category) {
-    andFilters.push({ category });
-  }
+  const [products, total, favorites] = await Promise.all([
+    Product.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
+    Product.countDocuments(filter),
+    getClientFavorites(userId),
+  ]);
 
-  if (pharmacyId) {
-    const pharmacyObjectId = new Types.ObjectId(pharmacyId);
-
-    andFilters.push({
-      $or: [
-        { pharmacyId: pharmacyObjectId, inStock: true },
-        {
-          offers: {
-            $elemMatch: {
-              pharmacyId: pharmacyObjectId,
-              inStock: true,
-              activeQuantity: { $gt: 0 },
-            },
-          },
-        },
-      ],
-    });
-  }
-
-  if (typeof minPrice === 'number' || typeof maxPrice === 'number') {
-    andFilters.push({
-      price: {
-        ...(typeof minPrice === 'number' ? { $gte: minPrice } : {}),
-        ...(typeof maxPrice === 'number' ? { $lte: maxPrice } : {}),
-      },
-    });
-  }
-
-  const availableProductFilter = {
-    $or: [
-      {
-        offers: {
-          $elemMatch: {
-            inStock: true,
-            activeQuantity: { $gt: 0 },
-          },
-        },
-      },
-      {
-        $and: [
-          { pharmacyId: { $exists: true, $ne: null } },
-          { inStock: true },
-        ],
-      },
-    ],
-  };
-
-  if (typeof inStock === 'boolean') {
-    andFilters.push(
-      inStock ? availableProductFilter : { $nor: [availableProductFilter] }
-    );
-  }
-
-  const filter = andFilters.length > 0 ? { $and: andFilters } : {};
-  const skip = (page - 1) * perPage;
-
-  const [products, total, favoriteProductIds, favoritePharmacyIds] =
-    await Promise.all([
-      Product.find(filter)
-        .sort(getSort(sort))
-        .skip(skip)
-        .limit(perPage)
-        .lean<ProductDocument[]>(),
-      Product.countDocuments(filter),
-      getFavoriteProductIds(userId),
-      getFavoritePharmacyIds(userId),
-    ]);
-
-  const serializedProducts = products.map((product: ProductDocument) =>
-    serializeProduct(product, favoriteProductIds, favoritePharmacyIds)
+  const offerMap = await getOffersByProductIds(
+    products.map((p) => p._id),
+    favorites.pharmacies
   );
 
+  const items = products.map((p) =>
+    serializeProduct(p, offerMap.get(String(p._id)) ?? [], favorites.products)
+  );
+
+  if (query.sort === 'price-asc') items.sort((a, b) => a.price - b.price);
+  if (query.sort === 'price-desc') items.sort((a, b) => b.price - a.price);
+
   return {
-    items: sortSerializedProducts(serializedProducts, sort),
+    items,
+    page: query.page,
+    perPage: query.perPage,
     total,
-    page,
-    perPage,
-    totalPages: Math.ceil(total / perPage),
+    totalPages: Math.ceil(total / query.perPage),
   };
 }
 
@@ -566,50 +298,48 @@ export async function getProductDetailsService(
   productId: string,
   userId?: string
 ) {
-  const [product, favoriteProductIds, favoritePharmacyIds] = await Promise.all([
-    Product.findById(productId).lean<ProductDocument | null>(),
-    getFavoriteProductIds(userId),
-    getFavoritePharmacyIds(userId),
-  ]);
-
-  if (!product) {
+  const product = await Product.findOne({
+    _id: productId,
+    status: 'active',
+  }).lean();
+  if (!product)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
-  }
+  const favorites = await getClientFavorites(userId);
+
+  const offerMap = await getOffersByProductIds(
+    [product._id],
+    favorites.pharmacies
+  );
 
   return {
-    product: serializeProduct(product, favoriteProductIds, favoritePharmacyIds),
+    product: serializeProduct(
+      product,
+      offerMap.get(String(product._id)) ?? [],
+      favorites.products
+    ),
   };
 }
 
 //===============================================================
 
 export async function getProductReviewsService(productId: string) {
-  const product = await Product.findById(productId)
-    .select('reviews')
-    .lean<ProductDocument | null>();
-
-  if (!product) {
+  const exists = await Product.exists({ _id: productId, status: 'active' });
+  if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
-  }
 
-  const reviews = (product.reviews ?? [])
-    .filter(
-      (review: ProductReviewDocument) =>
-        review.status === 'approved' || review.isModerated
-    )
-    .sort((a: ProductReviewDocument, b: ProductReviewDocument) => {
-      const aTime = (a.moderatedAt ?? a.createdAt).getTime();
-      const bTime = (b.moderatedAt ?? b.createdAt).getTime();
+  const reviews = await ProductReview.find({ productId, status: 'approved' })
+    .sort({ createdAt: -1 })
+    .lean();
 
-      return bTime - aTime;
-    });
+  const items: ProductReviewResponseDto[] = reviews.map((review) => ({
+    id: String(review._id),
+    userName: review.userName,
+    rating: review.rating,
+    comment: review.comment,
+    createdAt: review.createdAt.toISOString(),
+  }));
 
-  return {
-    items: reviews.map((review: ProductReviewDocument) =>
-      serializeReview(review)
-    ),
-    total: reviews.length,
-  };
+  return { items, total: items.length };
 }
 
 //===============================================================
@@ -618,32 +348,19 @@ export async function createProductReviewService(
   productId: string,
   input: CreateReviewInput
 ) {
-  const product = await Product.findById(productId).select('_id');
-
-  if (!product) {
+  const exists = await Product.exists({ _id: productId, status: 'active' });
+  if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
-  }
 
-  await Product.updateOne(
-    { _id: productId },
-    {
-      $push: {
-        reviews: {
-          userId: input.userId,
-          userName: input.userName,
-          rating: input.rating,
-          comment: input.comment,
-          status: 'pending',
-          isModerated: false,
-          createdAt: new Date(),
-        },
-      },
-    }
-  );
-
-  return {
-    message: 'Review was accepted and will be visible after moderation.',
-  };
+  await ProductReview.create({
+    productId,
+    userId: input.userId,
+    userName: input.userName,
+    rating: input.rating,
+    comment: input.comment,
+    status: 'on_moderation',
+  });
+  return { message: 'Product review was submitted for moderation.' };
 }
 
 //===============================================================
@@ -652,82 +369,74 @@ export async function toggleFavoriteProductService(
   productId: string,
   userId: string
 ) {
-  const product = await Product.exists({ _id: productId });
-
-  if (!product) {
+  const exists = await Product.exists({ _id: productId, status: 'active' });
+  if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
-  }
 
-  const user = await User.findById(userId)
-    .select('favoriteProductIds')
-    .lean<FavoriteUserDocument | null>();
+  const client = (await Client.findOneAndUpdate(
+    { userId },
+    { $setOnInsert: { userId } },
+    { upsert: true, returnDocument: 'after' }
+  )) as ClientFavoritesDocument;
 
-  if (!user) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.USER_NOT_FOUND);
-  }
-
-  const favoriteIds = (user.favoriteProductIds ?? []).map((id) =>
-    id.toString()
+  const isFavorite = client.favoriteProductIds.some(
+    (id) => String(id) === productId
   );
 
-  const isFavorite = favoriteIds.includes(productId);
-
-  if (isFavorite) {
-    await User.updateOne(
-      { _id: userId },
-      { $pull: { favoriteProductIds: productId } }
-    );
-
-    return {
-      isFavorite: false,
-      message: 'Product was removed from favorites.',
-    };
-  }
-
-  await User.updateOne(
-    { _id: userId },
-    { $addToSet: { favoriteProductIds: productId } }
+  await Client.updateOne(
+    { userId },
+    isFavorite
+      ? { $pull: { favoriteProductIds: productId } }
+      : { $addToSet: { favoriteProductIds: productId } }
   );
 
   return {
-    isFavorite: true,
-    message: 'Product was added to favorites.',
+    isFavorite: !isFavorite,
+    message: isFavorite
+      ? 'Product was removed from favorites.'
+      : 'Product was added to favorites.',
   };
 }
 
-
 //===============================================================
-
 
 export async function getPendingProductReviewsService(
   query: PendingReviewsQuery
 ) {
+  const skip = (query.page - 1) * query.perPage;
+  const [reviews, total] = await Promise.all([
+    ProductReview.find({ status: 'on_moderation' })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(query.perPage)
+      .lean(),
+    ProductReview.countDocuments({ status: 'on_moderation' }),
+  ]);
+
   const products = await Product.find({
-    reviews: { $elemMatch: { $or: [{ status: 'pending' }, { status: { $exists: false }, isModerated: false }] } },
+    _id: { $in: reviews.map((r) => r.productId) },
   })
-    .select('name reviews')
-    .lean<ProductDocument[]>();
+    .select('name')
+    .lean();
 
-  const pendingReviews = products
-    .flatMap((product) =>
-      (product.reviews ?? [])
-        .filter(isPendingReview)
-        .map((review) => serializePendingProductReview(product, review))
-    )
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-
-  const start = (query.page - 1) * query.perPage;
-  const items = pendingReviews.slice(start, start + query.perPage);
+  const names = new Map(products.map((p) => [String(p._id), p.name]));
+  const items: PendingReviewDto[] = reviews.map((review) => ({
+    productId: String(review.productId),
+    productName: names.get(String(review.productId)) ?? 'Product',
+    reviewId: String(review._id),
+    userName: review.userName,
+    rating: review.rating,
+    comment: review.comment,
+    status: review.status,
+    createdAt: review.createdAt.toISOString(),
+  }));
 
   return {
     items,
     page: query.page,
     perPage: query.perPage,
-    total: pendingReviews.length,
-    totalPages: Math.ceil(pendingReviews.length / query.perPage),
+    total,
+    totalPages: Math.ceil(total / query.perPage),
   };
 }
 
@@ -737,50 +446,42 @@ export async function moderateProductReviewService(
   productId: string,
   reviewId: string,
   input: {
-    status: Extract<ReviewModerationStatus, 'approved' | 'rejected'>;
+    status: 'approved' | 'rejected';
     reason?: string;
-    moderatedBy?: string;
+    moderatorId: string;
   }
 ) {
-  const moderatedAt = new Date();
-  const updateResult = await Product.updateOne(
-    { _id: productId, 'reviews._id': reviewId },
+  const review = await ProductReview.findOneAndUpdate(
+    { _id: reviewId, productId },
     {
       $set: {
-        'reviews.$.status': input.status,
-        'reviews.$.isModerated': input.status === 'approved',
-        'reviews.$.moderationReason': input.reason,
-        'reviews.$.moderatedBy': input.moderatedBy
-          ? new Types.ObjectId(input.moderatedBy)
-          : undefined,
-        'reviews.$.moderatedAt': moderatedAt,
+        status: input.status,
+        moderationReason: input.reason,
+        moderatedBy: input.moderatorId,
+        moderatedAt: new Date(),
       },
-    }
+    },
+    { returnDocument: 'after' }
   );
 
-  if (updateResult.matchedCount === 0) {
+  if (!review)
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Product review was not found.');
-  }
 
-  const product = await Product.findById(productId)
-    .select('reviews')
-    .lean<ProductDocument | null>();
+  const approved = await ProductReview.find({ productId, status: 'approved' })
+    .select('rating')
+    .lean();
 
-  if (!product) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
-  }
-
-  const moderatedReviews = getModeratedReviews(product);
-  const averageRating = getAverageRating(moderatedReviews) ?? 0;
+  const rating = approved.length
+    ? Number(
+        (
+          approved.reduce((sum, item) => sum + item.rating, 0) / approved.length
+        ).toFixed(1)
+      )
+    : 0;
 
   await Product.updateOne(
     { _id: productId },
-    {
-      $set: {
-        rating: averageRating,
-        reviewsCount: moderatedReviews.length,
-      },
-    }
+    { $set: { rating, reviewsCount: approved.length } }
   );
 
   return {
@@ -788,8 +489,8 @@ export async function moderateProductReviewService(
       input.status === 'approved'
         ? 'Product review was approved.'
         : 'Product review was rejected.',
-    rating: averageRating,
-    reviewsCount: moderatedReviews.length,
-    moderatedAt: moderatedAt.toISOString(),
+    rating,
+    reviewsCount: approved.length,
+    moderatedAt: review.moderatedAt?.toISOString(),
   };
 }

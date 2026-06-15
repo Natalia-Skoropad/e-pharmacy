@@ -4,11 +4,13 @@ import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Cart } from '../models/cart.model';
 import { Product } from '../models/product.model';
+import { ProductOffer } from '../models/productOffer.model';
+import { Pharmacy } from '../models/pharmacy.model';
 import { httpError } from '../utils/httpError';
 import { releaseOfferStock, reserveOfferStock } from './inventory.service';
 
 import type { CartResponseDto } from '../types/cart';
-import type { ProductEntity, ProductOfferEntity } from '../types/product';
+import type { ProductEntity } from '../types/product';
 
 //===============================================================
 
@@ -55,28 +57,18 @@ function removeExpiredItems<TItem extends { expiresAt: Date }>(items: TItem[]) {
 
 //===============================================================
 
-function findProductOffer(
-  product: ProductDocument,
-  pharmacyId: string
-): ProductOfferEntity | null {
-  return (
-    product.offers?.find((offer) => offer.pharmacyId.toString() === pharmacyId) ??
-    null
-  );
-}
-
-//===============================================================
-
 async function getProductOfferOrThrow(productId: string, pharmacyId: string) {
-  const product = await Product.findById(
-    productId
-  ).lean<ProductDocument | null>();
+  const [product, offer] = await Promise.all([
+    Product.findOne({
+      _id: productId,
+      status: 'active',
+    }).lean<ProductDocument | null>(),
+    ProductOffer.findOne({ productId, pharmacyId }).lean(),
+  ]);
 
   if (!product) {
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
   }
-
-  const offer = findProductOffer(product, pharmacyId);
 
   if (!offer || !offer.inStock || offer.activeQuantity <= 0) {
     throw httpError(
@@ -142,32 +134,55 @@ async function getCartDocument(
 
 async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
   const productIds = cart.items.map((item) => item.productId);
+  const pharmacyIds = cart.items.map((item) => item.pharmacyId);
 
-  const products = await Product.find({
-    _id: { $in: productIds },
-  }).lean<ProductDocument[]>();
+  const [products, offers, pharmacies] = await Promise.all([
+    Product.find({ _id: { $in: productIds } }).lean<ProductDocument[]>(),
+    ProductOffer.find({
+      productId: { $in: productIds },
+      pharmacyId: { $in: pharmacyIds },
+    }).lean(),
+    Pharmacy.find({ _id: { $in: pharmacyIds } }).lean(),
+  ]);
 
   const productMap = new Map(
-    products.map((product) => [product._id.toString(), product])
+    products.map((product) => [String(product._id), product])
+  );
+
+  const offerMap = new Map(
+    offers.map((offer) => [`${offer.productId}:${offer.pharmacyId}`, offer])
+  );
+
+  const pharmacyMap = new Map(
+    pharmacies.map((pharmacy) => [String(pharmacy._id), pharmacy])
+  );
+
+  const offerCounts = await ProductOffer.aggregate<{
+    _id: Types.ObjectId;
+    count: number;
+  }>([
+    { $match: { productId: { $in: productIds } } },
+    { $group: { _id: '$productId', count: { $sum: 1 } } },
+  ]);
+  const offerCountMap = new Map(
+    offerCounts.map((row) => [String(row._id), row.count])
   );
 
   const items = cart.items
     .map((item) => {
-      const product = productMap.get(item.productId.toString());
-
-      if (!product) return null;
-
-      const offer = findProductOffer(product, item.pharmacyId.toString());
-
-      if (!offer) return null;
+      const product = productMap.get(String(item.productId));
+      const offer = offerMap.get(`${item.productId}:${item.pharmacyId}`);
+      const pharmacy = pharmacyMap.get(String(item.pharmacyId));
+      if (!product || !offer || !pharmacy) return null;
 
       const productDto = {
-        id: product._id.toString(),
+        id: String(product._id),
         name: product.name,
         ...(product.slug ? { slug: product.slug } : {}),
         article: product.article,
         ...(product.description ? { description: product.description } : {}),
         category: product.category,
+        status: product.status,
         price: item.price,
         ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
         ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
@@ -175,9 +190,9 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
         ...(product.packageQuantity
           ? { packageQuantity: product.packageQuantity }
           : {}),
-        pharmacyId: offer.pharmacyId.toString(),
-        pharmacyName: offer.pharmacyName,
-        foundInPharmaciesCount: product.offers?.length ?? 1,
+        pharmacyId: String(pharmacy._id),
+        pharmacyName: pharmacy.name,
+        foundInPharmaciesCount: offerCountMap.get(String(product._id)) ?? 1,
         offers: [],
         inStock: offer.inStock,
         ...(typeof product.rating === 'number'
@@ -189,16 +204,16 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
       };
 
       return {
-        id: item._id.toString(),
-        productId: item.productId.toString(),
-        pharmacyId: item.pharmacyId.toString(),
+        id: String(item._id),
+        productId: String(item.productId),
+        pharmacyId: String(item.pharmacyId),
         product: productDto,
-        pharmacyName: offer.pharmacyName,
-        ...(typeof offer.pharmacyRating === 'number'
-          ? { pharmacyRating: offer.pharmacyRating }
+        pharmacyName: pharmacy.name,
+        ...(typeof pharmacy.rating === 'number'
+          ? { pharmacyRating: pharmacy.rating }
           : {}),
-        ...(typeof offer.pharmacyReviewsCount === 'number'
-          ? { pharmacyReviewsCount: offer.pharmacyReviewsCount }
+        ...(typeof pharmacy.reviewsCount === 'number'
+          ? { pharmacyReviewsCount: pharmacy.reviewsCount }
           : {}),
         stockQuantity: offer.activeQuantity + item.quantity,
         quantity: item.quantity,
@@ -348,7 +363,12 @@ export async function updateCartItemService(
         throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
       }
 
-      const offer = findProductOffer(product, currentItem.pharmacyId.toString());
+      const offer = await ProductOffer.findOne({
+        productId: currentItem.productId,
+        pharmacyId: currentItem.pharmacyId,
+      })
+        .session(session)
+        .lean();
 
       if (!offer) {
         throw httpError(

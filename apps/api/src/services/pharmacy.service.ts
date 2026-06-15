@@ -1,20 +1,24 @@
 import { Types } from 'mongoose';
 
-import { API_MESSAGES } from '../constants/messages';
+import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { Product } from '../models/product.model';
+import { API_MESSAGES } from '../constants/messages';
+import { Client } from '../models/client.model';
 import { Pharmacy } from '../models/pharmacy.model';
-import { User } from '../models/user.model';
-import { httpError } from '../utils/httpError';
-import { createSafeRegExp } from '../utils/regexp';
+import { PharmacyReview } from '../models/pharmacyReview.model';
+import { ProductOffer } from '../models/productOffer.model';
 
 import type {
   PharmacyBankDetails,
+  PharmacyEntity,
   PharmacyFilterOptionsResponseDto,
   PharmacyResponseDto,
   PharmacyReviewResponseDto,
   ReviewModerationStatus,
 } from '../types/pharmacy';
+
+import { httpError } from '../utils/httpError';
+import { createSafeRegExp } from '../utils/regexp';
 
 //===============================================================
 
@@ -22,40 +26,22 @@ type PharmaciesQuery = {
   page: number;
   perPage: number;
   keyword?: string;
-  nameKeyword?: string;
-  addressKeyword?: string;
   city?: string;
   sort?: 'newest' | 'rating-desc' | 'rating-asc' | 'name-asc' | 'name-desc';
 };
 
-type CreatePharmacyReviewInput = {
+type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
+type ClientFavoritesDocument = { favoritePharmacyIds: Types.ObjectId[] };
+
+type PendingReviewsQuery = { page: number; perPage: number };
+type CreateReviewInput = {
   userId: string;
   userName: string;
   rating: number;
   comment: string;
 };
 
-//===============================================================
-
-type FavoritePharmacyUserDocument = {
-  favoritePharmacyIds?: Array<Types.ObjectId | string>;
-};
-
-type PharmacyReviewDocument = {
-  _id: Types.ObjectId;
-  userId?: Types.ObjectId;
-  userName: string;
-  rating: number;
-  comment: string;
-  status?: ReviewModerationStatus;
-  isModerated: boolean;
-  moderationReason?: string;
-  moderatedBy?: Types.ObjectId;
-  moderatedAt?: Date;
-  createdAt: Date;
-};
-
-type PendingPharmacyReviewResponseDto = {
+type PendingReviewDto = {
   pharmacyId: string;
   pharmacyName: string;
   reviewId: string;
@@ -66,402 +52,265 @@ type PendingPharmacyReviewResponseDto = {
   createdAt: string;
 };
 
-type PendingReviewsQuery = {
-  page: number;
-  perPage: number;
-};
-
-type PharmacyDocument = {
-  _id: Types.ObjectId;
-  name: string;
-  address: string;
-  city?: string;
-  phone?: string;
-  email?: string;
-  workingHours?: string;
-  bankDetails?: PharmacyBankDetails;
-  status?: import('../types/pharmacy').PharmacyStatus;
-  rating?: number;
-  imageUrl?: string;
-  description?: string;
-  reviewsCount?: number;
-  reviews?: PharmacyReviewDocument[];
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-type PharmacyProductsCount = {
-  _id: Types.ObjectId;
-  count: number;
-};
-
-//===============================================================
-
-const PHARMACY_SORT_OPTIONS: PharmacyFilterOptionsResponseDto['sort'] = [
-  { value: 'newest', label: 'Newest first' },
-  { value: 'rating-desc', label: 'Rating: highest first' },
-  { value: 'rating-asc', label: 'Rating: lowest first' },
-  { value: 'name-asc', label: 'Name: A to Z' },
-  { value: 'name-desc', label: 'Name: Z to A' },
-];
-
-//===============================================================
-
-function getSort(sort: PharmaciesQuery['sort']): Record<string, 1 | -1> {
-  switch (sort) {
-    case 'rating-desc':
-      return { rating: -1, name: 1 };
-
-    case 'rating-asc':
-      return { rating: 1, name: 1 };
-
-    case 'name-asc':
-      return { name: 1 };
-
-    case 'name-desc':
-      return { name: -1 };
-
-    case 'newest':
-    default:
-      return { createdAt: -1 };
-  }
-}
-
-function getModeratedPharmacyReviews(pharmacy: PharmacyDocument): PharmacyReviewDocument[] {
-  return (pharmacy.reviews ?? []).filter(
-    (review) => review.status === 'approved' || review.isModerated
-  );
-}
-
 //===============================================================
 
 function hasCompleteBankDetails(
-  bankDetails?: PharmacyBankDetails
-): bankDetails is PharmacyBankDetails {
+  details?: Partial<PharmacyBankDetails> | null
+): boolean {
   return Boolean(
-    bankDetails?.recipientName &&
-      bankDetails.taxId &&
-      bankDetails.iban &&
-      bankDetails.bankName &&
-      bankDetails.paymentPurpose
+    details?.recipientName &&
+    details?.taxId &&
+    details?.iban &&
+    details?.bankName &&
+    details?.paymentPurpose
   );
 }
 
 //===============================================================
 
-function getAverageRating(reviews: PharmacyReviewDocument[]): number | null {
-  if (reviews.length === 0) return null;
-
-  const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-
-  return Number((totalRating / reviews.length).toFixed(1));
+async function getFavoritePharmacyIds(userId?: string): Promise<Set<string>> {
+  if (!userId) return new Set();
+  const client = await Client.findOne({ userId })
+    .select('favoritePharmacyIds')
+    .lean<{ favoritePharmacyIds?: Types.ObjectId[] } | null>();
+  return new Set((client?.favoritePharmacyIds ?? []).map(String));
 }
 
-function serializePharmacyReview(
-  review: PharmacyReviewDocument
-): PharmacyReviewResponseDto {
-  return {
-    id: review._id.toString(),
-    userName: review.userName,
-    rating: review.rating,
-    comment: review.comment,
-    createdAt: review.createdAt.toISOString(),
-  };
+//===============================================================
+
+async function getAvailableProductsCountMap(pharmacyIds: Types.ObjectId[]) {
+  const rows = await ProductOffer.aggregate<{
+    _id: Types.ObjectId;
+    count: number;
+  }>([
+    {
+      $match: {
+        pharmacyId: { $in: pharmacyIds },
+        inStock: true,
+        activeQuantity: { $gt: 0 },
+      },
+    },
+    { $group: { _id: '$pharmacyId', count: { $sum: 1 } } },
+  ]);
+  return new Map(rows.map((row) => [String(row._id), row.count]));
 }
 
-function isPendingPharmacyReview(review: PharmacyReviewDocument): boolean {
-  return review.status === 'pending' || (!review.status && !review.isModerated);
-}
-
-function serializePendingPharmacyReview(
-  pharmacy: Pick<PharmacyDocument, '_id' | 'name'>,
-  review: PharmacyReviewDocument
-): PendingPharmacyReviewResponseDto {
-  return {
-    pharmacyId: pharmacy._id.toString(),
-    pharmacyName: pharmacy.name,
-    reviewId: review._id.toString(),
-    userName: review.userName,
-    rating: review.rating,
-    comment: review.comment,
-    status: review.status ?? 'pending',
-    createdAt: review.createdAt.toISOString(),
-  };
-}
+//===============================================================
 
 function serializePharmacy(
   pharmacy: PharmacyDocument,
-  productsCountMap = new Map<string, number>(),
-  favoritePharmacyIds = new Set<string>()
+  availableProductsCount: number,
+  favoriteIds: Set<string>
 ): PharmacyResponseDto {
-  const pharmacyId = pharmacy._id.toString();
-  const moderatedReviews = getModeratedPharmacyReviews(pharmacy);
-  const averageRating = getAverageRating(moderatedReviews);
-
   return {
-    id: pharmacyId,
+    id: String(pharmacy._id),
     name: pharmacy.name,
     address: pharmacy.address,
     ...(pharmacy.city ? { city: pharmacy.city } : {}),
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
-    ...(hasCompleteBankDetails(pharmacy.bankDetails)
-      ? { bankDetails: pharmacy.bankDetails }
-      : {}),
+    ...(pharmacy.bankDetails ? { bankDetails: pharmacy.bankDetails } : {}),
     bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
-    ...(pharmacy.status ? { status: pharmacy.status } : {}),
-    ...(averageRating !== null
-      ? { rating: averageRating }
-      : typeof pharmacy.rating === 'number'
-        ? { rating: pharmacy.rating }
-        : {}),
+    status: pharmacy.status,
+    rating: pharmacy.rating ?? 0,
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
-    availableProductsCount: productsCountMap.get(pharmacyId) ?? 0,
-    reviewsCount: moderatedReviews.length,
-    isFavorite: favoritePharmacyIds.has(pharmacyId),
-    isActive: pharmacy.isActive,
-    updatedAt: pharmacy.updatedAt.toISOString(),
+    availableProductsCount,
+    reviewsCount: pharmacy.reviewsCount ?? 0,
+    isFavorite: favoriteIds.has(String(pharmacy._id)),
+    updatedAt:
+      pharmacy.updatedAt?.toISOString?.() ?? String(pharmacy.updatedAt ?? ''),
   };
 }
-
-async function getAvailableProductsCountMap(pharmacyIds: Types.ObjectId[]) {
-  if (pharmacyIds.length === 0) return new Map<string, number>();
-
-  const counts = await Product.aggregate<PharmacyProductsCount>([
-    {
-      $match: {
-        offers: {
-          $elemMatch: {
-            pharmacyId: { $in: pharmacyIds },
-            inStock: true,
-            activeQuantity: { $gt: 0 },
-          },
-        },
-      },
-    },
-    { $unwind: '$offers' },
-    {
-      $match: {
-        'offers.pharmacyId': { $in: pharmacyIds },
-        'offers.inStock': true,
-        'offers.activeQuantity': { $gt: 0 },
-      },
-    },
-    {
-      $group: {
-        _id: '$offers.pharmacyId',
-        count: { $sum: 1 },
-      },
-    },
-  ]);
-
-  return new Map(counts.map((item) => [item._id.toString(), item.count]));
-}
-
-async function getFavoritePharmacyIds(userId?: string): Promise<Set<string>> {
-  if (!userId) return new Set();
-
-  const user = await User.findById(userId)
-    .select('favoritePharmacyIds')
-    .lean<FavoritePharmacyUserDocument | null>();
-
-  const favoritePharmacyIds = user?.favoritePharmacyIds ?? [];
-
-  return new Set(favoritePharmacyIds.map((id) => id.toString()));
-}
-
 
 //===============================================================
 
 export async function getPharmacyFiltersService(): Promise<PharmacyFilterOptionsResponseDto> {
-  const cities = (await Pharmacy.distinct('city', { isActive: true })) as string[];
-  const normalizedCities = cities
-    .filter(
-      (city): city is string =>
-        typeof city === 'string' && city.trim().length > 0
-    )
-    .map((city) => city.trim());
-  const uniqueCities = [...new Set(normalizedCities)].sort((a, b) =>
-    a.localeCompare(b, 'en')
-  );
-
+  const cities = await Pharmacy.distinct('city', {
+    status: {
+      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
+    },
+    city: { $type: 'string', $ne: '' },
+  });
   return {
-    cities: uniqueCities.map((city) => ({ value: city, label: city })),
-    sort: PHARMACY_SORT_OPTIONS,
+    cities: cities.sort().map((value) => ({ value, label: value })),
+    sort: [
+      { value: 'newest', label: 'Newest first' },
+      { value: 'rating-desc', label: 'Rating: highest first' },
+      { value: 'rating-asc', label: 'Rating: lowest first' },
+      { value: 'name-asc', label: 'Name: A to Z' },
+      { value: 'name-desc', label: 'Name: Z to A' },
+    ],
   };
 }
 
 //===============================================================
 
-export async function getPharmaciesService(query: PharmaciesQuery, userId?: string) {
-  const {
-    page,
-    perPage,
-    keyword,
-    nameKeyword,
-    addressKeyword,
-    city,
-    sort,
-  } = query;
-
+export async function getPharmaciesService(
+  query: PharmaciesQuery,
+  userId?: string
+) {
   const filter: Record<string, unknown> = {
-    isActive: true,
+    status: {
+      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
+    },
   };
-
-  if (city) filter.city = createSafeRegExp(city);
-  if (nameKeyword) filter.name = createSafeRegExp(nameKeyword);
-  if (addressKeyword) filter.address = createSafeRegExp(addressKeyword);
-
-  if (keyword) {
+  if (query.keyword)
     filter.$or = [
-      { name: createSafeRegExp(keyword) },
-      { address: createSafeRegExp(keyword) },
-      { city: createSafeRegExp(keyword) },
+      { name: createSafeRegExp(query.keyword) },
+      { address: createSafeRegExp(query.keyword) },
+      { city: createSafeRegExp(query.keyword) },
     ];
-  }
-
-  const skip = (page - 1) * perPage;
-
-  const [pharmacies, total, favoritePharmacyIds] = await Promise.all([
-    Pharmacy.find(filter)
-      .sort(getSort(sort))
-      .skip(skip)
-      .limit(perPage)
-      .lean<PharmacyDocument[]>(),
+  if (query.city) filter.city = query.city;
+  const sort: Record<string, 1 | -1> =
+    query.sort === 'name-asc'
+      ? { name: 1 }
+      : query.sort === 'name-desc'
+        ? { name: -1 }
+        : query.sort === 'rating-asc'
+          ? { rating: 1 }
+          : query.sort === 'rating-desc'
+            ? { rating: -1 }
+            : { createdAt: -1 };
+  const skip = (query.page - 1) * query.perPage;
+  const [pharmacies, total, favoriteIds] = await Promise.all([
+    Pharmacy.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
     Pharmacy.countDocuments(filter),
     getFavoritePharmacyIds(userId),
   ]);
-
-  const productsCountMap = await getAvailableProductsCountMap(
+  const countMap = await getAvailableProductsCountMap(
     pharmacies.map((pharmacy) => pharmacy._id)
   );
-
   return {
     items: pharmacies.map((pharmacy) =>
-      serializePharmacy(pharmacy, productsCountMap, favoritePharmacyIds)
+      serializePharmacy(
+        pharmacy,
+        countMap.get(String(pharmacy._id)) ?? 0,
+        favoriteIds
+      )
     ),
+    page: query.page,
+    perPage: query.perPage,
     total,
-    page,
-    perPage,
-    totalPages: Math.ceil(total / perPage),
+    totalPages: Math.ceil(total / query.perPage),
   };
 }
 
 //===============================================================
 
-export async function getPharmacyDetailsService(pharmacyId: string, userId?: string) {
-  const [pharmacy, favoritePharmacyIds] = await Promise.all([
-    Pharmacy.findOne({
-      _id: pharmacyId,
-      isActive: true,
-    }).lean<PharmacyDocument | null>(),
-    getFavoritePharmacyIds(userId),
-  ]);
-
-  if (!pharmacy) {
+export async function getPharmacyDetailsService(
+  pharmacyId: string,
+  userId?: string
+) {
+  const pharmacy = await Pharmacy.findOne({
+    _id: pharmacyId,
+    status: {
+      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
+    },
+  }).lean();
+  if (!pharmacy)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
-  }
-
-  const productsCountMap = await getAvailableProductsCountMap([pharmacy._id]);
-
+  const [favoriteIds, countMap] = await Promise.all([
+    getFavoritePharmacyIds(userId),
+    getAvailableProductsCountMap([pharmacy._id]),
+  ]);
   return {
-    pharmacy: serializePharmacy(pharmacy, productsCountMap, favoritePharmacyIds),
+    pharmacy: serializePharmacy(
+      pharmacy,
+      countMap.get(String(pharmacy._id)) ?? 0,
+      favoriteIds
+    ),
   };
 }
 
 //===============================================================
 
 export async function getPharmacyReviewsService(pharmacyId: string) {
-  const pharmacy = await Pharmacy.findById(pharmacyId)
-    .select('reviews')
-    .lean<PharmacyDocument | null>();
-
-  if (!pharmacy) {
+  const exists = await Pharmacy.exists({
+    _id: pharmacyId,
+    status: {
+      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
+    },
+  });
+  if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
-  }
-
-  const reviews = (pharmacy.reviews ?? [])
-    .filter((review) => review.status === 'approved' || review.isModerated)
-    .sort((a, b) => {
-      const aTime = (a.moderatedAt ?? a.createdAt).getTime();
-      const bTime = (b.moderatedAt ?? b.createdAt).getTime();
-
-      return bTime - aTime;
-    });
-
-  return {
-    items: reviews.map((review) => serializePharmacyReview(review)),
-    total: reviews.length,
-  };
+  const reviews = await PharmacyReview.find({ pharmacyId, status: 'approved' })
+    .sort({ createdAt: -1 })
+    .lean();
+  const items: PharmacyReviewResponseDto[] = reviews.map((review) => ({
+    id: String(review._id),
+    userName: review.userName,
+    rating: review.rating,
+    comment: review.comment,
+    createdAt: review.createdAt.toISOString(),
+  }));
+  return { items, total: items.length };
 }
 
 //===============================================================
 
 export async function createPharmacyReviewService(
   pharmacyId: string,
-  input: CreatePharmacyReviewInput
+  input: CreateReviewInput
 ) {
-  const pharmacy = await Pharmacy.findById(pharmacyId).select('_id');
-
-  if (!pharmacy) {
+  const exists = await Pharmacy.exists({
+    _id: pharmacyId,
+    status: {
+      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
+    },
+  });
+  if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
-  }
-
-  await Pharmacy.updateOne(
-    { _id: pharmacyId },
-    {
-      $push: {
-        reviews: {
-          userId: input.userId,
-          userName: input.userName,
-          rating: input.rating,
-          comment: input.comment,
-          status: 'pending',
-          isModerated: false,
-          createdAt: new Date(),
-        },
-      },
-    }
-  );
-
-  return {
-    message: 'Review was accepted and will be visible after moderation.',
-  };
+  await PharmacyReview.create({
+    pharmacyId,
+    userId: input.userId,
+    userName: input.userName,
+    rating: input.rating,
+    comment: input.comment,
+    status: 'on_moderation',
+  });
+  return { message: 'Pharmacy review was submitted for moderation.' };
 }
 
 //===============================================================
 
-
-export async function getPendingPharmacyReviewsService(query: PendingReviewsQuery) {
+export async function getPendingPharmacyReviewsService(
+  query: PendingReviewsQuery
+) {
+  const skip = (query.page - 1) * query.perPage;
+  const [reviews, total] = await Promise.all([
+    PharmacyReview.find({ status: 'on_moderation' })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(query.perPage)
+      .lean(),
+    PharmacyReview.countDocuments({ status: 'on_moderation' }),
+  ]);
   const pharmacies = await Pharmacy.find({
-    reviews: { $elemMatch: { $or: [{ status: 'pending' }, { status: { $exists: false }, isModerated: false }] } },
+    _id: { $in: reviews.map((review) => review.pharmacyId) },
   })
-    .select('name reviews')
-    .lean<PharmacyDocument[]>();
-
-  const pendingReviews = pharmacies
-    .flatMap((pharmacy) =>
-      (pharmacy.reviews ?? [])
-        .filter(isPendingPharmacyReview)
-        .map((review) => serializePendingPharmacyReview(pharmacy, review))
-    )
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-
-  const start = (query.page - 1) * query.perPage;
-  const items = pendingReviews.slice(start, start + query.perPage);
-
+    .select('name')
+    .lean();
+  const names = new Map(
+    pharmacies.map((pharmacy) => [String(pharmacy._id), pharmacy.name])
+  );
+  const items: PendingReviewDto[] = reviews.map((review) => ({
+    pharmacyId: String(review.pharmacyId),
+    pharmacyName: names.get(String(review.pharmacyId)) ?? 'Pharmacy',
+    reviewId: String(review._id),
+    userName: review.userName,
+    rating: review.rating,
+    comment: review.comment,
+    status: review.status,
+    createdAt: review.createdAt.toISOString(),
+  }));
   return {
     items,
     page: query.page,
     perPage: query.perPage,
-    total: pendingReviews.length,
-    totalPages: Math.ceil(pendingReviews.length / query.perPage),
+    total,
+    totalPages: Math.ceil(total / query.perPage),
   };
 }
 
@@ -471,50 +320,39 @@ export async function moderatePharmacyReviewService(
   pharmacyId: string,
   reviewId: string,
   input: {
-    status: Extract<ReviewModerationStatus, 'approved' | 'rejected'>;
+    status: 'approved' | 'rejected';
     reason?: string;
-    moderatedBy?: string;
+    moderatorId: string;
   }
 ) {
-  const moderatedAt = new Date();
-  const updateResult = await Pharmacy.updateOne(
-    { _id: pharmacyId, 'reviews._id': reviewId },
+  const review = await PharmacyReview.findOneAndUpdate(
+    { _id: reviewId, pharmacyId },
     {
       $set: {
-        'reviews.$.status': input.status,
-        'reviews.$.isModerated': input.status === 'approved',
-        'reviews.$.moderationReason': input.reason,
-        'reviews.$.moderatedBy': input.moderatedBy
-          ? new Types.ObjectId(input.moderatedBy)
-          : undefined,
-        'reviews.$.moderatedAt': moderatedAt,
+        status: input.status,
+        moderationReason: input.reason,
+        moderatedBy: input.moderatorId,
+        moderatedAt: new Date(),
       },
-    }
+    },
+    { returnDocument: 'after' }
   );
 
-  if (updateResult.matchedCount === 0) {
+  if (!review)
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy review was not found.');
-  }
-
-  const pharmacy = await Pharmacy.findById(pharmacyId)
-    .select('reviews')
-    .lean<PharmacyDocument | null>();
-
-  if (!pharmacy) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
-  }
-
-  const moderatedReviews = getModeratedPharmacyReviews(pharmacy);
-  const averageRating = getAverageRating(moderatedReviews) ?? 0;
-
+  const approved = await PharmacyReview.find({ pharmacyId, status: 'approved' })
+    .select('rating')
+    .lean();
+  const rating = approved.length
+    ? Number(
+        (
+          approved.reduce((sum, item) => sum + item.rating, 0) / approved.length
+        ).toFixed(1)
+      )
+    : 0;
   await Pharmacy.updateOne(
     { _id: pharmacyId },
-    {
-      $set: {
-        rating: averageRating,
-        reviewsCount: moderatedReviews.length,
-      },
-    }
+    { $set: { rating, reviewsCount: approved.length } }
   );
 
   return {
@@ -522,51 +360,48 @@ export async function moderatePharmacyReviewService(
       input.status === 'approved'
         ? 'Pharmacy review was approved.'
         : 'Pharmacy review was rejected.',
-    rating: averageRating,
-    reviewsCount: moderatedReviews.length,
-    moderatedAt: moderatedAt.toISOString(),
+    rating,
+    reviewsCount: approved.length,
+    moderatedAt: review.moderatedAt?.toISOString(),
   };
 }
 
 //===============================================================
 
-export async function toggleFavoritePharmacyService(pharmacyId: string, userId: string) {
-  const pharmacy = await Pharmacy.exists({ _id: pharmacyId, isActive: true });
+export async function toggleFavoritePharmacyService(
+  pharmacyId: string,
+  userId: string
+) {
+  const exists = await Pharmacy.exists({
+    _id: pharmacyId,
+    status: {
+      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
+    },
+  });
 
-  if (!pharmacy) {
+  if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
-  }
+  const client = (await Client.findOneAndUpdate(
+    { userId },
+    { $setOnInsert: { userId } },
+    { upsert: true, returnDocument: 'after' }
+  )) as ClientFavoritesDocument;
 
-  const user = await User.findById(userId)
-    .select('favoritePharmacyIds')
-    .lean<FavoritePharmacyUserDocument | null>();
+  const isFavorite = client.favoritePharmacyIds.some(
+    (id) => String(id) === pharmacyId
+  );
 
-  if (!user) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.USER_NOT_FOUND);
-  }
-
-  const favoriteIds = (user.favoritePharmacyIds ?? []).map((id) => id.toString());
-  const isFavorite = favoriteIds.includes(pharmacyId);
-
-  if (isFavorite) {
-    await User.updateOne(
-      { _id: userId },
-      { $pull: { favoritePharmacyIds: pharmacyId } }
-    );
-
-    return {
-      isFavorite: false,
-      message: 'Pharmacy was removed from favorites.',
-    };
-  }
-
-  await User.updateOne(
-    { _id: userId },
-    { $addToSet: { favoritePharmacyIds: pharmacyId } }
+  await Client.updateOne(
+    { userId },
+    isFavorite
+      ? { $pull: { favoritePharmacyIds: pharmacyId } }
+      : { $addToSet: { favoritePharmacyIds: pharmacyId } }
   );
 
   return {
-    isFavorite: true,
-    message: 'Pharmacy was added to favorites.',
+    isFavorite: !isFavorite,
+    message: isFavorite
+      ? 'Pharmacy was removed from favorites.'
+      : 'Pharmacy was added to favorites.',
   };
 }

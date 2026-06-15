@@ -15,7 +15,7 @@ export type PharmacyProfileDto = BasePharmacyDto & {
   approvedAt?: ISODateString;
 };
 
-export type PharmacyProductDto = Product & {
+export type ProductOfferDto = Product & {
   ownedOffer: ProductOffer;
 };
 
@@ -37,14 +37,13 @@ export type ClientGoodsDto = {
   createdAt: ISODateString;
 };
 
-export type Pharmacy = AuthUser;
+export type PharmacyUser = AuthUser;
 
 export type ProductRequestStatus =
   | 'draft'
-  | 'pending'
+  | 'on_moderation'
   | 'approved'
-  | 'rejected'
-  | 'cancelled';
+  | 'rejected';
 
 export type ProductRequest = {
   id: EntityId;
