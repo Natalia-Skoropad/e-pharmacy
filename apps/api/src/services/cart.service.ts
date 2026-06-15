@@ -20,7 +20,7 @@ const MAX_CART_INVOICES = 15;
 type CartItemDocument = {
   _id: Types.ObjectId;
   productId: Types.ObjectId;
-  storeId: Types.ObjectId;
+  pharmacyId: Types.ObjectId;
   quantity: number;
   price: number;
   expiresAt: Date;
@@ -57,17 +57,17 @@ function removeExpiredItems<TItem extends { expiresAt: Date }>(items: TItem[]) {
 
 function findProductOffer(
   product: ProductDocument,
-  storeId: string
+  pharmacyId: string
 ): ProductOfferEntity | null {
   return (
-    product.offers?.find((offer) => offer.storeId.toString() === storeId) ??
+    product.offers?.find((offer) => offer.pharmacyId.toString() === pharmacyId) ??
     null
   );
 }
 
 //===============================================================
 
-async function getProductOfferOrThrow(productId: string, storeId: string) {
+async function getProductOfferOrThrow(productId: string, pharmacyId: string) {
   const product = await Product.findById(
     productId
   ).lean<ProductDocument | null>();
@@ -76,7 +76,7 @@ async function getProductOfferOrThrow(productId: string, storeId: string) {
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
   }
 
-  const offer = findProductOffer(product, storeId);
+  const offer = findProductOffer(product, pharmacyId);
 
   if (!offer || !offer.inStock || offer.activeQuantity <= 0) {
     throw httpError(
@@ -116,7 +116,7 @@ async function getCartDocument(
     for (const item of expiredItems) {
       await releaseOfferStock(
         item.productId,
-        item.storeId,
+        item.pharmacyId,
         item.quantity,
         session,
         false
@@ -157,7 +157,7 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
 
       if (!product) return null;
 
-      const offer = findProductOffer(product, item.storeId.toString());
+      const offer = findProductOffer(product, item.pharmacyId.toString());
 
       if (!offer) return null;
 
@@ -175,9 +175,9 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
         ...(product.packageQuantity
           ? { packageQuantity: product.packageQuantity }
           : {}),
-        storeId: offer.storeId.toString(),
-        storeName: offer.storeName,
-        foundInStoresCount: product.offers?.length ?? 1,
+        pharmacyId: offer.pharmacyId.toString(),
+        pharmacyName: offer.pharmacyName,
+        foundInPharmaciesCount: product.offers?.length ?? 1,
         offers: [],
         inStock: offer.inStock,
         ...(typeof product.rating === 'number'
@@ -191,14 +191,14 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
       return {
         id: item._id.toString(),
         productId: item.productId.toString(),
-        storeId: item.storeId.toString(),
+        pharmacyId: item.pharmacyId.toString(),
         product: productDto,
-        storeName: offer.storeName,
-        ...(typeof offer.storeRating === 'number'
-          ? { storeRating: offer.storeRating }
+        pharmacyName: offer.pharmacyName,
+        ...(typeof offer.pharmacyRating === 'number'
+          ? { pharmacyRating: offer.pharmacyRating }
           : {}),
-        ...(typeof offer.storeReviewsCount === 'number'
-          ? { storeReviewsCount: offer.storeReviewsCount }
+        ...(typeof offer.pharmacyReviewsCount === 'number'
+          ? { pharmacyReviewsCount: offer.pharmacyReviewsCount }
           : {}),
         stockQuantity: offer.activeQuantity + item.quantity,
         quantity: item.quantity,
@@ -230,7 +230,7 @@ export async function getCartService(userId: string) {
 
 export async function addCartItemService(
   userId: string,
-  input: { productId: string; storeId: string; quantity: number }
+  input: { productId: string; pharmacyId: string; quantity: number }
 ) {
   const session = await mongoose.startSession();
 
@@ -239,13 +239,13 @@ export async function addCartItemService(
       const cart = await getCartDocument(userId, session);
       const { offer } = await getProductOfferOrThrow(
         input.productId,
-        input.storeId
+        input.pharmacyId
       );
 
       const itemIndex = cart.items.findIndex(
         (item) =>
           item.productId.toString() === input.productId &&
-          item.storeId.toString() === input.storeId
+          item.pharmacyId.toString() === input.pharmacyId
       );
 
       const quantityToReserve = Math.min(input.quantity, offer.activeQuantity);
@@ -259,7 +259,7 @@ export async function addCartItemService(
 
       await reserveOfferStock(
         input.productId,
-        input.storeId,
+        input.pharmacyId,
         quantityToReserve,
         session
       );
@@ -274,17 +274,17 @@ export async function addCartItemService(
           expiresAt: getCartItemExpiresAt(),
         };
       } else {
-        const invoiceStoreIds = new Set(
-          cart.items.map((item) => item.storeId.toString())
+        const invoicePharmacyIds = new Set(
+          cart.items.map((item) => item.pharmacyId.toString())
         );
 
         if (
-          !invoiceStoreIds.has(input.storeId) &&
-          invoiceStoreIds.size >= MAX_CART_INVOICES
+          !invoicePharmacyIds.has(input.pharmacyId) &&
+          invoicePharmacyIds.size >= MAX_CART_INVOICES
         ) {
           await releaseOfferStock(
             input.productId,
-            input.storeId,
+            input.pharmacyId,
             quantityToReserve,
             session
           );
@@ -298,7 +298,7 @@ export async function addCartItemService(
         cart.items.push({
           _id: new Types.ObjectId(),
           productId: new Types.ObjectId(input.productId),
-          storeId: new Types.ObjectId(input.storeId),
+          pharmacyId: new Types.ObjectId(input.pharmacyId),
           quantity: quantityToReserve,
           price: offer.price,
           expiresAt: getCartItemExpiresAt(),
@@ -348,7 +348,7 @@ export async function updateCartItemService(
         throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
       }
 
-      const offer = findProductOffer(product, currentItem.storeId.toString());
+      const offer = findProductOffer(product, currentItem.pharmacyId.toString());
 
       if (!offer) {
         throw httpError(
@@ -372,7 +372,7 @@ export async function updateCartItemService(
 
         await reserveOfferStock(
           currentItem.productId,
-          currentItem.storeId,
+          currentItem.pharmacyId,
           delta,
           session
         );
@@ -381,7 +381,7 @@ export async function updateCartItemService(
       if (delta < 0) {
         await releaseOfferStock(
           currentItem.productId,
-          currentItem.storeId,
+          currentItem.pharmacyId,
           Math.abs(delta),
           session
         );
@@ -428,7 +428,7 @@ export async function removeCartItemService(
 
       await releaseOfferStock(
         removedItem.productId,
-        removedItem.storeId,
+        removedItem.pharmacyId,
         removedItem.quantity,
         session
       );
@@ -451,7 +451,7 @@ export async function removeCartItemService(
 export async function removeCartProductOfferService(
   userId: string,
   productId: string,
-  storeId: string
+  pharmacyId: string
 ) {
   const session = await mongoose.startSession();
 
@@ -461,13 +461,13 @@ export async function removeCartProductOfferService(
       const removedItems = cart.items.filter(
         (item) =>
           item.productId.toString() === productId &&
-          item.storeId.toString() === storeId
+          item.pharmacyId.toString() === pharmacyId
       );
 
       for (const item of removedItems) {
         await releaseOfferStock(
           item.productId,
-          item.storeId,
+          item.pharmacyId,
           item.quantity,
           session
         );
@@ -476,7 +476,7 @@ export async function removeCartProductOfferService(
       const items = cart.items.filter(
         (item) =>
           item.productId.toString() !== productId ||
-          item.storeId.toString() !== storeId
+          item.pharmacyId.toString() !== pharmacyId
       );
 
       await Cart.updateOne({ userId }, { $set: { items } }, { session });
@@ -500,7 +500,7 @@ export async function clearCartService(userId: string) {
       for (const item of cart.items) {
         await releaseOfferStock(
           item.productId,
-          item.storeId,
+          item.pharmacyId,
           item.quantity,
           session
         );

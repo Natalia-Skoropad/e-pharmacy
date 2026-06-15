@@ -8,7 +8,7 @@ import CheckoutInvoicePanel from '../CheckoutInvoicePanel';
 import CheckoutPaymentMethod from '../CheckoutPaymentMethod';
 
 import { useCheckoutCart } from '../hooks/useCheckoutCart';
-import { useCheckoutStore } from '../hooks/useCheckoutStore';
+import { useCheckoutPharmacy } from '../hooks/useCheckoutPharmacy';
 import { useCheckoutSubmit } from '../hooks/useCheckoutSubmit';
 
 import {
@@ -26,14 +26,14 @@ import {
 } from '@e-pharmacy/ui/form-fields';
 
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { groupCartByStore } from '@/lib/cart/cart-groups';
+import { groupCartByPharmacy } from '@/lib/cart/cart-groups';
 
 import {
-  getStoreAddress,
-  getStoreBankDetails,
-  getStoreEmail,
-  getStorePhone,
-  getStoreWorkingHours,
+  getPharmacyAddress,
+  getPharmacyBankDetails,
+  getPharmacyEmail,
+  getPharmacyPhone,
+  getPharmacyWorkingHours,
 } from '@/lib/checkout';
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@e-pharmacy/config/seo';
@@ -65,7 +65,7 @@ import css from './CheckoutPageContent.module.css';
 //===================================================================
 
 type CheckoutPageContentProps = {
-  checkoutStoreId?: string;
+  checkoutPharmacyId?: string;
 };
 
 //===================================================================
@@ -76,11 +76,11 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
   { label: CHECKOUT_TITLE },
 ];
 
-function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
+function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const { isAuthenticated, isAuthReady, user } = useAuth();
   const searchParams = useSearchParams();
-  const queryStoreId = searchParams.get('storeId');
-  const selectedStoreIdFromRoute = checkoutStoreId ?? queryStoreId;
+  const queryPharmacyId = searchParams.get('pharmacyId');
+  const selectedPharmacyIdFromRoute = checkoutPharmacyId ?? queryPharmacyId;
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
 
@@ -99,28 +99,28 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
     isAuthenticated
   );
 
-  const orderGroups = useMemo(() => groupCartByStore(cart), [cart]);
+  const orderGroups = useMemo(() => groupCartByPharmacy(cart), [cart]);
 
   const selectedOrderGroup = useMemo(() => {
     if (orderGroups.length === 0) return null;
 
-    if (selectedStoreIdFromRoute) {
+    if (selectedPharmacyIdFromRoute) {
       return (
         orderGroups.find(
-          (group) => group.storeId === selectedStoreIdFromRoute
+          (group) => group.pharmacyId === selectedPharmacyIdFromRoute
         ) ?? null
       );
     }
 
     return orderGroups.length === 1 ? orderGroups[0] : null;
-  }, [selectedStoreIdFromRoute, orderGroups]);
+  }, [selectedPharmacyIdFromRoute, orderGroups]);
 
-  const { store, isStoreLoading } = useCheckoutStore(selectedOrderGroup);
+  const { pharmacy, isPharmacyLoading } = useCheckoutPharmacy(selectedOrderGroup);
 
   const shouldSelectInvoice =
     !isLoading && cart.items.length > 0 && !selectedOrderGroup;
 
-  const selectInvoiceMessage = selectedStoreIdFromRoute
+  const selectInvoiceMessage = selectedPharmacyIdFromRoute
     ? 'This pharmacy invoice is not available in your cart anymore. Please return to the cart and choose an active invoice.'
     : 'You have several pharmacy invoices in your cart. Please choose the invoice you want to confirm from the cart page.';
 
@@ -153,17 +153,17 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
   const { recipientName, recipientPhone, deliveryAddress, comment } =
     deliveryValues;
 
-  const bankDetails = getStoreBankDetails(store);
+  const bankDetails = getPharmacyBankDetails(pharmacy);
 
   const canUseSelectedPayment =
     paymentMethod !== 'bank-transfer' || Boolean(bankDetails);
 
-  const storeEmail = getStoreEmail(store);
-  const storePhone = getStorePhone(store);
-  const storeWorkingHours = getStoreWorkingHours(store);
-  const storeAddress = getStoreAddress(store);
-  const hasStoreContactDetails = Boolean(
-    storePhone || storeWorkingHours || storeAddress
+  const pharmacyEmail = getPharmacyEmail(pharmacy);
+  const pharmacyPhone = getPharmacyPhone(pharmacy);
+  const pharmacyWorkingHours = getPharmacyWorkingHours(pharmacy);
+  const pharmacyAddress = getPharmacyAddress(pharmacy);
+  const hasPharmacyContactDetails = Boolean(
+    pharmacyPhone || pharmacyWorkingHours || pharmacyAddress
   );
 
   const canSubmit =
@@ -230,9 +230,9 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
 
   const handleCopyEmail = async () => {
     try {
-      if (!storeEmail) return;
+      if (!pharmacyEmail) return;
 
-      await navigator.clipboard.writeText(storeEmail);
+      await navigator.clipboard.writeText(pharmacyEmail);
       setCopiedEmail(true);
       window.setTimeout(() => setCopiedEmail(false), 1800);
     } catch {
@@ -325,38 +325,38 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                             Pharmacy details
                           </h3>
 
-                          {isStoreLoading ? (
+                          {isPharmacyLoading ? (
                             <p className={css.deliveryMutedText}>
                               Loading pharmacy details...
                             </p>
                           ) : null}
 
-                          {hasStoreContactDetails ? (
+                          {hasPharmacyContactDetails ? (
                             <ul className={css.deliveryIconList}>
-                              {storePhone ? (
+                              {pharmacyPhone ? (
                                 <li>
                                   <Phone size={18} aria-hidden="true" />
-                                  <a href={`tel:${storePhone}`}>{storePhone}</a>
+                                  <a href={`tel:${pharmacyPhone}`}>{pharmacyPhone}</a>
                                 </li>
                               ) : null}
 
-                              {storeWorkingHours ? (
+                              {pharmacyWorkingHours ? (
                                 <li>
                                   <Clock size={18} aria-hidden="true" />
-                                  <span>{storeWorkingHours}</span>
+                                  <span>{pharmacyWorkingHours}</span>
                                 </li>
                               ) : null}
 
-                              {storeAddress ? (
+                              {pharmacyAddress ? (
                                 <li>
                                   <MapPin size={18} aria-hidden="true" />
-                                  <span>{storeAddress}</span>
+                                  <span>{pharmacyAddress}</span>
                                 </li>
                               ) : null}
                             </ul>
                           ) : null}
 
-                          {!isStoreLoading && !hasStoreContactDetails ? (
+                          {!isPharmacyLoading && !hasPharmacyContactDetails ? (
                             <p className={css.deliveryMutedText}>
                               Pharmacy contact details are unavailable right
                               now.
@@ -429,7 +429,7 @@ function CheckoutPageContent({ checkoutStoreId }: CheckoutPageContentProps) {
                 <CheckoutPaymentMethod
                   paymentMethod={paymentMethod}
                   bankDetails={bankDetails}
-                  storeEmail={storeEmail}
+                  pharmacyEmail={pharmacyEmail}
                   copiedEmail={copiedEmail}
                   onPaymentMethodChange={setPaymentMethod}
                   onCopyEmail={() => void handleCopyEmail()}

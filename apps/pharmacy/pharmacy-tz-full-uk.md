@@ -311,14 +311,14 @@ Login сторінка спільна для Client, Pharmacy і Admin.
 
 На login не потрібно додавати вибір Client / Pharmacy / Admin. Backend визначає роль за email/password.
 
-### Login inactive pharmacy
+### Login blocked pharmacy
 
-Якщо аптека має статус `inactive`, вхід у Pharmacy cabinet блокується.
+Якщо аптека має статус `blocked`, вхід у Pharmacy cabinet блокується.
 
 Повідомлення:
 
 ```txt
-Your account is temporarily inactive. Please contact administration for details.
+Your account is temporarily blocked. Please contact administration for details.
 ```
 
 ### Login new pharmacy
@@ -463,7 +463,7 @@ Pharmacy Header схожий на Client Header, але має іншу наві
 - cart button;
 - cart count;
 - links to Client catalog;
-- links to pharmacy stores.
+- links to pharmacies.
 
 ### Header для неавторизованого користувача
 
@@ -560,7 +560,7 @@ Active state має працювати для вкладених сторіно�
 
 Має майже повний доступ, але не може повторно редагувати profile data, які вже pending moderation.
 
-### Inactive pharmacy
+### Blocked pharmacy
 
 Не може зайти в кабінет.
 
@@ -712,7 +712,7 @@ Your changes are under moderation. Until Admin reviews them, the Client app show
 Login message:
 
 ```txt
-Your account is temporarily inactive. Please contact administration for details.
+Your account is temporarily blocked. Please contact administration for details.
 ```
 
 Admin має вказати причину блокування при переведенні аптеки в `inactive`.
@@ -956,7 +956,7 @@ Send to moderation
 - button disabled;
 - show pending moderation data per tab.
 
-### For inactive pharmacy
+### For blocked pharmacy
 
 - cabinet is unavailable.
 
@@ -1017,7 +1017,7 @@ Dashboard доступний для:
 - `active`;
 - `on_moderation`.
 
-Для `inactive` login у Pharmacy cabinet заблокований, тому Dashboard недоступний.
+Для `blocked` login у Pharmacy cabinet заблокований, тому Dashboard недоступний.
 
 ### New pharmacy
 
@@ -1140,7 +1140,7 @@ Recommended cards:
 - Total clients;
 - Repeat clients;
 - Active clients;
-- Inactive clients.
+- Blocked clients.
 
 Не показувати “New clients for selected period”.
 
@@ -1149,7 +1149,7 @@ Click examples:
 ```txt
 /pharmacy/clients
 /pharmacy/clients/status-active
-/pharmacy/clients/status-inactive
+/pharmacy/clients/status-blocked
 ```
 
 Empty state:
@@ -1644,13 +1644,13 @@ Pharmacy може тільки переглядати клієнтів, які �
 | Status | Color | Description |
 |---|---|---|
 | `active` | green | Client can use Client cabinet and create orders |
-| `inactive` | red | Client is blocked or disabled by Admin |
+| `blocked` | red | Client is blocked or disabled by Admin |
 
-For inactive client, Admin must provide blocking reason.
+For blocked client, Admin must provide blocking reason.
 
-Inactive client cannot login, create orders, edit profile or leave reviews.
+Blocked client cannot login, create orders, edit profile or leave reviews.
 
-Pharmacy can still view order history of inactive clients for current pharmacy.
+Pharmacy can still view order history of blocked clients for current pharmacy.
 
 ## 7.3. Pharmacy client definition
 
@@ -1686,7 +1686,7 @@ Examples:
 
 ```txt
 /pharmacy/clients/status-active
-/pharmacy/clients/status-inactive
+/pharmacy/clients/status-blocked
 /pharmacy/clients/date-2026-06-01_2026-06-30
 /pharmacy/clients/name-john
 /pharmacy/clients/email-test-example-com
@@ -2442,7 +2442,7 @@ After approval:
 
 - global product is created;
 - request is linked to created product;
-- request stores link to created product;
+- request pharmacies link to created product;
 - Pharmacy can open created product;
 - Pharmacy can add product to pharmacy if it is active.
 
@@ -2499,10 +2499,10 @@ New pharmacy explanation:
 You will be able to create requests after Admin activates your pharmacy.
 ```
 
-Inactive pharmacy explanation:
+Blocked pharmacy explanation:
 
 ```txt
-Your account is temporarily inactive. Request creation is unavailable.
+Your account is temporarily blocked. Request creation is unavailable.
 ```
 
 ### Columns
@@ -2980,7 +2980,7 @@ Recommended approach for implementation: catch-all route + filter parser utility
 
 ## 12.1. packages/types
 
-Store shared domain types:
+Pharmacy shared domain types:
 
 - UserRole;
 - PharmacyStatus;
@@ -3002,7 +3002,7 @@ Store shared domain types:
 
 ## 12.2. packages/config
 
-Store constants:
+Pharmacy constants:
 
 - route constants;
 - status labels;

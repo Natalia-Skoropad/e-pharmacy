@@ -3,25 +3,25 @@ import type { Cart } from '@e-pharmacy/types';
 
 //===================================================================
 
-export type CartStoreGroup = {
-  storeId: string;
-  storeName: string;
+export type CartPharmacyGroup = {
+  pharmacyId: string;
+  pharmacyName: string;
   items: Cart['items'];
   totalItems: number;
   totalPrice: number;
-  storeRating?: number;
-  storeReviewsCount?: number;
+  pharmacyRating?: number;
+  pharmacyReviewsCount?: number;
 };
 
 //===================================================================
 
-export function groupCartItemsByStore(items: Cart['items']): CartStoreGroup[] {
-  const groups = new Map<string, CartStoreGroup>();
+export function groupCartItemsByPharmacy(items: Cart['items']): CartPharmacyGroup[] {
+  const groups = new Map<string, CartPharmacyGroup>();
 
   for (const item of items) {
-    const storeName =
-      item.storeName || item.product.storeName || 'Pharmacy order';
-    const currentGroup = groups.get(item.storeId);
+    const pharmacyName =
+      item.pharmacyName || item.product.pharmacyName || 'Pharmacy order';
+    const currentGroup = groups.get(item.pharmacyId);
 
     if (currentGroup) {
       currentGroup.items.push(item);
@@ -30,14 +30,14 @@ export function groupCartItemsByStore(items: Cart['items']): CartStoreGroup[] {
       continue;
     }
 
-    groups.set(item.storeId, {
-      storeId: item.storeId,
-      storeName,
+    groups.set(item.pharmacyId, {
+      pharmacyId: item.pharmacyId,
+      pharmacyName,
       items: [item],
       totalItems: item.quantity,
       totalPrice: item.totalPrice,
-      storeRating: item.storeRating,
-      storeReviewsCount: item.storeReviewsCount,
+      pharmacyRating: item.pharmacyRating,
+      pharmacyReviewsCount: item.pharmacyReviewsCount,
     });
   }
 
@@ -46,14 +46,14 @@ export function groupCartItemsByStore(items: Cart['items']): CartStoreGroup[] {
 
 //===================================================================
 
-export function groupCartByStore(cart: Cart): CartStoreGroup[] {
-  return groupCartItemsByStore(cart.items);
+export function groupCartByPharmacy(cart: Cart): CartPharmacyGroup[] {
+  return groupCartItemsByPharmacy(cart.items);
 }
 
-export function getCartInvoiceTotal(group: CartStoreGroup): number {
+export function getCartInvoiceTotal(group: CartPharmacyGroup): number {
   return group.items.reduce((total, item) => total + item.totalPrice, 0);
 }
 
-export function getCartInvoicePath(group: CartStoreGroup): string {
-  return buildCheckoutPath(group.storeName, group.storeId);
+export function getCartInvoicePath(group: CartPharmacyGroup): string {
+  return buildCheckoutPath(group.pharmacyName, group.pharmacyId);
 }

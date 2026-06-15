@@ -9,7 +9,7 @@ import type {
   updateProfileSchema,
 } from '../schemas/auth.schema';
 
-import type { UserRole, UserStatus, PharmacyAccountStatus } from './user';
+import type { UserRole, UserStatus, PharmacyStatus } from './user';
 
 //===============================================================
 
@@ -29,7 +29,7 @@ export type AuthUserResponse = {
   email: string;
   role: UserRole;
   status: UserStatus;
-  pharmacyStatus?: PharmacyAccountStatus;
+  pharmacyStatus?: PharmacyStatus;
   phone: string;
   address?: string;
   pictureUrl?: string;

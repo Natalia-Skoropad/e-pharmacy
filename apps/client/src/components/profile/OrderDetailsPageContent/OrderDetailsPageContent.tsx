@@ -31,7 +31,7 @@ import {
   formatPrice,
 } from '@e-pharmacy/utils/formatters';
 
-import { buildProductPath, buildStorePath } from '@e-pharmacy/config/routes';
+import { buildProductPath, buildPharmacyPath } from '@e-pharmacy/config/routes';
 import { getOrderIdFromPathParam } from '@/lib/orders';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { getOrderDetails } from '@e-pharmacy/api-client/client';
@@ -142,7 +142,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     );
   }
 
-  const storeHref = buildStorePath(order.storeName, order.storeId);
+  const pharmacyHref = buildPharmacyPath(order.pharmacyName, order.pharmacyId);
   const hasDeliveryDetails =
     order.deliveryMethod === 'post' && Boolean(order.deliveryDetails);
 
@@ -170,23 +170,23 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
           <div className={css.orderShell}>
             <div className={css.orderMain}>
               <article className={css.invoice} aria-labelledby="invoice-title">
-                <div className={css.storeHead}>
+                <div className={css.pharmacyHead}>
                   <div>
                     <p className={css.kicker}>Pharmacy invoice</p>
-                    <h2 className={css.storeTitle} id="invoice-title">
-                      {order.storeName}
+                    <h2 className={css.pharmacyTitle} id="invoice-title">
+                      {order.pharmacyName}
                     </h2>
 
                     <RatingSummary
-                      rating={order.storeRating}
-                      reviewsCount={order.storeReviewsCount ?? 0}
+                      rating={order.pharmacyRating}
+                      reviewsCount={order.pharmacyReviewsCount ?? 0}
                       size="sm"
                     />
                   </div>
 
                   <ButtonLink
-                    className={css.storeDetailsLink}
-                    href={storeHref}
+                    className={css.pharmacyDetailsLink}
+                    href={pharmacyHref}
                     variant="secondary"
                     size="sm"
                   >

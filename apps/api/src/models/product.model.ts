@@ -97,50 +97,50 @@ productReviewSchema.index({ status: 1, createdAt: -1 });
 
 const productOfferSchema = new Schema(
   {
-    storeId: {
+    pharmacyId: {
       type: Schema.Types.ObjectId,
-      ref: 'Store',
+      ref: 'Pharmacy',
       required: true,
     },
 
-    storeName: {
+    pharmacyName: {
       type: String,
       required: true,
       trim: true,
     },
 
-    storeCity: {
+    pharmacyCity: {
       type: String,
       trim: true,
       default: undefined,
     },
 
-    storeAddress: {
+    pharmacyAddress: {
       type: String,
       trim: true,
       default: undefined,
     },
 
-    storePhone: {
+    pharmacyPhone: {
       type: String,
       trim: true,
       default: undefined,
     },
 
-    storeImageUrl: {
+    pharmacyImageUrl: {
       type: String,
       trim: true,
       default: undefined,
     },
 
-    storeRating: {
+    pharmacyRating: {
       type: Number,
       min: 0,
       max: MAX_REVIEW_RATING,
       default: 0,
     },
 
-    storeReviewsCount: {
+    pharmacyReviewsCount: {
       type: Number,
       min: 0,
       default: 0,
@@ -265,13 +265,13 @@ const productSchema = new Schema<ProductEntity>(
       default: undefined,
     },
 
-    storeId: {
+    pharmacyId: {
       type: Schema.Types.ObjectId,
-      ref: 'Store',
+      ref: 'Pharmacy',
       default: undefined,
     },
 
-    storeName: {
+    pharmacyName: {
       type: String,
       trim: true,
       default: undefined,
@@ -334,8 +334,8 @@ productSchema.index({
 });
 productSchema.index({ article: 1 }, { unique: true });
 productSchema.index({ category: 1 });
-productSchema.index({ storeId: 1 });
-productSchema.index({ 'offers.storeId': 1 });
+productSchema.index({ pharmacyId: 1 });
+productSchema.index({ 'offers.pharmacyId': 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ rating: -1 });
 productSchema.index({ createdAt: -1 });

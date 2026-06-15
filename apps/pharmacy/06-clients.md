@@ -21,9 +21,9 @@ Pharmacy cannot see:
 | Status     | Color | Meaning                                            |
 | ---------- | ----- | -------------------------------------------------- |
 | `active`   | Green | client can use account and create orders           |
-| `inactive` | Red   | client is blocked or temporarily disabled by Admin |
+| `blocked` | Red   | client is blocked or temporarily disabled by Admin |
 
-When Admin sets client status to `inactive`, Admin must provide a required blocking reason.
+When Admin sets client status to `blocked`, Admin must provide a required blocking reason.
 
 ## 3. Active client
 
@@ -37,7 +37,7 @@ Can:
 
 Can be changed to `inactive` only by Admin.
 
-## 4. Inactive client
+## 4. Blocked client
 
 Cannot:
 
@@ -51,7 +51,7 @@ Can be changed back to `active` only by Admin.
 Login message:
 
 ```txt
-Your account is temporarily inactive. Please contact administration for details.
+Your account is temporarily blocked. Please contact administration for details.
 ```
 
 ## 5. Own client definition
@@ -105,7 +105,7 @@ Examples:
 
 ```txt
 /pharmacy/clients/status-active
-/pharmacy/clients/status-inactive
+/pharmacy/clients/status-blocked
 /pharmacy/clients/date-from-2026-01-01/date-to-2026-01-31
 ```
 

@@ -1,6 +1,6 @@
 # dependencies
 node_modules
-.pnpm-store
+.pnpm-pharmacy
 
 # build outputs
 .next
@@ -25,7 +25,7 @@ apps/*/.env.local
 apps/*/.env.*.local
 
 # system
-.DS_Store
+.DS_Pharmacy
 Thumbs.db
 
 # IDE

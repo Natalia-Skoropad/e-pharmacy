@@ -5,7 +5,7 @@ This folder contains the improved pharmacy technical specification split into gl
 ## Files
 
 1. `00-general-overview.md` — global pharmacy principles, ownership, statuses, filter URL strategy.
-2. `01-auth-and-access.md` — shared auth, role redirects, pharmacy registration, inactive access.
+2. `01-auth-and-access.md` — shared auth, role redirects, pharmacy registration, blocked access.
 3. `02-layout-and-navigation.md` — Header, Sidebar, Mobile menu, Breadcrumbs, layouts.
 4. `03-pharmacy-profile.md` — pharmacy profile, statuses, tabs, moderation, reviews.
 5. `04-dashboard.md` — Dashboard statistics and dashboard-specific rules.

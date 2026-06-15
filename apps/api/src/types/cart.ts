@@ -6,7 +6,7 @@ import type { ProductResponseDto } from './product';
 
 export type CartItemEntity = {
   productId: Types.ObjectId;
-  storeId: Types.ObjectId;
+  pharmacyId: Types.ObjectId;
   quantity: number;
   price: number;
   expiresAt: Date;
@@ -28,11 +28,11 @@ export type CartEntity = {
 export type CartItemResponseDto = {
   id: string;
   productId: string;
-  storeId: string;
+  pharmacyId: string;
   product: ProductResponseDto;
-  storeName: string;
-  storeRating?: number;
-  storeReviewsCount?: number;
+  pharmacyName: string;
+  pharmacyRating?: number;
+  pharmacyReviewsCount?: number;
   stockQuantity: number;
   quantity: number;
   price: number;

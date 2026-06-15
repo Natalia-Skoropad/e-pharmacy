@@ -79,7 +79,7 @@ For authenticated pharmacies:
 - cart button;
 - cart count;
 - links to Client catalog;
-- links to Pharmacy stores.
+- links to Pharmacies.
 
 Pharmacy navigation is located in Sidebar / Mobile menu.
 
@@ -225,7 +225,7 @@ Example page structure:
 | Product details  | Home / Dashboard / Own products / Product name     |
 | All products     | Home / Dashboard / All products                    |
 | Product requests | Home / Dashboard / Product requests                |
-| Request details  | Home / Dashboard / product requests / Request name |
+| Request details  | Home / Dashboard / Product requests / Request name |
 
 ### Breadcrumb accessibility
 

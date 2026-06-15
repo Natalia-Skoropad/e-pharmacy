@@ -1,5 +1,7 @@
 import type { AppKey } from '../app';
 
+//===================================================================
+
 export type MetadataApp = AppKey;
 
 export type AppSeoStrategy = {
@@ -32,9 +34,9 @@ export const SEO_STRATEGIES = {
 
 //===================================================================
 
-export const HOME_TITLE = 'Online Pharmacy Store';
+export const HOME_TITLE = 'Online Pharmacy Pharmacy';
 export const HOME_DESCRIPTION =
-  'Order products online, explore trusted pharmacy stores, and manage your health essentials with E-PHARMACY.';
+  'Order products online, explore trusted pharmacies, and manage your health essentials with E-PHARMACY.';
 
 //===================================================================
 
@@ -44,19 +46,19 @@ export const DEFAULT_OG_IMAGE_ALT =
 
 //===================================================================
 
-export const STORES_TITLE = 'Pharmacy Stores';
-export const STORES_DESCRIPTION =
-  'Explore available pharmacy stores and choose a trusted place to order medicines online.';
+export const PHARMACIES_TITLE = 'Pharmacy Pharmacies';
+export const PHARMACIES_DESCRIPTION =
+  'Explore available pharmacies and choose a trusted place to order medicines online.';
 
 //===================================================================
 
-export const MEDICINE_STORE_TITLE = 'Medicine Store';
-export const MEDICINE_STORE_DESCRIPTION =
+export const MEDICINE_PHARMACY_TITLE = 'Medicine Pharmacy';
+export const MEDICINE_PHARMACY_DESCRIPTION =
   'Browse products, compare available products, and prepare your online pharmacy order.';
 
 //===================================================================
 
-export const PRODUCTS_CATALOG_TITLE = 'Products Catalog';
+export const PRODUCTS_CATALOG_TITLE = 'Product Catalog';
 export const PRODUCTS_CATALOG_DESCRIPTION =
   'Search products by name or article, filter products by category and pharmacy availability, and compare trusted online pharmacy offers.';
 

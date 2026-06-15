@@ -3,10 +3,10 @@ import { ROUTES, buildSlugId } from '@e-pharmacy/config/routes';
 //===================================================================
 
 export function buildCheckoutPath(
-  storeName: string | null | undefined,
-  storeId: string
+  pharmacyName: string | null | undefined,
+  pharmacyId: string
 ): string {
-  const safeStoreName = storeName?.trim() ? storeName : 'pharmacy';
+  const safePharmacyName = pharmacyName?.trim() ? pharmacyName : 'pharmacy';
 
-  return `${ROUTES.CHECKOUT}/${buildSlugId(safeStoreName, storeId)}`;
+  return `${ROUTES.CHECKOUT}/${buildSlugId(safePharmacyName, pharmacyId)}`;
 }

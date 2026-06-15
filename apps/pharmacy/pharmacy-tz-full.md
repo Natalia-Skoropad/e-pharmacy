@@ -159,7 +159,7 @@ Do not use pagination or rows-per-page in the URL:
 
 ### URL rules
 
-Store in URL:
+Pharmacy in URL:
 
 - business filters;
 - status filters;
@@ -356,14 +356,14 @@ Redirects:
 | `pharmacy` | `/pharmacy/dashboard` |
 | `admin` | `/admin/dashboard` |
 
-## 6. Inactive pharmacy login
+## 6. Blocked pharmacy login
 
-If pharmacy status is `inactive`, Pharmacy cabinet access is blocked.
+If pharmacy status is `blocked`, Pharmacy cabinet access is blocked.
 
 Message:
 
 ```txt
-Your account is temporarily inactive. Please contact administration for details.
+Your account is temporarily blocked. Please contact administration for details.
 ```
 
 ## 7. New pharmacy login
@@ -550,7 +550,7 @@ For authenticated pharmacies:
 - cart button;
 - cart count;
 - links to Client catalog;
-- links to Pharmacy stores.
+- links to Pharmacies.
 
 Pharmacy navigation is located in Sidebar / Mobile menu.
 
@@ -727,7 +727,7 @@ Use shared components wherever possible.
 | `new` | Pharmacy registered but has not passed Admin moderation yet | System after registration |
 | `active` | Pharmacy passed moderation and can work | Admin |
 | `on_moderation` | Active pharmacy changed important data and waits for Admin review | System after Pharmacy submits changes |
-| `inactive` | Pharmacy is blocked or temporarily disabled | Admin |
+| `blocked` | Pharmacy is blocked or temporarily disabled | Admin |
 
 Pharmacy UI labels and colors:
 
@@ -799,7 +799,7 @@ Banner:
 Your changes are under moderation. Until Admin reviews them, Client pages show the previous approved data.
 ```
 
-### Inactive pharmacy
+### Blocked pharmacy
 
 Cannot:
 
@@ -820,10 +820,10 @@ History is preserved:
 Login message:
 
 ```txt
-Your account is temporarily inactive. Please contact administration for details.
+Your account is temporarily blocked. Please contact administration for details.
 ```
 
-Admin must provide a required blocking reason when setting pharmacy status to `inactive`.
+Admin must provide a required blocking reason when setting pharmacy status to `blocked`.
 
 ## 4. Approved data and pending data
 
@@ -1124,7 +1124,7 @@ Buttons are disabled when:
 - validation errors exist;
 - request is running;
 - pharmacy has `on_moderation` status;
-- pharmacy has `inactive` status.
+- pharmacy has `blocked` status.
 
 Use disabled state for `on_moderation` fields.
 
@@ -1166,7 +1166,7 @@ Dashboard is available for pharmacies with statuses:
 - `active`;
 - `on_moderation`.
 
-Dashboard is not available for `inactive` pharmacies because inactive pharmacies cannot enter the Pharmacy cabinet.
+Dashboard is not available for `blocked` pharmacies because blocked pharmacies cannot enter the Pharmacy cabinet.
 
 ### New pharmacy
 
@@ -1323,7 +1323,7 @@ Recommended cards:
 - Total clients;
 - Repeat clients;
 - Active clients;
-- Inactive clients.
+- Blocked clients.
 
 Removed from scope:
 
@@ -1336,7 +1336,7 @@ Examples:
 ```txt
 /pharmacy/clients
 /pharmacy/clients/status-active
-/pharmacy/clients/status-inactive
+/pharmacy/clients/status-blocked
 ```
 
 ### Empty state
@@ -2142,9 +2142,9 @@ Pharmacy cannot see:
 | Status | Color | Meaning |
 |---|---|---|
 | `active` | Green | Client can use account and create orders |
-| `inactive` | Red | Client is blocked or temporarily disabled by Admin |
+| `blocked` | Red | Client is blocked or temporarily disabled by Admin |
 
-When Admin sets client status to `inactive`, Admin must provide a required blocking reason.
+When Admin sets client status to `blocked`, Admin must provide a required blocking reason.
 
 ## 3. Active client
 
@@ -2158,7 +2158,7 @@ Can:
 
 Can be changed to `inactive` only by Admin.
 
-## 4. Inactive client
+## 4. Blocked client
 
 Cannot:
 
@@ -2172,7 +2172,7 @@ Can be changed back to `active` only by Admin.
 Login message:
 
 ```txt
-Your account is temporarily inactive. Please contact administration for details.
+Your account is temporarily blocked. Please contact administration for details.
 ```
 
 ## 5. Own client definition
@@ -2226,7 +2226,7 @@ Examples:
 
 ```txt
 /pharmacy/clients/status-active
-/pharmacy/clients/status-inactive
+/pharmacy/clients/status-blocked
 /pharmacy/clients/date-from-2026-01-01/date-to-2026-01-31
 ```
 
@@ -3444,7 +3444,7 @@ You will be able to create requests after Admin activates your pharmacy.
 Disabled explanation for `inactive`:
 
 ```txt
-Your account is temporarily inactive. Creating requests is unavailable.
+Your account is temporarily blocked. Creating requests is unavailable.
 ```
 
 ## 7. Requests table
@@ -3867,7 +3867,7 @@ Buttons are disabled when:
 - form has validation errors;
 - required moderation fields are missing;
 - pharmacy status is `new`;
-- pharmacy status is `inactive`;
+- pharmacy status is `blocked`;
 - request is already submitted;
 - action is not allowed for current status.
 
@@ -4262,7 +4262,7 @@ This folder contains the improved Pharmacy technical specification split into gl
 ## Files
 
 1. `00-general-overview.md` — global Pharmacy principles, ownership, statuses, filter URL strategy.
-2. `01-auth-and-access.md` — shared auth, role redirects, pharmacy registration, inactive access.
+2. `01-auth-and-access.md` — shared auth, role redirects, pharmacy registration, blocked access.
 3. `02-layout-and-navigation.md` — Header, Sidebar, Mobile menu, Breadcrumbs, layouts.
 4. `03-pharmacy-profile.md` — pharmacy profile, statuses, tabs, moderation, reviews.
 5. `04-dashboard.md` — Dashboard statistics and dashboard-specific rules.

@@ -7,14 +7,14 @@ type ProductLegacyDetailsPageProps = {
     slugId: string;
   }>;
   searchParams?: Promise<{
-    storeId?: string;
+    pharmacyId?: string;
   }>;
 };
 
 //===================================================================
 
-function createProductLegacyQueryString(storeId?: string): string {
-  return storeId ? `?storeId=${encodeURIComponent(storeId)}` : '';
+function createProductLegacyQueryString(pharmacyId?: string): string {
+  return pharmacyId ? `?pharmacyId=${encodeURIComponent(pharmacyId)}` : '';
 }
 
 //===================================================================
@@ -27,7 +27,7 @@ async function ProductLegacyDetailsPage({
   const resolvedSearchParams = await searchParams;
 
   permanentRedirect(
-    `/${slugId}${createProductLegacyQueryString(resolvedSearchParams?.storeId)}`
+    `/${slugId}${createProductLegacyQueryString(resolvedSearchParams?.pharmacyId)}`
   );
 }
 

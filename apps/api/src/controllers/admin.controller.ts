@@ -3,7 +3,6 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 
 import {
   createPharmacyUserByAdminService,
-  updateShopStatusByAdminService,
   updatePharmacyStatusByAdminService,
 } from '../services/admin.service';
 
@@ -11,13 +10,7 @@ import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
 
-type AdminPharmacyParams = {
-  pharmacyId: string;
-};
-
-type AdminShopParams = {
-  shopId: string;
-};
+type AdminPharmacyParams = { pharmacyId: string };
 
 //===============================================================
 
@@ -26,18 +19,16 @@ export async function createPharmacyUserByAdmin(
   res: Response
 ): Promise<void> {
   const adminUserId = req.user?.id;
-
   if (!adminUserId) return;
 
   const pharmacy = await createPharmacyUserByAdminService(
     req.body,
     adminUserId
   );
-
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.CREATED,
-    message: 'Pharmacy account was created successfully.',
+    message: 'Pharmacy was created successfully.',
     data: { pharmacy },
   });
 }
@@ -49,11 +40,9 @@ export async function updatePharmacyStatusByAdmin(
   res: Response
 ): Promise<void> {
   const adminUserId = req.user?.id;
-
   if (!adminUserId) return;
 
   const { pharmacyId } = req.params as AdminPharmacyParams;
-
   const pharmacy = await updatePharmacyStatusByAdminService(
     pharmacyId,
     req.body,
@@ -65,31 +54,5 @@ export async function updatePharmacyStatusByAdmin(
     statusCode: HTTP_STATUS.OK,
     message: 'Pharmacy status was updated successfully.',
     data: { pharmacy },
-  });
-}
-
-//===============================================================
-
-export async function updateShopStatusByAdmin(
-  req: Request,
-  res: Response
-): Promise<void> {
-  const adminUserId = req.user?.id;
-
-  if (!adminUserId) return;
-
-  const { shopId } = req.params as AdminShopParams;
-
-  const shop = await updateShopStatusByAdminService(
-    shopId,
-    req.body,
-    adminUserId
-  );
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    message: 'Shop status was updated successfully.',
-    data: { shop },
   });
 }

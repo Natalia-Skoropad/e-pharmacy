@@ -26,7 +26,7 @@ type ProductsQuery = {
   nameKeyword?: string;
   articleKeyword?: string;
   category?: ProductCategory;
-  storeId?: string;
+  pharmacyId?: string;
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
@@ -51,7 +51,7 @@ type CreateReviewInput = {
 
 type FavoriteUserDocument = {
   favoriteProductIds?: Array<Types.ObjectId | string>;
-  favoriteStoreIds?: Array<Types.ObjectId | string>;
+  favoritePharmacyIds?: Array<Types.ObjectId | string>;
 };
 
 //===============================================================
@@ -100,8 +100,8 @@ type ProductDocument = {
   manufacturer?: string;
   dosage?: string;
   packageQuantity?: string;
-  storeId?: Types.ObjectId;
-  storeName?: string;
+  pharmacyId?: Types.ObjectId;
+  pharmacyName?: string;
   offers?: ProductOfferEntity[];
   inStock: boolean;
   rating?: number;
@@ -148,24 +148,24 @@ type ProductSortOption = Record<string, 1 | -1>;
 
 function serializeOffer(
   offer: ProductOfferEntity,
-  favoriteStoreIds = new Set<string>()
+  favoritePharmacyIds = new Set<string>()
 ): ProductOfferResponseDto {
-  const storeId = offer.storeId.toString();
+  const pharmacyId = offer.pharmacyId.toString();
 
   return {
-    storeId,
-    storeName: offer.storeName,
-    ...(offer.storeCity ? { storeCity: offer.storeCity } : {}),
-    ...(offer.storeAddress ? { storeAddress: offer.storeAddress } : {}),
-    ...(offer.storePhone ? { storePhone: offer.storePhone } : {}),
-    ...(offer.storeImageUrl ? { storeImageUrl: offer.storeImageUrl } : {}),
-    ...(typeof offer.storeRating === 'number'
-      ? { storeRating: offer.storeRating }
+    pharmacyId,
+    pharmacyName: offer.pharmacyName,
+    ...(offer.pharmacyCity ? { pharmacyCity: offer.pharmacyCity } : {}),
+    ...(offer.pharmacyAddress ? { pharmacyAddress: offer.pharmacyAddress } : {}),
+    ...(offer.pharmacyPhone ? { pharmacyPhone: offer.pharmacyPhone } : {}),
+    ...(offer.pharmacyImageUrl ? { pharmacyImageUrl: offer.pharmacyImageUrl } : {}),
+    ...(typeof offer.pharmacyRating === 'number'
+      ? { pharmacyRating: offer.pharmacyRating }
       : {}),
-    ...(typeof offer.storeReviewsCount === 'number'
-      ? { storeReviewsCount: offer.storeReviewsCount }
+    ...(typeof offer.pharmacyReviewsCount === 'number'
+      ? { pharmacyReviewsCount: offer.pharmacyReviewsCount }
       : {}),
-    storeIsFavorite: favoriteStoreIds.has(storeId),
+    pharmacyIsFavorite: favoritePharmacyIds.has(pharmacyId),
     price: offer.price,
     totalQuantity: offer.totalQuantity,
     activeQuantity: offer.activeQuantity,
@@ -179,11 +179,11 @@ function serializeOffer(
 function getLegacyOffer(
   product: ProductDocument
 ): ProductOfferResponseDto | null {
-  if (!product.storeId || typeof product.price !== 'number') return null;
+  if (!product.pharmacyId || typeof product.price !== 'number') return null;
 
   return {
-    storeId: product.storeId.toString(),
-    storeName: product.storeName ?? 'Pharmacy',
+    pharmacyId: product.pharmacyId.toString(),
+    pharmacyName: product.pharmacyName ?? 'Pharmacy',
     price: product.price,
     totalQuantity: product.inStock ? 100 : 0,
     activeQuantity: product.inStock ? 100 : 0,
@@ -196,10 +196,10 @@ function getLegacyOffer(
 
 function getOffers(
   product: ProductDocument,
-  favoriteStoreIds = new Set<string>()
+  favoritePharmacyIds = new Set<string>()
 ): ProductOfferResponseDto[] {
   const serializedOffers = (product.offers ?? []).map((offer) =>
-    serializeOffer(offer, favoriteStoreIds)
+    serializeOffer(offer, favoritePharmacyIds)
   );
 
   if (serializedOffers.length > 0) return serializedOffers;
@@ -235,16 +235,16 @@ async function getFavoriteProductIds(userId?: string): Promise<Set<string>> {
   return new Set(favoriteProductIds.map((id) => id.toString()));
 }
 
-async function getFavoriteStoreIds(userId?: string): Promise<Set<string>> {
+async function getFavoritePharmacyIds(userId?: string): Promise<Set<string>> {
   if (!userId) return new Set();
 
   const user = await User.findById(userId)
-    .select('favoriteStoreIds')
+    .select('favoritePharmacyIds')
     .lean<FavoriteUserDocument | null>();
 
-  const favoriteStoreIds = user?.favoriteStoreIds ?? [];
+  const favoritePharmacyIds = user?.favoritePharmacyIds ?? [];
 
-  return new Set(favoriteStoreIds.map((id) => id.toString()));
+  return new Set(favoritePharmacyIds.map((id) => id.toString()));
 }
 
 //===============================================================
@@ -273,9 +273,9 @@ function getAverageRating(reviews: ProductReviewDocument[]): number | null {
 function serializeProduct(
   product: ProductDocument,
   favoriteProductIds = new Set<string>(),
-  favoriteStoreIds = new Set<string>()
+  favoritePharmacyIds = new Set<string>()
 ): ProductResponseDto {
-  const offers = getOffers(product, favoriteStoreIds);
+  const offers = getOffers(product, favoritePharmacyIds);
   const availableOffers = offers.filter((offer) => offer.inStock);
   const productId = product._id.toString();
   const firstOffer = availableOffers[0];
@@ -297,9 +297,9 @@ function serializeProduct(
     ...(product.packageQuantity
       ? { packageQuantity: product.packageQuantity }
       : {}),
-    ...(firstOffer ? { storeId: firstOffer.storeId } : {}),
-    ...(firstOffer ? { storeName: firstOffer.storeName } : {}),
-    foundInStoresCount: availableOffers.length,
+    ...(firstOffer ? { pharmacyId: firstOffer.pharmacyId } : {}),
+    ...(firstOffer ? { pharmacyName: firstOffer.pharmacyName } : {}),
+    foundInPharmaciesCount: availableOffers.length,
     offers: availableOffers,
     inStock: availableOffers.length > 0,
     ...(averageRating !== null ? { rating: averageRating } : {}),
@@ -447,7 +447,7 @@ export async function getProductsService(
     nameKeyword,
     articleKeyword,
     category,
-    storeId,
+    pharmacyId,
     minPrice,
     maxPrice,
     inStock,
@@ -479,16 +479,16 @@ export async function getProductsService(
     andFilters.push({ category });
   }
 
-  if (storeId) {
-    const storeObjectId = new Types.ObjectId(storeId);
+  if (pharmacyId) {
+    const pharmacyObjectId = new Types.ObjectId(pharmacyId);
 
     andFilters.push({
       $or: [
-        { storeId: storeObjectId, inStock: true },
+        { pharmacyId: pharmacyObjectId, inStock: true },
         {
           offers: {
             $elemMatch: {
-              storeId: storeObjectId,
+              pharmacyId: pharmacyObjectId,
               inStock: true,
               activeQuantity: { $gt: 0 },
             },
@@ -519,7 +519,7 @@ export async function getProductsService(
       },
       {
         $and: [
-          { storeId: { $exists: true, $ne: null } },
+          { pharmacyId: { $exists: true, $ne: null } },
           { inStock: true },
         ],
       },
@@ -535,7 +535,7 @@ export async function getProductsService(
   const filter = andFilters.length > 0 ? { $and: andFilters } : {};
   const skip = (page - 1) * perPage;
 
-  const [products, total, favoriteProductIds, favoriteStoreIds] =
+  const [products, total, favoriteProductIds, favoritePharmacyIds] =
     await Promise.all([
       Product.find(filter)
         .sort(getSort(sort))
@@ -544,11 +544,11 @@ export async function getProductsService(
         .lean<ProductDocument[]>(),
       Product.countDocuments(filter),
       getFavoriteProductIds(userId),
-      getFavoriteStoreIds(userId),
+      getFavoritePharmacyIds(userId),
     ]);
 
   const serializedProducts = products.map((product: ProductDocument) =>
-    serializeProduct(product, favoriteProductIds, favoriteStoreIds)
+    serializeProduct(product, favoriteProductIds, favoritePharmacyIds)
   );
 
   return {
@@ -566,10 +566,10 @@ export async function getProductDetailsService(
   productId: string,
   userId?: string
 ) {
-  const [product, favoriteProductIds, favoriteStoreIds] = await Promise.all([
+  const [product, favoriteProductIds, favoritePharmacyIds] = await Promise.all([
     Product.findById(productId).lean<ProductDocument | null>(),
     getFavoriteProductIds(userId),
-    getFavoriteStoreIds(userId),
+    getFavoritePharmacyIds(userId),
   ]);
 
   if (!product) {
@@ -577,7 +577,7 @@ export async function getProductDetailsService(
   }
 
   return {
-    product: serializeProduct(product, favoriteProductIds, favoriteStoreIds),
+    product: serializeProduct(product, favoriteProductIds, favoritePharmacyIds),
   };
 }
 

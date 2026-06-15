@@ -12,7 +12,7 @@ export const cartItemParamsSchema = z.object({
 
 export const addCartItemSchema = z.object({
   productId: mongoIdSchema,
-  storeId: mongoIdSchema,
+  pharmacyId: mongoIdSchema,
   quantity: z.coerce.number().int().min(1).max(99).default(1),
 });
 

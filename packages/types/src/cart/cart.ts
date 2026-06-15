@@ -6,11 +6,11 @@ import type { ProductDto } from '../products';
 export type CartItemDto = {
   id: EntityId;
   productId: EntityId;
-  storeId: EntityId;
+  pharmacyId: EntityId;
   product: ProductDto;
-  storeName: string;
-  storeRating?: number;
-  storeReviewsCount?: number;
+  pharmacyName: string;
+  pharmacyRating?: number;
+  pharmacyReviewsCount?: number;
   stockQuantity: number;
   quantity: number;
   price: number;
@@ -30,7 +30,7 @@ export type CartResponse = {
 
 export type AddCartItemPayload = {
   productId: EntityId;
-  storeId: EntityId;
+  pharmacyId: EntityId;
   quantity: number;
 };
 

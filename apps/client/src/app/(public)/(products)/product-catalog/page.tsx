@@ -1,16 +1,16 @@
-import { ProductStorePageContent } from '@/components/products-catalog';
+import { ProductCatalogPageContent } from '@/components/product-catalog';
 
 import {
-  buildProductsCatalogApiParams,
-  buildProductsCatalogCanonicalPath,
+  buildProductCatalogApiParams,
+  buildProductCatalogCanonicalPath,
   FALLBACK_PRODUCT_FILTER_OPTIONS,
-  getProductsCatalogDescription,
-  getProductsCatalogTitle,
-  isProductsCatalogNoIndex,
-  parseProductsCatalogSearchParams,
-  sortStoresByName,
-  type ProductsCatalogSearchParams,
-} from '@/lib/catalog/products-catalog';
+  getProductCatalogDescription,
+  getProductCatalogTitle,
+  isProductCatalogNoIndex,
+  parseProductCatalogSearchParams,
+  sortPharmaciesByName,
+  type ProductCatalogSearchParams,
+} from '@/lib/catalog/product-catalog';
 
 import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
 import { createPageMetadata } from '@/lib/seo';
@@ -18,21 +18,21 @@ import { createPageMetadata } from '@/lib/seo';
 import {
   getProductFilters,
   getProducts,
-  getStores,
+  getPharmacies,
 } from '@e-pharmacy/api-client/client';
 
 //===================================================================
 
-type ProductsCatalogPageProps = {
-  searchParams?: Promise<ProductsCatalogSearchParams>;
+type ProductCatalogPageProps = {
+  searchParams?: Promise<ProductCatalogSearchParams>;
 };
 
 //===================================================================
 
 export async function generateMetadata({
   searchParams,
-}: ProductsCatalogPageProps) {
-  const filters = parseProductsCatalogSearchParams(await searchParams);
+}: ProductCatalogPageProps) {
+  const filters = parseProductCatalogSearchParams(await searchParams);
 
   const categoryLabel = FALLBACK_PRODUCT_FILTER_OPTIONS.categories.find(
     (option) => option.value === filters.category
@@ -43,25 +43,25 @@ export async function generateMetadata({
   };
 
   return createPageMetadata({
-    title: getProductsCatalogTitle(filters, seoContext),
-    description: getProductsCatalogDescription(filters, seoContext),
-    path: buildProductsCatalogCanonicalPath(filters),
-    noIndex: isProductsCatalogNoIndex(filters),
+    title: getProductCatalogTitle(filters, seoContext),
+    description: getProductCatalogDescription(filters, seoContext),
+    path: buildProductCatalogCanonicalPath(filters),
+    noIndex: isProductCatalogNoIndex(filters),
   });
 }
 
 //===================================================================
 
-async function ProductsCatalogPage({ searchParams }: ProductsCatalogPageProps) {
-  const filters = parseProductsCatalogSearchParams(await searchParams);
+async function ProductCatalogPage({ searchParams }: ProductCatalogPageProps) {
+  const filters = parseProductCatalogSearchParams(await searchParams);
 
-  const [productsData, storesData, filterOptionsData] = await Promise.all([
+  const [productsData, pharmaciesData, filterOptionsData] = await Promise.all([
     getProducts(
-      buildProductsCatalogApiParams(filters),
+      buildProductCatalogApiParams(filters),
       PUBLIC_API_CACHE_OPTIONS
     ).catch(() => null),
 
-    getStores({ page: 1, perPage: 100 }, PUBLIC_API_CACHE_OPTIONS).catch(
+    getPharmacies({ page: 1, perPage: 100 }, PUBLIC_API_CACHE_OPTIONS).catch(
       () => null
     ),
 
@@ -70,14 +70,14 @@ async function ProductsCatalogPage({ searchParams }: ProductsCatalogPageProps) {
     ),
   ]);
 
-  const activeStores = sortStoresByName(
-    storesData?.items.filter((store) => store.isActive) ?? []
+  const activePharmacies = sortPharmaciesByName(
+    pharmaciesData?.items.filter((pharmacy) => pharmacy.isActive) ?? []
   );
 
   return (
-    <ProductStorePageContent
+    <ProductCatalogPageContent
       products={productsData?.items ?? []}
-      stores={activeStores}
+      pharmacies={activePharmacies}
       filterOptions={filterOptionsData}
       total={productsData?.total ?? 0}
       totalPages={productsData?.totalPages ?? 0}
@@ -87,4 +87,4 @@ async function ProductsCatalogPage({ searchParams }: ProductsCatalogPageProps) {
   );
 }
 
-export default ProductsCatalogPage;
+export default ProductCatalogPage;

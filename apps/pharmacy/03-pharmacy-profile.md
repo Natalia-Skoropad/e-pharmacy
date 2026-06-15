@@ -15,7 +15,7 @@ Use shared components wherever possible.
 | `new`           | Pharmacy registered but has not passed Admin moderation yet       | System after registration             |
 | `active`        | Pharmacy passed moderation and can work                           | Admin                                 |
 | `on_moderation` | Active pharmacy changed important data and waits for Admin review | System after Pharmacy submits changes |
-| `inactive`      | Pharmacy is blocked or temporarily disabled                       | Admin                                 |
+| `blocked`      | Pharmacy is blocked or temporarily disabled                       | Admin                                 |
 
 ## 3. Status behavior
 
@@ -78,7 +78,7 @@ Banner:
 Your changes are under moderation. Until Admin reviews them, Client pages show the previous approved data.
 ```
 
-### Inactive pharmacy
+### Blocked pharmacy
 
 Cannot:
 
@@ -99,10 +99,10 @@ History is preserved:
 Login message:
 
 ```txt
-Your account is temporarily inactive. Please contact administration for details.
+Your account is temporarily blocked. Please contact administration for details.
 ```
 
-Admin must provide a required blocking reason when setting pharmacy status to `inactive`.
+Admin must provide a required blocking reason when setting pharmacy status to `blocked`.
 
 ## 4. Approved data and pending data
 
@@ -403,7 +403,7 @@ Buttons are disabled when:
 - validation errors exist;
 - request is running;
 - pharmacy has `on_moderation` status;
-- pharmacy has `inactive` status.
+- pharmacy has `blocked` status.
 
 Use disabled state for `on_moderation` fields.
 

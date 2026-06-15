@@ -12,9 +12,9 @@ const cartItemSchema = new Schema(
       required: true,
     },
 
-    storeId: {
+    pharmacyId: {
       type: Schema.Types.ObjectId,
-      ref: 'Store',
+      ref: 'Pharmacy',
       required: true,
     },
 
@@ -67,7 +67,7 @@ const cartSchema = new Schema<CartEntity>(
 //===============================================================
 
 cartSchema.index({ 'items.expiresAt': 1 });
-cartSchema.index({ 'items.productId': 1, 'items.storeId': 1 });
+cartSchema.index({ 'items.productId': 1, 'items.pharmacyId': 1 });
 
 //===============================================================
 

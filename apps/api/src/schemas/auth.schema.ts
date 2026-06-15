@@ -12,7 +12,7 @@ import {
   sharedRequiredPhoneSchema,
 } from './shared-validation.schema';
 
-import { USER_ROLES, PHARMACY_ACCOUNT_STATUSES } from '../constants/auth';
+import { USER_ROLES, PHARMACY_STATUSES } from '../constants/auth';
 
 //===============================================================
 
@@ -58,12 +58,12 @@ export const createPharmacyUserSchema = z.object({
   phone: requiredPhoneSchema,
   address: optionalAddressSchema,
   pharmacyStatus: z
-    .enum(Object.values(PHARMACY_ACCOUNT_STATUSES))
-    .default(PHARMACY_ACCOUNT_STATUSES.NEW),
+    .enum(Object.values(PHARMACY_STATUSES))
+    .default(PHARMACY_STATUSES.NEW),
 });
 
 export const updatePharmacyStatusSchema = z.object({
-  pharmacyStatus: z.enum(Object.values(PHARMACY_ACCOUNT_STATUSES)),
+  pharmacyStatus: z.enum(Object.values(PHARMACY_STATUSES)),
 });
 
 //===============================================================

@@ -1,7 +1,7 @@
 import { Copy, CreditCard, Mail, Wallet } from 'lucide-react';
 
 import { RadioOption } from '@e-pharmacy/ui/common';
-import type { Store } from '@e-pharmacy/types';
+import type { Pharmacy } from '@e-pharmacy/types';
 import type { CheckoutPaymentMethod as PaymentMethod } from '@e-pharmacy/types/checkout';
 
 import css from './CheckoutPaymentMethod.module.css';
@@ -10,8 +10,8 @@ import css from './CheckoutPaymentMethod.module.css';
 
 type CheckoutPaymentMethodProps = {
   paymentMethod: PaymentMethod;
-  bankDetails: Store['bankDetails'] | null;
-  storeEmail: string;
+  bankDetails: Pharmacy['bankDetails'] | null;
+  pharmacyEmail: string;
   copiedEmail: boolean;
   onPaymentMethodChange: (value: PaymentMethod) => void;
   onCopyEmail: () => void;
@@ -22,7 +22,7 @@ type CheckoutPaymentMethodProps = {
 function CheckoutPaymentMethod({
   paymentMethod,
   bankDetails,
-  storeEmail,
+  pharmacyEmail,
   copiedEmail,
   onPaymentMethodChange,
   onCopyEmail,
@@ -98,7 +98,7 @@ function CheckoutPaymentMethod({
                 </p>
               )}
 
-              {bankDetails && storeEmail ? (
+              {bankDetails && pharmacyEmail ? (
                 <div className={css.emailNote}>
                   <Mail size={18} aria-hidden="true" />
                   <p>
@@ -110,7 +110,7 @@ function CheckoutPaymentMethod({
                     type="button"
                     onClick={onCopyEmail}
                   >
-                    <span>{storeEmail}</span>
+                    <span>{pharmacyEmail}</span>
                     <Copy size={16} aria-hidden="true" />
                   </button>
                   {copiedEmail ? (

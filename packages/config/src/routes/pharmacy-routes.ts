@@ -11,3 +11,13 @@ export const PHARMACY_ROUTES = {
   PRODUCT_REQUESTS: `/${ROUTE_SEGMENTS.pharmacy}/product-requests`,
   PROFILE: `/${ROUTE_SEGMENTS.pharmacy}/profile`,
 } as const;
+import { buildSlugId } from './slug-id';
+
+//===================================================================
+
+// Pharmacy details intentionally use root-level SEO URLs. Keep reserved root
+// slugs protected in root-detail-resolver when adding new public pages.
+
+export function buildPharmacyPath(name: string, id: string): string {
+  return `/${buildSlugId(name, id)}`;
+}

@@ -15,7 +15,7 @@
     "./products": "./src/products/index.ts",
     "./reviews": "./src/reviews/index.ts",
     "./shared": "./src/shared/index.ts",
-    "./stores": "./src/stores/index.ts",
+    "./pharmacies": "./src/pharmacies/index.ts",
     "./pharmacy": "./src/pharmacy/index.ts"
   },
   "scripts": {

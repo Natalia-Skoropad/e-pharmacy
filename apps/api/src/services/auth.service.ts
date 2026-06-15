@@ -2,11 +2,13 @@ import { createHash, randomBytes } from 'node:crypto';
 import type { HydratedDocument } from 'mongoose';
 
 import { env } from '../config/env';
+
 import {
   USER_ROLES,
   USER_STATUSES,
-  PHARMACY_ACCOUNT_STATUSES,
+  PHARMACY_STATUSES,
 } from '../constants/auth';
+
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Session } from '../models/session.model';
@@ -141,9 +143,7 @@ export async function registerUserService(
       password: hashedPassword,
       role: input.role || USER_ROLES.CLIENT,
       pharmacyStatus:
-        input.role === USER_ROLES.PHARMACY
-          ? PHARMACY_ACCOUNT_STATUSES.NEW
-          : undefined,
+        input.role === USER_ROLES.PHARMACY ? PHARMACY_STATUSES.NEW : undefined,
       phone: input.phone,
       address: input.address,
     });
@@ -248,7 +248,7 @@ export async function refreshAuthSessionService(
   // The earlier implementation rotated the refresh token on every refresh and
   // accepted the previous token only for a short grace window. That is a good
   // security pattern when the server can safely return the latest raw refresh
-  // token to every parallel request. Here we only store token hashes, so a
+  // token to every parallel request. Here we only pharmacy token hashes, so a
   // parallel request that arrived with the previous token could refresh the
   // access token but could not receive the already-rotated refresh token.
   // If that response was the last one applied by the browser, the browser kept

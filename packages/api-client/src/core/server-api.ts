@@ -9,8 +9,8 @@ export async function serverApiRequest<TData>(
   path: string,
   config?: ApiRequestConfig
 ): Promise<TData> {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString();
+  const cookiePharmacy = await cookies();
+  const cookieHeader = cookiePharmacy.toString();
   const headers = new Headers(config?.headers);
 
   if (cookieHeader && !headers.has('Cookie')) {

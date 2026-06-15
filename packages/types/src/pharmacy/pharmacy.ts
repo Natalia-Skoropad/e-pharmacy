@@ -1,15 +1,15 @@
 import type { AuthUser } from '../auth';
 import type { EntityId, ISODateString } from '../shared';
 import type { ProductDto, ProductOfferDto } from '../products';
-import type { StoreDto } from '../stores';
+import type { PharmacyDto as BasePharmacyDto } from '../pharmacies';
 import type { OrderStatus } from '../orders';
-import type { ShopStatus } from '../auth';
+import type { PharmacyStatus } from '../auth';
 
 //=============================================================================
 
-export type PharmacyShopDto = StoreDto & {
+export type PharmacyProfileDto = BasePharmacyDto & {
   ownerId: EntityId;
-  status: ShopStatus;
+  status: PharmacyStatus;
   createdAt?: ISODateString;
   approvedBy?: EntityId;
   approvedAt?: ISODateString;

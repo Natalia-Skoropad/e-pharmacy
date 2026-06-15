@@ -1,5 +1,5 @@
 import type { EntityId, ISODateString } from '../shared';
-import type { StoreBankDetails } from '../stores';
+import type { PharmacyBankDetails } from '../pharmacies';
 
 //=============================================================================
 
@@ -33,13 +33,13 @@ export type OrderDto = {
   id: EntityId;
   orderNumber: string;
   createdAt: ISODateString;
-  storeId: EntityId;
-  storeName: string;
-  storeRating?: number;
-  storeReviewsCount?: number;
-  storePhone?: string;
-  storeEmail?: string;
-  storeAddress?: string;
+  pharmacyId: EntityId;
+  pharmacyName: string;
+  pharmacyRating?: number;
+  pharmacyReviewsCount?: number;
+  pharmacyPhone?: string;
+  pharmacyEmail?: string;
+  pharmacyAddress?: string;
   totalItems: number;
   totalPrice: number;
   status: OrderStatus;
@@ -47,7 +47,7 @@ export type OrderDto = {
   deliveryMethod: OrderDeliveryMethod;
   deliveryDetails?: OrderDeliveryDetails;
   comment?: string;
-  bankDetails?: StoreBankDetails;
+  bankDetails?: PharmacyBankDetails;
   items: OrderItemDto[];
 };
 
@@ -57,7 +57,7 @@ export type OrdersResponse = {
 };
 
 export type CheckoutOrderPayload = {
-  storeId: EntityId;
+  pharmacyId: EntityId;
   paymentMethod: OrderPaymentMethod;
   deliveryMethod: OrderDeliveryMethod;
   deliveryDetails?: OrderDeliveryDetails;

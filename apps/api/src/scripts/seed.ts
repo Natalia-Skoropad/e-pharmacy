@@ -2,7 +2,7 @@ import mongoose, { type Types } from 'mongoose';
 
 import { connectDB } from '../db/connectDB';
 import { Product } from '../models/product.model';
-import { Store } from '../models/store.model';
+import { Pharmacy } from '../models/pharmacy.model';
 
 //===============================================================
 
@@ -25,10 +25,10 @@ const REVIEW_AUTHORS = [
 ];
 
 const REVIEW_COMMENTS = [
-  'The order was processed quickly, the product page had clear details, and the pharmacy staff explained the pickup process very politely. I liked that the information about availability matched the real stock, so there were no surprises when I arrived. Packaging was neat, the receipt was ready, and the overall experience felt reliable. This is exactly the kind of service I want to see in an online pharmacy catalog when comparing offers, prices, and nearby stores before making a purchase.',
+  'The order was processed quickly, the product page had clear details, and the pharmacy staff explained the pickup process very politely. I liked that the information about availability matched the real stock, so there were no surprises when I arrived. Packaging was neat, the receipt was ready, and the overall experience felt reliable. This is exactly the kind of service I want to see in an online pharmacy catalog when comparing offers, prices, and nearby pharmacies before making a purchase.',
   'I was checking several options and this one looked the most convenient because the description, price, rating, and pharmacy information were easy to understand. The product was prepared on time, the staff answered my questions calmly, and the checkout flow felt simple. Long reviews like this are helpful for testing the layout too: the card should stay readable, the spacing should not collapse, and the text should wrap naturally without breaking the design on mobile, tablet, or desktop screens.',
   'Very good experience from search to pickup. The catalog helped me compare similar products, the rating looked realistic, and the pharmacy page showed useful address and phone details. The item was available exactly as shown, which is important when someone needs products quickly. I also liked that the review section is not too cramped, because longer feedback gives more context and makes the interface feel closer to a real marketplace with many active clients.',
-  'The product name, package size, and price were clear, and the pharmacy had enough stock when I came to collect the order. I usually pay attention to reviews before choosing a store, so it is useful to see detailed feedback instead of one short sentence. This comment intentionally has many words to check how five hundred character reviews behave inside cards, lists, tabs, lazy loading blocks, and responsive layouts without creating awkward gaps or visual noise.',
+  'The product name, package size, and price were clear, and the pharmacy had enough stock when I came to collect the order. I usually pay attention to reviews before choosing a pharmacy, so it is useful to see detailed feedback instead of one short sentence. This comment intentionally has many words to check how five hundred character reviews behave inside cards, lists, tabs, lazy loading blocks, and responsive layouts without creating awkward gaps or visual noise.',
 ];
 
 const CITIES = [
@@ -48,7 +48,7 @@ const CITIES = [
   'Zhytomyr',
 ];
 
-const STORE_BRANDS = [
+const PHARMACY_BRANDS = [
   'DobroMed Pharmacy',
   'Apteka Zdorovia',
   'Family Health Pharmacy',
@@ -325,7 +325,7 @@ const PRODUCT_BLUEPRINTS = [
 
 //===============================================================
 
-type SeedStoreDocument = {
+type SeedPharmacyDocument = {
   _id: Types.ObjectId;
   name: string;
   address?: string;
@@ -344,31 +344,31 @@ type SeedStoreDocument = {
 
 //===============================================================
 
-const STORE_IMAGE_URLS = [
-  '/images/seed/stores/store-001.png',
-  '/images/seed/stores/store-002.png',
-  '/images/seed/stores/store-003.png',
-  '/images/seed/stores/store-004.png',
-  '/images/seed/stores/store-005.png',
-  '/images/seed/stores/store-006.png',
-  '/images/seed/stores/store-007.png',
-  '/images/seed/stores/store-008.png',
-  '/images/seed/stores/store-009.png',
-  '/images/seed/stores/store-010.png',
-  '/images/seed/stores/store-011.png',
-  '/images/seed/stores/store-012.png',
-  '/images/seed/stores/store-013.png',
-  '/images/seed/stores/store-014.png',
-  '/images/seed/stores/store-015.png',
-  '/images/seed/stores/store-016.png',
-  '/images/seed/stores/store-017.png',
-  '/images/seed/stores/store-018.png',
-  '/images/seed/stores/store-019.png',
-  '/images/seed/stores/store-020.png',
+const PHARMACY_IMAGE_URLS = [
+  '/images/seed/pharmacies/pharmacy-001.png',
+  '/images/seed/pharmacies/pharmacy-002.png',
+  '/images/seed/pharmacies/pharmacy-003.png',
+  '/images/seed/pharmacies/pharmacy-004.png',
+  '/images/seed/pharmacies/pharmacy-005.png',
+  '/images/seed/pharmacies/pharmacy-006.png',
+  '/images/seed/pharmacies/pharmacy-007.png',
+  '/images/seed/pharmacies/pharmacy-008.png',
+  '/images/seed/pharmacies/pharmacy-009.png',
+  '/images/seed/pharmacies/pharmacy-010.png',
+  '/images/seed/pharmacies/pharmacy-011.png',
+  '/images/seed/pharmacies/pharmacy-012.png',
+  '/images/seed/pharmacies/pharmacy-013.png',
+  '/images/seed/pharmacies/pharmacy-014.png',
+  '/images/seed/pharmacies/pharmacy-015.png',
+  '/images/seed/pharmacies/pharmacy-016.png',
+  '/images/seed/pharmacies/pharmacy-017.png',
+  '/images/seed/pharmacies/pharmacy-018.png',
+  '/images/seed/pharmacies/pharmacy-019.png',
+  '/images/seed/pharmacies/pharmacy-020.png',
 ] as const;
 
-function createStoreImageUrl(index: number): string {
-  return STORE_IMAGE_URLS[index % STORE_IMAGE_URLS.length];
+function createPharmacyImageUrl(index: number): string {
+  return PHARMACY_IMAGE_URLS[index % PHARMACY_IMAGE_URLS.length];
 }
 
 function createProductName(
@@ -422,7 +422,7 @@ function createModeratedReviews(count: number, ratingBase = 4) {
 }
 
 function createOffer(
-  store: SeedStoreDocument,
+  pharmacy: SeedPharmacyDocument,
   price: number,
   totalQuantity: number,
   reservedQuantity = 0
@@ -430,14 +430,14 @@ function createOffer(
   const activeQuantity = Math.max(totalQuantity - reservedQuantity, 0);
 
   return {
-    storeId: store._id,
-    storeName: store.name,
-    storeCity: store.city,
-    storeAddress: store.address,
-    storePhone: store.phone,
-    storeImageUrl: store.imageUrl,
-    storeRating: store.rating,
-    storeReviewsCount: 18 + (price % 17),
+    pharmacyId: pharmacy._id,
+    pharmacyName: pharmacy.name,
+    pharmacyCity: pharmacy.city,
+    pharmacyAddress: pharmacy.address,
+    pharmacyPhone: pharmacy.phone,
+    pharmacyImageUrl: pharmacy.imageUrl,
+    pharmacyRating: pharmacy.rating,
+    pharmacyReviewsCount: 18 + (price % 17),
     price,
     totalQuantity,
     activeQuantity,
@@ -446,42 +446,39 @@ function createOffer(
   };
 }
 
-function createBankDetails(storeName: string, storeNumber: number) {
-  const taxId = String(30000000 + storeNumber).padStart(8, '0');
-  const ibanTail = String(100000000000000000000000000 + storeNumber).slice(
-    0,
-    27
-  );
+function createBankDetails(pharmacyName: string, pharmacyNumber: number) {
+  const taxId = String(30000000 + pharmacyNumber).padStart(8, '0');
+  const ibanTail = `300001${String(pharmacyNumber).padStart(21, '0')}`;
 
   return {
-    recipientName: `LLC ${storeName}`,
+    recipientName: `LLC ${pharmacyName}`,
     taxId,
     iban: `UA${ibanTail}`,
-    bankName: storeNumber % 2 === 0 ? 'JSC PrivatBank' : 'JSC Oschadbank',
-    paymentPurpose: `Payment for E-PHARMACY invoice from ${storeName}`,
+    bankName: pharmacyNumber % 2 === 0 ? 'JSC PrivatBank' : 'JSC Oschadbank',
+    paymentPurpose: `Payment for E-PHARMACY invoice from ${pharmacyName}`,
   };
 }
 
-function createSeedStores() {
+function createSeedPharmacies() {
   return Array.from({ length: 98 }, (_, index) => {
-    const storeNumber = index + 1;
+    const pharmacyNumber = index + 1;
     const city = CITIES[index % CITIES.length];
-    const brand = STORE_BRANDS[index % STORE_BRANDS.length];
+    const brand = PHARMACY_BRANDS[index % PHARMACY_BRANDS.length];
     const street = STREETS[index % STREETS.length];
     const reviewsCount = index < 34 ? 26 + (index % 9) : 6 + (index % 18);
 
-    const storeName = `${brand} ${city} ${storeNumber}`;
+    const pharmacyName = `${brand} ${city} ${pharmacyNumber}`;
 
     return {
-      name: storeName,
+      name: pharmacyName,
       address: `${12 + index} ${street}`,
       city,
-      phone: `+380${String(501000000 + storeNumber).padStart(9, '0')}`,
-      email: `store.${storeNumber}@e-pharmacy.example.com`,
+      phone: `+380${String(501000000 + pharmacyNumber).padStart(9, '0')}`,
+      email: `pharmacy.${pharmacyNumber}@e-pharmacy.example.com`,
       workingHours: 'Mon–Fri 08:00–21:00, Sat–Sun 09:00–18:00',
-      bankDetails: createBankDetails(storeName, storeNumber),
+      bankDetails: createBankDetails(pharmacyName, pharmacyNumber),
       rating: Number((4 + (index % 10) * 0.1).toFixed(1)),
-      imageUrl: createStoreImageUrl(index),
+      imageUrl: createPharmacyImageUrl(index),
       description: `${brand} in ${city} offers everyday medicines, vitamins, medical devices, hygiene products, and quick online reservation for local clients.`,
       isActive: true,
       reviewsCount,
@@ -490,7 +487,7 @@ function createSeedStores() {
   });
 }
 
-function createSeedProducts(stores: SeedStoreDocument[]) {
+function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
   return Array.from({ length: 126 }, (_, index) => {
     const productNumber = index + 1;
     const [
@@ -514,18 +511,18 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       ? 1050 + ((index * 137) % 2450)
       : 75 + ((index * 29) % 780);
     const offersCount = index % 10 === 0 ? 25 : 2 + (index % 5);
-    const selectedStores = Array.from(
+    const selectedPharmacies = Array.from(
       { length: offersCount },
-      (_, offerIndex) => stores[(index * 3 + offerIndex) % stores.length]
+      (_, offerIndex) => pharmacies[(index * 3 + offerIndex) % pharmacies.length]
     );
     const isSoldOut = index % 17 === 0;
-    const richStockStores = index < 115 ? stores.slice(0, 10) : [];
-    const mergedStores = [
-      ...richStockStores,
-      ...selectedStores.filter(
-        (store) =>
-          !richStockStores.some(
-            (richStore) => richStore._id.toString() === store._id.toString()
+    const richStockPharmacies = index < 115 ? pharmacies.slice(0, 10) : [];
+    const mergedPharmacies = [
+      ...richStockPharmacies,
+      ...selectedPharmacies.filter(
+        (pharmacy) =>
+          !richStockPharmacies.some(
+            (richPharmacy) => richPharmacy._id.toString() === pharmacy._id.toString()
           )
       ),
     ];
@@ -533,9 +530,9 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
     const offers =
       isSoldOut && !shouldForceRichStock
         ? []
-        : mergedStores.map((store, offerIndex) =>
+        : mergedPharmacies.map((pharmacy, offerIndex) =>
             createOffer(
-              store,
+              pharmacy,
               basePrice + offerIndex * (7 + (index % 5)),
               shouldForceRichStock && offerIndex < 10
                 ? 40 + ((index + offerIndex) % 35)
@@ -562,8 +559,8 @@ function createSeedProducts(stores: SeedStoreDocument[]) {
       manufacturer,
       dosage,
       packageQuantity,
-      storeId: offers[0]?.storeId,
-      storeName: offers[0]?.storeName,
+      pharmacyId: offers[0]?.pharmacyId,
+      pharmacyName: offers[0]?.pharmacyName,
       offers,
       inStock: offers.some((offer) => offer.inStock),
       rating,
@@ -582,17 +579,17 @@ async function seedDatabase(): Promise<void> {
 
   await connectDB();
 
-  await Promise.all([Store.deleteMany({}), Product.deleteMany({})]);
+  await Promise.all([Pharmacy.deleteMany({}), Product.deleteMany({})]);
 
-  const createdStores = (await Store.insertMany(
-    createSeedStores()
-  )) as SeedStoreDocument[];
+  const createdPharmacies = (await Pharmacy.insertMany(
+    createSeedPharmacies()
+  )) as SeedPharmacyDocument[];
 
-  const seedProducts = createSeedProducts(createdStores);
+  const seedProducts = createSeedProducts(createdPharmacies);
 
   await Product.insertMany(seedProducts);
 
-  console.log(`Seed completed: ${createdStores.length} stores created`);
+  console.log(`Seed completed: ${createdPharmacies.length} pharmacies created`);
   console.log(`Seed completed: ${seedProducts.length} products created`);
 }
 

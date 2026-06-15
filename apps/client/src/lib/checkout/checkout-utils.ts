@@ -1,39 +1,39 @@
-import type { Store } from '@e-pharmacy/types';
-import type { CheckoutStoreOrderGroup } from '@e-pharmacy/types/checkout';
+import type { Pharmacy } from '@e-pharmacy/types';
+import type { CheckoutPharmacyOrderGroup } from '@e-pharmacy/types/checkout';
 
 //===================================================================
 
-export function getStoreEmail(store?: Store | null): string {
-  return store?.email?.trim() ?? '';
+export function getPharmacyEmail(pharmacy?: Pharmacy | null): string {
+  return pharmacy?.email?.trim() ?? '';
 }
 
-export function getStorePhone(store?: Store | null): string {
-  return store?.phone?.trim() ?? '';
+export function getPharmacyPhone(pharmacy?: Pharmacy | null): string {
+  return pharmacy?.phone?.trim() ?? '';
 }
 
-export function getStoreWorkingHours(store?: Store | null): string {
-  return store?.workingHours?.trim() ?? '';
+export function getPharmacyWorkingHours(pharmacy?: Pharmacy | null): string {
+  return pharmacy?.workingHours?.trim() ?? '';
 }
 
-export function getStoreAddress(store?: Store | null): string {
-  if (!store) return '';
+export function getPharmacyAddress(pharmacy?: Pharmacy | null): string {
+  if (!pharmacy) return '';
 
-  return [store.address, store.city]
+  return [pharmacy.address, pharmacy.city]
     .map((part) => part?.trim())
     .filter(Boolean)
     .join(', ');
 }
 
-export function getStoreBankDetails(
-  store?: Store | null
-): Store['bankDetails'] | null {
-  return store?.bankDetails ?? null;
+export function getPharmacyBankDetails(
+  pharmacy?: Pharmacy | null
+): Pharmacy['bankDetails'] | null {
+  return pharmacy?.bankDetails ?? null;
 }
 
 //===================================================================
 
 export function getStockValidationError(
-  group: CheckoutStoreOrderGroup
+  group: CheckoutPharmacyOrderGroup
 ): string {
   const unavailableItems = group.items.filter(
     (item) => item.stockQuantity <= 0 || item.quantity > item.stockQuantity

@@ -1,5 +1,5 @@
-import type { CheckoutStoreOrderGroup } from './checkout';
+import type { CheckoutPharmacyOrderGroup } from './checkout';
 
 //===================================================================
 
-export type CheckoutInvoice = CheckoutStoreOrderGroup;
+export type CheckoutInvoice = CheckoutPharmacyOrderGroup;

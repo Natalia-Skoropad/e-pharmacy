@@ -24,14 +24,14 @@ import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import {
   getCartInvoicePath,
   getCartInvoiceTotal,
-  groupCartItemsByStore,
-  type CartStoreGroup,
+  groupCartItemsByPharmacy,
+  type CartPharmacyGroup,
 } from '@/lib/cart/cart-groups';
 
 import { CART_DESCRIPTION, CART_TITLE } from '@e-pharmacy/config/seo';
 import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
 import { ROUTES } from '@e-pharmacy/config/routes';
-import { buildStorePath, createBreadcrumbs } from '@e-pharmacy/config/routes';
+import { buildPharmacyPath, createBreadcrumbs } from '@e-pharmacy/config/routes';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { getCart } from '@e-pharmacy/api-client/client';
 
@@ -89,12 +89,12 @@ function CartPageContent() {
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState(false);
 
-  const [continueShoppingStore, setContinueShoppingStore] =
-    useState<CartStoreGroup | null>(null);
+  const [continueShoppingPharmacy, setContinueShoppingPharmacy] =
+    useState<CartPharmacyGroup | null>(null);
 
   const [pendingAction, setPendingAction] = useState<
     | { type: 'item'; itemId: string }
-    | { type: 'store'; storeId: string; storeName: string }
+    | { type: 'pharmacy'; pharmacyId: string; pharmacyName: string }
     | { type: 'clear' }
     | null
   >(null);
@@ -208,21 +208,21 @@ function CartPageContent() {
   const shouldShowLoading = !isAuthReady || (isAuthenticated && isLoading);
 
   const groupedCartItems = useMemo(
-    () => groupCartItemsByStore(visibleCart.items),
+    () => groupCartItemsByPharmacy(visibleCart.items),
     [visibleCart.items]
   );
 
-  const handleRemoveStore = async (storeId: string) => {
+  const handleRemovePharmacy = async (pharmacyId: string) => {
     if (!canUseCart) return;
 
     try {
       setIsClearing(true);
       setError('');
 
-      const storeItems = cart.items.filter((item) => item.storeId === storeId);
+      const pharmacyItems = cart.items.filter((item) => item.pharmacyId === pharmacyId);
       let nextCart = cart;
 
-      for (const item of storeItems) {
+      for (const item of pharmacyItems) {
         const response = await removeCartItem(item.id);
         nextCart = response.cart;
       }
@@ -246,8 +246,8 @@ function CartPageContent() {
       await handleRemove(pendingAction.itemId);
     }
 
-    if (pendingAction.type === 'store') {
-      await handleRemoveStore(pendingAction.storeId);
+    if (pendingAction.type === 'pharmacy') {
+      await handleRemovePharmacy(pendingAction.pharmacyId);
     }
 
     if (pendingAction.type === 'clear') {
@@ -260,8 +260,8 @@ function CartPageContent() {
   const pendingActionText =
     pendingAction?.type === 'item'
       ? 'Remove this product from the invoice?'
-      : pendingAction?.type === 'store'
-        ? `Remove the whole invoice from ${pendingAction.storeName}?`
+      : pendingAction?.type === 'pharmacy'
+        ? `Remove the whole invoice from ${pendingAction.pharmacyName}?`
         : 'Clear the whole cart?';
 
   return (
@@ -318,29 +318,29 @@ function CartPageContent() {
           {visibleCart.items.length > 0 ? (
             <ul className={css.groupList}>
               {groupedCartItems.map((group) => (
-                <li className={css.invoice} key={group.storeId}>
+                <li className={css.invoice} key={group.pharmacyId}>
                   <div className={css.invoiceGrid}>
                     <div className={css.invoiceMain}>
-                      <div className={css.storeGroupHead}>
-                        <div className={css.storeInfo}>
+                      <div className={css.pharmacyGroupHead}>
+                        <div className={css.pharmacyInfo}>
                           <p className={css.groupKicker}>Pharmacy invoice</p>
-                          <h2 className={css.storeGroupTitle}>
-                            {group.storeName}
+                          <h2 className={css.pharmacyGroupTitle}>
+                            {group.pharmacyName}
                           </h2>
 
                           <RatingSummary
-                            className={css.storeRating}
-                            rating={group.storeRating}
-                            reviewsCount={group.storeReviewsCount ?? 0}
+                            className={css.pharmacyRating}
+                            rating={group.pharmacyRating}
+                            reviewsCount={group.pharmacyReviewsCount ?? 0}
                             size="sm"
                           />
                         </div>
 
-                        <div className={css.storeActions}>
+                        <div className={css.pharmacyActions}>
                           <ButtonLink
-                            href={buildStorePath(
-                              group.storeName,
-                              group.storeId
+                            href={buildPharmacyPath(
+                              group.pharmacyName,
+                              group.pharmacyId
                             )}
                             variant="secondary"
                             size="sm"
@@ -356,9 +356,9 @@ function CartPageContent() {
                             disabled={isUpdating}
                             onClick={() =>
                               setPendingAction({
-                                type: 'store',
-                                storeId: group.storeId,
-                                storeName: group.storeName,
+                                type: 'pharmacy',
+                                pharmacyId: group.pharmacyId,
+                                pharmacyName: group.pharmacyName,
                               })
                             }
                           >
@@ -384,12 +384,12 @@ function CartPageContent() {
                     </div>
 
                     <CartSummary
-                      storeId={group.storeId}
+                      pharmacyId={group.pharmacyId}
                       totalItems={group.totalItems}
                       totalPrice={getCartInvoiceTotal(group)}
                       checkoutPath={getCartInvoicePath(group)}
                       isUpdating={isUpdating}
-                      onContinueShopping={() => setContinueShoppingStore(group)}
+                      onContinueShopping={() => setContinueShoppingPharmacy(group)}
                     />
                   </div>
                 </li>
@@ -397,12 +397,12 @@ function CartPageContent() {
             </ul>
           ) : null}
 
-          {continueShoppingStore && canUseCart ? (
+          {continueShoppingPharmacy && canUseCart ? (
             <ContinueShoppingModal
-              storeId={continueShoppingStore.storeId}
-              storeName={continueShoppingStore.storeName}
+              pharmacyId={continueShoppingPharmacy.pharmacyId}
+              pharmacyName={continueShoppingPharmacy.pharmacyName}
               cartItems={visibleCart.items}
-              onClose={() => setContinueShoppingStore(null)}
+              onClose={() => setContinueShoppingPharmacy(null)}
               onCartChange={setCart}
             />
           ) : null}

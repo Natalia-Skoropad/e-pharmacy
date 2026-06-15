@@ -37,14 +37,14 @@ export type ProductReviewEntity = {
 //===============================================================
 
 export type ProductOfferEntity = {
-  storeId: Types.ObjectId;
-  storeName: string;
-  storeCity?: string;
-  storeAddress?: string;
-  storePhone?: string;
-  storeImageUrl?: string;
-  storeRating?: number;
-  storeReviewsCount?: number;
+  pharmacyId: Types.ObjectId;
+  pharmacyName: string;
+  pharmacyCity?: string;
+  pharmacyAddress?: string;
+  pharmacyPhone?: string;
+  pharmacyImageUrl?: string;
+  pharmacyRating?: number;
+  pharmacyReviewsCount?: number;
   price: number;
   totalQuantity: number;
   activeQuantity: number;
@@ -65,8 +65,8 @@ export type ProductEntity = {
   manufacturer?: string;
   dosage?: string;
   packageQuantity?: string;
-  storeId?: Types.ObjectId;
-  storeName?: string;
+  pharmacyId?: Types.ObjectId;
+  pharmacyName?: string;
   offers: ProductOfferEntity[];
   inStock: boolean;
   rating?: number;
@@ -81,15 +81,15 @@ export type ProductEntity = {
 //===============================================================
 
 export type ProductOfferResponseDto = {
-  storeId: string;
-  storeName: string;
-  storeCity?: string;
-  storeAddress?: string;
-  storePhone?: string;
-  storeImageUrl?: string;
-  storeRating?: number;
-  storeReviewsCount?: number;
-  storeIsFavorite?: boolean;
+  pharmacyId: string;
+  pharmacyName: string;
+  pharmacyCity?: string;
+  pharmacyAddress?: string;
+  pharmacyPhone?: string;
+  pharmacyImageUrl?: string;
+  pharmacyRating?: number;
+  pharmacyReviewsCount?: number;
+  pharmacyIsFavorite?: boolean;
   price: number;
   totalQuantity: number;
   activeQuantity: number;
@@ -111,9 +111,9 @@ export type ProductResponseDto = {
   manufacturer?: string;
   dosage?: string;
   packageQuantity?: string;
-  storeId?: string;
-  storeName?: string;
-  foundInStoresCount: number;
+  pharmacyId?: string;
+  pharmacyName?: string;
+  foundInPharmaciesCount: number;
   offers: ProductOfferResponseDto[];
   inStock: boolean;
   rating?: number;

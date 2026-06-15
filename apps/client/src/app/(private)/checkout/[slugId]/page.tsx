@@ -13,7 +13,7 @@ import type { Metadata } from 'next';
 
 //===================================================================
 
-type CheckoutStorePageProps = {
+type CheckoutPharmacyPageProps = {
   params: Promise<{
     slugId: string;
   }>;
@@ -23,7 +23,7 @@ type CheckoutStorePageProps = {
 
 export async function generateMetadata({
   params,
-}: CheckoutStorePageProps): Promise<Metadata> {
+}: CheckoutPharmacyPageProps): Promise<Metadata> {
   const { slugId } = await params;
 
   return createPageMetadata({
@@ -36,21 +36,21 @@ export async function generateMetadata({
 
 //===================================================================
 
-async function CheckoutStorePage({ params }: CheckoutStorePageProps) {
+async function CheckoutPharmacyPage({ params }: CheckoutPharmacyPageProps) {
   const { slugId } = await params;
-  const checkoutStoreId = getIdFromSlugId(slugId);
+  const checkoutPharmacyId = getIdFromSlugId(slugId);
 
-  if (!checkoutStoreId) {
+  if (!checkoutPharmacyId) {
     notFound();
   }
 
-  const selectedStoreId = checkoutStoreId as string;
+  const selectedPharmacyId = checkoutPharmacyId as string;
 
   return (
     <ProtectedRoute>
-      <CheckoutPageContent checkoutStoreId={selectedStoreId} />
+      <CheckoutPageContent checkoutPharmacyId={selectedPharmacyId} />
     </ProtectedRoute>
   );
 }
 
-export default CheckoutStorePage;
+export default CheckoutPharmacyPage;

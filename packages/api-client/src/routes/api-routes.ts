@@ -27,12 +27,12 @@ export const apiRoutes = {
     resetPassword: '/auth/reset-password',
   },
 
-  stores: {
-    list: '/stores',
-    filters: '/stores/filters',
-    details: (storeId: EntityId) => `/stores/${storeId}`,
-    reviews: (storeId: EntityId) => `/stores/${storeId}/reviews`,
-    favorite: (storeId: EntityId) => `/stores/${storeId}/favorite`,
+  pharmacies: {
+    list: '/pharmacies',
+    filters: '/pharmacies/filters',
+    details: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}`,
+    reviews: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}/reviews`,
+    favorite: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}/favorite`,
   },
 
   products: {
@@ -49,8 +49,8 @@ export const apiRoutes = {
     updateItem: (cartItemId: EntityId) => `/cart/items/${cartItemId}`,
     removeItem: (cartItemId: EntityId) => `/cart/items/${cartItemId}`,
     clear: '/cart/clear',
-    offer: (productId: EntityId, storeId: EntityId) =>
-      `/cart/products/${productId}/stores/${storeId}`,
+    offer: (productId: EntityId, pharmacyId: EntityId) =>
+      `/cart/products/${productId}/pharmacies/${pharmacyId}`,
   },
 
   orders: {
@@ -60,21 +60,19 @@ export const apiRoutes = {
   },
 
   pharmacy: {
-    shops: '/pharmacy/shops',
-    shop: (shopId: EntityId) => `/pharmacy/shops/${shopId}`,
-    products: (shopId: EntityId) => `/pharmacy/shops/${shopId}/products`,
-    product: (shopId: EntityId, productId: EntityId) =>
-      `/pharmacy/shops/${shopId}/products/${productId}`,
-    statistics: (shopId: EntityId) => `/pharmacy/shops/${shopId}/statistics`,
-    clientGoods: (shopId: EntityId) => `/pharmacy/shops/${shopId}/client-goods`,
+    list: '/pharmacy',
+    details: (pharmacyId: EntityId) => `/pharmacy/${pharmacyId}`,
+    products: (pharmacyId: EntityId) => `/pharmacy/${pharmacyId}/products`,
+    product: (pharmacyId: EntityId, productId: EntityId) =>
+      `/pharmacy/${pharmacyId}/products/${productId}`,
+    statistics: (pharmacyId: EntityId) => `/pharmacy/${pharmacyId}/statistics`,
+    clientGoods: (pharmacyId: EntityId) => `/pharmacy/${pharmacyId}/client-goods`,
   },
 
   admin: {
     pharmacies: '/admin/pharmacies',
     pharmacyStatus: (pharmacyId: EntityId) =>
       `/admin/pharmacies/${pharmacyId}/status`,
-    shops: '/admin/shops',
-    shopStatus: (shopId: EntityId) => `/admin/shops/${shopId}/status`,
   },
 } as const;
 
@@ -95,12 +93,12 @@ export const clientApiRoutes = {
     resetPassword: '/api/auth/reset-password',
   },
 
-  stores: {
-    list: '/api/stores',
-    filters: '/api/stores/filters',
-    details: (storeId: EntityId) => `/api/stores/${storeId}`,
-    reviews: (storeId: EntityId) => `/api/stores/${storeId}/reviews`,
-    favorite: (storeId: EntityId) => `/api/stores/${storeId}/favorite`,
+  pharmacies: {
+    list: '/api/pharmacies',
+    filters: '/api/pharmacies/filters',
+    details: (pharmacyId: EntityId) => `/api/pharmacies/${pharmacyId}`,
+    reviews: (pharmacyId: EntityId) => `/api/pharmacies/${pharmacyId}/reviews`,
+    favorite: (pharmacyId: EntityId) => `/api/pharmacies/${pharmacyId}/favorite`,
   },
 
   products: {

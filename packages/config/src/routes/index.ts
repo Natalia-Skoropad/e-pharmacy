@@ -5,5 +5,5 @@ export * from './is-active-route';
 export * from './product-routes';
 export * from './route-segments';
 export * from './slug-id';
-export * from './store-routes';
+export * from './pharmacy-routes';
 export * from './pharmacy-routes';

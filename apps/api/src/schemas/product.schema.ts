@@ -42,7 +42,7 @@ export const productsQuerySchema = z.object({
   nameKeyword: sharedSearchSchema,
   articleKeyword: sharedSearchSchema,
   category: z.enum(PRODUCT_CATEGORIES).optional(),
-  storeId: mongoIdSchema.optional(),
+  pharmacyId: mongoIdSchema.optional(),
   minPrice: z.coerce.number().min(0).optional(),
   maxPrice: z.coerce.number().min(0).optional(),
   inStock: z
@@ -77,9 +77,9 @@ export const moderateProductReviewSchema = z.object({
   reason: z.string().trim().max(300).optional(),
 });
 
-export const productStoreParamsSchema = z.object({
+export const productPharmacyParamsSchema = z.object({
   productId: mongoIdSchema,
-  storeId: mongoIdSchema,
+  pharmacyId: mongoIdSchema,
 });
 
 //===============================================================

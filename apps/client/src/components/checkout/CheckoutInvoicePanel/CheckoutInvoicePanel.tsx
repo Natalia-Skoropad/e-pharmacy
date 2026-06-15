@@ -2,14 +2,14 @@ import { ShieldAlert } from 'lucide-react';
 
 import { Button } from '@e-pharmacy/ui/common';
 import { formatPrice } from '@e-pharmacy/utils/formatters';
-import type { CheckoutStoreOrderGroup } from '@e-pharmacy/types/checkout';
+import type { CheckoutPharmacyOrderGroup } from '@e-pharmacy/types/checkout';
 
 import css from './CheckoutInvoicePanel.module.css';
 
 //===================================================================
 
 type CheckoutInvoicePanelProps = {
-  orderGroup: CheckoutStoreOrderGroup;
+  orderGroup: CheckoutPharmacyOrderGroup;
   canSubmit: boolean;
   isSubmitting: boolean;
   onSubmit: () => void;
@@ -30,7 +30,7 @@ function CheckoutInvoicePanel({
       </h2>
 
       <div className={css.invoiceCard}>
-        <h3>{orderGroup.storeName}</h3>
+        <h3>{orderGroup.pharmacyName}</h3>
       </div>
 
       <div className={css.policyNotice}>

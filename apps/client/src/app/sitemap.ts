@@ -11,7 +11,7 @@ import {
   parseSitemapDate,
 } from '@e-pharmacy/config/seo';
 
-import { buildProductPath, buildStorePath } from '@e-pharmacy/config/routes';
+import { buildProductPath, buildPharmacyPath } from '@e-pharmacy/config/routes';
 
 //===================================================================
 
@@ -29,7 +29,7 @@ type SitemapProduct = {
   updatedAt?: string;
 };
 
-type SitemapStore = {
+type SitemapPharmacy = {
   id: string;
   name: string;
   isActive?: boolean;
@@ -45,7 +45,7 @@ type SitemapEntry = {
 //===================================================================
 
 const PRODUCT_SITEMAP_PER_PAGE = 200;
-const STORE_SITEMAP_PER_PAGE = 100;
+const PHARMACY_SITEMAP_PER_PAGE = 100;
 const SITEMAP_REVALIDATE_SECONDS = 3600;
 const SITEMAP_FETCH_SAFETY_MAX_PAGES = 500;
 const SITEMAP_FETCH_BATCH_SIZE = 20;
@@ -114,9 +114,9 @@ async function fetchAllSitemapItems<TItem>(
 //===================================================================
 
 async function getDynamicSitemapEntries(): Promise<SitemapEntry[]> {
-  const [products, stores] = await Promise.all([
+  const [products, pharmacies] = await Promise.all([
     fetchAllSitemapItems<SitemapProduct>('/products', PRODUCT_SITEMAP_PER_PAGE),
-    fetchAllSitemapItems<SitemapStore>('/stores', STORE_SITEMAP_PER_PAGE),
+    fetchAllSitemapItems<SitemapPharmacy>('/pharmacies', PHARMACY_SITEMAP_PER_PAGE),
   ]);
 
   const productEntries = products
@@ -129,15 +129,15 @@ async function getDynamicSitemapEntries(): Promise<SitemapEntry[]> {
       lastModified: parseSitemapDate(product.updatedAt),
     }));
 
-  const storeEntries = stores
-    .filter((store) => store.id && store.name && store.isActive !== false)
-    .map((store) => ({
-      path: buildStorePath(store.name, store.id),
+  const pharmacyEntries = pharmacies
+    .filter((pharmacy) => pharmacy.id && pharmacy.name && pharmacy.isActive !== false)
+    .map((pharmacy) => ({
+      path: buildPharmacyPath(pharmacy.name, pharmacy.id),
       priority: 0.7,
-      lastModified: parseSitemapDate(store.updatedAt),
+      lastModified: parseSitemapDate(pharmacy.updatedAt),
     }));
 
-  return [...productEntries, ...storeEntries];
+  return [...productEntries, ...pharmacyEntries];
 }
 
 //===================================================================

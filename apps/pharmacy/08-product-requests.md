@@ -127,7 +127,7 @@ You will be able to create requests after Admin activates your pharmacy.
 Disabled explanation for `inactive`:
 
 ```txt
-Your account is temporarily inactive. Creating requests is unavailable.
+Your account is temporarily blocked. Creating requests is unavailable.
 ```
 
 ## 7. Requests table
@@ -550,7 +550,7 @@ Buttons are disabled when:
 - form has validation errors;
 - required moderation fields are missing;
 - pharmacy status is `new`;
-- pharmacy status is `inactive`;
+- pharmacy status is `blocked`;
 - request is already submitted;
 - action is not allowed for current status.
 

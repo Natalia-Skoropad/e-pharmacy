@@ -8,6 +8,6 @@ export const ASSETS = {
 export const IMAGE_DIRS = {
   common: '/images/common',
   home: '/images/home',
-  stores: '/images/stores',
+  pharmacies: '/images/pharmacies',
   products: '/images/products',
 } as const;

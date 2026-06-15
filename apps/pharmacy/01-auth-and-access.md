@@ -146,14 +146,14 @@ Redirects:
 | `pharmacy` | `/pharmacy/dashboard` |
 | `admin`    | `/admin/dashboard`    |
 
-## 6. Inactive pharmacy login
+## 6. Blocked pharmacy login
 
-If pharmacy status is `inactive`, Pharmacy cabinet access is blocked.
+If pharmacy status is `blocked`, Pharmacy cabinet access is blocked.
 
 Message:
 
 ```txt
-Your account is temporarily inactive. Please contact administration for details.
+Your account is temporarily blocked. Please contact administration for details.
 ```
 
 ## 7. New pharmacy login

@@ -8,7 +8,7 @@ import css from './CartSummary.module.css';
 //===================================================================
 
 type CartSummaryProps = {
-  storeId: string;
+  pharmacyId: string;
   totalItems: number;
   totalPrice: number;
   checkoutPath: string;
@@ -19,7 +19,7 @@ type CartSummaryProps = {
 //===================================================================
 
 function CartSummary({
-  storeId,
+  pharmacyId,
   totalItems,
   totalPrice,
   checkoutPath,
@@ -27,8 +27,8 @@ function CartSummary({
   onContinueShopping,
 }: CartSummaryProps) {
   return (
-    <aside className={css.card} aria-labelledby={`cart-summary-${storeId}`}>
-      <h2 className={css.title} id={`cart-summary-${storeId}`}>
+    <aside className={css.card} aria-labelledby={`cart-summary-${pharmacyId}`}>
+      <h2 className={css.title} id={`cart-summary-${pharmacyId}`}>
         Order summary
       </h2>
 

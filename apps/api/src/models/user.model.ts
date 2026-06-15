@@ -13,7 +13,7 @@ import {
 import {
   USER_ROLES,
   USER_STATUSES,
-  PHARMACY_ACCOUNT_STATUSES,
+  PHARMACY_STATUSES,
 } from '../constants/auth';
 
 import type { UserEntity } from '../types/user';
@@ -59,7 +59,7 @@ const userSchema = new Schema<UserEntity>(
 
     pharmacyStatus: {
       type: String,
-      enum: Object.values(PHARMACY_ACCOUNT_STATUSES),
+      enum: Object.values(PHARMACY_STATUSES),
       default: undefined,
     },
 
@@ -98,9 +98,9 @@ const userSchema = new Schema<UserEntity>(
       default: [],
     },
 
-    favoriteStoreIds: {
+    favoritePharmacyIds: {
       type: [Schema.Types.ObjectId],
-      ref: 'Store',
+      ref: 'Pharmacy',
       default: [],
     },
 

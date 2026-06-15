@@ -2,9 +2,9 @@ import { notFound, permanentRedirect } from 'next/navigation';
 
 import {
   createProductDetailMetadata,
-  createStoreDetailMetadata,
+  createPharmacyDetailMetadata,
   renderProductDetailPage,
-  renderStoreDetailPage,
+  renderPharmacyDetailPage,
   resolveRootDetailBySlugId,
 } from '@/lib/details';
 import { createPageMetadata } from '@/lib/seo';
@@ -18,15 +18,15 @@ type RootDetailsPageProps = {
     slugId: string;
   }>;
   searchParams?: Promise<{
-    storeId?: string;
+    pharmacyId?: string;
   }>;
 };
 
 //===================================================================
 
 
-function createProductCanonicalQueryString(storeId?: string): string {
-  return storeId ? `?storeId=${encodeURIComponent(storeId)}` : '';
+function createProductCanonicalQueryString(pharmacyId?: string): string {
+  return pharmacyId ? `?pharmacyId=${encodeURIComponent(pharmacyId)}` : '';
 }
 
 //===================================================================
@@ -50,7 +50,7 @@ export async function generateMetadata({
     return createProductDetailMetadata(detail.product);
   }
 
-  return createStoreDetailMetadata(detail.store);
+  return createPharmacyDetailMetadata(detail.pharmacy);
 }
 
 //===================================================================
@@ -65,7 +65,7 @@ async function RootDetailsPage({ params, searchParams }: RootDetailsPageProps) {
   if (!detail.isCanonicalSlug) {
     const queryString =
       detail.type === 'product'
-        ? createProductCanonicalQueryString(resolvedSearchParams?.storeId)
+        ? createProductCanonicalQueryString(resolvedSearchParams?.pharmacyId)
         : '';
 
     permanentRedirect(`${detail.canonicalPath}${queryString}`);
@@ -75,7 +75,7 @@ async function RootDetailsPage({ params, searchParams }: RootDetailsPageProps) {
     return renderProductDetailPage(detail.product, resolvedSearchParams);
   }
 
-  return renderStoreDetailPage(detail.store);
+  return renderPharmacyDetailPage(detail.pharmacy);
 }
 
 export default RootDetailsPage;

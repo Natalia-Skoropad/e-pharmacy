@@ -86,14 +86,14 @@
   gap: 16px;
 }
 
-.storeHead {
+.pharmacyHead {
   display: grid;
   gap: 14px;
   align-items: start;
   padding: 16px;
 }
 
-.storeTitle,
+.pharmacyTitle,
 .summaryTitle {
   font-size: var(--fz-24);
   font-weight: var(--fw-bold);
@@ -149,7 +149,7 @@
   gap: 12px;
 }
 
-.storeDetailsLink,
+.pharmacyDetailsLink,
 .productDetailsLink {
   justify-self: start;
 }
@@ -265,12 +265,12 @@
     padding-block: 20px 96px;
   }
 
-  .storeHead {
+  .pharmacyHead {
     grid-template-columns: minmax(0, 1fr) auto;
     padding: 18px 20px;
   }
 
-  .storeDetailsLink,
+  .pharmacyDetailsLink,
   .productDetailsLink {
     justify-self: end;
   }

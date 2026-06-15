@@ -13,20 +13,11 @@ export const USER_STATUSES = {
 
 //===============================================================
 
-export const PHARMACY_ACCOUNT_STATUSES = {
+export const PHARMACY_STATUSES = {
   NEW: 'new',
-  ACTIVE: 'active',
   ON_MODERATION: 'on_moderation',
-  INACTIVE: 'inactive',
-} as const;
-
-//===============================================================
-
-export const SHOP_STATUSES = {
-  NEW: 'new',
   ACTIVE: 'active',
-  ON_MODERATION: 'on_moderation',
-  INACTIVE: 'inactive',
+  BLOCKED: 'blocked',
 } as const;
 
 //===============================================================

@@ -5,13 +5,13 @@ import { isReservedRootSlug } from '@e-pharmacy/config';
 import {
   buildProductPath,
   buildSlugId,
-  buildStorePath,
+  buildPharmacyPath,
 } from '@e-pharmacy/config/routes';
 
 import { getProductBySlugId } from '@/lib/details/product-detail-page';
-import { getStoreBySlugId } from '@/lib/details/store-detail-page';
+import { getPharmacyBySlugId } from '@/lib/details/pharmacy-detail-page';
 
-import type { Product, Store } from '@e-pharmacy/types';
+import type { Product, Pharmacy } from '@e-pharmacy/types';
 
 //===================================================================
 
@@ -22,14 +22,14 @@ type ProductRootDetail = {
   isCanonicalSlug: boolean;
 };
 
-type StoreRootDetail = {
-  type: 'store';
-  store: Store;
+type PharmacyRootDetail = {
+  type: 'pharmacy';
+  pharmacy: Pharmacy;
   canonicalPath: string;
   isCanonicalSlug: boolean;
 };
 
-export type RootDetail = ProductRootDetail | StoreRootDetail;
+export type RootDetail = ProductRootDetail | PharmacyRootDetail;
 
 //===================================================================
 
@@ -49,13 +49,13 @@ function createProductRootDetail(
 
 //===================================================================
 
-function createStoreRootDetail(slugId: string, store: Store): StoreRootDetail {
-  const canonicalSlugId = buildSlugId(store.name, store.id);
+function createPharmacyRootDetail(slugId: string, pharmacy: Pharmacy): PharmacyRootDetail {
+  const canonicalSlugId = buildSlugId(pharmacy.name, pharmacy.id);
 
   return {
-    type: 'store',
-    store,
-    canonicalPath: buildStorePath(store.name, store.id),
+    type: 'pharmacy',
+    pharmacy,
+    canonicalPath: buildPharmacyPath(pharmacy.name, pharmacy.id),
     isCanonicalSlug: slugId === canonicalSlugId,
   };
 }
@@ -67,14 +67,14 @@ export const resolveRootDetailBySlugId = cache(async function resolveRootDetailB
 ): Promise<RootDetail | null> {
   if (isReservedRootSlug(slugId)) return null;
 
-  const [product, store] = await Promise.all([
+  const [product, pharmacy] = await Promise.all([
     getProductBySlugId(slugId),
-    getStoreBySlugId(slugId),
+    getPharmacyBySlugId(slugId),
   ]);
 
   const details = [
     product ? createProductRootDetail(slugId, product) : null,
-    store ? createStoreRootDetail(slugId, store) : null,
+    pharmacy ? createPharmacyRootDetail(slugId, pharmacy) : null,
   ].filter((detail): detail is RootDetail => Boolean(detail));
 
   if (details.length === 0) return null;

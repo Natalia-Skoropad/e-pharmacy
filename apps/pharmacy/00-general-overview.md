@@ -159,7 +159,7 @@ Do not use pagination or rows-per-page in the URL:
 
 ### URL rules
 
-Store in URL:
+Pharmacy in URL:
 
 - business filters;
 - status filters;

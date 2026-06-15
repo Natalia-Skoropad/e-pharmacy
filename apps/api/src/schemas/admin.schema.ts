@@ -1,46 +1,26 @@
 import { z } from 'zod';
-
-import {
-  SHOP_STATUSES,
-  USER_ROLES,
-  PHARMACY_ACCOUNT_STATUSES,
-} from '../constants/auth';
-
-import {
-  createPharmacyUserSchema,
-  updatePharmacyStatusSchema,
-} from './auth.schema';
-
-//===============================================================
+import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
+import { createPharmacyUserSchema } from './auth.schema';
 
 const objectIdSchema = z
   .string()
   .trim()
   .regex(/^[0-9a-fA-F]{24}$/, 'Invalid id');
 
-//===============================================================
-
 export const createAdminPharmacySchema = createPharmacyUserSchema;
-export const updateAdminPharmacyStatusSchema = updatePharmacyStatusSchema;
 
 export const pharmacyIdParamsSchema = z.object({
   pharmacyId: objectIdSchema,
 });
 
-export const shopIdParamsSchema = z.object({
-  shopId: objectIdSchema,
-});
-
-export const updateAdminShopStatusSchema = z.object({
+export const updateAdminPharmacyStatusSchema = z.object({
   status: z.enum([
-    SHOP_STATUSES.NEW,
-    SHOP_STATUSES.ON_MODERATION,
-    SHOP_STATUSES.ACTIVE,
-    SHOP_STATUSES.INACTIVE,
+    PHARMACY_STATUSES.NEW,
+    PHARMACY_STATUSES.ON_MODERATION,
+    PHARMACY_STATUSES.ACTIVE,
+    PHARMACY_STATUSES.BLOCKED,
   ]),
 });
 
-//===============================================================
-
 export const adminOnlyPharmacyRole = USER_ROLES.PHARMACY;
-export const activePharmacyStatus = PHARMACY_ACCOUNT_STATUSES.ACTIVE;
+export const activePharmacyStatus = PHARMACY_STATUSES.ACTIVE;

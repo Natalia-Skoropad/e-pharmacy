@@ -329,7 +329,7 @@
 }
 
 .orderLink,
-.storeLink {
+.pharmacyLink {
   font-weight: var(--fw-bold);
   color: var(--color-accent);
   text-decoration: none;
@@ -338,8 +338,8 @@
 
 .orderLink:hover,
 .orderLink:focus-visible,
-.storeLink:hover,
-.storeLink:focus-visible {
+.pharmacyLink:hover,
+.pharmacyLink:focus-visible {
   color: var(--color-accent-hover);
 }
 

@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 
-import type { StoreBankDetails } from './store';
+import type { PharmacyBankDetails } from './pharmacy';
 
 //===============================================================
 
@@ -10,7 +10,7 @@ export type OrderDeliveryMethod = 'pickup' | 'post';
 
 //===============================================================
 
-export type OrderStoreSnapshot = {
+export type OrderPharmacySnapshot = {
   name: string;
   address?: string;
   city?: string;
@@ -19,7 +19,7 @@ export type OrderStoreSnapshot = {
   imageUrl?: string;
   rating?: number;
   reviewsCount?: number;
-  bankDetails?: StoreBankDetails;
+  bankDetails?: PharmacyBankDetails;
 };
 
 export type OrderProductSnapshot = {
@@ -47,8 +47,8 @@ export type OrderItemEntity = {
 
 export type OrderEntity = {
   userId: Types.ObjectId;
-  storeId: Types.ObjectId;
-  storeSnapshot: OrderStoreSnapshot;
+  pharmacyId: Types.ObjectId;
+  pharmacySnapshot: OrderPharmacySnapshot;
   items: OrderItemEntity[];
   totalItems: number;
   totalPrice: number;
@@ -82,13 +82,13 @@ export type OrderResponseDto = {
   id: string;
   orderNumber: string;
   createdAt: string;
-  storeId: string;
-  storeName: string;
-  storeRating?: number;
-  storeReviewsCount?: number;
-  storePhone?: string;
-  storeEmail?: string;
-  storeAddress?: string;
+  pharmacyId: string;
+  pharmacyName: string;
+  pharmacyRating?: number;
+  pharmacyReviewsCount?: number;
+  pharmacyPhone?: string;
+  pharmacyEmail?: string;
+  pharmacyAddress?: string;
   totalItems: number;
   totalPrice: number;
   status: OrderStatus;
@@ -96,7 +96,7 @@ export type OrderResponseDto = {
   deliveryMethod: OrderDeliveryMethod;
   deliveryDetails?: OrderDeliveryDetails;
   comment?: string;
-  bankDetails?: StoreBankDetails;
+  bankDetails?: PharmacyBankDetails;
   items: OrderItemResponseDto[];
 };
 

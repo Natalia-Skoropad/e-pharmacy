@@ -1,8 +1,8 @@
 export const ROUTE_SEGMENTS = {
-  stores: 'pharmacy-stores',
+  pharmacies: 'pharmacies',
   pharmacyDetails: 'pharmacies',
-  medicineStore: 'medicine-store',
-  productsCatalog: 'product-catalog',
+  medicinePharmacy: 'medicine-pharmacy',
+  productCatalog: 'product-catalog',
   productDetails: 'products',
   cart: 'cart',
   checkout: 'checkout',
@@ -22,7 +22,7 @@ export const ROUTE_SEGMENTS = {
 //===================================================================
 
 /**
- * Root-level product/store SEO URLs live at `/:slugId`.
+ * Root-level product/pharmacy SEO URLs live at `/:slugId`.
  * Every real static top-level route must stay here so dynamic details
  * never accidentally capture `/pharmacy`, `/admin`, legal pages, etc.
  */
@@ -32,9 +32,9 @@ export const RESERVED_ROOT_SLUGS = [
   ROUTE_SEGMENTS.profile,
   ROUTE_SEGMENTS.login,
   ROUTE_SEGMENTS.register,
-  ROUTE_SEGMENTS.stores,
-  ROUTE_SEGMENTS.medicineStore,
-  ROUTE_SEGMENTS.productsCatalog,
+  ROUTE_SEGMENTS.pharmacies,
+  ROUTE_SEGMENTS.medicinePharmacy,
+  ROUTE_SEGMENTS.productCatalog,
   ROUTE_SEGMENTS.deliveryPayment,
   ROUTE_SEGMENTS.returnPolicy,
   ROUTE_SEGMENTS.userAgreement,

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import Link from 'next/link';
-import { Heart, KeyRound, Store } from 'lucide-react';
+import { Building2, Heart, KeyRound } from 'lucide-react';
 
 import {
   Button,
@@ -23,8 +23,8 @@ import {
 } from '@e-pharmacy/ui/form-fields';
 
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { ProductCard } from '@/components/products-catalog';
-import { StoreCard } from '@/components/pharmacy-stores';
+import { ProductCard } from '@/components/product-catalog';
+import { PharmacyCard } from '@/components/pharmacies';
 import { PROFILE_TITLE } from '@e-pharmacy/config/seo';
 import { ROUTES } from '@e-pharmacy/config/routes';
 
@@ -35,7 +35,10 @@ import {
 } from '@e-pharmacy/utils/formatters';
 
 import { buildClientOrderPath } from '@/lib/orders';
-import { buildStorePath, createBreadcrumbs } from '@e-pharmacy/config/routes';
+import {
+  buildPharmacyPath,
+  createBreadcrumbs,
+} from '@e-pharmacy/config/routes';
 
 import {
   CHANGE_PASSWORD_FORM_FIELDS,
@@ -66,22 +69,22 @@ import { useAuth } from '@e-pharmacy/auth/core';
 import {
   getOrders,
   getProducts,
-  getStores,
+  getPharmacies,
   updateCurrentUser,
   updateCurrentUserPassword,
 } from '@e-pharmacy/api-client/client';
 
-import type {
-  ClientOrder,
-  Product,
-  Store as PharmacyStore,
-} from '@e-pharmacy/types';
+import type { ClientOrder, Product, Pharmacy } from '@e-pharmacy/types';
 
 import css from './ProfilePageContent.module.css';
 
 //===================================================================
 
-type ProfileTab = 'data' | 'orders' | 'favorite-products' | 'favorite-stores';
+type ProfileTab =
+  | 'data'
+  | 'orders'
+  | 'favorite-products'
+  | 'favorite-pharmacies';
 
 const TABS: Array<{
   value: ProfileTab;
@@ -90,7 +93,7 @@ const TABS: Array<{
   { value: 'data', label: 'My data' },
   { value: 'orders', label: 'My orders' },
   { value: 'favorite-products', label: 'Favorite products' },
-  { value: 'favorite-stores', label: 'Favorite stores' },
+  { value: 'favorite-pharmacies', label: 'Favorite pharmacies' },
 ];
 
 const FAVORITES_PER_PAGE = 100;
@@ -128,8 +131,8 @@ async function getFavoriteProducts(): Promise<Product[]> {
 
 //===================================================================
 
-async function getFavoriteStores(): Promise<PharmacyStore[]> {
-  const firstPage = await getStores({
+async function getFavoritePharmacies(): Promise<Pharmacy[]> {
+  const firstPage = await getPharmacies({
     page: 1,
     perPage: FAVORITES_PER_PAGE,
     sort: 'name-asc',
@@ -139,7 +142,7 @@ async function getFavoriteStores(): Promise<PharmacyStore[]> {
   if (firstPage.totalPages > 1) {
     const nextPages = await Promise.all(
       Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
-        getStores({
+        getPharmacies({
           page: index + 2,
           perPage: FAVORITES_PER_PAGE,
           sort: 'name-asc',
@@ -151,7 +154,7 @@ async function getFavoriteStores(): Promise<PharmacyStore[]> {
   }
 
   return pages.flatMap((page) =>
-    page.items.filter((store) => Boolean(store.isFavorite))
+    page.items.filter((pharmacy) => Boolean(pharmacy.isFavorite))
   );
 }
 
@@ -189,29 +192,29 @@ function ProfilePageContent() {
     useState(ORDERS_VISIBLE_STEP);
 
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
-  const [favoriteStores, setFavoriteStores] = useState<PharmacyStore[]>([]);
+  const [favoritePharmacies, setFavoritePharmacies] = useState<Pharmacy[]>([]);
   const [favoriteProductsError, setFavoriteProductsError] = useState('');
-  const [favoriteStoresError, setFavoriteStoresError] = useState('');
+  const [favoritePharmaciesError, setFavoritePharmaciesError] = useState('');
 
   const [favoriteProductsCount, setFavoriteProductsCount] = useState<
     number | null
   >(null);
 
-  const [favoriteStoresCount, setFavoriteStoresCount] = useState<number | null>(
-    null
-  );
+  const [favoritePharmaciesCount, setFavoritePharmaciesCount] = useState<
+    number | null
+  >(null);
 
   const [favoriteProductsVisibleCount, setFavoriteProductsVisibleCount] =
     useState(FAVORITES_VISIBLE_STEP);
 
-  const [favoriteStoresVisibleCount, setFavoriteStoresVisibleCount] = useState(
-    FAVORITES_VISIBLE_STEP
-  );
+  const [favoritePharmaciesVisibleCount, setFavoritePharmaciesVisibleCount] =
+    useState(FAVORITES_VISIBLE_STEP);
 
   const [isFavoriteProductsLoading, setIsFavoriteProductsLoading] =
     useState(false);
 
-  const [isFavoriteStoresLoading, setIsFavoriteStoresLoading] = useState(false);
+  const [isFavoritePharmaciesLoading, setIsFavoritePharmaciesLoading] =
+    useState(false);
   const [isOrdersLoading, setIsOrdersLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
@@ -272,13 +275,13 @@ function ProfilePageContent() {
           };
         }
 
-        if (tab.value === 'favorite-stores') {
+        if (tab.value === 'favorite-pharmacies') {
           return {
             ...tab,
             label:
-              favoriteStoresCount === null
+              favoritePharmaciesCount === null
                 ? tab.label
-                : `${tab.label} (${favoriteStoresCount})`,
+                : `${tab.label} (${favoritePharmaciesCount})`,
           };
         }
 
@@ -291,7 +294,7 @@ function ProfilePageContent() {
 
         return tab;
       }),
-    [favoriteProductsCount, favoriteStoresCount, orders.length]
+    [favoriteProductsCount, favoritePharmaciesCount, orders.length]
   );
 
   const visibleOrders = useMemo(
@@ -306,9 +309,9 @@ function ProfilePageContent() {
     [favoriteProducts, favoriteProductsVisibleCount]
   );
 
-  const visibleFavoriteStores = useMemo(
-    () => favoriteStores.slice(0, favoriteStoresVisibleCount),
-    [favoriteStores, favoriteStoresVisibleCount]
+  const visibleFavoritePharmacies = useMemo(
+    () => favoritePharmacies.slice(0, favoritePharmaciesVisibleCount),
+    [favoritePharmacies, favoritePharmaciesVisibleCount]
   );
 
   const hiddenFavoriteProductsCount = Math.max(
@@ -316,8 +319,8 @@ function ProfilePageContent() {
     0
   );
 
-  const hiddenFavoriteStoresCount = Math.max(
-    favoriteStores.length - visibleFavoriteStores.length,
+  const hiddenFavoritePharmaciesCount = Math.max(
+    favoritePharmacies.length - visibleFavoritePharmacies.length,
     0
   );
 
@@ -338,20 +341,20 @@ function ProfilePageContent() {
     }
   }, []);
 
-  const loadFavoriteStores = useCallback(async () => {
+  const loadFavoritePharmacies = useCallback(async () => {
     try {
-      setIsFavoriteStoresLoading(true);
-      setFavoriteStoresError('');
+      setIsFavoritePharmaciesLoading(true);
+      setFavoritePharmaciesError('');
 
-      const stores = await getFavoriteStores();
+      const pharmacies = await getFavoritePharmacies();
 
-      setFavoriteStores(stores);
-      setFavoriteStoresCount(stores.length);
+      setFavoritePharmacies(pharmacies);
+      setFavoritePharmaciesCount(pharmacies.length);
     } catch {
-      setFavoriteStoresError('Could not load favorite stores.');
-      setFavoriteStoresCount(0);
+      setFavoritePharmaciesError('Could not load favorite pharmacies.');
+      setFavoritePharmaciesCount(0);
     } finally {
-      setIsFavoriteStoresLoading(false);
+      setIsFavoritePharmaciesLoading(false);
     }
   }, []);
 
@@ -360,17 +363,17 @@ function ProfilePageContent() {
 
     const timeoutId = window.setTimeout(() => {
       void loadFavoriteProducts();
-      void loadFavoriteStores();
+      void loadFavoritePharmacies();
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [canUseAuthFeatures, loadFavoriteProducts, loadFavoriteStores]);
+  }, [canUseAuthFeatures, loadFavoriteProducts, loadFavoritePharmacies]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setOrdersVisibleCount(ORDERS_VISIBLE_STEP);
       setFavoriteProductsVisibleCount(FAVORITES_VISIBLE_STEP);
-      setFavoriteStoresVisibleCount(FAVORITES_VISIBLE_STEP);
+      setFavoritePharmaciesVisibleCount(FAVORITES_VISIBLE_STEP);
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
@@ -813,13 +816,13 @@ function ProfilePageContent() {
                               </td>
                               <td>
                                 <Link
-                                  className={css.storeLink}
-                                  href={buildStorePath(
-                                    order.storeName,
-                                    order.storeId
+                                  className={css.pharmacyLink}
+                                  href={buildPharmacyPath(
+                                    order.pharmacyName,
+                                    order.pharmacyId
                                   )}
                                 >
-                                  {order.storeName}
+                                  {order.pharmacyName}
                                 </Link>
                               </td>
                               <td>{formatPrice(order.totalPrice)}</td>
@@ -947,11 +950,11 @@ function ProfilePageContent() {
                 </div>
               ) : null}
 
-              {activeTab === 'favorite-stores' ? (
+              {activeTab === 'favorite-pharmacies' ? (
                 <div className={css.tabPanel} role="tabpanel">
                   <div className={css.favoritesHeader}>
                     <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle}>Favorite stores</h2>
+                      <h2 className={css.panelTitle}>Favorite pharmacies</h2>
                       <p className={css.panelText}>
                         Pharmacies you mark with a heart are saved here for
                         quick access.
@@ -959,63 +962,70 @@ function ProfilePageContent() {
                     </div>
 
                     <CountLabel
-                      shown={visibleFavoriteStores.length}
-                      total={favoriteStoresCount ?? favoriteStores.length}
-                      label="stores"
+                      shown={visibleFavoritePharmacies.length}
+                      total={
+                        favoritePharmaciesCount ?? favoritePharmacies.length
+                      }
+                      label="pharmacies"
                     />
                   </div>
 
-                  {favoriteStoresError ? (
+                  {favoritePharmaciesError ? (
                     <p className={css.error} role="alert">
-                      {favoriteStoresError}
+                      {favoritePharmaciesError}
                     </p>
                   ) : null}
 
-                  {isFavoriteStoresLoading ? (
-                    <LoadingSpinner label="Loading favorite stores..." />
-                  ) : favoriteStores.length > 0 ? (
+                  {isFavoritePharmaciesLoading ? (
+                    <LoadingSpinner label="Loading favorite pharmacies..." />
+                  ) : favoritePharmacies.length > 0 ? (
                     <>
                       <div className={css.favoritesGrid}>
-                        {visibleFavoriteStores.map((store) => (
-                          <StoreCard
-                            key={store.id}
-                            store={store}
+                        {visibleFavoritePharmacies.map((pharmacy) => (
+                          <PharmacyCard
+                            key={pharmacy.id}
+                            pharmacy={pharmacy}
                             skipFavoriteRefresh
-                            onFavoriteChange={(storeId, isFavoriteStore) => {
-                              if (isFavoriteStore) return;
+                            onFavoriteChange={(
+                              pharmacyId,
+                              isFavoritePharmacy
+                            ) => {
+                              if (isFavoritePharmacy) return;
 
-                              setFavoriteStores((prev) => {
-                                const nextStores = prev.filter(
-                                  (item) => item.id !== storeId
+                              setFavoritePharmacies((prev) => {
+                                const nextPharmacies = prev.filter(
+                                  (item) => item.id !== pharmacyId
                                 );
-                                setFavoriteStoresCount(nextStores.length);
+                                setFavoritePharmaciesCount(
+                                  nextPharmacies.length
+                                );
 
-                                return nextStores;
+                                return nextPharmacies;
                               });
                             }}
                           />
                         ))}
                       </div>
 
-                      {hiddenFavoriteStoresCount > 0 ? (
+                      {hiddenFavoritePharmaciesCount > 0 ? (
                         <Button
                           className={css.showMoreButton}
                           type="button"
                           variant="secondary"
                           onClick={() =>
-                            setFavoriteStoresVisibleCount(
+                            setFavoritePharmaciesVisibleCount(
                               (prev) => prev + FAVORITES_VISIBLE_STEP
                             )
                           }
                         >
-                          Show more pharmacies ({hiddenFavoriteStoresCount})
+                          Show more pharmacies ({hiddenFavoritePharmaciesCount})
                         </Button>
                       ) : null}
                     </>
                   ) : (
                     <div className={css.emptyState}>
                       <span className={css.emptyIcon} aria-hidden="true">
-                        <Store size={30} />
+                        <Building2 size={30} />
                       </span>
                       <div className={css.emptyCopy}>
                         <h3 className={css.emptyTitle}>
@@ -1026,7 +1036,7 @@ function ProfilePageContent() {
                           for quick access — loyal as a tiny green assistant.
                         </p>
                       </div>
-                      <ButtonLink href={ROUTES.STORES}>
+                      <ButtonLink href={ROUTES.PHARMACIES}>
                         Browse pharmacies
                       </ButtonLink>
                     </div>

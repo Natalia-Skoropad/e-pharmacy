@@ -1,6 +1,6 @@
 # E-PHARMACY Client
 
-> A responsive client storefront for browsing pharmacy stores, finding products, managing a cart, and creating online orders.
+> A responsive client storefront for browsing pharmacies, finding products, managing a cart, and creating online orders.
 
 ![E-PHARMACY client cover](./public/og/og-cover.jpg)
 
@@ -10,7 +10,7 @@
 
 The client app allows clients to:
 
-- browse pharmacy stores
+- browse pharmacies
 - search, filter, and sort products
 - open detailed product and pharmacy pages with SEO-friendly URLs
 - add products and pharmacies to favorites
@@ -47,9 +47,9 @@ https://e-pharmacy-client-ten.vercel.app
 
 ![Pharmacy details page](./public/readme/pharmacy-page.jpg)
 
-### Products catalog
+### Product catalog
 
-![Products catalog](./public/readme/product-catalog.jpg)
+![Product catalog](./public/readme/product-catalog.jpg)
 
 ### Product details page
 
@@ -92,7 +92,7 @@ https://e-pharmacy-client-ten.vercel.app
 - profile editing
 - password changing
 
-### Pharmacy stores
+### Pharmacies
 
 - public pharmacy catalog
 - search by pharmacy name and address
@@ -103,9 +103,9 @@ https://e-pharmacy-client-ten.vercel.app
 - favorite pharmacy toggle for authenticated users
 - responsive pharmacy cards
 
-### Products catalog
+### Product catalog
 
-- public products catalog
+- public product catalog
 - search by product name and article
 - category filtering
 - pharmacy filtering
@@ -216,10 +216,10 @@ apps/client/
           return-policy/
           user-agreement/
         (products)/
-          products-catalog/[[...segments]]
+          product-catalog/[[...segments]]
           products/[slugId]/
         (pharmacies)/
-          pharmacy-stores/[[...segments]]
+          pharmacies/[[...segments]]
           pharmacies/[slugId]/
         [slugId]/
       api/
@@ -227,7 +227,7 @@ apps/client/
         cart/
         orders/
         products/
-        stores/
+        pharmacies/
         health/
       error.tsx
       layout.tsx
@@ -245,9 +245,9 @@ apps/client/
       home/
       info/
       layout/
-      products-catalog/
+      product-catalog/
       modals/
-      pharmacy-stores/
+      pharmacies/
       profile/
     hooks/
     lib/
@@ -283,11 +283,11 @@ A public landing page that introduces the service, explains the client flow, and
 
 Registration, login, password recovery, and reset-password pages with validation, user-friendly states, and redirect protection.
 
-### Pharmacy stores
+### Pharmacies
 
 A public catalog for browsing pharmacies with search, city filtering, sorting, pagination, favorite actions, reviews, and detail pages.
 
-### Products catalog
+### Product catalog
 
 A public catalog for browsing products with search, filters, sorting, pagination, product cards, reviews, and detailed product pages.
 
@@ -328,8 +328,8 @@ src/lib/details/*                    -> product/pharmacy detail metadata and can
 
 ```txt
 /
-/pharmacy-stores
-/products-catalog
+/pharmacies
+/product-catalog
 /delivery-and-payment
 /return-policy
 /user-agreement
@@ -382,13 +382,13 @@ If a user opens a detail page with an outdated or incorrect slug, the app resolv
 
 ### Catalog routing
 
-The products catalog supports readable route segments for meaningful primary filters:
+The product catalog supports readable route segments for meaningful primary filters:
 
 ```txt
-/products-catalog
-/products-catalog/category-antibiotics
-/products-catalog/pharmacy-wellness-hub-pharmacy-6a01bcd0b2ed6525cedea940
-/products-catalog/category-antibiotics/pharmacy-wellness-hub-pharmacy-6a01bcd0b2ed6525cedea940
+/product-catalog
+/product-catalog/category-antibiotics
+/product-catalog/pharmacy-wellness-hub-pharmacy-6a01bcd0b2ed6525cedea940
+/product-catalog/category-antibiotics/pharmacy-wellness-hub-pharmacy-6a01bcd0b2ed6525cedea940
 ```
 
 Search, article search, availability, sorting, and pagination are treated as temporary catalog states and are marked as non-indexable when needed.
@@ -396,12 +396,12 @@ Search, article search, availability, sorting, and pagination are treated as tem
 The pharmacy catalog also uses readable route segments:
 
 ```txt
-/pharmacy-stores
-/pharmacy-stores/city-kyiv
-/pharmacy-stores/search-name-health
-/pharmacy-stores/address-main-street
-/pharmacy-stores/sort-rating-desc
-/pharmacy-stores/page-2
+/pharmacies
+/pharmacies/city-kyiv
+/pharmacies/search-name-health
+/pharmacies/address-main-street
+/pharmacies/sort-rating-desc
+/pharmacies/page-2
 ```
 
 City pages can be indexable because they describe stable location-based catalog content. Search by name/address, sorting, pagination, and empty-result states are noindex to avoid thin or duplicate pages.
@@ -430,7 +430,7 @@ The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker f
 Main API areas used by the client:
 
 - auth: register, login, current user, profile update, password update, password reset, logout
-- stores: catalog, filters, details, reviews, favorites
+- pharmacies: catalog, filters, details, reviews, favorites
 - products: catalog, filters, details, reviews, favorites
 - cart: get cart, add/update/remove item, clear cart
 - orders: checkout, order history, order details

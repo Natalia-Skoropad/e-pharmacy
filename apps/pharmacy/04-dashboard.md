@@ -25,7 +25,7 @@ Dashboard is available for pharmacies with statuses:
 - `active`;
 - `on_moderation`.
 
-Dashboard is not available for `inactive` pharmacies because inactive pharmacies cannot enter the Pharmacy cabinet.
+Dashboard is not available for `blocked` pharmacies because blocked pharmacies cannot enter the Pharmacy cabinet.
 
 ### New pharmacy
 
@@ -182,7 +182,7 @@ Recommended cards:
 - Total clients;
 - Repeat clients;
 - Active clients;
-- Inactive clients.
+- Blocked clients.
 
 Removed from scope:
 
@@ -195,7 +195,7 @@ Examples:
 ```txt
 /pharmacy/clients
 /pharmacy/clients/status-active
-/pharmacy/clients/status-inactive
+/pharmacy/clients/status-blocked
 ```
 
 ### Empty state

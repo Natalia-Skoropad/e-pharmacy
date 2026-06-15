@@ -8,11 +8,11 @@ export const CLIENT_NAV_LINKS = [
     href: ROUTES.HOME,
   },
   {
-    label: 'Pharmacy stores',
-    href: ROUTES.STORES,
+    label: 'Pharmacies',
+    href: ROUTES.PHARMACIES,
   },
   {
-    label: 'products catalog',
+    label: 'Product catalog',
     href: ROUTES.PRODUCTS_CATALOG,
   },
 ] as const;

@@ -48,7 +48,7 @@ export const APP_ERROR_MESSAGES = {
     loadDetails: 'Could not load product details.',
   },
 
-  stores: {
+  pharmacies: {
     loadList: 'Could not load pharmacies.',
     loadDetails: 'Could not load pharmacy details.',
     copyEmail: 'Could not copy email.',
@@ -57,7 +57,7 @@ export const APP_ERROR_MESSAGES = {
   profile: {
     loadOrder: 'Order was not found or is not available for this account.',
     loadFavoriteProducts: 'Could not load favorite products.',
-    loadFavoriteStores: 'Could not load favorite stores.',
+    loadFavoritePharmacies: 'Could not load favorite pharmacies.',
     updatePhoto: 'Could not update profile photo.',
     updateData: 'Could not update profile data.',
     updatePassword: 'Could not update password.',

@@ -19,7 +19,7 @@ export const orderParamsSchema = z.object({
 
 export const checkoutOrderSchema = z
   .object({
-    storeId: mongoIdSchema,
+    pharmacyId: mongoIdSchema,
     paymentMethod: z.enum(['cash', 'bank-transfer']),
     deliveryMethod: z.enum(['pickup', 'post']),
     deliveryDetails: z

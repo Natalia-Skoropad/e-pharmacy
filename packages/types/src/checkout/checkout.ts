@@ -5,9 +5,9 @@ import type { OrderPaymentMethod } from '../orders';
 
 export type CheckoutPaymentMethod = OrderPaymentMethod;
 
-export type CheckoutStoreOrderGroup = {
-  storeId: string;
-  storeName: string;
+export type CheckoutPharmacyOrderGroup = {
+  pharmacyId: string;
+  pharmacyName: string;
   items: Cart['items'];
   totalItems: number;
   totalPrice: number;

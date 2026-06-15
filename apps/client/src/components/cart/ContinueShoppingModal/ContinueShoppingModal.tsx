@@ -25,8 +25,8 @@ import css from './ContinueShoppingModal.module.css';
 //===================================================================
 
 type ContinueShoppingModalProps = {
-  storeId: string;
-  storeName: string;
+  pharmacyId: string;
+  pharmacyName: string;
   cartItems: Cart['items'];
   onClose: () => void;
   onCartChange: (cart: Cart) => void;
@@ -53,10 +53,10 @@ const CATEGORY_PRODUCTS_LIMIT = 200;
 
 //===================================================================
 
-function getStoreProductPrice(product: Product, storeId: string): number {
-  const storeOffer = product.offers?.find((offer) => offer.storeId === storeId);
+function getPharmacyProductPrice(product: Product, pharmacyId: string): number {
+  const pharmacyOffer = product.offers?.find((offer) => offer.pharmacyId === pharmacyId);
 
-  return storeOffer?.price ?? product.price;
+  return pharmacyOffer?.price ?? product.price;
 }
 
 function getUniqueCategoryOptions(products: Product[]): CategoryOption[] {
@@ -77,8 +77,8 @@ function getUniqueCategoryOptions(products: Product[]): CategoryOption[] {
 //===================================================================
 
 function ContinueShoppingModal({
-  storeId,
-  storeName,
+  pharmacyId,
+  pharmacyName,
   cartItems,
   onClose,
   onCartChange,
@@ -108,18 +108,18 @@ function ContinueShoppingModal({
   const cartProductIds = useMemo(() => {
     return new Set(
       cartItems
-        .filter((item) => item.storeId === storeId)
+        .filter((item) => item.pharmacyId === pharmacyId)
         .map((item) => item.productId)
     );
-  }, [cartItems, storeId]);
+  }, [cartItems, pharmacyId]);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function fetchStoreCategories() {
+    async function fetchPharmacyCategories() {
       try {
         const response = await getProducts({
-          storeId,
+          pharmacyId,
           page: 1,
           perPage: CATEGORY_PRODUCTS_LIMIT,
           inStock: true,
@@ -136,12 +136,12 @@ function ContinueShoppingModal({
       }
     }
 
-    void fetchStoreCategories();
+    void fetchPharmacyCategories();
 
     return () => {
       isMounted = false;
     };
-  }, [storeId]);
+  }, [pharmacyId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -151,7 +151,7 @@ function ContinueShoppingModal({
         setError('');
 
         const response = await getProducts({
-          storeId,
+          pharmacyId,
           page: 1,
           perPage: PRODUCTS_LIMIT,
           inStock: true,
@@ -177,7 +177,7 @@ function ContinueShoppingModal({
       isMounted = false;
       window.clearTimeout(timeoutId);
     };
-  }, [searchValue, selectedCategory, storeId]);
+  }, [searchValue, selectedCategory, pharmacyId]);
 
   const handleAddProduct = async (productId: string) => {
     try {
@@ -186,7 +186,7 @@ function ContinueShoppingModal({
 
       const response = await addCartItem({
         productId,
-        storeId,
+        pharmacyId,
         quantity: 1,
       });
 
@@ -212,7 +212,7 @@ function ContinueShoppingModal({
       >
         <div className={css.head}>
           <div>
-            <p className={css.kicker}>{storeName}</p>
+            <p className={css.kicker}>{pharmacyName}</p>
             <h2 className={css.title} id={titleId}>
               Continue shopping
             </h2>
@@ -322,7 +322,7 @@ function ContinueShoppingModal({
                     </div>
 
                     <p className={css.productPrice}>
-                      {formatPrice(getStoreProductPrice(product, storeId))}
+                      {formatPrice(getPharmacyProductPrice(product, pharmacyId))}
                     </p>
 
                     <Button

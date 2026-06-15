@@ -4,10 +4,10 @@ import { ROUTE_SEGMENTS } from './route-segments';
 
 export const ROUTES = {
   HOME: '/',
-  STORES: `/${ROUTE_SEGMENTS.stores}`,
+  PHARMACIES: `/${ROUTE_SEGMENTS.pharmacies}`,
   PHARMACY_DETAILS: `/${ROUTE_SEGMENTS.pharmacyDetails}`,
-  MEDICINE_STORE: `/${ROUTE_SEGMENTS.medicineStore}`,
-  PRODUCTS_CATALOG: `/${ROUTE_SEGMENTS.productsCatalog}`,
+  MEDICINE_PHARMACY: `/${ROUTE_SEGMENTS.medicinePharmacy}`,
+  PRODUCTS_CATALOG: `/${ROUTE_SEGMENTS.productCatalog}`,
   PRODUCT_DETAILS: `/${ROUTE_SEGMENTS.productDetails}`,
   CART: `/${ROUTE_SEGMENTS.cart}`,
   CHECKOUT: `/${ROUTE_SEGMENTS.checkout}`,

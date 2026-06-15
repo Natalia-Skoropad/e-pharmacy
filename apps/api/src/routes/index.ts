@@ -6,7 +6,7 @@ import { cartRoutes } from './cart.routes';
 import { healthRoutes } from './health.routes';
 import { orderRoutes } from './order.routes';
 import { productRoutes } from './product.routes';
-import { storeRoutes } from './store.routes';
+import { pharmacyRoutes } from './pharmacy.routes';
 
 //===============================================================
 
@@ -20,4 +20,4 @@ routes.use('/cart', cartRoutes);
 routes.use('/health', healthRoutes);
 routes.use('/orders', orderRoutes);
 routes.use('/products', productRoutes);
-routes.use('/stores', storeRoutes);
+routes.use('/pharmacies', pharmacyRoutes);

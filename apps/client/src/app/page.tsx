@@ -10,14 +10,14 @@ import {
 
 import { ButtonLink, Container } from '@e-pharmacy/ui/common';
 import { HomeFeatureCards, HomeReviewsSlider } from '@/components/home';
-import { ProductCard } from '@/components/products-catalog';
-import { StoreCard } from '@/components/pharmacy-stores';
+import { ProductCard } from '@/components/product-catalog';
+import { PharmacyCard } from '@/components/pharmacies';
 
 import { HOME_DESCRIPTION, HOME_TITLE } from '@e-pharmacy/config/seo';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { createPageMetadata } from '@/lib/seo';
-import { getProducts, getStores } from '@e-pharmacy/api-client/client';
-import type { Product, Store } from '@e-pharmacy/types';
+import { getProducts, getPharmacies } from '@e-pharmacy/api-client/client';
+import type { Product, Pharmacy } from '@e-pharmacy/types';
 
 import css from './page.module.css';
 
@@ -39,19 +39,19 @@ const HOME_PREVIEW_LIMIT = 6;
 
 const STATS = [
   { value: '126+', label: 'products in catalog' },
-  { value: '98+', label: 'trusted pharmacy stores' },
+  { value: '98+', label: 'trusted pharmacies' },
   { value: '24/7', label: 'online order access' },
 ] as const;
 
 const BENEFITS = [
   {
     title: 'Compare before you order',
-    text: 'Check prices, ratings, store contacts, and available products before choosing a pharmacy.',
+    text: 'Check prices, ratings, pharmacy contacts, and available products before choosing a pharmacy.',
     icon: SearchCheck,
   },
   {
     title: 'Keep favorites nearby',
-    text: 'Save products and pharmacy stores in your account so repeat purchases take less time.',
+    text: 'Save products and pharmacies in your account so repeat purchases take less time.',
     icon: Heart,
   },
   {
@@ -78,7 +78,7 @@ const STEPS = [
   },
   {
     title: 'Choose pharmacy',
-    text: 'Check prices, ratings, available quantity, and store details before adding items to cart.',
+    text: 'Check prices, ratings, available quantity, and pharmacy details before adding items to cart.',
   },
   {
     title: 'Confirm order',
@@ -90,17 +90,17 @@ const REVIEWS = [
   {
     name: 'Maria Tkachenko',
     rating: 5,
-    text: 'The catalog feels simple and reliable. I found the product by name, checked which pharmacies had it available, compared ratings, and opened the store page before ordering. It is helpful that every pharmacy has its own details, contacts, and product list, because I can make a decision without jumping between different tabs.',
+    text: 'The catalog feels simple and reliable. I found the product by name, checked which pharmacies had it available, compared ratings, and opened the pharmacy page before ordering. It is helpful that every pharmacy has its own details, contacts, and product list, because I can make a decision without jumping between different tabs.',
   },
   {
     name: 'Sergey Rybachok',
     rating: 4.8,
-    text: 'Separate pharmacy invoices make the cart much easier to understand. I can see which items belong to which pharmacy, review every total separately, and move to checkout without guessing where the final sum came from. The flow feels clear even when I add products from several stores at once.',
+    text: 'Separate pharmacy invoices make the cart much easier to understand. I can see which items belong to which pharmacy, review every total separately, and move to checkout without guessing where the final sum came from. The flow feels clear even when I add products from several pharmacies at once.',
   },
   {
     name: 'Natalia Chatuk',
     rating: 4.6,
-    text: 'Favorite stores and order history are exactly what I need when buying the same products again. I do not have to search from the beginning every time. The profile keeps useful information close, and the pharmacy cards show enough details to choose a familiar store quickly.',
+    text: 'Favorite pharmacies and order history are exactly what I need when buying the same products again. I do not have to search from the beginning every time. The profile keeps useful information close, and the pharmacy cards show enough details to choose a familiar pharmacy quickly.',
   },
   {
     name: 'Olena Voronina',
@@ -121,9 +121,9 @@ const REVIEWS = [
 
 //===================================================================
 
-async function getFeaturedStores(): Promise<Store[]> {
+async function getFeaturedPharmacies(): Promise<Pharmacy[]> {
   try {
-    const response = await getStores(
+    const response = await getPharmacies(
       {
         page: 1,
         perPage: HOME_PREVIEW_LIMIT,
@@ -164,8 +164,8 @@ async function getFeaturedProducts(): Promise<Product[]> {
 //===================================================================
 
 async function HomePage() {
-  const [featuredStores, featuredProducts] = await Promise.all([
-    getFeaturedStores(),
+  const [featuredPharmacies, featuredProducts] = await Promise.all([
+    getFeaturedPharmacies(),
     getFeaturedProducts(),
   ]);
 
@@ -183,7 +183,7 @@ async function HomePage() {
 
               <p className={css.heroText}>
                 Order products online, compare pharmacy offers, manage your cart
-                by store, and keep health essentials organized in one calm
+                by pharmacy, and keep health essentials organized in one calm
                 digital place.
               </p>
 
@@ -192,7 +192,11 @@ async function HomePage() {
                   Buy product
                 </ButtonLink>
 
-                <ButtonLink href={ROUTES.STORES} variant="secondary" size="lg">
+                <ButtonLink
+                  href={ROUTES.PHARMACIES}
+                  variant="secondary"
+                  size="lg"
+                >
                   View pharmacies
                 </ButtonLink>
               </div>
@@ -228,30 +232,34 @@ async function HomePage() {
         </Container>
       </section>
 
-      <section className={css.section} aria-labelledby="stores-title">
+      <section className={css.section} aria-labelledby="pharmacies-title">
         <Container>
           <div className={css.sectionHead}>
             <p className={css.kicker}>Pharmacies</p>
-            <h2 className={css.sectionTitle} id="stores-title">
+            <h2 className={css.sectionTitle} id="pharmacies-title">
               Find a trusted pharmacy for your order
             </h2>
             <p className={css.sectionText}>
               Explore pharmacies, compare ratings, check contacts and available
-              products, then open the store that feels right before placing an
-              order.
+              products, then open the pharmacy that feels right before placing
+              an order.
             </p>
           </div>
 
-          {featuredStores.length > 0 ? (
+          {featuredPharmacies.length > 0 ? (
             <div className={css.previewGrid}>
-              {featuredStores.map((store) => (
-                <StoreCard key={store.id} store={store} skipFavoriteRefresh />
+              {featuredPharmacies.map((pharmacy) => (
+                <PharmacyCard
+                  key={pharmacy.id}
+                  pharmacy={pharmacy}
+                  skipFavoriteRefresh
+                />
               ))}
             </div>
           ) : null}
 
           <div className={css.sectionAction}>
-            <ButtonLink href={ROUTES.STORES} variant="secondary">
+            <ButtonLink href={ROUTES.PHARMACIES} variant="secondary">
               View all pharmacies
             </ButtonLink>
           </div>

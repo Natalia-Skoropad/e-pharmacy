@@ -53,7 +53,7 @@ function hasAuthContext(request: NextRequest): boolean {
  *
  * Guest requests stay cacheable for fast catalog/pharmacy pages.
  * Authenticated requests are intentionally proxied as private no-store requests,
- * because product/store payloads can contain viewer-specific fields such as
+ * because product/pharmacy payloads can contain viewer-specific fields such as
  * `isFavorite`. Without cookies, the UI can show a successful favorite toast
  * while the profile page still receives public items with `isFavorite: false`.
  */

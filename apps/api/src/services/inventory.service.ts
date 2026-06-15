@@ -25,7 +25,7 @@ function assertPositiveQuantity(quantity: number): void {
 
 export async function reserveOfferStock(
   productId: StockTarget,
-  storeId: StockTarget,
+  pharmacyId: StockTarget,
   quantity: number,
   session?: mongoose.ClientSession
 ): Promise<void> {
@@ -36,7 +36,7 @@ export async function reserveOfferStock(
       _id: productId,
       offers: {
         $elemMatch: {
-          storeId,
+          pharmacyId,
           activeQuantity: { $gte: quantity },
           inStock: true,
         },
@@ -58,14 +58,14 @@ export async function reserveOfferStock(
     );
   }
 
-  await syncOfferAvailability(productId, storeId, session);
+  await syncOfferAvailability(productId, pharmacyId, session);
 }
 
 //===============================================================
 
 export async function releaseOfferStock(
   productId: StockTarget,
-  storeId: StockTarget,
+  pharmacyId: StockTarget,
   quantity: number,
   session?: mongoose.ClientSession,
   strict = true
@@ -77,7 +77,7 @@ export async function releaseOfferStock(
       _id: productId,
       offers: {
         $elemMatch: {
-          storeId,
+          pharmacyId,
           reservedQuantity: { $gte: quantity },
         },
       },
@@ -99,7 +99,7 @@ export async function releaseOfferStock(
   }
 
   if (result.modifiedCount === 1) {
-    await syncOfferAvailability(productId, storeId, session);
+    await syncOfferAvailability(productId, pharmacyId, session);
   }
 }
 
@@ -107,7 +107,7 @@ export async function releaseOfferStock(
 
 export async function commitReservedStock(
   productId: StockTarget,
-  storeId: StockTarget,
+  pharmacyId: StockTarget,
   quantity: number,
   session: mongoose.ClientSession
 ): Promise<void> {
@@ -118,7 +118,7 @@ export async function commitReservedStock(
       _id: productId,
       offers: {
         $elemMatch: {
-          storeId,
+          pharmacyId,
           reservedQuantity: { $gte: quantity },
           totalQuantity: { $gte: quantity },
         },
@@ -140,14 +140,14 @@ export async function commitReservedStock(
     );
   }
 
-  await syncOfferAvailability(productId, storeId, session);
+  await syncOfferAvailability(productId, pharmacyId, session);
 }
 
 //===============================================================
 
 export async function setPharmacyOfferStock(
   productId: StockTarget,
-  storeId: StockTarget,
+  pharmacyId: StockTarget,
   nextTotalQuantity: number,
   session?: mongoose.ClientSession
 ): Promise<void> {
@@ -159,7 +159,7 @@ export async function setPharmacyOfferStock(
   }
 
   const product = await Product.findOne(
-    { _id: productId, 'offers.storeId': storeId },
+    { _id: productId, 'offers.pharmacyId': pharmacyId },
     { 'offers.$': 1 }
   )
     .session(session ?? null)
@@ -181,7 +181,7 @@ export async function setPharmacyOfferStock(
   const nextActiveQuantity = nextTotalQuantity - reservedQuantity;
 
   const result = await Product.updateOne(
-    { _id: productId, 'offers.storeId': storeId },
+    { _id: productId, 'offers.pharmacyId': pharmacyId },
     {
       $set: {
         'offers.$.totalQuantity': nextTotalQuantity,
@@ -201,14 +201,14 @@ export async function setPharmacyOfferStock(
 
 export async function syncOfferAvailability(
   productId: StockTarget,
-  storeId: StockTarget,
+  pharmacyId: StockTarget,
   session?: mongoose.ClientSession
 ): Promise<void> {
   const productObjectId = toObjectId(productId);
-  const storeObjectId = toObjectId(storeId);
+  const pharmacyObjectId = toObjectId(pharmacyId);
 
   const product = await Product.findOne(
-    { _id: productObjectId, 'offers.storeId': storeObjectId },
+    { _id: productObjectId, 'offers.pharmacyId': pharmacyObjectId },
     { 'offers.$': 1 }
   )
     .session(session ?? null)
@@ -218,7 +218,7 @@ export async function syncOfferAvailability(
   if (activeQuantity === undefined) return;
 
   await Product.updateOne(
-    { _id: productObjectId, 'offers.storeId': storeObjectId },
+    { _id: productObjectId, 'offers.pharmacyId': pharmacyObjectId },
     { $set: { 'offers.$.inStock': activeQuantity > 0 } },
     { session }
   );

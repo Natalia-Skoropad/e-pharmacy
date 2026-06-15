@@ -15,15 +15,15 @@ export type ProductCategory =
 //=============================================================================
 
 export type ProductOfferDto = {
-  storeId: EntityId;
-  storeName: string;
-  storeCity?: string;
-  storeAddress?: string;
-  storePhone?: string;
-  storeImageUrl?: string;
-  storeRating?: number;
-  storeReviewsCount?: number;
-  storeIsFavorite?: boolean;
+  pharmacyId: EntityId;
+  pharmacyName: string;
+  pharmacyCity?: string;
+  pharmacyAddress?: string;
+  pharmacyPhone?: string;
+  pharmacyImageUrl?: string;
+  pharmacyRating?: number;
+  pharmacyReviewsCount?: number;
+  pharmacyIsFavorite?: boolean;
   price: number;
   totalQuantity: number;
   activeQuantity: number;
@@ -43,9 +43,9 @@ export type ProductDto = {
   manufacturer?: string;
   dosage?: string;
   packageQuantity?: string;
-  storeId?: EntityId;
-  storeName?: string;
-  foundInStoresCount: number;
+  pharmacyId?: EntityId;
+  pharmacyName?: string;
+  foundInPharmaciesCount: number;
   offers: ProductOfferDto[];
   inStock: boolean;
   rating?: number;
@@ -85,7 +85,7 @@ export type ProductsQueryParams = {
   nameKeyword?: string;
   articleKeyword?: string;
   category?: ProductCategory;
-  storeId?: EntityId;
+  pharmacyId?: EntityId;
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;

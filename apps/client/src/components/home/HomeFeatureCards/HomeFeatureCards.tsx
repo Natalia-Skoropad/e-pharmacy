@@ -38,8 +38,8 @@ const FEATURE_CARDS: FeatureCard[] = [
   },
   {
     title: 'Pharmacy profiles',
-    text: 'Store contacts, working hours, reviews, payment details, and products are collected on clear pages.',
-    href: ROUTES.STORES,
+    text: 'Pharmacy contacts, working hours, reviews, payment details, and products are collected on clear pages.',
+    href: ROUTES.PHARMACIES,
     buttonLabel: 'View pharmacies',
     icon: Building2,
   },

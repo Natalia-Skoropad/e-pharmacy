@@ -8,8 +8,8 @@ Implemented:
 
 - Client auth and profile flow
 - Password recovery through email
-- Products and stores catalogs
-- Product and store details
+- Products and pharmacies catalogs
+- Product and pharmacy details
 - Reviews and favorites
 - Cart
 - Checkout and persisted orders
@@ -17,7 +17,7 @@ Implemented:
 
 Planned:
 
-- Pharmacy shop management
+- Pharmacy management
 - Pharmacy product CRUD
 - Pharmacy statistics and client goods data
 - Admin dashboard statistics
@@ -39,14 +39,14 @@ The API is currently client-ready. Pharmacy and admin modules are planned extens
 - JWT auth with backend-managed httpOnly cookies
 - Role middleware foundation
 
-### Stores
+### Pharmacies
 
-- Store catalog
-- Store filters
-- Store details
-- Store reviews
-- Authenticated store review creation
-- Favorite store toggle
+- Pharmacy catalog
+- Pharmacy filters
+- Pharmacy details
+- Pharmacy reviews
+- Authenticated pharmacy review creation
+- Favorite pharmacy toggle
 
 ### Products
 
@@ -151,15 +151,15 @@ GET /auth/test/pharmacy
 GET /auth/test/admin
 ```
 
-### Stores
+### Pharmacies
 
 ```txt
-GET   /stores
-GET   /stores/filters
-GET   /stores/:storeId
-GET   /stores/:storeId/reviews
-POST  /stores/:storeId/reviews
-PATCH /stores/:storeId/favorite
+GET   /pharmacies
+GET   /pharmacies/filters
+GET   /pharmacies/:pharmacyId
+GET   /pharmacies/:pharmacyId/reviews
+POST  /pharmacies/:pharmacyId/reviews
+PATCH /pharmacies/:pharmacyId/favorite
 ```
 
 ### Products

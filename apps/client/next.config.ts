@@ -28,6 +28,26 @@ const nextConfig: NextConfig = {
         destination: '/product-catalog/:path*',
         permanent: true,
       },
+      {
+        source: '/pharmacy-stores/:path*',
+        destination: '/pharmacies/:path*',
+        permanent: true,
+      },
+      {
+        source: '/stores/:path*',
+        destination: '/pharmacies/:path*',
+        permanent: true,
+      },
+      {
+        source: '/pharmacy-shops/:path*',
+        destination: '/pharmacies/:path*',
+        permanent: true,
+      },
+      {
+        source: '/shops/:path*',
+        destination: '/pharmacies/:path*',
+        permanent: true,
+      },
     ];
   },
 

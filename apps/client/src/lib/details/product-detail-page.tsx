@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { ProductDetailsPageContent } from '@/components/products-catalog';
+import { ProductDetailsPageContent } from '@/components/product-catalog';
 import { buildProductPath, getIdFromSlugId } from '@e-pharmacy/config/routes';
 import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
 import { createPageMetadata } from '@/lib/seo';
@@ -15,7 +15,7 @@ import type { Product } from '@e-pharmacy/types';
 //===================================================================
 
 type ProductDetailSearchParams = {
-  storeId?: string;
+  pharmacyId?: string;
 };
 
 //===================================================================
@@ -65,7 +65,7 @@ export async function renderProductDetailPage(
       product={product}
       reviews={reviewsData?.items ?? []}
       reviewsTotal={reviewsData?.total ?? 0}
-      contextStoreId={searchParams?.storeId}
+      contextPharmacyId={searchParams?.pharmacyId}
       areReviewsUnavailable={!reviewsData}
     />
   );

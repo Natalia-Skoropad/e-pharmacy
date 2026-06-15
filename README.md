@@ -27,8 +27,8 @@ Pharmacy and admin folders are kept as planned app boundaries. They are not comp
 ### Client storefront
 
 - Home page and public information pages
-- Pharmacy stores catalog with search, filters, sorting, pagination, details, reviews, and favorites
-- Products catalog with search, filters, sorting, pagination, product details, reviews, and favorites
+- Pharmacies catalog with search, filters, sorting, pagination, details, reviews, and favorites
+- Product catalog with search, filters, sorting, pagination, product details, reviews, and favorites
 - Cart grouped by pharmacy invoice
 - Checkout with pickup/post delivery details and client comment
 - Client profile, password update, order history, and order details
@@ -39,7 +39,7 @@ Pharmacy and admin folders are kept as planned app boundaries. They are not comp
 
 - Auth with JWT and backend-managed httpOnly cookies
 - User profile and password management
-- Products, stores, reviews, favorites, cart, and orders
+- Products, pharmacies, reviews, favorites, cart, and orders
 - MongoDB/Mongoose data models
 - Zod validation
 - Centralized error handling
@@ -57,7 +57,7 @@ Pharmacy and admin folders are kept as planned app boundaries. They are not comp
 
 ## Screenshots
 
-| Home                                                    | Products catalog                                                    | Product details                                                       |
+| Home                                                    | Product catalog                                                     | Product details                                                       |
 | ------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | ![Home page](./apps/client/public/readme/home-page.jpg) | ![Product catalog](./apps/client/public/readme/product-catalog.jpg) | ![Product details page](./apps/client/public/readme/product-page.jpg) |
 

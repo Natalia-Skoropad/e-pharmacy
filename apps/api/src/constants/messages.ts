@@ -22,6 +22,6 @@ export const API_MESSAGES = {
   FORBIDDEN_ROLE: 'You do not have permission to access this resource',
   FORBIDDEN_ORIGIN: 'Request origin is not allowed',
 
-  STORE_NOT_FOUND: 'Store not found',
+  PHARMACY_NOT_FOUND: 'Pharmacy not found',
   PRODUCT_NOT_FOUND: 'Product not found',
 } as const;

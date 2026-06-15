@@ -5,7 +5,7 @@ import { useFavoriteRefresh } from './useFavoriteRefresh';
 
 import {
   getProductDetails,
-  getStoreDetails,
+  getPharmacyDetails,
 } from '@e-pharmacy/api-client/client';
 
 //===================================================================
@@ -38,15 +38,15 @@ export function useProductFavoriteRefresh({
 
 //===================================================================
 
-export function useStoreFavoriteRefresh({
+export function usePharmacyFavoriteRefresh({
   id,
   isEnabled,
   onRefresh,
 }: UseFavoriteStatusRefreshParams): void {
   const refreshFavorite = useCallback(async () => {
-    const response = await getStoreDetails(id);
+    const response = await getPharmacyDetails(id);
 
-    return Boolean(response.store.isFavorite);
+    return Boolean(response.pharmacy.isFavorite);
   }, [id]);
 
   useFavoriteRefresh({

@@ -5,7 +5,7 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import { Cart } from '../models/cart.model';
 import { Order } from '../models/order.model';
 import { Product } from '../models/product.model';
-import { Store } from '../models/store.model';
+import { Pharmacy } from '../models/pharmacy.model';
 import { httpError } from '../utils/httpError';
 import { commitReservedStock } from './inventory.service';
 
@@ -19,14 +19,14 @@ import type {
 } from '../types/order';
 
 import type { ProductEntity, ProductOfferEntity } from '../types/product';
-import type { StoreEntity } from '../types/store';
+import type { PharmacyEntity } from '../types/pharmacy';
 
 //===============================================================
 
 type CartItemDocument = {
   _id: Types.ObjectId;
   productId: Types.ObjectId;
-  storeId: Types.ObjectId;
+  pharmacyId: Types.ObjectId;
   quantity: number;
   price: number;
   expiresAt: Date;
@@ -42,7 +42,7 @@ type ProductDocument = ProductEntity & {
   _id: Types.ObjectId;
 };
 
-type StoreDocument = StoreEntity & {
+type PharmacyDocument = PharmacyEntity & {
   _id: Types.ObjectId;
 };
 
@@ -53,7 +53,7 @@ type OrderDocument = OrderEntity & {
 //===============================================================
 
 function hasCompleteBankDetails(
-  bankDetails?: import('../types/store').StoreBankDetails
+  bankDetails?: import('../types/pharmacy').PharmacyBankDetails
 ): boolean {
   return Boolean(
     bankDetails?.recipientName &&
@@ -68,10 +68,10 @@ function hasCompleteBankDetails(
 
 function findProductOffer(
   product: ProductDocument,
-  storeId: string
+  pharmacyId: string
 ): ProductOfferEntity | null {
   return (
-    product.offers?.find((offer) => offer.storeId.toString() === storeId) ??
+    product.offers?.find((offer) => offer.pharmacyId.toString() === pharmacyId) ??
     null
   );
 }
@@ -103,10 +103,10 @@ function createOrderNumber(orderId: Types.ObjectId): string {
 
 //===============================================================
 
-function getStoreAddress(
-  storeSnapshot: OrderEntity['storeSnapshot']
+function getPharmacyAddress(
+  pharmacySnapshot: OrderEntity['pharmacySnapshot']
 ): string | undefined {
-  const address = [storeSnapshot.address, storeSnapshot.city]
+  const address = [pharmacySnapshot.address, pharmacySnapshot.city]
     .filter(Boolean)
     .join(', ');
 
@@ -120,22 +120,22 @@ function serializeOrder(order: OrderDocument): OrderResponseDto {
     id: order._id.toString(),
     orderNumber: order.orderNumber,
     createdAt: order.createdAt.toISOString(),
-    storeId: order.storeId.toString(),
-    storeName: order.storeSnapshot.name,
-    ...(typeof order.storeSnapshot.rating === 'number'
-      ? { storeRating: order.storeSnapshot.rating }
+    pharmacyId: order.pharmacyId.toString(),
+    pharmacyName: order.pharmacySnapshot.name,
+    ...(typeof order.pharmacySnapshot.rating === 'number'
+      ? { pharmacyRating: order.pharmacySnapshot.rating }
       : {}),
-    ...(typeof order.storeSnapshot.reviewsCount === 'number'
-      ? { storeReviewsCount: order.storeSnapshot.reviewsCount }
+    ...(typeof order.pharmacySnapshot.reviewsCount === 'number'
+      ? { pharmacyReviewsCount: order.pharmacySnapshot.reviewsCount }
       : {}),
-    ...(order.storeSnapshot.phone
-      ? { storePhone: order.storeSnapshot.phone }
+    ...(order.pharmacySnapshot.phone
+      ? { pharmacyPhone: order.pharmacySnapshot.phone }
       : {}),
-    ...(order.storeSnapshot.email
-      ? { storeEmail: order.storeSnapshot.email }
+    ...(order.pharmacySnapshot.email
+      ? { pharmacyEmail: order.pharmacySnapshot.email }
       : {}),
-    ...(getStoreAddress(order.storeSnapshot)
-      ? { storeAddress: getStoreAddress(order.storeSnapshot) }
+    ...(getPharmacyAddress(order.pharmacySnapshot)
+      ? { pharmacyAddress: getPharmacyAddress(order.pharmacySnapshot) }
       : {}),
     totalItems: order.totalItems,
     totalPrice: order.totalPrice,
@@ -146,8 +146,8 @@ function serializeOrder(order: OrderDocument): OrderResponseDto {
       ? { deliveryDetails: order.deliveryDetails }
       : {}),
     ...(order.comment ? { comment: order.comment } : {}),
-    ...(order.storeSnapshot.bankDetails
-      ? { bankDetails: order.storeSnapshot.bankDetails }
+    ...(order.pharmacySnapshot.bankDetails
+      ? { bankDetails: order.pharmacySnapshot.bankDetails }
       : {}),
     items: order.items.map((item) => ({
       id: item.productId.toString(),
@@ -193,7 +193,7 @@ export async function checkoutOrderService(
 
       const orderCartItems = (cart.items ?? []).filter(
         (item) =>
-          item.storeId.toString() === input.storeId &&
+          item.pharmacyId.toString() === input.pharmacyId &&
           item.expiresAt.getTime() > Date.now()
       );
 
@@ -204,15 +204,15 @@ export async function checkoutOrderService(
         );
       }
 
-      const store = await Store.findById(input.storeId)
+      const pharmacy = await Pharmacy.findById(input.pharmacyId)
         .session(session)
-        .lean<StoreDocument | null>();
+        .lean<PharmacyDocument | null>();
 
-      if (!store || !store.isActive) {
+      if (!pharmacy || !pharmacy.isActive) {
         throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found');
       }
 
-      if (input.paymentMethod === 'bank-transfer' && !hasCompleteBankDetails(store.bankDetails)) {
+      if (input.paymentMethod === 'bank-transfer' && !hasCompleteBankDetails(pharmacy.bankDetails)) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
           'Bank transfer is unavailable for this pharmacy until bank details are completed.'
@@ -239,7 +239,7 @@ export async function checkoutOrderService(
           );
         }
 
-        const offer = findProductOffer(product, input.storeId);
+        const offer = findProductOffer(product, input.pharmacyId);
 
         if (!offer) {
           throw httpError(
@@ -250,7 +250,7 @@ export async function checkoutOrderService(
 
         await commitReservedStock(
           cartItem.productId,
-          cartItem.storeId,
+          cartItem.pharmacyId,
           cartItem.quantity,
           session
         );
@@ -291,22 +291,22 @@ export async function checkoutOrderService(
           {
             _id: orderId,
             userId: new Types.ObjectId(userId),
-            storeId: store._id,
-            storeSnapshot: {
-              name: store.name,
-              address: store.address,
-              ...(store.city ? { city: store.city } : {}),
-              ...(store.phone ? { phone: store.phone } : {}),
-              ...(store.email ? { email: store.email } : {}),
-              ...(store.imageUrl ? { imageUrl: store.imageUrl } : {}),
-              ...(typeof store.rating === 'number'
-                ? { rating: store.rating }
+            pharmacyId: pharmacy._id,
+            pharmacySnapshot: {
+              name: pharmacy.name,
+              address: pharmacy.address,
+              ...(pharmacy.city ? { city: pharmacy.city } : {}),
+              ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
+              ...(pharmacy.email ? { email: pharmacy.email } : {}),
+              ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+              ...(typeof pharmacy.rating === 'number'
+                ? { rating: pharmacy.rating }
                 : {}),
-              ...(typeof store.reviewsCount === 'number'
-                ? { reviewsCount: store.reviewsCount }
+              ...(typeof pharmacy.reviewsCount === 'number'
+                ? { reviewsCount: pharmacy.reviewsCount }
                 : {}),
-              ...(hasCompleteBankDetails(store.bankDetails)
-                ? { bankDetails: store.bankDetails }
+              ...(hasCompleteBankDetails(pharmacy.bankDetails)
+                ? { bankDetails: pharmacy.bankDetails }
                 : {}),
             },
             items: orderItems,
@@ -328,7 +328,7 @@ export async function checkoutOrderService(
       createdOrder = order[0].toObject() as OrderDocument;
 
       const nextCartItems = cart.items.filter(
-        (item) => item.storeId.toString() !== input.storeId
+        (item) => item.pharmacyId.toString() !== input.pharmacyId
       );
 
       await Cart.updateOne(

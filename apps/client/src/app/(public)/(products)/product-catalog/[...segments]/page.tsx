@@ -1,23 +1,23 @@
 import { redirect } from 'next/navigation';
 
-import { ProductStorePageContent } from '@/components/products-catalog';
+import { ProductCatalogPageContent } from '@/components/product-catalog';
 
 import {
-  buildProductsCatalogApiParams,
-  buildProductsCatalogCanonicalPath,
-  buildProductsCatalogPath,
+  buildProductCatalogApiParams,
+  buildProductCatalogCanonicalPath,
+  buildProductCatalogPath,
   FALLBACK_PRODUCT_FILTER_OPTIONS,
-  getProductsCatalogDescription,
-  getProductsCatalogTitle,
-  hasLegacyProductsCatalogSegments,
-  isProductsCatalogNoIndex,
-  mergeProductsCatalogFilters,
-  parseProductsCatalogSearchParams,
-  parseProductsCatalogSegments,
-  sortStoresByName,
-  type ProductsCatalogRouteParams,
-  type ProductsCatalogSearchParams,
-} from '@/lib/catalog/products-catalog';
+  getProductCatalogDescription,
+  getProductCatalogTitle,
+  hasLegacyProductCatalogSegments,
+  isProductCatalogNoIndex,
+  mergeProductCatalogFilters,
+  parseProductCatalogSearchParams,
+  parseProductCatalogSegments,
+  sortPharmaciesByName,
+  type ProductCatalogRouteParams,
+  type ProductCatalogSearchParams,
+} from '@/lib/catalog/product-catalog';
 
 import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
 import { createPageMetadata } from '@/lib/seo';
@@ -25,14 +25,14 @@ import { createPageMetadata } from '@/lib/seo';
 import {
   getProductFilters,
   getProducts,
-  getStores,
+  getPharmacies,
 } from '@e-pharmacy/api-client/client';
 
 //===================================================================
 
-type ProductsCatalogPageProps = {
-  params?: Promise<ProductsCatalogRouteParams>;
-  searchParams?: Promise<ProductsCatalogSearchParams>;
+type ProductCatalogPageProps = {
+  params?: Promise<ProductCatalogRouteParams>;
+  searchParams?: Promise<ProductCatalogSearchParams>;
 };
 
 //===================================================================
@@ -40,10 +40,10 @@ type ProductsCatalogPageProps = {
 export async function generateMetadata({
   params,
   searchParams,
-}: ProductsCatalogPageProps) {
-  const filters = mergeProductsCatalogFilters(
-    parseProductsCatalogSegments(await params),
-    parseProductsCatalogSearchParams(await searchParams)
+}: ProductCatalogPageProps) {
+  const filters = mergeProductCatalogFilters(
+    parseProductCatalogSegments(await params),
+    parseProductCatalogSearchParams(await searchParams)
   );
 
   const categoryLabel = FALLBACK_PRODUCT_FILTER_OPTIONS.categories.find(
@@ -55,37 +55,37 @@ export async function generateMetadata({
   };
 
   return createPageMetadata({
-    title: getProductsCatalogTitle(filters, seoContext),
-    description: getProductsCatalogDescription(filters, seoContext),
-    path: buildProductsCatalogCanonicalPath(filters),
-    noIndex: isProductsCatalogNoIndex(filters),
+    title: getProductCatalogTitle(filters, seoContext),
+    description: getProductCatalogDescription(filters, seoContext),
+    path: buildProductCatalogCanonicalPath(filters),
+    noIndex: isProductCatalogNoIndex(filters),
   });
 }
 
 //===================================================================
 
-async function ProductsCatalogSegmentsPage({
+async function ProductCatalogSegmentsPage({
   params,
   searchParams,
-}: ProductsCatalogPageProps) {
+}: ProductCatalogPageProps) {
   const resolvedParams = await params;
 
-  const filters = mergeProductsCatalogFilters(
-    parseProductsCatalogSegments(resolvedParams),
-    parseProductsCatalogSearchParams(await searchParams)
+  const filters = mergeProductCatalogFilters(
+    parseProductCatalogSegments(resolvedParams),
+    parseProductCatalogSearchParams(await searchParams)
   );
 
-  if (hasLegacyProductsCatalogSegments(resolvedParams)) {
-    redirect(buildProductsCatalogPath(filters));
+  if (hasLegacyProductCatalogSegments(resolvedParams)) {
+    redirect(buildProductCatalogPath(filters));
   }
 
-  const [productsData, storesData, filterOptionsData] = await Promise.all([
+  const [productsData, pharmaciesData, filterOptionsData] = await Promise.all([
     getProducts(
-      buildProductsCatalogApiParams(filters),
+      buildProductCatalogApiParams(filters),
       PUBLIC_API_CACHE_OPTIONS
     ).catch(() => null),
 
-    getStores({ page: 1, perPage: 100 }, PUBLIC_API_CACHE_OPTIONS).catch(
+    getPharmacies({ page: 1, perPage: 100 }, PUBLIC_API_CACHE_OPTIONS).catch(
       () => null
     ),
 
@@ -94,14 +94,14 @@ async function ProductsCatalogSegmentsPage({
     ),
   ]);
 
-  const activeStores = sortStoresByName(
-    storesData?.items.filter((store) => store.isActive) ?? []
+  const activePharmacies = sortPharmaciesByName(
+    pharmaciesData?.items.filter((pharmacy) => pharmacy.isActive) ?? []
   );
 
   return (
-    <ProductStorePageContent
+    <ProductCatalogPageContent
       products={productsData?.items ?? []}
-      stores={activeStores}
+      pharmacies={activePharmacies}
       filterOptions={filterOptionsData}
       total={productsData?.total ?? 0}
       totalPages={productsData?.totalPages ?? 0}
@@ -111,4 +111,4 @@ async function ProductsCatalogSegmentsPage({
   );
 }
 
-export default ProductsCatalogSegmentsPage;
+export default ProductCatalogSegmentsPage;
