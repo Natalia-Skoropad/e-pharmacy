@@ -131,7 +131,7 @@ Existing order item prices remain fixed.
 Reserved quantity is quantity included in orders with statuses:
 
 - `new`;
-- `in_work`.
+- `in_progress`.
 
 Formula:
 

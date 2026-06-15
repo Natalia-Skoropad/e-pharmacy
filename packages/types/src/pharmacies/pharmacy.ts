@@ -15,7 +15,7 @@ export type PharmacyBankDetails = {
 
 //=============================================================================
 
-export type PharmacyDto = {
+export type Pharmacy = {
   id: EntityId;
   name: string;
   address: string;
@@ -36,7 +36,7 @@ export type PharmacyDto = {
   updatedAt?: ISODateString;
 };
 
-export type PharmacyReviewDto = {
+export type PharmacyReview = {
   id: EntityId;
   userName: string;
   rating: number;
@@ -44,7 +44,7 @@ export type PharmacyReviewDto = {
   createdAt: ISODateString;
 };
 
-export type PendingPharmacyReviewDto = {
+export type PendingPharmacyReview = {
   pharmacyId: EntityId;
   pharmacyName: string;
   reviewId: EntityId;
@@ -69,7 +69,7 @@ export type PharmaciesSortFilter =
 
 //=============================================================================
 
-export type PharmaciesResponse = ApiPaginationResponse<PharmacyDto>;
+export type PharmaciesResponse = ApiPaginationResponse<Pharmacy>;
 export type PharmacyFilterOption = { value: string; label: string };
 
 export type PharmacyFilterOptionsResponse = {
@@ -77,13 +77,17 @@ export type PharmacyFilterOptionsResponse = {
   sort: Array<{ value: PharmaciesSortFilter; label: string }>;
 };
 
-export type PharmacyDetailsResponse = { pharmacy: PharmacyDto };
+export type PharmacyDetailsResponse = { pharmacy: Pharmacy };
 
 //=============================================================================
 
-export type PharmacyReviewsResponse = { items: PharmacyReviewDto[]; total: number };
+export type PharmacyReviewsResponse = {
+  items: PharmacyReview[];
+  total: number;
+};
+
 export type PendingPharmacyReviewsResponse = {
-  items: PendingPharmacyReviewDto[];
+  items: PendingPharmacyReview[];
   page: number;
   perPage: number;
   total: number;
@@ -98,6 +102,3 @@ export type ToggleFavoritePharmacyResponse = {
   isFavorite: boolean;
   message: string;
 };
-
-export type Pharmacy = PharmacyDto;
-export type PharmacyReview = PharmacyReviewDto;

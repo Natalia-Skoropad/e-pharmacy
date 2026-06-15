@@ -52,7 +52,7 @@ const FEATURE_CARDS: FeatureCard[] = [
     icon: ClipboardList,
   },
   {
-    title: 'Separated invoices',
+    title: 'Separated orders',
     text: 'Cart items are grouped by pharmacy, so every order block has its own total and checkout flow.',
     href: ROUTES.CART,
     buttonLabel: 'Open cart',

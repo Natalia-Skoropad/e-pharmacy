@@ -29,15 +29,15 @@ export const APP_ERROR_MESSAGES = {
     update: 'Could not update cart item.',
     remove: 'Could not remove cart item.',
     clear: 'Could not clear cart.',
-    removeInvoice: 'Could not remove pharmacy invoice.',
-    addProduct: 'Could not add this product to the invoice.',
+    removeOrder: 'Could not remove pharmacy order.',
+    addProduct: 'Could not add this product to the order.',
   },
 
   checkout: {
     load: 'Could not load checkout data.',
     confirm: 'Could not confirm order.',
-    staleInvoice:
-      'Sorry, we cannot confirm this invoice right now. While you were placing the order, these products were reserved by another client. Please update the cart and try again.',
+    staleOrder:
+      'Sorry, we cannot confirm this order right now. While you were placing the order, these products were reserved by another client. Please update the cart and try again.',
   },
 
   products: {

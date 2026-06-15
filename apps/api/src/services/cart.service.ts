@@ -13,7 +13,7 @@ import type { ProductEntity, ProductOfferEntity } from '../types/product';
 //===============================================================
 
 const CART_ITEM_TTL_DAYS = 3;
-const MAX_CART_INVOICES = 15;
+const MAX_CART_ORDERS = 15;
 
 //===============================================================
 
@@ -274,13 +274,13 @@ export async function addCartItemService(
           expiresAt: getCartItemExpiresAt(),
         };
       } else {
-        const invoicePharmacyIds = new Set(
+        const orderPharmacyIds = new Set(
           cart.items.map((item) => item.pharmacyId.toString())
         );
 
         if (
-          !invoicePharmacyIds.has(input.pharmacyId) &&
-          invoicePharmacyIds.size >= MAX_CART_INVOICES
+          !orderPharmacyIds.has(input.pharmacyId) &&
+          orderPharmacyIds.size >= MAX_CART_ORDERS
         ) {
           await releaseOfferStock(
             input.productId,
@@ -291,7 +291,7 @@ export async function addCartItemService(
 
           throw httpError(
             HTTP_STATUS.BAD_REQUEST,
-            'You cannot add more than 15 invoices to the cart. Confirm previous invoices to continue shopping.'
+            'You cannot add more than 15 orders to the cart. Confirm previous orders to continue shopping.'
           );
         }
 

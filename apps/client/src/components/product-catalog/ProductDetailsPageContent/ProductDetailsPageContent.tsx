@@ -31,7 +31,7 @@ import {
 } from '@/components/common';
 
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
-import { CartInvoiceLimitModal } from '@/components/common';
+import { CartOrderLimitModal } from '@/components/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { useToast } from '@e-pharmacy/ui/feedback';
@@ -39,7 +39,7 @@ import { useFavoriteToggle, useReviewForm } from '@/hooks';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { CATALOG_SEARCH_MAX_LENGTH } from '@e-pharmacy/config/catalog';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
-import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
+import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
 
 import {
@@ -188,7 +188,7 @@ function ProductDetailsPageContent({
   );
   const [pendingRemoveOffer, setPendingRemoveOffer] =
     useState<ProductOffer | null>(null);
-  const [invoiceLimitMessage, setInvoiceLimitMessage] = useState('');
+  const [orderLimitMessage, setOrderLimitMessage] = useState('');
 
   const [pharmacyNameQuery, setPharmacyNameQuery] = useState('');
   const [pharmacyAddressQuery, setPharmacyAddressQuery] = useState('');
@@ -432,8 +432,8 @@ function ProductDetailsPageContent({
         setCart(previousCart);
         dispatchCartUpdated(previousCart);
       }
-      if (isCartInvoiceLimitError(error)) {
-        setInvoiceLimitMessage('limit');
+      if (isCartOrderLimitError(error)) {
+        setOrderLimitMessage('limit');
       } else {
         toast.error(
           getAppErrorMessage(error, {
@@ -922,8 +922,8 @@ function ProductDetailsPageContent({
           </Container>
         </section>
       ) : null}
-      {invoiceLimitMessage ? (
-        <CartInvoiceLimitModal onClose={() => setInvoiceLimitMessage('')} />
+      {orderLimitMessage ? (
+        <CartOrderLimitModal onClose={() => setOrderLimitMessage('')} />
       ) : null}
 
       {pendingRemoveOffer ? (

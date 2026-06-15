@@ -5,25 +5,22 @@ import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { groupCartByPharmacy } from '@/lib/cart/cart-groups';
 import { getStockValidationError } from '@/lib/checkout';
 import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
-import { buildClientOrderPath } from '@/lib/orders';
+import { buildOrderPath } from '@/lib/orders';
 
 import { checkoutOrder, getCart } from '@e-pharmacy/api-client/client';
 import type { Cart } from '@e-pharmacy/types';
 
-import type {
-  CheckoutPaymentMethod,
-  CheckoutPharmacyOrderGroup,
-} from '@e-pharmacy/types/checkout';
-
-import type { OrderDeliveryMethod } from '@e-pharmacy/types/orders';
+import type { CheckoutPharmacyOrderGroup } from '@e-pharmacy/types/checkout';
+import type { PaymentMethod } from '@e-pharmacy/types/orders';
+import type { DeliveryMethod } from '@e-pharmacy/types/orders';
 
 //===================================================================
 
 type UseCheckoutSubmitParams = {
   isAuthenticated: boolean;
   selectedOrderGroup: CheckoutPharmacyOrderGroup | null;
-  paymentMethod: CheckoutPaymentMethod;
-  deliveryMethod: OrderDeliveryMethod;
+  paymentMethod: PaymentMethod;
+  deliveryMethod: DeliveryMethod;
   recipientNameValue: string;
   recipientPhoneValue: string;
   deliveryAddressValue: string;
@@ -68,7 +65,7 @@ export function useCheckoutSubmit({
 
       if (!latestOrderGroup) {
         setCart(latestCartResponse.cart);
-        setError(APP_ERROR_MESSAGES.checkout.staleInvoice);
+        setError(APP_ERROR_MESSAGES.checkout.staleOrder);
         return;
       }
 
@@ -99,7 +96,7 @@ export function useCheckoutSubmit({
 
       setCart(nextCartResponse.cart);
       dispatchCartUpdated(nextCartResponse.cart);
-      router.push(buildClientOrderPath(response.order));
+      router.push(buildOrderPath(response.order));
     } catch (error) {
       setError(
         getAppErrorMessage(error, {

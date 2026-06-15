@@ -35,7 +35,7 @@ import { buildProductPath, buildPharmacyPath } from '@e-pharmacy/config/routes';
 import { getOrderIdFromPathParam } from '@/lib/orders';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { getOrderDetails } from '@e-pharmacy/api-client/client';
-import type { BreadcrumbItem, ClientOrder } from '@e-pharmacy/types';
+import type { BreadcrumbItem, Order } from '@e-pharmacy/types';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -47,13 +47,13 @@ type OrderDetailsPageContentProps = {
 
 //===================================================================
 
-function formatPaymentMethod(method: ClientOrder['paymentMethod']): string {
+function formatPaymentMethod(method: Order['paymentMethod']): string {
   return method === 'bank-transfer'
     ? 'Bank transfer'
     : 'Cash on pickup / delivery';
 }
 
-function formatDeliveryMethod(method: ClientOrder['deliveryMethod']): string {
+function formatDeliveryMethod(method: Order['deliveryMethod']): string {
   return method === 'post' ? 'Post delivery' : 'Pickup from pharmacy';
 }
 
@@ -61,7 +61,7 @@ function formatDeliveryMethod(method: ClientOrder['deliveryMethod']): string {
 
 function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const { isAuthenticated, isAuthReady } = useAuth();
-  const [order, setOrder] = useState<ClientOrder | null>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState('');
   const cleanOrderId = getOrderIdFromPathParam(orderId);
@@ -158,7 +158,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                 Order {order.orderNumber}
               </h1>
               <p className={css.text}>
-                Review the confirmed pharmacy invoice and order details.
+                Review the confirmed pharmacy order and order details.
               </p>
             </div>
 
@@ -169,11 +169,11 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
 
           <div className={css.orderShell}>
             <div className={css.orderMain}>
-              <article className={css.invoice} aria-labelledby="invoice-title">
+              <article className={css.order} aria-labelledby="order-title">
                 <div className={css.pharmacyHead}>
                   <div>
-                    <p className={css.kicker}>Pharmacy invoice</p>
-                    <h2 className={css.pharmacyTitle} id="invoice-title">
+                    <p className={css.kicker}>Pharmacy order</p>
+                    <h2 className={css.pharmacyTitle} id="order-title">
                       {order.pharmacyName}
                     </h2>
 

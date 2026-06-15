@@ -48,7 +48,7 @@ Use these cases after seeding at least one product offer with predictable quanti
    - `activeQuantity` increased by the expired quantity;
    - `reservedQuantity` decreased by the expired quantity.
 
-## 6. Checkout commits only selected pharmacy invoice
+## 6. Checkout commits only selected pharmacy order
 
 1. Add items from pharmacy A and pharmacy B to the same cart.
 2. Checkout only pharmacy A.

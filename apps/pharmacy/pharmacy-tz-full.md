@@ -1307,7 +1307,7 @@ Examples:
 
 ```txt
 /pharmacy/orders/status-new
-/pharmacy/orders/status-in-work
+/pharmacy/orders/status-in-progress
 /pharmacy/orders/status-successful
 /pharmacy/orders/status-rejected
 ```
@@ -1436,7 +1436,7 @@ Examples:
 ```txt
 /pharmacy/product-requests/status-draft
 /pharmacy/product-requests/status-new
-/pharmacy/product-requests/status-in-work
+/pharmacy/product-requests/status-in-progress
 /pharmacy/product-requests/status-approved
 /pharmacy/product-requests/status-rejected
 ```
@@ -1527,7 +1527,7 @@ After client confirms checkout:
 | Status | Color | Meaning |
 |---|---|---|
 | `new` | Blue | Order was confirmed by client |
-| `in_work` | Yellow | Pharmacy accepted the order for processing |
+| `in_progress` | Yellow | Pharmacy accepted the order for processing |
 | `successful` | Green | Order is completed |
 | `rejected` | Red | Order was rejected by Pharmacy |
 
@@ -1538,9 +1538,9 @@ For `rejected` status, Pharmacy must provide a required rejection reason.
 Allowed transitions:
 
 ```txt
-new → in_work
-in_work → successful
-in_work → rejected
+new → in_progress
+in_progress → successful
+in_progress → rejected
 ```
 
 Not allowed:
@@ -1548,9 +1548,9 @@ Not allowed:
 ```txt
 new → successful
 new → rejected
-in_work → new
-successful → in_work
-rejected → in_work
+in_progress → new
+successful → in_progress
+rejected → in_progress
 successful → new
 rejected → new
 successful → rejected
@@ -1631,7 +1631,7 @@ When order is created by client:
 - reserved quantity is not available for other orders;
 - order status is `new`.
 
-In statuses `new` and `in_work`:
+In statuses `new` and `in_progress`:
 
 - products remain reserved.
 
@@ -1647,17 +1647,17 @@ When order becomes `rejected`:
 - items become available for other orders;
 - order prices remain unchanged.
 
-If Pharmacy changes item quantity in `in_work` status:
+If Pharmacy changes item quantity in `in_progress` status:
 
 - reservation is recalculated;
 - available stock must be checked.
 
-If Pharmacy adds a new item in `in_work` status:
+If Pharmacy adds a new item in `in_progress` status:
 
 - item is reserved;
 - current price is fixed at the moment of adding.
 
-If Pharmacy removes an item in `in_work` status:
+If Pharmacy removes an item in `in_progress` status:
 
 - reservation for this item is cancelled.
 
@@ -1706,11 +1706,11 @@ Filter examples:
 
 ```txt
 /pharmacy/orders/status-new
-/pharmacy/orders/status-in-work
+/pharmacy/orders/status-in-progress
 /pharmacy/orders/status-successful
 /pharmacy/orders/status-rejected
 /pharmacy/orders/status-successful/delivery-pickup
-/pharmacy/orders/status-in-work/payment-cash
+/pharmacy/orders/status-in-progress/payment-cash
 ```
 
 Pagination and rows-per-page do not change URL.
@@ -1805,13 +1805,13 @@ Click opens client details page.
 
 Shows current delivery method.
 
-If Pharmacy changed delivery method in `in_work` status, table shows updated value.
+If Pharmacy changed delivery method in `in_progress` status, table shows updated value.
 
 ### Payment method
 
 Shows current payment method.
 
-If Pharmacy changed payment method in `in_work` status, table shows updated value.
+If Pharmacy changed payment method in `in_progress` status, table shows updated value.
 
 ### Client comment
 
@@ -1895,7 +1895,7 @@ Route:
 /pharmacy/orders/[orderId]
 ```
 
-Pharmacy can edit the order only when status is `in_work`.
+Pharmacy can edit the order only when status is `in_progress`.
 
 Readonly statuses:
 
@@ -1932,8 +1932,8 @@ Select shows only allowed next statuses.
 
 | Current status | Available next status |
 |---|---|
-| `new` | `in_work` |
-| `in_work` | `successful`, `rejected` |
+| `new` | `in_progress` |
+| `in_progress` | `successful`, `rejected` |
 | `successful` | none |
 | `rejected` | none |
 
@@ -1951,7 +1951,7 @@ Save changes
 
 Enabled only when:
 
-- order status is `in_work`;
+- order status is `in_progress`;
 - changes were made;
 - there are no validation errors;
 - order has at least one item;
@@ -1986,7 +1986,7 @@ For each item show:
 - remove button;
 - product details link.
 
-Editing items is available only for `in_work` status.
+Editing items is available only for `in_progress` status.
 
 Pharmacy can:
 
@@ -2011,7 +2011,7 @@ Are you sure you want to remove this item from the order?
 
 ## 17. Adding item to order
 
-Allowed only in `in_work` status.
+Allowed only in `in_progress` status.
 
 Pharmacy can add only products that are:
 
@@ -2031,7 +2031,7 @@ When a new item is added:
 
 ### Delivery method
 
-Editable only in `in_work` status.
+Editable only in `in_progress` status.
 
 Values must match Client checkout:
 
@@ -2042,7 +2042,7 @@ Post delivery
 
 ### Payment method
 
-Editable only in `in_work` status.
+Editable only in `in_progress` status.
 
 Values must match Client checkout:
 
@@ -2065,7 +2065,7 @@ Client did not leave a comment.
 
 ### Pharmacy comment
 
-Editable only in `in_work` status.
+Editable only in `in_progress` status.
 
 Use existing `CommentInput` if available.
 
@@ -2085,7 +2085,7 @@ Add products
 
 This button opens the same selection logic as Client `ContinueShoppingModal`, adapted for Pharmacy context.
 
-Enabled only in `in_work` status.
+Enabled only in `in_progress` status.
 
 ## 20. One order states
 
@@ -2702,7 +2702,7 @@ Existing order item prices remain fixed.
 Reserved quantity is quantity included in orders with statuses:
 
 - `new`;
-- `in_work`.
+- `in_progress`.
 
 Formula:
 
@@ -3359,7 +3359,7 @@ Draft → New → In work → Rejected
 
 Admin cannot approve or reject request directly from `new` status.
 
-Admin must first move request to `in_work`.
+Admin must first move request to `in_progress`.
 
 ## 3. Request statuses
 
@@ -3367,7 +3367,7 @@ Admin must first move request to `in_work`.
 |---|---|---|---|
 | `draft` | Gray | Pharmacy created request but did not send it to Admin | Yes |
 | `new` | Blue | Pharmacy sent request; Admin has not started review | No |
-| `in_work` | Yellow | Admin is checking the request | No |
+| `in_progress` | Yellow | Admin is checking the request | No |
 | `approved` | Green | Admin created product from request | No |
 | `rejected` | Red | Admin rejected request | No |
 
@@ -3380,7 +3380,7 @@ Pharmacy sees only own requests.
 Admin sees only requests submitted to moderation:
 
 - `new`;
-- `in_work`;
+- `in_progress`;
 - `approved`;
 - `rejected`.
 
@@ -3490,7 +3490,7 @@ Examples:
 ```txt
 /pharmacy/product-requests/status-draft
 /pharmacy/product-requests/status-new
-/pharmacy/product-requests/status-in-work
+/pharmacy/product-requests/status-in-progress
 /pharmacy/product-requests/status-approved
 /pharmacy/product-requests/status-rejected
 ```
@@ -3782,7 +3782,7 @@ For `new`, show:
 The request has been sent to Admin. Please wait for review.
 ```
 
-For `in_work`, show:
+For `in_progress`, show:
 
 ```txt
 Admin is reviewing this request.
@@ -3855,7 +3855,7 @@ Pharmacy can edit request only while status is `draft`.
 Readonly statuses:
 
 - `new`;
-- `in_work`;
+- `in_progress`;
 - `approved`;
 - `rejected`.
 

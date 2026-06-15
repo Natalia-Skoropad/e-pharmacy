@@ -121,7 +121,7 @@ https://e-pharmacy-client-ten.vercel.app
 - adding products to cart
 - cart grouped by pharmacy
 - quantity controls with stock limits
-- invoice-level summaries
+- order-level summaries
 - checkout with pickup or post delivery
 - order creation through the backend API
 - delivery address and client comment in order details
@@ -293,7 +293,7 @@ A public catalog for browsing products with search, filters, sorting, pagination
 
 ### Cart
 
-A private client page where products are grouped by pharmacy with stock-aware quantity controls and invoice summaries.
+A private client page where products are grouped by pharmacy with stock-aware quantity controls and order summaries.
 
 ### Checkout
 

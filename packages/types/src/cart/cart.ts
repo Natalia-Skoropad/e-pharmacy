@@ -1,13 +1,13 @@
 import type { EntityId, ISODateString } from '../shared';
-import type { ProductDto } from '../products';
+import type { Product } from '../products';
 
 //=============================================================================
 
-export type CartItemDto = {
+export type CartItem = {
   id: EntityId;
   productId: EntityId;
   pharmacyId: EntityId;
-  product: ProductDto;
+  product: Product;
   pharmacyName: string;
   pharmacyRating?: number;
   pharmacyReviewsCount?: number;
@@ -18,14 +18,14 @@ export type CartItemDto = {
   expiresAt: ISODateString;
 };
 
-export type CartDto = {
-  items: CartItemDto[];
+export type Cart = {
+  items: CartItem[];
   totalItems: number;
   totalPrice: number;
 };
 
 export type CartResponse = {
-  cart: CartDto;
+  cart: Cart;
 };
 
 export type AddCartItemPayload = {
@@ -38,6 +38,4 @@ export type UpdateCartItemPayload = {
   quantity: number;
 };
 
-export type Cart = CartDto;
-export type CartItem = CartItemDto;
-export type CartSummary = Pick<CartDto, 'totalItems' | 'totalPrice'>;
+export type CartSummary = Pick<Cart, 'totalItems' | 'totalPrice'>;

@@ -4,7 +4,7 @@ import { useMemo, useState, type ChangeEvent } from 'react';
 import { Clock, Info, MapPin, Phone, Truck } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
-import CheckoutInvoicePanel from '../CheckoutInvoicePanel';
+import CheckoutOrderPanel from '../CheckoutOrderPanel';
 import CheckoutPaymentMethod from '../CheckoutPaymentMethod';
 
 import { useCheckoutCart } from '../hooks/useCheckoutCart';
@@ -57,8 +57,8 @@ import {
 import { useAuth } from '@e-pharmacy/auth/core';
 import type { BreadcrumbItem } from '@e-pharmacy/types';
 
-import type { CheckoutPaymentMethod as PaymentMethod } from '@e-pharmacy/types/checkout';
-import type { OrderDeliveryMethod as DeliveryMethod } from '@e-pharmacy/types/orders';
+import type { PaymentMethod } from '@e-pharmacy/types/orders';
+import type { DeliveryMethod } from '@e-pharmacy/types/orders';
 
 import css from './CheckoutPageContent.module.css';
 
@@ -115,14 +115,15 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     return orderGroups.length === 1 ? orderGroups[0] : null;
   }, [selectedPharmacyIdFromRoute, orderGroups]);
 
-  const { pharmacy, isPharmacyLoading } = useCheckoutPharmacy(selectedOrderGroup);
+  const { pharmacy, isPharmacyLoading } =
+    useCheckoutPharmacy(selectedOrderGroup);
 
-  const shouldSelectInvoice =
+  const shouldSelectOrder =
     !isLoading && cart.items.length > 0 && !selectedOrderGroup;
 
-  const selectInvoiceMessage = selectedPharmacyIdFromRoute
-    ? 'This pharmacy invoice is not available in your cart anymore. Please return to the cart and choose an active invoice.'
-    : 'You have several pharmacy invoices in your cart. Please choose the invoice you want to confirm from the cart page.';
+  const selectOrderMessage = selectedPharmacyIdFromRoute
+    ? 'This pharmacy order is not available in your cart anymore. Please return to the cart and choose an active order.'
+    : 'You have several pharmacy orders in your cart. Please choose the order you want to confirm from the cart page.';
 
   const deliveryValues = useMemo<OrderDeliveryFormValues>(
     () => ({
@@ -273,7 +274,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
           {isLoading ? (
             <div className={css.status}>
-              <LoadingSpinner label="Loading checkout invoice..." />
+              <LoadingSpinner label="Loading checkout order..." />
             </div>
           ) : null}
 
@@ -287,8 +288,8 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
             <CheckoutEmptyState />
           ) : null}
 
-          {shouldSelectInvoice ? (
-            <CheckoutSelectInvoiceState message={selectInvoiceMessage} />
+          {shouldSelectOrder ? (
+            <CheckoutSelectOrderState message={selectOrderMessage} />
           ) : null}
 
           {selectedOrderGroup ? (
@@ -336,7 +337,9 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                               {pharmacyPhone ? (
                                 <li>
                                   <Phone size={18} aria-hidden="true" />
-                                  <a href={`tel:${pharmacyPhone}`}>{pharmacyPhone}</a>
+                                  <a href={`tel:${pharmacyPhone}`}>
+                                    {pharmacyPhone}
+                                  </a>
                                 </li>
                               ) : null}
 
@@ -451,7 +454,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                 </section>
               </div>
 
-              <CheckoutInvoicePanel
+              <CheckoutOrderPanel
                 orderGroup={selectedOrderGroup}
                 canSubmit={canSubmit && !isSubmitting}
                 isSubmitting={isSubmitting}
@@ -467,10 +470,10 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
 //===================================================================
 
-function CheckoutSelectInvoiceState({ message }: { message: string }) {
+function CheckoutSelectOrderState({ message }: { message: string }) {
   return (
     <div className={css.empty}>
-      <h2 className={css.emptyTitle}>Choose a pharmacy invoice</h2>
+      <h2 className={css.emptyTitle}>Choose a pharmacy order</h2>
       <p className={css.emptyText}>{message}</p>
       <div className={css.emptyActions}>
         <ButtonLink href={ROUTES.CART}>Back to cart</ButtonLink>
@@ -486,7 +489,7 @@ function CheckoutEmptyState() {
     <div className={css.empty}>
       <h2 className={css.emptyTitle}>Your cart is empty</h2>
       <p className={css.emptyText}>
-        Add products first, then checkout will form pharmacy invoices.
+        Add products first, then checkout will form pharmacy orders.
       </p>
       <div className={css.emptyActions}>
         <ButtonLink href={ROUTES.CART} variant="secondary">

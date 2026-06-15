@@ -1,23 +1,23 @@
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 
 import {
-  CART_INVOICE_LIMIT_ERROR_MESSAGE,
-  CART_INVOICE_LIMIT_MODAL_TITLE,
-} from '@/lib/cart/invoice-limit';
+  CART_ORDER_LIMIT_ERROR_MESSAGE,
+  CART_ORDER_LIMIT_MODAL_TITLE,
+} from '@/lib/cart/order-limit';
 
 //===================================================================
 
-type CartInvoiceLimitModalProps = {
+type CartOrderLimitModalProps = {
   onClose: () => void;
 };
 
 //===================================================================
 
-function CartInvoiceLimitModal({ onClose }: CartInvoiceLimitModalProps) {
+function CartOrderLimitModal({ onClose }: CartOrderLimitModalProps) {
   return (
     <ConfirmationModal
-      title={CART_INVOICE_LIMIT_MODAL_TITLE}
-      text={CART_INVOICE_LIMIT_ERROR_MESSAGE}
+      title={CART_ORDER_LIMIT_MODAL_TITLE}
+      text={CART_ORDER_LIMIT_ERROR_MESSAGE}
       confirmLabel="Got it"
       cancelLabel="Close"
       onConfirm={onClose}
@@ -26,4 +26,4 @@ function CartInvoiceLimitModal({ onClose }: CartInvoiceLimitModalProps) {
   );
 }
 
-export default CartInvoiceLimitModal;
+export default CartOrderLimitModal;

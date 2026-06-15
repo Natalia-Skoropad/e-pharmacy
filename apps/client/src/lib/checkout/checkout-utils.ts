@@ -46,7 +46,7 @@ export function getStockValidationError(
     .slice(0, 3)
     .join(', ');
 
-  return `Sorry, we cannot confirm this invoice right now. While you were placing the order, ${productNames} ${
+  return `Sorry, we cannot confirm this order right now. While you were placing the order, ${productNames} ${
     unavailableItems.length === 1 ? 'was' : 'were'
   } reserved by another client. Please update the cart and choose the available quantity again.`;
 }

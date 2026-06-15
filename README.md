@@ -29,7 +29,7 @@ Pharmacy and admin folders are kept as planned app boundaries. They are not comp
 - Home page and public information pages
 - Pharmacies catalog with search, filters, sorting, pagination, details, reviews, and favorites
 - Product catalog with search, filters, sorting, pagination, product details, reviews, and favorites
-- Cart grouped by pharmacy invoice
+- Cart grouped by pharmacy order
 - Checkout with pickup/post delivery details and client comment
 - Client profile, password update, order history, and order details
 - Password recovery through email reset flow

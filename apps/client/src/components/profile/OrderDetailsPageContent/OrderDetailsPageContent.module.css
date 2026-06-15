@@ -81,7 +81,7 @@
   box-shadow: var(--shadow-card);
 }
 
-.invoice {
+.order {
   display: grid;
   gap: 16px;
 }

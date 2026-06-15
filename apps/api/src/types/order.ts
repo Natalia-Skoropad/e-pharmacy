@@ -4,7 +4,7 @@ import type { PharmacyBankDetails } from './pharmacy';
 
 //===============================================================
 
-export type OrderStatus = 'accepted' | 'processing' | 'completed' | 'cancelled';
+export type OrderStatus = 'new' | 'in_progress' | 'successful' | 'rejected';
 export type OrderPaymentMethod = 'cash' | 'bank-transfer';
 export type OrderDeliveryMethod = 'pickup' | 'post';
 

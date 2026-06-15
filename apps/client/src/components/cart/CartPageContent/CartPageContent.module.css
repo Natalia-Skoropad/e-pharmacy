@@ -91,19 +91,19 @@
   gap: 24px;
 }
 
-.invoice {
+.order {
   padding: 12px;
   border-radius: calc(var(--radius-xl) + 4px);
   background-color: var(--color-surface);
   box-shadow: var(--shadow-card);
 }
 
-.invoiceGrid {
+.orderGrid {
   display: grid;
   gap: 18px;
 }
 
-.invoiceMain {
+.orderMain {
   display: grid;
   gap: 14px;
   min-width: 0;
@@ -233,7 +233,7 @@
     padding: 32px;
   }
 
-  .invoice {
+  .order {
     padding: 14px;
   }
 
@@ -264,7 +264,7 @@
     font-size: var(--fz-64);
   }
 
-  .invoiceGrid {
+  .orderGrid {
     grid-template-columns: minmax(0, 1fr) 360px;
     align-items: start;
   }

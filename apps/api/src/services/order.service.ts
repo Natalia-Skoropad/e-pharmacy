@@ -200,7 +200,7 @@ export async function checkoutOrderService(
       if (orderCartItems.length === 0) {
         throw httpError(
           HTTP_STATUS.BAD_REQUEST,
-          'Selected pharmacy invoice is empty or expired'
+          'Selected pharmacy order is empty or expired'
         );
       }
 
@@ -318,7 +318,7 @@ export async function checkoutOrderService(
               ? { deliveryDetails: input.deliveryDetails }
               : {}),
             ...(input.comment ? { comment: input.comment } : {}),
-            status: 'accepted',
+            status: 'new',
             orderNumber: createOrderNumber(orderId),
           },
         ],

@@ -55,7 +55,7 @@ const BENEFITS = [
     icon: Heart,
   },
   {
-    title: 'Control every invoice',
+    title: 'Control every order',
     text: 'Cart items are grouped by pharmacy, with a clear total and checkout flow for each order block.',
     icon: ReceiptText,
   },
@@ -95,7 +95,7 @@ const REVIEWS = [
   {
     name: 'Sergey Rybachok',
     rating: 4.8,
-    text: 'Separate pharmacy invoices make the cart much easier to understand. I can see which items belong to which pharmacy, review every total separately, and move to checkout without guessing where the final sum came from. The flow feels clear even when I add products from several pharmacies at once.',
+    text: 'Separate pharmacy orders make the cart much easier to understand. I can see which items belong to which pharmacy, review every total separately, and move to checkout without guessing where the final sum came from. The flow feels clear even when I add products from several pharmacies at once.',
   },
   {
     name: 'Natalia Chatuk',
@@ -343,7 +343,7 @@ async function HomePage() {
                 </strong>
                 <p>
                   E-PHARMACY keeps product search, pharmacy choice, cart
-                  invoices, profile data, and order history connected in one
+                  orders, profile data, and order history connected in one
                   clear flow.
                 </p>
               </div>

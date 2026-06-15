@@ -42,7 +42,7 @@ Draft → New → In work → Rejected
 
 Admin cannot approve or reject request directly from `new` status.
 
-Admin must first move request to `in_work`.
+Admin must first move request to `in_progress`.
 
 ## 3. Request statuses
 
@@ -50,7 +50,7 @@ Admin must first move request to `in_work`.
 | ---------- | ------ | ----------------------------------------------------- | -------------------- |
 | `draft`    | Gray   | Pharmacy created request but did not send it to Admin | Yes                  |
 | `new`      | Blue   | Pharmacy sent request; Admin has not started review   | No                   |
-| `in_work`  | Yellow | Admin is checking the request                         | No                   |
+| `in_progress`  | Yellow | Admin is checking the request                         | No                   |
 | `approved` | Green  | Admin created product from request                   | No                   |
 | `rejected` | Red    | Admin rejected request                                | No                   |
 
@@ -63,7 +63,7 @@ Pharmacy sees only own requests.
 Admin sees only requests submitted to moderation:
 
 - `new`;
-- `in_work`;
+- `in_progress`;
 - `approved`;
 - `rejected`.
 
@@ -173,7 +173,7 @@ Examples:
 ```txt
 /pharmacy/product-requests/status-draft
 /pharmacy/product-requests/status-new
-/pharmacy/product-requests/status-in-work
+/pharmacy/product-requests/status-in-progress
 /pharmacy/product-requests/status-approved
 /pharmacy/product-requests/status-rejected
 ```
@@ -465,7 +465,7 @@ For `new`, show:
 The request has been sent to Admin. Please wait for review.
 ```
 
-For `in_work`, show:
+For `in_progress`, show:
 
 ```txt
 Admin is reviewing this request.
@@ -538,7 +538,7 @@ Pharmacy can edit request only while status is `draft`.
 Readonly statuses:
 
 - `new`;
-- `in_work`;
+- `in_progress`;
 - `approved`;
 - `rejected`.
 

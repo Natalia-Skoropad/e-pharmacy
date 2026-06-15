@@ -50,10 +50,10 @@ export function groupCartByPharmacy(cart: Cart): CartPharmacyGroup[] {
   return groupCartItemsByPharmacy(cart.items);
 }
 
-export function getCartInvoiceTotal(group: CartPharmacyGroup): number {
+export function getCartOrderTotal(group: CartPharmacyGroup): number {
   return group.items.reduce((total, item) => total + item.totalPrice, 0);
 }
 
-export function getCartInvoicePath(group: CartPharmacyGroup): string {
+export function getCartOrderPath(group: CartPharmacyGroup): string {
   return buildCheckoutPath(group.pharmacyName, group.pharmacyId);
 }

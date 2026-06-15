@@ -4,11 +4,11 @@ import { Button } from '@e-pharmacy/ui/common';
 import { formatPrice } from '@e-pharmacy/utils/formatters';
 import type { CheckoutPharmacyOrderGroup } from '@e-pharmacy/types/checkout';
 
-import css from './CheckoutInvoicePanel.module.css';
+import css from './CheckoutOrderPanel.module.css';
 
 //===================================================================
 
-type CheckoutInvoicePanelProps = {
+type CheckoutOrderPanelProps = {
   orderGroup: CheckoutPharmacyOrderGroup;
   canSubmit: boolean;
   isSubmitting: boolean;
@@ -17,19 +17,19 @@ type CheckoutInvoicePanelProps = {
 
 //===================================================================
 
-function CheckoutInvoicePanel({
+function CheckoutOrderPanel({
   orderGroup,
   canSubmit,
   isSubmitting,
   onSubmit,
-}: CheckoutInvoicePanelProps) {
+}: CheckoutOrderPanelProps) {
   return (
-    <aside className={css.panel} aria-labelledby="invoice-title">
-      <h2 className={css.title} id="invoice-title">
-        Pharmacy invoice
+    <aside className={css.panel} aria-labelledby="order-title">
+      <h2 className={css.title} id="order-title">
+        Pharmacy order
       </h2>
 
-      <div className={css.invoiceCard}>
+      <div className={css.orderCard}>
         <h3>{orderGroup.pharmacyName}</h3>
       </div>
 
@@ -37,7 +37,7 @@ function CheckoutInvoicePanel({
         <ShieldAlert size={20} aria-hidden="true" />
         <p>
           Pharmacy products are non-returnable and non-exchangeable after
-          confirmation. Please check the invoice carefully before payment.
+          confirmation. Please check the order carefully before payment.
         </p>
       </div>
 
@@ -53,10 +53,10 @@ function CheckoutInvoicePanel({
       </dl>
 
       <Button type="button" fullWidth disabled={!canSubmit} onClick={onSubmit}>
-        {isSubmitting ? 'Confirming...' : 'Confirm invoice'}
+        {isSubmitting ? 'Confirming...' : 'Confirm order'}
       </Button>
     </aside>
   );
 }
 
-export default CheckoutInvoicePanel;
+export default CheckoutOrderPanel;

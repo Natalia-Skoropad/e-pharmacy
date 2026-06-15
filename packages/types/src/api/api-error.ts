@@ -3,5 +3,3 @@ export type ApiErrorResponse = {
   message: string;
   details?: Record<string, string[]>;
 };
-
-export type ApiError = ApiErrorResponse;

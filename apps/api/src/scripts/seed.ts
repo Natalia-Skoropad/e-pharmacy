@@ -455,7 +455,7 @@ function createBankDetails(pharmacyName: string, pharmacyNumber: number) {
     taxId,
     iban: `UA${ibanTail}`,
     bankName: pharmacyNumber % 2 === 0 ? 'JSC PrivatBank' : 'JSC Oschadbank',
-    paymentPurpose: `Payment for E-PHARMACY invoice from ${pharmacyName}`,
+    paymentPurpose: `Payment for E-PHARMACY order from ${pharmacyName}`,
   };
 }
 

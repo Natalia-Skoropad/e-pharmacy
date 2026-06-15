@@ -14,5 +14,3 @@ export type AuthUser = {
   address?: string;
   pictureUrl?: string;
 };
-
-export type User = AuthUser;

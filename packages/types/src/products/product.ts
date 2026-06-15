@@ -14,7 +14,7 @@ export type ProductCategory =
 
 //=============================================================================
 
-export type ProductOfferDto = {
+export type ProductOffer = {
   pharmacyId: EntityId;
   pharmacyName: string;
   pharmacyCity?: string;
@@ -31,7 +31,7 @@ export type ProductOfferDto = {
   inStock: boolean;
 };
 
-export type ProductDto = {
+export type Product = {
   id: EntityId;
   name: string;
   slug?: string;
@@ -46,7 +46,7 @@ export type ProductDto = {
   pharmacyId?: EntityId;
   pharmacyName?: string;
   foundInPharmaciesCount: number;
-  offers: ProductOfferDto[];
+  offers: ProductOffer[];
   inStock: boolean;
   rating?: number;
   reviewsCount?: number;
@@ -54,7 +54,7 @@ export type ProductDto = {
   updatedAt?: ISODateString;
 };
 
-export type ProductReviewDto = {
+export type ProductReview = {
   id: EntityId;
   userName: string;
   rating: number;
@@ -62,7 +62,7 @@ export type ProductReviewDto = {
   createdAt: ISODateString;
 };
 
-export type PendingProductReviewDto = {
+export type PendingProductReview = {
   productId: EntityId;
   productName: string;
   reviewId: EntityId;
@@ -114,18 +114,18 @@ export type ProductFilterOptionsResponse = {
 
 //=============================================================================
 
-export type ProductsResponse = ApiPaginationResponse<ProductDto>;
-export type ProductDetailsResponse = { product: ProductDto };
+export type ProductsResponse = ApiPaginationResponse<Product>;
+export type ProductDetailsResponse = { product: Product };
 
 //=============================================================================
 
 export type ProductReviewsResponse = {
-  items: ProductReviewDto[];
+  items: ProductReview[];
   total: number;
 };
 
 export type PendingProductReviewsResponse = {
-  items: PendingProductReviewDto[];
+  items: PendingProductReview[];
   page: number;
   perPage: number;
   total: number;
@@ -141,7 +141,3 @@ export type ToggleFavoriteProductResponse = {
   isFavorite: boolean;
   message: string;
 };
-
-export type Product = ProductDto;
-export type ProductOffer = ProductOfferDto;
-export type ProductReview = ProductReviewDto;

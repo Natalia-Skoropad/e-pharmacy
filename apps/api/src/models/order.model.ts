@@ -228,8 +228,8 @@ const orderSchema = new Schema<OrderEntity>(
 
     status: {
       type: String,
-      enum: ['accepted', 'processing', 'completed', 'cancelled'],
-      default: 'accepted',
+      enum: ['new', 'in_progress', 'successful', 'rejected'],
+      default: 'new',
       required: true,
       index: true,
     },

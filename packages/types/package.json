@@ -12,11 +12,11 @@
     "./checkout": "./src/checkout/index.ts",
     "./navigation": "./src/navigation/index.ts",
     "./orders": "./src/orders/index.ts",
+    "./pharmacies": "./src/pharmacies/index.ts",
+    "./pharmacy": "./src/pharmacy/index.ts",
     "./products": "./src/products/index.ts",
     "./reviews": "./src/reviews/index.ts",
-    "./shared": "./src/shared/index.ts",
-    "./pharmacies": "./src/pharmacies/index.ts",
-    "./pharmacy": "./src/pharmacy/index.ts"
+    "./shared": "./src/shared/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

@@ -34,7 +34,8 @@ import {
   formatShortDate,
 } from '@e-pharmacy/utils/formatters';
 
-import { buildClientOrderPath } from '@/lib/orders';
+import { buildOrderPath } from '@/lib/orders';
+
 import {
   buildPharmacyPath,
   createBreadcrumbs,
@@ -74,7 +75,7 @@ import {
   updateCurrentUserPassword,
 } from '@e-pharmacy/api-client/client';
 
-import type { ClientOrder, Product, Pharmacy } from '@e-pharmacy/types';
+import type { Order, Product, Pharmacy } from '@e-pharmacy/types';
 
 import css from './ProfilePageContent.module.css';
 
@@ -186,7 +187,7 @@ function ProfilePageContent() {
 
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
-  const [orders, setOrders] = useState<ClientOrder[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   const [ordersVisibleCount, setOrdersVisibleCount] =
     useState(ORDERS_VISIBLE_STEP);
@@ -809,7 +810,7 @@ function ProfilePageContent() {
                               <td>
                                 <Link
                                   className={css.orderLink}
-                                  href={buildClientOrderPath(order)}
+                                  href={buildOrderPath(order)}
                                 >
                                   {order.orderNumber}
                                 </Link>

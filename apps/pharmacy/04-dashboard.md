@@ -166,7 +166,7 @@ Examples:
 
 ```txt
 /pharmacy/orders/status-new
-/pharmacy/orders/status-in-work
+/pharmacy/orders/status-in-progress
 /pharmacy/orders/status-successful
 /pharmacy/orders/status-rejected
 ```
@@ -295,7 +295,7 @@ Examples:
 ```txt
 /pharmacy/product-requests/status-draft
 /pharmacy/product-requests/status-new
-/pharmacy/product-requests/status-in-work
+/pharmacy/product-requests/status-in-progress
 /pharmacy/product-requests/status-approved
 /pharmacy/product-requests/status-rejected
 ```

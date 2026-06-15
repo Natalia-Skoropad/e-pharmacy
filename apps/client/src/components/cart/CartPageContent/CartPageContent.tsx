@@ -22,8 +22,8 @@ import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 
 import {
-  getCartInvoicePath,
-  getCartInvoiceTotal,
+  getCartOrderPath,
+  getCartOrderTotal,
   groupCartItemsByPharmacy,
   type CartPharmacyGroup,
 } from '@/lib/cart/cart-groups';
@@ -231,7 +231,7 @@ function CartPageContent() {
     } catch (error) {
       setError(
         getAppErrorMessage(error, {
-          fallback: APP_ERROR_MESSAGES.cart.removeInvoice,
+          fallback: APP_ERROR_MESSAGES.cart.removeOrder,
         })
       );
     } finally {
@@ -259,9 +259,9 @@ function CartPageContent() {
 
   const pendingActionText =
     pendingAction?.type === 'item'
-      ? 'Remove this product from the invoice?'
+      ? 'Remove this product from the order?'
       : pendingAction?.type === 'pharmacy'
-        ? `Remove the whole invoice from ${pendingAction.pharmacyName}?`
+        ? `Remove the whole order from ${pendingAction.pharmacyName}?`
         : 'Clear the whole cart?';
 
   return (
@@ -288,7 +288,7 @@ function CartPageContent() {
 
           {shouldShowLoading ? (
             <div className={css.status}>
-              <LoadingSpinner label="Loading pharmacy invoices..." />
+              <LoadingSpinner label="Loading pharmacy orders..." />
             </div>
           ) : null}
 
@@ -318,12 +318,12 @@ function CartPageContent() {
           {visibleCart.items.length > 0 ? (
             <ul className={css.groupList}>
               {groupedCartItems.map((group) => (
-                <li className={css.invoice} key={group.pharmacyId}>
-                  <div className={css.invoiceGrid}>
-                    <div className={css.invoiceMain}>
+                <li className={css.order} key={group.pharmacyId}>
+                  <div className={css.orderGrid}>
+                    <div className={css.orderMain}>
                       <div className={css.pharmacyGroupHead}>
                         <div className={css.pharmacyInfo}>
-                          <p className={css.groupKicker}>Pharmacy invoice</p>
+                          <p className={css.groupKicker}>Pharmacy order</p>
                           <h2 className={css.pharmacyGroupTitle}>
                             {group.pharmacyName}
                           </h2>
@@ -362,7 +362,7 @@ function CartPageContent() {
                               })
                             }
                           >
-                            Remove invoice
+                            Remove order
                           </Button>
                         </div>
                       </div>
@@ -386,8 +386,8 @@ function CartPageContent() {
                     <CartSummary
                       pharmacyId={group.pharmacyId}
                       totalItems={group.totalItems}
-                      totalPrice={getCartInvoiceTotal(group)}
-                      checkoutPath={getCartInvoicePath(group)}
+                      totalPrice={getCartOrderTotal(group)}
+                      checkoutPath={getCartOrderPath(group)}
                       isUpdating={isUpdating}
                       onContinueShopping={() => setContinueShoppingPharmacy(group)}
                     />

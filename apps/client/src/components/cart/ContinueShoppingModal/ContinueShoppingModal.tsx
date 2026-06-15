@@ -12,9 +12,9 @@ import {
   SvgIcon,
 } from '@e-pharmacy/ui/common';
 
-import { CartInvoiceLimitModal } from '@/components/common';
+import { CartOrderLimitModal } from '@/components/common';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
-import { isCartInvoiceLimitError } from '@/lib/cart/invoice-limit';
+import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { formatPrice, formatStockLabel } from '@e-pharmacy/utils/formatters';
 import { getProducts } from '@e-pharmacy/api-client/client';
 import { addCartItem } from '@/services/cart-service';
@@ -98,7 +98,7 @@ function ContinueShoppingModal({
     null
   );
   const [error, setError] = useState('');
-  const [invoiceLimitMessage, setInvoiceLimitMessage] = useState('');
+  const [orderLimitMessage, setOrderLimitMessage] = useState('');
 
   const categoryOptions = useMemo(
     () => getUniqueCategoryOptions(categoryProducts),
@@ -192,10 +192,10 @@ function ContinueShoppingModal({
 
       onCartChange(response.cart);
     } catch (error) {
-      if (isCartInvoiceLimitError(error)) {
-        setInvoiceLimitMessage('limit');
+      if (isCartOrderLimitError(error)) {
+        setOrderLimitMessage('limit');
       } else {
-        setError('Could not add this product to the invoice.');
+        setError('Could not add this product to the order.');
       }
     } finally {
       setIsAddingProductId(null);
@@ -350,8 +350,8 @@ function ContinueShoppingModal({
         </div>
       </ModalBase>
 
-      {invoiceLimitMessage ? (
-        <CartInvoiceLimitModal onClose={() => setInvoiceLimitMessage('')} />
+      {orderLimitMessage ? (
+        <CartOrderLimitModal onClose={() => setOrderLimitMessage('')} />
       ) : null}
     </ModalRoot>
   );

@@ -2,7 +2,7 @@ import { Copy, CreditCard, Mail, Wallet } from 'lucide-react';
 
 import { RadioOption } from '@e-pharmacy/ui/common';
 import type { Pharmacy } from '@e-pharmacy/types';
-import type { CheckoutPaymentMethod as PaymentMethod } from '@e-pharmacy/types/checkout';
+import type { PaymentMethod } from '@e-pharmacy/types/orders';
 
 import css from './CheckoutPaymentMethod.module.css';
 
@@ -59,7 +59,7 @@ function CheckoutPaymentMethod({
               <Wallet size={20} aria-hidden="true" />
               <h3 className={css.infoTitle}>Pay when everything is ready</h3>
               <p className={css.mutedText}>
-                Cash is paid during pickup or delivery. Please keep the invoice
+                Cash is paid during pickup or delivery. Please keep the order
                 amount ready when you receive the order.
               </p>
             </div>

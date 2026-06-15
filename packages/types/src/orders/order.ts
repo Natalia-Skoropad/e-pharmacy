@@ -3,9 +3,9 @@ import type { PharmacyBankDetails } from '../pharmacies';
 
 //=============================================================================
 
-export type OrderStatus = 'accepted' | 'processing' | 'completed' | 'cancelled';
-export type OrderPaymentMethod = 'cash' | 'bank-transfer';
-export type OrderDeliveryMethod = 'pickup' | 'post';
+export type OrderStatus = 'new' | 'in_progress' | 'successful' | 'rejected';
+export type PaymentMethod = 'cash' | 'bank-transfer';
+export type DeliveryMethod = 'pickup' | 'post';
 
 //=============================================================================
 
@@ -15,7 +15,7 @@ export type OrderDeliveryDetails = {
   address?: string;
 };
 
-export type OrderItemDto = {
+export type OrderItem = {
   id: EntityId;
   productId: EntityId;
   name: string;
@@ -29,7 +29,7 @@ export type OrderItemDto = {
   totalPrice: number;
 };
 
-export type OrderDto = {
+export type Order = {
   id: EntityId;
   orderNumber: string;
   createdAt: ISODateString;
@@ -43,33 +43,31 @@ export type OrderDto = {
   totalItems: number;
   totalPrice: number;
   status: OrderStatus;
-  paymentMethod: OrderPaymentMethod;
-  deliveryMethod: OrderDeliveryMethod;
+  paymentMethod: PaymentMethod;
+  deliveryMethod: DeliveryMethod;
   deliveryDetails?: OrderDeliveryDetails;
   comment?: string;
   bankDetails?: PharmacyBankDetails;
-  items: OrderItemDto[];
+  items: OrderItem[];
 };
 
 export type OrdersResponse = {
-  items: OrderDto[];
+  items: Order[];
   total: number;
 };
 
 export type CheckoutOrderPayload = {
   pharmacyId: EntityId;
-  paymentMethod: OrderPaymentMethod;
-  deliveryMethod: OrderDeliveryMethod;
+  paymentMethod: PaymentMethod;
+  deliveryMethod: DeliveryMethod;
   deliveryDetails?: OrderDeliveryDetails;
   comment?: string;
 };
 
 export type CheckoutOrderResponse = {
-  order: OrderDto;
+  order: Order;
 };
 
 export type OrderDetailsResponse = {
-  order: OrderDto;
+  order: Order;
 };
-
-export type ClientOrder = OrderDto;

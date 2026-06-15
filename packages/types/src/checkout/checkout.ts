@@ -1,9 +1,6 @@
 import type { Cart } from '../cart';
-import type { OrderPaymentMethod } from '../orders';
 
 //===================================================================
-
-export type CheckoutPaymentMethod = OrderPaymentMethod;
 
 export type CheckoutPharmacyOrderGroup = {
   pharmacyId: string;
