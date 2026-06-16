@@ -608,3 +608,14 @@ Order not found.
 ```
 
 Pharmacy must not see orders of other pharmacies.
+
+## Canonical Order, Cart, and Stock rules
+
+- One multi-pharmacy Cart may contain no more than 15 Pharmacy groups. This prevents accidental creation of an excessive number of Orders; the Client should confirm existing groups before adding another Pharmacy.
+- Each Pharmacy group in Cart creates exactly one Order.
+- CartItem references ProductOffer. The Cart always shows the current ProductOffer price; the price becomes immutable only after Order confirmation.
+- Stock remains reserved for Orders in `new` and `in_progress`.
+- Allowed status transitions: `new -> in_progress | rejected`; `in_progress -> successful | rejected`.
+- `successful` commits reserved Stock. `rejected` releases it and requires `rejectionReason`, `rejectedAt`, and `rejectedBy`.
+- Every status change is appended to `statusHistory`.
+- Canonical types are `PaymentMethod` and `DeliveryMethod`; postal delivery value is `postal_delivery`.

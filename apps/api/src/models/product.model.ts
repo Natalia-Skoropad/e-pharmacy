@@ -1,14 +1,14 @@
 import { Schema, model, models } from 'mongoose';
 
 import { MAX_REVIEW_RATING } from '../constants/validation';
-
 import type { ProductEntity } from '../types/product';
+import { PRODUCT_CATEGORIES } from '../types/categories';
+
+//===============================================================
 
 const PRODUCT_STATUSES = ['new', 'active', 'blocked'] as const;
 
 //===============================================================
-
-
 
 const productSchema = new Schema<ProductEntity>(
   {
@@ -51,14 +51,7 @@ const productSchema = new Schema<ProductEntity>(
 
     category: {
       type: String,
-      enum: [
-        'medicine',
-        'vitamins',
-        'beauty',
-        'hygiene',
-        'medical-devices',
-        'other',
-      ],
+      enum: PRODUCT_CATEGORIES,
       default: 'medicine',
       required: true,
     },
@@ -108,7 +101,6 @@ const productSchema = new Schema<ProductEntity>(
       default: undefined,
     },
 
-
     inStock: {
       type: Boolean,
       default: true,
@@ -127,7 +119,6 @@ const productSchema = new Schema<ProductEntity>(
       min: 0,
       default: 0,
     },
-
 
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -155,6 +146,9 @@ productSchema.index({
   manufacturer: 'text',
   article: 'text',
 });
+
+//===============================================================
+
 productSchema.index({ article: 1 }, { unique: true });
 productSchema.index({ category: 1 });
 productSchema.index({ pharmacyId: 1 });

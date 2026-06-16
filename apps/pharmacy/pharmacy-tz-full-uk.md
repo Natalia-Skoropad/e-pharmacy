@@ -3158,3 +3158,16 @@ Pharmacy ТЗ логічно ділиться на такі глобальні �
 - Auth routes are global, Pharmacy protected routes start with `/pharmacy`;
 - protected Pharmacy layout не має Footer.
 
+
+## Канонічні правила Cart, Stock, Order, Session і ProductCategory
+
+- Stock належить ProductOffer і зберігає `totalQuantity`, `availableQuantity` та `reservedQuantity` з інваріантом `totalQuantity === availableQuantity + reservedQuantity`. Доступність обчислюється як `availableQuantity > 0`.
+- Cart належить `clientUserId`, посилається на ProductOffer, підтримує кілька груп Pharmacy та не більше 15 груп, щоб не створювати надмірну кількість Order. Одна група Pharmacy створює один Order.
+- Ціна в Cart завжди відповідає поточній ціні ProductOffer. Вона стає незмінною лише після підтвердження Order.
+- Прострочені резерви Cart звільняє заплановане транзакційне очищення.
+- Дозволені переходи Order: `new -> in_progress | rejected` і `in_progress -> successful | rejected`. Stock залишається зарезервованим до `successful`, що списує його, або `rejected`, що повертає резерв.
+- Відхилений Order зберігає причину й audit-дані; кожна зміна статусу додається до історії.
+- Favorites додаються через PUT і видаляються через DELETE.
+- Session зберігає причину відкликання; авторизація використовує актуальні дані User, а `roleAtLogin` є лише audit-метаданими.
+- Канонічні назви: `PaymentMethod` і `DeliveryMethod`; поштова доставка — `postal_delivery`.
+- ProductCategory береться зі спільної константи `PRODUCT_CATEGORIES`; використовується `medical_devices`.

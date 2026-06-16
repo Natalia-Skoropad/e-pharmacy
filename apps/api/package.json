@@ -10,7 +10,8 @@
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
-    "migrate:domain": "tsx src/scripts/migrate-domain-entities.ts"
+    "migrate:domain": "tsx src/scripts/migrate-domain-entities.ts",
+    "test": "tsx --test src/services/order-status.test.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -23,7 +24,8 @@
     "zod": "^4.4.3",
     "handlebars": "^4.7.8",
     "nodemailer": "^7.0.6",
-    "express-rate-limit": "^8.1.0"
+    "express-rate-limit": "^8.1.0",
+    "@e-pharmacy/types": "workspace:*"
   },
   "devDependencies": {
     "@types/cors": "latest",

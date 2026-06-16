@@ -8,7 +8,7 @@ import css from './CheckoutPaymentMethod.module.css';
 
 //===================================================================
 
-type CheckoutPaymentMethodProps = {
+type PaymentMethodProps = {
   paymentMethod: PaymentMethod;
   bankDetails: Pharmacy['bankDetails'] | null;
   pharmacyEmail: string;
@@ -26,7 +26,7 @@ function CheckoutPaymentMethod({
   copiedEmail,
   onPaymentMethodChange,
   onCopyEmail,
-}: CheckoutPaymentMethodProps) {
+}: PaymentMethodProps) {
   return (
     <section className={css.card} aria-labelledby="payment-title">
       <h2 className={css.title} id="payment-title">
@@ -45,8 +45,8 @@ function CheckoutPaymentMethod({
 
           <RadioOption
             name="payment"
-            value="bank-transfer"
-            checked={paymentMethod === 'bank-transfer'}
+            value="bank_transfer"
+            checked={paymentMethod === 'bank_transfer'}
             label="Bank transfer"
             disabled={!bankDetails}
             onChange={onPaymentMethodChange}

@@ -26,6 +26,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@e-pharmacy/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
@@ -255,6 +258,10 @@ importers:
         version: 5.9.3
 
   packages/validation:
+    dependencies:
+      '@e-pharmacy/types':
+        specifier: workspace:*
+        version: link:../types
     devDependencies:
       typescript:
         specifier: ^5

@@ -13,48 +13,49 @@ const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
 
 //===============================================================
 
-export const orderParamsSchema = z.object({
-  orderId: mongoIdSchema,
+export const orderParamsSchema = z.object({ orderId: mongoIdSchema });
+
+//===============================================================
+
+const baseCheckoutSchema = z.object({
+  pharmacyId: mongoIdSchema,
+  paymentMethod: z.enum(['cash', 'bank_transfer']),
+  comment: sharedOrderCommentSchema,
 });
 
-export const checkoutOrderSchema = z
+//===============================================================
+
+export const checkoutOrderSchema = z.discriminatedUnion('deliveryMethod', [
+  baseCheckoutSchema.extend({
+    deliveryMethod: z.literal('pickup'),
+    deliveryDetails: z.never().optional(),
+  }),
+
+  baseCheckoutSchema.extend({
+    deliveryMethod: z.literal('postal_delivery'),
+    deliveryDetails: z.object({
+      recipientName: sharedNameSchema,
+      recipientPhone: sharedRequiredPhoneSchema,
+      address: sharedRequiredAddressSchema,
+    }),
+  }),
+]);
+
+//===============================================================
+
+export const updateOrderStatusSchema = z
   .object({
-    pharmacyId: mongoIdSchema,
-    paymentMethod: z.enum(['cash', 'bank-transfer']),
-    deliveryMethod: z.enum(['pickup', 'post']),
-    deliveryDetails: z
-      .object({
-        recipientName: sharedNameSchema.optional(),
-        recipientPhone: sharedRequiredPhoneSchema.optional(),
-        address: sharedRequiredAddressSchema.optional(),
-      })
-      .optional(),
-    comment: sharedOrderCommentSchema,
+    status: z.enum(['in_progress', 'successful', 'rejected']),
+    rejectionReason: z.string().trim().min(3).max(500).optional(),
+    comment: z.string().trim().max(500).optional(),
   })
+
   .superRefine((value, ctx) => {
-    if (value.deliveryMethod !== 'post') return;
-
-    if (!value.deliveryDetails?.recipientName) {
+    if (value.status === 'rejected' && !value.rejectionReason) {
       ctx.addIssue({
         code: 'custom',
-        path: ['deliveryDetails', 'recipientName'],
-        message: 'Recipient name is required for post delivery',
-      });
-    }
-
-    if (!value.deliveryDetails?.recipientPhone) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['deliveryDetails', 'recipientPhone'],
-        message: 'Recipient phone is required for post delivery',
-      });
-    }
-
-    if (!value.deliveryDetails?.address) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['deliveryDetails', 'address'],
-        message: 'Delivery address is required for post delivery',
+        path: ['rejectionReason'],
+        message: 'Rejection reason is required',
       });
     }
   });
@@ -62,3 +63,4 @@ export const checkoutOrderSchema = z
 //===============================================================
 
 export type CheckoutOrderInput = z.infer<typeof checkoutOrderSchema>;
+export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import Link from 'next/link';
-import { Building2, Heart, KeyRound } from 'lucide-react';
+import { Building2, Heart, KeyRound, MonitorSmartphone } from 'lucide-react';
 
 import {
   Button,
@@ -69,13 +69,20 @@ import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
   getOrders,
+  getActiveSessions,
+  revokeActiveSession,
   getProducts,
   getPharmacies,
   updateCurrentUser,
   updateCurrentUserPassword,
 } from '@e-pharmacy/api-client/client';
 
-import type { Order, Product, Pharmacy } from '@e-pharmacy/types';
+import type {
+  ActiveSession,
+  Order,
+  Product,
+  Pharmacy,
+} from '@e-pharmacy/types';
 
 import css from './ProfilePageContent.module.css';
 
@@ -85,7 +92,8 @@ type ProfileTab =
   | 'data'
   | 'orders'
   | 'favorite-products'
-  | 'favorite-pharmacies';
+  | 'favorite-pharmacies'
+  | 'sessions';
 
 const TABS: Array<{
   value: ProfileTab;
@@ -95,7 +103,10 @@ const TABS: Array<{
   { value: 'orders', label: 'My orders' },
   { value: 'favorite-products', label: 'Favorite products' },
   { value: 'favorite-pharmacies', label: 'Favorite pharmacies' },
+  { value: 'sessions', label: 'Active sessions' },
 ];
+
+//===================================================================
 
 const FAVORITES_PER_PAGE = 100;
 const FAVORITES_VISIBLE_STEP = 16;
@@ -188,6 +199,9 @@ function ProfilePageContent() {
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [sessions, setSessions] = useState<ActiveSession[]>([]);
+  const [isSessionsLoading, setIsSessionsLoading] = useState(false);
+  const [sessionsError, setSessionsError] = useState('');
 
   const [ordersVisibleCount, setOrdersVisibleCount] =
     useState(ORDERS_VISIBLE_STEP);
@@ -421,6 +435,42 @@ function ProfilePageContent() {
       isMounted = false;
     };
   }, [canUseAuthFeatures]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!canUseAuthFeatures || activeTab !== 'sessions') return;
+
+    async function loadSessions() {
+      try {
+        setIsSessionsLoading(true);
+        setSessionsError('');
+        const response = await getActiveSessions();
+        if (isMounted) setSessions(response.sessions);
+      } catch {
+        if (isMounted) setSessionsError('Could not load active sessions.');
+      } finally {
+        if (isMounted) setIsSessionsLoading(false);
+      }
+    }
+
+    void loadSessions();
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab, canUseAuthFeatures]);
+
+  const handleRevokeSession = async (sessionId: string) => {
+    try {
+      setSessionsError('');
+      await revokeActiveSession(sessionId);
+      setSessions((current) =>
+        current.filter((session) => session.id !== sessionId)
+      );
+      setFeedback('Session was revoked.');
+    } catch {
+      setSessionsError('Could not revoke the session.');
+    }
+  };
 
   if (!user) {
     return (
@@ -772,6 +822,67 @@ function ProfilePageContent() {
                       <KeyRound size={18} aria-hidden="true" />
                       {isPasswordSaving ? 'Changing...' : 'Change password'}
                     </Button>
+                  </section>
+                </div>
+              ) : null}
+
+              {activeTab === 'sessions' ? (
+                <div className={css.tabPanel} role="tabpanel">
+                  <section
+                    className={css.panelSection}
+                    aria-labelledby="sessions-title"
+                  >
+                    <div className={css.panelHeader}>
+                      <h2 className={css.panelTitle} id="sessions-title">
+                        Active sessions and devices
+                      </h2>
+                      <p className={css.panelText}>
+                        Review devices signed in to your account and revoke
+                        sessions you no longer use.
+                      </p>
+                    </div>
+
+                    {isSessionsLoading ? (
+                      <LoadingSpinner label="Loading active sessions..." />
+                    ) : sessionsError ? (
+                      <p className={css.error} role="alert">
+                        {sessionsError}
+                      </p>
+                    ) : (
+                      <ul className={css.sessionsList}>
+                        {sessions.map((session) => (
+                          <li className={css.sessionCard} key={session.id}>
+                            <MonitorSmartphone size={22} aria-hidden="true" />
+                            <div className={css.sessionInfo}>
+                              <strong>
+                                {session.deviceName || 'Unknown device'}
+                              </strong>
+                              <span>{session.ip || 'IP unavailable'}</span>
+                              <span>
+                                Last active:{' '}
+                                {formatShortDate(session.lastUsedAt)}
+                              </span>
+                            </div>
+                            {session.isCurrent ? (
+                              <span className={css.currentSession}>
+                                Current session
+                              </span>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                onClick={() =>
+                                  void handleRevokeSession(session.id)
+                                }
+                              >
+                                Revoke
+                              </Button>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </section>
                 </div>
               ) : null}

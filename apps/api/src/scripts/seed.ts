@@ -452,7 +452,7 @@ function createOffer(
   totalQuantity: number,
   reservedQuantity = 0
 ) {
-  const activeQuantity = Math.max(totalQuantity - reservedQuantity, 0);
+  const availableQuantity = Math.max(totalQuantity - reservedQuantity, 0);
 
   return {
     pharmacyId: pharmacy._id,
@@ -465,9 +465,8 @@ function createOffer(
     pharmacyReviewsCount: 18 + (price % 17),
     price,
     totalQuantity,
-    activeQuantity,
+    availableQuantity,
     reservedQuantity,
-    inStock: activeQuantity > 0,
   };
 }
 
@@ -598,7 +597,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       pharmacyId: offers[0]?.pharmacyId,
       pharmacyName: offers[0]?.pharmacyName,
       offers,
-      inStock: offers.some((offer) => offer.inStock),
+      inStock: offers.some((offer) => offer.availableQuantity > 0),
       rating,
       reviewsCount,
       reviews: createModeratedReviews(reviewsCount, 4),
@@ -656,9 +655,8 @@ async function seedDatabase(): Promise<void> {
         pharmacyId: offer.pharmacyId,
         price: offer.price,
         totalQuantity: offer.totalQuantity,
-        activeQuantity: offer.activeQuantity,
+        availableQuantity: offer.availableQuantity,
         reservedQuantity: offer.reservedQuantity,
-        inStock: offer.inStock,
       }))
     )
   );

@@ -24,7 +24,12 @@ import type {
   UpdateProfileInput,
 } from '../types/auth';
 
-import type { SessionContext } from '../types/session';
+import type {
+  SessionContext,
+  SessionResponseDto,
+  SessionRevokedReason,
+} from '../types/session';
+
 import type { UserEntity } from '../types/user';
 
 import { httpError } from '../utils/httpError';
@@ -38,6 +43,7 @@ import { toAuthUserResponse } from '../utils/userResponse';
 //===============================================================
 
 const REFRESH_TOKEN_BYTES = 64;
+
 const REFRESH_TOKEN_TTL_MS = parseDurationMs(
   String(env.REFRESH_TOKEN_EXPIRES_IN),
   30 * 24 * 60 * 60 * 1000
@@ -232,6 +238,7 @@ export async function refreshAuthSessionService(
 
   if (user.status === USER_STATUSES.BLOCKED) {
     session.revokedAt = new Date();
+    session.revokedReason = 'user_blocked';
     await session.save();
 
     throw httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.USER_BLOCKED);
@@ -258,7 +265,7 @@ export async function refreshAuthSessionService(
   // The earlier implementation rotated the refresh token on every refresh and
   // accepted the previous token only for a short grace window. That is a good
   // security pattern when the server can safely return the latest raw refresh
-  // token to every parallel request. Here we only pharmacy token hashes, so a
+  // token to every parallel request. Here we only store token hashes, so a
   // parallel request that arrived with the previous token could refresh the
   // access token but could not receive the already-rotated refresh token.
   // If that response was the last one applied by the browser, the browser kept
@@ -284,7 +291,8 @@ export async function refreshAuthSessionService(
 //===============================================================
 
 export async function revokeCurrentSessionService(
-  sessionId?: string
+  sessionId?: string,
+  reason: SessionRevokedReason = 'logout'
 ): Promise<void> {
   if (!sessionId) return;
 
@@ -296,6 +304,7 @@ export async function revokeCurrentSessionService(
     {
       $set: {
         revokedAt: new Date(),
+        revokedReason: reason,
         lastUsedAt: new Date(),
       },
     }
@@ -305,7 +314,8 @@ export async function revokeCurrentSessionService(
 //===============================================================
 
 export async function revokeAllUserSessionsService(
-  userId: string
+  userId: string,
+  reason: SessionRevokedReason = 'logout_all'
 ): Promise<void> {
   await Session.updateMany(
     {
@@ -315,6 +325,7 @@ export async function revokeAllUserSessionsService(
     {
       $set: {
         revokedAt: new Date(),
+        revokedReason: reason,
         lastUsedAt: new Date(),
       },
     }
@@ -421,7 +432,7 @@ export async function resetPasswordService(
   user.resetPasswordExpiresAt = undefined;
 
   await user.save();
-  await revokeAllUserSessionsService(String(user._id));
+  await revokeAllUserSessionsService(String(user._id), 'password_changed');
 }
 
 //===============================================================
@@ -505,5 +516,58 @@ export async function updateUserPasswordService(
 
   user.password = await hashPassword(input.newPassword);
   await user.save();
-  await revokeAllUserSessionsService(userId);
+  await revokeAllUserSessionsService(userId, 'password_changed');
+}
+
+//===============================================================
+
+export async function getActiveSessionsService(
+  userId: string,
+  currentSessionId?: string
+): Promise<{ sessions: SessionResponseDto[] }> {
+  const sessions = await Session.find({
+    userId,
+    revokedAt: undefined,
+    expiresAt: { $gt: new Date() },
+  })
+    .sort({ lastUsedAt: -1 })
+    .lean();
+
+  return {
+    sessions: sessions.map((session) => ({
+      id: String(session._id),
+      ...(session.deviceName ? { deviceName: session.deviceName } : {}),
+      ...(session.userAgent ? { userAgent: session.userAgent } : {}),
+      ...(session.ip ? { ip: session.ip } : {}),
+      roleAtLogin: session.roleAtLogin,
+      ...(session.createdAt
+        ? { createdAt: session.createdAt.toISOString() }
+        : {}),
+      lastUsedAt: session.lastUsedAt.toISOString(),
+      expiresAt: session.expiresAt.toISOString(),
+      isCurrent: String(session._id) === currentSessionId,
+    })),
+  };
+}
+
+//===============================================================
+
+export async function revokeUserSessionService(
+  userId: string,
+  sessionId: string
+): Promise<void> {
+  const result = await Session.updateOne(
+    { _id: sessionId, userId, revokedAt: undefined },
+    {
+      $set: {
+        revokedAt: new Date(),
+        revokedReason: 'logout',
+        lastUsedAt: new Date(),
+      },
+    }
+  );
+
+  if (result.matchedCount !== 1) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Active session was not found.');
+  }
 }

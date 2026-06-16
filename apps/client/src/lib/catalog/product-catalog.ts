@@ -1,3 +1,5 @@
+import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
+
 import type {
   ProductCategory,
   ProductFilterOptionsResponse,
@@ -21,12 +23,10 @@ export const PRODUCTS_CATALOG_PER_PAGE = 24;
 export const FALLBACK_PRODUCT_FILTER_OPTIONS: ProductFilterOptionsResponse = {
   categories: [
     { value: 'all', label: 'All categories' },
-    { value: 'medicine', label: 'Medicine' },
-    { value: 'vitamins', label: 'Vitamins' },
-    { value: 'beauty', label: 'Beauty' },
-    { value: 'hygiene', label: 'Hygiene' },
-    { value: 'medical-devices', label: 'Medical devices' },
-    { value: 'other', label: 'Other' },
+    ...PRODUCT_CATEGORIES.map((value) => ({
+      value,
+      label: PRODUCT_CATEGORY_LABELS[value],
+    })),
   ],
   availability: [
     { value: 'all', label: 'All products' },

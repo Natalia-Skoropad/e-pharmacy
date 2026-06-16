@@ -4,6 +4,16 @@ import type { UserRole } from './user';
 
 //===============================================================
 
+export type SessionRevokedReason =
+  | 'logout'
+  | 'logout_all'
+  | 'password_changed'
+  | 'user_blocked'
+  | 'token_reuse'
+  | 'admin_revoked';
+
+//===============================================================
+
 export type SessionEntity = {
   userId: Types.ObjectId | string;
   refreshTokenHash: string;
@@ -18,6 +28,19 @@ export type SessionEntity = {
   expiresAt: Date;
   lastUsedAt: Date;
   revokedAt?: Date;
+  revokedReason?: SessionRevokedReason;
+};
+
+export type SessionResponseDto = {
+  id: string;
+  deviceName?: string;
+  userAgent?: string;
+  ip?: string;
+  roleAtLogin: UserRole;
+  createdAt?: string;
+  lastUsedAt: string;
+  expiresAt: string;
+  isCurrent: boolean;
 };
 
 //===============================================================

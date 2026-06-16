@@ -44,7 +44,7 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
   vitamins: 'Vitamins and minerals',
   beauty: 'Beauty',
   hygiene: 'Hygiene',
-  'medical-devices': 'Medical devices',
+  'medical_devices': 'Medical devices',
   other: 'Other',
 };
 

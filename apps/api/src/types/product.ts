@@ -1,14 +1,6 @@
 import type { Types } from 'mongoose';
 
-//===============================================================
-
-export type ProductCategory =
-  | 'medicine'
-  | 'vitamins'
-  | 'beauty'
-  | 'hygiene'
-  | 'medical-devices'
-  | 'other';
+import type { ProductCategory } from './categories';
 
 //===============================================================
 
@@ -46,9 +38,8 @@ export type ProductOfferEntity = {
   pharmacyId: Types.ObjectId;
   price: number;
   totalQuantity: number;
-  activeQuantity: number;
+  availableQuantity: number;
   reservedQuantity: number;
-  inStock: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -66,7 +57,7 @@ export type ProductOfferResponseDto = {
   pharmacyIsFavorite?: boolean;
   price: number;
   totalQuantity: number;
-  activeQuantity: number;
+  availableQuantity: number;
   reservedQuantity: number;
   inStock: boolean;
 };

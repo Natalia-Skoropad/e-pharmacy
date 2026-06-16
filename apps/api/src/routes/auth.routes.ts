@@ -10,6 +10,8 @@ import {
   getPharmacyOnlyTest,
   loginUser,
   logoutAllUserSessions,
+  getActiveSessions,
+  revokeActiveSession,
   logoutUser,
   refreshAuthSession,
   requestPasswordReset,
@@ -113,6 +115,10 @@ authRoutes.patch(
 );
 
 authRoutes.post('/logout', authenticate, ctrlWrapper(logoutUser));
+
+authRoutes.get('/sessions', authenticate, ctrlWrapper(getActiveSessions));
+authRoutes.delete('/sessions/:sessionId', authenticate, ctrlWrapper(revokeActiveSession));
+
 authRoutes.post(
   '/logout-all',
   authenticate,

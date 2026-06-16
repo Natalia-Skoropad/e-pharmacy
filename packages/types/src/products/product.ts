@@ -1,18 +1,11 @@
 import type { ApiPaginationResponse } from '../api';
 import type { EntityId, ISODateString } from '../shared';
 import type { ReviewModerationStatus } from '../reviews';
+import type { ProductCategory } from './categories';
 
 //=============================================================================
 
 export type ProductStatus = 'new' | 'active' | 'blocked';
-
-export type ProductCategory =
-  | 'medicine'
-  | 'vitamins'
-  | 'beauty'
-  | 'hygiene'
-  | 'medical-devices'
-  | 'other';
 
 //=============================================================================
 
@@ -29,7 +22,7 @@ export type ProductOffer = {
   pharmacyIsFavorite?: boolean;
   price: number;
   totalQuantity: number;
-  activeQuantity: number;
+  availableQuantity: number;
   reservedQuantity: number;
   inStock: boolean;
 };
@@ -141,7 +134,7 @@ export type CreateProductReviewResponse = { message: string };
 
 //=============================================================================
 
-export type ToggleFavoriteProductResponse = {
+export type FavoriteProductResponse = {
   isFavorite: boolean;
   message: string;
 };

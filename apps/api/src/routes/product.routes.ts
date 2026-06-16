@@ -8,7 +8,7 @@ import {
   getProductFilters,
   getProductReviews,
   getProducts,
-  toggleFavoriteProduct,
+  setFavoriteProduct,
 } from '../controllers/product.controller';
 
 import { USER_ROLES } from '../constants/auth';
@@ -90,13 +90,22 @@ productRoutes.patch(
   ctrlWrapper(moderateProductReview)
 );
 
-productRoutes.patch(
+productRoutes.put(
   '/:productId/favorite',
   authenticate,
   validate({
     params: productIdParamsSchema,
   }),
-  ctrlWrapper(toggleFavoriteProduct)
+  ctrlWrapper(setFavoriteProduct)
+);
+
+productRoutes.delete(
+  '/:productId/favorite',
+  authenticate,
+  validate({
+    params: productIdParamsSchema,
+  }),
+  ctrlWrapper(setFavoriteProduct)
 );
 
 productRoutes.get(

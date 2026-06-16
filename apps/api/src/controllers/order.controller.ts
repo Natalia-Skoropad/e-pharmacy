@@ -1,12 +1,13 @@
 import type { Request, Response } from 'express';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { checkoutOrderSchema } from '../schemas/order.schema';
+import { checkoutOrderSchema, updateOrderStatusSchema } from '../schemas/order.schema';
 
 import {
   checkoutOrderService,
   getOrderByIdService,
   getOrdersService,
+  updateOrderStatusService,
 } from '../services/order.service';
 
 import { sendSuccessResponse } from '../utils/apiResponse';
@@ -56,4 +57,15 @@ export async function getOrderById(req: Request, res: Response): Promise<void> {
     statusCode: HTTP_STATUS.OK,
     data,
   });
+}
+
+//===============================================================
+
+export async function updateOrderStatus(req: Request, res: Response): Promise<void> {
+  const { orderId } = req.params as OrderParams;
+  const body = updateOrderStatusSchema.parse(req.body);
+  const user = req.user;
+  if (!user) return;
+  const data = await updateOrderStatusService({ id: user.id, role: user.role }, orderId, body);
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

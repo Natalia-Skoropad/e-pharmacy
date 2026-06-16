@@ -6,68 +6,37 @@ import type { CartEntity } from '../types/cart';
 
 const cartItemSchema = new Schema(
   {
-    productId: {
+    productOfferId: {
       type: Schema.Types.ObjectId,
-      ref: 'Product',
+      ref: 'ProductOffer',
       required: true,
     },
-
-    pharmacyId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Pharmacy',
-      required: true,
-    },
-
-    quantity: {
-      type: Number,
-      min: 1,
-      required: true,
-    },
-
-    price: {
-      type: Number,
-      min: 0,
-      required: true,
-    },
-
-    expiresAt: {
-      type: Date,
-      required: true,
-    },
+    quantity: { type: Number, min: 1, required: true },
+    unitPrice: { type: Number, min: 0, required: true },
+    expiresAt: { type: Date, required: true },
   },
-  {
-    _id: true,
-    id: false,
-    timestamps: true,
-  }
+  { _id: true, id: false, timestamps: true }
 );
 
 //===============================================================
 
 const cartSchema = new Schema<CartEntity>(
   {
-    userId: {
+    clientUserId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
       unique: true,
     },
-
-    items: {
-      type: [cartItemSchema],
-      default: [],
-    },
+    items: { type: [cartItemSchema], default: [] },
   },
-  {
-    timestamps: true,
-    versionKey: false,
-  }
+  { timestamps: true, versionKey: false }
 );
 
 //===============================================================
 
 cartSchema.index({ 'items.expiresAt': 1 });
-cartSchema.index({ 'items.productId': 1, 'items.pharmacyId': 1 });
+cartSchema.index({ 'items.productOfferId': 1 });
 
 //===============================================================
 

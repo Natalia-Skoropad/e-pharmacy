@@ -324,3 +324,23 @@ Production checklist:
 - Verify CORS and Origin/Referer validation
 - Verify password reset links
 - Verify checkout and order creation
+
+## Domain invariants
+
+### Stock
+
+`ProductOffer` is the only Stock owner. It stores `totalQuantity`, `availableQuantity`, and `reservedQuantity`, where `totalQuantity === availableQuantity + reservedQuantity`. Only `stock.service.ts` may mutate these values. `inStock` is derived from `availableQuantity > 0` and is not persisted on ProductOffer.
+
+### Cart
+
+A Cart belongs to `clientUserId`, may contain ProductOffers from several pharmacies, and contains each ProductOffer at most once. One pharmacy group creates one Order. `MAX_PHARMACY_GROUPS_PER_CART` is 15 to prevent one checkout flow from producing an excessive number of independent orders. Expired reservations are released by the scheduled cleanup job.
+
+Cart prices are live ProductOffer prices. The immutable price snapshot is created only during Order checkout.
+
+### Order
+
+Allowed transitions are `new -> in_progress | rejected` and `in_progress -> successful | rejected`. Successful and rejected Orders are terminal. Stock remains reserved until a terminal transition: `successful` commits it, while `rejected` releases it. Rejection metadata and status history are stored with the Order.
+
+### Canonical shared names
+
+Use only `PaymentMethod`, `DeliveryMethod`, `postal_delivery`, `ProductCategory`, and `PRODUCT_CATEGORIES`.

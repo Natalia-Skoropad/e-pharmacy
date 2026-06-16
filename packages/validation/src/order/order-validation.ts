@@ -8,9 +8,7 @@ import {
   type FormTouchedFields,
 } from '../shared';
 
-//===================================================================
-
-export type OrderDeliveryMethod = 'pickup' | 'post';
+import type { DeliveryMethod } from '@e-pharmacy/types/orders';
 
 //===================================================================
 
@@ -44,7 +42,7 @@ export const ORDER_DELIVERY_FORM_FIELDS: Array<keyof OrderDeliveryFormValues> =
 
 export function validateOrderDeliveryForm(
   values: OrderDeliveryFormValues,
-  deliveryMethod: OrderDeliveryMethod
+  deliveryMethod: DeliveryMethod
 ): OrderDeliveryFormErrors {
   const errors: OrderDeliveryFormErrors = {};
 
@@ -81,7 +79,7 @@ export function validateOrderDeliveryForm(
 
 export function isOrderDeliveryFormValid(
   values: OrderDeliveryFormValues,
-  deliveryMethod: OrderDeliveryMethod
+  deliveryMethod: DeliveryMethod
 ): boolean {
   return isValidationResultValid(
     validateOrderDeliveryForm(values, deliveryMethod)

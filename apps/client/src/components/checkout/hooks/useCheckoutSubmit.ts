@@ -8,7 +8,7 @@ import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
 import { buildOrderPath } from '@/lib/orders';
 
 import { checkoutOrder, getCart } from '@e-pharmacy/api-client/client';
-import type { Cart } from '@e-pharmacy/types';
+import type { Cart, CheckoutOrderPayload } from '@e-pharmacy/types';
 
 import type { CheckoutPharmacyOrderGroup } from '@e-pharmacy/types/checkout';
 import type { PaymentMethod } from '@e-pharmacy/types/orders';
@@ -77,21 +77,28 @@ export function useCheckoutSubmit({
         return;
       }
 
-      const response = await checkoutOrder({
-        pharmacyId: latestOrderGroup.pharmacyId,
-        paymentMethod,
-        deliveryMethod,
-        ...(deliveryMethod === 'post'
+      const trimmedComment = comment.trim();
+      const orderPayload: CheckoutOrderPayload =
+        deliveryMethod === 'postal_delivery'
           ? {
+              pharmacyId: latestOrderGroup.pharmacyId,
+              paymentMethod,
+              deliveryMethod,
               deliveryDetails: {
                 recipientName: recipientNameValue.trim(),
                 recipientPhone: recipientPhoneValue.trim(),
                 address: deliveryAddressValue.trim(),
               },
+              ...(trimmedComment ? { comment: trimmedComment } : {}),
             }
-          : {}),
-        ...(comment.trim() ? { comment: comment.trim() } : {}),
-      });
+          : {
+              pharmacyId: latestOrderGroup.pharmacyId,
+              paymentMethod,
+              deliveryMethod,
+              ...(trimmedComment ? { comment: trimmedComment } : {}),
+            };
+
+      const response = await checkoutOrder(orderPayload);
       const nextCartResponse = await getCart();
 
       setCart(nextCartResponse.cart);

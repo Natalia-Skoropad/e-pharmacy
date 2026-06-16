@@ -122,7 +122,7 @@ https://e-pharmacy-client-ten.vercel.app
 - cart grouped by pharmacy
 - quantity controls with stock limits
 - order-level summaries
-- checkout with pickup or post delivery
+- checkout with pickup or postal delivery
 - order creation through the backend API
 - delivery address and client comment in order details
 
@@ -553,3 +553,11 @@ Recommended production checklist:
 **Nataliia Skoropad**  
 Full-stack Developer  
 Backend development, Frontend development, UI/UX design
+
+## Cart and checkout domain rules
+
+- The Cart can group ProductOffers from up to 15 pharmacies; each pharmacy group is confirmed as a separate Order.
+- The limit prevents accidental creation of too many Orders. Confirm existing pharmacy groups before adding products from another pharmacy.
+- ProductOffer prices remain live while products are in the Cart and update on the next Cart response. Price is frozen only in the confirmed Order.
+- Canonical checkout types are `PaymentMethod` and `DeliveryMethod`; postal delivery is `postal_delivery`.
+- Favorites use idempotent PUT to add and DELETE to remove.

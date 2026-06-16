@@ -6,16 +6,9 @@ import {
   sharedSearchSchema,
 } from './shared-validation.schema';
 
-//===============================================================
+import { PRODUCT_CATEGORIES } from '../types/categories';
 
-export const PRODUCT_CATEGORIES = [
-  'medicine',
-  'vitamins',
-  'beauty',
-  'hygiene',
-  'medical-devices',
-  'other',
-] as const;
+//===============================================================
 
 export const PRODUCT_SORT_OPTIONS = [
   'price-asc',

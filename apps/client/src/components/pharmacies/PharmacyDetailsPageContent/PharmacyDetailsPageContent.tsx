@@ -25,7 +25,7 @@ import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useToast } from '@e-pharmacy/ui/feedback';
 
 import {
-  useFavoriteToggle,
+  useFavoriteActions,
   useReviewForm,
   usePharmacyFavoriteRefresh,
 } from '@/hooks';
@@ -38,7 +38,8 @@ import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
   createPharmacyReview,
-  toggleFavoritePharmacy,
+  addFavoritePharmacy,
+  removeFavoritePharmacy,
 } from '@e-pharmacy/api-client/client';
 
 import type { Pharmacy, PharmacyReview } from '@e-pharmacy/types';
@@ -94,7 +95,7 @@ function PharmacyDetailsPageContent({
   const workingHours = pharmacy.workingHours?.trim() ?? '';
 
   const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
-    useFavoriteToggle({
+    useFavoriteActions({
       id: pharmacy.id,
       initialIsFavorite: Boolean(pharmacy.isFavorite),
       notifier: toast,
@@ -102,7 +103,8 @@ function PharmacyDetailsPageContent({
       addedMessage: 'Pharmacy was added to favorites.',
       removedMessage: 'Pharmacy was removed from favorites.',
       errorMessage: 'Could not update pharmacy favorites.',
-      toggleFavorite: toggleFavoritePharmacy,
+      addFavorite: addFavoritePharmacy,
+      removeFavorite: removeFavoritePharmacy,
     });
 
   usePharmacyFavoriteRefresh({

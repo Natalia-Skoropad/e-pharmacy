@@ -1,6 +1,10 @@
 'use client';
 
-import { toggleFavoritePharmacy } from '@e-pharmacy/api-client/client';
+import {
+  addFavoritePharmacy,
+  removeFavoritePharmacy,
+} from '@e-pharmacy/api-client/client';
+
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
 
 import { buildPharmacyPath } from '@e-pharmacy/config/routes';
@@ -16,7 +20,7 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
 
 import { FavoriteToggleButton } from '@/components/common';
-import { useFavoriteToggle, usePharmacyFavoriteRefresh } from '@/hooks';
+import { useFavoriteActions, usePharmacyFavoriteRefresh } from '@/hooks';
 import { useAuth } from '@e-pharmacy/auth/core';
 import type { Pharmacy } from '@e-pharmacy/types';
 
@@ -46,7 +50,7 @@ function PharmacyCard({
     isFavoriteLoading,
     handleFavoriteClick,
     setIsFavorite,
-  } = useFavoriteToggle({
+  } = useFavoriteActions({
     id: pharmacy.id,
     initialIsFavorite: Boolean(pharmacy.isFavorite),
     notifier: toast,
@@ -54,7 +58,8 @@ function PharmacyCard({
     addedMessage: 'Pharmacy was added to favorites.',
     removedMessage: 'Pharmacy was removed from favorites.',
     errorMessage: 'Could not update pharmacy favorites.',
-    toggleFavorite: toggleFavoritePharmacy,
+    addFavorite: addFavoritePharmacy,
+    removeFavorite: removeFavoritePharmacy,
     onFavoriteChange,
   });
 

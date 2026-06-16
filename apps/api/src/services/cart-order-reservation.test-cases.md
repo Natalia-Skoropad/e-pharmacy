@@ -1,13 +1,13 @@
 # Cart / Checkout / Orders reservation test cases
 
-Use these cases after seeding at least one product offer with predictable quantities, for example `totalQuantity: 10`, `activeQuantity: 10`, `reservedQuantity: 0`.
+Use these cases after seeding at least one product offer with predictable quantities, for example `totalQuantity: 10`, `availableQuantity: 10`, `reservedQuantity: 0`.
 
 ## 1. Add item to cart reserves stock
 
 1. Add product from pharmacy A with quantity 2.
 2. Check cart response contains the item with quantity 2.
 3. Check product offer for pharmacy A:
-   - `activeQuantity` decreased by 2;
+   - `availableQuantity` decreased by 2;
    - `reservedQuantity` increased by 2;
    - `totalQuantity` is unchanged.
 
@@ -17,7 +17,7 @@ Use these cases after seeding at least one product offer with predictable quanti
 2. Remove the cart item.
 3. Check the cart no longer contains the item.
 4. Check product offer:
-   - `activeQuantity` increased by 2;
+   - `availableQuantity` increased by 2;
    - `reservedQuantity` decreased by 2;
    - `totalQuantity` is unchanged.
 
@@ -26,7 +26,7 @@ Use these cases after seeding at least one product offer with predictable quanti
 1. Start with cart quantity 2.
 2. Update the cart item quantity to 5.
 3. Check product offer:
-   - `activeQuantity` decreased by 3;
+   - `availableQuantity` decreased by 3;
    - `reservedQuantity` increased by 3;
    - `totalQuantity` is unchanged.
 
@@ -35,7 +35,7 @@ Use these cases after seeding at least one product offer with predictable quanti
 1. Start with cart quantity 5.
 2. Update the cart item quantity to 2.
 3. Check product offer:
-   - `activeQuantity` increased by 3;
+   - `availableQuantity` increased by 3;
    - `reservedQuantity` decreased by 3;
    - `totalQuantity` is unchanged.
 
@@ -45,7 +45,7 @@ Use these cases after seeding at least one product offer with predictable quanti
 2. Request the cart.
 3. Check expired items are removed from cart response.
 4. Check product offer reservation was released:
-   - `activeQuantity` increased by the expired quantity;
+   - `availableQuantity` increased by the expired quantity;
    - `reservedQuantity` decreased by the expired quantity.
 
 ## 6. Checkout commits only selected pharmacy order
@@ -57,12 +57,12 @@ Use these cases after seeding at least one product offer with predictable quanti
 5. Check pharmacy A product offers:
    - `reservedQuantity` decreased by purchased quantity;
    - `totalQuantity` decreased by purchased quantity;
-   - `activeQuantity` is not increased back.
+   - `availableQuantity` is not increased back.
 6. Check pharmacy B product offers are unchanged.
 
 ## 7. Checkout saves order snapshot and delivery details
 
-1. Checkout with delivery method `post`, recipient data, address and comment.
+1. Checkout with delivery method `postal_delivery`, recipient data, address and comment.
 2. Check order response and database record contain:
    - product snapshot;
    - pharmacy snapshot;
@@ -73,6 +73,6 @@ Use these cases after seeding at least one product offer with predictable quanti
 
 ## 8. Unavailable stock blocks reservation
 
-1. Set product offer `activeQuantity` to 1.
+1. Set product offer `availableQuantity` to 1.
 2. Try to add or increase cart quantity above 1.
 3. Check API returns conflict and product quantities stay unchanged.

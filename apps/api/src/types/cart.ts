@@ -1,32 +1,27 @@
 import type { Types } from 'mongoose';
-
 import type { ProductResponseDto } from './product';
 
 //===============================================================
 
 export type CartItemEntity = {
-  productId: Types.ObjectId;
-  pharmacyId: Types.ObjectId;
+  productOfferId: Types.ObjectId;
   quantity: number;
-  price: number;
+  unitPrice: number;
   expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
 };
 
-//===============================================================
-
 export type CartEntity = {
-  userId: Types.ObjectId;
+  clientUserId: Types.ObjectId;
   items: CartItemEntity[];
   createdAt: Date;
   updatedAt: Date;
 };
 
-//===============================================================
-
 export type CartItemResponseDto = {
   id: string;
+  productOfferId: string;
   productId: string;
   pharmacyId: string;
   product: ProductResponseDto;
@@ -35,12 +30,10 @@ export type CartItemResponseDto = {
   pharmacyReviewsCount?: number;
   stockQuantity: number;
   quantity: number;
-  price: number;
+  unitPrice: number;
   totalPrice: number;
   expiresAt: string;
 };
-
-//===============================================================
 
 export type CartResponseDto = {
   items: CartItemResponseDto[];

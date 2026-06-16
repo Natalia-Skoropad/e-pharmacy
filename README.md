@@ -30,7 +30,7 @@ Pharmacy and admin folders are kept as planned app boundaries. They are not comp
 - Pharmacies catalog with search, filters, sorting, pagination, details, reviews, and favorites
 - Product catalog with search, filters, sorting, pagination, product details, reviews, and favorites
 - Cart grouped by pharmacy order
-- Checkout with pickup/post delivery details and client comment
+- Checkout with pickup/postal delivery details and client comment
 - Client profile, password update, order history, and order details
 - Password recovery through email reset flow
 - Loading, empty, error, success, not-found, and protected-route states
@@ -204,3 +204,14 @@ pnpm check:api
 The strongest completed parts of the project are the client storefront, backend API, SEO routing, cookie-based auth flow, cart/checkout/order logic, and shared monorepo structure.
 
 Pharmacy and admin apps are planned ecosystem extensions, not completed modules yet.
+
+## Canonical cart, stock, and order rules
+
+- Stock is stored only on `ProductOffer` as `totalQuantity`, `availableQuantity`, and `reservedQuantity`.
+- The invariant is `totalQuantity = availableQuantity + reservedQuantity`; availability is derived from `availableQuantity > 0`.
+- One Client User has one multi-pharmacy Cart. Each pharmacy group creates one separate Order.
+- A Cart may contain products from no more than 15 pharmacies to prevent accidental creation of an excessive number of orders. The client should confirm existing groups before adding another pharmacy.
+- Cart items reference `ProductOffer` and display its current price. Price becomes immutable only when an Order is confirmed.
+- Order stock stays reserved while the Order is `new` or `in_progress`; it is committed on `successful` and released on `rejected`.
+- Canonical types are `PaymentMethod` and `DeliveryMethod`; postal delivery uses `postal_delivery`.
+- Product categories come from the shared `PRODUCT_CATEGORIES` constant.

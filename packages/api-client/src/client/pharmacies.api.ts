@@ -1,11 +1,7 @@
 import { bffApiRequest } from '../core';
 import { buildQueryString } from '../core/build-query-string';
 
-import {
-  getResponseData,
-  localApiRequest,
-  type RequestOptions,
-} from '../core';
+import { getResponseData, localApiRequest, type RequestOptions } from '../core';
 
 import { apiRoutes as API_ROUTES } from '../routes';
 import { clientApiRoutes as CLIENT_API_ROUTES } from '../routes';
@@ -19,7 +15,7 @@ import type {
   PharmacyReviewsResponse,
   PharmaciesResponse,
   PharmaciesSortFilter,
-  ToggleFavoritePharmacyResponse,
+  FavoritePharmacyResponse,
 } from '@e-pharmacy/types';
 
 //===================================================================
@@ -119,14 +115,22 @@ export async function createPharmacyReview(
 
 //===================================================================
 
-export async function toggleFavoritePharmacy(
+export async function addFavoritePharmacy(
   pharmacyId: string
-): Promise<ToggleFavoritePharmacyResponse> {
+): Promise<FavoritePharmacyResponse> {
   const response = await localApiRequest<
-    ApiSuccessResponse<ToggleFavoritePharmacyResponse>
-  >(CLIENT_API_ROUTES.pharmacies.favorite(pharmacyId), {
-    method: 'PATCH',
-  });
+    ApiSuccessResponse<FavoritePharmacyResponse>
+  >(CLIENT_API_ROUTES.pharmacies.favorite(pharmacyId), { method: 'PUT' });
+  return getResponseData(response);
+}
 
+//===================================================================
+
+export async function removeFavoritePharmacy(
+  pharmacyId: string
+): Promise<FavoritePharmacyResponse> {
+  const response = await localApiRequest<
+    ApiSuccessResponse<FavoritePharmacyResponse>
+  >(CLIENT_API_ROUTES.pharmacies.favorite(pharmacyId), { method: 'DELETE' });
   return getResponseData(response);
 }

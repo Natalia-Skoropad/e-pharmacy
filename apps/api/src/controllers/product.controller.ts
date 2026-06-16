@@ -16,7 +16,7 @@ import {
   getProductReviewsService,
   getProductsService,
   moderateProductReviewService,
-  toggleFavoriteProductService,
+  setFavoriteProductService,
 } from '../services/product.service';
 
 import { sendSuccessResponse } from '../utils/apiResponse';
@@ -154,15 +154,16 @@ export async function moderateProductReview(
 
 //===============================================================
 
-export async function toggleFavoriteProduct(
+export async function setFavoriteProduct(
   req: Request,
   res: Response
 ): Promise<void> {
   const { productId } = req.params as ProductParams;
 
-  const data = await toggleFavoriteProductService(
+  const data = await setFavoriteProductService(
     productId,
-    req.user?.id ?? ''
+    req.user?.id ?? '',
+    req.method === 'PUT'
   );
 
   sendSuccessResponse({

@@ -48,13 +48,15 @@ type OrderDetailsPageContentProps = {
 //===================================================================
 
 function formatPaymentMethod(method: Order['paymentMethod']): string {
-  return method === 'bank-transfer'
+  return method === 'bank_transfer'
     ? 'Bank transfer'
     : 'Cash on pickup / delivery';
 }
 
-function formatDeliveryMethod(method: Order['deliveryMethod']): string {
-  return method === 'post' ? 'Post delivery' : 'Pickup from pharmacy';
+function formatDeliveryMethod(method: Order['delivery']['method']): string {
+  return method === 'postal_delivery'
+    ? 'Postal delivery'
+    : 'Pickup from pharmacy';
 }
 
 //===================================================================
@@ -144,7 +146,8 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
 
   const pharmacyHref = buildPharmacyPath(order.pharmacyName, order.pharmacyId);
   const hasDeliveryDetails =
-    order.deliveryMethod === 'post' && Boolean(order.deliveryDetails);
+    order.delivery.method === 'postal_delivery' &&
+    Boolean(order.delivery.details);
 
   return (
     <main className={css.page}>
@@ -216,11 +219,6 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                         <div className={css.itemHead}>
                           <div>
                             <h3 className={css.itemTitle}>{item.name}</h3>
-                            <RatingSummary
-                              rating={item.rating}
-                              reviewsCount={item.reviewsCount ?? 0}
-                              size="sm"
-                            />
                           </div>
                           <p className={css.itemPrice}>
                             {formatPrice(item.totalPrice)}
@@ -270,33 +268,34 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                   <dt>
                     <Truck size={16} aria-hidden="true" /> Delivery method
                   </dt>
-                  <dd>{formatDeliveryMethod(order.deliveryMethod)}</dd>
+                  <dd>{formatDeliveryMethod(order.delivery.method)}</dd>
                 </div>
 
-                {hasDeliveryDetails && order.deliveryDetails?.recipientName ? (
+                {hasDeliveryDetails && order.delivery.details?.recipientName ? (
                   <div>
                     <dt>
                       <UserRound size={16} aria-hidden="true" /> Recipient
                     </dt>
-                    <dd>{order.deliveryDetails.recipientName}</dd>
+                    <dd>{order.delivery.details.recipientName}</dd>
                   </div>
                 ) : null}
 
-                {hasDeliveryDetails && order.deliveryDetails?.recipientPhone ? (
+                {hasDeliveryDetails &&
+                order.delivery.details?.recipientPhone ? (
                   <div>
                     <dt>
                       <Phone size={16} aria-hidden="true" /> Recipient phone
                     </dt>
-                    <dd>{order.deliveryDetails.recipientPhone}</dd>
+                    <dd>{order.delivery.details.recipientPhone}</dd>
                   </div>
                 ) : null}
 
-                {hasDeliveryDetails && order.deliveryDetails?.address ? (
+                {hasDeliveryDetails && order.delivery.details?.address ? (
                   <div>
                     <dt>
                       <MapPin size={16} aria-hidden="true" /> Delivery address
                     </dt>
-                    <dd>{order.deliveryDetails.address}</dd>
+                    <dd>{order.delivery.details.address}</dd>
                   </div>
                 ) : null}
 

@@ -74,7 +74,21 @@ const sessionSchema = new Schema<SessionEntity>(
       default: undefined,
       index: true,
     },
+
+    revokedReason: {
+      type: String,
+      enum: [
+        'logout',
+        'logout_all',
+        'password_changed',
+        'user_blocked',
+        'token_reuse',
+        'admin_revoked',
+      ],
+      default: undefined,
+    },
   },
+
   {
     timestamps: true,
     versionKey: false,
@@ -85,9 +99,13 @@ const sessionSchema = new Schema<SessionEntity>(
 
 sessionSchema.index({ userId: 1, revokedAt: 1, expiresAt: 1 });
 sessionSchema.index({ refreshTokenHash: 1 }, { unique: true });
-sessionSchema.index({ previousRefreshTokenHash: 1, previousRefreshTokenValidUntil: 1 });
+sessionSchema.index({
+  previousRefreshTokenHash: 1,
+  previousRefreshTokenValidUntil: 1,
+});
 sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 //===============================================================
 
-export const Session = models.Session || model<SessionEntity>('Session', sessionSchema);
+export const Session =
+  models.Session || model<SessionEntity>('Session', sessionSchema);

@@ -9,7 +9,6 @@ import { ProductOffer } from '../models/productOffer.model';
 import { ProductReview } from '../models/productReview.model';
 
 import type {
-  ProductCategory,
   ProductFilterOptionsResponseDto,
   ProductEntity,
   ProductOfferResponseDto,
@@ -18,13 +17,15 @@ import type {
   ReviewModerationStatus,
 } from '../types/product';
 
+import type { ProductCategory } from '../types/categories';
+import { PRODUCT_CATEGORY_LABELS } from '../types/categories';
+
 import { httpError } from '../utils/httpError';
 import { createSafeRegExp } from '../utils/regexp';
 
 //===============================================================
 
 type ProductDocument = ProductEntity & { _id: Types.ObjectId };
-type ClientFavoritesDocument = { favoriteProductIds: Types.ObjectId[] };
 
 type ProductsQuery = {
   page: number;
@@ -65,17 +66,6 @@ type PendingReviewDto = {
   comment: string;
   status: ReviewModerationStatus;
   createdAt: string;
-};
-
-//===============================================================
-
-const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
-  medicine: 'Medicine',
-  vitamins: 'Vitamins',
-  beauty: 'Beauty',
-  hygiene: 'Hygiene',
-  'medical-devices': 'Medical devices',
-  other: 'Other',
 };
 
 //===============================================================
@@ -132,9 +122,9 @@ async function getOffersByProductIds(
       pharmacyIsFavorite: favoritePharmacyIds.has(String(pharmacy._id)),
       price: offer.price,
       totalQuantity: offer.totalQuantity,
-      activeQuantity: offer.activeQuantity,
+      availableQuantity: offer.availableQuantity,
       reservedQuantity: offer.reservedQuantity,
-      inStock: offer.inStock && offer.activeQuantity > 0,
+      inStock: offer.availableQuantity > 0,
     };
     const key = String(offer.productId);
     result.set(key, [...(result.get(key) ?? []), item]);
@@ -246,8 +236,8 @@ export async function getProductsService(
     };
   }
 
-  if (query.inStock === true) offerFilter.inStock = true;
-  if (query.inStock === false) offerFilter.inStock = false;
+  if (query.inStock === true) offerFilter.availableQuantity = { $gt: 0 };
+  if (query.inStock === false) offerFilter.availableQuantity = 0;
   if (Object.keys(offerFilter).length) {
     allowedProductIds = await ProductOffer.distinct('productId', offerFilter);
     filter._id = { $in: allowedProductIds };
@@ -365,36 +355,31 @@ export async function createProductReviewService(
 
 //===============================================================
 
-export async function toggleFavoriteProductService(
+export async function setFavoriteProductService(
   productId: string,
-  userId: string
+  userId: string,
+  isFavorite: boolean
 ) {
   const exists = await Product.exists({ _id: productId, status: 'active' });
   if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
 
-  const client = (await Client.findOneAndUpdate(
-    { userId },
-    { $setOnInsert: { userId } },
-    { upsert: true, returnDocument: 'after' }
-  )) as ClientFavoritesDocument;
-
-  const isFavorite = client.favoriteProductIds.some(
-    (id) => String(id) === productId
-  );
-
   await Client.updateOne(
     { userId },
     isFavorite
-      ? { $pull: { favoriteProductIds: productId } }
-      : { $addToSet: { favoriteProductIds: productId } }
+      ? {
+          $setOnInsert: { userId },
+          $addToSet: { favoriteProductIds: productId },
+        }
+      : { $pull: { favoriteProductIds: productId } },
+    { upsert: isFavorite }
   );
 
   return {
-    isFavorite: !isFavorite,
+    isFavorite,
     message: isFavorite
-      ? 'Product was removed from favorites.'
-      : 'Product was added to favorites.',
+      ? 'Product was added to favorites.'
+      : 'Product was removed from favorites.',
   };
 }
 

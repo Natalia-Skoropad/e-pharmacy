@@ -8,7 +8,7 @@ import {
   getPharmacyReviews,
   getPharmacies,
   moderatePharmacyReview,
-  toggleFavoritePharmacy,
+  setFavoritePharmacy,
 } from '../controllers/pharmacy.controller';
 
 import { USER_ROLES } from '../constants/auth';
@@ -90,13 +90,22 @@ pharmacyRoutes.patch(
   ctrlWrapper(moderatePharmacyReview)
 );
 
-pharmacyRoutes.patch(
+pharmacyRoutes.put(
   '/:pharmacyId/favorite',
   authenticate,
   validate({
     params: pharmacyIdParamsSchema,
   }),
-  ctrlWrapper(toggleFavoritePharmacy)
+  ctrlWrapper(setFavoritePharmacy)
+);
+
+pharmacyRoutes.delete(
+  '/:pharmacyId/favorite',
+  authenticate,
+  validate({
+    params: pharmacyIdParamsSchema,
+  }),
+  ctrlWrapper(setFavoritePharmacy)
 );
 
 pharmacyRoutes.get(

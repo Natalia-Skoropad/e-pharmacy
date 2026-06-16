@@ -12,6 +12,8 @@ import {
   resetPasswordService,
   revokeAllUserSessionsService,
   revokeCurrentSessionService,
+  getActiveSessionsService,
+  revokeUserSessionService,
   updateUserPasswordService,
   updateUserProfileService,
 } from '../services/auth.service';
@@ -333,5 +335,34 @@ export function getAdminOnlyTest(req: Request, res: Response): void {
     data: {
       user: req.user,
     },
+  });
+}
+
+//===============================================================
+
+export async function getActiveSessions(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) return;
+  const data = await getActiveSessionsService(userId, req.authSessionId);
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function revokeActiveSession(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) return;
+  const sessionId = String(req.params.sessionId ?? '');
+  await revokeUserSessionService(userId, sessionId);
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    message: 'Session was revoked successfully.',
   });
 }

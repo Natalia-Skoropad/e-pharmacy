@@ -66,7 +66,7 @@ function getCartWithUpdatedQuantity(
     return {
       ...item,
       quantity,
-      totalPrice: item.price * quantity,
+      totalPrice: item.unitPrice * quantity,
     };
   });
 

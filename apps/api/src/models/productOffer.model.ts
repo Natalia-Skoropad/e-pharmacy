@@ -7,9 +7,8 @@ export type ProductOfferEntity = {
   pharmacyId: Schema.Types.ObjectId;
   price: number;
   totalQuantity: number;
-  activeQuantity: number;
+  availableQuantity: number;
   reservedQuantity: number;
-  inStock: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -39,18 +38,36 @@ const productOfferSchema = new Schema<ProductOfferEntity>(
     },
 
     totalQuantity: { type: Number, min: 0, default: 0, required: true },
-    activeQuantity: { type: Number, min: 0, default: 0, required: true },
+    availableQuantity: { type: Number, min: 0, default: 0, required: true },
     reservedQuantity: { type: Number, min: 0, default: 0, required: true },
-    inStock: { type: Boolean, default: true, required: true },
   },
+
   { timestamps: true, versionKey: false }
 );
 
 //===============================================================
 
+productOfferSchema.pre('validate', function validateStockInvariant() {
+  if (this.reservedQuantity > this.totalQuantity) {
+    this.invalidate(
+      'reservedQuantity',
+      'Reserved quantity cannot exceed total quantity.'
+    );
+  }
+
+  if (this.availableQuantity + this.reservedQuantity !== this.totalQuantity) {
+    this.invalidate(
+      'availableQuantity',
+      'Available and reserved quantities must equal total quantity.'
+    );
+  }
+});
+
+//===============================================================
+
 productOfferSchema.index({ productId: 1, pharmacyId: 1 }, { unique: true });
-productOfferSchema.index({ pharmacyId: 1, inStock: 1 });
-productOfferSchema.index({ productId: 1, inStock: 1, price: 1 });
+productOfferSchema.index({ pharmacyId: 1, availableQuantity: 1 });
+productOfferSchema.index({ productId: 1, availableQuantity: 1, price: 1 });
 
 //===============================================================
 

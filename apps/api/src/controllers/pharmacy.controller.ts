@@ -16,7 +16,7 @@ import {
   getPharmacyReviewsService,
   getPharmaciesService,
   moderatePharmacyReviewService,
-  toggleFavoritePharmacyService,
+  setFavoritePharmacyService,
 } from '../services/pharmacy.service';
 
 import { sendSuccessResponse } from '../utils/apiResponse';
@@ -154,13 +154,17 @@ export async function moderatePharmacyReview(
 
 //===============================================================
 
-export async function toggleFavoritePharmacy(
+export async function setFavoritePharmacy(
   req: Request,
   res: Response
 ): Promise<void> {
   const { pharmacyId } = req.params as PharmacyParams;
 
-  const data = await toggleFavoritePharmacyService(pharmacyId, req.user?.id ?? '');
+  const data = await setFavoritePharmacyService(
+    pharmacyId,
+    req.user?.id ?? '',
+    req.method === 'PUT'
+  );
 
   sendSuccessResponse({
     res,

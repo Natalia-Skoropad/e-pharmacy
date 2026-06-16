@@ -4308,3 +4308,16 @@ This folder contains the improved Pharmacy technical specification split into gl
 
 
 ---
+
+## Canonical Cart, Stock, Order, Session, and Category rules
+
+- Stock is owned by ProductOffer and stores `totalQuantity`, `availableQuantity`, and `reservedQuantity`, with the invariant `totalQuantity === availableQuantity + reservedQuantity`. Availability is derived from `availableQuantity > 0`.
+- Cart belongs to `clientUserId`, references ProductOffer, supports multiple Pharmacy groups, and allows no more than 15 groups to prevent excessive Order creation. One Pharmacy group creates one Order.
+- Cart prices always follow the current ProductOffer price. Price becomes immutable only in the confirmed Order.
+- Expired Cart reservations are released by a scheduled transactional cleanup.
+- Order transitions are limited to `new -> in_progress | rejected` and `in_progress -> successful | rejected`. Stock remains reserved until `successful` commits it or `rejected` releases it.
+- Rejected Orders store rejection metadata; every transition is recorded in status history.
+- Favorites are added by PUT and removed by DELETE.
+- Session termination stores a revocation reason; authorization uses current User data, while `roleAtLogin` is audit metadata only.
+- Canonical names are `PaymentMethod` and `DeliveryMethod`; postal delivery is `postal_delivery`.
+- Product categories come from shared `PRODUCT_CATEGORIES`; use `medical_devices`.

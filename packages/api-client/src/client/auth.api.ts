@@ -11,6 +11,7 @@ import type {
   ResetPasswordPayload,
   UpdatePasswordPayload,
   UpdateProfilePayload,
+  ActiveSessionsResponse,
 } from '@e-pharmacy/types';
 
 //===================================================================
@@ -135,4 +136,20 @@ export async function updateCurrentUserPassword(
     method: 'PATCH',
     body: payload,
   });
+}
+
+//===================================================================
+
+export async function getActiveSessions(): Promise<ActiveSessionsResponse> {
+  const response = await localApiRequest<
+    ApiSuccessResponse<ActiveSessionsResponse>
+  >(CLIENT_API_ROUTES.auth.sessions);
+  return getResponseData(response);
+}
+
+export async function revokeActiveSession(sessionId: string): Promise<void> {
+  await localApiRequest<ApiSuccessResponse>(
+    CLIENT_API_ROUTES.auth.session(sessionId),
+    { method: 'DELETE' }
+  );
 }

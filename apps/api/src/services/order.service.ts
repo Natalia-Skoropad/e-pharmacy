@@ -1,5 +1,6 @@
 import mongoose, { Types } from 'mongoose';
 
+import { USER_ROLES } from '../constants/auth';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Cart } from '../models/cart.model';
@@ -8,48 +9,62 @@ import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { httpError } from '../utils/httpError';
-import { commitReservedStock } from './inventory.service';
+import { commitReservedStock, releaseOfferStock } from './stock.service';
 
-import type { CheckoutOrderInput } from '../schemas/order.schema';
+import type {
+  CheckoutOrderInput,
+  UpdateOrderStatusInput,
+} from '../schemas/order.schema';
 
 import type {
   OrderEntity,
   OrderItemEntity,
   OrderResponseDto,
   OrdersResponseDto,
+  OrderStatus,
 } from '../types/order';
 
 import type { ProductEntity } from '../types/product';
 import type { PharmacyEntity } from '../types/pharmacy';
+import type { UserRole } from '../types/user';
+
+//===============================================================
+
+const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
+  new: ['in_progress', 'rejected'],
+  in_progress: ['successful', 'rejected'],
+  successful: [],
+  rejected: [],
+};
+
+//===============================================================
+
+export function canTransitionOrderStatus(
+  currentStatus: OrderStatus,
+  nextStatus: OrderStatus
+): boolean {
+  return ORDER_STATUS_TRANSITIONS[currentStatus].includes(nextStatus);
+}
 
 //===============================================================
 
 type CartItemDocument = {
   _id: Types.ObjectId;
-  productId: Types.ObjectId;
-  pharmacyId: Types.ObjectId;
+  productOfferId: Types.ObjectId;
   quantity: number;
-  price: number;
+  unitPrice: number;
   expiresAt: Date;
 };
 
 type CartDocument = {
   _id: Types.ObjectId;
-  userId: Types.ObjectId;
+  clientUserId: Types.ObjectId;
   items: CartItemDocument[];
 };
 
-type ProductDocument = ProductEntity & {
-  _id: Types.ObjectId;
-};
-
-type PharmacyDocument = PharmacyEntity & {
-  _id: Types.ObjectId;
-};
-
-type OrderDocument = OrderEntity & {
-  _id: Types.ObjectId;
-};
+type ProductDocument = ProductEntity & { _id: Types.ObjectId };
+type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
+type OrderDocument = OrderEntity & { _id: Types.ObjectId };
 
 //===============================================================
 
@@ -85,9 +100,7 @@ function createOrderNumber(orderId: Types.ObjectId): string {
     padDatePart(date.getMinutes()),
     padDatePart(date.getSeconds()),
   ].join('');
-  const orderIdPart = orderId.toString().slice(-8).toUpperCase();
-
-  return `EP-${datePart}-${timePart}-${orderIdPart}`;
+  return `EP-${datePart}-${timePart}-${orderId.toString().slice(-8).toUpperCase()}`;
 }
 
 //===============================================================
@@ -98,7 +111,6 @@ function getPharmacyAddress(
   const address = [pharmacySnapshot.address, pharmacySnapshot.city]
     .filter(Boolean)
     .join(', ');
-
   return address || undefined;
 }
 
@@ -128,33 +140,46 @@ function serializeOrder(order: OrderDocument): OrderResponseDto {
       : {}),
     totalItems: order.totalItems,
     totalPrice: order.totalPrice,
+    currency: order.currency,
     status: order.status,
-    paymentMethod: order.paymentMethod,
-    deliveryMethod: order.deliveryMethod,
-    ...(order.deliveryDetails
-      ? { deliveryDetails: order.deliveryDetails }
+    statusHistory: order.statusHistory.map((entry) => ({
+      status: entry.status,
+      changedAt: entry.changedAt.toISOString(),
+      changedBy: entry.changedBy.toString(),
+      ...(entry.comment ? { comment: entry.comment } : {}),
+    })),
+    ...(order.rejectionReason
+      ? { rejectionReason: order.rejectionReason }
       : {}),
+    ...(order.rejectedAt ? { rejectedAt: order.rejectedAt.toISOString() } : {}),
+    ...(order.rejectedBy ? { rejectedBy: order.rejectedBy.toString() } : {}),
+    paymentMethod: order.paymentMethod,
+    delivery: order.delivery,
     ...(order.comment ? { comment: order.comment } : {}),
     ...(order.pharmacySnapshot.bankDetails
       ? { bankDetails: order.pharmacySnapshot.bankDetails }
       : {}),
     items: order.items.map((item) => ({
-      id: item.productId.toString(),
+      id: item._id?.toString() ?? '',
       productId: item.productId.toString(),
+      productOfferId: item.productOfferId.toString(),
       name: item.productSnapshot.name,
       ...(item.productSnapshot.slug ? { slug: item.productSnapshot.slug } : {}),
       article: item.productSnapshot.article,
       ...(item.productSnapshot.imageUrl
         ? { imageUrl: item.productSnapshot.imageUrl }
         : {}),
-      ...(typeof item.productSnapshot.rating === 'number'
-        ? { rating: item.productSnapshot.rating }
+      ...(item.productSnapshot.manufacturer
+        ? { manufacturer: item.productSnapshot.manufacturer }
         : {}),
-      ...(typeof item.productSnapshot.reviewsCount === 'number'
-        ? { reviewsCount: item.productSnapshot.reviewsCount }
+      ...(item.productSnapshot.dosage
+        ? { dosage: item.productSnapshot.dosage }
+        : {}),
+      ...(item.productSnapshot.packageQuantity
+        ? { packageQuantity: item.productSnapshot.packageQuantity }
         : {}),
       quantity: item.quantity,
-      price: item.price,
+      unitPrice: item.unitPrice,
       totalPrice: item.totalPrice,
     })),
   };
@@ -163,7 +188,7 @@ function serializeOrder(order: OrderDocument): OrderResponseDto {
 //===============================================================
 
 export async function checkoutOrderService(
-  userId: string,
+  clientUserId: string,
   input: CheckoutOrderInput
 ): Promise<{ order: OrderResponseDto }> {
   const session = await mongoose.startSession();
@@ -172,21 +197,28 @@ export async function checkoutOrderService(
     let createdOrder: OrderDocument | null = null;
 
     await session.withTransaction(async () => {
-      const cart = await Cart.findOne({ userId })
+      const cart = await Cart.findOne({ clientUserId })
         .session(session)
         .lean<CartDocument | null>();
+      if (!cart) throw httpError(HTTP_STATUS.BAD_REQUEST, 'Cart is empty');
 
-      if (!cart) {
-        throw httpError(HTTP_STATUS.BAD_REQUEST, 'Cart is empty');
-      }
-
-      const orderCartItems = (cart.items ?? []).filter(
-        (item) =>
-          item.pharmacyId.toString() === input.pharmacyId &&
-          item.expiresAt.getTime() > Date.now()
+      const offers = await ProductOffer.find({
+        _id: { $in: cart.items.map((item) => item.productOfferId) },
+      })
+        .session(session)
+        .lean();
+      const offerMap = new Map(
+        offers.map((offer) => [String(offer._id), offer])
       );
 
-      if (orderCartItems.length === 0) {
+      const orderCartItems = cart.items.filter((item) => {
+        const offer = offerMap.get(String(item.productOfferId));
+        return (
+          offer?.pharmacyId.toString() === input.pharmacyId &&
+          item.expiresAt.getTime() > Date.now()
+        );
+      });
+      if (!orderCartItems.length) {
         throw httpError(
           HTTP_STATUS.BAD_REQUEST,
           'Selected pharmacy order is empty or expired'
@@ -196,13 +228,11 @@ export async function checkoutOrderService(
       const pharmacy = await Pharmacy.findById(input.pharmacyId)
         .session(session)
         .lean<PharmacyDocument | null>();
-
       if (!pharmacy || !['active', 'on_moderation'].includes(pharmacy.status)) {
         throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found');
       }
-
       if (
-        input.paymentMethod === 'bank-transfer' &&
+        input.paymentMethod === 'bank_transfer' &&
         !hasCompleteBankDetails(pharmacy.bankDetails)
       ) {
         throw httpError(
@@ -211,66 +241,59 @@ export async function checkoutOrderService(
         );
       }
 
-      const productIds = orderCartItems.map((item) => item.productId);
+      const productIds = orderCartItems.map((item) => {
+        const offer = offerMap.get(String(item.productOfferId));
+        if (!offer)
+          throw httpError(
+            HTTP_STATUS.BAD_REQUEST,
+            'Product offer is unavailable'
+          );
+        return offer.productId;
+      });
       const products = await Product.find({ _id: { $in: productIds } })
         .session(session)
         .lean<ProductDocument[]>();
       const productMap = new Map(
-        products.map((product) => [product._id.toString(), product])
+        products.map((product) => [String(product._id), product])
       );
 
-      const orderItems: OrderItemEntity[] = [];
-
-      for (const cartItem of orderCartItems) {
-        const product = productMap.get(cartItem.productId.toString());
-
-        if (!product) {
+      const orderItems: OrderItemEntity[] = orderCartItems.map((cartItem) => {
+        const offer = offerMap.get(String(cartItem.productOfferId));
+        if (!offer)
+          throw httpError(
+            HTTP_STATUS.BAD_REQUEST,
+            'Product offer is unavailable'
+          );
+        const product = productMap.get(String(offer.productId));
+        if (!product)
           throw httpError(
             HTTP_STATUS.NOT_FOUND,
             API_MESSAGES.PRODUCT_NOT_FOUND
           );
-        }
 
-        const offer = await ProductOffer.findOne({
-          productId: cartItem.productId,
-          pharmacyId: input.pharmacyId,
-        })
-          .session(session)
-          .lean();
-
-        if (!offer) {
-          throw httpError(
-            HTTP_STATUS.BAD_REQUEST,
-            `${product.name} is unavailable in this pharmacy`
-          );
-        }
-
-        await commitReservedStock(
-          cartItem.productId,
-          cartItem.pharmacyId,
-          cartItem.quantity,
-          session
-        );
-
-        orderItems.push({
-          productId: cartItem.productId,
+        // The cart uses the current ProductOffer price. The Order snapshots it here.
+        const unitPrice = offer.price;
+        return {
+          productId: offer.productId,
+          productOfferId: offer._id,
           productSnapshot: {
             name: product.name,
             ...(product.slug ? { slug: product.slug } : {}),
             article: product.article,
             ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
-            ...(typeof product.rating === 'number'
-              ? { rating: product.rating }
+            ...(product.manufacturer
+              ? { manufacturer: product.manufacturer }
               : {}),
-            ...(typeof product.reviewsCount === 'number'
-              ? { reviewsCount: product.reviewsCount }
+            ...(product.dosage ? { dosage: product.dosage } : {}),
+            ...(product.packageQuantity
+              ? { packageQuantity: product.packageQuantity }
               : {}),
           },
           quantity: cartItem.quantity,
-          price: cartItem.price,
-          totalPrice: cartItem.quantity * cartItem.price,
-        });
-      }
+          unitPrice,
+          totalPrice: cartItem.quantity * unitPrice,
+        };
+      });
 
       const totalItems = orderItems.reduce(
         (sum, item) => sum + item.quantity,
@@ -280,14 +303,14 @@ export async function checkoutOrderService(
         (sum, item) => sum + item.totalPrice,
         0
       );
-
       const orderId = new Types.ObjectId();
+      const createdAt = new Date();
 
       const order = await Order.create(
         [
           {
             _id: orderId,
-            userId: new Types.ObjectId(userId),
+            userId: new Types.ObjectId(clientUserId),
             pharmacyId: pharmacy._id,
             pharmacySnapshot: {
               name: pharmacy.name,
@@ -309,13 +332,24 @@ export async function checkoutOrderService(
             items: orderItems,
             totalItems,
             totalPrice,
+            currency: 'UAH',
             paymentMethod: input.paymentMethod,
-            deliveryMethod: input.deliveryMethod,
-            ...(input.deliveryDetails
-              ? { deliveryDetails: input.deliveryDetails }
-              : {}),
+            delivery:
+              input.deliveryMethod === 'pickup'
+                ? { method: 'pickup' }
+                : {
+                    method: 'postal_delivery',
+                    details: input.deliveryDetails,
+                  },
             ...(input.comment ? { comment: input.comment } : {}),
             status: 'new',
+            statusHistory: [
+              {
+                status: 'new',
+                changedAt: createdAt,
+                changedBy: new Types.ObjectId(clientUserId),
+              },
+            ],
             orderNumber: createOrderNumber(orderId),
           },
         ],
@@ -323,14 +357,18 @@ export async function checkoutOrderService(
       );
 
       createdOrder = order[0].toObject() as OrderDocument;
-
-      const nextCartItems = cart.items.filter(
-        (item) => item.pharmacyId.toString() !== input.pharmacyId
+      const selectedIds = new Set(
+        orderCartItems.map((item) => String(item._id))
       );
-
       await Cart.updateOne(
-        { userId },
-        { $set: { items: nextCartItems } },
+        { clientUserId },
+        {
+          $set: {
+            items: cart.items.filter(
+              (item) => !selectedIds.has(String(item._id))
+            ),
+          },
+        },
         { session }
       );
     });
@@ -341,8 +379,96 @@ export async function checkoutOrderService(
         'Order was not created'
       );
     }
-
     return { order: serializeOrder(createdOrder) };
+  } finally {
+    await session.endSession();
+  }
+}
+
+//===============================================================
+
+export async function updateOrderStatusService(
+  actor: { id: string; role: UserRole },
+  orderId: string,
+  input: UpdateOrderStatusInput
+): Promise<{ order: OrderResponseDto }> {
+  const session = await mongoose.startSession();
+  try {
+    let updatedOrder: OrderDocument | null = null;
+    await session.withTransaction(async () => {
+      const order = await Order.findById(orderId)
+        .session(session)
+        .lean<OrderDocument | null>();
+      if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
+
+      if (actor.role !== USER_ROLES.ADMIN) {
+        if (actor.role !== USER_ROLES.PHARMACY) {
+          throw httpError(
+            HTTP_STATUS.FORBIDDEN,
+            'Only pharmacy users or admins can update order status.'
+          );
+        }
+        const hasAccess = await Pharmacy.exists({
+          _id: order.pharmacyId,
+          $or: [{ ownerId: actor.id }, { managerUserIds: actor.id }],
+        }).session(session);
+        if (!hasAccess)
+          throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy access denied.');
+      }
+
+      if (!canTransitionOrderStatus(order.status, input.status)) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          `Order status cannot change from ${order.status} to ${input.status}.`
+        );
+      }
+
+      if (input.status === 'successful') {
+        for (const item of order.items) {
+          await commitReservedStock(
+            item.productOfferId,
+            item.quantity,
+            session
+          );
+        }
+      }
+      if (input.status === 'rejected') {
+        for (const item of order.items) {
+          await releaseOfferStock(item.productOfferId, item.quantity, session);
+        }
+      }
+
+      const changedAt = new Date();
+      const set: Record<string, unknown> = { status: input.status };
+      if (input.status === 'rejected') {
+        set.rejectionReason = input.rejectionReason;
+        set.rejectedAt = changedAt;
+        set.rejectedBy = new Types.ObjectId(actor.id);
+      }
+
+      updatedOrder = await Order.findByIdAndUpdate(
+        orderId,
+        {
+          $set: set,
+          $push: {
+            statusHistory: {
+              status: input.status,
+              changedAt,
+              changedBy: new Types.ObjectId(actor.id),
+              ...(input.comment ? { comment: input.comment } : {}),
+            },
+          },
+        },
+        { returnDocument: 'after', runValidators: true, session }
+      ).lean<OrderDocument | null>();
+    });
+
+    if (!updatedOrder)
+      throw httpError(
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        'Order was not updated'
+      );
+    return { order: serializeOrder(updatedOrder) };
   } finally {
     await session.endSession();
   }
@@ -356,11 +482,7 @@ export async function getOrdersService(
   const orders = await Order.find({ userId })
     .sort({ createdAt: -1 })
     .lean<OrderDocument[]>();
-
-  return {
-    items: orders.map(serializeOrder),
-    total: orders.length,
-  };
+  return { items: orders.map(serializeOrder), total: orders.length };
 }
 
 //===============================================================
@@ -373,10 +495,6 @@ export async function getOrderByIdService(
     _id: orderId,
     userId,
   }).lean<OrderDocument | null>();
-
-  if (!order) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
-  }
-
+  if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
   return { order: serializeOrder(order) };
 }

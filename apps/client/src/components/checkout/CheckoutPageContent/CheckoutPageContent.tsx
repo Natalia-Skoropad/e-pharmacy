@@ -5,7 +5,7 @@ import { Clock, Info, MapPin, Phone, Truck } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 import CheckoutOrderPanel from '../CheckoutOrderPanel';
-import CheckoutPaymentMethod from '../CheckoutPaymentMethod';
+import CheckoutPaymentMethod from '../CheckoutPaymentMethod/CheckoutPaymentMethod';
 
 import { useCheckoutCart } from '../hooks/useCheckoutCart';
 import { useCheckoutPharmacy } from '../hooks/useCheckoutPharmacy';
@@ -157,7 +157,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const bankDetails = getPharmacyBankDetails(pharmacy);
 
   const canUseSelectedPayment =
-    paymentMethod !== 'bank-transfer' || Boolean(bankDetails);
+    paymentMethod !== 'bank_transfer' || Boolean(bankDetails);
 
   const pharmacyEmail = getPharmacyEmail(pharmacy);
   const pharmacyPhone = getPharmacyPhone(pharmacy);
@@ -247,7 +247,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
       deliveryMethod
     );
 
-    if (deliveryMethod === 'post') {
+    if (deliveryMethod === 'postal_delivery') {
       setDeliveryTouchedFields((prev) => ({
         ...prev,
         ...markAllFieldsTouched(ORDER_DELIVERY_FORM_FIELDS),
@@ -312,9 +312,9 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
                       <RadioOption
                         name="delivery"
-                        value="post"
-                        checked={deliveryMethod === 'post'}
-                        label="Post delivery"
+                        value="postal_delivery"
+                        checked={deliveryMethod === 'postal_delivery'}
+                        label="Postal delivery"
                         onChange={setDeliveryMethod}
                       />
                     </div>
@@ -468,6 +468,8 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   );
 }
 
+export default CheckoutPageContent;
+
 //===================================================================
 
 function CheckoutSelectOrderState({ message }: { message: string }) {
@@ -501,5 +503,3 @@ function CheckoutEmptyState() {
     </div>
   );
 }
-
-export default CheckoutPageContent;

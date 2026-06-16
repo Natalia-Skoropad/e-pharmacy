@@ -97,7 +97,7 @@ export type CreatePharmacyReviewResponse = { message: string };
 
 //=============================================================================
 
-export type ToggleFavoritePharmacyResponse = {
+export type FavoritePharmacyResponse = {
   isFavorite: boolean;
   message: string;
 };

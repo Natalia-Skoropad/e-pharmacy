@@ -739,3 +739,11 @@ Pharmacy must not see:
 
 - products with status `new`;
 - pharmacy-specific product data of other pharmacies.
+
+## Canonical Stock and ProductCategory rules
+
+- Stock belongs to ProductOffer and uses only `totalQuantity`, `availableQuantity`, and `reservedQuantity`.
+- Required invariant: `totalQuantity === availableQuantity + reservedQuantity`.
+- ProductOffer availability is derived as `availableQuantity > 0`; no availability boolean is stored.
+- Only the Stock service may modify quantity fields.
+- Product categories come from one shared `PRODUCT_CATEGORIES` constant. The canonical medical devices value is `medical_devices`.

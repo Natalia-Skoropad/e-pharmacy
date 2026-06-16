@@ -1,11 +1,7 @@
 import { bffApiRequest } from '../core';
 import { buildQueryString } from '../core/build-query-string';
 
-import {
-  getResponseData,
-  localApiRequest,
-  type RequestOptions,
-} from '../core';
+import { getResponseData, localApiRequest, type RequestOptions } from '../core';
 
 import { apiRoutes as API_ROUTES } from '../routes';
 import { clientApiRoutes as CLIENT_API_ROUTES } from '../routes';
@@ -19,7 +15,7 @@ import type {
   ProductReviewsResponse,
   ProductsQueryParams,
   ProductsResponse,
-  ToggleFavoriteProductResponse,
+  FavoriteProductResponse,
 } from '@e-pharmacy/types';
 
 //===================================================================
@@ -107,14 +103,22 @@ export async function createProductReview(
 
 //===================================================================
 
-export async function toggleFavoriteProduct(
+export async function addFavoriteProduct(
   productId: string
-): Promise<ToggleFavoriteProductResponse> {
+): Promise<FavoriteProductResponse> {
   const response = await localApiRequest<
-    ApiSuccessResponse<ToggleFavoriteProductResponse>
-  >(CLIENT_API_ROUTES.products.favorite(productId), {
-    method: 'PATCH',
-  });
+    ApiSuccessResponse<FavoriteProductResponse>
+  >(CLIENT_API_ROUTES.products.favorite(productId), { method: 'PUT' });
+  return getResponseData(response);
+}
 
+//===================================================================
+
+export async function removeFavoriteProduct(
+  productId: string
+): Promise<FavoriteProductResponse> {
+  const response = await localApiRequest<
+    ApiSuccessResponse<FavoriteProductResponse>
+  >(CLIENT_API_ROUTES.products.favorite(productId), { method: 'DELETE' });
   return getResponseData(response);
 }

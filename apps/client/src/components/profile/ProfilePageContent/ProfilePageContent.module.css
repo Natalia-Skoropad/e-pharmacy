@@ -448,3 +448,36 @@
     padding: 10px;
   }
 }
+.sessionsList {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+}
+
+.sessionCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-background);
+}
+
+.sessionInfo {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sessionInfo span,
+.currentSession {
+  font-size: var(--fz-14);
+  color: var(--color-text-secondary);
+}
+
+.currentSession {
+  font-weight: var(--fw-medium);
+  color: var(--color-accent);
+}

@@ -11,7 +11,7 @@ import {
 
 import { FavoriteToggleButton } from '@/components/common';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { useFavoriteToggle, useProductFavoriteRefresh } from '@/hooks';
+import { useFavoriteActions, useProductFavoriteRefresh } from '@/hooks';
 
 import {
   formatPharmaciesCount,
@@ -21,7 +21,12 @@ import {
 import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
 import { buildProductPath } from '@e-pharmacy/config/routes';
 import { useAuth } from '@e-pharmacy/auth/core';
-import { toggleFavoriteProduct } from '@e-pharmacy/api-client/client';
+
+import {
+  addFavoriteProduct,
+  removeFavoriteProduct,
+} from '@e-pharmacy/api-client/client';
+
 import type { Product } from '@e-pharmacy/types';
 
 import css from './ProductCard.module.css';
@@ -50,7 +55,7 @@ function ProductCard({
     isFavoriteLoading,
     handleFavoriteClick,
     setIsFavorite,
-  } = useFavoriteToggle({
+  } = useFavoriteActions({
     id: product.id,
     initialIsFavorite: Boolean(product.isFavorite),
     notifier: toast,
@@ -58,7 +63,8 @@ function ProductCard({
     addedMessage: 'Product was added to favorites.',
     removedMessage: 'Product was removed from favorites.',
     errorMessage: 'Could not update favorites.',
-    toggleFavorite: toggleFavoriteProduct,
+    addFavorite: addFavoriteProduct,
+    removeFavorite: removeFavoriteProduct,
     onFavoriteChange,
   });
 

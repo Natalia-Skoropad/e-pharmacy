@@ -1,12 +1,12 @@
 import type { Types } from 'mongoose';
-
 import type { PharmacyBankDetails } from './pharmacy';
 
 //===============================================================
 
 export type OrderStatus = 'new' | 'in_progress' | 'successful' | 'rejected';
-export type OrderPaymentMethod = 'cash' | 'bank-transfer';
-export type OrderDeliveryMethod = 'pickup' | 'post';
+export type PaymentMethod = 'cash' | 'bank_transfer';
+export type DeliveryMethod = 'pickup' | 'postal_delivery';
+export type Currency = 'UAH';
 
 //===============================================================
 
@@ -27,21 +27,38 @@ export type OrderProductSnapshot = {
   slug?: string;
   article: string;
   imageUrl?: string;
-  rating?: number;
-  reviewsCount?: number;
+  manufacturer?: string;
+  dosage?: string;
+  packageQuantity?: string;
 };
 
-export type OrderDeliveryDetails = {
-  recipientName?: string;
-  recipientPhone?: string;
-  address?: string;
+//===============================================================
+
+export type Delivery =
+  | { method: 'pickup'; details?: never }
+  | {
+      method: 'postal_delivery';
+      details: {
+        recipientName: string;
+        recipientPhone: string;
+        address: string;
+      };
+    };
+
+export type OrderStatusHistoryItem = {
+  status: OrderStatus;
+  changedAt: Date;
+  changedBy: Types.ObjectId;
+  comment?: string;
 };
 
 export type OrderItemEntity = {
+  _id?: Types.ObjectId;
   productId: Types.ObjectId;
+  productOfferId: Types.ObjectId;
   productSnapshot: OrderProductSnapshot;
   quantity: number;
-  price: number;
+  unitPrice: number;
   totalPrice: number;
 };
 
@@ -52,29 +69,33 @@ export type OrderEntity = {
   items: OrderItemEntity[];
   totalItems: number;
   totalPrice: number;
-  paymentMethod: OrderPaymentMethod;
-  deliveryMethod: OrderDeliveryMethod;
-  deliveryDetails?: OrderDeliveryDetails;
+  currency: Currency;
+  paymentMethod: PaymentMethod;
+  delivery: Delivery;
   comment?: string;
   status: OrderStatus;
+  statusHistory: OrderStatusHistoryItem[];
+  rejectionReason?: string;
+  rejectedAt?: Date;
+  rejectedBy?: Types.ObjectId;
   orderNumber: string;
   createdAt: Date;
   updatedAt: Date;
 };
 
-//===============================================================
-
 export type OrderItemResponseDto = {
   id: string;
   productId: string;
+  productOfferId: string;
   name: string;
   slug?: string;
   article: string;
   imageUrl?: string;
-  rating?: number;
-  reviewsCount?: number;
+  manufacturer?: string;
+  dosage?: string;
+  packageQuantity?: string;
   quantity: number;
-  price: number;
+  unitPrice: number;
   totalPrice: number;
 };
 
@@ -91,16 +112,24 @@ export type OrderResponseDto = {
   pharmacyAddress?: string;
   totalItems: number;
   totalPrice: number;
+  currency: Currency;
   status: OrderStatus;
-  paymentMethod: OrderPaymentMethod;
-  deliveryMethod: OrderDeliveryMethod;
-  deliveryDetails?: OrderDeliveryDetails;
+  statusHistory: Array<{
+    status: OrderStatus;
+    changedAt: string;
+    changedBy: string;
+    comment?: string;
+  }>;
+  rejectionReason?: string;
+  rejectedAt?: string;
+  rejectedBy?: string;
+  paymentMethod: PaymentMethod;
+  delivery: Delivery;
   comment?: string;
   bankDetails?: PharmacyBankDetails;
   items: OrderItemResponseDto[];
 };
 
-export type OrdersResponseDto = {
-  items: OrderResponseDto[];
-  total: number;
-};
+//===============================================================
+
+export type OrdersResponseDto = { items: OrderResponseDto[]; total: number };

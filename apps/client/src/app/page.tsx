@@ -61,7 +61,7 @@ const BENEFITS = [
   },
   {
     title: 'Choose convenient delivery',
-    text: 'Pick up an order from the pharmacy or add post delivery details during confirmation.',
+    text: 'Pick up an order from the pharmacy or add postal delivery details during confirmation.',
     icon: MapPin,
   },
   {
@@ -82,7 +82,7 @@ const STEPS = [
   },
   {
     title: 'Confirm order',
-    text: 'Select pickup or post delivery, add contact details, and keep the order in your profile.',
+    text: 'Select pickup or postal delivery, add contact details, and keep the order in your profile.',
   },
 ] as const;
 
@@ -301,7 +301,7 @@ async function HomePage() {
               </h2>
               <p>
                 Build your cart by pharmacy, control available quantities, and
-                prepare pickup or post delivery without the usual pharmacy-queue
+                prepare pickup or postal delivery without the usual pharmacy-queue
                 side quest.
               </p>
               <ButtonLink href={ROUTES.PRODUCTS_CATALOG} variant="secondary">

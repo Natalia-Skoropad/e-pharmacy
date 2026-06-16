@@ -31,9 +31,8 @@ type PharmaciesQuery = {
 };
 
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
-type ClientFavoritesDocument = { favoritePharmacyIds: Types.ObjectId[] };
-
 type PendingReviewsQuery = { page: number; perPage: number };
+
 type CreateReviewInput = {
   userId: string;
   userName: string;
@@ -86,8 +85,7 @@ async function getAvailableProductsCountMap(pharmacyIds: Types.ObjectId[]) {
     {
       $match: {
         pharmacyId: { $in: pharmacyIds },
-        inStock: true,
-        activeQuantity: { $gt: 0 },
+        availableQuantity: { $gt: 0 },
       },
     },
     { $group: { _id: '$pharmacyId', count: { $sum: 1 } } },
@@ -368,9 +366,10 @@ export async function moderatePharmacyReviewService(
 
 //===============================================================
 
-export async function toggleFavoritePharmacyService(
+export async function setFavoritePharmacyService(
   pharmacyId: string,
-  userId: string
+  userId: string,
+  isFavorite: boolean
 ) {
   const exists = await Pharmacy.exists({
     _id: pharmacyId,
@@ -381,27 +380,22 @@ export async function toggleFavoritePharmacyService(
 
   if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
-  const client = (await Client.findOneAndUpdate(
-    { userId },
-    { $setOnInsert: { userId } },
-    { upsert: true, returnDocument: 'after' }
-  )) as ClientFavoritesDocument;
-
-  const isFavorite = client.favoritePharmacyIds.some(
-    (id) => String(id) === pharmacyId
-  );
 
   await Client.updateOne(
     { userId },
     isFavorite
-      ? { $pull: { favoritePharmacyIds: pharmacyId } }
-      : { $addToSet: { favoritePharmacyIds: pharmacyId } }
+      ? {
+          $setOnInsert: { userId },
+          $addToSet: { favoritePharmacyIds: pharmacyId },
+        }
+      : { $pull: { favoritePharmacyIds: pharmacyId } },
+    { upsert: isFavorite }
   );
 
   return {
-    isFavorite: !isFavorite,
+    isFavorite,
     message: isFavorite
-      ? 'Pharmacy was removed from favorites.'
-      : 'Pharmacy was added to favorites.',
+      ? 'Pharmacy was added to favorites.'
+      : 'Pharmacy was removed from favorites.',
   };
 }

@@ -35,7 +35,7 @@ import { CartOrderLimitModal } from '@/components/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { useFavoriteToggle, useReviewForm } from '@/hooks';
+import { useFavoriteActions, useReviewForm } from '@/hooks';
 import { ROUTES } from '@e-pharmacy/config/routes';
 import { CATALOG_SEARCH_MAX_LENGTH } from '@e-pharmacy/config/catalog';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
@@ -64,7 +64,8 @@ import {
   createProductReview,
   getCart,
   getProductDetails,
-  toggleFavoriteProduct,
+  addFavoriteProduct,
+  removeFavoriteProduct,
 } from '@e-pharmacy/api-client/client';
 
 import {
@@ -97,16 +98,8 @@ type ProductDetailsPageContentProps = {
 
 //===================================================================
 
-function getOfferCartItem(
-  cart: Cart | null,
-  productId: string,
-  pharmacyId: string
-) {
-  return (
-    cart?.items.find(
-      (item) => item.productId === productId && item.pharmacyId === pharmacyId
-    ) ?? null
-  );
+function getOfferCartItem(cart: Cart | null, productOfferId: string) {
+  return cart?.items.find((item) => item.productOfferId === productOfferId) ?? null;
 }
 
 //===================================================================
@@ -128,7 +121,7 @@ function getCartWithUpdatedOfferQuantity(
     return {
       ...item,
       quantity,
-      totalPrice: item.price * quantity,
+      totalPrice: item.unitPrice * quantity,
     };
   });
 
@@ -332,7 +325,7 @@ function ProductDetailsPageContent({
   };
 
   const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
-    useFavoriteToggle({
+    useFavoriteActions({
       id: productDetails.id,
       initialIsFavorite: Boolean(product.isFavorite),
       notifier: toast,
@@ -340,7 +333,8 @@ function ProductDetailsPageContent({
       addedMessage: 'Product was added to favorites.',
       removedMessage: 'Product was removed from favorites.',
       errorMessage: 'Could not update favorites.',
-      toggleFavorite: toggleFavoriteProduct,
+      addFavorite: addFavoriteProduct,
+      removeFavorite: removeFavoriteProduct,
     });
 
   const {
@@ -395,11 +389,7 @@ function ProductDetailsPageContent({
     if (!isAuthReady || !isAuthenticated) return;
 
     const previousCart = cart;
-    const cartItem = getOfferCartItem(
-      cart,
-      productDetails.id,
-      offer.pharmacyId
-    );
+    const cartItem = getOfferCartItem(cart, offer.id);
     const nextQuantity = (cartItem?.quantity ?? 0) + 1;
 
     if (cartItem && previousCart) {
@@ -449,11 +439,7 @@ function ProductDetailsPageContent({
   const removeOfferUnit = async (offer: ProductOffer) => {
     if (!isAuthReady || !isAuthenticated) return;
 
-    const cartItem = getOfferCartItem(
-      cart,
-      productDetails.id,
-      offer.pharmacyId
-    );
+    const cartItem = getOfferCartItem(cart, offer.id);
 
     if (!cartItem) return;
 
@@ -501,11 +487,7 @@ function ProductDetailsPageContent({
   const handleRemoveUnit = (offer: ProductOffer) => {
     if (!isAuthReady || !isAuthenticated) return;
 
-    const cartItem = getOfferCartItem(
-      cart,
-      productDetails.id,
-      offer.pharmacyId
-    );
+    const cartItem = getOfferCartItem(cart, offer.id);
 
     if (!cartItem) return;
 
@@ -518,11 +500,7 @@ function ProductDetailsPageContent({
   };
 
   const renderQuantityControl = (offer: ProductOffer) => {
-    const cartItem = getOfferCartItem(
-      cart,
-      productDetails.id,
-      offer.pharmacyId
-    );
+    const cartItem = getOfferCartItem(cart, offer.id);
     const quantity = cartItem?.quantity ?? 0;
     const isDisabled = !isAuthReady || !isAuthenticated || !offer.inStock;
 
@@ -530,7 +508,7 @@ function ProductDetailsPageContent({
       <div className={css.quantityBlock}>
         <QuantityCounter
           value={quantity}
-          max={offer.activeQuantity}
+          max={offer.availableQuantity}
           disabled={isDisabled}
           isLoading={updatingPharmacyId === offer.pharmacyId}
           ariaLabel="Product quantity controls"
@@ -545,7 +523,7 @@ function ProductDetailsPageContent({
         {isAuthenticated ? (
           <StockAvailability
             className={css.stockLine}
-            stockQuantity={offer.activeQuantity}
+            stockQuantity={offer.availableQuantity}
           />
         ) : null}
       </div>
