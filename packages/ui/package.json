@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@e-pharmacy/hooks": "workspace:*",
+    "@e-pharmacy/types": "workspace:*",
     "@e-pharmacy/validation": "workspace:*"
   }
 }

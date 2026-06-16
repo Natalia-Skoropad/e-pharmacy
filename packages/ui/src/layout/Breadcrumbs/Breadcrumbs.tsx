@@ -1,3 +1,5 @@
+import type { BreadcrumbItem } from '@e-pharmacy/types/navigation';
+
 import Link from 'next/link';
 import clsx from 'clsx';
 import { ChevronRight, Home } from 'lucide-react';
@@ -5,11 +7,6 @@ import { ChevronRight, Home } from 'lucide-react';
 import css from './Breadcrumbs.module.css';
 
 //===================================================================
-
-export type BreadcrumbItem = {
-  label: string;
-  href?: string;
-};
 
 type BreadcrumbsProps = {
   items: BreadcrumbItem[];

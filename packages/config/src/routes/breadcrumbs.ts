@@ -1,11 +1,6 @@
+import type { BreadcrumbItem } from '@e-pharmacy/types/navigation';
+
 import { ROUTES } from './client-routes';
-
-//===================================================================
-
-export type BreadcrumbItem = {
-  label: string;
-  href?: string;
-};
 
 //===================================================================
 

@@ -117,6 +117,7 @@ export type PharmacyFilterOptionsResponse = {
 };
 
 export type PharmacyDetailsResponse = { pharmacy: Pharmacy };
+
 export type PharmacyCheckoutDetailsResponse = {
   pharmacy: PharmacyCheckoutDetails;
 };
