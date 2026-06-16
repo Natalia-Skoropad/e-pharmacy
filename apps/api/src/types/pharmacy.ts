@@ -28,7 +28,7 @@ export type PharmacyEntity = {
   bankDetails?: PharmacyBankDetails;
   license?: string;
   status: PharmacyStatus;
-  rating?: number;
+  rating: number;
   imageUrl?: string;
   description?: string;
   reviewsCount?: number;
@@ -54,7 +54,33 @@ export type PharmacyFilterOptionsResponseDto = {
   >[];
 };
 
-export type PharmacyResponseDto = {
+export type PublicPharmacyResponseDto = {
+  id: string;
+  name: string;
+  address: string;
+  city?: string;
+  phone?: string;
+  email?: string;
+  workingHours?: string;
+  bankTransferAvailable: boolean;
+  rating?: number;
+  imageUrl?: string;
+  description?: string;
+  availableProductsCount: number;
+  reviewsCount: number;
+  isFavorite: boolean;
+  updatedAt: string;
+};
+
+export type PharmacyReviewResponseDto = {
+  id: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+};
+
+export type PharmacyProfileResponseDto = {
   id: string;
   name: string;
   address: string;
@@ -65,19 +91,9 @@ export type PharmacyResponseDto = {
   bankDetails?: PharmacyBankDetails;
   bankTransferAvailable: boolean;
   status: PharmacyStatus;
-  rating?: number;
+  rating: number;
   imageUrl?: string;
   description?: string;
-  availableProductsCount: number;
   reviewsCount: number;
-  isFavorite: boolean;
-  updatedAt?: string;
-};
-
-export type PharmacyReviewResponseDto = {
-  id: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
+  updatedAt: string;
 };

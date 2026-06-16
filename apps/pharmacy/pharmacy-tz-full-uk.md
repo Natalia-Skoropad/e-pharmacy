@@ -2403,8 +2403,7 @@ This product already exists in the system, but it is currently blocked. Contact 
 | Status | Color | Description |
 |---|---|---|
 | `draft` | gray | Pharmacy created a draft but did not submit it |
-| `new` | blue | Pharmacy submitted request, Admin has not started review |
-| `in_progress` | yellow | Admin is reviewing the request |
+| `on_moderation` | yellow | Pharmacy submitted request and Admin is reviewing it |
 | `approved` | green | Admin created product based on request |
 | `rejected` | red | Admin rejected request |
 
@@ -2415,13 +2414,11 @@ For rejected request, rejection reason is required.
 Allowed flow:
 
 ```txt
-draft → new → in_progress → approved
-draft → new → in_progress → rejected
+draft → on_moderation → approved
+draft → on_moderation → rejected
 ```
 
-Admin does not approve or reject a request directly from `new`.
-
-Admin first moves it to `in_progress`.
+Admin can approve or reject a submitted request directly from `on_moderation`.
 
 ## 9.5. Draft
 
@@ -2440,7 +2437,7 @@ Minimum fields to save draft:
 - article;
 - category.
 
-## 9.6. New request
+## 9.6. On moderation request
 
 Created when Pharmacy clicks `Send to moderation`.
 
@@ -2448,20 +2445,7 @@ Request:
 
 - becomes visible to Admin;
 - readonly for Pharmacy;
-- can be moved by Admin to `in_progress`.
-
-## 9.7. In progress request
-
-Admin reviews request.
-
-Admin can:
-
-- verify data;
-- fix incomplete/incorrect fields;
-- create product;
-- reject request.
-
-Pharmacy can only view and wait.
+- can be approved or rejected by Admin.
 
 ## 9.8. Approved request
 
@@ -2551,7 +2535,6 @@ Examples:
 ```txt
 /pharmacy/product-requests/status-draft
 /pharmacy/product-requests/status-on-moderation
-/pharmacy/product-requests/status-in-progress
 /pharmacy/product-requests/status-approved
 /pharmacy/product-requests/status-rejected
 /pharmacy/product-requests/category-antibiotics
@@ -2659,7 +2642,7 @@ Send to moderation:
 
 - validates required fields;
 - opens ConfirmActionModal;
-- changes status to `new`;
+- changes status to `on_moderation`;
 - makes request visible to Admin;
 - shows Toast.
 
@@ -2719,15 +2702,14 @@ Text:
 This request is a draft. It has not been sent to Admin yet.
 ```
 
-### New / In progress
+### On moderation
 
 Readonly.
 
-Texts:
+Text:
 
 ```txt
-The request has been sent to Admin. Please wait for review.
-Admin is reviewing this request.
+The request has been sent to Admin and is being reviewed.
 ```
 
 ### Approved

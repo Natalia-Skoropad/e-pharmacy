@@ -26,7 +26,7 @@ Pharmacy can:
 Admin can:
 
 - view submitted requests;
-- move request to In work;
+- review submitted request in `on_moderation` status;
 - complete or correct data;
 - create global product from request;
 - reject request with reason.
@@ -38,21 +38,18 @@ Client does not see product requests.
 Allowed flow:
 
 ```txt
-Draft → New → In work → Approved
-Draft → New → In work → Rejected
+Draft → On moderation → Approved
+Draft → On moderation → Rejected
 ```
 
-Admin cannot approve or reject request directly from `new` status.
-
-Admin must first move request to `in_progress`.
+Admin can approve or reject a submitted request directly from `on_moderation` status.
 
 ## 3. Request statuses
 
 | Status     | Color  | Meaning                                               | Editable by Pharmacy |
 | ---------- | ------ | ----------------------------------------------------- | -------------------- |
 | `draft`    | Gray   | Pharmacy created request but did not send it to Admin | Yes                  |
-| `new`      | Blue   | Pharmacy sent request; Admin has not started review   | No                   |
-| `in_progress`  | Yellow | Admin is checking the request                         | No                   |
+| `on_moderation` | Yellow | Pharmacy sent request; Admin is reviewing it          | No                   |
 | `approved` | Green  | Admin created product from request                   | No                   |
 | `rejected` | Red    | Admin rejected request                                | No                   |
 
@@ -64,8 +61,7 @@ Pharmacy sees only own requests.
 
 Admin sees only requests submitted to moderation:
 
-- `new`;
-- `in_progress`;
+- `on_moderation`;
 - `approved`;
 - `rejected`.
 
@@ -175,7 +171,6 @@ Examples:
 ```txt
 /pharmacy/product-requests/status-draft
 /pharmacy/product-requests/status-on-moderation
-/pharmacy/product-requests/status-in-progress
 /pharmacy/product-requests/status-approved
 /pharmacy/product-requests/status-rejected
 ```
@@ -457,20 +452,14 @@ Info text:
 This is a draft request. It has not been sent to Admin yet.
 ```
 
-## 18. New or In work request details
+## 18. On moderation request details
 
 Pharmacy cannot edit submitted requests.
 
-For `new`, show:
+For `on_moderation`, show:
 
 ```txt
-The request has been sent to Admin. Please wait for review.
-```
-
-For `in_progress`, show:
-
-```txt
-Admin is reviewing this request.
+The request has been sent to Admin and is being reviewed.
 ```
 
 Do not show Edit request button.
@@ -539,8 +528,7 @@ Pharmacy can edit request only while status is `draft`.
 
 Readonly statuses:
 
-- `new`;
-- `in_progress`;
+- `on_moderation`;
 - `approved`;
 - `rejected`.
 

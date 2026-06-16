@@ -56,6 +56,8 @@ authRoutes.post(
   ctrlWrapper(registerUser)
 );
 
+//=================================================================================
+
 authRoutes.post(
   '/login',
   authRateLimit,
@@ -65,7 +67,11 @@ authRoutes.post(
   ctrlWrapper(loginUser)
 );
 
+//=================================================================================
+
 authRoutes.post('/refresh', ctrlWrapper(refreshAuthSession));
+
+//=================================================================================
 
 authRoutes.post(
   '/forgot-password',
@@ -76,6 +82,8 @@ authRoutes.post(
   ctrlWrapper(requestPasswordReset)
 );
 
+//=================================================================================
+
 authRoutes.post(
   '/request-reset-email',
   passwordResetRateLimit,
@@ -84,6 +92,8 @@ authRoutes.post(
   }),
   ctrlWrapper(requestPasswordReset)
 );
+
+//=================================================================================
 
 authRoutes.post(
   '/reset-password',
@@ -94,7 +104,11 @@ authRoutes.post(
   ctrlWrapper(resetPassword)
 );
 
+//=================================================================================
+
 authRoutes.get('/current', authenticate, ctrlWrapper(getCurrentUser));
+
+//=================================================================================
 
 authRoutes.patch(
   '/current',
@@ -105,6 +119,8 @@ authRoutes.patch(
   ctrlWrapper(updateCurrentUser)
 );
 
+//=================================================================================
+
 authRoutes.patch(
   '/current/password',
   authenticate,
@@ -114,14 +130,23 @@ authRoutes.patch(
   ctrlWrapper(updateCurrentUserPassword)
 );
 
+//=================================================================================
+
 authRoutes.post('/logout', authenticate, ctrlWrapper(logoutUser));
 
+//=================================================================================
+
 authRoutes.get('/sessions', authenticate, ctrlWrapper(getActiveSessions));
+
+//=================================================================================
+
 authRoutes.delete(
   '/sessions/:sessionId',
   authenticate,
   ctrlWrapper(revokeActiveSession)
 );
+
+//=================================================================================
 
 authRoutes.post(
   '/logout-all',

@@ -1,7 +1,7 @@
 import { Copy, CreditCard, Mail, Wallet } from 'lucide-react';
 
 import { RadioOption } from '@e-pharmacy/ui/common';
-import type { Pharmacy } from '@e-pharmacy/types';
+import type { PharmacyBankDetails } from '@e-pharmacy/types';
 import type { PaymentMethod } from '@e-pharmacy/types/orders';
 
 import css from './CheckoutPaymentMethod.module.css';
@@ -10,7 +10,7 @@ import css from './CheckoutPaymentMethod.module.css';
 
 type PaymentMethodProps = {
   paymentMethod: PaymentMethod;
-  bankDetails: Pharmacy['bankDetails'] | null;
+  bankDetails: PharmacyBankDetails | null;
   pharmacyEmail: string;
   copiedEmail: boolean;
   onPaymentMethodChange: (value: PaymentMethod) => void;

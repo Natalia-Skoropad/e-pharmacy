@@ -13,6 +13,8 @@ export const healthRoutes = Router();
 
 healthRoutes.get('/', ctrlWrapper(getHealth));
 
+//=================================================================================
+
 healthRoutes.post(
   '/echo',
   validate({

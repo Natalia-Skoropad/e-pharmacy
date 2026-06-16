@@ -32,8 +32,13 @@ export const apiRoutes = {
     list: '/pharmacies',
     filters: '/pharmacies/filters',
     details: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}`,
+    checkoutDetails: (pharmacyId: EntityId) =>
+      `/pharmacies/${pharmacyId}/checkout-details`,
     reviews: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}/reviews`,
     favorite: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}/favorite`,
+    pendingReviews: '/pharmacies/reviews/pending',
+    moderateReview: (pharmacyId: EntityId, reviewId: EntityId) =>
+      `/pharmacies/${pharmacyId}/reviews/${reviewId}/moderation`,
   },
 
   products: {
@@ -42,6 +47,9 @@ export const apiRoutes = {
     details: (productId: EntityId | string) => `/products/${productId}`,
     reviews: (productId: EntityId) => `/products/${productId}/reviews`,
     favorite: (productId: EntityId) => `/products/${productId}/favorite`,
+    pendingReviews: '/products/reviews/pending',
+    moderateReview: (productId: EntityId, reviewId: EntityId) =>
+      `/products/${productId}/reviews/${reviewId}/moderation`,
   },
 
   cart: {
@@ -58,6 +66,7 @@ export const apiRoutes = {
     checkout: '/orders/checkout',
     list: '/orders',
     details: (orderId: EntityId) => `/orders/${orderId}`,
+    updateStatus: (orderId: EntityId) => `/orders/${orderId}/status`,
   },
 
   pharmacy: {
@@ -101,6 +110,8 @@ export const clientApiRoutes = {
     list: '/api/pharmacies',
     filters: '/api/pharmacies/filters',
     details: (pharmacyId: EntityId) => `/api/pharmacies/${pharmacyId}`,
+    checkoutDetails: (pharmacyId: EntityId) =>
+      `/api/pharmacies/${pharmacyId}/checkout-details`,
     reviews: (pharmacyId: EntityId) => `/api/pharmacies/${pharmacyId}/reviews`,
     favorite: (pharmacyId: EntityId) =>
       `/api/pharmacies/${pharmacyId}/favorite`,

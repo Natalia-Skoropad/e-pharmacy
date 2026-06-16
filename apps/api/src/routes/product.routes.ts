@@ -48,7 +48,11 @@ productRoutes.get(
   ctrlWrapper(getProducts)
 );
 
+//=================================================================================
+
 productRoutes.get('/filters', ctrlWrapper(getProductFilters));
+
+//=================================================================================
 
 productRoutes.get(
   '/reviews/pending',
@@ -60,6 +64,8 @@ productRoutes.get(
   ctrlWrapper(getPendingProductReviews)
 );
 
+//=================================================================================
+
 productRoutes.get(
   '/:productId/reviews',
   validate({
@@ -67,6 +73,8 @@ productRoutes.get(
   }),
   ctrlWrapper(getProductReviews)
 );
+
+//=================================================================================
 
 productRoutes.post(
   '/:productId/reviews',
@@ -79,6 +87,8 @@ productRoutes.post(
   ctrlWrapper(createProductReview)
 );
 
+//=================================================================================
+
 productRoutes.patch(
   '/:productId/reviews/:reviewId/moderation',
   authenticate,
@@ -90,6 +100,8 @@ productRoutes.patch(
   ctrlWrapper(moderateProductReview)
 );
 
+//=================================================================================
+
 productRoutes.put(
   '/:productId/favorite',
   authenticate,
@@ -99,6 +111,8 @@ productRoutes.put(
   ctrlWrapper(setFavoriteProduct)
 );
 
+//=================================================================================
+
 productRoutes.delete(
   '/:productId/favorite',
   authenticate,
@@ -107,6 +121,8 @@ productRoutes.delete(
   }),
   ctrlWrapper(setFavoriteProduct)
 );
+
+//=================================================================================
 
 productRoutes.get(
   '/:productId',

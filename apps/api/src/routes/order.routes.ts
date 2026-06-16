@@ -26,19 +26,27 @@ export const orderRoutes = Router();
 
 orderRoutes.use(authenticate);
 
+//=================================================================================
+
 orderRoutes.post(
   '/checkout',
   validate({ body: checkoutOrderSchema }),
   ctrlWrapper(checkoutOrder)
 );
 
+//=================================================================================
+
 orderRoutes.get('/', ctrlWrapper(getOrders));
+
+//=================================================================================
 
 orderRoutes.get(
   '/:orderId',
   validate({ params: orderParamsSchema }),
   ctrlWrapper(getOrderById)
 );
+
+//=================================================================================
 
 orderRoutes.patch(
   '/:orderId/status',

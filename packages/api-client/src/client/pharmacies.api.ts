@@ -1,4 +1,4 @@
-import { bffApiRequest } from '../core';
+import { apiRequest, bffApiRequest } from '../core';
 import { buildQueryString } from '../core/build-query-string';
 
 import { getResponseData, localApiRequest, type RequestOptions } from '../core';
@@ -10,12 +10,17 @@ import type {
   ApiSuccessResponse,
   CreatePharmacyReviewPayload,
   CreatePharmacyReviewResponse,
+  PharmacyCheckoutDetailsResponse,
   PharmacyDetailsResponse,
   PharmacyFilterOptionsResponse,
   PharmacyReviewsResponse,
   PharmaciesQueryParams,
   PharmaciesResponse,
   FavoritePharmacyResponse,
+  PendingReviewsQueryParams,
+  PendingPharmacyReviewsResponse,
+  ModeratePharmacyReviewPayload,
+  ModeratePharmacyReviewResponse,
 } from '@e-pharmacy/types';
 
 //===================================================================
@@ -64,6 +69,18 @@ export async function getPharmacyDetails(
     CLIENT_API_ROUTES.pharmacies.details(pharmacyId),
     requestOptions
   );
+
+  return getResponseData(response);
+}
+
+//===================================================================
+
+export async function getPharmacyCheckoutDetails(
+  pharmacyId: string
+): Promise<PharmacyCheckoutDetailsResponse> {
+  const response = await localApiRequest<
+    ApiSuccessResponse<PharmacyCheckoutDetailsResponse>
+  >(CLIENT_API_ROUTES.pharmacies.checkoutDetails(pharmacyId));
 
   return getResponseData(response);
 }
@@ -120,5 +137,35 @@ export async function removeFavoritePharmacy(
   const response = await localApiRequest<
     ApiSuccessResponse<FavoritePharmacyResponse>
   >(CLIENT_API_ROUTES.pharmacies.favorite(pharmacyId), { method: 'DELETE' });
+  return getResponseData(response);
+}
+
+//===================================================================
+
+export async function getPendingPharmacyReviews(
+  params: PendingReviewsQueryParams = {}
+): Promise<PendingPharmacyReviewsResponse> {
+  const queryString = buildQueryString(params);
+  const response = await apiRequest<
+    ApiSuccessResponse<PendingPharmacyReviewsResponse>
+  >(`${API_ROUTES.pharmacies.pendingReviews}${queryString}`);
+
+  return getResponseData(response);
+}
+
+//===================================================================
+
+export async function moderatePharmacyReview(
+  pharmacyId: string,
+  reviewId: string,
+  payload: ModeratePharmacyReviewPayload
+): Promise<ModeratePharmacyReviewResponse> {
+  const response = await apiRequest<
+    ApiSuccessResponse<ModeratePharmacyReviewResponse>
+  >(API_ROUTES.pharmacies.moderateReview(pharmacyId, reviewId), {
+    method: 'PATCH',
+    body: payload,
+  });
+
   return getResponseData(response);
 }

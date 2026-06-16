@@ -78,9 +78,6 @@ function PharmacyDetailsPageContent({
   const tabs = useMemo<TabItem<PharmacyTab>[]>(
     () => [
       { value: 'details', label: 'Details' },
-      ...(isAuthenticated
-        ? [{ value: 'payment' as const, label: 'Payment details' }]
-        : []),
       { value: 'about', label: 'About pharmacy' },
       { value: 'reviews', label: `Reviews (${reviewsTotal})` },
     ],
@@ -91,7 +88,6 @@ function PharmacyDetailsPageContent({
     pharmacy,
   ]);
 
-  const bankDetails = pharmacy.bankDetails ?? null;
   const workingHours = pharmacy.workingHours?.trim() ?? '';
 
   const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
@@ -275,46 +271,6 @@ function PharmacyDetailsPageContent({
           ) : null}
         </Container>
       </section>
-
-      {activeTab === 'payment' && isAuthenticated ? (
-        <section className={css.tabSection} aria-live="polite">
-          <Container>
-            <div className={css.panel}>
-              <h2 className={css.panelTitle}>Payment details</h2>
-
-              {bankDetails ? (
-                <dl className={css.paymentList}>
-                  <div>
-                    <dt>Recipient</dt>
-                    <dd>{bankDetails.recipientName}</dd>
-                  </div>
-                  <div>
-                    <dt>EDRPOU / Tax ID</dt>
-                    <dd>{bankDetails.taxId}</dd>
-                  </div>
-                  <div>
-                    <dt>IBAN</dt>
-                    <dd>{bankDetails.iban}</dd>
-                  </div>
-                  <div>
-                    <dt>Bank</dt>
-                    <dd>{bankDetails.bankName}</dd>
-                  </div>
-                  <div>
-                    <dt>Payment purpose</dt>
-                    <dd>{bankDetails.paymentPurpose}</dd>
-                  </div>
-                </dl>
-              ) : (
-                <p className={css.notice}>
-                  Bank details are unavailable because the pharmacy has not
-                  provided them yet.
-                </p>
-              )}
-            </div>
-          </Container>
-        </section>
-      ) : null}
 
       {activeTab === 'about' ? (
         <section className={css.tabSection} aria-live="polite">

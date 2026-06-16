@@ -95,9 +95,7 @@ async function ProductCatalogSegmentsPage({
   ]);
 
   const activePharmacies = sortPharmaciesByName(
-    pharmaciesData?.items.filter((pharmacy) =>
-      pharmacy.status === 'active' || pharmacy.status === 'on_moderation'
-    ) ?? []
+    pharmaciesData?.items ?? []
   );
 
   return (

@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   createPharmacyReview,
   getPendingPharmacyReviews,
+  getPharmacyCheckoutDetails,
   getPharmacyDetails,
   getPharmacyFilters,
   getPharmacyReviews,
@@ -48,7 +49,11 @@ pharmacyRoutes.get(
   ctrlWrapper(getPharmacies)
 );
 
+//=================================================================================
+
 pharmacyRoutes.get('/filters', ctrlWrapper(getPharmacyFilters));
+
+//=================================================================================
 
 pharmacyRoutes.get(
   '/reviews/pending',
@@ -60,6 +65,17 @@ pharmacyRoutes.get(
   ctrlWrapper(getPendingPharmacyReviews)
 );
 
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/:pharmacyId/checkout-details',
+  authenticate,
+  validate({ params: pharmacyIdParamsSchema }),
+  ctrlWrapper(getPharmacyCheckoutDetails)
+);
+
+//=================================================================================
+
 pharmacyRoutes.get(
   '/:pharmacyId/reviews',
   validate({
@@ -67,6 +83,8 @@ pharmacyRoutes.get(
   }),
   ctrlWrapper(getPharmacyReviews)
 );
+
+//=================================================================================
 
 pharmacyRoutes.post(
   '/:pharmacyId/reviews',
@@ -79,6 +97,8 @@ pharmacyRoutes.post(
   ctrlWrapper(createPharmacyReview)
 );
 
+//=================================================================================
+
 pharmacyRoutes.patch(
   '/:pharmacyId/reviews/:reviewId/moderation',
   authenticate,
@@ -90,6 +110,8 @@ pharmacyRoutes.patch(
   ctrlWrapper(moderatePharmacyReview)
 );
 
+//=================================================================================
+
 pharmacyRoutes.put(
   '/:pharmacyId/favorite',
   authenticate,
@@ -99,6 +121,8 @@ pharmacyRoutes.put(
   ctrlWrapper(setFavoritePharmacy)
 );
 
+//=================================================================================
+
 pharmacyRoutes.delete(
   '/:pharmacyId/favorite',
   authenticate,
@@ -107,6 +131,8 @@ pharmacyRoutes.delete(
   }),
   ctrlWrapper(setFavoritePharmacy)
 );
+
+//=================================================================================
 
 pharmacyRoutes.get(
   '/:pharmacyId',

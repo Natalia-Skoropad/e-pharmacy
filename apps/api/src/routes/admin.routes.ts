@@ -26,11 +26,15 @@ export const adminRoutes = Router();
 
 adminRoutes.use(authenticate, authorizeRoles(USER_ROLES.ADMIN));
 
+//=================================================================================
+
 adminRoutes.post(
   '/pharmacies',
   validate({ body: createPharmacyUserSchema }),
   ctrlWrapper(createPharmacyUserByAdmin)
 );
+
+//=================================================================================
 
 adminRoutes.patch(
   '/pharmacies/:pharmacyId/status',

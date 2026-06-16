@@ -27,7 +27,11 @@ export const cartRoutes = Router();
 
 cartRoutes.use(authenticate);
 
+//=================================================================================
+
 cartRoutes.get('/', ctrlWrapper(getCart));
+
+//=================================================================================
 
 cartRoutes.post(
   '/items',
@@ -37,6 +41,8 @@ cartRoutes.post(
   ctrlWrapper(addCartItem)
 );
 
+//=================================================================================
+
 cartRoutes.patch(
   '/items/:cartItemId',
   validate({
@@ -45,6 +51,8 @@ cartRoutes.patch(
   }),
   ctrlWrapper(updateCartItem)
 );
+
+//=================================================================================
 
 cartRoutes.delete(
   '/items/:cartItemId',

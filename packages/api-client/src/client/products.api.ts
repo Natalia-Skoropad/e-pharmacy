@@ -1,4 +1,4 @@
-import { bffApiRequest } from '../core';
+import { apiRequest, bffApiRequest } from '../core';
 import { buildQueryString } from '../core/build-query-string';
 
 import { getResponseData, localApiRequest, type RequestOptions } from '../core';
@@ -13,6 +13,10 @@ import type {
   ProductDetailsResponse,
   ProductFilterOptionsResponse,
   ProductReviewsResponse,
+  PendingProductReviewsQueryParams,
+  PendingProductReviewsResponse,
+  ModerateProductReviewPayload,
+  ModerateProductReviewResponse,
   ProductsQueryParams,
   ProductsResponse,
   FavoriteProductResponse,
@@ -120,5 +124,35 @@ export async function removeFavoriteProduct(
   const response = await localApiRequest<
     ApiSuccessResponse<FavoriteProductResponse>
   >(CLIENT_API_ROUTES.products.favorite(productId), { method: 'DELETE' });
+  return getResponseData(response);
+}
+
+//===================================================================
+
+export async function getPendingProductReviews(
+  params: PendingProductReviewsQueryParams = {}
+): Promise<PendingProductReviewsResponse> {
+  const queryString = buildQueryString(params);
+  const response = await apiRequest<
+    ApiSuccessResponse<PendingProductReviewsResponse>
+  >(`${API_ROUTES.products.pendingReviews}${queryString}`);
+
+  return getResponseData(response);
+}
+
+//===================================================================
+
+export async function moderateProductReview(
+  productId: string,
+  reviewId: string,
+  payload: ModerateProductReviewPayload
+): Promise<ModerateProductReviewResponse> {
+  const response = await apiRequest<
+    ApiSuccessResponse<ModerateProductReviewResponse>
+  >(API_ROUTES.products.moderateReview(productId, reviewId), {
+    method: 'PATCH',
+    body: payload,
+  });
+
   return getResponseData(response);
 }

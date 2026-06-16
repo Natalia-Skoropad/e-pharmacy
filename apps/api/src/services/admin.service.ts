@@ -5,11 +5,54 @@ import { API_MESSAGES } from '../constants/messages';
 import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
 
-import type { PharmacyStatus } from '../types/pharmacy';
+import type { HydratedDocument } from 'mongoose';
+import type {
+  PharmacyEntity,
+  PharmacyProfileResponseDto,
+  PharmacyStatus,
+} from '../types/pharmacy';
 
 import { httpError } from '../utils/httpError';
 import { isDuplicateEmailError } from '../utils/mongoError';
 import { hashPassword } from '../utils/password';
+
+//===============================================================
+
+function hasCompleteBankDetails(
+  bankDetails?: PharmacyEntity['bankDetails']
+): boolean {
+  return Boolean(
+    bankDetails?.recipientName &&
+    bankDetails.taxId &&
+    bankDetails.iban &&
+    bankDetails.bankName &&
+    bankDetails.paymentPurpose
+  );
+}
+
+//===============================================================
+
+function serializePharmacyProfile(
+  pharmacy: HydratedDocument<PharmacyEntity>
+): PharmacyProfileResponseDto {
+  return {
+    id: String(pharmacy._id),
+    name: pharmacy.name,
+    address: pharmacy.address,
+    ...(pharmacy.city ? { city: pharmacy.city } : {}),
+    ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
+    ...(pharmacy.email ? { email: pharmacy.email } : {}),
+    ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
+    ...(pharmacy.bankDetails ? { bankDetails: pharmacy.bankDetails } : {}),
+    bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
+    status: pharmacy.status,
+    rating: pharmacy.rating ?? 0,
+    ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+    ...(pharmacy.description ? { description: pharmacy.description } : {}),
+    reviewsCount: pharmacy.reviewsCount ?? 0,
+    updatedAt: pharmacy.updatedAt.toISOString(),
+  };
+}
 
 //===============================================================
 
@@ -51,7 +94,7 @@ export async function createPharmacyUserByAdminService(
     });
 
     try {
-      return await Pharmacy.create({
+      const pharmacy = await Pharmacy.create({
         ownerId: user._id,
         managerUserIds: [],
         name: user.name,
@@ -61,6 +104,8 @@ export async function createPharmacyUserByAdminService(
         status: PHARMACY_STATUSES.NEW,
         createdBy: adminUserId,
       });
+
+      return serializePharmacyProfile(pharmacy);
     } catch (error) {
       await User.findByIdAndDelete(user._id);
       throw error;
@@ -102,5 +147,5 @@ export async function updatePharmacyStatusByAdminService(
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
   }
 
-  return pharmacy;
+  return serializePharmacyProfile(pharmacy);
 }

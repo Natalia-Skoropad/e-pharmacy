@@ -13,7 +13,7 @@ import type {
   PharmacyBankDetails,
   PharmacyEntity,
   PharmacyFilterOptionsResponseDto,
-  PharmacyResponseDto,
+  PublicPharmacyResponseDto,
   PharmacyReviewResponseDto,
   ReviewModerationStatus,
 } from '../types/pharmacy';
@@ -96,11 +96,11 @@ async function getAvailableProductsCountMap(pharmacyIds: Types.ObjectId[]) {
 
 //===============================================================
 
-function serializePharmacy(
+function serializePublicPharmacy(
   pharmacy: PharmacyDocument,
   availableProductsCount: number,
   favoriteIds: Set<string>
-): PharmacyResponseDto {
+): PublicPharmacyResponseDto {
   return {
     id: String(pharmacy._id),
     name: pharmacy.name,
@@ -109,9 +109,7 @@ function serializePharmacy(
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
-    ...(pharmacy.bankDetails ? { bankDetails: pharmacy.bankDetails } : {}),
     bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
-    status: pharmacy.status,
     rating: pharmacy.rating ?? 0,
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
@@ -183,7 +181,7 @@ export async function getPharmaciesService(
   );
   return {
     items: pharmacies.map((pharmacy) =>
-      serializePharmacy(
+      serializePublicPharmacy(
         pharmacy,
         countMap.get(String(pharmacy._id)) ?? 0,
         favoriteIds
@@ -215,11 +213,40 @@ export async function getPharmacyDetailsService(
     getAvailableProductsCountMap([pharmacy._id]),
   ]);
   return {
-    pharmacy: serializePharmacy(
+    pharmacy: serializePublicPharmacy(
       pharmacy,
       countMap.get(String(pharmacy._id)) ?? 0,
       favoriteIds
     ),
+  };
+}
+
+//===============================================================
+
+
+export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
+  const pharmacy = await Pharmacy.findOne({
+    _id: pharmacyId,
+    status: {
+      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
+    },
+  })
+    .select('name bankDetails')
+    .lean();
+
+  if (!pharmacy) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+  }
+
+  return {
+    pharmacy: {
+      id: String(pharmacy._id),
+      name: pharmacy.name,
+      bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
+      ...(hasCompleteBankDetails(pharmacy.bankDetails)
+        ? { bankDetails: pharmacy.bankDetails }
+        : {}),
+    },
   };
 }
 

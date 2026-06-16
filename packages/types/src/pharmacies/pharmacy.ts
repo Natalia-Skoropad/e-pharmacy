@@ -27,10 +27,13 @@ export type PublicPharmacy = {
   availableProductsCount: number;
   reviewsCount: number;
   isFavorite: boolean;
+  bankTransferAvailable: boolean;
   updatedAt: ISODateString;
 };
 
 export type PharmacyCheckoutDetails = {
+  id: EntityId;
+  name: string;
   bankTransferAvailable: boolean;
   bankDetails?: PharmacyBankDetails;
 };
@@ -39,14 +42,26 @@ export type PharmacyModerationDetails = {
   status: PharmacyStatus;
 };
 
-export type PharmacyProfile = PublicPharmacy &
-  PharmacyCheckoutDetails &
-  PharmacyModerationDetails;
+export type PharmacyProfile = {
+  id: EntityId;
+  name: string;
+  address: string;
+  city?: string;
+  phone?: string;
+  email?: string;
+  workingHours?: string;
+  bankDetails?: PharmacyBankDetails;
+  bankTransferAvailable: boolean;
+  status: PharmacyStatus;
+  rating: number;
+  imageUrl?: string;
+  description?: string;
+  reviewsCount: number;
+  updatedAt: ISODateString;
+};
 
-/** Current storefront API response. Split aliases keep public, checkout and
- * moderation responsibilities explicit until the backend exposes separate
- * serializers for those contexts. */
-export type Pharmacy = PharmacyProfile;
+/** Backward-compatible storefront alias. */
+export type Pharmacy = PublicPharmacy;
 
 export type PharmacyReview = {
   id: EntityId;
@@ -102,10 +117,18 @@ export type PharmacyFilterOptionsResponse = {
 };
 
 export type PharmacyDetailsResponse = { pharmacy: Pharmacy };
+export type PharmacyCheckoutDetailsResponse = {
+  pharmacy: PharmacyCheckoutDetails;
+};
 
 export type PharmacyReviewsResponse = {
   items: PharmacyReview[];
   total: number;
+};
+
+export type PendingReviewsQueryParams = {
+  page?: number;
+  perPage?: number;
 };
 
 export type PendingPharmacyReviewsResponse = {
@@ -126,4 +149,27 @@ export type CreatePharmacyReviewResponse = { message: string };
 export type FavoritePharmacyResponse = {
   isFavorite: boolean;
   message: string;
+};
+
+export type ModeratePharmacyReviewResponse = {
+  message: string;
+  rating: number;
+  reviewsCount: number;
+  moderatedAt?: ISODateString;
+};
+
+export type CreatePharmacyByAdminPayload = {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  address?: string;
+};
+
+export type UpdatePharmacyStatusPayload = {
+  status: PharmacyStatus;
+};
+
+export type PharmacyProfileResponse = {
+  pharmacy: PharmacyProfile;
 };

@@ -7,6 +7,12 @@ import type { ProductCategory } from './categories';
 
 export type ProductStatus = 'new' | 'active' | 'blocked';
 
+export type ProductRequestStatus =
+  | 'draft'
+  | 'on_moderation'
+  | 'approved'
+  | 'rejected';
+
 //=============================================================================
 
 export type ProductOffer = {
@@ -121,6 +127,11 @@ export type ProductReviewsResponse = {
   total: number;
 };
 
+export type PendingProductReviewsQueryParams = {
+  page?: number;
+  perPage?: number;
+};
+
 export type PendingProductReviewsResponse = {
   items: PendingProductReview[];
   page: number;
@@ -137,4 +148,11 @@ export type CreateProductReviewResponse = { message: string };
 export type FavoriteProductResponse = {
   isFavorite: boolean;
   message: string;
+};
+
+export type ModerateProductReviewResponse = {
+  message: string;
+  rating: number;
+  reviewsCount: number;
+  moderatedAt?: ISODateString;
 };

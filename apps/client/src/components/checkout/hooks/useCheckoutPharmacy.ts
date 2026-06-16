@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
-import { getPharmacyDetails } from '@e-pharmacy/api-client/client';
-import type { Pharmacy } from '@e-pharmacy/types';
+
+import {
+  getPharmacyCheckoutDetails,
+  getPharmacyDetails,
+} from '@e-pharmacy/api-client/client';
+
+import type { Pharmacy, PharmacyCheckoutDetails } from '@e-pharmacy/types';
 
 import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
 
@@ -9,7 +14,9 @@ import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
 export function useCheckoutPharmacy(
   selectedOrderGroup: CheckoutPharmacyOrderGroup | null
 ) {
-  const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
+  const [pharmacy, setPharmacy] = useState<
+    (Pharmacy & PharmacyCheckoutDetails) | null
+  >(null);
   const [isPharmacyLoading, setIsPharmacyLoading] = useState(false);
 
   useEffect(() => {
@@ -24,11 +31,17 @@ export function useCheckoutPharmacy(
 
       try {
         setIsPharmacyLoading(true);
-        const response = await getPharmacyDetails(selectedOrderGroup.pharmacyId);
+        const [detailsResponse, checkoutResponse] = await Promise.all([
+          getPharmacyDetails(selectedOrderGroup.pharmacyId),
+          getPharmacyCheckoutDetails(selectedOrderGroup.pharmacyId),
+        ]);
 
         if (!isMounted) return;
 
-        setPharmacy(response.pharmacy);
+        setPharmacy({
+          ...detailsResponse.pharmacy,
+          ...checkoutResponse.pharmacy,
+        });
       } catch {
         if (!isMounted) return;
 

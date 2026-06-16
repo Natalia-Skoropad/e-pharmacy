@@ -102,3 +102,19 @@ export type CheckoutOrderPayload =
 
 export type CheckoutOrderResponse = { order: Order };
 export type OrderDetailsResponse = { order: Order };
+
+//=============================================================================
+
+export type UpdateOrderStatusPayload =
+  | {
+      status: Extract<OrderStatus, 'in_progress' | 'successful'>;
+      comment?: string;
+      rejectionReason?: never;
+    }
+  | {
+      status: 'rejected';
+      rejectionReason: string;
+      comment?: string;
+    };
+
+export type UpdateOrderStatusResponse = OrderDetailsResponse;

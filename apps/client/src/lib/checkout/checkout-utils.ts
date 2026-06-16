@@ -1,4 +1,9 @@
-import type { Pharmacy } from '@e-pharmacy/types';
+import type {
+  Pharmacy,
+  PharmacyBankDetails,
+  PharmacyCheckoutDetails,
+} from '@e-pharmacy/types';
+
 import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
 
 //===================================================================
@@ -29,8 +34,8 @@ export function getPharmacyAddress(pharmacy?: Pharmacy | null): string {
 //===================================================================
 
 export function getPharmacyBankDetails(
-  pharmacy?: Pharmacy | null
-): Pharmacy['bankDetails'] | null {
+  pharmacy?: (Pharmacy & PharmacyCheckoutDetails) | null
+): PharmacyBankDetails | null {
   return pharmacy?.bankDetails ?? null;
 }
 
