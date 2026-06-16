@@ -183,8 +183,31 @@ async function migrate(): Promise<void> {
     );
   }
 
+  // Remove the legacy unique userId index before unsetting userId.
+  // Otherwise, multiple migrated carts are indexed as userId: null and fail
+  // with an E11000 duplicate key error.
+  const cartIndexes = await carts.indexes();
+  const legacyUserIdIndex = cartIndexes.find(
+    (index) =>
+      index.name === 'userId_1' ||
+      (index.unique === true &&
+        Object.keys(index.key).length === 1 &&
+        index.key.userId === 1)
+  );
+
+  if (legacyUserIdIndex?.name) {
+    await carts.dropIndex(legacyUserIdIndex.name);
+  }
+
   // Cart now references ProductOffer directly and uses clientUserId/unitPrice.
   for await (const cart of carts.find({})) {
+    const clientUserId = cart.clientUserId ?? cart.userId;
+
+    if (!clientUserId) {
+      console.warn(`Skipping cart ${cart._id}: missing client user id.`);
+      continue;
+    }
+
     const nextItems = [];
 
     for (const item of cart.items ?? []) {
@@ -215,11 +238,100 @@ async function migrate(): Promise<void> {
       { _id: cart._id },
       {
         $set: {
-          clientUserId: cart.clientUserId ?? cart.userId,
+          clientUserId,
           items: nextItems,
         },
         $unset: { userId: '' },
       }
+    );
+  }
+
+  // A partially completed migration may leave more than one cart for the
+  // same client. Merge those carts before creating the unique index.
+  const duplicateCartOwners = await carts
+    .aggregate([
+      { $match: { clientUserId: { $ne: null } } },
+      {
+        $group: {
+          _id: '$clientUserId',
+          cartIds: { $push: '$_id' },
+          count: { $sum: 1 },
+        },
+      },
+      { $match: { count: { $gt: 1 } } },
+    ])
+    .toArray();
+
+  for (const duplicateOwner of duplicateCartOwners) {
+    const duplicateCarts = await carts
+      .find({ _id: { $in: duplicateOwner.cartIds } })
+      .sort({ updatedAt: -1, createdAt: -1, _id: -1 })
+      .toArray();
+
+    const [primaryCart, ...redundantCarts] = duplicateCarts;
+    if (!primaryCart) continue;
+
+    const mergedItems = new Map<string, Record<string, unknown>>();
+
+    for (const cart of duplicateCarts) {
+      for (const item of cart.items ?? []) {
+        if (!item.productOfferId) continue;
+
+        const key = item.productOfferId.toString();
+        const existing = mergedItems.get(key) as
+          | (Record<string, unknown> & { quantity?: number })
+          | undefined;
+
+        if (!existing) {
+          mergedItems.set(key, item);
+          continue;
+        }
+
+        mergedItems.set(key, {
+          ...existing,
+          ...item,
+          _id: existing._id ?? item._id ?? new Types.ObjectId(),
+          quantity: (existing.quantity ?? 0) + (item.quantity ?? 0),
+        });
+      }
+    }
+
+    await carts.updateOne(
+      { _id: primaryCart._id },
+      { $set: { items: [...mergedItems.values()] } }
+    );
+
+    if (redundantCarts.length > 0) {
+      await carts.deleteMany({
+        _id: { $in: redundantCarts.map((cart) => cart._id) },
+      });
+    }
+  }
+
+  const cartsWithoutClientUserId = await carts.countDocuments({
+    $or: [
+      { clientUserId: { $exists: false } },
+      { clientUserId: null },
+    ],
+  });
+
+  if (cartsWithoutClientUserId === 0) {
+    const updatedCartIndexes = await carts.indexes();
+    const clientUserIdIndexExists = updatedCartIndexes.some(
+      (index) =>
+        index.name === 'clientUserId_1' ||
+        (Object.keys(index.key).length === 1 && index.key.clientUserId === 1)
+    );
+
+    if (!clientUserIdIndexExists) {
+      await carts.createIndex(
+        { clientUserId: 1 },
+        { unique: true, name: 'clientUserId_1' }
+      );
+    }
+  } else {
+    console.warn(
+      `Skipped clientUserId index creation: ${cartsWithoutClientUserId} carts have no clientUserId.`
     );
   }
 
