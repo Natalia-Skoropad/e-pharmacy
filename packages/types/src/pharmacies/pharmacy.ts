@@ -1,7 +1,7 @@
 import type { ApiPaginationResponse } from '../api';
 import type { EntityId, ISODateString } from '../shared';
-import type { PharmacyStatus } from '../auth';
 import type { ReviewModerationStatus } from '../reviews';
+import type { PharmacyStatus } from './status';
 
 //=============================================================================
 
@@ -13,9 +13,7 @@ export type PharmacyBankDetails = {
   paymentPurpose: string;
 };
 
-//=============================================================================
-
-export type Pharmacy = {
+export type PublicPharmacy = {
   id: EntityId;
   name: string;
   address: string;
@@ -23,17 +21,32 @@ export type Pharmacy = {
   phone?: string;
   email?: string;
   workingHours?: string;
-  bankDetails?: PharmacyBankDetails;
-  bankTransferAvailable: boolean;
-  status?: PharmacyStatus;
-  rating?: number;
+  rating: number;
   imageUrl?: string;
   description?: string;
-  availableProductsCount?: number;
-  reviewsCount?: number;
-  isFavorite?: boolean;
-  updatedAt?: ISODateString;
+  availableProductsCount: number;
+  reviewsCount: number;
+  isFavorite: boolean;
+  updatedAt: ISODateString;
 };
+
+export type PharmacyCheckoutDetails = {
+  bankTransferAvailable: boolean;
+  bankDetails?: PharmacyBankDetails;
+};
+
+export type PharmacyModerationDetails = {
+  status: PharmacyStatus;
+};
+
+export type PharmacyProfile = PublicPharmacy &
+  PharmacyCheckoutDetails &
+  PharmacyModerationDetails;
+
+/** Current storefront API response. Split aliases keep public, checkout and
+ * moderation responsibilities explicit until the backend exposes separate
+ * serializers for those contexts. */
+export type Pharmacy = PharmacyProfile;
 
 export type PharmacyReview = {
   id: EntityId;
@@ -66,10 +79,22 @@ export type PharmaciesSortFilter =
   | 'name-asc'
   | 'name-desc';
 
+export type PharmaciesQueryParams = {
+  page?: number;
+  perPage?: number;
+  keyword?: string;
+  nameKeyword?: string;
+  addressKeyword?: string;
+  city?: string;
+  sort?: PharmaciesSortFilter;
+};
+
 //=============================================================================
 
 export type PharmaciesResponse = ApiPaginationResponse<Pharmacy>;
 export type PharmacyFilterOption = { value: string; label: string };
+
+//=============================================================================
 
 export type PharmacyFilterOptionsResponse = {
   cities: PharmacyFilterOption[];
@@ -77,8 +102,6 @@ export type PharmacyFilterOptionsResponse = {
 };
 
 export type PharmacyDetailsResponse = { pharmacy: Pharmacy };
-
-//=============================================================================
 
 export type PharmacyReviewsResponse = {
   items: PharmacyReview[];
@@ -92,6 +115,9 @@ export type PendingPharmacyReviewsResponse = {
   total: number;
   totalPages: number;
 };
+
+//=============================================================================
+
 export type CreatePharmacyReviewPayload = { rating: number; comment: string };
 export type CreatePharmacyReviewResponse = { message: string };
 

@@ -1,9 +1,15 @@
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import type { ProductCategory } from '@e-pharmacy/types';
 
 //===================================================================
 
-export { PRODUCT_CATEGORY_LABELS };
+export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
+  medicine: 'Medicine',
+  vitamins: 'Vitamins',
+  beauty: 'Beauty',
+  hygiene: 'Hygiene',
+  medical_devices: 'Medical devices',
+  other: 'Other',
+};
 
 //===================================================================
 

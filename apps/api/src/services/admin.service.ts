@@ -1,9 +1,12 @@
 import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
+
 import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
+
 import type { PharmacyStatus } from '../types/pharmacy';
+
 import { httpError } from '../utils/httpError';
 import { isDuplicateEmailError } from '../utils/mongoError';
 import { hashPassword } from '../utils/password';

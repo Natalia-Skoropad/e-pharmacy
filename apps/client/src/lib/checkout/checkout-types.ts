@@ -1,4 +1,4 @@
-import type { Cart } from '../cart';
+import type { Cart } from '@e-pharmacy/types';
 
 //===================================================================
 

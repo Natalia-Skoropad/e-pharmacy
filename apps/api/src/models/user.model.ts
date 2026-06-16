@@ -10,11 +10,7 @@ import {
   VALIDATION_MESSAGES,
 } from '../constants/validation';
 
-import {
-  USER_ROLES,
-  USER_STATUSES,
-} from '../constants/auth';
-
+import { USER_ROLES, USER_STATUSES } from '../constants/auth';
 import type { UserEntity } from '../types/user';
 
 //===============================================================
@@ -56,7 +52,6 @@ const userSchema = new Schema<UserEntity>(
       required: true,
     },
 
-
     phone: {
       type: String,
       required: [true, VALIDATION_MESSAGES.required.phone],
@@ -85,7 +80,6 @@ const userSchema = new Schema<UserEntity>(
       ],
       default: undefined,
     },
-
 
     resetPasswordTokenHash: {
       type: String,
@@ -122,6 +116,7 @@ const userSchema = new Schema<UserEntity>(
       default: undefined,
     },
   },
+
   {
     timestamps: true,
     versionKey: false,

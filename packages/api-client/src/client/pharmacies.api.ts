@@ -13,22 +13,10 @@ import type {
   PharmacyDetailsResponse,
   PharmacyFilterOptionsResponse,
   PharmacyReviewsResponse,
+  PharmaciesQueryParams,
   PharmaciesResponse,
-  PharmaciesSortFilter,
   FavoritePharmacyResponse,
 } from '@e-pharmacy/types';
-
-//===================================================================
-
-type PharmaciesQueryParams = {
-  page?: number;
-  perPage?: number;
-  keyword?: string;
-  nameKeyword?: string;
-  addressKeyword?: string;
-  city?: string;
-  sort?: PharmaciesSortFilter;
-};
 
 //===================================================================
 

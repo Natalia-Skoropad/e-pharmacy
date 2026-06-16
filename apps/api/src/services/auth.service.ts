@@ -4,9 +4,9 @@ import type { HydratedDocument } from 'mongoose';
 import { env } from '../config/env';
 
 import { USER_ROLES, USER_STATUSES } from '../constants/auth';
-
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
+
 import { Session } from '../models/session.model';
 import { Client } from '../models/client.model';
 import { Pharmacy } from '../models/pharmacy.model';

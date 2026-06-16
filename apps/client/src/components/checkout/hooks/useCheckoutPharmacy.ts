@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getPharmacyDetails } from '@e-pharmacy/api-client/client';
 import type { Pharmacy } from '@e-pharmacy/types';
 
-import type { CheckoutPharmacyOrderGroup } from '@e-pharmacy/types/checkout';
+import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
 
 //===================================================================
 

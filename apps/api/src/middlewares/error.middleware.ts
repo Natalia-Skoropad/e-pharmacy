@@ -2,6 +2,7 @@ import type { ErrorRequestHandler } from 'express';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
+
 import type { HttpError } from '../types/errors';
 import { isDuplicateEmailError } from '../utils/mongoError';
 

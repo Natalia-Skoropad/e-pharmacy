@@ -6,6 +6,8 @@ import { useEffect, type RefObject } from 'react';
 
 type FocusableContainer = HTMLElement | null;
 
+//===================================================================
+
 type UseFocusTrapParams<TContainer extends FocusableContainer> = {
   isOpen: boolean;
   containerRef: RefObject<TContainer>;
@@ -26,7 +28,9 @@ const FOCUSABLE_SELECTOR = [
 //===================================================================
 
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
-  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+  ).filter(
     (element) =>
       !element.hasAttribute('disabled') &&
       element.getAttribute('aria-hidden') !== 'true' &&
@@ -68,7 +72,8 @@ export function useFocusTrap<TContainer extends FocusableContainer>({
       }
 
       const firstElement = currentFocusableElements[0];
-      const lastElement = currentFocusableElements[currentFocusableElements.length - 1];
+      const lastElement =
+        currentFocusableElements[currentFocusableElements.length - 1];
       const activeElement = document.activeElement;
 
       if (event.shiftKey && activeElement === firstElement) {

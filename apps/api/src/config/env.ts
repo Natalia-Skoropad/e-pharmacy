@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 import type { StringValue } from 'ms';
 
+//===============================================================
+
 dotenv.config();
 
 //===============================================================
@@ -12,6 +14,7 @@ type AuthCookieSameSite = 'lax' | 'strict' | 'none';
 
 const LOCAL_CLIENT_URL = 'http://localhost:3000';
 const PRODUCTION_CLIENT_URL = 'https://e-pharmacy-client-ten.vercel.app';
+
 const CLIENT_ORIGIN_ENV_NAMES = [
   'CLIENT_ORIGINS',
   'CORS_ORIGIN',
@@ -139,8 +142,10 @@ export const env = {
   MONGODB_URI: getRequiredEnv('MONGODB_URI'),
   JWT_SECRET: getRequiredEnv('JWT_SECRET'),
   JWT_EXPIRES_IN: (process.env.JWT_EXPIRES_IN || '15m') as StringValue,
-  JWT_RESET_EXPIRES_IN: (process.env.JWT_RESET_EXPIRES_IN || '15m') as StringValue,
-  REFRESH_TOKEN_EXPIRES_IN: (process.env.REFRESH_TOKEN_EXPIRES_IN || '30d') as StringValue,
+  JWT_RESET_EXPIRES_IN: (process.env.JWT_RESET_EXPIRES_IN ||
+    '15m') as StringValue,
+  REFRESH_TOKEN_EXPIRES_IN: (process.env.REFRESH_TOKEN_EXPIRES_IN ||
+    '30d') as StringValue,
   CLIENT_ORIGINS: getClientOrigins(),
   CLIENT_APP_URL: getClientAppUrl(),
   AUTH_COOKIE_DOMAIN: process.env.AUTH_COOKIE_DOMAIN,

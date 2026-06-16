@@ -16,26 +16,18 @@ import { USER_ROLES } from '../constants/auth';
 
 //===============================================================
 
-const nameSchema = sharedNameSchema;
-const emailSchema = sharedEmailSchema;
-const passwordSchema = sharedPasswordSchema;
-const requiredPasswordSchema = sharedRequiredPasswordSchema;
-
 const currentPasswordSchema = z
   .string()
   .min(1, VALIDATION_MESSAGES.required.currentPassword);
 
-const requiredPhoneSchema = sharedRequiredPhoneSchema;
 const optionalPhoneSchema = sharedRequiredPhoneSchema.optional();
-const optionalAddressSchema = sharedOptionalAddressSchema;
-const pictureUrlSchema = sharedPictureUrlSchema;
 
 //===============================================================
 
 export const registerSchema = z.object({
-  name: nameSchema,
-  email: emailSchema,
-  password: passwordSchema,
+  name: sharedNameSchema,
+  email: sharedEmailSchema,
+  password: sharedPasswordSchema,
 
   /**
    * Public registration supports client accounts now and pharmacy accounts for
@@ -45,46 +37,46 @@ export const registerSchema = z.object({
     .enum([USER_ROLES.CLIENT, USER_ROLES.PHARMACY])
     .default(USER_ROLES.CLIENT),
 
-  phone: requiredPhoneSchema,
-  address: optionalAddressSchema,
+  phone: sharedRequiredPhoneSchema,
+  address: sharedOptionalAddressSchema,
 });
 
 //===============================================================
 
 export const createPharmacyUserSchema = z.object({
-  name: nameSchema,
-  email: emailSchema,
-  password: passwordSchema,
-  phone: requiredPhoneSchema,
-  address: optionalAddressSchema,
+  name: sharedNameSchema,
+  email: sharedEmailSchema,
+  password: sharedPasswordSchema,
+  phone: sharedRequiredPhoneSchema,
+  address: sharedOptionalAddressSchema,
 });
 
 //===============================================================
 
 export const loginSchema = z.object({
-  email: emailSchema,
-  password: requiredPasswordSchema,
+  email: sharedEmailSchema,
+  password: sharedRequiredPasswordSchema,
 });
 
 //===============================================================
 
 export const forgotPasswordSchema = z.object({
-  email: emailSchema,
+  email: sharedEmailSchema,
 });
 
 export const resetPasswordSchema = z.object({
   token: z.string().trim().min(1, VALIDATION_MESSAGES.required.resetToken),
-  newPassword: passwordSchema,
+  newPassword: sharedPasswordSchema,
 });
 
 //===============================================================
 
 export const updateProfileSchema = z
   .object({
-    name: nameSchema.optional(),
+    name: sharedNameSchema.optional(),
     phone: optionalPhoneSchema,
-    address: optionalAddressSchema,
-    pictureUrl: pictureUrlSchema,
+    address: sharedOptionalAddressSchema,
+    pictureUrl: sharedPictureUrlSchema,
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: VALIDATION_MESSAGES.object.atLeastOneField,
@@ -94,5 +86,5 @@ export const updateProfileSchema = z
 
 export const updatePasswordSchema = z.object({
   currentPassword: currentPasswordSchema,
-  newPassword: passwordSchema,
+  newPassword: sharedPasswordSchema,
 });

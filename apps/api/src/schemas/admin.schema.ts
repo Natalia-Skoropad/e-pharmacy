@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
-import { createPharmacyUserSchema } from './auth.schema';
 
 //===============================================================
 
@@ -10,8 +9,6 @@ const objectIdSchema = z
   .regex(/^[0-9a-fA-F]{24}$/, 'Invalid id');
 
 //===============================================================
-
-export const createAdminPharmacySchema = createPharmacyUserSchema;
 
 export const pharmacyIdParamsSchema = z.object({
   pharmacyId: objectIdSchema,

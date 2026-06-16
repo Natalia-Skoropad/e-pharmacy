@@ -3,6 +3,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { USER_ROLES, PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
+
 import { Pharmacy } from '../models/pharmacy.model';
 import type { UserRole } from '../types/user';
 import { httpError } from '../utils/httpError';
@@ -45,13 +46,20 @@ export async function requireActivePharmacy(
 
     const pharmacy = await Pharmacy.findOne({
       $or: [{ ownerId: req.user.id }, { managerUserIds: req.user.id }],
-      status: { $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION] },
+      status: {
+        $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
+      },
     })
       .select('_id')
       .lean<{ _id: unknown } | null>();
 
     if (!pharmacy) {
-      next(httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy is not allowed to sell products.'));
+      next(
+        httpError(
+          HTTP_STATUS.FORBIDDEN,
+          'Pharmacy is not allowed to sell products.'
+        )
+      );
       return;
     }
 

@@ -10,9 +10,8 @@ import { buildOrderPath } from '@/lib/orders';
 import { checkoutOrder, getCart } from '@e-pharmacy/api-client/client';
 import type { Cart, CheckoutOrderPayload } from '@e-pharmacy/types';
 
-import type { CheckoutPharmacyOrderGroup } from '@e-pharmacy/types/checkout';
-import type { PaymentMethod } from '@e-pharmacy/types/orders';
-import type { DeliveryMethod } from '@e-pharmacy/types/orders';
+import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
+import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types/orders';
 
 //===================================================================
 

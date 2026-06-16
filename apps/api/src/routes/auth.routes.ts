@@ -117,13 +117,19 @@ authRoutes.patch(
 authRoutes.post('/logout', authenticate, ctrlWrapper(logoutUser));
 
 authRoutes.get('/sessions', authenticate, ctrlWrapper(getActiveSessions));
-authRoutes.delete('/sessions/:sessionId', authenticate, ctrlWrapper(revokeActiveSession));
+authRoutes.delete(
+  '/sessions/:sessionId',
+  authenticate,
+  ctrlWrapper(revokeActiveSession)
+);
 
 authRoutes.post(
   '/logout-all',
   authenticate,
   ctrlWrapper(logoutAllUserSessions)
 );
+
+//===============================================================
 
 // Temporary role test routes are available only outside production.
 if (env.NODE_ENV !== 'production') {

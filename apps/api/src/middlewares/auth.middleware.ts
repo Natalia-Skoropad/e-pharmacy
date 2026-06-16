@@ -3,7 +3,11 @@ import type { NextFunction, Request, Response } from 'express';
 import { ACCESS_TOKEN_COOKIE_NAME, AUTH_COOKIE_NAME } from '../constants/auth';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { assertActiveSessionService, getUserByIdService } from '../services/auth.service';
+
+import {
+  assertActiveSessionService,
+  getUserByIdService,
+} from '../services/auth.service';
 import { httpError } from '../utils/httpError';
 import { verifyToken } from '../utils/jwt';
 

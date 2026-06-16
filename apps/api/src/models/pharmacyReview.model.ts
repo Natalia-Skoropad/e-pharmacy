@@ -34,24 +34,28 @@ const pharmacyReviewSchema = new Schema<PharmacyReviewEntity>(
       required: true,
       index: true,
     },
+
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       default: undefined,
       index: true,
     },
+
     userName: {
       type: String,
       required: [true, 'User name is required'],
       trim: true,
       maxlength: [80, 'User name must be at most 80 characters'],
     },
+
     rating: {
       type: Number,
       required: true,
       min: MIN_REVIEW_RATING,
       max: MAX_REVIEW_RATING,
     },
+
     comment: {
       type: String,
       required: [true, 'Review comment is required'],
@@ -60,11 +64,13 @@ const pharmacyReviewSchema = new Schema<PharmacyReviewEntity>(
         USER_REVIEW_COMMENT_MIN_LENGTH,
         VALIDATION_MESSAGES.limits.reviewCommentMin,
       ],
+
       maxlength: [
         USER_REVIEW_COMMENT_MAX_LENGTH,
         VALIDATION_MESSAGES.limits.reviewCommentMax,
       ],
     },
+
     status: {
       type: String,
       enum: ['on_moderation', 'approved', 'rejected'],
@@ -72,27 +78,36 @@ const pharmacyReviewSchema = new Schema<PharmacyReviewEntity>(
       required: true,
       index: true,
     },
+
     moderationReason: {
       type: String,
       trim: true,
       maxlength: [300, 'Moderation reason must be at most 300 characters'],
       default: undefined,
     },
+
     moderatedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       default: undefined,
     },
+
     moderatedAt: {
       type: Date,
       default: undefined,
     },
   },
+
   { timestamps: true, versionKey: false }
 );
+
+//===============================================================
 
 pharmacyReviewSchema.index({ pharmacyId: 1, status: 1, createdAt: -1 });
 pharmacyReviewSchema.index({ status: 1, createdAt: -1 });
 
+//===============================================================
+
 export const PharmacyReview =
-  models.PharmacyReview || model<PharmacyReviewEntity>('PharmacyReview', pharmacyReviewSchema);
+  models.PharmacyReview ||
+  model<PharmacyReviewEntity>('PharmacyReview', pharmacyReviewSchema);

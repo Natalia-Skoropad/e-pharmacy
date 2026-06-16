@@ -17,9 +17,9 @@ export type ProductOffer = {
   pharmacyAddress?: string;
   pharmacyPhone?: string;
   pharmacyImageUrl?: string;
-  pharmacyRating?: number;
-  pharmacyReviewsCount?: number;
-  pharmacyIsFavorite?: boolean;
+  pharmacyRating: number;
+  pharmacyReviewsCount: number;
+  pharmacyIsFavorite: boolean;
   price: number;
   totalQuantity: number;
   availableQuantity: number;
@@ -45,10 +45,10 @@ export type Product = {
   foundInPharmaciesCount: number;
   offers: ProductOffer[];
   inStock: boolean;
-  rating?: number;
-  reviewsCount?: number;
-  isFavorite?: boolean;
-  updatedAt?: ISODateString;
+  rating: number;
+  reviewsCount: number;
+  isFavorite: boolean;
+  updatedAt: ISODateString;
 };
 
 export type ProductReview = {

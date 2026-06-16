@@ -7,10 +7,12 @@ import {
 
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
+
 import { Cart } from '../models/cart.model';
 import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { Pharmacy } from '../models/pharmacy.model';
+
 import { httpError } from '../utils/httpError';
 import { releaseOfferStock, reserveOfferStock } from './stock.service';
 

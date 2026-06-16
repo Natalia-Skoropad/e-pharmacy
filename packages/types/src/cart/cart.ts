@@ -3,12 +3,22 @@ import type { Product } from '../products';
 
 //===================================================================
 
+export type CartProduct = Omit<
+  Product,
+  'rating' | 'reviewsCount' | 'isFavorite' | 'updatedAt'
+> & {
+  rating?: number;
+  reviewsCount?: number;
+};
+
+//===================================================================
+
 export type CartItem = {
   id: EntityId;
   productOfferId: EntityId;
   productId: EntityId;
   pharmacyId: EntityId;
-  product: Product;
+  product: CartProduct;
   pharmacyName: string;
   pharmacyRating?: number;
   pharmacyReviewsCount?: number;
@@ -26,6 +36,7 @@ export type Cart = {
   totalItems: number;
   totalPrice: number;
 };
+
 export type CartResponse = { cart: Cart };
 
 //===================================================================
@@ -37,4 +48,3 @@ export type AddCartItemPayload = {
 };
 
 export type UpdateCartItemPayload = { quantity: number };
-export type CartSummary = Pick<Cart, 'totalItems' | 'totalPrice'>;

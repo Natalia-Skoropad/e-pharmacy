@@ -1,5 +1,5 @@
 import type { Pharmacy } from '@e-pharmacy/types';
-import type { CheckoutPharmacyOrderGroup } from '@e-pharmacy/types/checkout';
+import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
 
 //===================================================================
 
@@ -15,6 +15,8 @@ export function getPharmacyWorkingHours(pharmacy?: Pharmacy | null): string {
   return pharmacy?.workingHours?.trim() ?? '';
 }
 
+//===================================================================
+
 export function getPharmacyAddress(pharmacy?: Pharmacy | null): string {
   if (!pharmacy) return '';
 
@@ -23,6 +25,8 @@ export function getPharmacyAddress(pharmacy?: Pharmacy | null): string {
     .filter(Boolean)
     .join(', ');
 }
+
+//===================================================================
 
 export function getPharmacyBankDetails(
   pharmacy?: Pharmacy | null

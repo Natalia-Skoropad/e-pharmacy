@@ -5,6 +5,7 @@ import type { PHARMACY_STATUSES } from '../constants/auth';
 
 export type PharmacyStatus =
   (typeof PHARMACY_STATUSES)[keyof typeof PHARMACY_STATUSES];
+
 export type ReviewModerationStatus = 'on_moderation' | 'approved' | 'rejected';
 
 //===============================================================

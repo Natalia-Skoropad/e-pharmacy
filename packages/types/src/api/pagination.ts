@@ -5,11 +5,6 @@ export type PaginationMeta = {
   totalPages: number;
 };
 
-export type PaginatedResponse<TItem> = {
-  items: TItem[];
-  meta: PaginationMeta;
-};
-
 export type ApiPaginationResponse<TItem> = {
   items: TItem[];
 } & PaginationMeta;

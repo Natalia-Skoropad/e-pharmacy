@@ -6,6 +6,8 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 
+//===============================================================
+
 function createRateLimit(max: number, message: string) {
   return rateLimit({
     windowMs: RATE_LIMIT_WINDOW_MS,
@@ -27,10 +29,14 @@ export const authRateLimit = createRateLimit(
   'Too many authentication attempts. Please try again later.'
 );
 
+//===============================================================
+
 export const passwordResetRateLimit = createRateLimit(
   5,
   'Too many password reset requests. Please try again later.'
 );
+
+//===============================================================
 
 export const reviewRateLimit = createRateLimit(
   10,

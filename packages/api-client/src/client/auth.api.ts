@@ -2,6 +2,7 @@ import { getResponseData, localApiRequest } from '../core';
 import { clientApiRoutes as CLIENT_API_ROUTES } from '../routes';
 
 import type {
+  ApiEmptySuccessResponse,
   ApiSuccessResponse,
   AuthResponse,
   CurrentUserResponse,
@@ -49,7 +50,7 @@ export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
 export async function requestPasswordReset(
   payload: ForgotPasswordPayload
 ): Promise<void> {
-  await localApiRequest<ApiSuccessResponse>(
+  await localApiRequest<ApiEmptySuccessResponse>(
     CLIENT_API_ROUTES.auth.forgotPassword,
     {
       method: 'POST',
@@ -63,7 +64,7 @@ export async function requestPasswordReset(
 export async function resetPassword(
   payload: ResetPasswordPayload
 ): Promise<void> {
-  await localApiRequest<ApiSuccessResponse>(
+  await localApiRequest<ApiEmptySuccessResponse>(
     CLIENT_API_ROUTES.auth.resetPassword,
     {
       method: 'POST',
@@ -98,7 +99,7 @@ export async function getCurrentUser(): Promise<CurrentUserResponse> {
 //===================================================================
 
 export async function logoutUser(): Promise<void> {
-  await localApiRequest<ApiSuccessResponse>(CLIENT_API_ROUTES.auth.logout, {
+  await localApiRequest<ApiEmptySuccessResponse>(CLIENT_API_ROUTES.auth.logout, {
     method: 'POST',
   });
 }
@@ -106,7 +107,7 @@ export async function logoutUser(): Promise<void> {
 //===================================================================
 
 export async function logoutAllUserSessions(): Promise<void> {
-  await localApiRequest<ApiSuccessResponse>(CLIENT_API_ROUTES.auth.logoutAll, {
+  await localApiRequest<ApiEmptySuccessResponse>(CLIENT_API_ROUTES.auth.logoutAll, {
     method: 'POST',
   });
 }
@@ -132,7 +133,7 @@ export async function updateCurrentUser(
 export async function updateCurrentUserPassword(
   payload: UpdatePasswordPayload
 ): Promise<void> {
-  await localApiRequest<ApiSuccessResponse>(CLIENT_API_ROUTES.auth.password, {
+  await localApiRequest<ApiEmptySuccessResponse>(CLIENT_API_ROUTES.auth.password, {
     method: 'PATCH',
     body: payload,
   });
@@ -148,7 +149,7 @@ export async function getActiveSessions(): Promise<ActiveSessionsResponse> {
 }
 
 export async function revokeActiveSession(sessionId: string): Promise<void> {
-  await localApiRequest<ApiSuccessResponse>(
+  await localApiRequest<ApiEmptySuccessResponse>(
     CLIENT_API_ROUTES.auth.session(sessionId),
     { method: 'DELETE' }
   );

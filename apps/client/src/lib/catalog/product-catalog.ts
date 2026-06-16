@@ -1,4 +1,5 @@
-import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
+import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
+import { PRODUCT_CATEGORY_LABELS } from './product-category-labels';
 
 import type {
   ProductCategory,

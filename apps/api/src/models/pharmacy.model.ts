@@ -1,13 +1,10 @@
 import { Schema, model, models } from 'mongoose';
 
 import { MAX_REVIEW_RATING } from '../constants/validation';
-
 import { PHARMACY_STATUSES } from '../constants/auth';
 import type { PharmacyEntity } from '../types/pharmacy';
 
 //===============================================================
-
-
 
 const pharmacySchema = new Schema<PharmacyEntity>(
   {
@@ -53,7 +50,6 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       default: undefined,
     },
 
-
     bankDetails: {
       recipientName: {
         type: String,
@@ -74,7 +70,10 @@ const pharmacySchema = new Schema<PharmacyEntity>(
         required: false,
         trim: true,
         uppercase: true,
-        match: [/^UA[A-Z0-9]{27}$/, 'IBAN must start with UA and contain 29 characters'],
+        match: [
+          /^UA[A-Z0-9]{27}$/,
+          'IBAN must start with UA and contain 29 characters',
+        ],
       },
 
       bankName: {
@@ -119,13 +118,11 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       default: undefined,
     },
 
-
     reviewsCount: {
       type: Number,
       min: 0,
       default: 0,
     },
-
 
     ownerId: {
       type: Schema.Types.ObjectId,
@@ -186,4 +183,5 @@ pharmacySchema.index({ status: 1 });
 
 //===============================================================
 
-export const Pharmacy = models.Pharmacy || model<PharmacyEntity>('Pharmacy', pharmacySchema);
+export const Pharmacy =
+  models.Pharmacy || model<PharmacyEntity>('Pharmacy', pharmacySchema);
