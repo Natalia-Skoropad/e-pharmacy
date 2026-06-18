@@ -1,9 +1,7 @@
 export const ROUTE_SEGMENTS = {
   pharmacies: 'pharmacies',
-  pharmacyDetails: 'pharmacies',
-  medicinePharmacy: 'medicine-pharmacy',
+  products: 'products',
   productCatalog: 'product-catalog',
-  productDetails: 'products',
   cart: 'cart',
   checkout: 'checkout',
   login: 'login',

@@ -1,10 +1,10 @@
-export type SitemapEntryConfig = {
+type SitemapEntryConfig = {
   path: string;
   priority: number;
   lastModified?: Date;
 };
 
-export type SitemapRouteConfig = SitemapEntryConfig & {
+type SitemapRouteConfig = SitemapEntryConfig & {
   url: string;
   changeFrequency: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
   lastModified: Date;

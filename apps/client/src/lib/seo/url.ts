@@ -1,4 +1,4 @@
-import { createAbsoluteUrl } from '@/lib/seo';
+import { createAbsoluteUrl } from './sitemap';
 import { CLIENT_ENV } from '@/lib/constants/env';
 
 //===================================================================

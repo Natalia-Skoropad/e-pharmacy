@@ -1,5 +1,6 @@
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
 import { PRODUCT_CATEGORY_LABELS } from './product-category-labels';
+import { isValidObjectId } from '@/lib/routes';
 
 import type {
   ProductCategory,
@@ -115,12 +116,6 @@ function isProductAvailabilityFilter(
 
 function isProductSortFilter(value?: string): value is ProductSortFilter {
   return SORT_VALUES.includes(value as ProductSortFilter);
-}
-
-//===================================================================
-
-function isValidObjectId(value?: string): value is string {
-  return Boolean(value && /^[a-f\d]{24}$/i.test(value));
 }
 
 //===================================================================

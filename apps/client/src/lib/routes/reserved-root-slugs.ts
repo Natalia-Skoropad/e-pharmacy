@@ -15,7 +15,7 @@ export const RESERVED_ROOT_SLUGS = [
   ROUTE_SEGMENTS.login,
   ROUTE_SEGMENTS.register,
   ROUTE_SEGMENTS.pharmacies,
-  ROUTE_SEGMENTS.medicinePharmacy,
+  ROUTE_SEGMENTS.products,
   ROUTE_SEGMENTS.productCatalog,
   ROUTE_SEGMENTS.deliveryPayment,
   ROUTE_SEGMENTS.returnPolicy,

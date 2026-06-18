@@ -2,7 +2,7 @@ import { ROUTES, CLIENT_RESERVED_APP_PREFIXES } from '@/lib/routes';
 
 //===================================================================
 
-export const INDEXABLE_ROUTES = [
+const SITEMAP_INDEXABLE_ROUTES = [
   ROUTES.HOME,
   ROUTES.PHARMACIES,
   ROUTES.PRODUCTS_CATALOG,
@@ -14,25 +14,7 @@ export const INDEXABLE_ROUTES = [
 
 //===================================================================
 
-export const NOINDEX_ROUTES = [
-  ROUTES.CART,
-  ROUTES.CHECKOUT,
-  `${ROUTES.CHECKOUT}/:path*`,
-  ROUTES.LOGIN,
-  ROUTES.REGISTER,
-  ROUTES.PASSWORD_RECOVERY,
-  ROUTES.RESET_PASSWORD,
-  ROUTES.PROFILE,
-  `${ROUTES.PROFILE}/:path*`,
-  '/admin',
-  '/admin/:path*',
-  '/pharmacy',
-  '/pharmacy/:path*',
-] as const;
-
-//===================================================================
-
-export const ROBOTS_PRIVATE_ROUTE_ROOTS = [
+const ROBOTS_PRIVATE_ROUTE_ROOTS = [
   ROUTES.CART,
   ROUTES.CHECKOUT,
   ROUTES.LOGIN,
@@ -49,4 +31,4 @@ export const ROBOTS_DISALLOW_ROUTES = ROBOTS_PRIVATE_ROUTE_ROOTS.flatMap(
 
 //===================================================================
 
-export const SITEMAP_STATIC_ROUTES = INDEXABLE_ROUTES;
+export const SITEMAP_STATIC_ROUTES = SITEMAP_INDEXABLE_ROUTES;

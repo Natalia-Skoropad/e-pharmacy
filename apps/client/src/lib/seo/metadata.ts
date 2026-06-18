@@ -10,24 +10,6 @@ export const DEFAULT_OG_IMAGE_ALT =
 
 //===================================================================
 
-export const PHARMACIES_TITLE = 'Pharmacy Pharmacies';
-export const PHARMACIES_DESCRIPTION =
-  'Explore available pharmacies and choose a trusted place to order medicines online.';
-
-//===================================================================
-
-export const MEDICINE_PHARMACY_TITLE = 'Medicine Pharmacy';
-export const MEDICINE_PHARMACY_DESCRIPTION =
-  'Browse products, compare available products, and prepare your online pharmacy order.';
-
-//===================================================================
-
-export const PRODUCTS_CATALOG_TITLE = 'Product Catalog';
-export const PRODUCTS_CATALOG_DESCRIPTION =
-  'Search products by name or article, filter products by category and pharmacy availability, and compare trusted online pharmacy offers.';
-
-//===================================================================
-
 export const CART_TITLE = 'Cart';
 export const CART_DESCRIPTION =
   'Review selected products and prepare your order in the E-PHARMACY cart.';
@@ -89,12 +71,6 @@ export const PROFILE_DESCRIPTION =
 export const ORDER_DETAILS_TITLE = 'Order details';
 export const ORDER_DETAILS_DESCRIPTION =
   'View a private E-PHARMACY client order in your profile.';
-
-//===================================================================
-
-export const NOT_FOUND_TITLE = 'Page Not Found';
-export const NOT_FOUND_DESCRIPTION =
-  'The requested E-PHARMACY page could not be found.';
 
 //===================================================================
 

@@ -1,38 +1,25 @@
-export type RobotsApp = 'client' | 'pharmacy' | 'admin';
-
-export type RobotsConfig = {
+type RobotsConfig = {
   rules: {
     userAgent: string;
-    allow?: string | string[];
-    disallow?: string | string[];
+    allow: string;
+    disallow: string[];
   };
-  sitemap?: string;
+  sitemap: string;
 };
 
 //===================================================================
 
-type CreateRobotsConfigParams = {
-  app: RobotsApp;
+type CreateClientRobotsConfigParams = {
   siteUrl: string;
   disallowRoutes?: readonly string[];
 };
 
 //===================================================================
 
-export function createRobotsConfig({
-  app,
+export function createClientRobotsConfig({
   siteUrl,
   disallowRoutes = [],
-}: CreateRobotsConfigParams): RobotsConfig {
-  if (app === 'pharmacy' || app === 'admin') {
-    return {
-      rules: {
-        userAgent: '*',
-        disallow: '/',
-      },
-    };
-  }
-
+}: CreateClientRobotsConfigParams): RobotsConfig {
   return {
     rules: {
       userAgent: '*',

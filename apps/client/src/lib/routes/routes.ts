@@ -5,10 +5,7 @@ import { ROUTE_SEGMENTS } from './route-segments';
 export const ROUTES = {
   HOME: '/',
   PHARMACIES: `/${ROUTE_SEGMENTS.pharmacies}`,
-  PHARMACY_DETAILS: `/${ROUTE_SEGMENTS.pharmacyDetails}`,
-  MEDICINE_PHARMACY: `/${ROUTE_SEGMENTS.medicinePharmacy}`,
   PRODUCTS_CATALOG: `/${ROUTE_SEGMENTS.productCatalog}`,
-  PRODUCT_DETAILS: `/${ROUTE_SEGMENTS.productDetails}`,
   CART: `/${ROUTE_SEGMENTS.cart}`,
   CHECKOUT: `/${ROUTE_SEGMENTS.checkout}`,
   LOGIN: `/${ROUTE_SEGMENTS.login}`,
