@@ -1,11 +1,10 @@
 /**
- * Shared auth cookie contract.
+ * Shared frontend auth cookie contract.
  *
- * Keep these names in sync with the backend auth cookie constants. The Next BFF,
- * frontend auth session hint, and API auth cookie writer all depend on this
- * exact contract.
+ * Keep the token cookie names logically aligned with the backend-local auth
+ * constants. The backend must not import this frontend package.
  */
-export const AUTH_COOKIES = {
+const AUTH_COOKIES = {
   ACCESS_TOKEN: 'e_pharmacy_access_token',
   REFRESH_TOKEN: 'e_pharmacy_refresh_token',
   LEGACY_AUTH_TOKEN: 'e_pharmacy_auth_token',
@@ -14,8 +13,7 @@ export const AUTH_COOKIES = {
 
 //===================================================================
 
-// Client-readable auth hint only. It helps the provider decide whether
-// it is worth trying to refresh the current user during bootstrap.
+// Client-readable auth hint used only for auth bootstrap and redirects.
 export const AUTH_READY_COOKIE_NAME = AUTH_COOKIES.AUTH_READY;
 
 //===================================================================
@@ -27,4 +25,5 @@ export const LEGACY_AUTH_COOKIE_NAME = AUTH_COOKIES.LEGACY_AUTH_TOKEN;
 
 //===================================================================
 
-export const AUTH_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+export const REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+export const AUTH_READY_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;

@@ -2,9 +2,10 @@ import { type NextRequest, type NextResponse } from 'next/server';
 
 import {
   ACCESS_TOKEN_COOKIE_NAME,
-  AUTH_COOKIE_MAX_AGE_SECONDS,
+  AUTH_READY_COOKIE_MAX_AGE_SECONDS,
   AUTH_READY_COOKIE_NAME,
   LEGACY_AUTH_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS,
   REFRESH_TOKEN_COOKIE_NAME,
 } from '@e-pharmacy/config/auth';
 
@@ -64,14 +65,14 @@ export function setClientAuthCookies(
   if (tokens.refreshToken) {
     response.cookies.set(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, {
       ...baseOptions,
-      maxAge: AUTH_COOKIE_MAX_AGE_SECONDS,
+      maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS,
     });
   }
 
   if (tokens.accessToken || tokens.refreshToken) {
     response.cookies.set(AUTH_READY_COOKIE_NAME, '1', {
       path: '/',
-      maxAge: AUTH_COOKIE_MAX_AGE_SECONDS,
+      maxAge: AUTH_READY_COOKIE_MAX_AGE_SECONDS,
       sameSite: 'lax',
       secure: isSecureRequest(request),
     });
