@@ -71,6 +71,7 @@ function PasswordRecoveryForm() {
 
       await requestPasswordReset({
         email: values.email.trim(),
+        application: 'client',
       });
 
       setValues(FORGOT_PASSWORD_INITIAL_VALUES);

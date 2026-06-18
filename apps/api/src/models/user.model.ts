@@ -10,7 +10,7 @@ import {
   VALIDATION_MESSAGES,
 } from '../constants/validation';
 
-import { USER_ROLES, USER_STATUSES } from '../constants/auth';
+import { AUTH_APPLICATIONS, USER_ROLES, USER_STATUSES } from '../constants/auth';
 import type { UserEntity } from '../types/user';
 
 //===============================================================
@@ -89,6 +89,13 @@ const userSchema = new Schema<UserEntity>(
 
     resetPasswordExpiresAt: {
       type: Date,
+      select: false,
+      default: undefined,
+    },
+
+    resetPasswordApplication: {
+      type: String,
+      enum: Object.values(AUTH_APPLICATIONS),
       select: false,
       default: undefined,
     },

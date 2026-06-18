@@ -1,3 +1,4 @@
+import type { AuthApplication } from './application';
 import type { UserRole } from './role';
 import type { AuthUser } from './user';
 
@@ -27,6 +28,7 @@ export type LoginPayload = {
 
 export type ForgotPasswordPayload = {
   email: string;
+  application: AuthApplication;
 };
 
 export type ResetPasswordPayload = {

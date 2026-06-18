@@ -10,7 +10,9 @@ import type { AuthUser } from '@e-pharmacy/types';
 
 //===================================================================
 
-export type AuthenticatedRedirectPath = string | ((user: AuthUser) => string);
+export type AuthenticatedRedirectPath =
+  | string
+  | ((user: AuthUser, requestedRedirect: string | null) => string);
 
 export type GuestOnlyRouteProps = {
   children: ReactNode;
@@ -22,13 +24,14 @@ export type GuestOnlyRouteProps = {
 
 function resolveAuthenticatedRedirectPath(
   authenticatedRedirectPath: AuthenticatedRedirectPath,
-  user: AuthUser | null
+  user: AuthUser | null,
+  requestedRedirect: string | null
 ): string {
   if (typeof authenticatedRedirectPath === 'string') {
     return authenticatedRedirectPath;
   }
 
-  return user ? authenticatedRedirectPath(user) : '/';
+  return user ? authenticatedRedirectPath(user, requestedRedirect) : '/';
 }
 
 //===================================================================
@@ -41,19 +44,21 @@ export function GuestOnlyRoute({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { user, isAuthenticated, isAuthReady } = useAuth();
+  const { user, status, isAuthenticated, isAuthReady } = useAuth();
 
   useEffect(() => {
     if (!isAuthReady || !isAuthenticated) return;
 
+    const requestedRedirect = searchParams.get('redirect');
     const fallbackRedirectPath = resolveAuthenticatedRedirectPath(
       authenticatedRedirectPath,
-      user
+      user,
+      requestedRedirect
     );
-    const redirectTo = getSafeRedirectPath(
-      searchParams.get('redirect'),
-      fallbackRedirectPath
-    );
+    const redirectTo =
+      typeof authenticatedRedirectPath === 'function'
+        ? getSafeRedirectPath(fallbackRedirectPath)
+        : getSafeRedirectPath(requestedRedirect, fallbackRedirectPath);
 
     router.replace(redirectTo);
   }, [
@@ -65,7 +70,7 @@ export function GuestOnlyRoute({
     user,
   ]);
 
-  if (!isAuthReady) return loadingFallback;
+  if (!isAuthReady || status === 'error') return loadingFallback;
   if (isAuthenticated) return null;
 
   return children;

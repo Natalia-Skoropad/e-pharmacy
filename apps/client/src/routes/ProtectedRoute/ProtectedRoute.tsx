@@ -1,6 +1,6 @@
 'use client';
 
-import { ProtectedRoute as SharedProtectedRoute } from '@e-pharmacy/auth';
+import { ProtectedRoute as SharedProtectedRoute } from '@e-pharmacy/auth/guards';
 import { ROUTES } from '@/lib/routes';
 import { LoadingSpinner } from '@e-pharmacy/ui/common';
 

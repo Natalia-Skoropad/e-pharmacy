@@ -1,3 +1,11 @@
+export const AUTH_APPLICATIONS = {
+  CLIENT: 'client',
+  PHARMACY: 'pharmacy',
+  ADMIN: 'admin',
+} as const;
+
+//===============================================================
+
 export const USER_ROLES = {
   CLIENT: 'client',
   PHARMACY: 'pharmacy',

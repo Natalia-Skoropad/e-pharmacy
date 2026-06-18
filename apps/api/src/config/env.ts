@@ -15,6 +15,8 @@ type AuthCookieSameSite = 'lax' | 'strict' | 'none';
 const LOCAL_CLIENT_URL = 'http://localhost:3000';
 const PRODUCTION_CLIENT_URL = 'https://e-pharmacy-client-ten.vercel.app';
 
+//===============================================================
+
 const CLIENT_ORIGIN_ENV_NAMES = [
   'CLIENT_ORIGINS',
   'CORS_ORIGIN',
@@ -148,6 +150,8 @@ export const env = {
     '30d') as StringValue,
   CLIENT_ORIGINS: getClientOrigins(),
   CLIENT_APP_URL: getClientAppUrl(),
+  PHARMACY_APP_URL: process.env.PHARMACY_APP_URL,
+  ADMIN_APP_URL: process.env.ADMIN_APP_URL,
   AUTH_COOKIE_DOMAIN: process.env.AUTH_COOKIE_DOMAIN,
   AUTH_COOKIE_SAME_SITE: getAuthCookieSameSite(),
   SMTP_HOST: process.env.SMTP_HOST,

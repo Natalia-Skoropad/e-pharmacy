@@ -1,7 +1,7 @@
 'use client';
 
-import { GuestOnlyRoute as SharedGuestOnlyRoute } from '@e-pharmacy/auth';
-import { ROUTES } from '@/lib/routes';
+import { GuestOnlyRoute as SharedGuestOnlyRoute } from '@e-pharmacy/auth/guards';
+import { resolveAuthenticatedRouteForClientApp } from '@/lib/auth';
 
 import type { ReactNode } from 'react';
 
@@ -15,7 +15,7 @@ type GuestOnlyRouteProps = {
 
 function GuestOnlyRoute({ children }: GuestOnlyRouteProps) {
   return (
-    <SharedGuestOnlyRoute authenticatedRedirectPath={ROUTES.PROFILE}>
+    <SharedGuestOnlyRoute authenticatedRedirectPath={resolveAuthenticatedRouteForClientApp}>
       {children}
     </SharedGuestOnlyRoute>
   );

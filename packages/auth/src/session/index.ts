@@ -1,4 +1,2 @@
-export * from './auth-token-storage';
-export * from './session-hint-storage';
-export * from './browser-auth-session-hint';
-export * from './noop-auth-session-hint';
+export type { AuthSessionHintStorage } from './session-hint-storage';
+export { browserAuthSessionHintStorage } from './browser-auth-session-hint-storage';

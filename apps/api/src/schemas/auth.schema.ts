@@ -12,7 +12,7 @@ import {
   sharedRequiredPhoneSchema,
 } from './shared-validation.schema';
 
-import { USER_ROLES } from '../constants/auth';
+import { AUTH_APPLICATIONS, USER_ROLES } from '../constants/auth';
 
 //===============================================================
 
@@ -62,7 +62,14 @@ export const loginSchema = z.object({
 
 export const forgotPasswordSchema = z.object({
   email: sharedEmailSchema,
+  application: z.enum([
+    AUTH_APPLICATIONS.CLIENT,
+    AUTH_APPLICATIONS.PHARMACY,
+    AUTH_APPLICATIONS.ADMIN,
+  ]),
 });
+
+//===============================================================
 
 export const resetPasswordSchema = z.object({
   token: z.string().trim().min(1, VALIDATION_MESSAGES.required.resetToken),

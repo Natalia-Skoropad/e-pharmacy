@@ -9,7 +9,7 @@ import { EmailInput, PasswordInput } from '@e-pharmacy/ui/form-fields';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
 import { ROUTES } from '@/lib/routes';
-import { getSafeRedirectPath } from '@e-pharmacy/auth/routing';
+import { resolveLoginDestination } from '@/lib/auth';
 
 import {
   LOGIN_FORM_FIELDS,
@@ -45,7 +45,6 @@ function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
   const loginFormIsValid = isLoginFormValid(values);
 
   const handleChange =
@@ -85,12 +84,19 @@ function LoginForm() {
     try {
       setIsSubmitting(true);
 
-      await login({
+      const user = await login({
         email: values.email.trim(),
         password: values.password,
       });
 
-      router.replace(redirectTo);
+      if (!user) return;
+
+      router.replace(
+        resolveLoginDestination({
+          user,
+          requestedRedirect: searchParams.get('redirect'),
+        })
+      );
     } catch (error) {
       toast.error(getAuthErrorMessage(error));
     } finally {

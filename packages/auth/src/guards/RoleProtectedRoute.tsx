@@ -35,11 +35,11 @@ export function RoleProtectedRoute({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { isAuthenticated, isAuthReady, user } = useAuth();
+  const { status, isAuthenticated, isAuthReady, user } = useAuth();
   const hasAllowedRole = Boolean(user && allowedRoles.includes(user.role));
 
   useEffect(() => {
-    if (!isAuthReady) return;
+    if (!isAuthReady || status === 'error') return;
 
     if (!isAuthenticated) {
       const queryString = searchParams.toString();
@@ -57,13 +57,14 @@ export function RoleProtectedRoute({
     hasAllowedRole,
     isAuthReady,
     isAuthenticated,
+    status,
     loginPath,
     pathname,
     router,
     searchParams,
   ]);
 
-  if (!isAuthReady) return loadingFallback;
+  if (!isAuthReady || status === 'error') return loadingFallback;
   if (!isAuthenticated) return redirectingFallback;
   if (!hasAllowedRole) return forbiddenFallback;
 

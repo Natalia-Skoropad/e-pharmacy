@@ -3,7 +3,7 @@
 import {
   AuthProviderCore,
   type AuthProviderServices,
-} from '@e-pharmacy/auth';
+} from '@e-pharmacy/auth/core';
 
 import { browserAuthSessionHintStorage } from '@e-pharmacy/auth/session';
 

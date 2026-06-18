@@ -352,8 +352,33 @@ export async function assertActiveSessionService(
 
 //===============================================================
 
-function buildPasswordResetUrl(token: string): string {
-  const url = new URL('/reset-password', env.CLIENT_APP_URL);
+function getPasswordResetAppUrl(
+  application: ForgotPasswordInput['application']
+): string {
+  const appUrls = {
+    client: env.CLIENT_APP_URL,
+    pharmacy: env.PHARMACY_APP_URL,
+    admin: env.ADMIN_APP_URL,
+  } satisfies Record<ForgotPasswordInput['application'], string | undefined>;
+
+  const appUrl = appUrls[application];
+
+  if (!appUrl) {
+    throw new Error(
+      `Password reset URL is not configured for application: ${application}`
+    );
+  }
+
+  return appUrl;
+}
+
+//===============================================================
+
+function buildPasswordResetUrl(
+  token: string,
+  application: ForgotPasswordInput['application']
+): string {
+  const url = new URL('/reset-password', getPasswordResetAppUrl(application));
 
   url.searchParams.set('token', token);
 
@@ -398,13 +423,14 @@ export async function requestPasswordResetService(
 
   user.resetPasswordTokenHash = hashPasswordResetToken(resetToken);
   user.resetPasswordExpiresAt = getPasswordResetExpiresAt();
+  user.resetPasswordApplication = input.application;
 
   await user.save();
 
   await sendPasswordResetEmail({
     to: user.email,
     name: user.name,
-    resetUrl: buildPasswordResetUrl(resetToken),
+    resetUrl: buildPasswordResetUrl(resetToken, input.application),
   });
 }
 
@@ -418,7 +444,9 @@ export async function resetPasswordService(
   const user = await User.findOne({
     resetPasswordTokenHash: tokenHash,
     resetPasswordExpiresAt: { $gt: new Date() },
-  }).select('+password +resetPasswordTokenHash +resetPasswordExpiresAt');
+  }).select(
+    '+password +resetPasswordTokenHash +resetPasswordExpiresAt +resetPasswordApplication'
+  );
 
   if (!user || user.status === USER_STATUSES.BLOCKED) {
     throw httpError(
@@ -430,6 +458,7 @@ export async function resetPasswordService(
   user.password = await hashPassword(input.newPassword);
   user.resetPasswordTokenHash = undefined;
   user.resetPasswordExpiresAt = undefined;
+  user.resetPasswordApplication = undefined;
 
   await user.save();
   await revokeAllUserSessionsService(String(user._id), 'password_changed');

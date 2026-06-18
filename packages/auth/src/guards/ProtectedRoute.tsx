@@ -27,10 +27,10 @@ export function ProtectedRoute({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { isAuthenticated, isAuthReady } = useAuth();
+  const { status, isAuthenticated, isAuthReady } = useAuth();
 
   useEffect(() => {
-    if (!isAuthReady || isAuthenticated) return;
+    if (!isAuthReady || status === 'error' || isAuthenticated) return;
 
     const queryString = searchParams.toString();
     const currentPath = queryString ? `${pathname}?${queryString}` : pathname;
@@ -38,7 +38,7 @@ export function ProtectedRoute({
     router.replace(buildLoginRedirectPath(currentPath, loginPath));
   }, [isAuthReady, isAuthenticated, loginPath, pathname, router, searchParams]);
 
-  if (!isAuthReady) return loadingFallback;
+  if (!isAuthReady || status === 'error') return loadingFallback;
   if (!isAuthenticated) return redirectingFallback;
 
   return children;

@@ -28,46 +28,27 @@ function getCookieValue(name: string): string | null {
   if (!cookie) return null;
 
   const value = cookie.slice(name.length + 1);
-
   return value ? decodeURIComponent(value) : null;
 }
 
 //===================================================================
 
-function setClientCookie(name: string, value: string): void {
-  if (!canUseBrowserCookies()) return;
-
-  document.cookie = `${name}=${encodeURIComponent(
-    value
-  )}; Path=/; Max-Age=${AUTH_READY_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax${getSecureCookiePart()}`;
-}
-
-//===================================================================
-
-function removeClientCookie(name: string): void {
-  if (!canUseBrowserCookies()) return;
-
-  document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax${getSecureCookiePart()}`;
-}
-
-//===================================================================
-
-export function getClientAuthSessionHint(): boolean {
+export function hasBrowserAuthSessionHint(): boolean {
   return Boolean(getCookieValue(AUTH_READY_COOKIE_NAME));
 }
 
 //===================================================================
 
-export function setClientAuthSessionHint(): void {
+export function setBrowserAuthSessionHint(): void {
   if (!canUseBrowserCookies()) return;
 
-  setClientCookie(AUTH_READY_COOKIE_NAME, '1');
+  document.cookie = `${AUTH_READY_COOKIE_NAME}=1; Path=/; Max-Age=${AUTH_READY_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax${getSecureCookiePart()}`;
 }
 
 //===================================================================
 
-export function removeClientAuthSessionHint(): void {
+export function clearBrowserAuthSessionHint(): void {
   if (!canUseBrowserCookies()) return;
 
-  removeClientCookie(AUTH_READY_COOKIE_NAME);
+  document.cookie = `${AUTH_READY_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax${getSecureCookiePart()}`;
 }
