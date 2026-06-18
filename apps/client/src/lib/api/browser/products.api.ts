@@ -17,6 +17,7 @@ import type {
   ProductsQueryParams,
   ProductsResponse,
   FavoriteProductResponse,
+  FavoriteProductIdsResponse,
 } from '@e-pharmacy/types';
 
 //===================================================================
@@ -42,6 +43,18 @@ export async function getFavoriteProductsFromClientApi(
     `${ROUTES.products.favorites}${buildQueryString(params)}`,
     options
   );
+  return getResponseData(response);
+}
+
+
+//===================================================================
+
+export async function getFavoriteProductIdsFromClientApi(
+  options?: RequestOptions
+): Promise<FavoriteProductIdsResponse> {
+  const response = await localApiRequest<
+    ApiSuccessResponse<FavoriteProductIdsResponse>
+  >(ROUTES.products.favoriteIds, options);
   return getResponseData(response);
 }
 

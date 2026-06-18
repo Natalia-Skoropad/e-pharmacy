@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import {
-  getPharmacyCheckoutDetails,
-  getPharmacyDetails,
-} from '@/lib/api/browser';
-
-import type { Pharmacy, PharmacyCheckoutDetails } from '@e-pharmacy/types';
-
+import { getPharmacyCheckoutDetails } from '@/lib/api/browser';
+import type { PharmacyCheckoutDetails } from '@e-pharmacy/types';
 import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
 
 //===================================================================
@@ -14,15 +9,14 @@ import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
 export function useCheckoutPharmacy(
   selectedOrderGroup: CheckoutPharmacyOrderGroup | null
 ) {
-  const [pharmacy, setPharmacy] = useState<
-    (Pharmacy & PharmacyCheckoutDetails) | null
-  >(null);
+  const [pharmacy, setPharmacy] = useState<PharmacyCheckoutDetails | null>(
+    null
+  );
   const [isPharmacyLoading, setIsPharmacyLoading] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function fetchPharmacy() {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
       if (!selectedOrderGroup) {
         setPharmacy(null);
         setIsPharmacyLoading(false);
@@ -31,32 +25,28 @@ export function useCheckoutPharmacy(
 
       try {
         setIsPharmacyLoading(true);
-        const [detailsResponse, checkoutResponse] = await Promise.all([
-          getPharmacyDetails(selectedOrderGroup.pharmacyId),
-          getPharmacyCheckoutDetails(selectedOrderGroup.pharmacyId),
-        ]);
+        const response = await getPharmacyCheckoutDetails(
+          selectedOrderGroup.pharmacyId,
+          {
+            signal: controller.signal,
+          }
+        );
 
-        if (!isMounted) return;
-
-        setPharmacy({
-          ...detailsResponse.pharmacy,
-          ...checkoutResponse.pharmacy,
-        });
+        setPharmacy(response.pharmacy);
       } catch {
-        if (!isMounted) return;
+        if (controller.signal.aborted) return;
 
         setPharmacy(null);
       } finally {
-        if (!isMounted) return;
-
-        setIsPharmacyLoading(false);
+        if (!controller.signal.aborted) {
+          setIsPharmacyLoading(false);
+        }
       }
-    }
-
-    void fetchPharmacy();
+    }, 0);
 
     return () => {
-      isMounted = false;
+      controller.abort();
+      window.clearTimeout(timeoutId);
     };
   }, [selectedOrderGroup]);
 

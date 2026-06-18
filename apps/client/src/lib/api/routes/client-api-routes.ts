@@ -23,6 +23,7 @@ export const clientApiRoutes = {
     list: '/api/pharmacies',
     options: '/api/pharmacies/options',
     favorites: '/api/pharmacies/favorites',
+    favoriteIds: '/api/pharmacies/favorites/ids',
     filters: '/api/pharmacies/filters',
     details: (id: EntityId) => `/api/pharmacies/${id}`,
     checkoutDetails: (id: EntityId) => `/api/pharmacies/${id}/checkout-details`,
@@ -33,6 +34,7 @@ export const clientApiRoutes = {
   products: {
     list: '/api/products',
     favorites: '/api/products/favorites',
+    favoriteIds: '/api/products/favorites/ids',
     filters: '/api/products/filters',
     details: (id: EntityId | string) => `/api/products/${id}`,
     reviews: (id: EntityId) => `/api/products/${id}/reviews`,

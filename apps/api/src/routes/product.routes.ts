@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   createProductReview,
+  getFavoriteProductIds,
   getFavoriteProducts,
   getPendingProductReviews,
   moderateProductReview,
@@ -52,6 +53,15 @@ productRoutes.get(
 //=================================================================================
 
 productRoutes.get('/filters', ctrlWrapper(getProductFilters));
+
+//=================================================================================
+
+
+productRoutes.get(
+  '/favorites/ids',
+  authenticate,
+  ctrlWrapper(getFavoriteProductIds)
+);
 
 //=================================================================================
 

@@ -16,6 +16,10 @@ import type { HttpMethod } from '@e-pharmacy/api-client/core';
 
 //===================================================================
 
+const AUTH_PROXY_TIMEOUT_MS = 8_000;
+
+//===================================================================
+
 type AuthMarkerAction = 'set' | 'delete';
 
 type AuthProxyOptions = {
@@ -76,6 +80,7 @@ export async function proxyAuthRequest({
     headers: createProxyHeaders(request),
     body: await getProxyBody(request, method),
     cache: 'no-store',
+    signal: AbortSignal.timeout(AUTH_PROXY_TIMEOUT_MS),
   });
 
   return createAuthProxyResponse(response, request, markerAction);

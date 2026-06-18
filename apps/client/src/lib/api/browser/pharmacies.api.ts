@@ -18,6 +18,7 @@ import type {
   PharmaciesQueryParams,
   PharmaciesResponse,
   FavoritePharmacyResponse,
+  FavoritePharmacyIdsResponse,
   PharmacyOptionsResponse,
 } from '@e-pharmacy/types';
 
@@ -62,6 +63,18 @@ export async function getPharmacyOptionsFromClientApi(
   );
 }
 
+
+//===================================================================
+
+export async function getFavoritePharmacyIdsFromClientApi(
+  options?: RequestOptions
+): Promise<FavoritePharmacyIdsResponse> {
+  const response = await localApiRequest<
+    ApiSuccessResponse<FavoritePharmacyIdsResponse>
+  >(ROUTES.pharmacies.favoriteIds, options);
+  return getResponseData(response);
+}
+
 //===================================================================
 
 export async function getPharmacyFiltersFromClientApi(
@@ -92,11 +105,13 @@ export async function getPharmacyDetailsFromClientApi(
 //===================================================================
 
 export async function getPharmacyCheckoutDetails(
-  id: string
+  id: string,
+  options?: RequestOptions
 ): Promise<PharmacyCheckoutDetailsResponse> {
   return getResponseData(
     await localApiRequest<ApiSuccessResponse<PharmacyCheckoutDetailsResponse>>(
-      ROUTES.pharmacies.checkoutDetails(id)
+      ROUTES.pharmacies.checkoutDetails(id),
+      options
     )
   );
 }

@@ -28,6 +28,7 @@ import {
   useFavoriteActions,
   useReviewForm,
   usePharmacyFavoriteRefresh,
+  invalidateFavoritePharmacyIdsCache,
 } from '@/hooks';
 
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
@@ -101,6 +102,7 @@ function PharmacyDetailsPageContent({
       errorMessage: 'Could not update pharmacy favorites.',
       addFavorite: addFavoritePharmacy,
       removeFavorite: removeFavoritePharmacy,
+      onFavoriteChange: () => invalidateFavoritePharmacyIdsCache(),
     });
 
   usePharmacyFavoriteRefresh({

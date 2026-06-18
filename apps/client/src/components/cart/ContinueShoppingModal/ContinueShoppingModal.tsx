@@ -16,7 +16,7 @@ import { CartOrderLimitModal } from '@/components/common';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { formatPrice, formatStockLabel } from '@e-pharmacy/utils/formatters';
-import { getProducts } from '@/lib/api/browser';
+import { getProductFilters, getProducts } from '@/lib/api/browser';
 import { addCartItem } from '@/services/cart-service';
 import type { Cart, Product, ProductCategory } from '@e-pharmacy/types';
 
@@ -49,7 +49,6 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
 };
 
 const PRODUCTS_LIMIT = 150;
-const CATEGORY_PRODUCTS_LIMIT = 200;
 
 //===================================================================
 
@@ -63,17 +62,17 @@ function getProductOfferPrice(product: Product, pharmacyId: string): number {
 
 //===================================================================
 
-function getUniqueCategoryOptions(products: Product[]): CategoryOption[] {
-  const categories = new Set<ProductCategory>();
-
-  for (const product of products) {
-    categories.add(product.category);
-  }
-
-  return [...categories]
+function getCategoryOptions(
+  categories: Array<{ value: string; label: string }>
+): CategoryOption[] {
+  return categories
+    .filter(
+      (category): category is { value: ProductCategory; label: string } =>
+        category.value !== 'all'
+    )
     .map((category) => ({
-      value: category,
-      label: CATEGORY_LABELS[category] ?? category,
+      value: category.value,
+      label: category.label || CATEGORY_LABELS[category.value],
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
 }
@@ -94,7 +93,7 @@ function ContinueShoppingModal({
   const [selectedCategory, setSelectedCategory] = useState<
     ProductCategory | 'all'
   >('all');
-  const [categoryProducts, setCategoryProducts] = useState<Product[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -103,11 +102,6 @@ function ContinueShoppingModal({
   );
   const [error, setError] = useState('');
   const [orderLimitMessage, setOrderLimitMessage] = useState('');
-
-  const categoryOptions = useMemo(
-    () => getUniqueCategoryOptions(categoryProducts),
-    [categoryProducts]
-  );
 
   const cartProductIds = useMemo(() => {
     return new Set(
@@ -118,67 +112,65 @@ function ContinueShoppingModal({
   }, [cartItems, pharmacyId]);
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
-    async function fetchPharmacyCategories() {
+    async function fetchFilterOptions() {
       try {
-        const response = await getProducts({
-          pharmacyId,
-          page: 1,
-          perPage: CATEGORY_PRODUCTS_LIMIT,
-          inStock: true,
+        const response = await getProductFilters({
+          signal: controller.signal,
         });
 
-        if (!isMounted) return;
-
-        setCategoryProducts(response.items);
-        setAvailableProductsCount(response.total);
+        setCategoryOptions(getCategoryOptions(response.categories));
       } catch {
-        if (!isMounted) return;
+        if (controller.signal.aborted) return;
 
-        setError('Could not load pharmacy categories.');
+        setError('Could not load product categories.');
       }
     }
 
-    void fetchPharmacyCategories();
+    void fetchFilterOptions();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
-  }, [pharmacyId]);
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
     const timeoutId = window.setTimeout(async () => {
       try {
         setIsLoading(true);
         setError('');
 
-        const response = await getProducts({
-          pharmacyId,
-          page: 1,
-          perPage: PRODUCTS_LIMIT,
-          inStock: true,
-          category: selectedCategory === 'all' ? undefined : selectedCategory,
-          keyword: searchValue.trim() || undefined,
-        });
-
-        if (!isMounted) return;
+        const response = await getProducts(
+          {
+            pharmacyId,
+            page: 1,
+            perPage: PRODUCTS_LIMIT,
+            inStock: true,
+            category: selectedCategory === 'all' ? undefined : selectedCategory,
+            keyword: searchValue.trim() || undefined,
+          },
+          {
+            signal: controller.signal,
+          }
+        );
 
         setProducts(response.items);
+        setAvailableProductsCount(response.total);
       } catch {
-        if (!isMounted) return;
+        if (controller.signal.aborted) return;
 
         setError('Could not load products from this pharmacy.');
       } finally {
-        if (!isMounted) return;
-
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     }, 250);
 
     return () => {
-      isMounted = false;
+      controller.abort();
       window.clearTimeout(timeoutId);
     };
   }, [searchValue, selectedCategory, pharmacyId]);

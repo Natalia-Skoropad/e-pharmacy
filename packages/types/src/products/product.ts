@@ -119,6 +119,7 @@ export type ProductFilterOptionsResponse = {
 
 export type ProductsResponse = ApiPaginationResponse<Product>;
 export type ProductDetailsResponse = { product: Product };
+export type FavoriteProductIdsResponse = { ids: EntityId[] };
 
 //=============================================================================
 

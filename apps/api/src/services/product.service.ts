@@ -283,6 +283,19 @@ export async function getProductsService(
   };
 }
 
+
+//===============================================================
+
+export async function getFavoriteProductIdsService(userId: string) {
+  const client = await Client.findOne({ userId })
+    .select('favoriteProductIds')
+    .lean<{ favoriteProductIds?: Types.ObjectId[] } | null>();
+
+  return {
+    ids: (client?.favoriteProductIds ?? []).map(String),
+  };
+}
+
 //===============================================================
 
 export async function getFavoriteProductsService(

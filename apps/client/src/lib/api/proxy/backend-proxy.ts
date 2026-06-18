@@ -23,22 +23,38 @@ type BackendProxyOptions = {
   method?: HttpMethod;
 };
 
-//===================================================================
-
-async function refreshAuthCookies(request: NextRequest): Promise<{
+type RefreshResult = {
   response: Response;
   tokens: ReturnType<typeof extractTokensFromResponseBody>['tokens'];
-}> {
-  const response = await fetch(createApiUrl(API_ROUTES.auth.refresh), {
+};
+
+//===================================================================
+
+const PRIVATE_REQUEST_TIMEOUT_MS = 12_000;
+const AUTH_REFRESH_TIMEOUT_MS = 8_000;
+
+let refreshPromise: Promise<RefreshResult> | null = null;
+
+//===================================================================
+
+async function refreshAuthCookies(request: NextRequest): Promise<RefreshResult> {
+  refreshPromise ??= fetch(createApiUrl(API_ROUTES.auth.refresh), {
     method: 'POST',
     headers: createProxyHeaders(request),
     cache: 'no-store',
-  });
+    signal: AbortSignal.timeout(AUTH_REFRESH_TIMEOUT_MS),
+  })
+    .then(async (response) => {
+      const rawBody = await response.clone().text();
+      const { tokens } = extractTokensFromResponseBody(rawBody);
 
-  const rawBody = await response.clone().text();
-  const { tokens } = extractTokensFromResponseBody(rawBody);
+      return { response, tokens };
+    })
+    .finally(() => {
+      refreshPromise = null;
+    });
 
-  return { response, tokens };
+  return refreshPromise;
 }
 
 //===================================================================
@@ -61,6 +77,7 @@ async function fetchBackend(
     headers,
     body,
     cache: 'no-store',
+    signal: AbortSignal.timeout(PRIVATE_REQUEST_TIMEOUT_MS),
   });
 }
 

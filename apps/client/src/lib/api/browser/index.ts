@@ -8,6 +8,7 @@ export * from './pharmacies.api';
 export {
   getProductsFromClientApi as getProducts,
   getFavoriteProductsFromClientApi as getFavoriteProducts,
+  getFavoriteProductIdsFromClientApi as getFavoriteProductIds,
   getProductFiltersFromClientApi as getProductFilters,
   getProductDetailsFromClientApi as getProductDetails,
   getProductReviewsFromClientApi as getProductReviews,
@@ -16,6 +17,7 @@ export {
 export {
   getPharmaciesFromClientApi as getPharmacies,
   getFavoritePharmaciesFromClientApi as getFavoritePharmacies,
+  getFavoritePharmacyIdsFromClientApi as getFavoritePharmacyIds,
   getPharmacyOptionsFromClientApi as getPharmacyOptions,
   getPharmacyFiltersFromClientApi as getPharmacyFilters,
   getPharmacyDetailsFromClientApi as getPharmacyDetails,

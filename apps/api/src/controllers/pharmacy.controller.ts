@@ -10,6 +10,7 @@ import {
 
 import {
   createPharmacyReviewService,
+  getFavoritePharmacyIdsService,
   getFavoritePharmaciesService,
   getPharmacyCheckoutDetailsService,
   getPharmacyDetailsService,
@@ -65,6 +66,22 @@ export async function getPharmacyOptions(
   res: Response
 ): Promise<void> {
   const data = await getPharmacyOptionsService();
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+
+//===============================================================
+
+export async function getFavoritePharmacyIds(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const data = await getFavoritePharmacyIdsService(req.user?.id ?? '');
 
   sendSuccessResponse({
     res,

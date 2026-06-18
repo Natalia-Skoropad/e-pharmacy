@@ -4,8 +4,8 @@ import { useCallback } from 'react';
 import { useFavoriteRefresh } from './useFavoriteRefresh';
 
 import {
-  getProductDetails,
-  getPharmacyDetails,
+  getFavoriteProductIds,
+  getFavoritePharmacyIds,
 } from '@/lib/api/browser';
 
 //===================================================================
@@ -18,15 +18,52 @@ type UseFavoriteStatusRefreshParams = {
 
 //===================================================================
 
+let favoriteProductIdsPromise: Promise<Set<string>> | null = null;
+let favoritePharmacyIdsPromise: Promise<Set<string>> | null = null;
+
+//===================================================================
+
+async function getCachedFavoriteProductIds(): Promise<Set<string>> {
+  favoriteProductIdsPromise ??= getFavoriteProductIds().then(
+    (response) => new Set(response.ids)
+  );
+
+  return favoriteProductIdsPromise;
+}
+
+//===================================================================
+
+async function getCachedFavoritePharmacyIds(): Promise<Set<string>> {
+  favoritePharmacyIdsPromise ??= getFavoritePharmacyIds().then(
+    (response) => new Set(response.ids)
+  );
+
+  return favoritePharmacyIdsPromise;
+}
+
+//===================================================================
+
+export function invalidateFavoriteProductIdsCache(): void {
+  favoriteProductIdsPromise = null;
+}
+
+//===================================================================
+
+export function invalidateFavoritePharmacyIdsCache(): void {
+  favoritePharmacyIdsPromise = null;
+}
+
+//===================================================================
+
 export function useProductFavoriteRefresh({
   id,
   isEnabled,
   onRefresh,
 }: UseFavoriteStatusRefreshParams): void {
   const refreshFavorite = useCallback(async () => {
-    const response = await getProductDetails(id);
+    const favoriteIds = await getCachedFavoriteProductIds();
 
-    return Boolean(response.product.isFavorite);
+    return favoriteIds.has(id);
   }, [id]);
 
   useFavoriteRefresh({
@@ -44,9 +81,9 @@ export function usePharmacyFavoriteRefresh({
   onRefresh,
 }: UseFavoriteStatusRefreshParams): void {
   const refreshFavorite = useCallback(async () => {
-    const response = await getPharmacyDetails(id);
+    const favoriteIds = await getCachedFavoritePharmacyIds();
 
-    return Boolean(response.pharmacy.isFavorite);
+    return favoriteIds.has(id);
   }, [id]);
 
   useFavoriteRefresh({

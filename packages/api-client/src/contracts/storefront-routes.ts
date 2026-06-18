@@ -1,0 +1,44 @@
+import type { EntityId } from '@e-pharmacy/types';
+
+//===================================================================
+
+export const storefrontRoutes = {
+  health: '/health',
+
+  pharmacies: {
+    list: '/pharmacies',
+    options: '/pharmacies/options',
+    favorites: '/pharmacies/favorites',
+    favoriteIds: '/pharmacies/favorites/ids',
+    filters: '/pharmacies/filters',
+    details: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}`,
+    checkoutDetails: (pharmacyId: EntityId) =>
+      `/pharmacies/${pharmacyId}/checkout-details`,
+    reviews: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}/reviews`,
+    favorite: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}/favorite`,
+  },
+
+  products: {
+    list: '/products',
+    favorites: '/products/favorites',
+    favoriteIds: '/products/favorites/ids',
+    filters: '/products/filters',
+    details: (productId: EntityId | string) => `/products/${productId}`,
+    reviews: (productId: EntityId) => `/products/${productId}/reviews`,
+    favorite: (productId: EntityId) => `/products/${productId}/favorite`,
+  },
+
+  cart: {
+    current: '/cart',
+    addItem: '/cart/items',
+    updateItem: (cartItemId: EntityId) => `/cart/items/${cartItemId}`,
+    removeItem: (cartItemId: EntityId) => `/cart/items/${cartItemId}`,
+    clear: '/cart/clear',
+  },
+
+  orders: {
+    checkout: '/orders/checkout',
+    list: '/orders',
+    details: (orderId: EntityId) => `/orders/${orderId}`,
+  },
+} as const;

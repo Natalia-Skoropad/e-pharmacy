@@ -162,6 +162,19 @@ export async function getPharmacyOptionsService() {
   };
 }
 
+
+//===============================================================
+
+export async function getFavoritePharmacyIdsService(userId: string) {
+  const client = await Client.findOne({ userId })
+    .select('favoritePharmacyIds')
+    .lean<{ favoritePharmacyIds?: Types.ObjectId[] } | null>();
+
+  return {
+    ids: (client?.favoritePharmacyIds ?? []).map(String),
+  };
+}
+
 //===============================================================
 
 export async function getFavoritePharmaciesService(
@@ -296,8 +309,21 @@ export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
       $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
     },
   })
-    .select('name bankDetails')
-    .lean();
+    .select('name address city phone email workingHours bankDetails')
+    .lean<
+      | (Pick<
+          PharmacyDocument,
+          | '_id'
+          | 'name'
+          | 'address'
+          | 'city'
+          | 'phone'
+          | 'email'
+          | 'workingHours'
+          | 'bankDetails'
+        >)
+      | null
+    >();
 
   if (!pharmacy) {
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
@@ -307,6 +333,11 @@ export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
     pharmacy: {
       id: String(pharmacy._id),
       name: pharmacy.name,
+      ...(pharmacy.address ? { address: pharmacy.address } : {}),
+      ...(pharmacy.city ? { city: pharmacy.city } : {}),
+      ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
+      ...(pharmacy.email ? { email: pharmacy.email } : {}),
+      ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
       bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
       ...(hasCompleteBankDetails(pharmacy.bankDetails)
         ? { bankDetails: pharmacy.bankDetails }

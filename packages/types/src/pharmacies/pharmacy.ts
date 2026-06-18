@@ -34,6 +34,11 @@ export type PublicPharmacy = {
 export type PharmacyCheckoutDetails = {
   id: EntityId;
   name: string;
+  address?: string;
+  city?: string;
+  phone?: string;
+  email?: string;
+  workingHours?: string;
   bankTransferAvailable: boolean;
   bankDetails?: PharmacyBankDetails;
 };
@@ -110,6 +115,7 @@ export type PharmaciesResponse = ApiPaginationResponse<Pharmacy>;
 export type PharmacyFilterOption = { value: string; label: string };
 export type PharmacyOption = { id: EntityId; name: string };
 export type PharmacyOptionsResponse = { items: PharmacyOption[] };
+export type FavoritePharmacyIdsResponse = { ids: EntityId[] };
 
 //=============================================================================
 

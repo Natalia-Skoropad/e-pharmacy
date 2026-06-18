@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Image from 'next/image';
 
 import {
@@ -161,16 +162,78 @@ async function getFeaturedProducts(): Promise<FeaturedResult<Product>> {
   }
 }
 
+
+//===================================================================
+
+function FeaturedSectionFallback({ label }: { label: string }) {
+  return (
+    <div className={css.sectionEmpty} role="status">
+      Loading {label}...
+    </div>
+  );
+}
+
+//===================================================================
+
+async function FeaturedPharmaciesSection() {
+  const pharmaciesResult = await getFeaturedPharmacies();
+  const featuredPharmacies = pharmaciesResult.items;
+
+  return (
+    <>
+      {featuredPharmacies.length > 0 ? (
+        <div className={css.previewGrid}>
+          {featuredPharmacies.map((pharmacy) => (
+            <PharmacyCard
+              key={pharmacy.id}
+              pharmacy={pharmacy}
+              skipFavoriteRefresh
+            />
+          ))}
+        </div>
+      ) : pharmaciesResult.hasError ? (
+        <div className={css.sectionError} role="status">
+          Pharmacies are temporarily unavailable. Please try again shortly.
+        </div>
+      ) : (
+        <p className={css.sectionEmpty}>No pharmacies are available yet.</p>
+      )}
+    </>
+  );
+}
+
+//===================================================================
+
+async function FeaturedProductsSection() {
+  const productsResult = await getFeaturedProducts();
+  const featuredProducts = productsResult.items;
+
+  return (
+    <>
+      {featuredProducts.length > 0 ? (
+        <div className={css.previewGrid}>
+          {featuredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              skipFavoriteRefresh
+            />
+          ))}
+        </div>
+      ) : productsResult.hasError ? (
+        <div className={css.sectionError} role="status">
+          Products are temporarily unavailable. Please try again shortly.
+        </div>
+      ) : (
+        <p className={css.sectionEmpty}>No products are available yet.</p>
+      )}
+    </>
+  );
+}
+
 //===================================================================
 
 async function HomePage() {
-  const [pharmaciesResult, productsResult] = await Promise.all([
-    getFeaturedPharmacies(),
-    getFeaturedProducts(),
-  ]);
-  const featuredPharmacies = pharmaciesResult.items;
-  const featuredProducts = productsResult.items;
-
   return (
     <main className={css.page}>
       <section className={css.hero} aria-labelledby="home-title">
@@ -248,23 +311,9 @@ async function HomePage() {
             </p>
           </div>
 
-          {featuredPharmacies.length > 0 ? (
-            <div className={css.previewGrid}>
-              {featuredPharmacies.map((pharmacy) => (
-                <PharmacyCard
-                  key={pharmacy.id}
-                  pharmacy={pharmacy}
-                  skipFavoriteRefresh
-                />
-              ))}
-            </div>
-          ) : pharmaciesResult.hasError ? (
-            <div className={css.sectionError} role="status">
-              Pharmacies are temporarily unavailable. Please try again shortly.
-            </div>
-          ) : (
-            <p className={css.sectionEmpty}>No pharmacies are available yet.</p>
-          )}
+          <Suspense fallback={<FeaturedSectionFallback label="pharmacies" />}>
+            <FeaturedPharmaciesSection />
+          </Suspense>
 
           <div className={css.sectionAction}>
             <ButtonLink href={ROUTES.PHARMACIES} variant="secondary">
@@ -387,23 +436,9 @@ async function HomePage() {
             </p>
           </div>
 
-          {featuredProducts.length > 0 ? (
-            <div className={css.previewGrid}>
-              {featuredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  skipFavoriteRefresh
-                />
-              ))}
-            </div>
-          ) : productsResult.hasError ? (
-            <div className={css.sectionError} role="status">
-              Products are temporarily unavailable. Please try again shortly.
-            </div>
-          ) : (
-            <p className={css.sectionEmpty}>No products are available yet.</p>
-          )}
+          <Suspense fallback={<FeaturedSectionFallback label="products" />}>
+            <FeaturedProductsSection />
+          </Suspense>
 
           <div className={css.sectionAction}>
             <ButtonLink href={ROUTES.PRODUCTS_CATALOG} variant="secondary">

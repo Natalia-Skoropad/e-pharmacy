@@ -16,7 +16,13 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
 
 import { FavoriteToggleButton } from '@/components/common';
-import { useFavoriteActions, usePharmacyFavoriteRefresh } from '@/hooks';
+
+import {
+  invalidateFavoritePharmacyIdsCache,
+  useFavoriteActions,
+  usePharmacyFavoriteRefresh,
+} from '@/hooks';
+
 import { useAuth } from '@e-pharmacy/auth/core';
 import type { Pharmacy } from '@e-pharmacy/types';
 
@@ -56,7 +62,10 @@ function PharmacyCard({
     errorMessage: 'Could not update pharmacy favorites.',
     addFavorite: addFavoritePharmacy,
     removeFavorite: removeFavoritePharmacy,
-    onFavoriteChange,
+    onFavoriteChange: (pharmacyId, nextIsFavorite) => {
+      invalidateFavoritePharmacyIdsCache();
+      onFavoriteChange?.(pharmacyId, nextIsFavorite);
+    },
   });
 
   const productsHref = buildProductCatalogPath({ pharmacyId: pharmacy.id }, [

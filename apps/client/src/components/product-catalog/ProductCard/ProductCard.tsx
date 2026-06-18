@@ -11,7 +11,12 @@ import {
 
 import { FavoriteToggleButton } from '@/components/common';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { useFavoriteActions, useProductFavoriteRefresh } from '@/hooks';
+
+import {
+  invalidateFavoriteProductIdsCache,
+  useFavoriteActions,
+  useProductFavoriteRefresh,
+} from '@/hooks';
 
 import {
   formatPharmaciesCount,
@@ -22,10 +27,7 @@ import { formatProductCategoryLabel } from '@/lib/catalog/product-category-label
 import { buildProductPath } from '@/lib/routes';
 import { useAuth } from '@e-pharmacy/auth/core';
 
-import {
-  addFavoriteProduct,
-  removeFavoriteProduct,
-} from '@/lib/api/browser';
+import { addFavoriteProduct, removeFavoriteProduct } from '@/lib/api/browser';
 
 import type { Product } from '@e-pharmacy/types';
 
@@ -65,7 +67,10 @@ function ProductCard({
     errorMessage: 'Could not update favorites.',
     addFavorite: addFavoriteProduct,
     removeFavorite: removeFavoriteProduct,
-    onFavoriteChange,
+    onFavoriteChange: (productId, nextIsFavorite) => {
+      invalidateFavoriteProductIdsCache();
+      onFavoriteChange?.(productId, nextIsFavorite);
+    },
   });
 
   const productHref = buildProductPath(product.name, product.id);
