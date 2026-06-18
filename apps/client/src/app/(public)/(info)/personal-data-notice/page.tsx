@@ -1,6 +1,6 @@
 import { InfoPage } from '@/components/info';
 
-import { PERSONAL_DATA_NOTICE_INFO } from '@e-pharmacy/config/info-pages';
+import { PERSONAL_DATA_NOTICE_INFO } from '@/components/info/config';
 import { createPageMetadata } from '@/lib/seo';
 
 //===================================================================

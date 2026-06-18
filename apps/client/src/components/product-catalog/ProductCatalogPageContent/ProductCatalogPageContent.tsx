@@ -1,5 +1,6 @@
 import { Container, Pagination } from '@e-pharmacy/ui/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+
 import ProductCatalogFiltersForm from '@/components/product-catalog/ProductCatalogFiltersForm';
 import ProductsList from '@/components/product-catalog/ProductsList';
 
@@ -13,7 +14,7 @@ import {
   type ProductCatalogSeoContext,
 } from '@/lib/catalog/product-catalog';
 
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { ROUTES } from '@/lib/routes';
 import type {
   Product,
   ProductFilterOptionsResponse,

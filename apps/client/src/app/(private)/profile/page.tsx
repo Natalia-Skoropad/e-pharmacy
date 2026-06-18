@@ -1,7 +1,7 @@
 import { ProfilePageContent } from '@/components/profile';
 
-import { PROFILE_DESCRIPTION, PROFILE_TITLE } from '@e-pharmacy/config/seo';
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { PROFILE_DESCRIPTION, PROFILE_TITLE } from '@/lib/seo';
+import { ROUTES } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
 
 import { ProtectedRoute } from '@/routes';

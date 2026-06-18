@@ -4,9 +4,9 @@ import { Facebook, Instagram, Youtube } from 'lucide-react';
 import { Container, Logo } from '@e-pharmacy/ui/common';
 
 import {
-  CLIENT_FOOTER_LINKS,
   CLIENT_NAV_LINKS,
-} from '@e-pharmacy/config/navigation';
+  INFO_NAV_LINKS,
+} from '@/components/layout/config/navigation';
 
 import css from './Footer.module.css';
 
@@ -72,7 +72,7 @@ function Footer() {
 
           <nav className={css.infoNav} aria-label="Footer legal navigation">
             <ul className={css.infoList}>
-              {CLIENT_FOOTER_LINKS.map(({ label, href }) => (
+              {INFO_NAV_LINKS.map(({ label, href }) => (
                 <li key={href}>
                   <Link className={css.infoLink} href={href}>
                     {label}

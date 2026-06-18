@@ -6,7 +6,7 @@ import { Button, TextActionButton } from '@e-pharmacy/ui/common';
 import { PasswordInput } from '@e-pharmacy/ui/form-fields';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { ROUTES } from '@/lib/routes';
 
 import {
   RESET_PASSWORD_FORM_FIELDS,

@@ -5,8 +5,8 @@ import clsx from 'clsx';
 import { Container } from '@e-pharmacy/ui/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 
-import { INFO_NAV_LINKS } from '@e-pharmacy/config/navigation';
-import { createBreadcrumbs } from '@e-pharmacy/config/routes';
+import { INFO_NAV_LINKS } from '@/components/layout/config/navigation';
+import { createBreadcrumbs } from '@/lib/routes';
 
 import css from './InfoPage.module.css';
 

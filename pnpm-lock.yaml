@@ -191,10 +191,6 @@ importers:
         version: 5.9.3
 
   packages/config:
-    dependencies:
-      '@e-pharmacy/types':
-        specifier: workspace:*
-        version: link:../types
     devDependencies:
       typescript:
         specifier: ^5

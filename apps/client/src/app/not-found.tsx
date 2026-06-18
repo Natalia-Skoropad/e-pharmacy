@@ -1,5 +1,5 @@
 import { NotFoundPage } from '@e-pharmacy/ui/status-pages';
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { ROUTES } from '@/lib/routes';
 
 //===================================================================
 

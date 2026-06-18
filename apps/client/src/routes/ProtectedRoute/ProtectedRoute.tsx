@@ -1,7 +1,7 @@
 'use client';
 
 import { ProtectedRoute as SharedProtectedRoute } from '@e-pharmacy/auth';
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { ROUTES } from '@/lib/routes';
 import { LoadingSpinner } from '@e-pharmacy/ui/common';
 
 import type { ReactNode } from 'react';

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import { PharmacyDetailsPageContent } from '@/components/pharmacies';
-import { buildPharmacyPath, getIdFromSlugId } from '@e-pharmacy/config/routes';
+import { buildPharmacyPath, getIdFromSlugId } from '@/lib/routes';
 import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
 import { createPageMetadata } from '@/lib/seo';
 

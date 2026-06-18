@@ -22,7 +22,7 @@ import {
 import {
   CATALOG_SEARCH_MAX_LENGTH,
   CATALOG_SEARCH_UPDATE_DELAY,
-} from '@e-pharmacy/config/catalog';
+} from '@/lib/catalog/catalog-config';
 
 import {
   buildProductCatalogPath,

@@ -36,8 +36,8 @@ import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { useFavoriteActions, useReviewForm } from '@/hooks';
-import { ROUTES } from '@e-pharmacy/config/routes';
-import { CATALOG_SEARCH_MAX_LENGTH } from '@e-pharmacy/config/catalog';
+import { ROUTES } from '@/lib/routes';
+import { CATALOG_SEARCH_MAX_LENGTH } from '@/lib/catalog/catalog-config';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
@@ -57,7 +57,7 @@ import {
   type ProductOfferSort,
 } from '@/lib/catalog/product-offers';
 
-import { buildPharmacyPath } from '@e-pharmacy/config/routes';
+import { buildPharmacyPath } from '@/lib/routes';
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
 
 import {

@@ -23,7 +23,7 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { ROUTES } from '@/lib/routes';
 
 import {
   formatCapitalizedLabel,
@@ -31,7 +31,7 @@ import {
   formatPrice,
 } from '@e-pharmacy/utils/formatters';
 
-import { buildProductPath, buildPharmacyPath } from '@e-pharmacy/config/routes';
+import { buildProductPath, buildPharmacyPath } from '@/lib/routes';
 import { getOrderIdFromPathParam } from '@/lib/orders';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { getOrderDetails } from '@e-pharmacy/api-client/client';

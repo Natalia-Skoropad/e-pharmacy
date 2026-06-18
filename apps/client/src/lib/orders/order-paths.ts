@@ -1,4 +1,4 @@
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { ROUTES } from '@/lib/routes';
 
 import type { Order } from '@e-pharmacy/types';
 

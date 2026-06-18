@@ -14,7 +14,7 @@ import {
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { ROUTES } from '@/lib/routes';
 import { getSafeRedirectPath } from '@e-pharmacy/auth/routing';
 
 import {

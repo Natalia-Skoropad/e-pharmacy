@@ -20,6 +20,6 @@ export const ROUTES = {
   RETURN_POLICY: `/${ROUTE_SEGMENTS.returnPolicy}`,
   USER_AGREEMENT: `/${ROUTE_SEGMENTS.userAgreement}`,
   PERSONAL_DATA_NOTICE: `/${ROUTE_SEGMENTS.personalDataNotice}`,
-  PHARMACY: `/${ROUTE_SEGMENTS.pharmacy}`,
-  ADMIN: `/${ROUTE_SEGMENTS.admin}`,
 } as const;
+
+export const CLIENT_RESERVED_APP_PREFIXES = ['admin', 'pharmacy'] as const;

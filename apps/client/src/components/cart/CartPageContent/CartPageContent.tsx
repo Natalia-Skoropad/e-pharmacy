@@ -28,10 +28,10 @@ import {
   type CartPharmacyGroup,
 } from '@/lib/cart/cart-groups';
 
-import { CART_DESCRIPTION, CART_TITLE } from '@e-pharmacy/config/seo';
+import { CART_DESCRIPTION, CART_TITLE } from '@/lib/seo';
 import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
-import { ROUTES } from '@e-pharmacy/config/routes';
-import { buildPharmacyPath, createBreadcrumbs } from '@e-pharmacy/config/routes';
+import { ROUTES } from '@/lib/routes';
+import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { getCart } from '@e-pharmacy/api-client/client';
 

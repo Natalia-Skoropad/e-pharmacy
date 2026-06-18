@@ -1,4 +1,4 @@
-import { ADMIN_ROUTES } from '../routes/admin-routes';
+import { ADMIN_ROUTES } from './routes';
 
 //===================================================================
 

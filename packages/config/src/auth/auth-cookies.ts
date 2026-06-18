@@ -12,13 +12,19 @@ export const AUTH_COOKIES = {
   AUTH_READY: 'e_pharmacy_auth_ready',
 } as const;
 
+//===================================================================
+
 // Client-readable auth hint only. It helps the provider decide whether
 // it is worth trying to refresh the current user during bootstrap.
 export const AUTH_READY_COOKIE_NAME = AUTH_COOKIES.AUTH_READY;
+
+//===================================================================
 
 // HttpOnly cookies issued by the backend through the Next API proxy.
 export const ACCESS_TOKEN_COOKIE_NAME = AUTH_COOKIES.ACCESS_TOKEN;
 export const REFRESH_TOKEN_COOKIE_NAME = AUTH_COOKIES.REFRESH_TOKEN;
 export const LEGACY_AUTH_COOKIE_NAME = AUTH_COOKIES.LEGACY_AUTH_TOKEN;
+
+//===================================================================
 
 export const AUTH_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;

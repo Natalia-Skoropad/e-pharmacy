@@ -6,7 +6,7 @@ import {
   AUTH_READY_COOKIE_NAME,
   LEGACY_AUTH_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
-} from '@e-pharmacy/config/shared';
+} from '@e-pharmacy/config/auth';
 
 //===================================================================
 

@@ -25,8 +25,8 @@ import {
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
-import { PROFILE_TITLE } from '@e-pharmacy/config/seo';
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { PROFILE_TITLE } from '@/lib/seo';
+import { ROUTES } from '@/lib/routes';
 
 import {
   formatCapitalizedLabel,
@@ -39,7 +39,7 @@ import { buildOrderPath } from '@/lib/orders';
 import {
   buildPharmacyPath,
   createBreadcrumbs,
-} from '@e-pharmacy/config/routes';
+} from '@/lib/routes';
 
 import {
   CHANGE_PASSWORD_FORM_FIELDS,

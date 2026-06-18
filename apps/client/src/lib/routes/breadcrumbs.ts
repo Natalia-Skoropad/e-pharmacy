@@ -1,6 +1,6 @@
 import type { BreadcrumbItem } from '@e-pharmacy/types/navigation';
 
-import { ROUTES } from './client-routes';
+import { ROUTES } from './routes';
 
 //===================================================================
 

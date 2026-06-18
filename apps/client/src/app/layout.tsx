@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import AppShell from '@/components/layout/AppShell';
-import { AuthProvider } from '@/providers';
+import AuthProvider from '@/providers/AuthProvider/AuthProvider';
 import { ToastProvider } from '@e-pharmacy/ui/feedback';
 
 import {
@@ -9,7 +9,7 @@ import {
   DEFAULT_OG_IMAGE_ALT,
   HOME_DESCRIPTION,
   SITE_NAME,
-} from '@e-pharmacy/config/seo';
+} from '@/lib/seo';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
 

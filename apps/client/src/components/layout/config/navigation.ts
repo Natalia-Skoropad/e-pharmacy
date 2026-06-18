@@ -1,4 +1,4 @@
-import { ROUTES } from '../routes/client-routes';
+import { ROUTES } from '@/lib/routes';
 
 //===================================================================
 
@@ -38,6 +38,3 @@ export const INFO_NAV_LINKS = [
   },
 ] as const;
 
-//===================================================================
-
-export const CLIENT_FOOTER_LINKS = INFO_NAV_LINKS;

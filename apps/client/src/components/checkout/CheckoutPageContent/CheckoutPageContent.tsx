@@ -36,8 +36,8 @@ import {
   getPharmacyWorkingHours,
 } from '@/lib/checkout';
 
-import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@e-pharmacy/config/seo';
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo';
+import { ROUTES } from '@/lib/routes';
 
 import {
   ORDER_DELIVERY_INITIAL_VALUES,

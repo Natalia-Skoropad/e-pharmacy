@@ -32,9 +32,6 @@
       "@e-pharmacy/utils/*": [
         "../../packages/utils/src/*/index.ts"
       ],
-      "@e-pharmacy/config": [
-        "../../packages/config/src/index.ts"
-      ],
       "@e-pharmacy/config/*": [
         "../../packages/config/src/*/index.ts",
         "../../packages/config/src/*.ts"

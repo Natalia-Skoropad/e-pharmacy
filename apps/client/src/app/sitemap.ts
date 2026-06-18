@@ -2,16 +2,16 @@ import type { MetadataRoute } from 'next';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
 import { createApiUrl } from '@e-pharmacy/api-client/core';
-import { SITEMAP_STATIC_ROUTES } from '@e-pharmacy/config/seo';
+import { SITEMAP_STATIC_ROUTES } from '@/lib/seo';
 
 import {
   createSitemapRoutes,
   createStaticSitemapEntries,
   dedupeSitemapEntries,
   parseSitemapDate,
-} from '@e-pharmacy/config/seo';
+} from '@/lib/seo';
 
-import { buildProductPath, buildPharmacyPath } from '@e-pharmacy/config/routes';
+import { buildProductPath, buildPharmacyPath } from '@/lib/routes';
 
 //===================================================================
 

@@ -4,9 +4,9 @@ import {
   DEFAULT_OG_IMAGE,
   DEFAULT_OG_IMAGE_ALT,
   SITE_NAME,
-} from '@e-pharmacy/config/seo';
+} from './metadata';
 
-import { createClientAbsoluteUrl } from '@/lib/seo/url';
+import { createClientAbsoluteUrl } from './url';
 
 //===================================================================
 

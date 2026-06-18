@@ -1,4 +1,4 @@
-import { createAbsoluteUrl } from '@e-pharmacy/config/seo';
+import { createAbsoluteUrl } from '@/lib/seo';
 import { CLIENT_ENV } from '@/lib/constants/env';
 
 //===================================================================

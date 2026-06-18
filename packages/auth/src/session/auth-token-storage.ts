@@ -1,7 +1,7 @@
 import {
   AUTH_COOKIE_MAX_AGE_SECONDS,
   AUTH_READY_COOKIE_NAME,
-} from '@e-pharmacy/config/shared';
+} from '@e-pharmacy/config/auth';
 
 //===================================================================
 

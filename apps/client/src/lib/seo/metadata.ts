@@ -1,39 +1,3 @@
-import type { AppKey } from '../app';
-
-//===================================================================
-
-export type MetadataApp = AppKey;
-
-export type AppSeoStrategy = {
-  app: MetadataApp;
-  shouldIndexPublicPages: boolean;
-  privateRoutesNoIndex: boolean;
-};
-
-//===================================================================
-
-export const SEO_STRATEGIES = {
-  client: {
-    app: 'client',
-    shouldIndexPublicPages: true,
-    privateRoutesNoIndex: true,
-  },
-
-  pharmacy: {
-    app: 'pharmacy',
-    shouldIndexPublicPages: false,
-    privateRoutesNoIndex: true,
-  },
-
-  admin: {
-    app: 'admin',
-    shouldIndexPublicPages: false,
-    privateRoutesNoIndex: true,
-  },
-} as const satisfies Record<MetadataApp, AppSeoStrategy>;
-
-//===================================================================
-
 export const HOME_TITLE = 'Online Pharmacy Pharmacy';
 export const HOME_DESCRIPTION =
   'Order products online, explore trusted pharmacies, and manage your health essentials with E-PHARMACY.';

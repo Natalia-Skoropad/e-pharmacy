@@ -1,4 +1,4 @@
-import { ROUTES, buildSlugId } from '@e-pharmacy/config/routes';
+import { ROUTES, buildSlugId } from '@/lib/routes';
 
 //===================================================================
 

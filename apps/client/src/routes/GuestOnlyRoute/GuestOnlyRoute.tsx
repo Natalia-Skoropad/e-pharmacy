@@ -1,7 +1,7 @@
 'use client';
 
 import { GuestOnlyRoute as SharedGuestOnlyRoute } from '@e-pharmacy/auth';
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { ROUTES } from '@/lib/routes';
 
 import type { ReactNode } from 'react';
 

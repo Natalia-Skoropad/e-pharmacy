@@ -31,7 +31,7 @@ import {
 } from '@/hooks';
 
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { ROUTES } from '@/lib/routes';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
 import { useAuth } from '@e-pharmacy/auth/core';

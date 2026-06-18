@@ -7,7 +7,7 @@ import {
 
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
 
-import { buildPharmacyPath } from '@e-pharmacy/config/routes';
+import { buildPharmacyPath } from '@/lib/routes';
 
 import {
   ButtonLink,

@@ -1,4 +1,4 @@
-import { ROUTES } from '../routes/client-routes';
+import { ROUTES, CLIENT_RESERVED_APP_PREFIXES } from '@/lib/routes';
 
 //===================================================================
 
@@ -40,8 +40,7 @@ export const ROBOTS_PRIVATE_ROUTE_ROOTS = [
   ROUTES.PASSWORD_RECOVERY,
   ROUTES.RESET_PASSWORD,
   ROUTES.PROFILE,
-  ROUTES.ADMIN,
-  ROUTES.PHARMACY,
+  ...CLIENT_RESERVED_APP_PREFIXES.map((segment) => `/${segment}`),
 ] as const;
 
 export const ROBOTS_DISALLOW_ROUTES = ROBOTS_PRIVATE_ROUTE_ROOTS.flatMap(

@@ -1,8 +1,8 @@
 import type { MetadataRoute } from 'next';
 
-import { createRobotsConfig } from '@e-pharmacy/config/seo';
+import { createRobotsConfig } from '@/lib/seo';
 
-import { ROBOTS_DISALLOW_ROUTES } from '@e-pharmacy/config/seo';
+import { ROBOTS_DISALLOW_ROUTES } from '@/lib/seo';
 import { CLIENT_ENV } from '@/lib/constants/env';
 
 //===================================================================

@@ -3,9 +3,9 @@ import { OrderDetailsPageContent } from '@/components/profile';
 import {
   ORDER_DETAILS_DESCRIPTION,
   ORDER_DETAILS_TITLE,
-} from '@e-pharmacy/config/seo';
+} from '@/lib/seo';
 
-import { ROUTES } from '@e-pharmacy/config/routes';
+import { ROUTES } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
 
 import { ProtectedRoute } from '@/routes';
