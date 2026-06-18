@@ -13,7 +13,7 @@ import {
   logoutUser,
   refreshSession,
   registerUser,
-} from '@e-pharmacy/api-client/client';
+} from '@/lib/api/browser';
 
 import type { ReactNode } from 'react';
 

@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server';
 
-import { AUTH_PROXY_ROUTES, proxyAuthRequest } from '@e-pharmacy/api-client/proxy';
+import { AUTH_PROXY_ROUTES, proxyAuthRequest } from '@/lib/api/proxy';
 
 //===================================================================
 

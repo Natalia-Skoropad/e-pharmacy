@@ -10,9 +10,11 @@ import {
 
 import {
   createPharmacyReviewService,
+  getFavoritePharmaciesService,
   getPharmacyCheckoutDetailsService,
   getPharmacyDetailsService,
   getPharmacyFiltersService,
+  getPharmacyOptionsService,
   getPendingPharmacyReviewsService,
   getPharmacyReviewsService,
   getPharmaciesService,
@@ -48,6 +50,37 @@ export async function getPharmacyFilters(
   res: Response
 ): Promise<void> {
   const data = await getPharmacyFiltersService();
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function getPharmacyOptions(
+  _req: Request,
+  res: Response
+): Promise<void> {
+  const data = await getPharmacyOptionsService();
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function getFavoritePharmacies(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const query = pharmaciesQuerySchema.parse(req.query);
+  const data = await getFavoritePharmaciesService(query, req.user?.id ?? '');
 
   sendSuccessResponse({
     res,

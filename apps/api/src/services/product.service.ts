@@ -285,6 +285,59 @@ export async function getProductsService(
 
 //===============================================================
 
+export async function getFavoriteProductsService(
+  query: ProductsQuery,
+  userId: string
+) {
+  const client = await Client.findOne({ userId })
+    .select('favoriteProductIds favoritePharmacyIds')
+    .lean<{
+      favoriteProductIds?: Types.ObjectId[];
+      favoritePharmacyIds?: Types.ObjectId[];
+    } | null>();
+
+  const favoriteProductIds = client?.favoriteProductIds ?? [];
+  const favoritePharmacyIds = new Set(
+    (client?.favoritePharmacyIds ?? []).map(String)
+  );
+
+  const filter = {
+    _id: { $in: favoriteProductIds },
+    status: 'active',
+  };
+
+  const sort: Record<string, 1 | -1> =
+    query.sort === 'name-desc' ? { name: -1 } : { name: 1 };
+  const skip = (query.page - 1) * query.perPage;
+
+  const [products, total] = await Promise.all([
+    Product.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
+    Product.countDocuments(filter),
+  ]);
+
+  const offerMap = await getOffersByProductIds(
+    products.map((product) => product._id),
+    favoritePharmacyIds
+  );
+  const favoriteIds = new Set(favoriteProductIds.map(String));
+
+  return {
+    items: products.map((product) =>
+      serializeProduct(
+        product,
+        offerMap.get(String(product._id)) ?? [],
+        favoriteIds
+      )
+    ),
+    page: query.page,
+    perPage: query.perPage,
+    total,
+    totalPages: Math.ceil(total / query.perPage),
+  };
+}
+
+//===============================================================
+
 export async function getProductDetailsService(
   productId: string,
   userId?: string

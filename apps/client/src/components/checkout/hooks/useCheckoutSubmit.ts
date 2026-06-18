@@ -7,7 +7,7 @@ import { getStockValidationError } from '@/lib/checkout';
 import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
 import { buildOrderPath } from '@/lib/orders';
 
-import { checkoutOrder, getCart } from '@e-pharmacy/api-client/client';
+import { checkoutOrder, getCart } from '@/lib/api/browser';
 import type { Cart, CheckoutOrderPayload } from '@e-pharmacy/types';
 
 import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
@@ -98,10 +98,9 @@ export function useCheckoutSubmit({
             };
 
       const response = await checkoutOrder(orderPayload);
-      const nextCartResponse = await getCart();
 
-      setCart(nextCartResponse.cart);
-      dispatchCartUpdated(nextCartResponse.cart);
+      setCart(response.cart);
+      dispatchCartUpdated(response.cart);
       router.push(buildOrderPath(response.order));
     } catch (error) {
       setError(

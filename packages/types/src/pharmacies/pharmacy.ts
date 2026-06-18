@@ -108,6 +108,8 @@ export type PharmaciesQueryParams = {
 
 export type PharmaciesResponse = ApiPaginationResponse<Pharmacy>;
 export type PharmacyFilterOption = { value: string; label: string };
+export type PharmacyOption = { id: EntityId; name: string };
+export type PharmacyOptionsResponse = { items: PharmacyOption[] };
 
 //=============================================================================
 

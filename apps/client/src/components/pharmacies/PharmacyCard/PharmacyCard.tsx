@@ -1,12 +1,8 @@
 'use client';
 
-import {
-  addFavoritePharmacy,
-  removeFavoritePharmacy,
-} from '@e-pharmacy/api-client/client';
+import { addFavoritePharmacy, removeFavoritePharmacy } from '@/lib/api/browser';
 
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
-
 import { buildPharmacyPath } from '@/lib/routes';
 
 import {

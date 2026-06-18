@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server';
 
-import { proxyPublicBackendRequest } from '@e-pharmacy/api-client/proxy';
-import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client';
+import { proxyBackendRequest } from '@/lib/api/proxy';
+import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
 
 //===================================================================
 
@@ -16,7 +16,7 @@ type PharmacyRouteContext = {
 export async function GET(request: NextRequest, { params }: PharmacyRouteContext) {
   const { pharmacyId } = await params;
 
-  return proxyPublicBackendRequest({
+  return proxyBackendRequest({
     request,
     backendPath: API_ROUTES.pharmacies.details(pharmacyId),
   });

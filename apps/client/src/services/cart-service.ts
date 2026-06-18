@@ -4,7 +4,7 @@ import {
   getCart,
   removeCartItem as removeCartItemRequest,
   updateCartItem as updateCartItemRequest,
-} from '@e-pharmacy/api-client/client';
+} from '@/lib/api/browser';
 
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 

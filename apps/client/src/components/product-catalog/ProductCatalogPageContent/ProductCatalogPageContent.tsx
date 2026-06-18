@@ -15,10 +15,11 @@ import {
 } from '@/lib/catalog/product-catalog';
 
 import { ROUTES } from '@/lib/routes';
+
 import type {
   Product,
   ProductFilterOptionsResponse,
-  Pharmacy,
+  PharmacyOption,
 } from '@e-pharmacy/types';
 
 import css from './ProductCatalogPageContent.module.css';
@@ -27,7 +28,7 @@ import css from './ProductCatalogPageContent.module.css';
 
 type ProductCatalogPageContentProps = {
   products: Product[];
-  pharmacies: Pharmacy[];
+  pharmacies: PharmacyOption[];
   filterOptions: ProductFilterOptionsResponse;
   total: number;
   totalPages: number;
@@ -40,7 +41,7 @@ type ProductCatalogPageContentProps = {
 function buildProductsPageHref(
   filters: ProductCatalogFilters,
   page: number,
-  pharmacies: Pharmacy[]
+  pharmacies: PharmacyOption[]
 ) {
   return buildProductCatalogPath({ ...filters, page }, pharmacies);
 }
@@ -49,7 +50,7 @@ function buildProductsPageHref(
 
 function createSeoContext(
   filters: ProductCatalogFilters,
-  pharmacies: Pharmacy[],
+  pharmacies: PharmacyOption[],
   filterOptions: ProductFilterOptionsResponse
 ): ProductCatalogSeoContext {
   const selectedPharmacy = filters.pharmacyId

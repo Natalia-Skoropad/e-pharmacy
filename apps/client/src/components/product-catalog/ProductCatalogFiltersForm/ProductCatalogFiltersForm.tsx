@@ -38,7 +38,7 @@ import {
   sanitizeCatalogTextSearch,
 } from '@/lib/catalog/search-sanitizers';
 
-import type { ProductFilterOptionsResponse, Pharmacy } from '@e-pharmacy/types';
+import type { ProductFilterOptionsResponse, PharmacyOption } from '@e-pharmacy/types';
 
 import css from './ProductCatalogFiltersForm.module.css';
 
@@ -48,7 +48,7 @@ type PharmacySelectValue = 'all' | string;
 
 type ProductCatalogFiltersFormProps = {
   filters: ProductCatalogFilters;
-  pharmacies: Pharmacy[];
+  pharmacies: PharmacyOption[];
   filterOptions: ProductFilterOptionsResponse;
   visibleProductsCount: number;
   productsCount: number;
@@ -62,7 +62,7 @@ type CatalogHrefFilters = Omit<ProductCatalogFilters, 'page'> & {
 
 function buildProductsFiltersHref(
   filters: CatalogHrefFilters,
-  pharmacies: Pharmacy[]
+  pharmacies: PharmacyOption[]
 ) {
   return buildProductCatalogPath(filters, pharmacies);
 }
@@ -71,7 +71,7 @@ function buildProductsFiltersHref(
 
 function createProductsResetFiltersHref(
   filters: ProductCatalogFilters,
-  pharmacies: Pharmacy[]
+  pharmacies: PharmacyOption[]
 ) {
   return buildProductsFiltersHref(
     {

@@ -144,6 +144,71 @@ export async function getPharmacyFiltersService(): Promise<PharmacyFilterOptions
 
 //===============================================================
 
+export async function getPharmacyOptionsService() {
+  const pharmacies = await Pharmacy.find({
+    status: {
+      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
+    },
+  })
+    .select('_id name')
+    .sort({ name: 1 })
+    .lean<Array<{ _id: Types.ObjectId; name: string }>>();
+
+  return {
+    items: pharmacies.map((pharmacy) => ({
+      id: String(pharmacy._id),
+      name: pharmacy.name,
+    })),
+  };
+}
+
+//===============================================================
+
+export async function getFavoritePharmaciesService(
+  query: PharmaciesQuery,
+  userId: string
+) {
+  const client = await Client.findOne({ userId })
+    .select('favoritePharmacyIds')
+    .lean<{ favoritePharmacyIds?: Types.ObjectId[] } | null>();
+
+  const favoriteIdsArray = client?.favoritePharmacyIds ?? [];
+  const favoriteIds = new Set(favoriteIdsArray.map(String));
+  const filter = {
+    _id: { $in: favoriteIdsArray },
+    status: {
+      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
+    },
+  };
+  const sort: Record<string, 1 | -1> =
+    query.sort === 'name-desc' ? { name: -1 } : { name: 1 };
+  const skip = (query.page - 1) * query.perPage;
+
+  const [pharmacies, total] = await Promise.all([
+    Pharmacy.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
+    Pharmacy.countDocuments(filter),
+  ]);
+  const countMap = await getAvailableProductsCountMap(
+    pharmacies.map((pharmacy) => pharmacy._id)
+  );
+
+  return {
+    items: pharmacies.map((pharmacy) =>
+      serializePublicPharmacy(
+        pharmacy,
+        countMap.get(String(pharmacy._id)) ?? 0,
+        favoriteIds
+      )
+    ),
+    page: query.page,
+    perPage: query.perPage,
+    total,
+    totalPages: Math.ceil(total / query.perPage),
+  };
+}
+
+//===============================================================
+
 export async function getPharmaciesService(
   query: PharmaciesQuery,
   userId?: string

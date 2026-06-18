@@ -19,14 +19,14 @@ import {
   type ProductCatalogSearchParams,
 } from '@/lib/catalog/product-catalog';
 
-import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
+import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api/server';
 import { createPageMetadata } from '@/lib/seo';
 
 import {
   getProductFilters,
   getProducts,
-  getPharmacies,
-} from '@e-pharmacy/api-client/client';
+  getPharmacyOptions,
+} from '@/lib/api/server';
 
 //===================================================================
 
@@ -85,9 +85,7 @@ async function ProductCatalogSegmentsPage({
       PUBLIC_API_CACHE_OPTIONS
     ).catch(() => null),
 
-    getPharmacies({ page: 1, perPage: 100 }, PUBLIC_API_CACHE_OPTIONS).catch(
-      () => null
-    ),
+    getPharmacyOptions(PUBLIC_API_CACHE_OPTIONS).catch(() => null),
 
     getProductFilters(PUBLIC_API_CACHE_OPTIONS).catch(
       () => FALLBACK_PRODUCT_FILTER_OPTIONS

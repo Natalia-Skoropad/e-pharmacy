@@ -3,25 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./bff": "./src/routes/bff-routes.ts",
-    "./routes": "./src/routes/index.ts",
     "./core": "./src/core/index.ts",
     "./core/*": "./src/core/*",
-    "./proxy": "./src/proxy/index.ts",
-    "./proxy/*": "./src/proxy/*",
-    "./client": "./src/client/index.ts"
+    "./contracts": "./src/contracts/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
-    "typescript": "^5",
-    "next": "16.2.4"
+    "typescript": "^5"
   },
   "dependencies": {
     "@e-pharmacy/config": "workspace:*",

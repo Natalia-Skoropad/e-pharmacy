@@ -1,5 +1,6 @@
-import { apiRequest, getResponseData, localApiRequest } from '../core';
-import { apiRoutes as API_ROUTES, clientApiRoutes as CLIENT_API_ROUTES } from '../routes';
+import { localApiRequest } from './local-api-request';
+import { getResponseData } from '@e-pharmacy/api-client/core';
+import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 
 import type {
   ApiSuccessResponse,
@@ -7,8 +8,6 @@ import type {
   CheckoutOrderResponse,
   OrderDetailsResponse,
   OrdersResponse,
-  UpdateOrderStatusPayload,
-  UpdateOrderStatusResponse,
 } from '@e-pharmacy/types';
 
 //===================================================================
@@ -48,18 +47,3 @@ export async function getOrderDetails(
   return getResponseData(response);
 }
 
-//===================================================================
-
-export async function updateOrderStatus(
-  orderId: string,
-  payload: UpdateOrderStatusPayload
-): Promise<UpdateOrderStatusResponse> {
-  const response = await apiRequest<
-    ApiSuccessResponse<UpdateOrderStatusResponse>
-  >(API_ROUTES.orders.updateStatus(orderId), {
-    method: 'PATCH',
-    body: payload,
-  });
-
-  return getResponseData(response);
-}

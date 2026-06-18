@@ -16,7 +16,7 @@ import { CartOrderLimitModal } from '@/components/common';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { formatPrice, formatStockLabel } from '@e-pharmacy/utils/formatters';
-import { getProducts } from '@e-pharmacy/api-client/client';
+import { getProducts } from '@/lib/api/browser';
 import { addCartItem } from '@/services/cart-service';
 import type { Cart, Product, ProductCategory } from '@e-pharmacy/types';
 

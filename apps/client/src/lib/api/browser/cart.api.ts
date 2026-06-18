@@ -1,5 +1,6 @@
-import { getResponseData, localApiRequest } from '../core';
-import { clientApiRoutes as CLIENT_API_ROUTES } from '../routes';
+import { localApiRequest } from './local-api-request';
+import { getResponseData } from '@e-pharmacy/api-client/core';
+import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 
 import type {
   AddCartItemPayload,

@@ -1,4 +1,4 @@
-import type { RequestOptions } from './types';
+import type { RequestOptions } from '@e-pharmacy/api-client/core';
 
 //===================================================================
 

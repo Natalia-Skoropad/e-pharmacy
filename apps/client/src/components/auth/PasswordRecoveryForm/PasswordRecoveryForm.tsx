@@ -22,7 +22,7 @@ import {
 } from '@e-pharmacy/validation';
 
 import { useAuth } from '@e-pharmacy/auth/core';
-import { requestPasswordReset } from '@e-pharmacy/api-client/client';
+import { requestPasswordReset } from '@/lib/api/browser';
 
 import css from '../shared/AuthForm.module.css';
 

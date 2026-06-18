@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 
 import AppShell from '@/components/layout/AppShell';
 import AuthProvider from '@/providers/AuthProvider/AuthProvider';
+import { CartProvider } from '@/providers/CartProvider';
 import { ToastProvider } from '@e-pharmacy/ui/feedback';
 
 import {
@@ -71,7 +72,7 @@ function RootLayout({ children }: RootLayoutProps) {
       <body>
         <ToastProvider>
           <AuthProvider>
-            <AppShell>{children}</AppShell>
+            <CartProvider><AppShell>{children}</AppShell></CartProvider>
           </AuthProvider>
         </ToastProvider>
       </body>

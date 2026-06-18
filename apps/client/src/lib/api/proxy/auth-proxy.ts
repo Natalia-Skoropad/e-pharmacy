@@ -1,7 +1,8 @@
+import 'server-only';
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { apiRoutes as API_ROUTES } from '../routes';
-import { createApiUrl } from '../core/api-url';
+import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
+import { createApiUrl } from '@e-pharmacy/api-client/core';
 import { copySetCookieHeader } from './proxy-response';
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
 
@@ -11,7 +12,7 @@ import {
   setClientAuthCookies,
 } from './proxy-auth-cookies';
 
-import type { HttpMethod } from '../core/types';
+import type { HttpMethod } from '@e-pharmacy/api-client/core';
 
 //===================================================================
 

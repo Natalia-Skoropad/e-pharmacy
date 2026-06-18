@@ -11,24 +11,19 @@ declare const process:
 //===================================================================
 
 const LOCAL_API_BASE_URL = 'http://localhost:4000';
-const PRODUCTION_API_BASE_URL = 'https://e-pharmacy-api-pbaz.onrender.com';
 
 //===================================================================
 
 function getDefaultApiBaseUrl(): string {
   const env = typeof process !== 'undefined' ? process?.env : undefined;
+  const configuredBaseUrl = env?.API_BASE_URL ?? env?.NEXT_PUBLIC_API_BASE_URL;
 
-  if (env?.NEXT_PUBLIC_API_BASE_URL) {
-    return env.NEXT_PUBLIC_API_BASE_URL;
-  }
+  if (configuredBaseUrl) return configuredBaseUrl;
+  if (env?.NODE_ENV !== 'production') return LOCAL_API_BASE_URL;
 
-  if (env?.API_BASE_URL) {
-    return env.API_BASE_URL;
-  }
-
-  return env?.NODE_ENV === 'production'
-    ? PRODUCTION_API_BASE_URL
-    : LOCAL_API_BASE_URL;
+  throw new Error(
+    'API base URL is not configured. Set API_BASE_URL for server requests.'
+  );
 }
 
 //===================================================================
@@ -37,11 +32,8 @@ export function createApiUrl(
   path: string,
   baseUrl = getDefaultApiBaseUrl()
 ): string {
-  if (/^https?:\/\//i.test(path)) {
-    return path;
-  }
+  if (/^https?:\/\//i.test(path)) return path;
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-
   return new URL(normalizedPath, baseUrl).toString();
 }

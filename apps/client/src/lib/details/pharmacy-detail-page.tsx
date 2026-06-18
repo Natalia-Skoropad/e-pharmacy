@@ -2,13 +2,13 @@ import type { Metadata } from 'next';
 
 import { PharmacyDetailsPageContent } from '@/components/pharmacies';
 import { buildPharmacyPath, getIdFromSlugId } from '@/lib/routes';
-import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
+import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api/server';
 import { createPageMetadata } from '@/lib/seo';
 
 import {
   getPharmacyDetails,
   getPharmacyReviews,
-} from '@e-pharmacy/api-client/client';
+} from '@/lib/api/server';
 
 import type { Pharmacy } from '@e-pharmacy/types';
 

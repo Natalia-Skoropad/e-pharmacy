@@ -42,6 +42,11 @@ export type PharmacyEntity = {
   updatedAt: Date;
 };
 
+export type PharmacyOptionResponseDto = {
+  id: string;
+  name: string;
+};
+
 export type PharmacyFilterOptionDto<TValue extends string = string> = {
   value: TValue;
   label: string;

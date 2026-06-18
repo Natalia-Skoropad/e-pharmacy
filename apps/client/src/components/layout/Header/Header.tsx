@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -20,13 +20,8 @@ import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
 import { ROUTES } from '@/lib/routes';
 import { isActiveRoute } from '@/lib/routes';
 
-import {
-  CART_UPDATED_EVENT,
-  type CartUpdatedEventDetail,
-} from '@/lib/cart/cart-events';
-
 import { useAuth } from '@e-pharmacy/auth/core';
-import { getCart } from '@e-pharmacy/api-client/client';
+import { useCart } from '@/providers/CartProvider';
 
 import css from './Header.module.css';
 
@@ -41,41 +36,9 @@ function Header() {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
-  const [cartItemsCount, setCartItemsCount] = useState(0);
+  const { cart } = useCart();
   const visibleCartItemsCount =
-    isAuthReady && isAuthenticated ? cartItemsCount : 0;
-
-  useEffect(() => {
-    if (!isAuthReady || !isAuthenticated) return;
-
-    let isMounted = true;
-
-    getCart()
-      .then((response) => {
-        if (isMounted) setCartItemsCount(response.cart.totalItems);
-      })
-      .catch(() => {
-        if (isMounted) setCartItemsCount(0);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isAuthenticated, isAuthReady, pathname]);
-
-  useEffect(() => {
-    const handleCartUpdated = (event: Event) => {
-      const detail = (event as CustomEvent<CartUpdatedEventDetail>).detail;
-
-      setCartItemsCount(detail?.totalItems ?? 0);
-    };
-
-    window.addEventListener(CART_UPDATED_EVENT, handleCartUpdated);
-
-    return () => {
-      window.removeEventListener(CART_UPDATED_EVENT, handleCartUpdated);
-    };
-  }, []);
+    isAuthReady && isAuthenticated ? cart.totalItems : 0;
 
   const handleToggleMobileMenu = () => {
     setIsMobileMenuOpen((prev) => !prev);

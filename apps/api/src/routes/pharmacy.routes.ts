@@ -2,10 +2,12 @@ import { Router } from 'express';
 
 import {
   createPharmacyReview,
+  getFavoritePharmacies,
   getPendingPharmacyReviews,
   getPharmacyCheckoutDetails,
   getPharmacyDetails,
   getPharmacyFilters,
+  getPharmacyOptions,
   getPharmacyReviews,
   getPharmacies,
   moderatePharmacyReview,
@@ -52,6 +54,21 @@ pharmacyRoutes.get(
 //=================================================================================
 
 pharmacyRoutes.get('/filters', ctrlWrapper(getPharmacyFilters));
+
+//=================================================================================
+
+pharmacyRoutes.get('/options', ctrlWrapper(getPharmacyOptions));
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/favorites',
+  authenticate,
+  validate({
+    query: pharmaciesQuerySchema,
+  }),
+  ctrlWrapper(getFavoritePharmacies)
+);
 
 //=================================================================================
 

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import {
   getPharmacyCheckoutDetails,
   getPharmacyDetails,
-} from '@e-pharmacy/api-client/client';
+} from '@/lib/api/browser';
 
 import type { Pharmacy, PharmacyCheckoutDetails } from '@e-pharmacy/types';
 

@@ -6,7 +6,7 @@ import type {
   ProductCategory,
   ProductFilterOptionsResponse,
   ProductsQueryParams,
-  Pharmacy,
+  PharmacyOption,
 } from '@e-pharmacy/types';
 
 import {
@@ -143,7 +143,7 @@ function deslugifyArticleSegment(value: string): string {
 
 function getPharmacySegment(
   pharmacyId: string,
-  pharmacies: Pharmacy[]
+  pharmacies: PharmacyOption[]
 ): string {
   const pharmacy = pharmacies.find((item) => item.id === pharmacyId);
   const pharmacySlug = pharmacy
@@ -155,7 +155,7 @@ function getPharmacySegment(
 
 //===================================================================
 
-export function sortPharmaciesByName(pharmacies: Pharmacy[]): Pharmacy[] {
+export function sortPharmaciesByName(pharmacies: PharmacyOption[]): PharmacyOption[] {
   return [...pharmacies].sort((a, b) => a.name.localeCompare(b.name, 'en'));
 }
 
@@ -250,7 +250,7 @@ export function parseProductCatalogSegments(
 
 export function buildProductCatalogIndexedPath(
   filters: Partial<ProductCatalogFilters>,
-  pharmacies: Pharmacy[] = []
+  pharmacies: PharmacyOption[] = []
 ): string {
   const segments: string[] = [];
 
@@ -271,7 +271,7 @@ export function buildProductCatalogIndexedPath(
 
 export function buildProductCatalogPath(
   filters: Partial<ProductCatalogFilters>,
-  pharmacies: Pharmacy[] = []
+  pharmacies: PharmacyOption[] = []
 ): string {
   const segments: string[] = [];
 
@@ -309,7 +309,7 @@ export function buildProductCatalogPath(
 
 export function buildProductCatalogCanonicalPath(
   filters: ProductCatalogFilters,
-  pharmacies: Pharmacy[] = []
+  pharmacies: PharmacyOption[] = []
 ): string {
   return isProductCatalogNoIndex(filters)
     ? buildProductCatalogIndexedPath(filters, pharmacies)

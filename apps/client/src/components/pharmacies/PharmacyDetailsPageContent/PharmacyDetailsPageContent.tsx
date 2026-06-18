@@ -40,7 +40,7 @@ import {
   createPharmacyReview,
   addFavoritePharmacy,
   removeFavoritePharmacy,
-} from '@e-pharmacy/api-client/client';
+} from '@/lib/api/browser';
 
 import type { Pharmacy, PharmacyReview } from '@e-pharmacy/types';
 
@@ -81,7 +81,7 @@ function PharmacyDetailsPageContent({
       { value: 'about', label: 'About pharmacy' },
       { value: 'reviews', label: `Reviews (${reviewsTotal})` },
     ],
-    [isAuthenticated, reviewsTotal]
+    [reviewsTotal]
   );
 
   const productsHref = buildProductCatalogPath({ pharmacyId: pharmacy.id }, [

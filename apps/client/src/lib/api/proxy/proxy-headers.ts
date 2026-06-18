@@ -1,6 +1,7 @@
+import 'server-only';
 import { type NextRequest } from 'next/server';
 
-import type { HttpMethod } from '../core/types';
+import type { HttpMethod } from '@e-pharmacy/api-client/core';
 
 import {
   ACCESS_TOKEN_COOKIE_NAME,

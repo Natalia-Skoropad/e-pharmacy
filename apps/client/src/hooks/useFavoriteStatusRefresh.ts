@@ -6,7 +6,7 @@ import { useFavoriteRefresh } from './useFavoriteRefresh';
 import {
   getProductDetails,
   getPharmacyDetails,
-} from '@e-pharmacy/api-client/client';
+} from '@/lib/api/browser';
 
 //===================================================================
 

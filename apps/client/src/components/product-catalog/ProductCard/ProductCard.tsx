@@ -25,7 +25,7 @@ import { useAuth } from '@e-pharmacy/auth/core';
 import {
   addFavoriteProduct,
   removeFavoriteProduct,
-} from '@e-pharmacy/api-client/client';
+} from '@/lib/api/browser';
 
 import type { Product } from '@e-pharmacy/types';
 

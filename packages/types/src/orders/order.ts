@@ -1,5 +1,6 @@
 import type { EntityId, ISODateString } from '../shared';
 import type { PharmacyBankDetails } from '../pharmacies';
+import type { Cart } from '../cart';
 
 //=============================================================================
 
@@ -100,7 +101,7 @@ export type CheckoutOrderPayload =
 
 //=============================================================================
 
-export type CheckoutOrderResponse = { order: Order };
+export type CheckoutOrderResponse = { order: Order; cart: Cart };
 export type OrderDetailsResponse = { order: Order };
 
 //=============================================================================

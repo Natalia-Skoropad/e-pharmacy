@@ -10,6 +10,7 @@ import {
 
 import {
   createProductReviewService,
+  getFavoriteProductsService,
   getProductDetailsService,
   getProductFiltersService,
   getPendingProductReviewsService,
@@ -47,6 +48,22 @@ export async function getProductFilters(
 export async function getProducts(req: Request, res: Response): Promise<void> {
   const query = productsQuerySchema.parse(req.query);
   const data = await getProductsService(query, req.user?.id);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function getFavoriteProducts(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const query = productsQuerySchema.parse(req.query);
+  const data = await getFavoriteProductsService(query, req.user?.id ?? '');
 
   sendSuccessResponse({
     res,

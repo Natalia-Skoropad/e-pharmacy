@@ -1,4 +1,2 @@
-export * from './routes';
+export * from './contracts';
 export * from './core';
-export * from './proxy';
-export * from './client';

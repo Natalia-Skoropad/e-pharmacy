@@ -3,7 +3,7 @@ import { type NextRequest } from 'next/server';
 import {
   AUTH_PROXY_ROUTES,
   proxyBackendRequest,
-} from '@e-pharmacy/api-client/proxy';
+} from '@/lib/api/proxy';
 
 //===================================================================
 

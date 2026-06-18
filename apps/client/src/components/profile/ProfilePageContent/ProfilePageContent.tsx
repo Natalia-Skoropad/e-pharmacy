@@ -68,11 +68,11 @@ import {
   getOrders,
   getActiveSessions,
   revokeActiveSession,
-  getProducts,
-  getPharmacies,
+  getFavoriteProducts,
+  getFavoritePharmacies,
   updateCurrentUser,
   updateCurrentUserPassword,
-} from '@e-pharmacy/api-client/client';
+} from '@/lib/api/browser';
 
 import type {
   ActiveSession,
@@ -105,67 +105,8 @@ const TABS: Array<{
 
 //===================================================================
 
-const FAVORITES_PER_PAGE = 100;
-const FAVORITES_VISIBLE_STEP = 16;
+const FAVORITES_PER_PAGE = 16;
 const ORDERS_VISIBLE_STEP = 15;
-
-//===================================================================
-
-async function getFavoriteProducts(): Promise<Product[]> {
-  const firstPage = await getProducts({
-    page: 1,
-    perPage: FAVORITES_PER_PAGE,
-    sort: 'name-asc',
-  });
-  const pages = [firstPage];
-
-  if (firstPage.totalPages > 1) {
-    const nextPages = await Promise.all(
-      Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
-        getProducts({
-          page: index + 2,
-          perPage: FAVORITES_PER_PAGE,
-          sort: 'name-asc',
-        })
-      )
-    );
-
-    pages.push(...nextPages);
-  }
-
-  return pages.flatMap((page) =>
-    page.items.filter((product) => Boolean(product.isFavorite))
-  );
-}
-
-//===================================================================
-
-async function getFavoritePharmacies(): Promise<Pharmacy[]> {
-  const firstPage = await getPharmacies({
-    page: 1,
-    perPage: FAVORITES_PER_PAGE,
-    sort: 'name-asc',
-  });
-  const pages = [firstPage];
-
-  if (firstPage.totalPages > 1) {
-    const nextPages = await Promise.all(
-      Array.from({ length: firstPage.totalPages - 1 }, (_, index) =>
-        getPharmacies({
-          page: index + 2,
-          perPage: FAVORITES_PER_PAGE,
-          sort: 'name-asc',
-        })
-      )
-    );
-
-    pages.push(...nextPages);
-  }
-
-  return pages.flatMap((page) =>
-    page.items.filter((pharmacy) => Boolean(pharmacy.isFavorite))
-  );
-}
 
 //===================================================================
 
@@ -216,11 +157,10 @@ function ProfilePageContent() {
     number | null
   >(null);
 
-  const [favoriteProductsVisibleCount, setFavoriteProductsVisibleCount] =
-    useState(FAVORITES_VISIBLE_STEP);
-
-  const [favoritePharmaciesVisibleCount, setFavoritePharmaciesVisibleCount] =
-    useState(FAVORITES_VISIBLE_STEP);
+  const [favoriteProductsPage, setFavoriteProductsPage] = useState(0);
+  const [favoriteProductsTotalPages, setFavoriteProductsTotalPages] = useState(0);
+  const [favoritePharmaciesPage, setFavoritePharmaciesPage] = useState(0);
+  const [favoritePharmaciesTotalPages, setFavoritePharmaciesTotalPages] = useState(0);
 
   const [isFavoriteProductsLoading, setIsFavoriteProductsLoading] =
     useState(false);
@@ -316,55 +256,58 @@ function ProfilePageContent() {
 
   const hiddenOrdersCount = Math.max(orders.length - visibleOrders.length, 0);
 
-  const visibleFavoriteProducts = useMemo(
-    () => favoriteProducts.slice(0, favoriteProductsVisibleCount),
-    [favoriteProducts, favoriteProductsVisibleCount]
-  );
-
-  const visibleFavoritePharmacies = useMemo(
-    () => favoritePharmacies.slice(0, favoritePharmaciesVisibleCount),
-    [favoritePharmacies, favoritePharmaciesVisibleCount]
-  );
-
+  const visibleFavoriteProducts = favoriteProducts;
+  const visibleFavoritePharmacies = favoritePharmacies;
   const hiddenFavoriteProductsCount = Math.max(
-    favoriteProducts.length - visibleFavoriteProducts.length,
+    (favoriteProductsCount ?? favoriteProducts.length) - favoriteProducts.length,
     0
   );
-
   const hiddenFavoritePharmaciesCount = Math.max(
-    favoritePharmacies.length - visibleFavoritePharmacies.length,
+    (favoritePharmaciesCount ?? favoritePharmacies.length) - favoritePharmacies.length,
     0
   );
 
-  const loadFavoriteProducts = useCallback(async () => {
+  const loadFavoriteProducts = useCallback(async (page = 1) => {
     try {
       setIsFavoriteProductsLoading(true);
       setFavoriteProductsError('');
-
-      const products = await getFavoriteProducts();
-
-      setFavoriteProducts(products);
-      setFavoriteProductsCount(products.length);
+      const response = await getFavoriteProducts({
+        page,
+        perPage: FAVORITES_PER_PAGE,
+        sort: 'name-asc',
+      });
+      setFavoriteProducts((current) =>
+        page === 1 ? response.items : [...current, ...response.items]
+      );
+      setFavoriteProductsCount(response.total);
+      setFavoriteProductsPage(response.page);
+      setFavoriteProductsTotalPages(response.totalPages);
     } catch {
       setFavoriteProductsError('Could not load favorite products.');
-      setFavoriteProductsCount(0);
+      if (page === 1) setFavoriteProductsCount(0);
     } finally {
       setIsFavoriteProductsLoading(false);
     }
   }, []);
 
-  const loadFavoritePharmacies = useCallback(async () => {
+  const loadFavoritePharmacies = useCallback(async (page = 1) => {
     try {
       setIsFavoritePharmaciesLoading(true);
       setFavoritePharmaciesError('');
-
-      const pharmacies = await getFavoritePharmacies();
-
-      setFavoritePharmacies(pharmacies);
-      setFavoritePharmaciesCount(pharmacies.length);
+      const response = await getFavoritePharmacies({
+        page,
+        perPage: FAVORITES_PER_PAGE,
+        sort: 'name-asc',
+      });
+      setFavoritePharmacies((current) =>
+        page === 1 ? response.items : [...current, ...response.items]
+      );
+      setFavoritePharmaciesCount(response.total);
+      setFavoritePharmaciesPage(response.page);
+      setFavoritePharmaciesTotalPages(response.totalPages);
     } catch {
       setFavoritePharmaciesError('Could not load favorite pharmacies.');
-      setFavoritePharmaciesCount(0);
+      if (page === 1) setFavoritePharmaciesCount(0);
     } finally {
       setIsFavoritePharmaciesLoading(false);
     }
@@ -373,19 +316,37 @@ function ProfilePageContent() {
   useEffect(() => {
     if (!canUseAuthFeatures) return;
 
+    const shouldLoadFavoriteProducts =
+      activeTab === 'favorite-products' && favoriteProductsPage === 0;
+
+    const shouldLoadFavoritePharmacies =
+      activeTab === 'favorite-pharmacies' && favoritePharmaciesPage === 0;
+
+    if (!shouldLoadFavoriteProducts && !shouldLoadFavoritePharmacies) return;
+
     const timeoutId = window.setTimeout(() => {
-      void loadFavoriteProducts();
-      void loadFavoritePharmacies();
+      if (shouldLoadFavoriteProducts) {
+        void loadFavoriteProducts();
+      }
+
+      if (shouldLoadFavoritePharmacies) {
+        void loadFavoritePharmacies();
+      }
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [canUseAuthFeatures, loadFavoriteProducts, loadFavoritePharmacies]);
+  }, [
+    activeTab,
+    canUseAuthFeatures,
+    favoriteProductsPage,
+    favoritePharmaciesPage,
+    loadFavoriteProducts,
+    loadFavoritePharmacies,
+  ]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setOrdersVisibleCount(ORDERS_VISIBLE_STEP);
-      setFavoriteProductsVisibleCount(FAVORITES_VISIBLE_STEP);
-      setFavoritePharmaciesVisibleCount(FAVORITES_VISIBLE_STEP);
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
@@ -1004,8 +965,8 @@ function ProfilePageContent() {
                             product={product}
                             skipFavoriteRefresh
                             onFavoriteChange={(
-                              productId,
-                              isFavoriteProduct
+                              productId: string,
+                              isFavoriteProduct: boolean
                             ) => {
                               if (isFavoriteProduct) return;
 
@@ -1013,7 +974,7 @@ function ProfilePageContent() {
                                 const nextProducts = prev.filter(
                                   (item) => item.id !== productId
                                 );
-                                setFavoriteProductsCount(nextProducts.length);
+                                setFavoriteProductsCount((count) => Math.max((count ?? 1) - 1, 0));
 
                                 return nextProducts;
                               });
@@ -1022,16 +983,12 @@ function ProfilePageContent() {
                         ))}
                       </div>
 
-                      {hiddenFavoriteProductsCount > 0 ? (
+                      {favoriteProductsPage < favoriteProductsTotalPages ? (
                         <Button
                           className={css.showMoreButton}
                           type="button"
                           variant="secondary"
-                          onClick={() =>
-                            setFavoriteProductsVisibleCount(
-                              (prev) => prev + FAVORITES_VISIBLE_STEP
-                            )
-                          }
+                          onClick={() => void loadFavoriteProducts(favoriteProductsPage + 1)}
                         >
                           Show more products ({hiddenFavoriteProductsCount})
                         </Button>
@@ -1096,8 +1053,8 @@ function ProfilePageContent() {
                             pharmacy={pharmacy}
                             skipFavoriteRefresh
                             onFavoriteChange={(
-                              pharmacyId,
-                              isFavoritePharmacy
+                              pharmacyId: string,
+                              isFavoritePharmacy: boolean
                             ) => {
                               if (isFavoritePharmacy) return;
 
@@ -1105,8 +1062,8 @@ function ProfilePageContent() {
                                 const nextPharmacies = prev.filter(
                                   (item) => item.id !== pharmacyId
                                 );
-                                setFavoritePharmaciesCount(
-                                  nextPharmacies.length
+                                setFavoritePharmaciesCount((count) =>
+                                  Math.max((count ?? 1) - 1, 0)
                                 );
 
                                 return nextPharmacies;
@@ -1116,16 +1073,12 @@ function ProfilePageContent() {
                         ))}
                       </div>
 
-                      {hiddenFavoritePharmaciesCount > 0 ? (
+                      {favoritePharmaciesPage < favoritePharmaciesTotalPages ? (
                         <Button
                           className={css.showMoreButton}
                           type="button"
                           variant="secondary"
-                          onClick={() =>
-                            setFavoritePharmaciesVisibleCount(
-                              (prev) => prev + FAVORITES_VISIBLE_STEP
-                            )
-                          }
+                          onClick={() => void loadFavoritePharmacies(favoritePharmaciesPage + 1)}
                         >
                           Show more pharmacies ({hiddenFavoritePharmaciesCount})
                         </Button>

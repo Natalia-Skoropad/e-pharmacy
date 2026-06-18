@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import {
   CartItemCard,
@@ -33,7 +33,7 @@ import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
 import { ROUTES } from '@/lib/routes';
 import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
 import { useAuth } from '@e-pharmacy/auth/core';
-import { getCart } from '@e-pharmacy/api-client/client';
+import { useCart } from '@/providers/CartProvider';
 
 import {
   clearCart,
@@ -83,9 +83,8 @@ function CartPageContent() {
   const { isAuthenticated, isAuthReady } = useAuth();
   const canUseCart = isAuthReady && isAuthenticated;
 
-  const [cart, setCart] = useState<Cart>(EMPTY_CART);
+  const { cart, setCart, isLoading, error: cartLoadError } = useCart();
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState(false);
 
@@ -101,38 +100,7 @@ function CartPageContent() {
 
   const isUpdating = Boolean(updatingItemId) || isClearing;
 
-  useEffect(() => {
-    if (!isAuthReady || !isAuthenticated) return;
-
-    let isMounted = true;
-
-    async function fetchCart() {
-      try {
-        const response = await getCart();
-
-        if (!isMounted) return;
-
-        setCart(response.cart);
-        setError('');
-      } catch (error) {
-        if (!isMounted) return;
-
-        setError(
-          getAppErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.load })
-        );
-      } finally {
-        if (!isMounted) return;
-
-        setIsLoading(false);
-      }
-    }
-
-    void fetchCart();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isAuthenticated, isAuthReady]);
+  const visibleError = error || cartLoadError;
 
   const handleQuantityChange = async (cartItemId: string, quantity: number) => {
     if (!canUseCart || quantity < 1) return;
@@ -292,9 +260,9 @@ function CartPageContent() {
             </div>
           ) : null}
 
-          {error ? (
+          {visibleError ? (
             <div className={css.notice} role="alert">
-              {error}
+              {visibleError}
             </div>
           ) : null}
 

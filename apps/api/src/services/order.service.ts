@@ -12,6 +12,7 @@ import { Pharmacy } from '../models/pharmacy.model';
 
 import { httpError } from '../utils/httpError';
 import { commitReservedStock, releaseOfferStock } from './stock.service';
+import { getCartService } from './cart.service';
 
 import type {
   CheckoutOrderInput,
@@ -192,7 +193,7 @@ function serializeOrder(order: OrderDocument): OrderResponseDto {
 export async function checkoutOrderService(
   clientUserId: string,
   input: CheckoutOrderInput
-): Promise<{ order: OrderResponseDto }> {
+): Promise<{ order: OrderResponseDto; cart: Awaited<ReturnType<typeof getCartService>>['cart'] }> {
   const session = await mongoose.startSession();
 
   try {
@@ -381,7 +382,8 @@ export async function checkoutOrderService(
         'Order was not created'
       );
     }
-    return { order: serializeOrder(createdOrder) };
+    const { cart } = await getCartService(clientUserId);
+    return { order: serializeOrder(createdOrder), cart };
   } finally {
     await session.endSession();
   }

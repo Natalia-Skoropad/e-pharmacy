@@ -16,14 +16,12 @@ import { PharmacyCard } from '@/components/pharmacies';
 import { HOME_DESCRIPTION, HOME_TITLE } from '@/lib/seo';
 import { ROUTES } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
-import { getProducts, getPharmacies } from '@e-pharmacy/api-client/client';
+import { getProducts, getPharmacies } from '@/lib/api/server';
 import type { Product, Pharmacy } from '@e-pharmacy/types';
 
 import css from './page.module.css';
 
 //===================================================================
-
-export const dynamic = 'force-dynamic';
 
 const HOME_REVALIDATE_SECONDS = 300;
 
@@ -121,7 +119,9 @@ const REVIEWS = [
 
 //===================================================================
 
-async function getFeaturedPharmacies(): Promise<Pharmacy[]> {
+type FeaturedResult<T> = { items: T[]; hasError: boolean };
+
+async function getFeaturedPharmacies(): Promise<FeaturedResult<Pharmacy>> {
   try {
     const response = await getPharmacies(
       {
@@ -135,13 +135,13 @@ async function getFeaturedPharmacies(): Promise<Pharmacy[]> {
       }
     );
 
-    return response.items;
+    return { items: response.items, hasError: false };
   } catch {
-    return [];
+    return { items: [], hasError: true };
   }
 }
 
-async function getFeaturedProducts(): Promise<Product[]> {
+async function getFeaturedProducts(): Promise<FeaturedResult<Product>> {
   try {
     const response = await getProducts(
       {
@@ -155,19 +155,21 @@ async function getFeaturedProducts(): Promise<Product[]> {
       }
     );
 
-    return response.items;
+    return { items: response.items, hasError: false };
   } catch {
-    return [];
+    return { items: [], hasError: true };
   }
 }
 
 //===================================================================
 
 async function HomePage() {
-  const [featuredPharmacies, featuredProducts] = await Promise.all([
+  const [pharmaciesResult, productsResult] = await Promise.all([
     getFeaturedPharmacies(),
     getFeaturedProducts(),
   ]);
+  const featuredPharmacies = pharmaciesResult.items;
+  const featuredProducts = productsResult.items;
 
   return (
     <main className={css.page}>
@@ -256,7 +258,13 @@ async function HomePage() {
                 />
               ))}
             </div>
-          ) : null}
+          ) : pharmaciesResult.hasError ? (
+            <div className={css.sectionError} role="status">
+              Pharmacies are temporarily unavailable. Please try again shortly.
+            </div>
+          ) : (
+            <p className={css.sectionEmpty}>No pharmacies are available yet.</p>
+          )}
 
           <div className={css.sectionAction}>
             <ButtonLink href={ROUTES.PHARMACIES} variant="secondary">
@@ -389,7 +397,13 @@ async function HomePage() {
                 />
               ))}
             </div>
-          ) : null}
+          ) : productsResult.hasError ? (
+            <div className={css.sectionError} role="status">
+              Products are temporarily unavailable. Please try again shortly.
+            </div>
+          ) : (
+            <p className={css.sectionEmpty}>No products are available yet.</p>
+          )}
 
           <div className={css.sectionAction}>
             <ButtonLink href={ROUTES.PRODUCTS_CATALOG} variant="secondary">

@@ -2,13 +2,13 @@ import type { Metadata } from 'next';
 
 import { ProductDetailsPageContent } from '@/components/product-catalog';
 import { buildProductPath, getIdFromSlugId } from '@/lib/routes';
-import { PUBLIC_API_CACHE_OPTIONS } from '@e-pharmacy/api-client/core';
+import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api/server';
 import { createPageMetadata } from '@/lib/seo';
 
 import {
   getProductDetails,
   getProductReviews,
-} from '@e-pharmacy/api-client/client';
+} from '@/lib/api/server';
 
 import type { Product } from '@e-pharmacy/types';
 
