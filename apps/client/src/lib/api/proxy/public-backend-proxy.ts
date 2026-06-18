@@ -1,6 +1,7 @@
 import 'server-only';
 import { type NextRequest } from 'next/server';
-import { createApiUrl } from '@e-pharmacy/api-client/core';
+
+import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
 import { createProxyHeaders } from './proxy-headers';
 import { createProxyResponse } from './proxy-response';
 
@@ -82,7 +83,7 @@ export async function proxyPublicBackendRequest({
 
   try {
     response = await fetchPublicBackend(
-      createApiUrl(pathWithSearch),
+      createBackendApiUrl(pathWithSearch),
       request,
       revalidate
     );

@@ -2,7 +2,7 @@ import 'server-only';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
-import { createApiUrl } from '@e-pharmacy/api-client/core';
+import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
 import { copySetCookieHeader } from './proxy-response';
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
 
@@ -75,7 +75,7 @@ export async function proxyAuthRequest({
   method = 'POST',
   markerAction,
 }: AuthProxyOptions) {
-  const response = await fetch(createApiUrl(backendPath), {
+  const response = await fetch(createBackendApiUrl(backendPath), {
     method,
     headers: createProxyHeaders(request),
     body: await getProxyBody(request, method),

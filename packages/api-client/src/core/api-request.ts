@@ -87,7 +87,7 @@ export async function apiRequest<TData>(
     retry,
   }: ApiRequestConfig = {}
 ): Promise<TData> {
-  const url = createApiUrl(path, baseUrl);
+  const url = createApiUrl(path, baseUrl ?? '');
   const requestHeaders = new Headers(headers);
   const requestBody = prepareRequestBody(body, requestHeaders);
   const retryConfig = getRetryConfig(method, retry);

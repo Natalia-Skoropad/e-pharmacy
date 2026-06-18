@@ -48,9 +48,6 @@
       "@e-pharmacy/hooks/*": [
         "../../packages/hooks/src/*"
       ],
-      "@e-pharmacy/api-client": [
-        "../../packages/api-client/src/index.ts"
-      ],
       "@e-pharmacy/api-client/*": [
         "../../packages/api-client/src/*/index.ts",
         "../../packages/api-client/src/*.ts"

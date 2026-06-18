@@ -8,6 +8,8 @@ import {
   type HttpMethod,
 } from '@e-pharmacy/api-client/core';
 
+import { logApiRequest } from '@/lib/api/observability/request-logger';
+
 //===================================================================
 
 const DEFAULT_TIMEOUT_MS = 12_000;
@@ -82,6 +84,7 @@ export async function localApiRequest<TData>(
   const requestHeaders = new Headers(headers);
   const requestBody = prepareRequestBody(body, requestHeaders);
   const retryConfig = getRetryConfig(method, retry);
+  const startedAt = Date.now();
   let response: Response;
 
   for (let attempt = 1; ; attempt += 1) {
@@ -100,7 +103,19 @@ export async function localApiRequest<TData>(
         continue;
       }
 
-      throw toTransportError(error, { url: path, method });
+      const transportError = toTransportError(error, { url: path, method });
+
+      logApiRequest({
+        method,
+        path,
+        destination: 'bff',
+        durationMs: Date.now() - startedAt,
+        status: transportError.status,
+        cache,
+        source: 'browser-api',
+      });
+
+      throw transportError;
     }
 
     if (
@@ -114,6 +129,16 @@ export async function localApiRequest<TData>(
   }
 
   const payload = await parseJsonSafe<TData>(response);
+  logApiRequest({
+    method,
+    path,
+    destination: 'bff',
+    durationMs: Date.now() - startedAt,
+    status: response.status,
+    cache,
+    source: 'browser-api',
+  });
+
   if (!response.ok) {
     throw new ApiError(
       getApiErrorMessage(payload, response.statusText),

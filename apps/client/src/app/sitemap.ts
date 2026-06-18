@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
-import { createApiUrl } from '@e-pharmacy/api-client/core';
+import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
 import { SITEMAP_STATIC_ROUTES } from '@/lib/seo';
 
 import {
@@ -56,7 +56,7 @@ async function fetchSitemapPage<TItem>(
   path: string
 ): Promise<SitemapApiResponse<TItem> | null> {
   try {
-    const response = await fetch(createApiUrl(path), {
+    const response = await fetch(createBackendApiUrl(path), {
       next: { revalidate: SITEMAP_REVALIDATE_SECONDS },
     });
 

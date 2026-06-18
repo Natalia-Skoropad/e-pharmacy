@@ -2,7 +2,7 @@ import 'server-only';
 import { type NextRequest } from 'next/server';
 
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
-import { createApiUrl } from '@e-pharmacy/api-client/core';
+import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
 
 import {
@@ -38,7 +38,7 @@ let refreshPromise: Promise<RefreshResult> | null = null;
 //===================================================================
 
 async function refreshAuthCookies(request: NextRequest): Promise<RefreshResult> {
-  refreshPromise ??= fetch(createApiUrl(API_ROUTES.auth.refresh), {
+  refreshPromise ??= fetch(createBackendApiUrl(API_ROUTES.auth.refresh), {
     method: 'POST',
     headers: createProxyHeaders(request),
     cache: 'no-store',
@@ -72,7 +72,7 @@ async function fetchBackend(
     headers.set('Cookie', cookieHeader);
   }
 
-  return fetch(createApiUrl(backendPath), {
+  return fetch(createBackendApiUrl(backendPath), {
     method,
     headers,
     body,
