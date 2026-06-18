@@ -85,17 +85,6 @@ authRoutes.post(
 //=================================================================================
 
 authRoutes.post(
-  '/request-reset-email',
-  passwordResetRateLimit,
-  validate({
-    body: forgotPasswordSchema,
-  }),
-  ctrlWrapper(requestPasswordReset)
-);
-
-//=================================================================================
-
-authRoutes.post(
   '/reset-password',
   passwordResetRateLimit,
   validate({

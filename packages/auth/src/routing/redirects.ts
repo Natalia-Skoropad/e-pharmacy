@@ -1,3 +1,7 @@
+const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001F\u007F]/;
+
+//===================================================================
+
 function containsEncodedSlashOrBackslash(value: string): boolean {
   let currentValue = value;
 
@@ -30,6 +34,7 @@ export function getSafeRedirectPath(
     !redirectPath.startsWith('/') ||
     redirectPath.startsWith('//') ||
     redirectPath.includes('\\') ||
+    CONTROL_CHARACTER_PATTERN.test(redirectPath) ||
     containsEncodedSlashOrBackslash(redirectPath)
   ) {
     return fallbackPath;
@@ -48,4 +53,29 @@ export function buildLoginRedirectPath(
   const safePath = getSafeRedirectPath(normalizedPath, '/');
 
   return `${loginPath}?redirect=${encodeURIComponent(safePath)}`;
+}
+
+//===================================================================
+
+export type SafeApplicationRedirectOptions = {
+  allowedPrefixes: readonly string[];
+  fallbackPath?: string;
+};
+
+//===================================================================
+
+export function getSafeApplicationRedirectPath(
+  redirectPath: string | null,
+  { allowedPrefixes, fallbackPath = '/' }: SafeApplicationRedirectOptions
+): string {
+  const safePath = getSafeRedirectPath(redirectPath, fallbackPath);
+  const pathname = safePath.split(/[?#]/, 1)[0] || '/';
+  const isAllowed = allowedPrefixes.some((prefix) => {
+    const normalizedPrefix = prefix === '/' ? '/' : prefix.replace(/\/$/, '');
+    return normalizedPrefix === '/'
+      ? pathname === '/'
+      : pathname === normalizedPrefix ||
+          pathname.startsWith(`${normalizedPrefix}/`);
+  });
+  return isAllowed ? safePath : fallbackPath;
 }

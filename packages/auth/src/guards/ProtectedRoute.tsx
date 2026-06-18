@@ -10,7 +10,7 @@ import { buildLoginRedirectPath } from '../routing/redirects';
 
 export type ProtectedRouteProps = {
   children: ReactNode;
-  loginPath?: string;
+  loginPath: string;
   loadingFallback?: ReactNode;
   redirectingFallback?: ReactNode;
 };
@@ -19,24 +19,25 @@ export type ProtectedRouteProps = {
 
 export function ProtectedRoute({
   children,
-  loginPath = '/login',
+  loginPath,
   loadingFallback = null,
   redirectingFallback = null,
 }: ProtectedRouteProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryString = searchParams.toString();
 
   const { status, isAuthenticated, isAuthReady } = useAuth();
 
   useEffect(() => {
     if (!isAuthReady || status === 'error' || isAuthenticated) return;
 
-    const queryString = searchParams.toString();
-    const currentPath = queryString ? `${pathname}?${queryString}` : pathname;
+    const hash = typeof window === 'undefined' ? '' : window.location.hash;
+    const currentPath = `${pathname}${queryString ? `?${queryString}` : ''}${hash}`;
 
     router.replace(buildLoginRedirectPath(currentPath, loginPath));
-  }, [isAuthReady, isAuthenticated, loginPath, pathname, router, searchParams]);
+  }, [isAuthReady, isAuthenticated, loginPath, pathname, queryString, router]);
 
   if (!isAuthReady || status === 'error') return loadingFallback;
   if (!isAuthenticated) return redirectingFallback;

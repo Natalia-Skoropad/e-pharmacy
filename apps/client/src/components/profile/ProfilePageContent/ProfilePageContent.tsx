@@ -36,10 +36,7 @@ import {
 
 import { buildOrderPath } from '@/lib/orders';
 
-import {
-  buildPharmacyPath,
-  createBreadcrumbs,
-} from '@/lib/routes';
+import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
 
 import {
   CHANGE_PASSWORD_FORM_FIELDS,
@@ -173,7 +170,7 @@ async function getFavoritePharmacies(): Promise<Pharmacy[]> {
 //===================================================================
 
 function ProfilePageContent() {
-  const { isAuthenticated, isAuthReady, user, refreshCurrentUser } = useAuth();
+  const { isAuthenticated, isAuthReady, user, reloadCurrentUser } = useAuth();
   const canUseAuthFeatures = isAuthReady && isAuthenticated;
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
 
@@ -530,7 +527,7 @@ function ProfilePageContent() {
       setPicturePreview(pictureUrl);
 
       await updateCurrentUser({ pictureUrl: pictureUrl });
-      await refreshCurrentUser();
+      await reloadCurrentUser();
       setFeedback(
         pictureUrl ? 'Profile photo was updated.' : 'Profile photo was removed.'
       );
@@ -562,7 +559,7 @@ function ProfilePageContent() {
       const nextProfileValues = normalizeDataProfileValues(profileValues);
 
       await updateCurrentUser(nextProfileValues);
-      await refreshCurrentUser();
+      await reloadCurrentUser();
       setInitialProfileValues(nextProfileValues);
       setProfileTouchedFields({});
       setFeedback('Profile data was updated.');

@@ -13,7 +13,7 @@ import type { UserRole } from '@e-pharmacy/types';
 export type RoleProtectedRouteProps = {
   children: ReactNode;
   allowedRoles: readonly UserRole[];
-  loginPath?: string;
+  loginPath: string;
   forbiddenPath?: string;
   loadingFallback?: ReactNode;
   redirectingFallback?: ReactNode;
@@ -25,7 +25,7 @@ export type RoleProtectedRouteProps = {
 export function RoleProtectedRoute({
   children,
   allowedRoles,
-  loginPath = '/login',
+  loginPath,
   forbiddenPath = '/',
   loadingFallback = null,
   redirectingFallback = null,
@@ -34,6 +34,7 @@ export function RoleProtectedRoute({
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryString = searchParams.toString();
 
   const { status, isAuthenticated, isAuthReady, user } = useAuth();
   const hasAllowedRole = Boolean(user && allowedRoles.includes(user.role));
@@ -42,8 +43,8 @@ export function RoleProtectedRoute({
     if (!isAuthReady || status === 'error') return;
 
     if (!isAuthenticated) {
-      const queryString = searchParams.toString();
-      const currentPath = queryString ? `${pathname}?${queryString}` : pathname;
+      const hash = typeof window === 'undefined' ? '' : window.location.hash;
+      const currentPath = `${pathname}${queryString ? `?${queryString}` : ''}${hash}`;
 
       router.replace(buildLoginRedirectPath(currentPath, loginPath));
       return;
@@ -60,8 +61,8 @@ export function RoleProtectedRoute({
     status,
     loginPath,
     pathname,
+    queryString,
     router,
-    searchParams,
   ]);
 
   if (!isAuthReady || status === 'error') return loadingFallback;

@@ -46,7 +46,8 @@ type AuthContextValue = {
   login: (payload: LoginPayload) => Promise<AuthUser | null>;
   register?: (payload: RegisterPayload) => Promise<AuthUser | null>;
   logout: () => Promise<void>;
-  refreshCurrentUser: () => Promise<AuthUser | null>;
+  isRefreshingUser: boolean;
+  reloadCurrentUser: () => Promise<AuthUser | null>;
   retryAuthBootstrap: () => Promise<AuthUser | null>;
 };
 
@@ -60,6 +61,40 @@ type AuthProviderCoreProps = AuthProviderServices & {
   children: ReactNode;
   sessionHintStorage: AuthSessionHintStorage;
 };
+
+//===================================================================
+
+const currentUserPromises = new WeakMap<
+  AuthProviderServices['getCurrentUser'],
+  Promise<CurrentUserResponse>
+>();
+
+const refreshPromises = new WeakMap<
+  AuthProviderServices['refreshSession'],
+  Promise<CurrentUserResponse>
+>();
+
+//===================================================================
+
+function runSingleFlight(
+  service: () => Promise<CurrentUserResponse>,
+  store: WeakMap<
+    () => Promise<CurrentUserResponse>,
+    Promise<CurrentUserResponse>
+  >
+): Promise<CurrentUserResponse> {
+  const pending = store.get(service);
+  if (pending) return pending;
+
+  const request = service().finally(() => {
+    if (store.get(service) === request) store.delete(service);
+  });
+
+  store.set(service, request);
+  return request;
+}
+
+//===================================================================
 
 type ErrorWithStatus = {
   status?: unknown;
@@ -77,6 +112,8 @@ function getErrorStatus(error: unknown): number | null {
   const responseStatus = (error as ErrorWithStatus).response?.status;
   return typeof responseStatus === 'number' ? responseStatus : null;
 }
+
+//===================================================================
 
 function isInvalidSessionError(error: unknown): boolean {
   const status = getErrorStatus(error);
@@ -97,101 +134,130 @@ export function AuthProviderCore({
   const [user, setUser] = useState<AuthUser | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [authError, setAuthError] = useState<unknown>(null);
+  const [isRefreshingUser, setIsRefreshingUser] = useState(false);
 
   const lifecycleVersionRef = useRef(0);
-  const refreshPromiseRef = useRef<Promise<CurrentUserResponse> | null>(null);
   const bootstrapPromiseRef = useRef<Promise<AuthUser | null> | null>(null);
+  const sessionHintStorageRef = useRef(sessionHintStorage);
+  const userRef = useRef<AuthUser | null>(null);
 
-  const applyAuthenticatedUser = useCallback(
-    (nextUser: AuthUser) => {
-      sessionHintStorage.setHint();
-      setAuthError(null);
-      setUser(nextUser);
-      setStatus('authenticated');
-    },
-    [sessionHintStorage]
-  );
-
-  const clearAuthState = useCallback(() => {
-    sessionHintStorage.clearHint();
-    setAuthError(null);
-    setUser(null);
-    setStatus('unauthenticated');
+  useEffect(() => {
+    sessionHintStorageRef.current = sessionHintStorage;
   }, [sessionHintStorage]);
 
-  const markAuthUnavailable = useCallback((error: unknown) => {
-    setAuthError(error);
-    setUser(null);
-    setStatus('error');
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  const applyAuthenticatedUser = useCallback((nextUser: AuthUser) => {
+    sessionHintStorageRef.current.setHint();
+    setAuthError(null);
+    setIsRefreshingUser(false);
+    setUser(nextUser);
+    setStatus('authenticated');
   }, []);
 
-  const refreshSessionOnce = useCallback(() => {
-    if (!refreshPromiseRef.current) {
-      refreshPromiseRef.current = refreshSession().finally(() => {
-        refreshPromiseRef.current = null;
-      });
-    }
+  const clearAuthState = useCallback(() => {
+    sessionHintStorageRef.current.clearHint();
+    setAuthError(null);
+    setIsRefreshingUser(false);
+    setUser(null);
+    setStatus('unauthenticated');
+  }, []);
 
-    return refreshPromiseRef.current;
-  }, [refreshSession]);
+  const markAuthUnavailable = useCallback(
+    (error: unknown, preserveAuthenticatedState: boolean) => {
+      setAuthError(error);
 
-  const restoreCurrentUser = useCallback(async () => {
-    const lifecycleVersion = lifecycleVersionRef.current;
-
-    try {
-      const response = await getCurrentUser();
-
-      if (lifecycleVersion !== lifecycleVersionRef.current) return null;
-      applyAuthenticatedUser(response.user);
-      return response.user;
-    } catch (currentUserError) {
-      if (!isInvalidSessionError(currentUserError)) {
-        if (lifecycleVersion === lifecycleVersionRef.current) {
-          markAuthUnavailable(currentUserError);
-        }
-        return null;
+      if (!preserveAuthenticatedState) {
+        setUser(null);
+        setStatus('error');
       }
+    },
+    []
+  );
+
+  const refreshSessionOnce = useCallback(
+    () => runSingleFlight(refreshSession, refreshPromises),
+    [refreshSession]
+  );
+
+  const restoreCurrentUser = useCallback(
+    async (mode: 'bootstrap' | 'reload') => {
+      const lifecycleVersion = lifecycleVersionRef.current;
+      const preserveAuthenticatedState =
+        mode === 'reload' && Boolean(userRef.current);
 
       try {
-        const response = await refreshSessionOnce();
+        const response = await runSingleFlight(
+          getCurrentUser,
+          currentUserPromises
+        );
 
         if (lifecycleVersion !== lifecycleVersionRef.current) return null;
         applyAuthenticatedUser(response.user);
         return response.user;
-      } catch (refreshError) {
-        if (lifecycleVersion !== lifecycleVersionRef.current) return null;
-
-        if (isInvalidSessionError(refreshError)) {
-          clearAuthState();
-        } else {
-          markAuthUnavailable(refreshError);
+      } catch (currentUserError) {
+        if (!isInvalidSessionError(currentUserError)) {
+          if (lifecycleVersion === lifecycleVersionRef.current) {
+            markAuthUnavailable(currentUserError, preserveAuthenticatedState);
+          }
+          return null;
         }
 
-        return null;
+        try {
+          const response = await refreshSessionOnce();
+
+          if (lifecycleVersion !== lifecycleVersionRef.current) return null;
+          applyAuthenticatedUser(response.user);
+          return response.user;
+        } catch (refreshError) {
+          if (lifecycleVersion !== lifecycleVersionRef.current) return null;
+
+          if (isInvalidSessionError(refreshError)) {
+            clearAuthState();
+          } else {
+            markAuthUnavailable(refreshError, preserveAuthenticatedState);
+          }
+
+          return null;
+        }
       }
-    }
-  }, [
-    applyAuthenticatedUser,
-    clearAuthState,
-    getCurrentUser,
-    markAuthUnavailable,
-    refreshSessionOnce,
-  ]);
+    },
+    [
+      applyAuthenticatedUser,
+      clearAuthState,
+      getCurrentUser,
+      markAuthUnavailable,
+      refreshSessionOnce,
+    ]
+  );
 
   const runBootstrap = useCallback(() => {
     if (!bootstrapPromiseRef.current) {
       setStatus('loading');
       setAuthError(null);
-      bootstrapPromiseRef.current = restoreCurrentUser().finally(() => {
-        bootstrapPromiseRef.current = null;
-      });
+      bootstrapPromiseRef.current = restoreCurrentUser('bootstrap').finally(
+        () => {
+          bootstrapPromiseRef.current = null;
+        }
+      );
     }
 
     return bootstrapPromiseRef.current;
   }, [restoreCurrentUser]);
 
-  const refreshCurrentUser = useCallback(async () => {
-    return restoreCurrentUser();
+  const reloadCurrentUser = useCallback(async () => {
+    const lifecycleVersion = lifecycleVersionRef.current;
+    setIsRefreshingUser(true);
+
+    try {
+      return await restoreCurrentUser('reload');
+    } finally {
+      if (lifecycleVersion === lifecycleVersionRef.current) {
+        setIsRefreshingUser(false);
+      }
+    }
   }, [restoreCurrentUser]);
 
   const login = useCallback(
@@ -242,14 +308,16 @@ export function AuthProviderCore({
       login,
       register,
       logout,
-      refreshCurrentUser,
+      isRefreshingUser,
+      reloadCurrentUser,
       retryAuthBootstrap: runBootstrap,
     }),
     [
       authError,
       login,
       logout,
-      refreshCurrentUser,
+      isRefreshingUser,
+      reloadCurrentUser,
       register,
       runBootstrap,
       status,

@@ -24,7 +24,7 @@ export const apiRoutes = {
     password: '/auth/current/password',
     sessions: '/auth/sessions',
     session: (sessionId: EntityId) => `/auth/sessions/${sessionId}`,
-    forgotPassword: '/auth/request-reset-email',
+    forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/reset-password',
   },
 

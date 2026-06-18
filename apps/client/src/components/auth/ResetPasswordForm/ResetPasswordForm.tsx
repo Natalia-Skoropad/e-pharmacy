@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Button, TextActionButton } from '@e-pharmacy/ui/common';
 import { PasswordInput } from '@e-pharmacy/ui/form-fields';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
+import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
+import { getClientAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/routes';
 
 import {
@@ -95,7 +96,9 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       setErrors({});
       toast.success('Password changed successfully.');
     } catch (error) {
-      toast.error(getAuthErrorMessage(error));
+      toast.error(
+        getClientAuthErrorMessage(getAuthErrorCode(error, 'reset-password'))
+      );
     } finally {
       setIsSubmitting(false);
     }

@@ -135,7 +135,6 @@ POST /health/echo
 POST  /auth/register
 POST  /auth/login
 POST  /auth/forgot-password
-POST  /auth/request-reset-email
 POST  /auth/reset-password
 GET   /auth/current
 PATCH /auth/current

@@ -13,7 +13,8 @@ import {
 } from '@e-pharmacy/ui/form-fields';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
+import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
+import { getClientAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/routes';
 import { getSafeRedirectPath } from '@e-pharmacy/auth/routing';
 
@@ -111,11 +112,14 @@ function RegisterForm() {
         email: values.email.trim(),
         phone: values.phone.trim(),
         password: values.password,
+        role: 'client',
       });
 
       router.replace(redirectTo);
     } catch (error) {
-      toast.error(getAuthErrorMessage(error));
+      toast.error(
+        getClientAuthErrorMessage(getAuthErrorCode(error, 'register'))
+      );
     } finally {
       setIsSubmitting(false);
     }

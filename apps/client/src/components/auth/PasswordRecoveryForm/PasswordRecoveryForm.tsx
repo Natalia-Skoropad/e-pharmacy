@@ -4,7 +4,8 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Button, TextActionButton } from '@e-pharmacy/ui/common';
 import { EmailInput } from '@e-pharmacy/ui/form-fields';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
+import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
+import { getClientAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/routes';
 
 import {
@@ -81,7 +82,9 @@ function PasswordRecoveryForm() {
         'If an account with that email exists, you will receive password reset instructions shortly. Please check your inbox.'
       );
     } catch (error) {
-      toast.error(getAuthErrorMessage(error));
+      toast.error(
+        getClientAuthErrorMessage(getAuthErrorCode(error, 'forgot-password'))
+      );
     } finally {
       setIsSubmitting(false);
     }

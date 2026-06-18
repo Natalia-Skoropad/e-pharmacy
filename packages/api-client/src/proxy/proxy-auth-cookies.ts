@@ -37,13 +37,49 @@ function isSecureRequest(request: NextRequest): boolean {
 
 //===================================================================
 
+type ProxyCookieSameSite = 'lax' | 'strict' | 'none';
+
+type RuntimeEnvironment = {
+  AUTH_COOKIE_DOMAIN?: string;
+  AUTH_COOKIE_SAME_SITE?: string;
+};
+
+//===================================================================
+
+function getRuntimeEnvironment(): RuntimeEnvironment {
+  const runtime = globalThis as typeof globalThis & {
+    process?: { env?: RuntimeEnvironment };
+  };
+  return runtime.process?.env ?? {};
+}
+
+//===================================================================
+
+function getConfiguredSameSite(): ProxyCookieSameSite {
+  const value = getRuntimeEnvironment().AUTH_COOKIE_SAME_SITE;
+  return value === 'strict' || value === 'none' ? value : 'lax';
+}
+
+//===================================================================
+
 function getAuthCookieBaseOptions(request: NextRequest) {
+  const sameSite = getConfiguredSameSite();
+  const domain = getRuntimeEnvironment().AUTH_COOKIE_DOMAIN || undefined;
   return {
     httpOnly: true,
     path: '/',
-    sameSite: 'lax' as const,
-    secure: isSecureRequest(request),
+    sameSite,
+    secure: isSecureRequest(request) || sameSite === 'none',
+    ...(domain ? { domain } : {}),
   };
+}
+
+//===================================================================
+
+function getAuthHintCookieOptions(request: NextRequest) {
+  const { httpOnly: _httpOnly, ...options } = getAuthCookieBaseOptions(request);
+  void _httpOnly;
+  return options;
 }
 
 //===================================================================
@@ -71,10 +107,8 @@ export function setClientAuthCookies(
 
   if (tokens.accessToken || tokens.refreshToken) {
     response.cookies.set(AUTH_READY_COOKIE_NAME, '1', {
-      path: '/',
+      ...getAuthHintCookieOptions(request),
       maxAge: AUTH_READY_COOKIE_MAX_AGE_SECONDS,
-      sameSite: 'lax',
-      secure: isSecureRequest(request),
     });
   }
 }
@@ -85,17 +119,16 @@ export function clearClientAuthCookies(
   response: NextResponse,
   request: NextRequest
 ): void {
-  const cookieOptions = {
-    path: '/',
+  const tokenCookieOptions = {
+    ...getAuthCookieBaseOptions(request),
     maxAge: 0,
-    sameSite: 'lax' as const,
-    secure: isSecureRequest(request),
   };
+  const hintCookieOptions = { ...getAuthHintCookieOptions(request), maxAge: 0 };
 
-  response.cookies.set(ACCESS_TOKEN_COOKIE_NAME, '', cookieOptions);
-  response.cookies.set(REFRESH_TOKEN_COOKIE_NAME, '', cookieOptions);
-  response.cookies.set(LEGACY_AUTH_COOKIE_NAME, '', cookieOptions);
-  response.cookies.set(AUTH_READY_COOKIE_NAME, '', cookieOptions);
+  response.cookies.set(ACCESS_TOKEN_COOKIE_NAME, '', tokenCookieOptions);
+  response.cookies.set(REFRESH_TOKEN_COOKIE_NAME, '', tokenCookieOptions);
+  response.cookies.set(LEGACY_AUTH_COOKIE_NAME, '', tokenCookieOptions);
+  response.cookies.set(AUTH_READY_COOKIE_NAME, '', hintCookieOptions);
 }
 
 //===================================================================

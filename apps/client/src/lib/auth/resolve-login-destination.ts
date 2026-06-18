@@ -1,21 +1,22 @@
-import { getSafeRedirectPath } from '@e-pharmacy/auth/routing';
-import { ROUTES, CLIENT_RESERVED_APP_PREFIXES } from '@/lib/routes';
+import { getSafeApplicationRedirectPath } from '@e-pharmacy/auth/routing';
+import { ROUTES } from '@/lib/routes';
 
 import type { AuthUser } from '@e-pharmacy/types';
 
 //===================================================================
 
-const RESERVED_APPLICATION_PREFIXES = CLIENT_RESERVED_APP_PREFIXES.map(
-  (prefix) => `/${prefix}`
-);
-
-//===================================================================
-
-function isClientApplicationPath(path: string): boolean {
-  return !RESERVED_APPLICATION_PREFIXES.some(
-    (prefix) => path === prefix || path.startsWith(`${prefix}/`)
-  );
-}
+const CLIENT_ALLOWED_REDIRECT_PREFIXES = [
+  ROUTES.HOME,
+  ROUTES.PROFILE,
+  ROUTES.PHARMACIES,
+  ROUTES.PRODUCTS_CATALOG,
+  ROUTES.CART,
+  ROUTES.CHECKOUT,
+  ROUTES.DELIVERY_PAYMENT,
+  ROUTES.RETURN_POLICY,
+  ROUTES.USER_AGREEMENT,
+  ROUTES.PERSONAL_DATA_NOTICE,
+] as const;
 
 //===================================================================
 
@@ -30,9 +31,10 @@ export function resolveLoginDestination({
     return ROUTES.HOME;
   }
 
-  const safeRedirect = getSafeRedirectPath(requestedRedirect, ROUTES.PROFILE);
-
-  return isClientApplicationPath(safeRedirect) ? safeRedirect : ROUTES.PROFILE;
+  return getSafeApplicationRedirectPath(requestedRedirect, {
+    allowedPrefixes: CLIENT_ALLOWED_REDIRECT_PREFIXES,
+    fallbackPath: ROUTES.PROFILE,
+  });
 }
 
 //===================================================================

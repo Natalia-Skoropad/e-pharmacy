@@ -5,7 +5,7 @@ import {
   type AuthProviderServices,
 } from '@e-pharmacy/auth/core';
 
-import { browserAuthSessionHintStorage } from '@e-pharmacy/auth/session';
+import { createBrowserAuthSessionHintStorage } from '@e-pharmacy/auth/session';
 
 import {
   getCurrentUser,
@@ -16,6 +16,14 @@ import {
 } from '@e-pharmacy/api-client/client';
 
 import type { ReactNode } from 'react';
+
+//===================================================================
+
+const clientAuthSessionHintStorage = createBrowserAuthSessionHintStorage({
+  domain: process.env.NEXT_PUBLIC_AUTH_COOKIE_DOMAIN || undefined,
+  sameSite:
+    process.env.NEXT_PUBLIC_AUTH_COOKIE_SAME_SITE === 'none' ? 'None' : 'Lax',
+});
 
 //===================================================================
 
@@ -39,7 +47,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   return (
     <AuthProviderCore
       {...clientAuthServices}
-      sessionHintStorage={browserAuthSessionHintStorage}
+      sessionHintStorage={clientAuthSessionHintStorage}
     >
       {children}
     </AuthProviderCore>

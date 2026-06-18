@@ -7,9 +7,9 @@ import { Button, TextActionButton } from '@e-pharmacy/ui/common';
 import { EmailInput, PasswordInput } from '@e-pharmacy/ui/form-fields';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { getAuthErrorMessage } from '@e-pharmacy/auth/errors';
+import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { ROUTES } from '@/lib/routes';
-import { resolveLoginDestination } from '@/lib/auth';
+import { getClientAuthErrorMessage, resolveLoginDestination } from '@/lib/auth';
 
 import {
   LOGIN_FORM_FIELDS,
@@ -98,7 +98,7 @@ function LoginForm() {
         })
       );
     } catch (error) {
-      toast.error(getAuthErrorMessage(error));
+      toast.error(getClientAuthErrorMessage(getAuthErrorCode(error, 'login')));
     } finally {
       setIsSubmitting(false);
     }

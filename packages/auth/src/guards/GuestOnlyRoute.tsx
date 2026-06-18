@@ -16,7 +16,7 @@ export type AuthenticatedRedirectPath =
 
 export type GuestOnlyRouteProps = {
   children: ReactNode;
-  authenticatedRedirectPath?: AuthenticatedRedirectPath;
+  authenticatedRedirectPath: AuthenticatedRedirectPath;
   loadingFallback?: ReactNode;
 };
 
@@ -38,18 +38,18 @@ function resolveAuthenticatedRedirectPath(
 
 export function GuestOnlyRoute({
   children,
-  authenticatedRedirectPath = '/',
+  authenticatedRedirectPath,
   loadingFallback = null,
 }: GuestOnlyRouteProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const requestedRedirect = searchParams.get('redirect');
 
   const { user, status, isAuthenticated, isAuthReady } = useAuth();
 
   useEffect(() => {
     if (!isAuthReady || !isAuthenticated) return;
 
-    const requestedRedirect = searchParams.get('redirect');
     const fallbackRedirectPath = resolveAuthenticatedRedirectPath(
       authenticatedRedirectPath,
       user,
@@ -66,7 +66,7 @@ export function GuestOnlyRoute({
     isAuthReady,
     isAuthenticated,
     router,
-    searchParams,
+    requestedRedirect,
     user,
   ]);
 
