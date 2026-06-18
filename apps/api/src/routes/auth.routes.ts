@@ -39,6 +39,7 @@ import {
   updatePasswordSchema,
   updateProfileSchema,
 } from '../schemas/auth.schema';
+
 import { ctrlWrapper } from '../utils/ctrlWrapper';
 
 //===============================================================
@@ -74,7 +75,7 @@ authRoutes.post('/refresh', ctrlWrapper(refreshAuthSession));
 //=================================================================================
 
 authRoutes.post(
-  '/forgot-password',
+  '/password-reset/request',
   passwordResetRateLimit,
   validate({
     body: forgotPasswordSchema,
@@ -85,7 +86,7 @@ authRoutes.post(
 //=================================================================================
 
 authRoutes.post(
-  '/reset-password',
+  '/password-reset/confirm',
   passwordResetRateLimit,
   validate({
     body: resetPasswordSchema,

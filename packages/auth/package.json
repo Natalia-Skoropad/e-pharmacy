@@ -11,17 +11,26 @@
     "./session": "./src/session/index.ts"
   },
   "scripts": {
-    "lint": "tsc --noEmit",
+    "lint": "eslint src",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@e-pharmacy/config": "workspace:*",
-    "@e-pharmacy/types": "workspace:*",
-    "react": ">=19"
+    "@e-pharmacy/types": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19",
     "next": "16.2.4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "react": ">=19"
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "next": ">=16"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    }
   }
 }

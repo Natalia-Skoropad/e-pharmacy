@@ -37,12 +37,16 @@ export const sharedNameSchema = z
   .max(USER_NAME_MAX_LENGTH, VALIDATION_MESSAGES.limits.nameMax)
   .regex(NAME_PATTERN, VALIDATION_MESSAGES.format.name);
 
+//===============================================================
+
 export const sharedEmailSchema = z
   .string()
   .trim()
   .toLowerCase()
   .email(VALIDATION_MESSAGES.format.emailApi)
   .max(USER_EMAIL_MAX_LENGTH, VALIDATION_MESSAGES.limits.emailMax);
+
+//===============================================================
 
 export const sharedRequiredPhoneSchema = z
   .string()
@@ -51,7 +55,7 @@ export const sharedRequiredPhoneSchema = z
   .max(USER_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.limits.phoneMax)
   .regex(PHONE_PATTERN, VALIDATION_MESSAGES.format.phone);
 
-export const sharedPhoneSchema = sharedRequiredPhoneSchema;
+//===============================================================
 
 export const sharedPasswordSchema = z
   .string()
@@ -59,9 +63,13 @@ export const sharedPasswordSchema = z
   .max(USER_PASSWORD_MAX_LENGTH, VALIDATION_MESSAGES.limits.passwordMax)
   .regex(PASSWORD_PATTERN, VALIDATION_MESSAGES.format.password);
 
+//===============================================================
+
 export const sharedRequiredPasswordSchema = z
   .string()
   .min(1, VALIDATION_MESSAGES.required.password);
+
+//===============================================================
 
 export const sharedRequiredAddressSchema = z
   .string()
@@ -70,10 +78,16 @@ export const sharedRequiredAddressSchema = z
   .max(USER_ADDRESS_MAX_LENGTH, VALIDATION_MESSAGES.limits.addressMax)
   .regex(ADDRESS_PATTERN, VALIDATION_MESSAGES.format.address);
 
-export const sharedOptionalAddressSchema = z
-  .union([sharedRequiredAddressSchema, z.literal('')])
-  .optional()
-  .transform((value: string | undefined) => (value === '' ? undefined : value));
+//===============================================================
+
+export const sharedOptionalAddressSchema = z.preprocess((value) => {
+  if (typeof value !== 'string') return value;
+
+  const normalizedValue = value.trim();
+  return normalizedValue === '' ? undefined : normalizedValue;
+}, sharedRequiredAddressSchema.optional());
+
+//===============================================================
 
 export const sharedReviewCommentSchema = z
   .string()
@@ -87,6 +101,8 @@ export const sharedReviewCommentSchema = z
     VALIDATION_MESSAGES.limits.reviewCommentMax
   )
   .regex(REVIEW_COMMENT_PATTERN, VALIDATION_MESSAGES.format.reviewComment);
+
+//===============================================================
 
 export const sharedReviewRatingSchema = z.coerce
   .number()
@@ -106,6 +122,8 @@ export const sharedOrderCommentSchema = z
   .regex(ORDER_COMMENT_PATTERN, VALIDATION_MESSAGES.format.orderComment)
   .optional();
 
+//===============================================================
+
 export const sharedPictureUrlSchema = z
   .string()
   .trim()
@@ -116,6 +134,8 @@ export const sharedPictureUrlSchema = z
   )
   .optional()
   .nullable();
+
+//===============================================================
 
 export const sharedSearchSchema = z
   .string()

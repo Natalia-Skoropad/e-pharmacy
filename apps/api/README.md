@@ -134,8 +134,8 @@ POST /health/echo
 ```txt
 POST  /auth/register
 POST  /auth/login
-POST  /auth/forgot-password
-POST  /auth/reset-password
+POST  /auth/password-reset/request
+POST  /auth/password-reset/confirm
 GET   /auth/current
 PATCH /auth/current
 PATCH /auth/current/password

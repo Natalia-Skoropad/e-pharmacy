@@ -5,3 +5,6 @@ export {
   browserAuthSessionHintStorage,
   createBrowserAuthSessionHintStorage,
 } from './browser-auth-session-hint-storage';
+
+export type { AuthSessionEvent, AuthSessionSync } from './browser-auth-session-sync';
+export { createBrowserAuthSessionSync } from './browser-auth-session-sync';

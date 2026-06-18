@@ -24,8 +24,8 @@ export const apiRoutes = {
     password: '/auth/current/password',
     sessions: '/auth/sessions',
     session: (sessionId: EntityId) => `/auth/sessions/${sessionId}`,
-    forgotPassword: '/auth/forgot-password',
-    resetPassword: '/auth/reset-password',
+    passwordResetRequest: '/auth/password-reset/request',
+    passwordResetConfirm: '/auth/password-reset/confirm',
   },
 
   pharmacies: {
@@ -102,8 +102,8 @@ export const clientApiRoutes = {
     password: '/api/auth/password',
     sessions: '/api/auth/sessions',
     session: (sessionId: EntityId) => `/api/auth/sessions/${sessionId}`,
-    forgotPassword: '/api/auth/request-reset-email',
-    resetPassword: '/api/auth/reset-password',
+    passwordResetRequest: '/api/auth/password-reset/request',
+    passwordResetConfirm: '/api/auth/password-reset/confirm',
   },
 
   pharmacies: {
@@ -152,6 +152,31 @@ export const routePairs = {
     current: {
       backendPath: apiRoutes.auth.current,
       clientPath: clientApiRoutes.auth.current,
+    },
+
+    password: {
+      backendPath: apiRoutes.auth.password,
+      clientPath: clientApiRoutes.auth.password,
+    },
+
+    sessions: {
+      backendPath: apiRoutes.auth.sessions,
+      clientPath: clientApiRoutes.auth.sessions,
+    },
+
+    session: (sessionId: EntityId) => ({
+      backendPath: apiRoutes.auth.session(sessionId),
+      clientPath: clientApiRoutes.auth.session(sessionId),
+    }),
+
+    passwordResetRequest: {
+      backendPath: apiRoutes.auth.passwordResetRequest,
+      clientPath: clientApiRoutes.auth.passwordResetRequest,
+    },
+
+    passwordResetConfirm: {
+      backendPath: apiRoutes.auth.passwordResetConfirm,
+      clientPath: clientApiRoutes.auth.passwordResetConfirm,
     },
   },
 } as const;

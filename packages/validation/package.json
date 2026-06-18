@@ -16,10 +16,13 @@
   "scripts": {
     "build": "tsc",
     "lint": "tsc --noEmit",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "tsx --test src/shared/auth-contract.test.ts"
   },
   "devDependencies": {
-    "typescript": "^5"
+    "typescript": "^5",
+    "tsx": "latest",
+    "@types/node": "latest"
   },
   "dependencies": {
     "@e-pharmacy/types": "workspace:*"

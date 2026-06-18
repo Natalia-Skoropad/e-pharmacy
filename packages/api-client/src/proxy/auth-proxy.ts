@@ -92,6 +92,6 @@ export const AUTH_PROXY_ROUTES = {
   password: API_ROUTES.auth.password,
   sessions: API_ROUTES.auth.sessions,
   session: API_ROUTES.auth.session,
-  forgotPassword: API_ROUTES.auth.forgotPassword,
-  resetPassword: API_ROUTES.auth.resetPassword,
+  passwordResetRequest: API_ROUTES.auth.passwordResetRequest,
+  passwordResetConfirm: API_ROUTES.auth.passwordResetConfirm,
 } as const;

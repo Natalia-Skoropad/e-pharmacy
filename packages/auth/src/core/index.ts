@@ -1,1 +1,2 @@
-export * from './AuthProviderCore';
+export { AuthProviderCore, useAuth } from './AuthProviderCore';
+export type { AuthProviderServices } from './auth-provider.types';

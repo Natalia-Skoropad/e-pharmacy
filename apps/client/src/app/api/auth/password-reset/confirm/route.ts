@@ -7,6 +7,6 @@ import { AUTH_PROXY_ROUTES, proxyAuthRequest } from '@e-pharmacy/api-client/prox
 export async function POST(request: NextRequest) {
   return proxyAuthRequest({
     request,
-    backendPath: AUTH_PROXY_ROUTES.resetPassword,
+    backendPath: AUTH_PROXY_ROUTES.passwordResetConfirm,
   });
 }
