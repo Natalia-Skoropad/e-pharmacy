@@ -1,5 +1,3 @@
-import { USER_ADDRESS_MAX_LENGTH } from '@e-pharmacy/validation';
-
 import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
 import type { AddressFieldProps } from '../types';
 
@@ -14,18 +12,31 @@ function AddressInput({
   error,
   isTouched,
   required = true,
+  disabled = false,
   className,
+  label = 'Delivery address / post office',
+  placeholder = 'Example: 12 Central Street, Nova Poshta office #5, Kyiv',
+  autoComplete = 'street-address',
+  maxLength,
+  hint,
+  ariaDescribedBy,
   onChange,
 }: AddressFieldProps) {
+  const hasError = Boolean(isTouched && error);
+  const describedBy = [hint ? `${id}-hint` : null, hasError ? `${id}-error` : null, ariaDescribedBy]
+    .filter(Boolean)
+    .join(' ') || undefined;
+
   return (
     <FormFieldLayout
       id={id}
-      label="Delivery address / post office"
+      label={label}
       required={required}
       className={className}
       error={error}
       errorClassName={css.addressError}
       isTouched={isTouched}
+      hint={hint}
     >
       <div className={css.inputWrap}>
         <textarea
@@ -33,16 +44,19 @@ function AddressInput({
           id={id}
           name={name}
           value={value}
-          placeholder="Example: 12 Central Street, Nova Poshta office #5, Kyiv"
-          autoComplete="street-address"
-          maxLength={USER_ADDRESS_MAX_LENGTH}
-          aria-invalid={Boolean(isTouched && error)}
-          aria-describedby={`${id}-error`}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          maxLength={maxLength}
+          disabled={disabled}
+          aria-invalid={hasError}
+          aria-describedby={describedBy}
           onChange={onChange}
         />
-        <span className={css.textareaCounter} aria-hidden="true">
-          {value.length}/{USER_ADDRESS_MAX_LENGTH}
-        </span>
+        {typeof maxLength === 'number' ? (
+          <span className={css.textareaCounter} aria-hidden="true">
+            {value.length}/{maxLength}
+          </span>
+        ) : null}
       </div>
     </FormFieldLayout>
   );

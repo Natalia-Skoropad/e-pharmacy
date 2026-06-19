@@ -7,7 +7,9 @@ import css from './Toast.module.css';
 
 //===================================================================
 
-export type ToastVariant = 'success' | 'error' | 'info';
+export type ToastVariant = 'success' | 'error' | 'info' | 'warning';
+
+//===================================================================
 
 type ToastProps = {
   message: string;
@@ -27,6 +29,7 @@ const TOAST_LABELS: Record<ToastVariant, string> = {
   success: 'Success notification',
   error: 'Error notification',
   info: 'Information notification',
+  warning: 'Warning notification',
 };
 
 //===================================================================
@@ -61,8 +64,16 @@ function Toast({
           '--toast-offset': `${Math.max(offsetIndex, 0) * 68}px`,
         } as CSSProperties
       }
-      role={resolvedVariant === 'error' ? 'alert' : 'status'}
-      aria-live={resolvedVariant === 'error' ? 'assertive' : 'polite'}
+      role={
+        resolvedVariant === 'error' || resolvedVariant === 'warning'
+          ? 'alert'
+          : 'status'
+      }
+      aria-live={
+        resolvedVariant === 'error' || resolvedVariant === 'warning'
+          ? 'assertive'
+          : 'polite'
+      }
       aria-label={TOAST_LABELS[resolvedVariant]}
     >
       <span className={css.dot} aria-hidden="true" />

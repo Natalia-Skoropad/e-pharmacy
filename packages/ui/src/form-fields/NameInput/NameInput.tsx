@@ -1,5 +1,3 @@
-import { USER_NAME_MAX_LENGTH } from '@e-pharmacy/validation';
-
 import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
 import type { AuthFieldBaseProps } from '../types';
 
@@ -14,17 +12,31 @@ function NameInput({
   error,
   isTouched,
   required = true,
+  disabled = false,
   className,
+  label = 'Name',
+  placeholder = 'Your name',
+  autoComplete = 'name',
+  maxLength,
+  pattern,
+  hint,
+  ariaDescribedBy,
   onChange,
 }: AuthFieldBaseProps) {
+  const hasError = Boolean(isTouched && error);
+  const describedBy = [hint ? `${id}-hint` : null, hasError ? `${id}-error` : null, ariaDescribedBy]
+    .filter(Boolean)
+    .join(' ') || undefined;
+
   return (
     <FormFieldLayout
       id={id}
-      label="Name"
+      label={label}
       required={required}
       className={className}
       error={error}
       isTouched={isTouched}
+      hint={hint}
     >
       <div className={css.inputWrap}>
         <input
@@ -33,16 +45,20 @@ function NameInput({
           name={name}
           type="text"
           value={value}
-          placeholder="Your name"
-          autoComplete="name"
-          maxLength={USER_NAME_MAX_LENGTH}
-          aria-invalid={Boolean(isTouched && error)}
-          aria-describedby={`${id}-error`}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          maxLength={maxLength}
+          pattern={pattern}
+          disabled={disabled}
+          aria-invalid={hasError}
+          aria-describedby={describedBy}
           onChange={onChange}
         />
-        <span className={css.inputCounter} aria-hidden="true">
-          {value.length}/{USER_NAME_MAX_LENGTH}
-        </span>
+        {typeof maxLength === 'number' ? (
+          <span className={css.inputCounter} aria-hidden="true">
+            {value.length}/{maxLength}
+          </span>
+        ) : null}
       </div>
     </FormFieldLayout>
   );

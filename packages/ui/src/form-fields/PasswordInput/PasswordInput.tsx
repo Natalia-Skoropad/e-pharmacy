@@ -3,8 +3,6 @@ import { Eye, EyeOff } from 'lucide-react';
 import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
 import type { PasswordFieldProps } from '../types';
 
-import { USER_PASSWORD_MAX_LENGTH } from '@e-pharmacy/validation';
-
 import css from '../FormFieldLayout/FormField.module.css';
 
 //===================================================================
@@ -19,12 +17,24 @@ function PasswordInput({
   error,
   isTouched,
   required = true,
+  disabled = false,
   className,
+  maxLength,
+  pattern,
+  hint,
+  ariaDescribedBy,
   isVisible,
   labelAction,
+  showPasswordLabel = 'Show password',
+  hidePasswordLabel = 'Hide password',
   onChange,
   onToggleVisibility,
 }: PasswordFieldProps) {
+  const hasError = Boolean(isTouched && error);
+  const describedBy = [hint ? `${id}-hint` : null, hasError ? `${id}-error` : null, ariaDescribedBy]
+    .filter(Boolean)
+    .join(' ') || undefined;
+
   return (
     <FormFieldLayout
       id={id}
@@ -34,6 +44,7 @@ function PasswordInput({
       labelAction={labelAction}
       error={error}
       isTouched={isTouched}
+      hint={hint}
     >
       <div className={css.inputWrap}>
         <input
@@ -44,18 +55,23 @@ function PasswordInput({
           value={value}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          maxLength={USER_PASSWORD_MAX_LENGTH}
-          aria-invalid={Boolean(isTouched && error)}
-          aria-describedby={`${id}-error`}
+          maxLength={maxLength}
+          pattern={pattern}
+          disabled={disabled}
+          aria-invalid={hasError}
+          aria-describedby={describedBy}
           onChange={onChange}
         />
-        <span className={css.passwordCounter} aria-hidden="true">
-          {value.length}/{USER_PASSWORD_MAX_LENGTH}
-        </span>
+        {typeof maxLength === 'number' ? (
+          <span className={css.passwordCounter} aria-hidden="true">
+            {value.length}/{maxLength}
+          </span>
+        ) : null}
         <button
           className={css.eyeButton}
           type="button"
-          aria-label={isVisible ? 'Hide password' : 'Show password'}
+          aria-label={isVisible ? hidePasswordLabel : showPasswordLabel}
+          disabled={disabled}
           onClick={onToggleVisibility}
         >
           {isVisible ? (

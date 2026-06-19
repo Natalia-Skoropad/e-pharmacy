@@ -97,6 +97,14 @@
   background-color: var(--color-info);
 }
 
+.warning {
+  border-color: var(--color-warning);
+}
+
+.warning .dot {
+  background-color: var(--color-warning);
+}
+
 @media only screen and (max-width: 767.98px) {
   .toast {
     top: calc(76px + var(--toast-offset, 0px));

@@ -1,5 +1,3 @@
-import { USER_ORDER_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
-
 import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
 import type { CommentFieldProps } from '../types';
 
@@ -14,12 +12,20 @@ function CommentInput({
   error,
   isTouched,
   required = false,
+  disabled = false,
   className,
   label = 'Comment for pharmacy',
   placeholder = 'Add details for the pharmacy if needed',
-  maxLength = USER_ORDER_COMMENT_MAX_LENGTH,
+  maxLength,
+  hint,
+  ariaDescribedBy,
   onChange,
 }: CommentFieldProps) {
+  const hasError = Boolean(isTouched && error);
+  const describedBy = [hint ? `${id}-hint` : null, hasError ? `${id}-error` : null, ariaDescribedBy]
+    .filter(Boolean)
+    .join(' ') || undefined;
+
   return (
     <FormFieldLayout
       id={id}
@@ -28,6 +34,7 @@ function CommentInput({
       className={className}
       error={error}
       isTouched={isTouched}
+      hint={hint}
     >
       <div className={css.inputWrap}>
         <textarea
@@ -37,13 +44,16 @@ function CommentInput({
           value={value}
           placeholder={placeholder}
           maxLength={maxLength}
-          aria-invalid={Boolean(isTouched && error)}
-          aria-describedby={`${id}-error`}
+          disabled={disabled}
+          aria-invalid={hasError}
+          aria-describedby={describedBy}
           onChange={onChange}
         />
-        <span className={css.textareaCounter} aria-hidden="true">
-          {value.length}/{maxLength}
-        </span>
+        {typeof maxLength === 'number' ? (
+          <span className={css.textareaCounter} aria-hidden="true">
+            {value.length}/{maxLength}
+          </span>
+        ) : null}
       </div>
     </FormFieldLayout>
   );

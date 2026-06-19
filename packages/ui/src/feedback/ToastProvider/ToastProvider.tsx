@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
-
 import { Toast, DEFAULT_TOAST_DURATION, type ToastVariant } from '../Toast';
 
 import {
@@ -75,6 +74,8 @@ function ToastProvider({ children }: ToastProviderProps) {
       error: (message, duration) =>
         show({ message, duration, variant: 'error' }),
       info: (message, duration) => show({ message, duration, variant: 'info' }),
+      warning: (message, duration) =>
+        show({ message, duration, variant: 'warning' }),
     }),
     [show]
   );

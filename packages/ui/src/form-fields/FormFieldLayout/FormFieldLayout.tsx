@@ -16,8 +16,10 @@ function FormFieldLayout({
   errorClassName,
   error,
   isTouched,
+  hint,
 }: FormFieldLayoutProps) {
   const errorId = `${id}-error`;
+  const hintId = `${id}-hint`;
 
   return (
     <div className={clsx(css.field, className)}>
@@ -33,6 +35,12 @@ function FormFieldLayout({
 
         {labelAction}
       </div>
+
+      {hint ? (
+        <p className={css.hint} id={hintId}>
+          {hint}
+        </p>
+      ) : null}
 
       {children}
 
