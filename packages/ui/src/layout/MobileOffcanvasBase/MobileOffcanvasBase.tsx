@@ -39,7 +39,7 @@ function MobileOffcanvasBase({
   classNames,
 }: MobileOffcanvasBaseProps) {
   const panelRef = useRef<HTMLElement | null>(null);
-  const handleBackdropClick = useBackdropClick({ onClose });
+  const handleBackdropMouseDown = useBackdropClick({ onClose });
 
   useEscapeToClose({ isOpen, onClose });
   useBodyScrollLock(isOpen);
@@ -52,7 +52,7 @@ function MobileOffcanvasBase({
     <div
       className={clsx(classNames.backdrop, isOpen && classNames.backdropOpen)}
       aria-hidden={!isOpen}
-      onClick={handleBackdropClick}
+      onMouseDown={handleBackdropMouseDown}
     >
       <aside
         ref={panelRef}

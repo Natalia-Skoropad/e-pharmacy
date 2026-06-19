@@ -7,6 +7,11 @@ import css from '../Button/Button.module.css';
 
 //===================================================================
 
+type ButtonLinkRenderProps = Omit<ComponentPropsWithoutRef<typeof Link>, 'children'> & {
+  children: ReactNode;
+  className: string;
+};
+
 export type ButtonLinkProps = {
   children: ReactNode;
   variant?: ButtonVariant;
@@ -15,6 +20,7 @@ export type ButtonLinkProps = {
   iconLeft?: ReactNode;
   iconRight?: ReactNode;
   className?: string;
+  renderLink?: (props: ButtonLinkRenderProps) => ReactNode;
 } & ComponentPropsWithoutRef<typeof Link>;
 
 //===================================================================
@@ -27,22 +33,31 @@ function ButtonLink({
   iconLeft,
   iconRight,
   className,
+  renderLink,
   ...props
 }: ButtonLinkProps) {
-  return (
-    <Link
-      className={clsx(
-        css.button,
-        css[variant],
-        css[size],
-        fullWidth && css.fullWidth,
-        className
-      )}
-      {...props}
-    >
+  const classNames = clsx(
+    css.button,
+    css[variant],
+    css[size],
+    fullWidth && css.fullWidth,
+    className
+  );
+  const content = (
+    <>
       {iconLeft}
       <span className={css.content}>{children}</span>
       {iconRight}
+    </>
+  );
+
+  if (renderLink) {
+    return renderLink({ ...props, className: classNames, children: content });
+  }
+
+  return (
+    <Link className={classNames} {...props}>
+      {content}
     </Link>
   );
 }

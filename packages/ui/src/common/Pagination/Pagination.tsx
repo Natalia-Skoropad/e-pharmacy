@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 
 import css from './Pagination.module.css';
@@ -10,12 +11,20 @@ export type PaginationLabels = {
   page?: string;
 };
 
+type PaginationLinkRenderProps = {
+  href: string;
+  className: string;
+  children: ReactNode;
+  'aria-label'?: string;
+};
+
 export type PaginationProps = {
   currentPage: number;
   totalPages: number;
   getPageHref: (page: number) => string;
   ariaLabel?: string;
   labels?: PaginationLabels;
+  renderLink?: (props: PaginationLinkRenderProps) => ReactNode;
 };
 
 //===================================================================
@@ -63,6 +72,7 @@ function Pagination({
   getPageHref,
   ariaLabel = 'Pagination',
   labels,
+  renderLink,
 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
@@ -71,18 +81,39 @@ function Pagination({
   const nextPage = currentPage + 1;
   const items = getPaginationItems(currentPage, totalPages);
 
+  const renderPaginationLink = ({
+    href,
+    className,
+    children,
+    'aria-label': linkAriaLabel,
+  }: PaginationLinkRenderProps) => {
+    if (renderLink) {
+      return renderLink({
+        href,
+        className,
+        children,
+        'aria-label': linkAriaLabel,
+      });
+    }
+
+    return (
+      <Link className={className} href={href} aria-label={linkAriaLabel}>
+        {children}
+      </Link>
+    );
+  };
+
   return (
     <nav className={css.pagination} aria-label={ariaLabel}>
       <ul className={css.list}>
         <li>
           {currentPage > 1 ? (
-            <Link
-              className={css.link}
-              href={getPageHref(previousPage)}
-              aria-label={`${mergedLabels.previous}, ${mergedLabels.page.toLowerCase()} ${previousPage}`}
-            >
-              {mergedLabels.previous}
-            </Link>
+            renderPaginationLink({
+              href: getPageHref(previousPage),
+              className: css.link,
+              'aria-label': `${mergedLabels.previous}, ${mergedLabels.page.toLowerCase()} ${previousPage}`,
+              children: mergedLabels.previous,
+            })
           ) : (
             <span className={css.linkDisabled} aria-disabled="true">
               {mergedLabels.previous}
@@ -107,22 +138,21 @@ function Pagination({
             <li key={item}>
               {isCurrent ? (
                 <span className={css.current} aria-current="page">
-                  <span className="visually-hidden">
-                    {mergedLabels.page} 
-                  </span>
+                  <span className="visually-hidden">{mergedLabels.page} </span>
                   {item}
                 </span>
               ) : (
-                <Link
-                  className={css.link}
-                  href={getPageHref(item)}
-                  aria-label={`${mergedLabels.page} ${item}`}
-                >
-                  <span className="visually-hidden">
-                    {mergedLabels.page} 
-                  </span>
-                  {item}
-                </Link>
+                renderPaginationLink({
+                  href: getPageHref(item),
+                  className: css.link,
+                  'aria-label': `${mergedLabels.page} ${item}`,
+                  children: (
+                    <>
+                      <span className="visually-hidden">{mergedLabels.page} </span>
+                      {item}
+                    </>
+                  ),
+                })
               )}
             </li>
           );
@@ -130,13 +160,12 @@ function Pagination({
 
         <li>
           {currentPage < totalPages ? (
-            <Link
-              className={css.link}
-              href={getPageHref(nextPage)}
-              aria-label={`${mergedLabels.next}, ${mergedLabels.page.toLowerCase()} ${nextPage}`}
-            >
-              {mergedLabels.next}
-            </Link>
+            renderPaginationLink({
+              href: getPageHref(nextPage),
+              className: css.link,
+              'aria-label': `${mergedLabels.next}, ${mergedLabels.page.toLowerCase()} ${nextPage}`,
+              children: mergedLabels.next,
+            })
           ) : (
             <span className={css.linkDisabled} aria-disabled="true">
               {mergedLabels.next}

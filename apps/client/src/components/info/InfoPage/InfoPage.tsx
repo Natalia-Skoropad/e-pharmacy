@@ -1,9 +1,5 @@
-import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
-import clsx from 'clsx';
-
 import { Container } from '@e-pharmacy/ui/common';
-import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { Breadcrumbs, SideMenu } from '@e-pharmacy/ui/layout';
 
 import { INFO_NAV_LINKS } from '@/components/layout/config/navigation';
 import { createBreadcrumbs } from '@/lib/routes';
@@ -41,34 +37,24 @@ function InfoPage({
   highlights = [],
   sections,
 }: InfoPageProps) {
+  const sideMenuItems = INFO_NAV_LINKS.map(({ icon: Icon, ...item }) => ({
+    ...item,
+    icon: <Icon size={20} strokeWidth={1.8} aria-hidden="true" />,
+  }));
+
   return (
     <main className={css.page}>
       <Container>
         <Breadcrumbs items={createBreadcrumbs(title)} />
 
         <div className={css.layout}>
-          <aside className={css.sidebar} aria-label="Information pages">
-            <nav>
-              <ul className={css.sideList}>
-                {INFO_NAV_LINKS.map((link) => {
-                  const isActive = link.href === activePath;
-
-                  return (
-                    <li key={link.href}>
-                      <Link
-                        className={clsx(css.sideLink, isActive && css.active)}
-                        href={link.href}
-                        aria-current={isActive ? 'page' : undefined}
-                      >
-                        <span>{link.label}</span>
-                        <ChevronRight size={20} aria-hidden="true" />
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
-          </aside>
+          <SideMenu
+            className={css.sidebar}
+            ariaLabel="Information pages"
+            items={sideMenuItems}
+            activePath={activePath}
+            showChevron
+          />
 
           <article className={css.content}>
             <header className={css.header}>

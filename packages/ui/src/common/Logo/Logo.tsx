@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 
@@ -12,6 +13,15 @@ export type LogoSize = 'sm' | 'md';
 
 //===================================================================
 
+type LogoLinkRenderProps = {
+  href: string;
+  className: string;
+  children: ReactNode;
+  'aria-label': string;
+};
+
+//===================================================================
+
 export type LogoProps = {
   className?: string;
   variant?: LogoVariant;
@@ -21,6 +31,7 @@ export type LogoProps = {
   iconName?: string;
   showText?: boolean;
   ariaLabel?: string;
+  renderLink?: (props: LogoLinkRenderProps) => ReactNode;
 };
 
 //===================================================================
@@ -34,6 +45,7 @@ function Logo({
   iconName = 'icon-logo',
   showText = true,
   ariaLabel,
+  renderLink,
 }: LogoProps) {
   const classNames = clsx(css.logo, css[variant], css[size], className);
   const content = (
@@ -53,6 +65,15 @@ function Logo({
         {content}
       </span>
     );
+  }
+
+  if (renderLink) {
+    return renderLink({
+      href,
+      className: classNames,
+      children: content,
+      'aria-label': accessibleLabel,
+    });
   }
 
   return (

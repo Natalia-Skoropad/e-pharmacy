@@ -11,6 +11,13 @@ import css from './UserBadge.module.css';
 
 export type UserBadgeVariant = 'light' | 'dark';
 
+type UserBadgeLinkRenderProps = {
+  href: string;
+  className: string;
+  children: ReactNode;
+  onClick?: () => void;
+};
+
 export type UserBadgeProps = {
   name?: string | null;
   email?: string | null;
@@ -22,6 +29,7 @@ export type UserBadgeProps = {
   className?: string;
   meta?: ReactNode;
   onClick?: () => void;
+  renderLink?: (props: UserBadgeLinkRenderProps) => ReactNode;
 };
 
 //===================================================================
@@ -37,6 +45,7 @@ function UserBadge({
   className,
   meta,
   onClick,
+  renderLink,
 }: UserBadgeProps) {
   const label = name ?? email ?? fallbackLabel;
   const secondaryText = meta ?? (name && email ? email : null);
@@ -61,6 +70,15 @@ function UserBadge({
   const classNames = clsx(css.badge, css[variant], className);
 
   if (href) {
+    if (renderLink) {
+      return renderLink({
+        href,
+        className: classNames,
+        children: content,
+        onClick,
+      });
+    }
+
     return (
       <Link className={classNames} href={href} onClick={onClick}>
         {content}

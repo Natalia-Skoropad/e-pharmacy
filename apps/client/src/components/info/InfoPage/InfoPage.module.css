@@ -10,45 +10,6 @@
 
 .sidebar {
   align-self: start;
-  padding: 12px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
-}
-
-.sideList {
-  display: grid;
-  gap: 6px;
-}
-
-.sideLink {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 16px;
-  min-height: 58px;
-  padding: 14px 16px;
-  font-size: var(--fz-16);
-  font-weight: var(--fw-medium);
-  line-height: 1.4;
-  color: var(--color-text-secondary);
-  border-radius: var(--radius-md);
-  transition:
-    color var(--transition-base),
-    background-color var(--transition-base);
-}
-
-.sideLink:hover,
-.sideLink:focus-visible,
-.sideLink.active {
-  color: var(--color-accent-hover);
-  background-color: var(--color-accent-light);
-}
-
-.sideLink svg {
-  color: currentColor;
-  opacity: 0.72;
 }
 
 .content {
