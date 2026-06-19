@@ -1,5 +1,9 @@
 import ButtonLink from '../../common/ButtonLink/ButtonLink';
-import StatusPageLayout from '../StatusPageLayout/StatusPageLayout';
+
+import StatusPageLayout, {
+  type StatusPageLayoutImage,
+  type StatusPageLayoutVariant,
+} from '../StatusPageLayout/StatusPageLayout';
 
 //===================================================================
 
@@ -16,7 +20,9 @@ type NotFoundPageProps = {
   homeLabel?: string;
   eyebrow?: string;
   secondaryAction?: NotFoundPageAction;
+  image?: StatusPageLayoutImage;
   imageSrc?: string;
+  variant?: StatusPageLayoutVariant;
 };
 
 //===================================================================
@@ -28,21 +34,30 @@ function NotFoundPage({
   homeLabel = 'Back to home',
   eyebrow = '404',
   secondaryAction,
-  imageSrc = '/images/home/three-pills.png',
+  image,
+  imageSrc,
+  variant,
 }: NotFoundPageProps) {
+  const pageImage =
+    image ??
+    (imageSrc
+      ? {
+          src: imageSrc,
+          alt: '',
+          width: 749,
+          height: 508,
+          priority: true,
+        }
+      : undefined);
+
   return (
     <StatusPageLayout
       eyebrow={eyebrow}
       title={title}
       titleId="not-found-title"
       description={description}
-      image={{
-        src: imageSrc,
-        alt: '',
-        width: 749,
-        height: 508,
-        priority: true,
-      }}
+      image={pageImage}
+      variant={variant}
       actions={
         <>
           <ButtonLink href={homeHref} size="lg">

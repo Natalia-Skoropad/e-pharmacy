@@ -1,7 +1,11 @@
 'use client';
 
 import { Button, ButtonLink } from '../../common';
-import StatusPageLayout from '../StatusPageLayout/StatusPageLayout';
+
+import StatusPageLayout, {
+  type StatusPageLayoutImage,
+  type StatusPageLayoutVariant,
+} from '../StatusPageLayout/StatusPageLayout';
 
 //===================================================================
 
@@ -13,7 +17,9 @@ type ErrorPageProps = {
   homeLabel?: string;
   retryLabel?: string;
   eyebrow?: string;
+  image?: StatusPageLayoutImage;
   imageSrc?: string;
+  variant?: StatusPageLayoutVariant;
 };
 
 //===================================================================
@@ -26,21 +32,30 @@ function ErrorPage({
   homeLabel = 'Back to home',
   retryLabel = 'Try again',
   eyebrow = 'Page error',
-  imageSrc = '/images/home/three-pills.png',
+  image,
+  imageSrc,
+  variant,
 }: ErrorPageProps) {
+  const pageImage =
+    image ??
+    (imageSrc
+      ? {
+          src: imageSrc,
+          alt: '',
+          width: 749,
+          height: 508,
+          priority: true,
+        }
+      : undefined);
+
   return (
     <StatusPageLayout
       eyebrow={eyebrow}
       title={title}
       titleId="error-title"
       description={description}
-      image={{
-        src: imageSrc,
-        alt: '',
-        width: 749,
-        height: 508,
-        priority: true,
-      }}
+      image={pageImage}
+      variant={variant}
       actions={
         <>
           <Button type="button" size="lg" onClick={onRetry}>

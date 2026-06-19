@@ -4,18 +4,16 @@ import { useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import { ImageOff, Upload } from 'lucide-react';
 
-import {
-  PICTURE_ACCEPT,
-  buildPictureFileError,
-  buildPictureUrlError,
-} from '@e-pharmacy/validation';
-
 import PictureUpload from '../PictureUpload/PictureUpload';
 import Button from '../Button/Button';
 import ConfirmationModal from '../../modals/ConfirmationModal/ConfirmationModal';
 import { formatInitials } from '../helpers/format-initials';
 
 import css from './PictureCard.module.css';
+
+//===================================================================
+
+const DEFAULT_PICTURE_ACCEPT = 'image/jpeg,image/png,image/webp';
 
 //===================================================================
 
@@ -87,10 +85,10 @@ function PictureCard({
   name,
   pictureUrl,
   isSaving = false,
-  accept = PICTURE_ACCEPT,
+  accept = DEFAULT_PICTURE_ACCEPT,
   labels,
-  validateFile = buildPictureFileError,
-  validatePictureUrl = buildPictureUrlError,
+  validateFile,
+  validatePictureUrl,
   onChange,
   onError,
 }: PictureCardProps) {
@@ -104,7 +102,7 @@ function PictureCard({
 
     if (!file) return;
 
-    const fileError = validateFile(file);
+    const fileError = validateFile?.(file);
 
     if (fileError) {
       onError?.(fileError);
@@ -113,7 +111,7 @@ function PictureCard({
 
     try {
       const dataUrl = await readFileAsDataUrl(file);
-      const pictureUrlError = validatePictureUrl(dataUrl);
+      const pictureUrlError = validatePictureUrl?.(dataUrl);
 
       if (pictureUrlError) {
         onError?.(pictureUrlError);

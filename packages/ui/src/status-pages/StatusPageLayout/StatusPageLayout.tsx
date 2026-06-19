@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import type { ReactNode } from 'react';
+import clsx from 'clsx';
 
 import { Container } from '../../common/Container';
 
@@ -7,7 +8,7 @@ import css from './StatusPageLayout.module.css';
 
 //===================================================================
 
-type StatusPageLayoutImage = {
+export type StatusPageLayoutImage = {
   src: string;
   alt?: string;
   width: number;
@@ -16,13 +17,16 @@ type StatusPageLayoutImage = {
   priority?: boolean;
 };
 
-type StatusPageLayoutProps = {
+export type StatusPageLayoutVariant = 'plain' | 'brand';
+
+export type StatusPageLayoutProps = {
   title: string;
   description: string;
   eyebrow?: string;
   titleId?: string;
   actions?: ReactNode;
   image?: StatusPageLayoutImage;
+  variant?: StatusPageLayoutVariant;
 };
 
 //===================================================================
@@ -34,12 +38,13 @@ function StatusPageLayout({
   titleId = 'status-page-title',
   actions,
   image,
+  variant = 'plain',
 }: StatusPageLayoutProps) {
   return (
-    <main className={css.page}>
+    <main className={clsx(css.page, css[variant])}>
       <section className={css.hero} aria-labelledby={titleId}>
         <Container>
-          <div className={css.heroGrid}>
+          <div className={clsx(css.heroGrid, !image && css.heroGridCompact)}>
             <div className={css.content}>
               {eyebrow ? <p className={css.eyebrow}>{eyebrow}</p> : null}
 

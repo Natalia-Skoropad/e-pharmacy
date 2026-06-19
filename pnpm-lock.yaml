@@ -216,12 +216,6 @@ importers:
       '@e-pharmacy/hooks':
         specifier: workspace:*
         version: link:../hooks
-      '@e-pharmacy/types':
-        specifier: workspace:*
-        version: link:../types
-      '@e-pharmacy/validation':
-        specifier: workspace:*
-        version: link:../validation
       react:
         specifier: '>=19'
         version: 19.2.4

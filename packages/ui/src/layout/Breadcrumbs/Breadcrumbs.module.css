@@ -23,6 +23,7 @@
 }
 
 .sep {
+  display: inline-flex;
   flex-shrink: 0;
   color: var(--color-border);
 }
@@ -67,7 +68,8 @@
   outline: none;
 }
 
-.homeIcon {
+.icon {
+  display: inline-flex;
   flex-shrink: 0;
   color: var(--color-text-primary);
 }

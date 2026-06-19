@@ -14,10 +14,11 @@ import css from './ModalBase.module.css';
 
 //===================================================================
 
-type ModalBaseProps = {
+export type ModalBaseProps = {
   children: ReactNode;
   isOpen?: boolean;
   labelledBy?: string;
+  describedBy?: string;
   className?: string;
   dialogClassName?: string;
   style?: CSSProperties;
@@ -32,6 +33,7 @@ function ModalBase({
   children,
   isOpen = true,
   labelledBy,
+  describedBy,
   className,
   dialogClassName,
   style,
@@ -65,6 +67,7 @@ function ModalBase({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        aria-describedby={describedBy}
         tabIndex={-1}
       >
         {children}

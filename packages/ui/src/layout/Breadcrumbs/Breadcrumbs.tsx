@@ -1,24 +1,39 @@
-import type { BreadcrumbItem } from '@e-pharmacy/types/navigation';
-
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { ChevronRight, Home } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 import css from './Breadcrumbs.module.css';
 
 //===================================================================
 
-type BreadcrumbsProps = {
-  items: BreadcrumbItem[];
+export type BreadcrumbItem = {
+  label: string;
+  href?: string;
+};
+
+type BreadcrumbLinkRenderProps = {
+  item: BreadcrumbItem;
+  href: string;
+  className: string;
+  children: ReactNode;
+};
+
+export type BreadcrumbsProps = {
+  items: readonly BreadcrumbItem[];
   className?: string;
+  ariaLabel?: string;
   includeStructuredData?: boolean;
   createItemUrl?: (href: string) => string;
+  homeIcon?: ReactNode;
+  separatorIcon?: ReactNode;
+  renderLink?: (props: BreadcrumbLinkRenderProps) => ReactNode;
 };
 
 //===================================================================
 
 function createBreadcrumbStructuredData(
-  items: BreadcrumbItem[],
+  items: readonly BreadcrumbItem[],
   createItemUrl?: (href: string) => string
 ) {
   return {
@@ -38,34 +53,59 @@ function createBreadcrumbStructuredData(
 function Breadcrumbs({
   items,
   className,
+  ariaLabel = 'Breadcrumbs',
   includeStructuredData = false,
   createItemUrl,
+  homeIcon,
+  separatorIcon,
+  renderLink,
 }: BreadcrumbsProps) {
   if (!items?.length) return null;
 
+  const renderBreadcrumbLink = (
+    item: BreadcrumbItem,
+    href: string,
+    children: ReactNode
+  ) => {
+    if (renderLink) {
+      return renderLink({
+        item,
+        href,
+        className: css.link,
+        children,
+      });
+    }
+
+    return (
+      <Link href={href} className={css.link}>
+        {children}
+      </Link>
+    );
+  };
+
   return (
     <>
-      <nav className={clsx(css.nav, className)} aria-label="Breadcrumbs">
-        <ul className={css.list}>
+      <nav className={clsx(css.nav, className)} aria-label={ariaLabel}>
+        <ol className={css.list}>
           {items.map((item, idx) => {
+            const isFirst = idx === 0;
             const isLast = idx === items.length - 1;
             const isLink = Boolean(item.href) && !isLast;
+            const content = (
+              <>
+                {isFirst && homeIcon ? (
+                  <span className={css.icon} aria-hidden="true">
+                    {homeIcon}
+                  </span>
+                ) : null}
+                <span className={css.linkText}>{item.label}</span>
+              </>
+            );
 
             return (
               <li key={`${item.label}-${idx}`} className={css.item}>
-                {idx === 0 && item.href && !isLast ? (
-                  <Link href={item.href} className={css.link}>
-                    <Home
-                      size={16}
-                      className={css.homeIcon}
-                      aria-hidden="true"
-                    />
-                    <span className={css.linkText}>{item.label}</span>
-                  </Link>
-                ) : isLink ? (
-                  <Link href={item.href!} className={css.link}>
-                    <span className={css.linkText}>{item.label}</span>
-                  </Link>
+                {isLink ? (
+                  renderBreadcrumbLink(item, item.href!, content)
                 ) : (
                   <span className={css.current} aria-current="page">
                     {item.label}
@@ -73,16 +113,14 @@ function Breadcrumbs({
                 )}
 
                 {!isLast ? (
-                  <ChevronRight
-                    size={14}
-                    className={css.sep}
-                    aria-hidden="true"
-                  />
+                  <span className={css.sep} aria-hidden="true">
+                    {separatorIcon ?? <ChevronRight size={14} />}
+                  </span>
                 ) : null}
               </li>
             );
           })}
-        </ul>
+        </ol>
       </nav>
 
       {includeStructuredData ? (
