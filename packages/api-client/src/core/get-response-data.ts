@@ -1,10 +1,9 @@
 import type { ApiSuccessResponse } from '@e-pharmacy/types';
-
 import { ApiError } from './api-error';
 
 //===================================================================
 
-export function getRequiredResponseData<TData>(
+export function getResponseData<TData>(
   response: ApiSuccessResponse<TData>
 ): TData {
   if (response.data === undefined || response.data === null) {
@@ -35,7 +34,3 @@ export function assertSuccessfulEmptyResponse(
     });
   }
 }
-
-//===================================================================
-
-export const getResponseData = getRequiredResponseData;

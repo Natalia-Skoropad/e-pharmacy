@@ -30,6 +30,8 @@ import type {
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 
+//===================================================================
+
 type AuthContextValue = {
   user: AuthUser | null;
   status: AuthStatus;

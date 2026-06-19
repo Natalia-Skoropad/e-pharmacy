@@ -76,3 +76,26 @@
   color: var(--color-accent);
   border-color: var(--color-accent);
 }
+
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.spinner {
+  flex-shrink: 0;
+  animation: button-spin 800ms linear infinite;
+}
+
+.loading {
+  cursor: wait;
+}
+
+@keyframes button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 
@@ -8,16 +9,18 @@ import css from './UserBadge.module.css';
 
 //===================================================================
 
-type UserBadgeVariant = 'light' | 'dark';
+export type UserBadgeVariant = 'light' | 'dark';
 
-//===================================================================
-
-type UserBadgeProps = {
+export type UserBadgeProps = {
   name?: string | null;
+  email?: string | null;
   pictureUrl?: string | null;
+  pictureAlt?: string;
+  fallbackLabel?: string;
   href?: string;
   variant?: UserBadgeVariant;
   className?: string;
+  meta?: ReactNode;
   onClick?: () => void;
 };
 
@@ -25,18 +28,33 @@ type UserBadgeProps = {
 
 function UserBadge({
   name,
+  email,
   pictureUrl,
+  pictureAlt = '',
+  fallbackLabel = 'Profile',
   href,
   variant = 'light',
   className,
+  meta,
   onClick,
 }: UserBadgeProps) {
+  const label = name ?? email ?? fallbackLabel;
+  const secondaryText = meta ?? (name && email ? email : null);
+
   const content = (
     <>
-      <span className={css.picture} aria-hidden="true">
-        {pictureUrl ? <PictureUpload src={pictureUrl} /> : formatInitials(name)}
+      <span className={css.picture} aria-hidden={!pictureAlt}>
+        {pictureUrl ? (
+          <PictureUpload src={pictureUrl} alt={pictureAlt} />
+        ) : (
+          formatInitials(label)
+        )}
       </span>
-      <span className={css.name}>{name ?? 'Profile'}</span>
+
+      <span className={css.textWrap}>
+        <span className={css.name}>{label}</span>
+        {secondaryText ? <span className={css.meta}>{secondaryText}</span> : null}
+      </span>
     </>
   );
 

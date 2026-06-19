@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./core": "./src/core/index.ts",
-    "./core/*": "./src/core/*",
-    "./contracts": "./src/contracts/index.ts"
+    ".": "./src/index.ts",
+    "./contracts": "./src/contracts/index.ts",
+    "./core": "./src/core/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

@@ -12,6 +12,22 @@
     opacity var(--transition-base);
 }
 
+
+.sm {
+  gap: 8px;
+  font-size: var(--fz-16);
+}
+
+.sm .iconWrap {
+  width: 28px;
+  height: 28px;
+}
+
+.md {
+  gap: 10px;
+  font-size: var(--fz-18);
+}
+
 .logo:hover,
 .logo:focus-visible {
   opacity: 0.82;

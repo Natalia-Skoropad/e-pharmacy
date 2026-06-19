@@ -1,15 +1,14 @@
-import { LoaderCircle } from 'lucide-react';
-
 import Button from '../Button/Button';
 
 import css from './LazyLoadButton.module.css';
 
 //===================================================================
 
-type LazyLoadButtonProps = {
+export type LazyLoadButtonProps = {
   visibleCount: number;
   totalCount: number;
   label?: string;
+  loadingLabel?: string;
   isLoading?: boolean;
   onLoadMore: () => void;
 };
@@ -20,6 +19,7 @@ function LazyLoadButton({
   visibleCount,
   totalCount,
   label = 'Show more',
+  loadingLabel = 'Loading...',
   isLoading = false,
   onLoadMore,
 }: LazyLoadButtonProps) {
@@ -33,12 +33,10 @@ function LazyLoadButton({
         type="button"
         variant="secondary"
         className={css.button}
-        disabled={isLoading}
+        isLoading={isLoading}
+        loadingLabel={loadingLabel}
         onClick={onLoadMore}
       >
-        {isLoading ? (
-          <LoaderCircle className={css.spinner} size={18} aria-hidden="true" />
-        ) : null}
         {label} ({remainingCount})
       </Button>
     </div>

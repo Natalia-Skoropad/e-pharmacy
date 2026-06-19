@@ -22,6 +22,7 @@ import {
   PhoneInput,
 } from '@e-pharmacy/ui/form-fields';
 
+import { useToast } from '@e-pharmacy/ui/feedback';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
@@ -112,6 +113,7 @@ const ORDERS_VISIBLE_STEP = 15;
 
 function ProfilePageContent() {
   const { isAuthenticated, isAuthReady, user, reloadCurrentUser } = useAuth();
+  const toast = useToast();
   const canUseAuthFeatures = isAuthReady && isAuthenticated;
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
 
@@ -168,7 +170,6 @@ function ProfilePageContent() {
   const [isFavoritePharmaciesLoading, setIsFavoritePharmaciesLoading] =
     useState(false);
   const [isOrdersLoading, setIsOrdersLoading] = useState(false);
-  const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
   const [passwordSubmitError, setPasswordSubmitError] = useState('');
   const [isProfileSaving, setIsProfileSaving] = useState(false);
@@ -424,7 +425,7 @@ function ProfilePageContent() {
       setSessions((current) =>
         current.filter((session) => session.id !== sessionId)
       );
-      setFeedback('Session was revoked.');
+      toast.success('Session was revoked.');
     } catch {
       setSessionsError('Could not revoke the session.');
     }
@@ -458,7 +459,6 @@ function ProfilePageContent() {
     field: keyof DataProfileFormValues,
     value: string
   ) => {
-    setFeedback('');
     setError('');
     setProfileTouchedFields((prev) => ({
       ...prev,
@@ -472,7 +472,6 @@ function ProfilePageContent() {
   };
 
   const handlePictureError = (message: string) => {
-    setFeedback('');
     setError(message);
   };
 
@@ -483,13 +482,12 @@ function ProfilePageContent() {
 
     try {
       setIsPictureSaving(true);
-      setFeedback('');
       setError('');
       setPicturePreview(pictureUrl);
 
       await updateCurrentUser({ pictureUrl: pictureUrl });
       await reloadCurrentUser();
-      setFeedback(
+      toast.success(
         pictureUrl ? 'Profile photo was updated.' : 'Profile photo was removed.'
       );
     } catch {
@@ -514,7 +512,6 @@ function ProfilePageContent() {
 
     try {
       setIsProfileSaving(true);
-      setFeedback('');
       setError('');
 
       const nextProfileValues = normalizeDataProfileValues(profileValues);
@@ -523,7 +520,7 @@ function ProfilePageContent() {
       await reloadCurrentUser();
       setInitialProfileValues(nextProfileValues);
       setProfileTouchedFields({});
-      setFeedback('Profile data was updated.');
+      toast.success('Profile data was updated.');
     } catch {
       setError('Could not update profile data.');
     } finally {
@@ -535,7 +532,6 @@ function ProfilePageContent() {
     field: keyof ChangePasswordFormValues,
     value: string
   ) => {
-    setFeedback('');
     setPasswordSubmitError('');
     setPasswordTouchedFields((prev) => ({
       ...prev,
@@ -562,13 +558,12 @@ function ProfilePageContent() {
 
     try {
       setIsPasswordSaving(true);
-      setFeedback('');
       setPasswordSubmitError('');
 
       await updateCurrentUserPassword(passwordValues);
       setPasswordValues(CHANGE_PASSWORD_INITIAL_VALUES);
       setPasswordTouchedFields({});
-      setFeedback('Password was changed.');
+      toast.success('Password was changed.');
     } catch {
       setPasswordSubmitError(
         'Could not change password. Check the current password and try again.'
@@ -628,7 +623,6 @@ function ProfilePageContent() {
                 onChange={setActiveTab}
               />
 
-              {feedback ? <p className={css.feedback}>{feedback}</p> : null}
               {error ? (
                 <p className={css.error} role="alert">
                   {error}

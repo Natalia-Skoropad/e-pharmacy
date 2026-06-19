@@ -124,3 +124,48 @@
 .checkIcon {
   color: var(--color-accent);
 }
+
+.placeholder {
+  color: var(--color-text-muted);
+}
+
+.triggerError {
+  border-color: var(--color-error);
+}
+
+.triggerError:hover,
+.triggerError:focus-visible {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 18%, transparent);
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.trigger:disabled:hover,
+.trigger:disabled:focus-visible {
+  background-color: var(--color-white);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+.spinner {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  animation: select-field-spin 800ms linear infinite;
+}
+
+.error {
+  margin-top: 6px;
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  color: var(--color-error);
+}
+
+@keyframes select-field-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

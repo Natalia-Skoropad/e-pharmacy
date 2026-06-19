@@ -1,10 +1,4 @@
-import type { ApiErrorCode } from './api-error';
-
-//===================================================================
-
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-
-//===================================================================
 
 export type ApiRequestBody = BodyInit | Record<string, unknown> | unknown;
 
@@ -15,8 +9,6 @@ export type NextRequestOptions = {
   tags?: string[];
 };
 
-//===================================================================
-
 export type ApiRetryConfig = {
   attempts?: number;
   statuses?: number[];
@@ -25,7 +17,7 @@ export type ApiRetryConfig = {
 
 //===================================================================
 
-export type ApiRequestConfig = {
+export type RequestOptions = {
   method?: HttpMethod;
   body?: ApiRequestBody;
   headers?: HeadersInit;
@@ -37,8 +29,3 @@ export type ApiRequestConfig = {
   timeoutMs?: number;
   retry?: false | ApiRetryConfig;
 };
-
-//===================================================================
-
-export type RequestOptions = ApiRequestConfig;
-export type { ApiErrorCode };

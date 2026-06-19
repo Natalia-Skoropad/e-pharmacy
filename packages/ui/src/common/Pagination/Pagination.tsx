@@ -4,16 +4,29 @@ import css from './Pagination.module.css';
 
 //===================================================================
 
-type PaginationProps = {
+export type PaginationLabels = {
+  previous?: string;
+  next?: string;
+  page?: string;
+};
+
+export type PaginationProps = {
   currentPage: number;
   totalPages: number;
   getPageHref: (page: number) => string;
   ariaLabel?: string;
+  labels?: PaginationLabels;
 };
 
 //===================================================================
 
 const SIBLING_COUNT = 1;
+
+const DEFAULT_LABELS: Required<PaginationLabels> = {
+  previous: 'Previous',
+  next: 'Next',
+  page: 'Page',
+};
 
 //===================================================================
 
@@ -49,9 +62,11 @@ function Pagination({
   totalPages,
   getPageHref,
   ariaLabel = 'Pagination',
+  labels,
 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
+  const mergedLabels = { ...DEFAULT_LABELS, ...labels };
   const previousPage = currentPage - 1;
   const nextPage = currentPage + 1;
   const items = getPaginationItems(currentPage, totalPages);
@@ -61,12 +76,16 @@ function Pagination({
       <ul className={css.list}>
         <li>
           {currentPage > 1 ? (
-            <Link className={css.link} href={getPageHref(previousPage)}>
-              Previous
+            <Link
+              className={css.link}
+              href={getPageHref(previousPage)}
+              aria-label={`${mergedLabels.previous}, ${mergedLabels.page.toLowerCase()} ${previousPage}`}
+            >
+              {mergedLabels.previous}
             </Link>
           ) : (
             <span className={css.linkDisabled} aria-disabled="true">
-              Previous
+              {mergedLabels.previous}
             </span>
           )}
         </li>
@@ -88,11 +107,20 @@ function Pagination({
             <li key={item}>
               {isCurrent ? (
                 <span className={css.current} aria-current="page">
+                  <span className="visually-hidden">
+                    {mergedLabels.page} 
+                  </span>
                   {item}
                 </span>
               ) : (
-                <Link className={css.link} href={getPageHref(item)}>
-                  <span className="visually-hidden">Page </span>
+                <Link
+                  className={css.link}
+                  href={getPageHref(item)}
+                  aria-label={`${mergedLabels.page} ${item}`}
+                >
+                  <span className="visually-hidden">
+                    {mergedLabels.page} 
+                  </span>
                   {item}
                 </Link>
               )}
@@ -102,12 +130,16 @@ function Pagination({
 
         <li>
           {currentPage < totalPages ? (
-            <Link className={css.link} href={getPageHref(nextPage)}>
-              Next
+            <Link
+              className={css.link}
+              href={getPageHref(nextPage)}
+              aria-label={`${mergedLabels.next}, ${mergedLabels.page.toLowerCase()} ${nextPage}`}
+            >
+              {mergedLabels.next}
             </Link>
           ) : (
             <span className={css.linkDisabled} aria-disabled="true">
-              Next
+              {mergedLabels.next}
             </span>
           )}
         </li>

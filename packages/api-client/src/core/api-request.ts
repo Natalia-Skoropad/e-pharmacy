@@ -3,7 +3,7 @@ import { createApiUrl } from './api-url';
 import { getApiErrorMessage } from './get-api-error-message';
 import { parseJsonSafe } from './parse-json-safe';
 import { prepareRequestBody } from './request-body';
-import type { ApiRequestConfig, ApiRetryConfig, HttpMethod } from './types';
+import type { RequestOptions, ApiRetryConfig, HttpMethod } from './types';
 
 //===================================================================
 
@@ -24,7 +24,7 @@ function getRequestSignal(
 
 function getRetryConfig(
   method: HttpMethod,
-  retry: ApiRequestConfig['retry']
+  retry: RequestOptions['retry']
 ): Required<ApiRetryConfig> {
   if (retry === false || method !== 'GET') {
     return { attempts: 1, statuses: [], delayMs: 0 };
@@ -85,7 +85,7 @@ export async function apiRequest<TData>(
     baseUrl,
     timeoutMs = DEFAULT_API_REQUEST_TIMEOUT_MS,
     retry,
-  }: ApiRequestConfig = {}
+  }: RequestOptions = {}
 ): Promise<TData> {
   const url = createApiUrl(path, baseUrl ?? '');
   const requestHeaders = new Headers(headers);
@@ -104,7 +104,7 @@ export async function apiRequest<TData>(
         next,
         credentials,
         signal: getRequestSignal(signal, timeoutMs),
-      } as RequestInit & { next?: ApiRequestConfig['next'] });
+      } as RequestInit & { next?: RequestOptions['next'] });
     } catch (error) {
       if (attempt < retryConfig.attempts && !signal) {
         await wait(retryConfig.delayMs);

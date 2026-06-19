@@ -3,7 +3,7 @@ import {
   getApiErrorMessage,
   parseJsonSafe,
   prepareRequestBody,
-  type ApiRequestConfig,
+  type RequestOptions,
   type ApiRetryConfig,
   type HttpMethod,
 } from '@e-pharmacy/api-client/core';
@@ -20,7 +20,7 @@ const DEFAULT_RETRYABLE_GET_STATUSES = [502, 503, 504];
 
 function getRetryConfig(
   method: HttpMethod,
-  retry: ApiRequestConfig['retry']
+  retry: RequestOptions['retry']
 ): Required<ApiRetryConfig> {
   if (retry === false || method !== 'GET') {
     return { attempts: 1, statuses: [], delayMs: 0 };
@@ -79,7 +79,7 @@ export async function localApiRequest<TData>(
     credentials = 'same-origin',
     timeoutMs = DEFAULT_TIMEOUT_MS,
     retry,
-  }: ApiRequestConfig = {}
+  }: RequestOptions = {}
 ): Promise<TData> {
   const requestHeaders = new Headers(headers);
   const requestBody = prepareRequestBody(body, requestHeaders);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, LoaderCircle } from 'lucide-react';
 import clsx from 'clsx';
 
 import {
@@ -15,17 +15,22 @@ import css from './SelectField.module.css';
 
 //===================================================================
 
-type SelectOption<TValue extends string> = {
+export type SelectOption<TValue extends string> = {
   value: TValue;
   label: string;
 };
 
-type SelectFieldProps<TValue extends string> = {
+export type SelectFieldProps<TValue extends string> = {
   id?: string;
   label: string;
   value: TValue;
   options: SelectOption<TValue>[];
+  placeholder?: string;
   isActive?: boolean;
+  isLoading?: boolean;
+  disabled?: boolean;
+  error?: string;
+  describedBy?: string;
   onChange: (value: TValue) => void;
 };
 
@@ -36,12 +41,19 @@ function SelectField<TValue extends string>({
   label,
   value,
   options,
+  placeholder = 'Select option',
   isActive = false,
+  isLoading = false,
+  disabled = false,
+  error,
+  describedBy,
   onChange,
 }: SelectFieldProps<TValue>) {
   const generatedId = useId();
   const buttonId = id ?? generatedId;
   const listboxId = `${buttonId}-listbox`;
+  const errorId = error ? `${buttonId}-error` : undefined;
+  const ariaDescribedBy = [describedBy, errorId].filter(Boolean).join(' ') || undefined;
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -76,16 +88,22 @@ function SelectField<TValue extends string>({
   }, [isOpen]);
 
   const openSelect = () => {
+    if (disabled || isLoading) return;
+
     resetActiveIndex(selectedIndex);
     setIsOpen(true);
   };
 
   const handleSelect = (nextValue: TValue) => {
+    if (disabled || isLoading) return;
+
     onChange(nextValue);
     setIsOpen(false);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (disabled || isLoading) return;
+
     if (isListboxOpenKey(event.key)) {
       event.preventDefault();
 
@@ -131,13 +149,17 @@ function SelectField<TValue extends string>({
           className={clsx(
             css.trigger,
             isOpen && css.triggerOpen,
-            isActive && css.triggerActive
+            isActive && css.triggerActive,
+            error && css.triggerError
           )}
           type="button"
+          disabled={disabled || isLoading}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           aria-labelledby={`${buttonId}-label ${buttonId}`}
           aria-controls={isOpen ? listboxId : undefined}
+          aria-invalid={Boolean(error) || undefined}
+          aria-describedby={ariaDescribedBy}
           onClick={() => {
             if (isOpen) {
               setIsOpen(false);
@@ -148,14 +170,26 @@ function SelectField<TValue extends string>({
           }}
           onKeyDown={handleKeyDown}
         >
-          <span className={css.triggerText}>{selectedOption?.label}</span>
+          <span className={clsx(css.triggerText, !selectedOption && css.placeholder)}>
+            {selectedOption?.label ?? placeholder}
+          </span>
 
-          <ChevronDown
-            className={clsx(css.chevron, isOpen && css.chevronOpen)}
-            size={18}
-            aria-hidden="true"
-          />
+          {isLoading ? (
+            <LoaderCircle className={css.spinner} size={18} aria-hidden="true" />
+          ) : (
+            <ChevronDown
+              className={clsx(css.chevron, isOpen && css.chevronOpen)}
+              size={18}
+              aria-hidden="true"
+            />
+          )}
         </button>
+
+        {error ? (
+          <p className={css.error} id={errorId}>
+            {error}
+          </p>
+        ) : null}
 
         {isOpen ? (
           <ul

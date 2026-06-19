@@ -167,3 +167,47 @@
   font-size: var(--fz-14);
   color: var(--color-text-muted);
 }
+
+.comboboxError {
+  border-color: var(--color-error);
+}
+
+.comboboxError:hover,
+.comboboxError:focus-within {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 18%, transparent);
+}
+
+.comboboxDisabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.comboboxDisabled:hover,
+.comboboxDisabled:focus-within {
+  background-color: var(--color-white);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+.input:disabled,
+.toggleButton:disabled {
+  cursor: not-allowed;
+}
+
+.spinner {
+  animation: searchable-select-spin 800ms linear infinite;
+}
+
+.error {
+  margin-top: 6px;
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  color: var(--color-error);
+}
+
+@keyframes searchable-select-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

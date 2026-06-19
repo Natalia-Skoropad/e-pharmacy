@@ -5,13 +5,16 @@ import css from './Container.module.css';
 
 //===================================================================
 
-type ContainerOwnProps<TElement extends ElementType> = {
+export type ContainerVariant = 'page' | 'wide' | 'fluid';
+
+export type ContainerOwnProps<TElement extends ElementType> = {
   as?: TElement;
   children: ReactNode;
+  variant?: ContainerVariant;
   className?: string;
 };
 
-type ContainerProps<TElement extends ElementType> =
+export type ContainerProps<TElement extends ElementType> =
   ContainerOwnProps<TElement> &
     Omit<ComponentPropsWithoutRef<TElement>, keyof ContainerOwnProps<TElement>>;
 
@@ -20,13 +23,17 @@ type ContainerProps<TElement extends ElementType> =
 function Container<TElement extends ElementType = 'div'>({
   as,
   children,
+  variant = 'page',
   className,
   ...props
 }: ContainerProps<TElement>) {
   const Component = as || 'div';
 
   return (
-    <Component className={clsx(css.container, className)} {...props}>
+    <Component
+      className={clsx(css.container, css[variant], className)}
+      {...props}
+    >
       {children}
     </Component>
   );

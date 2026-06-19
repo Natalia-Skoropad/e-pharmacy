@@ -4,7 +4,7 @@ import {
   ApiError,
   apiRequest,
   createApiUrl,
-  type ApiRequestConfig,
+  type RequestOptions,
 } from '@e-pharmacy/api-client/core';
 
 import { logApiRequest } from '@/lib/api/observability/request-logger';
@@ -34,7 +34,7 @@ export function createBackendApiUrl(path: string): string {
 
 export async function backendApiRequest<TData>(
   path: string,
-  { method = 'GET', cache, ...options }: ApiRequestConfig = {}
+  { method = 'GET', cache, ...options }: RequestOptions = {}
 ): Promise<TData> {
   const startedAt = Date.now();
 

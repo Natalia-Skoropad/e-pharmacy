@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
+import clsx from 'clsx';
 
 import css from './Tabs.module.css';
 
@@ -11,17 +12,25 @@ export type TabItem<TValue extends string = string> = {
   label: string;
 };
 
+export type TabsLabels = {
+  moreButton?: string;
+};
+
 type TabsProps<TValue extends string = string> = {
   items: TabItem<TValue>[];
   activeValue: TValue;
   ariaLabel: string;
   onChange: (value: TValue) => void;
   mobileVisibleCount?: number;
+  labels?: TabsLabels;
 };
 
 //===================================================================
 
 const MOBILE_VISIBLE_TABS_COUNT = 1;
+const DEFAULT_LABELS: Required<TabsLabels> = {
+  moreButton: 'Open other tabs',
+};
 
 //===================================================================
 
@@ -31,11 +40,13 @@ function Tabs<TValue extends string = string>({
   ariaLabel,
   onChange,
   mobileVisibleCount = MOBILE_VISIBLE_TABS_COUNT,
+  labels,
 }: TabsProps<TValue>) {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   const tabsRef = useRef<HTMLDivElement>(null);
   const moreMenuId = useId();
+  const mergedLabels = { ...DEFAULT_LABELS, ...labels };
 
   const moreMobileItems = items.slice(mobileVisibleCount);
 
@@ -74,19 +85,22 @@ function Tabs<TValue extends string = string>({
   };
 
   return (
-    <nav className={css.tabs} aria-label={ariaLabel} ref={tabsRef}>
+    <div className={css.tabs} role="tablist" aria-label={ariaLabel} ref={tabsRef}>
       {items.map((item, index) => {
         const isActive = item.value === activeValue;
         const isHiddenOnMobile = index >= mobileVisibleCount;
 
         return (
           <button
-            className={`${isActive ? css.tabActive : css.tab} ${
-              isHiddenOnMobile ? css.tabDesktopOnly : ''
-            }`}
+            className={clsx(
+              isActive ? css.tabActive : css.tab,
+              isHiddenOnMobile && css.tabDesktopOnly
+            )}
             key={item.value}
             type="button"
-            aria-current={isActive ? 'page' : undefined}
+            role="tab"
+            aria-selected={isActive}
+            tabIndex={isActive ? 0 : -1}
             onClick={() => handleTabClick(item.value)}
           >
             {item.label}
@@ -97,11 +111,12 @@ function Tabs<TValue extends string = string>({
       {hasMoreMobileItems ? (
         <div className={css.moreWrap}>
           <button
-            className={`${isMoreActive ? css.tabActive : css.tab} ${
+            className={clsx(
+              isMoreActive ? css.tabActive : css.tab,
               css.moreButton
-            }`}
+            )}
             type="button"
-            aria-label="Open other tabs"
+            aria-label={mergedLabels.moreButton}
             aria-haspopup="menu"
             aria-expanded={isMoreOpen}
             aria-controls={moreMenuId}
@@ -122,8 +137,8 @@ function Tabs<TValue extends string = string>({
                     className={isActive ? css.moreItemActive : css.moreItem}
                     key={item.value}
                     type="button"
-                    role="menuitem"
-                    aria-current={isActive ? 'page' : undefined}
+                    role="menuitemradio"
+                    aria-checked={isActive}
                     onClick={() => handleTabClick(item.value)}
                   >
                     {item.label}
@@ -134,7 +149,7 @@ function Tabs<TValue extends string = string>({
           ) : null}
         </div>
       ) : null}
-    </nav>
+    </div>
   );
 }
 

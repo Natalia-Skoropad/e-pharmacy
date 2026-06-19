@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 
@@ -5,8 +6,10 @@ import css from './ResetFiltersButton.module.css';
 
 //===================================================================
 
-type ResetFiltersButtonProps = {
+export type ResetFiltersButtonProps = {
   href: string;
+  children?: ReactNode;
+  label?: ReactNode;
   className?: string;
   isVisible?: boolean;
   onClick?: () => void;
@@ -16,6 +19,8 @@ type ResetFiltersButtonProps = {
 
 function ResetFiltersButton({
   href,
+  children,
+  label = 'Reset filters',
   className,
   isVisible = true,
   onClick,
@@ -28,7 +33,7 @@ function ResetFiltersButton({
       tabIndex={isVisible ? undefined : -1}
       onClick={onClick}
     >
-      Reset filters
+      {children ?? label}
     </Link>
   );
 }

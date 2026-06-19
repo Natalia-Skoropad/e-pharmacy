@@ -4,16 +4,18 @@ import css from './RatingSummary.module.css';
 
 //===================================================================
 
-type RatingSummaryProps = {
+export type RatingSummaryProps = {
   rating: number | null | undefined;
   reviewsCount: number;
   size?: 'sm' | 'md';
   className?: string;
+  ratingLabel?: (rating: string) => string;
+  reviewsLabel?: (reviewsCount: number) => string;
 };
 
 //===================================================================
 
-function getReviewsLabel(reviewsCount: number): string {
+function getDefaultReviewsLabel(reviewsCount: number): string {
   return reviewsCount === 1 ? '1 review' : `${reviewsCount} reviews`;
 }
 
@@ -24,9 +26,11 @@ function RatingSummary({
   reviewsCount,
   size = 'md',
   className,
+  ratingLabel = (value) => `Rating ${value}`,
+  reviewsLabel = getDefaultReviewsLabel,
 }: RatingSummaryProps) {
   const hasReviews = reviewsCount > 0;
-  const ratingLabel =
+  const formattedRating =
     hasReviews && typeof rating === 'number' ? rating.toFixed(1) : null;
 
   return (
@@ -35,18 +39,18 @@ function RatingSummary({
         .filter(Boolean)
         .join(' ')}
     >
-      {ratingLabel ? (
+      {formattedRating ? (
         <span
           className={css.rating}
           role="img"
-          aria-label={`Rating ${ratingLabel}`}
+          aria-label={ratingLabel(formattedRating)}
         >
           <Star size={size === 'sm' ? 16 : 18} aria-hidden="true" />
-          {ratingLabel}
+          {formattedRating}
         </span>
       ) : null}
 
-      <span className={css.reviewsCount}>{getReviewsLabel(reviewsCount)}</span>
+      <span className={css.reviewsCount}>{reviewsLabel(reviewsCount)}</span>
     </div>
   );
 }

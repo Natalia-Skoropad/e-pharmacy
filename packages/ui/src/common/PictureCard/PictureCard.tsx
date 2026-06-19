@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, ReactNode } from 'react';
 import { ImageOff, Upload } from 'lucide-react';
 
 import {
@@ -19,12 +19,46 @@ import css from './PictureCard.module.css';
 
 //===================================================================
 
-type PictureCardProps = {
+export type PictureCardLabels = {
+  uploadAriaLabel?: string;
+  hint?: ReactNode;
+  uploadButton?: string;
+  savingButton?: string;
+  removeButton?: string;
+  removeTitle?: string;
+  removeText?: string;
+  removeConfirm?: string;
+  removingConfirm?: string;
+  removeCancel?: string;
+  uploadError?: string;
+};
+
+export type PictureCardProps = {
   name: string;
   pictureUrl: string | null;
   isSaving?: boolean;
+  accept?: string;
+  labels?: PictureCardLabels;
+  validateFile?: (file: File) => string | null;
+  validatePictureUrl?: (pictureUrl: string) => string | null;
   onChange: (pictureUrl: string | null) => Promise<void> | void;
   onError?: (message: string) => void;
+};
+
+//===================================================================
+
+const DEFAULT_LABELS: Required<PictureCardLabels> = {
+  uploadAriaLabel: 'Upload photo',
+  hint: 'Upload a lightweight JPG, PNG, or WEBP image up to 450 KB. The photo is saved right away.',
+  uploadButton: 'Upload photo',
+  savingButton: 'Saving...',
+  removeButton: 'Remove photo',
+  removeTitle: 'Remove photo?',
+  removeText: 'This photo will be removed. Are you sure?',
+  removeConfirm: 'Remove photo',
+  removingConfirm: 'Removing...',
+  removeCancel: 'Keep photo',
+  uploadError: 'Could not upload photo.',
 };
 
 //===================================================================
@@ -53,11 +87,16 @@ function PictureCard({
   name,
   pictureUrl,
   isSaving = false,
+  accept = PICTURE_ACCEPT,
+  labels,
+  validateFile = buildPictureFileError,
+  validatePictureUrl = buildPictureUrlError,
   onChange,
   onError,
 }: PictureCardProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const mergedLabels = { ...DEFAULT_LABELS, ...labels };
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -65,7 +104,7 @@ function PictureCard({
 
     if (!file) return;
 
-    const fileError = buildPictureFileError(file);
+    const fileError = validateFile(file);
 
     if (fileError) {
       onError?.(fileError);
@@ -74,7 +113,7 @@ function PictureCard({
 
     try {
       const dataUrl = await readFileAsDataUrl(file);
-      const pictureUrlError = buildPictureUrlError(dataUrl);
+      const pictureUrlError = validatePictureUrl(dataUrl);
 
       if (pictureUrlError) {
         onError?.(pictureUrlError);
@@ -83,7 +122,7 @@ function PictureCard({
 
       await onChange(dataUrl);
     } catch {
-      onError?.('Could not upload photo.');
+      onError?.(mergedLabels.uploadError);
     }
   };
 
@@ -107,26 +146,24 @@ function PictureCard({
           ref={inputRef}
           className={css.input}
           type="file"
-          accept={PICTURE_ACCEPT}
-          aria-label="Upload photo"
+          accept={accept}
+          aria-label={mergedLabels.uploadAriaLabel}
           onChange={(event) => void handleFileChange(event)}
         />
 
-        <p className={css.hint}>
-          Upload a lightweight JPG, PNG, or WEBP image up to 450 KB. The photo
-          is saved right away.
-        </p>
+        {mergedLabels.hint ? <p className={css.hint}>{mergedLabels.hint}</p> : null}
 
         <div className={css.buttons}>
           <Button
             type="button"
             variant="secondary"
             size="sm"
-            disabled={isSaving}
+            isLoading={isSaving}
+            loadingLabel={mergedLabels.savingButton}
+            iconLeft={<Upload size={16} aria-hidden="true" />}
             onClick={() => inputRef.current?.click()}
           >
-            <Upload size={16} aria-hidden="true" />
-            {isSaving ? 'Saving...' : 'Upload photo'}
+            {mergedLabels.uploadButton}
           </Button>
 
           <Button
@@ -135,20 +172,22 @@ function PictureCard({
             size="sm"
             className={css.dangerButton}
             disabled={!pictureUrl || isSaving}
+            iconLeft={<ImageOff size={16} aria-hidden="true" />}
             onClick={() => setIsConfirmOpen(true)}
           >
-            <ImageOff size={16} aria-hidden="true" />
-            Remove photo
+            {mergedLabels.removeButton}
           </Button>
         </div>
       </div>
 
       {isConfirmOpen ? (
         <ConfirmationModal
-          title="Remove photo?"
-          text="This photo will be removed. Are you sure?"
-          confirmLabel={isSaving ? 'Removing...' : 'Remove photo'}
-          cancelLabel="Keep photo"
+          title={mergedLabels.removeTitle}
+          text={mergedLabels.removeText}
+          confirmLabel={
+            isSaving ? mergedLabels.removingConfirm : mergedLabels.removeConfirm
+          }
+          cancelLabel={mergedLabels.removeCancel}
           isLoading={isSaving}
           onConfirm={() => void handleRemove()}
           onCancel={() => setIsConfirmOpen(false)}

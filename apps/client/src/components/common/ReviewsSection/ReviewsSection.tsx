@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { Star } from 'lucide-react';
 
-import { Button } from '@e-pharmacy/ui/common/Button';
-import { LazyLoadButton } from '@e-pharmacy/ui/common/LazyLoadButton';
+import { Button, LazyLoadButton } from '@e-pharmacy/ui/common';
 import { CommentInput } from '@e-pharmacy/ui/form-fields';
 import { formatReviewDate } from '@e-pharmacy/utils/formatters';
 import type { ReviewTouchedFields } from '@e-pharmacy/validation';

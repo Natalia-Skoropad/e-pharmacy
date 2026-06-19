@@ -145,26 +145,16 @@
   box-shadow: none;
 }
 
-.feedback,
 .error {
   margin-top: 16px;
   padding: 12px 14px;
   font-size: var(--fz-14);
   font-weight: var(--fw-medium);
   line-height: var(--lh-base);
-  border-radius: var(--radius-md);
-}
-
-.feedback {
-  color: var(--color-accent);
-  background-color: var(--color-success-soft);
-  border: 1px solid var(--color-success-border-medium);
-}
-
-.error {
   color: var(--color-error);
   background-color: var(--color-error-soft);
   border: 1px solid var(--color-error-border-medium);
+  border-radius: var(--radius-md);
 }
 
 .tabPanel {

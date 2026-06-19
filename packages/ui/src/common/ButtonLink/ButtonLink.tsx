@@ -2,20 +2,18 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 
+import type { ButtonSize, ButtonVariant } from '../Button/Button';
 import css from '../Button/Button.module.css';
 
 //===================================================================
 
-type ButtonLinkVariant = 'primary' | 'secondary' | 'ghost';
-type ButtonLinkSize = 'sm' | 'md' | 'lg';
-
-//===================================================================
-
-type ButtonLinkProps = {
+export type ButtonLinkProps = {
   children: ReactNode;
-  variant?: ButtonLinkVariant;
-  size?: ButtonLinkSize;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   fullWidth?: boolean;
+  iconLeft?: ReactNode;
+  iconRight?: ReactNode;
   className?: string;
 } & ComponentPropsWithoutRef<typeof Link>;
 
@@ -26,6 +24,8 @@ function ButtonLink({
   variant = 'primary',
   size = 'md',
   fullWidth = false,
+  iconLeft,
+  iconRight,
   className,
   ...props
 }: ButtonLinkProps) {
@@ -40,7 +40,9 @@ function ButtonLink({
       )}
       {...props}
     >
-      {children}
+      {iconLeft}
+      <span className={css.content}>{children}</span>
+      {iconRight}
     </Link>
   );
 }

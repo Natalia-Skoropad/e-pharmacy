@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Check, ChevronDown, Search } from 'lucide-react';
+import { Check, ChevronDown, LoaderCircle, Search } from 'lucide-react';
 import clsx from 'clsx';
 
 import { isListboxOpenKey } from '../helpers/listbox-keyboard';
@@ -16,7 +16,7 @@ export type SearchableSelectOption<TValue extends string = string> = {
   label: string;
 };
 
-type SearchableSelectProps<TValue extends string = string> = {
+export type SearchableSelectProps<TValue extends string = string> = {
   id?: string;
   label: string;
   value: TValue;
@@ -24,6 +24,10 @@ type SearchableSelectProps<TValue extends string = string> = {
   placeholder?: string;
   emptyMessage?: string;
   isActive?: boolean;
+  isLoading?: boolean;
+  disabled?: boolean;
+  error?: string;
+  describedBy?: string;
   maxLength?: number;
   sanitizeQuery?: (value: string) => string;
   onChange: (value: TValue) => void;
@@ -39,6 +43,10 @@ function SearchableSelect<TValue extends string = string>({
   placeholder = 'Search option',
   emptyMessage = 'No options found',
   isActive = false,
+  isLoading = false,
+  disabled = false,
+  error,
+  describedBy,
   maxLength = 80,
   sanitizeQuery,
   onChange,
@@ -46,6 +54,8 @@ function SearchableSelect<TValue extends string = string>({
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const listboxId = `${inputId}-listbox`;
+  const errorId = error ? `${inputId}-error` : undefined;
+  const ariaDescribedBy = [describedBy, errorId].filter(Boolean).join(' ') || undefined;
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -96,18 +106,24 @@ function SearchableSelect<TValue extends string = string>({
   };
 
   const openSelect = () => {
+    if (disabled || isLoading) return;
+
     setIsOpen(true);
     setQuery('');
     resetActiveIndex(0);
   };
 
   const handleSelect = (nextValue: TValue) => {
+    if (disabled || isLoading) return;
+
     onChange(nextValue);
     closeSelect();
     inputRef.current?.blur();
   };
 
   const handleInputChange = (nextQuery: string) => {
+    if (disabled || isLoading) return;
+
     const sanitizedQuery = sanitizeQuery ? sanitizeQuery(nextQuery) : nextQuery;
 
     setQuery(sanitizedQuery.slice(0, maxLength));
@@ -116,6 +132,8 @@ function SearchableSelect<TValue extends string = string>({
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (disabled || isLoading) return;
+
     if (isListboxOpenKey(event.key)) {
       event.preventDefault();
 
@@ -156,7 +174,9 @@ function SearchableSelect<TValue extends string = string>({
           className={clsx(
             css.combobox,
             isOpen && css.comboboxOpen,
-            isActive && css.comboboxActive
+            isActive && css.comboboxActive,
+            error && css.comboboxError,
+            (disabled || isLoading) && css.comboboxDisabled
           )}
         >
           <Search className={css.searchIcon} size={18} aria-hidden="true" />
@@ -171,11 +191,14 @@ function SearchableSelect<TValue extends string = string>({
             placeholder={placeholder}
             autoComplete="off"
             maxLength={maxLength}
+            disabled={disabled || isLoading}
             aria-autocomplete="list"
             aria-expanded={isOpen}
             aria-controls={isOpen ? listboxId : undefined}
             aria-haspopup="listbox"
             aria-activedescendant={isOpen ? activeOptionId : undefined}
+            aria-invalid={Boolean(error) || undefined}
+            aria-describedby={ariaDescribedBy}
             onFocus={openSelect}
             onChange={(event) => handleInputChange(event.target.value)}
             onKeyDown={handleKeyDown}
@@ -184,6 +207,7 @@ function SearchableSelect<TValue extends string = string>({
           <button
             className={css.toggleButton}
             type="button"
+            disabled={disabled || isLoading}
             aria-label={isOpen ? 'Close options' : 'Open options'}
             aria-expanded={isOpen}
             aria-controls={isOpen ? listboxId : undefined}
@@ -197,13 +221,23 @@ function SearchableSelect<TValue extends string = string>({
               inputRef.current?.focus();
             }}
           >
-            <ChevronDown
-              className={clsx(css.chevron, isOpen && css.chevronOpen)}
-              size={18}
-              aria-hidden="true"
-            />
+            {isLoading ? (
+              <LoaderCircle className={css.spinner} size={18} aria-hidden="true" />
+            ) : (
+              <ChevronDown
+                className={clsx(css.chevron, isOpen && css.chevronOpen)}
+                size={18}
+                aria-hidden="true"
+              />
+            )}
           </button>
         </div>
+
+        {error ? (
+          <p className={css.error} id={errorId}>
+            {error}
+          </p>
+        ) : null}
 
         {isOpen ? (
           <ul
