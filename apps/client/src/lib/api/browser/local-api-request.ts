@@ -1,3 +1,5 @@
+import 'client-only';
+
 import {
   ApiError,
   DEFAULT_API_REQUEST_TIMEOUT_MS,

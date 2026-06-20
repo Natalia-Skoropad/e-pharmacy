@@ -1,3 +1,5 @@
+import 'client-only';
+
 export * from './auth.api';
 export * from './cart.api';
 export * from './health.api';

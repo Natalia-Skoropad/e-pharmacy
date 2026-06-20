@@ -251,26 +251,23 @@ apps/client/
       profile/
     hooks/
     lib/
-      accessibility/
       api/
+        browser/
+        proxy/
+        routes/
+        server/
       auth/
       cart/
       catalog/
       checkout/
       constants/
       details/
+        server/
       errors/
-      formatters/
-      orders/
-      reviews/
       routes/
       seo/
-      utils/
-      validations/
     providers/
-    services/
-    styles/
-    types/
+    routes/
 ```
 
 ## Main Pages
@@ -314,14 +311,15 @@ The client app has a dedicated SEO layer for public pages. The goal is to keep u
 ### SEO architecture
 
 ```txt
-src/lib/constants/metadata.ts        -> site name, site URL, default metadata, OG image
-src/lib/constants/seo.ts             -> indexable routes, noindex routes, sitemap routes
-src/lib/seo/create-page-metadata.ts  -> shared metadata builder
-src/lib/seo/url.ts                   -> absolute URL helper
-src/app/sitemap.ts                   -> dynamic sitemap generation
-src/app/robots.ts                    -> robots.txt rules
-src/lib/catalog/*                    -> catalog URL, canonical, title, description, noindex logic
-src/lib/details/*                    -> product/pharmacy detail metadata and canonical resolver
+src/lib/seo/metadata.ts             -> site name, default metadata, OG image
+src/lib/seo/sitemap.ts              -> sitemap routes and dynamic sitemap helpers
+src/lib/seo/robots.ts               -> robots rules
+src/lib/seo/create-page-metadata.ts -> shared metadata builder
+src/lib/seo/url.ts                  -> absolute URL helper based on CLIENT_ENV.siteUrl
+src/app/sitemap.ts                  -> dynamic sitemap generation
+src/app/robots.ts                   -> robots.txt rules
+src/lib/catalog/*                   -> catalog URL, canonical, title, description, noindex logic
+src/lib/details/server/*            -> product/pharmacy detail metadata and canonical resolver
 ```
 
 ### Public indexable routes
@@ -427,6 +425,17 @@ This BFF layer keeps browser requests same-origin, forwards cookies to the backe
 
 The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker for redirects and auth bootstrap. It is not a security token and does not authorize backend data access.
 
+### Client architecture boundaries
+
+- Browser API helpers live in `src/lib/api/browser` and are marked as client-only. They are low-level same-origin BFF request wrappers and should not be imported by server components, metadata helpers, sitemap, robots, or server route handlers.
+- Server reads for catalog, SEO, sitemap, robots, and detail metadata use `src/lib/api/server`. Proxy route handlers use `src/lib/api/proxy`.
+- Cart reads use `getCart` from `src/lib/api/browser/cart.api.ts`. Cart mutations go through `src/lib/cart/cart-commands.ts`, which dispatches the cart update event after successful writes. Components should not call cart mutation API helpers directly.
+- `CartProvider` is the single source of cart state in the browser. `src/lib/cart/cart-events.ts` is only a sync bridge between cart commands and the provider.
+- Auth route guards in `src/routes` are client-specific wrappers around the shared auth guards. They provide storefront login paths, loading fallback, and redirect destination rules.
+- Product and pharmacy detail server composition lives under `src/lib/details/server` and is exported through a server-only details barrel.
+- Storefront route builders live in `src/lib/routes`. Product, pharmacy, checkout, and order paths should not be recreated in feature modules.
+- Review form state stays in client hooks, while validation rules come from the shared validation package. User-facing review messages are passed to the hook by the consuming UI.
+
 Main API areas used by the client:
 
 - auth: register, login, current user, profile update, password update, password reset, logout
@@ -438,8 +447,8 @@ Main API areas used by the client:
 ## Performance Notes
 
 - Public catalog pages are rendered on the server and use cached/revalidated public API reads.
-- `apps/client/src/lib/api/cache-options.ts` centralizes public API revalidation settings.
-- `apps/client/src/lib/api/public-backend-proxy.ts` adds cache headers for read-only public proxy responses.
+- `apps/client/src/lib/api/server/cache-options.ts` centralizes public API revalidation settings.
+- `apps/client/src/lib/api/proxy/public-backend-proxy.ts` adds cache headers for read-only public proxy responses.
 - `htmlLimitedBots: /.*/` in `next.config.ts` helps SEO validators receive metadata in `<head>`.
 - Remote image patterns are configured in `next.config.ts` for deployed backend image assets.
 - CSS Modules keep component styling scoped.
@@ -461,7 +470,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 | `NEXT_PUBLIC_SITE_URL`     | canonical URLs, metadata, sitemap, robots, absolute public URLs             | `http://localhost:3000` |
 | `NEXT_PUBLIC_API_BASE_URL` | backend URL used by server-side data fetches and Next.js BFF route handlers | `http://localhost:4000` |
 
-For production, replace these values with the deployed client and API URLs.
+For production, replace these values with the deployed client and API URLs. `NEXT_PUBLIC_SITE_URL` is required for real production deploys so sitemap, robots, canonical URLs, and social metadata do not fall back to localhost. Local builds may use the localhost fallback when this variable is not set.
 
 Client-side private flows should continue to call same-origin `/api/*` routes, while those route handlers use `NEXT_PUBLIC_API_BASE_URL` to reach the backend.
 
@@ -513,7 +522,7 @@ pnpm type-check
 
 ## Security Notes
 
-- Client-side services for private operations call same-origin `/api/*` route handlers instead of writing directly to the external backend URL.
+- Client-side browser API helpers and cart commands call same-origin `/api/*` route handlers instead of writing directly to the external backend URL.
 - Auth tokens are not stored in `localStorage`; the real auth session is represented by backend-managed httpOnly cookies.
 - The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker and is not used to authorize backend data access.
 - `ProtectedRoute` and `GuestOnlyRoute` improve navigation UX, while real authorization stays on the backend.
