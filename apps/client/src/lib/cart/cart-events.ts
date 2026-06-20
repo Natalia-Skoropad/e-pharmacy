@@ -2,6 +2,9 @@ import type { Cart } from '@e-pharmacy/types';
 
 //===================================================================
 
+// Cart mutation commands dispatch this browser event after successful writes so
+// CartProvider remains the single source of cart state while components do not
+// need to call cart API mutations directly.
 export const CART_UPDATED_EVENT = 'cart-updated';
 
 export type CartUpdatedEventDetail = {

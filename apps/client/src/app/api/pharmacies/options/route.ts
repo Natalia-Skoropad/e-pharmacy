@@ -1,12 +1,8 @@
-import { type NextRequest } from 'next/server';
-import { apiRoutes } from '@e-pharmacy/api-client/contracts';
-import { proxyPublicBackendRequest } from '@/lib/api/proxy';
+import { createPublicGetProxyRoute } from '@/lib/api/proxy';
+import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
 
 //===================================================================
 
-export async function GET(request: NextRequest) {
-  return proxyPublicBackendRequest({
-    request,
-    backendPath: apiRoutes.pharmacies.options,
-  });
-}
+export const GET = createPublicGetProxyRoute({
+  backendPath: API_ROUTES.pharmacies.options,
+});

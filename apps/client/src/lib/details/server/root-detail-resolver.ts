@@ -1,3 +1,4 @@
+import 'server-only';
 import { cache } from 'react';
 
 import { isReservedRootSlug } from '@/lib/routes';
@@ -8,8 +9,8 @@ import {
   buildPharmacyPath,
 } from '@/lib/routes';
 
-import { getProductBySlugId } from '@/lib/details/product-detail-page';
-import { getPharmacyBySlugId } from '@/lib/details/pharmacy-detail-page';
+import { getProductBySlugId } from '@/lib/details/server/product-detail-page';
+import { getPharmacyBySlugId } from '@/lib/details/server/pharmacy-detail-page';
 
 import type { Product, Pharmacy } from '@e-pharmacy/types';
 

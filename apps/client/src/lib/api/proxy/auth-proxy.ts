@@ -20,7 +20,7 @@ const AUTH_PROXY_TIMEOUT_MS = 8_000;
 
 //===================================================================
 
-type AuthMarkerAction = 'set' | 'delete';
+export type AuthMarkerAction = 'set' | 'delete';
 
 type AuthProxyOptions = {
   backendPath: string;

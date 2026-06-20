@@ -72,7 +72,7 @@ import {
   addCartItem,
   removeCartItem,
   updateCartItem,
-} from '@/services/cart-service';
+} from '@/lib/cart/cart-commands';
 
 import type {
   Cart,

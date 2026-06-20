@@ -1,7 +1,6 @@
 import {
   addCartItem as addCartItemRequest,
   clearCart as clearCartRequest,
-  getCart,
   removeCartItem as removeCartItemRequest,
   updateCartItem as updateCartItemRequest,
 } from '@/lib/api/browser';
@@ -21,10 +20,6 @@ function notifyCartUpdated(response: CartResponse): CartResponse {
 
   return response;
 }
-
-//===================================================================
-
-export { getCart };
 
 //===================================================================
 

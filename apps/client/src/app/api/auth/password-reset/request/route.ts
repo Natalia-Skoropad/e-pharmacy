@@ -1,12 +1,7 @@
-import { type NextRequest } from 'next/server';
-
-import { AUTH_PROXY_ROUTES, proxyAuthRequest } from '@/lib/api/proxy';
+import { AUTH_PROXY_ROUTES, createAuthProxyRoute } from '@/lib/api/proxy';
 
 //===================================================================
 
-export async function POST(request: NextRequest) {
-  return proxyAuthRequest({
-    request,
-    backendPath: AUTH_PROXY_ROUTES.passwordResetRequest,
-  });
-}
+export const POST = createAuthProxyRoute({
+  backendPath: AUTH_PROXY_ROUTES.passwordResetRequest,
+});

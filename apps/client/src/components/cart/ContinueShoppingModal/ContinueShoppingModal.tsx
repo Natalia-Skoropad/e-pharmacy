@@ -17,7 +17,7 @@ import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { formatPrice, formatStockLabel } from '@e-pharmacy/utils/formatters';
 import { getProductFilters, getProducts } from '@/lib/api/browser';
-import { addCartItem } from '@/services/cart-service';
+import { addCartItem } from '@/lib/cart/cart-commands';
 import type { Cart, Product, ProductCategory } from '@e-pharmacy/types';
 
 import css from './ContinueShoppingModal.module.css';

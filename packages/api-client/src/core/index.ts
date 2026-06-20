@@ -6,4 +6,5 @@ export * from './get-api-error-message';
 export * from './get-response-data';
 export * from './parse-json-safe';
 export * from './request-body';
+export * from './request-utils';
 export * from './types';

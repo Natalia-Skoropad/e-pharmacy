@@ -39,7 +39,7 @@ import {
   clearCart,
   removeCartItem,
   updateCartItem,
-} from '@/services/cart-service';
+} from '@/lib/cart/cart-commands';
 
 import type { Cart } from '@e-pharmacy/types';
 

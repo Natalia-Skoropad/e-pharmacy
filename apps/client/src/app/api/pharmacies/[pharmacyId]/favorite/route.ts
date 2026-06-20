@@ -1,27 +1,22 @@
-import { type NextRequest } from 'next/server';
-
-import { proxyBackendRequest } from '@/lib/api/proxy';
+import { createPrivateProxyRoute } from '@/lib/api/proxy';
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
 
 //===================================================================
 
-type PharmacyFavoriteRouteContext = {
-  params: Promise<{
-    pharmacyId: string;
-  }>;
+type PharmacyFavoriteRouteParams = {
+  pharmacyId: string;
 };
 
 //===================================================================
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: PharmacyFavoriteRouteContext
-) {
-  const { pharmacyId } = await params;
+export const PUT = createPrivateProxyRoute<PharmacyFavoriteRouteParams>({
+  backendPath: ({ pharmacyId }) => API_ROUTES.pharmacies.favorite(pharmacyId),
+  method: 'PUT',
+});
 
-  return proxyBackendRequest({
-    request,
-    backendPath: API_ROUTES.pharmacies.favorite(pharmacyId),
-    method: 'PATCH',
-  });
-}
+//===================================================================
+
+export const DELETE = createPrivateProxyRoute<PharmacyFavoriteRouteParams>({
+  backendPath: ({ pharmacyId }) => API_ROUTES.pharmacies.favorite(pharmacyId),
+  method: 'DELETE',
+});

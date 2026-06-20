@@ -1,26 +1,14 @@
-import { type NextRequest } from 'next/server';
-
-import { proxyBackendRequest } from '@/lib/api/proxy';
+import { createOptionalAuthGetProxyRoute } from '@/lib/api/proxy';
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
 
 //===================================================================
 
-type ProductRouteContext = {
-  params: Promise<{
-    productId: string;
-  }>;
+type ProductRouteParams = {
+  productId: string;
 };
 
 //===================================================================
 
-export async function GET(
-  request: NextRequest,
-  { params }: ProductRouteContext
-) {
-  const { productId } = await params;
-
-  return proxyBackendRequest({
-    request,
-    backendPath: API_ROUTES.products.details(productId),
-  });
-}
+export const GET = createOptionalAuthGetProxyRoute<ProductRouteParams>({
+  backendPath: ({ productId }) => API_ROUTES.products.details(productId),
+});
