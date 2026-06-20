@@ -124,6 +124,9 @@ function PharmacyDetailsPageContent({
   } = useReviewForm({
     createReview: (payload) => createPharmacyReview(pharmacy.id, payload),
     notifier: toast,
+    successMessage: 'Review was accepted and will be visible after moderation.',
+    errorMessage: 'Could not submit review.',
+    authRequiredMessage: 'Please log in to submit a review.',
   });
 
   const handleEmailCopy = async () => {

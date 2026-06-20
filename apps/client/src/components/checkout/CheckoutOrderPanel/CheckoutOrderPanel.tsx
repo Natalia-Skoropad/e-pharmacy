@@ -2,14 +2,14 @@ import { ShieldAlert } from 'lucide-react';
 
 import { Button } from '@e-pharmacy/ui/common';
 import { formatPrice } from '@e-pharmacy/utils/formatters';
-import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
+import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 
 import css from './CheckoutOrderPanel.module.css';
 
 //===================================================================
 
 type CheckoutOrderPanelProps = {
-  orderGroup: CheckoutPharmacyOrderGroup;
+  orderGroup: CartPharmacyGroup;
   canSubmit: boolean;
   isSubmitting: boolean;
   onSubmit: () => void;

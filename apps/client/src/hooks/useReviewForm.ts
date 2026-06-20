@@ -32,6 +32,9 @@ type UseReviewFormParams = {
   createReview: (payload: ReviewPayload) => Promise<unknown>;
   notifier?: ReviewNotifier;
   showToast?: (message: string) => void;
+  successMessage: string;
+  errorMessage: string;
+  authRequiredMessage?: string;
 };
 
 //===================================================================
@@ -40,6 +43,9 @@ export function useReviewForm({
   createReview,
   notifier,
   showToast,
+  successMessage,
+  errorMessage,
+  authRequiredMessage,
 }: UseReviewFormParams) {
   const { isAuthenticated, isAuthReady } = useAuth();
 
@@ -93,8 +99,14 @@ export function useReviewForm({
   const handleReviewSubmit = async () => {
     const nextErrors = validateReviewForm(reviewValues);
 
-    if (hasValidationErrors(nextErrors) || !isAuthReady || !isAuthenticated) {
+    if (hasValidationErrors(nextErrors) || !isAuthReady) {
       setReviewTouchedFields(markAllFieldsTouched(REVIEW_FORM_FIELDS));
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setReviewTouchedFields(markAllFieldsTouched(REVIEW_FORM_FIELDS));
+      if (authRequiredMessage) notifyError(authRequiredMessage);
       return;
     }
 
@@ -108,11 +120,9 @@ export function useReviewForm({
 
       setReviewValues(REVIEW_INITIAL_VALUES);
       setReviewTouchedFields({});
-      notifySuccess(
-        'Review was accepted and will be visible after moderation.'
-      );
+      notifySuccess(successMessage);
     } catch {
-      notifyError('Could not submit review.');
+      notifyError(errorMessage);
     } finally {
       setIsReviewSubmitting(false);
     }

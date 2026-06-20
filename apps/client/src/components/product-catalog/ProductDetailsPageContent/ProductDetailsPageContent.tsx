@@ -35,12 +35,18 @@ import { CartOrderLimitModal } from '@/components/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { useFavoriteActions, useReviewForm } from '@/hooks';
+
+import {
+  invalidateFavoriteProductIdsCache,
+  useFavoriteActions,
+  useReviewForm,
+} from '@/hooks';
+
 import { ROUTES } from '@/lib/routes';
 import { CATALOG_SEARCH_MAX_LENGTH } from '@/lib/catalog/catalog-config';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
-import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
+import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 
 import {
   formatPharmaciesCount,
@@ -99,7 +105,9 @@ type ProductDetailsPageContentProps = {
 //===================================================================
 
 function getOfferCartItem(cart: Cart | null, productOfferId: string) {
-  return cart?.items.find((item) => item.productOfferId === productOfferId) ?? null;
+  return (
+    cart?.items.find((item) => item.productOfferId === productOfferId) ?? null
+  );
 }
 
 //===================================================================
@@ -335,6 +343,7 @@ function ProductDetailsPageContent({
       errorMessage: 'Could not update favorites.',
       addFavorite: addFavoriteProduct,
       removeFavorite: removeFavoriteProduct,
+      onFavoriteChange: () => invalidateFavoriteProductIdsCache(),
     });
 
   const {
@@ -350,6 +359,9 @@ function ProductDetailsPageContent({
   } = useReviewForm({
     createReview: (payload) => createProductReview(productDetails.id, payload),
     notifier: toast,
+    successMessage: 'Review was accepted and will be visible after moderation.',
+    errorMessage: 'Could not submit review.',
+    authRequiredMessage: 'Please log in to submit a review.',
   });
 
   useEffect(() => {
@@ -373,7 +385,7 @@ function ProductDetailsPageContent({
       .catch((error) => {
         if (isMounted) {
           toast.error(
-            getAppErrorMessage(error, {
+            getUserFacingErrorMessage(error, {
               fallback: APP_ERROR_MESSAGES.products.loadCart,
             })
           );
@@ -426,7 +438,7 @@ function ProductDetailsPageContent({
         setOrderLimitMessage('limit');
       } else {
         toast.error(
-          getAppErrorMessage(error, {
+          getUserFacingErrorMessage(error, {
             fallback: APP_ERROR_MESSAGES.products.addToCart,
           })
         );
@@ -474,7 +486,7 @@ function ProductDetailsPageContent({
         dispatchCartUpdated(previousCart);
       }
       toast.error(
-        getAppErrorMessage(error, {
+        getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.products.removeFromCart,
         })
       );

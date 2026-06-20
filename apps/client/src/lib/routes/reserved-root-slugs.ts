@@ -26,7 +26,11 @@ export const RESERVED_ROOT_SLUGS = [
   ...CLIENT_RESERVED_APP_PREFIXES,
 ] as const;
 
+//===================================================================
+
 const RESERVED_ROOT_SLUG_SET = new Set<string>(RESERVED_ROOT_SLUGS);
+
+//===================================================================
 
 export function isReservedRootSlug(value: string): boolean {
   return RESERVED_ROOT_SLUG_SET.has(value.trim().toLowerCase());

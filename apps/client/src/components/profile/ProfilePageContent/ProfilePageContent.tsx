@@ -35,7 +35,7 @@ import {
   formatShortDate,
 } from '@e-pharmacy/utils/formatters';
 
-import { buildOrderPath } from '@/lib/orders';
+import { buildOrderPath } from '@/lib/routes';
 
 import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
 

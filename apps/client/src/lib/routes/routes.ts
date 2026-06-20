@@ -19,4 +19,6 @@ export const ROUTES = {
   PERSONAL_DATA_NOTICE: `/${ROUTE_SEGMENTS.personalDataNotice}`,
 } as const;
 
+//===================================================================
+
 export const CLIENT_RESERVED_APP_PREFIXES = ['admin', 'pharmacy'] as const;

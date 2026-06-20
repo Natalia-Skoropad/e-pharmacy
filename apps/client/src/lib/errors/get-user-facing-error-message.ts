@@ -6,7 +6,7 @@ import { APP_ERROR_MESSAGES } from './error-messages';
 
 type StatusMessageMap = Partial<Record<number, string>>;
 
-type GetAppErrorMessageOptions = {
+type GetUserFacingErrorMessageOptions = {
   fallback?: string;
   statusMessages?: StatusMessageMap;
   preferApiMessage?: boolean;
@@ -32,6 +32,8 @@ function isNetworkError(error: unknown): boolean {
   );
 }
 
+//===================================================================
+
 function getErrorMessage(error: unknown): string | null {
   if (error instanceof Error && error.message.trim()) {
     return error.message;
@@ -42,9 +44,9 @@ function getErrorMessage(error: unknown): string | null {
 
 //===================================================================
 
-export function getAppErrorMessage(
+export function getUserFacingErrorMessage(
   error: unknown,
-  options: GetAppErrorMessageOptions = {}
+  options: GetUserFacingErrorMessageOptions = {}
 ): string {
   const {
     fallback = APP_ERROR_MESSAGES.common.default,
@@ -57,7 +59,8 @@ export function getAppErrorMessage(
   }
 
   if (isApiError(error)) {
-    const mappedMessage = statusMessages?.[error.status] ?? COMMON_STATUS_MESSAGES[error.status];
+    const mappedMessage =
+      statusMessages?.[error.status] ?? COMMON_STATUS_MESSAGES[error.status];
     const apiMessage = getErrorMessage(error);
 
     if (preferApiMessage && apiMessage) return apiMessage;

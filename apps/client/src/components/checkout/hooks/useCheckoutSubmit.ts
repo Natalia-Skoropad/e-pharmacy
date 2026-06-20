@@ -4,20 +4,20 @@ import { useRouter } from 'next/navigation';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { groupCartByPharmacy } from '@/lib/cart/cart-groups';
 import { getStockValidationError } from '@/lib/checkout';
-import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
-import { buildOrderPath } from '@/lib/orders';
+import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
+import { buildOrderPath } from '@/lib/routes';
 
 import { checkoutOrder, getCart } from '@/lib/api/browser';
 import type { Cart, CheckoutOrderPayload } from '@e-pharmacy/types';
 
-import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
+import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types/orders';
 
 //===================================================================
 
 type UseCheckoutSubmitParams = {
   isAuthenticated: boolean;
-  selectedOrderGroup: CheckoutPharmacyOrderGroup | null;
+  selectedOrderGroup: CartPharmacyGroup | null;
   paymentMethod: PaymentMethod;
   deliveryMethod: DeliveryMethod;
   recipientNameValue: string;
@@ -104,7 +104,7 @@ export function useCheckoutSubmit({
       router.push(buildOrderPath(response.order));
     } catch (error) {
       setError(
-        getAppErrorMessage(error, {
+        getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.checkout.confirm,
         })
       );

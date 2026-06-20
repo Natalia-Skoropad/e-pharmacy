@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 
 import { getPharmacyCheckoutDetails } from '@/lib/api/browser';
 import type { PharmacyCheckoutDetails } from '@e-pharmacy/types';
-import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
+import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 
 //===================================================================
 
 export function useCheckoutPharmacy(
-  selectedOrderGroup: CheckoutPharmacyOrderGroup | null
+  selectedOrderGroup: CartPharmacyGroup | null
 ) {
   const [pharmacy, setPharmacy] = useState<PharmacyCheckoutDetails | null>(
     null

@@ -8,13 +8,13 @@ import type { ReactNode } from 'react';
 
 //===================================================================
 
-type ProtectedRouteProps = {
+type ClientProtectedRouteProps = {
   children: ReactNode;
 };
 
 //===================================================================
 
-function ProtectedRoute({ children }: ProtectedRouteProps) {
+function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
   return (
     <SharedProtectedRoute
       loginPath={ROUTES.LOGIN}
@@ -26,4 +26,4 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
   );
 }
 
-export default ProtectedRoute;
+export default ClientProtectedRoute;

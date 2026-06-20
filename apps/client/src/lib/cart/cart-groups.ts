@@ -1,4 +1,4 @@
-import { buildCheckoutPath } from '@/lib/checkout/checkout-routes';
+import { buildCheckoutPath } from '@/lib/routes';
 import type { Cart } from '@e-pharmacy/types';
 
 //===================================================================

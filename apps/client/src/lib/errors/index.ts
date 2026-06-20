@@ -1,2 +1,2 @@
 export * from './error-messages';
-export * from './get-app-error-message';
+export * from './get-user-facing-error-message';

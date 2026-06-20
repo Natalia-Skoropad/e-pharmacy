@@ -29,7 +29,7 @@ import {
 } from '@/lib/cart/cart-groups';
 
 import { CART_DESCRIPTION, CART_TITLE } from '@/lib/seo';
-import { APP_ERROR_MESSAGES, getAppErrorMessage } from '@/lib/errors';
+import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 import { ROUTES } from '@/lib/routes';
 import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
 import { useAuth } from '@e-pharmacy/auth/core';
@@ -127,7 +127,7 @@ function CartPageContent() {
       setCart(previousCart);
       dispatchCartUpdated(previousCart);
       setError(
-        getAppErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.update })
+        getUserFacingErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.update })
       );
     } finally {
       setUpdatingItemId(null);
@@ -146,7 +146,7 @@ function CartPageContent() {
       setCart(response.cart);
     } catch (error) {
       setError(
-        getAppErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.remove })
+        getUserFacingErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.remove })
       );
     } finally {
       setUpdatingItemId(null);
@@ -165,7 +165,7 @@ function CartPageContent() {
       setCart(response.cart);
     } catch (error) {
       setError(
-        getAppErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.clear })
+        getUserFacingErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.clear })
       );
     } finally {
       setIsClearing(false);
@@ -198,7 +198,7 @@ function CartPageContent() {
       setCart(nextCart);
     } catch (error) {
       setError(
-        getAppErrorMessage(error, {
+        getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.cart.removeOrder,
         })
       );

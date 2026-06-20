@@ -7,13 +7,13 @@ import type { ReactNode } from 'react';
 
 //===================================================================
 
-type GuestOnlyRouteProps = {
+type ClientGuestOnlyRouteProps = {
   children: ReactNode;
 };
 
 //===================================================================
 
-function GuestOnlyRoute({ children }: GuestOnlyRouteProps) {
+function ClientGuestOnlyRoute({ children }: ClientGuestOnlyRouteProps) {
   return (
     <SharedGuestOnlyRoute authenticatedRedirectPath={resolveAuthenticatedRouteForClientApp}>
       {children}
@@ -21,4 +21,4 @@ function GuestOnlyRoute({ children }: GuestOnlyRouteProps) {
   );
 }
 
-export default GuestOnlyRoute;
+export default ClientGuestOnlyRoute;

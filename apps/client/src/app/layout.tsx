@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 
 import AppShell from '@/components/layout/AppShell';
-import AuthProvider from '@/providers/AuthProvider/AuthProvider';
-import { CartProvider } from '@/providers/CartProvider';
+import { AuthProvider, CartProvider } from '@/providers';
 import { ToastProvider } from '@e-pharmacy/ui/feedback';
 
 import {
@@ -72,7 +71,9 @@ function RootLayout({ children }: RootLayoutProps) {
       <body>
         <ToastProvider>
           <AuthProvider>
-            <CartProvider><AppShell>{children}</AppShell></CartProvider>
+            <CartProvider>
+              <AppShell>{children}</AppShell>
+            </CartProvider>
           </AuthProvider>
         </ToastProvider>
       </body>

@@ -32,7 +32,7 @@ import {
 } from '@e-pharmacy/utils/formatters';
 
 import { buildProductPath, buildPharmacyPath } from '@/lib/routes';
-import { getOrderIdFromPathParam } from '@/lib/orders';
+import { getOrderIdFromPathParam } from '@/lib/routes';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { getOrderDetails } from '@/lib/api/browser';
 import type { BreadcrumbItem, Order } from '@e-pharmacy/types';

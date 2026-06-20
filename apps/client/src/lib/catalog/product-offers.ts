@@ -11,6 +11,8 @@ export type ProductOfferSort =
 
 export const PRODUCT_OFFERS_PER_PAGE = 10;
 
+//===================================================================
+
 export const PRODUCT_OFFER_SORT_OPTIONS: {
   value: ProductOfferSort;
   label: string;

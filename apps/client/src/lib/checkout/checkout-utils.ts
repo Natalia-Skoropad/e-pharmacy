@@ -4,7 +4,7 @@ import type {
   PharmacyCheckoutDetails,
 } from '@e-pharmacy/types';
 
-import type { CheckoutPharmacyOrderGroup } from '@/lib/checkout/checkout-types';
+import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 
 //===================================================================
 
@@ -16,13 +16,17 @@ export function getPharmacyPhone(pharmacy?: Partial<Pharmacy> | null): string {
   return pharmacy?.phone?.trim() ?? '';
 }
 
-export function getPharmacyWorkingHours(pharmacy?: Partial<Pharmacy> | null): string {
+export function getPharmacyWorkingHours(
+  pharmacy?: Partial<Pharmacy> | null
+): string {
   return pharmacy?.workingHours?.trim() ?? '';
 }
 
 //===================================================================
 
-export function getPharmacyAddress(pharmacy?: Partial<Pharmacy> | null): string {
+export function getPharmacyAddress(
+  pharmacy?: Partial<Pharmacy> | null
+): string {
   if (!pharmacy) return '';
 
   return [pharmacy.address, pharmacy.city]
@@ -41,9 +45,7 @@ export function getPharmacyBankDetails(
 
 //===================================================================
 
-export function getStockValidationError(
-  group: CheckoutPharmacyOrderGroup
-): string {
+export function getStockValidationError(group: CartPharmacyGroup): string {
   const unavailableItems = group.items.filter(
     (item) => item.stockQuantity <= 0 || item.quantity > item.stockQuantity
   );

@@ -18,6 +18,9 @@ type UseFavoriteStatusRefreshParams = {
 
 //===================================================================
 
+// These promise caches deduplicate favorite status refreshes inside one browser
+// runtime. Invalidate them after each add/remove mutation so details pages and
+// catalog cards do not reuse stale favorite ids.
 let favoriteProductIdsPromise: Promise<Set<string>> | null = null;
 let favoritePharmacyIdsPromise: Promise<Set<string>> | null = null;
 

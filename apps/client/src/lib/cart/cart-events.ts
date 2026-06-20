@@ -7,6 +7,8 @@ import type { Cart } from '@e-pharmacy/types';
 // need to call cart API mutations directly.
 export const CART_UPDATED_EVENT = 'cart-updated';
 
+//===================================================================
+
 export type CartUpdatedEventDetail = {
   totalItems: number;
   cart?: Cart;

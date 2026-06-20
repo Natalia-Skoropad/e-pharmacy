@@ -1,22 +1,7 @@
 import { getSafeApplicationRedirectPath } from '@e-pharmacy/auth/routing';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES, CLIENT_ALLOWED_REDIRECT_PREFIXES } from '@/lib/routes';
 
 import type { AuthUser } from '@e-pharmacy/types';
-
-//===================================================================
-
-const CLIENT_ALLOWED_REDIRECT_PREFIXES = [
-  ROUTES.HOME,
-  ROUTES.PROFILE,
-  ROUTES.PHARMACIES,
-  ROUTES.PRODUCTS_CATALOG,
-  ROUTES.CART,
-  ROUTES.CHECKOUT,
-  ROUTES.DELIVERY_PAYMENT,
-  ROUTES.RETURN_POLICY,
-  ROUTES.USER_AGREEMENT,
-  ROUTES.PERSONAL_DATA_NOTICE,
-] as const;
 
 //===================================================================
 
