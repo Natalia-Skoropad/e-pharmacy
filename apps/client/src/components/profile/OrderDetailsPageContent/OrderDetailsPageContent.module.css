@@ -151,12 +151,23 @@
 
 .pharmacyDetailsLink,
 .productDetailsLink {
-  justify-self: start;
+  justify-self: stretch;
+  width: 100%;
 }
 
 .itemHead {
   display: grid;
   gap: 12px;
+}
+
+.itemCategory {
+  margin-bottom: 6px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  line-height: 1.3;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
 }
 
 .itemTitle {
@@ -273,6 +284,7 @@
   .pharmacyDetailsLink,
   .productDetailsLink {
     justify-self: end;
+    width: auto;
   }
 
   .hero {

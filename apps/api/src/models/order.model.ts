@@ -1,6 +1,7 @@
 import { Schema, model, models } from 'mongoose';
 
 import { MAX_REVIEW_RATING } from '../constants/validation';
+import { PRODUCT_CATEGORIES } from '../types/categories';
 import type { OrderEntity } from '../types/order';
 
 //===============================================================
@@ -41,10 +42,23 @@ const orderProductSnapshotSchema = new Schema(
     name: { type: String, required: true, trim: true },
     slug: { type: String, trim: true, default: undefined },
     article: { type: String, required: true, trim: true },
+    category: {
+      type: String,
+      enum: Object.values(PRODUCT_CATEGORIES),
+      default: undefined,
+    },
+
     imageUrl: { type: String, trim: true, default: undefined },
     manufacturer: { type: String, trim: true, default: undefined },
     dosage: { type: String, trim: true, default: undefined },
     packageQuantity: { type: String, trim: true, default: undefined },
+    rating: {
+      type: Number,
+      min: 0,
+      max: MAX_REVIEW_RATING,
+      default: undefined,
+    },
+    reviewsCount: { type: Number, min: 0, default: undefined },
   },
 
   { _id: false, id: false }

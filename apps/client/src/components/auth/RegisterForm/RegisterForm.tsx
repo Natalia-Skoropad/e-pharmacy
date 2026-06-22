@@ -4,6 +4,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/common';
+import { useToast } from '@e-pharmacy/ui/feedback';
 
 import {
   EmailInput,
@@ -12,13 +13,15 @@ import {
   PhoneInput,
 } from '@e-pharmacy/ui/form-fields';
 
-import { useToast } from '@e-pharmacy/ui/feedback';
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
-import { getClientAuthErrorMessage, resolveLoginDestination } from '@/lib/auth';
-import { ROUTES } from '@/lib/routes';
+import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
   REGISTER_FORM_FIELDS,
+  USER_EMAIL_MAX_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_PASSWORD_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
   REGISTER_INITIAL_VALUES,
   hasValidationErrors,
   isRegisterFormValid,
@@ -33,7 +36,8 @@ import {
   type RegisterTouchedFields,
 } from '@e-pharmacy/validation';
 
-import { useAuth } from '@e-pharmacy/auth/core';
+import { getClientAuthErrorMessage, resolveLoginDestination } from '@/lib/auth';
+import { ROUTES } from '@/lib/routes';
 
 import css from '../shared/AuthForm.module.css';
 
@@ -47,7 +51,7 @@ function RegisterForm() {
   const toast = useToast();
 
   const [values, setValues] = useState<RegisterFormValues>(
-    REGISTER_INITIAL_VALUES
+    REGISTER_INITIAL_VALUES,
   );
 
   const [errors, setErrors] = useState<RegisterFormErrors>({});
@@ -119,11 +123,11 @@ function RegisterForm() {
               user,
               requestedRedirect: searchParams.get('redirect'),
             })
-          : ROUTES.PROFILE
+          : ROUTES.PROFILE,
       );
     } catch (error) {
       toast.error(
-        getClientAuthErrorMessage(getAuthErrorCode(error, 'register'))
+        getClientAuthErrorMessage(getAuthErrorCode(error, 'register')),
       );
     } finally {
       setIsSubmitting(false);
@@ -139,6 +143,7 @@ function RegisterForm() {
           value={values.name}
           error={errors.name}
           isTouched={touchedFields.name}
+          maxLength={USER_NAME_MAX_LENGTH}
           onChange={handleChange('name')}
         />
 
@@ -148,6 +153,7 @@ function RegisterForm() {
           value={values.email}
           error={errors.email}
           isTouched={touchedFields.email}
+          maxLength={USER_EMAIL_MAX_LENGTH}
           onChange={handleChange('email')}
         />
 
@@ -157,6 +163,7 @@ function RegisterForm() {
           value={values.phone}
           error={errors.phone}
           isTouched={touchedFields.phone}
+          maxLength={USER_PHONE_MAX_LENGTH}
           onChange={handleChange('phone')}
         />
 
@@ -169,6 +176,7 @@ function RegisterForm() {
           error={errors.password}
           isTouched={touchedFields.password}
           isVisible={isPasswordVisible}
+          maxLength={USER_PASSWORD_MAX_LENGTH}
           onChange={handleChange('password')}
           onToggleVisibility={() => setIsPasswordVisible((prev) => !prev)}
         />

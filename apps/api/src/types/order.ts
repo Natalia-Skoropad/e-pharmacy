@@ -1,5 +1,6 @@
 import type { Types } from 'mongoose';
 import type { PharmacyBankDetails } from './pharmacy';
+import type { ProductCategory } from './categories';
 
 //===============================================================
 
@@ -26,10 +27,13 @@ export type OrderProductSnapshot = {
   name: string;
   slug?: string;
   article: string;
+  category?: ProductCategory;
   imageUrl?: string;
   manufacturer?: string;
   dosage?: string;
   packageQuantity?: string;
+  rating?: number;
+  reviewsCount?: number;
 };
 
 //===============================================================
@@ -92,10 +96,13 @@ export type OrderItemResponseDto = {
   name: string;
   slug?: string;
   article: string;
+  category?: ProductCategory;
   imageUrl?: string;
   manufacturer?: string;
   dosage?: string;
   packageQuantity?: string;
+  rating?: number;
+  reviewsCount?: number;
   quantity: number;
   unitPrice: number;
   totalPrice: number;

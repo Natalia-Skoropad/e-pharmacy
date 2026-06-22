@@ -24,10 +24,9 @@ import {
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+
 import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
-import { PROFILE_TITLE } from '@/lib/seo';
-import { ROUTES } from '@/lib/routes';
 
 import {
   formatCapitalizedLabel,
@@ -35,13 +34,14 @@ import {
   formatShortDate,
 } from '@e-pharmacy/utils/formatters';
 
-import { buildOrderPath } from '@/lib/routes';
-
-import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
-
 import {
   CHANGE_PASSWORD_FORM_FIELDS,
   CHANGE_PASSWORD_INITIAL_VALUES,
+  PICTURE_ACCEPT,
+  USER_ADDRESS_MAX_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_PASSWORD_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
   DATA_PROFILE_FORM_FIELDS,
   DATA_PROFILE_INITIAL_VALUES,
   hasValidationErrors,
@@ -50,6 +50,8 @@ import {
   isDataProfileFormDirty,
   isDataProfileFormValid,
   markAllFieldsTouched,
+  buildPictureFileError,
+  buildPictureUrlError,
   normalizeDataProfileValues,
   sanitizeAddress,
   sanitizeName,
@@ -63,7 +65,23 @@ import {
   type DataProfileTouchedFields,
 } from '@e-pharmacy/validation';
 
+import type {
+  ActiveSession,
+  Order,
+  Product,
+  Pharmacy,
+} from '@e-pharmacy/types';
+
 import { useAuth } from '@e-pharmacy/auth/core';
+
+import { PROFILE_TITLE } from '@/lib/seo';
+
+import {
+  ROUTES,
+  buildOrderPath,
+  buildPharmacyPath,
+  createBreadcrumbs,
+} from '@/lib/routes';
 
 import {
   getOrders,
@@ -74,13 +92,6 @@ import {
   updateCurrentUser,
   updateCurrentUserPassword,
 } from '@/lib/api/browser';
-
-import type {
-  ActiveSession,
-  Order,
-  Product,
-  Pharmacy,
-} from '@e-pharmacy/types';
 
 import css from './ProfilePageContent.module.css';
 
@@ -119,7 +130,7 @@ function ProfilePageContent() {
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
 
   const [profileValues, setProfileValues] = useState<DataProfileFormValues>(
-    DATA_PROFILE_INITIAL_VALUES
+    DATA_PROFILE_INITIAL_VALUES,
   );
 
   const [initialProfileValues, setInitialProfileValues] =
@@ -152,13 +163,9 @@ function ProfilePageContent() {
   const [favoriteProductsError, setFavoriteProductsError] = useState('');
   const [favoritePharmaciesError, setFavoritePharmaciesError] = useState('');
 
-  const [favoriteProductsCount, setFavoriteProductsCount] = useState<
-    number | null
-  >(null);
+  const [favoriteProductsCount, setFavoriteProductsCount] = useState(0);
 
-  const [favoritePharmaciesCount, setFavoritePharmaciesCount] = useState<
-    number | null
-  >(null);
+  const [favoritePharmaciesCount, setFavoritePharmaciesCount] = useState(0);
 
   const [favoriteProductsPage, setFavoriteProductsPage] = useState(0);
   const [favoriteProductsTotalPages, setFavoriteProductsTotalPages] =
@@ -200,19 +207,19 @@ function ProfilePageContent() {
 
   const profileErrors = useMemo(
     () => validateDataProfileForm(profileValues),
-    [profileValues]
+    [profileValues],
   );
 
   const passwordErrors = useMemo(
     () => validateChangePasswordForm(passwordValues),
-    [passwordValues]
+    [passwordValues],
   );
 
   const profileFormIsValid = isDataProfileFormValid(profileValues);
 
   const profileFormIsDirty = isDataProfileFormDirty(
     profileValues,
-    initialProfileValues
+    initialProfileValues,
   );
 
   const passwordFormIsDirty = isChangePasswordFormDirty(passwordValues);
@@ -224,20 +231,14 @@ function ProfilePageContent() {
         if (tab.value === 'favorite-products') {
           return {
             ...tab,
-            label:
-              favoriteProductsCount === null
-                ? tab.label
-                : `${tab.label} (${favoriteProductsCount})`,
+            label: `${tab.label} (${favoriteProductsCount})`,
           };
         }
 
         if (tab.value === 'favorite-pharmacies') {
           return {
             ...tab,
-            label:
-              favoritePharmaciesCount === null
-                ? tab.label
-                : `${tab.label} (${favoritePharmaciesCount})`,
+            label: `${tab.label} (${favoritePharmaciesCount})`,
           };
         }
 
@@ -250,12 +251,12 @@ function ProfilePageContent() {
 
         return tab;
       }),
-    [favoriteProductsCount, favoritePharmaciesCount, orders.length]
+    [favoriteProductsCount, favoritePharmaciesCount, orders.length],
   );
 
   const visibleOrders = useMemo(
     () => orders.slice(0, ordersVisibleCount),
-    [orders, ordersVisibleCount]
+    [orders, ordersVisibleCount],
   );
 
   const hiddenOrdersCount = Math.max(orders.length - visibleOrders.length, 0);
@@ -263,14 +264,12 @@ function ProfilePageContent() {
   const visibleFavoriteProducts = favoriteProducts;
   const visibleFavoritePharmacies = favoritePharmacies;
   const hiddenFavoriteProductsCount = Math.max(
-    (favoriteProductsCount ?? favoriteProducts.length) -
-      favoriteProducts.length,
-    0
+    favoriteProductsCount - favoriteProducts.length,
+    0,
   );
   const hiddenFavoritePharmaciesCount = Math.max(
-    (favoritePharmaciesCount ?? favoritePharmacies.length) -
-      favoritePharmacies.length,
-    0
+    favoritePharmaciesCount - favoritePharmacies.length,
+    0,
   );
 
   const loadFavoriteProducts = useCallback(async (page = 1) => {
@@ -283,7 +282,7 @@ function ProfilePageContent() {
         sort: 'name-asc',
       });
       setFavoriteProducts((current) =>
-        page === 1 ? response.items : [...current, ...response.items]
+        page === 1 ? response.items : [...current, ...response.items],
       );
       setFavoriteProductsCount(response.total);
       setFavoriteProductsPage(response.page);
@@ -306,7 +305,7 @@ function ProfilePageContent() {
         sort: 'name-asc',
       });
       setFavoritePharmacies((current) =>
-        page === 1 ? response.items : [...current, ...response.items]
+        page === 1 ? response.items : [...current, ...response.items],
       );
       setFavoritePharmaciesCount(response.total);
       setFavoritePharmaciesPage(response.page);
@@ -345,8 +344,8 @@ function ProfilePageContent() {
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       if (!canUseAuthFeatures) {
-        setFavoriteProductsCount(null);
-        setFavoritePharmaciesCount(null);
+        setFavoriteProductsCount(0);
+        setFavoritePharmaciesCount(0);
         return;
       }
 
@@ -465,7 +464,7 @@ function ProfilePageContent() {
       setSessionsError('');
       await revokeActiveSession(sessionId);
       setSessions((current) =>
-        current.filter((session) => session.id !== sessionId)
+        current.filter((session) => session.id !== sessionId),
       );
       toast.success('Session was revoked.');
     } catch {
@@ -499,7 +498,7 @@ function ProfilePageContent() {
 
   const handleProfileChange = (
     field: keyof DataProfileFormValues,
-    value: string
+    value: string,
   ) => {
     setError('');
     setProfileTouchedFields((prev) => ({
@@ -514,7 +513,7 @@ function ProfilePageContent() {
   };
 
   const handlePictureError = (message: string) => {
-    setError(message);
+    toast.error(message);
   };
 
   const handlePictureChange = async (pictureUrl: string | null) => {
@@ -530,10 +529,17 @@ function ProfilePageContent() {
       await updateCurrentUser({ pictureUrl: pictureUrl });
       await reloadCurrentUser();
       toast.success(
-        pictureUrl ? 'Profile photo was updated.' : 'Profile photo was removed.'
+        pictureUrl
+          ? 'Profile photo was updated.'
+          : 'Profile photo was removed.',
       );
-    } catch {
-      setError('Could not update profile photo.');
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : 'Could not update profile photo.';
+
+      toast.error(message);
       setPicturePreview(previousPictureUrl);
     } finally {
       setIsPictureSaving(false);
@@ -572,7 +578,7 @@ function ProfilePageContent() {
 
   const handlePasswordChange = (
     field: keyof ChangePasswordFormValues,
-    value: string
+    value: string,
   ) => {
     setPasswordSubmitError('');
     setPasswordTouchedFields((prev) => ({
@@ -606,10 +612,13 @@ function ProfilePageContent() {
       setPasswordValues(CHANGE_PASSWORD_INITIAL_VALUES);
       setPasswordTouchedFields({});
       toast.success('Password was changed.');
-    } catch {
-      setPasswordSubmitError(
-        'Could not change password. Check the current password and try again.'
-      );
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : 'Could not change password. Check the current password and try again.';
+
+      setPasswordSubmitError(message);
     } finally {
       setIsPasswordSaving(false);
     }
@@ -635,6 +644,11 @@ function ProfilePageContent() {
                 name={user.name}
                 pictureUrl={picturePreview}
                 isSaving={isPictureSaving}
+                accept={PICTURE_ACCEPT}
+                validateFile={(file) => buildPictureFileError(file) || null}
+                validatePictureUrl={(pictureUrl) =>
+                  buildPictureUrlError(pictureUrl) || null
+                }
                 onChange={handlePictureChange}
                 onError={handlePictureError}
               />
@@ -694,10 +708,11 @@ function ProfilePageContent() {
                         value={profileValues.name}
                         error={profileErrors.name}
                         isTouched={Boolean(profileTouchedFields.name)}
+                        maxLength={USER_NAME_MAX_LENGTH}
                         onChange={(event) =>
                           handleProfileChange(
                             'name',
-                            sanitizeName(event.target.value)
+                            sanitizeName(event.target.value),
                           )
                         }
                       />
@@ -708,10 +723,11 @@ function ProfilePageContent() {
                         value={profileValues.phone}
                         error={profileErrors.phone}
                         isTouched={Boolean(profileTouchedFields.phone)}
+                        maxLength={USER_PHONE_MAX_LENGTH}
                         onChange={(event) =>
                           handleProfileChange(
                             'phone',
-                            sanitizePhone(event.target.value)
+                            sanitizePhone(event.target.value),
                           )
                         }
                       />
@@ -724,10 +740,11 @@ function ProfilePageContent() {
                         error={profileErrors.address}
                         isTouched={Boolean(profileTouchedFields.address)}
                         required={false}
+                        maxLength={USER_ADDRESS_MAX_LENGTH}
                         onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
                           handleProfileChange(
                             'address',
-                            sanitizeAddress(event.target.value)
+                            sanitizeAddress(event.target.value),
                           )
                         }
                       />
@@ -768,13 +785,14 @@ function ProfilePageContent() {
                         autoComplete="current-password"
                         error={passwordErrors.currentPassword}
                         isTouched={Boolean(
-                          passwordTouchedFields.currentPassword
+                          passwordTouchedFields.currentPassword,
                         )}
                         isVisible={isCurrentPasswordVisible}
+                        maxLength={USER_PASSWORD_MAX_LENGTH}
                         onChange={(event) =>
                           handlePasswordChange(
                             'currentPassword',
-                            event.target.value
+                            event.target.value,
                           )
                         }
                         onToggleVisibility={() =>
@@ -791,10 +809,11 @@ function ProfilePageContent() {
                         error={passwordErrors.newPassword}
                         isTouched={Boolean(passwordTouchedFields.newPassword)}
                         isVisible={isNewPasswordVisible}
+                        maxLength={USER_PASSWORD_MAX_LENGTH}
                         onChange={(event) =>
                           handlePasswordChange(
                             'newPassword',
-                            event.target.value
+                            event.target.value,
                           )
                         }
                         onToggleVisibility={() =>
@@ -926,7 +945,7 @@ function ProfilePageContent() {
                                   className={css.pharmacyLink}
                                   href={buildPharmacyPath(
                                     order.pharmacyName,
-                                    order.pharmacyId
+                                    order.pharmacyId,
                                   )}
                                 >
                                   {order.pharmacyName}
@@ -958,7 +977,7 @@ function ProfilePageContent() {
                       variant="secondary"
                       onClick={() =>
                         setOrdersVisibleCount(
-                          (prev) => prev + ORDERS_VISIBLE_STEP
+                          (prev) => prev + ORDERS_VISIBLE_STEP,
                         )
                       }
                     >
@@ -980,7 +999,7 @@ function ProfilePageContent() {
 
                     <CountLabel
                       shown={visibleFavoriteProducts.length}
-                      total={favoriteProductsCount ?? favoriteProducts.length}
+                      total={favoriteProductsCount}
                       label="items"
                     />
                   </div>
@@ -1003,16 +1022,16 @@ function ProfilePageContent() {
                             skipFavoriteRefresh
                             onFavoriteChange={(
                               productId: string,
-                              isFavoriteProduct: boolean
+                              isFavoriteProduct: boolean,
                             ) => {
                               if (isFavoriteProduct) return;
 
                               setFavoriteProducts((prev) => {
                                 const nextProducts = prev.filter(
-                                  (item) => item.id !== productId
+                                  (item) => item.id !== productId,
                                 );
                                 setFavoriteProductsCount((count) =>
-                                  Math.max((count ?? 1) - 1, 0)
+                                  Math.max((count ?? 1) - 1, 0),
                                 );
 
                                 return nextProducts;
@@ -1071,9 +1090,7 @@ function ProfilePageContent() {
 
                     <CountLabel
                       shown={visibleFavoritePharmacies.length}
-                      total={
-                        favoritePharmaciesCount ?? favoritePharmacies.length
-                      }
+                      total={favoritePharmaciesCount}
                       label="pharmacies"
                     />
                   </div>
@@ -1096,16 +1113,16 @@ function ProfilePageContent() {
                             skipFavoriteRefresh
                             onFavoriteChange={(
                               pharmacyId: string,
-                              isFavoritePharmacy: boolean
+                              isFavoritePharmacy: boolean,
                             ) => {
                               if (isFavoritePharmacy) return;
 
                               setFavoritePharmacies((prev) => {
                                 const nextPharmacies = prev.filter(
-                                  (item) => item.id !== pharmacyId
+                                  (item) => item.id !== pharmacyId,
                                 );
                                 setFavoritePharmaciesCount((count) =>
-                                  Math.max((count ?? 1) - 1, 0)
+                                  Math.max((count ?? 1) - 1, 0),
                                 );
 
                                 return nextPharmacies;
@@ -1123,7 +1140,7 @@ function ProfilePageContent() {
                           variant="secondary"
                           onClick={() =>
                             void loadFavoritePharmacies(
-                              favoritePharmaciesPage + 1
+                              favoritePharmaciesPage + 1,
                             )
                           }
                         >

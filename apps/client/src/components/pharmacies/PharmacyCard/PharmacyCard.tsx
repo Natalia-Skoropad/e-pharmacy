@@ -159,7 +159,7 @@ function PharmacyCard({
             size="sm"
             variant="secondary"
           >
-            Pharmacy details
+            View details
           </ButtonLink>
 
           <ButtonLink className={css.detailsLink} href={productsHref} size="sm">

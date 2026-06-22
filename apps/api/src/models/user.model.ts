@@ -10,7 +10,12 @@ import {
   VALIDATION_MESSAGES,
 } from '../constants/validation';
 
-import { AUTH_APPLICATIONS, USER_ROLES, USER_STATUSES } from '../constants/auth';
+import {
+  AUTH_APPLICATIONS,
+  USER_ROLES,
+  USER_STATUSES,
+} from '../constants/auth';
+
 import type { UserEntity } from '../types/user';
 
 //===============================================================
@@ -55,6 +60,7 @@ const userSchema = new Schema<UserEntity>(
     phone: {
       type: String,
       required: [true, VALIDATION_MESSAGES.required.phone],
+      unique: true,
       trim: true,
       minlength: [USER_PHONE_MIN_LENGTH, VALIDATION_MESSAGES.limits.phoneMin],
       maxlength: [USER_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.limits.phoneMax],

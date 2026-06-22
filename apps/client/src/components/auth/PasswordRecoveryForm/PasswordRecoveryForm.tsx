@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+
 import { Button, TextActionButton } from '@e-pharmacy/ui/common';
 import { EmailInput } from '@e-pharmacy/ui/form-fields';
 import { useToast } from '@e-pharmacy/ui/feedback';
+
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
-import { getClientAuthErrorMessage } from '@/lib/auth';
-import { ROUTES } from '@/lib/routes';
+import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
   FORGOT_PASSWORD_FORM_FIELDS,
+  USER_EMAIL_MAX_LENGTH,
   FORGOT_PASSWORD_INITIAL_VALUES,
   hasValidationErrors,
   isForgotPasswordFormValid,
@@ -21,7 +23,8 @@ import {
   type ForgotPasswordTouchedFields,
 } from '@e-pharmacy/validation';
 
-import { useAuth } from '@e-pharmacy/auth/core';
+import { getClientAuthErrorMessage } from '@/lib/auth';
+import { ROUTES } from '@/lib/routes';
 import { requestPasswordReset } from '@/lib/api/browser';
 
 import css from '../shared/AuthForm.module.css';
@@ -33,7 +36,7 @@ function PasswordRecoveryForm() {
   const { isAuthReady } = useAuth();
 
   const [values, setValues] = useState<ForgotPasswordFormValues>(
-    FORGOT_PASSWORD_INITIAL_VALUES
+    FORGOT_PASSWORD_INITIAL_VALUES,
   );
 
   const [errors, setErrors] = useState<ForgotPasswordFormErrors>({});
@@ -79,11 +82,11 @@ function PasswordRecoveryForm() {
       setTouchedFields({});
       setErrors({});
       toast.success(
-        'If an account with that email exists, you will receive password reset instructions shortly. Please check your inbox.'
+        'If an account with that email exists, you will receive password reset instructions shortly. Please check your inbox.',
       );
     } catch (error) {
       toast.error(
-        getClientAuthErrorMessage(getAuthErrorCode(error, 'forgot-password'))
+        getClientAuthErrorMessage(getAuthErrorCode(error, 'forgot-password')),
       );
     } finally {
       setIsSubmitting(false);
@@ -99,6 +102,7 @@ function PasswordRecoveryForm() {
           value={values.email}
           error={errors.email}
           isTouched={touchedFields.email}
+          maxLength={USER_EMAIL_MAX_LENGTH}
           onChange={handleChange}
         />
       </div>

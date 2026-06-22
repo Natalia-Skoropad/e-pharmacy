@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   CalendarDays,
   CreditCard,
+  CircleDollarSign,
   MapPin,
   MessageSquareText,
   PackageCheck,
@@ -23,7 +24,9 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { ROUTES } from '@/lib/routes';
+
+import { useAuth } from '@e-pharmacy/auth/core';
+import type { BreadcrumbItem, Order } from '@e-pharmacy/types';
 
 import {
   formatCapitalizedLabel,
@@ -31,11 +34,14 @@ import {
   formatPrice,
 } from '@e-pharmacy/utils/formatters';
 
-import { buildProductPath, buildPharmacyPath } from '@/lib/routes';
-import { getOrderIdFromPathParam } from '@/lib/routes';
-import { useAuth } from '@e-pharmacy/auth/core';
+import {
+  ROUTES,
+  buildProductPath,
+  buildPharmacyPath,
+  getOrderIdFromPathParam,
+} from '@/lib/routes';
+
 import { getOrderDetails } from '@/lib/api/browser';
-import type { BreadcrumbItem, Order } from '@e-pharmacy/types';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -113,7 +119,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       { label: 'Profile', href: ROUTES.PROFILE },
       { label: order?.orderNumber ?? 'Order details' },
     ],
-    [order]
+    [order],
   );
 
   if (!isLoaded) {
@@ -216,7 +222,21 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                       <div className={css.itemContent}>
                         <div className={css.itemHead}>
                           <div>
+                            {item.category ? (
+                              <p className={css.itemCategory}>
+                                {formatCapitalizedLabel(
+                                  item.category.replaceAll('_', ' '),
+                                )}
+                              </p>
+                            ) : null}
+
                             <h3 className={css.itemTitle}>{item.name}</h3>
+
+                            <RatingSummary
+                              rating={item.rating ?? 0}
+                              reviewsCount={item.reviewsCount ?? 0}
+                              size="sm"
+                            />
                           </div>
                           <p className={css.itemPrice}>
                             {formatPrice(item.totalPrice)}
@@ -304,7 +324,9 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                   <dd>{order.totalItems}</dd>
                 </div>
                 <div>
-                  <dt>Total</dt>
+                  <dt>
+                    <CircleDollarSign size={16} aria-hidden="true" /> Total
+                  </dt>
                   <dd>{formatPrice(order.totalPrice)}</dd>
                 </div>
               </dl>

@@ -5,14 +5,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/common';
 import { EmailInput, PasswordInput } from '@e-pharmacy/ui/form-fields';
-
 import { useToast } from '@e-pharmacy/ui/feedback';
+
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
-import { ROUTES } from '@/lib/routes';
-import { getClientAuthErrorMessage, resolveLoginDestination } from '@/lib/auth';
+import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
   LOGIN_FORM_FIELDS,
+  USER_EMAIL_MAX_LENGTH,
+  USER_PASSWORD_MAX_LENGTH,
   LOGIN_INITIAL_VALUES,
   hasValidationErrors,
   isLoginFormValid,
@@ -24,7 +25,8 @@ import {
   type LoginTouchedFields,
 } from '@e-pharmacy/validation';
 
-import { useAuth } from '@e-pharmacy/auth/core';
+import { ROUTES } from '@/lib/routes';
+import { getClientAuthErrorMessage, resolveLoginDestination } from '@/lib/auth';
 
 import css from '../shared/AuthForm.module.css';
 
@@ -95,7 +97,7 @@ function LoginForm() {
         resolveLoginDestination({
           user,
           requestedRedirect: searchParams.get('redirect'),
-        })
+        }),
       );
     } catch (error) {
       toast.error(getClientAuthErrorMessage(getAuthErrorCode(error, 'login')));
@@ -113,6 +115,7 @@ function LoginForm() {
           value={values.email}
           error={errors.email}
           isTouched={touchedFields.email}
+          maxLength={USER_EMAIL_MAX_LENGTH}
           onChange={handleChange('email')}
         />
 
@@ -124,6 +127,7 @@ function LoginForm() {
           error={errors.password}
           isTouched={touchedFields.password}
           isVisible={isPasswordVisible}
+          maxLength={USER_PASSWORD_MAX_LENGTH}
           labelAction={
             <TextActionButton href={ROUTES.PASSWORD_RECOVERY}>
               Forgot password?

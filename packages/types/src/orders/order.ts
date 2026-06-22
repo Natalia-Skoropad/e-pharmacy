@@ -1,6 +1,7 @@
 import type { EntityId, ISODateString } from '../shared';
 import type { PharmacyBankDetails } from '../pharmacies';
 import type { Cart } from '../cart';
+import type { ProductCategory } from '../products/categories';
 
 //=============================================================================
 
@@ -38,10 +39,13 @@ export type OrderItem = {
   name: string;
   slug?: string;
   article: string;
+  category?: ProductCategory;
   imageUrl?: string;
   manufacturer?: string;
   dosage?: string;
   packageQuantity?: string;
+  rating?: number;
+  reviewsCount?: number;
   quantity: number;
   unitPrice: number;
   totalPrice: number;

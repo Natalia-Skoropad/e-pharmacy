@@ -35,7 +35,12 @@ import type { UserEntity } from '../types/user';
 import { httpError } from '../utils/httpError';
 import { signToken } from '../utils/jwt';
 import { parseDurationMs } from '../utils/duration';
-import { isDuplicateEmailError } from '../utils/mongoError';
+
+import {
+  isDuplicateEmailError,
+  isDuplicatePhoneError,
+} from '../utils/mongoError';
+
 import { comparePassword, hashPassword } from '../utils/password';
 import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
 import { toAuthUserResponse } from '../utils/userResponse';
@@ -132,10 +137,16 @@ export async function registerUserService(
   input: RegisterInput,
   context?: SessionContext
 ): Promise<AuthSessionResult> {
-  const existingUser = await User.findOne({ email: input.email });
+  const existingUser = await User.findOne({
+    $or: [{ email: input.email }, { phone: input.phone }],
+  });
 
-  if (existingUser) {
+  if (existingUser?.email === input.email) {
     throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
+  }
+
+  if (existingUser?.phone === input.phone) {
+    throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
   }
 
   const hashedPassword = await hashPassword(input.password);
@@ -168,6 +179,10 @@ export async function registerUserService(
   } catch (error) {
     if (isDuplicateEmailError(error)) {
       throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
+    }
+
+    if (isDuplicatePhoneError(error)) {
+      throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
     }
 
     throw error;
@@ -493,7 +508,18 @@ export async function updateUserProfileService(
 
   if (typeof input.name === 'string') update.name = input.name;
 
-  if (typeof input.phone === 'string') update.phone = input.phone;
+  if (typeof input.phone === 'string') {
+    const existingPhoneOwner = await User.findOne({
+      _id: { $ne: userId },
+      phone: input.phone,
+    }).select('_id');
+
+    if (existingPhoneOwner) {
+      throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
+    }
+
+    update.phone = input.phone;
+  }
 
   if (typeof input.address === 'string') {
     if (input.address) update.address = input.address;
@@ -510,16 +536,24 @@ export async function updateUserProfileService(
   if (Object.keys(update).length > 0) updateQuery.$set = update;
   if (Object.keys(unset).length > 0) updateQuery.$unset = unset;
 
-  const user = await User.findByIdAndUpdate(userId, updateQuery, {
-    returnDocument: 'after',
-    runValidators: true,
-  });
+  try {
+    const user = await User.findByIdAndUpdate(userId, updateQuery, {
+      returnDocument: 'after',
+      runValidators: true,
+    });
 
-  if (!user) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.USER_NOT_FOUND);
+    if (!user) {
+      throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.USER_NOT_FOUND);
+    }
+
+    return toAuthUserResponse(user);
+  } catch (error) {
+    if (isDuplicatePhoneError(error)) {
+      throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
+    }
+
+    throw error;
   }
-
-  return toAuthUserResponse(user);
 }
 
 //===============================================================

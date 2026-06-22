@@ -4,7 +4,11 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
 
 import type { HttpError } from '../types/errors';
-import { isDuplicateEmailError } from '../utils/mongoError';
+
+import {
+  isDuplicateEmailError,
+  isDuplicatePhoneError,
+} from '../utils/mongoError';
 
 //===============================================================
 
@@ -26,10 +30,12 @@ export const errorMiddleware: ErrorRequestHandler = (error, req, res, next) => {
   void req;
   void next;
 
-  if (isDuplicateEmailError(error)) {
+  if (isDuplicateEmailError(error) || isDuplicatePhoneError(error)) {
     res.status(HTTP_STATUS.CONFLICT).json({
       status: 'error',
-      message: API_MESSAGES.EMAIL_IN_USE,
+      message: isDuplicatePhoneError(error)
+        ? API_MESSAGES.PHONE_IN_USE
+        : API_MESSAGES.EMAIL_IN_USE,
     });
 
     return;

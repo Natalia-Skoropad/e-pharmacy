@@ -41,6 +41,10 @@ import { ROUTES } from '@/lib/routes';
 
 import {
   ORDER_DELIVERY_INITIAL_VALUES,
+  USER_ADDRESS_MAX_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_ORDER_COMMENT_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
   ORDER_DELIVERY_FORM_FIELDS,
   hasValidationErrors,
   isOrderDeliveryFormValid,
@@ -96,7 +100,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
   const { cart, error, isLoading, setCart, setError } = useCheckoutCart(
     isAuthReady,
-    isAuthenticated
+    isAuthenticated,
   );
 
   const orderGroups = useMemo(() => groupCartByPharmacy(cart), [cart]);
@@ -107,7 +111,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     if (selectedPharmacyIdFromRoute) {
       return (
         orderGroups.find(
-          (group) => group.pharmacyId === selectedPharmacyIdFromRoute
+          (group) => group.pharmacyId === selectedPharmacyIdFromRoute,
         ) ?? null
       );
     }
@@ -138,17 +142,17 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
         ? deliveryDraftValues.deliveryAddress
         : deliveryDraftValues.deliveryAddress || user?.address || '',
     }),
-    [deliveryDraftValues, deliveryTouchedFields, user]
+    [deliveryDraftValues, deliveryTouchedFields, user],
   );
 
   const deliveryFormErrors = useMemo(
     () => validateOrderDeliveryForm(deliveryValues, deliveryMethod),
-    [deliveryValues, deliveryMethod]
+    [deliveryValues, deliveryMethod],
   );
 
   const isDeliveryFormValid = isOrderDeliveryFormValid(
     deliveryValues,
-    deliveryMethod
+    deliveryMethod,
   );
 
   const { recipientName, recipientPhone, deliveryAddress, comment } =
@@ -164,7 +168,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const pharmacyWorkingHours = getPharmacyWorkingHours(pharmacy);
   const pharmacyAddress = getPharmacyAddress(pharmacy);
   const hasPharmacyContactDetails = Boolean(
-    pharmacyPhone || pharmacyWorkingHours || pharmacyAddress
+    pharmacyPhone || pharmacyWorkingHours || pharmacyAddress,
   );
 
   const canSubmit =
@@ -186,7 +190,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
   const handleDeliveryFieldChange = (
     field: keyof OrderDeliveryFormValues,
-    value: string
+    value: string,
   ) => {
     setDeliveryTouchedFields((prev) => ({
       ...prev,
@@ -202,30 +206,30 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const handleRecipientNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     handleDeliveryFieldChange(
       'recipientName',
-      sanitizeName(event.target.value)
+      sanitizeName(event.target.value),
     );
   };
 
   const handleRecipientPhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
     handleDeliveryFieldChange(
       'recipientPhone',
-      sanitizePhone(event.target.value)
+      sanitizePhone(event.target.value),
     );
   };
 
   const handleDeliveryAddressChange = (
-    event: ChangeEvent<HTMLTextAreaElement>
+    event: ChangeEvent<HTMLTextAreaElement>,
   ) => {
     handleDeliveryFieldChange(
       'deliveryAddress',
-      sanitizeAddress(event.target.value)
+      sanitizeAddress(event.target.value),
     );
   };
 
   const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     handleDeliveryFieldChange(
       'comment',
-      sanitizeOrderComment(event.target.value)
+      sanitizeOrderComment(event.target.value),
     );
   };
 
@@ -244,7 +248,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const handleCheckoutSubmit = async () => {
     const nextErrors = validateOrderDeliveryForm(
       deliveryValues,
-      deliveryMethod
+      deliveryMethod,
     );
 
     if (deliveryMethod === 'postal_delivery') {
@@ -375,8 +379,9 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                               value={recipientName}
                               error={deliveryFormErrors.recipientName ?? ''}
                               isTouched={Boolean(
-                                deliveryTouchedFields.recipientName
+                                deliveryTouchedFields.recipientName,
                               )}
+                              maxLength={USER_NAME_MAX_LENGTH}
                               onChange={handleRecipientNameChange}
                             />
 
@@ -386,8 +391,9 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                               value={recipientPhone}
                               error={deliveryFormErrors.recipientPhone ?? ''}
                               isTouched={Boolean(
-                                deliveryTouchedFields.recipientPhone
+                                deliveryTouchedFields.recipientPhone,
                               )}
+                              maxLength={USER_PHONE_MAX_LENGTH}
                               onChange={handleRecipientPhoneChange}
                             />
 
@@ -398,8 +404,9 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                                 value={deliveryAddress}
                                 error={deliveryFormErrors.deliveryAddress ?? ''}
                                 isTouched={Boolean(
-                                  deliveryTouchedFields.deliveryAddress
+                                  deliveryTouchedFields.deliveryAddress,
                                 )}
+                                maxLength={USER_ADDRESS_MAX_LENGTH}
                                 onChange={handleDeliveryAddressChange}
                               />
                             </div>
@@ -449,6 +456,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                     value={comment}
                     error={deliveryFormErrors.comment}
                     isTouched={Boolean(deliveryTouchedFields.comment)}
+                    maxLength={USER_ORDER_COMMENT_MAX_LENGTH}
                     onChange={handleCommentChange}
                   />
                 </section>
