@@ -37,7 +37,17 @@ let refreshPromise: Promise<RefreshResult> | null = null;
 
 //===================================================================
 
-async function refreshAuthCookies(request: NextRequest): Promise<RefreshResult> {
+function appendSearchParams(path: string, search: string): string {
+  return search
+    ? `${path}${search.startsWith('?') ? search : `?${search}`}`
+    : path;
+}
+
+//===================================================================
+
+async function refreshAuthCookies(
+  request: NextRequest
+): Promise<RefreshResult> {
   refreshPromise ??= fetch(createBackendApiUrl(API_ROUTES.auth.refresh), {
     method: 'POST',
     headers: createProxyHeaders(request),
@@ -95,7 +105,13 @@ export async function proxyBackendRequest({
   method = 'GET',
 }: BackendProxyOptions) {
   const body = await getProxyBody(request, method);
-  const response = await fetchBackend(request, backendPath, method, body);
+
+  const pathWithSearch =
+    method === 'GET'
+      ? appendSearchParams(backendPath, request.nextUrl.search)
+      : backendPath;
+
+  const response = await fetchBackend(request, pathWithSearch, method, body);
 
   if (response.status !== 401) {
     return createProxyResponse(response, {
@@ -119,7 +135,7 @@ export async function proxyBackendRequest({
   const cookieHeader = createCookieHeaderWithTokens(request, tokens);
   const retryResponse = await fetchBackend(
     request,
-    backendPath,
+    pathWithSearch,
     method,
     body,
     cookieHeader
