@@ -1,6 +1,13 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import {
+  KeyboardEvent as ReactKeyboardEvent,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
+
 import clsx from 'clsx';
 
 import css from './Tabs.module.css';
@@ -29,6 +36,7 @@ type TabsProps<TValue extends string = string> = {
 //===================================================================
 
 const MOBILE_VISIBLE_TABS_COUNT = 1;
+
 const DEFAULT_LABELS: Required<TabsLabels> = {
   moreButton: 'Open other tabs',
 };
@@ -47,6 +55,9 @@ function Tabs<TValue extends string = string>({
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   const tabsRef = useRef<HTMLDivElement>(null);
+  const tabButtonRefs = useRef(new Map<TValue, HTMLButtonElement>());
+  const mobileMoreButtonRef = useRef<HTMLButtonElement>(null);
+  const tabletMoreButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMoreMenuId = useId();
   const tabletMoreMenuId = useId();
   const mergedLabels = { ...DEFAULT_LABELS, ...labels };
@@ -66,9 +77,11 @@ function Tabs<TValue extends string = string>({
   const hasMoreMobileItems = moreMobileItems.length > 0;
   const hasMoreTabletItems = moreTabletItems.length > 0;
   const hasMoreItems = hasMoreMobileItems || hasMoreTabletItems;
+
   const isMoreMobileActive = moreMobileItems.some(
     (item) => item.value === activeValue
   );
+
   const isMoreTabletActive = moreTabletItems.some(
     (item) => item.value === activeValue
   );
@@ -97,9 +110,69 @@ function Tabs<TValue extends string = string>({
     };
   }, [isMoreOpen]);
 
+  const isElementVisible = (element: HTMLElement | null) => {
+    if (!element) return false;
+
+    return element.offsetParent !== null;
+  };
+
+  const focusVisibleTabControl = (value: TValue) => {
+    window.setTimeout(() => {
+      const tabButton = tabButtonRefs.current.get(value);
+
+      if (isElementVisible(tabButton ?? null)) {
+        tabButton?.focus();
+        return;
+      }
+
+      if (isElementVisible(mobileMoreButtonRef.current)) {
+        mobileMoreButtonRef.current?.focus();
+        return;
+      }
+
+      if (isElementVisible(tabletMoreButtonRef.current)) {
+        tabletMoreButtonRef.current?.focus();
+      }
+    }, 0);
+  };
+
   const handleTabClick = (value: TValue) => {
     onChange(value);
     setIsMoreOpen(false);
+  };
+
+  const handleTabKeyDown = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    currentIndex: number
+  ) => {
+    const lastIndex = items.length - 1;
+    let nextIndex: number | null = null;
+
+    switch (event.key) {
+      case 'ArrowLeft':
+        nextIndex = currentIndex === 0 ? lastIndex : currentIndex - 1;
+        break;
+      case 'ArrowRight':
+        nextIndex = currentIndex === lastIndex ? 0 : currentIndex + 1;
+        break;
+      case 'Home':
+        nextIndex = 0;
+        break;
+      case 'End':
+        nextIndex = lastIndex;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+
+    const nextItem = items[nextIndex];
+
+    if (!nextItem) return;
+
+    handleTabClick(nextItem.value);
+    focusVisibleTabControl(nextItem.value);
   };
 
   return (
@@ -122,11 +195,19 @@ function Tabs<TValue extends string = string>({
               isHiddenOnTablet && css.tabHiddenOnTablet
             )}
             key={item.value}
+            ref={(node) => {
+              if (node) {
+                tabButtonRefs.current.set(item.value, node);
+              } else {
+                tabButtonRefs.current.delete(item.value);
+              }
+            }}
             type="button"
             role="tab"
             aria-selected={isActive}
             tabIndex={isActive ? 0 : -1}
             onClick={() => handleTabClick(item.value)}
+            onKeyDown={(event) => handleTabKeyDown(event, index)}
           >
             {item.label}
           </button>
@@ -142,6 +223,7 @@ function Tabs<TValue extends string = string>({
                   isMoreMobileActive ? css.tabActive : css.tab,
                   css.moreButton
                 )}
+                ref={mobileMoreButtonRef}
                 type="button"
                 aria-label={mergedLabels.moreButton}
                 aria-haspopup="menu"
@@ -184,6 +266,7 @@ function Tabs<TValue extends string = string>({
                   isMoreTabletActive ? css.tabActive : css.tab,
                   css.moreButton
                 )}
+                ref={tabletMoreButtonRef}
                 type="button"
                 aria-label={mergedLabels.moreButton}
                 aria-haspopup="menu"
