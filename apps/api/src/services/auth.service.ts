@@ -92,6 +92,30 @@ type UserDocument = HydratedDocument<UserEntity>;
 
 //===============================================================
 
+function normalizePhoneForLookup(phone: string): string {
+  return phone.trim();
+}
+
+//===============================================================
+
+async function ensurePhoneIsAvailable(
+  phone: string,
+  excludeUserId?: string
+): Promise<void> {
+  const normalizedPhone = normalizePhoneForLookup(phone);
+
+  const existingPhoneOwner = await User.exists({
+    ...(excludeUserId ? { _id: { $ne: excludeUserId } } : {}),
+    phone: normalizedPhone,
+  });
+
+  if (existingPhoneOwner) {
+    throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
+  }
+}
+
+//===============================================================
+
 async function createAuthSession(
   user: UserDocument,
   context?: SessionContext
@@ -137,17 +161,14 @@ export async function registerUserService(
   input: RegisterInput,
   context?: SessionContext
 ): Promise<AuthSessionResult> {
-  const existingUser = await User.findOne({
-    $or: [{ email: input.email }, { phone: input.phone }],
-  });
+  const phone = normalizePhoneForLookup(input.phone);
+  const existingUserWithEmail = await User.exists({ email: input.email });
 
-  if (existingUser?.email === input.email) {
+  if (existingUserWithEmail) {
     throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
   }
 
-  if (existingUser?.phone === input.phone) {
-    throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
-  }
+  await ensurePhoneIsAvailable(phone);
 
   const hashedPassword = await hashPassword(input.password);
 
@@ -157,7 +178,7 @@ export async function registerUserService(
       email: input.email,
       password: hashedPassword,
       role: input.role || USER_ROLES.CLIENT,
-      phone: input.phone,
+      phone,
       address: input.address,
     });
 
@@ -509,16 +530,11 @@ export async function updateUserProfileService(
   if (typeof input.name === 'string') update.name = input.name;
 
   if (typeof input.phone === 'string') {
-    const existingPhoneOwner = await User.findOne({
-      _id: { $ne: userId },
-      phone: input.phone,
-    }).select('_id');
+    const phone = normalizePhoneForLookup(input.phone);
 
-    if (existingPhoneOwner) {
-      throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
-    }
+    await ensurePhoneIsAvailable(phone, userId);
 
-    update.phone = input.phone;
+    update.phone = phone;
   }
 
   if (typeof input.address === 'string') {

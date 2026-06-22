@@ -33,6 +33,41 @@ function createPasswordResetEmailText(input: PasswordResetEmailInput): string {
 
 //===============================================================
 
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('\"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+//===============================================================
+
+function createPasswordResetEmailHtmlFallback(
+  input: PasswordResetEmailInput
+): string {
+  const safeName = escapeHtml(input.name);
+  const safeResetUrl = escapeHtml(input.resetUrl);
+
+  return `<!doctype html>
+<html lang="en">
+  <body style="font-family: Arial, sans-serif; color: #111827; line-height: 1.5;">
+    <h1 style="font-size: 24px; margin-bottom: 16px;">Reset your password</h1>
+    <p>Hello, ${safeName}!</p>
+    <p>We received a request to reset the password for your E-PHARMACY account.</p>
+    <p>Open the link below and create a new password:</p>
+    <p>
+      <a href="${safeResetUrl}" style="color: #2f9e66;">Reset password</a>
+    </p>
+    <p>This link expires soon.</p>
+    <p>If you did not request a password reset, you can safely ignore this email.</p>
+  </body>
+</html>`;
+}
+
+//===============================================================
+
 async function getResetPasswordTemplatePath(): Promise<string> {
   const paths = [
     path.resolve(process.cwd(), 'dist/templates/reset-password-email.html'),
@@ -56,14 +91,18 @@ async function getResetPasswordTemplatePath(): Promise<string> {
 async function createPasswordResetEmailHtml(
   input: PasswordResetEmailInput
 ): Promise<string> {
-  const templatePath = await getResetPasswordTemplatePath();
-  const templateSource = await fs.readFile(templatePath, 'utf-8');
-  const template = handlebars.compile(templateSource);
+  try {
+    const templatePath = await getResetPasswordTemplatePath();
+    const templateSource = await fs.readFile(templatePath, 'utf-8');
+    const template = handlebars.compile(templateSource);
 
-  return template({
-    name: input.name,
-    link: input.resetUrl,
-  });
+    return template({
+      name: input.name,
+      link: input.resetUrl,
+    });
+  } catch {
+    return createPasswordResetEmailHtmlFallback(input);
+  }
 }
 
 //===============================================================

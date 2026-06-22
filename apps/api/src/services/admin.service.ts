@@ -13,7 +13,12 @@ import type {
 } from '../types/pharmacy';
 
 import { httpError } from '../utils/httpError';
-import { isDuplicateEmailError } from '../utils/mongoError';
+
+import {
+  isDuplicateEmailError,
+  isDuplicatePhoneError,
+} from '../utils/mongoError';
+
 import { hashPassword } from '../utils/password';
 
 //===============================================================
@@ -74,10 +79,17 @@ export async function createPharmacyUserByAdminService(
   input: CreatePharmacyUserInput,
   adminUserId: string
 ) {
-  const existingUser = await User.exists({ email: input.email });
+  const phone = input.phone.trim();
+  const existingUserWithEmail = await User.exists({ email: input.email });
 
-  if (existingUser) {
+  if (existingUserWithEmail) {
     throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
+  }
+
+  const existingUserWithPhone = await User.exists({ phone });
+
+  if (existingUserWithPhone) {
+    throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
   }
 
   const hashedPassword = await hashPassword(input.password);
@@ -88,7 +100,7 @@ export async function createPharmacyUserByAdminService(
       email: input.email,
       password: hashedPassword,
       role: USER_ROLES.PHARMACY,
-      phone: input.phone,
+      phone,
       address: input.address,
       createdBy: adminUserId,
     });
@@ -113,6 +125,10 @@ export async function createPharmacyUserByAdminService(
   } catch (error) {
     if (isDuplicateEmailError(error)) {
       throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
+    }
+
+    if (isDuplicatePhoneError(error)) {
+      throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
     }
 
     throw error;

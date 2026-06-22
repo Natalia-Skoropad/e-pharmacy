@@ -44,7 +44,7 @@ const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
 
 export function canTransitionOrderStatus(
   currentStatus: OrderStatus,
-  nextStatus: OrderStatus,
+  nextStatus: OrderStatus
 ): boolean {
   return ORDER_STATUS_TRANSITIONS[currentStatus].includes(nextStatus);
 }
@@ -68,18 +68,19 @@ type CartDocument = {
 type ProductDocument = ProductEntity & { _id: Types.ObjectId };
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
 type OrderDocument = OrderEntity & { _id: Types.ObjectId };
+type ProductFallbackMap = Map<string, ProductDocument>;
 
 //===============================================================
 
 function hasCompleteBankDetails(
-  bankDetails?: import('../types/pharmacy').PharmacyBankDetails,
+  bankDetails?: import('../types/pharmacy').PharmacyBankDetails
 ): boolean {
   return Boolean(
     bankDetails?.recipientName &&
     bankDetails.taxId &&
     bankDetails.iban &&
     bankDetails.bankName &&
-    bankDetails.paymentPurpose,
+    bankDetails.paymentPurpose
   );
 }
 
@@ -109,7 +110,7 @@ function createOrderNumber(orderId: Types.ObjectId): string {
 //===============================================================
 
 function getPharmacyAddress(
-  pharmacySnapshot: OrderEntity['pharmacySnapshot'],
+  pharmacySnapshot: OrderEntity['pharmacySnapshot']
 ): string | undefined {
   const address = [pharmacySnapshot.address, pharmacySnapshot.city]
     .filter(Boolean)
@@ -119,7 +120,10 @@ function getPharmacyAddress(
 
 //===============================================================
 
-function serializeOrder(order: OrderDocument): OrderResponseDto {
+function serializeOrder(
+  order: OrderDocument,
+  productFallbacks?: ProductFallbackMap
+): OrderResponseDto {
   return {
     id: order._id.toString(),
     orderNumber: order.orderNumber,
@@ -162,46 +166,81 @@ function serializeOrder(order: OrderDocument): OrderResponseDto {
     ...(order.pharmacySnapshot.bankDetails
       ? { bankDetails: order.pharmacySnapshot.bankDetails }
       : {}),
-    items: order.items.map((item) => ({
-      id: item._id?.toString() ?? '',
-      productId: item.productId.toString(),
-      productOfferId: item.productOfferId.toString(),
-      name: item.productSnapshot.name,
-      ...(item.productSnapshot.slug ? { slug: item.productSnapshot.slug } : {}),
-      article: item.productSnapshot.article,
-      ...(item.productSnapshot.category
-        ? { category: item.productSnapshot.category }
-        : {}),
-      ...(item.productSnapshot.imageUrl
-        ? { imageUrl: item.productSnapshot.imageUrl }
-        : {}),
-      ...(item.productSnapshot.manufacturer
-        ? { manufacturer: item.productSnapshot.manufacturer }
-        : {}),
-      ...(item.productSnapshot.dosage
-        ? { dosage: item.productSnapshot.dosage }
-        : {}),
-      ...(item.productSnapshot.packageQuantity
-        ? { packageQuantity: item.productSnapshot.packageQuantity }
-        : {}),
-      ...(typeof item.productSnapshot.rating === 'number'
-        ? { rating: item.productSnapshot.rating }
-        : {}),
-      ...(typeof item.productSnapshot.reviewsCount === 'number'
-        ? { reviewsCount: item.productSnapshot.reviewsCount }
-        : {}),
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      totalPrice: item.totalPrice,
-    })),
+    items: order.items.map((item) => {
+      const productFallback = productFallbacks?.get(item.productId.toString());
+      const category =
+        item.productSnapshot.category ?? productFallback?.category;
+      const rating =
+        typeof item.productSnapshot.rating === 'number'
+          ? item.productSnapshot.rating
+          : productFallback?.rating;
+      const reviewsCount =
+        typeof item.productSnapshot.reviewsCount === 'number'
+          ? item.productSnapshot.reviewsCount
+          : productFallback?.reviewsCount;
+
+      return {
+        id: item._id?.toString() ?? '',
+        productId: item.productId.toString(),
+        productOfferId: item.productOfferId.toString(),
+        name: item.productSnapshot.name,
+        ...(item.productSnapshot.slug
+          ? { slug: item.productSnapshot.slug }
+          : {}),
+        article: item.productSnapshot.article,
+        ...(category ? { category } : {}),
+        ...(item.productSnapshot.imageUrl
+          ? { imageUrl: item.productSnapshot.imageUrl }
+          : {}),
+        ...(item.productSnapshot.manufacturer
+          ? { manufacturer: item.productSnapshot.manufacturer }
+          : {}),
+        ...(item.productSnapshot.dosage
+          ? { dosage: item.productSnapshot.dosage }
+          : {}),
+        ...(item.productSnapshot.packageQuantity
+          ? { packageQuantity: item.productSnapshot.packageQuantity }
+          : {}),
+        ...(typeof rating === 'number' ? { rating } : {}),
+        ...(typeof reviewsCount === 'number' ? { reviewsCount } : {}),
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice,
+      };
+    }),
   };
+}
+
+//===============================================================
+
+async function getOrderProductFallbacks(
+  order: OrderDocument
+): Promise<ProductFallbackMap> {
+  const missingProductDetailsIds = order.items
+    .filter(
+      (item) =>
+        !item.productSnapshot.category ||
+        typeof item.productSnapshot.rating !== 'number' ||
+        typeof item.productSnapshot.reviewsCount !== 'number'
+    )
+    .map((item) => item.productId);
+
+  if (!missingProductDetailsIds.length) return new Map();
+
+  const products = await Product.find({
+    _id: { $in: missingProductDetailsIds },
+  })
+    .select('category rating reviewsCount')
+    .lean<ProductDocument[]>();
+
+  return new Map(products.map((product) => [String(product._id), product]));
 }
 
 //===============================================================
 
 export async function checkoutOrderService(
   clientUserId: string,
-  input: CheckoutOrderInput,
+  input: CheckoutOrderInput
 ): Promise<{
   order: OrderResponseDto;
   cart: Awaited<ReturnType<typeof getCartService>>['cart'];
@@ -223,7 +262,7 @@ export async function checkoutOrderService(
         .session(session)
         .lean();
       const offerMap = new Map(
-        offers.map((offer) => [String(offer._id), offer]),
+        offers.map((offer) => [String(offer._id), offer])
       );
 
       const orderCartItems = cart.items.filter((item) => {
@@ -236,7 +275,7 @@ export async function checkoutOrderService(
       if (!orderCartItems.length) {
         throw httpError(
           HTTP_STATUS.BAD_REQUEST,
-          'Selected pharmacy order is empty or expired',
+          'Selected pharmacy order is empty or expired'
         );
       }
 
@@ -252,7 +291,7 @@ export async function checkoutOrderService(
       ) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
-          'Bank transfer is unavailable for this pharmacy until bank details are completed.',
+          'Bank transfer is unavailable for this pharmacy until bank details are completed.'
         );
       }
 
@@ -261,7 +300,7 @@ export async function checkoutOrderService(
         if (!offer)
           throw httpError(
             HTTP_STATUS.BAD_REQUEST,
-            'Product offer is unavailable',
+            'Product offer is unavailable'
           );
         return offer.productId;
       });
@@ -269,7 +308,7 @@ export async function checkoutOrderService(
         .session(session)
         .lean<ProductDocument[]>();
       const productMap = new Map(
-        products.map((product) => [String(product._id), product]),
+        products.map((product) => [String(product._id), product])
       );
 
       const orderItems: OrderItemEntity[] = orderCartItems.map((cartItem) => {
@@ -277,13 +316,13 @@ export async function checkoutOrderService(
         if (!offer)
           throw httpError(
             HTTP_STATUS.BAD_REQUEST,
-            'Product offer is unavailable',
+            'Product offer is unavailable'
           );
         const product = productMap.get(String(offer.productId));
         if (!product)
           throw httpError(
             HTTP_STATUS.NOT_FOUND,
-            API_MESSAGES.PRODUCT_NOT_FOUND,
+            API_MESSAGES.PRODUCT_NOT_FOUND
           );
 
         // The cart uses the current ProductOffer price. The Order snapshots it here.
@@ -319,11 +358,11 @@ export async function checkoutOrderService(
 
       const totalItems = orderItems.reduce(
         (sum, item) => sum + item.quantity,
-        0,
+        0
       );
       const totalPrice = orderItems.reduce(
         (sum, item) => sum + item.totalPrice,
-        0,
+        0
       );
       const orderId = new Types.ObjectId();
       const createdAt = new Date();
@@ -375,30 +414,30 @@ export async function checkoutOrderService(
             orderNumber: createOrderNumber(orderId),
           },
         ],
-        { session },
+        { session }
       );
 
       createdOrder = order[0].toObject() as OrderDocument;
       const selectedIds = new Set(
-        orderCartItems.map((item) => String(item._id)),
+        orderCartItems.map((item) => String(item._id))
       );
       await Cart.updateOne(
         { clientUserId },
         {
           $set: {
             items: cart.items.filter(
-              (item) => !selectedIds.has(String(item._id)),
+              (item) => !selectedIds.has(String(item._id))
             ),
           },
         },
-        { session },
+        { session }
       );
     });
 
     if (!createdOrder) {
       throw httpError(
         HTTP_STATUS.INTERNAL_SERVER_ERROR,
-        'Order was not created',
+        'Order was not created'
       );
     }
     const { cart } = await getCartService(clientUserId);
@@ -413,7 +452,7 @@ export async function checkoutOrderService(
 export async function updateOrderStatusService(
   actor: { id: string; role: UserRole },
   orderId: string,
-  input: UpdateOrderStatusInput,
+  input: UpdateOrderStatusInput
 ): Promise<{ order: OrderResponseDto }> {
   const session = await mongoose.startSession();
   try {
@@ -428,7 +467,7 @@ export async function updateOrderStatusService(
         if (actor.role !== USER_ROLES.PHARMACY) {
           throw httpError(
             HTTP_STATUS.FORBIDDEN,
-            'Only pharmacy users or admins can update order status.',
+            'Only pharmacy users or admins can update order status.'
           );
         }
         const hasAccess = await Pharmacy.exists({
@@ -442,7 +481,7 @@ export async function updateOrderStatusService(
       if (!canTransitionOrderStatus(order.status, input.status)) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
-          `Order status cannot change from ${order.status} to ${input.status}.`,
+          `Order status cannot change from ${order.status} to ${input.status}.`
         );
       }
 
@@ -451,7 +490,7 @@ export async function updateOrderStatusService(
           await commitReservedStock(
             item.productOfferId,
             item.quantity,
-            session,
+            session
           );
         }
       }
@@ -482,14 +521,14 @@ export async function updateOrderStatusService(
             },
           },
         },
-        { returnDocument: 'after', runValidators: true, session },
+        { returnDocument: 'after', runValidators: true, session }
       ).lean<OrderDocument | null>();
     });
 
     if (!updatedOrder)
       throw httpError(
         HTTP_STATUS.INTERNAL_SERVER_ERROR,
-        'Order was not updated',
+        'Order was not updated'
       );
     return { order: serializeOrder(updatedOrder) };
   } finally {
@@ -500,24 +539,30 @@ export async function updateOrderStatusService(
 //===============================================================
 
 export async function getOrdersService(
-  userId: string,
+  userId: string
 ): Promise<OrdersResponseDto> {
   const orders = await Order.find({ userId })
     .sort({ createdAt: -1 })
     .lean<OrderDocument[]>();
-  return { items: orders.map(serializeOrder), total: orders.length };
+  return {
+    items: orders.map((order) => serializeOrder(order)),
+    total: orders.length,
+  };
 }
 
 //===============================================================
 
 export async function getOrderByIdService(
   userId: string,
-  orderId: string,
+  orderId: string
 ): Promise<{ order: OrderResponseDto }> {
   const order = await Order.findOne({
     _id: orderId,
     userId,
   }).lean<OrderDocument | null>();
   if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
-  return { order: serializeOrder(order) };
+
+  const productFallbacks = await getOrderProductFallbacks(order);
+
+  return { order: serializeOrder(order, productFallbacks) };
 }
