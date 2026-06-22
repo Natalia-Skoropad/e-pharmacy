@@ -1,10 +1,6 @@
 import { AuthFormShell, RegisterForm } from '@/components/auth';
 
-import {
-  REGISTER_BENEFITS,
-  REGISTER_DESCRIPTION,
-  REGISTER_TITLE,
-} from '@/lib/seo';
+import { REGISTER_DESCRIPTION, REGISTER_TITLE } from '@/lib/seo';
 
 import { ROUTES } from '@/lib/routes';
 import { createBreadcrumbs } from '@/lib/routes';
@@ -29,7 +25,6 @@ function RegisterPage() {
       <AuthFormShell
         title={REGISTER_TITLE}
         text={REGISTER_DESCRIPTION}
-        descriptionItems={[...REGISTER_BENEFITS]}
         breadcrumbs={createBreadcrumbs(REGISTER_TITLE)}
       >
         <RegisterForm />

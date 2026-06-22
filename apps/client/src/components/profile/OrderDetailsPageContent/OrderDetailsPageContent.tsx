@@ -176,9 +176,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                 <div className={css.pharmacyHead}>
                   <div>
                     <p className={css.kicker}>Pharmacy order</p>
-                    <h2 className={css.pharmacyTitle} id="order-title">
-                      {order.pharmacyName}
-                    </h2>
+                    <h2 className={css.pharmacyTitle}>{order.pharmacyName}</h2>
 
                     <RatingSummary
                       rating={order.pharmacyRating}

@@ -1,10 +1,6 @@
 import { AuthFormShell, ResetPasswordForm } from '@/components/auth';
 
-import {
-  PASSWORD_RECOVERY_DESCRIPTION,
-  RESET_PASSWORD_BENEFITS,
-  RESET_PASSWORD_TITLE,
-} from '@/lib/seo';
+import { PASSWORD_RECOVERY_DESCRIPTION, RESET_PASSWORD_TITLE } from '@/lib/seo';
 
 import { ROUTES } from '@/lib/routes';
 import { createBreadcrumbs } from '@/lib/routes';
@@ -39,7 +35,6 @@ async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
       <AuthFormShell
         title={RESET_PASSWORD_TITLE}
         text={PASSWORD_RECOVERY_DESCRIPTION}
-        descriptionItems={[...RESET_PASSWORD_BENEFITS]}
         breadcrumbs={createBreadcrumbs(RESET_PASSWORD_TITLE)}
       >
         <ResetPasswordForm token={token} />

@@ -662,6 +662,7 @@ function ProfilePageContent() {
                 activeValue={activeTab}
                 ariaLabel="Profile sections"
                 mobileVisibleCount={2}
+                tabletVisibleCount={4}
                 onChange={setActiveTab}
               />
 
@@ -811,9 +812,9 @@ function ProfilePageContent() {
                     <Button
                       type="button"
                       disabled={!passwordFormIsValid || isPasswordSaving}
+                      iconLeft={<KeyRound size={18} aria-hidden="true" />}
                       onClick={() => void handleSavePassword()}
                     >
-                      <KeyRound size={18} aria-hidden="true" />
                       {isPasswordSaving ? 'Changing...' : 'Change password'}
                     </Button>
                   </section>

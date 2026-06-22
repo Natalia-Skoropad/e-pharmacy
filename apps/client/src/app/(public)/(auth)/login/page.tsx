@@ -1,10 +1,6 @@
 import { AuthFormShell, LoginForm } from '@/components/auth';
 
-import {
-  LOGIN_BENEFITS,
-  LOGIN_DESCRIPTION,
-  LOGIN_TITLE,
-} from '@/lib/seo';
+import { LOGIN_DESCRIPTION, LOGIN_TITLE } from '@/lib/seo';
 
 import { ROUTES } from '@/lib/routes';
 import { createBreadcrumbs } from '@/lib/routes';
@@ -29,7 +25,6 @@ function LoginPage() {
       <AuthFormShell
         title={LOGIN_TITLE}
         text={LOGIN_DESCRIPTION}
-        descriptionItems={[...LOGIN_BENEFITS]}
         breadcrumbs={createBreadcrumbs(LOGIN_TITLE)}
       >
         <LoginForm />

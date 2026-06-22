@@ -12,7 +12,6 @@ import css from './AuthFormShell.module.css';
 type AuthFormShellProps = {
   title: string;
   text: string;
-  descriptionItems?: string[];
   breadcrumbs: BreadcrumbItem[];
   children: ReactNode;
 };

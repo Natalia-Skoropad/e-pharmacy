@@ -22,6 +22,7 @@ type TabsProps<TValue extends string = string> = {
   ariaLabel: string;
   onChange: (value: TValue) => void;
   mobileVisibleCount?: number;
+  tabletVisibleCount?: number;
   labels?: TabsLabels;
 };
 
@@ -40,18 +41,35 @@ function Tabs<TValue extends string = string>({
   ariaLabel,
   onChange,
   mobileVisibleCount = MOBILE_VISIBLE_TABS_COUNT,
+  tabletVisibleCount,
   labels,
 }: TabsProps<TValue>) {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   const tabsRef = useRef<HTMLDivElement>(null);
-  const moreMenuId = useId();
+  const mobileMoreMenuId = useId();
+  const tabletMoreMenuId = useId();
   const mergedLabels = { ...DEFAULT_LABELS, ...labels };
 
-  const moreMobileItems = items.slice(mobileVisibleCount);
+  const normalizedMobileVisibleCount = Math.max(
+    0,
+    Math.min(mobileVisibleCount, items.length)
+  );
+  const normalizedTabletVisibleCount = Math.max(
+    0,
+    Math.min(tabletVisibleCount ?? items.length, items.length)
+  );
+
+  const moreMobileItems = items.slice(normalizedMobileVisibleCount);
+  const moreTabletItems = items.slice(normalizedTabletVisibleCount);
 
   const hasMoreMobileItems = moreMobileItems.length > 0;
-  const isMoreActive = moreMobileItems.some(
+  const hasMoreTabletItems = moreTabletItems.length > 0;
+  const hasMoreItems = hasMoreMobileItems || hasMoreTabletItems;
+  const isMoreMobileActive = moreMobileItems.some(
+    (item) => item.value === activeValue
+  );
+  const isMoreTabletActive = moreTabletItems.some(
     (item) => item.value === activeValue
   );
 
@@ -85,16 +103,23 @@ function Tabs<TValue extends string = string>({
   };
 
   return (
-    <div className={css.tabs} role="tablist" aria-label={ariaLabel} ref={tabsRef}>
+    <div
+      className={css.tabs}
+      role="tablist"
+      aria-label={ariaLabel}
+      ref={tabsRef}
+    >
       {items.map((item, index) => {
         const isActive = item.value === activeValue;
-        const isHiddenOnMobile = index >= mobileVisibleCount;
+        const isHiddenOnMobile = index >= normalizedMobileVisibleCount;
+        const isHiddenOnTablet = index >= normalizedTabletVisibleCount;
 
         return (
           <button
             className={clsx(
               isActive ? css.tabActive : css.tab,
-              isHiddenOnMobile && css.tabDesktopOnly
+              isHiddenOnMobile && css.tabHiddenOnMobile,
+              isHiddenOnTablet && css.tabHiddenOnTablet
             )}
             key={item.value}
             type="button"
@@ -108,46 +133,92 @@ function Tabs<TValue extends string = string>({
         );
       })}
 
-      {hasMoreMobileItems ? (
-        <div className={css.moreWrap}>
-          <button
-            className={clsx(
-              isMoreActive ? css.tabActive : css.tab,
-              css.moreButton
-            )}
-            type="button"
-            aria-label={mergedLabels.moreButton}
-            aria-haspopup="menu"
-            aria-expanded={isMoreOpen}
-            aria-controls={moreMenuId}
-            onClick={() => setIsMoreOpen((prev) => !prev)}
-          >
-            <span className={css.moreIcon} aria-hidden="true">
-              ...
-            </span>
-          </button>
+      {hasMoreItems ? (
+        <>
+          {hasMoreMobileItems ? (
+            <div className={clsx(css.moreWrap, css.mobileMoreWrap)}>
+              <button
+                className={clsx(
+                  isMoreMobileActive ? css.tabActive : css.tab,
+                  css.moreButton
+                )}
+                type="button"
+                aria-label={mergedLabels.moreButton}
+                aria-haspopup="menu"
+                aria-expanded={isMoreOpen}
+                aria-controls={mobileMoreMenuId}
+                onClick={() => setIsMoreOpen((prev) => !prev)}
+              >
+                <span className={css.moreIcon} aria-hidden="true">
+                  ...
+                </span>
+              </button>
 
-          {isMoreOpen ? (
-            <div className={css.moreMenu} id={moreMenuId} role="menu">
-              {moreMobileItems.map((item) => {
-                const isActive = item.value === activeValue;
+              {isMoreOpen ? (
+                <div className={css.moreMenu} id={mobileMoreMenuId} role="menu">
+                  {moreMobileItems.map((item) => {
+                    const isActive = item.value === activeValue;
 
-                return (
-                  <button
-                    className={isActive ? css.moreItemActive : css.moreItem}
-                    key={item.value}
-                    type="button"
-                    role="menuitemradio"
-                    aria-checked={isActive}
-                    onClick={() => handleTabClick(item.value)}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
+                    return (
+                      <button
+                        className={isActive ? css.moreItemActive : css.moreItem}
+                        key={item.value}
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={isActive}
+                        onClick={() => handleTabClick(item.value)}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
             </div>
           ) : null}
-        </div>
+
+          {hasMoreTabletItems ? (
+            <div className={clsx(css.moreWrap, css.tabletMoreWrap)}>
+              <button
+                className={clsx(
+                  isMoreTabletActive ? css.tabActive : css.tab,
+                  css.moreButton
+                )}
+                type="button"
+                aria-label={mergedLabels.moreButton}
+                aria-haspopup="menu"
+                aria-expanded={isMoreOpen}
+                aria-controls={tabletMoreMenuId}
+                onClick={() => setIsMoreOpen((prev) => !prev)}
+              >
+                <span className={css.moreIcon} aria-hidden="true">
+                  ...
+                </span>
+              </button>
+
+              {isMoreOpen ? (
+                <div className={css.moreMenu} id={tabletMoreMenuId} role="menu">
+                  {moreTabletItems.map((item) => {
+                    const isActive = item.value === activeValue;
+
+                    return (
+                      <button
+                        className={isActive ? css.moreItemActive : css.moreItem}
+                        key={item.value}
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={isActive}
+                        onClick={() => handleTabClick(item.value)}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </>
       ) : null}
     </div>
   );

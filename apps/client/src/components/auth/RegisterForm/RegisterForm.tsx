@@ -14,9 +14,8 @@ import {
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
-import { getClientAuthErrorMessage } from '@/lib/auth';
+import { getClientAuthErrorMessage, resolveLoginDestination } from '@/lib/auth';
 import { ROUTES } from '@/lib/routes';
-import { getSafeRedirectPath } from '@e-pharmacy/auth/routing';
 
 import {
   REGISTER_FORM_FIELDS,
@@ -57,7 +56,6 @@ function RegisterForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
   const registerFormIsValid = isRegisterFormValid(values);
 
   const handleChange =
@@ -107,7 +105,7 @@ function RegisterForm() {
     try {
       setIsSubmitting(true);
 
-      await register({
+      const user = await register({
         name: values.name.trim(),
         email: values.email.trim(),
         phone: values.phone.trim(),
@@ -115,7 +113,14 @@ function RegisterForm() {
         role: 'client',
       });
 
-      router.replace(redirectTo);
+      router.replace(
+        user
+          ? resolveLoginDestination({
+              user,
+              requestedRedirect: searchParams.get('redirect'),
+            })
+          : ROUTES.PROFILE
+      );
     } catch (error) {
       toast.error(
         getClientAuthErrorMessage(getAuthErrorCode(error, 'register'))

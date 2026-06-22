@@ -46,7 +46,11 @@
   border-color: var(--color-accent);
 }
 
-.tabDesktopOnly {
+.tabHiddenOnMobile {
+  display: none;
+}
+
+.tabHiddenOnTablet {
   display: none;
 }
 
@@ -54,6 +58,10 @@
   position: relative;
   flex: 0 0 auto;
   margin-left: auto;
+}
+
+.tabletMoreWrap {
+  display: none;
 }
 
 .moreButton {
@@ -127,12 +135,31 @@
   border-color: var(--color-accent);
 }
 
-@media only screen and (min-width: 768px) {
+@media only screen and (min-width: 768px) and (max-width: 1439px) {
   .tabs {
-    overflow-x: auto;
+    overflow-x: visible;
   }
 
-  .tabDesktopOnly {
+  .tabHiddenOnMobile {
+    display: inline-flex;
+  }
+
+  .tabHiddenOnTablet {
+    display: none;
+  }
+
+  .mobileMoreWrap {
+    display: none;
+  }
+
+  .tabletMoreWrap {
+    display: block;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .tabHiddenOnMobile,
+  .tabHiddenOnTablet {
     display: inline-flex;
   }
 
