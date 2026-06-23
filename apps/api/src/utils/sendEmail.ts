@@ -1,9 +1,7 @@
 import nodemailer from 'nodemailer';
 
 import { env } from '../config/env';
-import { httpError } from './httpError';
 import { logger } from './logger';
-import { HTTP_STATUS } from '../constants/httpStatus';
 
 //===============================================================
 
@@ -17,7 +15,9 @@ type SendEmailOptions = {
 //===============================================================
 
 function hasSmtpConfig(): boolean {
-  return Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASSWORD && env.SMTP_FROM);
+  return Boolean(
+    env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASSWORD && env.SMTP_FROM
+  );
 }
 
 //===============================================================
@@ -37,11 +37,13 @@ const transporter = hasSmtpConfig()
 //===============================================================
 
 export async function sendEmail(options: SendEmailOptions): Promise<void> {
+  const fallbackLogPayload = {
+    from: env.SMTP_FROM || 'not-configured',
+    ...options,
+  };
+
   if (!transporter || !env.SMTP_FROM) {
-    logger.info('[email:local-preview]', {
-      from: env.SMTP_FROM || 'not-configured',
-      ...options,
-    });
+    logger.info('[email:local-preview]', fallbackLogPayload);
     return;
   }
 
@@ -52,9 +54,6 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
     });
   } catch (error) {
     logger.error('Email sending failed', error);
-    throw httpError(
-      HTTP_STATUS.INTERNAL_SERVER_ERROR,
-      'Failed to send the email, please try again later.'
-    );
+    logger.info('[email:fallback-preview]', fallbackLogPayload);
   }
 }

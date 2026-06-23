@@ -36,7 +36,7 @@ function PasswordRecoveryForm() {
   const { isAuthReady } = useAuth();
 
   const [values, setValues] = useState<ForgotPasswordFormValues>(
-    FORGOT_PASSWORD_INITIAL_VALUES,
+    FORGOT_PASSWORD_INITIAL_VALUES
   );
 
   const [errors, setErrors] = useState<ForgotPasswordFormErrors>({});
@@ -82,12 +82,18 @@ function PasswordRecoveryForm() {
       setTouchedFields({});
       setErrors({});
       toast.success(
-        'If an account with that email exists, you will receive password reset instructions shortly. Please check your inbox.',
+        'If an account with that email exists, you will receive password reset instructions shortly. Please check your inbox.'
       );
     } catch (error) {
-      toast.error(
-        getClientAuthErrorMessage(getAuthErrorCode(error, 'forgot-password')),
+      const fallbackMessage = getClientAuthErrorMessage(
+        getAuthErrorCode(error, 'forgot-password')
       );
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : fallbackMessage;
+
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
