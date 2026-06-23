@@ -132,7 +132,7 @@ The same colors must be used consistently across Dashboard, tables, details page
 | New                            | Blue   |
 | In work / On moderation        | Yellow |
 | Active / Successful / Approved | Green  |
-| Blocked / Rejected            | Red    |
+| Blocked / Rejected             | Red    |
 | Draft                          | Gray   |
 
 ## 6. Filter URL strategy
@@ -201,5 +201,8 @@ pharmacy should reuse existing shared components where possible:
 - `ProfilePhotoCard`;
 - `RatingSummary`;
 - existing form-field components.
+
+Мають бути перевикористані всі компоненти папки packages/ui/src де це необхідно
+Перед створенням нового компонента необхідно впевнетись, що такого компонента немає в packages/ui/src, а потім вже створювати новий
 
 New common components should be created only when the UI pattern will be reused across Client, Pharmacy, or Admin.

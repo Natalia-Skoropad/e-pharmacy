@@ -16,8 +16,9 @@ import { CartOrderLimitModal } from '@/components/common';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { formatPrice, formatStockLabel } from '@e-pharmacy/utils/formatters';
-import { getProductFilters, getProducts } from '@/lib/api/browser';
+import { getProducts } from '@/lib/api/browser';
 import { addCartItem } from '@/lib/cart/cart-commands';
+
 import type { Cart, Product, ProductCategory } from '@e-pharmacy/types';
 
 import css from './ContinueShoppingModal.module.css';
@@ -44,7 +45,7 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
   vitamins: 'Vitamins and minerals',
   beauty: 'Beauty',
   hygiene: 'Hygiene',
-  'medical_devices': 'Medical devices',
+  medical_devices: 'Medical devices',
   other: 'Other',
 };
 
@@ -62,17 +63,13 @@ function getProductOfferPrice(product: Product, pharmacyId: string): number {
 
 //===================================================================
 
-function getCategoryOptions(
-  categories: Array<{ value: string; label: string }>
-): CategoryOption[] {
-  return categories
-    .filter(
-      (category): category is { value: ProductCategory; label: string } =>
-        category.value !== 'all'
-    )
+function getCategoryOptionsFromProducts(products: Product[]): CategoryOption[] {
+  const categories = new Set(products.map((product) => product.category));
+
+  return [...categories]
     .map((category) => ({
-      value: category.value,
-      label: category.label || CATEGORY_LABELS[category.value],
+      value: category,
+      label: CATEGORY_LABELS[category],
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
 }
@@ -93,12 +90,13 @@ function ContinueShoppingModal({
   const [selectedCategory, setSelectedCategory] = useState<
     ProductCategory | 'all'
   >('all');
+
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAddingProductId, setIsAddingProductId] = useState<string | null>(
-    null
+  const [addingProductIds, setAddingProductIds] = useState<Set<string>>(
+    () => new Set()
   );
   const [error, setError] = useState('');
   const [orderLimitMessage, setOrderLimitMessage] = useState('');
@@ -114,29 +112,47 @@ function ContinueShoppingModal({
   useEffect(() => {
     const controller = new AbortController();
 
-    async function fetchFilterOptions() {
+    async function fetchPharmacyCategories() {
       try {
-        const response = await getProductFilters({
-          signal: controller.signal,
-        });
+        const response = await getProducts(
+          {
+            pharmacyId,
+            page: 1,
+            perPage: PRODUCTS_LIMIT,
+            inStock: true,
+          },
+          {
+            signal: controller.signal,
+          }
+        );
 
-        setCategoryOptions(getCategoryOptions(response.categories));
+        const nextOptions = getCategoryOptionsFromProducts(response.items);
+
+        setCategoryOptions(nextOptions);
+
+        if (
+          selectedCategory !== 'all' &&
+          !nextOptions.some((category) => category.value === selectedCategory)
+        ) {
+          setSelectedCategory('all');
+        }
       } catch {
         if (controller.signal.aborted) return;
 
-        setError('Could not load product categories.');
+        setError('Could not load product categories for this pharmacy.');
       }
     }
 
-    void fetchFilterOptions();
+    void fetchPharmacyCategories();
 
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [pharmacyId, selectedCategory]);
 
   useEffect(() => {
     const controller = new AbortController();
+
     const timeoutId = window.setTimeout(async () => {
       try {
         setIsLoading(true);
@@ -176,8 +192,15 @@ function ContinueShoppingModal({
   }, [searchValue, selectedCategory, pharmacyId]);
 
   const handleAddProduct = async (productId: string) => {
+    if (addingProductIds.has(productId)) return;
+
+    setAddingProductIds((current) => {
+      const next = new Set(current);
+      next.add(productId);
+      return next;
+    });
+
     try {
-      setIsAddingProductId(productId);
       setError('');
 
       const response = await addCartItem({
@@ -194,7 +217,11 @@ function ContinueShoppingModal({
         setError('Could not add this product to the order.');
       }
     } finally {
-      setIsAddingProductId(null);
+      setAddingProductIds((current) => {
+        const next = new Set(current);
+        next.delete(productId);
+        return next;
+      });
     }
   };
 
@@ -209,6 +236,7 @@ function ContinueShoppingModal({
         <div className={css.head}>
           <div>
             <p className={css.kicker}>{pharmacyName}</p>
+
             <h2 className={css.title} id={titleId}>
               Continue shopping
             </h2>
@@ -242,6 +270,7 @@ function ContinueShoppingModal({
                 selectedCategory === 'all' ? css.categoryActive : css.category
               }
               type="button"
+              aria-pressed={selectedCategory === 'all'}
               onClick={() => setSelectedCategory('all')}
             >
               All
@@ -256,6 +285,7 @@ function ContinueShoppingModal({
                 }
                 type="button"
                 key={category.value}
+                aria-pressed={selectedCategory === category.value}
                 onClick={() => setSelectedCategory(category.value)}
               >
                 {category.label}
@@ -283,7 +313,7 @@ function ContinueShoppingModal({
             <ul className={css.productList}>
               {products.map((product) => {
                 const isInCart = cartProductIds.has(product.id);
-                const isAdding = isAddingProductId === product.id;
+                const isAdding = addingProductIds.has(product.id);
                 const categoryLabel =
                   CATEGORY_LABELS[product.category] ?? product.category;
 
@@ -309,7 +339,9 @@ function ContinueShoppingModal({
 
                     <div className={css.productInfo}>
                       <h3 className={css.productName}>{product.name}</h3>
+
                       <p className={css.productMeta}>{categoryLabel}</p>
+
                       {product.manufacturer ? (
                         <p className={css.productManufacturer}>
                           {product.manufacturer}
@@ -331,6 +363,8 @@ function ContinueShoppingModal({
                     >
                       {isInCart ? (
                         'In cart'
+                      ) : isAdding ? (
+                        'Adding...'
                       ) : (
                         <>
                           <ShoppingCart size={18} aria-hidden="true" />

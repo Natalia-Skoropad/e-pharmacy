@@ -19,7 +19,6 @@ import {
 
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 
 import {
   getCartOrderPath,
@@ -34,12 +33,7 @@ import { ROUTES } from '@/lib/routes';
 import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { useCart } from '@/providers/CartProvider';
-
-import {
-  clearCart,
-  removeCartItem,
-  updateCartItem,
-} from '@/lib/cart/cart-commands';
+import { useCartMutations } from '@/lib/cart/useCartMutations';
 
 import type { Cart } from '@e-pharmacy/types';
 
@@ -55,38 +49,21 @@ const EMPTY_CART: Cart = {
 
 //===================================================================
 
-function getCartWithUpdatedQuantity(
-  cart: Cart,
-  cartItemId: string,
-  quantity: number
-): Cart {
-  const nextItems = cart.items.map((item) => {
-    if (item.id !== cartItemId) return item;
-
-    return {
-      ...item,
-      quantity,
-      totalPrice: item.unitPrice * quantity,
-    };
-  });
-
-  return {
-    items: nextItems,
-    totalItems: nextItems.reduce((total, item) => total + item.quantity, 0),
-    totalPrice: nextItems.reduce((total, item) => total + item.totalPrice, 0),
-  };
-}
-
-//===================================================================
-
 function CartPageContent() {
   const { isAuthenticated, isAuthReady } = useAuth();
   const canUseCart = isAuthReady && isAuthenticated;
 
   const { cart, setCart, isLoading, error: cartLoadError } = useCart();
   const [error, setError] = useState('');
-  const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
-  const [isClearing, setIsClearing] = useState(false);
+
+  const {
+    pendingItemIds,
+    isClearing,
+    updateItemQuantity,
+    removeItemFromCart,
+    clearAllCart,
+    removePharmacyOrder,
+  } = useCartMutations({ canUseCart });
 
   const [continueShoppingPharmacy, setContinueShoppingPharmacy] =
     useState<CartPharmacyGroup | null>(null);
@@ -98,39 +75,22 @@ function CartPageContent() {
     | null
   >(null);
 
-  const isUpdating = Boolean(updatingItemId) || isClearing;
+  const isUpdating = pendingItemIds.size > 0 || isClearing;
 
   const visibleError = error || cartLoadError;
 
   const handleQuantityChange = async (cartItemId: string, quantity: number) => {
     if (!canUseCart || quantity < 1) return;
 
-    const previousCart = cart;
-    const optimisticCart = getCartWithUpdatedQuantity(
-      previousCart,
-      cartItemId,
-      quantity
-    );
-
-    setCart(optimisticCart);
-    dispatchCartUpdated(optimisticCart);
-
     try {
-      setUpdatingItemId(cartItemId);
       setError('');
-
-      const response = await updateCartItem(cartItemId, { quantity });
-
-      setCart(response.cart);
-      dispatchCartUpdated(response.cart);
+      await updateItemQuantity(cartItemId, { quantity });
     } catch (error) {
-      setCart(previousCart);
-      dispatchCartUpdated(previousCart);
       setError(
-        getUserFacingErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.update })
+        getUserFacingErrorMessage(error, {
+          fallback: APP_ERROR_MESSAGES.cart.update,
+        })
       );
-    } finally {
-      setUpdatingItemId(null);
     }
   };
 
@@ -138,18 +98,14 @@ function CartPageContent() {
     if (!canUseCart) return;
 
     try {
-      setUpdatingItemId(cartItemId);
       setError('');
-
-      const response = await removeCartItem(cartItemId);
-
-      setCart(response.cart);
+      await removeItemFromCart(cartItemId);
     } catch (error) {
       setError(
-        getUserFacingErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.remove })
+        getUserFacingErrorMessage(error, {
+          fallback: APP_ERROR_MESSAGES.cart.remove,
+        })
       );
-    } finally {
-      setUpdatingItemId(null);
     }
   };
 
@@ -157,18 +113,14 @@ function CartPageContent() {
     if (!canUseCart) return;
 
     try {
-      setIsClearing(true);
       setError('');
-
-      const response = await clearCart();
-
-      setCart(response.cart);
+      await clearAllCart();
     } catch (error) {
       setError(
-        getUserFacingErrorMessage(error, { fallback: APP_ERROR_MESSAGES.cart.clear })
+        getUserFacingErrorMessage(error, {
+          fallback: APP_ERROR_MESSAGES.cart.clear,
+        })
       );
-    } finally {
-      setIsClearing(false);
     }
   };
 
@@ -184,26 +136,14 @@ function CartPageContent() {
     if (!canUseCart) return;
 
     try {
-      setIsClearing(true);
       setError('');
-
-      const pharmacyItems = cart.items.filter((item) => item.pharmacyId === pharmacyId);
-      let nextCart = cart;
-
-      for (const item of pharmacyItems) {
-        const response = await removeCartItem(item.id);
-        nextCart = response.cart;
-      }
-
-      setCart(nextCart);
+      await removePharmacyOrder(pharmacyId);
     } catch (error) {
       setError(
         getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.cart.removeOrder,
         })
       );
-    } finally {
-      setIsClearing(false);
     }
   };
 
@@ -248,9 +188,9 @@ function CartPageContent() {
             </div>
 
             <CountLabel
-              shown={visibleCart.totalItems}
-              total={visibleCart.totalItems}
-              label="items"
+              shown={groupedCartItems.length}
+              total={groupedCartItems.length}
+              label={groupedCartItems.length === 1 ? 'order' : 'orders'}
             />
           </div>
 
@@ -292,6 +232,7 @@ function CartPageContent() {
                       <div className={css.pharmacyGroupHead}>
                         <div className={css.pharmacyInfo}>
                           <p className={css.groupKicker}>Pharmacy order</p>
+
                           <h2 className={css.pharmacyGroupTitle}>
                             {group.pharmacyName}
                           </h2>
@@ -340,7 +281,9 @@ function CartPageContent() {
                           <li key={item.id}>
                             <CartItemCard
                               item={item}
-                              isUpdating={updatingItemId === item.id}
+                              isUpdating={
+                                pendingItemIds.has(item.id) || isClearing
+                              }
                               onQuantityChange={handleQuantityChange}
                               onRemove={(itemId) =>
                                 setPendingAction({ type: 'item', itemId })
@@ -357,7 +300,9 @@ function CartPageContent() {
                       totalPrice={getCartOrderTotal(group)}
                       checkoutPath={getCartOrderPath(group)}
                       isUpdating={isUpdating}
-                      onContinueShopping={() => setContinueShoppingPharmacy(group)}
+                      onContinueShopping={() =>
+                        setContinueShoppingPharmacy(group)
+                      }
                     />
                   </div>
                 </li>

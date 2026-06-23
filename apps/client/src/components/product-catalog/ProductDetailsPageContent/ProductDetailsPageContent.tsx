@@ -44,7 +44,6 @@ import {
 
 import { ROUTES } from '@/lib/routes';
 import { CATALOG_SEARCH_MAX_LENGTH } from '@/lib/catalog/catalog-config';
-import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 
@@ -68,21 +67,16 @@ import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
 
 import {
   createProductReview,
-  getCart,
   getProductDetails,
   addFavoriteProduct,
   removeFavoriteProduct,
 } from '@/lib/api/browser';
 
-import {
-  addCartItem,
-  removeCartItem,
-  updateCartItem,
-} from '@/lib/cart/cart-commands';
+import { useCart } from '@/providers/CartProvider';
+import { useCartMutations } from '@/lib/cart/useCartMutations';
 
 import type {
   Cart,
-  CartItem,
   Product,
   ProductOffer,
   ProductReview,
@@ -108,36 +102,6 @@ function getOfferCartItem(cart: Cart | null, productOfferId: string) {
   return (
     cart?.items.find((item) => item.productOfferId === productOfferId) ?? null
   );
-}
-
-//===================================================================
-
-function getOfferTotal(cartItem: CartItem | null, offer: ProductOffer): number {
-  return (cartItem?.quantity ?? 0) * offer.price;
-}
-
-//===================================================================
-
-function getCartWithUpdatedOfferQuantity(
-  cart: Cart,
-  cartItemId: string,
-  quantity: number
-): Cart {
-  const nextItems = cart.items.map((item) => {
-    if (item.id !== cartItemId) return item;
-
-    return {
-      ...item,
-      quantity,
-      totalPrice: item.unitPrice * quantity,
-    };
-  });
-
-  return {
-    items: nextItems,
-    totalItems: nextItems.reduce((total, item) => total + item.quantity, 0),
-    totalPrice: nextItems.reduce((total, item) => total + item.totalPrice, 0),
-  };
 }
 
 //===================================================================
@@ -179,16 +143,28 @@ function ProductDetailsPageContent({
   contextPharmacyId,
 }: ProductDetailsPageContentProps) {
   const { isAuthenticated, isAuthReady } = useAuth();
+  const canUseCart = isAuthReady && isAuthenticated;
+  const { cart, loadCart } = useCart();
+
+  const {
+    pendingItemIds,
+    pendingOfferIds,
+    addProductToCart,
+    updateItemQuantity,
+    removeItemFromCart,
+  } = useCartMutations({ canUseCart });
 
   const [productDetails, setProductDetails] = useState(product);
   const [activeTab, setActiveTab] = useState<ProductTab>('about');
-  const [cart, setCart] = useState<Cart | null>(null);
   const toast = useToast();
-  const [updatingPharmacyId, setUpdatingPharmacyId] = useState<string | null>(
-    null
-  );
+
+  const [pendingOfferQuantities, setPendingOfferQuantities] = useState<
+    Record<string, number>
+  >({});
+
   const [pendingRemoveOffer, setPendingRemoveOffer] =
     useState<ProductOffer | null>(null);
+
   const [orderLimitMessage, setOrderLimitMessage] = useState('');
 
   const [pharmacyNameQuery, setPharmacyNameQuery] = useState('');
@@ -378,62 +354,62 @@ function ProductDetailsPageContent({
       })
       .catch(() => undefined);
 
-    getCart()
-      .then((response) => {
-        if (isMounted) setCart(response.cart);
-      })
-      .catch((error) => {
-        if (isMounted) {
-          toast.error(
-            getUserFacingErrorMessage(error, {
-              fallback: APP_ERROR_MESSAGES.products.loadCart,
-            })
-          );
-        }
-      });
+    loadCart().catch((error) => {
+      if (isMounted) {
+        toast.error(
+          getUserFacingErrorMessage(error, {
+            fallback: APP_ERROR_MESSAGES.products.loadCart,
+          })
+        );
+      }
+    });
 
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, isAuthReady, productDetails.id, setIsFavorite, toast]);
+  }, [
+    isAuthenticated,
+    isAuthReady,
+    loadCart,
+    productDetails.id,
+    setIsFavorite,
+    toast,
+  ]);
 
   const handleAddUnit = async (offer: ProductOffer) => {
-    if (!isAuthReady || !isAuthenticated) return;
+    if (!canUseCart) return;
+    if (pendingOfferIds.has(offer.id)) return;
 
-    const previousCart = cart;
     const cartItem = getOfferCartItem(cart, offer.id);
     const nextQuantity = (cartItem?.quantity ?? 0) + 1;
 
-    if (cartItem && previousCart) {
-      const optimisticCart = getCartWithUpdatedOfferQuantity(
-        previousCart,
-        cartItem.id,
-        nextQuantity
-      );
-
-      setCart(optimisticCart);
-      dispatchCartUpdated(optimisticCart);
+    if (!cartItem) {
+      setPendingOfferQuantities((current) => ({
+        ...current,
+        [offer.id]: nextQuantity,
+      }));
     }
 
     try {
-      setUpdatingPharmacyId(offer.pharmacyId);
-
       const response = cartItem
-        ? await updateCartItem(cartItem.id, { quantity: nextQuantity })
-        : await addCartItem({
-            productId: productDetails.id,
-            pharmacyId: offer.pharmacyId,
-            quantity: 1,
-          });
+        ? await updateItemQuantity(
+            cartItem.id,
+            { quantity: nextQuantity },
+            { offerId: offer.id }
+          )
+        : await addProductToCart(
+            {
+              productId: productDetails.id,
+              pharmacyId: offer.pharmacyId,
+              quantity: 1,
+            },
+            { offerId: offer.id }
+          );
 
-      setCart(response.cart);
-      dispatchCartUpdated(response.cart);
-      toast.success('One product unit was added to the order.');
-    } catch (error) {
-      if (previousCart) {
-        setCart(previousCart);
-        dispatchCartUpdated(previousCart);
+      if (response) {
+        toast.success('One product unit was added to the order.');
       }
+    } catch (error) {
       if (isCartOrderLimitError(error)) {
         setOrderLimitMessage('limit');
       } else {
@@ -444,60 +420,52 @@ function ProductDetailsPageContent({
         );
       }
     } finally {
-      setUpdatingPharmacyId(null);
+      if (!cartItem) {
+        setPendingOfferQuantities((current) => {
+          const next = { ...current };
+          delete next[offer.id];
+          return next;
+        });
+      }
     }
   };
 
   const removeOfferUnit = async (offer: ProductOffer) => {
-    if (!isAuthReady || !isAuthenticated) return;
+    if (!canUseCart) return;
+    if (pendingOfferIds.has(offer.id)) return;
 
     const cartItem = getOfferCartItem(cart, offer.id);
 
     if (!cartItem) return;
 
-    const previousCart = cart;
     const nextQuantity = cartItem.quantity - 1;
 
-    if (previousCart && nextQuantity > 0) {
-      const optimisticCart = getCartWithUpdatedOfferQuantity(
-        previousCart,
-        cartItem.id,
-        nextQuantity
-      );
-
-      setCart(optimisticCart);
-      dispatchCartUpdated(optimisticCart);
-    }
-
     try {
-      setUpdatingPharmacyId(offer.pharmacyId);
-
       const response =
         cartItem.quantity === 1
-          ? await removeCartItem(cartItem.id)
-          : await updateCartItem(cartItem.id, { quantity: nextQuantity });
+          ? await removeItemFromCart(cartItem.id, { offerId: offer.id })
+          : await updateItemQuantity(
+              cartItem.id,
+              { quantity: nextQuantity },
+              { offerId: offer.id }
+            );
 
-      setCart(response.cart);
-      dispatchCartUpdated(response.cart);
-      toast.success('One product unit was removed from the order.');
-    } catch (error) {
-      if (previousCart) {
-        setCart(previousCart);
-        dispatchCartUpdated(previousCart);
+      if (response) {
+        toast.success('One product unit was removed from the order.');
       }
+    } catch (error) {
       toast.error(
         getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.products.removeFromCart,
         })
       );
     } finally {
-      setUpdatingPharmacyId(null);
       setPendingRemoveOffer(null);
     }
   };
 
   const handleRemoveUnit = (offer: ProductOffer) => {
-    if (!isAuthReady || !isAuthenticated) return;
+    if (!canUseCart) return;
 
     const cartItem = getOfferCartItem(cart, offer.id);
 
@@ -513,8 +481,10 @@ function ProductDetailsPageContent({
 
   const renderQuantityControl = (offer: ProductOffer) => {
     const cartItem = getOfferCartItem(cart, offer.id);
-    const quantity = cartItem?.quantity ?? 0;
-    const isDisabled = !isAuthReady || !isAuthenticated || !offer.inStock;
+    const pendingQuantity = pendingOfferQuantities[offer.id];
+    const quantity = cartItem?.quantity ?? pendingQuantity ?? 0;
+    const isOfferPending = pendingOfferIds.has(offer.id);
+    const isDisabled = !canUseCart || !offer.inStock;
 
     return (
       <div className={css.quantityBlock}>
@@ -522,14 +492,22 @@ function ProductDetailsPageContent({
           value={quantity}
           max={offer.availableQuantity}
           disabled={isDisabled}
-          isLoading={updatingPharmacyId === offer.pharmacyId}
+          isLoading={
+            isOfferPending ||
+            (cartItem ? pendingItemIds.has(cartItem.id) : false)
+          }
           ariaLabel="Product quantity controls"
           onIncrement={() => handleAddUnit(offer)}
           onDecrement={() => handleRemoveUnit(offer)}
         />
 
         <p className={css.totalLine}>
-          Total: <b>{formatPrice(getOfferTotal(cartItem, offer))}</b>
+          Total:{' '}
+          <b>
+            {formatPrice(
+              (cartItem?.quantity ?? pendingQuantity ?? 0) * offer.price
+            )}
+          </b>
         </p>
 
         {isAuthenticated ? (
@@ -813,6 +791,7 @@ function ProductDetailsPageContent({
                 ) : (
                   <div className={css.emptyPanel}>
                     <h3 className={css.emptyTitle}>No pharmacies found</h3>
+
                     <p className={css.emptyText}>
                       Try changing the pharmacy name or address search.
                     </p>
@@ -865,6 +844,7 @@ function ProductDetailsPageContent({
 
                 <div className={css.descriptionBlock}>
                   <p>{longDescription}</p>
+
                   <p>
                     Before purchasing, compare pharmacy prices, check the
                     available quantity, read client reviews, and make sure the
@@ -880,6 +860,7 @@ function ProductDetailsPageContent({
               <div className={css.panel}>
                 <div className={css.sectionHeader}>
                   <h2 className={css.panelTitle}>Reviews</h2>
+
                   <CountLabel
                     shown={Math.min(visibleReviewsCount, reviews.length)}
                     total={reviewsTotal}
@@ -912,6 +893,7 @@ function ProductDetailsPageContent({
           </Container>
         </section>
       ) : null}
+
       {orderLimitMessage ? (
         <CartOrderLimitModal onClose={() => setOrderLimitMessage('')} />
       ) : null}
@@ -920,7 +902,7 @@ function ProductDetailsPageContent({
         <ConfirmationModal
           title="Remove product from order?"
           text={`This is the last unit of ${productDetails.name} from ${pendingRemoveOffer.pharmacyName}. It will be removed from the cart.`}
-          isLoading={updatingPharmacyId === pendingRemoveOffer.pharmacyId}
+          isLoading={pendingOfferIds.has(pendingRemoveOffer.id)}
           onConfirm={() => void removeOfferUnit(pendingRemoveOffer)}
           onCancel={() => setPendingRemoveOffer(null)}
         />

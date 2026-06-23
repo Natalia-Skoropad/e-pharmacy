@@ -15,12 +15,15 @@ export type CartPharmacyGroup = {
 
 //===================================================================
 
-export function groupCartItemsByPharmacy(items: Cart['items']): CartPharmacyGroup[] {
+export function groupCartItemsByPharmacy(
+  items: Cart['items']
+): CartPharmacyGroup[] {
   const groups = new Map<string, CartPharmacyGroup>();
 
   for (const item of items) {
     const pharmacyName =
       item.pharmacyName || item.product.pharmacyName || 'Pharmacy order';
+
     const currentGroup = groups.get(item.pharmacyId);
 
     if (currentGroup) {
@@ -56,4 +59,8 @@ export function getCartOrderTotal(group: CartPharmacyGroup): number {
 
 export function getCartOrderPath(group: CartPharmacyGroup): string {
   return buildCheckoutPath(group.pharmacyName, group.pharmacyId);
+}
+
+export function getCartOrdersCount(cart: Cart): number {
+  return groupCartByPharmacy(cart).length;
 }

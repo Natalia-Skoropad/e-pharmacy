@@ -5,8 +5,6 @@ import {
   updateCartItem as updateCartItemRequest,
 } from '@/lib/api/browser';
 
-import { dispatchCartUpdated } from '@/lib/cart/cart-events';
-
 import type {
   AddCartItemPayload,
   CartResponse,
@@ -15,18 +13,10 @@ import type {
 
 //===================================================================
 
-function notifyCartUpdated(response: CartResponse): CartResponse {
-  dispatchCartUpdated(response.cart);
-
-  return response;
-}
-
-//===================================================================
-
 export async function addCartItem(
   payload: AddCartItemPayload
 ): Promise<CartResponse> {
-  return notifyCartUpdated(await addCartItemRequest(payload));
+  return addCartItemRequest(payload);
 }
 
 //===================================================================
@@ -35,17 +25,19 @@ export async function updateCartItem(
   cartItemId: string,
   payload: UpdateCartItemPayload
 ): Promise<CartResponse> {
-  return notifyCartUpdated(await updateCartItemRequest(cartItemId, payload));
+  return updateCartItemRequest(cartItemId, payload);
 }
 
 //===================================================================
 
-export async function removeCartItem(cartItemId: string): Promise<CartResponse> {
-  return notifyCartUpdated(await removeCartItemRequest(cartItemId));
+export async function removeCartItem(
+  cartItemId: string
+): Promise<CartResponse> {
+  return removeCartItemRequest(cartItemId);
 }
 
 //===================================================================
 
 export async function clearCart(): Promise<CartResponse> {
-  return notifyCartUpdated(await clearCartRequest());
+  return clearCartRequest();
 }
