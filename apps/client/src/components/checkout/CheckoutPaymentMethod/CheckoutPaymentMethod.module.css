@@ -145,3 +145,20 @@
     max-width: 340px;
   }
 }
+
+.optionsGrid {
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.copyButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.copyButton:disabled:hover,
+.copyButton:disabled:focus-visible {
+  background-color: var(--color-accent-selected);
+  border-color: var(--color-accent-border);
+}

@@ -13,6 +13,7 @@ type PaymentMethodProps = {
   bankDetails: PharmacyBankDetails | null;
   pharmacyEmail: string;
   copiedEmail: boolean;
+  disabled?: boolean;
   onPaymentMethodChange: (value: PaymentMethod) => void;
   onCopyEmail: () => void;
 };
@@ -24,6 +25,7 @@ function CheckoutPaymentMethod({
   bankDetails,
   pharmacyEmail,
   copiedEmail,
+  disabled = false,
   onPaymentMethodChange,
   onCopyEmail,
 }: PaymentMethodProps) {
@@ -34,12 +36,15 @@ function CheckoutPaymentMethod({
       </h2>
 
       <div className={css.choiceGrid}>
-        <div className={css.optionsGrid}>
+        <fieldset className={css.optionsGrid} disabled={disabled}>
+          <legend className="visually-hidden">Payment method</legend>
+
           <RadioOption
             name="payment"
             value="cash"
             checked={paymentMethod === 'cash'}
             label="Cash on pickup / delivery"
+            disabled={disabled}
             onChange={onPaymentMethodChange}
           />
 
@@ -48,10 +53,10 @@ function CheckoutPaymentMethod({
             value="bank_transfer"
             checked={paymentMethod === 'bank_transfer'}
             label="Bank transfer"
-            disabled={!bankDetails}
+            disabled={disabled || !bankDetails}
             onChange={onPaymentMethodChange}
           />
-        </div>
+        </fieldset>
 
         <div className={css.detailsPanel}>
           {paymentMethod === 'cash' ? (
@@ -74,18 +79,22 @@ function CheckoutPaymentMethod({
                     <dt>Recipient</dt>
                     <dd>{bankDetails.recipientName}</dd>
                   </div>
+
                   <div>
                     <dt>EDRPOU / Tax ID</dt>
                     <dd>{bankDetails.taxId}</dd>
                   </div>
+
                   <div>
                     <dt>IBAN</dt>
                     <dd>{bankDetails.iban}</dd>
                   </div>
+
                   <div>
                     <dt>Bank</dt>
                     <dd>{bankDetails.bankName}</dd>
                   </div>
+
                   <div>
                     <dt>Payment purpose</dt>
                     <dd>{bankDetails.paymentPurpose}</dd>
@@ -108,6 +117,7 @@ function CheckoutPaymentMethod({
                   <button
                     className={css.copyButton}
                     type="button"
+                    disabled={disabled || !pharmacyEmail}
                     onClick={onCopyEmail}
                   >
                     <span>{pharmacyEmail}</span>

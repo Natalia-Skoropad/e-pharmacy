@@ -4,13 +4,6 @@ import { useMemo, useState, type ChangeEvent } from 'react';
 import { Clock, Info, MapPin, Phone, Truck } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
-import CheckoutOrderPanel from '../CheckoutOrderPanel';
-import CheckoutPaymentMethod from '../CheckoutPaymentMethod/CheckoutPaymentMethod';
-
-import { useCheckoutCart } from '../hooks/useCheckoutCart';
-import { useCheckoutPharmacy } from '../hooks/useCheckoutPharmacy';
-import { useCheckoutSubmit } from '../hooks/useCheckoutSubmit';
-
 import {
   ButtonLink,
   Container,
@@ -26,6 +19,19 @@ import {
 } from '@e-pharmacy/ui/form-fields';
 
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { useAuth } from '@e-pharmacy/auth/core';
+import type { BreadcrumbItem } from '@e-pharmacy/types';
+import type { PaymentMethod, DeliveryMethod } from '@e-pharmacy/types/orders';
+
+import {
+  USER_ADDRESS_MAX_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_ORDER_COMMENT_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  hasValidationErrors,
+  validateOrderDeliveryForm,
+} from '@e-pharmacy/validation';
+
 import { groupCartByPharmacy } from '@/lib/cart/cart-groups';
 
 import {
@@ -39,30 +45,13 @@ import {
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo';
 import { ROUTES } from '@/lib/routes';
 
-import {
-  ORDER_DELIVERY_INITIAL_VALUES,
-  USER_ADDRESS_MAX_LENGTH,
-  USER_NAME_MAX_LENGTH,
-  USER_ORDER_COMMENT_MAX_LENGTH,
-  USER_PHONE_MAX_LENGTH,
-  ORDER_DELIVERY_FORM_FIELDS,
-  hasValidationErrors,
-  isOrderDeliveryFormValid,
-  markAllFieldsTouched,
-  sanitizeAddress,
-  sanitizeName,
-  sanitizeOrderComment,
-  sanitizePhone,
-  validateOrderDeliveryForm,
-  type OrderDeliveryFormValues,
-  type OrderDeliveryTouchedFields,
-} from '@e-pharmacy/validation';
+import CheckoutOrderPanel from '../CheckoutOrderPanel';
+import CheckoutPaymentMethod from '../CheckoutPaymentMethod/CheckoutPaymentMethod';
 
-import { useAuth } from '@e-pharmacy/auth/core';
-import type { BreadcrumbItem } from '@e-pharmacy/types';
-
-import type { PaymentMethod } from '@e-pharmacy/types/orders';
-import type { DeliveryMethod } from '@e-pharmacy/types/orders';
+import { useCheckoutCart } from '../hooks/useCheckoutCart';
+import { useCheckoutPharmacy } from '../hooks/useCheckoutPharmacy';
+import { useCheckoutSubmit } from '../hooks/useCheckoutSubmit';
+import { useCheckoutDeliveryForm } from '../hooks/useCheckoutDeliveryForm';
 
 import css from './CheckoutPageContent.module.css';
 
@@ -91,16 +80,11 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>('pickup');
 
-  const [deliveryDraftValues, setDeliveryDraftValues] =
-    useState<OrderDeliveryFormValues>(ORDER_DELIVERY_INITIAL_VALUES);
-
-  const [deliveryTouchedFields, setDeliveryTouchedFields] =
-    useState<OrderDeliveryTouchedFields>({});
   const [copiedEmail, setCopiedEmail] = useState(false);
 
   const { cart, error, isLoading, setCart, setError } = useCheckoutCart(
     isAuthReady,
-    isAuthenticated,
+    isAuthenticated
   );
 
   const orderGroups = useMemo(() => groupCartByPharmacy(cart), [cart]);
@@ -111,7 +95,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     if (selectedPharmacyIdFromRoute) {
       return (
         orderGroups.find(
-          (group) => group.pharmacyId === selectedPharmacyIdFromRoute,
+          (group) => group.pharmacyId === selectedPharmacyIdFromRoute
         ) ?? null
       );
     }
@@ -129,31 +113,21 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     ? 'This pharmacy order is not available in your cart anymore. Please return to the cart and choose an active order.'
     : 'You have several pharmacy orders in your cart. Please choose the order you want to confirm from the cart page.';
 
-  const deliveryValues = useMemo<OrderDeliveryFormValues>(
-    () => ({
-      ...deliveryDraftValues,
-      recipientName: deliveryTouchedFields.recipientName
-        ? deliveryDraftValues.recipientName
-        : deliveryDraftValues.recipientName || user?.name || '',
-      recipientPhone: deliveryTouchedFields.recipientPhone
-        ? deliveryDraftValues.recipientPhone
-        : deliveryDraftValues.recipientPhone || user?.phone || '',
-      deliveryAddress: deliveryTouchedFields.deliveryAddress
-        ? deliveryDraftValues.deliveryAddress
-        : deliveryDraftValues.deliveryAddress || user?.address || '',
-    }),
-    [deliveryDraftValues, deliveryTouchedFields, user],
-  );
-
-  const deliveryFormErrors = useMemo(
-    () => validateOrderDeliveryForm(deliveryValues, deliveryMethod),
-    [deliveryValues, deliveryMethod],
-  );
-
-  const isDeliveryFormValid = isOrderDeliveryFormValid(
-    deliveryValues,
+  const {
+    values: deliveryValues,
+    errors: deliveryFormErrors,
+    touchedFields: deliveryTouchedFields,
+    isValid: isDeliveryFormValid,
+    setFieldValue: setDeliveryFieldValue,
+    markInvalidFieldsTouched,
+  } = useCheckoutDeliveryForm({
     deliveryMethod,
-  );
+    userDefaults: {
+      recipientName: user?.name,
+      recipientPhone: user?.phone,
+      deliveryAddress: user?.address,
+    },
+  });
 
   const { recipientName, recipientPhone, deliveryAddress, comment } =
     deliveryValues;
@@ -168,7 +142,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const pharmacyWorkingHours = getPharmacyWorkingHours(pharmacy);
   const pharmacyAddress = getPharmacyAddress(pharmacy);
   const hasPharmacyContactDetails = Boolean(
-    pharmacyPhone || pharmacyWorkingHours || pharmacyAddress,
+    pharmacyPhone || pharmacyWorkingHours || pharmacyAddress
   );
 
   const canSubmit =
@@ -188,54 +162,31 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     setError,
   });
 
-  const handleDeliveryFieldChange = (
-    field: keyof OrderDeliveryFormValues,
-    value: string,
-  ) => {
-    setDeliveryTouchedFields((prev) => ({
-      ...prev,
-      [field]: true,
-    }));
-
-    setDeliveryDraftValues((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
   const handleRecipientNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    handleDeliveryFieldChange(
-      'recipientName',
-      sanitizeName(event.target.value),
-    );
+    if (isSubmitting) return;
+    setDeliveryFieldValue('recipientName', event.target.value);
   };
 
   const handleRecipientPhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
-    handleDeliveryFieldChange(
-      'recipientPhone',
-      sanitizePhone(event.target.value),
-    );
+    if (isSubmitting) return;
+    setDeliveryFieldValue('recipientPhone', event.target.value);
   };
 
   const handleDeliveryAddressChange = (
-    event: ChangeEvent<HTMLTextAreaElement>,
+    event: ChangeEvent<HTMLTextAreaElement>
   ) => {
-    handleDeliveryFieldChange(
-      'deliveryAddress',
-      sanitizeAddress(event.target.value),
-    );
+    if (isSubmitting) return;
+    setDeliveryFieldValue('deliveryAddress', event.target.value);
   };
 
   const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    handleDeliveryFieldChange(
-      'comment',
-      sanitizeOrderComment(event.target.value),
-    );
+    if (isSubmitting) return;
+    setDeliveryFieldValue('comment', event.target.value);
   };
 
   const handleCopyEmail = async () => {
     try {
-      if (!pharmacyEmail) return;
+      if (isSubmitting || !pharmacyEmail) return;
 
       await navigator.clipboard.writeText(pharmacyEmail);
       setCopiedEmail(true);
@@ -246,19 +197,17 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   };
 
   const handleCheckoutSubmit = async () => {
+    if (isSubmitting) return;
+
     const nextErrors = validateOrderDeliveryForm(
       deliveryValues,
-      deliveryMethod,
+      deliveryMethod
     );
 
-    if (deliveryMethod === 'postal_delivery') {
-      setDeliveryTouchedFields((prev) => ({
-        ...prev,
-        ...markAllFieldsTouched(ORDER_DELIVERY_FORM_FIELDS),
-      }));
+    if (hasValidationErrors(nextErrors)) {
+      markInvalidFieldsTouched(nextErrors);
+      return;
     }
-
-    if (hasValidationErrors(nextErrors)) return;
 
     await handleSubmit();
   };
@@ -305,12 +254,20 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                   </h2>
 
                   <div className={css.deliveryChoiceGrid}>
-                    <div className={css.deliveryOptionsGrid}>
+                    <fieldset
+                      className={css.deliveryOptionsGrid}
+                      disabled={isSubmitting}
+                    >
+                      <legend className="visually-hidden">
+                        Delivery method
+                      </legend>
+
                       <RadioOption
                         name="delivery"
                         value="pickup"
                         checked={deliveryMethod === 'pickup'}
                         label="Pickup from pharmacy"
+                        disabled={isSubmitting}
                         onChange={setDeliveryMethod}
                       />
 
@@ -319,9 +276,10 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                         value="postal_delivery"
                         checked={deliveryMethod === 'postal_delivery'}
                         label="Postal delivery"
+                        disabled={isSubmitting}
                         onChange={setDeliveryMethod}
                       />
-                    </div>
+                    </fieldset>
 
                     <div className={css.deliveryDetailsPanel}>
                       {deliveryMethod === 'pickup' ? (
@@ -379,9 +337,10 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                               value={recipientName}
                               error={deliveryFormErrors.recipientName ?? ''}
                               isTouched={Boolean(
-                                deliveryTouchedFields.recipientName,
+                                deliveryTouchedFields.recipientName
                               )}
                               maxLength={USER_NAME_MAX_LENGTH}
+                              disabled={isSubmitting}
                               onChange={handleRecipientNameChange}
                             />
 
@@ -391,9 +350,10 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                               value={recipientPhone}
                               error={deliveryFormErrors.recipientPhone ?? ''}
                               isTouched={Boolean(
-                                deliveryTouchedFields.recipientPhone,
+                                deliveryTouchedFields.recipientPhone
                               )}
                               maxLength={USER_PHONE_MAX_LENGTH}
+                              disabled={isSubmitting}
                               onChange={handleRecipientPhoneChange}
                             />
 
@@ -404,9 +364,10 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                                 value={deliveryAddress}
                                 error={deliveryFormErrors.deliveryAddress ?? ''}
                                 isTouched={Boolean(
-                                  deliveryTouchedFields.deliveryAddress,
+                                  deliveryTouchedFields.deliveryAddress
                                 )}
                                 maxLength={USER_ADDRESS_MAX_LENGTH}
+                                disabled={isSubmitting}
                                 onChange={handleDeliveryAddressChange}
                               />
                             </div>
@@ -441,6 +402,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                   bankDetails={bankDetails}
                   pharmacyEmail={pharmacyEmail}
                   copiedEmail={copiedEmail}
+                  disabled={isSubmitting}
                   onPaymentMethodChange={setPaymentMethod}
                   onCopyEmail={() => void handleCopyEmail()}
                 />
@@ -457,6 +419,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                     error={deliveryFormErrors.comment}
                     isTouched={Boolean(deliveryTouchedFields.comment)}
                     maxLength={USER_ORDER_COMMENT_MAX_LENGTH}
+                    disabled={isSubmitting}
                     onChange={handleCommentChange}
                   />
                 </section>
@@ -464,7 +427,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
               <CheckoutOrderPanel
                 orderGroup={selectedOrderGroup}
-                canSubmit={canSubmit && !isSubmitting}
+                canSubmit={canSubmit}
                 isSubmitting={isSubmitting}
                 onSubmit={() => void handleCheckoutSubmit()}
               />

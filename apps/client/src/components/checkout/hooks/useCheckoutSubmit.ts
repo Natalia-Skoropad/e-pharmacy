@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import type { Cart, CheckoutOrderPayload } from '@e-pharmacy/types';
+import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types/orders';
+
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { groupCartByPharmacy } from '@/lib/cart/cart-groups';
+import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 import { getStockValidationError } from '@/lib/checkout';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 import { buildOrderPath } from '@/lib/routes';
-
 import { checkoutOrder, getCart } from '@/lib/api/browser';
-import type { Cart, CheckoutOrderPayload } from '@e-pharmacy/types';
-
-import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
-import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types/orders';
 
 //===================================================================
 
@@ -49,6 +48,8 @@ export function useCheckoutSubmit({
 
   const handleSubmit = async () => {
     if (!isAuthenticated || !canSubmit || isSubmitting) return;
+
+    let shouldResetSubmitting = true;
 
     try {
       setIsSubmitting(true);
@@ -101,6 +102,7 @@ export function useCheckoutSubmit({
 
       setCart(response.cart);
       dispatchCartUpdated(response.cart);
+      shouldResetSubmitting = false;
       router.push(buildOrderPath(response.order));
     } catch (error) {
       setError(
@@ -109,7 +111,7 @@ export function useCheckoutSubmit({
         })
       );
     } finally {
-      setIsSubmitting(false);
+      if (shouldResetSubmitting) setIsSubmitting(false);
     }
   };
 

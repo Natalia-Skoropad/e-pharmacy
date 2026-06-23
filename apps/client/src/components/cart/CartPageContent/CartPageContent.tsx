@@ -3,12 +3,6 @@
 import { useMemo, useState } from 'react';
 
 import {
-  CartItemCard,
-  CartSummary,
-  ContinueShoppingModal,
-} from '@/components/cart';
-
-import {
   Button,
   ButtonLink,
   Container,
@@ -19,6 +13,8 @@ import {
 
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { useAuth } from '@e-pharmacy/auth/core';
+import type { Cart } from '@e-pharmacy/types';
 
 import {
   getCartOrderPath,
@@ -31,11 +27,15 @@ import { CART_DESCRIPTION, CART_TITLE } from '@/lib/seo';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 import { ROUTES } from '@/lib/routes';
 import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
-import { useAuth } from '@e-pharmacy/auth/core';
-import { useCart } from '@/providers/CartProvider';
 import { useCartMutations } from '@/lib/cart/useCartMutations';
 
-import type { Cart } from '@e-pharmacy/types';
+import { useCart } from '@/providers/CartProvider';
+
+import {
+  CartItemCard,
+  CartSummary,
+  ContinueShoppingModal,
+} from '@/components/cart';
 
 import css from './CartPageContent.module.css';
 

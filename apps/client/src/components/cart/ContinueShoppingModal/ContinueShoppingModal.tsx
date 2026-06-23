@@ -12,14 +12,15 @@ import {
   SvgIcon,
 } from '@e-pharmacy/ui/common';
 
-import { CartOrderLimitModal } from '@/components/common';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
-import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { formatPrice, formatStockLabel } from '@e-pharmacy/utils/formatters';
+import type { Cart, Product, ProductCategory } from '@e-pharmacy/types';
+
 import { getProducts } from '@/lib/api/browser';
+import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { addCartItem } from '@/lib/cart/cart-commands';
 
-import type { Cart, Product, ProductCategory } from '@e-pharmacy/types';
+import { CartOrderLimitModal } from '@/components/common';
 
 import css from './ContinueShoppingModal.module.css';
 

@@ -7,10 +7,11 @@ import {
   SvgIcon,
 } from '@e-pharmacy/ui/common';
 
-import { StockAvailability } from '@/components/common';
 import { formatPrice } from '@e-pharmacy/utils/formatters';
-import { buildProductPath } from '@/lib/routes';
 import type { CartItem } from '@e-pharmacy/types';
+
+import { StockAvailability } from '@/components/common';
+import { buildProductPath } from '@/lib/routes';
 
 import css from './CartItemCard.module.css';
 

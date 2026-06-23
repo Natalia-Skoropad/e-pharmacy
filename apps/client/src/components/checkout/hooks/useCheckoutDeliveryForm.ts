@@ -1,0 +1,133 @@
+import { useMemo, useState } from 'react';
+
+import {
+  ORDER_DELIVERY_INITIAL_VALUES,
+  hasValidationErrors,
+  isOrderDeliveryFormValid,
+  sanitizeAddress,
+  sanitizeName,
+  sanitizeOrderComment,
+  sanitizePhone,
+  validateOrderDeliveryForm,
+  type OrderDeliveryFormErrors,
+  type OrderDeliveryFormValues,
+  type OrderDeliveryTouchedFields,
+} from '@e-pharmacy/validation';
+
+import type { DeliveryMethod } from '@e-pharmacy/types/orders';
+
+//===================================================================
+
+type CheckoutDeliveryUserDefaults = Partial<
+  Pick<
+    OrderDeliveryFormValues,
+    'recipientName' | 'recipientPhone' | 'deliveryAddress'
+  >
+>;
+
+type UseCheckoutDeliveryFormParams = {
+  deliveryMethod: DeliveryMethod;
+  userDefaults?: CheckoutDeliveryUserDefaults;
+};
+
+//===================================================================
+
+function sanitizeDeliveryFieldValue(
+  field: keyof OrderDeliveryFormValues,
+  value: string
+): string {
+  if (field === 'recipientName') return sanitizeName(value);
+  if (field === 'recipientPhone') return sanitizePhone(value);
+  if (field === 'deliveryAddress') return sanitizeAddress(value);
+  return sanitizeOrderComment(value);
+}
+
+function getTouchedFieldsFromErrors(
+  errors: OrderDeliveryFormErrors
+): OrderDeliveryTouchedFields {
+  return Object.keys(errors).reduce<OrderDeliveryTouchedFields>(
+    (acc, field) => {
+      acc[field as keyof OrderDeliveryFormValues] = true;
+      return acc;
+    },
+    {}
+  );
+}
+
+//===================================================================
+
+export function useCheckoutDeliveryForm({
+  deliveryMethod,
+  userDefaults,
+}: UseCheckoutDeliveryFormParams) {
+  const [draftValues, setDraftValues] = useState<OrderDeliveryFormValues>(
+    ORDER_DELIVERY_INITIAL_VALUES
+  );
+
+  const [touchedFields, setTouchedFields] =
+    useState<OrderDeliveryTouchedFields>({});
+
+  const values = useMemo<OrderDeliveryFormValues>(
+    () => ({
+      ...draftValues,
+      recipientName: touchedFields.recipientName
+        ? draftValues.recipientName
+        : draftValues.recipientName || userDefaults?.recipientName || '',
+      recipientPhone: touchedFields.recipientPhone
+        ? draftValues.recipientPhone
+        : draftValues.recipientPhone || userDefaults?.recipientPhone || '',
+      deliveryAddress: touchedFields.deliveryAddress
+        ? draftValues.deliveryAddress
+        : draftValues.deliveryAddress || userDefaults?.deliveryAddress || '',
+    }),
+    [draftValues, touchedFields, userDefaults]
+  );
+
+  const errors = useMemo(
+    () => validateOrderDeliveryForm(values, deliveryMethod),
+    [values, deliveryMethod]
+  );
+
+  const isValid = isOrderDeliveryFormValid(values, deliveryMethod);
+
+  const setFieldValue = (
+    field: keyof OrderDeliveryFormValues,
+    value: string
+  ) => {
+    const sanitizedValue = sanitizeDeliveryFieldValue(field, value);
+
+    setTouchedFields((current) => ({
+      ...current,
+      [field]: true,
+    }));
+
+    setDraftValues((current) => ({
+      ...current,
+      [field]: sanitizedValue,
+    }));
+  };
+
+  const markInvalidFieldsTouched = (nextErrors: OrderDeliveryFormErrors) => {
+    if (!hasValidationErrors(nextErrors)) return;
+
+    setTouchedFields((current) => ({
+      ...current,
+      ...getTouchedFieldsFromErrors(nextErrors),
+    }));
+  };
+
+  const resetFromUser = () => {
+    setDraftValues(ORDER_DELIVERY_INITIAL_VALUES);
+    setTouchedFields({});
+  };
+
+  return {
+    values,
+    errors,
+    touchedFields,
+    isValid,
+    setFieldValue,
+    markInvalidFieldsTouched,
+    resetFromUser,
+  };
+}

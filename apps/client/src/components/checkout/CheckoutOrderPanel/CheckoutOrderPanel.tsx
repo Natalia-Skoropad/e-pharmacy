@@ -52,8 +52,15 @@ function CheckoutOrderPanel({
         </div>
       </dl>
 
-      <Button type="button" fullWidth disabled={!canSubmit} onClick={onSubmit}>
-        {isSubmitting ? 'Confirming...' : 'Confirm order'}
+      <Button
+        type="button"
+        fullWidth
+        disabled={!canSubmit}
+        isLoading={isSubmitting}
+        loadingLabel="Confirming..."
+        onClick={onSubmit}
+      >
+        Confirm order
       </Button>
     </aside>
   );

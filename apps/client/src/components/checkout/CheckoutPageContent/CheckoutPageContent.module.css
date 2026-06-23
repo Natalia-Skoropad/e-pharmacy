@@ -84,7 +84,6 @@
   margin-bottom: 18px;
 }
 
-
 @media only screen and (min-width: 768px) {
   .section {
     padding-block: 20px 96px;
@@ -225,4 +224,10 @@
   .deliveryOptionsGrid {
     max-width: 340px;
   }
+}
+
+.deliveryOptionsGrid {
+  padding: 0;
+  margin: 0;
+  border: 0;
 }
