@@ -5,6 +5,7 @@ import {
   createProductReviewSchema,
   moderateProductReviewSchema,
   pendingProductReviewsQuerySchema,
+  productFiltersQuerySchema,
   productsQuerySchema,
 } from '../schemas/product.schema';
 
@@ -32,10 +33,11 @@ type ProductParams = {
 //===============================================================
 
 export async function getProductFilters(
-  _req: Request,
+  req: Request,
   res: Response
 ): Promise<void> {
-  const data = await getProductFiltersService();
+  const query = productFiltersQuerySchema.parse(req.query);
+  const data = await getProductFiltersService(query);
 
   sendSuccessResponse({
     res,
@@ -56,7 +58,6 @@ export async function getProducts(req: Request, res: Response): Promise<void> {
     data,
   });
 }
-
 
 //===============================================================
 

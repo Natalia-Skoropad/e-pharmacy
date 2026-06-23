@@ -19,7 +19,11 @@ import type {
 } from '../types/product';
 
 import type { ProductCategory } from '../types/categories';
-import { PRODUCT_CATEGORY_LABELS } from '../types/categories';
+
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_CATEGORY_LABELS,
+} from '../types/categories';
 
 import { httpError } from '../utils/httpError';
 import { createSafeRegExp } from '../utils/regexp';
@@ -58,6 +62,11 @@ type CreateReviewInput = {
 
 type PendingReviewsQuery = { page: number; perPage: number };
 
+type ProductFiltersQuery = {
+  pharmacyId?: string;
+  inStock?: boolean;
+};
+
 type PendingReviewDto = {
   productId: string;
   productName: string;
@@ -95,21 +104,27 @@ async function getOffersByProductIds(
   const offers = await ProductOffer.find({
     productId: { $in: productIds },
   }).lean();
+
   const pharmacyIds = [
     ...new Set(offers.map((offer) => String(offer.pharmacyId))),
   ];
+
   const pharmacies = await Pharmacy.find({
     _id: { $in: pharmacyIds },
     status: { $in: ['active', 'on_moderation'] },
   }).lean();
+
   const pharmacyMap = new Map(
     pharmacies.map((pharmacy) => [String(pharmacy._id), pharmacy])
   );
+
   const result = new Map<string, ProductOfferResponseDto[]>();
 
   for (const offer of offers) {
     const pharmacy = pharmacyMap.get(String(offer.pharmacyId));
+
     if (!pharmacy) continue;
+
     const item: ProductOfferResponseDto = {
       id: String(offer._id),
       pharmacyId: String(pharmacy._id),
@@ -127,9 +142,11 @@ async function getOffersByProductIds(
       reservedQuantity: offer.reservedQuantity,
       inStock: offer.availableQuantity > 0,
     };
+
     const key = String(offer.productId);
     result.set(key, [...(result.get(key) ?? []), item]);
   }
+
   return result;
 }
 
@@ -142,9 +159,11 @@ function serializeProduct(
 ): ProductResponseDto {
   const available = offers.filter((offer) => offer.inStock);
   const first = available[0] ?? offers[0];
+
   const minPrice = available.length
     ? Math.min(...available.map((offer) => offer.price))
     : (product.price ?? 0);
+
   return {
     id: String(product._id),
     name: product.name,
@@ -176,13 +195,46 @@ function serializeProduct(
 
 //===============================================================
 
-export async function getProductFiltersService(): Promise<ProductFilterOptionsResponseDto> {
+async function getAvailableFilterCategories(
+  query: ProductFiltersQuery
+): Promise<ProductCategory[]> {
+  if (!query.pharmacyId && typeof query.inStock !== 'boolean') {
+    return [...PRODUCT_CATEGORIES];
+  }
+
+  const offerFilter: Record<string, unknown> = {};
+
+  if (query.pharmacyId) offerFilter.pharmacyId = query.pharmacyId;
+  if (query.inStock === true) offerFilter.availableQuantity = { $gt: 0 };
+  if (query.inStock === false) offerFilter.availableQuantity = 0;
+
+  const productIds = await ProductOffer.distinct('productId', offerFilter);
+
+  if (!productIds.length) return [];
+
+  const categories = await Product.distinct('category', {
+    _id: { $in: productIds },
+    status: 'active',
+  });
+
+  const categorySet = new Set(categories.map(String));
+
+  return PRODUCT_CATEGORIES.filter((category) => categorySet.has(category));
+}
+
+//===============================================================
+
+export async function getProductFiltersService(
+  query: ProductFiltersQuery = {}
+): Promise<ProductFilterOptionsResponseDto> {
+  const categories = await getAvailableFilterCategories(query);
+
   return {
     categories: [
       { value: 'all', label: 'All categories' },
-      ...Object.entries(PRODUCT_CATEGORY_LABELS).map(([value, label]) => ({
-        value: value as ProductCategory,
-        label,
+      ...categories.map((value) => ({
+        value,
+        label: PRODUCT_CATEGORY_LABELS[value],
       })),
     ],
 
@@ -212,21 +264,26 @@ export async function getProductsService(
 ) {
   const filter: Record<string, unknown> = { status: 'active' };
   const keyword = query.keyword?.trim();
-  if (keyword)
+
+  if (keyword) {
     filter.$or = [
       { name: createSafeRegExp(keyword) },
       { article: createSafeRegExp(keyword) },
       { description: createSafeRegExp(keyword) },
     ];
+  }
 
   if (query.nameKeyword) filter.name = createSafeRegExp(query.nameKeyword);
-  if (query.articleKeyword)
+  if (query.articleKeyword) {
     filter.article = createSafeRegExp(query.articleKeyword);
+  }
   if (query.category) filter.category = query.category;
 
   let allowedProductIds: Types.ObjectId[] | undefined;
   const offerFilter: Record<string, unknown> = {};
+
   if (query.pharmacyId) offerFilter.pharmacyId = query.pharmacyId;
+
   if (
     typeof query.minPrice === 'number' ||
     typeof query.maxPrice === 'number'
@@ -239,6 +296,7 @@ export async function getProductsService(
 
   if (query.inStock === true) offerFilter.availableQuantity = { $gt: 0 };
   if (query.inStock === false) offerFilter.availableQuantity = 0;
+
   if (Object.keys(offerFilter).length) {
     allowedProductIds = await ProductOffer.distinct('productId', offerFilter);
     filter._id = { $in: allowedProductIds };
@@ -254,6 +312,7 @@ export async function getProductsService(
           : query.sort === 'rating-desc'
             ? { rating: -1 }
             : { createdAt: -1 };
+
   const skip = (query.page - 1) * query.perPage;
 
   const [products, total, favorites] = await Promise.all([
@@ -263,12 +322,16 @@ export async function getProductsService(
   ]);
 
   const offerMap = await getOffersByProductIds(
-    products.map((p) => p._id),
+    products.map((product) => product._id),
     favorites.pharmacies
   );
 
-  const items = products.map((p) =>
-    serializeProduct(p, offerMap.get(String(p._id)) ?? [], favorites.products)
+  const items = products.map((product) =>
+    serializeProduct(
+      product,
+      offerMap.get(String(product._id)) ?? [],
+      favorites.products
+    )
   );
 
   if (query.sort === 'price-asc') items.sort((a, b) => a.price - b.price);
@@ -282,7 +345,6 @@ export async function getProductsService(
     totalPages: Math.ceil(total / query.perPage),
   };
 }
-
 
 //===============================================================
 
@@ -321,6 +383,7 @@ export async function getFavoriteProductsService(
 
   const sort: Record<string, 1 | -1> =
     query.sort === 'name-desc' ? { name: -1 } : { name: 1 };
+
   const skip = (query.page - 1) * query.perPage;
 
   const [products, total] = await Promise.all([
@@ -332,6 +395,7 @@ export async function getFavoriteProductsService(
     products.map((product) => product._id),
     favoritePharmacyIds
   );
+
   const favoriteIds = new Set(favoriteProductIds.map(String));
 
   return {
@@ -359,8 +423,11 @@ export async function getProductDetailsService(
     _id: productId,
     status: 'active',
   }).lean();
-  if (!product)
+
+  if (!product) {
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+  }
+
   const favorites = await getClientFavorites(userId);
 
   const offerMap = await getOffersByProductIds(
@@ -381,8 +448,10 @@ export async function getProductDetailsService(
 
 export async function getProductReviewsService(productId: string) {
   const exists = await Product.exists({ _id: productId, status: 'active' });
-  if (!exists)
+
+  if (!exists) {
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+  }
 
   const reviews = await ProductReview.find({ productId, status: 'approved' })
     .sort({ createdAt: -1 })
@@ -406,8 +475,10 @@ export async function createProductReviewService(
   input: CreateReviewInput
 ) {
   const exists = await Product.exists({ _id: productId, status: 'active' });
-  if (!exists)
+
+  if (!exists) {
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+  }
 
   await ProductReview.create({
     productId,
@@ -417,6 +488,7 @@ export async function createProductReviewService(
     comment: input.comment,
     status: 'on_moderation',
   });
+
   return { message: 'Product review was submitted for moderation.' };
 }
 
@@ -428,8 +500,10 @@ export async function setFavoriteProductService(
   isFavorite: boolean
 ) {
   const exists = await Product.exists({ _id: productId, status: 'active' });
-  if (!exists)
+
+  if (!exists) {
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+  }
 
   await Client.updateOne(
     { userId },
@@ -456,6 +530,7 @@ export async function getPendingProductReviewsService(
   query: PendingReviewsQuery
 ) {
   const skip = (query.page - 1) * query.perPage;
+
   const [reviews, total] = await Promise.all([
     ProductReview.find({ status: 'on_moderation' })
       .sort({ createdAt: -1 })
@@ -466,12 +541,15 @@ export async function getPendingProductReviewsService(
   ]);
 
   const products = await Product.find({
-    _id: { $in: reviews.map((r) => r.productId) },
+    _id: { $in: reviews.map((review) => review.productId) },
   })
     .select('name')
     .lean();
 
-  const names = new Map(products.map((p) => [String(p._id), p.name]));
+  const names = new Map(
+    products.map((product) => [String(product._id), product.name])
+  );
+
   const items: PendingReviewDto[] = reviews.map((review) => ({
     productId: String(review.productId),
     productName: names.get(String(review.productId)) ?? 'Product',
@@ -516,8 +594,9 @@ export async function moderateProductReviewService(
     { returnDocument: 'after' }
   );
 
-  if (!review)
+  if (!review) {
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Product review was not found.');
+  }
 
   const approved = await ProductReview.find({ productId, status: 'approved' })
     .select('rating')

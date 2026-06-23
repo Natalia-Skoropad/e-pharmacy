@@ -63,6 +63,7 @@ type CartDocument = {
   _id: Types.ObjectId;
   clientUserId: Types.ObjectId;
   items: CartItemDocument[];
+  updatedAt: Date;
 };
 
 type ProductDocument = ProductEntity & { _id: Types.ObjectId };
@@ -94,16 +95,19 @@ function padDatePart(value: number): string {
 
 function createOrderNumber(orderId: Types.ObjectId): string {
   const date = new Date();
+
   const datePart = [
     date.getFullYear(),
     padDatePart(date.getMonth() + 1),
     padDatePart(date.getDate()),
   ].join('');
+
   const timePart = [
     padDatePart(date.getHours()),
     padDatePart(date.getMinutes()),
     padDatePart(date.getSeconds()),
   ].join('');
+
   return `EP-${datePart}-${timePart}-${orderId.toString().slice(-8).toUpperCase()}`;
 }
 
@@ -115,6 +119,7 @@ function getPharmacyAddress(
   const address = [pharmacySnapshot.address, pharmacySnapshot.city]
     .filter(Boolean)
     .join(', ');
+
   return address || undefined;
 }
 
@@ -170,10 +175,12 @@ function serializeOrder(
       const productFallback = productFallbacks?.get(item.productId.toString());
       const category =
         item.productSnapshot.category ?? productFallback?.category;
+
       const rating =
         typeof item.productSnapshot.rating === 'number'
           ? item.productSnapshot.rating
           : productFallback?.rating;
+
       const reviewsCount =
         typeof item.productSnapshot.reviewsCount === 'number'
           ? item.productSnapshot.reviewsCount
@@ -254,24 +261,30 @@ export async function checkoutOrderService(
       const cart = await Cart.findOne({ clientUserId })
         .session(session)
         .lean<CartDocument | null>();
-      if (!cart) throw httpError(HTTP_STATUS.BAD_REQUEST, 'Cart is empty');
+
+      if (!cart) {
+        throw httpError(HTTP_STATUS.BAD_REQUEST, 'Cart is empty');
+      }
 
       const offers = await ProductOffer.find({
         _id: { $in: cart.items.map((item) => item.productOfferId) },
       })
         .session(session)
         .lean();
+
       const offerMap = new Map(
         offers.map((offer) => [String(offer._id), offer])
       );
 
       const orderCartItems = cart.items.filter((item) => {
         const offer = offerMap.get(String(item.productOfferId));
+
         return (
           offer?.pharmacyId.toString() === input.pharmacyId &&
           item.expiresAt.getTime() > Date.now()
         );
       });
+
       if (!orderCartItems.length) {
         throw httpError(
           HTTP_STATUS.BAD_REQUEST,
@@ -282,9 +295,11 @@ export async function checkoutOrderService(
       const pharmacy = await Pharmacy.findById(input.pharmacyId)
         .session(session)
         .lean<PharmacyDocument | null>();
+
       if (!pharmacy || !['active', 'on_moderation'].includes(pharmacy.status)) {
         throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found');
       }
+
       if (
         input.paymentMethod === 'bank_transfer' &&
         !hasCompleteBankDetails(pharmacy.bankDetails)
@@ -297,36 +312,46 @@ export async function checkoutOrderService(
 
       const productIds = orderCartItems.map((item) => {
         const offer = offerMap.get(String(item.productOfferId));
-        if (!offer)
+
+        if (!offer) {
           throw httpError(
             HTTP_STATUS.BAD_REQUEST,
             'Product offer is unavailable'
           );
+        }
+
         return offer.productId;
       });
+
       const products = await Product.find({ _id: { $in: productIds } })
         .session(session)
         .lean<ProductDocument[]>();
+
       const productMap = new Map(
         products.map((product) => [String(product._id), product])
       );
 
       const orderItems: OrderItemEntity[] = orderCartItems.map((cartItem) => {
         const offer = offerMap.get(String(cartItem.productOfferId));
-        if (!offer)
+
+        if (!offer) {
           throw httpError(
             HTTP_STATUS.BAD_REQUEST,
             'Product offer is unavailable'
           );
+        }
+
         const product = productMap.get(String(offer.productId));
-        if (!product)
+
+        if (!product) {
           throw httpError(
             HTTP_STATUS.NOT_FOUND,
             API_MESSAGES.PRODUCT_NOT_FOUND
           );
+        }
 
-        // The cart uses the current ProductOffer price. The Order snapshots it here.
         const unitPrice = offer.price;
+
         return {
           productId: offer.productId,
           productOfferId: offer._id,
@@ -360,10 +385,12 @@ export async function checkoutOrderService(
         (sum, item) => sum + item.quantity,
         0
       );
+
       const totalPrice = orderItems.reduce(
         (sum, item) => sum + item.totalPrice,
         0
       );
+
       const orderId = new Types.ObjectId();
       const createdAt = new Date();
 
@@ -418,11 +445,13 @@ export async function checkoutOrderService(
       );
 
       createdOrder = order[0].toObject() as OrderDocument;
+
       const selectedIds = new Set(
         orderCartItems.map((item) => String(item._id))
       );
-      await Cart.updateOne(
-        { clientUserId },
+
+      const cartUpdateResult = await Cart.updateOne(
+        { _id: cart._id, updatedAt: cart.updatedAt },
         {
           $set: {
             items: cart.items.filter(
@@ -430,8 +459,15 @@ export async function checkoutOrderService(
             ),
           },
         },
-        { session }
+        { session, runValidators: true }
       );
+
+      if (cartUpdateResult.matchedCount !== 1) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Cart was changed by another request. Please refresh and try again.'
+        );
+      }
     });
 
     if (!createdOrder) {
@@ -440,8 +476,13 @@ export async function checkoutOrderService(
         'Order was not created'
       );
     }
+
     const { cart } = await getCartService(clientUserId);
-    return { order: serializeOrder(createdOrder), cart };
+
+    return {
+      order: serializeOrder(createdOrder),
+      cart,
+    };
   } finally {
     await session.endSession();
   }
@@ -455,12 +496,15 @@ export async function updateOrderStatusService(
   input: UpdateOrderStatusInput
 ): Promise<{ order: OrderResponseDto }> {
   const session = await mongoose.startSession();
+
   try {
     let updatedOrder: OrderDocument | null = null;
+
     await session.withTransaction(async () => {
       const order = await Order.findById(orderId)
         .session(session)
         .lean<OrderDocument | null>();
+
       if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
 
       if (actor.role !== USER_ROLES.ADMIN) {
@@ -470,12 +514,15 @@ export async function updateOrderStatusService(
             'Only pharmacy users or admins can update order status.'
           );
         }
+
         const hasAccess = await Pharmacy.exists({
           _id: order.pharmacyId,
           $or: [{ ownerId: actor.id }, { managerUserIds: actor.id }],
         }).session(session);
-        if (!hasAccess)
+
+        if (!hasAccess) {
           throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy access denied.');
+        }
       }
 
       if (!canTransitionOrderStatus(order.status, input.status)) {
@@ -494,6 +541,7 @@ export async function updateOrderStatusService(
           );
         }
       }
+
       if (input.status === 'rejected') {
         for (const item of order.items) {
           await releaseOfferStock(item.productOfferId, item.quantity, session);
@@ -502,6 +550,7 @@ export async function updateOrderStatusService(
 
       const changedAt = new Date();
       const set: Record<string, unknown> = { status: input.status };
+
       if (input.status === 'rejected') {
         set.rejectionReason = input.rejectionReason;
         set.rejectedAt = changedAt;
@@ -525,11 +574,13 @@ export async function updateOrderStatusService(
       ).lean<OrderDocument | null>();
     });
 
-    if (!updatedOrder)
+    if (!updatedOrder) {
       throw httpError(
         HTTP_STATUS.INTERNAL_SERVER_ERROR,
         'Order was not updated'
       );
+    }
+
     return { order: serializeOrder(updatedOrder) };
   } finally {
     await session.endSession();
@@ -544,6 +595,7 @@ export async function getOrdersService(
   const orders = await Order.find({ userId })
     .sort({ createdAt: -1 })
     .lean<OrderDocument[]>();
+
   return {
     items: orders.map((order) => serializeOrder(order)),
     total: orders.length,
@@ -560,6 +612,7 @@ export async function getOrderByIdService(
     _id: orderId,
     userId,
   }).lean<OrderDocument | null>();
+
   if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
 
   const productFallbacks = await getOrderProductFallbacks(order);

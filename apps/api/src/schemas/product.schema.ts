@@ -51,6 +51,20 @@ export const productsQuerySchema = z.object({
 
 //===============================================================
 
+export const productFiltersQuerySchema = z.object({
+  pharmacyId: mongoIdSchema.optional(),
+  inStock: z
+    .preprocess((value) => {
+      if (value === 'true') return true;
+      if (value === 'false') return false;
+
+      return value;
+    }, z.boolean())
+    .optional(),
+});
+
+//===============================================================
+
 export const productIdParamsSchema = z.object({
   productId: mongoIdSchema,
 });

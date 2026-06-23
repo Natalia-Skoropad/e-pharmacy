@@ -33,6 +33,7 @@ type CartDocument = {
   _id: Types.ObjectId;
   clientUserId: Types.ObjectId;
   items: CartItemDocument[];
+  updatedAt: Date;
 };
 
 type ProductDocument = ProductEntity & { _id: Types.ObjectId };
@@ -43,6 +44,31 @@ function getCartItemExpiresAt(): Date {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + CART_ITEM_TTL_DAYS);
   return expiresAt;
+}
+
+const CART_CLEANUP_THROTTLE_MS = 60_000;
+let lastCartCleanupAt = 0;
+let cartCleanupPromise: Promise<number> | null = null;
+
+//===============================================================
+
+async function replaceCartItemsOrThrow(
+  cart: CartDocument,
+  items: CartItemDocument[],
+  session: mongoose.ClientSession
+): Promise<void> {
+  const result = await Cart.updateOne(
+    { _id: cart._id, updatedAt: cart.updatedAt },
+    { $set: { items } },
+    { session, runValidators: true }
+  );
+
+  if (result.matchedCount !== 1) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'Cart was changed by another request. Please refresh and try again.'
+    );
+  }
 }
 
 //===============================================================
@@ -216,16 +242,10 @@ export async function releaseExpiredCartReservationsService(): Promise<number> {
           );
         }
 
-        await Cart.updateOne(
-          { _id: current._id },
-          {
-            $set: {
-              items: current.items.filter(
-                (item) => item.expiresAt.getTime() > now
-              ),
-            },
-          },
-          { session }
+        await replaceCartItemsOrThrow(
+          current,
+          current.items.filter((item) => item.expiresAt.getTime() > now),
+          session
         );
         releasedItems += expired.length;
       });
@@ -239,8 +259,28 @@ export async function releaseExpiredCartReservationsService(): Promise<number> {
 
 //===============================================================
 
+async function releaseExpiredCartReservationsIfDue(): Promise<void> {
+  const now = Date.now();
+
+  if (cartCleanupPromise) {
+    await cartCleanupPromise.catch(() => 0);
+    return;
+  }
+
+  if (now - lastCartCleanupAt < CART_CLEANUP_THROTTLE_MS) return;
+
+  lastCartCleanupAt = now;
+  cartCleanupPromise = releaseExpiredCartReservationsService().finally(() => {
+    cartCleanupPromise = null;
+  });
+
+  await cartCleanupPromise.catch(() => 0);
+}
+
+//===============================================================
+
 export async function getCartService(clientUserId: string) {
-  await releaseExpiredCartReservationsService();
+  await releaseExpiredCartReservationsIfDue();
   return { cart: await serializeCart(await getCartDocument(clientUserId)) };
 }
 
@@ -312,11 +352,7 @@ export async function addCartItemService(
         });
       }
 
-      await Cart.updateOne(
-        { clientUserId },
-        { $set: { items: cart.items } },
-        { session }
-      );
+      await replaceCartItemsOrThrow(cart, cart.items, session);
     });
     return getCartService(clientUserId);
   } finally {
@@ -362,11 +398,7 @@ export async function updateCartItemService(
         unitPrice: offer.price,
         expiresAt: getCartItemExpiresAt(),
       };
-      await Cart.updateOne(
-        { clientUserId },
-        { $set: { items: cart.items } },
-        { session }
-      );
+      await replaceCartItemsOrThrow(cart, cart.items, session);
     });
     return getCartService(clientUserId);
   } finally {
@@ -394,16 +426,10 @@ export async function removeCartItemService(
         removed.quantity,
         session
       );
-      await Cart.updateOne(
-        { clientUserId },
-        {
-          $set: {
-            items: cart.items.filter(
-              (item) => item._id.toString() !== cartItemId
-            ),
-          },
-        },
-        { session }
+      await replaceCartItemsOrThrow(
+        cart,
+        cart.items.filter((item) => item._id.toString() !== cartItemId),
+        session
       );
     });
 
@@ -436,16 +462,12 @@ export async function removeCartProductOfferService(
         await releaseOfferStock(item.productOfferId, item.quantity, session);
       }
 
-      await Cart.updateOne(
-        { clientUserId },
-        {
-          $set: {
-            items: cart.items.filter(
-              (item) => item.productOfferId.toString() !== String(offer._id)
-            ),
-          },
-        },
-        { session }
+      await replaceCartItemsOrThrow(
+        cart,
+        cart.items.filter(
+          (item) => item.productOfferId.toString() !== String(offer._id)
+        ),
+        session
       );
     });
 
@@ -466,11 +488,7 @@ export async function clearCartService(clientUserId: string) {
         await releaseOfferStock(item.productOfferId, item.quantity, session);
       }
 
-      await Cart.updateOne(
-        { clientUserId },
-        { $set: { items: [] } },
-        { upsert: true, session }
-      );
+      await replaceCartItemsOrThrow(cart, [], session);
     });
 
     return getCartService(clientUserId);

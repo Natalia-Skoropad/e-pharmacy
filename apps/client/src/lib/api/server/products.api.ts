@@ -20,6 +20,32 @@ import type {
 
 //===================================================================
 
+type ProductFiltersQueryParams = Pick<
+  ProductsQueryParams,
+  'pharmacyId' | 'inStock'
+>;
+
+//===================================================================
+
+function isRequestOptions(value: unknown): value is RequestOptions {
+  if (!value || typeof value !== 'object') return false;
+
+  return [
+    'method',
+    'body',
+    'headers',
+    'cache',
+    'next',
+    'credentials',
+    'signal',
+    'baseUrl',
+    'timeoutMs',
+    'retry',
+  ].some((key) => key in value);
+}
+
+//===================================================================
+
 export async function getProductsFromBackend(
   params: ProductsQueryParams = {},
   options?: RequestOptions
@@ -35,12 +61,18 @@ export async function getProductsFromBackend(
 //===================================================================
 
 export async function getProductFiltersFromBackend(
+  paramsOrOptions: ProductFiltersQueryParams | RequestOptions = {},
   options?: RequestOptions
 ): Promise<ProductFilterOptionsResponse> {
+  const params = isRequestOptions(paramsOrOptions) ? {} : paramsOrOptions;
+  const requestOptions = isRequestOptions(paramsOrOptions)
+    ? paramsOrOptions
+    : options;
+
   return getResponseData(
     await backendApiRequest<ApiSuccessResponse<ProductFilterOptionsResponse>>(
-      ROUTES.products.filters,
-      options
+      `${ROUTES.products.filters}${buildQueryString(params)}`,
+      requestOptions
     )
   );
 }
