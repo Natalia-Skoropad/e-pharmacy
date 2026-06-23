@@ -52,6 +52,17 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 //===================================================================
 
+const AUTH_BOOTSTRAP_TIMEOUT_MS = 4_000;
+
+class AuthBootstrapTimeoutError extends Error {
+  constructor() {
+    super('Auth bootstrap timed out.');
+    this.name = 'AuthBootstrapTimeoutError';
+  }
+}
+
+//===================================================================
+
 const noopSessionHintStorage: AuthSessionHintStorage = {
   hasHint: () => false,
   setHint: () => undefined,
@@ -182,10 +193,11 @@ export function AuthProviderCore({
   const markAuthUnavailable = useCallback(
     (error: unknown, preserveAuthenticatedState: boolean) => {
       setAuthError(error);
+      setIsRefreshingUser(false);
 
       if (!preserveAuthenticatedState) {
         setUser(null);
-        setStatus('error');
+        setStatus('unauthenticated');
       }
     },
     []
@@ -247,19 +259,45 @@ export function AuthProviderCore({
     ]
   );
 
+  const markBootstrapTimeout = useCallback((error: unknown) => {
+    setAuthError(error);
+    setIsRefreshingUser(false);
+    setUser(null);
+    setStatus('unauthenticated');
+  }, []);
+
   const runBootstrap = useCallback(() => {
+    if (!sessionHintStorageRef.current.hasHint()) {
+      clearAuthState(false);
+      return Promise.resolve(null);
+    }
+
     if (!bootstrapPromiseRef.current) {
       setStatus('loading');
       setAuthError(null);
-      bootstrapPromiseRef.current = restoreCurrentUser('bootstrap').finally(
-        () => {
-          bootstrapPromiseRef.current = null;
-        }
-      );
+
+      const restorePromise = restoreCurrentUser('bootstrap');
+
+      let timeoutId: number | null = null;
+      const timeoutPromise = new Promise<AuthUser | null>((resolve) => {
+        timeoutId = window.setTimeout(() => {
+          const timeoutError = new AuthBootstrapTimeoutError();
+          markBootstrapTimeout(timeoutError);
+          resolve(null);
+        }, AUTH_BOOTSTRAP_TIMEOUT_MS);
+      });
+
+      bootstrapPromiseRef.current = Promise.race([
+        restorePromise,
+        timeoutPromise,
+      ]).finally(() => {
+        if (timeoutId !== null) window.clearTimeout(timeoutId);
+        bootstrapPromiseRef.current = null;
+      });
     }
 
     return bootstrapPromiseRef.current;
-  }, [restoreCurrentUser]);
+  }, [clearAuthState, markBootstrapTimeout, restoreCurrentUser]);
 
   const reloadCurrentUser = useCallback(async () => {
     const lifecycleVersion = lifecycleVersionRef.current;
@@ -340,9 +378,6 @@ export function AuthProviderCore({
   }, [clearAuthState, restoreCurrentUser, sessionSync]);
 
   useEffect(() => {
-    // The client-readable hint is intentionally not a source of truth.
-    // HttpOnly access/refresh cookies can remain valid even when the hint is
-    // missing, scoped to another host, or removed by the browser.
     void runBootstrap();
   }, [runBootstrap]);
 

@@ -20,7 +20,7 @@ import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
 import { ROUTES } from '@/lib/routes';
 import { isActiveRoute } from '@/lib/routes';
 
-import { useAuth } from '@e-pharmacy/auth/core';
+import { usePublicAuthActionsState } from '@/components/layout/hooks/usePublicAuthActionsState';
 import { useCart } from '@/providers/CartProvider';
 
 import css from './Header.module.css';
@@ -32,13 +32,20 @@ function Header() {
   const router = useRouter();
   const mobileNavigationId = useId();
 
-  const { isAuthenticated, isAuthReady, user, logout } = useAuth();
+  const {
+    user,
+    logout,
+    isAuthReady,
+    shouldShowGuestActions,
+    shouldShowAuthenticatedActions,
+  } = usePublicAuthActionsState();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
   const { cart } = useCart();
-  const visibleCartItemsCount =
-    isAuthReady && isAuthenticated ? cart.totalItems : 0;
+  const visibleCartItemsCount = shouldShowAuthenticatedActions
+    ? cart.totalItems
+    : 0;
 
   const handleToggleMobileMenu = () => {
     setIsMobileMenuOpen((prev) => !prev);
@@ -84,7 +91,7 @@ function Header() {
         </nav>
 
         <div className={css.actions}>
-          {isAuthReady && isAuthenticated ? (
+          {shouldShowAuthenticatedActions ? (
             <ButtonLink
               className={css.cartLink}
               href={ROUTES.CART}
@@ -102,7 +109,7 @@ function Header() {
             <div className={css.authSkeleton} aria-hidden="true" />
           ) : null}
 
-          {isAuthReady && isAuthenticated ? (
+          {shouldShowAuthenticatedActions ? (
             <>
               <UserBadge
                 className={css.profileLink}
@@ -122,7 +129,7 @@ function Header() {
             </>
           ) : null}
 
-          {isAuthReady && !isAuthenticated ? (
+          {shouldShowGuestActions ? (
             <>
               <ButtonLink href={ROUTES.LOGIN} variant="ghost" size="sm">
                 Log in
@@ -135,7 +142,7 @@ function Header() {
           ) : null}
         </div>
 
-        {isAuthReady && isAuthenticated ? (
+        {shouldShowAuthenticatedActions ? (
           <ButtonLink
             className={css.mobileCartLink}
             href={ROUTES.CART}

@@ -1,5 +1,5 @@
 import 'server-only';
-import { type NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
 import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
 import { createProxyHeaders } from './proxy-headers';
@@ -7,11 +7,12 @@ import { createProxyResponse } from './proxy-response';
 
 //===================================================================
 
-const DEFAULT_PUBLIC_REVALIDATE_SECONDS = 300;
-const STALE_WHILE_REVALIDATE_SECONDS = 600;
-const PUBLIC_GET_TIMEOUT_MS = 15_000;
-const PUBLIC_RETRY_DELAY_MS = 250;
+const DEFAULT_PUBLIC_REVALIDATE_SECONDS = 120;
+const STALE_WHILE_REVALIDATE_SECONDS = 300;
+const PUBLIC_GET_TIMEOUT_MS = 6_000;
+const PUBLIC_RETRY_DELAY_MS = 150;
 const PUBLIC_RETRYABLE_STATUSES = new Set([502, 503, 504]);
+const NO_STORE_CACHE_CONTROL = 'no-store';
 
 //===================================================================
 
@@ -37,11 +38,13 @@ function wait(ms: number): Promise<void> {
 
 //===================================================================
 
-async function fetchPublicBackend(
-  url: string,
-  request: NextRequest,
-  revalidate: number
-) {
+function createPublicSuccessCacheControl(revalidate: number): string {
+  return `public, s-maxage=${revalidate}, stale-while-revalidate=${STALE_WHILE_REVALIDATE_SECONDS}`;
+}
+
+//===================================================================
+
+async function fetchPublicBackend(url: string, request: NextRequest) {
   let response: Response;
 
   for (let attempt = 1; ; attempt += 1) {
@@ -52,10 +55,9 @@ async function fetchPublicBackend(
         forwardContentType: false,
         forwardCookie: false,
       }),
-      cache: 'force-cache',
-      next: { revalidate },
+      cache: 'no-store',
       signal: AbortSignal.timeout(PUBLIC_GET_TIMEOUT_MS),
-    } as RequestInit & { next?: { revalidate?: number } });
+    });
 
     if (attempt >= 2 || !PUBLIC_RETRYABLE_STATUSES.has(response.status)) {
       break;
@@ -84,21 +86,27 @@ export async function proxyPublicBackendRequest({
   try {
     response = await fetchPublicBackend(
       createBackendApiUrl(pathWithSearch),
-      request,
-      revalidate
+      request
     );
   } catch {
-    response = Response.json(
+    return NextResponse.json(
       {
         success: false,
         message: 'The service is temporarily unavailable.',
       },
-      { status: 503 }
+      {
+        status: 503,
+        headers: {
+          'Cache-Control': NO_STORE_CACHE_CONTROL,
+        },
+      }
     );
   }
 
   return createProxyResponse(response, {
-    cacheControl: `public, s-maxage=${revalidate}, stale-while-revalidate=${STALE_WHILE_REVALIDATE_SECONDS}`,
+    cacheControl: response.ok
+      ? createPublicSuccessCacheControl(revalidate)
+      : NO_STORE_CACHE_CONTROL,
     copySetCookie: false,
   });
 }

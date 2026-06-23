@@ -23,10 +23,7 @@ type PharmaciesPageProps = {
 
 //===================================================================
 
-
-export async function generateMetadata({
-  searchParams,
-}: PharmaciesPageProps) {
+export async function generateMetadata({ searchParams }: PharmaciesPageProps) {
   const parsedFilters = parsePharmacySearchParams(await searchParams);
 
   return createPageMetadata({
@@ -42,21 +39,28 @@ export async function generateMetadata({
 async function PharmaciesPage({ searchParams }: PharmaciesPageProps) {
   const parsedFilters = parsePharmacySearchParams(await searchParams);
 
-  const pharmacyFiltersData = await getPharmacyFilters(
-    PUBLIC_API_CACHE_OPTIONS
-  ).catch(() => null);
+  const [pharmacyFiltersData, initialPharmaciesData] = await Promise.all([
+    getPharmacyFilters(PUBLIC_API_CACHE_OPTIONS).catch(() => null),
+    getPharmacies(
+      buildPharmacyApiParams(parsedFilters),
+      PUBLIC_API_CACHE_OPTIONS
+    ).catch(() => null),
+  ]);
 
-  const cityOptions = pharmacyFiltersData?.cities.map((city) => city.value) ?? [];
+  const cityOptions =
+    pharmacyFiltersData?.cities.map((city) => city.value) ?? [];
 
-  const filters = normalizePharmacyFiltersCity(
-    parsedFilters,
-    cityOptions
-  );
+  const filters = normalizePharmacyFiltersCity(parsedFilters, cityOptions);
 
-  const pharmaciesData = await getPharmacies(
-    buildPharmacyApiParams(filters),
-    PUBLIC_API_CACHE_OPTIONS
-  ).catch(() => null);
+  const shouldRefetchWithNormalizedCity =
+    filters.city !== parsedFilters.city && Boolean(filters.city);
+
+  const pharmaciesData = shouldRefetchWithNormalizedCity
+    ? await getPharmacies(
+        buildPharmacyApiParams(filters),
+        PUBLIC_API_CACHE_OPTIONS
+      ).catch(() => initialPharmaciesData)
+    : initialPharmaciesData;
 
   return (
     <PharmaciesPageContent

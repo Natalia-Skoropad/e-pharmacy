@@ -70,7 +70,8 @@ export function GuestOnlyRoute({
     user,
   ]);
 
-  if (!isAuthReady || status === 'error') return loadingFallback;
+  if (!isAuthReady) return loadingFallback;
+  if (status === 'error') return children;
   if (isAuthenticated) return null;
 
   return children;

@@ -17,7 +17,7 @@ import { MobileOffcanvasBase } from '@e-pharmacy/ui/layout';
 import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
 import { ROUTES } from '@/lib/routes';
 import { isActiveRoute } from '@/lib/routes';
-import { useAuth } from '@e-pharmacy/auth/core';
+import { usePublicAuthActionsState } from '@/components/layout/hooks/usePublicAuthActionsState';
 
 import css from './MobileOffcanvas.module.css';
 
@@ -36,7 +36,13 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
   const router = useRouter();
   const previousPathnameRef = useRef(pathname);
 
-  const { isAuthenticated, isAuthReady, user, logout } = useAuth();
+  const {
+    user,
+    logout,
+    isAuthReady,
+    shouldShowGuestActions,
+    shouldShowAuthenticatedActions,
+  } = usePublicAuthActionsState();
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
   const handleLogout = async () => {
@@ -105,7 +111,7 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
           <div className={css.authSkeleton} aria-hidden="true" />
         ) : null}
 
-        {isAuthReady && isAuthenticated ? (
+        {shouldShowAuthenticatedActions ? (
           <>
             <UserBadge
               href={ROUTES.PROFILE}
@@ -126,7 +132,7 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
           </>
         ) : null}
 
-        {isAuthReady && !isAuthenticated ? (
+        {shouldShowGuestActions ? (
           <>
             <ButtonLink
               className={css.loginLink}

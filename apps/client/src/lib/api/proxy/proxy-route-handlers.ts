@@ -36,7 +36,9 @@ async function resolveBackendPath<TParams extends RouteParams>(
 
 //===================================================================
 
-export function createPrivateProxyRoute<TParams extends RouteParams = RouteParams>({
+export function createPrivateProxyRoute<
+  TParams extends RouteParams = RouteParams,
+>({
   backendPath,
   method = 'GET',
 }: {
@@ -53,7 +55,9 @@ export function createPrivateProxyRoute<TParams extends RouteParams = RouteParam
 
 //===================================================================
 
-export function createPublicGetProxyRoute<TParams extends RouteParams = RouteParams>({
+export function createPublicGetProxyRoute<
+  TParams extends RouteParams = RouteParams,
+>({
   backendPath,
   revalidate,
 }: {

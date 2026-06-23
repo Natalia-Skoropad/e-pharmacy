@@ -17,14 +17,18 @@ import { PharmacyCard } from '@/components/pharmacies';
 import { HOME_DESCRIPTION, HOME_TITLE } from '@/lib/seo';
 import { ROUTES } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
-import { getProducts, getPharmacies } from '@/lib/api/server';
+
+import {
+  getProducts,
+  getPharmacies,
+  PUBLIC_API_CACHE_OPTIONS,
+} from '@/lib/api/server';
+
 import type { Product, Pharmacy } from '@e-pharmacy/types';
 
 import css from './page.module.css';
 
 //===================================================================
-
-const HOME_REVALIDATE_SECONDS = 300;
 
 export const metadata = createPageMetadata({
   title: HOME_TITLE,
@@ -130,10 +134,7 @@ async function getFeaturedPharmacies(): Promise<FeaturedResult<Pharmacy>> {
         perPage: HOME_PREVIEW_LIMIT,
         sort: 'rating-desc',
       },
-      {
-        cache: 'force-cache',
-        next: { revalidate: HOME_REVALIDATE_SECONDS },
-      }
+      PUBLIC_API_CACHE_OPTIONS
     );
 
     return { items: response.items, hasError: false };
@@ -150,10 +151,7 @@ async function getFeaturedProducts(): Promise<FeaturedResult<Product>> {
         perPage: HOME_PREVIEW_LIMIT,
         sort: 'rating-desc',
       },
-      {
-        cache: 'force-cache',
-        next: { revalidate: HOME_REVALIDATE_SECONDS },
-      }
+      PUBLIC_API_CACHE_OPTIONS
     );
 
     return { items: response.items, hasError: false };
@@ -161,7 +159,6 @@ async function getFeaturedProducts(): Promise<FeaturedResult<Product>> {
     return { items: [], hasError: true };
   }
 }
-
 
 //===================================================================
 
@@ -192,7 +189,7 @@ async function FeaturedPharmaciesSection() {
           ))}
         </div>
       ) : pharmaciesResult.hasError ? (
-        <div className={css.sectionError} role="status">
+        <div className={css.sectionError} role="alert">
           Pharmacies are temporarily unavailable. Please try again shortly.
         </div>
       ) : (
@@ -221,7 +218,7 @@ async function FeaturedProductsSection() {
           ))}
         </div>
       ) : productsResult.hasError ? (
-        <div className={css.sectionError} role="status">
+        <div className={css.sectionError} role="alert">
           Products are temporarily unavailable. Please try again shortly.
         </div>
       ) : (
@@ -358,8 +355,8 @@ async function HomePage() {
               </h2>
               <p>
                 Build your cart by pharmacy, control available quantities, and
-                prepare pickup or postal delivery without the usual pharmacy-queue
-                side quest.
+                prepare pickup or postal delivery without the usual
+                pharmacy-queue side quest.
               </p>
               <ButtonLink href={ROUTES.PRODUCTS_CATALOG} variant="secondary">
                 Browse catalog
@@ -399,9 +396,8 @@ async function HomePage() {
                   important details.
                 </strong>
                 <p>
-                  E-PHARMACY keeps product search, pharmacy choice, cart
-                  orders, profile data, and order history connected in one
-                  clear flow.
+                  E-PHARMACY keeps product search, pharmacy choice, cart orders,
+                  profile data, and order history connected in one clear flow.
                 </p>
               </div>
 
