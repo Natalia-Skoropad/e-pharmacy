@@ -191,7 +191,7 @@ function PharmacyDetailsPageContent({
 
                   <FavoriteToggleButton
                     isActive={isFavorite}
-                    disabled={isFavoriteLoading || !isAuthReady}
+                    disabled={isFavoriteLoading}
                     onClick={handleFavoriteClick}
                     activeLabel="Remove pharmacy from favorites"
                     inactiveLabel="Add pharmacy to favorites"

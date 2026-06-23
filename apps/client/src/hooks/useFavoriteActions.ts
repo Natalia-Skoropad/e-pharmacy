@@ -49,9 +49,7 @@ export function useFavoriteActions<TId extends string>({
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
   const handleFavoriteClick = async () => {
-    if (!isAuthReady) return;
-
-    if (!isAuthenticated) {
+    if (!isAuthReady || !isAuthenticated) {
       notifier.info(loginMessage);
       return;
     }

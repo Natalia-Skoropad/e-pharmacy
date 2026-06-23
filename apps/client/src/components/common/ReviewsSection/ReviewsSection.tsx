@@ -60,7 +60,6 @@ function ReviewsSection({
   reviewTouchedFields,
   isReviewSubmitting,
   isAuthenticated,
-  isAuthReady,
   isUnavailable = false,
   emptyTitle = 'No reviews yet',
   emptyText = 'Reviews will appear here after clients share their feedback.',
@@ -143,17 +142,12 @@ function ReviewsSection({
           <Button
             type="submit"
             className={css.reviewSubmitButton}
-            disabled={
-              !isReviewValid ||
-              isReviewSubmitting ||
-              !isAuthenticated ||
-              !isAuthReady
-            }
+            disabled={!isReviewValid || isReviewSubmitting || !isAuthenticated}
           >
             {isReviewSubmitting ? 'Sending...' : 'Send review'}
           </Button>
 
-          {!isAuthenticated && isAuthReady ? (
+          {!isAuthenticated ? (
             <p className={css.authNote}>
               Only logged-in users can submit reviews.
             </p>
@@ -162,13 +156,11 @@ function ReviewsSection({
       </form>
 
       {isUnavailable ? (
-        <div className={css.notice} role="status">
+        <div className={css.notice} role="alert">
           Reviews are temporarily unavailable. Please check that the backend API
           is running.
         </div>
-      ) : null}
-
-      {reviews.length === 0 ? (
+      ) : reviews.length === 0 ? (
         <div className={css.empty}>
           <h3 className={css.emptyTitle}>{emptyTitle}</h3>
           <p className={css.emptyText}>{emptyText}</p>

@@ -151,6 +151,8 @@ productSchema.index({
 
 productSchema.index({ article: 1 }, { unique: true });
 productSchema.index({ category: 1 });
+productSchema.index({ status: 1, rating: -1 });
+productSchema.index({ status: 1, category: 1, rating: -1 });
 productSchema.index({ pharmacyId: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ rating: -1 });

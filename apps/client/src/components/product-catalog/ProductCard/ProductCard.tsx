@@ -108,7 +108,7 @@ function ProductCard({
         <div className={css.favoriteWrap}>
           <FavoriteToggleButton
             isActive={isFavorite}
-            disabled={isFavoriteLoading || !isAuthReady}
+            disabled={isFavoriteLoading}
             onClick={handleFavoriteClick}
             activeLabel="Remove product from favorites"
             inactiveLabel="Add product to favorites"

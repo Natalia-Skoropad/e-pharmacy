@@ -22,31 +22,56 @@ type HomeReviewsSliderProps = {
 
 function HomeReviewsSlider({ reviews }: HomeReviewsSliderProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const hasReviews = reviews.length > 0;
+  const safeActiveIndex = hasReviews
+    ? Math.min(activeIndex, reviews.length - 1)
+    : 0;
+  const activeReviewNumber = hasReviews ? safeActiveIndex + 1 : 0;
 
   const goToPreviousSlide = () => {
-    setActiveIndex((currentIndex) =>
-      currentIndex === 0 ? reviews.length - 1 : currentIndex - 1
+    if (!hasReviews) return;
+
+    setActiveIndex(
+      safeActiveIndex === 0 ? reviews.length - 1 : safeActiveIndex - 1
     );
   };
 
   const goToNextSlide = () => {
-    setActiveIndex((currentIndex) =>
-      currentIndex === reviews.length - 1 ? 0 : currentIndex + 1
+    if (!hasReviews) return;
+
+    setActiveIndex(
+      safeActiveIndex === reviews.length - 1 ? 0 : safeActiveIndex + 1
     );
   };
 
+  if (!hasReviews) {
+    return (
+      <div className={css.slider} role="status">
+        Client reviews will appear here after clients share their feedback.
+      </div>
+    );
+  }
+
   return (
-    <div className={css.slider} aria-roledescription="carousel">
+    <div
+      className={css.slider}
+      aria-label="Client reviews"
+      aria-roledescription="carousel"
+    >
+      <p className="visually-hidden" aria-live="polite">
+        Showing review {activeReviewNumber} of {reviews.length}.
+      </p>
+
       <div className={css.viewport}>
         <div
           className={css.track}
-          style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+          style={{ transform: `translateX(-${safeActiveIndex * 100}%)` }}
         >
           {reviews.map((review, index) => (
             <article
               className={css.slide}
               key={review.name}
-              aria-hidden={index !== activeIndex}
+              aria-hidden={index !== safeActiveIndex}
             >
               <div className={css.reviewCard}>
                 <div className={css.photo} aria-hidden="true">
@@ -86,12 +111,12 @@ function HomeReviewsSlider({ reviews }: HomeReviewsSliderProps) {
         >
           {reviews.map((review, index) => (
             <button
-              className={clsx(css.dot, index === activeIndex && css.dotActive)}
+              className={clsx(css.dot, index === safeActiveIndex && css.dotActive)}
               type="button"
               key={review.name}
               onClick={() => setActiveIndex(index)}
               aria-label={`Show review ${index + 1}`}
-              aria-current={index === activeIndex ? 'true' : undefined}
+              aria-current={index === safeActiveIndex ? 'true' : undefined}
             />
           ))}
         </div>

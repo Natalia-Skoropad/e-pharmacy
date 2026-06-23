@@ -180,6 +180,7 @@ pharmacySchema.index({ name: 'text', address: 'text', city: 'text' });
 pharmacySchema.index({ city: 1 });
 pharmacySchema.index({ ownerId: 1, status: 1 });
 pharmacySchema.index({ status: 1 });
+pharmacySchema.index({ status: 1, rating: -1 });
 
 //===============================================================
 

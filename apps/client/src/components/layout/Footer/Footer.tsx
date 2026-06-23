@@ -3,10 +3,8 @@ import { Facebook, Instagram, Youtube } from 'lucide-react';
 
 import { Container, Logo } from '@e-pharmacy/ui/common';
 
-import {
-  CLIENT_NAV_LINKS,
-  INFO_NAV_LINKS,
-} from '@/components/layout/config/navigation';
+import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
+import { INFO_NAV_LINKS } from '@/components/info/config/navigation';
 
 import css from './Footer.module.css';
 

@@ -69,9 +69,7 @@ function HomeFeatureCards() {
   const toast = useToast();
 
   const handleProtectedClick = (href: string) => {
-    if (!isAuthReady) return;
-
-    if (!isAuthenticated) {
+    if (!isAuthReady || !isAuthenticated) {
       toast.error('Please log in to open this private page.');
       return;
     }

@@ -1,4 +1,5 @@
 export * from './delivery-payment';
+export * from './navigation';
 export * from './personal-data-notice';
 export * from './return-policy';
 export * from './types';

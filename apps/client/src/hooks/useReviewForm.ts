@@ -99,12 +99,12 @@ export function useReviewForm({
   const handleReviewSubmit = async () => {
     const nextErrors = validateReviewForm(reviewValues);
 
-    if (hasValidationErrors(nextErrors) || !isAuthReady) {
+    if (hasValidationErrors(nextErrors)) {
       setReviewTouchedFields(markAllFieldsTouched(REVIEW_FORM_FIELDS));
       return;
     }
 
-    if (!isAuthenticated) {
+    if (!isAuthReady || !isAuthenticated) {
       setReviewTouchedFields(markAllFieldsTouched(REVIEW_FORM_FIELDS));
       if (authRequiredMessage) notifyError(authRequiredMessage);
       return;
