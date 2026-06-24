@@ -19,6 +19,10 @@ type ProxyHeadersOptions = {
 
 //===================================================================
 
+const BFF_PROXY_SECRET_HEADER = 'X-E-Pharmacy-BFF-Secret';
+
+//===================================================================
+
 const AUTH_COOKIE_NAMES = new Set<string>([
   ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
@@ -73,11 +77,17 @@ export function createProxyHeaders(
   const referer = request.headers.get('referer');
 
   if (forwardAccept && accept) headers.set('Accept', accept);
-  if (forwardContentType && contentType) headers.set('Content-Type', contentType);
+  if (forwardContentType && contentType)
+    headers.set('Content-Type', contentType);
   if (forwardCookie && cookie) {
     headers.set('Cookie', normalizeCookieHeader(cookie));
   }
   headers.set('X-E-Pharmacy-Auth-Proxy', 'next-bff');
+
+  const bffProxySecret = process.env.BFF_PROXY_SECRET?.trim();
+  if (bffProxySecret) {
+    headers.set(BFF_PROXY_SECRET_HEADER, bffProxySecret);
+  }
   if (origin) headers.set('Origin', origin);
   if (referer) headers.set('Referer', referer);
 

@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
 import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
 import { copySetCookieHeader } from './proxy-response';
+import { createProxyTransportErrorResponse } from './proxy-transport-error';
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
 
 import {
@@ -21,6 +22,8 @@ const AUTH_PROXY_TIMEOUT_MS = 8_000;
 //===================================================================
 
 export type AuthMarkerAction = 'set' | 'delete';
+
+//===================================================================
 
 type AuthProxyOptions = {
   backendPath: string;
@@ -75,13 +78,22 @@ export async function proxyAuthRequest({
   method = 'POST',
   markerAction,
 }: AuthProxyOptions) {
-  const response = await fetch(createBackendApiUrl(backendPath), {
-    method,
-    headers: createProxyHeaders(request),
-    body: await getProxyBody(request, method),
-    cache: 'no-store',
-    signal: AbortSignal.timeout(AUTH_PROXY_TIMEOUT_MS),
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(createBackendApiUrl(backendPath), {
+      method,
+      headers: createProxyHeaders(request),
+      body: await getProxyBody(request, method),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(AUTH_PROXY_TIMEOUT_MS),
+    });
+  } catch {
+    return createProxyTransportErrorResponse({
+      request,
+      clearAuthCookies: markerAction === 'delete',
+    });
+  }
 
   return createAuthProxyResponse(response, request, markerAction);
 }

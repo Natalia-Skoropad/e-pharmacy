@@ -133,9 +133,7 @@ function serializePublicPharmacy(
 
 export async function getPharmacyFiltersService(): Promise<PharmacyFilterOptionsResponseDto> {
   const cities = await Pharmacy.distinct('city', {
-    status: {
-      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
-    },
+    status: PHARMACY_STATUSES.ACTIVE,
     city: { $type: 'string', $ne: '' },
   });
   return {
@@ -154,9 +152,7 @@ export async function getPharmacyFiltersService(): Promise<PharmacyFilterOptions
 
 export async function getPharmacyOptionsService() {
   const pharmacies = await Pharmacy.find({
-    status: {
-      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
-    },
+    status: PHARMACY_STATUSES.ACTIVE,
   })
     .select('_id name')
     .sort({ name: 1 })
@@ -197,9 +193,7 @@ export async function getFavoritePharmaciesService(
   const favoriteIds = new Set(favoriteIdsArray.map(String));
   const filter = {
     _id: { $in: favoriteIdsArray },
-    status: {
-      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
-    },
+    status: PHARMACY_STATUSES.ACTIVE,
   };
   const sort: Record<string, 1 | -1> =
     query.sort === 'name-desc' ? { name: -1 } : { name: 1 };
@@ -235,9 +229,7 @@ export async function getPharmaciesService(
   userId?: string
 ) {
   const filter: Record<string, unknown> = {
-    status: {
-      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
-    },
+    status: PHARMACY_STATUSES.ACTIVE,
   };
   if (query.keyword) {
     filter.$or = [
@@ -306,9 +298,7 @@ export async function getPharmacyDetailsService(
 ) {
   const pharmacy = await Pharmacy.findOne({
     _id: pharmacyId,
-    status: {
-      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
-    },
+    status: PHARMACY_STATUSES.ACTIVE,
   }).lean();
   if (!pharmacy)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
@@ -332,9 +322,7 @@ export async function getPharmacyDetailsService(
 export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
   const pharmacy = await Pharmacy.findOne({
     _id: pharmacyId,
-    status: {
-      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
-    },
+    status: PHARMACY_STATUSES.ACTIVE,
   })
     .select('name address city phone email workingHours bankDetails')
     .lean<
@@ -378,9 +366,7 @@ export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
 export async function getPharmacyReviewsService(pharmacyId: string) {
   const exists = await Pharmacy.exists({
     _id: pharmacyId,
-    status: {
-      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
-    },
+    status: PHARMACY_STATUSES.ACTIVE,
   });
   if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
@@ -405,9 +391,7 @@ export async function createPharmacyReviewService(
 ) {
   const exists = await Pharmacy.exists({
     _id: pharmacyId,
-    status: {
-      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
-    },
+    status: PHARMACY_STATUSES.ACTIVE,
   });
   if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
@@ -524,9 +508,7 @@ export async function setFavoritePharmacyService(
 ) {
   const exists = await Pharmacy.exists({
     _id: pharmacyId,
-    status: {
-      $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
-    },
+    status: PHARMACY_STATUSES.ACTIVE,
   });
 
   if (!exists)

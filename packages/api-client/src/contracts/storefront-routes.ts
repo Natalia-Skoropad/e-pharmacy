@@ -23,7 +23,7 @@ export const storefrontRoutes = {
     favorites: '/products/favorites',
     favoriteIds: '/products/favorites/ids',
     filters: '/products/filters',
-    details: (productId: EntityId | string) => `/products/${productId}`,
+    details: (productId: EntityId) => `/products/${productId}`,
     reviews: (productId: EntityId) => `/products/${productId}/reviews`,
     favorite: (productId: EntityId) => `/products/${productId}/favorite`,
   },

@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 
 import { REFRESH_TOKEN_COOKIE_NAME } from '../constants/auth';
+import { env } from '../config/env';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
@@ -55,7 +56,17 @@ function getSessionContext(req: Request): SessionContext {
 //===============================================================
 
 function isNextAuthProxyRequest(req: Request): boolean {
-  return req.headers['x-e-pharmacy-auth-proxy'] === 'next-bff';
+  const marker = req.headers['x-e-pharmacy-auth-proxy'];
+  const secret = req.headers['x-e-pharmacy-bff-secret'];
+  const configuredSecret = env.BFF_PROXY_SECRET?.trim();
+
+  if (marker !== 'next-bff') return false;
+
+  if (!configuredSecret) {
+    return env.NODE_ENV !== 'production';
+  }
+
+  return secret === configuredSecret;
 }
 
 //===============================================================

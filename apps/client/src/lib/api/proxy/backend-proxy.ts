@@ -1,7 +1,9 @@
 import 'server-only';
+import { createHash } from 'crypto';
 import { type NextRequest } from 'next/server';
 
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
+import { REFRESH_TOKEN_COOKIE_NAME } from '@e-pharmacy/config/auth';
 import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
 
@@ -13,6 +15,7 @@ import {
 } from './proxy-auth-cookies';
 
 import { createProxyResponse } from './proxy-response';
+import { createProxyTransportErrorResponse } from './proxy-transport-error';
 import type { HttpMethod } from '@e-pharmacy/api-client/core';
 
 //===================================================================
@@ -21,6 +24,7 @@ type BackendProxyOptions = {
   backendPath: string;
   request: NextRequest;
   method?: HttpMethod;
+  clearAuthCookiesOnSuccess?: boolean;
 };
 
 type RefreshResult = {
@@ -32,8 +36,11 @@ type RefreshResult = {
 
 const PRIVATE_REQUEST_TIMEOUT_MS = 12_000;
 const AUTH_REFRESH_TIMEOUT_MS = 8_000;
+const REFRESH_PROMISE_FALLBACK_KEY = 'anonymous';
 
-let refreshPromise: Promise<RefreshResult> | null = null;
+//===================================================================
+
+const refreshPromises = new Map<string, Promise<RefreshResult>>();
 
 //===================================================================
 
@@ -45,15 +52,33 @@ function appendSearchParams(path: string, search: string): string {
 
 //===================================================================
 
+function getRefreshFingerprint(request: NextRequest): string {
+  const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE_NAME)?.value;
+  const cookieHeader = request.headers.get('cookie') ?? '';
+  const source = refreshToken || cookieHeader || REFRESH_PROMISE_FALLBACK_KEY;
+
+  return createHash('sha256').update(source).digest('hex');
+}
+
+//===================================================================
+
 async function refreshAuthCookies(
   request: NextRequest
 ): Promise<RefreshResult> {
-  refreshPromise ??= fetch(createBackendApiUrl(API_ROUTES.auth.refresh), {
-    method: 'POST',
-    headers: createProxyHeaders(request),
-    cache: 'no-store',
-    signal: AbortSignal.timeout(AUTH_REFRESH_TIMEOUT_MS),
-  })
+  const refreshFingerprint = getRefreshFingerprint(request);
+  const existingRefreshPromise = refreshPromises.get(refreshFingerprint);
+
+  if (existingRefreshPromise) return existingRefreshPromise;
+
+  const nextRefreshPromise = fetch(
+    createBackendApiUrl(API_ROUTES.auth.refresh),
+    {
+      method: 'POST',
+      headers: createProxyHeaders(request),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(AUTH_REFRESH_TIMEOUT_MS),
+    }
+  )
     .then(async (response) => {
       const rawBody = await response.clone().text();
       const { tokens } = extractTokensFromResponseBody(rawBody);
@@ -61,10 +86,12 @@ async function refreshAuthCookies(
       return { response, tokens };
     })
     .finally(() => {
-      refreshPromise = null;
+      refreshPromises.delete(refreshFingerprint);
     });
 
-  return refreshPromise;
+  refreshPromises.set(refreshFingerprint, nextRefreshPromise);
+
+  return nextRefreshPromise;
 }
 
 //===================================================================
@@ -103,6 +130,7 @@ export async function proxyBackendRequest({
   backendPath,
   request,
   method = 'GET',
+  clearAuthCookiesOnSuccess = false,
 }: BackendProxyOptions) {
   const body = await getProxyBody(request, method);
 
@@ -111,16 +139,38 @@ export async function proxyBackendRequest({
       ? appendSearchParams(backendPath, request.nextUrl.search)
       : backendPath;
 
-  const response = await fetchBackend(request, pathWithSearch, method, body);
+  let response: Response;
+
+  try {
+    response = await fetchBackend(request, pathWithSearch, method, body);
+  } catch {
+    return createProxyTransportErrorResponse({ request });
+  }
 
   if (response.status !== 401) {
-    return createProxyResponse(response, {
+    const nextResponse = await createProxyResponse(response, {
       cacheControl: 'no-store',
+    });
+
+    if (response.ok && clearAuthCookiesOnSuccess) {
+      clearClientAuthCookies(nextResponse, request);
+    }
+
+    return nextResponse;
+  }
+
+  let refreshResult: RefreshResult;
+
+  try {
+    refreshResult = await refreshAuthCookies(request);
+  } catch {
+    return createProxyTransportErrorResponse({
+      request,
+      clearAuthCookies: true,
     });
   }
 
-  const { response: refreshResponse, tokens } =
-    await refreshAuthCookies(request);
+  const { response: refreshResponse, tokens } = refreshResult;
 
   if (!refreshResponse.ok) {
     const nextResponse = await createProxyResponse(response, {
@@ -133,19 +183,30 @@ export async function proxyBackendRequest({
   }
 
   const cookieHeader = createCookieHeaderWithTokens(request, tokens);
-  const retryResponse = await fetchBackend(
-    request,
-    pathWithSearch,
-    method,
-    body,
-    cookieHeader
-  );
+  let retryResponse: Response;
+
+  try {
+    retryResponse = await fetchBackend(
+      request,
+      pathWithSearch,
+      method,
+      body,
+      cookieHeader
+    );
+  } catch {
+    return createProxyTransportErrorResponse({ request });
+  }
 
   const nextResponse = await createProxyResponse(retryResponse, {
     cacheControl: 'no-store',
   });
 
   setClientAuthCookies(nextResponse, request, tokens);
+
+  if (retryResponse.ok && clearAuthCookiesOnSuccess) {
+    clearClientAuthCookies(nextResponse, request);
+    return nextResponse;
+  }
 
   if (retryResponse.status === 401) {
     clearClientAuthCookies(nextResponse, request);

@@ -4,6 +4,7 @@ import { type NextRequest } from 'next/server';
 import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
 import { createProxyHeaders } from './proxy-headers';
 import { createProxyResponse } from './proxy-response';
+import { createProxyTransportErrorResponse } from './proxy-transport-error';
 
 //===================================================================
 
@@ -15,6 +16,14 @@ type OptionalAuthBackendProxyOptions = {
   backendPath: string;
   request: NextRequest;
 };
+
+//===================================================================
+
+function appendSearchParams(path: string, search: string): string {
+  return search
+    ? `${path}${search.startsWith('?') ? search : `?${search}`}`
+    : path;
+}
 
 //===================================================================
 
@@ -47,10 +56,21 @@ export async function proxyOptionalAuthBackendRequest({
   backendPath,
   request,
 }: OptionalAuthBackendProxyOptions) {
-  let response = await fetchOptionalAuthBackend(request, backendPath, true);
+  const pathWithSearch = appendSearchParams(backendPath, request.nextUrl.search);
+  let response: Response;
+
+  try {
+    response = await fetchOptionalAuthBackend(request, pathWithSearch, true);
+  } catch {
+    return createProxyTransportErrorResponse({ request });
+  }
 
   if (response.status === 401) {
-    response = await fetchOptionalAuthBackend(request, backendPath, false);
+    try {
+      response = await fetchOptionalAuthBackend(request, pathWithSearch, false);
+    } catch {
+      return createProxyTransportErrorResponse({ request });
+    }
   }
 
   return createProxyResponse(response, {

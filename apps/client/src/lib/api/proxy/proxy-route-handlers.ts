@@ -1,4 +1,5 @@
 import 'server-only';
+
 import { type NextRequest } from 'next/server';
 
 import type { HttpMethod } from '@e-pharmacy/api-client/core';
@@ -10,6 +11,7 @@ import { proxyPublicBackendRequest } from './public-backend-proxy';
 //===================================================================
 
 type RouteParams = Record<string, string>;
+
 type RouteContext<TParams extends RouteParams> = {
   params: Promise<TParams>;
 };
@@ -41,15 +43,18 @@ export function createPrivateProxyRoute<
 >({
   backendPath,
   method = 'GET',
+  clearAuthCookiesOnSuccess = false,
 }: {
   backendPath: BackendPath<TParams>;
   method?: HttpMethod;
+  clearAuthCookiesOnSuccess?: boolean;
 }): ProxyRouteHandler<TParams> {
   return async (request, context) =>
     proxyBackendRequest({
       request,
       backendPath: await resolveBackendPath(backendPath, context),
       method,
+      clearAuthCookiesOnSuccess,
     });
 }
 
@@ -86,6 +91,26 @@ export function createOptionalAuthGetProxyRoute<
       request,
       backendPath: await resolveBackendPath(backendPath, context),
     });
+}
+
+//===================================================================
+
+export function createPublicGetPrivatePostProxyRoute<
+  TParams extends RouteParams = RouteParams,
+>({
+  backendPath,
+  revalidate,
+}: {
+  backendPath: BackendPath<TParams>;
+  revalidate?: number;
+}): {
+  GET: ProxyRouteHandler<TParams>;
+  POST: ProxyRouteHandler<TParams>;
+} {
+  return {
+    GET: createPublicGetProxyRoute({ backendPath, revalidate }),
+    POST: createPrivateProxyRoute({ backendPath, method: 'POST' }),
+  };
 }
 
 //===================================================================

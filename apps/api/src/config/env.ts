@@ -154,6 +154,7 @@ export const env = {
   ADMIN_APP_URL: process.env.ADMIN_APP_URL,
   AUTH_COOKIE_DOMAIN: process.env.AUTH_COOKIE_DOMAIN,
   AUTH_COOKIE_SAME_SITE: getAuthCookieSameSite(),
+  BFF_PROXY_SECRET: process.env.BFF_PROXY_SECRET,
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: getOptionalNumberEnv('SMTP_PORT', 587),
   SMTP_USER: process.env.SMTP_USER,

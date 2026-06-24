@@ -1,42 +1,15 @@
-import { type NextRequest } from 'next/server';
-
-import { proxyBackendRequest } from '@/lib/api/proxy';
-import { proxyPublicBackendRequest } from '@/lib/api/proxy';
+import { createPublicGetPrivatePostProxyRoute } from '@/lib/api/proxy';
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
 
 //===================================================================
 
-type ProductReviewsRouteContext = {
-  params: Promise<{
-    productId: string;
-  }>;
-};
+const reviewsRoute = createPublicGetPrivatePostProxyRoute<{
+  productId: string;
+}>({
+  backendPath: ({ productId }) => API_ROUTES.products.reviews(productId),
+});
 
 //===================================================================
 
-export async function GET(
-  request: NextRequest,
-  { params }: ProductReviewsRouteContext
-) {
-  const { productId } = await params;
-
-  return proxyPublicBackendRequest({
-    request,
-    backendPath: API_ROUTES.products.reviews(productId),
-  });
-}
-
-//===================================================================
-
-export async function POST(
-  request: NextRequest,
-  { params }: ProductReviewsRouteContext
-) {
-  const { productId } = await params;
-
-  return proxyBackendRequest({
-    request,
-    backendPath: API_ROUTES.products.reviews(productId),
-    method: 'POST',
-  });
-}
+export const GET = reviewsRoute.GET;
+export const POST = reviewsRoute.POST;
