@@ -46,6 +46,8 @@ function getCartItemExpiresAt(): Date {
   return expiresAt;
 }
 
+//===============================================================
+
 const CART_CLEANUP_THROTTLE_MS = 60_000;
 let lastCartCleanupAt = 0;
 let cartCleanupPromise: Promise<number> | null = null;
@@ -129,7 +131,12 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
     Product.find({ _id: { $in: productIds } }).lean<ProductDocument[]>(),
     Pharmacy.find({ _id: { $in: pharmacyIds } }).lean(),
     ProductOffer.aggregate<{ _id: Types.ObjectId; count: number }>([
-      { $match: { productId: { $in: productIds } } },
+      {
+        $match: {
+          productId: { $in: productIds },
+          availableQuantity: { $gt: 0 },
+        },
+      },
       { $group: { _id: '$productId', count: { $sum: 1 } } },
     ]),
   ]);
@@ -171,7 +178,8 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
           : {}),
         pharmacyId: String(pharmacy._id),
         pharmacyName: pharmacy.name,
-        foundInPharmaciesCount: offerCountMap.get(String(product._id)) ?? 1,
+        foundInPharmaciesCount: offerCountMap.get(String(product._id)) ?? 0,
+        availableInPharmaciesCount: offerCountMap.get(String(product._id)) ?? 0,
         offers: [],
         inStock: offer.availableQuantity > 0,
         ...(typeof product.rating === 'number'

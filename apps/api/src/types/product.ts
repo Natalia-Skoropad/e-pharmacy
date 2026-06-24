@@ -78,6 +78,7 @@ export type ProductResponseDto = {
   pharmacyId?: string;
   pharmacyName?: string;
   foundInPharmaciesCount: number;
+  availableInPharmaciesCount: number;
   offers: ProductOfferResponseDto[];
   inStock: boolean;
   rating?: number;

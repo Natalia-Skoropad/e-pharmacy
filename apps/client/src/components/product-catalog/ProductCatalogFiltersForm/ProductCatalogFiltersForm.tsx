@@ -19,6 +19,11 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
+import type {
+  ProductFilterOptionsResponse,
+  PharmacyOption,
+} from '@e-pharmacy/types';
+
 import {
   CATALOG_SEARCH_MAX_LENGTH,
   CATALOG_SEARCH_UPDATE_DELAY,
@@ -38,13 +43,13 @@ import {
   sanitizeCatalogTextSearch,
 } from '@/lib/catalog/search-sanitizers';
 
-import type { ProductFilterOptionsResponse, PharmacyOption } from '@e-pharmacy/types';
-
 import css from './ProductCatalogFiltersForm.module.css';
 
 //===================================================================
 
 type PharmacySelectValue = 'all' | string;
+
+//===================================================================
 
 type ProductCatalogFiltersFormProps = {
   filters: ProductCatalogFilters;

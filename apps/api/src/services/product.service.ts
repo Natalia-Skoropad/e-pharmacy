@@ -157,11 +157,11 @@ function serializeProduct(
   offers: ProductOfferResponseDto[],
   favoriteIds: Set<string>
 ): ProductResponseDto {
-  const available = offers.filter((offer) => offer.inStock);
-  const first = available[0] ?? offers[0];
+  const availableOffers = offers.filter((offer) => offer.inStock);
+  const first = availableOffers[0] ?? offers[0];
 
-  const minPrice = available.length
-    ? Math.min(...available.map((offer) => offer.price))
+  const minPrice = availableOffers.length
+    ? Math.min(...availableOffers.map((offer) => offer.price))
     : (product.price ?? 0);
 
   return {
@@ -182,9 +182,10 @@ function serializeProduct(
     ...(first
       ? { pharmacyId: first.pharmacyId, pharmacyName: first.pharmacyName }
       : {}),
-    foundInPharmaciesCount: offers.length,
+    foundInPharmaciesCount: availableOffers.length,
+    availableInPharmaciesCount: availableOffers.length,
     offers,
-    inStock: available.length > 0,
+    inStock: availableOffers.length > 0,
     rating: product.rating ?? 0,
     reviewsCount: product.reviewsCount ?? 0,
     isFavorite: favoriteIds.has(String(product._id)),
@@ -205,6 +206,22 @@ async function getAvailableFilterCategories(
   const offerFilter: Record<string, unknown> = {};
 
   if (query.pharmacyId) offerFilter.pharmacyId = query.pharmacyId;
+
+  if (query.inStock === false && !query.pharmacyId) {
+    const availableProductIds = await ProductOffer.distinct('productId', {
+      availableQuantity: { $gt: 0 },
+    });
+
+    const categories = await Product.distinct('category', {
+      _id: { $nin: availableProductIds },
+      status: 'active',
+    });
+
+    const categorySet = new Set(categories.map(String));
+
+    return PRODUCT_CATEGORIES.filter((category) => categorySet.has(category));
+  }
+
   if (query.inStock === true) offerFilter.availableQuantity = { $gt: 0 };
   if (query.inStock === false) offerFilter.availableQuantity = 0;
 
@@ -295,11 +312,20 @@ export async function getProductsService(
   }
 
   if (query.inStock === true) offerFilter.availableQuantity = { $gt: 0 };
-  if (query.inStock === false) offerFilter.availableQuantity = 0;
 
-  if (Object.keys(offerFilter).length) {
-    allowedProductIds = await ProductOffer.distinct('productId', offerFilter);
-    filter._id = { $in: allowedProductIds };
+  if (query.inStock === false && !query.pharmacyId) {
+    const availableProductIds = await ProductOffer.distinct('productId', {
+      availableQuantity: { $gt: 0 },
+    });
+
+    filter._id = { $nin: availableProductIds };
+  } else {
+    if (query.inStock === false) offerFilter.availableQuantity = 0;
+
+    if (Object.keys(offerFilter).length) {
+      allowedProductIds = await ProductOffer.distinct('productId', offerFilter);
+      filter._id = { $in: allowedProductIds };
+    }
   }
 
   const sort: Record<string, 1 | -1> =

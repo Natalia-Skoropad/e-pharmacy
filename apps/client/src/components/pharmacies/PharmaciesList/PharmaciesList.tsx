@@ -1,5 +1,6 @@
-import PharmacyCard from '@/components/pharmacies/PharmacyCard';
 import type { Pharmacy } from '@e-pharmacy/types';
+
+import PharmacyCard from '@/components/pharmacies/PharmacyCard';
 
 import css from './PharmaciesList.module.css';
 

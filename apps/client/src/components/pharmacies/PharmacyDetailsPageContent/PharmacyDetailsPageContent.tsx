@@ -14,15 +14,13 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { type TabItem } from '@e-pharmacy/ui/common';
-
-import {
-  DEFAULT_VISIBLE_REVIEWS_COUNT,
-  FavoriteToggleButton,
-  ReviewsSection,
-} from '@/components/common';
-
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useToast } from '@e-pharmacy/ui/feedback';
+
+import { useAuth } from '@e-pharmacy/auth/core';
+import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
+import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
+import type { Pharmacy, PharmacyReview } from '@e-pharmacy/types';
 
 import {
   useFavoriteActions,
@@ -33,9 +31,6 @@ import {
 
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
 import { ROUTES } from '@/lib/routes';
-import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
-import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
-import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
   createPharmacyReview,
@@ -43,7 +38,11 @@ import {
   removeFavoritePharmacy,
 } from '@/lib/api/browser';
 
-import type { Pharmacy, PharmacyReview } from '@e-pharmacy/types';
+import {
+  DEFAULT_VISIBLE_REVIEWS_COUNT,
+  FavoriteToggleButton,
+  ReviewsSection,
+} from '@/components/common';
 
 import css from './PharmacyDetailsPageContent.module.css';
 

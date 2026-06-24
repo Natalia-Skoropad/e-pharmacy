@@ -1,6 +1,6 @@
-import ProductCard from '@/components/product-catalog/ProductCard';
-
 import type { Product } from '@e-pharmacy/types';
+
+import ProductCard from '@/components/product-catalog/ProductCard';
 
 import css from './ProductsList.module.css';
 

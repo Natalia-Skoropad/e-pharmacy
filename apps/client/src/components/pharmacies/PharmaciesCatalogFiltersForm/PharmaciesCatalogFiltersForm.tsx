@@ -19,6 +19,8 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
+import type { PharmaciesSortFilter } from '@e-pharmacy/types';
+
 import {
   CATALOG_SEARCH_MAX_LENGTH,
   CATALOG_SEARCH_UPDATE_DELAY,
@@ -32,7 +34,6 @@ import {
 } from '@/lib/catalog/pharmacies-catalog';
 
 import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';
-import type { PharmaciesSortFilter } from '@e-pharmacy/types';
 
 import css from './PharmaciesCatalogFiltersForm.module.css';
 
@@ -56,6 +57,8 @@ type PharmaciesHrefFilters = Omit<PharmacyFilters, 'page'> & {
 function buildPharmacyFiltersHref(filters: PharmaciesHrefFilters) {
   return buildPharmacyPath(filters);
 }
+
+//===================================================================
 
 function createPharmaciesResetFiltersHref(filters: PharmacyFilters) {
   return buildPharmacyFiltersHref({
@@ -251,7 +254,10 @@ function PharmaciesCatalogFiltersForm({
               <div>
                 <p className={css.offcanvasKicker}>Pharmacies</p>
 
-                <h2 className={css.offcanvasTitle} id="pharmacies-filters-title">
+                <h2
+                  className={css.offcanvasTitle}
+                  id="pharmacies-filters-title"
+                >
                   Filters and sorting
                 </h2>
               </div>

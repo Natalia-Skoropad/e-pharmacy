@@ -1,7 +1,6 @@
 import { Container, Pagination } from '@e-pharmacy/ui/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import PharmaciesList from '@/components/pharmacies/PharmaciesList';
-import { PharmaciesCatalogFiltersForm } from '@/components/pharmacies/PharmaciesCatalogFiltersForm';
+import type { Pharmacy } from '@e-pharmacy/types';
 
 import {
   buildPharmacyPath,
@@ -13,7 +12,9 @@ import {
 } from '@/lib/catalog/pharmacies-catalog';
 
 import { ROUTES } from '@/lib/routes';
-import type { Pharmacy } from '@e-pharmacy/types';
+
+import PharmaciesList from '@/components/pharmacies/PharmaciesList';
+import { PharmaciesCatalogFiltersForm } from '@/components/pharmacies/PharmaciesCatalogFiltersForm';
 
 import css from './PharmaciesPageContent.module.css';
 
@@ -51,7 +52,10 @@ function PharmaciesPageContent({
 
   return (
     <main className={css.page}>
-      <section className={css.pharmaciesSection} aria-labelledby="pharmacies-title">
+      <section
+        className={css.pharmaciesSection}
+        aria-labelledby="pharmacies-title"
+      >
         <Container>
           <Breadcrumbs
             items={[
@@ -77,8 +81,8 @@ function PharmaciesPageContent({
 
           {isUnavailable ? (
             <div className={css.notice} role="status">
-              Pharmacies are temporarily unavailable. Please check that the backend
-              API is running.
+              Pharmacies are temporarily unavailable. Please check that the
+              backend API is running.
             </div>
           ) : null}
 
@@ -92,7 +96,10 @@ function PharmaciesPageContent({
           />
 
           {showSeoText ? (
-            <section className={css.seoCard} aria-labelledby="pharmacies-seo-title">
+            <section
+              className={css.seoCard}
+              aria-labelledby="pharmacies-seo-title"
+            >
               <h2 className={css.seoTitle} id="pharmacies-seo-title">
                 Choose a trusted pharmacy before you order
               </h2>

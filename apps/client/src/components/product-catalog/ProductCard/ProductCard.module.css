@@ -117,6 +117,13 @@
   color: var(--color-accent);
 }
 
+.unavailableStatus {
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
 .detailsLink {
   flex-shrink: 0;
 }

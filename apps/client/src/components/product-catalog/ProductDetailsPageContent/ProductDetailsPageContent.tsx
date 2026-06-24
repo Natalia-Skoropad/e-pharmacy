@@ -20,32 +20,11 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { type TabItem } from '@e-pharmacy/ui/common';
-
-import {
-  DeliveryInfoCard,
-  FavoriteToggleButton,
-  PaymentInfoCard,
-  DEFAULT_VISIBLE_REVIEWS_COUNT,
-  ReviewsSection,
-  StockAvailability,
-} from '@/components/common';
-
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
-import { CartOrderLimitModal } from '@/components/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { useAuth } from '@e-pharmacy/auth/core';
 import { useToast } from '@e-pharmacy/ui/feedback';
-
-import {
-  invalidateFavoriteProductIdsCache,
-  useFavoriteActions,
-  useReviewForm,
-} from '@/hooks';
-
-import { ROUTES } from '@/lib/routes';
-import { CATALOG_SEARCH_MAX_LENGTH } from '@/lib/catalog/catalog-config';
-import { isCartOrderLimitError } from '@/lib/cart/order-limit';
-import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
+import { useAuth } from '@e-pharmacy/auth/core';
+import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
 
 import {
   formatPharmaciesCount,
@@ -53,17 +32,35 @@ import {
   formatPriceRange,
 } from '@e-pharmacy/utils/formatters';
 
+import type {
+  Cart,
+  Product,
+  ProductOffer,
+  ProductReview,
+} from '@e-pharmacy/types';
+
+import {
+  invalidateFavoriteProductIdsCache,
+  useFavoriteActions,
+  useReviewForm,
+} from '@/hooks';
+
+import { ROUTES, buildPharmacyPath } from '@/lib/routes';
+import { CATALOG_SEARCH_MAX_LENGTH } from '@/lib/catalog/catalog-config';
 import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
-import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';
+import { isCartOrderLimitError } from '@/lib/cart/order-limit';
+import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
+
+import {
+  normalizeCatalogSearchValue,
+  sanitizeCatalogTextSearch,
+} from '@/lib/catalog/search-sanitizers';
 
 import {
   PRODUCT_OFFER_SORT_OPTIONS,
   PRODUCT_OFFERS_PER_PAGE,
   type ProductOfferSort,
 } from '@/lib/catalog/product-offers';
-
-import { buildPharmacyPath } from '@/lib/routes';
-import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
 
 import {
   createProductReview,
@@ -75,18 +72,23 @@ import {
 import { useCart } from '@/providers/CartProvider';
 import { useCartMutations } from '@/lib/cart/useCartMutations';
 
-import type {
-  Cart,
-  Product,
-  ProductOffer,
-  ProductReview,
-} from '@e-pharmacy/types';
+import {
+  DeliveryInfoCard,
+  FavoriteToggleButton,
+  PaymentInfoCard,
+  DEFAULT_VISIBLE_REVIEWS_COUNT,
+  ReviewsSection,
+  StockAvailability,
+  CartOrderLimitModal,
+} from '@/components/common';
 
 import css from './ProductDetailsPageContent.module.css';
 
 //===================================================================
 
 type ProductTab = 'about' | 'prices' | 'characteristics' | 'reviews';
+
+//===================================================================
 
 type ProductDetailsPageContentProps = {
   product: Product;
@@ -110,13 +112,19 @@ function getPharmacyHref(offer: ProductOffer): string {
   return buildPharmacyPath(offer.pharmacyName, offer.pharmacyId);
 }
 
+//===================================================================
+
 function getOfferAddress(offer: ProductOffer): string {
   return [offer.pharmacyCity, offer.pharmacyAddress].filter(Boolean).join(', ');
 }
 
+//===================================================================
+
 function sortOfferCities(cities: string[]): string[] {
   return [...cities].sort((a, b) => a.localeCompare(b, 'en'));
 }
+
+//===================================================================
 
 function getUniqueOfferCities(offers: ProductOffer[]): string[] {
   const cities = offers
@@ -125,6 +133,8 @@ function getUniqueOfferCities(offers: ProductOffer[]): string[] {
 
   return sortOfferCities([...new Set(cities)]);
 }
+
+//===================================================================
 
 function getLongDescription(product: Product): string {
   return (
@@ -180,51 +190,57 @@ function ProductDetailsPageContent({
     DEFAULT_VISIBLE_REVIEWS_COUNT
   );
 
+  const availableOffers = useMemo(
+    () => productDetails.offers.filter((offer) => offer.inStock),
+    [productDetails.offers]
+  );
+
+  const isProductAvailable = availableOffers.length > 0;
+
   const tabs = useMemo<TabItem<ProductTab>[]>(
     () => [
       { value: 'about', label: 'About product' },
       {
         value: 'prices',
-        label: `Prices in pharmacies (${productDetails.foundInPharmaciesCount})`,
+        label: `Prices in pharmacies (${availableOffers.length})`,
       },
       { value: 'characteristics', label: 'Characteristics' },
       { value: 'reviews', label: `Reviews (${reviewsTotal})` },
     ],
-    [productDetails.foundInPharmaciesCount, reviewsTotal]
+    [availableOffers.length, reviewsTotal]
   );
 
-  const pharmaciesCountLabel = formatPharmaciesCount(
-    productDetails.foundInPharmaciesCount
-  );
+  const pharmaciesCountLabel = formatPharmaciesCount(availableOffers.length);
 
-  const priceRangeLabel = formatPriceRange(productDetails.offers);
+  const priceRangeLabel = formatPriceRange(availableOffers);
   const longDescription = getLongDescription(productDetails);
 
   const cityOptions = useMemo(
     () => [
       { value: 'all', label: 'All cities' },
-      ...getUniqueOfferCities(productDetails.offers).map((city) => ({
+      ...getUniqueOfferCities(availableOffers).map((city) => ({
         value: city,
         label: city,
       })),
     ],
-    [productDetails.offers]
+    [availableOffers]
   );
 
   const filteredOffers = useMemo(() => {
-    const normalizedNameQuery = pharmacyNameQuery.trim().toLowerCase();
-    const normalizedAddressQuery = pharmacyAddressQuery.trim().toLowerCase();
+    const normalizedNameQuery = normalizeCatalogSearchValue(pharmacyNameQuery);
+    const normalizedAddressQuery =
+      normalizeCatalogSearchValue(pharmacyAddressQuery);
 
-    return productDetails.offers
+    return availableOffers
       .map((offer, index) => ({ offer, index }))
       .filter(({ offer }) => {
-        const nameMatches = offer.pharmacyName
-          .toLowerCase()
-          .includes(normalizedNameQuery);
+        const nameMatches = normalizeCatalogSearchValue(
+          offer.pharmacyName
+        ).includes(normalizedNameQuery);
 
-        const addressMatches = getOfferAddress(offer)
-          .toLowerCase()
-          .includes(normalizedAddressQuery);
+        const addressMatches = normalizeCatalogSearchValue(
+          getOfferAddress(offer)
+        ).includes(normalizedAddressQuery);
 
         const cityMatches =
           cityFilter === 'all' || offer.pharmacyCity?.trim() === cityFilter;
@@ -272,12 +288,27 @@ function ProductDetailsPageContent({
     cityFilter,
     contextPharmacyId,
     offerSort,
-    productDetails.offers,
+    availableOffers,
     pharmacyAddressQuery,
     pharmacyNameQuery,
   ]);
 
   const visibleOffers = filteredOffers.slice(0, visibleOffersCount);
+
+  const hasActiveOfferFilters =
+    Boolean(pharmacyNameQuery.trim()) ||
+    Boolean(pharmacyAddressQuery.trim()) ||
+    cityFilter !== 'all';
+
+  const emptyOffersTitle = isProductAvailable
+    ? 'No pharmacies found'
+    : 'This product is currently unavailable in pharmacies.';
+
+  const emptyOffersText = isProductAvailable
+    ? hasActiveOfferFilters
+      ? 'Try changing the pharmacy name or address search.'
+      : 'No pharmacies match the current offers list.'
+    : 'There are no pharmacies where this product is currently available.';
 
   const handlePharmacyNameQueryChange = (value: string) => {
     setPharmacyNameQuery(value);
@@ -377,7 +408,7 @@ function ProductDetailsPageContent({
   ]);
 
   const handleAddUnit = async (offer: ProductOffer) => {
-    if (!canUseCart) return;
+    if (!canUseCart || !offer.inStock) return;
     if (pendingOfferIds.has(offer.id)) return;
 
     const cartItem = getOfferCartItem(cart, offer.id);
@@ -431,7 +462,7 @@ function ProductDetailsPageContent({
   };
 
   const removeOfferUnit = async (offer: ProductOffer) => {
-    if (!canUseCart) return;
+    if (!canUseCart || !offer.inStock) return;
     if (pendingOfferIds.has(offer.id)) return;
 
     const cartItem = getOfferCartItem(cart, offer.id);
@@ -465,7 +496,7 @@ function ProductDetailsPageContent({
   };
 
   const handleRemoveUnit = (offer: ProductOffer) => {
-    if (!canUseCart) return;
+    if (!canUseCart || !offer.inStock) return;
 
     const cartItem = getOfferCartItem(cart, offer.id);
 
@@ -480,6 +511,14 @@ function ProductDetailsPageContent({
   };
 
   const renderQuantityControl = (offer: ProductOffer) => {
+    if (!offer.inStock) {
+      return (
+        <p className={css.unavailableOffer}>
+          Currently unavailable in this pharmacy.
+        </p>
+      );
+    }
+
     const cartItem = getOfferCartItem(cart, offer.id);
     const pendingQuantity = pendingOfferQuantities[offer.id];
     const quantity = cartItem?.quantity ?? pendingQuantity ?? 0;
@@ -593,15 +632,24 @@ function ProductDetailsPageContent({
                     <dd>{productDetails.article}</dd>
                   </div>
 
-                  <div className={css.summaryItem}>
-                    <dt>Found in pharmacies</dt>
-                    <dd>{pharmaciesCountLabel}</dd>
-                  </div>
+                  {isProductAvailable ? (
+                    <>
+                      <div className={css.summaryItem}>
+                        <dt>Found in pharmacies</dt>
+                        <dd>{pharmaciesCountLabel}</dd>
+                      </div>
 
-                  <div className={css.summaryItem}>
-                    <dt>Price</dt>
-                    <dd>{priceRangeLabel}</dd>
-                  </div>
+                      <div className={css.summaryItem}>
+                        <dt>Price</dt>
+                        <dd>{priceRangeLabel}</dd>
+                      </div>
+                    </>
+                  ) : (
+                    <div className={css.summaryItem}>
+                      <dt>Availability</dt>
+                      <dd>Not available in pharmacies</dd>
+                    </div>
+                  )}
                 </dl>
 
                 <div className={css.infoGrid}>
@@ -790,11 +838,9 @@ function ProductDetailsPageContent({
                   </ul>
                 ) : (
                   <div className={css.emptyPanel}>
-                    <h3 className={css.emptyTitle}>No pharmacies found</h3>
+                    <h3 className={css.emptyTitle}>{emptyOffersTitle}</h3>
 
-                    <p className={css.emptyText}>
-                      Try changing the pharmacy name or address search.
-                    </p>
+                    <p className={css.emptyText}>{emptyOffersText}</p>
                   </div>
                 )}
 

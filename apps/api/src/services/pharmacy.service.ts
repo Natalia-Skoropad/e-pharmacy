@@ -27,6 +27,8 @@ type PharmaciesQuery = {
   page: number;
   perPage: number;
   keyword?: string;
+  nameKeyword?: string;
+  addressKeyword?: string;
   city?: string;
   sort?: 'newest' | 'rating-desc' | 'rating-asc' | 'name-asc' | 'name-desc';
 };
@@ -231,12 +233,30 @@ export async function getPharmaciesService(
       $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
     },
   };
-  if (query.keyword)
+  if (query.keyword) {
     filter.$or = [
       { name: createSafeRegExp(query.keyword) },
       { address: createSafeRegExp(query.keyword) },
       { city: createSafeRegExp(query.keyword) },
     ];
+  }
+
+  if (query.nameKeyword) {
+    filter.name = createSafeRegExp(query.nameKeyword);
+  }
+
+  if (query.addressKeyword) {
+    filter.$and = [
+      ...(Array.isArray(filter.$and) ? filter.$and : []),
+      {
+        $or: [
+          { address: createSafeRegExp(query.addressKeyword) },
+          { city: createSafeRegExp(query.addressKeyword) },
+        ],
+      },
+    ];
+  }
+
   if (query.city) filter.city = query.city;
   const sort: Record<string, 1 | -1> =
     query.sort === 'name-asc'

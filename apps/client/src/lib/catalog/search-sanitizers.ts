@@ -14,3 +14,13 @@ export function sanitizeCatalogTextSearch(value: string): string {
 export function sanitizeCatalogArticleSearch(value: string): string {
   return sanitizeCatalogArticleParam(sanitizeSearchText(value));
 }
+
+//===================================================================
+
+export function normalizeCatalogSearchValue(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[.,'’/#-]+/g, ' ')
+    .replace(/\s+/g, ' ');
+}

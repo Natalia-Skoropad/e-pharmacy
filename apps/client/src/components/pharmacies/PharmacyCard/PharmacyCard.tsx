@@ -1,10 +1,5 @@
 'use client';
 
-import { addFavoritePharmacy, removeFavoritePharmacy } from '@/lib/api/browser';
-
-import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
-import { buildPharmacyPath } from '@/lib/routes';
-
 import {
   ButtonLink,
   RatingSummary,
@@ -14,8 +9,12 @@ import {
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
+import { useAuth } from '@e-pharmacy/auth/core';
+import type { Pharmacy } from '@e-pharmacy/types';
 
-import { FavoriteToggleButton } from '@/components/common';
+import { addFavoritePharmacy, removeFavoritePharmacy } from '@/lib/api/browser';
+import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
+import { buildPharmacyPath } from '@/lib/routes';
 
 import {
   invalidateFavoritePharmacyIdsCache,
@@ -23,8 +22,7 @@ import {
   usePharmacyFavoriteRefresh,
 } from '@/hooks';
 
-import { useAuth } from '@e-pharmacy/auth/core';
-import type { Pharmacy } from '@e-pharmacy/types';
+import { FavoriteToggleButton } from '@/components/common';
 
 import css from './PharmacyCard.module.css';
 

@@ -49,6 +49,7 @@ export type Product = {
   pharmacyId?: EntityId;
   pharmacyName?: string;
   foundInPharmaciesCount: number;
+  availableInPharmaciesCount: number;
   offers: ProductOffer[];
   inStock: boolean;
   rating: number;

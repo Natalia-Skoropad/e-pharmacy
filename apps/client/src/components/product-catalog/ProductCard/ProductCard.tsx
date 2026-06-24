@@ -9,8 +9,14 @@ import {
   SvgIcon,
 } from '@e-pharmacy/ui/common';
 
-import { FavoriteToggleButton } from '@/components/common';
+import {
+  formatPharmaciesCount,
+  formatPriceRange,
+} from '@e-pharmacy/utils/formatters';
+
 import { useToast } from '@e-pharmacy/ui/feedback';
+import { useAuth } from '@e-pharmacy/auth/core';
+import type { Product } from '@e-pharmacy/types';
 
 import {
   invalidateFavoriteProductIdsCache,
@@ -18,18 +24,11 @@ import {
   useProductFavoriteRefresh,
 } from '@/hooks';
 
-import {
-  formatPharmaciesCount,
-  formatPriceRange,
-} from '@e-pharmacy/utils/formatters';
-
+import { addFavoriteProduct, removeFavoriteProduct } from '@/lib/api/browser';
 import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
 import { buildProductPath } from '@/lib/routes';
-import { useAuth } from '@e-pharmacy/auth/core';
 
-import { addFavoriteProduct, removeFavoriteProduct } from '@/lib/api/browser';
-
-import type { Product } from '@e-pharmacy/types';
+import { FavoriteToggleButton } from '@/components/common';
 
 import css from './ProductCard.module.css';
 
@@ -74,6 +73,8 @@ function ProductCard({
   });
 
   const productHref = buildProductPath(product.name, product.id);
+
+  const isAvailable = product.inStock && product.foundInPharmaciesCount > 0;
 
   const priceRangeLabel = useMemo(
     () => formatPriceRange(product.offers),
@@ -140,14 +141,20 @@ function ProductCard({
             <dd>{product.article}</dd>
           </div>
 
-          <div className={css.summaryItem}>
-            <dt>Found in pharmacies</dt>
-            <dd>{formatPharmaciesCount(product.foundInPharmaciesCount)}</dd>
-          </div>
+          {isAvailable ? (
+            <div className={css.summaryItem}>
+              <dt>Found in pharmacies</dt>
+              <dd>{formatPharmaciesCount(product.foundInPharmaciesCount)}</dd>
+            </div>
+          ) : null}
         </dl>
 
         <div className={css.footer}>
-          <p className={css.price}>{priceRangeLabel}</p>
+          {isAvailable ? (
+            <p className={css.price}>{priceRangeLabel}</p>
+          ) : (
+            <p className={css.unavailableStatus}>Not available in pharmacies</p>
+          )}
 
           <ButtonLink className={css.detailsLink} href={productHref} size="sm">
             Details

@@ -1,8 +1,11 @@
 import { Container, Pagination } from '@e-pharmacy/ui/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 
-import ProductCatalogFiltersForm from '@/components/product-catalog/ProductCatalogFiltersForm';
-import ProductsList from '@/components/product-catalog/ProductsList';
+import type {
+  Product,
+  ProductFilterOptionsResponse,
+  PharmacyOption,
+} from '@e-pharmacy/types';
 
 import {
   buildProductCatalogPath,
@@ -16,11 +19,8 @@ import {
 
 import { ROUTES } from '@/lib/routes';
 
-import type {
-  Product,
-  ProductFilterOptionsResponse,
-  PharmacyOption,
-} from '@e-pharmacy/types';
+import ProductsList from '@/components/product-catalog/ProductsList';
+import ProductCatalogFiltersForm from '@/components/product-catalog/ProductCatalogFiltersForm';
 
 import css from './ProductCatalogPageContent.module.css';
 
