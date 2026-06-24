@@ -15,6 +15,7 @@ const SITEMAP_INDEXABLE_ROUTES = [
 //===================================================================
 
 const ROBOTS_PRIVATE_ROUTE_ROOTS = [
+  '/api',
   ROUTES.CART,
   ROUTES.CHECKOUT,
   ROUTES.LOGIN,

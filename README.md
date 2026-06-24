@@ -138,6 +138,7 @@ Main local values:
 # apps/client
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 API_BASE_URL=http://localhost:4000
+BFF_PROXY_SECRET=
 
 # apps/api
 NODE_ENV=development

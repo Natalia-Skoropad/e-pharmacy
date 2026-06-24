@@ -48,7 +48,7 @@ const PRODUCT_SITEMAP_PER_PAGE = 200;
 const PHARMACY_SITEMAP_PER_PAGE = 100;
 const SITEMAP_REVALIDATE_SECONDS = 3600;
 const SITEMAP_FETCH_SAFETY_MAX_PAGES = 500;
-const SITEMAP_FETCH_BATCH_SIZE = 20;
+const SITEMAP_FETCH_BATCH_SIZE = 5;
 
 //===================================================================
 

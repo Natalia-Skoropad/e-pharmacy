@@ -450,6 +450,7 @@ Main API areas used by the client:
 - `apps/client/src/lib/api/server/cache-options.ts` centralizes public API revalidation settings.
 - `apps/client/src/lib/api/proxy/public-backend-proxy.ts` adds cache headers for read-only public proxy responses.
 - Remote image patterns are configured in `next.config.ts` for deployed backend image assets.
+- Seed product and pharmacy images are client-owned runtime assets under `public/images/seed/**`; backend seed DTOs return same-origin relative paths for this portfolio deployment.
 - CSS Modules keep component styling scoped.
 - `AuthProvider` checks the client-readable auth marker before calling `/api/auth/me`, so anonymous public pages avoid unnecessary auth bootstrap requests.
 
@@ -460,16 +461,20 @@ Create an `.env.local` file inside `apps/client`. The source of truth for client
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 API_BASE_URL=http://localhost:4000
+BFF_PROXY_SECRET=
 ```
 
 ### Variable reference
 
-| Variable                   | Used for                                                                    | Example                 |
-| -------------------------- | --------------------------------------------------------------------------- | ----------------------- |
-| `NEXT_PUBLIC_SITE_URL`     | canonical URLs, metadata, sitemap, robots, absolute public URLs             | `http://localhost:3000` |
+| Variable | Used for | Example |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | canonical URLs, metadata, sitemap, robots, absolute public URLs | `http://localhost:3000` |
 | `API_BASE_URL` | backend URL used only by Next.js server-side data fetches and BFF route handlers | `http://localhost:4000` |
+| `BFF_PROXY_SECRET` | optional shared secret sent by Next.js BFF handlers to the Express API | `local-secret` |
 
 For production, replace these values with the deployed client and API URLs. `NEXT_PUBLIC_SITE_URL` is required for real production deploys so sitemap, robots, canonical URLs, and social metadata do not fall back to localhost. Local builds may use the localhost fallback when this variable is not set.
+
+For production, set the same `BFF_PROXY_SECRET` value in the client app and API app when the API enforces BFF proxy authentication.
 
 Client-side private flows should continue to call same-origin `/api/*` routes, while those route handlers use server-only `API_BASE_URL` to reach the backend.
 
