@@ -1,12 +1,13 @@
-import { AuthFormShell, ResetPasswordForm } from '@/components/auth';
+import {
+  PASSWORD_RECOVERY_DESCRIPTION,
+  RESET_PASSWORD_TITLE,
+  createPageMetadata,
+} from '@/lib/seo';
 
-import { PASSWORD_RECOVERY_DESCRIPTION, RESET_PASSWORD_TITLE } from '@/lib/seo';
-
-import { ROUTES } from '@/lib/routes';
-import { createBreadcrumbs } from '@/lib/routes';
-import { createPageMetadata } from '@/lib/seo';
-
+import { createBreadcrumbs, ROUTES } from '@/lib/routes';
 import { GuestOnlyRoute } from '@/routes';
+
+import { AuthFormShell, ResetPasswordForm } from '@/components/auth';
 
 //===================================================================
 

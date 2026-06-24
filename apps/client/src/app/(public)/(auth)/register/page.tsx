@@ -1,12 +1,13 @@
-import { AuthFormShell, RegisterForm } from '@/components/auth';
+import {
+  REGISTER_DESCRIPTION,
+  REGISTER_TITLE,
+  createPageMetadata,
+} from '@/lib/seo';
 
-import { REGISTER_DESCRIPTION, REGISTER_TITLE } from '@/lib/seo';
-
-import { ROUTES } from '@/lib/routes';
-import { createBreadcrumbs } from '@/lib/routes';
-import { createPageMetadata } from '@/lib/seo';
-
+import { ROUTES, createBreadcrumbs } from '@/lib/routes';
 import { GuestOnlyRoute } from '@/routes';
+
+import { AuthFormShell, RegisterForm } from '@/components/auth';
 
 //===================================================================
 

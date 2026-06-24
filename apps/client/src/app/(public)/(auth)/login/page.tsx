@@ -1,12 +1,8 @@
-import { AuthFormShell, LoginForm } from '@/components/auth';
-
-import { LOGIN_DESCRIPTION, LOGIN_TITLE } from '@/lib/seo';
-
-import { ROUTES } from '@/lib/routes';
-import { createBreadcrumbs } from '@/lib/routes';
-import { createPageMetadata } from '@/lib/seo';
-
+import { LOGIN_DESCRIPTION, LOGIN_TITLE, createPageMetadata } from '@/lib/seo';
+import { ROUTES, createBreadcrumbs } from '@/lib/routes';
 import { GuestOnlyRoute } from '@/routes';
+
+import { AuthFormShell, LoginForm } from '@/components/auth';
 
 //===================================================================
 

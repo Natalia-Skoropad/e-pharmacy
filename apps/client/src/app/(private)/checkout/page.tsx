@@ -1,10 +1,13 @@
-import { CheckoutPageContent } from '@/components/checkout';
+import {
+  CHECKOUT_DESCRIPTION,
+  CHECKOUT_TITLE,
+  createPageMetadata,
+} from '@/lib/seo';
 
-import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo';
 import { ROUTES } from '@/lib/routes';
-import { createPageMetadata } from '@/lib/seo';
-
 import { ProtectedRoute } from '@/routes';
+
+import { CheckoutPageContent } from '@/components/checkout';
 
 //===================================================================
 

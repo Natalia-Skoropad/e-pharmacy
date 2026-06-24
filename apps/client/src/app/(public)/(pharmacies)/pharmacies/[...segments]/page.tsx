@@ -1,23 +1,16 @@
-import { PharmaciesPageContent } from '@/components/pharmacies';
-
 import {
-  buildPharmacyApiParams,
   buildPharmacyPath,
   getPharmacyDescription,
   getPharmacyTitle,
   isPharmacyNoIndex,
-  normalizePharmacyFiltersCity,
   parsePharmacySegments,
   type PharmacyRouteParams,
 } from '@/lib/catalog/pharmacies-catalog';
 
-import {
-  PUBLIC_API_CACHE_OPTIONS,
-  resolveServerDataState,
-} from '@/lib/api/server';
-
+import { loadPharmaciesCatalogPageData } from '@/lib/catalog/pharmacies-catalog-server';
 import { createPageMetadata } from '@/lib/seo';
-import { getPharmacyFilters, getPharmacies } from '@/lib/api/server';
+
+import { PharmaciesPageContent } from '@/components/pharmacies';
 
 //===================================================================
 
@@ -44,35 +37,9 @@ export async function generateMetadata({
 
 async function PharmaciesSegmentsPage({ params }: PharmaciesSegmentsPageProps) {
   const parsedFilters = parsePharmacySegments(await params);
+  const pageData = await loadPharmaciesCatalogPageData(parsedFilters);
 
-  const pharmacyFiltersState = await resolveServerDataState(
-    getPharmacyFilters(PUBLIC_API_CACHE_OPTIONS)
-  );
-
-  const cityOptions =
-    pharmacyFiltersState.status === 'success'
-      ? pharmacyFiltersState.data.cities.map((city) => city.value)
-      : [];
-
-  const filters = normalizePharmacyFiltersCity(parsedFilters, cityOptions);
-
-  const pharmaciesState = await resolveServerDataState(
-    getPharmacies(buildPharmacyApiParams(filters), PUBLIC_API_CACHE_OPTIONS)
-  );
-
-  const pharmaciesData =
-    pharmaciesState.status === 'success' ? pharmaciesState.data : null;
-
-  return (
-    <PharmaciesPageContent
-      pharmacies={pharmaciesData?.items ?? []}
-      total={pharmaciesData?.total ?? 0}
-      totalPages={pharmaciesData?.totalPages ?? 0}
-      filters={filters}
-      cityOptions={cityOptions}
-      isUnavailable={pharmaciesState.status === 'unavailable'}
-    />
-  );
+  return <PharmaciesPageContent {...pageData} />;
 }
 
 export default PharmaciesSegmentsPage;

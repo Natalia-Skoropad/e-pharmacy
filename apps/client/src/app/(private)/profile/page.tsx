@@ -1,10 +1,13 @@
-import { ProfilePageContent } from '@/components/profile';
+import {
+  PROFILE_DESCRIPTION,
+  PROFILE_TITLE,
+  createPageMetadata,
+} from '@/lib/seo';
 
-import { PROFILE_DESCRIPTION, PROFILE_TITLE } from '@/lib/seo';
 import { ROUTES } from '@/lib/routes';
-import { createPageMetadata } from '@/lib/seo';
-
 import { ProtectedRoute } from '@/routes';
+
+import { ProfilePageContent } from '@/components/profile';
 
 //===================================================================
 

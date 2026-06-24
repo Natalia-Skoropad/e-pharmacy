@@ -1,7 +1,7 @@
-import { InfoPage } from '@/components/info';
-
-import { RETURN_POLICY_INFO } from '@/components/info/config';
 import { createPageMetadata } from '@/lib/seo';
+
+import { InfoPage } from '@/components/info';
+import { RETURN_POLICY_INFO } from '@/components/info/config';
 
 //===================================================================
 

@@ -1,15 +1,16 @@
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 
-import { CheckoutPageContent } from '@/components/checkout';
+import {
+  CHECKOUT_DESCRIPTION,
+  CHECKOUT_TITLE,
+  createPageMetadata,
+} from '@/lib/seo';
 
-import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo';
-import { ROUTES } from '@/lib/routes';
-import { getIdFromSlugId } from '@/lib/routes';
-import { createPageMetadata } from '@/lib/seo';
-
+import { ROUTES, getIdFromSlugId } from '@/lib/routes';
 import { ProtectedRoute } from '@/routes';
 
-import type { Metadata } from 'next';
+import { CheckoutPageContent } from '@/components/checkout';
 
 //===================================================================
 

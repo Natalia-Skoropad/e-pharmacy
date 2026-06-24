@@ -70,9 +70,6 @@ import type {
   Pharmacy,
 } from '@e-pharmacy/types';
 
-import { ProductCard } from '@/components/product-catalog';
-import { PharmacyCard } from '@/components/pharmacies';
-
 import { PROFILE_TITLE } from '@/lib/seo';
 
 import {
@@ -91,6 +88,9 @@ import {
   updateCurrentUser,
   updateCurrentUserPassword,
 } from '@/lib/api/browser';
+
+import { ProductCard } from '@/components/product-catalog';
+import { PharmacyCard } from '@/components/pharmacies';
 
 import css from './ProfilePageContent.module.css';
 

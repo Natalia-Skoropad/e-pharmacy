@@ -1,10 +1,15 @@
 import { notFound } from 'next/navigation';
 
-import { OrderDetailsPageContent } from '@/components/profile';
-import { ORDER_DETAILS_DESCRIPTION, ORDER_DETAILS_TITLE } from '@/lib/seo';
+import {
+  ORDER_DETAILS_DESCRIPTION,
+  ORDER_DETAILS_TITLE,
+  createPageMetadata,
+} from '@/lib/seo';
+
 import { getOrderIdFromPathParam, isValidObjectId, ROUTES } from '@/lib/routes';
-import { createPageMetadata } from '@/lib/seo';
 import { ProtectedRoute } from '@/routes';
+
+import { OrderDetailsPageContent } from '@/components/profile';
 
 //===================================================================
 

@@ -7,6 +7,8 @@ import { ROUTES } from '@/lib/routes';
 
 type DataUnavailableReason = 'timeout' | 'server_error' | 'network';
 
+//===================================================================
+
 type RootDetailsUnavailablePageProps = {
   reason: DataUnavailableReason;
 };
@@ -27,7 +29,9 @@ function getDescription(reason: DataUnavailableReason): string {
 
 //===================================================================
 
-function RootDetailsUnavailablePage({ reason }: RootDetailsUnavailablePageProps) {
+function RootDetailsUnavailablePage({
+  reason,
+}: RootDetailsUnavailablePageProps) {
   return (
     <ErrorPage
       title="Service temporarily unavailable"

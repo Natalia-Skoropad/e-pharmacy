@@ -1,8 +1,8 @@
 import { Container } from '@e-pharmacy/ui/common';
 import { Breadcrumbs, SideMenu } from '@e-pharmacy/ui/layout';
 
-import { INFO_NAV_LINKS } from '@/components/info/config/navigation';
 import { createBreadcrumbs } from '@/lib/routes';
+import { INFO_NAV_LINKS } from '@/components/info/config/navigation';
 
 import css from './InfoPage.module.css';
 
@@ -29,6 +29,18 @@ type InfoPageProps = {
 
 //===================================================================
 
+function createSectionId(title: string, index: number): string {
+  const slug = title
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return `section-${index + 1}-${slug || 'info'}`;
+}
+
+//===================================================================
+
 function InfoPage({
   title,
   description,
@@ -40,6 +52,11 @@ function InfoPage({
   const sideMenuItems = INFO_NAV_LINKS.map(({ icon: Icon, ...item }) => ({
     ...item,
     icon: <Icon size={20} strokeWidth={1.8} aria-hidden="true" />,
+  }));
+
+  const sectionLinks = sections.map((section, index) => ({
+    ...section,
+    id: createSectionId(section.title, index),
   }));
 
   return (
@@ -56,41 +73,76 @@ function InfoPage({
             showChevron
           />
 
-          <article className={css.content}>
+          <article
+            className={css.content}
+            aria-labelledby="info-page-title"
+            aria-describedby="info-page-description"
+          >
             <header className={css.header}>
               <p className={css.kicker}>E-PHARMACY information</p>
-              <h1 className={css.title}>{title}</h1>
+              <h1 className={css.title} id="info-page-title">
+                {title}
+              </h1>
               {updatedAt ? (
-                <p className={css.updated}>Updated {updatedAt}</p>
+                <p className={css.updated}>
+                  Updated <time dateTime={updatedAt}>{updatedAt}</time>
+                </p>
               ) : null}
-              <p className={css.description}>{description}</p>
+              <p className={css.description} id="info-page-description">
+                {description}
+              </p>
             </header>
 
             {highlights.length > 0 ? (
-              <ul className={css.highlights}>
-                {highlights.map((item) => (
-                  <li className={css.highlightCard} key={item.title}>
-                    <strong>{item.title}</strong>
-                    <span>{item.text}</span>
-                  </li>
-                ))}
-              </ul>
+              <section
+                className={css.highlightsSection}
+                aria-labelledby="info-highlights-title"
+              >
+                <h2 className="visually-hidden" id="info-highlights-title">
+                  Key information
+                </h2>
+
+                <ul className={css.highlights}>
+                  {highlights.map((item) => (
+                    <li className={css.highlightCard} key={item.title}>
+                      <strong>{item.title}</strong>
+                      <span>{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             ) : null}
 
-            <div className={css.indexCard}>
-              <h2 className={css.indexTitle}>On this page</h2>
+            <nav
+              className={css.indexCard}
+              aria-labelledby="info-page-index-title"
+            >
+              <h2 className={css.indexTitle} id="info-page-index-title">
+                On this page
+              </h2>
               <ol className={css.indexList}>
-                {sections.map((section) => (
-                  <li key={section.title}>{section.title}</li>
+                {sectionLinks.map((section) => (
+                  <li key={section.id}>
+                    <a className={css.indexLink} href={`#${section.id}`}>
+                      {section.title}
+                    </a>
+                  </li>
                 ))}
               </ol>
-            </div>
+            </nav>
 
             <div className={css.sections}>
-              {sections.map((section, index) => (
-                <section className={css.section} key={section.title}>
+              {sectionLinks.map((section, index) => (
+                <section
+                  className={css.section}
+                  id={section.id}
+                  key={section.id}
+                  aria-labelledby={`${section.id}-title`}
+                >
                   <div className={css.sectionHead}>
-                    <h2>{`${index + 1}. ${section.title}`}</h2>
+                    <h2 id={`${section.id}-title`}>
+                      {`${index + 1}. ${section.title}`}
+                    </h2>
                   </div>
 
                   <div className={css.sectionBody}>

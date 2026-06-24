@@ -12,8 +12,9 @@ import {
 
 import { Button, ButtonLink } from '@e-pharmacy/ui/common';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { ROUTES } from '@/lib/routes';
 import { useAuth } from '@e-pharmacy/auth/core';
+
+import { ROUTES } from '@/lib/routes';
 
 import css from './HomeFeatureCards.module.css';
 

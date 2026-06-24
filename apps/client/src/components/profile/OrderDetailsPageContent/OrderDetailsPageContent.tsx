@@ -24,7 +24,6 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-
 import { useAuth } from '@e-pharmacy/auth/core';
 import type { BreadcrumbItem, Order } from '@e-pharmacy/types';
 
@@ -119,7 +118,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       { label: 'Profile', href: ROUTES.PROFILE },
       { label: order?.orderNumber ?? 'Order details' },
     ],
-    [order],
+    [order]
   );
 
   if (!isLoaded) {
@@ -225,7 +224,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                             {item.category ? (
                               <p className={css.itemCategory}>
                                 {formatCapitalizedLabel(
-                                  item.category.replaceAll('_', ' '),
+                                  item.category.replaceAll('_', ' ')
                                 )}
                               </p>
                             ) : null}

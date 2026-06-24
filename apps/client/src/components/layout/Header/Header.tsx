@@ -15,13 +15,13 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { BurgerButton } from '@e-pharmacy/ui/layout';
-import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
-import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
-import { ROUTES } from '@/lib/routes';
-import { isActiveRoute } from '@/lib/routes';
+
+import { ROUTES, isActiveRoute } from '@/lib/routes';
+import { useCart } from '@/providers/CartProvider';
 
 import { usePublicAuthActionsState } from '@/components/layout/hooks/usePublicAuthActionsState';
-import { useCart } from '@/providers/CartProvider';
+import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
+import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
 
 import css from './Header.module.css';
 

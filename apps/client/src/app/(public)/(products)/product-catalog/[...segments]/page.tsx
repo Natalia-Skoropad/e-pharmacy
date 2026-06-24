@@ -1,9 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { ProductCatalogPageContent } from '@/components/product-catalog';
-
 import {
-  buildProductCatalogApiParams,
   buildProductCatalogCanonicalPath,
   buildProductCatalogPath,
   FALLBACK_PRODUCT_FILTER_OPTIONS,
@@ -14,23 +11,14 @@ import {
   mergeProductCatalogFilters,
   parseProductCatalogSearchParams,
   parseProductCatalogSegments,
-  sortPharmaciesByName,
   type ProductCatalogRouteParams,
   type ProductCatalogSearchParams,
 } from '@/lib/catalog/product-catalog';
 
-import {
-  PUBLIC_API_CACHE_OPTIONS,
-  resolveServerDataState,
-} from '@/lib/api/server';
-
+import { loadProductCatalogPageData } from '@/lib/catalog/product-catalog-server';
 import { createPageMetadata } from '@/lib/seo';
 
-import {
-  getProductFilters,
-  getProducts,
-  getPharmacyOptions,
-} from '@/lib/api/server';
+import { ProductCatalogPageContent } from '@/components/product-catalog';
 
 //===================================================================
 
@@ -83,43 +71,9 @@ async function ProductCatalogSegmentsPage({
     redirect(buildProductCatalogPath(filters));
   }
 
-  const [productsState, pharmaciesState, filterOptionsState] =
-    await Promise.all([
-      resolveServerDataState(
-        getProducts(
-          buildProductCatalogApiParams(filters),
-          PUBLIC_API_CACHE_OPTIONS
-        )
-      ),
+  const pageData = await loadProductCatalogPageData(filters);
 
-      resolveServerDataState(getPharmacyOptions(PUBLIC_API_CACHE_OPTIONS)),
-
-      resolveServerDataState(getProductFilters(PUBLIC_API_CACHE_OPTIONS)),
-    ]);
-
-  const productsData =
-    productsState.status === 'success' ? productsState.data : null;
-
-  const filterOptionsData =
-    filterOptionsState.status === 'success'
-      ? filterOptionsState.data
-      : FALLBACK_PRODUCT_FILTER_OPTIONS;
-
-  const activePharmacies = sortPharmaciesByName(
-    pharmaciesState.status === 'success' ? pharmaciesState.data.items : []
-  );
-
-  return (
-    <ProductCatalogPageContent
-      products={productsData?.items ?? []}
-      pharmacies={activePharmacies}
-      filterOptions={filterOptionsData}
-      total={productsData?.total ?? 0}
-      totalPages={productsData?.totalPages ?? 0}
-      filters={filters}
-      isUnavailable={productsState.status === 'unavailable'}
-    />
-  );
+  return <ProductCatalogPageContent {...pageData} />;
 }
 
 export default ProductCatalogSegmentsPage;

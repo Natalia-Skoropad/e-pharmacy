@@ -1,10 +1,8 @@
-import { CartPageContent } from '@/components/cart';
-
-import { CART_DESCRIPTION, CART_TITLE } from '@/lib/seo';
+import { CART_DESCRIPTION, CART_TITLE, createPageMetadata } from '@/lib/seo';
 import { ROUTES } from '@/lib/routes';
-import { createPageMetadata } from '@/lib/seo';
-
 import { ProtectedRoute } from '@/routes';
+
+import { CartPageContent } from '@/components/cart';
 
 //===================================================================
 
