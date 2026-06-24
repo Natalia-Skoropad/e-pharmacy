@@ -240,3 +240,20 @@
     font-size: var(--fz-40);
   }
 }
+
+.copyValueButton {
+  padding: 0;
+  font: inherit;
+  font-weight: var(--fw-medium);
+  color: inherit;
+  text-align: right;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: color var(--transition-base);
+}
+
+.copyValueButton:hover,
+.copyValueButton:focus-visible {
+  color: var(--color-accent);
+}

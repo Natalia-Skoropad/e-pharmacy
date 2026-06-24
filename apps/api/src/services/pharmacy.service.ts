@@ -101,8 +101,13 @@ async function getAvailableProductsCountMap(pharmacyIds: Types.ObjectId[]) {
 function serializePublicPharmacy(
   pharmacy: PharmacyDocument,
   availableProductsCount: number,
-  favoriteIds: Set<string>
+  favoriteIds: Set<string>,
+  options: { includeBankDetails?: boolean } = {}
 ): PublicPharmacyResponseDto {
+  const shouldIncludeBankDetails =
+    Boolean(options.includeBankDetails) &&
+    hasCompleteBankDetails(pharmacy.bankDetails);
+
   return {
     id: String(pharmacy._id),
     name: pharmacy.name,
@@ -112,6 +117,7 @@ function serializePublicPharmacy(
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
     bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
+    ...(shouldIncludeBankDetails ? { bankDetails: pharmacy.bankDetails } : {}),
     rating: pharmacy.rating ?? 0,
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
@@ -314,7 +320,8 @@ export async function getPharmacyDetailsService(
     pharmacy: serializePublicPharmacy(
       pharmacy,
       countMap.get(String(pharmacy._id)) ?? 0,
-      favoriteIds
+      favoriteIds,
+      { includeBankDetails: Boolean(userId) }
     ),
   };
 }

@@ -14,6 +14,7 @@ function CommentInput({
   required = false,
   disabled = false,
   className,
+  errorClassName,
   label = 'Comment for pharmacy',
   placeholder = 'Add details for the pharmacy if needed',
   maxLength,
@@ -22,9 +23,13 @@ function CommentInput({
   onChange,
 }: CommentFieldProps) {
   const hasError = Boolean(isTouched && error);
-  const describedBy = [hint ? `${id}-hint` : null, hasError ? `${id}-error` : null, ariaDescribedBy]
-    .filter(Boolean)
-    .join(' ') || undefined;
+  const describedBy =
+    [
+      hint ? `${id}-hint` : null,
+      hasError ? `${id}-error` : null,
+      ariaDescribedBy,
+    ].filter(Boolean)
+      .join(' ') || undefined;
 
   return (
     <FormFieldLayout
@@ -32,6 +37,7 @@ function CommentInput({
       label={label}
       required={required}
       className={className}
+      errorClassName={errorClassName}
       error={error}
       isTouched={isTouched}
       hint={hint}

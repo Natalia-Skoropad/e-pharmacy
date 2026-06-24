@@ -40,6 +40,7 @@ export type CommentFieldProps = Omit<
   AuthFieldBaseProps,
   'onChange' | 'autoComplete' | 'pattern'
 > & {
+  errorClassName?: string;
   onChange: ChangeEventHandler<HTMLTextAreaElement>;
 };
 

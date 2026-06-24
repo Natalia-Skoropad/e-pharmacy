@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 
 import {
@@ -20,7 +20,7 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
-import type { Pharmacy, PharmacyReview } from '@e-pharmacy/types';
+import type { Pharmacy, PharmacyBankDetails, PharmacyReview } from '@e-pharmacy/types';
 
 import {
   useFavoriteActions,
@@ -36,6 +36,7 @@ import {
   createPharmacyReview,
   addFavoritePharmacy,
   removeFavoritePharmacy,
+  getPharmacyCheckoutDetails,
 } from '@/lib/api/browser';
 
 import {
@@ -73,22 +74,87 @@ function PharmacyDetailsPageContent({
   const [visibleReviewsCount, setVisibleReviewsCount] = useState(
     DEFAULT_VISIBLE_REVIEWS_COUNT
   );
+  const [bankDetails, setBankDetails] = useState<
+    PharmacyBankDetails | null | undefined
+  >(pharmacy.bankDetails);
+  const bankDetailsRequestStatusRef = useRef<'idle' | 'loading' | 'done'>(
+    pharmacy.bankDetails ? 'done' : 'idle'
+  );
+  const [isBankDetailsLoading, setIsBankDetailsLoading] = useState(false);
+  const [areBankDetailsUnavailable, setAreBankDetailsUnavailable] =
+    useState(false);
   const toast = useToast();
 
-  const tabs = useMemo<TabItem<PharmacyTab>[]>(
-    () => [
+  const canShowBankDetailsTab = isAuthReady && isAuthenticated;
+  const currentTab: PharmacyTab =
+    activeTab === 'payment' && !canShowBankDetailsTab ? 'details' : activeTab;
+
+  const tabs = useMemo<TabItem<PharmacyTab>[]>(() => {
+    const items: TabItem<PharmacyTab>[] = [
       { value: 'details', label: 'Details' },
+    ];
+
+    if (canShowBankDetailsTab) {
+      items.push({ value: 'payment', label: 'Bank details' });
+    }
+
+    items.push(
       { value: 'about', label: 'About pharmacy' },
-      { value: 'reviews', label: `Reviews (${reviewsTotal})` },
-    ],
-    [reviewsTotal]
-  );
+      { value: 'reviews', label: `Reviews (${reviewsTotal})` }
+    );
+
+    return items;
+  }, [canShowBankDetailsTab, reviewsTotal]);
 
   const productsHref = buildProductCatalogPath({ pharmacyId: pharmacy.id }, [
     pharmacy,
   ]);
 
   const workingHours = pharmacy.workingHours?.trim() ?? '';
+  const paymentDetails = bankDetails ?? pharmacy.bankDetails;
+  const receiptEmail = pharmacy.email;
+
+  useEffect(() => {
+    if (currentTab !== 'payment') return;
+    if (!canShowBankDetailsTab) return;
+    if (paymentDetails || bankDetailsRequestStatusRef.current === 'done') return;
+
+    let isCancelled = false;
+
+    if (bankDetailsRequestStatusRef.current === 'idle') {
+      bankDetailsRequestStatusRef.current = 'loading';
+
+      queueMicrotask(() => {
+        if (isCancelled) return;
+
+        setIsBankDetailsLoading(true);
+        setAreBankDetailsUnavailable(false);
+      });
+    }
+
+    getPharmacyCheckoutDetails(pharmacy.id)
+      .then((data) => {
+        if (isCancelled) return;
+
+        setBankDetails(data.pharmacy.bankDetails ?? null);
+      })
+      .catch(() => {
+        if (isCancelled) return;
+
+        setBankDetails(null);
+        setAreBankDetailsUnavailable(true);
+      })
+      .finally(() => {
+        if (isCancelled) return;
+
+        bankDetailsRequestStatusRef.current = 'done';
+        setIsBankDetailsLoading(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [canShowBankDetailsTab, currentTab, paymentDetails, pharmacy.id]);
 
   const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
     useFavoriteActions({
@@ -128,15 +194,38 @@ function PharmacyDetailsPageContent({
     authRequiredMessage: 'Please log in to submit a review.',
   });
 
-  const handleEmailCopy = async () => {
-    if (!pharmacy.email) return;
-
-    try {
-      await navigator.clipboard.writeText(pharmacy.email);
-      toast.success('Email copied.');
-    } catch {
-      toast.error('Could not copy email.');
+  const handleTabChange = (nextTab: PharmacyTab) => {
+    if (nextTab === 'payment' && !canShowBankDetailsTab) {
+      setActiveTab('details');
+      return;
     }
+
+    if (
+      nextTab === 'payment' &&
+      !paymentDetails &&
+      bankDetailsRequestStatusRef.current === 'idle'
+    ) {
+      bankDetailsRequestStatusRef.current = 'loading';
+      setIsBankDetailsLoading(true);
+      setAreBankDetailsUnavailable(false);
+    }
+
+    setActiveTab(nextTab);
+  };
+
+  const handleCopy = async (value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copied.`);
+    } catch {
+      toast.error(`Could not copy ${label.toLowerCase()}.`);
+    }
+  };
+
+  const handleEmailCopy = async () => {
+    if (!receiptEmail) return;
+
+    await handleCopy(receiptEmail, 'Email');
   };
 
   return (
@@ -158,12 +247,12 @@ function PharmacyDetailsPageContent({
 
           <Tabs
             items={tabs}
-            activeValue={activeTab}
+            activeValue={currentTab}
             ariaLabel="Pharmacy information tabs"
-            onChange={setActiveTab}
+            onChange={handleTabChange}
           />
 
-          {activeTab === 'details' ? (
+          {currentTab === 'details' ? (
             <div className={css.grid}>
               <div className={css.imageCard}>
                 {pharmacy.imageUrl ? (
@@ -226,7 +315,7 @@ function PharmacyDetailsPageContent({
                     </div>
                   ) : null}
 
-                  {pharmacy.email ? (
+                  {receiptEmail ? (
                     <div className={css.summaryItem}>
                       <dt>
                         <Mail size={18} aria-hidden="true" />
@@ -238,7 +327,7 @@ function PharmacyDetailsPageContent({
                           type="button"
                           onClick={handleEmailCopy}
                         >
-                          {pharmacy.email}
+                          {receiptEmail}
                         </button>
                       </dd>
                     </div>
@@ -276,7 +365,88 @@ function PharmacyDetailsPageContent({
         </Container>
       </section>
 
-      {activeTab === 'about' ? (
+      {currentTab === 'payment' ? (
+        <section className={css.tabSection} aria-live="polite">
+          <Container>
+            <div className={css.panel}>
+              <div className={css.sectionHeader}>
+                <h2 className={css.panelTitle}>Bank details</h2>
+              </div>
+
+              {isBankDetailsLoading ? (
+                <p className={css.notice}>Loading bank details...</p>
+              ) : areBankDetailsUnavailable ? (
+                <p className={css.notice}>
+                  Bank details are temporarily unavailable. Please try again
+                  later.
+                </p>
+              ) : paymentDetails ? (
+                <dl className={css.paymentList}>
+                  <div>
+                    <dt>Recipient name</dt>
+                    <dd>{paymentDetails.recipientName}</dd>
+                  </div>
+
+                  <div>
+                    <dt>Tax ID / EDRPOU</dt>
+                    <dd>{paymentDetails.taxId}</dd>
+                  </div>
+
+                  <div>
+                    <dt>IBAN</dt>
+                    <dd>
+                      <button
+                        className={css.copyValueButton}
+                        type="button"
+                        onClick={() =>
+                          void handleCopy(paymentDetails.iban, 'IBAN')
+                        }
+                        aria-label="Copy IBAN"
+                      >
+                        {paymentDetails.iban}
+                      </button>
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt>Bank name</dt>
+                    <dd>{paymentDetails.bankName}</dd>
+                  </div>
+
+                  <div>
+                    <dt>Payment purpose</dt>
+                    <dd>{paymentDetails.paymentPurpose}</dd>
+                  </div>
+
+                  {receiptEmail ? (
+                    <div>
+                      <dt>Receipt email</dt>
+                      <dd>
+                        <button
+                          className={css.copyValueButton}
+                          type="button"
+                          onClick={() =>
+                            void handleCopy(receiptEmail, 'Email')
+                          }
+                          aria-label="Copy receipt email"
+                        >
+                          {receiptEmail}
+                        </button>
+                      </dd>
+                    </div>
+                  ) : null}
+                </dl>
+              ) : (
+                <p className={css.notice}>
+                  Bank details are not available for this pharmacy yet.
+                </p>
+              )}
+            </div>
+          </Container>
+        </section>
+      ) : null}
+
+      {currentTab === 'about' ? (
         <section className={css.tabSection} aria-live="polite">
           <Container>
             <div className={css.panel}>
@@ -293,7 +463,7 @@ function PharmacyDetailsPageContent({
         </section>
       ) : null}
 
-      {activeTab === 'reviews' ? (
+      {currentTab === 'reviews' ? (
         <section className={css.tabSection} aria-live="polite">
           <Container>
             <div className={css.panel}>

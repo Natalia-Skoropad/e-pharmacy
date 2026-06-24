@@ -68,6 +68,7 @@ export type PublicPharmacyResponseDto = {
   email?: string;
   workingHours?: string;
   bankTransferAvailable: boolean;
+  bankDetails?: PharmacyBankDetails;
   rating?: number;
   imageUrl?: string;
   description?: string;

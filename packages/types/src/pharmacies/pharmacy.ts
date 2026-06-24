@@ -28,6 +28,7 @@ export type PublicPharmacy = {
   reviewsCount: number;
   isFavorite: boolean;
   bankTransferAvailable: boolean;
+  bankDetails?: PharmacyBankDetails;
   updatedAt: ISODateString;
 };
 
