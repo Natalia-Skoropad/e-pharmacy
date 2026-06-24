@@ -13,6 +13,7 @@ export type ProtectedRouteProps = {
   loginPath: string;
   loadingFallback?: ReactNode;
   redirectingFallback?: ReactNode;
+  authUnavailableFallback?: ReactNode;
 };
 
 //===================================================================
@@ -22,6 +23,7 @@ export function ProtectedRoute({
   loginPath,
   loadingFallback = null,
   redirectingFallback = null,
+  authUnavailableFallback = loadingFallback,
 }: ProtectedRouteProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -29,17 +31,27 @@ export function ProtectedRoute({
   const queryString = searchParams.toString();
 
   const { status, isAuthenticated, isAuthReady } = useAuth();
+  const isAuthUnavailable = status === 'auth_unavailable';
 
   useEffect(() => {
-    if (!isAuthReady || status === 'error' || isAuthenticated) return;
+    if (!isAuthReady || isAuthUnavailable || isAuthenticated) return;
 
     const hash = typeof window === 'undefined' ? '' : window.location.hash;
     const currentPath = `${pathname}${queryString ? `?${queryString}` : ''}${hash}`;
 
     router.replace(buildLoginRedirectPath(currentPath, loginPath));
-  }, [isAuthReady, isAuthenticated, loginPath, pathname, queryString, router]);
+  }, [
+    isAuthReady,
+    isAuthUnavailable,
+    isAuthenticated,
+    loginPath,
+    pathname,
+    queryString,
+    router,
+  ]);
 
-  if (!isAuthReady || status === 'error') return loadingFallback;
+  if (!isAuthReady) return loadingFallback;
+  if (isAuthUnavailable) return authUnavailableFallback;
   if (!isAuthenticated) return redirectingFallback;
 
   return children;

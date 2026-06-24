@@ -11,7 +11,11 @@ import {
   type PharmacySearchParams,
 } from '@/lib/catalog/pharmacies-catalog';
 
-import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api/server';
+import {
+  PUBLIC_API_CACHE_OPTIONS,
+  resolveServerDataState,
+} from '@/lib/api/server';
+
 import { createPageMetadata } from '@/lib/seo';
 import { getPharmacyFilters, getPharmacies } from '@/lib/api/server';
 
@@ -39,28 +43,34 @@ export async function generateMetadata({ searchParams }: PharmaciesPageProps) {
 async function PharmaciesPage({ searchParams }: PharmaciesPageProps) {
   const parsedFilters = parsePharmacySearchParams(await searchParams);
 
-  const [pharmacyFiltersData, initialPharmaciesData] = await Promise.all([
-    getPharmacyFilters(PUBLIC_API_CACHE_OPTIONS).catch(() => null),
-    getPharmacies(
-      buildPharmacyApiParams(parsedFilters),
-      PUBLIC_API_CACHE_OPTIONS
-    ).catch(() => null),
+  const [pharmacyFiltersState, initialPharmaciesState] = await Promise.all([
+    resolveServerDataState(getPharmacyFilters(PUBLIC_API_CACHE_OPTIONS)),
+    resolveServerDataState(
+      getPharmacies(
+        buildPharmacyApiParams(parsedFilters),
+        PUBLIC_API_CACHE_OPTIONS
+      )
+    ),
   ]);
 
   const cityOptions =
-    pharmacyFiltersData?.cities.map((city) => city.value) ?? [];
+    pharmacyFiltersState.status === 'success'
+      ? pharmacyFiltersState.data.cities.map((city) => city.value)
+      : [];
 
   const filters = normalizePharmacyFiltersCity(parsedFilters, cityOptions);
 
   const shouldRefetchWithNormalizedCity =
     filters.city !== parsedFilters.city && Boolean(filters.city);
 
-  const pharmaciesData = shouldRefetchWithNormalizedCity
-    ? await getPharmacies(
-        buildPharmacyApiParams(filters),
-        PUBLIC_API_CACHE_OPTIONS
-      ).catch(() => initialPharmaciesData)
-    : initialPharmaciesData;
+  const pharmaciesState = shouldRefetchWithNormalizedCity
+    ? await resolveServerDataState(
+        getPharmacies(buildPharmacyApiParams(filters), PUBLIC_API_CACHE_OPTIONS)
+      )
+    : initialPharmaciesState;
+
+  const pharmaciesData =
+    pharmaciesState.status === 'success' ? pharmaciesState.data : null;
 
   return (
     <PharmaciesPageContent
@@ -69,7 +79,7 @@ async function PharmaciesPage({ searchParams }: PharmaciesPageProps) {
       totalPages={pharmaciesData?.totalPages ?? 0}
       filters={filters}
       cityOptions={cityOptions}
-      isUnavailable={!pharmaciesData}
+      isUnavailable={pharmaciesState.status === 'unavailable'}
     />
   );
 }

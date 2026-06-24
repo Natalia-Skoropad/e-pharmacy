@@ -16,6 +16,6 @@ export function usePublicAuthActionsState() {
     isAuthLoading: !isAuthReady,
     shouldShowGuestActions: isAuthReady && !shouldShowAuthenticatedActions,
     shouldShowAuthenticatedActions,
-    isAuthUnavailable: status === 'error',
+    isAuthUnavailable: status === 'auth_unavailable',
   };
 }

@@ -3,29 +3,69 @@ import type { Metadata } from 'next';
 
 import { PharmacyDetailsPageContent } from '@/components/pharmacies';
 import { buildPharmacyPath, getIdFromSlugId } from '@/lib/routes';
-import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api/server';
-import { createPageMetadata } from '@/lib/seo';
 
 import {
-  getPharmacyDetails,
-  getPharmacyReviews,
+  getDataUnavailableReason,
+  PUBLIC_API_CACHE_OPTIONS,
 } from '@/lib/api/server';
 
+import { createPageMetadata } from '@/lib/seo';
+
+import { getPharmacyDetails, getPharmacyReviews } from '@/lib/api/server';
+
+import { ApiError } from '@e-pharmacy/api-client/core';
 import type { Pharmacy } from '@e-pharmacy/types';
+import type { DataUnavailableReason } from '@/lib/api/server';
 
 //===================================================================
 
-export async function getPharmacyBySlugId(slugId: string): Promise<Pharmacy | null> {
+export type PharmacyDetailLookupResult =
+  | { status: 'found'; pharmacy: Pharmacy }
+  | { status: 'not_found' }
+  | { status: 'unavailable'; reason: DataUnavailableReason };
+
+//===================================================================
+
+function isNotFoundError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
+}
+
+//===================================================================
+
+export async function lookupPharmacyBySlugId(
+  slugId: string
+): Promise<PharmacyDetailLookupResult> {
   const pharmacyId = getIdFromSlugId(slugId);
 
-  if (!pharmacyId) return null;
+  if (!pharmacyId) return { status: 'not_found' };
 
-  const pharmacyData = await getPharmacyDetails(
-    pharmacyId,
-    PUBLIC_API_CACHE_OPTIONS
-  ).catch(() => null);
+  try {
+    const pharmacyData = await getPharmacyDetails(
+      pharmacyId,
+      PUBLIC_API_CACHE_OPTIONS
+    );
 
-  return pharmacyData?.pharmacy ?? null;
+    return pharmacyData?.pharmacy
+      ? { status: 'found', pharmacy: pharmacyData.pharmacy }
+      : { status: 'not_found' };
+  } catch (error) {
+    if (isNotFoundError(error)) return { status: 'not_found' };
+
+    return {
+      status: 'unavailable',
+      reason: getDataUnavailableReason(error),
+    };
+  }
+}
+
+//===================================================================
+
+export async function getPharmacyBySlugId(
+  slugId: string
+): Promise<Pharmacy | null> {
+  const result = await lookupPharmacyBySlugId(slugId);
+
+  return result.status === 'found' ? result.pharmacy : null;
 }
 
 //===================================================================

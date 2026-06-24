@@ -110,7 +110,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     !isLoading && cart.items.length > 0 && !selectedOrderGroup;
 
   const selectOrderMessage = selectedPharmacyIdFromRoute
-    ? 'This pharmacy order is not available in your cart anymore. Please return to the cart and choose an active order.'
+    ? 'This checkout link is no longer valid. Return to cart and choose an active pharmacy order.'
     : 'You have several pharmacy orders in your cart. Please choose the order you want to confirm from the cart page.';
 
   const {

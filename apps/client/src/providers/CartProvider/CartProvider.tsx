@@ -1,5 +1,7 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
+
 import {
   createContext,
   useCallback,
@@ -43,7 +45,14 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 //===================================================================
 
+function shouldLoadCartForPath(pathname: string): boolean {
+  return pathname === '/cart' || pathname.startsWith('/checkout');
+}
+
+//===================================================================
+
 export function CartProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const { isAuthReady, isAuthenticated } = useAuth();
 
   const [cart, setCartState] = useState<Cart>(EMPTY_CART);
@@ -108,6 +117,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      if (!shouldLoadCartForPath(pathname)) {
+        return;
+      }
+
       if (wasAuthenticated !== true) {
         setIsLoaded(false);
         void loadCart().catch(() => undefined);
@@ -122,7 +135,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => {
       isCancelled = true;
     };
-  }, [isAuthReady, isAuthenticated, isLoaded, isLoading, loadCart]);
+  }, [isAuthReady, isAuthenticated, isLoaded, isLoading, loadCart, pathname]);
 
   useEffect(() => {
     const onCartUpdated = (event: Event) => {

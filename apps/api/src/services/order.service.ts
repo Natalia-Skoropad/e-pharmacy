@@ -1,6 +1,6 @@
 import mongoose, { Types } from 'mongoose';
 
-import { USER_ROLES } from '../constants/auth';
+import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
@@ -27,7 +27,7 @@ import type {
   OrderStatus,
 } from '../types/order';
 
-import type { ProductEntity } from '../types/product';
+import type { ProductEntity, ProductOfferEntity } from '../types/product';
 import type { PharmacyEntity } from '../types/pharmacy';
 import type { UserRole } from '../types/user';
 
@@ -67,9 +67,19 @@ type CartDocument = {
 };
 
 type ProductDocument = ProductEntity & { _id: Types.ObjectId };
+type ProductOfferDocument = ProductOfferEntity & { _id: Types.ObjectId };
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
 type OrderDocument = OrderEntity & { _id: Types.ObjectId };
 type ProductFallbackMap = Map<string, ProductDocument>;
+
+//===============================================================
+
+function isCheckoutPharmacyStatus(status: PharmacyEntity['status']): boolean {
+  return (
+    status === PHARMACY_STATUSES.ACTIVE ||
+    status === PHARMACY_STATUSES.ON_MODERATION
+  );
+}
 
 //===============================================================
 
@@ -243,6 +253,91 @@ async function getOrderProductFallbacks(
   return new Map(products.map((product) => [String(product._id), product]));
 }
 
+
+//===============================================================
+
+type CheckoutCartValidationInput = {
+  cartItems: CartItemDocument[];
+  offers: ProductOfferDocument[];
+  products: ProductDocument[];
+  pharmacyId: string;
+  now: number;
+};
+
+type CheckoutCartValidationResult = {
+  offerMap: Map<string, ProductOfferDocument>;
+  productMap: Map<string, ProductDocument>;
+};
+
+//===============================================================
+
+function validateCheckoutCartItemsOrThrow({
+  cartItems,
+  offers,
+  products,
+  pharmacyId,
+  now,
+}: CheckoutCartValidationInput): CheckoutCartValidationResult {
+  const offerMap = new Map(
+    offers.map((offer) => [String(offer._id), offer])
+  );
+
+  const productMap = new Map(
+    products.map((product) => [String(product._id), product])
+  );
+
+  for (const cartItem of cartItems) {
+    const offer = offerMap.get(String(cartItem.productOfferId));
+
+    if (!offer) {
+      throw httpError(HTTP_STATUS.BAD_REQUEST, 'Product offer is unavailable');
+    }
+
+    if (offer.pharmacyId.toString() !== pharmacyId) {
+      throw httpError(
+        HTTP_STATUS.BAD_REQUEST,
+        'Selected pharmacy order contains an invalid offer.'
+      );
+    }
+
+    if (cartItem.expiresAt.getTime() <= now) {
+      throw httpError(
+        HTTP_STATUS.BAD_REQUEST,
+        'Selected pharmacy order is empty or expired'
+      );
+    }
+
+    if (offer.reservedQuantity < cartItem.quantity) {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        'Product reservation is no longer available. Please refresh and try again.'
+      );
+    }
+
+    if (offer.totalQuantity < cartItem.quantity) {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        'Product quantity is no longer available. Please refresh and try again.'
+      );
+    }
+
+    const product = productMap.get(String(offer.productId));
+
+    if (!product) {
+      throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+    }
+
+    if (product.status !== 'active') {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        'Product is no longer available for checkout.'
+      );
+    }
+  }
+
+  return { offerMap, productMap };
+}
+
 //===============================================================
 
 export async function checkoutOrderService(
@@ -270,19 +365,18 @@ export async function checkoutOrderService(
         _id: { $in: cart.items.map((item) => item.productOfferId) },
       })
         .session(session)
-        .lean();
+        .lean<ProductOfferDocument[]>();
 
-      const offerMap = new Map(
+      const initialOfferMap = new Map(
         offers.map((offer) => [String(offer._id), offer])
       );
 
-      const orderCartItems = cart.items.filter((item) => {
-        const offer = offerMap.get(String(item.productOfferId));
+      const now = Date.now();
 
-        return (
-          offer?.pharmacyId.toString() === input.pharmacyId &&
-          item.expiresAt.getTime() > Date.now()
-        );
+      const orderCartItems = cart.items.filter((item) => {
+        const offer = initialOfferMap.get(String(item.productOfferId));
+
+        return offer?.pharmacyId.toString() === input.pharmacyId;
       });
 
       if (!orderCartItems.length) {
@@ -296,7 +390,7 @@ export async function checkoutOrderService(
         .session(session)
         .lean<PharmacyDocument | null>();
 
-      if (!pharmacy || !['active', 'on_moderation'].includes(pharmacy.status)) {
+      if (!pharmacy || !isCheckoutPharmacyStatus(pharmacy.status)) {
         throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found');
       }
 
@@ -311,7 +405,7 @@ export async function checkoutOrderService(
       }
 
       const productIds = orderCartItems.map((item) => {
-        const offer = offerMap.get(String(item.productOfferId));
+        const offer = initialOfferMap.get(String(item.productOfferId));
 
         if (!offer) {
           throw httpError(
@@ -327,9 +421,13 @@ export async function checkoutOrderService(
         .session(session)
         .lean<ProductDocument[]>();
 
-      const productMap = new Map(
-        products.map((product) => [String(product._id), product])
-      );
+      const { offerMap, productMap } = validateCheckoutCartItemsOrThrow({
+        cartItems: orderCartItems,
+        offers,
+        products,
+        pharmacyId: input.pharmacyId,
+        now,
+      });
 
       const orderItems: OrderItemEntity[] = orderCartItems.map((cartItem) => {
         const offer = offerMap.get(String(cartItem.productOfferId));

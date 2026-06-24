@@ -40,7 +40,7 @@ export function RoleProtectedRoute({
   const hasAllowedRole = Boolean(user && allowedRoles.includes(user.role));
 
   useEffect(() => {
-    if (!isAuthReady || status === 'error') return;
+    if (!isAuthReady || status === 'auth_unavailable') return;
 
     if (!isAuthenticated) {
       const hash = typeof window === 'undefined' ? '' : window.location.hash;
@@ -65,7 +65,7 @@ export function RoleProtectedRoute({
     router,
   ]);
 
-  if (!isAuthReady || status === 'error') return loadingFallback;
+  if (!isAuthReady || status === 'auth_unavailable') return loadingFallback;
   if (!isAuthenticated) return redirectingFallback;
   if (!hasAllowedRole) return forbiddenFallback;
 

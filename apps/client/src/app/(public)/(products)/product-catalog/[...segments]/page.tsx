@@ -19,7 +19,11 @@ import {
   type ProductCatalogSearchParams,
 } from '@/lib/catalog/product-catalog';
 
-import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api/server';
+import {
+  PUBLIC_API_CACHE_OPTIONS,
+  resolveServerDataState,
+} from '@/lib/api/server';
+
 import { createPageMetadata } from '@/lib/seo';
 
 import {
@@ -79,21 +83,30 @@ async function ProductCatalogSegmentsPage({
     redirect(buildProductCatalogPath(filters));
   }
 
-  const [productsData, pharmaciesData, filterOptionsData] = await Promise.all([
-    getProducts(
-      buildProductCatalogApiParams(filters),
-      PUBLIC_API_CACHE_OPTIONS
-    ).catch(() => null),
+  const [productsState, pharmaciesState, filterOptionsState] =
+    await Promise.all([
+      resolveServerDataState(
+        getProducts(
+          buildProductCatalogApiParams(filters),
+          PUBLIC_API_CACHE_OPTIONS
+        )
+      ),
 
-    getPharmacyOptions(PUBLIC_API_CACHE_OPTIONS).catch(() => null),
+      resolveServerDataState(getPharmacyOptions(PUBLIC_API_CACHE_OPTIONS)),
 
-    getProductFilters(PUBLIC_API_CACHE_OPTIONS).catch(
-      () => FALLBACK_PRODUCT_FILTER_OPTIONS
-    ),
-  ]);
+      resolveServerDataState(getProductFilters(PUBLIC_API_CACHE_OPTIONS)),
+    ]);
+
+  const productsData =
+    productsState.status === 'success' ? productsState.data : null;
+
+  const filterOptionsData =
+    filterOptionsState.status === 'success'
+      ? filterOptionsState.data
+      : FALLBACK_PRODUCT_FILTER_OPTIONS;
 
   const activePharmacies = sortPharmaciesByName(
-    pharmaciesData?.items ?? []
+    pharmaciesState.status === 'success' ? pharmaciesState.data.items : []
   );
 
   return (
@@ -104,7 +117,7 @@ async function ProductCatalogSegmentsPage({
       total={productsData?.total ?? 0}
       totalPages={productsData?.totalPages ?? 0}
       filters={filters}
-      isUnavailable={!productsData}
+      isUnavailable={productsState.status === 'unavailable'}
     />
   );
 }

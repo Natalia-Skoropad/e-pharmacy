@@ -9,10 +9,11 @@ import {
   buildPharmacyPath,
 } from '@/lib/routes';
 
-import { getProductBySlugId } from '@/lib/details/server/product-detail-page';
-import { getPharmacyBySlugId } from '@/lib/details/server/pharmacy-detail-page';
+import { lookupProductBySlugId } from '@/lib/details/server/product-detail-page';
+import { lookupPharmacyBySlugId } from '@/lib/details/server/pharmacy-detail-page';
 
 import type { Product, Pharmacy } from '@e-pharmacy/types';
+import type { DataUnavailableReason } from '@/lib/api/server';
 
 //===================================================================
 
@@ -31,6 +32,11 @@ type PharmacyRootDetail = {
 };
 
 export type RootDetail = ProductRootDetail | PharmacyRootDetail;
+
+export type RootDetailResolveResult =
+  | { status: 'found'; detail: RootDetail }
+  | { status: 'not_found' }
+  | { status: 'unavailable'; reason: DataUnavailableReason };
 
 //===================================================================
 
@@ -65,22 +71,44 @@ function createPharmacyRootDetail(slugId: string, pharmacy: Pharmacy): PharmacyR
 
 export const resolveRootDetailBySlugId = cache(async function resolveRootDetailBySlugId(
   slugId: string
-): Promise<RootDetail | null> {
-  if (isReservedRootSlug(slugId)) return null;
+): Promise<RootDetailResolveResult> {
+  if (isReservedRootSlug(slugId)) return { status: 'not_found' };
 
-  const [product, pharmacy] = await Promise.all([
-    getProductBySlugId(slugId),
-    getPharmacyBySlugId(slugId),
+  const [productResult, pharmacyResult] = await Promise.all([
+    lookupProductBySlugId(slugId),
+    lookupPharmacyBySlugId(slugId),
   ]);
 
   const details = [
-    product ? createProductRootDetail(slugId, product) : null,
-    pharmacy ? createPharmacyRootDetail(slugId, pharmacy) : null,
+    productResult.status === 'found'
+      ? createProductRootDetail(slugId, productResult.product)
+      : null,
+    pharmacyResult.status === 'found'
+      ? createPharmacyRootDetail(slugId, pharmacyResult.pharmacy)
+      : null,
   ].filter((detail): detail is RootDetail => Boolean(detail));
 
-  if (details.length === 0) return null;
+  if (details.length > 0) {
+    const exactCanonicalMatch = details.find((detail) => detail.isCanonicalSlug);
 
-  const exactCanonicalMatch = details.find((detail) => detail.isCanonicalSlug);
+    if (exactCanonicalMatch) {
+      return { status: 'found', detail: exactCanonicalMatch };
+    }
 
-  return exactCanonicalMatch ?? details[0];
+    if (details.length === 1) {
+      return { status: 'found', detail: details[0] };
+    }
+
+    return { status: 'not_found' };
+  }
+
+  if (productResult.status === 'unavailable') {
+    return { status: 'unavailable', reason: productResult.reason };
+  }
+
+  if (pharmacyResult.status === 'unavailable') {
+    return { status: 'unavailable', reason: pharmacyResult.reason };
+  }
+
+  return { status: 'not_found' };
 });

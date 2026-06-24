@@ -46,9 +46,10 @@ export function GuestOnlyRoute({
   const requestedRedirect = searchParams.get('redirect');
 
   const { user, status, isAuthenticated, isAuthReady } = useAuth();
+  const isAuthUnavailable = status === 'auth_unavailable';
 
   useEffect(() => {
-    if (!isAuthReady || !isAuthenticated) return;
+    if (!isAuthReady || isAuthUnavailable || !isAuthenticated) return;
 
     const fallbackRedirectPath = resolveAuthenticatedRedirectPath(
       authenticatedRedirectPath,
@@ -64,6 +65,7 @@ export function GuestOnlyRoute({
   }, [
     authenticatedRedirectPath,
     isAuthReady,
+    isAuthUnavailable,
     isAuthenticated,
     router,
     requestedRedirect,
@@ -71,7 +73,7 @@ export function GuestOnlyRoute({
   ]);
 
   if (!isAuthReady) return loadingFallback;
-  if (status === 'error') return children;
+  if (isAuthUnavailable) return children;
   if (isAuthenticated) return null;
 
   return children;

@@ -11,7 +11,11 @@ import {
   type PharmacyRouteParams,
 } from '@/lib/catalog/pharmacies-catalog';
 
-import { PUBLIC_API_CACHE_OPTIONS } from '@/lib/api/server';
+import {
+  PUBLIC_API_CACHE_OPTIONS,
+  resolveServerDataState,
+} from '@/lib/api/server';
+
 import { createPageMetadata } from '@/lib/seo';
 import { getPharmacyFilters, getPharmacies } from '@/lib/api/server';
 
@@ -22,7 +26,6 @@ type PharmaciesSegmentsPageProps = {
 };
 
 //===================================================================
-
 
 export async function generateMetadata({
   params,
@@ -39,26 +42,26 @@ export async function generateMetadata({
 
 //===================================================================
 
-async function PharmaciesSegmentsPage({
-  params,
-}: PharmaciesSegmentsPageProps) {
+async function PharmaciesSegmentsPage({ params }: PharmaciesSegmentsPageProps) {
   const parsedFilters = parsePharmacySegments(await params);
 
-  const pharmacyFiltersData = await getPharmacyFilters(
-    PUBLIC_API_CACHE_OPTIONS
-  ).catch(() => null);
-
-  const cityOptions = pharmacyFiltersData?.cities.map((city) => city.value) ?? [];
-
-  const filters = normalizePharmacyFiltersCity(
-    parsedFilters,
-    cityOptions
+  const pharmacyFiltersState = await resolveServerDataState(
+    getPharmacyFilters(PUBLIC_API_CACHE_OPTIONS)
   );
 
-  const pharmaciesData = await getPharmacies(
-    buildPharmacyApiParams(filters),
-    PUBLIC_API_CACHE_OPTIONS
-  ).catch(() => null);
+  const cityOptions =
+    pharmacyFiltersState.status === 'success'
+      ? pharmacyFiltersState.data.cities.map((city) => city.value)
+      : [];
+
+  const filters = normalizePharmacyFiltersCity(parsedFilters, cityOptions);
+
+  const pharmaciesState = await resolveServerDataState(
+    getPharmacies(buildPharmacyApiParams(filters), PUBLIC_API_CACHE_OPTIONS)
+  );
+
+  const pharmaciesData =
+    pharmaciesState.status === 'success' ? pharmaciesState.data : null;
 
   return (
     <PharmaciesPageContent
@@ -67,7 +70,7 @@ async function PharmaciesSegmentsPage({
       totalPages={pharmaciesData?.totalPages ?? 0}
       filters={filters}
       cityOptions={cityOptions}
-      isUnavailable={!pharmaciesData}
+      isUnavailable={pharmaciesState.status === 'unavailable'}
     />
   );
 }

@@ -28,7 +28,11 @@ import type {
 
 //===================================================================
 
-type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+type AuthStatus =
+  | 'loading'
+  | 'authenticated'
+  | 'unauthenticated'
+  | 'auth_unavailable';
 
 //===================================================================
 
@@ -54,6 +58,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 4_000;
 
+//===================================================================
 class AuthBootstrapTimeoutError extends Error {
   constructor() {
     super('Auth bootstrap timed out.');
@@ -197,7 +202,7 @@ export function AuthProviderCore({
 
       if (!preserveAuthenticatedState) {
         setUser(null);
-        setStatus('unauthenticated');
+        setStatus('auth_unavailable');
       }
     },
     []
@@ -263,7 +268,7 @@ export function AuthProviderCore({
     setAuthError(error);
     setIsRefreshingUser(false);
     setUser(null);
-    setStatus('unauthenticated');
+    setStatus('auth_unavailable');
   }, []);
 
   const runBootstrap = useCallback(() => {

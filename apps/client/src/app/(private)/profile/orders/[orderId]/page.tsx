@@ -1,13 +1,9 @@
+import { notFound } from 'next/navigation';
+
 import { OrderDetailsPageContent } from '@/components/profile';
-
-import {
-  ORDER_DETAILS_DESCRIPTION,
-  ORDER_DETAILS_TITLE,
-} from '@/lib/seo';
-
-import { ROUTES } from '@/lib/routes';
+import { ORDER_DETAILS_DESCRIPTION, ORDER_DETAILS_TITLE } from '@/lib/seo';
+import { getOrderIdFromPathParam, isValidObjectId, ROUTES } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo';
-
 import { ProtectedRoute } from '@/routes';
 
 //===================================================================
@@ -22,11 +18,12 @@ type OrderDetailsPageProps = {
 
 export async function generateMetadata({ params }: OrderDetailsPageProps) {
   const { orderId } = await params;
+  const cleanOrderId = getOrderIdFromPathParam(orderId);
 
   return createPageMetadata({
     title: ORDER_DETAILS_TITLE,
     description: ORDER_DETAILS_DESCRIPTION,
-    path: `${ROUTES.PROFILE}/orders/${orderId}`,
+    path: `${ROUTES.PROFILE}/orders/${cleanOrderId}`,
     noIndex: true,
   });
 }
@@ -35,10 +32,13 @@ export async function generateMetadata({ params }: OrderDetailsPageProps) {
 
 async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   const { orderId } = await params;
+  const cleanOrderId = getOrderIdFromPathParam(orderId);
+
+  if (!isValidObjectId(cleanOrderId)) notFound();
 
   return (
     <ProtectedRoute>
-      <OrderDetailsPageContent orderId={orderId} />
+      <OrderDetailsPageContent orderId={cleanOrderId} />
     </ProtectedRoute>
   );
 }
