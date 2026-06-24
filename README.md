@@ -137,7 +137,7 @@ Main local values:
 ```env
 # apps/client
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
+API_BASE_URL=http://localhost:4000
 
 # apps/api
 NODE_ENV=development

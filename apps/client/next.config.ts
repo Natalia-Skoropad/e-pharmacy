@@ -14,8 +14,6 @@ const nextConfig: NextConfig = {
     '@e-pharmacy/validation',
   ],
 
-  htmlLimitedBots: /.*/,
-
   async redirects() {
     return [
       {

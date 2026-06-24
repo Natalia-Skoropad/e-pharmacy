@@ -103,9 +103,9 @@ export const config = {
     '/cart/:path*',
     '/checkout/:path*',
     '/profile/:path*',
-    '/login',
-    '/register',
-    '/password-recovery',
-    '/reset-password',
+    '/login/:path*',
+    '/register/:path*',
+    '/password-recovery/:path*',
+    '/reset-password/:path*',
   ],
 };

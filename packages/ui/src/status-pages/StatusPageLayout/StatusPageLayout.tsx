@@ -41,7 +41,7 @@ function StatusPageLayout({
   variant = 'plain',
 }: StatusPageLayoutProps) {
   return (
-    <main className={clsx(css.page, css[variant])}>
+    <div className={clsx(css.page, css[variant])}>
       <section className={css.hero} aria-labelledby={titleId}>
         <Container>
           <div className={clsx(css.heroGrid, !image && css.heroGridCompact)}>
@@ -79,7 +79,7 @@ function StatusPageLayout({
           </div>
         </Container>
       </section>
-    </main>
+    </div>
   );
 }
 

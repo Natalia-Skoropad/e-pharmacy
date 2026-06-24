@@ -25,7 +25,7 @@ apps/*/.env.local
 apps/*/.env.*.local
 
 # system
-.DS_Pharmacy
+.DS_Store
 Thumbs.db
 
 # IDE

@@ -10,7 +10,7 @@
 .hero {
   display: flex;
   align-items: center;
-  min-height: calc(100dvh - 100px);
+  min-height: clamp(520px, calc(100dvh - 180px), 760px);
   padding-block: 30px;
 }
 
@@ -161,7 +161,6 @@
 }
 
 .brand .image {
-  aspect-ratio: 749 / 508;
   transform: rotate(8deg) scale(0.9);
   filter: drop-shadow(var(--shadow-status-image));
 }

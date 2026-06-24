@@ -449,7 +449,6 @@ Main API areas used by the client:
 - Public catalog pages are rendered on the server and use cached/revalidated public API reads.
 - `apps/client/src/lib/api/server/cache-options.ts` centralizes public API revalidation settings.
 - `apps/client/src/lib/api/proxy/public-backend-proxy.ts` adds cache headers for read-only public proxy responses.
-- `htmlLimitedBots: /.*/` in `next.config.ts` helps SEO validators receive metadata in `<head>`.
 - Remote image patterns are configured in `next.config.ts` for deployed backend image assets.
 - CSS Modules keep component styling scoped.
 - `AuthProvider` checks the client-readable auth marker before calling `/api/auth/me`, so anonymous public pages avoid unnecessary auth bootstrap requests.
@@ -460,7 +459,7 @@ Create an `.env.local` file inside `apps/client`. The source of truth for client
 
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
+API_BASE_URL=http://localhost:4000
 ```
 
 ### Variable reference
@@ -468,11 +467,11 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 | Variable                   | Used for                                                                    | Example                 |
 | -------------------------- | --------------------------------------------------------------------------- | ----------------------- |
 | `NEXT_PUBLIC_SITE_URL`     | canonical URLs, metadata, sitemap, robots, absolute public URLs             | `http://localhost:3000` |
-| `NEXT_PUBLIC_API_BASE_URL` | backend URL used by server-side data fetches and Next.js BFF route handlers | `http://localhost:4000` |
+| `API_BASE_URL` | backend URL used only by Next.js server-side data fetches and BFF route handlers | `http://localhost:4000` |
 
 For production, replace these values with the deployed client and API URLs. `NEXT_PUBLIC_SITE_URL` is required for real production deploys so sitemap, robots, canonical URLs, and social metadata do not fall back to localhost. Local builds may use the localhost fallback when this variable is not set.
 
-Client-side private flows should continue to call same-origin `/api/*` routes, while those route handlers use `NEXT_PUBLIC_API_BASE_URL` to reach the backend.
+Client-side private flows should continue to call same-origin `/api/*` routes, while those route handlers use server-only `API_BASE_URL` to reach the backend.
 
 The browser should not call private backend mutations directly. Auth, cart, checkout, orders, profile updates, password updates, review/favorite mutations, and logout should keep using the same-origin BFF route handlers.
 
@@ -539,7 +538,7 @@ pnpm check:client
 Recommended production checklist:
 
 - set production `NEXT_PUBLIC_SITE_URL`
-- set production `NEXT_PUBLIC_API_BASE_URL`
+- set production `API_BASE_URL`
 - verify API CORS, cookie, and Origin/Referer settings
 - verify private auth/cart/order/review/favorite flows go through same-origin `/api/*` route handlers
 - verify sitemap and robots rules
