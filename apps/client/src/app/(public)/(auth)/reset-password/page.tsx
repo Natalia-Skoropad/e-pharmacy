@@ -37,8 +37,13 @@ async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
         title={RESET_PASSWORD_TITLE}
         text={PASSWORD_RECOVERY_DESCRIPTION}
         breadcrumbs={createBreadcrumbs(RESET_PASSWORD_TITLE)}
+        showHeader={false}
       >
-        <ResetPasswordForm token={token} />
+        <ResetPasswordForm
+          token={token}
+          title={RESET_PASSWORD_TITLE}
+          text={PASSWORD_RECOVERY_DESCRIPTION}
+        />
       </AuthFormShell>
     </GuestOnlyRoute>
   );

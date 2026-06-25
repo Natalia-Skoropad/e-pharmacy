@@ -34,11 +34,13 @@ import css from '../shared/AuthForm.module.css';
 
 type ResetPasswordFormProps = {
   token: string;
+  title: string;
+  text: string;
 };
 
 //===================================================================
 
-function ResetPasswordForm({ token }: ResetPasswordFormProps) {
+function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
   const toast = useToast();
   const router = useRouter();
   const { isAuthReady } = useAuth();
@@ -113,7 +115,7 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       <div className={css.form}>
         <div className={css.head}>
           <p className={css.text}>All set</p>
-          <h2 className={css.title}>Password changed successfully</h2>
+          <h1 className={css.title}>Password changed successfully</h1>
           <p className={css.text}>
             Your password has been updated. You can now log in with your new
             password and continue using E-PHARMACY.
@@ -133,6 +135,11 @@ function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
   return (
     <form className={css.form} noValidate onSubmit={handleSubmit}>
+      <div className={css.head}>
+        <h1 className={css.title}>{title}</h1>
+        <p className={css.text}>{text}</p>
+      </div>
+
       {!token ? (
         <p className={css.submitError} role="alert">
           Password reset link is missing. Please request a new link.

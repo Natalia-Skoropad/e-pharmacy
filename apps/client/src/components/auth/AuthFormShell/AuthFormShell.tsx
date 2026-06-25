@@ -14,6 +14,7 @@ type AuthFormShellProps = {
   text: string;
   breadcrumbs: BreadcrumbItem[];
   children: ReactNode;
+  showHeader?: boolean;
 };
 
 //===================================================================
@@ -23,12 +24,17 @@ function AuthFormShell({
   text,
   breadcrumbs,
   children,
+  showHeader = true,
 }: AuthFormShellProps) {
   const titleId = useId();
 
   return (
     <main className={css.page}>
-      <section className={css.section} aria-labelledby={titleId}>
+      <section
+        className={css.section}
+        aria-label={showHeader ? undefined : title}
+        aria-labelledby={showHeader ? titleId : undefined}
+      >
         <Container>
           <Breadcrumbs items={breadcrumbs} />
 
@@ -47,12 +53,14 @@ function AuthFormShell({
 
             <div className={css.card}>
               <div className={css.cardInner}>
-                <div className={css.head}>
-                  <h1 className={css.title} id={titleId}>
-                    {title}
-                  </h1>
-                  <p className={css.text}>{text}</p>
-                </div>
+                {showHeader ? (
+                  <div className={css.head}>
+                    <h1 className={css.title} id={titleId}>
+                      {title}
+                    </h1>
+                    <p className={css.text}>{text}</p>
+                  </div>
+                ) : null}
 
                 {children}
               </div>
