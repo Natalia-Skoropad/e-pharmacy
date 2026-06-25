@@ -65,11 +65,12 @@ After successful client registration:
 
 ### Pharmacy registration fields
 
-- pharmacy name;
+- name (ім'я власника акаунта) (обов'язкове поле)
+- pharmacy name; (обов'язкове поле)
 - email;
 - phone;
 - password;
-- confirmation documents upload.
+- confirmation documents upload. (обов'язкове поле)
 
 After successful pharmacy registration:
 

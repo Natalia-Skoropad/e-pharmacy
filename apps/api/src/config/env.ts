@@ -138,6 +138,28 @@ function getOptionalNumberEnv(name: string, fallback: number): number {
 
 //===============================================================
 
+function getOptionalNumberListEnv(name: string): number[] {
+  const value = process.env[name];
+
+  if (!value) return [];
+
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      const numberValue = Number(item);
+
+      if (!Number.isInteger(numberValue) || numberValue <= 0) {
+        throw new Error(`${name} must contain positive numbers only`);
+      }
+
+      return numberValue;
+    });
+}
+
+//===============================================================
+
 export const env = {
   NODE_ENV,
   PORT: getPort(),
@@ -157,6 +179,7 @@ export const env = {
   BFF_PROXY_SECRET: process.env.BFF_PROXY_SECRET,
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: getOptionalNumberEnv('SMTP_PORT', 587),
+  SMTP_FALLBACK_PORTS: getOptionalNumberListEnv('SMTP_FALLBACK_PORTS'),
   SMTP_USER: process.env.SMTP_USER,
   SMTP_PASSWORD: process.env.SMTP_PASSWORD,
   SMTP_FROM: process.env.SMTP_FROM,
