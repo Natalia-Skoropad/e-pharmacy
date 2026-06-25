@@ -1,0 +1,52 @@
+.banner {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid transparent;
+  border-radius: 18px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.message {
+  margin: 0;
+  color: var(--color-text-secondary, #667085);
+  line-height: 1.6;
+}
+
+.blue {
+  background-color: #eff8ff;
+  border-color: #b2ddff;
+}
+
+.yellow {
+  background-color: #fffaeb;
+  border-color: #fedf89;
+}
+
+.green {
+  background-color: #ecfdf3;
+  border-color: #abefc6;
+}
+
+.red {
+  background-color: #fef3f2;
+  border-color: #fecdca;
+}
+
+.gray {
+  background-color: #f9fafb;
+  border-color: #d0d5dd;
+}

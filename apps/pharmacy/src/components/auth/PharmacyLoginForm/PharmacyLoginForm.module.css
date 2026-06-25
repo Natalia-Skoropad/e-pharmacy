@@ -71,3 +71,44 @@
   cursor: not-allowed;
   opacity: 0.65;
 }
+
+.demoBox {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background-color: #ecfdf3;
+  border: 1px solid #abefc6;
+  border-radius: var(--radius-md, 12px);
+}
+
+.demoTitle,
+.demoText {
+  margin: 0;
+}
+
+.demoTitle {
+  font-weight: 900;
+  color: #067647;
+}
+
+.demoText {
+  color: var(--color-text-secondary, #667085);
+  line-height: 1.55;
+}
+
+.demoButton {
+  min-height: 38px;
+  padding-inline: 14px;
+  font: inherit;
+  font-weight: 800;
+  color: #067647;
+  cursor: pointer;
+  background-color: #ffffff;
+  border: 1px solid #75e0a7;
+  border-radius: 10px;
+}
+
+.demoButton:hover,
+.demoButton:focus-visible {
+  background-color: #dcfae6;
+}

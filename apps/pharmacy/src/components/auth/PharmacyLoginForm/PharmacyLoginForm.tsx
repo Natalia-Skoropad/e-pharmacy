@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { getSafeApplicationRedirectPath } from '@e-pharmacy/auth/routing';
 
+import { getDemoPharmacyCredentials } from '@/lib/auth/demo-pharmacy-auth';
 import { getPharmacyDashboardPath } from '@/lib/pharmacy/routes';
 
 import css from './PharmacyLoginForm.module.css';
@@ -29,6 +30,8 @@ export function PharmacyLoginForm() {
   const searchParams = useSearchParams();
   const { login } = useAuth();
 
+  const demoCredentials = getDemoPharmacyCredentials();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +47,12 @@ export function PharmacyLoginForm() {
   );
 
   const reason = searchParams.get('reason');
+
+  const handleUseDemoCredentials = () => {
+    setEmail(demoCredentials.email);
+    setPassword(demoCredentials.password);
+    setError(null);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -70,7 +79,9 @@ export function PharmacyLoginForm() {
 
       router.replace(redirectPath);
     } catch {
-      setError('Invalid email or password. Please check the details and try again.');
+      setError(
+        'Invalid email or password. Please check the details and try again.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -83,6 +94,22 @@ export function PharmacyLoginForm() {
           This pharmacy account is blocked. Please contact support.
         </p>
       ) : null}
+
+      <div className={css.demoBox}>
+        <p className={css.demoTitle}>Demo pharmacy account</p>
+        <p className={css.demoText}>
+          Email: <strong>{demoCredentials.email}</strong>
+          <br />
+          Password: <strong>{demoCredentials.password}</strong>
+        </p>
+        <button
+          className={css.demoButton}
+          type="button"
+          onClick={handleUseDemoCredentials}
+        >
+          Use demo account
+        </button>
+      </div>
 
       <label className={css.field}>
         <span>Email</span>

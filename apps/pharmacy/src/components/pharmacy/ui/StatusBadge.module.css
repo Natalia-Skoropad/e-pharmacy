@@ -1,0 +1,42 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 28px;
+  padding: 4px 10px;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1.2;
+  border: 1px solid transparent;
+  border-radius: 999px;
+}
+
+.blue {
+  color: #175cd3;
+  background-color: #eff8ff;
+  border-color: #b2ddff;
+}
+
+.yellow {
+  color: #854a0e;
+  background-color: #fffaeb;
+  border-color: #fedf89;
+}
+
+.green {
+  color: #067647;
+  background-color: #ecfdf3;
+  border-color: #abefc6;
+}
+
+.red {
+  color: #b42318;
+  background-color: #fef3f2;
+  border-color: #fecdca;
+}
+
+.gray {
+  color: #344054;
+  background-color: #f2f4f7;
+  border-color: #d0d5dd;
+}

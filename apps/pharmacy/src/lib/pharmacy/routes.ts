@@ -84,6 +84,26 @@ export function getPharmacyProfilePath() {
   return PHARMACY_PROFILE;
 }
 
+export function getPharmacyOrdersPath() {
+  return PHARMACY_ORDERS;
+}
+
+export function getPharmacyClientsPath() {
+  return PHARMACY_CLIENTS;
+}
+
+export function getPharmacyProductsPath() {
+  return PHARMACY_PRODUCTS;
+}
+
+export function getPharmacyAllProductsPath() {
+  return PHARMACY_ALL_PRODUCTS;
+}
+
+export function getPharmacyProductRequestsPath() {
+  return PHARMACY_PRODUCT_REQUESTS;
+}
+
 export function getPharmacyOrderPath(orderId: string | number) {
   return `${PHARMACY_ORDERS}/${encodeURIComponent(String(orderId))}`;
 }

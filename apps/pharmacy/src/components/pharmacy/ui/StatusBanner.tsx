@@ -1,0 +1,41 @@
+import clsx from 'clsx';
+
+import {
+  getStatusTone,
+  type PharmacyStatusVariant,
+} from './status-types';
+import { StatusBadge } from './StatusBadge';
+
+import css from './StatusBanner.module.css';
+
+//===================================================================
+
+type StatusBannerProps = Readonly<{
+  status: PharmacyStatusVariant;
+  title: string;
+  message: string;
+  label?: string;
+  className?: string;
+}>;
+
+//===================================================================
+
+export function StatusBanner({
+  status,
+  title,
+  message,
+  label,
+  className,
+}: StatusBannerProps) {
+  const tone = getStatusTone(status);
+
+  return (
+    <section className={clsx(css.banner, css[tone], className)}>
+      <div className={css.header}>
+        <h2 className={css.title}>{title}</h2>
+        <StatusBadge status={status} label={label} />
+      </div>
+      <p className={css.message}>{message}</p>
+    </section>
+  );
+}
