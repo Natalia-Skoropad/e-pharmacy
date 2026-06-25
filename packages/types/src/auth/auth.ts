@@ -19,6 +19,12 @@ export type RegisterPayload = {
   phone: string;
   address?: string;
   role?: Extract<UserRole, 'client' | 'pharmacy'>;
+  pharmacyName?: string;
+  pharmacyDocuments?: Array<{
+    name: string;
+    size: number;
+    type: string;
+  }>;
 };
 
 export type LoginPayload = {

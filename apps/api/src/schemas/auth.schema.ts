@@ -39,6 +39,16 @@ export const registerSchema = z.object({
 
   phone: sharedRequiredPhoneSchema,
   address: sharedOptionalAddressSchema,
+  pharmacyName: sharedNameSchema.optional(),
+  pharmacyDocuments: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1),
+        size: z.number().nonnegative(),
+        type: z.string().trim().optional().default(''),
+      })
+    )
+    .optional(),
 });
 
 //===============================================================
@@ -49,6 +59,16 @@ export const createPharmacyUserSchema = z.object({
   password: sharedPasswordSchema,
   phone: sharedRequiredPhoneSchema,
   address: sharedOptionalAddressSchema,
+  pharmacyName: sharedNameSchema.optional(),
+  pharmacyDocuments: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1),
+        size: z.number().nonnegative(),
+        type: z.string().trim().optional().default(''),
+      })
+    )
+    .optional(),
 });
 
 //===============================================================

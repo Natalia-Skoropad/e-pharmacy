@@ -24,7 +24,7 @@ export const CHECKOUT_DESCRIPTION =
 
 export const LOGIN_TITLE = 'Log In';
 export const LOGIN_DESCRIPTION =
-  'Access your E-PHARMACY account to track orders, manage saved products, and keep your delivery details ready for the next checkout.';
+  'Use one E-PHARMACY sign-in page for both client and pharmacy accounts. Enter your email and password — the system checks your role and opens the right cabinet automatically.';
 
 export const LOGIN_BENEFITS = [
   'Track your orders, profile details, delivery information, and saved account data in one secure place.',
@@ -54,7 +54,7 @@ export const RESET_PASSWORD_BENEFITS = [
 
 export const REGISTER_TITLE = 'Register';
 export const REGISTER_DESCRIPTION =
-  'Create your E-PHARMACY account to save checkout details, manage pharmacy orders, and keep favorite products close at hand.';
+  'Create one E-PHARMACY account as a client or register a pharmacy owner account with the extra details needed for verification.';
 
 export const REGISTER_BENEFITS = [
   'Save your profile details once and use them again during checkout.',

@@ -189,7 +189,7 @@ export async function registerUserService(
       await Pharmacy.create({
         ownerId: user._id,
         managerUserIds: [],
-        name: user.name,
+        name: input.pharmacyName?.trim() || user.name,
         address: user.address ?? 'Address pending verification',
         phone: user.phone,
         email: user.email,

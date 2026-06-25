@@ -5,6 +5,22 @@ import type { AuthUser } from '@e-pharmacy/types';
 
 //===================================================================
 
+const PHARMACY_DASHBOARD_PATH = '/pharmacy/dashboard';
+
+//===================================================================
+
+function getPharmacyDashboardUrl(): string {
+  const pharmacyAppUrl = process.env.NEXT_PUBLIC_PHARMACY_APP_URL?.trim();
+
+  if (!pharmacyAppUrl) {
+    return PHARMACY_DASHBOARD_PATH;
+  }
+
+  return new URL(PHARMACY_DASHBOARD_PATH, pharmacyAppUrl).toString();
+}
+
+//===================================================================
+
 export function resolveLoginDestination({
   user,
   requestedRedirect,
@@ -12,7 +28,15 @@ export function resolveLoginDestination({
   user: AuthUser;
   requestedRedirect: string | null;
 }): string {
-  if (user.status !== 'active' || user.role !== 'client') {
+  if (user.status !== 'active') {
+    return ROUTES.HOME;
+  }
+
+  if (user.role === 'pharmacy') {
+    return getPharmacyDashboardUrl();
+  }
+
+  if (user.role !== 'client') {
     return ROUTES.HOME;
   }
 
@@ -26,7 +50,7 @@ export function resolveLoginDestination({
 
 export function resolveAuthenticatedRouteForClientApp(
   user: AuthUser,
-  requestedRedirect: string | null
+  requestedRedirect: string | null,
 ): string {
   return resolveLoginDestination({ user, requestedRedirect });
 }

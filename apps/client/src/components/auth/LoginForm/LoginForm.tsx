@@ -3,7 +3,8 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { Button, TextActionButton } from '@e-pharmacy/ui/common';
+import { Button, RadioOption, TextActionButton } from '@e-pharmacy/ui/common';
+
 import { EmailInput, PasswordInput } from '@e-pharmacy/ui/form-fields';
 import { useToast } from '@e-pharmacy/ui/feedback';
 
@@ -32,6 +33,35 @@ import css from '../shared/AuthForm.module.css';
 
 //===================================================================
 
+type AuthAccountType = 'client' | 'pharmacy';
+
+//===================================================================
+
+const LOGIN_COPY: Record<
+  AuthAccountType,
+  {
+    title: string;
+    text: string;
+    button: string;
+    loading: string;
+  }
+> = {
+  client: {
+    title: 'Client account',
+    text: 'Use the email and password from your personal account. After sign in, E-PHARMACY will open your client profile, orders, favorites, and checkout details.',
+    button: 'Log in as client',
+    loading: 'Logging in...',
+  },
+  pharmacy: {
+    title: 'Pharmacy owner account',
+    text: 'Use the same sign-in form with your pharmacy account. E-PHARMACY checks the account role by email and opens the pharmacy dashboard automatically.',
+    button: 'Open pharmacy cabinet',
+    loading: 'Opening cabinet...',
+  },
+};
+
+//===================================================================
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,6 +69,7 @@ function LoginForm() {
   const { login, isAuthReady } = useAuth();
   const toast = useToast();
 
+  const [accountType, setAccountType] = useState<AuthAccountType>('client');
   const [values, setValues] = useState<LoginFormValues>(LOGIN_INITIAL_VALUES);
   const [errors, setErrors] = useState<LoginFormErrors>({});
 
@@ -48,6 +79,7 @@ function LoginForm() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const loginFormIsValid = isLoginFormValid(values);
+  const selectedCopy = LOGIN_COPY[accountType];
 
   const handleChange =
     (field: keyof LoginFormValues) =>
@@ -93,12 +125,17 @@ function LoginForm() {
 
       if (!user) return;
 
-      router.replace(
-        resolveLoginDestination({
-          user,
-          requestedRedirect: searchParams.get('redirect'),
-        }),
-      );
+      const destination = resolveLoginDestination({
+        user,
+        requestedRedirect: searchParams.get('redirect'),
+      });
+
+      if (destination.startsWith('http')) {
+        window.location.assign(destination);
+        return;
+      }
+
+      router.replace(destination);
     } catch (error) {
       toast.error(getClientAuthErrorMessage(getAuthErrorCode(error, 'login')));
     } finally {
@@ -108,6 +145,31 @@ function LoginForm() {
 
   return (
     <form className={css.form} noValidate onSubmit={handleSubmit}>
+      <fieldset className={css.accountTypeGroup}>
+        <legend className={css.accountTypeLegend}>Choose account type</legend>
+        <div className={css.accountTypeOptions}>
+          <RadioOption
+            name="login-account-type"
+            value="client"
+            checked={accountType === 'client'}
+            label="I am a client"
+            onChange={setAccountType}
+          />
+          <RadioOption
+            name="login-account-type"
+            value="pharmacy"
+            checked={accountType === 'pharmacy'}
+            label="I am a pharmacy owner"
+            onChange={setAccountType}
+          />
+        </div>
+      </fieldset>
+
+      <div className={css.choiceInfo}>
+        <p className={css.choiceTitle}>{selectedCopy.title}</p>
+        <p className={css.choiceText}>{selectedCopy.text}</p>
+      </div>
+
       <div className={css.fields}>
         <EmailInput
           id="login-email"
@@ -143,7 +205,7 @@ function LoginForm() {
         fullWidth
         disabled={isSubmitting || !isAuthReady || !loginFormIsValid}
       >
-        {isSubmitting ? 'Logging in...' : 'Log in'}
+        {isSubmitting ? selectedCopy.loading : selectedCopy.button}
       </Button>
 
       <p className={css.footerText}>
