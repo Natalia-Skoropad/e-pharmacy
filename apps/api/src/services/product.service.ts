@@ -263,8 +263,6 @@ export async function getProductFiltersService(
 
     sort: [
       { value: 'newest', label: 'Newest first' },
-      { value: 'price-asc', label: 'Price: low to high' },
-      { value: 'price-desc', label: 'Price: high to low' },
       { value: 'rating-desc', label: 'Rating: highest first' },
       { value: 'rating-asc', label: 'Rating: lowest first' },
       { value: 'name-asc', label: 'Name: A to Z' },

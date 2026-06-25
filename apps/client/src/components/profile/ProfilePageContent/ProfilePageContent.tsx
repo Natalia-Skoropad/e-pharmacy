@@ -619,7 +619,7 @@ function ProfilePageContent() {
           ? error.message
           : 'Could not change password. Check the current password and try again.';
 
-      setPasswordSubmitError(message);
+      toast.error(message);
     } finally {
       setIsPasswordSaving(false);
     }

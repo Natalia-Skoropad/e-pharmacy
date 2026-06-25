@@ -143,6 +143,14 @@ function ProductCatalogFiltersForm({
     [pharmacies]
   );
 
+  const productCatalogSortOptions = useMemo(
+    () =>
+      filterOptions.sort.filter(
+        (option) => option.value !== 'price-asc' && option.value !== 'price-desc'
+      ),
+    [filterOptions.sort]
+  );
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       const trimmedName = name.trim();
@@ -328,7 +336,7 @@ function ProductCatalogFiltersForm({
             id="catalog-sort-desktop"
             label="Sort by"
             value={filters.sort}
-            options={filterOptions.sort}
+            options={productCatalogSortOptions}
             isActive={filters.sort !== 'newest'}
             onChange={handleSortChange}
           />
@@ -369,7 +377,7 @@ function ProductCatalogFiltersForm({
                 id="catalog-sort-mobile"
                 label="Sort by"
                 value={filters.sort}
-                options={filterOptions.sort}
+                options={productCatalogSortOptions}
                 isActive={filters.sort !== 'newest'}
                 onChange={handleSortChange}
               />
