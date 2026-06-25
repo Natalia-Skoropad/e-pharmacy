@@ -88,7 +88,7 @@
 
 @media only screen and (min-width: 1440px) {
   .grid {
-    grid-template-columns: minmax(0, 1fr) 600px;
+    grid-template-columns: minmax(0, 1fr) 680px;
     max-width: none;
     gap: 70px;
   }

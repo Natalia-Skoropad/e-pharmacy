@@ -7,10 +7,10 @@ import { ShoppingCart } from 'lucide-react';
 import clsx from 'clsx';
 
 import {
-  Button,
   ButtonLink,
   Container,
   Logo,
+  LogoutButton,
   UserBadge,
 } from '@e-pharmacy/ui/common';
 
@@ -118,14 +118,11 @@ function Header() {
                 pictureUrl={user?.pictureUrl}
               />
 
-              <Button
-                variant="secondary"
-                size="sm"
+              <LogoutButton
+                isLoading={isLogoutLoading}
                 disabled={isLogoutLoading}
                 onClick={handleLogout}
-              >
-                {isLogoutLoading ? 'Logging out...' : 'Log out'}
-              </Button>
+              />
             </>
           ) : null}
 

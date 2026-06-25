@@ -97,11 +97,6 @@
   color: var(--color-text-secondary);
 }
 
-@media screen and (min-width: 768px) {
-  .accountTypeOptions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 
 .authTitleBlock {
   display: grid;
@@ -129,8 +124,23 @@
   border: 0;
 }
 
+
 @media screen and (min-width: 768px) {
-  .accountTypeOptions > * {
-    min-width: 0;
+  .fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+    row-gap: 14px;
+  }
+
+  .fieldFull {
+    grid-column: 1 / -1;
+  }
+
+  .accountTypeOptions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .accountTypeOptions label {
+    white-space: nowrap;
   }
 }

@@ -1,35 +1,37 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: var(--z-header, 20);
+  background-color: var(--color-background-alpha-90, rgba(255, 255, 255, 0.9));
+  border-bottom: 1px solid var(--color-border, #d0d5dd);
+  backdrop-filter: blur(16px);
+}
+
+.container {
   display: flex;
-  min-height: var(--pharmacy-header-height);
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding-inline: 20px;
-  background-color: var(--color-surface, #ffffff);
-  border-bottom: 1px solid var(--color-border, #d0d5dd);
+  min-height: 72px;
+  gap: 24px;
 }
 
 .actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.logout {
   display: none;
 }
 
-@media (min-width: 768px) {
-  .logout {
-    display: inline-flex;
-  }
+.userBadge {
+  flex: 0 1 auto;
 }
 
-@media (min-width: 1024px) {
-  .header {
-    display: none;
+.logoutButton {
+  flex-shrink: 0;
+}
+
+@media only screen and (min-width: 1024px) {
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
   }
 }

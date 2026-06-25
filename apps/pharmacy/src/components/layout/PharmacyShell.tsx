@@ -21,8 +21,10 @@ export function PharmacyShell({ children }: PharmacyShellProps) {
       <PharmacyProtectedRoute>
         <div className={css.shell}>
           <PharmacyHeader />
-          <PharmacySidebar />
-          <div className={css.content}>{children}</div>
+          <div className={css.body}>
+            <PharmacySidebar />
+            <div className={css.content}>{children}</div>
+          </div>
         </div>
       </PharmacyProtectedRoute>
     </Suspense>

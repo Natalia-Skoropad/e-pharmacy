@@ -22,3 +22,4 @@ export * from './ShimmerImage';
 export * from './RadioOption';
 export * from './CountLabel';
 export * from './DocumentUpload';
+export * from './LogoutButton';

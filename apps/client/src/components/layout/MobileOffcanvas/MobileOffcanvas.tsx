@@ -6,10 +6,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import clsx from 'clsx';
 
 import {
-  Button,
   ButtonLink,
   CloseIconButton,
   Logo,
+  LogoutButton,
   UserBadge,
 } from '@e-pharmacy/ui/common';
 
@@ -121,14 +121,12 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
               onClick={onClose}
             />
 
-            <Button
-              variant="secondary"
+            <LogoutButton
               fullWidth
+              isLoading={isLogoutLoading}
               disabled={isLogoutLoading}
               onClick={handleLogout}
-            >
-              {isLogoutLoading ? 'Logging out...' : 'Log out'}
-            </Button>
+            />
           </>
         ) : null}
 

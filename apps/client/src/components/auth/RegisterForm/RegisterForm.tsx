@@ -323,6 +323,7 @@ function RegisterForm() {
 
         {accountType === 'pharmacy' ? (
           <DocumentUpload
+            className={css.fieldFull}
             id="register-pharmacy-documents"
             name="pharmacyDocuments"
             value={pharmacyDocuments}

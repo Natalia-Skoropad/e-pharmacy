@@ -2,17 +2,21 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import { Logo } from '@e-pharmacy/ui/common';
-import { MobileOffcanvasBase } from '@e-pharmacy/ui/layout';
+import {
+  CloseIconButton,
+  Logo,
+  LogoutButton,
+  UserBadge,
+} from '@e-pharmacy/ui/common';
+
+import { MobileOffcanvasBase, SideMenu } from '@e-pharmacy/ui/layout';
+import { useAuth } from '@e-pharmacy/auth/core';
 
 import { PHARMACY_NAVIGATION } from '@/lib/pharmacy/navigation';
 import { getPharmacyDashboardPath } from '@/lib/pharmacy/routes';
-
-import { PharmacyBadge } from '@/components/layout/PharmacyBadge';
-import { PharmacyLogoutButton } from '@/components/layout/PharmacyLogoutButton';
-import { PharmacyNavLink } from '@/components/layout/PharmacyNavLink';
+import { getSharedLoginUrl } from '@/lib/pharmacy/shared-auth';
 
 import css from './PharmacyMobileMenu.module.css';
 
@@ -32,29 +36,44 @@ export function PharmacyMobileMenu({
   onClose,
 }: PharmacyMobileMenuProps) {
   const pathname = usePathname();
+  const previousPathnameRef = useRef(pathname);
+  const { user, logout } = useAuth();
+  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsLogoutLoading(true);
+      await logout();
+      onClose();
+      window.location.assign(getSharedLoginUrl());
+    } finally {
+      setIsLogoutLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (isOpen) onClose();
-    // Close only on route change. onClose is intentionally omitted because it is recreated by the parent.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+    if (previousPathnameRef.current === pathname) return;
+
+    previousPathnameRef.current = pathname;
+    onClose();
+  }, [pathname, onClose]);
 
   return (
     <MobileOffcanvasBase
       id={id}
       isOpen={isOpen}
-      title="Pharmacy menu"
+      title="Pharmacy navigation"
       onClose={onClose}
       classNames={{
         backdrop: css.backdrop,
-        backdropOpen: css.backdropOpen,
+        backdropOpen: css.open,
         panel: css.panel,
       }}
     >
-      <div className={css.header}>
+      <div className={css.head}>
         <Logo
+          variant="white"
           href={getPharmacyDashboardPath()}
-          label="E-PHARMACY"
           ariaLabel="E-PHARMACY pharmacy dashboard"
           renderLink={({ href, className, children, ...props }) => (
             <Link
@@ -67,17 +86,42 @@ export function PharmacyMobileMenu({
             </Link>
           )}
         />
-        <PharmacyBadge />
+
+        <CloseIconButton
+          className={css.closeButton}
+          variant="light"
+          label="Close menu"
+          onClick={onClose}
+        />
       </div>
 
-      <nav className={css.nav} aria-label="Main pharmacy pages">
-        {PHARMACY_NAVIGATION.map((item) => (
-          <PharmacyNavLink key={item.href} item={item} onNavigate={onClose} />
-        ))}
-      </nav>
+      <SideMenu
+        className={css.menu}
+        items={PHARMACY_NAVIGATION}
+        activePath={pathname}
+        ariaLabel="Mobile pharmacy navigation"
+        showChevron={false}
+        onNavigate={onClose}
+      />
 
-      <div className={css.footer}>
-        <PharmacyLogoutButton />
+      <div className={css.actions}>
+        <UserBadge
+          href={getPharmacyDashboardPath()}
+          name={user?.name}
+          email={user?.email}
+          pictureUrl={user?.pictureUrl}
+          fallbackLabel="Pharmacy"
+          variant="dark"
+          meta="Pharmacy"
+          onClick={onClose}
+        />
+
+        <LogoutButton
+          fullWidth
+          isLoading={isLogoutLoading}
+          disabled={isLogoutLoading}
+          onClick={handleLogout}
+        />
       </div>
     </MobileOffcanvasBase>
   );

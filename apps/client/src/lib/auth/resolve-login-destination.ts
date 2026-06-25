@@ -12,11 +12,15 @@ const PHARMACY_DASHBOARD_PATH = '/pharmacy/dashboard';
 function getPharmacyDashboardUrl(): string {
   const pharmacyAppUrl = process.env.NEXT_PUBLIC_PHARMACY_APP_URL?.trim();
 
-  if (!pharmacyAppUrl) {
-    return PHARMACY_DASHBOARD_PATH;
+  if (pharmacyAppUrl) {
+    return new URL(PHARMACY_DASHBOARD_PATH, pharmacyAppUrl).toString();
   }
 
-  return new URL(PHARMACY_DASHBOARD_PATH, pharmacyAppUrl).toString();
+  if (process.env.NODE_ENV !== 'production') {
+    return `http://localhost:3002${PHARMACY_DASHBOARD_PATH}`;
+  }
+
+  return PHARMACY_DASHBOARD_PATH;
 }
 
 //===================================================================
