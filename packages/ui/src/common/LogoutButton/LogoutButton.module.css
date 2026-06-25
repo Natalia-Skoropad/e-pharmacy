@@ -1,0 +1,13 @@
+.inverse {
+  min-height: 52px;
+  color: var(--color-white);
+  background-color: var(--color-white-alpha-10);
+  border-color: var(--color-white-alpha-22);
+}
+
+.inverse:hover:not(:disabled),
+.inverse:focus-visible:not(:disabled) {
+  color: var(--color-white);
+  background-color: var(--color-white-alpha-20);
+  border-color: var(--color-white-alpha-48);
+}

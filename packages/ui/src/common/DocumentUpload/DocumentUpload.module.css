@@ -78,8 +78,7 @@
 
 .text,
 .hint,
-.limit,
-.emptyText {
+.limit {
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
@@ -151,6 +150,11 @@
   background-color: var(--color-error-soft);
 }
 
+.metaRow {
+  display: grid;
+  gap: 6px;
+}
+
 .error {
   min-height: 18px;
   margin: 0;
@@ -159,12 +163,18 @@
   color: var(--color-error);
 }
 
-
 .limit {
   margin: 0;
 }
 
-@media screen and (min-width: 768px) {
+@media only screen and (min-width: 768px) {
+  .metaRow {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 16px;
+  }
+
+
   .list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

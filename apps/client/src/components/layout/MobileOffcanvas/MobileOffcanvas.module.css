@@ -110,23 +110,6 @@
   border-radius: var(--radius-pill);
 }
 
-.actions :is(a, button):not(.loginLink):not(.registerLink),
-.actions :is(a, button):not(.loginLink):not(.registerLink):hover,
-.actions :is(a, button):not(.loginLink):not(.registerLink):focus-visible {
-  color: var(--color-white);
-}
-
-.actions :is(a, button):not(.loginLink):not(.registerLink) {
-  background-color: var(--color-white-alpha-10);
-  border-color: var(--color-white-alpha-22);
-}
-
-.actions :is(a, button):not(.loginLink):not(.registerLink):hover,
-.actions :is(a, button):not(.loginLink):not(.registerLink):focus-visible {
-  background-color: var(--color-white-alpha-20);
-  border-color: var(--color-white-alpha-48);
-}
-
 .actions .loginLink,
 .actions .loginLink:hover,
 .actions .loginLink:focus-visible {

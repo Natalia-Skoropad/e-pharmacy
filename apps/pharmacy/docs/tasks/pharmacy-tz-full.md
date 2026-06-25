@@ -240,7 +240,7 @@ The system supports these account roles:
 - `pharmacy`;
 - `admin`.
 
-Email and phone must be unique across all roles. The same email cannot belong to both a client and a pharmacy/pharmacy account. This allows login without a role selector.
+Registration assigns the selected role: Client creates a `client` account and Pharmacy owner creates a `pharmacy` account. Login and password recovery are scoped by selected account type. The auth payload carries the selected application/account type to keep the architecture ready for future multi-profile accounts under one email.
 
 ## 3. Register page
 
@@ -277,7 +277,6 @@ After successful client registration:
 
 ### Pharmacy registration fields
 
-- pharmacy name;
 - email;
 - phone;
 - password;
@@ -320,7 +319,7 @@ The exact list of required legal documents should be clarified separately.
 ### Limits
 
 - max file size: 5 MB per file;
-- recommended max number of files: 5.
+- max number of files: 6.
 
 ### UI requirements
 
@@ -564,7 +563,6 @@ Show:
 
 - round pharmacy photo;
 - fallback initials if photo is missing;
-- pharmacy name;
 - link to `/pharmacy/profile`.
 
 Long names must be truncated with `text-overflow: ellipsis`.
@@ -633,7 +631,6 @@ It is not shown for blocked pharmacies because blocked pharmacies cannot enter t
 | Own products | `/pharmacy/products` |
 | All products | `/pharmacy/all-products` |
 | Product requests | `/pharmacy/product-requests` |
-| Pharmacy profile | `/pharmacy/profile` |
 
 ### Active state
 
@@ -649,7 +646,6 @@ Examples:
 Sidebar top should show compact pharmacy info:
 
 - photo or fallback avatar;
-- pharmacy name;
 - email;
 - status.
 
@@ -895,7 +891,6 @@ Show:
 
 - pharmacy photo;
 - photo upload/change/remove controls;
-- pharmacy name;
 - email;
 - rating and reviews count;
 - role: Pharmacy;

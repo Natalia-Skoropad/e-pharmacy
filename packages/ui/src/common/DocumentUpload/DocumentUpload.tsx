@@ -71,6 +71,7 @@ function DocumentUpload({
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
   const limitId = `${id}-limit`;
+  const metaId = `${id}-meta`;
   const hasError = Boolean(isTouched && error);
   const hasReachedLimit = typeof maxFiles === 'number' && value.length >= maxFiles;
 
@@ -118,7 +119,7 @@ function DocumentUpload({
         multiple={multiple}
         disabled={disabled || hasReachedLimit}
         aria-invalid={hasError}
-        aria-describedby={`${hintId} ${limitId} ${errorId}`}
+        aria-describedby={`${hintId} ${metaId} ${errorId}`}
         onChange={handleChange}
       />
 
@@ -140,11 +141,17 @@ function DocumentUpload({
         </p>
       ) : null}
 
-      {typeof maxFiles === 'number' ? (
-        <p className={css.limit} id={limitId}>
-          {value.length}/{maxFiles} files uploaded
+      <div className={css.metaRow} id={metaId}>
+        {typeof maxFiles === 'number' ? (
+          <p className={css.limit} id={limitId}>
+            {value.length}/{maxFiles} files uploaded
+          </p>
+        ) : null}
+
+        <p className={css.error} id={errorId}>
+          {isTouched ? (error ?? '') : ''}
         </p>
-      ) : null}
+      </div>
 
       {value.length > 0 ? (
         <ul className={css.list} aria-label="Uploaded documents">
@@ -167,13 +174,7 @@ function DocumentUpload({
             </li>
           ))}
         </ul>
-      ) : (
-        <p className={css.emptyText}>No documents uploaded yet.</p>
-      )}
-
-      <p className={css.error} id={errorId}>
-        {isTouched ? (error ?? '') : ''}
-      </p>
+      ) : null}
     </div>
   );
 }

@@ -28,7 +28,9 @@ The system supports these account roles:
 - `pharmacy`;
 - `admin`.
 
-Email and phone must be unique across all roles. The same email cannot belong to both a client and a pharmacy. This allows login without a role selector.
+In the current implementation, registration assigns the selected account role to the created user: choosing **Client** creates a `client` account, and choosing **Pharmacy owner** creates a `pharmacy` account. Login and password recovery are scoped by the selected account type, so a client account cannot sign in through the pharmacy option and a pharmacy account cannot sign in through the client option.
+
+Architecture note: the auth payload already carries the selected application/account type. This keeps the flow ready for a future model where one email may own both client and pharmacy profiles under one login identity.
 
 ## 3. Register page
 
@@ -66,7 +68,6 @@ After successful client registration:
 ### Pharmacy registration fields
 
 - name (ім'я власника акаунта) (обов'язкове поле)
-- pharmacy name; (обов'язкове поле)
 - email;
 - phone;
 - password;
@@ -109,7 +110,7 @@ The exact list of required legal documents should be clarified separately.
 ### Limits
 
 - max file size: 5 MB per file;
-- recommended max number of files: 5.
+- max number of files: 6.
 
 ### UI requirements
 
@@ -130,14 +131,17 @@ Upload confirmation documents to register a pharmacy account.
 
 ## 5. Login page
 
-The login page is shared for clients, pharmacies, and admins.
+The login page is shared for client and pharmacy accounts. It shows an account type selector:
 
-Fields:
+- Client;
+- Pharmacy owner.
+
+Fields stay the same for both account types:
 
 - email;
 - password.
 
-After successful login, backend returns the user role.
+The selected account type is sent with the login request. If the email exists only for another role, the API returns a role-specific not-found error, for example `Pharmacy account was not found for this email`.
 
 Redirects:
 
@@ -194,7 +198,7 @@ Field:
 
 - email.
 
-Backend determines the account by email.
+The selected account type is sent with the password recovery request. The backend creates a reset token only when the email belongs to the selected role, while the user-facing success response remains neutral to avoid account enumeration.
 
 After submit, show a neutral message:
 

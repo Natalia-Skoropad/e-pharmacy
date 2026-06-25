@@ -14,8 +14,13 @@ import {
 import { MobileOffcanvasBase, SideMenu } from '@e-pharmacy/ui/layout';
 import { useAuth } from '@e-pharmacy/auth/core';
 
-import { PHARMACY_NAVIGATION } from '@/lib/pharmacy/navigation';
-import { getPharmacyDashboardPath } from '@/lib/pharmacy/routes';
+import { PHARMACY_MOBILE_NAVIGATION } from '@/lib/pharmacy/navigation';
+
+import {
+  getPharmacyDashboardPath,
+  getPharmacyProfilePath,
+} from '@/lib/pharmacy/routes';
+
 import { getSharedLoginUrl } from '@/lib/pharmacy/shared-auth';
 
 import css from './PharmacyMobileMenu.module.css';
@@ -97,7 +102,7 @@ export function PharmacyMobileMenu({
 
       <SideMenu
         className={css.menu}
-        items={PHARMACY_NAVIGATION}
+        items={PHARMACY_MOBILE_NAVIGATION}
         activePath={pathname}
         ariaLabel="Mobile pharmacy navigation"
         showChevron={false}
@@ -106,18 +111,17 @@ export function PharmacyMobileMenu({
 
       <div className={css.actions}>
         <UserBadge
-          href={getPharmacyDashboardPath()}
+          href={getPharmacyProfilePath()}
           name={user?.name}
-          email={user?.email}
           pictureUrl={user?.pictureUrl}
-          fallbackLabel="Pharmacy"
+          fallbackLabel="Profile"
           variant="dark"
-          meta="Pharmacy"
           onClick={onClose}
         />
 
         <LogoutButton
           fullWidth
+          tone="inverse"
           isLoading={isLogoutLoading}
           disabled={isLogoutLoading}
           onClick={handleLogout}

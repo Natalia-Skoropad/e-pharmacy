@@ -122,6 +122,7 @@ function LoginForm() {
       const user = await login({
         email: values.email.trim(),
         password: values.password,
+        application: accountType,
       });
 
       if (!user) return;
@@ -138,7 +139,14 @@ function LoginForm() {
 
       router.replace(destination);
     } catch (error) {
-      toast.error(getClientAuthErrorMessage(getAuthErrorCode(error, 'login')));
+      const message =
+        error instanceof Error &&
+        (error.message.includes('Pharmacy account') ||
+          error.message.includes('Client account'))
+          ? error.message
+          : getClientAuthErrorMessage(getAuthErrorCode(error, 'login'));
+
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

@@ -91,6 +91,8 @@
 }
 
 .choiceText {
+  max-width: 560px;
+  min-height: calc(var(--fz-14) * var(--lh-base) * 2);
   margin: 0;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
@@ -125,7 +127,7 @@
 }
 
 
-@media screen and (min-width: 768px) {
+@media only screen and (min-width: 768px) {
   .fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 16px;

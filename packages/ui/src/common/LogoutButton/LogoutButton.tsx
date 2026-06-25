@@ -1,10 +1,15 @@
 'use client';
 
 import { LogOut } from 'lucide-react';
+import clsx from 'clsx';
 
 import Button, { type ButtonProps } from '../Button/Button';
 
+import css from './LogoutButton.module.css';
+
 //===================================================================
+
+type LogoutButtonTone = 'default' | 'inverse';
 
 type LogoutButtonProps = Omit<
   ButtonProps,
@@ -13,6 +18,7 @@ type LogoutButtonProps = Omit<
   isLoading?: boolean;
   label?: string;
   loadingLabel?: string;
+  tone?: LogoutButtonTone;
 };
 
 //===================================================================
@@ -23,12 +29,15 @@ function LogoutButton({
   loadingLabel = 'Logging out...',
   variant = 'secondary',
   size = 'sm',
+  tone = 'default',
   iconLeft,
+  className,
   ...props
 }: LogoutButtonProps) {
   return (
     <Button
       {...props}
+      className={clsx(tone === 'inverse' && css.inverse, className)}
       type="button"
       variant={variant}
       size={size}

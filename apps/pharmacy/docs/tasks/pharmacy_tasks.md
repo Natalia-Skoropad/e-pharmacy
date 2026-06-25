@@ -239,7 +239,6 @@ components/layout/PharmacyBadge
 - Own products — `/pharmacy/products`;
 - All products — `/pharmacy/all-products`;
 - Product requests — `/pharmacy/product-requests`;
-- Pharmacy profile — `/pharmacy/profile`.
 
 ## Header
 
@@ -451,7 +450,6 @@ Product requests:
 
 - pharmacy photo;
 - upload/change/remove controls;
-- pharmacy name;
 - email;
 - rating;
 - reviews count;

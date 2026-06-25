@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
 
+import { Container } from '@e-pharmacy/ui/common';
+
 import { PharmacyProtectedRoute } from '@/components/auth/PharmacyProtectedRoute';
 import { PharmacyHeader } from '@/components/layout/PharmacyHeader';
 import { PharmacySidebar } from '@/components/layout/PharmacySidebar';
@@ -21,10 +23,10 @@ export function PharmacyShell({ children }: PharmacyShellProps) {
       <PharmacyProtectedRoute>
         <div className={css.shell}>
           <PharmacyHeader />
-          <div className={css.body}>
+          <Container className={css.body} variant="wide">
             <PharmacySidebar />
             <div className={css.content}>{children}</div>
-          </div>
+          </Container>
         </div>
       </PharmacyProtectedRoute>
     </Suspense>

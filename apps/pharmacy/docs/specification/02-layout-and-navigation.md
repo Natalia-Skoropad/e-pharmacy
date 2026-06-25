@@ -55,7 +55,7 @@ Sidebar is not shown in public layout.
 
 ## 4. Pharmacy Header
 
-Pharmacy Header is similar to Client Header, but with Pharmacy-specific navigation logic.
+Pharmacy Header reuses the same shared building blocks as Client Header and keeps Pharmacy-specific navigation in the sidebar/mobile menu.
 
 ### Header contains
 
@@ -69,7 +69,7 @@ For unauthenticated users:
 For authenticated pharmacies:
 
 - Logo;
-- pharmacy badge;
+- user badge;
 - Log out button;
 - burger button on mobile/tablet.
 
@@ -89,10 +89,12 @@ The pharmacy badge should be similar to the Client `UserBadge`.
 
 Show:
 
-- round pharmacy photo;
+- round user photo;
 - fallback initials if photo is missing;
-- pharmacy name;
+- user name;
 - link to `/pharmacy/profile`.
+
+The badge must not show a separate `Pharmacy` meta label; it should visually match the Client `UserBadge`.
 
 Long names must be truncated with `text-overflow: ellipsis`.
 
@@ -125,7 +127,7 @@ Logging out...
 
 ## 7. Mobile menu
 
-Mobile menu opens with the burger button and shows the same navigation links as Sidebar.
+Mobile menu opens with the burger button and shows the same navigation links as Sidebar, plus access to Pharmacy profile through the user badge.
 
 It must:
 
@@ -140,7 +142,7 @@ It must:
 
 ## 8. Sidebar
 
-Sidebar is the main Pharmacy navigation on desktop.
+Sidebar is the main Pharmacy navigation on desktop. It uses the shared `SideMenu` component and every item has a matching icon.
 
 It is shown only in protected layout for pharmacies with statuses:
 
@@ -160,7 +162,6 @@ It is not shown for blocked pharmacies because blocked pharmacies cannot enter t
 | Own products     | `/pharmacy/products`         |
 | All products     | `/pharmacy/all-products`     |
 | Product requests | `/pharmacy/product-requests` |
-| Pharmacy profile | `/pharmacy/profile`          |
 
 ### Active state
 
@@ -173,21 +174,7 @@ Examples:
 
 ## 9. Sidebar content
 
-Sidebar top should show compact pharmacy info:
-
-- photo or fallback avatar;
-- pharmacy name;
-- email;
-- status.
-
-Example:
-
-```txt
-[photo]
-Good Pharmacy
-pharmacy@example.com
-Status: New
-```
+Sidebar contains navigation only. Pharmacy profile is opened through the user badge in the Header or Mobile menu.
 
 ## 10. Breadcrumbs
 

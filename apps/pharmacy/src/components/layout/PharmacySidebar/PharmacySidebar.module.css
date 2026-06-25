@@ -2,7 +2,7 @@
   display: none;
 }
 
-@media only screen and (min-width: 1024px) {
+@media only screen and (min-width: 1440px) {
   .sidebar {
     position: sticky;
     top: calc(72px + 24px);

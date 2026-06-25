@@ -77,6 +77,9 @@ export const createPharmacyUserSchema = z.object({
 export const loginSchema = z.object({
   email: sharedEmailSchema,
   password: sharedRequiredPasswordSchema,
+  application: z
+    .enum([AUTH_APPLICATIONS.CLIENT, AUTH_APPLICATIONS.PHARMACY])
+    .optional(),
 });
 
 //===============================================================

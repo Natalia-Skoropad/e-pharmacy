@@ -66,30 +66,13 @@
   border-radius: var(--radius-pill, 999px);
 }
 
-.actions :is(a, button),
-.actions :is(a, button):hover,
-.actions :is(a, button):focus-visible {
-  color: var(--color-white, #fff);
-}
-
-.actions :is(a, button) {
-  background-color: var(--color-white-alpha-10, rgba(255, 255, 255, 0.1));
-  border-color: var(--color-white-alpha-22, rgba(255, 255, 255, 0.22));
-}
-
-.actions :is(a, button):hover,
-.actions :is(a, button):focus-visible {
-  background-color: var(--color-white-alpha-20, rgba(255, 255, 255, 0.2));
-  border-color: var(--color-white-alpha-48, rgba(255, 255, 255, 0.48));
-}
-
 @media only screen and (min-width: 768px) {
   .panel {
     width: min(100%, 400px);
   }
 }
 
-@media only screen and (min-width: 1024px) {
+@media only screen and (min-width: 1440px) {
   .backdrop {
     display: none;
   }

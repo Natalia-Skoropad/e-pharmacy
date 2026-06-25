@@ -7,7 +7,7 @@ import { BurgerButton } from '@e-pharmacy/ui/layout';
 import { Container, Logo, LogoutButton, UserBadge } from '@e-pharmacy/ui/common';
 import { useAuth } from '@e-pharmacy/auth/core';
 
-import { getPharmacyDashboardPath } from '@/lib/pharmacy/routes';
+import { getPharmacyDashboardPath, getPharmacyProfilePath } from '@/lib/pharmacy/routes';
 import { getSharedLoginUrl } from '@/lib/pharmacy/shared-auth';
 
 import { PharmacyMobileMenu } from '@/components/layout/PharmacyMobileMenu';
@@ -53,12 +53,10 @@ export function PharmacyHeader() {
           <div className={css.actions}>
             <UserBadge
               className={css.userBadge}
-              href={getPharmacyDashboardPath()}
+              href={getPharmacyProfilePath()}
               name={user?.name}
-              email={user?.email}
               pictureUrl={user?.pictureUrl}
-              fallbackLabel="Pharmacy"
-              meta="Pharmacy"
+              fallbackLabel="Profile"
             />
 
             <LogoutButton

@@ -123,6 +123,7 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
 
             <LogoutButton
               fullWidth
+              tone="inverse"
               isLoading={isLogoutLoading}
               disabled={isLogoutLoading}
               onClick={handleLogout}

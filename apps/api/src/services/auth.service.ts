@@ -99,6 +99,14 @@ function normalizePhoneForLookup(phone: string): string {
 
 //===============================================================
 
+function getAccountNotFoundMessage(application: 'client' | 'pharmacy'): string {
+  return application === 'pharmacy'
+    ? API_MESSAGES.PHARMACY_ACCOUNT_NOT_FOUND
+    : API_MESSAGES.CLIENT_ACCOUNT_NOT_FOUND;
+}
+
+//===============================================================
+
 async function ensurePhoneIsAvailable(
   phone: string,
   excludeUserId?: string
@@ -221,6 +229,13 @@ export async function loginUserService(
 
   if (!user) {
     throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_CREDENTIALS);
+  }
+
+  if (input.application && user.role !== input.application) {
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      getAccountNotFoundMessage(input.application)
+    );
   }
 
   if (user.status === USER_STATUSES.BLOCKED) {
@@ -451,8 +466,14 @@ export async function requestPasswordResetService(
   const user = await User.findOne({ email: input.email });
 
   // Anti user enumeration: the controller returns the same 200 response
-  // whether the account exists or not.
-  if (!user || user.status === USER_STATUSES.BLOCKED) {
+  // whether the account exists or not. The selected application still scopes
+  // the reset token, so a client login cannot reset a pharmacy account and
+  // vice versa.
+  if (
+    !user ||
+    user.status === USER_STATUSES.BLOCKED ||
+    user.role !== input.application
+  ) {
     return;
   }
 

@@ -27,6 +27,7 @@ function PasswordRecoveryPage() {
         title={PASSWORD_RECOVERY_TITLE}
         text={PASSWORD_RECOVERY_DESCRIPTION}
         breadcrumbs={createBreadcrumbs(PASSWORD_RECOVERY_TITLE)}
+        showDescription={false}
       >
         <PasswordRecoveryForm />
       </AuthFormShell>
