@@ -17,7 +17,7 @@ import type { HttpMethod } from '@e-pharmacy/api-client/core';
 
 //===================================================================
 
-const AUTH_PROXY_TIMEOUT_MS = 8_000;
+const AUTH_PROXY_TIMEOUT_MS = 20_000;
 
 //===================================================================
 
@@ -88,7 +88,14 @@ export async function proxyAuthRequest({
       cache: 'no-store',
       signal: AbortSignal.timeout(AUTH_PROXY_TIMEOUT_MS),
     });
-  } catch {
+  } catch (error) {
+    console.error('[auth-proxy] Backend request failed', {
+      backendPath,
+      method,
+      apiBaseUrlConfigured: Boolean(process.env.API_BASE_URL?.trim()),
+      error,
+    });
+
     return createProxyTransportErrorResponse({
       request,
       clearAuthCookies: markerAction === 'delete',
