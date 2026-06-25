@@ -53,7 +53,7 @@ function CartPageContent() {
   const { isAuthenticated, isAuthReady } = useAuth();
   const canUseCart = isAuthReady && isAuthenticated;
 
-  const { cart, setCart, isLoading, error: cartLoadError } = useCart();
+  const { cart, setCart, isLoaded, isLoading, error: cartLoadError } = useCart();
   const [error, setError] = useState('');
 
   const {
@@ -125,7 +125,8 @@ function CartPageContent() {
   };
 
   const visibleCart = canUseCart ? cart : EMPTY_CART;
-  const shouldShowLoading = !isAuthReady || (isAuthenticated && isLoading);
+  const shouldShowLoading =
+    !isAuthReady || (isAuthenticated && (!isLoaded || isLoading));
 
   const groupedCartItems = useMemo(
     () => groupCartItemsByPharmacy(visibleCart.items),

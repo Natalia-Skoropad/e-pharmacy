@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import {
   AuthProviderCore,
   type AuthProviderServices,
@@ -14,8 +16,6 @@ import {
   refreshSession,
   registerUser,
 } from '@/lib/api/browser';
-
-import type { ReactNode } from 'react';
 
 //===================================================================
 

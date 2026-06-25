@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useFavoriteRefresh } from './useFavoriteRefresh';
 
 import {
   getFavoriteProductIds,
   getFavoritePharmacyIds,
 } from '@/lib/api/browser';
+
+import { useFavoriteRefresh } from './useFavoriteRefresh';
 
 //===================================================================
 

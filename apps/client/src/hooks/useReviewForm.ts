@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
+import { useAuth } from '@e-pharmacy/auth/core';
+
 import {
   REVIEW_FORM_FIELDS,
   REVIEW_INITIAL_VALUES,
@@ -13,8 +15,6 @@ import {
   type ReviewFormValues,
   type ReviewTouchedFields,
 } from '@e-pharmacy/validation';
-
-import { useAuth } from '@e-pharmacy/auth/core';
 
 //===================================================================
 

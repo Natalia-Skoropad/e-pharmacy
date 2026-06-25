@@ -1,7 +1,5 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-
 import {
   createContext,
   useCallback,
@@ -14,14 +12,14 @@ import {
 } from 'react';
 
 import { useAuth } from '@e-pharmacy/auth/core';
+import type { Cart } from '@e-pharmacy/types';
+
 import { getCart } from '@/lib/api/browser';
 
 import {
   CART_UPDATED_EVENT,
   type CartUpdatedEventDetail,
 } from '@/lib/cart/cart-events';
-
-import type { Cart } from '@e-pharmacy/types';
 
 //===================================================================
 
@@ -45,14 +43,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 //===================================================================
 
-function shouldLoadCartForPath(pathname: string): boolean {
-  return pathname === '/cart' || pathname.startsWith('/checkout');
-}
-
-//===================================================================
-
 export function CartProvider({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
   const { isAuthReady, isAuthenticated } = useAuth();
 
   const [cart, setCartState] = useState<Cart>(EMPTY_CART);
@@ -117,10 +108,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (!shouldLoadCartForPath(pathname)) {
-        return;
-      }
-
       if (wasAuthenticated !== true) {
         setIsLoaded(false);
         void loadCart().catch(() => undefined);
@@ -135,7 +122,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => {
       isCancelled = true;
     };
-  }, [isAuthReady, isAuthenticated, isLoaded, isLoading, loadCart, pathname]);
+  }, [isAuthReady, isAuthenticated, isLoaded, isLoading, loadCart]);
 
   useEffect(() => {
     const onCartUpdated = (event: Event) => {

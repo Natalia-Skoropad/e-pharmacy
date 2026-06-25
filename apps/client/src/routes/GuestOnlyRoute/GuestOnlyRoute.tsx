@@ -1,10 +1,11 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { GuestOnlyRoute as SharedGuestOnlyRoute } from '@e-pharmacy/auth/guards';
-import { resolveAuthenticatedRouteForClientApp } from '@/lib/auth';
 import { LoadingSpinner } from '@e-pharmacy/ui/common';
 
-import type { ReactNode } from 'react';
+import { resolveAuthenticatedRouteForClientApp } from '@/lib/auth';
 
 //===================================================================
 

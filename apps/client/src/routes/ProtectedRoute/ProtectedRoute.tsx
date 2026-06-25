@@ -1,11 +1,11 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { ProtectedRoute as SharedProtectedRoute } from '@e-pharmacy/auth/guards';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { Button, LoadingSpinner } from '@e-pharmacy/ui/common';
 import { ROUTES } from '@/lib/routes';
-
-import type { ReactNode } from 'react';
 
 //===================================================================
 

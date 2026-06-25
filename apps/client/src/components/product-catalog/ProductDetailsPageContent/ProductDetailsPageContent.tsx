@@ -385,7 +385,7 @@ function ProductDetailsPageContent({
       })
       .catch(() => undefined);
 
-    loadCart().catch((error) => {
+    loadCart().catch((error: unknown) => {
       if (isMounted) {
         toast.error(
           getUserFacingErrorMessage(error, {
@@ -676,14 +676,8 @@ function ProductDetailsPageContent({
             {activeTab === 'prices' ? (
               <div className={css.panel}>
                 <div className={css.sectionHeader}>
-                  <div>
+                  <div className={css.sectionHeaderMain}>
                     <h2 className={css.panelTitle}>Pharmacies</h2>
-
-                    <CountLabel
-                      shown={visibleOffers.length}
-                      total={filteredOffers.length}
-                      label="pharmacies"
-                    />
 
                     {!isAuthenticated && isAuthReady ? (
                       <p className={css.authNote}>
@@ -691,6 +685,12 @@ function ProductDetailsPageContent({
                       </p>
                     ) : null}
                   </div>
+
+                  <CountLabel
+                    shown={visibleOffers.length}
+                    total={filteredOffers.length}
+                    label="pharmacies"
+                  />
                 </div>
 
                 <button
