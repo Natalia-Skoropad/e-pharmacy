@@ -42,6 +42,7 @@ import {
 } from '../utils/mongoError';
 
 import { comparePassword, hashPassword } from '../utils/password';
+import { logger } from '../utils/logger';
 import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
 import { toAuthUserResponse } from '../utils/userResponse';
 
@@ -463,10 +464,18 @@ export async function requestPasswordResetService(
 
   await user.save();
 
-  await sendPasswordResetEmail({
+  const resetUrl = buildPasswordResetUrl(resetToken, input.application);
+
+  // Do not keep the password recovery request open while SMTP connects.
+  // The reset token is already saved, so the API can return the same
+  // anti-enumeration success response immediately. SMTP failures are logged
+  // for diagnostics without blocking the user-facing flow.
+  void sendPasswordResetEmail({
     to: user.email,
     name: user.name,
-    resetUrl: buildPasswordResetUrl(resetToken, input.application),
+    resetUrl,
+  }).catch((error) => {
+    logger.error('[auth] Password reset email sending failed', error);
   });
 }
 

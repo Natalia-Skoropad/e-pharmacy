@@ -12,6 +12,11 @@ import { routes } from './routes';
 
 export const app = express();
 
+// Render and Vercel sit behind proxies and send X-Forwarded-* headers.
+// express-rate-limit needs Express to trust the first proxy to resolve
+// client IPs correctly in production.
+app.set('trust proxy', 1);
+
 //===============================================================
 
 app.use(helmet());
