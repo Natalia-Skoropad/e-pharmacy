@@ -1,0 +1,60 @@
+.page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--gradient-page-bg, #f5f7fb);
+}
+
+.card {
+  width: min(100%, 640px);
+  padding: 32px;
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d0d5dd);
+  border-radius: var(--radius-xl, 24px);
+  box-shadow: var(--shadow-card-lg, 0 20px 45px rgb(16 24 40 / 0.08));
+}
+
+.card h1 {
+  margin-top: 8px;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.05;
+  color: var(--color-text-primary, #1f2937);
+}
+
+.card p:not(.kicker) {
+  margin-top: 16px;
+  color: var(--color-text-secondary, #667085);
+  line-height: 1.6;
+}
+
+.kicker {
+  font-weight: 700;
+  color: var(--color-accent, #1a7f64);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.actions a,
+.actions button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--color-white, #ffffff);
+  text-decoration: none;
+  cursor: pointer;
+  background-color: var(--color-accent, #1a7f64);
+  border: 0;
+  border-radius: var(--radius-pill, 999px);
+}

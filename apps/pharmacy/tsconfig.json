@@ -1,0 +1,60 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@e-pharmacy/utils": ["../../packages/utils/src/index.ts"],
+
+      "@e-pharmacy/utils/*": ["../../packages/utils/src/*/index.ts"],
+      "@e-pharmacy/config/*": [
+        "../../packages/config/src/*/index.ts",
+        "../../packages/config/src/*.ts"
+      ],
+      "@e-pharmacy/ui": ["../../packages/ui/src/index.ts"],
+      "@e-pharmacy/ui/*": ["../../packages/ui/src/*/index.ts"],
+      "@e-pharmacy/hooks": ["../../packages/hooks/src/index.ts"],
+      "@e-pharmacy/hooks/*": ["../../packages/hooks/src/*"],
+      "@e-pharmacy/api-client/*": [
+        "../../packages/api-client/src/*/index.ts",
+        "../../packages/api-client/src/*.ts"
+      ],
+      "@e-pharmacy/types": ["../../packages/types/src/index.ts"],
+      "@e-pharmacy/types/*": [
+        "../../packages/types/src/*/index.ts",
+        "../../packages/types/src/*.ts"
+      ],
+      "@e-pharmacy/validation": ["../../packages/validation/src/index.ts"],
+      "@e-pharmacy/validation/*": [
+        "../../packages/validation/src/*/index.ts",
+        "../../packages/validation/src/*.ts"
+      ],
+      "@e-pharmacy/auth": ["../../packages/auth/src/index.ts"],
+      "@e-pharmacy/auth/*": [
+        "../../packages/auth/src/*/index.ts",
+        "../../packages/auth/src/*.ts"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.mts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

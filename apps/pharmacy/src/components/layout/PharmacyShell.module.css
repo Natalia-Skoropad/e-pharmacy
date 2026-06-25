@@ -1,0 +1,87 @@
+.shell {
+  min-height: 100vh;
+  background: var(--gradient-page-bg, #f5f7fb);
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  min-height: var(--pharmacy-header-height);
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 20px;
+  background-color: var(--color-surface, #ffffff);
+  border-bottom: 1px solid var(--color-border, #d0d5dd);
+}
+
+.logo {
+  font-weight: 800;
+  color: var(--color-text-primary, #1f2937);
+  text-decoration: none;
+  letter-spacing: -0.03em;
+}
+
+.badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding-inline: 12px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-accent, #1a7f64);
+  background-color: var(--color-accent-light, #e7f6f0);
+  border-radius: var(--radius-pill, 999px);
+}
+
+.sidebar {
+  display: none;
+}
+
+.content {
+  min-width: 0;
+}
+
+.nav {
+  display: grid;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.nav a {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  padding-inline: 14px;
+  color: var(--color-text-secondary, #667085);
+  text-decoration: none;
+  border-radius: var(--radius-md, 12px);
+}
+
+.nav a:hover,
+.nav a:focus-visible {
+  color: var(--color-text-primary, #1f2937);
+  background-color: var(--color-accent-light, #e7f6f0);
+}
+
+@media (min-width: 1024px) {
+  .shell {
+    display: grid;
+    grid-template-columns: var(--pharmacy-sidebar-width) minmax(0, 1fr);
+  }
+
+  .header {
+    display: none;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    display: block;
+    height: 100vh;
+    padding: 28px 20px;
+    background-color: var(--color-surface, #ffffff);
+    border-right: 1px solid var(--color-border, #d0d5dd);
+  }
+}

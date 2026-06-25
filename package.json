@@ -22,7 +22,12 @@
     "check:client": "pnpm --filter @e-pharmacy/client lint && pnpm --filter @e-pharmacy/client type-check && pnpm --filter @e-pharmacy/client build",
     "check:api": "pnpm --filter @e-pharmacy/api lint && pnpm --filter @e-pharmacy/api type-check && pnpm --filter @e-pharmacy/api build",
     "lint:packages": "turbo lint --filter='./packages/*'",
-    "type-check:packages": "turbo type-check --filter='./packages/*'"
+    "type-check:packages": "turbo type-check --filter='./packages/*'",
+    "dev:pharmacy": "pnpm --filter @e-pharmacy/pharmacy dev",
+    "build:pharmacy": "pnpm --filter @e-pharmacy/pharmacy build",
+    "lint:pharmacy": "pnpm --filter @e-pharmacy/pharmacy lint",
+    "type-check:pharmacy": "pnpm --filter @e-pharmacy/pharmacy type-check",
+    "check:pharmacy": "pnpm --filter @e-pharmacy/pharmacy lint && pnpm --filter @e-pharmacy/pharmacy type-check && pnpm --filter @e-pharmacy/pharmacy build"
   },
   "devDependencies": {
     "turbo": "latest",

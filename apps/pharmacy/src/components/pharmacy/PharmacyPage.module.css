@@ -1,0 +1,94 @@
+.page {
+  width: min(100%, 1180px);
+  min-height: 100vh;
+  margin-inline: auto;
+  padding: 24px 20px 56px;
+}
+
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #667085);
+}
+
+.breadcrumbs a {
+  color: var(--color-accent, #1a7f64);
+  text-decoration: none;
+}
+
+.hero,
+.content {
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d0d5dd);
+  border-radius: var(--radius-xl, 24px);
+  box-shadow: var(--shadow-card, 0 12px 32px rgb(16 24 40 / 0.08));
+}
+
+.hero {
+  padding: 28px;
+}
+
+.kicker {
+  margin-bottom: 8px;
+  font-weight: 800;
+  color: var(--color-accent, #1a7f64);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.05;
+  color: var(--color-text-primary, #1f2937);
+}
+
+.hero p:last-child {
+  max-width: 760px;
+  margin-top: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary, #667085);
+}
+
+.content {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 24px;
+}
+
+.placeholderGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.placeholderCard {
+  padding: 20px;
+  background-color: var(--color-background-soft, #f7faf9);
+  border: 1px dashed var(--color-border, #d0d5dd);
+  border-radius: var(--radius-lg, 18px);
+}
+
+.placeholderCard strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-text-primary, #1f2937);
+}
+
+.placeholderCard p {
+  color: var(--color-text-secondary, #667085);
+  line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding: 32px;
+  }
+
+  .placeholderGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
