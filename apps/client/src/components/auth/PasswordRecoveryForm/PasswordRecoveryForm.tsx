@@ -2,7 +2,7 @@
 
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
-import { Button, TextActionButton } from '@e-pharmacy/ui/common';
+import { Button, RadioOption, TextActionButton } from '@e-pharmacy/ui/common';
 import { EmailInput } from '@e-pharmacy/ui/form-fields';
 import { useToast } from '@e-pharmacy/ui/feedback';
 
@@ -31,9 +31,29 @@ import css from '../shared/AuthForm.module.css';
 
 //===================================================================
 
+type RecoveryAccountType = 'client' | 'pharmacy';
+
+//===================================================================
+
+const RECOVERY_COPY: Record<RecoveryAccountType, { title: string; text: string }> = {
+  client: {
+    title: 'Client account',
+    text: 'Enter the email from your personal account. We will send a reset link for your client login.',
+  },
+  pharmacy: {
+    title: 'Pharmacy owner account',
+    text: 'Enter the email from your pharmacy owner account. We will send a reset link for access to the pharmacy dashboard.',
+  },
+};
+
+//===================================================================
+
 function PasswordRecoveryForm() {
   const toast = useToast();
   const { isAuthReady } = useAuth();
+
+  const [accountType, setAccountType] =
+    useState<RecoveryAccountType>('client');
 
   const [values, setValues] = useState<ForgotPasswordFormValues>(
     FORGOT_PASSWORD_INITIAL_VALUES
@@ -46,6 +66,7 @@ function PasswordRecoveryForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formIsValid = isForgotPasswordFormValid(values);
+  const selectedCopy = RECOVERY_COPY[accountType];
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const nextValues = {
@@ -75,7 +96,7 @@ function PasswordRecoveryForm() {
 
       await requestPasswordReset({
         email: values.email.trim(),
-        application: 'client',
+        application: accountType,
       });
 
       setValues(FORGOT_PASSWORD_INITIAL_VALUES);
@@ -101,6 +122,31 @@ function PasswordRecoveryForm() {
 
   return (
     <form className={css.form} noValidate onSubmit={handleSubmit}>
+      <fieldset className={css.accountTypeGroup}>
+        <legend className={css.visuallyHidden}>Account type</legend>
+        <div className={css.accountTypeOptions}>
+          <RadioOption
+            name="recovery-account-type"
+            value="client"
+            checked={accountType === 'client'}
+            label="I am a client"
+            onChange={setAccountType}
+          />
+          <RadioOption
+            name="recovery-account-type"
+            value="pharmacy"
+            checked={accountType === 'pharmacy'}
+            label="I am a pharmacy owner"
+            onChange={setAccountType}
+          />
+        </div>
+      </fieldset>
+
+      <div className={css.choiceInfo}>
+        <p className={css.choiceTitle}>{selectedCopy.title}</p>
+        <p className={css.choiceText}>{selectedCopy.text}</p>
+      </div>
+
       <div className={css.fields}>
         <EmailInput
           id="recovery-email"

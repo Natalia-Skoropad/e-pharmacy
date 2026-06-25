@@ -1,9 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { useAuth } from '@e-pharmacy/auth/core';
+
+import { getSharedLoginUrl } from '@/lib/pharmacy/shared-auth';
 
 import css from './PharmacyLogoutButton.module.css';
 
@@ -16,7 +17,6 @@ type PharmacyLogoutButtonProps = Readonly<{
 //===================================================================
 
 export function PharmacyLogoutButton({ className }: PharmacyLogoutButtonProps) {
-  const router = useRouter();
   const { logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -27,7 +27,7 @@ export function PharmacyLogoutButton({ className }: PharmacyLogoutButtonProps) {
     try {
       await logout();
     } finally {
-      router.replace('/auth/login');
+      window.location.assign(getSharedLoginUrl());
       setIsLoggingOut(false);
     }
   };

@@ -11,8 +11,18 @@ import { getPharmacyDashboardPath } from '@/lib/pharmacy/routes';
 
 //===================================================================
 
-const LOGIN_PATH = '/auth/login';
+const SHARED_LOGIN_PATH = '/login';
 const PROTECTED_PHARMACY_PREFIX = '/pharmacy';
+
+//===================================================================
+
+function getClientAppUrl(request: NextRequest): string {
+  return (
+    process.env.NEXT_PUBLIC_CLIENT_APP_URL?.trim() ||
+    process.env.CLIENT_APP_URL?.trim() ||
+    new URL('http://localhost:3000', request.url).toString()
+  );
+}
 
 //===================================================================
 
@@ -28,9 +38,15 @@ function hasSessionCookie(request: NextRequest) {
 //===================================================================
 
 function buildLoginRedirect(request: NextRequest) {
-  const loginUrl = new URL(LOGIN_PATH, request.url);
+  const loginUrl = new URL(SHARED_LOGIN_PATH, getClientAppUrl(request));
   const requestedPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
-  loginUrl.searchParams.set('redirect', requestedPath || getPharmacyDashboardPath());
+  const pharmacyAppUrl = new URL(request.url).origin;
+  const redirectUrl = new URL(
+    requestedPath || getPharmacyDashboardPath(),
+    pharmacyAppUrl
+  );
+
+  loginUrl.searchParams.set('redirect', redirectUrl.toString());
   return loginUrl;
 }
 

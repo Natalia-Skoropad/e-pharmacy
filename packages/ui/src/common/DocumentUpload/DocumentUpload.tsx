@@ -28,6 +28,7 @@ type DocumentUploadProps = {
   required?: boolean;
   disabled?: boolean;
   multiple?: boolean;
+  maxFiles?: number;
   accept?: string;
   hint?: string;
   className?: string;
@@ -61,6 +62,7 @@ function DocumentUpload({
   required = false,
   disabled = false,
   multiple = true,
+  maxFiles,
   accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx',
   hint = 'Upload registration documents, license scans, or other files that confirm pharmacy ownership.',
   className,
@@ -68,7 +70,9 @@ function DocumentUpload({
 }: DocumentUploadProps) {
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
+  const limitId = `${id}-limit`;
   const hasError = Boolean(isTouched && error);
+  const hasReachedLimit = typeof maxFiles === 'number' && value.length >= maxFiles;
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files ?? []).map((file) => ({
@@ -81,10 +85,12 @@ function DocumentUpload({
 
     const nextFiles = multiple ? [...value, ...selectedFiles] : selectedFiles;
     const uniqueFiles = Array.from(
-      new Map(nextFiles.map((file) => [file.id, file])).values(),
+      new Map(nextFiles.map((file) => [file.id, file])).values()
     );
+    const limitedFiles =
+      typeof maxFiles === 'number' ? uniqueFiles.slice(0, maxFiles) : uniqueFiles;
 
-    onChange(uniqueFiles);
+    onChange(limitedFiles);
     event.target.value = '';
   };
 
@@ -110,14 +116,17 @@ function DocumentUpload({
         type="file"
         accept={accept}
         multiple={multiple}
-        disabled={disabled}
+        disabled={disabled || hasReachedLimit}
         aria-invalid={hasError}
-        aria-describedby={`${hintId} ${errorId}`}
+        aria-describedby={`${hintId} ${limitId} ${errorId}`}
         onChange={handleChange}
       />
 
       <label
-        className={clsx(css.dropzone, disabled && css.dropzoneDisabled)}
+        className={clsx(
+          css.dropzone,
+          (disabled || hasReachedLimit) && css.dropzoneDisabled
+        )}
         htmlFor={id}
       >
         <UploadCloud className={css.icon} size={28} aria-hidden="true" />
@@ -128,6 +137,12 @@ function DocumentUpload({
       {hint ? (
         <p className={css.hint} id={hintId}>
           {hint}
+        </p>
+      ) : null}
+
+      {typeof maxFiles === 'number' ? (
+        <p className={css.limit} id={limitId}>
+          {value.length}/{maxFiles} files uploaded
         </p>
       ) : null}
 

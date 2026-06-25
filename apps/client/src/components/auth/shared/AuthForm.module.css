@@ -102,3 +102,35 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.authTitleBlock {
+  display: grid;
+  gap: 8px;
+}
+
+.authTitle {
+  margin: 0;
+  font-size: var(--fz-24);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media screen and (min-width: 768px) {
+  .accountTypeOptions > * {
+    min-width: 0;
+  }
+}

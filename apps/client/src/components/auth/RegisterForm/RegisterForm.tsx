@@ -30,7 +30,6 @@ import {
   USER_PASSWORD_MAX_LENGTH,
   USER_PHONE_MAX_LENGTH,
   REGISTER_INITIAL_VALUES,
-  buildNameError,
   hasValidationErrors,
   isRegisterFormValid,
   markAllFieldsTouched,
@@ -46,6 +45,7 @@ import {
 
 import { getClientAuthErrorMessage, resolveLoginDestination } from '@/lib/auth';
 import { ROUTES } from '@/lib/routes';
+import { REGISTER_TITLE } from '@/lib/seo';
 
 import css from '../shared/AuthForm.module.css';
 
@@ -56,12 +56,10 @@ type RegisterAccountType = 'client' | 'pharmacy';
 //===================================================================
 
 type PharmacyRegisterTouchedFields = RegisterTouchedFields & {
-  pharmacyName?: boolean;
   pharmacyDocuments?: boolean;
 };
 
 type PharmacyRegisterErrors = RegisterFormErrors & {
-  pharmacyName?: string;
   pharmacyDocuments?: string;
 };
 
@@ -79,16 +77,20 @@ const REGISTER_COPY: Record<
   client: {
     title: 'Client account',
     text: 'Create a personal account for orders, favorites, checkout details, and profile settings.',
-    button: 'Create client account',
+    button: 'Create account',
     loading: 'Creating account...',
   },
   pharmacy: {
     title: 'Pharmacy owner account',
-    text: 'Create a pharmacy account request. Add the pharmacy name and documents so the team can verify the cabinet before full access.',
+    text: 'Create a pharmacy owner account and upload documents that confirm your right to manage the pharmacy cabinet.',
     button: 'Create pharmacy account',
     loading: 'Creating pharmacy account...',
   },
 };
+
+//===================================================================
+
+const PHARMACY_DOCUMENTS_LIMIT = 6;
 
 //===================================================================
 
@@ -105,7 +107,6 @@ function RegisterForm() {
     REGISTER_INITIAL_VALUES
   );
 
-  const [pharmacyName, setPharmacyName] = useState('');
   const [pharmacyDocuments, setPharmacyDocuments] = useState<
     DocumentUploadFile[]
   >([]);
@@ -118,7 +119,6 @@ function RegisterForm() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const selectedCopy = REGISTER_COPY[accountType];
-  const pharmacyNameError = buildNameError(pharmacyName, { required: true });
   const pharmacyDocumentsError =
     accountType === 'pharmacy' && pharmacyDocuments.length === 0
       ? 'Please upload pharmacy documents.'
@@ -126,8 +126,7 @@ function RegisterForm() {
 
   const registerFormIsValid =
     isRegisterFormValid(values) &&
-    (accountType === 'client' ||
-      (!pharmacyNameError && pharmacyDocuments.length > 0));
+    (accountType === 'client' || pharmacyDocuments.length > 0);
 
   const handleChange =
     (field: keyof RegisterFormValues) =>
@@ -163,24 +162,13 @@ function RegisterForm() {
     if (nextType === 'client') {
       setErrors((prev) => ({
         ...prev,
-        pharmacyName: undefined,
         pharmacyDocuments: undefined,
       }));
       setTouchedFields((prev) => ({
         ...prev,
-        pharmacyName: false,
         pharmacyDocuments: false,
       }));
     }
-  };
-
-  const handlePharmacyNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const nextValue = sanitizeName(event.target.value);
-    const nextError = buildNameError(nextValue, { required: true });
-
-    setPharmacyName(nextValue);
-    setTouchedFields((prev) => ({ ...prev, pharmacyName: true }));
-    setErrors((prev) => ({ ...prev, pharmacyName: nextError }));
   };
 
   const handleDocumentsChange = (files: DocumentUploadFile[]) => {
@@ -203,24 +191,13 @@ function RegisterForm() {
       return;
     }
 
-    if (accountType === 'pharmacy') {
-      const nextPharmacyNameError = buildNameError(pharmacyName, {
-        required: true,
-      });
-
-      if (nextPharmacyNameError) {
-        nextErrors.pharmacyName = nextPharmacyNameError;
-      }
-
-      if (pharmacyDocuments.length === 0) {
-        nextErrors.pharmacyDocuments = 'Please upload pharmacy documents.';
-      }
+    if (accountType === 'pharmacy' && pharmacyDocuments.length === 0) {
+      nextErrors.pharmacyDocuments = 'Please upload pharmacy documents.';
     }
 
     if (hasValidationErrors(nextErrors)) {
       setTouchedFields({
         ...markAllFieldsTouched(REGISTER_FORM_FIELDS),
-        pharmacyName: accountType === 'pharmacy',
         pharmacyDocuments: accountType === 'pharmacy',
       });
       setErrors(nextErrors);
@@ -236,8 +213,6 @@ function RegisterForm() {
         phone: values.phone.trim(),
         password: values.password,
         role: accountType,
-        pharmacyName:
-          accountType === 'pharmacy' ? pharmacyName.trim() : undefined,
         pharmacyDocuments:
           accountType === 'pharmacy'
             ? pharmacyDocuments.map(({ name, size, type }) => ({
@@ -272,8 +247,12 @@ function RegisterForm() {
 
   return (
     <form className={css.form} noValidate onSubmit={handleSubmit}>
+      <div className={css.authTitleBlock}>
+        <h1 className={css.authTitle}>{REGISTER_TITLE}</h1>
+      </div>
+
       <fieldset className={css.accountTypeGroup}>
-        <legend className={css.accountTypeLegend}>Choose account type</legend>
+        <legend className={css.visuallyHidden}>Account type</legend>
         <div className={css.accountTypeOptions}>
           <RadioOption
             name="register-account-type"
@@ -307,21 +286,6 @@ function RegisterForm() {
           maxLength={USER_NAME_MAX_LENGTH}
           onChange={handleChange('name')}
         />
-
-        {accountType === 'pharmacy' ? (
-          <NameInput
-            id="register-pharmacy-name"
-            name="pharmacyName"
-            value={pharmacyName}
-            label="Pharmacy name"
-            placeholder="Your pharmacy name"
-            autoComplete="organization"
-            error={errors.pharmacyName ?? pharmacyNameError}
-            isTouched={touchedFields.pharmacyName}
-            maxLength={USER_NAME_MAX_LENGTH}
-            onChange={handlePharmacyNameChange}
-          />
-        ) : null}
 
         <EmailInput
           id="register-email"
@@ -365,6 +329,7 @@ function RegisterForm() {
             error={errors.pharmacyDocuments ?? pharmacyDocumentsError}
             isTouched={touchedFields.pharmacyDocuments}
             required
+            maxFiles={PHARMACY_DOCUMENTS_LIMIT}
             onChange={handleDocumentsChange}
           />
         ) : null}

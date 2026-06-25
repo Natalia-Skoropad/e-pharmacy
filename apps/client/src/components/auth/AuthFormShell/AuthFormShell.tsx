@@ -15,6 +15,7 @@ type AuthFormShellProps = {
   breadcrumbs: BreadcrumbItem[];
   children: ReactNode;
   showHeader?: boolean;
+  showDescription?: boolean;
 };
 
 //===================================================================
@@ -25,6 +26,7 @@ function AuthFormShell({
   breadcrumbs,
   children,
   showHeader = true,
+  showDescription = true,
 }: AuthFormShellProps) {
   const titleId = useId();
 
@@ -58,7 +60,9 @@ function AuthFormShell({
                     <h1 className={css.title} id={titleId}>
                       {title}
                     </h1>
-                    <p className={css.text}>{text}</p>
+                    {showDescription && text ? (
+                      <p className={css.text}>{text}</p>
+                    ) : null}
                   </div>
                 ) : null}
 

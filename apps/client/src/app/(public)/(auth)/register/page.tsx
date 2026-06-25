@@ -27,6 +27,7 @@ function RegisterPage() {
         title={REGISTER_TITLE}
         text={REGISTER_DESCRIPTION}
         breadcrumbs={createBreadcrumbs(REGISTER_TITLE)}
+        showHeader={false}
       >
         <RegisterForm />
       </AuthFormShell>

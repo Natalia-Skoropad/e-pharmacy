@@ -4,14 +4,17 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
 import { useAuth } from '@e-pharmacy/auth/core';
-import { buildLoginRedirectPath } from '@e-pharmacy/auth/routing';
-
 import { getPharmacyDashboardPath } from '@/lib/pharmacy/routes';
+
+import {
+  getSharedLoginUrl,
+  getSharedLoginUrlForCurrentPharmacyPage,
+} from '@/lib/pharmacy/shared-auth';
+
 import { PageLoader } from '@/components/pharmacy/PageLoader';
 
 //===================================================================
 
-const PHARMACY_LOGIN_PATH = '/auth/login';
 const CLIENT_APP_FALLBACK_PATH = '/';
 const ADMIN_APP_FALLBACK_PATH = '/admin/dashboard';
 
@@ -48,7 +51,9 @@ export function PharmacyProtectedRoute({
     if (!isAuthenticated) {
       const hash = typeof window === 'undefined' ? '' : window.location.hash;
       const currentPath = `${pathname}${queryString ? `?${queryString}` : ''}${hash}`;
-      router.replace(buildLoginRedirectPath(currentPath, PHARMACY_LOGIN_PATH));
+      window.location.assign(
+        getSharedLoginUrlForCurrentPharmacyPage(currentPath)
+      );
       return;
     }
 
@@ -59,9 +64,7 @@ export function PharmacyProtectedRoute({
 
     if (isBlocked) {
       void logout().finally(() => {
-        router.replace(
-          `${PHARMACY_LOGIN_PATH}?reason=pharmacy-blocked&redirect=${encodeURIComponent(getPharmacyDashboardPath())}`
-        );
+        window.location.assign(getSharedLoginUrl(getPharmacyDashboardPath()));
       });
     }
   }, [

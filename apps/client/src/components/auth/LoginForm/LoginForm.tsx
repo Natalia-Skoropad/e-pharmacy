@@ -27,6 +27,7 @@ import {
 } from '@e-pharmacy/validation';
 
 import { ROUTES } from '@/lib/routes';
+import { LOGIN_TITLE } from '@/lib/seo';
 import { getClientAuthErrorMessage, resolveLoginDestination } from '@/lib/auth';
 
 import css from '../shared/AuthForm.module.css';
@@ -48,15 +49,15 @@ const LOGIN_COPY: Record<
 > = {
   client: {
     title: 'Client account',
-    text: 'Use the email and password from your personal account. After sign in, E-PHARMACY will open your client profile, orders, favorites, and checkout details.',
-    button: 'Log in as client',
+    text: 'Use your personal account email and password. After sign in, E-PHARMACY will open your profile, orders, favorites, and checkout details.',
+    button: 'Log in',
     loading: 'Logging in...',
   },
   pharmacy: {
     title: 'Pharmacy owner account',
-    text: 'Use the same sign-in form with your pharmacy account. E-PHARMACY checks the account role by email and opens the pharmacy dashboard automatically.',
-    button: 'Open pharmacy cabinet',
-    loading: 'Opening cabinet...',
+    text: 'Use your pharmacy owner email and password. E-PHARMACY checks the account role and opens the pharmacy dashboard automatically.',
+    button: 'Open pharmacy dashboard',
+    loading: 'Opening dashboard...',
   },
 };
 
@@ -145,8 +146,12 @@ function LoginForm() {
 
   return (
     <form className={css.form} noValidate onSubmit={handleSubmit}>
+      <div className={css.authTitleBlock}>
+        <h1 className={css.authTitle}>{LOGIN_TITLE}</h1>
+      </div>
+
       <fieldset className={css.accountTypeGroup}>
-        <legend className={css.accountTypeLegend}>Choose account type</legend>
+        <legend className={css.visuallyHidden}>Account type</legend>
         <div className={css.accountTypeOptions}>
           <RadioOption
             name="login-account-type"

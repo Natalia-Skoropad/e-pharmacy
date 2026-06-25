@@ -5,28 +5,12 @@ import { getResponseData } from '@e-pharmacy/api-client/core';
 import type {
   ApiEmptySuccessResponse,
   ApiSuccessResponse,
-  AuthResponse,
   CurrentUserResponse,
-  LoginPayload,
 } from '@e-pharmacy/types';
 
-import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes';
+import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
 import { localApiRequest } from './local-api-request';
-
-//===================================================================
-
-export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
-    PHARMACY_API_ROUTES.auth.login,
-    {
-      method: 'POST',
-      body: payload,
-    }
-  );
-
-  return getResponseData(response);
-}
 
 //===================================================================
 

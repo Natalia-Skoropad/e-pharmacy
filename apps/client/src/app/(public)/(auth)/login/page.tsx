@@ -22,6 +22,7 @@ function LoginPage() {
         title={LOGIN_TITLE}
         text={LOGIN_DESCRIPTION}
         breadcrumbs={createBreadcrumbs(LOGIN_TITLE)}
+        showHeader={false}
       >
         <LoginForm />
       </AuthFormShell>

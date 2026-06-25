@@ -2,8 +2,6 @@
 
 import type { ReactNode } from 'react';
 
-import type { LoginPayload } from '@e-pharmacy/types';
-
 import {
   AuthProviderCore,
   type AuthProviderServices,
@@ -13,16 +11,9 @@ import { createBrowserAuthSessionHintStorage } from '@e-pharmacy/auth/session';
 
 import {
   getCurrentUser,
-  loginUser,
   logoutUser,
   refreshSession,
 } from '@/lib/api/browser';
-
-import {
-  clearDemoPharmacyUser,
-  getDemoCurrentPharmacyUser,
-  loginDemoPharmacyUser,
-} from '@/lib/auth/demo-pharmacy-auth';
 
 //===================================================================
 
@@ -35,35 +26,15 @@ const pharmacyAuthSessionHintStorage = createBrowserAuthSessionHintStorage({
 //===================================================================
 
 const pharmacyAuthServices = {
-  async getCurrentUser() {
-    const demoUser = await getDemoCurrentPharmacyUser();
-    if (demoUser) return demoUser;
+  getCurrentUser,
+  refreshSession,
 
-    return getCurrentUser();
-  },
-
-  async refreshSession() {
-    const demoUser = await getDemoCurrentPharmacyUser();
-    if (demoUser) return demoUser;
-
-    return refreshSession();
-  },
-
-  async login(payload: LoginPayload) {
-    const demoResponse = await loginDemoPharmacyUser(payload);
-    if (demoResponse) return demoResponse;
-
-    return loginUser(payload);
+  async login() {
+    throw new Error('Use the shared E-PHARMACY login page to sign in.');
   },
 
   async logout() {
-    clearDemoPharmacyUser();
-
-    try {
-      await logoutUser();
-    } catch {
-      // Demo mode can be used without a running backend, so logout stays local-safe.
-    }
+    await logoutUser();
   },
 } satisfies AuthProviderServices;
 

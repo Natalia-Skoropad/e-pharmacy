@@ -39,7 +39,6 @@ export const registerSchema = z.object({
 
   phone: sharedRequiredPhoneSchema,
   address: sharedOptionalAddressSchema,
-  pharmacyName: sharedNameSchema.optional(),
   pharmacyDocuments: z
     .array(
       z.object({
@@ -48,6 +47,7 @@ export const registerSchema = z.object({
         type: z.string().trim().optional().default(''),
       })
     )
+    .max(6)
     .optional(),
 });
 
@@ -68,6 +68,7 @@ export const createPharmacyUserSchema = z.object({
         type: z.string().trim().optional().default(''),
       })
     )
+    .max(6)
     .optional(),
 });
 

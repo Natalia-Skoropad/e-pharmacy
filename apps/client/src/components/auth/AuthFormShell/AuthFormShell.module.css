@@ -88,7 +88,7 @@
 
 @media only screen and (min-width: 1440px) {
   .grid {
-    grid-template-columns: minmax(0, 1fr) 520px;
+    grid-template-columns: minmax(0, 1fr) 600px;
     max-width: none;
     gap: 70px;
   }
@@ -99,5 +99,6 @@
 
   .card {
     display: flex;
+    padding: 40px;
   }
 }

@@ -1,6 +1,5 @@
 export const pharmacyApiRoutes = {
   auth: {
-    login: '/api/auth/login',
     logout: '/api/auth/logout',
     logoutAll: '/api/auth/logout-all',
     refresh: '/api/auth/refresh',

@@ -189,7 +189,7 @@ export async function registerUserService(
       await Pharmacy.create({
         ownerId: user._id,
         managerUserIds: [],
-        name: input.pharmacyName?.trim() || user.name,
+        name: user.name,
         address: user.address ?? 'Address pending verification',
         phone: user.phone,
         email: user.email,
@@ -394,7 +394,7 @@ function getPasswordResetAppUrl(
 ): string {
   const appUrls = {
     client: env.CLIENT_APP_URL,
-    pharmacy: env.PHARMACY_APP_URL,
+    pharmacy: env.CLIENT_APP_URL,
     admin: env.ADMIN_APP_URL,
   } satisfies Record<ForgotPasswordInput['application'], string | undefined>;
 
