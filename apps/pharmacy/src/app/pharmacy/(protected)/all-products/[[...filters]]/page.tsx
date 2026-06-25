@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
-import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
 import { parsePharmacyAllProductFilters } from '@/lib/pharmacy/routes';
+import { getAllProductsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
+
+import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
+import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
 
 //===================================================================
 
@@ -27,6 +29,7 @@ async function AllProductsPage({ params }: AllProductsPageProps) {
     <PharmacyPage
       title="All products"
       description="Global products table skeleton with add-to-my-pharmacy actions. Products with new status must stay hidden."
+      breadcrumbs={getAllProductsBreadcrumbs()}
     >
       <pre>{JSON.stringify(parsedFilters, null, 2)}</pre>
       <PlaceholderCards

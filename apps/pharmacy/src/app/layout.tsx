@@ -5,6 +5,8 @@ import '@e-pharmacy/ui/styles/reset.css';
 import '@e-pharmacy/ui/styles/base.css';
 import '@e-pharmacy/ui/styles/utilities.css';
 
+import { AuthProvider } from '@/providers/AuthProvider';
+
 import './styles.css';
 
 //===================================================================
@@ -28,7 +30,9 @@ type RootLayoutProps = Readonly<{
 function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import { getEditProductRequestBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
+
 import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
 import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
 
@@ -25,6 +27,7 @@ async function EditProductRequestPage({ params }: EditProductRequestPageProps) {
     <PharmacyPage
       title={`Edit product request ${requestId}`}
       description="Edit product request skeleton. Submitted requests must become readonly in the next implementation step."
+      breadcrumbs={getEditProductRequestBreadcrumbs(requestId)}
     >
       <PlaceholderCards
         items={[

@@ -1,13 +1,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
-import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
 import {
   getPharmacyOrdersFilterPath,
   getPharmacyProductsFilterPath,
   getPharmacyRequestsFilterPath,
 } from '@/lib/pharmacy/routes';
+
+import { getDashboardBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
+
+import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
+import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
 
 //===================================================================
 
@@ -23,6 +26,7 @@ function DashboardPage() {
     <PharmacyPage
       title="Dashboard"
       description="A first-stage dashboard skeleton for pharmacy status, statistics, and quick actions."
+      breadcrumbs={getDashboardBreadcrumbs()}
     >
       <PlaceholderCards
         items={[
@@ -35,9 +39,15 @@ function DashboardPage() {
         ]}
       />
       <div>
-        <Link href={getPharmacyOrdersFilterPath({ status: 'new' })}>New orders</Link>{' '}
-        <Link href={getPharmacyProductsFilterPath({ stock: 'empty' })}>Empty stock</Link>{' '}
-        <Link href={getPharmacyRequestsFilterPath({ status: 'draft' })}>Draft requests</Link>
+        <Link href={getPharmacyOrdersFilterPath({ status: 'new' })}>
+          New orders
+        </Link>{' '}
+        <Link href={getPharmacyProductsFilterPath({ stock: 'empty' })}>
+          Empty stock
+        </Link>{' '}
+        <Link href={getPharmacyRequestsFilterPath({ status: 'draft' })}>
+          Draft requests
+        </Link>
       </div>
     </PharmacyPage>
   );

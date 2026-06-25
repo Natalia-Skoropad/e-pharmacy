@@ -1,0 +1,33 @@
+.sidebar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    height: 100vh;
+    flex-direction: column;
+    gap: 28px;
+    padding: 28px 20px;
+    background-color: var(--color-surface, #ffffff);
+    border-right: 1px solid var(--color-border, #d0d5dd);
+  }
+}
+
+.brand {
+  display: grid;
+  gap: 12px;
+}
+
+.nav {
+  display: grid;
+  gap: 8px;
+}
+
+.footer {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+}

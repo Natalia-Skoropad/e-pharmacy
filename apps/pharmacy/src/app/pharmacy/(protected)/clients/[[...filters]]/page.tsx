@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
-import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
+import { getClientsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
 import { parsePharmacyClientFilters } from '@/lib/pharmacy/routes';
+
+import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
+import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
 
 //===================================================================
 
@@ -27,6 +29,7 @@ async function ClientsPage({ params }: ClientsPageProps) {
     <PharmacyPage
       title="Clients"
       description="Clients table skeleton with status, date, and search clean URL filters."
+      breadcrumbs={getClientsBreadcrumbs()}
     >
       <pre>{JSON.stringify(parsedFilters, null, 2)}</pre>
       <PlaceholderCards

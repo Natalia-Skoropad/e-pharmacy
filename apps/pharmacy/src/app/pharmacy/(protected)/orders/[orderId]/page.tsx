@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import { getOrderDetailsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
+
 import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
 import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
 
@@ -25,6 +27,7 @@ async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
     <PharmacyPage
       title={`Order #${orderId}`}
       description="Order details skeleton with client, delivery, payment, items, status history, and actions."
+      breadcrumbs={getOrderDetailsBreadcrumbs(orderId)}
     >
       <PlaceholderCards
         items={[

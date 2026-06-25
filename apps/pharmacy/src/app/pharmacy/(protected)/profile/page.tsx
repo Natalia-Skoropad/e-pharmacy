@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import { getProfileBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
+
 import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
 import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
 
@@ -17,6 +19,7 @@ function PharmacyProfilePage() {
     <PharmacyPage
       title="Pharmacy profile"
       description="Profile summary and tab skeleton for pharmacy data, about pharmacy, payment details, and reviews."
+      breadcrumbs={getProfileBreadcrumbs()}
     >
       <PlaceholderCards
         items={[

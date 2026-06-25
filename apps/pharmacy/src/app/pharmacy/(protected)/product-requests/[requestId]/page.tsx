@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import { getProductRequestDetailsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
+
 import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
 import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
 
@@ -18,13 +20,16 @@ type ProductRequestDetailsPageProps = Readonly<{
 
 //===================================================================
 
-async function ProductRequestDetailsPage({ params }: ProductRequestDetailsPageProps) {
+async function ProductRequestDetailsPage({
+  params,
+}: ProductRequestDetailsPageProps) {
   const { requestId } = await params;
 
   return (
     <PharmacyPage
       title={`Product request ${requestId}`}
       description="Readonly/request action skeleton for draft, moderation, approved, and rejected request states."
+      breadcrumbs={getProductRequestDetailsBreadcrumbs(requestId)}
     >
       <PlaceholderCards
         items={[

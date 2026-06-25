@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 
+import { getProductsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
+import { parsePharmacyProductFilters } from '@/lib/pharmacy/routes';
+
 import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
 import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
-import { parsePharmacyProductFilters } from '@/lib/pharmacy/routes';
 
 //===================================================================
 
@@ -27,6 +29,7 @@ async function ProductsPage({ params }: ProductsPageProps) {
     <PharmacyPage
       title="Own products"
       description="Own products table skeleton with category, status, stock, article, name, and date filters."
+      breadcrumbs={getProductsBreadcrumbs()}
     >
       <pre>{JSON.stringify(parsedFilters, null, 2)}</pre>
       <PlaceholderCards

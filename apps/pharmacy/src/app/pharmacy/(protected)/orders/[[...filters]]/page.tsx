@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
-import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
+import { getOrdersBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
 import { parsePharmacyOrderFilters } from '@/lib/pharmacy/routes';
+
+import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
+import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
 
 //===================================================================
 
@@ -27,6 +29,7 @@ async function OrdersPage({ params }: OrdersPageProps) {
     <PharmacyPage
       title="Orders"
       description="Orders table skeleton with clean URL filters. Pagination stays local only."
+      breadcrumbs={getOrdersBreadcrumbs()}
     >
       <pre>{JSON.stringify(parsedFilters, null, 2)}</pre>
       <PlaceholderCards

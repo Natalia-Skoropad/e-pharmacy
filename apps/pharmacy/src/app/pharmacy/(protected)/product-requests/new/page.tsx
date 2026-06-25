@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
+import { getNewProductRequestBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
 import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
 
 //===================================================================
@@ -17,6 +18,7 @@ function NewProductRequestPage() {
     <PharmacyPage
       title="New product request"
       description="Create product request form skeleton with draft and send-for-moderation actions."
+      breadcrumbs={getNewProductRequestBreadcrumbs()}
     >
       <PlaceholderCards
         items={[

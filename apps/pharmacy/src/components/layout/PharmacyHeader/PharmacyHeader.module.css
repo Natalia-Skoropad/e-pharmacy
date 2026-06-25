@@ -1,0 +1,35 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  min-height: var(--pharmacy-header-height);
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-inline: 20px;
+  background-color: var(--color-surface, #ffffff);
+  border-bottom: 1px solid var(--color-border, #d0d5dd);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logout {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .logout {
+    display: inline-flex;
+  }
+}
+
+@media (min-width: 1024px) {
+  .header {
+    display: none;
+  }
+}

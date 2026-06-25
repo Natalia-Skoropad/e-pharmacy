@@ -1,7 +1,9 @@
-import Link from 'next/link';
+import { Suspense } from 'react';
 
-import { PHARMACY_NAVIGATION } from '@/lib/pharmacy/navigation';
-import { getPharmacyDashboardPath } from '@/lib/pharmacy/routes';
+import { PharmacyProtectedRoute } from '@/components/auth/PharmacyProtectedRoute';
+import { PharmacyHeader } from '@/components/layout/PharmacyHeader';
+import { PharmacySidebar } from '@/components/layout/PharmacySidebar';
+import { PageLoader } from '@/components/pharmacy/PageLoader';
 
 import css from './PharmacyShell.module.css';
 
@@ -15,29 +17,14 @@ type PharmacyShellProps = Readonly<{
 
 export function PharmacyShell({ children }: PharmacyShellProps) {
   return (
-    <div className={css.shell}>
-      <header className={css.header}>
-        <Link className={css.logo} href={getPharmacyDashboardPath()}>
-          E-PHARMACY
-        </Link>
-        <span className={css.badge}>Pharmacy</span>
-      </header>
-
-      <aside className={css.sidebar} aria-label="Pharmacy navigation">
-        <Link className={css.logo} href={getPharmacyDashboardPath()}>
-          E-PHARMACY
-        </Link>
-        <span className={css.badge}>Pharmacy</span>
-        <nav className={css.nav} aria-label="Main pharmacy pages">
-          {PHARMACY_NAVIGATION.map((item) => (
-            <Link key={item.href} href={item.href}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </aside>
-
-      <div className={css.content}>{children}</div>
-    </div>
+    <Suspense fallback={<PageLoader label="Loading pharmacy cabinet..." />}>
+      <PharmacyProtectedRoute>
+        <div className={css.shell}>
+          <PharmacyHeader />
+          <PharmacySidebar />
+          <div className={css.content}>{children}</div>
+        </div>
+      </PharmacyProtectedRoute>
+    </Suspense>
   );
 }

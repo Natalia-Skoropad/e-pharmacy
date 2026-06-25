@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import { getClientDetailsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
+
 import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
 import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
 
@@ -25,6 +27,7 @@ async function ClientDetailsPage({ params }: ClientDetailsPageProps) {
     <PharmacyPage
       title={`Client ${clientId}`}
       description="Readonly client details skeleton with related pharmacy orders only."
+      breadcrumbs={getClientDetailsBreadcrumbs(clientId)}
     >
       <PlaceholderCards
         items={[

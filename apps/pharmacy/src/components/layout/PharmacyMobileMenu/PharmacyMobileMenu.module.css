@@ -1,0 +1,47 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+  background-color: rgba(15, 23, 42, 0.42);
+}
+
+.backdropOpen {
+  animation: fade-in 180ms ease both;
+}
+
+.panel {
+  display: flex;
+  width: min(88vw, 360px);
+  height: 100%;
+  flex-direction: column;
+  gap: 28px;
+  padding: 24px 20px;
+  background-color: var(--color-surface, #ffffff);
+  box-shadow: -24px 0 60px rgba(15, 23, 42, 0.16);
+}
+
+.header {
+  display: grid;
+  gap: 12px;
+}
+
+.nav {
+  display: grid;
+  gap: 8px;
+}
+
+.footer {
+  margin-top: auto;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

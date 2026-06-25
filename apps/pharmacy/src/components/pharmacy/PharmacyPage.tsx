@@ -1,6 +1,4 @@
-import Link from 'next/link';
-
-import { getPharmacyDashboardPath } from '@/lib/pharmacy/routes';
+import { Breadcrumbs, type BreadcrumbItem } from '@e-pharmacy/ui/layout';
 
 import css from './PharmacyPage.module.css';
 
@@ -9,19 +7,21 @@ import css from './PharmacyPage.module.css';
 type PharmacyPageProps = Readonly<{
   title: string;
   description: string;
+  breadcrumbs?: BreadcrumbItem[];
   children?: React.ReactNode;
 }>;
 
 //===================================================================
 
-export function PharmacyPage({ title, description, children }: PharmacyPageProps) {
+export function PharmacyPage({
+  title,
+  description,
+  children,
+  breadcrumbs = [{ label: 'Dashboard', href: '/pharmacy/dashboard' }, { label: title }],
+}: PharmacyPageProps) {
   return (
     <main className={css.page}>
-      <nav className={css.breadcrumbs} aria-label="Breadcrumbs">
-        <Link href={getPharmacyDashboardPath()}>Home</Link>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page">{title}</span>
-      </nav>
+      <Breadcrumbs items={breadcrumbs} className={css.breadcrumbs} />
 
       <section className={css.hero} aria-labelledby="page-title">
         <p className={css.kicker}>Pharmacy cabinet</p>

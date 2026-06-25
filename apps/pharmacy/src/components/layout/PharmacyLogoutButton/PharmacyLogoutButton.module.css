@@ -1,0 +1,24 @@
+.button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 14px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--color-danger, #d92d20);
+  cursor: pointer;
+  background-color: transparent;
+  border: 1px solid rgba(217, 45, 32, 0.28);
+  border-radius: var(--radius-md, 12px);
+}
+
+.button:hover,
+.button:focus-visible {
+  background-color: rgba(217, 45, 32, 0.08);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
