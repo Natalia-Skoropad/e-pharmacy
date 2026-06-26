@@ -32,33 +32,57 @@ type TextareaRef = RefObject<HTMLTextAreaElement | null>;
 //===================================================================
 
 function createSyntheticTextareaEvent(
-  textarea: HTMLTextAreaElement
+  textarea: HTMLTextAreaElement,
+  value: string
 ): ChangeEvent<HTMLTextAreaElement> {
+  const target = {
+    ...textarea,
+    value,
+    name: textarea.name,
+    id: textarea.id,
+  } as HTMLTextAreaElement;
+
   return {
-    target: textarea,
-    currentTarget: textarea,
+    target,
+    currentTarget: target,
   } as ChangeEvent<HTMLTextAreaElement>;
 }
 
-function insertSnippet(
-  textareaRef: TextareaRef,
-  snippet: string,
-  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void
-) {
+function getLimitedValue(value: string, maxLength?: number): string {
+  return typeof maxLength === 'number' ? value.slice(0, maxLength) : value;
+}
+
+function insertSnippet({
+  textareaRef,
+  snippet,
+  value,
+  maxLength,
+  onChange,
+}: {
+  textareaRef: TextareaRef;
+  snippet: string;
+  value: string;
+  maxLength?: number;
+  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+}) {
   const textarea = textareaRef.current;
   if (!textarea) return;
 
-  const { selectionStart, selectionEnd, value } = textarea;
+  const { selectionStart, selectionEnd } = textarea;
   const selectedText = value.slice(selectionStart, selectionEnd);
   const nextText = snippet.replace('$text', selectedText || 'text');
-  const nextValue = `${value.slice(0, selectionStart)}${nextText}${value.slice(selectionEnd)}`;
+  const nextValue = getLimitedValue(
+    `${value.slice(0, selectionStart)}${nextText}${value.slice(selectionEnd)}`,
+    maxLength
+  );
 
-  textarea.value = nextValue;
-  onChange(createSyntheticTextareaEvent(textarea));
+  onChange(createSyntheticTextareaEvent(textarea, nextValue));
   textarea.focus();
 
-  const cursorPosition = selectionStart + nextText.length;
-  textarea.setSelectionRange(cursorPosition, cursorPosition);
+  window.requestAnimationFrame(() => {
+    const cursorPosition = Math.min(selectionStart + nextText.length, nextValue.length);
+    textarea.setSelectionRange(cursorPosition, cursorPosition);
+  });
 }
 
 //===================================================================
@@ -80,9 +104,14 @@ function TextEditor({
 }: TextEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const hasError = Boolean(isTouched && error);
-  const describedBy = [hint ? `${id}-hint` : null, hasError ? `${id}-error` : null]
-    .filter(Boolean)
-    .join(' ') || undefined;
+  const describedBy =
+    [hint ? `${id}-hint` : null, hasError ? `${id}-error` : null]
+      .filter(Boolean)
+      .join(' ') || undefined;
+
+  const insert = (snippet: string) => {
+    insertSnippet({ textareaRef, snippet, value, maxLength, onChange });
+  };
 
   return (
     <FormFieldLayout
@@ -101,7 +130,7 @@ function TextEditor({
             type="button"
             disabled={disabled}
             aria-label="Bold"
-            onClick={() => insertSnippet(textareaRef, '**$text**', onChange)}
+            onClick={() => insert('**$text**')}
           >
             <Bold size={16} aria-hidden="true" />
           </button>
@@ -110,7 +139,7 @@ function TextEditor({
             type="button"
             disabled={disabled}
             aria-label="Italic"
-            onClick={() => insertSnippet(textareaRef, '*$text*', onChange)}
+            onClick={() => insert('*$text*')}
           >
             <Italic size={16} aria-hidden="true" />
           </button>
@@ -119,7 +148,7 @@ function TextEditor({
             type="button"
             disabled={disabled}
             aria-label="List item"
-            onClick={() => insertSnippet(textareaRef, '\n- $text', onChange)}
+            onClick={() => insert('\n- $text')}
           >
             <List size={16} aria-hidden="true" />
           </button>
@@ -128,7 +157,7 @@ function TextEditor({
             type="button"
             disabled={disabled}
             aria-label="Paragraph break"
-            onClick={() => insertSnippet(textareaRef, '\n\n$text', onChange)}
+            onClick={() => insert('\n\n$text')}
           >
             <Pilcrow size={16} aria-hidden="true" />
           </button>

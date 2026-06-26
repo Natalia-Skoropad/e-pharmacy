@@ -13,6 +13,8 @@ type AuthCookieSameSite = 'lax' | 'strict' | 'none';
 //===============================================================
 
 const LOCAL_CLIENT_URL = 'http://localhost:3000';
+const LOCAL_ADMIN_URL = 'http://localhost:3001';
+const LOCAL_PHARMACY_URL = 'http://localhost:3002';
 const PRODUCTION_CLIENT_URL = 'https://e-pharmacy-client-ten.vercel.app';
 
 //===============================================================
@@ -95,17 +97,32 @@ function getEnvValue(names: readonly string[]): string | undefined {
 
 //===============================================================
 
+function getLocalClientOrigins(): string[] {
+  return [LOCAL_CLIENT_URL, LOCAL_ADMIN_URL, LOCAL_PHARMACY_URL];
+}
+
+//===============================================================
+
+function uniqueOrigins(origins: string[]): string[] {
+  return Array.from(new Set(origins.filter(Boolean)));
+}
+
+//===============================================================
+
 function getClientOrigins(): string[] {
   const value = getEnvValue(CLIENT_ORIGIN_ENV_NAMES);
+  const configuredOrigins = value
+    ? value
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean)
+    : [getFallbackClientUrl()];
 
-  if (!value) {
-    return [getFallbackClientUrl()];
-  }
-
-  return value
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
+  return uniqueOrigins(
+    NODE_ENV === 'production'
+      ? configuredOrigins
+      : [...configuredOrigins, ...getLocalClientOrigins()]
+  );
 }
 
 //===============================================================

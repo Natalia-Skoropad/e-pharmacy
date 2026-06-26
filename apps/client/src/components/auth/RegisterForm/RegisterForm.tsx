@@ -80,6 +80,7 @@ const REGISTER_COPY: Record<
     button: 'Create account',
     loading: 'Creating account...',
   },
+
   pharmacy: {
     title: 'Pharmacy owner account',
     text: 'Create a pharmacy owner account and upload documents that confirm your right to manage the pharmacy cabinet.',
@@ -330,6 +331,7 @@ function RegisterForm() {
             error={errors.pharmacyDocuments ?? pharmacyDocumentsError}
             isTouched={touchedFields.pharmacyDocuments}
             required
+            confirmRemove
             maxFiles={PHARMACY_DOCUMENTS_LIMIT}
             onChange={handleDocumentsChange}
           />

@@ -1,6 +1,6 @@
 'use client';
 
-import type { ChangeEventHandler } from 'react';
+import type { ChangeEvent, ChangeEventHandler } from 'react';
 
 import css from './WorkingHoursInput.module.css';
 
@@ -21,6 +21,116 @@ export type WorkingHoursInputProps = {
   onChange: ChangeEventHandler<HTMLTextAreaElement>;
 };
 
+type WorkingDay = {
+  key: string;
+  label: string;
+};
+
+type DayValue = {
+  from: string;
+  to: string;
+  isClosed: boolean;
+};
+
+type WorkingHoursValue = Record<string, DayValue>;
+
+//===================================================================
+
+const WORKING_DAYS: WorkingDay[] = [
+  { key: 'Mon', label: 'Monday' },
+  { key: 'Tue', label: 'Tuesday' },
+  { key: 'Wed', label: 'Wednesday' },
+  { key: 'Thu', label: 'Thursday' },
+  { key: 'Fri', label: 'Friday' },
+  { key: 'Sat', label: 'Saturday' },
+  { key: 'Sun', label: 'Sunday' },
+];
+
+//===================================================================
+
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+//===================================================================
+
+function createEmptyValue(): WorkingHoursValue {
+  return Object.fromEntries(
+    WORKING_DAYS.map((day) => [
+      day.key,
+      {
+        from: '',
+        to: '',
+        isClosed: false,
+      },
+    ])
+  ) as WorkingHoursValue;
+}
+
+//===================================================================
+
+function parseWorkingHours(value: string): WorkingHoursValue {
+  const result = createEmptyValue();
+
+  value
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .forEach((part) => {
+      const separatorIndex = part.indexOf(':');
+
+      if (separatorIndex < 0) return;
+
+      const dayKey = part.slice(0, separatorIndex).trim();
+      const rawHours = part.slice(separatorIndex + 1).trim();
+
+      if (!dayKey || !rawHours || !(dayKey in result)) return;
+
+      if (rawHours.toLowerCase() === 'closed') {
+        result[dayKey] = { from: '', to: '', isClosed: true };
+        return;
+      }
+
+      const [from, to] = rawHours.split('-').map((item) => item.trim());
+
+      if (TIME_PATTERN.test(from) && TIME_PATTERN.test(to)) {
+        result[dayKey] = { from, to, isClosed: false };
+      }
+    });
+
+  return result;
+}
+
+//===================================================================
+
+function formatWorkingHours(value: WorkingHoursValue): string {
+  return WORKING_DAYS.map((day) => {
+    const dayValue = value[day.key];
+
+    if (dayValue.isClosed) return `${day.key}: Closed`;
+    if (dayValue.from && dayValue.to) {
+      return `${day.key}: ${dayValue.from}-${dayValue.to}`;
+    }
+
+    return '';
+  })
+    .filter(Boolean)
+    .join('; ');
+}
+
+//===================================================================
+
+function createSyntheticTextareaEvent(
+  id: string,
+  name: string,
+  value: string
+): ChangeEvent<HTMLTextAreaElement> {
+  const target = { id, name, value } as HTMLTextAreaElement;
+
+  return {
+    target,
+    currentTarget: target,
+  } as ChangeEvent<HTMLTextAreaElement>;
+}
+
 //===================================================================
 
 function WorkingHoursInput({
@@ -28,8 +138,7 @@ function WorkingHoursInput({
   name,
   value,
   label = 'Working hours',
-  placeholder = 'Mon–Fri: 08:00–20:00, Sat–Sun: 09:00–18:00',
-  hint = 'Add days and hours in a clear format clients can understand.',
+  hint = 'Choose opening and closing time for each working day.',
   error,
   isTouched,
   required = true,
@@ -40,10 +149,27 @@ function WorkingHoursInput({
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
   const hasError = Boolean(isTouched && error);
+  const parsedValue = parseWorkingHours(value);
+
+  const emitChange = (nextValue: WorkingHoursValue) => {
+    onChange(
+      createSyntheticTextareaEvent(id, name, formatWorkingHours(nextValue))
+    );
+  };
+
+  const updateDay = (dayKey: string, patch: Partial<DayValue>) => {
+    emitChange({
+      ...parsedValue,
+      [dayKey]: {
+        ...parsedValue[dayKey],
+        ...patch,
+      },
+    });
+  };
 
   return (
     <div className={css.field}>
-      <label className={css.label} htmlFor={id}>
+      <label className={css.label} htmlFor={`${id}-Mon-from`}>
         {label}
         {required ? (
           <span className={css.requiredMark} aria-hidden="true">
@@ -58,28 +184,78 @@ function WorkingHoursInput({
         </p>
       ) : null}
 
-      <div className={css.inputWrap}>
-        <textarea
-          className={css.textarea}
-          id={id}
-          name={name}
-          value={value}
-          placeholder={placeholder}
-          maxLength={maxLength}
-          disabled={disabled}
-          aria-invalid={hasError}
-          aria-describedby={`${hintId} ${errorId}`}
-          onChange={onChange}
-        />
+      <div
+        className={css.schedule}
+        aria-invalid={hasError}
+        aria-describedby={`${hintId} ${errorId}`}
+      >
+        {WORKING_DAYS.map((day) => {
+          const dayValue = parsedValue[day.key];
+          const fromId = `${id}-${day.key}-from`;
+          const toId = `${id}-${day.key}-to`;
+          const closedId = `${id}-${day.key}-closed`;
 
+          return (
+            <div className={css.dayRow} key={day.key}>
+              <span className={css.dayName}>{day.label}</span>
+
+              <label className={css.timeLabel} htmlFor={fromId}>
+                <span>From</span>
+                <input
+                  className={css.timeInput}
+                  id={fromId}
+                  type="time"
+                  value={dayValue.from}
+                  disabled={disabled || dayValue.isClosed}
+                  onChange={(event) =>
+                    updateDay(day.key, { from: event.target.value })
+                  }
+                />
+              </label>
+
+              <label className={css.timeLabel} htmlFor={toId}>
+                <span>To</span>
+                <input
+                  className={css.timeInput}
+                  id={toId}
+                  type="time"
+                  value={dayValue.to}
+                  disabled={disabled || dayValue.isClosed}
+                  onChange={(event) =>
+                    updateDay(day.key, { to: event.target.value })
+                  }
+                />
+              </label>
+
+              <label className={css.closedLabel} htmlFor={closedId}>
+                <input
+                  id={closedId}
+                  type="checkbox"
+                  checked={dayValue.isClosed}
+                  disabled={disabled}
+                  onChange={(event) =>
+                    updateDay(day.key, {
+                      isClosed: event.target.checked,
+                      from: event.target.checked ? '' : dayValue.from,
+                      to: event.target.checked ? '' : dayValue.to,
+                    })
+                  }
+                />
+                <span>Closed</span>
+              </label>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className={css.metaRow}>
         <span className={css.counter} aria-hidden="true">
           {value.length}/{maxLength}
         </span>
+        <p className={css.error} id={errorId}>
+          {isTouched ? (error ?? '') : ''}
+        </p>
       </div>
-
-      <p className={css.error} id={errorId}>
-        {isTouched ? (error ?? '') : ''}
-      </p>
     </div>
   );
 }

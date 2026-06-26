@@ -94,7 +94,7 @@ export function sanitizeWorkingHours(value: string): string {
 
 export function sanitizeTextEditor(value: string): string {
   return value
-    .replace(/[^A-Za-z0-9\s.,!?;:'"()\-–—/#%+\n\r]/g, '')
+    .replace(/[^A-Za-z0-9\s.,!?;:'"()\-–—/#%+*\n\r]/g, '')
     .slice(0, TEXT_EDITOR_MAX_LENGTH);
 }
 

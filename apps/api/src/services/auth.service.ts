@@ -197,8 +197,7 @@ export async function registerUserService(
       await Pharmacy.create({
         ownerId: user._id,
         managerUserIds: [],
-        name: user.name,
-        ...(user.address ? { address: user.address } : {}),
+        name: '',
         phone: user.phone,
         email: user.email,
         documents: input.pharmacyDocuments ?? [],

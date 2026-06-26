@@ -10,8 +10,9 @@ const pharmacySchema = new Schema<PharmacyEntity>(
   {
     name: {
       type: String,
-      required: [true, 'Pharmacy name is required'],
+      required: false,
       trim: true,
+      default: '',
       maxlength: [100, 'Pharmacy name must be at most 100 characters'],
     },
 

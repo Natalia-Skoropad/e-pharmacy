@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { FileText, KeyRound, MonitorSmartphone } from 'lucide-react';
+import { KeyRound, MonitorSmartphone } from 'lucide-react';
 
 import {
   Button,
   Container,
+  DocumentUpload,
   LoadingSpinner,
   PictureCard,
   ReviewsList,
@@ -15,6 +16,7 @@ import {
   Tabs,
   TextEditor,
   WorkingHoursInput,
+  type DocumentUploadFile,
 } from '@e-pharmacy/ui/common';
 
 import {
@@ -125,12 +127,12 @@ type ProfileTab =
   | 'reviews'
   | 'sessions';
 
-
 type ProfileStatusBadgeVariant = 'new' | 'on_moderation' | 'active' | 'blocked';
 
 //===================================================================
 
 const INITIAL_VISIBLE_REVIEWS_COUNT = 10;
+const PHARMACY_DOCUMENTS_LIMIT = 6;
 
 const TABS: Array<{ value: ProfileTab; label: string }> = [
   { value: 'data', label: 'My data' },
@@ -152,19 +154,25 @@ function createOwnerInitialValues(user: AuthUser): DataProfileFormValues {
   };
 }
 
+//===================================================================
+
 function createPharmacyInitialValues(
   user: AuthUser,
   pharmacy: PharmacyProfile
 ): PharmacyContactFormValues {
   return {
-    address: pharmacy.address ?? user.address ?? '',
+    address: pharmacy.address ?? '',
     phone: pharmacy.phone ?? user.phone ?? '',
     email: pharmacy.email ?? user.email ?? '',
     workingHours: pharmacy.workingHours ?? '',
   };
 }
 
-function createAboutInitialValues(pharmacy: PharmacyProfile): PharmacyAboutFormValues {
+//===================================================================
+
+function createAboutInitialValues(
+  pharmacy: PharmacyProfile
+): PharmacyAboutFormValues {
   return {
     description: pharmacy.description ?? '',
   };
@@ -174,15 +182,81 @@ function createPaymentInitialValues(
   user: AuthUser,
   pharmacy: PharmacyProfile
 ): PharmacyPaymentFormValues {
+  const recipientName = pharmacy.bankDetails?.recipientName?.trim() ?? '';
+  const ownerName = user.name?.trim() ?? '';
+  const shouldClearOwnerNameFallback =
+    pharmacy.status === 'new' && recipientName === ownerName;
+
   return {
-    recipientName: pharmacy.bankDetails?.recipientName ?? pharmacy.name ?? user.name ?? '',
+    recipientName: shouldClearOwnerNameFallback ? '' : recipientName,
     taxId: pharmacy.bankDetails?.taxId ?? '',
     iban: pharmacy.bankDetails?.iban ?? '',
     bankName: pharmacy.bankDetails?.bankName ?? '',
-    receiptEmail: pharmacy.bankDetails?.receiptEmail ?? pharmacy.email ?? user.email ?? '',
+    receiptEmail:
+      pharmacy.bankDetails?.receiptEmail ?? pharmacy.email ?? user.email ?? '',
     paymentPurpose: pharmacy.bankDetails?.paymentPurpose ?? '',
   };
 }
+
+//===================================================================
+
+function createPharmacyNameInitialValue(
+  user: AuthUser,
+  pharmacy: PharmacyProfile
+): string {
+  const pharmacyName = pharmacy.name?.trim() ?? '';
+  const ownerName = user.name?.trim() ?? '';
+  const looksLikeRegistrationFallback =
+    pharmacy.status === 'new' && pharmacyName === ownerName;
+
+  return looksLikeRegistrationFallback ? '' : pharmacyName;
+}
+
+//===================================================================
+
+function createDocumentId(
+  document: PharmacyProfile['documents'][number],
+  index: number
+): string {
+  return `${document.name}-${document.size}-${document.type ?? ''}-${index}`;
+}
+
+//===================================================================
+
+function createDocumentValues(
+  documents: PharmacyProfile['documents']
+): DocumentUploadFile[] {
+  return documents.map((document, index) => ({
+    id: createDocumentId(document, index),
+    name: document.name,
+    size: document.size,
+    type: document.type ?? '',
+  }));
+}
+
+//===================================================================
+
+function normalizeDocumentValues(files: DocumentUploadFile[]) {
+  return files.map(({ name, size, type }) => ({
+    name: name.trim(),
+    size,
+    type: type.trim(),
+  }));
+}
+
+//===================================================================
+
+function areDocumentValuesEqual(
+  first: DocumentUploadFile[],
+  second: DocumentUploadFile[]
+): boolean {
+  return (
+    JSON.stringify(normalizeDocumentValues(first)) ===
+    JSON.stringify(normalizeDocumentValues(second))
+  );
+}
+
+//===================================================================
 
 function createTouchedUpdater<TValues extends object>(
   setTouched: Dispatch<SetStateAction<Partial<Record<keyof TValues, boolean>>>>,
@@ -191,31 +265,33 @@ function createTouchedUpdater<TValues extends object>(
   setTouched((current) => ({ ...current, [field]: true }));
 }
 
+//===================================================================
+
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
 }
+
+//===================================================================
 
 function getStatusLabel(status: PharmacyStatus): string {
   return PHARMACY_STATUS_LABELS[status] ?? status;
 }
 
+//===================================================================
 
-function getStatusBadgeStatus(status: PharmacyStatus): ProfileStatusBadgeVariant {
+function getStatusBadgeStatus(
+  status: PharmacyStatus
+): ProfileStatusBadgeVariant {
   return status === 'on_verification' ? 'on_moderation' : status;
 }
+
+//===================================================================
 
 function isReadonlyStatus(status: PharmacyStatus): boolean {
   return status === 'on_verification' || status === 'on_moderation';
 }
 
-function formatFileSize(size: number): string {
-  if (!Number.isFinite(size) || size <= 0) return 'Unknown size';
-
-  const kilobytes = size / 1024;
-  if (kilobytes < 1024) return `${kilobytes.toFixed(1)} KB`;
-
-  return `${(kilobytes / 1024).toFixed(1)} MB`;
-}
+//===================================================================
 
 function formatSessionDate(value: string): string {
   if (!value) return 'Unknown';
@@ -226,6 +302,8 @@ function formatSessionDate(value: string): string {
     return value;
   }
 }
+
+//===================================================================
 
 function buildProfilePayload(
   values: PharmacyContactFormValues,
@@ -240,13 +318,21 @@ function buildProfilePayload(
   };
 }
 
-function buildAboutPayload(values: PharmacyAboutFormValues): UpdateMyPharmacyProfilePayload {
+//===================================================================
+
+function buildAboutPayload(
+  values: PharmacyAboutFormValues
+): UpdateMyPharmacyProfilePayload {
   return {
     description: values.description.trim(),
   };
 }
 
-function buildPaymentPayload(values: PharmacyPaymentFormValues): UpdateMyPharmacyProfilePayload {
+//===================================================================
+
+function buildPaymentPayload(
+  values: PharmacyPaymentFormValues
+): UpdateMyPharmacyProfilePayload {
   return {
     bankDetails: {
       recipientName: values.recipientName.trim(),
@@ -259,8 +345,14 @@ function buildPaymentPayload(values: PharmacyPaymentFormValues): UpdateMyPharmac
   };
 }
 
-function hasDocuments(pharmacy: PharmacyProfile): boolean {
-  return pharmacy.documents.length > 0;
+//===================================================================
+
+function buildDocumentsPayload(
+  files: DocumentUploadFile[]
+): UpdateMyPharmacyProfilePayload {
+  return {
+    documents: normalizeDocumentValues(files),
+  };
 }
 
 //===================================================================
@@ -275,9 +367,13 @@ function PharmacyProfilePageContent() {
   return <PharmacyProfilePage key={user.id ?? user.email} user={user} />;
 }
 
+//===================================================================
+
 type PharmacyProfilePageProps = Readonly<{
   user: AuthUser;
 }>;
+
+//===================================================================
 
 function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const toast = useToast();
@@ -293,52 +389,79 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const [ownerValues, setOwnerValues] = useState<DataProfileFormValues>(() =>
     createOwnerInitialValues(user)
   );
-  const [initialOwnerValues, setInitialOwnerValues] = useState<DataProfileFormValues>(() =>
-    createOwnerInitialValues(user)
+  const [initialOwnerValues, setInitialOwnerValues] =
+    useState<DataProfileFormValues>(() => createOwnerInitialValues(user));
+  const [ownerTouched, setOwnerTouched] = useState<DataProfileTouchedFields>(
+    {}
   );
-  const [ownerTouched, setOwnerTouched] = useState<DataProfileTouchedFields>({});
 
-  const [passwordValues, setPasswordValues] = useState<ChangePasswordFormValues>(CHANGE_PASSWORD_INITIAL_VALUES);
-  const [passwordTouched, setPasswordTouched] = useState<ChangePasswordTouchedFields>({});
-  const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
+  const [passwordValues, setPasswordValues] =
+    useState<ChangePasswordFormValues>(CHANGE_PASSWORD_INITIAL_VALUES);
+  const [passwordTouched, setPasswordTouched] =
+    useState<ChangePasswordTouchedFields>({});
+  const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] =
+    useState(false);
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
 
-  const [pictureUrl, setPictureUrl] = useState<string | null>(user.pictureUrl ?? null);
   const [pharmacyName, setPharmacyName] = useState('');
   const [initialPharmacyName, setInitialPharmacyName] = useState('');
-  const [pharmacyPictureUrl, setPharmacyPictureUrl] = useState<string | null>(null);
+  const [pharmacyPictureUrl, setPharmacyPictureUrl] = useState<string | null>(
+    null
+  );
 
-  const [pharmacyValues, setPharmacyValues] = useState<PharmacyContactFormValues>({
-    address: '',
-    phone: '',
-    email: '',
-    workingHours: '',
+  const [pharmacyValues, setPharmacyValues] =
+    useState<PharmacyContactFormValues>({
+      address: '',
+      phone: '',
+      email: '',
+      workingHours: '',
+    });
+  const [initialPharmacyValues, setInitialPharmacyValues] =
+    useState<PharmacyContactFormValues>(pharmacyValues);
+  const [pharmacyTouched, setPharmacyTouched] =
+    useState<PharmacyContactTouchedFields>({});
+
+  const [aboutValues, setAboutValues] = useState<PharmacyAboutFormValues>({
+    description: '',
   });
-  const [initialPharmacyValues, setInitialPharmacyValues] = useState<PharmacyContactFormValues>(pharmacyValues);
-  const [pharmacyTouched, setPharmacyTouched] = useState<PharmacyContactTouchedFields>({});
+  const [initialAboutValues, setInitialAboutValues] =
+    useState<PharmacyAboutFormValues>(aboutValues);
+  const [aboutTouched, setAboutTouched] = useState<PharmacyAboutTouchedFields>(
+    {}
+  );
 
-  const [aboutValues, setAboutValues] = useState<PharmacyAboutFormValues>({ description: '' });
-  const [initialAboutValues, setInitialAboutValues] = useState<PharmacyAboutFormValues>(aboutValues);
-  const [aboutTouched, setAboutTouched] = useState<PharmacyAboutTouchedFields>({});
+  const [paymentValues, setPaymentValues] = useState<PharmacyPaymentFormValues>(
+    {
+      recipientName: '',
+      taxId: '',
+      iban: '',
+      bankName: '',
+      receiptEmail: '',
+      paymentPurpose: '',
+    }
+  );
+  const [initialPaymentValues, setInitialPaymentValues] =
+    useState<PharmacyPaymentFormValues>(paymentValues);
+  const [paymentTouched, setPaymentTouched] =
+    useState<PharmacyPaymentTouchedFields>({});
 
-  const [paymentValues, setPaymentValues] = useState<PharmacyPaymentFormValues>({
-    recipientName: '',
-    taxId: '',
-    iban: '',
-    bankName: '',
-    receiptEmail: '',
-    paymentPurpose: '',
-  });
-  const [initialPaymentValues, setInitialPaymentValues] = useState<PharmacyPaymentFormValues>(paymentValues);
-  const [paymentTouched, setPaymentTouched] = useState<PharmacyPaymentTouchedFields>({});
+  const [documentValues, setDocumentValues] = useState<DocumentUploadFile[]>(
+    []
+  );
+  const [initialDocumentValues, setInitialDocumentValues] = useState<
+    DocumentUploadFile[]
+  >([]);
+  const [documentsTouched, setDocumentsTouched] = useState(false);
 
   const [isOwnerSaving, setIsOwnerSaving] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
-  const [isPictureSaving, setIsPictureSaving] = useState(false);
   const [isPharmacyPictureSaving, setIsPharmacyPictureSaving] = useState(false);
   const [isPharmacySaving, setIsPharmacySaving] = useState(false);
+  const [isDocumentsSaving, setIsDocumentsSaving] = useState(false);
   const [isSendingVerification, setIsSendingVerification] = useState(false);
-  const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
+  const [revokingSessionId, setRevokingSessionId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -352,13 +475,25 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
         if (!isMounted) return;
 
         const nextPharmacy = response.pharmacy;
-        const nextPharmacyValues = createPharmacyInitialValues(user, nextPharmacy);
+        const nextPharmacyValues = createPharmacyInitialValues(
+          user,
+          nextPharmacy
+        );
         const nextAboutValues = createAboutInitialValues(nextPharmacy);
-        const nextPaymentValues = createPaymentInitialValues(user, nextPharmacy);
+        const nextPaymentValues = createPaymentInitialValues(
+          user,
+          nextPharmacy
+        );
+
+        const nextPharmacyName = createPharmacyNameInitialValue(
+          user,
+          nextPharmacy
+        );
+        const nextDocumentValues = createDocumentValues(nextPharmacy.documents);
 
         setPharmacy(nextPharmacy);
-        setPharmacyName(nextPharmacy.name);
-        setInitialPharmacyName(nextPharmacy.name);
+        setPharmacyName(nextPharmacyName);
+        setInitialPharmacyName(nextPharmacyName);
         setPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
         setPharmacyValues(nextPharmacyValues);
         setInitialPharmacyValues(nextPharmacyValues);
@@ -366,9 +501,14 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
         setInitialAboutValues(nextAboutValues);
         setPaymentValues(nextPaymentValues);
         setInitialPaymentValues(nextPaymentValues);
+        setDocumentValues(nextDocumentValues);
+        setInitialDocumentValues(nextDocumentValues);
+        setDocumentsTouched(false);
       } catch (error) {
         if (!isMounted) return;
-        setLoadError(getErrorMessage(error, 'Could not load pharmacy profile.'));
+        setLoadError(
+          getErrorMessage(error, 'Could not load pharmacy profile.')
+        );
       } finally {
         if (isMounted) setIsLoadingProfile(false);
       }
@@ -404,25 +544,56 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     };
   }, []);
 
-  const ownerErrors = useMemo(() => validateDataProfileForm(ownerValues), [ownerValues]);
-  const passwordErrors = useMemo(() => validateChangePasswordForm(passwordValues), [passwordValues]);
-  const pharmacyErrors = useMemo(() => validatePharmacyContactForm(pharmacyValues), [pharmacyValues]);
-  const aboutErrors = useMemo(() => validatePharmacyAboutForm(aboutValues), [aboutValues]);
-  const paymentErrors = useMemo(() => validatePharmacyPaymentForm(paymentValues), [paymentValues]);
+  const ownerErrors = useMemo(
+    () => validateDataProfileForm(ownerValues),
+    [ownerValues]
+  );
+  const passwordErrors = useMemo(
+    () => validateChangePasswordForm(passwordValues),
+    [passwordValues]
+  );
+  const pharmacyErrors = useMemo(
+    () => validatePharmacyContactForm(pharmacyValues),
+    [pharmacyValues]
+  );
+  const aboutErrors = useMemo(
+    () => validatePharmacyAboutForm(aboutValues),
+    [aboutValues]
+  );
+  const paymentErrors = useMemo(
+    () => validatePharmacyPaymentForm(paymentValues),
+    [paymentValues]
+  );
 
-  const ownerFormIsDirty = isDataProfileFormDirty(ownerValues, initialOwnerValues);
+  const ownerFormIsDirty = isDataProfileFormDirty(
+    ownerValues,
+    initialOwnerValues
+  );
   const ownerFormIsValid = isDataProfileFormValid(ownerValues);
   const passwordFormIsDirty = isChangePasswordFormDirty(passwordValues);
   const passwordFormIsValid = isChangePasswordFormValid(passwordValues);
-  const pharmacyNameIsDirty = pharmacyName.trim() !== initialPharmacyName.trim();
+  const pharmacyNameIsDirty =
+    pharmacyName.trim() !== initialPharmacyName.trim();
   const pharmacyFormIsDirty =
-    pharmacyNameIsDirty || isPharmacyContactFormDirty(pharmacyValues, initialPharmacyValues);
-  const aboutFormIsDirty = isPharmacyAboutFormDirty(aboutValues, initialAboutValues);
-  const paymentFormIsDirty = isPharmacyPaymentFormDirty(paymentValues, initialPaymentValues);
+    pharmacyNameIsDirty ||
+    isPharmacyContactFormDirty(pharmacyValues, initialPharmacyValues);
+  const aboutFormIsDirty = isPharmacyAboutFormDirty(
+    aboutValues,
+    initialAboutValues
+  );
+  const paymentFormIsDirty = isPharmacyPaymentFormDirty(
+    paymentValues,
+    initialPaymentValues
+  );
+  const documentsFormIsDirty = !areDocumentValuesEqual(
+    documentValues,
+    initialDocumentValues
+  );
   const pharmacyStatus = pharmacy?.status ?? 'new';
   const isProfileReadonly = isReadonlyStatus(pharmacyStatus);
   const pharmacyNameIsValid = pharmacyName.trim().length > 0;
-  const pharmacyDocumentsAreReady = pharmacy ? hasDocuments(pharmacy) : false;
+  const pharmacyDocumentsAreReady =
+    documentValues.length > 0 && !documentsFormIsDirty;
 
   const canSendForVerification =
     Boolean(pharmacy) &&
@@ -432,11 +603,16 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     !hasValidationErrors(pharmacyErrors) &&
     !hasValidationErrors(aboutErrors) &&
     !hasValidationErrors(paymentErrors) &&
+    !pharmacyFormIsDirty &&
+    !aboutFormIsDirty &&
+    !paymentFormIsDirty &&
+    !documentsFormIsDirty &&
     !isPharmacySaving &&
+    !isDocumentsSaving &&
     !isSendingVerification;
 
   const reviewsCount = pharmacy?.reviewsCount ?? 0;
-  const documentsCount = pharmacy?.documents.length ?? 0;
+  const documentsCount = documentValues.length;
 
   const tabs = TABS.map((tab) => {
     if (tab.value === 'reviews') {
@@ -450,12 +626,18 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     return tab;
   });
 
-  const handleOwnerChange = (field: keyof DataProfileFormValues, value: string) => {
+  const handleOwnerChange = (
+    field: keyof DataProfileFormValues,
+    value: string
+  ) => {
     createTouchedUpdater(setOwnerTouched, field);
     setOwnerValues((current) => ({ ...current, [field]: value }));
   };
 
-  const handlePasswordChange = (field: keyof ChangePasswordFormValues, value: string) => {
+  const handlePasswordChange = (
+    field: keyof ChangePasswordFormValues,
+    value: string
+  ) => {
     createTouchedUpdater(setPasswordTouched, field);
     setPasswordValues((current) => ({ ...current, [field]: value }));
   };
@@ -464,7 +646,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     setPharmacyName(value);
   };
 
-  const handlePharmacyChange = (field: keyof PharmacyContactFormValues, value: string) => {
+  const handlePharmacyChange = (
+    field: keyof PharmacyContactFormValues,
+    value: string
+  ) => {
     createTouchedUpdater(setPharmacyTouched, field);
     setPharmacyValues((current) => ({ ...current, [field]: value }));
   };
@@ -474,27 +659,15 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     setAboutValues({ description: value });
   };
 
-  const handlePaymentChange = (field: keyof PharmacyPaymentFormValues, value: string) => {
+  const handlePaymentChange = (
+    field: keyof PharmacyPaymentFormValues,
+    value: string
+  ) => {
     createTouchedUpdater(setPaymentTouched, field);
     setPaymentValues((current) => ({ ...current, [field]: value }));
   };
 
   const handlePictureError = (message: string) => toast.error(message);
-
-  const handleProfilePictureChange = async (nextPictureUrl: string | null) => {
-    setIsPictureSaving(true);
-
-    try {
-      const response = await updateCurrentUser({ pictureUrl: nextPictureUrl });
-      setPictureUrl(response.user.pictureUrl ?? null);
-      await reloadCurrentUser();
-      toast.success(nextPictureUrl ? 'Profile photo was updated.' : 'Profile photo was removed.');
-    } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not update profile photo.'));
-    } finally {
-      setIsPictureSaving(false);
-    }
-  };
 
   const handlePharmacyPictureChange = async (nextPictureUrl: string | null) => {
     if (!pharmacy || isProfileReadonly) return;
@@ -502,10 +675,16 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     setIsPharmacyPictureSaving(true);
 
     try {
-      const response = await updateMyPharmacyProfile({ imageUrl: nextPictureUrl });
+      const response = await updateMyPharmacyProfile({
+        imageUrl: nextPictureUrl,
+      });
       setPharmacy(response.pharmacy);
       setPharmacyPictureUrl(response.pharmacy.imageUrl ?? null);
-      toast.success(nextPictureUrl ? 'Pharmacy photo was updated.' : 'Pharmacy photo was removed.');
+      toast.success(
+        nextPictureUrl
+          ? 'Pharmacy photo was updated.'
+          : 'Pharmacy photo was removed.'
+      );
     } catch (error) {
       toast.error(getErrorMessage(error, 'Could not update pharmacy photo.'));
     } finally {
@@ -524,7 +703,6 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       const response = await updateCurrentUser({
         name: ownerValues.name.trim(),
         phone: ownerValues.phone.trim(),
-        address: ownerValues.address.trim() || undefined,
       });
 
       const nextValues = createOwnerInitialValues(response.user);
@@ -554,7 +732,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       });
       setPasswordValues(CHANGE_PASSWORD_INITIAL_VALUES);
       setPasswordTouched({});
-      toast.success('Password changed successfully. Please sign in again if the session was refreshed.');
+      toast.success(
+        'Password changed successfully. Please sign in again if the session was refreshed.'
+      );
     } catch (error) {
       toast.error(getErrorMessage(error, 'Could not change password.'));
     } finally {
@@ -582,9 +762,13 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
         buildProfilePayload(pharmacyValues, pharmacyName)
       );
       const nextValues = createPharmacyInitialValues(user, response.pharmacy);
+      const nextPharmacyName = createPharmacyNameInitialValue(
+        user,
+        response.pharmacy
+      );
       setPharmacy(response.pharmacy);
-      setPharmacyName(response.pharmacy.name);
-      setInitialPharmacyName(response.pharmacy.name);
+      setPharmacyName(nextPharmacyName);
+      setInitialPharmacyName(nextPharmacyName);
       setPharmacyValues(nextValues);
       setInitialPharmacyValues(nextValues);
       setPharmacyTouched({});
@@ -599,12 +783,20 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const handleAboutSubmit = async () => {
     setAboutTouched(markAllFieldsTouched(PHARMACY_ABOUT_FORM_FIELDS));
 
-    if (!pharmacy || hasValidationErrors(aboutErrors) || !aboutFormIsDirty || isProfileReadonly) return;
+    if (
+      !pharmacy ||
+      hasValidationErrors(aboutErrors) ||
+      !aboutFormIsDirty ||
+      isProfileReadonly
+    )
+      return;
 
     setIsPharmacySaving(true);
 
     try {
-      const response = await updateMyPharmacyProfile(buildAboutPayload(aboutValues));
+      const response = await updateMyPharmacyProfile(
+        buildAboutPayload(aboutValues)
+      );
       const nextValues = createAboutInitialValues(response.pharmacy);
       setPharmacy(response.pharmacy);
       setAboutValues(nextValues);
@@ -621,12 +813,20 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const handlePaymentSubmit = async () => {
     setPaymentTouched(markAllFieldsTouched(PHARMACY_PAYMENT_FORM_FIELDS));
 
-    if (!pharmacy || hasValidationErrors(paymentErrors) || !paymentFormIsDirty || isProfileReadonly) return;
+    if (
+      !pharmacy ||
+      hasValidationErrors(paymentErrors) ||
+      !paymentFormIsDirty ||
+      isProfileReadonly
+    )
+      return;
 
     setIsPharmacySaving(true);
 
     try {
-      const response = await updateMyPharmacyProfile(buildPaymentPayload(paymentValues));
+      const response = await updateMyPharmacyProfile(
+        buildPaymentPayload(paymentValues)
+      );
       const nextValues = createPaymentInitialValues(user, response.pharmacy);
       setPharmacy(response.pharmacy);
       setPaymentValues(nextValues);
@@ -640,10 +840,43 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     }
   };
 
+  const handleDocumentsChange = (files: DocumentUploadFile[]) => {
+    setDocumentsTouched(true);
+    setDocumentValues(files);
+  };
+
+  const handleDocumentsSubmit = async () => {
+    setDocumentsTouched(true);
+
+    if (!pharmacy || !documentsFormIsDirty || isProfileReadonly) return;
+
+    setIsDocumentsSaving(true);
+
+    try {
+      const response = await updateMyPharmacyProfile(
+        buildDocumentsPayload(documentValues)
+      );
+      const nextDocumentValues = createDocumentValues(
+        response.pharmacy.documents
+      );
+
+      setPharmacy(response.pharmacy);
+      setDocumentValues(nextDocumentValues);
+      setInitialDocumentValues(nextDocumentValues);
+      setDocumentsTouched(false);
+      toast.success('Documents saved successfully.');
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Could not save documents.'));
+    } finally {
+      setIsDocumentsSaving(false);
+    }
+  };
+
   const handleSendForVerification = async () => {
     setPharmacyTouched(markAllFieldsTouched(PHARMACY_CONTACT_FORM_FIELDS));
     setAboutTouched(markAllFieldsTouched(PHARMACY_ABOUT_FORM_FIELDS));
     setPaymentTouched(markAllFieldsTouched(PHARMACY_PAYMENT_FORM_FIELDS));
+    setDocumentsTouched(true);
 
     if (!canSendForVerification) return;
 
@@ -654,7 +887,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       setPharmacy(response.pharmacy);
       toast.success(response.message);
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not send pharmacy for verification.'));
+      toast.error(
+        getErrorMessage(error, 'Could not send pharmacy for verification.')
+      );
     } finally {
       setIsSendingVerification(false);
     }
@@ -665,7 +900,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
     try {
       await revokeActiveSession(sessionId);
-      setSessions((current) => current.filter((session) => session.id !== sessionId));
+      setSessions((current) =>
+        current.filter((session) => session.id !== sessionId)
+      );
       toast.success('Session was revoked.');
     } catch (error) {
       toast.error(getErrorMessage(error, 'Could not revoke session.'));
@@ -681,7 +918,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   if (loadError || !pharmacy) {
     return (
       <main className={css.page}>
-        <section className={css.section} aria-labelledby="pharmacy-profile-title">
+        <section
+          className={css.section}
+          aria-labelledby="pharmacy-profile-title"
+        >
           <Container className={css.profileContainer}>
             <Breadcrumbs items={getProfileBreadcrumbs()} />
             <StatusBanner
@@ -695,35 +935,35 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     );
   }
 
+  const summaryPharmacyName =
+    pharmacyName || pharmacy.name || user.name || 'Pharmacy profile';
+
   return (
     <main className={css.page}>
       <section className={css.section} aria-labelledby="pharmacy-profile-title">
         <Container className={css.profileContainer}>
           <Breadcrumbs items={getProfileBreadcrumbs()} />
 
-          <h1 className={css.title} id="pharmacy-profile-title">
-            Pharmacy profile
-          </h1>
-
-          <p className={css.text}>
-            Manage real owner data, pharmacy public data, payment details, documents, reviews, and sessions.
-          </p>
-
           <div className={css.profileShell}>
-            <aside className={css.sidebar} aria-label="Pharmacy profile summary">
+            <aside
+              className={css.sidebar}
+              aria-label="Pharmacy profile summary"
+            >
               <PictureCard
-                name={pharmacy.name}
+                name={summaryPharmacyName}
                 pictureUrl={pharmacyPictureUrl}
                 isSaving={isPharmacyPictureSaving}
                 accept={PICTURE_ACCEPT}
                 validateFile={(file) => buildPictureFileError(file) || null}
-                validatePictureUrl={(nextPictureUrl) => buildPictureUrlError(nextPictureUrl) || null}
+                validatePictureUrl={(nextPictureUrl) =>
+                  buildPictureUrlError(nextPictureUrl) || null
+                }
                 onChange={handlePharmacyPictureChange}
                 onError={handlePictureError}
               />
 
               <div className={css.nameBlock}>
-                <p className={css.name}>{pharmacy.name}</p>
+                <p className={css.name}>{summaryPharmacyName}</p>
                 <p className={css.email}>{pharmacy.email ?? user.email}</p>
               </div>
 
@@ -736,32 +976,40 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                   <dt>Status</dt>
                   <dd>{getStatusLabel(pharmacy.status)}</dd>
                 </div>
-                <div>
-                  <dt>Documents</dt>
-                  <dd>{pharmacy.documents.length}</dd>
-                </div>
               </dl>
 
               <div className={css.statusNote}>
                 <div className={css.statusNoteHeader}>
                   <h3>Profile status</h3>
-                  <StatusBadge status={getStatusBadgeStatus(pharmacy.status)} label={getStatusLabel(pharmacy.status)} />
+                  <StatusBadge
+                    status={getStatusBadgeStatus(pharmacy.status)}
+                    label={getStatusLabel(pharmacy.status)}
+                  />
                 </div>
                 {pharmacy.status === 'new' ? (
                   <p>
-                    New pharmacies can edit registration data and complete required fields. Sales, orders, own products, clients, and product requests unlock after verification.
+                    New pharmacies can edit registration data and complete
+                    required fields. Sales, orders, own products, clients, and
+                    product requests unlock after verification.
                   </p>
                 ) : null}
                 {pharmacy.status === 'on_verification' ? (
                   <p>
-                    The profile is waiting for Admin verification. Submitted fields are read-only until the decision is made.
+                    The profile is waiting for Admin verification. Submitted
+                    fields are read-only until the decision is made.
                   </p>
                 ) : null}
                 {pharmacy.status === 'active' ? (
-                  <p>The pharmacy is active. Important public changes may require moderation.</p>
+                  <p>
+                    The pharmacy is active. Important public changes may require
+                    moderation.
+                  </p>
                 ) : null}
                 {pharmacy.status === 'on_moderation' ? (
-                  <p>Profile changes are on moderation. Approved public data remains visible until Admin reviews the changes.</p>
+                  <p>
+                    Profile changes are on moderation. Approved public data
+                    remains visible until Admin reviews the changes.
+                  </p>
                 ) : null}
               </div>
 
@@ -791,26 +1039,19 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
               {activeTab === 'data' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <section className={css.panelSection} aria-labelledby="owner-data-title">
+                  <section
+                    className={css.panelSection}
+                    aria-labelledby="owner-data-title"
+                  >
                     <div className={css.panelHeader}>
                       <h2 className={css.panelTitle} id="owner-data-title">
                         Owner data
                       </h2>
                       <p className={css.panelText}>
-                        These are the real details used when the pharmacy owner registered.
+                        These are the real details used when the pharmacy owner
+                        registered.
                       </p>
                     </div>
-
-                    <PictureCard
-                      name={ownerValues.name || user.name}
-                      pictureUrl={pictureUrl}
-                      isSaving={isPictureSaving}
-                      accept={PICTURE_ACCEPT}
-                      validateFile={(file) => buildPictureFileError(file) || null}
-                      validatePictureUrl={(nextPictureUrl) => buildPictureUrlError(nextPictureUrl) || null}
-                      onChange={handleProfilePictureChange}
-                      onError={handlePictureError}
-                    />
 
                     <div className={css.formGrid}>
                       <NameInput
@@ -820,7 +1061,12 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         error={ownerErrors.name}
                         isTouched={Boolean(ownerTouched.name)}
                         maxLength={USER_NAME_MAX_LENGTH}
-                        onChange={(event) => handleOwnerChange('name', sanitizeName(event.target.value))}
+                        onChange={(event) =>
+                          handleOwnerChange(
+                            'name',
+                            sanitizeName(event.target.value)
+                          )
+                        }
                       />
 
                       <PhoneInput
@@ -830,25 +1076,20 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         error={ownerErrors.phone}
                         isTouched={Boolean(ownerTouched.phone)}
                         maxLength={USER_PHONE_MAX_LENGTH}
-                        onChange={(event) => handleOwnerChange('phone', sanitizePhone(event.target.value))}
-                      />
-
-                      <AddressInput
-                        id="owner-address"
-                        name="address"
-                        className={css.fieldWide}
-                        value={ownerValues.address}
-                        error={ownerErrors.address}
-                        isTouched={Boolean(ownerTouched.address)}
-                        required={false}
-                        maxLength={USER_ADDRESS_MAX_LENGTH}
-                        onChange={(event) => handleOwnerChange('address', sanitizeAddress(event.target.value))}
+                        onChange={(event) =>
+                          handleOwnerChange(
+                            'phone',
+                            sanitizePhone(event.target.value)
+                          )
+                        }
                       />
                     </div>
 
                     <Button
                       type="button"
-                      disabled={!ownerFormIsValid || !ownerFormIsDirty || isOwnerSaving}
+                      disabled={
+                        !ownerFormIsValid || !ownerFormIsDirty || isOwnerSaving
+                      }
                       isLoading={isOwnerSaving}
                       loadingLabel="Saving..."
                       onClick={handleOwnerSubmit}
@@ -857,13 +1098,17 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                     </Button>
                   </section>
 
-                  <section className={css.panelSection} aria-labelledby="password-title">
+                  <section
+                    className={css.panelSection}
+                    aria-labelledby="password-title"
+                  >
                     <div className={css.panelHeader}>
                       <h2 className={css.panelTitle} id="password-title">
                         Change password
                       </h2>
                       <p className={css.panelText}>
-                        Use this section only when you want to update the owner login password.
+                        Use this section only when you want to update the owner
+                        login password.
                       </p>
                     </div>
 
@@ -878,8 +1123,15 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         autoComplete="current-password"
                         maxLength={USER_PASSWORD_MAX_LENGTH}
                         isVisible={isCurrentPasswordVisible}
-                        onToggleVisibility={() => setIsCurrentPasswordVisible((value) => !value)}
-                        onChange={(event) => handlePasswordChange('currentPassword', sanitizePassword(event.target.value))}
+                        onToggleVisibility={() =>
+                          setIsCurrentPasswordVisible((value) => !value)
+                        }
+                        onChange={(event) =>
+                          handlePasswordChange(
+                            'currentPassword',
+                            sanitizePassword(event.target.value)
+                          )
+                        }
                       />
 
                       <PasswordInput
@@ -892,8 +1144,15 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         autoComplete="new-password"
                         maxLength={USER_PASSWORD_MAX_LENGTH}
                         isVisible={isNewPasswordVisible}
-                        onToggleVisibility={() => setIsNewPasswordVisible((value) => !value)}
-                        onChange={(event) => handlePasswordChange('newPassword', sanitizePassword(event.target.value))}
+                        onToggleVisibility={() =>
+                          setIsNewPasswordVisible((value) => !value)
+                        }
+                        onChange={(event) =>
+                          handlePasswordChange(
+                            'newPassword',
+                            sanitizePassword(event.target.value)
+                          )
+                        }
                       />
                     </div>
 
@@ -913,13 +1172,17 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
               {activeTab === 'pharmacy-data' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <section className={css.panelSection} aria-labelledby="pharmacy-data-title">
+                  <section
+                    className={css.panelSection}
+                    aria-labelledby="pharmacy-data-title"
+                  >
                     <div className={css.panelHeader}>
                       <h2 className={css.panelTitle} id="pharmacy-data-title">
                         Pharmacy data
                       </h2>
                       <p className={css.panelText}>
-                        Fill in the public pharmacy data required for verification.
+                        Fill in the public pharmacy data required for
+                        verification.
                       </p>
                     </div>
 
@@ -932,51 +1195,104 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       />
                     ) : null}
 
+                    <PictureCard
+                      name={pharmacyName || pharmacy.name || 'Pharmacy'}
+                      pictureUrl={pharmacyPictureUrl}
+                      isSaving={isPharmacyPictureSaving}
+                      accept={PICTURE_ACCEPT}
+                      labels={{
+                        uploadAriaLabel: 'Upload pharmacy photo',
+                        hint: 'Upload the public pharmacy photo clients will see in the pharmacy profile.',
+                        uploadButton: 'Upload pharmacy photo',
+                        removeButton: 'Remove pharmacy photo',
+                        removeTitle: 'Remove pharmacy photo?',
+                        removeText:
+                          'This public pharmacy photo will be removed from the profile.',
+                      }}
+                      validateFile={(file) =>
+                        buildPictureFileError(file) || null
+                      }
+                      validatePictureUrl={(nextPictureUrl) =>
+                        buildPictureUrlError(nextPictureUrl) || null
+                      }
+                      onChange={handlePharmacyPictureChange}
+                      onError={handlePictureError}
+                    />
+
                     <div className={css.formGrid}>
                       <NameInput
                         id="pharmacy-name"
                         name="pharmacyName"
                         label="Pharmacy name"
+                        placeholder="Enter pharmacy name"
                         value={pharmacyName}
-                        error={!pharmacyNameIsValid ? 'Pharmacy name is required.' : undefined}
+                        error={
+                          !pharmacyNameIsValid
+                            ? 'Pharmacy name is required.'
+                            : undefined
+                        }
                         isTouched={!pharmacyNameIsValid && pharmacyFormIsDirty}
                         disabled={isProfileReadonly}
                         maxLength={USER_NAME_MAX_LENGTH}
-                        onChange={(event) => handlePharmacyNameChange(sanitizeName(event.target.value))}
+                        onChange={(event) =>
+                          handlePharmacyNameChange(
+                            sanitizeName(event.target.value)
+                          )
+                        }
                       />
 
                       <EmailInput
                         id="pharmacy-email"
                         name="email"
                         value={pharmacyValues.email}
+                        hint="Clients will see this email in the pharmacy profile on the website."
                         error={pharmacyErrors.email}
                         isTouched={Boolean(pharmacyTouched.email)}
                         disabled={isProfileReadonly}
                         maxLength={USER_EMAIL_MAX_LENGTH}
-                        onChange={(event) => handlePharmacyChange('email', sanitizeEmail(event.target.value))}
+                        onChange={(event) =>
+                          handlePharmacyChange(
+                            'email',
+                            sanitizeEmail(event.target.value)
+                          )
+                        }
                       />
 
                       <PhoneInput
                         id="pharmacy-phone"
                         name="phone"
                         value={pharmacyValues.phone}
+                        hint="Clients will see this phone number in the pharmacy profile on the website."
                         error={pharmacyErrors.phone}
                         isTouched={Boolean(pharmacyTouched.phone)}
                         disabled={isProfileReadonly}
                         maxLength={USER_PHONE_MAX_LENGTH}
-                        onChange={(event) => handlePharmacyChange('phone', sanitizePhone(event.target.value))}
+                        onChange={(event) =>
+                          handlePharmacyChange(
+                            'phone',
+                            sanitizePhone(event.target.value)
+                          )
+                        }
                       />
 
                       <AddressInput
                         id="pharmacy-address"
                         name="address"
                         className={css.fieldWide}
+                        label="Pharmacy address"
+                        placeholder="Example: 12 Central Street, Kyiv"
+                        hint="Clients will see this address in the pharmacy profile on the website."
                         value={pharmacyValues.address}
                         error={pharmacyErrors.address}
                         isTouched={Boolean(pharmacyTouched.address)}
                         disabled={isProfileReadonly}
                         maxLength={USER_ADDRESS_MAX_LENGTH}
-                        onChange={(event) => handlePharmacyChange('address', sanitizeAddress(event.target.value))}
+                        onChange={(event) =>
+                          handlePharmacyChange(
+                            'address',
+                            sanitizeAddress(event.target.value)
+                          )
+                        }
                       />
 
                       <div className={css.fieldWide}>
@@ -988,14 +1304,25 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                           isTouched={Boolean(pharmacyTouched.workingHours)}
                           maxLength={WORKING_HOURS_MAX_LENGTH}
                           disabled={isProfileReadonly}
-                          onChange={(event) => handlePharmacyChange('workingHours', sanitizeWorkingHours(event.target.value))}
+                          onChange={(event) =>
+                            handlePharmacyChange(
+                              'workingHours',
+                              sanitizeWorkingHours(event.target.value)
+                            )
+                          }
                         />
                       </div>
                     </div>
 
                     <Button
                       type="button"
-                      disabled={!pharmacyNameIsValid || hasValidationErrors(pharmacyErrors) || !pharmacyFormIsDirty || isPharmacySaving || isProfileReadonly}
+                      disabled={
+                        !pharmacyNameIsValid ||
+                        hasValidationErrors(pharmacyErrors) ||
+                        !pharmacyFormIsDirty ||
+                        isPharmacySaving ||
+                        isProfileReadonly
+                      }
                       isLoading={isPharmacySaving}
                       loadingLabel="Saving..."
                       onClick={handlePharmacySubmit}
@@ -1008,13 +1335,17 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
               {activeTab === 'about' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <section className={css.panelSection} aria-labelledby="about-title">
+                  <section
+                    className={css.panelSection}
+                    aria-labelledby="about-title"
+                  >
                     <div className={css.panelHeader}>
                       <h2 className={css.panelTitle} id="about-title">
                         About pharmacy
                       </h2>
                       <p className={css.panelText}>
-                        Add the public pharmacy description clients will read after verification.
+                        Add the public pharmacy description clients will read
+                        after verification.
                       </p>
                     </div>
 
@@ -1023,16 +1354,27 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       name="pharmacyDescription"
                       label="Description"
                       value={aboutValues.description}
+                      placeholder="Describe pharmacy services, pickup details, and useful information for clients."
+                      hint="You can use simple formatting buttons or type plain text."
                       error={aboutErrors.description}
                       isTouched={Boolean(aboutTouched.description)}
                       maxLength={TEXT_EDITOR_MAX_LENGTH}
                       disabled={isProfileReadonly}
-                      onChange={(event) => handleAboutChange(sanitizeTextEditor(event.target.value))}
+                      onChange={(event) =>
+                        handleAboutChange(
+                          sanitizeTextEditor(event.target.value)
+                        )
+                      }
                     />
 
                     <Button
                       type="button"
-                      disabled={hasValidationErrors(aboutErrors) || !aboutFormIsDirty || isPharmacySaving || isProfileReadonly}
+                      disabled={
+                        hasValidationErrors(aboutErrors) ||
+                        !aboutFormIsDirty ||
+                        isPharmacySaving ||
+                        isProfileReadonly
+                      }
                       isLoading={isPharmacySaving}
                       loadingLabel="Saving..."
                       onClick={handleAboutSubmit}
@@ -1045,7 +1387,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
               {activeTab === 'payment' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <section className={css.panelSection} aria-labelledby="payment-title">
+                  <section
+                    className={css.panelSection}
+                    aria-labelledby="payment-title"
+                  >
                     <div className={css.panelHeader}>
                       <h2 className={css.panelTitle} id="payment-title">
                         Payment details
@@ -1060,12 +1405,18 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         id="recipient-name"
                         name="recipientName"
                         label="Recipient name"
+                        hint="Enter the legal payment recipient name."
                         value={paymentValues.recipientName}
                         error={paymentErrors.recipientName}
                         isTouched={Boolean(paymentTouched.recipientName)}
                         disabled={isProfileReadonly}
                         maxLength={USER_NAME_MAX_LENGTH}
-                        onChange={(event) => handlePaymentChange('recipientName', sanitizeName(event.target.value))}
+                        onChange={(event) =>
+                          handlePaymentChange(
+                            'recipientName',
+                            sanitizeName(event.target.value)
+                          )
+                        }
                       />
 
                       <TaxIdInput
@@ -1076,7 +1427,12 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         isTouched={Boolean(paymentTouched.taxId)}
                         disabled={isProfileReadonly}
                         maxLength={TAX_ID_MAX_LENGTH}
-                        onChange={(event) => handlePaymentChange('taxId', sanitizeTaxId(event.target.value))}
+                        onChange={(event) =>
+                          handlePaymentChange(
+                            'taxId',
+                            sanitizeTaxId(event.target.value)
+                          )
+                        }
                       />
 
                       <IbanInput
@@ -1088,7 +1444,12 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         isTouched={Boolean(paymentTouched.iban)}
                         disabled={isProfileReadonly}
                         maxLength={IBAN_MAX_LENGTH}
-                        onChange={(event) => handlePaymentChange('iban', sanitizeIban(event.target.value))}
+                        onChange={(event) =>
+                          handlePaymentChange(
+                            'iban',
+                            sanitizeIban(event.target.value)
+                          )
+                        }
                       />
 
                       <NameInput
@@ -1100,7 +1461,12 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         isTouched={Boolean(paymentTouched.bankName)}
                         disabled={isProfileReadonly}
                         maxLength={USER_NAME_MAX_LENGTH}
-                        onChange={(event) => handlePaymentChange('bankName', sanitizeName(event.target.value))}
+                        onChange={(event) =>
+                          handlePaymentChange(
+                            'bankName',
+                            sanitizeName(event.target.value)
+                          )
+                        }
                       />
 
                       <EmailInput
@@ -1112,7 +1478,12 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         isTouched={Boolean(paymentTouched.receiptEmail)}
                         disabled={isProfileReadonly}
                         maxLength={USER_EMAIL_MAX_LENGTH}
-                        onChange={(event) => handlePaymentChange('receiptEmail', sanitizeEmail(event.target.value))}
+                        onChange={(event) =>
+                          handlePaymentChange(
+                            'receiptEmail',
+                            sanitizeEmail(event.target.value)
+                          )
+                        }
                       />
 
                       <CommentInput
@@ -1126,13 +1497,23 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         required
                         disabled={isProfileReadonly}
                         maxLength={PAYMENT_PURPOSE_MAX_LENGTH}
-                        onChange={(event) => handlePaymentChange('paymentPurpose', sanitizePaymentPurpose(event.target.value))}
+                        onChange={(event) =>
+                          handlePaymentChange(
+                            'paymentPurpose',
+                            sanitizePaymentPurpose(event.target.value)
+                          )
+                        }
                       />
                     </div>
 
                     <Button
                       type="button"
-                      disabled={hasValidationErrors(paymentErrors) || !paymentFormIsDirty || isPharmacySaving || isProfileReadonly}
+                      disabled={
+                        hasValidationErrors(paymentErrors) ||
+                        !paymentFormIsDirty ||
+                        isPharmacySaving ||
+                        isProfileReadonly
+                      }
                       isLoading={isPharmacySaving}
                       loadingLabel="Saving..."
                       onClick={handlePaymentSubmit}
@@ -1145,36 +1526,50 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
               {activeTab === 'documents' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <section className={css.panelSection} aria-labelledby="documents-title">
+                  <section
+                    className={css.panelSection}
+                    aria-labelledby="documents-title"
+                  >
                     <div className={css.panelHeader}>
                       <h2 className={css.panelTitle} id="documents-title">
                         Registration documents
                       </h2>
                       <p className={css.panelText}>
-                        Documents attached during pharmacy registration are shown here without demo files.
+                        Manage registration documents, license scans, and other
+                        files Admin needs for verification.
                       </p>
                     </div>
 
-                    {pharmacy.documents.length > 0 ? (
-                      <ul className={css.documentsList}>
-                        {pharmacy.documents.map((document) => (
-                          <li className={css.documentCard} key={`${document.name}-${document.size}`}>
-                            <FileText size={22} aria-hidden="true" />
-                            <div className={css.documentInfo}>
-                              <strong>{document.name}</strong>
-                              <span>{[document.type, formatFileSize(document.size)].filter(Boolean).join(' · ')}</span>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className={css.emptyState}>
-                        <h3>No documents found</h3>
-                        <p>
-                          The backend did not return registration documents for this pharmacy. Add documents during registration so Admin can verify the profile.
-                        </p>
-                      </div>
-                    )}
+                    <DocumentUpload
+                      id="pharmacy-profile-documents"
+                      name="documents"
+                      value={documentValues}
+                      error={
+                        documentValues.length === 0
+                          ? 'Upload at least one document before verification.'
+                          : undefined
+                      }
+                      isTouched={documentsTouched}
+                      required
+                      disabled={isProfileReadonly || isDocumentsSaving}
+                      maxFiles={PHARMACY_DOCUMENTS_LIMIT}
+                      confirmRemove
+                      onChange={handleDocumentsChange}
+                    />
+
+                    <Button
+                      type="button"
+                      disabled={
+                        !documentsFormIsDirty ||
+                        isDocumentsSaving ||
+                        isProfileReadonly
+                      }
+                      isLoading={isDocumentsSaving}
+                      loadingLabel="Saving..."
+                      onClick={handleDocumentsSubmit}
+                    >
+                      Save documents
+                    </Button>
                   </section>
                 </div>
               ) : null}
@@ -1192,7 +1587,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
               {activeTab === 'sessions' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <section className={css.panelSection} aria-labelledby="sessions-title">
+                  <section
+                    className={css.panelSection}
+                    aria-labelledby="sessions-title"
+                  >
                     <div className={css.panelHeader}>
                       <h2 className={css.panelTitle} id="sessions-title">
                         Active sessions and devices
@@ -1210,11 +1608,20 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                           <li className={css.sessionCard} key={session.id}>
                             <MonitorSmartphone size={22} aria-hidden="true" />
                             <div className={css.sessionInfo}>
-                              <strong>{session.deviceName ?? session.userAgent ?? 'Unknown device'}</strong>
-                              <span>Last used: {formatSessionDate(session.lastUsedAt)}</span>
+                              <strong>
+                                {session.deviceName ??
+                                  session.userAgent ??
+                                  'Unknown device'}
+                              </strong>
+                              <span>
+                                Last used:{' '}
+                                {formatSessionDate(session.lastUsedAt)}
+                              </span>
                             </div>
                             {session.isCurrent ? (
-                              <span className={css.currentSession}>Current session</span>
+                              <span className={css.currentSession}>
+                                Current session
+                              </span>
                             ) : (
                               <Button
                                 type="button"
@@ -1222,7 +1629,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                                 size="sm"
                                 isLoading={revokingSessionId === session.id}
                                 loadingLabel="Revoking..."
-                                onClick={() => void handleRevokeSession(session.id)}
+                                onClick={() =>
+                                  void handleRevokeSession(session.id)
+                                }
                               >
                                 Revoke
                               </Button>
@@ -1233,7 +1642,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                     ) : (
                       <div className={css.emptyState}>
                         <h3>No active sessions found</h3>
-                        <p>Session data will appear here when the backend returns active login devices.</p>
+                        <p>
+                          Session data will appear here when the backend returns
+                          active login devices.
+                        </p>
                       </div>
                     )}
                   </section>

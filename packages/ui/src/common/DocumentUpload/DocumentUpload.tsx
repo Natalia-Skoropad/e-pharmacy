@@ -1,8 +1,10 @@
 'use client';
 
-import { type ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { FileText, UploadCloud, X } from 'lucide-react';
 import clsx from 'clsx';
+
+import ConfirmationModal from '../../modals/ConfirmationModal/ConfirmationModal';
 
 import css from './DocumentUpload.module.css';
 
@@ -18,6 +20,16 @@ export type DocumentUploadFile = {
 
 //===================================================================
 
+export type DocumentUploadLabels = {
+  dropzoneTitle?: string;
+  dropzoneText?: string;
+  removeAriaLabel?: (fileName: string) => string;
+  removeTitle?: string;
+  removeText?: (fileName: string) => string;
+  removeConfirm?: string;
+  removeCancel?: string;
+};
+
 type DocumentUploadProps = {
   id: string;
   name: string;
@@ -32,7 +44,21 @@ type DocumentUploadProps = {
   accept?: string;
   hint?: string;
   className?: string;
+  confirmRemove?: boolean;
+  labels?: DocumentUploadLabels;
   onChange: (files: DocumentUploadFile[]) => void;
+};
+
+//===================================================================
+
+const DEFAULT_LABELS: Required<DocumentUploadLabels> = {
+  dropzoneTitle: 'Upload pharmacy documents',
+  dropzoneText: 'PDF, DOC, JPG or PNG files are supported.',
+  removeAriaLabel: (fileName) => `Remove ${fileName}`,
+  removeTitle: 'Remove document?',
+  removeText: (fileName) => `The document “${fileName}” will be removed.`,
+  removeConfirm: 'Remove document',
+  removeCancel: 'Keep document',
 };
 
 //===================================================================
@@ -66,14 +92,27 @@ function DocumentUpload({
   accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx',
   hint = 'Upload registration documents, license scans, or other files that confirm pharmacy ownership.',
   className,
+  confirmRemove = false,
+  labels,
   onChange,
 }: DocumentUploadProps) {
+  const [pendingRemoveFileId, setPendingRemoveFileId] = useState<string | null>(
+    null
+  );
+  const mergedLabels = { ...DEFAULT_LABELS, ...labels };
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
   const limitId = `${id}-limit`;
   const metaId = `${id}-meta`;
   const hasError = Boolean(isTouched && error);
-  const hasReachedLimit = typeof maxFiles === 'number' && value.length >= maxFiles;
+  const hasReachedLimit =
+    typeof maxFiles === 'number' && value.length >= maxFiles;
+  const pendingRemoveFile =
+    value.find((file) => file.id === pendingRemoveFileId) ?? null;
+
+  const removeFile = (fileId: string) => {
+    onChange(value.filter((file) => file.id !== fileId));
+  };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files ?? []).map((file) => ({
@@ -89,14 +128,28 @@ function DocumentUpload({
       new Map(nextFiles.map((file) => [file.id, file])).values()
     );
     const limitedFiles =
-      typeof maxFiles === 'number' ? uniqueFiles.slice(0, maxFiles) : uniqueFiles;
+      typeof maxFiles === 'number'
+        ? uniqueFiles.slice(0, maxFiles)
+        : uniqueFiles;
 
     onChange(limitedFiles);
     event.target.value = '';
   };
 
   const handleRemove = (fileId: string) => {
-    onChange(value.filter((file) => file.id !== fileId));
+    if (disabled) return;
+
+    if (confirmRemove) {
+      setPendingRemoveFileId(fileId);
+      return;
+    }
+
+    removeFile(fileId);
+  };
+
+  const handleConfirmRemove = () => {
+    if (pendingRemoveFileId) removeFile(pendingRemoveFileId);
+    setPendingRemoveFileId(null);
   };
 
   return (
@@ -131,8 +184,8 @@ function DocumentUpload({
         htmlFor={id}
       >
         <UploadCloud className={css.icon} size={28} aria-hidden="true" />
-        <span className={css.title}>Upload pharmacy documents</span>
-        <span className={css.text}>PDF, DOC, JPG or PNG files are supported.</span>
+        <span className={css.title}>{mergedLabels.dropzoneTitle}</span>
+        <span className={css.text}>{mergedLabels.dropzoneText}</span>
       </label>
 
       {hint ? (
@@ -166,7 +219,7 @@ function DocumentUpload({
                 className={css.removeButton}
                 type="button"
                 disabled={disabled}
-                aria-label={`Remove ${file.name}`}
+                aria-label={mergedLabels.removeAriaLabel(file.name)}
                 onClick={() => handleRemove(file.id)}
               >
                 <X size={16} aria-hidden="true" />
@@ -174,6 +227,17 @@ function DocumentUpload({
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {pendingRemoveFile ? (
+        <ConfirmationModal
+          title={mergedLabels.removeTitle}
+          text={mergedLabels.removeText(pendingRemoveFile.name)}
+          confirmLabel={mergedLabels.removeConfirm}
+          cancelLabel={mergedLabels.removeCancel}
+          onConfirm={handleConfirmRemove}
+          onCancel={() => setPendingRemoveFileId(null)}
+        />
       ) : null}
     </div>
   );

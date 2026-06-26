@@ -29,7 +29,6 @@
 .profileShell {
   display: grid;
   gap: 18px;
-  margin-top: 32px;
   padding: 12px;
   background-color: var(--color-surface);
   border-radius: calc(var(--radius-xl) + 4px);
@@ -308,7 +307,6 @@
     grid-template-columns: 320px minmax(0, 1fr);
     align-items: start;
     gap: 18px;
-    margin-top: 40px;
   }
 
   .sidebar {

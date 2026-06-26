@@ -197,6 +197,7 @@ export type UpdateMyPharmacyProfilePayload = {
   workingHours?: string;
   imageUrl?: string | null;
   description?: string;
+  documents?: PharmacyVerificationDocument[];
   bankDetails?: Partial<PharmacyBankDetails>;
 };
 

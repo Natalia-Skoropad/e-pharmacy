@@ -34,6 +34,13 @@ function normalizePaginationQuery(value: unknown): unknown {
 
 //===============================================================
 
+const pharmacyDocumentSchema = z.object({
+  name: z.string().trim().min(1, 'Document name is required'),
+  size: z.number().int().nonnegative(),
+  type: z.string().trim().optional().default(''),
+});
+
+//===============================================================
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
 const perPageSchema = z.coerce.number().int().min(1).max(100).default(12);
 
@@ -91,7 +98,6 @@ export const createPharmacyReviewSchema = z.object({
   comment: sharedReviewCommentSchema,
 });
 
-
 //===============================================================
 
 export const updateMyPharmacyProfileSchema = z
@@ -104,6 +110,7 @@ export const updateMyPharmacyProfileSchema = z
     workingHours: sharedOptionalWorkingHoursSchema,
     imageUrl: sharedPictureUrlSchema,
     description: sharedOptionalTextEditorSchema,
+    documents: z.array(pharmacyDocumentSchema).max(6).optional(),
     bankDetails: z
       .object({
         recipientName: sharedNameSchema.optional(),

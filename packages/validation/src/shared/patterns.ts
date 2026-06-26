@@ -13,4 +13,4 @@ export const PICTURE_DATA_URL_PATTERN =
 export const TAX_ID_PATTERN = /^\d{8,10}$/;
 export const IBAN_PATTERN = /^UA\d{27}$/;
 export const WORKING_HOURS_PATTERN = /^[A-Za-z0-9\s.,:;–—'’/#()-]+$/;
-export const TEXT_EDITOR_PATTERN = /^[A-Za-z0-9\s.,!?;:'"()\-–—/#%+\n\r]+$/;
+export const TEXT_EDITOR_PATTERN = /^[A-Za-z0-9\s.,!?;:'"()\-–—/#%+*\n\r]+$/;

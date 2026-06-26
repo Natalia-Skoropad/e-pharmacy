@@ -606,6 +606,7 @@ function assertReadyForVerification(
     bankName: bankDetails?.bankName,
     receiptEmail: bankDetails?.receiptEmail,
     paymentPurpose: bankDetails?.paymentPurpose,
+    documents: pharmacy.documents?.length,
   };
 
   const missingFields = Object.entries(requiredFields)
@@ -651,6 +652,7 @@ export async function updateMyPharmacyProfileService(
   if (input.workingHours !== undefined) update.workingHours = input.workingHours;
   if (input.imageUrl !== undefined) update.imageUrl = input.imageUrl;
   if (input.description !== undefined) update.description = input.description;
+  if (input.documents !== undefined) update.documents = input.documents;
 
   if (input.bankDetails) {
     for (const [key, value] of Object.entries(input.bankDetails)) {
