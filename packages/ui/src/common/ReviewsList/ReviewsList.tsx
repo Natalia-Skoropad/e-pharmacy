@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Star } from 'lucide-react';
 
+import { formatReviewDate } from '@e-pharmacy/utils/formatters';
+
 import CountLabel from '../CountLabel/CountLabel';
 import LazyLoadButton from '../LazyLoadButton/LazyLoadButton';
 
@@ -31,16 +33,6 @@ export type ReviewsListProps = {
 
 const DEFAULT_VISIBLE_REVIEWS_COUNT = 10;
 const REVIEWS_LOAD_DELAY_MS = 250;
-
-//===================================================================
-
-function formatReviewDate(value: string) {
-  return new Intl.DateTimeFormat('uk-UA', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value));
-}
 
 //===================================================================
 

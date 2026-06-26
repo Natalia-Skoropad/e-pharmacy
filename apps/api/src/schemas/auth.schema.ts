@@ -49,6 +49,16 @@ export const registerSchema = z.object({
     )
     .max(6)
     .optional(),
+}).superRefine((data, ctx) => {
+  if (data.role !== USER_ROLES.PHARMACY) return;
+
+  if (!data.pharmacyDocuments || data.pharmacyDocuments.length === 0) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['pharmacyDocuments'],
+      message: 'Pharmacy documents are required',
+    });
+  }
 });
 
 //===============================================================
@@ -70,6 +80,14 @@ export const createPharmacyUserSchema = z.object({
     )
     .max(6)
     .optional(),
+}).superRefine((data, ctx) => {
+  if (!data.pharmacyDocuments || data.pharmacyDocuments.length === 0) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['pharmacyDocuments'],
+      message: 'Pharmacy documents are required',
+    });
+  }
 });
 
 //===============================================================

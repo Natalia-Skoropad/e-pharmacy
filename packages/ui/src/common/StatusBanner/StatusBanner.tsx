@@ -3,8 +3,8 @@ import clsx from 'clsx';
 import {
   getStatusTone,
   type PharmacyStatusVariant,
-} from './status-types';
-import { StatusBadge } from './StatusBadge';
+} from '../StatusBadge/status-types';
+import { StatusBadge } from '../StatusBadge/StatusBadge';
 
 import css from './StatusBanner.module.css';
 

@@ -201,6 +201,7 @@ export async function registerUserService(
         address: user.address ?? 'Address pending verification',
         phone: user.phone,
         email: user.email,
+        documents: input.pharmacyDocuments ?? [],
         status: 'new',
       });
     }

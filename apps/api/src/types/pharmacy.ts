@@ -1,5 +1,7 @@
 import type { Types } from 'mongoose';
 import type { PHARMACY_STATUSES } from '../constants/auth';
+import type { updateMyPharmacyProfileSchema } from '../schemas/pharmacy.schema';
+import type { z } from 'zod';
 
 //===============================================================
 
@@ -10,11 +12,18 @@ export type ReviewModerationStatus = 'on_moderation' | 'approved' | 'rejected';
 
 //===============================================================
 
+export type PharmacyVerificationDocument = {
+  name: string;
+  size: number;
+  type?: string;
+};
+
 export type PharmacyBankDetails = {
   recipientName: string;
   taxId: string;
   iban: string;
   bankName: string;
+  receiptEmail: string;
   paymentPurpose: string;
 };
 
@@ -27,6 +36,7 @@ export type PharmacyEntity = {
   workingHours?: string;
   bankDetails?: PharmacyBankDetails;
   license?: string;
+  documents?: PharmacyVerificationDocument[];
   status: PharmacyStatus;
   rating: number;
   imageUrl?: string;
@@ -96,6 +106,7 @@ export type PharmacyProfileResponseDto = {
   workingHours?: string;
   bankDetails?: PharmacyBankDetails;
   bankTransferAvailable: boolean;
+  documents?: PharmacyVerificationDocument[];
   status: PharmacyStatus;
   rating: number;
   imageUrl?: string;
@@ -103,3 +114,9 @@ export type PharmacyProfileResponseDto = {
   reviewsCount: number;
   updatedAt: string;
 };
+
+//===============================================================
+
+export type UpdateMyPharmacyProfileInput = z.infer<
+  typeof updateMyPharmacyProfileSchema
+>;

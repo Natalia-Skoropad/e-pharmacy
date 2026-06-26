@@ -4,8 +4,24 @@ import {
   buildAddressError,
   buildPasswordError,
   buildRequiredPasswordError,
+  buildEmailError,
+  buildWorkingHoursError,
+  buildTextEditorError,
+  buildTaxIdError,
+  buildIbanError,
+  buildPaymentPurposeError,
   isValidationResultValid,
   VALIDATION_MESSAGES,
+  USER_EMAIL_MAX_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  USER_PASSWORD_MAX_LENGTH,
+  USER_ADDRESS_MAX_LENGTH,
+  WORKING_HOURS_MAX_LENGTH,
+  TEXT_EDITOR_MAX_LENGTH,
+  TAX_ID_MAX_LENGTH,
+  IBAN_MAX_LENGTH,
+  PAYMENT_PURPOSE_MAX_LENGTH,
   type FormErrors,
   type FormTouchedFields,
 } from '../shared';
@@ -23,16 +39,45 @@ export type ChangePasswordFormValues = {
   newPassword: string;
 };
 
+export type PharmacyContactFormValues = {
+  address: string;
+  phone: string;
+  email: string;
+  workingHours: string;
+};
+
+export type PharmacyAboutFormValues = {
+  description: string;
+};
+
+export type PharmacyPaymentFormValues = {
+  recipientName: string;
+  taxId: string;
+  iban: string;
+  bankName: string;
+  receiptEmail: string;
+  paymentPurpose: string;
+};
+
 //===================================================================
 
 export type DataProfileFormErrors = FormErrors<DataProfileFormValues>;
 export type ChangePasswordFormErrors = FormErrors<ChangePasswordFormValues>;
+export type PharmacyContactFormErrors = FormErrors<PharmacyContactFormValues>;
+export type PharmacyAboutFormErrors = FormErrors<PharmacyAboutFormValues>;
+export type PharmacyPaymentFormErrors = FormErrors<PharmacyPaymentFormValues>;
 
 //===================================================================
 
 export type DataProfileTouchedFields = FormTouchedFields<DataProfileFormValues>;
 export type ChangePasswordTouchedFields =
   FormTouchedFields<ChangePasswordFormValues>;
+export type PharmacyContactTouchedFields =
+  FormTouchedFields<PharmacyContactFormValues>;
+export type PharmacyAboutTouchedFields =
+  FormTouchedFields<PharmacyAboutFormValues>;
+export type PharmacyPaymentTouchedFields =
+  FormTouchedFields<PharmacyPaymentFormValues>;
 
 //===================================================================
 
@@ -47,6 +92,26 @@ export const CHANGE_PASSWORD_INITIAL_VALUES: ChangePasswordFormValues = {
   newPassword: '',
 };
 
+export const PHARMACY_CONTACT_INITIAL_VALUES: PharmacyContactFormValues = {
+  address: '',
+  phone: '',
+  email: '',
+  workingHours: '',
+};
+
+export const PHARMACY_ABOUT_INITIAL_VALUES: PharmacyAboutFormValues = {
+  description: '',
+};
+
+export const PHARMACY_PAYMENT_INITIAL_VALUES: PharmacyPaymentFormValues = {
+  recipientName: '',
+  taxId: '',
+  iban: '',
+  bankName: '',
+  receiptEmail: '',
+  paymentPurpose: '',
+};
+
 //===================================================================
 
 export const DATA_PROFILE_FORM_FIELDS: Array<keyof DataProfileFormValues> = [
@@ -58,6 +123,24 @@ export const DATA_PROFILE_FORM_FIELDS: Array<keyof DataProfileFormValues> = [
 export const CHANGE_PASSWORD_FORM_FIELDS: Array<
   keyof ChangePasswordFormValues
 > = ['currentPassword', 'newPassword'];
+
+export const PHARMACY_CONTACT_FORM_FIELDS: Array<
+  keyof PharmacyContactFormValues
+> = ['address', 'phone', 'email', 'workingHours'];
+
+export const PHARMACY_ABOUT_FORM_FIELDS: Array<keyof PharmacyAboutFormValues> =
+  ['description'];
+
+export const PHARMACY_PAYMENT_FORM_FIELDS: Array<
+  keyof PharmacyPaymentFormValues
+> = [
+  'recipientName',
+  'taxId',
+  'iban',
+  'bankName',
+  'receiptEmail',
+  'paymentPurpose',
+];
 
 //===================================================================
 
@@ -158,3 +241,135 @@ export function validateChangePasswordForm(
 
   return errors;
 }
+
+//===================================================================
+
+export function isPharmacyContactFormDirty(
+  values: PharmacyContactFormValues,
+  initialValues: PharmacyContactFormValues
+): boolean {
+  return PHARMACY_CONTACT_FORM_FIELDS.some(
+    (field) => values[field].trim() !== initialValues[field].trim()
+  );
+}
+
+//===================================================================
+
+export function isPharmacyAboutFormDirty(
+  values: PharmacyAboutFormValues,
+  initialValues: PharmacyAboutFormValues
+): boolean {
+  return PHARMACY_ABOUT_FORM_FIELDS.some(
+    (field) => values[field].trim() !== initialValues[field].trim()
+  );
+}
+
+//===================================================================
+
+export function isPharmacyPaymentFormDirty(
+  values: PharmacyPaymentFormValues,
+  initialValues: PharmacyPaymentFormValues
+): boolean {
+  return PHARMACY_PAYMENT_FORM_FIELDS.some(
+    (field) => values[field].trim() !== initialValues[field].trim()
+  );
+}
+
+//===================================================================
+
+export function validatePharmacyContactForm(
+  values: PharmacyContactFormValues
+): PharmacyContactFormErrors {
+  const errors: PharmacyContactFormErrors = {};
+
+  const addressError = buildAddressError(values.address, {
+    required: true,
+    trailingDot: true,
+  });
+  const phoneError = buildPhoneError(values.phone, {
+    required: true,
+    trailingDot: true,
+  });
+  const emailError = buildEmailError(values.email);
+  const workingHoursError = buildWorkingHoursError(values.workingHours, {
+    required: true,
+    trailingDot: true,
+  });
+
+  if (addressError) errors.address = addressError;
+  if (phoneError) errors.phone = phoneError;
+  if (emailError) errors.email = emailError;
+  if (workingHoursError) errors.workingHours = workingHoursError;
+
+  return errors;
+}
+
+//===================================================================
+
+export function validatePharmacyAboutForm(
+  values: PharmacyAboutFormValues
+): PharmacyAboutFormErrors {
+  const errors: PharmacyAboutFormErrors = {};
+  const descriptionError = buildTextEditorError(values.description, {
+    required: true,
+    trailingDot: true,
+  });
+
+  if (descriptionError) errors.description = descriptionError;
+
+  return errors;
+}
+
+//===================================================================
+
+export function validatePharmacyPaymentForm(
+  values: PharmacyPaymentFormValues
+): PharmacyPaymentFormErrors {
+  const errors: PharmacyPaymentFormErrors = {};
+
+  const recipientNameError = buildNameError(values.recipientName, {
+    required: true,
+    trailingDot: true,
+  });
+  const taxIdError = buildTaxIdError(values.taxId, {
+    required: true,
+    trailingDot: true,
+  });
+  const ibanError = buildIbanError(values.iban, {
+    required: true,
+    trailingDot: true,
+  });
+  const bankNameError = buildNameError(values.bankName, {
+    required: true,
+    trailingDot: true,
+  });
+  const receiptEmailError = buildEmailError(values.receiptEmail);
+  const paymentPurposeError = buildPaymentPurposeError(values.paymentPurpose, {
+    required: true,
+    trailingDot: true,
+  });
+
+  if (recipientNameError) errors.recipientName = recipientNameError;
+  if (taxIdError) errors.taxId = taxIdError;
+  if (ibanError) errors.iban = ibanError;
+  if (bankNameError) errors.bankName = bankNameError;
+  if (receiptEmailError) errors.receiptEmail = receiptEmailError;
+  if (paymentPurposeError) errors.paymentPurpose = paymentPurposeError;
+
+  return errors;
+}
+
+//===================================================================
+
+export {
+  USER_NAME_MAX_LENGTH,
+  USER_EMAIL_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  USER_PASSWORD_MAX_LENGTH,
+  USER_ADDRESS_MAX_LENGTH,
+  WORKING_HOURS_MAX_LENGTH,
+  TEXT_EDITOR_MAX_LENGTH,
+  TAX_ID_MAX_LENGTH,
+  IBAN_MAX_LENGTH,
+  PAYMENT_PURPOSE_MAX_LENGTH,
+};

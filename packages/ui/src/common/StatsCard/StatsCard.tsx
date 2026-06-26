@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import clsx from 'clsx';
 
-import { StatusBadge } from './StatusBadge';
-import type { PharmacyStatusVariant } from './status-types';
+import { StatusBadge } from '../StatusBadge/StatusBadge';
+import type { PharmacyStatusVariant } from '../StatusBadge/status-types';
 
 import css from './StatsCard.module.css';
 

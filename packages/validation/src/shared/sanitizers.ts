@@ -7,6 +7,11 @@ import {
   USER_PHONE_MAX_LENGTH,
   USER_REVIEW_COMMENT_MAX_LENGTH,
   USER_SEARCH_MAX_LENGTH,
+  WORKING_HOURS_MAX_LENGTH,
+  TEXT_EDITOR_MAX_LENGTH,
+  TAX_ID_MAX_LENGTH,
+  IBAN_MAX_LENGTH,
+  PAYMENT_PURPOSE_MAX_LENGTH,
 } from './limits';
 
 //=============================================================================
@@ -74,4 +79,41 @@ export function sanitizeReviewComment(value: string): string {
   return value
     .replace(/[^A-Za-z0-9\s.,!?;:'"()\-]/g, '')
     .slice(0, USER_REVIEW_COMMENT_MAX_LENGTH);
+}
+
+
+//=============================================================================
+
+export function sanitizeWorkingHours(value: string): string {
+  return value
+    .replace(/[^A-Za-z0-9\s.,:;–—'’/#()-]/g, '')
+    .slice(0, WORKING_HOURS_MAX_LENGTH);
+}
+
+//=============================================================================
+
+export function sanitizeTextEditor(value: string): string {
+  return value
+    .replace(/[^A-Za-z0-9\s.,!?;:'"()\-–—/#%+\n\r]/g, '')
+    .slice(0, TEXT_EDITOR_MAX_LENGTH);
+}
+
+//=============================================================================
+
+export function sanitizeTaxId(value: string): string {
+  return value.replace(/\D/g, '').slice(0, TAX_ID_MAX_LENGTH);
+}
+
+//=============================================================================
+
+export function sanitizeIban(value: string): string {
+  return value.replace(/\s/g, '').toUpperCase().slice(0, IBAN_MAX_LENGTH);
+}
+
+//=============================================================================
+
+export function sanitizePaymentPurpose(value: string): string {
+  return value
+    .replace(/[^A-Za-z0-9\s.,!?;:'"()\-]/g, '')
+    .slice(0, PAYMENT_PURPOSE_MAX_LENGTH);
 }

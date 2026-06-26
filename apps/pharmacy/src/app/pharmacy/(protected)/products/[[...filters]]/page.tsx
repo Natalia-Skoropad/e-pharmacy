@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import { getProductsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
 import { parsePharmacyProductFilters } from '@/lib/pharmacy/routes';
 
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
-import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
+import { CabinetPage } from '@e-pharmacy/ui/common';
+import { PlaceholderCards } from '@e-pharmacy/ui/common';
 
 //===================================================================
 
@@ -26,7 +26,7 @@ async function ProductsPage({ params }: ProductsPageProps) {
   const parsedFilters = parsePharmacyProductFilters(filters);
 
   return (
-    <PharmacyPage
+    <CabinetPage
       title="Own products"
       description="Own products table skeleton with category, status, stock, article, name, and date filters."
       breadcrumbs={getProductsBreadcrumbs()}
@@ -45,7 +45,7 @@ async function ProductsPage({ params }: ProductsPageProps) {
           'Status',
         ]}
       />
-    </PharmacyPage>
+    </CabinetPage>
   );
 }
 

@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 
 import { getClientDetailsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
 
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
-import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
+import { CabinetPage } from '@e-pharmacy/ui/common';
+import { PlaceholderCards } from '@e-pharmacy/ui/common';
 
 //===================================================================
 
@@ -24,7 +24,7 @@ async function ClientDetailsPage({ params }: ClientDetailsPageProps) {
   const { clientId } = await params;
 
   return (
-    <PharmacyPage
+    <CabinetPage
       title={`Client ${clientId}`}
       description="Readonly client details skeleton with related pharmacy orders only."
       breadcrumbs={getClientDetailsBreadcrumbs(clientId)}
@@ -38,7 +38,7 @@ async function ClientDetailsPage({ params }: ClientDetailsPageProps) {
           'Related orders table',
         ]}
       />
-    </PharmacyPage>
+    </CabinetPage>
   );
 }
 

@@ -1,10 +1,10 @@
 import { Breadcrumbs, type BreadcrumbItem } from '@e-pharmacy/ui/layout';
 
-import css from './PharmacyPage.module.css';
+import css from './CabinetPage.module.css';
 
 //===================================================================
 
-type PharmacyPageProps = Readonly<{
+type CabinetPageProps = Readonly<{
   title: string;
   description: string;
   breadcrumbs?: BreadcrumbItem[];
@@ -13,12 +13,12 @@ type PharmacyPageProps = Readonly<{
 
 //===================================================================
 
-export function PharmacyPage({
+export function CabinetPage({
   title,
   description,
   children,
   breadcrumbs = [{ label: 'Dashboard', href: '/pharmacy/dashboard' }, { label: title }],
-}: PharmacyPageProps) {
+}: CabinetPageProps) {
   return (
     <main className={css.page}>
       <Breadcrumbs items={breadcrumbs} className={css.breadcrumbs} />

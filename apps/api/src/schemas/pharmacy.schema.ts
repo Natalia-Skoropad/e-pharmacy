@@ -4,6 +4,16 @@ import {
   sharedReviewCommentSchema,
   sharedReviewRatingSchema,
   sharedSearchSchema,
+  sharedEmailSchema,
+  sharedNameSchema,
+  sharedRequiredAddressSchema,
+  sharedRequiredPhoneSchema,
+  sharedPictureUrlSchema,
+  sharedOptionalWorkingHoursSchema,
+  sharedOptionalTextEditorSchema,
+  sharedOptionalTaxIdSchema,
+  sharedOptionalIbanSchema,
+  sharedOptionalPaymentPurposeSchema,
 } from './shared-validation.schema';
 
 //===============================================================
@@ -79,4 +89,38 @@ export const moderatePharmacyReviewSchema = z.object({
 export const createPharmacyReviewSchema = z.object({
   rating: sharedReviewRatingSchema,
   comment: sharedReviewCommentSchema,
+});
+
+
+//===============================================================
+
+export const updateMyPharmacyProfileSchema = z
+  .object({
+    name: sharedNameSchema.optional(),
+    address: sharedRequiredAddressSchema.optional(),
+    city: sharedSearchSchema,
+    phone: sharedRequiredPhoneSchema.optional(),
+    email: sharedEmailSchema.optional(),
+    workingHours: sharedOptionalWorkingHoursSchema,
+    imageUrl: sharedPictureUrlSchema,
+    description: sharedOptionalTextEditorSchema,
+    bankDetails: z
+      .object({
+        recipientName: sharedNameSchema.optional(),
+        taxId: sharedOptionalTaxIdSchema,
+        iban: sharedOptionalIbanSchema,
+        bankName: sharedNameSchema.optional(),
+        receiptEmail: sharedEmailSchema.optional(),
+        paymentPurpose: sharedOptionalPaymentPurposeSchema,
+      })
+      .optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field is required',
+  });
+
+//===============================================================
+
+export const sendMyPharmacyForVerificationSchema = z.object({
+  comment: z.string().trim().max(500).optional(),
 });

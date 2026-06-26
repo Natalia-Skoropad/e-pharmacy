@@ -1,17 +1,17 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { KeyRound, MonitorSmartphone } from 'lucide-react';
 
 import {
   Button,
   Container,
   LoadingSpinner,
-  PharmacyAboutFields,
   PictureCard,
   ReviewsList,
   Tabs,
+  TextEditor,
   WorkingHoursInput,
 } from '@e-pharmacy/ui/common';
 
@@ -28,10 +28,67 @@ import {
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { useAuth } from '@e-pharmacy/auth/core';
+import { formatCapitalizedLabel } from '@e-pharmacy/utils/formatters';
+
+import {
+  CHANGE_PASSWORD_FORM_FIELDS,
+  CHANGE_PASSWORD_INITIAL_VALUES,
+  DATA_PROFILE_FORM_FIELDS,
+  PICTURE_ACCEPT,
+  PHARMACY_ABOUT_FORM_FIELDS,
+  PHARMACY_PAYMENT_FORM_FIELDS,
+  PHARMACY_CONTACT_FORM_FIELDS,
+  PAYMENT_PURPOSE_MAX_LENGTH,
+  USER_ADDRESS_MAX_LENGTH,
+  USER_EMAIL_MAX_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_PASSWORD_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  WORKING_HOURS_MAX_LENGTH,
+  TEXT_EDITOR_MAX_LENGTH,
+  TAX_ID_MAX_LENGTH,
+  IBAN_MAX_LENGTH,
+  buildPictureFileError,
+  buildPictureUrlError,
+  hasValidationErrors,
+  isChangePasswordFormDirty,
+  isChangePasswordFormValid,
+  isDataProfileFormDirty,
+  isDataProfileFormValid,
+  isPharmacyAboutFormDirty,
+  isPharmacyContactFormDirty,
+  isPharmacyPaymentFormDirty,
+  markAllFieldsTouched,
+  sanitizeAddress,
+  sanitizeEmail,
+  sanitizeIban,
+  sanitizeName,
+  sanitizePassword,
+  sanitizePaymentPurpose,
+  sanitizePhone,
+  sanitizeTaxId,
+  sanitizeTextEditor,
+  sanitizeWorkingHours,
+  validateChangePasswordForm,
+  validateDataProfileForm,
+  validatePharmacyAboutForm,
+  validatePharmacyContactForm,
+  validatePharmacyPaymentForm,
+  type ChangePasswordFormValues,
+  type ChangePasswordTouchedFields,
+  type DataProfileFormValues,
+  type DataProfileTouchedFields,
+  type PharmacyAboutFormValues,
+  type PharmacyAboutTouchedFields,
+  type PharmacyContactFormValues,
+  type PharmacyContactTouchedFields,
+  type PharmacyPaymentFormValues,
+  type PharmacyPaymentTouchedFields,
+} from '@e-pharmacy/validation';
 
 import { getProfileBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
-import { PageLoader } from '@/components/pharmacy/PageLoader';
 
 import css from './PharmacyProfilePageContent.module.css';
 
@@ -47,58 +104,18 @@ type ProfileTab =
   | 'reviews'
   | 'sessions';
 
-type TouchedMap<T extends string> = Partial<Record<T, boolean>>;
-
-type OwnerDataValues = {
-  name: string;
-  phone: string;
-};
-
-type PasswordValues = {
-  currentPassword: string;
-  newPassword: string;
-};
-
-type PharmacyDataValues = {
-  address: string;
-  phone: string;
-  email: string;
-  workingHours: string;
-};
-
-type AboutValues = {
-  description: string;
-};
-
-type PaymentValues = {
-  recipientName: string;
-  taxId: string;
-  iban: string;
-  bankName: string;
-  receiptEmail: string;
-  paymentPurpose: string;
-};
+type PharmacyStatus = 'new' | 'on_moderation' | 'active';
 
 //===================================================================
-
-const USER_NAME_MAX_LENGTH = 50;
-const PHONE_MAX_LENGTH = 13;
-const EMAIL_MAX_LENGTH = 64;
-const PASSWORD_MAX_LENGTH = 20;
-const ADDRESS_MAX_LENGTH = 200;
-const WORKING_HOURS_MAX_LENGTH = 160;
-const PAYMENT_PURPOSE_MAX_LENGTH = 500;
 
 const INITIAL_VISIBLE_REVIEWS_COUNT = 10;
-
-//===================================================================
 
 const TABS: Array<{ value: ProfileTab; label: string }> = [
   { value: 'data', label: 'My data' },
   { value: 'pharmacy-data', label: 'Pharmacy data' },
   { value: 'about', label: 'About pharmacy' },
   { value: 'payment', label: 'Payment details' },
-  { value: 'reviews', label: 'Reviews (13)' },
+  { value: 'reviews', label: 'Reviews' },
   { value: 'sessions', label: 'Active sessions' },
 ];
 
@@ -117,7 +134,7 @@ const DEMO_REVIEWS = [
     rating: 5,
     createdAt: '2026-04-06T12:00:00.000Z',
     comment:
-      'I was checking several options and this one looked the most convenient because the description, price, rating, and pharmacy information were easy to understand. The product was prepared on time, and the checkout flow felt simple.',
+      'The order was prepared on time, the staff answered questions calmly, and the checkout flow felt simple. Long reviews are useful for testing that the layout remains readable.',
   },
   {
     id: 'review-3',
@@ -125,7 +142,7 @@ const DEMO_REVIEWS = [
     rating: 4,
     createdAt: '2026-04-05T12:00:00.000Z',
     comment:
-      'The order was processed quickly, the product page had clear details, and the pharmacy staff explained the pickup process very politely. I liked that the information about availability matched the real stock.',
+      'The product page had clear details, pickup was explained politely, and availability matched the real stock when I arrived.',
   },
   {
     id: 'review-4',
@@ -133,7 +150,7 @@ const DEMO_REVIEWS = [
     rating: 5,
     createdAt: '2026-04-04T12:00:00.000Z',
     comment:
-      'The product name, package size and price were clear, and the pharmacy had enough stock when I came to collect the order. Detailed feedback helps compare pharmacies before making a purchase.',
+      'The product name, package size, price, and pharmacy contacts were easy to find. It helps compare offers before making a purchase.',
   },
   ...Array.from({ length: 9 }, (_, index) => ({
     id: `review-extra-${index + 1}`,
@@ -162,65 +179,46 @@ const DEMO_SESSIONS = [
 
 //===================================================================
 
-function isRequired(value: string) {
-  return value.trim().length > 0;
+function createOwnerInitialValues(user: AuthUser): DataProfileFormValues {
+  return {
+    name: user.name ?? '',
+    phone: user.phone ?? '',
+    address: '',
+  };
 }
 
-function sanitizePhone(value: string) {
-  return value.replace(/[^(+\d)]/g, '').slice(0, PHONE_MAX_LENGTH);
+function createPharmacyInitialValues(user: AuthUser): PharmacyContactFormValues {
+  return {
+    address: '12 Central Street, Kyiv',
+    phone: user.phone || '+380501112233',
+    email: user.email || 'green.cross@example.com',
+    workingHours: 'Mon–Fri: 08:00–20:00, Sat–Sun: 09:00–18:00',
+  };
 }
 
-function sanitizeTaxId(value: string) {
-  return value.replace(/\D/g, '').slice(0, 10);
+function createAboutInitialValues(): PharmacyAboutFormValues {
+  return {
+    description:
+      'Green Cross Pharmacy helps clients quickly reserve products, compare availability, and pick up orders safely.',
+  };
 }
 
-function sanitizeIban(value: string) {
-  return value.replace(/\s/g, '').toUpperCase().slice(0, 29);
+function createPaymentInitialValues(user: AuthUser): PharmacyPaymentFormValues {
+  return {
+    recipientName: 'Green Cross Pharmacy LLC',
+    taxId: '12345678',
+    iban: 'UA123456789012345678901234567',
+    bankName: 'E-PHARMACY Bank',
+    receiptEmail: user.email || 'green.cross@example.com',
+    paymentPurpose: 'Payment for reserved pharmacy products.',
+  };
 }
 
-function validateEmail(value: string) {
-  if (!isRequired(value)) return 'Email is required.';
-  if (!/^\S+@\S+\.\S+$/.test(value)) return 'Enter a valid email.';
-  return '';
-}
-
-function validatePhone(value: string) {
-  if (!isRequired(value)) return 'Phone is required.';
-  if (!/^\+380\d{9}$/.test(value)) return 'Use format +380XXXXXXXXX.';
-  return '';
-}
-
-function validateTaxId(value: string) {
-  if (!isRequired(value)) return 'Tax ID / EDRPOU is required.';
-  if (!/^\d{8,10}$/.test(value)) return 'Use 8–10 digits.';
-  return '';
-}
-
-function validateIban(value: string) {
-  if (!isRequired(value)) return 'IBAN is required.';
-  if (!/^UA\d{27}$/.test(value)) return 'Use UA + 27 digits.';
-  return '';
-}
-
-function isDirty<T extends Record<string, string>>(values: T, initialValues: T) {
-  return Object.keys(values).some(
-    (key) => values[key as keyof T] !== initialValues[key as keyof T]
-  );
-}
-
-function hasErrors(errors: Record<string, string>) {
-  return Object.values(errors).some(Boolean);
-}
-
-function markTouched<T extends string>(fields: T[]): TouchedMap<T> {
-  return fields.reduce<TouchedMap<T>>((acc, field) => {
-    acc[field] = true;
-    return acc;
-  }, {});
-}
-
-function formatCapitalized(value: string) {
-  return value ? `${value[0]?.toUpperCase()}${value.slice(1)}` : value;
+function createTouchedUpdater<TValues extends object>(
+  setTouched: Dispatch<SetStateAction<Partial<Record<keyof TValues, boolean>>>>,
+  field: keyof TValues
+) {
+  setTouched((current) => ({ ...current, [field]: true }));
 }
 
 //===================================================================
@@ -232,7 +230,7 @@ function PharmacyProfilePageContent() {
     return <PageLoader label="Loading pharmacy profile..." />;
   }
 
-  return <PharmacyProfilePage user={user} />;
+  return <PharmacyProfilePage key={user.id ?? user.email} user={user} />;
 }
 
 type PharmacyProfilePageProps = Readonly<{
@@ -242,254 +240,100 @@ type PharmacyProfilePageProps = Readonly<{
 function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
-  const [isPictureSaving, setIsPictureSaving] = useState(false);
-  const [pictureUrl, setPictureUrl] = useState<string | null>(
-    user?.pictureUrl ?? null
-  );
-  const [pharmacyPictureUrl, setPharmacyPictureUrl] = useState<string | null>(
-    null
-  );
-  const [isPharmacyPictureSaving, setIsPharmacyPictureSaving] = useState(false);
-  const [isOwnerSaving, setIsOwnerSaving] = useState(false);
-  const [isPasswordSaving, setIsPasswordSaving] = useState(false);
-  const [isPharmacySaving, setIsPharmacySaving] = useState(false);
+  const [pharmacyStatus, setPharmacyStatus] = useState<PharmacyStatus>('new');
+
+  const ownerInitialValues = useMemo(() => createOwnerInitialValues(user), [user]);
+  const pharmacyInitialSeed = useMemo(() => createPharmacyInitialValues(user), [user]);
+  const paymentInitialSeed = useMemo(() => createPaymentInitialValues(user), [user]);
+  const aboutInitialSeed = useMemo(() => createAboutInitialValues(), []);
+
+  const [ownerValues, setOwnerValues] = useState<DataProfileFormValues>(ownerInitialValues);
+  const [initialOwnerValues, setInitialOwnerValues] = useState<DataProfileFormValues>(ownerInitialValues);
+  const [ownerTouched, setOwnerTouched] = useState<DataProfileTouchedFields>({});
+
+  const [passwordValues, setPasswordValues] = useState<ChangePasswordFormValues>(CHANGE_PASSWORD_INITIAL_VALUES);
+  const [passwordTouched, setPasswordTouched] = useState<ChangePasswordTouchedFields>({});
   const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
-  const [isVerificationSent, setIsVerificationSent] = useState(false);
 
-  const initialOwnerValues = useMemo<OwnerDataValues>(
-    () => ({
-      name: user?.name ?? '',
-      phone: user?.phone ?? '',
-    }),
-    [user?.name, user?.phone]
-  );
+  const [pictureUrl, setPictureUrl] = useState<string | null>(user.pictureUrl ?? null);
+  const [pharmacyPictureUrl, setPharmacyPictureUrl] = useState<string | null>(null);
 
-  const [ownerValues, setOwnerValues] = useState<OwnerDataValues>({
-    name: user?.name ?? '',
-    phone: user?.phone ?? '',
-  });
+  const [pharmacyValues, setPharmacyValues] = useState<PharmacyContactFormValues>(pharmacyInitialSeed);
+  const [initialPharmacyValues, setInitialPharmacyValues] = useState<PharmacyContactFormValues>(pharmacyInitialSeed);
+  const [pharmacyTouched, setPharmacyTouched] = useState<PharmacyContactTouchedFields>({});
 
-  const [ownerTouched, setOwnerTouched] = useState<TouchedMap<keyof OwnerDataValues>>({});
+  const [aboutValues, setAboutValues] = useState<PharmacyAboutFormValues>(aboutInitialSeed);
+  const [initialAboutValues, setInitialAboutValues] = useState<PharmacyAboutFormValues>(aboutInitialSeed);
+  const [aboutTouched, setAboutTouched] = useState<PharmacyAboutTouchedFields>({});
 
-  const [passwordValues, setPasswordValues] = useState<PasswordValues>({
-    currentPassword: '',
-    newPassword: '',
-  });
+  const [paymentValues, setPaymentValues] = useState<PharmacyPaymentFormValues>(paymentInitialSeed);
+  const [initialPaymentValues, setInitialPaymentValues] = useState<PharmacyPaymentFormValues>(paymentInitialSeed);
+  const [paymentTouched, setPaymentTouched] = useState<PharmacyPaymentTouchedFields>({});
 
-  const [passwordTouched, setPasswordTouched] = useState<TouchedMap<keyof PasswordValues>>({});
+  const [isOwnerSaving, setIsOwnerSaving] = useState(false);
+  const [isPasswordSaving, setIsPasswordSaving] = useState(false);
+  const [isPictureSaving, setIsPictureSaving] = useState(false);
+  const [isPharmacyPictureSaving, setIsPharmacyPictureSaving] = useState(false);
+  const [isPharmacySaving, setIsPharmacySaving] = useState(false);
 
-  const [pharmacyValues, setPharmacyValues] = useState<PharmacyDataValues>({
-    address: '12 Central Street, Kyiv',
-    phone: user?.phone ?? '+380501112233',
-    email: user?.email ?? 'green.cross@example.com',
-    workingHours: 'Mon–Fri: 08:00–20:00, Sat–Sun: 09:00–18:00',
-  });
+  const ownerErrors = useMemo(() => validateDataProfileForm(ownerValues), [ownerValues]);
+  const passwordErrors = useMemo(() => validateChangePasswordForm(passwordValues), [passwordValues]);
+  const pharmacyErrors = useMemo(() => validatePharmacyContactForm(pharmacyValues), [pharmacyValues]);
+  const aboutErrors = useMemo(() => validatePharmacyAboutForm(aboutValues), [aboutValues]);
+  const paymentErrors = useMemo(() => validatePharmacyPaymentForm(paymentValues), [paymentValues]);
 
-  const [initialPharmacyValues, setInitialPharmacyValues] = useState<PharmacyDataValues>(pharmacyValues);
-  const [pharmacyTouched, setPharmacyTouched] = useState<TouchedMap<keyof PharmacyDataValues>>({});
-
-  const [aboutValues, setAboutValues] = useState<AboutValues>({
-    description:
-      'Green Cross Pharmacy helps clients quickly reserve products, compare availability, and pick up orders safely.',
-  });
-
-  const [initialAboutValues, setInitialAboutValues] = useState<AboutValues>(aboutValues);
-  const [aboutTouched, setAboutTouched] = useState<TouchedMap<keyof AboutValues>>({});
-
-  const [paymentValues, setPaymentValues] = useState<PaymentValues>({
-    recipientName: 'Green Cross Pharmacy LLC',
-    taxId: '12345678',
-    iban: 'UA123456789012345678901234567',
-    bankName: 'E-PHARMACY Bank',
-    receiptEmail: user?.email ?? 'green.cross@example.com',
-    paymentPurpose: 'Payment for reserved pharmacy products.',
-  });
-
-  const [initialPaymentValues, setInitialPaymentValues] = useState<PaymentValues>(paymentValues);
-  const [paymentTouched, setPaymentTouched] = useState<TouchedMap<keyof PaymentValues>>({});
-
-
-  const status = isVerificationSent ? 'on verification' : 'new';
-  const isModerationLocked = status === 'on verification';
-
-  const ownerErrors = {
-    name: isRequired(ownerValues.name) ? '' : 'Name is required.',
-    phone: validatePhone(ownerValues.phone),
-  };
-
-  const passwordErrors = {
-    currentPassword: isRequired(passwordValues.currentPassword)
-      ? ''
-      : 'Current password is required.',
-    newPassword:
-      passwordValues.newPassword.length >= 6
-        ? ''
-        : 'Password must contain at least 6 characters.',
-  };
-
-  const pharmacyErrors = {
-    address: isRequired(pharmacyValues.address) ? '' : 'Address is required.',
-    phone: validatePhone(pharmacyValues.phone),
-    email: validateEmail(pharmacyValues.email),
-    workingHours: isRequired(pharmacyValues.workingHours)
-      ? ''
-      : 'Working hours are required.',
-  };
-
-  const aboutErrors = {
-    description: isRequired(aboutValues.description)
-      ? ''
-      : 'Pharmacy description is required.',
-  };
-
-  const paymentErrors = {
-    recipientName: isRequired(paymentValues.recipientName)
-      ? ''
-      : 'Recipient name is required.',
-    taxId: validateTaxId(paymentValues.taxId),
-    iban: validateIban(paymentValues.iban),
-    bankName: isRequired(paymentValues.bankName) ? '' : 'Bank name is required.',
-    receiptEmail: validateEmail(paymentValues.receiptEmail),
-    paymentPurpose: isRequired(paymentValues.paymentPurpose)
-      ? ''
-      : 'Payment purpose is required.',
-  };
+  const ownerFormIsDirty = isDataProfileFormDirty(ownerValues, initialOwnerValues);
+  const ownerFormIsValid = isDataProfileFormValid(ownerValues);
+  const passwordFormIsDirty = isChangePasswordFormDirty(passwordValues);
+  const passwordFormIsValid = isChangePasswordFormValid(passwordValues);
+  const pharmacyFormIsDirty = isPharmacyContactFormDirty(pharmacyValues, initialPharmacyValues);
+  const aboutFormIsDirty = isPharmacyAboutFormDirty(aboutValues, initialAboutValues);
+  const paymentFormIsDirty = isPharmacyPaymentFormDirty(paymentValues, initialPaymentValues);
+  const isModerationLocked = pharmacyStatus === 'on_moderation';
 
   const canSendForVerification =
-    !hasErrors(pharmacyErrors) &&
-    !hasErrors(aboutErrors) &&
-    !hasErrors(paymentErrors) &&
+    !hasValidationErrors(pharmacyErrors) &&
+    !hasValidationErrors(aboutErrors) &&
+    !hasValidationErrors(paymentErrors) &&
     !isModerationLocked;
 
-  const ownerFormIsDirty = isDirty(ownerValues, initialOwnerValues);
-  const pharmacyFormIsDirty = isDirty(pharmacyValues, initialPharmacyValues);
-  const aboutFormIsDirty = isDirty(aboutValues, initialAboutValues);
-  const paymentFormIsDirty = isDirty(paymentValues, initialPaymentValues);
-
   const tabs = useMemo(
-    () => TABS.map((tab) => (tab.value === 'reviews' ? { ...tab, label: `Reviews (${DEMO_REVIEWS.length})` } : tab)),
+    () =>
+      TABS.map((tab) =>
+        tab.value === 'reviews'
+          ? { ...tab, label: `Reviews (${DEMO_REVIEWS.length})` }
+          : tab
+      ),
     []
   );
 
-  const handleOwnerChange = (field: keyof OwnerDataValues, value: string) => {
-    setOwnerTouched((current) => ({ ...current, [field]: true }));
+  const handleOwnerChange = (field: keyof DataProfileFormValues, value: string) => {
+    createTouchedUpdater(setOwnerTouched, field);
     setOwnerValues((current) => ({ ...current, [field]: value }));
   };
 
-  const handlePasswordChange = (field: keyof PasswordValues, value: string) => {
-    setPasswordTouched((current) => ({ ...current, [field]: true }));
+  const handlePasswordChange = (field: keyof ChangePasswordFormValues, value: string) => {
+    createTouchedUpdater(setPasswordTouched, field);
     setPasswordValues((current) => ({ ...current, [field]: value }));
   };
 
-  const handlePharmacyChange = (field: keyof PharmacyDataValues, value: string) => {
-    setPharmacyTouched((current) => ({ ...current, [field]: true }));
+  const handlePharmacyChange = (field: keyof PharmacyContactFormValues, value: string) => {
+    createTouchedUpdater(setPharmacyTouched, field);
     setPharmacyValues((current) => ({ ...current, [field]: value }));
   };
 
   const handleAboutChange = (value: string) => {
-    setAboutTouched({ description: true });
+    setAboutTouched((current) => ({ ...current, description: true }));
     setAboutValues({ description: value });
   };
 
-  const handlePaymentChange = (field: keyof PaymentValues, value: string) => {
-    setPaymentTouched((current) => ({ ...current, [field]: true }));
+  const handlePaymentChange = (field: keyof PharmacyPaymentFormValues, value: string) => {
+    createTouchedUpdater(setPaymentTouched, field);
     setPaymentValues((current) => ({ ...current, [field]: value }));
   };
 
-  const handleOwnerSubmit = () => {
-    setOwnerTouched(markTouched(['name', 'phone']));
-
-    if (hasErrors(ownerErrors) || !ownerFormIsDirty) return;
-
-    setIsOwnerSaving(true);
-    window.setTimeout(() => {
-      setIsOwnerSaving(false);
-      toast.success('Owner data saved successfully.');
-    }, 350);
-  };
-
-  const handlePasswordSubmit = () => {
-    setPasswordTouched(markTouched(['currentPassword', 'newPassword']));
-
-    if (hasErrors(passwordErrors)) return;
-
-    setIsPasswordSaving(true);
-    window.setTimeout(() => {
-      setIsPasswordSaving(false);
-      setPasswordValues({ currentPassword: '', newPassword: '' });
-      setPasswordTouched({});
-      toast.success('Password changed successfully.');
-    }, 350);
-  };
-
-  const handlePharmacySubmit = () => {
-    setPharmacyTouched(markTouched(['address', 'phone', 'email', 'workingHours']));
-
-    if (hasErrors(pharmacyErrors) || !pharmacyFormIsDirty || isModerationLocked) return;
-
-    setIsPharmacySaving(true);
-    window.setTimeout(() => {
-      setInitialPharmacyValues(pharmacyValues);
-      setIsPharmacySaving(false);
-      toast.success('Pharmacy data saved successfully.');
-    }, 350);
-  };
-
-  const handleAboutSubmit = () => {
-    setAboutTouched(markTouched(['description']));
-
-    if (hasErrors(aboutErrors) || !aboutFormIsDirty || isModerationLocked) return;
-
-    setIsPharmacySaving(true);
-    window.setTimeout(() => {
-      setInitialAboutValues(aboutValues);
-      setIsPharmacySaving(false);
-      toast.success('About pharmacy saved successfully.');
-    }, 350);
-  };
-
-  const handlePaymentSubmit = () => {
-    setPaymentTouched(
-      markTouched([
-        'recipientName',
-        'taxId',
-        'iban',
-        'bankName',
-        'receiptEmail',
-        'paymentPurpose',
-      ])
-    );
-
-    if (hasErrors(paymentErrors) || !paymentFormIsDirty || isModerationLocked) return;
-
-    setIsPharmacySaving(true);
-    window.setTimeout(() => {
-      setInitialPaymentValues(paymentValues);
-      setIsPharmacySaving(false);
-      toast.success('Payment details saved successfully.');
-    }, 350);
-  };
-
-  const handleSendForVerification = () => {
-    setPharmacyTouched(markTouched(['address', 'phone', 'email', 'workingHours']));
-    setAboutTouched(markTouched(['description']));
-    setPaymentTouched(
-      markTouched([
-        'recipientName',
-        'taxId',
-        'iban',
-        'bankName',
-        'receiptEmail',
-        'paymentPurpose',
-      ])
-    );
-
-    if (!canSendForVerification) return;
-
-    setIsVerificationSent(true);
-    toast.success('Pharmacy profile was sent for verification.');
-  };
+  const handlePictureError = (message: string) => toast.error(message);
 
   const handleProfilePictureChange = async (nextPictureUrl: string | null) => {
     setIsPictureSaving(true);
@@ -497,7 +341,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       setPictureUrl(nextPictureUrl);
       setIsPictureSaving(false);
       toast.success(nextPictureUrl ? 'Profile photo was updated.' : 'Profile photo was removed.');
-    }, 300);
+    }, 250);
   };
 
   const handlePharmacyPictureChange = async (nextPictureUrl: string | null) => {
@@ -506,7 +350,88 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       setPharmacyPictureUrl(nextPictureUrl);
       setIsPharmacyPictureSaving(false);
       toast.success(nextPictureUrl ? 'Pharmacy photo was updated.' : 'Pharmacy photo was removed.');
-    }, 300);
+    }, 250);
+  };
+
+  const handleOwnerSubmit = () => {
+    setOwnerTouched(markAllFieldsTouched(DATA_PROFILE_FORM_FIELDS));
+
+    if (!ownerFormIsValid || !ownerFormIsDirty) return;
+
+    setIsOwnerSaving(true);
+    window.setTimeout(() => {
+      setInitialOwnerValues(ownerValues);
+      setOwnerTouched({});
+      setIsOwnerSaving(false);
+      toast.success('Owner data saved successfully.');
+    }, 350);
+  };
+
+  const handlePasswordSubmit = () => {
+    setPasswordTouched(markAllFieldsTouched(CHANGE_PASSWORD_FORM_FIELDS));
+
+    if (!passwordFormIsValid || !passwordFormIsDirty) return;
+
+    setIsPasswordSaving(true);
+    window.setTimeout(() => {
+      setPasswordValues(CHANGE_PASSWORD_INITIAL_VALUES);
+      setPasswordTouched({});
+      setIsPasswordSaving(false);
+      toast.success('Password changed successfully.');
+    }, 350);
+  };
+
+  const handlePharmacySubmit = () => {
+    setPharmacyTouched(markAllFieldsTouched(PHARMACY_CONTACT_FORM_FIELDS));
+
+    if (hasValidationErrors(pharmacyErrors) || !pharmacyFormIsDirty || isModerationLocked) return;
+
+    setIsPharmacySaving(true);
+    window.setTimeout(() => {
+      setInitialPharmacyValues(pharmacyValues);
+      setPharmacyTouched({});
+      setIsPharmacySaving(false);
+      toast.success('Pharmacy data saved successfully.');
+    }, 350);
+  };
+
+  const handleAboutSubmit = () => {
+    setAboutTouched(markAllFieldsTouched(PHARMACY_ABOUT_FORM_FIELDS));
+
+    if (hasValidationErrors(aboutErrors) || !aboutFormIsDirty || isModerationLocked) return;
+
+    setIsPharmacySaving(true);
+    window.setTimeout(() => {
+      setInitialAboutValues(aboutValues);
+      setAboutTouched({});
+      setIsPharmacySaving(false);
+      toast.success('About pharmacy saved successfully.');
+    }, 350);
+  };
+
+  const handlePaymentSubmit = () => {
+    setPaymentTouched(markAllFieldsTouched(PHARMACY_PAYMENT_FORM_FIELDS));
+
+    if (hasValidationErrors(paymentErrors) || !paymentFormIsDirty || isModerationLocked) return;
+
+    setIsPharmacySaving(true);
+    window.setTimeout(() => {
+      setInitialPaymentValues(paymentValues);
+      setPaymentTouched({});
+      setIsPharmacySaving(false);
+      toast.success('Payment details saved successfully.');
+    }, 350);
+  };
+
+  const handleSendForVerification = () => {
+    setPharmacyTouched(markAllFieldsTouched(PHARMACY_CONTACT_FORM_FIELDS));
+    setAboutTouched(markAllFieldsTouched(PHARMACY_ABOUT_FORM_FIELDS));
+    setPaymentTouched(markAllFieldsTouched(PHARMACY_PAYMENT_FORM_FIELDS));
+
+    if (!canSendForVerification) return;
+
+    setPharmacyStatus('on_moderation');
+    toast.success('Pharmacy profile was sent for verification.');
   };
 
   return (
@@ -520,7 +445,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
           </h1>
 
           <p className={css.text}>
-            Manage your pharmacy profile, contact details, payment details, and reviews.
+            Manage owner data, pharmacy public data, payment details, reviews, and sessions.
           </p>
 
           <div className={css.profileShell}>
@@ -529,8 +454,11 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                 name={user.name}
                 pictureUrl={pictureUrl}
                 isSaving={isPictureSaving}
+                accept={PICTURE_ACCEPT}
+                validateFile={(file) => buildPictureFileError(file) || null}
+                validatePictureUrl={(nextPictureUrl) => buildPictureUrlError(nextPictureUrl) || null}
                 onChange={handleProfilePictureChange}
-                onError={toast.error}
+                onError={handlePictureError}
               />
 
               <div className={css.nameBlock}>
@@ -541,20 +469,20 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
               <dl className={css.compactDetails}>
                 <div>
                   <dt>Role</dt>
-                  <dd>{formatCapitalized(user.role)}</dd>
+                  <dd>{formatCapitalizedLabel(user.role)}</dd>
                 </div>
                 <div>
                   <dt>Status</dt>
-                  <dd>{formatCapitalized(status)}</dd>
+                  <dd>{formatCapitalizedLabel(pharmacyStatus)}</dd>
                 </div>
               </dl>
 
               <div className={css.statusNote}>
-                <h3>{isVerificationSent ? 'Verification requested' : 'Verification required'}</h3>
+                <h3>{pharmacyStatus === 'on_moderation' ? 'Verification requested' : 'Verification required'}</h3>
                 <p>
-                  {isVerificationSent
-                    ? 'Your pharmacy data is waiting for Admin review.'
-                    : 'Complete all required pharmacy data, about pharmacy, and payment details to send the pharmacy for verification.'}
+                  {pharmacyStatus === 'on_moderation'
+                    ? 'Your pharmacy data is waiting for admin review.'
+                    : 'Complete required pharmacy data, about pharmacy, and payment details before sending the pharmacy for verification.'}
                 </p>
               </div>
 
@@ -564,7 +492,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                 disabled={!canSendForVerification}
                 onClick={handleSendForVerification}
               >
-                {isVerificationSent ? 'Waiting for verification' : 'Send for verification'}
+                {pharmacyStatus === 'active' ? 'Send for moderation' : 'Send for verification'}
               </Button>
             </aside>
 
@@ -596,9 +524,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         name="ownerName"
                         value={ownerValues.name}
                         error={ownerErrors.name}
-                        isTouched={ownerTouched.name}
+                        isTouched={Boolean(ownerTouched.name)}
                         maxLength={USER_NAME_MAX_LENGTH}
-                        onChange={(event) => handleOwnerChange('name', event.target.value)}
+                        onChange={(event) => handleOwnerChange('name', sanitizeName(event.target.value))}
                       />
 
                       <PhoneInput
@@ -606,15 +534,15 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         name="ownerPhone"
                         value={ownerValues.phone}
                         error={ownerErrors.phone}
-                        isTouched={ownerTouched.phone}
-                        maxLength={PHONE_MAX_LENGTH}
+                        isTouched={Boolean(ownerTouched.phone)}
+                        maxLength={USER_PHONE_MAX_LENGTH}
                         onChange={(event) => handleOwnerChange('phone', sanitizePhone(event.target.value))}
                       />
                     </div>
 
                     <Button
                       type="button"
-                      disabled={hasErrors(ownerErrors) || !ownerFormIsDirty || isOwnerSaving}
+                      disabled={!ownerFormIsValid || !ownerFormIsDirty || isOwnerSaving}
                       isLoading={isOwnerSaving}
                       loadingLabel="Saving..."
                       onClick={handleOwnerSubmit}
@@ -639,9 +567,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         value={passwordValues.currentPassword}
                         autoComplete="current-password"
                         error={passwordErrors.currentPassword}
-                        isTouched={passwordTouched.currentPassword}
+                        isTouched={Boolean(passwordTouched.currentPassword)}
                         isVisible={isCurrentPasswordVisible}
-                        maxLength={PASSWORD_MAX_LENGTH}
+                        maxLength={USER_PASSWORD_MAX_LENGTH}
                         onChange={(event) => handlePasswordChange('currentPassword', event.target.value)}
                         onToggleVisibility={() => setIsCurrentPasswordVisible((value) => !value)}
                       />
@@ -653,17 +581,17 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         value={passwordValues.newPassword}
                         autoComplete="new-password"
                         error={passwordErrors.newPassword}
-                        isTouched={passwordTouched.newPassword}
+                        isTouched={Boolean(passwordTouched.newPassword)}
                         isVisible={isNewPasswordVisible}
-                        maxLength={PASSWORD_MAX_LENGTH}
-                        onChange={(event) => handlePasswordChange('newPassword', event.target.value)}
+                        maxLength={USER_PASSWORD_MAX_LENGTH}
+                        onChange={(event) => handlePasswordChange('newPassword', sanitizePassword(event.target.value))}
                         onToggleVisibility={() => setIsNewPasswordVisible((value) => !value)}
                       />
                     </div>
 
                     <Button
                       type="button"
-                      disabled={hasErrors(passwordErrors) || isPasswordSaving}
+                      disabled={!passwordFormIsValid || !passwordFormIsDirty || isPasswordSaving}
                       iconLeft={<KeyRound size={18} aria-hidden="true" />}
                       isLoading={isPasswordSaving}
                       loadingLabel="Changing..."
@@ -691,14 +619,17 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       name="Green Cross Pharmacy"
                       pictureUrl={pharmacyPictureUrl}
                       isSaving={isPharmacyPictureSaving}
+                      accept={PICTURE_ACCEPT}
                       labels={{
                         uploadAriaLabel: 'Upload pharmacy photo',
                         hint: 'Upload a lightweight JPG, PNG, or WEBP image up to 450 KB. The photo is saved right away.',
                         uploadButton: 'Upload pharmacy photo',
                         removeButton: 'Remove pharmacy photo',
                       }}
+                      validateFile={(file) => buildPictureFileError(file) || null}
+                      validatePictureUrl={(nextPictureUrl) => buildPictureUrlError(nextPictureUrl) || null}
                       onChange={handlePharmacyPictureChange}
-                      onError={toast.error}
+                      onError={handlePictureError}
                     />
 
                     <div className={css.formGrid}>
@@ -710,11 +641,11 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         className={css.fieldWide}
                         value={pharmacyValues.address}
                         error={pharmacyErrors.address}
-                        isTouched={pharmacyTouched.address}
-                        maxLength={ADDRESS_MAX_LENGTH}
+                        isTouched={Boolean(pharmacyTouched.address)}
+                        maxLength={USER_ADDRESS_MAX_LENGTH}
                         disabled={isModerationLocked}
                         onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-                          handlePharmacyChange('address', event.target.value)
+                          handlePharmacyChange('address', sanitizeAddress(event.target.value))
                         }
                       />
 
@@ -723,8 +654,8 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         name="pharmacyPhone"
                         value={pharmacyValues.phone}
                         error={pharmacyErrors.phone}
-                        isTouched={pharmacyTouched.phone}
-                        maxLength={PHONE_MAX_LENGTH}
+                        isTouched={Boolean(pharmacyTouched.phone)}
+                        maxLength={USER_PHONE_MAX_LENGTH}
                         disabled={isModerationLocked}
                         onChange={(event) => handlePharmacyChange('phone', sanitizePhone(event.target.value))}
                       />
@@ -734,10 +665,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         name="pharmacyEmail"
                         value={pharmacyValues.email}
                         error={pharmacyErrors.email}
-                        isTouched={pharmacyTouched.email}
-                        maxLength={EMAIL_MAX_LENGTH}
+                        isTouched={Boolean(pharmacyTouched.email)}
+                        maxLength={USER_EMAIL_MAX_LENGTH}
                         disabled={isModerationLocked}
-                        onChange={(event) => handlePharmacyChange('email', event.target.value)}
+                        onChange={(event) => handlePharmacyChange('email', sanitizeEmail(event.target.value))}
                       />
 
                       <WorkingHoursInput
@@ -745,16 +676,16 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         name="workingHours"
                         value={pharmacyValues.workingHours}
                         error={pharmacyErrors.workingHours}
-                        isTouched={pharmacyTouched.workingHours}
+                        isTouched={Boolean(pharmacyTouched.workingHours)}
                         maxLength={WORKING_HOURS_MAX_LENGTH}
                         disabled={isModerationLocked}
-                        onChange={(event) => handlePharmacyChange('workingHours', event.target.value)}
+                        onChange={(event) => handlePharmacyChange('workingHours', sanitizeWorkingHours(event.target.value))}
                       />
                     </div>
 
                     <Button
                       type="button"
-                      disabled={hasErrors(pharmacyErrors) || !pharmacyFormIsDirty || isPharmacySaving || isModerationLocked}
+                      disabled={hasValidationErrors(pharmacyErrors) || !pharmacyFormIsDirty || isPharmacySaving || isModerationLocked}
                       isLoading={isPharmacySaving}
                       loadingLabel="Saving..."
                       onClick={handlePharmacySubmit}
@@ -777,17 +708,21 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       </p>
                     </div>
 
-                    <PharmacyAboutFields
-                      description={aboutValues.description}
-                      descriptionError={aboutErrors.description}
-                      isDescriptionTouched={aboutTouched.description}
+                    <TextEditor
+                      id="pharmacy-description"
+                      name="pharmacyDescription"
+                      label="Description"
+                      value={aboutValues.description}
+                      error={aboutErrors.description}
+                      isTouched={Boolean(aboutTouched.description)}
+                      maxLength={TEXT_EDITOR_MAX_LENGTH}
                       disabled={isModerationLocked}
-                      onDescriptionChange={handleAboutChange}
+                      onChange={(event) => handleAboutChange(sanitizeTextEditor(event.target.value))}
                     />
 
                     <Button
                       type="button"
-                      disabled={hasErrors(aboutErrors) || !aboutFormIsDirty || isPharmacySaving || isModerationLocked}
+                      disabled={hasValidationErrors(aboutErrors) || !aboutFormIsDirty || isPharmacySaving || isModerationLocked}
                       isLoading={isPharmacySaving}
                       loadingLabel="Saving..."
                       onClick={handleAboutSubmit}
@@ -817,10 +752,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         label="Recipient name"
                         value={paymentValues.recipientName}
                         error={paymentErrors.recipientName}
-                        isTouched={paymentTouched.recipientName}
+                        isTouched={Boolean(paymentTouched.recipientName)}
                         disabled={isModerationLocked}
                         maxLength={USER_NAME_MAX_LENGTH}
-                        onChange={(event) => handlePaymentChange('recipientName', event.target.value)}
+                        onChange={(event) => handlePaymentChange('recipientName', sanitizeName(event.target.value))}
                       />
 
                       <TaxIdInput
@@ -828,8 +763,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         name="taxId"
                         value={paymentValues.taxId}
                         error={paymentErrors.taxId}
-                        isTouched={paymentTouched.taxId}
+                        isTouched={Boolean(paymentTouched.taxId)}
                         disabled={isModerationLocked}
+                        maxLength={TAX_ID_MAX_LENGTH}
                         onChange={(event) => handlePaymentChange('taxId', sanitizeTaxId(event.target.value))}
                       />
 
@@ -839,8 +775,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         className={css.fieldWide}
                         value={paymentValues.iban}
                         error={paymentErrors.iban}
-                        isTouched={paymentTouched.iban}
+                        isTouched={Boolean(paymentTouched.iban)}
                         disabled={isModerationLocked}
+                        maxLength={IBAN_MAX_LENGTH}
                         onChange={(event) => handlePaymentChange('iban', sanitizeIban(event.target.value))}
                       />
 
@@ -850,10 +787,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         label="Bank name"
                         value={paymentValues.bankName}
                         error={paymentErrors.bankName}
-                        isTouched={paymentTouched.bankName}
+                        isTouched={Boolean(paymentTouched.bankName)}
                         disabled={isModerationLocked}
                         maxLength={USER_NAME_MAX_LENGTH}
-                        onChange={(event) => handlePaymentChange('bankName', event.target.value)}
+                        onChange={(event) => handlePaymentChange('bankName', sanitizeName(event.target.value))}
                       />
 
                       <EmailInput
@@ -862,10 +799,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         label="Receipt email"
                         value={paymentValues.receiptEmail}
                         error={paymentErrors.receiptEmail}
-                        isTouched={paymentTouched.receiptEmail}
+                        isTouched={Boolean(paymentTouched.receiptEmail)}
                         disabled={isModerationLocked}
-                        maxLength={EMAIL_MAX_LENGTH}
-                        onChange={(event) => handlePaymentChange('receiptEmail', event.target.value)}
+                        maxLength={USER_EMAIL_MAX_LENGTH}
+                        onChange={(event) => handlePaymentChange('receiptEmail', sanitizeEmail(event.target.value))}
                       />
 
                       <CommentInput
@@ -875,17 +812,17 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         className={css.fieldWide}
                         value={paymentValues.paymentPurpose}
                         error={paymentErrors.paymentPurpose}
-                        isTouched={paymentTouched.paymentPurpose}
+                        isTouched={Boolean(paymentTouched.paymentPurpose)}
                         required
                         disabled={isModerationLocked}
                         maxLength={PAYMENT_PURPOSE_MAX_LENGTH}
-                        onChange={(event) => handlePaymentChange('paymentPurpose', event.target.value)}
+                        onChange={(event) => handlePaymentChange('paymentPurpose', sanitizePaymentPurpose(event.target.value))}
                       />
                     </div>
 
                     <Button
                       type="button"
-                      disabled={hasErrors(paymentErrors) || !paymentFormIsDirty || isPharmacySaving || isModerationLocked}
+                      disabled={hasValidationErrors(paymentErrors) || !paymentFormIsDirty || isPharmacySaving || isModerationLocked}
                       isLoading={isPharmacySaving}
                       loadingLabel="Saving..."
                       onClick={handlePaymentSubmit}

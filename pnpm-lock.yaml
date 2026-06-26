@@ -277,6 +277,9 @@ importers:
       '@e-pharmacy/hooks':
         specifier: workspace:*
         version: link:../hooks
+      '@e-pharmacy/utils':
+        specifier: workspace:*
+        version: link:../utils
       react:
         specifier: '>=19'
         version: 19.2.4

@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 
 import { getOrderDetailsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
 
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
-import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
+import { CabinetPage } from '@e-pharmacy/ui/common';
+import { PlaceholderCards } from '@e-pharmacy/ui/common';
 
 //===================================================================
 
@@ -24,7 +24,7 @@ async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   const { orderId } = await params;
 
   return (
-    <PharmacyPage
+    <CabinetPage
       title={`Order #${orderId}`}
       description="Order details skeleton with client, delivery, payment, items, status history, and actions."
       breadcrumbs={getOrderDetailsBreadcrumbs(orderId)}
@@ -39,7 +39,7 @@ async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
           'Action buttons',
         ]}
       />
-    </PharmacyPage>
+    </CabinetPage>
   );
 }
 

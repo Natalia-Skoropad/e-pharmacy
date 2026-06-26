@@ -31,6 +31,7 @@ function hasCompleteBankDetails(
     bankDetails.taxId &&
     bankDetails.iban &&
     bankDetails.bankName &&
+    bankDetails.receiptEmail &&
     bankDetails.paymentPurpose
   );
 }

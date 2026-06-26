@@ -1,0 +1,108 @@
+.field {
+  min-width: 0;
+}
+
+.editor {
+  display: grid;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.editor:hover,
+.editor:focus-within {
+  border-color: var(--color-accent);
+}
+
+.editor:focus-within {
+  box-shadow: var(--shadow-accent-ring);
+}
+
+.editorInvalid,
+.editorInvalid:focus-within {
+  border-color: var(--color-error);
+  box-shadow: none;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px;
+  background-color: var(--color-background-soft);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.toolButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 32px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--transition-base),
+    border-color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.toolButton:hover:not(:disabled),
+.toolButton:focus-visible:not(:disabled) {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border-color: var(--color-accent-border);
+}
+
+.toolButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.inputWrap {
+  position: relative;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 220px;
+  padding: 16px 18px 36px;
+  font-size: var(--fz-16);
+  line-height: 1.55;
+  color: var(--color-text-primary);
+  resize: vertical;
+  background-color: transparent;
+  border: 0;
+  outline: none;
+}
+
+.textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+.textarea:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  background-color: var(--color-background-soft);
+}
+
+.counter {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  font-size: var(--fz-12);
+  line-height: 1;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}

@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 
 import { getProductDetailsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
 
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
-import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
+import { CabinetPage } from '@e-pharmacy/ui/common';
+import { PlaceholderCards } from '@e-pharmacy/ui/common';
 
 //===================================================================
 
@@ -24,7 +24,7 @@ async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
   const { productId } = await params;
 
   return (
-    <PharmacyPage
+    <CabinetPage
       title={`Product ${productId}`}
       description="Product details skeleton with global product data and pharmacy-specific price and stock."
       breadcrumbs={getProductDetailsBreadcrumbs(productId)}
@@ -40,7 +40,7 @@ async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
           'Reviews tab',
         ]}
       />
-    </PharmacyPage>
+    </CabinetPage>
   );
 }
 

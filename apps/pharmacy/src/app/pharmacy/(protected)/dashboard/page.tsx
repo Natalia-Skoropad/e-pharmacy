@@ -11,13 +11,13 @@ import {
 
 import { getDashboardBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
 
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
+import { CabinetPage } from '@e-pharmacy/ui/common';
 import {
   ActionBar,
   PharmacyPageHeader,
   StatsCard,
   StatusBanner,
-} from '@/components/pharmacy/ui';
+} from '@e-pharmacy/ui/common';
 
 import css from './Dashboard.module.css';
 
@@ -143,7 +143,7 @@ const requestStats = [
 
 function DashboardPage() {
   return (
-    <PharmacyPage
+    <CabinetPage
       title="Dashboard"
       description="Track pharmacy status, order flow, clients, stock, and product requests. Demo data is used until the pharmacy API is connected."
       breadcrumbs={getDashboardBreadcrumbs()}
@@ -233,7 +233,7 @@ function DashboardPage() {
           </Link>
         </ActionBar>
       </div>
-    </PharmacyPage>
+    </CabinetPage>
   );
 }
 

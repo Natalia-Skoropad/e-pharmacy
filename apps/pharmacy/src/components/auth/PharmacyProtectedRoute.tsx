@@ -11,7 +11,7 @@ import {
   getSharedLoginUrlForCurrentPharmacyPage,
 } from '@/lib/pharmacy/shared-auth';
 
-import { PageLoader } from '@/components/pharmacy/PageLoader';
+import { PageLoader } from '@e-pharmacy/ui/status-pages';
 
 //===================================================================
 

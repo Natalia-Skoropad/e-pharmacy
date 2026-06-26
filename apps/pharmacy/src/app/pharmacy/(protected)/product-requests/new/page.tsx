@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
+import { CabinetPage } from '@e-pharmacy/ui/common';
 import { getNewProductRequestBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
-import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
+import { PlaceholderCards } from '@e-pharmacy/ui/common';
 
 //===================================================================
 
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 function NewProductRequestPage() {
   return (
-    <PharmacyPage
+    <CabinetPage
       title="New product request"
       description="Create product request form skeleton with draft and send-for-moderation actions."
       breadcrumbs={getNewProductRequestBreadcrumbs()}
@@ -31,7 +31,7 @@ function NewProductRequestPage() {
           'Send for moderation action',
         ]}
       />
-    </PharmacyPage>
+    </CabinetPage>
   );
 }
 

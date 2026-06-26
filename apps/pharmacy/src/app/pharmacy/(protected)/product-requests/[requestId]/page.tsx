@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 
 import { getProductRequestDetailsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
 
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
-import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
+import { CabinetPage } from '@e-pharmacy/ui/common';
+import { PlaceholderCards } from '@e-pharmacy/ui/common';
 
 //===================================================================
 
@@ -26,7 +26,7 @@ async function ProductRequestDetailsPage({
   const { requestId } = await params;
 
   return (
-    <PharmacyPage
+    <CabinetPage
       title={`Product request ${requestId}`}
       description="Readonly/request action skeleton for draft, moderation, approved, and rejected request states."
       breadcrumbs={getProductRequestDetailsBreadcrumbs(requestId)}
@@ -42,7 +42,7 @@ async function ProductRequestDetailsPage({
           'Request actions',
         ]}
       />
-    </PharmacyPage>
+    </CabinetPage>
   );
 }
 

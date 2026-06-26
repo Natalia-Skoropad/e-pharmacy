@@ -21,3 +21,4 @@ routes.use('/health', healthRoutes);
 routes.use('/orders', orderRoutes);
 routes.use('/products', productRoutes);
 routes.use('/pharmacies', pharmacyRoutes);
+routes.use('/pharmacy', pharmacyRoutes);

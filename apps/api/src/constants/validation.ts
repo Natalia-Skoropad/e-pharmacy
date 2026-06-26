@@ -23,6 +23,13 @@ export const VALIDATION_LIMITS = {
 
   orderCommentMax: 500,
 
+  workingHoursMax: 160,
+  textEditorMax: 1200,
+  taxIdMin: 8,
+  taxIdMax: 10,
+  ibanMax: 29,
+  paymentPurposeMax: 500,
+
   pictureUrlMax: 700000,
   pictureFileMaxSizeBytes: 450 * 1024,
 } as const;
@@ -55,6 +62,13 @@ export const MAX_REVIEW_RATING = VALIDATION_LIMITS.reviewRatingMax;
 
 export const USER_ORDER_COMMENT_MAX_LENGTH = VALIDATION_LIMITS.orderCommentMax;
 
+export const WORKING_HOURS_MAX_LENGTH = VALIDATION_LIMITS.workingHoursMax;
+export const TEXT_EDITOR_MAX_LENGTH = VALIDATION_LIMITS.textEditorMax;
+export const TAX_ID_MIN_LENGTH = VALIDATION_LIMITS.taxIdMin;
+export const TAX_ID_MAX_LENGTH = VALIDATION_LIMITS.taxIdMax;
+export const IBAN_MAX_LENGTH = VALIDATION_LIMITS.ibanMax;
+export const PAYMENT_PURPOSE_MAX_LENGTH = VALIDATION_LIMITS.paymentPurposeMax;
+
 export const PICTURE_URL_MAX_LENGTH = VALIDATION_LIMITS.pictureUrlMax;
 export const PICTURE_FILE_MAX_SIZE_BYTES =
   VALIDATION_LIMITS.pictureFileMaxSizeBytes;
@@ -71,6 +85,11 @@ export const ADDRESS_PATTERN = /^[A-Za-z0-9\s.,'’/#-]+$/;
 export const SEARCH_TEXT_PATTERN = /^[A-Za-z0-9\s.,'’/#-]*$/;
 export const REVIEW_COMMENT_PATTERN = /^[A-Za-z0-9\s.,!?;:'"()\-]+$/;
 export const ORDER_COMMENT_PATTERN = /^[A-Za-z0-9\s.,!?;:'"()\-]*$/;
+export const TAX_ID_PATTERN = /^\d{8,10}$/;
+export const IBAN_PATTERN = /^UA\d{27}$/;
+export const WORKING_HOURS_PATTERN = /^[A-Za-z0-9\s.,:;–—'’/#()-]+$/;
+export const TEXT_EDITOR_PATTERN = /^[A-Za-z0-9\s.,!?;:'"()\-–—/#%+\n\r]+$/;
+export const PAYMENT_PURPOSE_PATTERN = /^[A-Za-z0-9\s.,!?;:'"()\-]+$/;
 export const PICTURE_DATA_URL_PATTERN =
   /^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 
@@ -87,6 +106,11 @@ export const VALIDATION_MESSAGES = {
     address: 'Address is required',
     reviewComment: 'Review comment is required',
     orderComment: 'Order comment is required',
+    workingHours: 'Working hours are required',
+    textEditor: 'Text is required',
+    taxId: 'Tax ID / EDRPOU is required',
+    iban: 'IBAN is required',
+    paymentPurpose: 'Payment purpose is required',
     picture: 'Photo is required',
     resetToken: 'Reset token is required',
   },
@@ -105,6 +129,12 @@ export const VALIDATION_MESSAGES = {
     reviewRating: `Choose a rating from ${MIN_REVIEW_RATING} to ${MAX_REVIEW_RATING} stars`,
     orderComment:
       'Order comment may contain only Latin letters, numbers, spaces and basic punctuation',
+    workingHours: 'Use Latin letters, numbers, spaces and basic punctuation',
+    textEditor: 'Use Latin letters, numbers, line breaks and basic punctuation',
+    taxId: 'Use 8–10 digits',
+    iban: 'Use Ukrainian IBAN format: UA + 27 digits',
+    paymentPurpose:
+      'Payment purpose may contain only Latin letters, numbers, spaces and basic punctuation',
     picture: 'Photo must be a valid image URL or JPG/PNG/WEBP upload',
     pictureFileType: 'Please choose a JPG, PNG, or WEBP image',
     search: 'Search may contain only allowed text characters',
@@ -124,6 +154,9 @@ export const VALIDATION_MESSAGES = {
     reviewCommentMin: `Review comment must be at least ${USER_REVIEW_COMMENT_MIN_LENGTH} characters`,
     reviewCommentMax: `Review comment must be at most ${USER_REVIEW_COMMENT_MAX_LENGTH} characters`,
     orderCommentMax: `Order comment must be at most ${USER_ORDER_COMMENT_MAX_LENGTH} characters`,
+    workingHoursMax: `Working hours must be at most ${WORKING_HOURS_MAX_LENGTH} characters`,
+    textEditorMax: `Text must be at most ${TEXT_EDITOR_MAX_LENGTH} characters`,
+    paymentPurposeMax: `Payment purpose must be at most ${PAYMENT_PURPOSE_MAX_LENGTH} characters`,
     pictureMax: 'Photo is too large. Use a smaller image',
     picturePayloadMax: 'Photo is too large. Use an image up to 450 KB',
     pictureFileSize: 'Photo must be up to 450 KB',

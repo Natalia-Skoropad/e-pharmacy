@@ -8,8 +8,8 @@ import {
   parsePharmacyRequestFilters,
 } from '@/lib/pharmacy/routes';
 
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
-import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
+import { CabinetPage } from '@e-pharmacy/ui/common';
+import { PlaceholderCards } from '@e-pharmacy/ui/common';
 
 //===================================================================
 
@@ -31,7 +31,7 @@ async function ProductRequestsPage({ params }: ProductRequestsPageProps) {
   const parsedFilters = parsePharmacyRequestFilters(filters);
 
   return (
-    <PharmacyPage
+    <CabinetPage
       title="Product requests"
       description="Product request table skeleton prepared for future backend API integration."
       breadcrumbs={getProductRequestsBreadcrumbs()}
@@ -41,7 +41,7 @@ async function ProductRequestsPage({ params }: ProductRequestsPageProps) {
       <PlaceholderCards
         items={['Created date', 'Article', 'Name', 'Category', 'Status']}
       />
-    </PharmacyPage>
+    </CabinetPage>
   );
 }
 

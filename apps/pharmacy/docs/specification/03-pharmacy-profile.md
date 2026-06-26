@@ -1,472 +1,97 @@
-# pharmacy Technical Specification — Pharmacy Profile
+# Pharmacy profile — current implementation notes
 
-## 1. General logic
+## Goal
 
-Pharmacy profile is the Pharmacy page where the pharmacy can view and edit its own data according to current pharmacy status.
+`/pharmacy/profile` is the private pharmacy owner profile page. The route file is `apps/pharmacy/src/app/pharmacy/(protected)/profile/page.tsx`. It follows the same visual structure as the client profile page: page header, breadcrumbs, left summary card, right tabbed content card.
 
-The page should be visually close to the Client profile page but with pharmacy-specific content and rules.
+The page does not show the pharmacy cabinet side menu. The pharmacy owner opens it from the user badge in the pharmacy header.
 
-Use shared components wherever possible.
+## Shared components
 
-## 2. Pharmacy statuses
+The page must use shared package components instead of pharmacy-local UI copies:
 
-| Status          | Meaning                                                           | Who sets it                           |
-| --------------- | ----------------------------------------------------------------- | ------------------------------------- |
-| `new`           | Pharmacy registered and has not submitted initial data            | System after registration             |
-| `on_verification` | Pharmacy submitted initial data for Admin verification          | System after Pharmacy submits data     |
-| `active`        | Pharmacy passed moderation and can work                           | Admin                                 |
-| `on_moderation` | Active pharmacy changed important data and waits for Admin review | System after Pharmacy submits changes |
-| `blocked`      | Pharmacy is blocked or temporarily disabled                       | Admin                                 |
+- `Container`, `Button`, `Tabs`, `PictureCard`, `ReviewsList`, `TextEditor`, `WorkingHoursInput` from `@e-pharmacy/ui/common`;
+- `NameInput`, `PhoneInput`, `AddressInput`, `EmailInput`, `PasswordInput`, `CommentInput`, `TaxIdInput`, `IbanInput` from `@e-pharmacy/ui/form-fields`;
+- `Breadcrumbs` from `@e-pharmacy/ui/layout`;
+- `PageLoader` / `LoadingSpinner` for loading states.
 
-## 3. Status behavior
+## Validation
 
-### New pharmacy
+All profile form validation must come from `@e-pharmacy/validation`.
 
-Can:
+Do not duplicate local validators in `apps/pharmacy` for:
 
-- enter Pharmacy cabinet;
-- view own data;
-- edit own data without moderation;
-- view all Pharmacy-visible products from Admin.
+- owner name;
+- phone;
+- email;
+- password;
+- address;
+- working hours;
+- pharmacy description;
+- Tax ID / EDRPOU;
+- IBAN;
+- payment purpose.
 
-Cannot:
+`TaxIdInput` and `IbanInput` are reusable UI fields, and their validation is defined in `packages/validation`.
 
-- appear in Client;
-- sell products;
-- add products to own pharmacy;
-- create product requests.
+## Tabs
 
-Banner:
+### My data
 
-```txt
-Your pharmacy is not activated yet. Complete the required information and wait for Admin review.
-```
+Owner account data. This tab is not moderated.
 
-### Pharmacy on verification
+Fields:
 
-Can:
+- name;
+- phone;
+- current password;
+- new password.
 
-- enter Pharmacy cabinet;
-- view submitted data and verification status.
+### Pharmacy data
 
-Cannot:
+Public pharmacy contact data. Required before verification.
 
-- appear in Client;
-- sell products;
-- add products;
-- create product requests.
-
-### Active pharmacy
-
-Can:
-
-- enter Pharmacy cabinet;
-- appear in Client;
-- sell products;
-- add active Admin products to own pharmacy;
-- create product requests;
-- view all Pharmacy-visible products from Admin;
-- edit own data with Admin moderation.
-
-If active pharmacy changes important data, public Client data and approved Pharmacy/Admin data must remain unchanged until Admin approves pending changes.
-
-### Pharmacy on moderation
-
-Can:
-
-- enter Pharmacy cabinet;
-- appear in Client with previous approved data;
-- sell products;
-- add active Admin products to own pharmacy;
-- create product requests;
-- view all Pharmacy-visible products from Admin;
-- view approved data;
-- view pending moderation data.
-
-Cannot:
-
-- edit data again until current pending changes are reviewed.
-
-Banner:
-
-```txt
-Your changes are under moderation. Until Admin reviews them, Client pages show the previous approved data.
-```
-
-### Blocked pharmacy
-
-Cannot:
-
-- enter Pharmacy cabinet;
-- appear in Client;
-- sell products;
-- add products;
-- create product requests.
-
-History is preserved:
-
-- orders;
-- clients;
-- products;
-- reviews;
-- statistics.
-
-Login message:
-
-```txt
-Your account is temporarily blocked. Please contact administration for details.
-```
-
-Admin must provide a required blocking reason when setting pharmacy status to `blocked`.
-
-## 4. Approved data and pending data
-
-Do not mix approved and pending data.
-
-For `on_moderation` status:
-
-- show previous approved data in normal profile fields;
-- show pending data in separate pending moderation sections;
-- each tab shows only its own pending fields.
-
-Pending data by tab:
-
-| Tab             | Pending fields                                 |
-| --------------- | ---------------------------------------------- |
-| Pharmacy data   | name, phone, address, working hours            |
-| About pharmacy  | description                                    |
-| Payment details | recipient, tax ID, IBAN, bank, payment purpose |
-
-## 5. Page structure
-
-Profile page includes:
-
-- top page section with Breadcrumbs, `h1`, description, and status action;
-- left summary sidebar;
-- right content card with tabs.
-
-Top title:
-
-```txt
-Pharmacy profile
-```
-
-Description:
-
-```txt
-Manage your pharmacy profile, contact details, payment details, and reviews.
-```
-
-The top of the page must follow the Client profile page structure: shared `Container`, shared `Breadcrumbs`, one `h1`, and the same spacing/typography approach.
-
-For `new` pharmacy show button:
-
-```txt
-Send for moderation
-```
-
-This button is shown only for `new` status and is enabled only when all required fields across all tabs are completed and a photo is uploaded.
-
-## 6. Left profile summary
-
-Show:
+Fields:
 
 - pharmacy photo;
-- photo upload/change/remove controls;
-- pharmacy name;
+- address;
+- phone;
 - email;
-- rating and reviews count;
-- role: Pharmacy;
-- pharmacy status;
-- status banner for `new`, `on_moderation`, and `blocked`.
+- working hours.
 
-Use:
+### About pharmacy
 
-- `ProfilePhotoCard`;
-- `RatingSummary`;
-- `AvatarImage` where needed.
+Public text about the pharmacy. Required before verification.
 
-Photo helper text:
+Uses the reusable `TextEditor` component from `packages/ui/common/TextEditor`.
 
-```txt
-Upload a lightweight JPG, PNG, or WEBP image up to 450 KB. The photo is saved to your profile right away.
-```
+### Payment details
 
-## 7. Pharmacy photo rules
-
-Photo is:
-
-- optional for `new` and `blocked`;
-- required for `active` and `on_moderation`.
-
-For active pharmacy, photo change requires Admin moderation.
-
-For new pharmacy, photo change does not require moderation.
-
-Supported formats:
-
-- JPG;
-- PNG;
-- WEBP.
-
-Max size:
-
-- 450 KB.
-
-Component requirements:
-
-- preview after selection;
-- loading state while saving;
-- error state;
-- replace photo;
-- remove photo when allowed by status.
-
-Photo component and validation should be shared between Client, Pharmacy, and Admin.
-
-## 8. Email
-
-Email:
-
-- is not editable in Pharmacy profile;
-- is shown as readonly;
-- is unique across Client, Pharmacy, and Admin;
-- is used for login.
-
-## 9. Profile tabs
-
-Use shared `Tabs` component.
-
-Tabs:
-
-1. My data;
-2. Pharmacy data;
-3. About pharmacy;
-4. Payment details;
-5. Reviews;
-6. Active sessions.
-
-`My data` is for the pharmacy owner account only and is not moderated.
-
-## 10. Tab: My data
-
-This tab contains pharmacy owner account data and is not moderated.
+Payment data required before verification.
 
 Fields:
 
-- Name;
-- Phone;
-- Current password;
-- New password.
-
-Use shared components:
-
-- `NameInput`;
-- `PhoneInput`;
-- `PasswordInput`;
-- `Button`.
-
-Password change does not require Admin moderation.
-
-## 11. Tab: Pharmacy data
-
-Fields:
-
-- Pharmacy photo;
-- Address;
-- Phone;
-- Email;
-- Working hours.
-
-### Field rules
-
-| Field         | Required for `new` | Required for `active` / `on_moderation` | Moderation for active pharmacy |
-| ------------- | -----------------: | --------------------------------------: | -----------------------------: |
-| Name          |                 No |                                     Yes |                            Yes |
-| Phone         |                Yes |                                     Yes |                            Yes |
-| Address       |                 No |                                     Yes |                            Yes |
-| Working hours |                 No |                                     Yes |                            Yes |
-| Password      |  By password rules |                       By password rules |                             No |
-
-Phone must be unique across Client, Pharmacy, and Admin.
-
-Pharmacy photo must use shared `PictureCard`.
-
-Working hours should use a shared common component:
-
-```txt
-WorkingHoursInput
-```
-
-Recommended format:
-
-```txt
-Mon–Fri: 08:00–20:00, Sat–Sun: 09:00–18:00
-```
-
-Password change does not require Admin moderation.
-
-Password success toast:
-
-```txt
-Password changed successfully.
-```
-
-Password error:
-
-```txt
-Could not change password. Please try again.
-```
-
-### Save button labels
-
-| Pharmacy status | Button              | State                                                   |
-| --------------- | ------------------- | ------------------------------------------------------- |
-| `new`           | Save                | Enabled only when changed and valid                     |
-| `active`        | Send for moderation | Enabled only when changed and required fields are valid |
-| `on_moderation` | Send for moderation | Disabled; fields disabled                               |
-| `blocked`      | Not available       | Cabinet access blocked                                  |
-
-Every save or send action opens `ConfirmActionModal`.
-
-Success toasts:
-
-```txt
-Pharmacy data saved successfully.
-Changes sent for moderation.
-```
-
-Error toast:
-
-```txt
-Could not save changes. Please try again.
-```
-
-## 12. Tab: About pharmacy
-
-Field:
-
-- pharmacy description.
-
-Use common component:
-
-```txt
-PharmacyAboutFields
-```
-
-Rules:
-
-- optional for `new`;
-- required for `active` and `on_moderation`;
-- active pharmacy changes require Admin moderation;
-- new pharmacy changes save immediately without moderation.
-
-### PharmacyAboutFields requirements
-
-- max 5000 characters;
-- character counter;
-- simple formatting;
-- paragraphs;
-- line breaks;
-- simple lists;
-- bold text if implementation remains lightweight.
-
-Save button follows the same status rules as the Pharmacy data tab.
-
-## 13. Tab: Payment details
-
-Fields:
-
-- Recipient name;
-- EDRPOU / Tax ID;
+- recipient name;
+- Tax ID / EDRPOU;
 - IBAN;
-- Bank name;
-- Receipt email;
-- Payment purpose.
+- bank name;
+- receipt email;
+- payment purpose.
 
-Rules:
+### Reviews
 
-- optional for `new`;
-- required for `active` and `on_moderation`;
-- active pharmacy changes require Admin moderation;
-- new pharmacy changes save immediately without moderation.
+Readonly pharmacy reviews. Uses shared `ReviewsList`, which uses the existing `formatReviewDate` formatter from `@e-pharmacy/utils/formatters`.
 
-Unique fields:
+### Active sessions
 
-- EDRPOU / Tax ID;
-- IBAN.
+The same concept as client profile active sessions. Shows active devices and a revoke action.
 
-Use shared form field components:
+## Moderation rules
 
-- Recipient name — `NameInput`;
-- EDRPOU / Tax ID — `TaxIdInput`;
-- IBAN — `IbanInput`;
-- Bank name — `NameInput`;
-- Receipt email — `EmailInput`;
-- Payment purpose — `CommentInput`.
+- `new` pharmacy can edit required data and send the profile for verification when required fields are valid.
+- `on_moderation` pharmacy sees data as readonly until admin decision.
+- `active` pharmacy can later send moderated changes again.
 
-## 14. Tab: Reviews
+## Deleted local pharmacy UI
 
-Pharmacy can only view pharmacy reviews.
-
-Pharmacy cannot:
-
-- create reviews;
-- edit reviews;
-- delete reviews;
-- moderate reviews.
-
-Reviews are moderated in Admin.
-
-Use shared `ReviewsList` based on Client review styles.
-
-Show:
-
-- client name;
-- rating;
-- date;
-- review text;
-- empty state.
-
-Load more with:
-
-```txt
-LazyLoadButton
-```
-
-Empty state:
-
-```txt
-This pharmacy has no reviews yet.
-```
-
-## 15. Tab: Active sessions
-
-This tab mirrors the Client profile active sessions section.
-
-Show:
-
-- device name;
-- last used date;
-- current session label;
-- revoke action for other sessions.
-
-Use shared `LoadingSpinner` while session data is loading.
-
-## 16. Shared profile form rules
-
-Buttons are disabled when:
-
-- form is unchanged;
-- validation errors exist;
-- request is running;
-- pharmacy has `on_moderation` status;
-- pharmacy has `blocked` status.
-
-Use disabled state for `on_moderation` fields.
-
-Use `ConfirmActionModal` for:
-
-- saving new pharmacy data;
-- sending active pharmacy changes to moderation;
-- password change;
-- removing photo when the action is important or irreversible.
+The folder `apps/pharmacy/src/components/pharmacy` is no longer part of the profile implementation and should be removed. Reusable blocks live in packages.

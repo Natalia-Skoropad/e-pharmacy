@@ -4,6 +4,8 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import {
   createPharmacyReviewSchema,
   moderatePharmacyReviewSchema,
+  sendMyPharmacyForVerificationSchema,
+  updateMyPharmacyProfileSchema,
   pendingPharmacyReviewsQuerySchema,
   pharmaciesQuerySchema,
 } from '../schemas/pharmacy.schema';
@@ -15,12 +17,15 @@ import {
   getPharmacyCheckoutDetailsService,
   getPharmacyDetailsService,
   getPharmacyFiltersService,
+  getMyPharmacyProfileService,
   getPharmacyOptionsService,
   getPendingPharmacyReviewsService,
   getPharmacyReviewsService,
   getPharmaciesService,
   moderatePharmacyReviewService,
+  sendMyPharmacyForVerificationService,
   setFavoritePharmacyService,
+  updateMyPharmacyProfileService,
 } from '../services/pharmacy.service';
 
 import { sendSuccessResponse } from '../utils/apiResponse';
@@ -30,6 +35,54 @@ import { sendSuccessResponse } from '../utils/apiResponse';
 type PharmacyParams = {
   pharmacyId: string;
 };
+
+//===============================================================
+
+export async function getMyPharmacyProfile(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const data = await getMyPharmacyProfileService(req.user?.id ?? '');
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function updateMyPharmacyProfile(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const body = updateMyPharmacyProfileSchema.parse(req.body);
+  const data = await updateMyPharmacyProfileService(req.user?.id ?? '', body);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function sendMyPharmacyForVerification(
+  req: Request,
+  res: Response
+): Promise<void> {
+  sendMyPharmacyForVerificationSchema.parse(req.body ?? {});
+
+  const data = await sendMyPharmacyForVerificationService(req.user?.id ?? '');
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
 
 //===============================================================
 

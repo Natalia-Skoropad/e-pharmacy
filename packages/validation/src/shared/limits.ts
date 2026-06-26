@@ -21,6 +21,13 @@ export const VALIDATION_LIMITS = {
 
   orderCommentMax: 500,
 
+  workingHoursMax: 160,
+  textEditorMax: 1200,
+  taxIdMin: 8,
+  taxIdMax: 10,
+  ibanMax: 29,
+  paymentPurposeMax: 500,
+
   pictureUrlMax: 700000,
   pictureFileMaxSizeBytes: 450 * 1024,
 } as const;
@@ -50,6 +57,13 @@ export const MIN_REVIEW_RATING = VALIDATION_LIMITS.reviewRatingMin;
 export const MAX_REVIEW_RATING = VALIDATION_LIMITS.reviewRatingMax;
 
 export const USER_ORDER_COMMENT_MAX_LENGTH = VALIDATION_LIMITS.orderCommentMax;
+
+export const WORKING_HOURS_MAX_LENGTH = VALIDATION_LIMITS.workingHoursMax;
+export const TEXT_EDITOR_MAX_LENGTH = VALIDATION_LIMITS.textEditorMax;
+export const TAX_ID_MIN_LENGTH = VALIDATION_LIMITS.taxIdMin;
+export const TAX_ID_MAX_LENGTH = VALIDATION_LIMITS.taxIdMax;
+export const IBAN_MAX_LENGTH = VALIDATION_LIMITS.ibanMax;
+export const PAYMENT_PURPOSE_MAX_LENGTH = VALIDATION_LIMITS.paymentPurposeMax;
 
 export const PICTURE_URL_MAX_LENGTH = VALIDATION_LIMITS.pictureUrlMax;
 export const PICTURE_FILE_MAX_SIZE_BYTES =

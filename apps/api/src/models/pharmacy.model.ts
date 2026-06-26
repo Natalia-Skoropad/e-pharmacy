@@ -46,7 +46,7 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     workingHours: {
       type: String,
       trim: true,
-      maxlength: [120, 'Working hours must be at most 120 characters'],
+      maxlength: [160, 'Working hours must be at most 160 characters'],
       default: undefined,
     },
 
@@ -87,7 +87,15 @@ const pharmacySchema = new Schema<PharmacyEntity>(
         type: String,
         required: false,
         trim: true,
-        maxlength: [220, 'Payment purpose must be at most 220 characters'],
+        maxlength: [500, 'Payment purpose must be at most 500 characters'],
+      },
+
+      receiptEmail: {
+        type: String,
+        required: false,
+        trim: true,
+        lowercase: true,
+        maxlength: [64, 'Receipt email must be at most 64 characters'],
       },
     },
 
@@ -114,7 +122,7 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     description: {
       type: String,
       trim: true,
-      maxlength: [1000, 'Description must be at most 1000 characters'],
+      maxlength: [1200, 'Description must be at most 1200 characters'],
       default: undefined,
     },
 
@@ -135,6 +143,17 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     managerUserIds: {
       type: [Schema.Types.ObjectId],
       ref: 'User',
+      default: [],
+    },
+
+    documents: {
+      type: [
+        {
+          name: { type: String, required: true, trim: true },
+          size: { type: Number, required: true, min: 0 },
+          type: { type: String, trim: true, default: '' },
+        },
+      ],
       default: [],
     },
 

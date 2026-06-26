@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Types, type HydratedDocument } from 'mongoose';
 
 import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
@@ -14,8 +14,10 @@ import type {
   PharmacyEntity,
   PharmacyFilterOptionsResponseDto,
   PublicPharmacyResponseDto,
+  PharmacyProfileResponseDto,
   PharmacyReviewResponseDto,
   ReviewModerationStatus,
+  UpdateMyPharmacyProfileInput,
 } from '../types/pharmacy';
 
 import { httpError } from '../utils/httpError';
@@ -34,6 +36,9 @@ type PharmaciesQuery = {
 };
 
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
+type PharmacyHydratedDocument = HydratedDocument<PharmacyEntity> & {
+  _id: Types.ObjectId;
+};
 type PendingReviewsQuery = { page: number; perPage: number };
 
 type CreateReviewInput = {
@@ -64,6 +69,7 @@ function hasCompleteBankDetails(
     details?.taxId &&
     details?.iban &&
     details?.bankName &&
+    details?.receiptEmail &&
     details?.paymentPurpose
   );
 }
@@ -124,6 +130,33 @@ function serializePublicPharmacy(
     availableProductsCount,
     reviewsCount: pharmacy.reviewsCount ?? 0,
     isFavorite: favoriteIds.has(String(pharmacy._id)),
+    updatedAt:
+      pharmacy.updatedAt?.toISOString?.() ?? String(pharmacy.updatedAt ?? ''),
+  };
+}
+
+
+//===============================================================
+
+function serializePharmacyProfile(
+  pharmacy: PharmacyDocument
+): PharmacyProfileResponseDto {
+  return {
+    id: String(pharmacy._id),
+    name: pharmacy.name,
+    address: pharmacy.address,
+    ...(pharmacy.city ? { city: pharmacy.city } : {}),
+    ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
+    ...(pharmacy.email ? { email: pharmacy.email } : {}),
+    ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
+    bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
+    ...(pharmacy.bankDetails ? { bankDetails: pharmacy.bankDetails } : {}),
+    ...(pharmacy.documents?.length ? { documents: pharmacy.documents } : {}),
+    status: pharmacy.status,
+    rating: pharmacy.rating ?? 0,
+    ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+    ...(pharmacy.description ? { description: pharmacy.description } : {}),
+    reviewsCount: pharmacy.reviewsCount ?? 0,
     updatedAt:
       pharmacy.updatedAt?.toISOString?.() ?? String(pharmacy.updatedAt ?? ''),
   };
@@ -530,5 +563,141 @@ export async function setFavoritePharmacyService(
     message: isFavorite
       ? 'Pharmacy was added to favorites.'
       : 'Pharmacy was removed from favorites.',
+  };
+}
+
+
+//===============================================================
+
+async function findMyPharmacy(
+  userId: string
+): Promise<PharmacyHydratedDocument> {
+  const pharmacy = await Pharmacy.findOne({
+    $or: [{ ownerId: userId }, { managerUserIds: userId }],
+  });
+
+  if (!pharmacy) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+  }
+
+  if (pharmacy.status === PHARMACY_STATUSES.BLOCKED) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy is blocked.');
+  }
+
+  return pharmacy as PharmacyHydratedDocument;
+}
+
+//===============================================================
+
+function assertReadyForVerification(
+  pharmacy: PharmacyHydratedDocument
+): void {
+  const bankDetails = pharmacy.bankDetails;
+  const requiredFields: Record<string, unknown> = {
+    name: pharmacy.name,
+    address: pharmacy.address,
+    phone: pharmacy.phone,
+    email: pharmacy.email,
+    workingHours: pharmacy.workingHours,
+    description: pharmacy.description,
+    recipientName: bankDetails?.recipientName,
+    taxId: bankDetails?.taxId,
+    iban: bankDetails?.iban,
+    bankName: bankDetails?.bankName,
+    receiptEmail: bankDetails?.receiptEmail,
+    paymentPurpose: bankDetails?.paymentPurpose,
+  };
+
+  const missingFields = Object.entries(requiredFields)
+    .filter(([, value]) => !value)
+    .map(([field]) => field);
+
+  if (missingFields.length > 0) {
+    throw httpError(HTTP_STATUS.BAD_REQUEST, 'Complete pharmacy profile before verification.', {
+      missingFields,
+    });
+  }
+}
+
+//===============================================================
+
+export async function getMyPharmacyProfileService(
+  userId: string
+): Promise<{ pharmacy: PharmacyProfileResponseDto }> {
+  const pharmacy = await findMyPharmacy(userId);
+
+  return {
+    pharmacy: serializePharmacyProfile(pharmacy),
+  };
+}
+
+//===============================================================
+
+export async function updateMyPharmacyProfileService(
+  userId: string,
+  input: UpdateMyPharmacyProfileInput
+): Promise<{ pharmacy: PharmacyProfileResponseDto }> {
+  const pharmacy = await findMyPharmacy(userId);
+
+  const update: Record<string, unknown> = {
+    updatedBy: userId,
+  };
+
+  if (input.name !== undefined) update.name = input.name;
+  if (input.address !== undefined) update.address = input.address;
+  if (input.city !== undefined) update.city = input.city;
+  if (input.phone !== undefined) update.phone = input.phone;
+  if (input.email !== undefined) update.email = input.email;
+  if (input.workingHours !== undefined) update.workingHours = input.workingHours;
+  if (input.imageUrl !== undefined) update.imageUrl = input.imageUrl;
+  if (input.description !== undefined) update.description = input.description;
+
+  if (input.bankDetails) {
+    for (const [key, value] of Object.entries(input.bankDetails)) {
+      if (value !== undefined) {
+        update[`bankDetails.${key}`] = value;
+      }
+    }
+  }
+
+  const updatedPharmacy = await Pharmacy.findByIdAndUpdate(
+    pharmacy._id,
+    { $set: update },
+    { new: true, runValidators: true }
+  );
+
+  if (!updatedPharmacy) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+  }
+
+  return {
+    pharmacy: serializePharmacyProfile(updatedPharmacy as PharmacyDocument),
+  };
+}
+
+//===============================================================
+
+export async function sendMyPharmacyForVerificationService(
+  userId: string
+): Promise<{ pharmacy: PharmacyProfileResponseDto; message: string }> {
+  const pharmacy = await findMyPharmacy(userId);
+
+  assertReadyForVerification(pharmacy);
+
+  if (pharmacy.status === PHARMACY_STATUSES.NEW) {
+    pharmacy.status = PHARMACY_STATUSES.ON_VERIFICATION;
+  } else if (pharmacy.status === PHARMACY_STATUSES.ACTIVE) {
+    pharmacy.status = PHARMACY_STATUSES.ON_MODERATION;
+  }
+
+  pharmacy.updatedBy = new Types.ObjectId(userId);
+  await pharmacy.save();
+
+  return {
+    pharmacy: serializePharmacyProfile(pharmacy),
+    message:
+      pharmacy.status === PHARMACY_STATUSES.ON_VERIFICATION
+        ? 'Pharmacy was sent for verification.'
+        : 'Pharmacy changes were sent for moderation.',
   };
 }

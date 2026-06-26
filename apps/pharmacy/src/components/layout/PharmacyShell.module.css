@@ -19,4 +19,9 @@
     align-items: start;
     padding-block: 28px 64px;
   }
+
+  .bodyPlain {
+    display: block;
+    padding-block: 0;
+  }
 }

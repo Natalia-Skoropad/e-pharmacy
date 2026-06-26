@@ -1,10 +1,8 @@
 'use client';
 
-import Link from 'next/link';
+import { ErrorPage as SharedErrorPage } from '@e-pharmacy/ui/status-pages';
 
 import { getPharmacyDashboardPath } from '@/lib/pharmacy/routes';
-
-import css from '@/components/pharmacy/ServicePage.module.css';
 
 //===================================================================
 
@@ -16,22 +14,15 @@ type ErrorPageProps = Readonly<{
 
 function ErrorPage({ reset }: ErrorPageProps) {
   return (
-    <main className={css.page}>
-      <section className={css.card} aria-labelledby="error-title">
-        <p className={css.kicker}>Route guard</p>
-        <h1 id="error-title">Something went wrong, but your route is still safe</h1>
-        <p>
-          The pharmacy cabinet could not render this page. Please try again or
-          return to the dashboard.
-        </p>
-        <div className={css.actions}>
-          <button type="button" onClick={reset}>
-            Try again
-          </button>
-          <Link href={getPharmacyDashboardPath()}>Back to dashboard</Link>
-        </div>
-      </section>
-    </main>
+    <SharedErrorPage
+      title="Something went wrong, but your route is still safe"
+      description="The pharmacy cabinet could not render this page. Please try again or return to the dashboard."
+      eyebrow="Route guard"
+      homeHref={getPharmacyDashboardPath()}
+      homeLabel="Back to dashboard"
+      retryLabel="Try again"
+      onRetry={reset}
+    />
   );
 }
 

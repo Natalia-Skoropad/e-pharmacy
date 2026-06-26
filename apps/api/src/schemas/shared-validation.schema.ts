@@ -6,10 +6,15 @@ import {
   MIN_REVIEW_RATING,
   NAME_PATTERN,
   ORDER_COMMENT_PATTERN,
+  PAYMENT_PURPOSE_PATTERN,
   PASSWORD_PATTERN,
   PHONE_PATTERN,
   REVIEW_COMMENT_PATTERN,
   SEARCH_TEXT_PATTERN,
+  TAX_ID_PATTERN,
+  IBAN_PATTERN,
+  WORKING_HOURS_PATTERN,
+  TEXT_EDITOR_PATTERN,
   USER_ADDRESS_MAX_LENGTH,
   USER_ADDRESS_MIN_LENGTH,
   USER_EMAIL_MAX_LENGTH,
@@ -23,6 +28,12 @@ import {
   USER_REVIEW_COMMENT_MAX_LENGTH,
   USER_REVIEW_COMMENT_MIN_LENGTH,
   USER_SEARCH_MAX_LENGTH,
+  WORKING_HOURS_MAX_LENGTH,
+  TEXT_EDITOR_MAX_LENGTH,
+  TAX_ID_MIN_LENGTH,
+  TAX_ID_MAX_LENGTH,
+  IBAN_MAX_LENGTH,
+  PAYMENT_PURPOSE_MAX_LENGTH,
   VALIDATION_MESSAGES,
   isHttpUrl,
   isPictureDataUrl,
@@ -143,3 +154,87 @@ export const sharedSearchSchema = z
   .max(USER_SEARCH_MAX_LENGTH, VALIDATION_MESSAGES.limits.searchMax)
   .regex(SEARCH_TEXT_PATTERN, VALIDATION_MESSAGES.format.search)
   .optional();
+
+//===============================================================
+
+export const sharedWorkingHoursSchema = z
+  .string()
+  .trim()
+  .min(1, VALIDATION_MESSAGES.required.workingHours)
+  .max(WORKING_HOURS_MAX_LENGTH, VALIDATION_MESSAGES.limits.workingHoursMax)
+  .regex(WORKING_HOURS_PATTERN, VALIDATION_MESSAGES.format.workingHours);
+
+//===============================================================
+
+export const sharedTextEditorSchema = z
+  .string()
+  .trim()
+  .min(1, VALIDATION_MESSAGES.required.textEditor)
+  .max(TEXT_EDITOR_MAX_LENGTH, VALIDATION_MESSAGES.limits.textEditorMax)
+  .regex(TEXT_EDITOR_PATTERN, VALIDATION_MESSAGES.format.textEditor);
+
+//===============================================================
+
+export const sharedTaxIdSchema = z
+  .string()
+  .trim()
+  .min(TAX_ID_MIN_LENGTH, VALIDATION_MESSAGES.format.taxId)
+  .max(TAX_ID_MAX_LENGTH, VALIDATION_MESSAGES.format.taxId)
+  .regex(TAX_ID_PATTERN, VALIDATION_MESSAGES.format.taxId);
+
+//===============================================================
+
+export const sharedIbanSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .max(IBAN_MAX_LENGTH, VALIDATION_MESSAGES.format.iban)
+  .regex(IBAN_PATTERN, VALIDATION_MESSAGES.format.iban);
+
+//===============================================================
+
+export const sharedPaymentPurposeSchema = z
+  .string()
+  .trim()
+  .min(1, VALIDATION_MESSAGES.required.paymentPurpose)
+  .max(
+    PAYMENT_PURPOSE_MAX_LENGTH,
+    VALIDATION_MESSAGES.limits.paymentPurposeMax
+  )
+  .regex(PAYMENT_PURPOSE_PATTERN, VALIDATION_MESSAGES.format.paymentPurpose);
+
+//===============================================================
+
+function emptyStringToUndefined(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+
+  const normalizedValue = value.trim();
+  return normalizedValue === '' ? undefined : normalizedValue;
+}
+
+//===============================================================
+
+export const sharedOptionalWorkingHoursSchema = z.preprocess(
+  emptyStringToUndefined,
+  sharedWorkingHoursSchema.optional()
+);
+
+export const sharedOptionalTextEditorSchema = z.preprocess(
+  emptyStringToUndefined,
+  sharedTextEditorSchema.optional()
+);
+
+export const sharedOptionalTaxIdSchema = z.preprocess(
+  emptyStringToUndefined,
+  sharedTaxIdSchema.optional()
+);
+
+export const sharedOptionalIbanSchema = z.preprocess(
+  emptyStringToUndefined,
+  sharedIbanSchema.optional()
+);
+
+export const sharedOptionalPaymentPurposeSchema = z.preprocess(
+  emptyStringToUndefined,
+  sharedPaymentPurposeSchema.optional()
+);

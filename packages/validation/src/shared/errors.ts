@@ -11,6 +11,9 @@ import {
   USER_NAME_MAX_LENGTH,
   USER_NAME_MIN_LENGTH,
   USER_ORDER_COMMENT_MAX_LENGTH,
+  WORKING_HOURS_MAX_LENGTH,
+  TEXT_EDITOR_MAX_LENGTH,
+  PAYMENT_PURPOSE_MAX_LENGTH,
   USER_PASSWORD_MAX_LENGTH,
   USER_PASSWORD_MIN_LENGTH,
   USER_PHONE_MAX_LENGTH,
@@ -26,6 +29,10 @@ import {
   ORDER_COMMENT_PATTERN,
   PASSWORD_PATTERN,
   PHONE_PATTERN,
+  TAX_ID_PATTERN,
+  IBAN_PATTERN,
+  WORKING_HOURS_PATTERN,
+  TEXT_EDITOR_PATTERN,
   REVIEW_COMMENT_PATTERN,
 } from './patterns';
 
@@ -226,6 +233,124 @@ export function buildOrderCommentError(
   if (!ORDER_COMMENT_PATTERN.test(comment)) {
     const message = VALIDATION_MESSAGES.format.orderComment;
     return formatValidationMessage(message, options);
+  }
+
+  return '';
+}
+
+
+//=============================================================================
+
+export function buildWorkingHoursError(
+  value: string,
+  options: { required?: boolean; trailingDot?: boolean } = {}
+): string {
+  const workingHours = value.trim();
+
+  if (!workingHours) {
+    return options.required
+      ? formatValidationMessage(VALIDATION_MESSAGES.required.workingHours, options)
+      : '';
+  }
+
+  if (workingHours.length > WORKING_HOURS_MAX_LENGTH) {
+    return formatValidationMessage(VALIDATION_MESSAGES.limits.workingHoursMax, options);
+  }
+
+  if (!WORKING_HOURS_PATTERN.test(workingHours)) {
+    return formatValidationMessage(VALIDATION_MESSAGES.format.workingHours, options);
+  }
+
+  return '';
+}
+
+//=============================================================================
+
+export function buildTextEditorError(
+  value: string,
+  options: { required?: boolean; trailingDot?: boolean } = {}
+): string {
+  const text = value.trim();
+
+  if (!text) {
+    return options.required
+      ? formatValidationMessage(VALIDATION_MESSAGES.required.textEditor, options)
+      : '';
+  }
+
+  if (text.length > TEXT_EDITOR_MAX_LENGTH) {
+    return formatValidationMessage(VALIDATION_MESSAGES.limits.textEditorMax, options);
+  }
+
+  if (!TEXT_EDITOR_PATTERN.test(text)) {
+    return formatValidationMessage(VALIDATION_MESSAGES.format.textEditor, options);
+  }
+
+  return '';
+}
+
+//=============================================================================
+
+export function buildTaxIdError(
+  value: string,
+  options: { required?: boolean; trailingDot?: boolean } = {}
+): string {
+  const taxId = value.trim();
+
+  if (!taxId) {
+    return options.required
+      ? formatValidationMessage(VALIDATION_MESSAGES.required.taxId, options)
+      : '';
+  }
+
+  if (!TAX_ID_PATTERN.test(taxId)) {
+    return formatValidationMessage(VALIDATION_MESSAGES.format.taxId, options);
+  }
+
+  return '';
+}
+
+//=============================================================================
+
+export function buildIbanError(
+  value: string,
+  options: { required?: boolean; trailingDot?: boolean } = {}
+): string {
+  const iban = value.trim().toUpperCase();
+
+  if (!iban) {
+    return options.required
+      ? formatValidationMessage(VALIDATION_MESSAGES.required.iban, options)
+      : '';
+  }
+
+  if (!IBAN_PATTERN.test(iban)) {
+    return formatValidationMessage(VALIDATION_MESSAGES.format.iban, options);
+  }
+
+  return '';
+}
+
+//=============================================================================
+
+export function buildPaymentPurposeError(
+  value: string,
+  options: { required?: boolean; trailingDot?: boolean } = {}
+): string {
+  const paymentPurpose = value.trim();
+
+  if (!paymentPurpose) {
+    return options.required
+      ? formatValidationMessage(VALIDATION_MESSAGES.required.paymentPurpose, options)
+      : '';
+  }
+
+  if (paymentPurpose.length > PAYMENT_PURPOSE_MAX_LENGTH) {
+    return formatValidationMessage(VALIDATION_MESSAGES.limits.paymentPurposeMax, options);
+  }
+
+  if (!ORDER_COMMENT_PATTERN.test(paymentPurpose)) {
+    return formatValidationMessage(VALIDATION_MESSAGES.format.paymentPurpose, options);
   }
 
   return '';

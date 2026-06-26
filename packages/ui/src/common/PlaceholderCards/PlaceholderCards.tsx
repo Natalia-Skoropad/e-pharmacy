@@ -1,4 +1,4 @@
-import css from './PharmacyPage.module.css';
+import css from '../CabinetPage/CabinetPage.module.css';
 
 //===================================================================
 

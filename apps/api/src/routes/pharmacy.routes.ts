@@ -4,6 +4,7 @@ import {
   createPharmacyReview,
   getFavoritePharmacyIds,
   getFavoritePharmacies,
+  getMyPharmacyProfile,
   getPendingPharmacyReviews,
   getPharmacyCheckoutDetails,
   getPharmacyDetails,
@@ -12,7 +13,9 @@ import {
   getPharmacyReviews,
   getPharmacies,
   moderatePharmacyReview,
+  sendMyPharmacyForVerification,
   setFavoritePharmacy,
+  updateMyPharmacyProfile,
 } from '../controllers/pharmacy.controller';
 
 import { USER_ROLES } from '../constants/auth';
@@ -33,6 +36,8 @@ import {
   pharmacyIdParamsSchema,
   pharmacyReviewParamsSchema,
   pharmaciesQuerySchema,
+  sendMyPharmacyForVerificationSchema,
+  updateMyPharmacyProfileSchema,
 } from '../schemas/pharmacy.schema';
 
 import { ctrlWrapper } from '../utils/ctrlWrapper';
@@ -42,6 +47,36 @@ import { ctrlWrapper } from '../utils/ctrlWrapper';
 export const pharmacyRoutes = Router();
 
 //===============================================================
+
+
+pharmacyRoutes.get(
+  '/me/profile',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  ctrlWrapper(getMyPharmacyProfile)
+);
+
+//=================================================================================
+
+pharmacyRoutes.patch(
+  '/me/profile',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ body: updateMyPharmacyProfileSchema }),
+  ctrlWrapper(updateMyPharmacyProfile)
+);
+
+//=================================================================================
+
+pharmacyRoutes.post(
+  '/me/profile/send-for-verification',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ body: sendMyPharmacyForVerificationSchema }),
+  ctrlWrapper(sendMyPharmacyForVerification)
+);
+
+//=================================================================================
 
 pharmacyRoutes.get(
   '/',

@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import { parsePharmacyAllProductFilters } from '@/lib/pharmacy/routes';
 import { getAllProductsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
 
-import { PlaceholderCards } from '@/components/pharmacy/PlaceholderCards';
-import { PharmacyPage } from '@/components/pharmacy/PharmacyPage';
+import { PlaceholderCards } from '@e-pharmacy/ui/common';
+import { CabinetPage } from '@e-pharmacy/ui/common';
 
 //===================================================================
 
@@ -26,7 +26,7 @@ async function AllProductsPage({ params }: AllProductsPageProps) {
   const parsedFilters = parsePharmacyAllProductFilters(filters);
 
   return (
-    <PharmacyPage
+    <CabinetPage
       title="All products"
       description="Global products table skeleton with add-to-my-pharmacy actions. Products with new status must stay hidden."
       breadcrumbs={getAllProductsBreadcrumbs()}
@@ -43,7 +43,7 @@ async function AllProductsPage({ params }: AllProductsPageProps) {
           'Action',
         ]}
       />
-    </PharmacyPage>
+    </CabinetPage>
   );
 }
 
