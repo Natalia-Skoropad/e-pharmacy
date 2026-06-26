@@ -1,10 +1,7 @@
 import type { Metadata } from 'next';
 
-import { parsePharmacyAllProductFilters } from '@/lib/pharmacy/routes';
+import { AllProductsPageContent } from '@/components/all-products/AllProductsPageContent';
 import { getAllProductsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
-
-import { PlaceholderCards } from '@e-pharmacy/ui/common';
-import { CabinetPage } from '@e-pharmacy/ui/common';
 
 //===================================================================
 
@@ -15,36 +12,8 @@ export const metadata: Metadata = {
 
 //===================================================================
 
-type AllProductsPageProps = Readonly<{
-  params: Promise<{ filters?: string[] }>;
-}>;
-
-//===================================================================
-
-async function AllProductsPage({ params }: AllProductsPageProps) {
-  const { filters } = await params;
-  const parsedFilters = parsePharmacyAllProductFilters(filters);
-
-  return (
-    <CabinetPage
-      title="All products"
-      description="Global products table skeleton with add-to-my-pharmacy actions. Products with new status must stay hidden."
-      breadcrumbs={getAllProductsBreadcrumbs()}
-    >
-      <pre>{JSON.stringify(parsedFilters, null, 2)}</pre>
-      <PlaceholderCards
-        items={[
-          'Created date in Admin',
-          'Article',
-          'Name',
-          'Category',
-          'Status',
-          'Added to my pharmacy',
-          'Action',
-        ]}
-      />
-    </CabinetPage>
-  );
+function AllProductsPage() {
+  return <AllProductsPageContent breadcrumbs={getAllProductsBreadcrumbs()} />;
 }
 
 export default AllProductsPage;

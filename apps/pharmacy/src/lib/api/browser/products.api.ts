@@ -1,0 +1,39 @@
+import 'client-only';
+
+import { buildQueryString, getResponseData } from '@e-pharmacy/api-client/core';
+
+import type {
+  ApiSuccessResponse,
+  Product,
+  ProductDetailsResponse,
+  ProductsQueryParams,
+  ProductsResponse,
+} from '@e-pharmacy/types';
+
+import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
+
+import { localApiRequest } from './local-api-request';
+
+//===================================================================
+
+export async function getProducts(
+  params: ProductsQueryParams = {}
+): Promise<ProductsResponse> {
+  const response = await localApiRequest<ApiSuccessResponse<ProductsResponse>>(
+    `${PHARMACY_API_ROUTES.products.list}${buildQueryString(params)}`
+  );
+
+  return getResponseData(response);
+}
+
+//===================================================================
+
+export async function getProductDetails(
+  productId: Product['id']
+): Promise<ProductDetailsResponse> {
+  const response = await localApiRequest<ApiSuccessResponse<ProductDetailsResponse>>(
+    PHARMACY_API_ROUTES.products.details(productId)
+  );
+
+  return getResponseData(response);
+}

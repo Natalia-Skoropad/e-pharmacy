@@ -1,12 +1,12 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  z-index: calc(var(--z-overlay, 1000) + 20);
+  z-index: calc(var(--z-overlay) + 20);
   pointer-events: none;
-  background-color: var(--color-overlay, rgba(15, 23, 42, 0.5));
+  background-color: var(--color-overlay);
   touch-action: none;
   opacity: 0;
-  transition: opacity var(--transition-base, 180ms ease);
+  transition: opacity var(--transition-base);
 }
 
 .backdrop.open {
@@ -25,11 +25,11 @@
   max-height: 100dvh;
   padding: 20px;
   overflow-y: auto;
-  color: var(--color-white, #fff);
-  background: var(--gradient-mobile-offcanvas, linear-gradient(180deg, #58b77c 0%, #2f9461 100%));
-  box-shadow: var(--shadow-modal, -24px 0 60px rgba(15, 23, 42, 0.16));
+  color: var(--color-white);
+  background: var(--gradient-mobile-offcanvas);
+  box-shadow: var(--shadow-modal);
   transform: translateX(100%);
-  transition: transform var(--transition-base, 180ms ease);
+  transition: transform var(--transition-base);
 }
 
 .backdrop.open .panel {
@@ -51,7 +51,7 @@
 }
 
 .menu {
-  color: var(--color-text-primary, #1f2937);
+  color: var(--color-text-primary);
 }
 
 .actions {
@@ -63,7 +63,7 @@
 
 .actions :is(a, button) {
   min-height: 52px;
-  border-radius: var(--radius-pill, 999px);
+  border-radius: var(--radius-pill);
 }
 
 @media only screen and (min-width: 768px) {

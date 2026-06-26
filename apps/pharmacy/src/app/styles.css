@@ -9,8 +9,8 @@ body {
 }
 
 body {
-  background: var(--gradient-page-bg, #f5f7fb);
-  color: var(--color-text-primary, #1f2937);
+  background: var(--gradient-page-bg);
+  color: var(--color-text-primary);
 }
 
 a {

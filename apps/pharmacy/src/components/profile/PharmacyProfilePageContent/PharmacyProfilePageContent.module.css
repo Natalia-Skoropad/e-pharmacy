@@ -100,13 +100,21 @@
 
 .statusNote {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
   padding: 14px;
   color: var(--color-text-secondary);
   background-color: var(--color-accent-soft);
   border: 1px solid var(--color-accent-border);
   border-radius: var(--radius-lg);
+}
+
+.statusNoteHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .statusNote h3 {
@@ -165,6 +173,7 @@
   min-width: 0;
 }
 
+.documentsList,
 .sessionsList {
   display: grid;
   gap: 12px;
@@ -173,6 +182,7 @@
   list-style: none;
 }
 
+.documentCard,
 .sessionCard {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -184,12 +194,20 @@
   border-radius: var(--radius-lg);
 }
 
+.documentInfo,
 .sessionInfo {
   display: grid;
   gap: 4px;
   min-width: 0;
 }
 
+.documentInfo strong,
+.sessionInfo strong {
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.documentInfo span,
 .sessionInfo span,
 .currentSession {
   font-size: var(--fz-14);
@@ -199,6 +217,27 @@
 .currentSession {
   font-weight: var(--fw-medium);
   color: var(--color-accent);
+}
+
+.emptyState {
+  display: grid;
+  gap: 8px;
+  padding: 20px;
+  background-color: var(--color-background);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.emptyState h3 {
+  font-size: var(--fz-18);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+}
+
+.emptyState p {
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
 }
 
 .sidebar,

@@ -51,6 +51,7 @@ function serializePharmacyProfile(
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
     ...(pharmacy.bankDetails ? { bankDetails: pharmacy.bankDetails } : {}),
     bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
+    documents: pharmacy.documents ?? [],
     status: pharmacy.status,
     rating: pharmacy.rating ?? 0,
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),

@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 
 import { getClientDetailsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
-
-import { CabinetPage } from '@e-pharmacy/ui/common';
-import { PlaceholderCards } from '@e-pharmacy/ui/common';
+import { LockedPharmacyFeaturePage } from '@/components/shared/LockedPharmacyFeaturePage';
 
 //===================================================================
 
@@ -24,21 +22,12 @@ async function ClientDetailsPage({ params }: ClientDetailsPageProps) {
   const { clientId } = await params;
 
   return (
-    <CabinetPage
+    <LockedPharmacyFeaturePage
       title={`Client ${clientId}`}
-      description="Readonly client details skeleton with related pharmacy orders only."
+      description="Client details open only after verified pharmacy orders create real client relationships."
       breadcrumbs={getClientDetailsBreadcrumbs(clientId)}
-    >
-      <PlaceholderCards
-        items={[
-          'Readonly contacts',
-          'First order in current pharmacy',
-          'Orders count in current pharmacy',
-          'Total spent in current pharmacy',
-          'Related orders table',
-        ]}
-      />
-    </CabinetPage>
+      featureName="Client details"
+    />
   );
 }
 

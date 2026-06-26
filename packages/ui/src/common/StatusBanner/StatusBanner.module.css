@@ -3,7 +3,7 @@
   gap: 10px;
   padding: 18px;
   border: 1px solid transparent;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
 }
 
 .header {
@@ -16,37 +16,38 @@
 
 .title {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 800;
+  font-size: var(--fz-16);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
 }
 
 .message {
   margin: 0;
-  color: var(--color-text-secondary, #667085);
-  line-height: 1.6;
+  color: var(--color-text-secondary);
+  line-height: var(--lh-base);
 }
 
 .blue {
-  background-color: #eff8ff;
-  border-color: #b2ddff;
+  background-color: var(--color-info-soft);
+  border-color: var(--color-info-border);
 }
 
 .yellow {
-  background-color: #fffaeb;
-  border-color: #fedf89;
+  background-color: var(--color-warning-light);
+  border-color: var(--color-warning);
 }
 
 .green {
-  background-color: #ecfdf3;
-  border-color: #abefc6;
+  background-color: var(--color-success-soft);
+  border-color: var(--color-success-border);
 }
 
 .red {
-  background-color: #fef3f2;
-  border-color: #fecdca;
+  background-color: var(--color-error-soft);
+  border-color: var(--color-error-border);
 }
 
 .gray {
-  background-color: #f9fafb;
-  border-color: #d0d5dd;
+  background-color: var(--color-background);
+  border-color: var(--color-border);
 }

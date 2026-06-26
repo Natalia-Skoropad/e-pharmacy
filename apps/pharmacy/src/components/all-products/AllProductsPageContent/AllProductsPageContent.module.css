@@ -1,0 +1,40 @@
+.stack {
+  display: grid;
+  gap: 20px;
+}
+
+.toolbar {
+  padding: 16px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card-soft);
+}
+
+.toolbarGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.productLink {
+  font-weight: var(--fw-semi-bold);
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.productLink:hover,
+.productLink:focus-visible {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+}
+
+.muted {
+  color: var(--color-text-secondary);
+}
+
+@media only screen and (min-width: 768px) {
+  .toolbarGrid {
+    grid-template-columns: minmax(0, 1.4fr) minmax(190px, 0.8fr) minmax(190px, 0.8fr);
+    align-items: end;
+  }
+}

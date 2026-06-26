@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 
 import { getOrderDetailsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
-
-import { CabinetPage } from '@e-pharmacy/ui/common';
-import { PlaceholderCards } from '@e-pharmacy/ui/common';
+import { LockedPharmacyFeaturePage } from '@/components/shared/LockedPharmacyFeaturePage';
 
 //===================================================================
 
@@ -24,22 +22,12 @@ async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   const { orderId } = await params;
 
   return (
-    <CabinetPage
+    <LockedPharmacyFeaturePage
       title={`Order #${orderId}`}
-      description="Order details skeleton with client, delivery, payment, items, status history, and actions."
+      description="Order details are unavailable for a newly registered pharmacy because no real orders can exist before verification."
       breadcrumbs={getOrderDetailsBreadcrumbs(orderId)}
-    >
-      <PlaceholderCards
-        items={[
-          'Client info',
-          'Delivery info',
-          'Payment info',
-          'Order items',
-          'Status history',
-          'Action buttons',
-        ]}
-      />
-    </CabinetPage>
+      featureName="Order details"
+    />
   );
 }
 

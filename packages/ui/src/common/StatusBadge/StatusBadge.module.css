@@ -4,39 +4,39 @@
   width: fit-content;
   min-height: 28px;
   padding: 4px 10px;
-  font-size: 0.8125rem;
-  font-weight: 800;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-bold);
   line-height: 1.2;
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .blue {
-  color: #175cd3;
-  background-color: #eff8ff;
-  border-color: #b2ddff;
+  color: var(--color-info);
+  background-color: var(--color-info-soft);
+  border-color: var(--color-info-border);
 }
 
 .yellow {
-  color: #854a0e;
-  background-color: #fffaeb;
-  border-color: #fedf89;
+  color: var(--color-warning);
+  background-color: var(--color-warning-light);
+  border-color: var(--color-warning);
 }
 
 .green {
-  color: #067647;
-  background-color: #ecfdf3;
-  border-color: #abefc6;
+  color: var(--color-success);
+  background-color: var(--color-success-soft);
+  border-color: var(--color-success-border);
 }
 
 .red {
-  color: #b42318;
-  background-color: #fef3f2;
-  border-color: #fecdca;
+  color: var(--color-error);
+  background-color: var(--color-error-soft);
+  border-color: var(--color-error-border);
 }
 
 .gray {
-  color: #344054;
-  background-color: #f2f4f7;
-  border-color: #d0d5dd;
+  color: var(--color-text-secondary);
+  background-color: var(--color-background);
+  border-color: var(--color-border);
 }

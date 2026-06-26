@@ -17,7 +17,7 @@ const pharmacySchema = new Schema<PharmacyEntity>(
 
     address: {
       type: String,
-      required: [true, 'Pharmacy address is required'],
+      required: false,
       trim: true,
       maxlength: [200, 'Pharmacy address must be at most 200 characters'],
     },

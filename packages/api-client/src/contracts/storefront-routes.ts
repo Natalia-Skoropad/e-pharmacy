@@ -7,6 +7,8 @@ export const storefrontRoutes = {
 
   pharmacies: {
     list: '/pharmacies',
+    myProfile: '/pharmacies/me/profile',
+    sendMyProfileForVerification: '/pharmacies/me/profile/send-for-verification',
     options: '/pharmacies/options',
     favorites: '/pharmacies/favorites',
     favoriteIds: '/pharmacies/favorites/ids',

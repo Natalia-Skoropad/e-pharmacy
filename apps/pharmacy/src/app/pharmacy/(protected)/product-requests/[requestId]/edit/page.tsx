@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 
 import { getEditProductRequestBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
-
-import { CabinetPage } from '@e-pharmacy/ui/common';
-import { PlaceholderCards } from '@e-pharmacy/ui/common';
+import { LockedPharmacyFeaturePage } from '@/components/shared/LockedPharmacyFeaturePage';
 
 //===================================================================
 
@@ -24,22 +22,12 @@ async function EditProductRequestPage({ params }: EditProductRequestPageProps) {
   const { requestId } = await params;
 
   return (
-    <CabinetPage
+    <LockedPharmacyFeaturePage
       title={`Edit product request ${requestId}`}
-      description="Edit product request skeleton. Submitted requests must become readonly in the next implementation step."
+      description="Editing product requests is unavailable while the pharmacy has the new status."
       breadcrumbs={getEditProductRequestBreadcrumbs(requestId)}
-    >
-      <PlaceholderCards
-        items={[
-          'Editable draft fields',
-          'Product image upload',
-          'Additional documents',
-          'Save draft action',
-          'Send for moderation action',
-          'Cancel action',
-        ]}
-      />
-    </CabinetPage>
+      featureName="Product request editing"
+    />
   );
 }
 

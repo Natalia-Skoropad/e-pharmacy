@@ -198,7 +198,7 @@ export async function registerUserService(
         ownerId: user._id,
         managerUserIds: [],
         name: user.name,
-        address: user.address ?? 'Address pending verification',
+        ...(user.address ? { address: user.address } : {}),
         phone: user.phone,
         email: user.email,
         documents: input.pharmacyDocuments ?? [],

@@ -10,7 +10,14 @@ export type PharmacyBankDetails = {
   taxId: string;
   iban: string;
   bankName: string;
+  receiptEmail?: string;
   paymentPurpose: string;
+};
+
+export type PharmacyVerificationDocument = {
+  name: string;
+  size: number;
+  type: string;
 };
 
 export type PublicPharmacy = {
@@ -51,13 +58,14 @@ export type PharmacyModerationDetails = {
 export type PharmacyProfile = {
   id: EntityId;
   name: string;
-  address: string;
+  address?: string;
   city?: string;
   phone?: string;
   email?: string;
   workingHours?: string;
   bankDetails?: PharmacyBankDetails;
   bankTransferAvailable: boolean;
+  documents: PharmacyVerificationDocument[];
   status: PharmacyStatus;
   rating: number;
   imageUrl?: string;
@@ -180,6 +188,23 @@ export type UpdatePharmacyStatusPayload = {
   status: PharmacyStatus;
 };
 
+export type UpdateMyPharmacyProfilePayload = {
+  name?: string;
+  address?: string;
+  city?: string;
+  phone?: string;
+  email?: string;
+  workingHours?: string;
+  imageUrl?: string | null;
+  description?: string;
+  bankDetails?: Partial<PharmacyBankDetails>;
+};
+
 export type PharmacyProfileResponse = {
   pharmacy: PharmacyProfile;
+};
+
+export type SendPharmacyForVerificationResponse = {
+  pharmacy: PharmacyProfile;
+  message: string;
 };

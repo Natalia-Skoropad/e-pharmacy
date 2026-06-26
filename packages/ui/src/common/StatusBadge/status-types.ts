@@ -1,5 +1,7 @@
 export type PharmacyStatusTone = 'blue' | 'yellow' | 'green' | 'red' | 'gray';
 
+//===================================================================
+
 export type PharmacyStatusVariant =
   | 'new'
   | 'in_work'
@@ -13,7 +15,11 @@ export type PharmacyStatusVariant =
   | 'draft'
   | 'empty';
 
-export function getStatusTone(status: PharmacyStatusVariant): PharmacyStatusTone {
+//===================================================================
+
+export function getStatusTone(
+  status: PharmacyStatusVariant
+): PharmacyStatusTone {
   if (status === 'new') return 'blue';
   if (
     status === 'in_work' ||
@@ -28,6 +34,8 @@ export function getStatusTone(status: PharmacyStatusVariant): PharmacyStatusTone
   if (status === 'blocked' || status === 'rejected') return 'red';
   return 'gray';
 }
+
+//===================================================================
 
 export function formatStatusLabel(status: PharmacyStatusVariant) {
   return status

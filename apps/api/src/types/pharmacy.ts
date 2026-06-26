@@ -29,14 +29,14 @@ export type PharmacyBankDetails = {
 
 export type PharmacyEntity = {
   name: string;
-  address: string;
+  address?: string;
   city?: string;
   phone?: string;
   email?: string;
   workingHours?: string;
   bankDetails?: PharmacyBankDetails;
   license?: string;
-  documents?: PharmacyVerificationDocument[];
+  documents: PharmacyVerificationDocument[];
   status: PharmacyStatus;
   rating: number;
   imageUrl?: string;
@@ -72,7 +72,7 @@ export type PharmacyFilterOptionsResponseDto = {
 export type PublicPharmacyResponseDto = {
   id: string;
   name: string;
-  address: string;
+  address?: string;
   city?: string;
   phone?: string;
   email?: string;
@@ -99,14 +99,14 @@ export type PharmacyReviewResponseDto = {
 export type PharmacyProfileResponseDto = {
   id: string;
   name: string;
-  address: string;
+  address?: string;
   city?: string;
   phone?: string;
   email?: string;
   workingHours?: string;
   bankDetails?: PharmacyBankDetails;
   bankTransferAvailable: boolean;
-  documents?: PharmacyVerificationDocument[];
+  documents: PharmacyVerificationDocument[];
   status: PharmacyStatus;
   rating: number;
   imageUrl?: string;

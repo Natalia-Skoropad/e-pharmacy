@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 
+import { AllProductDetailsPageContent } from '@/components/all-products/AllProductDetailsPageContent';
 import { getAllProductDetailsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
-
-import { CabinetPage } from '@e-pharmacy/ui/common';
-import { PlaceholderCards } from '@e-pharmacy/ui/common';
 
 //===================================================================
 
@@ -24,20 +22,10 @@ async function AllProductDetailsPage({ params }: AllProductDetailsPageProps) {
   const { productId } = await params;
 
   return (
-    <CabinetPage
-      title={`Global product ${productId}`}
-      description="Global product details skeleton with CTA to add the product to the current pharmacy."
+    <AllProductDetailsPageContent
+      productId={productId}
       breadcrumbs={getAllProductDetailsBreadcrumbs(productId)}
-    >
-      <PlaceholderCards
-        items={[
-          'Global product overview',
-          'Add to my pharmacy CTA',
-          'Characteristics tab',
-          'Reviews tab',
-        ]}
-      />
-    </CabinetPage>
+    />
   );
 }
 

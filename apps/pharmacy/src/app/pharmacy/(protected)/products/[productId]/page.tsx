@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 
 import { getProductDetailsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
-
-import { CabinetPage } from '@e-pharmacy/ui/common';
-import { PlaceholderCards } from '@e-pharmacy/ui/common';
+import { LockedPharmacyFeaturePage } from '@/components/shared/LockedPharmacyFeaturePage';
 
 //===================================================================
 
@@ -24,23 +22,12 @@ async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
   const { productId } = await params;
 
   return (
-    <CabinetPage
-      title={`Product ${productId}`}
-      description="Product details skeleton with global product data and pharmacy-specific price and stock."
+    <LockedPharmacyFeaturePage
+      title={`Own product ${productId}`}
+      description="Own product details open after verification, when this pharmacy can add products and manage price or stock."
       breadcrumbs={getProductDetailsBreadcrumbs(productId)}
-    >
-      <PlaceholderCards
-        items={[
-          'Product overview',
-          'Pharmacy offer',
-          'Statistics tab',
-          'Stock movement tab',
-          'Related orders tab',
-          'Characteristics tab',
-          'Reviews tab',
-        ]}
-      />
-    </CabinetPage>
+      featureName="Own product details"
+    />
   );
 }
 

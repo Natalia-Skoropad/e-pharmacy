@@ -1,10 +1,7 @@
 import type { Metadata } from 'next';
 
 import { getClientsBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
-import { parsePharmacyClientFilters } from '@/lib/pharmacy/routes';
-
-import { PlaceholderCards } from '@e-pharmacy/ui/common';
-import { CabinetPage } from '@e-pharmacy/ui/common';
+import { PharmacyEmptyTablePageContent } from '@/components/shared/PharmacyEmptyTablePageContent';
 
 //===================================================================
 
@@ -15,35 +12,14 @@ export const metadata: Metadata = {
 
 //===================================================================
 
-type ClientsPageProps = Readonly<{
-  params: Promise<{ filters?: string[] }>;
-}>;
-
-//===================================================================
-
-async function ClientsPage({ params }: ClientsPageProps) {
-  const { filters } = await params;
-  const parsedFilters = parsePharmacyClientFilters(filters);
-
+function ClientsPage() {
   return (
-    <CabinetPage
+    <PharmacyEmptyTablePageContent
       title="Clients"
-      description="Clients table skeleton with status, date, and search clean URL filters."
+      description="Client rows are created from real orders for this pharmacy only. New pharmacies do not have clients yet."
       breadcrumbs={getClientsBreadcrumbs()}
-    >
-      <pre>{JSON.stringify(parsedFilters, null, 2)}</pre>
-      <PlaceholderCards
-        items={[
-          'Client name',
-          'Email',
-          'Phone',
-          'First order date',
-          'Orders count',
-          'Total spent',
-          'Status',
-        ]}
-      />
-    </CabinetPage>
+      kind="clients"
+    />
   );
 }
 

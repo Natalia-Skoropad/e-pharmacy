@@ -1,0 +1,49 @@
+.tableWrap {
+  max-width: 100%;
+  overflow-x: auto;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fz-14);
+}
+
+.table th,
+.table td {
+  padding: 14px 16px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table th {
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+}
+
+.table td {
+  color: var(--color-text-secondary);
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.alignRight {
+  text-align: right !important;
+}
+
+.alignCenter {
+  text-align: center !important;
+}
+
+.stateCell {
+  padding: 24px 16px !important;
+  color: var(--color-text-secondary);
+  text-align: center !important;
+}
