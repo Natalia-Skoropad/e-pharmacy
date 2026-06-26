@@ -157,6 +157,8 @@ Description:
 Manage your pharmacy profile, contact details, payment details, and reviews.
 ```
 
+The top of the page must follow the Client profile page structure: shared `Container`, shared `Breadcrumbs`, one `h1`, and the same spacing/typography approach.
+
 For `new` pharmacy show button:
 
 ```txt
@@ -236,21 +238,44 @@ Use shared `Tabs` component.
 
 Tabs:
 
-1. Pharmacy data;
-2. About pharmacy;
-3. Payment details;
-4. Reviews.
+1. My data;
+2. Pharmacy data;
+3. About pharmacy;
+4. Payment details;
+5. Reviews;
+6. Active sessions.
 
-## 10. Tab: Pharmacy data
+`My data` is for the pharmacy owner account only and is not moderated.
+
+## 10. Tab: My data
+
+This tab contains pharmacy owner account data and is not moderated.
 
 Fields:
 
 - Name;
 - Phone;
-- Address;
-- Working hours;
 - Current password;
 - New password.
+
+Use shared components:
+
+- `NameInput`;
+- `PhoneInput`;
+- `PasswordInput`;
+- `Button`.
+
+Password change does not require Admin moderation.
+
+## 11. Tab: Pharmacy data
+
+Fields:
+
+- Pharmacy photo;
+- Address;
+- Phone;
+- Email;
+- Working hours.
 
 ### Field rules
 
@@ -263,6 +288,8 @@ Fields:
 | Password      |  By password rules |                       By password rules |                             No |
 
 Phone must be unique across Client, Pharmacy, and Admin.
+
+Pharmacy photo must use shared `PictureCard`.
 
 Working hours should use a shared common component:
 
@@ -314,7 +341,7 @@ Error toast:
 Could not save changes. Please try again.
 ```
 
-## 11. Tab: About pharmacy
+## 12. Tab: About pharmacy
 
 Field:
 
@@ -323,7 +350,7 @@ Field:
 Use common component:
 
 ```txt
-TextEditor
+PharmacyAboutFields
 ```
 
 Rules:
@@ -333,7 +360,7 @@ Rules:
 - active pharmacy changes require Admin moderation;
 - new pharmacy changes save immediately without moderation.
 
-### TextEditor requirements
+### PharmacyAboutFields requirements
 
 - max 5000 characters;
 - character counter;
@@ -345,14 +372,15 @@ Rules:
 
 Save button follows the same status rules as the Pharmacy data tab.
 
-## 12. Tab: Payment details
+## 13. Tab: Payment details
 
 Fields:
 
-- Recipient;
+- Recipient name;
 - EDRPOU / Tax ID;
 - IBAN;
-- Bank;
+- Bank name;
+- Receipt email;
 - Payment purpose.
 
 Rules:
@@ -367,15 +395,16 @@ Unique fields:
 - EDRPOU / Tax ID;
 - IBAN.
 
-Create reusable form-field components:
+Use shared form field components:
 
-- `RecipientInput`;
-- `TaxIdInput`;
-- `IbanInput`;
-- `BankInput`;
-- `PaymentPurposeInput`.
+- Recipient name — `NameInput`;
+- EDRPOU / Tax ID — `TaxIdInput`;
+- IBAN — `IbanInput`;
+- Bank name — `NameInput`;
+- Receipt email — `EmailInput`;
+- Payment purpose — `CommentInput`.
 
-## 13. Tab: Reviews
+## 14. Tab: Reviews
 
 Pharmacy can only view pharmacy reviews.
 
@@ -388,7 +417,7 @@ Pharmacy cannot:
 
 Reviews are moderated in Admin.
 
-Use Client review styles where possible.
+Use shared `ReviewsList` based on Client review styles.
 
 Show:
 
@@ -410,7 +439,20 @@ Empty state:
 This pharmacy has no reviews yet.
 ```
 
-## 14. Shared profile form rules
+## 15. Tab: Active sessions
+
+This tab mirrors the Client profile active sessions section.
+
+Show:
+
+- device name;
+- last used date;
+- current session label;
+- revoke action for other sessions.
+
+Use shared `LoadingSpinner` while session data is loading.
+
+## 16. Shared profile form rules
 
 Buttons are disabled when:
 

@@ -1,0 +1,116 @@
+.section {
+  display: grid;
+  gap: 20px;
+}
+
+.headerBlock {
+  display: grid;
+  gap: 12px;
+}
+
+.title {
+  font-size: var(--fz-24);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.count {
+  justify-self: start;
+}
+
+.empty {
+  padding: 24px;
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.emptyTitle {
+  font-size: var(--fz-20);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.emptyText {
+  margin-top: 8px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.list {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.card {
+  padding: 18px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.cardHeader {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.author {
+  font-size: var(--fz-16);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.date {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  color: var(--color-text-muted);
+}
+
+.rating {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+  color: var(--color-text-primary);
+  background-color: var(--color-accent-light);
+  border-radius: var(--radius-pill);
+}
+
+.star {
+  color: var(--color-warning);
+  fill: currentColor;
+}
+
+.comment {
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+@media only screen and (min-width: 768px) {
+  .headerBlock {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .count {
+    justify-self: end;
+  }
+}

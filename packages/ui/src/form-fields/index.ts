@@ -13,3 +13,6 @@ export type {
   FormFieldLayoutProps,
   PasswordFieldProps,
 } from './types';
+
+export * from './TaxIdInput';
+export * from './IbanInput';
