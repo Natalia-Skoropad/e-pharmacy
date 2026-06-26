@@ -1,14 +1,12 @@
-.page {
-  min-height: 100%;
-  background-color: var(--color-background);
-}
-
 .section {
   padding-block: 20px 64px;
 }
 
+.section > .profileContainer {
+  padding-inline: 0;
+}
+
 .title {
-  margin-top: 32px;
   font-size: var(--fz-40);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
@@ -233,7 +231,6 @@
   }
 
   .title {
-    margin-top: 40px;
     font-size: var(--fz-48);
   }
 

@@ -5,6 +5,8 @@ import '@e-pharmacy/ui/styles/reset.css';
 import '@e-pharmacy/ui/styles/base.css';
 import '@e-pharmacy/ui/styles/utilities.css';
 
+import { ToastProvider } from '@e-pharmacy/ui/feedback';
+
 import { AuthProvider } from '@/providers/AuthProvider';
 
 import './styles.css';
@@ -31,7 +33,9 @@ function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <ToastProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

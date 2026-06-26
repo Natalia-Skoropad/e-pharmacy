@@ -437,7 +437,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   return (
     <main className={css.page}>
       <section className={css.section} aria-labelledby="pharmacy-profile-title">
-        <Container>
+        <Container className={css.profileContainer}>
           <Breadcrumbs items={getProfileBreadcrumbs()} />
 
           <h1 className={css.title} id="pharmacy-profile-title">
