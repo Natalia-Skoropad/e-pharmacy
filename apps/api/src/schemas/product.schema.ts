@@ -66,6 +66,14 @@ export const productsQuerySchema = z.preprocess(
     articleKeyword: sharedSearchSchema,
     category: z.enum(PRODUCT_CATEGORIES).optional(),
     status: z.enum(PRODUCT_STATUS_FILTER_OPTIONS).optional(),
+    includeBlocked: z
+      .preprocess((value) => {
+        if (value === 'true') return true;
+        if (value === 'false') return false;
+
+        return value;
+      }, z.boolean())
+      .optional(),
     pharmacyId: mongoIdSchema.optional(),
     minPrice: z.coerce.number().min(0).optional(),
     maxPrice: z.coerce.number().min(0).optional(),

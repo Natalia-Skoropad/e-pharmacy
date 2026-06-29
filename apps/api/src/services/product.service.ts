@@ -40,6 +40,7 @@ type ProductsQuery = {
   articleKeyword?: string;
   category?: ProductCategory;
   status?: 'active' | 'blocked';
+  includeBlocked?: boolean;
   pharmacyId?: string;
   minPrice?: number;
   maxPrice?: number;
@@ -196,6 +197,8 @@ function serializeProduct(
     rating: product.rating ?? 0,
     reviewsCount: product.reviewsCount ?? 0,
     isFavorite: favoriteIds.has(String(product._id)),
+    createdAt:
+      product.createdAt?.toISOString?.() ?? String(product.createdAt ?? ''),
     updatedAt:
       product.updatedAt?.toISOString?.() ?? String(product.updatedAt ?? ''),
   };
@@ -303,7 +306,10 @@ export async function getProductsService(
   if (query.status) {
     filter.status = query.status;
   } else {
-    filter.status = query.pharmacyId ? { $in: ['active', 'blocked'] } : 'active';
+    filter.status =
+      query.pharmacyId || query.includeBlocked
+        ? { $in: ['active', 'blocked'] }
+        : 'active';
   }
   const keyword = query.keyword?.trim();
 

@@ -205,6 +205,7 @@ export function parsePharmacyAllProductFilters(segments?: string[]) {
     FILTER_PREFIXES.article,
     FILTER_PREFIXES.category,
     FILTER_PREFIXES.status,
+    FILTER_PREFIXES.stock,
   ]);
 }
 

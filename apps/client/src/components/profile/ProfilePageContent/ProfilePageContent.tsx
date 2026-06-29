@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import Link from 'next/link';
 import { Building2, Heart, KeyRound, MonitorSmartphone } from 'lucide-react';
 
 import {
@@ -13,6 +12,7 @@ import {
   LoadingSpinner,
   PictureCard,
   Tabs,
+  TextActionButton,
 } from '@e-pharmacy/ui/common';
 
 import {
@@ -928,15 +928,15 @@ function ProfilePageContent() {
                             <tr key={order.id}>
                               <td>{formatShortDate(order.createdAt)}</td>
                               <td>
-                                <Link
+                                <TextActionButton
                                   className={css.orderLink}
                                   href={buildOrderPath(order)}
                                 >
                                   {order.orderNumber}
-                                </Link>
+                                </TextActionButton>
                               </td>
                               <td>
-                                <Link
+                                <TextActionButton
                                   className={css.pharmacyLink}
                                   href={buildPharmacyPath(
                                     order.pharmacyName,
@@ -944,7 +944,7 @@ function ProfilePageContent() {
                                   )}
                                 >
                                   {order.pharmacyName}
-                                </Link>
+                                </TextActionButton>
                               </td>
                               <td>{formatPrice(order.totalPrice)}</td>
                               <td>

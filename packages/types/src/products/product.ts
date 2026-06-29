@@ -57,6 +57,7 @@ export type Product = {
   rating: number;
   reviewsCount: number;
   isFavorite: boolean;
+  createdAt?: ISODateString;
   updatedAt: ISODateString;
 };
 
@@ -92,6 +93,7 @@ export type ProductsQueryParams = {
   articleKeyword?: string;
   category?: ProductCategory;
   status?: Extract<ProductStatus, 'active' | 'blocked'>;
+  includeBlocked?: boolean;
   pharmacyId?: EntityId;
   minPrice?: number;
   maxPrice?: number;

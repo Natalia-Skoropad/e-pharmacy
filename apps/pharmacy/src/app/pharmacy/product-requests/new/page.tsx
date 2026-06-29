@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { LockedPharmacyFeaturePage } from '@/components/shared/LockedPharmacyFeaturePage';
+import { NewProductRequestPageContent } from '@/components/product-requests/NewProductRequestPageContent';
 
 //===================================================================
 
@@ -12,13 +12,7 @@ export const metadata: Metadata = {
 //===================================================================
 
 function NewProductRequestPage() {
-  return (
-    <LockedPharmacyFeaturePage
-      title="New product request"
-      description="Creating product requests is locked while the pharmacy has the new status."
-      featureName="Product request creation"
-    />
-  );
+  return <NewProductRequestPageContent />;
 }
 
 export default NewProductRequestPage;

@@ -11,6 +11,8 @@ import {
   StatusBanner,
 } from '@e-pharmacy/ui/common';
 
+import { isApiError } from '@e-pharmacy/api-client/core';
+
 import type { Product } from '@e-pharmacy/types';
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
@@ -53,8 +55,25 @@ const DEFAULT_BANNER_MESSAGE =
 
 //===================================================================
 
-function getErrorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error && error.message ? error.message : fallback;
+type ProductDetailsError = Readonly<{
+  title: string;
+  message: string;
+}>;
+
+//===================================================================
+
+function getProductDetailsError(error: unknown): ProductDetailsError {
+  if (isApiError(error) && [400, 404, 422].includes(error.status)) {
+    return {
+      title: 'Product not found',
+      message: 'This product does not exist.',
+    };
+  }
+
+  return {
+    title: 'Product could not be loaded',
+    message: 'Could not load product data. Please try again.',
+  };
 }
 
 //===================================================================
@@ -71,7 +90,7 @@ function AllProductDetailsPageContent({
 }: AllProductDetailsPageContentProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ProductDetailsError | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -85,9 +104,8 @@ function AllProductDetailsPageContent({
         if (isMounted) setProduct(response.product);
       } catch (loadError) {
         if (isMounted) {
-          setError(
-            getErrorMessage(loadError, 'Could not load product details.')
-          );
+          setProduct(null);
+          setError(getProductDetailsError(loadError));
         }
       } finally {
         if (isMounted) setIsLoading(false);
@@ -105,7 +123,7 @@ function AllProductDetailsPageContent({
     <main className={css.page} aria-labelledby="global-product-page-title">
       <div className={css.pageHeader}>
         <h1 className={css.title} id="global-product-page-title">
-          {product ? product.name : 'Global product'}
+          {product ? product.name : (error?.title ?? 'Global product')}
         </h1>
         <p className={css.pageDescription}>{pageDescription}</p>
       </div>
@@ -128,8 +146,8 @@ function AllProductDetailsPageContent({
           {error ? (
             <StatusBanner
               status="rejected"
-              title="Product could not be loaded"
-              message={error}
+              title={error.title}
+              message={error.message}
             />
           ) : null}
 

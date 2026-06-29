@@ -1,101 +1,160 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { PackageSearch } from 'lucide-react';
 
 import {
-  Button,
   CountLabel,
-  DataTable,
-  Pagination,
-  SearchInput,
-  SelectField,
-  StatusBadge,
+  FiltersButton,
+  RowsPerPageSelect,
   StatusBanner,
-  type DataTableColumn,
-  type SelectOption,
+  type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
 
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
+import {
+  useBackdropClick,
+  useBodyScrollLock,
+  useEscapeToClose,
+} from '@e-pharmacy/hooks';
+
+import type { EntityId, Product, ProductCategory } from '@e-pharmacy/types';
+
+import { getMyPharmacyProfile, getProducts } from '@/lib/api/browser';
 
 import type {
-  Product,
-  ProductCategory,
-  ProductsQueryParams,
-} from '@e-pharmacy/types';
+  OwnProductStatus,
+  StockAvailabilityFilter,
+} from '@/lib/pharmacy/products';
 
-import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
-
-import { getProducts } from '@/lib/api/browser';
-import { getPharmacyAllProductPath } from '@/lib/pharmacy/routes';
+import { AllProductsFiltersDrawer } from '@/components/all-products/AllProductsFiltersDrawer';
+import { AllProductsTable } from '@/components/all-products/AllProductsTable';
 
 import css from './AllProductsPageContent.module.css';
 
 //===================================================================
 
-type CategoryFilter = 'all' | ProductCategory;
-type SortFilter = NonNullable<ProductsQueryParams['sort']>;
-
-const PRODUCTS_PER_PAGE = 12;
-
-const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  medicine: 'Medicine',
-  vitamins: 'Vitamins',
-  beauty: 'Beauty',
-  hygiene: 'Hygiene',
-  medical_devices: 'Medical devices',
-  other: 'Other',
-};
-
-const CATEGORY_OPTIONS: Array<SelectOption<CategoryFilter>> = [
-  { value: 'all', label: 'All categories' },
-  ...PRODUCT_CATEGORIES.map((category) => ({
-    value: category,
-    label: CATEGORY_LABELS[category],
-  })),
-];
-
-const SORT_OPTIONS: Array<SelectOption<SortFilter>> = [
-  { value: 'newest', label: 'Newest first' },
-  { value: 'name-asc', label: 'Name: A to Z' },
-  { value: 'name-desc', label: 'Name: Z to A' },
-  { value: 'rating-desc', label: 'Rating: highest first' },
-  { value: 'rating-asc', label: 'Rating: lowest first' },
-  { value: 'price-asc', label: 'Price: low to high' },
-  { value: 'price-desc', label: 'Price: high to low' },
-];
+type ProductCategoryFilter = 'all' | ProductCategory;
+type ProductStatusFilter = 'all' | OwnProductStatus;
+type ProductStockFilter = 'all' | StockAvailabilityFilter;
 
 //===================================================================
 
-function getErrorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error && error.message ? error.message : fallback;
+export type AllProductsFilterState = Readonly<{
+  createdDate: {
+    from: string;
+    to: string;
+  };
+  name: string;
+  article: string;
+  category: ProductCategoryFilter;
+  status: ProductStatusFilter;
+  stock: ProductStockFilter;
+}>;
+
+//===================================================================
+
+const DEFAULT_FILTERS: AllProductsFilterState = {
+  createdDate: {
+    from: '',
+    to: '',
+  },
+  name: '',
+  article: '',
+  category: 'all',
+  status: 'all',
+  stock: 'all',
+};
+
+//===================================================================
+
+function getActiveFiltersCount(filters: AllProductsFilterState): number {
+  return [
+    filters.createdDate.from || filters.createdDate.to,
+    filters.name.trim(),
+    filters.article.trim(),
+    filters.category !== 'all',
+    filters.status !== 'all',
+    filters.stock !== 'all',
+  ].filter(Boolean).length;
 }
 
-function getPageFromHref(href: string): number {
-  const page = Number(href.replace('#page-', ''));
-  return Number.isFinite(page) && page > 0 ? page : 1;
+//===================================================================
+
+function getProductsQueryParams(
+  filters: AllProductsFilterState,
+  rowsPerPage: RowsPerPageValue
+) {
+  return {
+    page: 1,
+    perPage: rowsPerPage,
+    includeBlocked: true,
+    addedFrom: filters.createdDate.from || undefined,
+    addedTo: filters.createdDate.to || undefined,
+    nameKeyword: filters.name.trim() || undefined,
+    articleKeyword: filters.article.trim() || undefined,
+    category: filters.category === 'all' ? undefined : filters.category,
+    status: filters.status === 'all' ? undefined : filters.status,
+    inStock:
+      filters.stock === 'available'
+        ? true
+        : filters.stock === 'empty'
+          ? false
+          : undefined,
+    sort: 'newest' as const,
+  };
 }
+
+//===================================================================
 
 function AllProductsPageContent() {
-  const [items, setItems] = useState<Product[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<CategoryFilter>('all');
-  const [sort, setSort] = useState<SortFilter>('newest');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] =
+    useState<AllProductsFilterState>(DEFAULT_FILTERS);
+  const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
-  const params = useMemo<ProductsQueryParams>(
-    () => ({
-      page,
-      perPage: PRODUCTS_PER_PAGE,
-      keyword: search.trim() || undefined,
-      category: category === 'all' ? undefined : category,
-      sort,
-    }),
-    [category, page, search, sort]
+  useBodyScrollLock(isFiltersOpen);
+
+  useEscapeToClose({
+    isOpen: isFiltersOpen,
+    onClose: () => setIsFiltersOpen(false),
+  });
+
+  const handleBackdropClick = useBackdropClick({
+    onClose: () => setIsFiltersOpen(false),
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadPharmacyProfile() {
+      try {
+        const response = await getMyPharmacyProfile();
+        if (!isMounted) return;
+
+        setCurrentPharmacyId(response.pharmacy.id);
+      } catch {
+        if (!isMounted) return;
+
+        setCurrentPharmacyId(null);
+      }
+    }
+
+    void loadPharmacyProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const queryParams = useMemo(
+    () => getProductsQueryParams(filters, rowsPerPage),
+    [filters, rowsPerPage]
   );
 
   useEffect(() => {
@@ -103,21 +162,18 @@ function AllProductsPageContent() {
 
     async function loadProducts() {
       setIsLoading(true);
-      setError(null);
 
       try {
-        const response = await getProducts(params);
+        const response = await getProducts(queryParams);
         if (!isMounted) return;
 
-        setItems(response.items);
-        setTotal(response.total);
-        setTotalPages(Math.max(1, response.totalPages));
-      } catch (loadError) {
+        setProducts(response.items);
+        setTotalProducts(response.total);
+      } catch {
         if (!isMounted) return;
-        setItems([]);
-        setTotal(0);
-        setTotalPages(1);
-        setError(getErrorMessage(loadError, 'Could not load products.'));
+
+        setProducts([]);
+        setTotalProducts(0);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -128,186 +184,83 @@ function AllProductsPageContent() {
     return () => {
       isMounted = false;
     };
-  }, [params]);
+  }, [queryParams]);
 
-  const columns = useMemo<Array<DataTableColumn<Product>>>(
-    () => [
-      {
-        key: 'updatedAt',
-        title: 'Updated date',
-        render: (product) => (
-          <time dateTime={product.updatedAt}>
-            {formatShortDate(product.updatedAt)}
-          </time>
-        ),
-      },
-      {
-        key: 'article',
-        title: 'Article',
-        render: (product) => (
-          <span className={css.muted}>{product.article}</span>
-        ),
-      },
-      {
-        key: 'name',
-        title: 'Name',
-        render: (product) => (
-          <Link
-            className={css.productLink}
-            href={getPharmacyAllProductPath(product.id)}
-          >
-            {product.name}
-          </Link>
-        ),
-      },
-      {
-        key: 'category',
-        title: 'Category',
-        render: (product) => CATEGORY_LABELS[product.category],
-      },
-      {
-        key: 'price',
-        title: 'Average price',
-        align: 'right',
-        render: (product) => formatPrice(product.price),
-      },
-      {
-        key: 'pharmacies',
-        title: 'In pharmacies',
-        align: 'center',
-        render: (product) => product.availableInPharmaciesCount,
-      },
-      {
-        key: 'status',
-        title: 'Status',
-        render: (product) => <StatusBadge status={product.status} />,
-      },
-      {
-        key: 'action',
-        title: 'Action',
-        align: 'center',
-        render: () => (
-          <Button type="button" size="sm" variant="secondary" disabled>
-            Locked
-          </Button>
-        ),
-      },
-    ],
-    []
-  );
+  const activeFiltersCount = getActiveFiltersCount(filters);
+  const hasActiveFilters = activeFiltersCount > 0;
 
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    setPage(1);
-  };
-
-  const handleCategoryChange = (value: CategoryFilter) => {
-    setCategory(value);
-    setPage(1);
-  };
-
-  const handleSortChange = (value: SortFilter) => {
-    setSort(value);
-    setPage(1);
+  const resetFilters = () => {
+    setFilters(DEFAULT_FILTERS);
   };
 
   return (
     <main className={css.page} aria-labelledby="all-products-page-title">
-      <div className={css.pageHeader}>
-        <h1 className={css.title} id="all-products-page-title">
-          All products
-        </h1>
-        <p className={css.description}>
-          Browse real active Admin products. A new pharmacy can view the
-          catalog, but adding products unlocks after verification.
-        </p>
-      </div>
+      <div className={css.card}>
+        <div className={css.headerRow}>
+          <h1 className={css.title} id="all-products-page-title">
+            <PackageSearch
+              className={css.titleIcon}
+              size={30}
+              aria-hidden="true"
+            />
+            <span>All products</span>
+          </h1>
 
-      <div className={css.contentCard}>
+          <CountLabel
+            shown={products.length}
+            total={totalProducts}
+            label="products"
+          />
+        </div>
+
         <div className={css.stack}>
           <StatusBanner
             status="new"
             label="New"
             title="Catalog is available in read-only mode"
-            message="Only active Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
+            message="Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
           />
 
           <div className={css.toolbar}>
-            <div className={css.toolbarGrid}>
-              <SearchInput
-                id="all-products-search"
-                label="Search by name or article"
-                value={search}
-                placeholder="Start typing"
-                isActive={Boolean(search)}
-                onChange={handleSearchChange}
+            <div className={css.toolbarActions}>
+              <RowsPerPageSelect
+                id="all-products-rows-per-page"
+                value={rowsPerPage}
+                onChange={setRowsPerPage}
               />
 
-              <SelectField
-                id="all-products-category"
-                label="Category"
-                value={category}
-                options={CATEGORY_OPTIONS}
-                isActive={category !== 'all'}
-                onChange={handleCategoryChange}
-              />
-
-              <SelectField
-                id="all-products-sort"
-                label="Sort"
-                value={sort}
-                options={SORT_OPTIONS}
-                isActive={sort !== 'newest'}
-                onChange={handleSortChange}
+              <FiltersButton
+                activeCount={activeFiltersCount}
+                controlsId="all-products-filters-panel"
+                isExpanded={isFiltersOpen}
+                onClick={() => setIsFiltersOpen(true)}
               />
             </div>
           </div>
 
-          {error ? (
-            <StatusBanner
-              status="rejected"
-              title="Products could not be loaded"
-              message={error}
-            />
-          ) : null}
-
-          <CountLabel shown={items.length} total={total} label="products" />
-
-          <DataTable
-            columns={columns}
-            items={items}
-            getItemKey={(product) => product.id}
+          <AllProductsTable
+            currentPharmacyId={currentPharmacyId}
+            products={products}
             isLoading={isLoading}
-            minWidth={1080}
-            labels={{
-              loading: 'Loading real products...',
-              empty: 'No active Admin products match the selected filters.',
-            }}
-          />
-
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            getPageHref={(nextPage) => `#page-${nextPage}`}
-            ariaLabel="All products pagination"
-            renderLink={({
-              href,
-              className,
-              children,
-              'aria-label': ariaLabel,
-            }) => (
-              <button
-                type="button"
-                className={className}
-                aria-label={ariaLabel}
-                onClick={() => setPage(getPageFromHref(href))}
-              >
-                {children}
-              </button>
-            )}
+            emptyMessage={
+              hasActiveFilters
+                ? 'No products found for the selected filters.'
+                : 'No active or blocked Admin products are available yet.'
+            }
           />
         </div>
       </div>
+
+      {isFiltersOpen ? (
+        <AllProductsFiltersDrawer
+          filters={filters}
+          hasActiveFilters={hasActiveFilters}
+          onBackdropMouseDown={handleBackdropClick}
+          onChange={setFilters}
+          onClose={() => setIsFiltersOpen(false)}
+          onReset={resetFilters}
+        />
+      ) : null}
     </main>
   );
 }
