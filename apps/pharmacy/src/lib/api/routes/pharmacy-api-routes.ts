@@ -9,6 +9,11 @@ export const pharmacyApiRoutes = {
     details: (orderId: string) => `/api/orders/${orderId}`,
   },
 
+  clients: {
+    list: '/api/clients',
+    details: (clientId: string) => `/api/clients/${clientId}`,
+  },
+
   pharmacies: {
     myProfile: '/api/pharmacies/me/profile',
     sendMyProfileForVerification: '/api/pharmacies/me/profile/send-for-verification',

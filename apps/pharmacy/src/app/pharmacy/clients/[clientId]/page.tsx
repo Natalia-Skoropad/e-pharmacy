@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { LockedPharmacyFeaturePage } from '@/components/shared/LockedPharmacyFeaturePage';
+import { ClientDetailsPageContent } from '@/components/clients/ClientDetailsPageContent';
 
 //===================================================================
 
@@ -20,13 +20,7 @@ type ClientDetailsPageProps = Readonly<{
 async function ClientDetailsPage({ params }: ClientDetailsPageProps) {
   const { clientId } = await params;
 
-  return (
-    <LockedPharmacyFeaturePage
-      title={`Client ${clientId}`}
-      description="Client details open only after verified pharmacy orders create real client relationships."
-      featureName="Client details"
-    />
-  );
+  return <ClientDetailsPageContent clientId={clientId} />;
 }
 
 export default ClientDetailsPage;

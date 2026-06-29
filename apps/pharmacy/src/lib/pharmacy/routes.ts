@@ -19,6 +19,10 @@ const FILTER_PREFIXES = {
   payment: 'payment',
   date: 'date',
   search: 'search',
+  clientId: 'client-id',
+  email: 'email',
+  phone: 'phone',
+  address: 'address',
   category: 'category',
   stock: 'stock',
   article: 'article',
@@ -164,13 +168,22 @@ export function parsePharmacyOrderFilters(segments?: string[]) {
   ]);
 }
 
+//===================================================================
+
 export function parsePharmacyClientFilters(segments?: string[]) {
   return parseFilterSegments(segments, [
     FILTER_PREFIXES.status,
     FILTER_PREFIXES.date,
     FILTER_PREFIXES.search,
+    FILTER_PREFIXES.name,
+    FILTER_PREFIXES.clientId,
+    FILTER_PREFIXES.email,
+    FILTER_PREFIXES.phone,
+    FILTER_PREFIXES.address,
   ]);
 }
+
+//===================================================================
 
 export function parsePharmacyProductFilters(segments?: string[]) {
   return parseFilterSegments(segments, [
@@ -183,6 +196,8 @@ export function parsePharmacyProductFilters(segments?: string[]) {
   ]);
 }
 
+//===================================================================
+
 export function parsePharmacyAllProductFilters(segments?: string[]) {
   return parseFilterSegments(segments, [
     FILTER_PREFIXES.date,
@@ -192,6 +207,8 @@ export function parsePharmacyAllProductFilters(segments?: string[]) {
     FILTER_PREFIXES.status,
   ]);
 }
+
+//===================================================================
 
 export function parsePharmacyRequestFilters(segments?: string[]) {
   return parseFilterSegments(segments, [

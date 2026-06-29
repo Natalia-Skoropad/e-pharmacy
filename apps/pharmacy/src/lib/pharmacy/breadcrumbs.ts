@@ -74,7 +74,7 @@ export function getClientDetailsBreadcrumbs(
   clientId: string
 ): BreadcrumbItem[] {
   return getPharmacyBreadcrumbs(
-    { label: `Client ${clientId}` },
+    { label: `Client #${clientId}` },
     { label: 'Clients', href: PHARMACY_CLIENTS }
   );
 }
@@ -188,6 +188,10 @@ function isFilterSegment(segment: string | undefined): boolean {
     'payment-',
     'date-',
     'search-',
+    'client-id-',
+    'email-',
+    'phone-',
+    'address-',
     'category-',
     'stock-',
     'article-',
