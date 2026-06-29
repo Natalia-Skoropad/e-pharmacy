@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { Users } from 'lucide-react';
 
 import {
   CountLabel,
@@ -164,7 +165,12 @@ function ClientsPageContent() {
       <div className={css.card}>
         <div className={css.headerRow}>
           <h1 className={css.title} id="clients-page-title">
-            Clients
+            <Users
+              className={css.titleIcon}
+              size={30}
+              aria-hidden="true"
+            />
+            <span>Clients</span>
           </h1>
           <CountLabel
             shown={clients.length}

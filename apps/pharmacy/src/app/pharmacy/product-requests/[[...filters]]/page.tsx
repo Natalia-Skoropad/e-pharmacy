@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { PharmacyEmptyTablePageContent } from '@/components/shared/PharmacyEmptyTablePageContent';
+import { ProductRequestsPageContent } from '@/components/product-requests/ProductRequestsPageContent';
 
 //===================================================================
 
@@ -12,13 +12,7 @@ export const metadata: Metadata = {
 //===================================================================
 
 function ProductRequestsPage() {
-  return (
-    <PharmacyEmptyTablePageContent
-      title="Product requests"
-      description="Product requests are available after verification. A new pharmacy can review the empty request table but cannot create requests yet."
-      kind="product-requests"
-    />
-  );
+  return <ProductRequestsPageContent />;
 }
 
 export default ProductRequestsPage;

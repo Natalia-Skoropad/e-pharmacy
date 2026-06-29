@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { LockedPharmacyFeaturePage } from '@/components/shared/LockedPharmacyFeaturePage';
+import { ProductRequestDetailsPageContent } from '@/components/product-requests/ProductRequestDetailsPageContent';
 
 //===================================================================
 
@@ -22,13 +22,7 @@ async function ProductRequestDetailsPage({
 }: ProductRequestDetailsPageProps) {
   const { requestId } = await params;
 
-  return (
-    <LockedPharmacyFeaturePage
-      title={`Product request ${requestId}`}
-      description="Product request details are unavailable until request creation is unlocked after verification."
-      featureName="Product request details"
-    />
-  );
+  return <ProductRequestDetailsPageContent requestId={requestId} />;
 }
 
 export default ProductRequestDetailsPage;

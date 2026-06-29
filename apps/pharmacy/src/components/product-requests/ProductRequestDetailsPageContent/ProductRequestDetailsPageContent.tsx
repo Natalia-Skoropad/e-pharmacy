@@ -1,0 +1,72 @@
+import Link from 'next/link';
+import { FilePlus2 } from 'lucide-react';
+
+import { ButtonLink, StatusBanner } from '@e-pharmacy/ui/common';
+
+import { getPharmacyProfilePath } from '@/lib/pharmacy/routes';
+
+import css from './ProductRequestDetailsPageContent.module.css';
+
+//===================================================================
+
+type ProductRequestDetailsPageContentProps = Readonly<{
+  requestId: string;
+}>;
+
+//===================================================================
+
+function ProductRequestDetailsPageContent({
+  requestId,
+}: ProductRequestDetailsPageContentProps) {
+  const title = `Product request #${requestId}`;
+
+  return (
+    <main
+      className={css.page}
+      aria-labelledby="product-request-details-page-title"
+    >
+      <div className={css.contentCard}>
+        <div className={css.stack}>
+          <h1 className={css.title} id="product-request-details-page-title">
+            <FilePlus2
+              className={css.titleIcon}
+              size={30}
+              aria-hidden="true"
+            />
+            <span>{title}</span>
+          </h1>
+
+          <StatusBanner
+            status="new"
+            label="New"
+            title="Product request details is locked for now"
+            message="This page belongs to business functionality that opens after Admin verifies your pharmacy profile."
+          />
+
+          <section className={css.card} aria-labelledby="request-actions-title">
+            <h2 id="request-actions-title">What can you do now?</h2>
+            <p>
+              Complete the pharmacy profile, check that registration documents are
+              attached, and send the profile for verification.
+            </p>
+            <div className={css.actions}>
+              <ButtonLink
+                href={getPharmacyProfilePath()}
+                renderLink={({ href, className, children, ...props }) => (
+                  <Link href={href} className={className} {...props}>
+                    {children}
+                  </Link>
+                )}
+              >
+                Go to profile
+              </ButtonLink>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+export default ProductRequestDetailsPageContent;
+export { ProductRequestDetailsPageContent };

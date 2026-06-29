@@ -1,0 +1,19 @@
+.headerTitle {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.nameLink {
+  font-weight: var(--fw-medium);
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.nameLink:hover,
+.nameLink:focus-visible {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+}

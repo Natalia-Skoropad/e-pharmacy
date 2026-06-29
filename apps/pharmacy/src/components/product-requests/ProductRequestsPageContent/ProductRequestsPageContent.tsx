@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ShoppingBag } from 'lucide-react';
+import { FilePlus2 } from 'lucide-react';
 
 import {
   CountLabel,
@@ -17,99 +17,90 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
-import type {
-  DeliveryMethod,
-  OrderStatus,
-  PaymentMethod,
-} from '@e-pharmacy/types';
+import type { ProductCategory } from '@e-pharmacy/types';
 
-import { getPharmacyOrders } from '@/lib/api/browser';
+import { getPharmacyProductRequests } from '@/lib/api/browser';
 
 import type {
-  PharmacyOrdersQueryParams,
-  PharmacyOrderRow,
-} from '@/lib/pharmacy/orders';
+  PharmacyProductRequestRow,
+  PharmacyProductRequestsQueryParams,
+  ProductRequestStatus,
+} from '@/lib/pharmacy/product-requests';
 
-import { OrdersFiltersDrawer } from '@/components/orders/OrdersFiltersDrawer';
-import { OrdersTable } from '@/components/orders/OrdersTable';
+import { ProductRequestsFiltersDrawer } from '@/components/product-requests/ProductRequestsFiltersDrawer';
+import { ProductRequestsTable } from '@/components/product-requests/ProductRequestsTable';
 
-import css from './OrdersPageContent.module.css';
+import css from './ProductRequestsPageContent.module.css';
 
 //===================================================================
 
-type DeliveryMethodFilter = 'all' | DeliveryMethod;
-type PaymentMethodFilter = 'all' | PaymentMethod;
-type OrderStatusFilter = 'all' | OrderStatus;
+type ProductRequestCategoryFilter = 'all' | ProductCategory;
+type ProductRequestStatusFilter = 'all' | ProductRequestStatus;
 
 //===================================================================
 
-export type OrdersFilterState = Readonly<{
+export type ProductRequestsFilterState = Readonly<{
   date: {
     from: string;
     to: string;
   };
-  client: string;
-  orderNumber: string;
-  deliveryMethod: DeliveryMethodFilter;
-  paymentMethod: PaymentMethodFilter;
-  status: OrderStatusFilter;
+  name: string;
+  article: string;
+  category: ProductRequestCategoryFilter;
+  status: ProductRequestStatusFilter;
 }>;
 
 //===================================================================
 
-const DEFAULT_FILTERS: OrdersFilterState = {
+const DEFAULT_FILTERS: ProductRequestsFilterState = {
   date: {
     from: '',
     to: '',
   },
-  client: '',
-  orderNumber: '',
-  deliveryMethod: 'all',
-  paymentMethod: 'all',
+  name: '',
+  article: '',
+  category: 'all',
   status: 'all',
 };
 
 //===================================================================
 
-function getActiveFiltersCount(filters: OrdersFilterState): number {
+function getActiveFiltersCount(filters: ProductRequestsFilterState): number {
   return [
     filters.date.from || filters.date.to,
-    filters.client.trim(),
-    filters.orderNumber.trim(),
-    filters.deliveryMethod !== 'all',
-    filters.paymentMethod !== 'all',
+    filters.name.trim(),
+    filters.article.trim(),
+    filters.category !== 'all',
     filters.status !== 'all',
   ].filter(Boolean).length;
 }
 
 //===================================================================
 
-function getOrdersQueryParams(
-  filters: OrdersFilterState,
+function getProductRequestsQueryParams(
+  filters: ProductRequestsFilterState,
   rowsPerPage: RowsPerPageValue
-): PharmacyOrdersQueryParams {
+): PharmacyProductRequestsQueryParams {
   return {
     page: 1,
     perPage: rowsPerPage,
     dateFrom: filters.date.from || undefined,
     dateTo: filters.date.to || undefined,
-    client: filters.client.trim() || undefined,
-    orderNumber: filters.orderNumber.trim() || undefined,
-    deliveryMethod:
-      filters.deliveryMethod === 'all' ? undefined : filters.deliveryMethod,
-    paymentMethod:
-      filters.paymentMethod === 'all' ? undefined : filters.paymentMethod,
+    name: filters.name.trim() || undefined,
+    article: filters.article.trim() || undefined,
+    category: filters.category === 'all' ? undefined : filters.category,
     status: filters.status === 'all' ? undefined : filters.status,
   };
 }
 
 //===================================================================
 
-function OrdersPageContent() {
-  const [filters, setFilters] = useState<OrdersFilterState>(DEFAULT_FILTERS);
+function ProductRequestsPageContent() {
+  const [filters, setFilters] =
+    useState<ProductRequestsFilterState>(DEFAULT_FILTERS);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
-  const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
-  const [totalOrders, setTotalOrders] = useState(0);
+  const [requests, setRequests] = useState<PharmacyProductRequestRow[]>([]);
+  const [totalRequests, setTotalRequests] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -125,33 +116,33 @@ function OrdersPageContent() {
   });
 
   const queryParams = useMemo(
-    () => getOrdersQueryParams(filters, rowsPerPage),
+    () => getProductRequestsQueryParams(filters, rowsPerPage),
     [filters, rowsPerPage]
   );
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadOrders() {
+    async function loadProductRequests() {
       setIsLoading(true);
 
       try {
-        const response = await getPharmacyOrders(queryParams);
+        const response = await getPharmacyProductRequests(queryParams);
         if (!isMounted) return;
 
-        setOrders(response.items);
-        setTotalOrders(response.total);
+        setRequests(response.items);
+        setTotalRequests(response.total);
       } catch {
         if (!isMounted) return;
 
-        setOrders([]);
-        setTotalOrders(0);
+        setRequests([]);
+        setTotalRequests(0);
       } finally {
         if (isMounted) setIsLoading(false);
       }
     }
 
-    void loadOrders();
+    void loadProductRequests();
 
     return () => {
       isMounted = false;
@@ -166,58 +157,59 @@ function OrdersPageContent() {
   };
 
   return (
-    <main className={css.page} aria-labelledby="orders-page-title">
+    <main className={css.page} aria-labelledby="product-requests-page-title">
       <div className={css.card}>
         <div className={css.headerRow}>
-          <h1 className={css.title} id="orders-page-title">
-            <ShoppingBag
-              className={css.titleIcon}
-              size={30}
-              aria-hidden="true"
-            />
-            <span>Orders</span>
+          <h1 className={css.title} id="product-requests-page-title">
+            <FilePlus2 className={css.titleIcon} size={30} aria-hidden="true" />
+            <span>Product requests</span>
           </h1>
-          <CountLabel shown={orders.length} total={totalOrders} label="orders" />
+          <CountLabel
+            shown={requests.length}
+            total={totalRequests}
+            label="requests"
+          />
         </div>
+
         <div className={css.stack}>
           <StatusBanner
             status="new"
             label="New"
             title="Verification is required"
-            message="New pharmacies do not receive orders until Admin verifies the pharmacy profile."
+            message="Creating product requests is locked for a new pharmacy until verification is complete."
           />
 
           <div className={css.toolbar}>
             <div className={css.toolbarActions}>
               <RowsPerPageSelect
-                id="orders-rows-per-page"
+                id="product-requests-rows-per-page"
                 value={rowsPerPage}
                 onChange={setRowsPerPage}
               />
 
               <FiltersButton
                 activeCount={activeFiltersCount}
-                controlsId="orders-filters-panel"
+                controlsId="product-requests-filters-panel"
                 isExpanded={isFiltersOpen}
                 onClick={() => setIsFiltersOpen(true)}
               />
             </div>
           </div>
 
-          <OrdersTable
-            orders={orders}
+          <ProductRequestsTable
+            requests={requests}
             isLoading={isLoading}
             emptyMessage={
               hasActiveFilters
-                ? 'No orders found for the selected filters. Adjust filters or reset them.'
-                : 'Orders will appear here after the pharmacy is verified and clients place orders.'
+                ? 'No requests found for the selected filters.'
+                : 'Your pharmacy has no product creation requests yet.'
             }
           />
         </div>
       </div>
 
       {isFiltersOpen ? (
-        <OrdersFiltersDrawer
+        <ProductRequestsFiltersDrawer
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           onBackdropMouseDown={handleBackdropClick}
@@ -230,5 +222,5 @@ function OrdersPageContent() {
   );
 }
 
-export default OrdersPageContent;
-export { OrdersPageContent };
+export default ProductRequestsPageContent;
+export { ProductRequestsPageContent };

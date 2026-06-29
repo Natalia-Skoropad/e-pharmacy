@@ -14,12 +14,20 @@
 }
 
 .title {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
   font-size: var(--fz-32);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
-  color: var(--color-text-primary);
+  color: var(--color-accent);
   letter-spacing: var(--ls-tight);
   margin-bottom: 20px;
+}
+
+.titleIcon {
+  flex: 0 0 auto;
+  color: var(--color-accent);
 }
 
 .description {
