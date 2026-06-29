@@ -129,13 +129,13 @@ Pharmacy must not see:
 
 The same colors must be used consistently across Dashboard, tables, details pages, badges, chips, and Admin views.
 
-| Meaning | Color |
-|---|---|
-| New | Blue |
-| In work / On moderation | Yellow |
-| Active / Successful / Approved | Green |
-| Blocked / Rejected | Red |
-| Draft | Gray |
+| Meaning                        | Color  |
+| ------------------------------ | ------ |
+| New                            | Blue   |
+| In work / On moderation        | Yellow |
+| Active / Successful / Approved | Green  |
+| Blocked / Rejected             | Red    |
+| Draft                          | Gray   |
 
 ## 6. Filter URL strategy
 
@@ -205,8 +205,6 @@ Pharmacy should reuse existing shared components where possible:
 - existing form-field components.
 
 New common components should be created only when the UI pattern will be reused across Client, Pharmacy, or Admin.
-
-
 
 ---
 
@@ -351,11 +349,11 @@ After successful login, backend returns the user role.
 
 Redirects:
 
-| Role | Redirect |
-|---|---|
-| `client` | `/profile` |
+| Role       | Redirect              |
+| ---------- | --------------------- |
+| `client`   | `/profile`            |
 | `pharmacy` | `/pharmacy/dashboard` |
-| `admin` | `/admin/dashboard` |
+| `admin`    | `/admin/dashboard`    |
 
 ## 6. Blocked pharmacy login
 
@@ -418,11 +416,11 @@ Do not reveal whether the email exists in the system.
 
 If an authenticated user opens an auth page, redirect by role:
 
-| Role | Redirect |
-|---|---|
-| `client` | `/profile` |
+| Role       | Redirect              |
+| ---------- | --------------------- |
+| `client`   | `/profile`            |
 | `pharmacy` | `/pharmacy/dashboard` |
-| `admin` | `/admin/dashboard` |
+| `admin`    | `/admin/dashboard`    |
 
 ## 10. Shared auth components
 
@@ -465,8 +463,6 @@ The selected file is too large.
 The server is temporarily unavailable. Please try again later.
 Something went wrong. Please try again.
 ```
-
-
 
 ---
 
@@ -623,13 +619,13 @@ It is not shown for blocked pharmacies because blocked pharmacies cannot enter t
 
 ### Sidebar links
 
-| Label | Route |
-|---|---|
-| Dashboard | `/pharmacy/dashboard` |
-| Orders | `/pharmacy/orders` |
-| Clients | `/pharmacy/clients` |
-| Own products | `/pharmacy/products` |
-| All products | `/pharmacy/all-products` |
+| Label            | Route                        |
+| ---------------- | ---------------------------- |
+| Dashboard        | `/pharmacy/dashboard`        |
+| Orders           | `/pharmacy/orders`           |
+| Clients          | `/pharmacy/clients`          |
+| Own products     | `/pharmacy/products`         |
+| All products     | `/pharmacy/all-products`     |
 | Product requests | `/pharmacy/product-requests` |
 
 ### Active state
@@ -671,7 +667,9 @@ Example page structure:
   <section className={css.section} aria-labelledby="page-title">
     <Container>
       <Breadcrumbs items={createBreadcrumbs(PAGE_TITLE)} />
-      <h1 id="page-title" className={css.title}>{PAGE_TITLE}</h1>
+      <h1 id="page-title" className={css.title}>
+        {PAGE_TITLE}
+      </h1>
       <p className={css.text}>{PAGE_DESCRIPTION}</p>
     </Container>
   </section>
@@ -680,19 +678,19 @@ Example page structure:
 
 ### Breadcrumb examples
 
-| Page | Breadcrumbs |
-|---|---|
-| Dashboard | Home / Dashboard |
-| Pharmacy profile | Home / Dashboard / Pharmacy profile |
-| Orders | Home / Dashboard / Orders |
-| Order details | Home / Dashboard / Orders / Order #12345 |
-| Clients | Home / Dashboard / Clients |
-| Client details | Home / Dashboard / Clients / Client name |
-| Own products | Home / Dashboard / Own products |
-| Product details | Home / Dashboard / Own products / Product name |
-| All products | Home / Dashboard / All products |
-| Product requests | Home / Dashboard / Product requests |
-| Request details | Home / Dashboard / Product requests / Request name |
+| Page             | Breadcrumbs                                        |
+| ---------------- | -------------------------------------------------- |
+| Dashboard        | Home / Dashboard                                   |
+| Pharmacy profile | Home / Dashboard / Pharmacy profile                |
+| Orders           | Home / Dashboard / Orders                          |
+| Order details    | Home / Dashboard / Orders / Order #12345           |
+| Clients          | Home / Dashboard / Clients                         |
+| Client details   | Home / Dashboard / Clients / Client name           |
+| Own products     | Home / Dashboard / Own products                    |
+| Product details  | Home / Dashboard / Own products / Product name     |
+| All products     | Home / Dashboard / All products                    |
+| Product requests | Home / Dashboard / Product requests                |
+| Request details  | Home / Dashboard / Product requests / Request name |
 
 ### Breadcrumb accessibility
 
@@ -703,8 +701,6 @@ Breadcrumbs must:
 - use `ul/li`;
 - mark current page with `aria-current="page"`;
 - use decorative separators with `aria-hidden="true"`.
-
-
 
 ---
 
@@ -720,23 +716,23 @@ Use shared components wherever possible.
 
 ## 2. Pharmacy statuses
 
-| Status | Meaning | Who sets it |
-|---|---|---|
-| `new` | Pharmacy registered and has not submitted initial data for verification | System after registration |
-| `on_verification` | Pharmacy submitted its initial data for Admin verification | System after Pharmacy submits initial data |
-| `active` | Pharmacy passed moderation and can work | Admin |
-| `on_moderation` | Active pharmacy changed important data and waits for Admin review | System after Pharmacy submits changes |
-| `blocked` | Pharmacy is blocked or temporarily disabled | Admin |
+| Status            | Meaning                                                                 | Who sets it                                |
+| ----------------- | ----------------------------------------------------------------------- | ------------------------------------------ |
+| `new`             | Pharmacy registered and has not submitted initial data for verification | System after registration                  |
+| `on_verification` | Pharmacy submitted its initial data for Admin verification              | System after Pharmacy submits initial data |
+| `active`          | Pharmacy passed moderation and can work                                 | Admin                                      |
+| `on_moderation`   | Active pharmacy changed important data and waits for Admin review       | System after Pharmacy submits changes      |
+| `blocked`         | Pharmacy is blocked or temporarily disabled                             | Admin                                      |
 
 Pharmacy UI labels and colors:
 
-| Code | UI label | Color |
-|---|---|---|
-| `new` | Нова | Blue |
+| Code              | UI label     | Color  |
+| ----------------- | ------------ | ------ |
+| `new`             | Нова         | Blue   |
 | `on_verification` | На перевірці | Purple |
-| `active` | Активна | Green |
-| `on_moderation` | На модерації | Yellow |
-| `blocked` | Неактивна | Red |
+| `active`          | Активна      | Green  |
+| `on_moderation`   | На модерації | Yellow |
+| `blocked`         | Неактивна    | Red    |
 
 ## 3. Status behavior
 
@@ -851,10 +847,10 @@ For `on_moderation` status:
 
 Pending data by tab:
 
-| Tab | Pending fields |
-|---|---|
-| Pharmacy data | name, phone, address, working hours |
-| About pharmacy | description |
+| Tab             | Pending fields                                 |
+| --------------- | ---------------------------------------------- |
+| Pharmacy data   | name, phone, address, working hours            |
+| About pharmacy  | description                                    |
 | Payment details | recipient, tax ID, IBAN, bank, payment purpose |
 
 ## 5. Page structure
@@ -973,13 +969,13 @@ Fields:
 
 ### Field rules
 
-| Field | Required for `new` | Required for `active` / `on_moderation` | Moderation for active pharmacy |
-|---|---:|---:|---:|
-| Name | No | Yes | Yes |
-| Phone | Yes | Yes | Yes |
-| Address | No | Yes | Yes |
-| Working hours | No | Yes | Yes |
-| Password | By password rules | By password rules | No |
+| Field         | Required for `new` | Required for `active` / `on_moderation` | Moderation for active pharmacy |
+| ------------- | -----------------: | --------------------------------------: | -----------------------------: |
+| Name          |                 No |                                     Yes |                            Yes |
+| Phone         |                Yes |                                     Yes |                            Yes |
+| Address       |                 No |                                     Yes |                            Yes |
+| Working hours |                 No |                                     Yes |                            Yes |
+| Password      |  By password rules |                       By password rules |                             No |
 
 Phone must be unique across Client, Pharmacy, and Admin.
 
@@ -1011,12 +1007,12 @@ Could not change password. Please try again.
 
 ### Save button labels
 
-| Pharmacy status | Button | State |
-|---|---|---|
-| `new` | Save | Enabled only when changed and valid |
-| `active` | Send for moderation | Enabled only when changed and required fields are valid |
-| `on_moderation` | Send for moderation | Disabled; fields disabled |
-| `blocked` | Not available | Cabinet access blocked |
+| Pharmacy status | Button              | State                                                   |
+| --------------- | ------------------- | ------------------------------------------------------- |
+| `new`           | Save                | Enabled only when changed and valid                     |
+| `active`        | Send for moderation | Enabled only when changed and required fields are valid |
+| `on_moderation` | Send for moderation | Disabled; fields disabled                               |
+| `blocked`       | Not available       | Cabinet access blocked                                  |
 
 Every save or send action opens `ConfirmActionModal`.
 
@@ -1147,8 +1143,6 @@ Use `ConfirmActionModal` for:
 - sending active pharmacy changes to moderation;
 - password change;
 - removing photo when the action is important or irreversible.
-
-
 
 ---
 
@@ -1297,12 +1291,12 @@ Current product price changes do not affect already created orders.
 
 Statuses:
 
-| Status | Color | Shows |
-|---|---|---|
-| New | Blue | count and amount of new orders |
-| In work | Yellow | count and amount of orders in processing |
-| Successful | Green | count and completed sales amount |
-| Rejected | Red | count and rejected order amount for analytics |
+| Status     | Color  | Shows                                         |
+| ---------- | ------ | --------------------------------------------- |
+| New        | Blue   | count and amount of new orders                |
+| In work    | Yellow | count and amount of orders in processing      |
+| Successful | Green  | count and completed sales amount              |
+| Rejected   | Red    | count and rejected order amount for analytics |
 
 Each status card shows:
 
@@ -1513,8 +1507,6 @@ Recommended reusable components:
 - `DashboardSection`;
 - `DashboardFilters`.
 
-
-
 ---
 
 # Pharmacy Technical Specification — Orders
@@ -1537,12 +1529,12 @@ After client confirms checkout:
 
 ## 2. Order statuses
 
-| Status | Color | Meaning |
-|---|---|---|
-| `new` | Blue | Order was confirmed by client |
+| Status        | Color  | Meaning                                    |
+| ------------- | ------ | ------------------------------------------ |
+| `new`         | Blue   | Order was confirmed by client              |
 | `in_progress` | Yellow | Pharmacy accepted the order for processing |
-| `successful` | Green | Order is completed |
-| `rejected` | Red | Order was rejected by Pharmacy |
+| `successful`  | Green  | Order is completed                         |
+| `rejected`    | Red    | Order was rejected by Pharmacy             |
 
 For `rejected` status, Pharmacy must provide a required rejection reason.
 
@@ -1733,9 +1725,9 @@ Filters:
 - date filter;
 - client search;
 - order number search;
-- status select;
 - delivery method select;
 - payment method select.
+- status select;
 
 Search fields should use debounce before updating URL.
 
@@ -1943,12 +1935,12 @@ Created on March 12, 2026
 
 Select shows only allowed next statuses.
 
-| Current status | Available next status |
-|---|---|
-| `new` | `in_progress` |
-| `in_progress` | `successful`, `rejected` |
-| `successful` | none |
-| `rejected` | none |
+| Current status | Available next status    |
+| -------------- | ------------------------ |
+| `new`          | `in_progress`            |
+| `in_progress`  | `successful`, `rejected` |
+| `successful`   | none                     |
+| `rejected`     | none                     |
 
 Selecting status opens confirmation modal immediately.
 
@@ -2128,8 +2120,6 @@ Order not found.
 
 Pharmacy must not see orders of other pharmacies.
 
-
-
 ---
 
 # Pharmacy Technical Specification — Clients
@@ -2152,10 +2142,10 @@ Pharmacy cannot see:
 
 ## 2. Client statuses
 
-| Status | Color | Meaning |
-|---|---|---|
-| `active` | Green | Client can use account and create orders |
-| `blocked` | Red | Client is blocked or temporarily disabled by Admin |
+| Status    | Color | Meaning                                            |
+| --------- | ----- | -------------------------------------------------- |
+| `active`  | Green | Client can use account and create orders           |
+| `blocked` | Red   | Client is blocked or temporarily disabled by Admin |
 
 When Admin sets client status to `blocked`, Admin must provide a required blocking reason.
 
@@ -2578,8 +2568,6 @@ Client ID copied.
 Could not load data. Please try again.
 ```
 
-
-
 ---
 
 # Pharmacy Technical Specification — Products
@@ -2606,11 +2594,11 @@ Price and stock quantity are not edited manually in Pharmacy. They come from an 
 
 All products in the system have one global status, regardless of which table they are shown in.
 
-| Status | Color | Meaning | Visible to Pharmacy |
-|---|---|---|---|
-| `new` | Blue | Product created in Admin but not activated yet | No |
-| `active` | Green | Product can be added to pharmacies | Yes |
-| `blocked` | Red | Product is temporarily or permanently deactivated by Admin | Yes |
+| Status    | Color | Meaning                                                    | Visible to Pharmacy |
+| --------- | ----- | ---------------------------------------------------------- | ------------------- |
+| `new`     | Blue  | Product created in Admin but not activated yet             | No                  |
+| `active`  | Green | Product can be added to pharmacies                         | Yes                 |
+| `blocked` | Red   | Product is temporarily or permanently deactivated by Admin | Yes                 |
 
 The `new` status is visible only to Admin.
 
@@ -3324,8 +3312,6 @@ Pharmacy must not see:
 - products with status `new`;
 - pharmacy-specific product data of other pharmacies.
 
-
-
 ---
 
 # Pharmacy Technical Specification — Product Creation Requests
@@ -3374,13 +3360,13 @@ Admin can approve or reject a submitted request directly from `on_moderation` st
 
 ## 3. Request statuses
 
-| Status | Color | Meaning | Editable by Pharmacy |
-|---|---|---|---|
-| `draft` | Gray | Pharmacy created request but did not send it to Admin | Yes |
-| `new` | Blue | Pharmacy sent request; Admin has not started review | No |
-| `in_progress` | Yellow | Admin is checking the request | No |
-| `approved` | Green | Admin created product from request | No |
-| `rejected` | Red | Admin rejected request | No |
+| Status        | Color  | Meaning                                               | Editable by Pharmacy |
+| ------------- | ------ | ----------------------------------------------------- | -------------------- |
+| `draft`       | Gray   | Pharmacy created request but did not send it to Admin | Yes                  |
+| `new`         | Blue   | Pharmacy sent request; Admin has not started review   | No                   |
+| `in_progress` | Yellow | Admin is checking the request                         | No                   |
+| `approved`    | Green  | Admin created product from request                    | No                   |
+| `rejected`    | Red    | Admin rejected request                                | No                   |
 
 For `rejected` status, Admin must provide rejection reason.
 
@@ -3588,10 +3574,10 @@ This allows Admin to use the same structure when creating product from request.
 
 Modes:
 
-| Mode | Route | Description |
-|---|---|---|
-| Create mode | `/pharmacy/product-requests/new` | Pharmacy creates new request |
-| Edit draft mode | `/pharmacy/product-requests/[requestId]/edit` | Pharmacy edits draft request |
+| Mode                      | Route                                                                                               | Description                        |
+| ------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| Create mode               | `/pharmacy/product-requests/new`                                                                    | Pharmacy creates new request       |
+| Edit draft mode           | `/pharmacy/product-requests/[requestId]/edit`                                                       | Pharmacy edits draft request       |
 | Admin create product mode | `/admin/product-requests/[requestId]/create-product` or `/admin/products/new?requestId={requestId}` | Admin creates product from request |
 
 ## 11. Request form fields
@@ -3885,8 +3871,6 @@ New draft created from rejected request.
 Product created based on request.
 ```
 
-
-
 ---
 
 # Pharmacy Technical Specification — Service Pages, Loaders, and States
@@ -4098,8 +4082,6 @@ Common retry button:
 Try again
 ```
 
-
-
 ---
 
 # Pharmacy Technical Specification — Recommended Route Structure
@@ -4253,8 +4235,6 @@ Each page must still have:
 - one `h1`;
 - semantic section headings.
 
-
-
 ---
 
 # Pharmacy Technical Specification — E-PHARMACY
@@ -4288,8 +4268,6 @@ This folder contains the improved Pharmacy technical specification split into gl
 - Product request flow is strict: Draft → New → In work → Approved/Rejected.
 - Auth pages are global, not part of `/pharmacy` route group.
 - Protected Pharmacy layout has no Footer.
-
-
 
 ---
 

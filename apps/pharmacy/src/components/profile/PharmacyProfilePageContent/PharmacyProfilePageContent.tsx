@@ -31,7 +31,6 @@ import {
 } from '@e-pharmacy/ui/form-fields';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { formatOrderDateTime } from '@e-pharmacy/utils/formatters';
@@ -110,7 +109,6 @@ import {
 } from '@/lib/api/browser';
 
 import { PHARMACY_STATUS_LABELS } from '@/lib/pharmacy/status';
-import { getProfileBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
 
 import css from './PharmacyProfilePageContent.module.css';
 
@@ -133,6 +131,8 @@ type ProfileStatusBadgeVariant = 'new' | 'on_moderation' | 'active' | 'blocked';
 
 const INITIAL_VISIBLE_REVIEWS_COUNT = 10;
 const PHARMACY_DOCUMENTS_LIMIT = 6;
+
+//===================================================================
 
 const TABS: Array<{ value: ProfileTab; label: string }> = [
   { value: 'data', label: 'My data' },
@@ -177,6 +177,8 @@ function createAboutInitialValues(
     description: pharmacy.description ?? '',
   };
 }
+
+//===================================================================
 
 function createPaymentInitialValues(
   user: AuthUser,
@@ -416,6 +418,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       email: '',
       workingHours: '',
     });
+
   const [initialPharmacyValues, setInitialPharmacyValues] =
     useState<PharmacyContactFormValues>(pharmacyValues);
   const [pharmacyTouched, setPharmacyTouched] =
@@ -424,6 +427,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const [aboutValues, setAboutValues] = useState<PharmacyAboutFormValues>({
     description: '',
   });
+
   const [initialAboutValues, setInitialAboutValues] =
     useState<PharmacyAboutFormValues>(aboutValues);
   const [aboutTouched, setAboutTouched] = useState<PharmacyAboutTouchedFields>(
@@ -923,7 +927,6 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
           aria-labelledby="pharmacy-profile-title"
         >
           <Container className={css.profileContainer}>
-            <Breadcrumbs items={getProfileBreadcrumbs()} />
             <StatusBanner
               status="rejected"
               title="Pharmacy profile could not be loaded"
@@ -942,8 +945,6 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     <main className={css.page}>
       <section className={css.section} aria-labelledby="pharmacy-profile-title">
         <Container className={css.profileContainer}>
-          <Breadcrumbs items={getProfileBreadcrumbs()} />
-
           <div className={css.profileShell}>
             <aside
               className={css.sidebar}

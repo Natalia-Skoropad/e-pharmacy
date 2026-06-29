@@ -1,0 +1,78 @@
+.page {
+  display: grid;
+  gap: 24px;
+  width: min(100%, 1180px);
+  margin-inline: auto;
+}
+
+.headerRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: var(--fz-32);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+  letter-spacing: var(--ls-tight);
+}
+
+.description {
+  max-width: 720px;
+  margin-top: 8px;
+  font-size: var(--fz-16);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.card {
+  padding: 20px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.stack {
+  display: grid;
+  gap: 20px;
+}
+
+.toolbar {
+  display: grid;
+  gap: 16px;
+}
+
+.toolbarActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+}
+
+.toolbarActions > * {
+  flex: 1 1 180px;
+}
+
+@media only screen and (min-width: 768px) {
+  .card {
+    padding: 24px;
+  }
+
+  .toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .toolbarActions {
+    justify-content: flex-end;
+  }
+
+  .toolbarActions > * {
+    flex: 0 0 auto;
+  }
+}

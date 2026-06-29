@@ -6,13 +6,12 @@ import { useEffect, useState } from 'react';
 import {
   Button,
   ButtonLink,
-  CabinetPage,
   PictureUpload,
   StatusBadge,
   StatusBanner,
 } from '@e-pharmacy/ui/common';
 
-import type { BreadcrumbItem, Product } from '@e-pharmacy/types';
+import type { Product } from '@e-pharmacy/types';
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import { getProductDetails } from '@/lib/api/browser';
@@ -24,7 +23,6 @@ import css from './AllProductDetailsPageContent.module.css';
 
 type AllProductDetailsPageContentProps = Readonly<{
   productId: string;
-  breadcrumbs: BreadcrumbItem[];
 }>;
 
 const CATEGORY_LABELS = {
@@ -44,7 +42,6 @@ function getErrorMessage(error: unknown, fallback: string): string {
 
 function AllProductDetailsPageContent({
   productId,
-  breadcrumbs,
 }: AllProductDetailsPageContentProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,12 +72,18 @@ function AllProductDetailsPageContent({
   }, [productId]);
 
   return (
-    <CabinetPage
-      title={product ? product.name : 'Global product'}
-      description="View real Admin product data. Adding products to your pharmacy is locked while the pharmacy status is new."
-      breadcrumbs={breadcrumbs}
-    >
-      <div className={css.stack}>
+    <main className={css.page} aria-labelledby="global-product-page-title">
+      <div className={css.pageHeader}>
+        <h1 className={css.title} id="global-product-page-title">
+          {product ? product.name : 'Global product'}
+        </h1>
+        <p className={css.pageDescription}>
+          View real Admin product data. Adding products to your pharmacy is locked while the pharmacy status is new.
+        </p>
+      </div>
+
+      <div className={css.contentCard}>
+        <div className={css.stack}>
         <StatusBanner
           status="new"
           label="New"
@@ -183,8 +186,9 @@ function AllProductDetailsPageContent({
             </div>
           </section>
         ) : null}
+        </div>
       </div>
-    </CabinetPage>
+    </main>
   );
 }
 

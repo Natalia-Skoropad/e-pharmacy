@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Filter } from 'lucide-react';
 
 import {
   CloseIconButton,
   CountLabel,
+  FiltersButton,
   ResetFiltersButton,
   SearchableSelect,
   SearchInput,
@@ -318,18 +318,13 @@ function ProductCatalogFiltersForm({
           label="products"
         />
 
-        <button
+        <FiltersButton
           className={css.filterButton}
-          type="button"
+          activeCount={activeFiltersCount}
+          controlsId="catalog-filters-panel"
+          isExpanded={isFiltersOpen}
           onClick={() => setIsFiltersOpen(true)}
-        >
-          <Filter size={18} aria-hidden="true" />
-          <span>Filters</span>
-
-          {activeFiltersCount ? (
-            <span className={css.filterBadge}>{activeFiltersCount}</span>
-          ) : null}
-        </button>
+        />
 
         <div className={css.desktopSort}>
           <SelectField
@@ -351,6 +346,7 @@ function ProductCatalogFiltersForm({
         >
           <aside
             className={css.offcanvas}
+            id="catalog-filters-panel"
             aria-labelledby="catalog-filters-title"
             aria-modal="true"
             role="dialog"

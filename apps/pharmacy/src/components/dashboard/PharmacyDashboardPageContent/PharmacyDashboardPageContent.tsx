@@ -5,13 +5,10 @@ import { ClipboardList, PackageCheck, ReceiptText, UsersRound } from 'lucide-rea
 
 import {
   ButtonLink,
-  CabinetPage,
-  PharmacyPageHeader,
   StatsCard,
   StatusBanner,
 } from '@e-pharmacy/ui/common';
 
-import { getDashboardBreadcrumbs } from '@/lib/pharmacy/breadcrumbs';
 import {
   getPharmacyAllProductsPath,
   getPharmacyProfilePath,
@@ -66,12 +63,18 @@ const PRODUCT_STATS = [
 
 function PharmacyDashboardPageContent() {
   return (
-    <CabinetPage
-      title="Dashboard"
-      description="Your new pharmacy cabinet starts with clean zero statistics. Only real orders, clients, products, and requests will be shown here."
-      breadcrumbs={getDashboardBreadcrumbs()}
-    >
-      <div className={css.stack}>
+    <main className={css.page} aria-labelledby="dashboard-page-title">
+      <div className={css.pageHeader}>
+        <h1 className={css.title} id="dashboard-page-title">
+          Dashboard
+        </h1>
+        <p className={css.description}>
+          Your new pharmacy cabinet starts with clean zero statistics. Only real orders, clients, products, and requests will be shown here.
+        </p>
+      </div>
+
+      <div className={css.contentCard}>
+        <div className={css.stack}>
         <StatusBanner
           status="new"
           title="Your pharmacy is new"
@@ -96,11 +99,13 @@ function PharmacyDashboardPageContent() {
         </section>
 
         <section className={css.section} aria-labelledby="order-stats-title">
-          <PharmacyPageHeader
-            title="Orders statistics"
-            description="A new pharmacy has no orders yet. These cards update only from real order data."
-            kicker="Current pharmacy"
-          />
+          <div className={css.sectionHeader}>
+            <p className={css.sectionKicker}>Current pharmacy</p>
+            <h2 className={css.sectionTitle}>Orders statistics</h2>
+            <p className={css.sectionDescription}>
+              A new pharmacy has no orders yet. These cards update only from real order data.
+            </p>
+          </div>
           <div className={css.grid} id="order-stats-title">
             {ORDER_STATS.map((item) => (
               <StatsCard
@@ -115,11 +120,13 @@ function PharmacyDashboardPageContent() {
         </section>
 
         <section className={css.section} aria-labelledby="product-stats-title">
-          <PharmacyPageHeader
-            title="Products and requests"
-            description="You can browse all active Admin products now. Adding products and creating requests unlock after verification."
-            kicker="Catalog"
-          />
+          <div className={css.sectionHeader}>
+            <p className={css.sectionKicker}>Catalog</p>
+            <h2 className={css.sectionTitle}>Products and requests</h2>
+            <p className={css.sectionDescription}>
+              You can browse all active Admin products now. Adding products and creating requests unlock after verification.
+            </p>
+          </div>
           <div className={css.grid} id="product-stats-title">
             {PRODUCT_STATS.map((item) => (
               <StatsCard
@@ -158,8 +165,9 @@ function PharmacyDashboardPageContent() {
             View all products
           </ButtonLink>
         </div>
+        </div>
       </div>
-    </CabinetPage>
+    </main>
   );
 }
 

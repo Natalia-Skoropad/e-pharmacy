@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 
 import {
   Button,
-  CabinetPage,
   CountLabel,
   DataTable,
   Pagination,
@@ -18,8 +17,8 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
+
 import type {
-  BreadcrumbItem,
   Product,
   ProductCategory,
   ProductsQueryParams,
@@ -36,12 +35,6 @@ import css from './AllProductsPageContent.module.css';
 
 type CategoryFilter = 'all' | ProductCategory;
 type SortFilter = NonNullable<ProductsQueryParams['sort']>;
-
-type AllProductsPageContentProps = Readonly<{
-  breadcrumbs: BreadcrumbItem[];
-}>;
-
-//===================================================================
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -83,7 +76,7 @@ function getPageFromHref(href: string): number {
   return Number.isFinite(page) && page > 0 ? page : 1;
 }
 
-function AllProductsPageContent({ breadcrumbs }: AllProductsPageContentProps) {
+function AllProductsPageContent() {
   const [items, setItems] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -142,18 +135,27 @@ function AllProductsPageContent({ breadcrumbs }: AllProductsPageContentProps) {
       {
         key: 'updatedAt',
         title: 'Updated date',
-        render: (product) => <time dateTime={product.updatedAt}>{formatShortDate(product.updatedAt)}</time>,
+        render: (product) => (
+          <time dateTime={product.updatedAt}>
+            {formatShortDate(product.updatedAt)}
+          </time>
+        ),
       },
       {
         key: 'article',
         title: 'Article',
-        render: (product) => <span className={css.muted}>{product.article}</span>,
+        render: (product) => (
+          <span className={css.muted}>{product.article}</span>
+        ),
       },
       {
         key: 'name',
         title: 'Name',
         render: (product) => (
-          <Link className={css.productLink} href={getPharmacyAllProductPath(product.id)}>
+          <Link
+            className={css.productLink}
+            href={getPharmacyAllProductPath(product.id)}
+          >
             {product.name}
           </Link>
         ),
@@ -210,86 +212,103 @@ function AllProductsPageContent({ breadcrumbs }: AllProductsPageContentProps) {
   };
 
   return (
-    <CabinetPage
-      title="All products"
-      description="Browse real active Admin products. A new pharmacy can view the catalog, but adding products unlocks after verification."
-      breadcrumbs={breadcrumbs}
-    >
-      <div className={css.stack}>
-        <StatusBanner
-          status="new"
-          label="New"
-          title="Catalog is available in read-only mode"
-          message="Only active Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
-        />
-
-        <div className={css.toolbar}>
-          <div className={css.toolbarGrid}>
-            <SearchInput
-              id="all-products-search"
-              label="Search by name or article"
-              value={search}
-              placeholder="Start typing"
-              isActive={Boolean(search)}
-              onChange={handleSearchChange}
-            />
-
-            <SelectField
-              id="all-products-category"
-              label="Category"
-              value={category}
-              options={CATEGORY_OPTIONS}
-              isActive={category !== 'all'}
-              onChange={handleCategoryChange}
-            />
-
-            <SelectField
-              id="all-products-sort"
-              label="Sort"
-              value={sort}
-              options={SORT_OPTIONS}
-              isActive={sort !== 'newest'}
-              onChange={handleSortChange}
-            />
-          </div>
-        </div>
-
-        {error ? (
-          <StatusBanner status="rejected" title="Products could not be loaded" message={error} />
-        ) : null}
-
-        <CountLabel shown={items.length} total={total} label="products" />
-
-        <DataTable
-          columns={columns}
-          items={items}
-          getItemKey={(product) => product.id}
-          isLoading={isLoading}
-          minWidth={1080}
-          labels={{
-            loading: 'Loading real products...',
-            empty: 'No active Admin products match the selected filters.',
-          }}
-        />
-
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          getPageHref={(nextPage) => `#page-${nextPage}`}
-          ariaLabel="All products pagination"
-          renderLink={({ href, className, children, 'aria-label': ariaLabel }) => (
-            <button
-              type="button"
-              className={className}
-              aria-label={ariaLabel}
-              onClick={() => setPage(getPageFromHref(href))}
-            >
-              {children}
-            </button>
-          )}
-        />
+    <main className={css.page} aria-labelledby="all-products-page-title">
+      <div className={css.pageHeader}>
+        <h1 className={css.title} id="all-products-page-title">
+          All products
+        </h1>
+        <p className={css.description}>
+          Browse real active Admin products. A new pharmacy can view the
+          catalog, but adding products unlocks after verification.
+        </p>
       </div>
-    </CabinetPage>
+
+      <div className={css.contentCard}>
+        <div className={css.stack}>
+          <StatusBanner
+            status="new"
+            label="New"
+            title="Catalog is available in read-only mode"
+            message="Only active Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
+          />
+
+          <div className={css.toolbar}>
+            <div className={css.toolbarGrid}>
+              <SearchInput
+                id="all-products-search"
+                label="Search by name or article"
+                value={search}
+                placeholder="Start typing"
+                isActive={Boolean(search)}
+                onChange={handleSearchChange}
+              />
+
+              <SelectField
+                id="all-products-category"
+                label="Category"
+                value={category}
+                options={CATEGORY_OPTIONS}
+                isActive={category !== 'all'}
+                onChange={handleCategoryChange}
+              />
+
+              <SelectField
+                id="all-products-sort"
+                label="Sort"
+                value={sort}
+                options={SORT_OPTIONS}
+                isActive={sort !== 'newest'}
+                onChange={handleSortChange}
+              />
+            </div>
+          </div>
+
+          {error ? (
+            <StatusBanner
+              status="rejected"
+              title="Products could not be loaded"
+              message={error}
+            />
+          ) : null}
+
+          <CountLabel shown={items.length} total={total} label="products" />
+
+          <DataTable
+            columns={columns}
+            items={items}
+            getItemKey={(product) => product.id}
+            isLoading={isLoading}
+            minWidth={1080}
+            labels={{
+              loading: 'Loading real products...',
+              empty: 'No active Admin products match the selected filters.',
+            }}
+          />
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            getPageHref={(nextPage) => `#page-${nextPage}`}
+            ariaLabel="All products pagination"
+            renderLink={({
+              href,
+              className,
+              children,
+              'aria-label': ariaLabel,
+            }) => (
+              <button
+                type="button"
+                className={className}
+                aria-label={ariaLabel}
+                onClick={() => setPage(getPageFromHref(href))}
+              >
+                {children}
+              </button>
+            )}
+          />
+        </div>
+      </div>
+    </main>
   );
 }
 

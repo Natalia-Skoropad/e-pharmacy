@@ -176,3 +176,79 @@ export const PHARMACY_BREADCRUMB_ROOTS = {
   allProducts: PHARMACY_ALL_PRODUCTS,
   productRequests: PHARMACY_PRODUCT_REQUESTS,
 } as const;
+
+//===================================================================
+
+function isFilterSegment(segment: string | undefined): boolean {
+  if (!segment) return false;
+
+  return [
+    'status-',
+    'delivery-',
+    'payment-',
+    'date-',
+    'search-',
+    'category-',
+    'stock-',
+    'article-',
+    'name-',
+  ].some((prefix) => segment.startsWith(prefix));
+}
+
+//===================================================================
+
+export function getPharmacyBreadcrumbsByPathname(
+  pathname: string
+): BreadcrumbItem[] {
+  const cleanPathname = pathname.split('?')[0] ?? pathname;
+  const segments = cleanPathname.split('/').filter(Boolean);
+  const [, section, id, action] = segments;
+
+  if (section === 'dashboard' || !section) {
+    return getDashboardBreadcrumbs();
+  }
+
+  if (section === 'profile') {
+    return getProfileBreadcrumbs();
+  }
+
+  if (section === 'orders') {
+    return id && !isFilterSegment(id)
+      ? getOrderDetailsBreadcrumbs(id)
+      : getOrdersBreadcrumbs();
+  }
+
+  if (section === 'clients') {
+    return id && !isFilterSegment(id)
+      ? getClientDetailsBreadcrumbs(id)
+      : getClientsBreadcrumbs();
+  }
+
+  if (section === 'products') {
+    return id && !isFilterSegment(id)
+      ? getProductDetailsBreadcrumbs(id)
+      : getProductsBreadcrumbs();
+  }
+
+  if (section === 'all-products') {
+    return id && !isFilterSegment(id)
+      ? getAllProductDetailsBreadcrumbs(id)
+      : getAllProductsBreadcrumbs();
+  }
+
+  if (section === 'product-requests') {
+    if (id === 'new') {
+      return getNewProductRequestBreadcrumbs();
+    }
+
+    if (id && action === 'edit') {
+      return getEditProductRequestBreadcrumbs(id);
+    }
+
+    return id && !isFilterSegment(id)
+      ? getProductRequestDetailsBreadcrumbs(id)
+      : getProductRequestsBreadcrumbs();
+  }
+
+  return getDashboardBreadcrumbs();
+}

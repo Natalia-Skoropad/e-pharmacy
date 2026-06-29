@@ -11,9 +11,6 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
-import type { BreadcrumbItem } from '@e-pharmacy/types';
-import { CabinetPage } from '@e-pharmacy/ui/common';
-
 import css from './PharmacyEmptyTablePageContent.module.css';
 
 //===================================================================
@@ -25,7 +22,6 @@ type EmptyRow = { id: string };
 type PharmacyEmptyTablePageContentProps = Readonly<{
   title: string;
   description: string;
-  breadcrumbs: BreadcrumbItem[];
   kind: EmptyTableKind;
 }>;
 
@@ -190,7 +186,6 @@ function getStatusOptions(kind: EmptyTableKind) {
 function PharmacyEmptyTablePageContent({
   title,
   description,
-  breadcrumbs,
   kind,
 }: PharmacyEmptyTablePageContentProps) {
   const [search, setSearch] = useState('');
@@ -198,12 +193,16 @@ function PharmacyEmptyTablePageContent({
   const columns = useMemo(() => getColumns(kind), [kind]);
 
   return (
-    <CabinetPage
-      title={title}
-      description={description}
-      breadcrumbs={breadcrumbs}
-    >
-      <div className={css.stack}>
+    <main className={css.page} aria-labelledby={`${kind}-page-title`}>
+      <div className={css.pageHeader}>
+        <h1 className={css.title} id={`${kind}-page-title`}>
+          {title}
+        </h1>
+        <p className={css.description}>{description}</p>
+      </div>
+
+      <div className={css.card}>
+        <div className={css.stack}>
         <StatusBanner
           status="new"
           label="New"
@@ -247,8 +246,9 @@ function PharmacyEmptyTablePageContent({
             Create request is available after verification
           </span>
         ) : null}
+        </div>
       </div>
-    </CabinetPage>
+    </main>
   );
 }
 

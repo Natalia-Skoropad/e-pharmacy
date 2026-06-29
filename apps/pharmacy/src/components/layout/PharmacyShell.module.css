@@ -3,6 +3,14 @@
   background: var(--gradient-page-bg);
 }
 
+.container {
+  padding-block: 20px 64px;
+}
+
+.breadcrumbs.breadcrumbs {
+  padding-bottom: 24px;
+}
+
 .body {
   display: block;
 }
@@ -12,16 +20,22 @@
 }
 
 @media only screen and (min-width: 1440px) {
+  .container {
+    padding-block: 18px 64px;
+  }
+
+  .breadcrumbs.breadcrumbs {
+    padding-bottom: 28px;
+  }
+
   .body {
     display: grid;
     grid-template-columns: 280px minmax(0, 1fr);
     gap: 28px;
     align-items: start;
-    padding-block: 28px 64px;
   }
 
   .bodyPlain {
     display: block;
-    padding-block: 0;
   }
 }
