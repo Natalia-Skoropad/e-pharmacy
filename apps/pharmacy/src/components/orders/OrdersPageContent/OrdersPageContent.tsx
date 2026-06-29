@@ -1,23 +1,44 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   CountLabel,
   FiltersButton,
-  ResetFiltersButton,
   RowsPerPageSelect,
   StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
 
-import { useBackdropClick, useBodyScrollLock, useEscapeToClose } from '@e-pharmacy/hooks';
+import {
+  useBackdropClick,
+  useBodyScrollLock,
+  useEscapeToClose,
+} from '@e-pharmacy/hooks';
 
-import { getPharmacyOrdersPath } from '@/lib/pharmacy/routes';
+import type {
+  DeliveryMethod,
+  OrderStatus,
+  PaymentMethod,
+} from '@e-pharmacy/types';
+
+import { getPharmacyOrders } from '@/lib/api/browser';
+
+import type {
+  PharmacyOrdersQueryParams,
+  PharmacyOrderRow,
+} from '@/lib/pharmacy/orders';
+
 import { OrdersFiltersDrawer } from '@/components/orders/OrdersFiltersDrawer';
-import { OrdersTable, type PharmacyOrderRow } from '@/components/orders/OrdersTable';
+import { OrdersTable } from '@/components/orders/OrdersTable';
 
 import css from './OrdersPageContent.module.css';
+
+//===================================================================
+
+type DeliveryMethodFilter = 'all' | DeliveryMethod;
+type PaymentMethodFilter = 'all' | PaymentMethod;
+type OrderStatusFilter = 'all' | OrderStatus;
 
 //===================================================================
 
@@ -28,14 +49,12 @@ export type OrdersFilterState = Readonly<{
   };
   client: string;
   orderNumber: string;
-  deliveryMethod: string;
-  paymentMethod: string;
-  status: string;
+  deliveryMethod: DeliveryMethodFilter;
+  paymentMethod: PaymentMethodFilter;
+  status: OrderStatusFilter;
 }>;
 
 //===================================================================
-
-const EMPTY_ORDERS: PharmacyOrderRow[] = [];
 
 const DEFAULT_FILTERS: OrdersFilterState = {
   date: {
@@ -62,32 +81,25 @@ function getActiveFiltersCount(filters: OrdersFilterState): number {
   ].filter(Boolean).length;
 }
 
-function filterOrders(orders: PharmacyOrderRow[], filters: OrdersFilterState) {
-  const clientQuery = filters.client.trim().toLowerCase();
-  const orderQuery = filters.orderNumber.trim().toLowerCase();
+//===================================================================
 
-  return orders.filter((order) => {
-    const matchesDateFrom = !filters.date.from || order.orderDate >= filters.date.from;
-    const matchesDateTo = !filters.date.to || order.orderDate <= filters.date.to;
-    const matchesClient = !clientQuery || order.client.toLowerCase().includes(clientQuery);
-    const matchesOrderNumber =
-      !orderQuery || order.orderNumber.toLowerCase().includes(orderQuery);
-    const matchesDelivery =
-      filters.deliveryMethod === 'all' || order.deliveryMethod === filters.deliveryMethod;
-    const matchesPayment =
-      filters.paymentMethod === 'all' || order.paymentMethod === filters.paymentMethod;
-    const matchesStatus = filters.status === 'all' || order.status === filters.status;
-
-    return (
-      matchesDateFrom &&
-      matchesDateTo &&
-      matchesClient &&
-      matchesOrderNumber &&
-      matchesDelivery &&
-      matchesPayment &&
-      matchesStatus
-    );
-  });
+function getOrdersQueryParams(
+  filters: OrdersFilterState,
+  rowsPerPage: RowsPerPageValue
+): PharmacyOrdersQueryParams {
+  return {
+    page: 1,
+    perPage: rowsPerPage,
+    dateFrom: filters.date.from || undefined,
+    dateTo: filters.date.to || undefined,
+    client: filters.client.trim() || undefined,
+    orderNumber: filters.orderNumber.trim() || undefined,
+    deliveryMethod:
+      filters.deliveryMethod === 'all' ? undefined : filters.deliveryMethod,
+    paymentMethod:
+      filters.paymentMethod === 'all' ? undefined : filters.paymentMethod,
+    status: filters.status === 'all' ? undefined : filters.status,
+  };
 }
 
 //===================================================================
@@ -95,6 +107,9 @@ function filterOrders(orders: PharmacyOrderRow[], filters: OrdersFilterState) {
 function OrdersPageContent() {
   const [filters, setFilters] = useState<OrdersFilterState>(DEFAULT_FILTERS);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
+  const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   useBodyScrollLock(isFiltersOpen);
@@ -108,15 +123,39 @@ function OrdersPageContent() {
     onClose: () => setIsFiltersOpen(false),
   });
 
-  const filteredOrders = useMemo(
-    () => filterOrders(EMPTY_ORDERS, filters),
-    [filters]
+  const queryParams = useMemo(
+    () => getOrdersQueryParams(filters, rowsPerPage),
+    [filters, rowsPerPage]
   );
 
-  const visibleOrders = useMemo(
-    () => filteredOrders.slice(0, rowsPerPage),
-    [filteredOrders, rowsPerPage]
-  );
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadOrders() {
+      setIsLoading(true);
+
+      try {
+        const response = await getPharmacyOrders(queryParams);
+        if (!isMounted) return;
+
+        setOrders(response.items);
+        setTotalOrders(response.total);
+      } catch {
+        if (!isMounted) return;
+
+        setOrders([]);
+        setTotalOrders(0);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    void loadOrders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [queryParams]);
 
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
@@ -127,18 +166,13 @@ function OrdersPageContent() {
 
   return (
     <main className={css.page} aria-labelledby="orders-page-title">
-      <div className={css.headerRow}>
-        <div>
+      <div className={css.card}>
+        <div className={css.headerRow}>
           <h1 className={css.title} id="orders-page-title">
             Orders
           </h1>
-          <p className={css.description}>
-            Orders will contain only real client orders for the current pharmacy.
-          </p>
+          <CountLabel shown={orders.length} total={totalOrders} label="orders" />
         </div>
-      </div>
-
-      <div className={css.card}>
         <div className={css.stack}>
           <StatusBanner
             status="new"
@@ -148,13 +182,7 @@ function OrdersPageContent() {
           />
 
           <div className={css.toolbar}>
-            <CountLabel shown={visibleOrders.length} total={filteredOrders.length} label="records" />
-
             <div className={css.toolbarActions}>
-              {hasActiveFilters ? (
-                <ResetFiltersButton href={getPharmacyOrdersPath()} onClick={resetFilters} />
-              ) : null}
-
               <RowsPerPageSelect
                 id="orders-rows-per-page"
                 value={rowsPerPage}
@@ -171,7 +199,8 @@ function OrdersPageContent() {
           </div>
 
           <OrdersTable
-            orders={visibleOrders}
+            orders={orders}
+            isLoading={isLoading}
             emptyMessage={
               hasActiveFilters
                 ? 'No orders found for the selected filters. Adjust filters or reset them.'

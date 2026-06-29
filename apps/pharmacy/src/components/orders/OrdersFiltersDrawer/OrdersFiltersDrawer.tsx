@@ -10,6 +10,12 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { getPharmacyOrdersPath } from '@/lib/pharmacy/routes';
+
+import {
+  DELIVERY_METHOD_LABELS,
+  PAYMENT_METHOD_LABELS,
+} from '@/lib/pharmacy/orders';
+
 import type { OrdersFilterState } from '@/components/orders/OrdersPageContent';
 
 import css from './OrdersFiltersDrawer.module.css';
@@ -27,22 +33,24 @@ type OrdersFiltersDrawerProps = Readonly<{
 
 //===================================================================
 
-const DELIVERY_METHOD_OPTIONS: Array<SelectOption<string>> = [
-  { value: 'all', label: 'All delivery methods' },
-  { value: 'pickup', label: 'Pickup' },
-  { value: 'courier', label: 'Courier' },
-  { value: 'nova_poshta', label: 'Nova Poshta' },
+const DELIVERY_METHOD_OPTIONS: Array<
+  SelectOption<OrdersFilterState['deliveryMethod']>
+> = [
+  { value: 'all', label: 'All' },
+  { value: 'pickup', label: DELIVERY_METHOD_LABELS.pickup },
+  { value: 'postal_delivery', label: DELIVERY_METHOD_LABELS.postal_delivery },
 ];
 
-const PAYMENT_METHOD_OPTIONS: Array<SelectOption<string>> = [
-  { value: 'all', label: 'All payment methods' },
-  { value: 'cash', label: 'Cash' },
-  { value: 'card_online', label: 'Card online' },
-  { value: 'card_on_delivery', label: 'Card on delivery' },
+const PAYMENT_METHOD_OPTIONS: Array<
+  SelectOption<OrdersFilterState['paymentMethod']>
+> = [
+  { value: 'all', label: 'All' },
+  { value: 'cash', label: PAYMENT_METHOD_LABELS.cash },
+  { value: 'bank_transfer', label: PAYMENT_METHOD_LABELS.bank_transfer },
 ];
 
-const ORDER_STATUS_OPTIONS: Array<SelectOption<string>> = [
-  { value: 'all', label: 'All statuses' },
+const ORDER_STATUS_OPTIONS: Array<SelectOption<OrdersFilterState['status']>> = [
+  { value: 'all', label: 'All' },
   { value: 'new', label: 'New' },
   { value: 'in_progress', label: 'In progress' },
   { value: 'successful', label: 'Successful' },
@@ -116,7 +124,9 @@ function OrdersFiltersDrawer({
             value={filters.deliveryMethod}
             options={DELIVERY_METHOD_OPTIONS}
             isActive={filters.deliveryMethod !== 'all'}
-            onChange={(deliveryMethod) => onChange({ ...filters, deliveryMethod })}
+            onChange={(deliveryMethod) =>
+              onChange({ ...filters, deliveryMethod })
+            }
           />
 
           <SelectField
@@ -125,7 +135,9 @@ function OrdersFiltersDrawer({
             value={filters.paymentMethod}
             options={PAYMENT_METHOD_OPTIONS}
             isActive={filters.paymentMethod !== 'all'}
-            onChange={(paymentMethod) => onChange({ ...filters, paymentMethod })}
+            onChange={(paymentMethod) =>
+              onChange({ ...filters, paymentMethod })
+            }
           />
 
           <SelectField

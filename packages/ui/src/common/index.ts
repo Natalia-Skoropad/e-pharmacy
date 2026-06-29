@@ -32,5 +32,4 @@ export * from './ReviewsList';
 export * from './StatsCard';
 export * from './StatusBadge';
 export * from './StatusBanner';
-export * from './ActionBar';
 export * from './DataTable';

@@ -19,6 +19,7 @@
   line-height: var(--lh-heading);
   color: var(--color-text-primary);
   letter-spacing: var(--ls-tight);
+  margin-bottom: 20px;
 }
 
 .description {
@@ -52,10 +53,7 @@
   flex-wrap: wrap;
   gap: 12px;
   align-items: end;
-}
-
-.toolbarActions > * {
-  flex: 1 1 180px;
+  justify-content: space-between;
 }
 
 @media only screen and (min-width: 768px) {
@@ -63,13 +61,8 @@
     padding: 24px;
   }
 
-  .toolbar {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-  }
-
   .toolbarActions {
-    justify-content: flex-end;
+    justify-content: space-between;
   }
 
   .toolbarActions > * {

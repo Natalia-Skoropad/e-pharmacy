@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { LockedPharmacyFeaturePage } from '@/components/shared/LockedPharmacyFeaturePage';
+import { OrderDetailsPageContent } from '@/components/orders/OrderDetailsPageContent';
 
 //===================================================================
 
@@ -20,13 +20,7 @@ type OrderDetailsPageProps = Readonly<{
 async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   const { orderId } = await params;
 
-  return (
-    <LockedPharmacyFeaturePage
-      title={`Order #${orderId}`}
-      description="Order details are unavailable for a newly registered pharmacy because no real orders can exist before verification."
-      featureName="Order details"
-    />
-  );
+  return <OrderDetailsPageContent orderId={orderId} />;
 }
 
 export default OrderDetailsPage;

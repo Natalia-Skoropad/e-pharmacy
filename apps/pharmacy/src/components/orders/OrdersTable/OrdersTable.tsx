@@ -8,40 +8,58 @@ import {
 
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
-//===================================================================
+import {
+  DELIVERY_METHOD_LABELS,
+  PAYMENT_METHOD_LABELS,
+  type PharmacyOrderRow,
+} from '@/lib/pharmacy/orders';
 
-export type PharmacyOrderRow = Readonly<{
-  id: string;
-  orderNumber: string;
-  orderDate: string;
-  client: string;
-  deliveryMethod: string;
-  paymentMethod: string;
-  clientComment: string;
-  totalQuantity: number;
-  totalAmount: number;
-  status: 'new' | 'in_progress' | 'successful' | 'rejected';
-}>;
+import css from './OrdersTable.module.css';
+
+//===================================================================
 
 type OrdersTableProps = Readonly<{
   orders: PharmacyOrderRow[];
   emptyMessage: string;
+  isLoading?: boolean;
 }>;
 
 //===================================================================
 
-function OrdersTable({ orders, emptyMessage }: OrdersTableProps) {
+function TableHeader({
+  first,
+  second,
+}: Readonly<{ first: string; second?: string }>) {
+  return (
+    <span className={css.headerTitle}>
+      <span>{first}</span>
+      {second ? <span>{second}</span> : null}
+    </span>
+  );
+}
+
+//===================================================================
+
+function OrdersTable({
+  orders,
+  emptyMessage,
+  isLoading = false,
+}: OrdersTableProps) {
   const columns = useMemo<Array<DataTableColumn<PharmacyOrderRow>>>(
     () => [
       {
         key: 'orderNumber',
-        title: 'Order number',
+        title: <TableHeader first="Order" second="number" />,
         render: (order) => order.orderNumber,
       },
       {
         key: 'orderDate',
-        title: 'Order date',
-        render: (order) => <time dateTime={order.orderDate}>{formatShortDate(order.orderDate)}</time>,
+        title: <TableHeader first="Order" second="date" />,
+        render: (order) => (
+          <time dateTime={order.orderDate}>
+            {formatShortDate(order.orderDate)}
+          </time>
+        ),
       },
       {
         key: 'client',
@@ -50,29 +68,27 @@ function OrdersTable({ orders, emptyMessage }: OrdersTableProps) {
       },
       {
         key: 'deliveryMethod',
-        title: 'Delivery method',
-        render: (order) => order.deliveryMethod,
+        title: <TableHeader first="Delivery" second="method" />,
+        render: (order) => DELIVERY_METHOD_LABELS[order.deliveryMethod],
       },
       {
         key: 'paymentMethod',
-        title: 'Payment method',
-        render: (order) => order.paymentMethod,
+        title: <TableHeader first="Payment" second="method" />,
+        render: (order) => PAYMENT_METHOD_LABELS[order.paymentMethod],
       },
       {
         key: 'clientComment',
-        title: 'Client comment',
+        title: <TableHeader first="Client" second="comment" />,
         render: (order) => order.clientComment || '—',
       },
       {
         key: 'totalQuantity',
-        title: 'Total quantity',
-        align: 'center',
+        title: <TableHeader first="Total" second="quantity" />,
         render: (order) => order.totalQuantity,
       },
       {
         key: 'totalAmount',
-        title: 'Total amount',
-        align: 'right',
+        title: <TableHeader first="Total" second="amount" />,
         render: (order) => formatPrice(order.totalAmount),
       },
       {
@@ -88,12 +104,17 @@ function OrdersTable({ orders, emptyMessage }: OrdersTableProps) {
     <DataTable
       columns={columns}
       items={orders}
-      getItemKey={(order) => order.id}
-      minWidth={1280}
-      labels={{ empty: emptyMessage }}
+      getItemKey={(order) => String(order.id)}
+      isLoading={isLoading}
+      minWidth={1180}
+      labels={{
+        loading: 'Loading orders...',
+        empty: emptyMessage,
+      }}
     />
   );
 }
 
 export default OrdersTable;
 export { OrdersTable };
+export type { PharmacyOrderRow };
