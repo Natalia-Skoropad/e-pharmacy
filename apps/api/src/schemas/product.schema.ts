@@ -10,6 +10,10 @@ import { PRODUCT_CATEGORIES } from '../types/categories';
 
 //===============================================================
 
+export const PRODUCT_STATUS_FILTER_OPTIONS = ['active', 'blocked'] as const;
+
+//===============================================================
+
 export const PRODUCT_SORT_OPTIONS = [
   'price-asc',
   'price-desc',
@@ -44,6 +48,11 @@ function normalizePaginationQuery(value: unknown): unknown {
 
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
 const perPageSchema = z.coerce.number().int().min(1).max(200).default(12);
+const dateFilterSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must use YYYY-MM-DD format')
+  .optional();
 
 //===============================================================
 
@@ -56,6 +65,7 @@ export const productsQuerySchema = z.preprocess(
     nameKeyword: sharedSearchSchema,
     articleKeyword: sharedSearchSchema,
     category: z.enum(PRODUCT_CATEGORIES).optional(),
+    status: z.enum(PRODUCT_STATUS_FILTER_OPTIONS).optional(),
     pharmacyId: mongoIdSchema.optional(),
     minPrice: z.coerce.number().min(0).optional(),
     maxPrice: z.coerce.number().min(0).optional(),
@@ -67,6 +77,8 @@ export const productsQuerySchema = z.preprocess(
         return value;
       }, z.boolean())
       .optional(),
+    addedFrom: dateFilterSchema,
+    addedTo: dateFilterSchema,
     sort: z.enum(PRODUCT_SORT_OPTIONS).optional(),
   })
 );

@@ -60,6 +60,8 @@ export type ProductOfferResponseDto = {
   availableQuantity: number;
   reservedQuantity: number;
   inStock: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type ProductResponseDto = {

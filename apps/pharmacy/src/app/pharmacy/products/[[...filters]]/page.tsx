@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { PharmacyEmptyTablePageContent } from '@/components/shared/PharmacyEmptyTablePageContent';
+import { OwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
 
 //===================================================================
 
@@ -12,13 +12,7 @@ export const metadata: Metadata = {
 //===================================================================
 
 function ProductsPage() {
-  return (
-    <PharmacyEmptyTablePageContent
-      title="Own products"
-      description="Own products will appear only after verification, when adding products to this pharmacy becomes available."
-      kind="products"
-    />
-  );
+  return <OwnProductsPageContent />;
 }
 
 export default ProductsPage;

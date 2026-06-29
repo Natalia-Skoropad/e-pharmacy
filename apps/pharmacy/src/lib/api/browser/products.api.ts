@@ -12,6 +12,13 @@ import type {
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
+import {
+  getOwnProductBackendQuery,
+  normalizePharmacyProductsResponse,
+  type PharmacyProductsQueryParams,
+  type PharmacyProductsResponse,
+} from '@/lib/pharmacy/products';
+
 import { localApiRequest } from './local-api-request';
 
 //===================================================================
@@ -28,12 +35,29 @@ export async function getProducts(
 
 //===================================================================
 
+export async function getPharmacyProducts(
+  params: PharmacyProductsQueryParams = {}
+): Promise<PharmacyProductsResponse> {
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
+    `${PHARMACY_API_ROUTES.products.list}${buildQueryString(
+      getOwnProductBackendQuery(params)
+    )}`
+  );
+
+  return normalizePharmacyProductsResponse(
+    getResponseData(response),
+    params.pharmacyId
+  );
+}
+
+//===================================================================
+
 export async function getProductDetails(
   productId: Product['id']
 ): Promise<ProductDetailsResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<ProductDetailsResponse>>(
-    PHARMACY_API_ROUTES.products.details(productId)
-  );
+  const response = await localApiRequest<
+    ApiSuccessResponse<ProductDetailsResponse>
+  >(PHARMACY_API_ROUTES.products.details(productId));
 
   return getResponseData(response);
 }

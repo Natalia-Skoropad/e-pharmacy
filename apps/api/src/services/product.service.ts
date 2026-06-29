@@ -39,10 +39,13 @@ type ProductsQuery = {
   nameKeyword?: string;
   articleKeyword?: string;
   category?: ProductCategory;
+  status?: 'active' | 'blocked';
   pharmacyId?: string;
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
+  addedFrom?: string;
+  addedTo?: string;
   sort?:
     | 'price-asc'
     | 'price-desc'
@@ -141,6 +144,10 @@ async function getOffersByProductIds(
       availableQuantity: offer.availableQuantity,
       reservedQuantity: offer.reservedQuantity,
       inStock: offer.availableQuantity > 0,
+      createdAt:
+        offer.createdAt?.toISOString?.() ?? String(offer.createdAt ?? ''),
+      updatedAt:
+        offer.updatedAt?.toISOString?.() ?? String(offer.updatedAt ?? ''),
     };
 
     const key = String(offer.productId);
@@ -273,11 +280,31 @@ export async function getProductFiltersService(
 
 //===============================================================
 
+function getStartOfDay(value: string): Date {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) ? new Date(0) : date;
+}
+
+//===============================================================
+
+function getEndOfDay(value: string): Date {
+  const date = new Date(`${value}T23:59:59.999Z`);
+  return Number.isNaN(date.getTime()) ? new Date(0) : date;
+}
+
+//===============================================================
+
 export async function getProductsService(
   query: ProductsQuery,
   userId?: string
 ) {
-  const filter: Record<string, unknown> = { status: 'active' };
+  const filter: Record<string, unknown> = {};
+
+  if (query.status) {
+    filter.status = query.status;
+  } else {
+    filter.status = query.pharmacyId ? { $in: ['active', 'blocked'] } : 'active';
+  }
   const keyword = query.keyword?.trim();
 
   if (keyword) {
@@ -294,10 +321,24 @@ export async function getProductsService(
   }
   if (query.category) filter.category = query.category;
 
+  if (!query.pharmacyId && (query.addedFrom || query.addedTo)) {
+    filter.createdAt = {
+      ...(query.addedFrom ? { $gte: getStartOfDay(query.addedFrom) } : {}),
+      ...(query.addedTo ? { $lte: getEndOfDay(query.addedTo) } : {}),
+    };
+  }
+
   let allowedProductIds: Types.ObjectId[] | undefined;
   const offerFilter: Record<string, unknown> = {};
 
   if (query.pharmacyId) offerFilter.pharmacyId = query.pharmacyId;
+
+  if (query.pharmacyId && (query.addedFrom || query.addedTo)) {
+    offerFilter.createdAt = {
+      ...(query.addedFrom ? { $gte: getStartOfDay(query.addedFrom) } : {}),
+      ...(query.addedTo ? { $lte: getEndOfDay(query.addedTo) } : {}),
+    };
+  }
 
   if (
     typeof query.minPrice === 'number' ||
@@ -445,7 +486,7 @@ export async function getProductDetailsService(
 ) {
   const product = await Product.findOne({
     _id: productId,
-    status: 'active',
+    status: { $in: ['active', 'blocked'] },
   }).lean();
 
   if (!product) {

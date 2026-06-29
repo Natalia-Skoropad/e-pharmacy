@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { LockedPharmacyFeaturePage } from '@/components/shared/LockedPharmacyFeaturePage';
+import { OwnProductDetailsPageContent } from '@/components/products/OwnProductDetailsPageContent';
 
 //===================================================================
 
@@ -20,13 +20,7 @@ type ProductDetailsPageProps = Readonly<{
 async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
   const { productId } = await params;
 
-  return (
-    <LockedPharmacyFeaturePage
-      title={`Own product ${productId}`}
-      description="Own product details open after verification, when this pharmacy can add products and manage price or stock."
-      featureName="Own product details"
-    />
-  );
+  return <OwnProductDetailsPageContent productId={productId} />;
 }
 
 export default ProductDetailsPage;

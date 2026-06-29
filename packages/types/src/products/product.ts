@@ -31,6 +31,8 @@ export type ProductOffer = {
   availableQuantity: number;
   reservedQuantity: number;
   inStock: boolean;
+  createdAt?: ISODateString;
+  updatedAt?: ISODateString;
 };
 
 export type Product = {
@@ -89,10 +91,13 @@ export type ProductsQueryParams = {
   nameKeyword?: string;
   articleKeyword?: string;
   category?: ProductCategory;
+  status?: Extract<ProductStatus, 'active' | 'blocked'>;
   pharmacyId?: EntityId;
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
+  addedFrom?: ISODateString;
+  addedTo?: ISODateString;
   sort?:
     | 'price-asc'
     | 'price-desc'
