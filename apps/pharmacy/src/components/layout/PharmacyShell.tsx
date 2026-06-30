@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 
@@ -17,6 +17,22 @@ import css from './PharmacyShell.module.css';
 
 //===================================================================
 
+const BREADCRUMB_LABEL_EVENT = 'pharmacy:breadcrumb-current-label';
+
+//===================================================================
+
+type BreadcrumbLabelEventDetail = {
+  pathname?: string;
+  label?: string;
+};
+
+type BreadcrumbOverride = {
+  pathname: string;
+  label: string;
+};
+
+//===================================================================
+
 type PharmacyShellProps = Readonly<{
   children: React.ReactNode;
 }>;
@@ -25,8 +41,36 @@ type PharmacyShellProps = Readonly<{
 
 function PharmacyShellContent({ children }: PharmacyShellProps) {
   const pathname = usePathname();
+  const [breadcrumbOverride, setBreadcrumbOverride] =
+    useState<BreadcrumbOverride | null>(null);
   const isProfilePage = pathname === '/pharmacy/profile';
-  const breadcrumbs = getPharmacyBreadcrumbsByPathname(pathname);
+  const currentDetailLabel =
+    breadcrumbOverride?.pathname === pathname
+      ? breadcrumbOverride.label
+      : undefined;
+  const breadcrumbs = getPharmacyBreadcrumbsByPathname(
+    pathname,
+    currentDetailLabel
+  );
+
+  useEffect(() => {
+    const handleBreadcrumbLabel = (event: Event) => {
+      const { detail } = event as CustomEvent<BreadcrumbLabelEventDetail>;
+
+      if (!detail?.pathname || !detail.label) return;
+
+      setBreadcrumbOverride({
+        pathname: detail.pathname,
+        label: detail.label,
+      });
+    };
+
+    window.addEventListener(BREADCRUMB_LABEL_EVENT, handleBreadcrumbLabel);
+
+    return () => {
+      window.removeEventListener(BREADCRUMB_LABEL_EVENT, handleBreadcrumbLabel);
+    };
+  }, []);
 
   return (
     <PharmacyProtectedRoute>
@@ -44,6 +88,8 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
     </PharmacyProtectedRoute>
   );
 }
+
+//===================================================================
 
 export function PharmacyShell({ children }: PharmacyShellProps) {
   return (

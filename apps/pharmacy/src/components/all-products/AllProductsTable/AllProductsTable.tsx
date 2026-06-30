@@ -83,6 +83,7 @@ function AllProductsTable({
     () => [
       {
         key: 'createdAt',
+        width: '100px',
         title: <TableHeader parts={['Created', 'date']} />,
         render: (product) =>
           product.createdAt ? (
@@ -95,6 +96,7 @@ function AllProductsTable({
       },
       {
         key: 'article',
+        width: '90px',
         title: 'Article',
         render: (product) => (
           <span className={css.muted}>{product.article}</span>
@@ -102,6 +104,7 @@ function AllProductsTable({
       },
       {
         key: 'name',
+        width: '240px',
         title: 'Name',
         render: (product) => (
           <TextActionButton href={getPharmacyAllProductPath(product.id)}>
@@ -111,11 +114,13 @@ function AllProductsTable({
       },
       {
         key: 'category',
+        width: '100px',
         title: 'Category',
         render: (product) => PRODUCT_CATEGORY_LABELS[product.category],
       },
       {
         key: 'status',
+        width: '100px',
         title: 'Status',
         render: (product) => (
           <StatusBadge
@@ -126,6 +131,7 @@ function AllProductsTable({
       },
       {
         key: 'addedToMyPharmacy',
+        width: '150px',
         title: <TableHeader parts={['Added to', 'my pharmacy']} />,
         render: (product) =>
           isProductAddedToCurrentPharmacy(product, currentPharmacyId)
@@ -134,6 +140,7 @@ function AllProductsTable({
       },
       {
         key: 'action',
+        width: '170px',
         title: 'Action',
         render: (product) => {
           const isAddedToCurrentPharmacy = isProductAddedToCurrentPharmacy(
@@ -154,11 +161,12 @@ function AllProductsTable({
 
   return (
     <DataTable
+      className={css.tableWrap}
       columns={columns}
       items={products}
       getItemKey={(product) => String(product.id)}
       isLoading={isLoading}
-      minWidth={1120}
+      minWidth={0}
       labels={{
         loading: 'Loading products...',
         empty: emptyMessage,

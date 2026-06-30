@@ -14,7 +14,7 @@
 
 .table th,
 .table td {
-  padding: 7px 7px;
+  padding: 7px;
   text-align: left;
   vertical-align: middle;
   border-bottom: 1px solid var(--color-border);

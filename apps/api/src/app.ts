@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import path from 'path';
 
 import { env } from './config/env';
 import { errorMiddleware } from './middlewares/error.middleware';
@@ -19,7 +20,13 @@ app.set('trust proxy', 1);
 
 //===============================================================
 
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
+
+//===============================================================
 
 app.use(
   cors({
@@ -35,11 +42,29 @@ app.use(
   })
 );
 
+//===============================================================
+
 app.use(validateMutationOrigin);
+
+//===============================================================
+
+app.use(
+  '/images',
+  express.static(path.join(process.cwd(), 'public/images'), {
+    immutable: true,
+    maxAge: '30d',
+  })
+);
+
+//===============================================================
 
 app.use(express.json({ limit: '2mb' }));
 
+//===============================================================
+
 app.use(routes);
+
+//===============================================================
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

@@ -9,10 +9,12 @@ import {
   ButtonLink,
   Container,
   CountLabel,
+  DataTable,
   LoadingSpinner,
   PictureCard,
   Tabs,
   TextActionButton,
+  type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
 import {
@@ -259,6 +261,55 @@ function ProfilePageContent() {
   );
 
   const hiddenOrdersCount = Math.max(orders.length - visibleOrders.length, 0);
+
+  const orderColumns = useMemo<Array<DataTableColumn<Order>>>(
+    () => [
+      {
+        key: 'date',
+        title: 'Date',
+        render: (order) => formatShortDate(order.createdAt),
+      },
+      {
+        key: 'orderNumber',
+        title: 'Order number',
+        render: (order) => (
+          <TextActionButton
+            className={css.orderLink}
+            href={buildOrderPath(order)}
+          >
+            {order.orderNumber}
+          </TextActionButton>
+        ),
+      },
+      {
+        key: 'pharmacy',
+        title: 'Pharmacy',
+        render: (order) => (
+          <TextActionButton
+            className={css.pharmacyLink}
+            href={buildPharmacyPath(order.pharmacyName, order.pharmacyId)}
+          >
+            {order.pharmacyName}
+          </TextActionButton>
+        ),
+      },
+      {
+        key: 'amount',
+        title: 'Order amount',
+        render: (order) => formatPrice(order.totalPrice),
+      },
+      {
+        key: 'status',
+        title: 'Status',
+        render: (order) => (
+          <span className={css.statusBadge}>
+            {formatCapitalizedLabel(order.status)}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
 
   const visibleFavoriteProducts = favoriteProducts;
   const visibleFavoritePharmacies = favoritePharmacies;
@@ -907,63 +958,17 @@ function ProfilePageContent() {
                     />
                   </div>
 
-                  <div className={css.tableWrap}>
-                    <table className={css.ordersTable}>
-                      <thead>
-                        <tr>
-                          <th>Date</th>
-                          <th>Order number</th>
-                          <th>Pharmacy</th>
-                          <th>Order amount</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {isOrdersLoading ? (
-                          <tr>
-                            <td colSpan={5}>Loading orders...</td>
-                          </tr>
-                        ) : orders.length > 0 ? (
-                          visibleOrders.map((order) => (
-                            <tr key={order.id}>
-                              <td>{formatShortDate(order.createdAt)}</td>
-                              <td>
-                                <TextActionButton
-                                  className={css.orderLink}
-                                  href={buildOrderPath(order)}
-                                >
-                                  {order.orderNumber}
-                                </TextActionButton>
-                              </td>
-                              <td>
-                                <TextActionButton
-                                  className={css.pharmacyLink}
-                                  href={buildPharmacyPath(
-                                    order.pharmacyName,
-                                    order.pharmacyId
-                                  )}
-                                >
-                                  {order.pharmacyName}
-                                </TextActionButton>
-                              </td>
-                              <td>{formatPrice(order.totalPrice)}</td>
-                              <td>
-                                <span className={css.statusBadge}>
-                                  {formatCapitalizedLabel(order.status)}
-                                </span>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={5}>
-                              Orders will appear here after checkout.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                  <DataTable
+                    columns={orderColumns}
+                    items={visibleOrders}
+                    getItemKey={(order) => String(order.id)}
+                    isLoading={isOrdersLoading}
+                    minWidth={620}
+                    labels={{
+                      loading: 'Loading orders...',
+                      empty: 'Orders will appear here after checkout.',
+                    }}
+                  />
 
                   {hiddenOrdersCount > 0 ? (
                     <Button

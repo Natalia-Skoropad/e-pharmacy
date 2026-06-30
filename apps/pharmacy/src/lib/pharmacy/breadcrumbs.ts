@@ -90,10 +90,14 @@ export function getProductsBreadcrumbs(
 //===================================================================
 
 export function getProductDetailsBreadcrumbs(
-  productId: string
+  productId: string,
+  productName?: string
 ): BreadcrumbItem[] {
   return getPharmacyBreadcrumbs(
-    { label: `Product ${productId}`, href: getPharmacyProductPath(productId) },
+    {
+      label: productName ?? `Product ${productId}`,
+      href: getPharmacyProductPath(productId),
+    },
     { label: 'Own products', href: PHARMACY_PRODUCTS }
   );
 }
@@ -109,11 +113,12 @@ export function getAllProductsBreadcrumbs(
 //===================================================================
 
 export function getAllProductDetailsBreadcrumbs(
-  productId: string
+  productId: string,
+  productName?: string
 ): BreadcrumbItem[] {
   return getPharmacyBreadcrumbs(
     {
-      label: `Global product ${productId}`,
+      label: productName ?? `Global product ${productId}`,
       href: getPharmacyAllProductPath(productId),
     },
     { label: 'All products', href: PHARMACY_ALL_PRODUCTS }
@@ -202,7 +207,8 @@ function isFilterSegment(segment: string | undefined): boolean {
 //===================================================================
 
 export function getPharmacyBreadcrumbsByPathname(
-  pathname: string
+  pathname: string,
+  currentDetailLabel?: string
 ): BreadcrumbItem[] {
   const cleanPathname = pathname.split('?')[0] ?? pathname;
   const segments = cleanPathname.split('/').filter(Boolean);
@@ -230,13 +236,13 @@ export function getPharmacyBreadcrumbsByPathname(
 
   if (section === 'products') {
     return id && !isFilterSegment(id)
-      ? getProductDetailsBreadcrumbs(id)
+      ? getProductDetailsBreadcrumbs(id, currentDetailLabel)
       : getProductsBreadcrumbs();
   }
 
   if (section === 'all-products') {
     return id && !isFilterSegment(id)
-      ? getAllProductDetailsBreadcrumbs(id)
+      ? getAllProductDetailsBreadcrumbs(id, currentDetailLabel)
       : getAllProductsBreadcrumbs();
   }
 
