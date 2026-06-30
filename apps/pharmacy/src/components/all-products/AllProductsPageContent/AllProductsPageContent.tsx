@@ -6,6 +6,7 @@ import { PackageSearch } from 'lucide-react';
 import {
   CountLabel,
   FiltersButton,
+  Pagination,
   RowsPerPageSelect,
   StatusBanner,
   type RowsPerPageValue,
@@ -82,10 +83,11 @@ function getActiveFiltersCount(filters: AllProductsFilterState): number {
 
 function getProductsQueryParams(
   filters: AllProductsFilterState,
-  rowsPerPage: RowsPerPageValue
+  rowsPerPage: RowsPerPageValue,
+  page: number
 ) {
   return {
-    page: 1,
+    page,
     perPage: rowsPerPage,
     includeBlocked: true,
     addedFrom: filters.createdDate.from || undefined,
@@ -110,8 +112,10 @@ function AllProductsPageContent() {
   const [filters, setFilters] =
     useState<AllProductsFilterState>(DEFAULT_FILTERS);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
+  const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
   );
@@ -153,8 +157,8 @@ function AllProductsPageContent() {
   }, []);
 
   const queryParams = useMemo(
-    () => getProductsQueryParams(filters, rowsPerPage),
-    [filters, rowsPerPage]
+    () => getProductsQueryParams(filters, rowsPerPage, currentPage),
+    [currentPage, filters, rowsPerPage]
   );
 
   useEffect(() => {
@@ -169,11 +173,13 @@ function AllProductsPageContent() {
 
         setProducts(response.items);
         setTotalProducts(response.total);
+        setTotalPages(Math.max(1, response.totalPages));
       } catch {
         if (!isMounted) return;
 
         setProducts([]);
         setTotalProducts(0);
+        setTotalPages(1);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -189,7 +195,18 @@ function AllProductsPageContent() {
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
 
+  const handleFiltersChange = (nextFilters: AllProductsFilterState) => {
+    setCurrentPage(1);
+    setFilters(nextFilters);
+  };
+
+  const handleRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
+    setCurrentPage(1);
+    setRowsPerPage(nextRowsPerPage);
+  };
+
   const resetFilters = () => {
+    setCurrentPage(1);
     setFilters(DEFAULT_FILTERS);
   };
 
@@ -226,7 +243,7 @@ function AllProductsPageContent() {
               <RowsPerPageSelect
                 id="all-products-rows-per-page"
                 value={rowsPerPage}
-                onChange={setRowsPerPage}
+                onChange={handleRowsPerPageChange}
               />
 
               <FiltersButton
@@ -248,6 +265,23 @@ function AllProductsPageContent() {
                 : 'No active or blocked Admin products are available yet.'
             }
           />
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            getPageHref={(page) => String(page)}
+            ariaLabel="All products pagination"
+            renderLink={({ href, className, children, 'aria-label': label }) => (
+              <button
+                className={className}
+                type="button"
+                aria-label={label}
+                onClick={() => setCurrentPage(Number(href))}
+              >
+                {children}
+              </button>
+            )}
+          />
         </div>
       </div>
 
@@ -256,7 +290,7 @@ function AllProductsPageContent() {
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           onBackdropMouseDown={handleBackdropClick}
-          onChange={setFilters}
+          onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}
         />

@@ -6,6 +6,7 @@ import type {
   ApiSuccessResponse,
   Product,
   ProductDetailsResponse,
+  ProductReviewsResponse,
   ProductsQueryParams,
   ProductsResponse,
 } from '@e-pharmacy/types';
@@ -58,6 +59,18 @@ export async function getProductDetails(
   const response = await localApiRequest<
     ApiSuccessResponse<ProductDetailsResponse>
   >(PHARMACY_API_ROUTES.products.details(productId));
+
+  return getResponseData(response);
+}
+
+//===================================================================
+
+export async function getProductReviews(
+  productId: Product['id']
+): Promise<ProductReviewsResponse> {
+  const response = await localApiRequest<
+    ApiSuccessResponse<ProductReviewsResponse>
+  >(PHARMACY_API_ROUTES.products.reviews(productId));
 
   return getResponseData(response);
 }

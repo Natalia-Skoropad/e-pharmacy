@@ -9,19 +9,33 @@ import {
   DataTable,
   PictureUpload,
   RatingSummary,
+  ReviewsList,
   StatusBadge,
   StatusBanner,
   Tabs,
   type DataTableColumn,
+  type ReviewsListItem,
   type TabItem,
 } from '@e-pharmacy/ui/common';
 
+import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { isApiError } from '@e-pharmacy/api-client/core';
 
-import type { EntityId, Product, ProductOffer } from '@e-pharmacy/types';
+import type {
+  EntityId,
+  Product,
+  ProductOffer,
+  ProductReview,
+} from '@e-pharmacy/types';
+
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
-import { getMyPharmacyProfile, getProductDetails } from '@/lib/api/browser';
+import {
+  getMyPharmacyProfile,
+  getProductDetails,
+  getProductReviews,
+} from '@/lib/api/browser';
+
 import { getPharmacyAllProductsPath } from '@/lib/pharmacy/routes';
 
 import css from './AllProductDetailsPageContent.module.css';
@@ -206,11 +220,20 @@ function getProductImageSrc(imageUrl: string | undefined): string | undefined {
 
   if (/^(https?:|data:|blob:)/i.test(imageUrl)) return imageUrl;
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
+  const apiUrl = (
+    process.env.NEXT_PUBLIC_API_URL ||
+    (process.env.NODE_ENV !== 'production' ? 'http://localhost:4000' : '')
+  ).replace(/\/$/, '');
 
-  if (!apiUrl) return imageUrl;
+  if (apiUrl && imageUrl.startsWith('/images/')) {
+    return `${apiUrl}${imageUrl}`;
+  }
 
-  return `${apiUrl}${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+  if (apiUrl && imageUrl.startsWith('images/')) {
+    return `${apiUrl}/${imageUrl}`;
+  }
+
+  return imageUrl;
 }
 
 //===================================================================
@@ -293,9 +316,6 @@ function getProductCharacteristics(product: Product): CharacteristicItem[] {
       ? { label: 'Package', value: product.packageQuantity }
       : null,
     { label: 'Category', value: CATEGORY_LABELS[product.category] },
-    product.description
-      ? { label: 'Description', value: product.description }
-      : null,
   ].filter((item): item is CharacteristicItem => Boolean(item));
 }
 
@@ -338,6 +358,18 @@ function getStatisticCards(offer: ProductOffer | null): StatisticCard[] {
 
 //===================================================================
 
+function mapReviewsToListItems(reviews: ProductReview[]): ReviewsListItem[] {
+  return reviews.map((review) => ({
+    id: String(review.id),
+    userName: review.userName,
+    rating: review.rating,
+    comment: review.comment,
+    createdAt: review.createdAt,
+  }));
+}
+
+//===================================================================
+
 function EmptyPanel({ children }: Readonly<{ children: string }>) {
   return <p className={css.emptyPanel}>{children}</p>;
 }
@@ -353,6 +385,8 @@ function AllProductDetailsPageContent({
   showAddAction = true,
 }: AllProductDetailsPageContentProps) {
   const [product, setProduct] = useState<Product | null>(null);
+  const [reviews, setReviews] = useState<ProductReview[]>([]);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
   );
@@ -368,19 +402,27 @@ function AllProductDetailsPageContent({
       setError(null);
 
       try {
-        const [productResponse, profileResponse] = await Promise.all([
-          getProductDetails(productId),
-          getMyPharmacyProfile().catch(() => null),
-        ]);
+        const [productResponse, profileResponse, reviewsResponse] =
+          await Promise.all([
+            getProductDetails(productId),
+            getMyPharmacyProfile().catch(() => null),
+            getProductReviews(productId).catch(() => null),
+          ]);
 
         if (!isMounted) return;
 
         setProduct(productResponse.product);
+        setReviews(reviewsResponse?.items ?? []);
+        setReviewsTotal(
+          reviewsResponse?.total ?? productResponse.product.reviewsCount ?? 0
+        );
         setCurrentPharmacyId(profileResponse?.pharmacy.id ?? null);
       } catch (loadError) {
         if (!isMounted) return;
 
         setProduct(null);
+        setReviews([]);
+        setReviewsTotal(0);
         setError(getProductDetailsError(loadError));
       } finally {
         if (isMounted) setIsLoading(false);
@@ -405,12 +447,18 @@ function AllProductDetailsPageContent({
     : null;
   const isAddedToPharmacy = Boolean(currentOffer);
   const productImageSrc = getProductImageSrc(product?.imageUrl);
+  const tabs = PRODUCT_DETAILS_TABS.map((tab) =>
+    tab.value === 'reviews'
+      ? { ...tab, label: `Reviews (${reviewsTotal})` }
+      : tab
+  );
 
   const summaryItems = product
     ? getProductSummaryItems(product, currentOffer)
     : [];
   const characteristics = product ? getProductCharacteristics(product) : [];
   const statisticCards = getStatisticCards(currentOffer);
+  const reviewItems = mapReviewsToListItems(reviews);
 
   const stockMovementColumns = useMemo<
     Array<DataTableColumn<StockMovementRow>>
@@ -460,6 +508,14 @@ function AllProductDetailsPageContent({
     []
   );
 
+  if (isLoading) {
+    return (
+      <main className={css.page} aria-label="Loading global product">
+        <PageLoader label="Loading product data..." />
+      </main>
+    );
+  }
+
   return (
     <main className={css.page} aria-labelledby="global-product-page-title">
       <div className={css.contentCard}>
@@ -473,16 +529,10 @@ function AllProductDetailsPageContent({
               <RatingSummary
                 className={css.titleRating}
                 rating={product.rating}
-                reviewsCount={product.reviewsCount}
+                reviewsCount={reviewsTotal}
               />
             ) : null}
           </div>
-
-          {isLoading ? (
-            <section className={css.card} aria-busy="true">
-              <p className={css.muted}>Loading product data...</p>
-            </section>
-          ) : null}
 
           {error ? (
             <StatusBanner
@@ -495,7 +545,7 @@ function AllProductDetailsPageContent({
           {product ? (
             <section className={css.tabsSection} aria-label="Product data">
               <Tabs
-                items={PRODUCT_DETAILS_TABS}
+                items={tabs}
                 activeValue={activeTab}
                 ariaLabel="Product details tabs"
                 mobileVisibleCount={1}
@@ -536,14 +586,12 @@ function AllProductDetailsPageContent({
                     <div className={css.card}>
                       <p
                         className={
-                          isAddedToPharmacy
-                            ? css.priceLine
-                            : css.productNotice
+                          isAddedToPharmacy ? css.priceLine : css.productNotice
                         }
                       >
                         {isAddedToPharmacy
                           ? getProductPriceLabel(product, currentOffer)
-                          : 'This product is not added to your pharmacy yet.'}
+                          : 'This product is not added to your pharmacy yet'}
                       </p>
 
                       <dl className={css.detailsList}>
@@ -557,7 +605,12 @@ function AllProductDetailsPageContent({
 
                       <div className={css.actions}>
                         {showAddAction ? (
-                          <Button type="button" disabled>
+                          <Button
+                            className={css.actionButton}
+                            type="button"
+                            size="sm"
+                            disabled
+                          >
                             {product.status === 'blocked'
                               ? 'Unavailable'
                               : isAddedToPharmacy
@@ -567,8 +620,10 @@ function AllProductDetailsPageContent({
                         ) : null}
 
                         <ButtonLink
+                          className={css.actionButton}
                           href={backHref}
                           variant="secondary"
+                          size="sm"
                           renderLink={({
                             href,
                             className,
@@ -666,7 +721,10 @@ function AllProductDetailsPageContent({
                       {characteristics.length > 0 ? (
                         <dl className={css.characteristicsList}>
                           {characteristics.map((item) => (
-                            <div key={item.label}>
+                            <div
+                              className={css.characteristicItem}
+                              key={item.label}
+                            >
                               <dt>{item.label}</dt>
                               <dd>{item.value}</dd>
                             </div>
@@ -678,14 +736,31 @@ function AllProductDetailsPageContent({
                           yet.
                         </EmptyPanel>
                       )}
+
+                      <div className={css.descriptionBlock}>
+                        {product.description ? (
+                          <p>{product.description}</p>
+                        ) : null}
+
+                        <p>
+                          Before purchasing, compare pharmacy prices, check the
+                          available quantity, read client reviews, and make sure
+                          the selected offer matches your needs. Information on
+                          this page helps clients quickly understand the
+                          product, its main properties, and where it can be
+                          bought online.
+                        </p>
+                      </div>
                     </>
                   ) : null}
 
                   {activeTab === 'reviews' ? (
-                    <>
-                      <h3 className={css.panelTitle}>Reviews</h3>
-                      <EmptyPanel>This product has no reviews yet.</EmptyPanel>
-                    </>
+                    <ReviewsList
+                      reviews={reviewItems}
+                      title="Reviews"
+                      emptyTitle="This product has no reviews yet."
+                      emptyText="Product reviews will appear here after clients share their feedback."
+                    />
                   ) : null}
                 </div>
               )}

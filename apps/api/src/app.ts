@@ -13,6 +13,10 @@ import { routes } from './routes';
 
 export const app = express();
 
+const publicImagesPath = path.resolve(__dirname, '..', 'public', 'images');
+
+//===============================================================
+
 // Render and Vercel sit behind proxies and send X-Forwarded-* headers.
 // express-rate-limit needs Express to trust the first proxy to resolve
 // client IPs correctly in production.
@@ -50,7 +54,7 @@ app.use(validateMutationOrigin);
 
 app.use(
   '/images',
-  express.static(path.join(process.cwd(), 'public/images'), {
+  express.static(publicImagesPath, {
     immutable: true,
     maxAge: '30d',
   })

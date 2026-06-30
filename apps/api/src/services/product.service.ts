@@ -26,7 +26,7 @@ import {
 } from '../types/categories';
 
 import { httpError } from '../utils/httpError';
-import { createSafeRegExp } from '../utils/regexp';
+import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
 
 //===============================================================
 
@@ -315,13 +315,15 @@ export async function getProductsService(
 
   if (keyword) {
     filter.$or = [
-      { name: createSafeRegExp(keyword) },
+      { name: createFlexibleSearchRegExp(keyword) },
       { article: createSafeRegExp(keyword) },
-      { description: createSafeRegExp(keyword) },
+      { description: createFlexibleSearchRegExp(keyword) },
     ];
   }
 
-  if (query.nameKeyword) filter.name = createSafeRegExp(query.nameKeyword);
+  if (query.nameKeyword) {
+    filter.name = createFlexibleSearchRegExp(query.nameKeyword);
+  }
   if (query.articleKeyword) {
     filter.article = createSafeRegExp(query.articleKeyword);
   }
@@ -518,7 +520,10 @@ export async function getProductDetailsService(
 //===============================================================
 
 export async function getProductReviewsService(productId: string) {
-  const exists = await Product.exists({ _id: productId, status: 'active' });
+  const exists = await Product.exists({
+    _id: productId,
+    status: { $in: ['active', 'blocked'] },
+  });
 
   if (!exists) {
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);

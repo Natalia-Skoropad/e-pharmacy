@@ -2,6 +2,7 @@ export const pharmacyApiRoutes = {
   products: {
     list: '/api/products',
     details: (productId: string) => `/api/products/${productId}`,
+    reviews: (productId: string) => `/api/products/${productId}/reviews`,
   },
 
   orders: {
