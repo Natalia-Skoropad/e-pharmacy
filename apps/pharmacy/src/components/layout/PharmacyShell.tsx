@@ -44,6 +44,7 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
   const [breadcrumbOverride, setBreadcrumbOverride] =
     useState<BreadcrumbOverride | null>(null);
   const isProfilePage = pathname === '/pharmacy/profile';
+  const isDashboardPage = pathname === '/pharmacy/dashboard';
   const currentDetailLabel =
     breadcrumbOverride?.pathname === pathname
       ? breadcrumbOverride.label
@@ -77,7 +78,9 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
       <div className={css.shell}>
         <PharmacyHeader />
         <Container className={css.container} variant="wide">
-          <Breadcrumbs items={breadcrumbs} className={css.breadcrumbs} />
+          {isDashboardPage ? null : (
+            <Breadcrumbs items={breadcrumbs} className={css.breadcrumbs} />
+          )}
 
           <div className={clsx(css.body, isProfilePage && css.bodyPlain)}>
             {isProfilePage ? null : <PharmacySidebar />}
