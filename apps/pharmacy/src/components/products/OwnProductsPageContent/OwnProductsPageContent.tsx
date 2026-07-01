@@ -11,6 +11,8 @@ import {
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
 
+import { PageHeader } from '@e-pharmacy/ui/layout';
+
 import {
   useBackdropClick,
   useBodyScrollLock,
@@ -199,17 +201,18 @@ function OwnProductsPageContent() {
   return (
     <main className={css.page} aria-labelledby="own-products-page-title">
       <div className={css.card}>
-        <div className={css.headerRow}>
-          <h1 className={css.title} id="own-products-page-title">
-            <Boxes className={css.titleIcon} size={30} aria-hidden="true" />
-            <span>Own products</span>
-          </h1>
-          <CountLabel
-            shown={products.length}
-            total={totalProducts}
-            label="products"
-          />
-        </div>
+        <PageHeader
+          title="Own products"
+          titleId="own-products-page-title"
+          icon={<Boxes size={23} aria-hidden="true" />}
+          actions={
+            <CountLabel
+              shown={products.length}
+              total={totalProducts}
+              label="products"
+            />
+          }
+        />
 
         <div className={css.stack}>
           <StatusBanner

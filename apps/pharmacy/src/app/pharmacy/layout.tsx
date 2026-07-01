@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { PharmacyShell } from '@/components/layout/PharmacyShell';
+import { PharmacyShell } from '@/components/layout/PharmacyShell/PharmacyShell';
 
 //===================================================================
 

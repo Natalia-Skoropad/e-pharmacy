@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { ShoppingBag } from 'lucide-react';
 
 import { ButtonLink, StatusBanner } from '@e-pharmacy/ui/common';
+import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import { getPharmacyProfilePath } from '@/lib/pharmacy/routes';
 
@@ -21,9 +23,11 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     <main className={css.page} aria-labelledby="order-details-page-title">
       <div className={css.contentCard}>
         <div className={css.stack}>
-          <h1 className={css.title} id="order-details-page-title">
-            {title}
-          </h1>
+          <PageHeader
+            title={title}
+            titleId="order-details-page-title"
+            icon={<ShoppingBag size={23} aria-hidden="true" />}
+          />
 
           <StatusBanner
             status="new"

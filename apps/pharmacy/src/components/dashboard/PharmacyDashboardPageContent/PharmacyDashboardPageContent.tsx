@@ -28,6 +28,7 @@ import {
   SelectField,
   StatusBanner,
 } from '@e-pharmacy/ui/common';
+import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import type { EntityId, OrderStatus, PharmacyStatus } from '@e-pharmacy/types';
 import { formatPrice } from '@e-pharmacy/utils/formatters';
@@ -733,17 +734,11 @@ function PharmacyDashboardPageContent() {
     <main className={css.page} aria-labelledby="dashboard-page-title">
       <div className={css.contentCard}>
         <div className={css.stack}>
-          <div className={css.hero}>
-            <div className={css.heroTitleWrap}>
-              <span className={css.titleIconWrap}>
-                <LayoutDashboard size={28} aria-hidden="true" />
-              </span>
-
-              <h1 className={css.title} id="dashboard-page-title">
-                Dashboard
-              </h1>
-            </div>
-          </div>
+          <PageHeader
+            title="Dashboard"
+            titleId="dashboard-page-title"
+            icon={<LayoutDashboard size={23} aria-hidden="true" />}
+          />
 
           {banner ? (
             <StatusBanner

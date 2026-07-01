@@ -10,6 +10,7 @@ import {
   StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
+import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import {
   useBackdropClick,
@@ -163,21 +164,18 @@ function ClientsPageContent() {
   return (
     <main className={css.page} aria-labelledby="clients-page-title">
       <div className={css.card}>
-        <div className={css.headerRow}>
-          <h1 className={css.title} id="clients-page-title">
-            <Users
-              className={css.titleIcon}
-              size={30}
-              aria-hidden="true"
+        <PageHeader
+          title="Clients"
+          titleId="clients-page-title"
+          icon={<Users size={23} aria-hidden="true" />}
+          actions={
+            <CountLabel
+              shown={clients.length}
+              total={totalClients}
+              label="clients"
             />
-            <span>Clients</span>
-          </h1>
-          <CountLabel
-            shown={clients.length}
-            total={totalClients}
-            label="clients"
-          />
-        </div>
+          }
+        />
 
         <div className={css.stack}>
           <StatusBanner

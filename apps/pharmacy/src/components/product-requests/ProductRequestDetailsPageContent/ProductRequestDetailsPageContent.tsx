@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { FilePlus2 } from 'lucide-react';
 
 import { ButtonLink, StatusBanner } from '@e-pharmacy/ui/common';
+import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import { getPharmacyProfilePath } from '@/lib/pharmacy/routes';
 
@@ -27,14 +28,11 @@ function ProductRequestDetailsPageContent({
     >
       <div className={css.contentCard}>
         <div className={css.stack}>
-          <h1 className={css.title} id="product-request-details-page-title">
-            <FilePlus2
-              className={css.titleIcon}
-              size={30}
-              aria-hidden="true"
-            />
-            <span>{title}</span>
-          </h1>
+          <PageHeader
+            title={title}
+            titleId="product-request-details-page-title"
+            icon={<FilePlus2 size={23} aria-hidden="true" />}
+          />
 
           <StatusBanner
             status="new"

@@ -11,6 +11,8 @@ import {
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
 
+import { PageHeader } from '@e-pharmacy/ui/layout';
+
 import {
   useBackdropClick,
   useBodyScrollLock,
@@ -159,17 +161,18 @@ function ProductRequestsPageContent() {
   return (
     <main className={css.page} aria-labelledby="product-requests-page-title">
       <div className={css.card}>
-        <div className={css.headerRow}>
-          <h1 className={css.title} id="product-requests-page-title">
-            <FilePlus2 className={css.titleIcon} size={30} aria-hidden="true" />
-            <span>Product requests</span>
-          </h1>
-          <CountLabel
-            shown={requests.length}
-            total={totalRequests}
-            label="requests"
-          />
-        </div>
+        <PageHeader
+          title="Product requests"
+          titleId="product-requests-page-title"
+          icon={<FilePlus2 size={23} aria-hidden="true" />}
+          actions={
+            <CountLabel
+              shown={requests.length}
+              total={totalRequests}
+              label="requests"
+            />
+          }
+        />
 
         <div className={css.stack}>
           <StatusBanner

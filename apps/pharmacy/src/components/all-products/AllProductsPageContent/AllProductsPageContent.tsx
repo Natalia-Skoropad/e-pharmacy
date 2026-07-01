@@ -11,6 +11,7 @@ import {
   StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
+import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import {
   useBackdropClick,
@@ -213,22 +214,18 @@ function AllProductsPageContent() {
   return (
     <main className={css.page} aria-labelledby="all-products-page-title">
       <div className={css.card}>
-        <div className={css.headerRow}>
-          <h1 className={css.title} id="all-products-page-title">
-            <PackageSearch
-              className={css.titleIcon}
-              size={30}
-              aria-hidden="true"
+        <PageHeader
+          title="All products"
+          titleId="all-products-page-title"
+          icon={<PackageSearch size={23} aria-hidden="true" />}
+          actions={
+            <CountLabel
+              shown={products.length}
+              total={totalProducts}
+              label="products"
             />
-            <span>All products</span>
-          </h1>
-
-          <CountLabel
-            shown={products.length}
-            total={totalProducts}
-            label="products"
-          />
-        </div>
+          }
+        />
 
         <div className={css.stack}>
           <StatusBanner

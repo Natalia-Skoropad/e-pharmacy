@@ -19,6 +19,62 @@ import css from './PharmacyShell.module.css';
 
 const BREADCRUMB_LABEL_EVENT = 'pharmacy:breadcrumb-current-label';
 
+const SECTIONS_WITH_HIDDEN_LIST_BREADCRUMBS = new Set([
+  'orders',
+  'clients',
+  'products',
+  'all-products',
+  'product-requests',
+]);
+
+const SECTIONS_WITH_PLAIN_DETAILS = new Set([
+  'orders',
+  'clients',
+  'products',
+  'all-products',
+  'product-requests',
+]);
+
+function isPharmacyFilterSegment(segment: string | undefined): boolean {
+  if (!segment) return false;
+
+  return [
+    'status-',
+    'delivery-',
+    'payment-',
+    'date-',
+    'search-',
+    'client-id-',
+    'email-',
+    'phone-',
+    'address-',
+    'category-',
+    'stock-',
+    'article-',
+    'name-',
+    'page-',
+  ].some((prefix) => segment.startsWith(prefix));
+}
+
+function getPharmacyPathState(pathname: string) {
+  const cleanPathname = pathname.split('?')[0] ?? pathname;
+  const [, section, id] = cleanPathname.split('/').filter(Boolean);
+  const isListPage = Boolean(
+    section &&
+      SECTIONS_WITH_HIDDEN_LIST_BREADCRUMBS.has(section) &&
+      (!id || isPharmacyFilterSegment(id))
+  );
+  const isDetailPage = Boolean(
+    section &&
+      SECTIONS_WITH_PLAIN_DETAILS.has(section) &&
+      id &&
+      id !== 'new' &&
+      !isPharmacyFilterSegment(id)
+  );
+
+  return { isListPage, isDetailPage };
+}
+
 //===================================================================
 
 type BreadcrumbLabelEventDetail = {
@@ -41,14 +97,21 @@ type PharmacyShellProps = Readonly<{
 
 function PharmacyShellContent({ children }: PharmacyShellProps) {
   const pathname = usePathname();
+
   const [breadcrumbOverride, setBreadcrumbOverride] =
     useState<BreadcrumbOverride | null>(null);
+
   const isProfilePage = pathname === '/pharmacy/profile';
   const isDashboardPage = pathname === '/pharmacy/dashboard';
+  const { isListPage, isDetailPage } = getPharmacyPathState(pathname);
+  const shouldShowBreadcrumbs = !isDashboardPage && !isListPage;
+  const shouldShowSidebar = !isProfilePage && !isDetailPage;
+
   const currentDetailLabel =
     breadcrumbOverride?.pathname === pathname
       ? breadcrumbOverride.label
       : undefined;
+
   const breadcrumbs = getPharmacyBreadcrumbsByPathname(
     pathname,
     currentDetailLabel
@@ -77,13 +140,18 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
     <PharmacyProtectedRoute>
       <div className={css.shell}>
         <PharmacyHeader />
-        <Container className={css.container} variant="wide">
-          {isDashboardPage ? null : (
+        <Container className={css.container}>
+          {shouldShowBreadcrumbs ? (
             <Breadcrumbs items={breadcrumbs} className={css.breadcrumbs} />
-          )}
+          ) : null}
 
-          <div className={clsx(css.body, isProfilePage && css.bodyPlain)}>
-            {isProfilePage ? null : <PharmacySidebar />}
+          <div
+            className={clsx(
+              css.body,
+              (isProfilePage || isDetailPage) && css.bodyPlain
+            )}
+          >
+            {shouldShowSidebar ? <PharmacySidebar /> : null}
             <div className={css.content}>{children}</div>
           </div>
         </Container>

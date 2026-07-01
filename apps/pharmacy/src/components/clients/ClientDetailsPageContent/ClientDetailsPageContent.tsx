@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { Users } from 'lucide-react';
 
 import { ButtonLink, StatusBanner } from '@e-pharmacy/ui/common';
+import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import { getPharmacyProfilePath } from '@/lib/pharmacy/routes';
 
@@ -21,9 +23,11 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
     <main className={css.page} aria-labelledby="client-details-page-title">
       <div className={css.contentCard}>
         <div className={css.stack}>
-          <h1 className={css.title} id="client-details-page-title">
-            {title}
-          </h1>
+          <PageHeader
+            title={title}
+            titleId="client-details-page-title"
+            icon={<Users size={23} aria-hidden="true" />}
+          />
 
           <StatusBanner
             status="new"

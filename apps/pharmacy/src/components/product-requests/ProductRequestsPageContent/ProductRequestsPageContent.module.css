@@ -5,32 +5,9 @@
   margin-inline: auto;
 }
 
-.headerRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.title {
-  display: inline-flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 20px;
-  font-size: var(--fz-32);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-heading);
-  color: var(--color-accent);
-  letter-spacing: var(--ls-tight);
-}
-
-.titleIcon {
-  flex: 0 0 auto;
-  color: var(--color-accent);
-}
-
 .card {
+  display: grid;
+  gap: 20px;
   padding: 20px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);

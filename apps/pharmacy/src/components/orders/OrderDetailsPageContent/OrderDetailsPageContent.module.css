@@ -16,14 +16,6 @@
   gap: 18px;
 }
 
-.title {
-  font-size: var(--fz-32);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-heading);
-  color: var(--color-text-primary);
-  letter-spacing: var(--ls-tight);
-}
-
 .card {
   display: grid;
   gap: 12px;

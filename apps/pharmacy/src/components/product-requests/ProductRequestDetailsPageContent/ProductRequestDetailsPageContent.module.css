@@ -16,22 +16,6 @@
   gap: 18px;
 }
 
-.title {
-  display: inline-flex;
-  gap: 10px;
-  align-items: center;
-  font-size: var(--fz-32);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-heading);
-  color: var(--color-text-primary);
-  letter-spacing: var(--ls-tight);
-}
-
-.titleIcon {
-  flex: 0 0 auto;
-  color: var(--color-accent);
-}
-
 .card {
   display: grid;
   gap: 12px;

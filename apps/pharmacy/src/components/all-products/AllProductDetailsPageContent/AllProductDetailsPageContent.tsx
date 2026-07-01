@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { PackageSearch } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import {
@@ -17,6 +18,7 @@ import {
   type ReviewsListItem,
   type TabItem,
 } from '@e-pharmacy/ui/common';
+import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { isApiError } from '@e-pharmacy/api-client/core';
@@ -521,9 +523,11 @@ function AllProductDetailsPageContent({
       <div className={css.contentCard}>
         <div className={css.stack}>
           <div className={css.titleBlock}>
-            <h1 className={css.title} id="global-product-page-title">
-              {product ? product.name : (error?.title ?? 'Global product')}
-            </h1>
+            <PageHeader
+              title={product ? product.name : (error?.title ?? 'Global product')}
+              titleId="global-product-page-title"
+              icon={<PackageSearch size={23} aria-hidden="true" />}
+            />
 
             {product ? (
               <RatingSummary
