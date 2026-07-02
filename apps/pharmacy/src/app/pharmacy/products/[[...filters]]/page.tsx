@@ -1,6 +1,13 @@
 import type { Metadata } from 'next';
 
+import { OwnProductDetailsPageContent } from '@/components/products/OwnProductDetailsPageContent';
 import { OwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
+
+import {
+  isOwnProductsFilterRoute,
+  parseOwnProductsSegments,
+  type OwnProductsRouteParams,
+} from '@/lib/products/own-product-paths';
 
 //===================================================================
 
@@ -11,8 +18,25 @@ export const metadata: Metadata = {
 
 //===================================================================
 
-function ProductsPage() {
-  return <OwnProductsPageContent />;
+type ProductsPageProps = Readonly<{
+  params?: Promise<OwnProductsRouteParams>;
+}>;
+
+//===================================================================
+
+async function ProductsPage({ params }: ProductsPageProps) {
+  const resolvedParams = await params;
+  const segments = resolvedParams?.filters;
+
+  if (!isOwnProductsFilterRoute(segments)) {
+    return <OwnProductDetailsPageContent productId={segments?.[0] ?? ''} />;
+  }
+
+  return (
+    <OwnProductsPageContent
+      initialFilters={parseOwnProductsSegments(resolvedParams)}
+    />
+  );
 }
 
 export default ProductsPage;

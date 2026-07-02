@@ -66,6 +66,7 @@ function OwnProductsTable({
     () => [
       {
         key: 'addedAt',
+        width: '100px',
         title: <TableHeader parts={['Added', 'date']} />,
         render: (product) =>
           product.addedAt ? (
@@ -78,6 +79,7 @@ function OwnProductsTable({
       },
       {
         key: 'article',
+        width: '80px',
         title: 'Article',
         render: (product) => (
           <ProductLink product={product}>{product.article}</ProductLink>
@@ -85,6 +87,7 @@ function OwnProductsTable({
       },
       {
         key: 'name',
+        width: '250px',
         title: 'Name',
         render: (product) => (
           <ProductLink product={product}>{product.name}</ProductLink>
@@ -92,31 +95,37 @@ function OwnProductsTable({
       },
       {
         key: 'category',
+        width: '70px',
         title: 'Category',
         render: (product) => PRODUCT_CATEGORY_LABELS[product.category],
       },
       {
         key: 'stockQuantity',
+        width: '40px',
         title: <TableHeader parts={['Stock', 'quantity']} />,
         render: (product) => product.stockQuantity,
       },
       {
         key: 'reservedQuantity',
+        width: '50px',
         title: <TableHeader parts={['Reserved', 'quantity']} />,
         render: (product) => product.reservedQuantity,
       },
       {
         key: 'availableQuantity',
+        width: '50px',
         title: <TableHeader parts={['Available', 'quantity']} />,
         render: (product) => product.availableQuantity,
       },
       {
         key: 'currentPrice',
+        width: '50px',
         title: <TableHeader parts={['Current', 'price']} />,
         render: (product) => formatPrice(product.currentPrice),
       },
       {
         key: 'status',
+        width: '70px',
         title: 'Status',
         render: (product) => (
           <StatusBadge
@@ -135,7 +144,7 @@ function OwnProductsTable({
       items={products}
       getItemKey={(product) => String(product.id)}
       isLoading={isLoading}
-      minWidth={1280}
+      minWidth={0}
       labels={{
         loading: 'Loading products...',
         empty: emptyMessage,

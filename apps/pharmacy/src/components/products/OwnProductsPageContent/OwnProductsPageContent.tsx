@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { Boxes } from 'lucide-react';
 
 import {
@@ -19,55 +20,26 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
-import type { EntityId, ProductCategory } from '@e-pharmacy/types';
+import type { EntityId } from '@e-pharmacy/types';
 
 import { getMyPharmacyProfile, getPharmacyProducts } from '@/lib/api/browser';
 
 import type {
-  OwnProductStatus,
   PharmacyProductRow,
   PharmacyProductsQueryParams,
-  StockAvailabilityFilter,
 } from '@/lib/products/products';
+
+import {
+  DEFAULT_OWN_PRODUCTS_FILTERS,
+  type OwnProductsFilterState,
+} from '@/lib/products/own-products-filters';
+
+import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
 
 import { OwnProductsFiltersDrawer } from '@/components/products/OwnProductsFiltersDrawer';
 import { OwnProductsTable } from '@/components/products/OwnProductsTable';
 
 import css from './OwnProductsPageContent.module.css';
-
-//===================================================================
-
-type ProductCategoryFilter = 'all' | ProductCategory;
-type ProductStatusFilter = 'all' | OwnProductStatus;
-type ProductStockFilter = 'all' | StockAvailabilityFilter;
-
-//===================================================================
-
-export type OwnProductsFilterState = Readonly<{
-  addedDate: {
-    from: string;
-    to: string;
-  };
-  name: string;
-  article: string;
-  category: ProductCategoryFilter;
-  status: ProductStatusFilter;
-  stock: ProductStockFilter;
-}>;
-
-//===================================================================
-
-const DEFAULT_FILTERS: OwnProductsFilterState = {
-  addedDate: {
-    from: '',
-    to: '',
-  },
-  name: '',
-  article: '',
-  category: 'all',
-  status: 'all',
-  stock: 'all',
-};
 
 //===================================================================
 
@@ -105,9 +77,19 @@ function getProductsQueryParams(
 
 //===================================================================
 
-function OwnProductsPageContent() {
+type OwnProductsPageContentProps = Readonly<{
+  initialFilters?: OwnProductsFilterState;
+}>;
+
+//===================================================================
+
+function OwnProductsPageContent({
+  initialFilters = DEFAULT_OWN_PRODUCTS_FILTERS,
+}: OwnProductsPageContentProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [filters, setFilters] =
-    useState<OwnProductsFilterState>(DEFAULT_FILTERS);
+    useState<OwnProductsFilterState>(initialFilters);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [products, setProducts] = useState<PharmacyProductRow[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -191,11 +173,23 @@ function OwnProductsPageContent() {
     };
   }, [isProfileLoaded, queryParams]);
 
+  useEffect(() => {
+    const nextPath = buildOwnProductsPath(filters);
+
+    if (pathname === nextPath) return;
+
+    const timeoutId = window.setTimeout(() => {
+      router.replace(nextPath, { scroll: false });
+    }, 450);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [filters, pathname, router]);
+
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
 
   const resetFilters = () => {
-    setFilters(DEFAULT_FILTERS);
+    setFilters(DEFAULT_OWN_PRODUCTS_FILTERS);
   };
 
   return (

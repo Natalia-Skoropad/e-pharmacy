@@ -19,7 +19,7 @@ import {
   STOCK_AVAILABILITY_LABELS,
 } from '@/lib/products/products';
 
-import type { OwnProductsFilterState } from '@/components/products/OwnProductsPageContent';
+import type { OwnProductsFilterState } from '@/lib/products/own-products-filters';
 
 import css from './OwnProductsFiltersDrawer.module.css';
 

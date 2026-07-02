@@ -1,6 +1,12 @@
 import type { Metadata } from 'next';
 
 import { OwnProductDetailsPageContent } from '@/components/products/OwnProductDetailsPageContent';
+import { OwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
+
+import {
+  isOwnProductsFilterSegment,
+  parseOwnProductsSegments,
+} from '@/lib/products/own-product-paths';
 
 //===================================================================
 
@@ -19,6 +25,14 @@ type ProductDetailsPageProps = Readonly<{
 
 async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
   const { productId } = await params;
+
+  if (isOwnProductsFilterSegment(productId)) {
+    return (
+      <OwnProductsPageContent
+        initialFilters={parseOwnProductsSegments({ filters: [productId] })}
+      />
+    );
+  }
 
   return <OwnProductDetailsPageContent productId={productId} />;
 }
