@@ -96,7 +96,7 @@ function AllProductsTable({
       },
       {
         key: 'article',
-        width: '90px',
+        width: '100px',
         title: 'Article',
         render: (product) => (
           <span className={css.muted}>{product.article}</span>

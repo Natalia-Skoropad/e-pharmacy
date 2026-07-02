@@ -2,7 +2,7 @@
   min-height: 320px;
   display: grid;
   place-items: center;
-  background-color: var(--color-background);
+  background-color: transparent;
 }
 
 .loader {

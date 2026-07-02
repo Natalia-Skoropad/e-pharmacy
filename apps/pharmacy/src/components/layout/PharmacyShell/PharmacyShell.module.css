@@ -20,18 +20,10 @@
 }
 
 @media only screen and (min-width: 1440px) {
-  .container {
-    padding-block: 18px 64px;
-  }
-
-  .breadcrumbs.breadcrumbs {
-    padding-bottom: 28px;
-  }
-
   .body {
     display: grid;
     grid-template-columns: 280px minmax(0, 1fr);
-    gap: 28px;
+    gap: 20px;
     align-items: start;
   }
 

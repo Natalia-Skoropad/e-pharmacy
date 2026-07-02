@@ -5,7 +5,6 @@
 @media only screen and (min-width: 1440px) {
   .sidebar {
     position: sticky;
-    top: calc(72px + 24px);
     display: block;
     align-self: start;
   }

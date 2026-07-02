@@ -19,6 +19,8 @@ import css from './PharmacyShell.module.css';
 
 const BREADCRUMB_LABEL_EVENT = 'pharmacy:breadcrumb-current-label';
 
+//===================================================================
+
 const SECTIONS_WITH_HIDDEN_LIST_BREADCRUMBS = new Set([
   'orders',
   'clients',
@@ -34,6 +36,8 @@ const SECTIONS_WITH_PLAIN_DETAILS = new Set([
   'all-products',
   'product-requests',
 ]);
+
+//===================================================================
 
 function isPharmacyFilterSegment(segment: string | undefined): boolean {
   if (!segment) return false;
@@ -56,20 +60,22 @@ function isPharmacyFilterSegment(segment: string | undefined): boolean {
   ].some((prefix) => segment.startsWith(prefix));
 }
 
+//===================================================================
+
 function getPharmacyPathState(pathname: string) {
   const cleanPathname = pathname.split('?')[0] ?? pathname;
   const [, section, id] = cleanPathname.split('/').filter(Boolean);
   const isListPage = Boolean(
     section &&
-      SECTIONS_WITH_HIDDEN_LIST_BREADCRUMBS.has(section) &&
-      (!id || isPharmacyFilterSegment(id))
+    SECTIONS_WITH_HIDDEN_LIST_BREADCRUMBS.has(section) &&
+    (!id || isPharmacyFilterSegment(id))
   );
   const isDetailPage = Boolean(
     section &&
-      SECTIONS_WITH_PLAIN_DETAILS.has(section) &&
-      id &&
-      id !== 'new' &&
-      !isPharmacyFilterSegment(id)
+    SECTIONS_WITH_PLAIN_DETAILS.has(section) &&
+    id &&
+    id !== 'new' &&
+    !isPharmacyFilterSegment(id)
   );
 
   return { isListPage, isDetailPage };

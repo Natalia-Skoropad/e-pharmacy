@@ -2,7 +2,7 @@ import Image from 'next/image';
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
 
-import { Container } from '../../common/Container';
+import { Container } from '../../layout/Container';
 
 import css from './StatusPageLayout.module.css';
 
