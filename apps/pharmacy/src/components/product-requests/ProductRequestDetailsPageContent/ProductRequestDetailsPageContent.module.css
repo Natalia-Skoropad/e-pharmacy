@@ -41,9 +41,3 @@
   flex-wrap: wrap;
   gap: 10px;
 }
-
-@media only screen and (min-width: 768px) {
-  .contentCard {
-    padding: 24px;
-  }
-}

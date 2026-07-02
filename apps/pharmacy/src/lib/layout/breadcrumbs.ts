@@ -15,26 +15,17 @@ import {
 
 //===================================================================
 
-const DASHBOARD_CRUMB: BreadcrumbItem = {
-  label: 'Dashboard',
-  href: PHARMACY_DASHBOARD,
-};
-
-//===================================================================
-
 export function getPharmacyBreadcrumbs(
   current: BreadcrumbItem,
   parent?: BreadcrumbItem
 ): BreadcrumbItem[] {
-  return parent
-    ? [DASHBOARD_CRUMB, parent, current]
-    : [DASHBOARD_CRUMB, current];
+  return parent ? [parent, current] : [current];
 }
 
 //===================================================================
 
 export function getDashboardBreadcrumbs(): BreadcrumbItem[] {
-  return [{ label: 'Dashboard' }];
+  return getPharmacyBreadcrumbs({ label: 'Dashboard' });
 }
 
 //===================================================================
@@ -192,6 +183,11 @@ function isFilterSegment(segment: string | undefined): boolean {
     'delivery-',
     'payment-',
     'date-',
+    'date-from-',
+    'date-to-',
+    'added-to-my-pharmacy-',
+    'order-number-',
+    'client-',
     'search-',
     'client-id-',
     'email-',

@@ -44,7 +44,13 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
 
   const [breadcrumbOverride, setBreadcrumbOverride] =
     useState<BreadcrumbOverride | null>(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+
+    return (
+      window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true'
+    );
+  });
 
   const currentDetailLabel =
     breadcrumbOverride?.pathname === pathname
@@ -56,13 +62,6 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
     currentDetailLabel
   );
 
-  useEffect(() => {
-    const storedValue = window.localStorage.getItem(
-      SIDEBAR_COLLAPSED_STORAGE_KEY
-    );
-
-    setIsSidebarCollapsed(storedValue === 'true');
-  }, []);
 
   useEffect(() => {
     const handleBreadcrumbLabel = (event: Event) => {

@@ -28,13 +28,13 @@
 
   .layout {
     display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-columns: 240px minmax(0, 1fr);
     gap: 20px;
     align-items: start;
     transition: grid-template-columns var(--transition-base);
   }
 
   .layoutCollapsed {
-    grid-template-columns: 84px minmax(0, 1fr);
+    grid-template-columns: 90px minmax(0, 1fr);
   }
 }

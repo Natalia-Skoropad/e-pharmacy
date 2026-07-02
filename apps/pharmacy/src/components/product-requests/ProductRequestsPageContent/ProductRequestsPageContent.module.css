@@ -1,8 +1,6 @@
 .page {
-  display: grid;
-  gap: 24px;
-  width: min(100%, 1180px);
-  margin-inline: auto;
+  width: 100%;
+  margin-inline: 0;
 }
 
 .card {
@@ -50,10 +48,6 @@
 }
 
 @media only screen and (min-width: 768px) {
-  .card {
-    padding: 24px;
-  }
-
   .toolbarActions {
     justify-content: space-between;
   }

@@ -1,5 +1,5 @@
 .sidebar {
-  --cabinet-sidebar-width: 260px;
+  --cabinet-sidebar-width: 240px;
 
   position: relative;
 
@@ -9,20 +9,21 @@
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card);
+
   transition:
     width var(--transition-base),
     padding var(--transition-base);
 }
 
 .collapsed {
-  --cabinet-sidebar-width: 84px;
-
+  --cabinet-sidebar-width: 90px;
   padding-inline: 14px;
 }
 
 .header {
+  position: relative;
   display: flex;
-  gap: 10px;
+  gap: 20px;
   align-items: center;
   min-height: 38px;
 }
@@ -33,6 +34,7 @@
 }
 
 .collapsed .logo {
+  flex: 0 0 auto;
   justify-content: center;
 }
 
@@ -69,10 +71,14 @@
 
 .collapsed .toggleButton {
   position: absolute;
-  top: 22px;
-  right: 8px;
-  width: 22px;
-  height: 22px;
+  top: 6px;
+  right: -5px;
+  z-index: 2;
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-accent-light);
+  border-color: var(--color-accent-border-soft);
+  box-shadow: var(--shadow-card-soft);
 }
 
 .divider {
@@ -110,7 +116,7 @@
   padding: 11px 12px;
   color: var(--color-text-secondary);
   text-decoration: none;
-  border-radius: var(--radius-lg);
+  border-radius: 15px;
   transition:
     color var(--transition-base),
     background-color var(--transition-base),
@@ -139,6 +145,8 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
+  width: 22px;
+  height: 22px;
   color: currentColor;
 }
 
@@ -157,19 +165,25 @@
     transform var(--transition-base);
 }
 
-.chevron {
-  flex: 0 0 auto;
-  color: currentColor;
-  opacity: 0.75;
+.collapsed .list {
+  justify-items: center;
+  gap: 8px;
 }
 
 .collapsed .link {
   justify-content: center;
-  padding-inline: 10px;
+  width: 52px;
+  padding-inline: 0;
+  margin-inline: auto;
+  gap: 0;
 }
 
-.collapsed .label,
-.collapsed .chevron {
+.collapsed .icon {
+  width: 24px;
+  height: 24px;
+}
+
+.collapsed .label {
   width: 0;
   max-width: 0;
   overflow: hidden;

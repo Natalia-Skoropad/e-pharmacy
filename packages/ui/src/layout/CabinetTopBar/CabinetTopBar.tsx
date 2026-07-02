@@ -35,7 +35,7 @@ function CabinetTopBar({
   ariaLabel = 'Current cabinet page',
   renderLink,
 }: CabinetTopBarProps) {
-  const visibleItems = items.length ? items : [{ label: 'Dashboard' }];
+  const hasPathItems = items.length > 0;
 
   const renderTopBarLink = (item: BreadcrumbItem, href: string, children: ReactNode) => {
     if (renderLink) {
@@ -51,40 +51,46 @@ function CabinetTopBar({
 
   return (
     <div className={clsx(css.topbar, className)}>
-      <nav className={css.pathNav} aria-label={ariaLabel}>
-        <ol className={css.pathList}>
-          {visibleItems.map((item, index) => {
-            const isLast = index === visibleItems.length - 1;
-            const isLinked = Boolean(item.href) && !isLast;
-            const label = (
-              <>
-                {index === 0 ? (
-                  <span className={css.leadingIcon} aria-hidden="true">
-                    {leadingIcon ?? null}
-                  </span>
-                ) : null}
-                <span className={css.text}>{item.label}</span>
-              </>
-            );
+      {hasPathItems ? (
+        <nav className={css.pathNav} aria-label={ariaLabel}>
+          <ol className={css.pathList}>
+            {items.map((item, index) => {
+              const isLast = index === items.length - 1;
+              const isLinked = Boolean(item.href) && !isLast;
+              const label = (
+                <>
+                  {index === 0 && leadingIcon ? (
+                    <span className={css.leadingIcon} aria-hidden="true">
+                      {leadingIcon}
+                    </span>
+                  ) : null}
+                  <span className={css.text}>{item.label}</span>
+                </>
+              );
 
-            return (
-              <li className={css.pathItem} key={`${item.label}-${index}`}>
-                {isLinked ? (
-                  renderTopBarLink(item, item.href!, label)
-                ) : (
-                  <span className={css.current} aria-current="page">
-                    {label}
-                  </span>
-                )}
+              return (
+                <li className={css.pathItem} key={`${item.label}-${index}`}>
+                  {isLinked ? (
+                    renderTopBarLink(item, item.href!, label)
+                  ) : (
+                    <span className={css.current} aria-current="page">
+                      {label}
+                    </span>
+                  )}
 
-                {!isLast ? (
-                  <ChevronRight className={css.separator} size={17} aria-hidden="true" />
-                ) : null}
-              </li>
-            );
-          })}
-        </ol>
-      </nav>
+                  {!isLast ? (
+                    <ChevronRight
+                      className={css.separator}
+                      size={17}
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
+      ) : null}
 
       {actions ? <div className={css.actions}>{actions}</div> : null}
     </div>

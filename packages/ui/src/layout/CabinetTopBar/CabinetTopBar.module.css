@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: space-between;
   min-height: 56px;
-  padding: 8px 12px 8px 18px;
+  padding: 8px 20px 8px 20px;
   color: var(--color-white);
   background: var(--gradient-accent);
   border: 1px solid var(--color-accent-border-soft);
@@ -77,20 +77,18 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
+  color: var(--color-white);
   background-color: var(--color-white-alpha-22);
   border: 1px solid var(--color-white-alpha-48);
-  border-radius: 50%;
+  border-radius: 10px;
 }
 
-.leadingIcon:empty::before {
-  display: block;
-  width: 10px;
-  height: 10px;
-  content: '';
-  background-color: currentColor;
-  border-radius: 50%;
+.leadingIcon svg {
+  width: 19px;
+  height: 19px;
+  stroke-width: 2.2;
 }
 
 .text {

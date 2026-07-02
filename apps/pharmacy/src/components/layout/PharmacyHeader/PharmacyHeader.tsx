@@ -2,22 +2,38 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { ExternalLink, Store, UserRound } from 'lucide-react';
+
+import {
+  Boxes,
+  ClipboardList,
+  ExternalLink,
+  FilePlus2,
+  LayoutDashboard,
+  PackageSearch,
+  ShoppingBag,
+  Store,
+  UserRound,
+  Users,
+} from 'lucide-react';
 
 import type { BreadcrumbItem } from '@e-pharmacy/ui/layout';
 import { BurgerButton, CabinetTopBar } from '@e-pharmacy/ui/layout';
+
 import {
   Container,
   Logo,
   LogoutButton,
+  TextActionButton,
   UserBadge,
 } from '@e-pharmacy/ui/common';
+
 import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
   getPharmacyDashboardPath,
   getPharmacyProfilePath,
 } from '@/lib/layout/routes';
+
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 
 import { PharmacyMobileMenu } from '@/components/layout/PharmacyMobileMenu';
@@ -27,6 +43,7 @@ import css from './PharmacyHeader.module.css';
 //===================================================================
 
 const MOBILE_MENU_ID = 'pharmacy-mobile-menu';
+const TOPBAR_ICON_SIZE = 19;
 
 const CLIENT_APP_URL =
   process.env.NEXT_PUBLIC_CLIENT_APP_URL?.trim() || 'http://localhost:3000';
@@ -39,12 +56,48 @@ type PharmacyHeaderProps = Readonly<{
 
 //===================================================================
 
+function getTopBarIcon(label?: string) {
+  if (label === 'Dashboard') {
+    return <LayoutDashboard size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
+  }
+
+  if (label === 'Orders') {
+    return <ShoppingBag size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
+  }
+
+  if (label === 'Clients') {
+    return <Users size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
+  }
+
+  if (label === 'Own products') {
+    return <Boxes size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
+  }
+
+  if (label === 'All products') {
+    return <PackageSearch size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
+  }
+
+  if (label === 'Product requests') {
+    return <FilePlus2 size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
+  }
+
+  if (label === 'Pharmacy profile') {
+    return <ClipboardList size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
+  }
+
+  return null;
+}
+
+//===================================================================
+
 export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
   const { user, logout } = useAuth();
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
+
+  const topBarIcon = getTopBarIcon(breadcrumbs[0]?.label);
 
   const handleLogout = async () => {
     try {
@@ -97,10 +150,11 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
         <CabinetTopBar
           className={css.topbar}
           items={breadcrumbs}
+          leadingIcon={topBarIcon}
           renderLink={({ href, className, children }) => (
-            <Link href={href} className={className}>
+            <TextActionButton className={className} href={href} variant="light">
               {children}
-            </Link>
+            </TextActionButton>
           )}
           actions={
             <div className={css.userMenuWrap} ref={menuRef}>

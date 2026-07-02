@@ -6,8 +6,11 @@ import css from './TextActionButton.module.css';
 
 //===========================================================================
 
+export type TextActionButtonVariant = 'accent' | 'light';
+
 type TextActionButtonBaseProps = {
   className?: string;
+  variant?: TextActionButtonVariant;
 };
 
 type TextActionButtonAsButton = TextActionButtonBaseProps &
@@ -36,25 +39,39 @@ function isTextActionButtonLink(
 
 //===========================================================================
 
+function getTextActionButtonClassName(
+  variant: TextActionButtonVariant,
+  className?: string
+) {
+  return clsx(css.button, css[variant], className);
+}
+
+//===========================================================================
+
 function TextActionButton(props: TextActionButtonProps) {
   if (isTextActionButtonLink(props)) {
-    const { className, href, ...linkProps } = props;
+    const { className, href, variant = 'accent', ...linkProps } = props;
 
     return (
       <Link
         href={href}
-        className={clsx(css.button, className)}
+        className={getTextActionButtonClassName(variant, className)}
         {...linkProps}
       />
     );
   }
 
-  const { className, type = 'button', ...buttonProps } = props;
+  const {
+    className,
+    type = 'button',
+    variant = 'accent',
+    ...buttonProps
+  } = props;
 
   return (
     <button
       type={type}
-      className={clsx(css.button, className)}
+      className={getTextActionButtonClassName(variant, className)}
       {...buttonProps}
     />
   );

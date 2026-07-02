@@ -5,16 +5,17 @@
   justify-content: center;
   width: fit-content;
   padding: 0;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-base);
-  color: var(--color-accent);
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
   text-align: center;
   text-decoration: none;
   background-color: transparent;
   border: none;
   cursor: pointer;
-  transition: color var(--transition-base);
+  transition:
+    color var(--transition-base),
+    opacity var(--transition-base);
 }
 
 .button::after {
@@ -32,11 +33,6 @@
   transition: transform var(--transition-base);
 }
 
-.button:hover,
-.button:focus-visible {
-  color: var(--color-accent-hover);
-}
-
 .button:hover::after,
 .button:focus-visible::after {
   transform: scaleX(1);
@@ -44,4 +40,25 @@
 
 .button:focus-visible {
   outline: none;
+}
+
+.accent {
+  color: var(--color-accent);
+  font-weight: var(--fw-medium);
+}
+
+.accent:hover,
+.accent:focus-visible {
+  color: var(--color-accent-hover);
+}
+
+.light {
+  color: var(--color-white);
+  opacity: 0.9;
+}
+
+.light:hover,
+.light:focus-visible {
+  color: var(--color-white);
+  opacity: 1;
 }

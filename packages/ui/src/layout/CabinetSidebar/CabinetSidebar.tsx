@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 import Logo from '../../common/Logo/Logo';
 import type { SideMenuItem } from '../SideMenu/SideMenu';
@@ -25,6 +25,7 @@ type CabinetSidebarLinkRenderProps = {
   className: string;
   children: ReactNode;
   'aria-current'?: 'page';
+  title?: string;
   onClick?: () => void;
 };
 
@@ -41,7 +42,11 @@ export type CabinetSidebarProps = Readonly<{
   className?: string;
   onToggleCollapsed?: () => void;
   onNavigate?: () => void;
-  isActive?: (itemHref: string, activePath: string, item: SideMenuItem) => boolean;
+  isActive?: (
+    itemHref: string,
+    activePath: string,
+    item: SideMenuItem
+  ) => boolean;
   renderLogoLink?: (props: CabinetSidebarLogoRenderProps) => ReactNode;
   renderLink?: (props: CabinetSidebarLinkRenderProps) => ReactNode;
 }>;
@@ -119,6 +124,7 @@ function CabinetSidebar({
               active && css.active,
               item.disabled && css.disabled
             );
+            const title = isCollapsed ? item.label : undefined;
             const content = (
               <>
                 {item.icon ? (
@@ -128,15 +134,17 @@ function CabinetSidebar({
                 ) : null}
 
                 <span className={css.label}>{item.label}</span>
-
-                <ChevronRight className={css.chevron} size={18} aria-hidden="true" />
               </>
             );
 
             return (
               <li key={item.href} className={css.item}>
                 {item.disabled ? (
-                  <span className={linkClassName} aria-disabled="true" title={item.label}>
+                  <span
+                    className={linkClassName}
+                    aria-disabled="true"
+                    title={item.label}
+                  >
                     {content}
                   </span>
                 ) : renderLink ? (
@@ -145,6 +153,7 @@ function CabinetSidebar({
                     href: item.href,
                     className: linkClassName,
                     children: content,
+                    title,
                     'aria-current': active ? 'page' : undefined,
                     onClick: onNavigate,
                   })
@@ -153,7 +162,7 @@ function CabinetSidebar({
                     href={item.href}
                     className={linkClassName}
                     aria-current={active ? 'page' : undefined}
-                    title={isCollapsed ? item.label : undefined}
+                    title={title}
                     onClick={onNavigate}
                   >
                     {content}
