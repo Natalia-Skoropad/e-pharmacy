@@ -1,0 +1,129 @@
+.topbar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 8px 12px 8px 18px;
+  color: var(--color-white);
+  background: var(--gradient-accent);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card-soft);
+}
+
+.pathNav,
+.pathList,
+.pathItem {
+  min-width: 0;
+}
+
+.pathList {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pathItem {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.link,
+.current {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  color: var(--color-white);
+  font-size: var(--fz-18);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-heading);
+  text-decoration: none;
+}
+
+.link {
+  opacity: 0.9;
+  transition: opacity var(--transition-base);
+}
+
+.link:hover,
+.link:focus-visible {
+  opacity: 1;
+}
+
+.link:focus-visible {
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.current {
+  opacity: 0.95;
+}
+
+.pathItem:last-child .current,
+.pathItem:last-child .link {
+  font-weight: var(--fw-bold);
+  opacity: 1;
+}
+
+.leadingIcon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: var(--color-white-alpha-22);
+  border: 1px solid var(--color-white-alpha-48);
+  border-radius: 50%;
+}
+
+.leadingIcon:empty::before {
+  display: block;
+  width: 10px;
+  height: 10px;
+  content: '';
+  background-color: currentColor;
+  border-radius: 50%;
+}
+
+.text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.separator {
+  flex: 0 0 auto;
+  margin-inline: 10px;
+  color: var(--color-white);
+  opacity: 0.72;
+}
+
+.actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+@media only screen and (max-width: 767px) {
+  .topbar {
+    min-height: 52px;
+    padding-inline: 14px;
+  }
+
+  .link,
+  .current {
+    font-size: var(--fz-16);
+  }
+}

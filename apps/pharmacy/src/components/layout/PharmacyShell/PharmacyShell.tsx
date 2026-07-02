@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 
 import { Container } from '@e-pharmacy/ui/common';
-import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 
 import { PharmacyProtectedRoute } from '@/components/auth/PharmacyProtectedRoute';
@@ -18,69 +17,7 @@ import css from './PharmacyShell.module.css';
 //===================================================================
 
 const BREADCRUMB_LABEL_EVENT = 'pharmacy:breadcrumb-current-label';
-
-//===================================================================
-
-const SECTIONS_WITH_HIDDEN_LIST_BREADCRUMBS = new Set([
-  'orders',
-  'clients',
-  'products',
-  'all-products',
-  'product-requests',
-]);
-
-const SECTIONS_WITH_PLAIN_DETAILS = new Set([
-  'orders',
-  'clients',
-  'products',
-  'all-products',
-  'product-requests',
-]);
-
-//===================================================================
-
-function isPharmacyFilterSegment(segment: string | undefined): boolean {
-  if (!segment) return false;
-
-  return [
-    'status-',
-    'delivery-',
-    'payment-',
-    'date-',
-    'search-',
-    'client-id-',
-    'email-',
-    'phone-',
-    'address-',
-    'category-',
-    'stock-',
-    'article-',
-    'name-',
-    'page-',
-    'added-to-my-pharmacy-',
-  ].some((prefix) => segment.startsWith(prefix));
-}
-
-//===================================================================
-
-function getPharmacyPathState(pathname: string) {
-  const cleanPathname = pathname.split('?')[0] ?? pathname;
-  const [, section, id] = cleanPathname.split('/').filter(Boolean);
-  const isListPage = Boolean(
-    section &&
-    SECTIONS_WITH_HIDDEN_LIST_BREADCRUMBS.has(section) &&
-    (!id || isPharmacyFilterSegment(id))
-  );
-  const isDetailPage = Boolean(
-    section &&
-    SECTIONS_WITH_PLAIN_DETAILS.has(section) &&
-    id &&
-    id !== 'new' &&
-    !isPharmacyFilterSegment(id)
-  );
-
-  return { isListPage, isDetailPage };
-}
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'pharmacy-sidebar-collapsed';
 
 //===================================================================
 
@@ -107,12 +44,7 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
 
   const [breadcrumbOverride, setBreadcrumbOverride] =
     useState<BreadcrumbOverride | null>(null);
-
-  const isProfilePage = pathname === '/pharmacy/profile';
-  const isDashboardPage = pathname === '/pharmacy/dashboard';
-  const { isListPage, isDetailPage } = getPharmacyPathState(pathname);
-  const shouldShowBreadcrumbs = !isDashboardPage && !isListPage;
-  const shouldShowSidebar = !isProfilePage && !isDetailPage;
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const currentDetailLabel =
     breadcrumbOverride?.pathname === pathname
@@ -123,6 +55,14 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
     pathname,
     currentDetailLabel
   );
+
+  useEffect(() => {
+    const storedValue = window.localStorage.getItem(
+      SIDEBAR_COLLAPSED_STORAGE_KEY
+    );
+
+    setIsSidebarCollapsed(storedValue === 'true');
+  }, []);
 
   useEffect(() => {
     const handleBreadcrumbLabel = (event: Event) => {
@@ -143,23 +83,37 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
     };
   }, []);
 
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((currentValue) => {
+      const nextValue = !currentValue;
+      window.localStorage.setItem(
+        SIDEBAR_COLLAPSED_STORAGE_KEY,
+        String(nextValue)
+      );
+
+      return nextValue;
+    });
+  };
+
   return (
     <PharmacyProtectedRoute>
       <div className={css.shell}>
-        <PharmacyHeader />
-        <Container className={css.container}>
-          {shouldShowBreadcrumbs ? (
-            <Breadcrumbs items={breadcrumbs} className={css.breadcrumbs} />
-          ) : null}
-
+        <Container className={css.container} variant="wide">
           <div
             className={clsx(
-              css.body,
-              (isProfilePage || isDetailPage) && css.bodyPlain
+              css.layout,
+              isSidebarCollapsed && css.layoutCollapsed
             )}
           >
-            {shouldShowSidebar ? <PharmacySidebar /> : null}
-            <div className={css.content}>{children}</div>
+            <PharmacySidebar
+              isCollapsed={isSidebarCollapsed}
+              onToggleCollapsed={toggleSidebar}
+            />
+
+            <div className={css.workspace}>
+              <PharmacyHeader breadcrumbs={breadcrumbs} />
+              <div className={css.content}>{children}</div>
+            </div>
           </div>
         </Container>
       </div>

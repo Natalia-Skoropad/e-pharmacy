@@ -7,12 +7,14 @@
   padding-block: 20px 64px;
 }
 
-.breadcrumbs.breadcrumbs {
-  padding-bottom: 24px;
+.layout {
+  display: block;
 }
 
-.body {
-  display: block;
+.workspace {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
 }
 
 .content {
@@ -20,14 +22,19 @@
 }
 
 @media only screen and (min-width: 1440px) {
-  .body {
-    display: grid;
-    grid-template-columns: 250px minmax(0, 1fr);
-    gap: 20px;
-    align-items: start;
+  .container {
+    padding-block: 32px 72px;
   }
 
-  .bodyPlain {
-    display: block;
+  .layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+    transition: grid-template-columns var(--transition-base);
+  }
+
+  .layoutCollapsed {
+    grid-template-columns: 84px minmax(0, 1fr);
   }
 }
