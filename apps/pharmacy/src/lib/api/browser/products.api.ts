@@ -18,7 +18,7 @@ import {
   normalizePharmacyProductsResponse,
   type PharmacyProductsQueryParams,
   type PharmacyProductsResponse,
-} from '@/lib/pharmacy/products';
+} from '@/lib/products/products';
 
 import { localApiRequest } from './local-api-request';
 

@@ -13,9 +13,9 @@ import {
   PRODUCT_REQUEST_CATEGORY_LABELS,
   PRODUCT_REQUEST_STATUS_LABELS,
   type PharmacyProductRequestRow,
-} from '@/lib/pharmacy/product-requests';
+} from '@/lib/product-requests/product-requests';
 
-import { getPharmacyRequestPath } from '@/lib/pharmacy/routes';
+import { getPharmacyRequestPath } from '@/lib/layout/routes';
 
 import css from './ProductRequestsTable.module.css';
 

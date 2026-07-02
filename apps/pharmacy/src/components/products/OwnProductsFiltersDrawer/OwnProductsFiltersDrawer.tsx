@@ -11,13 +11,13 @@ import {
 
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
 
-import { getPharmacyProductsPath } from '@/lib/pharmacy/routes';
+import { getPharmacyProductsPath } from '@/lib/layout/routes';
 
 import {
   PRODUCT_CATEGORY_LABELS,
   PRODUCT_STATUS_LABELS,
   STOCK_AVAILABILITY_LABELS,
-} from '@/lib/pharmacy/products';
+} from '@/lib/products/products';
 
 import type { OwnProductsFilterState } from '@/components/products/OwnProductsPageContent';
 
@@ -36,7 +36,9 @@ type OwnProductsFiltersDrawerProps = Readonly<{
 
 //===================================================================
 
-const CATEGORY_OPTIONS: Array<SelectOption<OwnProductsFilterState['category']>> = [
+const CATEGORY_OPTIONS: Array<
+  SelectOption<OwnProductsFilterState['category']>
+> = [
   { value: 'all', label: 'All' },
   ...PRODUCT_CATEGORIES.map((category) => ({
     value: category,

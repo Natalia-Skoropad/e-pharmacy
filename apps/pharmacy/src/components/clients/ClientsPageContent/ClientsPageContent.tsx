@@ -24,7 +24,7 @@ import type {
   ClientStatus,
   PharmacyClientRow,
   PharmacyClientsQueryParams,
-} from '@/lib/pharmacy/clients';
+} from '@/lib/clients/clients';
 
 import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer';
 import { ClientsTable } from '@/components/clients/ClientsTable';

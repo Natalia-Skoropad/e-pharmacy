@@ -28,7 +28,7 @@ import type {
   PharmacyProductRow,
   PharmacyProductsQueryParams,
   StockAvailabilityFilter,
-} from '@/lib/pharmacy/products';
+} from '@/lib/products/products';
 
 import { OwnProductsFiltersDrawer } from '@/components/products/OwnProductsFiltersDrawer';
 import { OwnProductsTable } from '@/components/products/OwnProductsTable';

@@ -4,12 +4,12 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
 import { useAuth } from '@e-pharmacy/auth/core';
-import { getPharmacyDashboardPath } from '@/lib/pharmacy/routes';
+import { getPharmacyDashboardPath } from '@/lib/layout/routes';
 
 import {
   getSharedLoginUrl,
   getSharedLoginUrlForCurrentPharmacyPage,
-} from '@/lib/pharmacy/shared-auth';
+} from '@/lib/auth/shared-auth';
 
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 

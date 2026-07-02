@@ -9,7 +9,7 @@ import {
   normalizePharmacyClientsResponse,
   type PharmacyClientsQueryParams,
   type PharmacyClientsResponse,
-} from '@/lib/pharmacy/clients';
+} from '@/lib/clients/clients';
 
 import { localApiRequest } from './local-api-request';
 

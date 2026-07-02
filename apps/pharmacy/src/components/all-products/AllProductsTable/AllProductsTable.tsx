@@ -14,9 +14,9 @@ import { formatShortDate } from '@e-pharmacy/utils/formatters';
 import {
   PRODUCT_CATEGORY_LABELS,
   PRODUCT_STATUS_LABELS,
-} from '@/lib/pharmacy/products';
+} from '@/lib/products/products';
 
-import { getPharmacyAllProductPath } from '@/lib/pharmacy/routes';
+import { getPharmacyAllProductPath } from '@/lib/layout/routes';
 
 import css from './AllProductsTable.module.css';
 

@@ -4,11 +4,19 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { BurgerButton } from '@e-pharmacy/ui/layout';
-import { Container, Logo, LogoutButton, UserBadge } from '@e-pharmacy/ui/common';
+import {
+  Container,
+  Logo,
+  LogoutButton,
+  UserBadge,
+} from '@e-pharmacy/ui/common';
 import { useAuth } from '@e-pharmacy/auth/core';
 
-import { getPharmacyDashboardPath, getPharmacyProfilePath } from '@/lib/pharmacy/routes';
-import { getSharedLoginUrl } from '@/lib/pharmacy/shared-auth';
+import {
+  getPharmacyDashboardPath,
+  getPharmacyProfilePath,
+} from '@/lib/layout/routes';
+import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 
 import { PharmacyMobileMenu } from '@/components/layout/PharmacyMobileMenu';
 

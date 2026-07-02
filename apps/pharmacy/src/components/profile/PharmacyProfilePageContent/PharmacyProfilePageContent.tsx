@@ -108,7 +108,7 @@ import {
   updateMyPharmacyProfile,
 } from '@/lib/api/browser';
 
-import { PHARMACY_STATUS_LABELS } from '@/lib/pharmacy/status';
+import { PHARMACY_STATUS_LABELS } from '@/lib/pharmacies/status';
 
 import css from './PharmacyProfilePageContent.module.css';
 

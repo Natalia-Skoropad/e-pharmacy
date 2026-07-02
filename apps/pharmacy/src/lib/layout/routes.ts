@@ -152,8 +152,31 @@ export function getPharmacyAllProductsFilterPath(filters: PharmacyFilterMap) {
   return buildFilterPath(PHARMACY_ALL_PRODUCTS, filters);
 }
 
+//===================================================================
+
 export function getPharmacyRequestsFilterPath(filters: PharmacyFilterMap) {
-  return buildFilterPath(PHARMACY_PRODUCT_REQUESTS, filters);
+  const segments: string[] = [];
+  const name = filters.name ? String(filters.name).trim() : '';
+  const article = filters.article ? String(filters.article).trim() : '';
+  const category = filters.category ? String(filters.category).trim() : '';
+  const status = filters.status ? String(filters.status).trim() : '';
+  const dateFrom = filters.dateFrom ? String(filters.dateFrom).trim() : '';
+  const dateTo = filters.dateTo ? String(filters.dateTo).trim() : '';
+
+  if (name) segments.push(`search-name-${encodeFilterValue(name)}`);
+  if (article) segments.push(`article-${encodeFilterValue(article)}`);
+  if (category && category !== 'all') {
+    segments.push(`category-${category.replaceAll('_', '-')}`);
+  }
+  if (status && status !== 'all') {
+    segments.push(`status-${status.replaceAll('_', '-')}`);
+  }
+  if (dateFrom) segments.push(`date-from-${dateFrom}`);
+  if (dateTo) segments.push(`date-to-${dateTo}`);
+
+  return segments.length
+    ? `${PHARMACY_PRODUCT_REQUESTS}/${segments.join('/')}`
+    : PHARMACY_PRODUCT_REQUESTS;
 }
 
 //===================================================================

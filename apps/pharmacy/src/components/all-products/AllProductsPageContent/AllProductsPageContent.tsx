@@ -26,7 +26,7 @@ import { getMyPharmacyProfile, getProducts } from '@/lib/api/browser';
 import type {
   OwnProductStatus,
   StockAvailabilityFilter,
-} from '@/lib/pharmacy/products';
+} from '@/lib/products/products';
 
 import { AllProductsFiltersDrawer } from '@/components/all-products/AllProductsFiltersDrawer';
 import { AllProductsTable } from '@/components/all-products/AllProductsTable';
@@ -268,7 +268,12 @@ function AllProductsPageContent() {
             totalPages={totalPages}
             getPageHref={(page) => String(page)}
             ariaLabel="All products pagination"
-            renderLink={({ href, className, children, 'aria-label': label }) => (
+            renderLink={({
+              href,
+              className,
+              children,
+              'aria-label': label,
+            }) => (
               <button
                 className={className}
                 type="button"

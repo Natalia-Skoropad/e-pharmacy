@@ -29,7 +29,7 @@ import { getPharmacyOrders } from '@/lib/api/browser';
 import type {
   PharmacyOrdersQueryParams,
   PharmacyOrderRow,
-} from '@/lib/pharmacy/orders';
+} from '@/lib/orders/orders';
 
 import { OrdersFiltersDrawer } from '@/components/orders/OrdersFiltersDrawer';
 import { OrdersTable } from '@/components/orders/OrdersTable';
@@ -174,7 +174,11 @@ function OrdersPageContent() {
           titleId="orders-page-title"
           icon={<ShoppingBag size={23} aria-hidden="true" />}
           actions={
-            <CountLabel shown={orders.length} total={totalOrders} label="orders" />
+            <CountLabel
+              shown={orders.length}
+              total={totalOrders}
+              label="orders"
+            />
           }
         />
         <div className={css.stack}>

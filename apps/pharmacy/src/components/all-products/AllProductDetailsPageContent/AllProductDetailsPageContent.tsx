@@ -38,7 +38,7 @@ import {
   getProductReviews,
 } from '@/lib/api/browser';
 
-import { getPharmacyAllProductsPath } from '@/lib/pharmacy/routes';
+import { getPharmacyAllProductsPath } from '@/lib/layout/routes';
 
 import css from './AllProductDetailsPageContent.module.css';
 
@@ -524,7 +524,9 @@ function AllProductDetailsPageContent({
         <div className={css.stack}>
           <div className={css.titleBlock}>
             <PageHeader
-              title={product ? product.name : (error?.title ?? 'Global product')}
+              title={
+                product ? product.name : (error?.title ?? 'Global product')
+              }
               titleId="global-product-page-title"
               icon={<PackageSearch size={23} aria-hidden="true" />}
             />

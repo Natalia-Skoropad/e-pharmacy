@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { FilePlus2 } from 'lucide-react';
 
 import {
@@ -19,51 +20,20 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
-import type { ProductCategory } from '@e-pharmacy/types';
-
 import { getPharmacyProductRequests } from '@/lib/api/browser';
 
-import type {
-  PharmacyProductRequestRow,
-  PharmacyProductRequestsQueryParams,
-  ProductRequestStatus,
-} from '@/lib/pharmacy/product-requests';
+import {
+  DEFAULT_PRODUCT_REQUESTS_FILTERS,
+  type PharmacyProductRequestRow,
+  type PharmacyProductRequestsQueryParams,
+  type ProductRequestsFilterState,
+} from '@/lib/product-requests/product-requests';
 
+import { buildProductRequestsPath } from '@/lib/product-requests/product-request-paths';
 import { ProductRequestsFiltersDrawer } from '@/components/product-requests/ProductRequestsFiltersDrawer';
 import { ProductRequestsTable } from '@/components/product-requests/ProductRequestsTable';
 
 import css from './ProductRequestsPageContent.module.css';
-
-//===================================================================
-
-type ProductRequestCategoryFilter = 'all' | ProductCategory;
-type ProductRequestStatusFilter = 'all' | ProductRequestStatus;
-
-//===================================================================
-
-export type ProductRequestsFilterState = Readonly<{
-  date: {
-    from: string;
-    to: string;
-  };
-  name: string;
-  article: string;
-  category: ProductRequestCategoryFilter;
-  status: ProductRequestStatusFilter;
-}>;
-
-//===================================================================
-
-const DEFAULT_FILTERS: ProductRequestsFilterState = {
-  date: {
-    from: '',
-    to: '',
-  },
-  name: '',
-  article: '',
-  category: 'all',
-  status: 'all',
-};
 
 //===================================================================
 
@@ -97,9 +67,19 @@ function getProductRequestsQueryParams(
 
 //===================================================================
 
-function ProductRequestsPageContent() {
+type ProductRequestsPageContentProps = Readonly<{
+  initialFilters?: ProductRequestsFilterState;
+}>;
+
+//===================================================================
+
+function ProductRequestsPageContent({
+  initialFilters = DEFAULT_PRODUCT_REQUESTS_FILTERS,
+}: ProductRequestsPageContentProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [filters, setFilters] =
-    useState<ProductRequestsFilterState>(DEFAULT_FILTERS);
+    useState<ProductRequestsFilterState>(initialFilters);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [requests, setRequests] = useState<PharmacyProductRequestRow[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
@@ -151,11 +131,23 @@ function ProductRequestsPageContent() {
     };
   }, [queryParams]);
 
+  useEffect(() => {
+    const nextPath = buildProductRequestsPath(filters);
+
+    if (pathname === nextPath) return;
+
+    const timeoutId = window.setTimeout(() => {
+      router.replace(nextPath, { scroll: false });
+    }, 450);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [filters, pathname, router]);
+
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
 
   const resetFilters = () => {
-    setFilters(DEFAULT_FILTERS);
+    setFilters(DEFAULT_PRODUCT_REQUESTS_FILTERS);
   };
 
   return (

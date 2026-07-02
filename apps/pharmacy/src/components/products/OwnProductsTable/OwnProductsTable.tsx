@@ -13,9 +13,9 @@ import {
   PRODUCT_CATEGORY_LABELS,
   PRODUCT_STATUS_LABELS,
   type PharmacyProductRow,
-} from '@/lib/pharmacy/products';
+} from '@/lib/products/products';
 
-import { getPharmacyProductPath } from '@/lib/pharmacy/routes';
+import { getPharmacyProductPath } from '@/lib/layout/routes';
 
 import css from './OwnProductsTable.module.css';
 

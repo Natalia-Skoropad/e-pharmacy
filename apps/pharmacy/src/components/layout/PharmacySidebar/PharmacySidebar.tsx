@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 
 import { SideMenu } from '@e-pharmacy/ui/layout';
 
-import { PHARMACY_NAVIGATION } from '@/lib/pharmacy/navigation';
+import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
 
 import css from './PharmacySidebar.module.css';
 

@@ -2,7 +2,7 @@
 
 import { ErrorPage as SharedErrorPage } from '@e-pharmacy/ui/status-pages';
 
-import { getPharmacyDashboardPath } from '@/lib/pharmacy/routes';
+import { getPharmacyDashboardPath } from '@/lib/layout/routes';
 
 //===================================================================
 

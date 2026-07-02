@@ -14,14 +14,14 @@ import {
 import { MobileOffcanvasBase, SideMenu } from '@e-pharmacy/ui/layout';
 import { useAuth } from '@e-pharmacy/auth/core';
 
-import { PHARMACY_MOBILE_NAVIGATION } from '@/lib/pharmacy/navigation';
+import { PHARMACY_MOBILE_NAVIGATION } from '@/lib/layout/navigation';
 
 import {
   getPharmacyDashboardPath,
   getPharmacyProfilePath,
-} from '@/lib/pharmacy/routes';
+} from '@/lib/layout/routes';
 
-import { getSharedLoginUrl } from '@/lib/pharmacy/shared-auth';
+import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 
 import css from './PharmacyMobileMenu.module.css';
 

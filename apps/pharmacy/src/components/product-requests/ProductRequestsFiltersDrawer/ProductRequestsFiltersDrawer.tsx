@@ -14,14 +14,14 @@ import {
   type ProductCategory,
 } from '@e-pharmacy/types/products';
 
-import { getPharmacyProductRequestsPath } from '@/lib/pharmacy/routes';
+import { getPharmacyProductRequestsPath } from '@/lib/layout/routes';
 
 import {
   PRODUCT_REQUEST_CATEGORY_LABELS,
   PRODUCT_REQUEST_STATUS_LABELS,
-} from '@/lib/pharmacy/product-requests';
+} from '@/lib/product-requests/product-requests';
 
-import type { ProductRequestsFilterState } from '@/components/product-requests/ProductRequestsPageContent';
+import type { ProductRequestsFilterState } from '@/lib/product-requests/product-requests';
 
 import css from './ProductRequestsFiltersDrawer.module.css';
 
@@ -47,6 +47,8 @@ const CATEGORY_OPTIONS: Array<
     label: PRODUCT_REQUEST_CATEGORY_LABELS[category],
   })),
 ];
+
+//===================================================================
 
 const STATUS_OPTIONS: Array<
   SelectOption<ProductRequestsFilterState['status']>

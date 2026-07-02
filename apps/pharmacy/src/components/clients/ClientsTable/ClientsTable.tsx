@@ -10,8 +10,8 @@ import {
 
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
-import type { PharmacyClientRow } from '@/lib/pharmacy/clients';
-import { getPharmacyClientPath } from '@/lib/pharmacy/routes';
+import type { PharmacyClientRow } from '@/lib/clients/clients';
+import { getPharmacyClientPath } from '@/lib/layout/routes';
 
 import css from './ClientsTable.module.css';
 

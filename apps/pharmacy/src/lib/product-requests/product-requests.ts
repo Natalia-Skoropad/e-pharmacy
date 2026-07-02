@@ -9,6 +9,39 @@ export type ProductRequestStatus =
   | 'approved'
   | 'rejected';
 
+//===================================================================
+
+export type ProductRequestCategoryFilter = 'all' | ProductCategory;
+export type ProductRequestStatusFilter = 'all' | ProductRequestStatus;
+
+//===================================================================
+
+export type ProductRequestsFilterState = Readonly<{
+  date: {
+    from: string;
+    to: string;
+  };
+  name: string;
+  article: string;
+  category: ProductRequestCategoryFilter;
+  status: ProductRequestStatusFilter;
+}>;
+
+//===================================================================
+
+export const DEFAULT_PRODUCT_REQUESTS_FILTERS: ProductRequestsFilterState = {
+  date: {
+    from: '',
+    to: '',
+  },
+  name: '',
+  article: '',
+  category: 'all',
+  status: 'all',
+};
+
+//===================================================================
+
 export type PharmacyProductRequestRow = Readonly<{
   id: EntityId;
   createdAt: string;
@@ -36,14 +69,17 @@ export type PharmacyProductRequestsResponse = Readonly<{
 
 //===================================================================
 
-export const PRODUCT_REQUEST_CATEGORY_LABELS: Record<ProductCategory, string> = {
-  medicine: 'Medicine',
-  vitamins: 'Vitamins',
-  beauty: 'Beauty',
-  hygiene: 'Hygiene',
-  medical_devices: 'Medical devices',
-  other: 'Other',
-};
+export const PRODUCT_REQUEST_CATEGORY_LABELS: Record<ProductCategory, string> =
+  {
+    medicine: 'Medicine',
+    vitamins: 'Vitamins',
+    beauty: 'Beauty',
+    hygiene: 'Hygiene',
+    medical_devices: 'Medical devices',
+    other: 'Other',
+  };
+
+//===================================================================
 
 export const PRODUCT_REQUEST_STATUS_LABELS: Record<
   ProductRequestStatus,
@@ -62,15 +98,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+//===================================================================
+
 function getStringValue(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value : undefined;
 }
+
+//===================================================================
 
 function getNumberValue(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value)
     ? value
     : undefined;
 }
+
+//===================================================================
 
 function isProductCategory(value: unknown): value is ProductCategory {
   return (
@@ -83,6 +125,8 @@ function isProductCategory(value: unknown): value is ProductCategory {
   );
 }
 
+//===================================================================
+
 function isProductRequestStatus(value: unknown): value is ProductRequestStatus {
   return (
     value === 'draft' ||
@@ -92,6 +136,8 @@ function isProductRequestStatus(value: unknown): value is ProductRequestStatus {
     value === 'rejected'
   );
 }
+
+//===================================================================
 
 function getProductRequestStatus(value: unknown): ProductRequestStatus {
   if (isProductRequestStatus(value)) return value;
@@ -123,7 +169,9 @@ export function normalizePharmacyProductRequest(
     createdAt,
     article: getStringValue(rawRequest.article) ?? '—',
     name: getStringValue(rawRequest.name) ?? 'Unnamed request',
-    category: isProductCategory(rawRequest.category) ? rawRequest.category : 'other',
+    category: isProductCategory(rawRequest.category)
+      ? rawRequest.category
+      : 'other',
     status: getProductRequestStatus(rawRequest.status),
   };
 }

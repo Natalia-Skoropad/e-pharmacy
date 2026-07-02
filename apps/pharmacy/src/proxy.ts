@@ -7,7 +7,7 @@ import {
   REFRESH_TOKEN_COOKIE_NAME,
 } from '@e-pharmacy/config/auth';
 
-import { getPharmacyDashboardPath } from '@/lib/pharmacy/routes';
+import { getPharmacyDashboardPath } from '@/lib/layout/routes';
 
 //===================================================================
 
@@ -29,9 +29,9 @@ function getClientAppUrl(request: NextRequest): string {
 function hasSessionCookie(request: NextRequest) {
   return Boolean(
     request.cookies.get(ACCESS_TOKEN_COOKIE_NAME)?.value ||
-      request.cookies.get(REFRESH_TOKEN_COOKIE_NAME)?.value ||
-      request.cookies.get(LEGACY_AUTH_COOKIE_NAME)?.value ||
-      request.cookies.get(AUTH_READY_COOKIE_NAME)?.value
+    request.cookies.get(REFRESH_TOKEN_COOKIE_NAME)?.value ||
+    request.cookies.get(LEGACY_AUTH_COOKIE_NAME)?.value ||
+    request.cookies.get(AUTH_READY_COOKIE_NAME)?.value
   );
 }
 

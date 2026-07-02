@@ -12,7 +12,7 @@ import {
   DELIVERY_METHOD_LABELS,
   PAYMENT_METHOD_LABELS,
   type PharmacyOrderRow,
-} from '@/lib/pharmacy/orders';
+} from '@/lib/orders/orders';
 
 import css from './OrdersTable.module.css';
 

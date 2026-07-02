@@ -4,7 +4,7 @@ import { Users } from 'lucide-react';
 import { ButtonLink, StatusBanner } from '@e-pharmacy/ui/common';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
-import { getPharmacyProfilePath } from '@/lib/pharmacy/routes';
+import { getPharmacyProfilePath } from '@/lib/layout/routes';
 
 import css from './ClientDetailsPageContent.module.css';
 
@@ -39,8 +39,8 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
           <section className={css.card} aria-labelledby="client-actions-title">
             <h2 id="client-actions-title">What can you do now?</h2>
             <p>
-              Complete the pharmacy profile, check that registration documents are
-              attached, and send the profile for verification.
+              Complete the pharmacy profile, check that registration documents
+              are attached, and send the profile for verification.
             </p>
             <div className={css.actions}>
               <ButtonLink

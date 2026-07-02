@@ -41,14 +41,14 @@ import {
   getPharmacyProducts,
 } from '@/lib/api/browser';
 
-import type { ClientStatus } from '@/lib/pharmacy/clients';
-import type { ProductRequestStatus } from '@/lib/pharmacy/product-requests';
+import type { ClientStatus } from '@/lib/clients/clients';
+import type { ProductRequestStatus } from '@/lib/product-requests/product-requests';
 
 import type {
   OwnProductStatus,
   PharmacyProductRow,
   StockAvailabilityFilter,
-} from '@/lib/pharmacy/products';
+} from '@/lib/products/products';
 
 import {
   getPharmacyAllProductsPath,
@@ -61,7 +61,7 @@ import {
   getPharmacyProductsPath,
   getPharmacyProfilePath,
   getPharmacyRequestsFilterPath,
-} from '@/lib/pharmacy/routes';
+} from '@/lib/layout/routes';
 
 import css from './PharmacyDashboardPageContent.module.css';
 
@@ -486,7 +486,6 @@ function StatusStatCard({
           <p className={css.statusCardAmount}>{formatPrice(amount)}</p>
         ) : null}
       </div>
-
     </>
   );
 

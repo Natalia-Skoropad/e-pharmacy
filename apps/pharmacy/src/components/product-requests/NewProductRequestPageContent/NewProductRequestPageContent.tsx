@@ -3,7 +3,7 @@ import { FilePlus2 } from 'lucide-react';
 
 import { ButtonLink, StatusBanner } from '@e-pharmacy/ui/common';
 
-import { getPharmacyProfilePath } from '@/lib/pharmacy/routes';
+import { getPharmacyProfilePath } from '@/lib/layout/routes';
 
 import css from './NewProductRequestPageContent.module.css';
 
@@ -15,11 +15,7 @@ function NewProductRequestPageContent() {
       <div className={css.contentCard}>
         <div className={css.stack}>
           <h1 className={css.title} id="new-request-page-title">
-            <FilePlus2
-              className={css.titleIcon}
-              size={30}
-              aria-hidden="true"
-            />
+            <FilePlus2 className={css.titleIcon} size={30} aria-hidden="true" />
             <span>New product request</span>
           </h1>
 
@@ -33,8 +29,8 @@ function NewProductRequestPageContent() {
           <section className={css.card} aria-labelledby="request-actions-title">
             <h2 id="request-actions-title">What can you do now?</h2>
             <p>
-              Complete the pharmacy profile, check that registration documents are
-              attached, and send the profile for verification.
+              Complete the pharmacy profile, check that registration documents
+              are attached, and send the profile for verification.
             </p>
             <div className={css.actions}>
               <ButtonLink

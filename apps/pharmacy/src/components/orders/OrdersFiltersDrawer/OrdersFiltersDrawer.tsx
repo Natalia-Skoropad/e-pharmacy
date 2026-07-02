@@ -9,12 +9,12 @@ import {
   type SelectOption,
 } from '@e-pharmacy/ui/common';
 
-import { getPharmacyOrdersPath } from '@/lib/pharmacy/routes';
+import { getPharmacyOrdersPath } from '@/lib/layout/routes';
 
 import {
   DELIVERY_METHOD_LABELS,
   PAYMENT_METHOD_LABELS,
-} from '@/lib/pharmacy/orders';
+} from '@/lib/orders/orders';
 
 import type { OrdersFilterState } from '@/components/orders/OrdersPageContent';
 

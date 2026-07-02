@@ -1,2 +1,5 @@
-export { default, ProductRequestsPageContent } from './ProductRequestsPageContent';
-export type { ProductRequestsFilterState } from './ProductRequestsPageContent';
+export {
+  default,
+  ProductRequestsPageContent,
+} from './ProductRequestsPageContent';
+export type { ProductRequestsFilterState } from '@/lib/product-requests/product-requests';

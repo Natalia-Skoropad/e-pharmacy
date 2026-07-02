@@ -1,4 +1,4 @@
-import { getPharmacyDashboardPath } from './routes';
+import { getPharmacyDashboardPath } from '../layout/routes';
 
 //===================================================================
 

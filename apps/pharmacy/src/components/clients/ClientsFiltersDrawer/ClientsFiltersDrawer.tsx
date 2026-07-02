@@ -9,7 +9,7 @@ import {
   type SelectOption,
 } from '@e-pharmacy/ui/common';
 
-import { getPharmacyClientsPath } from '@/lib/pharmacy/routes';
+import { getPharmacyClientsPath } from '@/lib/layout/routes';
 
 import type { ClientsFilterState } from '@/components/clients/ClientsPageContent';
 

@@ -11,7 +11,7 @@ import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { PharmacyProtectedRoute } from '@/components/auth/PharmacyProtectedRoute';
 import { PharmacyHeader } from '@/components/layout/PharmacyHeader';
 import { PharmacySidebar } from '@/components/layout/PharmacySidebar';
-import { getPharmacyBreadcrumbsByPathname } from '@/lib/pharmacy/breadcrumbs';
+import { getPharmacyBreadcrumbsByPathname } from '@/lib/layout/breadcrumbs';
 
 import css from './PharmacyShell.module.css';
 
