@@ -57,6 +57,7 @@ function isPharmacyFilterSegment(segment: string | undefined): boolean {
     'article-',
     'name-',
     'page-',
+    'added-to-my-pharmacy-',
   ].some((prefix) => segment.startsWith(prefix));
 }
 

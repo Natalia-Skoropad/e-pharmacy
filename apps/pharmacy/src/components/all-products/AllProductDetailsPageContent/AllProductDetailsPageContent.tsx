@@ -18,8 +18,8 @@ import {
   type ReviewsListItem,
   type TabItem,
 } from '@e-pharmacy/ui/common';
-import { PageHeader } from '@e-pharmacy/ui/layout';
 
+import { PageHeader } from '@e-pharmacy/ui/layout';
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { isApiError } from '@e-pharmacy/api-client/core';
 

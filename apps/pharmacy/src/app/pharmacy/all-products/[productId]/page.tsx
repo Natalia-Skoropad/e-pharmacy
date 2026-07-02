@@ -1,6 +1,12 @@
 import type { Metadata } from 'next';
 
 import { AllProductDetailsPageContent } from '@/components/all-products/AllProductDetailsPageContent';
+import { AllProductsPageContent } from '@/components/all-products/AllProductsPageContent';
+
+import {
+  isAllProductsFilterSegment,
+  parseAllProductsSegments,
+} from '@/lib/products/all-product-paths';
 
 //===================================================================
 
@@ -20,11 +26,15 @@ type AllProductDetailsPageProps = Readonly<{
 async function AllProductDetailsPage({ params }: AllProductDetailsPageProps) {
   const { productId } = await params;
 
-  return (
-    <AllProductDetailsPageContent
-      productId={productId}
-    />
-  );
+  if (isAllProductsFilterSegment(productId)) {
+    return (
+      <AllProductsPageContent
+        initialFilters={parseAllProductsSegments({ filters: [productId] })}
+      />
+    );
+  }
+
+  return <AllProductDetailsPageContent productId={productId} />;
 }
 
 export default AllProductDetailsPage;

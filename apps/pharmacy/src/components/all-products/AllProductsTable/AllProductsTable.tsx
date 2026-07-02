@@ -104,7 +104,7 @@ function AllProductsTable({
       },
       {
         key: 'name',
-        width: '240px',
+        width: '270px',
         title: 'Name',
         render: (product) => (
           <TextActionButton href={getPharmacyAllProductPath(product.id)}>

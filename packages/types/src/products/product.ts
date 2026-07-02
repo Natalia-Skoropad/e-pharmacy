@@ -7,6 +7,8 @@ import type { ProductCategory } from './categories';
 
 export type ProductStatus = 'new' | 'active' | 'blocked';
 
+//=============================================================================
+
 export type ProductRequestStatus =
   | 'draft'
   | 'on_moderation'
@@ -95,6 +97,8 @@ export type ProductsQueryParams = {
   status?: Extract<ProductStatus, 'active' | 'blocked'>;
   includeBlocked?: boolean;
   pharmacyId?: EntityId;
+  addedToPharmacyId?: EntityId;
+  addedToMyPharmacy?: boolean;
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;

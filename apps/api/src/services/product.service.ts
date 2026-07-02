@@ -42,6 +42,8 @@ type ProductsQuery = {
   status?: 'active' | 'blocked';
   includeBlocked?: boolean;
   pharmacyId?: string;
+  addedToPharmacyId?: string;
+  addedToMyPharmacy?: boolean;
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
@@ -297,6 +299,56 @@ function getEndOfDay(value: string): Date {
 
 //===============================================================
 
+function toObjectIdStrings(values: unknown[]): string[] {
+  return values.map(String);
+}
+
+//===============================================================
+
+function intersectStringLists(first: string[], second: string[]): string[] {
+  const secondSet = new Set(second);
+
+  return first.filter((item) => secondSet.has(item));
+}
+
+//===============================================================
+
+function applyProductIdIncludeFilter(
+  filter: Record<string, unknown>,
+  productIds: unknown[]
+): void {
+  const ids = toObjectIdStrings(productIds);
+  const current = filter._id as
+    | { $in?: unknown[]; $nin?: unknown[] }
+    | undefined;
+  const currentIn = current?.$in ? toObjectIdStrings(current.$in) : undefined;
+
+  filter._id = {
+    ...(current ?? {}),
+    $in: currentIn ? intersectStringLists(currentIn, ids) : ids,
+  };
+}
+
+//===============================================================
+
+function applyProductIdExcludeFilter(
+  filter: Record<string, unknown>,
+  productIds: unknown[]
+): void {
+  const ids = toObjectIdStrings(productIds);
+  const current = filter._id as
+    | { $in?: unknown[]; $nin?: unknown[] }
+    | undefined;
+  const currentNin = current?.$nin ? toObjectIdStrings(current.$nin) : [];
+
+  filter._id = {
+    ...(current ?? {}),
+    $nin: [...new Set([...currentNin, ...ids])],
+  };
+}
+
+//===============================================================
+
 export async function getProductsService(
   query: ProductsQuery,
   userId?: string
@@ -365,13 +417,28 @@ export async function getProductsService(
       availableQuantity: { $gt: 0 },
     });
 
-    filter._id = { $nin: availableProductIds };
+    applyProductIdExcludeFilter(filter, availableProductIds);
   } else {
     if (query.inStock === false) offerFilter.availableQuantity = 0;
 
     if (Object.keys(offerFilter).length) {
       allowedProductIds = await ProductOffer.distinct('productId', offerFilter);
-      filter._id = { $in: allowedProductIds };
+      applyProductIdIncludeFilter(filter, allowedProductIds);
+    }
+  }
+
+  if (
+    query.addedToPharmacyId &&
+    typeof query.addedToMyPharmacy === 'boolean'
+  ) {
+    const pharmacyProductIds = await ProductOffer.distinct('productId', {
+      pharmacyId: query.addedToPharmacyId,
+    });
+
+    if (query.addedToMyPharmacy) {
+      applyProductIdIncludeFilter(filter, pharmacyProductIds);
+    } else {
+      applyProductIdExcludeFilter(filter, pharmacyProductIds);
     }
   }
 

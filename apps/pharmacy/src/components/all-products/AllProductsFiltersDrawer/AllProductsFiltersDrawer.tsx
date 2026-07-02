@@ -16,10 +16,9 @@ import { getPharmacyAllProductsPath } from '@/lib/layout/routes';
 import {
   PRODUCT_CATEGORY_LABELS,
   PRODUCT_STATUS_LABELS,
-  STOCK_AVAILABILITY_LABELS,
 } from '@/lib/products/products';
 
-import type { AllProductsFilterState } from '@/components/all-products/AllProductsPageContent';
+import type { AllProductsFilterState } from '@/lib/products/all-products-filters';
 
 import css from './AllProductsFiltersDrawer.module.css';
 
@@ -52,10 +51,12 @@ const STATUS_OPTIONS: Array<SelectOption<AllProductsFilterState['status']>> = [
   { value: 'blocked', label: PRODUCT_STATUS_LABELS.blocked },
 ];
 
-const STOCK_OPTIONS: Array<SelectOption<AllProductsFilterState['stock']>> = [
+const ADDED_TO_MY_PHARMACY_OPTIONS: Array<
+  SelectOption<AllProductsFilterState['addedToMyPharmacy']>
+> = [
   { value: 'all', label: 'All' },
-  { value: 'available', label: STOCK_AVAILABILITY_LABELS.available },
-  { value: 'empty', label: STOCK_AVAILABILITY_LABELS.empty },
+  { value: 'yes', label: 'Added to my pharmacy' },
+  { value: 'no', label: 'Not added to my pharmacy' },
 ];
 
 //===================================================================
@@ -140,12 +141,14 @@ function AllProductsFiltersDrawer({
           />
 
           <SelectField
-            id="all-products-stock"
-            label="Stock availability"
-            value={filters.stock}
-            options={STOCK_OPTIONS}
-            isActive={filters.stock !== 'all'}
-            onChange={(stock) => onChange({ ...filters, stock })}
+            id="all-products-added-to-my-pharmacy"
+            label="Added to my pharmacy"
+            value={filters.addedToMyPharmacy}
+            options={ADDED_TO_MY_PHARMACY_OPTIONS}
+            isActive={filters.addedToMyPharmacy !== 'all'}
+            onChange={(addedToMyPharmacy) =>
+              onChange({ ...filters, addedToMyPharmacy })
+            }
           />
         </div>
 

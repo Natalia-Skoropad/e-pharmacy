@@ -1,0 +1,285 @@
+import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation';
+import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
+
+import { PHARMACY_ALL_PRODUCTS } from '@/lib/layout/routes';
+
+import type { OwnProductStatus } from './products';
+
+import type {
+  AllProductsAddedToMyPharmacyFilter,
+  AllProductsFilterState,
+} from './all-products-filters';
+
+//===================================================================
+
+const URL_TEXT_PARAM_DISALLOWED_CHARS_PATTERN = /[^A-Za-z0-9 .-]/g;
+const URL_ARTICLE_PARAM_DISALLOWED_CHARS_PATTERN = /[^A-Za-z0-9.-]/g;
+const SLUG_SEGMENT_SEPARATOR_PATTERN = /[^a-z0-9]+/g;
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+//===================================================================
+
+const ALL_PRODUCT_STATUSES: OwnProductStatus[] = ['active', 'blocked'];
+const ADDED_TO_MY_PHARMACY_FILTERS: Array<
+  Exclude<AllProductsAddedToMyPharmacyFilter, 'all'>
+> = ['yes', 'no'];
+
+//===================================================================
+
+type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
+
+type AllProductsFilterDraft = {
+  createdDate: {
+    from: string;
+    to: string;
+  };
+  name: string;
+  article: string;
+  category: AllProductsFilterState['category'];
+  status: AllProductsFilterState['status'];
+  addedToMyPharmacy: AllProductsFilterState['addedToMyPharmacy'];
+};
+
+//===================================================================
+
+function sanitizeTextParam(value?: string): string {
+  return (
+    value
+      ?.trim()
+      .replace(URL_TEXT_PARAM_DISALLOWED_CHARS_PATTERN, '')
+      .slice(0, USER_SEARCH_MAX_LENGTH) ?? ''
+  );
+}
+
+//===================================================================
+
+function sanitizeArticleParam(value?: string): string {
+  return (
+    value
+      ?.trim()
+      .replace(URL_ARTICLE_PARAM_DISALLOWED_CHARS_PATTERN, '')
+      .slice(0, USER_SEARCH_MAX_LENGTH) ?? ''
+  );
+}
+
+//===================================================================
+
+function slugifySegment(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(SLUG_SEGMENT_SEPARATOR_PATTERN, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, USER_SEARCH_MAX_LENGTH);
+}
+
+//===================================================================
+
+function deslugifyNameSegment(value: string): string {
+  return sanitizeTextParam(value.replace(/-/g, ' '));
+}
+
+//===================================================================
+
+function deslugifyArticleSegment(value: string): string {
+  return sanitizeArticleParam(value);
+}
+
+//===================================================================
+
+function isValidAllProductDate(value?: string): boolean {
+  return Boolean(value && DATE_PATTERN.test(value));
+}
+
+//===================================================================
+
+function isAllProductCategory(value?: string): value is ProductCategory {
+  return PRODUCT_CATEGORIES.includes(value as ProductCategory);
+}
+
+//===================================================================
+
+function normalizeStatusSegment(value: string): OwnProductStatus | null {
+  const normalized = value.replace(/-/g, '_');
+
+  return ALL_PRODUCT_STATUSES.includes(normalized as OwnProductStatus)
+    ? (normalized as OwnProductStatus)
+    : null;
+}
+
+//===================================================================
+
+function normalizeAddedToMyPharmacySegment(
+  value: string
+): Exclude<AllProductsAddedToMyPharmacyFilter, 'all'> | null {
+  return ADDED_TO_MY_PHARMACY_FILTERS.includes(
+    value as Exclude<AllProductsAddedToMyPharmacyFilter, 'all'>
+  )
+    ? (value as Exclude<AllProductsAddedToMyPharmacyFilter, 'all'>)
+    : null;
+}
+
+//===================================================================
+
+function slugifyStatus(status: OwnProductStatus): string {
+  return status.replace(/_/g, '-');
+}
+
+//===================================================================
+
+export type AllProductsRouteParams = Readonly<{
+  filters?: string[];
+}>;
+
+//===================================================================
+
+export function isAllProductsFilterSegment(segment: string): boolean {
+  return (
+    segment.startsWith('search-name-') ||
+    segment.startsWith('article-') ||
+    segment.startsWith('category-') ||
+    segment.startsWith('status-') ||
+    segment.startsWith('added-to-my-pharmacy-') ||
+    segment.startsWith('date-from-') ||
+    segment.startsWith('date-to-')
+  );
+}
+
+//===================================================================
+
+export function isAllProductsFilterRoute(
+  segments: string[] | undefined
+): boolean {
+  return !segments?.length || segments.every(isAllProductsFilterSegment);
+}
+
+//===================================================================
+
+export function parseAllProductsSegments(
+  params: AllProductsRouteParams = {}
+): AllProductsFilterState {
+  const filters: AllProductsFilterDraft = {
+    createdDate: {
+      from: '',
+      to: '',
+    },
+    name: '',
+    article: '',
+    category: 'all',
+    status: 'all',
+    addedToMyPharmacy: 'all',
+  };
+
+  for (const segment of params.filters ?? []) {
+    if (segment.startsWith('search-name-')) {
+      filters.name = deslugifyNameSegment(segment.replace('search-name-', ''));
+      continue;
+    }
+
+    if (segment.startsWith('article-')) {
+      filters.article = deslugifyArticleSegment(
+        segment.replace('article-', '')
+      );
+      continue;
+    }
+
+    if (segment.startsWith('category-')) {
+      const category = segment.replace('category-', '').replace(/-/g, '_');
+
+      if (isAllProductCategory(category)) {
+        filters.category = category;
+      }
+
+      continue;
+    }
+
+    if (segment.startsWith('status-')) {
+      const status = normalizeStatusSegment(segment.replace('status-', ''));
+
+      if (status) {
+        filters.status = status;
+      }
+
+      continue;
+    }
+
+    if (segment.startsWith('added-to-my-pharmacy-')) {
+      const addedToMyPharmacy = normalizeAddedToMyPharmacySegment(
+        segment.replace('added-to-my-pharmacy-', '')
+      );
+
+      if (addedToMyPharmacy) {
+        filters.addedToMyPharmacy = addedToMyPharmacy;
+      }
+
+      continue;
+    }
+
+    if (segment.startsWith('date-from-')) {
+      const dateFrom = segment.replace('date-from-', '');
+
+      if (isValidAllProductDate(dateFrom)) {
+        filters.createdDate = {
+          ...filters.createdDate,
+          from: dateFrom,
+        };
+      }
+
+      continue;
+    }
+
+    if (segment.startsWith('date-to-')) {
+      const dateTo = segment.replace('date-to-', '');
+
+      if (isValidAllProductDate(dateTo)) {
+        filters.createdDate = {
+          ...filters.createdDate,
+          to: dateTo,
+        };
+      }
+    }
+  }
+
+  return filters;
+}
+
+//===================================================================
+
+export function buildAllProductsPath(filters: AllProductsFilterState): string {
+  const segments: string[] = [];
+  const name = filters.name.trim();
+  const article = filters.article.trim();
+
+  if (name) {
+    segments.push(`search-name-${slugifySegment(name)}`);
+  }
+
+  if (article) {
+    segments.push(`article-${slugifySegment(article)}`);
+  }
+
+  if (filters.category !== 'all') {
+    segments.push(`category-${filters.category.replace(/_/g, '-')}`);
+  }
+
+  if (filters.status !== 'all') {
+    segments.push(`status-${slugifyStatus(filters.status)}`);
+  }
+
+  if (filters.addedToMyPharmacy !== 'all') {
+    segments.push(`added-to-my-pharmacy-${filters.addedToMyPharmacy}`);
+  }
+
+  if (filters.createdDate.from) {
+    segments.push(`date-from-${filters.createdDate.from}`);
+  }
+
+  if (filters.createdDate.to) {
+    segments.push(`date-to-${filters.createdDate.to}`);
+  }
+
+  return segments.length
+    ? `${PHARMACY_ALL_PRODUCTS}/${segments.join('/')}`
+    : PHARMACY_ALL_PRODUCTS;
+}

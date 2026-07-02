@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { PackageSearch } from 'lucide-react';
 
 import {
@@ -19,53 +20,20 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
-import type { EntityId, Product, ProductCategory } from '@e-pharmacy/types';
+import type { EntityId, Product } from '@e-pharmacy/types';
 
 import { getMyPharmacyProfile, getProducts } from '@/lib/api/browser';
 
-import type {
-  OwnProductStatus,
-  StockAvailabilityFilter,
-} from '@/lib/products/products';
+import {
+  DEFAULT_ALL_PRODUCTS_FILTERS,
+  type AllProductsFilterState,
+} from '@/lib/products/all-products-filters';
+import { buildAllProductsPath } from '@/lib/products/all-product-paths';
 
 import { AllProductsFiltersDrawer } from '@/components/all-products/AllProductsFiltersDrawer';
 import { AllProductsTable } from '@/components/all-products/AllProductsTable';
 
 import css from './AllProductsPageContent.module.css';
-
-//===================================================================
-
-type ProductCategoryFilter = 'all' | ProductCategory;
-type ProductStatusFilter = 'all' | OwnProductStatus;
-type ProductStockFilter = 'all' | StockAvailabilityFilter;
-
-//===================================================================
-
-export type AllProductsFilterState = Readonly<{
-  createdDate: {
-    from: string;
-    to: string;
-  };
-  name: string;
-  article: string;
-  category: ProductCategoryFilter;
-  status: ProductStatusFilter;
-  stock: ProductStockFilter;
-}>;
-
-//===================================================================
-
-const DEFAULT_FILTERS: AllProductsFilterState = {
-  createdDate: {
-    from: '',
-    to: '',
-  },
-  name: '',
-  article: '',
-  category: 'all',
-  status: 'all',
-  stock: 'all',
-};
 
 //===================================================================
 
@@ -76,7 +44,7 @@ function getActiveFiltersCount(filters: AllProductsFilterState): number {
     filters.article.trim(),
     filters.category !== 'all',
     filters.status !== 'all',
-    filters.stock !== 'all',
+    filters.addedToMyPharmacy !== 'all',
   ].filter(Boolean).length;
 }
 
@@ -85,8 +53,11 @@ function getActiveFiltersCount(filters: AllProductsFilterState): number {
 function getProductsQueryParams(
   filters: AllProductsFilterState,
   rowsPerPage: RowsPerPageValue,
-  page: number
+  page: number,
+  currentPharmacyId: EntityId | null
 ) {
+  const isAddedToMyPharmacyFilterActive = filters.addedToMyPharmacy !== 'all';
+
   return {
     page,
     perPage: rowsPerPage,
@@ -97,21 +68,31 @@ function getProductsQueryParams(
     articleKeyword: filters.article.trim() || undefined,
     category: filters.category === 'all' ? undefined : filters.category,
     status: filters.status === 'all' ? undefined : filters.status,
-    inStock:
-      filters.stock === 'available'
-        ? true
-        : filters.stock === 'empty'
-          ? false
-          : undefined,
+    addedToMyPharmacy: isAddedToMyPharmacyFilterActive
+      ? filters.addedToMyPharmacy === 'yes'
+      : undefined,
+    addedToPharmacyId:
+      isAddedToMyPharmacyFilterActive && currentPharmacyId
+        ? currentPharmacyId
+        : undefined,
     sort: 'newest' as const,
   };
 }
 
 //===================================================================
 
-function AllProductsPageContent() {
-  const [filters, setFilters] =
-    useState<AllProductsFilterState>(DEFAULT_FILTERS);
+type AllProductsPageContentProps = Readonly<{
+  initialFilters?: AllProductsFilterState;
+}>;
+
+//===================================================================
+
+function AllProductsPageContent({
+  initialFilters = DEFAULT_ALL_PRODUCTS_FILTERS,
+}: AllProductsPageContentProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [filters, setFilters] = useState<AllProductsFilterState>(initialFilters);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
@@ -120,6 +101,7 @@ function AllProductsPageContent() {
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
   );
+  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -147,6 +129,8 @@ function AllProductsPageContent() {
         if (!isMounted) return;
 
         setCurrentPharmacyId(null);
+      } finally {
+        if (isMounted) setIsProfileLoaded(true);
       }
     }
 
@@ -158,11 +142,19 @@ function AllProductsPageContent() {
   }, []);
 
   const queryParams = useMemo(
-    () => getProductsQueryParams(filters, rowsPerPage, currentPage),
-    [currentPage, filters, rowsPerPage]
+    () =>
+      getProductsQueryParams(
+        filters,
+        rowsPerPage,
+        currentPage,
+        currentPharmacyId
+      ),
+    [currentPage, currentPharmacyId, filters, rowsPerPage]
   );
 
   useEffect(() => {
+    if (!isProfileLoaded) return;
+
     let isMounted = true;
 
     async function loadProducts() {
@@ -191,7 +183,19 @@ function AllProductsPageContent() {
     return () => {
       isMounted = false;
     };
-  }, [queryParams]);
+  }, [isProfileLoaded, queryParams]);
+
+  useEffect(() => {
+    const nextPath = buildAllProductsPath(filters);
+
+    if (pathname === nextPath) return;
+
+    const timeoutId = window.setTimeout(() => {
+      router.replace(nextPath, { scroll: false });
+    }, 450);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [filters, pathname, router]);
 
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
@@ -208,7 +212,7 @@ function AllProductsPageContent() {
 
   const resetFilters = () => {
     setCurrentPage(1);
-    setFilters(DEFAULT_FILTERS);
+    setFilters(DEFAULT_ALL_PRODUCTS_FILTERS);
   };
 
   return (
@@ -255,7 +259,7 @@ function AllProductsPageContent() {
           <AllProductsTable
             currentPharmacyId={currentPharmacyId}
             products={products}
-            isLoading={isLoading}
+            isLoading={!isProfileLoaded || isLoading}
             emptyMessage={
               hasActiveFilters
                 ? 'No products found for the selected filters.'
@@ -303,3 +307,4 @@ function AllProductsPageContent() {
 
 export default AllProductsPageContent;
 export { AllProductsPageContent };
+export type { AllProductsFilterState };

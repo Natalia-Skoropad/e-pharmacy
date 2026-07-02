@@ -43,6 +43,7 @@
 
 .visualCard {
   display: grid;
+  align-self: stretch;
   place-items: center;
   min-height: 280px;
   overflow: hidden;
@@ -53,7 +54,7 @@
   width: 100%;
   max-width: 420px;
   max-height: 300px;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .imagePlaceholder {
@@ -244,7 +245,11 @@
 @media only screen and (min-width: 1024px) {
   .detailsGrid {
     grid-template-columns: minmax(280px, 0.44fr) minmax(0, 0.56fr);
-    align-items: start;
+    align-items: stretch;
+  }
+
+  .visualCard {
+    height: 100%;
   }
 
   .statsGrid {
