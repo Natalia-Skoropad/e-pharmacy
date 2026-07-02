@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { ShoppingBag } from 'lucide-react';
 
 import {
@@ -25,6 +26,7 @@ import type {
 } from '@e-pharmacy/types';
 
 import { getPharmacyOrders } from '@/lib/api/browser';
+import { buildOrdersPath } from '@/lib/orders/order-paths';
 
 import type {
   PharmacyOrdersQueryParams,
@@ -106,8 +108,18 @@ function getOrdersQueryParams(
 
 //===================================================================
 
-function OrdersPageContent() {
-  const [filters, setFilters] = useState<OrdersFilterState>(DEFAULT_FILTERS);
+type OrdersPageContentProps = Readonly<{
+  initialFilters?: OrdersFilterState;
+}>;
+
+//===================================================================
+
+function OrdersPageContent({
+  initialFilters = DEFAULT_FILTERS,
+}: OrdersPageContentProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [filters, setFilters] = useState<OrdersFilterState>(initialFilters);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
@@ -158,6 +170,18 @@ function OrdersPageContent() {
       isMounted = false;
     };
   }, [queryParams]);
+
+  useEffect(() => {
+    const nextPath = buildOrdersPath(filters);
+
+    if (pathname === nextPath) return;
+
+    const timeoutId = window.setTimeout(() => {
+      router.replace(nextPath, { scroll: false });
+    }, 450);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [filters, pathname, router]);
 
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;

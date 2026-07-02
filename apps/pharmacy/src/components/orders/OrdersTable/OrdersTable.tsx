@@ -106,7 +106,7 @@ function OrdersTable({
       items={orders}
       getItemKey={(order) => String(order.id)}
       isLoading={isLoading}
-      minWidth={1180}
+      minWidth={0}
       labels={{
         loading: 'Loading orders...',
         empty: emptyMessage,

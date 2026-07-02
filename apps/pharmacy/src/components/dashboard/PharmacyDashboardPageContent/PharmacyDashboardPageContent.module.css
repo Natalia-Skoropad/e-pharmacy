@@ -433,8 +433,6 @@
     padding: 24px;
   }
 
-  
-
   .overviewGrid,
   .cardGrid,
   .valueGrid {
@@ -447,7 +445,7 @@
   }
 }
 
-@media only screen and (min-width: 1200px) {
+@media only screen and (min-width: 1440px) {
   .sectionTopline {
     grid-template-columns: minmax(0, 1fr) auto;
   }

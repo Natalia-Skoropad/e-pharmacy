@@ -1,6 +1,12 @@
 import type { Metadata } from 'next';
 
 import { ClientDetailsPageContent } from '@/components/clients/ClientDetailsPageContent';
+import { ClientsPageContent } from '@/components/clients/ClientsPageContent/ClientsPageContent';
+
+import {
+  isClientsFilterSegment,
+  parseClientsSegments,
+} from '@/lib/clients/client-paths';
 
 //===================================================================
 
@@ -19,6 +25,14 @@ type ClientDetailsPageProps = Readonly<{
 
 async function ClientDetailsPage({ params }: ClientDetailsPageProps) {
   const { clientId } = await params;
+
+  if (isClientsFilterSegment(clientId)) {
+    return (
+      <ClientsPageContent
+        initialFilters={parseClientsSegments({ filters: [clientId] })}
+      />
+    );
+  }
 
   return <ClientDetailsPageContent clientId={clientId} />;
 }

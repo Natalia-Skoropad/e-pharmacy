@@ -28,8 +28,8 @@ import {
   SelectField,
   StatusBanner,
 } from '@e-pharmacy/ui/common';
-import { PageHeader } from '@e-pharmacy/ui/layout';
 
+import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { EntityId, OrderStatus, PharmacyStatus } from '@e-pharmacy/types';
 import { formatPrice } from '@e-pharmacy/utils/formatters';
 
@@ -886,24 +886,6 @@ function PharmacyDashboardPageContent() {
                   <EmptyState
                     title="Your pharmacy has no added products yet."
                     message="Browse active Admin products and add them after verification."
-                    action={
-                      <ButtonLink
-                        href={getPharmacyAllProductsPath()}
-                        variant="secondary"
-                        renderLink={({
-                          href,
-                          className,
-                          children,
-                          ...props
-                        }) => (
-                          <Link href={href} className={className} {...props}>
-                            {children}
-                          </Link>
-                        )}
-                      >
-                        View all products
-                      </ButtonLink>
-                    }
                   />
                 ) : null}
               </section>
@@ -948,53 +930,9 @@ function PharmacyDashboardPageContent() {
                   <EmptyState
                     title="Your pharmacy has no product creation requests yet."
                     message="Create a product request when you need to add a product that is absent from the global catalog."
-                    action={
-                      <ButtonLink
-                        href={getPharmacyProductRequestsPath()}
-                        variant="secondary"
-                        renderLink={({
-                          href,
-                          className,
-                          children,
-                          ...props
-                        }) => (
-                          <Link href={href} className={className} {...props}>
-                            {children}
-                          </Link>
-                        )}
-                      >
-                        View requests
-                      </ButtonLink>
-                    }
                   />
                 ) : null}
               </section>
-
-              <div className={css.quickActions}>
-                <ButtonLink
-                  href={getPharmacyProfilePath()}
-                  variant="primary"
-                  renderLink={({ href, className, children, ...props }) => (
-                    <Link href={href} className={className} {...props}>
-                      {children}
-                    </Link>
-                  )}
-                >
-                  Complete profile
-                </ButtonLink>
-
-                <ButtonLink
-                  href={getPharmacyOrdersFilterPath({ status: 'new' })}
-                  variant="secondary"
-                  renderLink={({ href, className, children, ...props }) => (
-                    <Link href={href} className={className} {...props}>
-                      {children}
-                    </Link>
-                  )}
-                >
-                  Process new orders
-                </ButtonLink>
-              </div>
             </>
           )}
         </div>

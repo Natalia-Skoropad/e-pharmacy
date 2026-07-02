@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
 
 import {
@@ -19,6 +20,7 @@ import {
 } from '@e-pharmacy/hooks';
 
 import { getPharmacyClients } from '@/lib/api/browser';
+import { buildClientsPath } from '@/lib/clients/client-paths';
 
 import type {
   ClientStatus,
@@ -101,8 +103,18 @@ function getClientsQueryParams(
 
 //===================================================================
 
-function ClientsPageContent() {
-  const [filters, setFilters] = useState<ClientsFilterState>(DEFAULT_FILTERS);
+type ClientsPageContentProps = Readonly<{
+  initialFilters?: ClientsFilterState;
+}>;
+
+//===================================================================
+
+function ClientsPageContent({
+  initialFilters = DEFAULT_FILTERS,
+}: ClientsPageContentProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [filters, setFilters] = useState<ClientsFilterState>(initialFilters);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
   const [totalClients, setTotalClients] = useState(0);
@@ -153,6 +165,18 @@ function ClientsPageContent() {
       isMounted = false;
     };
   }, [queryParams]);
+
+  useEffect(() => {
+    const nextPath = buildClientsPath(filters);
+
+    if (pathname === nextPath) return;
+
+    const timeoutId = window.setTimeout(() => {
+      router.replace(nextPath, { scroll: false });
+    }, 450);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [filters, pathname, router]);
 
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;

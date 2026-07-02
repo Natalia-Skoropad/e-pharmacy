@@ -13,6 +13,7 @@ import { validate } from '../middlewares/validate.middleware';
 import {
   checkoutOrderSchema,
   orderParamsSchema,
+  ordersQuerySchema,
   updateOrderStatusSchema,
 } from '../schemas/order.schema';
 
@@ -36,7 +37,7 @@ orderRoutes.post(
 
 //=================================================================================
 
-orderRoutes.get('/', ctrlWrapper(getOrders));
+orderRoutes.get('/', validate({ query: ordersQuerySchema }), ctrlWrapper(getOrders));
 
 //=================================================================================
 

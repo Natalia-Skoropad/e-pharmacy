@@ -16,6 +16,7 @@ import { getCartService } from './cart.service';
 
 import type {
   CheckoutOrderInput,
+  OrdersQuery,
   UpdateOrderStatusInput,
 } from '../schemas/order.schema';
 
@@ -687,16 +688,111 @@ export async function updateOrderStatusService(
 
 //===============================================================
 
+function getStartOfDay(value: string): Date {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) ? new Date(0) : date;
+}
+
+//===============================================================
+
+function getEndOfDay(value: string): Date {
+  const date = new Date(`${value}T23:59:59.999Z`);
+  return Number.isNaN(date.getTime()) ? new Date(0) : date;
+}
+
+//===============================================================
+
+function createOrderSearchRegExp(value: string): RegExp {
+  return new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+}
+
+//===============================================================
+
+async function getCurrentPharmacyId(userId: string) {
+  if (!Types.ObjectId.isValid(userId)) return null;
+
+  const pharmacy = await Pharmacy.findOne({
+    $or: [{ ownerId: userId }, { managerUserIds: userId }],
+  })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId } | null>();
+
+  return pharmacy?._id ?? null;
+}
+
+//===============================================================
+
 export async function getOrdersService(
-  userId: string
-): Promise<OrdersResponseDto> {
-  const orders = await Order.find({ userId })
-    .sort({ createdAt: -1 })
-    .lean<OrderDocument[]>();
+  userId: string,
+  query: OrdersQuery,
+  role?: UserRole
+): Promise<OrdersResponseDto & { page: number; perPage: number; totalPages: number }> {
+  const filter: Record<string, unknown> = {};
+
+  if (role === USER_ROLES.PHARMACY) {
+    const pharmacyId = await getCurrentPharmacyId(userId);
+
+    if (!pharmacyId) {
+      return {
+        items: [],
+        page: query.page,
+        perPage: query.perPage,
+        total: 0,
+        totalPages: 0,
+      };
+    }
+
+    filter.pharmacyId = pharmacyId;
+  } else {
+    filter.userId = userId;
+  }
+
+  if (query.dateFrom || query.dateTo) {
+    filter.createdAt = {
+      ...(query.dateFrom ? { $gte: getStartOfDay(query.dateFrom) } : {}),
+      ...(query.dateTo ? { $lte: getEndOfDay(query.dateTo) } : {}),
+    };
+  }
+
+  if (query.orderNumber?.trim()) {
+    filter.orderNumber = createOrderSearchRegExp(query.orderNumber.trim());
+  }
+
+  if (query.client?.trim()) {
+    filter['delivery.details.recipientName'] = createOrderSearchRegExp(
+      query.client.trim()
+    );
+  }
+
+  if (query.deliveryMethod) {
+    filter['delivery.method'] = query.deliveryMethod;
+  }
+
+  if (query.paymentMethod) {
+    filter.paymentMethod = query.paymentMethod;
+  }
+
+  if (query.status) {
+    filter.status = query.status;
+  }
+
+  const skip = (query.page - 1) * query.perPage;
+
+  const [orders, total] = await Promise.all([
+    Order.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(query.perPage)
+      .lean<OrderDocument[]>(),
+    Order.countDocuments(filter),
+  ]);
 
   return {
     items: orders.map((order) => serializeOrder(order)),
-    total: orders.length,
+    page: query.page,
+    perPage: query.perPage,
+    total,
+    totalPages: Math.ceil(total / query.perPage),
   };
 }
 

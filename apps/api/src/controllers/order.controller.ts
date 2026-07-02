@@ -4,6 +4,7 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 
 import {
   checkoutOrderSchema,
+  ordersQuerySchema,
   updateOrderStatusSchema,
 } from '../schemas/order.schema';
 
@@ -41,7 +42,8 @@ export async function checkoutOrder(
 //===============================================================
 
 export async function getOrders(req: Request, res: Response): Promise<void> {
-  const data = await getOrdersService(req.user?.id ?? '');
+  const query = ordersQuerySchema.parse(req.query);
+  const data = await getOrdersService(req.user?.id ?? '', query, req.user?.role);
 
   sendSuccessResponse({
     res,
