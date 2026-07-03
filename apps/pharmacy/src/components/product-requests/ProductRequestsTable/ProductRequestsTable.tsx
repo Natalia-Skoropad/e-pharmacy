@@ -8,12 +8,13 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
-import { formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import {
   PRODUCT_REQUEST_STATUS_LABELS,
   type PharmacyProductRequestRow,
-} from '@/lib/product-requests/product-requests';
+} from '@e-pharmacy/types/product-requests';
+
+import { formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import {
   getPharmacyAllProductPath,

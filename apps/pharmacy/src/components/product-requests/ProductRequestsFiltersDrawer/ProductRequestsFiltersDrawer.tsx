@@ -14,9 +14,13 @@ import {
   type ProductCategory,
 } from '@e-pharmacy/types/products';
 
+import {
+  PRODUCT_REQUEST_STATUSES,
+  PRODUCT_REQUEST_STATUS_LABELS,
+  type ProductRequestsFilterState,
+} from '@e-pharmacy/types/product-requests';
+
 import { getPharmacyProductRequestsPath } from '@/lib/layout/routes';
-import { PRODUCT_REQUEST_STATUS_LABELS } from '@/lib/product-requests/product-requests';
-import type { ProductRequestsFilterState } from '@/lib/product-requests/product-requests';
 
 import css from './ProductRequestsFiltersDrawer.module.css';
 
@@ -49,11 +53,10 @@ const STATUS_OPTIONS: Array<
   SelectOption<ProductRequestsFilterState['status']>
 > = [
   { value: 'all', label: 'All' },
-  { value: 'draft', label: PRODUCT_REQUEST_STATUS_LABELS.draft },
-  { value: 'new', label: PRODUCT_REQUEST_STATUS_LABELS.new },
-  { value: 'in_progress', label: PRODUCT_REQUEST_STATUS_LABELS.in_progress },
-  { value: 'approved', label: PRODUCT_REQUEST_STATUS_LABELS.approved },
-  { value: 'rejected', label: PRODUCT_REQUEST_STATUS_LABELS.rejected },
+  ...PRODUCT_REQUEST_STATUSES.map((status) => ({
+    value: status,
+    label: PRODUCT_REQUEST_STATUS_LABELS[status],
+  })),
 ];
 
 //===================================================================

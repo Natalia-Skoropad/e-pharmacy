@@ -11,6 +11,7 @@ import {
   StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
+
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import {
@@ -19,14 +20,13 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
-import type {
-  DeliveryMethod,
-  OrderStatus,
-  PaymentMethod,
-} from '@e-pharmacy/types';
-
 import { getPharmacyOrders } from '@/lib/api/browser';
 import { buildOrdersPath } from '@/lib/orders/order-paths';
+
+import {
+  DEFAULT_ORDERS_FILTERS,
+  type OrdersFilterState,
+} from '@/lib/orders/orders-filters';
 
 import type {
   PharmacyOrdersQueryParams,
@@ -37,40 +37,6 @@ import { OrdersFiltersDrawer } from '@/components/orders/OrdersFiltersDrawer';
 import { OrdersTable } from '@/components/orders/OrdersTable';
 
 import css from './OrdersPageContent.module.css';
-
-//===================================================================
-
-type DeliveryMethodFilter = 'all' | DeliveryMethod;
-type PaymentMethodFilter = 'all' | PaymentMethod;
-type OrderStatusFilter = 'all' | OrderStatus;
-
-//===================================================================
-
-export type OrdersFilterState = Readonly<{
-  date: {
-    from: string;
-    to: string;
-  };
-  client: string;
-  orderNumber: string;
-  deliveryMethod: DeliveryMethodFilter;
-  paymentMethod: PaymentMethodFilter;
-  status: OrderStatusFilter;
-}>;
-
-//===================================================================
-
-const DEFAULT_FILTERS: OrdersFilterState = {
-  date: {
-    from: '',
-    to: '',
-  },
-  client: '',
-  orderNumber: '',
-  deliveryMethod: 'all',
-  paymentMethod: 'all',
-  status: 'all',
-};
 
 //===================================================================
 
@@ -115,7 +81,7 @@ type OrdersPageContentProps = Readonly<{
 //===================================================================
 
 function OrdersPageContent({
-  initialFilters = DEFAULT_FILTERS,
+  initialFilters = DEFAULT_ORDERS_FILTERS,
 }: OrdersPageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -187,7 +153,7 @@ function OrdersPageContent({
   const hasActiveFilters = activeFiltersCount > 0;
 
   const resetFilters = () => {
-    setFilters(DEFAULT_FILTERS);
+    setFilters(DEFAULT_ORDERS_FILTERS);
   };
 
   return (

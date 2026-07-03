@@ -22,16 +22,16 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
-import { getPharmacyProductRequests } from '@/lib/api/browser';
-
 import {
   DEFAULT_PRODUCT_REQUESTS_FILTERS,
   type PharmacyProductRequestRow,
   type PharmacyProductRequestsQueryParams,
   type ProductRequestsFilterState,
-} from '@/lib/product-requests/product-requests';
+} from '@e-pharmacy/types/product-requests';
 
+import { getPharmacyProductRequests } from '@/lib/api/browser';
 import { buildProductRequestsPath } from '@/lib/product-requests/product-request-paths';
+
 import { ProductRequestsFiltersDrawer } from '@/components/product-requests/ProductRequestsFiltersDrawer';
 import { ProductRequestsTable } from '@/components/product-requests/ProductRequestsTable';
 
@@ -156,7 +156,10 @@ function ProductRequestsPageContent({
 
   return (
     <main className={css.page} aria-labelledby="product-requests-page-title">
-      <section className={css.heroCard} aria-labelledby="product-requests-page-title">
+      <section
+        className={css.heroCard}
+        aria-labelledby="product-requests-page-title"
+      >
         <PageHeader
           title="Product requests"
           titleId="product-requests-page-title"

@@ -1,3 +1,5 @@
+import { normalizePaginatedResponse } from '@e-pharmacy/utils/api';
+
 import {
   getNumberValue,
   getStringValue,
@@ -8,7 +10,14 @@ import type { EntityId, UserStatus } from '@e-pharmacy/types';
 
 //===================================================================
 
-export type ClientStatus = Extract<UserStatus, 'active' | 'blocked'>;
+export const CLIENT_STATUSES = [
+  'active',
+  'blocked',
+] as const satisfies readonly UserStatus[];
+
+//===================================================================
+
+export type ClientStatus = (typeof CLIENT_STATUSES)[number];
 
 //===================================================================
 
@@ -45,8 +54,15 @@ export type PharmacyClientsResponse = Readonly<{
 
 //===================================================================
 
+export const CLIENT_STATUS_LABELS: Record<ClientStatus, string> = {
+  active: 'Active',
+  blocked: 'Blocked',
+};
+
+//===================================================================
+
 function isClientStatus(value: unknown): value is ClientStatus {
-  return value === 'active' || value === 'blocked';
+  return CLIENT_STATUSES.includes(value as ClientStatus);
 }
 
 //===================================================================
@@ -217,21 +233,8 @@ export function normalizePharmacyClient(
 export function normalizePharmacyClientsResponse(
   payload: unknown
 ): PharmacyClientsResponse {
-  if (!isRecord(payload)) return { items: [], total: 0 };
-
-  const rawItems = Array.isArray(payload.items)
-    ? payload.items
-    : Array.isArray(payload.clients)
-      ? payload.clients
-      : [];
-
-  const items = rawItems.flatMap((item) => {
-    const client = normalizePharmacyClient(item);
-    return client ? [client] : [];
+  return normalizePaginatedResponse(payload, {
+    itemKeys: ['items', 'clients'],
+    normalizeItem: normalizePharmacyClient,
   });
-
-  return {
-    items,
-    total: getNumberValue(payload.total) ?? items.length,
-  };
 }

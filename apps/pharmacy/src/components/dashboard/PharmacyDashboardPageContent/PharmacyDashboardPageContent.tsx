@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+
 import {
   Archive,
   Ban,
@@ -31,6 +32,7 @@ import {
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { EntityId, OrderStatus, PharmacyStatus } from '@e-pharmacy/types';
+import type { ProductRequestStatus } from '@e-pharmacy/types/product-requests';
 import { formatPrice } from '@e-pharmacy/utils/formatters';
 
 import {
@@ -42,7 +44,6 @@ import {
 } from '@/lib/api/browser';
 
 import type { ClientStatus } from '@/lib/clients/clients';
-import type { ProductRequestStatus } from '@/lib/product-requests/product-requests';
 
 import type {
   OwnProductStatus,
@@ -56,10 +57,8 @@ import {
   getPharmacyClientsPath,
   getPharmacyNewRequestPath,
   getPharmacyOrdersFilterPath,
-  getPharmacyProductRequestsPath,
   getPharmacyProductsFilterPath,
   getPharmacyProductsPath,
-  getPharmacyProfilePath,
   getPharmacyRequestsFilterPath,
 } from '@/lib/layout/routes';
 
@@ -82,7 +81,11 @@ type MonthFilterValue =
   | '11'
   | '12';
 
+//===================================================================
+
 type DashboardTone = 'blue' | 'yellow' | 'green' | 'red' | 'gray' | 'accent';
+
+//===================================================================
 
 type StatusCardConfig = Readonly<{
   title: string;
@@ -92,6 +95,8 @@ type StatusCardConfig = Readonly<{
   icon: LucideIcon;
   href?: string;
 }>;
+
+//===================================================================
 
 type DashboardData = Readonly<{
   pharmacyStatus: PharmacyStatus;
@@ -141,6 +146,8 @@ type DashboardData = Readonly<{
 
 const CURRENT_YEAR = new Date().getFullYear();
 
+//===================================================================
+
 const DEFAULT_DATA: DashboardData = {
   pharmacyStatus: 'new',
   overview: {
@@ -184,11 +191,15 @@ const DEFAULT_DATA: DashboardData = {
   },
 };
 
+//===================================================================
+
 const YEAR_OPTIONS = [
   { value: String(CURRENT_YEAR), label: String(CURRENT_YEAR) },
   { value: String(CURRENT_YEAR - 1), label: String(CURRENT_YEAR - 1) },
   { value: String(CURRENT_YEAR - 2), label: String(CURRENT_YEAR - 2) },
 ];
+
+//===================================================================
 
 const MONTH_OPTIONS: Array<{ value: MonthFilterValue; label: string }> = [
   { value: 'all', label: 'All months' },

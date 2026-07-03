@@ -14,7 +14,12 @@ import {
 } from '@e-pharmacy/types/products';
 
 import { getPharmacyAllProductsPath } from '@/lib/layout/routes';
-import { PRODUCT_STATUS_LABELS } from '@/lib/products/products';
+
+import {
+  OWN_PRODUCT_STATUSES,
+  PRODUCT_STATUS_LABELS,
+} from '@/lib/products/products';
+
 import type { AllProductsFilterState } from '@/lib/products/all-products-filters';
 
 import css from './AllProductsFiltersDrawer.module.css';
@@ -44,8 +49,10 @@ const CATEGORY_OPTIONS: Array<
 
 const STATUS_OPTIONS: Array<SelectOption<AllProductsFilterState['status']>> = [
   { value: 'all', label: 'All' },
-  { value: 'active', label: PRODUCT_STATUS_LABELS.active },
-  { value: 'blocked', label: PRODUCT_STATUS_LABELS.blocked },
+  ...OWN_PRODUCT_STATUSES.map((status) => ({
+    value: status,
+    label: PRODUCT_STATUS_LABELS[status],
+  })),
 ];
 
 const ADDED_TO_MY_PHARMACY_OPTIONS: Array<

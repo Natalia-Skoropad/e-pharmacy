@@ -80,6 +80,17 @@ export function deslugifyArticleSegment(value: string): string {
 
 //===================================================================
 
+export function normalizeSlugEnumValue<TValue extends string>(
+  value: string,
+  allowedValues: readonly TValue[]
+): TValue | null {
+  const normalized = value.replace(/-/g, '_') as TValue;
+
+  return allowedValues.includes(normalized) ? normalized : null;
+}
+
+//===================================================================
+
 export function isDateParam(value?: string): boolean {
   return Boolean(value && DATE_PATTERN.test(value));
 }

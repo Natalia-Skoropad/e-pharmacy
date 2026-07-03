@@ -2,6 +2,7 @@ import {
   deslugifyArticleSegment,
   deslugifyNameSegment,
   isDateParam,
+  normalizeSlugEnumValue,
   slugifySegment,
   slugifyStatus,
 } from '@e-pharmacy/validation';
@@ -14,19 +15,12 @@ import type {
   PaymentMethod,
 } from '@e-pharmacy/types';
 
-import type { OrdersFilterState } from '@/components/orders/OrdersPageContent';
+import { DELIVERY_METHODS, ORDER_STATUSES, PAYMENT_METHODS } from './orders';
 
-//===================================================================
-
-const DELIVERY_METHODS: DeliveryMethod[] = ['pickup', 'postal_delivery'];
-const PAYMENT_METHODS: PaymentMethod[] = ['cash', 'bank_transfer'];
-
-const ORDER_STATUSES: OrderStatus[] = [
-  'new',
-  'in_progress',
-  'successful',
-  'rejected',
-];
+import {
+  DEFAULT_ORDERS_FILTERS,
+  type OrdersFilterState,
+} from './orders-filters';
 
 //===================================================================
 
@@ -45,31 +39,19 @@ type OrdersFilterDraft = {
 //===================================================================
 
 function normalizeDeliveryMethodSegment(value: string): DeliveryMethod | null {
-  const normalized = value.replace(/-/g, '_');
-
-  return DELIVERY_METHODS.includes(normalized as DeliveryMethod)
-    ? (normalized as DeliveryMethod)
-    : null;
+  return normalizeSlugEnumValue(value, DELIVERY_METHODS);
 }
 
 //===================================================================
 
 function normalizePaymentMethodSegment(value: string): PaymentMethod | null {
-  const normalized = value.replace(/-/g, '_');
-
-  return PAYMENT_METHODS.includes(normalized as PaymentMethod)
-    ? (normalized as PaymentMethod)
-    : null;
+  return normalizeSlugEnumValue(value, PAYMENT_METHODS);
 }
 
 //===================================================================
 
 function normalizeStatusSegment(value: string): OrderStatus | null {
-  const normalized = value.replace(/-/g, '_');
-
-  return ORDER_STATUSES.includes(normalized as OrderStatus)
-    ? (normalized as OrderStatus)
-    : null;
+  return normalizeSlugEnumValue(value, ORDER_STATUSES);
 }
 
 //===================================================================
@@ -104,15 +86,8 @@ export function parseOrdersSegments(
   params: OrdersRouteParams = {}
 ): OrdersFilterState {
   const filters: OrdersFilterDraft = {
-    date: {
-      from: '',
-      to: '',
-    },
-    client: '',
-    orderNumber: '',
-    deliveryMethod: 'all',
-    paymentMethod: 'all',
-    status: 'all',
+    ...DEFAULT_ORDERS_FILTERS,
+    date: { ...DEFAULT_ORDERS_FILTERS.date },
   };
 
   for (const segment of params.filters ?? []) {

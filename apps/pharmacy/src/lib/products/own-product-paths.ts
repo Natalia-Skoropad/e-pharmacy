@@ -2,6 +2,7 @@ import {
   deslugifyArticleSegment,
   deslugifyNameSegment,
   isDateParam,
+  normalizeSlugEnumValue,
   slugifySegment,
   slugifyStatus,
 } from '@e-pharmacy/validation';
@@ -10,19 +11,17 @@ import { isProductCategory } from '@e-pharmacy/types/products';
 
 import { PHARMACY_PRODUCTS } from '@/lib/layout/routes';
 
-import type {
-  OwnProductsFilterState,
-  OwnProductsStockFilter,
+import {
+  DEFAULT_OWN_PRODUCTS_FILTERS,
+  type OwnProductsFilterState,
+  type OwnProductsStockFilter,
 } from './own-products-filters';
 
-import type { OwnProductStatus } from './products';
-
-//===================================================================
-
-const OWN_PRODUCT_STATUSES: OwnProductStatus[] = ['active', 'blocked'];
-
-const OWN_PRODUCT_STOCK_FILTERS: Array<Exclude<OwnProductsStockFilter, 'all'>> =
-  ['available', 'empty'];
+import {
+  OWN_PRODUCT_STATUSES,
+  STOCK_AVAILABILITY_FILTERS,
+  type OwnProductStatus,
+} from './products';
 
 //===================================================================
 
@@ -47,11 +46,7 @@ export type OwnProductsRouteParams = Readonly<{
 //===================================================================
 
 function normalizeStatusSegment(value: string): OwnProductStatus | null {
-  const normalized = value.replace(/-/g, '_');
-
-  return OWN_PRODUCT_STATUSES.includes(normalized as OwnProductStatus)
-    ? (normalized as OwnProductStatus)
-    : null;
+  return normalizeSlugEnumValue(value, OWN_PRODUCT_STATUSES);
 }
 
 //===================================================================
@@ -59,11 +54,7 @@ function normalizeStatusSegment(value: string): OwnProductStatus | null {
 function normalizeStockSegment(
   value: string
 ): Exclude<OwnProductsStockFilter, 'all'> | null {
-  return OWN_PRODUCT_STOCK_FILTERS.includes(
-    value as Exclude<OwnProductsStockFilter, 'all'>
-  )
-    ? (value as Exclude<OwnProductsStockFilter, 'all'>)
-    : null;
+  return normalizeSlugEnumValue(value, STOCK_AVAILABILITY_FILTERS);
 }
 
 //===================================================================
@@ -94,15 +85,8 @@ export function parseOwnProductsSegments(
   params: OwnProductsRouteParams = {}
 ): OwnProductsFilterState {
   const filters: OwnProductsFilterDraft = {
-    addedDate: {
-      from: '',
-      to: '',
-    },
-    name: '',
-    article: '',
-    category: 'all',
-    status: 'all',
-    stock: 'all',
+    ...DEFAULT_OWN_PRODUCTS_FILTERS,
+    addedDate: { ...DEFAULT_OWN_PRODUCTS_FILTERS.addedDate },
   };
 
   for (const segment of params.filters ?? []) {

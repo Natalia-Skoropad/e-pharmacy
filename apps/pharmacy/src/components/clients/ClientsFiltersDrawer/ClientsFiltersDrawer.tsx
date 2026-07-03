@@ -10,6 +10,7 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { getPharmacyClientsPath } from '@/lib/layout/routes';
+import { CLIENT_STATUSES, CLIENT_STATUS_LABELS } from '@/lib/clients/clients';
 import type { ClientsFilterState } from '@/lib/clients/client-paths';
 
 import css from './ClientsFiltersDrawer.module.css';
@@ -30,8 +31,10 @@ type ClientsFiltersDrawerProps = Readonly<{
 const CLIENT_STATUS_OPTIONS: Array<SelectOption<ClientsFilterState['status']>> =
   [
     { value: 'all', label: 'All' },
-    { value: 'active', label: 'Active' },
-    { value: 'blocked', label: 'Blocked' },
+    ...CLIENT_STATUSES.map((status) => ({
+      value: status,
+      label: CLIENT_STATUS_LABELS[status],
+    })),
   ];
 
 //===================================================================

@@ -2,11 +2,17 @@ import {
   deslugifyArticleSegment,
   deslugifyNameSegment,
   isDateParam,
+  normalizeSlugEnumValue,
   slugifySegment,
   slugifyStatus,
 } from '@e-pharmacy/validation';
 
 import { isProductCategory } from '@e-pharmacy/types/products';
+
+import {
+  DEFAULT_PRODUCT_REQUESTS_FILTERS,
+  PRODUCT_REQUEST_STATUSES,
+} from '@e-pharmacy/types/product-requests';
 
 import { PHARMACY_PRODUCT_REQUESTS } from '../layout/routes';
 
@@ -14,16 +20,6 @@ import type {
   ProductRequestStatus,
   ProductRequestsFilterState,
 } from './product-requests';
-
-//===================================================================
-
-const PRODUCT_REQUEST_STATUSES: ProductRequestStatus[] = [
-  'draft',
-  'new',
-  'in_progress',
-  'approved',
-  'rejected',
-];
 
 //===================================================================
 
@@ -53,11 +49,7 @@ export type ProductRequestsRouteParams = Readonly<{
 //===================================================================
 
 function normalizeStatusSegment(value: string): ProductRequestStatus | null {
-  const normalized = value.replace(/-/g, '_');
-
-  return PRODUCT_REQUEST_STATUSES.includes(normalized as ProductRequestStatus)
-    ? (normalized as ProductRequestStatus)
-    : null;
+  return normalizeSlugEnumValue(value, PRODUCT_REQUEST_STATUSES);
 }
 
 //===================================================================
@@ -90,15 +82,8 @@ export function parseProductRequestsSegments(
   params: ProductRequestsRouteParams = {}
 ): ProductRequestsFilterState {
   const filters: ProductRequestsFilterDraft = {
-    date: {
-      from: '',
-      to: '',
-    },
-    requestNumber: '',
-    productArticle: '',
-    productName: '',
-    category: 'all',
-    status: 'all',
+    ...DEFAULT_PRODUCT_REQUESTS_FILTERS,
+    date: { ...DEFAULT_PRODUCT_REQUESTS_FILTERS.date },
   };
 
   for (const segment of params.filters ?? []) {

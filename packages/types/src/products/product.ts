@@ -9,14 +9,6 @@ export type ProductStatus = 'new' | 'active' | 'blocked';
 
 //=============================================================================
 
-export type ProductRequestStatus =
-  | 'draft'
-  | 'on_moderation'
-  | 'approved'
-  | 'rejected';
-
-//=============================================================================
-
 export type ProductOffer = {
   id: EntityId;
   pharmacyId: EntityId;

@@ -2,6 +2,7 @@ import {
   deslugifyArticleSegment,
   deslugifyNameSegment,
   isDateParam,
+  normalizeSlugEnumValue,
   slugifySegment,
   slugifyStatus,
 } from '@e-pharmacy/validation';
@@ -10,20 +11,22 @@ import { isProductCategory } from '@e-pharmacy/types/products';
 
 import { PHARMACY_ALL_PRODUCTS } from '@/lib/layout/routes';
 
-import type { OwnProductStatus } from './products';
+import { OWN_PRODUCT_STATUSES, type OwnProductStatus } from './products';
 
-import type {
-  AllProductsAddedToMyPharmacyFilter,
-  AllProductsFilterState,
+import {
+  DEFAULT_ALL_PRODUCTS_FILTERS,
+  type AllProductsAddedToMyPharmacyFilter,
+  type AllProductsFilterState,
 } from './all-products-filters';
 
 //===================================================================
 
-const ALL_PRODUCT_STATUSES: OwnProductStatus[] = ['active', 'blocked'];
-
-const ADDED_TO_MY_PHARMACY_FILTERS: Array<
+const ADDED_TO_MY_PHARMACY_FILTERS = [
+  'yes',
+  'no',
+] as const satisfies ReadonlyArray<
   Exclude<AllProductsAddedToMyPharmacyFilter, 'all'>
-> = ['yes', 'no'];
+>;
 
 //===================================================================
 
@@ -48,11 +51,7 @@ export type AllProductsRouteParams = Readonly<{
 //===================================================================
 
 function normalizeStatusSegment(value: string): OwnProductStatus | null {
-  const normalized = value.replace(/-/g, '_');
-
-  return ALL_PRODUCT_STATUSES.includes(normalized as OwnProductStatus)
-    ? (normalized as OwnProductStatus)
-    : null;
+  return normalizeSlugEnumValue(value, OWN_PRODUCT_STATUSES);
 }
 
 //===================================================================
@@ -60,11 +59,7 @@ function normalizeStatusSegment(value: string): OwnProductStatus | null {
 function normalizeAddedToMyPharmacySegment(
   value: string
 ): Exclude<AllProductsAddedToMyPharmacyFilter, 'all'> | null {
-  return ADDED_TO_MY_PHARMACY_FILTERS.includes(
-    value as Exclude<AllProductsAddedToMyPharmacyFilter, 'all'>
-  )
-    ? (value as Exclude<AllProductsAddedToMyPharmacyFilter, 'all'>)
-    : null;
+  return normalizeSlugEnumValue(value, ADDED_TO_MY_PHARMACY_FILTERS);
 }
 
 //===================================================================
@@ -97,15 +92,8 @@ export function parseAllProductsSegments(
   params: AllProductsRouteParams = {}
 ): AllProductsFilterState {
   const filters: AllProductsFilterDraft = {
-    createdDate: {
-      from: '',
-      to: '',
-    },
-    name: '',
-    article: '',
-    category: 'all',
-    status: 'all',
-    addedToMyPharmacy: 'all',
+    ...DEFAULT_ALL_PRODUCTS_FILTERS,
+    createdDate: { ...DEFAULT_ALL_PRODUCTS_FILTERS.createdDate },
   };
 
   for (const segment of params.filters ?? []) {

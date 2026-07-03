@@ -1,3 +1,5 @@
+import { normalizePaginatedResponse } from '@e-pharmacy/utils/api';
+
 import {
   getNumberValue,
   getStringValue,
@@ -10,6 +12,25 @@ import type {
   OrderStatus,
   PaymentMethod,
 } from '@e-pharmacy/types';
+
+//===================================================================
+
+export const DELIVERY_METHODS = [
+  'pickup',
+  'postal_delivery',
+] as const satisfies readonly DeliveryMethod[];
+
+export const PAYMENT_METHODS = [
+  'cash',
+  'bank_transfer',
+] as const satisfies readonly PaymentMethod[];
+
+export const ORDER_STATUSES = [
+  'new',
+  'in_progress',
+  'successful',
+  'rejected',
+] as const satisfies readonly OrderStatus[];
 
 //===================================================================
 
@@ -55,27 +76,29 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   bank_transfer: 'Bank transfer',
 };
 
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  new: 'New',
+  in_progress: 'In progress',
+  successful: 'Successful',
+  rejected: 'Rejected',
+};
+
 //===================================================================
 
 function isDeliveryMethod(value: unknown): value is DeliveryMethod {
-  return value === 'pickup' || value === 'postal_delivery';
+  return DELIVERY_METHODS.includes(value as DeliveryMethod);
 }
 
 //===================================================================
 
 function isPaymentMethod(value: unknown): value is PaymentMethod {
-  return value === 'cash' || value === 'bank_transfer';
+  return PAYMENT_METHODS.includes(value as PaymentMethod);
 }
 
 //===================================================================
 
 function isOrderStatus(value: unknown): value is OrderStatus {
-  return (
-    value === 'new' ||
-    value === 'in_progress' ||
-    value === 'successful' ||
-    value === 'rejected'
-  );
+  return ORDER_STATUSES.includes(value as OrderStatus);
 }
 
 //===================================================================
@@ -159,16 +182,7 @@ export function normalizePharmacyOrder(
 export function normalizePharmacyOrdersResponse(
   payload: unknown
 ): PharmacyOrdersResponse {
-  if (!isRecord(payload)) return { items: [], total: 0 };
-
-  const rawItems = Array.isArray(payload.items) ? payload.items : [];
-  const items = rawItems.flatMap((item) => {
-    const order = normalizePharmacyOrder(item);
-    return order ? [order] : [];
+  return normalizePaginatedResponse(payload, {
+    normalizeItem: normalizePharmacyOrder,
   });
-
-  return {
-    items,
-    total: getNumberValue(payload.total) ?? items.length,
-  };
 }

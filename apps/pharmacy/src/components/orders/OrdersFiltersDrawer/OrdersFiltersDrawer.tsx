@@ -13,10 +13,14 @@ import { getPharmacyOrdersPath } from '@/lib/layout/routes';
 
 import {
   DELIVERY_METHOD_LABELS,
+  DELIVERY_METHODS,
+  ORDER_STATUS_LABELS,
+  ORDER_STATUSES,
   PAYMENT_METHOD_LABELS,
+  PAYMENT_METHODS,
 } from '@/lib/orders/orders';
 
-import type { OrdersFilterState } from '@/components/orders/OrdersPageContent';
+import type { OrdersFilterState } from '@/lib/orders/orders-filters';
 
 import css from './OrdersFiltersDrawer.module.css';
 
@@ -37,24 +41,28 @@ const DELIVERY_METHOD_OPTIONS: Array<
   SelectOption<OrdersFilterState['deliveryMethod']>
 > = [
   { value: 'all', label: 'All' },
-  { value: 'pickup', label: DELIVERY_METHOD_LABELS.pickup },
-  { value: 'postal_delivery', label: DELIVERY_METHOD_LABELS.postal_delivery },
+  ...DELIVERY_METHODS.map((deliveryMethod) => ({
+    value: deliveryMethod,
+    label: DELIVERY_METHOD_LABELS[deliveryMethod],
+  })),
 ];
 
 const PAYMENT_METHOD_OPTIONS: Array<
   SelectOption<OrdersFilterState['paymentMethod']>
 > = [
   { value: 'all', label: 'All' },
-  { value: 'cash', label: PAYMENT_METHOD_LABELS.cash },
-  { value: 'bank_transfer', label: PAYMENT_METHOD_LABELS.bank_transfer },
+  ...PAYMENT_METHODS.map((paymentMethod) => ({
+    value: paymentMethod,
+    label: PAYMENT_METHOD_LABELS[paymentMethod],
+  })),
 ];
 
 const ORDER_STATUS_OPTIONS: Array<SelectOption<OrdersFilterState['status']>> = [
   { value: 'all', label: 'All' },
-  { value: 'new', label: 'New' },
-  { value: 'in_progress', label: 'In progress' },
-  { value: 'successful', label: 'Successful' },
-  { value: 'rejected', label: 'Rejected' },
+  ...ORDER_STATUSES.map((status) => ({
+    value: status,
+    label: ORDER_STATUS_LABELS[status],
+  })),
 ];
 
 //===================================================================

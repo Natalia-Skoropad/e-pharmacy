@@ -17,7 +17,9 @@ import {
 import { getPharmacyProductsPath } from '@/lib/layout/routes';
 
 import {
+  OWN_PRODUCT_STATUSES,
   PRODUCT_STATUS_LABELS,
+  STOCK_AVAILABILITY_FILTERS,
   STOCK_AVAILABILITY_LABELS,
 } from '@/lib/products/products';
 
@@ -50,14 +52,18 @@ const CATEGORY_OPTIONS: Array<
 
 const STATUS_OPTIONS: Array<SelectOption<OwnProductsFilterState['status']>> = [
   { value: 'all', label: 'All' },
-  { value: 'active', label: PRODUCT_STATUS_LABELS.active },
-  { value: 'blocked', label: PRODUCT_STATUS_LABELS.blocked },
+  ...OWN_PRODUCT_STATUSES.map((status) => ({
+    value: status,
+    label: PRODUCT_STATUS_LABELS[status],
+  })),
 ];
 
 const STOCK_OPTIONS: Array<SelectOption<OwnProductsFilterState['stock']>> = [
   { value: 'all', label: 'All' },
-  { value: 'available', label: STOCK_AVAILABILITY_LABELS.available },
-  { value: 'empty', label: STOCK_AVAILABILITY_LABELS.empty },
+  ...STOCK_AVAILABILITY_FILTERS.map((stock) => ({
+    value: stock,
+    label: STOCK_AVAILABILITY_LABELS[stock],
+  })),
 ];
 
 //===================================================================

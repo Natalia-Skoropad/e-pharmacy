@@ -13,6 +13,7 @@
     "./orders": "./src/orders/index.ts",
     "./pharmacies": "./src/pharmacies/index.ts",
     "./products": "./src/products/index.ts",
+    "./product-requests": "./src/product-requests/index.ts",
     "./reviews": "./src/reviews/index.ts",
     "./shared": "./src/shared/index.ts"
   },

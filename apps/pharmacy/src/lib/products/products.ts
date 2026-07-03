@@ -1,4 +1,5 @@
 import { isProductCategory } from '@e-pharmacy/types/products';
+import { normalizePaginatedResponse } from '@e-pharmacy/utils/api';
 
 import {
   getNumberValue,
@@ -14,8 +15,22 @@ import type {
 
 //===================================================================
 
-export type OwnProductStatus = Extract<ProductStatus, 'active' | 'blocked'>;
-export type StockAvailabilityFilter = 'available' | 'empty';
+export const OWN_PRODUCT_STATUSES = [
+  'active',
+  'blocked',
+] as const satisfies readonly ProductStatus[];
+
+export const STOCK_AVAILABILITY_FILTERS = [
+  'available',
+  'empty',
+] as const;
+
+//===================================================================
+
+export type OwnProductStatus = (typeof OWN_PRODUCT_STATUSES)[number];
+
+export type StockAvailabilityFilter =
+  (typeof STOCK_AVAILABILITY_FILTERS)[number];
 
 //===================================================================
 
@@ -68,7 +83,7 @@ export const STOCK_AVAILABILITY_LABELS: Record<
 //===================================================================
 
 function isOwnProductStatus(value: unknown): value is OwnProductStatus {
-  return value === 'active' || value === 'blocked';
+  return OWN_PRODUCT_STATUSES.includes(value as OwnProductStatus);
 }
 
 //===================================================================
@@ -192,18 +207,9 @@ export function normalizePharmacyProductsResponse(
   payload: unknown,
   pharmacyId?: EntityId
 ): PharmacyProductsResponse {
-  if (!isRecord(payload)) return { items: [], total: 0 };
-
-  const rawItems = Array.isArray(payload.items) ? payload.items : [];
-  const items = rawItems.flatMap((item) => {
-    const product = normalizePharmacyProduct(item, pharmacyId);
-    return product ? [product] : [];
+  return normalizePaginatedResponse(payload, {
+    normalizeItem: (item) => normalizePharmacyProduct(item, pharmacyId),
   });
-
-  return {
-    items,
-    total: getNumberValue(payload.total) ?? items.length,
-  };
 }
 
 //===================================================================

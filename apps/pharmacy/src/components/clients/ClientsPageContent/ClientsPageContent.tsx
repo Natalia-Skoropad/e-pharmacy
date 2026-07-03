@@ -21,8 +21,12 @@ import {
 } from '@e-pharmacy/hooks';
 
 import { getPharmacyClients } from '@/lib/api/browser';
-import { buildClientsPath } from '@/lib/clients/client-paths';
-import type { ClientsFilterState } from '@/lib/clients/client-paths';
+
+import {
+  DEFAULT_CLIENTS_FILTERS,
+  buildClientsPath,
+  type ClientsFilterState,
+} from '@/lib/clients/client-paths';
 
 import type {
   PharmacyClientRow,
@@ -33,21 +37,6 @@ import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer'
 import { ClientsTable } from '@/components/clients/ClientsTable';
 
 import css from './ClientsPageContent.module.css';
-
-//===================================================================
-
-const DEFAULT_FILTERS: ClientsFilterState = {
-  firstOrderDate: {
-    from: '',
-    to: '',
-  },
-  name: '',
-  clientId: '',
-  email: '',
-  phone: '',
-  address: '',
-  status: 'all',
-};
 
 //===================================================================
 
@@ -92,7 +81,7 @@ type ClientsPageContentProps = Readonly<{
 //===================================================================
 
 function ClientsPageContent({
-  initialFilters = DEFAULT_FILTERS,
+  initialFilters = DEFAULT_CLIENTS_FILTERS,
 }: ClientsPageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -164,7 +153,7 @@ function ClientsPageContent({
   const hasActiveFilters = activeFiltersCount > 0;
 
   const resetFilters = () => {
-    setFilters(DEFAULT_FILTERS);
+    setFilters(DEFAULT_CLIENTS_FILTERS);
   };
 
   return (

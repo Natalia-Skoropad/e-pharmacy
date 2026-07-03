@@ -3,6 +3,7 @@ import {
   URL_CLIENT_TEXT_PARAM_DISALLOWED_CHARS_PATTERN,
   deslugifyNameSegment,
   isDateParam,
+  normalizeSlugEnumValue,
   sanitizeTextParam,
   slugifySegment,
   slugifyStatus,
@@ -10,11 +11,7 @@ import {
 
 import { PHARMACY_CLIENTS } from '@/lib/layout/routes';
 
-import type { ClientStatus } from './clients';
-
-//===================================================================
-
-const CLIENT_STATUSES: ClientStatus[] = ['active', 'blocked'];
+import { CLIENT_STATUSES, type ClientStatus } from './clients';
 
 //===================================================================
 
@@ -47,6 +44,21 @@ export type ClientsFilterState = Readonly<{
 
 //===================================================================
 
+export const DEFAULT_CLIENTS_FILTERS: ClientsFilterState = {
+  firstOrderDate: {
+    from: '',
+    to: '',
+  },
+  name: '',
+  clientId: '',
+  email: '',
+  phone: '',
+  address: '',
+  status: 'all',
+};
+
+//===================================================================
+
 type ClientsFilterDraft = {
   firstOrderDate: {
     from: string;
@@ -63,11 +75,7 @@ type ClientsFilterDraft = {
 //===================================================================
 
 function normalizeStatusSegment(value: string): ClientStatus | null {
-  const normalized = value.replace(/-/g, '_');
-
-  return CLIENT_STATUSES.includes(normalized as ClientStatus)
-    ? (normalized as ClientStatus)
-    : null;
+  return normalizeSlugEnumValue(value, CLIENT_STATUSES);
 }
 
 //===================================================================
@@ -103,16 +111,8 @@ export function parseClientsSegments(
   params: ClientsRouteParams = {}
 ): ClientsFilterState {
   const filters: ClientsFilterDraft = {
-    firstOrderDate: {
-      from: '',
-      to: '',
-    },
-    name: '',
-    clientId: '',
-    email: '',
-    phone: '',
-    address: '',
-    status: 'all',
+    ...DEFAULT_CLIENTS_FILTERS,
+    firstOrderDate: { ...DEFAULT_CLIENTS_FILTERS.firstOrderDate },
   };
 
   for (const segment of params.filters ?? []) {

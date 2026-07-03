@@ -5,5 +5,6 @@ export type * from './navigation';
 export type * from './orders';
 export type * from './pharmacies';
 export type * from './products';
+export * from './product-requests';
 export type * from './reviews';
 export type * from './shared';
