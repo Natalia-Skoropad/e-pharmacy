@@ -8,14 +8,11 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import type { EntityId, Product } from '@e-pharmacy/types';
 import { formatShortDate } from '@e-pharmacy/utils/formatters';
 
-import {
-  PRODUCT_CATEGORY_LABELS,
-  PRODUCT_STATUS_LABELS,
-} from '@/lib/products/products';
-
+import { PRODUCT_STATUS_LABELS } from '@/lib/products/products';
 import { getPharmacyAllProductPath } from '@/lib/layout/routes';
 
 import css from './AllProductsTable.module.css';

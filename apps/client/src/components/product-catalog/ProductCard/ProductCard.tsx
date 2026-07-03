@@ -25,7 +25,7 @@ import {
 } from '@/hooks';
 
 import { addFavoriteProduct, removeFavoriteProduct } from '@/lib/api/browser';
-import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
+import { formatProductCategoryLabel } from '@e-pharmacy/types/products';
 import { buildProductPath } from '@/lib/routes';
 
 import { FavoriteToggleButton } from '@/components/common';

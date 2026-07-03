@@ -1,3 +1,11 @@
+import { isProductCategory } from '@e-pharmacy/types/products';
+
+import {
+  getNumberValue,
+  getStringValue,
+  isRecord,
+} from '@e-pharmacy/utils/guards';
+
 import type { EntityId, ProductCategory } from '@e-pharmacy/types';
 
 //===================================================================
@@ -27,20 +35,6 @@ export type ProductRequestsFilterState = Readonly<{
   category: ProductRequestCategoryFilter;
   status: ProductRequestStatusFilter;
 }>;
-
-//===================================================================
-
-export const DEFAULT_PRODUCT_REQUESTS_FILTERS: ProductRequestsFilterState = {
-  date: {
-    from: '',
-    to: '',
-  },
-  requestNumber: '',
-  productArticle: '',
-  productName: '',
-  category: 'all',
-  status: 'all',
-};
 
 //===================================================================
 
@@ -74,18 +68,6 @@ export type PharmacyProductRequestsResponse = Readonly<{
 
 //===================================================================
 
-export const PRODUCT_REQUEST_CATEGORY_LABELS: Record<ProductCategory, string> =
-  {
-    medicine: 'Medicine',
-    vitamins: 'Vitamins',
-    beauty: 'Beauty',
-    hygiene: 'Hygiene',
-    medical_devices: 'Medical devices',
-    other: 'Other',
-  };
-
-//===================================================================
-
 export const PRODUCT_REQUEST_STATUS_LABELS: Record<
   ProductRequestStatus,
   string
@@ -99,36 +81,17 @@ export const PRODUCT_REQUEST_STATUS_LABELS: Record<
 
 //===================================================================
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-//===================================================================
-
-function getStringValue(value: unknown): string | undefined {
-  return typeof value === 'string' && value.trim() ? value : undefined;
-}
-
-//===================================================================
-
-function getNumberValue(value: unknown): number | undefined {
-  return typeof value === 'number' && Number.isFinite(value)
-    ? value
-    : undefined;
-}
-
-//===================================================================
-
-function isProductCategory(value: unknown): value is ProductCategory {
-  return (
-    value === 'medicine' ||
-    value === 'vitamins' ||
-    value === 'beauty' ||
-    value === 'hygiene' ||
-    value === 'medical_devices' ||
-    value === 'other'
-  );
-}
+export const DEFAULT_PRODUCT_REQUESTS_FILTERS: ProductRequestsFilterState = {
+  date: {
+    from: '',
+    to: '',
+  },
+  requestNumber: '',
+  productArticle: '',
+  productName: '',
+  category: 'all',
+  status: 'all',
+};
 
 //===================================================================
 

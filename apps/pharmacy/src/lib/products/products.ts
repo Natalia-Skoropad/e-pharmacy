@@ -1,3 +1,10 @@
+import { isProductCategory } from '@e-pharmacy/types/products';
+import {
+  getNumberValue,
+  getStringValue,
+  isRecord,
+} from '@e-pharmacy/utils/guards';
+
 import type {
   EntityId,
   ProductCategory,
@@ -8,6 +15,8 @@ import type {
 
 export type OwnProductStatus = Extract<ProductStatus, 'active' | 'blocked'>;
 export type StockAvailabilityFilter = 'available' | 'empty';
+
+//===================================================================
 
 export type PharmacyProductRow = Readonly<{
   id: EntityId;
@@ -42,15 +51,6 @@ export type PharmacyProductsResponse = Readonly<{
 
 //===================================================================
 
-export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
-  medicine: 'Medicine',
-  vitamins: 'Vitamins',
-  beauty: 'Beauty',
-  hygiene: 'Hygiene',
-  medical_devices: 'Medical devices',
-  other: 'Other',
-};
-
 export const PRODUCT_STATUS_LABELS: Record<OwnProductStatus, string> = {
   active: 'Active',
   blocked: 'Blocked',
@@ -66,31 +66,6 @@ export const STOCK_AVAILABILITY_LABELS: Record<
 
 //===================================================================
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function getStringValue(value: unknown): string | undefined {
-  return typeof value === 'string' && value.trim() ? value : undefined;
-}
-
-function getNumberValue(value: unknown): number | undefined {
-  return typeof value === 'number' && Number.isFinite(value)
-    ? value
-    : undefined;
-}
-
-function isProductCategory(value: unknown): value is ProductCategory {
-  return (
-    value === 'medicine' ||
-    value === 'vitamins' ||
-    value === 'beauty' ||
-    value === 'hygiene' ||
-    value === 'medical_devices' ||
-    value === 'other'
-  );
-}
-
 function isOwnProductStatus(value: unknown): value is OwnProductStatus {
   return value === 'active' || value === 'blocked';
 }
@@ -101,9 +76,13 @@ function getProductId(product: Record<string, unknown>): string | undefined {
   return getStringValue(product.id) ?? getStringValue(product._id);
 }
 
+//===================================================================
+
 function getOfferId(offer: Record<string, unknown>): string | undefined {
   return getStringValue(offer.id) ?? getStringValue(offer._id);
 }
+
+//===================================================================
 
 function getOfferPharmacyId(
   offer: Record<string, unknown>

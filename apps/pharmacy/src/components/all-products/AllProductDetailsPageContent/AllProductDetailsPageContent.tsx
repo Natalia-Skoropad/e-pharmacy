@@ -22,6 +22,7 @@ import {
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { isApiError } from '@e-pharmacy/api-client/core';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 
 import type {
   EntityId,
@@ -107,17 +108,6 @@ type RelatedOrderRow = Readonly<{
   amount: string;
   status: string;
 }>;
-
-//===================================================================
-
-const CATEGORY_LABELS = {
-  medicine: 'Medicine',
-  vitamins: 'Vitamins',
-  beauty: 'Beauty',
-  hygiene: 'Hygiene',
-  medical_devices: 'Medical devices',
-  other: 'Other',
-} as const;
 
 //===================================================================
 
@@ -261,7 +251,7 @@ function getProductSummaryItems(
 ): SummaryItem[] {
   const items: SummaryItem[] = [
     { label: 'Article', value: product.article },
-    { label: 'Category', value: CATEGORY_LABELS[product.category] },
+    { label: 'Category', value: PRODUCT_CATEGORY_LABELS[product.category] },
     {
       label: 'Status',
       value: (
@@ -317,7 +307,7 @@ function getProductCharacteristics(product: Product): CharacteristicItem[] {
     product.packageQuantity
       ? { label: 'Package', value: product.packageQuantity }
       : null,
-    { label: 'Category', value: CATEGORY_LABELS[product.category] },
+    { label: 'Category', value: PRODUCT_CATEGORY_LABELS[product.category] },
   ].filter((item): item is CharacteristicItem => Boolean(item));
 }
 

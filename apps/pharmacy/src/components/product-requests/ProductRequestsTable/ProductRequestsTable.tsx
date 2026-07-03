@@ -7,10 +7,10 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import { formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import {
-  PRODUCT_REQUEST_CATEGORY_LABELS,
   PRODUCT_REQUEST_STATUS_LABELS,
   type PharmacyProductRequestRow,
 } from '@/lib/product-requests/product-requests';
@@ -114,7 +114,7 @@ function ProductRequestsTable({
       {
         key: 'category',
         title: <TableHeader parts={['Product', 'category']} />,
-        render: (request) => PRODUCT_REQUEST_CATEGORY_LABELS[request.category],
+        render: (request) => PRODUCT_CATEGORY_LABELS[request.category],
       },
       {
         key: 'status',

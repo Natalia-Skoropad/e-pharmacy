@@ -47,7 +47,7 @@ import {
 
 import { ROUTES, buildPharmacyPath } from '@/lib/routes';
 import { CATALOG_SEARCH_MAX_LENGTH } from '@/lib/catalog/catalog-config';
-import { formatProductCategoryLabel } from '@/lib/catalog/product-category-labels';
+import { formatProductCategoryLabel } from '@e-pharmacy/types/products';
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 

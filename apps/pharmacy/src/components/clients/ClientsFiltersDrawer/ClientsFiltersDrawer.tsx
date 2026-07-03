@@ -10,8 +10,7 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { getPharmacyClientsPath } from '@/lib/layout/routes';
-
-import type { ClientsFilterState } from '@/components/clients/ClientsPageContent';
+import type { ClientsFilterState } from '@/lib/clients/client-paths';
 
 import css from './ClientsFiltersDrawer.module.css';
 

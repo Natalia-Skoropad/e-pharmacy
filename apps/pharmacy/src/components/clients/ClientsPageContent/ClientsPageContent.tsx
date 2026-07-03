@@ -11,6 +11,7 @@ import {
   StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
+
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import {
@@ -21,9 +22,9 @@ import {
 
 import { getPharmacyClients } from '@/lib/api/browser';
 import { buildClientsPath } from '@/lib/clients/client-paths';
+import type { ClientsFilterState } from '@/lib/clients/client-paths';
 
 import type {
-  ClientStatus,
   PharmacyClientRow,
   PharmacyClientsQueryParams,
 } from '@/lib/clients/clients';
@@ -32,25 +33,6 @@ import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer'
 import { ClientsTable } from '@/components/clients/ClientsTable';
 
 import css from './ClientsPageContent.module.css';
-
-//===================================================================
-
-type ClientStatusFilter = 'all' | ClientStatus;
-
-//===================================================================
-
-export type ClientsFilterState = Readonly<{
-  firstOrderDate: {
-    from: string;
-    to: string;
-  };
-  name: string;
-  clientId: string;
-  email: string;
-  phone: string;
-  address: string;
-  status: ClientStatusFilter;
-}>;
 
 //===================================================================
 

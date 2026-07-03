@@ -1,19 +1,47 @@
-import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation';
+import {
+  CLIENT_SLUG_SEGMENT_SEPARATOR_PATTERN,
+  URL_CLIENT_TEXT_PARAM_DISALLOWED_CHARS_PATTERN,
+  deslugifyNameSegment,
+  isDateParam,
+  sanitizeTextParam,
+  slugifySegment,
+  slugifyStatus,
+} from '@e-pharmacy/validation';
 
 import { PHARMACY_CLIENTS } from '@/lib/layout/routes';
 
-import type { ClientsFilterState } from '@/components/clients/ClientsPageContent';
 import type { ClientStatus } from './clients';
 
 //===================================================================
 
-const URL_TEXT_PARAM_DISALLOWED_CHARS_PATTERN = /[^A-Za-z0-9 .@_+-]/g;
-const SLUG_SEGMENT_SEPARATOR_PATTERN = /[^a-z0-9.@_+]+/g;
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const CLIENT_STATUSES: ClientStatus[] = ['active', 'blocked'];
+
+const CLIENT_TEXT_PARAM_OPTIONS = {
+  disallowedCharsPattern: URL_CLIENT_TEXT_PARAM_DISALLOWED_CHARS_PATTERN,
+} as const;
+
+const CLIENT_SLUG_OPTIONS = {
+  separatorPattern: CLIENT_SLUG_SEGMENT_SEPARATOR_PATTERN,
+} as const;
 
 //===================================================================
 
-const CLIENT_STATUSES: ClientStatus[] = ['active', 'blocked'];
+export type ClientStatusFilter = 'all' | ClientStatus;
+
+//===================================================================
+
+export type ClientsFilterState = Readonly<{
+  firstOrderDate: {
+    from: string;
+    to: string;
+  };
+  name: string;
+  clientId: string;
+  email: string;
+  phone: string;
+  address: string;
+  status: ClientStatusFilter;
+}>;
 
 //===================================================================
 
@@ -29,47 +57,6 @@ type ClientsFilterDraft = {
   address: string;
   status: ClientsFilterState['status'];
 };
-
-//===================================================================
-
-function sanitizeTextParam(value?: string): string {
-  return (
-    value
-      ?.trim()
-      .replace(URL_TEXT_PARAM_DISALLOWED_CHARS_PATTERN, '')
-      .slice(0, USER_SEARCH_MAX_LENGTH) ?? ''
-  );
-}
-
-//===================================================================
-
-function slugifySegment(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(SLUG_SEGMENT_SEPARATOR_PATTERN, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, USER_SEARCH_MAX_LENGTH);
-}
-
-//===================================================================
-
-function deslugifyTextSegment(value: string): string {
-  return sanitizeTextParam(value.replace(/-/g, ' '));
-}
-
-//===================================================================
-
-function deslugifyDirectSegment(value: string): string {
-  return sanitizeTextParam(value);
-}
-
-//===================================================================
-
-function isValidClientDate(value?: string): boolean {
-  return Boolean(value && DATE_PATTERN.test(value));
-}
 
 //===================================================================
 
@@ -104,9 +91,7 @@ export function isClientsFilterSegment(segment: string): boolean {
 
 //===================================================================
 
-export function isClientsFilterRoute(
-  segments: string[] | undefined
-): boolean {
+export function isClientsFilterRoute(segments: string[] | undefined): boolean {
   return !segments?.length || segments.every(isClientsFilterSegment);
 }
 
@@ -130,27 +115,42 @@ export function parseClientsSegments(
 
   for (const segment of params.filters ?? []) {
     if (segment.startsWith('search-name-')) {
-      filters.name = deslugifyTextSegment(segment.replace('search-name-', ''));
+      filters.name = deslugifyNameSegment(
+        segment.replace('search-name-', ''),
+        CLIENT_TEXT_PARAM_OPTIONS
+      );
       continue;
     }
 
     if (segment.startsWith('client-id-')) {
-      filters.clientId = deslugifyDirectSegment(segment.replace('client-id-', ''));
+      filters.clientId = sanitizeTextParam(
+        segment.replace('client-id-', ''),
+        CLIENT_TEXT_PARAM_OPTIONS
+      );
       continue;
     }
 
     if (segment.startsWith('email-')) {
-      filters.email = deslugifyDirectSegment(segment.replace('email-', ''));
+      filters.email = sanitizeTextParam(
+        segment.replace('email-', ''),
+        CLIENT_TEXT_PARAM_OPTIONS
+      );
       continue;
     }
 
     if (segment.startsWith('phone-')) {
-      filters.phone = deslugifyDirectSegment(segment.replace('phone-', ''));
+      filters.phone = sanitizeTextParam(
+        segment.replace('phone-', ''),
+        CLIENT_TEXT_PARAM_OPTIONS
+      );
       continue;
     }
 
     if (segment.startsWith('address-')) {
-      filters.address = deslugifyTextSegment(segment.replace('address-', ''));
+      filters.address = deslugifyNameSegment(
+        segment.replace('address-', ''),
+        CLIENT_TEXT_PARAM_OPTIONS
+      );
       continue;
     }
 
@@ -167,7 +167,7 @@ export function parseClientsSegments(
     if (segment.startsWith('date-from-')) {
       const dateFrom = segment.replace('date-from-', '');
 
-      if (isValidClientDate(dateFrom)) {
+      if (isDateParam(dateFrom)) {
         filters.firstOrderDate = {
           ...filters.firstOrderDate,
           from: dateFrom,
@@ -180,7 +180,7 @@ export function parseClientsSegments(
     if (segment.startsWith('date-to-')) {
       const dateTo = segment.replace('date-to-', '');
 
-      if (isValidClientDate(dateTo)) {
+      if (isDateParam(dateTo)) {
         filters.firstOrderDate = {
           ...filters.firstOrderDate,
           to: dateTo,
@@ -203,27 +203,27 @@ export function buildClientsPath(filters: ClientsFilterState): string {
   const address = filters.address.trim();
 
   if (name) {
-    segments.push(`search-name-${slugifySegment(name)}`);
+    segments.push(`search-name-${slugifySegment(name, CLIENT_SLUG_OPTIONS)}`);
   }
 
   if (clientId) {
-    segments.push(`client-id-${slugifySegment(clientId)}`);
+    segments.push(`client-id-${slugifySegment(clientId, CLIENT_SLUG_OPTIONS)}`);
   }
 
   if (email) {
-    segments.push(`email-${slugifySegment(email)}`);
+    segments.push(`email-${slugifySegment(email, CLIENT_SLUG_OPTIONS)}`);
   }
 
   if (phone) {
-    segments.push(`phone-${slugifySegment(phone)}`);
+    segments.push(`phone-${slugifySegment(phone, CLIENT_SLUG_OPTIONS)}`);
   }
 
   if (address) {
-    segments.push(`address-${slugifySegment(address)}`);
+    segments.push(`address-${slugifySegment(address, CLIENT_SLUG_OPTIONS)}`);
   }
 
   if (filters.status !== 'all') {
-    segments.push(`status-${filters.status.replace(/_/g, '-')}`);
+    segments.push(`status-${slugifyStatus(filters.status)}`);
   }
 
   if (filters.firstOrderDate.from) {

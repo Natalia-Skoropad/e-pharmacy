@@ -1,8 +1,16 @@
+import {
+  getNumberValue,
+  getStringValue,
+  isRecord,
+} from '@e-pharmacy/utils/guards';
+
 import type { EntityId, UserStatus } from '@e-pharmacy/types';
 
 //===================================================================
 
 export type ClientStatus = Extract<UserStatus, 'active' | 'blocked'>;
+
+//===================================================================
 
 export type PharmacyClientRow = Readonly<{
   id: EntityId;
@@ -36,20 +44,6 @@ export type PharmacyClientsResponse = Readonly<{
 }>;
 
 //===================================================================
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function getStringValue(value: unknown): string | undefined {
-  return typeof value === 'string' && value.trim() ? value : undefined;
-}
-
-function getNumberValue(value: unknown): number | undefined {
-  return typeof value === 'number' && Number.isFinite(value)
-    ? value
-    : undefined;
-}
 
 function isClientStatus(value: unknown): value is ClientStatus {
   return value === 'active' || value === 'blocked';

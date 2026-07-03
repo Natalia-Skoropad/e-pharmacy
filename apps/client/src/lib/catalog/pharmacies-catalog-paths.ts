@@ -1,20 +1,12 @@
-import {
-  parsePositivePageParam,
-  sanitizeCatalogTextParam,
-  slugifyCatalogSegment,
-} from './catalog-param-utils';
+import { deslugifyNameSegment, slugifySegment } from '@e-pharmacy/validation';
+
+import { parsePositivePageParam } from './catalog-param-utils';
 
 import {
   isPharmacySortFilter,
   type PharmacyFilters,
   type PharmacyRouteParams,
 } from './pharmacies-catalog-filters';
-
-//===================================================================
-
-function deslugifyTextSegment(value: string): string {
-  return sanitizeCatalogTextParam(value.replace(/-/g, ' '));
-}
 
 //===================================================================
 
@@ -31,17 +23,17 @@ export function parsePharmacySegments(
 
   for (const segment of params.segments ?? []) {
     if (segment.startsWith('search-name-')) {
-      filters.name = deslugifyTextSegment(segment.replace('search-name-', ''));
+      filters.name = deslugifyNameSegment(segment.replace('search-name-', ''));
       continue;
     }
 
     if (segment.startsWith('address-')) {
-      filters.address = deslugifyTextSegment(segment.replace('address-', ''));
+      filters.address = deslugifyNameSegment(segment.replace('address-', ''));
       continue;
     }
 
     if (segment.startsWith('city-')) {
-      filters.city = deslugifyTextSegment(segment.replace('city-', ''));
+      filters.city = deslugifyNameSegment(segment.replace('city-', ''));
       continue;
     }
 
@@ -66,11 +58,11 @@ export function buildPharmacyPath(filters: Partial<PharmacyFilters>): string {
   const segments: string[] = [];
 
   if (filters.name)
-    segments.push(`search-name-${slugifyCatalogSegment(filters.name)}`);
+    segments.push(`search-name-${slugifySegment(filters.name)}`);
   if (filters.address)
-    segments.push(`address-${slugifyCatalogSegment(filters.address)}`);
+    segments.push(`address-${slugifySegment(filters.address)}`);
   if (filters.city)
-    segments.push(`city-${slugifyCatalogSegment(filters.city)}`);
+    segments.push(`city-${slugifySegment(filters.city)}`);
   if (filters.sort && filters.sort !== 'newest') {
     segments.push(`sort-${filters.sort}`);
   }

@@ -1,6 +1,7 @@
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
-import { PRODUCT_CATEGORY_LABELS } from './product-category-labels';
-import { isValidObjectId } from '@/lib/routes';
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_CATEGORY_LABELS,
+} from '@e-pharmacy/types/products';
 
 import type {
   ProductCategory,
@@ -10,10 +11,13 @@ import type {
 } from '@e-pharmacy/types';
 
 import {
-  parsePositivePageParam,
-  sanitizeCatalogArticleParam,
-  sanitizeCatalogTextParam,
-} from './catalog-param-utils';
+  sanitizeArticleParam,
+  sanitizeTextParam,
+} from '@e-pharmacy/validation';
+
+import { isValidObjectId } from '@/lib/routes';
+
+import { parsePositivePageParam } from './catalog-param-utils';
 
 //===================================================================
 
@@ -29,11 +33,13 @@ export const FALLBACK_PRODUCT_FILTER_OPTIONS: ProductFilterOptionsResponse = {
       label: PRODUCT_CATEGORY_LABELS[value],
     })),
   ],
+
   availability: [
     { value: 'all', label: 'All products' },
     { value: 'in-stock', label: 'Available in pharmacies' },
     { value: 'out-of-stock', label: 'Not available in pharmacies' },
   ],
+  
   sort: [
     { value: 'newest', label: 'Newest first' },
     { value: 'rating-desc', label: 'Rating: highest first' },
@@ -151,8 +157,8 @@ export function parseProductCatalogSearchParams(
   params: ProductCatalogSearchParams = {}
 ): ProductCatalogFilters {
   return {
-    name: sanitizeCatalogTextParam(params.name),
-    article: sanitizeCatalogArticleParam(params.article),
+    name: sanitizeTextParam(params.name),
+    article: sanitizeArticleParam(params.article),
     category: isProductCategoryFilter(params.category)
       ? params.category
       : 'all',

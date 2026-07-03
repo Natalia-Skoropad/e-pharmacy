@@ -1,18 +1,17 @@
-import { sanitizeSearchText } from '@e-pharmacy/validation';
-
 import {
-  sanitizeCatalogArticleParam,
-  sanitizeCatalogTextParam,
-} from './catalog-param-utils';
+  sanitizeArticleParam,
+  sanitizeSearchText,
+  sanitizeTextParam,
+} from '@e-pharmacy/validation';
 
 //===================================================================
 
 export function sanitizeCatalogTextSearch(value: string): string {
-  return sanitizeCatalogTextParam(sanitizeSearchText(value));
+  return sanitizeTextParam(sanitizeSearchText(value));
 }
 
 export function sanitizeCatalogArticleSearch(value: string): string {
-  return sanitizeCatalogArticleParam(sanitizeSearchText(value));
+  return sanitizeArticleParam(sanitizeSearchText(value));
 }
 
 //===================================================================

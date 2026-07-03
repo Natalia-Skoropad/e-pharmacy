@@ -9,12 +9,14 @@ import {
   type SelectOption,
 } from '@e-pharmacy/ui/common';
 
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_CATEGORY_LABELS,
+} from '@e-pharmacy/types/products';
 
 import { getPharmacyProductsPath } from '@/lib/layout/routes';
 
 import {
-  PRODUCT_CATEGORY_LABELS,
   PRODUCT_STATUS_LABELS,
   STOCK_AVAILABILITY_LABELS,
 } from '@/lib/products/products';

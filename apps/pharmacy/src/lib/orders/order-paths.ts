@@ -1,4 +1,10 @@
-import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation';
+import {
+  deslugifyArticleSegment,
+  deslugifyNameSegment,
+  isDateParam,
+  slugifySegment,
+  slugifyStatus,
+} from '@e-pharmacy/validation';
 
 import { PHARMACY_ORDERS } from '@/lib/layout/routes';
 
@@ -12,15 +18,9 @@ import type { OrdersFilterState } from '@/components/orders/OrdersPageContent';
 
 //===================================================================
 
-const URL_TEXT_PARAM_DISALLOWED_CHARS_PATTERN = /[^A-Za-z0-9 .-]/g;
-const URL_ORDER_NUMBER_PARAM_DISALLOWED_CHARS_PATTERN = /[^A-Za-z0-9.-]/g;
-const SLUG_SEGMENT_SEPARATOR_PATTERN = /[^a-z0-9]+/g;
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
-//===================================================================
-
 const DELIVERY_METHODS: DeliveryMethod[] = ['pickup', 'postal_delivery'];
 const PAYMENT_METHODS: PaymentMethod[] = ['cash', 'bank_transfer'];
+
 const ORDER_STATUSES: OrderStatus[] = [
   'new',
   'in_progress',
@@ -41,58 +41,6 @@ type OrdersFilterDraft = {
   paymentMethod: OrdersFilterState['paymentMethod'];
   status: OrdersFilterState['status'];
 };
-
-//===================================================================
-
-function sanitizeTextParam(value?: string): string {
-  return (
-    value
-      ?.trim()
-      .replace(URL_TEXT_PARAM_DISALLOWED_CHARS_PATTERN, '')
-      .slice(0, USER_SEARCH_MAX_LENGTH) ?? ''
-  );
-}
-
-//===================================================================
-
-function sanitizeOrderNumberParam(value?: string): string {
-  return (
-    value
-      ?.trim()
-      .replace(URL_ORDER_NUMBER_PARAM_DISALLOWED_CHARS_PATTERN, '')
-      .slice(0, USER_SEARCH_MAX_LENGTH) ?? ''
-  );
-}
-
-//===================================================================
-
-function slugifySegment(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(SLUG_SEGMENT_SEPARATOR_PATTERN, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, USER_SEARCH_MAX_LENGTH);
-}
-
-//===================================================================
-
-function deslugifyTextSegment(value: string): string {
-  return sanitizeTextParam(value.replace(/-/g, ' '));
-}
-
-//===================================================================
-
-function deslugifyOrderNumberSegment(value: string): string {
-  return sanitizeOrderNumberParam(value);
-}
-
-//===================================================================
-
-function isValidOrderDate(value?: string): boolean {
-  return Boolean(value && DATE_PATTERN.test(value));
-}
 
 //===================================================================
 
@@ -146,9 +94,7 @@ export function isOrdersFilterSegment(segment: string): boolean {
 
 //===================================================================
 
-export function isOrdersFilterRoute(
-  segments: string[] | undefined
-): boolean {
+export function isOrdersFilterRoute(segments: string[] | undefined): boolean {
   return !segments?.length || segments.every(isOrdersFilterSegment);
 }
 
@@ -171,12 +117,12 @@ export function parseOrdersSegments(
 
   for (const segment of params.filters ?? []) {
     if (segment.startsWith('client-')) {
-      filters.client = deslugifyTextSegment(segment.replace('client-', ''));
+      filters.client = deslugifyNameSegment(segment.replace('client-', ''));
       continue;
     }
 
     if (segment.startsWith('order-number-')) {
-      filters.orderNumber = deslugifyOrderNumberSegment(
+      filters.orderNumber = deslugifyArticleSegment(
         segment.replace('order-number-', '')
       );
       continue;
@@ -219,7 +165,7 @@ export function parseOrdersSegments(
     if (segment.startsWith('date-from-')) {
       const dateFrom = segment.replace('date-from-', '');
 
-      if (isValidOrderDate(dateFrom)) {
+      if (isDateParam(dateFrom)) {
         filters.date = {
           ...filters.date,
           from: dateFrom,
@@ -232,7 +178,7 @@ export function parseOrdersSegments(
     if (segment.startsWith('date-to-')) {
       const dateTo = segment.replace('date-to-', '');
 
-      if (isValidOrderDate(dateTo)) {
+      if (isDateParam(dateTo)) {
         filters.date = {
           ...filters.date,
           to: dateTo,
@@ -260,15 +206,15 @@ export function buildOrdersPath(filters: OrdersFilterState): string {
   }
 
   if (filters.deliveryMethod !== 'all') {
-    segments.push(`delivery-${filters.deliveryMethod.replace(/_/g, '-')}`);
+    segments.push(`delivery-${slugifyStatus(filters.deliveryMethod)}`);
   }
 
   if (filters.paymentMethod !== 'all') {
-    segments.push(`payment-${filters.paymentMethod.replace(/_/g, '-')}`);
+    segments.push(`payment-${slugifyStatus(filters.paymentMethod)}`);
   }
 
   if (filters.status !== 'all') {
-    segments.push(`status-${filters.status.replace(/_/g, '-')}`);
+    segments.push(`status-${slugifyStatus(filters.status)}`);
   }
 
   if (filters.date.from) {

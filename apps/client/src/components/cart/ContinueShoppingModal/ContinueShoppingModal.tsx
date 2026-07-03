@@ -13,6 +13,7 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import { formatPrice, formatStockLabel } from '@e-pharmacy/utils/formatters';
 import type { Cart, Product, ProductCategory } from '@e-pharmacy/types';
 
@@ -41,15 +42,6 @@ type CategoryOption = {
 
 //===================================================================
 
-const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  medicine: 'Medicines',
-  vitamins: 'Vitamins and minerals',
-  beauty: 'Beauty',
-  hygiene: 'Hygiene',
-  medical_devices: 'Medical devices',
-  other: 'Other',
-};
-
 const PRODUCTS_LIMIT = 150;
 
 //===================================================================
@@ -70,7 +62,7 @@ function getCategoryOptionsFromProducts(products: Product[]): CategoryOption[] {
   return [...categories]
     .map((category) => ({
       value: category,
-      label: CATEGORY_LABELS[category],
+      label: PRODUCT_CATEGORY_LABELS[category],
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
 }
@@ -316,7 +308,7 @@ function ContinueShoppingModal({
                 const isInCart = cartProductIds.has(product.id);
                 const isAdding = addingProductIds.has(product.id);
                 const categoryLabel =
-                  CATEGORY_LABELS[product.category] ?? product.category;
+                  PRODUCT_CATEGORY_LABELS[product.category] ?? product.category;
 
                 return (
                   <li className={css.productItem} key={product.id}>

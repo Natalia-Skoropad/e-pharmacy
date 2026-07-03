@@ -1,13 +1,14 @@
-import { isValidObjectId } from '@/lib/routes';
+import {
+  deslugifyArticleSegment,
+  deslugifyNameSegment,
+  slugifySegment,
+} from '@e-pharmacy/validation';
 
 import type { PharmacyOption } from '@e-pharmacy/types';
 
-import {
-  parsePositivePageParam,
-  sanitizeCatalogArticleParam,
-  sanitizeCatalogTextParam,
-  slugifyCatalogSegment,
-} from './catalog-param-utils';
+import { isValidObjectId } from '@/lib/routes';
+
+import { parsePositivePageParam } from './catalog-param-utils';
 
 import {
   isProductAvailabilityFilter,
@@ -20,26 +21,12 @@ import {
 
 //===================================================================
 
-function deslugifyNameSegment(value: string): string {
-  return sanitizeCatalogTextParam(value.replace(/-/g, ' '));
-}
-
-//===================================================================
-
-function deslugifyArticleSegment(value: string): string {
-  return sanitizeCatalogArticleParam(value);
-}
-
-//===================================================================
-
 function getPharmacySegment(
   pharmacyId: string,
   pharmacies: PharmacyOption[]
 ): string {
   const pharmacy = pharmacies.find((item) => item.id === pharmacyId);
-  const pharmacySlug = pharmacy
-    ? slugifyCatalogSegment(pharmacy.name)
-    : 'pharmacy';
+  const pharmacySlug = pharmacy ? slugifySegment(pharmacy.name) : 'pharmacy';
 
   return `pharmacy-${pharmacySlug}-${pharmacyId}`;
 }
@@ -139,9 +126,9 @@ export function buildProductCatalogPath(
   const segments: string[] = [];
 
   if (filters.name)
-    segments.push(`search-name-${slugifyCatalogSegment(filters.name)}`);
+    segments.push(`search-name-${slugifySegment(filters.name)}`);
   if (filters.article)
-    segments.push(`article-${slugifyCatalogSegment(filters.article)}`);
+    segments.push(`article-${slugifySegment(filters.article)}`);
 
   if (filters.category && filters.category !== 'all') {
     segments.push(`category-${filters.category}`);

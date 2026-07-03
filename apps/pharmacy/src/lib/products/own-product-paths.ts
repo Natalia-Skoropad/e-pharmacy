@@ -1,5 +1,12 @@
-import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation';
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
+import {
+  deslugifyArticleSegment,
+  deslugifyNameSegment,
+  isDateParam,
+  slugifySegment,
+  slugifyStatus,
+} from '@e-pharmacy/validation';
+
+import { isProductCategory } from '@e-pharmacy/types/products';
 
 import { PHARMACY_PRODUCTS } from '@/lib/layout/routes';
 
@@ -7,24 +14,17 @@ import type {
   OwnProductsFilterState,
   OwnProductsStockFilter,
 } from './own-products-filters';
+
 import type { OwnProductStatus } from './products';
 
 //===================================================================
 
-const URL_TEXT_PARAM_DISALLOWED_CHARS_PATTERN = /[^A-Za-z0-9 .-]/g;
-const URL_ARTICLE_PARAM_DISALLOWED_CHARS_PATTERN = /[^A-Za-z0-9.-]/g;
-const SLUG_SEGMENT_SEPARATOR_PATTERN = /[^a-z0-9]+/g;
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
-//===================================================================
-
 const OWN_PRODUCT_STATUSES: OwnProductStatus[] = ['active', 'blocked'];
+
 const OWN_PRODUCT_STOCK_FILTERS: Array<Exclude<OwnProductsStockFilter, 'all'>> =
   ['available', 'empty'];
 
 //===================================================================
-
-type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
 
 type OwnProductsFilterDraft = {
   addedDate: {
@@ -40,61 +40,9 @@ type OwnProductsFilterDraft = {
 
 //===================================================================
 
-function sanitizeTextParam(value?: string): string {
-  return (
-    value
-      ?.trim()
-      .replace(URL_TEXT_PARAM_DISALLOWED_CHARS_PATTERN, '')
-      .slice(0, USER_SEARCH_MAX_LENGTH) ?? ''
-  );
-}
-
-//===================================================================
-
-function sanitizeArticleParam(value?: string): string {
-  return (
-    value
-      ?.trim()
-      .replace(URL_ARTICLE_PARAM_DISALLOWED_CHARS_PATTERN, '')
-      .slice(0, USER_SEARCH_MAX_LENGTH) ?? ''
-  );
-}
-
-//===================================================================
-
-function slugifySegment(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(SLUG_SEGMENT_SEPARATOR_PATTERN, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, USER_SEARCH_MAX_LENGTH);
-}
-
-//===================================================================
-
-function deslugifyNameSegment(value: string): string {
-  return sanitizeTextParam(value.replace(/-/g, ' '));
-}
-
-//===================================================================
-
-function deslugifyArticleSegment(value: string): string {
-  return sanitizeArticleParam(value);
-}
-
-//===================================================================
-
-function isValidOwnProductDate(value?: string): boolean {
-  return Boolean(value && DATE_PATTERN.test(value));
-}
-
-//===================================================================
-
-function isOwnProductCategory(value?: string): value is ProductCategory {
-  return PRODUCT_CATEGORIES.includes(value as ProductCategory);
-}
+export type OwnProductsRouteParams = Readonly<{
+  filters?: string[];
+}>;
 
 //===================================================================
 
@@ -117,18 +65,6 @@ function normalizeStockSegment(
     ? (value as Exclude<OwnProductsStockFilter, 'all'>)
     : null;
 }
-
-//===================================================================
-
-function slugifyStatus(status: OwnProductStatus): string {
-  return status.replace(/_/g, '-');
-}
-
-//===================================================================
-
-export type OwnProductsRouteParams = Readonly<{
-  filters?: string[];
-}>;
 
 //===================================================================
 
@@ -185,7 +121,7 @@ export function parseOwnProductsSegments(
     if (segment.startsWith('category-')) {
       const category = segment.replace('category-', '').replace(/-/g, '_');
 
-      if (isOwnProductCategory(category)) {
+      if (isProductCategory(category)) {
         filters.category = category;
       }
 
@@ -215,7 +151,7 @@ export function parseOwnProductsSegments(
     if (segment.startsWith('date-from-')) {
       const dateFrom = segment.replace('date-from-', '');
 
-      if (isValidOwnProductDate(dateFrom)) {
+      if (isDateParam(dateFrom)) {
         filters.addedDate = {
           ...filters.addedDate,
           from: dateFrom,
@@ -228,7 +164,7 @@ export function parseOwnProductsSegments(
     if (segment.startsWith('date-to-')) {
       const dateTo = segment.replace('date-to-', '');
 
-      if (isValidOwnProductDate(dateTo)) {
+      if (isDateParam(dateTo)) {
         filters.addedDate = {
           ...filters.addedDate,
           to: dateTo,

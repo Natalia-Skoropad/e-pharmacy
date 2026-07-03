@@ -10,16 +10,12 @@ import {
 
 import {
   PRODUCT_CATEGORIES,
+  PRODUCT_CATEGORY_LABELS,
   type ProductCategory,
 } from '@e-pharmacy/types/products';
 
 import { getPharmacyProductRequestsPath } from '@/lib/layout/routes';
-
-import {
-  PRODUCT_REQUEST_CATEGORY_LABELS,
-  PRODUCT_REQUEST_STATUS_LABELS,
-} from '@/lib/product-requests/product-requests';
-
+import { PRODUCT_REQUEST_STATUS_LABELS } from '@/lib/product-requests/product-requests';
 import type { ProductRequestsFilterState } from '@/lib/product-requests/product-requests';
 
 import css from './ProductRequestsFiltersDrawer.module.css';
@@ -43,7 +39,7 @@ const CATEGORY_OPTIONS: Array<
   { value: 'all', label: 'All' },
   ...PRODUCT_CATEGORIES.map((category: ProductCategory) => ({
     value: category,
-    label: PRODUCT_REQUEST_CATEGORY_LABELS[category],
+    label: PRODUCT_CATEGORY_LABELS[category],
   })),
 ];
 

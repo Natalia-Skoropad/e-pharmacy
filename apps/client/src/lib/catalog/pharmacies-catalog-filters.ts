@@ -1,9 +1,7 @@
+import { sanitizeTextParam } from '@e-pharmacy/validation';
 import type { Pharmacy, PharmaciesSortFilter } from '@e-pharmacy/types';
 
-import {
-  parsePositivePageParam,
-  sanitizeCatalogTextParam,
-} from './catalog-param-utils';
+import { parsePositivePageParam } from './catalog-param-utils';
 
 //===================================================================
 
@@ -105,7 +103,7 @@ export function getUniquePharmacyCities(pharmacies: Pharmacy[]): string[] {
 //===================================================================
 
 export function resolvePharmacyCity(value: string, cities: string[]): string {
-  const sanitizedCity = sanitizeCatalogTextParam(value);
+  const sanitizedCity = sanitizeTextParam(value);
   if (!sanitizedCity) return '';
 
   const normalizedCity = normalizeCityKey(sanitizedCity);
@@ -136,9 +134,9 @@ export function parsePharmacySearchParams(
   params: PharmacySearchParams = {}
 ): PharmacyFilters {
   return {
-    name: sanitizeCatalogTextParam(params.name),
-    address: sanitizeCatalogTextParam(params.address),
-    city: sanitizeCatalogTextParam(params.city),
+    name: sanitizeTextParam(params.name),
+    address: sanitizeTextParam(params.address),
+    city: sanitizeTextParam(params.city),
     sort: isPharmacySortFilter(params.sort) ? params.sort : 'newest',
     page: parsePositivePageParam(params.page),
   };

@@ -7,10 +7,10 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import {
-  PRODUCT_CATEGORY_LABELS,
   PRODUCT_STATUS_LABELS,
   type PharmacyProductRow,
 } from '@/lib/products/products';

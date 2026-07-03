@@ -1,5 +1,12 @@
-import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation';
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
+import {
+  deslugifyArticleSegment,
+  deslugifyNameSegment,
+  isDateParam,
+  slugifySegment,
+  slugifyStatus,
+} from '@e-pharmacy/validation';
+
+import { isProductCategory } from '@e-pharmacy/types/products';
 
 import { PHARMACY_PRODUCT_REQUESTS } from '../layout/routes';
 
@@ -7,13 +14,6 @@ import type {
   ProductRequestStatus,
   ProductRequestsFilterState,
 } from './product-requests';
-
-//===================================================================
-
-const URL_TEXT_PARAM_DISALLOWED_CHARS_PATTERN = /[^A-Za-z0-9 .-]/g;
-const URL_ARTICLE_PARAM_DISALLOWED_CHARS_PATTERN = /[^A-Za-z0-9.-]/g;
-const SLUG_SEGMENT_SEPARATOR_PATTERN = /[^a-z0-9]+/g;
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 //===================================================================
 
@@ -27,9 +27,10 @@ const PRODUCT_REQUEST_STATUSES: ProductRequestStatus[] = [
 
 //===================================================================
 
-type ProductRequestCategory = (typeof PRODUCT_CATEGORIES)[number];
 type ProductRequestCategoryFilter = ProductRequestsFilterState['category'];
 type ProductRequestStatusFilter = ProductRequestsFilterState['status'];
+
+//===================================================================
 
 type ProductRequestsFilterDraft = {
   date: {
@@ -45,63 +46,9 @@ type ProductRequestsFilterDraft = {
 
 //===================================================================
 
-function sanitizeTextParam(value?: string): string {
-  return (
-    value
-      ?.trim()
-      .replace(URL_TEXT_PARAM_DISALLOWED_CHARS_PATTERN, '')
-      .slice(0, USER_SEARCH_MAX_LENGTH) ?? ''
-  );
-}
-
-//===================================================================
-
-function sanitizeArticleParam(value?: string): string {
-  return (
-    value
-      ?.trim()
-      .replace(URL_ARTICLE_PARAM_DISALLOWED_CHARS_PATTERN, '')
-      .slice(0, USER_SEARCH_MAX_LENGTH) ?? ''
-  );
-}
-
-//===================================================================
-
-function slugifySegment(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(SLUG_SEGMENT_SEPARATOR_PATTERN, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, USER_SEARCH_MAX_LENGTH);
-}
-
-//===================================================================
-
-function deslugifyNameSegment(value: string): string {
-  return sanitizeTextParam(value.replace(/-/g, ' '));
-}
-
-//===================================================================
-
-function deslugifyArticleSegment(value: string): string {
-  return sanitizeArticleParam(value);
-}
-
-//===================================================================
-
-function isValidProductRequestDate(value?: string): boolean {
-  return Boolean(value && DATE_PATTERN.test(value));
-}
-
-//===================================================================
-
-function isProductRequestCategory(
-  value?: string
-): value is ProductRequestCategory {
-  return PRODUCT_CATEGORIES.includes(value as ProductRequestCategory);
-}
+export type ProductRequestsRouteParams = Readonly<{
+  filters?: string[];
+}>;
 
 //===================================================================
 
@@ -112,18 +59,6 @@ function normalizeStatusSegment(value: string): ProductRequestStatus | null {
     ? (normalized as ProductRequestStatus)
     : null;
 }
-
-//===================================================================
-
-function slugifyStatus(status: ProductRequestStatus): string {
-  return status.replace(/_/g, '-');
-}
-
-//===================================================================
-
-export type ProductRequestsRouteParams = Readonly<{
-  filters?: string[];
-}>;
 
 //===================================================================
 
@@ -205,7 +140,7 @@ export function parseProductRequestsSegments(
     if (segment.startsWith('category-')) {
       const category = segment.replace('category-', '').replace(/-/g, '_');
 
-      if (isProductRequestCategory(category)) {
+      if (isProductCategory(category)) {
         filters.category = category;
       }
 
@@ -225,7 +160,7 @@ export function parseProductRequestsSegments(
     if (segment.startsWith('date-from-')) {
       const dateFrom = segment.replace('date-from-', '');
 
-      if (isValidProductRequestDate(dateFrom)) {
+      if (isDateParam(dateFrom)) {
         filters.date = {
           ...filters.date,
           from: dateFrom,
@@ -238,7 +173,7 @@ export function parseProductRequestsSegments(
     if (segment.startsWith('date-to-')) {
       const dateTo = segment.replace('date-to-', '');
 
-      if (isValidProductRequestDate(dateTo)) {
+      if (isDateParam(dateTo)) {
         filters.date = {
           ...filters.date,
           to: dateTo,

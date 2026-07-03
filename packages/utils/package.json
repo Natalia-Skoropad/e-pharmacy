@@ -7,7 +7,8 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./formatters": "./src/formatters/index.ts"
+    "./formatters": "./src/formatters/index.ts",
+    "./guards": "./src/guards/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

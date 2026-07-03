@@ -8,15 +8,13 @@ import {
   type SelectOption,
 } from '@e-pharmacy/ui/common';
 
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_CATEGORY_LABELS,
+} from '@e-pharmacy/types/products';
 
 import { getPharmacyAllProductsPath } from '@/lib/layout/routes';
-
-import {
-  PRODUCT_CATEGORY_LABELS,
-  PRODUCT_STATUS_LABELS,
-} from '@/lib/products/products';
-
+import { PRODUCT_STATUS_LABELS } from '@/lib/products/products';
 import type { AllProductsFilterState } from '@/lib/products/all-products-filters';
 
 import css from './AllProductsFiltersDrawer.module.css';

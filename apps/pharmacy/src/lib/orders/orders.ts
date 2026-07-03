@@ -1,3 +1,9 @@
+import {
+  getNumberValue,
+  getStringValue,
+  isRecord,
+} from '@e-pharmacy/utils/guards';
+
 import type {
   DeliveryMethod,
   EntityId,
@@ -50,20 +56,6 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
 };
 
 //===================================================================
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function getStringValue(value: unknown): string | undefined {
-  return typeof value === 'string' && value.trim() ? value : undefined;
-}
-
-function getNumberValue(value: unknown): number | undefined {
-  return typeof value === 'number' && Number.isFinite(value)
-    ? value
-    : undefined;
-}
 
 function isDeliveryMethod(value: unknown): value is DeliveryMethod {
   return value === 'pickup' || value === 'postal_delivery';
