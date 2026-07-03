@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 import { sharedSearchSchema } from './shared-validation.schema';
-
 import { PRODUCT_CATEGORIES } from '../types/categories';
 
 //===============================================================
@@ -19,6 +18,7 @@ export const PRODUCT_REQUEST_STATUS_OPTIONS = [
 const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
 const perPageSchema = z.coerce.number().int().min(1).max(200).default(20);
+
 const dateFilterSchema = z
   .string()
   .trim()
@@ -50,6 +50,9 @@ export const productRequestsQuerySchema = z.preprocess(
     perPage: perPageSchema,
     dateFrom: dateFilterSchema,
     dateTo: dateFilterSchema,
+    requestNumber: sharedSearchSchema,
+    productName: sharedSearchSchema,
+    productArticle: sharedSearchSchema,
     name: sharedSearchSchema,
     article: sharedSearchSchema,
     category: z.enum(PRODUCT_CATEGORIES).optional(),

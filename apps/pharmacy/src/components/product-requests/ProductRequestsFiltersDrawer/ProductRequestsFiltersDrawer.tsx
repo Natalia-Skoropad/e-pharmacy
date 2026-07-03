@@ -4,7 +4,6 @@ import {
   CloseIconButton,
   DateFilter,
   ResetFiltersButton,
-  SearchInput,
   SelectField,
   type SelectOption,
 } from '@e-pharmacy/ui/common';
@@ -63,6 +62,12 @@ const STATUS_OPTIONS: Array<
 
 //===================================================================
 
+function getTodayIsoDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+//===================================================================
+
 function ProductRequestsFiltersDrawer({
   filters,
   hasActiveFilters,
@@ -101,30 +106,15 @@ function ProductRequestsFiltersDrawer({
             label="Created date"
             value={filters.date}
             isActive={Boolean(filters.date.from || filters.date.to)}
+            maxDate={getTodayIsoDate()}
+            applyOnSubmit
+            applyLabel="Apply"
             onChange={(date) => onChange({ ...filters, date })}
-          />
-
-          <SearchInput
-            id="product-requests-name-search"
-            label="Name search"
-            value={filters.name}
-            placeholder="Request name"
-            isActive={Boolean(filters.name)}
-            onChange={(name) => onChange({ ...filters, name })}
-          />
-
-          <SearchInput
-            id="product-requests-article-search"
-            label="Article search"
-            value={filters.article}
-            placeholder="Article"
-            isActive={Boolean(filters.article)}
-            onChange={(article) => onChange({ ...filters, article })}
           />
 
           <SelectField
             id="product-requests-category"
-            label="Category"
+            label="Product category"
             value={filters.category}
             options={CATEGORY_OPTIONS}
             isActive={filters.category !== 'all'}
@@ -133,7 +123,7 @@ function ProductRequestsFiltersDrawer({
 
           <SelectField
             id="product-requests-status"
-            label="Status"
+            label="Request status"
             value={filters.status}
             options={STATUS_OPTIONS}
             isActive={filters.status !== 'all'}

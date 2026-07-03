@@ -5,9 +5,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { FilePlus2 } from 'lucide-react';
 
 import {
+  Button,
   CountLabel,
   FiltersButton,
   RowsPerPageSelect,
+  SearchInput,
   StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
@@ -40,8 +42,9 @@ import css from './ProductRequestsPageContent.module.css';
 function getActiveFiltersCount(filters: ProductRequestsFilterState): number {
   return [
     filters.date.from || filters.date.to,
-    filters.name.trim(),
-    filters.article.trim(),
+    filters.requestNumber.trim(),
+    filters.productArticle.trim(),
+    filters.productName.trim(),
     filters.category !== 'all',
     filters.status !== 'all',
   ].filter(Boolean).length;
@@ -58,8 +61,9 @@ function getProductRequestsQueryParams(
     perPage: rowsPerPage,
     dateFrom: filters.date.from || undefined,
     dateTo: filters.date.to || undefined,
-    name: filters.name.trim() || undefined,
-    article: filters.article.trim() || undefined,
+    requestNumber: filters.requestNumber.trim() || undefined,
+    productName: filters.productName.trim() || undefined,
+    productArticle: filters.productArticle.trim() || undefined,
     category: filters.category === 'all' ? undefined : filters.category,
     status: filters.status === 'all' ? undefined : filters.status,
   };
@@ -152,7 +156,7 @@ function ProductRequestsPageContent({
 
   return (
     <main className={css.page} aria-labelledby="product-requests-page-title">
-      <div className={css.card}>
+      <section className={css.heroCard} aria-labelledby="product-requests-page-title">
         <PageHeader
           title="Product requests"
           titleId="product-requests-page-title"
@@ -166,42 +170,92 @@ function ProductRequestsPageContent({
           }
         />
 
-        <div className={css.stack}>
-          <StatusBanner
-            status="new"
-            label="New"
-            title="Verification is required"
-            message="Creating product requests is locked for a new pharmacy until verification is complete."
+        <div className={css.searchGrid}>
+          <SearchInput
+            id="product-requests-request-number-search"
+            label="Request number search"
+            value={filters.requestNumber}
+            placeholder="Request number"
+            isActive={Boolean(filters.requestNumber)}
+            onChange={(requestNumber) =>
+              setFilters((currentFilters) => ({
+                ...currentFilters,
+                requestNumber,
+              }))
+            }
           />
 
-          <div className={css.toolbar}>
-            <div className={css.toolbarActions}>
-              <RowsPerPageSelect
-                id="product-requests-rows-per-page"
-                value={rowsPerPage}
-                onChange={setRowsPerPage}
-              />
+          <SearchInput
+            id="product-requests-product-article-search"
+            label="Product article search"
+            value={filters.productArticle}
+            placeholder="Product article"
+            isActive={Boolean(filters.productArticle)}
+            onChange={(productArticle) =>
+              setFilters((currentFilters) => ({
+                ...currentFilters,
+                productArticle,
+              }))
+            }
+          />
 
-              <FiltersButton
-                activeCount={activeFiltersCount}
-                controlsId="product-requests-filters-panel"
-                isExpanded={isFiltersOpen}
-                onClick={() => setIsFiltersOpen(true)}
-              />
-            </div>
-          </div>
-
-          <ProductRequestsTable
-            requests={requests}
-            isLoading={isLoading}
-            emptyMessage={
-              hasActiveFilters
-                ? 'No requests found for the selected filters.'
-                : 'Your pharmacy has no product creation requests yet.'
+          <SearchInput
+            id="product-requests-product-name-search"
+            label="Product name search"
+            value={filters.productName}
+            placeholder="Product name"
+            isActive={Boolean(filters.productName)}
+            onChange={(productName) =>
+              setFilters((currentFilters) => ({
+                ...currentFilters,
+                productName,
+              }))
             }
           />
         </div>
-      </div>
+
+        <StatusBanner
+          status="new"
+          label="New"
+          title="Verification is required"
+          message="Creating product requests is locked for a new pharmacy until verification is complete."
+        />
+      </section>
+
+      <section className={css.tableCard} aria-label="Product requests table">
+        <div className={css.toolbar}>
+          <Button className={css.createButton} type="button" size="md" disabled>
+            Create request
+          </Button>
+
+          <div className={css.rowsControl}>
+            <RowsPerPageSelect
+              id="product-requests-rows-per-page"
+              value={rowsPerPage}
+              onChange={setRowsPerPage}
+            />
+          </div>
+
+          <div className={css.filtersControl}>
+            <FiltersButton
+              activeCount={activeFiltersCount}
+              controlsId="product-requests-filters-panel"
+              isExpanded={isFiltersOpen}
+              onClick={() => setIsFiltersOpen(true)}
+            />
+          </div>
+        </div>
+
+        <ProductRequestsTable
+          requests={requests}
+          isLoading={isLoading}
+          emptyMessage={
+            hasActiveFilters
+              ? 'No requests found for the selected filters.'
+              : 'Your pharmacy has no product creation requests yet.'
+          }
+        />
+      </section>
 
       {isFiltersOpen ? (
         <ProductRequestsFiltersDrawer

@@ -4,9 +4,7 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  color: var(--color-text-primary);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 1px solid currentColor;
   border-radius: var(--radius-pill);
   transition:
     color var(--transition-base),
@@ -14,8 +12,30 @@
     background-color var(--transition-base);
 }
 
-.button:hover,
-.button:focus-visible {
+
+.default {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+.light {
+  color: var(--color-white);
+  background-color: var(--color-white-alpha-18);
+  border-color: var(--color-white-alpha-48);
+}
+
+.light:hover,
+.light:focus-visible {
+  color: var(--color-white);
+  background-color: var(--color-white-alpha-28);
+  border-color: var(--color-white-alpha-72);
+}
+
+
+
+.default:hover,
+.default:focus-visible {
   color: var(--color-accent);
   border-color: var(--color-accent);
 }

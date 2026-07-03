@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import clsx from 'clsx';
 
 import css from './DateFilter.module.css';
@@ -18,8 +21,33 @@ export type DateFilterProps = Readonly<{
   isActive?: boolean;
   disabled?: boolean;
   className?: string;
+  maxDate?: string;
+  applyOnSubmit?: boolean;
+  applyLabel?: string;
   onChange: (value: DateFilterValue) => void;
 }>;
+
+//===================================================================
+
+function getMinDate(value: string | undefined) {
+  return value || undefined;
+}
+
+//===================================================================
+
+function getMaxDate(...values: Array<string | undefined>) {
+  const validValues = values.filter(Boolean) as string[];
+
+  if (!validValues.length) return undefined;
+
+  return validValues.sort()[0];
+}
+
+//===================================================================
+
+function areDatesEqual(first: DateFilterValue, second: DateFilterValue) {
+  return first.from === second.from && first.to === second.to;
+}
 
 //===================================================================
 
@@ -32,23 +60,52 @@ function DateFilter({
   isActive = false,
   disabled = false,
   className,
+  maxDate,
+  applyOnSubmit = false,
+  applyLabel = 'Apply',
   onChange,
 }: DateFilterProps) {
+  const [draftValue, setDraftValue] = useState<DateFilterValue>(value);
+  const currentValue = applyOnSubmit ? draftValue : value;
   const fromId = `${id}-from`;
   const toId = `${id}-to`;
+  const applyButtonId = `${id}-apply`;
+  const isApplyDisabled =
+    disabled ||
+    !currentValue.from ||
+    !currentValue.to ||
+    areDatesEqual(currentValue, value);
+
+  const updateValue = (nextValue: DateFilterValue) => {
+    if (disabled) return;
+
+    if (applyOnSubmit) {
+      setDraftValue(nextValue);
+      return;
+    }
+
+    onChange(nextValue);
+  };
 
   const handleFromChange = (from: string) => {
-    if (disabled) return;
-    onChange({ ...value, from });
+    updateValue({ ...currentValue, from });
   };
 
   const handleToChange = (to: string) => {
-    if (disabled) return;
-    onChange({ ...value, to });
+    updateValue({ ...currentValue, to });
+  };
+
+  const handleApply = () => {
+    if (isApplyDisabled) return;
+
+    onChange(currentValue);
   };
 
   return (
-    <fieldset className={clsx(css.field, className)} disabled={disabled}>
+    <fieldset
+      className={clsx(css.field, applyOnSubmit && css.withApply, className)}
+      disabled={disabled}
+    >
       <legend className={css.label}>{label}</legend>
 
       <div className={css.grid}>
@@ -56,10 +113,14 @@ function DateFilter({
           <span className={css.dateLabel}>{fromLabel}</span>
           <input
             id={fromId}
-            className={clsx(css.input, (isActive || value.from) && css.inputActive)}
+            className={clsx(
+              css.input,
+              (isActive || currentValue.from) && css.inputActive
+            )}
             type="date"
-            value={value.from}
-            max={value.to || undefined}
+            value={currentValue.from}
+            max={getMaxDate(currentValue.to, maxDate)}
+            aria-describedby={applyOnSubmit ? applyButtonId : undefined}
             onChange={(event) => handleFromChange(event.target.value)}
           />
         </label>
@@ -68,14 +129,31 @@ function DateFilter({
           <span className={css.dateLabel}>{toLabel}</span>
           <input
             id={toId}
-            className={clsx(css.input, (isActive || value.to) && css.inputActive)}
+            className={clsx(
+              css.input,
+              (isActive || currentValue.to) && css.inputActive
+            )}
             type="date"
-            value={value.to}
-            min={value.from || undefined}
+            value={currentValue.to}
+            min={getMinDate(currentValue.from)}
+            max={maxDate}
+            aria-describedby={applyOnSubmit ? applyButtonId : undefined}
             onChange={(event) => handleToChange(event.target.value)}
           />
         </label>
       </div>
+
+      {applyOnSubmit ? (
+        <button
+          className={css.applyButton}
+          id={applyButtonId}
+          type="button"
+          disabled={isApplyDisabled}
+          onClick={handleApply}
+        >
+          {applyLabel}
+        </button>
+      ) : null}
     </fieldset>
   );
 }

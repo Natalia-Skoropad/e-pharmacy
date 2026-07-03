@@ -53,7 +53,15 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
       required: true,
       index: true,
     },
+
+    productId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Product',
+      required: false,
+      index: true,
+    },
   },
+  
   {
     timestamps: true,
     versionKey: false,

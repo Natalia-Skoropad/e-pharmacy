@@ -36,8 +36,9 @@ type ProductRequestsFilterDraft = {
     from: string;
     to: string;
   };
-  name: string;
-  article: string;
+  requestNumber: string;
+  productArticle: string;
+  productName: string;
   category: ProductRequestCategoryFilter;
   status: ProductRequestStatusFilter;
 };
@@ -128,6 +129,9 @@ export type ProductRequestsRouteParams = Readonly<{
 
 export function isProductRequestsFilterSegment(segment: string): boolean {
   return (
+    segment.startsWith('request-number-') ||
+    segment.startsWith('product-article-') ||
+    segment.startsWith('product-name-') ||
     segment.startsWith('search-name-') ||
     segment.startsWith('article-') ||
     segment.startsWith('category-') ||
@@ -155,20 +159,44 @@ export function parseProductRequestsSegments(
       from: '',
       to: '',
     },
-    name: '',
-    article: '',
+    requestNumber: '',
+    productArticle: '',
+    productName: '',
     category: 'all',
     status: 'all',
   };
 
   for (const segment of params.filters ?? []) {
+    if (segment.startsWith('request-number-')) {
+      filters.requestNumber = deslugifyArticleSegment(
+        segment.replace('request-number-', '')
+      );
+      continue;
+    }
+
+    if (segment.startsWith('product-article-')) {
+      filters.productArticle = deslugifyArticleSegment(
+        segment.replace('product-article-', '')
+      );
+      continue;
+    }
+
+    if (segment.startsWith('product-name-')) {
+      filters.productName = deslugifyNameSegment(
+        segment.replace('product-name-', '')
+      );
+      continue;
+    }
+
     if (segment.startsWith('search-name-')) {
-      filters.name = deslugifyNameSegment(segment.replace('search-name-', ''));
+      filters.productName = deslugifyNameSegment(
+        segment.replace('search-name-', '')
+      );
       continue;
     }
 
     if (segment.startsWith('article-')) {
-      filters.article = deslugifyArticleSegment(
+      filters.productArticle = deslugifyArticleSegment(
         segment.replace('article-', '')
       );
       continue;
@@ -228,15 +256,20 @@ export function buildProductRequestsPath(
   filters: ProductRequestsFilterState
 ): string {
   const segments: string[] = [];
-  const name = filters.name.trim();
-  const article = filters.article.trim();
+  const requestNumber = filters.requestNumber.trim();
+  const productArticle = filters.productArticle.trim();
+  const productName = filters.productName.trim();
 
-  if (name) {
-    segments.push(`search-name-${slugifySegment(name)}`);
+  if (requestNumber) {
+    segments.push(`request-number-${slugifySegment(requestNumber)}`);
   }
 
-  if (article) {
-    segments.push(`article-${slugifySegment(article)}`);
+  if (productArticle) {
+    segments.push(`product-article-${slugifySegment(productArticle)}`);
+  }
+
+  if (productName) {
+    segments.push(`product-name-${slugifySegment(productName)}`);
   }
 
   if (filters.category !== 'all') {

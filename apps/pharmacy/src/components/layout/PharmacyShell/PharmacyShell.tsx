@@ -62,7 +62,6 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
     currentDetailLabel
   );
 
-
   useEffect(() => {
     const handleBreadcrumbLabel = (event: Event) => {
       const { detail } = event as CustomEvent<BreadcrumbLabelEventDetail>;
@@ -97,7 +96,7 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
   return (
     <PharmacyProtectedRoute>
       <div className={css.shell}>
-        <Container className={css.container} variant="wide">
+        <Container className={css.container}>
           <div
             className={clsx(
               css.layout,

@@ -20,6 +20,7 @@ export type CabinetTopBarProps = Readonly<{
   items: readonly BreadcrumbItem[];
   actions?: ReactNode;
   leadingIcon?: ReactNode;
+  navigationToggle?: ReactNode;
   className?: string;
   ariaLabel?: string;
   renderLink?: (props: CabinetTopBarLinkRenderProps) => ReactNode;
@@ -31,13 +32,18 @@ function CabinetTopBar({
   items,
   actions,
   leadingIcon,
+  navigationToggle,
   className,
   ariaLabel = 'Current cabinet page',
   renderLink,
 }: CabinetTopBarProps) {
   const hasPathItems = items.length > 0;
 
-  const renderTopBarLink = (item: BreadcrumbItem, href: string, children: ReactNode) => {
+  const renderTopBarLink = (
+    item: BreadcrumbItem,
+    href: string,
+    children: ReactNode
+  ) => {
     if (renderLink) {
       return renderLink({ item, href, className: css.link, children });
     }
@@ -57,24 +63,21 @@ function CabinetTopBar({
             {items.map((item, index) => {
               const isLast = index === items.length - 1;
               const isLinked = Boolean(item.href) && !isLast;
-              const label = (
-                <>
+              const text = <span className={css.text}>{item.label}</span>;
+
+              return (
+                <li className={css.pathItem} key={`${item.label}-${index}`}>
                   {index === 0 && leadingIcon ? (
                     <span className={css.leadingIcon} aria-hidden="true">
                       {leadingIcon}
                     </span>
                   ) : null}
-                  <span className={css.text}>{item.label}</span>
-                </>
-              );
 
-              return (
-                <li className={css.pathItem} key={`${item.label}-${index}`}>
                   {isLinked ? (
-                    renderTopBarLink(item, item.href!, label)
+                    renderTopBarLink(item, item.href!, text)
                   ) : (
                     <span className={css.current} aria-current="page">
-                      {label}
+                      {text}
                     </span>
                   )}
 
@@ -93,6 +96,10 @@ function CabinetTopBar({
       ) : null}
 
       {actions ? <div className={css.actions}>{actions}</div> : null}
+
+      {navigationToggle ? (
+        <div className={css.navigationToggle}>{navigationToggle}</div>
+      ) : null}
     </div>
   );
 }

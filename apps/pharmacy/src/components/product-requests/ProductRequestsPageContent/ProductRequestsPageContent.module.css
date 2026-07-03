@@ -1,9 +1,12 @@
 .page {
+  display: grid;
+  gap: 20px;
   width: 100%;
   margin-inline: 0;
 }
 
-.card {
+.heroCard,
+.tableCard {
   display: grid;
   gap: 20px;
   padding: 20px;
@@ -13,46 +16,56 @@
   box-shadow: var(--shadow-card);
 }
 
-.stack {
+.searchGrid {
   display: grid;
-  gap: 20px;
+  gap: 12px;
 }
 
 .toolbar {
-  display: grid;
-  gap: 16px;
-}
-
-.toolbarActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  align-items: end;
-  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-end;
 }
 
-.disabledAction {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  min-height: 44px;
-  padding-inline: 18px;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  line-height: 1;
-  color: var(--color-text-muted);
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
+.createButton {
+  order: 1;
+  width: 100%;
+}
+
+.rowsControl {
+  order: 2;
+  min-width: 0;
+}
+
+.filtersControl {
+  order: 3;
+  display: flex;
+  justify-content: flex-end;
+  margin-left: auto;
 }
 
 @media only screen and (min-width: 768px) {
-  .toolbarActions {
-    justify-content: space-between;
+  .searchGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .toolbarActions > * {
-    flex: 0 0 auto;
+  .toolbar {
+    flex-wrap: nowrap;
+  }
+
+  .createButton {
+    order: 2;
+    width: auto;
+    margin-left: auto;
+  }
+
+  .rowsControl {
+    order: 1;
+  }
+
+  .filtersControl {
+    order: 3;
+    margin-left: 0;
   }
 }

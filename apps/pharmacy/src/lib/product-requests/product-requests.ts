@@ -21,8 +21,9 @@ export type ProductRequestsFilterState = Readonly<{
     from: string;
     to: string;
   };
-  name: string;
-  article: string;
+  requestNumber: string;
+  productArticle: string;
+  productName: string;
   category: ProductRequestCategoryFilter;
   status: ProductRequestStatusFilter;
 }>;
@@ -34,8 +35,9 @@ export const DEFAULT_PRODUCT_REQUESTS_FILTERS: ProductRequestsFilterState = {
     from: '',
     to: '',
   },
-  name: '',
-  article: '',
+  requestNumber: '',
+  productArticle: '',
+  productName: '',
   category: 'all',
   status: 'all',
 };
@@ -44,9 +46,11 @@ export const DEFAULT_PRODUCT_REQUESTS_FILTERS: ProductRequestsFilterState = {
 
 export type PharmacyProductRequestRow = Readonly<{
   id: EntityId;
+  requestNumber: string;
   createdAt: string;
-  article: string;
-  name: string;
+  productId?: EntityId;
+  productArticle: string;
+  productName: string;
   category: ProductCategory;
   status: ProductRequestStatus;
 }>;
@@ -56,8 +60,9 @@ export type PharmacyProductRequestsQueryParams = Readonly<{
   perPage?: number;
   dateFrom?: string;
   dateTo?: string;
-  name?: string;
-  article?: string;
+  requestNumber?: string;
+  productName?: string;
+  productArticle?: string;
   category?: ProductCategory;
   status?: ProductRequestStatus;
 }>;
@@ -164,11 +169,26 @@ export function normalizePharmacyProductRequest(
 
   if (!id || !createdAt) return null;
 
+  const productId =
+    getStringValue(rawRequest.productId) ?? getStringValue(rawRequest.product);
+
+  const productArticle =
+    getStringValue(rawRequest.productArticle) ??
+    getStringValue(rawRequest.article) ??
+    '—';
+
+  const productName =
+    getStringValue(rawRequest.productName) ??
+    getStringValue(rawRequest.name) ??
+    'Unnamed request';
+
   return {
     id,
+    requestNumber: getStringValue(rawRequest.requestNumber) ?? id,
     createdAt,
-    article: getStringValue(rawRequest.article) ?? '—',
-    name: getStringValue(rawRequest.name) ?? 'Unnamed request',
+    productId,
+    productArticle,
+    productName,
     category: isProductCategory(rawRequest.category)
       ? rawRequest.category
       : 'other',

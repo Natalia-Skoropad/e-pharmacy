@@ -47,6 +47,10 @@ function serializeProductRequest(
     id: String(request._id),
     createdAt: request.createdAt.toISOString(),
     updatedAt: request.updatedAt.toISOString(),
+    requestNumber: String(request._id),
+    productId: request.productId ? String(request.productId) : undefined,
+    productArticle: request.article,
+    productName: request.name,
     article: request.article,
     name: request.name,
     category: request.category,
@@ -81,12 +85,22 @@ export async function getProductRequestsService(
     };
   }
 
-  if (query.name?.trim()) {
-    filter.name = createFlexibleSearchRegExp(query.name.trim());
+  const requestNumber = query.requestNumber?.trim();
+  const productName = query.productName?.trim() || query.name?.trim();
+  const productArticle = query.productArticle?.trim() || query.article?.trim();
+
+  if (requestNumber) {
+    filter._id = Types.ObjectId.isValid(requestNumber)
+      ? new Types.ObjectId(requestNumber)
+      : null;
   }
 
-  if (query.article?.trim()) {
-    filter.article = createSafeRegExp(query.article.trim());
+  if (productName) {
+    filter.name = createFlexibleSearchRegExp(productName);
+  }
+
+  if (productArticle) {
+    filter.article = createSafeRegExp(productArticle);
   }
 
   if (query.category) filter.category = query.category;

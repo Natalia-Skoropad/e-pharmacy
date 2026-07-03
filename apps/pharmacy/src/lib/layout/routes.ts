@@ -156,15 +156,29 @@ export function getPharmacyAllProductsFilterPath(filters: PharmacyFilterMap) {
 
 export function getPharmacyRequestsFilterPath(filters: PharmacyFilterMap) {
   const segments: string[] = [];
-  const name = filters.name ? String(filters.name).trim() : '';
-  const article = filters.article ? String(filters.article).trim() : '';
+  const requestNumber = filters.requestNumber
+    ? String(filters.requestNumber).trim()
+    : '';
+  const name = filters.productName
+    ? String(filters.productName).trim()
+    : filters.name
+      ? String(filters.name).trim()
+      : '';
+  const article = filters.productArticle
+    ? String(filters.productArticle).trim()
+    : filters.article
+      ? String(filters.article).trim()
+      : '';
   const category = filters.category ? String(filters.category).trim() : '';
   const status = filters.status ? String(filters.status).trim() : '';
   const dateFrom = filters.dateFrom ? String(filters.dateFrom).trim() : '';
   const dateTo = filters.dateTo ? String(filters.dateTo).trim() : '';
 
-  if (name) segments.push(`search-name-${encodeFilterValue(name)}`);
-  if (article) segments.push(`article-${encodeFilterValue(article)}`);
+  if (requestNumber) {
+    segments.push(`request-number-${encodeFilterValue(requestNumber)}`);
+  }
+  if (article) segments.push(`product-article-${encodeFilterValue(article)}`);
+  if (name) segments.push(`product-name-${encodeFilterValue(name)}`);
   if (category && category !== 'all') {
     segments.push(`category-${category.replaceAll('_', '-')}`);
   }

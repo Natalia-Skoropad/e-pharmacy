@@ -18,24 +18,15 @@ import {
 
 import type { BreadcrumbItem } from '@e-pharmacy/ui/layout';
 import { BurgerButton, CabinetTopBar } from '@e-pharmacy/ui/layout';
-
 import {
-  Container,
-  Logo,
   LogoutButton,
   TextActionButton,
   UserBadge,
 } from '@e-pharmacy/ui/common';
-
 import { useAuth } from '@e-pharmacy/auth/core';
 
-import {
-  getPharmacyDashboardPath,
-  getPharmacyProfilePath,
-} from '@/lib/layout/routes';
-
+import { getPharmacyProfilePath } from '@/lib/layout/routes';
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
-
 import { PharmacyMobileMenu } from '@/components/layout/PharmacyMobileMenu';
 
 import css from './PharmacyHeader.module.css';
@@ -126,31 +117,20 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
   return (
     <>
       <header className={css.header}>
-        <Container className={css.mobileContainer}>
-          <Logo
-            href={getPharmacyDashboardPath()}
-            label="E-PHARMACY"
-            ariaLabel="E-PHARMACY pharmacy dashboard"
-            renderLink={({ href, className, children, ...props }) => (
-              <Link href={href} className={className} {...props}>
-                {children}
-              </Link>
-            )}
-          />
-
-          <BurgerButton
-            controlsId={MOBILE_MENU_ID}
-            isOpen={isMenuOpen}
-            openLabel="Open pharmacy menu"
-            closeLabel="Close pharmacy menu"
-            onClick={() => setIsMenuOpen((value) => !value)}
-          />
-        </Container>
-
         <CabinetTopBar
           className={css.topbar}
           items={breadcrumbs}
           leadingIcon={topBarIcon}
+          navigationToggle={
+            <BurgerButton
+              controlsId={MOBILE_MENU_ID}
+              isOpen={isMenuOpen}
+              variant="light"
+              openLabel="Open pharmacy menu"
+              closeLabel="Close pharmacy menu"
+              onClick={() => setIsMenuOpen((value) => !value)}
+            />
+          }
           renderLink={({ href, className, children }) => (
             <TextActionButton className={className} href={href} variant="light">
               {children}

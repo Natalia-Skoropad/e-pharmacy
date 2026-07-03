@@ -21,6 +21,27 @@
   gap: 10px;
 }
 
+.withApply {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 10px;
+  align-items: end;
+}
+
+.withApply .label {
+  grid-column: 1 / -1;
+}
+
+.withApply .grid {
+  grid-column: 1;
+  grid-row: 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.withApply .applyButton {
+  grid-column: 2;
+  grid-row: 2;
+}
+
 .dateField {
   display: grid;
   gap: 6px;
@@ -46,6 +67,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   outline: none;
+  cursor: pointer;
   transition:
     border-color var(--transition-base),
     box-shadow var(--transition-base),
@@ -65,8 +87,58 @@
   opacity: 0.6;
 }
 
+.applyButton {
+  justify-self: end;
+  min-height: 48px;
+  padding-inline: 18px;
+  color: var(--color-white);
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+  background-color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-pill);
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    opacity var(--transition-base);
+}
+
+.applyButton:hover,
+.applyButton:focus-visible {
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.applyButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-accent-border-soft);
+}
+
+.applyButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 @media only screen and (min-width: 480px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media only screen and (max-width: 359px) {
+  .withApply {
+    grid-template-columns: 1fr;
+  }
+
+  .withApply .grid,
+  .withApply .applyButton {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .withApply .grid {
+    grid-template-columns: 1fr;
   }
 }

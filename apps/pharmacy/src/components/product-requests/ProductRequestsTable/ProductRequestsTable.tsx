@@ -1,9 +1,9 @@
-import Link from 'next/link';
 import { useMemo } from 'react';
 
 import {
   DataTable,
   StatusBadge,
+  TextActionButton,
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
@@ -15,7 +15,10 @@ import {
   type PharmacyProductRequestRow,
 } from '@/lib/product-requests/product-requests';
 
-import { getPharmacyRequestPath } from '@/lib/layout/routes';
+import {
+  getPharmacyAllProductPath,
+  getPharmacyRequestPath,
+} from '@/lib/layout/routes';
 
 import css from './ProductRequestsTable.module.css';
 
@@ -41,6 +44,14 @@ function TableHeader({ parts }: Readonly<{ parts: string[] }>) {
 
 //===================================================================
 
+function getProductHref(request: PharmacyProductRequestRow) {
+  return request.status === 'approved' && request.productId
+    ? getPharmacyAllProductPath(request.productId)
+    : null;
+}
+
+//===================================================================
+
 function ProductRequestsTable({
   requests,
   emptyMessage,
@@ -58,30 +69,56 @@ function ProductRequestsTable({
         ),
       },
       {
-        key: 'article',
-        title: 'Article',
-        render: (request) => request.article,
-      },
-      {
-        key: 'name',
-        title: 'Name',
+        key: 'requestNumber',
+        title: <TableHeader parts={['Request', 'number']} />,
         render: (request) => (
-          <Link
-            className={css.nameLink}
-            href={getPharmacyRequestPath(request.id)}
-          >
-            {request.name}
-          </Link>
+          <TextActionButton href={getPharmacyRequestPath(request.id)}>
+            {request.requestNumber}
+          </TextActionButton>
         ),
       },
       {
+        key: 'productArticle',
+        title: <TableHeader parts={['Product', 'article']} />,
+        render: (request) => {
+          const productHref = getProductHref(request);
+
+          return productHref ? (
+            <TextActionButton href={productHref}>
+              {request.productArticle}
+            </TextActionButton>
+          ) : (
+            <TextActionButton className={css.disabledAction} disabled>
+              {request.productArticle}
+            </TextActionButton>
+          );
+        },
+      },
+      {
+        key: 'productName',
+        title: <TableHeader parts={['Product', 'name']} />,
+        render: (request) => {
+          const productHref = getProductHref(request);
+
+          return productHref ? (
+            <TextActionButton href={productHref}>
+              {request.productName}
+            </TextActionButton>
+          ) : (
+            <TextActionButton className={css.disabledAction} disabled>
+              {request.productName}
+            </TextActionButton>
+          );
+        },
+      },
+      {
         key: 'category',
-        title: 'Category',
+        title: <TableHeader parts={['Product', 'category']} />,
         render: (request) => PRODUCT_REQUEST_CATEGORY_LABELS[request.category],
       },
       {
         key: 'status',
-        title: 'Status',
+        title: <TableHeader parts={['Request', 'status']} />,
         render: (request) => (
           <StatusBadge
             status={request.status}
@@ -99,7 +136,7 @@ function ProductRequestsTable({
       items={requests}
       getItemKey={(request) => String(request.id)}
       isLoading={isLoading}
-      minWidth={760}
+      minWidth={940}
       labels={{
         loading: 'Loading requests...',
         empty: emptyMessage,

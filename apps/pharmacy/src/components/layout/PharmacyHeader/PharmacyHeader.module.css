@@ -3,19 +3,8 @@
   z-index: var(--z-header);
 }
 
-.mobileContainer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 72px;
-  gap: 24px;
-  background-color: var(--color-background-alpha-90);
-  border-bottom: 1px solid var(--color-border);
-  backdrop-filter: blur(16px);
-}
-
 .topbar {
-  display: none;
+  display: flex;
 }
 
 .userMenuWrap {
@@ -121,12 +110,10 @@
   display: none;
 }
 
-@media only screen and (min-width: 1440px) {
-  .mobileContainer {
-    display: none;
-  }
 
-  .topbar {
-    display: flex;
+
+@media only screen and (max-width: 767px) {
+  .userBadge {
+    min-width: 0;
   }
 }

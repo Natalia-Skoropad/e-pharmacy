@@ -1,8 +1,11 @@
 .topbar {
   display: flex;
+  box-sizing: border-box;
+  width: 100%;
   gap: 16px;
   align-items: center;
   justify-content: space-between;
+  min-width: 0;
   min-height: 56px;
   padding: 8px 20px 8px 20px;
   color: var(--color-white);
@@ -12,10 +15,21 @@
   box-shadow: var(--shadow-card-soft);
 }
 
+.navigationToggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin-left: 0;
+}
+
 .pathNav,
 .pathList,
 .pathItem {
   min-width: 0;
+}
+
+.pathNav {
+  flex: 1 1 auto;
 }
 
 .pathList {
@@ -29,6 +43,7 @@
 
 .pathItem {
   display: inline-flex;
+  gap: 10px;
   align-items: center;
   min-width: 0;
 }
@@ -36,7 +51,6 @@
 .link,
 .current {
   display: inline-flex;
-  gap: 10px;
   align-items: center;
   min-width: 0;
   color: var(--color-white);
@@ -100,7 +114,7 @@
 
 .separator {
   flex: 0 0 auto;
-  margin-inline: 10px;
+  margin-inline: 0 10px;
   color: var(--color-white);
   opacity: 0.72;
 }
@@ -116,12 +130,29 @@
 
 @media only screen and (max-width: 767px) {
   .topbar {
+    gap: 8px;
     min-height: 52px;
     padding-inline: 14px;
+  }
+
+  .pathNav {
+    flex: 1 1 auto;
   }
 
   .link,
   .current {
     font-size: var(--fz-16);
+  }
+
+  .leadingIcon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .topbar {
+    gap: 0;
   }
 }
