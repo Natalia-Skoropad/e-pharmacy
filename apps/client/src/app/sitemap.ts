@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
 import { createBackendApiUrl } from '@e-pharmacy/next-api/server';
-import { SITEMAP_STATIC_ROUTES } from '@/lib/seo';
+import { SITEMAP_INDEXABLE_ROUTES } from '@/lib/seo';
 
 import {
   createSitemapRoutes,
@@ -116,7 +116,10 @@ async function fetchAllSitemapItems<TItem>(
 async function getDynamicSitemapEntries(): Promise<SitemapEntry[]> {
   const [products, pharmacies] = await Promise.all([
     fetchAllSitemapItems<SitemapProduct>('/products', PRODUCT_SITEMAP_PER_PAGE),
-    fetchAllSitemapItems<SitemapPharmacy>('/pharmacies', PHARMACY_SITEMAP_PER_PAGE),
+    fetchAllSitemapItems<SitemapPharmacy>(
+      '/pharmacies',
+      PHARMACY_SITEMAP_PER_PAGE
+    ),
   ]);
 
   const productEntries = products
@@ -130,7 +133,9 @@ async function getDynamicSitemapEntries(): Promise<SitemapEntry[]> {
     }));
 
   const pharmacyEntries = pharmacies
-    .filter((pharmacy) => pharmacy.id && pharmacy.name && pharmacy.isActive !== false)
+    .filter(
+      (pharmacy) => pharmacy.id && pharmacy.name && pharmacy.isActive !== false
+    )
     .map((pharmacy) => ({
       path: buildPharmacyPath(pharmacy.name, pharmacy.id),
       priority: 0.7,
@@ -145,7 +150,7 @@ async function getDynamicSitemapEntries(): Promise<SitemapEntry[]> {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fallbackLastModified = new Date();
   const staticEntries = createStaticSitemapEntries(
-    SITEMAP_STATIC_ROUTES,
+    SITEMAP_INDEXABLE_ROUTES,
     fallbackLastModified
   );
   const dynamicEntries = await getDynamicSitemapEntries();

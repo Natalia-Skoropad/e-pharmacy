@@ -2,7 +2,7 @@ import { ROUTES, CLIENT_RESERVED_APP_PREFIXES } from '@/lib/routes';
 
 //===================================================================
 
-const SITEMAP_INDEXABLE_ROUTES = [
+export const SITEMAP_INDEXABLE_ROUTES = [
   ROUTES.HOME,
   ROUTES.PHARMACIES,
   ROUTES.PRODUCTS_CATALOG,
@@ -26,10 +26,8 @@ const ROBOTS_PRIVATE_ROUTE_ROOTS = [
   ...CLIENT_RESERVED_APP_PREFIXES.map((segment) => `/${segment}`),
 ] as const;
 
+//===================================================================
+
 export const ROBOTS_DISALLOW_ROUTES = ROBOTS_PRIVATE_ROUTE_ROOTS.flatMap(
   (route) => [route, `${route}/`]
 );
-
-//===================================================================
-
-export const SITEMAP_STATIC_ROUTES = SITEMAP_INDEXABLE_ROUTES;

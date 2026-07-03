@@ -32,6 +32,7 @@ export type ProductRequestResponseDto = {
   updatedAt?: string;
   requestNumber?: string;
   productId?: string;
+  productImageUrl?: string;
   productArticle?: string;
   productName?: string;
   article: string;

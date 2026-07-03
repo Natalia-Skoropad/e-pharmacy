@@ -38,6 +38,7 @@ export type ProductRequestRow = Readonly<{
   requestNumber: string;
   createdAt: string;
   productId?: EntityId;
+  productImageUrl?: string;
   productArticle: string;
   productName: string;
   category: ProductCategory;
@@ -66,6 +67,20 @@ export type ProductRequestsResponse = Readonly<{
 export type PharmacyProductRequestRow = ProductRequestRow;
 export type PharmacyProductRequestsQueryParams = ProductRequestsQueryParams;
 export type PharmacyProductRequestsResponse = ProductRequestsResponse;
+
+//=============================================================================
+
+export type ProductRequestStatisticsCounts = Record<ProductRequestStatus, number>;
+
+//=============================================================================
+
+export const DEFAULT_PRODUCT_REQUEST_STATISTICS: ProductRequestStatisticsCounts = {
+  draft: 0,
+  new: 0,
+  in_progress: 0,
+  approved: 0,
+  rejected: 0,
+};
 
 //=============================================================================
 

@@ -29,9 +29,12 @@ async function ProductRequestDetailsPage({
   const { requestId } = await params;
 
   if (isProductRequestsFilterSegment(requestId)) {
+    const initialFilters = parseProductRequestsSegments({ filters: [requestId] });
+
     return (
       <ProductRequestsPageContent
-        initialFilters={parseProductRequestsSegments({ filters: [requestId] })}
+        key={JSON.stringify(initialFilters)}
+        initialFilters={initialFilters}
       />
     );
   }

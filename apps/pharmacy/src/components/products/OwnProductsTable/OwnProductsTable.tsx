@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import {
   DataTable,
   StatusBadge,
+  TableHeaderTitle,
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
@@ -26,18 +27,6 @@ type OwnProductsTableProps = Readonly<{
   emptyMessage: string;
   isLoading?: boolean;
 }>;
-
-//===================================================================
-
-function TableHeader({ parts }: Readonly<{ parts: string[] }>) {
-  return (
-    <span className={css.headerTitle}>
-      {parts.map((part) => (
-        <span key={part}>{part}</span>
-      ))}
-    </span>
-  );
-}
 
 //===================================================================
 
@@ -67,7 +56,7 @@ function OwnProductsTable({
       {
         key: 'addedAt',
         width: '100px',
-        title: <TableHeader parts={['Added', 'date']} />,
+        title: <TableHeaderTitle parts={['Added', 'date']} />,
         render: (product) =>
           product.addedAt ? (
             <time dateTime={product.addedAt}>
@@ -102,25 +91,25 @@ function OwnProductsTable({
       {
         key: 'stockQuantity',
         width: '40px',
-        title: <TableHeader parts={['Stock', 'quantity']} />,
+        title: <TableHeaderTitle parts={['Stock', 'quantity']} />,
         render: (product) => product.stockQuantity,
       },
       {
         key: 'reservedQuantity',
         width: '50px',
-        title: <TableHeader parts={['Reserved', 'quantity']} />,
+        title: <TableHeaderTitle parts={['Reserved', 'quantity']} />,
         render: (product) => product.reservedQuantity,
       },
       {
         key: 'availableQuantity',
         width: '50px',
-        title: <TableHeader parts={['Available', 'quantity']} />,
+        title: <TableHeaderTitle parts={['Available', 'quantity']} />,
         render: (product) => product.availableQuantity,
       },
       {
         key: 'currentPrice',
         width: '50px',
-        title: <TableHeader parts={['Current', 'price']} />,
+        title: <TableHeaderTitle parts={['Current', 'price']} />,
         render: (product) => formatPrice(product.currentPrice),
       },
       {

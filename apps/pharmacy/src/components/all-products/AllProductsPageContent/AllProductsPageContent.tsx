@@ -95,16 +95,20 @@ function AllProductsPageContent({
 }: AllProductsPageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
+
   const [filters, setFilters] =
     useState<AllProductsFilterState>(initialFilters);
+
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
   );
+
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);

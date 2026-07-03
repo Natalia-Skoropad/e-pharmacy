@@ -41,12 +41,16 @@ import css from './PharmaciesCatalogFiltersForm.module.css';
 
 type CitySelectValue = 'all' | string;
 
+//===================================================================
+
 type PharmaciesCatalogFiltersFormProps = {
   filters: PharmacyFilters;
   cityOptions: string[];
   visiblePharmaciesCount: number;
   pharmaciesCount: number;
 };
+
+//===================================================================
 
 type PharmaciesHrefFilters = Omit<PharmacyFilters, 'page'> & {
   page?: number;

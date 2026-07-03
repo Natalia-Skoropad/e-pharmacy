@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import {
   DataTable,
   StatusBadge,
+  TableHeaderTitle,
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
@@ -14,8 +15,6 @@ import {
   type PharmacyOrderRow,
 } from '@/lib/orders/orders';
 
-import css from './OrdersTable.module.css';
-
 //===================================================================
 
 type OrdersTableProps = Readonly<{
@@ -23,20 +22,6 @@ type OrdersTableProps = Readonly<{
   emptyMessage: string;
   isLoading?: boolean;
 }>;
-
-//===================================================================
-
-function TableHeader({
-  first,
-  second,
-}: Readonly<{ first: string; second?: string }>) {
-  return (
-    <span className={css.headerTitle}>
-      <span>{first}</span>
-      {second ? <span>{second}</span> : null}
-    </span>
-  );
-}
 
 //===================================================================
 
@@ -49,12 +34,12 @@ function OrdersTable({
     () => [
       {
         key: 'orderNumber',
-        title: <TableHeader first="Order" second="number" />,
+        title: <TableHeaderTitle parts={['Order', 'number']} />,
         render: (order) => order.orderNumber,
       },
       {
         key: 'orderDate',
-        title: <TableHeader first="Order" second="date" />,
+        title: <TableHeaderTitle parts={['Order', 'date']} />,
         render: (order) => (
           <time dateTime={order.orderDate}>
             {formatShortDate(order.orderDate)}
@@ -68,27 +53,27 @@ function OrdersTable({
       },
       {
         key: 'deliveryMethod',
-        title: <TableHeader first="Delivery" second="method" />,
+        title: <TableHeaderTitle parts={['Delivery', 'method']} />,
         render: (order) => DELIVERY_METHOD_LABELS[order.deliveryMethod],
       },
       {
         key: 'paymentMethod',
-        title: <TableHeader first="Payment" second="method" />,
+        title: <TableHeaderTitle parts={['Payment', 'method']} />,
         render: (order) => PAYMENT_METHOD_LABELS[order.paymentMethod],
       },
       {
         key: 'clientComment',
-        title: <TableHeader first="Client" second="comment" />,
+        title: <TableHeaderTitle parts={['Client', 'comment']} />,
         render: (order) => order.clientComment || '—',
       },
       {
         key: 'totalQuantity',
-        title: <TableHeader first="Total" second="quantity" />,
+        title: <TableHeaderTitle parts={['Total', 'quantity']} />,
         render: (order) => order.totalQuantity,
       },
       {
         key: 'totalAmount',
-        title: <TableHeader first="Total" second="amount" />,
+        title: <TableHeaderTitle parts={['Total', 'amount']} />,
         render: (order) => formatPrice(order.totalAmount),
       },
       {

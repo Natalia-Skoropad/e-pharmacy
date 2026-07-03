@@ -2,15 +2,30 @@ import { Types } from 'mongoose';
 
 import { Pharmacy } from '../models/pharmacy.model';
 import { ProductRequest } from '../models/productRequest.model';
+import '../models/product.model';
 
-import type { ProductRequestEntity, ProductRequestResponseDto } from '../types/product-request';
+import type {
+  ProductRequestEntity,
+  ProductRequestResponseDto,
+} from '../types/product-request';
+
 import type { ProductRequestsQuery } from '../schemas/product-request.schema';
 
 import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
 
 //===============================================================
 
-type ProductRequestDocument = ProductRequestEntity & { _id: Types.ObjectId };
+type ProductRequestProductDocument = {
+  _id: Types.ObjectId;
+  imageUrl?: string;
+  article?: string;
+  name?: string;
+};
+
+type ProductRequestDocument = Omit<ProductRequestEntity, 'productId'> & {
+  _id: Types.ObjectId;
+  productId?: Types.ObjectId | ProductRequestProductDocument;
+};
 
 //===============================================================
 
@@ -40,6 +55,31 @@ async function getCurrentPharmacyId(userId: string) {
 
 //===============================================================
 
+function isProductRequestProductDocument(
+  value: unknown
+): value is ProductRequestProductDocument {
+  return Boolean(
+    value &&
+    typeof value === 'object' &&
+    '_id' in value &&
+    !(value instanceof Types.ObjectId)
+  );
+}
+
+//===============================================================
+
+function getProductRequestProductId(
+  product: ProductRequestDocument['productId']
+): string | undefined {
+  if (!product) return undefined;
+
+  return product instanceof Types.ObjectId
+    ? String(product)
+    : String(product._id);
+}
+
+//===============================================================
+
 function serializeProductRequest(
   request: ProductRequestDocument
 ): ProductRequestResponseDto {
@@ -48,9 +88,16 @@ function serializeProductRequest(
     createdAt: request.createdAt.toISOString(),
     updatedAt: request.updatedAt.toISOString(),
     requestNumber: String(request._id),
-    productId: request.productId ? String(request.productId) : undefined,
-    productArticle: request.article,
-    productName: request.name,
+    productId: getProductRequestProductId(request.productId),
+    productImageUrl: isProductRequestProductDocument(request.productId)
+      ? request.productId.imageUrl
+      : undefined,
+    productArticle: isProductRequestProductDocument(request.productId)
+      ? request.productId.article || request.article
+      : request.article,
+    productName: isProductRequestProductDocument(request.productId)
+      ? request.productId.name || request.name
+      : request.name,
     article: request.article,
     name: request.name,
     category: request.category,
@@ -113,6 +160,7 @@ export async function getProductRequestsService(
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(query.perPage)
+      .populate('productId', 'imageUrl article name')
       .lean<ProductRequestDocument[]>(),
     ProductRequest.countDocuments(filter),
   ]);

@@ -32,9 +32,12 @@ async function ProductRequestsPage({ params }: ProductRequestsPageProps) {
     return <ProductRequestDetailsPageContent requestId={segments?.[0] ?? ''} />;
   }
 
+  const initialFilters = parseProductRequestsSegments(resolvedParams);
+
   return (
     <ProductRequestsPageContent
-      initialFilters={parseProductRequestsSegments(resolvedParams)}
+      key={JSON.stringify(initialFilters)}
+      initialFilters={initialFilters}
     />
   );
 }

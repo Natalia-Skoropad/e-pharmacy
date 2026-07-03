@@ -69,6 +69,8 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
   { label: CHECKOUT_TITLE },
 ];
 
+//===================================================================
+
 function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const { isAuthenticated, isAuthReady, user } = useAuth();
   const searchParams = useSearchParams();

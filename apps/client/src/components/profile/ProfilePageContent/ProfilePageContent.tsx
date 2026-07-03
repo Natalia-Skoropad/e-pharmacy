@@ -105,6 +105,8 @@ type ProfileTab =
   | 'favorite-pharmacies'
   | 'sessions';
 
+//===================================================================
+
 const TABS: Array<{
   value: ProfileTab;
   label: string;

@@ -59,6 +59,8 @@ type ProductCatalogFiltersFormProps = {
   productsCount: number;
 };
 
+//===================================================================
+
 type CatalogHrefFilters = Omit<ProductCatalogFilters, 'page'> & {
   page?: number;
 };
@@ -146,7 +148,8 @@ function ProductCatalogFiltersForm({
   const productCatalogSortOptions = useMemo(
     () =>
       filterOptions.sort.filter(
-        (option) => option.value !== 'price-asc' && option.value !== 'price-desc'
+        (option) =>
+          option.value !== 'price-asc' && option.value !== 'price-desc'
       ),
     [filterOptions.sort]
   );

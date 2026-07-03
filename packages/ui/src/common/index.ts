@@ -33,3 +33,6 @@ export * from './StatsCard';
 export * from './StatusBadge';
 export * from './StatusBanner';
 export * from './DataTable';
+export * from './TableHeaderTitle';
+export * from './TableImagePreview';
+export * from './ProductRequestStatistics';

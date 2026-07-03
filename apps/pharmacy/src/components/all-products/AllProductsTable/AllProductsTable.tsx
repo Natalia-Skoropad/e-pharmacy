@@ -4,6 +4,8 @@ import {
   Button,
   DataTable,
   StatusBadge,
+  TableHeaderTitle,
+  TableImagePreview,
   TextActionButton,
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
@@ -14,8 +16,7 @@ import { formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import { PRODUCT_STATUS_LABELS } from '@/lib/products/products';
 import { getPharmacyAllProductPath } from '@/lib/layout/routes';
-
-import css from './AllProductsTable.module.css';
+import { getProductImageSrc } from '@/lib/products/product-images';
 
 //===================================================================
 
@@ -25,18 +26,6 @@ type AllProductsTableProps = Readonly<{
   emptyMessage: string;
   isLoading?: boolean;
 }>;
-
-//===================================================================
-
-function TableHeader({ parts }: Readonly<{ parts: string[] }>) {
-  return (
-    <span className={css.headerTitle}>
-      {parts.map((part) => (
-        <span key={part}>{part}</span>
-      ))}
-    </span>
-  );
-}
 
 //===================================================================
 
@@ -80,7 +69,7 @@ function AllProductsTable({
     () => [
       {
         key: 'createdAt',
-        title: <TableHeader parts={['Created', 'date']} />,
+        title: <TableHeaderTitle parts={['Created', 'date']} />,
         render: (product) =>
           product.createdAt ? (
             <time dateTime={product.createdAt}>
@@ -91,8 +80,19 @@ function AllProductsTable({
           ),
       },
       {
+        key: 'productPhoto',
+        title: <TableHeaderTitle parts={['Product', 'photo']} />,
+        render: (product) => (
+          <TableImagePreview
+            src={getProductImageSrc(product.imageUrl)}
+            alt={`${product.name} photo`}
+            fallback={product.name.charAt(0)}
+          />
+        ),
+      },
+      {
         key: 'article',
-        title: <TableHeader parts={['Product', 'article']} />,
+        title: <TableHeaderTitle parts={['Product', 'article']} />,
         render: (product) => (
           <TextActionButton href={getPharmacyAllProductPath(product.id)}>
             {product.article}
@@ -101,7 +101,7 @@ function AllProductsTable({
       },
       {
         key: 'name',
-        title: <TableHeader parts={['Product', 'name']} />,
+        title: <TableHeaderTitle parts={['Product', 'name']} />,
         render: (product) => (
           <TextActionButton href={getPharmacyAllProductPath(product.id)}>
             {product.name}
@@ -110,12 +110,12 @@ function AllProductsTable({
       },
       {
         key: 'category',
-        title: <TableHeader parts={['Product', 'category']} />,
+        title: <TableHeaderTitle parts={['Product', 'category']} />,
         render: (product) => PRODUCT_CATEGORY_LABELS[product.category],
       },
       {
         key: 'status',
-        title: <TableHeader parts={['Product', 'status']} />,
+        title: <TableHeaderTitle parts={['Product', 'status']} />,
         render: (product) => (
           <StatusBadge
             status={product.status}
@@ -125,7 +125,7 @@ function AllProductsTable({
       },
       {
         key: 'addedToMyPharmacy',
-        title: <TableHeader parts={['Added to', 'my pharmacy']} />,
+        title: <TableHeaderTitle parts={['Added to', 'my pharmacy']} />,
         render: (product) =>
           isProductAddedToCurrentPharmacy(product, currentPharmacyId)
             ? 'Yes'
@@ -153,7 +153,6 @@ function AllProductsTable({
 
   return (
     <DataTable
-      className={css.tableWrap}
       columns={columns}
       items={products}
       getItemKey={(product) => String(product.id)}

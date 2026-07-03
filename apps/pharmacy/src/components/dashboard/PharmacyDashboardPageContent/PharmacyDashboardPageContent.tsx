@@ -10,8 +10,6 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock3,
-  FileClock,
-  FilePlus2,
   LayoutDashboard,
   PackageCheck,
   PackageX,
@@ -26,24 +24,30 @@ import {
 import {
   ButtonLink,
   LoadingSpinner,
+  ProductRequestStatistics,
   SelectField,
   StatusBanner,
 } from '@e-pharmacy/ui/common';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { EntityId, OrderStatus, PharmacyStatus } from '@e-pharmacy/types';
-import type { ProductRequestStatus } from '@e-pharmacy/types/product-requests';
+
+import {
+  DEFAULT_PRODUCT_REQUEST_STATISTICS,
+  type ProductRequestStatisticsCounts,
+} from '@e-pharmacy/types/product-requests';
+
 import { formatPrice } from '@e-pharmacy/utils/formatters';
 
 import {
   getMyPharmacyProfile,
   getPharmacyClients,
   getPharmacyOrders,
-  getPharmacyProductRequests,
   getPharmacyProducts,
 } from '@/lib/api/browser';
 
 import type { ClientStatus } from '@/lib/clients/clients';
+import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 
 import type {
   OwnProductStatus,
@@ -133,13 +137,7 @@ type DashboardData = Readonly<{
     availableValue: number;
   };
 
-  requests: {
-    draft: number;
-    new: number;
-    inProgress: number;
-    approved: number;
-    rejected: number;
-  };
+  requests: ProductRequestStatisticsCounts;
 }>;
 
 //===================================================================
@@ -182,13 +180,7 @@ const DEFAULT_DATA: DashboardData = {
     availableValue: 0,
   },
 
-  requests: {
-    draft: 0,
-    new: 0,
-    inProgress: 0,
-    approved: 0,
-    rejected: 0,
-  },
+  requests: DEFAULT_PRODUCT_REQUEST_STATISTICS,
 };
 
 //===================================================================
@@ -358,20 +350,6 @@ async function getProductStatusTotal(
 
 //===================================================================
 
-async function getRequestStatusTotal(
-  status: ProductRequestStatus
-): Promise<number> {
-  const response = await getPharmacyProductRequests({
-    page: 1,
-    perPage: 1,
-    status,
-  });
-
-  return response.total;
-}
-
-//===================================================================
-
 async function loadDashboardData(
   selectedYear: string,
   selectedMonth: MonthFilterValue
@@ -393,11 +371,7 @@ async function loadDashboardData(
     blockedProducts,
     inStockProducts,
     outOfStockProducts,
-    draftRequests,
-    newRequests,
-    inProgressRequests,
-    approvedRequests,
-    rejectedRequests,
+    requestStatistics,
   ] = await Promise.all([
     getOrderStatusStat('new', dateRange),
     getOrderStatusStat('in_progress', dateRange),
@@ -411,11 +385,7 @@ async function loadDashboardData(
     getProductStatusTotal(pharmacyId, 'blocked'),
     getProductStatusTotal(pharmacyId, undefined, 'available'),
     getProductStatusTotal(pharmacyId, undefined, 'empty'),
-    getRequestStatusTotal('draft'),
-    getRequestStatusTotal('new'),
-    getRequestStatusTotal('in_progress'),
-    getRequestStatusTotal('approved'),
-    getRequestStatusTotal('rejected'),
+    getPharmacyProductRequestStatistics(),
   ]);
 
   const financialStats = getFinancialStats(allProducts.items);
@@ -462,13 +432,7 @@ async function loadDashboardData(
       availableValue: financialStats.availableValue,
     },
 
-    requests: {
-      draft: draftRequests,
-      new: newRequests,
-      inProgress: inProgressRequests,
-      approved: approvedRequests,
-      rejected: rejectedRequests,
-    },
+    requests: requestStatistics,
   };
 }
 
@@ -561,7 +525,6 @@ function PharmacyDashboardPageContent() {
   const [dashboardData, setDashboardData] =
     useState<DashboardData>(DEFAULT_DATA);
   const [isLoading, setIsLoading] = useState(true);
-  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -587,7 +550,7 @@ function PharmacyDashboardPageContent() {
     return () => {
       isMounted = false;
     };
-  }, [reloadKey, selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear]);
 
   const banner = getPharmacyBanner(dashboardData.pharmacyStatus);
 
@@ -699,44 +662,6 @@ function PharmacyDashboardPageContent() {
       tone: 'yellow',
       icon: ShoppingBag,
       href: getPharmacyProductsPath(),
-    },
-  ];
-
-  const requestCards: StatusCardConfig[] = [
-    {
-      title: 'Draft',
-      value: dashboardData.requests.draft,
-      tone: 'gray',
-      icon: FileClock,
-      href: getPharmacyRequestsFilterPath({ status: 'draft' }),
-    },
-    {
-      title: 'New',
-      value: dashboardData.requests.new,
-      tone: 'blue',
-      icon: FilePlus2,
-      href: getPharmacyRequestsFilterPath({ status: 'new' }),
-    },
-    {
-      title: 'In work',
-      value: dashboardData.requests.inProgress,
-      tone: 'yellow',
-      icon: Clock3,
-      href: getPharmacyRequestsFilterPath({ status: 'in_progress' }),
-    },
-    {
-      title: 'Approved',
-      value: dashboardData.requests.approved,
-      tone: 'green',
-      icon: CheckCircle2,
-      href: getPharmacyRequestsFilterPath({ status: 'approved' }),
-    },
-    {
-      title: 'Rejected',
-      value: dashboardData.requests.rejected,
-      tone: 'red',
-      icon: XCircle,
-      href: getPharmacyRequestsFilterPath({ status: 'rejected' }),
     },
   ];
 
@@ -929,11 +854,12 @@ function PharmacyDashboardPageContent() {
                   </ButtonLink>
                 </div>
 
-                <div className={css.cardGrid}>
-                  {requestCards.map((card) => (
-                    <StatusStatCard key={card.title} {...card} />
-                  ))}
-                </div>
+                <ProductRequestStatistics
+                  counts={dashboardData.requests}
+                  getStatusHref={(status) =>
+                    getPharmacyRequestsFilterPath({ status })
+                  }
+                />
 
                 {Object.values(dashboardData.requests).every(
                   (value) => value === 0

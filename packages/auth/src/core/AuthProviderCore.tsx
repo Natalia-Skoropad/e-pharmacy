@@ -57,6 +57,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 //===================================================================
 
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 4_000;
+const AUTH_SESSION_REFRESH_INTERVAL_MS = 8 * 60 * 1000;
 
 //===================================================================
 class AuthBootstrapTimeoutError extends Error {
@@ -73,6 +74,8 @@ const noopSessionHintStorage: AuthSessionHintStorage = {
   setHint: () => undefined,
   clearHint: () => undefined,
 };
+
+//===================================================================
 
 type AuthProviderCoreProps = AuthProviderServices & {
   children: ReactNode;
@@ -317,6 +320,41 @@ export function AuthProviderCore({
     }
   }, [restoreCurrentUser]);
 
+  const refreshActiveSession = useCallback(async () => {
+    if (!userRef.current) return null;
+
+    const lifecycleVersion = lifecycleVersionRef.current;
+    setIsRefreshingUser(true);
+
+    try {
+      const response = await refreshSessionOnce();
+
+      if (lifecycleVersion !== lifecycleVersionRef.current) return null;
+
+      applyAuthenticatedUser(response.user, false);
+      return response.user;
+    } catch (refreshError) {
+      if (lifecycleVersion !== lifecycleVersionRef.current) return null;
+
+      if (isInvalidSessionError(refreshError)) {
+        clearAuthState(false);
+      } else {
+        markAuthUnavailable(refreshError, true);
+      }
+
+      return null;
+    } finally {
+      if (lifecycleVersion === lifecycleVersionRef.current) {
+        setIsRefreshingUser(false);
+      }
+    }
+  }, [
+    applyAuthenticatedUser,
+    clearAuthState,
+    markAuthUnavailable,
+    refreshSessionOnce,
+  ]);
+
   const login = useCallback(
     async (payload: LoginPayload) => {
       lifecycleVersionRef.current += 1;
@@ -381,6 +419,16 @@ export function AuthProviderCore({
       document.removeEventListener('visibilitychange', revalidateOnFocus);
     };
   }, [clearAuthState, restoreCurrentUser, sessionSync]);
+
+  useEffect(() => {
+    if (status !== 'authenticated') return undefined;
+
+    const intervalId = window.setInterval(() => {
+      void refreshActiveSession();
+    }, AUTH_SESSION_REFRESH_INTERVAL_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [refreshActiveSession, status]);
 
   useEffect(() => {
     void runBootstrap();

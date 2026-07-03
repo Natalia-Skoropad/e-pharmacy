@@ -302,6 +302,9 @@ importers:
       '@e-pharmacy/hooks':
         specifier: workspace:*
         version: link:../hooks
+      '@e-pharmacy/types':
+        specifier: workspace:*
+        version: link:../types
       '@e-pharmacy/utils':
         specifier: workspace:*
         version: link:../utils

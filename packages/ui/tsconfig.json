@@ -15,6 +15,12 @@
       ],
       "@e-pharmacy/hooks/*": [
         "../hooks/src/*"
+      ],
+      "@e-pharmacy/types": [
+        "../types/src/index.ts"
+      ],
+      "@e-pharmacy/types/*": [
+        "../types/src/*"
       ]
     }
   }

@@ -5,6 +5,7 @@ import {
   DataTable,
   PictureUpload,
   StatusBadge,
+  TableHeaderTitle,
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
@@ -22,18 +23,6 @@ type ClientsTableProps = Readonly<{
   emptyMessage: string;
   isLoading?: boolean;
 }>;
-
-//===================================================================
-
-function TableHeader({ parts }: Readonly<{ parts: string[] }>) {
-  return (
-    <span className={css.headerTitle}>
-      {parts.map((part) => (
-        <span key={part}>{part}</span>
-      ))}
-    </span>
-  );
-}
 
 //===================================================================
 
@@ -81,7 +70,7 @@ function ClientsTable({
     () => [
       {
         key: 'clientId',
-        title: <TableHeader parts={['Client', 'ID']} />,
+        title: <TableHeaderTitle parts={['Client', 'ID']} />,
         render: (client) => client.id,
       },
       {
@@ -91,7 +80,7 @@ function ClientsTable({
       },
       {
         key: 'firstOrderAt',
-        title: <TableHeader parts={['Order', 'date']} />,
+        title: <TableHeaderTitle parts={['Order', 'date']} />,
         render: (client) => <FirstOrderDate value={client.firstOrderAt} />,
       },
       {
@@ -123,12 +112,12 @@ function ClientsTable({
       },
       {
         key: 'successfulOrdersCount',
-        title: <TableHeader parts={['Orders', 'count']} />,
+        title: <TableHeaderTitle parts={['Orders', 'count']} />,
         render: (client) => client.successfulOrdersCount,
       },
       {
         key: 'successfulOrdersAmount',
-        title: <TableHeader parts={['Orders', 'amount']} />,
+        title: <TableHeaderTitle parts={['Orders', 'amount']} />,
         render: (client) => formatPrice(client.successfulOrdersAmount),
       },
       {

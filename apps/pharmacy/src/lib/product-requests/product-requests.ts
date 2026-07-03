@@ -42,8 +42,20 @@ export function normalizePharmacyProductRequest(
 
   if (!id || !createdAt) return null;
 
+  const rawProduct = isRecord(rawRequest.product)
+    ? rawRequest.product
+    : undefined;
+
   const productId =
-    getStringValue(rawRequest.productId) ?? getStringValue(rawRequest.product);
+    getStringValue(rawRequest.productId) ??
+    getStringValue(rawProduct?.id) ??
+    getStringValue(rawProduct?._id) ??
+    getStringValue(rawRequest.product);
+
+  const productImageUrl =
+    getStringValue(rawRequest.productImageUrl) ??
+    getStringValue(rawRequest.imageUrl) ??
+    getStringValue(rawProduct?.imageUrl);
 
   const productArticle =
     getStringValue(rawRequest.productArticle) ??
@@ -60,6 +72,7 @@ export function normalizePharmacyProductRequest(
     requestNumber: getStringValue(rawRequest.requestNumber) ?? id,
     createdAt,
     productId,
+    productImageUrl,
     productArticle,
     productName,
     category: isProductCategory(rawRequest.category)

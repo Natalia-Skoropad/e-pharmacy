@@ -3,6 +3,8 @@ import { useMemo } from 'react';
 import {
   DataTable,
   StatusBadge,
+  TableHeaderTitle,
+  TableImagePreview,
   TextActionButton,
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
@@ -21,6 +23,8 @@ import {
   getPharmacyRequestPath,
 } from '@/lib/layout/routes';
 
+import { getProductImageSrc } from '@/lib/products/product-images';
+
 import css from './ProductRequestsTable.module.css';
 
 //===================================================================
@@ -30,18 +34,6 @@ type ProductRequestsTableProps = Readonly<{
   emptyMessage: string;
   isLoading?: boolean;
 }>;
-
-//===================================================================
-
-function TableHeader({ parts }: Readonly<{ parts: string[] }>) {
-  return (
-    <span className={css.headerTitle}>
-      {parts.map((part) => (
-        <span key={part}>{part}</span>
-      ))}
-    </span>
-  );
-}
 
 //===================================================================
 
@@ -62,7 +54,7 @@ function ProductRequestsTable({
     () => [
       {
         key: 'createdAt',
-        title: <TableHeader parts={['Created', 'date']} />,
+        title: <TableHeaderTitle parts={['Created', 'date']} />,
         render: (request) => (
           <time dateTime={request.createdAt}>
             {formatShortDate(request.createdAt)}
@@ -70,8 +62,19 @@ function ProductRequestsTable({
         ),
       },
       {
+        key: 'productPhoto',
+        title: <TableHeaderTitle parts={['Product', 'photo']} />,
+        render: (request) => (
+          <TableImagePreview
+            src={getProductImageSrc(request.productImageUrl)}
+            alt={`${request.productName} photo`}
+            fallback={request.productName.charAt(0)}
+          />
+        ),
+      },
+      {
         key: 'requestNumber',
-        title: <TableHeader parts={['Request', 'number']} />,
+        title: <TableHeaderTitle parts={['Request', 'number']} />,
         render: (request) => (
           <TextActionButton href={getPharmacyRequestPath(request.id)}>
             {request.requestNumber}
@@ -80,7 +83,7 @@ function ProductRequestsTable({
       },
       {
         key: 'productArticle',
-        title: <TableHeader parts={['Product', 'article']} />,
+        title: <TableHeaderTitle parts={['Product', 'article']} />,
         render: (request) => {
           const productHref = getProductHref(request);
 
@@ -97,7 +100,7 @@ function ProductRequestsTable({
       },
       {
         key: 'productName',
-        title: <TableHeader parts={['Product', 'name']} />,
+        title: <TableHeaderTitle parts={['Product', 'name']} />,
         render: (request) => {
           const productHref = getProductHref(request);
 
@@ -114,12 +117,12 @@ function ProductRequestsTable({
       },
       {
         key: 'category',
-        title: <TableHeader parts={['Product', 'category']} />,
+        title: <TableHeaderTitle parts={['Product', 'category']} />,
         render: (request) => PRODUCT_CATEGORY_LABELS[request.category],
       },
       {
         key: 'status',
-        title: <TableHeader parts={['Request', 'status']} />,
+        title: <TableHeaderTitle parts={['Request', 'status']} />,
         render: (request) => (
           <StatusBadge
             status={request.status}

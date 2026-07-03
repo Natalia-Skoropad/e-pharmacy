@@ -8,7 +8,8 @@ import {
   Button,
   ButtonLink,
   DataTable,
-  PictureUpload,
+  LoadingSpinner,
+  ShimmerImage,
   RatingSummary,
   ReviewsList,
   StatusBadge,
@@ -19,8 +20,7 @@ import {
   type TabItem,
 } from '@e-pharmacy/ui/common';
 
-import { PageHeader } from '@e-pharmacy/ui/layout';
-import { PageLoader } from '@e-pharmacy/ui/status-pages';
+import { Container, PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/core';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 
@@ -40,6 +40,7 @@ import {
 } from '@/lib/api/browser';
 
 import { getPharmacyAllProductsPath } from '@/lib/layout/routes';
+import { getProductImageSrc } from '@/lib/products/product-images';
 
 import css from './AllProductDetailsPageContent.module.css';
 
@@ -203,29 +204,6 @@ function getAvailableQuantity(offer: ProductOffer | null): number {
     offer.availableQuantity ??
     Math.max(0, offer.totalQuantity - offer.reservedQuantity)
   );
-}
-
-//===================================================================
-
-function getProductImageSrc(imageUrl: string | undefined): string | undefined {
-  if (!imageUrl) return undefined;
-
-  if (/^(https?:|data:|blob:)/i.test(imageUrl)) return imageUrl;
-
-  const apiUrl = (
-    process.env.NEXT_PUBLIC_API_URL ||
-    (process.env.NODE_ENV !== 'production' ? 'http://localhost:4000' : '')
-  ).replace(/\/$/, '');
-
-  if (apiUrl && imageUrl.startsWith('/images/')) {
-    return `${apiUrl}${imageUrl}`;
-  }
-
-  if (apiUrl && imageUrl.startsWith('images/')) {
-    return `${apiUrl}/${imageUrl}`;
-  }
-
-  return imageUrl;
 }
 
 //===================================================================
@@ -502,14 +480,28 @@ function AllProductDetailsPageContent({
 
   if (isLoading) {
     return (
-      <main className={css.page} aria-label="Loading global product">
-        <PageLoader label="Loading product data..." />
-      </main>
+      <Container
+        as="main"
+        variant="fluid"
+        className={css.page}
+        aria-label="Loading global product"
+      >
+        <div className={css.contentCard}>
+          <div className={css.loaderBox}>
+            <LoadingSpinner label="Loading product data..." />
+          </div>
+        </div>
+      </Container>
     );
   }
 
   return (
-    <main className={css.page} aria-labelledby="global-product-page-title">
+    <Container
+      as="main"
+      variant="fluid"
+      className={css.page}
+      aria-labelledby="global-product-page-title"
+    >
       <div className={css.contentCard}>
         <div className={css.stack}>
           <div className={css.titleBlock}>
@@ -564,11 +556,15 @@ function AllProductDetailsPageContent({
                   >
                     <div className={css.visualCard}>
                       {productImageSrc ? (
-                        <PictureUpload
-                          className={css.image}
-                          src={productImageSrc}
-                          alt={product.name}
-                        />
+                        <span className={css.imageFrame}>
+                          <ShimmerImage
+                            className={css.image}
+                            src={productImageSrc}
+                            alt={product.name}
+                            sizes="(min-width: 1440px) 420px, 90vw"
+                            unoptimized
+                          />
+                        </span>
                       ) : (
                         <div
                           className={css.imagePlaceholder}
@@ -764,7 +760,7 @@ function AllProductDetailsPageContent({
           ) : null}
         </div>
       </div>
-    </main>
+    </Container>
   );
 }
 

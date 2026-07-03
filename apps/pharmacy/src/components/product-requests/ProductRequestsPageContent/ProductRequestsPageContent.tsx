@@ -8,6 +8,7 @@ import {
   Button,
   CountLabel,
   FiltersButton,
+  ProductRequestStatistics,
   RowsPerPageSelect,
   SearchInput,
   StatusBanner,
@@ -24,13 +25,17 @@ import {
 
 import {
   DEFAULT_PRODUCT_REQUESTS_FILTERS,
+  DEFAULT_PRODUCT_REQUEST_STATISTICS,
   type PharmacyProductRequestRow,
   type PharmacyProductRequestsQueryParams,
+  type ProductRequestStatisticsCounts,
   type ProductRequestsFilterState,
 } from '@e-pharmacy/types/product-requests';
 
 import { getPharmacyProductRequests } from '@/lib/api/browser';
+import { getPharmacyRequestsFilterPath } from '@/lib/layout/routes';
 import { buildProductRequestsPath } from '@/lib/product-requests/product-request-paths';
+import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 
 import { ProductRequestsFiltersDrawer } from '@/components/product-requests/ProductRequestsFiltersDrawer';
 import { ProductRequestsTable } from '@/components/product-requests/ProductRequestsTable';
@@ -82,11 +87,15 @@ function ProductRequestsPageContent({
 }: ProductRequestsPageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
+
   const [filters, setFilters] =
     useState<ProductRequestsFilterState>(initialFilters);
+
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [requests, setRequests] = useState<PharmacyProductRequestRow[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
+  const [requestStatistics, setRequestStatistics] =
+    useState<ProductRequestStatisticsCounts>(DEFAULT_PRODUCT_REQUEST_STATISTICS);
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -101,10 +110,32 @@ function ProductRequestsPageContent({
     onClose: () => setIsFiltersOpen(false),
   });
 
+
   const queryParams = useMemo(
     () => getProductRequestsQueryParams(filters, rowsPerPage),
     [filters, rowsPerPage]
   );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadProductRequestStatistics() {
+      try {
+        const statistics = await getPharmacyProductRequestStatistics();
+        if (isMounted) setRequestStatistics(statistics);
+      } catch {
+        if (isMounted) {
+          setRequestStatistics(DEFAULT_PRODUCT_REQUEST_STATISTICS);
+        }
+      }
+    }
+
+    void loadProductRequestStatistics();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -216,6 +247,11 @@ function ProductRequestsPageContent({
             }
           />
         </div>
+
+        <ProductRequestStatistics
+          counts={requestStatistics}
+          getStatusHref={(status) => getPharmacyRequestsFilterPath({ status })}
+        />
 
         <StatusBanner
           status="new"
