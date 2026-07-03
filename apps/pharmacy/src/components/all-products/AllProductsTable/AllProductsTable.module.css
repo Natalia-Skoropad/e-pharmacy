@@ -1,17 +1,3 @@
-.tableWrap {
-  width: fit-content;
-  max-width: 100%;
-}
-
-.tableWrap :global(table) {
-  width: max-content;
-}
-
-.tableWrap :global(th),
-.tableWrap :global(td) {
-  white-space: nowrap;
-}
-
 .headerTitle {
   display: inline-flex;
   flex-direction: column;
@@ -20,6 +6,12 @@
   white-space: nowrap;
 }
 
-.muted {
-  color: var(--color-text-secondary);
+.disabledAction {
+  color: var(--color-text-muted) !important;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.disabledAction::after {
+  display: none;
 }

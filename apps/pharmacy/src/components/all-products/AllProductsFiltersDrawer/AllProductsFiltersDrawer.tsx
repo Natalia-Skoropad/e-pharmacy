@@ -4,7 +4,6 @@ import {
   CloseIconButton,
   DateFilter,
   ResetFiltersButton,
-  SearchInput,
   SelectField,
   type SelectOption,
 } from '@e-pharmacy/ui/common';
@@ -101,30 +100,14 @@ function AllProductsFiltersDrawer({
             isActive={Boolean(
               filters.createdDate.from || filters.createdDate.to
             )}
+            applyOnSubmit
+            applyLabel="Apply"
             onChange={(createdDate) => onChange({ ...filters, createdDate })}
-          />
-
-          <SearchInput
-            id="all-products-name-search"
-            label="Name search"
-            value={filters.name}
-            placeholder="Product name"
-            isActive={Boolean(filters.name)}
-            onChange={(name) => onChange({ ...filters, name })}
-          />
-
-          <SearchInput
-            id="all-products-article-search"
-            label="Article search"
-            value={filters.article}
-            placeholder="Product article"
-            isActive={Boolean(filters.article)}
-            onChange={(article) => onChange({ ...filters, article })}
           />
 
           <SelectField
             id="all-products-category"
-            label="Category"
+            label="Product category"
             value={filters.category}
             options={CATEGORY_OPTIONS}
             isActive={filters.category !== 'all'}
@@ -133,7 +116,7 @@ function AllProductsFiltersDrawer({
 
           <SelectField
             id="all-products-status"
-            label="Status"
+            label="Product status"
             value={filters.status}
             options={STATUS_OPTIONS}
             isActive={filters.status !== 'all'}

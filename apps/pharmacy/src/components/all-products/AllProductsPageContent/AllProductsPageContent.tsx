@@ -9,9 +9,11 @@ import {
   FiltersButton,
   Pagination,
   RowsPerPageSelect,
+  SearchInput,
   StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
+
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import {
@@ -28,6 +30,7 @@ import {
   DEFAULT_ALL_PRODUCTS_FILTERS,
   type AllProductsFilterState,
 } from '@/lib/products/all-products-filters';
+
 import { buildAllProductsPath } from '@/lib/products/all-product-paths';
 
 import { AllProductsFiltersDrawer } from '@/components/all-products/AllProductsFiltersDrawer';
@@ -92,7 +95,8 @@ function AllProductsPageContent({
 }: AllProductsPageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [filters, setFilters] = useState<AllProductsFilterState>(initialFilters);
+  const [filters, setFilters] =
+    useState<AllProductsFilterState>(initialFilters);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
@@ -217,7 +221,10 @@ function AllProductsPageContent({
 
   return (
     <main className={css.page} aria-labelledby="all-products-page-title">
-      <div className={css.card}>
+      <section
+        className={css.heroCard}
+        aria-labelledby="all-products-page-title"
+      >
         <PageHeader
           title="All products"
           titleId="all-products-page-title"
@@ -231,65 +238,88 @@ function AllProductsPageContent({
           }
         />
 
-        <div className={css.stack}>
-          <StatusBanner
-            status="new"
-            label="New"
-            title="Catalog is available in read-only mode"
-            message="Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
-          />
-
-          <div className={css.toolbar}>
-            <div className={css.toolbarActions}>
-              <RowsPerPageSelect
-                id="all-products-rows-per-page"
-                value={rowsPerPage}
-                onChange={handleRowsPerPageChange}
-              />
-
-              <FiltersButton
-                activeCount={activeFiltersCount}
-                controlsId="all-products-filters-panel"
-                isExpanded={isFiltersOpen}
-                onClick={() => setIsFiltersOpen(true)}
-              />
-            </div>
-          </div>
-
-          <AllProductsTable
-            currentPharmacyId={currentPharmacyId}
-            products={products}
-            isLoading={!isProfileLoaded || isLoading}
-            emptyMessage={
-              hasActiveFilters
-                ? 'No products found for the selected filters.'
-                : 'No active or blocked Admin products are available yet.'
+        <div className={css.searchGrid}>
+          <SearchInput
+            id="all-products-product-article-search"
+            label="Product article search"
+            value={filters.article}
+            placeholder="Product article"
+            isActive={Boolean(filters.article)}
+            onChange={(article) =>
+              handleFiltersChange({
+                ...filters,
+                article,
+              })
             }
           />
 
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            getPageHref={(page) => String(page)}
-            ariaLabel="All products pagination"
-            renderLink={({
-              href,
-              className,
-              children,
-              'aria-label': label,
-            }) => (
-              <button
-                className={className}
-                type="button"
-                aria-label={label}
-                onClick={() => setCurrentPage(Number(href))}
-              >
-                {children}
-              </button>
-            )}
+          <SearchInput
+            id="all-products-product-name-search"
+            label="Product name search"
+            value={filters.name}
+            placeholder="Product name"
+            isActive={Boolean(filters.name)}
+            onChange={(name) =>
+              handleFiltersChange({
+                ...filters,
+                name,
+              })
+            }
           />
         </div>
-      </div>
+
+        <StatusBanner
+          status="new"
+          label="New"
+          title="Catalog is available in read-only mode"
+          message="Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
+        />
+      </section>
+
+      <section className={css.tableCard} aria-label="All products table">
+        <div className={css.toolbar}>
+          <RowsPerPageSelect
+            id="all-products-rows-per-page"
+            value={rowsPerPage}
+            onChange={handleRowsPerPageChange}
+          />
+
+          <FiltersButton
+            activeCount={activeFiltersCount}
+            controlsId="all-products-filters-panel"
+            isExpanded={isFiltersOpen}
+            onClick={() => setIsFiltersOpen(true)}
+          />
+        </div>
+
+        <AllProductsTable
+          currentPharmacyId={currentPharmacyId}
+          products={products}
+          isLoading={!isProfileLoaded || isLoading}
+          emptyMessage={
+            hasActiveFilters
+              ? 'No products found for the selected filters.'
+              : 'No active or blocked Admin products are available yet.'
+          }
+        />
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          getPageHref={(page) => String(page)}
+          ariaLabel="All products pagination"
+          renderLink={({ href, className, children, 'aria-label': label }) => (
+            <button
+              className={className}
+              type="button"
+              aria-label={label}
+              onClick={() => setCurrentPage(Number(href))}
+            >
+              {children}
+            </button>
+          )}
+        />
+      </section>
 
       {isFiltersOpen ? (
         <AllProductsFiltersDrawer

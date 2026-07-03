@@ -29,6 +29,12 @@ export type DateFilterProps = Readonly<{
 
 //===================================================================
 
+function getTodayIsoDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+//===================================================================
+
 function getMinDate(value: string | undefined) {
   return value || undefined;
 }
@@ -60,7 +66,7 @@ function DateFilter({
   isActive = false,
   disabled = false,
   className,
-  maxDate,
+  maxDate = getTodayIsoDate(),
   applyOnSubmit = false,
   applyLabel = 'Apply',
   onChange,

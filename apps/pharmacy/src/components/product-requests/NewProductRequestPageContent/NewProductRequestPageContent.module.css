@@ -1,6 +1,8 @@
 .page {
-  width: min(100%, 1180px);
-  margin-inline: auto;
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  margin-inline: 0;
 }
 
 .contentCard {

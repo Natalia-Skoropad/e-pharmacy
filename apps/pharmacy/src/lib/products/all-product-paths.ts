@@ -136,6 +136,8 @@ export type AllProductsRouteParams = Readonly<{
 
 export function isAllProductsFilterSegment(segment: string): boolean {
   return (
+    segment.startsWith('product-name-') ||
+    segment.startsWith('product-article-') ||
     segment.startsWith('search-name-') ||
     segment.startsWith('article-') ||
     segment.startsWith('category-') ||
@@ -172,8 +174,20 @@ export function parseAllProductsSegments(
   };
 
   for (const segment of params.filters ?? []) {
+    if (segment.startsWith('product-name-')) {
+      filters.name = deslugifyNameSegment(segment.replace('product-name-', ''));
+      continue;
+    }
+
     if (segment.startsWith('search-name-')) {
       filters.name = deslugifyNameSegment(segment.replace('search-name-', ''));
+      continue;
+    }
+
+    if (segment.startsWith('product-article-')) {
+      filters.article = deslugifyArticleSegment(
+        segment.replace('product-article-', '')
+      );
       continue;
     }
 
@@ -251,12 +265,12 @@ export function buildAllProductsPath(filters: AllProductsFilterState): string {
   const name = filters.name.trim();
   const article = filters.article.trim();
 
-  if (name) {
-    segments.push(`search-name-${slugifySegment(name)}`);
+  if (article) {
+    segments.push(`product-article-${slugifySegment(article)}`);
   }
 
-  if (article) {
-    segments.push(`article-${slugifySegment(article)}`);
+  if (name) {
+    segments.push(`product-name-${slugifySegment(name)}`);
   }
 
   if (filters.category !== 'all') {

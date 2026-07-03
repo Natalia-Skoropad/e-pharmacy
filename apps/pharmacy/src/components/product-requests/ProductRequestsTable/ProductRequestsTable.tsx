@@ -136,7 +136,7 @@ function ProductRequestsTable({
       items={requests}
       getItemKey={(request) => String(request.id)}
       isLoading={isLoading}
-      minWidth={940}
+      minWidth={0}
       labels={{
         loading: 'Loading requests...',
         empty: emptyMessage,

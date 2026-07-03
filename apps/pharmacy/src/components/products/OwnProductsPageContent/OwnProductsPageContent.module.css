@@ -1,8 +1,8 @@
 .page {
   display: grid;
-  gap: 24px;
-  width: min(100%, 1180px);
-  margin-inline: auto;
+  gap: 20px;
+  width: 100%;
+  margin-inline: 0;
 }
 
 .card {

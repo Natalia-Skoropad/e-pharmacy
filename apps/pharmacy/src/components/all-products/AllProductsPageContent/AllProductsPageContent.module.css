@@ -1,11 +1,12 @@
 .page {
   display: grid;
-  gap: 24px;
-  width: min(100%, 1180px);
-  margin-inline: auto;
+  gap: 20px;
+  width: 100%;
+  margin-inline: 0;
 }
 
-.card {
+.heroCard,
+.tableCard {
   display: grid;
   gap: 20px;
   padding: 20px;
@@ -15,34 +16,30 @@
   box-shadow: var(--shadow-card);
 }
 
-.stack {
+.searchGrid {
   display: grid;
-  gap: 20px;
+  gap: 12px;
 }
 
 .toolbar {
-  display: grid;
-  gap: 16px;
-}
-
-.toolbarActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  align-items: end;
+  gap: 16px;
+  align-items: flex-end;
   justify-content: space-between;
 }
 
 @media only screen and (min-width: 768px) {
-  .card {
+  .heroCard,
+  .tableCard {
     padding: 24px;
   }
 
-  .toolbarActions {
-    justify-content: space-between;
+  .searchGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .toolbarActions > * {
-    flex: 0 0 auto;
+  .toolbar {
+    flex-wrap: nowrap;
   }
 }

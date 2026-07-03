@@ -62,12 +62,6 @@ const STATUS_OPTIONS: Array<
 
 //===================================================================
 
-function getTodayIsoDate() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-//===================================================================
-
 function ProductRequestsFiltersDrawer({
   filters,
   hasActiveFilters,
@@ -106,7 +100,6 @@ function ProductRequestsFiltersDrawer({
             label="Created date"
             value={filters.date}
             isActive={Boolean(filters.date.from || filters.date.to)}
-            maxDate={getTodayIsoDate()}
             applyOnSubmit
             applyLabel="Apply"
             onChange={(date) => onChange({ ...filters, date })}

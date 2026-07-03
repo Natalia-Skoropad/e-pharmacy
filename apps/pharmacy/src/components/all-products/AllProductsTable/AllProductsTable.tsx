@@ -83,7 +83,6 @@ function AllProductsTable({
     () => [
       {
         key: 'createdAt',
-        width: '100px',
         title: <TableHeader parts={['Created', 'date']} />,
         render: (product) =>
           product.createdAt ? (
@@ -96,16 +95,16 @@ function AllProductsTable({
       },
       {
         key: 'article',
-        width: '100px',
-        title: 'Article',
+        title: <TableHeader parts={['Product', 'article']} />,
         render: (product) => (
-          <span className={css.muted}>{product.article}</span>
+          <TextActionButton href={getPharmacyAllProductPath(product.id)}>
+            {product.article}
+          </TextActionButton>
         ),
       },
       {
         key: 'name',
-        width: '270px',
-        title: 'Name',
+        title: <TableHeader parts={['Product', 'name']} />,
         render: (product) => (
           <TextActionButton href={getPharmacyAllProductPath(product.id)}>
             {product.name}
@@ -114,14 +113,12 @@ function AllProductsTable({
       },
       {
         key: 'category',
-        width: '100px',
-        title: 'Category',
+        title: <TableHeader parts={['Product', 'category']} />,
         render: (product) => PRODUCT_CATEGORY_LABELS[product.category],
       },
       {
         key: 'status',
-        width: '100px',
-        title: 'Status',
+        title: <TableHeader parts={['Product', 'status']} />,
         render: (product) => (
           <StatusBadge
             status={product.status}
@@ -131,7 +128,6 @@ function AllProductsTable({
       },
       {
         key: 'addedToMyPharmacy',
-        width: '150px',
         title: <TableHeader parts={['Added to', 'my pharmacy']} />,
         render: (product) =>
           isProductAddedToCurrentPharmacy(product, currentPharmacyId)
@@ -140,7 +136,6 @@ function AllProductsTable({
       },
       {
         key: 'action',
-        width: '170px',
         title: 'Action',
         render: (product) => {
           const isAddedToCurrentPharmacy = isProductAddedToCurrentPharmacy(
