@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"],
+  "compilerOptions": {
+    "paths": {
+      "@e-pharmacy/api-client/*": [
+        "../api-client/src/*/index.ts",
+        "../api-client/src/*.ts"
+      ],
+      "@e-pharmacy/config/*": [
+        "../config/src/*/index.ts",
+        "../config/src/*.ts"
+      ]
+    }
+  }
+}

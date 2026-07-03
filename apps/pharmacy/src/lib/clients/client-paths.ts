@@ -16,6 +16,8 @@ import type { ClientStatus } from './clients';
 
 const CLIENT_STATUSES: ClientStatus[] = ['active', 'blocked'];
 
+//===================================================================
+
 const CLIENT_TEXT_PARAM_OPTIONS = {
   disallowedCharsPattern: URL_CLIENT_TEXT_PARAM_DISALLOWED_CHARS_PATTERN,
 } as const;

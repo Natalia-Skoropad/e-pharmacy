@@ -1,7 +1,7 @@
 import 'server-only';
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
+import { createBackendApiUrl } from '../server/backend-api-request';
 import { createProxyHeaders } from './proxy-headers';
 import { createProxyResponse } from './proxy-response';
 

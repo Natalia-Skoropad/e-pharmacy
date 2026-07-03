@@ -105,6 +105,9 @@ importers:
       '@e-pharmacy/hooks':
         specifier: workspace:*
         version: link:../../packages/hooks
+      '@e-pharmacy/next-api':
+        specifier: workspace:*
+        version: link:../../packages/next-api
       '@e-pharmacy/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -166,6 +169,9 @@ importers:
       '@e-pharmacy/hooks':
         specifier: workspace:*
         version: link:../../packages/hooks
+      '@e-pharmacy/next-api':
+        specifier: workspace:*
+        version: link:../../packages/next-api
       '@e-pharmacy/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -262,6 +268,25 @@ importers:
       react:
         specifier: 19.2.4
         version: 19.2.4
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/next-api:
+    dependencies:
+      '@e-pharmacy/api-client':
+        specifier: workspace:*
+        version: link:../api-client
+      '@e-pharmacy/config':
+        specifier: workspace:*
+        version: link:../config
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.39
+      next:
+        specifier: 16.2.4
+        version: 16.2.4(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       typescript:
         specifier: ^5
         version: 5.9.3

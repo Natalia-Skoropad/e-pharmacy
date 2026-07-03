@@ -1,4 +1,4 @@
-import { AUTH_PROXY_ROUTES, createAuthProxyRoute } from '@/lib/api/proxy';
+import { AUTH_PROXY_ROUTES, createAuthProxyRoute } from '@e-pharmacy/next-api/proxy';
 
 //===================================================================
 

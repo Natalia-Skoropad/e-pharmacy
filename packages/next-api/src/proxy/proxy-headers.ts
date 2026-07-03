@@ -11,10 +11,15 @@ import {
 
 //===================================================================
 
+type AuthCookieForwardMode = 'all' | 'refresh-only' | 'none';
+
+//===================================================================
+
 type ProxyHeadersOptions = {
   forwardAccept?: boolean;
   forwardContentType?: boolean;
   forwardCookie?: boolean;
+  authCookieMode?: AuthCookieForwardMode;
 };
 
 //===================================================================
@@ -31,7 +36,25 @@ const AUTH_COOKIE_NAMES = new Set<string>([
 
 //===================================================================
 
-function normalizeCookieHeader(cookieHeader: string): string {
+function shouldForwardCookie(
+  name: string,
+  authCookieMode: AuthCookieForwardMode
+): boolean {
+  if (!AUTH_COOKIE_NAMES.has(name)) return true;
+  if (authCookieMode === 'none') return false;
+  if (authCookieMode === 'refresh-only') {
+    return name === REFRESH_TOKEN_COOKIE_NAME;
+  }
+
+  return true;
+}
+
+//===================================================================
+
+function normalizeCookieHeader(
+  cookieHeader: string,
+  authCookieMode: AuthCookieForwardMode
+): string {
   const cookies = new Map<string, string>();
 
   cookieHeader
@@ -43,10 +66,11 @@ function normalizeCookieHeader(cookieHeader: string): string {
       const value = valueParts.join('=');
 
       if (!name || !value) return;
+      if (!shouldForwardCookie(name, authCookieMode)) return;
 
       if (AUTH_COOKIE_NAMES.has(name)) {
         // Keep the last auth cookie value if the browser sends duplicates.
-        // This prevents stale cookies from shadowing the fresh login/refresh
+        // This prevents stale cookies from shadowing fresh login/refresh
         // cookies when the request is proxied to the backend.
         cookies.delete(name);
       }
@@ -67,6 +91,7 @@ export function createProxyHeaders(
     forwardAccept = false,
     forwardContentType = true,
     forwardCookie = true,
+    authCookieMode = 'all',
   }: ProxyHeadersOptions = {}
 ): Headers {
   const headers = new Headers();
@@ -80,8 +105,10 @@ export function createProxyHeaders(
   if (forwardContentType && contentType)
     headers.set('Content-Type', contentType);
   if (forwardCookie && cookie) {
-    headers.set('Cookie', normalizeCookieHeader(cookie));
+    const nextCookieHeader = normalizeCookieHeader(cookie, authCookieMode);
+    if (nextCookieHeader) headers.set('Cookie', nextCookieHeader);
   }
+
   headers.set('X-E-Pharmacy-Auth-Proxy', 'next-bff');
 
   const bffProxySecret = process.env.BFF_PROXY_SECRET?.trim();

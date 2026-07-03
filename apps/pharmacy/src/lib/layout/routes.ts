@@ -159,16 +159,19 @@ export function getPharmacyRequestsFilterPath(filters: PharmacyFilterMap) {
   const requestNumber = filters.requestNumber
     ? String(filters.requestNumber).trim()
     : '';
+
   const name = filters.productName
     ? String(filters.productName).trim()
     : filters.name
       ? String(filters.name).trim()
       : '';
+
   const article = filters.productArticle
     ? String(filters.productArticle).trim()
     : filters.article
       ? String(filters.article).trim()
       : '';
+
   const category = filters.category ? String(filters.category).trim() : '';
   const status = filters.status ? String(filters.status).trim() : '';
   const dateFrom = filters.dateFrom ? String(filters.dateFrom).trim() : '';

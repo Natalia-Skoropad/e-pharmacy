@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
-import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
+import { createBackendApiUrl } from '@e-pharmacy/next-api/server';
 import { SITEMAP_STATIC_ROUTES } from '@/lib/seo';
 
 import {

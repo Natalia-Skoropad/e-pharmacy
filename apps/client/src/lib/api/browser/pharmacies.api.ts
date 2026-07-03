@@ -6,7 +6,7 @@ import {
   type RequestOptions,
 } from '@e-pharmacy/api-client/core';
 
-import { localApiRequest } from './local-api-request';
+import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
 
 import type {

@@ -1,6 +1,6 @@
 import 'client-only';
 
-import { localApiRequest } from './local-api-request';
+import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { getResponseData } from '@e-pharmacy/api-client/core';
 import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 

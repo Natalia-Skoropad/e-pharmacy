@@ -1,6 +1,6 @@
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
 
-import { createPrivateProxyRoute } from '@/lib/api/proxy';
+import { createPrivateProxyRoute } from '@e-pharmacy/next-api/proxy';
 
 //===================================================================
 

@@ -7,7 +7,7 @@ import {
 } from '@e-pharmacy/api-client/core';
 
 import { apiRoutes as ROUTES } from '@e-pharmacy/api-client/contracts';
-import { backendApiRequest } from './backend-api-request';
+import { backendApiRequest } from '@e-pharmacy/next-api/server';
 
 import type {
   ApiSuccessResponse,

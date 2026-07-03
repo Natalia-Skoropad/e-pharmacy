@@ -1,0 +1,28 @@
+{
+  "name": "@e-pharmacy/next-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./browser": "./src/browser/local-api-request.ts",
+    "./server": "./src/server/backend-api-request.ts",
+    "./proxy": "./src/proxy/index.ts",
+    "./observability": "./src/observability/request-logger.ts"
+  },
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@e-pharmacy/api-client": "workspace:*",
+    "@e-pharmacy/config": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "next": "16.2.4",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "next": ">=16"
+  }
+}

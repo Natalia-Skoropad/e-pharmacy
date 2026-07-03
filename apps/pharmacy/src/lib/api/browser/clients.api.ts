@@ -11,7 +11,7 @@ import {
   type PharmacyClientsResponse,
 } from '@/lib/clients/clients';
 
-import { localApiRequest } from './local-api-request';
+import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 //===================================================================
 

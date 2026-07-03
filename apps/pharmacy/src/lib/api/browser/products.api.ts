@@ -20,7 +20,7 @@ import {
   type PharmacyProductsResponse,
 } from '@/lib/products/products';
 
-import { localApiRequest } from './local-api-request';
+import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 //===================================================================
 

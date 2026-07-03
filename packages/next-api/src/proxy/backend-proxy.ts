@@ -1,12 +1,11 @@
 import 'server-only';
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 import { type NextRequest } from 'next/server';
 
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
-import type { HttpMethod } from '@e-pharmacy/api-client/core';
 import { REFRESH_TOKEN_COOKIE_NAME } from '@e-pharmacy/config/auth';
-
-import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
+import { createBackendApiUrl } from '../server/backend-api-request';
+import { createProxyHeaders, getProxyBody } from './proxy-headers';
 
 import {
   clearClientAuthCookies,
@@ -15,9 +14,9 @@ import {
   setClientAuthCookies,
 } from './proxy-auth-cookies';
 
-import { createProxyHeaders, getProxyBody } from './proxy-headers';
 import { createProxyResponse } from './proxy-response';
 import { createProxyTransportErrorResponse } from './proxy-transport-error';
+import type { HttpMethod } from '@e-pharmacy/api-client/core';
 
 //===================================================================
 
@@ -75,7 +74,7 @@ async function refreshAuthCookies(
     createBackendApiUrl(API_ROUTES.auth.refresh),
     {
       method: 'POST',
-      headers: createProxyHeaders(request),
+      headers: createProxyHeaders(request, { authCookieMode: 'refresh-only' }),
       cache: 'no-store',
       signal: AbortSignal.timeout(AUTH_REFRESH_TIMEOUT_MS),
     }

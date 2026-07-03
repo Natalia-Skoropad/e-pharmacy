@@ -2,10 +2,7 @@ import 'server-only';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
-import type { HttpMethod } from '@e-pharmacy/api-client/core';
-
-import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
-
+import { createBackendApiUrl } from '../server/backend-api-request';
 import { copySetCookieHeader } from './proxy-response';
 import { createProxyTransportErrorResponse } from './proxy-transport-error';
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
@@ -15,6 +12,8 @@ import {
   extractTokensFromResponseBody,
   setClientAuthCookies,
 } from './proxy-auth-cookies';
+
+import type { HttpMethod } from '@e-pharmacy/api-client/core';
 
 //===================================================================
 
@@ -84,7 +83,10 @@ export async function proxyAuthRequest({
   try {
     response = await fetch(createBackendApiUrl(backendPath), {
       method,
-      headers: createProxyHeaders(request),
+      headers: createProxyHeaders(request, {
+        authCookieMode:
+          backendPath === API_ROUTES.auth.refresh ? 'refresh-only' : 'all',
+      }),
       body: await getProxyBody(request, method),
       cache: 'no-store',
       signal: AbortSignal.timeout(AUTH_PROXY_TIMEOUT_MS),

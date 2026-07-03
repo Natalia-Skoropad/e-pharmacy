@@ -13,7 +13,7 @@ import {
   type RequestOptions,
 } from '@e-pharmacy/api-client/core';
 
-import { logApiRequest } from '@/lib/api/observability/request-logger';
+import { logApiRequest } from '../observability/request-logger';
 
 //===================================================================
 

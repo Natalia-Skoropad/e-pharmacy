@@ -72,6 +72,18 @@
       "@e-pharmacy/auth/*": [
         "../../packages/auth/src/*/index.ts",
         "../../packages/auth/src/*.ts"
+      ],
+      "@e-pharmacy/next-api/browser": [
+        "../../packages/next-api/src/browser/local-api-request.ts"
+      ],
+      "@e-pharmacy/next-api/server": [
+        "../../packages/next-api/src/server/backend-api-request.ts"
+      ],
+      "@e-pharmacy/next-api/proxy": [
+        "../../packages/next-api/src/proxy/index.ts"
+      ],
+      "@e-pharmacy/next-api/observability": [
+        "../../packages/next-api/src/observability/request-logger.ts"
       ]
     }
   },

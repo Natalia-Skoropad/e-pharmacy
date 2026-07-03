@@ -61,9 +61,13 @@ function isDeliveryMethod(value: unknown): value is DeliveryMethod {
   return value === 'pickup' || value === 'postal_delivery';
 }
 
+//===================================================================
+
 function isPaymentMethod(value: unknown): value is PaymentMethod {
   return value === 'cash' || value === 'bank_transfer';
 }
+
+//===================================================================
 
 function isOrderStatus(value: unknown): value is OrderStatus {
   return (

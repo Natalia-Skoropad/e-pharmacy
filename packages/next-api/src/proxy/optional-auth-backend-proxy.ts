@@ -1,8 +1,7 @@
 import 'server-only';
 import { type NextRequest } from 'next/server';
 
-import { createBackendApiUrl } from '@/lib/api/server/backend-api-request';
-
+import { createBackendApiUrl } from '../server/backend-api-request';
 import { createProxyHeaders } from './proxy-headers';
 import { createProxyResponse } from './proxy-response';
 import { createProxyTransportErrorResponse } from './proxy-transport-error';
@@ -57,10 +56,7 @@ export async function proxyOptionalAuthBackendRequest({
   backendPath,
   request,
 }: OptionalAuthBackendProxyOptions) {
-  const pathWithSearch = appendSearchParams(
-    backendPath,
-    request.nextUrl.search
-  );
+  const pathWithSearch = appendSearchParams(backendPath, request.nextUrl.search);
   let response: Response;
 
   try {

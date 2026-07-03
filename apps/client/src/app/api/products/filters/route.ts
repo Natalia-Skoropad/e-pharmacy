@@ -1,4 +1,4 @@
-import { createPublicGetProxyRoute } from '@/lib/api/proxy';
+import { createPublicGetProxyRoute } from '@e-pharmacy/next-api/proxy';
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
 
 //===================================================================

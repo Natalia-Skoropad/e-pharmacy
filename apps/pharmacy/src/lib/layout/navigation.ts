@@ -60,6 +60,8 @@ export const PHARMACY_NAVIGATION: readonly SideMenuItem[] = [
   },
 ];
 
+//===================================================================
+
 export const PHARMACY_MOBILE_NAVIGATION: readonly SideMenuItem[] = [
   ...PHARMACY_NAVIGATION,
   {
