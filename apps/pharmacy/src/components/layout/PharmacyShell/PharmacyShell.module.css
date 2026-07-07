@@ -4,11 +4,13 @@
 }
 
 .container {
+  min-width: 0;
   padding-block: 20px 64px;
 }
 
 .layout {
   display: block;
+  min-width: 0;
 }
 
 .workspace {
@@ -18,6 +20,7 @@
 }
 
 .content {
+  width: 100%;
   min-width: 0;
 }
 

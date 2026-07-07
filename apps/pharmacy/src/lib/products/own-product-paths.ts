@@ -26,7 +26,7 @@ import {
 //===================================================================
 
 type OwnProductsFilterDraft = {
-  addedDate: {
+  createdDate: {
     from: string;
     to: string;
   };
@@ -61,6 +61,8 @@ function normalizeStockSegment(
 
 export function isOwnProductsFilterSegment(segment: string): boolean {
   return (
+    segment.startsWith('product-name-') ||
+    segment.startsWith('product-article-') ||
     segment.startsWith('search-name-') ||
     segment.startsWith('article-') ||
     segment.startsWith('category-') ||
@@ -86,12 +88,24 @@ export function parseOwnProductsSegments(
 ): OwnProductsFilterState {
   const filters: OwnProductsFilterDraft = {
     ...DEFAULT_OWN_PRODUCTS_FILTERS,
-    addedDate: { ...DEFAULT_OWN_PRODUCTS_FILTERS.addedDate },
+    createdDate: { ...DEFAULT_OWN_PRODUCTS_FILTERS.createdDate },
   };
 
   for (const segment of params.filters ?? []) {
+    if (segment.startsWith('product-name-')) {
+      filters.name = deslugifyNameSegment(segment.replace('product-name-', ''));
+      continue;
+    }
+
     if (segment.startsWith('search-name-')) {
       filters.name = deslugifyNameSegment(segment.replace('search-name-', ''));
+      continue;
+    }
+
+    if (segment.startsWith('product-article-')) {
+      filters.article = deslugifyArticleSegment(
+        segment.replace('product-article-', '')
+      );
       continue;
     }
 
@@ -136,8 +150,8 @@ export function parseOwnProductsSegments(
       const dateFrom = segment.replace('date-from-', '');
 
       if (isDateParam(dateFrom)) {
-        filters.addedDate = {
-          ...filters.addedDate,
+        filters.createdDate = {
+          ...filters.createdDate,
           from: dateFrom,
         };
       }
@@ -149,8 +163,8 @@ export function parseOwnProductsSegments(
       const dateTo = segment.replace('date-to-', '');
 
       if (isDateParam(dateTo)) {
-        filters.addedDate = {
-          ...filters.addedDate,
+        filters.createdDate = {
+          ...filters.createdDate,
           to: dateTo,
         };
       }
@@ -168,11 +182,11 @@ export function buildOwnProductsPath(filters: OwnProductsFilterState): string {
   const article = filters.article.trim();
 
   if (name) {
-    segments.push(`search-name-${slugifySegment(name)}`);
+    segments.push(`product-name-${slugifySegment(name)}`);
   }
 
   if (article) {
-    segments.push(`article-${slugifySegment(article)}`);
+    segments.push(`product-article-${slugifySegment(article)}`);
   }
 
   if (filters.category !== 'all') {
@@ -187,12 +201,12 @@ export function buildOwnProductsPath(filters: OwnProductsFilterState): string {
     segments.push(`stock-${filters.stock}`);
   }
 
-  if (filters.addedDate.from) {
-    segments.push(`date-from-${filters.addedDate.from}`);
+  if (filters.createdDate.from) {
+    segments.push(`date-from-${filters.createdDate.from}`);
   }
 
-  if (filters.addedDate.to) {
-    segments.push(`date-to-${filters.addedDate.to}`);
+  if (filters.createdDate.to) {
+    segments.push(`date-to-${filters.createdDate.to}`);
   }
 
   return segments.length

@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 
-import { Container } from '@e-pharmacy/ui/common';
+import { Container } from '@e-pharmacy/ui/layout';
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 
 import { PharmacyProtectedRoute } from '@/components/auth/PharmacyProtectedRoute';

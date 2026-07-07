@@ -1,10 +1,11 @@
-import Link from 'next/link';
 import { useMemo } from 'react';
 
 import {
   DataTable,
   StatusBadge,
   TableHeaderTitle,
+  TableImagePreview,
+  TextActionButton,
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
@@ -17,8 +18,7 @@ import {
 } from '@/lib/products/products';
 
 import { getPharmacyProductPath } from '@/lib/layout/routes';
-
-import css from './OwnProductsTable.module.css';
+import { getProductImageSrc } from '@/lib/products/product-images';
 
 //===================================================================
 
@@ -27,22 +27,6 @@ type OwnProductsTableProps = Readonly<{
   emptyMessage: string;
   isLoading?: boolean;
 }>;
-
-//===================================================================
-
-function ProductLink({
-  product,
-  children,
-}: Readonly<{
-  product: PharmacyProductRow;
-  children: string;
-}>) {
-  return (
-    <Link className={css.productLink} href={getPharmacyProductPath(product.id)}>
-      {children}
-    </Link>
-  );
-}
 
 //===================================================================
 
@@ -67,25 +51,41 @@ function OwnProductsTable({
           ),
       },
       {
-        key: 'article',
+        key: 'productPhoto',
         width: '80px',
-        title: 'Article',
+        title: <TableHeaderTitle parts={['Product', 'photo']} />,
         render: (product) => (
-          <ProductLink product={product}>{product.article}</ProductLink>
+          <TableImagePreview
+            src={getProductImageSrc(product.imageUrl)}
+            alt={`${product.name} photo`}
+            fallback={product.name.charAt(0)}
+          />
+        ),
+      },
+      {
+        key: 'article',
+        width: '110px',
+        title: <TableHeaderTitle parts={['Product', 'article']} />,
+        render: (product) => (
+          <TextActionButton href={getPharmacyProductPath(product.id)}>
+            {product.article}
+          </TextActionButton>
         ),
       },
       {
         key: 'name',
         width: '250px',
-        title: 'Name',
+        title: <TableHeaderTitle parts={['Product', 'name']} />,
         render: (product) => (
-          <ProductLink product={product}>{product.name}</ProductLink>
+          <TextActionButton href={getPharmacyProductPath(product.id)}>
+            {product.name}
+          </TextActionButton>
         ),
       },
       {
         key: 'category',
-        width: '70px',
-        title: 'Category',
+        width: '110px',
+        title: <TableHeaderTitle parts={['Product', 'category']} />,
         render: (product) => PRODUCT_CATEGORY_LABELS[product.category],
       },
       {
@@ -114,8 +114,8 @@ function OwnProductsTable({
       },
       {
         key: 'status',
-        width: '70px',
-        title: 'Status',
+        width: '100px',
+        title: <TableHeaderTitle parts={['Product', 'status']} />,
         render: (product) => (
           <StatusBadge
             status={product.status}

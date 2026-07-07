@@ -2,10 +2,12 @@
   display: grid;
   gap: 20px;
   width: 100%;
+  min-width: 0;
   margin-inline: 0;
 }
 
 .card {
+  min-width: 0;
   display: grid;
   gap: 20px;
   padding: 20px;
@@ -15,22 +17,33 @@
   box-shadow: var(--shadow-card);
 }
 
-.stack {
+.searchGrid {
   display: grid;
-  gap: 20px;
+  gap: 12px;
+}
+
+.searchAction {
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.filterButton {
+  width: 100%;
+  min-height: 48px;
 }
 
 .toolbar {
-  display: grid;
-  gap: 16px;
-}
-
-.toolbarActions {
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  align-items: end;
+  gap: 15px;
+  align-items: flex-end;
   justify-content: space-between;
+}
+
+.productStatistics {
+  display: none;
 }
 
 @media only screen and (min-width: 768px) {
@@ -38,11 +51,17 @@
     padding: 24px;
   }
 
-  .toolbarActions {
-    justify-content: space-between;
+  .searchGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(140px, 190px);
+    align-items: end;
   }
 
-  .toolbarActions > * {
-    flex: 0 0 auto;
+  .toolbar {
+    flex-wrap: nowrap;
+  }
+
+  .productStatistics {
+    display: grid;
+    gap: 14px;
   }
 }

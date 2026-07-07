@@ -7,6 +7,7 @@
   justify-content: space-between;
   min-width: 0;
   min-height: 56px;
+  overflow: hidden;
   padding: 8px 20px 8px 20px;
   color: var(--color-white);
   background: var(--gradient-accent);
@@ -30,11 +31,13 @@
 
 .pathNav {
   flex: 1 1 auto;
+  overflow: hidden;
 }
 
 .pathList {
   display: flex;
   align-items: center;
+  width: 100%;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -43,9 +46,14 @@
 
 .pathItem {
   display: inline-flex;
+  flex: 0 1 auto;
   gap: 10px;
   align-items: center;
   min-width: 0;
+}
+
+.pathItem:last-child {
+  flex: 1 1 auto;
 }
 
 .link,
@@ -122,6 +130,7 @@
 .actions {
   display: inline-flex;
   flex: 0 0 auto;
+  min-width: 0;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
@@ -137,6 +146,18 @@
 
   .pathNav {
     flex: 1 1 auto;
+  }
+
+  .pathItem {
+    gap: 8px;
+  }
+
+  .pathItem:not(:first-child) {
+    display: none;
+  }
+
+  .separator {
+    display: none;
   }
 
   .link,

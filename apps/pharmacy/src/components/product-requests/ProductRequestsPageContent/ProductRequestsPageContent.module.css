@@ -2,11 +2,13 @@
   display: grid;
   gap: 20px;
   width: 100%;
+  min-width: 0;
   margin-inline: 0;
 }
 
 .heroCard,
 .tableCard {
+  min-width: 0;
   display: grid;
   gap: 20px;
   padding: 20px;
@@ -21,51 +23,66 @@
   gap: 12px;
 }
 
-.toolbar {
+.searchAction {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
   align-items: flex-end;
-}
-
-.createButton {
-  order: 1;
-  width: 100%;
-}
-
-.rowsControl {
-  order: 2;
   min-width: 0;
 }
 
-.filtersControl {
-  order: 3;
+.filterButton {
+  width: 100%;
+  min-height: 48px;
+}
+
+.toolbar {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.tableActions {
+  min-width: 0;
   display: flex;
-  justify-content: flex-end;
-  margin-left: auto;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.createButton {
+  width: 100%;
+}
+
+.requestStatistics {
+  display: none;
 }
 
 @media only screen and (min-width: 768px) {
+  .heroCard,
+  .tableCard {
+    padding: 24px;
+  }
+
   .searchGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(140px, 190px);
+    align-items: end;
   }
 
   .toolbar {
-    flex-wrap: nowrap;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .tableActions {
+    justify-content: flex-end;
   }
 
   .createButton {
-    order: 2;
     width: auto;
-    margin-left: auto;
+    min-width: 160px;
   }
 
-  .rowsControl {
-    order: 1;
-  }
-
-  .filtersControl {
-    order: 3;
-    margin-left: 0;
+  .requestStatistics {
+    display: grid;
+    gap: 14px;
   }
 }

@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { FilePlus2 } from 'lucide-react';
 
 import { ButtonLink, StatusBanner } from '@e-pharmacy/ui/common';
-import { Container } from '@e-pharmacy/ui/layout';
 
 import { getPharmacyProfilePath } from '@/lib/layout/routes';
 
@@ -12,12 +11,7 @@ import css from './NewProductRequestPageContent.module.css';
 
 function NewProductRequestPageContent() {
   return (
-    <Container
-      as="main"
-      variant="fluid"
-      className={css.page}
-      aria-labelledby="new-request-page-title"
-    >
+    <main className={css.page} aria-labelledby="new-request-page-title">
       <div className={css.contentCard}>
         <div className={css.stack}>
           <h1 className={css.title} id="new-request-page-title">
@@ -53,7 +47,7 @@ function NewProductRequestPageContent() {
           </section>
         </div>
       </div>
-    </Container>
+    </main>
   );
 }
 

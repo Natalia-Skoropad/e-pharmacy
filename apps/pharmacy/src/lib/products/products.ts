@@ -44,6 +44,7 @@ export type PharmacyProductRow = Readonly<{
   reservedQuantity: number;
   availableQuantity: number;
   currentPrice: number;
+  imageUrl?: string;
   status: OwnProductStatus;
 }>;
 
@@ -197,6 +198,10 @@ export function normalizePharmacyProduct(
       getNumberValue(rawProduct.currentPrice) ??
       getNumberValue(rawProduct.price) ??
       0,
+    imageUrl:
+      getStringValue(rawProduct.imageUrl) ??
+      getStringValue(rawProduct.pictureUrl) ??
+      getStringValue(rawProduct.photoUrl),
     status,
   };
 }

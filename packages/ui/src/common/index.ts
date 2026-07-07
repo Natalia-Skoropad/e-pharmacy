@@ -36,3 +36,4 @@ export * from './DataTable';
 export * from './TableHeaderTitle';
 export * from './TableImagePreview';
 export * from './ProductRequestStatistics';
+export * from './OwnProductStatistics';

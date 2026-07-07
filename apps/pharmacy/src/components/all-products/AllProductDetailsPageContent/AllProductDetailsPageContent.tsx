@@ -20,7 +20,7 @@ import {
   type TabItem,
 } from '@e-pharmacy/ui/common';
 
-import { Container, PageHeader } from '@e-pharmacy/ui/layout';
+import { PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/core';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 
@@ -480,28 +480,18 @@ function AllProductDetailsPageContent({
 
   if (isLoading) {
     return (
-      <Container
-        as="main"
-        variant="fluid"
-        className={css.page}
-        aria-label="Loading global product"
-      >
+      <main className={css.page} aria-label="Loading global product">
         <div className={css.contentCard}>
           <div className={css.loaderBox}>
             <LoadingSpinner label="Loading product data..." />
           </div>
         </div>
-      </Container>
+      </main>
     );
   }
 
   return (
-    <Container
-      as="main"
-      variant="fluid"
-      className={css.page}
-      aria-labelledby="global-product-page-title"
-    >
+    <main className={css.page} aria-labelledby="global-product-page-title">
       <div className={css.contentCard}>
         <div className={css.stack}>
           <div className={css.titleBlock}>
@@ -760,7 +750,7 @@ function AllProductDetailsPageContent({
           ) : null}
         </div>
       </div>
-    </Container>
+    </main>
   );
 }
 

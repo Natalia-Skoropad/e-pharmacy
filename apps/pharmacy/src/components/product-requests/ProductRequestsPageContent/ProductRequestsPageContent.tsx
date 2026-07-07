@@ -95,7 +95,9 @@ function ProductRequestsPageContent({
   const [requests, setRequests] = useState<PharmacyProductRequestRow[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
   const [requestStatistics, setRequestStatistics] =
-    useState<ProductRequestStatisticsCounts>(DEFAULT_PRODUCT_REQUEST_STATISTICS);
+    useState<ProductRequestStatisticsCounts>(
+      DEFAULT_PRODUCT_REQUEST_STATISTICS
+    );
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -109,7 +111,6 @@ function ProductRequestsPageContent({
   const handleBackdropClick = useBackdropClick({
     onClose: () => setIsFiltersOpen(false),
   });
-
 
   const queryParams = useMemo(
     () => getProductRequestsQueryParams(filters, rowsPerPage),
@@ -186,24 +187,35 @@ function ProductRequestsPageContent({
   };
 
   return (
-    <main className={css.page} aria-labelledby="product-requests-page-title">
+    <main className={css.page} aria-labelledby="product-requests-page">
       <section
-        className={css.heroCard}
-        aria-labelledby="product-requests-page-title"
+        className={css.tableCard}
+        aria-label="product-requests-page-title"
       >
         <PageHeader
           title="Product requests"
           titleId="product-requests-page-title"
           icon={<FilePlus2 size={23} aria-hidden="true" />}
-          actions={
-            <CountLabel
-              shown={requests.length}
-              total={totalRequests}
-              label="requests"
-            />
-          }
         />
 
+        <StatusBanner
+          status="new"
+          label="New"
+          title="Verification is required"
+          message="Creating product requests is locked for a new pharmacy until verification is complete."
+        />
+
+        <ProductRequestStatistics
+          className={css.requestStatistics}
+          counts={requestStatistics}
+          getStatusHref={(status) => getPharmacyRequestsFilterPath({ status })}
+        />
+      </section>
+
+      <section
+        className={css.heroCard}
+        aria-labelledby="product-requests-search"
+      >
         <div className={css.searchGrid}>
           <SearchInput
             id="product-requests-request-number-search"
@@ -246,42 +258,41 @@ function ProductRequestsPageContent({
               }))
             }
           />
-        </div>
-
-        <ProductRequestStatistics
-          counts={requestStatistics}
-          getStatusHref={(status) => getPharmacyRequestsFilterPath({ status })}
-        />
-
-        <StatusBanner
-          status="new"
-          label="New"
-          title="Verification is required"
-          message="Creating product requests is locked for a new pharmacy until verification is complete."
-        />
-      </section>
-
-      <section className={css.tableCard} aria-label="Product requests table">
-        <div className={css.toolbar}>
-          <Button className={css.createButton} type="button" size="md" disabled>
-            Create request
-          </Button>
-
-          <div className={css.rowsControl}>
-            <RowsPerPageSelect
-              id="product-requests-rows-per-page"
-              value={rowsPerPage}
-              onChange={setRowsPerPage}
-            />
-          </div>
-
-          <div className={css.filtersControl}>
+          <div className={css.searchAction}>
             <FiltersButton
               activeCount={activeFiltersCount}
               controlsId="product-requests-filters-panel"
               isExpanded={isFiltersOpen}
               onClick={() => setIsFiltersOpen(true)}
+              className={css.filterButton}
             />
+          </div>
+        </div>
+      </section>
+
+      <section className={css.tableCard} aria-label="Product requests table">
+        <div className={css.toolbar}>
+          <RowsPerPageSelect
+            id="product-requests-rows-per-page"
+            value={rowsPerPage}
+            onChange={setRowsPerPage}
+          />
+
+          <div className={css.tableActions}>
+            <CountLabel
+              shown={requests.length}
+              total={totalRequests}
+              label="requests"
+            />
+
+            <Button
+              className={css.createButton}
+              type="button"
+              size="md"
+              disabled
+            >
+              Create request
+            </Button>
           </div>
         </div>
 

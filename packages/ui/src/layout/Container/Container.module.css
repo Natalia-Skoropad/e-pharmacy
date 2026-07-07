@@ -3,45 +3,21 @@
   margin: 0 auto;
 }
 
-.page,
-.wide,
-.fluid {
+.page {
+  max-width: 375px;
   padding-inline: 20px;
 }
 
-.page {
-  max-width: 375px;
-}
-
-.wide {
-  max-width: 1440px;
-}
-
-.fluid {
-  max-width: none;
-}
-
 @media only screen and (min-width: 768px) {
-  .page,
-  .wide,
-  .fluid {
-    padding-inline: 32px;
-  }
-
   .page {
     max-width: 768px;
+    padding-inline: 32px;
   }
 }
 
 @media only screen and (min-width: 1440px) {
-  .page,
-  .wide,
-  .fluid {
-    padding-inline: 64px;
-  }
-
-  .page,
-  .wide {
+  .page {
     max-width: 1440px;
+    padding-inline: 64px;
   }
 }

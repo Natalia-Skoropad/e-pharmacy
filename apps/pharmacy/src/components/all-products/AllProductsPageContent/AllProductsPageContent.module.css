@@ -2,11 +2,13 @@
   display: grid;
   gap: 20px;
   width: 100%;
+  min-width: 0;
   margin-inline: 0;
 }
 
 .heroCard,
 .tableCard {
+  min-width: 0;
   display: grid;
   gap: 20px;
   padding: 20px;
@@ -21,10 +23,22 @@
   gap: 12px;
 }
 
+.searchAction {
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.filterButton {
+  width: 100%;
+  min-height: 48px;
+}
+
 .toolbar {
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 15px;
   align-items: flex-end;
   justify-content: space-between;
 }
@@ -36,7 +50,8 @@
   }
 
   .searchGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(140px, 190px);
+    align-items: end;
   }
 
   .toolbar {

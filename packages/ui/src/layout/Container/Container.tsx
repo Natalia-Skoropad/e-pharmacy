@@ -5,7 +5,7 @@ import css from './Container.module.css';
 
 //===================================================================
 
-export type ContainerVariant = 'page' | 'wide' | 'fluid';
+export type ContainerVariant = 'page';
 
 export type ContainerOwnProps<TElement extends ElementType> = {
   as?: TElement;

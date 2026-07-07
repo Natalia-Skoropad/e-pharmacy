@@ -11,7 +11,7 @@ export type OwnProductsStockFilter = 'all' | StockAvailabilityFilter;
 //===================================================================
 
 export type OwnProductsFilterState = Readonly<{
-  addedDate: {
+  createdDate: {
     from: string;
     to: string;
   };
@@ -25,7 +25,7 @@ export type OwnProductsFilterState = Readonly<{
 //===================================================================
 
 export const DEFAULT_OWN_PRODUCTS_FILTERS: OwnProductsFilterState = {
-  addedDate: {
+  createdDate: {
     from: '',
     to: '',
   },

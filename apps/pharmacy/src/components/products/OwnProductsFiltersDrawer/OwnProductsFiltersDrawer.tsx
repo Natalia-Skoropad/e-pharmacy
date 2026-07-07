@@ -4,7 +4,6 @@ import {
   CloseIconButton,
   DateFilter,
   ResetFiltersButton,
-  SearchInput,
   SelectField,
   type SelectOption,
 } from '@e-pharmacy/ui/common';
@@ -102,34 +101,20 @@ function OwnProductsFiltersDrawer({
 
         <div className={css.controls}>
           <DateFilter
-            id="own-products-added-date-filter"
-            label="Added date"
-            value={filters.addedDate}
-            isActive={Boolean(filters.addedDate.from || filters.addedDate.to)}
-            onChange={(addedDate) => onChange({ ...filters, addedDate })}
-          />
-
-          <SearchInput
-            id="own-products-name-search"
-            label="Name search"
-            value={filters.name}
-            placeholder="Product name"
-            isActive={Boolean(filters.name)}
-            onChange={(name) => onChange({ ...filters, name })}
-          />
-
-          <SearchInput
-            id="own-products-article-search"
-            label="Article search"
-            value={filters.article}
-            placeholder="Product article"
-            isActive={Boolean(filters.article)}
-            onChange={(article) => onChange({ ...filters, article })}
+            id="own-products-created-date-filter"
+            label="Created date"
+            value={filters.createdDate}
+            isActive={Boolean(
+              filters.createdDate.from || filters.createdDate.to
+            )}
+            applyOnSubmit
+            applyLabel="Apply"
+            onChange={(createdDate) => onChange({ ...filters, createdDate })}
           />
 
           <SelectField
             id="own-products-category"
-            label="Category"
+            label="Product category"
             value={filters.category}
             options={CATEGORY_OPTIONS}
             isActive={filters.category !== 'all'}
@@ -138,7 +123,7 @@ function OwnProductsFiltersDrawer({
 
           <SelectField
             id="own-products-status"
-            label="Status"
+            label="Product status"
             value={filters.status}
             options={STATUS_OPTIONS}
             isActive={filters.status !== 'all'}

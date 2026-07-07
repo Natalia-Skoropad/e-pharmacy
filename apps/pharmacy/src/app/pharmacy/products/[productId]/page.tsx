@@ -27,9 +27,12 @@ async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
   const { productId } = await params;
 
   if (isOwnProductsFilterSegment(productId)) {
+    const initialFilters = parseOwnProductsSegments({ filters: [productId] });
+
     return (
       <OwnProductsPageContent
-        initialFilters={parseOwnProductsSegments({ filters: [productId] })}
+        key={JSON.stringify(initialFilters)}
+        initialFilters={initialFilters}
       />
     );
   }

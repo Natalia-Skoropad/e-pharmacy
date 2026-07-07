@@ -7,7 +7,9 @@ import { Boxes } from 'lucide-react';
 import {
   CountLabel,
   FiltersButton,
+  OwnProductStatistics,
   RowsPerPageSelect,
+  SearchInput,
   StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
@@ -22,6 +24,12 @@ import {
 
 import type { EntityId } from '@e-pharmacy/types';
 
+import {
+  DEFAULT_OWN_PRODUCT_STATISTICS,
+  type OwnProductStatisticsCounts,
+  type OwnProductStatisticsKey,
+} from '@e-pharmacy/types/products';
+
 import { getMyPharmacyProfile, getPharmacyProducts } from '@/lib/api/browser';
 
 import type {
@@ -35,6 +43,12 @@ import {
 } from '@/lib/products/own-products-filters';
 
 import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
+import { getPharmacyOwnProductStatistics } from '@/lib/products/product-statistics';
+
+import {
+  getPharmacyProductsFilterPath,
+  getPharmacyProductsPath,
+} from '@/lib/layout/routes';
 
 import { OwnProductsFiltersDrawer } from '@/components/products/OwnProductsFiltersDrawer';
 import { OwnProductsTable } from '@/components/products/OwnProductsTable';
@@ -45,7 +59,7 @@ import css from './OwnProductsPageContent.module.css';
 
 function getActiveFiltersCount(filters: OwnProductsFilterState): number {
   return [
-    filters.addedDate.from || filters.addedDate.to,
+    filters.createdDate.from || filters.createdDate.to,
     filters.name.trim(),
     filters.article.trim(),
     filters.category !== 'all',
@@ -65,8 +79,8 @@ function getProductsQueryParams(
     page: 1,
     perPage: rowsPerPage,
     pharmacyId,
-    addedFrom: filters.addedDate.from || undefined,
-    addedTo: filters.addedDate.to || undefined,
+    addedFrom: filters.createdDate.from || undefined,
+    addedTo: filters.createdDate.to || undefined,
     name: filters.name.trim() || undefined,
     article: filters.article.trim() || undefined,
     category: filters.category === 'all' ? undefined : filters.category,
@@ -83,6 +97,24 @@ type OwnProductsPageContentProps = Readonly<{
 
 //===================================================================
 
+function getOwnProductStatisticHref(key: OwnProductStatisticsKey) {
+  if (key === 'active' || key === 'blocked') {
+    return getPharmacyProductsFilterPath({ status: key });
+  }
+
+  if (key === 'inStock') {
+    return getPharmacyProductsFilterPath({ stock: 'available' });
+  }
+
+  if (key === 'outOfStock') {
+    return getPharmacyProductsFilterPath({ stock: 'empty' });
+  }
+
+  return getPharmacyProductsPath();
+}
+
+//===================================================================
+
 function OwnProductsPageContent({
   initialFilters = DEFAULT_OWN_PRODUCTS_FILTERS,
 }: OwnProductsPageContentProps) {
@@ -93,6 +125,8 @@ function OwnProductsPageContent({
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [products, setProducts] = useState<PharmacyProductRow[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [productStatistics, setProductStatistics] =
+    useState<OwnProductStatisticsCounts>(DEFAULT_OWN_PRODUCT_STATISTICS);
   const [pharmacyId, setPharmacyId] = useState<EntityId | null>(null);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -133,6 +167,25 @@ function OwnProductsPageContent({
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!pharmacyId) return;
+
+    let isMounted = true;
+
+    async function loadProductStatistics(currentPharmacyId: EntityId) {
+      const nextStatistics =
+        await getPharmacyOwnProductStatistics(currentPharmacyId);
+
+      if (isMounted) setProductStatistics(nextStatistics);
+    }
+
+    void loadProductStatistics(pharmacyId);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pharmacyId]);
 
   const queryParams = useMemo(
     () =>
@@ -188,69 +241,115 @@ function OwnProductsPageContent({
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
 
+  const handleFiltersChange = (nextFilters: OwnProductsFilterState) => {
+    setFilters(nextFilters);
+  };
+
+  const handleRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
+    setRowsPerPage(nextRowsPerPage);
+  };
+
   const resetFilters = () => {
     setFilters(DEFAULT_OWN_PRODUCTS_FILTERS);
   };
 
   return (
     <main className={css.page} aria-labelledby="own-products-page-title">
-      <div className={css.card}>
+      <section className={css.card} aria-labelledby="own-products-page-title">
         <PageHeader
           title="Own products"
           titleId="own-products-page-title"
           icon={<Boxes size={23} aria-hidden="true" />}
-          actions={
-            <CountLabel
-              shown={products.length}
-              total={totalProducts}
-              label="products"
-            />
-          }
         />
 
-        <div className={css.stack}>
-          <StatusBanner
-            status="new"
-            label="New"
-            title="Verification is required"
-            message="Own products will appear only after verification, when adding products to this pharmacy becomes available."
-          />
+        <StatusBanner
+          status="new"
+          label="New"
+          title="Verification is required"
+          message="Own products will appear only after verification, when adding products to this pharmacy becomes available."
+        />
 
-          <div className={css.toolbar}>
-            <div className={css.toolbarActions}>
-              <RowsPerPageSelect
-                id="own-products-rows-per-page"
-                value={rowsPerPage}
-                onChange={setRowsPerPage}
-              />
+        <OwnProductStatistics
+          className={css.productStatistics}
+          counts={productStatistics}
+          getStatisticHref={getOwnProductStatisticHref}
+        />
+      </section>
 
-              <FiltersButton
-                activeCount={activeFiltersCount}
-                controlsId="own-products-filters-panel"
-                isExpanded={isFiltersOpen}
-                onClick={() => setIsFiltersOpen(true)}
-              />
-            </div>
-          </div>
-
-          <OwnProductsTable
-            products={products}
-            isLoading={!isProfileLoaded || isLoading}
-            emptyMessage={
-              hasActiveFilters
-                ? 'No products found for the selected filters.'
-                : 'Your pharmacy has no added products yet.'
+      <section className={css.card} aria-labelledby="own-products-search">
+        <div className={css.searchGrid}>
+          <SearchInput
+            id="own-products-product-article-search"
+            label="Product article search"
+            value={filters.article}
+            placeholder="Product article"
+            isActive={Boolean(filters.article)}
+            onChange={(article) =>
+              handleFiltersChange({
+                ...filters,
+                article,
+              })
             }
           />
+
+          <SearchInput
+            id="own-products-product-name-search"
+            label="Product name search"
+            value={filters.name}
+            placeholder="Product name"
+            isActive={Boolean(filters.name)}
+            onChange={(name) =>
+              handleFiltersChange({
+                ...filters,
+                name,
+              })
+            }
+          />
+
+          <div className={css.searchAction}>
+            <FiltersButton
+              activeCount={activeFiltersCount}
+              controlsId="own-products-filters-panel"
+              isExpanded={isFiltersOpen}
+              onClick={() => setIsFiltersOpen(true)}
+              className={css.filterButton}
+            />
+          </div>
         </div>
-      </div>
+      </section>
+
+      <section className={css.card} aria-label="Own products table">
+        <div className={css.toolbar}>
+          <RowsPerPageSelect
+            id="own-products-rows-per-page"
+            value={rowsPerPage}
+            onChange={handleRowsPerPageChange}
+          />
+
+          <CountLabel
+            shown={products.length}
+            total={totalProducts}
+            label="products"
+          />
+        </div>
+
+        <OwnProductsTable
+          products={products}
+          isLoading={!isProfileLoaded || isLoading}
+          emptyMessage={
+            hasActiveFilters
+              ? 'No products found for the selected filters.'
+              : 'Your pharmacy has no added products yet.'
+          }
+        />
+      </section>
 
       {isFiltersOpen ? (
         <OwnProductsFiltersDrawer
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           onBackdropMouseDown={handleBackdropClick}
-          onChange={setFilters}
+          onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}
         />

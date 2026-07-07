@@ -32,9 +32,12 @@ async function ProductsPage({ params }: ProductsPageProps) {
     return <OwnProductDetailsPageContent productId={segments?.[0] ?? ''} />;
   }
 
+  const initialFilters = parseOwnProductsSegments(resolvedParams);
+
   return (
     <OwnProductsPageContent
-      initialFilters={parseOwnProductsSegments(resolvedParams)}
+      key={JSON.stringify(initialFilters)}
+      initialFilters={initialFilters}
     />
   );
 }

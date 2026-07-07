@@ -4,18 +4,13 @@ import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 
 import {
-  Archive,
   Ban,
-  Boxes,
   CheckCircle2,
   ClipboardList,
   Clock3,
   LayoutDashboard,
-  PackageCheck,
-  PackageX,
   RefreshCw,
   ShieldCheck,
-  ShoppingBag,
   UsersRound,
   XCircle,
   type LucideIcon,
@@ -24,13 +19,20 @@ import {
 import {
   ButtonLink,
   LoadingSpinner,
+  OwnProductStatistics,
   ProductRequestStatistics,
   SelectField,
   StatusBanner,
 } from '@e-pharmacy/ui/common';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import type { EntityId, OrderStatus, PharmacyStatus } from '@e-pharmacy/types';
+import type { OrderStatus, PharmacyStatus } from '@e-pharmacy/types';
+
+import {
+  DEFAULT_OWN_PRODUCT_STATISTICS,
+  type OwnProductStatisticsCounts,
+  type OwnProductStatisticsKey,
+} from '@e-pharmacy/types/products';
 
 import {
   DEFAULT_PRODUCT_REQUEST_STATISTICS,
@@ -49,11 +51,10 @@ import {
 import type { ClientStatus } from '@/lib/clients/clients';
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 
-import type {
-  OwnProductStatus,
-  PharmacyProductRow,
-  StockAvailabilityFilter,
-} from '@/lib/products/products';
+import {
+  getPharmacyOwnProductStatistics,
+  getProductFinancialStats,
+} from '@/lib/products/product-statistics';
 
 import {
   getPharmacyAllProductsPath,
@@ -125,13 +126,7 @@ type DashboardData = Readonly<{
     blocked: number;
   };
 
-  products: {
-    total: number;
-    active: number;
-    blocked: number;
-    inStock: number;
-    outOfStock: number;
-    reserved: number;
+  products: OwnProductStatisticsCounts & {
     stockValue: number;
     reservedValue: number;
     availableValue: number;
@@ -169,12 +164,7 @@ const DEFAULT_DATA: DashboardData = {
   },
 
   products: {
-    total: 0,
-    active: 0,
-    blocked: 0,
-    inStock: 0,
-    outOfStock: 0,
-    reserved: 0,
+    ...DEFAULT_OWN_PRODUCT_STATISTICS,
     stockValue: 0,
     reservedValue: 0,
     availableValue: 0,
@@ -250,28 +240,6 @@ function sumOrderAmount(
 
 //===================================================================
 
-function getFinancialStats(products: PharmacyProductRow[]) {
-  return products.reduce(
-    (acc, product) => ({
-      stockValue: acc.stockValue + product.stockQuantity * product.currentPrice,
-      reservedValue:
-        acc.reservedValue + product.reservedQuantity * product.currentPrice,
-      availableValue:
-        acc.availableValue + product.availableQuantity * product.currentPrice,
-      reservedProducts:
-        acc.reservedProducts + (product.reservedQuantity > 0 ? 1 : 0),
-    }),
-    {
-      stockValue: 0,
-      reservedValue: 0,
-      availableValue: 0,
-      reservedProducts: 0,
-    }
-  );
-}
-
-//===================================================================
-
 function getPharmacyBanner(status: PharmacyStatus) {
   if (status === 'on_moderation') {
     return {
@@ -332,24 +300,6 @@ async function getClientStatusTotal(status?: ClientStatus): Promise<number> {
 
 //===================================================================
 
-async function getProductStatusTotal(
-  pharmacyId: EntityId,
-  status?: OwnProductStatus,
-  stock?: StockAvailabilityFilter
-): Promise<number> {
-  const response = await getPharmacyProducts({
-    page: 1,
-    perPage: 100,
-    pharmacyId,
-    status,
-    stock,
-  });
-
-  return response.total;
-}
-
-//===================================================================
-
 async function loadDashboardData(
   selectedYear: string,
   selectedMonth: MonthFilterValue
@@ -367,11 +317,8 @@ async function loadDashboardData(
     activeClients,
     blockedClients,
     allProducts,
-    activeProducts,
-    blockedProducts,
-    inStockProducts,
-    outOfStockProducts,
     requestStatistics,
+    productStatistics,
   ] = await Promise.all([
     getOrderStatusStat('new', dateRange),
     getOrderStatusStat('in_progress', dateRange),
@@ -381,14 +328,11 @@ async function loadDashboardData(
     getClientStatusTotal('active'),
     getClientStatusTotal('blocked'),
     getPharmacyProducts({ page: 1, perPage: 100, pharmacyId }),
-    getProductStatusTotal(pharmacyId, 'active'),
-    getProductStatusTotal(pharmacyId, 'blocked'),
-    getProductStatusTotal(pharmacyId, undefined, 'available'),
-    getProductStatusTotal(pharmacyId, undefined, 'empty'),
     getPharmacyProductRequestStatistics(),
+    getPharmacyOwnProductStatistics(pharmacyId),
   ]);
 
-  const financialStats = getFinancialStats(allProducts.items);
+  const financialStats = getProductFinancialStats(allProducts.items);
   const repeatClients = allClients.items.filter(
     (client) => client.successfulOrdersCount > 1
   ).length;
@@ -421,11 +365,8 @@ async function loadDashboardData(
     },
 
     products: {
+      ...productStatistics,
       total: allProducts.total,
-      active: activeProducts,
-      blocked: blockedProducts,
-      inStock: inStockProducts,
-      outOfStock: outOfStockProducts,
       reserved: financialStats.reservedProducts,
       stockValue: financialStats.stockValue,
       reservedValue: financialStats.reservedValue,
@@ -620,50 +561,21 @@ function PharmacyDashboardPageContent() {
     },
   ];
 
-  const productCards: StatusCardConfig[] = [
-    {
-      title: 'Total products',
-      value: dashboardData.products.total,
-      tone: 'accent',
-      icon: Boxes,
-      href: getPharmacyProductsPath(),
-    },
-    {
-      title: 'Active products',
-      value: dashboardData.products.active,
-      tone: 'green',
-      icon: PackageCheck,
-      href: getPharmacyProductsFilterPath({ status: 'active' }),
-    },
-    {
-      title: 'Blocked products',
-      value: dashboardData.products.blocked,
-      tone: 'red',
-      icon: Ban,
-      href: getPharmacyProductsFilterPath({ status: 'blocked' }),
-    },
-    {
-      title: 'Products in stock',
-      value: dashboardData.products.inStock,
-      tone: 'blue',
-      icon: Archive,
-      href: getPharmacyProductsFilterPath({ stock: 'available' }),
-    },
-    {
-      title: 'Out of stock',
-      value: dashboardData.products.outOfStock,
-      tone: 'gray',
-      icon: PackageX,
-      href: getPharmacyProductsFilterPath({ stock: 'empty' }),
-    },
-    {
-      title: 'Reserved products',
-      value: dashboardData.products.reserved,
-      tone: 'yellow',
-      icon: ShoppingBag,
-      href: getPharmacyProductsPath(),
-    },
-  ];
+  const getProductStatisticHref = (key: OwnProductStatisticsKey) => {
+    if (key === 'active' || key === 'blocked') {
+      return getPharmacyProductsFilterPath({ status: key });
+    }
+
+    if (key === 'inStock') {
+      return getPharmacyProductsFilterPath({ stock: 'available' });
+    }
+
+    if (key === 'outOfStock') {
+      return getPharmacyProductsFilterPath({ stock: 'empty' });
+    }
+
+    return getPharmacyProductsPath();
+  };
 
   return (
     <main className={css.page} aria-labelledby="dashboard-page-title">
@@ -791,11 +703,10 @@ function PharmacyDashboardPageContent() {
                   </ButtonLink>
                 </div>
 
-                <div className={css.cardGrid}>
-                  {productCards.map((card) => (
-                    <StatusStatCard key={card.title} {...card} />
-                  ))}
-                </div>
+                <OwnProductStatistics
+                  counts={dashboardData.products}
+                  getStatisticHref={getProductStatisticHref}
+                />
 
                 <div
                   className={css.valueGrid}

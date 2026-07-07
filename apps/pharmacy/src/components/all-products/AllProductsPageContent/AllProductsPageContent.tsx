@@ -233,15 +233,20 @@ function AllProductsPageContent({
           title="All products"
           titleId="all-products-page-title"
           icon={<PackageSearch size={23} aria-hidden="true" />}
-          actions={
-            <CountLabel
-              shown={products.length}
-              total={totalProducts}
-              label="products"
-            />
-          }
         />
 
+        <StatusBanner
+          status="new"
+          label="New"
+          title="Catalog is available in read-only mode"
+          message="Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
+        />
+      </section>
+
+      <section
+        className={css.heroCard}
+        aria-labelledby="all-products-page-title"
+      >
         <div className={css.searchGrid}>
           <SearchInput
             id="all-products-product-article-search"
@@ -270,29 +275,31 @@ function AllProductsPageContent({
               })
             }
           />
-        </div>
 
-        <StatusBanner
-          status="new"
-          label="New"
-          title="Catalog is available in read-only mode"
-          message="Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
-        />
+          <div className={css.searchAction}>
+            <FiltersButton
+              activeCount={activeFiltersCount}
+              controlsId="all-products-filters-panel"
+              isExpanded={isFiltersOpen}
+              onClick={() => setIsFiltersOpen(true)}
+              className={css.filterButton}
+            />
+          </div>
+        </div>
       </section>
 
       <section className={css.tableCard} aria-label="All products table">
         <div className={css.toolbar}>
+          <CountLabel
+            shown={products.length}
+            total={totalProducts}
+            label="products"
+          />
+
           <RowsPerPageSelect
             id="all-products-rows-per-page"
             value={rowsPerPage}
             onChange={handleRowsPerPageChange}
-          />
-
-          <FiltersButton
-            activeCount={activeFiltersCount}
-            controlsId="all-products-filters-panel"
-            isExpanded={isFiltersOpen}
-            onClick={() => setIsFiltersOpen(true)}
           />
         </div>
 
