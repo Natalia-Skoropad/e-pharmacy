@@ -1,0 +1,223 @@
+.card {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  padding: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      var(--color-accent-tint),
+      transparent 32%
+    ),
+    var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.header {
+  display: flex;
+  gap: 16px;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.titleGroup {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.kicker {
+  margin: 0;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-bold);
+  line-height: 1.2;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--fz-20);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.description {
+  max-width: 720px;
+  margin: 0;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.chartWrap {
+  position: relative;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+}
+
+.chart {
+  width: max(720px, 100%);
+  height: auto;
+}
+
+.gridLines line {
+  stroke: var(--color-chart-grid);
+  stroke-width: 1;
+}
+
+.gridLines text,
+.xAxis text {
+  font-size: 12px;
+  fill: var(--color-text-secondary);
+}
+
+.gridLines text {
+  text-anchor: end;
+}
+
+.xAxis text {
+  text-anchor: middle;
+}
+
+.areas path {
+  opacity: 0.52;
+}
+
+.lines path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.dots circle {
+  stroke: var(--color-surface);
+  stroke-width: 2;
+  transition: r var(--transition-fast);
+}
+
+.activeMarker line {
+  stroke: var(--color-chart-marker);
+  stroke-dasharray: 5 5;
+  stroke-width: 1.5;
+}
+
+.hitAreas rect {
+  cursor: pointer;
+  fill: transparent;
+  outline: none;
+}
+
+.tooltip {
+  display: grid;
+  gap: 10px;
+  min-width: min(100%, 260px);
+  padding: 12px;
+  margin-top: 12px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.tooltipTitle {
+  margin: 0;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+}
+
+.tooltipList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tooltipItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--fz-14);
+  color: var(--color-text-secondary);
+}
+
+.tooltipItem strong {
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+}
+
+.tooltipDot,
+.legendDot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legendItem {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+}
+
+.emptyState {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  background-color: var(--color-background);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.emptyTitle,
+.emptyText {
+  margin: 0;
+}
+
+.emptyTitle {
+  font-size: var(--fz-16);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+}
+
+.emptyText {
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+@media only screen and (min-width: 768px) {
+  .card {
+    padding: 22px;
+  }
+
+  .tooltip {
+    position: absolute;
+    right: 18px;
+    bottom: 62px;
+    margin-top: 0;
+  }
+}

@@ -16,6 +16,7 @@ import { getCartService } from './cart.service';
 
 import type {
   CheckoutOrderInput,
+  OrderSalesStatisticsQuery,
   OrdersQuery,
   UpdateOrderStatusInput,
 } from '../schemas/order.schema';
@@ -25,9 +26,12 @@ import type {
   OrderItemEntity,
   OrderResponseDto,
   OrdersResponseDto,
+  OrderSalesStatisticsDto,
+  OrderSalesStatisticsGroupBy,
   OrderStatus,
 } from '../types/order';
 
+import { PRODUCT_CATEGORIES, type ProductCategory } from '../types/categories';
 import type { ProductEntity, ProductOfferEntity } from '../types/product';
 import type { PharmacyEntity } from '../types/pharmacy';
 import type { UserRole } from '../types/user';
@@ -769,6 +773,220 @@ async function getOrderStatistics(filter: Record<string, unknown>) {
   }
 
   return statistics;
+}
+
+
+//===============================================================
+
+type OrderSalesAggregationRow = {
+  _id: {
+    period: string;
+    category: ProductCategory | null;
+  };
+  quantity: number;
+  amount: number;
+};
+
+//===============================================================
+
+function getDefaultSalesDateRange(query: OrderSalesStatisticsQuery) {
+  const currentYear = new Date().getUTCFullYear();
+
+  return {
+    dateFrom: query.dateFrom ?? `${currentYear}-01-01`,
+    dateTo: query.dateTo ?? `${currentYear}-12-31`,
+  };
+}
+
+//===============================================================
+
+function addSalesPeriod(
+  date: Date,
+  groupBy: OrderSalesStatisticsGroupBy
+): Date {
+  const nextDate = new Date(date);
+
+  if (groupBy === 'day') {
+    nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+    return nextDate;
+  }
+
+  nextDate.setUTCMonth(nextDate.getUTCMonth() + 1, 1);
+  return nextDate;
+}
+
+//===============================================================
+
+function createSalesPeriodKey(
+  date: Date,
+  groupBy: OrderSalesStatisticsGroupBy
+): string {
+  const year = date.getUTCFullYear();
+  const month = padDatePart(date.getUTCMonth() + 1);
+
+  if (groupBy === 'day') {
+    return `${year}-${month}-${padDatePart(date.getUTCDate())}`;
+  }
+
+  return `${year}-${month}`;
+}
+
+//===============================================================
+
+function formatSalesPeriodLabel(
+  key: string,
+  groupBy: OrderSalesStatisticsGroupBy
+): string {
+  const date = new Date(
+    `${key}${groupBy === 'month' ? '-01' : ''}T00:00:00.000Z`
+  );
+
+  return new Intl.DateTimeFormat('en-GB', {
+    ...(groupBy === 'day' ? { day: '2-digit' } : {}),
+    month: 'short',
+    ...(groupBy === 'month' ? { year: 'numeric' } : {}),
+  }).format(date);
+}
+
+//===============================================================
+
+function createEmptySalesValues(categories: readonly ProductCategory[]) {
+  return categories.reduce<
+    Partial<Record<ProductCategory, { quantity: number; amount: number }>>
+  >((acc, category) => {
+    acc[category] = { quantity: 0, amount: 0 };
+    return acc;
+  }, {});
+}
+
+//===============================================================
+
+function createSalesPoints({
+  rows,
+  dateFrom,
+  dateTo,
+  groupBy,
+  categories,
+}: {
+  rows: OrderSalesAggregationRow[];
+  dateFrom: string;
+  dateTo: string;
+  groupBy: OrderSalesStatisticsGroupBy;
+  categories: ProductCategory[];
+}): OrderSalesStatisticsDto['points'] {
+  const rowMap = new Map<string, OrderSalesAggregationRow>();
+
+  for (const row of rows) {
+    const category = row._id.category;
+    if (!category || !PRODUCT_CATEGORIES.includes(category)) continue;
+
+    rowMap.set(`${row._id.period}:${category}`, row);
+  }
+
+  const points: OrderSalesStatisticsDto['points'] = [];
+  let cursor = getStartOfDay(dateFrom);
+  const endDate = getEndOfDay(dateTo);
+
+  if (groupBy === 'month') {
+    cursor = new Date(
+      Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth(), 1)
+    );
+  }
+
+  while (cursor.getTime() <= endDate.getTime()) {
+    const key = createSalesPeriodKey(cursor, groupBy);
+    const values = createEmptySalesValues(categories);
+
+    for (const category of categories) {
+      const row = rowMap.get(`${key}:${category}`);
+      if (!row) continue;
+
+      values[category] = {
+        quantity: row.quantity,
+        amount: row.amount,
+      };
+    }
+
+    points.push({
+      key,
+      label: formatSalesPeriodLabel(key, groupBy),
+      values,
+    });
+
+    cursor = addSalesPeriod(cursor, groupBy);
+  }
+
+  return points;
+}
+
+//===============================================================
+
+export async function getOrderSalesStatisticsService(
+  userId: string,
+  query: OrderSalesStatisticsQuery,
+  role?: UserRole
+): Promise<OrderSalesStatisticsDto> {
+  const pharmacyId =
+    role === USER_ROLES.PHARMACY ? await getCurrentPharmacyId(userId) : null;
+  const { dateFrom, dateTo } = getDefaultSalesDateRange(query);
+  const groupBy = query.groupBy;
+
+  if (!pharmacyId) {
+    return {
+      currency: 'UAH',
+      groupBy,
+      categories: [],
+      points: createSalesPoints({
+        rows: [],
+        dateFrom,
+        dateTo,
+        groupBy,
+        categories: [],
+      }),
+    };
+  }
+
+  const matchFilter: Record<string, unknown> = {
+    pharmacyId,
+    status: 'successful',
+    createdAt: {
+      $gte: getStartOfDay(dateFrom),
+      $lte: getEndOfDay(dateTo),
+    },
+  };
+
+  const rows = await Order.aggregate<OrderSalesAggregationRow>([
+    { $match: matchFilter },
+    { $unwind: '$items' },
+    {
+      $group: {
+        _id: {
+          period: {
+            $dateToString: {
+              date: '$createdAt',
+              format: groupBy === 'day' ? '%Y-%m-%d' : '%Y-%m',
+              timezone: 'UTC',
+            },
+          },
+          category: { $ifNull: ['$items.productSnapshot.category', 'other'] },
+        },
+        quantity: { $sum: '$items.quantity' },
+        amount: { $sum: '$items.totalPrice' },
+      },
+    },
+    { $sort: { '_id.period': 1, '_id.category': 1 } },
+  ]);
+
+  const categories = PRODUCT_CATEGORIES.filter((category) =>
+    rows.some((row) => row._id.category === category && row.amount > 0)
+  );
+
+  return {
+    currency: 'UAH',
+    groupBy,
+    categories,
+    points: createSalesPoints({ rows, dateFrom, dateTo, groupBy, categories }),
+  };
 }
 
 //===============================================================

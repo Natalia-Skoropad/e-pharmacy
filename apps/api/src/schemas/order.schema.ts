@@ -16,6 +16,7 @@ const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
 
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
 const perPageSchema = z.coerce.number().int().min(1).max(200).default(20);
+
 const dateFilterSchema = z
   .string()
   .trim()
@@ -58,6 +59,14 @@ export const ordersQuerySchema = z.preprocess(
 //===============================================================
 
 export const orderParamsSchema = z.object({ orderId: mongoIdSchema });
+
+//===============================================================
+
+export const orderSalesStatisticsQuerySchema = z.object({
+  dateFrom: dateFilterSchema,
+  dateTo: dateFilterSchema,
+  groupBy: z.enum(['day', 'month']).default('month'),
+});
 
 //===============================================================
 
@@ -107,5 +116,8 @@ export const updateOrderStatusSchema = z
 //===============================================================
 
 export type OrdersQuery = z.infer<typeof ordersQuerySchema>;
+export type OrderSalesStatisticsQuery = z.infer<
+  typeof orderSalesStatisticsQuerySchema
+>;
 export type CheckoutOrderInput = z.infer<typeof checkoutOrderSchema>;
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;

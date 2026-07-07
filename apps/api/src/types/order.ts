@@ -141,6 +141,25 @@ export type OrderResponseDto = {
 
 //===============================================================
 
+//===============================================================
+
+export type OrderSalesStatisticsGroupBy = 'day' | 'month';
+
+export type OrderSalesStatisticsValueDto = { quantity: number; amount: number };
+
+export type OrderSalesStatisticsPointDto = {
+  key: string;
+  label: string;
+  values: Partial<Record<ProductCategory, OrderSalesStatisticsValueDto>>;
+};
+
+export type OrderSalesStatisticsDto = {
+  currency: Currency;
+  groupBy: OrderSalesStatisticsGroupBy;
+  categories: ProductCategory[];
+  points: OrderSalesStatisticsPointDto[];
+};
+
 export type OrderStatisticsValueDto = { count: number; amount: number };
 
 export type OrderStatisticsDto = Record<OrderStatus, OrderStatisticsValueDto>;

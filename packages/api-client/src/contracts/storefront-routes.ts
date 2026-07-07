@@ -41,6 +41,7 @@ export const storefrontRoutes = {
   orders: {
     checkout: '/orders/checkout',
     list: '/orders',
+    salesStatistics: '/orders/sales-statistics',
     details: (orderId: EntityId) => `/orders/${orderId}`,
   },
 

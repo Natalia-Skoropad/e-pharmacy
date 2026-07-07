@@ -4,6 +4,7 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 
 import {
   checkoutOrderSchema,
+  orderSalesStatisticsQuerySchema,
   ordersQuerySchema,
   updateOrderStatusSchema,
 } from '../schemas/order.schema';
@@ -11,6 +12,7 @@ import {
 import {
   checkoutOrderService,
   getOrderByIdService,
+  getOrderSalesStatisticsService,
   getOrdersService,
   updateOrderStatusService,
 } from '../services/order.service';
@@ -44,6 +46,26 @@ export async function checkoutOrder(
 export async function getOrders(req: Request, res: Response): Promise<void> {
   const query = ordersQuerySchema.parse(req.query);
   const data = await getOrdersService(req.user?.id ?? '', query, req.user?.role);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function getOrderSalesStatistics(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const query = orderSalesStatisticsQuerySchema.parse(req.query);
+  const data = await getOrderSalesStatisticsService(
+    req.user?.id ?? '',
+    query,
+    req.user?.role
+  );
 
   sendSuccessResponse({
     res,

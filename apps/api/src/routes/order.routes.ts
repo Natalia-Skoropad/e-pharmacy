@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   checkoutOrder,
   getOrderById,
+  getOrderSalesStatistics,
   getOrders,
   updateOrderStatus,
 } from '../controllers/order.controller';
@@ -13,6 +14,7 @@ import { validate } from '../middlewares/validate.middleware';
 import {
   checkoutOrderSchema,
   orderParamsSchema,
+  orderSalesStatisticsQuerySchema,
   ordersQuerySchema,
   updateOrderStatusSchema,
 } from '../schemas/order.schema';
@@ -27,7 +29,7 @@ export const orderRoutes = Router();
 
 orderRoutes.use(authenticate);
 
-//=================================================================================
+//===============================================================
 
 orderRoutes.post(
   '/checkout',
@@ -35,11 +37,23 @@ orderRoutes.post(
   ctrlWrapper(checkoutOrder)
 );
 
-//=================================================================================
+//===============================================================
 
-orderRoutes.get('/', validate({ query: ordersQuerySchema }), ctrlWrapper(getOrders));
+orderRoutes.get(
+  '/',
+  validate({ query: ordersQuerySchema }),
+  ctrlWrapper(getOrders)
+);
 
-//=================================================================================
+//===============================================================
+
+orderRoutes.get(
+  '/sales-statistics',
+  validate({ query: orderSalesStatisticsQuerySchema }),
+  ctrlWrapper(getOrderSalesStatistics)
+);
+
+//===============================================================
 
 orderRoutes.get(
   '/:orderId',
@@ -47,7 +61,7 @@ orderRoutes.get(
   ctrlWrapper(getOrderById)
 );
 
-//=================================================================================
+//===============================================================
 
 orderRoutes.patch(
   '/:orderId/status',

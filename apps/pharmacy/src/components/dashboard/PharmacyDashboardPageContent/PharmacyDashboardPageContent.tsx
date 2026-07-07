@@ -11,6 +11,7 @@ import {
   ClientStatistics,
   OrderStatistics,
   OwnProductStatistics,
+  SalesValueChart,
   ProductRequestStatistics,
   StatusBanner,
 } from '@e-pharmacy/ui/statistics';
@@ -27,7 +28,9 @@ import {
 } from '@e-pharmacy/types/products';
 
 import {
+  DEFAULT_ORDER_SALES_STATISTICS,
   DEFAULT_ORDER_STATISTICS,
+  type OrderSalesStatistics,
   type OrderStatisticsCounts,
 } from '@e-pharmacy/types/orders';
 
@@ -44,6 +47,7 @@ import {
 
 import {
   getMyPharmacyProfile,
+  getPharmacyOrderSalesStatistics,
   getPharmacyOrders,
   getPharmacyProducts,
 } from '@/lib/api/browser';
@@ -100,6 +104,7 @@ type DashboardData = Readonly<{
   };
 
   orders: OrderStatisticsCounts;
+  sales: OrderSalesStatistics;
 
   clients: ClientStatisticsCounts;
 
@@ -123,6 +128,7 @@ const DEFAULT_DATA: DashboardData = {
     clients: 0,
   },
   orders: DEFAULT_ORDER_STATISTICS,
+  sales: DEFAULT_ORDER_SALES_STATISTICS,
 
   clients: DEFAULT_CLIENT_STATISTICS,
 
@@ -222,6 +228,7 @@ async function loadDashboardData(
   selectedMonth: MonthFilterValue
 ): Promise<DashboardData> {
   const dateRange = getDateRange(selectedYear, selectedMonth);
+  const salesGroupBy = selectedMonth === 'all' ? 'month' : 'day';
   const profileResponse = await getMyPharmacyProfile();
   const pharmacyId = profileResponse.pharmacy.id;
 
@@ -232,6 +239,7 @@ async function loadDashboardData(
     requestStatistics,
     productStatistics,
     allProductStatistics,
+    salesStatistics,
   ] = await Promise.all([
     getPharmacyOrders({ page: 1, perPage: 1, ...dateRange }),
     getPharmacyClientStatistics(),
@@ -239,6 +247,7 @@ async function loadDashboardData(
     getPharmacyProductRequestStatistics(),
     getPharmacyOwnProductStatistics(pharmacyId),
     getPharmacyAllProductStatistics(pharmacyId),
+    getPharmacyOrderSalesStatistics({ ...dateRange, groupBy: salesGroupBy }),
   ]);
 
   return {
@@ -251,6 +260,7 @@ async function loadDashboardData(
     },
 
     orders: ordersResponse.statistics,
+    sales: salesStatistics,
 
     clients: clientStatistics,
 
@@ -477,6 +487,13 @@ function PharmacyDashboardPageContent() {
                   getPharmacyOrdersFilterPath({ status })
                 }
               />
+            </section>
+
+            <section
+              className={css.section}
+              aria-labelledby="orders-stats-title"
+            >
+              <SalesValueChart data={dashboardData.sales} />
             </section>
 
             <section

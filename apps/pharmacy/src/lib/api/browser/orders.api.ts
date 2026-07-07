@@ -11,6 +11,11 @@ import {
   type PharmacyOrdersResponse,
 } from '@/lib/orders/orders';
 
+import {
+  normalizeOrderSalesStatistics,
+  type PharmacyOrderSalesStatisticsQueryParams,
+} from '@/lib/orders/order-sales-statistics';
+
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 //===================================================================
@@ -23,4 +28,17 @@ export async function getPharmacyOrders(
   );
 
   return normalizePharmacyOrdersResponse(getResponseData(response));
+}
+
+
+//===================================================================
+
+export async function getPharmacyOrderSalesStatistics(
+  params: PharmacyOrderSalesStatisticsQueryParams = {}
+) {
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
+    `${PHARMACY_API_ROUTES.orders.salesStatistics}${buildQueryString(params)}`
+  );
+
+  return normalizeOrderSalesStatistics(getResponseData(response));
 }

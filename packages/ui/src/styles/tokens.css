@@ -76,6 +76,22 @@
 
   --color-shimmer-highlight: rgba(255, 255, 255, 0.72);
 
+  --color-chart-medicine: #2563eb;
+  --color-chart-medicine-soft: rgba(37, 99, 235, 0.16);
+  --color-chart-vitamins: #22c55e;
+  --color-chart-vitamins-soft: rgba(34, 197, 94, 0.16);
+  --color-chart-beauty: #d946ef;
+  --color-chart-beauty-soft: rgba(217, 70, 239, 0.14);
+  --color-chart-hygiene: #06b6d4;
+  --color-chart-hygiene-soft: rgba(6, 182, 212, 0.16);
+  --color-chart-medical_devices: #f97316;
+  --color-chart-medical_devices-soft: rgba(249, 115, 22, 0.16);
+  --color-chart-other: #64748b;
+  --color-chart-other-soft: rgba(100, 116, 139, 0.16);
+  --color-chart-grid: rgba(29, 30, 33, 0.1);
+  --color-chart-marker: rgba(29, 30, 33, 0.35);
+
+
   /* Gradients */
   --gradient-accent: linear-gradient(
     135deg,
