@@ -3,32 +3,28 @@ import type { CSSProperties } from 'react';
 
 import {
   Archive,
-  Ban,
-  Boxes,
-  PackageCheck,
   PackageX,
   ShoppingBag,
+  Warehouse,
   type LucideIcon,
 } from 'lucide-react';
+
 import clsx from 'clsx';
 
 import {
   OWN_PRODUCT_STATISTICS_LABELS,
   type OwnProductStatisticsCounts,
   type OwnProductStatisticsKey,
+  type OwnProductStatisticsValue,
 } from '@e-pharmacy/types/products';
+
+import { formatPrice } from '@e-pharmacy/utils/formatters';
 
 import css from './OwnProductStatistics.module.css';
 
 //===================================================================
 
-type OwnProductStatisticTone =
-  | 'accent'
-  | 'blue'
-  | 'green'
-  | 'red'
-  | 'gray'
-  | 'yellow';
+type OwnProductStatisticTone = 'accent' | 'blue' | 'green' | 'gray' | 'yellow';
 
 type OwnProductStatisticConfig = Readonly<{
   key: OwnProductStatisticsKey;
@@ -50,12 +46,10 @@ type OwnProductStatisticsStyle = CSSProperties & {
 //===================================================================
 
 const OWN_PRODUCT_STATISTICS_CONFIG: OwnProductStatisticConfig[] = [
-  { key: 'total', tone: 'accent', icon: Boxes },
-  { key: 'active', tone: 'green', icon: PackageCheck },
-  { key: 'blocked', tone: 'red', icon: Ban },
-  { key: 'inStock', tone: 'blue', icon: Archive },
-  { key: 'outOfStock', tone: 'gray', icon: PackageX },
+  { key: 'inStock', tone: 'accent', icon: Warehouse },
   { key: 'reserved', tone: 'yellow', icon: ShoppingBag },
+  { key: 'available', tone: 'blue', icon: Archive },
+  { key: 'outOfStock', tone: 'gray', icon: PackageX },
 ];
 
 //===================================================================
@@ -68,7 +62,7 @@ function OwnProductStatisticCard({
   href,
 }: Readonly<{
   statisticKey: OwnProductStatisticsKey;
-  value: number;
+  value: OwnProductStatisticsValue;
   tone: OwnProductStatisticTone;
   icon: LucideIcon;
   href?: string;
@@ -83,7 +77,12 @@ function OwnProductStatisticCard({
           <Icon className={css.icon} size={26} aria-hidden="true" />
         </span>
       </div>
-      <p className={css.cardValue}>{value}</p>
+      <div className={css.cardValues}>
+        <p className={css.cardValue}>{value.quantity}</p>
+        {typeof value.amount === 'number' ? (
+          <p className={css.cardAmount}>{formatPrice(value.amount)}</p>
+        ) : null}
+      </div>
     </>
   );
 
@@ -109,7 +108,7 @@ function OwnProductStatistics({
 }: OwnProductStatisticsProps) {
   const style: OwnProductStatisticsStyle = {
     '--own-product-stat-columns': String(OWN_PRODUCT_STATISTICS_CONFIG.length),
-    '--own-product-stat-tablet-columns': '3',
+    '--own-product-stat-tablet-columns': '2',
   };
 
   return (
@@ -122,7 +121,7 @@ function OwnProductStatistics({
         <OwnProductStatisticCard
           key={card.key}
           statisticKey={card.key}
-          value={counts[card.key] ?? 0}
+          value={counts[card.key] ?? { quantity: 0 }}
           tone={card.tone}
           icon={card.icon}
           href={getStatisticHref?.(card.key)}

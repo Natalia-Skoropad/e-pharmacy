@@ -43,6 +43,10 @@
   justify-content: space-between;
 }
 
+.productStatistics {
+  display: none;
+}
+
 @media only screen and (min-width: 768px) {
   .heroCard,
   .tableCard {
@@ -56,5 +60,10 @@
 
   .toolbar {
     flex-wrap: nowrap;
+  }
+
+  .productStatistics {
+    display: grid;
+    gap: 14px;
   }
 }

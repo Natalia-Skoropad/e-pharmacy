@@ -1,4 +1,8 @@
-import { isProductCategory } from '@e-pharmacy/types/products';
+import {
+  DEFAULT_OWN_PRODUCT_STATISTICS,
+  isProductCategory,
+  type OwnProductStatisticsCounts,
+} from '@e-pharmacy/types/products';
 import { normalizePaginatedResponse } from '@e-pharmacy/utils/api';
 
 import {
@@ -22,6 +26,7 @@ export const OWN_PRODUCT_STATUSES = [
 
 export const STOCK_AVAILABILITY_FILTERS = [
   'available',
+  'reserved',
   'empty',
 ] as const;
 
@@ -64,6 +69,7 @@ export type PharmacyProductsQueryParams = Readonly<{
 export type PharmacyProductsResponse = Readonly<{
   items: PharmacyProductRow[];
   total: number;
+  statistics: OwnProductStatisticsCounts;
 }>;
 
 //===================================================================
@@ -77,8 +83,9 @@ export const STOCK_AVAILABILITY_LABELS: Record<
   StockAvailabilityFilter,
   string
 > = {
-  available: 'Available',
-  empty: 'Empty',
+  available: 'Available products',
+  reserved: 'Reserved products',
+  empty: 'Out of stock',
 };
 
 //===================================================================
@@ -206,15 +213,51 @@ export function normalizePharmacyProduct(
   };
 }
 
+
+//===================================================================
+
+function normalizeStatisticValue(value: unknown) {
+  if (!isRecord(value)) return { quantity: 0 };
+
+  const amount = getNumberValue(value.amount);
+
+  return {
+    quantity: getNumberValue(value.quantity) ?? 0,
+    ...(typeof amount === 'number' ? { amount } : {}),
+  };
+}
+
+//===================================================================
+
+function normalizeOwnProductStatistics(
+  value: unknown
+): OwnProductStatisticsCounts {
+  if (!isRecord(value)) return DEFAULT_OWN_PRODUCT_STATISTICS;
+
+  return {
+    inStock: normalizeStatisticValue(value.inStock),
+    reserved: normalizeStatisticValue(value.reserved),
+    available: normalizeStatisticValue(value.available),
+    outOfStock: normalizeStatisticValue(value.outOfStock),
+  };
+}
+
 //===================================================================
 
 export function normalizePharmacyProductsResponse(
   payload: unknown,
   pharmacyId?: EntityId
 ): PharmacyProductsResponse {
-  return normalizePaginatedResponse(payload, {
+  const response = normalizePaginatedResponse(payload, {
     normalizeItem: (item) => normalizePharmacyProduct(item, pharmacyId),
   });
+
+  return {
+    ...response,
+    statistics: isRecord(payload)
+      ? normalizeOwnProductStatistics(payload.ownProductStatistics)
+      : DEFAULT_OWN_PRODUCT_STATISTICS,
+  };
 }
 
 //===================================================================
@@ -232,11 +275,6 @@ export function getOwnProductBackendQuery(
     articleKeyword: params.article,
     category: params.category,
     status: params.status,
-    inStock:
-      params.stock === 'available'
-        ? true
-        : params.stock === 'empty'
-          ? false
-          : undefined,
+    stock: params.stock,
   };
 }

@@ -5,20 +5,18 @@ import Link from 'next/link';
 
 import {
   Ban,
-  CheckCircle2,
-  ClipboardList,
-  Clock3,
   LayoutDashboard,
   RefreshCw,
   ShieldCheck,
   UsersRound,
-  XCircle,
   type LucideIcon,
 } from 'lucide-react';
 
 import {
+  AllProductStatistics,
   ButtonLink,
   LoadingSpinner,
+  OrderStatistics,
   OwnProductStatistics,
   ProductRequestStatistics,
   SelectField,
@@ -26,13 +24,20 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import type { OrderStatus, PharmacyStatus } from '@e-pharmacy/types';
+import type { PharmacyStatus } from '@e-pharmacy/types';
 
 import {
+  DEFAULT_ALL_PRODUCT_STATISTICS,
   DEFAULT_OWN_PRODUCT_STATISTICS,
+  type AllProductStatisticsKey,
   type OwnProductStatisticsCounts,
   type OwnProductStatisticsKey,
 } from '@e-pharmacy/types/products';
+
+import {
+  DEFAULT_ORDER_STATISTICS,
+  type OrderStatisticsCounts,
+} from '@e-pharmacy/types/orders';
 
 import {
   DEFAULT_PRODUCT_REQUEST_STATISTICS,
@@ -48,12 +53,14 @@ import {
   getPharmacyProducts,
 } from '@/lib/api/browser';
 
-import type { ClientStatus } from '@/lib/clients/clients';
+import type { ClientStatus, PharmacyClientRow } from '@/lib/clients/clients';
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 
+import { buildAllProductsPath } from '@/lib/products/all-product-paths';
+
 import {
+  getPharmacyAllProductStatistics,
   getPharmacyOwnProductStatistics,
-  getProductFinancialStats,
 } from '@/lib/products/product-statistics';
 
 import {
@@ -112,12 +119,7 @@ type DashboardData = Readonly<{
     clients: number;
   };
 
-  orders: {
-    new: { count: number; amount: number };
-    inProgress: { count: number; amount: number };
-    successful: { count: number; amount: number };
-    rejected: { count: number; amount: number };
-  };
+  orders: OrderStatisticsCounts;
 
   clients: {
     total: number;
@@ -126,12 +128,8 @@ type DashboardData = Readonly<{
     blocked: number;
   };
 
-  products: OwnProductStatisticsCounts & {
-    stockValue: number;
-    reservedValue: number;
-    availableValue: number;
-  };
-
+  products: OwnProductStatisticsCounts;
+  allProducts: typeof DEFAULT_ALL_PRODUCT_STATISTICS;
   requests: ProductRequestStatisticsCounts;
 }>;
 
@@ -149,12 +147,7 @@ const DEFAULT_DATA: DashboardData = {
     products: 0,
     clients: 0,
   },
-  orders: {
-    new: { count: 0, amount: 0 },
-    inProgress: { count: 0, amount: 0 },
-    successful: { count: 0, amount: 0 },
-    rejected: { count: 0, amount: 0 },
-  },
+  orders: DEFAULT_ORDER_STATISTICS,
 
   clients: {
     total: 0,
@@ -163,12 +156,8 @@ const DEFAULT_DATA: DashboardData = {
     blocked: 0,
   },
 
-  products: {
-    ...DEFAULT_OWN_PRODUCT_STATISTICS,
-    stockValue: 0,
-    reservedValue: 0,
-    availableValue: 0,
-  },
+  products: DEFAULT_OWN_PRODUCT_STATISTICS,
+  allProducts: DEFAULT_ALL_PRODUCT_STATISTICS,
 
   requests: DEFAULT_PRODUCT_REQUEST_STATISTICS,
 };
@@ -229,17 +218,6 @@ function getDateRange(year: string, month: MonthFilterValue) {
 
 //===================================================================
 
-function sumOrderAmount(
-  orders: Array<{ totalAmount: number }>,
-  fallback = 0
-): number {
-  const amount = orders.reduce((total, order) => total + order.totalAmount, 0);
-
-  return amount || fallback;
-}
-
-//===================================================================
-
 function getPharmacyBanner(status: PharmacyStatus) {
   if (status === 'on_moderation') {
     return {
@@ -269,25 +247,6 @@ function getPharmacyBanner(status: PharmacyStatus) {
 
 //===================================================================
 
-async function getOrderStatusStat(
-  status: OrderStatus,
-  dateRange: { dateFrom: string; dateTo: string }
-) {
-  const response = await getPharmacyOrders({
-    page: 1,
-    perPage: 100,
-    status,
-    ...dateRange,
-  });
-
-  return {
-    count: response.total,
-    amount: sumOrderAmount(response.items),
-  };
-}
-
-//===================================================================
-
 async function getClientStatusTotal(status?: ClientStatus): Promise<number> {
   const response = await getPharmacyClients({
     page: 1,
@@ -309,53 +268,39 @@ async function loadDashboardData(
   const pharmacyId = profileResponse.pharmacy.id;
 
   const [
-    newOrders,
-    inProgressOrders,
-    successfulOrders,
-    rejectedOrders,
+    ordersResponse,
     allClients,
     activeClients,
     blockedClients,
     allProducts,
     requestStatistics,
     productStatistics,
+    allProductStatistics,
   ] = await Promise.all([
-    getOrderStatusStat('new', dateRange),
-    getOrderStatusStat('in_progress', dateRange),
-    getOrderStatusStat('successful', dateRange),
-    getOrderStatusStat('rejected', dateRange),
+    getPharmacyOrders({ page: 1, perPage: 1, ...dateRange }),
     getPharmacyClients({ page: 1, perPage: 100 }),
     getClientStatusTotal('active'),
     getClientStatusTotal('blocked'),
     getPharmacyProducts({ page: 1, perPage: 100, pharmacyId }),
     getPharmacyProductRequestStatistics(),
     getPharmacyOwnProductStatistics(pharmacyId),
+    getPharmacyAllProductStatistics(pharmacyId),
   ]);
 
-  const financialStats = getProductFinancialStats(allProducts.items);
-  const repeatClients = allClients.items.filter(
+  const repeatClients = (allClients.items as PharmacyClientRow[]).filter(
     (client) => client.successfulOrdersCount > 1
   ).length;
 
   return {
     pharmacyStatus: profileResponse.pharmacy.status,
     overview: {
-      orders:
-        newOrders.count +
-        inProgressOrders.count +
-        successfulOrders.count +
-        rejectedOrders.count,
-      revenue: successfulOrders.amount,
+      orders: ordersResponse.total,
+      revenue: ordersResponse.statistics.successful.amount,
       products: allProducts.total,
       clients: allClients.total,
     },
 
-    orders: {
-      new: newOrders,
-      inProgress: inProgressOrders,
-      successful: successfulOrders,
-      rejected: rejectedOrders,
-    },
+    orders: ordersResponse.statistics,
 
     clients: {
       total: allClients.total,
@@ -364,14 +309,8 @@ async function loadDashboardData(
       blocked: blockedClients,
     },
 
-    products: {
-      ...productStatistics,
-      total: allProducts.total,
-      reserved: financialStats.reservedProducts,
-      stockValue: financialStats.stockValue,
-      reservedValue: financialStats.reservedValue,
-      availableValue: financialStats.availableValue,
-    },
+    products: productStatistics,
+    allProducts: allProductStatistics,
 
     requests: requestStatistics,
   };
@@ -416,26 +355,6 @@ function StatusStatCard({
   }
 
   return <article className={className}>{content}</article>;
-}
-
-//===================================================================
-
-function ValueCard({
-  title,
-  value,
-  description,
-}: Readonly<{
-  title: string;
-  value: number;
-  description: string;
-}>) {
-  return (
-    <article className={css.valueCard}>
-      <p className={css.valueCardTitle}>{title}</p>
-      <p className={css.valueCardValue}>{formatPrice(value)}</p>
-      <p className={css.valueCardDescription}>{description}</p>
-    </article>
-  );
 }
 
 //===================================================================
@@ -495,41 +414,6 @@ function PharmacyDashboardPageContent() {
 
   const banner = getPharmacyBanner(dashboardData.pharmacyStatus);
 
-  const orderCards: StatusCardConfig[] = [
-    {
-      title: 'New orders',
-      value: dashboardData.orders.new.count,
-      amount: dashboardData.orders.new.amount,
-      tone: 'blue',
-      icon: ClipboardList,
-      href: getPharmacyOrdersFilterPath({ status: 'new' }),
-    },
-    {
-      title: 'In work',
-      value: dashboardData.orders.inProgress.count,
-      amount: dashboardData.orders.inProgress.amount,
-      tone: 'yellow',
-      icon: Clock3,
-      href: getPharmacyOrdersFilterPath({ status: 'in_progress' }),
-    },
-    {
-      title: 'Successful',
-      value: dashboardData.orders.successful.count,
-      amount: dashboardData.orders.successful.amount,
-      tone: 'green',
-      icon: CheckCircle2,
-      href: getPharmacyOrdersFilterPath({ status: 'successful' }),
-    },
-    {
-      title: 'Rejected',
-      value: dashboardData.orders.rejected.count,
-      amount: dashboardData.orders.rejected.amount,
-      tone: 'red',
-      icon: XCircle,
-      href: getPharmacyOrdersFilterPath({ status: 'rejected' }),
-    },
-  ];
-
   const clientCards: StatusCardConfig[] = [
     {
       title: 'Total clients',
@@ -562,11 +446,11 @@ function PharmacyDashboardPageContent() {
   ];
 
   const getProductStatisticHref = (key: OwnProductStatisticsKey) => {
-    if (key === 'active' || key === 'blocked') {
-      return getPharmacyProductsFilterPath({ status: key });
+    if (key === 'reserved') {
+      return getPharmacyProductsFilterPath({ stock: 'reserved' });
     }
 
-    if (key === 'inStock') {
+    if (key === 'available') {
       return getPharmacyProductsFilterPath({ stock: 'available' });
     }
 
@@ -575,6 +459,54 @@ function PharmacyDashboardPageContent() {
     }
 
     return getPharmacyProductsPath();
+  };
+
+  const getAllProductStatisticHref = (key: AllProductStatisticsKey) => {
+    if (key === 'active') {
+      return buildAllProductsPath({
+        createdDate: { from: '', to: '' },
+        name: '',
+        article: '',
+        category: 'all',
+        status: 'active',
+        addedToMyPharmacy: 'all',
+      });
+    }
+
+    if (key === 'blocked') {
+      return buildAllProductsPath({
+        createdDate: { from: '', to: '' },
+        name: '',
+        article: '',
+        category: 'all',
+        status: 'blocked',
+        addedToMyPharmacy: 'all',
+      });
+    }
+
+    if (key === 'addedToPharmacy') {
+      return buildAllProductsPath({
+        createdDate: { from: '', to: '' },
+        name: '',
+        article: '',
+        category: 'all',
+        status: 'all',
+        addedToMyPharmacy: 'yes',
+      });
+    }
+
+    if (key === 'notAddedToPharmacy') {
+      return buildAllProductsPath({
+        createdDate: { from: '', to: '' },
+        name: '',
+        article: '',
+        category: 'all',
+        status: 'all',
+        addedToMyPharmacy: 'no',
+      });
+    }
+
+    return getPharmacyAllProductsPath();
   };
 
   return (
@@ -639,11 +571,12 @@ function PharmacyDashboardPageContent() {
                   </div>
                 </div>
 
-                <div className={css.cardGrid}>
-                  {orderCards.map((card) => (
-                    <StatusStatCard key={card.title} {...card} />
-                  ))}
-                </div>
+                <OrderStatistics
+                  counts={dashboardData.orders}
+                  getStatusHref={(status) =>
+                    getPharmacyOrdersFilterPath({ status })
+                  }
+                />
               </section>
 
               <section
@@ -708,28 +641,14 @@ function PharmacyDashboardPageContent() {
                   getStatisticHref={getProductStatisticHref}
                 />
 
-                <div
-                  className={css.valueGrid}
-                  aria-label="Product stock value statistics"
-                >
-                  <ValueCard
-                    title="Total stock value"
-                    value={dashboardData.products.stockValue}
-                    description="Stock quantity × current price."
-                  />
-                  <ValueCard
-                    title="Reserved stock value"
-                    value={dashboardData.products.reservedValue}
-                    description="Reserved quantity × current price."
-                  />
-                  <ValueCard
-                    title="Available stock value"
-                    value={dashboardData.products.availableValue}
-                    description="Available quantity × current price."
-                  />
-                </div>
+                <AllProductStatistics
+                  counts={dashboardData.allProducts}
+                  getStatisticHref={getAllProductStatisticHref}
+                />
 
-                {dashboardData.products.total === 0 ? (
+                {Object.values(dashboardData.products).every(
+                  (value) => value.quantity === 0
+                ) ? (
                   <EmptyState
                     title="Your pharmacy has no added products yet."
                     message="Browse active Admin products and add them after verification."

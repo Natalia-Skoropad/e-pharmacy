@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { PackageSearch } from 'lucide-react';
 
 import {
+  AllProductStatistics,
   CountLabel,
   FiltersButton,
   Pagination,
@@ -24,6 +25,12 @@ import {
 
 import type { EntityId, Product } from '@e-pharmacy/types';
 
+import {
+  DEFAULT_ALL_PRODUCT_STATISTICS,
+  type AllProductStatisticsCounts,
+  type AllProductStatisticsKey,
+} from '@e-pharmacy/types/products';
+
 import { getMyPharmacyProfile, getProducts } from '@/lib/api/browser';
 
 import {
@@ -32,6 +39,7 @@ import {
 } from '@/lib/products/all-products-filters';
 
 import { buildAllProductsPath } from '@/lib/products/all-product-paths';
+import { getPharmacyAllProductStatistics } from '@/lib/products/product-statistics';
 
 import { AllProductsFiltersDrawer } from '@/components/all-products/AllProductsFiltersDrawer';
 import { AllProductsTable } from '@/components/all-products/AllProductsTable';
@@ -104,6 +112,8 @@ function AllProductsPageContent({
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [productStatistics, setProductStatistics] =
+    useState<AllProductStatisticsCounts>(DEFAULT_ALL_PRODUCT_STATISTICS);
 
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
@@ -148,6 +158,29 @@ function AllProductsPageContent({
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!currentPharmacyId) return;
+
+    let isMounted = true;
+
+    async function loadProductStatistics(pharmacyId: EntityId) {
+      try {
+        const nextStatistics =
+          await getPharmacyAllProductStatistics(pharmacyId);
+
+        if (isMounted) setProductStatistics(nextStatistics);
+      } catch {
+        if (isMounted) setProductStatistics(DEFAULT_ALL_PRODUCT_STATISTICS);
+      }
+    }
+
+    void loadProductStatistics(currentPharmacyId);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentPharmacyId]);
 
   const queryParams = useMemo(
     () =>
@@ -223,6 +256,38 @@ function AllProductsPageContent({
     setFilters(DEFAULT_ALL_PRODUCTS_FILTERS);
   };
 
+  const getProductStatisticHref = (key: AllProductStatisticsKey) => {
+    if (key === 'active') {
+      return buildAllProductsPath({
+        ...DEFAULT_ALL_PRODUCTS_FILTERS,
+        status: 'active',
+      });
+    }
+
+    if (key === 'blocked') {
+      return buildAllProductsPath({
+        ...DEFAULT_ALL_PRODUCTS_FILTERS,
+        status: 'blocked',
+      });
+    }
+
+    if (key === 'addedToPharmacy') {
+      return buildAllProductsPath({
+        ...DEFAULT_ALL_PRODUCTS_FILTERS,
+        addedToMyPharmacy: 'yes',
+      });
+    }
+
+    if (key === 'notAddedToPharmacy') {
+      return buildAllProductsPath({
+        ...DEFAULT_ALL_PRODUCTS_FILTERS,
+        addedToMyPharmacy: 'no',
+      });
+    }
+
+    return buildAllProductsPath(DEFAULT_ALL_PRODUCTS_FILTERS);
+  };
+
   return (
     <main className={css.page} aria-labelledby="all-products-page-title">
       <section
@@ -240,6 +305,12 @@ function AllProductsPageContent({
           label="New"
           title="Catalog is available in read-only mode"
           message="Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
+        />
+
+        <AllProductStatistics
+          counts={productStatistics}
+          getStatisticHref={getProductStatisticHref}
+          className={css.productStatistics}
         />
       </section>
 
@@ -290,16 +361,16 @@ function AllProductsPageContent({
 
       <section className={css.tableCard} aria-label="All products table">
         <div className={css.toolbar}>
-          <CountLabel
-            shown={products.length}
-            total={totalProducts}
-            label="products"
-          />
-
           <RowsPerPageSelect
             id="all-products-rows-per-page"
             value={rowsPerPage}
             onChange={handleRowsPerPageChange}
+          />
+
+          <CountLabel
+            shown={products.length}
+            total={totalProducts}
+            label="products"
           />
         </div>
 

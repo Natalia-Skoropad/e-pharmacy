@@ -6,6 +6,11 @@ import {
   isRecord,
 } from '@e-pharmacy/utils/guards';
 
+import {
+  DEFAULT_ORDER_STATISTICS,
+  type OrderStatisticsCounts,
+} from '@e-pharmacy/types/orders';
+
 import type {
   DeliveryMethod,
   EntityId,
@@ -62,6 +67,7 @@ export type PharmacyOrdersQueryParams = Readonly<{
 export type PharmacyOrdersResponse = Readonly<{
   items: PharmacyOrderRow[];
   total: number;
+  statistics: OrderStatisticsCounts;
 }>;
 
 //===================================================================
@@ -179,10 +185,37 @@ export function normalizePharmacyOrder(
 
 //===================================================================
 
+function normalizeOrderStatistics(payload: unknown): OrderStatisticsCounts {
+  if (!isRecord(payload)) return DEFAULT_ORDER_STATISTICS;
+
+  return ORDER_STATUSES.reduce<OrderStatisticsCounts>((acc, status) => {
+    const value = payload[status];
+
+    if (!isRecord(value)) return acc;
+
+    return {
+      ...acc,
+      [status]: {
+        count: getNumberValue(value.count) ?? 0,
+        amount: getNumberValue(value.amount) ?? 0,
+      },
+    };
+  }, DEFAULT_ORDER_STATISTICS);
+}
+
+//===================================================================
+
 export function normalizePharmacyOrdersResponse(
   payload: unknown
 ): PharmacyOrdersResponse {
-  return normalizePaginatedResponse(payload, {
+  const response = normalizePaginatedResponse(payload, {
     normalizeItem: normalizePharmacyOrder,
   });
+
+  return {
+    ...response,
+    statistics: isRecord(payload)
+      ? normalizeOrderStatistics(payload.statistics)
+      : DEFAULT_ORDER_STATISTICS,
+  };
 }

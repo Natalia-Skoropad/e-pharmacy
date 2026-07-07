@@ -47,6 +47,7 @@ type ProductsQuery = {
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
+  stock?: 'available' | 'empty' | 'reserved';
   addedFrom?: string;
   addedTo?: string;
   sort?:
@@ -349,6 +350,73 @@ function applyProductIdExcludeFilter(
 
 //===============================================================
 
+function createEmptyOwnProductStatistics() {
+  return {
+    inStock: { quantity: 0, amount: 0 },
+    reserved: { quantity: 0, amount: 0 },
+    available: { quantity: 0, amount: 0 },
+    outOfStock: { quantity: 0 },
+  };
+}
+
+//===============================================================
+
+async function getOwnProductStatistics(pharmacyId: string) {
+  const [row] = await ProductOffer.aggregate<{
+    stockQuantity: number;
+    stockValue: number;
+    reservedQuantity: number;
+    reservedValue: number;
+    availableQuantity: number;
+    availableValue: number;
+    outOfStockProducts: number;
+  }>([
+    { $match: { pharmacyId: new Types.ObjectId(pharmacyId) } },
+    {
+      $lookup: {
+        from: 'products',
+        localField: 'productId',
+        foreignField: '_id',
+        as: 'product',
+      },
+    },
+    { $unwind: '$product' },
+    { $match: { 'product.status': { $in: ['active', 'blocked'] } } },
+    {
+      $group: {
+        _id: null,
+        stockQuantity: { $sum: '$totalQuantity' },
+        stockValue: { $sum: { $multiply: ['$totalQuantity', '$price'] } },
+        reservedQuantity: { $sum: '$reservedQuantity' },
+        reservedValue: {
+          $sum: { $multiply: ['$reservedQuantity', '$price'] },
+        },
+        availableQuantity: { $sum: '$availableQuantity' },
+        availableValue: {
+          $sum: { $multiply: ['$availableQuantity', '$price'] },
+        },
+        outOfStockProducts: {
+          $sum: { $cond: [{ $eq: ['$totalQuantity', 0] }, 1, 0] },
+        },
+      },
+    },
+  ]);
+
+  if (!row) return createEmptyOwnProductStatistics();
+
+  return {
+    inStock: { quantity: row.stockQuantity, amount: row.stockValue },
+    reserved: { quantity: row.reservedQuantity, amount: row.reservedValue },
+    available: {
+      quantity: row.availableQuantity,
+      amount: row.availableValue,
+    },
+    outOfStock: { quantity: row.outOfStockProducts },
+  };
+}
+
+//===============================================================
+
 export async function getProductsService(
   query: ProductsQuery,
   userId?: string
@@ -410,16 +478,32 @@ export async function getProductsService(
     };
   }
 
-  if (query.inStock === true) offerFilter.availableQuantity = { $gt: 0 };
+  if (query.stock === 'available') {
+    offerFilter.availableQuantity = { $gt: 0 };
+  }
 
-  if (query.inStock === false && !query.pharmacyId) {
+  if (query.stock === 'reserved') {
+    offerFilter.reservedQuantity = { $gt: 0 };
+  }
+
+  if (query.stock === 'empty') {
+    offerFilter.totalQuantity = 0;
+  }
+
+  if (!query.stock && query.inStock === true) {
+    offerFilter.availableQuantity = { $gt: 0 };
+  }
+
+  if (!query.stock && query.inStock === false && !query.pharmacyId) {
     const availableProductIds = await ProductOffer.distinct('productId', {
       availableQuantity: { $gt: 0 },
     });
 
     applyProductIdExcludeFilter(filter, availableProductIds);
   } else {
-    if (query.inStock === false) offerFilter.availableQuantity = 0;
+    if (!query.stock && query.inStock === false) {
+      offerFilter.availableQuantity = 0;
+    }
 
     if (Object.keys(offerFilter).length) {
       allowedProductIds = await ProductOffer.distinct('productId', offerFilter);
@@ -455,11 +539,15 @@ export async function getProductsService(
 
   const skip = (query.page - 1) * query.perPage;
 
-  const [products, total, favorites] = await Promise.all([
-    Product.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
-    Product.countDocuments(filter),
-    getClientFavorites(userId),
-  ]);
+  const [products, total, favorites, ownProductStatistics] =
+    await Promise.all([
+      Product.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
+      Product.countDocuments(filter),
+      getClientFavorites(userId),
+      query.pharmacyId
+        ? getOwnProductStatistics(query.pharmacyId)
+        : Promise.resolve(undefined),
+    ]);
 
   const offerMap = await getOffersByProductIds(
     products.map((product) => product._id),
@@ -483,6 +571,7 @@ export async function getProductsService(
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+    ...(ownProductStatistics ? { ownProductStatistics } : {}),
   };
 }
 

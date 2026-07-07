@@ -7,7 +7,9 @@ import { ShoppingBag } from 'lucide-react';
 import {
   CountLabel,
   FiltersButton,
+  OrderStatistics,
   RowsPerPageSelect,
+  SearchInput,
   StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
@@ -20,7 +22,10 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
+import { DEFAULT_ORDER_STATISTICS } from '@e-pharmacy/types/orders';
+
 import { getPharmacyOrders } from '@/lib/api/browser';
+import { getPharmacyOrdersFilterPath } from '@/lib/layout/routes';
 import { buildOrdersPath } from '@/lib/orders/order-paths';
 
 import {
@@ -89,6 +94,9 @@ function OrdersPageContent({
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
+  const [orderStatistics, setOrderStatistics] = useState(
+    DEFAULT_ORDER_STATISTICS
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -120,11 +128,13 @@ function OrdersPageContent({
 
         setOrders(response.items);
         setTotalOrders(response.total);
+        setOrderStatistics(response.statistics);
       } catch {
         if (!isMounted) return;
 
         setOrders([]);
         setTotalOrders(0);
+        setOrderStatistics(DEFAULT_ORDER_STATISTICS);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -152,68 +162,111 @@ function OrdersPageContent({
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
 
+  const handleFiltersChange = (nextFilters: OrdersFilterState) => {
+    setFilters(nextFilters);
+  };
+
+  const handleRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
+    setRowsPerPage(nextRowsPerPage);
+  };
+
   const resetFilters = () => {
     setFilters(DEFAULT_ORDERS_FILTERS);
   };
 
   return (
     <main className={css.page} aria-labelledby="orders-page-title">
-      <div className={css.card}>
+      <section className={css.card} aria-labelledby="orders-page-title">
         <PageHeader
           title="Orders"
           titleId="orders-page-title"
           icon={<ShoppingBag size={23} aria-hidden="true" />}
-          actions={
-            <CountLabel
-              shown={orders.length}
-              total={totalOrders}
-              label="orders"
-            />
-          }
         />
-        <div className={css.stack}>
-          <StatusBanner
-            status="new"
-            label="New"
-            title="Verification is required"
-            message="New pharmacies do not receive orders until Admin verifies the pharmacy profile."
-          />
 
-          <div className={css.toolbar}>
-            <div className={css.toolbarActions}>
-              <RowsPerPageSelect
-                id="orders-rows-per-page"
-                value={rowsPerPage}
-                onChange={setRowsPerPage}
-              />
+        <StatusBanner
+          status="new"
+          label="New"
+          title="Verification is required"
+          message="New pharmacies do not receive orders until Admin verifies the pharmacy profile."
+        />
 
-              <FiltersButton
-                activeCount={activeFiltersCount}
-                controlsId="orders-filters-panel"
-                isExpanded={isFiltersOpen}
-                onClick={() => setIsFiltersOpen(true)}
-              />
-            </div>
-          </div>
+        <OrderStatistics
+          counts={orderStatistics}
+          getStatusHref={(status) => getPharmacyOrdersFilterPath({ status })}
+          className={css.orderStatistics}
+        />
+      </section>
 
-          <OrdersTable
-            orders={orders}
-            isLoading={isLoading}
-            emptyMessage={
-              hasActiveFilters
-                ? 'No orders found for the selected filters. Adjust filters or reset them.'
-                : 'Orders will appear here after the pharmacy is verified and clients place orders.'
+      <section className={css.card} aria-labelledby="orders-search-title">
+        <h2 className={css.visuallyHidden} id="orders-search-title">
+          Orders search
+        </h2>
+
+        <div className={css.searchGrid}>
+          <SearchInput
+            id="orders-number-search"
+            label="Order number search"
+            value={filters.orderNumber}
+            placeholder="Order number"
+            isActive={Boolean(filters.orderNumber)}
+            onChange={(orderNumber) =>
+              handleFiltersChange({ ...filters, orderNumber })
             }
           />
+
+          <SearchInput
+            id="orders-client-search"
+            label="Client search"
+            value={filters.client}
+            placeholder="Client name"
+            isActive={Boolean(filters.client)}
+            onChange={(client) => handleFiltersChange({ ...filters, client })}
+          />
+
+          <div className={css.searchAction}>
+            <FiltersButton
+              activeCount={activeFiltersCount}
+              controlsId="orders-filters-panel"
+              isExpanded={isFiltersOpen}
+              onClick={() => setIsFiltersOpen(true)}
+              className={css.filterButton}
+            />
+          </div>
         </div>
-      </div>
+      </section>
+
+      <section className={css.card} aria-label="Orders table">
+        <div className={css.toolbar}>
+          <RowsPerPageSelect
+            id="orders-rows-per-page"
+            value={rowsPerPage}
+            onChange={handleRowsPerPageChange}
+          />
+
+          <CountLabel
+            shown={orders.length}
+            total={totalOrders}
+            label="orders"
+          />
+        </div>
+
+        <OrdersTable
+          orders={orders}
+          isLoading={isLoading}
+          emptyMessage={
+            hasActiveFilters
+              ? 'No orders found for the selected filters. Adjust filters or reset them.'
+              : 'Orders will appear here after the pharmacy is verified and clients place orders.'
+          }
+        />
+      </section>
 
       {isFiltersOpen ? (
         <OrdersFiltersDrawer
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           onBackdropMouseDown={handleBackdropClick}
-          onChange={setFilters}
+          onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}
         />

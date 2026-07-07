@@ -98,11 +98,11 @@ type OwnProductsPageContentProps = Readonly<{
 //===================================================================
 
 function getOwnProductStatisticHref(key: OwnProductStatisticsKey) {
-  if (key === 'active' || key === 'blocked') {
-    return getPharmacyProductsFilterPath({ status: key });
+  if (key === 'reserved') {
+    return getPharmacyProductsFilterPath({ stock: 'reserved' });
   }
 
-  if (key === 'inStock') {
+  if (key === 'available') {
     return getPharmacyProductsFilterPath({ stock: 'available' });
   }
 
@@ -174,10 +174,14 @@ function OwnProductsPageContent({
     let isMounted = true;
 
     async function loadProductStatistics(currentPharmacyId: EntityId) {
-      const nextStatistics =
-        await getPharmacyOwnProductStatistics(currentPharmacyId);
+      try {
+        const nextStatistics =
+          await getPharmacyOwnProductStatistics(currentPharmacyId);
 
-      if (isMounted) setProductStatistics(nextStatistics);
+        if (isMounted) setProductStatistics(nextStatistics);
+      } catch {
+        if (isMounted) setProductStatistics(DEFAULT_OWN_PRODUCT_STATISTICS);
+      }
     }
 
     void loadProductStatistics(pharmacyId);

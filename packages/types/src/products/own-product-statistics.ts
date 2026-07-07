@@ -1,10 +1,8 @@
 export const OWN_PRODUCT_STATISTICS_KEYS = [
-  'total',
-  'active',
-  'blocked',
   'inStock',
-  'outOfStock',
   'reserved',
+  'available',
+  'outOfStock',
 ] as const;
 
 //===================================================================
@@ -14,20 +12,25 @@ export type OwnProductStatisticsKey =
 
 //===================================================================
 
+export type OwnProductStatisticsValue = Readonly<{
+  quantity: number;
+  amount?: number;
+}>;
+
+//===================================================================
+
 export type OwnProductStatisticsCounts = Record<
   OwnProductStatisticsKey,
-  number
+  OwnProductStatisticsValue
 >;
 
 //===================================================================
 
 export const DEFAULT_OWN_PRODUCT_STATISTICS: OwnProductStatisticsCounts = {
-  total: 0,
-  active: 0,
-  blocked: 0,
-  inStock: 0,
-  outOfStock: 0,
-  reserved: 0,
+  inStock: { quantity: 0, amount: 0 },
+  reserved: { quantity: 0, amount: 0 },
+  available: { quantity: 0, amount: 0 },
+  outOfStock: { quantity: 0 },
 };
 
 //===================================================================
@@ -36,10 +39,8 @@ export const OWN_PRODUCT_STATISTICS_LABELS: Record<
   OwnProductStatisticsKey,
   string
 > = {
-  total: 'Total products',
-  active: 'Active products',
-  blocked: 'Blocked products',
   inStock: 'Products in stock',
-  outOfStock: 'Out of stock',
   reserved: 'Reserved products',
+  available: 'Available products',
+  outOfStock: 'Out of stock products',
 };

@@ -6,6 +6,7 @@ import type { ProductCategory } from './categories';
 //=============================================================================
 
 export type ProductStatus = 'new' | 'active' | 'blocked';
+export type ProductStockFilter = 'available' | 'empty' | 'reserved';
 
 //=============================================================================
 
@@ -94,6 +95,7 @@ export type ProductsQueryParams = {
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
+  stock?: ProductStockFilter;
   addedFrom?: ISODateString;
   addedTo?: ISODateString;
   sort?:

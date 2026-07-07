@@ -7,7 +7,7 @@
   position: relative;
   display: grid;
   gap: 18px;
-  min-height: 126px;
+  min-height: 118px;
   padding: 18px 20px;
   overflow: hidden;
   color: var(--color-white);
@@ -83,14 +83,8 @@
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12));
 }
 
-.cardValues {
-  display: grid;
-  gap: 6px;
-  align-self: end;
-}
-
 .cardValue {
-  margin: 0;
+  margin: auto 0 0;
   overflow-wrap: anywhere;
   font-size: clamp(2rem, 5vw, 2.55rem);
   font-weight: 900;
@@ -98,21 +92,12 @@
   color: var(--color-white);
 }
 
-.cardAmount {
-  margin: 0;
-  overflow-wrap: anywhere;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-bold);
-  color: rgba(255, 255, 255, 0.88);
-}
-
-.accent,
 .green {
   background: var(--gradient-accent);
 }
 
-.blue {
-  background: linear-gradient(135deg, #60a5fa 0%, var(--color-info) 100%);
+.success {
+  background: linear-gradient(135deg, #66bb6a 0%, #2e7d32 100%);
 }
 
 .yellow {
@@ -123,24 +108,14 @@
   background: linear-gradient(135deg, #ff6b6b 0%, var(--color-error) 100%);
 }
 
-.gray {
-  background: linear-gradient(135deg, #8a8f98 0%, #6a6f7a 100%);
-}
-
 @media only screen and (min-width: 768px) {
   .grid {
-    grid-template-columns: repeat(
-      var(--own-product-stat-tablet-columns),
-      minmax(0, 1fr)
-    );
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media only screen and (min-width: 1440px) {
   .grid {
-    grid-template-columns: repeat(
-      var(--own-product-stat-columns),
-      minmax(0, 1fr)
-    );
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

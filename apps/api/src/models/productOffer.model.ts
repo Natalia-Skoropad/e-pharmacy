@@ -67,6 +67,7 @@ productOfferSchema.pre('validate', function validateStockInvariant() {
 
 productOfferSchema.index({ productId: 1, pharmacyId: 1 }, { unique: true });
 productOfferSchema.index({ pharmacyId: 1, availableQuantity: 1 });
+productOfferSchema.index({ pharmacyId: 1, reservedQuantity: 1 });
 productOfferSchema.index({ productId: 1, availableQuantity: 1, price: 1 });
 
 //===============================================================

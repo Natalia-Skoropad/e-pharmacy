@@ -4,7 +4,6 @@ import {
   CloseIconButton,
   DateFilter,
   ResetFiltersButton,
-  SearchInput,
   SelectField,
   type SelectOption,
 } from '@e-pharmacy/ui/common';
@@ -106,24 +105,6 @@ function OrdersFiltersDrawer({
             value={filters.date}
             isActive={Boolean(filters.date.from || filters.date.to)}
             onChange={(date) => onChange({ ...filters, date })}
-          />
-
-          <SearchInput
-            id="orders-client-search"
-            label="Client search"
-            value={filters.client}
-            placeholder="Client name"
-            isActive={Boolean(filters.client)}
-            onChange={(client) => onChange({ ...filters, client })}
-          />
-
-          <SearchInput
-            id="orders-number-search"
-            label="Order number search"
-            value={filters.orderNumber}
-            placeholder="Order number"
-            isActive={Boolean(filters.orderNumber)}
-            onChange={(orderNumber) => onChange({ ...filters, orderNumber })}
           />
 
           <SelectField

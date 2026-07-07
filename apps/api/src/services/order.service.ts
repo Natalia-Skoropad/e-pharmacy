@@ -73,6 +73,13 @@ type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
 type OrderDocument = OrderEntity & { _id: Types.ObjectId };
 type ProductFallbackMap = Map<string, ProductDocument>;
 
+const ORDER_STATUSES_FOR_STATISTICS = [
+  'new',
+  'in_progress',
+  'successful',
+  'rejected',
+] as const;
+
 //===============================================================
 
 function isCheckoutPharmacyStatus(status: PharmacyEntity['status']): boolean {
@@ -720,13 +727,59 @@ async function getCurrentPharmacyId(userId: string) {
   return pharmacy?._id ?? null;
 }
 
+
+//===============================================================
+
+function createEmptyOrderStatistics() {
+  return {
+    new: { count: 0, amount: 0 },
+    in_progress: { count: 0, amount: 0 },
+    successful: { count: 0, amount: 0 },
+    rejected: { count: 0, amount: 0 },
+  };
+}
+
+//===============================================================
+
+async function getOrderStatistics(filter: Record<string, unknown>) {
+  const rows = await Order.aggregate<{
+    _id: (typeof ORDER_STATUSES_FOR_STATISTICS)[number];
+    count: number;
+    amount: number;
+  }>([
+    { $match: filter },
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 },
+        amount: { $sum: '$totalPrice' },
+      },
+    },
+  ]);
+
+  const statistics = createEmptyOrderStatistics();
+
+  for (const row of rows) {
+    if (!ORDER_STATUSES_FOR_STATISTICS.includes(row._id)) continue;
+
+    statistics[row._id] = {
+      count: row.count,
+      amount: row.amount,
+    };
+  }
+
+  return statistics;
+}
+
 //===============================================================
 
 export async function getOrdersService(
   userId: string,
   query: OrdersQuery,
   role?: UserRole
-): Promise<OrdersResponseDto & { page: number; perPage: number; totalPages: number }> {
+): Promise<
+  OrdersResponseDto & { page: number; perPage: number; totalPages: number }
+> {
   const filter: Record<string, unknown> = {};
 
   if (role === USER_ROLES.PHARMACY) {
@@ -739,6 +792,7 @@ export async function getOrdersService(
         perPage: query.perPage,
         total: 0,
         totalPages: 0,
+        statistics: createEmptyOrderStatistics(),
       };
     }
 
@@ -772,19 +826,22 @@ export async function getOrdersService(
     filter.paymentMethod = query.paymentMethod;
   }
 
+  const statisticsFilter = { ...filter };
+
   if (query.status) {
     filter.status = query.status;
   }
 
   const skip = (query.page - 1) * query.perPage;
 
-  const [orders, total] = await Promise.all([
+  const [orders, total, statistics] = await Promise.all([
     Order.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(query.perPage)
       .lean<OrderDocument[]>(),
     Order.countDocuments(filter),
+    getOrderStatistics(statisticsFilter),
   ]);
 
   return {
@@ -793,6 +850,7 @@ export async function getOrdersService(
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+    statistics,
   };
 }
 

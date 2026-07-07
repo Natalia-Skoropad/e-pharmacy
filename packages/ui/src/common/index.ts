@@ -37,3 +37,5 @@ export * from './TableHeaderTitle';
 export * from './TableImagePreview';
 export * from './ProductRequestStatistics';
 export * from './OwnProductStatistics';
+export * from './AllProductStatistics';
+export * from './OrderStatistics';

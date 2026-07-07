@@ -14,6 +14,14 @@ export const PRODUCT_STATUS_FILTER_OPTIONS = ['active', 'blocked'] as const;
 
 //===============================================================
 
+export const PRODUCT_STOCK_FILTER_OPTIONS = [
+  'available',
+  'empty',
+  'reserved',
+] as const;
+
+//===============================================================
+
 export const PRODUCT_SORT_OPTIONS = [
   'price-asc',
   'price-desc',
@@ -99,6 +107,7 @@ export const productsQuerySchema = z.preprocess(
         return value;
       }, z.boolean())
       .optional(),
+    stock: z.enum(PRODUCT_STOCK_FILTER_OPTIONS).optional(),
     
     addedFrom: dateFilterSchema,
     addedTo: dateFilterSchema,

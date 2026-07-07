@@ -141,4 +141,12 @@ export type OrderResponseDto = {
 
 //===============================================================
 
-export type OrdersResponseDto = { items: OrderResponseDto[]; total: number };
+export type OrderStatisticsValueDto = { count: number; amount: number };
+
+export type OrderStatisticsDto = Record<OrderStatus, OrderStatisticsValueDto>;
+
+export type OrdersResponseDto = {
+  items: OrderResponseDto[];
+  total: number;
+  statistics: OrderStatisticsDto;
+};
