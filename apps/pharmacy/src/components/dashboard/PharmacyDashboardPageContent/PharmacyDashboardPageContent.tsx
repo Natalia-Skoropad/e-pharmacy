@@ -2,26 +2,18 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import { LayoutDashboard } from 'lucide-react';
 
-import {
-  Ban,
-  LayoutDashboard,
-  RefreshCw,
-  ShieldCheck,
-  UsersRound,
-  type LucideIcon,
-} from 'lucide-react';
+import { ButtonLink, LoadingSpinner, SelectField } from '@e-pharmacy/ui/common';
 
 import {
   AllProductStatistics,
-  ButtonLink,
-  LoadingSpinner,
+  ClientStatistics,
   OrderStatistics,
   OwnProductStatistics,
   ProductRequestStatistics,
-  SelectField,
   StatusBanner,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/statistics';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { PharmacyStatus } from '@e-pharmacy/types';
@@ -40,22 +32,24 @@ import {
 } from '@e-pharmacy/types/orders';
 
 import {
+  DEFAULT_CLIENT_STATISTICS,
+  type ClientStatisticsCounts,
+  type ClientStatisticsKey,
+} from '@e-pharmacy/types/clients';
+
+import {
   DEFAULT_PRODUCT_REQUEST_STATISTICS,
   type ProductRequestStatisticsCounts,
 } from '@e-pharmacy/types/product-requests';
 
-import { formatPrice } from '@e-pharmacy/utils/formatters';
-
 import {
   getMyPharmacyProfile,
-  getPharmacyClients,
   getPharmacyOrders,
   getPharmacyProducts,
 } from '@/lib/api/browser';
 
-import type { ClientStatus, PharmacyClientRow } from '@/lib/clients/clients';
+import { getPharmacyClientStatistics } from '@/lib/clients/client-statistics';
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
-
 import { buildAllProductsPath } from '@/lib/products/all-product-paths';
 
 import {
@@ -67,10 +61,11 @@ import {
   getPharmacyAllProductsPath,
   getPharmacyClientsFilterPath,
   getPharmacyClientsPath,
-  getPharmacyNewRequestPath,
   getPharmacyOrdersFilterPath,
+  getPharmacyOrdersPath,
   getPharmacyProductsFilterPath,
   getPharmacyProductsPath,
+  getPharmacyProductRequestsPath,
   getPharmacyRequestsFilterPath,
 } from '@/lib/layout/routes';
 
@@ -95,21 +90,6 @@ type MonthFilterValue =
 
 //===================================================================
 
-type DashboardTone = 'blue' | 'yellow' | 'green' | 'red' | 'gray' | 'accent';
-
-//===================================================================
-
-type StatusCardConfig = Readonly<{
-  title: string;
-  value: number;
-  amount?: number;
-  tone: DashboardTone;
-  icon: LucideIcon;
-  href?: string;
-}>;
-
-//===================================================================
-
 type DashboardData = Readonly<{
   pharmacyStatus: PharmacyStatus;
   overview: {
@@ -121,12 +101,7 @@ type DashboardData = Readonly<{
 
   orders: OrderStatisticsCounts;
 
-  clients: {
-    total: number;
-    repeat: number;
-    active: number;
-    blocked: number;
-  };
+  clients: ClientStatisticsCounts;
 
   products: OwnProductStatisticsCounts;
   allProducts: typeof DEFAULT_ALL_PRODUCT_STATISTICS;
@@ -149,12 +124,7 @@ const DEFAULT_DATA: DashboardData = {
   },
   orders: DEFAULT_ORDER_STATISTICS,
 
-  clients: {
-    total: 0,
-    repeat: 0,
-    active: 0,
-    blocked: 0,
-  },
+  clients: DEFAULT_CLIENT_STATISTICS,
 
   products: DEFAULT_OWN_PRODUCT_STATISTICS,
   allProducts: DEFAULT_ALL_PRODUCT_STATISTICS,
@@ -247,18 +217,6 @@ function getPharmacyBanner(status: PharmacyStatus) {
 
 //===================================================================
 
-async function getClientStatusTotal(status?: ClientStatus): Promise<number> {
-  const response = await getPharmacyClients({
-    page: 1,
-    perPage: 100,
-    status,
-  });
-
-  return response.total;
-}
-
-//===================================================================
-
 async function loadDashboardData(
   selectedYear: string,
   selectedMonth: MonthFilterValue
@@ -269,27 +227,19 @@ async function loadDashboardData(
 
   const [
     ordersResponse,
-    allClients,
-    activeClients,
-    blockedClients,
+    clientStatistics,
     allProducts,
     requestStatistics,
     productStatistics,
     allProductStatistics,
   ] = await Promise.all([
     getPharmacyOrders({ page: 1, perPage: 1, ...dateRange }),
-    getPharmacyClients({ page: 1, perPage: 100 }),
-    getClientStatusTotal('active'),
-    getClientStatusTotal('blocked'),
+    getPharmacyClientStatistics(),
     getPharmacyProducts({ page: 1, perPage: 100, pharmacyId }),
     getPharmacyProductRequestStatistics(),
     getPharmacyOwnProductStatistics(pharmacyId),
     getPharmacyAllProductStatistics(pharmacyId),
   ]);
-
-  const repeatClients = (allClients.items as PharmacyClientRow[]).filter(
-    (client) => client.successfulOrdersCount > 1
-  ).length;
 
   return {
     pharmacyStatus: profileResponse.pharmacy.status,
@@ -297,64 +247,18 @@ async function loadDashboardData(
       orders: ordersResponse.total,
       revenue: ordersResponse.statistics.successful.amount,
       products: allProducts.total,
-      clients: allClients.total,
+      clients: clientStatistics.total,
     },
 
     orders: ordersResponse.statistics,
 
-    clients: {
-      total: allClients.total,
-      repeat: repeatClients,
-      active: activeClients,
-      blocked: blockedClients,
-    },
+    clients: clientStatistics,
 
     products: productStatistics,
     allProducts: allProductStatistics,
 
     requests: requestStatistics,
   };
-}
-
-//===================================================================
-
-function StatusStatCard({
-  title,
-  value,
-  amount,
-  tone,
-  icon: Icon,
-  href,
-}: StatusCardConfig) {
-  const content = (
-    <>
-      <div className={css.statusCardHeader}>
-        <h3 className={css.statusCardTitle}>{title}</h3>
-        <div className={css.statusIconWrap}>
-          <Icon className={css.statusIcon} size={28} aria-hidden="true" />
-        </div>
-      </div>
-
-      <div className={css.statusCardValues}>
-        <p className={css.statusCardValue}>{value}</p>
-        {typeof amount === 'number' ? (
-          <p className={css.statusCardAmount}>{formatPrice(amount)}</p>
-        ) : null}
-      </div>
-    </>
-  );
-
-  const className = `${css.statusCard} ${css[tone]}`;
-
-  if (href) {
-    return (
-      <Link className={className} href={href}>
-        {content}
-      </Link>
-    );
-  }
-
-  return <article className={className}>{content}</article>;
 }
 
 //===================================================================
@@ -414,36 +318,17 @@ function PharmacyDashboardPageContent() {
 
   const banner = getPharmacyBanner(dashboardData.pharmacyStatus);
 
-  const clientCards: StatusCardConfig[] = [
-    {
-      title: 'Total clients',
-      value: dashboardData.clients.total,
-      tone: 'accent',
-      icon: UsersRound,
-      href: getPharmacyClientsPath(),
-    },
-    {
-      title: 'Repeat clients',
-      value: dashboardData.clients.repeat,
-      tone: 'blue',
-      icon: RefreshCw,
-      href: getPharmacyClientsPath(),
-    },
-    {
-      title: 'Active clients',
-      value: dashboardData.clients.active,
-      tone: 'green',
-      icon: ShieldCheck,
-      href: getPharmacyClientsFilterPath({ status: 'active' }),
-    },
-    {
-      title: 'Blocked clients',
-      value: dashboardData.clients.blocked,
-      tone: 'red',
-      icon: Ban,
-      href: getPharmacyClientsFilterPath({ status: 'blocked' }),
-    },
-  ];
+  const getClientStatisticHref = (key: ClientStatisticsKey) => {
+    if (key === 'active') {
+      return getPharmacyClientsFilterPath({ status: 'active' });
+    }
+
+    if (key === 'blocked') {
+      return getPharmacyClientsFilterPath({ status: 'blocked' });
+    }
+
+    return getPharmacyClientsPath();
+  };
 
   const getProductStatisticHref = (key: OwnProductStatisticsKey) => {
     if (key === 'reserved') {
@@ -511,8 +396,8 @@ function PharmacyDashboardPageContent() {
 
   return (
     <main className={css.page} aria-labelledby="dashboard-page-title">
-      <div className={css.contentCard}>
-        <div className={css.stack}>
+      <div className={css.stack}>
+        <section className={css.section} aria-labelledby="orders-stats-title">
           <PageHeader
             title="Dashboard"
             titleId="dashboard-page-title"
@@ -527,29 +412,31 @@ function PharmacyDashboardPageContent() {
               message={banner.message}
             />
           ) : null}
+        </section>
 
-          {isLoading ? (
-            <div className={css.loaderBox}>
-              <LoadingSpinner label="Loading dashboard statistics..." />
-            </div>
-          ) : (
-            <>
-              <section
-                className={css.section}
-                aria-labelledby="orders-stats-title"
-              >
-                <div className={css.sectionTopline}>
-                  <div className={css.sectionHeader}>
-                    <p className={css.sectionKicker}>Orders</p>
-                    <h2 className={css.sectionTitle} id="orders-stats-title">
-                      Orders statistics
-                    </h2>
-                    <p className={css.sectionDescription}>
-                      Counts and amounts are calculated from real order data for
-                      the selected period.
-                    </p>
-                  </div>
+        {isLoading ? (
+          <section className={css.section} aria-labelledby="orders-stats-title">
+            <LoadingSpinner label="Loading dashboard statistics..." />
+          </section>
+        ) : (
+          <>
+            <section
+              className={css.section}
+              aria-labelledby="orders-stats-title"
+            >
+              <div className={css.sectionTopline}>
+                <div className={css.sectionHeader}>
+                  <p className={css.sectionKicker}>Orders</p>
+                  <h2 className={css.sectionTitle} id="orders-stats-title">
+                    Orders statistics
+                  </h2>
+                  <p className={css.sectionDescription}>
+                    Counts and amounts are calculated from real order data for
+                    the selected period.
+                  </p>
+                </div>
 
+                <div className={css.sectionActions}>
                   <div
                     className={css.filters}
                     aria-label="Order statistics filters"
@@ -569,20 +456,34 @@ function PharmacyDashboardPageContent() {
                       onChange={setSelectedMonth}
                     />
                   </div>
+
+                  <ButtonLink
+                    href={getPharmacyOrdersPath()}
+                    variant="secondary"
+                    renderLink={({ href, className, children, ...props }) => (
+                      <Link href={href} className={className} {...props}>
+                        {children}
+                      </Link>
+                    )}
+                  >
+                    View orders
+                  </ButtonLink>
                 </div>
+              </div>
 
-                <OrderStatistics
-                  counts={dashboardData.orders}
-                  getStatusHref={(status) =>
-                    getPharmacyOrdersFilterPath({ status })
-                  }
-                />
-              </section>
+              <OrderStatistics
+                counts={dashboardData.orders}
+                getStatusHref={(status) =>
+                  getPharmacyOrdersFilterPath({ status })
+                }
+              />
+            </section>
 
-              <section
-                className={css.section}
-                aria-labelledby="clients-stats-title"
-              >
+            <section
+              className={css.section}
+              aria-labelledby="clients-stats-title"
+            >
+              <div className={css.sectionTopline}>
                 <div className={css.sectionHeader}>
                   <p className={css.sectionKicker}>Clients</p>
                   <h2 className={css.sectionTitle} id="clients-stats-title">
@@ -594,115 +495,163 @@ function PharmacyDashboardPageContent() {
                   </p>
                 </div>
 
-                <div className={css.cardGrid}>
-                  {clientCards.map((card) => (
-                    <StatusStatCard key={card.title} {...card} />
-                  ))}
-                </div>
+                <ButtonLink
+                  href={getPharmacyClientsPath()}
+                  variant="secondary"
+                  renderLink={({ href, className, children, ...props }) => (
+                    <Link href={href} className={className} {...props}>
+                      {children}
+                    </Link>
+                  )}
+                >
+                  View clients
+                </ButtonLink>
+              </div>
 
-                {dashboardData.clients.total === 0 ? (
-                  <EmptyState
-                    title="Your pharmacy has no clients yet."
-                    message="Clients will appear after the first orders in your pharmacy."
-                  />
-                ) : null}
-              </section>
+              <ClientStatistics
+                counts={dashboardData.clients}
+                getStatisticHref={getClientStatisticHref}
+              />
 
-              <section
-                className={css.section}
-                aria-labelledby="products-stats-title"
-              >
-                <div className={css.sectionTopline}>
-                  <div className={css.sectionHeader}>
-                    <p className={css.sectionKicker}>Products</p>
-                    <h2 className={css.sectionTitle} id="products-stats-title">
-                      Own products
-                    </h2>
-                    <p className={css.sectionDescription}>
-                      Analytics includes only products added to the current
-                      pharmacy.
-                    </p>
-                  </div>
-                  <ButtonLink
-                    href={getPharmacyAllProductsPath()}
-                    variant="secondary"
-                    renderLink={({ href, className, children, ...props }) => (
-                      <Link href={href} className={className} {...props}>
-                        {children}
-                      </Link>
-                    )}
+              {dashboardData.clients.total === 0 ? (
+                <EmptyState
+                  title="Your pharmacy has no clients yet."
+                  message="Clients will appear after the first orders in your pharmacy."
+                />
+              ) : null}
+            </section>
+
+            <section
+              className={css.section}
+              aria-labelledby="own-products-stats-title"
+            >
+              <div className={css.sectionTopline}>
+                <div className={css.sectionHeader}>
+                  <p className={css.sectionKicker}>Own products</p>
+                  <h2
+                    className={css.sectionTitle}
+                    id="own-products-stats-title"
                   >
-                    View all products
-                  </ButtonLink>
+                    Own product statistics
+                  </h2>
+                  <p className={css.sectionDescription}>
+                    Analytics includes only products added to the current
+                    pharmacy.
+                  </p>
                 </div>
 
-                <OwnProductStatistics
-                  counts={dashboardData.products}
-                  getStatisticHref={getProductStatisticHref}
+                <ButtonLink
+                  href={getPharmacyProductsPath()}
+                  variant="secondary"
+                  renderLink={({ href, className, children, ...props }) => (
+                    <Link href={href} className={className} {...props}>
+                      {children}
+                    </Link>
+                  )}
+                >
+                  View own products
+                </ButtonLink>
+              </div>
+
+              <OwnProductStatistics
+                counts={dashboardData.products}
+                getStatisticHref={getProductStatisticHref}
+              />
+
+              {Object.values(dashboardData.products).every(
+                (value) => value.quantity === 0
+              ) ? (
+                <EmptyState
+                  title="Your pharmacy has no added products yet."
+                  message="Browse active Admin products and add them after verification."
                 />
+              ) : null}
+            </section>
 
-                <AllProductStatistics
-                  counts={dashboardData.allProducts}
-                  getStatisticHref={getAllProductStatisticHref}
-                />
-
-                {Object.values(dashboardData.products).every(
-                  (value) => value.quantity === 0
-                ) ? (
-                  <EmptyState
-                    title="Your pharmacy has no added products yet."
-                    message="Browse active Admin products and add them after verification."
-                  />
-                ) : null}
-              </section>
-
-              <section
-                className={css.section}
-                aria-labelledby="requests-stats-title"
-              >
-                <div className={css.sectionTopline}>
-                  <div className={css.sectionHeader}>
-                    <p className={css.sectionKicker}>Product requests</p>
-                    <h2 className={css.sectionTitle} id="requests-stats-title">
-                      Product request statistics
-                    </h2>
-                    <p className={css.sectionDescription}>
-                      Requests created only by the current pharmacy are shown
-                      here.
-                    </p>
-                  </div>
-                  <ButtonLink
-                    href={getPharmacyNewRequestPath()}
-                    variant="primary"
-                    renderLink={({ href, className, children, ...props }) => (
-                      <Link href={href} className={className} {...props}>
-                        {children}
-                      </Link>
-                    )}
+            <section
+              className={css.section}
+              aria-labelledby="all-products-stats-title"
+            >
+              <div className={css.sectionTopline}>
+                <div className={css.sectionHeader}>
+                  <p className={css.sectionKicker}>All products</p>
+                  <h2
+                    className={css.sectionTitle}
+                    id="all-products-stats-title"
                   >
-                    Create request
-                  </ButtonLink>
+                    All product statistics
+                  </h2>
+                  <p className={css.sectionDescription}>
+                    Global catalog analytics shows Admin products and whether
+                    they are added to the current pharmacy.
+                  </p>
                 </div>
 
-                <ProductRequestStatistics
-                  counts={dashboardData.requests}
-                  getStatusHref={(status) =>
-                    getPharmacyRequestsFilterPath({ status })
-                  }
-                />
+                <ButtonLink
+                  href={getPharmacyAllProductsPath()}
+                  variant="secondary"
+                  renderLink={({ href, className, children, ...props }) => (
+                    <Link href={href} className={className} {...props}>
+                      {children}
+                    </Link>
+                  )}
+                >
+                  View all products
+                </ButtonLink>
+              </div>
 
-                {Object.values(dashboardData.requests).every(
-                  (value) => value === 0
-                ) ? (
-                  <EmptyState
-                    title="Your pharmacy has no product creation requests yet."
-                    message="Create a product request when you need to add a product that is absent from the global catalog."
-                  />
-                ) : null}
-              </section>
-            </>
-          )}
-        </div>
+              <AllProductStatistics
+                counts={dashboardData.allProducts}
+                getStatisticHref={getAllProductStatisticHref}
+              />
+            </section>
+
+            <section
+              className={css.section}
+              aria-labelledby="requests-stats-title"
+            >
+              <div className={css.sectionTopline}>
+                <div className={css.sectionHeader}>
+                  <p className={css.sectionKicker}>Product requests</p>
+                  <h2 className={css.sectionTitle} id="requests-stats-title">
+                    Product request statistics
+                  </h2>
+                  <p className={css.sectionDescription}>
+                    Requests created only by the current pharmacy are shown
+                    here.
+                  </p>
+                </div>
+                <ButtonLink
+                  href={getPharmacyProductRequestsPath()}
+                  variant="primary"
+                  renderLink={({ href, className, children, ...props }) => (
+                    <Link href={href} className={className} {...props}>
+                      {children}
+                    </Link>
+                  )}
+                >
+                  View requests
+                </ButtonLink>
+              </div>
+
+              <ProductRequestStatistics
+                counts={dashboardData.requests}
+                getStatusHref={(status) =>
+                  getPharmacyRequestsFilterPath({ status })
+                }
+              />
+
+              {Object.values(dashboardData.requests).every(
+                (value) => value === 0
+              ) ? (
+                <EmptyState
+                  title="Your pharmacy has no product creation requests yet."
+                  message="Create a product request when you need to add a product that is absent from the global catalog."
+                />
+              ) : null}
+            </section>
+          </>
+        )}
       </div>
     </main>
   );

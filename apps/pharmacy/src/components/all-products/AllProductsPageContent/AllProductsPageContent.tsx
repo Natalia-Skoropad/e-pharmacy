@@ -5,15 +5,15 @@ import { usePathname, useRouter } from 'next/navigation';
 import { PackageSearch } from 'lucide-react';
 
 import {
-  AllProductStatistics,
   CountLabel,
   FiltersButton,
   Pagination,
   RowsPerPageSelect,
   SearchInput,
-  StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
+
+import { AllProductStatistics, StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
 

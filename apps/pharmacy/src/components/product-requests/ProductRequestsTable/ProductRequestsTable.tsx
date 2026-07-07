@@ -2,13 +2,13 @@ import { useMemo } from 'react';
 
 import {
   DataTable,
-  StatusBadge,
   TableHeaderTitle,
   TableImagePreview,
   TextActionButton,
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 
 import {

@@ -7,6 +7,7 @@ import { sharedSearchSchema } from './shared-validation.schema';
 const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
 const perPageSchema = z.coerce.number().int().min(1).max(200).default(20);
+
 const dateFilterSchema = z
   .string()
   .trim()
@@ -40,6 +41,7 @@ export const clientsQuerySchema = z.preprocess(
     firstOrderTo: dateFilterSchema,
     name: sharedSearchSchema,
     clientId: sharedSearchSchema,
+    contact: sharedSearchSchema,
     email: sharedSearchSchema,
     phone: sharedSearchSchema,
     address: sharedSearchSchema,

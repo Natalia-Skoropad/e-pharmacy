@@ -11,13 +11,13 @@ import {
   LoadingSpinner,
   PictureCard,
   ReviewsList,
-  StatusBadge,
-  StatusBanner,
   Tabs,
   TextEditor,
   WorkingHoursInput,
   type DocumentUploadFile,
 } from '@e-pharmacy/ui/common';
+
+import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import {
   AddressInput,

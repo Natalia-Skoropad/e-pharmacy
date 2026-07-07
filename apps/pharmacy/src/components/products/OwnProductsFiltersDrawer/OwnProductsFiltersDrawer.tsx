@@ -101,8 +101,8 @@ function OwnProductsFiltersDrawer({
 
         <div className={css.controls}>
           <DateFilter
-            id="own-products-created-date-filter"
-            label="Created date"
+            id="own-products-added-date-filter"
+            label="Added date"
             value={filters.createdDate}
             isActive={Boolean(
               filters.createdDate.from || filters.createdDate.to

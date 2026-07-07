@@ -7,12 +7,12 @@ import { ShoppingBag } from 'lucide-react';
 import {
   CountLabel,
   FiltersButton,
-  OrderStatistics,
   RowsPerPageSelect,
   SearchInput,
-  StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
+
+import { OrderStatistics, StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
@@ -216,7 +216,7 @@ function OrdersPageContent({
 
           <SearchInput
             id="orders-client-search"
-            label="Client search"
+            label="Client name search"
             value={filters.client}
             placeholder="Client name"
             isActive={Boolean(filters.client)}

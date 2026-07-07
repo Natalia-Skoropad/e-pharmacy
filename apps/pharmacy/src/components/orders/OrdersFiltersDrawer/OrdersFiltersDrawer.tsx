@@ -104,6 +104,8 @@ function OrdersFiltersDrawer({
             label="Order date"
             value={filters.date}
             isActive={Boolean(filters.date.from || filters.date.to)}
+            applyOnSubmit
+            applyLabel="Apply"
             onChange={(date) => onChange({ ...filters, date })}
           />
 
@@ -131,7 +133,7 @@ function OrdersFiltersDrawer({
 
           <SelectField
             id="orders-status"
-            label="Status"
+            label="Order status"
             value={filters.status}
             options={ORDER_STATUS_OPTIONS}
             isActive={filters.status !== 'all'}

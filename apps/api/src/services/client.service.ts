@@ -17,6 +17,8 @@ type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
 type OrderDocument = OrderEntity & { _id: Types.ObjectId };
 type UserDocument = UserEntity & { _id: Types.ObjectId };
 
+//===============================================================
+
 type ClientRow = Readonly<{
   id: string;
   photoUrl: string | null;
@@ -96,8 +98,13 @@ function getFirstOrderDate(orders: OrderDocument[]): Date {
 
 //===============================================================
 
-function serializeClient(user: UserDocument, orders: OrderDocument[]): ClientRow {
-  const successfulOrders = orders.filter((order) => order.status === 'successful');
+function serializeClient(
+  user: UserDocument,
+  orders: OrderDocument[]
+): ClientRow {
+  const successfulOrders = orders.filter(
+    (order) => order.status === 'successful'
+  );
 
   return {
     id: String(user._id),
@@ -128,6 +135,18 @@ function matchesClientFilters(client: ClientRow, query: ClientsQuery): boolean {
     !createClientSearchRegExp(query.name.trim()).test(client.name)
   ) {
     return false;
+  }
+
+  if (query.contact?.trim()) {
+    const contactSearchRegExp = createClientSearchRegExp(query.contact.trim());
+
+    if (
+      !contactSearchRegExp.test(client.email) &&
+      !contactSearchRegExp.test(client.phone) &&
+      !contactSearchRegExp.test(client.address)
+    ) {
+      return false;
+    }
   }
 
   if (

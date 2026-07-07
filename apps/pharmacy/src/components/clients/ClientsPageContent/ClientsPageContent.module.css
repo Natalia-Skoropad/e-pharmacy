@@ -17,24 +17,41 @@
   box-shadow: var(--shadow-card);
 }
 
-.stack {
-  min-width: 0;
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+}
+
+.searchGrid {
   display: grid;
-  gap: 20px;
+  gap: 12px;
+}
+
+.searchAction {
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.filterButton {
+  width: 100%;
+  min-height: 48px;
 }
 
 .toolbar {
   min-width: 0;
-  display: grid;
-  gap: 16px;
-}
-
-.toolbarActions {
-  min-width: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  align-items: end;
+  gap: 15px;
+  align-items: flex-end;
   justify-content: space-between;
 }
 
@@ -43,11 +60,12 @@
     padding: 24px;
   }
 
-  .toolbarActions {
-    justify-content: space-between;
+  .searchGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(140px, 190px);
+    align-items: end;
   }
 
-  .toolbarActions > * {
-    flex: 0 0 auto;
+  .toolbar {
+    flex-wrap: nowrap;
   }
 }

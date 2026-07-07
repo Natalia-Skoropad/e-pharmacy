@@ -2,10 +2,14 @@ import { useMemo } from 'react';
 
 import {
   DataTable,
-  StatusBadge,
+  formatInitials,
   TableHeaderTitle,
+  TableImagePreview,
+  TextActionButton,
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
+
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
@@ -14,6 +18,11 @@ import {
   PAYMENT_METHOD_LABELS,
   type PharmacyOrderRow,
 } from '@/lib/orders/orders';
+
+import {
+  getPharmacyClientPath,
+  getPharmacyOrderPath,
+} from '@/lib/layout/routes';
 
 //===================================================================
 
@@ -33,11 +42,6 @@ function OrdersTable({
   const columns = useMemo<Array<DataTableColumn<PharmacyOrderRow>>>(
     () => [
       {
-        key: 'orderNumber',
-        title: <TableHeaderTitle parts={['Order', 'number']} />,
-        render: (order) => order.orderNumber,
-      },
-      {
         key: 'orderDate',
         title: <TableHeaderTitle parts={['Order', 'date']} />,
         render: (order) => (
@@ -47,9 +51,36 @@ function OrdersTable({
         ),
       },
       {
+        key: 'orderNumber',
+        title: <TableHeaderTitle parts={['Order', 'number']} />,
+        render: (order) => (
+          <TextActionButton href={getPharmacyOrderPath(order.id)}>
+            {order.orderNumber}
+          </TextActionButton>
+        ),
+      },
+      {
+        key: 'clientPhoto',
+        title: <TableHeaderTitle parts={['Client', 'photo']} />,
+        render: (order) => (
+          <TableImagePreview
+            src={order.clientPhotoUrl ?? undefined}
+            alt={`${order.client} photo`}
+            fallback={formatInitials(order.client, 'C')}
+          />
+        ),
+      },
+      {
         key: 'client',
-        title: 'Client',
-        render: (order) => order.client,
+        title: <TableHeaderTitle parts={['Client', 'name']} />,
+        render: (order) =>
+          order.clientId ? (
+            <TextActionButton href={getPharmacyClientPath(order.clientId)}>
+              {order.client}
+            </TextActionButton>
+          ) : (
+            order.client
+          ),
       },
       {
         key: 'deliveryMethod',
@@ -78,7 +109,7 @@ function OrdersTable({
       },
       {
         key: 'status',
-        title: 'Status',
+        title: <TableHeaderTitle parts={['Order', 'status']} />,
         render: (order) => <StatusBadge status={order.status} />,
       },
     ],

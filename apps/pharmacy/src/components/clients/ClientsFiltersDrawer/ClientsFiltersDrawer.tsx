@@ -4,7 +4,6 @@ import {
   CloseIconButton,
   DateFilter,
   ResetFiltersButton,
-  SearchInput,
   SelectField,
   type SelectOption,
 } from '@e-pharmacy/ui/common';
@@ -74,64 +73,21 @@ function ClientsFiltersDrawer({
         <div className={css.controls}>
           <DateFilter
             id="clients-first-order-date-filter"
-            label="Order date"
+            label="Client added"
             value={filters.firstOrderDate}
             isActive={Boolean(
               filters.firstOrderDate.from || filters.firstOrderDate.to
             )}
+            applyOnSubmit
+            applyLabel="Apply"
             onChange={(firstOrderDate) =>
               onChange({ ...filters, firstOrderDate })
             }
           />
 
-          <SearchInput
-            id="clients-name-search"
-            label="Name search"
-            value={filters.name}
-            placeholder="Client name"
-            isActive={Boolean(filters.name)}
-            onChange={(name) => onChange({ ...filters, name })}
-          />
-
-          <SearchInput
-            id="clients-id-search"
-            label="Client ID search"
-            value={filters.clientId}
-            placeholder="Client ID"
-            isActive={Boolean(filters.clientId)}
-            onChange={(clientId) => onChange({ ...filters, clientId })}
-          />
-
-          <SearchInput
-            id="clients-email-search"
-            label="Email search"
-            value={filters.email}
-            placeholder="Client email"
-            isActive={Boolean(filters.email)}
-            onChange={(email) => onChange({ ...filters, email })}
-          />
-
-          <SearchInput
-            id="clients-phone-search"
-            label="Phone search"
-            value={filters.phone}
-            placeholder="Client phone"
-            isActive={Boolean(filters.phone)}
-            onChange={(phone) => onChange({ ...filters, phone })}
-          />
-
-          <SearchInput
-            id="clients-address-search"
-            label="Address search"
-            value={filters.address}
-            placeholder="Client address"
-            isActive={Boolean(filters.address)}
-            onChange={(address) => onChange({ ...filters, address })}
-          />
-
           <SelectField
             id="clients-status"
-            label="Status"
+            label="Client status"
             value={filters.status}
             options={CLIENT_STATUS_OPTIONS}
             isActive={filters.status !== 'all'}

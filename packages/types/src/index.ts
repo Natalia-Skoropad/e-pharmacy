@@ -1,6 +1,7 @@
 export type * from './api';
 export type * from './auth';
 export type * from './cart';
+export * from './clients';
 export type * from './navigation';
 export type * from './orders';
 export type * from './pharmacies';

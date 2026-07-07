@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { ShoppingBag } from 'lucide-react';
 
-import { ButtonLink, StatusBanner } from '@e-pharmacy/ui/common';
+import { ButtonLink } from '@e-pharmacy/ui/common';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import { getPharmacyProfilePath } from '@/lib/layout/routes';

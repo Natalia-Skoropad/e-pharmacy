@@ -12,14 +12,13 @@ import {
   ShimmerImage,
   RatingSummary,
   ReviewsList,
-  StatusBadge,
-  StatusBanner,
   Tabs,
   type DataTableColumn,
   type ReviewsListItem,
   type TabItem,
 } from '@e-pharmacy/ui/common';
 
+import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/core';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';

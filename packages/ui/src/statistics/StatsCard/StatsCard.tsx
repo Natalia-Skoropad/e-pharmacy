@@ -48,7 +48,11 @@ function StatsCardContent({
 
 //===================================================================
 
-export function StatsCard({ href, className, ...contentProps }: StatsCardProps) {
+export function StatsCard({
+  href,
+  className,
+  ...contentProps
+}: StatsCardProps) {
   const classNames = clsx(css.card, href && css.clickable, className);
 
   if (href) {

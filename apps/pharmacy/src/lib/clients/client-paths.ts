@@ -36,9 +36,7 @@ export type ClientsFilterState = Readonly<{
   };
   name: string;
   clientId: string;
-  email: string;
-  phone: string;
-  address: string;
+  contact: string;
   status: ClientStatusFilter;
 }>;
 
@@ -51,9 +49,7 @@ export const DEFAULT_CLIENTS_FILTERS: ClientsFilterState = {
   },
   name: '',
   clientId: '',
-  email: '',
-  phone: '',
-  address: '',
+  contact: '',
   status: 'all',
 };
 
@@ -66,9 +62,7 @@ type ClientsFilterDraft = {
   };
   name: string;
   clientId: string;
-  email: string;
-  phone: string;
-  address: string;
+  contact: string;
   status: ClientsFilterState['status'];
 };
 
@@ -76,6 +70,18 @@ type ClientsFilterDraft = {
 
 function normalizeStatusSegment(value: string): ClientStatus | null {
   return normalizeSlugEnumValue(value, CLIENT_STATUSES);
+}
+
+//===================================================================
+
+function sanitizeContactSegment(value: string): string {
+  return sanitizeTextParam(value, CLIENT_TEXT_PARAM_OPTIONS);
+}
+
+//===================================================================
+
+function deslugifyContactSegment(value: string): string {
+  return deslugifyNameSegment(value, CLIENT_TEXT_PARAM_OPTIONS);
 }
 
 //===================================================================
@@ -90,6 +96,7 @@ export function isClientsFilterSegment(segment: string): boolean {
   return (
     segment.startsWith('search-name-') ||
     segment.startsWith('client-id-') ||
+    segment.startsWith('contact-') ||
     segment.startsWith('email-') ||
     segment.startsWith('phone-') ||
     segment.startsWith('address-') ||
@@ -132,27 +139,23 @@ export function parseClientsSegments(
       continue;
     }
 
+    if (segment.startsWith('contact-')) {
+      filters.contact = deslugifyContactSegment(segment.replace('contact-', ''));
+      continue;
+    }
+
     if (segment.startsWith('email-')) {
-      filters.email = sanitizeTextParam(
-        segment.replace('email-', ''),
-        CLIENT_TEXT_PARAM_OPTIONS
-      );
+      filters.contact = sanitizeContactSegment(segment.replace('email-', ''));
       continue;
     }
 
     if (segment.startsWith('phone-')) {
-      filters.phone = sanitizeTextParam(
-        segment.replace('phone-', ''),
-        CLIENT_TEXT_PARAM_OPTIONS
-      );
+      filters.contact = sanitizeContactSegment(segment.replace('phone-', ''));
       continue;
     }
 
     if (segment.startsWith('address-')) {
-      filters.address = deslugifyNameSegment(
-        segment.replace('address-', ''),
-        CLIENT_TEXT_PARAM_OPTIONS
-      );
+      filters.contact = deslugifyContactSegment(segment.replace('address-', ''));
       continue;
     }
 
@@ -200,9 +203,7 @@ export function buildClientsPath(filters: ClientsFilterState): string {
   const segments: string[] = [];
   const name = filters.name.trim();
   const clientId = filters.clientId.trim();
-  const email = filters.email.trim();
-  const phone = filters.phone.trim();
-  const address = filters.address.trim();
+  const contact = filters.contact.trim();
 
   if (name) {
     segments.push(`search-name-${slugifySegment(name, CLIENT_SLUG_OPTIONS)}`);
@@ -212,16 +213,8 @@ export function buildClientsPath(filters: ClientsFilterState): string {
     segments.push(`client-id-${slugifySegment(clientId, CLIENT_SLUG_OPTIONS)}`);
   }
 
-  if (email) {
-    segments.push(`email-${slugifySegment(email, CLIENT_SLUG_OPTIONS)}`);
-  }
-
-  if (phone) {
-    segments.push(`phone-${slugifySegment(phone, CLIENT_SLUG_OPTIONS)}`);
-  }
-
-  if (address) {
-    segments.push(`address-${slugifySegment(address, CLIENT_SLUG_OPTIONS)}`);
+  if (contact) {
+    segments.push(`contact-${slugifySegment(contact, CLIENT_SLUG_OPTIONS)}`);
   }
 
   if (filters.status !== 'all') {

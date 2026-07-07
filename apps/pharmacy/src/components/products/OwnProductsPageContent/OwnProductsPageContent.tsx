@@ -7,13 +7,12 @@ import { Boxes } from 'lucide-react';
 import {
   CountLabel,
   FiltersButton,
-  OwnProductStatistics,
   RowsPerPageSelect,
   SearchInput,
-  StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
 
+import { OwnProductStatistics, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import {

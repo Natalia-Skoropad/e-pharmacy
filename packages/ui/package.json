@@ -13,6 +13,7 @@
     "./layout": "./src/layout/index.ts",
     "./modals": "./src/modals/index.ts",
     "./status-pages": "./src/status-pages/index.ts",
+    "./statistics": "./src/statistics/index.ts",
     "./styles/*.css": "./src/styles/*.css"
   },
   "scripts": {

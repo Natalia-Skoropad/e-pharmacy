@@ -1,20 +1,19 @@
-import Link from 'next/link';
 import { useMemo } from 'react';
 
 import {
   DataTable,
-  PictureUpload,
-  StatusBadge,
+  formatInitials,
   TableHeaderTitle,
+  TableImagePreview,
+  TextActionButton,
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import type { PharmacyClientRow } from '@/lib/clients/clients';
 import { getPharmacyClientPath } from '@/lib/layout/routes';
-
-import css from './ClientsTable.module.css';
 
 //===================================================================
 
@@ -23,33 +22,6 @@ type ClientsTableProps = Readonly<{
   emptyMessage: string;
   isLoading?: boolean;
 }>;
-
-//===================================================================
-
-function formatInitials(name: string) {
-  const initials = name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join('');
-
-  return initials || 'C';
-}
-
-//===================================================================
-
-function ClientPhoto({ client }: Readonly<{ client: PharmacyClientRow }>) {
-  return (
-    <span className={css.photo} aria-label={`${client.name} photo`}>
-      {client.photoUrl ? (
-        <PictureUpload src={client.photoUrl} alt="" />
-      ) : (
-        <span aria-hidden="true">{formatInitials(client.name)}</span>
-      )}
-    </span>
-  );
-}
 
 //===================================================================
 
@@ -69,45 +41,52 @@ function ClientsTable({
   const columns = useMemo<Array<DataTableColumn<PharmacyClientRow>>>(
     () => [
       {
-        key: 'clientId',
-        title: <TableHeaderTitle parts={['Client', 'ID']} />,
-        render: (client) => client.id,
-      },
-      {
-        key: 'photo',
-        title: 'Photo',
-        render: (client) => <ClientPhoto client={client} />,
-      },
-      {
         key: 'firstOrderAt',
-        title: <TableHeaderTitle parts={['Order', 'date']} />,
+        title: <TableHeaderTitle parts={['Client', 'added']} />,
         render: (client) => <FirstOrderDate value={client.firstOrderAt} />,
       },
       {
-        key: 'name',
-        title: 'Name',
+        key: 'photo',
+        title: <TableHeaderTitle parts={['Client', 'photo']} />,
         render: (client) => (
-          <Link
-            className={css.nameLink}
-            href={getPharmacyClientPath(client.id)}
-          >
+          <TableImagePreview
+            src={client.photoUrl ?? undefined}
+            alt={`${client.name} photo`}
+            fallback={formatInitials(client.name, 'C')}
+          />
+        ),
+      },
+      {
+        key: 'clientId',
+        title: <TableHeaderTitle parts={['Client', 'ID']} />,
+        render: (client) => (
+          <TextActionButton href={getPharmacyClientPath(client.id)}>
+            {client.id}
+          </TextActionButton>
+        ),
+      },
+      {
+        key: 'name',
+        title: <TableHeaderTitle parts={['Client', 'name']} />,
+        render: (client) => (
+          <TextActionButton href={getPharmacyClientPath(client.id)}>
             {client.name}
-          </Link>
+          </TextActionButton>
         ),
       },
       {
         key: 'email',
-        title: 'Email',
+        title: <TableHeaderTitle parts={['Client', 'email']} />,
         render: (client) => client.email,
       },
       {
         key: 'phone',
-        title: 'Phone',
+        title: <TableHeaderTitle parts={['Client', 'phone']} />,
         render: (client) => client.phone,
       },
       {
         key: 'address',
-        title: 'Address',
+        title: <TableHeaderTitle parts={['Client', 'address']} />,
         render: (client) => client.address,
       },
       {
@@ -122,7 +101,7 @@ function ClientsTable({
       },
       {
         key: 'status',
-        title: 'Status',
+        title: <TableHeaderTitle parts={['Client', 'status']} />,
         render: (client) => <StatusBadge status={client.status} />,
       },
     ],

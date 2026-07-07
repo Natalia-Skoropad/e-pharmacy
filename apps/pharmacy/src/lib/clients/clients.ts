@@ -41,6 +41,7 @@ export type PharmacyClientsQueryParams = Readonly<{
   firstOrderTo?: string;
   name?: string;
   clientId?: string;
+  contact?: string;
   email?: string;
   phone?: string;
   address?: string;

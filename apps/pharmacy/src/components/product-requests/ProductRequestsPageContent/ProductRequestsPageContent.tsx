@@ -8,12 +8,15 @@ import {
   Button,
   CountLabel,
   FiltersButton,
-  ProductRequestStatistics,
   RowsPerPageSelect,
   SearchInput,
-  StatusBanner,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
+
+import {
+  ProductRequestStatistics,
+  StatusBanner,
+} from '@e-pharmacy/ui/statistics';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
 

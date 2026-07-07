@@ -44,6 +44,8 @@ export type PharmacyOrderRow = Readonly<{
   orderNumber: string;
   orderDate: string;
   client: string;
+  clientId: EntityId | null;
+  clientPhotoUrl: string | null;
   deliveryMethod: DeliveryMethod;
   paymentMethod: PaymentMethod;
   clientComment: string;
@@ -109,6 +111,60 @@ function isOrderStatus(value: unknown): value is OrderStatus {
 
 //===================================================================
 
+function getNestedRecord(
+  source: Record<string, unknown>,
+  key: string
+): Record<string, unknown> | undefined {
+  const value = source[key];
+
+  return isRecord(value) ? value : undefined;
+}
+
+//===================================================================
+
+function getClientId(order: Record<string, unknown>): string | null {
+  const client = getNestedRecord(order, 'client');
+  const customer = getNestedRecord(order, 'customer');
+  const user = getNestedRecord(order, 'user');
+
+  return (
+    getStringValue(order.clientId) ??
+    getStringValue(order.customerId) ??
+    getStringValue(order.userId) ??
+    (client ? getStringValue(client.id) : undefined) ??
+    (client ? getStringValue(client.clientId) : undefined) ??
+    (client ? getStringValue(client._id) : undefined) ??
+    (customer ? getStringValue(customer.id) : undefined) ??
+    (user ? getStringValue(user.id) : undefined) ??
+    null
+  );
+}
+
+//===================================================================
+
+function getClientPhotoUrl(order: Record<string, unknown>): string | null {
+  const client = getNestedRecord(order, 'client');
+  const customer = getNestedRecord(order, 'customer');
+  const user = getNestedRecord(order, 'user');
+  const profile = client ? getNestedRecord(client, 'profile') : undefined;
+
+  return (
+    getStringValue(order.clientPhotoUrl) ??
+    getStringValue(order.clientAvatarUrl) ??
+    getStringValue(order.photoUrl) ??
+    (client ? getStringValue(client.photoUrl) : undefined) ??
+    (client ? getStringValue(client.pictureUrl) : undefined) ??
+    (client ? getStringValue(client.avatarUrl) : undefined) ??
+    (customer ? getStringValue(customer.photoUrl) : undefined) ??
+    (user ? getStringValue(user.photoUrl) : undefined) ??
+    (profile ? getStringValue(profile.photoUrl) : undefined) ??
+    (profile ? getStringValue(profile.pictureUrl) : undefined) ??
+    null
+  );
+}
+
+//===================================================================
+
 function getDeliveryMethod(order: Record<string, unknown>): DeliveryMethod {
   if (isDeliveryMethod(order.deliveryMethod)) return order.deliveryMethod;
 
@@ -165,6 +221,8 @@ export function normalizePharmacyOrder(
     orderNumber,
     orderDate,
     client: getClientName(rawOrder),
+    clientId: getClientId(rawOrder),
+    clientPhotoUrl: getClientPhotoUrl(rawOrder),
     deliveryMethod: getDeliveryMethod(rawOrder),
     paymentMethod,
     clientComment:
