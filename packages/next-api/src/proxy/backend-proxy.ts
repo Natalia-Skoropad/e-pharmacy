@@ -133,7 +133,7 @@ export async function proxyBackendRequest({
   request,
   method = 'GET',
   clearAuthCookiesOnSuccess = false,
-  clearAuthCookiesOnRefreshFailure = true,
+  clearAuthCookiesOnRefreshFailure = false,
 }: BackendProxyOptions) {
   const body = await getProxyBody(request, method);
 

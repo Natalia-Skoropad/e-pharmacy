@@ -123,7 +123,7 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     description: {
       type: String,
       trim: true,
-      maxlength: [1200, 'Description must be at most 1200 characters'],
+      maxlength: [5000, 'Description must be at most 5000 characters'],
       default: undefined,
     },
 

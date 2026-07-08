@@ -15,7 +15,7 @@ function NameInput({
   disabled = false,
   className,
   label = 'Name',
-  placeholder = 'Your name',
+  placeholder = 'Enter name',
   autoComplete = 'name',
   maxLength,
   pattern,
@@ -24,9 +24,14 @@ function NameInput({
   onChange,
 }: AuthFieldBaseProps) {
   const hasError = Boolean(isTouched && error);
-  const describedBy = [hint ? `${id}-hint` : null, hasError ? `${id}-error` : null, ariaDescribedBy]
-    .filter(Boolean)
-    .join(' ') || undefined;
+  const describedBy =
+    [
+      hint ? `${id}-hint` : null,
+      hasError ? `${id}-error` : null,
+      ariaDescribedBy,
+    ]
+      .filter(Boolean)
+      .join(' ') || undefined;
 
   return (
     <FormFieldLayout

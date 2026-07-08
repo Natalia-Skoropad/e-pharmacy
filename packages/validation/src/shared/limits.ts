@@ -22,7 +22,7 @@ export const VALIDATION_LIMITS = {
   orderCommentMax: 500,
 
   workingHoursMax: 160,
-  textEditorMax: 1200,
+  textEditorMax: 5000,
   taxIdMin: 8,
   taxIdMax: 10,
   ibanMax: 29,

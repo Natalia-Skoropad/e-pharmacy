@@ -407,6 +407,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
   const [pharmacyName, setPharmacyName] = useState('');
   const [initialPharmacyName, setInitialPharmacyName] = useState('');
+  const [ownerPictureUrl, setOwnerPictureUrl] = useState<string | null>(
+    user.pictureUrl ?? null
+  );
   const [pharmacyPictureUrl, setPharmacyPictureUrl] = useState<string | null>(
     null
   );
@@ -458,6 +461,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const [documentsTouched, setDocumentsTouched] = useState(false);
 
   const [isOwnerSaving, setIsOwnerSaving] = useState(false);
+  const [isOwnerPictureSaving, setIsOwnerPictureSaving] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isPharmacyPictureSaving, setIsPharmacyPictureSaving] = useState(false);
   const [isPharmacySaving, setIsPharmacySaving] = useState(false);
@@ -523,7 +527,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     return () => {
       isMounted = false;
     };
-  }, [user]);
+  }, [user.email, user.id, user.name, user.phone]);
 
   useEffect(() => {
     let isMounted = true;
@@ -673,6 +677,28 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
   const handlePictureError = (message: string) => toast.error(message);
 
+  const handleOwnerPictureChange = async (nextPictureUrl: string | null) => {
+    setIsOwnerPictureSaving(true);
+
+    try {
+      const response = await updateCurrentUser({
+        pictureUrl: nextPictureUrl,
+      });
+
+      setOwnerPictureUrl(response.user.pictureUrl ?? null);
+      await reloadCurrentUser();
+      toast.success(
+        nextPictureUrl
+          ? 'Profile photo was updated.'
+          : 'Profile photo was removed.'
+      );
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Could not update profile photo.'));
+    } finally {
+      setIsOwnerPictureSaving(false);
+    }
+  };
+
   const handlePharmacyPictureChange = async (nextPictureUrl: string | null) => {
     if (!pharmacy || isProfileReadonly) return;
 
@@ -710,6 +736,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       });
 
       const nextValues = createOwnerInitialValues(response.user);
+      setOwnerPictureUrl(response.user.pictureUrl ?? null);
       setOwnerValues(nextValues);
       setInitialOwnerValues(nextValues);
       setOwnerTouched({});
@@ -766,10 +793,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
         buildProfilePayload(pharmacyValues, pharmacyName)
       );
       const nextValues = createPharmacyInitialValues(user, response.pharmacy);
-      const nextPharmacyName = createPharmacyNameInitialValue(
-        user,
-        response.pharmacy
-      );
+      const nextPharmacyName = response.pharmacy.name ?? '';
       setPharmacy(response.pharmacy);
       setPharmacyName(nextPharmacyName);
       setInitialPharmacyName(nextPharmacyName);
@@ -916,7 +940,17 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   };
 
   if (isLoadingProfile) {
-    return <PageLoader label="Loading pharmacy profile..." />;
+    return (
+      <main className={css.page}>
+        <section className={css.section} aria-label="Loading pharmacy profile">
+          <Container className={css.profileContainer}>
+            <div className={css.loaderBox}>
+              <LoadingSpinner label="Loading pharmacy profile..." />
+            </div>
+          </Container>
+        </section>
+      </main>
+    );
   }
 
   if (loadError || !pharmacy) {
@@ -938,8 +972,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     );
   }
 
+  const summaryOwnerName = ownerValues.name || user.name || 'Pharmacy owner';
   const summaryPharmacyName =
-    pharmacyName || pharmacy.name || user.name || 'Pharmacy profile';
+    pharmacyName || pharmacy.name || 'Pharmacy profile';
 
   return (
     <main className={css.page}>
@@ -951,21 +986,21 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
               aria-label="Pharmacy profile summary"
             >
               <PictureCard
-                name={summaryPharmacyName}
-                pictureUrl={pharmacyPictureUrl}
-                isSaving={isPharmacyPictureSaving}
+                name={summaryOwnerName}
+                pictureUrl={ownerPictureUrl}
+                isSaving={isOwnerPictureSaving}
                 accept={PICTURE_ACCEPT}
                 validateFile={(file) => buildPictureFileError(file) || null}
                 validatePictureUrl={(nextPictureUrl) =>
                   buildPictureUrlError(nextPictureUrl) || null
                 }
-                onChange={handlePharmacyPictureChange}
+                onChange={handleOwnerPictureChange}
                 onError={handlePictureError}
               />
 
               <div className={css.nameBlock}>
-                <p className={css.name}>{summaryPharmacyName}</p>
-                <p className={css.email}>{pharmacy.email ?? user.email}</p>
+                <p className={css.name}>{summaryOwnerName}</p>
+                <p className={css.email}>{user.email}</p>
               </div>
 
               <dl className={css.compactDetails}>

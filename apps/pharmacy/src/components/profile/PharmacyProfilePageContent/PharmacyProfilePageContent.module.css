@@ -34,6 +34,19 @@
   margin-top: 16px;
 }
 
+.loaderBox {
+  display: grid;
+  gap: 16px;
+  place-items: center;
+  min-height: 220px;
+  padding: 32px 20px;
+  text-align: center;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
 .profileShell {
   min-width: 0;
   display: grid;
@@ -140,7 +153,9 @@
 
 .contentCard {
   min-width: 0;
+  max-width: 100%;
   padding: 10px;
+  overflow: hidden;
   box-shadow: none;
 }
 
@@ -279,6 +294,19 @@
     font-size: var(--fz-48);
   }
 
+  .loaderBox {
+    display: grid;
+    gap: 16px;
+    place-items: center;
+    min-height: 220px;
+    padding: 32px 20px;
+    text-align: center;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+
   .profileShell {
     gap: 18px;
     padding: 14px;
@@ -306,6 +334,19 @@
     font-size: var(--fz-56);
   }
 
+  .loaderBox {
+    display: grid;
+    gap: 16px;
+    place-items: center;
+    min-height: 220px;
+    padding: 32px 20px;
+    text-align: center;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+
   .profileShell {
     grid-template-columns: 320px minmax(0, 1fr);
     align-items: start;
@@ -313,7 +354,6 @@
   }
 
   .sidebar {
-    position: sticky;
     top: 96px;
   }
 

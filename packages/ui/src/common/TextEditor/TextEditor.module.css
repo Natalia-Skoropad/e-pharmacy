@@ -76,15 +76,18 @@
 
 .textarea {
   width: 100%;
-  min-height: 220px;
+  height: 360px;
+  min-height: 360px;
+  max-height: 360px;
   padding: 16px 18px 36px;
   font-size: var(--fz-16);
   line-height: 1.55;
   color: var(--color-text-primary);
-  resize: vertical;
+  resize: none;
   background-color: transparent;
   border: 0;
   outline: none;
+  overflow-y: auto;
 }
 
 .textarea::placeholder {

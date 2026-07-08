@@ -51,6 +51,7 @@ function AuthProvider({ children }: AuthProviderProps) {
     <AuthProviderCore
       {...pharmacyAuthServices}
       sessionHintStorage={pharmacyAuthSessionHintStorage}
+      revalidateOnFocus={false}
     >
       {children}
     </AuthProviderCore>

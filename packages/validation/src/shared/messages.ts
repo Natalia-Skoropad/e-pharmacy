@@ -57,7 +57,7 @@ export const VALIDATION_MESSAGES = {
     reviewCommentMax: 'Review comment must be at most 500 characters',
     orderCommentMax: 'Order comment must be at most 500 characters',
     workingHoursMax: 'Working hours must be at most 160 characters',
-    textEditorMax: 'Text must be at most 1200 characters',
+    textEditorMax: 'Text must be at most 5000 characters',
     paymentPurposeMax: 'Payment purpose must be at most 500 characters',
     pictureMax: 'Photo is too large. Use a smaller image',
     picturePayloadMax: 'Photo is too large. Use an image up to 450 KB',

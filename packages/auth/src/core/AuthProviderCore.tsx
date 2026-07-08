@@ -81,6 +81,7 @@ type AuthProviderCoreProps = AuthProviderServices & {
   children: ReactNode;
   sessionHintStorage?: AuthSessionHintStorage;
   sessionSync?: AuthSessionSync;
+  revalidateOnFocus?: boolean;
 };
 
 //===================================================================
@@ -152,6 +153,7 @@ export function AuthProviderCore({
   logout: logoutService,
   sessionHintStorage = noopSessionHintStorage,
   sessionSync,
+  revalidateOnFocus = true,
 }: AuthProviderCoreProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
@@ -402,23 +404,27 @@ export function AuthProviderCore({
       void restoreCurrentUser('reload');
     });
 
-    const revalidateOnFocus = () => {
+    const revalidateOnFocusHandler = () => {
       if (document.visibilityState === 'visible' && userRef.current) {
         void restoreCurrentUser('reload');
       }
     };
 
-    window.addEventListener('focus', revalidateOnFocus);
-    document.addEventListener('visibilitychange', revalidateOnFocus);
+    if (revalidateOnFocus) {
+      window.addEventListener('focus', revalidateOnFocusHandler);
+      document.addEventListener('visibilitychange', revalidateOnFocusHandler);
+    }
 
     return () => {
       unsubscribe();
       if (ownsSync) sync.close();
       sessionSyncRef.current = null;
-      window.removeEventListener('focus', revalidateOnFocus);
-      document.removeEventListener('visibilitychange', revalidateOnFocus);
+      if (revalidateOnFocus) {
+        window.removeEventListener('focus', revalidateOnFocusHandler);
+        document.removeEventListener('visibilitychange', revalidateOnFocusHandler);
+      }
     };
-  }, [clearAuthState, restoreCurrentUser, sessionSync]);
+  }, [clearAuthState, restoreCurrentUser, revalidateOnFocus, sessionSync]);
 
   useEffect(() => {
     if (status !== 'authenticated') return undefined;

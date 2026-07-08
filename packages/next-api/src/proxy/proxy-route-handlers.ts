@@ -45,7 +45,7 @@ export function createPrivateProxyRoute<
   backendPath,
   method = 'GET',
   clearAuthCookiesOnSuccess = false,
-  clearAuthCookiesOnRefreshFailure = true,
+  clearAuthCookiesOnRefreshFailure = false,
 }: {
   backendPath: BackendPath<TParams>;
   method?: HttpMethod;

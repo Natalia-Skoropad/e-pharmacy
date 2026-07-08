@@ -1,6 +1,12 @@
 'use client';
 
-import type { ChangeEvent, ChangeEventHandler } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ChangeEventHandler,
+} from 'react';
 
 import css from './WorkingHoursInput.module.css';
 
@@ -149,19 +155,33 @@ function WorkingHoursInput({
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
   const hasError = Boolean(isTouched && error);
-  const parsedValue = parseWorkingHours(value);
+  const lastEmittedValueRef = useRef<string | null>(null);
+  const [currentValue, setCurrentValue] = useState<WorkingHoursValue>(() =>
+    parseWorkingHours(value)
+  );
+
+  useEffect(() => {
+    if (value === lastEmittedValueRef.current) {
+      lastEmittedValueRef.current = null;
+      return;
+    }
+
+    setCurrentValue(parseWorkingHours(value));
+  }, [value]);
 
   const emitChange = (nextValue: WorkingHoursValue) => {
-    onChange(
-      createSyntheticTextareaEvent(id, name, formatWorkingHours(nextValue))
-    );
+    const formattedValue = formatWorkingHours(nextValue);
+
+    lastEmittedValueRef.current = formattedValue;
+    setCurrentValue(nextValue);
+    onChange(createSyntheticTextareaEvent(id, name, formattedValue));
   };
 
   const updateDay = (dayKey: string, patch: Partial<DayValue>) => {
     emitChange({
-      ...parsedValue,
+      ...currentValue,
       [dayKey]: {
-        ...parsedValue[dayKey],
+        ...currentValue[dayKey],
         ...patch,
       },
     });
@@ -190,7 +210,7 @@ function WorkingHoursInput({
         aria-describedby={`${hintId} ${errorId}`}
       >
         {WORKING_DAYS.map((day) => {
-          const dayValue = parsedValue[day.key];
+          const dayValue = currentValue[day.key];
           const fromId = `${id}-${day.key}-from`;
           const toId = `${id}-${day.key}-to`;
           const closedId = `${id}-${day.key}-closed`;
