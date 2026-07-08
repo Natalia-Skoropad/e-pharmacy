@@ -26,6 +26,11 @@ import { DEFAULT_ORDER_STATISTICS } from '@e-pharmacy/types/orders';
 
 import { getPharmacyOrders } from '@/lib/api/browser';
 import { getPharmacyOrdersFilterPath } from '@/lib/layout/routes';
+import {
+  getLockedFeatureBannerLabel,
+  getLockedFeatureBannerStatus,
+  useCurrentPharmacyStatus,
+} from '@/lib/pharmacies/current-pharmacy-status';
 import { buildOrdersPath } from '@/lib/orders/order-paths';
 
 import {
@@ -174,6 +179,10 @@ function OrdersPageContent({
     setFilters(DEFAULT_ORDERS_FILTERS);
   };
 
+  const currentPharmacyStatus = useCurrentPharmacyStatus();
+  const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
+  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
+
   return (
     <main className={css.page} aria-labelledby="orders-page-title">
       <section className={css.card} aria-labelledby="orders-page-title">
@@ -184,10 +193,14 @@ function OrdersPageContent({
         />
 
         <StatusBanner
-          status="new"
-          label="New"
+          status={bannerStatus}
+          label={bannerLabel}
           title="Verification is required"
-          message="New pharmacies do not receive orders until Admin verifies the pharmacy profile."
+          message={
+            bannerStatus === 'on_verification'
+              ? 'Orders stay locked while Admin reviews the submitted pharmacy profile.'
+              : 'New pharmacies do not receive orders until Admin verifies the pharmacy profile.'
+          }
         />
 
         <OrderStatistics

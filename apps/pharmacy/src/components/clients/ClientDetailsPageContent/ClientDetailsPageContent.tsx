@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Users } from 'lucide-react';
 
@@ -6,6 +8,12 @@ import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import { getPharmacyProfilePath } from '@/lib/layout/routes';
+
+import {
+  getLockedFeatureBannerLabel,
+  getLockedFeatureBannerStatus,
+  useCurrentPharmacyStatus,
+} from '@/lib/pharmacies/current-pharmacy-status';
 
 import css from './ClientDetailsPageContent.module.css';
 
@@ -19,6 +27,9 @@ type ClientDetailsPageContentProps = Readonly<{
 
 function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
   const title = `Client #${clientId}`;
+  const currentPharmacyStatus = useCurrentPharmacyStatus();
+  const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
+  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
 
   return (
     <main className={css.page} aria-labelledby="client-details-page-title">
@@ -31,8 +42,8 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
           />
 
           <StatusBanner
-            status="new"
-            label="New"
+            status={bannerStatus}
+            label={bannerLabel}
             title="Client details is locked for now"
             message="This page belongs to business functionality that opens after Admin verifies your pharmacy profile."
           />

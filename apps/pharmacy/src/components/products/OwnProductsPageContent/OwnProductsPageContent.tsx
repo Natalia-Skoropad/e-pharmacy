@@ -21,7 +21,7 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
-import type { EntityId } from '@e-pharmacy/types';
+import type { EntityId, PharmacyStatus } from '@e-pharmacy/types';
 
 import {
   DEFAULT_OWN_PRODUCT_STATISTICS,
@@ -30,6 +30,10 @@ import {
 } from '@e-pharmacy/types/products';
 
 import { getMyPharmacyProfile, getPharmacyProducts } from '@/lib/api/browser';
+import {
+  getLockedFeatureBannerLabel,
+  getLockedFeatureBannerStatus,
+} from '@/lib/pharmacies/current-pharmacy-status';
 
 import type {
   PharmacyProductRow,
@@ -131,6 +135,8 @@ function OwnProductsPageContent({
   const [productStatistics, setProductStatistics] =
     useState<OwnProductStatisticsCounts>(DEFAULT_OWN_PRODUCT_STATISTICS);
   const [pharmacyId, setPharmacyId] = useState<EntityId | null>(null);
+  const [pharmacyStatus, setPharmacyStatus] =
+    useState<PharmacyStatus>('new');
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -155,10 +161,12 @@ function OwnProductsPageContent({
         if (!isMounted) return;
 
         setPharmacyId(response.pharmacy.id);
+        setPharmacyStatus(response.pharmacy.status);
       } catch {
         if (!isMounted) return;
 
         setPharmacyId(null);
+        setPharmacyStatus('new');
       } finally {
         if (isMounted) setIsProfileLoaded(true);
       }
@@ -260,6 +268,9 @@ function OwnProductsPageContent({
     setFilters(DEFAULT_OWN_PRODUCTS_FILTERS);
   };
 
+  const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
+  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
+
   return (
     <main className={css.page} aria-labelledby="own-products-page-title">
       <section className={css.card} aria-labelledby="own-products-page-title">
@@ -270,8 +281,8 @@ function OwnProductsPageContent({
         />
 
         <StatusBanner
-          status="new"
-          label="New"
+          status={bannerStatus}
+          label={bannerLabel}
           title="Verification is required"
           message="Own products will appear only after verification, when adding products to this pharmacy becomes available."
         />

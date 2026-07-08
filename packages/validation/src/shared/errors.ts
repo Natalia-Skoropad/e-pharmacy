@@ -241,6 +241,24 @@ export function buildOrderCommentError(
 
 //=============================================================================
 
+const WORKING_HOURS_RANGE_PATTERN =
+  /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(Closed|([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d)\b/g;
+
+function hasValidWorkingHoursRanges(value: string): boolean {
+  const entries = [...value.matchAll(WORKING_HOURS_RANGE_PATTERN)];
+
+  if (entries.length === 0) return true;
+
+  return entries.every((entry) => {
+    if (entry[1] === 'Closed') return true;
+
+    const from = entry[2];
+    const to = entry[3];
+
+    return Boolean(from && to && from < to);
+  });
+}
+
 export function buildWorkingHoursError(
   value: string,
   options: { required?: boolean; trailingDot?: boolean } = {}
@@ -259,6 +277,13 @@ export function buildWorkingHoursError(
 
   if (!WORKING_HOURS_PATTERN.test(workingHours)) {
     return formatValidationMessage(VALIDATION_MESSAGES.format.workingHours, options);
+  }
+
+  if (!hasValidWorkingHoursRanges(workingHours)) {
+    return formatValidationMessage(
+      VALIDATION_MESSAGES.format.workingHoursRange,
+      options
+    );
   }
 
   return '';

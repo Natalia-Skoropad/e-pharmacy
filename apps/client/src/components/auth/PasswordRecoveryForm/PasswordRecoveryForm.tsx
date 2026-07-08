@@ -38,7 +38,7 @@ type RecoveryAccountType = 'client' | 'pharmacy';
 const RECOVERY_COPY: Record<RecoveryAccountType, { title: string; text: string }> = {
   client: {
     title: 'Client account',
-    text: 'Enter the email from your personal account. We will send a reset link for your client login.',
+    text: 'Enter the email from your personal account. We will send a reset link for your client login, saved orders, favorites, and profile access.',
   },
   pharmacy: {
     title: 'Pharmacy owner account',
@@ -149,6 +149,7 @@ function PasswordRecoveryForm() {
 
       <div className={css.fields}>
         <EmailInput
+          className={css.fieldFull}
           id="recovery-email"
           name="email"
           value={values.email}

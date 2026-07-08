@@ -76,7 +76,7 @@ const REGISTER_COPY: Record<
 > = {
   client: {
     title: 'Client account',
-    text: 'Create a personal account for orders, favorites, checkout details, and profile settings.',
+    text: 'Create a personal account to order medicines, save favorites, manage checkout details, and keep profile settings in one place.',
     button: 'Create account',
     loading: 'Creating account...',
   },

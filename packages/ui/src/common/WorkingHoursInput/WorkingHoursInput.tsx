@@ -149,7 +149,6 @@ function WorkingHoursInput({
   isTouched,
   required = true,
   disabled = false,
-  maxLength = 160,
   onChange,
 }: WorkingHoursInputProps) {
   const errorId = `${id}-error`;
@@ -269,9 +268,6 @@ function WorkingHoursInput({
       </div>
 
       <div className={css.metaRow}>
-        <span className={css.counter} aria-hidden="true">
-          {value.length}/{maxLength}
-        </span>
         <p className={css.error} id={errorId}>
           {isTouched ? (error ?? '') : ''}
         </p>

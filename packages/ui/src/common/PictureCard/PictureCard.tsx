@@ -35,6 +35,7 @@ export type PictureCardProps = {
   name: string;
   pictureUrl: string | null;
   isSaving?: boolean;
+  disabled?: boolean;
   accept?: string;
   labels?: PictureCardLabels;
   validateFile?: (file: File) => string | null;
@@ -85,6 +86,7 @@ function PictureCard({
   name,
   pictureUrl,
   isSaving = false,
+  disabled = false,
   accept = DEFAULT_PICTURE_ACCEPT,
   labels,
   validateFile,
@@ -97,6 +99,8 @@ function PictureCard({
   const mergedLabels = { ...DEFAULT_LABELS, ...labels };
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (disabled || isSaving) return;
+
     const file = event.target.files?.[0];
     event.target.value = '';
 
@@ -125,6 +129,8 @@ function PictureCard({
   };
 
   const handleRemove = async () => {
+    if (disabled || isSaving) return;
+
     setIsConfirmOpen(false);
     await onChange(null);
   };
@@ -146,6 +152,7 @@ function PictureCard({
           type="file"
           accept={accept}
           aria-label={mergedLabels.uploadAriaLabel}
+          disabled={disabled || isSaving}
           onChange={(event) => void handleFileChange(event)}
         />
 
@@ -156,6 +163,7 @@ function PictureCard({
             type="button"
             variant="secondary"
             size="sm"
+            disabled={disabled || isSaving}
             isLoading={isSaving}
             loadingLabel={mergedLabels.savingButton}
             iconLeft={<Upload size={16} aria-hidden="true" />}
@@ -169,7 +177,7 @@ function PictureCard({
             variant="ghost"
             size="sm"
             className={css.dangerButton}
-            disabled={!pictureUrl || isSaving}
+            disabled={disabled || !pictureUrl || isSaving}
             iconLeft={<ImageOff size={16} aria-hidden="true" />}
             onClick={() => setIsConfirmOpen(true)}
           >

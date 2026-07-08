@@ -125,7 +125,12 @@ type ProfileTab =
   | 'reviews'
   | 'sessions';
 
-type ProfileStatusBadgeVariant = 'new' | 'on_moderation' | 'active' | 'blocked';
+type ProfileStatusBadgeVariant =
+  | 'new'
+  | 'on_verification'
+  | 'on_moderation'
+  | 'active'
+  | 'blocked';
 
 //===================================================================
 
@@ -284,7 +289,7 @@ function getStatusLabel(status: PharmacyStatus): string {
 function getStatusBadgeStatus(
   status: PharmacyStatus
 ): ProfileStatusBadgeVariant {
-  return status === 'on_verification' ? 'on_moderation' : status;
+  return status;
 }
 
 //===================================================================
@@ -602,11 +607,13 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const pharmacyNameIsValid = pharmacyName.trim().length > 0;
   const pharmacyDocumentsAreReady =
     documentValues.length > 0 && !documentsFormIsDirty;
+  const pharmacyPictureIsReady = Boolean(pharmacyPictureUrl);
 
   const canSendForVerification =
     Boolean(pharmacy) &&
     pharmacyStatus === 'new' &&
     pharmacyDocumentsAreReady &&
+    pharmacyPictureIsReady &&
     pharmacyNameIsValid &&
     !hasValidationErrors(pharmacyErrors) &&
     !hasValidationErrors(aboutErrors) &&
@@ -616,6 +623,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     !paymentFormIsDirty &&
     !documentsFormIsDirty &&
     !isPharmacySaving &&
+    !isPharmacyPictureSaving &&
     !isDocumentsSaving &&
     !isSendingVerification;
 
@@ -1014,7 +1022,13 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                 </div>
               </dl>
 
-              <div className={css.statusNote}>
+              <div
+                className={
+                  pharmacy.status === 'on_verification'
+                    ? `${css.statusNote} ${css.statusNoteBeauty}`
+                    : css.statusNote
+                }
+              >
                 <div className={css.statusNoteHeader}>
                   <h3>Profile status</h3>
                   <StatusBadge
@@ -1222,19 +1236,11 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       </p>
                     </div>
 
-                    {isProfileReadonly ? (
-                      <StatusBanner
-                        status="on_moderation"
-                        label={getStatusLabel(pharmacy.status)}
-                        title="Profile data is locked"
-                        message="The submitted profile is waiting for Admin review. You can view it, but editing is paused until a decision is made."
-                      />
-                    ) : null}
-
                     <PictureCard
                       name={pharmacyName || pharmacy.name || 'Pharmacy'}
                       pictureUrl={pharmacyPictureUrl}
                       isSaving={isPharmacyPictureSaving}
+                      disabled={isProfileReadonly}
                       accept={PICTURE_ACCEPT}
                       labels={{
                         uploadAriaLabel: 'Upload pharmacy photo',

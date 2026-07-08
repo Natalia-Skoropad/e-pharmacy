@@ -1,11 +1,20 @@
 import mongoose, { type Types } from 'mongoose';
 
 import { connectDB } from '../db/connectDB';
+
+import {
+  PHARMACY_STATUSES,
+  USER_ROLES,
+  USER_STATUSES,
+} from '../constants/auth';
+
 import { Product } from '../models/product.model';
 import { Pharmacy } from '../models/pharmacy.model';
+import { User } from '../models/user.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { ProductReview } from '../models/productReview.model';
 import { PharmacyReview } from '../models/pharmacyReview.model';
+import { hashPassword } from '../utils/password';
 
 //===============================================================
 
@@ -351,6 +360,7 @@ type SeedPharmacyDocument = {
     taxId: string;
     iban: string;
     bankName: string;
+    receiptEmail?: string;
     paymentPurpose: string;
   };
 };
@@ -487,6 +497,192 @@ function createBankDetails(pharmacyName: string, pharmacyNumber: number) {
 
 //===============================================================
 
+const PHARMACY_ACCOUNT_PASSWORD = '123456789';
+const PHARMACY_ACCOUNT_DESCRIPTION_LENGTH = 5000;
+const PHARMACY_ACCOUNT_IMAGE_URL =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p94AAAAASUVORK5CYII=';
+
+type PharmacyAccountSeed = {
+  email: string;
+  phone: string;
+  ownerName: string;
+  address: string;
+  pharmacyName: string;
+  status:
+    | typeof PHARMACY_STATUSES.NEW
+    | typeof PHARMACY_STATUSES.ON_VERIFICATION;
+};
+
+const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
+  {
+    email: 'nata5@ukr.net',
+    phone: '+380661234005',
+    ownerName: 'Nata Five',
+    address: '25 Health Avenue, Kyiv',
+    pharmacyName: 'Nata Care Pharmacy New',
+    status: PHARMACY_STATUSES.NEW,
+  },
+  {
+    email: 'nata6@ukr.net',
+    phone: '+380661234006',
+    ownerName: 'Nata Six',
+    address: '26 Wellness Street, Lviv',
+    pharmacyName: 'Nata Care Pharmacy Verification',
+    status: PHARMACY_STATUSES.ON_VERIFICATION,
+  },
+];
+
+function createExactLengthText(source: string, targetLength: number): string {
+  const filler = `
+
+**Service checklist**
+- Online product reservation with clear pickup instructions.
+- Friendly consultation at the pharmacy counter.
+- Verified documents, payment details, and contact channels.
+- Updated working hours and support for regular clients.`;
+
+  let result = source.trim();
+
+  while (result.length < targetLength) {
+    result += filler;
+  }
+
+  const sliced = result.slice(0, targetLength);
+
+  return /\s$/.test(sliced) ? `${sliced.slice(0, -1)}.` : sliced;
+}
+
+function createPharmacyAccountDescription(pharmacyName: string): string {
+  return createExactLengthText(
+    `**${pharmacyName}**
+
+${pharmacyName} is a complete demo pharmacy profile prepared for checking the pharmacy cabinet, profile forms, validation rules, and the send-for-verification flow. The description intentionally uses a long structured text so the editor can be tested with realistic content length, paragraphs, bold headings, and lists.
+
+**About the pharmacy**
+The pharmacy focuses on everyday medicines, vitamins, hygiene products, medical devices, and clear client communication. The team keeps contact data, payment details, documents, and public information filled in so the profile behaves like a real business account during manual testing.
+
+**What clients can expect**
+- Accurate product availability information.
+- Polite consultation before pickup.
+- Clear working hours and phone support.
+- Careful handling of orders and reservation requests.
+- Transparent payment details for online orders.
+
+**Operational standards**
+The pharmacy profile contains realistic bank details, address, phone number, email, working hours, uploaded verification documents, and a public image placeholder. This makes the verification button active for the New account while the second account demonstrates the read-only On verification state.
+
+**Quality notes**
+- The profile is suitable for testing empty and filled sections.
+- The text contains multiple paragraphs for layout checks.
+- Markdown-style bold headings and lists are included.
+- The total description length is exactly five thousand characters.`,
+    PHARMACY_ACCOUNT_DESCRIPTION_LENGTH
+  );
+}
+
+function createVerificationDocuments(email: string) {
+  const prefix = email.split('@')[0];
+
+  return [
+    {
+      name: `${prefix}-license.pdf`,
+      size: 186_420,
+      type: 'application/pdf',
+    },
+    {
+      name: `${prefix}-registration-certificate.pdf`,
+      size: 214_880,
+      type: 'application/pdf',
+    },
+    {
+      name: `${prefix}-tax-details.pdf`,
+      size: 156_320,
+      type: 'application/pdf',
+    },
+  ];
+}
+
+function createPharmacyAccountBankDetails(seed: PharmacyAccountSeed) {
+  const accountNumber = seed.email.includes('nata5') ? 5 : 6;
+  const ibanTail = `300001${String(accountNumber).padStart(21, '0')}`;
+
+  return {
+    recipientName: `LLC ${seed.pharmacyName}`,
+    taxId: `3000000${accountNumber}`,
+    iban: `UA${ibanTail}`,
+    bankName: accountNumber === 5 ? 'JSC PrivatBank' : 'JSC Oschadbank',
+    receiptEmail: seed.email,
+    paymentPurpose: `Payment for E-PHARMACY orders from ${seed.pharmacyName}`,
+  };
+}
+
+async function seedPharmacyAccounts(): Promise<number> {
+  const password = await hashPassword(PHARMACY_ACCOUNT_PASSWORD);
+  let createdCount = 0;
+
+  for (const seed of PHARMACY_ACCOUNT_SEEDS) {
+    const user = await User.findOneAndUpdate(
+      { email: seed.email },
+      {
+        $set: {
+          name: seed.ownerName,
+          email: seed.email,
+          password,
+          role: USER_ROLES.PHARMACY,
+          status: USER_STATUSES.ACTIVE,
+          phone: seed.phone,
+          address: seed.address,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      }
+    );
+
+    const pharmacy = await Pharmacy.findOneAndUpdate(
+      { ownerId: user._id },
+      {
+        $set: {
+          name: seed.pharmacyName,
+          address: seed.address,
+          city: seed.address.endsWith('Kyiv') ? 'Kyiv' : 'Lviv',
+          phone: seed.phone,
+          email: seed.email,
+          workingHours: 'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
+          bankDetails: createPharmacyAccountBankDetails(seed),
+          rating: 0,
+          imageUrl: PHARMACY_ACCOUNT_IMAGE_URL,
+          description: createPharmacyAccountDescription(seed.pharmacyName),
+          reviewsCount: 0,
+          managerUserIds: [],
+          documents: createVerificationDocuments(seed.email),
+          status: seed.status,
+          updatedBy: user._id,
+        },
+        $setOnInsert: {
+          ownerId: user._id,
+          createdBy: user._id,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      }
+    );
+
+    if (pharmacy) createdCount += 1;
+  }
+
+  return createdCount;
+}
+
+//===============================================================
+
 function createSeedPharmacies() {
   return Array.from({ length: 98 }, (_, index) => {
     const pharmacyNumber = index + 1;
@@ -503,14 +699,14 @@ function createSeedPharmacies() {
       city,
       phone: `+380${String(501000000 + pharmacyNumber).padStart(9, '0')}`,
       email: `pharmacy.${pharmacyNumber}@e-pharmacy.example.com`,
-      workingHours: 'Mon–Fri 08:00–21:00, Sat–Sun 09:00–18:00',
+      workingHours: 'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
       bankDetails: createBankDetails(pharmacyName, pharmacyNumber),
       rating: Number((4 + (index % 10) * 0.1).toFixed(1)),
       imageUrl: createPharmacyImageUrl(index),
       description: `${brand} in ${city} offers everyday medicines, vitamins, medical devices, hygiene products, and quick online reservation for local clients.`,
       ownerId: new mongoose.Types.ObjectId(),
       managerUserIds: [],
-      status: 'active' as const,
+      status: PHARMACY_STATUSES.ACTIVE,
       reviewsCount,
       reviews: createModeratedReviews(reviewsCount, 4),
     };
@@ -670,8 +866,13 @@ async function seedDatabase(): Promise<void> {
     )
   );
 
+  const pharmacyAccountsCount = await seedPharmacyAccounts();
+
   console.log(`Seed completed: ${createdPharmacies.length} pharmacies created`);
   console.log(`Seed completed: ${seedProducts.length} products created`);
+  console.log(
+    `Seed completed: ${pharmacyAccountsCount} pharmacy accounts created`
+  );
 }
 
 //===============================================================

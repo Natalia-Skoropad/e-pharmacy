@@ -25,6 +25,7 @@ import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 
 import type {
   EntityId,
+  PharmacyStatus,
   Product,
   ProductOffer,
   ProductReview,
@@ -39,6 +40,10 @@ import {
 } from '@/lib/api/browser';
 
 import { getPharmacyAllProductsPath } from '@/lib/layout/routes';
+import {
+  getLockedFeatureBannerLabel,
+  getLockedFeatureBannerStatus,
+} from '@/lib/pharmacies/current-pharmacy-status';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
 import css from './AllProductDetailsPageContent.module.css';
@@ -359,6 +364,8 @@ function AllProductDetailsPageContent({
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
   );
+  const [pharmacyStatus, setPharmacyStatus] =
+    useState<PharmacyStatus>('new');
   const [activeTab, setActiveTab] = useState<ProductDetailsTab>('details');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ProductDetailsError | null>(null);
@@ -386,12 +393,14 @@ function AllProductDetailsPageContent({
           reviewsResponse?.total ?? productResponse.product.reviewsCount ?? 0
         );
         setCurrentPharmacyId(profileResponse?.pharmacy.id ?? null);
+        setPharmacyStatus(profileResponse?.pharmacy.status ?? 'new');
       } catch (loadError) {
         if (!isMounted) return;
 
         setProduct(null);
         setReviews([]);
         setReviewsTotal(0);
+        setPharmacyStatus('new');
         setError(getProductDetailsError(loadError));
       } finally {
         if (isMounted) setIsLoading(false);
@@ -416,6 +425,8 @@ function AllProductDetailsPageContent({
     : null;
   const isAddedToPharmacy = Boolean(currentOffer);
   const productImageSrc = getProductImageSrc(product?.imageUrl);
+  const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
+  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
   const tabs = PRODUCT_DETAILS_TABS.map((tab) =>
     tab.value === 'reviews'
       ? { ...tab, label: `Reviews (${reviewsTotal})` }
@@ -533,8 +544,8 @@ function AllProductDetailsPageContent({
               {activeTab === 'details' ? (
                 <div className={css.detailsTab}>
                   <StatusBanner
-                    status="new"
-                    label="New"
+                    status={bannerStatus}
+                    label={bannerLabel}
                     title={bannerTitle}
                     message={bannerMessage}
                   />

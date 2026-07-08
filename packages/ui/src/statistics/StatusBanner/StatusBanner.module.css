@@ -51,3 +51,10 @@
   background-color: var(--color-background);
   border-color: var(--color-border);
 }
+
+
+.beauty {
+  color: var(--color-chart-beauty);
+  background-color: var(--color-chart-beauty-soft);
+  border-color: var(--color-chart-beauty);
+}

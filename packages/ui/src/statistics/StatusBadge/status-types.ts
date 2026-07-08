@@ -1,4 +1,10 @@
-export type PharmacyStatusTone = 'blue' | 'yellow' | 'green' | 'red' | 'gray';
+export type PharmacyStatusTone =
+  | 'blue'
+  | 'yellow'
+  | 'green'
+  | 'red'
+  | 'gray'
+  | 'beauty';
 
 //===================================================================
 
@@ -7,6 +13,7 @@ export type PharmacyStatusVariant =
   | 'in_work'
   | 'in_progress'
   | 'on_moderation'
+  | 'on_verification'
   | 'active'
   | 'successful'
   | 'approved'
@@ -21,6 +28,7 @@ export function getStatusTone(
   status: PharmacyStatusVariant
 ): PharmacyStatusTone {
   if (status === 'new') return 'blue';
+  if (status === 'on_verification') return 'beauty';
   if (
     status === 'in_work' ||
     status === 'in_progress' ||

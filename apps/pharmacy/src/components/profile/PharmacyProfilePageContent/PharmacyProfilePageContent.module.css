@@ -131,6 +131,16 @@
   border-radius: var(--radius-lg);
 }
 
+
+.statusNoteBeauty {
+  background-color: var(--color-chart-beauty-soft);
+  border-color: var(--color-chart-beauty);
+}
+
+.statusNoteBeauty :is(h3, p) {
+  color: var(--color-text-primary);
+}
+
 .statusNoteHeader {
   display: flex;
   flex-wrap: wrap;

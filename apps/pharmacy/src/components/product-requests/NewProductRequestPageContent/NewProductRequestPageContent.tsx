@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { FilePlus2 } from 'lucide-react';
 
@@ -6,11 +8,21 @@ import { StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import { getPharmacyProfilePath } from '@/lib/layout/routes';
 
+import {
+  getLockedFeatureBannerLabel,
+  getLockedFeatureBannerStatus,
+  useCurrentPharmacyStatus,
+} from '@/lib/pharmacies/current-pharmacy-status';
+
 import css from './NewProductRequestPageContent.module.css';
 
 //===================================================================
 
 function NewProductRequestPageContent() {
+  const currentPharmacyStatus = useCurrentPharmacyStatus();
+  const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
+  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
+
   return (
     <main className={css.page} aria-labelledby="new-request-page-title">
       <div className={css.contentCard}>
@@ -21,10 +33,14 @@ function NewProductRequestPageContent() {
           </h1>
 
           <StatusBanner
-            status="new"
-            label="New"
+            status={bannerStatus}
+            label={bannerLabel}
             title="Product request creation is locked for now"
-            message="Creating product requests is locked while the pharmacy has the new status. This action opens after Admin verifies your pharmacy profile."
+            message={
+              bannerStatus === 'on_verification'
+                ? 'Creating product requests is paused while Admin reviews the submitted pharmacy profile.'
+                : 'Creating product requests is locked while the pharmacy has the new status. This action opens after Admin verifies your pharmacy profile.'
+            }
           />
 
           <section className={css.card} aria-labelledby="request-actions-title">

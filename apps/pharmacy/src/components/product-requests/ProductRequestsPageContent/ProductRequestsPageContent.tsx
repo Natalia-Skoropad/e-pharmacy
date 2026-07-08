@@ -40,6 +40,12 @@ import { getPharmacyRequestsFilterPath } from '@/lib/layout/routes';
 import { buildProductRequestsPath } from '@/lib/product-requests/product-request-paths';
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 
+import {
+  getLockedFeatureBannerLabel,
+  getLockedFeatureBannerStatus,
+  useCurrentPharmacyStatus,
+} from '@/lib/pharmacies/current-pharmacy-status';
+
 import { ProductRequestsFiltersDrawer } from '@/components/product-requests/ProductRequestsFiltersDrawer';
 import { ProductRequestsTable } from '@/components/product-requests/ProductRequestsTable';
 
@@ -189,6 +195,10 @@ function ProductRequestsPageContent({
     setFilters(DEFAULT_PRODUCT_REQUESTS_FILTERS);
   };
 
+  const currentPharmacyStatus = useCurrentPharmacyStatus();
+  const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
+  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
+
   return (
     <main className={css.page} aria-labelledby="product-requests-page">
       <section
@@ -202,10 +212,14 @@ function ProductRequestsPageContent({
         />
 
         <StatusBanner
-          status="new"
-          label="New"
+          status={bannerStatus}
+          label={bannerLabel}
           title="Verification is required"
-          message="Creating product requests is locked for a new pharmacy until verification is complete."
+          message={
+            bannerStatus === 'on_verification'
+              ? 'Creating product requests is paused while Admin reviews the submitted pharmacy profile.'
+              : 'Creating product requests is locked for a new pharmacy until verification is complete.'
+          }
         />
 
         <ProductRequestStatistics

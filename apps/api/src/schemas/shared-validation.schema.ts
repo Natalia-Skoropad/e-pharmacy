@@ -157,12 +157,38 @@ export const sharedSearchSchema = z
 
 //===============================================================
 
+const WORKING_HOURS_RANGE_PATTERN =
+  /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(Closed|([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d)\b/g;
+
+//===============================================================
+
+function hasValidWorkingHoursRanges(value: string): boolean {
+  const entries = [...value.matchAll(WORKING_HOURS_RANGE_PATTERN)];
+
+  if (entries.length === 0) return true;
+
+  return entries.every((entry) => {
+    if (entry[1] === 'Closed') return true;
+
+    const from = entry[2];
+    const to = entry[3];
+
+    return Boolean(from && to && from < to);
+  });
+}
+
+//===============================================================
+
 export const sharedWorkingHoursSchema = z
   .string()
   .trim()
   .min(1, VALIDATION_MESSAGES.required.workingHours)
   .max(WORKING_HOURS_MAX_LENGTH, VALIDATION_MESSAGES.limits.workingHoursMax)
-  .regex(WORKING_HOURS_PATTERN, VALIDATION_MESSAGES.format.workingHours);
+  .regex(WORKING_HOURS_PATTERN, VALIDATION_MESSAGES.format.workingHours)
+  .refine(
+    hasValidWorkingHoursRanges,
+    VALIDATION_MESSAGES.format.workingHoursRange
+  );
 
 //===============================================================
 
@@ -197,10 +223,7 @@ export const sharedPaymentPurposeSchema = z
   .string()
   .trim()
   .min(1, VALIDATION_MESSAGES.required.paymentPurpose)
-  .max(
-    PAYMENT_PURPOSE_MAX_LENGTH,
-    VALIDATION_MESSAGES.limits.paymentPurposeMax
-  )
+  .max(PAYMENT_PURPOSE_MAX_LENGTH, VALIDATION_MESSAGES.limits.paymentPurposeMax)
   .regex(PAYMENT_PURPOSE_PATTERN, VALIDATION_MESSAGES.format.paymentPurpose);
 
 //===============================================================

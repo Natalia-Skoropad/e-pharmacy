@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { FilePlus2 } from 'lucide-react';
 
@@ -6,6 +8,12 @@ import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import { getPharmacyProfilePath } from '@/lib/layout/routes';
+
+import {
+  getLockedFeatureBannerLabel,
+  getLockedFeatureBannerStatus,
+  useCurrentPharmacyStatus,
+} from '@/lib/pharmacies/current-pharmacy-status';
 
 import css from './ProductRequestDetailsPageContent.module.css';
 
@@ -21,6 +29,9 @@ function ProductRequestDetailsPageContent({
   requestId,
 }: ProductRequestDetailsPageContentProps) {
   const title = `Product request #${requestId}`;
+  const currentPharmacyStatus = useCurrentPharmacyStatus();
+  const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
+  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
 
   return (
     <main className={css.page} aria-labelledby="product-requests-page">
@@ -33,8 +44,8 @@ function ProductRequestDetailsPageContent({
           />
 
           <StatusBanner
-            status="new"
-            label="New"
+            status={bannerStatus}
+            label={bannerLabel}
             title="Product request details is locked for now"
             message="This page belongs to business functionality that opens after Admin verifies your pharmacy profile."
           />

@@ -1,11 +1,12 @@
 import { Types, type HydratedDocument } from 'mongoose';
 
-import { PHARMACY_STATUSES } from '../constants/auth';
+import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
 
 import { Client } from '../models/client.model';
 import { Pharmacy } from '../models/pharmacy.model';
+import { User } from '../models/user.model';
 import { PharmacyReview } from '../models/pharmacyReview.model';
 import { ProductOffer } from '../models/productOffer.model';
 
@@ -569,12 +570,51 @@ export async function setFavoritePharmacyService(
 
 //===============================================================
 
+async function createMissingOwnerPharmacyProfile(
+  userId: string
+): Promise<PharmacyHydratedDocument | null> {
+  const user = await User.findById(userId);
+
+  if (!user || user.role !== USER_ROLES.PHARMACY) {
+    return null;
+  }
+
+  const pharmacy = await Pharmacy.findOneAndUpdate(
+    { ownerId: user._id },
+    {
+      $setOnInsert: {
+        ownerId: user._id,
+        managerUserIds: [],
+        name: '',
+        phone: user.phone,
+        email: user.email,
+        ...(user.address ? { address: user.address } : {}),
+        documents: [],
+        status: PHARMACY_STATUSES.NEW,
+        createdBy: user._id,
+        updatedBy: user._id,
+      },
+    },
+    {
+      new: true,
+      upsert: true,
+      setDefaultsOnInsert: true,
+      runValidators: true,
+    }
+  );
+
+  return pharmacy as PharmacyHydratedDocument;
+}
+
+//===============================================================
+
 async function findMyPharmacy(
   userId: string
 ): Promise<PharmacyHydratedDocument> {
-  const pharmacy = await Pharmacy.findOne({
-    $or: [{ ownerId: userId }, { managerUserIds: userId }],
-  });
+  const pharmacy =
+    (await Pharmacy.findOne({
+      $or: [{ ownerId: userId }, { managerUserIds: userId }],
+    })) ?? (await createMissingOwnerPharmacyProfile(userId));
 
   if (!pharmacy) {
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
@@ -599,6 +639,7 @@ function assertReadyForVerification(
     phone: pharmacy.phone,
     email: pharmacy.email,
     workingHours: pharmacy.workingHours,
+    imageUrl: pharmacy.imageUrl,
     description: pharmacy.description,
     recipientName: bankDetails?.recipientName,
     taxId: bankDetails?.taxId,

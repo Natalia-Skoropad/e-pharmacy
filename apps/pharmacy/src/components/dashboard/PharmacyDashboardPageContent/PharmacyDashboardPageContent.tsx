@@ -209,13 +209,20 @@ function getPharmacyBanner(status: PharmacyStatus) {
     return null;
   }
 
+  if (status === 'on_verification') {
+    return {
+      status: 'on_verification' as const,
+      label: 'On verification',
+      title: 'Your pharmacy is waiting for Admin review',
+      message:
+        'After Admin review, you will be able to sell products, add products, and create product requests.',
+    };
+  }
+
   return {
     status: 'new' as const,
-    label: status === 'on_verification' ? 'On verification' : 'New',
-    title:
-      status === 'on_verification'
-        ? 'Your pharmacy is waiting for Admin review'
-        : 'Your pharmacy is not activated yet',
+    label: 'New',
+    title: 'Your pharmacy is not activated yet',
     message:
       'After Admin review, you will be able to sell products, add products, and create product requests.',
   };

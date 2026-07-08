@@ -23,7 +23,7 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
-import type { EntityId, Product } from '@e-pharmacy/types';
+import type { EntityId, PharmacyStatus, Product } from '@e-pharmacy/types';
 
 import {
   DEFAULT_ALL_PRODUCT_STATISTICS,
@@ -32,6 +32,11 @@ import {
 } from '@e-pharmacy/types/products';
 
 import { getMyPharmacyProfile, getProducts } from '@/lib/api/browser';
+
+import {
+  getLockedFeatureBannerLabel,
+  getLockedFeatureBannerStatus,
+} from '@/lib/pharmacies/current-pharmacy-status';
 
 import {
   DEFAULT_ALL_PRODUCTS_FILTERS,
@@ -118,6 +123,7 @@ function AllProductsPageContent({
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
   );
+  const [pharmacyStatus, setPharmacyStatus] = useState<PharmacyStatus>('new');
 
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -143,10 +149,12 @@ function AllProductsPageContent({
         if (!isMounted) return;
 
         setCurrentPharmacyId(response.pharmacy.id);
+        setPharmacyStatus(response.pharmacy.status);
       } catch {
         if (!isMounted) return;
 
         setCurrentPharmacyId(null);
+        setPharmacyStatus('new');
       } finally {
         if (isMounted) setIsProfileLoaded(true);
       }
@@ -256,6 +264,9 @@ function AllProductsPageContent({
     setFilters(DEFAULT_ALL_PRODUCTS_FILTERS);
   };
 
+  const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
+  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
+
   const getProductStatisticHref = (key: AllProductStatisticsKey) => {
     if (key === 'active') {
       return buildAllProductsPath({
@@ -301,8 +312,8 @@ function AllProductsPageContent({
         />
 
         <StatusBanner
-          status="new"
-          label="New"
+          status={bannerStatus}
+          label={bannerLabel}
           title="Catalog is available in read-only mode"
           message="Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
         />

@@ -33,6 +33,7 @@ export const VALIDATION_MESSAGES = {
     orderComment:
       'Order comment may contain only Latin letters, numbers, spaces and basic punctuation',
     workingHours: 'Use Latin letters, numbers, spaces and basic punctuation',
+    workingHoursRange: 'Closing time must be later than opening time',
     textEditor: 'Use Latin letters, numbers, line breaks and basic punctuation',
     taxId: 'Use 8–10 digits',
     iban: 'Use Ukrainian IBAN format: UA + 27 digits',
