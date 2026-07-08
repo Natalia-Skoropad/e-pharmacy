@@ -3,11 +3,8 @@ import { cache } from 'react';
 
 import { isReservedRootSlug } from '@/lib/routes';
 
-import {
-  buildProductPath,
-  buildSlugId,
-  buildPharmacyPath,
-} from '@/lib/routes';
+import { buildSlugId } from '@e-pharmacy/validation/shared';
+import { buildProductPath, buildPharmacyPath } from '@/lib/routes';
 
 import { lookupProductBySlugId } from '@/lib/details/server/product-detail-page';
 import { lookupPharmacyBySlugId } from '@/lib/details/server/pharmacy-detail-page';

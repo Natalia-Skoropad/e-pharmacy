@@ -3,6 +3,7 @@ import 'server-only';
 import { type NextRequest } from 'next/server';
 
 import type { HttpMethod } from '@e-pharmacy/api-client/core';
+
 import { proxyAuthRequest, type AuthMarkerAction } from './auth-proxy';
 import { proxyBackendRequest } from './backend-proxy';
 import { proxyOptionalAuthBackendRequest } from './optional-auth-backend-proxy';
@@ -44,10 +45,12 @@ export function createPrivateProxyRoute<
   backendPath,
   method = 'GET',
   clearAuthCookiesOnSuccess = false,
+  clearAuthCookiesOnRefreshFailure = true,
 }: {
   backendPath: BackendPath<TParams>;
   method?: HttpMethod;
   clearAuthCookiesOnSuccess?: boolean;
+  clearAuthCookiesOnRefreshFailure?: boolean;
 }): ProxyRouteHandler<TParams> {
   return async (request, context) =>
     proxyBackendRequest({
@@ -55,6 +58,7 @@ export function createPrivateProxyRoute<
       backendPath: await resolveBackendPath(backendPath, context),
       method,
       clearAuthCookiesOnSuccess,
+      clearAuthCookiesOnRefreshFailure,
     });
 }
 

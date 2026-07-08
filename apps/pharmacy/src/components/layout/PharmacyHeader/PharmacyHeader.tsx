@@ -6,9 +6,12 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Boxes,
   ClipboardList,
-  ExternalLink,
   FilePlus2,
+  Globe2,
   LayoutDashboard,
+  LogOut,
+  Maximize2,
+  Minimize2,
   PackageSearch,
   ShoppingBag,
   Store,
@@ -16,17 +19,24 @@ import {
   Users,
 } from 'lucide-react';
 
+import type { PharmacyProfile } from '@e-pharmacy/types';
 import type { BreadcrumbItem } from '@e-pharmacy/ui/layout';
 import { BurgerButton, CabinetTopBar } from '@e-pharmacy/ui/layout';
-import {
-  LogoutButton,
-  TextActionButton,
-  UserBadge,
-} from '@e-pharmacy/ui/common';
+
+import { TextActionButton, UserBadge } from '@e-pharmacy/ui/common';
+
 import { useAuth } from '@e-pharmacy/auth/core';
 
-import { getPharmacyProfilePath } from '@/lib/layout/routes';
+import { getMyPharmacyProfile } from '@/lib/api/browser';
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
+
+import {
+  canOpenClientPharmacyPage,
+  getClientAppUrl,
+  getClientPharmacyUrl,
+} from '@/lib/layout/external-links';
+
+import { getPharmacyProfilePath } from '@/lib/layout/routes';
 import { PharmacyMobileMenu } from '@/components/layout/PharmacyMobileMenu';
 
 import css from './PharmacyHeader.module.css';
@@ -35,9 +45,6 @@ import css from './PharmacyHeader.module.css';
 
 const MOBILE_MENU_ID = 'pharmacy-mobile-menu';
 const TOPBAR_ICON_SIZE = 19;
-
-const CLIENT_APP_URL =
-  process.env.NEXT_PUBLIC_CLIENT_APP_URL?.trim() || 'http://localhost:3000';
 
 //===================================================================
 
@@ -87,8 +94,16 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [pharmacyProfile, setPharmacyProfile] =
+    useState<PharmacyProfile | null>(null);
 
   const topBarIcon = getTopBarIcon(breadcrumbs[0]?.label);
+  const clientAppUrl = getClientAppUrl();
+  const clientPharmacyUrl = getClientPharmacyUrl(pharmacyProfile);
+  const canOpenPharmacyWebsite =
+    canOpenClientPharmacyPage(pharmacyProfile?.status) &&
+    Boolean(clientPharmacyUrl);
 
   const handleLogout = async () => {
     try {
@@ -100,6 +115,52 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
     }
   };
 
+  const handleFullscreenToggle = async () => {
+    if (!document.documentElement.requestFullscreen) return;
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return;
+      }
+
+      await document.documentElement.requestFullscreen();
+    } catch (error) {
+      console.error('[pharmacy-header] Failed to toggle fullscreen', error);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadPharmacyProfile() {
+      try {
+        const response = await getMyPharmacyProfile();
+        if (isMounted) setPharmacyProfile(response.pharmacy);
+      } catch {
+        if (isMounted) setPharmacyProfile(null);
+      }
+    }
+
+    void loadPharmacyProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   useEffect(() => {
     if (!isUserMenuOpen) return;
 
@@ -109,9 +170,19 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
       }
     };
 
-    window.addEventListener('pointerdown', handlePointerDown);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsUserMenuOpen(false);
+      }
+    };
 
-    return () => window.removeEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isUserMenuOpen]);
 
   return (
@@ -137,66 +208,99 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
             </TextActionButton>
           )}
           actions={
-            <div className={css.userMenuWrap} ref={menuRef}>
+            <div className={css.actionsGroup}>
               <button
-                className={css.userMenuButton}
+                className={css.fullscreenButton}
                 type="button"
-                aria-haspopup="menu"
-                aria-expanded={isUserMenuOpen}
-                onClick={() => setIsUserMenuOpen((value) => !value)}
+                aria-label={
+                  isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'
+                }
+                onClick={handleFullscreenToggle}
               >
-                <UserBadge
-                  className={css.userBadge}
-                  variant="dark"
-                  name={user?.name}
-                  pictureUrl={user?.pictureUrl}
-                  fallbackLabel="Profile"
-                />
+                {isFullscreen ? (
+                  <Minimize2 size={18} aria-hidden="true" />
+                ) : (
+                  <Maximize2 size={18} aria-hidden="true" />
+                )}
               </button>
 
-              {isUserMenuOpen ? (
-                <div className={css.userMenu} role="menu">
-                  <Link
-                    className={css.userMenuItem}
-                    href={getPharmacyProfilePath()}
-                    role="menuitem"
-                    onClick={() => setIsUserMenuOpen(false)}
-                  >
-                    <UserRound size={16} aria-hidden="true" />
-                    <span>Profile</span>
-                  </Link>
-
-                  <a
-                    className={css.userMenuItem}
-                    href={CLIENT_APP_URL}
-                    role="menuitem"
-                    onClick={() => setIsUserMenuOpen(false)}
-                  >
-                    <ExternalLink size={16} aria-hidden="true" />
-                    <span>Go to site</span>
-                  </a>
-
-                  <a
-                    className={css.userMenuItem}
-                    href={`${CLIENT_APP_URL}/pharmacies`}
-                    role="menuitem"
-                    onClick={() => setIsUserMenuOpen(false)}
-                  >
-                    <Store size={16} aria-hidden="true" />
-                    <span>Go to my pharmacy on site</span>
-                  </a>
-
-                  <span className={css.userMenuDivider} aria-hidden="true" />
-
-                  <LogoutButton
-                    className={css.logoutButton}
-                    isLoading={isLogoutLoading}
-                    disabled={isLogoutLoading}
-                    tone="inverse"
-                    onClick={handleLogout}
+              <div className={css.userMenuWrap} ref={menuRef}>
+                <button
+                  className={css.userMenuButton}
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-expanded={isUserMenuOpen}
+                  onClick={() => setIsUserMenuOpen((value) => !value)}
+                >
+                  <UserBadge
+                    className={css.userBadge}
+                    variant="dark"
+                    name={user?.name}
+                    pictureUrl={user?.pictureUrl}
+                    fallbackLabel="Profile"
                   />
-                </div>
-              ) : null}
+                </button>
+
+                {isUserMenuOpen ? (
+                  <div className={css.userMenu} role="menu">
+                    <Link
+                      className={css.userMenuItem}
+                      href={getPharmacyProfilePath()}
+                      role="menuitem"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <UserRound size={18} aria-hidden="true" />
+                      <span>Go to profile</span>
+                    </Link>
+
+                    <span className={css.userMenuDivider} aria-hidden="true" />
+
+                    <a
+                      className={css.userMenuItem}
+                      href={clientAppUrl}
+                      role="menuitem"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Globe2 size={18} aria-hidden="true" />
+                      <span>Go to the website</span>
+                    </a>
+
+                    {canOpenPharmacyWebsite ? (
+                      <a
+                        className={css.userMenuItem}
+                        href={clientPharmacyUrl}
+                        role="menuitem"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <Store size={18} aria-hidden="true" />
+                        <span>Go to my pharmacy on the website</span>
+                      </a>
+                    ) : (
+                      <span
+                        className={`${css.userMenuItem} ${css.userMenuItemDisabled}`}
+                        role="menuitem"
+                        aria-disabled="true"
+                      >
+                        <Store size={18} aria-hidden="true" />
+                        <span>Go to my pharmacy on the website</span>
+                      </span>
+                    )}
+
+                    <span className={css.userMenuDivider} aria-hidden="true" />
+
+                    <button
+                      className={css.logoutButton}
+                      type="button"
+                      disabled={isLogoutLoading}
+                      aria-busy={isLogoutLoading || undefined}
+                      onClick={handleLogout}
+                    >
+                      <LogOut size={16} aria-hidden="true" />
+                      <span>{isLogoutLoading ? 'Logging out...' : 'Log out'}</span>
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             </div>
           }
         />

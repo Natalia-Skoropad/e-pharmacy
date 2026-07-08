@@ -2,7 +2,6 @@ import { createElement } from 'react';
 
 import {
   Boxes,
-  ClipboardList,
   FilePlus2,
   LayoutDashboard,
   PackageSearch,
@@ -62,11 +61,5 @@ export const PHARMACY_NAVIGATION: readonly SideMenuItem[] = [
 
 //===================================================================
 
-export const PHARMACY_MOBILE_NAVIGATION: readonly SideMenuItem[] = [
-  ...PHARMACY_NAVIGATION,
-  {
-    label: 'Pharmacy profile',
-    href: '/pharmacy/profile',
-    icon: createElement(ClipboardList, { size: ICON_SIZE }),
-  },
-];
+export const PHARMACY_MOBILE_NAVIGATION: readonly SideMenuItem[] =
+  PHARMACY_NAVIGATION;

@@ -1,7 +1,7 @@
 import type { Order } from '@e-pharmacy/types';
 
 import { ROUTES } from './routes';
-import { buildSlugId } from './slug-id';
+import { buildSlugId } from '@e-pharmacy/validation/shared';
 
 //===================================================================
 

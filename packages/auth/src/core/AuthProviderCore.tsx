@@ -249,7 +249,11 @@ export function AuthProviderCore({
           if (lifecycleVersion !== lifecycleVersionRef.current) return null;
 
           if (isInvalidSessionError(refreshError)) {
-            clearAuthState(false);
+            if (preserveAuthenticatedState) {
+              markAuthUnavailable(refreshError, true);
+            } else {
+              clearAuthState(false);
+            }
           } else {
             markAuthUnavailable(refreshError, preserveAuthenticatedState);
           }
@@ -336,11 +340,7 @@ export function AuthProviderCore({
     } catch (refreshError) {
       if (lifecycleVersion !== lifecycleVersionRef.current) return null;
 
-      if (isInvalidSessionError(refreshError)) {
-        clearAuthState(false);
-      } else {
-        markAuthUnavailable(refreshError, true);
-      }
+      markAuthUnavailable(refreshError, true);
 
       return null;
     } finally {

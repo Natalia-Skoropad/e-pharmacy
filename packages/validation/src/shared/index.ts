@@ -5,3 +5,4 @@ export * from './patterns';
 export * from './sanitizers';
 export * from './form-utils';
 export * from './url-params';
+export * from './slug-id';

@@ -5,4 +5,8 @@ export * from './reserved-root-slugs';
 export * from './route-builders';
 export * from './route-segments';
 export * from './routes';
-export * from './slug-id';
+
+export {
+  getIdFromSlugId,
+  isValidObjectId,
+} from '@e-pharmacy/validation/shared';

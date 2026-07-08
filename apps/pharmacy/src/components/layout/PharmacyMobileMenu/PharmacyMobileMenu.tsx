@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { Globe2, Store } from 'lucide-react';
+
+import type { PharmacyProfile } from '@e-pharmacy/types';
 
 import {
   CloseIconButton,
@@ -14,14 +17,21 @@ import {
 import { MobileOffcanvasBase, SideMenu } from '@e-pharmacy/ui/layout';
 import { useAuth } from '@e-pharmacy/auth/core';
 
+import { getMyPharmacyProfile } from '@/lib/api/browser';
+import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
+
+import {
+  canOpenClientPharmacyPage,
+  getClientAppUrl,
+  getClientPharmacyUrl,
+} from '@/lib/layout/external-links';
+
 import { PHARMACY_MOBILE_NAVIGATION } from '@/lib/layout/navigation';
 
 import {
   getPharmacyDashboardPath,
   getPharmacyProfilePath,
 } from '@/lib/layout/routes';
-
-import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 
 import css from './PharmacyMobileMenu.module.css';
 
@@ -44,6 +54,14 @@ export function PharmacyMobileMenu({
   const previousPathnameRef = useRef(pathname);
   const { user, logout } = useAuth();
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
+  const [pharmacyProfile, setPharmacyProfile] =
+    useState<PharmacyProfile | null>(null);
+
+  const clientAppUrl = getClientAppUrl();
+  const clientPharmacyUrl = getClientPharmacyUrl(pharmacyProfile);
+  const canOpenPharmacyWebsite =
+    canOpenClientPharmacyPage(pharmacyProfile?.status) &&
+    Boolean(clientPharmacyUrl);
 
   const handleLogout = async () => {
     try {
@@ -55,6 +73,27 @@ export function PharmacyMobileMenu({
       setIsLogoutLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let isMounted = true;
+
+    async function loadPharmacyProfile() {
+      try {
+        const response = await getMyPharmacyProfile();
+        if (isMounted) setPharmacyProfile(response.pharmacy);
+      } catch {
+        if (isMounted) setPharmacyProfile(null);
+      }
+    }
+
+    void loadPharmacyProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (previousPathnameRef.current === pathname) return;
@@ -108,6 +147,31 @@ export function PharmacyMobileMenu({
         showChevron={false}
         onNavigate={onClose}
       />
+
+      <div className={css.quickLinks} aria-label="Website quick links">
+        <span className={css.quickLinksDivider} aria-hidden="true" />
+
+        <a className={css.quickLink} href={clientAppUrl} onClick={onClose}>
+          <Globe2 size={23} aria-hidden="true" />
+          <span>Go to the website</span>
+        </a>
+
+        {canOpenPharmacyWebsite ? (
+          <a
+            className={css.quickLink}
+            href={clientPharmacyUrl}
+            onClick={onClose}
+          >
+            <Store size={23} aria-hidden="true" />
+            <span>Go to my pharmacy on the website</span>
+          </a>
+        ) : (
+          <span className={`${css.quickLink} ${css.quickLinkDisabled}`}>
+            <Store size={23} aria-hidden="true" />
+            <span>Go to my pharmacy on the website</span>
+          </span>
+        )}
+      </div>
 
       <div className={css.actions}>
         <UserBadge

@@ -1224,6 +1224,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       <NameInput
                         id="pharmacy-name"
                         name="pharmacyName"
+                        hint="Clients will see this Pharmacy name in the pharmacy profile on the website."
                         label="Pharmacy name"
                         placeholder="Enter pharmacy name"
                         value={pharmacyName}

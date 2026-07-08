@@ -1,8 +1,8 @@
-const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
+export const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
 
 //===================================================================
 
-function normalizeSlugPart(value: string): string {
+export function normalizeSlugPart(value: string): string {
   return value
     .trim()
     .toLowerCase()

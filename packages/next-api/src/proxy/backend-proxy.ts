@@ -4,6 +4,8 @@ import { type NextRequest } from 'next/server';
 
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
 import { REFRESH_TOKEN_COOKIE_NAME } from '@e-pharmacy/config/auth';
+import type { HttpMethod } from '@e-pharmacy/api-client/core';
+
 import { createBackendApiUrl } from '../server/backend-api-request';
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
 
@@ -16,7 +18,6 @@ import {
 
 import { createProxyResponse } from './proxy-response';
 import { createProxyTransportErrorResponse } from './proxy-transport-error';
-import type { HttpMethod } from '@e-pharmacy/api-client/core';
 
 //===================================================================
 
@@ -25,6 +26,7 @@ type BackendProxyOptions = {
   request: NextRequest;
   method?: HttpMethod;
   clearAuthCookiesOnSuccess?: boolean;
+  clearAuthCookiesOnRefreshFailure?: boolean;
 };
 
 type RefreshResult = {
@@ -131,6 +133,7 @@ export async function proxyBackendRequest({
   request,
   method = 'GET',
   clearAuthCookiesOnSuccess = false,
+  clearAuthCookiesOnRefreshFailure = true,
 }: BackendProxyOptions) {
   const body = await getProxyBody(request, method);
 
@@ -166,7 +169,7 @@ export async function proxyBackendRequest({
   } catch {
     return createProxyTransportErrorResponse({
       request,
-      clearAuthCookies: true,
+      clearAuthCookies: clearAuthCookiesOnRefreshFailure,
     });
   }
 
@@ -177,7 +180,9 @@ export async function proxyBackendRequest({
       cacheControl: 'no-store',
     });
 
-    clearClientAuthCookies(nextResponse, request);
+    if (clearAuthCookiesOnRefreshFailure) {
+      clearClientAuthCookies(nextResponse, request);
+    }
 
     return nextResponse;
   }
