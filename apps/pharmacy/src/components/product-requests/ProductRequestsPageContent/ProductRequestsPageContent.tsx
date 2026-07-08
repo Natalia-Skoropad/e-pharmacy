@@ -275,28 +275,24 @@ function ProductRequestsPageContent({
 
       <section className={css.tableCard} aria-label="Product requests table">
         <div className={css.toolbar}>
-          <RowsPerPageSelect
-            id="product-requests-rows-per-page"
-            value={rowsPerPage}
-            onChange={setRowsPerPage}
+          <CountLabel
+            className={css.countLabel}
+            shown={requests.length}
+            total={totalRequests}
+            label="requests"
           />
 
-          <div className={css.tableActions}>
-            <CountLabel
-              shown={requests.length}
-              total={totalRequests}
-              label="requests"
+          <div className={css.rowsControl}>
+            <RowsPerPageSelect
+              id="product-requests-rows-per-page"
+              value={rowsPerPage}
+              onChange={setRowsPerPage}
             />
-
-            <Button
-              className={css.createButton}
-              type="button"
-              size="md"
-              disabled
-            >
-              Create request
-            </Button>
           </div>
+
+          <Button className={css.createButton} type="button" size="md" disabled>
+            Create request
+          </Button>
         </div>
 
         <ProductRequestsTable

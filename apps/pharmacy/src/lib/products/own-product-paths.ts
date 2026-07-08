@@ -54,6 +54,8 @@ function normalizeStatusSegment(value: string): OwnProductStatus | null {
 function normalizeStockSegment(
   value: string
 ): Exclude<OwnProductsStockFilter, 'all'> | null {
+  if (value === 'in-stock') return 'in-stock';
+
   return normalizeSlugEnumValue(value, STOCK_AVAILABILITY_FILTERS);
 }
 

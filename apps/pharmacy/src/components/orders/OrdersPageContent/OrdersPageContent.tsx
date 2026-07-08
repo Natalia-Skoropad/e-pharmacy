@@ -237,17 +237,20 @@ function OrdersPageContent({
 
       <section className={css.card} aria-label="Orders table">
         <div className={css.toolbar}>
-          <RowsPerPageSelect
-            id="orders-rows-per-page"
-            value={rowsPerPage}
-            onChange={handleRowsPerPageChange}
-          />
-
           <CountLabel
+            className={css.countLabel}
             shown={orders.length}
             total={totalOrders}
             label="orders"
           />
+
+          <div className={css.rowsControl}>
+            <RowsPerPageSelect
+              id="orders-rows-per-page"
+              value={rowsPerPage}
+              onChange={handleRowsPerPageChange}
+            />
+          </div>
         </div>
 
         <OrdersTable

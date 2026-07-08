@@ -46,6 +46,9 @@ export const clientsQuerySchema = z.preprocess(
     phone: sharedSearchSchema,
     address: sharedSearchSchema,
     status: z.enum(['active', 'blocked']).optional(),
+    successfulOrders: z
+      .enum(['repeat', 'successful', 'other'])
+      .optional(),
   })
 );
 

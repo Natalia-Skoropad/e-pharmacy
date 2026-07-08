@@ -35,11 +35,17 @@
 
 .toolbar {
   min-width: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  align-items: flex-end;
-  justify-content: space-between;
+  display: grid;
+  gap: 16px;
+}
+
+.countLabel {
+  justify-self: start;
+}
+
+.rowsControl {
+  width: 100%;
+  min-width: 0;
 }
 
 .productStatistics {
@@ -52,12 +58,25 @@
   }
 
   .searchGrid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(140px, 190px);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(140px, 80px);
     align-items: end;
   }
 
   .toolbar {
-    flex-wrap: nowrap;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .countLabel {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .rowsControl {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
   }
 
   .productStatistics {

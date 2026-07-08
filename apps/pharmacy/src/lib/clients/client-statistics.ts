@@ -9,19 +9,21 @@ import { getPharmacyClients } from '@/lib/api/browser';
 
 export async function getPharmacyClientStatistics(): Promise<ClientStatisticsCounts> {
   try {
-    const [allClients, activeClients, blockedClients] = await Promise.all([
-      getPharmacyClients({ page: 1, perPage: 100 }),
-      getPharmacyClients({ page: 1, perPage: 1, status: 'active' }),
-      getPharmacyClients({ page: 1, perPage: 1, status: 'blocked' }),
-    ]);
-
-    const repeatClients = allClients.items.filter(
-      (client) => client.successfulOrdersCount > 1
-    ).length;
+    const [allClients, repeatClients, activeClients, blockedClients] =
+      await Promise.all([
+        getPharmacyClients({ page: 1, perPage: 1 }),
+        getPharmacyClients({
+          page: 1,
+          perPage: 1,
+          successfulOrders: 'repeat',
+        }),
+        getPharmacyClients({ page: 1, perPage: 1, status: 'active' }),
+        getPharmacyClients({ page: 1, perPage: 1, status: 'blocked' }),
+      ]);
 
     return {
       total: allClients.total,
-      repeat: repeatClients,
+      repeat: repeatClients.total,
       active: activeClients.total,
       blocked: blockedClients.total,
     };

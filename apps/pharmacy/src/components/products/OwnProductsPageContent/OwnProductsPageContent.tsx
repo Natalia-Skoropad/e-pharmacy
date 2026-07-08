@@ -109,6 +109,10 @@ function getOwnProductStatisticHref(key: OwnProductStatisticsKey) {
     return getPharmacyProductsFilterPath({ stock: 'empty' });
   }
 
+  if (key === 'inStock') {
+    return getPharmacyProductsFilterPath({ stock: 'in-stock' });
+  }
+
   return getPharmacyProductsPath();
 }
 
@@ -323,17 +327,20 @@ function OwnProductsPageContent({
 
       <section className={css.card} aria-label="Own products table">
         <div className={css.toolbar}>
-          <RowsPerPageSelect
-            id="own-products-rows-per-page"
-            value={rowsPerPage}
-            onChange={handleRowsPerPageChange}
-          />
-
           <CountLabel
+            className={css.countLabel}
             shown={products.length}
             total={totalProducts}
             label="products"
           />
+
+          <div className={css.rowsControl}>
+            <RowsPerPageSelect
+              id="own-products-rows-per-page"
+              value={rowsPerPage}
+              onChange={handleRowsPerPageChange}
+            />
+          </div>
         </div>
 
         <OwnProductsTable

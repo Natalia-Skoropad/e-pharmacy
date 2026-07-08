@@ -6,7 +6,7 @@ import type { ProductCategory } from './categories';
 //=============================================================================
 
 export type ProductStatus = 'new' | 'active' | 'blocked';
-export type ProductStockFilter = 'available' | 'empty' | 'reserved';
+export type ProductStockFilter = 'in-stock' | 'available' | 'empty' | 'reserved';
 
 //=============================================================================
 

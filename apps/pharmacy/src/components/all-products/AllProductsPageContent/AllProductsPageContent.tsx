@@ -361,17 +361,20 @@ function AllProductsPageContent({
 
       <section className={css.tableCard} aria-label="All products table">
         <div className={css.toolbar}>
-          <RowsPerPageSelect
-            id="all-products-rows-per-page"
-            value={rowsPerPage}
-            onChange={handleRowsPerPageChange}
-          />
-
           <CountLabel
+            className={css.countLabel}
             shown={products.length}
             total={totalProducts}
             label="products"
           />
+
+          <div className={css.rowsControl}>
+            <RowsPerPageSelect
+              id="all-products-rows-per-page"
+              value={rowsPerPage}
+              onChange={handleRowsPerPageChange}
+            />
+          </div>
         </div>
 
         <AllProductsTable

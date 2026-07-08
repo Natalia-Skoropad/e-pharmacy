@@ -47,7 +47,7 @@ type ProductsQuery = {
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
-  stock?: 'available' | 'empty' | 'reserved';
+  stock?: 'in-stock' | 'available' | 'empty' | 'reserved';
   addedFrom?: string;
   addedTo?: string;
   sort?:
@@ -476,6 +476,10 @@ export async function getProductsService(
       ...(typeof query.minPrice === 'number' ? { $gte: query.minPrice } : {}),
       ...(typeof query.maxPrice === 'number' ? { $lte: query.maxPrice } : {}),
     };
+  }
+
+  if (query.stock === 'in-stock') {
+    offerFilter.totalQuantity = { $gt: 0 };
   }
 
   if (query.stock === 'available') {

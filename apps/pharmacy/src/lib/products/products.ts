@@ -25,6 +25,7 @@ export const OWN_PRODUCT_STATUSES = [
 ] as const satisfies readonly ProductStatus[];
 
 export const STOCK_AVAILABILITY_FILTERS = [
+  'in-stock',
   'available',
   'reserved',
   'empty',
@@ -83,6 +84,7 @@ export const STOCK_AVAILABILITY_LABELS: Record<
   StockAvailabilityFilter,
   string
 > = {
+  'in-stock': 'Products in stock',
   available: 'Available products',
   reserved: 'Reserved products',
   empty: 'Out of stock',

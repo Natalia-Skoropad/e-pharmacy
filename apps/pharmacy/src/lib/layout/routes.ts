@@ -24,6 +24,7 @@ const FILTER_PREFIXES = {
   email: 'email',
   phone: 'phone',
   address: 'address',
+  successfulOrders: 'successful-orders',
   category: 'category',
   stock: 'stock',
   article: 'article',
@@ -222,6 +223,7 @@ export function parsePharmacyClientFilters(segments?: string[]) {
     FILTER_PREFIXES.email,
     FILTER_PREFIXES.phone,
     FILTER_PREFIXES.address,
+    FILTER_PREFIXES.successfulOrders,
   ]);
 }
 

@@ -9,6 +9,11 @@ import {
   slugifyStatus,
 } from '@e-pharmacy/validation';
 
+import {
+  CLIENT_SUCCESSFUL_ORDERS_FILTERS,
+  type ClientSuccessfulOrdersFilter as ClientSuccessfulOrdersValue,
+} from '@e-pharmacy/types/clients';
+
 import { PHARMACY_CLIENTS } from '@/lib/layout/routes';
 
 import { CLIENT_STATUSES, type ClientStatus } from './clients';
@@ -26,6 +31,9 @@ const CLIENT_SLUG_OPTIONS = {
 //===================================================================
 
 export type ClientStatusFilter = 'all' | ClientStatus;
+export type ClientSuccessfulOrdersFilter =
+  | 'all'
+  | ClientSuccessfulOrdersValue;
 
 //===================================================================
 
@@ -38,6 +46,7 @@ export type ClientsFilterState = Readonly<{
   clientId: string;
   contact: string;
   status: ClientStatusFilter;
+  successfulOrders: ClientSuccessfulOrdersFilter;
 }>;
 
 //===================================================================
@@ -51,6 +60,7 @@ export const DEFAULT_CLIENTS_FILTERS: ClientsFilterState = {
   clientId: '',
   contact: '',
   status: 'all',
+  successfulOrders: 'all',
 };
 
 //===================================================================
@@ -64,12 +74,21 @@ type ClientsFilterDraft = {
   clientId: string;
   contact: string;
   status: ClientsFilterState['status'];
+  successfulOrders: ClientsFilterState['successfulOrders'];
 };
 
 //===================================================================
 
 function normalizeStatusSegment(value: string): ClientStatus | null {
   return normalizeSlugEnumValue(value, CLIENT_STATUSES);
+}
+
+//===================================================================
+
+function normalizeSuccessfulOrdersSegment(
+  value: string
+): Exclude<ClientSuccessfulOrdersFilter, 'all'> | null {
+  return normalizeSlugEnumValue(value, CLIENT_SUCCESSFUL_ORDERS_FILTERS);
 }
 
 //===================================================================
@@ -101,6 +120,7 @@ export function isClientsFilterSegment(segment: string): boolean {
     segment.startsWith('phone-') ||
     segment.startsWith('address-') ||
     segment.startsWith('status-') ||
+    segment.startsWith('successful-orders-') ||
     segment.startsWith('date-from-') ||
     segment.startsWith('date-to-')
   );
@@ -169,6 +189,18 @@ export function parseClientsSegments(
       continue;
     }
 
+    if (segment.startsWith('successful-orders-')) {
+      const successfulOrders = normalizeSuccessfulOrdersSegment(
+        segment.replace('successful-orders-', '')
+      );
+
+      if (successfulOrders) {
+        filters.successfulOrders = successfulOrders;
+      }
+
+      continue;
+    }
+
     if (segment.startsWith('date-from-')) {
       const dateFrom = segment.replace('date-from-', '');
 
@@ -219,6 +251,10 @@ export function buildClientsPath(filters: ClientsFilterState): string {
 
   if (filters.status !== 'all') {
     segments.push(`status-${slugifyStatus(filters.status)}`);
+  }
+
+  if (filters.successfulOrders !== 'all') {
+    segments.push(`successful-orders-${filters.successfulOrders}`);
   }
 
   if (filters.firstOrderDate.from) {

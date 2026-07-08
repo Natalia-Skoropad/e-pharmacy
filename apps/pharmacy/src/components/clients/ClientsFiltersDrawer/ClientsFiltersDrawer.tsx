@@ -8,6 +8,11 @@ import {
   type SelectOption,
 } from '@e-pharmacy/ui/common';
 
+import {
+  CLIENT_SUCCESSFUL_ORDERS_FILTER_LABELS,
+  CLIENT_SUCCESSFUL_ORDERS_FILTERS,
+} from '@e-pharmacy/types/clients';
+
 import { getPharmacyClientsPath } from '@/lib/layout/routes';
 import { CLIENT_STATUSES, CLIENT_STATUS_LABELS } from '@/lib/clients/clients';
 import type { ClientsFilterState } from '@/lib/clients/client-paths';
@@ -35,6 +40,16 @@ const CLIENT_STATUS_OPTIONS: Array<SelectOption<ClientsFilterState['status']>> =
       label: CLIENT_STATUS_LABELS[status],
     })),
   ];
+
+const SUCCESSFUL_ORDERS_OPTIONS: Array<
+  SelectOption<ClientsFilterState['successfulOrders']>
+> = [
+  { value: 'all', label: 'All' },
+  ...CLIENT_SUCCESSFUL_ORDERS_FILTERS.map((filter) => ({
+    value: filter,
+    label: CLIENT_SUCCESSFUL_ORDERS_FILTER_LABELS[filter],
+  })),
+];
 
 //===================================================================
 
@@ -92,6 +107,17 @@ function ClientsFiltersDrawer({
             options={CLIENT_STATUS_OPTIONS}
             isActive={filters.status !== 'all'}
             onChange={(status) => onChange({ ...filters, status })}
+          />
+
+          <SelectField
+            id="clients-successful-orders"
+            label="Successful orders"
+            value={filters.successfulOrders}
+            options={SUCCESSFUL_ORDERS_OPTIONS}
+            isActive={filters.successfulOrders !== 'all'}
+            onChange={(successfulOrders) =>
+              onChange({ ...filters, successfulOrders })
+            }
           />
         </div>
 

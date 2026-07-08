@@ -15,6 +15,7 @@ export const PRODUCT_STATUS_FILTER_OPTIONS = ['active', 'blocked'] as const;
 //===============================================================
 
 export const PRODUCT_STOCK_FILTER_OPTIONS = [
+  'in-stock',
   'available',
   'empty',
   'reserved',

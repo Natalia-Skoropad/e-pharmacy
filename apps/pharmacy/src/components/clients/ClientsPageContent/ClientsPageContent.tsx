@@ -60,6 +60,7 @@ function getActiveFiltersCount(filters: ClientsFilterState): number {
     filters.clientId.trim(),
     filters.contact.trim(),
     filters.status !== 'all',
+    filters.successfulOrders !== 'all',
   ].filter(Boolean).length;
 }
 
@@ -78,6 +79,8 @@ function getClientsQueryParams(
     clientId: filters.clientId.trim() || undefined,
     contact: filters.contact.trim() || undefined,
     status: filters.status === 'all' ? undefined : filters.status,
+    successfulOrders:
+      filters.successfulOrders === 'all' ? undefined : filters.successfulOrders,
   };
 }
 
@@ -199,6 +202,10 @@ function ClientsPageContent({
       return getPharmacyClientsFilterPath({ status: 'blocked' });
     }
 
+    if (key === 'repeat') {
+      return getPharmacyClientsFilterPath({ 'successful-orders': 'repeat' });
+    }
+
     return getPharmacyClientsPath();
   };
 
@@ -221,6 +228,7 @@ function ClientsPageContent({
         <ClientStatistics
           counts={clientStatistics}
           getStatisticHref={getClientStatisticHref}
+          className={css.clientStatistics}
         />
       </section>
 
@@ -273,17 +281,20 @@ function ClientsPageContent({
 
       <section className={css.card} aria-label="Clients table">
         <div className={css.toolbar}>
-          <RowsPerPageSelect
-            id="clients-rows-per-page"
-            value={rowsPerPage}
-            onChange={handleRowsPerPageChange}
-          />
-
           <CountLabel
+            className={css.countLabel}
             shown={clients.length}
             total={totalClients}
             label="clients"
           />
+
+          <div className={css.rowsControl}>
+            <RowsPerPageSelect
+              id="clients-rows-per-page"
+              value={rowsPerPage}
+              onChange={handleRowsPerPageChange}
+            />
+          </div>
         </div>
 
         <ClientsTable

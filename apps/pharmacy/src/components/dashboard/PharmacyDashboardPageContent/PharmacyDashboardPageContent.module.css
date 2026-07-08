@@ -89,10 +89,8 @@
   color: var(--color-text-secondary);
 }
 
-.sectionActions {
-  display: grid;
-  gap: 12px;
-  align-items: end;
+.sectionButton {
+  width: 100%;
 }
 
 .filters {
@@ -135,14 +133,19 @@
     padding: 24px;
   }
 
-  .sectionActions {
-    grid-template-columns: minmax(0, auto) auto;
-    justify-content: end;
+  .sectionTopline {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .sectionButton {
+    width: auto;
+    justify-self: end;
   }
 
   .filters {
     grid-template-columns: repeat(2, minmax(180px, 220px));
-    justify-content: end;
+    justify-content: start;
   }
 
   .section {
@@ -150,8 +153,3 @@
   }
 }
 
-@media only screen and (min-width: 1440px) {
-  .sectionTopline {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-}

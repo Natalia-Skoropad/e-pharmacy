@@ -337,6 +337,10 @@ function PharmacyDashboardPageContent() {
       return getPharmacyClientsFilterPath({ status: 'blocked' });
     }
 
+    if (key === 'repeat') {
+      return getPharmacyClientsFilterPath({ 'successful-orders': 'repeat' });
+    }
+
     return getPharmacyClientsPath();
   };
 
@@ -351,6 +355,10 @@ function PharmacyDashboardPageContent() {
 
     if (key === 'outOfStock') {
       return getPharmacyProductsFilterPath({ stock: 'empty' });
+    }
+
+    if (key === 'inStock') {
+      return getPharmacyProductsFilterPath({ stock: 'in-stock' });
     }
 
     return getPharmacyProductsPath();
@@ -446,39 +454,35 @@ function PharmacyDashboardPageContent() {
                   </p>
                 </div>
 
-                <div className={css.sectionActions}>
-                  <div
-                    className={css.filters}
-                    aria-label="Order statistics filters"
-                  >
-                    <SelectField
-                      id="dashboard-order-year"
-                      label="Year"
-                      value={selectedYear}
-                      options={YEAR_OPTIONS}
-                      onChange={setSelectedYear}
-                    />
-                    <SelectField
-                      id="dashboard-order-month"
-                      label="Month"
-                      value={selectedMonth}
-                      options={MONTH_OPTIONS}
-                      onChange={setSelectedMonth}
-                    />
-                  </div>
+                <ButtonLink
+                  className={css.sectionButton}
+                  href={getPharmacyOrdersPath()}
+                  variant="secondary"
+                  renderLink={({ href, className, children, ...props }) => (
+                    <Link href={href} className={className} {...props}>
+                      {children}
+                    </Link>
+                  )}
+                >
+                  View orders
+                </ButtonLink>
+              </div>
 
-                  <ButtonLink
-                    href={getPharmacyOrdersPath()}
-                    variant="secondary"
-                    renderLink={({ href, className, children, ...props }) => (
-                      <Link href={href} className={className} {...props}>
-                        {children}
-                      </Link>
-                    )}
-                  >
-                    View orders
-                  </ButtonLink>
-                </div>
+              <div className={css.filters} aria-label="Order statistics filters">
+                <SelectField
+                  id="dashboard-order-year"
+                  label="Year"
+                  value={selectedYear}
+                  options={YEAR_OPTIONS}
+                  onChange={setSelectedYear}
+                />
+                <SelectField
+                  id="dashboard-order-month"
+                  label="Month"
+                  value={selectedMonth}
+                  options={MONTH_OPTIONS}
+                  onChange={setSelectedMonth}
+                />
               </div>
 
               <OrderStatistics
@@ -513,6 +517,7 @@ function PharmacyDashboardPageContent() {
                 </div>
 
                 <ButtonLink
+                  className={css.sectionButton}
                   href={getPharmacyClientsPath()}
                   variant="secondary"
                   renderLink={({ href, className, children, ...props }) => (
@@ -558,6 +563,7 @@ function PharmacyDashboardPageContent() {
                 </div>
 
                 <ButtonLink
+                  className={css.sectionButton}
                   href={getPharmacyProductsPath()}
                   variant="secondary"
                   renderLink={({ href, className, children, ...props }) => (
@@ -605,6 +611,7 @@ function PharmacyDashboardPageContent() {
                 </div>
 
                 <ButtonLink
+                  className={css.sectionButton}
                   href={getPharmacyAllProductsPath()}
                   variant="secondary"
                   renderLink={({ href, className, children, ...props }) => (
@@ -639,8 +646,9 @@ function PharmacyDashboardPageContent() {
                   </p>
                 </div>
                 <ButtonLink
+                  className={css.sectionButton}
                   href={getPharmacyProductRequestsPath()}
-                  variant="primary"
+                  variant="secondary"
                   renderLink={({ href, className, children, ...props }) => (
                     <Link href={href} className={className} {...props}>
                       {children}

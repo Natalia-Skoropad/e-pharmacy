@@ -174,6 +174,18 @@ function matchesClientFilters(client: ClientRow, query: ClientsQuery): boolean {
     return false;
   }
 
+  if (query.successfulOrders === 'repeat') {
+    return client.successfulOrdersCount > 1;
+  }
+
+  if (query.successfulOrders === 'successful') {
+    return client.successfulOrdersCount > 0;
+  }
+
+  if (query.successfulOrders === 'other') {
+    return client.successfulOrdersCount === 0;
+  }
+
   return true;
 }
 

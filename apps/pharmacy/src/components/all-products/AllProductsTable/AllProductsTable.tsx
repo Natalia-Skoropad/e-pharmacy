@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import {
-  useMemo } from 'react';  import {   Button,
+  Button,
   DataTable,
   TableHeaderTitle,
   TableImagePreview,
@@ -124,7 +125,7 @@ function AllProductsTable({
       },
       {
         key: 'addedToMyPharmacy',
-        title: <TableHeaderTitle parts={['Added to', 'my pharmacy']} />,
+        title: <TableHeaderTitle parts={['Added to', 'pharmacy']} />,
         render: (product) =>
           isProductAddedToCurrentPharmacy(product, currentPharmacyId)
             ? 'Yes'

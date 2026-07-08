@@ -62,6 +62,15 @@ function ProductRequestsTable({
         ),
       },
       {
+        key: 'requestNumber',
+        title: <TableHeaderTitle parts={['Request', 'number']} />,
+        render: (request) => (
+          <TextActionButton href={getPharmacyRequestPath(request.id)}>
+            {request.requestNumber}
+          </TextActionButton>
+        ),
+      },
+      {
         key: 'productPhoto',
         title: <TableHeaderTitle parts={['Product', 'photo']} />,
         render: (request) => (
@@ -70,15 +79,6 @@ function ProductRequestsTable({
             alt={`${request.productName} photo`}
             fallback={request.productName.charAt(0)}
           />
-        ),
-      },
-      {
-        key: 'requestNumber',
-        title: <TableHeaderTitle parts={['Request', 'number']} />,
-        render: (request) => (
-          <TextActionButton href={getPharmacyRequestPath(request.id)}>
-            {request.requestNumber}
-          </TextActionButton>
         ),
       },
       {

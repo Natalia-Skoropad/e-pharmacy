@@ -18,6 +18,7 @@ export const CLIENT_STATUSES = [
 //===================================================================
 
 export type ClientStatus = (typeof CLIENT_STATUSES)[number];
+export type ClientSuccessfulOrdersFilter = 'repeat' | 'successful' | 'other';
 
 //===================================================================
 
@@ -46,6 +47,7 @@ export type PharmacyClientsQueryParams = Readonly<{
   phone?: string;
   address?: string;
   status?: ClientStatus;
+  successfulOrders?: ClientSuccessfulOrdersFilter;
 }>;
 
 export type PharmacyClientsResponse = Readonly<{
