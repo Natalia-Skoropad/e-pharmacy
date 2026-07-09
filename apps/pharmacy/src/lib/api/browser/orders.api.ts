@@ -20,7 +20,7 @@ import {
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
-import type { OrderStatus } from '@e-pharmacy/types';
+import type { DeliveryMethod, OrderStatus, PaymentMethod } from '@e-pharmacy/types';
 
 //===================================================================
 
@@ -48,6 +48,36 @@ export async function getPharmacyOrderDetails(
 
   if (!order) {
     throw new Error('Order could not be loaded.');
+  }
+
+  return order;
+}
+
+//===================================================================
+
+export async function updatePharmacyOrder(
+  orderId: string,
+  payload: {
+    items?: Array<{ productOfferId: string; quantity: number }>;
+    deliveryMethod?: DeliveryMethod;
+    deliveryDetails?: { recipientName: string; recipientPhone: string; address: string };
+    paymentMethod?: PaymentMethod;
+    managerComment?: string;
+  }
+): Promise<PharmacyOrderDetails> {
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
+    PHARMACY_API_ROUTES.orders.details(orderId),
+    {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }
+  );
+
+  const responsePayload = getResponseData(response) as { order?: unknown };
+  const order = normalizePharmacyOrderDetails(responsePayload.order);
+
+  if (!order) {
+    throw new Error('Order could not be updated.');
   }
 
   return order;

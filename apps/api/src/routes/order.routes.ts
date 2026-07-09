@@ -5,6 +5,7 @@ import {
   getOrderById,
   getOrderSalesStatistics,
   getOrders,
+  updateOrderDetails,
   updateOrderStatus,
 } from '../controllers/order.controller';
 
@@ -16,6 +17,7 @@ import {
   orderParamsSchema,
   orderSalesStatisticsQuerySchema,
   ordersQuerySchema,
+  updateOrderDetailsSchema,
   updateOrderStatusSchema,
 } from '../schemas/order.schema';
 
@@ -59,6 +61,15 @@ orderRoutes.get(
   '/:orderId',
   validate({ params: orderParamsSchema }),
   ctrlWrapper(getOrderById)
+);
+
+
+//===============================================================
+
+orderRoutes.patch(
+  '/:orderId',
+  validate({ params: orderParamsSchema, body: updateOrderDetailsSchema }),
+  ctrlWrapper(updateOrderDetails)
 );
 
 //===============================================================

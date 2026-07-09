@@ -55,6 +55,8 @@ export type PharmacyOrderItem = Readonly<{
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  availableQuantity?: number;
+  currentPrice?: number;
 }>;
 
 export type PharmacyOrderRow = Readonly<{
@@ -73,6 +75,13 @@ export type PharmacyOrderRow = Readonly<{
   items: PharmacyOrderItem[];
 }>;
 
+export type PharmacyOrderStatusHistoryItem = Readonly<{
+  status: OrderStatus;
+  changedAt: string;
+  changedBy: EntityId;
+  comment?: string;
+}>;
+
 export type PharmacyOrderDetails = PharmacyOrderRow &
   Readonly<{
     currency: 'UAH';
@@ -80,7 +89,13 @@ export type PharmacyOrderDetails = PharmacyOrderRow &
     recipientName?: string;
     recipientPhone?: string;
     pharmacyComment?: string;
+    managerComment?: string;
     rejectionReason?: string;
+    statusHistory: PharmacyOrderStatusHistoryItem[];
+    pharmacyId: EntityId;
+    pharmacyPhone?: string;
+    pharmacyAddress?: string;
+    pharmacyEmail?: string;
   }>;
 
 export type PharmacyOrdersQueryParams = Readonly<{
@@ -263,6 +278,12 @@ function normalizePharmacyOrderItem(rawItem: unknown): PharmacyOrderItem | null 
     quantity: getNumberValue(rawItem.quantity) ?? 0,
     unitPrice: getNumberValue(rawItem.unitPrice) ?? 0,
     totalPrice: getNumberValue(rawItem.totalPrice) ?? 0,
+    ...(typeof getNumberValue(rawItem.availableQuantity) === 'number'
+      ? { availableQuantity: getNumberValue(rawItem.availableQuantity) }
+      : {}),
+    ...(typeof getNumberValue(rawItem.currentPrice) === 'number'
+      ? { currentPrice: getNumberValue(rawItem.currentPrice) }
+      : {}),
   };
 }
 
@@ -318,6 +339,34 @@ export function normalizePharmacyOrder(
 
 //===================================================================
 
+
+function normalizeStatusHistory(payload: unknown): PharmacyOrderStatusHistoryItem[] {
+  if (!Array.isArray(payload)) return [];
+
+  return payload
+    .map((entry) => {
+      if (!isRecord(entry)) return null;
+
+      const status = isOrderStatus(entry.status) ? entry.status : null;
+      const changedAt = getStringValue(entry.changedAt);
+      const changedBy = getStringValue(entry.changedBy);
+
+      if (!status || !changedAt || !changedBy) return null;
+
+      return {
+        status,
+        changedAt,
+        changedBy,
+        ...(getStringValue(entry.comment)
+          ? { comment: getStringValue(entry.comment) }
+          : {}),
+      };
+    })
+    .filter((entry): entry is PharmacyOrderStatusHistoryItem => Boolean(entry));
+}
+
+//===================================================================
+
 export function normalizePharmacyOrderDetails(
   payload: unknown
 ): PharmacyOrderDetails | null {
@@ -334,6 +383,17 @@ export function normalizePharmacyOrderDetails(
   return {
     ...row,
     currency: 'UAH',
+    pharmacyId: getStringValue(payload.pharmacyId) ?? '',
+    statusHistory: normalizeStatusHistory(payload.statusHistory),
+    ...(getStringValue(payload.pharmacyPhone)
+      ? { pharmacyPhone: getStringValue(payload.pharmacyPhone) }
+      : {}),
+    ...(getStringValue(payload.pharmacyAddress)
+      ? { pharmacyAddress: getStringValue(payload.pharmacyAddress) }
+      : {}),
+    ...(getStringValue(payload.pharmacyEmail)
+      ? { pharmacyEmail: getStringValue(payload.pharmacyEmail) }
+      : {}),
     ...(getStringValue(deliveryDetails?.address)
       ? { deliveryAddress: getStringValue(deliveryDetails?.address) }
       : {}),
@@ -345,6 +405,9 @@ export function normalizePharmacyOrderDetails(
       : {}),
     ...(getStringValue(payload.pharmacyComment)
       ? { pharmacyComment: getStringValue(payload.pharmacyComment) }
+      : {}),
+    ...(getStringValue(payload.managerComment)
+      ? { managerComment: getStringValue(payload.managerComment) }
       : {}),
     ...(getStringValue(payload.rejectionReason)
       ? { rejectionReason: getStringValue(payload.rejectionReason) }

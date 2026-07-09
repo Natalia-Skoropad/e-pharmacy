@@ -97,10 +97,43 @@ export const checkoutOrderSchema = z.discriminatedUnion('deliveryMethod', [
 
 //===============================================================
 
+const orderEditableItemSchema = z.object({
+  productOfferId: mongoIdSchema,
+  quantity: z.coerce.number().int().min(1).max(999),
+});
+
+//===============================================================
+
+export const updateOrderDetailsSchema = z
+  .object({
+    items: z.array(orderEditableItemSchema).min(1).optional(),
+    paymentMethod: z.enum(['cash', 'bank_transfer']).optional(),
+    deliveryMethod: z.enum(['pickup', 'postal_delivery']).optional(),
+    deliveryDetails: z
+      .object({
+        recipientName: sharedNameSchema,
+        recipientPhone: sharedRequiredPhoneSchema,
+        address: sharedRequiredAddressSchema,
+      })
+      .optional(),
+    managerComment: z.string().trim().max(1000).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.deliveryMethod === 'postal_delivery' && !value.deliveryDetails) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['deliveryDetails'],
+        message: 'Delivery details are required for postal delivery',
+      });
+    }
+  });
+
+//===============================================================
+
 export const updateOrderStatusSchema = z
   .object({
     status: z.enum(['in_progress', 'successful', 'rejected']),
-    rejectionReason: z.string().trim().min(3).max(500).optional(),
+    rejectionReason: z.string().trim().min(100).max(500).optional(),
     comment: z.string().trim().max(500).optional(),
   })
 
@@ -123,4 +156,5 @@ export type OrderSalesStatisticsQuery = z.infer<
 >;
 
 export type CheckoutOrderInput = z.infer<typeof checkoutOrderSchema>;
+export type UpdateOrderDetailsInput = z.infer<typeof updateOrderDetailsSchema>;
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;

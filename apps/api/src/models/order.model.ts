@@ -171,6 +171,13 @@ const orderSchema = new Schema<OrderEntity>(
     },
 
     comment: { type: String, trim: true, maxlength: 500, default: undefined },
+    managerComment: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+      default: undefined,
+    },
+
     status: {
       type: String,
       enum: ['new', 'in_progress', 'successful', 'rejected'],

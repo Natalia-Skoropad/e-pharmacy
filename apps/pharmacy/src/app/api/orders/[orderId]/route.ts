@@ -14,3 +14,11 @@ export const GET = createPrivateProxyRoute<OrderRouteParams>({
   backendPath: ({ orderId }) => API_ROUTES.orders.details(orderId),
   method: 'GET',
 });
+
+
+//===================================================================
+
+export const PATCH = createPrivateProxyRoute<OrderRouteParams>({
+  backendPath: ({ orderId }) => API_ROUTES.orders.details(orderId),
+  method: 'PATCH',
+});

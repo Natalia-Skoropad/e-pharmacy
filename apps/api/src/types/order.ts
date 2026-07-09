@@ -79,6 +79,7 @@ export type OrderEntity = {
   paymentMethod: PaymentMethod;
   delivery: Delivery;
   comment?: string;
+  managerComment?: string;
   status: OrderStatus;
   statusHistory: OrderStatusHistoryItem[];
   rejectionReason?: string;
@@ -106,6 +107,8 @@ export type OrderItemResponseDto = {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  availableQuantity?: number;
+  currentPrice?: number;
 };
 
 export type OrderResponseDto = {
@@ -144,15 +147,16 @@ export type OrderResponseDto = {
   paymentMethod: PaymentMethod;
   delivery: Delivery;
   comment?: string;
+  managerComment?: string;
   bankDetails?: PharmacyBankDetails;
   items: OrderItemResponseDto[];
 };
 
 //===============================================================
 
-//===============================================================
-
 export type OrderSalesStatisticsGroupBy = 'day' | 'month';
+
+//===============================================================
 
 export type OrderSalesStatisticsValueDto = { quantity: number; amount: number };
 

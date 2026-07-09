@@ -25,6 +25,7 @@ import type {
   CheckoutOrderInput,
   OrderSalesStatisticsQuery,
   OrdersQuery,
+  UpdateOrderDetailsInput,
   UpdateOrderStatusInput,
 } from '../schemas/order.schema';
 
@@ -89,6 +90,7 @@ type UserDocument = {
   pictureUrl?: string;
 };
 type ProductFallbackMap = Map<string, ProductDocument>;
+type OfferFallbackMap = Map<string, ProductOfferDocument>;
 type ClientUserMap = Map<string, UserDocument>;
 
 const ORDER_STATUSES_FOR_STATISTICS = [
@@ -164,7 +166,8 @@ function getPharmacyAddress(
 function serializeOrder(
   order: OrderDocument,
   productFallbacks?: ProductFallbackMap,
-  clientUsers?: ClientUserMap
+  clientUsers?: ClientUserMap,
+  offerFallbacks?: OfferFallbackMap
 ): OrderResponseDto {
   const clientUser = clientUsers?.get(order.userId.toString());
 
@@ -222,11 +225,13 @@ function serializeOrder(
     paymentMethod: order.paymentMethod,
     delivery: order.delivery,
     ...(order.comment ? { comment: order.comment } : {}),
+    ...(order.managerComment ? { managerComment: order.managerComment } : {}),
     ...(order.pharmacySnapshot.bankDetails
       ? { bankDetails: order.pharmacySnapshot.bankDetails }
       : {}),
     items: order.items.map((item) => {
       const productFallback = productFallbacks?.get(item.productId.toString());
+      const offerFallback = offerFallbacks?.get(item.productOfferId.toString());
       const category =
         item.productSnapshot.category ?? productFallback?.category;
 
@@ -267,6 +272,12 @@ function serializeOrder(
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         totalPrice: item.totalPrice,
+        ...(typeof offerFallback?.availableQuantity === 'number'
+          ? { availableQuantity: offerFallback.availableQuantity }
+          : {}),
+        ...(typeof offerFallback?.price === 'number'
+          ? { currentPrice: offerFallback.price }
+          : {}),
       };
     }),
   };
@@ -295,6 +306,23 @@ async function getOrderProductFallbacks(
     .lean<ProductDocument[]>();
 
   return new Map(products.map((product) => [String(product._id), product]));
+}
+
+
+//===============================================================
+
+async function getOrderOfferFallbacks(
+  order: OrderDocument
+): Promise<OfferFallbackMap> {
+  if (!order.items.length) return new Map();
+
+  const offers = await ProductOffer.find({
+    _id: { $in: order.items.map((item) => item.productOfferId) },
+  })
+    .select('_id price availableQuantity reservedQuantity totalQuantity')
+    .lean<ProductOfferDocument[]>();
+
+  return new Map(offers.map((offer) => [String(offer._id), offer]));
 }
 
 //===============================================================
@@ -633,6 +661,272 @@ export async function checkoutOrderService(
 
 //===============================================================
 
+
+async function assertCanEditPharmacyOrder(
+  actor: { id: string; role: UserRole },
+  order: OrderDocument,
+  session: mongoose.ClientSession
+): Promise<void> {
+  if (actor.role === USER_ROLES.ADMIN) return;
+
+  if (actor.role !== USER_ROLES.PHARMACY) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Only pharmacy users or admins can edit orders.'
+    );
+  }
+
+  const hasAccess = await Pharmacy.exists({
+    _id: order.pharmacyId,
+    $or: [{ ownerId: actor.id }, { managerUserIds: actor.id }],
+  }).session(session);
+
+  if (!hasAccess) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy access denied.');
+  }
+}
+
+//===============================================================
+
+function createOrderItemFromProductOffer({
+  offer,
+  product,
+  quantity,
+  previousItem,
+}: {
+  offer: ProductOfferDocument;
+  product: ProductDocument;
+  quantity: number;
+  previousItem?: OrderItemEntity;
+}): OrderItemEntity {
+  return {
+    ...(previousItem?._id ? { _id: previousItem._id } : {}),
+    productId: offer.productId,
+    productOfferId: offer._id,
+    productSnapshot: {
+      name: product.name,
+      ...(product.slug ? { slug: product.slug } : {}),
+      article: product.article,
+      category: product.category,
+      ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+      ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
+      ...(product.dosage ? { dosage: product.dosage } : {}),
+      ...(product.packageQuantity
+        ? { packageQuantity: product.packageQuantity }
+        : {}),
+      ...(typeof product.rating === 'number' ? { rating: product.rating } : {}),
+      ...(typeof product.reviewsCount === 'number'
+        ? { reviewsCount: product.reviewsCount }
+        : {}),
+    },
+    quantity,
+    unitPrice:
+      previousItem && quantity <= previousItem.quantity
+        ? previousItem.unitPrice
+        : offer.price,
+    totalPrice:
+      quantity *
+      (previousItem && quantity <= previousItem.quantity
+        ? previousItem.unitPrice
+        : offer.price),
+  };
+}
+
+//===============================================================
+
+export async function updateOrderDetailsService(
+  actor: { id: string; role: UserRole },
+  orderId: string,
+  input: UpdateOrderDetailsInput
+): Promise<{ order: OrderResponseDto }> {
+  const session = await mongoose.startSession();
+
+  try {
+    let updatedOrder: OrderDocument | null = null;
+
+    await session.withTransaction(async () => {
+      const order = await Order.findById(orderId)
+        .session(session)
+        .lean<OrderDocument | null>();
+
+      if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
+
+      await assertCanEditPharmacyOrder(actor, order, session);
+
+      if (order.status !== 'in_progress') {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Order can be edited only after it is taken into work.'
+        );
+      }
+
+      const set: Record<string, unknown> = {};
+      const unset: Record<string, ''> = {};
+
+      if (input.paymentMethod) {
+        set.paymentMethod = input.paymentMethod;
+      }
+
+      if (input.deliveryMethod) {
+        set.delivery =
+          input.deliveryMethod === 'pickup'
+            ? { method: 'pickup' }
+            : {
+                method: 'postal_delivery',
+                details: input.deliveryDetails,
+              };
+      }
+
+      if (typeof input.managerComment === 'string') {
+        if (input.managerComment.trim()) {
+          set.managerComment = input.managerComment.trim();
+        } else {
+          unset.managerComment = '';
+        }
+      }
+
+      if (input.items) {
+        const requested = new Map<string, number>();
+
+        for (const item of input.items) {
+          requested.set(
+            item.productOfferId,
+            (requested.get(item.productOfferId) ?? 0) + item.quantity
+          );
+        }
+
+        if (requested.size === 0) {
+          throw httpError(HTTP_STATUS.BAD_REQUEST, 'Order must contain products.');
+        }
+
+        const existingByOfferId: Map<string, OrderItemEntity> = new Map(
+          order.items.map((item) => [String(item.productOfferId), item])
+        );
+
+        const offers = await ProductOffer.find({
+          _id: { $in: [...requested.keys()] },
+          pharmacyId: order.pharmacyId,
+        })
+          .session(session)
+          .lean<ProductOfferDocument[]>();
+
+        const offerMap: Map<string, ProductOfferDocument> = new Map(
+          offers.map((offer) => [String(offer._id), offer])
+        );
+
+        if (offerMap.size !== requested.size) {
+          throw httpError(HTTP_STATUS.BAD_REQUEST, 'Product offer is unavailable.');
+        }
+
+        const products = await Product.find({
+          _id: { $in: offers.map((offer) => offer.productId) },
+          status: 'active',
+        })
+          .session(session)
+          .lean<ProductDocument[]>();
+
+        const productMap: Map<string, ProductDocument> = new Map(
+          products.map((product) => [String(product._id), product])
+        );
+
+        for (const oldItem of order.items) {
+          const nextQuantity = requested.get(String(oldItem.productOfferId)) ?? 0;
+
+          if (nextQuantity < oldItem.quantity) {
+            await releaseOfferStock(
+              oldItem.productOfferId,
+              oldItem.quantity - nextQuantity,
+              session
+            );
+          }
+        }
+
+        for (const [offerId, nextQuantity] of requested) {
+          const oldItem = existingByOfferId.get(offerId);
+
+          if (oldItem && nextQuantity > oldItem.quantity) {
+            await reserveOfferStock(
+              oldItem.productOfferId,
+              nextQuantity - oldItem.quantity,
+              session
+            );
+          }
+
+          if (!oldItem) {
+            await reserveOfferStock(offerId, nextQuantity, session);
+          }
+        }
+
+        const nextItems = [...requested.entries()].map(([offerId, quantity]) => {
+          const offer = offerMap.get(offerId);
+
+          if (!offer) {
+            throw httpError(HTTP_STATUS.BAD_REQUEST, 'Product offer is unavailable.');
+          }
+
+          const product = productMap.get(String(offer.productId));
+
+          if (!product) {
+            throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+          }
+
+          return createOrderItemFromProductOffer({
+            offer,
+            product,
+            quantity,
+            previousItem: existingByOfferId.get(offerId),
+          });
+        });
+
+        set.items = nextItems;
+        set.totalItems = nextItems.reduce((sum, item) => sum + item.quantity, 0);
+        set.totalPrice = nextItems.reduce((sum, item) => sum + item.totalPrice, 0);
+      }
+
+      updatedOrder = await Order.findByIdAndUpdate(
+        orderId,
+        {
+          ...(Object.keys(set).length ? { $set: set } : {}),
+          ...(Object.keys(unset).length ? { $unset: unset } : {}),
+        },
+        { returnDocument: 'after', runValidators: true, session }
+      ).lean<OrderDocument | null>();
+    });
+
+    if (!updatedOrder) {
+      throw httpError(
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        'Order was not updated'
+      );
+    }
+
+    const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
+      getOrderProductFallbacks(updatedOrder),
+      getOrderOfferFallbacks(updatedOrder),
+      User.findById(updatedOrder.userId)
+        .select('name email pictureUrl')
+        .lean<UserDocument | null>(),
+    ]);
+
+    const clientMap = clientUser
+      ? new Map([[String(clientUser._id), clientUser]])
+      : undefined;
+
+    return {
+      order: serializeOrder(
+        updatedOrder,
+        productFallbacks,
+        clientMap,
+        offerFallbacks
+      ),
+    };
+  } finally {
+    await session.endSession();
+  }
+}
+
+//===============================================================
+
 export async function updateOrderStatusService(
   actor: { id: string; role: UserRole },
   orderId: string,
@@ -724,7 +1018,26 @@ export async function updateOrderStatusService(
       );
     }
 
-    return { order: serializeOrder(updatedOrder) };
+    const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
+      getOrderProductFallbacks(updatedOrder),
+      getOrderOfferFallbacks(updatedOrder),
+      User.findById(updatedOrder.userId)
+        .select('name email pictureUrl')
+        .lean<UserDocument | null>(),
+    ]);
+
+    const clientMap = clientUser
+      ? new Map([[String(clientUser._id), clientUser]])
+      : undefined;
+
+    return {
+      order: serializeOrder(
+        updatedOrder,
+        productFallbacks,
+        clientMap,
+        offerFallbacks
+      ),
+    };
   } finally {
     await session.endSession();
   }
@@ -1099,7 +1412,7 @@ export async function getOrdersService(
     .select('name email pictureUrl')
     .lean<UserDocument[]>();
 
-  const clientMap = new Map(
+  const clientMap: ClientUserMap = new Map(
     clients.map((client) => [String(client._id), client])
   );
 
@@ -1146,8 +1459,9 @@ export async function getOrderByIdService(
 
   if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
 
-  const [productFallbacks, clientUser] = await Promise.all([
+  const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
     getOrderProductFallbacks(order),
+    getOrderOfferFallbacks(order),
     User.findById(order.userId)
       .select('name email pictureUrl')
       .lean<UserDocument | null>(),
@@ -1157,5 +1471,5 @@ export async function getOrderByIdService(
     ? new Map([[String(clientUser._id), clientUser]])
     : undefined;
 
-  return { order: serializeOrder(order, productFallbacks, clientMap) };
+  return { order: serializeOrder(order, productFallbacks, clientMap, offerFallbacks) };
 }

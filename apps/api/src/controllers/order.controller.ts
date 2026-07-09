@@ -6,6 +6,7 @@ import {
   checkoutOrderSchema,
   orderSalesStatisticsQuerySchema,
   ordersQuerySchema,
+  updateOrderDetailsSchema,
   updateOrderStatusSchema,
 } from '../schemas/order.schema';
 
@@ -14,6 +15,7 @@ import {
   getOrderByIdService,
   getOrderSalesStatisticsService,
   getOrdersService,
+  updateOrderDetailsService,
   updateOrderStatusService,
 } from '../services/order.service';
 
@@ -45,7 +47,11 @@ export async function checkoutOrder(
 
 export async function getOrders(req: Request, res: Response): Promise<void> {
   const query = ordersQuerySchema.parse(req.query);
-  const data = await getOrdersService(req.user?.id ?? '', query, req.user?.role);
+  const data = await getOrdersService(
+    req.user?.id ?? '',
+    query,
+    req.user?.role
+  );
 
   sendSuccessResponse({
     res,
@@ -89,6 +95,27 @@ export async function getOrderById(req: Request, res: Response): Promise<void> {
     statusCode: HTTP_STATUS.OK,
     data,
   });
+}
+
+//===============================================================
+
+export async function updateOrderDetails(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { orderId } = req.params as OrderParams;
+  const body = updateOrderDetailsSchema.parse(req.body);
+  const user = req.user;
+
+  if (!user) return;
+
+  const data = await updateOrderDetailsService(
+    { id: user.id, role: user.role },
+    orderId,
+    body
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
