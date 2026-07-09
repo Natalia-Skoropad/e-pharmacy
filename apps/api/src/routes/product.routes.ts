@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import {
+  addProductToMyPharmacy,
   createProductReview,
   getFavoriteProductIds,
   getFavoriteProducts,
@@ -56,7 +57,6 @@ productRoutes.get('/filters', ctrlWrapper(getProductFilters));
 
 //=================================================================================
 
-
 productRoutes.get(
   '/favorites/ids',
   authenticate,
@@ -84,6 +84,18 @@ productRoutes.get(
     query: pendingProductReviewsQuerySchema,
   }),
   ctrlWrapper(getPendingProductReviews)
+);
+
+//=================================================================================
+
+productRoutes.post(
+  '/:productId/my-pharmacy',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({
+    params: productIdParamsSchema,
+  }),
+  ctrlWrapper(addProductToMyPharmacy)
 );
 
 //=================================================================================

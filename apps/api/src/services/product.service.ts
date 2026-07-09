@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 
+import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
 
@@ -84,6 +85,13 @@ type PendingReviewDto = {
   status: ReviewModerationStatus;
   createdAt: string;
 };
+
+//===============================================================
+
+const PHARMACY_PRODUCT_MANAGEMENT_STATUSES = [
+  PHARMACY_STATUSES.ACTIVE,
+  PHARMACY_STATUSES.ON_MODERATION,
+] as const;
 
 //===============================================================
 
@@ -320,8 +328,7 @@ function applyProductIdIncludeFilter(
 ): void {
   const ids = toObjectIdStrings(productIds);
   const current = filter._id as
-    | { $in?: unknown[]; $nin?: unknown[] }
-    | undefined;
+    { $in?: unknown[]; $nin?: unknown[] } | undefined;
   const currentIn = current?.$in ? toObjectIdStrings(current.$in) : undefined;
 
   filter._id = {
@@ -338,8 +345,7 @@ function applyProductIdExcludeFilter(
 ): void {
   const ids = toObjectIdStrings(productIds);
   const current = filter._id as
-    | { $in?: unknown[]; $nin?: unknown[] }
-    | undefined;
+    { $in?: unknown[]; $nin?: unknown[] } | undefined;
   const currentNin = current?.$nin ? toObjectIdStrings(current.$nin) : [];
 
   filter._id = {
@@ -515,10 +521,7 @@ export async function getProductsService(
     }
   }
 
-  if (
-    query.addedToPharmacyId &&
-    typeof query.addedToMyPharmacy === 'boolean'
-  ) {
+  if (query.addedToPharmacyId && typeof query.addedToMyPharmacy === 'boolean') {
     const pharmacyProductIds = await ProductOffer.distinct('productId', {
       pharmacyId: query.addedToPharmacyId,
     });
@@ -543,15 +546,14 @@ export async function getProductsService(
 
   const skip = (query.page - 1) * query.perPage;
 
-  const [products, total, favorites, ownProductStatistics] =
-    await Promise.all([
-      Product.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
-      Product.countDocuments(filter),
-      getClientFavorites(userId),
-      query.pharmacyId
-        ? getOwnProductStatistics(query.pharmacyId)
-        : Promise.resolve(undefined),
-    ]);
+  const [products, total, favorites, ownProductStatistics] = await Promise.all([
+    Product.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
+    Product.countDocuments(filter),
+    getClientFavorites(userId),
+    query.pharmacyId
+      ? getOwnProductStatistics(query.pharmacyId)
+      : Promise.resolve(undefined),
+  ]);
 
   const offerMap = await getOffersByProductIds(
     products.map((product) => product._id),
@@ -674,6 +676,82 @@ export async function getProductDetailsService(
       offerMap.get(String(product._id)) ?? [],
       favorites.products
     ),
+  };
+}
+
+//===============================================================
+
+async function getCurrentUserPharmacyForProductManagement(userId: string) {
+  const pharmacy = await Pharmacy.findOne({
+    $or: [{ ownerId: userId }, { managerUserIds: userId }],
+  });
+
+  if (!pharmacy) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy profile was not found.');
+  }
+
+  const canManageProducts = PHARMACY_PRODUCT_MANAGEMENT_STATUSES.some(
+    (status) => status === pharmacy.status
+  );
+
+  if (!canManageProducts) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Products can be added only after Admin verifies the pharmacy profile.'
+    );
+  }
+
+  return pharmacy;
+}
+
+//===============================================================
+
+export async function addProductToMyPharmacyService(
+  productId: string,
+  userId: string
+) {
+  const [pharmacy, product] = await Promise.all([
+    getCurrentUserPharmacyForProductManagement(userId),
+    Product.findById(productId).lean(),
+  ]);
+
+  if (!product) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+  }
+
+  if (product.status !== 'active') {
+    throw httpError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Blocked products cannot be added to a pharmacy.'
+    );
+  }
+
+  const existingOffer = await ProductOffer.findOne({
+    productId: product._id,
+    pharmacyId: pharmacy._id,
+  }).lean();
+
+  if (existingOffer) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'This product is already added to your pharmacy.'
+    );
+  }
+
+  await ProductOffer.create({
+    productId: product._id,
+    pharmacyId: pharmacy._id,
+    price: product.price ?? 0,
+    totalQuantity: 0,
+    availableQuantity: 0,
+    reservedQuantity: 0,
+  });
+
+  const details = await getProductDetailsService(productId, userId);
+
+  return {
+    ...details,
+    message: 'Product added to your pharmacy.',
   };
 }
 

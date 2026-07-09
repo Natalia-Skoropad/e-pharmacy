@@ -499,7 +499,7 @@ function createBankDetails(pharmacyName: string, pharmacyNumber: number) {
 
 const PHARMACY_ACCOUNT_PASSWORD = '123456789';
 const PHARMACY_ACCOUNT_DESCRIPTION_LENGTH = 5000;
-const PHARMACY_ACCOUNT_IMAGE_URL =
+const PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p94AAAAASUVORK5CYII=';
 
 type PharmacyAccountSeed = {
@@ -513,6 +513,7 @@ type PharmacyAccountSeed = {
     | typeof PHARMACY_STATUSES.ON_VERIFICATION
     | typeof PHARMACY_STATUSES.ACTIVE;
   statusReason?: string;
+  imageUrl?: string;
 };
 
 const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
@@ -533,6 +534,7 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
     address: '26 Wellness Street, Lviv',
     pharmacyName: 'Nata Care Pharmacy Active',
     status: PHARMACY_STATUSES.ACTIVE,
+    imageUrl: '/images/seed/pharmacies/pharmacy-021.png',
   },
 ];
 
@@ -655,10 +657,11 @@ async function seedPharmacyAccounts(): Promise<number> {
           city: seed.address.endsWith('Kyiv') ? 'Kyiv' : 'Lviv',
           phone: seed.phone,
           email: seed.email,
-          workingHours: 'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
+          workingHours:
+            'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
           bankDetails: createPharmacyAccountBankDetails(seed),
           rating: 0,
-          imageUrl: PHARMACY_ACCOUNT_IMAGE_URL,
+          imageUrl: seed.imageUrl ?? PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL,
           description: createPharmacyAccountDescription(seed.pharmacyName),
           reviewsCount: 0,
           managerUserIds: [],
@@ -708,7 +711,8 @@ function createSeedPharmacies() {
       city,
       phone: `+380${String(501000000 + pharmacyNumber).padStart(9, '0')}`,
       email: `pharmacy.${pharmacyNumber}@e-pharmacy.example.com`,
-      workingHours: 'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
+      workingHours:
+        'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
       bankDetails: createBankDetails(pharmacyName, pharmacyNumber),
       rating: Number((4 + (index % 10) * 0.1).toFixed(1)),
       imageUrl: createPharmacyImageUrl(index),

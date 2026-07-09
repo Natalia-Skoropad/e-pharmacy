@@ -3,6 +3,7 @@ import 'client-only';
 import { buildQueryString, getResponseData } from '@e-pharmacy/api-client/core';
 
 import type {
+  AddProductToMyPharmacyResponse,
   ApiSuccessResponse,
   Product,
   ProductDetailsResponse,
@@ -59,6 +60,20 @@ export async function getProductDetails(
   const response = await localApiRequest<
     ApiSuccessResponse<ProductDetailsResponse>
   >(PHARMACY_API_ROUTES.products.details(productId));
+
+  return getResponseData(response);
+}
+
+//===================================================================
+
+export async function addProductToMyPharmacy(
+  productId: Product['id']
+): Promise<AddProductToMyPharmacyResponse> {
+  const response = await localApiRequest<
+    ApiSuccessResponse<AddProductToMyPharmacyResponse>
+  >(PHARMACY_API_ROUTES.products.addToMyPharmacy(productId), {
+    method: 'POST',
+  });
 
   return getResponseData(response);
 }

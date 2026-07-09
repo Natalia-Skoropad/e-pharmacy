@@ -111,7 +111,7 @@
 .workingHoursValue {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px 8px;
+  gap: 4px 10px;
   justify-content: flex-end;
 }
 
@@ -120,7 +120,8 @@
 }
 
 .workingHoursValue strong {
-  font-weight: var(--fw-bold);
+  font-weight: 800;
+  color: var(--color-accent);
 }
 
 .summaryItem a {
@@ -172,7 +173,7 @@
 
 .descriptionText strong {
   font-weight: var(--fw-bold);
-  color: var(--color-text-primary);
+  color: var(--color-accent);
 }
 
 .descriptionParagraph + .descriptionParagraph,

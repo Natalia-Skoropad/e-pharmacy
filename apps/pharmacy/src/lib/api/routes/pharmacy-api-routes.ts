@@ -2,6 +2,10 @@ export const pharmacyApiRoutes = {
   products: {
     list: '/api/products',
     details: (productId: string) => `/api/products/${productId}`,
+
+    addToMyPharmacy: (productId: string) =>
+      `/api/products/${productId}/my-pharmacy`,
+    
     reviews: (productId: string) => `/api/products/${productId}/reviews`,
   },
 
@@ -23,7 +27,8 @@ export const pharmacyApiRoutes = {
 
   pharmacies: {
     myProfile: '/api/pharmacies/me/profile',
-    sendMyProfileForVerification: '/api/pharmacies/me/profile/send-for-verification',
+    sendMyProfileForVerification:
+      '/api/pharmacies/me/profile/send-for-verification',
   },
 
   auth: {

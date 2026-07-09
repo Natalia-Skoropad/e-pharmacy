@@ -14,6 +14,8 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { AllProductStatistics, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { ConfirmationModal } from '@e-pharmacy/ui/modals';
+import { useToast } from '@e-pharmacy/ui/feedback';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
@@ -31,7 +33,11 @@ import {
   type AllProductStatisticsKey,
 } from '@e-pharmacy/types/products';
 
-import { getMyPharmacyProfile, getProducts } from '@/lib/api/browser';
+import {
+  addProductToMyPharmacy,
+  getMyPharmacyProfile,
+  getProducts,
+} from '@/lib/api/browser';
 
 import {
   getLockedFeatureBannerLabel,
@@ -97,6 +103,14 @@ function getProductsQueryParams(
 
 //===================================================================
 
+function getAddProductErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+
+  return 'Could not add product. Please try again.';
+}
+
+//===================================================================
+
 type AllProductsPageContentProps = Readonly<{
   initialFilters?: AllProductsFilterState;
 }>;
@@ -108,6 +122,7 @@ function AllProductsPageContent({
 }: AllProductsPageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const toast = useToast();
 
   const [filters, setFilters] =
     useState<AllProductsFilterState>(initialFilters);
@@ -120,10 +135,16 @@ function AllProductsPageContent({
   const [productStatistics, setProductStatistics] =
     useState<AllProductStatisticsCounts>(DEFAULT_ALL_PRODUCT_STATISTICS);
 
+  const [productToAdd, setProductToAdd] = useState<Product | null>(null);
+  const [addingProductId, setAddingProductId] = useState<EntityId | null>(null);
+  const [refreshVersion, setRefreshVersion] = useState(0);
+
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
   );
-  const [pharmacyStatus, setPharmacyStatus] = useState<PharmacyStatus | null>(null);
+  const [pharmacyStatus, setPharmacyStatus] = useState<PharmacyStatus | null>(
+    null
+  );
 
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -188,7 +209,7 @@ function AllProductsPageContent({
     return () => {
       isMounted = false;
     };
-  }, [currentPharmacyId]);
+  }, [currentPharmacyId, refreshVersion]);
 
   const queryParams = useMemo(
     () =>
@@ -232,7 +253,7 @@ function AllProductsPageContent({
     return () => {
       isMounted = false;
     };
-  }, [isProfileLoaded, queryParams]);
+  }, [isProfileLoaded, queryParams, refreshVersion]);
 
   useEffect(() => {
     const nextPath = buildAllProductsPath(filters);
@@ -268,6 +289,29 @@ function AllProductsPageContent({
   const bannerLabel = bannerStatus
     ? getLockedFeatureBannerLabel(bannerStatus)
     : null;
+
+  const handleConfirmAddProduct = async () => {
+    if (!productToAdd) return;
+
+    setAddingProductId(productToAdd.id);
+
+    try {
+      const response = await addProductToMyPharmacy(productToAdd.id);
+
+      setProducts((currentProducts) =>
+        currentProducts.map((product) =>
+          product.id === response.product.id ? response.product : product
+        )
+      );
+      setProductToAdd(null);
+      setRefreshVersion((value) => value + 1);
+      toast.success(response.message || 'Product added to your pharmacy.');
+    } catch (addError) {
+      toast.error(getAddProductErrorMessage(addError));
+    } finally {
+      setAddingProductId(null);
+    }
+  };
 
   const getProductStatisticHref = (key: AllProductStatisticsKey) => {
     if (key === 'active') {
@@ -317,8 +361,8 @@ function AllProductsPageContent({
           <StatusBanner
             status={bannerStatus}
             label={bannerLabel ?? undefined}
-          title="Catalog is available in read-only mode"
-          message="Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
+            title="Catalog is available in read-only mode"
+            message="Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
           />
         ) : null}
 
@@ -396,6 +440,9 @@ function AllProductsPageContent({
           currentPharmacyId={currentPharmacyId}
           products={products}
           isLoading={!isProfileLoaded || isLoading}
+          isAddActionDisabled={Boolean(bannerStatus) || !currentPharmacyId}
+          addingProductId={addingProductId}
+          onAddProduct={setProductToAdd}
           emptyMessage={
             hasActiveFilters
               ? 'No products found for the selected filters.'
@@ -420,6 +467,18 @@ function AllProductsPageContent({
           )}
         />
       </section>
+
+      <ConfirmationModal
+        isOpen={Boolean(productToAdd)}
+        title="Add product to pharmacy?"
+        description="Are you sure you want to add this product to your pharmacy?"
+        confirmLabel="Add to pharmacy"
+        isLoading={Boolean(addingProductId)}
+        onConfirm={() => void handleConfirmAddProduct()}
+        onCancel={() => {
+          if (!addingProductId) setProductToAdd(null);
+        }}
+      />
 
       {isFiltersOpen ? (
         <AllProductsFiltersDrawer

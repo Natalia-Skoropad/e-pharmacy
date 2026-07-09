@@ -19,6 +19,8 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { ConfirmationModal } from '@e-pharmacy/ui/modals';
+import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/core';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
@@ -34,6 +36,7 @@ import type {
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import {
+  addProductToMyPharmacy,
   getMyPharmacyProfile,
   getProductDetails,
   getProductReviews,
@@ -155,6 +158,15 @@ function getProductDetailsError(error: unknown): ProductDetailsError {
     title: 'Product could not be loaded',
     message: 'Could not load product data. Please try again.',
   };
+}
+
+//===================================================================
+
+function getAddProductErrorMessage(error: unknown): string {
+  if (isApiError(error) && error.message) return error.message;
+  if (error instanceof Error && error.message) return error.message;
+
+  return 'Could not add product. Please try again.';
 }
 
 //===================================================================
@@ -371,7 +383,10 @@ function AllProductDetailsPageContent({
   );
   const [activeTab, setActiveTab] = useState<ProductDetailsTab>('details');
   const [isLoading, setIsLoading] = useState(true);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [error, setError] = useState<ProductDetailsError | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     let isMounted = true;
@@ -432,6 +447,13 @@ function AllProductDetailsPageContent({
   const bannerLabel = bannerStatus
     ? getLockedFeatureBannerLabel(bannerStatus)
     : null;
+  const canAddToPharmacy = Boolean(
+    product &&
+    product.status === 'active' &&
+    currentPharmacyId &&
+    !currentOffer &&
+    !bannerStatus
+  );
   const tabs = PRODUCT_DETAILS_TABS.map((tab) =>
     tab.value === 'reviews'
       ? { ...tab, label: `Reviews (${reviewsTotal})` }
@@ -492,6 +514,24 @@ function AllProductDetailsPageContent({
     ],
     []
   );
+
+  const handleAddProductConfirm = async () => {
+    if (!product || !canAddToPharmacy) return;
+
+    setIsAddingProduct(true);
+
+    try {
+      const response = await addProductToMyPharmacy(product.id);
+
+      setProduct(response.product);
+      setIsAddModalOpen(false);
+      toast.success(response.message || 'Product added to your pharmacy.');
+    } catch (addError) {
+      toast.error(getAddProductErrorMessage(addError));
+    } finally {
+      setIsAddingProduct(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -608,13 +648,16 @@ function AllProductDetailsPageContent({
                             className={css.actionButton}
                             type="button"
                             size="sm"
-                            disabled
+                            disabled={!canAddToPharmacy}
+                            isLoading={isAddingProduct}
+                            loadingLabel="Adding product..."
+                            onClick={() => setIsAddModalOpen(true)}
                           >
                             {product.status === 'blocked'
                               ? 'Unavailable'
                               : isAddedToPharmacy
                                 ? 'Added to your pharmacy'
-                                : bannerStatus
+                                : bannerStatus || !currentPharmacyId
                                   ? 'Add to my pharmacy after verification'
                                   : 'Add to my pharmacy'}
                           </Button>
@@ -769,6 +812,18 @@ function AllProductDetailsPageContent({
           ) : null}
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={isAddModalOpen}
+        title="Add product to pharmacy?"
+        description="Are you sure you want to add this product to your pharmacy?"
+        confirmLabel="Add to pharmacy"
+        isLoading={isAddingProduct}
+        onConfirm={() => void handleAddProductConfirm()}
+        onCancel={() => {
+          if (!isAddingProduct) setIsAddModalOpen(false);
+        }}
+      />
     </main>
   );
 }

@@ -25,6 +25,9 @@ type AllProductsTableProps = Readonly<{
   products: Product[];
   emptyMessage: string;
   isLoading?: boolean;
+  isAddActionDisabled?: boolean;
+  addingProductId?: EntityId | null;
+  onAddProduct?: (product: Product) => void;
 }>;
 
 //===================================================================
@@ -64,6 +67,9 @@ function AllProductsTable({
   products,
   emptyMessage,
   isLoading = false,
+  isAddActionDisabled = false,
+  addingProductId = null,
+  onAddProduct,
 }: AllProductsTableProps) {
   const columns = useMemo<Array<DataTableColumn<Product>>>(
     () => [
@@ -140,15 +146,29 @@ function AllProductsTable({
             currentPharmacyId
           );
 
+          const canAddProduct =
+            product.status === 'active' &&
+            !isAddedToCurrentPharmacy &&
+            !isAddActionDisabled &&
+            Boolean(onAddProduct);
+
           return (
-            <Button type="button" size="sm" variant="secondary" disabled>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={!canAddProduct}
+              isLoading={addingProductId === product.id}
+              loadingLabel="Adding..."
+              onClick={() => onAddProduct?.(product)}
+            >
               {getActionLabel(product, isAddedToCurrentPharmacy)}
             </Button>
           );
         },
       },
     ],
-    [currentPharmacyId]
+    [addingProductId, currentPharmacyId, isAddActionDisabled, onAddProduct]
   );
 
   return (

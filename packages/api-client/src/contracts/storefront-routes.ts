@@ -8,7 +8,10 @@ export const storefrontRoutes = {
   pharmacies: {
     list: '/pharmacies',
     myProfile: '/pharmacies/me/profile',
-    sendMyProfileForVerification: '/pharmacies/me/profile/send-for-verification',
+
+    sendMyProfileForVerification:
+      '/pharmacies/me/profile/send-for-verification',
+
     options: '/pharmacies/options',
     favorites: '/pharmacies/favorites',
     favoriteIds: '/pharmacies/favorites/ids',
@@ -26,6 +29,10 @@ export const storefrontRoutes = {
     favoriteIds: '/products/favorites/ids',
     filters: '/products/filters',
     details: (productId: EntityId) => `/products/${productId}`,
+
+    addToMyPharmacy: (productId: EntityId) =>
+      `/products/${productId}/my-pharmacy`,
+
     reviews: (productId: EntityId) => `/products/${productId}/reviews`,
     favorite: (productId: EntityId) => `/products/${productId}/favorite`,
   },

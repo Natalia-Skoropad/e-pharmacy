@@ -6,7 +6,12 @@ import type { ProductCategory } from './categories';
 //=============================================================================
 
 export type ProductStatus = 'new' | 'active' | 'blocked';
-export type ProductStockFilter = 'in-stock' | 'available' | 'empty' | 'reserved';
+
+export type ProductStockFilter =
+  | 'in-stock'
+  | 'available'
+  | 'empty'
+  | 'reserved';
 
 //=============================================================================
 
@@ -125,6 +130,11 @@ export type ProductFilterOptionsResponse = {
 
 export type ProductsResponse = ApiPaginationResponse<Product>;
 export type ProductDetailsResponse = { product: Product };
+
+export type AddProductToMyPharmacyResponse = ProductDetailsResponse & {
+  message: string;
+};
+
 export type FavoriteProductIdsResponse = { ids: EntityId[] };
 
 //=============================================================================

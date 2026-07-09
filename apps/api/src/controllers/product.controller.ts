@@ -10,6 +10,7 @@ import {
 } from '../schemas/product.schema';
 
 import {
+  addProductToMyPharmacyService,
   createProductReviewService,
   getFavoriteProductIdsService,
   getFavoriteProductsService,
@@ -103,6 +104,25 @@ export async function getProductDetails(
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function addProductToMyPharmacy(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { productId } = req.params as ProductParams;
+  const data = await addProductToMyPharmacyService(
+    productId,
+    req.user?.id ?? ''
+  );
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.CREATED,
     data,
   });
 }

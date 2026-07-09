@@ -20,6 +20,7 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
+
 import type {
   Pharmacy,
   PharmacyBankDetails,
@@ -80,37 +81,65 @@ function renderInlineMarkdown(text: string): ReactNode[] {
 
 //===================================================================
 
-function renderDescriptionMarkdown(text: string) {
-  const blocks = text
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
+function normalizeDescriptionMarkdown(text: string): string[] {
+  return text
+    .replace(/\r\n?/g, '\n')
+    .replace(/\s+-\s+/g, '\n- ')
+    .split(/\n+/)
+    .map((line) => line.trim())
     .filter(Boolean);
+}
 
-  return blocks.map((block, blockIndex) => {
-    const lines = block
-      .split(/\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
-    const isList = lines.every((line) => line.startsWith('- '));
+//===================================================================
 
-    if (isList) {
-      return (
-        <ul className={css.descriptionList} key={`list-${blockIndex}`}>
-          {lines.map((line, lineIndex) => (
-            <li key={`${line}-${lineIndex}`}>
-              {renderInlineMarkdown(line.slice(2).trim())}
-            </li>
-          ))}
-        </ul>
-      );
-    }
+function renderDescriptionMarkdown(text: string) {
+  const lines = normalizeDescriptionMarkdown(text);
+  const nodes: ReactNode[] = [];
+  let paragraphLines: string[] = [];
+  let listLines: string[] = [];
 
-    return (
-      <p className={css.descriptionParagraph} key={`paragraph-${blockIndex}`}>
-        {renderInlineMarkdown(lines.join(' '))}
+  const flushParagraph = () => {
+    if (!paragraphLines.length) return;
+
+    const content = paragraphLines.join(' ');
+    nodes.push(
+      <p className={css.descriptionParagraph} key={`paragraph-${nodes.length}`}>
+        {renderInlineMarkdown(content)}
       </p>
     );
-  });
+    paragraphLines = [];
+  };
+
+  const flushList = () => {
+    if (!listLines.length) return;
+
+    nodes.push(
+      <ul className={css.descriptionList} key={`list-${nodes.length}`}>
+        {listLines.map((line, lineIndex) => (
+          <li key={`${line}-${lineIndex}`}>
+            {renderInlineMarkdown(line.slice(2).trim())}
+          </li>
+        ))}
+      </ul>
+    );
+    listLines = [];
+  };
+
+  for (const line of lines) {
+    if (line.startsWith('- ')) {
+      flushParagraph();
+      listLines.push(line);
+      continue;
+    }
+
+    flushList();
+    paragraphLines.push(line);
+  }
+
+  flushParagraph();
+  flushList();
+
+  return nodes;
 }
 
 //===================================================================

@@ -1,11 +1,8 @@
 import type { Request, Response } from 'express';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
-
 import { productRequestsQuerySchema } from '../schemas/product-request.schema';
-
 import { getProductRequestsService } from '../services/product-request.service';
-
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================

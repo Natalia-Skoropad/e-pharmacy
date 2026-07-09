@@ -65,6 +65,17 @@ type PendingReviewDto = {
 
 //===============================================================
 
+const PUBLIC_PHARMACY_STATUSES = [
+  PHARMACY_STATUSES.ACTIVE,
+  PHARMACY_STATUSES.ON_MODERATION,
+] as const;
+
+const PUBLIC_PHARMACY_STATUS_FILTER = {
+  $in: [...PUBLIC_PHARMACY_STATUSES],
+};
+
+//===============================================================
+
 function hasCompleteBankDetails(
   details?: Partial<PharmacyBankDetails> | null
 ): boolean {
@@ -173,7 +184,7 @@ function serializePharmacyProfile(
 
 export async function getPharmacyFiltersService(): Promise<PharmacyFilterOptionsResponseDto> {
   const cities = await Pharmacy.distinct('city', {
-    status: PHARMACY_STATUSES.ACTIVE,
+    status: PUBLIC_PHARMACY_STATUS_FILTER,
     city: { $type: 'string', $ne: '' },
   });
   return {
@@ -192,7 +203,7 @@ export async function getPharmacyFiltersService(): Promise<PharmacyFilterOptions
 
 export async function getPharmacyOptionsService() {
   const pharmacies = await Pharmacy.find({
-    status: PHARMACY_STATUSES.ACTIVE,
+    status: PUBLIC_PHARMACY_STATUS_FILTER,
   })
     .select('_id name')
     .sort({ name: 1 })
@@ -232,7 +243,7 @@ export async function getFavoritePharmaciesService(
   const favoriteIds = new Set(favoriteIdsArray.map(String));
   const filter = {
     _id: { $in: favoriteIdsArray },
-    status: PHARMACY_STATUSES.ACTIVE,
+    status: PUBLIC_PHARMACY_STATUS_FILTER,
   };
   const sort: Record<string, 1 | -1> =
     query.sort === 'name-desc' ? { name: -1 } : { name: 1 };
@@ -268,7 +279,7 @@ export async function getPharmaciesService(
   userId?: string
 ) {
   const filter: Record<string, unknown> = {
-    status: PHARMACY_STATUSES.ACTIVE,
+    status: PUBLIC_PHARMACY_STATUS_FILTER,
   };
   if (query.keyword) {
     filter.$or = [
@@ -337,7 +348,7 @@ export async function getPharmacyDetailsService(
 ) {
   const pharmacy = await Pharmacy.findOne({
     _id: pharmacyId,
-    status: PHARMACY_STATUSES.ACTIVE,
+    status: PUBLIC_PHARMACY_STATUS_FILTER,
   }).lean();
   if (!pharmacy)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
@@ -360,7 +371,7 @@ export async function getPharmacyDetailsService(
 export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
   const pharmacy = await Pharmacy.findOne({
     _id: pharmacyId,
-    status: PHARMACY_STATUSES.ACTIVE,
+    status: PUBLIC_PHARMACY_STATUS_FILTER,
   })
     .select('name address city phone email workingHours bankDetails')
     .lean<Pick<
@@ -401,7 +412,7 @@ export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
 export async function getPharmacyReviewsService(pharmacyId: string) {
   const exists = await Pharmacy.exists({
     _id: pharmacyId,
-    status: PHARMACY_STATUSES.ACTIVE,
+    status: PUBLIC_PHARMACY_STATUS_FILTER,
   });
   if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
@@ -426,7 +437,7 @@ export async function createPharmacyReviewService(
 ) {
   const exists = await Pharmacy.exists({
     _id: pharmacyId,
-    status: PHARMACY_STATUSES.ACTIVE,
+    status: PUBLIC_PHARMACY_STATUS_FILTER,
   });
   if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
@@ -543,7 +554,7 @@ export async function setFavoritePharmacyService(
 ) {
   const exists = await Pharmacy.exists({
     _id: pharmacyId,
-    status: PHARMACY_STATUSES.ACTIVE,
+    status: PUBLIC_PHARMACY_STATUS_FILTER,
   });
 
   if (!exists)
