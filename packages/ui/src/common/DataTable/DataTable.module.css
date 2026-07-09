@@ -35,15 +35,15 @@
 }
 
 .alignRight {
-  text-align: right !important;
+  text-align: left !important;
 }
 
 .alignCenter {
-  text-align: center !important;
+  text-align: left !important;
 }
 
 .stateCell {
   padding: 24px 16px !important;
   color: var(--color-text-secondary);
-  text-align: center !important;
+  text-align: left !important;
 }

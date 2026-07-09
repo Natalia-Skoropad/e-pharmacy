@@ -23,6 +23,8 @@ import {
 import { getPharmacyProductPath } from '@/lib/layout/routes';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
+import css from './OwnProductsTable.module.css';
+
 //===================================================================
 
 type OwnProductsTableProps = Readonly<{
@@ -136,6 +138,7 @@ function OwnProductsTable({
         title: 'Action',
         render: (product) => (
           <Button
+            className={css.removeButton}
             type="button"
             variant="secondary"
             size="sm"

@@ -425,7 +425,9 @@ function buildDocumentsPayload(
 
 //===================================================================
 
-function hasProfilePayloadChanges(payload: UpdateMyPharmacyProfilePayload): boolean {
+function hasProfilePayloadChanges(
+  payload: UpdateMyPharmacyProfilePayload
+): boolean {
   return Object.keys(payload).length > 0;
 }
 
@@ -656,30 +658,39 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const ownerFormIsValid = isDataProfileFormValid(ownerValues);
   const passwordFormIsDirty = isChangePasswordFormDirty(passwordValues);
   const passwordFormIsValid = isChangePasswordFormValid(passwordValues);
+
   const pharmacyNameIsDirty =
     pharmacyName.trim() !== initialPharmacyName.trim();
+
   const pharmacyFormIsDirty =
     pharmacyNameIsDirty ||
     isPharmacyContactFormDirty(pharmacyValues, initialPharmacyValues);
+
   const aboutFormIsDirty = isPharmacyAboutFormDirty(
     aboutValues,
     initialAboutValues
   );
+
   const paymentFormIsDirty = isPharmacyPaymentFormDirty(
     paymentValues,
     initialPaymentValues
   );
+
   const documentsFormIsDirty = !areDocumentValuesEqual(
     documentValues,
     initialDocumentValues
   );
+
   const pharmacyPictureIsDirty =
     (pharmacyPictureUrl ?? '') !== (initialPharmacyPictureUrl ?? '');
+
   const pharmacyStatus = pharmacy?.status ?? 'new';
   const isProfileReadonly = isReadonlyStatus(pharmacyStatus);
   const pharmacyNameIsValid = pharmacyName.trim().length > 0;
+
   const pharmacyDocumentsAreReady =
     documentValues.length > 0 && !documentsFormIsDirty;
+
   const pharmacyPictureIsReady = Boolean(pharmacyPictureUrl);
 
   const canSendForVerification =
@@ -1105,7 +1116,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       toast.success(response.message);
     } catch (error) {
       toast.error(
-        getErrorMessage(error, 'Could not send pharmacy changes for moderation.')
+        getErrorMessage(
+          error,
+          'Could not send pharmacy changes for moderation.'
+        )
       );
     } finally {
       setIsSendingVerification(false);
@@ -1185,6 +1199,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   }
 
   const summaryOwnerName = ownerValues.name || user.name || 'Pharmacy owner';
+
   const summaryPharmacyName =
     pharmacyName || pharmacy.name || 'Pharmacy profile';
 
@@ -1468,17 +1483,39 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       onError={handlePictureError}
                     />
 
-
                     {pharmacy.status === 'on_moderation' ? (
                       <PendingModerationBox
                         title="Pending pharmacy data"
                         items={[
-                          { label: 'Pharmacy name', value: pharmacy.pendingModeration?.name },
-                          { label: 'Email', value: pharmacy.pendingModeration?.email },
-                          { label: 'Phone', value: pharmacy.pendingModeration?.phone },
-                          { label: 'Address', value: pharmacy.pendingModeration?.address },
-                          { label: 'Working hours', value: pharmacy.pendingModeration?.workingHours },
-                          { label: 'Photo', value: pharmacy.pendingModeration?.imageUrl === null ? 'Photo will be removed' : pharmacy.pendingModeration?.imageUrl ? 'New photo uploaded' : undefined },
+                          {
+                            label: 'Pharmacy name',
+                            value: pharmacy.pendingModeration?.name,
+                          },
+                          {
+                            label: 'Email',
+                            value: pharmacy.pendingModeration?.email,
+                          },
+                          {
+                            label: 'Phone',
+                            value: pharmacy.pendingModeration?.phone,
+                          },
+                          {
+                            label: 'Address',
+                            value: pharmacy.pendingModeration?.address,
+                          },
+                          {
+                            label: 'Working hours',
+                            value: pharmacy.pendingModeration?.workingHours,
+                          },
+                          {
+                            label: 'Photo',
+                            value:
+                              pharmacy.pendingModeration?.imageUrl === null
+                                ? 'Photo will be removed'
+                                : pharmacy.pendingModeration?.imageUrl
+                                  ? 'New photo uploaded'
+                                  : undefined,
+                          },
                         ]}
                       />
                     ) : null}
@@ -1579,7 +1616,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       </div>
                     </div>
 
-                    {pharmacy.status !== 'active' ? (
+                    {pharmacy.status === 'new' ? (
                       <Button
                         type="button"
                         disabled={
@@ -1611,8 +1648,8 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         About pharmacy
                       </h2>
                       <p className={css.panelText}>
-                        Add the public pharmacy description clients will read
-                        on the website.
+                        Add the public pharmacy description clients will read on
+                        the website.
                       </p>
                     </div>
 
@@ -1646,7 +1683,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       }
                     />
 
-                    {pharmacy.status !== 'active' ? (
+                    {pharmacy.status === 'new' ? (
                       <Button
                         type="button"
                         disabled={
@@ -1685,12 +1722,39 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       <PendingModerationBox
                         title="Pending payment details"
                         items={[
-                          { label: 'Recipient name', value: pharmacy.pendingModeration?.bankDetails?.recipientName },
-                          { label: 'Tax ID', value: pharmacy.pendingModeration?.bankDetails?.taxId },
-                          { label: 'IBAN', value: pharmacy.pendingModeration?.bankDetails?.iban },
-                          { label: 'Bank name', value: pharmacy.pendingModeration?.bankDetails?.bankName },
-                          { label: 'Receipt email', value: pharmacy.pendingModeration?.bankDetails?.receiptEmail },
-                          { label: 'Payment purpose', value: pharmacy.pendingModeration?.bankDetails?.paymentPurpose },
+                          {
+                            label: 'Recipient name',
+                            value:
+                              pharmacy.pendingModeration?.bankDetails
+                                ?.recipientName,
+                          },
+                          {
+                            label: 'Tax ID',
+                            value:
+                              pharmacy.pendingModeration?.bankDetails?.taxId,
+                          },
+                          {
+                            label: 'IBAN',
+                            value:
+                              pharmacy.pendingModeration?.bankDetails?.iban,
+                          },
+                          {
+                            label: 'Bank name',
+                            value:
+                              pharmacy.pendingModeration?.bankDetails?.bankName,
+                          },
+                          {
+                            label: 'Receipt email',
+                            value:
+                              pharmacy.pendingModeration?.bankDetails
+                                ?.receiptEmail,
+                          },
+                          {
+                            label: 'Payment purpose',
+                            value:
+                              pharmacy.pendingModeration?.bankDetails
+                                ?.paymentPurpose,
+                          },
                         ]}
                       />
                     ) : null}
@@ -1801,7 +1865,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       />
                     </div>
 
-                    {pharmacy.status !== 'active' ? (
+                    {pharmacy.status === 'new' ? (
                       <Button
                         type="button"
                         disabled={
@@ -1840,12 +1904,12 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                     {pharmacy.status === 'on_moderation' ? (
                       <PendingModerationBox
                         title="Pending registration documents"
-                        items={(pharmacy.pendingModeration?.documents ?? []).map(
-                          (document, index) => ({
-                            label: `Document ${index + 1}`,
-                            value: document.name,
-                          })
-                        )}
+                        items={(
+                          pharmacy.pendingModeration?.documents ?? []
+                        ).map((document, index) => ({
+                          label: `Document ${index + 1}`,
+                          value: document.name,
+                        }))}
                       />
                     ) : null}
 
@@ -1866,7 +1930,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       onChange={handleDocumentsChange}
                     />
 
-                    {pharmacy.status !== 'active' ? (
+                    {pharmacy.status === 'new' ? (
                       <Button
                         type="button"
                         disabled={

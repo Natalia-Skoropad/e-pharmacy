@@ -18,12 +18,21 @@ import {
   type TabItem,
 } from '@e-pharmacy/ui/common';
 
-import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
+import {
+  OwnProductStatistics,
+  StatusBadge,
+  StatusBanner,
+} from '@e-pharmacy/ui/statistics';
+
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/core';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
+
+import {
+  PRODUCT_CATEGORY_LABELS,
+  type OwnProductStatisticsCounts,
+} from '@e-pharmacy/types/products';
 
 import type {
   EntityId,
@@ -125,7 +134,6 @@ type RelatedOrderRow = Readonly<{
 
 const PRODUCT_DETAILS_TABS: Array<TabItem<ProductDetailsTab>> = [
   { value: 'details', label: 'Details' },
-  { value: 'statistics', label: 'Statistics' },
   { value: 'stock-movement', label: 'Stock movement' },
   { value: 'related-orders', label: 'Related orders' },
   { value: 'characteristics', label: 'Characteristics' },
@@ -274,15 +282,6 @@ function getProductSummaryItems(
     });
   }
 
-  if (offer) {
-    items.push(
-      { label: 'Current price', value: formatPrice(offer.price) },
-      { label: 'Stock quantity', value: offer.totalQuantity },
-      { label: 'Reserved quantity', value: offer.reservedQuantity },
-      { label: 'Available quantity', value: getAvailableQuantity(offer) }
-    );
-  }
-
   if (offer?.createdAt) {
     items.push({
       label: 'Date added to pharmacy',
@@ -343,6 +342,33 @@ function getStatisticCards(offer: ProductOffer | null): StatisticCard[] {
     { label: 'Successful orders', value: 0, hint: formatPrice(0) },
     { label: 'Rejected orders', value: 0, hint: formatPrice(0) },
   ];
+}
+
+//===================================================================
+
+function getSingleProductStatisticsCounts(
+  offer: ProductOffer | null
+): OwnProductStatisticsCounts {
+  const stockQuantity = getStockQuantity(offer);
+  const reservedQuantity = getReservedQuantity(offer);
+  const availableQuantity = getAvailableQuantity(offer);
+  const currentPrice = offer?.price ?? 0;
+
+  return {
+    inStock: {
+      quantity: stockQuantity,
+      amount: currentPrice ? stockQuantity * currentPrice : 0,
+    },
+    reserved: {
+      quantity: reservedQuantity,
+      amount: currentPrice ? reservedQuantity * currentPrice : 0,
+    },
+    available: {
+      quantity: availableQuantity,
+      amount: currentPrice ? availableQuantity * currentPrice : 0,
+    },
+    outOfStock: { quantity: offer && availableQuantity === 0 ? 1 : 0 },
+  };
 }
 
 //===================================================================
@@ -480,7 +506,9 @@ function AllProductDetailsPageContent({
   const canRemoveFromPharmacy = Boolean(
     product && currentOffer && currentPharmacyId && !bannerStatus
   );
-  const tabs = PRODUCT_DETAILS_TABS.map((tab) =>
+  const tabs = PRODUCT_DETAILS_TABS.filter(
+    (tab) => !(showRemoveAction && tab.value === 'statistics')
+  ).map((tab) =>
     tab.value === 'reviews'
       ? { ...tab, label: `Reviews (${reviewsTotal})` }
       : tab
@@ -489,8 +517,14 @@ function AllProductDetailsPageContent({
   const summaryItems = product
     ? getProductSummaryItems(product, currentOffer)
     : [];
+
   const characteristics = product ? getProductCharacteristics(product) : [];
   const statisticCards = getStatisticCards(currentOffer);
+
+  const singleProductStatistics = getSingleProductStatisticsCounts(
+    bannerStatus ? null : currentOffer
+  );
+
   const stockMovementRows = getStockMovementRows(currentOffer);
   const reviewItems = mapReviewsToListItems(reviews);
 
@@ -624,6 +658,11 @@ function AllProductDetailsPageContent({
 
           {product ? (
             <section className={css.tabsSection} aria-label="Product data">
+              <OwnProductStatistics
+                counts={singleProductStatistics}
+                className={css.singleProductStatistics}
+              />
+
               <Tabs
                 items={tabs}
                 activeValue={activeTab}
@@ -712,7 +751,7 @@ function AllProductDetailsPageContent({
 
                         {showRemoveAction && isAddedToPharmacy ? (
                           <Button
-                            className={css.actionButton}
+                            className={`${css.actionButton} ${css.removeButton}`}
                             type="button"
                             variant="secondary"
                             size="sm"
@@ -783,7 +822,7 @@ function AllProductDetailsPageContent({
                           columns={stockMovementColumns}
                           items={stockMovementRows}
                           getItemKey={(row) => row.id}
-                          minWidth={980}
+                          minWidth={0}
                           labels={{
                             empty: 'Stock movement history is empty.',
                           }}
@@ -806,7 +845,7 @@ function AllProductDetailsPageContent({
                           columns={relatedOrderColumns}
                           items={RELATED_ORDER_ROWS}
                           getItemKey={(row) => row.id}
-                          minWidth={1040}
+                          minWidth={0}
                           labels={{
                             empty: 'There are no orders with this product yet.',
                           }}

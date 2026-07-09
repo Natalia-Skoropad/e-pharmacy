@@ -1,0 +1,12 @@
+.removeButton {
+  color: var(--color-error);
+  background-color: var(--color-error-soft);
+  border-color: var(--color-error-soft);
+}
+
+.removeButton:hover:not(:disabled),
+.removeButton:focus-visible:not(:disabled) {
+  color: var(--color-white);
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+}

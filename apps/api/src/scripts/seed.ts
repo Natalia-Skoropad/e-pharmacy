@@ -499,11 +499,8 @@ function createBankDetails(pharmacyName: string, pharmacyNumber: number) {
 
 const PHARMACY_ACCOUNT_PASSWORD = '123456789';
 const PHARMACY_ACCOUNT_DESCRIPTION_LENGTH = 5000;
-
 const PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p94AAAAASUVORK5CYII=';
-
-//===============================================================
 
 type PharmacyAccountSeed = {
   email: string;
@@ -519,9 +516,8 @@ type PharmacyAccountSeed = {
   imageUrl?: string;
   publicEmail?: string;
   workingHours?: string;
+  description?: string;
 };
-
-//===============================================================
 
 const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
   {
@@ -545,10 +541,9 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
     imageUrl: '/images/seed/pharmacies/pharmacy-021.png',
     workingHours:
       'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 11:00-16:00; Sun: Closed',
+    description: createActivePharmacyDescription('Nata Care Pharmacy'),
   },
 ];
-
-//===============================================================
 
 function createExactLengthText(source: string, targetLength: number): string {
   const filler = `
@@ -569,8 +564,6 @@ function createExactLengthText(source: string, targetLength: number): string {
 
   return /\s$/.test(sliced) ? `${sliced.slice(0, -1)}.` : sliced;
 }
-
-//===============================================================
 
 function createPharmacyAccountDescription(pharmacyName: string): string {
   return createExactLengthText(
@@ -600,7 +593,23 @@ The pharmacy profile contains realistic bank details, address, phone number, ema
   );
 }
 
-//===============================================================
+function createActivePharmacyDescription(pharmacyName: string): string {
+  return `**Operational standards**
+
+${pharmacyName} keeps public pharmacy data ready for clients after Admin approval. The profile shows updated contact details, payment information, documents, working hours, and a public pharmacy photo.
+
+**Quality notes**
+- The pharmacy profile is active and visible on the website.
+- Clients can see approved public information while new changes wait for moderation.
+- Product stock, prices, and availability can be managed in the pharmacy cabinet.
+- Orders can be created for products with available quantity.
+
+**Service checklist**
+- Online product reservation with clear pickup instructions.
+- Friendly consultation at the pharmacy counter.
+- Verified documents, payment details, and contact channels.
+- Updated working hours and support for regular clients.`;
+}
 
 function createVerificationDocuments(email: string) {
   const prefix = email.split('@')[0];
@@ -624,8 +633,6 @@ function createVerificationDocuments(email: string) {
   ];
 }
 
-//===============================================================
-
 function createPharmacyAccountBankDetails(seed: PharmacyAccountSeed) {
   const accountNumber = Number(seed.email.match(/nata(\d+)/)?.[1] ?? 6);
   const ibanTail = `300001${String(accountNumber).padStart(21, '0')}`;
@@ -639,8 +646,6 @@ function createPharmacyAccountBankDetails(seed: PharmacyAccountSeed) {
     paymentPurpose: `Payment for E-PHARMACY orders from ${seed.pharmacyName}`,
   };
 }
-
-//===============================================================
 
 async function seedPharmacyAccounts(): Promise<number> {
   const password = await hashPassword(PHARMACY_ACCOUNT_PASSWORD);
@@ -683,17 +688,25 @@ async function seedPharmacyAccounts(): Promise<number> {
           bankDetails: createPharmacyAccountBankDetails(seed),
           rating: 0,
           imageUrl: seed.imageUrl ?? PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL,
-          description: createPharmacyAccountDescription(seed.pharmacyName),
+          description:
+            seed.description ??
+            createPharmacyAccountDescription(seed.pharmacyName),
           reviewsCount: 0,
           managerUserIds: [],
           documents: createVerificationDocuments(seed.email),
           status: seed.status,
-          statusReason: seed.statusReason,
-          pendingModeration: undefined,
+          ...(seed.statusReason ? { statusReason: seed.statusReason } : {}),
           ...(seed.status === PHARMACY_STATUSES.ACTIVE
             ? { approvedBy: user._id, approvedAt: new Date() }
-            : { approvedBy: undefined, approvedAt: undefined }),
+            : {}),
           updatedBy: user._id,
+        },
+        $unset: {
+          pendingModeration: '',
+          ...(seed.statusReason ? {} : { statusReason: '' }),
+          ...(seed.status === PHARMACY_STATUSES.ACTIVE
+            ? {}
+            : { approvedBy: '', approvedAt: '' }),
         },
         $setOnInsert: {
           ownerId: user._id,
@@ -769,7 +782,6 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       packageQuantity,
       variantIndex
     );
-
     const isPremium = index % 6 === 0 || index % 11 === 0;
     const basePrice = isPremium
       ? 1050 + ((index * 137) % 2450)
@@ -780,7 +792,6 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       (_, offerIndex) =>
         pharmacies[(index * 3 + offerIndex) % pharmacies.length]
     );
-
     const isSoldOut = index % 17 === 0;
     const richStockPharmacies = index < 115 ? pharmacies.slice(0, 10) : [];
     const mergedPharmacies = [
@@ -793,7 +804,6 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
           )
       ),
     ];
-
     const shouldForceRichStock = index < 115;
     const offers =
       isSoldOut && !shouldForceRichStock
@@ -942,13 +952,14 @@ async function seedDatabase(): Promise<void> {
   );
 
   const pharmacyAccountsCount = await seedPharmacyAccounts();
-  const activePharmacyOffersCount = await seedActivePharmacyProductOffers(
-    createdProducts as Array<{
-      _id: Types.ObjectId;
-      status: string;
-      price: number;
-    }>
-  );
+  const activePharmacyOffersCount =
+    await seedActivePharmacyProductOffers(
+      createdProducts as Array<{
+        _id: Types.ObjectId;
+        status: string;
+        price: number;
+      }>
+    );
 
   console.log(`Seed completed: ${createdPharmacies.length} pharmacies created`);
   console.log(`Seed completed: ${seedProducts.length} products created`);
