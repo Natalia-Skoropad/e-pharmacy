@@ -78,7 +78,11 @@ export async function getOrderSalesStatistics(
 
 export async function getOrderById(req: Request, res: Response): Promise<void> {
   const { orderId } = req.params as OrderParams;
-  const data = await getOrderByIdService(req.user?.id ?? '', orderId);
+  const data = await getOrderByIdService(
+    req.user?.id ?? '',
+    orderId,
+    req.user?.role
+  );
 
   sendSuccessResponse({
     res,

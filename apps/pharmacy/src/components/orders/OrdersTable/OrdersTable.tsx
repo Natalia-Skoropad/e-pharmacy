@@ -10,7 +10,6 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
-
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import {
@@ -31,6 +30,17 @@ type OrdersTableProps = Readonly<{
   emptyMessage: string;
   isLoading?: boolean;
 }>;
+
+//===================================================================
+
+function truncateComment(value: string): string {
+  const normalized = value.trim();
+
+  if (!normalized) return '—';
+  if (normalized.length <= 50) return normalized;
+
+  return `${normalized.slice(0, 50)}...`;
+}
 
 //===================================================================
 
@@ -95,7 +105,7 @@ function OrdersTable({
       {
         key: 'clientComment',
         title: <TableHeaderTitle parts={['Client', 'comment']} />,
-        render: (order) => order.clientComment || '—',
+        render: (order) => truncateComment(order.clientComment),
       },
       {
         key: 'totalQuantity',

@@ -9,9 +9,16 @@ import { Order } from '../models/order.model';
 import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { Pharmacy } from '../models/pharmacy.model';
+import { User } from '../models/user.model';
 
 import { httpError } from '../utils/httpError';
-import { commitReservedStock, releaseOfferStock } from './stock.service';
+
+import {
+  commitReservedStock,
+  releaseOfferStock,
+  reserveOfferStock,
+} from './stock.service';
+
 import { getCartService } from './cart.service';
 
 import type {
@@ -39,7 +46,7 @@ import type { UserRole } from '../types/user';
 //===============================================================
 
 const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
-  new: ['in_progress', 'rejected'],
+  new: ['in_progress'],
   in_progress: ['successful', 'rejected'],
   successful: [],
   rejected: [],
@@ -75,7 +82,14 @@ type ProductDocument = ProductEntity & { _id: Types.ObjectId };
 type ProductOfferDocument = ProductOfferEntity & { _id: Types.ObjectId };
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
 type OrderDocument = OrderEntity & { _id: Types.ObjectId };
+type UserDocument = {
+  _id: Types.ObjectId;
+  name?: string;
+  email?: string;
+  pictureUrl?: string;
+};
 type ProductFallbackMap = Map<string, ProductDocument>;
+type ClientUserMap = Map<string, UserDocument>;
 
 const ORDER_STATUSES_FOR_STATISTICS = [
   'new',
@@ -149,12 +163,30 @@ function getPharmacyAddress(
 
 function serializeOrder(
   order: OrderDocument,
-  productFallbacks?: ProductFallbackMap
+  productFallbacks?: ProductFallbackMap,
+  clientUsers?: ClientUserMap
 ): OrderResponseDto {
+  const clientUser = clientUsers?.get(order.userId.toString());
+
   return {
     id: order._id.toString(),
     orderNumber: order.orderNumber,
     createdAt: order.createdAt.toISOString(),
+    userId: order.userId.toString(),
+    clientId: order.userId.toString(),
+    clientName: clientUser?.name ?? undefined,
+    clientPhotoUrl: clientUser?.pictureUrl ?? undefined,
+    ...(clientUser
+      ? {
+          client: {
+            id: clientUser._id.toString(),
+            name: clientUser.name ?? clientUser.email ?? 'Client',
+            ...(clientUser.pictureUrl
+              ? { photoUrl: clientUser.pictureUrl }
+              : {}),
+          },
+        }
+      : {}),
     pharmacyId: order.pharmacyId.toString(),
     pharmacyName: order.pharmacySnapshot.name,
     ...(typeof order.pharmacySnapshot.rating === 'number'
@@ -265,7 +297,6 @@ async function getOrderProductFallbacks(
   return new Map(products.map((product) => [String(product._id), product]));
 }
 
-
 //===============================================================
 
 type CheckoutCartValidationInput = {
@@ -290,9 +321,7 @@ function validateCheckoutCartItemsOrThrow({
   pharmacyId,
   now,
 }: CheckoutCartValidationInput): CheckoutCartValidationResult {
-  const offerMap = new Map(
-    offers.map((offer) => [String(offer._id), offer])
-  );
+  const offerMap = new Map(offers.map((offer) => [String(offer._id), offer]));
 
   const productMap = new Map(
     products.map((product) => [String(product._id), product])
@@ -319,10 +348,10 @@ function validateCheckoutCartItemsOrThrow({
       );
     }
 
-    if (offer.reservedQuantity < cartItem.quantity) {
+    if (offer.availableQuantity < cartItem.quantity) {
       throw httpError(
         HTTP_STATUS.CONFLICT,
-        'Product reservation is no longer available. Please refresh and try again.'
+        'Product quantity is no longer available. Please refresh and try again.'
       );
     }
 
@@ -500,6 +529,10 @@ export async function checkoutOrderService(
         (sum, item) => sum + item.totalPrice,
         0
       );
+
+      for (const item of orderItems) {
+        await reserveOfferStock(item.productOfferId, item.quantity, session);
+      }
 
       const orderId = new Types.ObjectId();
       const createdAt = new Date();
@@ -731,7 +764,6 @@ async function getCurrentPharmacyId(userId: string) {
   return pharmacy?._id ?? null;
 }
 
-
 //===============================================================
 
 function createEmptyOrderStatistics() {
@@ -774,7 +806,6 @@ async function getOrderStatistics(filter: Record<string, unknown>) {
 
   return statistics;
 }
-
 
 //===============================================================
 
@@ -1062,8 +1093,18 @@ export async function getOrdersService(
     getOrderStatistics(statisticsFilter),
   ]);
 
+  const clients = await User.find({
+    _id: { $in: orders.map((order) => order.userId) },
+  })
+    .select('name email pictureUrl')
+    .lean<UserDocument[]>();
+
+  const clientMap = new Map(
+    clients.map((client) => [String(client._id), client])
+  );
+
   return {
-    items: orders.map((order) => serializeOrder(order)),
+    items: orders.map((order) => serializeOrder(order, undefined, clientMap)),
     page: query.page,
     perPage: query.perPage,
     total,
@@ -1076,16 +1117,45 @@ export async function getOrdersService(
 
 export async function getOrderByIdService(
   userId: string,
-  orderId: string
+  orderId: string,
+  role?: UserRole
 ): Promise<{ order: OrderResponseDto }> {
-  const order = await Order.findOne({
-    _id: orderId,
-    userId,
-  }).lean<OrderDocument | null>();
+  let filter: Record<string, unknown>;
+
+  if (role === USER_ROLES.PHARMACY) {
+    const pharmacyId = await getCurrentPharmacyId(userId);
+
+    if (!pharmacyId) {
+      throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
+    }
+
+    filter = Types.ObjectId.isValid(orderId)
+      ? { _id: orderId, pharmacyId }
+      : { pharmacyId };
+  } else {
+    if (!Types.ObjectId.isValid(orderId)) {
+      throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
+    }
+
+    filter = { _id: orderId, userId };
+  }
+
+  const order = await Order.findOne(filter)
+    .sort({ createdAt: -1 })
+    .lean<OrderDocument | null>();
 
   if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
 
-  const productFallbacks = await getOrderProductFallbacks(order);
+  const [productFallbacks, clientUser] = await Promise.all([
+    getOrderProductFallbacks(order),
+    User.findById(order.userId)
+      .select('name email pictureUrl')
+      .lean<UserDocument | null>(),
+  ]);
 
-  return { order: serializeOrder(order, productFallbacks) };
+  const clientMap = clientUser
+    ? new Map([[String(clientUser._id), clientUser]])
+    : undefined;
+
+  return { order: serializeOrder(order, productFallbacks, clientMap) };
 }

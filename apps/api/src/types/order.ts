@@ -112,6 +112,15 @@ export type OrderResponseDto = {
   id: string;
   orderNumber: string;
   createdAt: string;
+  userId?: string;
+  clientId?: string;
+  clientName?: string;
+  clientPhotoUrl?: string;
+  client?: {
+    id: string;
+    name: string;
+    photoUrl?: string;
+  };
   pharmacyId: string;
   pharmacyName: string;
   pharmacyRating?: number;

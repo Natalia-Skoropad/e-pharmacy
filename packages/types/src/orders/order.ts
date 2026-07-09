@@ -55,6 +55,17 @@ export type Order = {
   id: EntityId;
   orderNumber: string;
   createdAt: ISODateString;
+  userId?: EntityId;
+  clientId?: EntityId;
+  clientName?: string;
+  clientPhotoUrl?: string;
+
+  client?: {
+    id: EntityId;
+    name: string;
+    photoUrl?: string;
+  };
+
   pharmacyId: EntityId;
   pharmacyName: string;
   pharmacyRating?: number;

@@ -14,6 +14,9 @@ import { User } from '../models/user.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { ProductReview } from '../models/productReview.model';
 import { PharmacyReview } from '../models/pharmacyReview.model';
+import { Order } from '../models/order.model';
+import { Client } from '../models/client.model';
+import { Cart } from '../models/cart.model';
 import { hashPassword } from '../utils/password';
 
 //===============================================================
@@ -532,16 +535,16 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
   },
   {
     email: 'nata6@ukr.net',
-    publicEmail: 'nata777@ukr.net',
-    phone: '+380661234077',
+    publicEmail: 'care_pharmacy@ukr.net',
+    phone: '+380661234777',
     ownerName: 'Nata Six',
-    address: '27 Wellness Street, Lviv',
-    pharmacyName: 'Nata Care Pharmacy',
+    address: '777 Wellness Street, Lviv',
+    pharmacyName: 'Care Pharmacy Lviv',
     status: PHARMACY_STATUSES.ACTIVE,
     imageUrl: '/images/seed/pharmacies/pharmacy-021.png',
     workingHours:
-      'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 11:00-16:00; Sun: Closed',
-    description: createActivePharmacyDescription('Nata Care Pharmacy'),
+      'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
+    description: createActivePharmacyDescription('Care Pharmacy Lviv'),
   },
 ];
 
@@ -634,6 +637,17 @@ function createVerificationDocuments(email: string) {
 }
 
 function createPharmacyAccountBankDetails(seed: PharmacyAccountSeed) {
+  if (seed.email === 'nata6@ukr.net') {
+    return {
+      recipientName: 'LLC Care Pharmacy Lviv',
+      taxId: '30000777',
+      iban: 'UA300001000000000000000000777',
+      bankName: 'JSC Oschadbank Lviv',
+      receiptEmail: 'care_pharmacy_lviv@ukr.net',
+      paymentPurpose: 'Payment for E-PHARMACY orders from Care Pharmacy Lviv',
+    };
+  }
+
   const accountNumber = Number(seed.email.match(/nata(\d+)/)?.[1] ?? 6);
   const ibanTail = `300001${String(accountNumber).padStart(21, '0')}`;
 
@@ -666,7 +680,7 @@ async function seedPharmacyAccounts(): Promise<number> {
         },
       },
       {
-        new: true,
+        returnDocument: 'after',
         upsert: true,
         runValidators: true,
         setDefaultsOnInsert: true,
@@ -714,7 +728,7 @@ async function seedPharmacyAccounts(): Promise<number> {
         },
       },
       {
-        new: true,
+        returnDocument: 'after',
         upsert: true,
         runValidators: true,
         setDefaultsOnInsert: true,
@@ -854,7 +868,9 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
 async function seedActivePharmacyProductOffers(
   products: Array<{ _id: Types.ObjectId; status: string; price: number }>
 ): Promise<number> {
-  const activePharmacy = await Pharmacy.findOne({ email: 'nata777@ukr.net' })
+  const activePharmacy = await Pharmacy.findOne({
+    email: 'care_pharmacy@ukr.net',
+  })
     .select('_id')
     .lean<{ _id: Types.ObjectId } | null>();
 
@@ -870,7 +886,13 @@ async function seedActivePharmacyProductOffers(
 
   await ProductOffer.insertMany(
     activeProducts.map((product, index) => {
-      const quantity = 100 + index * 3;
+      const lowStockQuantities = [5, 7, 8, 10];
+      const quantity =
+        index < 4
+          ? 0
+          : index < 8
+            ? lowStockQuantities[index - 4]
+            : 100 + index * 3;
 
       return {
         productId: product._id,
@@ -888,6 +910,229 @@ async function seedActivePharmacyProductOffers(
 
 //===============================================================
 
+async function seedActivePharmacyOrder(): Promise<number> {
+  type SeedPharmacyLean = {
+    _id: unknown;
+    name: string;
+    address: string;
+    city: string;
+    phone: string;
+    email: string;
+    imageUrl?: string;
+    rating?: number;
+    reviewsCount?: number;
+    bankDetails?: unknown;
+  };
+
+  type SeedProductOfferLean = {
+    _id: unknown;
+    productId: unknown;
+    price: number;
+    availableQuantity: number;
+  };
+
+  type SeedProductLean = {
+    _id: unknown;
+    name: string;
+    slug?: string;
+    article: string;
+    category: string;
+    imageUrl?: string;
+    manufacturer?: string;
+    dosage?: string;
+    packageQuantity?: string | number;
+    rating?: number;
+    reviewsCount?: number;
+  };
+
+  type SeedOrderItem = {
+    productId: unknown;
+    productOfferId: unknown;
+    productSnapshot: {
+      name: string;
+      slug?: string;
+      article: string;
+      category: string;
+      imageUrl?: string;
+      manufacturer?: string;
+      dosage?: string;
+      packageQuantity?: string | number;
+      rating: number;
+      reviewsCount: number;
+    };
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  };
+
+  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
+    .select(
+      '_id name address city phone email imageUrl rating reviewsCount bankDetails'
+    )
+    .lean<SeedPharmacyLean | null>();
+
+  if (!pharmacy) return 0;
+
+  const password = await hashPassword('123456789');
+  const clientUser = await User.findOneAndUpdate(
+    { email: 'nata.client@ukr.net' },
+    {
+      $set: {
+        name: 'Nata',
+        email: 'nata.client@ukr.net',
+        password,
+        role: USER_ROLES.CLIENT,
+        status: USER_STATUSES.ACTIVE,
+        phone: '+380968016907',
+        address: '27 Wellness Street, Lviv, Lviv',
+        pictureUrl: '/images/seed/pharmacies/pharmacy-005.png',
+      },
+    },
+    {
+      returnDocument: 'after',
+      upsert: true,
+      runValidators: true,
+      setDefaultsOnInsert: true,
+    }
+  );
+
+  await Client.findOneAndUpdate(
+    { userId: clientUser._id },
+    {
+      $setOnInsert: {
+        userId: clientUser._id,
+        favoriteProductIds: [],
+        favoritePharmacyIds: [],
+      },
+    },
+    { upsert: true, runValidators: true }
+  );
+
+  await Promise.all([
+    Order.deleteMany({ pharmacyId: pharmacy._id }),
+    Cart.deleteMany({ clientUserId: clientUser._id }),
+  ]);
+
+  const offers = await ProductOffer.find({
+    pharmacyId: pharmacy._id,
+    availableQuantity: { $gt: 0 },
+  })
+    .sort({ createdAt: 1 })
+    .limit(16)
+    .lean<SeedProductOfferLean[]>();
+
+  if (!offers.length) return 0;
+
+  const products = await Product.find({
+    _id: { $in: offers.map((offer) => offer.productId) },
+  }).lean<SeedProductLean[]>();
+
+  const productMap = new Map(
+    products.map((product) => [String(product._id), product])
+  );
+
+  const quantities = [3, 3, 2, 4, 1, 3, 3, 2, 3, 1, 2, 2, 1, 5, 1, 6];
+
+  const items = offers
+    .map((offer, index): SeedOrderItem | null => {
+      const product = productMap.get(String(offer.productId));
+      const quantity = Math.min(
+        quantities[index] ?? 1,
+        offer.availableQuantity
+      );
+
+      if (!product) return null;
+
+      return {
+        productId: offer.productId,
+        productOfferId: offer._id,
+        productSnapshot: {
+          name: product.name,
+          ...(product.slug ? { slug: product.slug } : {}),
+          article: product.article,
+          category: product.category,
+          ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+          ...(product.manufacturer
+            ? { manufacturer: product.manufacturer }
+            : {}),
+          ...(product.dosage ? { dosage: product.dosage } : {}),
+          ...(product.packageQuantity
+            ? { packageQuantity: product.packageQuantity }
+            : {}),
+          rating: product.rating ?? 0,
+          reviewsCount: product.reviewsCount ?? 0,
+        },
+        quantity,
+        unitPrice: offer.price,
+        totalPrice: quantity * offer.price,
+      };
+    })
+    .filter((item): item is SeedOrderItem => item !== null);
+
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
+  const createdAt = new Date('2026-07-09T14:33:13.000Z');
+
+  for (const item of items) {
+    await ProductOffer.updateOne(
+      { _id: item.productOfferId },
+      {
+        $inc: {
+          availableQuantity: -item.quantity,
+          reservedQuantity: item.quantity,
+        },
+      },
+      { runValidators: true }
+    );
+  }
+
+  await Order.create({
+    userId: clientUser._id,
+    pharmacyId: pharmacy._id,
+    pharmacySnapshot: {
+      name: pharmacy.name,
+      address: pharmacy.address,
+      city: pharmacy.city,
+      phone: pharmacy.phone,
+      email: pharmacy.email,
+      imageUrl: pharmacy.imageUrl,
+      rating: pharmacy.rating ?? 0,
+      reviewsCount: pharmacy.reviewsCount ?? 0,
+      bankDetails: pharmacy.bankDetails,
+    },
+    items,
+    totalItems,
+    totalPrice,
+    currency: 'UAH',
+    paymentMethod: 'bank_transfer',
+    delivery: {
+      method: 'postal_delivery',
+      details: {
+        recipientName: 'Nata',
+        recipientPhone: '+380968016907',
+        address: '27 Wellness Street, Lviv, Lviv',
+      },
+    },
+    comment:
+      'Pharmacy products are non-returnable and non-exchangeable after confirmation. Please check the order carefully before payment.',
+    status: 'new',
+    statusHistory: [
+      {
+        status: 'new',
+        changedAt: createdAt,
+        changedBy: clientUser._id,
+      },
+    ],
+    orderNumber: 'EP-20260709-173313-BOECC9FC',
+    createdAt,
+    updatedAt: createdAt,
+  });
+
+  return 1;
+}
+
+//===============================================================
+
 async function seedDatabase(): Promise<void> {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('Seed script is blocked in production');
@@ -901,6 +1146,8 @@ async function seedDatabase(): Promise<void> {
     ProductOffer.deleteMany({}),
     ProductReview.deleteMany({}),
     PharmacyReview.deleteMany({}),
+    Order.deleteMany({}),
+    Cart.deleteMany({}),
   ]);
 
   const pharmacySeeds = createSeedPharmacies();
@@ -952,22 +1199,26 @@ async function seedDatabase(): Promise<void> {
   );
 
   const pharmacyAccountsCount = await seedPharmacyAccounts();
-  const activePharmacyOffersCount =
-    await seedActivePharmacyProductOffers(
-      createdProducts as Array<{
-        _id: Types.ObjectId;
-        status: string;
-        price: number;
-      }>
-    );
+  const activePharmacyOffersCount = await seedActivePharmacyProductOffers(
+    createdProducts as Array<{
+      _id: Types.ObjectId;
+      status: string;
+      price: number;
+    }>
+  );
 
   console.log(`Seed completed: ${createdPharmacies.length} pharmacies created`);
   console.log(`Seed completed: ${seedProducts.length} products created`);
   console.log(
     `Seed completed: ${pharmacyAccountsCount} pharmacy accounts created`
   );
+  const activePharmacyOrdersCount = await seedActivePharmacyOrder();
+
   console.log(
     `Seed completed: ${activePharmacyOffersCount} active pharmacy offers created`
+  );
+  console.log(
+    `Seed completed: ${activePharmacyOrdersCount} active pharmacy orders created`
   );
 }
 

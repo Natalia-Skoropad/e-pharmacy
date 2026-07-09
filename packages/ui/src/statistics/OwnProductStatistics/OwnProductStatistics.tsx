@@ -35,6 +35,7 @@ type OwnProductStatisticConfig = Readonly<{
 type OwnProductStatisticsProps = Readonly<{
   counts: OwnProductStatisticsCounts;
   className?: string;
+  visibleKeys?: readonly OwnProductStatisticsKey[];
   getStatisticHref?: (key: OwnProductStatisticsKey) => string | undefined;
 }>;
 
@@ -104,11 +105,18 @@ function OwnProductStatisticCard({
 function OwnProductStatistics({
   counts,
   className,
+  visibleKeys,
   getStatisticHref,
 }: OwnProductStatisticsProps) {
+  const cards = visibleKeys?.length
+    ? OWN_PRODUCT_STATISTICS_CONFIG.filter((card) =>
+        visibleKeys.includes(card.key)
+      )
+    : OWN_PRODUCT_STATISTICS_CONFIG;
+
   const style: OwnProductStatisticsStyle = {
-    '--own-product-stat-columns': String(OWN_PRODUCT_STATISTICS_CONFIG.length),
-    '--own-product-stat-tablet-columns': '2',
+    '--own-product-stat-columns': String(cards.length),
+    '--own-product-stat-tablet-columns': cards.length > 2 ? '2' : String(cards.length),
   };
 
   return (
@@ -117,7 +125,7 @@ function OwnProductStatistics({
       style={style}
       aria-label="Own product statistics"
     >
-      {OWN_PRODUCT_STATISTICS_CONFIG.map((card) => (
+      {cards.map((card) => (
         <OwnProductStatisticCard
           key={card.key}
           statisticKey={card.key}

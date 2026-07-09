@@ -11,9 +11,12 @@ import {
   type OrderStatisticsCounts,
 } from '@e-pharmacy/types/orders';
 
+import { isProductCategory } from '@e-pharmacy/types/products';
+
 import type {
   DeliveryMethod,
   EntityId,
+  ProductCategory,
   OrderStatus,
   PaymentMethod,
 } from '@e-pharmacy/types';
@@ -39,6 +42,21 @@ export const ORDER_STATUSES = [
 
 //===================================================================
 
+export type PharmacyOrderItem = Readonly<{
+  id: EntityId;
+  productId: EntityId;
+  productOfferId: EntityId;
+  name: string;
+  article: string;
+  category?: ProductCategory;
+  imageUrl?: string;
+  rating?: number;
+  reviewsCount?: number;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}>;
+
 export type PharmacyOrderRow = Readonly<{
   id: EntityId;
   orderNumber: string;
@@ -52,7 +70,18 @@ export type PharmacyOrderRow = Readonly<{
   totalQuantity: number;
   totalAmount: number;
   status: OrderStatus;
+  items: PharmacyOrderItem[];
 }>;
+
+export type PharmacyOrderDetails = PharmacyOrderRow &
+  Readonly<{
+    currency: 'UAH';
+    deliveryAddress?: string;
+    recipientName?: string;
+    recipientPhone?: string;
+    pharmacyComment?: string;
+    rejectionReason?: string;
+  }>;
 
 export type PharmacyOrdersQueryParams = Readonly<{
   page?: number;
@@ -179,6 +208,9 @@ function getDeliveryMethod(order: Record<string, unknown>): DeliveryMethod {
 //===================================================================
 
 function getClientName(order: Record<string, unknown>): string {
+  const directClientName = getStringValue(order.clientName);
+  if (directClientName) return directClientName;
+
   const directClient = getStringValue(order.client);
   if (directClient) return directClient;
 
@@ -199,6 +231,43 @@ function getClientName(order: Record<string, unknown>): string {
 
 //===================================================================
 
+
+function normalizePharmacyOrderItem(rawItem: unknown): PharmacyOrderItem | null {
+  if (!isRecord(rawItem)) return null;
+
+  const id = getStringValue(rawItem.id) ?? getStringValue(rawItem._id);
+  const productId = getStringValue(rawItem.productId);
+  const productOfferId = getStringValue(rawItem.productOfferId);
+  const name = getStringValue(rawItem.name) ?? 'Product';
+  const article = getStringValue(rawItem.article) ?? '—';
+  const category = rawItem.category;
+
+  if (!id || !productId || !productOfferId) return null;
+
+  return {
+    id,
+    productId,
+    productOfferId,
+    name,
+    article,
+    ...(isProductCategory(category) ? { category } : {}),
+    ...(getStringValue(rawItem.imageUrl)
+      ? { imageUrl: getStringValue(rawItem.imageUrl) }
+      : {}),
+    ...(typeof getNumberValue(rawItem.rating) === 'number'
+      ? { rating: getNumberValue(rawItem.rating) }
+      : {}),
+    ...(typeof getNumberValue(rawItem.reviewsCount) === 'number'
+      ? { reviewsCount: getNumberValue(rawItem.reviewsCount) }
+      : {}),
+    quantity: getNumberValue(rawItem.quantity) ?? 0,
+    unitPrice: getNumberValue(rawItem.unitPrice) ?? 0,
+    totalPrice: getNumberValue(rawItem.totalPrice) ?? 0,
+  };
+}
+
+//===================================================================
+
 export function normalizePharmacyOrder(
   rawOrder: unknown
 ): PharmacyOrderRow | null {
@@ -215,6 +284,11 @@ export function normalizePharmacyOrder(
     ? rawOrder.paymentMethod
     : 'cash';
   const status = isOrderStatus(rawOrder.status) ? rawOrder.status : 'new';
+  const items = Array.isArray(rawOrder.items)
+    ? rawOrder.items
+        .map(normalizePharmacyOrderItem)
+        .filter((item): item is PharmacyOrderItem => Boolean(item))
+    : [];
 
   return {
     id,
@@ -238,6 +312,43 @@ export function normalizePharmacyOrder(
       getNumberValue(rawOrder.totalPrice) ??
       0,
     status,
+    items,
+  };
+}
+
+//===================================================================
+
+export function normalizePharmacyOrderDetails(
+  payload: unknown
+): PharmacyOrderDetails | null {
+  if (!isRecord(payload)) return null;
+
+  const row = normalizePharmacyOrder(payload);
+  if (!row) return null;
+
+  const delivery = isRecord(payload.delivery) ? payload.delivery : undefined;
+  const deliveryDetails = delivery && isRecord(delivery.details)
+    ? delivery.details
+    : undefined;
+
+  return {
+    ...row,
+    currency: 'UAH',
+    ...(getStringValue(deliveryDetails?.address)
+      ? { deliveryAddress: getStringValue(deliveryDetails?.address) }
+      : {}),
+    ...(getStringValue(deliveryDetails?.recipientName)
+      ? { recipientName: getStringValue(deliveryDetails?.recipientName) }
+      : {}),
+    ...(getStringValue(deliveryDetails?.recipientPhone)
+      ? { recipientPhone: getStringValue(deliveryDetails?.recipientPhone) }
+      : {}),
+    ...(getStringValue(payload.pharmacyComment)
+      ? { pharmacyComment: getStringValue(payload.pharmacyComment) }
+      : {}),
+    ...(getStringValue(payload.rejectionReason)
+      ? { rejectionReason: getStringValue(payload.rejectionReason) }
+      : {}),
   };
 }
 

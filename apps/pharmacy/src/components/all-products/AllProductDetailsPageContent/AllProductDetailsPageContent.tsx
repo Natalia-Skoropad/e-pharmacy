@@ -48,11 +48,20 @@ import {
   addProductToMyPharmacy,
   removeProductFromMyPharmacy,
   getMyPharmacyProfile,
+  getPharmacyOrders,
   getProductDetails,
   getProductReviews,
 } from '@/lib/api/browser';
 
-import { getPharmacyAllProductsPath } from '@/lib/layout/routes';
+import {
+  getPharmacyAllProductsPath,
+  getPharmacyOrderPath,
+} from '@/lib/layout/routes';
+
+import {
+  ORDER_STATUS_LABELS,
+  type PharmacyOrderRow,
+} from '@/lib/orders/orders';
 
 import {
   getLockedFeatureBannerLabel,
@@ -139,10 +148,6 @@ const PRODUCT_DETAILS_TABS: Array<TabItem<ProductDetailsTab>> = [
   { value: 'characteristics', label: 'Characteristics' },
   { value: 'reviews', label: 'Reviews' },
 ];
-
-//===================================================================
-
-const RELATED_ORDER_ROWS: RelatedOrderRow[] = [];
 
 //===================================================================
 
@@ -373,7 +378,10 @@ function getSingleProductStatisticsCounts(
 
 //===================================================================
 
-function getStockMovementRows(offer: ProductOffer | null): StockMovementRow[] {
+function getStockMovementRows(
+  offer: ProductOffer | null,
+  relatedRows: RelatedOrderRow[]
+): StockMovementRow[] {
   if (!offer) return [];
 
   return [
@@ -387,7 +395,45 @@ function getStockMovementRows(offer: ProductOffer | null): StockMovementRow[] {
       source: 'Pharmacy stock',
       comment: 'Initial stock quantity added to the pharmacy warehouse.',
     },
+    ...relatedRows.map((row) => ({
+      id: `${row.id}-reserved-stock`,
+      date: row.orderDate,
+      eventType: 'Reserved in order',
+      quantity: `-${row.quantity}`,
+      price: row.fixedUnitPrice,
+      orderNumber: row.orderNumber,
+      source: 'Client order',
+      comment: `Reserved for ${row.orderNumber}.`,
+    })),
   ];
+}
+
+//===================================================================
+
+function getRelatedOrderRows(
+  productId: EntityId,
+  orders: PharmacyOrderRow[]
+): RelatedOrderRow[] {
+  return orders.flatMap((order) => {
+    const item = order.items.find(
+      (orderItem) => String(orderItem.productId) === String(productId)
+    );
+
+    if (!item) return [];
+
+    return [
+      {
+        id: `${order.id}-${item.id}`,
+        orderNumber: order.orderNumber,
+        orderDate: formatShortDate(order.orderDate),
+        client: order.client,
+        quantity: String(item.quantity),
+        fixedUnitPrice: formatPrice(item.unitPrice),
+        amount: formatPrice(item.totalPrice),
+        status: ORDER_STATUS_LABELS[order.status],
+      },
+    ];
+  });
 }
 
 //===================================================================
@@ -422,6 +468,7 @@ function AllProductDetailsPageContent({
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [reviewsTotal, setReviewsTotal] = useState(0);
+  const [relatedOrders, setRelatedOrders] = useState<PharmacyOrderRow[]>([]);
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
   );
@@ -445,12 +492,17 @@ function AllProductDetailsPageContent({
       setError(null);
 
       try {
-        const [productResponse, profileResponse, reviewsResponse] =
-          await Promise.all([
-            getProductDetails(productId),
-            getMyPharmacyProfile().catch(() => null),
-            getProductReviews(productId).catch(() => null),
-          ]);
+        const [
+          productResponse,
+          profileResponse,
+          reviewsResponse,
+          ordersResponse,
+        ] = await Promise.all([
+          getProductDetails(productId),
+          getMyPharmacyProfile().catch(() => null),
+          getProductReviews(productId).catch(() => null),
+          getPharmacyOrders({ page: 1, perPage: 200 }).catch(() => null),
+        ]);
 
         if (!isMounted) return;
 
@@ -459,6 +511,7 @@ function AllProductDetailsPageContent({
         setReviewsTotal(
           reviewsResponse?.total ?? productResponse.product.reviewsCount ?? 0
         );
+        setRelatedOrders(ordersResponse?.items ?? []);
         setCurrentPharmacyId(profileResponse?.pharmacy.id ?? null);
         setPharmacyStatus(profileResponse?.pharmacy.status ?? 'new');
       } catch (loadError) {
@@ -467,6 +520,7 @@ function AllProductDetailsPageContent({
         setProduct(null);
         setReviews([]);
         setReviewsTotal(0);
+        setRelatedOrders([]);
         setPharmacyStatus('new');
         setError(getProductDetailsError(loadError));
       } finally {
@@ -525,28 +579,61 @@ function AllProductDetailsPageContent({
     bannerStatus ? null : currentOffer
   );
 
-  const stockMovementRows = getStockMovementRows(currentOffer);
+  const relatedOrderRows = product
+    ? getRelatedOrderRows(product.id, relatedOrders)
+    : [];
+  const stockMovementRows = getStockMovementRows(
+    currentOffer,
+    relatedOrderRows
+  );
   const reviewItems = mapReviewsToListItems(reviews);
 
   const stockMovementColumns = useMemo<
     Array<DataTableColumn<StockMovementRow>>
   >(
     () => [
-      { key: 'date', title: 'Date', render: (row) => row.date },
+      {
+        key: 'date',
+        title: 'Date',
+        render: (row: StockMovementRow) => row.date,
+      },
       {
         key: 'eventType',
         title: 'Event type',
-        render: (row) => row.eventType,
+        render: (row: StockMovementRow) => row.eventType,
       },
-      { key: 'quantity', title: 'Quantity', render: (row) => row.quantity },
-      { key: 'price', title: 'Price', render: (row) => row.price },
+      {
+        key: 'quantity',
+        title: 'Quantity',
+        render: (row: StockMovementRow) => row.quantity,
+      },
+      {
+        key: 'price',
+        title: 'Price',
+        render: (row: StockMovementRow) => row.price,
+      },
       {
         key: 'orderNumber',
         title: 'Order number',
-        render: (row) => row.orderNumber,
+        render: (row: StockMovementRow) =>
+          row.orderNumber === '—' ? (
+            '—'
+          ) : (
+            <Link href={getPharmacyOrderPath(row.id.split('-')[0])}>
+              {row.orderNumber}
+            </Link>
+          ),
       },
-      { key: 'source', title: 'Source', render: (row) => row.source },
-      { key: 'comment', title: 'Comment', render: (row) => row.comment },
+      {
+        key: 'source',
+        title: 'Source',
+        render: (row: StockMovementRow) => row.source,
+      },
+      {
+        key: 'comment',
+        title: 'Comment',
+        render: (row: StockMovementRow) => row.comment,
+      },
     ],
     []
   );
@@ -556,22 +643,42 @@ function AllProductDetailsPageContent({
       {
         key: 'orderNumber',
         title: 'Order number',
-        render: (row) => row.orderNumber,
+        render: (row: RelatedOrderRow) => (
+          <Link href={getPharmacyOrderPath(row.id.split('-')[0])}>
+            {row.orderNumber}
+          </Link>
+        ),
       },
       {
         key: 'orderDate',
         title: 'Order date',
-        render: (row) => row.orderDate,
+        render: (row: RelatedOrderRow) => row.orderDate,
       },
-      { key: 'client', title: 'Client', render: (row) => row.client },
-      { key: 'quantity', title: 'Quantity', render: (row) => row.quantity },
+      {
+        key: 'client',
+        title: 'Client',
+        render: (row: RelatedOrderRow) => row.client,
+      },
+      {
+        key: 'quantity',
+        title: 'Quantity',
+        render: (row: RelatedOrderRow) => row.quantity,
+      },
       {
         key: 'fixedUnitPrice',
         title: 'Fixed unit price',
-        render: (row) => row.fixedUnitPrice,
+        render: (row: RelatedOrderRow) => row.fixedUnitPrice,
       },
-      { key: 'amount', title: 'Amount', render: (row) => row.amount },
-      { key: 'status', title: 'Order status', render: (row) => row.status },
+      {
+        key: 'amount',
+        title: 'Amount',
+        render: (row: RelatedOrderRow) => row.amount,
+      },
+      {
+        key: 'status',
+        title: 'Order status',
+        render: (row: RelatedOrderRow) => row.status,
+      },
     ],
     []
   );
@@ -628,7 +735,7 @@ function AllProductDetailsPageContent({
 
   return (
     <main className={css.page} aria-labelledby="global-product-page-title">
-      <div className={css.contentCard}>
+      <section className={css.contentCard}>
         <div className={css.stack}>
           <div className={css.titleBlock}>
             <PageHeader
@@ -657,262 +764,263 @@ function AllProductDetailsPageContent({
           ) : null}
 
           {product ? (
-            <section className={css.tabsSection} aria-label="Product data">
-              <OwnProductStatistics
-                counts={singleProductStatistics}
-                className={css.singleProductStatistics}
-              />
+            <OwnProductStatistics
+              counts={singleProductStatistics}
+              visibleKeys={['inStock', 'reserved', 'available']}
+              className={css.singleProductStatistics}
+            />
+          ) : null}
+        </div>
+      </section>
 
-              <Tabs
-                items={tabs}
-                activeValue={activeTab}
-                ariaLabel="Product details tabs"
-                mobileVisibleCount={1}
-                tabletVisibleCount={3}
-                onChange={setActiveTab}
-              />
+      {product ? (
+        <section className={css.contentCard} aria-label="Product data">
+          <div className={css.tabsSection}>
+            <Tabs
+              items={tabs}
+              activeValue={activeTab}
+              ariaLabel="Product details tabs"
+              mobileVisibleCount={1}
+              tabletVisibleCount={3}
+              onChange={setActiveTab}
+            />
 
-              {activeTab === 'details' ? (
-                <div className={css.detailsTab}>
-                  {bannerStatus ? (
-                    <StatusBanner
-                      status={bannerStatus}
-                      label={bannerLabel ?? undefined}
-                      title={bannerTitle}
-                      message={bannerMessage}
-                    />
-                  ) : null}
+            {activeTab === 'details' ? (
+              <div className={css.detailsTab}>
+                {bannerStatus ? (
+                  <StatusBanner
+                    status={bannerStatus}
+                    label={bannerLabel ?? undefined}
+                    title={bannerTitle}
+                    message={bannerMessage}
+                  />
+                ) : null}
 
-                  <section
-                    className={css.detailsGrid}
-                    aria-labelledby="product-summary-title"
-                  >
-                    <div className={css.visualCard}>
-                      {productImageSrc ? (
-                        <span className={css.imageFrame}>
-                          <ShimmerImage
-                            className={css.image}
-                            src={productImageSrc}
-                            alt={product.name}
-                            sizes="(min-width: 1440px) 420px, 90vw"
-                            unoptimized
-                          />
-                        </span>
-                      ) : (
-                        <div
-                          className={css.imagePlaceholder}
-                          aria-hidden="true"
-                        >
-                          {product.name.charAt(0)}
+                <section
+                  className={css.detailsGrid}
+                  aria-labelledby="product-summary-title"
+                >
+                  <div className={css.visualCard}>
+                    {productImageSrc ? (
+                      <span className={css.imageFrame}>
+                        <ShimmerImage
+                          className={css.image}
+                          src={productImageSrc}
+                          alt={product.name}
+                          sizes="(min-width: 1440px) 420px, 90vw"
+                          unoptimized
+                        />
+                      </span>
+                    ) : (
+                      <div className={css.imagePlaceholder} aria-hidden="true">
+                        {product.name.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={css.card}>
+                    <p
+                      className={
+                        isAddedToPharmacy ? css.priceLine : css.productNotice
+                      }
+                    >
+                      {isAddedToPharmacy
+                        ? getProductPriceLabel(product, currentOffer)
+                        : 'This product is not added to your pharmacy yet'}
+                    </p>
+
+                    <dl className={css.detailsList}>
+                      {summaryItems.map((item) => (
+                        <div key={item.label}>
+                          <dt>{item.label}</dt>
+                          <dd>{item.value}</dd>
                         </div>
-                      )}
-                    </div>
+                      ))}
+                    </dl>
 
-                    <div className={css.card}>
-                      <p
-                        className={
-                          isAddedToPharmacy ? css.priceLine : css.productNotice
-                        }
+                    <div className={css.actions}>
+                      {showAddAction ? (
+                        <Button
+                          className={css.actionButton}
+                          type="button"
+                          size="sm"
+                          disabled={!canAddToPharmacy}
+                          isLoading={isAddingProduct}
+                          loadingLabel="Adding product..."
+                          onClick={() => setIsAddModalOpen(true)}
+                        >
+                          {product.status === 'blocked'
+                            ? 'Unavailable'
+                            : isAddedToPharmacy
+                              ? 'Added to your pharmacy'
+                              : bannerStatus || !currentPharmacyId
+                                ? 'Add to my pharmacy after verification'
+                                : 'Add to my pharmacy'}
+                        </Button>
+                      ) : null}
+
+                      {showRemoveAction && isAddedToPharmacy ? (
+                        <Button
+                          className={`${css.actionButton} ${css.removeButton}`}
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          disabled={!canRemoveFromPharmacy}
+                          isLoading={isRemovingProduct}
+                          loadingLabel="Removing product..."
+                          onClick={() => setIsRemoveModalOpen(true)}
+                        >
+                          Remove from my pharmacy
+                        </Button>
+                      ) : null}
+
+                      <ButtonLink
+                        className={css.actionButton}
+                        href={backHref}
+                        variant="secondary"
+                        size="sm"
+                        renderLink={({
+                          href,
+                          className,
+                          children,
+                          ...props
+                        }) => (
+                          <Link href={href} className={className} {...props}>
+                            {children}
+                          </Link>
+                        )}
                       >
-                        {isAddedToPharmacy
-                          ? getProductPriceLabel(product, currentOffer)
-                          : 'This product is not added to your pharmacy yet'}
-                      </p>
+                        {backLabel}
+                      </ButtonLink>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            ) : (
+              <div className={css.tabPanel}>
+                {activeTab === 'statistics' ? (
+                  <>
+                    <h3 className={css.panelTitle}>Statistics</h3>
 
-                      <dl className={css.detailsList}>
-                        {summaryItems.map((item) => (
-                          <div key={item.label}>
+                    {isAddedToPharmacy ? (
+                      <ul className={css.statsGrid}>
+                        {statisticCards.map((statistic) => (
+                          <li className={css.statCard} key={statistic.label}>
+                            <span>{statistic.label}</span>
+                            <strong>{statistic.value}</strong>
+                            {statistic.hint ? (
+                              <small>{statistic.hint}</small>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <EmptyPanel>
+                        This product is not added to your pharmacy, so
+                        statistics are unavailable.
+                      </EmptyPanel>
+                    )}
+                  </>
+                ) : null}
+
+                {activeTab === 'stock-movement' ? (
+                  <>
+                    <h3 className={css.panelTitle}>Stock movement</h3>
+
+                    {isAddedToPharmacy ? (
+                      <DataTable
+                        columns={stockMovementColumns}
+                        items={stockMovementRows}
+                        getItemKey={(row) => row.id}
+                        minWidth={0}
+                        labels={{
+                          empty: 'Stock movement history is empty.',
+                        }}
+                      />
+                    ) : (
+                      <EmptyPanel>
+                        This product is not added to your pharmacy, so stock
+                        movement is unavailable.
+                      </EmptyPanel>
+                    )}
+                  </>
+                ) : null}
+
+                {activeTab === 'related-orders' ? (
+                  <>
+                    <h3 className={css.panelTitle}>Related orders</h3>
+
+                    {isAddedToPharmacy ? (
+                      <DataTable
+                        columns={relatedOrderColumns}
+                        items={relatedOrderRows}
+                        getItemKey={(row) => row.id}
+                        minWidth={0}
+                        labels={{
+                          empty: 'There are no orders with this product yet.',
+                        }}
+                      />
+                    ) : (
+                      <EmptyPanel>
+                        This product is not added to your pharmacy, so related
+                        orders are unavailable.
+                      </EmptyPanel>
+                    )}
+                  </>
+                ) : null}
+
+                {activeTab === 'characteristics' ? (
+                  <>
+                    <h3 className={css.panelTitle}>Characteristics</h3>
+
+                    {characteristics.length > 0 ? (
+                      <dl className={css.characteristicsList}>
+                        {characteristics.map((item) => (
+                          <div
+                            className={css.characteristicItem}
+                            key={item.label}
+                          >
                             <dt>{item.label}</dt>
                             <dd>{item.value}</dd>
                           </div>
                         ))}
                       </dl>
+                    ) : (
+                      <EmptyPanel>
+                        Characteristics for this product have not been added
+                        yet.
+                      </EmptyPanel>
+                    )}
 
-                      <div className={css.actions}>
-                        {showAddAction ? (
-                          <Button
-                            className={css.actionButton}
-                            type="button"
-                            size="sm"
-                            disabled={!canAddToPharmacy}
-                            isLoading={isAddingProduct}
-                            loadingLabel="Adding product..."
-                            onClick={() => setIsAddModalOpen(true)}
-                          >
-                            {product.status === 'blocked'
-                              ? 'Unavailable'
-                              : isAddedToPharmacy
-                                ? 'Added to your pharmacy'
-                                : bannerStatus || !currentPharmacyId
-                                  ? 'Add to my pharmacy after verification'
-                                  : 'Add to my pharmacy'}
-                          </Button>
-                        ) : null}
+                    <div className={css.descriptionBlock}>
+                      {product.description ? (
+                        <p>{product.description}</p>
+                      ) : null}
 
-                        {showRemoveAction && isAddedToPharmacy ? (
-                          <Button
-                            className={`${css.actionButton} ${css.removeButton}`}
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            disabled={!canRemoveFromPharmacy}
-                            isLoading={isRemovingProduct}
-                            loadingLabel="Removing product..."
-                            onClick={() => setIsRemoveModalOpen(true)}
-                          >
-                            Remove from my pharmacy
-                          </Button>
-                        ) : null}
-
-                        <ButtonLink
-                          className={css.actionButton}
-                          href={backHref}
-                          variant="secondary"
-                          size="sm"
-                          renderLink={({
-                            href,
-                            className,
-                            children,
-                            ...props
-                          }) => (
-                            <Link href={href} className={className} {...props}>
-                              {children}
-                            </Link>
-                          )}
-                        >
-                          {backLabel}
-                        </ButtonLink>
-                      </div>
+                      <p>
+                        Before purchasing, compare pharmacy prices, check the
+                        available quantity, read client reviews, and make sure
+                        the selected offer matches your needs. Information on
+                        this page helps clients quickly understand the product,
+                        its main properties, and where it can be bought online.
+                      </p>
                     </div>
-                  </section>
-                </div>
-              ) : (
-                <div className={css.tabPanel}>
-                  {activeTab === 'statistics' ? (
-                    <>
-                      <h3 className={css.panelTitle}>Statistics</h3>
+                  </>
+                ) : null}
 
-                      {isAddedToPharmacy ? (
-                        <ul className={css.statsGrid}>
-                          {statisticCards.map((statistic) => (
-                            <li className={css.statCard} key={statistic.label}>
-                              <span>{statistic.label}</span>
-                              <strong>{statistic.value}</strong>
-                              {statistic.hint ? (
-                                <small>{statistic.hint}</small>
-                              ) : null}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <EmptyPanel>
-                          This product is not added to your pharmacy, so
-                          statistics are unavailable.
-                        </EmptyPanel>
-                      )}
-                    </>
-                  ) : null}
-
-                  {activeTab === 'stock-movement' ? (
-                    <>
-                      <h3 className={css.panelTitle}>Stock movement</h3>
-
-                      {isAddedToPharmacy ? (
-                        <DataTable
-                          columns={stockMovementColumns}
-                          items={stockMovementRows}
-                          getItemKey={(row) => row.id}
-                          minWidth={0}
-                          labels={{
-                            empty: 'Stock movement history is empty.',
-                          }}
-                        />
-                      ) : (
-                        <EmptyPanel>
-                          This product is not added to your pharmacy, so stock
-                          movement is unavailable.
-                        </EmptyPanel>
-                      )}
-                    </>
-                  ) : null}
-
-                  {activeTab === 'related-orders' ? (
-                    <>
-                      <h3 className={css.panelTitle}>Related orders</h3>
-
-                      {isAddedToPharmacy ? (
-                        <DataTable
-                          columns={relatedOrderColumns}
-                          items={RELATED_ORDER_ROWS}
-                          getItemKey={(row) => row.id}
-                          minWidth={0}
-                          labels={{
-                            empty: 'There are no orders with this product yet.',
-                          }}
-                        />
-                      ) : (
-                        <EmptyPanel>
-                          This product is not added to your pharmacy, so related
-                          orders are unavailable.
-                        </EmptyPanel>
-                      )}
-                    </>
-                  ) : null}
-
-                  {activeTab === 'characteristics' ? (
-                    <>
-                      <h3 className={css.panelTitle}>Characteristics</h3>
-
-                      {characteristics.length > 0 ? (
-                        <dl className={css.characteristicsList}>
-                          {characteristics.map((item) => (
-                            <div
-                              className={css.characteristicItem}
-                              key={item.label}
-                            >
-                              <dt>{item.label}</dt>
-                              <dd>{item.value}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      ) : (
-                        <EmptyPanel>
-                          Characteristics for this product have not been added
-                          yet.
-                        </EmptyPanel>
-                      )}
-
-                      <div className={css.descriptionBlock}>
-                        {product.description ? (
-                          <p>{product.description}</p>
-                        ) : null}
-
-                        <p>
-                          Before purchasing, compare pharmacy prices, check the
-                          available quantity, read client reviews, and make sure
-                          the selected offer matches your needs. Information on
-                          this page helps clients quickly understand the
-                          product, its main properties, and where it can be
-                          bought online.
-                        </p>
-                      </div>
-                    </>
-                  ) : null}
-
-                  {activeTab === 'reviews' ? (
-                    <ReviewsList
-                      reviews={reviewItems}
-                      title="Reviews"
-                      emptyTitle="This product has no reviews yet."
-                      emptyText="Product reviews will appear here after clients share their feedback."
-                    />
-                  ) : null}
-                </div>
-              )}
-            </section>
-          ) : null}
-        </div>
-      </div>
+                {activeTab === 'reviews' ? (
+                  <ReviewsList
+                    reviews={reviewItems}
+                    title="Reviews"
+                    emptyTitle="This product has no reviews yet."
+                    emptyText="Product reviews will appear here after clients share their feedback."
+                  />
+                ) : null}
+              </div>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <ConfirmationModal
         isOpen={isAddModalOpen}

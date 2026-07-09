@@ -14,7 +14,7 @@ import { ProductOffer } from '../models/productOffer.model';
 import { Pharmacy } from '../models/pharmacy.model';
 
 import { httpError } from '../utils/httpError';
-import { releaseOfferStock, reserveOfferStock } from './stock.service';
+
 
 import type { CartResponseDto } from '../types/cart';
 import type { ProductEntity } from '../types/product';
@@ -203,7 +203,7 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
         ...(typeof pharmacy.reviewsCount === 'number'
           ? { pharmacyReviewsCount: pharmacy.reviewsCount }
           : {}),
-        stockQuantity: offer.availableQuantity + item.quantity,
+        stockQuantity: offer.availableQuantity,
         quantity: item.quantity,
         unitPrice,
         totalPrice: item.quantity * unitPrice,
@@ -241,14 +241,7 @@ export async function releaseExpiredCartReservationsService(): Promise<number> {
         );
         if (!expired.length) return;
 
-        for (const item of expired) {
-          await releaseOfferStock(
-            item.productOfferId,
-            item.quantity,
-            session,
-            false
-          );
-        }
+        void expired;
 
         await replaceCartItemsOrThrow(
           current,
@@ -309,11 +302,13 @@ export async function addCartItemService(
       const itemIndex = cart.items.findIndex(
         (item) => item.productOfferId.toString() === String(offer._id)
       );
-      const quantityToReserve = Math.min(
-        input.quantity,
-        offer.availableQuantity
-      );
-      if (quantityToReserve < 1) {
+      const currentQuantity =
+        itemIndex >= 0 ? cart.items[itemIndex].quantity : 0;
+      const quantityToAdd = Math.min(input.quantity, offer.availableQuantity);
+      if (
+        quantityToAdd < 1 ||
+        currentQuantity + quantityToAdd > offer.availableQuantity
+      ) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
           'Product quantity is no longer available.'
@@ -340,13 +335,12 @@ export async function addCartItemService(
         }
       }
 
-      await reserveOfferStock(offer._id, quantityToReserve, session);
 
       if (itemIndex >= 0) {
         const currentItem = cart.items[itemIndex];
         cart.items[itemIndex] = {
           ...currentItem,
-          quantity: currentItem.quantity + quantityToReserve,
+          quantity: currentItem.quantity + quantityToAdd,
           unitPrice: offer.price,
           expiresAt: getCartItemExpiresAt(),
         };
@@ -354,7 +348,7 @@ export async function addCartItemService(
         cart.items.push({
           _id: new Types.ObjectId(),
           productOfferId: offer._id,
-          quantity: quantityToReserve,
+          quantity: quantityToAdd,
           unitPrice: offer.price,
           expiresAt: getCartItemExpiresAt(),
         });
@@ -395,10 +389,12 @@ export async function updateCartItemService(
         );
 
       const nextQuantity = Math.max(1, quantity);
-      const delta = nextQuantity - currentItem.quantity;
-      if (delta > 0) await reserveOfferStock(offer._id, delta, session);
-      if (delta < 0)
-        await releaseOfferStock(offer._id, Math.abs(delta), session);
+      if (nextQuantity > offer.availableQuantity) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Product quantity is no longer available.'
+        );
+      }
 
       cart.items[itemIndex] = {
         ...currentItem,
@@ -429,11 +425,7 @@ export async function removeCartItemService(
       );
       if (!removed)
         throw httpError(HTTP_STATUS.NOT_FOUND, 'Cart item not found');
-      await releaseOfferStock(
-        removed.productOfferId,
-        removed.quantity,
-        session
-      );
+      void removed;
       await replaceCartItemsOrThrow(
         cart,
         cart.items.filter((item) => item._id.toString() !== cartItemId),
@@ -466,9 +458,7 @@ export async function removeCartProductOfferService(
         (item) => item.productOfferId.toString() === String(offer._id)
       );
 
-      for (const item of removed) {
-        await releaseOfferStock(item.productOfferId, item.quantity, session);
-      }
+      void removed;
 
       await replaceCartItemsOrThrow(
         cart,
@@ -492,10 +482,6 @@ export async function clearCartService(clientUserId: string) {
   try {
     await session.withTransaction(async () => {
       const cart = await getCartDocument(clientUserId, session);
-      for (const item of cart.items) {
-        await releaseOfferStock(item.productOfferId, item.quantity, session);
-      }
-
       await replaceCartItemsOrThrow(cart, [], session);
     });
 

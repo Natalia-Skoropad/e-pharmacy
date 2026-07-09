@@ -11,6 +11,7 @@ import {
 //===============================================================
 
 const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
+const orderRouteIdSchema = z.string().trim().min(1, 'ID is required');
 
 //===============================================================
 
@@ -58,7 +59,7 @@ export const ordersQuerySchema = z.preprocess(
 
 //===============================================================
 
-export const orderParamsSchema = z.object({ orderId: mongoIdSchema });
+export const orderParamsSchema = z.object({ orderId: orderRouteIdSchema });
 
 //===============================================================
 
@@ -116,8 +117,10 @@ export const updateOrderStatusSchema = z
 //===============================================================
 
 export type OrdersQuery = z.infer<typeof ordersQuerySchema>;
+
 export type OrderSalesStatisticsQuery = z.infer<
   typeof orderSalesStatisticsQuerySchema
 >;
+
 export type CheckoutOrderInput = z.infer<typeof checkoutOrderSchema>;
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
