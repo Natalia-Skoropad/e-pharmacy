@@ -20,6 +20,7 @@ import {
   getProductReviewsService,
   getProductsService,
   moderateProductReviewService,
+  removeProductFromMyPharmacyService,
   setFavoriteProductService,
 } from '../services/product.service';
 
@@ -123,6 +124,25 @@ export async function addProductToMyPharmacy(
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.CREATED,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function removeProductFromMyPharmacy(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { productId } = req.params as ProductParams;
+  const data = await removeProductFromMyPharmacyService(
+    productId,
+    req.user?.id ?? ''
+  );
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
     data,
   });
 }

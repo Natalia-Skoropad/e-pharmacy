@@ -16,9 +16,12 @@ export const storefrontRoutes = {
     favorites: '/pharmacies/favorites',
     favoriteIds: '/pharmacies/favorites/ids',
     filters: '/pharmacies/filters',
+
     details: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}`,
+
     checkoutDetails: (pharmacyId: EntityId) =>
       `/pharmacies/${pharmacyId}/checkout-details`,
+
     reviews: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}/reviews`,
     favorite: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}/favorite`,
   },
@@ -31,6 +34,9 @@ export const storefrontRoutes = {
     details: (productId: EntityId) => `/products/${productId}`,
 
     addToMyPharmacy: (productId: EntityId) =>
+      `/products/${productId}/my-pharmacy`,
+
+    removeFromMyPharmacy: (productId: EntityId) =>
       `/products/${productId}/my-pharmacy`,
 
     reviews: (productId: EntityId) => `/products/${productId}/reviews`,

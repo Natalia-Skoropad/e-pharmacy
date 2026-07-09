@@ -14,3 +14,11 @@ export const POST = createPrivateProxyRoute<ProductMyPharmacyRouteParams>({
     API_ROUTES.products.addToMyPharmacy(productId),
   method: 'POST',
 });
+
+//===================================================================
+
+export const DELETE = createPrivateProxyRoute<ProductMyPharmacyRouteParams>({
+  backendPath: ({ productId }) =>
+    API_ROUTES.products.removeFromMyPharmacy(productId),
+  method: 'DELETE',
+});

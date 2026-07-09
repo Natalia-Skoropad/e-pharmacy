@@ -7,6 +7,7 @@ import {
   getFavoriteProducts,
   getPendingProductReviews,
   moderateProductReview,
+  removeProductFromMyPharmacy,
   getProductDetails,
   getProductFilters,
   getProductReviews,
@@ -96,6 +97,18 @@ productRoutes.post(
     params: productIdParamsSchema,
   }),
   ctrlWrapper(addProductToMyPharmacy)
+);
+
+//=================================================================================
+
+productRoutes.delete(
+  '/:productId/my-pharmacy',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({
+    params: productIdParamsSchema,
+  }),
+  ctrlWrapper(removeProductFromMyPharmacy)
 );
 
 //=================================================================================

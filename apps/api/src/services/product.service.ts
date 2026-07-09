@@ -9,6 +9,7 @@ import { Pharmacy } from '../models/pharmacy.model';
 import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { ProductReview } from '../models/productReview.model';
+import { Order } from '../models/order.model';
 
 import type {
   ProductFilterOptionsResponseDto,
@@ -681,6 +682,15 @@ export async function getProductDetailsService(
 
 //===============================================================
 
+function createInitialOfferStockQuantity(productId: Types.ObjectId): number {
+  const tail = productId.toString().slice(-2);
+  const parsed = Number.parseInt(tail, 16);
+
+  return 100 + (Number.isNaN(parsed) ? 0 : parsed % 35);
+}
+
+//===============================================================
+
 async function getCurrentUserPharmacyForProductManagement(userId: string) {
   const pharmacy = await Pharmacy.findOne({
     $or: [{ ownerId: userId }, { managerUserIds: userId }],
@@ -738,12 +748,14 @@ export async function addProductToMyPharmacyService(
     );
   }
 
+  const initialQuantity = createInitialOfferStockQuantity(product._id);
+
   await ProductOffer.create({
     productId: product._id,
     pharmacyId: pharmacy._id,
     price: product.price ?? 0,
-    totalQuantity: 0,
-    availableQuantity: 0,
+    totalQuantity: initialQuantity,
+    availableQuantity: initialQuantity,
     reservedQuantity: 0,
   });
 
@@ -752,6 +764,55 @@ export async function addProductToMyPharmacyService(
   return {
     ...details,
     message: 'Product added to your pharmacy.',
+  };
+}
+
+//===============================================================
+
+export async function removeProductFromMyPharmacyService(
+  productId: string,
+  userId: string
+) {
+  const [pharmacy, product] = await Promise.all([
+    getCurrentUserPharmacyForProductManagement(userId),
+    Product.findById(productId).lean(),
+  ]);
+
+  if (!product) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+  }
+
+  const offer = await ProductOffer.findOne({
+    productId: product._id,
+    pharmacyId: pharmacy._id,
+  });
+
+  if (!offer) {
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      'This product is not added to your pharmacy.'
+    );
+  }
+
+  const hasRelatedOrders = await Order.exists({
+    pharmacyId: pharmacy._id,
+    'items.productOfferId': offer._id,
+  });
+
+  if (hasRelatedOrders) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'Product cannot be removed because it already has related orders.'
+    );
+  }
+
+  await ProductOffer.deleteOne({ _id: offer._id });
+
+  const details = await getProductDetailsService(productId, userId);
+
+  return {
+    ...details,
+    message: 'Product was removed from your pharmacy.',
   };
 }
 

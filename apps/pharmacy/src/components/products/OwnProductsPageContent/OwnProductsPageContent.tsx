@@ -12,6 +12,9 @@ import {
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
 
+import { ConfirmationModal } from '@e-pharmacy/ui/modals';
+import { useToast } from '@e-pharmacy/ui/feedback';
+
 import { OwnProductStatistics, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
@@ -29,7 +32,12 @@ import {
   type OwnProductStatisticsKey,
 } from '@e-pharmacy/types/products';
 
-import { getMyPharmacyProfile, getPharmacyProducts } from '@/lib/api/browser';
+import {
+  getMyPharmacyProfile,
+  getPharmacyProducts,
+  removeProductFromMyPharmacy,
+} from '@/lib/api/browser';
+
 import {
   getLockedFeatureBannerLabel,
   getLockedFeatureBannerStatus,
@@ -94,6 +102,14 @@ function getProductsQueryParams(
 
 //===================================================================
 
+function getRemoveProductErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message;
+
+  return 'Could not remove product from your pharmacy.';
+}
+
+//===================================================================
+
 type OwnProductsPageContentProps = Readonly<{
   initialFilters?: OwnProductsFilterState;
 }>;
@@ -126,6 +142,7 @@ function OwnProductsPageContent({
   initialFilters = DEFAULT_OWN_PRODUCTS_FILTERS,
 }: OwnProductsPageContentProps) {
   const router = useRouter();
+  const toast = useToast();
   const pathname = usePathname();
   const [filters, setFilters] =
     useState<OwnProductsFilterState>(initialFilters);
@@ -135,11 +152,18 @@ function OwnProductsPageContent({
   const [productStatistics, setProductStatistics] =
     useState<OwnProductStatisticsCounts>(DEFAULT_OWN_PRODUCT_STATISTICS);
   const [pharmacyId, setPharmacyId] = useState<EntityId | null>(null);
-  const [pharmacyStatus, setPharmacyStatus] =
-    useState<PharmacyStatus | null>(null);
+  const [pharmacyStatus, setPharmacyStatus] = useState<PharmacyStatus | null>(
+    null
+  );
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [productToRemove, setProductToRemove] =
+    useState<PharmacyProductRow | null>(null);
+  const [removingProductId, setRemovingProductId] = useState<EntityId | null>(
+    null
+  );
+  const [refreshVersion, setRefreshVersion] = useState(0);
 
   useBodyScrollLock(isFiltersOpen);
 
@@ -200,7 +224,7 @@ function OwnProductsPageContent({
     return () => {
       isMounted = false;
     };
-  }, [pharmacyId]);
+  }, [pharmacyId, refreshVersion]);
 
   const queryParams = useMemo(
     () =>
@@ -239,7 +263,7 @@ function OwnProductsPageContent({
     return () => {
       isMounted = false;
     };
-  }, [isProfileLoaded, queryParams]);
+  }, [isProfileLoaded, queryParams, refreshVersion]);
 
   useEffect(() => {
     const nextPath = buildOwnProductsPath(filters);
@@ -268,6 +292,32 @@ function OwnProductsPageContent({
     setFilters(DEFAULT_OWN_PRODUCTS_FILTERS);
   };
 
+  const handleRemoveProduct = (product: PharmacyProductRow) => {
+    setProductToRemove(product);
+  };
+
+  const handleRemoveProductConfirm = async () => {
+    if (!productToRemove) return;
+
+    setRemovingProductId(productToRemove.id);
+
+    try {
+      const response = await removeProductFromMyPharmacy(productToRemove.id);
+
+      setProducts((current) =>
+        current.filter((product) => product.id !== productToRemove.id)
+      );
+      setTotalProducts((current) => Math.max(0, current - 1));
+      setProductToRemove(null);
+      setRefreshVersion((current) => current + 1);
+      toast.success(response.message || 'Product was removed.');
+    } catch (error) {
+      toast.error(getRemoveProductErrorMessage(error));
+    } finally {
+      setRemovingProductId(null);
+    }
+  };
+
   const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
   const bannerLabel = bannerStatus
     ? getLockedFeatureBannerLabel(bannerStatus)
@@ -286,8 +336,8 @@ function OwnProductsPageContent({
           <StatusBanner
             status={bannerStatus}
             label={bannerLabel ?? undefined}
-          title="Verification is required"
-          message="Own products will appear only after verification, when adding products to this pharmacy becomes available."
+            title="Verification is required"
+            message="Own products will appear only after verification, when adding products to this pharmacy becomes available."
           />
         ) : null}
 
@@ -366,8 +416,26 @@ function OwnProductsPageContent({
               ? 'No products found for the selected filters.'
               : 'Your pharmacy has no added products yet.'
           }
+          removingProductId={removingProductId}
+          onRemoveProduct={handleRemoveProduct}
         />
       </section>
+
+      <ConfirmationModal
+        isOpen={Boolean(productToRemove)}
+        title="Remove product from pharmacy?"
+        description={
+          productToRemove
+            ? `Remove ${productToRemove.name} from your own products? This is possible only while there are no orders for this product.`
+            : 'Remove this product from your own products?'
+        }
+        confirmLabel="Remove product"
+        isLoading={Boolean(removingProductId)}
+        onConfirm={() => void handleRemoveProductConfirm()}
+        onCancel={() => {
+          if (!removingProductId) setProductToRemove(null);
+        }}
+      />
 
       {isFiltersOpen ? (
         <OwnProductsFiltersDrawer

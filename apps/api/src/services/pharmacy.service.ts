@@ -766,7 +766,6 @@ export async function updateMyPharmacyProfileService(
       {
         $set: {
           pendingModeration,
-          status: PHARMACY_STATUSES.ON_MODERATION,
           updatedBy: userId,
         },
         $unset: { statusReason: '' },
@@ -828,12 +827,21 @@ export async function sendMyPharmacyForVerificationService(
 ): Promise<{ pharmacy: PharmacyProfileResponseDto; message: string }> {
   const pharmacy = await findMyPharmacy(userId);
 
-  assertReadyForVerification(pharmacy);
-
   if (pharmacy.status === PHARMACY_STATUSES.NEW) {
+    assertReadyForVerification(pharmacy);
     pharmacy.status = PHARMACY_STATUSES.ON_VERIFICATION;
     pharmacy.statusReason = undefined;
   } else if (pharmacy.status === PHARMACY_STATUSES.ACTIVE) {
+    if (
+      !pharmacy.pendingModeration ||
+      Object.keys(pharmacy.pendingModeration).length === 0
+    ) {
+      throw httpError(
+        HTTP_STATUS.BAD_REQUEST,
+        'There are no pharmacy changes to send for moderation.'
+      );
+    }
+
     pharmacy.status = PHARMACY_STATUSES.ON_MODERATION;
   }
 

@@ -499,8 +499,11 @@ function createBankDetails(pharmacyName: string, pharmacyNumber: number) {
 
 const PHARMACY_ACCOUNT_PASSWORD = '123456789';
 const PHARMACY_ACCOUNT_DESCRIPTION_LENGTH = 5000;
+
 const PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p94AAAAASUVORK5CYII=';
+
+//===============================================================
 
 type PharmacyAccountSeed = {
   email: string;
@@ -514,7 +517,11 @@ type PharmacyAccountSeed = {
     | typeof PHARMACY_STATUSES.ACTIVE;
   statusReason?: string;
   imageUrl?: string;
+  publicEmail?: string;
+  workingHours?: string;
 };
+
+//===============================================================
 
 const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
   {
@@ -529,14 +536,19 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
   },
   {
     email: 'nata6@ukr.net',
-    phone: '+380661234006',
+    publicEmail: 'nata777@ukr.net',
+    phone: '+380661234077',
     ownerName: 'Nata Six',
-    address: '26 Wellness Street, Lviv',
-    pharmacyName: 'Nata Care Pharmacy Active',
+    address: '27 Wellness Street, Lviv',
+    pharmacyName: 'Nata Care Pharmacy',
     status: PHARMACY_STATUSES.ACTIVE,
     imageUrl: '/images/seed/pharmacies/pharmacy-021.png',
+    workingHours:
+      'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 11:00-16:00; Sun: Closed',
   },
 ];
+
+//===============================================================
 
 function createExactLengthText(source: string, targetLength: number): string {
   const filler = `
@@ -557,6 +569,8 @@ function createExactLengthText(source: string, targetLength: number): string {
 
   return /\s$/.test(sliced) ? `${sliced.slice(0, -1)}.` : sliced;
 }
+
+//===============================================================
 
 function createPharmacyAccountDescription(pharmacyName: string): string {
   return createExactLengthText(
@@ -586,6 +600,8 @@ The pharmacy profile contains realistic bank details, address, phone number, ema
   );
 }
 
+//===============================================================
+
 function createVerificationDocuments(email: string) {
   const prefix = email.split('@')[0];
 
@@ -608,6 +624,8 @@ function createVerificationDocuments(email: string) {
   ];
 }
 
+//===============================================================
+
 function createPharmacyAccountBankDetails(seed: PharmacyAccountSeed) {
   const accountNumber = Number(seed.email.match(/nata(\d+)/)?.[1] ?? 6);
   const ibanTail = `300001${String(accountNumber).padStart(21, '0')}`;
@@ -617,10 +635,12 @@ function createPharmacyAccountBankDetails(seed: PharmacyAccountSeed) {
     taxId: `3000000${accountNumber}`,
     iban: `UA${ibanTail}`,
     bankName: accountNumber === 5 ? 'JSC PrivatBank' : 'JSC Oschadbank',
-    receiptEmail: seed.email,
+    receiptEmail: seed.publicEmail ?? seed.email,
     paymentPurpose: `Payment for E-PHARMACY orders from ${seed.pharmacyName}`,
   };
 }
+
+//===============================================================
 
 async function seedPharmacyAccounts(): Promise<number> {
   const password = await hashPassword(PHARMACY_ACCOUNT_PASSWORD);
@@ -656,8 +676,9 @@ async function seedPharmacyAccounts(): Promise<number> {
           address: seed.address,
           city: seed.address.endsWith('Kyiv') ? 'Kyiv' : 'Lviv',
           phone: seed.phone,
-          email: seed.email,
+          email: seed.publicEmail ?? seed.email,
           workingHours:
+            seed.workingHours ??
             'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
           bankDetails: createPharmacyAccountBankDetails(seed),
           rating: 0,
@@ -739,6 +760,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       packageQuantity,
       imageUrl,
     ] = PRODUCT_BLUEPRINTS[index % PRODUCT_BLUEPRINTS.length];
+    const status = index >= 122 ? ('blocked' as const) : ('active' as const);
     const variantIndex = Math.floor(index / PRODUCT_BLUEPRINTS.length);
     const name = createProductName(
       baseName,
@@ -747,6 +769,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       packageQuantity,
       variantIndex
     );
+
     const isPremium = index % 6 === 0 || index % 11 === 0;
     const basePrice = isPremium
       ? 1050 + ((index * 137) % 2450)
@@ -757,6 +780,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       (_, offerIndex) =>
         pharmacies[(index * 3 + offerIndex) % pharmacies.length]
     );
+
     const isSoldOut = index % 17 === 0;
     const richStockPharmacies = index < 115 ? pharmacies.slice(0, 10) : [];
     const mergedPharmacies = [
@@ -769,6 +793,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
           )
       ),
     ];
+
     const shouldForceRichStock = index < 115;
     const offers =
       isSoldOut && !shouldForceRichStock
@@ -797,7 +822,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       article: `EPH-${String(productNumber).padStart(4, '0')}`,
       description: `${name} is a realistic demo catalog item for testing product cards, price formatting, long review text, filters, sorting, pharmacy availability, and responsive catalog layouts.`,
       category,
-      status: 'active' as const,
+      status,
       price: offers.length > 0 ? basePrice : 0,
       imageUrl,
       manufacturer,
@@ -812,6 +837,43 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       reviews: createModeratedReviews(reviewsCount, 4),
     };
   });
+}
+
+//===============================================================
+
+async function seedActivePharmacyProductOffers(
+  products: Array<{ _id: Types.ObjectId; status: string; price: number }>
+): Promise<number> {
+  const activePharmacy = await Pharmacy.findOne({ email: 'nata777@ukr.net' })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId } | null>();
+
+  if (!activePharmacy) return 0;
+
+  const activeProducts = products
+    .filter((product) => product.status === 'active')
+    .slice(0, 30);
+
+  if (!activeProducts.length) return 0;
+
+  await ProductOffer.deleteMany({ pharmacyId: activePharmacy._id });
+
+  await ProductOffer.insertMany(
+    activeProducts.map((product, index) => {
+      const quantity = 100 + index * 3;
+
+      return {
+        productId: product._id,
+        pharmacyId: activePharmacy._id,
+        price: product.price > 0 ? product.price : 100 + index * 10,
+        totalQuantity: quantity,
+        availableQuantity: quantity,
+        reservedQuantity: 0,
+      };
+    })
+  );
+
+  return activeProducts.length;
 }
 
 //===============================================================
@@ -880,11 +942,21 @@ async function seedDatabase(): Promise<void> {
   );
 
   const pharmacyAccountsCount = await seedPharmacyAccounts();
+  const activePharmacyOffersCount = await seedActivePharmacyProductOffers(
+    createdProducts as Array<{
+      _id: Types.ObjectId;
+      status: string;
+      price: number;
+    }>
+  );
 
   console.log(`Seed completed: ${createdPharmacies.length} pharmacies created`);
   console.log(`Seed completed: ${seedProducts.length} products created`);
   console.log(
     `Seed completed: ${pharmacyAccountsCount} pharmacy accounts created`
+  );
+  console.log(
+    `Seed completed: ${activePharmacyOffersCount} active pharmacy offers created`
   );
 }
 

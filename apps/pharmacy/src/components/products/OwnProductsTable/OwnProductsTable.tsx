@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import {
+  Button,
   DataTable,
   TableHeaderTitle,
   TableImagePreview,
@@ -10,6 +11,7 @@ import {
 
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
+import type { EntityId } from '@e-pharmacy/types';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
@@ -27,6 +29,8 @@ type OwnProductsTableProps = Readonly<{
   products: PharmacyProductRow[];
   emptyMessage: string;
   isLoading?: boolean;
+  removingProductId?: EntityId | null;
+  onRemoveProduct?: (product: PharmacyProductRow) => void;
 }>;
 
 //===================================================================
@@ -35,6 +39,8 @@ function OwnProductsTable({
   products,
   emptyMessage,
   isLoading = false,
+  removingProductId = null,
+  onRemoveProduct,
 }: OwnProductsTableProps) {
   const columns = useMemo<Array<DataTableColumn<PharmacyProductRow>>>(
     () => [
@@ -124,8 +130,26 @@ function OwnProductsTable({
           />
         ),
       },
+      {
+        key: 'action',
+        width: '130px',
+        title: 'Action',
+        render: (product) => (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={!onRemoveProduct || removingProductId === product.id}
+            isLoading={removingProductId === product.id}
+            loadingLabel="Removing..."
+            onClick={() => onRemoveProduct?.(product)}
+          >
+            Remove
+          </Button>
+        ),
+      },
     ],
-    []
+    [onRemoveProduct, removingProductId]
   );
 
   return (

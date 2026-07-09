@@ -323,12 +323,6 @@ function getStatusNoteClassName(status: PharmacyStatus): string {
 
 //===================================================================
 
-function getModeratedActionLabel(status: PharmacyStatus, fallback: string): string {
-  return status === 'active' ? 'Send for moderation' : fallback;
-}
-
-//===================================================================
-
 function formatPendingModerationValue(value?: string | null): string {
   const text = typeof value === 'string' ? value.trim() : '';
   return text || 'Not provided';
@@ -431,6 +425,12 @@ function buildDocumentsPayload(
 
 //===================================================================
 
+function hasProfilePayloadChanges(payload: UpdateMyPharmacyProfilePayload): boolean {
+  return Object.keys(payload).length > 0;
+}
+
+//===================================================================
+
 function PharmacyProfilePageContent() {
   const { user, isAuthReady } = useAuth();
 
@@ -485,6 +485,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const [pharmacyPictureUrl, setPharmacyPictureUrl] = useState<string | null>(
     null
   );
+  const [initialPharmacyPictureUrl, setInitialPharmacyPictureUrl] = useState<
+    string | null
+  >(null);
 
   const [pharmacyValues, setPharmacyValues] =
     useState<PharmacyContactFormValues>({
@@ -575,6 +578,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
         setPharmacyName(nextPharmacyName);
         setInitialPharmacyName(nextPharmacyName);
         setPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
+        setInitialPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
         setPharmacyValues(nextPharmacyValues);
         setInitialPharmacyValues(nextPharmacyValues);
         setAboutValues(nextAboutValues);
@@ -669,6 +673,8 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     documentValues,
     initialDocumentValues
   );
+  const pharmacyPictureIsDirty =
+    (pharmacyPictureUrl ?? '') !== (initialPharmacyPictureUrl ?? '');
   const pharmacyStatus = pharmacy?.status ?? 'new';
   const isProfileReadonly = isReadonlyStatus(pharmacyStatus);
   const pharmacyNameIsValid = pharmacyName.trim().length > 0;
@@ -689,6 +695,30 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     !aboutFormIsDirty &&
     !paymentFormIsDirty &&
     !documentsFormIsDirty &&
+    !isPharmacySaving &&
+    !isPharmacyPictureSaving &&
+    !isDocumentsSaving &&
+    !isSendingVerification;
+
+  const moderationFormHasChanges =
+    pharmacyFormIsDirty ||
+    aboutFormIsDirty ||
+    paymentFormIsDirty ||
+    documentsFormIsDirty ||
+    pharmacyPictureIsDirty;
+
+  const moderationFormIsValid =
+    pharmacyNameIsValid &&
+    pharmacyPictureIsReady &&
+    !hasValidationErrors(pharmacyErrors) &&
+    !hasValidationErrors(aboutErrors) &&
+    !hasValidationErrors(paymentErrors);
+
+  const canSendForModeration =
+    Boolean(pharmacy) &&
+    pharmacyStatus === 'active' &&
+    moderationFormHasChanges &&
+    moderationFormIsValid &&
     !isPharmacySaving &&
     !isPharmacyPictureSaving &&
     !isDocumentsSaving &&
@@ -777,6 +807,16 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const handlePharmacyPictureChange = async (nextPictureUrl: string | null) => {
     if (!pharmacy || isProfileReadonly) return;
 
+    if (pharmacy.status === 'active') {
+      setPharmacyPictureUrl(nextPictureUrl);
+      toast.success(
+        nextPictureUrl
+          ? 'Pharmacy photo is ready to send for moderation.'
+          : 'Pharmacy photo removal is ready to send for moderation.'
+      );
+      return;
+    }
+
     setIsPharmacyPictureSaving(true);
 
     try {
@@ -785,12 +825,11 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       });
       setPharmacy(response.pharmacy);
       setPharmacyPictureUrl(response.pharmacy.imageUrl ?? null);
+      setInitialPharmacyPictureUrl(response.pharmacy.imageUrl ?? null);
       toast.success(
-        response.pharmacy.status === 'on_moderation'
-          ? 'Photo change was sent for moderation.'
-          : nextPictureUrl
-            ? 'Pharmacy photo was updated.'
-            : 'Pharmacy photo was removed.'
+        nextPictureUrl
+          ? 'Pharmacy photo was updated.'
+          : 'Pharmacy photo was removed.'
       );
     } catch (error) {
       toast.error(getErrorMessage(error, 'Could not update pharmacy photo.'));
@@ -993,6 +1032,86 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     }
   };
 
+  const buildModerationPayload = (): UpdateMyPharmacyProfilePayload => {
+    const payload: UpdateMyPharmacyProfilePayload = {};
+
+    if (pharmacyFormIsDirty) {
+      Object.assign(payload, buildProfilePayload(pharmacyValues, pharmacyName));
+    }
+
+    if (pharmacyPictureIsDirty) {
+      payload.imageUrl = pharmacyPictureUrl;
+    }
+
+    if (aboutFormIsDirty) {
+      Object.assign(payload, buildAboutPayload(aboutValues));
+    }
+
+    if (paymentFormIsDirty) {
+      Object.assign(payload, buildPaymentPayload(paymentValues));
+    }
+
+    if (documentsFormIsDirty) {
+      Object.assign(payload, buildDocumentsPayload(documentValues));
+    }
+
+    return payload;
+  };
+
+  const applyPharmacyFormState = (nextPharmacy: PharmacyProfile) => {
+    const nextPharmacyValues = createPharmacyInitialValues(user, nextPharmacy);
+    const nextAboutValues = createAboutInitialValues(nextPharmacy);
+    const nextPaymentValues = createPaymentInitialValues(user, nextPharmacy);
+    const nextPharmacyName = createPharmacyNameInitialValue(user, nextPharmacy);
+    const nextDocumentValues = createDocumentValues(nextPharmacy.documents);
+
+    setPharmacy(nextPharmacy);
+    setPharmacyName(nextPharmacyName);
+    setInitialPharmacyName(nextPharmacyName);
+    setPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
+    setInitialPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
+    setPharmacyValues(nextPharmacyValues);
+    setInitialPharmacyValues(nextPharmacyValues);
+    setAboutValues(nextAboutValues);
+    setInitialAboutValues(nextAboutValues);
+    setPaymentValues(nextPaymentValues);
+    setInitialPaymentValues(nextPaymentValues);
+    setDocumentValues(nextDocumentValues);
+    setInitialDocumentValues(nextDocumentValues);
+    setPharmacyTouched({});
+    setAboutTouched({});
+    setPaymentTouched({});
+    setDocumentsTouched(false);
+  };
+
+  const handleSendForModeration = async () => {
+    setPharmacyTouched(markAllFieldsTouched(PHARMACY_CONTACT_FORM_FIELDS));
+    setAboutTouched(markAllFieldsTouched(PHARMACY_ABOUT_FORM_FIELDS));
+    setPaymentTouched(markAllFieldsTouched(PHARMACY_PAYMENT_FORM_FIELDS));
+    setDocumentsTouched(true);
+
+    if (!canSendForModeration) return;
+
+    const payload = buildModerationPayload();
+
+    if (!hasProfilePayloadChanges(payload)) return;
+
+    setIsSendingVerification(true);
+
+    try {
+      await updateMyPharmacyProfile(payload);
+      const response = await sendMyPharmacyForVerification();
+      applyPharmacyFormState(response.pharmacy);
+      toast.success(response.message);
+    } catch (error) {
+      toast.error(
+        getErrorMessage(error, 'Could not send pharmacy changes for moderation.')
+      );
+    } finally {
+      setIsSendingVerification(false);
+    }
+  };
+
   const handleSendForVerification = async () => {
     setPharmacyTouched(markAllFieldsTouched(PHARMACY_CONTACT_FORM_FIELDS));
     setAboutTouched(markAllFieldsTouched(PHARMACY_ABOUT_FORM_FIELDS));
@@ -1149,6 +1268,19 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                   onClick={handleSendForVerification}
                 >
                   Send for verification
+                </Button>
+              ) : null}
+
+              {pharmacy.status === 'active' ? (
+                <Button
+                  type="button"
+                  fullWidth
+                  disabled={!canSendForModeration}
+                  isLoading={isSendingVerification}
+                  loadingLabel="Sending..."
+                  onClick={handleSendForModeration}
+                >
+                  Send for moderation
                 </Button>
               ) : null}
             </aside>
@@ -1447,21 +1579,23 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       </div>
                     </div>
 
-                    <Button
-                      type="button"
-                      disabled={
-                        !pharmacyNameIsValid ||
-                        hasValidationErrors(pharmacyErrors) ||
-                        !pharmacyFormIsDirty ||
-                        isPharmacySaving ||
-                        isProfileReadonly
-                      }
-                      isLoading={isPharmacySaving}
-                      loadingLabel="Saving..."
-                      onClick={handlePharmacySubmit}
-                    >
-                      {getModeratedActionLabel(pharmacy.status, 'Save pharmacy data')}
-                    </Button>
+                    {pharmacy.status !== 'active' ? (
+                      <Button
+                        type="button"
+                        disabled={
+                          !pharmacyNameIsValid ||
+                          hasValidationErrors(pharmacyErrors) ||
+                          !pharmacyFormIsDirty ||
+                          isPharmacySaving ||
+                          isProfileReadonly
+                        }
+                        isLoading={isPharmacySaving}
+                        loadingLabel="Saving..."
+                        onClick={handlePharmacySubmit}
+                      >
+                        Save pharmacy data
+                      </Button>
+                    ) : null}
                   </section>
                 </div>
               ) : null}
@@ -1512,20 +1646,22 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       }
                     />
 
-                    <Button
-                      type="button"
-                      disabled={
-                        hasValidationErrors(aboutErrors) ||
-                        !aboutFormIsDirty ||
-                        isPharmacySaving ||
-                        isProfileReadonly
-                      }
-                      isLoading={isPharmacySaving}
-                      loadingLabel="Saving..."
-                      onClick={handleAboutSubmit}
-                    >
-                      {getModeratedActionLabel(pharmacy.status, 'Save about pharmacy')}
-                    </Button>
+                    {pharmacy.status !== 'active' ? (
+                      <Button
+                        type="button"
+                        disabled={
+                          hasValidationErrors(aboutErrors) ||
+                          !aboutFormIsDirty ||
+                          isPharmacySaving ||
+                          isProfileReadonly
+                        }
+                        isLoading={isPharmacySaving}
+                        loadingLabel="Saving..."
+                        onClick={handleAboutSubmit}
+                      >
+                        Save about pharmacy
+                      </Button>
+                    ) : null}
                   </section>
                 </div>
               ) : null}
@@ -1665,20 +1801,22 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       />
                     </div>
 
-                    <Button
-                      type="button"
-                      disabled={
-                        hasValidationErrors(paymentErrors) ||
-                        !paymentFormIsDirty ||
-                        isPharmacySaving ||
-                        isProfileReadonly
-                      }
-                      isLoading={isPharmacySaving}
-                      loadingLabel="Saving..."
-                      onClick={handlePaymentSubmit}
-                    >
-                      {getModeratedActionLabel(pharmacy.status, 'Save payment details')}
-                    </Button>
+                    {pharmacy.status !== 'active' ? (
+                      <Button
+                        type="button"
+                        disabled={
+                          hasValidationErrors(paymentErrors) ||
+                          !paymentFormIsDirty ||
+                          isPharmacySaving ||
+                          isProfileReadonly
+                        }
+                        isLoading={isPharmacySaving}
+                        loadingLabel="Saving..."
+                        onClick={handlePaymentSubmit}
+                      >
+                        Save payment details
+                      </Button>
+                    ) : null}
                   </section>
                 </div>
               ) : null}
@@ -1728,19 +1866,21 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       onChange={handleDocumentsChange}
                     />
 
-                    <Button
-                      type="button"
-                      disabled={
-                        !documentsFormIsDirty ||
-                        isDocumentsSaving ||
-                        isProfileReadonly
-                      }
-                      isLoading={isDocumentsSaving}
-                      loadingLabel="Saving..."
-                      onClick={handleDocumentsSubmit}
-                    >
-                      {getModeratedActionLabel(pharmacy.status, 'Save documents')}
-                    </Button>
+                    {pharmacy.status !== 'active' ? (
+                      <Button
+                        type="button"
+                        disabled={
+                          !documentsFormIsDirty ||
+                          isDocumentsSaving ||
+                          isProfileReadonly
+                        }
+                        isLoading={isDocumentsSaving}
+                        loadingLabel="Saving..."
+                        onClick={handleDocumentsSubmit}
+                      >
+                        Save documents
+                      </Button>
+                    ) : null}
                   </section>
                 </div>
               ) : null}

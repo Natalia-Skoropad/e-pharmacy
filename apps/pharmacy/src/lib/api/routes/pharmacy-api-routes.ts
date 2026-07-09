@@ -5,7 +5,10 @@ export const pharmacyApiRoutes = {
 
     addToMyPharmacy: (productId: string) =>
       `/api/products/${productId}/my-pharmacy`,
-    
+
+    removeFromMyPharmacy: (productId: string) =>
+      `/api/products/${productId}/my-pharmacy`,
+
     reviews: (productId: string) => `/api/products/${productId}/reviews`,
   },
 

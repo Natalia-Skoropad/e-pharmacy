@@ -135,6 +135,10 @@ export type AddProductToMyPharmacyResponse = ProductDetailsResponse & {
   message: string;
 };
 
+export type RemoveProductFromMyPharmacyResponse = ProductDetailsResponse & {
+  message: string;
+};
+
 export type FavoriteProductIdsResponse = { ids: EntityId[] };
 
 //=============================================================================

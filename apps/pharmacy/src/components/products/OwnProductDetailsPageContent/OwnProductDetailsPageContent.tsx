@@ -23,6 +23,7 @@ function OwnProductDetailsPageContent({
       bannerMessage="You can review product details now. Price and stock management unlock after Admin verifies your pharmacy profile."
       productKicker="Own product"
       showAddAction={false}
+      showRemoveAction
     />
   );
 }

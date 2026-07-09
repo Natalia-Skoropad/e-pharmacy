@@ -9,6 +9,7 @@ import type {
   ProductDetailsResponse,
   ProductReviewsResponse,
   ProductsQueryParams,
+  RemoveProductFromMyPharmacyResponse,
   ProductsResponse,
 } from '@e-pharmacy/types';
 
@@ -73,6 +74,20 @@ export async function addProductToMyPharmacy(
     ApiSuccessResponse<AddProductToMyPharmacyResponse>
   >(PHARMACY_API_ROUTES.products.addToMyPharmacy(productId), {
     method: 'POST',
+  });
+
+  return getResponseData(response);
+}
+
+//===================================================================
+
+export async function removeProductFromMyPharmacy(
+  productId: Product['id']
+): Promise<RemoveProductFromMyPharmacyResponse> {
+  const response = await localApiRequest<
+    ApiSuccessResponse<RemoveProductFromMyPharmacyResponse>
+  >(PHARMACY_API_ROUTES.products.removeFromMyPharmacy(productId), {
+    method: 'DELETE',
   });
 
   return getResponseData(response);

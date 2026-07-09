@@ -37,6 +37,7 @@ import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import {
   addProductToMyPharmacy,
+  removeProductFromMyPharmacy,
   getMyPharmacyProfile,
   getProductDetails,
   getProductReviews,
@@ -74,6 +75,7 @@ type AllProductDetailsPageContentProps = Readonly<{
   bannerMessage?: string;
   productKicker?: string;
   showAddAction?: boolean;
+  showRemoveAction?: boolean;
 }>;
 
 type ProductDetailsError = Readonly<{
@@ -132,7 +134,6 @@ const PRODUCT_DETAILS_TABS: Array<TabItem<ProductDetailsTab>> = [
 
 //===================================================================
 
-const STOCK_MOVEMENT_ROWS: StockMovementRow[] = [];
 const RELATED_ORDER_ROWS: RelatedOrderRow[] = [];
 
 //===================================================================
@@ -162,11 +163,11 @@ function getProductDetailsError(error: unknown): ProductDetailsError {
 
 //===================================================================
 
-function getAddProductErrorMessage(error: unknown): string {
+function getProductActionErrorMessage(error: unknown): string {
   if (isApiError(error) && error.message) return error.message;
   if (error instanceof Error && error.message) return error.message;
 
-  return 'Could not add product. Please try again.';
+  return 'Product action could not be completed. Please try again.';
 }
 
 //===================================================================
@@ -346,6 +347,25 @@ function getStatisticCards(offer: ProductOffer | null): StatisticCard[] {
 
 //===================================================================
 
+function getStockMovementRows(offer: ProductOffer | null): StockMovementRow[] {
+  if (!offer) return [];
+
+  return [
+    {
+      id: `${offer.id}-initial-stock`,
+      date: offer.createdAt ? formatShortDate(offer.createdAt) : '—',
+      eventType: 'Stock arrival',
+      quantity: `+${offer.totalQuantity}`,
+      price: formatPrice(offer.price),
+      orderNumber: '—',
+      source: 'Pharmacy stock',
+      comment: 'Initial stock quantity added to the pharmacy warehouse.',
+    },
+  ];
+}
+
+//===================================================================
+
 function mapReviewsToListItems(reviews: ProductReview[]): ReviewsListItem[] {
   return reviews.map((review) => ({
     id: String(review.id),
@@ -371,6 +391,7 @@ function AllProductDetailsPageContent({
   bannerTitle = DEFAULT_BANNER_TITLE,
   bannerMessage = DEFAULT_BANNER_MESSAGE,
   showAddAction = true,
+  showRemoveAction = false,
 }: AllProductDetailsPageContentProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<ProductReview[]>([]);
@@ -384,7 +405,9 @@ function AllProductDetailsPageContent({
   const [activeTab, setActiveTab] = useState<ProductDetailsTab>('details');
   const [isLoading, setIsLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [isRemovingProduct, setIsRemovingProduct] = useState(false);
   const [error, setError] = useState<ProductDetailsError | null>(null);
   const toast = useToast();
 
@@ -454,6 +477,9 @@ function AllProductDetailsPageContent({
     !currentOffer &&
     !bannerStatus
   );
+  const canRemoveFromPharmacy = Boolean(
+    product && currentOffer && currentPharmacyId && !bannerStatus
+  );
   const tabs = PRODUCT_DETAILS_TABS.map((tab) =>
     tab.value === 'reviews'
       ? { ...tab, label: `Reviews (${reviewsTotal})` }
@@ -465,6 +491,7 @@ function AllProductDetailsPageContent({
     : [];
   const characteristics = product ? getProductCharacteristics(product) : [];
   const statisticCards = getStatisticCards(currentOffer);
+  const stockMovementRows = getStockMovementRows(currentOffer);
   const reviewItems = mapReviewsToListItems(reviews);
 
   const stockMovementColumns = useMemo<
@@ -527,9 +554,29 @@ function AllProductDetailsPageContent({
       setIsAddModalOpen(false);
       toast.success(response.message || 'Product added to your pharmacy.');
     } catch (addError) {
-      toast.error(getAddProductErrorMessage(addError));
+      toast.error(getProductActionErrorMessage(addError));
     } finally {
       setIsAddingProduct(false);
+    }
+  };
+
+  const handleRemoveProductConfirm = async () => {
+    if (!product || !canRemoveFromPharmacy) return;
+
+    setIsRemovingProduct(true);
+
+    try {
+      const response = await removeProductFromMyPharmacy(product.id);
+
+      setProduct(response.product);
+      setIsRemoveModalOpen(false);
+      toast.success(
+        response.message || 'Product was removed from your pharmacy.'
+      );
+    } catch (removeError) {
+      toast.error(getProductActionErrorMessage(removeError));
+    } finally {
+      setIsRemovingProduct(false);
     }
   };
 
@@ -663,6 +710,21 @@ function AllProductDetailsPageContent({
                           </Button>
                         ) : null}
 
+                        {showRemoveAction && isAddedToPharmacy ? (
+                          <Button
+                            className={css.actionButton}
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            disabled={!canRemoveFromPharmacy}
+                            isLoading={isRemovingProduct}
+                            loadingLabel="Removing product..."
+                            onClick={() => setIsRemoveModalOpen(true)}
+                          >
+                            Remove from my pharmacy
+                          </Button>
+                        ) : null}
+
                         <ButtonLink
                           className={css.actionButton}
                           href={backHref}
@@ -719,7 +781,7 @@ function AllProductDetailsPageContent({
                       {isAddedToPharmacy ? (
                         <DataTable
                           columns={stockMovementColumns}
-                          items={STOCK_MOVEMENT_ROWS}
+                          items={stockMovementRows}
                           getItemKey={(row) => row.id}
                           minWidth={980}
                           labels={{
@@ -822,6 +884,18 @@ function AllProductDetailsPageContent({
         onConfirm={() => void handleAddProductConfirm()}
         onCancel={() => {
           if (!isAddingProduct) setIsAddModalOpen(false);
+        }}
+      />
+
+      <ConfirmationModal
+        isOpen={isRemoveModalOpen}
+        title="Remove product from pharmacy?"
+        description="This product will be removed from your own products only if no orders were created for it."
+        confirmLabel="Remove product"
+        isLoading={isRemovingProduct}
+        onConfirm={() => void handleRemoveProductConfirm()}
+        onCancel={() => {
+          if (!isRemovingProduct) setIsRemoveModalOpen(false);
         }}
       />
     </main>
