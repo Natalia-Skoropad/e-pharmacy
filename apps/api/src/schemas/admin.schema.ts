@@ -24,6 +24,7 @@ export const updateAdminPharmacyStatusSchema = z.object({
     PHARMACY_STATUSES.ACTIVE,
     PHARMACY_STATUSES.BLOCKED,
   ]),
+  reason: z.string().trim().max(1000).optional(),
 });
 
 //===============================================================

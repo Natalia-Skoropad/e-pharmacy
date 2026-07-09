@@ -51,8 +51,23 @@ export type PharmacyCheckoutDetails = {
   bankDetails?: PharmacyBankDetails;
 };
 
+export type PharmacyPendingModeration = {
+  name?: string;
+  address?: string;
+  city?: string;
+  phone?: string;
+  email?: string;
+  workingHours?: string;
+  imageUrl?: string | null;
+  description?: string;
+  documents?: PharmacyVerificationDocument[];
+  bankDetails?: Partial<PharmacyBankDetails>;
+};
+
 export type PharmacyModerationDetails = {
   status: PharmacyStatus;
+  statusReason?: string;
+  pendingModeration?: PharmacyPendingModeration;
 };
 
 export type PharmacyProfile = {
@@ -70,6 +85,8 @@ export type PharmacyProfile = {
   rating: number;
   imageUrl?: string;
   description?: string;
+  statusReason?: string;
+  pendingModeration?: PharmacyPendingModeration;
   reviewsCount: number;
   updatedAt: ISODateString;
 };
@@ -186,6 +203,7 @@ export type CreatePharmacyByAdminPayload = {
 
 export type UpdatePharmacyStatusPayload = {
   status: PharmacyStatus;
+  reason?: string;
 };
 
 export type UpdateMyPharmacyProfilePayload = {

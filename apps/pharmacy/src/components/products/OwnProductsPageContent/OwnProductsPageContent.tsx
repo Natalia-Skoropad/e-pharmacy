@@ -136,7 +136,7 @@ function OwnProductsPageContent({
     useState<OwnProductStatisticsCounts>(DEFAULT_OWN_PRODUCT_STATISTICS);
   const [pharmacyId, setPharmacyId] = useState<EntityId | null>(null);
   const [pharmacyStatus, setPharmacyStatus] =
-    useState<PharmacyStatus>('new');
+    useState<PharmacyStatus | null>(null);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -269,7 +269,9 @@ function OwnProductsPageContent({
   };
 
   const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
-  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
+  const bannerLabel = bannerStatus
+    ? getLockedFeatureBannerLabel(bannerStatus)
+    : null;
 
   return (
     <main className={css.page} aria-labelledby="own-products-page-title">
@@ -280,12 +282,14 @@ function OwnProductsPageContent({
           icon={<Boxes size={23} aria-hidden="true" />}
         />
 
-        <StatusBanner
-          status={bannerStatus}
-          label={bannerLabel}
+        {bannerStatus ? (
+          <StatusBanner
+            status={bannerStatus}
+            label={bannerLabel ?? undefined}
           title="Verification is required"
           message="Own products will appear only after verification, when adding products to this pharmacy becomes available."
-        />
+          />
+        ) : null}
 
         <OwnProductStatistics
           className={css.productStatistics}

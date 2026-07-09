@@ -123,7 +123,7 @@ function AllProductsPageContent({
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
   );
-  const [pharmacyStatus, setPharmacyStatus] = useState<PharmacyStatus>('new');
+  const [pharmacyStatus, setPharmacyStatus] = useState<PharmacyStatus | null>(null);
 
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -265,7 +265,9 @@ function AllProductsPageContent({
   };
 
   const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
-  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
+  const bannerLabel = bannerStatus
+    ? getLockedFeatureBannerLabel(bannerStatus)
+    : null;
 
   const getProductStatisticHref = (key: AllProductStatisticsKey) => {
     if (key === 'active') {
@@ -311,12 +313,14 @@ function AllProductsPageContent({
           icon={<PackageSearch size={23} aria-hidden="true" />}
         />
 
-        <StatusBanner
-          status={bannerStatus}
-          label={bannerLabel}
+        {bannerStatus ? (
+          <StatusBanner
+            status={bannerStatus}
+            label={bannerLabel ?? undefined}
           title="Catalog is available in read-only mode"
           message="Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
-        />
+          />
+        ) : null}
 
         <AllProductStatistics
           counts={productStatistics}

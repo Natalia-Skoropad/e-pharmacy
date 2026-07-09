@@ -23,6 +23,7 @@ import {
 
 import { getPharmacyClients } from '@/lib/api/browser';
 import { getPharmacyClientStatistics } from '@/lib/clients/client-statistics';
+
 import {
   getLockedFeatureBannerLabel,
   getLockedFeatureBannerStatus,
@@ -216,7 +217,9 @@ function ClientsPageContent({
 
   const currentPharmacyStatus = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
-  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
+  const bannerLabel = bannerStatus
+    ? getLockedFeatureBannerLabel(bannerStatus)
+    : null;
 
   return (
     <main className={css.page} aria-labelledby="clients-page-title">
@@ -227,16 +230,18 @@ function ClientsPageContent({
           icon={<Users size={23} aria-hidden="true" />}
         />
 
-        <StatusBanner
-          status={bannerStatus}
-          label={bannerLabel}
-          title="Verification is required"
-          message={
-            bannerStatus === 'on_verification'
-              ? 'Client data stays locked while Admin reviews the submitted pharmacy profile.'
-              : 'Client data is connected only to real pharmacy orders, so a new pharmacy starts with an empty client table.'
-          }
-        />
+        {bannerStatus ? (
+          <StatusBanner
+            status={bannerStatus}
+            label={bannerLabel ?? undefined}
+            title="Verification is required"
+            message={
+              bannerStatus === 'on_verification'
+                ? 'Client data stays locked while Admin reviews the submitted pharmacy profile.'
+                : 'Client data is connected only to real pharmacy orders, so a new pharmacy starts with an empty client table.'
+            }
+          />
+        ) : null}
 
         <ClientStatistics
           counts={clientStatistics}

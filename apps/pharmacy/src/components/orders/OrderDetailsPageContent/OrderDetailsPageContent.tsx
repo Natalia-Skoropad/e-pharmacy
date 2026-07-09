@@ -29,7 +29,10 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const title = `Order #${orderId}`;
   const currentPharmacyStatus = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
-  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
+
+  const bannerLabel = bannerStatus
+    ? getLockedFeatureBannerLabel(bannerStatus)
+    : null;
 
   return (
     <main className={css.page} aria-labelledby="order-details-page-title">
@@ -41,32 +44,36 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
             icon={<ShoppingBag size={23} aria-hidden="true" />}
           />
 
-          <StatusBanner
-            status={bannerStatus}
-            label={bannerLabel}
-            title="Order details is locked for now"
-            message="This page belongs to business functionality that opens after Admin verifies your pharmacy profile."
-          />
+          {bannerStatus ? (
+            <StatusBanner
+              status={bannerStatus}
+              label={bannerLabel ?? undefined}
+              title="Order details is locked for now"
+              message="This page belongs to business functionality that opens after Admin verifies your pharmacy profile."
+            />
+          ) : null}
 
-          <section className={css.card} aria-labelledby="order-actions-title">
-            <h2 id="order-actions-title">What can you do now?</h2>
-            <p>
-              Complete the pharmacy profile, check that registration documents
-              are attached, and send the profile for verification.
-            </p>
-            <div className={css.actions}>
-              <ButtonLink
-                href={getPharmacyProfilePath()}
-                renderLink={({ href, className, children, ...props }) => (
-                  <Link href={href} className={className} {...props}>
-                    {children}
-                  </Link>
-                )}
-              >
-                Go to profile
-              </ButtonLink>
-            </div>
-          </section>
+          {bannerStatus ? (
+            <section className={css.card} aria-labelledby="order-actions-title">
+              <h2 id="order-actions-title">What can you do now?</h2>
+              <p>
+                Complete the pharmacy profile, check that registration documents
+                are attached, and send the profile for verification.
+              </p>
+              <div className={css.actions}>
+                <ButtonLink
+                  href={getPharmacyProfilePath()}
+                  renderLink={({ href, className, children, ...props }) => (
+                    <Link href={href} className={className} {...props}>
+                      {children}
+                    </Link>
+                  )}
+                >
+                  Go to profile
+                </ButtonLink>
+              </div>
+            </section>
+          ) : null}
         </div>
       </div>
     </main>

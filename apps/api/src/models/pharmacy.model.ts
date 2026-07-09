@@ -127,6 +127,18 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       default: undefined,
     },
 
+    statusReason: {
+      type: String,
+      trim: true,
+      maxlength: [1000, 'Status reason must be at most 1000 characters'],
+      default: undefined,
+    },
+
+    pendingModeration: {
+      type: Schema.Types.Mixed,
+      default: undefined,
+    },
+
     reviewsCount: {
       type: Number,
       min: 0,

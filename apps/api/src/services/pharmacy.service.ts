@@ -14,6 +14,7 @@ import type {
   PharmacyBankDetails,
   PharmacyEntity,
   PharmacyFilterOptionsResponseDto,
+  PharmacyPendingModeration,
   PublicPharmacyResponseDto,
   PharmacyProfileResponseDto,
   PharmacyReviewResponseDto,
@@ -37,9 +38,11 @@ type PharmaciesQuery = {
 };
 
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
+
 type PharmacyHydratedDocument = HydratedDocument<PharmacyEntity> & {
   _id: Types.ObjectId;
 };
+
 type PendingReviewsQuery = { page: number; perPage: number };
 
 type CreateReviewInput = {
@@ -136,7 +139,6 @@ function serializePublicPharmacy(
   };
 }
 
-
 //===============================================================
 
 function serializePharmacyProfile(
@@ -157,6 +159,10 @@ function serializePharmacyProfile(
     rating: pharmacy.rating ?? 0,
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
+    ...(pharmacy.statusReason ? { statusReason: pharmacy.statusReason } : {}),
+    ...(pharmacy.pendingModeration
+      ? { pendingModeration: pharmacy.pendingModeration }
+      : {}),
     reviewsCount: pharmacy.reviewsCount ?? 0,
     updatedAt:
       pharmacy.updatedAt?.toISOString?.() ?? String(pharmacy.updatedAt ?? ''),
@@ -199,7 +205,6 @@ export async function getPharmacyOptionsService() {
     })),
   };
 }
-
 
 //===============================================================
 
@@ -352,27 +357,23 @@ export async function getPharmacyDetailsService(
 
 //===============================================================
 
-
 export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
   const pharmacy = await Pharmacy.findOne({
     _id: pharmacyId,
     status: PHARMACY_STATUSES.ACTIVE,
   })
     .select('name address city phone email workingHours bankDetails')
-    .lean<
-      | (Pick<
-          PharmacyDocument,
-          | '_id'
-          | 'name'
-          | 'address'
-          | 'city'
-          | 'phone'
-          | 'email'
-          | 'workingHours'
-          | 'bankDetails'
-        >)
-      | null
-    >();
+    .lean<Pick<
+      PharmacyDocument,
+      | '_id'
+      | 'name'
+      | 'address'
+      | 'city'
+      | 'phone'
+      | 'email'
+      | 'workingHours'
+      | 'bankDetails'
+    > | null>();
 
   if (!pharmacy) {
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
@@ -567,7 +568,6 @@ export async function setFavoritePharmacyService(
   };
 }
 
-
 //===============================================================
 
 async function createMissingOwnerPharmacyProfile(
@@ -629,9 +629,7 @@ async function findMyPharmacy(
 
 //===============================================================
 
-function assertReadyForVerification(
-  pharmacy: PharmacyHydratedDocument
-): void {
+function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
   const bankDetails = pharmacy.bankDetails;
   const requiredFields: Record<string, unknown> = {
     name: pharmacy.name,
@@ -655,9 +653,13 @@ function assertReadyForVerification(
     .map(([field]) => field);
 
   if (missingFields.length > 0) {
-    throw httpError(HTTP_STATUS.BAD_REQUEST, 'Complete pharmacy profile before verification.', {
-      missingFields,
-    });
+    throw httpError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Complete pharmacy profile before verification.',
+      {
+        missingFields,
+      }
+    );
   }
 }
 
@@ -675,11 +677,100 @@ export async function getMyPharmacyProfileService(
 
 //===============================================================
 
+function hasModeratedProfileChanges(
+  input: UpdateMyPharmacyProfileInput
+): boolean {
+  return Boolean(
+    input.name !== undefined ||
+    input.address !== undefined ||
+    input.city !== undefined ||
+    input.phone !== undefined ||
+    input.email !== undefined ||
+    input.workingHours !== undefined ||
+    input.imageUrl !== undefined ||
+    input.description !== undefined ||
+    input.documents !== undefined ||
+    input.bankDetails
+  );
+}
+
+//===============================================================
+
+function buildPendingModerationPayload(
+  current: PharmacyPendingModeration | undefined,
+  input: UpdateMyPharmacyProfileInput
+): PharmacyPendingModeration {
+  const pending: PharmacyPendingModeration = { ...(current ?? {}) };
+
+  if (input.name !== undefined) pending.name = input.name;
+  if (input.address !== undefined) pending.address = input.address;
+  if (input.city !== undefined) pending.city = input.city;
+  if (input.phone !== undefined) pending.phone = input.phone;
+  if (input.email !== undefined) pending.email = input.email;
+  if (input.workingHours !== undefined)
+    pending.workingHours = input.workingHours;
+  if (input.imageUrl !== undefined) pending.imageUrl = input.imageUrl;
+  if (input.description !== undefined) pending.description = input.description;
+  if (input.documents !== undefined) pending.documents = input.documents;
+
+  if (input.bankDetails) {
+    pending.bankDetails = {
+      ...(pending.bankDetails ?? {}),
+      ...input.bankDetails,
+    };
+  }
+
+  return pending;
+}
+
+//===============================================================
+
 export async function updateMyPharmacyProfileService(
   userId: string,
   input: UpdateMyPharmacyProfileInput
 ): Promise<{ pharmacy: PharmacyProfileResponseDto }> {
   const pharmacy = await findMyPharmacy(userId);
+
+  if (
+    pharmacy.status === PHARMACY_STATUSES.ON_VERIFICATION ||
+    pharmacy.status === PHARMACY_STATUSES.ON_MODERATION
+  ) {
+    throw httpError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Profile fields are locked until Admin reviews the submitted pharmacy data.'
+    );
+  }
+
+  if (
+    pharmacy.status === PHARMACY_STATUSES.ACTIVE &&
+    hasModeratedProfileChanges(input)
+  ) {
+    const pendingModeration = buildPendingModerationPayload(
+      pharmacy.pendingModeration,
+      input
+    );
+
+    const updatedPharmacy = await Pharmacy.findByIdAndUpdate(
+      pharmacy._id,
+      {
+        $set: {
+          pendingModeration,
+          status: PHARMACY_STATUSES.ON_MODERATION,
+          updatedBy: userId,
+        },
+        $unset: { statusReason: '' },
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedPharmacy) {
+      throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+    }
+
+    return {
+      pharmacy: serializePharmacyProfile(updatedPharmacy as PharmacyDocument),
+    };
+  }
 
   const update: Record<string, unknown> = {
     updatedBy: userId,
@@ -690,7 +781,8 @@ export async function updateMyPharmacyProfileService(
   if (input.city !== undefined) update.city = input.city;
   if (input.phone !== undefined) update.phone = input.phone;
   if (input.email !== undefined) update.email = input.email;
-  if (input.workingHours !== undefined) update.workingHours = input.workingHours;
+  if (input.workingHours !== undefined)
+    update.workingHours = input.workingHours;
   if (input.imageUrl !== undefined) update.imageUrl = input.imageUrl;
   if (input.description !== undefined) update.description = input.description;
   if (input.documents !== undefined) update.documents = input.documents;
@@ -729,6 +821,7 @@ export async function sendMyPharmacyForVerificationService(
 
   if (pharmacy.status === PHARMACY_STATUSES.NEW) {
     pharmacy.status = PHARMACY_STATUSES.ON_VERIFICATION;
+    pharmacy.statusReason = undefined;
   } else if (pharmacy.status === PHARMACY_STATUSES.ACTIVE) {
     pharmacy.status = PHARMACY_STATUSES.ON_MODERATION;
   }

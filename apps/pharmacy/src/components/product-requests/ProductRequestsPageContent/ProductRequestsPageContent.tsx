@@ -197,7 +197,9 @@ function ProductRequestsPageContent({
 
   const currentPharmacyStatus = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
-  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
+  const bannerLabel = bannerStatus
+    ? getLockedFeatureBannerLabel(bannerStatus)
+    : null;
 
   return (
     <main className={css.page} aria-labelledby="product-requests-page">
@@ -211,16 +213,18 @@ function ProductRequestsPageContent({
           icon={<FilePlus2 size={23} aria-hidden="true" />}
         />
 
-        <StatusBanner
-          status={bannerStatus}
-          label={bannerLabel}
-          title="Verification is required"
+        {bannerStatus ? (
+          <StatusBanner
+            status={bannerStatus}
+            label={bannerLabel ?? undefined}
+            title="Verification is required"
           message={
             bannerStatus === 'on_verification'
               ? 'Creating product requests is paused while Admin reviews the submitted pharmacy profile.'
               : 'Creating product requests is locked for a new pharmacy until verification is complete.'
           }
-        />
+          />
+        ) : null}
 
         <ProductRequestStatistics
           className={css.requestStatistics}

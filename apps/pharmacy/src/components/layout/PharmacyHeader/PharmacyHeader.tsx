@@ -259,6 +259,8 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
                       className={css.userMenuItem}
                       href={clientAppUrl}
                       role="menuitem"
+                      target="_blank"
+                      rel="noreferrer"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       <Globe2 size={18} aria-hidden="true" />
@@ -270,6 +272,8 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
                         className={css.userMenuItem}
                         href={clientPharmacyUrl}
                         role="menuitem"
+                        target="_blank"
+                        rel="noreferrer"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <Store size={18} aria-hidden="true" />

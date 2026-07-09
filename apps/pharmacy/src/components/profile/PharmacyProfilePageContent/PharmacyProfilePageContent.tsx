@@ -132,6 +132,11 @@ type ProfileStatusBadgeVariant =
   | 'active'
   | 'blocked';
 
+type PendingModerationItem = {
+  label: string;
+  value?: string | null;
+};
+
 //===================================================================
 
 const INITIAL_VISIBLE_REVIEWS_COUNT = 10;
@@ -296,6 +301,68 @@ function getStatusBadgeStatus(
 
 function isReadonlyStatus(status: PharmacyStatus): boolean {
   return status === 'on_verification' || status === 'on_moderation';
+}
+
+//===================================================================
+
+function getStatusNoteClassName(status: PharmacyStatus): string {
+  if (status === 'on_verification') {
+    return `${css.statusNote} ${css.statusNoteBeauty}`;
+  }
+
+  if (status === 'active') {
+    return `${css.statusNote} ${css.statusNoteActive}`;
+  }
+
+  if (status === 'on_moderation') {
+    return `${css.statusNote} ${css.statusNoteWarning}`;
+  }
+
+  return css.statusNote;
+}
+
+//===================================================================
+
+function getModeratedActionLabel(status: PharmacyStatus, fallback: string): string {
+  return status === 'active' ? 'Send for moderation' : fallback;
+}
+
+//===================================================================
+
+function formatPendingModerationValue(value?: string | null): string {
+  const text = typeof value === 'string' ? value.trim() : '';
+  return text || 'Not provided';
+}
+
+//===================================================================
+
+function PendingModerationBox({
+  title,
+  items,
+}: Readonly<{
+  title: string;
+  items: PendingModerationItem[];
+}>) {
+  const visibleItems = items.filter((item) => item.value !== undefined);
+
+  if (visibleItems.length === 0) return null;
+
+  return (
+    <section className={css.pendingBox} aria-label={title}>
+      <div className={css.pendingHeader}>
+        <h3>{title}</h3>
+        <StatusBadge status="on_moderation" label="On moderation" />
+      </div>
+      <dl className={css.pendingList}>
+        {visibleItems.map((item) => (
+          <div key={item.label}>
+            <dt>{item.label}</dt>
+            <dd>{formatPendingModerationValue(item.value)}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
 }
 
 //===================================================================
@@ -719,9 +786,11 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       setPharmacy(response.pharmacy);
       setPharmacyPictureUrl(response.pharmacy.imageUrl ?? null);
       toast.success(
-        nextPictureUrl
-          ? 'Pharmacy photo was updated.'
-          : 'Pharmacy photo was removed.'
+        response.pharmacy.status === 'on_moderation'
+          ? 'Photo change was sent for moderation.'
+          : nextPictureUrl
+            ? 'Pharmacy photo was updated.'
+            : 'Pharmacy photo was removed.'
       );
     } catch (error) {
       toast.error(getErrorMessage(error, 'Could not update pharmacy photo.'));
@@ -808,7 +877,11 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       setPharmacyValues(nextValues);
       setInitialPharmacyValues(nextValues);
       setPharmacyTouched({});
-      toast.success('Pharmacy data saved successfully.');
+      toast.success(
+        response.pharmacy.status === 'on_moderation'
+          ? 'Changes sent for moderation.'
+          : 'Pharmacy data saved successfully.'
+      );
     } catch (error) {
       toast.error(getErrorMessage(error, 'Could not save pharmacy data.'));
     } finally {
@@ -838,7 +911,11 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       setAboutValues(nextValues);
       setInitialAboutValues(nextValues);
       setAboutTouched({});
-      toast.success('About pharmacy saved successfully.');
+      toast.success(
+        response.pharmacy.status === 'on_moderation'
+          ? 'Changes sent for moderation.'
+          : 'About pharmacy saved successfully.'
+      );
     } catch (error) {
       toast.error(getErrorMessage(error, 'Could not save about pharmacy.'));
     } finally {
@@ -868,7 +945,11 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       setPaymentValues(nextValues);
       setInitialPaymentValues(nextValues);
       setPaymentTouched({});
-      toast.success('Payment details saved successfully.');
+      toast.success(
+        response.pharmacy.status === 'on_moderation'
+          ? 'Changes sent for moderation.'
+          : 'Payment details saved successfully.'
+      );
     } catch (error) {
       toast.error(getErrorMessage(error, 'Could not save payment details.'));
     } finally {
@@ -900,7 +981,11 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       setDocumentValues(nextDocumentValues);
       setInitialDocumentValues(nextDocumentValues);
       setDocumentsTouched(false);
-      toast.success('Documents saved successfully.');
+      toast.success(
+        response.pharmacy.status === 'on_moderation'
+          ? 'Changes sent for moderation.'
+          : 'Documents saved successfully.'
+      );
     } catch (error) {
       toast.error(getErrorMessage(error, 'Could not save documents.'));
     } finally {
@@ -1022,13 +1107,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                 </div>
               </dl>
 
-              <div
-                className={
-                  pharmacy.status === 'on_verification'
-                    ? `${css.statusNote} ${css.statusNoteBeauty}`
-                    : css.statusNote
-                }
-              >
+              <div className={getStatusNoteClassName(pharmacy.status)}>
                 <div className={css.statusNoteHeader}>
                   <h3>Profile status</h3>
                   <StatusBadge
@@ -1036,7 +1115,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                     label={getStatusLabel(pharmacy.status)}
                   />
                 </div>
-                {pharmacy.status === 'new' ? (
+                {pharmacy.status === 'new' && pharmacy.statusReason ? (
+                  <p className={css.statusReason}>{pharmacy.statusReason}</p>
+                ) : null}
+                {pharmacy.status === 'new' && !pharmacy.statusReason ? (
                   <p>
                     New pharmacies can edit registration data and complete
                     required fields. Sales, orders, own products, clients, and
@@ -1047,12 +1129,6 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                   <p>
                     The profile is waiting for Admin verification. Submitted
                     fields are read-only until the decision is made.
-                  </p>
-                ) : null}
-                {pharmacy.status === 'active' ? (
-                  <p>
-                    The pharmacy is active. Important public changes may require
-                    moderation.
                   </p>
                 ) : null}
                 {pharmacy.status === 'on_moderation' ? (
@@ -1102,7 +1178,6 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         registered.
                       </p>
                     </div>
-
                     <div className={css.formGrid}>
                       <NameInput
                         id="owner-name"
@@ -1261,6 +1336,21 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       onError={handlePictureError}
                     />
 
+
+                    {pharmacy.status === 'on_moderation' ? (
+                      <PendingModerationBox
+                        title="Pending pharmacy data"
+                        items={[
+                          { label: 'Pharmacy name', value: pharmacy.pendingModeration?.name },
+                          { label: 'Email', value: pharmacy.pendingModeration?.email },
+                          { label: 'Phone', value: pharmacy.pendingModeration?.phone },
+                          { label: 'Address', value: pharmacy.pendingModeration?.address },
+                          { label: 'Working hours', value: pharmacy.pendingModeration?.workingHours },
+                          { label: 'Photo', value: pharmacy.pendingModeration?.imageUrl === null ? 'Photo will be removed' : pharmacy.pendingModeration?.imageUrl ? 'New photo uploaded' : undefined },
+                        ]}
+                      />
+                    ) : null}
+
                     <div className={css.formGrid}>
                       <NameInput
                         id="pharmacy-name"
@@ -1370,7 +1460,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       loadingLabel="Saving..."
                       onClick={handlePharmacySubmit}
                     >
-                      Save pharmacy data
+                      {getModeratedActionLabel(pharmacy.status, 'Save pharmacy data')}
                     </Button>
                   </section>
                 </div>
@@ -1388,9 +1478,21 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       </h2>
                       <p className={css.panelText}>
                         Add the public pharmacy description clients will read
-                        after verification.
+                        on the website.
                       </p>
                     </div>
+
+                    {pharmacy.status === 'on_moderation' ? (
+                      <PendingModerationBox
+                        title="Pending about pharmacy"
+                        items={[
+                          {
+                            label: 'Description',
+                            value: pharmacy.pendingModeration?.description,
+                          },
+                        ]}
+                      />
+                    ) : null}
 
                     <TextEditor
                       id="pharmacy-description"
@@ -1422,7 +1524,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       loadingLabel="Saving..."
                       onClick={handleAboutSubmit}
                     >
-                      Save about pharmacy
+                      {getModeratedActionLabel(pharmacy.status, 'Save about pharmacy')}
                     </Button>
                   </section>
                 </div>
@@ -1442,6 +1544,20 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         These payment details are required before verification.
                       </p>
                     </div>
+
+                    {pharmacy.status === 'on_moderation' ? (
+                      <PendingModerationBox
+                        title="Pending payment details"
+                        items={[
+                          { label: 'Recipient name', value: pharmacy.pendingModeration?.bankDetails?.recipientName },
+                          { label: 'Tax ID', value: pharmacy.pendingModeration?.bankDetails?.taxId },
+                          { label: 'IBAN', value: pharmacy.pendingModeration?.bankDetails?.iban },
+                          { label: 'Bank name', value: pharmacy.pendingModeration?.bankDetails?.bankName },
+                          { label: 'Receipt email', value: pharmacy.pendingModeration?.bankDetails?.receiptEmail },
+                          { label: 'Payment purpose', value: pharmacy.pendingModeration?.bankDetails?.paymentPurpose },
+                        ]}
+                      />
+                    ) : null}
 
                     <div className={css.formGrid}>
                       <NameInput
@@ -1561,7 +1677,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       loadingLabel="Saving..."
                       onClick={handlePaymentSubmit}
                     >
-                      Save payment details
+                      {getModeratedActionLabel(pharmacy.status, 'Save payment details')}
                     </Button>
                   </section>
                 </div>
@@ -1582,6 +1698,18 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         files Admin needs for verification.
                       </p>
                     </div>
+
+                    {pharmacy.status === 'on_moderation' ? (
+                      <PendingModerationBox
+                        title="Pending registration documents"
+                        items={(pharmacy.pendingModeration?.documents ?? []).map(
+                          (document, index) => ({
+                            label: `Document ${index + 1}`,
+                            value: document.name,
+                          })
+                        )}
+                      />
+                    ) : null}
 
                     <DocumentUpload
                       id="pharmacy-profile-documents"
@@ -1611,7 +1739,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       loadingLabel="Saving..."
                       onClick={handleDocumentsSubmit}
                     >
-                      Save documents
+                      {getModeratedActionLabel(pharmacy.status, 'Save documents')}
                     </Button>
                   </section>
                 </div>

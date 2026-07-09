@@ -95,7 +95,7 @@ type MonthFilterValue =
 //===================================================================
 
 type DashboardData = Readonly<{
-  pharmacyStatus: PharmacyStatus;
+  pharmacyStatus: PharmacyStatus | null;
   overview: {
     orders: number;
     revenue: number;
@@ -120,7 +120,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 //===================================================================
 
 const DEFAULT_DATA: DashboardData = {
-  pharmacyStatus: 'new',
+  pharmacyStatus: null,
   overview: {
     orders: 0,
     revenue: 0,
@@ -194,7 +194,8 @@ function getDateRange(year: string, month: MonthFilterValue) {
 
 //===================================================================
 
-function getPharmacyBanner(status: PharmacyStatus) {
+function getPharmacyBanner(status: PharmacyStatus | null) {
+  if (!status) return null;
   if (status === 'on_moderation') {
     return {
       status: 'on_moderation' as const,
@@ -429,7 +430,7 @@ function PharmacyDashboardPageContent() {
             icon={<LayoutDashboard size={23} aria-hidden="true" />}
           />
 
-          {banner ? (
+          {!isLoading && banner ? (
             <StatusBanner
               status={banner.status}
               title={banner.title}
@@ -593,7 +594,12 @@ function PharmacyDashboardPageContent() {
               ) ? (
                 <EmptyState
                   title="Your pharmacy has no added products yet."
-                  message="Browse active Admin products and add them after verification."
+                  message={
+                    dashboardData.pharmacyStatus === 'active' ||
+                    dashboardData.pharmacyStatus === 'on_moderation'
+                      ? 'Browse active Admin products and add them to your pharmacy.'
+                      : 'Browse active Admin products and add them after verification.'
+                  }
                 />
               ) : null}
             </section>

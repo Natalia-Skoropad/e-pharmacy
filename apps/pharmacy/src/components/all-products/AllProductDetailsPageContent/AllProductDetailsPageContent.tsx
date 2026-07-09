@@ -40,10 +40,12 @@ import {
 } from '@/lib/api/browser';
 
 import { getPharmacyAllProductsPath } from '@/lib/layout/routes';
+
 import {
   getLockedFeatureBannerLabel,
   getLockedFeatureBannerStatus,
 } from '@/lib/pharmacies/current-pharmacy-status';
+
 import { getProductImageSrc } from '@/lib/products/product-images';
 
 import css from './AllProductDetailsPageContent.module.css';
@@ -364,8 +366,9 @@ function AllProductDetailsPageContent({
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
   );
-  const [pharmacyStatus, setPharmacyStatus] =
-    useState<PharmacyStatus>('new');
+  const [pharmacyStatus, setPharmacyStatus] = useState<PharmacyStatus | null>(
+    null
+  );
   const [activeTab, setActiveTab] = useState<ProductDetailsTab>('details');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ProductDetailsError | null>(null);
@@ -426,7 +429,9 @@ function AllProductDetailsPageContent({
   const isAddedToPharmacy = Boolean(currentOffer);
   const productImageSrc = getProductImageSrc(product?.imageUrl);
   const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
-  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
+  const bannerLabel = bannerStatus
+    ? getLockedFeatureBannerLabel(bannerStatus)
+    : null;
   const tabs = PRODUCT_DETAILS_TABS.map((tab) =>
     tab.value === 'reviews'
       ? { ...tab, label: `Reviews (${reviewsTotal})` }
@@ -543,12 +548,14 @@ function AllProductDetailsPageContent({
 
               {activeTab === 'details' ? (
                 <div className={css.detailsTab}>
-                  <StatusBanner
-                    status={bannerStatus}
-                    label={bannerLabel}
-                    title={bannerTitle}
-                    message={bannerMessage}
-                  />
+                  {bannerStatus ? (
+                    <StatusBanner
+                      status={bannerStatus}
+                      label={bannerLabel ?? undefined}
+                      title={bannerTitle}
+                      message={bannerMessage}
+                    />
+                  ) : null}
 
                   <section
                     className={css.detailsGrid}
@@ -607,7 +614,9 @@ function AllProductDetailsPageContent({
                               ? 'Unavailable'
                               : isAddedToPharmacy
                                 ? 'Added to your pharmacy'
-                                : 'Add to my pharmacy after verification'}
+                                : bannerStatus
+                                  ? 'Add to my pharmacy after verification'
+                                  : 'Add to my pharmacy'}
                           </Button>
                         ) : null}
 

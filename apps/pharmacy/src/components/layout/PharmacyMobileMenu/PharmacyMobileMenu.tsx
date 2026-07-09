@@ -151,7 +151,13 @@ export function PharmacyMobileMenu({
       <div className={css.quickLinks} aria-label="Website quick links">
         <span className={css.quickLinksDivider} aria-hidden="true" />
 
-        <a className={css.quickLink} href={clientAppUrl} onClick={onClose}>
+        <a
+          className={css.quickLink}
+          href={clientAppUrl}
+          target="_blank"
+          rel="noreferrer"
+          onClick={onClose}
+        >
           <Globe2 size={23} aria-hidden="true" />
           <span>Go to the website</span>
         </a>
@@ -160,6 +166,8 @@ export function PharmacyMobileMenu({
           <a
             className={css.quickLink}
             href={clientPharmacyUrl}
+            target="_blank"
+            rel="noreferrer"
             onClick={onClose}
           >
             <Store size={23} aria-hidden="true" />

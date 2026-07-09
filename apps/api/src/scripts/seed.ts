@@ -510,7 +510,9 @@ type PharmacyAccountSeed = {
   pharmacyName: string;
   status:
     | typeof PHARMACY_STATUSES.NEW
-    | typeof PHARMACY_STATUSES.ON_VERIFICATION;
+    | typeof PHARMACY_STATUSES.ON_VERIFICATION
+    | typeof PHARMACY_STATUSES.ACTIVE;
+  statusReason?: string;
 };
 
 const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
@@ -521,14 +523,16 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
     address: '25 Health Avenue, Kyiv',
     pharmacyName: 'Nata Care Pharmacy New',
     status: PHARMACY_STATUSES.NEW,
+    statusReason:
+      'Admin returned the profile to New status: please upload a clearer pharmacy photo, check the license document scan, and update working hours before sending the profile again.',
   },
   {
     email: 'nata6@ukr.net',
     phone: '+380661234006',
     ownerName: 'Nata Six',
     address: '26 Wellness Street, Lviv',
-    pharmacyName: 'Nata Care Pharmacy Verification',
-    status: PHARMACY_STATUSES.ON_VERIFICATION,
+    pharmacyName: 'Nata Care Pharmacy Active',
+    status: PHARMACY_STATUSES.ACTIVE,
   },
 ];
 
@@ -569,7 +573,7 @@ The pharmacy focuses on everyday medicines, vitamins, hygiene products, medical 
 - Transparent payment details for online orders.
 
 **Operational standards**
-The pharmacy profile contains realistic bank details, address, phone number, email, working hours, uploaded verification documents, and a public image placeholder. This makes the verification button active for the New account while the second account demonstrates the read-only On verification state.
+The pharmacy profile contains realistic bank details, address, phone number, email, working hours, uploaded verification documents, and a public image placeholder. This makes the New account ready for resubmission after Admin feedback while the second account demonstrates the newly activated pharmacy state.
 
 **Quality notes**
 - The profile is suitable for testing empty and filled sections.
@@ -603,7 +607,7 @@ function createVerificationDocuments(email: string) {
 }
 
 function createPharmacyAccountBankDetails(seed: PharmacyAccountSeed) {
-  const accountNumber = seed.email.includes('nata5') ? 5 : 6;
+  const accountNumber = Number(seed.email.match(/nata(\d+)/)?.[1] ?? 6);
   const ibanTail = `300001${String(accountNumber).padStart(21, '0')}`;
 
   return {
@@ -660,6 +664,11 @@ async function seedPharmacyAccounts(): Promise<number> {
           managerUserIds: [],
           documents: createVerificationDocuments(seed.email),
           status: seed.status,
+          statusReason: seed.statusReason,
+          pendingModeration: undefined,
+          ...(seed.status === PHARMACY_STATUSES.ACTIVE
+            ? { approvedBy: user._id, approvedAt: new Date() }
+            : { approvedBy: undefined, approvedAt: undefined }),
           updatedBy: user._id,
         },
         $setOnInsert: {

@@ -17,7 +17,7 @@ export function getClientAppUrl(): string {
 export function canOpenClientPharmacyPage(
   status?: PharmacyProfile['status']
 ): boolean {
-  return status === 'active';
+  return status === 'active' || status === 'on_moderation';
 }
 
 //===================================================================

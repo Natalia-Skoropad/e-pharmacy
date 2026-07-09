@@ -27,6 +27,19 @@ export type PharmacyBankDetails = {
   paymentPurpose: string;
 };
 
+export type PharmacyPendingModeration = {
+  name?: string;
+  address?: string;
+  city?: string;
+  phone?: string;
+  email?: string;
+  workingHours?: string;
+  imageUrl?: string | null;
+  description?: string;
+  documents?: PharmacyVerificationDocument[];
+  bankDetails?: Partial<PharmacyBankDetails>;
+};
+
 export type PharmacyEntity = {
   name: string;
   address?: string;
@@ -41,6 +54,8 @@ export type PharmacyEntity = {
   rating: number;
   imageUrl?: string;
   description?: string;
+  statusReason?: string;
+  pendingModeration?: PharmacyPendingModeration;
   reviewsCount?: number;
   ownerId: Types.ObjectId;
   managerUserIds: Types.ObjectId[];
@@ -111,6 +126,8 @@ export type PharmacyProfileResponseDto = {
   rating: number;
   imageUrl?: string;
   description?: string;
+  statusReason?: string;
+  pendingModeration?: PharmacyPendingModeration;
   reviewsCount: number;
   updatedAt: string;
 };

@@ -14,8 +14,12 @@ export type LockedFeatureBannerStatus = 'new' | 'on_verification';
 
 export function getLockedFeatureBannerStatus(
   pharmacyStatus: PharmacyStatus | null | undefined
-): LockedFeatureBannerStatus {
-  return pharmacyStatus === 'on_verification' ? 'on_verification' : 'new';
+): LockedFeatureBannerStatus | null {
+  if (pharmacyStatus === 'new' || pharmacyStatus === 'on_verification') {
+    return pharmacyStatus;
+  }
+
+  return null;
 }
 
 //===================================================================
@@ -28,10 +32,8 @@ export function getLockedFeatureBannerLabel(
 
 //===================================================================
 
-export function useCurrentPharmacyStatus(
-  fallbackStatus: PharmacyStatus = 'new'
-): PharmacyStatus {
-  const [status, setStatus] = useState<PharmacyStatus>(fallbackStatus);
+export function useCurrentPharmacyStatus(): PharmacyStatus | null {
+  const [status, setStatus] = useState<PharmacyStatus | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -42,7 +44,7 @@ export function useCurrentPharmacyStatus(
 
         if (isMounted) setStatus(response.pharmacy.status);
       } catch {
-        if (isMounted) setStatus(fallbackStatus);
+        if (isMounted) setStatus(null);
       }
     }
 
@@ -51,7 +53,7 @@ export function useCurrentPharmacyStatus(
     return () => {
       isMounted = false;
     };
-  }, [fallbackStatus]);
+  }, []);
 
   return status;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 
 import {
@@ -20,7 +20,11 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
-import type { Pharmacy, PharmacyBankDetails, PharmacyReview } from '@e-pharmacy/types';
+import type {
+  Pharmacy,
+  PharmacyBankDetails,
+  PharmacyReview,
+} from '@e-pharmacy/types';
 
 import {
   useFavoriteActions,
@@ -59,6 +63,72 @@ type PharmacyDetailsPageContentProps = {
   reviewsTotal: number;
   areReviewsUnavailable?: boolean;
 };
+
+//===================================================================
+
+function renderInlineMarkdown(text: string): ReactNode[] {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={`${part}-${index}`}>{part.slice(2, -2)}</strong>;
+    }
+
+    return part;
+  });
+}
+
+//===================================================================
+
+function renderDescriptionMarkdown(text: string) {
+  const blocks = text
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  return blocks.map((block, blockIndex) => {
+    const lines = block
+      .split(/\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const isList = lines.every((line) => line.startsWith('- '));
+
+    if (isList) {
+      return (
+        <ul className={css.descriptionList} key={`list-${blockIndex}`}>
+          {lines.map((line, lineIndex) => (
+            <li key={`${line}-${lineIndex}`}>
+              {renderInlineMarkdown(line.slice(2).trim())}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
+    return (
+      <p className={css.descriptionParagraph} key={`paragraph-${blockIndex}`}>
+        {renderInlineMarkdown(lines.join(' '))}
+      </p>
+    );
+  });
+}
+
+//===================================================================
+
+function renderWorkingHours(value: string) {
+  return value
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const [day, ...rest] = part.split(':');
+      const hours = rest.join(':').trim();
+
+      if (!day || !hours) return part;
+
+      return { day: day.trim(), hours };
+    });
+}
 
 //===================================================================
 
@@ -117,7 +187,8 @@ function PharmacyDetailsPageContent({
   useEffect(() => {
     if (currentTab !== 'payment') return;
     if (!canShowBankDetailsTab) return;
-    if (paymentDetails || bankDetailsRequestStatusRef.current === 'done') return;
+    if (paymentDetails || bankDetailsRequestStatusRef.current === 'done')
+      return;
 
     let isCancelled = false;
 
@@ -339,7 +410,17 @@ function PharmacyDetailsPageContent({
                         <Clock size={18} aria-hidden="true" />
                         Working hours
                       </dt>
-                      <dd>{workingHours}</dd>
+                      <dd className={css.workingHoursValue}>
+                        {renderWorkingHours(workingHours).map((item) =>
+                          typeof item === 'string' ? (
+                            <span key={item}>{item}</span>
+                          ) : (
+                            <span key={item.day}>
+                              <strong>{item.day}</strong>: {item.hours}
+                            </span>
+                          )
+                        )}
+                      </dd>
                     </div>
                   ) : null}
 
@@ -425,9 +506,7 @@ function PharmacyDetailsPageContent({
                         <button
                           className={css.copyValueButton}
                           type="button"
-                          onClick={() =>
-                            void handleCopy(receiptEmail, 'Email')
-                          }
+                          onClick={() => void handleCopy(receiptEmail, 'Email')}
                           aria-label="Copy receipt email"
                         >
                           {receiptEmail}
@@ -454,10 +533,12 @@ function PharmacyDetailsPageContent({
                 <h2 className={css.panelTitle}>About {pharmacy.name}</h2>
               </div>
 
-              <p className={css.descriptionText}>
-                {pharmacy.description ??
-                  `${pharmacy.name} is an active E-PHARMACY partner in ${pharmacy.city ?? 'your city'}, created for clients who want to compare products calmly before placing an order. The pharmacy page brings together the most useful details: address, phone, email, working hours, rating, client reviews, and a direct catalog link with products from this exact pharmacy. You can quickly check whether the needed product is available, compare offers, and decide whether pickup or delivery will be more convenient. The pharmacy keeps product information clear, so clients do not have to jump between random tabs, screenshots, and notes. Reviews help you understand service quality, while the catalog filter helps you move from pharmacy details straight to the right product list. It is a practical page for everyday orders, urgent purchases, planned family medicine refills, and simple price comparison. In short, ${pharmacy.name} works like a tidy digital pharmacy counter: all important information is visible, the next action is obvious, and the shopping flow stays friendly instead of turning into a mini quest with a white coat.`}
-              </p>
+              <div className={css.descriptionText}>
+                {renderDescriptionMarkdown(
+                  pharmacy.description ??
+                    `${pharmacy.name} is an active E-PHARMACY partner in ${pharmacy.city ?? 'your city'}, created for clients who want to compare products calmly before placing an order. The pharmacy page brings together the most useful details: address, phone, email, working hours, rating, client reviews, and a direct catalog link with products from this exact pharmacy. You can quickly check whether the needed product is available, compare offers, and decide whether pickup or delivery will be more convenient. The pharmacy keeps product information clear, so clients do not have to jump between random tabs, screenshots, and notes. Reviews help you understand service quality, while the catalog filter helps you move from pharmacy details straight to the right product list. It is a practical page for everyday orders, urgent purchases, planned family medicine refills, and simple price comparison. In short, ${pharmacy.name} works like a tidy digital pharmacy counter: all important information is visible, the next action is obvious, and the shopping flow stays friendly instead of turning into a mini quest with a white coat.`
+                )}
+              </div>
             </div>
           </Container>
         </section>

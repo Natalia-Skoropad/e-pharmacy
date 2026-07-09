@@ -29,7 +29,9 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
   const title = `Client #${clientId}`;
   const currentPharmacyStatus = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
-  const bannerLabel = getLockedFeatureBannerLabel(bannerStatus);
+  const bannerLabel = bannerStatus
+    ? getLockedFeatureBannerLabel(bannerStatus)
+    : null;
 
   return (
     <main className={css.page} aria-labelledby="client-details-page-title">
@@ -41,13 +43,16 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
             icon={<Users size={23} aria-hidden="true" />}
           />
 
-          <StatusBanner
-            status={bannerStatus}
-            label={bannerLabel}
+          {bannerStatus ? (
+            <StatusBanner
+              status={bannerStatus}
+              label={bannerLabel ?? undefined}
             title="Client details is locked for now"
             message="This page belongs to business functionality that opens after Admin verifies your pharmacy profile."
-          />
+            />
+          ) : null}
 
+          {bannerStatus ? (
           <section className={css.card} aria-labelledby="client-actions-title">
             <h2 id="client-actions-title">What can you do now?</h2>
             <p>
@@ -67,6 +72,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
               </ButtonLink>
             </div>
           </section>
+          ) : null}
         </div>
       </div>
     </main>
