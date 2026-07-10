@@ -49,6 +49,7 @@
 }
 
 .dateLabel {
+  white-space: nowrap;
   font-size: var(--fz-12);
   font-weight: var(--fw-medium);
   line-height: 1.2;

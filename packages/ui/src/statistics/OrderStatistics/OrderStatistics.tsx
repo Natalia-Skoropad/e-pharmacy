@@ -7,6 +7,7 @@ import {
   XCircle,
   type LucideIcon,
 } from 'lucide-react';
+
 import clsx from 'clsx';
 
 import type { OrderStatus } from '@e-pharmacy/types/orders';
@@ -30,6 +31,7 @@ type OrderStatisticsProps = Readonly<{
   counts: OrderStatisticsCounts;
   className?: string;
   getStatusHref?: (status: OrderStatus) => string | undefined;
+  onStatusClick?: (status: OrderStatus) => void;
 }>;
 
 //===================================================================
@@ -51,6 +53,7 @@ function OrderStatisticCard({
   tone,
   icon: Icon,
   href,
+  onClick,
 }: Readonly<{
   status: OrderStatus;
   title: string;
@@ -59,6 +62,7 @@ function OrderStatisticCard({
   tone: OrderStatisticTone;
   icon: LucideIcon;
   href?: string;
+  onClick?: (status: OrderStatus) => void;
 }>) {
   const content = (
     <>
@@ -75,13 +79,30 @@ function OrderStatisticCard({
     </>
   );
 
-  const className = clsx(css.card, css[tone]);
+  const className = clsx(css.card, css[tone], onClick && css.cardButton);
 
   if (href) {
     return (
-      <Link className={className} href={href} aria-label={`${title} statistics`}>
+      <Link
+        className={className}
+        href={href}
+        aria-label={`${title} statistics`}
+      >
         {content}
       </Link>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <button
+        className={className}
+        type="button"
+        aria-label={`${title} statistics`}
+        onClick={() => onClick(status)}
+      >
+        {content}
+      </button>
     );
   }
 
@@ -98,6 +119,7 @@ function OrderStatistics({
   counts,
   className,
   getStatusHref,
+  onStatusClick,
 }: OrderStatisticsProps) {
   return (
     <div className={clsx(css.grid, className)} aria-label="Order statistics">
@@ -114,6 +136,7 @@ function OrderStatistics({
             tone={card.tone}
             icon={card.icon}
             href={getStatusHref?.(card.key)}
+            onClick={onStatusClick}
           />
         );
       })}

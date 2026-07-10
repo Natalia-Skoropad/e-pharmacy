@@ -60,8 +60,7 @@
 }
 
 .card,
-.visualCard,
-.tabPanel {
+.visualCard {
   min-width: 0;
   max-width: 100%;
   padding: 20px;
@@ -69,10 +68,6 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card-soft);
-}
-
-.tabPanel {
-  overflow-x: auto;
 }
 
 .visualCard {
@@ -215,7 +210,6 @@
   max-width: 100%;
   display: grid;
   gap: 18px;
-  overflow: hidden;
 }
 
 .panelTitle {
@@ -271,10 +265,6 @@
 }
 
 @media only screen and (min-width: 768px) {
-  .contentCard {
-    padding: 24px;
-  }
-
   .statsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -306,6 +296,7 @@
 }
 
 .singleProductStatistics {
+  display: none;
   min-width: 0;
 }
 
@@ -339,17 +330,17 @@
 .searchAction {
   display: flex;
   align-items: flex-end;
+  min-width: 0;
 }
 
 .tableToolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
-  justify-content: space-between;
+  min-width: 0;
+  display: grid;
+  gap: 16px;
 }
 
 .relatedStatistics {
+  display: none;
   min-width: 0;
 }
 
@@ -374,7 +365,7 @@
 .filtersBackdrop {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 1000;
   display: flex;
   justify-content: flex-end;
   background-color: rgba(15, 23, 42, 0.2);
@@ -404,7 +395,7 @@
   font-size: var(--fz-12);
   font-weight: var(--fw-semibold);
   line-height: var(--lh-base);
-  color: var(--color-brand-primary);
+  color: var(--color-accent);
   text-transform: uppercase;
   letter-spacing: var(--ls-wide);
 }
@@ -422,11 +413,70 @@
 }
 
 .resetButton {
-  justify-self: start;
+  width: 100%;
+  justify-self: stretch;
 }
 
 @media only screen and (min-width: 768px) {
   .searchGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(150px, auto);
+  }
+}
+
+.sectionStack {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.sectionCard {
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card-soft);
+}
+
+.filterButton {
+  width: 100%;
+  min-height: 48px;
+}
+
+.countLabel {
+  justify-self: start;
+}
+
+.rowsControl {
+  width: 100%;
+  min-width: 0;
+}
+
+@media only screen and (min-width: 768px) {
+  .singleProductStatistics {
+    display: grid;
+  }
+
+  .relatedStatistics {
+    display: grid;
+  }
+
+  .tableToolbar {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .countLabel {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .rowsControl {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
   }
 }

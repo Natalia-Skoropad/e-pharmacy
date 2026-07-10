@@ -946,6 +946,14 @@ function AllProductDetailsPageContent({
 
   const relatedOrderStatistics = getRelatedOrderStatistics(relatedOrderRows);
 
+  const handleRelatedStatisticsClick = (status: OrderStatus) => {
+    setRelatedFilters((currentFilters) => ({
+      ...currentFilters,
+      orderStatus: currentFilters.orderStatus === status ? 'all' : status,
+    }));
+    setRelatedCurrentPage(1);
+  };
+
   const stockMovementTotalPages = getTotalPages(
     stockMovementRows.length,
     stockRowsPerPage
@@ -980,7 +988,7 @@ function AllProductDetailsPageContent({
     () => [
       {
         key: 'date',
-        title: 'Date',
+        title: <TableHeaderTitle parts={['Event', 'date']} />,
         render: (row: StockMovementRow) => row.date,
       },
       {
@@ -1090,7 +1098,7 @@ function AllProductDetailsPageContent({
       },
       {
         key: 'client',
-        title: 'Client',
+        title: <TableHeaderTitle parts={['Client', 'name']} />,
         render: (row: RelatedOrderRow) =>
           row.clientId ? (
             <TextActionButton href={getPharmacyClientPath(row.clientId)}>
@@ -1102,7 +1110,7 @@ function AllProductDetailsPageContent({
       },
       {
         key: 'quantity',
-        title: 'Quantity',
+        title: <TableHeaderTitle parts={['Order', 'quantity']} />,
         render: (row: RelatedOrderRow) => row.quantity,
       },
       {
@@ -1112,7 +1120,7 @@ function AllProductDetailsPageContent({
       },
       {
         key: 'amount',
-        title: 'Amount',
+        title: <TableHeaderTitle parts={['Order', 'amount']} />,
         render: (row: RelatedOrderRow) => row.amount,
       },
       {
@@ -1343,94 +1351,119 @@ function AllProductDetailsPageContent({
                 </section>
               </div>
             ) : (
-              <div className={css.tabPanel}>
+              <div>
                 {activeTab === 'stock-movement' ? (
                   <>
-                    <h3 className={css.panelTitle}>Stock movement</h3>
-
                     {isAddedToPharmacy ? (
-                      <div className={css.tableStack}>
-                        <div className={css.searchGrid}>
-                          <SearchInput
-                            id="stock-movement-order-number-search"
-                            label="Order number search"
-                            value={stockOrderNumberSearch}
-                            placeholder="Order number"
-                            isActive={Boolean(stockOrderNumberSearch)}
-                            onChange={(value) => {
-                              setStockOrderNumberSearch(value);
-                              setStockCurrentPage(1);
-                            }}
-                          />
+                      <div className={css.sectionStack}>
+                        <section
+                          className={css.sectionCard}
+                          aria-labelledby="stock-movement-title"
+                        >
+                          <h3
+                            className={css.panelTitle}
+                            id="stock-movement-title"
+                          >
+                            Stock movement
+                          </h3>
 
-                          <SearchInput
-                            id="stock-movement-comment-search"
-                            label="Comment search"
-                            value={stockCommentSearch}
-                            placeholder="Comment"
-                            isActive={Boolean(stockCommentSearch)}
-                            onChange={(value) => {
-                              setStockCommentSearch(value);
-                              setStockCurrentPage(1);
-                            }}
-                          />
+                          <div className={css.searchGrid}>
+                            <SearchInput
+                              id="stock-movement-order-number-search"
+                              label="Order number search"
+                              value={stockOrderNumberSearch}
+                              placeholder="Order number"
+                              isActive={Boolean(stockOrderNumberSearch)}
+                              onChange={(value) => {
+                                setStockOrderNumberSearch(value);
+                                setStockCurrentPage(1);
+                              }}
+                            />
 
-                          <FiltersButton
-                            activeCount={stockActiveFiltersCount}
-                            controlsId="stock-movement-filters-panel"
-                            isExpanded={isStockFiltersOpen}
-                            onClick={() => setIsStockFiltersOpen(true)}
-                          />
-                        </div>
+                            <SearchInput
+                              id="stock-movement-comment-search"
+                              label="Comment search"
+                              value={stockCommentSearch}
+                              placeholder="Comment"
+                              isActive={Boolean(stockCommentSearch)}
+                              onChange={(value) => {
+                                setStockCommentSearch(value);
+                                setStockCurrentPage(1);
+                              }}
+                            />
 
-                        <div className={css.tableToolbar}>
-                          <RowsPerPageSelect
-                            id="stock-movement-rows-per-page"
-                            value={stockRowsPerPage}
-                            options={PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS}
-                            onChange={(value) => {
-                              setStockRowsPerPage(value);
-                              setStockCurrentPage(1);
-                            }}
-                          />
+                            <div className={css.searchAction}>
+                              <FiltersButton
+                                activeCount={stockActiveFiltersCount}
+                                controlsId="stock-movement-filters-panel"
+                                isExpanded={isStockFiltersOpen}
+                                className={css.filterButton}
+                                onClick={() => setIsStockFiltersOpen(true)}
+                              />
+                            </div>
+                          </div>
+                        </section>
 
-                          <CountLabel
-                            shown={paginatedStockMovementRows.length}
-                            total={stockMovementRows.length}
-                            label="events"
-                          />
-                        </div>
+                        <section
+                          className={css.sectionCard}
+                          aria-label="Stock movement table"
+                        >
+                          <div className={css.tableStack}>
+                            <div className={css.tableToolbar}>
+                              <CountLabel
+                                className={css.countLabel}
+                                shown={paginatedStockMovementRows.length}
+                                total={stockMovementRows.length}
+                                label="events"
+                              />
 
-                        <DataTable
-                          columns={stockMovementColumns}
-                          items={paginatedStockMovementRows}
-                          getItemKey={(row) => row.id}
-                          minWidth={0}
-                          labels={{
-                            empty: 'Stock movement history is empty.',
-                          }}
-                        />
+                              <div className={css.rowsControl}>
+                                <RowsPerPageSelect
+                                  id="stock-movement-rows-per-page"
+                                  value={stockRowsPerPage}
+                                  options={PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS}
+                                  onChange={(value) => {
+                                    setStockRowsPerPage(value);
+                                    setStockCurrentPage(1);
+                                  }}
+                                />
+                              </div>
+                            </div>
 
-                        <Pagination
-                          currentPage={stockCurrentPage}
-                          totalPages={stockMovementTotalPages}
-                          getPageHref={(page) => String(page)}
-                          renderLink={({
-                            href,
-                            className,
-                            children,
-                            'aria-label': ariaLabel,
-                          }) => (
-                            <button
-                              className={className}
-                              type="button"
-                              aria-label={ariaLabel}
-                              onClick={() => setStockCurrentPage(Number(href))}
-                            >
-                              {children}
-                            </button>
-                          )}
-                        />
+                            <DataTable
+                              columns={stockMovementColumns}
+                              items={paginatedStockMovementRows}
+                              getItemKey={(row) => row.id}
+                              minWidth={0}
+                              labels={{
+                                empty: 'Stock movement history is empty.',
+                              }}
+                            />
+
+                            <Pagination
+                              currentPage={stockCurrentPage}
+                              totalPages={stockMovementTotalPages}
+                              getPageHref={(page) => String(page)}
+                              renderLink={({
+                                href,
+                                className,
+                                children,
+                                'aria-label': ariaLabel,
+                              }) => (
+                                <button
+                                  className={className}
+                                  type="button"
+                                  aria-label={ariaLabel}
+                                  onClick={() =>
+                                    setStockCurrentPage(Number(href))
+                                  }
+                                >
+                                  {children}
+                                </button>
+                              )}
+                            />
+                          </div>
+                        </section>
                       </div>
                     ) : (
                       <EmptyPanel>
@@ -1443,98 +1476,128 @@ function AllProductDetailsPageContent({
 
                 {activeTab === 'related-orders' ? (
                   <>
-                    <h3 className={css.panelTitle}>Related orders</h3>
-
                     {isAddedToPharmacy ? (
-                      <div className={css.tableStack}>
-                        <OrderStatistics
-                          counts={relatedOrderStatistics}
-                          className={css.relatedStatistics}
-                        />
+                      <div className={css.sectionStack}>
+                        <section
+                          className={css.sectionCard}
+                          aria-labelledby="related-orders-title"
+                        >
+                          <h3
+                            className={css.panelTitle}
+                            id="related-orders-title"
+                          >
+                            Related orders
+                          </h3>
 
-                        <div className={css.searchGrid}>
-                          <SearchInput
-                            id="related-orders-order-number-search"
-                            label="Order number search"
-                            value={relatedOrderNumberSearch}
-                            placeholder="Order number"
-                            isActive={Boolean(relatedOrderNumberSearch)}
-                            onChange={(value) => {
-                              setRelatedOrderNumberSearch(value);
-                              setRelatedCurrentPage(1);
-                            }}
+                          <OrderStatistics
+                            counts={relatedOrderStatistics}
+                            className={css.relatedStatistics}
+                            onStatusClick={handleRelatedStatisticsClick}
                           />
+                        </section>
 
-                          <SearchInput
-                            id="related-orders-client-search"
-                            label="Client search"
-                            value={relatedClientSearch}
-                            placeholder="Client"
-                            isActive={Boolean(relatedClientSearch)}
-                            onChange={(value) => {
-                              setRelatedClientSearch(value);
-                              setRelatedCurrentPage(1);
-                            }}
-                          />
+                        <section
+                          className={css.sectionCard}
+                          aria-label="Related orders filters"
+                        >
+                          <div className={css.searchGrid}>
+                            <SearchInput
+                              id="related-orders-order-number-search"
+                              label="Order number search"
+                              value={relatedOrderNumberSearch}
+                              placeholder="Order number"
+                              isActive={Boolean(relatedOrderNumberSearch)}
+                              onChange={(value) => {
+                                setRelatedOrderNumberSearch(value);
+                                setRelatedCurrentPage(1);
+                              }}
+                            />
 
-                          <FiltersButton
-                            activeCount={relatedActiveFiltersCount}
-                            controlsId="related-orders-filters-panel"
-                            isExpanded={isRelatedFiltersOpen}
-                            onClick={() => setIsRelatedFiltersOpen(true)}
-                          />
-                        </div>
+                            <SearchInput
+                              id="related-orders-client-search"
+                              label="Client search"
+                              value={relatedClientSearch}
+                              placeholder="Client"
+                              isActive={Boolean(relatedClientSearch)}
+                              onChange={(value) => {
+                                setRelatedClientSearch(value);
+                                setRelatedCurrentPage(1);
+                              }}
+                            />
 
-                        <div className={css.tableToolbar}>
-                          <RowsPerPageSelect
-                            id="related-orders-rows-per-page"
-                            value={relatedRowsPerPage}
-                            options={PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS}
-                            onChange={(value) => {
-                              setRelatedRowsPerPage(value);
-                              setRelatedCurrentPage(1);
-                            }}
-                          />
+                            <div className={css.searchAction}>
+                              <FiltersButton
+                                activeCount={relatedActiveFiltersCount}
+                                controlsId="related-orders-filters-panel"
+                                isExpanded={isRelatedFiltersOpen}
+                                className={css.filterButton}
+                                onClick={() => setIsRelatedFiltersOpen(true)}
+                              />
+                            </div>
+                          </div>
+                        </section>
 
-                          <CountLabel
-                            shown={paginatedRelatedOrderRows.length}
-                            total={relatedOrderRows.length}
-                            label="orders"
-                          />
-                        </div>
+                        <section
+                          className={css.sectionCard}
+                          aria-label="Related orders table"
+                        >
+                          <div className={css.tableStack}>
+                            <div className={css.tableToolbar}>
+                              <CountLabel
+                                className={css.countLabel}
+                                shown={paginatedRelatedOrderRows.length}
+                                total={relatedOrderRows.length}
+                                label="orders"
+                              />
 
-                        <DataTable
-                          columns={relatedOrderColumns}
-                          items={paginatedRelatedOrderRows}
-                          getItemKey={(row) => row.id}
-                          minWidth={0}
-                          labels={{
-                            empty: 'There are no orders with this product yet.',
-                          }}
-                        />
+                              <div className={css.rowsControl}>
+                                <RowsPerPageSelect
+                                  id="related-orders-rows-per-page"
+                                  value={relatedRowsPerPage}
+                                  options={PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS}
+                                  onChange={(value) => {
+                                    setRelatedRowsPerPage(value);
+                                    setRelatedCurrentPage(1);
+                                  }}
+                                />
+                              </div>
+                            </div>
 
-                        <Pagination
-                          currentPage={relatedCurrentPage}
-                          totalPages={relatedOrdersTotalPages}
-                          getPageHref={(page) => String(page)}
-                          renderLink={({
-                            href,
-                            className,
-                            children,
-                            'aria-label': ariaLabel,
-                          }) => (
-                            <button
-                              className={className}
-                              type="button"
-                              aria-label={ariaLabel}
-                              onClick={() =>
-                                setRelatedCurrentPage(Number(href))
-                              }
-                            >
-                              {children}
-                            </button>
-                          )}
-                        />
+                            <DataTable
+                              columns={relatedOrderColumns}
+                              items={paginatedRelatedOrderRows}
+                              getItemKey={(row) => row.id}
+                              minWidth={0}
+                              labels={{
+                                empty:
+                                  'There are no orders with this product yet.',
+                              }}
+                            />
+
+                            <Pagination
+                              currentPage={relatedCurrentPage}
+                              totalPages={relatedOrdersTotalPages}
+                              getPageHref={(page) => String(page)}
+                              renderLink={({
+                                href,
+                                className,
+                                children,
+                                'aria-label': ariaLabel,
+                              }) => (
+                                <button
+                                  className={className}
+                                  type="button"
+                                  aria-label={ariaLabel}
+                                  onClick={() =>
+                                    setRelatedCurrentPage(Number(href))
+                                  }
+                                >
+                                  {children}
+                                </button>
+                              )}
+                            />
+                          </div>
+                        </section>
                       </div>
                     ) : (
                       <EmptyPanel>
@@ -1613,7 +1676,11 @@ function AllProductDetailsPageContent({
         >
           <DateFilter
             id="stock-movement-date-filter"
+            label="Event date"
             value={stockFilters.date}
+            isActive={Boolean(stockFilters.date.from || stockFilters.date.to)}
+            applyOnSubmit
+            applyLabel="Apply"
             onChange={(date) => {
               setStockFilters((currentFilters) => ({
                 ...currentFilters,
@@ -1682,7 +1749,13 @@ function AllProductDetailsPageContent({
         >
           <DateFilter
             id="related-orders-date-filter"
+            label="Order date"
             value={relatedFilters.date}
+            isActive={Boolean(
+              relatedFilters.date.from || relatedFilters.date.to
+            )}
+            applyOnSubmit
+            applyLabel="Apply"
             onChange={(date) => {
               setRelatedFilters((currentFilters) => ({
                 ...currentFilters,
