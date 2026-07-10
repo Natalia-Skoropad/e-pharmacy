@@ -8,6 +8,7 @@ import {
   Button,
   CountLabel,
   FiltersButton,
+  Pagination,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
@@ -68,10 +69,11 @@ function getActiveFiltersCount(filters: ProductRequestsFilterState): number {
 
 function getProductRequestsQueryParams(
   filters: ProductRequestsFilterState,
-  rowsPerPage: RowsPerPageValue
+  rowsPerPage: RowsPerPageValue,
+  page: number
 ): PharmacyProductRequestsQueryParams {
   return {
-    page: 1,
+    page,
     perPage: rowsPerPage,
     dateFrom: filters.date.from || undefined,
     dateTo: filters.date.to || undefined,
@@ -101,6 +103,7 @@ function ProductRequestsPageContent({
     useState<ProductRequestsFilterState>(initialFilters);
 
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
+  const [currentPage, setCurrentPage] = useState(1);
   const [requests, setRequests] = useState<PharmacyProductRequestRow[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
   const [requestStatistics, setRequestStatistics] =
@@ -122,8 +125,8 @@ function ProductRequestsPageContent({
   });
 
   const queryParams = useMemo(
-    () => getProductRequestsQueryParams(filters, rowsPerPage),
-    [filters, rowsPerPage]
+    () => getProductRequestsQueryParams(filters, rowsPerPage, currentPage),
+    [currentPage, filters, rowsPerPage]
   );
 
   useEffect(() => {
@@ -190,9 +193,21 @@ function ProductRequestsPageContent({
 
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
+  const totalPages = Math.ceil(totalRequests / rowsPerPage);
+
+  const handleFiltersChange = (nextFilters: ProductRequestsFilterState) => {
+    setFilters(nextFilters);
+    setCurrentPage(1);
+  };
+
+  const handleRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
+    setRowsPerPage(nextRowsPerPage);
+    setCurrentPage(1);
+  };
 
   const resetFilters = () => {
     setFilters(DEFAULT_PRODUCT_REQUESTS_FILTERS);
+    setCurrentPage(1);
   };
 
   const currentPharmacyStatus = useCurrentPharmacyStatus();
@@ -245,10 +260,10 @@ function ProductRequestsPageContent({
             placeholder="Request number"
             isActive={Boolean(filters.requestNumber)}
             onChange={(requestNumber) =>
-              setFilters((currentFilters) => ({
-                ...currentFilters,
+              handleFiltersChange({
+                ...filters,
                 requestNumber,
-              }))
+              })
             }
           />
 
@@ -259,10 +274,10 @@ function ProductRequestsPageContent({
             placeholder="Product article"
             isActive={Boolean(filters.productArticle)}
             onChange={(productArticle) =>
-              setFilters((currentFilters) => ({
-                ...currentFilters,
+              handleFiltersChange({
+                ...filters,
                 productArticle,
-              }))
+              })
             }
           />
 
@@ -273,10 +288,10 @@ function ProductRequestsPageContent({
             placeholder="Product name"
             isActive={Boolean(filters.productName)}
             onChange={(productName) =>
-              setFilters((currentFilters) => ({
-                ...currentFilters,
+              handleFiltersChange({
+                ...filters,
                 productName,
-              }))
+              })
             }
           />
           <div className={css.searchAction}>
@@ -304,7 +319,7 @@ function ProductRequestsPageContent({
             <RowsPerPageSelect
               id="product-requests-rows-per-page"
               value={rowsPerPage}
-              onChange={setRowsPerPage}
+              onChange={handleRowsPerPageChange}
             />
           </div>
 
@@ -322,6 +337,22 @@ function ProductRequestsPageContent({
               : 'Your pharmacy has no product creation requests yet.'
           }
         />
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          getPageHref={(page) => String(page)}
+          renderLink={({ href, className, children, 'aria-label': ariaLabel }) => (
+            <button
+              className={className}
+              type="button"
+              aria-label={ariaLabel}
+              onClick={() => setCurrentPage(Number(href))}
+            >
+              {children}
+            </button>
+          )}
+        />
       </section>
 
       {isFiltersOpen ? (
@@ -329,7 +360,7 @@ function ProductRequestsPageContent({
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           onBackdropMouseDown={handleBackdropClick}
-          onChange={setFilters}
+          onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}
         />

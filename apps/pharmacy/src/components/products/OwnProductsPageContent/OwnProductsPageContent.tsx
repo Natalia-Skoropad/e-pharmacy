@@ -7,6 +7,7 @@ import { Boxes } from 'lucide-react';
 import {
   CountLabel,
   FiltersButton,
+  Pagination,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
@@ -84,10 +85,11 @@ function getActiveFiltersCount(filters: OwnProductsFilterState): number {
 function getProductsQueryParams(
   filters: OwnProductsFilterState,
   rowsPerPage: RowsPerPageValue,
-  pharmacyId: EntityId
+  pharmacyId: EntityId,
+  page: number
 ): PharmacyProductsQueryParams {
   return {
-    page: 1,
+    page,
     perPage: rowsPerPage,
     pharmacyId,
     addedFrom: filters.createdDate.from || undefined,
@@ -147,6 +149,7 @@ function OwnProductsPageContent({
   const [filters, setFilters] =
     useState<OwnProductsFilterState>(initialFilters);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
+  const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<PharmacyProductRow[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [productStatistics, setProductStatistics] =
@@ -229,9 +232,9 @@ function OwnProductsPageContent({
   const queryParams = useMemo(
     () =>
       pharmacyId
-        ? getProductsQueryParams(filters, rowsPerPage, pharmacyId)
+        ? getProductsQueryParams(filters, rowsPerPage, pharmacyId, currentPage)
         : null,
-    [filters, pharmacyId, rowsPerPage]
+    [currentPage, filters, pharmacyId, rowsPerPage]
   );
 
   useEffect(() => {
@@ -279,17 +282,21 @@ function OwnProductsPageContent({
 
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
+  const totalPages = Math.ceil(totalProducts / rowsPerPage);
 
   const handleFiltersChange = (nextFilters: OwnProductsFilterState) => {
     setFilters(nextFilters);
+    setCurrentPage(1);
   };
 
   const handleRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
     setRowsPerPage(nextRowsPerPage);
+    setCurrentPage(1);
   };
 
   const resetFilters = () => {
     setFilters(DEFAULT_OWN_PRODUCTS_FILTERS);
+    setCurrentPage(1);
   };
 
   const handleRemoveProduct = (product: PharmacyProductRow) => {
@@ -418,6 +425,22 @@ function OwnProductsPageContent({
           }
           removingProductId={removingProductId}
           onRemoveProduct={handleRemoveProduct}
+        />
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          getPageHref={(page) => String(page)}
+          renderLink={({ href, className, children, 'aria-label': ariaLabel }) => (
+            <button
+              className={className}
+              type="button"
+              aria-label={ariaLabel}
+              onClick={() => setCurrentPage(Number(href))}
+            >
+              {children}
+            </button>
+          )}
         />
       </section>
 

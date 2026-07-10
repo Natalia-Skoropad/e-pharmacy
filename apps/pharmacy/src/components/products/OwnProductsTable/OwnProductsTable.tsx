@@ -142,7 +142,11 @@ function OwnProductsTable({
             type="button"
             variant="secondary"
             size="sm"
-            disabled={!onRemoveProduct || removingProductId === product.id}
+            disabled={
+              !onRemoveProduct ||
+              product.hasRelatedOrders ||
+              removingProductId === product.id
+            }
             isLoading={removingProductId === product.id}
             loadingLabel="Removing..."
             onClick={() => onRemoveProduct?.(product)}

@@ -54,6 +54,8 @@ export const ordersQuerySchema = z.preprocess(
     deliveryMethod: z.enum(['pickup', 'postal_delivery']).optional(),
     paymentMethod: z.enum(['cash', 'bank_transfer']).optional(),
     status: z.enum(['new', 'in_progress', 'successful', 'rejected']).optional(),
+    productId: mongoIdSchema.optional(),
+    comment: sharedSearchSchema,
   })
 );
 

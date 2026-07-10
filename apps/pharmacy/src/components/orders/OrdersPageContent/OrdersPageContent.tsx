@@ -7,6 +7,7 @@ import { ShoppingBag } from 'lucide-react';
 import {
   CountLabel,
   FiltersButton,
+  Pagination,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
@@ -67,10 +68,11 @@ function getActiveFiltersCount(filters: OrdersFilterState): number {
 
 function getOrdersQueryParams(
   filters: OrdersFilterState,
-  rowsPerPage: RowsPerPageValue
+  rowsPerPage: RowsPerPageValue,
+  page: number
 ): PharmacyOrdersQueryParams {
   return {
-    page: 1,
+    page,
     perPage: rowsPerPage,
     dateFrom: filters.date.from || undefined,
     dateTo: filters.date.to || undefined,
@@ -99,6 +101,7 @@ function OrdersPageContent({
   const pathname = usePathname();
   const [filters, setFilters] = useState<OrdersFilterState>(initialFilters);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
+  const [currentPage, setCurrentPage] = useState(1);
   const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
   const [orderStatistics, setOrderStatistics] = useState(
@@ -119,8 +122,8 @@ function OrdersPageContent({
   });
 
   const queryParams = useMemo(
-    () => getOrdersQueryParams(filters, rowsPerPage),
-    [filters, rowsPerPage]
+    () => getOrdersQueryParams(filters, rowsPerPage, currentPage),
+    [currentPage, filters, rowsPerPage]
   );
 
   useEffect(() => {
@@ -168,17 +171,21 @@ function OrdersPageContent({
 
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
+  const totalPages = Math.ceil(totalOrders / rowsPerPage);
 
   const handleFiltersChange = (nextFilters: OrdersFilterState) => {
     setFilters(nextFilters);
+    setCurrentPage(1);
   };
 
   const handleRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
     setRowsPerPage(nextRowsPerPage);
+    setCurrentPage(1);
   };
 
   const resetFilters = () => {
     setFilters(DEFAULT_ORDERS_FILTERS);
+    setCurrentPage(1);
   };
 
   const currentPharmacyStatus = useCurrentPharmacyStatus();
@@ -280,6 +287,22 @@ function OrdersPageContent({
               ? 'No orders found for the selected filters. Adjust filters or reset them.'
               : 'Orders will appear here after the pharmacy is verified and clients place orders.'
           }
+        />
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          getPageHref={(page) => String(page)}
+          renderLink={({ href, className, children, 'aria-label': ariaLabel }) => (
+            <button
+              className={className}
+              type="button"
+              aria-label={ariaLabel}
+              onClick={() => setCurrentPage(Number(href))}
+            >
+              {children}
+            </button>
+          )}
         />
       </section>
 

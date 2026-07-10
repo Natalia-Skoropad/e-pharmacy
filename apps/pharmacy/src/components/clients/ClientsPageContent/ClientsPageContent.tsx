@@ -7,6 +7,7 @@ import { Users } from 'lucide-react';
 import {
   CountLabel,
   FiltersButton,
+  Pagination,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
@@ -74,10 +75,11 @@ function getActiveFiltersCount(filters: ClientsFilterState): number {
 
 function getClientsQueryParams(
   filters: ClientsFilterState,
-  rowsPerPage: RowsPerPageValue
+  rowsPerPage: RowsPerPageValue,
+  page: number
 ): PharmacyClientsQueryParams {
   return {
-    page: 1,
+    page,
     perPage: rowsPerPage,
     firstOrderFrom: filters.firstOrderDate.from || undefined,
     firstOrderTo: filters.firstOrderDate.to || undefined,
@@ -105,6 +107,7 @@ function ClientsPageContent({
   const pathname = usePathname();
   const [filters, setFilters] = useState<ClientsFilterState>(initialFilters);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
+  const [currentPage, setCurrentPage] = useState(1);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
   const [totalClients, setTotalClients] = useState(0);
   const [clientStatistics, setClientStatistics] =
@@ -139,8 +142,8 @@ function ClientsPageContent({
   }, []);
 
   const queryParams = useMemo(
-    () => getClientsQueryParams(filters, rowsPerPage),
-    [filters, rowsPerPage]
+    () => getClientsQueryParams(filters, rowsPerPage, currentPage),
+    [currentPage, filters, rowsPerPage]
   );
 
   useEffect(() => {
@@ -186,17 +189,21 @@ function ClientsPageContent({
 
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
+  const totalPages = Math.ceil(totalClients / rowsPerPage);
 
   const handleFiltersChange = (nextFilters: ClientsFilterState) => {
     setFilters(nextFilters);
+    setCurrentPage(1);
   };
 
   const handleRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
     setRowsPerPage(nextRowsPerPage);
+    setCurrentPage(1);
   };
 
   const resetFilters = () => {
     setFilters(DEFAULT_CLIENTS_FILTERS);
+    setCurrentPage(1);
   };
 
   const getClientStatisticHref = (key: ClientStatisticsKey) => {
@@ -323,6 +330,22 @@ function ClientsPageContent({
               ? 'No clients found for the selected filters.'
               : 'Your pharmacy has no clients yet.'
           }
+        />
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          getPageHref={(page) => String(page)}
+          renderLink={({ href, className, children, 'aria-label': ariaLabel }) => (
+            <button
+              className={className}
+              type="button"
+              aria-label={ariaLabel}
+              onClick={() => setCurrentPage(Number(href))}
+            >
+              {children}
+            </button>
+          )}
         />
       </section>
 

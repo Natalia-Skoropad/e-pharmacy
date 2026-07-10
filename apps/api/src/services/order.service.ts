@@ -83,15 +83,19 @@ type ProductDocument = ProductEntity & { _id: Types.ObjectId };
 type ProductOfferDocument = ProductOfferEntity & { _id: Types.ObjectId };
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
 type OrderDocument = OrderEntity & { _id: Types.ObjectId };
+
 type UserDocument = {
   _id: Types.ObjectId;
   name?: string;
   email?: string;
   pictureUrl?: string;
 };
+
 type ProductFallbackMap = Map<string, ProductDocument>;
 type OfferFallbackMap = Map<string, ProductOfferDocument>;
 type ClientUserMap = Map<string, UserDocument>;
+
+//===============================================================
 
 const ORDER_STATUSES_FOR_STATISTICS = [
   'new',
@@ -307,7 +311,6 @@ async function getOrderProductFallbacks(
 
   return new Map(products.map((product) => [String(product._id), product]));
 }
-
 
 //===============================================================
 
@@ -661,7 +664,6 @@ export async function checkoutOrderService(
 
 //===============================================================
 
-
 async function assertCanEditPharmacyOrder(
   actor: { id: string; role: UserRole },
   order: OrderDocument,
@@ -796,7 +798,10 @@ export async function updateOrderDetailsService(
         }
 
         if (requested.size === 0) {
-          throw httpError(HTTP_STATUS.BAD_REQUEST, 'Order must contain products.');
+          throw httpError(
+            HTTP_STATUS.BAD_REQUEST,
+            'Order must contain products.'
+          );
         }
 
         const existingByOfferId: Map<string, OrderItemEntity> = new Map(
@@ -815,7 +820,10 @@ export async function updateOrderDetailsService(
         );
 
         if (offerMap.size !== requested.size) {
-          throw httpError(HTTP_STATUS.BAD_REQUEST, 'Product offer is unavailable.');
+          throw httpError(
+            HTTP_STATUS.BAD_REQUEST,
+            'Product offer is unavailable.'
+          );
         }
 
         const products = await Product.find({
@@ -830,7 +838,8 @@ export async function updateOrderDetailsService(
         );
 
         for (const oldItem of order.items) {
-          const nextQuantity = requested.get(String(oldItem.productOfferId)) ?? 0;
+          const nextQuantity =
+            requested.get(String(oldItem.productOfferId)) ?? 0;
 
           if (nextQuantity < oldItem.quantity) {
             await releaseOfferStock(
@@ -857,30 +866,44 @@ export async function updateOrderDetailsService(
           }
         }
 
-        const nextItems = [...requested.entries()].map(([offerId, quantity]) => {
-          const offer = offerMap.get(offerId);
+        const nextItems = [...requested.entries()].map(
+          ([offerId, quantity]) => {
+            const offer = offerMap.get(offerId);
 
-          if (!offer) {
-            throw httpError(HTTP_STATUS.BAD_REQUEST, 'Product offer is unavailable.');
+            if (!offer) {
+              throw httpError(
+                HTTP_STATUS.BAD_REQUEST,
+                'Product offer is unavailable.'
+              );
+            }
+
+            const product = productMap.get(String(offer.productId));
+
+            if (!product) {
+              throw httpError(
+                HTTP_STATUS.NOT_FOUND,
+                API_MESSAGES.PRODUCT_NOT_FOUND
+              );
+            }
+
+            return createOrderItemFromProductOffer({
+              offer,
+              product,
+              quantity,
+              previousItem: existingByOfferId.get(offerId),
+            });
           }
-
-          const product = productMap.get(String(offer.productId));
-
-          if (!product) {
-            throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
-          }
-
-          return createOrderItemFromProductOffer({
-            offer,
-            product,
-            quantity,
-            previousItem: existingByOfferId.get(offerId),
-          });
-        });
+        );
 
         set.items = nextItems;
-        set.totalItems = nextItems.reduce((sum, item) => sum + item.quantity, 0);
-        set.totalPrice = nextItems.reduce((sum, item) => sum + item.totalPrice, 0);
+        set.totalItems = nextItems.reduce(
+          (sum, item) => sum + item.quantity,
+          0
+        );
+        set.totalPrice = nextItems.reduce(
+          (sum, item) => sum + item.totalPrice,
+          0
+        );
       }
 
       updatedOrder = await Order.findByIdAndUpdate(
@@ -1388,6 +1411,20 @@ export async function getOrdersService(
     filter.paymentMethod = query.paymentMethod;
   }
 
+  if (query.productId) {
+    filter['items.productId'] = new Types.ObjectId(query.productId);
+  }
+
+  if (query.comment?.trim()) {
+    const commentRegExp = createOrderSearchRegExp(query.comment.trim());
+
+    filter.$or = [
+      { comment: commentRegExp },
+      { managerComment: commentRegExp },
+      { 'statusHistory.comment': commentRegExp },
+    ];
+  }
+
   const statisticsFilter = { ...filter };
 
   if (query.status) {
@@ -1471,5 +1508,7 @@ export async function getOrderByIdService(
     ? new Map([[String(clientUser._id), clientUser]])
     : undefined;
 
-  return { order: serializeOrder(order, productFallbacks, clientMap, offerFallbacks) };
+  return {
+    order: serializeOrder(order, productFallbacks, clientMap, offerFallbacks),
+  };
 }

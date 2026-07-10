@@ -121,6 +121,16 @@ async function getOffersByProductIds(
     productId: { $in: productIds },
   }).lean();
 
+  const relatedOfferIds = new Set<string>(
+    (
+      offers.length
+        ? await Order.distinct('items.productOfferId', {
+            'items.productOfferId': { $in: offers.map((offer) => offer._id) },
+          })
+        : []
+    ).map(String)
+  );
+
   const pharmacyIds = [
     ...new Set(offers.map((offer) => String(offer.pharmacyId))),
   ];
@@ -157,6 +167,7 @@ async function getOffersByProductIds(
       availableQuantity: offer.availableQuantity,
       reservedQuantity: offer.reservedQuantity,
       inStock: offer.availableQuantity > 0,
+      hasRelatedOrders: relatedOfferIds.has(String(offer._id)),
       createdAt:
         offer.createdAt?.toISOString?.() ?? String(offer.createdAt ?? ''),
       updatedAt:

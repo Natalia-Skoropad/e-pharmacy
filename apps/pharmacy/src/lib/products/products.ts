@@ -3,6 +3,7 @@ import {
   isProductCategory,
   type OwnProductStatisticsCounts,
 } from '@e-pharmacy/types/products';
+
 import { normalizePaginatedResponse } from '@e-pharmacy/utils/api';
 
 import {
@@ -52,6 +53,7 @@ export type PharmacyProductRow = Readonly<{
   currentPrice: number;
   imageUrl?: string;
   status: OwnProductStatus;
+  hasRelatedOrders: boolean;
 }>;
 
 export type PharmacyProductsQueryParams = Readonly<{
@@ -212,9 +214,9 @@ export function normalizePharmacyProduct(
       getStringValue(rawProduct.pictureUrl) ??
       getStringValue(rawProduct.photoUrl),
     status,
+    hasRelatedOrders: Boolean(offer.hasRelatedOrders),
   };
 }
-
 
 //===================================================================
 

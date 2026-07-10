@@ -31,6 +31,7 @@ export type ProductOffer = {
   availableQuantity: number;
   reservedQuantity: number;
   inStock: boolean;
+  hasRelatedOrders?: boolean;
   createdAt?: ISODateString;
   updatedAt?: ISODateString;
 };
