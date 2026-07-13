@@ -53,10 +53,6 @@
 }
 
 @media only screen and (min-width: 768px) {
-  .card {
-    padding: 24px;
-  }
-
   .searchGrid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(140px, 80px);
     align-items: end;

@@ -178,11 +178,32 @@
   color: var(--color-text-primary);
 }
 
-.itemPrice {
-  font-size: var(--fz-20);
+.itemPrices {
+  display: grid;
+  gap: 8px;
+  min-width: 170px;
+  margin: 0;
+}
+
+.itemPrices div {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.itemPrices dt {
+  font-size: var(--fz-13);
+  color: var(--color-accent);
+}
+
+.itemPrices dd {
+  margin: 0;
+  font-size: var(--fz-18);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
   color: var(--color-text-primary);
+  white-space: nowrap;
 }
 
 .quantityText {
@@ -312,6 +333,10 @@
   .itemHead {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
+  }
+
+  .itemPrices {
+    justify-self: end;
   }
 
   .itemFooter {

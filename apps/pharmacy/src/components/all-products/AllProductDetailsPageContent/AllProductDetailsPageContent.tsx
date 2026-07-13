@@ -162,6 +162,7 @@ type StockMovementRow = Readonly<{
   quantityValue: number;
   price: string;
   priceValue: number;
+  totalAmount: string;
   orderNumber: string;
   orderStatus?: OrderStatus;
   source: string;
@@ -456,6 +457,7 @@ function getStockMovementRows(
       quantityValue: offer.totalQuantity,
       price: formatPrice(offer.price),
       priceValue: offer.price,
+      totalAmount: formatPrice(offer.totalQuantity * offer.price),
       orderNumber: '—',
       source: 'Pharmacy stock',
       sourceValue: 'pharmacy_stock',
@@ -490,6 +492,7 @@ function getStockMovementRows(
         quantityValue,
         price: row.fixedUnitPrice,
         priceValue: row.unitPriceValue,
+        totalAmount: formatPrice(Math.abs(quantityValue) * row.unitPriceValue),
         orderNumber: row.orderNumber,
         orderStatus: row.status,
         source: 'Client order',
@@ -1027,6 +1030,23 @@ function AllProductDetailsPageContent({
             }
           >
             {row.price}
+          </strong>
+        ),
+      },
+      {
+        key: 'totalAmount',
+        title: <TableHeaderTitle parts={['Total', 'amount']} />,
+        render: (row: StockMovementRow) => (
+          <strong
+            className={
+              row.eventTypeValue === 'reserve'
+                ? css.valueReserve
+                : row.quantityValue < 0
+                  ? css.valueOut
+                  : css.valueIn
+            }
+          >
+            {row.totalAmount}
           </strong>
         ),
       },

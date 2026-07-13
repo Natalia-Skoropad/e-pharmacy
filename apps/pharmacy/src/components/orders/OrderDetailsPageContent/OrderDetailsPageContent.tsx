@@ -7,11 +7,12 @@ import {
   History,
   MapPin,
   Phone,
-  ShieldAlert,
+  MessageSquareText,
   ShoppingBag,
   ShoppingCart,
   Wallet,
 } from 'lucide-react';
+
 import { useEffect, useId, useMemo, useState } from 'react';
 
 import {
@@ -25,6 +26,8 @@ import {
   SearchInput,
   ShimmerImage,
   SvgIcon,
+  Tabs,
+  type TabItem,
 } from '@e-pharmacy/ui/common';
 
 import { ConfirmationModal, ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
@@ -32,9 +35,14 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
-import type { DeliveryMethod, OrderStatus, PaymentMethod, Product } from '@e-pharmacy/types';
+import type {
+  DeliveryMethod,
+  OrderStatus,
+  PaymentMethod,
+  Product,
+} from '@e-pharmacy/types';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
-import { formatPrice, formatShortDate, formatStockLabel } from '@e-pharmacy/utils/formatters';
+import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import {
   getPharmacyOrderDetails,
@@ -70,23 +78,20 @@ type PendingStatusChange = Readonly<{
   rejectionReason?: string;
 }>;
 
-type OrderTab =
-  | 'products'
-  | 'delivery'
-  | 'payment'
-  | 'comment'
-  | 'history';
+type OrderTab = 'products' | 'delivery' | 'payment' | 'comment' | 'history';
 
 //===================================================================
 
 const PRODUCT_PICKER_LIMIT = 150;
 
-const ORDER_TABS: Array<{ id: OrderTab; label: string }> = [
-  { id: 'products', label: 'Order products' },
-  { id: 'delivery', label: 'Delivery method' },
-  { id: 'payment', label: 'Payment method' },
-  { id: 'comment', label: 'Order comment' },
-  { id: 'history', label: 'Order history' },
+//===================================================================
+
+const ORDER_TABS: Array<TabItem<OrderTab>> = [
+  { value: 'products', label: 'Order products' },
+  { value: 'delivery', label: 'Delivery method' },
+  { value: 'payment', label: 'Payment method' },
+  { value: 'comment', label: 'Order comment' },
+  { value: 'history', label: 'Order history' },
 ];
 
 //===================================================================
@@ -157,6 +162,12 @@ function getOrderItemsPayload(items: PharmacyOrderItem[]) {
 
 //===================================================================
 
+function formatAvailableItems(quantity: number): string {
+  return quantity === 1 ? '1 item available' : `${quantity} items available`;
+}
+
+//===================================================================
+
 function getOrderFormState(order: PharmacyOrderDetails) {
   return {
     deliveryMethod: order.deliveryMethod,
@@ -185,7 +196,10 @@ function OrderProductCard({
   const stockQuantity = item.quantity + (item.availableQuantity ?? 0);
 
   return (
-    <article className={css.itemCard} aria-labelledby={`order-product-${item.id}`}>
+    <article
+      className={css.itemCard}
+      aria-labelledby={`order-product-${item.id}`}
+    >
       <div className={css.itemImageWrap}>
         {imageSrc ? (
           <ShimmerImage
@@ -205,6 +219,12 @@ function OrderProductCard({
       <div className={css.itemContent}>
         <div className={css.itemHead}>
           <div>
+            {item.category ? (
+              <p className={css.itemCategory}>
+                {PRODUCT_CATEGORY_LABELS[item.category] ?? item.category}
+              </p>
+            ) : null}
+
             <h3 className={css.itemTitle} id={`order-product-${item.id}`}>
               {item.name}
             </h3>
@@ -217,7 +237,16 @@ function OrderProductCard({
             />
           </div>
 
-          <p className={css.itemAmount}>{formatPrice(item.totalPrice)}</p>
+          <dl className={css.itemPrices}>
+            <div>
+              <dt>Unit price</dt>
+              <dd>{formatPrice(item.unitPrice)}</dd>
+            </div>
+            <div>
+              <dt>Total amount</dt>
+              <dd>{formatPrice(item.totalPrice)}</dd>
+            </div>
+          </dl>
         </div>
 
         <div className={css.itemFooter}>
@@ -234,7 +263,7 @@ function OrderProductCard({
             />
 
             <p className={css.stockText}>
-              {formatStockLabel(stockQuantity)} available in this pharmacy
+              {formatAvailableItems(stockQuantity)}
             </p>
           </div>
 
@@ -351,7 +380,7 @@ function ProductPickerModal({
             onChange={setSearchValue}
           />
 
-          <p className={css.availableCount}>{formatStockLabel(total)}</p>
+          <p className={css.availableCount}>{formatAvailableItems(total)}</p>
         </div>
 
         {error ? <p className={css.errorText}>{error}</p> : null}
@@ -360,14 +389,17 @@ function ProductPickerModal({
           {isLoading ? <LoadingSpinner label="Loading products..." /> : null}
 
           {!isLoading && products.length === 0 ? (
-            <p className={css.metaText}>No matching products in this pharmacy.</p>
+            <p className={css.metaText}>
+              No matching products in this pharmacy.
+            </p>
           ) : null}
 
           {!isLoading && products.length > 0 ? (
             <ul className={css.modalProductList}>
               {products.map((product) => {
                 const offer = getProductOffer(product, order.pharmacyId);
-                const categoryLabel = PRODUCT_CATEGORY_LABELS[product.category] ?? product.category;
+                const categoryLabel =
+                  PRODUCT_CATEGORY_LABELS[product.category] ?? product.category;
 
                 return (
                   <li className={css.modalProductItem} key={product.id}>
@@ -381,7 +413,10 @@ function ProductPickerModal({
                           unoptimized
                         />
                       ) : (
-                        <div className={css.modalProductFallback} aria-hidden="true">
+                        <div
+                          className={css.modalProductFallback}
+                          aria-hidden="true"
+                        >
                           <SvgIcon name="icon-shopping-cart" size={24} />
                         </div>
                       )}
@@ -390,10 +425,14 @@ function ProductPickerModal({
                     <div className={css.modalProductInfo}>
                       <h3>{product.name}</h3>
                       <p>{categoryLabel}</p>
-                      <span>{formatStockLabel(offer?.availableQuantity ?? 0)} available</span>
+                      <span>
+                        {formatAvailableItems(offer?.availableQuantity ?? 0)}
+                      </span>
                     </div>
 
-                    <p className={css.modalProductPrice}>{formatPrice(offer?.price ?? product.price)}</p>
+                    <p className={css.modalProductPrice}>
+                      {formatPrice(offer?.price ?? product.price)}
+                    </p>
 
                     <Button
                       type="button"
@@ -463,8 +502,11 @@ function OrderProductsTab({
           </div>
         </dl>
 
-        <div className={css.policyNotice}>
-          <ShieldAlert size={18} aria-hidden="true" />
+        <div className={css.clientComment}>
+          <div className={css.clientCommentTitle}>
+            <MessageSquareText size={18} aria-hidden="true" />
+            <strong>Client comment</strong>
+          </div>
           <p>{order.clientComment || 'Client did not leave a comment.'}</p>
         </div>
 
@@ -516,7 +558,10 @@ function DeliveryTab({
       <h2 id="delivery-title">Delivery method</h2>
 
       <div className={css.methodGrid}>
-        <fieldset className={css.methodOptions} disabled={!isEditable || isUpdating}>
+        <fieldset
+          className={css.methodOptions}
+          disabled={!isEditable || isUpdating}
+        >
           <legend className="visually-hidden">Delivery method</legend>
 
           <RadioOption
@@ -547,13 +592,18 @@ function DeliveryTab({
                 {order.pharmacyPhone ? (
                   <li>
                     <Phone size={18} aria-hidden="true" />
-                    <a href={`tel:${order.pharmacyPhone}`}>{order.pharmacyPhone}</a>
+                    <a href={`tel:${order.pharmacyPhone}`}>
+                      {order.pharmacyPhone}
+                    </a>
                   </li>
                 ) : null}
 
                 <li>
                   <Clock size={18} aria-hidden="true" />
-                  <span>Use the approved pharmacy working hours from the public profile.</span>
+                  <span>
+                    Use the approved pharmacy working hours from the public
+                    profile.
+                  </span>
                 </li>
 
                 {order.pharmacyAddress ? (
@@ -573,7 +623,9 @@ function DeliveryTab({
                   value={recipientName}
                   maxLength={50}
                   disabled={!isEditable || isUpdating}
-                  onChange={(event) => onRecipientNameChange(event.target.value)}
+                  onChange={(event) =>
+                    onRecipientNameChange(event.target.value)
+                  }
                 />
               </label>
 
@@ -584,7 +636,9 @@ function DeliveryTab({
                   value={recipientPhone}
                   maxLength={13}
                   disabled={!isEditable || isUpdating}
-                  onChange={(event) => onRecipientPhoneChange(event.target.value)}
+                  onChange={(event) =>
+                    onRecipientPhoneChange(event.target.value)
+                  }
                 />
               </label>
 
@@ -595,7 +649,9 @@ function DeliveryTab({
                   value={deliveryAddress}
                   maxLength={120}
                   disabled={!isEditable || isUpdating}
-                  onChange={(event) => onDeliveryAddressChange(event.target.value)}
+                  onChange={(event) =>
+                    onDeliveryAddressChange(event.target.value)
+                  }
                 />
               </label>
             </div>
@@ -635,7 +691,10 @@ function PaymentTab({
       <h2 id="payment-title">Payment method</h2>
 
       <div className={css.methodGrid}>
-        <fieldset className={css.methodOptions} disabled={!isEditable || isUpdating}>
+        <fieldset
+          className={css.methodOptions}
+          disabled={!isEditable || isUpdating}
+        >
           <legend className="visually-hidden">Payment method</legend>
 
           <RadioOption
@@ -663,7 +722,8 @@ function PaymentTab({
               <Wallet size={20} aria-hidden="true" />
               <h3>Pay when everything is ready</h3>
               <p>
-                Cash is paid during pickup or delivery. Please keep the order amount ready when the client receives the order.
+                Cash is paid during pickup or delivery. Please keep the order
+                amount ready when the client receives the order.
               </p>
             </div>
           ) : (
@@ -671,7 +731,8 @@ function PaymentTab({
               <CreditCard size={20} aria-hidden="true" />
               <h3>Bank transfer</h3>
               <p>
-                The client selected bank transfer. Check payment status before confirming the order.
+                The client selected bank transfer. Check payment status before
+                confirming the order.
               </p>
             </div>
           )}
@@ -710,7 +771,9 @@ function ManagerCommentTab({
   return (
     <section className={css.methodCard} aria-labelledby="manager-comment-title">
       <h2 id="manager-comment-title">Order comment</h2>
-      <p className={css.metaText}>Private manager notes for processing this order.</p>
+      <p className={css.metaText}>
+        Private manager notes for processing this order.
+      </p>
 
       <textarea
         className={css.commentTextarea}
@@ -794,7 +857,11 @@ function RejectOrderModal({
 
   return (
     <ModalRoot>
-      <ModalBase labelledBy={titleId} dialogClassName={css.rejectModal} onClose={onCancel}>
+      <ModalBase
+        labelledBy={titleId}
+        dialogClassName={css.rejectModal}
+        onClose={onCancel}
+      >
         <div className={css.modalHead}>
           <div>
             <p className={css.modalKicker}>Reject order</p>
@@ -807,7 +874,8 @@ function RejectOrderModal({
         </div>
 
         <p className={css.metaText}>
-          Write at least 100 characters so Admin and client support can clearly understand why the order was rejected.
+          Write at least 100 characters so Admin and client support can clearly
+          understand why the order was rejected.
         </p>
 
         <textarea
@@ -824,7 +892,12 @@ function RejectOrderModal({
         </p>
 
         <div className={css.modalActions}>
-          <Button type="button" variant="secondary" disabled={isLoading} onClick={onCancel}>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={isLoading}
+            onClick={onCancel}
+          >
             Cancel
           </Button>
 
@@ -850,13 +923,15 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<OrderTab>('products');
-  const [pendingStatus, setPendingStatus] = useState<PendingStatusChange | null>(null);
+  const [pendingStatus, setPendingStatus] =
+    useState<PendingStatusChange | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
-  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('pickup');
+  const [deliveryMethod, setDeliveryMethod] =
+    useState<DeliveryMethod>('pickup');
   const [recipientName, setRecipientName] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
@@ -878,7 +953,10 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
         } catch (detailsError) {
           if (!/^\d+$/.test(orderId)) throw detailsError;
 
-          const ordersResponse = await getPharmacyOrders({ page: 1, perPage: 1 });
+          const ordersResponse = await getPharmacyOrders({
+            page: 1,
+            perPage: 1,
+          });
           const fallbackOrder = ordersResponse.items[0];
 
           if (!fallbackOrder) throw detailsError;
@@ -914,18 +992,23 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     };
   }, [orderId]);
 
-
   const isEditable = order?.status === 'in_progress';
-  const statusModalText = pendingStatus ? getStatusModalText(pendingStatus.status) : null;
+  const statusModalText = pendingStatus
+    ? getStatusModalText(pendingStatus.status)
+    : null;
 
   const statusActions = useMemo(() => {
     if (!order) return [] as Array<PendingStatusChange['status']>;
-    if (order.status === 'new') return ['in_progress'] as Array<PendingStatusChange['status']>;
-    if (order.status === 'in_progress') return ['successful', 'rejected'] as Array<PendingStatusChange['status']>;
+    if (order.status === 'new')
+      return ['in_progress'] as Array<PendingStatusChange['status']>;
+    if (order.status === 'in_progress')
+      return ['successful', 'rejected'] as Array<PendingStatusChange['status']>;
     return [] as Array<PendingStatusChange['status']>;
   }, [order]);
 
-  const updateOrderDraft = async (payload: Parameters<typeof updatePharmacyOrder>[1]) => {
+  const updateOrderDraft = async (
+    payload: Parameters<typeof updatePharmacyOrder>[1]
+  ) => {
     if (!order) return;
 
     setIsUpdatingOrder(true);
@@ -957,11 +1040,17 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     if (!order || !isEditable || isUpdatingOrder) return;
 
     if (quantity < 1 && order.items.length <= 1) {
-      toast.error('You cannot remove the whole order. Continue editing it or reject the order.');
+      toast.error(
+        'You cannot remove the whole order. Continue editing it or reject the order.'
+      );
       return;
     }
 
-    if (quantity > item.quantity && item.currentPrice !== undefined && item.currentPrice !== item.unitPrice) {
+    if (
+      quantity > item.quantity &&
+      item.currentPrice !== undefined &&
+      item.currentPrice !== item.unitPrice
+    ) {
       const shouldContinue = window.confirm(
         'The product price has changed. If you add one more unit, the current product price will be used.'
       );
@@ -990,9 +1079,14 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       return;
     }
 
-    const existingItem = order.items.find((item) => item.productOfferId === offer.id);
+    const existingItem = order.items.find(
+      (item) => item.productOfferId === offer.id
+    );
 
-    if (existingItem?.currentPrice !== undefined && existingItem.currentPrice !== existingItem.unitPrice) {
+    if (
+      existingItem?.currentPrice !== undefined &&
+      existingItem.currentPrice !== existingItem.unitPrice
+    ) {
       const shouldContinue = window.confirm(
         'The product price has changed. If you add one more unit, the current product price will be used.'
       );
@@ -1152,11 +1246,16 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
               titleId="order-details-page-title"
               icon={<ShoppingBag size={23} aria-hidden="true" />}
             />
-            <p className={css.metaText}>Created on {formatOrderDate(order.orderDate)}</p>
+            <p className={css.metaText}>
+              Created on {formatOrderDate(order.orderDate)}
+            </p>
           </div>
 
           <div className={css.statusActions}>
-            <StatusBadge status={order.status} label={ORDER_STATUS_LABELS[order.status]} />
+            <StatusBadge
+              status={order.status}
+              label={ORDER_STATUS_LABELS[order.status]}
+            />
 
             {statusActions.map((status) => (
               <Button
@@ -1176,26 +1275,28 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       </section>
 
       <section className={css.contentCard}>
-        <nav className={css.tabs} aria-label="Order details tabs">
-          {ORDER_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              className={activeTab === tab.id ? css.tabActive : css.tab}
-              type="button"
-              aria-pressed={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+        <div className={css.tabsWrap}>
+          <Tabs
+            items={ORDER_TABS}
+            activeValue={activeTab}
+            ariaLabel="Order details tabs"
+            mobileVisibleCount={1}
+            tabletVisibleCount={3}
+            onChange={setActiveTab}
+          />
+        </div>
 
         {!isEditable && order.status === 'new' ? (
-          <p className={css.lockNotice}>Take this order into work to edit it.</p>
+          <p className={css.lockNotice}>
+            Take this order into work to edit it.
+          </p>
         ) : null}
 
-        {!isEditable && (order.status === 'successful' || order.status === 'rejected') ? (
-          <p className={css.lockNotice}>This order has a final status and can no longer be edited.</p>
+        {!isEditable &&
+        (order.status === 'successful' || order.status === 'rejected') ? (
+          <p className={css.lockNotice}>
+            This order has a final status and can no longer be edited.
+          </p>
         ) : null}
 
         <div className={css.tabPanel}>
@@ -1255,7 +1356,9 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
         isOpen={Boolean(pendingStatus && pendingStatus.status !== 'rejected')}
         title={statusModalText?.title ?? 'Update order status?'}
         description={statusModalText?.description ?? ''}
-        confirmLabel={pendingStatus ? getStatusActionLabel(pendingStatus.status) : 'Confirm'}
+        confirmLabel={
+          pendingStatus ? getStatusActionLabel(pendingStatus.status) : 'Confirm'
+        }
         isLoading={isUpdatingStatus}
         onConfirm={() => void handleConfirmStatus()}
         onCancel={() => {

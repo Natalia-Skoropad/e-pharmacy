@@ -25,7 +25,7 @@
 .stack {
   min-width: 0;
   display: grid;
-  gap: 24px;
+  gap: 20px;
 }
 
 .loaderBox {
@@ -129,10 +129,6 @@
 }
 
 @media only screen and (min-width: 768px) {
-  .contentCard {
-    padding: 24px;
-  }
-
   .sectionTopline {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
@@ -147,9 +143,4 @@
     grid-template-columns: repeat(2, minmax(180px, 220px));
     justify-content: start;
   }
-
-  .section {
-    padding: 24px;
-  }
 }
-

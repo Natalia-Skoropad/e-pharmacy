@@ -2,6 +2,13 @@ import 'client-only';
 
 import { buildQueryString, getResponseData } from '@e-pharmacy/api-client/core';
 import type { ApiSuccessResponse } from '@e-pharmacy/types';
+import { localApiRequest } from '@e-pharmacy/next-api/browser';
+
+import type {
+  DeliveryMethod,
+  OrderStatus,
+  PaymentMethod,
+} from '@e-pharmacy/types';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
@@ -17,10 +24,6 @@ import {
   normalizeOrderSalesStatistics,
   type PharmacyOrderSalesStatisticsQueryParams,
 } from '@/lib/orders/order-sales-statistics';
-
-import { localApiRequest } from '@e-pharmacy/next-api/browser';
-
-import type { DeliveryMethod, OrderStatus, PaymentMethod } from '@e-pharmacy/types';
 
 //===================================================================
 
@@ -69,7 +72,7 @@ export async function updatePharmacyOrder(
     PHARMACY_API_ROUTES.orders.details(orderId),
     {
       method: 'PATCH',
-      body: JSON.stringify(payload),
+      body: payload,
     }
   );
 
@@ -96,7 +99,7 @@ export async function updatePharmacyOrderStatus(
     PHARMACY_API_ROUTES.orders.status(orderId),
     {
       method: 'PATCH',
-      body: JSON.stringify(payload),
+      body: payload,
     }
   );
 

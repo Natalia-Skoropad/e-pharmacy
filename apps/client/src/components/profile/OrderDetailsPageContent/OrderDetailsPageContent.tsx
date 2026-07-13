@@ -237,9 +237,16 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                               size="sm"
                             />
                           </div>
-                          <p className={css.itemPrice}>
-                            {formatPrice(item.totalPrice)}
-                          </p>
+                          <dl className={css.itemPrices}>
+                            <div>
+                              <dt>Unit price</dt>
+                              <dd>{formatPrice(item.unitPrice)}</dd>
+                            </div>
+                            <div>
+                              <dt>Total amount</dt>
+                              <dd>{formatPrice(item.totalPrice)}</dd>
+                            </div>
+                          </dl>
                         </div>
 
                         <div className={css.itemFooter}>

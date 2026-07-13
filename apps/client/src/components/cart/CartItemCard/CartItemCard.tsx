@@ -9,6 +9,7 @@ import {
 
 import { formatPrice } from '@e-pharmacy/utils/formatters';
 import type { CartItem } from '@e-pharmacy/types';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 
 import { StockAvailability } from '@/components/common';
 import { buildProductPath } from '@/lib/routes';
@@ -58,6 +59,11 @@ function CartItemCard({
       <div className={css.content}>
         <div className={css.head}>
           <div>
+            <p className={css.category}>
+              {PRODUCT_CATEGORY_LABELS[item.product.category] ??
+                item.product.category}
+            </p>
+
             <h2 className={css.title} id={`cart-item-${item.id}`}>
               {item.product.name}
             </h2>
@@ -70,7 +76,16 @@ function CartItemCard({
             />
           </div>
 
-          <p className={css.price}>{formatPrice(item.totalPrice)}</p>
+          <dl className={css.prices}>
+            <div>
+              <dt>Unit price</dt>
+              <dd>{formatPrice(item.unitPrice)}</dd>
+            </div>
+            <div>
+              <dt>Total amount</dt>
+              <dd>{formatPrice(item.totalPrice)}</dd>
+            </div>
+          </dl>
         </div>
 
         <div className={css.footer}>
