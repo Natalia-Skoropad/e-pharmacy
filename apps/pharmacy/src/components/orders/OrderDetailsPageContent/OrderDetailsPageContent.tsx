@@ -3,17 +3,22 @@
 import Link from 'next/link';
 import {
   Clock,
+  Copy,
   CreditCard,
   History,
+  Info,
   MapPin,
+  Mail,
   Phone,
   MessageSquareText,
   ShoppingBag,
   ShoppingCart,
+  Trash2,
+  Truck,
   Wallet,
 } from 'lucide-react';
 
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 import {
   Button,
@@ -30,7 +35,19 @@ import {
   type TabItem,
 } from '@e-pharmacy/ui/common';
 
-import { ConfirmationModal, ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
+import {
+  AddressInput,
+  CommentInput,
+  NameInput,
+  PhoneInput,
+} from '@e-pharmacy/ui/form-fields';
+
+import {
+  ConfirmationModal,
+  ModalBase,
+  ModalRoot,
+  OrderCancellationModal,
+} from '@e-pharmacy/ui/modals';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
@@ -45,7 +62,25 @@ import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import {
+  USER_ADDRESS_MAX_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  hasValidationErrors,
+  sanitizeAddress,
+  sanitizeName,
+  sanitizeOrderComment,
+  sanitizePhone,
+  validateOrderDeliveryForm,
+  type OrderDeliveryFormErrors,
+  type OrderDeliveryTouchedFields,
+  type OrderDeliveryFormValues,
+} from '@e-pharmacy/validation';
+
+import {
+  createPharmacyOrderComment,
+  deletePharmacyOrderComment,
   getPharmacyOrderDetails,
+  getPharmacyOrderComments,
   getPharmacyOrders,
   getProducts,
   updatePharmacyOrder,
@@ -56,6 +91,8 @@ import {
   ORDER_STATUS_LABELS,
   type PharmacyOrderDetails,
   type PharmacyOrderItem,
+  type PharmacyOrderManagerComment,
+  type PharmacyOrderManagerCommentsResponse,
 } from '@/lib/orders/orders';
 
 import {
@@ -83,6 +120,9 @@ type OrderTab = 'products' | 'delivery' | 'payment' | 'comment' | 'history';
 //===================================================================
 
 const PRODUCT_PICKER_LIMIT = 150;
+const COMMENTS_PER_PAGE = 5;
+const MANAGER_COMMENT_MAX_LENGTH = 1000;
+const REJECTION_REASON_MAX_LENGTH = 500;
 
 //===================================================================
 
@@ -175,8 +215,20 @@ function getOrderFormState(order: PharmacyOrderDetails) {
     recipientPhone: order.recipientPhone ?? '',
     deliveryAddress: order.deliveryAddress ?? '',
     paymentMethod: order.paymentMethod,
-    managerComment: order.managerComment ?? '',
   };
+}
+
+//===================================================================
+
+function getCommentPageItems(currentPage: number, totalPages: number) {
+  const start = Math.max(1, currentPage - 2);
+  const end = Math.min(totalPages, start + 4);
+  const adjustedStart = Math.max(1, end - 4);
+
+  return Array.from(
+    { length: end - adjustedStart + 1 },
+    (_, index) => adjustedStart + index
+  );
 }
 
 //===================================================================
@@ -186,14 +238,17 @@ function OrderProductCard({
   isEditable,
   isUpdating,
   onQuantityChange,
+  onRemove,
 }: Readonly<{
   item: PharmacyOrderItem;
   isEditable: boolean;
   isUpdating: boolean;
   onQuantityChange: (item: PharmacyOrderItem, quantity: number) => void;
+  onRemove: (item: PharmacyOrderItem) => void;
 }>) {
   const imageSrc = getProductImageSrc(item.imageUrl);
   const stockQuantity = item.quantity + (item.availableQuantity ?? 0);
+  const availableQuantity = item.availableQuantity ?? 0;
 
   return (
     <article
@@ -238,13 +293,13 @@ function OrderProductCard({
           </div>
 
           <dl className={css.itemPrices}>
-            <div>
-              <dt>Unit price</dt>
-              <dd>{formatPrice(item.unitPrice)}</dd>
-            </div>
-            <div>
+            <div className={css.totalPriceRow}>
               <dt>Total amount</dt>
               <dd>{formatPrice(item.totalPrice)}</dd>
+            </div>
+            <div className={css.unitPriceRow}>
+              <dt>Unit price</dt>
+              <dd>{formatPrice(item.unitPrice)}</dd>
             </div>
           </dl>
         </div>
@@ -263,7 +318,7 @@ function OrderProductCard({
             />
 
             <p className={css.stockText}>
-              {formatAvailableItems(stockQuantity)}
+              {formatAvailableItems(availableQuantity)}
             </p>
           </div>
 
@@ -287,7 +342,7 @@ function OrderProductCard({
               size="sm"
               variant="ghost"
               disabled={!isEditable || isUpdating}
-              onClick={() => onQuantityChange(item, 0)}
+              onClick={() => onRemove(item)}
             >
               Remove
             </Button>
@@ -307,7 +362,7 @@ function ProductPickerModal({
 }: Readonly<{
   order: PharmacyOrderDetails;
   onClose: () => void;
-  onAddProduct: (product: Product) => void;
+  onAddProduct: (product: Product) => Promise<void>;
 }>) {
   const titleId = useId();
   const searchId = useId();
@@ -316,6 +371,7 @@ function ProductPickerModal({
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [addingOfferId, setAddingOfferId] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -398,16 +454,25 @@ function ProductPickerModal({
             <ul className={css.modalProductList}>
               {products.map((product) => {
                 const offer = getProductOffer(product, order.pharmacyId);
+                const existingItem = offer
+                  ? order.items.find((item) => item.productOfferId === offer.id)
+                  : undefined;
+                const isAlreadyAdded = Boolean(existingItem);
+                const availableQuantity =
+                  existingItem?.availableQuantity ??
+                  offer?.availableQuantity ??
+                  0;
+                const imageSrc = getProductImageSrc(product.imageUrl);
                 const categoryLabel =
                   PRODUCT_CATEGORY_LABELS[product.category] ?? product.category;
 
                 return (
                   <li className={css.modalProductItem} key={product.id}>
                     <div className={css.modalProductImageWrap}>
-                      {product.imageUrl ? (
+                      {imageSrc ? (
                         <ShimmerImage
                           className={css.modalProductImage}
-                          src={product.imageUrl}
+                          src={imageSrc}
                           alt={product.name}
                           sizes="72px"
                           unoptimized
@@ -425,9 +490,7 @@ function ProductPickerModal({
                     <div className={css.modalProductInfo}>
                       <h3>{product.name}</h3>
                       <p>{categoryLabel}</p>
-                      <span>
-                        {formatAvailableItems(offer?.availableQuantity ?? 0)}
-                      </span>
+                      <span>{formatAvailableItems(availableQuantity)}</span>
                     </div>
 
                     <p className={css.modalProductPrice}>
@@ -437,11 +500,28 @@ function ProductPickerModal({
                     <Button
                       type="button"
                       size="sm"
-                      disabled={!offer || offer.availableQuantity < 1}
-                      onClick={() => onAddProduct(product)}
+                      variant={isAlreadyAdded ? 'secondary' : 'primary'}
+                      isLoading={addingOfferId === offer?.id}
+                      disabled={
+                        !offer ||
+                        availableQuantity < 1 ||
+                        isAlreadyAdded ||
+                        Boolean(addingOfferId)
+                      }
+                      onClick={async () => {
+                        if (!offer) return;
+
+                        setAddingOfferId(offer.id);
+
+                        try {
+                          await onAddProduct(product);
+                        } finally {
+                          setAddingOfferId(null);
+                        }
+                      }}
                     >
                       <ShoppingCart size={18} aria-hidden="true" />
-                      Add
+                      {isAlreadyAdded ? 'Added' : 'Add'}
                     </Button>
                   </li>
                 );
@@ -461,12 +541,14 @@ function OrderProductsTab({
   isEditable,
   isUpdating,
   onQuantityChange,
+  onRemoveProduct,
   onOpenProductModal,
 }: Readonly<{
   order: PharmacyOrderDetails;
   isEditable: boolean;
   isUpdating: boolean;
   onQuantityChange: (item: PharmacyOrderItem, quantity: number) => void;
+  onRemoveProduct: (item: PharmacyOrderItem) => void;
   onOpenProductModal: () => void;
 }>) {
   return (
@@ -480,6 +562,7 @@ function OrderProductsTab({
               isEditable={isEditable}
               isUpdating={isUpdating}
               onQuantityChange={onQuantityChange}
+              onRemove={onRemoveProduct}
             />
           ))}
         </div>
@@ -533,6 +616,8 @@ function DeliveryTab({
   recipientName,
   recipientPhone,
   deliveryAddress,
+  deliveryErrors,
+  deliveryTouchedFields,
   isUpdating,
   onDeliveryMethodChange,
   onRecipientNameChange,
@@ -546,6 +631,8 @@ function DeliveryTab({
   recipientName: string;
   recipientPhone: string;
   deliveryAddress: string;
+  deliveryErrors: OrderDeliveryFormErrors;
+  deliveryTouchedFields: OrderDeliveryTouchedFields;
   isUpdating: boolean;
   onDeliveryMethodChange: (value: DeliveryMethod) => void;
   onRecipientNameChange: (value: string) => void;
@@ -616,44 +703,66 @@ function DeliveryTab({
             </div>
           ) : (
             <div className={css.deliveryFields}>
-              <label>
-                <span>Recipient name</span>
-                <input
-                  type="text"
+              <div className={css.deliveryFieldsGrid}>
+                <NameInput
+                  id="recipient-name"
+                  name="recipientName"
                   value={recipientName}
-                  maxLength={50}
+                  error={deliveryErrors.recipientName ?? ''}
+                  isTouched={Boolean(deliveryTouchedFields.recipientName)}
+                  maxLength={USER_NAME_MAX_LENGTH}
                   disabled={!isEditable || isUpdating}
                   onChange={(event) =>
                     onRecipientNameChange(event.target.value)
                   }
                 />
-              </label>
 
-              <label>
-                <span>Recipient phone</span>
-                <input
-                  type="tel"
+                <PhoneInput
+                  id="recipient-phone"
+                  name="recipientPhone"
                   value={recipientPhone}
-                  maxLength={13}
+                  error={deliveryErrors.recipientPhone ?? ''}
+                  isTouched={Boolean(deliveryTouchedFields.recipientPhone)}
+                  maxLength={USER_PHONE_MAX_LENGTH}
                   disabled={!isEditable || isUpdating}
                   onChange={(event) =>
                     onRecipientPhoneChange(event.target.value)
                   }
                 />
-              </label>
 
-              <label className={css.fullField}>
-                <span>Delivery address</span>
-                <input
-                  type="text"
-                  value={deliveryAddress}
-                  maxLength={120}
-                  disabled={!isEditable || isUpdating}
-                  onChange={(event) =>
-                    onDeliveryAddressChange(event.target.value)
-                  }
-                />
-              </label>
+                <div className={css.deliveryFieldWide}>
+                  <AddressInput
+                    id="delivery-address"
+                    name="deliveryAddress"
+                    value={deliveryAddress}
+                    error={deliveryErrors.deliveryAddress ?? ''}
+                    isTouched={Boolean(deliveryTouchedFields.deliveryAddress)}
+                    maxLength={USER_ADDRESS_MAX_LENGTH}
+                    disabled={!isEditable || isUpdating}
+                    onChange={(event) =>
+                      onDeliveryAddressChange(event.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className={css.deliveryNotes}>
+                <div className={css.deliveryNoteCard}>
+                  <Truck size={18} aria-hidden="true" />
+                  <p>
+                    After confirmation, the pharmacy will contact the client to
+                    confirm or clarify the delivery address.
+                  </p>
+                </div>
+
+                <div className={css.deliveryNoteCardAccent}>
+                  <Info size={18} aria-hidden="true" />
+                  <p>
+                    Delivery is not included in the product price. The carrier
+                    will announce the delivery cost separately.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -674,18 +783,27 @@ function DeliveryTab({
 //===================================================================
 
 function PaymentTab({
+  order,
   paymentMethod,
+  copiedEmail,
   isEditable,
   isUpdating,
   onPaymentMethodChange,
+  onCopyEmail,
   onSave,
 }: Readonly<{
+  order: PharmacyOrderDetails;
   paymentMethod: PaymentMethod;
+  copiedEmail: boolean;
   isEditable: boolean;
   isUpdating: boolean;
   onPaymentMethodChange: (value: PaymentMethod) => void;
+  onCopyEmail: () => void;
   onSave: () => void;
 }>) {
+  const bankDetails = order.bankDetails;
+  const receiptEmail = bankDetails?.receiptEmail ?? order.pharmacyEmail ?? '';
+
   return (
     <section className={css.methodCard} aria-labelledby="payment-title">
       <h2 id="payment-title">Payment method</h2>
@@ -711,7 +829,7 @@ function PaymentTab({
             value="bank_transfer"
             checked={paymentMethod === 'bank_transfer'}
             label="Bank transfer"
-            disabled={!isEditable || isUpdating}
+            disabled={!isEditable || isUpdating || !bankDetails}
             onChange={onPaymentMethodChange}
           />
         </fieldset>
@@ -727,13 +845,61 @@ function PaymentTab({
               </p>
             </div>
           ) : (
-            <div className={css.paymentInfoCard}>
+            <div className={css.bankCard}>
               <CreditCard size={20} aria-hidden="true" />
-              <h3>Bank transfer</h3>
-              <p>
-                The client selected bank transfer. Check payment status before
-                confirming the order.
-              </p>
+              <h3>Bank details</h3>
+
+              {bankDetails ? (
+                <dl className={css.bankList}>
+                  <div>
+                    <dt>Recipient</dt>
+                    <dd>{bankDetails.recipientName}</dd>
+                  </div>
+                  <div>
+                    <dt>EDRPOU / Tax ID</dt>
+                    <dd>{bankDetails.taxId}</dd>
+                  </div>
+                  <div>
+                    <dt>IBAN</dt>
+                    <dd>{bankDetails.iban}</dd>
+                  </div>
+                  <div>
+                    <dt>Bank</dt>
+                    <dd>{bankDetails.bankName}</dd>
+                  </div>
+                  <div>
+                    <dt>Payment purpose</dt>
+                    <dd>{bankDetails.paymentPurpose}</dd>
+                  </div>
+                </dl>
+              ) : (
+                <p className={css.metaText}>
+                  Bank transfer is unavailable because the pharmacy has not
+                  provided bank details yet.
+                </p>
+              )}
+
+              {bankDetails && receiptEmail ? (
+                <div className={css.emailNote}>
+                  <Mail size={18} aria-hidden="true" />
+                  <p>
+                    After payment, the client should send the receipt to the
+                    pharmacy email for faster processing.
+                  </p>
+                  <button
+                    className={css.copyButton}
+                    type="button"
+                    disabled={!isEditable || isUpdating}
+                    onClick={onCopyEmail}
+                  >
+                    <span>{receiptEmail}</span>
+                    <Copy size={16} aria-hidden="true" />
+                  </button>
+                  {copiedEmail ? (
+                    <span className={css.copiedText}>Copied</span>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           )}
         </div>
@@ -742,7 +908,11 @@ function PaymentTab({
       <Button
         className={css.tabSaveButton}
         type="button"
-        disabled={!isEditable || isUpdating}
+        disabled={
+          !isEditable ||
+          isUpdating ||
+          (paymentMethod === 'bank_transfer' && !bankDetails)
+        }
         onClick={onSave}
       >
         Save payment method
@@ -755,53 +925,158 @@ function PaymentTab({
 
 function ManagerCommentTab({
   value,
+  comments,
+  currentPage,
+  totalPages,
+  totalComments,
   isEditable,
-  isUpdating,
+  isLoading,
+  isSaving,
+  deletingCommentId,
+  error,
   onChange,
   onSave,
   onDelete,
+  onPageChange,
 }: Readonly<{
   value: string;
+  comments: PharmacyOrderManagerComment[];
+  currentPage: number;
+  totalPages: number;
+  totalComments: number;
   isEditable: boolean;
-  isUpdating: boolean;
+  isLoading: boolean;
+  isSaving: boolean;
+  deletingCommentId: string | null;
+  error: string;
   onChange: (value: string) => void;
   onSave: () => void;
-  onDelete: () => void;
+  onDelete: (comment: PharmacyOrderManagerComment) => void;
+  onPageChange: (page: number) => void;
 }>) {
+  const pageItems = getCommentPageItems(currentPage, totalPages);
+
   return (
     <section className={css.methodCard} aria-labelledby="manager-comment-title">
-      <h2 id="manager-comment-title">Order comment</h2>
-      <p className={css.metaText}>
-        Private manager notes for processing this order.
-      </p>
+      <div className={css.commentSectionHead}>
+        <div>
+          <h2 id="manager-comment-title">Order comments</h2>
+          <p className={css.metaText}>
+            Private manager notes for processing this order.
+          </p>
+        </div>
 
-      <textarea
-        className={css.commentTextarea}
-        value={value}
-        maxLength={1000}
-        disabled={!isEditable || isUpdating}
-        placeholder="Write an internal comment for this order..."
-        onChange={(event) => onChange(event.target.value)}
-      />
+        <span className={css.commentCount}>{totalComments}</span>
+      </div>
 
-      <div className={css.commentActions}>
+      <div className={css.commentComposer}>
+        <CommentInput
+          id="manager-comment"
+          name="managerComment"
+          label="New manager comment"
+          placeholder="Write an internal comment for this order..."
+          value={value}
+          error=""
+          isTouched={false}
+          maxLength={MANAGER_COMMENT_MAX_LENGTH}
+          disabled={!isEditable || isSaving}
+          onChange={(event) => onChange(event.target.value)}
+        />
+
         <Button
+          className={css.tabSaveButton}
           type="button"
-          disabled={!isEditable || isUpdating}
+          isLoading={isSaving}
+          disabled={!isEditable || isSaving || !value.trim()}
           onClick={onSave}
         >
-          Save comment
+          Add comment
         </Button>
+      </div>
 
-        <Button
-          type="button"
-          variant="secondary"
-          className={css.rejectButton}
-          disabled={!isEditable || isUpdating || !value.trim()}
-          onClick={onDelete}
-        >
-          Delete comment
-        </Button>
+      <div className={css.savedComments}>
+        <h3>Saved comments</h3>
+
+        {error ? <p className={css.errorText}>{error}</p> : null}
+        {isLoading ? <LoadingSpinner label="Loading comments..." /> : null}
+
+        {!isLoading && !error && comments.length === 0 ? (
+          <p className={css.commentsEmpty}>
+            No manager comments yet. The comment drawer is waiting patiently.
+          </p>
+        ) : null}
+
+        {!isLoading && comments.length > 0 ? (
+          <ul className={css.commentList}>
+            {comments.map((comment) => (
+              <li className={css.commentCard} key={comment.id}>
+                <div className={css.commentCardHead}>
+                  <div>
+                    <strong>Manager comment</strong>
+                    <time dateTime={comment.createdAt}>
+                      {formatOrderDate(comment.createdAt)}
+                    </time>
+                  </div>
+
+                  <Button
+                    className={css.commentDeleteButton}
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    isLoading={deletingCommentId === comment.id}
+                    disabled={
+                      !isEditable || Boolean(deletingCommentId) || isSaving
+                    }
+                    onClick={() => onDelete(comment)}
+                  >
+                    <Trash2 size={17} aria-hidden="true" />
+                    Delete
+                  </Button>
+                </div>
+
+                <p>{comment.text}</p>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {totalPages > 1 ? (
+          <nav
+            className={css.commentPagination}
+            aria-label="Order comments pagination"
+          >
+            <button
+              type="button"
+              disabled={currentPage <= 1 || isLoading}
+              onClick={() => onPageChange(currentPage - 1)}
+            >
+              Previous
+            </button>
+
+            {pageItems.map((page) => (
+              <button
+                key={page}
+                type="button"
+                className={
+                  page === currentPage ? css.commentPageActive : undefined
+                }
+                aria-current={page === currentPage ? 'page' : undefined}
+                disabled={isLoading}
+                onClick={() => onPageChange(page)}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              disabled={currentPage >= totalPages || isLoading}
+              onClick={() => onPageChange(currentPage + 1)}
+            >
+              Next
+            </button>
+          </nav>
+        ) : null}
       </div>
     </section>
   );
@@ -839,84 +1114,6 @@ function HistoryTab({ order }: Readonly<{ order: PharmacyOrderDetails }>) {
 
 //===================================================================
 
-function RejectOrderModal({
-  value,
-  isLoading,
-  onChange,
-  onCancel,
-  onConfirm,
-}: Readonly<{
-  value: string;
-  isLoading: boolean;
-  onChange: (value: string) => void;
-  onCancel: () => void;
-  onConfirm: () => void;
-}>) {
-  const titleId = useId();
-  const isValid = value.trim().length >= 100;
-
-  return (
-    <ModalRoot>
-      <ModalBase
-        labelledBy={titleId}
-        dialogClassName={css.rejectModal}
-        onClose={onCancel}
-      >
-        <div className={css.modalHead}>
-          <div>
-            <p className={css.modalKicker}>Reject order</p>
-            <h2 className={css.modalTitle} id={titleId}>
-              Explain rejection reason
-            </h2>
-          </div>
-
-          <CloseIconButton disabled={isLoading} onClick={onCancel} />
-        </div>
-
-        <p className={css.metaText}>
-          Write at least 100 characters so Admin and client support can clearly
-          understand why the order was rejected.
-        </p>
-
-        <textarea
-          className={css.commentTextarea}
-          value={value}
-          minLength={100}
-          maxLength={500}
-          disabled={isLoading}
-          onChange={(event) => onChange(event.target.value)}
-        />
-
-        <p className={isValid ? css.counterValid : css.counterError}>
-          {value.trim().length}/100 minimum characters
-        </p>
-
-        <div className={css.modalActions}>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={isLoading}
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            type="button"
-            className={css.rejectButton}
-            disabled={!isValid || isLoading}
-            onClick={onConfirm}
-          >
-            Reject order
-          </Button>
-        </div>
-      </ModalBase>
-    </ModalRoot>
-  );
-}
-
-//===================================================================
-
 function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const toast = useToast();
   const [order, setOrder] = useState<PharmacyOrderDetails | null>(null);
@@ -929,14 +1126,37 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [productToRemove, setProductToRemove] =
+    useState<PharmacyOrderItem | null>(null);
 
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>('pickup');
   const [recipientName, setRecipientName] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [deliveryTouchedFields, setDeliveryTouchedFields] =
+    useState<OrderDeliveryTouchedFields>({});
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
-  const [managerComment, setManagerComment] = useState('');
+  const [copiedEmail, setCopiedEmail] = useState(false);
+
+  const [commentDraft, setCommentDraft] = useState('');
+  const [commentsPage, setCommentsPage] = useState(1);
+  const [commentsData, setCommentsData] =
+    useState<PharmacyOrderManagerCommentsResponse>({
+      items: [],
+      page: 1,
+      perPage: COMMENTS_PER_PAGE,
+      total: 0,
+      totalPages: 1,
+    });
+  const [isCommentsLoading, setIsCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState('');
+  const [isSavingComment, setIsSavingComment] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(
+    null
+  );
+  const [commentToDelete, setCommentToDelete] =
+    useState<PharmacyOrderManagerComment | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -973,7 +1193,17 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
           setRecipientPhone(formState.recipientPhone);
           setDeliveryAddress(formState.deliveryAddress);
           setPaymentMethod(formState.paymentMethod);
-          setManagerComment(formState.managerComment);
+          setDeliveryTouchedFields({});
+          setCommentDraft('');
+          setCommentsPage(1);
+          setCommentsData({
+            items: [],
+            page: 1,
+            perPage: COMMENTS_PER_PAGE,
+            total: 0,
+            totalPages: 1,
+          });
+          setCommentsError('');
         }
       } catch {
         if (isMounted) {
@@ -992,45 +1222,113 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     };
   }, [orderId]);
 
+  const orderIdForComments = order?.id;
+
+  const loadComments = useCallback(
+    async (page: number) => {
+      if (!orderIdForComments) return;
+
+      setIsCommentsLoading(true);
+      setCommentsError('');
+
+      try {
+        const response = await getPharmacyOrderComments(orderIdForComments, {
+          page,
+          perPage: COMMENTS_PER_PAGE,
+        });
+
+        setCommentsData(response);
+
+        if (response.page !== page) {
+          setCommentsPage(response.page);
+        }
+      } catch (commentsLoadError) {
+        setCommentsError(
+          commentsLoadError instanceof Error && commentsLoadError.message
+            ? commentsLoadError.message
+            : 'Could not load order comments.'
+        );
+      } finally {
+        setIsCommentsLoading(false);
+      }
+    },
+    [orderIdForComments]
+  );
+
+  useEffect(() => {
+    if (activeTab !== 'comment' || !orderIdForComments) return;
+
+    const timeoutId = window.setTimeout(() => {
+      void loadComments(commentsPage);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [activeTab, commentsPage, loadComments, orderIdForComments]);
+
   const isEditable = order?.status === 'in_progress';
   const statusModalText = pendingStatus
     ? getStatusModalText(pendingStatus.status)
     : null;
 
+  const deliveryValues = useMemo<OrderDeliveryFormValues>(
+    () => ({
+      recipientName,
+      recipientPhone,
+      deliveryAddress,
+      comment: '',
+    }),
+    [deliveryAddress, recipientName, recipientPhone]
+  );
+
+  const deliveryErrors = useMemo(
+    () => validateOrderDeliveryForm(deliveryValues, deliveryMethod),
+    [deliveryMethod, deliveryValues]
+  );
+
   const statusActions = useMemo(() => {
     if (!order) return [] as Array<PendingStatusChange['status']>;
-    if (order.status === 'new')
+    if (order.status === 'new') {
       return ['in_progress'] as Array<PendingStatusChange['status']>;
-    if (order.status === 'in_progress')
+    }
+    if (order.status === 'in_progress') {
       return ['successful', 'rejected'] as Array<PendingStatusChange['status']>;
+    }
     return [] as Array<PendingStatusChange['status']>;
   }, [order]);
 
+  const syncOrderState = (updatedOrder: PharmacyOrderDetails) => {
+    const formState = getOrderFormState(updatedOrder);
+
+    setOrder(updatedOrder);
+    setDeliveryMethod(formState.deliveryMethod);
+    setRecipientName(formState.recipientName);
+    setRecipientPhone(formState.recipientPhone);
+    setDeliveryAddress(formState.deliveryAddress);
+    setPaymentMethod(formState.paymentMethod);
+  };
+
   const updateOrderDraft = async (
     payload: Parameters<typeof updatePharmacyOrder>[1]
-  ) => {
-    if (!order) return;
+  ): Promise<PharmacyOrderDetails | null> => {
+    if (!order) return null;
 
     setIsUpdatingOrder(true);
 
     try {
       const updatedOrder = await updatePharmacyOrder(order.id, payload);
-      const formState = getOrderFormState(updatedOrder);
 
-      setOrder(updatedOrder);
-      setDeliveryMethod(formState.deliveryMethod);
-      setRecipientName(formState.recipientName);
-      setRecipientPhone(formState.recipientPhone);
-      setDeliveryAddress(formState.deliveryAddress);
-      setPaymentMethod(formState.paymentMethod);
-      setManagerComment(formState.managerComment);
+      syncOrderState(updatedOrder);
       toast.success('Order updated successfully.');
+
+      return updatedOrder;
     } catch (updateError) {
       toast.error(
         updateError instanceof Error && updateError.message
           ? updateError.message
           : 'Could not update order.'
       );
+
+      return null;
     } finally {
       setIsUpdatingOrder(false);
     }
@@ -1069,7 +1367,29 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     void updateOrderDraft({ items: getOrderItemsPayload(nextItems) });
   };
 
-  const handleAddProduct = (product: Product) => {
+  const handleRequestRemoveProduct = (item: PharmacyOrderItem) => {
+    if (!order || !isEditable || isUpdatingOrder) return;
+
+    if (order.items.length <= 1) {
+      toast.error(
+        'You cannot remove the whole order. Continue editing it or reject the order.'
+      );
+      return;
+    }
+
+    setProductToRemove(item);
+  };
+
+  const handleConfirmRemoveProduct = () => {
+    const item = productToRemove;
+
+    if (!item) return;
+
+    setProductToRemove(null);
+    handleQuantityChange(item, 0);
+  };
+
+  const handleAddProduct = async (product: Product): Promise<void> => {
     if (!order || !isEditable || isUpdatingOrder) return;
 
     const offer = getProductOffer(product, order.pharmacyId);
@@ -1083,48 +1403,87 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       (item) => item.productOfferId === offer.id
     );
 
-    if (
-      existingItem?.currentPrice !== undefined &&
-      existingItem.currentPrice !== existingItem.unitPrice
-    ) {
-      const shouldContinue = window.confirm(
-        'The product price has changed. If you add one more unit, the current product price will be used.'
-      );
-
-      if (!shouldContinue) return;
+    if (existingItem) {
+      toast.error('This product is already added to the order.');
+      return;
     }
 
-    const nextItems = existingItem
-      ? order.items.map((item) =>
-          item.productOfferId === offer.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      : [
-          ...order.items,
-          {
-            id: offer.id,
-            productId: product.id,
-            productOfferId: offer.id,
-            name: product.name,
-            article: product.article,
-            category: product.category,
-            imageUrl: product.imageUrl,
-            rating: product.rating,
-            reviewsCount: product.reviewsCount,
-            quantity: 1,
-            unitPrice: offer.price,
-            totalPrice: offer.price,
-            availableQuantity: offer.availableQuantity,
-            currentPrice: offer.price,
-          },
-        ];
+    const nextItems = [
+      ...order.items,
+      {
+        id: offer.id,
+        productId: product.id,
+        productOfferId: offer.id,
+        name: product.name,
+        article: product.article,
+        category: product.category,
+        imageUrl: product.imageUrl,
+        rating: product.rating,
+        reviewsCount: product.reviewsCount,
+        quantity: 1,
+        unitPrice: offer.price,
+        totalPrice: offer.price,
+        availableQuantity: Math.max(0, offer.availableQuantity - 1),
+        currentPrice: offer.price,
+      },
+    ];
 
-    setIsProductModalOpen(false);
-    void updateOrderDraft({ items: getOrderItemsPayload(nextItems) });
+    await updateOrderDraft({ items: getOrderItemsPayload(nextItems) });
+  };
+
+  const handleDeliveryMethodChange = (value: DeliveryMethod) => {
+    setDeliveryMethod(value);
+
+    if (value === 'pickup') {
+      setDeliveryTouchedFields({});
+    }
+  };
+
+  const handleRecipientNameChange = (value: string) => {
+    setRecipientName(sanitizeName(value));
+    setDeliveryTouchedFields((current) => ({
+      ...current,
+      recipientName: true,
+    }));
+  };
+
+  const handleRecipientPhoneChange = (value: string) => {
+    setRecipientPhone(sanitizePhone(value));
+    setDeliveryTouchedFields((current) => ({
+      ...current,
+      recipientPhone: true,
+    }));
+  };
+
+  const handleDeliveryAddressChange = (value: string) => {
+    setDeliveryAddress(sanitizeAddress(value));
+    setDeliveryTouchedFields((current) => ({
+      ...current,
+      deliveryAddress: true,
+    }));
   };
 
   const handleSaveDelivery = () => {
+    const nextErrors = validateOrderDeliveryForm(
+      deliveryValues,
+      deliveryMethod
+    );
+
+    if (hasValidationErrors(nextErrors)) {
+      setDeliveryTouchedFields((current) => ({
+        ...current,
+        ...Object.keys(nextErrors).reduce<OrderDeliveryTouchedFields>(
+          (fields, field) => ({
+            ...fields,
+            [field as keyof OrderDeliveryFormValues]: true,
+          }),
+          {}
+        ),
+      }));
+      toast.error('Please check the postal delivery fields.');
+      return;
+    }
+
     const payload =
       deliveryMethod === 'pickup'
         ? { deliveryMethod }
@@ -1141,16 +1500,89 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   };
 
   const handleSavePayment = () => {
+    if (paymentMethod === 'bank_transfer' && !order?.bankDetails) {
+      toast.error('Bank details are not available for this pharmacy.');
+      return;
+    }
+
     void updateOrderDraft({ paymentMethod });
   };
 
-  const handleSaveManagerComment = () => {
-    void updateOrderDraft({ managerComment });
+  const handleCopyEmail = async () => {
+    const email =
+      order?.bankDetails?.receiptEmail ?? order?.pharmacyEmail ?? '';
+
+    if (!email) return;
+
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopiedEmail(true);
+      window.setTimeout(() => setCopiedEmail(false), 1800);
+    } catch {
+      toast.error('Could not copy the pharmacy email.');
+    }
   };
 
-  const handleDeleteManagerComment = () => {
-    setManagerComment('');
-    void updateOrderDraft({ managerComment: '' });
+  const handleSaveManagerComment = async () => {
+    if (!order || !isEditable || isSavingComment) return;
+
+    const text = commentDraft.trim();
+
+    if (!text) return;
+
+    setIsSavingComment(true);
+
+    try {
+      await createPharmacyOrderComment(order.id, text);
+      setCommentDraft('');
+      toast.success('Comment added successfully.');
+
+      if (commentsPage === 1) {
+        await loadComments(1);
+      } else {
+        setCommentsPage(1);
+      }
+    } catch (commentError) {
+      toast.error(
+        commentError instanceof Error && commentError.message
+          ? commentError.message
+          : 'Could not add the comment.'
+      );
+    } finally {
+      setIsSavingComment(false);
+    }
+  };
+
+  const handleConfirmDeleteComment = async () => {
+    if (!order || !commentToDelete || deletingCommentId) return;
+
+    const comment = commentToDelete;
+    setCommentToDelete(null);
+    setDeletingCommentId(comment.id);
+
+    try {
+      await deletePharmacyOrderComment(order.id, comment.id);
+      toast.success('Comment deleted successfully.');
+
+      const nextPage =
+        commentsData.items.length === 1 && commentsPage > 1
+          ? commentsPage - 1
+          : commentsPage;
+
+      if (nextPage !== commentsPage) {
+        setCommentsPage(nextPage);
+      } else {
+        await loadComments(nextPage);
+      }
+    } catch (commentError) {
+      toast.error(
+        commentError instanceof Error && commentError.message
+          ? commentError.message
+          : 'Could not delete the comment.'
+      );
+    } finally {
+      setDeletingCommentId(null);
+    }
   };
 
   const handleStatusClick = (status: PendingStatusChange['status']) => {
@@ -1178,15 +1610,8 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
           : pendingStatus;
 
       const updatedOrder = await updatePharmacyOrderStatus(order.id, payload);
-      const formState = getOrderFormState(updatedOrder);
 
-      setOrder(updatedOrder);
-      setDeliveryMethod(formState.deliveryMethod);
-      setRecipientName(formState.recipientName);
-      setRecipientPhone(formState.recipientPhone);
-      setDeliveryAddress(formState.deliveryAddress);
-      setPaymentMethod(formState.paymentMethod);
-      setManagerComment(formState.managerComment);
+      syncOrderState(updatedOrder);
       setPendingStatus(null);
       setRejectionReason('');
       toast.success('Order status updated successfully.');
@@ -1306,6 +1731,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
               isEditable={isEditable}
               isUpdating={isUpdatingOrder}
               onQuantityChange={handleQuantityChange}
+              onRemoveProduct={handleRequestRemoveProduct}
               onOpenProductModal={() => setIsProductModalOpen(true)}
             />
           ) : null}
@@ -1318,39 +1744,86 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
               recipientName={recipientName}
               recipientPhone={recipientPhone}
               deliveryAddress={deliveryAddress}
+              deliveryErrors={deliveryErrors}
+              deliveryTouchedFields={deliveryTouchedFields}
               isUpdating={isUpdatingOrder}
-              onDeliveryMethodChange={setDeliveryMethod}
-              onRecipientNameChange={setRecipientName}
-              onRecipientPhoneChange={setRecipientPhone}
-              onDeliveryAddressChange={setDeliveryAddress}
+              onDeliveryMethodChange={handleDeliveryMethodChange}
+              onRecipientNameChange={handleRecipientNameChange}
+              onRecipientPhoneChange={handleRecipientPhoneChange}
+              onDeliveryAddressChange={handleDeliveryAddressChange}
               onSave={handleSaveDelivery}
             />
           ) : null}
 
           {activeTab === 'payment' ? (
             <PaymentTab
+              order={order}
               paymentMethod={paymentMethod}
+              copiedEmail={copiedEmail}
               isEditable={isEditable}
               isUpdating={isUpdatingOrder}
               onPaymentMethodChange={setPaymentMethod}
+              onCopyEmail={() => void handleCopyEmail()}
               onSave={handleSavePayment}
             />
           ) : null}
 
           {activeTab === 'comment' ? (
             <ManagerCommentTab
-              value={managerComment}
+              value={commentDraft}
+              comments={commentsData.items}
+              currentPage={commentsData.page}
+              totalPages={commentsData.totalPages}
+              totalComments={commentsData.total}
               isEditable={isEditable}
-              isUpdating={isUpdatingOrder}
-              onChange={setManagerComment}
-              onSave={handleSaveManagerComment}
-              onDelete={handleDeleteManagerComment}
+              isLoading={isCommentsLoading}
+              isSaving={isSavingComment}
+              deletingCommentId={deletingCommentId}
+              error={commentsError}
+              onChange={(value) =>
+                setCommentDraft(value.slice(0, MANAGER_COMMENT_MAX_LENGTH))
+              }
+              onSave={() => void handleSaveManagerComment()}
+              onDelete={setCommentToDelete}
+              onPageChange={setCommentsPage}
             />
           ) : null}
 
           {activeTab === 'history' ? <HistoryTab order={order} /> : null}
         </div>
       </section>
+
+      <ConfirmationModal
+        isOpen={Boolean(productToRemove)}
+        title="Remove product from order?"
+        description={
+          productToRemove
+            ? `${productToRemove.name} will be removed and its reserved quantity will return to available stock.`
+            : ''
+        }
+        confirmLabel="Remove product"
+        cancelLabel="Keep product"
+        confirmButtonClassName={css.dangerConfirmButton}
+        isLoading={isUpdatingOrder}
+        onConfirm={handleConfirmRemoveProduct}
+        onCancel={() => {
+          if (!isUpdatingOrder) setProductToRemove(null);
+        }}
+      />
+
+      <ConfirmationModal
+        isOpen={Boolean(commentToDelete)}
+        title="Delete this comment?"
+        description="The comment will be permanently removed from the order."
+        confirmLabel="Delete comment"
+        cancelLabel="Keep comment"
+        confirmButtonClassName={css.dangerConfirmButton}
+        isLoading={Boolean(deletingCommentId)}
+        onConfirm={() => void handleConfirmDeleteComment()}
+        onCancel={() => {
+          if (!deletingCommentId) setCommentToDelete(null);
+        }}
+      />
 
       <ConfirmationModal
         isOpen={Boolean(pendingStatus && pendingStatus.status !== 'rejected')}
@@ -1367,10 +1840,16 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       />
 
       {pendingStatus?.status === 'rejected' ? (
-        <RejectOrderModal
+        <OrderCancellationModal
           value={rejectionReason}
           isLoading={isUpdatingStatus}
-          onChange={setRejectionReason}
+          minLength={100}
+          maxLength={REJECTION_REASON_MAX_LENGTH}
+          onChange={(value) =>
+            setRejectionReason(
+              sanitizeOrderComment(value).slice(0, REJECTION_REASON_MAX_LENGTH)
+            )
+          }
           onCancel={() => {
             if (!isUpdatingStatus) setPendingStatus(null);
           }}
@@ -1388,6 +1867,5 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     </main>
   );
 }
-
 export default OrderDetailsPageContent;
 export { OrderDetailsPageContent };

@@ -4,6 +4,8 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 
 import {
   checkoutOrderSchema,
+  createOrderManagerCommentSchema,
+  orderCommentsQuerySchema,
   orderSalesStatisticsQuerySchema,
   ordersQuerySchema,
   updateOrderDetailsSchema,
@@ -12,7 +14,10 @@ import {
 
 import {
   checkoutOrderService,
+  createOrderManagerCommentService,
+  deleteOrderManagerCommentService,
   getOrderByIdService,
+  getOrderManagerCommentsService,
   getOrderSalesStatisticsService,
   getOrdersService,
   updateOrderDetailsService,
@@ -26,6 +31,8 @@ import { sendSuccessResponse } from '../utils/apiResponse';
 type OrderParams = {
   orderId: string;
 };
+
+type OrderCommentParams = OrderParams & { commentId: string };
 
 //===============================================================
 
@@ -95,6 +102,68 @@ export async function getOrderById(req: Request, res: Response): Promise<void> {
     statusCode: HTTP_STATUS.OK,
     data,
   });
+}
+
+//===============================================================
+
+export async function getOrderManagerComments(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { orderId } = req.params as OrderParams;
+  const query = orderCommentsQuerySchema.parse(req.query);
+  const user = req.user;
+
+  if (!user) return;
+
+  const data = await getOrderManagerCommentsService(
+    { id: user.id, role: user.role },
+    orderId,
+    query
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function createOrderManagerComment(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { orderId } = req.params as OrderParams;
+  const body = createOrderManagerCommentSchema.parse(req.body);
+  const user = req.user;
+
+  if (!user) return;
+
+  const data = await createOrderManagerCommentService(
+    { id: user.id, role: user.role },
+    orderId,
+    body
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
+}
+
+//===============================================================
+
+export async function deleteOrderManagerComment(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { orderId, commentId } = req.params as OrderCommentParams;
+  const user = req.user;
+
+  if (!user) return;
+
+  const data = await deleteOrderManagerCommentService(
+    { id: user.id, role: user.role },
+    orderId,
+    commentId
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================

@@ -17,6 +17,10 @@ export const pharmacyApiRoutes = {
     salesStatistics: '/api/orders/sales-statistics',
     details: (orderId: string) => `/api/orders/${orderId}`,
     status: (orderId: string) => `/api/orders/${orderId}/status`,
+    comments: (orderId: string) => `/api/orders/${orderId}/comments`,
+
+    comment: (orderId: string, commentId: string) =>
+      `/api/orders/${orderId}/comments/${commentId}`,
   },
 
   clients: {

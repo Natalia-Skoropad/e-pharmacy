@@ -29,6 +29,14 @@ const orderPharmacySnapshotSchema = new Schema(
       taxId: { type: String, trim: true, default: undefined },
       iban: { type: String, trim: true, default: undefined },
       bankName: { type: String, trim: true, default: undefined },
+
+      receiptEmail: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        default: undefined,
+      },
+
       paymentPurpose: { type: String, trim: true, default: undefined },
     },
   },
@@ -42,6 +50,7 @@ const orderProductSnapshotSchema = new Schema(
     name: { type: String, required: true, trim: true },
     slug: { type: String, trim: true, default: undefined },
     article: { type: String, required: true, trim: true },
+
     category: {
       type: String,
       enum: Object.values(PRODUCT_CATEGORIES),
@@ -52,12 +61,14 @@ const orderProductSnapshotSchema = new Schema(
     manufacturer: { type: String, trim: true, default: undefined },
     dosage: { type: String, trim: true, default: undefined },
     packageQuantity: { type: String, trim: true, default: undefined },
+
     rating: {
       type: Number,
       min: 0,
       max: MAX_REVIEW_RATING,
       default: undefined,
     },
+
     reviewsCount: { type: Number, min: 0, default: undefined },
   },
 
@@ -115,6 +126,17 @@ const statusHistorySchema = new Schema(
   },
 
   { _id: false, id: false }
+);
+
+//===============================================================
+
+const managerCommentSchema = new Schema(
+  {
+    text: { type: String, required: true, trim: true, maxlength: 1000 },
+    createdAt: { type: Date, required: true, default: Date.now },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  },
+  { _id: true, id: false }
 );
 
 //===============================================================
@@ -177,6 +199,8 @@ const orderSchema = new Schema<OrderEntity>(
       maxlength: 1000,
       default: undefined,
     },
+
+    managerComments: { type: [managerCommentSchema], default: [] },
 
     status: {
       type: String,

@@ -2,7 +2,10 @@ import { Router } from 'express';
 
 import {
   checkoutOrder,
+  createOrderManagerComment,
+  deleteOrderManagerComment,
   getOrderById,
+  getOrderManagerComments,
   getOrderSalesStatistics,
   getOrders,
   updateOrderDetails,
@@ -14,6 +17,9 @@ import { validate } from '../middlewares/validate.middleware';
 
 import {
   checkoutOrderSchema,
+  createOrderManagerCommentSchema,
+  orderCommentParamsSchema,
+  orderCommentsQuerySchema,
   orderParamsSchema,
   orderSalesStatisticsQuerySchema,
   ordersQuerySchema,
@@ -58,11 +64,33 @@ orderRoutes.get(
 //===============================================================
 
 orderRoutes.get(
+  '/:orderId/comments',
+  validate({ params: orderParamsSchema, query: orderCommentsQuerySchema }),
+  ctrlWrapper(getOrderManagerComments)
+);
+
+orderRoutes.post(
+  '/:orderId/comments',
+  validate({
+    params: orderParamsSchema,
+    body: createOrderManagerCommentSchema,
+  }),
+  ctrlWrapper(createOrderManagerComment)
+);
+
+orderRoutes.delete(
+  '/:orderId/comments/:commentId',
+  validate({ params: orderCommentParamsSchema }),
+  ctrlWrapper(deleteOrderManagerComment)
+);
+
+//===============================================================
+
+orderRoutes.get(
   '/:orderId',
   validate({ params: orderParamsSchema }),
   ctrlWrapper(getOrderById)
 );
-
 
 //===============================================================
 

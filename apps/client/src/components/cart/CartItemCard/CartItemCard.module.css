@@ -74,18 +74,34 @@
   justify-content: space-between;
 }
 
-.prices dt {
-  font-size: var(--fz-13);
+.prices dt,
+.prices dd {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.totalPriceRow dt {
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
   color: var(--color-accent);
 }
 
-.prices dd {
-  margin: 0;
-  font-size: var(--fz-18);
+.totalPriceRow dd {
+  font-size: var(--fz-20);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
   color: var(--color-text-primary);
-  white-space: nowrap;
+}
+
+.unitPriceRow dt,
+.unitPriceRow dd {
+  font-size: var(--fz-13);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.unitPriceRow dd {
+  font-weight: var(--fw-medium);
 }
 
 .footer {

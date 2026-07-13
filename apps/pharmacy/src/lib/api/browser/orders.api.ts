@@ -14,8 +14,12 @@ import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharm
 
 import {
   normalizePharmacyOrderDetails,
+  normalizePharmacyOrderManagerComment,
+  normalizePharmacyOrderManagerCommentsResponse,
   normalizePharmacyOrdersResponse,
   type PharmacyOrderDetails,
+  type PharmacyOrderManagerComment,
+  type PharmacyOrderManagerCommentsResponse,
   type PharmacyOrdersQueryParams,
   type PharmacyOrdersResponse,
 } from '@/lib/orders/orders';
@@ -63,9 +67,12 @@ export async function updatePharmacyOrder(
   payload: {
     items?: Array<{ productOfferId: string; quantity: number }>;
     deliveryMethod?: DeliveryMethod;
-    deliveryDetails?: { recipientName: string; recipientPhone: string; address: string };
+    deliveryDetails?: {
+      recipientName: string;
+      recipientPhone: string;
+      address: string;
+    };
     paymentMethod?: PaymentMethod;
-    managerComment?: string;
   }
 ): Promise<PharmacyOrderDetails> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
@@ -111,6 +118,52 @@ export async function updatePharmacyOrderStatus(
   }
 
   return order;
+}
+
+//===================================================================
+
+export async function getPharmacyOrderComments(
+  orderId: string,
+  params: { page?: number; perPage?: number } = {}
+): Promise<PharmacyOrderManagerCommentsResponse> {
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
+    `${PHARMACY_API_ROUTES.orders.comments(orderId)}${buildQueryString(params)}`
+  );
+
+  return normalizePharmacyOrderManagerCommentsResponse(
+    getResponseData(response)
+  );
+}
+
+//===================================================================
+
+export async function createPharmacyOrderComment(
+  orderId: string,
+  text: string
+): Promise<PharmacyOrderManagerComment> {
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
+    PHARMACY_API_ROUTES.orders.comments(orderId),
+    { method: 'POST', body: { text } }
+  );
+
+  const data = getResponseData(response) as { comment?: unknown };
+  const comment = normalizePharmacyOrderManagerComment(data.comment);
+
+  if (!comment) throw new Error('Comment could not be created.');
+
+  return comment;
+}
+
+//===================================================================
+
+export async function deletePharmacyOrderComment(
+  orderId: string,
+  commentId: string
+): Promise<void> {
+  await localApiRequest<ApiSuccessResponse<unknown>>(
+    PHARMACY_API_ROUTES.orders.comment(orderId, commentId),
+    { method: 'DELETE' }
+  );
 }
 
 //===================================================================

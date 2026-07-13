@@ -238,13 +238,13 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                             />
                           </div>
                           <dl className={css.itemPrices}>
-                            <div>
-                              <dt>Unit price</dt>
-                              <dd>{formatPrice(item.unitPrice)}</dd>
-                            </div>
-                            <div>
+                            <div className={css.totalPriceRow}>
                               <dt>Total amount</dt>
                               <dd>{formatPrice(item.totalPrice)}</dd>
+                            </div>
+                            <div className={css.unitPriceRow}>
+                              <dt>Unit price</dt>
+                              <dd>{formatPrice(item.unitPrice)}</dd>
                             </div>
                           </dl>
                         </div>

@@ -56,6 +56,10 @@ export const storefrontRoutes = {
     list: '/orders',
     salesStatistics: '/orders/sales-statistics',
     details: (orderId: EntityId) => `/orders/${orderId}`,
+    comments: (orderId: EntityId) => `/orders/${orderId}/comments`,
+    
+    comment: (orderId: EntityId, commentId: EntityId) =>
+      `/orders/${orderId}/comments/${commentId}`,
   },
 
   clients: {

@@ -16,6 +16,7 @@ import { isProductCategory } from '@e-pharmacy/types/products';
 import type {
   DeliveryMethod,
   EntityId,
+  PharmacyBankDetails,
   ProductCategory,
   OrderStatus,
   PaymentMethod,
@@ -82,6 +83,13 @@ export type PharmacyOrderStatusHistoryItem = Readonly<{
   comment?: string;
 }>;
 
+export type PharmacyOrderManagerComment = Readonly<{
+  id: EntityId;
+  text: string;
+  createdAt: string;
+  createdBy: EntityId;
+}>;
+
 export type PharmacyOrderDetails = PharmacyOrderRow &
   Readonly<{
     currency: 'UAH';
@@ -96,7 +104,16 @@ export type PharmacyOrderDetails = PharmacyOrderRow &
     pharmacyPhone?: string;
     pharmacyAddress?: string;
     pharmacyEmail?: string;
+    bankDetails?: PharmacyBankDetails;
   }>;
+
+export type PharmacyOrderManagerCommentsResponse = Readonly<{
+  items: PharmacyOrderManagerComment[];
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
+}>;
 
 export type PharmacyOrdersQueryParams = Readonly<{
   page?: number;
@@ -248,8 +265,9 @@ function getClientName(order: Record<string, unknown>): string {
 
 //===================================================================
 
-
-function normalizePharmacyOrderItem(rawItem: unknown): PharmacyOrderItem | null {
+function normalizePharmacyOrderItem(
+  rawItem: unknown
+): PharmacyOrderItem | null {
   if (!isRecord(rawItem)) return null;
 
   const id = getStringValue(rawItem.id) ?? getStringValue(rawItem._id);
@@ -341,8 +359,9 @@ export function normalizePharmacyOrder(
 
 //===================================================================
 
-
-function normalizeStatusHistory(payload: unknown): PharmacyOrderStatusHistoryItem[] {
+function normalizeStatusHistory(
+  payload: unknown
+): PharmacyOrderStatusHistoryItem[] {
   if (!Array.isArray(payload)) return [];
 
   return payload
@@ -369,6 +388,72 @@ function normalizeStatusHistory(payload: unknown): PharmacyOrderStatusHistoryIte
 
 //===================================================================
 
+export function normalizePharmacyOrderManagerComment(
+  payload: unknown
+): PharmacyOrderManagerComment | null {
+  if (!isRecord(payload)) return null;
+
+  const id = getStringValue(payload.id) ?? getStringValue(payload._id);
+  const text = getStringValue(payload.text);
+  const createdAt = getStringValue(payload.createdAt);
+  const createdBy = getStringValue(payload.createdBy);
+
+  if (!id || !text || !createdAt || !createdBy) return null;
+
+  return { id, text, createdAt, createdBy };
+}
+
+export function normalizePharmacyOrderManagerCommentsResponse(
+  payload: unknown
+): PharmacyOrderManagerCommentsResponse {
+  if (!isRecord(payload)) {
+    return { items: [], page: 1, perPage: 5, total: 0, totalPages: 1 };
+  }
+
+  const items = Array.isArray(payload.items)
+    ? payload.items
+        .map(normalizePharmacyOrderManagerComment)
+        .filter((item): item is PharmacyOrderManagerComment => Boolean(item))
+    : [];
+
+  return {
+    items,
+    page: Math.max(1, getNumberValue(payload.page) ?? 1),
+    perPage: Math.max(1, getNumberValue(payload.perPage) ?? 5),
+    total: Math.max(0, getNumberValue(payload.total) ?? items.length),
+    totalPages: Math.max(1, getNumberValue(payload.totalPages) ?? 1),
+  };
+}
+
+//===================================================================
+
+function normalizeBankDetails(payload: unknown): PharmacyBankDetails | null {
+  if (!isRecord(payload)) return null;
+
+  const recipientName = getStringValue(payload.recipientName);
+  const taxId = getStringValue(payload.taxId);
+  const iban = getStringValue(payload.iban);
+  const bankName = getStringValue(payload.bankName);
+  const paymentPurpose = getStringValue(payload.paymentPurpose);
+
+  if (!recipientName || !taxId || !iban || !bankName || !paymentPurpose) {
+    return null;
+  }
+
+  return {
+    recipientName,
+    taxId,
+    iban,
+    bankName,
+    paymentPurpose,
+    ...(getStringValue(payload.receiptEmail)
+      ? { receiptEmail: getStringValue(payload.receiptEmail) }
+      : {}),
+  };
+}
+
+//===================================================================
+
 export function normalizePharmacyOrderDetails(
   payload: unknown
 ): PharmacyOrderDetails | null {
@@ -378,9 +463,9 @@ export function normalizePharmacyOrderDetails(
   if (!row) return null;
 
   const delivery = isRecord(payload.delivery) ? payload.delivery : undefined;
-  const deliveryDetails = delivery && isRecord(delivery.details)
-    ? delivery.details
-    : undefined;
+  const deliveryDetails =
+    delivery && isRecord(delivery.details) ? delivery.details : undefined;
+  const bankDetails = normalizeBankDetails(payload.bankDetails);
 
   return {
     ...row,
@@ -396,6 +481,7 @@ export function normalizePharmacyOrderDetails(
     ...(getStringValue(payload.pharmacyEmail)
       ? { pharmacyEmail: getStringValue(payload.pharmacyEmail) }
       : {}),
+    ...(bankDetails ? { bankDetails } : {}),
     ...(getStringValue(deliveryDetails?.address)
       ? { deliveryAddress: getStringValue(deliveryDetails?.address) }
       : {}),

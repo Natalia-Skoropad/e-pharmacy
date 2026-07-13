@@ -32,6 +32,13 @@ export type OrderStatusHistoryItem = {
   comment?: string;
 };
 
+export type OrderManagerComment = {
+  id: EntityId;
+  text: string;
+  createdAt: ISODateString;
+  createdBy: EntityId;
+};
+
 export type OrderItem = {
   id: EntityId;
   productId: EntityId;
@@ -85,6 +92,7 @@ export type Order = {
   delivery: Delivery;
   comment?: string;
   bankDetails?: PharmacyBankDetails;
+  managerComments?: OrderManagerComment[];
   items: OrderItem[];
 };
 
@@ -133,4 +141,16 @@ export type UpdateOrderStatusPayload =
       comment?: string;
     };
 
-export type UpdateOrderStatusResponse = OrderDetailsResponse;
+export type OrderManagerCommentsResponse = {
+  items: OrderManagerComment[];
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
+};
+
+export type CreateOrderManagerCommentPayload = { text: string };
+
+export type CreateOrderManagerCommentResponse = {
+  comment: OrderManagerComment;
+};

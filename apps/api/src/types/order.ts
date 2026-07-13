@@ -58,6 +58,13 @@ export type OrderStatusHistoryItem = {
   comment?: string;
 };
 
+export type OrderManagerCommentEntity = {
+  _id?: Types.ObjectId;
+  text: string;
+  createdAt: Date;
+  createdBy: Types.ObjectId;
+};
+
 export type OrderItemEntity = {
   _id?: Types.ObjectId;
   productId: Types.ObjectId;
@@ -80,6 +87,7 @@ export type OrderEntity = {
   delivery: Delivery;
   comment?: string;
   managerComment?: string;
+  managerComments?: OrderManagerCommentEntity[];
   status: OrderStatus;
   statusHistory: OrderStatusHistoryItem[];
   rejectionReason?: string;
@@ -148,6 +156,12 @@ export type OrderResponseDto = {
   delivery: Delivery;
   comment?: string;
   managerComment?: string;
+  managerComments?: Array<{
+    id: string;
+    text: string;
+    createdAt: string;
+    createdBy: string;
+  }>;
   bankDetails?: PharmacyBankDetails;
   items: OrderItemResponseDto[];
 };

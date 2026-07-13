@@ -63,6 +63,23 @@ export const ordersQuerySchema = z.preprocess(
 
 export const orderParamsSchema = z.object({ orderId: orderRouteIdSchema });
 
+export const orderCommentParamsSchema = z.object({
+  orderId: orderRouteIdSchema,
+  commentId: orderRouteIdSchema,
+});
+
+export const orderCommentsQuerySchema = z.preprocess(
+  normalizePaginationQuery,
+  z.object({
+    page: positivePageSchema,
+    perPage: z.coerce.number().int().min(1).max(50).default(5),
+  })
+);
+
+export const createOrderManagerCommentSchema = z.object({
+  text: z.string().trim().min(1, 'Comment is required').max(1000),
+});
+
 //===============================================================
 
 export const orderSalesStatisticsQuerySchema = z.object({
@@ -160,3 +177,8 @@ export type OrderSalesStatisticsQuery = z.infer<
 export type CheckoutOrderInput = z.infer<typeof checkoutOrderSchema>;
 export type UpdateOrderDetailsInput = z.infer<typeof updateOrderDetailsSchema>;
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
+export type OrderCommentsQuery = z.infer<typeof orderCommentsQuerySchema>;
+
+export type CreateOrderManagerCommentInput = z.infer<
+  typeof createOrderManagerCommentSchema
+>;

@@ -23,6 +23,8 @@ import { getCartService } from './cart.service';
 
 import type {
   CheckoutOrderInput,
+  CreateOrderManagerCommentInput,
+  OrderCommentsQuery,
   OrderSalesStatisticsQuery,
   OrdersQuery,
   UpdateOrderDetailsInput,
@@ -95,6 +97,13 @@ type ProductFallbackMap = Map<string, ProductDocument>;
 type OfferFallbackMap = Map<string, ProductOfferDocument>;
 type ClientUserMap = Map<string, UserDocument>;
 
+type ManagerCommentDto = {
+  id: string;
+  text: string;
+  createdAt: string;
+  createdBy: string;
+};
+
 //===============================================================
 
 const ORDER_STATUSES_FOR_STATISTICS = [
@@ -125,6 +134,35 @@ function hasCompleteBankDetails(
     bankDetails.bankName &&
     bankDetails.paymentPurpose
   );
+}
+
+//===============================================================
+
+async function hydrateOrderPharmacyPaymentDetails(
+  order: OrderDocument
+): Promise<OrderDocument> {
+  if (hasCompleteBankDetails(order.pharmacySnapshot.bankDetails)) return order;
+
+  const pharmacy = await Pharmacy.findById(order.pharmacyId)
+    .select('bankDetails email')
+    .lean<Pick<PharmacyDocument, 'bankDetails' | 'email'> | null>();
+
+  const bankDetails = pharmacy?.bankDetails;
+
+  if (!pharmacy || !bankDetails || !hasCompleteBankDetails(bankDetails)) {
+    return order;
+  }
+
+  return {
+    ...order,
+    pharmacySnapshot: {
+      ...order.pharmacySnapshot,
+      ...(order.pharmacySnapshot.email || !pharmacy.email
+        ? {}
+        : { email: pharmacy.email }),
+      bankDetails,
+    },
+  };
 }
 
 //===============================================================
@@ -167,6 +205,32 @@ function getPharmacyAddress(
 
 //===============================================================
 
+function serializeManagerComments(order: OrderDocument): ManagerCommentDto[] {
+  const comments = (order.managerComments ?? []).map((comment) => ({
+    id: comment._id?.toString() ?? '',
+    text: comment.text,
+    createdAt: comment.createdAt.toISOString(),
+    createdBy: comment.createdBy.toString(),
+  }));
+
+  if (order.managerComment?.trim()) {
+    comments.push({
+      id: order._id.toString(),
+      text: order.managerComment.trim(),
+      createdAt: order.updatedAt.toISOString(),
+      createdBy:
+        order.statusHistory.at(-1)?.changedBy.toString() ??
+        order.userId.toString(),
+    });
+  }
+
+  return comments
+    .filter((comment) => Boolean(comment.id))
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+}
+
+//===============================================================
+
 function serializeOrder(
   order: OrderDocument,
   productFallbacks?: ProductFallbackMap,
@@ -174,6 +238,7 @@ function serializeOrder(
   offerFallbacks?: OfferFallbackMap
 ): OrderResponseDto {
   const clientUser = clientUsers?.get(order.userId.toString());
+  const managerComments = serializeManagerComments(order);
 
   return {
     id: order._id.toString(),
@@ -230,6 +295,7 @@ function serializeOrder(
     delivery: order.delivery,
     ...(order.comment ? { comment: order.comment } : {}),
     ...(order.managerComment ? { managerComment: order.managerComment } : {}),
+    ...(managerComments.length ? { managerComments } : {}),
     ...(order.pharmacySnapshot.bankDetails
       ? { bankDetails: order.pharmacySnapshot.bankDetails }
       : {}),
@@ -923,6 +989,8 @@ export async function updateOrderDetailsService(
       );
     }
 
+    updatedOrder = await hydrateOrderPharmacyPaymentDetails(updatedOrder);
+
     const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
       getOrderProductFallbacks(updatedOrder),
       getOrderOfferFallbacks(updatedOrder),
@@ -943,6 +1011,163 @@ export async function updateOrderDetailsService(
         offerFallbacks
       ),
     };
+  } finally {
+    await session.endSession();
+  }
+}
+
+//===============================================================
+
+export async function getOrderManagerCommentsService(
+  actor: { id: string; role: UserRole },
+  orderId: string,
+  query: OrderCommentsQuery
+) {
+  const session = await mongoose.startSession();
+
+  try {
+    const order = await Order.findById(orderId)
+      .session(session)
+      .lean<OrderDocument | null>();
+
+    if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
+
+    await assertCanEditPharmacyOrder(actor, order, session);
+
+    const comments = serializeManagerComments(order);
+    const total = comments.length;
+    const totalPages = Math.max(1, Math.ceil(total / query.perPage));
+    const page = Math.min(query.page, totalPages);
+    const start = (page - 1) * query.perPage;
+
+    return {
+      items: comments.slice(start, start + query.perPage),
+      page,
+      perPage: query.perPage,
+      total,
+      totalPages,
+    };
+  } finally {
+    await session.endSession();
+  }
+}
+
+//===============================================================
+
+export async function createOrderManagerCommentService(
+  actor: { id: string; role: UserRole },
+  orderId: string,
+  input: CreateOrderManagerCommentInput
+) {
+  const session = await mongoose.startSession();
+  const commentId = new Types.ObjectId();
+  const createdAt = new Date();
+
+  try {
+    await session.withTransaction(async () => {
+      const order = await Order.findById(orderId)
+        .session(session)
+        .lean<OrderDocument | null>();
+
+      if (!order) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
+      }
+
+      await assertCanEditPharmacyOrder(actor, order, session);
+
+      if (order.status !== 'in_progress') {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Comments can be added only while the order is in progress.'
+        );
+      }
+
+      await Order.updateOne(
+        { _id: orderId },
+        {
+          $push: {
+            managerComments: {
+              _id: commentId,
+              text: input.text.trim(),
+              createdAt,
+              createdBy: new Types.ObjectId(actor.id),
+            },
+          },
+        },
+        { session, runValidators: true }
+      );
+    });
+
+    return {
+      comment: {
+        id: commentId.toString(),
+        text: input.text.trim(),
+        createdAt: createdAt.toISOString(),
+        createdBy: actor.id,
+      },
+    };
+  } finally {
+    await session.endSession();
+  }
+}
+
+//===============================================================
+
+export async function deleteOrderManagerCommentService(
+  actor: { id: string; role: UserRole },
+  orderId: string,
+  commentId: string
+) {
+  const session = await mongoose.startSession();
+
+  try {
+    await session.withTransaction(async () => {
+      const order = await Order.findById(orderId)
+        .session(session)
+        .lean<OrderDocument | null>();
+
+      if (!order) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
+      }
+
+      await assertCanEditPharmacyOrder(actor, order, session);
+
+      if (order.status !== 'in_progress') {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Comments can be deleted only while the order is in progress.'
+        );
+      }
+
+      if (commentId === order._id.toString() && order.managerComment) {
+        await Order.updateOne(
+          { _id: orderId },
+          { $unset: { managerComment: '' } },
+          { session }
+        );
+        return;
+      }
+
+      if (!Types.ObjectId.isValid(commentId)) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, 'Comment was not found');
+      }
+
+      const commentExists = (order.managerComments ?? []).some(
+        (comment) => comment._id?.toString() === commentId
+      );
+
+      if (!commentExists) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, 'Comment was not found');
+      }
+
+      await Order.updateOne(
+        { _id: orderId },
+        { $pull: { managerComments: { _id: new Types.ObjectId(commentId) } } },
+        { session }
+      );
+    });
+
+    return { message: 'Comment deleted successfully.' };
   } finally {
     await session.endSession();
   }
@@ -1040,6 +1265,8 @@ export async function updateOrderStatusService(
         'Order was not updated'
       );
     }
+
+    updatedOrder = await hydrateOrderPharmacyPaymentDetails(updatedOrder);
 
     const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
       getOrderProductFallbacks(updatedOrder),
@@ -1421,6 +1648,7 @@ export async function getOrdersService(
     filter.$or = [
       { comment: commentRegExp },
       { managerComment: commentRegExp },
+      { 'managerComments.text': commentRegExp },
       { 'statusHistory.comment': commentRegExp },
     ];
   }
@@ -1496,9 +1724,11 @@ export async function getOrderByIdService(
 
   if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
 
+  const hydratedOrder = await hydrateOrderPharmacyPaymentDetails(order);
+
   const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
-    getOrderProductFallbacks(order),
-    getOrderOfferFallbacks(order),
+    getOrderProductFallbacks(hydratedOrder),
+    getOrderOfferFallbacks(hydratedOrder),
     User.findById(order.userId)
       .select('name email pictureUrl')
       .lean<UserDocument | null>(),
@@ -1509,6 +1739,11 @@ export async function getOrderByIdService(
     : undefined;
 
   return {
-    order: serializeOrder(order, productFallbacks, clientMap, offerFallbacks),
+    order: serializeOrder(
+      hydratedOrder,
+      productFallbacks,
+      clientMap,
+      offerFallbacks
+    ),
   };
 }

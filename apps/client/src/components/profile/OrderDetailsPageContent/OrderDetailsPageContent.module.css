@@ -192,18 +192,34 @@
   justify-content: space-between;
 }
 
-.itemPrices dt {
-  font-size: var(--fz-13);
+.itemPrices dt,
+.itemPrices dd {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.totalPriceRow dt {
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
   color: var(--color-accent);
 }
 
-.itemPrices dd {
-  margin: 0;
-  font-size: var(--fz-18);
+.totalPriceRow dd {
+  font-size: var(--fz-20);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
   color: var(--color-text-primary);
-  white-space: nowrap;
+}
+
+.unitPriceRow dt,
+.unitPriceRow dd {
+  font-size: var(--fz-13);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.unitPriceRow dd {
+  font-weight: var(--fw-medium);
 }
 
 .quantityText {
