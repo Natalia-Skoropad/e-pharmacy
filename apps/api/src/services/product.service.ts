@@ -27,6 +27,7 @@ import {
   PRODUCT_CATEGORY_LABELS,
 } from '../types/categories';
 
+import { recordInitialStockArrival } from './stockMovement.service';
 import { httpError } from '../utils/httpError';
 import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
 
@@ -122,12 +123,11 @@ async function getOffersByProductIds(
   }).lean();
 
   const relatedOfferIds = new Set<string>(
-    (
-      offers.length
-        ? await Order.distinct('items.productOfferId', {
-            'items.productOfferId': { $in: offers.map((offer) => offer._id) },
-          })
-        : []
+    (offers.length
+      ? await Order.distinct('items.productOfferId', {
+          'items.productOfferId': { $in: offers.map((offer) => offer._id) },
+        })
+      : []
     ).map(String)
   );
 
@@ -761,7 +761,7 @@ export async function addProductToMyPharmacyService(
 
   const initialQuantity = createInitialOfferStockQuantity(product._id);
 
-  await ProductOffer.create({
+  const offer = await ProductOffer.create({
     productId: product._id,
     pharmacyId: pharmacy._id,
     price: product.price ?? 0,
@@ -769,6 +769,19 @@ export async function addProductToMyPharmacyService(
     availableQuantity: initialQuantity,
     reservedQuantity: 0,
   });
+
+  await recordInitialStockArrival(
+    {
+      _id: offer._id as Types.ObjectId,
+      productId: offer.productId as unknown as Types.ObjectId,
+      pharmacyId: offer.pharmacyId as unknown as Types.ObjectId,
+      price: offer.price,
+      totalQuantity: offer.totalQuantity,
+      availableQuantity: offer.availableQuantity,
+      reservedQuantity: offer.reservedQuantity,
+    },
+    'Initial stock quantity added when the product was added to the pharmacy.'
+  );
 
   const details = await getProductDetailsService(productId, userId);
 

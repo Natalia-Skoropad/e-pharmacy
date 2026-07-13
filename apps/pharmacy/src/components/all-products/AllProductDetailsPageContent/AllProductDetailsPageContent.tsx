@@ -58,6 +58,10 @@ import type {
   ProductOffer,
   ProductReview,
   OrderStatus,
+  ProductStockBalance,
+  ProductStockMovement,
+  StockMovementEventType,
+  StockMovementSource,
 } from '@e-pharmacy/types';
 
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
@@ -70,6 +74,7 @@ import {
   getPharmacyOrders,
   getProductDetails,
   getProductReviews,
+  getProductStockMovements,
 } from '@/lib/api/browser';
 
 import {
@@ -130,13 +135,6 @@ type CharacteristicItem = Readonly<{
   value: string;
 }>;
 
-//===================================================================
-
-type StockMovementEventType = 'arrival' | 'reserve' | 'write_off' | 'release';
-type StockMovementSource = 'pharmacy_stock' | 'client_order';
-
-//===================================================================
-
 type ProductTabDateFilter = DateFilterValue;
 
 type StockMovementFilters = Readonly<{
@@ -153,18 +151,21 @@ type RelatedOrdersFilters = Readonly<{
 
 type StockMovementRow = Readonly<{
   id: string;
+  sequence: number;
   orderId?: string;
   date: string;
   dateValue: string;
   eventType: string;
   eventTypeValue: StockMovementEventType;
-  quantity: string;
-  quantityValue: number;
-  price: string;
-  priceValue: number;
-  totalAmount: string;
+  stockDelta: number;
+  reservedDelta: number;
+  availableDelta: number;
+  balanceAfter: ProductStockBalance;
+  unitPrice: string;
+  movementValue: string;
   orderNumber: string;
   orderStatus?: OrderStatus;
+  orderStatusAtEvent?: OrderStatus;
   source: string;
   sourceValue: StockMovementSource;
   comment: string;
@@ -233,6 +234,7 @@ const STOCK_EVENT_TYPE_OPTIONS: Array<
   { value: 'reserve', label: 'Reserved in order' },
   { value: 'write_off', label: 'Stock write-off' },
   { value: 'release', label: 'Reserve released' },
+  { value: 'adjustment', label: 'Stock adjustment' },
 ];
 
 const STOCK_SOURCE_OPTIONS: Array<SelectOption<'all' | StockMovementSource>> = [
@@ -242,6 +244,19 @@ const STOCK_SOURCE_OPTIONS: Array<SelectOption<'all' | StockMovementSource>> = [
 ];
 
 const PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS: RowsPerPageValue[] = [20, 50, 100];
+
+const STOCK_EVENT_LABELS: Record<StockMovementEventType, string> = {
+  arrival: 'Stock arrival',
+  reserve: 'Reserved in order',
+  release: 'Reserve released',
+  write_off: 'Stock write-off',
+  adjustment: 'Stock adjustment',
+};
+
+const STOCK_SOURCE_LABELS: Record<StockMovementSource, string> = {
+  pharmacy_stock: 'Pharmacy stock',
+  client_order: 'Client order',
+};
 
 //===================================================================
 
@@ -409,11 +424,14 @@ function getProductCharacteristics(product: Product): CharacteristicItem[] {
 //===================================================================
 
 function getSingleProductStatisticsCounts(
-  offer: ProductOffer | null
+  offer: ProductOffer | null,
+  stockBalance?: ProductStockBalance | null
 ): OwnProductStatisticsCounts {
-  const stockQuantity = getStockQuantity(offer);
-  const reservedQuantity = getReservedQuantity(offer);
-  const availableQuantity = getAvailableQuantity(offer);
+  const stockQuantity = stockBalance?.stockQuantity ?? getStockQuantity(offer);
+  const reservedQuantity =
+    stockBalance?.reservedQuantity ?? getReservedQuantity(offer);
+  const availableQuantity =
+    stockBalance?.availableQuantity ?? getAvailableQuantity(offer);
   const currentPrice = offer?.price ?? 0;
 
   return {
@@ -438,99 +456,120 @@ function getSingleProductStatisticsCounts(
 
 //===================================================================
 
+function formatStockDelta(value: number): string {
+  if (value === 0) return '0';
+
+  return `${value > 0 ? '+' : '−'}${Math.abs(value)}`;
+}
+
+//===================================================================
+
+function formatStockMovementDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return formatShortDate(value);
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+//===================================================================
+
+function getStockEventClassName(eventType: StockMovementEventType): string {
+  if (eventType === 'arrival') return css.eventArrival;
+  if (eventType === 'reserve') return css.eventReserve;
+  if (eventType === 'release') return css.eventRelease;
+  if (eventType === 'write_off') return css.eventWriteOff;
+
+  return css.eventAdjustment;
+}
+
+//===================================================================
+
 function getStockMovementRows(
-  offer: ProductOffer | null,
-  relatedRows: RelatedOrderRow[],
-  filters: StockMovementFilters
+  movements: ProductStockMovement[],
+  filters: StockMovementFilters,
+  orderNumberSearch: string,
+  commentSearch: string
 ): StockMovementRow[] {
-  if (!offer) return [];
+  const normalizedOrderNumber = orderNumberSearch.trim().toLowerCase();
+  const normalizedComment = commentSearch.trim().toLowerCase();
 
-  const initialDateValue = offer.createdAt ?? offer.updatedAt ?? '';
-  const rows: StockMovementRow[] = [
-    {
-      id: `${offer.id}-initial-stock`,
-      date: initialDateValue ? formatShortDate(initialDateValue) : '—',
-      dateValue: initialDateValue,
-      eventType: 'Stock arrival',
-      eventTypeValue: 'arrival',
-      quantity: `+${offer.totalQuantity}`,
-      quantityValue: offer.totalQuantity,
-      price: formatPrice(offer.price),
-      priceValue: offer.price,
-      totalAmount: formatPrice(offer.totalQuantity * offer.price),
-      orderNumber: '—',
-      source: 'Pharmacy stock',
-      sourceValue: 'pharmacy_stock',
-      comment: 'Initial stock quantity added to the pharmacy warehouse.',
-    },
+  return movements
+    .map((movement): StockMovementRow => ({
+      id: movement.id,
+      sequence: movement.sequence,
+      ...(movement.orderId ? { orderId: movement.orderId } : {}),
+      date: formatStockMovementDate(movement.occurredAt),
+      dateValue: movement.occurredAt,
+      eventType: STOCK_EVENT_LABELS[movement.eventType],
+      eventTypeValue: movement.eventType,
+      stockDelta: movement.stockDelta,
+      reservedDelta: movement.reservedDelta,
+      availableDelta: movement.availableDelta,
+      balanceAfter: movement.balanceAfter,
+      unitPrice: formatPrice(movement.unitPrice),
+      movementValue: formatPrice(movement.movementValue),
+      orderNumber: movement.orderNumber ?? '—',
+      ...(movement.orderStatus ? { orderStatus: movement.orderStatus } : {}),
+      ...(movement.orderStatusAtEvent
+        ? { orderStatusAtEvent: movement.orderStatusAtEvent }
+        : {}),
+      source: STOCK_SOURCE_LABELS[movement.source],
+      sourceValue: movement.source,
+      comment: movement.comment,
+    }))
+    .filter((row) => {
+      if (
+        filters.eventType !== 'all' &&
+        row.eventTypeValue !== filters.eventType
+      ) {
+        return false;
+      }
 
-    ...relatedRows.map((row): StockMovementRow => {
-      const isSuccessful = row.status === 'successful';
-      const isRejected = row.status === 'rejected';
+      if (filters.source !== 'all' && row.sourceValue !== filters.source) {
+        return false;
+      }
 
-      const eventTypeValue: StockMovementEventType = isSuccessful
-        ? 'write_off'
-        : isRejected
-          ? 'release'
-          : 'reserve';
+      if (
+        filters.orderStatus !== 'all' &&
+        row.orderStatus !== filters.orderStatus
+      ) {
+        return false;
+      }
 
-      const quantityValue = isRejected ? row.quantityValue : -row.quantityValue;
+      if (filters.date.from && row.dateValue < filters.date.from) {
+        return false;
+      }
 
-      return {
-        id: `${row.id}-stock-movement`,
-        orderId: row.orderId,
-        date: row.orderDate,
-        dateValue: row.orderDateValue,
-        eventType:
-          eventTypeValue === 'write_off'
-            ? 'Stock write-off'
-            : eventTypeValue === 'release'
-              ? 'Reserve released'
-              : 'Reserved in order',
-        eventTypeValue,
-        quantity: `${quantityValue > 0 ? '+' : ''}${quantityValue}`,
-        quantityValue,
-        price: row.fixedUnitPrice,
-        priceValue: row.unitPriceValue,
-        totalAmount: formatPrice(Math.abs(quantityValue) * row.unitPriceValue),
-        orderNumber: row.orderNumber,
-        orderStatus: row.status,
-        source: 'Client order',
-        sourceValue: 'client_order',
-        comment: `${ORDER_STATUS_LABELS[row.status]} order ${row.orderNumber}.`,
-      };
-    }),
-  ];
+      if (
+        filters.date.to &&
+        row.dateValue > `${filters.date.to}T23:59:59.999Z`
+      ) {
+        return false;
+      }
 
-  return rows.filter((row) => {
-    if (
-      filters.eventType !== 'all' &&
-      row.eventTypeValue !== filters.eventType
-    ) {
-      return false;
-    }
+      if (
+        normalizedOrderNumber &&
+        !row.orderNumber.toLowerCase().includes(normalizedOrderNumber)
+      ) {
+        return false;
+      }
 
-    if (filters.source !== 'all' && row.sourceValue !== filters.source) {
-      return false;
-    }
+      if (
+        normalizedComment &&
+        !row.comment.toLowerCase().includes(normalizedComment)
+      ) {
+        return false;
+      }
 
-    if (
-      filters.orderStatus !== 'all' &&
-      row.orderStatus !== filters.orderStatus
-    ) {
-      return false;
-    }
-
-    if (filters.date.from && row.dateValue < filters.date.from) {
-      return false;
-    }
-
-    if (filters.date.to && row.dateValue > `${filters.date.to}T23:59:59.999Z`) {
-      return false;
-    }
-
-    return true;
-  });
+      return true;
+    });
 }
 
 //===================================================================
@@ -695,7 +734,12 @@ function AllProductDetailsPageContent({
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [reviewsTotal, setReviewsTotal] = useState(0);
   const [relatedOrders, setRelatedOrders] = useState<PharmacyOrderRow[]>([]);
-  const [stockOrders, setStockOrders] = useState<PharmacyOrderRow[]>([]);
+  const [stockMovements, setStockMovements] = useState<ProductStockMovement[]>(
+    []
+  );
+  const [stockBalance, setStockBalance] = useState<ProductStockBalance | null>(
+    null
+  );
 
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
@@ -753,6 +797,7 @@ function AllProductDetailsPageContent({
           profileResponse,
           reviewsResponse,
           ordersResponse,
+          stockMovementsResponse,
         ] = await Promise.all([
           getProductDetails(productId),
           getMyPharmacyProfile().catch(() => null),
@@ -760,6 +805,7 @@ function AllProductDetailsPageContent({
           getPharmacyOrders({ page: 1, perPage: 200, productId }).catch(
             () => null
           ),
+          getProductStockMovements(productId).catch(() => null),
         ]);
 
         if (!isMounted) return;
@@ -770,7 +816,8 @@ function AllProductDetailsPageContent({
           reviewsResponse?.total ?? productResponse.product.reviewsCount ?? 0
         );
         setRelatedOrders(ordersResponse?.items ?? []);
-        setStockOrders(ordersResponse?.items ?? []);
+        setStockMovements(stockMovementsResponse?.items ?? []);
+        setStockBalance(stockMovementsResponse?.stock ?? null);
         setCurrentPharmacyId(profileResponse?.pharmacy.id ?? null);
         setPharmacyStatus(profileResponse?.pharmacy.status ?? 'new');
       } catch (loadError) {
@@ -780,7 +827,8 @@ function AllProductDetailsPageContent({
         setReviews([]);
         setReviewsTotal(0);
         setRelatedOrders([]);
-        setStockOrders([]);
+        setStockMovements([]);
+        setStockBalance(null);
         setPharmacyStatus('new');
         setError(getProductDetailsError(loadError));
       } finally {
@@ -800,45 +848,6 @@ function AllProductDetailsPageContent({
 
     dispatchBreadcrumbLabel(product.name);
   }, [product?.name]);
-
-  useEffect(() => {
-    if (!product || !currentPharmacyId) return;
-
-    const currentProductId = product.id;
-    let isMounted = true;
-
-    async function loadStockOrders() {
-      const response = await getPharmacyOrders({
-        page: 1,
-        perPage: 200,
-        productId: currentProductId,
-        orderNumber: stockOrderNumberSearch.trim() || undefined,
-        comment: stockCommentSearch.trim() || undefined,
-        status:
-          stockFilters.orderStatus === 'all'
-            ? undefined
-            : stockFilters.orderStatus,
-        dateFrom: stockFilters.date.from || undefined,
-        dateTo: stockFilters.date.to || undefined,
-      });
-
-      if (isMounted) setStockOrders(response.items);
-    }
-
-    void loadStockOrders().catch(() => {
-      if (isMounted) setStockOrders([]);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [
-    currentPharmacyId,
-    product,
-    stockCommentSearch,
-    stockFilters,
-    stockOrderNumberSearch,
-  ]);
 
   useEffect(() => {
     if (!product || !currentPharmacyId) return;
@@ -918,21 +927,19 @@ function AllProductDetailsPageContent({
 
   const characteristics = product ? getProductCharacteristics(product) : [];
   const singleProductStatistics = getSingleProductStatisticsCounts(
-    bannerStatus ? null : currentOffer
+    bannerStatus ? null : currentOffer,
+    bannerStatus ? null : stockBalance
   );
 
   const relatedOrderRows = product
     ? getRelatedOrderRows(product.id, relatedOrders)
     : [];
 
-  const stockRelatedRows = product
-    ? getRelatedOrderRows(product.id, stockOrders)
-    : [];
-
   const stockMovementRows = getStockMovementRows(
-    currentOffer,
-    stockRelatedRows,
-    stockFilters
+    stockMovements,
+    stockFilters,
+    stockOrderNumberSearch,
+    stockCommentSearch
   );
 
   const paginatedStockMovementRows = paginateRows(
@@ -990,6 +997,14 @@ function AllProductDetailsPageContent({
   >(
     () => [
       {
+        key: 'sequence',
+        title: 'Step',
+        width: '72px',
+        render: (row: StockMovementRow) => (
+          <span className={css.sequenceBadge}>{row.sequence}</span>
+        ),
+      },
+      {
         key: 'date',
         title: <TableHeaderTitle parts={['Event', 'date']} />,
         render: (row: StockMovementRow) => row.date,
@@ -997,93 +1012,139 @@ function AllProductDetailsPageContent({
       {
         key: 'eventType',
         title: <TableHeaderTitle parts={['Event', 'type']} />,
-        render: (row: StockMovementRow) => row.eventType,
+        render: (row: StockMovementRow) => (
+          <div className={css.eventCell}>
+            <span
+              className={`${css.eventBadge} ${getStockEventClassName(
+                row.eventTypeValue
+              )}`}
+            >
+              {row.eventType}
+            </span>
+            <small>{row.source}</small>
+          </div>
+        ),
       },
       {
-        key: 'quantity',
-        title: 'Quantity',
+        key: 'stockDelta',
+        title: <TableHeaderTitle parts={['Physical', 'stock Δ']} />,
         render: (row: StockMovementRow) => (
           <strong
             className={
-              row.eventTypeValue === 'reserve'
-                ? css.valueReserve
-                : row.quantityValue < 0
+              row.stockDelta > 0
+                ? css.valueIn
+                : row.stockDelta < 0
                   ? css.valueOut
-                  : css.valueIn
+                  : css.valueNeutral
             }
           >
-            {row.quantity}
+            {formatStockDelta(row.stockDelta)}
           </strong>
         ),
       },
       {
-        key: 'price',
-        title: 'Price',
+        key: 'reservedDelta',
+        title: <TableHeaderTitle parts={['Reserved', 'stock Δ']} />,
         render: (row: StockMovementRow) => (
           <strong
             className={
-              row.eventTypeValue === 'reserve'
+              row.reservedDelta > 0
                 ? css.valueReserve
-                : row.quantityValue < 0
-                  ? css.valueOut
-                  : css.valueIn
+                : row.reservedDelta < 0
+                  ? row.eventTypeValue === 'write_off'
+                    ? css.valueOut
+                    : css.valueIn
+                  : css.valueNeutral
             }
           >
-            {row.price}
+            {formatStockDelta(row.reservedDelta)}
           </strong>
         ),
       },
       {
-        key: 'totalAmount',
-        title: <TableHeaderTitle parts={['Total', 'amount']} />,
+        key: 'availableDelta',
+        title: <TableHeaderTitle parts={['Available', 'stock Δ']} />,
         render: (row: StockMovementRow) => (
           <strong
             className={
-              row.eventTypeValue === 'reserve'
-                ? css.valueReserve
-                : row.quantityValue < 0
-                  ? css.valueOut
-                  : css.valueIn
+              row.availableDelta > 0
+                ? css.valueIn
+                : row.availableDelta < 0
+                  ? row.eventTypeValue === 'reserve'
+                    ? css.valueReserve
+                    : css.valueOut
+                  : css.valueNeutral
             }
           >
-            {row.totalAmount}
+            {formatStockDelta(row.availableDelta)}
           </strong>
         ),
       },
       {
-        key: 'orderNumber',
-        title: <TableHeaderTitle parts={['Order', 'number']} />,
-        render: (row: StockMovementRow) =>
-          row.orderId ? (
-            <TextActionButton href={getPharmacyOrderPath(row.orderId)}>
-              {row.orderNumber}
-            </TextActionButton>
-          ) : (
-            '—'
-          ),
+        key: 'balanceAfter',
+        title: <TableHeaderTitle parts={['Balance', 'after event']} />,
+        render: (row: StockMovementRow) => (
+          <dl className={css.balanceCell}>
+            <div>
+              <dt>Stock</dt>
+              <dd>{row.balanceAfter.stockQuantity}</dd>
+            </div>
+            <div>
+              <dt>Reserved</dt>
+              <dd>{row.balanceAfter.reservedQuantity}</dd>
+            </div>
+            <div>
+              <dt>Available</dt>
+              <dd>{row.balanceAfter.availableQuantity}</dd>
+            </div>
+          </dl>
+        ),
       },
       {
-        key: 'orderStatus',
-        title: <TableHeaderTitle parts={['Order', 'status']} />,
-        render: (row: StockMovementRow) =>
-          row.orderStatus ? (
-            <StatusBadge
-              status={row.orderStatus}
-              label={ORDER_STATUS_LABELS[row.orderStatus]}
-            />
-          ) : (
-            '—'
-          ),
+        key: 'value',
+        title: <TableHeaderTitle parts={['Price /', 'movement value']} />,
+        render: (row: StockMovementRow) => (
+          <div className={css.valueCell}>
+            <span>{row.unitPrice}</span>
+            <strong>{row.movementValue}</strong>
+          </div>
+        ),
       },
       {
-        key: 'source',
-        title: 'Source',
-        render: (row: StockMovementRow) => row.source,
+        key: 'order',
+        title: <TableHeaderTitle parts={['Order /', 'current status']} />,
+        render: (row: StockMovementRow) => (
+          <div className={css.orderCell}>
+            {row.orderId ? (
+              <TextActionButton href={getPharmacyOrderPath(row.orderId)}>
+                {row.orderNumber}
+              </TextActionButton>
+            ) : (
+              <span>—</span>
+            )}
+
+            {row.orderStatus ? (
+              <StatusBadge
+                status={row.orderStatus}
+                label={ORDER_STATUS_LABELS[row.orderStatus]}
+              />
+            ) : null}
+
+            {row.orderStatusAtEvent &&
+            row.orderStatusAtEvent !== row.orderStatus ? (
+              <small className={css.statusAtEvent}>
+                At event: {ORDER_STATUS_LABELS[row.orderStatusAtEvent]}
+              </small>
+            ) : null}
+          </div>
+        ),
       },
       {
         key: 'comment',
-        title: 'Comment',
-        render: (row: StockMovementRow) => row.comment,
+        title: 'Why the balance changed',
+        render: (row: StockMovementRow) => (
+          <p className={css.movementComment}>{row.comment}</p>
+        ),
       },
     ],
     []
@@ -1164,8 +1225,11 @@ function AllProductDetailsPageContent({
 
     try {
       const response = await addProductToMyPharmacy(product.id);
+      const stockResponse = await getProductStockMovements(product.id);
 
       setProduct(response.product);
+      setStockMovements(stockResponse.items);
+      setStockBalance(stockResponse.stock);
       setIsAddModalOpen(false);
       toast.success(response.message || 'Product added to your pharmacy.');
     } catch (addError) {
@@ -1184,6 +1248,8 @@ function AllProductDetailsPageContent({
       const response = await removeProductFromMyPharmacy(product.id);
 
       setProduct(response.product);
+      setStockMovements([]);
+      setStockBalance(null);
       setIsRemoveModalOpen(false);
       toast.success(
         response.message || 'Product was removed from your pharmacy.'
@@ -1380,12 +1446,78 @@ function AllProductDetailsPageContent({
                           className={css.sectionCard}
                           aria-labelledby="stock-movement-title"
                         >
-                          <h3
-                            className={css.panelTitle}
-                            id="stock-movement-title"
-                          >
-                            Stock movement
-                          </h3>
+                          <div className={css.stockMovementHeading}>
+                            <h3
+                              className={css.panelTitle}
+                              id="stock-movement-title"
+                            >
+                              Stock movement
+                            </h3>
+                            <p>
+                              Events are shown from the first stock arrival to
+                              the latest change. Each row shows the exact delta
+                              and the balance immediately after that step.
+                            </p>
+                          </div>
+
+                          {stockBalance ? (
+                            <div className={css.stockExplanation}>
+                              <div className={css.stockFormulaCard}>
+                                <span>Current formula</span>
+                                <strong>
+                                  {stockBalance.stockQuantity} −{' '}
+                                  {stockBalance.reservedQuantity} ={' '}
+                                  {stockBalance.availableQuantity}
+                                </strong>
+                                <p>
+                                  Available products = physical stock − reserved
+                                  products.
+                                </p>
+                              </div>
+
+                              <ol className={css.stockFlow}>
+                                <li>
+                                  <span>1</span>
+                                  <div>
+                                    <strong>Stock arrival</strong>
+                                    <p>
+                                      Physical and available stock increase.
+                                    </p>
+                                  </div>
+                                </li>
+                                <li>
+                                  <span>2</span>
+                                  <div>
+                                    <strong>Order reservation</strong>
+                                    <p>
+                                      Units move from available to reserved;
+                                      physical stock stays unchanged.
+                                    </p>
+                                  </div>
+                                </li>
+                                <li>
+                                  <span>3A</span>
+                                  <div>
+                                    <strong>Successful order</strong>
+                                    <p>
+                                      Physical and reserved stock decrease;
+                                      available stock stays unchanged.
+                                    </p>
+                                  </div>
+                                </li>
+                                <li>
+                                  <span>3B</span>
+                                  <div>
+                                    <strong>Rejected order</strong>
+                                    <p>
+                                      Units return from reserved to available;
+                                      physical stock stays unchanged.
+                                    </p>
+                                  </div>
+                                </li>
+                              </ol>
+                            </div>
+                          ) : null}
 
                           <div className={css.searchGrid}>
                             <SearchInput
@@ -1454,7 +1586,8 @@ function AllProductDetailsPageContent({
                               columns={stockMovementColumns}
                               items={paginatedStockMovementRows}
                               getItemKey={(row) => row.id}
-                              minWidth={0}
+                              minWidth={1480}
+                              newestFirst={false}
                               labels={{
                                 empty: 'Stock movement history is empty.',
                               }}

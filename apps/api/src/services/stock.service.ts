@@ -2,11 +2,25 @@ import mongoose, { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { ProductOffer } from '../models/productOffer.model';
+import {
+  recordStockMovement,
+  type StockMovementContext,
+} from './stockMovement.service';
 import { httpError } from '../utils/httpError';
 
 //===============================================================
 
 type StockTarget = string | Types.ObjectId;
+
+type StockOfferSnapshot = {
+  _id: Types.ObjectId;
+  productId: Types.ObjectId;
+  pharmacyId: Types.ObjectId;
+  price: number;
+  totalQuantity: number;
+  availableQuantity: number;
+  reservedQuantity: number;
+};
 
 function assertPositiveQuantity(quantity: number): void {
   if (!Number.isInteger(quantity) || quantity < 1) {
@@ -19,25 +33,61 @@ function assertPositiveQuantity(quantity: number): void {
 
 //===============================================================
 
+async function recordMovementIfNeeded(
+  offer: StockOfferSnapshot,
+  input: {
+    eventType: 'reserve' | 'release' | 'write_off' | 'adjustment';
+    stockDelta: number;
+    reservedDelta: number;
+    availableDelta: number;
+  },
+  context?: StockMovementContext,
+  session?: mongoose.ClientSession
+): Promise<void> {
+  if (!context) return;
+
+  await recordStockMovement({
+    offer,
+    ...input,
+    context,
+    session,
+  });
+}
+
+//===============================================================
+
 export async function reserveOfferStock(
   productOfferId: StockTarget,
   quantity: number,
-  session?: mongoose.ClientSession
+  session?: mongoose.ClientSession,
+  context?: StockMovementContext
 ): Promise<void> {
   assertPositiveQuantity(quantity);
 
-  const result = await ProductOffer.updateOne(
+  const offer = await ProductOffer.findOneAndUpdate(
     { _id: productOfferId, availableQuantity: { $gte: quantity } },
     { $inc: { availableQuantity: -quantity, reservedQuantity: quantity } },
-    { session, runValidators: true }
-  );
+    { returnDocument: 'after', session, runValidators: true }
+  ).lean<StockOfferSnapshot | null>();
 
-  if (result.modifiedCount !== 1) {
+  if (!offer) {
     throw httpError(
       HTTP_STATUS.CONFLICT,
       'Product quantity is no longer available. Please refresh and try again.'
     );
   }
+
+  await recordMovementIfNeeded(
+    offer,
+    {
+      eventType: 'reserve',
+      stockDelta: 0,
+      reservedDelta: quantity,
+      availableDelta: -quantity,
+    },
+    context,
+    session
+  );
 }
 
 //===============================================================
@@ -46,22 +96,37 @@ export async function releaseOfferStock(
   productOfferId: StockTarget,
   quantity: number,
   session?: mongoose.ClientSession,
-  strict = true
+  strict = true,
+  context?: StockMovementContext
 ): Promise<void> {
   assertPositiveQuantity(quantity);
 
-  const result = await ProductOffer.updateOne(
+  const offer = await ProductOffer.findOneAndUpdate(
     { _id: productOfferId, reservedQuantity: { $gte: quantity } },
     { $inc: { availableQuantity: quantity, reservedQuantity: -quantity } },
-    { session, runValidators: true }
-  );
+    { returnDocument: 'after', session, runValidators: true }
+  ).lean<StockOfferSnapshot | null>();
 
-  if (strict && result.modifiedCount !== 1) {
+  if (!offer) {
+    if (!strict) return;
+
     throw httpError(
       HTTP_STATUS.CONFLICT,
       'Product reservation could not be released. Please refresh and try again.'
     );
   }
+
+  await recordMovementIfNeeded(
+    offer,
+    {
+      eventType: 'release',
+      stockDelta: 0,
+      reservedDelta: -quantity,
+      availableDelta: quantity,
+    },
+    context,
+    session
+  );
 }
 
 //===============================================================
@@ -69,26 +134,39 @@ export async function releaseOfferStock(
 export async function commitReservedStock(
   productOfferId: StockTarget,
   quantity: number,
-  session: mongoose.ClientSession
+  session: mongoose.ClientSession,
+  context?: StockMovementContext
 ): Promise<void> {
   assertPositiveQuantity(quantity);
 
-  const result = await ProductOffer.updateOne(
+  const offer = await ProductOffer.findOneAndUpdate(
     {
       _id: productOfferId,
       reservedQuantity: { $gte: quantity },
       totalQuantity: { $gte: quantity },
     },
     { $inc: { reservedQuantity: -quantity, totalQuantity: -quantity } },
-    { session, runValidators: true }
-  );
+    { returnDocument: 'after', session, runValidators: true }
+  ).lean<StockOfferSnapshot | null>();
 
-  if (result.modifiedCount !== 1) {
+  if (!offer) {
     throw httpError(
       HTTP_STATUS.CONFLICT,
       'Product reservation is no longer available. Please refresh and try again.'
     );
   }
+
+  await recordMovementIfNeeded(
+    offer,
+    {
+      eventType: 'write_off',
+      stockDelta: -quantity,
+      reservedDelta: -quantity,
+      availableDelta: 0,
+    },
+    context,
+    session
+  );
 }
 
 //===============================================================
@@ -96,14 +174,31 @@ export async function commitReservedStock(
 export async function restoreCommittedStock(
   productOfferId: StockTarget,
   quantity: number,
-  session: mongoose.ClientSession
+  session: mongoose.ClientSession,
+  context?: StockMovementContext
 ): Promise<void> {
   assertPositiveQuantity(quantity);
 
-  await ProductOffer.updateOne(
+  const offer = await ProductOffer.findOneAndUpdate(
     { _id: productOfferId },
     { $inc: { totalQuantity: quantity, availableQuantity: quantity } },
-    { session, runValidators: true }
+    { returnDocument: 'after', session, runValidators: true }
+  ).lean<StockOfferSnapshot | null>();
+
+  if (!offer) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product offer was not found.');
+  }
+
+  await recordMovementIfNeeded(
+    offer,
+    {
+      eventType: 'adjustment',
+      stockDelta: quantity,
+      reservedDelta: 0,
+      availableDelta: quantity,
+    },
+    context,
+    session
   );
 }
 
@@ -112,7 +207,8 @@ export async function restoreCommittedStock(
 export async function setPharmacyOfferStock(
   productOfferId: StockTarget,
   nextTotalQuantity: number,
-  session?: mongoose.ClientSession
+  session?: mongoose.ClientSession,
+  context?: StockMovementContext
 ): Promise<void> {
   if (!Number.isInteger(nextTotalQuantity) || nextTotalQuantity < 0) {
     throw httpError(
@@ -121,28 +217,49 @@ export async function setPharmacyOfferStock(
     );
   }
 
-  const offer = await ProductOffer.findById(productOfferId)
+  const currentOffer = await ProductOffer.findById(productOfferId)
     .session(session ?? null)
-    .lean();
+    .lean<StockOfferSnapshot | null>();
+
+  if (!currentOffer) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product offer was not found.');
+  }
+
+  if (nextTotalQuantity < currentOffer.reservedQuantity) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'Stock cannot be lower than the quantity already reserved in client orders.'
+    );
+  }
+
+  const stockDelta = nextTotalQuantity - currentOffer.totalQuantity;
+
+  if (stockDelta === 0) return;
+
+  const offer = await ProductOffer.findByIdAndUpdate(
+    currentOffer._id,
+    {
+      $set: {
+        totalQuantity: nextTotalQuantity,
+        availableQuantity: nextTotalQuantity - currentOffer.reservedQuantity,
+      },
+    },
+    { returnDocument: 'after', session, runValidators: true }
+  ).lean<StockOfferSnapshot | null>();
 
   if (!offer) {
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Product offer was not found.');
   }
-  if (nextTotalQuantity < offer.reservedQuantity) {
-    throw httpError(
-      HTTP_STATUS.CONFLICT,
-      'Stock cannot be lower than the quantity already reserved in client carts.'
-    );
-  }
 
-  await ProductOffer.updateOne(
-    { _id: offer._id },
+  await recordMovementIfNeeded(
+    offer,
     {
-      $set: {
-        totalQuantity: nextTotalQuantity,
-        availableQuantity: nextTotalQuantity - offer.reservedQuantity,
-      },
+      eventType: 'adjustment',
+      stockDelta,
+      reservedDelta: 0,
+      availableDelta: stockDelta,
     },
-    { session, runValidators: true }
+    context,
+    session
   );
 }

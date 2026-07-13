@@ -39,6 +39,9 @@ export const storefrontRoutes = {
     removeFromMyPharmacy: (productId: EntityId) =>
       `/products/${productId}/my-pharmacy`,
 
+    stockMovements: (productId: EntityId) =>
+      `/products/${productId}/stock-movements`,
+
     reviews: (productId: EntityId) => `/products/${productId}/reviews`,
     favorite: (productId: EntityId) => `/products/${productId}/favorite`,
   },
@@ -57,7 +60,7 @@ export const storefrontRoutes = {
     salesStatistics: '/orders/sales-statistics',
     details: (orderId: EntityId) => `/orders/${orderId}`,
     comments: (orderId: EntityId) => `/orders/${orderId}/comments`,
-    
+
     comment: (orderId: EntityId, commentId: EntityId) =>
       `/orders/${orderId}/comments/${commentId}`,
   },

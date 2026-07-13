@@ -627,12 +627,20 @@ export async function checkoutOrderService(
         0
       );
 
-      for (const item of orderItems) {
-        await reserveOfferStock(item.productOfferId, item.quantity, session);
-      }
-
       const orderId = new Types.ObjectId();
       const createdAt = new Date();
+      const orderNumber = createOrderNumber(orderId);
+
+      for (const item of orderItems) {
+        await reserveOfferStock(item.productOfferId, item.quantity, session, {
+          source: 'client_order',
+          orderId,
+          orderNumber,
+          orderStatus: 'new',
+          occurredAt: createdAt,
+          comment: `Order ${orderNumber} reserved ${item.quantity} unit${item.quantity === 1 ? '' : 's'}: available −${item.quantity}, reserved +${item.quantity}; physical stock did not change.`,
+        });
+      }
 
       const order = await Order.create(
         [
@@ -678,7 +686,7 @@ export async function checkoutOrderService(
                 changedBy: new Types.ObjectId(clientUserId),
               },
             ],
-            orderNumber: createOrderNumber(orderId),
+            orderNumber,
           },
         ],
         { session }
@@ -908,10 +916,20 @@ export async function updateOrderDetailsService(
             requested.get(String(oldItem.productOfferId)) ?? 0;
 
           if (nextQuantity < oldItem.quantity) {
+            const releasedQuantity = oldItem.quantity - nextQuantity;
+
             await releaseOfferStock(
               oldItem.productOfferId,
-              oldItem.quantity - nextQuantity,
-              session
+              releasedQuantity,
+              session,
+              true,
+              {
+                source: 'client_order',
+                orderId: order._id,
+                orderNumber: order.orderNumber,
+                orderStatus: order.status,
+                comment: `Order ${order.orderNumber} quantity was reduced by ${releasedQuantity}: reserved −${releasedQuantity}, available +${releasedQuantity}; physical stock did not change.`,
+              }
             );
           }
         }
@@ -920,15 +938,30 @@ export async function updateOrderDetailsService(
           const oldItem = existingByOfferId.get(offerId);
 
           if (oldItem && nextQuantity > oldItem.quantity) {
+            const reservedQuantity = nextQuantity - oldItem.quantity;
+
             await reserveOfferStock(
               oldItem.productOfferId,
-              nextQuantity - oldItem.quantity,
-              session
+              reservedQuantity,
+              session,
+              {
+                source: 'client_order',
+                orderId: order._id,
+                orderNumber: order.orderNumber,
+                orderStatus: order.status,
+                comment: `Order ${order.orderNumber} quantity was increased by ${reservedQuantity}: available −${reservedQuantity}, reserved +${reservedQuantity}; physical stock did not change.`,
+              }
             );
           }
 
           if (!oldItem) {
-            await reserveOfferStock(offerId, nextQuantity, session);
+            await reserveOfferStock(offerId, nextQuantity, session, {
+              source: 'client_order',
+              orderId: order._id,
+              orderNumber: order.orderNumber,
+              orderStatus: order.status,
+              comment: `Product was added to order ${order.orderNumber}: available −${nextQuantity}, reserved +${nextQuantity}; physical stock did not change.`,
+            });
           }
         }
 
@@ -1217,23 +1250,44 @@ export async function updateOrderStatusService(
         );
       }
 
+      const changedAt = new Date();
+
       if (input.status === 'successful') {
         for (const item of order.items) {
           await commitReservedStock(
             item.productOfferId,
             item.quantity,
-            session
+            session,
+            {
+              source: 'client_order',
+              orderId: order._id,
+              orderNumber: order.orderNumber,
+              orderStatus: 'successful',
+              occurredAt: changedAt,
+              comment: `Order ${order.orderNumber} was completed: ${item.quantity} reserved unit${item.quantity === 1 ? '' : 's'} left the warehouse. Physical stock −${item.quantity}, reserved −${item.quantity}; available stock did not change.`,
+            }
           );
         }
       }
 
       if (input.status === 'rejected') {
         for (const item of order.items) {
-          await releaseOfferStock(item.productOfferId, item.quantity, session);
+          await releaseOfferStock(
+            item.productOfferId,
+            item.quantity,
+            session,
+            true,
+            {
+              source: 'client_order',
+              orderId: order._id,
+              orderNumber: order.orderNumber,
+              orderStatus: 'rejected',
+              occurredAt: changedAt,
+              comment: `Order ${order.orderNumber} was rejected: ${item.quantity} unit${item.quantity === 1 ? '' : 's'} returned from reserved to available. Physical stock did not change.`,
+            }
+          );
         }
       }
-
-      const changedAt = new Date();
       const set: Record<string, unknown> = { status: input.status };
 
       if (input.status === 'rejected') {

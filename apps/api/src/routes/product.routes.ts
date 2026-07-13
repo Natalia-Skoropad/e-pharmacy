@@ -11,6 +11,7 @@ import {
   getProductDetails,
   getProductFilters,
   getProductReviews,
+  getProductStockMovements,
   getProducts,
   setFavoriteProduct,
 } from '../controllers/product.controller';
@@ -109,6 +110,18 @@ productRoutes.delete(
     params: productIdParamsSchema,
   }),
   ctrlWrapper(removeProductFromMyPharmacy)
+);
+
+//=================================================================================
+
+productRoutes.get(
+  '/:productId/stock-movements',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({
+    params: productIdParamsSchema,
+  }),
+  ctrlWrapper(getProductStockMovements)
 );
 
 //=================================================================================

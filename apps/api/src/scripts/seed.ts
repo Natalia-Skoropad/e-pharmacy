@@ -1,4 +1,4 @@
-import mongoose, { type Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
 import { connectDB } from '../db/connectDB';
 
@@ -17,6 +17,8 @@ import { PharmacyReview } from '../models/pharmacyReview.model';
 import { Order } from '../models/order.model';
 import { Client } from '../models/client.model';
 import { Cart } from '../models/cart.model';
+import { StockMovement } from '../models/stockMovement.model';
+import { reserveOfferStock } from '../services/stock.service';
 import { hashPassword } from '../utils/password';
 
 //===============================================================
@@ -462,10 +464,10 @@ function createModeratedReviews(count: number, ratingBase = 4) {
 function createOffer(
   pharmacy: SeedPharmacyDocument,
   price: number,
-  totalQuantity: number,
-  reservedQuantity = 0
+  totalQuantity: number
 ) {
-  const availableQuantity = Math.max(totalQuantity - reservedQuantity, 0);
+  const reservedQuantity = 0;
+  const availableQuantity = totalQuantity;
 
   return {
     pharmacyId: pharmacy._id,
@@ -828,8 +830,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
               basePrice + offerIndex * (7 + (index % 5)),
               shouldForceRichStock && offerIndex < 10
                 ? 40 + ((index + offerIndex) % 35)
-                : 12 + ((index + offerIndex) % 48),
-              shouldForceRichStock && offerIndex < 10 ? 0 : offerIndex % 4
+                : 12 + ((index + offerIndex) % 48)
             )
           );
     const reviewsCount =
@@ -882,9 +883,14 @@ async function seedActivePharmacyProductOffers(
 
   if (!activeProducts.length) return 0;
 
-  await ProductOffer.deleteMany({ pharmacyId: activePharmacy._id });
+  const stockArrivalAt = new Date('2026-07-08T09:00:00.000Z');
 
-  await ProductOffer.insertMany(
+  await Promise.all([
+    ProductOffer.deleteMany({ pharmacyId: activePharmacy._id }),
+    StockMovement.deleteMany({ pharmacyId: activePharmacy._id }),
+  ]);
+
+  const createdOffers = await ProductOffer.insertMany(
     activeProducts.map((product, index) => {
       const lowStockQuantities = [5, 7, 8, 10];
       const quantity =
@@ -901,8 +907,29 @@ async function seedActivePharmacyProductOffers(
         totalQuantity: quantity,
         availableQuantity: quantity,
         reservedQuantity: 0,
+        createdAt: stockArrivalAt,
+        updatedAt: stockArrivalAt,
       };
     })
+  );
+
+  await StockMovement.insertMany(
+    createdOffers.map((offer) => ({
+      productOfferId: offer._id,
+      productId: offer.productId,
+      pharmacyId: offer.pharmacyId,
+      eventType: 'arrival',
+      source: 'pharmacy_stock',
+      stockDelta: offer.totalQuantity,
+      reservedDelta: 0,
+      availableDelta: offer.availableQuantity,
+      stockAfter: offer.totalQuantity,
+      reservedAfter: offer.reservedQuantity,
+      availableAfter: offer.availableQuantity,
+      unitPrice: offer.price,
+      comment: 'Initial stock quantity added to the pharmacy warehouse.',
+      occurredAt: offer.createdAt,
+    }))
   );
 
   return activeProducts.length;
@@ -1073,20 +1100,27 @@ async function seedActivePharmacyOrder(): Promise<number> {
   const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
   const createdAt = new Date('2026-07-09T14:33:13.000Z');
 
+  const orderId = new Types.ObjectId();
+  const orderNumber = 'EP-20260709-173313-BOECC9FC';
+
   for (const item of items) {
-    await ProductOffer.updateOne(
-      { _id: item.productOfferId },
+    await reserveOfferStock(
+      item.productOfferId as Types.ObjectId,
+      item.quantity,
+      undefined,
       {
-        $inc: {
-          availableQuantity: -item.quantity,
-          reservedQuantity: item.quantity,
-        },
-      },
-      { runValidators: true }
+        source: 'client_order',
+        orderId,
+        orderNumber,
+        orderStatus: 'new',
+        occurredAt: createdAt,
+        comment: `Order ${orderNumber} reserved ${item.quantity} unit${item.quantity === 1 ? '' : 's'}: available −${item.quantity}, reserved +${item.quantity}; physical stock did not change.`,
+      }
     );
   }
 
   await Order.create({
+    _id: orderId,
     userId: clientUser._id,
     pharmacyId: pharmacy._id,
     pharmacySnapshot: {
@@ -1123,7 +1157,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
         changedBy: clientUser._id,
       },
     ],
-    orderNumber: 'EP-20260709-173313-BOECC9FC',
+    orderNumber,
     createdAt,
     updatedAt: createdAt,
   });
@@ -1148,6 +1182,7 @@ async function seedDatabase(): Promise<void> {
     PharmacyReview.deleteMany({}),
     Order.deleteMany({}),
     Cart.deleteMany({}),
+    StockMovement.deleteMany({}),
   ]);
 
   const pharmacySeeds = createSeedPharmacies();
@@ -1176,7 +1211,7 @@ async function seedDatabase(): Promise<void> {
     })
   );
 
-  await ProductOffer.insertMany(
+  const createdProductOffers = await ProductOffer.insertMany(
     createdProducts.flatMap((product, index) =>
       seedProducts[index].offers.map((offer) => ({
         productId: product._id,
@@ -1187,6 +1222,25 @@ async function seedDatabase(): Promise<void> {
         reservedQuantity: offer.reservedQuantity,
       }))
     )
+  );
+
+  await StockMovement.insertMany(
+    createdProductOffers.map((offer) => ({
+      productOfferId: offer._id,
+      productId: offer.productId,
+      pharmacyId: offer.pharmacyId,
+      eventType: 'arrival',
+      source: 'pharmacy_stock',
+      stockDelta: offer.totalQuantity,
+      reservedDelta: 0,
+      availableDelta: offer.availableQuantity,
+      stockAfter: offer.totalQuantity,
+      reservedAfter: offer.reservedQuantity,
+      availableAfter: offer.availableQuantity,
+      unitPrice: offer.price,
+      comment: 'Initial stock quantity added to the pharmacy warehouse.',
+      occurredAt: offer.createdAt,
+    }))
   );
 
   await ProductReview.insertMany(

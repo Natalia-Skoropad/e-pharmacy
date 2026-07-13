@@ -24,6 +24,7 @@ import {
   setFavoriteProductService,
 } from '../services/product.service';
 
+import { getProductStockMovementsService } from '../services/stockMovement.service';
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
@@ -101,6 +102,25 @@ export async function getProductDetails(
   const { productId } = req.params as ProductParams;
 
   const data = await getProductDetailsService(productId, req.user?.id);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function getProductStockMovements(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { productId } = req.params as ProductParams;
+  const data = await getProductStockMovementsService(
+    productId,
+    req.user?.id ?? ''
+  );
 
   sendSuccessResponse({
     res,

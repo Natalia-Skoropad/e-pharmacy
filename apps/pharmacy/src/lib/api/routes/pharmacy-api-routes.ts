@@ -9,6 +9,9 @@ export const pharmacyApiRoutes = {
     removeFromMyPharmacy: (productId: string) =>
       `/api/products/${productId}/my-pharmacy`,
 
+    stockMovements: (productId: string) =>
+      `/api/products/${productId}/stock-movements`,
+
     reviews: (productId: string) => `/api/products/${productId}/reviews`,
   },
 
