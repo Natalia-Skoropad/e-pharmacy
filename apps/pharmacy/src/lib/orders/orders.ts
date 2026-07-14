@@ -65,6 +65,7 @@ export type PharmacyOrderRow = Readonly<{
   id: EntityId;
   orderNumber: string;
   orderDate: string;
+  pharmacyName: string;
   client: string;
   clientId: EntityId | null;
   clientPhotoUrl: string | null;
@@ -117,10 +118,14 @@ export type PharmacyOrderDetails = PharmacyOrderRow &
     statusHistory: PharmacyOrderStatusHistoryItem[];
     activityHistory: PharmacyOrderActivityHistoryItem[];
     pharmacyId: EntityId;
+    clientPhone?: string;
+    clientAddress?: string;
     pharmacyPhone?: string;
     pharmacyAddress?: string;
+    pharmacyWorkingHours?: string;
     pharmacyEmail?: string;
     bankDetails?: PharmacyBankDetails;
+    managerCommentsCount: number;
   }>;
 
 export type PharmacyOrderManagerCommentsResponse = Readonly<{
@@ -366,6 +371,7 @@ export function normalizePharmacyOrder(
     id,
     orderNumber,
     orderDate,
+    pharmacyName: getStringValue(rawOrder.pharmacyName) ?? 'Pharmacy',
     client: getClientName(rawOrder),
     clientId: getClientId(rawOrder),
     clientPhotoUrl: getClientPhotoUrl(rawOrder),
@@ -560,11 +566,29 @@ export function normalizePharmacyOrderDetails(
     pharmacyId: getStringValue(payload.pharmacyId) ?? '',
     statusHistory: normalizeStatusHistory(payload.statusHistory),
     activityHistory: normalizeActivityHistory(payload.activityHistory),
+    managerCommentsCount:
+      getNumberValue(payload.managerCommentsCount) ??
+      (Array.isArray(payload.managerComments)
+        ? payload.managerComments.length
+        : getStringValue(payload.managerComment)
+          ? 1
+          : 0),
+    ...(getStringValue(payload.clientPhone)
+      ? { clientPhone: getStringValue(payload.clientPhone) }
+      : {}),
+    ...(getStringValue(payload.clientAddress)
+      ? { clientAddress: getStringValue(payload.clientAddress) }
+      : {}),
     ...(getStringValue(payload.pharmacyPhone)
       ? { pharmacyPhone: getStringValue(payload.pharmacyPhone) }
       : {}),
     ...(getStringValue(payload.pharmacyAddress)
       ? { pharmacyAddress: getStringValue(payload.pharmacyAddress) }
+      : {}),
+    ...(getStringValue(payload.pharmacyWorkingHours)
+      ? {
+          pharmacyWorkingHours: getStringValue(payload.pharmacyWorkingHours),
+        }
       : {}),
     ...(getStringValue(payload.pharmacyEmail)
       ? { pharmacyEmail: getStringValue(payload.pharmacyEmail) }

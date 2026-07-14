@@ -13,6 +13,7 @@ const orderPharmacySnapshotSchema = new Schema(
     city: { type: String, trim: true, default: undefined },
     phone: { type: String, trim: true, default: undefined },
     email: { type: String, trim: true, lowercase: true, default: undefined },
+    workingHours: { type: String, trim: true, default: undefined },
     imageUrl: { type: String, trim: true, default: undefined },
 
     rating: {

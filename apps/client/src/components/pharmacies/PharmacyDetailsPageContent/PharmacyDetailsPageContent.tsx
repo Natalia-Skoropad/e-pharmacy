@@ -18,7 +18,12 @@ import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useToast } from '@e-pharmacy/ui/feedback';
 
 import { useAuth } from '@e-pharmacy/auth/core';
-import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
+
+import {
+  formatAvailableProductsCount,
+  parseWorkingHours,
+} from '@e-pharmacy/utils/formatters';
+
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
 
 import type {
@@ -140,23 +145,6 @@ function renderDescriptionMarkdown(text: string) {
   flushList();
 
   return nodes;
-}
-
-//===================================================================
-
-function renderWorkingHours(value: string) {
-  return value
-    .split(';')
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map((part) => {
-      const [day, ...rest] = part.split(':');
-      const hours = rest.join(':').trim();
-
-      if (!day || !hours) return part;
-
-      return { day: day.trim(), hours };
-    });
 }
 
 //===================================================================
@@ -440,7 +428,7 @@ function PharmacyDetailsPageContent({
                         Working hours
                       </dt>
                       <dd className={css.workingHoursValue}>
-                        {renderWorkingHours(workingHours).map((item) =>
+                        {parseWorkingHours(workingHours).map((item) =>
                           typeof item === 'string' ? (
                             <span key={item}>{item}</span>
                           ) : (

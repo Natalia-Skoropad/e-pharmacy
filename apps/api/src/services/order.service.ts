@@ -92,6 +92,8 @@ type UserDocument = {
   name?: string;
   email?: string;
   pictureUrl?: string;
+  phone?: string;
+  address?: string;
 };
 
 type ProductFallbackMap = Map<string, ProductDocument>;
@@ -139,29 +141,42 @@ function hasCompleteBankDetails(
 
 //===============================================================
 
-async function hydrateOrderPharmacyPaymentDetails(
+async function hydrateOrderPharmacyDetails(
   order: OrderDocument
 ): Promise<OrderDocument> {
-  if (hasCompleteBankDetails(order.pharmacySnapshot.bankDetails)) return order;
-
   const pharmacy = await Pharmacy.findById(order.pharmacyId)
-    .select('bankDetails email')
-    .lean<Pick<PharmacyDocument, 'bankDetails' | 'email'> | null>();
+    .select('bankDetails email phone address city workingHours')
+    .lean<
+      | Pick<
+          PharmacyDocument,
+          | 'bankDetails'
+          | 'email'
+          | 'phone'
+          | 'address'
+          | 'city'
+          | 'workingHours'
+        >
+      | null
+    >();
 
-  const bankDetails = pharmacy?.bankDetails;
+  if (!pharmacy) return order;
 
-  if (!pharmacy || !bankDetails || !hasCompleteBankDetails(bankDetails)) {
-    return order;
-  }
+  const bankDetails = hasCompleteBankDetails(pharmacy.bankDetails)
+    ? pharmacy.bankDetails
+    : order.pharmacySnapshot.bankDetails;
 
   return {
     ...order,
     pharmacySnapshot: {
       ...order.pharmacySnapshot,
-      ...(order.pharmacySnapshot.email || !pharmacy.email
-        ? {}
-        : { email: pharmacy.email }),
-      bankDetails,
+      ...(pharmacy.email ? { email: pharmacy.email } : {}),
+      ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
+      ...(pharmacy.address ? { address: pharmacy.address } : {}),
+      ...(pharmacy.city ? { city: pharmacy.city } : {}),
+      ...(pharmacy.workingHours
+        ? { workingHours: pharmacy.workingHours }
+        : {}),
+      ...(bankDetails ? { bankDetails } : {}),
     },
   };
 }
@@ -249,6 +264,8 @@ function serializeOrder(
     clientId: order.userId.toString(),
     clientName: clientUser?.name ?? undefined,
     clientPhotoUrl: clientUser?.pictureUrl ?? undefined,
+    ...(clientUser?.phone ? { clientPhone: clientUser.phone } : {}),
+    ...(clientUser?.address ? { clientAddress: clientUser.address } : {}),
     ...(clientUser
       ? {
           client: {
@@ -276,6 +293,9 @@ function serializeOrder(
       : {}),
     ...(getPharmacyAddress(order.pharmacySnapshot)
       ? { pharmacyAddress: getPharmacyAddress(order.pharmacySnapshot) }
+      : {}),
+    ...(order.pharmacySnapshot.workingHours
+      ? { pharmacyWorkingHours: order.pharmacySnapshot.workingHours }
       : {}),
     totalItems: order.totalItems,
     totalPrice: order.totalPrice,
@@ -309,6 +329,7 @@ function serializeOrder(
     delivery: order.delivery,
     ...(order.comment ? { comment: order.comment } : {}),
     ...(order.managerComment ? { managerComment: order.managerComment } : {}),
+    managerCommentsCount: managerComments.length,
     ...(managerComments.length ? { managerComments } : {}),
     ...(order.pharmacySnapshot.bankDetails
       ? { bankDetails: order.pharmacySnapshot.bankDetails }
@@ -668,6 +689,9 @@ export async function checkoutOrderService(
               ...(pharmacy.city ? { city: pharmacy.city } : {}),
               ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
               ...(pharmacy.email ? { email: pharmacy.email } : {}),
+              ...(pharmacy.workingHours
+                ? { workingHours: pharmacy.workingHours }
+                : {}),
               ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
               ...(typeof pharmacy.rating === 'number'
                 ? { rating: pharmacy.rating }
@@ -1106,13 +1130,13 @@ export async function updateOrderDetailsService(
       );
     }
 
-    updatedOrder = await hydrateOrderPharmacyPaymentDetails(updatedOrder);
+    updatedOrder = await hydrateOrderPharmacyDetails(updatedOrder);
 
     const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
       getOrderProductFallbacks(updatedOrder),
       getOrderOfferFallbacks(updatedOrder),
       User.findById(updatedOrder.userId)
-        .select('name email pictureUrl')
+        .select('name email pictureUrl phone address')
         .lean<UserDocument | null>(),
     ]);
 
@@ -1404,13 +1428,13 @@ export async function updateOrderStatusService(
       );
     }
 
-    updatedOrder = await hydrateOrderPharmacyPaymentDetails(updatedOrder);
+    updatedOrder = await hydrateOrderPharmacyDetails(updatedOrder);
 
     const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
       getOrderProductFallbacks(updatedOrder),
       getOrderOfferFallbacks(updatedOrder),
       User.findById(updatedOrder.userId)
-        .select('name email pictureUrl')
+        .select('name email pictureUrl phone address')
         .lean<UserDocument | null>(),
     ]);
 
@@ -1812,7 +1836,7 @@ export async function getOrdersService(
   const clients = await User.find({
     _id: { $in: orders.map((order) => order.userId) },
   })
-    .select('name email pictureUrl')
+    .select('name email pictureUrl phone address')
     .lean<UserDocument[]>();
 
   const clientMap: ClientUserMap = new Map(
@@ -1862,13 +1886,13 @@ export async function getOrderByIdService(
 
   if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
 
-  const hydratedOrder = await hydrateOrderPharmacyPaymentDetails(order);
+  const hydratedOrder = await hydrateOrderPharmacyDetails(order);
 
   const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
     getOrderProductFallbacks(hydratedOrder),
     getOrderOfferFallbacks(hydratedOrder),
     User.findById(order.userId)
-      .select('name email pictureUrl')
+      .select('name email pictureUrl phone address')
       .lean<UserDocument | null>(),
   ]);
 

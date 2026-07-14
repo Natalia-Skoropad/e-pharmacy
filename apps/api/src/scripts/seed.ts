@@ -957,6 +957,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
     city: string;
     phone: string;
     email: string;
+    workingHours?: string;
     imageUrl?: string;
     rating?: number;
     reviewsCount?: number;
@@ -988,7 +989,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
 
   const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
     .select(
-      '_id name address city phone email imageUrl rating reviewsCount bankDetails'
+      '_id name address city phone email workingHours imageUrl rating reviewsCount bankDetails'
     )
     .lean<SeedPharmacyLean | null>();
 
@@ -1179,6 +1180,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
     city: pharmacy.city,
     phone: pharmacy.phone,
     email: pharmacy.email,
+    ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     rating: pharmacy.rating ?? 0,
     reviewsCount: pharmacy.reviewsCount ?? 0,

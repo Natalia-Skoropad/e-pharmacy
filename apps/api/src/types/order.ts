@@ -23,6 +23,7 @@ export type OrderPharmacySnapshot = {
   city?: string;
   phone?: string;
   email?: string;
+  workingHours?: string;
   imageUrl?: string;
   rating?: number;
   reviewsCount?: number;
@@ -148,6 +149,8 @@ export type OrderResponseDto = {
   clientId?: string;
   clientName?: string;
   clientPhotoUrl?: string;
+  clientPhone?: string;
+  clientAddress?: string;
   client?: {
     id: string;
     name: string;
@@ -160,6 +163,7 @@ export type OrderResponseDto = {
   pharmacyPhone?: string;
   pharmacyEmail?: string;
   pharmacyAddress?: string;
+  pharmacyWorkingHours?: string;
   totalItems: number;
   totalPrice: number;
   currency: Currency;
@@ -190,6 +194,7 @@ export type OrderResponseDto = {
   delivery: Delivery;
   comment?: string;
   managerComment?: string;
+  managerCommentsCount: number;
   managerComments?: Array<{
     id: string;
     text: string;

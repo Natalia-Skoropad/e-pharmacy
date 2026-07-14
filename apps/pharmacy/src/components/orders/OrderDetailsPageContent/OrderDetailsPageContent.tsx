@@ -27,6 +27,8 @@ import {
   Button,
   ButtonLink,
   CloseIconButton,
+  CountLabel,
+  LazyLoadButton,
   LoadingSpinner,
   QuantityCounter,
   RadioOption,
@@ -61,10 +63,16 @@ import type {
   OrderStatus,
   PaymentMethod,
   Product,
+  ProductCategory,
 } from '@e-pharmacy/types';
 
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
-import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
+import {
+  formatPrice,
+  formatShortDate,
+  formatStockLabel,
+  parseWorkingHours,
+} from '@e-pharmacy/utils/formatters';
 
 import {
   USER_ADDRESS_MAX_LENGTH,
@@ -128,22 +136,48 @@ type PendingPriceQuantityChange = Readonly<{
 
 type OrderTab = 'products' | 'delivery' | 'payment' | 'comment' | 'history';
 
+type CategoryOption = Readonly<{
+  value: ProductCategory;
+  label: string;
+}>;
+
+type OrderHistoryEntry =
+  | Readonly<{
+      id: string;
+      occurredAt: string;
+      kind: 'status';
+      entry: PharmacyOrderDetails['statusHistory'][number];
+    }>
+  | Readonly<{
+      id: string;
+      occurredAt: string;
+      kind: 'activity';
+      entry: PharmacyOrderActivityHistoryItem;
+    }>;
+
 //===================================================================
 
 const PRODUCT_PICKER_LIMIT = 150;
 const COMMENTS_PER_PAGE = 5;
 const MANAGER_COMMENT_MAX_LENGTH = 1000;
 const REJECTION_REASON_MAX_LENGTH = 500;
+const HISTORY_INITIAL_VISIBLE_COUNT = 5;
+const HISTORY_LOAD_STEP = 5;
 
 //===================================================================
 
-const ORDER_TABS: Array<TabItem<OrderTab>> = [
-  { value: 'products', label: 'Order products' },
-  { value: 'delivery', label: 'Delivery method' },
-  { value: 'payment', label: 'Payment method' },
-  { value: 'comment', label: 'Order comment' },
-  { value: 'history', label: 'Order history' },
-];
+function getOrderTabs(
+  commentsCount: number,
+  historyCount: number
+): Array<TabItem<OrderTab>> {
+  return [
+    { value: 'products', label: 'Order products' },
+    { value: 'delivery', label: 'Delivery method' },
+    { value: 'payment', label: 'Payment method' },
+    { value: 'comment', label: `Order comments (${commentsCount})` },
+    { value: 'history', label: `Order history (${historyCount})` },
+  ];
+}
 
 //===================================================================
 
@@ -204,6 +238,46 @@ function getProductOffer(product: Product, pharmacyId: string) {
 
 //===================================================================
 
+function getCategoryOptionsFromProducts(
+  products: Product[]
+): CategoryOption[] {
+  const categories = new Set(products.map((product) => product.category));
+
+  return [...categories]
+    .map((category) => ({
+      value: category,
+      label: PRODUCT_CATEGORY_LABELS[category] ?? category,
+    }))
+    .sort((first, second) => first.label.localeCompare(second.label));
+}
+
+//===================================================================
+
+function getOrderHistoryEntries(
+  order: PharmacyOrderDetails
+): OrderHistoryEntry[] {
+  return [
+    ...order.statusHistory.map((entry, index) => ({
+      id: `status-${entry.status}-${entry.changedAt}-${index}`,
+      occurredAt: entry.changedAt,
+      kind: 'status' as const,
+      entry,
+    })),
+    ...order.activityHistory.map((entry, index) => ({
+      id: `activity-${entry.type}-${entry.occurredAt}-${entry.productOfferId}-${index}`,
+      occurredAt: entry.occurredAt,
+      kind: 'activity' as const,
+      entry,
+    })),
+  ].sort(
+    (first, second) =>
+      new Date(second.occurredAt).getTime() -
+      new Date(first.occurredAt).getTime()
+  );
+}
+
+//===================================================================
+
 function getOrderItemsPayload(items: PharmacyOrderItem[]) {
   return items.map((item) => ({
     productOfferId: item.productOfferId,
@@ -223,8 +297,8 @@ function getOrderFormState(order: PharmacyOrderDetails) {
   return {
     deliveryMethod: order.deliveryMethod,
     recipientName: order.recipientName ?? order.client,
-    recipientPhone: order.recipientPhone ?? '',
-    deliveryAddress: order.deliveryAddress ?? '',
+    recipientPhone: order.recipientPhone ?? order.clientPhone ?? '',
+    deliveryAddress: order.deliveryAddress ?? order.clientAddress ?? '',
     paymentMethod: order.paymentMethod,
   };
 }
@@ -378,11 +452,45 @@ function ProductPickerModal({
   const titleId = useId();
   const searchId = useId();
   const [searchValue, setSearchValue] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<
+    ProductCategory | 'all'
+  >('all');
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
+  const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
-  const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [addingOfferId, setAddingOfferId] = useState<string | null>(null);
+  const [addingProductIds, setAddingProductIds] = useState<Set<string>>(
+    () => new Set()
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadCategories() {
+      try {
+        const response = await getProducts(
+          {
+            pharmacyId: order.pharmacyId,
+            inStock: true,
+            page: 1,
+            perPage: PRODUCT_PICKER_LIMIT,
+          },
+          { signal: controller.signal }
+        );
+
+        setCategoryOptions(getCategoryOptionsFromProducts(response.items));
+      } catch {
+        if (!controller.signal.aborted) {
+          setError('Could not load product categories for this pharmacy.');
+        }
+      }
+    }
+
+    void loadCategories();
+
+    return () => controller.abort();
+  }, [order.pharmacyId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -397,13 +505,15 @@ function ProductPickerModal({
             inStock: true,
             page: 1,
             perPage: PRODUCT_PICKER_LIMIT,
+            category:
+              selectedCategory === 'all' ? undefined : selectedCategory,
             keyword: searchValue.trim() || undefined,
           },
           { signal: controller.signal }
         );
 
         setProducts(response.items);
-        setTotal(response.total);
+        setAvailableProductsCount(response.total);
       } catch {
         if (!controller.signal.aborted) {
           setError('Could not load products from this pharmacy.');
@@ -417,72 +527,139 @@ function ProductPickerModal({
       controller.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [order.pharmacyId, searchValue]);
+  }, [order.pharmacyId, searchValue, selectedCategory]);
+
+  const handleAddProduct = async (product: Product) => {
+    if (addingProductIds.has(product.id)) return;
+
+    setAddingProductIds((current) => {
+      const next = new Set(current);
+      next.add(product.id);
+      return next;
+    });
+
+    try {
+      await onAddProduct(product);
+    } finally {
+      setAddingProductIds((current) => {
+        const next = new Set(current);
+        next.delete(product.id);
+        return next;
+      });
+    }
+  };
 
   return (
     <ModalRoot>
       <ModalBase
-        labelledBy={titleId}
+        className={css.productModalBackdrop}
         dialogClassName={css.productModal}
+        labelledBy={titleId}
         onClose={onClose}
       >
-        <div className={css.modalHead}>
+        <div className={css.productModalHead}>
           <div>
-            <p className={css.modalKicker}>Add products to order</p>
-            <h2 className={css.modalTitle} id={titleId}>
-              Products in this pharmacy
+            <p className={css.productModalKicker}>{order.pharmacyName}</p>
+            <h2 className={css.productModalTitle} id={titleId}>
+              Continue shopping
             </h2>
           </div>
 
-          <CloseIconButton onClick={onClose} />
+          <CloseIconButton
+            className={css.productModalCloseButton}
+            onClick={onClose}
+          />
         </div>
 
-        <div className={css.searchRow}>
+        <div className={css.productModalSearchBlock}>
           <SearchInput
             id={searchId}
             label="Search products"
             value={searchValue}
-            placeholder="Product name or article"
+            placeholder="Add one more product"
             isActive={Boolean(searchValue)}
             onChange={setSearchValue}
           />
 
-          <p className={css.availableCount}>{formatAvailableItems(total)}</p>
+          <p className={css.productModalAvailableCount}>
+            {formatStockLabel(availableProductsCount)}
+          </p>
         </div>
 
-        {error ? <p className={css.errorText}>{error}</p> : null}
+        {categoryOptions.length > 0 ? (
+          <div
+            className={css.productModalCategories}
+            aria-label="Product categories in this pharmacy"
+          >
+            <button
+              className={
+                selectedCategory === 'all'
+                  ? css.productModalCategoryActive
+                  : css.productModalCategory
+              }
+              type="button"
+              aria-pressed={selectedCategory === 'all'}
+              onClick={() => setSelectedCategory('all')}
+            >
+              All
+            </button>
 
-        <div className={css.modalResults}>
-          {isLoading ? <LoadingSpinner label="Loading products..." /> : null}
+            {categoryOptions.map((category) => (
+              <button
+                className={
+                  selectedCategory === category.value
+                    ? css.productModalCategoryActive
+                    : css.productModalCategory
+                }
+                type="button"
+                key={category.value}
+                aria-pressed={selectedCategory === category.value}
+                onClick={() => setSelectedCategory(category.value)}
+              >
+                {category.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {error ? (
+          <p className={css.productModalNotice} role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        <div className={css.productModalResults}>
+          {isLoading ? (
+            <LoadingSpinner label="Loading pharmacy products..." />
+          ) : null}
 
           {!isLoading && products.length === 0 ? (
-            <p className={css.metaText}>
+            <p className={css.productModalStatus}>
               No matching products in this pharmacy.
             </p>
           ) : null}
 
           {!isLoading && products.length > 0 ? (
-            <ul className={css.modalProductList}>
+            <ul className={css.productModalList}>
               {products.map((product) => {
                 const offer = getProductOffer(product, order.pharmacyId);
-                const existingItem = offer
-                  ? order.items.find((item) => item.productOfferId === offer.id)
-                  : undefined;
-                const isAlreadyAdded = Boolean(existingItem);
-                const availableQuantity =
-                  existingItem?.availableQuantity ??
-                  offer?.availableQuantity ??
-                  0;
-                const imageSrc = getProductImageSrc(product.imageUrl);
+                const isInOrder = Boolean(
+                  offer &&
+                    order.items.some(
+                      (item) => item.productOfferId === offer.id
+                    )
+                );
+                const isAdding = addingProductIds.has(product.id);
                 const categoryLabel =
                   PRODUCT_CATEGORY_LABELS[product.category] ?? product.category;
+                const imageSrc = getProductImageSrc(product.imageUrl);
 
                 return (
-                  <li className={css.modalProductItem} key={product.id}>
-                    <div className={css.modalProductImageWrap}>
+                  <li className={css.productModalItem} key={product.id}>
+                    <div className={css.productModalImageWrap}>
                       {imageSrc ? (
                         <ShimmerImage
-                          className={css.modalProductImage}
+                          className={css.productModalImage}
                           src={imageSrc}
                           alt={product.name}
                           sizes="72px"
@@ -490,7 +667,7 @@ function ProductPickerModal({
                         />
                       ) : (
                         <div
-                          className={css.modalProductFallback}
+                          className={css.productModalImageFallback}
                           aria-hidden="true"
                         >
                           <SvgIcon name="icon-shopping-cart" size={24} />
@@ -498,41 +675,47 @@ function ProductPickerModal({
                       )}
                     </div>
 
-                    <div className={css.modalProductInfo}>
-                      <h3>{product.name}</h3>
-                      <p>{categoryLabel}</p>
-                      <span>{formatAvailableItems(availableQuantity)}</span>
+                    <div className={css.productModalInfo}>
+                      <h3 className={css.productModalName}>{product.name}</h3>
+                      <p className={css.productModalMeta}>{categoryLabel}</p>
+                      {product.manufacturer ? (
+                        <p className={css.productModalManufacturer}>
+                          {product.manufacturer}
+                        </p>
+                      ) : null}
                     </div>
 
-                    <p className={css.modalProductPrice}>
+                    <p className={css.productModalPrice}>
                       {formatPrice(offer?.price ?? product.price)}
                     </p>
 
                     <Button
+                      className={
+                        isInOrder
+                          ? css.productModalInOrderButton
+                          : css.productModalAddButton
+                      }
                       type="button"
                       size="sm"
-                      variant={isAlreadyAdded ? 'secondary' : 'primary'}
-                      isLoading={addingOfferId === offer?.id}
+                      variant={isInOrder ? 'secondary' : 'primary'}
                       disabled={
                         !offer ||
-                        availableQuantity < 1 ||
-                        isAlreadyAdded ||
-                        Boolean(addingOfferId)
+                        offer.availableQuantity < 1 ||
+                        isInOrder ||
+                        isAdding
                       }
-                      onClick={async () => {
-                        if (!offer) return;
-
-                        setAddingOfferId(offer.id);
-
-                        try {
-                          await onAddProduct(product);
-                        } finally {
-                          setAddingOfferId(null);
-                        }
-                      }}
+                      onClick={() => void handleAddProduct(product)}
                     >
-                      <ShoppingCart size={18} aria-hidden="true" />
-                      {isAlreadyAdded ? 'Added' : 'Add'}
+                      {isInOrder ? (
+                        'In order'
+                      ) : isAdding ? (
+                        'Adding...'
+                      ) : (
+                        <>
+                          <ShoppingCart size={18} aria-hidden="true" />
+                          Add
+                        </>
+                      )}
                     </Button>
                   </li>
                 );
@@ -651,9 +834,22 @@ function DeliveryTab({
   onDeliveryAddressChange: (value: string) => void;
   onSave: () => void;
 }>) {
+  const workingHours = parseWorkingHours(order.pharmacyWorkingHours ?? '');
+
   return (
     <section className={css.methodCard} aria-labelledby="delivery-title">
-      <h2 id="delivery-title">Delivery method</h2>
+      <div className={css.methodHeader}>
+        <h2 id="delivery-title">Delivery method</h2>
+
+        <Button
+          className={css.tabSaveButton}
+          type="button"
+          disabled={!isEditable || isUpdating}
+          onClick={onSave}
+        >
+          Save delivery method
+        </Button>
+      </div>
 
       <div className={css.methodGrid}>
         <fieldset
@@ -698,10 +894,21 @@ function DeliveryTab({
 
                 <li>
                   <Clock size={18} aria-hidden="true" />
-                  <span>
-                    Use the approved pharmacy working hours from the public
-                    profile.
-                  </span>
+                  {workingHours.length > 0 ? (
+                    <span className={css.workingHoursList}>
+                      {workingHours.map((item, index) =>
+                        typeof item === 'string' ? (
+                          <span key={`${item}-${index}`}>{item}</span>
+                        ) : (
+                          <span key={`${item.day}-${index}`}>
+                            <strong>{item.day}:</strong> {item.hours}
+                          </span>
+                        )
+                      )}
+                    </span>
+                  ) : (
+                    <span>Working hours are not specified.</span>
+                  )}
                 </li>
 
                 {order.pharmacyAddress ? (
@@ -778,15 +985,6 @@ function DeliveryTab({
           )}
         </div>
       </div>
-
-      <Button
-        className={css.tabSaveButton}
-        type="button"
-        disabled={!isEditable || isUpdating}
-        onClick={onSave}
-      >
-        Save delivery method
-      </Button>
     </section>
   );
 }
@@ -817,7 +1015,22 @@ function PaymentTab({
 
   return (
     <section className={css.methodCard} aria-labelledby="payment-title">
-      <h2 id="payment-title">Payment method</h2>
+      <div className={css.methodHeader}>
+        <h2 id="payment-title">Payment method</h2>
+
+        <Button
+          className={css.tabSaveButton}
+          type="button"
+          disabled={
+            !isEditable ||
+            isUpdating ||
+            (paymentMethod === 'bank_transfer' && !bankDetails)
+          }
+          onClick={onSave}
+        >
+          Save payment method
+        </Button>
+      </div>
 
       <div className={css.methodGrid}>
         <fieldset
@@ -915,19 +1128,6 @@ function PaymentTab({
           )}
         </div>
       </div>
-
-      <Button
-        className={css.tabSaveButton}
-        type="button"
-        disabled={
-          !isEditable ||
-          isUpdating ||
-          (paymentMethod === 'bank_transfer' && !bankDetails)
-        }
-        onClick={onSave}
-      >
-        Save payment method
-      </Button>
     </section>
   );
 }
@@ -977,7 +1177,12 @@ function ManagerCommentTab({
           </p>
         </div>
 
-        <span className={css.commentCount}>{totalComments}</span>
+        <CountLabel
+          className={css.tabCountLabel}
+          shown={comments.length}
+          total={totalComments}
+          label="comments"
+        />
       </div>
 
       <div className={css.commentComposer}>
@@ -1107,25 +1312,17 @@ function getOrderActivityLabel(
 
 //===================================================================
 
-function HistoryTab({ order }: Readonly<{ order: PharmacyOrderDetails }>) {
-  const historyEntries = [
-    ...order.statusHistory.map((entry, index) => ({
-      id: `status-${entry.status}-${entry.changedAt}-${index}`,
-      occurredAt: entry.changedAt,
-      kind: 'status' as const,
-      entry,
-    })),
-    ...order.activityHistory.map((entry, index) => ({
-      id: `activity-${entry.type}-${entry.occurredAt}-${entry.productOfferId}-${index}`,
-      occurredAt: entry.occurredAt,
-      kind: 'activity' as const,
-      entry,
-    })),
-  ].sort(
-    (first, second) =>
-      new Date(second.occurredAt).getTime() -
-      new Date(first.occurredAt).getTime()
+function HistoryTab({
+  historyEntries,
+  rejectionReason,
+}: Readonly<{
+  historyEntries: OrderHistoryEntry[];
+  rejectionReason?: string;
+}>) {
+  const [visibleCount, setVisibleCount] = useState(
+    HISTORY_INITIAL_VISIBLE_COUNT
   );
+  const visibleEntries = historyEntries.slice(0, visibleCount);
 
   return (
     <section className={css.methodCard} aria-labelledby="history-title">
@@ -1137,11 +1334,23 @@ function HistoryTab({ order }: Readonly<{ order: PharmacyOrderDetails }>) {
           </p>
         </div>
 
-        <span className={css.historyCount}>{historyEntries.length}</span>
+        <CountLabel
+          className={css.tabCountLabel}
+          shown={visibleEntries.length}
+          total={historyEntries.length}
+          label="history events"
+        />
       </div>
 
+      {rejectionReason ? (
+        <div className={css.rejectionBox}>
+          <h3>Rejection reason</h3>
+          <p>{rejectionReason}</p>
+        </div>
+      ) : null}
+
       <ol className={css.historyList}>
-        {historyEntries.map((historyEntry) => {
+        {visibleEntries.map((historyEntry) => {
           if (historyEntry.kind === 'status') {
             const entry = historyEntry.entry;
 
@@ -1205,12 +1414,14 @@ function HistoryTab({ order }: Readonly<{ order: PharmacyOrderDetails }>) {
         })}
       </ol>
 
-      {order.rejectionReason ? (
-        <div className={css.rejectionBox}>
-          <h3>Rejection reason</h3>
-          <p>{order.rejectionReason}</p>
-        </div>
-      ) : null}
+      <LazyLoadButton
+        visibleCount={visibleEntries.length}
+        totalCount={historyEntries.length}
+        label="Show more history"
+        onLoadMore={() =>
+          setVisibleCount((current) => current + HISTORY_LOAD_STEP)
+        }
+      />
     </section>
   );
 }
@@ -1306,8 +1517,13 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
             items: [],
             page: 1,
             perPage: COMMENTS_PER_PAGE,
-            total: 0,
-            totalPages: 1,
+            total: loadedOrder.managerCommentsCount,
+            totalPages: Math.max(
+              1,
+              Math.ceil(
+                loadedOrder.managerCommentsCount / COMMENTS_PER_PAGE
+              )
+            ),
           });
           setCommentsError('');
         }
@@ -1370,6 +1586,16 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
 
     return () => window.clearTimeout(timeoutId);
   }, [activeTab, commentsPage, loadComments, orderIdForComments]);
+
+  const historyEntries = useMemo(
+    () => (order ? getOrderHistoryEntries(order) : []),
+    [order]
+  );
+
+  const orderTabs = useMemo(
+    () => getOrderTabs(commentsData.total, historyEntries.length),
+    [commentsData.total, historyEntries.length]
+  );
 
   const isEditable = order?.status === 'in_progress';
   const statusModalText = pendingStatus
@@ -1542,9 +1768,20 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
 
   const handleDeliveryMethodChange = (value: DeliveryMethod) => {
     setDeliveryMethod(value);
+    setDeliveryTouchedFields({});
 
-    if (value === 'pickup') {
-      setDeliveryTouchedFields({});
+    if (value !== 'postal_delivery' || !order) return;
+
+    if (!recipientName.trim()) {
+      setRecipientName(sanitizeName(order.recipientName ?? order.client));
+    }
+
+    if (!recipientPhone.trim() && order.clientPhone) {
+      setRecipientPhone(sanitizePhone(order.clientPhone));
+    }
+
+    if (!deliveryAddress.trim() && order.clientAddress) {
+      setDeliveryAddress(sanitizeAddress(order.clientAddress));
     }
   };
 
@@ -1811,7 +2048,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       <section className={css.contentCard}>
         <div className={css.tabsWrap}>
           <Tabs
-            items={ORDER_TABS}
+            items={orderTabs}
             activeValue={activeTab}
             ariaLabel="Order details tabs"
             mobileVisibleCount={1}
@@ -1898,7 +2135,12 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
             />
           ) : null}
 
-          {activeTab === 'history' ? <HistoryTab order={order} /> : null}
+          {activeTab === 'history' ? (
+            <HistoryTab
+              historyEntries={historyEntries}
+              rejectionReason={order.rejectionReason}
+            />
+          ) : null}
         </div>
       </section>
 
