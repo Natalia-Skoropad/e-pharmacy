@@ -648,6 +648,32 @@
   opacity: 0.55;
 }
 
+.historyHeader {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.historyHeader > div {
+  display: grid;
+  gap: 6px;
+}
+
+.historyCount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  height: 36px;
+  padding-inline: 10px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: var(--radius-pill);
+}
+
 .historyList {
   padding: 0;
   margin: 0;
@@ -669,16 +695,53 @@
   color: var(--color-accent);
 }
 
-.historyList strong,
-.historyList span,
-.historyList p {
-  display: block;
+.historyContent {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
 }
 
-.historyList span,
-.historyList p {
-  margin-top: 4px;
+.historyContent strong {
+  color: var(--color-text-primary);
+}
+
+.historyContent time {
+  font-size: var(--fz-12);
+  color: var(--color-text-muted);
+}
+
+.historyContent p {
   color: var(--color-text-secondary);
+  line-height: var(--lh-base);
+  overflow-wrap: anywhere;
+}
+
+.historyContent p b {
+  color: var(--color-text-primary);
+}
+
+.historyIncrease,
+.historyDecrease {
+  display: inline;
+  margin: 0;
+  font-weight: var(--fw-bold);
+}
+
+.historyIncrease {
+  color: var(--color-accent);
+}
+
+.historyDecrease {
+  color: var(--color-error);
+}
+
+.historyPriceChange {
+  padding: 8px 10px;
+  margin-top: 4px;
+  font-size: var(--fz-13);
+  background-color: var(--color-warning-light);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-md);
 }
 
 .rejectionBox {

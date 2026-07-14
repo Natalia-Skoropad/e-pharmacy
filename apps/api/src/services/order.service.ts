@@ -32,6 +32,7 @@ import type {
 } from '../schemas/order.schema';
 
 import type {
+  OrderActivityHistoryItem,
   OrderEntity,
   OrderItemEntity,
   OrderResponseDto,
@@ -285,6 +286,19 @@ function serializeOrder(
       changedAt: entry.changedAt.toISOString(),
       changedBy: entry.changedBy.toString(),
       ...(entry.comment ? { comment: entry.comment } : {}),
+    })),
+    activityHistory: (order.activityHistory ?? []).map((entry) => ({
+      type: entry.type,
+      occurredAt: entry.occurredAt.toISOString(),
+      changedBy: entry.changedBy.toString(),
+      productId: entry.productId.toString(),
+      productOfferId: entry.productOfferId.toString(),
+      productName: entry.productName,
+      previousQuantity: entry.previousQuantity,
+      quantity: entry.quantity,
+      quantityDelta: entry.quantityDelta,
+      previousUnitPrice: entry.previousUnitPrice,
+      unitPrice: entry.unitPrice,
     })),
     ...(order.rejectionReason
       ? { rejectionReason: order.rejectionReason }
@@ -686,6 +700,19 @@ export async function checkoutOrderService(
                 changedBy: new Types.ObjectId(clientUserId),
               },
             ],
+            activityHistory: orderItems.map((item) => ({
+              type: 'product_added',
+              occurredAt: createdAt,
+              changedBy: new Types.ObjectId(clientUserId),
+              productId: item.productId,
+              productOfferId: item.productOfferId,
+              productName: item.productSnapshot.name,
+              previousQuantity: 0,
+              quantity: item.quantity,
+              quantityDelta: item.quantity,
+              previousUnitPrice: item.unitPrice,
+              unitPrice: item.unitPrice,
+            })),
             orderNumber,
           },
         ],
@@ -838,6 +865,7 @@ export async function updateOrderDetailsService(
 
       const set: Record<string, unknown> = {};
       const unset: Record<string, ''> = {};
+      let activityHistoryEntries: OrderActivityHistoryItem[] = [];
 
       if (input.paymentMethod) {
         set.paymentMethod = input.paymentMethod;
@@ -862,6 +890,7 @@ export async function updateOrderDetailsService(
       }
 
       if (input.items) {
+        const changedAt = new Date();
         const requested = new Map<string, number>();
 
         for (const item of input.items) {
@@ -928,6 +957,7 @@ export async function updateOrderDetailsService(
                 orderId: order._id,
                 orderNumber: order.orderNumber,
                 orderStatus: order.status,
+                occurredAt: changedAt,
                 comment: `Order ${order.orderNumber} quantity was reduced by ${releasedQuantity}: reserved −${releasedQuantity}, available +${releasedQuantity}; physical stock did not change.`,
               }
             );
@@ -949,6 +979,7 @@ export async function updateOrderDetailsService(
                 orderId: order._id,
                 orderNumber: order.orderNumber,
                 orderStatus: order.status,
+                occurredAt: changedAt,
                 comment: `Order ${order.orderNumber} quantity was increased by ${reservedQuantity}: available −${reservedQuantity}, reserved +${reservedQuantity}; physical stock did not change.`,
               }
             );
@@ -960,6 +991,7 @@ export async function updateOrderDetailsService(
               orderId: order._id,
               orderNumber: order.orderNumber,
               orderStatus: order.status,
+              occurredAt: changedAt,
               comment: `Product was added to order ${order.orderNumber}: available −${nextQuantity}, reserved +${nextQuantity}; physical stock did not change.`,
             });
           }
@@ -994,6 +1026,53 @@ export async function updateOrderDetailsService(
           }
         );
 
+        const nextByOfferId = new Map(
+          nextItems.map((item) => [String(item.productOfferId), item])
+        );
+        const changedOfferIds = new Set([
+          ...existingByOfferId.keys(),
+          ...nextByOfferId.keys(),
+        ]);
+
+        activityHistoryEntries = [...changedOfferIds].flatMap((offerId) => {
+          const previousItem = existingByOfferId.get(offerId);
+          const nextItem = nextByOfferId.get(offerId);
+          const previousQuantity = previousItem?.quantity ?? 0;
+          const quantity = nextItem?.quantity ?? 0;
+
+          if (previousQuantity === quantity) return [];
+
+          const sourceItem = nextItem ?? previousItem;
+
+          if (!sourceItem) return [];
+
+          const type =
+            previousQuantity === 0
+              ? 'product_added'
+              : quantity === 0
+                ? 'product_removed'
+                : quantity > previousQuantity
+                  ? 'quantity_increased'
+                  : 'quantity_decreased';
+
+          return [
+            {
+              type,
+              occurredAt: changedAt,
+              changedBy: new Types.ObjectId(actor.id),
+              productId: sourceItem.productId,
+              productOfferId: sourceItem.productOfferId,
+              productName: sourceItem.productSnapshot.name,
+              previousQuantity,
+              quantity,
+              quantityDelta: quantity - previousQuantity,
+              previousUnitPrice:
+                previousItem?.unitPrice ?? nextItem?.unitPrice ?? 0,
+              unitPrice: nextItem?.unitPrice ?? previousItem?.unitPrice ?? 0,
+            },
+          ];
+        });
+
         set.items = nextItems;
         set.totalItems = nextItems.reduce(
           (sum, item) => sum + item.quantity,
@@ -1005,14 +1084,19 @@ export async function updateOrderDetailsService(
         );
       }
 
-      updatedOrder = await Order.findByIdAndUpdate(
-        orderId,
-        {
-          ...(Object.keys(set).length ? { $set: set } : {}),
-          ...(Object.keys(unset).length ? { $unset: unset } : {}),
-        },
-        { returnDocument: 'after', runValidators: true, session }
-      ).lean<OrderDocument | null>();
+      const update: Record<string, unknown> = {
+        ...(Object.keys(set).length ? { $set: set } : {}),
+        ...(Object.keys(unset).length ? { $unset: unset } : {}),
+        ...(activityHistoryEntries.length
+          ? { $push: { activityHistory: { $each: activityHistoryEntries } } }
+          : {}),
+      };
+
+      updatedOrder = await Order.findByIdAndUpdate(orderId, update, {
+        returnDocument: 'after',
+        runValidators: true,
+        session,
+      }).lean<OrderDocument | null>();
     });
 
     if (!updatedOrder) {

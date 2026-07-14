@@ -346,7 +346,8 @@
 
 .valueIn,
 .valueOut,
-.valueReserve {
+.valueReserve,
+.valueRelease {
   font-weight: var(--fw-bold);
 }
 
@@ -360,6 +361,10 @@
 
 .valueReserve {
   color: var(--color-warning);
+}
+
+.valueRelease {
+  color: var(--color-text-secondary);
 }
 
 .filtersBackdrop {

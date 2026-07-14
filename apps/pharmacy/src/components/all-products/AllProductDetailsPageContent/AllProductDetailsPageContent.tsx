@@ -334,17 +334,6 @@ function getReservedQuantity(offer: ProductOffer | null): number {
 
 //===================================================================
 
-function getAvailableQuantity(offer: ProductOffer | null): number {
-  if (!offer) return 0;
-
-  return (
-    offer.availableQuantity ??
-    Math.max(0, offer.totalQuantity - offer.reservedQuantity)
-  );
-}
-
-//===================================================================
-
 function dispatchBreadcrumbLabel(label: string): void {
   if (typeof window === 'undefined') return;
 
@@ -421,13 +410,15 @@ function getProductCharacteristics(product: Product): CharacteristicItem[] {
 
 function getSingleProductStatisticsCounts(
   offer: ProductOffer | null,
-  stockBalance?: ProductStockBalance | null
+  stockBalance?: ProductStockBalance | null,
+  activeOrdersReservedQuantity?: number
 ): OwnProductStatisticsCounts {
   const stockQuantity = stockBalance?.stockQuantity ?? getStockQuantity(offer);
   const reservedQuantity =
-    stockBalance?.reservedQuantity ?? getReservedQuantity(offer);
-  const availableQuantity =
-    stockBalance?.availableQuantity ?? getAvailableQuantity(offer);
+    activeOrdersReservedQuantity ??
+    stockBalance?.reservedQuantity ??
+    getReservedQuantity(offer);
+  const availableQuantity = Math.max(0, stockQuantity - reservedQuantity);
   const currentPrice = offer?.price ?? 0;
 
   return {
@@ -453,7 +444,7 @@ function getSingleProductStatisticsCounts(
 //===================================================================
 
 function getMovementQuantity(movement: ProductStockMovement): number {
-  if (movement.eventType === 'reserve') return -movement.quantity;
+  if (movement.eventType === 'release') return -movement.quantity;
   if (movement.eventType === 'write_off') return -movement.quantity;
 
   return movement.quantity;
@@ -473,9 +464,6 @@ function getStockMovementRows(
   return movements
     .map((movement): StockMovementRow => {
       const quantityValue = getMovementQuantity(movement);
-      const balance = movement.balanceAfter;
-      const balanceExplanation = `Balance after operation: products in stock ${balance.stockQuantity}, reserved ${balance.reservedQuantity}, available ${balance.availableQuantity} (${balance.stockQuantity} − ${balance.reservedQuantity} = ${balance.availableQuantity}).`;
-
       return {
         id: movement.id,
         ...(movement.orderId ? { orderId: movement.orderId } : {}),
@@ -491,7 +479,7 @@ function getStockMovementRows(
         ...(movement.orderStatus ? { orderStatus: movement.orderStatus } : {}),
         source: STOCK_SOURCE_LABELS[movement.source],
         sourceValue: movement.source,
-        comment: `${movement.comment} ${balanceExplanation}`,
+        comment: movement.comment,
       };
     })
     .filter((row) => {
@@ -580,6 +568,22 @@ function getRelatedOrderRows(
       },
     ];
   });
+}
+
+//===================================================================
+
+function getActiveOrdersReservedQuantity(
+  rows: RelatedOrderRow[]
+): number | undefined {
+  if (rows.length === 0) return undefined;
+
+  return rows.reduce(
+    (total, row) =>
+      row.status === 'new' || row.status === 'in_progress'
+        ? total + row.quantityValue
+        : total,
+    0
+  );
 }
 
 //===================================================================
@@ -901,14 +905,16 @@ function AllProductDetailsPageContent({
     : [];
 
   const characteristics = product ? getProductCharacteristics(product) : [];
-  const singleProductStatistics = getSingleProductStatisticsCounts(
-    bannerStatus ? null : currentOffer,
-    bannerStatus ? null : stockBalance
-  );
-
   const relatedOrderRows = product
     ? getRelatedOrderRows(product.id, relatedOrders)
     : [];
+  const activeOrdersReservedQuantity =
+    getActiveOrdersReservedQuantity(relatedOrderRows);
+  const singleProductStatistics = getSingleProductStatisticsCounts(
+    bannerStatus ? null : currentOffer,
+    bannerStatus ? null : stockBalance,
+    bannerStatus ? undefined : activeOrdersReservedQuantity
+  );
 
   const stockMovementRows = getStockMovementRows(
     stockMovements,
@@ -973,13 +979,27 @@ function AllProductDetailsPageContent({
     () => [
       {
         key: 'date',
-        title: <TableHeaderTitle parts={['Event', 'date']} />,
+        title: <TableHeaderTitle parts={['Last', 'changed']} />,
         render: (row: StockMovementRow) => row.date,
       },
       {
         key: 'eventType',
         title: <TableHeaderTitle parts={['Event', 'type']} />,
-        render: (row: StockMovementRow) => row.eventType,
+        render: (row: StockMovementRow) => (
+          <strong
+            className={
+              row.eventTypeValue === 'reserve'
+                ? css.valueReserve
+                : row.eventTypeValue === 'release'
+                  ? css.valueRelease
+                  : row.quantityValue < 0
+                    ? css.valueOut
+                    : css.valueIn
+            }
+          >
+            {row.eventType}
+          </strong>
+        ),
       },
       {
         key: 'quantity',
@@ -989,9 +1009,11 @@ function AllProductDetailsPageContent({
             className={
               row.eventTypeValue === 'reserve'
                 ? css.valueReserve
-                : row.quantityValue < 0
-                  ? css.valueOut
-                  : css.valueIn
+                : row.eventTypeValue === 'release'
+                  ? css.valueRelease
+                  : row.quantityValue < 0
+                    ? css.valueOut
+                    : css.valueIn
             }
           >
             {row.quantity}
@@ -1397,7 +1419,7 @@ function AllProductDetailsPageContent({
                                 className={css.countLabel}
                                 shown={paginatedStockMovementRows.length}
                                 total={stockMovementRows.length}
-                                label="events"
+                                label="records"
                               />
 
                               <div className={css.rowsControl}>
@@ -1660,7 +1682,7 @@ function AllProductDetailsPageContent({
         >
           <DateFilter
             id="stock-movement-date-filter"
-            label="Event date"
+            label="Last changed date"
             value={stockFilters.date}
             isActive={Boolean(stockFilters.date.from || stockFilters.date.to)}
             applyOnSubmit

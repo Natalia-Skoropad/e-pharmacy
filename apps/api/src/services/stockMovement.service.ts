@@ -427,6 +427,256 @@ async function backfillLegacyStockHistory(
 
 //===============================================================
 
+type CurrentOrderSnapshot = {
+  _id: Types.ObjectId;
+  status: OrderStatus;
+  orderNumber: string;
+  items: Array<{
+    productOfferId: Types.ObjectId;
+    quantity: number;
+    unitPrice: number;
+  }>;
+  statusHistory: Array<{
+    status: OrderStatus;
+    changedAt: Date;
+  }>;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type StockMovementDocument = StockMovementEntity & { _id: Types.ObjectId };
+
+type ActiveOrderReservationSnapshot = Pick<
+  CurrentOrderSnapshot,
+  'items'
+>;
+
+//===============================================================
+
+async function reconcileOfferReservationBalance(
+  offer: StockOfferSnapshot,
+  session: mongoose.ClientSession
+): Promise<StockOfferSnapshot> {
+  const activeOrders = await Order.find({
+    pharmacyId: offer.pharmacyId,
+    status: { $in: ['new', 'in_progress'] },
+    'items.productOfferId': offer._id,
+  })
+    .select('items.productOfferId items.quantity')
+    .session(session)
+    .lean<ActiveOrderReservationSnapshot[]>();
+
+  const reservedQuantity = activeOrders.reduce(
+    (ordersTotal, order) =>
+      ordersTotal +
+      order.items.reduce(
+        (orderTotal, item) =>
+          String(item.productOfferId) === String(offer._id)
+            ? orderTotal + item.quantity
+            : orderTotal,
+        0
+      ),
+    0
+  );
+
+  const availableQuantity = offer.totalQuantity - reservedQuantity;
+
+  assertStockBalance({
+    stockQuantity: offer.totalQuantity,
+    reservedQuantity,
+    availableQuantity,
+  });
+
+  if (
+    offer.reservedQuantity === reservedQuantity &&
+    offer.availableQuantity === availableQuantity
+  ) {
+    return offer;
+  }
+
+  const reconciledOffer = await ProductOffer.findByIdAndUpdate(
+    offer._id,
+    {
+      $set: {
+        reservedQuantity,
+        availableQuantity,
+      },
+    },
+    { returnDocument: 'after', runValidators: true, session }
+  ).lean<StockOfferSnapshot | null>();
+
+  if (!reconciledOffer) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product offer was not found.');
+  }
+
+  return reconciledOffer;
+}
+
+//===============================================================
+
+function getLatestOrderStockChangeDate(order: CurrentOrderSnapshot): Date {
+  const latestStatusDate = (order.statusHistory ?? []).reduce<Date | null>(
+    (latest, entry) =>
+      !latest || entry.changedAt.getTime() > latest.getTime()
+        ? entry.changedAt
+        : latest,
+    null
+  );
+
+  return latestStatusDate ?? order.updatedAt ?? order.createdAt;
+}
+
+//===============================================================
+
+function getAggregatedOrderComment(
+  status: OrderStatus,
+  orderNumber: string,
+  quantity: number
+): string {
+  const unitLabel = quantity === 1 ? 'unit' : 'units';
+
+  if (status === 'successful') {
+    return `Successful order ${orderNumber} wrote off ${quantity} reserved ${unitLabel} from the warehouse.`;
+  }
+
+  if (status === 'rejected') {
+    return `Rejected order ${orderNumber} released ${quantity} reserved ${unitLabel} back to available stock.`;
+  }
+
+  if (status === 'in_progress') {
+    return `In progress order ${orderNumber} currently reserves ${quantity} ${unitLabel} from available stock.`;
+  }
+
+  return `New order ${orderNumber} reserves ${quantity} ${unitLabel} from available stock.`;
+}
+
+//===============================================================
+
+function getLastMovement(
+  movements: StockMovementDocument[],
+  predicate?: (movement: StockMovementDocument) => boolean
+): StockMovementDocument | undefined {
+  for (let index = movements.length - 1; index >= 0; index -= 1) {
+    const movement = movements[index];
+
+    if (!predicate || predicate(movement)) return movement;
+  }
+
+  return undefined;
+}
+
+//===============================================================
+
+function aggregateOrderMovements(
+  movements: StockMovementDocument[],
+  order: CurrentOrderSnapshot | undefined,
+  productOfferId: Types.ObjectId
+) {
+  const latestMovement = getLastMovement(movements);
+
+  if (!latestMovement) return null;
+
+  const orderId = String(latestMovement.orderId);
+  const orderStatus = order?.status ?? latestMovement.orderStatus;
+  const orderNumber = order?.orderNumber ?? latestMovement.orderNumber;
+
+  if (!orderStatus || !orderNumber) return null;
+
+  const currentItem = order?.items.find(
+    (item) => String(item.productOfferId) === String(productOfferId)
+  );
+
+  let eventMovement = latestMovement;
+  let eventType: StockMovementEventType = latestMovement.eventType;
+  let quantity =
+    latestMovement.quantity ?? getMovementValueQuantity(latestMovement);
+  let unitPrice = latestMovement.unitPrice;
+
+  if (orderStatus === 'successful') {
+    eventMovement =
+      getLastMovement(
+        movements,
+        (movement) => movement.eventType === 'write_off'
+      ) ?? latestMovement;
+    eventType = 'write_off';
+    quantity =
+      eventMovement.quantity ?? getMovementValueQuantity(eventMovement);
+    unitPrice = eventMovement.unitPrice;
+  } else if (orderStatus === 'rejected') {
+    eventMovement =
+      getLastMovement(
+        movements,
+        (movement) =>
+          movement.eventType === 'release' && movement.orderStatus === 'rejected'
+      ) ??
+      getLastMovement(
+        movements,
+        (movement) => movement.eventType === 'release'
+      ) ?? latestMovement;
+    eventType = 'release';
+    quantity =
+      eventMovement.quantity ?? getMovementValueQuantity(eventMovement);
+    unitPrice = eventMovement.unitPrice;
+  } else {
+    if (!currentItem || currentItem.quantity < 1) return null;
+
+    eventType = 'reserve';
+    quantity = currentItem.quantity;
+    unitPrice = currentItem.unitPrice;
+  }
+
+  const orderChangedAt = order ? getLatestOrderStockChangeDate(order) : null;
+  const occurredAt =
+    orderChangedAt &&
+    orderChangedAt.getTime() > latestMovement.occurredAt.getTime()
+      ? orderChangedAt
+      : latestMovement.occurredAt;
+
+  const stockDelta =
+    eventType === 'write_off' ? -quantity : eventMovement.stockDelta;
+  const reservedDelta =
+    eventType === 'reserve'
+      ? quantity
+      : eventType === 'release' || eventType === 'write_off'
+        ? -quantity
+        : eventMovement.reservedDelta;
+  const availableDelta =
+    eventType === 'reserve'
+      ? -quantity
+      : eventType === 'release'
+        ? quantity
+        : eventType === 'write_off'
+          ? 0
+          : eventMovement.availableDelta;
+
+  return {
+    id: `order-${orderId}-${String(productOfferId)}`,
+    occurredAt,
+    eventType,
+    source: 'client_order' as const,
+    quantity,
+    stockDelta,
+    reservedDelta,
+    availableDelta,
+    balanceAfter: {
+      stockQuantity: latestMovement.stockAfter,
+      reservedQuantity: latestMovement.reservedAfter,
+      availableQuantity: latestMovement.availableAfter,
+    },
+    unitPrice,
+    movementValue: quantity * unitPrice,
+    orderId,
+    orderNumber,
+    orderStatus,
+    ...(eventMovement.orderStatus
+      ? { orderStatusAtEvent: eventMovement.orderStatus }
+      : {}),
+    comment: getAggregatedOrderComment(orderStatus, orderNumber, quantity),
+  };
+}
+
+//===============================================================
+
 export async function getProductStockMovementsService(
   productId: string,
   userId: string
@@ -464,7 +714,12 @@ export async function getProductStockMovementsService(
         );
       }
 
-      return backfillLegacyStockHistory(offer, session);
+      const offerWithHistory = await backfillLegacyStockHistory(
+        offer,
+        session
+      );
+
+      return reconcileOfferReservationBalance(offerWithHistory, session);
     });
   } finally {
     await session.endSession();
@@ -478,60 +733,121 @@ export async function getProductStockMovementsService(
     productOfferId: currentOffer._id,
   })
     .sort({ occurredAt: 1, _id: 1 })
-    .lean<Array<StockMovementEntity & { _id: Types.ObjectId }>>();
+    .lean<StockMovementDocument[]>();
 
-  const orderIds = movements.flatMap((movement) =>
-    movement.orderId ? [movement.orderId] : []
-  );
-  const currentOrderStatuses = new Map<string, OrderStatus>();
+  const orderIds = [
+    ...new Set(
+      movements.flatMap((movement) =>
+        movement.orderId ? [String(movement.orderId)] : []
+      )
+    ),
+  ];
+  const ordersById = new Map<string, CurrentOrderSnapshot>();
 
   if (orderIds.length > 0) {
     const orders = await Order.find({ _id: { $in: orderIds } })
-      .select('_id status')
-      .lean<Array<{ _id: Types.ObjectId; status: OrderStatus }>>();
+      .select(
+        '_id status orderNumber items.productOfferId items.quantity items.unitPrice statusHistory createdAt updatedAt'
+      )
+      .lean<CurrentOrderSnapshot[]>();
 
     for (const order of orders) {
-      currentOrderStatuses.set(String(order._id), order.status);
+      ordersById.set(String(order._id), order);
     }
   }
 
-  return {
-    items: movements.map((movement, index) => {
-      const movementValueQuantity =
-        movement.quantity ?? getMovementValueQuantity(movement);
-      const orderId = movement.orderId ? String(movement.orderId) : undefined;
-      const currentOrderStatus = orderId
-        ? currentOrderStatuses.get(orderId)
-        : undefined;
-      const displayedOrderStatus = currentOrderStatus ?? movement.orderStatus;
+  const orderMovementGroups = new Map<string, StockMovementDocument[]>();
+  const rows: Array<{
+    id: string;
+    occurredAt: Date;
+    eventType: StockMovementEventType;
+    source: StockMovementSource;
+    quantity: number;
+    stockDelta: number;
+    reservedDelta: number;
+    availableDelta: number;
+    balanceAfter: {
+      stockQuantity: number;
+      reservedQuantity: number;
+      availableQuantity: number;
+    };
+    unitPrice: number;
+    movementValue: number;
+    orderId?: string;
+    orderNumber?: string;
+    orderStatus?: OrderStatus;
+    orderStatusAtEvent?: OrderStatus;
+    comment: string;
+  }> = [];
 
-      return {
-        id: String(movement._id),
-        sequence: index + 1,
-        occurredAt: movement.occurredAt.toISOString(),
-        eventType: movement.eventType,
-        source: movement.source,
-        quantity: movementValueQuantity,
-        stockDelta: movement.stockDelta,
-        reservedDelta: movement.reservedDelta,
-        availableDelta: movement.availableDelta,
-        balanceAfter: {
-          stockQuantity: movement.stockAfter,
-          reservedQuantity: movement.reservedAfter,
-          availableQuantity: movement.availableAfter,
-        },
-        unitPrice: movement.unitPrice,
-        movementValue: movementValueQuantity * movement.unitPrice,
-        ...(orderId ? { orderId } : {}),
-        ...(movement.orderNumber ? { orderNumber: movement.orderNumber } : {}),
-        ...(displayedOrderStatus ? { orderStatus: displayedOrderStatus } : {}),
-        ...(movement.orderStatus
-          ? { orderStatusAtEvent: movement.orderStatus }
-          : {}),
-        comment: movement.comment,
-      };
-    }),
-    total: movements.length,
+  for (const movement of movements) {
+    if (movement.source === 'client_order' && movement.orderId) {
+      const orderId = String(movement.orderId);
+      const group = orderMovementGroups.get(orderId) ?? [];
+      group.push(movement);
+      orderMovementGroups.set(orderId, group);
+      continue;
+    }
+
+    const eventType =
+      movement.eventType === 'adjustment' && movement.stockDelta > 0
+        ? 'arrival'
+        : movement.eventType;
+    const quantity = movement.quantity ?? getMovementValueQuantity(movement);
+
+    rows.push({
+      id: String(movement._id),
+      occurredAt: movement.occurredAt,
+      eventType,
+      source: movement.source,
+      quantity,
+      stockDelta: movement.stockDelta,
+      reservedDelta: movement.reservedDelta,
+      availableDelta: movement.availableDelta,
+      balanceAfter: {
+        stockQuantity: movement.stockAfter,
+        reservedQuantity: movement.reservedAfter,
+        availableQuantity: movement.availableAfter,
+      },
+      unitPrice: movement.unitPrice,
+      movementValue: quantity * movement.unitPrice,
+      comment: movement.comment,
+    });
+  }
+
+  for (const [orderId, orderMovements] of orderMovementGroups) {
+    const aggregatedMovement = aggregateOrderMovements(
+      orderMovements,
+      ordersById.get(orderId),
+      currentOffer._id
+    );
+
+    if (aggregatedMovement) rows.push(aggregatedMovement);
+  }
+
+  rows.sort(
+    (first, second) =>
+      second.occurredAt.getTime() - first.occurredAt.getTime() ||
+      second.id.localeCompare(first.id)
+  );
+
+  const latestRow = rows[0];
+
+  if (latestRow) {
+    latestRow.balanceAfter = {
+      stockQuantity: currentOffer.totalQuantity,
+      reservedQuantity: currentOffer.reservedQuantity,
+      availableQuantity: currentOffer.availableQuantity,
+    };
+  }
+
+  return {
+    items: rows.map((row, index) => ({
+      ...row,
+      sequence: rows.length - index,
+      occurredAt: row.occurredAt.toISOString(),
+    })),
+    total: rows.length,
     stock: {
       stockQuantity: currentOffer.totalQuantity,
       reservedQuantity: currentOffer.reservedQuantity,

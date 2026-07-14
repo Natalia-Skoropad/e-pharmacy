@@ -16,9 +16,10 @@ import { isProductCategory } from '@e-pharmacy/types/products';
 import type {
   DeliveryMethod,
   EntityId,
+  OrderActivityType,
+  OrderStatus,
   PharmacyBankDetails,
   ProductCategory,
-  OrderStatus,
   PaymentMethod,
 } from '@e-pharmacy/types';
 
@@ -83,6 +84,20 @@ export type PharmacyOrderStatusHistoryItem = Readonly<{
   comment?: string;
 }>;
 
+export type PharmacyOrderActivityHistoryItem = Readonly<{
+  type: OrderActivityType;
+  occurredAt: string;
+  changedBy: EntityId;
+  productId: EntityId;
+  productOfferId: EntityId;
+  productName: string;
+  previousQuantity: number;
+  quantity: number;
+  quantityDelta: number;
+  previousUnitPrice: number;
+  unitPrice: number;
+}>;
+
 export type PharmacyOrderManagerComment = Readonly<{
   id: EntityId;
   text: string;
@@ -100,6 +115,7 @@ export type PharmacyOrderDetails = PharmacyOrderRow &
     managerComment?: string;
     rejectionReason?: string;
     statusHistory: PharmacyOrderStatusHistoryItem[];
+    activityHistory: PharmacyOrderActivityHistoryItem[];
     pharmacyId: EntityId;
     pharmacyPhone?: string;
     pharmacyAddress?: string;
@@ -170,6 +186,21 @@ function isPaymentMethod(value: unknown): value is PaymentMethod {
 
 function isOrderStatus(value: unknown): value is OrderStatus {
   return ORDER_STATUSES.includes(value as OrderStatus);
+}
+
+//===================================================================
+
+const ORDER_ACTIVITY_TYPES = [
+  'product_added',
+  'product_removed',
+  'quantity_increased',
+  'quantity_decreased',
+] as const satisfies readonly OrderActivityType[];
+
+//===================================================================
+
+function isOrderActivityType(value: unknown): value is OrderActivityType {
+  return ORDER_ACTIVITY_TYPES.includes(value as OrderActivityType);
 }
 
 //===================================================================
@@ -388,6 +419,62 @@ function normalizeStatusHistory(
 
 //===================================================================
 
+function normalizeActivityHistory(
+  payload: unknown
+): PharmacyOrderActivityHistoryItem[] {
+  if (!Array.isArray(payload)) return [];
+
+  return payload
+    .map((entry) => {
+      if (!isRecord(entry) || !isOrderActivityType(entry.type)) return null;
+
+      const occurredAt = getStringValue(entry.occurredAt);
+      const changedBy = getStringValue(entry.changedBy);
+      const productId = getStringValue(entry.productId);
+      const productOfferId = getStringValue(entry.productOfferId);
+      const productName = getStringValue(entry.productName);
+      const previousQuantity = getNumberValue(entry.previousQuantity);
+      const quantity = getNumberValue(entry.quantity);
+      const quantityDelta = getNumberValue(entry.quantityDelta);
+      const previousUnitPrice = getNumberValue(entry.previousUnitPrice);
+      const unitPrice = getNumberValue(entry.unitPrice);
+
+      if (
+        !occurredAt ||
+        !changedBy ||
+        !productId ||
+        !productOfferId ||
+        !productName ||
+        previousQuantity === undefined ||
+        quantity === undefined ||
+        quantityDelta === undefined ||
+        previousUnitPrice === undefined ||
+        unitPrice === undefined
+      ) {
+        return null;
+      }
+
+      return {
+        type: entry.type,
+        occurredAt,
+        changedBy,
+        productId,
+        productOfferId,
+        productName,
+        previousQuantity,
+        quantity,
+        quantityDelta,
+        previousUnitPrice,
+        unitPrice,
+      };
+    })
+    .filter((entry): entry is PharmacyOrderActivityHistoryItem =>
+      Boolean(entry)
+    );
+}
+
+//===================================================================
+
 export function normalizePharmacyOrderManagerComment(
   payload: unknown
 ): PharmacyOrderManagerComment | null {
@@ -472,6 +559,7 @@ export function normalizePharmacyOrderDetails(
     currency: 'UAH',
     pharmacyId: getStringValue(payload.pharmacyId) ?? '',
     statusHistory: normalizeStatusHistory(payload.statusHistory),
+    activityHistory: normalizeActivityHistory(payload.activityHistory),
     ...(getStringValue(payload.pharmacyPhone)
       ? { pharmacyPhone: getStringValue(payload.pharmacyPhone) }
       : {}),

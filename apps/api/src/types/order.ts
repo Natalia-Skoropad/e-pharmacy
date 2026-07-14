@@ -9,6 +9,12 @@ export type PaymentMethod = 'cash' | 'bank_transfer';
 export type DeliveryMethod = 'pickup' | 'postal_delivery';
 export type Currency = 'UAH';
 
+export type OrderActivityType =
+  | 'product_added'
+  | 'product_removed'
+  | 'quantity_increased'
+  | 'quantity_decreased';
+
 //===============================================================
 
 export type OrderPharmacySnapshot = {
@@ -58,6 +64,20 @@ export type OrderStatusHistoryItem = {
   comment?: string;
 };
 
+export type OrderActivityHistoryItem = {
+  type: OrderActivityType;
+  occurredAt: Date;
+  changedBy: Types.ObjectId;
+  productId: Types.ObjectId;
+  productOfferId: Types.ObjectId;
+  productName: string;
+  previousQuantity: number;
+  quantity: number;
+  quantityDelta: number;
+  previousUnitPrice: number;
+  unitPrice: number;
+};
+
 export type OrderManagerCommentEntity = {
   _id?: Types.ObjectId;
   text: string;
@@ -90,6 +110,7 @@ export type OrderEntity = {
   managerComments?: OrderManagerCommentEntity[];
   status: OrderStatus;
   statusHistory: OrderStatusHistoryItem[];
+  activityHistory?: OrderActivityHistoryItem[];
   rejectionReason?: string;
   rejectedAt?: Date;
   rejectedBy?: Types.ObjectId;
@@ -148,6 +169,19 @@ export type OrderResponseDto = {
     changedAt: string;
     changedBy: string;
     comment?: string;
+  }>;
+  activityHistory: Array<{
+    type: OrderActivityType;
+    occurredAt: string;
+    changedBy: string;
+    productId: string;
+    productOfferId: string;
+    productName: string;
+    previousQuantity: number;
+    quantity: number;
+    quantityDelta: number;
+    previousUnitPrice: number;
+    unitPrice: number;
   }>;
   rejectionReason?: string;
   rejectedAt?: string;

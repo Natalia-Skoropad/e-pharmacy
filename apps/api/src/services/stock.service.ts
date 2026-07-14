@@ -2,15 +2,19 @@ import mongoose, { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { ProductOffer } from '../models/productOffer.model';
+
 import {
   recordStockMovement,
   type StockMovementContext,
 } from './stockMovement.service';
+
 import { httpError } from '../utils/httpError';
 
 //===============================================================
 
 type StockTarget = string | Types.ObjectId;
+
+//===============================================================
 
 type StockOfferSnapshot = {
   _id: Types.ObjectId;
@@ -21,6 +25,8 @@ type StockOfferSnapshot = {
   availableQuantity: number;
   reservedQuantity: number;
 };
+
+//===============================================================
 
 function assertPositiveQuantity(quantity: number): void {
   if (!Number.isInteger(quantity) || quantity < 1) {
@@ -36,7 +42,7 @@ function assertPositiveQuantity(quantity: number): void {
 async function recordMovementIfNeeded(
   offer: StockOfferSnapshot,
   input: {
-    eventType: 'reserve' | 'release' | 'write_off' | 'adjustment';
+    eventType: 'arrival' | 'reserve' | 'release' | 'write_off' | 'adjustment';
     stockDelta: number;
     reservedDelta: number;
     availableDelta: number;
@@ -254,7 +260,7 @@ export async function setPharmacyOfferStock(
   await recordMovementIfNeeded(
     offer,
     {
-      eventType: 'adjustment',
+      eventType: stockDelta > 0 ? 'arrival' : 'adjustment',
       stockDelta,
       reservedDelta: 0,
       availableDelta: stockDelta,

@@ -10,6 +10,12 @@ export type PaymentMethod = 'cash' | 'bank_transfer';
 export type DeliveryMethod = 'pickup' | 'postal_delivery';
 export type Currency = 'UAH';
 
+export type OrderActivityType =
+  | 'product_added'
+  | 'product_removed'
+  | 'quantity_increased'
+  | 'quantity_decreased';
+
 //=============================================================================
 
 export type Delivery =
@@ -30,6 +36,20 @@ export type OrderStatusHistoryItem = {
   changedAt: ISODateString;
   changedBy: EntityId;
   comment?: string;
+};
+
+export type OrderActivityHistoryItem = {
+  type: OrderActivityType;
+  occurredAt: ISODateString;
+  changedBy: EntityId;
+  productId: EntityId;
+  productOfferId: EntityId;
+  productName: string;
+  previousQuantity: number;
+  quantity: number;
+  quantityDelta: number;
+  previousUnitPrice: number;
+  unitPrice: number;
 };
 
 export type OrderManagerComment = {
@@ -85,6 +105,7 @@ export type Order = {
   currency: Currency;
   status: OrderStatus;
   statusHistory: OrderStatusHistoryItem[];
+  activityHistory: OrderActivityHistoryItem[];
   rejectionReason?: string;
   rejectedAt?: ISODateString;
   rejectedBy?: EntityId;

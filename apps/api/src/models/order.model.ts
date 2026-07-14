@@ -130,6 +130,39 @@ const statusHistorySchema = new Schema(
 
 //===============================================================
 
+const activityHistorySchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: [
+        'product_added',
+        'product_removed',
+        'quantity_increased',
+        'quantity_decreased',
+      ],
+      required: true,
+    },
+
+    occurredAt: { type: Date, required: true },
+    changedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    productOfferId: {
+      type: Schema.Types.ObjectId,
+      ref: 'ProductOffer',
+      required: true,
+    },
+    productName: { type: String, required: true, trim: true },
+    previousQuantity: { type: Number, required: true, min: 0 },
+    quantity: { type: Number, required: true, min: 0 },
+    quantityDelta: { type: Number, required: true },
+    previousUnitPrice: { type: Number, required: true, min: 0 },
+    unitPrice: { type: Number, required: true, min: 0 },
+  },
+  { _id: false, id: false }
+);
+
+//===============================================================
+
 const managerCommentSchema = new Schema(
   {
     text: { type: String, required: true, trim: true, maxlength: 1000 },
@@ -211,6 +244,7 @@ const orderSchema = new Schema<OrderEntity>(
     },
 
     statusHistory: { type: [statusHistorySchema], default: [] },
+    activityHistory: { type: [activityHistorySchema], default: [] },
     rejectionReason: {
       type: String,
       trim: true,

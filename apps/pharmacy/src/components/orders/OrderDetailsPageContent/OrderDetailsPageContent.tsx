@@ -1,7 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+
 import {
+  CircleMinus,
+  CirclePlus,
   Clock,
   Copy,
   CreditCard,
@@ -48,6 +51,7 @@ import {
   ModalRoot,
   OrderCancellationModal,
 } from '@e-pharmacy/ui/modals';
+
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
@@ -58,6 +62,7 @@ import type {
   PaymentMethod,
   Product,
 } from '@e-pharmacy/types';
+
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
@@ -89,6 +94,7 @@ import {
 
 import {
   ORDER_STATUS_LABELS,
+  type PharmacyOrderActivityHistoryItem,
   type PharmacyOrderDetails,
   type PharmacyOrderItem,
   type PharmacyOrderManagerComment,
@@ -113,6 +119,11 @@ type OrderDetailsPageContentProps = Readonly<{
 type PendingStatusChange = Readonly<{
   status: Extract<OrderStatus, 'in_progress' | 'successful' | 'rejected'>;
   rejectionReason?: string;
+}>;
+
+type PendingPriceQuantityChange = Readonly<{
+  item: PharmacyOrderItem;
+  quantity: number;
 }>;
 
 type OrderTab = 'products' | 'delivery' | 'payment' | 'comment' | 'history';
@@ -1084,22 +1095,114 @@ function ManagerCommentTab({
 
 //===================================================================
 
+function getOrderActivityLabel(
+  activity: PharmacyOrderActivityHistoryItem
+): string {
+  if (activity.type === 'product_added') return 'Product added';
+  if (activity.type === 'product_removed') return 'Product removed';
+  if (activity.type === 'quantity_increased') return 'Quantity increased';
+
+  return 'Quantity decreased';
+}
+
+//===================================================================
+
 function HistoryTab({ order }: Readonly<{ order: PharmacyOrderDetails }>) {
+  const historyEntries = [
+    ...order.statusHistory.map((entry, index) => ({
+      id: `status-${entry.status}-${entry.changedAt}-${index}`,
+      occurredAt: entry.changedAt,
+      kind: 'status' as const,
+      entry,
+    })),
+    ...order.activityHistory.map((entry, index) => ({
+      id: `activity-${entry.type}-${entry.occurredAt}-${entry.productOfferId}-${index}`,
+      occurredAt: entry.occurredAt,
+      kind: 'activity' as const,
+      entry,
+    })),
+  ].sort(
+    (first, second) =>
+      new Date(second.occurredAt).getTime() -
+      new Date(first.occurredAt).getTime()
+  );
+
   return (
     <section className={css.methodCard} aria-labelledby="history-title">
-      <h2 id="history-title">Order history</h2>
+      <div className={css.historyHeader}>
+        <div>
+          <h2 id="history-title">Order history</h2>
+          <p className={css.metaText}>
+            Status changes and product updates are shown from newest to oldest.
+          </p>
+        </div>
+
+        <span className={css.historyCount}>{historyEntries.length}</span>
+      </div>
 
       <ol className={css.historyList}>
-        {order.statusHistory.map((entry, index) => (
-          <li key={`${entry.status}-${entry.changedAt}-${index}`}>
-            <History size={18} aria-hidden="true" />
-            <div>
-              <strong>{ORDER_STATUS_LABELS[entry.status]}</strong>
-              <span>{formatOrderDate(entry.changedAt)}</span>
-              {entry.comment ? <p>{entry.comment}</p> : null}
-            </div>
-          </li>
-        ))}
+        {historyEntries.map((historyEntry) => {
+          if (historyEntry.kind === 'status') {
+            const entry = historyEntry.entry;
+
+            return (
+              <li key={historyEntry.id}>
+                <History size={18} aria-hidden="true" />
+                <div className={css.historyContent}>
+                  <strong>{ORDER_STATUS_LABELS[entry.status]}</strong>
+                  <time dateTime={entry.changedAt}>
+                    {formatOrderDate(entry.changedAt)}
+                  </time>
+                  {entry.comment ? <p>{entry.comment}</p> : null}
+                </div>
+              </li>
+            );
+          }
+
+          const activity = historyEntry.entry;
+          const isIncrease = activity.quantityDelta > 0;
+          const priceChanged =
+            activity.previousUnitPrice !== activity.unitPrice;
+          const ActivityIcon =
+            activity.type === 'product_added'
+              ? ShoppingCart
+              : activity.type === 'product_removed'
+                ? Trash2
+                : isIncrease
+                  ? CirclePlus
+                  : CircleMinus;
+
+          return (
+            <li key={historyEntry.id}>
+              <ActivityIcon size={18} aria-hidden="true" />
+              <div className={css.historyContent}>
+                <strong>{getOrderActivityLabel(activity)}</strong>
+                <time dateTime={activity.occurredAt}>
+                  {formatOrderDate(activity.occurredAt)}
+                </time>
+                <p>
+                  <b>{activity.productName}</b>: {activity.previousQuantity} →{' '}
+                  {activity.quantity}{' '}
+                  <span
+                    className={
+                      isIncrease ? css.historyIncrease : css.historyDecrease
+                    }
+                  >
+                    ({activity.quantityDelta > 0 ? '+' : ''}
+                    {activity.quantityDelta})
+                  </span>
+                </p>
+                {priceChanged ? (
+                  <p className={css.historyPriceChange}>
+                    Unit price changed from{' '}
+                    {formatPrice(activity.previousUnitPrice)} to{' '}
+                    {formatPrice(activity.unitPrice)}.
+                  </p>
+                ) : null}
+              </div>
+            </li>
+          );
+        })}
       </ol>
 
       {order.rejectionReason ? (
@@ -1128,6 +1231,9 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [productToRemove, setProductToRemove] =
     useState<PharmacyOrderItem | null>(null);
+
+  const [pendingPriceQuantityChange, setPendingPriceQuantityChange] =
+    useState<PendingPriceQuantityChange | null>(null);
 
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>('pickup');
@@ -1334,6 +1440,20 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     }
   };
 
+  const applyQuantityChange = (item: PharmacyOrderItem, quantity: number) => {
+    if (!order || !isEditable || isUpdatingOrder) return;
+
+    const nextItems = order.items
+      .map((orderItem) =>
+        orderItem.productOfferId === item.productOfferId
+          ? { ...orderItem, quantity }
+          : orderItem
+      )
+      .filter((orderItem) => orderItem.quantity > 0);
+
+    void updateOrderDraft({ items: getOrderItemsPayload(nextItems) });
+  };
+
   const handleQuantityChange = (item: PharmacyOrderItem, quantity: number) => {
     if (!order || !isEditable || isUpdatingOrder) return;
 
@@ -1349,22 +1469,11 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       item.currentPrice !== undefined &&
       item.currentPrice !== item.unitPrice
     ) {
-      const shouldContinue = window.confirm(
-        'The product price has changed. If you add one more unit, the current product price will be used.'
-      );
-
-      if (!shouldContinue) return;
+      setPendingPriceQuantityChange({ item, quantity });
+      return;
     }
 
-    const nextItems = order.items
-      .map((orderItem) =>
-        orderItem.productOfferId === item.productOfferId
-          ? { ...orderItem, quantity }
-          : orderItem
-      )
-      .filter((orderItem) => orderItem.quantity > 0);
-
-    void updateOrderDraft({ items: getOrderItemsPayload(nextItems) });
+    applyQuantityChange(item, quantity);
   };
 
   const handleRequestRemoveProduct = (item: PharmacyOrderItem) => {
@@ -1792,6 +1901,46 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
           {activeTab === 'history' ? <HistoryTab order={order} /> : null}
         </div>
       </section>
+
+      <ConfirmationModal
+        isOpen={Boolean(pendingPriceQuantityChange)}
+        title="Product price changed"
+        description={
+          pendingPriceQuantityChange ? (
+            <>
+              {pendingPriceQuantityChange.item.name} now costs{' '}
+              <strong>
+                {formatPrice(
+                  pendingPriceQuantityChange.item.currentPrice ??
+                    pendingPriceQuantityChange.item.unitPrice
+                )}
+              </strong>{' '}
+              instead of{' '}
+              <strong>
+                {formatPrice(pendingPriceQuantityChange.item.unitPrice)}
+              </strong>
+              . Increasing the quantity from{' '}
+              {pendingPriceQuantityChange.item.quantity} to{' '}
+              {pendingPriceQuantityChange.quantity} will use the current price
+              for the updated order line.
+            </>
+          ) : null
+        }
+        confirmLabel="Use current price"
+        cancelLabel="Keep current quantity"
+        isLoading={isUpdatingOrder}
+        onConfirm={() => {
+          const pendingChange = pendingPriceQuantityChange;
+
+          if (!pendingChange) return;
+
+          setPendingPriceQuantityChange(null);
+          applyQuantityChange(pendingChange.item, pendingChange.quantity);
+        }}
+        onCancel={() => {
+          if (!isUpdatingOrder) setPendingPriceQuantityChange(null);
+        }}
+      />
 
       <ConfirmationModal
         isOpen={Boolean(productToRemove)}
