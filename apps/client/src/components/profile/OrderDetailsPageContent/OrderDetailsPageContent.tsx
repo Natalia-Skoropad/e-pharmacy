@@ -24,6 +24,7 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { useAuth } from '@e-pharmacy/auth/core';
 import type { BreadcrumbItem, Order } from '@e-pharmacy/types';
 
@@ -41,6 +42,7 @@ import {
 } from '@/lib/routes';
 
 import { getOrderDetails } from '@/lib/api/browser';
+import { ORDER_STATUS_LABELS } from '@/lib/orders/order-status';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -170,9 +172,10 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
               </p>
             </div>
 
-            <span className={css.statusBadge}>
-              {formatCapitalizedLabel(order.status)}
-            </span>
+            <StatusBadge
+              status={order.status}
+              label={ORDER_STATUS_LABELS[order.status]}
+            />
           </div>
 
           <div className={css.orderShell}>

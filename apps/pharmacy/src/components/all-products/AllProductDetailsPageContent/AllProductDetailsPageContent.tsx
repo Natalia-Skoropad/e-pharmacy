@@ -151,21 +151,17 @@ type RelatedOrdersFilters = Readonly<{
 
 type StockMovementRow = Readonly<{
   id: string;
-  sequence: number;
   orderId?: string;
   date: string;
   dateValue: string;
   eventType: string;
   eventTypeValue: StockMovementEventType;
-  stockDelta: number;
-  reservedDelta: number;
-  availableDelta: number;
-  balanceAfter: ProductStockBalance;
-  unitPrice: string;
-  movementValue: string;
+  quantity: string;
+  quantityValue: number;
+  price: string;
+  totalAmount: string;
   orderNumber: string;
   orderStatus?: OrderStatus;
-  orderStatusAtEvent?: OrderStatus;
   source: string;
   sourceValue: StockMovementSource;
   comment: string;
@@ -456,37 +452,11 @@ function getSingleProductStatisticsCounts(
 
 //===================================================================
 
-function formatStockDelta(value: number): string {
-  if (value === 0) return '0';
+function getMovementQuantity(movement: ProductStockMovement): number {
+  if (movement.eventType === 'reserve') return -movement.quantity;
+  if (movement.eventType === 'write_off') return -movement.quantity;
 
-  return `${value > 0 ? '+' : '−'}${Math.abs(value)}`;
-}
-
-//===================================================================
-
-function formatStockMovementDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return formatShortDate(value);
-
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-}
-
-//===================================================================
-
-function getStockEventClassName(eventType: StockMovementEventType): string {
-  if (eventType === 'arrival') return css.eventArrival;
-  if (eventType === 'reserve') return css.eventReserve;
-  if (eventType === 'release') return css.eventRelease;
-  if (eventType === 'write_off') return css.eventWriteOff;
-
-  return css.eventAdjustment;
+  return movement.quantity;
 }
 
 //===================================================================
@@ -501,29 +471,29 @@ function getStockMovementRows(
   const normalizedComment = commentSearch.trim().toLowerCase();
 
   return movements
-    .map((movement): StockMovementRow => ({
-      id: movement.id,
-      sequence: movement.sequence,
-      ...(movement.orderId ? { orderId: movement.orderId } : {}),
-      date: formatStockMovementDate(movement.occurredAt),
-      dateValue: movement.occurredAt,
-      eventType: STOCK_EVENT_LABELS[movement.eventType],
-      eventTypeValue: movement.eventType,
-      stockDelta: movement.stockDelta,
-      reservedDelta: movement.reservedDelta,
-      availableDelta: movement.availableDelta,
-      balanceAfter: movement.balanceAfter,
-      unitPrice: formatPrice(movement.unitPrice),
-      movementValue: formatPrice(movement.movementValue),
-      orderNumber: movement.orderNumber ?? '—',
-      ...(movement.orderStatus ? { orderStatus: movement.orderStatus } : {}),
-      ...(movement.orderStatusAtEvent
-        ? { orderStatusAtEvent: movement.orderStatusAtEvent }
-        : {}),
-      source: STOCK_SOURCE_LABELS[movement.source],
-      sourceValue: movement.source,
-      comment: movement.comment,
-    }))
+    .map((movement): StockMovementRow => {
+      const quantityValue = getMovementQuantity(movement);
+      const balance = movement.balanceAfter;
+      const balanceExplanation = `Balance after operation: products in stock ${balance.stockQuantity}, reserved ${balance.reservedQuantity}, available ${balance.availableQuantity} (${balance.stockQuantity} − ${balance.reservedQuantity} = ${balance.availableQuantity}).`;
+
+      return {
+        id: movement.id,
+        ...(movement.orderId ? { orderId: movement.orderId } : {}),
+        date: formatShortDate(movement.occurredAt),
+        dateValue: movement.occurredAt,
+        eventType: STOCK_EVENT_LABELS[movement.eventType],
+        eventTypeValue: movement.eventType,
+        quantity: `${quantityValue > 0 ? '+' : ''}${quantityValue}`,
+        quantityValue,
+        price: formatPrice(movement.unitPrice),
+        totalAmount: formatPrice(movement.movementValue),
+        orderNumber: movement.orderNumber ?? '—',
+        ...(movement.orderStatus ? { orderStatus: movement.orderStatus } : {}),
+        source: STOCK_SOURCE_LABELS[movement.source],
+        sourceValue: movement.source,
+        comment: `${movement.comment} ${balanceExplanation}`,
+      };
+    })
     .filter((row) => {
       if (
         filters.eventType !== 'all' &&
@@ -569,7 +539,12 @@ function getStockMovementRows(
       }
 
       return true;
-    });
+    })
+    .sort(
+      (first, second) =>
+        new Date(second.dateValue).getTime() -
+        new Date(first.dateValue).getTime()
+    );
 }
 
 //===================================================================
@@ -997,14 +972,6 @@ function AllProductDetailsPageContent({
   >(
     () => [
       {
-        key: 'sequence',
-        title: 'Step',
-        width: '72px',
-        render: (row: StockMovementRow) => (
-          <span className={css.sequenceBadge}>{row.sequence}</span>
-        ),
-      },
-      {
         key: 'date',
         title: <TableHeaderTitle parts={['Event', 'date']} />,
         render: (row: StockMovementRow) => row.date,
@@ -1012,139 +979,69 @@ function AllProductDetailsPageContent({
       {
         key: 'eventType',
         title: <TableHeaderTitle parts={['Event', 'type']} />,
-        render: (row: StockMovementRow) => (
-          <div className={css.eventCell}>
-            <span
-              className={`${css.eventBadge} ${getStockEventClassName(
-                row.eventTypeValue
-              )}`}
-            >
-              {row.eventType}
-            </span>
-            <small>{row.source}</small>
-          </div>
-        ),
+        render: (row: StockMovementRow) => row.eventType,
       },
       {
-        key: 'stockDelta',
-        title: <TableHeaderTitle parts={['Physical', 'stock Δ']} />,
+        key: 'quantity',
+        title: 'Quantity',
         render: (row: StockMovementRow) => (
           <strong
             className={
-              row.stockDelta > 0
-                ? css.valueIn
-                : row.stockDelta < 0
-                  ? css.valueOut
-                  : css.valueNeutral
-            }
-          >
-            {formatStockDelta(row.stockDelta)}
-          </strong>
-        ),
-      },
-      {
-        key: 'reservedDelta',
-        title: <TableHeaderTitle parts={['Reserved', 'stock Δ']} />,
-        render: (row: StockMovementRow) => (
-          <strong
-            className={
-              row.reservedDelta > 0
+              row.eventTypeValue === 'reserve'
                 ? css.valueReserve
-                : row.reservedDelta < 0
-                  ? row.eventTypeValue === 'write_off'
-                    ? css.valueOut
-                    : css.valueIn
-                  : css.valueNeutral
+                : row.quantityValue < 0
+                  ? css.valueOut
+                  : css.valueIn
             }
           >
-            {formatStockDelta(row.reservedDelta)}
+            {row.quantity}
           </strong>
         ),
       },
       {
-        key: 'availableDelta',
-        title: <TableHeaderTitle parts={['Available', 'stock Δ']} />,
-        render: (row: StockMovementRow) => (
-          <strong
-            className={
-              row.availableDelta > 0
-                ? css.valueIn
-                : row.availableDelta < 0
-                  ? row.eventTypeValue === 'reserve'
-                    ? css.valueReserve
-                    : css.valueOut
-                  : css.valueNeutral
-            }
-          >
-            {formatStockDelta(row.availableDelta)}
-          </strong>
-        ),
+        key: 'price',
+        title: 'Price',
+        render: (row: StockMovementRow) => row.price,
       },
       {
-        key: 'balanceAfter',
-        title: <TableHeaderTitle parts={['Balance', 'after event']} />,
-        render: (row: StockMovementRow) => (
-          <dl className={css.balanceCell}>
-            <div>
-              <dt>Stock</dt>
-              <dd>{row.balanceAfter.stockQuantity}</dd>
-            </div>
-            <div>
-              <dt>Reserved</dt>
-              <dd>{row.balanceAfter.reservedQuantity}</dd>
-            </div>
-            <div>
-              <dt>Available</dt>
-              <dd>{row.balanceAfter.availableQuantity}</dd>
-            </div>
-          </dl>
-        ),
+        key: 'totalAmount',
+        title: <TableHeaderTitle parts={['Total', 'amount']} />,
+        render: (row: StockMovementRow) => row.totalAmount,
       },
       {
-        key: 'value',
-        title: <TableHeaderTitle parts={['Price /', 'movement value']} />,
-        render: (row: StockMovementRow) => (
-          <div className={css.valueCell}>
-            <span>{row.unitPrice}</span>
-            <strong>{row.movementValue}</strong>
-          </div>
-        ),
+        key: 'orderNumber',
+        title: <TableHeaderTitle parts={['Order', 'number']} />,
+        render: (row: StockMovementRow) =>
+          row.orderId ? (
+            <TextActionButton href={getPharmacyOrderPath(row.orderId)}>
+              {row.orderNumber}
+            </TextActionButton>
+          ) : (
+            '—'
+          ),
       },
       {
-        key: 'order',
-        title: <TableHeaderTitle parts={['Order /', 'current status']} />,
-        render: (row: StockMovementRow) => (
-          <div className={css.orderCell}>
-            {row.orderId ? (
-              <TextActionButton href={getPharmacyOrderPath(row.orderId)}>
-                {row.orderNumber}
-              </TextActionButton>
-            ) : (
-              <span>—</span>
-            )}
-
-            {row.orderStatus ? (
-              <StatusBadge
-                status={row.orderStatus}
-                label={ORDER_STATUS_LABELS[row.orderStatus]}
-              />
-            ) : null}
-
-            {row.orderStatusAtEvent &&
-            row.orderStatusAtEvent !== row.orderStatus ? (
-              <small className={css.statusAtEvent}>
-                At event: {ORDER_STATUS_LABELS[row.orderStatusAtEvent]}
-              </small>
-            ) : null}
-          </div>
-        ),
+        key: 'orderStatus',
+        title: <TableHeaderTitle parts={['Order', 'status']} />,
+        render: (row: StockMovementRow) =>
+          row.orderStatus ? (
+            <StatusBadge
+              status={row.orderStatus}
+              label={ORDER_STATUS_LABELS[row.orderStatus]}
+            />
+          ) : (
+            '—'
+          ),
+      },
+      {
+        key: 'source',
+        title: 'Source',
+        render: (row: StockMovementRow) => row.source,
       },
       {
         key: 'comment',
-        title: 'Why the balance changed',
-        render: (row: StockMovementRow) => (
-          <p className={css.movementComment}>{row.comment}</p>
-        ),
+        title: 'Comment',
+        render: (row: StockMovementRow) => row.comment,
       },
     ],
     []
@@ -1446,78 +1343,12 @@ function AllProductDetailsPageContent({
                           className={css.sectionCard}
                           aria-labelledby="stock-movement-title"
                         >
-                          <div className={css.stockMovementHeading}>
-                            <h3
-                              className={css.panelTitle}
-                              id="stock-movement-title"
-                            >
-                              Stock movement
-                            </h3>
-                            <p>
-                              Events are shown from the first stock arrival to
-                              the latest change. Each row shows the exact delta
-                              and the balance immediately after that step.
-                            </p>
-                          </div>
-
-                          {stockBalance ? (
-                            <div className={css.stockExplanation}>
-                              <div className={css.stockFormulaCard}>
-                                <span>Current formula</span>
-                                <strong>
-                                  {stockBalance.stockQuantity} −{' '}
-                                  {stockBalance.reservedQuantity} ={' '}
-                                  {stockBalance.availableQuantity}
-                                </strong>
-                                <p>
-                                  Available products = physical stock − reserved
-                                  products.
-                                </p>
-                              </div>
-
-                              <ol className={css.stockFlow}>
-                                <li>
-                                  <span>1</span>
-                                  <div>
-                                    <strong>Stock arrival</strong>
-                                    <p>
-                                      Physical and available stock increase.
-                                    </p>
-                                  </div>
-                                </li>
-                                <li>
-                                  <span>2</span>
-                                  <div>
-                                    <strong>Order reservation</strong>
-                                    <p>
-                                      Units move from available to reserved;
-                                      physical stock stays unchanged.
-                                    </p>
-                                  </div>
-                                </li>
-                                <li>
-                                  <span>3A</span>
-                                  <div>
-                                    <strong>Successful order</strong>
-                                    <p>
-                                      Physical and reserved stock decrease;
-                                      available stock stays unchanged.
-                                    </p>
-                                  </div>
-                                </li>
-                                <li>
-                                  <span>3B</span>
-                                  <div>
-                                    <strong>Rejected order</strong>
-                                    <p>
-                                      Units return from reserved to available;
-                                      physical stock stays unchanged.
-                                    </p>
-                                  </div>
-                                </li>
-                              </ol>
-                            </div>
-                          ) : null}
+                          <h3
+                            className={css.panelTitle}
+                            id="stock-movement-title"
+                          >
+                            Stock movement
+                          </h3>
 
                           <div className={css.searchGrid}>
                             <SearchInput
@@ -1586,7 +1417,7 @@ function AllProductDetailsPageContent({
                               columns={stockMovementColumns}
                               items={paginatedStockMovementRows}
                               getItemKey={(row) => row.id}
-                              minWidth={1480}
+                              minWidth={0}
                               newestFirst={false}
                               labels={{
                                 empty: 'Stock movement history is empty.',

@@ -18,8 +18,17 @@ import { Order } from '../models/order.model';
 import { Client } from '../models/client.model';
 import { Cart } from '../models/cart.model';
 import { StockMovement } from '../models/stockMovement.model';
-import { reserveOfferStock } from '../services/stock.service';
 import { hashPassword } from '../utils/password';
+
+//===============================================================
+
+const STOCK_MOVEMENT_DEMO_PRODUCT_ID = new Types.ObjectId(
+  '6a4fc8b1e78e187afe81fd99'
+);
+
+const STOCK_MOVEMENT_DEMO_CLIENT_EMAIL = 'nataa@ukr.net';
+const STOCK_MOVEMENT_DEMO_ORDER_PRICE = 1968;
+const STOCK_MOVEMENT_DEMO_CURRENT_PRICE = 2010;
 
 //===============================================================
 
@@ -842,6 +851,9 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
     const rating = Number((4 + (index % 11) * 0.09).toFixed(1));
 
     return {
+      ...(baseName === 'Carvedilol' && variantIndex === 0
+        ? { _id: STOCK_MOVEMENT_DEMO_PRODUCT_ID }
+        : {}),
       name,
       slug: createSlug(name),
       article: `EPH-${String(productNumber).padStart(4, '0')}`,
@@ -939,7 +951,7 @@ async function seedActivePharmacyProductOffers(
 
 async function seedActivePharmacyOrder(): Promise<number> {
   type SeedPharmacyLean = {
-    _id: unknown;
+    _id: Types.ObjectId;
     name: string;
     address: string;
     city: string;
@@ -951,15 +963,8 @@ async function seedActivePharmacyOrder(): Promise<number> {
     bankDetails?: unknown;
   };
 
-  type SeedProductOfferLean = {
-    _id: unknown;
-    productId: unknown;
-    price: number;
-    availableQuantity: number;
-  };
-
   type SeedProductLean = {
-    _id: unknown;
+    _id: Types.ObjectId;
     name: string;
     slug?: string;
     article: string;
@@ -972,24 +977,13 @@ async function seedActivePharmacyOrder(): Promise<number> {
     reviewsCount?: number;
   };
 
-  type SeedOrderItem = {
-    productId: unknown;
-    productOfferId: unknown;
-    productSnapshot: {
-      name: string;
-      slug?: string;
-      article: string;
-      category: string;
-      imageUrl?: string;
-      manufacturer?: string;
-      dosage?: string;
-      packageQuantity?: string | number;
-      rating: number;
-      reviewsCount: number;
-    };
+  type DemoOrderStatus = 'new' | 'in_progress' | 'successful' | 'rejected';
+
+  type DemoOrderConfig = {
+    status: DemoOrderStatus;
     quantity: number;
-    unitPrice: number;
-    totalPrice: number;
+    createdAt: Date;
+    statusChangedAt: Date;
   };
 
   const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
@@ -1000,13 +994,26 @@ async function seedActivePharmacyOrder(): Promise<number> {
 
   if (!pharmacy) return 0;
 
+  const product = await Product.findById(
+    STOCK_MOVEMENT_DEMO_PRODUCT_ID
+  ).lean<SeedProductLean | null>();
+
+  if (!product) return 0;
+
+  const offer = await ProductOffer.findOne({
+    pharmacyId: pharmacy._id,
+    productId: product._id,
+  });
+
+  if (!offer) return 0;
+
   const password = await hashPassword('123456789');
   const clientUser = await User.findOneAndUpdate(
-    { email: 'nata.client@ukr.net' },
+    { email: STOCK_MOVEMENT_DEMO_CLIENT_EMAIL },
     {
       $set: {
         name: 'Nata',
-        email: 'nata.client@ukr.net',
+        email: STOCK_MOVEMENT_DEMO_CLIENT_EMAIL,
         password,
         role: USER_ROLES.CLIENT,
         status: USER_STATUSES.ACTIVE,
@@ -1023,146 +1030,360 @@ async function seedActivePharmacyOrder(): Promise<number> {
     }
   );
 
+  const additionalFavoritePharmacies = await Pharmacy.find({
+    _id: { $ne: pharmacy._id },
+    status: PHARMACY_STATUSES.ACTIVE,
+  })
+    .sort({ name: 1, _id: 1 })
+    .limit(20)
+    .select('_id')
+    .lean<Array<{ _id: Types.ObjectId }>>();
+
   await Client.findOneAndUpdate(
     { userId: clientUser._id },
     {
-      $setOnInsert: {
+      $set: {
         userId: clientUser._id,
         favoriteProductIds: [],
-        favoritePharmacyIds: [],
+        favoritePharmacyIds: [
+          pharmacy._id,
+          ...additionalFavoritePharmacies.map((item) => item._id),
+        ],
       },
     },
-    { upsert: true, runValidators: true }
+    { upsert: true, runValidators: true, setDefaultsOnInsert: true }
   );
 
   await Promise.all([
     Order.deleteMany({ pharmacyId: pharmacy._id }),
     Cart.deleteMany({ clientUserId: clientUser._id }),
+    StockMovement.deleteMany({ productOfferId: offer._id }),
   ]);
 
-  const offers = await ProductOffer.find({
-    pharmacyId: pharmacy._id,
-    availableQuantity: { $gt: 0 },
-  })
-    .sort({ createdAt: 1 })
-    .limit(16)
-    .lean<SeedProductOfferLean[]>();
+  const orderConfigs: DemoOrderConfig[] = [
+    {
+      status: 'new',
+      quantity: 10,
+      createdAt: new Date('2026-07-10T09:00:00.000Z'),
+      statusChangedAt: new Date('2026-07-10T09:00:00.000Z'),
+    },
+    {
+      status: 'in_progress',
+      quantity: 10,
+      createdAt: new Date('2026-07-11T09:00:00.000Z'),
+      statusChangedAt: new Date('2026-07-11T10:00:00.000Z'),
+    },
+    {
+      status: 'rejected',
+      quantity: 10,
+      createdAt: new Date('2026-07-12T08:00:00.000Z'),
+      statusChangedAt: new Date('2026-07-12T10:00:00.000Z'),
+    },
+    {
+      status: 'successful',
+      quantity: 7,
+      createdAt: new Date('2026-07-13T08:00:00.000Z'),
+      statusChangedAt: new Date('2026-07-13T10:00:00.000Z'),
+    },
+  ];
 
-  if (!offers.length) return 0;
-
-  const products = await Product.find({
-    _id: { $in: offers.map((offer) => offer.productId) },
-  }).lean<SeedProductLean[]>();
-
-  const productMap = new Map(
-    products.map((product) => [String(product._id), product])
-  );
-
-  const quantities = [3, 3, 2, 4, 1, 3, 3, 2, 3, 1, 2, 2, 1, 5, 1, 6];
-
-  const items = offers
-    .map((offer, index): SeedOrderItem | null => {
-      const product = productMap.get(String(offer.productId));
-      const quantity = Math.min(
-        quantities[index] ?? 1,
-        offer.availableQuantity
-      );
-
-      if (!product) return null;
-
-      return {
-        productId: offer.productId,
-        productOfferId: offer._id,
-        productSnapshot: {
-          name: product.name,
-          ...(product.slug ? { slug: product.slug } : {}),
-          article: product.article,
-          category: product.category,
-          ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
-          ...(product.manufacturer
-            ? { manufacturer: product.manufacturer }
-            : {}),
-          ...(product.dosage ? { dosage: product.dosage } : {}),
-          ...(product.packageQuantity
-            ? { packageQuantity: product.packageQuantity }
-            : {}),
-          rating: product.rating ?? 0,
-          reviewsCount: product.reviewsCount ?? 0,
-        },
-        quantity,
-        unitPrice: offer.price,
-        totalPrice: quantity * offer.price,
-      };
-    })
-    .filter((item): item is SeedOrderItem => item !== null);
-
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
-  const createdAt = new Date('2026-07-09T14:33:13.000Z');
-
-  const orderId = new Types.ObjectId();
-  const orderNumber = 'EP-20260709-173313-BOECC9FC';
-
-  for (const item of items) {
-    await reserveOfferStock(
-      item.productOfferId as Types.ObjectId,
-      item.quantity,
-      undefined,
-      {
-        source: 'client_order',
-        orderId,
-        orderNumber,
-        orderStatus: 'new',
-        occurredAt: createdAt,
-        comment: `Order ${orderNumber} reserved ${item.quantity} unit${item.quantity === 1 ? '' : 's'}: available −${item.quantity}, reserved +${item.quantity}; physical stock did not change.`,
-      }
-    );
+  function padDatePart(value: number): string {
+    return String(value).padStart(2, '0');
   }
 
-  await Order.create({
-    _id: orderId,
-    userId: clientUser._id,
-    pharmacyId: pharmacy._id,
-    pharmacySnapshot: {
-      name: pharmacy.name,
-      address: pharmacy.address,
-      city: pharmacy.city,
-      phone: pharmacy.phone,
-      email: pharmacy.email,
-      imageUrl: pharmacy.imageUrl,
-      rating: pharmacy.rating ?? 0,
-      reviewsCount: pharmacy.reviewsCount ?? 0,
-      bankDetails: pharmacy.bankDetails,
-    },
-    items,
-    totalItems,
-    totalPrice,
-    currency: 'UAH',
-    paymentMethod: 'bank_transfer',
-    delivery: {
-      method: 'postal_delivery',
-      details: {
-        recipientName: 'Nata',
-        recipientPhone: '+380968016907',
-        address: '27 Wellness Street, Lviv, Lviv',
-      },
-    },
-    comment:
-      'Pharmacy products are non-returnable and non-exchangeable after confirmation. Please check the order carefully before payment.',
-    status: 'new',
-    statusHistory: [
+  function createSeedOrderNumber(
+    orderId: Types.ObjectId,
+    createdAt: Date
+  ): string {
+    const datePart = [
+      createdAt.getUTCFullYear(),
+      padDatePart(createdAt.getUTCMonth() + 1),
+      padDatePart(createdAt.getUTCDate()),
+    ].join('');
+    const timePart = [
+      padDatePart(createdAt.getUTCHours()),
+      padDatePart(createdAt.getUTCMinutes()),
+      padDatePart(createdAt.getUTCSeconds()),
+    ].join('');
+
+    return `EP-${datePart}-${timePart}-${orderId
+      .toString()
+      .slice(-8)
+      .toUpperCase()}`;
+  }
+
+  function createStatusHistory(config: DemoOrderConfig) {
+    const history: Array<{
+      status: DemoOrderStatus;
+      changedAt: Date;
+      changedBy: Types.ObjectId;
+      comment?: string;
+    }> = [
       {
         status: 'new',
-        changedAt: createdAt,
+        changedAt: config.createdAt,
         changedBy: clientUser._id,
       },
-    ],
-    orderNumber,
-    createdAt,
-    updatedAt: createdAt,
+    ];
+
+    if (config.status !== 'new') {
+      history.push({
+        status: 'in_progress',
+        changedAt:
+          config.status === 'in_progress'
+            ? config.statusChangedAt
+            : new Date(config.createdAt.getTime() + 60 * 60 * 1000),
+        changedBy: clientUser._id,
+      });
+    }
+
+    if (config.status === 'successful') {
+      history.push({
+        status: 'successful',
+        changedAt: config.statusChangedAt,
+        changedBy: clientUser._id,
+        comment: 'The pharmacy confirmed and completed the order.',
+      });
+    }
+
+    if (config.status === 'rejected') {
+      history.push({
+        status: 'rejected',
+        changedAt: config.statusChangedAt,
+        changedBy: clientUser._id,
+        comment: 'The pharmacy cancelled the order and released its reserve.',
+      });
+    }
+
+    return history;
+  }
+
+  const productSnapshot = {
+    name: product.name,
+    ...(product.slug ? { slug: product.slug } : {}),
+    article: product.article,
+    category: product.category,
+    ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+    ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
+    ...(product.dosage ? { dosage: product.dosage } : {}),
+    ...(product.packageQuantity
+      ? { packageQuantity: String(product.packageQuantity) }
+      : {}),
+    rating: product.rating ?? 0,
+    reviewsCount: product.reviewsCount ?? 0,
+  };
+
+  const pharmacySnapshot = {
+    name: pharmacy.name,
+    address: pharmacy.address,
+    city: pharmacy.city,
+    phone: pharmacy.phone,
+    email: pharmacy.email,
+    ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+    rating: pharmacy.rating ?? 0,
+    reviewsCount: pharmacy.reviewsCount ?? 0,
+    bankDetails: pharmacy.bankDetails,
+  };
+
+  const seededOrders = orderConfigs.map((config) => {
+    const orderId = new Types.ObjectId();
+    const orderNumber = createSeedOrderNumber(orderId, config.createdAt);
+    const totalPrice = config.quantity * STOCK_MOVEMENT_DEMO_ORDER_PRICE;
+
+    return {
+      _id: orderId,
+      orderNumber,
+      status: config.status,
+      quantity: config.quantity,
+      createdAt: config.createdAt,
+      statusChangedAt: config.statusChangedAt,
+      document: {
+        _id: orderId,
+        userId: clientUser._id,
+        pharmacyId: pharmacy._id,
+        pharmacySnapshot,
+        items: [
+          {
+            productId: product._id,
+            productOfferId: offer._id,
+            productSnapshot,
+            quantity: config.quantity,
+            unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
+            totalPrice,
+          },
+        ],
+        totalItems: config.quantity,
+        totalPrice,
+        currency: 'UAH',
+        paymentMethod:
+          config.status === 'new' || config.status === 'rejected'
+            ? 'cash'
+            : 'bank_transfer',
+        delivery:
+          config.status === 'new' || config.status === 'successful'
+            ? { method: 'pickup' }
+            : {
+                method: 'postal_delivery',
+                details: {
+                  recipientName: 'Nata',
+                  recipientPhone: '+380968016907',
+                  address: '27 Wellness Street, Lviv, Lviv',
+                },
+              },
+        comment: `Demo order for ${product.name}.`,
+        status: config.status,
+        statusHistory: createStatusHistory(config),
+        ...(config.status === 'rejected'
+          ? {
+              rejectionReason:
+                'The order was cancelled for the stock movement demonstration.',
+              rejectedAt: config.statusChangedAt,
+              rejectedBy: clientUser._id,
+            }
+          : {}),
+        orderNumber,
+        createdAt: config.createdAt,
+        updatedAt: config.statusChangedAt,
+      },
+    };
   });
 
-  return 1;
+  await Order.insertMany(seededOrders.map((order) => order.document));
+
+  const [newOrder, inProgressOrder, rejectedOrder, successfulOrder] =
+    seededOrders;
+
+  await StockMovement.insertMany([
+    {
+      productOfferId: offer._id,
+      productId: product._id,
+      pharmacyId: pharmacy._id,
+      eventType: 'arrival',
+      source: 'pharmacy_stock',
+      quantity: 127,
+      stockDelta: 127,
+      reservedDelta: 0,
+      availableDelta: 127,
+      stockAfter: 127,
+      reservedAfter: 0,
+      availableAfter: 127,
+      unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
+      comment: 'Stock arrival added 127 units at 1 968,00 UAH per unit.',
+      occurredAt: new Date('2026-07-09T09:00:00.000Z'),
+    },
+    {
+      productOfferId: offer._id,
+      productId: product._id,
+      pharmacyId: pharmacy._id,
+      eventType: 'reserve',
+      source: 'client_order',
+      quantity: 10,
+      stockDelta: 0,
+      reservedDelta: 10,
+      availableDelta: -10,
+      stockAfter: 127,
+      reservedAfter: 10,
+      availableAfter: 117,
+      unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
+      orderId: newOrder._id,
+      orderNumber: newOrder.orderNumber,
+      orderStatus: 'new',
+      comment: 'New order reserved 10 units from the available stock.',
+      occurredAt: newOrder.createdAt,
+    },
+    {
+      productOfferId: offer._id,
+      productId: product._id,
+      pharmacyId: pharmacy._id,
+      eventType: 'reserve',
+      source: 'client_order',
+      quantity: 10,
+      stockDelta: 0,
+      reservedDelta: 10,
+      availableDelta: -10,
+      stockAfter: 127,
+      reservedAfter: 20,
+      availableAfter: 107,
+      unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
+      orderId: inProgressOrder._id,
+      orderNumber: inProgressOrder.orderNumber,
+      orderStatus: 'in_progress',
+      comment:
+        'In progress order reserved 10 more units from the available stock.',
+      occurredAt: inProgressOrder.statusChangedAt,
+    },
+    {
+      productOfferId: offer._id,
+      productId: product._id,
+      pharmacyId: pharmacy._id,
+      eventType: 'release',
+      source: 'client_order',
+      quantity: 10,
+      stockDelta: 0,
+      reservedDelta: 0,
+      availableDelta: 0,
+      stockAfter: 127,
+      reservedAfter: 20,
+      availableAfter: 107,
+      unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
+      orderId: rejectedOrder._id,
+      orderNumber: rejectedOrder.orderNumber,
+      orderStatus: 'rejected',
+      comment:
+        'Rejected order created and released its own temporary 10-unit reservation in the same lifecycle step. Its net stock change is 0, while the two active orders keep their 20 reserved units.',
+      occurredAt: rejectedOrder.statusChangedAt,
+    },
+    {
+      productOfferId: offer._id,
+      productId: product._id,
+      pharmacyId: pharmacy._id,
+      eventType: 'write_off',
+      source: 'client_order',
+      quantity: 7,
+      stockDelta: -7,
+      reservedDelta: -7,
+      availableDelta: 0,
+      stockAfter: 120,
+      reservedAfter: 13,
+      availableAfter: 107,
+      unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
+      orderId: successfulOrder._id,
+      orderNumber: successfulOrder.orderNumber,
+      orderStatus: 'successful',
+      comment:
+        'Successful order wrote off 7 reserved units from the warehouse.',
+      occurredAt: successfulOrder.statusChangedAt,
+    },
+    {
+      productOfferId: offer._id,
+      productId: product._id,
+      pharmacyId: pharmacy._id,
+      eventType: 'arrival',
+      source: 'pharmacy_stock',
+      quantity: 50,
+      stockDelta: 50,
+      reservedDelta: 0,
+      availableDelta: 50,
+      stockAfter: 170,
+      reservedAfter: 13,
+      availableAfter: 157,
+      unitPrice: STOCK_MOVEMENT_DEMO_CURRENT_PRICE,
+      comment:
+        'Stock arrival added 50 units at the new price of 2 010,00 UAH per unit.',
+      occurredAt: new Date('2026-07-14T09:00:00.000Z'),
+    },
+  ]);
+
+  offer.set({
+    price: STOCK_MOVEMENT_DEMO_CURRENT_PRICE,
+    totalQuantity: 170,
+    reservedQuantity: 13,
+    availableQuantity: 157,
+    updatedAt: new Date('2026-07-14T09:00:00.000Z'),
+  });
+  await offer.save();
+
+  return seededOrders.length;
 }
 
 //===============================================================

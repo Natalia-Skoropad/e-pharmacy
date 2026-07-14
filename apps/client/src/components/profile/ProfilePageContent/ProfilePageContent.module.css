@@ -333,19 +333,6 @@
   color: var(--color-accent-hover);
 }
 
-.statusBadge {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 6px 10px;
-  font-size: var(--fz-12);
-  font-weight: var(--fw-medium);
-  line-height: 1;
-  color: var(--color-accent);
-  background-color: var(--color-accent-light);
-  border-radius: var(--radius-pill);
-}
-
 @media only screen and (max-width: 767.98px) {
   .panelSection > button,
   .emptyState > a,

@@ -224,6 +224,13 @@ export async function recordStockMovement({
     pharmacyId: offer.pharmacyId,
     eventType,
     source: context.source,
+
+    quantity: getMovementValueQuantity({
+      stockDelta,
+      reservedDelta,
+      availableDelta,
+    }),
+
     stockDelta,
     reservedDelta,
     availableDelta,
@@ -312,6 +319,7 @@ async function backfillLegacyStockHistory(
       pharmacyId: offer.pharmacyId,
       eventType: 'arrival',
       source: 'pharmacy_stock',
+      quantity: stockQuantity,
       stockDelta: stockQuantity,
       reservedDelta: 0,
       availableDelta: availableQuantity,
@@ -374,6 +382,7 @@ async function backfillLegacyStockHistory(
       pharmacyId: offer.pharmacyId,
       eventType: event.eventType,
       source: 'client_order',
+      quantity: event.quantity,
       stockDelta: event.eventType === 'write_off' ? -event.quantity : 0,
       reservedDelta:
         event.eventType === 'reserve' ? event.quantity : -event.quantity,
@@ -488,7 +497,8 @@ export async function getProductStockMovementsService(
 
   return {
     items: movements.map((movement, index) => {
-      const movementValueQuantity = getMovementValueQuantity(movement);
+      const movementValueQuantity =
+        movement.quantity ?? getMovementValueQuantity(movement);
       const orderId = movement.orderId ? String(movement.orderId) : undefined;
       const currentOrderStatus = orderId
         ? currentOrderStatuses.get(orderId)
@@ -501,6 +511,7 @@ export async function getProductStockMovementsService(
         occurredAt: movement.occurredAt.toISOString(),
         eventType: movement.eventType,
         source: movement.source,
+        quantity: movementValueQuantity,
         stockDelta: movement.stockDelta,
         reservedDelta: movement.reservedDelta,
         availableDelta: movement.availableDelta,

@@ -17,10 +17,14 @@ export const STOCK_MOVEMENT_SOURCES = [
   'client_order',
 ] as const;
 
+//===============================================================
+
 export type StockMovementEventType =
   (typeof STOCK_MOVEMENT_EVENT_TYPES)[number];
 
 export type StockMovementSource = (typeof STOCK_MOVEMENT_SOURCES)[number];
+
+//===============================================================
 
 export type StockMovementEntity = {
   productOfferId: Schema.Types.ObjectId;
@@ -28,6 +32,7 @@ export type StockMovementEntity = {
   pharmacyId: Schema.Types.ObjectId;
   eventType: StockMovementEventType;
   source: StockMovementSource;
+  quantity?: number;
   stockDelta: number;
   reservedDelta: number;
   availableDelta: number;
@@ -83,6 +88,7 @@ const stockMovementSchema = new Schema<StockMovementEntity>(
       index: true,
     },
 
+    quantity: { type: Number, min: 0, default: undefined },
     stockDelta: { type: Number, required: true },
     reservedDelta: { type: Number, required: true },
     availableDelta: { type: Number, required: true },

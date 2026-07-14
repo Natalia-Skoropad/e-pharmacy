@@ -27,6 +27,7 @@ import {
 import { useAuth } from '@e-pharmacy/auth/core';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import {
   formatCapitalizedLabel,
@@ -73,6 +74,7 @@ import type {
 } from '@e-pharmacy/types';
 
 import { PROFILE_TITLE } from '@/lib/seo';
+import { ORDER_STATUS_LABELS } from '@/lib/orders/order-status';
 
 import {
   ROUTES,
@@ -304,9 +306,10 @@ function ProfilePageContent() {
         key: 'status',
         title: 'Status',
         render: (order) => (
-          <span className={css.statusBadge}>
-            {formatCapitalizedLabel(order.status)}
-          </span>
+          <StatusBadge
+            status={order.status}
+            label={ORDER_STATUS_LABELS[order.status]}
+          />
         ),
       },
     ],
