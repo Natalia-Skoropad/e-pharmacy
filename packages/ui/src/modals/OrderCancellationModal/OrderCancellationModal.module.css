@@ -54,21 +54,6 @@
   resize: none;
 }
 
-.counterValid,
-.counterError {
-  margin-top: 8px;
-  font-size: var(--fz-13);
-  line-height: var(--lh-base);
-}
-
-.counterValid {
-  color: var(--color-accent);
-}
-
-.counterError {
-  color: var(--color-error);
-}
-
 .actions {
   display: flex;
   flex-wrap: wrap;

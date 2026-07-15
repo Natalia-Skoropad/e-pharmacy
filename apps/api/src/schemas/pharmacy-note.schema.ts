@@ -7,7 +7,7 @@ const mongoId = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
 //===============================================================
 
 export const pharmacyNoteParamsSchema = z.object({
-  entityType: z.enum(['client', 'product']),
+  entityType: z.enum(['client', 'product', 'pharmacy']),
   entityId: mongoId,
 });
 

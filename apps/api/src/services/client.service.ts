@@ -30,6 +30,7 @@ type ClientRow = Readonly<{
   successfulOrdersCount: number;
   successfulOrdersAmount: number;
   status: 'active' | 'blocked';
+  statusReason?: string;
 }>;
 
 //===============================================================
@@ -120,6 +121,7 @@ function serializeClient(
       0
     ),
     status: user.status === 'blocked' ? 'blocked' : 'active',
+    ...(user.statusReason ? { statusReason: user.statusReason } : {}),
   };
 }
 

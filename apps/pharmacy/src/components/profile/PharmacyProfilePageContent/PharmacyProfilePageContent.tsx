@@ -30,7 +30,7 @@ import {
   TaxIdInput,
 } from '@e-pharmacy/ui/form-fields';
 
-import { useToast } from '@e-pharmacy/ui/feedback';
+import { EntityComments, useToast } from '@e-pharmacy/ui/feedback';
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { formatOrderDateTime } from '@e-pharmacy/utils/formatters';
@@ -99,7 +99,10 @@ import {
 } from '@e-pharmacy/validation';
 
 import {
+  createPharmacyNote,
+  deletePharmacyNote,
   getActiveSessions,
+  getPharmacyNotes,
   getMyPharmacyProfile,
   revokeActiveSession,
   sendMyPharmacyForVerification,
@@ -116,6 +119,8 @@ import css from './PharmacyProfilePageContent.module.css';
 
 type AuthUser = NonNullable<ReturnType<typeof useAuth>['user']>;
 
+//===================================================================
+
 type ProfileTab =
   | 'data'
   | 'pharmacy-data'
@@ -123,6 +128,7 @@ type ProfileTab =
   | 'payment'
   | 'documents'
   | 'reviews'
+  | 'comments'
   | 'sessions';
 
 type ProfileStatusBadgeVariant =
@@ -151,6 +157,7 @@ const TABS: Array<{ value: ProfileTab; label: string }> = [
   { value: 'payment', label: 'Payment details' },
   { value: 'documents', label: 'Documents' },
   { value: 'reviews', label: 'Reviews' },
+  { value: 'comments', label: 'Comments' },
   { value: 'sessions', label: 'Active sessions' },
 ];
 
@@ -1956,6 +1963,23 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                     initialVisibleCount={INITIAL_VISIBLE_REVIEWS_COUNT}
                     emptyTitle="This pharmacy has no reviews yet."
                     emptyText="Reviews appear only after real client orders are completed and approved."
+                  />
+                </div>
+              ) : null}
+
+              {activeTab === 'comments' ? (
+                <div className={css.tabPanel} role="tabpanel">
+                  <EntityComments
+                    entityKey={`pharmacy:${pharmacy.id}`}
+                    load={(page) =>
+                      getPharmacyNotes('pharmacy', pharmacy.id, page)
+                    }
+                    create={(text) =>
+                      createPharmacyNote('pharmacy', pharmacy.id, text)
+                    }
+                    remove={(id) =>
+                      deletePharmacyNote('pharmacy', pharmacy.id, id)
+                    }
                   />
                 </div>
               ) : null}

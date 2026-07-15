@@ -21,7 +21,7 @@ import {
   Wallet,
 } from 'lucide-react';
 
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 
 import {
   Button,
@@ -42,7 +42,6 @@ import {
 
 import {
   AddressInput,
-  CommentInput,
   NameInput,
   PhoneInput,
 } from '@e-pharmacy/ui/form-fields';
@@ -54,7 +53,7 @@ import {
   OrderCancellationModal,
 } from '@e-pharmacy/ui/modals';
 
-import { useToast } from '@e-pharmacy/ui/feedback';
+import { EntityComments, useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
@@ -106,8 +105,6 @@ import {
   type PharmacyOrderActivityHistoryItem,
   type PharmacyOrderDetails,
   type PharmacyOrderItem,
-  type PharmacyOrderManagerComment,
-  type PharmacyOrderManagerCommentsResponse,
 } from '@/lib/orders/orders';
 
 import {
@@ -160,7 +157,6 @@ type OrderHistoryEntry =
 
 const PRODUCT_PICKER_LIMIT = 150;
 const COMMENTS_PER_PAGE = 10;
-const MANAGER_COMMENT_MAX_LENGTH = 1000;
 const REJECTION_REASON_MAX_LENGTH = 500;
 const HISTORY_INITIAL_VISIBLE_COUNT = 10;
 const HISTORY_LOAD_STEP = 5;
@@ -300,19 +296,6 @@ function getOrderFormState(order: PharmacyOrderDetails) {
     deliveryAddress: order.deliveryAddress ?? order.clientAddress ?? '',
     paymentMethod: order.paymentMethod,
   };
-}
-
-//===================================================================
-
-function getCommentPageItems(currentPage: number, totalPages: number) {
-  const start = Math.max(1, currentPage - 2);
-  const end = Math.min(totalPages, start + 4);
-  const adjustedStart = Math.max(1, end - 4);
-
-  return Array.from(
-    { length: end - adjustedStart + 1 },
-    (_, index) => adjustedStart + index
-  );
 }
 
 //===================================================================
@@ -1131,161 +1114,34 @@ function PaymentTab({
 //===================================================================
 
 function ManagerCommentTab({
-  value,
-  comments,
-  currentPage,
-  totalPages,
+  orderId,
   totalComments,
   isEditable,
-  isLoading,
-  isSaving,
-  deletingCommentId,
-  error,
-  onChange,
-  onSave,
-  onDelete,
-  onPageChange,
+  onTotalChange,
 }: Readonly<{
-  value: string;
-  comments: PharmacyOrderManagerComment[];
-  currentPage: number;
-  totalPages: number;
+  orderId: string;
   totalComments: number;
   isEditable: boolean;
-  isLoading: boolean;
-  isSaving: boolean;
-  deletingCommentId: string | null;
-  error: string;
-  onChange: (value: string) => void;
-  onSave: () => void;
-  onDelete: (comment: PharmacyOrderManagerComment) => void;
-  onPageChange: (page: number) => void;
+  onTotalChange: (total: number) => void;
 }>) {
-  const pageItems = getCommentPageItems(currentPage, totalPages);
-
   return (
-    <section className={css.methodCard} aria-labelledby="manager-comment-title">
-      <div className={css.commentSectionHead}>
-        <h2 id="manager-comment-title">Comments</h2>
-
-        <CountLabel
-          className={css.tabCountLabel}
-          shown={comments.length}
-          total={totalComments}
-          label="comments"
-        />
-      </div>
-
-      <div className={css.commentComposer}>
-        <CommentInput
-          id="manager-comment"
-          name="managerComment"
-          label="New manager comment"
-          placeholder="Write an internal comment for this order..."
-          value={value}
-          error=""
-          isTouched={false}
-          maxLength={MANAGER_COMMENT_MAX_LENGTH}
-          disabled={!isEditable || isSaving}
-          onChange={(event) => onChange(event.target.value)}
-        />
-
-        <Button
-          className={css.tabSaveButton}
-          type="button"
-          isLoading={isSaving}
-          disabled={!isEditable || isSaving || !value.trim()}
-          onClick={onSave}
-        >
-          Add comment
-        </Button>
-      </div>
-
-      <div className={css.savedComments}>
-        <h3>Saved comments</h3>
-
-        {error ? <p className={css.errorText}>{error}</p> : null}
-        {isLoading ? <LoadingSpinner label="Loading comments..." /> : null}
-
-        {!isLoading && !error && comments.length === 0 ? (
-          <p className={css.commentsEmpty}>
-            No manager comments yet. The comment drawer is waiting patiently.
-          </p>
-        ) : null}
-
-        {!isLoading && comments.length > 0 ? (
-          <ul className={css.commentList}>
-            {comments.map((comment) => (
-              <li className={css.commentCard} key={comment.id}>
-                <div className={css.commentCardHead}>
-                  <div>
-                    <strong>Comment</strong>
-                    <time dateTime={comment.createdAt}>
-                      {formatOrderDate(comment.createdAt)}
-                    </time>
-                  </div>
-
-                  <Button
-                    className={css.commentDeleteButton}
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    isLoading={deletingCommentId === comment.id}
-                    disabled={
-                      !isEditable || Boolean(deletingCommentId) || isSaving
-                    }
-                    onClick={() => onDelete(comment)}
-                  >
-                    <Trash2 size={17} aria-hidden="true" />
-                    Delete
-                  </Button>
-                </div>
-
-                <p>{comment.text}</p>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-
-        {totalPages > 1 ? (
-          <nav
-            className={css.commentPagination}
-            aria-label="Order comments pagination"
-          >
-            <button
-              type="button"
-              disabled={currentPage <= 1 || isLoading}
-              onClick={() => onPageChange(currentPage - 1)}
-            >
-              Previous
-            </button>
-
-            {pageItems.map((page) => (
-              <button
-                key={page}
-                type="button"
-                className={
-                  page === currentPage ? css.commentPageActive : undefined
-                }
-                aria-current={page === currentPage ? 'page' : undefined}
-                disabled={isLoading}
-                onClick={() => onPageChange(page)}
-              >
-                {page}
-              </button>
-            ))}
-
-            <button
-              type="button"
-              disabled={currentPage >= totalPages || isLoading}
-              onClick={() => onPageChange(currentPage + 1)}
-            >
-              Next
-            </button>
-          </nav>
-        ) : null}
-      </div>
-    </section>
+    <EntityComments
+      entityKey={`order:${orderId}`}
+      initialTotal={totalComments}
+      isEditable={isEditable}
+      placeholder="Write an internal comment for this order..."
+      load={(page) =>
+        getPharmacyOrderComments(orderId, {
+          page,
+          perPage: COMMENTS_PER_PAGE,
+        })
+      }
+      create={async (text) => {
+        await createPharmacyOrderComment(orderId, text);
+      }}
+      remove={(id) => deletePharmacyOrderComment(orderId, id)}
+      onTotalChange={onTotalChange}
+    />
   );
 }
 
@@ -1377,7 +1233,10 @@ function HistoryTab({
                   : CircleMinus;
 
           const activityToneClassName =
-            activity.type === 'product_removed' ? css.historyDanger : undefined;
+            activity.type === 'product_removed' ||
+            activity.type === 'quantity_decreased'
+              ? css.historyDanger
+              : undefined;
 
           return (
             <li key={historyEntry.id} className={activityToneClassName}>
@@ -1454,25 +1313,6 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [copiedEmail, setCopiedEmail] = useState(false);
 
-  const [commentDraft, setCommentDraft] = useState('');
-  const [commentsPage, setCommentsPage] = useState(1);
-  const [commentsData, setCommentsData] =
-    useState<PharmacyOrderManagerCommentsResponse>({
-      items: [],
-      page: 1,
-      perPage: COMMENTS_PER_PAGE,
-      total: 0,
-      totalPages: 1,
-    });
-  const [isCommentsLoading, setIsCommentsLoading] = useState(false);
-  const [commentsError, setCommentsError] = useState('');
-  const [isSavingComment, setIsSavingComment] = useState(false);
-  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(
-    null
-  );
-  const [commentToDelete, setCommentToDelete] =
-    useState<PharmacyOrderManagerComment | null>(null);
-
   useEffect(() => {
     let isMounted = true;
 
@@ -1509,19 +1349,6 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
           setDeliveryAddress(formState.deliveryAddress);
           setPaymentMethod(formState.paymentMethod);
           setDeliveryTouchedFields({});
-          setCommentDraft('');
-          setCommentsPage(1);
-          setCommentsData({
-            items: [],
-            page: 1,
-            perPage: COMMENTS_PER_PAGE,
-            total: loadedOrder.managerCommentsCount,
-            totalPages: Math.max(
-              1,
-              Math.ceil(loadedOrder.managerCommentsCount / COMMENTS_PER_PAGE)
-            ),
-          });
-          setCommentsError('');
         }
       } catch {
         if (isMounted) {
@@ -1540,57 +1367,14 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     };
   }, [orderId]);
 
-  const orderIdForComments = order?.id;
-
-  const loadComments = useCallback(
-    async (page: number) => {
-      if (!orderIdForComments) return;
-
-      setIsCommentsLoading(true);
-      setCommentsError('');
-
-      try {
-        const response = await getPharmacyOrderComments(orderIdForComments, {
-          page,
-          perPage: COMMENTS_PER_PAGE,
-        });
-
-        setCommentsData(response);
-
-        if (response.page !== page) {
-          setCommentsPage(response.page);
-        }
-      } catch (commentsLoadError) {
-        setCommentsError(
-          commentsLoadError instanceof Error && commentsLoadError.message
-            ? commentsLoadError.message
-            : 'Could not load order comments.'
-        );
-      } finally {
-        setIsCommentsLoading(false);
-      }
-    },
-    [orderIdForComments]
-  );
-
-  useEffect(() => {
-    if (activeTab !== 'comment' || !orderIdForComments) return;
-
-    const timeoutId = window.setTimeout(() => {
-      void loadComments(commentsPage);
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [activeTab, commentsPage, loadComments, orderIdForComments]);
-
   const historyEntries = useMemo(
     () => (order ? getOrderHistoryEntries(order) : []),
     [order]
   );
 
   const orderTabs = useMemo(
-    () => getOrderTabs(commentsData.total, historyEntries.length),
-    [commentsData.total, historyEntries.length]
+    () => getOrderTabs(order?.managerCommentsCount ?? 0, historyEntries.length),
+    [historyEntries.length, order?.managerCommentsCount]
   );
 
   const isEditable = order?.status === 'in_progress';
@@ -1865,68 +1649,6 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     }
   };
 
-  const handleSaveManagerComment = async () => {
-    if (!order || !isEditable || isSavingComment) return;
-
-    const text = commentDraft.trim();
-
-    if (!text) return;
-
-    setIsSavingComment(true);
-
-    try {
-      await createPharmacyOrderComment(order.id, text);
-      setCommentDraft('');
-      toast.success('Comment added successfully.');
-
-      if (commentsPage === 1) {
-        await loadComments(1);
-      } else {
-        setCommentsPage(1);
-      }
-    } catch (commentError) {
-      toast.error(
-        commentError instanceof Error && commentError.message
-          ? commentError.message
-          : 'Could not add the comment.'
-      );
-    } finally {
-      setIsSavingComment(false);
-    }
-  };
-
-  const handleConfirmDeleteComment = async () => {
-    if (!order || !commentToDelete || deletingCommentId) return;
-
-    const comment = commentToDelete;
-    setCommentToDelete(null);
-    setDeletingCommentId(comment.id);
-
-    try {
-      await deletePharmacyOrderComment(order.id, comment.id);
-      toast.success('Comment deleted successfully.');
-
-      const nextPage =
-        commentsData.items.length === 1 && commentsPage > 1
-          ? commentsPage - 1
-          : commentsPage;
-
-      if (nextPage !== commentsPage) {
-        setCommentsPage(nextPage);
-      } else {
-        await loadComments(nextPage);
-      }
-    } catch (commentError) {
-      toast.error(
-        commentError instanceof Error && commentError.message
-          ? commentError.message
-          : 'Could not delete the comment.'
-      );
-    } finally {
-      setDeletingCommentId(null);
-    }
-  };
-
   const handleStatusClick = (status: PendingStatusChange['status']) => {
     if (status === 'rejected') {
       setRejectionReason('');
@@ -2018,7 +1740,11 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
             </p>
           </div>
 
-          <div className={css.statusActions}>
+          <div
+            className={`${css.statusActions} ${
+              order.status === 'in_progress' ? css.statusActionsInProgress : ''
+            }`}
+          >
             <StatusBadge
               status={order.status}
               label={ORDER_STATUS_LABELS[order.status]}
@@ -2112,22 +1838,16 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
 
           {activeTab === 'comment' ? (
             <ManagerCommentTab
-              value={commentDraft}
-              comments={commentsData.items}
-              currentPage={commentsData.page}
-              totalPages={commentsData.totalPages}
-              totalComments={commentsData.total}
+              orderId={order.id}
+              totalComments={order.managerCommentsCount}
               isEditable={isEditable}
-              isLoading={isCommentsLoading}
-              isSaving={isSavingComment}
-              deletingCommentId={deletingCommentId}
-              error={commentsError}
-              onChange={(value) =>
-                setCommentDraft(value.slice(0, MANAGER_COMMENT_MAX_LENGTH))
+              onTotalChange={(total) =>
+                setOrder((currentOrder) =>
+                  currentOrder
+                    ? { ...currentOrder, managerCommentsCount: total }
+                    : currentOrder
+                )
               }
-              onSave={() => void handleSaveManagerComment()}
-              onDelete={setCommentToDelete}
-              onPageChange={setCommentsPage}
             />
           ) : null}
 
@@ -2199,20 +1919,6 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       />
 
       <ConfirmationModal
-        isOpen={Boolean(commentToDelete)}
-        title="Delete this comment?"
-        description="The comment will be permanently removed from the order."
-        confirmLabel="Delete comment"
-        cancelLabel="Keep comment"
-        confirmButtonClassName={css.dangerConfirmButton}
-        isLoading={Boolean(deletingCommentId)}
-        onConfirm={() => void handleConfirmDeleteComment()}
-        onCancel={() => {
-          if (!deletingCommentId) setCommentToDelete(null);
-        }}
-      />
-
-      <ConfirmationModal
         isOpen={Boolean(pendingStatus && pendingStatus.status !== 'rejected')}
         title={statusModalText?.title ?? 'Update order status?'}
         description={statusModalText?.description ?? ''}
@@ -2254,5 +1960,6 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     </main>
   );
 }
+
 export default OrderDetailsPageContent;
 export { OrderDetailsPageContent };

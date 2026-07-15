@@ -346,8 +346,7 @@
 .deliveryInfoCard h3,
 .paymentInfoCard h3,
 .bankCard h3,
-.rejectionBox h3,
-.savedComments h3 {
+.rejectionBox h3 {
   font-size: var(--fz-16);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
@@ -518,139 +517,17 @@
   flex: 0 0 auto;
 }
 
-.commentSectionHead {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.commentSectionHead > div {
-  display: grid;
-  gap: 6px;
-}
-
-.commentComposer,
-.savedComments,
-.commentList {
-  display: grid;
-  gap: 14px;
-  min-width: 0;
-}
-
-.commentComposer {
-  padding: 16px;
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.commentList {
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.commentCard {
-  display: grid;
-  gap: 12px;
-  padding: 16px;
-  color: var(--color-text-secondary);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-}
-
-.commentCardHead {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.commentCardHead > div {
-  display: grid;
-  gap: 4px;
-}
-
-.commentCardHead strong {
-  color: var(--color-text-primary);
-}
-
-.commentCardHead time {
-  font-size: var(--fz-12);
-  color: var(--color-text-muted);
-}
-
-.commentCard > p {
-  line-height: var(--lh-base);
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-
-.commentDeleteButton,
 .dangerConfirmButton {
   color: var(--color-white);
   background-color: var(--color-error);
   border-color: var(--color-error);
 }
 
-.commentDeleteButton:hover:not(:disabled),
-.commentDeleteButton:focus-visible:not(:disabled),
 .dangerConfirmButton:hover:not(:disabled),
 .dangerConfirmButton:focus-visible:not(:disabled) {
   color: var(--color-white);
   background-color: color-mix(in srgb, var(--color-error) 86%, black);
   border-color: color-mix(in srgb, var(--color-error) 86%, black);
-}
-
-.commentsEmpty {
-  padding: 18px;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
-  text-align: center;
-  background-color: var(--color-background);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.commentPagination {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
-}
-
-.commentPagination button {
-  min-width: 38px;
-  min-height: 38px;
-  padding: 8px 10px;
-  font-size: var(--fz-14);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  transition:
-    color var(--transition-base),
-    background-color var(--transition-base),
-    border-color var(--transition-base);
-}
-
-.commentPagination button:hover:not(:disabled),
-.commentPagination button:focus-visible:not(:disabled),
-.commentPagination .commentPageActive {
-  color: var(--color-white);
-  background-color: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
-.commentPagination button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
 }
 
 .historyHeader {
@@ -1075,18 +952,8 @@
 
   .itemActions,
   .itemActions > *,
-  .commentDeleteButton,
   .methodHeader .tabSaveButton {
     width: 100%;
-  }
-
-  .commentCardHead {
-    display: grid;
-  }
-
-  .commentPagination button:first-child,
-  .commentPagination button:last-child {
-    flex: 1 1 100%;
   }
 }
 
@@ -1163,7 +1030,10 @@
     width: auto;
   }
 
-  .commentSectionHead,
+  .statusActionsInProgress > :first-child {
+    grid-column: 1 / -1;
+  }
+
   .historyHeader {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -1176,20 +1046,5 @@
     justify-content: center;
     white-space: normal;
     text-align: center;
-  }
-
-  .commentComposer .tabSaveButton {
-    width: 100%;
-  }
-
-  .commentCardHead {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
-  }
-
-  .commentDeleteButton {
-    width: auto;
-    min-width: 0;
   }
 }

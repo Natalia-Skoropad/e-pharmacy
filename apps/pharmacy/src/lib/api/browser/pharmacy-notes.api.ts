@@ -11,7 +11,7 @@ import type {
 
 //===================================================================
 
-export type PharmacyNoteEntityType = 'client' | 'product';
+export type PharmacyNoteEntityType = 'client' | 'product' | 'pharmacy';
 
 //===================================================================
 
@@ -35,13 +35,16 @@ export async function getPharmacyNotes(
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     `/api/pharmacy-notes/${type}/${entityId}${buildQueryString({ page, perPage: 10 })}`
   );
+
   const data = getResponseData(response) as Record<string, unknown>;
+
   return {
     items: Array.isArray(data.items)
       ? data.items
           .map(normalizeComment)
           .filter((item): item is EntityComment => Boolean(item))
       : [],
+
     page: typeof data.page === 'number' ? data.page : page,
     total: typeof data.total === 'number' ? data.total : 0,
     totalPages: typeof data.totalPages === 'number' ? data.totalPages : 1,

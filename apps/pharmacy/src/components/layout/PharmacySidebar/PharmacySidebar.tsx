@@ -89,17 +89,26 @@ export function PharmacySidebar({
       renderLink={({ item, href, className, children, ...props }) => (
         <Link href={href} className={className} {...props}>
           {children}
-          {!isCollapsed && item.href === getPharmacyOrdersPath() ? (
+          {!isCollapsed &&
+          item.href === getPharmacyOrdersPath() &&
+          (orderCounts.new > 0 || orderCounts.inProgress > 0) ? (
             <span
               className={css.orderCounters}
               aria-label="Order notifications"
             >
-              <span className={css.newCounter} title="New orders">
-                {orderCounts.new}
-              </span>
-              <span className={css.progressCounter} title="Orders in progress">
-                {orderCounts.inProgress}
-              </span>
+              {orderCounts.new > 0 ? (
+                <span className={css.newCounter} title="New orders">
+                  {orderCounts.new}
+                </span>
+              ) : null}
+              {orderCounts.inProgress > 0 ? (
+                <span
+                  className={css.progressCounter}
+                  title="Orders in progress"
+                >
+                  {orderCounts.inProgress}
+                </span>
+              ) : null}
             </span>
           ) : null}
         </Link>

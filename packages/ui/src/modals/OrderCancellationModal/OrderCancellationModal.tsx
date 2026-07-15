@@ -55,10 +55,9 @@ function OrderCancellationModal({
   const descriptionId = useId();
   const trimmedLength = value.trim().length;
   const isValid = trimmedLength >= minLength;
-  const fieldError =
-    value.length > 0 && !isValid
-      ? `Add at least ${minLength} characters before rejecting the order.`
-      : '';
+  const fieldError = !isValid
+    ? `${trimmedLength}/${minLength} minimum characters`
+    : '';
 
   if (!isOpen) return null;
 
@@ -101,18 +100,11 @@ function OrderCancellationModal({
           required
           value={value}
           error={fieldError}
-          isTouched={Boolean(value)}
+          isTouched
           maxLength={maxLength}
           disabled={isLoading}
           onChange={(event) => onChange(event.target.value)}
         />
-
-        <p
-          className={isValid ? css.counterValid : css.counterError}
-          aria-live="polite"
-        >
-          {trimmedLength}/{minLength} minimum characters
-        </p>
 
         <div className={css.actions}>
           <Button

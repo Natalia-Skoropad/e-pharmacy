@@ -17,16 +17,28 @@ import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 //===================================================================
 
-
-export async function getPharmacyClientDetails(clientId: string): Promise<PharmacyClientRow> {
+export async function getPharmacyClientDetails(
+  clientId: string
+): Promise<PharmacyClientRow> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     PHARMACY_API_ROUTES.clients.details(clientId)
   );
-  const data = getResponseData(response) as { client?: unknown };
-  const client = normalizePharmacyClient(data.client);
+
+  const data = getResponseData(response);
+
+  const payload =
+    data && typeof data === 'object' && 'client' in data
+      ? (data as { client?: unknown }).client
+      : data;
+
+  const client = normalizePharmacyClient(payload);
+
   if (!client) throw new Error('Client could not be loaded.');
+
   return client;
 }
+
+//===================================================================
 
 export async function getPharmacyClients(
   params: PharmacyClientsQueryParams = {}

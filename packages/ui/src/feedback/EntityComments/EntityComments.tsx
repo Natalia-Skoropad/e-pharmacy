@@ -1,10 +1,12 @@
 'use client';
 
 import { Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button, CountLabel, LoadingSpinner } from '../../common';
 import { CommentInput } from '../../form-fields';
+import { ConfirmationModal } from '../../modals';
+import { useToast } from '../ToastProvider';
 
 import css from './EntityComments.module.css';
 
@@ -23,145 +25,299 @@ export type EntityCommentsPage = Readonly<{
   totalPages: number;
 }>;
 
-//===================================================================
-
-export function EntityComments({
-  title = 'Comments',
-  load,
-  create,
-  remove,
-}: Readonly<{
+export type EntityCommentsProps = Readonly<{
+  entityKey: string;
   title?: string;
+  commentTitle?: string;
+  placeholder?: string;
+  emptyText?: string;
+  initialTotal?: number;
+  isEditable?: boolean;
   load: (page: number) => Promise<EntityCommentsPage>;
   create: (text: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
-}>) {
+  onTotalChange?: (total: number) => void;
+}>;
+
+//===================================================================
+
+const COMMENT_MAX_LENGTH = 1000;
+
+//===================================================================
+
+function formatCommentDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+//===================================================================
+
+function getPageItems(currentPage: number, totalPages: number): number[] {
+  const start = Math.max(1, currentPage - 2);
+  const end = Math.min(totalPages, start + 4);
+  const adjustedStart = Math.max(1, end - 4);
+
+  return Array.from(
+    { length: end - adjustedStart + 1 },
+    (_, index) => adjustedStart + index
+  );
+}
+
+//===================================================================
+
+export function EntityComments({
+  entityKey,
+  title = 'Comments',
+  commentTitle = 'Comment',
+  placeholder = 'Write an internal comment...',
+  emptyText = 'No manager comments yet. The comment drawer is waiting patiently.',
+  initialTotal = 0,
+  isEditable = true,
+  load,
+  create,
+  remove,
+  onTotalChange,
+}: EntityCommentsProps) {
+  const toast = useToast();
+  const loadRef = useRef(load);
+  const onTotalChangeRef = useRef(onTotalChange);
   const [data, setData] = useState<EntityCommentsPage>({
     items: [],
     page: 1,
-    total: 0,
+    total: initialTotal,
     totalPages: 1,
   });
   const [draft, setDraft] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [commentToDelete, setCommentToDelete] =
+    useState<EntityComment | null>(null);
+  const [error, setError] = useState('');
 
-  async function refresh(page = data.page) {
-    setLoading(true);
+  loadRef.current = load;
+  onTotalChangeRef.current = onTotalChange;
+
+  async function loadPage(page: number): Promise<void> {
+    setIsLoading(true);
+    setError('');
+
     try {
-      setData(await load(page));
+      const response = await loadRef.current(page);
+      setData(response);
+      onTotalChangeRef.current?.(response.total);
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error && loadError.message
+          ? loadError.message
+          : 'Could not load comments.'
+      );
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   }
 
   useEffect(() => {
-    void refresh(1);
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      setDraft('');
+      setCommentToDelete(null);
+      void loadPage(1);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [entityKey]);
+
+  const handleCreate = async () => {
+    const text = draft.trim();
+
+    if (!text || isSaving || !isEditable) return;
+
+    setIsSaving(true);
+
+    try {
+      await create(text);
+      setDraft('');
+      await loadPage(1);
+      toast.success('Comment added successfully.');
+    } catch (createError) {
+      toast.error(
+        createError instanceof Error && createError.message
+          ? createError.message
+          : 'Could not add the comment.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    const comment = commentToDelete;
+
+    if (!comment || deletingId || !isEditable) return;
+
+    setCommentToDelete(null);
+    setDeletingId(comment.id);
+
+    try {
+      await remove(comment.id);
+      const nextPage =
+        data.items.length === 1 && data.page > 1 ? data.page - 1 : data.page;
+
+      await loadPage(nextPage);
+      toast.success('Comment deleted successfully.');
+    } catch (deleteError) {
+      toast.error(
+        deleteError instanceof Error && deleteError.message
+          ? deleteError.message
+          : 'Could not delete the comment.'
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const pageItems = getPageItems(data.page, data.totalPages);
 
   return (
-    <section className={css.card}>
+    <section
+      className={css.card}
+      aria-labelledby={`${entityKey}-comments-title`}
+    >
       <div className={css.head}>
-        <h2>{title}</h2>
+        <h2 id={`${entityKey}-comments-title`}>{title}</h2>
         <CountLabel
+          className={css.countLabel}
           shown={data.items.length}
           total={data.total}
           label="comments"
         />
       </div>
+
       <div className={css.composer}>
         <CommentInput
-          id="entity-comment"
+          id={`${entityKey}-comment`}
           name="entityComment"
           label="New manager comment"
+          placeholder={placeholder}
           value={draft}
           error=""
           isTouched={false}
-          maxLength={1000}
-          disabled={busy}
-          onChange={(e) => setDraft(e.target.value.slice(0, 1000))}
+          maxLength={COMMENT_MAX_LENGTH}
+          disabled={!isEditable || isSaving}
+          onChange={(event) =>
+            setDraft(event.target.value.slice(0, COMMENT_MAX_LENGTH))
+          }
         />
+
         <Button
-          fullWidth
+          className={css.addButton}
           type="button"
-          disabled={!draft.trim() || busy}
-          isLoading={busy}
-          onClick={async () => {
-            setBusy(true);
-            try {
-              await create(draft.trim());
-              setDraft('');
-              await refresh(1);
-            } finally {
-              setBusy(false);
-            }
-          }}
+          disabled={!isEditable || !draft.trim() || isSaving}
+          isLoading={isSaving}
+          onClick={() => void handleCreate()}
         >
           Add comment
         </Button>
       </div>
-      {loading ? <LoadingSpinner label="Loading comments..." /> : null}
-      {!loading && !data.items.length ? (
-        <p className={css.empty}>No manager comments yet.</p>
-      ) : null}
-      <ul className={css.list}>
-        {data.items.map((comment) => (
-          <li key={comment.id} className={css.comment}>
-            <div>
-              <strong>Comment</strong>
-              <time dateTime={comment.createdAt}>
-                {new Intl.DateTimeFormat('en-GB', {
-                  dateStyle: 'medium',
-                  timeStyle: 'short',
-                }).format(new Date(comment.createdAt))}
-              </time>
-            </div>
-            <Button
+
+      <div className={css.savedComments}>
+        <h3>Saved comments</h3>
+
+        {error ? <p className={css.error}>{error}</p> : null}
+        {isLoading ? <LoadingSpinner label="Loading comments..." /> : null}
+
+        {!isLoading && !error && data.items.length === 0 ? (
+          <p className={css.empty}>{emptyText}</p>
+        ) : null}
+
+        {!isLoading && data.items.length > 0 ? (
+          <ul className={css.list}>
+            {data.items.map((comment) => (
+              <li key={comment.id} className={css.comment}>
+                <div className={css.commentHead}>
+                  <div>
+                    <strong>{commentTitle}</strong>
+                    <time dateTime={comment.createdAt}>
+                      {formatCommentDate(comment.createdAt)}
+                    </time>
+                  </div>
+
+                  <Button
+                    className={css.deleteButton}
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    isLoading={deletingId === comment.id}
+                    disabled={!isEditable || Boolean(deletingId) || isSaving}
+                    onClick={() => setCommentToDelete(comment)}
+                  >
+                    <Trash2 size={17} aria-hidden="true" />
+                    Delete
+                  </Button>
+                </div>
+
+                <p>{comment.text}</p>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {data.totalPages > 1 ? (
+          <nav className={css.pagination} aria-label="Comments pagination">
+            <button
               type="button"
-              size="sm"
-              variant="ghost"
-              className={css.delete}
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true);
-                try {
-                  await remove(comment.id);
-                  await refresh();
-                } finally {
-                  setBusy(false);
-                }
-              }}
+              disabled={data.page <= 1 || isLoading}
+              onClick={() => void loadPage(data.page - 1)}
             >
-              <Trash2 size={16} />
-              Delete
-            </Button>
-            <p>{comment.text}</p>
-          </li>
-        ))}
-      </ul>
-      {data.totalPages > 1 ? (
-        <div className={css.pagination}>
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={data.page <= 1 || loading}
-            onClick={() => void refresh(data.page - 1)}
-          >
-            Previous
-          </Button>
-          <span>
-            {data.page} / {data.totalPages}
-          </span>
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={data.page >= data.totalPages || loading}
-            onClick={() => void refresh(data.page + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      ) : null}
+              Previous
+            </button>
+
+            {pageItems.map((page) => (
+              <button
+                key={page}
+                type="button"
+                className={page === data.page ? css.pageActive : undefined}
+                aria-current={page === data.page ? 'page' : undefined}
+                disabled={isLoading}
+                onClick={() => void loadPage(page)}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              disabled={data.page >= data.totalPages || isLoading}
+              onClick={() => void loadPage(data.page + 1)}
+            >
+              Next
+            </button>
+          </nav>
+        ) : null}
+      </div>
+
+      <ConfirmationModal
+        isOpen={Boolean(commentToDelete)}
+        title="Delete this comment?"
+        description="The comment will be permanently removed."
+        confirmLabel="Delete comment"
+        cancelLabel="Keep comment"
+        confirmButtonClassName={css.dangerConfirmButton}
+        isLoading={Boolean(deletingId)}
+        onConfirm={() => void handleDelete()}
+        onCancel={() => {
+          if (!deletingId) setCommentToDelete(null);
+        }}
+      />
     </section>
   );
 }

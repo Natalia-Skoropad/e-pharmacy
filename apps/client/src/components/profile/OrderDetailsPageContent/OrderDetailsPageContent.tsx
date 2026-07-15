@@ -60,6 +60,8 @@ function formatPaymentMethod(method: Order['paymentMethod']): string {
     : 'Cash on pickup / delivery';
 }
 
+//===================================================================
+
 function formatDeliveryMethod(method: Order['delivery']['method']): string {
   return method === 'postal_delivery'
     ? 'Postal delivery'
@@ -177,6 +179,19 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
               label={ORDER_STATUS_LABELS[order.status]}
             />
           </div>
+
+          {order.status === 'rejected' && order.rejectionReason ? (
+            <section
+              className={css.rejectionCard}
+              aria-labelledby="order-rejection-title"
+            >
+              <MessageSquareText size={20} aria-hidden="true" />
+              <div>
+                <h2 id="order-rejection-title">Rejection reason</h2>
+                <p>{order.rejectionReason}</p>
+              </div>
+            </section>
+          ) : null}
 
           <div className={css.orderShell}>
             <div className={css.orderMain}>

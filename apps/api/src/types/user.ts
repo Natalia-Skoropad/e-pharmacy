@@ -9,8 +9,10 @@ import type {
 //===============================================================
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+
 export type AuthApplication =
   (typeof AUTH_APPLICATIONS)[keyof typeof AUTH_APPLICATIONS];
+
 export type UserStatus = (typeof USER_STATUSES)[keyof typeof USER_STATUSES];
 
 //===============================================================
@@ -21,6 +23,7 @@ export type UserEntity = {
   password: string;
   role: UserRole;
   status: UserStatus;
+  statusReason?: string;
   phone: string;
   address?: string;
   pictureUrl?: string;

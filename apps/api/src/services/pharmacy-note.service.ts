@@ -22,7 +22,7 @@ async function getPharmacyId(userId: string) {
 
 export async function getPharmacyNotesService(
   userId: string,
-  entityType: 'client' | 'product',
+  entityType: 'client' | 'product' | 'pharmacy',
   entityId: string,
   page: number,
   perPage: number
@@ -58,7 +58,7 @@ export async function getPharmacyNotesService(
 
 export async function createPharmacyNoteService(
   userId: string,
-  entityType: 'client' | 'product',
+  entityType: 'client' | 'product' | 'pharmacy',
   entityId: string,
   text: string
 ) {
@@ -83,7 +83,7 @@ export async function createPharmacyNoteService(
 
 export async function deletePharmacyNoteService(
   userId: string,
-  entityType: 'client' | 'product',
+  entityType: 'client' | 'product' | 'pharmacy',
   entityId: string,
   noteId: string
 ) {

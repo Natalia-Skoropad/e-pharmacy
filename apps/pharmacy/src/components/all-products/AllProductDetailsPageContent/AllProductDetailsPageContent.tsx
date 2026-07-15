@@ -1669,6 +1669,7 @@ function AllProductDetailsPageContent({
 
                 {activeTab === 'comments' ? (
                   <EntityComments
+                    entityKey={`product:${product.id}`}
                     load={(page) => getPharmacyNotes('product', productId, page)}
                     create={(text) => createPharmacyNote('product', productId, text)}
                     remove={(id) => deletePharmacyNote('product', productId, id)}

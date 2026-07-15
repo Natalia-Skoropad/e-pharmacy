@@ -51,11 +51,23 @@ type ClientDetailsPageContentProps = Readonly<{ clientId: string }>;
 
 type ClientTab = 'details' | 'orders' | 'comments';
 
+//===================================================================
+
 const CLIENT_TABS: Array<TabItem<ClientTab>> = [
   { value: 'details', label: 'Details' },
   { value: 'orders', label: 'Orders' },
   { value: 'comments', label: 'Comments' },
 ];
+
+//===================================================================
+
+function formatClientDate(value: string): string {
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime())
+    ? 'Not specified'
+    : formatShortDate(value);
+}
 
 //===================================================================
 
@@ -200,8 +212,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
                 src={client.photoUrl}
                 alt={client.name}
                 className={css.avatar}
-                width={150}
-                height={150}
+                sizes="(max-width: 767px) calc(100vw - 56px), 150px"
                 unoptimized
               />
             ) : (
@@ -223,12 +234,20 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
             </p>
             <p>
               <strong>First order:</strong>{' '}
-              {formatShortDate(client.firstOrderAt)}
+              {formatClientDate(client.firstOrderAt)}
             </p>
+
             <StatusBadge
               status={client.status}
               label={client.status === 'active' ? 'Active' : 'Blocked'}
             />
+
+            {client.status === 'blocked' && client.statusReason ? (
+              <div className={css.statusReason}>
+                <strong>Inactive reason</strong>
+                <p>{client.statusReason}</p>
+              </div>
+            ) : null}
           </div>
         </div>
         <div className={css.statistics}>
@@ -323,6 +342,12 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
                   <dt>Address</dt>
                   <dd>{client.address}</dd>
                 </div>
+                {client.status === 'blocked' && client.statusReason ? (
+                  <div>
+                    <dt>Inactive reason</dt>
+                    <dd>{client.statusReason}</dd>
+                  </div>
+                ) : null}
               </dl>
             </section>
           ) : null}
@@ -347,6 +372,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
           ) : null}
           {activeTab === 'comments' ? (
             <EntityComments
+              entityKey={`client:${clientId}`}
               load={(page) => getPharmacyNotes('client', clientId, page)}
               create={(text) => createPharmacyNote('client', clientId, text)}
               remove={(id) => deletePharmacyNote('client', clientId, id)}

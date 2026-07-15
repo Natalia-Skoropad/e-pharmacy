@@ -57,6 +57,13 @@ const userSchema = new Schema<UserEntity>(
       required: true,
     },
 
+    statusReason: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: undefined,
+    },
+
     phone: {
       type: String,
       required: [true, VALIDATION_MESSAGES.required.phone],

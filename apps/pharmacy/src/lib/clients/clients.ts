@@ -18,6 +18,7 @@ export const CLIENT_STATUSES = [
 //===================================================================
 
 export type ClientStatus = (typeof CLIENT_STATUSES)[number];
+
 export type ClientSuccessfulOrdersFilter = 'repeat' | 'successful' | 'other';
 
 //===================================================================
@@ -33,6 +34,7 @@ export type PharmacyClientRow = Readonly<{
   successfulOrdersCount: number;
   successfulOrdersAmount: number;
   status: ClientStatus;
+  statusReason?: string;
 }>;
 
 export type PharmacyClientsQueryParams = Readonly<{
@@ -228,6 +230,9 @@ export function normalizePharmacyClient(
     successfulOrdersCount: getSuccessfulOrdersCount(rawClient),
     successfulOrdersAmount: getSuccessfulOrdersAmount(rawClient),
     status: isClientStatus(rawClient.status) ? rawClient.status : 'active',
+    ...(getStringValue(rawClient.statusReason)
+      ? { statusReason: getStringValue(rawClient.statusReason) }
+      : {}),
   };
 }
 

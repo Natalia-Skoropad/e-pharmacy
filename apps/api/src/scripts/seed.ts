@@ -18,6 +18,7 @@ import { Order } from '../models/order.model';
 import { Client } from '../models/client.model';
 import { Cart } from '../models/cart.model';
 import { StockMovement } from '../models/stockMovement.model';
+import { PharmacyNote } from '../models/pharmacyNote.model';
 import { hashPassword } from '../utils/password';
 
 //===============================================================
@@ -26,9 +27,40 @@ const STOCK_MOVEMENT_DEMO_PRODUCT_ID = new Types.ObjectId(
   '6a4fc8b1e78e187afe81fd99'
 );
 
+//===============================================================
+
 const STOCK_MOVEMENT_DEMO_CLIENT_EMAIL = 'nataa@ukr.net';
 const STOCK_MOVEMENT_DEMO_ORDER_PRICE = 1968;
 const STOCK_MOVEMENT_DEMO_CURRENT_PRICE = 2010;
+
+//===============================================================
+
+function padDatePart(value: number): string {
+  return String(value).padStart(2, '0');
+}
+
+//===============================================================
+
+function createSeedOrderNumber(
+  orderId: Types.ObjectId,
+  createdAt: Date
+): string {
+  const datePart = [
+    createdAt.getUTCFullYear(),
+    padDatePart(createdAt.getUTCMonth() + 1),
+    padDatePart(createdAt.getUTCDate()),
+  ].join('');
+  const timePart = [
+    padDatePart(createdAt.getUTCHours()),
+    padDatePart(createdAt.getUTCMinutes()),
+    padDatePart(createdAt.getUTCSeconds()),
+  ].join('');
+
+  return `EP-${datePart}-${timePart}-${orderId
+    .toString()
+    .slice(-8)
+    .toUpperCase()}`;
+}
 
 //===============================================================
 
@@ -513,8 +545,11 @@ function createBankDetails(pharmacyName: string, pharmacyNumber: number) {
 
 const PHARMACY_ACCOUNT_PASSWORD = '123456789';
 const PHARMACY_ACCOUNT_DESCRIPTION_LENGTH = 5000;
+
 const PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p94AAAAASUVORK5CYII=';
+
+//===============================================================
 
 type PharmacyAccountSeed = {
   email: string;
@@ -522,16 +557,20 @@ type PharmacyAccountSeed = {
   ownerName: string;
   address: string;
   pharmacyName: string;
+
   status:
     | typeof PHARMACY_STATUSES.NEW
     | typeof PHARMACY_STATUSES.ON_VERIFICATION
     | typeof PHARMACY_STATUSES.ACTIVE;
+
   statusReason?: string;
   imageUrl?: string;
   publicEmail?: string;
   workingHours?: string;
   description?: string;
 };
+
+//===============================================================
 
 const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
   {
@@ -559,6 +598,8 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
   },
 ];
 
+//===============================================================
+
 function createExactLengthText(source: string, targetLength: number): string {
   const filler = `
 
@@ -578,6 +619,8 @@ function createExactLengthText(source: string, targetLength: number): string {
 
   return /\s$/.test(sliced) ? `${sliced.slice(0, -1)}.` : sliced;
 }
+
+//===============================================================
 
 function createPharmacyAccountDescription(pharmacyName: string): string {
   return createExactLengthText(
@@ -607,6 +650,8 @@ The pharmacy profile contains realistic bank details, address, phone number, ema
   );
 }
 
+//===============================================================
+
 function createActivePharmacyDescription(pharmacyName: string): string {
   return `**Operational standards**
 
@@ -624,6 +669,8 @@ ${pharmacyName} keeps public pharmacy data ready for clients after Admin approva
 - Verified documents, payment details, and contact channels.
 - Updated working hours and support for regular clients.`;
 }
+
+//===============================================================
 
 function createVerificationDocuments(email: string) {
   const prefix = email.split('@')[0];
@@ -646,6 +693,8 @@ function createVerificationDocuments(email: string) {
     },
   ];
 }
+
+//===============================================================
 
 function createPharmacyAccountBankDetails(seed: PharmacyAccountSeed) {
   if (seed.email === 'nata6@ukr.net') {
@@ -671,6 +720,8 @@ function createPharmacyAccountBankDetails(seed: PharmacyAccountSeed) {
     paymentPurpose: `Payment for E-PHARMACY orders from ${seed.pharmacyName}`,
   };
 }
+
+//===============================================================
 
 async function seedPharmacyAccounts(): Promise<number> {
   const password = await hashPassword(PHARMACY_ACCOUNT_PASSWORD);
@@ -1088,31 +1139,6 @@ async function seedActivePharmacyOrder(): Promise<number> {
     },
   ];
 
-  function padDatePart(value: number): string {
-    return String(value).padStart(2, '0');
-  }
-
-  function createSeedOrderNumber(
-    orderId: Types.ObjectId,
-    createdAt: Date
-  ): string {
-    const datePart = [
-      createdAt.getUTCFullYear(),
-      padDatePart(createdAt.getUTCMonth() + 1),
-      padDatePart(createdAt.getUTCDate()),
-    ].join('');
-    const timePart = [
-      padDatePart(createdAt.getUTCHours()),
-      padDatePart(createdAt.getUTCMinutes()),
-      padDatePart(createdAt.getUTCSeconds()),
-    ].join('');
-
-    return `EP-${datePart}-${timePart}-${orderId
-      .toString()
-      .slice(-8)
-      .toUpperCase()}`;
-  }
-
   function createStatusHistory(config: DemoOrderConfig) {
     const history: Array<{
       status: DemoOrderStatus;
@@ -1445,6 +1471,559 @@ async function seedActivePharmacyOrder(): Promise<number> {
 
 //===============================================================
 
+async function seedPharmacyClientPortfolio(): Promise<number> {
+  type DemoClientStatus = 'new' | 'in_progress' | 'successful' | 'rejected';
+  type DemoClientConfig = Readonly<{
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    pictureUrl: string;
+    status: 'active' | 'blocked';
+    statusReason?: string;
+    orderStatuses: DemoClientStatus[];
+  }>;
+
+  type DemoOffer = Readonly<{
+    _id: Types.ObjectId;
+    productId: Types.ObjectId;
+    price: number;
+    totalQuantity: number;
+    reservedQuantity: number;
+    availableQuantity: number;
+  }>;
+
+  type DemoProduct = Readonly<{
+    _id: Types.ObjectId;
+    name: string;
+    slug?: string;
+    article: string;
+    category: string;
+    imageUrl?: string;
+    manufacturer?: string;
+    dosage?: string;
+    packageQuantity?: string | number;
+    rating?: number;
+    reviewsCount?: number;
+  }>;
+
+  type OfferWithProduct = Readonly<{
+    offer: DemoOffer;
+    product: DemoProduct;
+  }>;
+
+  type OfferBalance = {
+    total: number;
+    reserved: number;
+    available: number;
+  };
+
+  type MovementPlan = Readonly<{
+    eventType: 'reserve' | 'release' | 'write_off';
+    offerId: Types.ObjectId;
+    productId: Types.ObjectId;
+    quantity: number;
+    unitPrice: number;
+    orderId: Types.ObjectId;
+    orderNumber: string;
+    orderStatus: DemoClientStatus;
+    comment: string;
+    occurredAt: Date;
+  }>;
+
+  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
+    .select(
+      '_id name address city phone email workingHours imageUrl rating reviewsCount bankDetails'
+    )
+    .lean<{
+      _id: Types.ObjectId;
+      name: string;
+      address: string;
+      city: string;
+      phone: string;
+      email: string;
+      workingHours?: string;
+      imageUrl?: string;
+      rating?: number;
+      reviewsCount?: number;
+      bankDetails?: unknown;
+    } | null>();
+
+  if (!pharmacy) return 0;
+
+  const offers = await ProductOffer.find({
+    pharmacyId: pharmacy._id,
+    productId: { $ne: STOCK_MOVEMENT_DEMO_PRODUCT_ID },
+    availableQuantity: { $gte: 20 },
+  })
+    .sort({ productId: 1 })
+    .limit(30)
+    .lean<DemoOffer[]>();
+
+  const products = await Product.find({
+    _id: { $in: offers.map((offer) => offer.productId) },
+  })
+    .select(
+      '_id name slug article category imageUrl manufacturer dosage packageQuantity rating reviewsCount'
+    )
+    .lean<DemoProduct[]>();
+
+  const productsById = new Map(
+    products.map((product) => [String(product._id), product])
+  );
+
+  const joinedOffers = offers
+    .map((offer) => {
+      const product = productsById.get(String(offer.productId));
+      return product ? ({ offer, product } satisfies OfferWithProduct) : null;
+    })
+    .filter((item): item is OfferWithProduct => Boolean(item));
+
+  if (joinedOffers.length < 4) return 0;
+
+  const clientConfigs: DemoClientConfig[] = [
+    {
+      id: '6a311d5386d9f5e0be7d19aa',
+      name: 'Olena Kovalenko',
+      email: 'olena.kovalenko.demo@ukr.net',
+      phone: '+380671110101',
+      address: '11 Horodotska Street, Lviv',
+      pictureUrl: '/images/seed/pharmacies/pharmacy-006.png',
+      status: 'active',
+      orderStatuses: ['successful', 'in_progress', 'new', 'rejected'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19ab',
+      name: 'Iryna Bondar',
+      email: 'iryna.bondar.demo@ukr.net',
+      phone: '+380671110102',
+      address: '24 Shevchenka Street, Lviv',
+      pictureUrl: '/images/seed/pharmacies/pharmacy-007.png',
+      status: 'active',
+      orderStatuses: ['successful', 'successful', 'new'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19ac',
+      name: 'Maksym Hnatiuk',
+      email: 'maksym.hnatiuk.demo@ukr.net',
+      phone: '+380671110103',
+      address: '8 Zelena Street, Lviv',
+      pictureUrl: '/images/seed/pharmacies/pharmacy-008.png',
+      status: 'active',
+      orderStatuses: ['in_progress', 'rejected', 'successful'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19ad',
+      name: 'Sofiia Melnyk',
+      email: 'sofiia.melnyk.demo@ukr.net',
+      phone: '+380671110104',
+      address: '42 Franka Street, Lviv',
+      pictureUrl: '/images/seed/pharmacies/pharmacy-009.png',
+      status: 'active',
+      orderStatuses: ['new', 'successful', 'rejected', 'in_progress'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19ae',
+      name: 'Andrii Koval',
+      email: 'andrii.koval.demo@ukr.net',
+      phone: '+380671110105',
+      address: '15 Stryiska Street, Lviv',
+      pictureUrl: '/images/seed/pharmacies/pharmacy-010.png',
+      status: 'active',
+      orderStatuses: ['successful', 'new', 'in_progress'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19af',
+      name: 'Kateryna Savchuk',
+      email: 'kateryna.savchuk.demo@ukr.net',
+      phone: '+380671110106',
+      address: '6 Pekarska Street, Lviv',
+      pictureUrl: '/images/seed/pharmacies/pharmacy-011.png',
+      status: 'active',
+      orderStatuses: ['rejected', 'successful', 'new', 'successful'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19b0',
+      name: 'Roman Danyliuk',
+      email: 'roman.danyliuk.demo@ukr.net',
+      phone: '+380671110107',
+      address: '19 Lychakivska Street, Lviv',
+      pictureUrl: '/images/seed/pharmacies/pharmacy-012.png',
+      status: 'blocked',
+      statusReason:
+        'The client account is inactive after repeated uncollected orders. New reservations require manager approval.',
+      orderStatuses: ['rejected', 'successful', 'new'],
+    },
+  ];
+
+  const clientIds = clientConfigs.map(
+    (client) => new Types.ObjectId(client.id)
+  );
+
+  const password = await hashPassword('123456789');
+
+  await User.deleteMany({
+    _id: { $nin: clientIds },
+    $or: [
+      { email: { $in: clientConfigs.map((client) => client.email) } },
+      { phone: { $in: clientConfigs.map((client) => client.phone) } },
+    ],
+  });
+
+  const clientUsers = await Promise.all(
+    clientConfigs.map((client) =>
+      User.findOneAndUpdate(
+        { _id: new Types.ObjectId(client.id) },
+        {
+          $set: {
+            name: client.name,
+            email: client.email,
+            password,
+            role: USER_ROLES.CLIENT,
+            status:
+              client.status === 'blocked'
+                ? USER_STATUSES.BLOCKED
+                : USER_STATUSES.ACTIVE,
+            phone: client.phone,
+            address: client.address,
+            pictureUrl: client.pictureUrl,
+            ...(client.statusReason
+              ? { statusReason: client.statusReason }
+              : {}),
+          },
+          ...(client.statusReason ? {} : { $unset: { statusReason: '' } }),
+        },
+        {
+          upsert: true,
+          returnDocument: 'after',
+          runValidators: true,
+          setDefaultsOnInsert: true,
+        }
+      )
+    )
+  );
+
+  const resolvedClientUsers = clientUsers.map((clientUser) => {
+    if (!clientUser) {
+      throw new Error('Could not create the demo pharmacy client.');
+    }
+
+    return clientUser;
+  });
+
+  await Promise.all(
+    resolvedClientUsers.map((clientUser) =>
+      Client.findOneAndUpdate(
+        { userId: clientUser._id },
+        {
+          $set: {
+            userId: clientUser._id,
+            favoriteProductIds: [],
+            favoritePharmacyIds: [pharmacy._id],
+          },
+        },
+        { upsert: true, runValidators: true, setDefaultsOnInsert: true }
+      )
+    )
+  );
+
+  const pharmacySnapshot = {
+    name: pharmacy.name,
+    address: pharmacy.address,
+    city: pharmacy.city,
+    phone: pharmacy.phone,
+    email: pharmacy.email,
+    ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
+    ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+    rating: pharmacy.rating ?? 0,
+    reviewsCount: pharmacy.reviewsCount ?? 0,
+    bankDetails: pharmacy.bankDetails,
+  };
+
+  const orderDocuments: Array<Record<string, unknown>> = [];
+  const movementPlans: MovementPlan[] = [];
+  const baseDate = new Date('2026-06-20T08:00:00.000Z');
+
+  clientConfigs.forEach((client, clientIndex) => {
+    const clientUser = resolvedClientUsers[clientIndex];
+
+    client.orderStatuses.forEach((status, orderIndex) => {
+      const orderId = new Types.ObjectId();
+      const createdAt = new Date(
+        baseDate.getTime() +
+          (clientIndex * 5 + orderIndex) * 24 * 60 * 60 * 1000 +
+          orderIndex * 47 * 60 * 1000
+      );
+      const finalChangedAt = new Date(createdAt.getTime() + 90 * 60 * 1000);
+      const orderNumber = createSeedOrderNumber(orderId, createdAt);
+      const itemCount = orderIndex % 2 === 0 ? 3 : 2;
+      const selectedItems = Array.from(
+        { length: itemCount },
+        (_, itemIndex) => {
+          const poolIndex =
+            (clientIndex * 4 + orderIndex * 3 + itemIndex) %
+            joinedOffers.length;
+          const selected = joinedOffers[poolIndex];
+          const quantity = 1 + ((clientIndex + orderIndex + itemIndex) % 3);
+          const product = selected.product;
+          const offer = selected.offer;
+          const productSnapshot = {
+            name: product.name,
+            ...(product.slug ? { slug: product.slug } : {}),
+            article: product.article,
+            category: product.category,
+            ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+            ...(product.manufacturer
+              ? { manufacturer: product.manufacturer }
+              : {}),
+            ...(product.dosage ? { dosage: product.dosage } : {}),
+            ...(product.packageQuantity
+              ? { packageQuantity: String(product.packageQuantity) }
+              : {}),
+            rating: product.rating ?? 0,
+            reviewsCount: product.reviewsCount ?? 0,
+          };
+
+          return {
+            productId: product._id,
+            productOfferId: offer._id,
+            productSnapshot,
+            quantity,
+            unitPrice: offer.price,
+            totalPrice: quantity * offer.price,
+          };
+        }
+      );
+
+      const totalItems = selectedItems.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+      );
+
+      const totalPrice = selectedItems.reduce(
+        (sum, item) => sum + item.totalPrice,
+        0
+      );
+
+      const statusHistory: Array<Record<string, unknown>> = [
+        {
+          status: 'new',
+          changedAt: createdAt,
+          changedBy: clientUser._id,
+        },
+      ];
+
+      if (status !== 'new') {
+        statusHistory.push({
+          status: 'in_progress',
+          changedAt:
+            status === 'in_progress'
+              ? finalChangedAt
+              : new Date(createdAt.getTime() + 45 * 60 * 1000),
+          changedBy: clientUser._id,
+        });
+      }
+
+      if (status === 'successful' || status === 'rejected') {
+        statusHistory.push({
+          status,
+          changedAt: finalChangedAt,
+          changedBy: clientUser._id,
+          comment:
+            status === 'successful'
+              ? 'The pharmacy completed the demo client order.'
+              : 'The pharmacy rejected the demo client order and released its reserve.',
+        });
+      }
+
+      orderDocuments.push({
+        _id: orderId,
+        userId: clientUser._id,
+        pharmacyId: pharmacy._id,
+        pharmacySnapshot,
+        items: selectedItems,
+        totalItems,
+        totalPrice,
+        currency: 'UAH',
+        paymentMethod: orderIndex % 2 === 0 ? 'bank_transfer' : 'cash',
+        delivery:
+          orderIndex % 2 === 0
+            ? {
+                method: 'postal_delivery',
+                details: {
+                  recipientName: client.name,
+                  recipientPhone: client.phone,
+                  address: client.address,
+                },
+              }
+            : { method: 'pickup' },
+        comment: `Demo portfolio order for ${client.name}.`,
+        status,
+        statusHistory,
+        activityHistory: selectedItems.map((item) => ({
+          type: 'product_added',
+          occurredAt: createdAt,
+          changedBy: clientUser._id,
+          productId: item.productId,
+          productOfferId: item.productOfferId,
+          productName: item.productSnapshot.name,
+          previousQuantity: 0,
+          quantity: item.quantity,
+          quantityDelta: item.quantity,
+          previousUnitPrice: item.unitPrice,
+          unitPrice: item.unitPrice,
+        })),
+
+        ...(status === 'rejected'
+          ? {
+              rejectionReason:
+                'The requested combination was unavailable for the selected pickup time. The reservation was released automatically.',
+              rejectedAt: finalChangedAt,
+              rejectedBy: clientUser._id,
+            }
+          : {}),
+        orderNumber,
+        createdAt,
+        updatedAt: finalChangedAt,
+      });
+
+      selectedItems.forEach((item) => {
+        movementPlans.push({
+          eventType: 'reserve',
+          offerId: item.productOfferId,
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          orderId,
+          orderNumber,
+          orderStatus: status === 'new' ? 'new' : 'in_progress',
+          comment: `${client.name}'s order reserved ${item.quantity} units.`,
+          occurredAt: createdAt,
+        });
+
+        if (status === 'successful') {
+          movementPlans.push({
+            eventType: 'write_off',
+            offerId: item.productOfferId,
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            orderId,
+            orderNumber,
+            orderStatus: 'successful',
+            comment: `Successful order wrote off ${item.quantity} reserved units.`,
+            occurredAt: finalChangedAt,
+          });
+        }
+
+        if (status === 'rejected') {
+          movementPlans.push({
+            eventType: 'release',
+            offerId: item.productOfferId,
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            orderId,
+            orderNumber,
+            orderStatus: 'rejected',
+            comment: `Rejected order released ${item.quantity} reserved units.`,
+            occurredAt: finalChangedAt,
+          });
+        }
+      });
+    });
+  });
+
+  await Order.insertMany(orderDocuments);
+
+  const balances = new Map<string, OfferBalance>(
+    joinedOffers.map(({ offer }) => [
+      String(offer._id),
+      {
+        total: offer.totalQuantity,
+        reserved: offer.reservedQuantity,
+        available: offer.availableQuantity,
+      },
+    ])
+  );
+  const stockMovements: Array<Record<string, unknown>> = [];
+
+  movementPlans
+    .sort(
+      (first, second) =>
+        first.occurredAt.getTime() - second.occurredAt.getTime()
+    )
+    .forEach((movement) => {
+      const balance = balances.get(String(movement.offerId));
+      if (!balance) return;
+
+      let stockDelta = 0;
+      let reservedDelta = 0;
+      let availableDelta = 0;
+
+      if (movement.eventType === 'reserve') {
+        reservedDelta = movement.quantity;
+        availableDelta = -movement.quantity;
+      } else if (movement.eventType === 'release') {
+        reservedDelta = -movement.quantity;
+        availableDelta = movement.quantity;
+      } else {
+        stockDelta = -movement.quantity;
+        reservedDelta = -movement.quantity;
+      }
+
+      balance.total += stockDelta;
+      balance.reserved += reservedDelta;
+      balance.available += availableDelta;
+
+      stockMovements.push({
+        productOfferId: movement.offerId,
+        productId: movement.productId,
+        pharmacyId: pharmacy._id,
+        eventType: movement.eventType,
+        source: 'client_order',
+        quantity: movement.quantity,
+        stockDelta,
+        reservedDelta,
+        availableDelta,
+        stockAfter: balance.total,
+        reservedAfter: balance.reserved,
+        availableAfter: balance.available,
+        unitPrice: movement.unitPrice,
+        orderId: movement.orderId,
+        orderNumber: movement.orderNumber,
+        orderStatus: movement.orderStatus,
+        comment: movement.comment,
+        occurredAt: movement.occurredAt,
+      });
+    });
+
+  if (stockMovements.length > 0) {
+    await StockMovement.insertMany(stockMovements);
+  }
+
+  await Promise.all(
+    [...balances.entries()].map(([offerId, balance]) =>
+      ProductOffer.updateOne(
+        { _id: offerId },
+        {
+          $set: {
+            totalQuantity: balance.total,
+            reservedQuantity: balance.reserved,
+            availableQuantity: balance.available,
+          },
+        },
+        { runValidators: true }
+      )
+    )
+  );
+
+  return clientConfigs.length;
+}
+
+//===============================================================
+
 async function seedDatabase(): Promise<void> {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('Seed script is blocked in production');
@@ -1461,6 +2040,7 @@ async function seedDatabase(): Promise<void> {
     Order.deleteMany({}),
     Cart.deleteMany({}),
     StockMovement.deleteMany({}),
+    PharmacyNote.deleteMany({}),
   ]);
 
   const pharmacySeeds = createSeedPharmacies();
@@ -1545,12 +2125,18 @@ async function seedDatabase(): Promise<void> {
     `Seed completed: ${pharmacyAccountsCount} pharmacy accounts created`
   );
   const activePharmacyOrdersCount = await seedActivePharmacyOrder();
+  const pharmacyClientsCount = await seedPharmacyClientPortfolio();
 
   console.log(
     `Seed completed: ${activePharmacyOffersCount} active pharmacy offers created`
   );
+
   console.log(
     `Seed completed: ${activePharmacyOrdersCount} active pharmacy orders created`
+  );
+
+  console.log(
+    `Seed completed: ${pharmacyClientsCount} pharmacy client profiles created`
   );
 }
 
