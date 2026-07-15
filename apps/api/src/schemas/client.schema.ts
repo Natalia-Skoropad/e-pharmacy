@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { PRODUCT_CATEGORIES } from '../types/categories';
 import { sharedSearchSchema } from './shared-validation.schema';
 
 //===============================================================
@@ -54,8 +55,25 @@ export const clientsQuerySchema = z.preprocess(
 
 //===============================================================
 
+export const clientProductsQuerySchema = z.preprocess(
+  normalizePaginationQuery,
+  z.object({
+    page: positivePageSchema,
+    perPage: perPageSchema,
+    dateFrom: dateFilterSchema,
+    dateTo: dateFilterSchema,
+    article: sharedSearchSchema,
+    name: sharedSearchSchema,
+    category: z.enum(PRODUCT_CATEGORIES).optional(),
+    status: z.enum(['new', 'active', 'blocked']).optional(),
+  })
+);
+
+//===============================================================
+
 export const clientParamsSchema = z.object({ clientId: mongoIdSchema });
 
 //===============================================================
 
 export type ClientsQuery = z.infer<typeof clientsQuerySchema>;
+export type ClientProductsQuery = z.infer<typeof clientProductsQuerySchema>;

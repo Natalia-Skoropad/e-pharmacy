@@ -6,7 +6,14 @@ import {
   isRecord,
 } from '@e-pharmacy/utils/guards';
 
-import type { EntityId, UserStatus } from '@e-pharmacy/types';
+import type {
+  EntityId,
+  ProductCategory,
+  ProductStatus,
+  UserStatus,
+} from '@e-pharmacy/types';
+
+import { isProductCategory } from '@e-pharmacy/types/products';
 
 //===================================================================
 
@@ -55,6 +62,39 @@ export type PharmacyClientsQueryParams = Readonly<{
 export type PharmacyClientsResponse = Readonly<{
   items: PharmacyClientRow[];
   total: number;
+}>;
+
+export type PharmacyClientPurchasedProduct = Readonly<{
+  id: string;
+  orderId: EntityId;
+  orderDate: string;
+  productId: EntityId;
+  photoUrl: string | null;
+  article: string;
+  name: string;
+  category: ProductCategory;
+  quantity: number;
+  totalAmount: number;
+  status: ProductStatus;
+}>;
+
+export type PharmacyClientProductsQueryParams = Readonly<{
+  page?: number;
+  perPage?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  article?: string;
+  name?: string;
+  category?: ProductCategory;
+  status?: ProductStatus;
+}>;
+
+export type PharmacyClientProductsResponse = Readonly<{
+  items: PharmacyClientPurchasedProduct[];
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
 }>;
 
 //===================================================================
@@ -245,4 +285,75 @@ export function normalizePharmacyClientsResponse(
     itemKeys: ['items', 'clients'],
     normalizeItem: normalizePharmacyClient,
   });
+}
+
+//===================================================================
+
+function isProductStatus(value: unknown): value is ProductStatus {
+  return value === 'new' || value === 'active' || value === 'blocked';
+}
+
+//===================================================================
+
+function normalizePharmacyClientPurchasedProduct(
+  payload: unknown
+): PharmacyClientPurchasedProduct | null {
+  if (!isRecord(payload)) return null;
+
+  const id = getStringValue(payload.id);
+  const orderId = getStringValue(payload.orderId);
+  const orderDate = getStringValue(payload.orderDate);
+  const productId = getStringValue(payload.productId);
+  const article = getStringValue(payload.article);
+  const name = getStringValue(payload.name);
+  const category = payload.category;
+  const status = payload.status;
+
+  if (
+    !id ||
+    !orderId ||
+    !orderDate ||
+    !productId ||
+    !article ||
+    !name ||
+    !isProductCategory(category) ||
+    !isProductStatus(status)
+  ) {
+    return null;
+  }
+
+  return {
+    id,
+    orderId,
+    orderDate,
+    productId,
+    photoUrl: getStringValue(payload.photoUrl) ?? null,
+    article,
+    name,
+    category,
+    quantity: getNumberValue(payload.quantity) ?? 0,
+    totalAmount: getNumberValue(payload.totalAmount) ?? 0,
+    status,
+  };
+}
+
+//===================================================================
+
+export function normalizePharmacyClientProductsResponse(
+  payload: unknown
+): PharmacyClientProductsResponse {
+  const response = normalizePaginatedResponse(payload, {
+    itemKeys: ['items', 'products'],
+    normalizeItem: normalizePharmacyClientPurchasedProduct,
+  });
+
+  const record = isRecord(payload) ? payload : {};
+
+  return {
+    items: response.items,
+    page: Math.max(1, getNumberValue(record.page) ?? 1),
+    perPage: Math.max(1, getNumberValue(record.perPage) ?? 20),
+    total: response.total,
+    totalPages: Math.max(0, getNumberValue(record.totalPages) ?? 0),
+  };
 }

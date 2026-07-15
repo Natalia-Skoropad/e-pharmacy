@@ -1,0 +1,7 @@
+.breakableLink,
+.breakableText {
+  max-width: 150px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  word-break: break-word;
+}

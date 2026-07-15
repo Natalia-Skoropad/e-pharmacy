@@ -7,7 +7,10 @@ import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharm
 
 import {
   normalizePharmacyClient,
+  normalizePharmacyClientProductsResponse,
   normalizePharmacyClientsResponse,
+  type PharmacyClientProductsQueryParams,
+  type PharmacyClientProductsResponse,
   type PharmacyClientRow,
   type PharmacyClientsQueryParams,
   type PharmacyClientsResponse,
@@ -48,4 +51,17 @@ export async function getPharmacyClients(
   );
 
   return normalizePharmacyClientsResponse(getResponseData(response));
+}
+
+//===================================================================
+
+export async function getPharmacyClientProducts(
+  clientId: string,
+  params: PharmacyClientProductsQueryParams = {}
+): Promise<PharmacyClientProductsResponse> {
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
+    `${PHARMACY_API_ROUTES.clients.products(clientId)}${buildQueryString(params)}`
+  );
+
+  return normalizePharmacyClientProductsResponse(getResponseData(response));
 }

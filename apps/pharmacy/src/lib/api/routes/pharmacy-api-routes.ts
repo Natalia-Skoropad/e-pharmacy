@@ -29,6 +29,7 @@ export const pharmacyApiRoutes = {
   clients: {
     list: '/api/clients',
     details: (clientId: string) => `/api/clients/${clientId}`,
+    products: (clientId: string) => `/api/clients/${clientId}/products`,
   },
 
   productRequests: {

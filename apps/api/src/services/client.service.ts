@@ -2,12 +2,19 @@ import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Order } from '../models/order.model';
+import { Product } from '../models/product.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
 import { httpError } from '../utils/httpError';
 
-import type { ClientsQuery } from '../schemas/client.schema';
+import type {
+  ClientProductsQuery,
+  ClientsQuery,
+} from '../schemas/client.schema';
+
 import type { OrderEntity } from '../types/order';
+import type { ProductEntity, ProductStatus } from '../types/product';
+import type { ProductCategory } from '../types/categories';
 import type { PharmacyEntity } from '../types/pharmacy';
 import type { UserEntity } from '../types/user';
 
@@ -16,6 +23,7 @@ import type { UserEntity } from '../types/user';
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
 type OrderDocument = OrderEntity & { _id: Types.ObjectId };
 type UserDocument = UserEntity & { _id: Types.ObjectId };
+type ProductDocument = ProductEntity & { _id: Types.ObjectId };
 
 //===============================================================
 
@@ -31,6 +39,20 @@ type ClientRow = Readonly<{
   successfulOrdersAmount: number;
   status: 'active' | 'blocked';
   statusReason?: string;
+}>;
+
+type ClientPurchasedProductRow = Readonly<{
+  id: string;
+  orderId: string;
+  orderDate: string;
+  productId: string;
+  photoUrl: string | null;
+  article: string;
+  name: string;
+  category: ProductCategory;
+  quantity: number;
+  totalAmount: number;
+  status: ProductStatus;
 }>;
 
 //===============================================================
@@ -289,4 +311,132 @@ export async function getClientByIdService(userId: string, clientId: string) {
   }
 
   return { client };
+}
+
+//===============================================================
+
+function matchesClientProductFilters(
+  row: ClientPurchasedProductRow,
+  query: ClientProductsQuery
+): boolean {
+  if (
+    query.article?.trim() &&
+    !createClientSearchRegExp(query.article.trim()).test(row.article)
+  ) {
+    return false;
+  }
+
+  if (
+    query.name?.trim() &&
+    !createClientSearchRegExp(query.name.trim()).test(row.name)
+  ) {
+    return false;
+  }
+
+  if (query.category && row.category !== query.category) return false;
+  if (query.status && row.status !== query.status) return false;
+
+  if (query.dateFrom && row.orderDate < `${query.dateFrom}T00:00:00.000Z`) {
+    return false;
+  }
+
+  if (query.dateTo && row.orderDate > `${query.dateTo}T23:59:59.999Z`) {
+    return false;
+  }
+
+  return true;
+}
+
+//===============================================================
+
+export async function getClientPurchasedProductsService(
+  userId: string,
+  clientId: string,
+  query: ClientProductsQuery
+) {
+  const pharmacyId = await getCurrentPharmacyId(userId);
+
+  if (!pharmacyId || !Types.ObjectId.isValid(clientId)) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Client was not found');
+  }
+
+  const orders = await Order.find({
+    pharmacyId,
+    userId: new Types.ObjectId(clientId),
+    status: 'successful',
+  })
+    .sort({ createdAt: -1 })
+    .lean<OrderDocument[]>();
+
+  if (!orders.length) {
+    const clientHasOrders = await Order.exists({
+      pharmacyId,
+      userId: new Types.ObjectId(clientId),
+    });
+
+    if (!clientHasOrders) {
+      throw httpError(HTTP_STATUS.NOT_FOUND, 'Client was not found');
+    }
+
+    return {
+      items: [],
+      page: query.page,
+      perPage: query.perPage,
+      total: 0,
+      totalPages: 0,
+    };
+  }
+
+  const productIds = [
+    ...new Set(
+      orders.flatMap((order) =>
+        order.items.map((item) => item.productId.toString())
+      )
+    ),
+  ].map((productId) => new Types.ObjectId(productId));
+
+  const products = await Product.find({ _id: { $in: productIds } })
+    .select('name article category imageUrl status')
+    .lean<ProductDocument[]>();
+
+  const productsById = new Map(
+    products.map((product) => [String(product._id), product])
+  );
+
+  const rows = orders
+    .flatMap((order) =>
+      order.items.map((item, itemIndex): ClientPurchasedProductRow => {
+        const productId = item.productId.toString();
+        const product = productsById.get(productId);
+        const category =
+          product?.category ?? item.productSnapshot.category ?? 'other';
+
+        return {
+          id: `${order._id.toString()}-${item._id?.toString() ?? itemIndex}`,
+          orderId: order._id.toString(),
+          orderDate: order.createdAt.toISOString(),
+          productId,
+          photoUrl: product?.imageUrl ?? item.productSnapshot.imageUrl ?? null,
+          article: product?.article ?? item.productSnapshot.article,
+          name: product?.name ?? item.productSnapshot.name,
+          category,
+          quantity: item.quantity,
+          totalAmount: item.totalPrice,
+          status: product?.status ?? 'blocked',
+        };
+      })
+    )
+    .filter((row) => matchesClientProductFilters(row, query))
+    .sort((left, right) => right.orderDate.localeCompare(left.orderDate));
+
+  const skip = (query.page - 1) * query.perPage;
+  const items = rows.slice(skip, skip + query.perPage);
+
+  return {
+    items,
+    page: query.page,
+    perPage: query.perPage,
+    total: rows.length,
+    totalPages: Math.ceil(rows.length / query.perPage),
+  };
 }

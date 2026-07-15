@@ -13,7 +13,10 @@ import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import type { PharmacyClientRow } from '@/lib/clients/clients';
+import { getProductImageSrc } from '@/lib/products/product-images';
 import { getPharmacyClientPath } from '@/lib/layout/routes';
+
+import css from './ClientsTable.module.css';
 
 //===================================================================
 
@@ -50,7 +53,7 @@ function ClientsTable({
         title: <TableHeaderTitle parts={['Client', 'photo']} />,
         render: (client) => (
           <TableImagePreview
-            src={client.photoUrl ?? undefined}
+            src={getProductImageSrc(client.photoUrl ?? undefined)}
             alt={`${client.name} photo`}
             fallback={formatInitials(client.name, 'C')}
           />
@@ -60,7 +63,10 @@ function ClientsTable({
         key: 'clientId',
         title: <TableHeaderTitle parts={['Client', 'ID']} />,
         render: (client) => (
-          <TextActionButton href={getPharmacyClientPath(client.id)}>
+          <TextActionButton
+            className={css.breakableLink}
+            href={getPharmacyClientPath(client.id)}
+          >
             {client.id}
           </TextActionButton>
         ),
@@ -77,7 +83,9 @@ function ClientsTable({
       {
         key: 'email',
         title: <TableHeaderTitle parts={['Client', 'email']} />,
-        render: (client) => client.email,
+        render: (client) => (
+          <span className={css.breakableText}>{client.email}</span>
+        ),
       },
       {
         key: 'phone',

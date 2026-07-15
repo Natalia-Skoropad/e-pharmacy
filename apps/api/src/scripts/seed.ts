@@ -841,6 +841,7 @@ function createSeedPharmacies() {
 function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
   return Array.from({ length: 126 }, (_, index) => {
     const productNumber = index + 1;
+
     const [
       baseName,
       category,
@@ -849,8 +850,10 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       packageQuantity,
       imageUrl,
     ] = PRODUCT_BLUEPRINTS[index % PRODUCT_BLUEPRINTS.length];
+
     const status = index >= 122 ? ('blocked' as const) : ('active' as const);
     const variantIndex = Math.floor(index / PRODUCT_BLUEPRINTS.length);
+
     const name = createProductName(
       baseName,
       manufacturer,
@@ -858,18 +861,24 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       packageQuantity,
       variantIndex
     );
+
     const isPremium = index % 6 === 0 || index % 11 === 0;
+
     const basePrice = isPremium
       ? 1050 + ((index * 137) % 2450)
       : 75 + ((index * 29) % 780);
+    
     const offersCount = index % 10 === 0 ? 25 : 2 + (index % 5);
+
     const selectedPharmacies = Array.from(
       { length: offersCount },
       (_, offerIndex) =>
         pharmacies[(index * 3 + offerIndex) % pharmacies.length]
     );
+    
     const isSoldOut = index % 17 === 0;
     const richStockPharmacies = index < 115 ? pharmacies.slice(0, 10) : [];
+
     const mergedPharmacies = [
       ...richStockPharmacies,
       ...selectedPharmacies.filter(
@@ -881,6 +890,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       ),
     ];
     const shouldForceRichStock = index < 115;
+
     const offers =
       isSoldOut && !shouldForceRichStock
         ? []
@@ -893,6 +903,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
                 : 12 + ((index + offerIndex) % 48)
             )
           );
+
     const reviewsCount =
       index < 38
         ? 18 + (index % 16)
@@ -1589,7 +1600,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       email: 'olena.kovalenko.demo@ukr.net',
       phone: '+380671110101',
       address: '11 Horodotska Street, Lviv',
-      pictureUrl: '/images/seed/pharmacies/pharmacy-006.png',
+      pictureUrl: '/images/seed/clients/client-001.png',
       status: 'active',
       orderStatuses: ['successful', 'in_progress', 'new', 'rejected'],
     },
@@ -1599,7 +1610,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       email: 'iryna.bondar.demo@ukr.net',
       phone: '+380671110102',
       address: '24 Shevchenka Street, Lviv',
-      pictureUrl: '/images/seed/pharmacies/pharmacy-007.png',
+      pictureUrl: '/images/seed/clients/client-002.png',
       status: 'active',
       orderStatuses: ['successful', 'successful', 'new'],
     },
@@ -1609,7 +1620,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       email: 'maksym.hnatiuk.demo@ukr.net',
       phone: '+380671110103',
       address: '8 Zelena Street, Lviv',
-      pictureUrl: '/images/seed/pharmacies/pharmacy-008.png',
+      pictureUrl: '/images/seed/clients/client-003.png',
       status: 'active',
       orderStatuses: ['in_progress', 'rejected', 'successful'],
     },
@@ -1619,7 +1630,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       email: 'sofiia.melnyk.demo@ukr.net',
       phone: '+380671110104',
       address: '42 Franka Street, Lviv',
-      pictureUrl: '/images/seed/pharmacies/pharmacy-009.png',
+      pictureUrl: '/images/seed/clients/client-004.png',
       status: 'active',
       orderStatuses: ['new', 'successful', 'rejected', 'in_progress'],
     },
@@ -1629,7 +1640,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       email: 'andrii.koval.demo@ukr.net',
       phone: '+380671110105',
       address: '15 Stryiska Street, Lviv',
-      pictureUrl: '/images/seed/pharmacies/pharmacy-010.png',
+      pictureUrl: '/images/seed/clients/client-005.png',
       status: 'active',
       orderStatuses: ['successful', 'new', 'in_progress'],
     },
@@ -1639,7 +1650,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       email: 'kateryna.savchuk.demo@ukr.net',
       phone: '+380671110106',
       address: '6 Pekarska Street, Lviv',
-      pictureUrl: '/images/seed/pharmacies/pharmacy-011.png',
+      pictureUrl: '/images/seed/clients/client-006.png',
       status: 'active',
       orderStatuses: ['rejected', 'successful', 'new', 'successful'],
     },
@@ -1649,7 +1660,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       email: 'roman.danyliuk.demo@ukr.net',
       phone: '+380671110107',
       address: '19 Lychakivska Street, Lviv',
-      pictureUrl: '/images/seed/pharmacies/pharmacy-012.png',
+      pictureUrl: '/images/seed/clients/client-007.png',
       status: 'blocked',
       statusReason:
         'The client account is inactive after repeated uncollected orders. New reservations require manager approval.',

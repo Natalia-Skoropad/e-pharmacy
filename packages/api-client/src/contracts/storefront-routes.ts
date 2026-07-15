@@ -68,6 +68,7 @@ export const storefrontRoutes = {
   clients: {
     list: '/clients',
     details: (clientId: EntityId) => `/clients/${clientId}`,
+    products: (clientId: EntityId) => `/clients/${clientId}/products`,
   },
 
   productRequests: {
