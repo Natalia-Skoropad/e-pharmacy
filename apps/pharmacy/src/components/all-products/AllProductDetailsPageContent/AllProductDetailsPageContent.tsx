@@ -42,7 +42,7 @@ import {
 } from '@e-pharmacy/ui/statistics';
 
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
-import { useToast } from '@e-pharmacy/ui/feedback';
+import { EntityComments, useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/core';
 
@@ -75,6 +75,9 @@ import {
   getProductDetails,
   getProductReviews,
   getProductStockMovements,
+  getPharmacyNotes,
+  createPharmacyNote,
+  deletePharmacyNote,
 } from '@/lib/api/browser';
 
 import {
@@ -104,7 +107,8 @@ type ProductDetailsTab =
   | 'stock-movement'
   | 'related-orders'
   | 'characteristics'
-  | 'reviews';
+  | 'reviews'
+  | 'comments';
 
 //===================================================================
 
@@ -193,6 +197,7 @@ const PRODUCT_DETAILS_TABS: Array<TabItem<ProductDetailsTab>> = [
   { value: 'related-orders', label: 'Related orders' },
   { value: 'characteristics', label: 'Characteristics' },
   { value: 'reviews', label: 'Reviews' },
+  { value: 'comments', label: 'Comments' },
 ];
 
 //===================================================================
@@ -1659,6 +1664,14 @@ function AllProductDetailsPageContent({
                     title="Reviews"
                     emptyTitle="This product has no reviews yet."
                     emptyText="Product reviews will appear here after clients share their feedback."
+                  />
+                ) : null}
+
+                {activeTab === 'comments' ? (
+                  <EntityComments
+                    load={(page) => getPharmacyNotes('product', productId, page)}
+                    create={(text) => createPharmacyNote('product', productId, text)}
+                    remove={(id) => deletePharmacyNote('product', productId, id)}
                   />
                 ) : null}
               </div>

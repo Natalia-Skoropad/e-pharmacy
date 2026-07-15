@@ -67,6 +67,7 @@ import type {
 } from '@e-pharmacy/types';
 
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
+
 import {
   formatPrice,
   formatShortDate,
@@ -158,10 +159,10 @@ type OrderHistoryEntry =
 //===================================================================
 
 const PRODUCT_PICKER_LIMIT = 150;
-const COMMENTS_PER_PAGE = 5;
+const COMMENTS_PER_PAGE = 10;
 const MANAGER_COMMENT_MAX_LENGTH = 1000;
 const REJECTION_REASON_MAX_LENGTH = 500;
-const HISTORY_INITIAL_VISIBLE_COUNT = 5;
+const HISTORY_INITIAL_VISIBLE_COUNT = 10;
 const HISTORY_LOAD_STEP = 5;
 
 //===================================================================
@@ -238,9 +239,7 @@ function getProductOffer(product: Product, pharmacyId: string) {
 
 //===================================================================
 
-function getCategoryOptionsFromProducts(
-  products: Product[]
-): CategoryOption[] {
+function getCategoryOptionsFromProducts(products: Product[]): CategoryOption[] {
   const categories = new Set(products.map((product) => product.category));
 
   return [...categories]
@@ -505,8 +504,7 @@ function ProductPickerModal({
             inStock: true,
             page: 1,
             perPage: PRODUCT_PICKER_LIMIT,
-            category:
-              selectedCategory === 'all' ? undefined : selectedCategory,
+            category: selectedCategory === 'all' ? undefined : selectedCategory,
             keyword: searchValue.trim() || undefined,
           },
           { signal: controller.signal }
@@ -645,9 +643,7 @@ function ProductPickerModal({
                 const offer = getProductOffer(product, order.pharmacyId);
                 const isInOrder = Boolean(
                   offer &&
-                    order.items.some(
-                      (item) => item.productOfferId === offer.id
-                    )
+                  order.items.some((item) => item.productOfferId === offer.id)
                 );
                 const isAdding = addingProductIds.has(product.id);
                 const categoryLabel =
@@ -1170,12 +1166,7 @@ function ManagerCommentTab({
   return (
     <section className={css.methodCard} aria-labelledby="manager-comment-title">
       <div className={css.commentSectionHead}>
-        <div>
-          <h2 id="manager-comment-title">Order comments</h2>
-          <p className={css.metaText}>
-            Private manager notes for processing this order.
-          </p>
-        </div>
+        <h2 id="manager-comment-title">Comments</h2>
 
         <CountLabel
           className={css.tabCountLabel}
@@ -1228,7 +1219,7 @@ function ManagerCommentTab({
               <li className={css.commentCard} key={comment.id}>
                 <div className={css.commentCardHead}>
                   <div>
-                    <strong>Manager comment</strong>
+                    <strong>Comment</strong>
                     <time dateTime={comment.createdAt}>
                       {formatOrderDate(comment.createdAt)}
                     </time>
@@ -1327,12 +1318,7 @@ function HistoryTab({
   return (
     <section className={css.methodCard} aria-labelledby="history-title">
       <div className={css.historyHeader}>
-        <div>
-          <h2 id="history-title">Order history</h2>
-          <p className={css.metaText}>
-            Status changes and product updates are shown from newest to oldest.
-          </p>
-        </div>
+        <h2 id="history-title">Order history</h2>
 
         <CountLabel
           className={css.tabCountLabel}
@@ -1354,8 +1340,17 @@ function HistoryTab({
           if (historyEntry.kind === 'status') {
             const entry = historyEntry.entry;
 
+            const toneClassName =
+              entry.status === 'rejected'
+                ? css.historyDanger
+                : entry.status === 'in_progress'
+                  ? css.historyWarning
+                  : entry.status === 'new'
+                    ? css.historyInfo
+                    : undefined;
+
             return (
-              <li key={historyEntry.id}>
+              <li key={historyEntry.id} className={toneClassName}>
                 <History size={18} aria-hidden="true" />
                 <div className={css.historyContent}>
                   <strong>{ORDER_STATUS_LABELS[entry.status]}</strong>
@@ -1381,8 +1376,11 @@ function HistoryTab({
                   ? CirclePlus
                   : CircleMinus;
 
+          const activityToneClassName =
+            activity.type === 'product_removed' ? css.historyDanger : undefined;
+
           return (
-            <li key={historyEntry.id}>
+            <li key={historyEntry.id} className={activityToneClassName}>
               <ActivityIcon size={18} aria-hidden="true" />
               <div className={css.historyContent}>
                 <strong>{getOrderActivityLabel(activity)}</strong>
@@ -1520,9 +1518,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
             total: loadedOrder.managerCommentsCount,
             totalPages: Math.max(
               1,
-              Math.ceil(
-                loadedOrder.managerCommentsCount / COMMENTS_PER_PAGE
-              )
+              Math.ceil(loadedOrder.managerCommentsCount / COMMENTS_PER_PAGE)
             ),
           });
           setCommentsError('');

@@ -1,3 +1,5 @@
+import { pharmacyNoteRoutes } from './pharmacy-note.routes';
+
 import { Router } from 'express';
 
 import { adminRoutes } from './admin.routes';
@@ -20,6 +22,7 @@ routes.use('/admin', adminRoutes);
 routes.use('/auth', authRoutes);
 routes.use('/cart', cartRoutes);
 routes.use('/clients', clientRoutes);
+routes.use('/pharmacy-notes', pharmacyNoteRoutes);
 routes.use('/health', healthRoutes);
 routes.use('/orders', orderRoutes);
 routes.use('/products', productRoutes);

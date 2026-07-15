@@ -2,11 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { CabinetSidebar } from '@e-pharmacy/ui/layout';
 
+import { getPharmacyOrders } from '@/lib/api/browser';
 import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
-import { getPharmacyDashboardPath } from '@/lib/layout/routes';
+
+import {
+  getPharmacyDashboardPath,
+  getPharmacyOrdersPath,
+} from '@/lib/layout/routes';
 
 import css from './PharmacySidebar.module.css';
 
@@ -17,6 +23,11 @@ type PharmacySidebarProps = Readonly<{
   onToggleCollapsed: () => void;
 }>;
 
+type OrderMenuCounts = Readonly<{
+  new: number;
+  inProgress: number;
+}>;
+
 //===================================================================
 
 export function PharmacySidebar({
@@ -24,6 +35,38 @@ export function PharmacySidebar({
   onToggleCollapsed,
 }: PharmacySidebarProps) {
   const pathname = usePathname();
+  const [orderCounts, setOrderCounts] = useState<OrderMenuCounts>({
+    new: 0,
+    inProgress: 0,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadOrderCounts() {
+      try {
+        const [newOrders, inProgressOrders] = await Promise.all([
+          getPharmacyOrders({ page: 1, perPage: 1, status: 'new' }),
+          getPharmacyOrders({ page: 1, perPage: 1, status: 'in_progress' }),
+        ]);
+
+        if (isMounted) {
+          setOrderCounts({
+            new: newOrders.total,
+            inProgress: inProgressOrders.total,
+          });
+        }
+      } catch {
+        // Navigation must stay usable when counters cannot be loaded.
+      }
+    }
+
+    void loadOrderCounts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pathname]);
 
   return (
     <CabinetSidebar
@@ -43,9 +86,22 @@ export function PharmacySidebar({
           {children}
         </Link>
       )}
-      renderLink={({ href, className, children, ...props }) => (
+      renderLink={({ item, href, className, children, ...props }) => (
         <Link href={href} className={className} {...props}>
           {children}
+          {!isCollapsed && item.href === getPharmacyOrdersPath() ? (
+            <span
+              className={css.orderCounters}
+              aria-label="Order notifications"
+            >
+              <span className={css.newCounter} title="New orders">
+                {orderCounts.new}
+              </span>
+              <span className={css.progressCounter} title="Orders in progress">
+                {orderCounts.inProgress}
+              </span>
+            </span>
+          ) : null}
         </Link>
       )}
     />

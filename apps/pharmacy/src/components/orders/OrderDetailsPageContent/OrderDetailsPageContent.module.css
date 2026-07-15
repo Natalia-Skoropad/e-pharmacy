@@ -38,6 +38,7 @@
 .statusActions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
   gap: 10px;
   align-items: center;
 }
@@ -221,8 +222,6 @@
 }
 
 .orderSummary {
-  position: sticky;
-  top: 96px;
   display: grid;
   gap: 18px;
   align-self: start;
@@ -1025,7 +1024,7 @@
   }
 
   .productModal {
-    padding: 24px;
+    padding: 20px;
   }
 
   .productModalItem {
@@ -1088,5 +1087,109 @@
   .commentPagination button:first-child,
   .commentPagination button:last-child {
     flex: 1 1 100%;
+  }
+}
+
+.historyDanger {
+  background-color: var(--color-error-soft) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--color-error) 28%,
+    transparent
+  ) !important;
+}
+
+.historyDanger > svg {
+  color: var(--color-error) !important;
+}
+
+.historyWarning {
+  background-color: var(--color-warning-light) !important;
+}
+
+.historyWarning > svg {
+  color: var(--color-warning) !important;
+}
+
+.historyInfo {
+  background-color: var(--color-info-soft) !important;
+}
+
+.historyInfo > svg {
+  color: var(--color-info) !important;
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1199px) {
+  .headerGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .titleBlock {
+    max-width: 100%;
+  }
+
+  .statusActions {
+    justify-content: flex-start;
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  .contentCard {
+    padding: 14px;
+  }
+
+  .headerGrid {
+    gap: 16px;
+  }
+
+  .titleBlock h1 {
+    font-size: var(--fz-24);
+    overflow-wrap: anywhere;
+  }
+
+  .statusActions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    justify-content: stretch;
+  }
+
+  .statusActions > * {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .statusActions > :first-child {
+    justify-self: start;
+    width: auto;
+  }
+
+  .commentSectionHead,
+  .historyHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .tabCountLabel {
+    width: 100%;
+    max-width: 100%;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .commentComposer .tabSaveButton {
+    width: 100%;
+  }
+
+  .commentCardHead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .commentDeleteButton {
+    width: auto;
+    min-width: 0;
   }
 }

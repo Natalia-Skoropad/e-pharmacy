@@ -10,3 +10,32 @@
     align-self: start;
   }
 }
+
+.orderCounters {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.newCounter,
+.progressCounter {
+  display: inline-grid;
+  place-items: center;
+  min-width: 25px;
+  height: 25px;
+  padding-inline: 8px;
+  font-size: 14;
+  color: var(--color-white);
+  border-radius: var(--radius-pill);
+}
+
+.newCounter {
+  background-color: var(--color-info);
+  opacity: 0.8;
+}
+
+.progressCounter {
+  background-color: var(--color-warning);
+  opacity: 0.8;
+}
