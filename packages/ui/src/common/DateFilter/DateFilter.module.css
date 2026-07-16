@@ -88,6 +88,14 @@
   opacity: 0.6;
 }
 
+.input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+.input:disabled::-webkit-calendar-picker-indicator {
+  cursor: not-allowed;
+}
+
 .applyButton {
   justify-self: end;
   min-height: 48px;

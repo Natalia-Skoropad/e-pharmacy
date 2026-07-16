@@ -1,8 +1,139 @@
-.root { position: relative; display: inline-flex; vertical-align: middle; }
-.trigger { display:inline-grid; place-items:center; width:28px; height:28px; padding:0; color:var(--color-white); cursor:help; background:var(--color-info); border:0; border-radius:50%; }
-.tooltip { position:absolute; z-index:40; top:calc(100% + 10px); left:50%; display:grid; grid-template-columns:auto minmax(0,1fr); gap:10px; width:min(320px, calc(100vw - 32px)); padding:14px; color:var(--color-text-secondary); pointer-events:none; visibility:hidden; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); opacity:0; transform:translate(-50%, -4px); transition:opacity var(--transition-base), transform var(--transition-base), visibility var(--transition-base); }
-.root:hover .tooltip, .root:focus-within .tooltip { visibility:visible; opacity:1; transform:translate(-50%,0); }
-.icon { color:var(--color-accent); }
-.tooltip strong { display:block; margin-bottom:4px; color:var(--color-text-primary); }
-.text { display:block; font-size:var(--fz-14); line-height:var(--lh-base); }
-@media (max-width:767px){ .tooltip{left:0; transform:translate(0,-4px)} .root:hover .tooltip,.root:focus-within .tooltip{transform:translate(0,0)} }
+.root {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.trigger {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--color-info);
+  cursor: help;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.trigger:hover,
+.trigger:focus-visible {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+}
+
+.trigger:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-accent-border-soft);
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 12px);
+  left: 50%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  width: min(340px, calc(100vw - 32px));
+  padding: 16px;
+  color: var(--color-text-secondary);
+  font-size: var(--fz-14);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-base);
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+  visibility: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  opacity: 0;
+  transform: translate(-50%, -6px);
+  transition:
+    opacity var(--transition-base),
+    transform var(--transition-base),
+    visibility var(--transition-base);
+}
+
+.tooltip::before {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  content: '';
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-accent-border-soft);
+  border-left: 1px solid var(--color-accent-border-soft);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.root:hover .tooltip,
+.root:focus-within .tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.topicIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: var(--radius-lg);
+}
+
+.content {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--fz-16);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  white-space: normal;
+}
+
+.text {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: var(--fz-14);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-base);
+  white-space: normal;
+}
+
+@media only screen and (max-width: 767px) {
+  .tooltip {
+    left: 0;
+    width: min(300px, calc(100vw - 24px));
+    transform: translate(0, -6px);
+  }
+
+  .tooltip::before {
+    left: 12px;
+    transform: rotate(45deg);
+  }
+
+  .root:hover .tooltip,
+  .root:focus-within .tooltip {
+    transform: translate(0, 0);
+  }
+}

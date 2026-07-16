@@ -1,7 +1,7 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import { CircleHelp, UsersRound } from 'lucide-react';
+import { useId, type ReactNode } from 'react';
+import { MessageCircleQuestion, UsersRound } from 'lucide-react';
 import clsx from 'clsx';
 
 import css from './InfoTooltip.module.css';
@@ -13,24 +13,38 @@ type InfoTooltipProps = Readonly<{
   title: string;
   children: ReactNode;
   className?: string;
+  icon?: ReactNode;
 }>;
 
 //===================================================================
 
-function InfoTooltip({ label, title, children, className }: InfoTooltipProps) {
+function InfoTooltip({
+  label,
+  title,
+  children,
+  className,
+  icon,
+}: InfoTooltipProps) {
+  const tooltipId = useId();
+
   return (
     <span className={clsx(css.root, className)}>
-      <button className={css.trigger} type="button" aria-label={label}>
-        <CircleHelp size={18} aria-hidden="true" />
+      <button
+        className={css.trigger}
+        type="button"
+        aria-label={label}
+        aria-describedby={tooltipId}
+      >
+        <MessageCircleQuestion size={20} strokeWidth={2.2} aria-hidden="true" />
       </button>
 
-      <span className={css.tooltip} role="tooltip">
-        <span className={css.icon}>
-          <UsersRound size={18} aria-hidden="true" />
+      <span className={css.tooltip} id={tooltipId} role="tooltip">
+        <span className={css.topicIcon} aria-hidden="true">
+          {icon ?? <UsersRound size={20} strokeWidth={2} />}
         </span>
-        
-        <span>
-          <strong>{title}</strong>
+
+        <span className={css.content}>
+          <strong className={css.title}>{title}</strong>
           <span className={css.text}>{children}</span>
         </span>
       </span>

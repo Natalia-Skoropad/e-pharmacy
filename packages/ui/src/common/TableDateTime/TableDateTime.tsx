@@ -1,3 +1,5 @@
+import css from './TableDateTime.module.css';
+
 type TableDateTimeProps = Readonly<{ value: string }>;
 
 //===================================================================
@@ -23,7 +25,7 @@ function TableDateTime({ value }: TableDateTimeProps) {
   }).format(date);
 
   return (
-    <time dateTime={value} style={{ display: 'grid', lineHeight: 1.35 }}>
+    <time className={css.root} dateTime={value}>
       <span>{dayMonth}</span>
       <span>{year}</span>
       <span>{time}</span>

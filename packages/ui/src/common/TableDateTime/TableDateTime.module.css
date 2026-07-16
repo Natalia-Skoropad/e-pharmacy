@@ -1,0 +1,14 @@
+.root {
+  display: inline-grid;
+  grid-template-rows: repeat(3, auto);
+  width: max-content;
+  min-width: 54px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.root span {
+  display: block;
+  white-space: nowrap;
+}

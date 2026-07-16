@@ -730,12 +730,24 @@ async function seedOwnProductRestocks(): Promise<number> {
     .lean();
   if (!pharmacy) return 0;
 
+  const selloutProducts = await Product.find({
+    _id: { $ne: STOCK_MOVEMENT_DEMO_PRODUCT_ID },
+  })
+    .sort({ article: 1, _id: 1 })
+    .limit(4)
+    .select('_id')
+    .lean<Array<{ _id: Types.ObjectId }>>();
+  const selloutProductIds = new Set(
+    selloutProducts.map((product) => String(product._id))
+  );
   const offers = await ProductOffer.find({ pharmacyId: pharmacy._id }).sort({
     productId: 1,
   });
-  const occurredAt = new Date('2026-07-15T12:00:00.000Z');
 
   for (const [index, offer] of offers.entries()) {
+    const occurredAt = selloutProductIds.has(String(offer.productId))
+      ? new Date('2026-05-15T12:00:00.000Z')
+      : new Date('2026-07-15T12:00:00.000Z');
     const quantity = 40 + (index % 11);
     const priceIncrease = 50 + (index % 11);
     const nextPrice = offer.price + priceIncrease;
@@ -761,12 +773,6 @@ async function seedOwnProductRestocks(): Promise<number> {
       occurredAt,
     });
   }
-
-  const blockedProductIds = offers.slice(0, 2).map((offer) => offer.productId);
-  await Product.updateMany(
-    { _id: { $in: blockedProductIds } },
-    { $set: { status: 'blocked' } }
-  );
 
   return offers.length;
 }
@@ -1016,13 +1022,17 @@ async function seedActivePharmacyProductOffers(
 
   const createdOffers = await ProductOffer.insertMany(
     activeProducts.map((product, index) => {
+      const initialSelloutQuantities = [36, 42, 48, 54];
       const lowStockQuantities = [5, 7, 8, 10];
       const quantity =
         index < 4
-          ? 0
+          ? initialSelloutQuantities[index]
           : index < 8
             ? lowStockQuantities[index - 4]
             : 100 + index * 3;
+
+      const offerCreatedAt =
+        index < 4 ? new Date('2026-05-01T09:00:00.000Z') : stockArrivalAt;
 
       return {
         productId: product._id,
@@ -1031,8 +1041,8 @@ async function seedActivePharmacyProductOffers(
         totalQuantity: quantity,
         availableQuantity: quantity,
         reservedQuantity: 0,
-        createdAt: stockArrivalAt,
-        updatedAt: stockArrivalAt,
+        createdAt: offerCreatedAt,
+        updatedAt: offerCreatedAt,
       };
     })
   );
@@ -1137,7 +1147,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
         status: USER_STATUSES.ACTIVE,
         phone: '+380968016907',
         address: '27 Wellness Street, Lviv, Lviv',
-        pictureUrl: '/images/seed/pharmacies/pharmacy-005.png',
+        pictureUrl: '/images/seed/clients/client-008.png',
       },
     },
     {
@@ -1182,14 +1192,14 @@ async function seedActivePharmacyOrder(): Promise<number> {
     {
       status: 'new',
       quantity: 10,
-      createdAt: new Date('2026-07-10T09:00:00.000Z'),
-      statusChangedAt: new Date('2026-07-10T09:00:00.000Z'),
+      createdAt: new Date('2026-07-16T08:00:00.000Z'),
+      statusChangedAt: new Date('2026-07-16T08:00:00.000Z'),
     },
     {
       status: 'in_progress',
       quantity: 10,
-      createdAt: new Date('2026-07-11T09:00:00.000Z'),
-      statusChangedAt: new Date('2026-07-11T10:00:00.000Z'),
+      createdAt: new Date('2026-07-16T08:20:00.000Z'),
+      statusChangedAt: new Date('2026-07-16T08:40:00.000Z'),
     },
     {
       status: 'rejected',
@@ -1390,9 +1400,9 @@ async function seedActivePharmacyOrder(): Promise<number> {
       stockDelta: 0,
       reservedDelta: 10,
       availableDelta: -10,
-      stockAfter: 127,
+      stockAfter: 170,
       reservedAfter: 10,
-      availableAfter: 117,
+      availableAfter: 160,
       unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
       orderId: newOrder._id,
       orderNumber: newOrder.orderNumber,
@@ -1410,9 +1420,9 @@ async function seedActivePharmacyOrder(): Promise<number> {
       stockDelta: 0,
       reservedDelta: 10,
       availableDelta: -10,
-      stockAfter: 127,
+      stockAfter: 170,
       reservedAfter: 20,
-      availableAfter: 107,
+      availableAfter: 150,
       unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
       orderId: inProgressOrder._id,
       orderNumber: inProgressOrder.orderNumber,
@@ -1432,8 +1442,8 @@ async function seedActivePharmacyOrder(): Promise<number> {
       reservedDelta: 10,
       availableDelta: -10,
       stockAfter: 127,
-      reservedAfter: 30,
-      availableAfter: 97,
+      reservedAfter: 10,
+      availableAfter: 117,
       unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
       orderId: rejectedOrder._id,
       orderNumber: rejectedOrder.orderNumber,
@@ -1452,8 +1462,8 @@ async function seedActivePharmacyOrder(): Promise<number> {
       reservedDelta: -10,
       availableDelta: 10,
       stockAfter: 127,
-      reservedAfter: 20,
-      availableAfter: 107,
+      reservedAfter: 0,
+      availableAfter: 127,
       unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
       orderId: rejectedOrder._id,
       orderNumber: rejectedOrder.orderNumber,
@@ -1473,8 +1483,8 @@ async function seedActivePharmacyOrder(): Promise<number> {
       reservedDelta: 7,
       availableDelta: -7,
       stockAfter: 127,
-      reservedAfter: 27,
-      availableAfter: 100,
+      reservedAfter: 7,
+      availableAfter: 120,
       unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
       orderId: successfulOrder._id,
       orderNumber: successfulOrder.orderNumber,
@@ -1493,8 +1503,8 @@ async function seedActivePharmacyOrder(): Promise<number> {
       reservedDelta: -7,
       availableDelta: 0,
       stockAfter: 120,
-      reservedAfter: 20,
-      availableAfter: 100,
+      reservedAfter: 0,
+      availableAfter: 120,
       unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
       orderId: successfulOrder._id,
       orderNumber: successfulOrder.orderNumber,
@@ -1514,8 +1524,8 @@ async function seedActivePharmacyOrder(): Promise<number> {
       reservedDelta: 0,
       availableDelta: 50,
       stockAfter: 170,
-      reservedAfter: 20,
-      availableAfter: 150,
+      reservedAfter: 0,
+      availableAfter: 170,
       unitPrice: STOCK_MOVEMENT_DEMO_CURRENT_PRICE,
       comment:
         'Stock arrival added 50 units at the new price of 2 010,00 UAH per unit.',
@@ -1528,7 +1538,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
     totalQuantity: 170,
     reservedQuantity: 20,
     availableQuantity: 150,
-    updatedAt: new Date('2026-07-14T09:00:00.000Z'),
+    updatedAt: new Date('2026-07-16T08:40:00.000Z'),
   });
   await offer.save();
 
@@ -1618,9 +1628,22 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 
   if (!pharmacy) return 0;
 
+  const selloutProducts = await Product.find({
+    _id: { $ne: STOCK_MOVEMENT_DEMO_PRODUCT_ID },
+  })
+    .sort({ article: 1, _id: 1 })
+    .limit(4)
+    .select('_id')
+    .lean<Array<{ _id: Types.ObjectId }>>();
+
   const offers = await ProductOffer.find({
     pharmacyId: pharmacy._id,
-    productId: { $ne: STOCK_MOVEMENT_DEMO_PRODUCT_ID },
+    productId: {
+      $nin: [
+        STOCK_MOVEMENT_DEMO_PRODUCT_ID,
+        ...selloutProducts.map((product) => product._id),
+      ],
+    },
     availableQuantity: { $gte: 20 },
   })
     .sort({ productId: 1 })
@@ -2051,20 +2074,88 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 
   const orderDocuments: Array<Record<string, unknown>> = [];
   const movementPlans: MovementPlan[] = [];
-  const baseDate = new Date('2026-06-20T08:00:00.000Z');
+  const portfolioOrderSlots = clientConfigs
+    .flatMap((client, clientIndex) =>
+      client.orderStatuses.map((_status, orderIndex) => ({
+        clientIndex,
+        orderIndex,
+      }))
+    )
+    .sort(
+      (first, second) =>
+        first.orderIndex - second.orderIndex ||
+        first.clientIndex - second.clientIndex
+    );
+  const portfolioOrderCount = portfolioOrderSlots.length;
+  const portfolioStatusTargets = {
+    new: 10,
+    inProgress: 8,
+    rejected: 6,
+  } as const;
+  const portfolioStatusBySlot = new Map<string, DemoClientStatus>();
+
+  portfolioOrderSlots.forEach((slot, index) => {
+    const status: DemoClientStatus =
+      index < portfolioStatusTargets.new
+        ? 'new'
+        : index <
+            portfolioStatusTargets.new + portfolioStatusTargets.inProgress
+          ? 'in_progress'
+          : index <
+              portfolioStatusTargets.new +
+                portfolioStatusTargets.inProgress +
+                portfolioStatusTargets.rejected
+            ? 'rejected'
+            : 'successful';
+
+    portfolioStatusBySlot.set(`${slot.clientIndex}:${slot.orderIndex}`, status);
+  });
+
+  let portfolioOrderIndex = 0;
+  let activeOrderIndex = 0;
+  let rejectedOrderIndex = 0;
+  let successfulOrderIndex = 0;
 
   clientConfigs.forEach((client, clientIndex) => {
     const clientUser = resolvedClientUsers[clientIndex];
 
-    client.orderStatuses.forEach((status, orderIndex) => {
+    client.orderStatuses.forEach((_configuredStatus, orderIndex) => {
       const orderId = new Types.ObjectId();
-      const dayOffset = (clientIndex * 3 + orderIndex) % 26;
-      const createdAt = new Date(
-        baseDate.getTime() +
-          dayOffset * 24 * 60 * 60 * 1000 +
-          (8 + orderIndex) * 47 * 60 * 1000
+      portfolioOrderIndex += 1;
+
+      const status =
+        portfolioStatusBySlot.get(`${clientIndex}:${orderIndex}`) ??
+        'successful';
+
+      let createdAt: Date;
+
+      if (status === 'new' || status === 'in_progress') {
+        createdAt = new Date(
+          new Date('2026-07-16T07:00:00.000Z').getTime() +
+            activeOrderIndex * 20 * 60 * 1000
+        );
+        activeOrderIndex += 1;
+      } else if (status === 'rejected') {
+        createdAt = new Date(
+          new Date('2026-07-09T08:00:00.000Z').getTime() +
+            rejectedOrderIndex * 24 * 60 * 60 * 1000 +
+            rejectedOrderIndex * 35 * 60 * 1000
+        );
+        rejectedOrderIndex += 1;
+      } else {
+        const dayOffset = successfulOrderIndex % 26;
+        const timeOffset = (successfulOrderIndex % 8) * 43 * 60 * 1000;
+        createdAt = new Date(
+          new Date('2026-06-20T08:00:00.000Z').getTime() +
+            dayOffset * 24 * 60 * 60 * 1000 +
+            timeOffset
+        );
+        successfulOrderIndex += 1;
+      }
+
+      const finalChangedAt = new Date(
+        createdAt.getTime() + (status === 'new' ? 0 : 90 * 60 * 1000)
       );
-      const finalChangedAt = new Date(createdAt.getTime() + 90 * 60 * 1000);
       const orderNumber = createSeedOrderNumber(orderId, createdAt);
       const itemCount = 5 + ((clientIndex + orderIndex) % 2);
       const selectedItems = Array.from(
@@ -2244,6 +2335,10 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
     });
   });
 
+  if (portfolioOrderIndex !== portfolioOrderCount) {
+    throw new Error('Portfolio order plan did not cover every client order.');
+  }
+
   await Order.insertMany(orderDocuments);
 
   const balances = new Map<string, OfferBalance>(
@@ -2329,6 +2424,385 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
   );
 
   return clientConfigs.length;
+}
+
+//===============================================================
+
+async function seedSoldOutAndLowStockProducts(): Promise<{
+  soldOutProducts: number;
+  lowStockProducts: number;
+  linkedOrders: number;
+}> {
+  type SelloutProduct = {
+    _id: Types.ObjectId;
+    name: string;
+    slug?: string;
+    article: string;
+    category: string;
+    imageUrl?: string;
+    manufacturer?: string;
+    dosage?: string;
+    packageQuantity?: string | number;
+    rating?: number;
+    reviewsCount?: number;
+  };
+
+  type SuccessfulOrderSnapshot = {
+    _id: Types.ObjectId;
+    userId: Types.ObjectId;
+    orderNumber: string;
+    totalItems: number;
+    totalPrice: number;
+    createdAt: Date;
+    updatedAt: Date;
+    statusHistory: Array<{
+      status: 'new' | 'in_progress' | 'successful' | 'rejected';
+      changedAt: Date;
+    }>;
+  };
+
+  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId } | null>();
+
+  if (!pharmacy) {
+    return { soldOutProducts: 0, lowStockProducts: 0, linkedOrders: 0 };
+  }
+
+  const soldOutProducts = await Product.find({
+    _id: { $ne: STOCK_MOVEMENT_DEMO_PRODUCT_ID },
+  })
+    .sort({ article: 1, _id: 1 })
+    .limit(4)
+    .select(
+      '_id name slug article category imageUrl manufacturer dosage packageQuantity rating reviewsCount'
+    )
+    .lean<SelloutProduct[]>();
+
+  const soldOutOffers = await ProductOffer.find({
+    pharmacyId: pharmacy._id,
+    productId: { $in: soldOutProducts.map((product) => product._id) },
+  }).sort({ productId: 1 });
+
+  if (soldOutOffers.length !== 4) {
+    throw new Error('Could not resolve four own products for sellout history.');
+  }
+
+  if (soldOutOffers.some((offer) => offer.reservedQuantity !== 0)) {
+    throw new Error(
+      'Sellout demo products must not be used by active portfolio orders.'
+    );
+  }
+
+  const successfulOrders = await Order.find({
+    pharmacyId: pharmacy._id,
+    status: 'successful',
+    'items.productId': { $ne: STOCK_MOVEMENT_DEMO_PRODUCT_ID },
+  })
+    .sort({ createdAt: 1, _id: 1 })
+    .limit(40)
+    .select(
+      '_id userId orderNumber totalItems totalPrice createdAt updatedAt statusHistory'
+    )
+    .lean<SuccessfulOrderSnapshot[]>();
+
+  if (successfulOrders.length < 40) {
+    throw new Error(
+      'Forty successful orders are required for sold-out product history.'
+    );
+  }
+
+  const productsById = new Map<string, SelloutProduct>(
+    soldOutProducts.map((product) => [String(product._id), product])
+  );
+  const earliestArrivalPrices = new Map<string, number>();
+
+  for (const offer of soldOutOffers) {
+    const earliestArrival = await StockMovement.findOne({
+      productOfferId: offer._id,
+      eventType: 'arrival',
+    })
+      .sort({ occurredAt: 1, _id: 1 })
+      .select('unitPrice')
+      .lean<{ unitPrice: number } | null>();
+
+    earliestArrivalPrices.set(
+      String(offer._id),
+      earliestArrival?.unitPrice ?? Math.max(offer.price - 55, 1)
+    );
+  }
+
+  const orderUpdates: Array<Record<string, unknown>> = [];
+  const historicalMovements: Array<Record<string, unknown>> = [];
+
+  soldOutOffers.forEach((offer, productIndex) => {
+    const product = productsById.get(String(offer.productId));
+    if (!product) throw new Error('Sellout product snapshot is missing.');
+
+    const productOrders = successfulOrders.slice(
+      productIndex * 10,
+      productIndex * 10 + 10
+    );
+    const baseQuantity = Math.floor(offer.totalQuantity / 10);
+    const remainder = offer.totalQuantity % 10;
+    let total = offer.totalQuantity;
+    let reserved = 0;
+    let available = offer.availableQuantity;
+
+    productOrders.forEach((order, orderIndex) => {
+      const quantity = baseQuantity + (orderIndex < remainder ? 1 : 0);
+      const unitPrice =
+        orderIndex < 5
+          ? (earliestArrivalPrices.get(String(offer._id)) ?? offer.price)
+          : offer.price;
+      const totalPrice = quantity * unitPrice;
+      const productSnapshot = {
+        name: product.name,
+        ...(product.slug ? { slug: product.slug } : {}),
+        article: product.article,
+        category: product.category,
+        ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+        ...(product.manufacturer
+          ? { manufacturer: product.manufacturer }
+          : {}),
+        ...(product.dosage ? { dosage: product.dosage } : {}),
+        ...(product.packageQuantity
+          ? { packageQuantity: String(product.packageQuantity) }
+          : {}),
+        rating: product.rating ?? 0,
+        reviewsCount: product.reviewsCount ?? 0,
+      };
+      const completedAt =
+        [...order.statusHistory]
+          .reverse()
+          .find((entry) => entry.status === 'successful')?.changedAt ??
+        order.updatedAt;
+
+      orderUpdates.push({
+        updateOne: {
+          filter: { _id: order._id },
+          update: {
+            $push: {
+              items: {
+                productId: product._id,
+                productOfferId: offer._id,
+                productSnapshot,
+                quantity,
+                unitPrice,
+                totalPrice,
+              },
+              activityHistory: {
+                type: 'product_added',
+                occurredAt: order.createdAt,
+                changedBy: order.userId,
+                productId: product._id,
+                productOfferId: offer._id,
+                productName: product.name,
+                previousQuantity: 0,
+                quantity,
+                quantityDelta: quantity,
+                previousUnitPrice: unitPrice,
+                unitPrice,
+              },
+            },
+            $inc: { totalItems: quantity, totalPrice },
+          },
+        },
+      });
+
+      reserved += quantity;
+      available -= quantity;
+
+      historicalMovements.push({
+        productOfferId: offer._id,
+        productId: product._id,
+        pharmacyId: pharmacy._id,
+        eventType: 'reserve',
+        source: 'client_order',
+        quantity,
+        stockDelta: 0,
+        reservedDelta: quantity,
+        availableDelta: -quantity,
+        stockAfter: total,
+        reservedAfter: reserved,
+        availableAfter: available,
+        unitPrice,
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        orderStatus: 'in_progress',
+        comment: `Historical order reserved ${quantity} units.`,
+        occurredAt: order.createdAt,
+      });
+
+      total -= quantity;
+      reserved -= quantity;
+
+      historicalMovements.push({
+        productOfferId: offer._id,
+        productId: product._id,
+        pharmacyId: pharmacy._id,
+        eventType: 'write_off',
+        source: 'client_order',
+        quantity,
+        stockDelta: -quantity,
+        reservedDelta: -quantity,
+        availableDelta: 0,
+        stockAfter: total,
+        reservedAfter: reserved,
+        availableAfter: available,
+        unitPrice,
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        orderStatus: 'successful',
+        comment: `Successful historical order wrote off ${quantity} units.`,
+        occurredAt: completedAt,
+      });
+    });
+
+    if (total !== 0 || reserved !== 0 || available !== 0) {
+      throw new Error('Sold-out product balance did not reach zero.');
+    }
+  });
+
+  if (orderUpdates.length > 0) {
+    await Order.bulkWrite(
+      orderUpdates as Parameters<typeof Order.bulkWrite>[0]
+    );
+  }
+  if (historicalMovements.length > 0) {
+    await StockMovement.insertMany(historicalMovements);
+  }
+
+  await Promise.all(
+    soldOutOffers.map((offer) =>
+      ProductOffer.updateOne(
+        { _id: offer._id },
+        {
+          $set: {
+            totalQuantity: 0,
+            reservedQuantity: 0,
+            availableQuantity: 0,
+          },
+        },
+        { runValidators: true }
+      )
+    )
+  );
+
+  await Product.updateMany(
+    { _id: { $in: soldOutProducts.slice(0, 2).map((product) => product._id) } },
+    { $set: { status: 'blocked', inStock: false } }
+  );
+  await Product.updateMany(
+    { _id: { $in: soldOutProducts.slice(2).map((product) => product._id) } },
+    { $set: { status: 'active', inStock: false } }
+  );
+
+  const soldOutProductIds = soldOutProducts.map((product) => product._id);
+  const lowStockProducts = await Product.find({
+    _id: {
+      $nin: [STOCK_MOVEMENT_DEMO_PRODUCT_ID, ...soldOutProductIds],
+    },
+    status: 'active',
+  })
+    .sort({ article: 1, _id: 1 })
+    .select('_id')
+    .lean<Array<{ _id: Types.ObjectId }>>();
+
+  const lowStockOffers = await ProductOffer.find({
+    pharmacyId: pharmacy._id,
+    productId: { $in: lowStockProducts.map((product) => product._id) },
+    reservedQuantity: { $lte: 4 },
+  }).sort({ productId: 1 });
+
+  let lowStockCount = 0;
+
+  for (const offer of lowStockOffers) {
+    if (lowStockCount >= 4) break;
+
+    const targetAvailable = 2 + lowStockCount;
+    const targetTotal = offer.reservedQuantity + targetAvailable;
+
+    if (targetTotal >= 10 || offer.totalQuantity <= targetTotal) continue;
+
+    const reduction = offer.totalQuantity - targetTotal;
+
+    await StockMovement.create({
+      productOfferId: offer._id,
+      productId: offer.productId,
+      pharmacyId: offer.pharmacyId,
+      eventType: 'adjustment',
+      source: 'pharmacy_stock',
+      quantity: reduction,
+      stockDelta: -reduction,
+      reservedDelta: 0,
+      availableDelta: -reduction,
+      stockAfter: targetTotal,
+      reservedAfter: offer.reservedQuantity,
+      availableAfter: targetAvailable,
+      unitPrice: offer.price,
+      comment:
+        'Inventory reconciliation left fewer than ten units after recent sales.',
+      occurredAt: new Date(
+        new Date('2026-07-15T14:00:00.000Z').getTime() +
+          lowStockCount * 15 * 60 * 1000
+      ),
+    });
+
+    offer.totalQuantity = targetTotal;
+    offer.availableQuantity = targetAvailable;
+    await offer.save();
+
+    await Product.updateOne(
+      { _id: offer.productId },
+      { $set: { status: 'active', inStock: true } }
+    );
+
+    lowStockCount += 1;
+  }
+
+  return {
+    soldOutProducts: soldOutOffers.length,
+    lowStockProducts: lowStockCount,
+    linkedOrders: orderUpdates.length,
+  };
+}
+
+//===============================================================
+
+async function assertDemoOrderStatusCounts(): Promise<void> {
+  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId } | null>();
+
+  if (!pharmacy) throw new Error('Demo pharmacy was not found.');
+
+  const statusCounts = await Order.aggregate<{
+    _id: 'new' | 'in_progress' | 'successful' | 'rejected';
+    count: number;
+  }>([
+    { $match: { pharmacyId: pharmacy._id } },
+    { $group: { _id: '$status', count: { $sum: 1 } } },
+  ]);
+
+  const countByStatus = new Map(
+    statusCounts.map((item) => [item._id, item.count])
+  );
+  const expectedCounts = {
+    new: 11,
+    in_progress: 9,
+    rejected: 7,
+  } as const;
+
+  for (const [status, expected] of Object.entries(expectedCounts)) {
+    const actual = countByStatus.get(status as keyof typeof expectedCounts) ?? 0;
+
+    if (actual !== expected) {
+      throw new Error(
+        `Unexpected ${status} order count: expected ${expected}, received ${actual}.`
+      );
+    }
+  }
 }
 
 //===============================================================
@@ -2436,6 +2910,8 @@ async function seedDatabase(): Promise<void> {
   );
   const activePharmacyOrdersCount = await seedActivePharmacyOrder();
   const pharmacyClientsCount = await seedPharmacyClientPortfolio();
+  const inventoryScenario = await seedSoldOutAndLowStockProducts();
+  await assertDemoOrderStatusCounts();
 
   console.log(
     `Seed completed: ${activePharmacyOffersCount} active pharmacy offers created`
@@ -2450,6 +2926,9 @@ async function seedDatabase(): Promise<void> {
 
   console.log(
     `Seed completed: ${pharmacyClientsCount} pharmacy client profiles created`
+  );
+  console.log(
+    `Seed completed: ${inventoryScenario.soldOutProducts} sold-out products, ${inventoryScenario.lowStockProducts} low-stock products, and ${inventoryScenario.linkedOrders} successful orders linked to sellout history`
   );
 }
 
