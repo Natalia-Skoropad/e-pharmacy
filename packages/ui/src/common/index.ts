@@ -33,3 +33,6 @@ export * from './DataTable';
 export * from './TableHeaderTitle';
 export * from './TableImagePreview';
 export * from './helpers/format-initials';
+
+export * from './InfoTooltip';
+export * from './TableDateTime';

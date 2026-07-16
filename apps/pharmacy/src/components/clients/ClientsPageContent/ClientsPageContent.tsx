@@ -6,6 +6,7 @@ import { Users } from 'lucide-react';
 
 import {
   CountLabel,
+  InfoTooltip,
   FiltersButton,
   Pagination,
   RowsPerPageSelect,
@@ -110,8 +111,10 @@ function ClientsPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
   const [totalClients, setTotalClients] = useState(0);
+
   const [clientStatistics, setClientStatistics] =
     useState<ClientStatisticsCounts>(DEFAULT_CLIENT_STATISTICS);
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -232,7 +235,17 @@ function ClientsPageContent({
     <main className={css.page} aria-labelledby="clients-page-title">
       <section className={css.card} aria-labelledby="clients-page-title">
         <PageHeader
-          title="Clients"
+          title={
+            <span className={css.titleWithHelp}>
+              Clients
+              <InfoTooltip
+                label="What is a repeat client?"
+                title="Repeat clients"
+              >
+                Repeat clients are customers who have completed two or more successful orders in this pharmacy.
+              </InfoTooltip>
+            </span>
+          }
           titleId="clients-page-title"
           icon={<Users size={23} aria-hidden="true" />}
         />
@@ -306,13 +319,6 @@ function ClientsPageContent({
 
       <section className={css.card} aria-label="Clients table">
         <div className={css.toolbar}>
-          <CountLabel
-            className={css.countLabel}
-            shown={clients.length}
-            total={totalClients}
-            label="clients"
-          />
-
           <div className={css.rowsControl}>
             <RowsPerPageSelect
               id="clients-rows-per-page"
@@ -320,6 +326,13 @@ function ClientsPageContent({
               onChange={handleRowsPerPageChange}
             />
           </div>
+
+          <CountLabel
+            className={css.countLabel}
+            shown={clients.length}
+            total={totalClients}
+            label="clients"
+          />
         </div>
 
         <ClientsTable
@@ -336,7 +349,12 @@ function ClientsPageContent({
           currentPage={currentPage}
           totalPages={totalPages}
           getPageHref={(page) => String(page)}
-          renderLink={({ href, className, children, 'aria-label': ariaLabel }) => (
+          renderLink={({
+            href,
+            className,
+            children,
+            'aria-label': ariaLabel,
+          }) => (
             <button
               className={className}
               type="button"

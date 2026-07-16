@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import clsx from 'clsx';
 
 import css from './DateFilter.module.css';
@@ -21,6 +21,7 @@ export type DateFilterProps = Readonly<{
   isActive?: boolean;
   disabled?: boolean;
   className?: string;
+  minDate?: string;
   maxDate?: string;
   applyOnSubmit?: boolean;
   applyLabel?: string;
@@ -66,16 +67,21 @@ function DateFilter({
   isActive = false,
   disabled = false,
   className,
+  minDate = '2026-07-10',
   maxDate = getTodayIsoDate(),
   applyOnSubmit = false,
   applyLabel = 'Apply',
   onChange,
 }: DateFilterProps) {
+  const fromInputRef = useRef<HTMLInputElement>(null);
+  const toInputRef = useRef<HTMLInputElement>(null);
   const [draftValue, setDraftValue] = useState<DateFilterValue>(value);
   const currentValue = applyOnSubmit ? draftValue : value;
+
   const fromId = `${id}-from`;
   const toId = `${id}-to`;
   const applyButtonId = `${id}-apply`;
+
   const isApplyDisabled =
     disabled ||
     !currentValue.from ||
@@ -118,6 +124,7 @@ function DateFilter({
         <label className={css.dateField} htmlFor={fromId}>
           <span className={css.dateLabel}>{fromLabel}</span>
           <input
+            ref={fromInputRef}
             id={fromId}
             className={clsx(
               css.input,
@@ -125,7 +132,9 @@ function DateFilter({
             )}
             type="date"
             value={currentValue.from}
+            min={minDate}
             max={getMaxDate(currentValue.to, maxDate)}
+            onClick={() => fromInputRef.current?.showPicker?.()}
             aria-describedby={applyOnSubmit ? applyButtonId : undefined}
             onChange={(event) => handleFromChange(event.target.value)}
           />
@@ -134,6 +143,7 @@ function DateFilter({
         <label className={css.dateField} htmlFor={toId}>
           <span className={css.dateLabel}>{toLabel}</span>
           <input
+            ref={toInputRef}
             id={toId}
             className={clsx(
               css.input,
@@ -141,8 +151,9 @@ function DateFilter({
             )}
             type="date"
             value={currentValue.to}
-            min={getMinDate(currentValue.from)}
+            min={getMinDate(currentValue.from || minDate)}
             max={maxDate}
+            onClick={() => toInputRef.current?.showPicker?.()}
             aria-describedby={applyOnSubmit ? applyButtonId : undefined}
             onChange={(event) => handleToChange(event.target.value)}
           />

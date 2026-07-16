@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 
 import {
   DataTable,
+  TableDateTime,
   TableHeaderTitle,
   TableImagePreview,
   TextActionButton,
@@ -15,8 +16,6 @@ import {
   PRODUCT_REQUEST_STATUS_LABELS,
   type PharmacyProductRequestRow,
 } from '@e-pharmacy/types/product-requests';
-
-import { formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import {
   getPharmacyAllProductPath,
@@ -55,11 +54,7 @@ function ProductRequestsTable({
       {
         key: 'createdAt',
         title: <TableHeaderTitle parts={['Created', 'date']} />,
-        render: (request) => (
-          <time dateTime={request.createdAt}>
-            {formatShortDate(request.createdAt)}
-          </time>
-        ),
+        render: (request) => <TableDateTime value={request.createdAt} />,
       },
       {
         key: 'requestNumber',

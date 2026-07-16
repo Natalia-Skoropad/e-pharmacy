@@ -16,7 +16,6 @@ import {
 import { AllProductStatistics, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { useToast } from '@e-pharmacy/ui/feedback';
-
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import {
@@ -132,6 +131,7 @@ function AllProductsPageContent({
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+
   const [productStatistics, setProductStatistics] =
     useState<AllProductStatisticsCounts>(DEFAULT_ALL_PRODUCT_STATISTICS);
 
@@ -142,6 +142,7 @@ function AllProductsPageContent({
   const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
     null
   );
+
   const [pharmacyStatus, setPharmacyStatus] = useState<PharmacyStatus | null>(
     null
   );
@@ -420,13 +421,6 @@ function AllProductsPageContent({
 
       <section className={css.tableCard} aria-label="All products table">
         <div className={css.toolbar}>
-          <CountLabel
-            className={css.countLabel}
-            shown={products.length}
-            total={totalProducts}
-            label="products"
-          />
-
           <div className={css.rowsControl}>
             <RowsPerPageSelect
               id="all-products-rows-per-page"
@@ -434,6 +428,13 @@ function AllProductsPageContent({
               onChange={handleRowsPerPageChange}
             />
           </div>
+
+          <CountLabel
+            className={css.countLabel}
+            shown={products.length}
+            total={totalProducts}
+            label="products"
+          />
         </div>
 
         <AllProductsTable

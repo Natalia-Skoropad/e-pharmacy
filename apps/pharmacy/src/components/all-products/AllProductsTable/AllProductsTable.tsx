@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import {
   Button,
   DataTable,
+  TableDateTime,
   TableHeaderTitle,
   TableImagePreview,
   TextActionButton,
@@ -13,7 +14,6 @@ import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import type { EntityId, Product } from '@e-pharmacy/types';
-import { formatShortDate } from '@e-pharmacy/utils/formatters';
 
 import { PRODUCT_STATUS_LABELS } from '@/lib/products/products';
 import { getPharmacyAllProductPath } from '@/lib/layout/routes';
@@ -79,9 +79,7 @@ function AllProductsTable({
         title: <TableHeaderTitle parts={['Created', 'date']} />,
         render: (product) =>
           product.createdAt ? (
-            <time dateTime={product.createdAt}>
-              {formatShortDate(product.createdAt)}
-            </time>
+            <TableDateTime value={product.createdAt} />
           ) : (
             '—'
           ),

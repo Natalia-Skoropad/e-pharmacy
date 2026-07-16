@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import {
   DataTable,
   formatInitials,
+  TableDateTime,
   TableHeaderTitle,
   TableImagePreview,
   TextActionButton,
@@ -10,13 +11,15 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
-import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
+import { formatPrice } from '@e-pharmacy/utils/formatters';
 
 import {
   DELIVERY_METHOD_LABELS,
   PAYMENT_METHOD_LABELS,
   type PharmacyOrderRow,
 } from '@/lib/orders/orders';
+
+import { getProductImageSrc } from '@/lib/products/product-images';
 
 import {
   getPharmacyClientPath,
@@ -54,11 +57,7 @@ function OrdersTable({
       {
         key: 'orderDate',
         title: <TableHeaderTitle parts={['Order', 'date']} />,
-        render: (order) => (
-          <time dateTime={order.orderDate}>
-            {formatShortDate(order.orderDate)}
-          </time>
-        ),
+        render: (order) => <TableDateTime value={order.orderDate} />,
       },
       {
         key: 'orderNumber',
@@ -74,7 +73,7 @@ function OrdersTable({
         title: <TableHeaderTitle parts={['Client', 'photo']} />,
         render: (order) => (
           <TableImagePreview
-            src={order.clientPhotoUrl ?? undefined}
+            src={getProductImageSrc(order.clientPhotoUrl ?? undefined)}
             alt={`${order.client} photo`}
             fallback={formatInitials(order.client, 'C')}
           />
@@ -114,8 +113,8 @@ function OrdersTable({
       },
       {
         key: 'totalAmount',
-        title: <TableHeaderTitle parts={['Total', 'amount']} />,
-        render: (order) => formatPrice(order.totalAmount),
+        title: <TableHeaderTitle parts={['Total ', 'amount, ', 'UAH']} />,
+        render: (order) => formatPrice(order.totalAmount).replace(' UAH', ''),
       },
       {
         key: 'status',

@@ -2,7 +2,9 @@ import { useMemo } from 'react';
 
 import {
   DataTable,
+  InfoTooltip,
   formatInitials,
+  TableDateTime,
   TableHeaderTitle,
   TableImagePreview,
   TextActionButton,
@@ -10,7 +12,7 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
-import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
+import { formatPrice } from '@e-pharmacy/utils/formatters';
 
 import type { PharmacyClientRow } from '@/lib/clients/clients';
 import { getProductImageSrc } from '@/lib/products/product-images';
@@ -31,7 +33,7 @@ type ClientsTableProps = Readonly<{
 function FirstOrderDate({ value }: Readonly<{ value: string }>) {
   if (!value) return 'Not specified';
 
-  return <time dateTime={value}>{formatShortDate(value)}</time>;
+  return <TableDateTime value={value} />;
 }
 
 //===================================================================
@@ -99,13 +101,25 @@ function ClientsTable({
       },
       {
         key: 'successfulOrdersCount',
-        title: <TableHeaderTitle parts={['Orders', 'count']} />,
+        title: (
+          <span className={css.headerWithHelp}>
+            <TableHeaderTitle parts={['Orders', 'count']} />
+            <InfoTooltip
+              label="How are order totals calculated?"
+              title="Successful orders only"
+            >
+              Orders count is the number of successful orders. Orders amount is
+              the total value of all successful orders for this client.
+            </InfoTooltip>
+          </span>
+        ),
         render: (client) => client.successfulOrdersCount,
       },
       {
         key: 'successfulOrdersAmount',
-        title: <TableHeaderTitle parts={['Orders', 'amount']} />,
-        render: (client) => formatPrice(client.successfulOrdersAmount),
+        title: <TableHeaderTitle parts={['Orders', ' amount, ', 'UAH']} />,
+        render: (client) =>
+          formatPrice(client.successfulOrdersAmount).replace(' UAH', ''),
       },
       {
         key: 'status',

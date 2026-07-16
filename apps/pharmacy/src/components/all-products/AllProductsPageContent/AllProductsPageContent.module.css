@@ -42,6 +42,7 @@
 
 .countLabel {
   justify-self: start;
+  width: 100%;
 }
 
 .rowsControl {
@@ -68,6 +69,7 @@
     grid-column: 2;
     grid-row: 1;
     justify-self: end;
+    width: unset;
   }
 
   .rowsControl {

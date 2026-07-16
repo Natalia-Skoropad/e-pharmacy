@@ -146,26 +146,35 @@ function OwnProductsPageContent({
   const router = useRouter();
   const toast = useToast();
   const pathname = usePathname();
+
   const [filters, setFilters] =
     useState<OwnProductsFilterState>(initialFilters);
+
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<PharmacyProductRow[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
+
   const [productStatistics, setProductStatistics] =
     useState<OwnProductStatisticsCounts>(DEFAULT_OWN_PRODUCT_STATISTICS);
+
   const [pharmacyId, setPharmacyId] = useState<EntityId | null>(null);
+
   const [pharmacyStatus, setPharmacyStatus] = useState<PharmacyStatus | null>(
     null
   );
+
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
   const [productToRemove, setProductToRemove] =
     useState<PharmacyProductRow | null>(null);
+
   const [removingProductId, setRemovingProductId] = useState<EntityId | null>(
     null
   );
+
   const [refreshVersion, setRefreshVersion] = useState(0);
 
   useBodyScrollLock(isFiltersOpen);
@@ -399,13 +408,6 @@ function OwnProductsPageContent({
 
       <section className={css.card} aria-label="Own products table">
         <div className={css.toolbar}>
-          <CountLabel
-            className={css.countLabel}
-            shown={products.length}
-            total={totalProducts}
-            label="products"
-          />
-
           <div className={css.rowsControl}>
             <RowsPerPageSelect
               id="own-products-rows-per-page"
@@ -413,6 +415,13 @@ function OwnProductsPageContent({
               onChange={handleRowsPerPageChange}
             />
           </div>
+
+          <CountLabel
+            className={css.countLabel}
+            shown={products.length}
+            total={totalProducts}
+            label="products"
+          />
         </div>
 
         <OwnProductsTable
@@ -431,7 +440,12 @@ function OwnProductsPageContent({
           currentPage={currentPage}
           totalPages={totalPages}
           getPageHref={(page) => String(page)}
-          renderLink={({ href, className, children, 'aria-label': ariaLabel }) => (
+          renderLink={({
+            href,
+            className,
+            children,
+            'aria-label': ariaLabel,
+          }) => (
             <button
               className={className}
               type="button"

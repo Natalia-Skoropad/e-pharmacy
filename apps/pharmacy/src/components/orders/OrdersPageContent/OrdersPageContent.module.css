@@ -54,6 +54,7 @@
 
 .countLabel {
   justify-self: start;
+  width: 100%;
 }
 
 .rowsControl {
@@ -80,6 +81,7 @@
     grid-column: 2;
     grid-row: 1;
     justify-self: end;
+    width: unset;
   }
 
   .rowsControl {
@@ -93,3 +95,6 @@
     gap: 14px;
   }
 }
+
+.createButton { width:100%; }
+@media only screen and (min-width:768px){ .toolbar{grid-template-columns:auto minmax(0,1fr) auto;} .createButton{grid-column:3;grid-row:1;width:auto;} }

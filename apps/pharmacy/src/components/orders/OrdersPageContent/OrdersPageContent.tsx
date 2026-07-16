@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ShoppingBag } from 'lucide-react';
 
 import {
+  Button,
   CountLabel,
   FiltersButton,
   Pagination,
@@ -47,7 +48,7 @@ import type {
 } from '@/lib/orders/orders';
 
 import { OrdersFiltersDrawer } from '@/components/orders/OrdersFiltersDrawer';
-import { OrdersTable } from '@/components/orders/OrdersTable';
+import { OrdersTable } from '@/components/orders/OrdersTable/OrdersTable';
 
 import css from './OrdersPageContent.module.css';
 
@@ -104,9 +105,11 @@ function OrdersPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
+
   const [orderStatistics, setOrderStatistics] = useState(
     DEFAULT_ORDER_STATISTICS
   );
+
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -263,13 +266,6 @@ function OrdersPageContent({
 
       <section className={css.card} aria-label="Orders table">
         <div className={css.toolbar}>
-          <CountLabel
-            className={css.countLabel}
-            shown={orders.length}
-            total={totalOrders}
-            label="orders"
-          />
-
           <div className={css.rowsControl}>
             <RowsPerPageSelect
               id="orders-rows-per-page"
@@ -277,6 +273,17 @@ function OrdersPageContent({
               onChange={handleRowsPerPageChange}
             />
           </div>
+
+          <CountLabel
+            className={css.countLabel}
+            shown={orders.length}
+            total={totalOrders}
+            label="orders"
+          />
+
+          <Button className={css.createButton} type="button" size="md" disabled>
+            Create order
+          </Button>
         </div>
 
         <OrdersTable
@@ -293,7 +300,12 @@ function OrdersPageContent({
           currentPage={currentPage}
           totalPages={totalPages}
           getPageHref={(page) => String(page)}
-          renderLink={({ href, className, children, 'aria-label': ariaLabel }) => (
+          renderLink={({
+            href,
+            className,
+            children,
+            'aria-label': ariaLabel,
+          }) => (
             <button
               className={className}
               type="button"

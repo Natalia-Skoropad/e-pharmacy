@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import {
   Button,
   DataTable,
+  TableDateTime,
   TableHeaderTitle,
   TableImagePreview,
   TextActionButton,
@@ -13,7 +14,7 @@ import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import type { EntityId } from '@e-pharmacy/types';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
-import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
+import { formatPrice } from '@e-pharmacy/utils/formatters';
 
 import {
   PRODUCT_STATUS_LABELS,
@@ -51,13 +52,7 @@ function OwnProductsTable({
         width: '100px',
         title: <TableHeaderTitle parts={['Added', 'date']} />,
         render: (product) =>
-          product.addedAt ? (
-            <time dateTime={product.addedAt}>
-              {formatShortDate(product.addedAt)}
-            </time>
-          ) : (
-            '—'
-          ),
+          product.addedAt ? <TableDateTime value={product.addedAt} /> : '—',
       },
       {
         key: 'productPhoto',
@@ -118,8 +113,9 @@ function OwnProductsTable({
       {
         key: 'currentPrice',
         width: '50px',
-        title: <TableHeaderTitle parts={['Current', 'price']} />,
-        render: (product) => formatPrice(product.currentPrice),
+        title: <TableHeaderTitle parts={['Current', ' price, ', 'UAH']} />,
+        render: (product) =>
+          formatPrice(product.currentPrice).replace(' UAH', ''),
       },
       {
         key: 'status',

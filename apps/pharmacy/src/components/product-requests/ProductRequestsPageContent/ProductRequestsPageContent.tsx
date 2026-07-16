@@ -106,10 +106,12 @@ function ProductRequestsPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [requests, setRequests] = useState<PharmacyProductRequestRow[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
+
   const [requestStatistics, setRequestStatistics] =
     useState<ProductRequestStatisticsCounts>(
       DEFAULT_PRODUCT_REQUEST_STATISTICS
     );
+
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -233,11 +235,11 @@ function ProductRequestsPageContent({
             status={bannerStatus}
             label={bannerLabel ?? undefined}
             title="Verification is required"
-          message={
-            bannerStatus === 'on_verification'
-              ? 'Creating product requests is paused while Admin reviews the submitted pharmacy profile.'
-              : 'Creating product requests is locked for a new pharmacy until verification is complete.'
-          }
+            message={
+              bannerStatus === 'on_verification'
+                ? 'Creating product requests is paused while Admin reviews the submitted pharmacy profile.'
+                : 'Creating product requests is locked for a new pharmacy until verification is complete.'
+            }
           />
         ) : null}
 
@@ -308,13 +310,6 @@ function ProductRequestsPageContent({
 
       <section className={css.tableCard} aria-label="Product requests table">
         <div className={css.toolbar}>
-          <CountLabel
-            className={css.countLabel}
-            shown={requests.length}
-            total={totalRequests}
-            label="requests"
-          />
-
           <div className={css.rowsControl}>
             <RowsPerPageSelect
               id="product-requests-rows-per-page"
@@ -322,6 +317,13 @@ function ProductRequestsPageContent({
               onChange={handleRowsPerPageChange}
             />
           </div>
+
+          <CountLabel
+            className={css.countLabel}
+            shown={requests.length}
+            total={totalRequests}
+            label="requests"
+          />
 
           <Button className={css.createButton} type="button" size="md" disabled>
             Create request
@@ -342,7 +344,12 @@ function ProductRequestsPageContent({
           currentPage={currentPage}
           totalPages={totalPages}
           getPageHref={(page) => String(page)}
-          renderLink={({ href, className, children, 'aria-label': ariaLabel }) => (
+          renderLink={({
+            href,
+            className,
+            children,
+            'aria-label': ariaLabel,
+          }) => (
             <button
               className={className}
               type="button"

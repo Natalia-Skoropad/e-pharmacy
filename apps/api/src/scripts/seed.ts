@@ -50,6 +50,7 @@ function createSeedOrderNumber(
     padDatePart(createdAt.getUTCMonth() + 1),
     padDatePart(createdAt.getUTCDate()),
   ].join('');
+
   const timePart = [
     padDatePart(createdAt.getUTCHours()),
     padDatePart(createdAt.getUTCMinutes()),
@@ -723,6 +724,55 @@ function createPharmacyAccountBankDetails(seed: PharmacyAccountSeed) {
 
 //===============================================================
 
+async function seedOwnProductRestocks(): Promise<number> {
+  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
+    .select('_id')
+    .lean();
+  if (!pharmacy) return 0;
+
+  const offers = await ProductOffer.find({ pharmacyId: pharmacy._id }).sort({
+    productId: 1,
+  });
+  const occurredAt = new Date('2026-07-15T12:00:00.000Z');
+
+  for (const [index, offer] of offers.entries()) {
+    const quantity = 40 + (index % 11);
+    const priceIncrease = 50 + (index % 11);
+    const nextPrice = offer.price + priceIncrease;
+    offer.totalQuantity += quantity;
+    offer.availableQuantity += quantity;
+    offer.price = nextPrice;
+    await offer.save();
+
+    await StockMovement.create({
+      productOfferId: offer._id,
+      productId: offer.productId,
+      pharmacyId: offer.pharmacyId,
+      eventType: 'arrival',
+      source: 'pharmacy_stock',
+      stockDelta: quantity,
+      reservedDelta: 0,
+      availableDelta: quantity,
+      stockAfter: offer.totalQuantity,
+      reservedAfter: offer.reservedQuantity,
+      availableAfter: offer.availableQuantity,
+      unitPrice: nextPrice,
+      comment: `Stock arrival added ${quantity} units at the updated price.`,
+      occurredAt,
+    });
+  }
+
+  const blockedProductIds = offers.slice(0, 2).map((offer) => offer.productId);
+  await Product.updateMany(
+    { _id: { $in: blockedProductIds } },
+    { $set: { status: 'blocked' } }
+  );
+
+  return offers.length;
+}
+
+//===============================================================
+
 async function seedPharmacyAccounts(): Promise<number> {
   const password = await hashPassword(PHARMACY_ACCOUNT_PASSWORD);
   let createdCount = 0;
@@ -867,7 +917,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
     const basePrice = isPremium
       ? 1050 + ((index * 137) % 2450)
       : 75 + ((index * 29) % 780);
-    
+
     const offersCount = index % 10 === 0 ? 25 : 2 + (index % 5);
 
     const selectedPharmacies = Array.from(
@@ -875,7 +925,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       (_, offerIndex) =>
         pharmacies[(index * 3 + offerIndex) % pharmacies.length]
     );
-    
+
     const isSoldOut = index % 17 === 0;
     const richStockPharmacies = index < 115 ? pharmacies.slice(0, 10) : [];
 
@@ -1071,6 +1121,11 @@ async function seedActivePharmacyOrder(): Promise<number> {
   if (!offer) return 0;
 
   const password = await hashPassword('123456789');
+
+  await User.updateOne(
+    { email: STOCK_MOVEMENT_DEMO_CLIENT_EMAIL },
+    { $set: { pictureUrl: '/images/seed/clients/client-008.png' } }
+  );
   const clientUser = await User.findOneAndUpdate(
     { email: STOCK_MOVEMENT_DEMO_CLIENT_EMAIL },
     {
@@ -1666,6 +1721,243 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
         'The client account is inactive after repeated uncollected orders. New reservations require manager approval.',
       orderStatuses: ['rejected', 'successful', 'new'],
     },
+    {
+      id: '6a311d5386d9f5e0be7d19b1',
+      name: 'Anastasiia Shevchenko',
+      email: 'anastasiia.shevchenko.portfolio@ukr.net',
+      phone: '+380672221100',
+      address: '10 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-009.png',
+      status: 'active',
+
+      orderStatuses: ['successful', 'in_progress', 'new', 'rejected'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19b2',
+      name: 'Mariia Tkachenko',
+      email: 'mariia.tkachenko.portfolio@ukr.net',
+      phone: '+380672221101',
+      address: '11 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-010.png',
+      status: 'active',
+
+      orderStatuses: [
+        'successful',
+        'in_progress',
+        'new',
+        'rejected',
+        'successful',
+      ],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19b3',
+      name: 'Viktoriia Moroz',
+      email: 'viktoriia.moroz.portfolio@ukr.net',
+      phone: '+380672221102',
+      address: '12 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-011.png',
+      status: 'active',
+
+      orderStatuses: ['successful', 'in_progress', 'new', 'rejected'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19b4',
+      name: 'Alina Kravets',
+      email: 'alina.kravets.portfolio@ukr.net',
+      phone: '+380672221103',
+      address: '13 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-012.png',
+      status: 'active',
+
+      orderStatuses: [
+        'successful',
+        'in_progress',
+        'new',
+        'rejected',
+        'successful',
+      ],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19b5',
+      name: 'Daria Poliakova',
+      email: 'daria.poliakova.portfolio@ukr.net',
+      phone: '+380672221104',
+      address: '14 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-013.png',
+      status: 'active',
+
+      orderStatuses: ['successful', 'in_progress', 'new', 'rejected'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19b6',
+      name: 'Yuliia Marchenko',
+      email: 'yuliia.marchenko.portfolio@ukr.net',
+      phone: '+380672221105',
+      address: '15 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-014.png',
+      status: 'blocked',
+      statusReason:
+        'The client is temporarily blocked after repeated uncollected orders.',
+      orderStatuses: [
+        'successful',
+        'in_progress',
+        'new',
+        'rejected',
+        'successful',
+      ],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19b7',
+      name: 'Veronika Lisova',
+      email: 'veronika.lisova.portfolio@ukr.net',
+      phone: '+380672221106',
+      address: '16 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-015.png',
+      status: 'active',
+
+      orderStatuses: ['successful', 'in_progress', 'new', 'rejected'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19b8',
+      name: 'Tetiana Klymenko',
+      email: 'tetiana.klymenko.portfolio@ukr.net',
+      phone: '+380672221107',
+      address: '17 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-016.png',
+      status: 'active',
+
+      orderStatuses: [
+        'successful',
+        'in_progress',
+        'new',
+        'rejected',
+        'successful',
+      ],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19b9',
+      name: 'Diana Pavlenko',
+      email: 'diana.pavlenko.portfolio@ukr.net',
+      phone: '+380672221108',
+      address: '18 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-017.png',
+      status: 'active',
+
+      orderStatuses: ['successful', 'in_progress', 'new', 'rejected'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19ba',
+      name: 'Anna Rudenko',
+      email: 'anna.rudenko.portfolio@ukr.net',
+      phone: '+380672221109',
+      address: '19 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-018.png',
+      status: 'active',
+
+      orderStatuses: [
+        'successful',
+        'in_progress',
+        'new',
+        'rejected',
+        'successful',
+      ],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19bb',
+      name: 'Oleksandr Mazur',
+      email: 'oleksandr.mazur.portfolio@ukr.net',
+      phone: '+380672221110',
+      address: '20 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-019.png',
+      status: 'active',
+
+      orderStatuses: ['successful', 'in_progress', 'new', 'rejected'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19bc',
+      name: 'Dmytro Horbunov',
+      email: 'dmytro.horbunov.portfolio@ukr.net',
+      phone: '+380672221111',
+      address: '21 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-020.png',
+      status: 'active',
+
+      orderStatuses: [
+        'successful',
+        'in_progress',
+        'new',
+        'rejected',
+        'successful',
+      ],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19bd',
+      name: 'Bohdan Yaremchuk',
+      email: 'bohdan.yaremchuk.portfolio@ukr.net',
+      phone: '+380672221112',
+      address: '22 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-021.png',
+      status: 'active',
+
+      orderStatuses: ['successful', 'in_progress', 'new', 'rejected'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19be',
+      name: 'Artem Sydorenko',
+      email: 'artem.sydorenko.portfolio@ukr.net',
+      phone: '+380672221113',
+      address: '23 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-022.png',
+      status: 'active',
+
+      orderStatuses: [
+        'successful',
+        'in_progress',
+        'new',
+        'rejected',
+        'successful',
+      ],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19bf',
+      name: 'Vladyslav Taran',
+      email: 'vladyslav.taran.portfolio@ukr.net',
+      phone: '+380672221114',
+      address: '24 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-023.png',
+      status: 'blocked',
+      statusReason:
+        'The client is temporarily blocked after repeated uncollected orders.',
+      orderStatuses: ['successful', 'in_progress', 'new', 'rejected'],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19c0',
+      name: 'Mykhailo Petrenko',
+      email: 'mykhailo.petrenko.portfolio@ukr.net',
+      phone: '+380672221115',
+      address: '25 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-024.png',
+      status: 'active',
+
+      orderStatuses: [
+        'successful',
+        'in_progress',
+        'new',
+        'rejected',
+        'successful',
+      ],
+    },
+    {
+      id: '6a311d5386d9f5e0be7d19c1',
+      name: 'Nazar Oliinyk',
+      email: 'nazar.oliinyk.portfolio@ukr.net',
+      phone: '+380672221116',
+      address: '26 Portfolio Street, Lviv',
+      pictureUrl: '/images/seed/clients/client-025.png',
+      status: 'active',
+
+      orderStatuses: ['successful', 'in_progress', 'new', 'rejected'],
+    },
   ];
 
   const clientIds = clientConfigs.map(
@@ -1673,6 +1965,11 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
   );
 
   const password = await hashPassword('123456789');
+
+  await User.updateOne(
+    { email: STOCK_MOVEMENT_DEMO_CLIENT_EMAIL },
+    { $set: { pictureUrl: '/images/seed/clients/client-008.png' } }
+  );
 
   await User.deleteMany({
     _id: { $nin: clientIds },
@@ -1761,14 +2058,15 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 
     client.orderStatuses.forEach((status, orderIndex) => {
       const orderId = new Types.ObjectId();
+      const dayOffset = (clientIndex * 3 + orderIndex) % 26;
       const createdAt = new Date(
         baseDate.getTime() +
-          (clientIndex * 5 + orderIndex) * 24 * 60 * 60 * 1000 +
-          orderIndex * 47 * 60 * 1000
+          dayOffset * 24 * 60 * 60 * 1000 +
+          (8 + orderIndex) * 47 * 60 * 1000
       );
       const finalChangedAt = new Date(createdAt.getTime() + 90 * 60 * 1000);
       const orderNumber = createSeedOrderNumber(orderId, createdAt);
-      const itemCount = orderIndex % 2 === 0 ? 3 : 2;
+      const itemCount = 5 + ((clientIndex + orderIndex) % 2);
       const selectedItems = Array.from(
         { length: itemCount },
         (_, itemIndex) => {
@@ -2129,6 +2427,7 @@ async function seedDatabase(): Promise<void> {
       price: number;
     }>
   );
+  const restockedOffersCount = await seedOwnProductRestocks();
 
   console.log(`Seed completed: ${createdPharmacies.length} pharmacies created`);
   console.log(`Seed completed: ${seedProducts.length} products created`);
@@ -2140,6 +2439,9 @@ async function seedDatabase(): Promise<void> {
 
   console.log(
     `Seed completed: ${activePharmacyOffersCount} active pharmacy offers created`
+  );
+  console.log(
+    `Seed completed: ${restockedOffersCount} own products restocked and repriced`
   );
 
   console.log(
