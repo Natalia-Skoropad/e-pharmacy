@@ -90,6 +90,7 @@ function ClientsFiltersDrawer({
             id="clients-first-order-date-filter"
             label="Client added"
             value={filters.firstOrderDate}
+            minDate="2026-06-20"
             isActive={Boolean(
               filters.firstOrderDate.from || filters.firstOrderDate.to
             )}

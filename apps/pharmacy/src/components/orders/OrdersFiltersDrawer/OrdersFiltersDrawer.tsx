@@ -103,6 +103,7 @@ function OrdersFiltersDrawer({
             id="orders-date-filter"
             label="Order date"
             value={filters.date}
+            minDate="2026-06-20"
             isActive={Boolean(filters.date.from || filters.date.to)}
             applyOnSubmit
             applyLabel="Apply"

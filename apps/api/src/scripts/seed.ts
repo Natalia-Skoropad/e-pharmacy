@@ -724,6 +724,69 @@ function createPharmacyAccountBankDetails(seed: PharmacyAccountSeed) {
 
 //===============================================================
 
+type OfferPricePoint = Readonly<{
+  occurredAt: Date;
+  unitPrice: number;
+}>;
+
+type OfferPriceTimeline = Map<string, OfferPricePoint[]>;
+
+async function getOfferPriceTimeline(
+  offerIds: Types.ObjectId[]
+): Promise<OfferPriceTimeline> {
+  const arrivalMovements = await StockMovement.find({
+    productOfferId: { $in: offerIds },
+    eventType: 'arrival',
+  })
+    .sort({ occurredAt: 1, _id: 1 })
+    .select('productOfferId unitPrice occurredAt')
+    .lean<
+      Array<{
+        productOfferId: Types.ObjectId;
+        unitPrice: number;
+        occurredAt: Date;
+      }>
+    >();
+
+  const timelineByOfferId: OfferPriceTimeline = new Map();
+
+  arrivalMovements.forEach((movement) => {
+    const offerId = String(movement.productOfferId);
+    const timeline = timelineByOfferId.get(offerId) ?? [];
+
+    timeline.push({
+      occurredAt: movement.occurredAt,
+      unitPrice: movement.unitPrice,
+    });
+    timelineByOfferId.set(offerId, timeline);
+  });
+
+  return timelineByOfferId;
+}
+
+//===============================================================
+
+function resolveOfferPriceAt(
+  timelineByOfferId: OfferPriceTimeline,
+  offerId: Types.ObjectId,
+  occurredAt: Date
+): number {
+  const timeline = timelineByOfferId.get(String(offerId)) ?? [];
+  const pricePoint = [...timeline]
+    .reverse()
+    .find((item) => item.occurredAt.getTime() <= occurredAt.getTime());
+
+  if (!pricePoint) {
+    throw new Error(
+      `Product offer ${offerId.toString()} has no stock arrival before ${occurredAt.toISOString()}.`
+    );
+  }
+
+  return pricePoint.unitPrice;
+}
+
+//===============================================================
+
 async function seedOwnProductRestocks(): Promise<number> {
   const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
     .select('_id')
@@ -1013,7 +1076,7 @@ async function seedActivePharmacyProductOffers(
 
   if (!activeProducts.length) return 0;
 
-  const stockArrivalAt = new Date('2026-07-08T09:00:00.000Z');
+  const stockArrivalAt = new Date('2026-06-18T09:00:00.000Z');
 
   await Promise.all([
     ProductOffer.deleteMany({ pharmacyId: activePharmacy._id }),
@@ -1023,13 +1086,8 @@ async function seedActivePharmacyProductOffers(
   const createdOffers = await ProductOffer.insertMany(
     activeProducts.map((product, index) => {
       const initialSelloutQuantities = [36, 42, 48, 54];
-      const lowStockQuantities = [5, 7, 8, 10];
       const quantity =
-        index < 4
-          ? initialSelloutQuantities[index]
-          : index < 8
-            ? lowStockQuantities[index - 4]
-            : 100 + index * 3;
+        index < 4 ? initialSelloutQuantities[index] : 100 + index * 3;
 
       const offerCreatedAt =
         index < 4 ? new Date('2026-05-01T09:00:00.000Z') : stockArrivalAt;
@@ -1671,6 +1729,10 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 
   if (joinedOffers.length < 4) return 0;
 
+  const priceTimelineByOfferId = await getOfferPriceTimeline(
+    joinedOffers.map(({ offer }) => offer._id)
+  );
+
   const clientConfigs: DemoClientConfig[] = [
     {
       id: '6a311d5386d9f5e0be7d19aa',
@@ -2168,6 +2230,11 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
           const quantity = 1 + ((clientIndex + orderIndex + itemIndex) % 3);
           const product = selected.product;
           const offer = selected.offer;
+          const unitPrice = resolveOfferPriceAt(
+            priceTimelineByOfferId,
+            offer._id,
+            createdAt
+          );
           const productSnapshot = {
             name: product.name,
             ...(product.slug ? { slug: product.slug } : {}),
@@ -2190,8 +2257,8 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
             productOfferId: offer._id,
             productSnapshot,
             quantity,
-            unitPrice: offer.price,
-            totalPrice: quantity * offer.price,
+            unitPrice,
+            totalPrice: quantity * unitPrice,
           };
         }
       );
@@ -2515,22 +2582,9 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
   const productsById = new Map<string, SelloutProduct>(
     soldOutProducts.map((product) => [String(product._id), product])
   );
-  const earliestArrivalPrices = new Map<string, number>();
-
-  for (const offer of soldOutOffers) {
-    const earliestArrival = await StockMovement.findOne({
-      productOfferId: offer._id,
-      eventType: 'arrival',
-    })
-      .sort({ occurredAt: 1, _id: 1 })
-      .select('unitPrice')
-      .lean<{ unitPrice: number } | null>();
-
-    earliestArrivalPrices.set(
-      String(offer._id),
-      earliestArrival?.unitPrice ?? Math.max(offer.price - 55, 1)
-    );
-  }
+  const selloutPriceTimelineByOfferId = await getOfferPriceTimeline(
+    soldOutOffers.map((offer) => offer._id)
+  );
 
   const orderUpdates: Array<Record<string, unknown>> = [];
   const historicalMovements: Array<Record<string, unknown>> = [];
@@ -2551,10 +2605,11 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
 
     productOrders.forEach((order, orderIndex) => {
       const quantity = baseQuantity + (orderIndex < remainder ? 1 : 0);
-      const unitPrice =
-        orderIndex < 5
-          ? (earliestArrivalPrices.get(String(offer._id)) ?? offer.price)
-          : offer.price;
+      const unitPrice = resolveOfferPriceAt(
+        selloutPriceTimelineByOfferId,
+        offer._id,
+        order.createdAt
+      );
       const totalPrice = quantity * unitPrice;
       const productSnapshot = {
         name: product.name,
@@ -2744,7 +2799,7 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
       comment:
         'Inventory reconciliation left fewer than ten units after recent sales.',
       occurredAt: new Date(
-        new Date('2026-07-15T14:00:00.000Z').getTime() +
+        new Date('2026-07-16T16:00:00.000Z').getTime() +
           lowStockCount * 15 * 60 * 1000
       ),
     });
@@ -2766,6 +2821,115 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
     lowStockProducts: lowStockCount,
     linkedOrders: orderUpdates.length,
   };
+}
+
+//===============================================================
+
+async function reconcileActivePharmacyInventoryLedger(): Promise<number> {
+  type LedgerMovement = {
+    _id: Types.ObjectId;
+    stockDelta: number;
+    reservedDelta: number;
+    availableDelta: number;
+    occurredAt: Date;
+    eventType: string;
+  };
+
+  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId } | null>();
+
+  if (!pharmacy) return 0;
+
+  const offers = await ProductOffer.find({ pharmacyId: pharmacy._id })
+    .select('_id productId')
+    .lean<Array<{ _id: Types.ObjectId; productId: Types.ObjectId }>>();
+
+  let reconciledCount = 0;
+
+  for (const offer of offers) {
+    const movements = await StockMovement.find({
+      productOfferId: offer._id,
+    })
+      .sort({ occurredAt: 1, _id: 1 })
+      .select(
+        '_id stockDelta reservedDelta availableDelta occurredAt eventType'
+      )
+      .lean<LedgerMovement[]>();
+
+    let totalQuantity = 0;
+    let reservedQuantity = 0;
+    let availableQuantity = 0;
+    const movementUpdates: Array<Record<string, unknown>> = [];
+
+    for (const movement of movements) {
+      totalQuantity += movement.stockDelta;
+      reservedQuantity += movement.reservedDelta;
+      availableQuantity += movement.availableDelta;
+
+      if (
+        totalQuantity < 0 ||
+        reservedQuantity < 0 ||
+        availableQuantity < 0 ||
+        reservedQuantity > totalQuantity ||
+        availableQuantity !== totalQuantity - reservedQuantity
+      ) {
+        throw new Error(
+          [
+            `Invalid inventory ledger for offer ${offer._id.toString()}`,
+            `after ${movement.eventType} at ${movement.occurredAt.toISOString()}:`,
+            `stock ${totalQuantity}, reserved ${reservedQuantity}, available ${availableQuantity}.`,
+          ].join(' ')
+        );
+      }
+
+      movementUpdates.push({
+        updateOne: {
+          filter: { _id: movement._id },
+          update: {
+            $set: {
+              stockAfter: totalQuantity,
+              reservedAfter: reservedQuantity,
+              availableAfter: availableQuantity,
+            },
+          },
+        },
+      });
+    }
+
+    if (movementUpdates.length > 0) {
+      await StockMovement.bulkWrite(
+        movementUpdates as Parameters<typeof StockMovement.bulkWrite>[0]
+      );
+    }
+
+    await ProductOffer.updateOne(
+      { _id: offer._id },
+      {
+        $set: {
+          totalQuantity,
+          reservedQuantity,
+          availableQuantity,
+        },
+      },
+      { runValidators: true }
+    );
+
+    const product = await Product.findById(offer.productId)
+      .select('status')
+      .lean<{ status: string } | null>();
+
+    if (product?.status !== 'blocked') {
+      await Product.updateOne(
+        { _id: offer.productId },
+        { $set: { inStock: availableQuantity > 0 } }
+      );
+    }
+
+    reconciledCount += 1;
+  }
+
+  return reconciledCount;
 }
 
 //===============================================================
@@ -2911,6 +3075,8 @@ async function seedDatabase(): Promise<void> {
   const activePharmacyOrdersCount = await seedActivePharmacyOrder();
   const pharmacyClientsCount = await seedPharmacyClientPortfolio();
   const inventoryScenario = await seedSoldOutAndLowStockProducts();
+  const reconciledOffersCount =
+    await reconcileActivePharmacyInventoryLedger();
   await assertDemoOrderStatusCounts();
 
   console.log(
@@ -2929,6 +3095,9 @@ async function seedDatabase(): Promise<void> {
   );
   console.log(
     `Seed completed: ${inventoryScenario.soldOutProducts} sold-out products, ${inventoryScenario.lowStockProducts} low-stock products, and ${inventoryScenario.linkedOrders} successful orders linked to sellout history`
+  );
+  console.log(
+    `Seed completed: ${reconciledOffersCount} inventory ledgers reconciled chronologically`
   );
 }
 
