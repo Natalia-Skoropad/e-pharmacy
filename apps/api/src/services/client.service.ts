@@ -273,10 +273,18 @@ export async function getClientsService(userId: string, query: ClientsQuery) {
       perPage: query.perPage,
       total: 0,
       totalPages: 0,
+      earliestCreatedAt: null,
     };
   }
 
-  const clients = await getClientRowsForPharmacy(pharmacyId, query);
+  const [clients, earliestOrder] = await Promise.all([
+    getClientRowsForPharmacy(pharmacyId, query),
+    Order.findOne({ pharmacyId })
+      .sort({ createdAt: 1 })
+      .select('createdAt')
+      .lean<{ createdAt: Date } | null>(),
+  ]);
+
   const skip = (query.page - 1) * query.perPage;
   const items = clients.slice(skip, skip + query.perPage);
 
@@ -286,6 +294,10 @@ export async function getClientsService(userId: string, query: ClientsQuery) {
     perPage: query.perPage,
     total: clients.length,
     totalPages: Math.ceil(clients.length / query.perPage),
+
+    earliestCreatedAt: earliestOrder
+      ? earliestOrder.createdAt.toISOString().slice(0, 10)
+      : null,
   };
 }
 
@@ -384,6 +396,7 @@ export async function getClientPurchasedProductsService(
       perPage: query.perPage,
       total: 0,
       totalPages: 0,
+      earliestCreatedAt: null,
     };
   }
 
@@ -438,5 +451,7 @@ export async function getClientPurchasedProductsService(
     perPage: query.perPage,
     total: rows.length,
     totalPages: Math.ceil(rows.length / query.perPage),
+    earliestCreatedAt:
+      orders[orders.length - 1]?.createdAt.toISOString().slice(0, 10) ?? null,
   };
 }

@@ -440,15 +440,15 @@ export async function getProductsService(
   userId?: string
 ) {
   const filter: Record<string, unknown> = {};
+  const tableStatusFilter =
+    query.pharmacyId || query.includeBlocked
+      ? { $in: ['active', 'blocked'] }
+      : 'active';
 
-  if (query.status) {
-    filter.status = query.status;
-  } else {
-    filter.status =
-      query.pharmacyId || query.includeBlocked
-        ? { $in: ['active', 'blocked'] }
-        : 'active';
-  }
+  filter.status = query.status ?? tableStatusFilter;
+  const productTableScopeFilter: Record<string, unknown> = {
+    status: tableStatusFilter,
+  };
   const keyword = query.keyword?.trim();
 
   if (keyword) {
@@ -558,13 +558,30 @@ export async function getProductsService(
 
   const skip = (query.page - 1) * query.perPage;
 
-  const [products, total, favorites, ownProductStatistics] = await Promise.all([
+  const earliestCreatedAtQuery = query.pharmacyId
+    ? ProductOffer.findOne({ pharmacyId: query.pharmacyId })
+        .sort({ createdAt: 1 })
+        .select('createdAt')
+        .lean<{ createdAt: Date } | null>()
+    : Product.findOne(productTableScopeFilter)
+        .sort({ createdAt: 1 })
+        .select('createdAt')
+        .lean<{ createdAt: Date } | null>();
+
+  const [
+    products,
+    total,
+    favorites,
+    ownProductStatistics,
+    earliestCreatedRecord,
+  ] = await Promise.all([
     Product.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
     Product.countDocuments(filter),
     getClientFavorites(userId),
     query.pharmacyId
       ? getOwnProductStatistics(query.pharmacyId)
       : Promise.resolve(undefined),
+    earliestCreatedAtQuery,
   ]);
 
   const offerMap = await getOffersByProductIds(
@@ -589,6 +606,9 @@ export async function getProductsService(
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+    earliestCreatedAt: earliestCreatedRecord
+      ? earliestCreatedRecord.createdAt.toISOString().slice(0, 10)
+      : null,
     ...(ownProductStatistics ? { ownProductStatistics } : {}),
   };
 }

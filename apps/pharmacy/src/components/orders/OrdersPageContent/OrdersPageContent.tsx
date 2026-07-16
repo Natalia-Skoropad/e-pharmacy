@@ -105,6 +105,7 @@ function OrdersPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
+  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(null);
 
   const [orderStatistics, setOrderStatistics] = useState(
     DEFAULT_ORDER_STATISTICS
@@ -141,12 +142,14 @@ function OrdersPageContent({
 
         setOrders(response.items);
         setTotalOrders(response.total);
+        setEarliestCreatedAt(response.earliestCreatedAt);
         setOrderStatistics(response.statistics);
       } catch {
         if (!isMounted) return;
 
         setOrders([]);
         setTotalOrders(0);
+        setEarliestCreatedAt(null);
         setOrderStatistics(DEFAULT_ORDER_STATISTICS);
       } finally {
         if (isMounted) setIsLoading(false);
@@ -322,6 +325,7 @@ function OrdersPageContent({
         <OrdersFiltersDrawer
           filters={filters}
           hasActiveFilters={hasActiveFilters}
+          minDate={earliestCreatedAt ?? undefined}
           onBackdropMouseDown={handleBackdropClick}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}

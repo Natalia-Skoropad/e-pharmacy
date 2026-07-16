@@ -62,6 +62,7 @@ export type PharmacyClientsQueryParams = Readonly<{
 export type PharmacyClientsResponse = Readonly<{
   items: PharmacyClientRow[];
   total: number;
+  earliestCreatedAt: string | null;
 }>;
 
 export type PharmacyClientPurchasedProduct = Readonly<{
@@ -95,6 +96,7 @@ export type PharmacyClientProductsResponse = Readonly<{
   perPage: number;
   total: number;
   totalPages: number;
+  earliestCreatedAt: string | null;
 }>;
 
 //===================================================================
@@ -281,10 +283,17 @@ export function normalizePharmacyClient(
 export function normalizePharmacyClientsResponse(
   payload: unknown
 ): PharmacyClientsResponse {
-  return normalizePaginatedResponse(payload, {
+  const response = normalizePaginatedResponse(payload, {
     itemKeys: ['items', 'clients'],
     normalizeItem: normalizePharmacyClient,
   });
+
+  return {
+    ...response,
+    earliestCreatedAt: isRecord(payload)
+      ? (getStringValue(payload.earliestCreatedAt) ?? null)
+      : null,
+  };
 }
 
 //===================================================================
@@ -355,5 +364,6 @@ export function normalizePharmacyClientProductsResponse(
     perPage: Math.max(1, getNumberValue(record.perPage) ?? 20),
     total: response.total,
     totalPages: Math.max(0, getNumberValue(record.totalPages) ?? 0),
+    earliestCreatedAt: getStringValue(record.earliestCreatedAt) ?? null,
   };
 }

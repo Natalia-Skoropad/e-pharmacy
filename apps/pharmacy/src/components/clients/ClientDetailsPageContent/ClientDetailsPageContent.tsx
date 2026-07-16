@@ -179,6 +179,7 @@ function getClientOrderStatistics(
 type ClientProductsFiltersDrawerProps = Readonly<{
   filters: ClientProductFilters;
   hasActiveFilters: boolean;
+  minDate?: string;
   resetHref: string;
   onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
   onChange: (filters: ClientProductFilters) => void;
@@ -189,6 +190,7 @@ type ClientProductsFiltersDrawerProps = Readonly<{
 function ClientProductsFiltersDrawer({
   filters,
   hasActiveFilters,
+  minDate,
   resetHref,
   onBackdropMouseDown,
   onChange,
@@ -222,6 +224,8 @@ function ClientProductsFiltersDrawer({
         <div className={css.filtersControls}>
           <DateFilter
             id="client-products-order-date"
+            minDate={minDate}
+            disabled={!minDate}
             label="Order date"
             value={filters.date}
             isActive={Boolean(filters.date.from || filters.date.to)}
@@ -277,6 +281,8 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
     []
   );
   const [productsTotal, setProductsTotal] = useState(0);
+  const [productsEarliestCreatedAt, setProductsEarliestCreatedAt] =
+    useState<string | null>(null);
   const [productsOverallTotal, setProductsOverallTotal] = useState(0);
   const [productsTotalPages, setProductsTotalPages] = useState(0);
   const [productsPage, setProductsPage] = useState(1);
@@ -365,6 +371,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
 
         setProducts(response.items);
         setProductsTotal(response.total);
+        setProductsEarliestCreatedAt(response.earliestCreatedAt);
         setProductsTotalPages(response.totalPages);
 
         const hasSearchOrFilters = Boolean(
@@ -384,6 +391,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
 
         setProducts([]);
         setProductsTotal(0);
+        setProductsEarliestCreatedAt(null);
         setProductsTotalPages(0);
         setProductsError(
           loadProductsError instanceof Error && loadProductsError.message
@@ -847,6 +855,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
         <ClientProductsFiltersDrawer
           filters={productFilters}
           hasActiveFilters={hasProductFilters}
+          minDate={productsEarliestCreatedAt ?? undefined}
           resetHref={getPharmacyClientPath(clientId)}
           onBackdropMouseDown={handleProductsFiltersBackdrop}
           onChange={(filters) => {

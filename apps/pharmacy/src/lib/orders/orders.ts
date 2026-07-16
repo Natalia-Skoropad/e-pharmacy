@@ -154,6 +154,7 @@ export type PharmacyOrdersResponse = Readonly<{
   items: PharmacyOrderRow[];
   total: number;
   statistics: OrderStatisticsCounts;
+  earliestCreatedAt: string | null;
 }>;
 
 //===================================================================
@@ -649,5 +650,8 @@ export function normalizePharmacyOrdersResponse(
     statistics: isRecord(payload)
       ? normalizeOrderStatistics(payload.statistics)
       : DEFAULT_ORDER_STATISTICS,
+    earliestCreatedAt: isRecord(payload)
+      ? (getStringValue(payload.earliestCreatedAt) ?? null)
+      : null,
   };
 }

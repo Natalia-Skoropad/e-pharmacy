@@ -73,6 +73,7 @@ export type PharmacyProductsResponse = Readonly<{
   items: PharmacyProductRow[];
   total: number;
   statistics: OwnProductStatisticsCounts;
+  earliestCreatedAt: string | null;
 }>;
 
 //===================================================================
@@ -197,23 +198,27 @@ export function normalizePharmacyProduct(
       getStringValue(rawProduct.addedAt) ??
       getStringValue(rawProduct.updatedAt) ??
       '',
+
     article: getStringValue(rawProduct.article) ?? '—',
     name: getStringValue(rawProduct.name) ?? 'Product',
     category,
     stockQuantity: getStockQuantity(offer),
     reservedQuantity: getReservedQuantity(offer),
     availableQuantity: getAvailableQuantity(offer),
+
     currentPrice:
       getNumberValue(offer.currentPrice) ??
       getNumberValue(offer.price) ??
       getNumberValue(rawProduct.currentPrice) ??
       getNumberValue(rawProduct.price) ??
       0,
+
     imageUrl:
       getStringValue(rawProduct.imageUrl) ??
       getStringValue(rawProduct.pictureUrl) ??
       getStringValue(rawProduct.photoUrl),
     status,
+
     hasRelatedOrders: Boolean(offer.hasRelatedOrders),
   };
 }
@@ -261,6 +266,9 @@ export function normalizePharmacyProductsResponse(
     statistics: isRecord(payload)
       ? normalizeOwnProductStatistics(payload.ownProductStatistics)
       : DEFAULT_OWN_PRODUCT_STATISTICS,
+    earliestCreatedAt: isRecord(payload)
+      ? (getStringValue(payload.earliestCreatedAt) ?? null)
+      : null,
   };
 }
 

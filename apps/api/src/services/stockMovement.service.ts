@@ -57,10 +57,12 @@ type LegacyOrder = {
   orderNumber: string;
   status: OrderStatus;
   items: LegacyOrderItem[];
+
   statusHistory: Array<{
     status: OrderStatus;
     changedAt: Date;
   }>;
+
   createdAt: Date;
   updatedAt: Date;
 };
@@ -446,10 +448,7 @@ type CurrentOrderSnapshot = {
 
 type StockMovementDocument = StockMovementEntity & { _id: Types.ObjectId };
 
-type ActiveOrderReservationSnapshot = Pick<
-  CurrentOrderSnapshot,
-  'items'
->;
+type ActiveOrderReservationSnapshot = Pick<CurrentOrderSnapshot, 'items'>;
 
 //===============================================================
 
@@ -607,12 +606,14 @@ function aggregateOrderMovements(
       getLastMovement(
         movements,
         (movement) =>
-          movement.eventType === 'release' && movement.orderStatus === 'rejected'
+          movement.eventType === 'release' &&
+          movement.orderStatus === 'rejected'
       ) ??
       getLastMovement(
         movements,
         (movement) => movement.eventType === 'release'
-      ) ?? latestMovement;
+      ) ??
+      latestMovement;
     eventType = 'release';
     quantity =
       eventMovement.quantity ?? getMovementValueQuantity(eventMovement);
@@ -714,10 +715,7 @@ export async function getProductStockMovementsService(
         );
       }
 
-      const offerWithHistory = await backfillLegacyStockHistory(
-        offer,
-        session
-      );
+      const offerWithHistory = await backfillLegacyStockHistory(offer, session);
 
       return reconcileOfferReservationBalance(offerWithHistory, session);
     });
@@ -847,12 +845,16 @@ export async function getProductStockMovementsService(
       sequence: rows.length - index,
       occurredAt: row.occurredAt.toISOString(),
     })),
+
     total: rows.length,
     stock: {
       stockQuantity: currentOffer.totalQuantity,
       reservedQuantity: currentOffer.reservedQuantity,
       availableQuantity: currentOffer.availableQuantity,
     },
+
+    earliestCreatedAt:
+      rows[rows.length - 1]?.occurredAt.toISOString().slice(0, 10) ?? null,
   };
 }
 

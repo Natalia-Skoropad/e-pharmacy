@@ -130,6 +130,7 @@ function AllProductsPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(1);
 
   const [productStatistics, setProductStatistics] =
@@ -237,12 +238,14 @@ function AllProductsPageContent({
 
         setProducts(response.items);
         setTotalProducts(response.total);
+        setEarliestCreatedAt(response.earliestCreatedAt);
         setTotalPages(Math.max(1, response.totalPages));
       } catch {
         if (!isMounted) return;
 
         setProducts([]);
         setTotalProducts(0);
+        setEarliestCreatedAt(null);
         setTotalPages(1);
       } finally {
         if (isMounted) setIsLoading(false);
@@ -485,6 +488,7 @@ function AllProductsPageContent({
         <AllProductsFiltersDrawer
           filters={filters}
           hasActiveFilters={hasActiveFilters}
+          minDate={earliestCreatedAt ?? undefined}
           onBackdropMouseDown={handleBackdropClick}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}

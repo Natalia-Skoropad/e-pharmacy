@@ -111,6 +111,7 @@ function ClientsPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
   const [totalClients, setTotalClients] = useState(0);
+  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(null);
 
   const [clientStatistics, setClientStatistics] =
     useState<ClientStatisticsCounts>(DEFAULT_CLIENT_STATISTICS);
@@ -161,11 +162,13 @@ function ClientsPageContent({
 
         setClients(response.items);
         setTotalClients(response.total);
+        setEarliestCreatedAt(response.earliestCreatedAt);
       } catch {
         if (!isMounted) return;
 
         setClients([]);
         setTotalClients(0);
+        setEarliestCreatedAt(null);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -371,6 +374,7 @@ function ClientsPageContent({
         <ClientsFiltersDrawer
           filters={filters}
           hasActiveFilters={hasActiveFilters}
+          minDate={earliestCreatedAt ?? undefined}
           onBackdropMouseDown={handleBackdropClick}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}

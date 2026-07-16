@@ -87,8 +87,15 @@ export function normalizePharmacyProductRequest(
 export function normalizePharmacyProductRequestsResponse(
   payload: unknown
 ): PharmacyProductRequestsResponse {
-  return normalizePaginatedResponse(payload, {
+  const response = normalizePaginatedResponse(payload, {
     itemKeys: ['items', 'requests'],
     normalizeItem: normalizePharmacyProductRequest,
   });
+
+  return {
+    ...response,
+    earliestCreatedAt: isRecord(payload)
+      ? (getStringValue(payload.earliestCreatedAt) ?? null)
+      : null,
+  };
 }

@@ -40,4 +40,5 @@ export type ProductStockMovementsResponse = {
   items: ProductStockMovement[];
   total: number;
   stock: ProductStockBalance;
+  earliestCreatedAt: ISODateString | null;
 };

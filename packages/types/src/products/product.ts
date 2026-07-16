@@ -129,7 +129,10 @@ export type ProductFilterOptionsResponse = {
 
 //=============================================================================
 
-export type ProductsResponse = ApiPaginationResponse<Product>;
+export type ProductsResponse = ApiPaginationResponse<Product> & {
+  earliestCreatedAt: ISODateString | null;
+};
+
 export type ProductDetailsResponse = { product: Product };
 
 export type AddProductToMyPharmacyResponse = ProductDetailsResponse & {

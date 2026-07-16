@@ -67,7 +67,7 @@ function DateFilter({
   isActive = false,
   disabled = false,
   className,
-  minDate = '2026-07-10',
+  minDate,
   maxDate = getTodayIsoDate(),
   applyOnSubmit = false,
   applyLabel = 'Apply',

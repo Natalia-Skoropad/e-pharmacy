@@ -1767,12 +1767,19 @@ export async function getOrdersService(
         total: 0,
         totalPages: 0,
         statistics: createEmptyOrderStatistics(),
+        earliestCreatedAt: null,
       };
     }
 
     filter.pharmacyId = pharmacyId;
   } else {
     filter.userId = userId;
+  }
+
+  const earliestDateFilter: Record<string, unknown> = { ...filter };
+
+  if (query.productId) {
+    earliestDateFilter['items.productId'] = new Types.ObjectId(query.productId);
   }
 
   if (query.dateFrom || query.dateTo) {
@@ -1823,7 +1830,7 @@ export async function getOrdersService(
 
   const skip = (query.page - 1) * query.perPage;
 
-  const [orders, total, statistics] = await Promise.all([
+  const [orders, total, statistics, earliestOrder] = await Promise.all([
     Order.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -1831,6 +1838,10 @@ export async function getOrdersService(
       .lean<OrderDocument[]>(),
     Order.countDocuments(filter),
     getOrderStatistics(statisticsFilter),
+    Order.findOne(earliestDateFilter)
+      .sort({ createdAt: 1 })
+      .select('createdAt')
+      .lean<{ createdAt: Date } | null>(),
   ]);
 
   const clients = await User.find({
@@ -1850,6 +1861,9 @@ export async function getOrdersService(
     total,
     totalPages: Math.ceil(total / query.perPage),
     statistics,
+    earliestCreatedAt: earliestOrder
+      ? earliestOrder.createdAt.toISOString().slice(0, 10)
+      : null,
   };
 }
 

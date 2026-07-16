@@ -49,4 +49,5 @@ export type ProductRequestsResponseDto = {
   perPage: number;
   total: number;
   totalPages: number;
+  earliestCreatedAt: string | null;
 };

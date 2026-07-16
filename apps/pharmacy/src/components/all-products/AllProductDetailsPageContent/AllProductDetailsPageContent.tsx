@@ -721,6 +721,10 @@ function AllProductDetailsPageContent({
   const [stockMovements, setStockMovements] = useState<ProductStockMovement[]>(
     []
   );
+  const [stockEarliestCreatedAt, setStockEarliestCreatedAt] =
+    useState<string | null>(null);
+  const [relatedOrdersEarliestCreatedAt, setRelatedOrdersEarliestCreatedAt] =
+    useState<string | null>(null);
   const [stockBalance, setStockBalance] = useState<ProductStockBalance | null>(
     null
   );
@@ -800,7 +804,13 @@ function AllProductDetailsPageContent({
           reviewsResponse?.total ?? productResponse.product.reviewsCount ?? 0
         );
         setRelatedOrders(ordersResponse?.items ?? []);
+        setRelatedOrdersEarliestCreatedAt(
+          ordersResponse?.earliestCreatedAt ?? null
+        );
         setStockMovements(stockMovementsResponse?.items ?? []);
+        setStockEarliestCreatedAt(
+          stockMovementsResponse?.earliestCreatedAt ?? null
+        );
         setStockBalance(stockMovementsResponse?.stock ?? null);
         setCurrentPharmacyId(profileResponse?.pharmacy.id ?? null);
         setPharmacyStatus(profileResponse?.pharmacy.status ?? 'new');
@@ -811,7 +821,9 @@ function AllProductDetailsPageContent({
         setReviews([]);
         setReviewsTotal(0);
         setRelatedOrders([]);
+        setRelatedOrdersEarliestCreatedAt(null);
         setStockMovements([]);
+        setStockEarliestCreatedAt(null);
         setStockBalance(null);
         setPharmacyStatus('new');
         setError(getProductDetailsError(loadError));
@@ -854,11 +866,17 @@ function AllProductDetailsPageContent({
         dateTo: relatedFilters.date.to || undefined,
       });
 
-      if (isMounted) setRelatedOrders(response.items);
+      if (isMounted) {
+        setRelatedOrders(response.items);
+        setRelatedOrdersEarliestCreatedAt(response.earliestCreatedAt);
+      }
     }
 
     void loadRelatedOrders().catch(() => {
-      if (isMounted) setRelatedOrders([]);
+      if (isMounted) {
+        setRelatedOrders([]);
+        setRelatedOrdersEarliestCreatedAt(null);
+      }
     });
 
     return () => {
@@ -1153,6 +1171,7 @@ function AllProductDetailsPageContent({
 
       setProduct(response.product);
       setStockMovements(stockResponse.items);
+      setStockEarliestCreatedAt(stockResponse.earliestCreatedAt);
       setStockBalance(stockResponse.stock);
       setIsAddModalOpen(false);
       toast.success(response.message || 'Product added to your pharmacy.');
@@ -1173,6 +1192,7 @@ function AllProductDetailsPageContent({
 
       setProduct(response.product);
       setStockMovements([]);
+      setStockEarliestCreatedAt(null);
       setStockBalance(null);
       setIsRemoveModalOpen(false);
       toast.success(
@@ -1696,6 +1716,8 @@ function AllProductDetailsPageContent({
         >
           <DateFilter
             id="stock-movement-date-filter"
+            minDate={stockEarliestCreatedAt ?? undefined}
+            disabled={!stockEarliestCreatedAt}
             label="Last changed date"
             value={stockFilters.date}
             isActive={Boolean(stockFilters.date.from || stockFilters.date.to)}
@@ -1769,6 +1791,8 @@ function AllProductDetailsPageContent({
         >
           <DateFilter
             id="related-orders-date-filter"
+            minDate={relatedOrdersEarliestCreatedAt ?? undefined}
+            disabled={!relatedOrdersEarliestCreatedAt}
             label="Order date"
             value={relatedFilters.date}
             isActive={Boolean(

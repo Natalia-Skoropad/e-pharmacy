@@ -31,6 +31,7 @@ import css from './OwnProductsFiltersDrawer.module.css';
 type OwnProductsFiltersDrawerProps = Readonly<{
   filters: OwnProductsFilterState;
   hasActiveFilters: boolean;
+  minDate?: string;
   onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
   onChange: (filters: OwnProductsFilterState) => void;
   onClose: () => void;
@@ -70,6 +71,7 @@ const STOCK_OPTIONS: Array<SelectOption<OwnProductsFilterState['stock']>> = [
 function OwnProductsFiltersDrawer({
   filters,
   hasActiveFilters,
+  minDate,
   onBackdropMouseDown,
   onChange,
   onClose,
@@ -102,6 +104,8 @@ function OwnProductsFiltersDrawer({
         <div className={css.controls}>
           <DateFilter
             id="own-products-added-date-filter"
+            minDate={minDate}
+            disabled={!minDate}
             label="Added date"
             value={filters.createdDate}
             isActive={Boolean(

@@ -151,11 +151,13 @@ export type OrderResponseDto = {
   clientPhotoUrl?: string;
   clientPhone?: string;
   clientAddress?: string;
+
   client?: {
     id: string;
     name: string;
     photoUrl?: string;
   };
+
   pharmacyId: string;
   pharmacyName: string;
   pharmacyRating?: number;
@@ -174,6 +176,7 @@ export type OrderResponseDto = {
     changedBy: string;
     comment?: string;
   }>;
+
   activityHistory: Array<{
     type: OrderActivityType;
     occurredAt: string;
@@ -187,6 +190,7 @@ export type OrderResponseDto = {
     previousUnitPrice: number;
     unitPrice: number;
   }>;
+
   rejectionReason?: string;
   rejectedAt?: string;
   rejectedBy?: string;
@@ -195,12 +199,14 @@ export type OrderResponseDto = {
   comment?: string;
   managerComment?: string;
   managerCommentsCount: number;
+
   managerComments?: Array<{
     id: string;
     text: string;
     createdAt: string;
     createdBy: string;
   }>;
+
   bankDetails?: PharmacyBankDetails;
   items: OrderItemResponseDto[];
 };
@@ -234,4 +240,5 @@ export type OrdersResponseDto = {
   items: OrderResponseDto[];
   total: number;
   statistics: OrderStatisticsDto;
+  earliestCreatedAt: string | null;
 };

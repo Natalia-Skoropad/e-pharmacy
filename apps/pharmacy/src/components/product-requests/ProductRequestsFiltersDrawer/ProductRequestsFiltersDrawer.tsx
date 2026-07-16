@@ -29,6 +29,7 @@ import css from './ProductRequestsFiltersDrawer.module.css';
 type ProductRequestsFiltersDrawerProps = Readonly<{
   filters: ProductRequestsFilterState;
   hasActiveFilters: boolean;
+  minDate?: string;
   onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
   onChange: (filters: ProductRequestsFilterState) => void;
   onClose: () => void;
@@ -64,6 +65,7 @@ const STATUS_OPTIONS: Array<
 function ProductRequestsFiltersDrawer({
   filters,
   hasActiveFilters,
+  minDate,
   onBackdropMouseDown,
   onChange,
   onClose,
@@ -96,6 +98,8 @@ function ProductRequestsFiltersDrawer({
         <div className={css.controls}>
           <DateFilter
             id="product-requests-date-filter"
+            minDate={minDate}
+            disabled={!minDate}
             label="Created date"
             value={filters.date}
             isActive={Boolean(filters.date.from || filters.date.to)}

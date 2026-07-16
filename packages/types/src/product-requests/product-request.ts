@@ -14,6 +14,7 @@ export const PRODUCT_REQUEST_STATUSES = [
 //=============================================================================
 
 export type ProductRequestStatus = (typeof PRODUCT_REQUEST_STATUSES)[number];
+
 export type ProductRequestCategoryFilter = 'all' | ProductCategory;
 export type ProductRequestStatusFilter = 'all' | ProductRequestStatus;
 
@@ -24,6 +25,7 @@ export type ProductRequestsFilterState = Readonly<{
     from: string;
     to: string;
   };
+
   requestNumber: string;
   productArticle: string;
   productName: string;
@@ -60,6 +62,7 @@ export type ProductRequestsQueryParams = Readonly<{
 export type ProductRequestsResponse = Readonly<{
   items: ProductRequestRow[];
   total: number;
+  earliestCreatedAt: string | null;
 }>;
 
 //=============================================================================
@@ -70,17 +73,21 @@ export type PharmacyProductRequestsResponse = ProductRequestsResponse;
 
 //=============================================================================
 
-export type ProductRequestStatisticsCounts = Record<ProductRequestStatus, number>;
+export type ProductRequestStatisticsCounts = Record<
+  ProductRequestStatus,
+  number
+>;
 
 //=============================================================================
 
-export const DEFAULT_PRODUCT_REQUEST_STATISTICS: ProductRequestStatisticsCounts = {
-  draft: 0,
-  new: 0,
-  in_progress: 0,
-  approved: 0,
-  rejected: 0,
-};
+export const DEFAULT_PRODUCT_REQUEST_STATISTICS: ProductRequestStatisticsCounts =
+  {
+    draft: 0,
+    new: 0,
+    in_progress: 0,
+    approved: 0,
+    rejected: 0,
+  };
 
 //=============================================================================
 
@@ -102,6 +109,7 @@ export const DEFAULT_PRODUCT_REQUESTS_FILTERS: ProductRequestsFilterState = {
     from: '',
     to: '',
   },
+
   requestNumber: '',
   productArticle: '',
   productName: '',

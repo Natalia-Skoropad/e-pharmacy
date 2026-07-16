@@ -120,6 +120,7 @@ export async function getProductRequestsService(
       perPage: query.perPage,
       total: 0,
       totalPages: 0,
+      earliestCreatedAt: null,
     };
   }
 
@@ -155,7 +156,7 @@ export async function getProductRequestsService(
 
   const skip = (query.page - 1) * query.perPage;
 
-  const [requests, total] = await Promise.all([
+  const [requests, total, earliestRequest] = await Promise.all([
     ProductRequest.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -163,6 +164,10 @@ export async function getProductRequestsService(
       .populate('productId', 'imageUrl article name')
       .lean<ProductRequestDocument[]>(),
     ProductRequest.countDocuments(filter),
+    ProductRequest.findOne({ pharmacyId })
+      .sort({ createdAt: 1 })
+      .select('createdAt')
+      .lean<{ createdAt: Date } | null>(),
   ]);
 
   return {
@@ -171,5 +176,8 @@ export async function getProductRequestsService(
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+    earliestCreatedAt: earliestRequest
+      ? earliestRequest.createdAt.toISOString().slice(0, 10)
+      : null,
   };
 }

@@ -28,6 +28,7 @@ import css from './OrdersFiltersDrawer.module.css';
 type OrdersFiltersDrawerProps = Readonly<{
   filters: OrdersFilterState;
   hasActiveFilters: boolean;
+  minDate?: string;
   onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
   onChange: (filters: OrdersFilterState) => void;
   onClose: () => void;
@@ -69,6 +70,7 @@ const ORDER_STATUS_OPTIONS: Array<SelectOption<OrdersFilterState['status']>> = [
 function OrdersFiltersDrawer({
   filters,
   hasActiveFilters,
+  minDate,
   onBackdropMouseDown,
   onChange,
   onClose,
@@ -101,9 +103,10 @@ function OrdersFiltersDrawer({
         <div className={css.controls}>
           <DateFilter
             id="orders-date-filter"
+            minDate={minDate}
+            disabled={!minDate}
             label="Order date"
             value={filters.date}
-            minDate="2026-06-20"
             isActive={Boolean(filters.date.from || filters.date.to)}
             applyOnSubmit
             applyLabel="Apply"

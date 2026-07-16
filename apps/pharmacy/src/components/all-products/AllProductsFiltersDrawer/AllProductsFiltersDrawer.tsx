@@ -29,6 +29,7 @@ import css from './AllProductsFiltersDrawer.module.css';
 type AllProductsFiltersDrawerProps = Readonly<{
   filters: AllProductsFilterState;
   hasActiveFilters: boolean;
+  minDate?: string;
   onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
   onChange: (filters: AllProductsFilterState) => void;
   onClose: () => void;
@@ -68,6 +69,7 @@ const ADDED_TO_MY_PHARMACY_OPTIONS: Array<
 function AllProductsFiltersDrawer({
   filters,
   hasActiveFilters,
+  minDate,
   onBackdropMouseDown,
   onChange,
   onClose,
@@ -100,6 +102,8 @@ function AllProductsFiltersDrawer({
         <div className={css.controls}>
           <DateFilter
             id="all-products-created-date-filter"
+            minDate={minDate}
+            disabled={!minDate}
             label="Created date"
             value={filters.createdDate}
             isActive={Boolean(

@@ -106,6 +106,7 @@ function ProductRequestsPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [requests, setRequests] = useState<PharmacyProductRequestRow[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
+  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(null);
 
   const [requestStatistics, setRequestStatistics] =
     useState<ProductRequestStatisticsCounts>(
@@ -164,11 +165,13 @@ function ProductRequestsPageContent({
 
         setRequests(response.items);
         setTotalRequests(response.total);
+        setEarliestCreatedAt(response.earliestCreatedAt);
       } catch {
         if (!isMounted) return;
 
         setRequests([]);
         setTotalRequests(0);
+        setEarliestCreatedAt(null);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -366,6 +369,7 @@ function ProductRequestsPageContent({
         <ProductRequestsFiltersDrawer
           filters={filters}
           hasActiveFilters={hasActiveFilters}
+          minDate={earliestCreatedAt ?? undefined}
           onBackdropMouseDown={handleBackdropClick}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}

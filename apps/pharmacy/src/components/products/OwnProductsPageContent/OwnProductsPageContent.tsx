@@ -154,6 +154,7 @@ function OwnProductsPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<PharmacyProductRow[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(null);
 
   const [productStatistics, setProductStatistics] =
     useState<OwnProductStatisticsCounts>(DEFAULT_OWN_PRODUCT_STATISTICS);
@@ -260,11 +261,13 @@ function OwnProductsPageContent({
 
         setProducts(response.items);
         setTotalProducts(response.total);
+        setEarliestCreatedAt(response.earliestCreatedAt);
       } catch {
         if (!isMounted) return;
 
         setProducts([]);
         setTotalProducts(0);
+        setEarliestCreatedAt(null);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -478,6 +481,7 @@ function OwnProductsPageContent({
         <OwnProductsFiltersDrawer
           filters={filters}
           hasActiveFilters={hasActiveFilters}
+          minDate={earliestCreatedAt ?? undefined}
           onBackdropMouseDown={handleBackdropClick}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}

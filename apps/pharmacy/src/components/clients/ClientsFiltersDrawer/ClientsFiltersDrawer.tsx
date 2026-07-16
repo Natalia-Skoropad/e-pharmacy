@@ -24,6 +24,7 @@ import css from './ClientsFiltersDrawer.module.css';
 type ClientsFiltersDrawerProps = Readonly<{
   filters: ClientsFilterState;
   hasActiveFilters: boolean;
+  minDate?: string;
   onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
   onChange: (filters: ClientsFilterState) => void;
   onClose: () => void;
@@ -56,6 +57,7 @@ const SUCCESSFUL_ORDERS_OPTIONS: Array<
 function ClientsFiltersDrawer({
   filters,
   hasActiveFilters,
+  minDate,
   onBackdropMouseDown,
   onChange,
   onClose,
@@ -88,9 +90,10 @@ function ClientsFiltersDrawer({
         <div className={css.controls}>
           <DateFilter
             id="clients-first-order-date-filter"
+            minDate={minDate}
+            disabled={!minDate}
             label="Client added"
             value={filters.firstOrderDate}
-            minDate="2026-06-20"
             isActive={Boolean(
               filters.firstOrderDate.from || filters.firstOrderDate.to
             )}
