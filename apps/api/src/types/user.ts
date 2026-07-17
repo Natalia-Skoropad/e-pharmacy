@@ -34,4 +34,6 @@ export type UserEntity = {
   updatedBy?: Types.ObjectId;
   approvedBy?: Types.ObjectId;
   approvedAt?: Date;
+  isDefaultPharmacyClient?: boolean;
+  defaultClientPharmacyId?: Types.ObjectId;
 };

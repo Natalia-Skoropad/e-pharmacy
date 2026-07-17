@@ -14,6 +14,7 @@ import type {
 } from '../types/pharmacy';
 
 import { httpError } from '../utils/httpError';
+import { ensureDefaultPharmacyClient } from './default-pharmacy-client.service';
 
 import {
   isDuplicateEmailError,
@@ -227,6 +228,10 @@ export async function updatePharmacyStatusByAdminService(
 
   if (!updatedPharmacy) {
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+  }
+
+  if (input.status === PHARMACY_STATUSES.ACTIVE) {
+    await ensureDefaultPharmacyClient(updatedPharmacy._id, adminUserId);
   }
 
   return serializePharmacyProfile(updatedPharmacy);

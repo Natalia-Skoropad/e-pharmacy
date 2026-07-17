@@ -86,18 +86,18 @@ function ClientsTable({
         key: 'email',
         title: <TableHeaderTitle parts={['Client', 'email']} />,
         render: (client) => (
-          <span className={css.breakableText}>{client.email}</span>
+          <span className={css.breakableText}>{client.email || '—'}</span>
         ),
       },
       {
         key: 'phone',
         title: <TableHeaderTitle parts={['Client', 'phone']} />,
-        render: (client) => client.phone,
+        render: (client) => client.phone || '—',
       },
       {
         key: 'address',
         title: <TableHeaderTitle parts={['Client', 'address']} />,
-        render: (client) => client.address,
+        render: (client) => client.address || '—',
       },
       {
         key: 'successfulOrdersCount',

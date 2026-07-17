@@ -20,6 +20,7 @@ import { Cart } from '../models/cart.model';
 import { StockMovement } from '../models/stockMovement.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
 import { hashPassword } from '../utils/password';
+import { ensureDefaultPharmacyClient } from '../services/default-pharmacy-client.service';
 
 //===============================================================
 
@@ -916,7 +917,13 @@ async function seedPharmacyAccounts(): Promise<number> {
       }
     );
 
-    if (pharmacy) createdCount += 1;
+    if (pharmacy) {
+      createdCount += 1;
+
+      if (seed.status === PHARMACY_STATUSES.ACTIVE) {
+        await ensureDefaultPharmacyClient(pharmacy._id, user._id);
+      }
+    }
   }
 
   return createdCount;
@@ -3060,6 +3067,127 @@ async function seedOwnProductManagerNotes(): Promise<number> {
   return notes.length;
 }
 
+
+const CLIENT_MANAGER_NOTE_TEMPLATES = [
+  'Prefers concise updates about order readiness and pickup timing.',
+  'Check previous successful purchases before suggesting a replacement product.',
+  'Usually confirms the final quantity after the pharmacist explains available alternatives.',
+  'Keep delivery and payment preferences aligned with the latest completed order.',
+  'No issues were reported during the latest order handoff.',
+  'When reserving several items, confirm the expected pickup date in advance.',
+  'The purchase history is useful when the client asks for a familiar product again.',
+  'Double-check active reservations before approving an additional quantity.',
+  'The client appreciates clear information about price changes and package size.',
+  'Record any important pickup or communication details in the next order comment.',
+  'Review the client order history before offering products from another category.',
+  'The latest interaction was completed without additional support requests.',
+] as const;
+
+//===============================================================
+
+async function seedClientManagerNotes(): Promise<number> {
+  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
+    .select('_id ownerId managerUserIds approvedAt createdAt')
+    .lean<{
+      _id: Types.ObjectId;
+      ownerId?: Types.ObjectId;
+      managerUserIds?: Types.ObjectId[];
+      approvedAt?: Date;
+      createdAt: Date;
+    } | null>();
+
+  if (!pharmacy) return 0;
+
+  const createdBy = pharmacy.ownerId ?? pharmacy.managerUserIds?.[0];
+  if (!createdBy) return 0;
+
+  const orders = await Order.find({ pharmacyId: pharmacy._id })
+    .sort({ createdAt: 1 })
+    .select('userId createdAt')
+    .lean<Array<{ userId: Types.ObjectId; createdAt: Date }>>();
+
+  const firstOrderByClientId = new Map<string, Date>();
+  for (const order of orders) {
+    const clientId = String(order.userId);
+    if (!firstOrderByClientId.has(clientId)) {
+      firstOrderByClientId.set(clientId, order.createdAt);
+    }
+  }
+
+  const defaultClient = await User.findOne({
+    isDefaultPharmacyClient: true,
+    defaultClientPharmacyId: pharmacy._id,
+  })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId } | null>();
+
+  const clientIds = [
+    ...firstOrderByClientId.keys(),
+    ...(defaultClient ? [String(defaultClient._id)] : []),
+  ];
+
+  const clients = await User.find({ _id: { $in: clientIds } })
+    .select('_id name isDefaultPharmacyClient')
+    .lean<
+      Array<{
+        _id: Types.ObjectId;
+        name: string;
+        isDefaultPharmacyClient?: boolean;
+      }>
+    >();
+
+  const latestNoteAt = new Date('2026-07-16T19:00:00.000Z');
+  const notes = clients.flatMap((client, clientIndex) => {
+    const notesCount = 10 + (clientIndex % 3);
+    const addedAt =
+      firstOrderByClientId.get(String(client._id)) ??
+      pharmacy.approvedAt ??
+      pharmacy.createdAt;
+    const firstNoteAt = new Date(addedAt.getTime() + 3 * 60 * 60 * 1000);
+    const rangeEnd = Math.max(firstNoteAt.getTime(), latestNoteAt.getTime());
+    const step =
+      notesCount > 1
+        ? Math.floor((rangeEnd - firstNoteAt.getTime()) / (notesCount - 1))
+        : 0;
+
+    return Array.from({ length: notesCount }, (_, noteIndex) => {
+      const createdAt = new Date(firstNoteAt.getTime() + step * noteIndex);
+      const template =
+        CLIENT_MANAGER_NOTE_TEMPLATES[
+          (clientIndex + noteIndex) % CLIENT_MANAGER_NOTE_TEMPLATES.length
+        ];
+
+      return {
+        pharmacyId: pharmacy._id,
+        entityType: 'client' as const,
+        entityId: client._id,
+        text: `${client.name}: ${template}`,
+        createdBy,
+        createdAt,
+        updatedAt: createdAt,
+      };
+    });
+  });
+
+  await PharmacyNote.insertMany(notes);
+  return notes.length;
+}
+
+//===============================================================
+
+async function removeSeededDefaultPharmacyClients(): Promise<void> {
+  const defaultClientIds = await User.find({
+    isDefaultPharmacyClient: true,
+  }).distinct('_id');
+
+  if (!defaultClientIds.length) return;
+
+  await Promise.all([
+    Client.deleteMany({ userId: { $in: defaultClientIds } }),
+    User.deleteMany({ _id: { $in: defaultClientIds } }),
+  ]);
+}
+
 //===============================================================
 
 async function seedDatabase(): Promise<void> {
@@ -3068,6 +3196,7 @@ async function seedDatabase(): Promise<void> {
   }
 
   await connectDB();
+  await removeSeededDefaultPharmacyClients();
 
   await Promise.all([
     Pharmacy.deleteMany({}),
@@ -3170,6 +3299,7 @@ async function seedDatabase(): Promise<void> {
   const reconciledOffersCount = await reconcileActivePharmacyInventoryLedger();
 
   const productManagerNotesCount = await seedOwnProductManagerNotes();
+  const clientManagerNotesCount = await seedClientManagerNotes();
   await assertDemoOrderStatusCounts();
 
   console.log(
@@ -3194,6 +3324,9 @@ async function seedDatabase(): Promise<void> {
   );
   console.log(
     `Seed completed: ${productManagerNotesCount} product manager comments created`
+  );
+  console.log(
+    `Seed completed: ${clientManagerNotesCount} client manager comments created`
   );
 }
 

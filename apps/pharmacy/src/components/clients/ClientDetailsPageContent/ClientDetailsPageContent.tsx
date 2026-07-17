@@ -1,7 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { Mail, MapPin, Phone, UserRound, Users } from 'lucide-react';
+import {
+  Mail,
+  MapPin,
+  PackageCheck,
+  Phone,
+  UserRound,
+  Users,
+} from 'lucide-react';
 
 import { useEffect, useMemo, useState, type MouseEventHandler } from 'react';
 
@@ -13,6 +20,7 @@ import {
   DateFilter,
   FiltersButton,
   formatInitials,
+  InfoTooltip,
   LoadingSpinner,
   Pagination,
   ResetFiltersButton,
@@ -20,6 +28,7 @@ import {
   SearchInput,
   SelectField,
   ShimmerImage,
+  TableDateTime,
   TableHeaderTitle,
   TableImagePreview,
   Tabs,
@@ -39,6 +48,12 @@ import {
   DEFAULT_ORDER_STATISTICS,
   type OrderStatisticsCounts,
 } from '@e-pharmacy/types/orders';
+
+import type {
+  DeliveryMethod,
+  OrderStatus,
+  PaymentMethod,
+} from '@e-pharmacy/types';
 
 import {
   PRODUCT_CATEGORIES,
@@ -82,7 +97,9 @@ import {
 } from '@/lib/layout/routes';
 
 import {
+  DELIVERY_METHOD_LABELS,
   ORDER_STATUS_LABELS,
+  PAYMENT_METHOD_LABELS,
   type PharmacyOrderRow,
 } from '@/lib/orders/orders';
 
@@ -94,18 +111,28 @@ type ClientDetailsPageContentProps = Readonly<{ clientId: string }>;
 
 type ClientTab = 'details' | 'orders' | 'products' | 'comments';
 
+//===================================================================
+
 type ClientProductFilters = Readonly<{
   date: DateFilterValue;
   category: 'all' | ProductCategory;
   status: 'all' | ProductStatus;
 }>;
 
+type ClientOrderFilters = Readonly<{
+  date: DateFilterValue;
+  status: 'all' | OrderStatus;
+  deliveryMethod: 'all' | DeliveryMethod;
+  paymentMethod: 'all' | PaymentMethod;
+  clientCommentPresence: 'all' | 'with' | 'without';
+}>;
+
 //===================================================================
 
 const CLIENT_TABS: Array<TabItem<ClientTab>> = [
   { value: 'details', label: 'Details' },
-  { value: 'orders', label: 'Orders' },
-  { value: 'products', label: 'Products' },
+  { value: 'orders', label: 'Client orders' },
+  { value: 'products', label: 'Purchased products' },
   { value: 'comments', label: 'Comments' },
 ];
 
@@ -116,6 +143,47 @@ const DEFAULT_PRODUCT_FILTERS: ClientProductFilters = {
   category: 'all',
   status: 'all',
 };
+
+const DEFAULT_ORDER_FILTERS: ClientOrderFilters = {
+  date: { from: '', to: '' },
+  status: 'all',
+  deliveryMethod: 'all',
+  paymentMethod: 'all',
+  clientCommentPresence: 'all',
+};
+
+const ORDER_STATUS_OPTIONS: Array<SelectOption<ClientOrderFilters['status']>> =
+  [
+    { value: 'all', label: 'All' },
+    { value: 'new', label: 'New' },
+    { value: 'in_progress', label: 'In progress' },
+    { value: 'successful', label: 'Successful' },
+    { value: 'rejected', label: 'Rejected' },
+  ];
+
+const DELIVERY_METHOD_OPTIONS: Array<
+  SelectOption<ClientOrderFilters['deliveryMethod']>
+> = [
+  { value: 'all', label: 'All' },
+  { value: 'pickup', label: DELIVERY_METHOD_LABELS.pickup },
+  { value: 'postal_delivery', label: DELIVERY_METHOD_LABELS.postal_delivery },
+];
+
+const PAYMENT_METHOD_OPTIONS: Array<
+  SelectOption<ClientOrderFilters['paymentMethod']>
+> = [
+  { value: 'all', label: 'All' },
+  { value: 'cash', label: PAYMENT_METHOD_LABELS.cash },
+  { value: 'bank_transfer', label: PAYMENT_METHOD_LABELS.bank_transfer },
+];
+
+const CLIENT_COMMENT_OPTIONS: Array<
+  SelectOption<ClientOrderFilters['clientCommentPresence']>
+> = [
+  { value: 'all', label: 'All' },
+  { value: 'with', label: 'With client comment' },
+  { value: 'without', label: 'Without client comment' },
+];
 
 const PRODUCT_CATEGORY_OPTIONS: Array<
   SelectOption<ClientProductFilters['category']>
@@ -154,24 +222,128 @@ function formatClientDate(value: string): string {
 
 //===================================================================
 
-function getClientOrderStatistics(
-  orders: PharmacyOrderRow[]
-): OrderStatisticsCounts {
-  const counts: OrderStatisticsCounts = {
-    new: { ...DEFAULT_ORDER_STATISTICS.new },
-    in_progress: { ...DEFAULT_ORDER_STATISTICS.in_progress },
-    successful: { ...DEFAULT_ORDER_STATISTICS.successful },
-    rejected: { ...DEFAULT_ORDER_STATISTICS.rejected },
-  };
+function formatAmount(value: number): string {
+  return formatPrice(value).replace(/\sUAH$/, '');
+}
 
-  for (const order of orders) {
-    counts[order.status] = {
-      count: counts[order.status].count + 1,
-      amount: counts[order.status].amount + order.totalAmount,
-    };
-  }
+//===================================================================
 
-  return counts;
+type ClientOrdersFiltersDrawerProps = Readonly<{
+  filters: ClientOrderFilters;
+  hasActiveFilters: boolean;
+  minDate?: string;
+  resetHref: string;
+  onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
+  onChange: (filters: ClientOrderFilters) => void;
+  onClose: () => void;
+  onReset: () => void;
+}>;
+
+//===================================================================
+
+function ClientOrdersFiltersDrawer({
+  filters,
+  hasActiveFilters,
+  minDate,
+  resetHref,
+  onBackdropMouseDown,
+  onChange,
+  onClose,
+  onReset,
+}: ClientOrdersFiltersDrawerProps) {
+  return (
+    <div
+      className={css.filtersBackdrop}
+      role="presentation"
+      onMouseDown={onBackdropMouseDown}
+    >
+      <aside
+        className={css.filtersPanel}
+        id="client-orders-filters-panel"
+        aria-labelledby="client-orders-filters-title"
+        aria-modal="true"
+        role="dialog"
+      >
+        <div className={css.filtersHeader}>
+          <div>
+            <p className={css.filtersKicker}>Client orders</p>
+            <h2 className={css.filtersTitle} id="client-orders-filters-title">
+              Filters
+            </h2>
+          </div>
+
+          <CloseIconButton label="Close filters" onClick={onClose} />
+        </div>
+
+        <div className={css.filtersControls}>
+          <DateFilter
+            id="client-orders-date"
+            minDate={minDate}
+            disabled={!minDate}
+            label="Order date"
+            value={filters.date}
+            isActive={Boolean(filters.date.from || filters.date.to)}
+            applyOnSubmit
+            applyLabel="Apply"
+            onChange={(date) => onChange({ ...filters, date })}
+          />
+
+          <SelectField
+            id="client-orders-status"
+            label="Order status"
+            value={filters.status}
+            options={ORDER_STATUS_OPTIONS}
+            isActive={filters.status !== 'all'}
+            onChange={(status) => onChange({ ...filters, status })}
+          />
+
+          <SelectField
+            id="client-orders-delivery"
+            label="Delivery method"
+            value={filters.deliveryMethod}
+            options={DELIVERY_METHOD_OPTIONS}
+            isActive={filters.deliveryMethod !== 'all'}
+            onChange={(deliveryMethod) =>
+              onChange({ ...filters, deliveryMethod })
+            }
+          />
+
+          <SelectField
+            id="client-orders-payment"
+            label="Payment method"
+            value={filters.paymentMethod}
+            options={PAYMENT_METHOD_OPTIONS}
+            isActive={filters.paymentMethod !== 'all'}
+            onChange={(paymentMethod) =>
+              onChange({ ...filters, paymentMethod })
+            }
+          />
+
+          <SelectField
+            id="client-orders-comment-presence"
+            label="Client comment"
+            value={filters.clientCommentPresence}
+            options={CLIENT_COMMENT_OPTIONS}
+            isActive={filters.clientCommentPresence !== 'all'}
+            onChange={(clientCommentPresence) =>
+              onChange({ ...filters, clientCommentPresence })
+            }
+          />
+        </div>
+
+        {hasActiveFilters ? (
+          <ResetFiltersButton
+            className={css.resetButton}
+            href={resetHref}
+            onClick={() => {
+              onReset();
+              onClose();
+            }}
+          />
+        ) : null}
+      </aside>
+    </div>
+  );
 }
 
 //===================================================================
@@ -273,6 +445,34 @@ function ClientProductsFiltersDrawer({
 function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
   const [client, setClient] = useState<PharmacyClientRow | null>(null);
   const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
+  const [ordersTotal, setOrdersTotal] = useState(0);
+  const [ordersOverallTotal, setOrdersOverallTotal] = useState(0);
+  const [ordersTotalPages, setOrdersTotalPages] = useState(0);
+  const [ordersPage, setOrdersPage] = useState(1);
+
+  const [ordersRowsPerPage, setOrdersRowsPerPage] =
+    useState<RowsPerPageValue>(20);
+
+  const [ordersEarliestCreatedAt, setOrdersEarliestCreatedAt] = useState<
+    string | null
+  >(null);
+
+  const [orderNumberSearch, setOrderNumberSearch] = useState('');
+  const [orderCommentSearch, setOrderCommentSearch] = useState('');
+
+  const [orderFilters, setOrderFilters] = useState<ClientOrderFilters>(
+    DEFAULT_ORDER_FILTERS
+  );
+
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState('');
+  const [isOrdersFiltersOpen, setIsOrdersFiltersOpen] = useState(false);
+
+  const [orderStatistics, setOrderStatistics] = useState<OrderStatisticsCounts>(
+    DEFAULT_ORDER_STATISTICS
+  );
+
+  const [commentsTotal, setCommentsTotal] = useState(0);
   const [activeTab, setActiveTab] = useState<ClientTab>('details');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -280,30 +480,49 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
   const [products, setProducts] = useState<PharmacyClientPurchasedProduct[]>(
     []
   );
+
   const [productsTotal, setProductsTotal] = useState(0);
-  const [productsEarliestCreatedAt, setProductsEarliestCreatedAt] =
-    useState<string | null>(null);
+
+  const [productsEarliestCreatedAt, setProductsEarliestCreatedAt] = useState<
+    string | null
+  >(null);
+
   const [productsOverallTotal, setProductsOverallTotal] = useState(0);
   const [productsTotalPages, setProductsTotalPages] = useState(0);
   const [productsPage, setProductsPage] = useState(1);
+
   const [productsRowsPerPage, setProductsRowsPerPage] =
     useState<RowsPerPageValue>(20);
+
   const [productArticleSearch, setProductArticleSearch] = useState('');
   const [productNameSearch, setProductNameSearch] = useState('');
+
   const [productFilters, setProductFilters] = useState<ClientProductFilters>(
     DEFAULT_PRODUCT_FILTERS
   );
+
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState('');
   const [isProductsFiltersOpen, setIsProductsFiltersOpen] = useState(false);
 
-  useBodyScrollLock(isProductsFiltersOpen);
+  useBodyScrollLock(isProductsFiltersOpen || isOrdersFiltersOpen);
+
   useEscapeToClose({
     isOpen: isProductsFiltersOpen,
     onClose: () => setIsProductsFiltersOpen(false),
   });
+
+  useEscapeToClose({
+    isOpen: isOrdersFiltersOpen,
+    onClose: () => setIsOrdersFiltersOpen(false),
+  });
+
   const handleProductsFiltersBackdrop = useBackdropClick({
     onClose: () => setIsProductsFiltersOpen(false),
+  });
+
+  const handleOrdersFiltersBackdrop = useBackdropClick({
+    onClose: () => setIsOrdersFiltersOpen(false),
   });
 
   useEffect(() => {
@@ -316,18 +535,20 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       setError('');
 
       try {
-        const loadedClient = await getPharmacyClientDetails(clientId);
-        const ordersResponse = await getPharmacyOrders({
-          page: 1,
-          perPage: 200,
-        });
+        const [loadedClient, ordersResponse, commentsResponse] =
+          await Promise.all([
+            getPharmacyClientDetails(clientId),
+            getPharmacyOrders({ page: 1, perPage: 1, clientId }),
+            getPharmacyNotes('client', clientId, 1).catch(() => null),
+          ]);
 
         if (!mounted) return;
 
         setClient(loadedClient);
-        setOrders(
-          ordersResponse.items.filter((order) => order.clientId === clientId)
-        );
+        setOrdersOverallTotal(ordersResponse.total);
+        setOrdersEarliestCreatedAt(ordersResponse.earliestCreatedAt);
+        setOrderStatistics(ordersResponse.statistics);
+        setCommentsTotal(commentsResponse?.total ?? 0);
       } catch {
         if (mounted) setError('Could not load client details.');
       } finally {
@@ -341,6 +562,90 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       mounted = false;
     };
   }, [clientId]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadOrders() {
+      await Promise.resolve();
+      setOrdersLoading(true);
+      setOrdersError('');
+
+      try {
+        const response = await getPharmacyOrders({
+          page: ordersPage,
+          perPage: ordersRowsPerPage,
+          clientId,
+          orderNumber: orderNumberSearch.trim() || undefined,
+          clientComment: orderCommentSearch.trim() || undefined,
+          dateFrom: orderFilters.date.from || undefined,
+          dateTo: orderFilters.date.to || undefined,
+          status:
+            orderFilters.status === 'all' ? undefined : orderFilters.status,
+          deliveryMethod:
+            orderFilters.deliveryMethod === 'all'
+              ? undefined
+              : orderFilters.deliveryMethod,
+          paymentMethod:
+            orderFilters.paymentMethod === 'all'
+              ? undefined
+              : orderFilters.paymentMethod,
+          clientCommentPresence:
+            orderFilters.clientCommentPresence === 'all'
+              ? undefined
+              : orderFilters.clientCommentPresence,
+        });
+
+        if (!mounted) return;
+
+        setOrders(response.items);
+        setOrdersTotal(response.total);
+        setOrdersTotalPages(Math.ceil(response.total / ordersRowsPerPage));
+        setOrdersEarliestCreatedAt(response.earliestCreatedAt);
+
+        const hasSearchOrFilters = Boolean(
+          orderNumberSearch.trim() ||
+          orderCommentSearch.trim() ||
+          orderFilters.date.from ||
+          orderFilters.date.to ||
+          orderFilters.status !== 'all' ||
+          orderFilters.deliveryMethod !== 'all' ||
+          orderFilters.paymentMethod !== 'all' ||
+          orderFilters.clientCommentPresence !== 'all'
+        );
+
+        if (!hasSearchOrFilters) {
+          setOrdersOverallTotal(response.total);
+          setOrderStatistics(response.statistics);
+        }
+      } catch (loadOrdersError) {
+        if (!mounted) return;
+        setOrders([]);
+        setOrdersTotal(0);
+        setOrdersTotalPages(0);
+        setOrdersError(
+          loadOrdersError instanceof Error && loadOrdersError.message
+            ? loadOrdersError.message
+            : 'Could not load client orders.'
+        );
+      } finally {
+        if (mounted) setOrdersLoading(false);
+      }
+    }
+
+    void loadOrders();
+
+    return () => {
+      mounted = false;
+    };
+  }, [
+    clientId,
+    orderCommentSearch,
+    orderFilters,
+    orderNumberSearch,
+    ordersPage,
+    ordersRowsPerPage,
+  ]);
 
   useEffect(() => {
     let mounted = true;
@@ -417,26 +722,35 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
     productsRowsPerPage,
   ]);
 
-  const orderStatistics = useMemo(
-    () => getClientOrderStatistics(orders),
-    [orders]
-  );
-
   const tabs = useMemo(
     () =>
       CLIENT_TABS.map((tab) => {
         if (tab.value === 'orders') {
-          return { ...tab, label: `Orders (${orders.length})` };
+          return { ...tab, label: `Orders (${ordersOverallTotal})` };
         }
 
         if (tab.value === 'products') {
           return { ...tab, label: `Products (${productsOverallTotal})` };
         }
 
+        if (tab.value === 'comments') {
+          return { ...tab, label: `Comments (${commentsTotal})` };
+        }
+
         return tab;
       }),
-    [orders.length, productsOverallTotal]
+    [commentsTotal, ordersOverallTotal, productsOverallTotal]
   );
+
+  const orderFiltersCount = [
+    orderFilters.date.from || orderFilters.date.to,
+    orderFilters.status !== 'all',
+    orderFilters.deliveryMethod !== 'all',
+    orderFilters.paymentMethod !== 'all',
+    orderFilters.clientCommentPresence !== 'all',
+  ].filter(Boolean).length;
+
+  const hasOrderFilters = orderFiltersCount > 0;
 
   const productFiltersCount = [
     productFilters.date.from || productFilters.date.to,
@@ -451,7 +765,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       {
         key: 'date',
         title: <TableHeaderTitle parts={['Order', 'date']} />,
-        render: (order) => formatShortDate(order.orderDate),
+        render: (order) => <TableDateTime value={order.orderDate} />,
       },
       {
         key: 'number',
@@ -463,14 +777,29 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
         ),
       },
       {
+        key: 'delivery',
+        title: <TableHeaderTitle parts={['Delivery', 'method']} />,
+        render: (order) => DELIVERY_METHOD_LABELS[order.deliveryMethod],
+      },
+      {
+        key: 'payment',
+        title: <TableHeaderTitle parts={['Payment', 'method']} />,
+        render: (order) => PAYMENT_METHOD_LABELS[order.paymentMethod],
+      },
+      {
+        key: 'comment',
+        title: <TableHeaderTitle parts={['Client', 'comment']} />,
+        render: (order) => order.clientComment || '—',
+      },
+      {
         key: 'quantity',
         title: <TableHeaderTitle parts={['Order', 'quantity']} />,
         render: (order) => order.totalQuantity,
       },
       {
         key: 'amount',
-        title: <TableHeaderTitle parts={['Order', 'amount']} />,
-        render: (order) => formatPrice(order.totalAmount),
+        title: <TableHeaderTitle parts={['Order amount,', 'UAH']} />,
+        render: (order) => formatAmount(order.totalAmount),
       },
       {
         key: 'status',
@@ -493,11 +822,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       {
         key: 'date',
         title: <TableHeaderTitle parts={['Order', 'date']} />,
-        render: (item) => (
-          <time dateTime={item.orderDate}>
-            {formatShortDate(item.orderDate)}
-          </time>
-        ),
+        render: (item) => <TableDateTime value={item.orderDate} />,
       },
       {
         key: 'photo',
@@ -540,8 +865,8 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       },
       {
         key: 'amount',
-        title: <TableHeaderTitle parts={['Purchased', 'amount']} />,
-        render: (item) => formatPrice(item.totalAmount),
+        title: <TableHeaderTitle parts={['Purchased amount,', 'UAH']} />,
+        render: (item) => formatAmount(item.totalAmount),
       },
       {
         key: 'status',
@@ -595,18 +920,11 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
     <main className={css.page} aria-labelledby="client-details-page-title">
       <section className={css.contentCard}>
         <div className={css.headerStack}>
-          <div className={css.titleBlock}>
-            <PageHeader
-              title={client.name}
-              titleId="client-details-page-title"
-              icon={<Users size={23} aria-hidden="true" />}
-            />
-
-            <StatusBadge
-              status={client.status}
-              label={client.status === 'active' ? 'Active' : 'Blocked'}
-            />
-          </div>
+          <PageHeader
+            title={client.name}
+            titleId="client-details-page-title"
+            icon={<Users size={23} aria-hidden="true" />}
+          />
 
           <OrderStatistics
             counts={orderStatistics}
@@ -651,41 +969,6 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
 
                 <dl className={css.detailsList}>
                   <div>
-                    <dt>Client ID</dt>
-                    <dd>{client.id}</dd>
-                  </div>
-                  <div>
-                    <dt>Email</dt>
-                    <dd>
-                      <a href={`mailto:${client.email}`}>
-                        <Mail size={17} aria-hidden="true" />
-                        {client.email}
-                      </a>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Phone</dt>
-                    <dd>
-                      <a href={`tel:${client.phone}`}>
-                        <Phone size={17} aria-hidden="true" />
-                        {client.phone}
-                      </a>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Address</dt>
-                    <dd>
-                      <span className={css.detailValueWithIcon}>
-                        <MapPin size={17} aria-hidden="true" />
-                        {client.address}
-                      </span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>First order</dt>
-                    <dd>{formatClientDate(client.firstOrderAt)}</dd>
-                  </div>
-                  <div>
                     <dt>Status</dt>
                     <dd>
                       <StatusBadge
@@ -695,6 +978,53 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
                         }
                       />
                     </dd>
+                  </div>
+                  <div>
+                    <dt>Client ID</dt>
+                    <dd>{client.id}</dd>
+                  </div>
+                  <div>
+                    <dt>Email</dt>
+                    <dd>
+                      {client.email ? (
+                        <a href={`mailto:${client.email}`}>
+                          <Mail size={17} aria-hidden="true" />
+                          {client.email}
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Phone</dt>
+                    <dd>
+                      {client.phone ? (
+                        <a href={`tel:${client.phone}`}>
+                          <Phone size={17} aria-hidden="true" />
+                          {client.phone}
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Address</dt>
+                    <dd>
+                      {client.address ? (
+                        <span className={css.detailValueWithIcon}>
+                          <MapPin size={17} aria-hidden="true" />
+                          {client.address}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>First order</dt>
+                    <dd>{formatClientDate(client.firstOrderAt)}</dd>
                   </div>
                 </dl>
 
@@ -709,34 +1039,127 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
           ) : null}
 
           {activeTab === 'orders' ? (
-            <section className={css.sectionCard}>
-              <div className={css.sectionHead}>
+            <div className={css.sectionStack}>
+              <section className={css.sectionCard}>
                 <h2>Client orders</h2>
-                <CountLabel
-                  shown={orders.length}
-                  total={orders.length}
-                  label="orders"
-                />
-              </div>
 
-              <DataTable
-                columns={orderColumns}
-                items={orders}
-                getItemKey={(order) => String(order.id)}
-                minWidth={0}
-                labels={{ empty: 'No orders found for this client.' }}
-              />
-            </section>
+                <div className={css.searchGrid}>
+                  <SearchInput
+                    id="client-order-number-search"
+                    label="Order number search"
+                    value={orderNumberSearch}
+                    placeholder="Order number"
+                    isActive={Boolean(orderNumberSearch)}
+                    onChange={(value) => {
+                      setOrderNumberSearch(value);
+                      setOrdersPage(1);
+                    }}
+                  />
+
+                  <SearchInput
+                    id="client-order-comment-search"
+                    label="Client comment search"
+                    value={orderCommentSearch}
+                    placeholder="Client comment"
+                    isActive={Boolean(orderCommentSearch)}
+                    onChange={(value) => {
+                      setOrderCommentSearch(value);
+                      setOrdersPage(1);
+                    }}
+                  />
+
+                  <div className={css.searchAction}>
+                    <FiltersButton
+                      activeCount={orderFiltersCount}
+                      controlsId="client-orders-filters-panel"
+                      isExpanded={isOrdersFiltersOpen}
+                      className={css.filterButton}
+                      onClick={() => setIsOrdersFiltersOpen(true)}
+                    />
+                  </div>
+                </div>
+              </section>
+
+              <section className={css.sectionCard}>
+                <div className={css.tableStack}>
+                  <div className={css.tableToolbar}>
+                    <div className={css.rowsControl}>
+                      <RowsPerPageSelect
+                        id="client-orders-rows-per-page"
+                        value={ordersRowsPerPage}
+                        options={PRODUCT_ROWS_PER_PAGE_OPTIONS}
+                        onChange={(value) => {
+                          setOrdersRowsPerPage(value);
+                          setOrdersPage(1);
+                        }}
+                      />
+                    </div>
+
+                    <CountLabel
+                      className={css.countLabel}
+                      shown={orders.length}
+                      total={ordersTotal}
+                      label="orders"
+                    />
+                  </div>
+
+                  {ordersError ? (
+                    <p className={css.errorText}>{ordersError}</p>
+                  ) : null}
+
+                  <DataTable
+                    columns={orderColumns}
+                    items={orders}
+                    getItemKey={(order) => String(order.id)}
+                    isLoading={ordersLoading}
+                    minWidth={0}
+                    labels={{
+                      loading: 'Loading client orders...',
+                      empty: 'No orders match the selected filters.',
+                    }}
+                  />
+
+                  <Pagination
+                    currentPage={ordersPage}
+                    totalPages={ordersTotalPages}
+                    getPageHref={(page) => String(page)}
+                    ariaLabel="Client orders pagination"
+                    renderLink={({
+                      href,
+                      className,
+                      children,
+                      'aria-label': ariaLabel,
+                    }) => (
+                      <button
+                        className={className}
+                        type="button"
+                        aria-label={ariaLabel}
+                        disabled={ordersLoading}
+                        onClick={() => setOrdersPage(Number(href))}
+                      >
+                        {children}
+                      </button>
+                    )}
+                  />
+                </div>
+              </section>
+            </div>
           ) : null}
 
           {activeTab === 'products' ? (
             <div className={css.sectionStack}>
               <section className={css.sectionCard}>
-                <div>
+                <div className={css.titleWithTooltip}>
                   <h2>Purchased products</h2>
-                  <p className={css.sectionDescription}>
-                    Only products from successful orders are included.
-                  </p>
+                  <InfoTooltip
+                    label="About purchased products"
+                    title="Successful purchases"
+                    icon={<PackageCheck size={20} aria-hidden="true" />}
+                  >
+                    This table contains products from this client’s successful
+                    orders only. Quantities and amounts reflect what was
+                    actually purchased in completed orders.
+                  </InfoTooltip>
                 </div>
 
                 <div className={css.searchGrid}>
@@ -779,13 +1202,6 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
               <section className={css.sectionCard}>
                 <div className={css.tableStack}>
                   <div className={css.tableToolbar}>
-                    <CountLabel
-                      className={css.countLabel}
-                      shown={products.length}
-                      total={productsTotal}
-                      label="products"
-                    />
-
                     <div className={css.rowsControl}>
                       <RowsPerPageSelect
                         id="client-products-rows-per-page"
@@ -797,6 +1213,12 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
                         }}
                       />
                     </div>
+                    <CountLabel
+                      className={css.countLabel}
+                      shown={products.length}
+                      total={productsTotal}
+                      label="products"
+                    />
                   </div>
 
                   {productsError ? (
@@ -843,13 +1265,34 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
           {activeTab === 'comments' ? (
             <EntityComments
               entityKey={`client:${clientId}`}
+              initialTotal={commentsTotal}
               load={(page) => getPharmacyNotes('client', clientId, page)}
               create={(text) => createPharmacyNote('client', clientId, text)}
               remove={(id) => deletePharmacyNote('client', clientId, id)}
+              onTotalChange={setCommentsTotal}
             />
           ) : null}
         </div>
       </section>
+
+      {isOrdersFiltersOpen ? (
+        <ClientOrdersFiltersDrawer
+          filters={orderFilters}
+          hasActiveFilters={hasOrderFilters}
+          minDate={ordersEarliestCreatedAt ?? undefined}
+          resetHref={getPharmacyClientPath(clientId)}
+          onBackdropMouseDown={handleOrdersFiltersBackdrop}
+          onChange={(filters) => {
+            setOrderFilters(filters);
+            setOrdersPage(1);
+          }}
+          onClose={() => setIsOrdersFiltersOpen(false)}
+          onReset={() => {
+            setOrderFilters(DEFAULT_ORDER_FILTERS);
+            setOrdersPage(1);
+          }}
+        />
+      ) : null}
 
       {isProductsFiltersOpen ? (
         <ClientProductsFiltersDrawer

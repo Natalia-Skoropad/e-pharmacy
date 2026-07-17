@@ -142,12 +142,15 @@ export type PharmacyOrdersQueryParams = Readonly<{
   dateFrom?: string;
   dateTo?: string;
   client?: string;
+  clientId?: EntityId;
   orderNumber?: string;
   deliveryMethod?: DeliveryMethod;
   paymentMethod?: PaymentMethod;
   status?: OrderStatus;
   productId?: EntityId;
   comment?: string;
+  clientComment?: string;
+  clientCommentPresence?: 'with' | 'without';
 }>;
 
 export type PharmacyOrdersResponse = Readonly<{

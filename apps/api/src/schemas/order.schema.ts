@@ -18,6 +18,8 @@ const orderRouteIdSchema = z.string().trim().min(1, 'ID is required');
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
 const perPageSchema = z.coerce.number().int().min(1).max(200).default(20);
 
+//===============================================================
+
 const dateFilterSchema = z
   .string()
   .trim()
@@ -50,12 +52,15 @@ export const ordersQuerySchema = z.preprocess(
     dateFrom: dateFilterSchema,
     dateTo: dateFilterSchema,
     client: sharedSearchSchema,
+    clientId: mongoIdSchema.optional(),
     orderNumber: sharedSearchSchema,
     deliveryMethod: z.enum(['pickup', 'postal_delivery']).optional(),
     paymentMethod: z.enum(['cash', 'bank_transfer']).optional(),
     status: z.enum(['new', 'in_progress', 'successful', 'rejected']).optional(),
     productId: mongoIdSchema.optional(),
     comment: sharedSearchSchema,
+    clientComment: sharedSearchSchema,
+    clientCommentPresence: z.enum(['with', 'without']).optional(),
   })
 );
 

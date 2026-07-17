@@ -22,7 +22,7 @@ import type { UserEntity } from '../types/user';
 
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
 type OrderDocument = OrderEntity & { _id: Types.ObjectId };
-type UserDocument = UserEntity & { _id: Types.ObjectId };
+type UserDocument = UserEntity & { _id: Types.ObjectId; createdAt: Date };
 type ProductDocument = ProductEntity & { _id: Types.ObjectId };
 
 //===============================================================
@@ -39,6 +39,7 @@ type ClientRow = Readonly<{
   successfulOrdersAmount: number;
   status: 'active' | 'blocked';
   statusReason?: string;
+  isDefault: boolean;
 }>;
 
 type ClientPurchasedProductRow = Readonly<{
@@ -100,6 +101,7 @@ function getDeliveryAddress(order: OrderDocument): string | undefined {
 //===============================================================
 
 function getClientAddress(user: UserDocument, orders: OrderDocument[]): string {
+  if (user.isDefaultPharmacyClient) return '';
   if (user.address) return user.address;
 
   const deliveryAddress = orders
@@ -111,11 +113,14 @@ function getClientAddress(user: UserDocument, orders: OrderDocument[]): string {
 
 //===============================================================
 
-function getFirstOrderDate(orders: OrderDocument[]): Date {
+function getFirstOrderDate(
+  orders: OrderDocument[],
+  fallbackDate: Date
+): Date {
   return orders.reduce(
     (earliest, order) =>
       order.createdAt < earliest ? order.createdAt : earliest,
-    orders[0]?.createdAt ?? new Date(0)
+    orders[0]?.createdAt ?? fallbackDate
   );
 }
 
@@ -123,27 +128,38 @@ function getFirstOrderDate(orders: OrderDocument[]): Date {
 
 function serializeClient(
   user: UserDocument,
-  orders: OrderDocument[]
+  orders: OrderDocument[],
+  pharmacy: Pick<PharmacyDocument, 'imageUrl' | 'approvedAt' | 'createdAt'>
 ): ClientRow {
   const successfulOrders = orders.filter(
     (order) => order.status === 'successful'
   );
+  const isDefault = Boolean(user.isDefaultPharmacyClient);
+  const fallbackDate =
+    pharmacy.approvedAt ?? pharmacy.createdAt ?? user.createdAt;
 
   return {
     id: String(user._id),
-    photoUrl: user.pictureUrl ?? null,
-    firstOrderAt: getFirstOrderDate(orders).toISOString(),
+    photoUrl: isDefault ? pharmacy.imageUrl ?? null : user.pictureUrl ?? null,
+    firstOrderAt: getFirstOrderDate(orders, fallbackDate).toISOString(),
     name: user.name,
-    email: user.email,
-    phone: user.phone,
-    address: getClientAddress(user, orders),
+    email: isDefault ? '' : user.email,
+    phone: isDefault ? '' : user.phone,
+    address: isDefault ? '' : getClientAddress(user, orders),
     successfulOrdersCount: successfulOrders.length,
     successfulOrdersAmount: successfulOrders.reduce(
       (sum, order) => sum + order.totalPrice,
       0
     ),
-    status: user.status === 'blocked' ? 'blocked' : 'active',
-    ...(user.statusReason ? { statusReason: user.statusReason } : {}),
+    status: isDefault
+      ? 'active'
+      : user.status === 'blocked'
+        ? 'blocked'
+        : 'active',
+    ...(user.statusReason && !isDefault
+      ? { statusReason: user.statusReason }
+      : {}),
+    isDefault,
   };
 }
 
@@ -219,6 +235,15 @@ async function getClientRowsForPharmacy(
   pharmacyId: Types.ObjectId,
   query: ClientsQuery
 ): Promise<ClientRow[]> {
+  const pharmacy = await Pharmacy.findById(pharmacyId)
+    .select('imageUrl approvedAt createdAt')
+    .lean<
+      | Pick<PharmacyDocument, '_id' | 'imageUrl' | 'approvedAt' | 'createdAt'>
+      | null
+    >();
+
+  if (!pharmacy) return [];
+
   const orderFilter: Record<string, unknown> = { pharmacyId };
 
   if (query.firstOrderFrom || query.firstOrderTo) {
@@ -234,8 +259,6 @@ async function getClientRowsForPharmacy(
     .sort({ createdAt: -1 })
     .lean<OrderDocument[]>();
 
-  if (!orders.length) return [];
-
   const ordersByUserId = new Map<string, OrderDocument[]>();
 
   for (const order of orders) {
@@ -246,19 +269,28 @@ async function getClientRowsForPharmacy(
   }
 
   const users = await User.find({
-    _id: { $in: [...ordersByUserId.keys()] },
+    $or: [
+      { _id: { $in: [...ordersByUserId.keys()] } },
+      {
+        isDefaultPharmacyClient: true,
+        defaultClientPharmacyId: pharmacyId,
+      },
+    ],
   }).lean<UserDocument[]>();
 
   return users
     .flatMap((user) => {
       const userOrders = ordersByUserId.get(String(user._id)) ?? [];
 
-      return userOrders.length ? [serializeClient(user, userOrders)] : [];
+      if (!userOrders.length && !user.isDefaultPharmacyClient) return [];
+
+      return [serializeClient(user, userOrders, pharmacy)];
     })
     .filter((client) => matchesClientFilters(client, query))
-    .sort((first, second) =>
-      second.firstOrderAt.localeCompare(first.firstOrderAt)
-    );
+    .sort((first, second) => {
+      if (first.isDefault !== second.isDefault) return first.isDefault ? -1 : 1;
+      return second.firstOrderAt.localeCompare(first.firstOrderAt);
+    });
 }
 
 //===============================================================
@@ -381,12 +413,19 @@ export async function getClientPurchasedProductsService(
     .lean<OrderDocument[]>();
 
   if (!orders.length) {
-    const clientHasOrders = await Order.exists({
-      pharmacyId,
-      userId: new Types.ObjectId(clientId),
-    });
+    const [clientHasOrders, defaultClientExists] = await Promise.all([
+      Order.exists({
+        pharmacyId,
+        userId: new Types.ObjectId(clientId),
+      }),
+      User.exists({
+        _id: new Types.ObjectId(clientId),
+        isDefaultPharmacyClient: true,
+        defaultClientPharmacyId: pharmacyId,
+      }),
+    ]);
 
-    if (!clientHasOrders) {
+    if (!clientHasOrders && !defaultClientExists) {
       throw httpError(HTTP_STATUS.NOT_FOUND, 'Client was not found');
     }
 

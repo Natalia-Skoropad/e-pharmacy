@@ -82,10 +82,14 @@ type CartDocument = {
   updatedAt: Date;
 };
 
+//===============================================================
+
 type ProductDocument = ProductEntity & { _id: Types.ObjectId };
 type ProductOfferDocument = ProductOfferEntity & { _id: Types.ObjectId };
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
 type OrderDocument = OrderEntity & { _id: Types.ObjectId };
+
+//===============================================================
 
 type UserDocument = {
   _id: Types.ObjectId;
@@ -94,11 +98,17 @@ type UserDocument = {
   pictureUrl?: string;
   phone?: string;
   address?: string;
+  isDefaultPharmacyClient?: boolean;
+  defaultClientPharmacyId?: Types.ObjectId;
 };
+
+//===============================================================
 
 type ProductFallbackMap = Map<string, ProductDocument>;
 type OfferFallbackMap = Map<string, ProductOfferDocument>;
 type ClientUserMap = Map<string, UserDocument>;
+
+//===============================================================
 
 type ManagerCommentDto = {
   id: string;
@@ -263,17 +273,27 @@ function serializeOrder(
     userId: order.userId.toString(),
     clientId: order.userId.toString(),
     clientName: clientUser?.name ?? undefined,
-    clientPhotoUrl: clientUser?.pictureUrl ?? undefined,
-    ...(clientUser?.phone ? { clientPhone: clientUser.phone } : {}),
-    ...(clientUser?.address ? { clientAddress: clientUser.address } : {}),
+    clientPhotoUrl: clientUser?.isDefaultPharmacyClient
+      ? order.pharmacySnapshot.imageUrl
+      : clientUser?.pictureUrl ?? undefined,
+    ...(!clientUser?.isDefaultPharmacyClient && clientUser?.phone
+      ? { clientPhone: clientUser.phone }
+      : {}),
+    ...(!clientUser?.isDefaultPharmacyClient && clientUser?.address
+      ? { clientAddress: clientUser.address }
+      : {}),
     ...(clientUser
       ? {
           client: {
             id: clientUser._id.toString(),
             name: clientUser.name ?? clientUser.email ?? 'Client',
-            ...(clientUser.pictureUrl
-              ? { photoUrl: clientUser.pictureUrl }
-              : {}),
+            ...(clientUser.isDefaultPharmacyClient
+              ? order.pharmacySnapshot.imageUrl
+                ? { photoUrl: order.pharmacySnapshot.imageUrl }
+                : {}
+              : clientUser.pictureUrl
+                ? { photoUrl: clientUser.pictureUrl }
+                : {}),
           },
         }
       : {}),
@@ -1136,7 +1156,7 @@ export async function updateOrderDetailsService(
       getOrderProductFallbacks(updatedOrder),
       getOrderOfferFallbacks(updatedOrder),
       User.findById(updatedOrder.userId)
-        .select('name email pictureUrl phone address')
+        .select('name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId')
         .lean<UserDocument | null>(),
     ]);
 
@@ -1434,7 +1454,7 @@ export async function updateOrderStatusService(
       getOrderProductFallbacks(updatedOrder),
       getOrderOfferFallbacks(updatedOrder),
       User.findById(updatedOrder.userId)
-        .select('name email pictureUrl phone address')
+        .select('name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId')
         .lean<UserDocument | null>(),
     ]);
 
@@ -1799,6 +1819,12 @@ export async function getOrdersService(
     );
   }
 
+  if (query.clientId) {
+    const clientObjectId = new Types.ObjectId(query.clientId);
+    filter.userId = clientObjectId;
+    earliestDateFilter.userId = clientObjectId;
+  }
+
   if (query.deliveryMethod) {
     filter['delivery.method'] = query.deliveryMethod;
   }
@@ -1819,6 +1845,28 @@ export async function getOrdersService(
       { managerComment: commentRegExp },
       { 'managerComments.text': commentRegExp },
       { 'statusHistory.comment': commentRegExp },
+    ];
+  }
+
+  if (query.clientComment?.trim()) {
+    filter.comment = createOrderSearchRegExp(query.clientComment.trim());
+  }
+
+  if (query.clientCommentPresence === 'with') {
+    filter.$and = [
+      ...((filter.$and as Record<string, unknown>[] | undefined) ?? []),
+      { comment: { $exists: true, $nin: ['', null] } },
+    ];
+  } else if (query.clientCommentPresence === 'without') {
+    filter.$and = [
+      ...((filter.$and as Record<string, unknown>[] | undefined) ?? []),
+      {
+        $or: [
+          { comment: { $exists: false } },
+          { comment: '' },
+          { comment: null },
+        ],
+      },
     ];
   }
 
@@ -1847,7 +1895,7 @@ export async function getOrdersService(
   const clients = await User.find({
     _id: { $in: orders.map((order) => order.userId) },
   })
-    .select('name email pictureUrl phone address')
+    .select('name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId')
     .lean<UserDocument[]>();
 
   const clientMap: ClientUserMap = new Map(
@@ -1906,7 +1954,7 @@ export async function getOrderByIdService(
     getOrderProductFallbacks(hydratedOrder),
     getOrderOfferFallbacks(hydratedOrder),
     User.findById(order.userId)
-      .select('name email pictureUrl phone address')
+      .select('name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId')
       .lean<UserDocument | null>(),
   ]);
 

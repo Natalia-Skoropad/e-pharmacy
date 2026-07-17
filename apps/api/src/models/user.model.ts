@@ -135,6 +135,19 @@ const userSchema = new Schema<UserEntity>(
       type: Date,
       default: undefined,
     },
+
+    isDefaultPharmacyClient: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    defaultClientPharmacyId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Pharmacy',
+      default: undefined,
+      index: true,
+    },
   },
 
   {
@@ -147,6 +160,14 @@ const userSchema = new Schema<UserEntity>(
 
 userSchema.index({ role: 1, status: 1 });
 userSchema.index({ approvedBy: 1 });
+
+userSchema.index(
+  { defaultClientPharmacyId: 1, isDefaultPharmacyClient: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { isDefaultPharmacyClient: true },
+  }
+);
 
 //===============================================================
 

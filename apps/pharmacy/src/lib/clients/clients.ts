@@ -42,6 +42,7 @@ export type PharmacyClientRow = Readonly<{
   successfulOrdersAmount: number;
   status: ClientStatus;
   statusReason?: string;
+  isDefault: boolean;
 }>;
 
 export type PharmacyClientsQueryParams = Readonly<{
@@ -257,6 +258,8 @@ export function normalizePharmacyClient(
   const id = getClientId(rawClient);
   if (!id) return null;
 
+  const isDefault = rawClient.isDefault === true;
+
   return {
     id,
     photoUrl: getClientPhoto(rawClient),
@@ -266,15 +269,20 @@ export function normalizePharmacyClient(
       getStringValue(rawClient.createdAt) ??
       '',
     name: getClientName(rawClient),
-    email: getClientEmail(rawClient),
-    phone: getClientPhone(rawClient),
-    address: getClientAddress(rawClient),
+    email: isDefault ? '' : getClientEmail(rawClient),
+    phone: isDefault ? '' : getClientPhone(rawClient),
+    address: isDefault ? '' : getClientAddress(rawClient),
     successfulOrdersCount: getSuccessfulOrdersCount(rawClient),
     successfulOrdersAmount: getSuccessfulOrdersAmount(rawClient),
-    status: isClientStatus(rawClient.status) ? rawClient.status : 'active',
+    status: isDefault
+      ? 'active'
+      : isClientStatus(rawClient.status)
+        ? rawClient.status
+        : 'active',
     ...(getStringValue(rawClient.statusReason)
       ? { statusReason: getStringValue(rawClient.statusReason) }
       : {}),
+    isDefault,
   };
 }
 

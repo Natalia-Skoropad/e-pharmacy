@@ -227,7 +227,7 @@ export async function loginUserService(
 ): Promise<AuthSessionResult> {
   const user = await User.findOne({ email: input.email }).select('+password');
 
-  if (!user) {
+  if (!user || user.isDefaultPharmacyClient) {
     throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_CREDENTIALS);
   }
 
