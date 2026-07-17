@@ -13,6 +13,8 @@ import { getPharmacyOrdersPath } from '@/lib/layout/routes';
 import {
   DELIVERY_METHOD_LABELS,
   DELIVERY_METHODS,
+  ORDER_CREATED_BY_LABELS,
+  ORDER_CREATED_BY_TYPES,
   ORDER_STATUS_LABELS,
   ORDER_STATUSES,
   PAYMENT_METHOD_LABELS,
@@ -62,6 +64,16 @@ const ORDER_STATUS_OPTIONS: Array<SelectOption<OrdersFilterState['status']>> = [
   ...ORDER_STATUSES.map((status) => ({
     value: status,
     label: ORDER_STATUS_LABELS[status],
+  })),
+];
+
+const ORDER_CREATED_BY_OPTIONS: Array<
+  SelectOption<OrdersFilterState['createdByType']>
+> = [
+  { value: 'all', label: 'All' },
+  ...ORDER_CREATED_BY_TYPES.map((createdByType) => ({
+    value: createdByType,
+    label: ORDER_CREATED_BY_LABELS[createdByType],
   })),
 ];
 
@@ -142,6 +154,17 @@ function OrdersFiltersDrawer({
             options={ORDER_STATUS_OPTIONS}
             isActive={filters.status !== 'all'}
             onChange={(status) => onChange({ ...filters, status })}
+          />
+
+          <SelectField
+            id="orders-created-by"
+            label="Created by"
+            value={filters.createdByType}
+            options={ORDER_CREATED_BY_OPTIONS}
+            isActive={filters.createdByType !== 'all'}
+            onChange={(createdByType) =>
+              onChange({ ...filters, createdByType })
+            }
           />
         </div>
 

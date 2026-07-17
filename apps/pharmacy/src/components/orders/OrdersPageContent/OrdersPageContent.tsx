@@ -27,7 +27,11 @@ import {
 import { DEFAULT_ORDER_STATISTICS } from '@e-pharmacy/types/orders';
 
 import { getPharmacyOrders } from '@/lib/api/browser';
-import { getPharmacyOrdersFilterPath } from '@/lib/layout/routes';
+
+import {
+  getPharmacyNewOrderPath,
+  getPharmacyOrdersFilterPath,
+} from '@/lib/layout/routes';
 
 import {
   getLockedFeatureBannerLabel,
@@ -62,6 +66,7 @@ function getActiveFiltersCount(filters: OrdersFilterState): number {
     filters.deliveryMethod !== 'all',
     filters.paymentMethod !== 'all',
     filters.status !== 'all',
+    filters.createdByType !== 'all',
   ].filter(Boolean).length;
 }
 
@@ -84,6 +89,8 @@ function getOrdersQueryParams(
     paymentMethod:
       filters.paymentMethod === 'all' ? undefined : filters.paymentMethod,
     status: filters.status === 'all' ? undefined : filters.status,
+    createdByType:
+      filters.createdByType === 'all' ? undefined : filters.createdByType,
   };
 }
 
@@ -105,7 +112,9 @@ function OrdersPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
-  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(null);
+  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
+    null
+  );
 
   const [orderStatistics, setOrderStatistics] = useState(
     DEFAULT_ORDER_STATISTICS
@@ -284,7 +293,13 @@ function OrdersPageContent({
             label="orders"
           />
 
-          <Button className={css.createButton} type="button" size="md" disabled>
+          <Button
+            className={css.createButton}
+            type="button"
+            size="md"
+            disabled={Boolean(bannerStatus)}
+            onClick={() => router.push(getPharmacyNewOrderPath())}
+          >
             Create order
           </Button>
         </div>

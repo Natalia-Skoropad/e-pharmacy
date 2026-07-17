@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   checkoutOrder,
+  createManagerOrder,
   createOrderManagerComment,
   deleteOrderManagerComment,
   getOrderById,
@@ -17,6 +18,7 @@ import { validate } from '../middlewares/validate.middleware';
 
 import {
   checkoutOrderSchema,
+  createManagerOrderSchema,
   createOrderManagerCommentSchema,
   orderCommentParamsSchema,
   orderCommentsQuerySchema,
@@ -43,6 +45,14 @@ orderRoutes.post(
   '/checkout',
   validate({ body: checkoutOrderSchema }),
   ctrlWrapper(checkoutOrder)
+);
+
+//===============================================================
+
+orderRoutes.post(
+  '/',
+  validate({ body: createManagerOrderSchema }),
+  ctrlWrapper(createManagerOrder)
 );
 
 //===============================================================

@@ -261,6 +261,14 @@ const orderSchema = new Schema<OrderEntity>(
     },
 
     orderNumber: { type: String, required: true, unique: true, index: true },
+
+    createdByType: {
+      type: String,
+      enum: ['client', 'manager'],
+      default: 'client',
+      required: true,
+      index: true,
+    },
   },
 
   { timestamps: true, versionKey: false }

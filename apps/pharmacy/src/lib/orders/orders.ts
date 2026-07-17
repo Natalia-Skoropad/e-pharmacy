@@ -35,6 +35,10 @@ export const PAYMENT_METHODS = [
   'bank_transfer',
 ] as const satisfies readonly PaymentMethod[];
 
+export const ORDER_CREATED_BY_TYPES = ['client', 'manager'] as const;
+
+export type OrderCreatedByType = (typeof ORDER_CREATED_BY_TYPES)[number];
+
 export const ORDER_STATUSES = [
   'new',
   'in_progress',
@@ -75,6 +79,7 @@ export type PharmacyOrderRow = Readonly<{
   totalQuantity: number;
   totalAmount: number;
   status: OrderStatus;
+  createdByType: OrderCreatedByType;
   items: PharmacyOrderItem[];
 }>;
 
@@ -147,6 +152,7 @@ export type PharmacyOrdersQueryParams = Readonly<{
   deliveryMethod?: DeliveryMethod;
   paymentMethod?: PaymentMethod;
   status?: OrderStatus;
+  createdByType?: OrderCreatedByType;
   productId?: EntityId;
   comment?: string;
   clientComment?: string;
@@ -172,6 +178,11 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   bank_transfer: 'Bank transfer',
 };
 
+export const ORDER_CREATED_BY_LABELS: Record<OrderCreatedByType, string> = {
+  client: 'Client',
+  manager: 'Manager',
+};
+
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   new: 'New',
   in_progress: 'In progress',
@@ -189,6 +200,12 @@ function isDeliveryMethod(value: unknown): value is DeliveryMethod {
 
 function isPaymentMethod(value: unknown): value is PaymentMethod {
   return PAYMENT_METHODS.includes(value as PaymentMethod);
+}
+
+//===================================================================
+
+function isOrderCreatedByType(value: unknown): value is OrderCreatedByType {
+  return ORDER_CREATED_BY_TYPES.includes(value as OrderCreatedByType);
 }
 
 //===================================================================
@@ -394,6 +411,9 @@ export function normalizePharmacyOrder(
       getNumberValue(rawOrder.totalPrice) ??
       0,
     status,
+    createdByType: isOrderCreatedByType(rawOrder.createdByType)
+      ? rawOrder.createdByType
+      : 'client',
     items,
   };
 }

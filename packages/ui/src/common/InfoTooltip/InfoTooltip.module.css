@@ -112,7 +112,8 @@
 }
 
 .text {
-  display: block;
+  display: grid;
+  gap: 8px;
   color: var(--color-text-secondary);
   font-size: var(--fz-14);
   font-weight: var(--fw-regular);

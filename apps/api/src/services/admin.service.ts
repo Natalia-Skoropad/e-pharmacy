@@ -189,6 +189,7 @@ export async function updatePharmacyStatusByAdminService(
   if (input.status === PHARMACY_STATUSES.ACTIVE) {
     const pendingModeration = pharmacy.pendingModeration ?? {};
     const { bankDetails, ...pendingRootFields } = pendingModeration;
+    const approvedAt = new Date();
 
     Object.assign(nextUpdate, {
       ...pendingRootFields,
@@ -196,7 +197,8 @@ export async function updatePharmacyStatusByAdminService(
         ? { bankDetails: { ...(pharmacy.bankDetails ?? {}), ...bankDetails } }
         : {}),
       approvedBy: adminUserId,
-      approvedAt: new Date(),
+      approvedAt,
+      activatedAt: pharmacy.activatedAt ?? approvedAt,
     });
     unsetFields.pendingModeration = '';
     unsetFields.statusReason = '';

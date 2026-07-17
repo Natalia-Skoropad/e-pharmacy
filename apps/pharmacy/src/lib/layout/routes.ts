@@ -94,6 +94,10 @@ export function getPharmacyOrdersPath() {
   return PHARMACY_ORDERS;
 }
 
+export function getPharmacyNewOrderPath() {
+  return `${PHARMACY_ORDERS}/new`;
+}
+
 export function getPharmacyClientsPath() {
   return PHARMACY_CLIENTS;
 }

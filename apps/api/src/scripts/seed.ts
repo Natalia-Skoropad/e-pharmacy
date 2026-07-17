@@ -21,6 +21,8 @@ import { StockMovement } from '../models/stockMovement.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
 import { hashPassword } from '../utils/password';
 import { ensureDefaultPharmacyClient } from '../services/default-pharmacy-client.service';
+import type { PharmacyEntity } from '../types/pharmacy';
+import type { ProductEntity } from '../types/product';
 
 //===============================================================
 
@@ -546,6 +548,9 @@ function createBankDetails(pharmacyName: string, pharmacyNumber: number) {
 //===============================================================
 
 const PHARMACY_ACCOUNT_PASSWORD = '123456789';
+const ACTIVE_PHARMACY_FIRST_ACTIVATED_AT = new Date(
+  '2026-06-18T09:00:00.000Z'
+);
 const PHARMACY_ACCOUNT_DESCRIPTION_LENGTH = 5000;
 
 const PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL =
@@ -893,7 +898,11 @@ async function seedPharmacyAccounts(): Promise<number> {
           status: seed.status,
           ...(seed.statusReason ? { statusReason: seed.statusReason } : {}),
           ...(seed.status === PHARMACY_STATUSES.ACTIVE
-            ? { approvedBy: user._id, approvedAt: new Date() }
+            ? {
+                approvedBy: user._id,
+                approvedAt: ACTIVE_PHARMACY_FIRST_ACTIVATED_AT,
+                activatedAt: ACTIVE_PHARMACY_FIRST_ACTIVATED_AT,
+              }
             : {}),
           updatedBy: user._id,
         },
@@ -902,7 +911,7 @@ async function seedPharmacyAccounts(): Promise<number> {
           ...(seed.statusReason ? {} : { statusReason: '' }),
           ...(seed.status === PHARMACY_STATUSES.ACTIVE
             ? {}
-            : { approvedBy: '', approvedAt: '' }),
+            : { approvedBy: '', approvedAt: '', activatedAt: '' }),
         },
         $setOnInsert: {
           ownerId: user._id,
@@ -2501,6 +2510,431 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 
 //===============================================================
 
+async function seedDefaultClientSuccessfulOrders(): Promise<number> {
+  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
+    .select(
+      '_id name address city phone email workingHours imageUrl rating reviewsCount bankDetails ownerId activatedAt approvedAt createdAt'
+    )
+    .lean<
+      | (Pick<
+          PharmacyEntity,
+          | 'name'
+          | 'address'
+          | 'city'
+          | 'phone'
+          | 'email'
+          | 'workingHours'
+          | 'imageUrl'
+          | 'rating'
+          | 'reviewsCount'
+          | 'bankDetails'
+          | 'ownerId'
+          | 'activatedAt'
+          | 'approvedAt'
+          | 'createdAt'
+        > & { _id: Types.ObjectId })
+      | null
+    >();
+
+  if (!pharmacy?.ownerId) return 0;
+
+  const defaultClient = await User.findOne({
+    isDefaultPharmacyClient: true,
+    defaultClientPharmacyId: pharmacy._id,
+  })
+    .select('_id name')
+    .lean<{ _id: Types.ObjectId; name: string } | null>();
+
+  if (!defaultClient) return 0;
+
+  const selloutProducts = await Product.find({
+    _id: { $ne: STOCK_MOVEMENT_DEMO_PRODUCT_ID },
+  })
+    .sort({ article: 1, _id: 1 })
+    .limit(4)
+    .select('_id')
+    .lean<Array<{ _id: Types.ObjectId }>>();
+  const protectedProductIds = [
+    STOCK_MOVEMENT_DEMO_PRODUCT_ID,
+    ...selloutProducts.map((product) => product._id),
+  ];
+
+  const offers = await ProductOffer.find({
+    pharmacyId: pharmacy._id,
+    productId: { $nin: protectedProductIds },
+  })
+    .sort({ productId: 1 })
+    .select('_id productId price')
+    .lean<
+      Array<{
+        _id: Types.ObjectId;
+        productId: Types.ObjectId;
+        price: number;
+      }>
+    >();
+
+  if (!offers.length) return 0;
+
+  const products = await Product.find({
+    _id: { $in: offers.map((offer) => offer.productId) },
+    status: 'active',
+  })
+    .select(
+      '_id name slug article category imageUrl manufacturer dosage packageQuantity rating reviewsCount'
+    )
+    .lean<
+      Array<
+        Pick<
+          ProductEntity,
+          | 'name'
+          | 'slug'
+          | 'article'
+          | 'category'
+          | 'imageUrl'
+          | 'manufacturer'
+          | 'dosage'
+          | 'packageQuantity'
+          | 'rating'
+          | 'reviewsCount'
+        > & { _id: Types.ObjectId }
+      >
+    >();
+
+  const productMap = new Map(
+    products.map((product) => [String(product._id), product])
+  );
+  const usableOffers = offers.filter((offer) =>
+    productMap.has(String(offer.productId))
+  );
+
+  if (!usableOffers.length) return 0;
+
+  const usableOfferIds = usableOffers.map((offer) => offer._id);
+  const priceTimeline = await getOfferPriceTimeline(usableOfferIds);
+
+  type ShadowMovement = {
+    occurredAt: Date;
+    stockDelta: number;
+    reservedDelta: number;
+    availableDelta: number;
+    sequence: number;
+  };
+
+  const existingMovements = await StockMovement.find({
+    productOfferId: { $in: usableOfferIds },
+  })
+    .sort({ occurredAt: 1, _id: 1 })
+    .select(
+      'productOfferId occurredAt stockDelta reservedDelta availableDelta'
+    )
+    .lean<
+      Array<{
+        productOfferId: Types.ObjectId;
+        occurredAt: Date;
+        stockDelta: number;
+        reservedDelta: number;
+        availableDelta: number;
+      }>
+    >();
+
+  const shadowMovementsByOfferId = new Map<string, ShadowMovement[]>();
+
+  existingMovements.forEach((movement, index) => {
+    const offerId = String(movement.productOfferId);
+    const offerMovements = shadowMovementsByOfferId.get(offerId) ?? [];
+
+    offerMovements.push({
+      occurredAt: movement.occurredAt,
+      stockDelta: movement.stockDelta,
+      reservedDelta: movement.reservedDelta,
+      availableDelta: movement.availableDelta,
+      sequence: index,
+    });
+    shadowMovementsByOfferId.set(offerId, offerMovements);
+  });
+
+  function canScheduleSuccessfulSale(
+    offerId: Types.ObjectId,
+    createdAt: Date,
+    completedAt: Date,
+    quantity: number
+  ): boolean {
+    const offerKey = String(offerId);
+    const existing = shadowMovementsByOfferId.get(offerKey) ?? [];
+    const candidateSequenceStart = existingMovements.length + orders.length * 2;
+    const combined: ShadowMovement[] = [
+      ...existing,
+      {
+        occurredAt: createdAt,
+        stockDelta: 0,
+        reservedDelta: quantity,
+        availableDelta: -quantity,
+        sequence: candidateSequenceStart,
+      },
+      {
+        occurredAt: completedAt,
+        stockDelta: -quantity,
+        reservedDelta: -quantity,
+        availableDelta: 0,
+        sequence: candidateSequenceStart + 1,
+      },
+    ].sort(
+      (left, right) =>
+        left.occurredAt.getTime() - right.occurredAt.getTime() ||
+        left.sequence - right.sequence
+    );
+
+    let stock = 0;
+    let reserved = 0;
+    let available = 0;
+
+    for (const movement of combined) {
+      stock += movement.stockDelta;
+      reserved += movement.reservedDelta;
+      available += movement.availableDelta;
+
+      if (
+        stock < 0 ||
+        reserved < 0 ||
+        available < 0 ||
+        reserved > stock ||
+        available !== stock - reserved
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  function addSaleToShadowLedger(
+    offerId: Types.ObjectId,
+    createdAt: Date,
+    completedAt: Date,
+    quantity: number
+  ) {
+    const offerKey = String(offerId);
+    const offerMovements = shadowMovementsByOfferId.get(offerKey) ?? [];
+    const sequenceStart = existingMovements.length + orders.length * 2;
+
+    offerMovements.push(
+      {
+        occurredAt: createdAt,
+        stockDelta: 0,
+        reservedDelta: quantity,
+        availableDelta: -quantity,
+        sequence: sequenceStart,
+      },
+      {
+        occurredAt: completedAt,
+        stockDelta: -quantity,
+        reservedDelta: -quantity,
+        availableDelta: 0,
+        sequence: sequenceStart + 1,
+      }
+    );
+    shadowMovementsByOfferId.set(offerKey, offerMovements);
+  }
+
+  const pharmacySnapshot = {
+    name: pharmacy.name,
+    address: pharmacy.address,
+    city: pharmacy.city,
+    phone: pharmacy.phone,
+    email: pharmacy.email,
+    ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
+    ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+    rating: pharmacy.rating ?? 0,
+    reviewsCount: pharmacy.reviewsCount ?? 0,
+    bankDetails: pharmacy.bankDetails,
+  };
+
+  const orders: Array<Record<string, unknown>> = [];
+  const movements: Array<Record<string, unknown>> = [];
+  const orderCount = 55;
+  const firstOrderAt = new Date('2026-06-20T08:10:00.000Z');
+  const rangeDays = 26;
+
+  for (let index = 0; index < orderCount; index += 1) {
+    const dayOffset = Math.floor((index * rangeDays) / orderCount);
+    const createdAt = new Date(firstOrderAt);
+    createdAt.setUTCDate(createdAt.getUTCDate() + dayOffset);
+    createdAt.setUTCHours(8 + (index % 10), 10 + ((index * 7) % 45), 0, 0);
+    const completedAt = new Date(createdAt.getTime() + 45 * 60 * 1000);
+    const preferredQuantity = 1 + (index % 2);
+
+    let offer: (typeof usableOffers)[number] | undefined;
+    let quantity = preferredQuantity;
+
+    for (const candidateQuantity of [preferredQuantity, 1]) {
+      for (let offset = 0; offset < usableOffers.length; offset += 1) {
+        const candidate =
+          usableOffers[(index + offset) % usableOffers.length];
+        const hasHistoricalPrice = (
+          priceTimeline.get(String(candidate._id)) ?? []
+        ).some(
+          (pricePoint) =>
+            pricePoint.occurredAt.getTime() <= createdAt.getTime()
+        );
+
+        if (
+          hasHistoricalPrice &&
+          canScheduleSuccessfulSale(
+            candidate._id,
+            createdAt,
+            completedAt,
+            candidateQuantity
+          )
+        ) {
+          offer = candidate;
+          quantity = candidateQuantity;
+          break;
+        }
+      }
+
+      if (offer) break;
+    }
+
+    if (!offer) {
+      throw new Error(
+        `Could not allocate inventory for walk-in order ${index + 1} at ${createdAt.toISOString()} without breaking the chronological stock ledger.`
+      );
+    }
+
+    const product = productMap.get(String(offer.productId));
+    if (!product) continue;
+
+    const unitPrice = resolveOfferPriceAt(priceTimeline, offer._id, createdAt);
+    addSaleToShadowLedger(offer._id, createdAt, completedAt, quantity);
+    const orderId = new Types.ObjectId();
+    const orderNumber = createSeedOrderNumber(orderId, createdAt);
+    const totalPrice = quantity * unitPrice;
+    const productSnapshot = {
+      name: product.name,
+      ...(product.slug ? { slug: product.slug } : {}),
+      article: product.article,
+      category: product.category,
+      ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+      ...(product.manufacturer
+        ? { manufacturer: product.manufacturer }
+        : {}),
+      ...(product.dosage ? { dosage: product.dosage } : {}),
+      ...(product.packageQuantity
+        ? { packageQuantity: String(product.packageQuantity) }
+        : {}),
+      rating: product.rating ?? 0,
+      reviewsCount: product.reviewsCount ?? 0,
+    };
+
+    orders.push({
+      _id: orderId,
+      userId: defaultClient._id,
+      pharmacyId: pharmacy._id,
+      pharmacySnapshot,
+      items: [
+        {
+          productId: product._id,
+          productOfferId: offer._id,
+          productSnapshot,
+          quantity,
+          unitPrice,
+          totalPrice,
+        },
+      ],
+      totalItems: quantity,
+      totalPrice,
+      currency: 'UAH',
+      paymentMethod: index % 3 === 0 ? 'bank_transfer' : 'cash',
+      delivery: { method: 'pickup' },
+      comment: `Walk-in counter purchase ${index + 1}.`,
+      status: 'successful',
+      createdByType: 'manager',
+      statusHistory: [
+        {
+          status: 'in_progress',
+          changedAt: createdAt,
+          changedBy: pharmacy.ownerId,
+          comment: 'Order created by the pharmacy manager for a walk-in customer.',
+        },
+        {
+          status: 'successful',
+          changedAt: completedAt,
+          changedBy: pharmacy.ownerId,
+          comment: 'The counter sale was completed successfully.',
+        },
+      ],
+      activityHistory: [
+        {
+          type: 'product_added',
+          occurredAt: createdAt,
+          changedBy: pharmacy.ownerId,
+          productId: product._id,
+          productOfferId: offer._id,
+          productName: product.name,
+          previousQuantity: 0,
+          quantity,
+          quantityDelta: quantity,
+          previousUnitPrice: unitPrice,
+          unitPrice,
+        },
+      ],
+      orderNumber,
+      createdAt,
+      updatedAt: completedAt,
+    });
+
+    movements.push(
+      {
+        productOfferId: offer._id,
+        productId: product._id,
+        pharmacyId: pharmacy._id,
+        eventType: 'reserve',
+        source: 'client_order',
+        quantity,
+        stockDelta: 0,
+        reservedDelta: quantity,
+        availableDelta: -quantity,
+        stockAfter: 0,
+        reservedAfter: 0,
+        availableAfter: 0,
+        unitPrice,
+        orderId,
+        orderNumber,
+        orderStatus: 'in_progress',
+        comment: `Manager-created walk-in order ${orderNumber} reserved ${quantity} unit${quantity === 1 ? '' : 's'}.`,
+        occurredAt: createdAt,
+      },
+      {
+        productOfferId: offer._id,
+        productId: product._id,
+        pharmacyId: pharmacy._id,
+        eventType: 'write_off',
+        source: 'client_order',
+        quantity,
+        stockDelta: -quantity,
+        reservedDelta: -quantity,
+        availableDelta: 0,
+        stockAfter: 0,
+        reservedAfter: 0,
+        availableAfter: 0,
+        unitPrice,
+        orderId,
+        orderNumber,
+        orderStatus: 'successful',
+        comment: `Successful walk-in order ${orderNumber} wrote off ${quantity} reserved unit${quantity === 1 ? '' : 's'}.`,
+        occurredAt: completedAt,
+      }
+    );
+  }
+
+  await Order.insertMany(orders);
+  await StockMovement.insertMany(movements);
+
+  return orders.length;
+}
+
+//===============================================================
+
 async function seedSoldOutAndLowStockProducts(): Promise<{
   soldOutProducts: number;
   lowStockProducts: number;
@@ -3294,8 +3728,15 @@ async function seedDatabase(): Promise<void> {
   );
   const activePharmacyOrdersCount = await seedActivePharmacyOrder();
   const pharmacyClientsCount = await seedPharmacyClientPortfolio();
-  const inventoryScenario = await seedSoldOutAndLowStockProducts();
+  const defaultClientOrdersCount = await seedDefaultClientSuccessfulOrders();
 
+  // Bring ProductOffer balances in sync with all order movements before the
+  // sold-out and low-stock demo scenarios calculate their final adjustments.
+  // Otherwise those scenarios would use the original seeded quantities and
+  // could subtract stock that the walk-in orders had already sold.
+  await reconcileActivePharmacyInventoryLedger();
+
+  const inventoryScenario = await seedSoldOutAndLowStockProducts();
   const reconciledOffersCount = await reconcileActivePharmacyInventoryLedger();
 
   const productManagerNotesCount = await seedOwnProductManagerNotes();
@@ -3315,6 +3756,9 @@ async function seedDatabase(): Promise<void> {
 
   console.log(
     `Seed completed: ${pharmacyClientsCount} pharmacy client profiles created`
+  );
+  console.log(
+    `Seed completed: ${defaultClientOrdersCount} successful walk-in customer orders created`
   );
   console.log(
     `Seed completed: ${inventoryScenario.soldOutProducts} sold-out products, ${inventoryScenario.lowStockProducts} low-stock products, and ${inventoryScenario.linkedOrders} successful orders linked to sellout history`

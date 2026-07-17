@@ -8,3 +8,10 @@ export const GET = createPrivateProxyRoute({
   backendPath: API_ROUTES.orders.list,
   method: 'GET',
 });
+
+//===================================================================
+
+export const POST = createPrivateProxyRoute({
+  backendPath: API_ROUTES.orders.list,
+  method: 'POST',
+});

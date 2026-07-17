@@ -23,6 +23,7 @@ import { getCartService } from './cart.service';
 
 import type {
   CheckoutOrderInput,
+  CreateManagerOrderInput,
   CreateOrderManagerCommentInput,
   OrderCommentsQuery,
   OrderSalesStatisticsQuery,
@@ -100,6 +101,8 @@ type UserDocument = {
   address?: string;
   isDefaultPharmacyClient?: boolean;
   defaultClientPharmacyId?: Types.ObjectId;
+  status?: string;
+  role?: string;
 };
 
 //===============================================================
@@ -321,6 +324,7 @@ function serializeOrder(
     totalPrice: order.totalPrice,
     currency: order.currency,
     status: order.status,
+    createdByType: order.createdByType ?? 'client',
     statusHistory: order.statusHistory.map((entry) => ({
       status: entry.status,
       changedAt: entry.changedAt.toISOString(),
@@ -737,6 +741,7 @@ export async function checkoutOrderService(
                   },
             ...(input.comment ? { comment: input.comment } : {}),
             status: 'new',
+            createdByType: 'client',
             statusHistory: [
               {
                 status: 'new',
@@ -802,6 +807,250 @@ export async function checkoutOrderService(
       order: serializeOrder(createdOrder),
       cart,
     };
+  } finally {
+    await session.endSession();
+  }
+}
+
+//===============================================================
+
+export async function createManagerOrderService(
+  actor: { id: string; role: UserRole },
+  input: CreateManagerOrderInput
+): Promise<{ order: OrderResponseDto }> {
+  if (actor.role !== USER_ROLES.PHARMACY) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Only a pharmacy manager can create an order.'
+    );
+  }
+
+  const session = await mongoose.startSession();
+
+  try {
+    let createdOrder: OrderDocument | null = null;
+    let selectedClient: UserDocument | null = null;
+
+    await session.withTransaction(async () => {
+      const pharmacy = await Pharmacy.findOne({
+        $or: [{ ownerId: actor.id }, { managerUserIds: actor.id }],
+      })
+        .session(session)
+        .lean<PharmacyDocument | null>();
+
+      if (!pharmacy || !isCheckoutPharmacyStatus(pharmacy.status)) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'An active pharmacy is required to create orders.'
+        );
+      }
+
+      const client = await User.findOne({
+        _id: input.clientId,
+        role: USER_ROLES.CLIENT,
+        status: 'active',
+      })
+        .session(session)
+        .lean<UserDocument | null>();
+
+      if (!client) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'The selected client is inactive or unavailable.'
+        );
+      }
+
+      const isDefaultClient = Boolean(
+        client.isDefaultPharmacyClient &&
+          client.defaultClientPharmacyId?.equals(pharmacy._id)
+      );
+
+      if (!isDefaultClient) {
+        const belongsToPharmacy = await Order.exists({
+          pharmacyId: pharmacy._id,
+          userId: client._id,
+        }).session(session);
+
+        if (!belongsToPharmacy) {
+          throw httpError(
+            HTTP_STATUS.BAD_REQUEST,
+            'The selected client is not connected to this pharmacy.'
+          );
+        }
+      }
+
+      if (
+        input.paymentMethod === 'bank_transfer' &&
+        !hasCompleteBankDetails(pharmacy.bankDetails)
+      ) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Bank transfer is unavailable until bank details are completed.'
+        );
+      }
+
+      const requested = new Map<string, number>();
+      for (const item of input.items) {
+        requested.set(
+          item.productOfferId,
+          (requested.get(item.productOfferId) ?? 0) + item.quantity
+        );
+      }
+
+      const offers = await ProductOffer.find({
+        _id: { $in: [...requested.keys()] },
+        pharmacyId: pharmacy._id,
+      })
+        .session(session)
+        .lean<ProductOfferDocument[]>();
+
+      if (offers.length !== requested.size) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'One or more product offers are unavailable.'
+        );
+      }
+
+      const products = await Product.find({
+        _id: { $in: offers.map((offer) => offer.productId) },
+        status: 'active',
+      })
+        .session(session)
+        .lean<ProductDocument[]>();
+
+      const productMap = new Map(
+        products.map((product) => [String(product._id), product])
+      );
+
+      const orderItems = offers.map((offer) => {
+        const product = productMap.get(String(offer.productId));
+        const quantity = requested.get(String(offer._id)) ?? 0;
+
+        if (!product || quantity < 1) {
+          throw httpError(
+            HTTP_STATUS.BAD_REQUEST,
+            'One or more products are unavailable.'
+          );
+        }
+
+        if (offer.availableQuantity < quantity) {
+          throw httpError(
+            HTTP_STATUS.CONFLICT,
+            `${product.name} does not have enough available stock.`
+          );
+        }
+
+        return createOrderItemFromProductOffer({ offer, product, quantity });
+      });
+
+      const orderId = new Types.ObjectId();
+      const createdAt = new Date();
+      const orderNumber = createOrderNumber(orderId);
+
+      for (const item of orderItems) {
+        await reserveOfferStock(item.productOfferId, item.quantity, session, {
+          source: 'client_order',
+          orderId,
+          orderNumber,
+          orderStatus: 'in_progress',
+          occurredAt: createdAt,
+          comment: `Manager-created order ${orderNumber} reserved ${item.quantity} unit${item.quantity === 1 ? '' : 's'}: available −${item.quantity}, reserved +${item.quantity}; physical stock did not change.`,
+        });
+      }
+
+      const totalItems = orderItems.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+      );
+      const totalPrice = orderItems.reduce(
+        (sum, item) => sum + item.totalPrice,
+        0
+      );
+
+      const [order] = await Order.create(
+        [
+          {
+            _id: orderId,
+            userId: client._id,
+            pharmacyId: pharmacy._id,
+            pharmacySnapshot: {
+              name: pharmacy.name,
+              address: pharmacy.address,
+              ...(pharmacy.city ? { city: pharmacy.city } : {}),
+              ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
+              ...(pharmacy.email ? { email: pharmacy.email } : {}),
+              ...(pharmacy.workingHours
+                ? { workingHours: pharmacy.workingHours }
+                : {}),
+              ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+              ...(typeof pharmacy.rating === 'number'
+                ? { rating: pharmacy.rating }
+                : {}),
+              ...(typeof pharmacy.reviewsCount === 'number'
+                ? { reviewsCount: pharmacy.reviewsCount }
+                : {}),
+              ...(hasCompleteBankDetails(pharmacy.bankDetails)
+                ? { bankDetails: pharmacy.bankDetails }
+                : {}),
+            },
+            items: orderItems,
+            totalItems,
+            totalPrice,
+            currency: 'UAH',
+            paymentMethod: input.paymentMethod,
+            delivery:
+              input.deliveryMethod === 'pickup'
+                ? { method: 'pickup' }
+                : {
+                    method: 'postal_delivery',
+                    details: input.deliveryDetails,
+                  },
+            ...(input.comment ? { comment: input.comment } : {}),
+            status: 'in_progress',
+            createdByType: 'manager',
+            statusHistory: [
+              {
+                status: 'in_progress',
+                changedAt: createdAt,
+                changedBy: new Types.ObjectId(actor.id),
+                comment: 'Order created by the pharmacy manager.',
+              },
+            ],
+            activityHistory: orderItems.map((item) => ({
+              type: 'product_added',
+              occurredAt: createdAt,
+              changedBy: new Types.ObjectId(actor.id),
+              productId: item.productId,
+              productOfferId: item.productOfferId,
+              productName: item.productSnapshot.name,
+              previousQuantity: 0,
+              quantity: item.quantity,
+              quantityDelta: item.quantity,
+              previousUnitPrice: item.unitPrice,
+              unitPrice: item.unitPrice,
+            })),
+            orderNumber,
+          },
+        ],
+        { session }
+      );
+
+      createdOrder = order.toObject() as OrderDocument;
+      selectedClient = client;
+    });
+
+    if (!createdOrder || !selectedClient) {
+      throw httpError(
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        'Order could not be created.'
+      );
+    }
+
+    const clientMap: ClientUserMap = new Map([
+      [String(selectedClient._id), selectedClient],
+    ]);
+
+    return { order: serializeOrder(createdOrder, undefined, clientMap) };
   } finally {
     await session.endSession();
   }
@@ -1831,6 +2080,10 @@ export async function getOrdersService(
 
   if (query.paymentMethod) {
     filter.paymentMethod = query.paymentMethod;
+  }
+
+  if (query.createdByType) {
+    filter.createdByType = query.createdByType;
   }
 
   if (query.productId) {

@@ -129,19 +129,28 @@ function getFirstOrderDate(
 function serializeClient(
   user: UserDocument,
   orders: OrderDocument[],
-  pharmacy: Pick<PharmacyDocument, 'imageUrl' | 'approvedAt' | 'createdAt'>
+  pharmacy: Pick<
+    PharmacyDocument,
+    'imageUrl' | 'activatedAt' | 'approvedAt' | 'createdAt'
+  >
 ): ClientRow {
   const successfulOrders = orders.filter(
     (order) => order.status === 'successful'
   );
   const isDefault = Boolean(user.isDefaultPharmacyClient);
   const fallbackDate =
-    pharmacy.approvedAt ?? pharmacy.createdAt ?? user.createdAt;
+    pharmacy.activatedAt ??
+    pharmacy.approvedAt ??
+    pharmacy.createdAt ??
+    user.createdAt;
 
   return {
     id: String(user._id),
     photoUrl: isDefault ? pharmacy.imageUrl ?? null : user.pictureUrl ?? null,
-    firstOrderAt: getFirstOrderDate(orders, fallbackDate).toISOString(),
+    firstOrderAt: (isDefault
+      ? fallbackDate
+      : getFirstOrderDate(orders, fallbackDate)
+    ).toISOString(),
     name: user.name,
     email: isDefault ? '' : user.email,
     phone: isDefault ? '' : user.phone,
@@ -236,9 +245,12 @@ async function getClientRowsForPharmacy(
   query: ClientsQuery
 ): Promise<ClientRow[]> {
   const pharmacy = await Pharmacy.findById(pharmacyId)
-    .select('imageUrl approvedAt createdAt')
+    .select('imageUrl activatedAt approvedAt createdAt')
     .lean<
-      | Pick<PharmacyDocument, '_id' | 'imageUrl' | 'approvedAt' | 'createdAt'>
+      | Pick<
+          PharmacyDocument,
+          '_id' | 'imageUrl' | 'activatedAt' | 'approvedAt' | 'createdAt'
+        >
       | null
     >();
 

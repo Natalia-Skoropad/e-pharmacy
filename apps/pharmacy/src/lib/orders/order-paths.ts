@@ -34,6 +34,7 @@ type OrdersFilterDraft = {
   deliveryMethod: OrdersFilterState['deliveryMethod'];
   paymentMethod: OrdersFilterState['paymentMethod'];
   status: OrdersFilterState['status'];
+  createdByType: OrdersFilterState['createdByType'];
 };
 
 //===================================================================
@@ -69,6 +70,7 @@ export function isOrdersFilterSegment(segment: string): boolean {
     segment.startsWith('delivery-') ||
     segment.startsWith('payment-') ||
     segment.startsWith('status-') ||
+    segment.startsWith('created-by-') ||
     segment.startsWith('date-from-') ||
     segment.startsWith('date-to-')
   );
@@ -137,6 +139,14 @@ export function parseOrdersSegments(
       continue;
     }
 
+    if (segment.startsWith('created-by-')) {
+      const value = segment.replace('created-by-', '');
+      if (value === 'client' || value === 'manager') {
+        filters.createdByType = value;
+      }
+      continue;
+    }
+
     if (segment.startsWith('date-from-')) {
       const dateFrom = segment.replace('date-from-', '');
 
@@ -190,6 +200,10 @@ export function buildOrdersPath(filters: OrdersFilterState): string {
 
   if (filters.status !== 'all') {
     segments.push(`status-${slugifyStatus(filters.status)}`);
+  }
+
+  if (filters.createdByType !== 'all') {
+    segments.push(`created-by-${filters.createdByType}`);
   }
 
   if (filters.date.from) {

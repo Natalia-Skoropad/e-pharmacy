@@ -40,12 +40,20 @@ export async function ensureDefaultPharmacyClient(
       : new Types.ObjectId(pharmacyId);
 
   const pharmacy = await Pharmacy.findById(resolvedPharmacyId)
-    .select('_id ownerId')
-    .lean<{ _id: Types.ObjectId; ownerId: Types.ObjectId } | null>();
+    .select('_id ownerId activatedAt approvedAt createdAt')
+    .lean<{
+      _id: Types.ObjectId;
+      ownerId: Types.ObjectId;
+      activatedAt?: Date;
+      approvedAt?: Date;
+      createdAt: Date;
+    } | null>();
 
   if (!pharmacy) return null;
 
   const password = await hashPassword(DEFAULT_CLIENT_PASSWORD);
+  const activatedAt =
+    pharmacy.activatedAt ?? pharmacy.approvedAt ?? pharmacy.createdAt;
   const actorId = createdBy
     ? createdBy instanceof Types.ObjectId
       ? createdBy
@@ -76,6 +84,7 @@ export async function ensureDefaultPharmacyClient(
       },
       $setOnInsert: {
         createdBy: actorId,
+        createdAt: activatedAt,
       },
     },
     {
@@ -87,6 +96,11 @@ export async function ensureDefaultPharmacyClient(
   );
 
   if (!user) return null;
+
+  await User.updateOne(
+    { _id: user._id },
+    { $set: { createdAt: activatedAt } }
+  );
 
   await Client.findOneAndUpdate(
     { userId: user._id },

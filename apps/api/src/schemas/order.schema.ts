@@ -57,6 +57,7 @@ export const ordersQuerySchema = z.preprocess(
     deliveryMethod: z.enum(['pickup', 'postal_delivery']).optional(),
     paymentMethod: z.enum(['cash', 'bank_transfer']).optional(),
     status: z.enum(['new', 'in_progress', 'successful', 'rejected']).optional(),
+    createdByType: z.enum(['client', 'manager']).optional(),
     productId: mongoIdSchema.optional(),
     comment: sharedSearchSchema,
     clientComment: sharedSearchSchema,
@@ -128,6 +129,32 @@ const orderEditableItemSchema = z.object({
 
 //===============================================================
 
+const managerOrderBaseSchema = z.object({
+  clientId: mongoIdSchema,
+  items: z.array(orderEditableItemSchema).min(1, 'Order must contain products'),
+  paymentMethod: z.enum(['cash', 'bank_transfer']),
+  comment: sharedOrderCommentSchema,
+});
+
+//===============================================================
+
+export const createManagerOrderSchema = z.discriminatedUnion('deliveryMethod', [
+  managerOrderBaseSchema.extend({
+    deliveryMethod: z.literal('pickup'),
+    deliveryDetails: z.never().optional(),
+  }),
+  managerOrderBaseSchema.extend({
+    deliveryMethod: z.literal('postal_delivery'),
+    deliveryDetails: z.object({
+      recipientName: sharedNameSchema,
+      recipientPhone: sharedRequiredPhoneSchema,
+      address: sharedRequiredAddressSchema,
+    }),
+  }),
+]);
+
+//===============================================================
+
 export const updateOrderDetailsSchema = z
   .object({
     items: z.array(orderEditableItemSchema).min(1).optional(),
@@ -180,6 +207,7 @@ export type OrderSalesStatisticsQuery = z.infer<
 >;
 
 export type CheckoutOrderInput = z.infer<typeof checkoutOrderSchema>;
+export type CreateManagerOrderInput = z.infer<typeof createManagerOrderSchema>;
 export type UpdateOrderDetailsInput = z.infer<typeof updateOrderDetailsSchema>;
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
 export type OrderCommentsQuery = z.infer<typeof orderCommentsQuerySchema>;

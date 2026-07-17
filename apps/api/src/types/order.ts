@@ -8,6 +8,7 @@ export type OrderStatus = 'new' | 'in_progress' | 'successful' | 'rejected';
 export type PaymentMethod = 'cash' | 'bank_transfer';
 export type DeliveryMethod = 'pickup' | 'postal_delivery';
 export type Currency = 'UAH';
+export type OrderCreatedByType = 'client' | 'manager';
 
 export type OrderActivityType =
   | 'product_added'
@@ -110,6 +111,7 @@ export type OrderEntity = {
   managerComment?: string;
   managerComments?: OrderManagerCommentEntity[];
   status: OrderStatus;
+  createdByType: OrderCreatedByType;
   statusHistory: OrderStatusHistoryItem[];
   activityHistory?: OrderActivityHistoryItem[];
   rejectionReason?: string;
@@ -170,6 +172,7 @@ export type OrderResponseDto = {
   totalPrice: number;
   currency: Currency;
   status: OrderStatus;
+  createdByType: OrderCreatedByType;
   statusHistory: Array<{
     status: OrderStatus;
     changedAt: string;

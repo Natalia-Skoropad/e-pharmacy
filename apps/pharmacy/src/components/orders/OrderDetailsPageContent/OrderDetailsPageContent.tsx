@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import {
   CircleMinus,
@@ -18,6 +19,7 @@ import {
   ShoppingCart,
   Trash2,
   Truck,
+  UserRound,
   Wallet,
 } from 'lucide-react';
 
@@ -33,10 +35,13 @@ import {
   QuantityCounter,
   RadioOption,
   RatingSummary,
+  SearchableSelect,
   SearchInput,
   ShimmerImage,
   SvgIcon,
+  TableImagePreview,
   Tabs,
+  formatInitials,
   type TabItem,
 } from '@e-pharmacy/ui/common';
 
@@ -90,8 +95,11 @@ import {
 } from '@e-pharmacy/validation';
 
 import {
+  createPharmacyOrder,
   createPharmacyOrderComment,
   deletePharmacyOrderComment,
+  getMyPharmacyProfile,
+  getPharmacyClients,
   getPharmacyOrderDetails,
   getPharmacyOrderComments,
   getPharmacyOrders,
@@ -99,6 +107,8 @@ import {
   updatePharmacyOrder,
   updatePharmacyOrderStatus,
 } from '@/lib/api/browser';
+
+import type { PharmacyClientRow } from '@/lib/clients/clients';
 
 import {
   ORDER_STATUS_LABELS,
@@ -108,6 +118,8 @@ import {
 } from '@/lib/orders/orders';
 
 import {
+  getPharmacyClientPath,
+  getPharmacyOrderPath,
   getPharmacyOrdersPath,
   getPharmacyProductPath,
 } from '@/lib/layout/routes';
@@ -119,7 +131,8 @@ import css from './OrderDetailsPageContent.module.css';
 //===================================================================
 
 type OrderDetailsPageContentProps = Readonly<{
-  orderId: string;
+  orderId?: string;
+  mode?: 'details' | 'create';
 }>;
 
 type PendingStatusChange = Readonly<{
@@ -728,16 +741,35 @@ function OrderProductsTab({
     <div className={css.productsGrid}>
       <section className={css.itemsSection} aria-labelledby="order-items-title">
         <div className={css.itemsList}>
-          {order.items.map((item) => (
-            <OrderProductCard
-              key={item.productOfferId}
-              item={item}
-              isEditable={isEditable}
-              isUpdating={isUpdating}
-              onQuantityChange={onQuantityChange}
-              onRemove={onRemoveProduct}
-            />
-          ))}
+          {order.items.length > 0 ? (
+            order.items.map((item) => (
+              <OrderProductCard
+                key={item.productOfferId}
+                item={item}
+                isEditable={isEditable}
+                isUpdating={isUpdating}
+                onQuantityChange={onQuantityChange}
+                onRemove={onRemoveProduct}
+              />
+            ))
+          ) : (
+            <div className={css.emptyProducts}>
+              <ShoppingCart size={28} aria-hidden="true" />
+              <div>
+                <h2>No products in this order yet</h2>
+                <p>
+                  Add at least one available product before saving the order.
+                </p>
+              </div>
+              <Button
+                type="button"
+                disabled={!isEditable || isUpdating}
+                onClick={onOpenProductModal}
+              >
+                Add products
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -1285,9 +1317,52 @@ function HistoryTab({
 
 //===================================================================
 
-function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
+function getOptionalClientValue(value: string): string | undefined {
+  const normalized = value.trim();
+
+  if (!normalized || normalized === 'Not specified' || normalized === '—') {
+    return undefined;
+  }
+
+  return normalized;
+}
+
+//===================================================================
+
+function recalculateDraftItems(
+  items: PharmacyOrderItem[]
+): Pick<PharmacyOrderDetails, 'items' | 'totalQuantity' | 'totalAmount'> {
+  const normalizedItems = items.map((item) => ({
+    ...item,
+    totalPrice: item.quantity * item.unitPrice,
+  }));
+
+  return {
+    items: normalizedItems,
+    totalQuantity: normalizedItems.reduce(
+      (total, item) => total + item.quantity,
+      0
+    ),
+    totalAmount: normalizedItems.reduce(
+      (total, item) => total + item.totalPrice,
+      0
+    ),
+  };
+}
+
+//===================================================================
+
+function OrderDetailsPageContent({
+  orderId,
+  mode = 'details',
+}: OrderDetailsPageContentProps) {
+  const router = useRouter();
   const toast = useToast();
+  const isCreateMode = mode === 'create';
+
   const [order, setOrder] = useState<PharmacyOrderDetails | null>(null);
+  const [clients, setClients] = useState<PharmacyClientRow[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<OrderTab>('products');
@@ -1296,6 +1371,9 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [isCreateConfirmationOpen, setIsCreateConfirmationOpen] =
+    useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [productToRemove, setProductToRemove] =
     useState<PharmacyOrderItem | null>(null);
@@ -1316,11 +1394,92 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadOrder() {
+    async function loadPage() {
       setIsLoading(true);
       setError(null);
 
       try {
+        if (isCreateMode) {
+          const [profileResponse, clientsResponse] = await Promise.all([
+            getMyPharmacyProfile(),
+            getPharmacyClients({ page: 1, perPage: 200, status: 'active' }),
+          ]);
+
+          if (!isMounted) return;
+
+          const activeClients = clientsResponse.items.filter(
+            (client) => client.status === 'active'
+          );
+          const defaultClient =
+            activeClients.find((client) => client.isDefault) ?? activeClients[0];
+
+          if (!defaultClient) {
+            throw new Error(
+              'An active client is required before an order can be created.'
+            );
+          }
+
+          const pharmacy = profileResponse.pharmacy;
+          const clientPhone = getOptionalClientValue(defaultClient.phone);
+          const clientAddress = getOptionalClientValue(defaultClient.address);
+          const createdAt = new Date().toISOString();
+
+          const draftOrder: PharmacyOrderDetails = {
+            id: 'draft',
+            orderNumber: 'Draft',
+            orderDate: createdAt,
+            pharmacyId: pharmacy.id,
+            pharmacyName: pharmacy.name,
+            client: defaultClient.name,
+            clientId: defaultClient.id,
+            clientPhotoUrl: defaultClient.photoUrl,
+            ...(clientPhone ? { clientPhone } : {}),
+            ...(clientAddress ? { clientAddress } : {}),
+            deliveryMethod: 'pickup',
+            paymentMethod: 'cash',
+            clientComment: '',
+            totalQuantity: 0,
+            totalAmount: 0,
+            status: 'in_progress',
+            createdByType: 'manager',
+            items: [],
+            currency: 'UAH',
+            statusHistory: [],
+            activityHistory: [],
+            managerCommentsCount: 0,
+            ...(pharmacy.phone ? { pharmacyPhone: pharmacy.phone } : {}),
+            ...([pharmacy.address, pharmacy.city].filter(Boolean).length
+              ? {
+                  pharmacyAddress: [pharmacy.address, pharmacy.city]
+                    .filter(Boolean)
+                    .join(', '),
+                }
+              : {}),
+            ...(pharmacy.workingHours
+              ? { pharmacyWorkingHours: pharmacy.workingHours }
+              : {}),
+            ...(pharmacy.email ? { pharmacyEmail: pharmacy.email } : {}),
+            ...(pharmacy.bankDetails
+              ? { bankDetails: pharmacy.bankDetails }
+              : {}),
+          };
+
+          setClients(activeClients);
+          setSelectedClientId(defaultClient.id);
+          setOrder(draftOrder);
+          setDeliveryMethod('pickup');
+          setRecipientName(defaultClient.name);
+          setRecipientPhone(clientPhone ?? '');
+          setDeliveryAddress(clientAddress ?? '');
+          setPaymentMethod('cash');
+          setDeliveryTouchedFields({});
+          return;
+        }
+
+        if (!orderId) {
+          throw new Error('Order ID is required.');
+        }
+
         let loadedOrder: PharmacyOrderDetails;
 
         try {
@@ -1343,6 +1502,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
           const formState = getOrderFormState(loadedOrder);
 
           setOrder(loadedOrder);
+          setSelectedClientId(loadedOrder.clientId ?? '');
           setDeliveryMethod(formState.deliveryMethod);
           setRecipientName(formState.recipientName);
           setRecipientPhone(formState.recipientPhone);
@@ -1350,22 +1510,28 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
           setPaymentMethod(formState.paymentMethod);
           setDeliveryTouchedFields({});
         }
-      } catch {
+      } catch (loadError) {
         if (isMounted) {
           setOrder(null);
-          setError('Could not load the order. Please try again.');
+          setError(
+            loadError instanceof Error && loadError.message
+              ? loadError.message
+              : isCreateMode
+                ? 'Could not prepare a new order. Please try again.'
+                : 'Could not load the order. Please try again.'
+          );
         }
       } finally {
         if (isMounted) setIsLoading(false);
       }
     }
 
-    void loadOrder();
+    void loadPage();
 
     return () => {
       isMounted = false;
     };
-  }, [orderId]);
+  }, [isCreateMode, orderId]);
 
   const historyEntries = useMemo(
     () => (order ? getOrderHistoryEntries(order) : []),
@@ -1377,7 +1543,24 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     [historyEntries.length, order?.managerCommentsCount]
   );
 
-  const isEditable = order?.status === 'in_progress';
+  const selectedClient = useMemo(
+    () => clients.find((client) => client.id === selectedClientId) ?? null,
+    [clients, selectedClientId]
+  );
+
+  const clientOptions = useMemo(
+    () =>
+      clients.map((client) => ({
+        value: client.id,
+        label: client.isDefault
+          ? `${client.name} — default client`
+          : client.name,
+      })),
+    [clients]
+  );
+
+  const isEditable = isCreateMode || order?.status === 'in_progress';
+  const isOrderBusy = isUpdatingOrder || isCreatingOrder;
   const statusModalText = pendingStatus
     ? getStatusModalText(pendingStatus.status)
     : null;
@@ -1398,7 +1581,9 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   );
 
   const statusActions = useMemo(() => {
-    if (!order) return [] as Array<PendingStatusChange['status']>;
+    if (!order || isCreateMode) {
+      return [] as Array<PendingStatusChange['status']>;
+    }
     if (order.status === 'new') {
       return ['in_progress'] as Array<PendingStatusChange['status']>;
     }
@@ -1406,12 +1591,13 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       return ['successful', 'rejected'] as Array<PendingStatusChange['status']>;
     }
     return [] as Array<PendingStatusChange['status']>;
-  }, [order]);
+  }, [isCreateMode, order]);
 
   const syncOrderState = (updatedOrder: PharmacyOrderDetails) => {
     const formState = getOrderFormState(updatedOrder);
 
     setOrder(updatedOrder);
+    setSelectedClientId(updatedOrder.clientId ?? '');
     setDeliveryMethod(formState.deliveryMethod);
     setRecipientName(formState.recipientName);
     setRecipientPhone(formState.recipientPhone);
@@ -1419,10 +1605,21 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     setPaymentMethod(formState.paymentMethod);
   };
 
+  const setDraftItems = (items: PharmacyOrderItem[]) => {
+    setOrder((currentOrder) =>
+      currentOrder
+        ? {
+            ...currentOrder,
+            ...recalculateDraftItems(items),
+          }
+        : currentOrder
+    );
+  };
+
   const updateOrderDraft = async (
     payload: Parameters<typeof updatePharmacyOrder>[1]
   ): Promise<PharmacyOrderDetails | null> => {
-    if (!order) return null;
+    if (!order || isCreateMode) return order;
 
     setIsUpdatingOrder(true);
 
@@ -1447,7 +1644,27 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   };
 
   const applyQuantityChange = (item: PharmacyOrderItem, quantity: number) => {
-    if (!order || !isEditable || isUpdatingOrder) return;
+    if (!order || !isEditable || isOrderBusy) return;
+
+    if (isCreateMode) {
+      const physicalQuantity =
+        item.quantity + Math.max(0, item.availableQuantity ?? 0);
+      const nextItems = order.items
+        .map((orderItem) =>
+          orderItem.productOfferId === item.productOfferId
+            ? {
+                ...orderItem,
+                quantity,
+                availableQuantity: Math.max(0, physicalQuantity - quantity),
+                totalPrice: quantity * orderItem.unitPrice,
+              }
+            : orderItem
+        )
+        .filter((orderItem) => orderItem.quantity > 0);
+
+      setDraftItems(nextItems);
+      return;
+    }
 
     const nextItems = order.items
       .map((orderItem) =>
@@ -1461,9 +1678,9 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   };
 
   const handleQuantityChange = (item: PharmacyOrderItem, quantity: number) => {
-    if (!order || !isEditable || isUpdatingOrder) return;
+    if (!order || !isEditable || isOrderBusy) return;
 
-    if (quantity < 1 && order.items.length <= 1) {
+    if (!isCreateMode && quantity < 1 && order.items.length <= 1) {
       toast.error(
         'You cannot remove the whole order. Continue editing it or reject the order.'
       );
@@ -1483,9 +1700,9 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   };
 
   const handleRequestRemoveProduct = (item: PharmacyOrderItem) => {
-    if (!order || !isEditable || isUpdatingOrder) return;
+    if (!order || !isEditable || isOrderBusy) return;
 
-    if (order.items.length <= 1) {
+    if (!isCreateMode && order.items.length <= 1) {
       toast.error(
         'You cannot remove the whole order. Continue editing it or reject the order.'
       );
@@ -1505,7 +1722,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   };
 
   const handleAddProduct = async (product: Product): Promise<void> => {
-    if (!order || !isEditable || isUpdatingOrder) return;
+    if (!order || !isEditable || isOrderBusy) return;
 
     const offer = getProductOffer(product, order.pharmacyId);
 
@@ -1523,7 +1740,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       return;
     }
 
-    const nextItems = [
+    const nextItems: PharmacyOrderItem[] = [
       ...order.items,
       {
         id: offer.id,
@@ -1543,7 +1760,41 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       },
     ];
 
+    if (isCreateMode) {
+      setDraftItems(nextItems);
+      return;
+    }
+
     await updateOrderDraft({ items: getOrderItemsPayload(nextItems) });
+  };
+
+  const handleClientChange = (clientId: string) => {
+    const client = clients.find((item) => item.id === clientId);
+
+    if (!client || client.status !== 'active') return;
+
+    const clientPhone = getOptionalClientValue(client.phone);
+    const clientAddress = getOptionalClientValue(client.address);
+
+    setSelectedClientId(client.id);
+    setRecipientName(client.name);
+    setRecipientPhone(clientPhone ?? '');
+    setDeliveryAddress(clientAddress ?? '');
+    setDeliveryTouchedFields({});
+    setOrder((currentOrder) =>
+      currentOrder
+        ? {
+            ...currentOrder,
+            client: client.name,
+            clientId: client.id,
+            clientPhotoUrl: client.photoUrl,
+            ...(clientPhone ? { clientPhone } : { clientPhone: undefined }),
+            ...(clientAddress
+              ? { clientAddress }
+              : { clientAddress: undefined }),
+          }
+        : currentOrder
+    );
   };
 
   const handleDeliveryMethodChange = (value: DeliveryMethod) => {
@@ -1589,24 +1840,52 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     }));
   };
 
-  const handleSaveDelivery = () => {
+  const validateDelivery = (): boolean => {
     const nextErrors = validateOrderDeliveryForm(
       deliveryValues,
       deliveryMethod
     );
 
-    if (hasValidationErrors(nextErrors)) {
-      setDeliveryTouchedFields((current) => ({
-        ...current,
-        ...Object.keys(nextErrors).reduce<OrderDeliveryTouchedFields>(
-          (fields, field) => ({
-            ...fields,
-            [field as keyof OrderDeliveryFormValues]: true,
-          }),
-          {}
-        ),
-      }));
-      toast.error('Please check the postal delivery fields.');
+    if (!hasValidationErrors(nextErrors)) return true;
+
+    setDeliveryTouchedFields((current) => ({
+      ...current,
+      ...Object.keys(nextErrors).reduce<OrderDeliveryTouchedFields>(
+        (fields, field) => ({
+          ...fields,
+          [field as keyof OrderDeliveryFormValues]: true,
+        }),
+        {}
+      ),
+    }));
+    toast.error('Please check the postal delivery fields.');
+    return false;
+  };
+
+  const handleSaveDelivery = () => {
+    if (!validateDelivery()) return;
+
+    if (isCreateMode) {
+      setOrder((currentOrder) =>
+        currentOrder
+          ? {
+              ...currentOrder,
+              deliveryMethod,
+              ...(deliveryMethod === 'postal_delivery'
+                ? {
+                    recipientName: recipientName.trim(),
+                    recipientPhone: recipientPhone.trim(),
+                    deliveryAddress: deliveryAddress.trim(),
+                  }
+                : {
+                    recipientName: undefined,
+                    recipientPhone: undefined,
+                    deliveryAddress: undefined,
+                  }),
+            }
+          : currentOrder
+      );
+      toast.success('Delivery method saved in the order draft.');
       return;
     }
 
@@ -1628,6 +1907,14 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const handleSavePayment = () => {
     if (paymentMethod === 'bank_transfer' && !order?.bankDetails) {
       toast.error('Bank details are not available for this pharmacy.');
+      return;
+    }
+
+    if (isCreateMode) {
+      setOrder((currentOrder) =>
+        currentOrder ? { ...currentOrder, paymentMethod } : currentOrder
+      );
+      toast.success('Payment method saved in the order draft.');
       return;
     }
 
@@ -1660,7 +1947,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   };
 
   const handleConfirmStatus = async () => {
-    if (!order || !pendingStatus) return;
+    if (!order || !pendingStatus || isCreateMode) return;
 
     setIsUpdatingStatus(true);
 
@@ -1690,11 +1977,76 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     }
   };
 
+  const handleRequestCreateOrder = () => {
+    if (!order || !selectedClientId) {
+      toast.error('Select an active client for this order.');
+      return;
+    }
+
+    if (order.items.length === 0) {
+      setActiveTab('products');
+      toast.error('Add at least one product before saving the order.');
+      return;
+    }
+
+    if (!validateDelivery()) {
+      setActiveTab('delivery');
+      return;
+    }
+
+    if (paymentMethod === 'bank_transfer' && !order.bankDetails) {
+      setActiveTab('payment');
+      toast.error('Bank details are not available for this pharmacy.');
+      return;
+    }
+
+    setIsCreateConfirmationOpen(true);
+  };
+
+  const handleConfirmCreateOrder = async () => {
+    if (!order || !selectedClientId || !isCreateMode) return;
+
+    setIsCreatingOrder(true);
+
+    try {
+      const createdOrder = await createPharmacyOrder({
+        clientId: selectedClientId,
+        items: getOrderItemsPayload(order.items),
+        deliveryMethod,
+        ...(deliveryMethod === 'postal_delivery'
+          ? {
+              deliveryDetails: {
+                recipientName: recipientName.trim(),
+                recipientPhone: recipientPhone.trim(),
+                address: deliveryAddress.trim(),
+              },
+            }
+          : {}),
+        paymentMethod,
+        comment: '',
+      });
+
+      setIsCreateConfirmationOpen(false);
+      toast.success('Order created and moved to In progress.');
+      router.replace(getPharmacyOrderPath(createdOrder.id));
+    } catch (createError) {
+      toast.error(
+        createError instanceof Error && createError.message
+          ? createError.message
+          : 'Could not create the order.'
+      );
+    } finally {
+      setIsCreatingOrder(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <main className={css.page} aria-label="Loading order">
         <section className={css.contentCard}>
-          <LoadingSpinner label="Loading order..." />
+          <LoadingSpinner
+            label={isCreateMode ? 'Preparing order...' : 'Loading order...'}
+          />
         </section>
       </main>
     );
@@ -1705,7 +2057,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       <main className={css.page} aria-labelledby="order-details-page-title">
         <section className={css.contentCard}>
           <PageHeader
-            title="Order not found"
+            title={isCreateMode ? 'Order could not be prepared' : 'Order not found'}
             titleId="order-details-page-title"
             icon={<ShoppingBag size={23} aria-hidden="true" />}
           />
@@ -1731,39 +2083,116 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
         <div className={css.headerGrid}>
           <div className={css.titleBlock}>
             <PageHeader
-              title={`Order ${order.orderNumber}`}
+              title={isCreateMode ? 'Create order' : `Order ${order.orderNumber}`}
               titleId="order-details-page-title"
               icon={<ShoppingBag size={23} aria-hidden="true" />}
             />
-            <p className={css.metaText}>
-              Created on {formatOrderDate(order.orderDate)}
-            </p>
+
+            {isCreateMode ? (
+              <div className={css.clientSelector}>
+                <SearchableSelect
+                  id="manager-order-client"
+                  label="Client"
+                  value={selectedClientId}
+                  options={clientOptions}
+                  placeholder="Search active client"
+                  emptyMessage="No active clients found"
+                  isActive={Boolean(selectedClientId)}
+                  disabled={isCreatingOrder}
+                  onChange={handleClientChange}
+                />
+                <p>
+                  The default walk-in customer is selected automatically. Only
+                  active clients can be used for a new order.
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className={css.metaText}>
+                  Created on {formatOrderDate(order.orderDate)}
+                </p>
+                {order.clientId ? (
+                  <Link
+                    className={css.orderClientLink}
+                    href={getPharmacyClientPath(order.clientId)}
+                  >
+                    <TableImagePreview
+                      src={getProductImageSrc(order.clientPhotoUrl ?? undefined)}
+                      alt={`${order.client} photo`}
+                      fallback={
+                        order.client ? (
+                          formatInitials(order.client, 'C')
+                        ) : (
+                          <UserRound size={18} aria-hidden="true" />
+                        )
+                      }
+                      size={38}
+                    />
+                    <span>
+                      <small>Client</small>
+                      <strong>{order.client}</strong>
+                    </span>
+                  </Link>
+                ) : null}
+              </>
+            )}
           </div>
 
-          <div
-            className={`${css.statusActions} ${
-              order.status === 'in_progress' ? css.statusActionsInProgress : ''
-            }`}
-          >
-            <StatusBadge
-              status={order.status}
-              label={ORDER_STATUS_LABELS[order.status]}
-            />
-
-            {statusActions.map((status) => (
+          {isCreateMode ? (
+            <div className={css.createOrderActions}>
+              {selectedClient ? (
+                <div className={css.selectedClientPreview}>
+                  <TableImagePreview
+                    src={getProductImageSrc(selectedClient.photoUrl ?? undefined)}
+                    alt={`${selectedClient.name} photo`}
+                    fallback={formatInitials(selectedClient.name, 'C')}
+                    size={42}
+                  />
+                  <span>
+                    <small>Selected client</small>
+                    <strong>{selectedClient.name}</strong>
+                  </span>
+                </div>
+              ) : null}
               <Button
-                key={status}
                 type="button"
-                size="sm"
-                variant={status === 'rejected' ? 'secondary' : 'primary'}
-                className={status === 'rejected' ? css.rejectButton : undefined}
-                disabled={isUpdatingStatus || isUpdatingOrder}
-                onClick={() => handleStatusClick(status)}
+                disabled={!selectedClientId || isCreatingOrder}
+                isLoading={isCreatingOrder}
+                onClick={handleRequestCreateOrder}
               >
-                {getStatusActionLabel(status)}
+                Save order
               </Button>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div
+              className={`${css.statusActions} ${
+                order.status === 'in_progress'
+                  ? css.statusActionsInProgress
+                  : ''
+              }`}
+            >
+              <StatusBadge
+                status={order.status}
+                label={ORDER_STATUS_LABELS[order.status]}
+              />
+
+              {statusActions.map((status) => (
+                <Button
+                  key={status}
+                  type="button"
+                  size="sm"
+                  variant={status === 'rejected' ? 'secondary' : 'primary'}
+                  className={
+                    status === 'rejected' ? css.rejectButton : undefined
+                  }
+                  disabled={isUpdatingStatus || isUpdatingOrder}
+                  onClick={() => handleStatusClick(status)}
+                >
+                  {getStatusActionLabel(status)}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -1779,16 +2208,24 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
           />
         </div>
 
-        {!isEditable && order.status === 'new' ? (
+        {!isCreateMode && !isEditable && order.status === 'new' ? (
           <p className={css.lockNotice}>
             Take this order into work to edit it.
           </p>
         ) : null}
 
-        {!isEditable &&
+        {!isCreateMode &&
+        !isEditable &&
         (order.status === 'successful' || order.status === 'rejected') ? (
           <p className={css.lockNotice}>
             This order has a final status and can no longer be edited.
+          </p>
+        ) : null}
+
+        {isCreateMode ? (
+          <p className={css.draftNotice}>
+            This is an unsaved order draft. Saving it reserves the selected
+            products and immediately moves the order to In progress.
           </p>
         ) : null}
 
@@ -1797,7 +2234,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
             <OrderProductsTab
               order={order}
               isEditable={isEditable}
-              isUpdating={isUpdatingOrder}
+              isUpdating={isOrderBusy}
               onQuantityChange={handleQuantityChange}
               onRemoveProduct={handleRequestRemoveProduct}
               onOpenProductModal={() => setIsProductModalOpen(true)}
@@ -1814,7 +2251,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
               deliveryAddress={deliveryAddress}
               deliveryErrors={deliveryErrors}
               deliveryTouchedFields={deliveryTouchedFields}
-              isUpdating={isUpdatingOrder}
+              isUpdating={isOrderBusy}
               onDeliveryMethodChange={handleDeliveryMethodChange}
               onRecipientNameChange={handleRecipientNameChange}
               onRecipientPhoneChange={handleRecipientPhoneChange}
@@ -1829,7 +2266,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
               paymentMethod={paymentMethod}
               copiedEmail={copiedEmail}
               isEditable={isEditable}
-              isUpdating={isUpdatingOrder}
+              isUpdating={isOrderBusy}
               onPaymentMethodChange={setPaymentMethod}
               onCopyEmail={() => void handleCopyEmail()}
               onSave={handleSavePayment}
@@ -1837,28 +2274,75 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
           ) : null}
 
           {activeTab === 'comment' ? (
-            <ManagerCommentTab
-              orderId={order.id}
-              totalComments={order.managerCommentsCount}
-              isEditable={isEditable}
-              onTotalChange={(total) =>
-                setOrder((currentOrder) =>
-                  currentOrder
-                    ? { ...currentOrder, managerCommentsCount: total }
-                    : currentOrder
-                )
-              }
-            />
+            isCreateMode ? (
+              <section className={css.methodCard}>
+                <div className={css.draftTabMessage}>
+                  <MessageSquareText size={24} aria-hidden="true" />
+                  <div>
+                    <h2>Order comments are available after saving</h2>
+                    <p>
+                      Save the order first, then add private manager notes in
+                      this tab.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            ) : (
+              <ManagerCommentTab
+                orderId={order.id}
+                totalComments={order.managerCommentsCount}
+                isEditable={isEditable}
+                onTotalChange={(total) =>
+                  setOrder((currentOrder) =>
+                    currentOrder
+                      ? { ...currentOrder, managerCommentsCount: total }
+                      : currentOrder
+                  )
+                }
+              />
+            )
           ) : null}
 
           {activeTab === 'history' ? (
-            <HistoryTab
-              historyEntries={historyEntries}
-              rejectionReason={order.rejectionReason}
-            />
+            isCreateMode ? (
+              <section className={css.methodCard}>
+                <div className={css.draftTabMessage}>
+                  <History size={24} aria-hidden="true" />
+                  <div>
+                    <h2>Order history will start after saving</h2>
+                    <p>
+                      The first event will record that the manager created the
+                      order with status In progress.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            ) : (
+              <HistoryTab
+                historyEntries={historyEntries}
+                rejectionReason={order.rejectionReason}
+              />
+            )
           ) : null}
         </div>
       </section>
+
+      <ConfirmationModal
+        isOpen={isCreateConfirmationOpen}
+        title="Create this order?"
+        description={
+          selectedClient
+            ? `The order will be assigned to ${selectedClient.name}, the selected products will be reserved, and the order will receive In progress status. It cannot be deleted after creation.`
+            : 'The selected products will be reserved and the order will receive In progress status.'
+        }
+        confirmLabel="Create order"
+        cancelLabel="Continue editing"
+        isLoading={isCreatingOrder}
+        onConfirm={() => void handleConfirmCreateOrder()}
+        onCancel={() => {
+          if (!isCreatingOrder) setIsCreateConfirmationOpen(false);
+        }}
+      />
 
       <ConfirmationModal
         isOpen={Boolean(pendingPriceQuantityChange)}
@@ -1886,7 +2370,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
         }
         confirmLabel="Use current price"
         cancelLabel="Keep current quantity"
-        isLoading={isUpdatingOrder}
+        isLoading={isOrderBusy}
         onConfirm={() => {
           const pendingChange = pendingPriceQuantityChange;
 
@@ -1896,7 +2380,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
           applyQuantityChange(pendingChange.item, pendingChange.quantity);
         }}
         onCancel={() => {
-          if (!isUpdatingOrder) setPendingPriceQuantityChange(null);
+          if (!isOrderBusy) setPendingPriceQuantityChange(null);
         }}
       />
 
@@ -1905,16 +2389,18 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
         title="Remove product from order?"
         description={
           productToRemove
-            ? `${productToRemove.name} will be removed and its reserved quantity will return to available stock.`
+            ? isCreateMode
+              ? `${productToRemove.name} will be removed from this unsaved order draft.`
+              : `${productToRemove.name} will be removed and its reserved quantity will return to available stock.`
             : ''
         }
         confirmLabel="Remove product"
         cancelLabel="Keep product"
         confirmButtonClassName={css.dangerConfirmButton}
-        isLoading={isUpdatingOrder}
+        isLoading={isOrderBusy}
         onConfirm={handleConfirmRemoveProduct}
         onCancel={() => {
-          if (!isUpdatingOrder) setProductToRemove(null);
+          if (!isOrderBusy) setProductToRemove(null);
         }}
       />
 

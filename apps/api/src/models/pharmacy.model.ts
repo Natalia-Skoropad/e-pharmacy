@@ -199,6 +199,11 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       type: Date,
       default: undefined,
     },
+
+    activatedAt: {
+      type: Date,
+      default: undefined,
+    },
   },
   {
     timestamps: true,

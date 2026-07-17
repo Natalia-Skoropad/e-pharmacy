@@ -245,7 +245,17 @@ function ClientsPageContent({
                 label="What is a repeat client?"
                 title="Repeat clients"
               >
-                Repeat clients are customers who have completed two or more successful orders in this pharmacy.
+                <span>
+                  Repeat clients are customers who have completed two or more
+                  successful orders in this pharmacy.
+                </span>
+                <span>
+                  <strong>Walk-in customer:</strong> the default active client
+                  created automatically when the pharmacy first becomes Active.
+                  Use it for counter sales when a visitor has no personal account.
+                  Its photo comes from the pharmacy profile, and its purchase
+                  statistics are tracked like any other client.
+                </span>
               </InfoTooltip>
             </span>
           }

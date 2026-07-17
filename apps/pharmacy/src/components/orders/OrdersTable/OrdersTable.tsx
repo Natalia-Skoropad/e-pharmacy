@@ -15,6 +15,7 @@ import { formatPrice } from '@e-pharmacy/utils/formatters';
 
 import {
   DELIVERY_METHOD_LABELS,
+  ORDER_CREATED_BY_LABELS,
   PAYMENT_METHOD_LABELS,
   type PharmacyOrderRow,
 } from '@/lib/orders/orders';
@@ -115,6 +116,11 @@ function OrdersTable({
         key: 'totalAmount',
         title: <TableHeaderTitle parts={['Total ', 'amount, ', 'UAH']} />,
         render: (order) => formatPrice(order.totalAmount).replace(' UAH', ''),
+      },
+      {
+        key: 'createdByType',
+        title: <TableHeaderTitle parts={['Created', 'by']} />,
+        render: (order) => ORDER_CREATED_BY_LABELS[order.createdByType],
       },
       {
         key: 'status',

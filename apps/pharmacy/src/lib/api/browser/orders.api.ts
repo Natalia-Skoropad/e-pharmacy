@@ -31,6 +31,44 @@ import {
 
 //===================================================================
 
+export type CreatePharmacyOrderPayload = Readonly<{
+  clientId: string;
+  items: Array<{ productOfferId: string; quantity: number }>;
+  deliveryMethod: DeliveryMethod;
+  deliveryDetails?: {
+    recipientName: string;
+    recipientPhone: string;
+    address: string;
+  };
+  paymentMethod: PaymentMethod;
+  comment?: string;
+}>;
+
+//===================================================================
+
+export async function createPharmacyOrder(
+  payload: CreatePharmacyOrderPayload
+): Promise<PharmacyOrderDetails> {
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
+    PHARMACY_API_ROUTES.orders.list,
+    {
+      method: 'POST',
+      body: payload,
+    }
+  );
+
+  const responsePayload = getResponseData(response) as { order?: unknown };
+  const order = normalizePharmacyOrderDetails(responsePayload.order);
+
+  if (!order) {
+    throw new Error('Order could not be created.');
+  }
+
+  return order;
+}
+
+//===================================================================
+
 export async function getPharmacyOrders(
   params: PharmacyOrdersQueryParams = {}
 ): Promise<PharmacyOrdersResponse> {

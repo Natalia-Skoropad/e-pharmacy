@@ -4,6 +4,7 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 
 import {
   checkoutOrderSchema,
+  createManagerOrderSchema,
   createOrderManagerCommentSchema,
   orderCommentsQuerySchema,
   orderSalesStatisticsQuerySchema,
@@ -14,6 +15,7 @@ import {
 
 import {
   checkoutOrderService,
+  createManagerOrderService,
   createOrderManagerCommentService,
   deleteOrderManagerCommentService,
   getOrderByIdService,
@@ -42,6 +44,29 @@ export async function checkoutOrder(
 ): Promise<void> {
   const body = checkoutOrderSchema.parse(req.body);
   const data = await checkoutOrderService(req.user?.id ?? '', body);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.CREATED,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function createManagerOrder(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const body = createManagerOrderSchema.parse(req.body);
+  const user = req.user;
+
+  if (!user) return;
+
+  const data = await createManagerOrderService(
+    { id: user.id, role: user.role },
+    body
+  );
 
   sendSuccessResponse({
     res,

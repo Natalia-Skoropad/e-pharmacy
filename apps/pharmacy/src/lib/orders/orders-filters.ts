@@ -4,11 +4,14 @@ import type {
   PaymentMethod,
 } from '@e-pharmacy/types';
 
+import type { OrderCreatedByType } from './orders';
+
 //===================================================================
 
 export type DeliveryMethodFilter = 'all' | DeliveryMethod;
 export type PaymentMethodFilter = 'all' | PaymentMethod;
 export type OrderStatusFilter = 'all' | OrderStatus;
+export type OrderCreatedByFilter = 'all' | OrderCreatedByType;
 
 //===================================================================
 
@@ -22,6 +25,7 @@ export type OrdersFilterState = Readonly<{
   deliveryMethod: DeliveryMethodFilter;
   paymentMethod: PaymentMethodFilter;
   status: OrderStatusFilter;
+  createdByType: OrderCreatedByFilter;
 }>;
 
 //===================================================================
@@ -36,4 +40,5 @@ export const DEFAULT_ORDERS_FILTERS: OrdersFilterState = {
   deliveryMethod: 'all',
   paymentMethod: 'all',
   status: 'all',
+  createdByType: 'all',
 };

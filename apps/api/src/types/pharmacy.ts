@@ -63,6 +63,7 @@ export type PharmacyEntity = {
   updatedBy?: Types.ObjectId;
   approvedBy?: Types.ObjectId;
   approvedAt?: Date;
+  activatedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 };
