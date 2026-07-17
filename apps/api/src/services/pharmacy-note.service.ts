@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Pharmacy } from '../models/pharmacy.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
+import { ProductOffer } from '../models/productOffer.model';
 import { httpError } from '../utils/httpError';
 
 //===============================================================
@@ -16,6 +17,28 @@ async function getPharmacyId(userId: string) {
   if (!pharmacy)
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found');
   return pharmacy._id;
+}
+
+//===============================================================
+
+async function assertProductIsAdded(
+  pharmacyId: Types.ObjectId,
+  entityType: 'client' | 'product' | 'pharmacy',
+  entityId: string
+) {
+  if (entityType !== 'product') return;
+
+  const offerExists = await ProductOffer.exists({
+    pharmacyId,
+    productId: new Types.ObjectId(entityId),
+  });
+
+  if (!offerExists) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Add this product to your pharmacy before creating comments.'
+    );
+  }
 }
 
 //===============================================================
@@ -63,6 +86,8 @@ export async function createPharmacyNoteService(
   text: string
 ) {
   const pharmacyId = await getPharmacyId(userId);
+  await assertProductIsAdded(pharmacyId, entityType, entityId);
+
   const note = await PharmacyNote.create({
     pharmacyId,
     entityType,

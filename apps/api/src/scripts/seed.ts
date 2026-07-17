@@ -2160,8 +2160,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
     const status: DemoClientStatus =
       index < portfolioStatusTargets.new
         ? 'new'
-        : index <
-            portfolioStatusTargets.new + portfolioStatusTargets.inProgress
+        : index < portfolioStatusTargets.new + portfolioStatusTargets.inProgress
           ? 'in_progress'
           : index <
               portfolioStatusTargets.new +
@@ -2617,9 +2616,7 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
         article: product.article,
         category: product.category,
         ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
-        ...(product.manufacturer
-          ? { manufacturer: product.manufacturer }
-          : {}),
+        ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
         ...(product.dosage ? { dosage: product.dosage } : {}),
         ...(product.packageQuantity
           ? { packageQuantity: String(product.packageQuantity) }
@@ -2959,7 +2956,8 @@ async function assertDemoOrderStatusCounts(): Promise<void> {
   } as const;
 
   for (const [status, expected] of Object.entries(expectedCounts)) {
-    const actual = countByStatus.get(status as keyof typeof expectedCounts) ?? 0;
+    const actual =
+      countByStatus.get(status as keyof typeof expectedCounts) ?? 0;
 
     if (actual !== expected) {
       throw new Error(
@@ -2967,6 +2965,99 @@ async function assertDemoOrderStatusCounts(): Promise<void> {
       );
     }
   }
+}
+
+//===============================================================
+
+const PRODUCT_MANAGER_NOTE_TEMPLATES = [
+  'Clients regularly ask about availability, so check the shelf balance before confirming a large quantity.',
+  'Keep the product card details and package information aligned with the latest supplier documents.',
+  'The current placement in the pharmacy is convenient; keep the shelf label visible and easy to read.',
+  'Monitor the remaining quantity after active orders because this product is often added together with related items.',
+  'The product image and article were checked against the received package and are correct.',
+  'Before the next restock, compare the supplier price with the current pharmacy selling price.',
+  'Several clients asked about an alternative dosage, so mention available substitutes when needed.',
+  'Check the expiry dates during the next inventory review and move the nearest dates forward on the shelf.',
+  'The product is included in recent orders; confirm the available quantity before approving another reservation.',
+  'No packaging issues were noticed during the latest stock check.',
+  'Keep the manufacturer information visible when answering client questions about this product.',
+  'Review demand after the next completed orders and adjust the planned restock quantity if necessary.',
+] as const;
+
+//===============================================================
+
+async function seedOwnProductManagerNotes(): Promise<number> {
+  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
+    .select('_id ownerId managerUserIds')
+    .lean<{
+      _id: Types.ObjectId;
+      ownerId?: Types.ObjectId;
+      managerUserIds?: Types.ObjectId[];
+    } | null>();
+
+  if (!pharmacy) return 0;
+
+  const createdBy = pharmacy.ownerId ?? pharmacy.managerUserIds?.[0];
+
+  if (!createdBy) return 0;
+
+  const offers = await ProductOffer.find({ pharmacyId: pharmacy._id })
+    .sort({ createdAt: 1, productId: 1 })
+    .select('productId createdAt')
+    .lean<
+      Array<{
+        productId: Types.ObjectId;
+        createdAt: Date;
+      }>
+    >();
+
+  if (!offers.length) return 0;
+
+  const products = await Product.find({
+    _id: { $in: offers.map((offer) => offer.productId) },
+  })
+    .select('_id name')
+    .lean<Array<{ _id: Types.ObjectId; name: string }>>();
+
+  const productNames = new Map(
+    products.map((product) => [String(product._id), product.name])
+  );
+
+  const latestNoteAt = new Date('2026-07-16T18:00:00.000Z');
+  const notes = offers.flatMap((offer, offerIndex) => {
+    const notesCount = 10 + (offerIndex % 3);
+    const addedAt = new Date(offer.createdAt);
+    const firstNoteAt = new Date(addedAt.getTime() + 6 * 60 * 60 * 1000);
+    const rangeEnd = Math.max(firstNoteAt.getTime(), latestNoteAt.getTime());
+    const step =
+      notesCount > 1
+        ? Math.floor((rangeEnd - firstNoteAt.getTime()) / (notesCount - 1))
+        : 0;
+    const productName =
+      productNames.get(String(offer.productId)) ?? 'This product';
+
+    return Array.from({ length: notesCount }, (_, noteIndex) => {
+      const template =
+        PRODUCT_MANAGER_NOTE_TEMPLATES[
+          (offerIndex + noteIndex) % PRODUCT_MANAGER_NOTE_TEMPLATES.length
+        ];
+      const createdAt = new Date(firstNoteAt.getTime() + step * noteIndex);
+
+      return {
+        pharmacyId: pharmacy._id,
+        entityType: 'product' as const,
+        entityId: offer.productId,
+        text: `${productName}: ${template}`,
+        createdBy,
+        createdAt,
+        updatedAt: createdAt,
+      };
+    });
+  });
+
+  await PharmacyNote.insertMany(notes);
+
+  return notes.length;
 }
 
 //===============================================================
@@ -3075,8 +3166,10 @@ async function seedDatabase(): Promise<void> {
   const activePharmacyOrdersCount = await seedActivePharmacyOrder();
   const pharmacyClientsCount = await seedPharmacyClientPortfolio();
   const inventoryScenario = await seedSoldOutAndLowStockProducts();
-  const reconciledOffersCount =
-    await reconcileActivePharmacyInventoryLedger();
+
+  const reconciledOffersCount = await reconcileActivePharmacyInventoryLedger();
+
+  const productManagerNotesCount = await seedOwnProductManagerNotes();
   await assertDemoOrderStatusCounts();
 
   console.log(
@@ -3098,6 +3191,9 @@ async function seedDatabase(): Promise<void> {
   );
   console.log(
     `Seed completed: ${reconciledOffersCount} inventory ledgers reconciled chronologically`
+  );
+  console.log(
+    `Seed completed: ${productManagerNotesCount} product manager comments created`
   );
 }
 

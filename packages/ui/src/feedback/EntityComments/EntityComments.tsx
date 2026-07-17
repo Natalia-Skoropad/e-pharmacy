@@ -3,7 +3,7 @@
 import { Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import { Button, CountLabel, LoadingSpinner } from '../../common';
+import { Button, CountLabel, LoadingSpinner, Pagination } from '../../common';
 import { CommentInput } from '../../form-fields';
 import { ConfirmationModal } from '../../modals';
 import { useToast } from '../ToastProvider';
@@ -61,19 +61,6 @@ function formatCommentDate(value: string): string {
 
 //===================================================================
 
-function getPageItems(currentPage: number, totalPages: number): number[] {
-  const start = Math.max(1, currentPage - 2);
-  const end = Math.min(totalPages, start + 4);
-  const adjustedStart = Math.max(1, end - 4);
-
-  return Array.from(
-    { length: end - adjustedStart + 1 },
-    (_, index) => adjustedStart + index
-  );
-}
-
-//===================================================================
-
 export function EntityComments({
   entityKey,
   title = 'Comments',
@@ -100,8 +87,9 @@ export function EntityComments({
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [commentToDelete, setCommentToDelete] =
-    useState<EntityComment | null>(null);
+  const [commentToDelete, setCommentToDelete] = useState<EntityComment | null>(
+    null
+  );
   const [error, setError] = useState('');
 
   loadRef.current = load;
@@ -184,8 +172,6 @@ export function EntityComments({
       setDeletingId(null);
     }
   };
-
-  const pageItems = getPageItems(data.page, data.totalPages);
 
   return (
     <section
@@ -271,38 +257,28 @@ export function EntityComments({
           </ul>
         ) : null}
 
-        {data.totalPages > 1 ? (
-          <nav className={css.pagination} aria-label="Comments pagination">
+        <Pagination
+          currentPage={data.page}
+          totalPages={data.totalPages}
+          getPageHref={(page) => String(page)}
+          ariaLabel="Comments pagination"
+          renderLink={({
+            href,
+            className,
+            children,
+            'aria-label': ariaLabel,
+          }) => (
             <button
+              className={className}
               type="button"
-              disabled={data.page <= 1 || isLoading}
-              onClick={() => void loadPage(data.page - 1)}
+              aria-label={ariaLabel}
+              disabled={isLoading}
+              onClick={() => void loadPage(Number(href))}
             >
-              Previous
+              {children}
             </button>
-
-            {pageItems.map((page) => (
-              <button
-                key={page}
-                type="button"
-                className={page === data.page ? css.pageActive : undefined}
-                aria-current={page === data.page ? 'page' : undefined}
-                disabled={isLoading}
-                onClick={() => void loadPage(page)}
-              >
-                {page}
-              </button>
-            ))}
-
-            <button
-              type="button"
-              disabled={data.page >= data.totalPages || isLoading}
-              onClick={() => void loadPage(data.page + 1)}
-            >
-              Next
-            </button>
-          </nav>
-        ) : null}
+          )}
+        />
       </div>
 
       <ConfirmationModal

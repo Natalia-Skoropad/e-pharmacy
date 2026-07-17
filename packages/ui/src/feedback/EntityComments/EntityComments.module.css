@@ -132,43 +132,6 @@
   color: var(--color-error);
 }
 
-.pagination {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
-}
-
-.pagination button {
-  min-width: 38px;
-  min-height: 38px;
-  padding: 8px 10px;
-  font-size: var(--fz-14);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  transition:
-    color var(--transition-base),
-    background-color var(--transition-base),
-    border-color var(--transition-base);
-}
-
-.pagination button:hover:not(:disabled),
-.pagination button:focus-visible:not(:disabled),
-.pagination .pageActive {
-  color: var(--color-white);
-  background-color: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
-.pagination button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
 @media only screen and (max-width: 767px) {
   .card {
     padding: 14px;
@@ -195,10 +158,5 @@
   .deleteButton {
     width: auto;
     min-width: 0;
-  }
-
-  .pagination button:first-child,
-  .pagination button:last-child {
-    flex: 1 1 100%;
   }
 }

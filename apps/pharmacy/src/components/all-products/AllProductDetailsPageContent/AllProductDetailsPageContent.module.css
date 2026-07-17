@@ -220,6 +220,13 @@
   color: var(--color-text-primary);
 }
 
+.panelTitleWithHelp {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  width: fit-content;
+}
+
 .statsGrid {
   display: grid;
   gap: 12px;
@@ -452,6 +459,7 @@
 
 .countLabel {
   justify-self: start;
+  width: 100%;
 }
 
 .rowsControl {
@@ -477,6 +485,7 @@
     grid-column: 2;
     grid-row: 1;
     justify-self: end;
+    width: unset;
   }
 
   .rowsControl {
