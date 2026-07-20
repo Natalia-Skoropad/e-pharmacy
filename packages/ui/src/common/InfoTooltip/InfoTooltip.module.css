@@ -121,7 +121,7 @@
   white-space: normal;
 }
 
-@media only screen and (max-width: 767px) {
+@media only screen and (max-width: 768px) {
   .tooltip {
     left: 0;
     width: min(300px, calc(100vw - 24px));
@@ -137,4 +137,34 @@
   .root:focus-within .tooltip {
     transform: translate(0, 0);
   }
+}
+
+.items {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.item {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.item strong {
+  color: var(--color-text-primary);
+  font-size: var(--fz-14);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+}
+
+.item > span {
+  color: var(--color-text-secondary);
+  font-size: var(--fz-14);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-base);
 }

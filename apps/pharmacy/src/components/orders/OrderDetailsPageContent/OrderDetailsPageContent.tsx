@@ -17,9 +17,11 @@ import {
   MessageSquareText,
   ShoppingBag,
   ShoppingCart,
+  ShieldAlert,
   Trash2,
   Truck,
   UserRound,
+  UsersRound,
   Wallet,
 } from 'lucide-react';
 
@@ -30,6 +32,7 @@ import {
   ButtonLink,
   CloseIconButton,
   CountLabel,
+  InfoTooltip,
   LazyLoadButton,
   LoadingSpinner,
   QuantityCounter,
@@ -124,6 +127,7 @@ import {
   getPharmacyProductPath,
 } from '@/lib/layout/routes';
 
+import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
 import css from './OrderDetailsPageContent.module.css';
@@ -1216,13 +1220,6 @@ function HistoryTab({
         />
       </div>
 
-      {rejectionReason ? (
-        <div className={css.rejectionBox}>
-          <h3>Rejection reason</h3>
-          <p>{rejectionReason}</p>
-        </div>
-      ) : null}
-
       <ol className={css.historyList}>
         {visibleEntries.map((historyEntry) => {
           if (historyEntry.kind === 'status') {
@@ -1246,6 +1243,11 @@ function HistoryTab({
                     {formatOrderDate(entry.changedAt)}
                   </time>
                   {entry.comment ? <p>{entry.comment}</p> : null}
+                  {entry.status === 'rejected' && rejectionReason ? (
+                    <p className={css.historyRejectionReason}>
+                      <b>Rejection reason:</b> {rejectionReason}
+                    </p>
+                  ) : null}
                 </div>
               </li>
             );
@@ -1533,6 +1535,12 @@ function OrderDetailsPageContent({
     };
   }, [isCreateMode, orderId]);
 
+  useEffect(() => {
+    if (isCreateMode || !order?.orderNumber) return;
+
+    dispatchPharmacyBreadcrumbLabel(`Order ${order.orderNumber}`);
+  }, [isCreateMode, order?.orderNumber]);
+
   const historyEntries = useMemo(
     () => (order ? getOrderHistoryEntries(order) : []),
     [order]
@@ -1555,6 +1563,14 @@ function OrderDetailsPageContent({
         label: client.isDefault
           ? `${client.name} — default client`
           : client.name,
+        leading: (
+          <TableImagePreview
+            src={getProductImageSrc(client.photoUrl ?? undefined)}
+            alt={`${client.name} photo`}
+            fallback={formatInitials(client.name, 'C')}
+            size={30}
+          />
+        ),
       })),
     [clients]
   );
@@ -2055,23 +2071,43 @@ function OrderDetailsPageContent({
   if (error || !order) {
     return (
       <main className={css.page} aria-labelledby="order-details-page-title">
-        <section className={css.contentCard}>
-          <PageHeader
-            title={isCreateMode ? 'Order could not be prepared' : 'Order not found'}
-            titleId="order-details-page-title"
-            icon={<ShoppingBag size={23} aria-hidden="true" />}
-          />
-          <p className={css.errorText}>{error ?? 'Order not found.'}</p>
-          <ButtonLink
-            href={getPharmacyOrdersPath()}
-            renderLink={({ href, className, children, ...props }) => (
-              <Link href={href} className={className} {...props}>
-                {children}
-              </Link>
-            )}
-          >
-            Back to orders
-          </ButtonLink>
+        <section className={`${css.contentCard} ${css.errorCard}`}>
+          <div className={css.errorState}>
+            <span className={css.errorIcon} aria-hidden="true">
+              <ShieldAlert size={30} strokeWidth={1.9} />
+            </span>
+
+            <div className={css.errorCopy}>
+              <p className={css.errorKicker}>Order workspace</p>
+              <h1 id="order-details-page-title">
+                {isCreateMode ? 'Order could not be prepared' : 'Order not found'}
+              </h1>
+              <p className={css.errorText}>{error ?? 'Order not found.'}</p>
+              {error === 'Authorization token is invalid' ? (
+                <p className={css.errorHint}>
+                  Your session may have expired. Refresh the page or sign in
+                  again before creating the order.
+                </p>
+              ) : null}
+            </div>
+
+            <div className={css.errorActions}>
+              <Button type="button" onClick={() => window.location.reload()}>
+                Try again
+              </Button>
+              <ButtonLink
+                href={getPharmacyOrdersPath()}
+                variant="secondary"
+                renderLink={({ href, className, children, ...props }) => (
+                  <Link href={href} className={className} {...props}>
+                    {children}
+                  </Link>
+                )}
+              >
+                Back to orders
+              </ButtonLink>
+            </div>
+          </div>
         </section>
       </main>
     );
@@ -2079,121 +2115,135 @@ function OrderDetailsPageContent({
 
   return (
     <main className={css.page} aria-labelledby="order-details-page-title">
-      <section className={css.contentCard}>
-        <div className={css.headerGrid}>
-          <div className={css.titleBlock}>
-            <PageHeader
-              title={isCreateMode ? 'Create order' : `Order ${order.orderNumber}`}
-              titleId="order-details-page-title"
-              icon={<ShoppingBag size={23} aria-hidden="true" />}
-            />
+      <section className={`${css.contentCard} ${css.headerCard}`}>
+        {isCreateMode ? (
+          <div className={css.createHeader}>
+            <div className={css.createTitle}>
+              <PageHeader
+                title="Create order"
+                titleId="order-details-page-title"
+                icon={<ShoppingBag size={23} aria-hidden="true" />}
+              />
+            </div>
 
-            {isCreateMode ? (
-              <div className={css.clientSelector}>
-                <SearchableSelect
-                  id="manager-order-client"
-                  label="Client"
-                  value={selectedClientId}
-                  options={clientOptions}
-                  placeholder="Search active client"
-                  emptyMessage="No active clients found"
-                  isActive={Boolean(selectedClientId)}
-                  disabled={isCreatingOrder}
-                  onChange={handleClientChange}
-                />
-                <p>
-                  The default walk-in customer is selected automatically. Only
-                  active clients can be used for a new order.
-                </p>
-              </div>
-            ) : (
-              <>
-                <p className={css.metaText}>
-                  Created on {formatOrderDate(order.orderDate)}
-                </p>
-                {order.clientId ? (
-                  <Link
-                    className={css.orderClientLink}
-                    href={getPharmacyClientPath(order.clientId)}
+            <div className={css.clientSelector}>
+              <SearchableSelect
+                id="manager-order-client"
+                label="Client"
+                labelAccessory={
+                  <InfoTooltip
+                    label="About client selection"
+                    title="Client selection"
+                    icon={<UsersRound size={20} aria-hidden="true" />}
                   >
-                    <TableImagePreview
-                      src={getProductImageSrc(order.clientPhotoUrl ?? undefined)}
-                      alt={`${order.client} photo`}
-                      fallback={
-                        order.client ? (
-                          formatInitials(order.client, 'C')
-                        ) : (
-                          <UserRound size={18} aria-hidden="true" />
-                        )
-                      }
-                      size={38}
-                    />
-                    <span>
-                      <small>Client</small>
-                      <strong>{order.client}</strong>
-                    </span>
-                  </Link>
-                ) : null}
-              </>
-            )}
-          </div>
+                    The default walk-in customer is selected automatically.
+                    Only active clients can be used for a new order.
+                  </InfoTooltip>
+                }
+                value={selectedClientId}
+                options={clientOptions}
+                placeholder="Search active client"
+                emptyMessage="No active clients found"
+                isActive={Boolean(selectedClientId)}
+                disabled={isCreatingOrder}
+                onChange={handleClientChange}
+              />
+            </div>
 
-          {isCreateMode ? (
-            <div className={css.createOrderActions}>
-              {selectedClient ? (
-                <div className={css.selectedClientPreview}>
+            {selectedClient ? (
+              <div className={css.selectedClientPreview}>
+                <TableImagePreview
+                  src={getProductImageSrc(selectedClient.photoUrl ?? undefined)}
+                  alt={`${selectedClient.name} photo`}
+                  fallback={formatInitials(selectedClient.name, 'C')}
+                  size={42}
+                />
+                <span>
+                  <small>Selected client</small>
+                  <strong>{selectedClient.name}</strong>
+                </span>
+              </div>
+            ) : null}
+
+            <Button
+              className={css.saveOrderButton}
+              type="button"
+              disabled={!selectedClientId || isCreatingOrder}
+              isLoading={isCreatingOrder}
+              onClick={handleRequestCreateOrder}
+            >
+              Save order
+            </Button>
+          </div>
+        ) : (
+          <div className={css.detailsHeader}>
+            <div className={css.titleBlock}>
+              <PageHeader
+                title={`Order ${order.orderNumber}`}
+                titleId="order-details-page-title"
+                icon={<ShoppingBag size={23} aria-hidden="true" />}
+              />
+              <p className={css.metaText}>
+                Created on {formatOrderDate(order.orderDate)}
+              </p>
+            </div>
+
+            <div className={css.clientStatusRow}>
+              {order.clientId ? (
+                <Link
+                  className={css.orderClientLink}
+                  href={getPharmacyClientPath(order.clientId)}
+                >
                   <TableImagePreview
-                    src={getProductImageSrc(selectedClient.photoUrl ?? undefined)}
-                    alt={`${selectedClient.name} photo`}
-                    fallback={formatInitials(selectedClient.name, 'C')}
-                    size={42}
+                    src={getProductImageSrc(order.clientPhotoUrl ?? undefined)}
+                    alt={`${order.client} photo`}
+                    fallback={
+                      order.client ? (
+                        formatInitials(order.client, 'C')
+                      ) : (
+                        <UserRound size={18} aria-hidden="true" />
+                      )
+                    }
+                    size={38}
                   />
                   <span>
-                    <small>Selected client</small>
-                    <strong>{selectedClient.name}</strong>
+                    <small>Client</small>
+                    <strong>{order.client}</strong>
                   </span>
-                </div>
+                </Link>
               ) : null}
-              <Button
-                type="button"
-                disabled={!selectedClientId || isCreatingOrder}
-                isLoading={isCreatingOrder}
-                onClick={handleRequestCreateOrder}
-              >
-                Save order
-              </Button>
-            </div>
-          ) : (
-            <div
-              className={`${css.statusActions} ${
-                order.status === 'in_progress'
-                  ? css.statusActionsInProgress
-                  : ''
-              }`}
-            >
-              <StatusBadge
-                status={order.status}
-                label={ORDER_STATUS_LABELS[order.status]}
-              />
 
-              {statusActions.map((status) => (
-                <Button
-                  key={status}
-                  type="button"
-                  size="sm"
-                  variant={status === 'rejected' ? 'secondary' : 'primary'}
-                  className={
-                    status === 'rejected' ? css.rejectButton : undefined
-                  }
-                  disabled={isUpdatingStatus || isUpdatingOrder}
-                  onClick={() => handleStatusClick(status)}
-                >
-                  {getStatusActionLabel(status)}
-                </Button>
-              ))}
+              <div
+                className={`${css.statusActions} ${
+                  order.status === 'in_progress'
+                    ? css.statusActionsInProgress
+                    : ''
+                }`}
+              >
+                <StatusBadge
+                  status={order.status}
+                  label={ORDER_STATUS_LABELS[order.status]}
+                />
+
+                {statusActions.map((status) => (
+                  <Button
+                    key={status}
+                    type="button"
+                    size="sm"
+                    variant={status === 'rejected' ? 'secondary' : 'primary'}
+                    className={
+                      status === 'rejected' ? css.rejectButton : undefined
+                    }
+                    disabled={isUpdatingStatus || isUpdatingOrder}
+                    onClick={() => handleStatusClick(status)}
+                  >
+                    {getStatusActionLabel(status)}
+                  </Button>
+                ))}
+              </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </section>
 
       <section className={css.contentCard}>

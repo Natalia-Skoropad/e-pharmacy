@@ -90,9 +90,13 @@ import {
   getPharmacyClientPath,
   getPharmacyOrderPath,
 } from '@/lib/layout/routes';
+import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
 import {
+  ORDER_CREATED_BY_LABELS,
+  ORDER_CREATED_BY_TYPES,
   ORDER_STATUS_LABELS,
+  type OrderCreatedByType,
   type PharmacyOrderRow,
 } from '@/lib/orders/orders';
 
@@ -156,6 +160,7 @@ type StockMovementFilters = Readonly<{
 type RelatedOrdersFilters = Readonly<{
   date: ProductTabDateFilter;
   orderStatus: 'all' | OrderStatus;
+  createdByType: 'all' | OrderCreatedByType;
 }>;
 
 type StockMovementRow = Readonly<{
@@ -192,6 +197,7 @@ type RelatedOrderRow = Readonly<{
   amount: string;
   amountValue: number;
   status: OrderStatus;
+  createdByType: OrderCreatedByType;
 }>;
 
 //===================================================================
@@ -222,6 +228,7 @@ const DEFAULT_STOCK_MOVEMENT_FILTERS: StockMovementFilters = {
 const DEFAULT_RELATED_ORDERS_FILTERS: RelatedOrdersFilters = {
   date: DEFAULT_PRODUCT_TAB_DATE_FILTER,
   orderStatus: 'all',
+  createdByType: 'all',
 };
 
 const ORDER_STATUS_OPTIONS: Array<SelectOption<'all' | OrderStatus>> = [
@@ -230,6 +237,16 @@ const ORDER_STATUS_OPTIONS: Array<SelectOption<'all' | OrderStatus>> = [
   { value: 'in_progress', label: ORDER_STATUS_LABELS.in_progress },
   { value: 'successful', label: ORDER_STATUS_LABELS.successful },
   { value: 'rejected', label: ORDER_STATUS_LABELS.rejected },
+];
+
+const ORDER_CREATED_BY_OPTIONS: Array<
+  SelectOption<'all' | OrderCreatedByType>
+> = [
+  { value: 'all', label: 'All' },
+  ...ORDER_CREATED_BY_TYPES.map((createdByType) => ({
+    value: createdByType,
+    label: ORDER_CREATED_BY_LABELS[createdByType],
+  })),
 ];
 
 const STOCK_EVENT_TYPE_OPTIONS: Array<
@@ -270,10 +287,6 @@ const DEFAULT_BANNER_TITLE = 'Adding this product is locked';
 
 const DEFAULT_BANNER_MESSAGE =
   'You can review active Admin product details now. Add-to-my-pharmacy actions unlock after Admin verifies your pharmacy profile.';
-
-const BREADCRUMB_LABEL_EVENT = 'pharmacy:breadcrumb-current-label';
-
-//===================================================================
 
 function getProductDetailsError(error: unknown): ProductDetailsError {
   if (isApiError(error) && [400, 404, 422].includes(error.status)) {
@@ -343,19 +356,6 @@ function getReservedQuantity(offer: ProductOffer | null): number {
 }
 
 //===================================================================
-
-function dispatchBreadcrumbLabel(label: string): void {
-  if (typeof window === 'undefined') return;
-
-  window.dispatchEvent(
-    new CustomEvent(BREADCRUMB_LABEL_EVENT, {
-      detail: {
-        pathname: window.location.pathname,
-        label,
-      },
-    })
-  );
-}
 
 //===================================================================
 
@@ -575,6 +575,7 @@ function getRelatedOrderRows(
         amount: formatPrice(item.totalPrice).replace(' UAH', ''),
         amountValue: item.totalPrice,
         status: order.status,
+        createdByType: order.createdByType,
       },
     ];
   });
@@ -840,7 +841,7 @@ function AllProductDetailsPageContent({
   useEffect(() => {
     if (!product?.name) return;
 
-    dispatchBreadcrumbLabel(product.name);
+    dispatchPharmacyBreadcrumbLabel(product.name);
   }, [product?.name]);
 
   useEffect(() => {
@@ -860,6 +861,10 @@ function AllProductDetailsPageContent({
           relatedFilters.orderStatus === 'all'
             ? undefined
             : relatedFilters.orderStatus,
+        createdByType:
+          relatedFilters.createdByType === 'all'
+            ? undefined
+            : relatedFilters.createdByType,
         dateFrom: relatedFilters.date.from || undefined,
         dateTo: relatedFilters.date.to || undefined,
       });
@@ -1028,6 +1033,7 @@ function AllProductDetailsPageContent({
   const relatedActiveFiltersCount = [
     relatedFilters.date.from || relatedFilters.date.to,
     relatedFilters.orderStatus !== 'all',
+    relatedFilters.createdByType !== 'all',
     relatedOrderNumberSearch.trim(),
     relatedClientSearch.trim(),
   ].filter(Boolean).length;
@@ -1189,6 +1195,12 @@ function AllProductDetailsPageContent({
         key: 'amount',
         title: <TableHeaderTitle parts={['Order amount,', 'UAH']} />,
         render: (row: RelatedOrderRow) => row.amount,
+      },
+      {
+        key: 'createdByType',
+        title: <TableHeaderTitle parts={['Created', 'by']} />,
+        render: (row: RelatedOrderRow) =>
+          ORDER_CREATED_BY_LABELS[row.createdByType],
       },
       {
         key: 'status',
@@ -1894,6 +1906,20 @@ function AllProductDetailsPageContent({
               setRelatedFilters((currentFilters) => ({
                 ...currentFilters,
                 orderStatus,
+              }));
+              setRelatedCurrentPage(1);
+            }}
+          />
+
+          <SelectField
+            id="related-order-created-by-filter"
+            label="Created by"
+            value={relatedFilters.createdByType}
+            options={ORDER_CREATED_BY_OPTIONS}
+            onChange={(createdByType) => {
+              setRelatedFilters((currentFilters) => ({
+                ...currentFilters,
+                createdByType,
               }));
               setRelatedCurrentPage(1);
             }}

@@ -4,6 +4,14 @@
   min-width: 0;
 }
 
+.labelRow {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  justify-self: start;
+  min-width: 0;
+}
+
 .label {
   font-size: var(--fz-14);
   font-weight: var(--fw-medium);
@@ -144,6 +152,25 @@
   transition:
     color var(--transition-base),
     background-color var(--transition-base);
+}
+
+
+.optionWithLeading {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.optionLeading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.optionLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .option:hover,

@@ -8,10 +8,16 @@ import css from './InfoTooltip.module.css';
 
 //===================================================================
 
+export type InfoTooltipItem = Readonly<{
+  title: string;
+  description: ReactNode;
+}>;
+
 type InfoTooltipProps = Readonly<{
   label: string;
   title: string;
-  children: ReactNode;
+  children?: ReactNode;
+  items?: readonly InfoTooltipItem[];
   className?: string;
   icon?: ReactNode;
 }>;
@@ -22,6 +28,7 @@ function InfoTooltip({
   label,
   title,
   children,
+  items,
   className,
   icon,
 }: InfoTooltipProps) {
@@ -45,7 +52,18 @@ function InfoTooltip({
 
         <span className={css.content}>
           <strong className={css.title}>{title}</strong>
-          <span className={css.text}>{children}</span>
+          {items?.length ? (
+            <span className={css.items}>
+              {items.map((item) => (
+                <span className={css.item} key={item.title}>
+                  <strong>{item.title}</strong>
+                  <span>{item.description}</span>
+                </span>
+              ))}
+            </span>
+          ) : (
+            <span className={css.text}>{children}</span>
+          )}
         </span>
       </span>
     </span>

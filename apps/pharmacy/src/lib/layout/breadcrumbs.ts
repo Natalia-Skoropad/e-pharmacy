@@ -15,6 +15,34 @@ import {
 
 //===================================================================
 
+const BREADCRUMB_LABEL_EVENT = 'pharmacy:breadcrumb-current-label';
+
+//===================================================================
+
+export function dispatchPharmacyBreadcrumbLabel(label: string): void {
+  if (typeof window === 'undefined') return;
+
+  const dispatch = () => {
+    window.dispatchEvent(
+      new CustomEvent(BREADCRUMB_LABEL_EVENT, {
+        detail: {
+          pathname: window.location.pathname,
+          label,
+        },
+      })
+    );
+  };
+
+  if (typeof window.queueMicrotask === 'function') {
+    window.queueMicrotask(dispatch);
+    return;
+  }
+
+  window.setTimeout(dispatch, 0);
+}
+
+//===================================================================
+
 export function getPharmacyBreadcrumbs(
   current: BreadcrumbItem,
   parent?: BreadcrumbItem
@@ -44,9 +72,12 @@ export function getOrdersBreadcrumbs(
 
 //===================================================================
 
-export function getOrderDetailsBreadcrumbs(orderId: string): BreadcrumbItem[] {
+export function getOrderDetailsBreadcrumbs(
+  orderId: string,
+  orderLabel?: string
+): BreadcrumbItem[] {
   return getPharmacyBreadcrumbs(
-    { label: `Order #${orderId}` },
+    { label: orderLabel ?? `Order #${orderId}` },
     { label: 'Orders', href: PHARMACY_ORDERS }
   );
 }
@@ -62,10 +93,11 @@ export function getClientsBreadcrumbs(
 //===================================================================
 
 export function getClientDetailsBreadcrumbs(
-  clientId: string
+  clientId: string,
+  clientLabel?: string
 ): BreadcrumbItem[] {
   return getPharmacyBreadcrumbs(
-    { label: `Client #${clientId}` },
+    { label: clientLabel ?? `Client #${clientId}` },
     { label: 'Clients', href: PHARMACY_CLIENTS }
   );
 }
@@ -222,14 +254,21 @@ export function getPharmacyBreadcrumbsByPathname(
   }
 
   if (section === 'orders') {
+    if (id === 'new') {
+      return getPharmacyBreadcrumbs(
+        { label: 'New order' },
+        { label: 'Orders', href: PHARMACY_ORDERS }
+      );
+    }
+
     return id && !isFilterSegment(id)
-      ? getOrderDetailsBreadcrumbs(id)
+      ? getOrderDetailsBreadcrumbs(id, currentDetailLabel)
       : getOrdersBreadcrumbs();
   }
 
   if (section === 'clients') {
     return id && !isFilterSegment(id)
-      ? getClientDetailsBreadcrumbs(id)
+      ? getClientDetailsBreadcrumbs(id, currentDetailLabel)
       : getClientsBreadcrumbs();
   }
 

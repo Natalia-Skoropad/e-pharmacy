@@ -851,8 +851,6 @@
   opacity: 1;
 }
 
-
-
 .emptyProducts {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -1067,7 +1065,7 @@
   }
 }
 
-@media only screen and (max-width: 767px) {
+@media only screen and (max-width: 768px) {
   .itemCard {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1130,7 +1128,7 @@
   color: var(--color-info) !important;
 }
 
-@media only screen and (min-width: 768px) and (max-width: 1199px) {
+@media only screen and (min-width: 768px) and (max-width: 1440px) {
   .headerGrid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1144,7 +1142,7 @@
   }
 }
 
-@media only screen and (max-width: 767px) {
+@media only screen and (max-width: 768px) {
   .contentCard {
     padding: 14px;
   }
@@ -1190,5 +1188,235 @@
     justify-content: center;
     white-space: normal;
     text-align: center;
+  }
+}
+
+/* Refined order header and error state */
+.headerCard {
+  position: relative;
+  z-index: 6;
+  overflow: visible;
+}
+
+.detailsHeader,
+.createHeader {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.clientStatusRow {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.createHeader {
+  grid-template-areas:
+    'title'
+    'selector'
+    'preview'
+    'save';
+}
+
+.createTitle {
+  grid-area: title;
+  min-width: 0;
+}
+
+.clientSelector {
+  z-index: 4;
+  grid-area: selector;
+  width: 100%;
+  min-width: 0;
+  margin-top: 0;
+}
+
+.selectedClientPreview {
+  grid-area: preview;
+  justify-self: start;
+  justify-content: flex-start;
+}
+
+.saveOrderButton {
+  grid-area: save;
+  width: 100%;
+  min-height: 48px;
+}
+
+.errorCard {
+  padding: clamp(20px, 4vw, 36px);
+  overflow: visible;
+}
+
+.errorState {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  max-width: 760px;
+  margin-inline: auto;
+  padding: clamp(18px, 3vw, 28px);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card-soft);
+}
+
+.errorIcon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  color: var(--color-error);
+  background-color: var(--color-error-soft);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-lg);
+}
+
+.errorCopy {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.errorCopy h1 {
+  font-size: clamp(var(--fz-24), 3vw, var(--fz-32));
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.errorKicker {
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  color: var(--color-error);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.errorHint {
+  padding: 10px 12px;
+  color: var(--color-text-secondary);
+  line-height: var(--lh-base);
+  background-color: var(--color-error-soft);
+  border-left: 3px solid var(--color-error);
+  border-radius: var(--radius-sm);
+}
+
+.errorActions {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 2;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.historyRejectionReason {
+  padding: 8px 10px;
+  margin-top: 4px;
+  font-size: var(--fz-13);
+  color: var(--color-text-secondary);
+  background-color: var(--color-error-soft);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+}
+
+.historyRejectionReason b {
+  color: var(--color-error) !important;
+}
+
+@media only screen and (min-width: 768px) {
+  .createHeader {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'title preview'
+      'selector save';
+    align-items: end;
+  }
+
+  .selectedClientPreview {
+    align-self: start;
+    justify-self: end;
+    justify-content: flex-end;
+  }
+
+  .saveOrderButton {
+    width: auto;
+    min-width: 132px;
+    height: 48px;
+  }
+
+  .clientStatusRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .statusActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  .clientStatusRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .orderClientLink {
+    min-width: 0;
+    justify-self: start;
+  }
+
+  .statusActions,
+  .statusActionsInProgress {
+    display: contents;
+  }
+
+  .statusActions > :first-child,
+  .statusActionsInProgress > :first-child {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    width: auto;
+  }
+
+  .statusActions > button {
+    grid-row: 2;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .statusActions > button:first-of-type {
+    grid-column: 1;
+  }
+
+  .statusActions > button:last-of-type {
+    grid-column: 2;
+  }
+
+  .statusActions > button:only-of-type {
+    grid-column: 1 / -1;
+  }
+
+  .selectedClientPreview {
+    width: fit-content;
+    max-width: 100%;
+    justify-self: start;
+  }
+
+  .errorState {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .errorActions {
+    display: grid;
+    grid-column: 1;
+  }
+
+  .errorActions > * {
+    width: 100%;
   }
 }

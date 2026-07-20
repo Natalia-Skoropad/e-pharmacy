@@ -174,6 +174,16 @@ function serializeClient(
 
 //===============================================================
 
+function compareClientRows(first: ClientRow, second: ClientRow): number {
+  if (first.isDefault !== second.isDefault) {
+    return first.isDefault ? -1 : 1;
+  }
+
+  return second.firstOrderAt.localeCompare(first.firstOrderAt);
+}
+
+//===============================================================
+
 function matchesClientFilters(client: ClientRow, query: ClientsQuery): boolean {
   if (query.clientId?.trim() && !client.id.includes(query.clientId.trim())) {
     return false;
@@ -299,10 +309,7 @@ async function getClientRowsForPharmacy(
       return [serializeClient(user, userOrders, pharmacy)];
     })
     .filter((client) => matchesClientFilters(client, query))
-    .sort((first, second) => {
-      if (first.isDefault !== second.isDefault) return first.isDefault ? -1 : 1;
-      return second.firstOrderAt.localeCompare(first.firstOrderAt);
-    });
+    .sort(compareClientRows);
 }
 
 //===============================================================

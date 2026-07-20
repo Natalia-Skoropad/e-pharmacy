@@ -98,10 +98,15 @@ import {
 
 import {
   DELIVERY_METHOD_LABELS,
+  ORDER_CREATED_BY_LABELS,
+  ORDER_CREATED_BY_TYPES,
   ORDER_STATUS_LABELS,
   PAYMENT_METHOD_LABELS,
+  type OrderCreatedByType,
   type PharmacyOrderRow,
 } from '@/lib/orders/orders';
+
+import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
 import css from './ClientDetailsPageContent.module.css';
 
@@ -125,6 +130,7 @@ type ClientOrderFilters = Readonly<{
   deliveryMethod: 'all' | DeliveryMethod;
   paymentMethod: 'all' | PaymentMethod;
   clientCommentPresence: 'all' | 'with' | 'without';
+  createdByType: 'all' | OrderCreatedByType;
 }>;
 
 //===================================================================
@@ -150,6 +156,7 @@ const DEFAULT_ORDER_FILTERS: ClientOrderFilters = {
   deliveryMethod: 'all',
   paymentMethod: 'all',
   clientCommentPresence: 'all',
+  createdByType: 'all',
 };
 
 const ORDER_STATUS_OPTIONS: Array<SelectOption<ClientOrderFilters['status']>> =
@@ -183,6 +190,16 @@ const CLIENT_COMMENT_OPTIONS: Array<
   { value: 'all', label: 'All' },
   { value: 'with', label: 'With client comment' },
   { value: 'without', label: 'Without client comment' },
+];
+
+const ORDER_CREATED_BY_OPTIONS: Array<
+  SelectOption<ClientOrderFilters['createdByType']>
+> = [
+  { value: 'all', label: 'All' },
+  ...ORDER_CREATED_BY_TYPES.map((createdByType) => ({
+    value: createdByType,
+    label: ORDER_CREATED_BY_LABELS[createdByType],
+  })),
 ];
 
 const PRODUCT_CATEGORY_OPTIONS: Array<
@@ -327,6 +344,17 @@ function ClientOrdersFiltersDrawer({
             isActive={filters.clientCommentPresence !== 'all'}
             onChange={(clientCommentPresence) =>
               onChange({ ...filters, clientCommentPresence })
+            }
+          />
+
+          <SelectField
+            id="client-orders-created-by"
+            label="Created by"
+            value={filters.createdByType}
+            options={ORDER_CREATED_BY_OPTIONS}
+            isActive={filters.createdByType !== 'all'}
+            onChange={(createdByType) =>
+              onChange({ ...filters, createdByType })
             }
           />
         </div>
@@ -564,6 +592,12 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
   }, [clientId]);
 
   useEffect(() => {
+    if (!client?.name) return;
+
+    dispatchPharmacyBreadcrumbLabel(client.name);
+  }, [client?.name]);
+
+  useEffect(() => {
     let mounted = true;
 
     async function loadOrders() {
@@ -594,6 +628,10 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
             orderFilters.clientCommentPresence === 'all'
               ? undefined
               : orderFilters.clientCommentPresence,
+          createdByType:
+            orderFilters.createdByType === 'all'
+              ? undefined
+              : orderFilters.createdByType,
         });
 
         if (!mounted) return;
@@ -611,7 +649,8 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
           orderFilters.status !== 'all' ||
           orderFilters.deliveryMethod !== 'all' ||
           orderFilters.paymentMethod !== 'all' ||
-          orderFilters.clientCommentPresence !== 'all'
+          orderFilters.clientCommentPresence !== 'all' ||
+          orderFilters.createdByType !== 'all'
         );
 
         if (!hasSearchOrFilters) {
@@ -748,6 +787,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
     orderFilters.deliveryMethod !== 'all',
     orderFilters.paymentMethod !== 'all',
     orderFilters.clientCommentPresence !== 'all',
+    orderFilters.createdByType !== 'all',
   ].filter(Boolean).length;
 
   const hasOrderFilters = orderFiltersCount > 0;
@@ -798,8 +838,13 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       },
       {
         key: 'amount',
-        title: <TableHeaderTitle parts={['Order amount,', 'UAH']} />,
+        title: <TableHeaderTitle parts={['Order', ' amount, ', 'UAH']} />,
         render: (order) => formatAmount(order.totalAmount),
+      },
+      {
+        key: 'createdByType',
+        title: <TableHeaderTitle parts={['Created', 'by']} />,
+        render: (order) => ORDER_CREATED_BY_LABELS[order.createdByType],
       },
       {
         key: 'status',

@@ -1,6 +1,14 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+
 import { Check, ChevronDown, LoaderCircle, Search } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -14,11 +22,13 @@ import css from './SearchableSelect.module.css';
 export type SearchableSelectOption<TValue extends string = string> = {
   value: TValue;
   label: string;
+  leading?: ReactNode;
 };
 
 export type SearchableSelectProps<TValue extends string = string> = {
   id?: string;
   label: string;
+  labelAccessory?: ReactNode;
   value: TValue;
   options: SearchableSelectOption<TValue>[];
   placeholder?: string;
@@ -38,6 +48,7 @@ export type SearchableSelectProps<TValue extends string = string> = {
 function SearchableSelect<TValue extends string = string>({
   id,
   label,
+  labelAccessory,
   value,
   options,
   placeholder = 'Search option',
@@ -55,7 +66,8 @@ function SearchableSelect<TValue extends string = string>({
   const inputId = id ?? generatedId;
   const listboxId = `${inputId}-listbox`;
   const errorId = error ? `${inputId}-error` : undefined;
-  const ariaDescribedBy = [describedBy, errorId].filter(Boolean).join(' ') || undefined;
+  const ariaDescribedBy =
+    [describedBy, errorId].filter(Boolean).join(' ') || undefined;
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -165,9 +177,12 @@ function SearchableSelect<TValue extends string = string>({
 
   return (
     <div className={css.field} ref={rootRef}>
-      <label className={css.label} htmlFor={inputId}>
-        {label}
-      </label>
+      <span className={css.labelRow}>
+        <label className={css.label} htmlFor={inputId}>
+          {label}
+        </label>
+        {labelAccessory}
+      </span>
 
       <div className={css.selectRoot}>
         <div
@@ -222,7 +237,11 @@ function SearchableSelect<TValue extends string = string>({
             }}
           >
             {isLoading ? (
-              <LoaderCircle className={css.spinner} size={18} aria-hidden="true" />
+              <LoaderCircle
+                className={css.spinner}
+                size={18}
+                aria-hidden="true"
+              />
             ) : (
               <ChevronDown
                 className={clsx(css.chevron, isOpen && css.chevronOpen)}
@@ -255,6 +274,7 @@ function SearchableSelect<TValue extends string = string>({
                   <li
                     className={clsx(
                       css.option,
+                      option.leading && css.optionWithLeading,
                       isOptionActive && css.optionActive,
                       isSelected && css.optionSelected
                     )}
@@ -266,7 +286,13 @@ function SearchableSelect<TValue extends string = string>({
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => handleSelect(option.value)}
                   >
-                    <span>{option.label}</span>
+                    {option.leading ? (
+                      <span className={css.optionLeading}>
+                        {option.leading}
+                      </span>
+                    ) : null}
+
+                    <span className={css.optionLabel}>{option.label}</span>
 
                     {isSelected ? (
                       <Check className={css.checkIcon} size={16} aria-hidden />
