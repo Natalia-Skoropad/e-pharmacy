@@ -19,6 +19,7 @@ export type PharmacyOrderSalesStatisticsQueryParams = Readonly<{
   dateFrom?: string;
   dateTo?: string;
   groupBy?: OrderSalesStatisticsGroupBy;
+  productId?: string;
 }>;
 
 //===================================================================

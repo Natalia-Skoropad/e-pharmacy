@@ -92,6 +92,7 @@ export const orderSalesStatisticsQuerySchema = z.object({
   dateFrom: dateFilterSchema,
   dateTo: dateFilterSchema,
   groupBy: z.enum(['day', 'month']).default('month'),
+  productId: mongoIdSchema.optional(),
 });
 
 //===============================================================

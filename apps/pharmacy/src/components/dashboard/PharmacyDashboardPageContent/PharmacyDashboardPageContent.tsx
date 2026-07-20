@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { LayoutDashboard } from 'lucide-react';
 
-import { ButtonLink, LoadingSpinner, SelectField } from '@e-pharmacy/ui/common';
+import { ButtonLink, LoadingSpinner } from '@e-pharmacy/ui/common';
 
 import {
   AllProductStatistics,
@@ -12,6 +12,9 @@ import {
   OrderStatistics,
   OwnProductStatistics,
   SalesValueChart,
+  SalesPeriodFilters,
+  getSalesPeriodDateRange,
+  type SalesPeriodMonth,
   ProductRequestStatistics,
   StatusBanner,
 } from '@e-pharmacy/ui/statistics';
@@ -77,23 +80,6 @@ import css from './PharmacyDashboardPageContent.module.css';
 
 //===================================================================
 
-type MonthFilterValue =
-  | 'all'
-  | '1'
-  | '2'
-  | '3'
-  | '4'
-  | '5'
-  | '6'
-  | '7'
-  | '8'
-  | '9'
-  | '10'
-  | '11'
-  | '12';
-
-//===================================================================
-
 type DashboardData = Readonly<{
   pharmacyStatus: PharmacyStatus | null;
   overview: {
@@ -104,7 +90,6 @@ type DashboardData = Readonly<{
   };
 
   orders: OrderStatisticsCounts;
-  sales: OrderSalesStatistics;
 
   clients: ClientStatisticsCounts;
 
@@ -128,7 +113,6 @@ const DEFAULT_DATA: DashboardData = {
     clients: 0,
   },
   orders: DEFAULT_ORDER_STATISTICS,
-  sales: DEFAULT_ORDER_SALES_STATISTICS,
 
   clients: DEFAULT_CLIENT_STATISTICS,
 
@@ -137,60 +121,6 @@ const DEFAULT_DATA: DashboardData = {
 
   requests: DEFAULT_PRODUCT_REQUEST_STATISTICS,
 };
-
-//===================================================================
-
-const YEAR_OPTIONS = [
-  { value: String(CURRENT_YEAR), label: String(CURRENT_YEAR) },
-  { value: String(CURRENT_YEAR - 1), label: String(CURRENT_YEAR - 1) },
-  { value: String(CURRENT_YEAR - 2), label: String(CURRENT_YEAR - 2) },
-];
-
-//===================================================================
-
-const MONTH_OPTIONS: Array<{ value: MonthFilterValue; label: string }> = [
-  { value: 'all', label: 'All months' },
-  { value: '1', label: 'January' },
-  { value: '2', label: 'February' },
-  { value: '3', label: 'March' },
-  { value: '4', label: 'April' },
-  { value: '5', label: 'May' },
-  { value: '6', label: 'June' },
-  { value: '7', label: 'July' },
-  { value: '8', label: 'August' },
-  { value: '9', label: 'September' },
-  { value: '10', label: 'October' },
-  { value: '11', label: 'November' },
-  { value: '12', label: 'December' },
-];
-
-//===================================================================
-
-function padDatePart(value: number): string {
-  return String(value).padStart(2, '0');
-}
-
-//===================================================================
-
-function getDateRange(year: string, month: MonthFilterValue) {
-  const parsedYear = Number(year) || CURRENT_YEAR;
-
-  if (month === 'all') {
-    return {
-      dateFrom: `${parsedYear}-01-01`,
-      dateTo: `${parsedYear}-12-31`,
-    };
-  }
-
-  const parsedMonth = Number(month);
-  const lastDay = new Date(parsedYear, parsedMonth, 0).getDate();
-  const monthPart = padDatePart(parsedMonth);
-
-  return {
-    dateFrom: `${parsedYear}-${monthPart}-01`,
-    dateTo: `${parsedYear}-${monthPart}-${padDatePart(lastDay)}`,
-  };
-}
 
 //===================================================================
 
@@ -233,10 +163,13 @@ function getPharmacyBanner(status: PharmacyStatus | null) {
 
 async function loadDashboardData(
   selectedYear: string,
-  selectedMonth: MonthFilterValue
+  selectedMonth: SalesPeriodMonth
 ): Promise<DashboardData> {
-  const dateRange = getDateRange(selectedYear, selectedMonth);
-  const salesGroupBy = selectedMonth === 'all' ? 'month' : 'day';
+  const { dateFrom, dateTo } = getSalesPeriodDateRange(
+    selectedYear,
+    selectedMonth
+  );
+  const dateRange = { dateFrom, dateTo };
   const profileResponse = await getMyPharmacyProfile();
   const pharmacyId = profileResponse.pharmacy.id;
 
@@ -247,7 +180,6 @@ async function loadDashboardData(
     requestStatistics,
     productStatistics,
     allProductStatistics,
-    salesStatistics,
   ] = await Promise.all([
     getPharmacyOrders({ page: 1, perPage: 1, ...dateRange }),
     getPharmacyClientStatistics(),
@@ -255,7 +187,6 @@ async function loadDashboardData(
     getPharmacyProductRequestStatistics(),
     getPharmacyOwnProductStatistics(pharmacyId),
     getPharmacyAllProductStatistics(pharmacyId),
-    getPharmacyOrderSalesStatistics({ ...dateRange, groupBy: salesGroupBy }),
   ]);
 
   return {
@@ -268,7 +199,6 @@ async function loadDashboardData(
     },
 
     orders: ordersResponse.statistics,
-    sales: salesStatistics,
 
     clients: clientStatistics,
 
@@ -303,7 +233,16 @@ function EmptyState({
 
 function PharmacyDashboardPageContent() {
   const [selectedYear, setSelectedYear] = useState(String(CURRENT_YEAR));
-  const [selectedMonth, setSelectedMonth] = useState<MonthFilterValue>('all');
+  const [selectedMonth, setSelectedMonth] = useState<SalesPeriodMonth>('all');
+  const [selectedSalesYear, setSelectedSalesYear] = useState(
+    String(CURRENT_YEAR)
+  );
+  const [selectedSalesMonth, setSelectedSalesMonth] =
+    useState<SalesPeriodMonth>('all');
+  const [salesData, setSalesData] = useState<OrderSalesStatistics>(
+    DEFAULT_ORDER_SALES_STATISTICS
+  );
+  const [isSalesLoading, setIsSalesLoading] = useState(true);
   const [dashboardData, setDashboardData] =
     useState<DashboardData>(DEFAULT_DATA);
   const [isLoading, setIsLoading] = useState(true);
@@ -333,6 +272,34 @@ function PharmacyDashboardPageContent() {
       isMounted = false;
     };
   }, [selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSalesStatistics() {
+      setIsSalesLoading(true);
+
+      try {
+        const period = getSalesPeriodDateRange(
+          selectedSalesYear,
+          selectedSalesMonth
+        );
+        const nextSalesData = await getPharmacyOrderSalesStatistics(period);
+
+        if (isMounted) setSalesData(nextSalesData);
+      } catch {
+        if (isMounted) setSalesData(DEFAULT_ORDER_SALES_STATISTICS);
+      } finally {
+        if (isMounted) setIsSalesLoading(false);
+      }
+    }
+
+    void loadSalesStatistics();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedSalesMonth, selectedSalesYear]);
 
   const banner = getPharmacyBanner(dashboardData.pharmacyStatus);
 
@@ -476,22 +443,14 @@ function PharmacyDashboardPageContent() {
                 </ButtonLink>
               </div>
 
-              <div className={css.filters} aria-label="Order statistics filters">
-                <SelectField
-                  id="dashboard-order-year"
-                  label="Year"
-                  value={selectedYear}
-                  options={YEAR_OPTIONS}
-                  onChange={setSelectedYear}
-                />
-                <SelectField
-                  id="dashboard-order-month"
-                  label="Month"
-                  value={selectedMonth}
-                  options={MONTH_OPTIONS}
-                  onChange={setSelectedMonth}
-                />
-              </div>
+              <SalesPeriodFilters
+                idPrefix="dashboard-order"
+                year={selectedYear}
+                month={selectedMonth}
+                onYearChange={setSelectedYear}
+                onMonthChange={setSelectedMonth}
+                className={css.filters}
+              />
 
               <OrderStatistics
                 counts={dashboardData.orders}
@@ -503,9 +462,26 @@ function PharmacyDashboardPageContent() {
 
             <section
               className={css.section}
-              aria-labelledby="orders-stats-title"
+              aria-label="Sales value statistics"
             >
-              <SalesValueChart data={dashboardData.sales} />
+              <div className={css.salesToolbar}>
+                <SalesPeriodFilters
+                  idPrefix="dashboard-sales"
+                  year={selectedSalesYear}
+                  month={selectedSalesMonth}
+                  onYearChange={setSelectedSalesYear}
+                  onMonthChange={setSelectedSalesMonth}
+                />
+              </div>
+
+              {isSalesLoading ? (
+                <LoadingSpinner label="Loading sales chart..." />
+              ) : (
+                <SalesValueChart
+                  key={`${selectedSalesYear}-${selectedSalesMonth}`}
+                  data={salesData}
+                />
+              )}
             </section>
 
             <section

@@ -1420,3 +1420,27 @@
     width: 100%;
   }
 }
+
+@media only screen and (min-width: 768px) {
+  .createHeader {
+    align-items: start;
+  }
+
+  .createTitle,
+  .selectedClientPreview {
+    align-self: start;
+  }
+
+  .clientSelector,
+  .saveOrderButton {
+    align-self: end;
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  .selectedClientPreview {
+    width: 100%;
+    justify-self: stretch;
+    justify-content: flex-start;
+  }
+}

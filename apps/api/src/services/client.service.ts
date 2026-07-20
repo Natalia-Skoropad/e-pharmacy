@@ -336,8 +336,12 @@ export async function getClientsService(userId: string, query: ClientsQuery) {
       .lean<{ createdAt: Date } | null>(),
   ]);
 
+  const orderedClients = [
+    ...clients.filter((client) => client.isDefault),
+    ...clients.filter((client) => !client.isDefault),
+  ];
   const skip = (query.page - 1) * query.perPage;
-  const items = clients.slice(skip, skip + query.perPage);
+  const items = orderedClients.slice(skip, skip + query.perPage);
 
   return {
     items,

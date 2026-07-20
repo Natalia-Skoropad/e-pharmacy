@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { History, PackageSearch } from 'lucide-react';
+import { BarChart3, History, PackageSearch } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import {
@@ -39,6 +39,10 @@ import {
 import {
   OrderStatistics,
   OwnProductStatistics,
+  SalesPeriodFilters,
+  SalesValueChart,
+  getSalesPeriodDateRange,
+  type SalesPeriodMonth,
   StatusBadge,
   StatusBanner,
 } from '@e-pharmacy/ui/statistics';
@@ -68,7 +72,9 @@ import type {
 
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
 import {
+  DEFAULT_ORDER_SALES_STATISTICS,
   DEFAULT_ORDER_STATISTICS,
+  type OrderSalesStatistics,
   type OrderStatisticsCounts,
 } from '@e-pharmacy/types/orders';
 
@@ -77,6 +83,7 @@ import {
   removeProductFromMyPharmacy,
   getMyPharmacyProfile,
   getPharmacyOrders,
+  getPharmacyOrderSalesStatistics,
   getProductDetails,
   getProductReviews,
   getProductStockMovements,
@@ -268,6 +275,8 @@ const STOCK_SOURCE_OPTIONS: Array<SelectOption<'all' | StockMovementSource>> = [
 
 const PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS: RowsPerPageValue[] = [20, 50, 100];
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 const STOCK_EVENT_LABELS: Record<StockMovementEventType, string> = {
   arrival: 'Stock arrival',
   reserve: 'Reserved in order',
@@ -354,8 +363,6 @@ function getStockQuantity(offer: ProductOffer | null): number {
 function getReservedQuantity(offer: ProductOffer | null): number {
   return offer?.reservedQuantity ?? 0;
 }
-
-//===================================================================
 
 //===================================================================
 
@@ -705,16 +712,33 @@ function AllProductDetailsPageContent({
   const [reviewsTotal, setReviewsTotal] = useState(0);
   const [commentsTotal, setCommentsTotal] = useState(0);
   const [relatedOrders, setRelatedOrders] = useState<PharmacyOrderRow[]>([]);
+
   const [relatedOrderStatistics, setRelatedOrderStatistics] =
     useState<OrderStatisticsCounts>(DEFAULT_ORDER_STATISTICS);
+
+  const [productSalesYear, setProductSalesYear] = useState(
+    String(CURRENT_YEAR)
+  );
+
+  const [productSalesMonth, setProductSalesMonth] =
+    useState<SalesPeriodMonth>('all');
+
+  const [productSalesData, setProductSalesData] =
+    useState<OrderSalesStatistics>(DEFAULT_ORDER_SALES_STATISTICS);
+
+  const [isProductSalesLoading, setIsProductSalesLoading] = useState(false);
+
   const [stockMovements, setStockMovements] = useState<ProductStockMovement[]>(
     []
   );
+
   const [stockEarliestCreatedAt, setStockEarliestCreatedAt] = useState<
     string | null
   >(null);
+
   const [relatedOrdersEarliestCreatedAt, setRelatedOrdersEarliestCreatedAt] =
     useState<string | null>(null);
+
   const [stockBalance, setStockBalance] = useState<ProductStockBalance | null>(
     null
   );
@@ -900,6 +924,39 @@ function AllProductDetailsPageContent({
     : null;
 
   const isAddedToPharmacy = Boolean(currentOffer);
+
+  useEffect(() => {
+    if (!isAddedToPharmacy) return;
+
+    let isMounted = true;
+
+    async function loadProductSales() {
+      setIsProductSalesLoading(true);
+
+      try {
+        const period = getSalesPeriodDateRange(
+          productSalesYear,
+          productSalesMonth
+        );
+        const response = await getPharmacyOrderSalesStatistics({
+          ...period,
+          productId,
+        });
+
+        if (isMounted) setProductSalesData(response);
+      } catch {
+        if (isMounted) setProductSalesData(DEFAULT_ORDER_SALES_STATISTICS);
+      } finally {
+        if (isMounted) setIsProductSalesLoading(false);
+      }
+    }
+
+    void loadProductSales();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAddedToPharmacy, productId, productSalesMonth, productSalesYear]);
 
   useEffect(() => {
     let isMounted = true;
@@ -1435,6 +1492,47 @@ function AllProductDetailsPageContent({
                     </div>
                   </div>
                 </section>
+
+                {isAddedToPharmacy ? (
+                  <section
+                    className={css.productSalesSection}
+                    aria-label="Product sales value"
+                  >
+                    <div className={css.productSalesToolbar}>
+                      <div className={css.productSalesHeading}>
+                        <BarChart3 size={22} aria-hidden="true" />
+                        <div>
+                          <h3>Product sales analytics</h3>
+                          <p>
+                            Successful sales of this product for the selected
+                            year or month.
+                          </p>
+                        </div>
+                      </div>
+
+                      <SalesPeriodFilters
+                        idPrefix={`product-${productId}-sales`}
+                        year={productSalesYear}
+                        month={productSalesMonth}
+                        onYearChange={setProductSalesYear}
+                        onMonthChange={setProductSalesMonth}
+                      />
+                    </div>
+
+                    {isProductSalesLoading ? (
+                      <LoadingSpinner label="Loading product sales chart..." />
+                    ) : (
+                      <SalesValueChart
+                        key={`${productSalesYear}-${productSalesMonth}`}
+                        data={productSalesData}
+                        kicker="Product sales"
+                        title="Sales value by product"
+                        description="The line shows successful sales of this product for the selected period."
+                        categoryControlsLabel="Product category shown on the chart"
+                      />
+                    )}
+                  </section>
+                ) : null}
               </div>
             ) : (
               <div>

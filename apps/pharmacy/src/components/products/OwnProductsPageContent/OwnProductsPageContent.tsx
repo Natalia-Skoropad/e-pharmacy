@@ -354,17 +354,19 @@ function OwnProductsPageContent({
                 label="How do reserved and available products work?"
                 title="Reserved and available products"
                 icon={<PackageCheck size={20} strokeWidth={2} />}
-              >
-                <strong>Reserved products</strong> are units held for orders
-                with New or In progress status. They remain physically in stock
-                but cannot be added to another order.
-                <br />
-                <br />
-                <strong>Available products</strong> are units that can be sold
-                now: products in stock minus reserved products. They become
-                available after a stock arrival or when an order reservation is
-                reduced or released.
-              </InfoTooltip>
+                items={[
+                  {
+                    title: 'Reserved products',
+                    description:
+                      'Units held for orders with New or In progress status. They remain physically in stock but cannot be added to another order.',
+                  },
+                  {
+                    title: 'Available products',
+                    description:
+                      'Units that can be sold now: products in stock minus reserved products. They become available after an arrival or when a reservation is reduced or released.',
+                  },
+                ]}
+              />
             </span>
           }
           titleId="own-products-page-title"

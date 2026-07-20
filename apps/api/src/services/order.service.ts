@@ -1980,9 +1980,18 @@ export async function getOrderSalesStatisticsService(
     },
   };
 
+  if (query.productId) {
+    matchFilter['items.productId'] = new Types.ObjectId(query.productId);
+  }
+
   const rows = await Order.aggregate<OrderSalesAggregationRow>([
     { $match: matchFilter },
     { $unwind: '$items' },
+    {
+      $match: query.productId
+        ? { 'items.productId': new Types.ObjectId(query.productId) }
+        : {},
+    },
     {
       $group: {
         _id: {

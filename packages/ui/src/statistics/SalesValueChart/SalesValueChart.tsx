@@ -22,12 +22,16 @@ import css from './SalesValueChart.module.css';
 const CHART_WIDTH = 720;
 const CHART_HEIGHT = 300;
 
+//===================================================================
+
 const CHART_PADDING = {
   top: 24,
   right: 22,
   bottom: 44,
   left: 58,
 } as const;
+
+//===================================================================
 
 const CHART_INNER_WIDTH =
   CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right;
@@ -40,6 +44,10 @@ const GRID_LINES_COUNT = 4;
 type SalesValueChartProps = Readonly<{
   data: OrderSalesStatistics;
   className?: string;
+  kicker?: string;
+  title?: string;
+  description?: string;
+  categoryControlsLabel?: string;
 }>;
 
 type ChartSeries = Readonly<{
@@ -137,22 +145,40 @@ function getVisibleTickIndexes(pointsLength: number): Set<number> {
 
 //===================================================================
 
-function SalesValueChart({ data, className }: SalesValueChartProps) {
-  const [activePointIndex, setActivePointIndex] = useState(0);
+function SalesValueChart({
+  data,
+  className,
+  kicker = 'Sales chart',
+  title = 'Sales value by product category',
+  description = 'Lines show successful sales grouped by sold product categories for the selected period.',
+  categoryControlsLabel = 'Product categories shown on the chart',
+}: SalesValueChartProps) {
+  const [activePointIndex, setActivePointIndex] = useState<number | null>(null);
+  const [hiddenCategories, setHiddenCategories] = useState<ProductCategory[]>(
+    []
+  );
 
-  const hasData = data.categories.length > 0 && data.points.length > 0;
+  const visibleCategories = useMemo(
+    () =>
+      data.categories.filter(
+        (category) => !hiddenCategories.includes(category)
+      ),
+    [data.categories, hiddenCategories]
+  );
+
+  const hasData = visibleCategories.length > 0 && data.points.length > 0;
 
   const maxValue = useMemo(() => {
     const values = data.points.flatMap((point) =>
-      data.categories.map((category) => getPointValue(point, category))
+      visibleCategories.map((category) => getPointValue(point, category))
     );
 
     return getNiceMaxValue(Math.max(0, ...values));
-  }, [data.categories, data.points]);
+  }, [data.points, visibleCategories]);
 
   const series = useMemo<ChartSeries[]>(
     () =>
-      data.categories.map((category) => {
+      visibleCategories.map((category) => {
         const points = data.points.map((point, index) => ({
           x: getX(index, data.points.length),
           y: getY(getPointValue(point, category), maxValue),
@@ -166,7 +192,7 @@ function SalesValueChart({ data, className }: SalesValueChartProps) {
           areaPath: createAreaPath(points),
         };
       }),
-    [data.categories, data.points, maxValue]
+    [data.points, maxValue, visibleCategories]
   );
 
   const tickIndexes = useMemo(
@@ -174,8 +200,24 @@ function SalesValueChart({ data, className }: SalesValueChartProps) {
     [data.points.length]
   );
 
-  const activePoint = data.points[activePointIndex] ?? data.points[0];
-  const activeX = getX(activePointIndex, data.points.length);
+  const activePoint =
+    activePointIndex === null ? undefined : data.points[activePointIndex];
+  const activeX =
+    activePointIndex === null
+      ? CHART_PADDING.left
+      : getX(activePointIndex, data.points.length);
+
+  const toggleCategory = (category: ProductCategory) => {
+    setHiddenCategories((current) => {
+      if (current.includes(category)) {
+        return current.filter((item) => item !== category);
+      }
+
+      if (visibleCategories.length === 1) return current;
+
+      return [...current, category];
+    });
+  };
 
   return (
     <section
@@ -184,22 +226,51 @@ function SalesValueChart({ data, className }: SalesValueChartProps) {
     >
       <div className={css.header}>
         <div className={css.titleGroup}>
-          <p className={css.kicker}>Sales chart</p>
-          <h3 className={css.title}>Sales value by product category</h3>
-          <p className={css.description}>
-            Lines show successful sales grouped by sold product categories for
-            the selected period.
-          </p>
+          <p className={css.kicker}>{kicker}</p>
+          <h3 className={css.title}>{title}</h3>
+          <p className={css.description}>{description}</p>
         </div>
       </div>
 
+      {data.categories.length > 0 ? (
+        <div
+          className={css.categoryControls}
+          aria-label={categoryControlsLabel}
+        >
+          {data.categories.map((category) => {
+            const isActive = !hiddenCategories.includes(category);
+
+            return (
+              <button
+                key={category}
+                className={clsx(css.categoryButton, {
+                  [css.categoryButtonInactive]: !isActive,
+                })}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => toggleCategory(category)}
+              >
+                <span
+                  className={css.legendDot}
+                  style={{ backgroundColor: getCategoryColorVar(category) }}
+                />
+                {formatProductCategoryLabel(category)}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+
       {hasData ? (
-        <div className={css.chartWrap}>
+        <div
+          className={css.chartWrap}
+          onMouseLeave={() => setActivePointIndex(null)}
+        >
           <svg
             className={css.chart}
             viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
             role="img"
-            aria-label="Sales value by product category"
+            aria-label={title}
           >
             <g className={css.gridLines}>
               {Array.from({ length: GRID_LINES_COUNT + 1 }, (_, index) => {
@@ -294,6 +365,7 @@ function SalesValueChart({ data, className }: SalesValueChartProps) {
                   height={CHART_INNER_HEIGHT}
                   onMouseEnter={() => setActivePointIndex(index)}
                   onFocus={() => setActivePointIndex(index)}
+                  onBlur={() => setActivePointIndex(null)}
                   tabIndex={0}
                   aria-label={`Show ${point.label} sales`}
                 />
@@ -302,10 +374,10 @@ function SalesValueChart({ data, className }: SalesValueChartProps) {
           </svg>
 
           {activePoint ? (
-            <div className={css.tooltip}>
+            <div className={css.tooltip} role="status">
               <p className={css.tooltipTitle}>{activePoint.label}</p>
               <ul className={css.tooltipList}>
-                {data.categories.map((category) => {
+                {visibleCategories.map((category) => {
                   const value = activePoint.values[category];
 
                   return (
@@ -335,20 +407,6 @@ function SalesValueChart({ data, className }: SalesValueChartProps) {
           </p>
         </div>
       )}
-
-      {hasData ? (
-        <ul className={css.legend} aria-label="Sales categories legend">
-          {data.categories.map((category) => (
-            <li key={category} className={css.legendItem}>
-              <span
-                className={css.legendDot}
-                style={{ backgroundColor: getCategoryColorVar(category) }}
-              />
-              {formatProductCategoryLabel(category)}
-            </li>
-          ))}
-        </ul>
-      ) : null}
     </section>
   );
 }

@@ -74,6 +74,20 @@ function getActiveFiltersCount(filters: ClientsFilterState): number {
 
 //===================================================================
 
+function putDefaultClientFirst(
+  clients: PharmacyClientRow[]
+): PharmacyClientRow[] {
+  return [...clients].sort((first, second) => {
+    if (first.isDefault !== second.isDefault) {
+      return first.isDefault ? -1 : 1;
+    }
+
+    return 0;
+  });
+}
+
+//===================================================================
+
 function getClientsQueryParams(
   filters: ClientsFilterState,
   rowsPerPage: RowsPerPageValue,
@@ -160,7 +174,7 @@ function ClientsPageContent({
         const response = await getPharmacyClients(queryParams);
         if (!isMounted) return;
 
-        setClients(response.items);
+        setClients(putDefaultClientFirst(response.items));
         setTotalClients(response.total);
         setEarliestCreatedAt(response.earliestCreatedAt);
       } catch {
