@@ -1,11 +1,17 @@
 import { Router } from 'express';
 
-import { getProductRequests } from '../controllers/product-request.controller';
+import {
+  createProductRequest,
+  getProductRequests,
+} from '../controllers/product-request.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validate.middleware';
 
-import { productRequestsQuerySchema } from '../schemas/product-request.schema';
+import {
+  createProductRequestSchema,
+  productRequestsQuerySchema,
+} from '../schemas/product-request.schema';
 
 import { ctrlWrapper } from '../utils/ctrlWrapper';
 
@@ -23,4 +29,12 @@ productRequestRoutes.get(
   '/',
   validate({ query: productRequestsQuerySchema }),
   ctrlWrapper(getProductRequests)
+);
+
+//=================================================================================
+
+productRequestRoutes.post(
+  '/',
+  validate({ body: createProductRequestSchema }),
+  ctrlWrapper(createProductRequest)
 );

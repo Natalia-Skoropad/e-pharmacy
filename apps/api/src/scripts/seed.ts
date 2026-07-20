@@ -19,6 +19,7 @@ import { Client } from '../models/client.model';
 import { Cart } from '../models/cart.model';
 import { StockMovement } from '../models/stockMovement.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
+import { ProductRequest } from '../models/productRequest.model';
 import { hashPassword } from '../utils/password';
 import { ensureDefaultPharmacyClient } from '../services/default-pharmacy-client.service';
 import type { PharmacyEntity } from '../types/pharmacy';
@@ -3609,6 +3610,140 @@ async function seedClientManagerNotes(): Promise<number> {
 
 //===============================================================
 
+const PRODUCT_REQUEST_SEED_NAMES = [
+  'Magnesium Citrate Plus',
+  'Vitamin D3 Kids Drops',
+  'Herbal Throat Spray',
+  'Digital Thermometer Flex',
+  'Sensitive Skin Cleansing Gel',
+  'Omega-3 Forte Capsules',
+  'Cooling Eye Mask',
+  'Probiotic Balance Complex',
+  'Antiseptic Wound Foam',
+  'Daily Zinc Lozenges',
+  'Joint Support Collagen',
+  'Baby Nasal Aspirator',
+  'Hydrating Hand Cream',
+  'Iron Bisglycinate Tablets',
+  'Reusable Hot Cold Pack',
+  'Electrolyte Powder Lemon',
+  'Calming Herbal Tea',
+  'Medical Compression Socks',
+  'Face Sunscreen SPF 50',
+  'Vitamin B12 Oral Spray',
+  'Sleep Support Melatonin',
+  'Portable Nebulizer Mini',
+  'Dental Floss Mint',
+  'Lactase Enzyme Capsules',
+  'Sterile Saline Spray',
+] as const;
+
+const PRODUCT_REQUEST_SEED_STATUSES = [
+  'draft',
+  'new',
+  'in_progress',
+  'approved',
+  'rejected',
+] as const;
+
+const PRODUCT_REQUEST_SEED_CATEGORIES = [
+  'medicine',
+  'vitamins',
+  'hygiene',
+  'medical_devices',
+  'beauty',
+  'other',
+] as const;
+
+//===============================================================
+
+async function seedProductRequests(): Promise<number> {
+  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId } | null>();
+
+  if (!pharmacy) return 0;
+
+  const approvedProducts = await Product.find({ status: 'active' })
+    .sort({ createdAt: 1 })
+    .limit(5)
+    .select('_id name article category manufacturer')
+    .lean<
+      Array<{
+        _id: Types.ObjectId;
+        name: string;
+        article: string;
+        category: (typeof PRODUCT_REQUEST_SEED_CATEGORIES)[number];
+        manufacturer?: string;
+      }>
+    >();
+
+  const baseDate = new Date('2026-06-25T08:30:00.000Z');
+  const requests = PRODUCT_REQUEST_SEED_NAMES.map((seedName, index) => {
+    const status = PRODUCT_REQUEST_SEED_STATUSES[index % 5];
+    const approvedProduct =
+      status === 'approved' && approvedProducts.length > 0
+        ? approvedProducts[Math.floor(index / 5) % approvedProducts.length]
+        : undefined;
+    const createdAt = new Date(baseDate.getTime() + index * 24 * 60 * 60 * 1000);
+    const category =
+      approvedProduct?.category ??
+      PRODUCT_REQUEST_SEED_CATEGORIES[
+        index % PRODUCT_REQUEST_SEED_CATEGORIES.length
+      ];
+    const name = approvedProduct?.name ?? seedName;
+    const article =
+      approvedProduct?.article ?? `REQ-${String(index + 1).padStart(4, '0')}`;
+
+    return {
+      pharmacyId: pharmacy._id,
+      name,
+      article,
+      category,
+      status,
+      productId: approvedProduct?._id,
+      manufacturer:
+        approvedProduct?.manufacturer ??
+        ['Medica Nova', 'HealthLab', 'CareLine', 'VitaWorks'][index % 4],
+      countryOfOrigin: ['Ukraine', 'Poland', 'Germany', 'Italy'][index % 4],
+      dosage: index % 3 === 0 ? '500 mg' : index % 3 === 1 ? '10 ml' : '1 unit',
+      packageSize: index % 2 === 0 ? '№30' : '100 ml',
+      form: ['tablets', 'spray', 'capsules', 'medical device'][index % 4],
+      activeSubstance:
+        category === 'medical_devices' ? undefined : `Active component ${index + 1}`,
+      prescriptionType:
+        category === 'medicine' ? 'non_prescription' : 'not_applicable',
+      storageConditions: 'Store in a dry place below 25°C and keep away from direct sunlight.',
+      shortDescription: `${name} is a demo product submitted by the pharmacy for catalog review.`,
+      fullDescription:
+        'The request contains sample product data for checking the pharmacy request list, filters, pagination, and moderation statuses.',
+      characteristics:
+        'Demo package information, composition, dosage form, and storage requirements.',
+      pharmacyComment:
+        status === 'rejected'
+          ? 'Please review the package information and manufacturer documents before creating a new request based on this one.'
+          : 'The product is planned for the pharmacy assortment and is not currently available in the global catalog.',
+      additionalFiles:
+        index % 4 === 0
+          ? [
+              {
+                name: `product-document-${index + 1}.pdf`,
+                type: 'application/pdf',
+                size: 245000 + index * 1000,
+              },
+            ]
+          : undefined,
+      createdAt,
+      updatedAt: new Date(createdAt.getTime() + (index % 3) * 60 * 60 * 1000),
+    };
+  });
+
+  await ProductRequest.insertMany(requests);
+  return requests.length;
+}
+
+//===============================================================
+
 async function removeSeededDefaultPharmacyClients(): Promise<void> {
   const defaultClientIds = await User.find({
     isDefaultPharmacyClient: true,
@@ -3642,6 +3777,7 @@ async function seedDatabase(): Promise<void> {
     Cart.deleteMany({}),
     StockMovement.deleteMany({}),
     PharmacyNote.deleteMany({}),
+    ProductRequest.deleteMany({}),
   ]);
 
   const pharmacySeeds = createSeedPharmacies();
@@ -3739,6 +3875,7 @@ async function seedDatabase(): Promise<void> {
   const inventoryScenario = await seedSoldOutAndLowStockProducts();
   const reconciledOffersCount = await reconcileActivePharmacyInventoryLedger();
 
+  const productRequestsCount = await seedProductRequests();
   const productManagerNotesCount = await seedOwnProductManagerNotes();
   const clientManagerNotesCount = await seedClientManagerNotes();
   await assertDemoOrderStatusCounts();
@@ -3765,6 +3902,9 @@ async function seedDatabase(): Promise<void> {
   );
   console.log(
     `Seed completed: ${reconciledOffersCount} inventory ledgers reconciled chronologically`
+  );
+  console.log(
+    `Seed completed: ${productRequestsCount} product requests created`
   );
   console.log(
     `Seed completed: ${productManagerNotesCount} product manager comments created`

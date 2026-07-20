@@ -20,6 +20,35 @@ export type ProductRequestStatusFilter = 'all' | ProductRequestStatus;
 
 //=============================================================================
 
+export type ProductRequestFile = Readonly<{
+  name: string;
+  type: string;
+  size: number;
+}>;
+
+export type CreateProductRequestPayload = Readonly<{
+  status: Extract<ProductRequestStatus, 'draft' | 'new'>;
+  name: string;
+  article: string;
+  category: ProductCategory;
+  productImage?: ProductRequestFile;
+  manufacturer?: string;
+  countryOfOrigin?: string;
+  dosage?: string;
+  packageSize?: string;
+  form?: string;
+  activeSubstance?: string;
+  prescriptionType?: string;
+  storageConditions?: string;
+  shortDescription?: string;
+  fullDescription?: string;
+  characteristics?: string;
+  pharmacyComment?: string;
+  additionalFiles?: ProductRequestFile[];
+}>;
+
+//=============================================================================
+
 export type ProductRequestsFilterState = Readonly<{
   date: {
     from: string;
@@ -70,6 +99,7 @@ export type ProductRequestsResponse = Readonly<{
 export type PharmacyProductRequestRow = ProductRequestRow;
 export type PharmacyProductRequestsQueryParams = ProductRequestsQueryParams;
 export type PharmacyProductRequestsResponse = ProductRequestsResponse;
+export type CreatePharmacyProductRequestPayload = CreateProductRequestPayload;
 
 //=============================================================================
 

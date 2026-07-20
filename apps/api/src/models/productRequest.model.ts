@@ -15,6 +15,32 @@ const PRODUCT_REQUEST_STATUSES = [
 
 //===============================================================
 
+const productRequestFileSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 180,
+    },
+    type: {
+      type: String,
+      default: 'application/octet-stream',
+      trim: true,
+      maxlength: 120,
+    },
+    size: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 10 * 1024 * 1024,
+    },
+  },
+  { _id: false }
+);
+
+//===============================================================
+
 const productRequestSchema = new Schema<ProductRequestEntity>(
   {
     pharmacyId: {
@@ -60,8 +86,34 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
       required: false,
       index: true,
     },
+
+    productImage: {
+      type: productRequestFileSchema,
+      required: false,
+    },
+
+    manufacturer: { type: String, trim: true, maxlength: 160 },
+    countryOfOrigin: { type: String, trim: true, maxlength: 100 },
+    dosage: { type: String, trim: true, maxlength: 100 },
+    packageSize: { type: String, trim: true, maxlength: 100 },
+    form: { type: String, trim: true, maxlength: 100 },
+    activeSubstance: { type: String, trim: true, maxlength: 180 },
+    prescriptionType: { type: String, trim: true, maxlength: 80 },
+    storageConditions: { type: String, trim: true, maxlength: 500 },
+    shortDescription: { type: String, trim: true, maxlength: 1000 },
+    fullDescription: { type: String, trim: true, maxlength: 5000 },
+    characteristics: { type: String, trim: true, maxlength: 3000 },
+    pharmacyComment: { type: String, trim: true, maxlength: 1500 },
+
+    additionalFiles: {
+      type: [productRequestFileSchema],
+      default: undefined,
+      validate: {
+        validator: (files: unknown[]) => files.length <= 5,
+        message: 'A product request can contain at most 5 additional files',
+      },
+    },
   },
-  
   {
     timestamps: true,
     versionKey: false,

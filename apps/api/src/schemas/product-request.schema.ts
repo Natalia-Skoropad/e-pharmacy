@@ -25,6 +25,15 @@ const dateFilterSchema = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must use YYYY-MM-DD format')
   .optional();
 
+const optionalText = (maxLength: number) =>
+  z.string().trim().max(maxLength).optional().or(z.literal(''));
+
+const productRequestFileSchema = z.object({
+  name: z.string().trim().min(1).max(180),
+  type: z.string().trim().max(120).default('application/octet-stream'),
+  size: z.number().int().min(0).max(10 * 1024 * 1024),
+});
+
 //===============================================================
 
 function normalizePaginationQuery(value: unknown): unknown {
@@ -62,6 +71,49 @@ export const productRequestsQuerySchema = z.preprocess(
 
 //===============================================================
 
+export const createProductRequestSchema = z
+  .object({
+    status: z.enum(['draft', 'new']).default('draft'),
+    name: z.string().trim().min(1, 'Product name is required').max(160),
+    article: z.string().trim().min(1, 'Product article is required').max(40),
+    category: z.enum(PRODUCT_CATEGORIES),
+    productImage: productRequestFileSchema.optional(),
+    manufacturer: optionalText(160),
+    countryOfOrigin: optionalText(100),
+    dosage: optionalText(100),
+    packageSize: optionalText(100),
+    form: optionalText(100),
+    activeSubstance: optionalText(180),
+    prescriptionType: optionalText(80),
+    storageConditions: optionalText(500),
+    shortDescription: optionalText(1000),
+    fullDescription: optionalText(5000),
+    characteristics: optionalText(3000),
+    pharmacyComment: optionalText(1500),
+    additionalFiles: z.array(productRequestFileSchema).max(5).optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.status !== 'new') return;
+
+    const requiredForModeration = [
+      ['manufacturer', value.manufacturer],
+      ['shortDescription', value.shortDescription],
+      ['pharmacyComment', value.pharmacyComment],
+    ] as const;
+
+    for (const [field, fieldValue] of requiredForModeration) {
+      if (fieldValue?.trim()) continue;
+
+      context.addIssue({
+        code: 'custom',
+        path: [field],
+        message: 'This field is required for moderation',
+      });
+    }
+  });
+
+//===============================================================
+
 export const productRequestParamsSchema = z.object({
   requestId: mongoIdSchema,
 });
@@ -69,3 +121,6 @@ export const productRequestParamsSchema = z.object({
 //===============================================================
 
 export type ProductRequestsQuery = z.infer<typeof productRequestsQuerySchema>;
+export type CreateProductRequestInput = z.infer<
+  typeof createProductRequestSchema
+>;

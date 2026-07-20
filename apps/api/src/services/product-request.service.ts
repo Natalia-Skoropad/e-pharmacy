@@ -1,5 +1,8 @@
 import { Types } from 'mongoose';
 
+import { PHARMACY_STATUSES } from '../constants/auth';
+import { HTTP_STATUS } from '../constants/httpStatus';
+
 import { Pharmacy } from '../models/pharmacy.model';
 import { ProductRequest } from '../models/productRequest.model';
 import '../models/product.model';
@@ -9,8 +12,12 @@ import type {
   ProductRequestResponseDto,
 } from '../types/product-request';
 
-import type { ProductRequestsQuery } from '../schemas/product-request.schema';
+import type {
+  CreateProductRequestInput,
+  ProductRequestsQuery,
+} from '../schemas/product-request.schema';
 
+import { httpError } from '../utils/httpError';
 import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
 
 //===============================================================
@@ -25,6 +32,11 @@ type ProductRequestProductDocument = {
 type ProductRequestDocument = Omit<ProductRequestEntity, 'productId'> & {
   _id: Types.ObjectId;
   productId?: Types.ObjectId | ProductRequestProductDocument;
+};
+
+type CurrentPharmacy = {
+  _id: Types.ObjectId;
+  status: string;
 };
 
 //===============================================================
@@ -43,13 +55,18 @@ function getEndOfDay(value: string): Date {
 
 //===============================================================
 
-async function getCurrentPharmacyId(userId: string) {
+async function getCurrentPharmacy(userId: string): Promise<CurrentPharmacy | null> {
   if (!Types.ObjectId.isValid(userId)) return null;
 
-  const pharmacy = await Pharmacy.findOne({ ownerId: userId })
-    .select('_id')
-    .lean<{ _id: Types.ObjectId } | null>();
+  return Pharmacy.findOne({ ownerId: userId })
+    .select('_id status')
+    .lean<CurrentPharmacy | null>();
+}
 
+//===============================================================
+
+async function getCurrentPharmacyId(userId: string) {
+  const pharmacy = await getCurrentPharmacy(userId);
   return pharmacy?._id ?? null;
 }
 
@@ -60,9 +77,9 @@ function isProductRequestProductDocument(
 ): value is ProductRequestProductDocument {
   return Boolean(
     value &&
-    typeof value === 'object' &&
-    '_id' in value &&
-    !(value instanceof Types.ObjectId)
+      typeof value === 'object' &&
+      '_id' in value &&
+      !(value instanceof Types.ObjectId)
   );
 }
 
@@ -102,6 +119,81 @@ function serializeProductRequest(
     name: request.name,
     category: request.category,
     status: request.status,
+    productImage: request.productImage,
+    manufacturer: request.manufacturer,
+    countryOfOrigin: request.countryOfOrigin,
+    dosage: request.dosage,
+    packageSize: request.packageSize,
+    form: request.form,
+    activeSubstance: request.activeSubstance,
+    prescriptionType: request.prescriptionType,
+    storageConditions: request.storageConditions,
+    shortDescription: request.shortDescription,
+    fullDescription: request.fullDescription,
+    characteristics: request.characteristics,
+    pharmacyComment: request.pharmacyComment,
+    additionalFiles: request.additionalFiles,
+  };
+}
+
+//===============================================================
+
+function normalizeOptionalText(value?: string): string | undefined {
+  const normalized = value?.trim();
+  return normalized || undefined;
+}
+
+//===============================================================
+
+export async function createProductRequestService(
+  userId: string,
+  input: CreateProductRequestInput
+) {
+  const pharmacy = await getCurrentPharmacy(userId);
+
+  if (!pharmacy) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy profile was not found.');
+  }
+
+  const canCreateRequest =
+    pharmacy.status === PHARMACY_STATUSES.ACTIVE ||
+    pharmacy.status === PHARMACY_STATUSES.ON_MODERATION;
+
+  if (!canCreateRequest) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Product requests are available only for an activated pharmacy.'
+    );
+  }
+
+  const request = await ProductRequest.create({
+    pharmacyId: pharmacy._id,
+    status: input.status,
+    name: input.name.trim(),
+    article: input.article.trim().toUpperCase(),
+    category: input.category,
+    productImage: input.productImage,
+    manufacturer: normalizeOptionalText(input.manufacturer),
+    countryOfOrigin: normalizeOptionalText(input.countryOfOrigin),
+    dosage: normalizeOptionalText(input.dosage),
+    packageSize: normalizeOptionalText(input.packageSize),
+    form: normalizeOptionalText(input.form),
+    activeSubstance: normalizeOptionalText(input.activeSubstance),
+    prescriptionType: normalizeOptionalText(input.prescriptionType),
+    storageConditions: normalizeOptionalText(input.storageConditions),
+    shortDescription: normalizeOptionalText(input.shortDescription),
+    fullDescription: normalizeOptionalText(input.fullDescription),
+    characteristics: normalizeOptionalText(input.characteristics),
+    pharmacyComment: normalizeOptionalText(input.pharmacyComment),
+    additionalFiles: input.additionalFiles?.length
+      ? input.additionalFiles
+      : undefined,
+  });
+
+  return {
+    request: serializeProductRequest(
+      request.toObject() as unknown as ProductRequestDocument
+    ),
   };
 }
 

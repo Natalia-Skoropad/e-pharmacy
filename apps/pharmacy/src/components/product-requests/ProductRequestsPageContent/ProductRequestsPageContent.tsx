@@ -6,6 +6,7 @@ import { FilePlus2 } from 'lucide-react';
 
 import {
   Button,
+  ButtonLink,
   CountLabel,
   FiltersButton,
   Pagination,
@@ -37,7 +38,12 @@ import {
 } from '@e-pharmacy/types/product-requests';
 
 import { getPharmacyProductRequests } from '@/lib/api/browser';
-import { getPharmacyRequestsFilterPath } from '@/lib/layout/routes';
+
+import {
+  getPharmacyNewRequestPath,
+  getPharmacyRequestsFilterPath,
+} from '@/lib/layout/routes';
+
 import { buildProductRequestsPath } from '@/lib/product-requests/product-request-paths';
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 
@@ -106,7 +112,9 @@ function ProductRequestsPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [requests, setRequests] = useState<PharmacyProductRequestRow[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
-  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(null);
+  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
+    null
+  );
 
   const [requestStatistics, setRequestStatistics] =
     useState<ProductRequestStatisticsCounts>(
@@ -220,6 +228,8 @@ function ProductRequestsPageContent({
   const bannerLabel = bannerStatus
     ? getLockedFeatureBannerLabel(bannerStatus)
     : null;
+  const isCreateRequestLocked =
+    Boolean(bannerStatus) || currentPharmacyStatus === 'blocked';
 
   return (
     <main className={css.page} aria-labelledby="product-requests-page">
@@ -328,9 +338,24 @@ function ProductRequestsPageContent({
             label="requests"
           />
 
-          <Button className={css.createButton} type="button" size="md" disabled>
-            Create request
-          </Button>
+          {isCreateRequestLocked ? (
+            <Button
+              className={css.createButton}
+              type="button"
+              size="md"
+              disabled
+            >
+              Create request
+            </Button>
+          ) : (
+            <ButtonLink
+              className={css.createButton}
+              href={getPharmacyNewRequestPath()}
+              size="md"
+            >
+              Create request
+            </ButtonLink>
+          )}
         </div>
 
         <ProductRequestsTable

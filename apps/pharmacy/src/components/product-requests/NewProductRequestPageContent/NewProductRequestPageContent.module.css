@@ -6,7 +6,10 @@
   margin-inline: 0;
 }
 
-.contentCard {
+.contentCard,
+.noticeCard,
+.formCard,
+.actionsCard {
   min-width: 0;
   padding: 20px;
   background-color: var(--color-surface);
@@ -15,58 +18,170 @@
   box-shadow: var(--shadow-card);
 }
 
-.stack {
-  min-width: 0;
+.contentCard {
   display: grid;
   gap: 18px;
 }
 
-.title {
-  display: inline-flex;
-  gap: 10px;
-  align-items: center;
-  font-size: var(--fz-32);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-heading);
-  color: var(--color-text-primary);
-  letter-spacing: var(--ls-tight);
-}
-
-.titleIcon {
-  flex: 0 0 auto;
-  color: var(--color-accent);
-}
-
-.card {
-  min-width: 0;
+.noticeCard {
   display: grid;
-  gap: 12px;
-  padding: 22px;
-  background-color: var(--color-background-soft);
-  border: 1px solid var(--color-accent-border);
-  border-radius: var(--radius-xl);
+  gap: 16px;
+  align-items: center;
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-accent-border);
 }
 
-.card h2 {
-  font-size: var(--fz-24);
+.noticeTitle,
+.sectionTitle,
+.actionsText h2 {
+  margin: 0;
+  font-size: var(--fz-20);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
   color: var(--color-text-primary);
 }
 
-.card p {
-  max-width: 720px;
+.noticeText,
+.sectionText,
+.actionsText p {
+  margin: 6px 0 0;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
   color: var(--color-text-secondary);
 }
 
-.actions {
+.form {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.formCard {
+  display: grid;
+  gap: 20px;
+}
+
+.sectionHeader {
   display: flex;
   flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.formGrid,
+.textareaGrid {
+  display: grid;
+  gap: 4px 16px;
+  min-width: 0;
+}
+
+.fieldWide {
+  min-width: 0;
+}
+
+.imageGrid {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.imagePreview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  overflow: hidden;
+  background-color: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.imagePreview img {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  max-height: 320px;
+  object-fit: contain;
+}
+
+.imagePlaceholder {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 24px;
+  font-size: var(--fz-14);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.imagePlaceholder svg {
+  color: var(--color-accent);
+}
+
+.actionsCard {
+  display: grid;
+  gap: 18px;
+  align-items: center;
+}
+
+.actions {
+  display: grid;
   gap: 10px;
 }
 
+.actions > * {
+  width: 100%;
+}
+
 @media only screen and (min-width: 768px) {
-  .contentCard {
+  .contentCard,
+  .noticeCard,
+  .formCard,
+  .actionsCard {
     padding: 24px;
+  }
+
+  .noticeCard {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .formGrid,
+  .textareaGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fieldWide {
+    grid-column: 1 / -1;
+  }
+
+  .imageGrid {
+    grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr);
+    align-items: stretch;
+  }
+
+  .actionsCard {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .actions > * {
+    width: auto;
+    min-width: 150px;
+  }
+}
+
+@media only screen and (min-width: 1200px) {
+  .formGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .fieldWide {
+    grid-column: span 2;
   }
 }

@@ -1,9 +1,34 @@
 import type { Request, Response } from 'express';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { productRequestsQuerySchema } from '../schemas/product-request.schema';
-import { getProductRequestsService } from '../services/product-request.service';
+
+import {
+  createProductRequestSchema,
+  productRequestsQuerySchema,
+} from '../schemas/product-request.schema';
+
+import {
+  createProductRequestService,
+  getProductRequestsService,
+} from '../services/product-request.service';
+
 import { sendSuccessResponse } from '../utils/apiResponse';
+
+//===============================================================
+
+export async function createProductRequest(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const body = createProductRequestSchema.parse(req.body);
+  const data = await createProductRequestService(req.user?.id ?? '', body);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.CREATED,
+    data,
+  });
+}
 
 //===============================================================
 

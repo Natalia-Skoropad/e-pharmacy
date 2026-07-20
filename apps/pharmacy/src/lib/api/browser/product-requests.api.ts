@@ -4,14 +4,43 @@ import { buildQueryString, getResponseData } from '@e-pharmacy/api-client/core';
 import type { ApiSuccessResponse } from '@e-pharmacy/types';
 
 import type {
+  CreatePharmacyProductRequestPayload,
+  PharmacyProductRequestRow,
   PharmacyProductRequestsQueryParams,
   PharmacyProductRequestsResponse,
 } from '@e-pharmacy/types/product-requests';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
-import { normalizePharmacyProductRequestsResponse } from '@/lib/product-requests/product-requests';
+
+import {
+  normalizePharmacyProductRequest,
+  normalizePharmacyProductRequestsResponse,
+} from '@/lib/product-requests/product-requests';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
+
+//===================================================================
+
+export async function createPharmacyProductRequest(
+  payload: CreatePharmacyProductRequestPayload
+): Promise<PharmacyProductRequestRow> {
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
+    PHARMACY_API_ROUTES.productRequests.list,
+    {
+      method: 'POST',
+      body: payload,
+    }
+  );
+
+  const data = getResponseData(response) as { request?: unknown };
+  const request = normalizePharmacyProductRequest(data.request);
+
+  if (!request) {
+    throw new Error('Product request could not be created.');
+  }
+
+  return request;
+}
 
 //===================================================================
 
