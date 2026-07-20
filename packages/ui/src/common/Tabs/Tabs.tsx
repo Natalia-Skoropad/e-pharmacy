@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 
+import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 
 import css from './Tabs.module.css';
@@ -43,6 +44,39 @@ const DEFAULT_LABELS: Required<TabsLabels> = {
 
 //===================================================================
 
+type MoreMenuMode = 'mobile' | 'tablet' | null;
+
+type MoreMenuPosition = Readonly<{
+  top: number;
+  left: number;
+}>;
+
+//===================================================================
+
+const MORE_MENU_WIDTH = 210;
+const MORE_MENU_OFFSET = 15;
+const VIEWPORT_GUTTER = 12;
+
+//===================================================================
+
+function getMoreMenuPosition(button: HTMLButtonElement): MoreMenuPosition {
+  const rect = button.getBoundingClientRect();
+  const maximumLeft = Math.max(
+    VIEWPORT_GUTTER,
+    window.innerWidth - MORE_MENU_WIDTH - VIEWPORT_GUTTER
+  );
+
+  return {
+    top: rect.bottom + MORE_MENU_OFFSET,
+    left: Math.min(
+      Math.max(VIEWPORT_GUTTER, rect.right - MORE_MENU_WIDTH),
+      maximumLeft
+    ),
+  };
+}
+
+//===================================================================
+
 function Tabs<TValue extends string = string>({
   items,
   activeValue,
@@ -52,15 +86,19 @@ function Tabs<TValue extends string = string>({
   tabletVisibleCount,
   labels,
 }: TabsProps<TValue>) {
-  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [moreMenuMode, setMoreMenuMode] = useState<MoreMenuMode>(null);
+  const [moreMenuPosition, setMoreMenuPosition] =
+    useState<MoreMenuPosition | null>(null);
 
   const tabsRef = useRef<HTMLDivElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
   const tabButtonRefs = useRef(new Map<TValue, HTMLButtonElement>());
   const mobileMoreButtonRef = useRef<HTMLButtonElement>(null);
   const tabletMoreButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMoreMenuId = useId();
   const tabletMoreMenuId = useId();
   const mergedLabels = { ...DEFAULT_LABELS, ...labels };
+  const isMoreOpen = moreMenuMode !== null;
 
   const normalizedMobileVisibleCount = Math.max(
     0,
@@ -90,25 +128,53 @@ function Tabs<TValue extends string = string>({
     if (!isMoreOpen) return;
 
     const handleDocumentClick = (event: MouseEvent) => {
-      if (!tabsRef.current?.contains(event.target as Node)) {
-        setIsMoreOpen(false);
+      const target = event.target as Node;
+
+      if (
+        tabsRef.current?.contains(target) ||
+        moreMenuRef.current?.contains(target)
+      ) {
+        return;
       }
+
+      setMoreMenuMode(null);
+      setMoreMenuPosition(null);
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setIsMoreOpen(false);
+        setMoreMenuMode(null);
+        setMoreMenuPosition(null);
       }
+    };
+
+    const updateMenuPosition = () => {
+      const button =
+        moreMenuMode === 'mobile'
+          ? mobileMoreButtonRef.current
+          : tabletMoreButtonRef.current;
+
+      if (!button || button.offsetParent === null) {
+        setMoreMenuMode(null);
+        setMoreMenuPosition(null);
+        return;
+      }
+
+      setMoreMenuPosition(getMoreMenuPosition(button));
     };
 
     document.addEventListener('mousedown', handleDocumentClick);
     document.addEventListener('keydown', handleEscape);
+    window.addEventListener('resize', updateMenuPosition);
+    window.addEventListener('scroll', updateMenuPosition, true);
 
     return () => {
       document.removeEventListener('mousedown', handleDocumentClick);
       document.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('resize', updateMenuPosition);
+      window.removeEventListener('scroll', updateMenuPosition, true);
     };
-  }, [isMoreOpen]);
+  }, [isMoreOpen, moreMenuMode]);
 
   const isElementVisible = (element: HTMLElement | null) => {
     if (!element) return false;
@@ -138,7 +204,22 @@ function Tabs<TValue extends string = string>({
 
   const handleTabClick = (value: TValue) => {
     onChange(value);
-    setIsMoreOpen(false);
+    setMoreMenuMode(null);
+    setMoreMenuPosition(null);
+  };
+
+  const handleMoreButtonClick = (
+    mode: Exclude<MoreMenuMode, null>,
+    button: HTMLButtonElement
+  ) => {
+    if (moreMenuMode === mode) {
+      setMoreMenuMode(null);
+      setMoreMenuPosition(null);
+      return;
+    }
+
+    setMoreMenuPosition(getMoreMenuPosition(button));
+    setMoreMenuMode(mode);
   };
 
   const handleTabKeyDown = (
@@ -173,6 +254,51 @@ function Tabs<TValue extends string = string>({
 
     handleTabClick(nextItem.value);
     focusVisibleTabControl(nextItem.value);
+  };
+
+  const renderMoreMenu = (
+    mode: Exclude<MoreMenuMode, null>,
+    menuId: string,
+    menuItems: TabItem<TValue>[]
+  ) => {
+    if (
+      moreMenuMode !== mode ||
+      !moreMenuPosition ||
+      typeof document === 'undefined'
+    ) {
+      return null;
+    }
+
+    return createPortal(
+      <div
+        className={css.moreMenu}
+        id={menuId}
+        ref={moreMenuRef}
+        role="menu"
+        style={{
+          top: moreMenuPosition.top,
+          left: moreMenuPosition.left,
+        }}
+      >
+        {menuItems.map((item) => {
+          const isActive = item.value === activeValue;
+
+          return (
+            <button
+              className={isActive ? css.moreItemActive : css.moreItem}
+              key={item.value}
+              type="button"
+              role="menuitemradio"
+              aria-checked={isActive}
+              onClick={() => handleTabClick(item.value)}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>,
+      document.body
+    );
   };
 
   return (
@@ -227,35 +353,18 @@ function Tabs<TValue extends string = string>({
                 type="button"
                 aria-label={mergedLabels.moreButton}
                 aria-haspopup="menu"
-                aria-expanded={isMoreOpen}
+                aria-expanded={moreMenuMode === 'mobile'}
                 aria-controls={mobileMoreMenuId}
-                onClick={() => setIsMoreOpen((prev) => !prev)}
+                onClick={(event) =>
+                  handleMoreButtonClick('mobile', event.currentTarget)
+                }
               >
                 <span className={css.moreIcon} aria-hidden="true">
                   ...
                 </span>
               </button>
 
-              {isMoreOpen ? (
-                <div className={css.moreMenu} id={mobileMoreMenuId} role="menu">
-                  {moreMobileItems.map((item) => {
-                    const isActive = item.value === activeValue;
-
-                    return (
-                      <button
-                        className={isActive ? css.moreItemActive : css.moreItem}
-                        key={item.value}
-                        type="button"
-                        role="menuitemradio"
-                        aria-checked={isActive}
-                        onClick={() => handleTabClick(item.value)}
-                      >
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
+              {renderMoreMenu('mobile', mobileMoreMenuId, moreMobileItems)}
             </div>
           ) : null}
 
@@ -270,35 +379,18 @@ function Tabs<TValue extends string = string>({
                 type="button"
                 aria-label={mergedLabels.moreButton}
                 aria-haspopup="menu"
-                aria-expanded={isMoreOpen}
+                aria-expanded={moreMenuMode === 'tablet'}
                 aria-controls={tabletMoreMenuId}
-                onClick={() => setIsMoreOpen((prev) => !prev)}
+                onClick={(event) =>
+                  handleMoreButtonClick('tablet', event.currentTarget)
+                }
               >
                 <span className={css.moreIcon} aria-hidden="true">
                   ...
                 </span>
               </button>
 
-              {isMoreOpen ? (
-                <div className={css.moreMenu} id={tabletMoreMenuId} role="menu">
-                  {moreTabletItems.map((item) => {
-                    const isActive = item.value === activeValue;
-
-                    return (
-                      <button
-                        className={isActive ? css.moreItemActive : css.moreItem}
-                        key={item.value}
-                        type="button"
-                        role="menuitemradio"
-                        aria-checked={isActive}
-                        onClick={() => handleTabClick(item.value)}
-                      >
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
+              {renderMoreMenu('tablet', tabletMoreMenuId, moreTabletItems)}
             </div>
           ) : null}
         </>

@@ -363,6 +363,12 @@
     width: 100%;
     justify-content: center;
   }
+
+  .sessionCard > button {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media only screen and (min-width: 768px) {
@@ -402,6 +408,10 @@
 
   .sessionCard {
     grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .myDataAction {
+    justify-self: end;
   }
 }
 

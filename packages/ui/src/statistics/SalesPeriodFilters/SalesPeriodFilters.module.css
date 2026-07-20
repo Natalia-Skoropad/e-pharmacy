@@ -35,7 +35,15 @@
 
 @media only screen and (min-width: 768px) {
   .filters {
-    grid-template-columns: repeat(2, minmax(150px, 180px));
-    width: min(100%, 372px);
+    grid-template-columns: repeat(2, minmax(140px, 180px)) auto;
+    align-items: end;
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .appliedPeriod {
+    grid-column: auto;
+    flex-wrap: nowrap;
+    white-space: nowrap;
   }
 }

@@ -293,16 +293,16 @@
 @media only screen and (min-width: 1440px) {
   .detailsGrid {
     grid-template-columns: minmax(280px, 0.44fr) minmax(0, 0.56fr);
-    align-items: stretch;
+    align-items: start;
   }
 
   .visualCard {
-    height: 100%;
-    min-height: 420px;
+    height: auto;
+    min-height: 250px;
   }
 
   .imageFrame {
-    min-height: 420px;
+    min-height: 250px;
   }
 
   .statsGrid {
@@ -525,6 +525,7 @@
   gap: 10px;
   align-items: flex-start;
   min-width: 0;
+  margin-top: 20px;
 }
 
 .productSalesHeading > svg {
@@ -562,21 +563,5 @@
   .detailsColumns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
-  }
-}
-
-@media only screen and (min-width: 1440px) {
-  .detailsGrid {
-    grid-template-columns: minmax(280px, 0.44fr) minmax(0, 0.56fr);
-    align-items: stretch;
-  }
-
-  .visualCard {
-    height: 100%;
-    min-height: 420px;
-  }
-
-  .imageFrame {
-    min-height: 420px;
   }
 }

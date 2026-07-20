@@ -8,6 +8,7 @@ import {
   Button,
   Container,
   DocumentUpload,
+  LazyLoadButton,
   LoadingSpinner,
   PictureCard,
   ReviewsList,
@@ -147,6 +148,7 @@ type PendingModerationItem = {
 //===================================================================
 
 const INITIAL_VISIBLE_REVIEWS_COUNT = 10;
+const INITIAL_VISIBLE_SESSIONS_COUNT = 10;
 const PHARMACY_DOCUMENTS_LIMIT = 6;
 
 //===================================================================
@@ -466,6 +468,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
   const [pharmacy, setPharmacy] = useState<PharmacyProfile | null>(null);
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
+  const [commentsTotal, setCommentsTotal] = useState(0);
+  const [visibleSessionsCount, setVisibleSessionsCount] = useState(
+    INITIAL_VISIBLE_SESSIONS_COUNT
+  );
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -628,6 +634,28 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   }, [profileUserDefaults, user.id]);
 
   useEffect(() => {
+    if (!pharmacy?.id) return;
+
+    const pharmacyId = pharmacy.id;
+    let isMounted = true;
+
+    async function loadCommentsTotal() {
+      try {
+        const response = await getPharmacyNotes('pharmacy', pharmacyId, 1);
+        if (isMounted) setCommentsTotal(response.total);
+      } catch {
+        if (isMounted) setCommentsTotal(0);
+      }
+    }
+
+    void loadCommentsTotal();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pharmacy?.id]);
+
+  useEffect(() => {
     let isMounted = true;
 
     async function loadSessions() {
@@ -767,8 +795,14 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       return { ...tab, label: `Documents (${documentsCount})` };
     }
 
+    if (tab.value === 'comments') {
+      return { ...tab, label: `Comments (${commentsTotal})` };
+    }
+
     return tab;
   });
+
+  const visibleSessions = sessions.slice(0, visibleSessionsCount);
 
   const handleOwnerChange = (
     field: keyof DataProfileFormValues,
@@ -1378,6 +1412,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                     </div>
 
                     <Button
+                      className={css.myDataAction}
                       type="button"
                       disabled={
                         !ownerFormIsValid || !ownerFormIsDirty || isOwnerSaving
@@ -1449,6 +1484,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                     </div>
 
                     <Button
+                      className={css.myDataAction}
                       type="button"
                       iconLeft={<KeyRound size={18} aria-hidden="true" />}
                       disabled={!passwordFormIsValid || isPasswordSaving}
@@ -1984,6 +2020,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                 <div className={css.tabPanel} role="tabpanel">
                   <EntityComments
                     entityKey={`pharmacy:${pharmacy.id}`}
+                    initialTotal={commentsTotal}
                     load={(page) =>
                       getPharmacyNotes('pharmacy', pharmacy.id, page)
                     }
@@ -1993,6 +2030,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                     remove={(id) =>
                       deletePharmacyNote('pharmacy', pharmacy.id, id)
                     }
+                    onTotalChange={setCommentsTotal}
                   />
                 </div>
               ) : null}
@@ -2015,42 +2053,56 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                     {isLoadingSessions ? (
                       <LoadingSpinner label="Loading active sessions..." />
                     ) : sessions.length > 0 ? (
-                      <ul className={css.sessionsList}>
-                        {sessions.map((session) => (
-                          <li className={css.sessionCard} key={session.id}>
-                            <MonitorSmartphone size={22} aria-hidden="true" />
-                            <div className={css.sessionInfo}>
-                              <strong>
-                                {session.deviceName ??
-                                  session.userAgent ??
-                                  'Unknown device'}
-                              </strong>
-                              <span>
-                                Last used:{' '}
-                                {formatSessionDate(session.lastUsedAt)}
-                              </span>
-                            </div>
-                            {session.isCurrent ? (
-                              <span className={css.currentSession}>
-                                Current session
-                              </span>
-                            ) : (
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                size="sm"
-                                isLoading={revokingSessionId === session.id}
-                                loadingLabel="Revoking..."
-                                onClick={() =>
-                                  void handleRevokeSession(session.id)
-                                }
-                              >
-                                Revoke
-                              </Button>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
+                      <>
+                        <ul className={css.sessionsList}>
+                          {visibleSessions.map((session) => (
+                            <li className={css.sessionCard} key={session.id}>
+                              <MonitorSmartphone size={22} aria-hidden="true" />
+                              <div className={css.sessionInfo}>
+                                <strong>
+                                  {session.deviceName ??
+                                    session.userAgent ??
+                                    'Unknown device'}
+                                </strong>
+                                <span>
+                                  Last used:{' '}
+                                  {formatSessionDate(session.lastUsedAt)}
+                                </span>
+                              </div>
+                              {session.isCurrent ? (
+                                <span className={css.currentSession}>
+                                  Current session
+                                </span>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="sm"
+                                  isLoading={revokingSessionId === session.id}
+                                  loadingLabel="Revoking..."
+                                  onClick={() =>
+                                    void handleRevokeSession(session.id)
+                                  }
+                                >
+                                  Revoke
+                                </Button>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+
+                        <LazyLoadButton
+                          visibleCount={visibleSessions.length}
+                          totalCount={sessions.length}
+                          label="Show more sessions"
+                          onLoadMore={() =>
+                            setVisibleSessionsCount(
+                              (current) =>
+                                current + INITIAL_VISIBLE_SESSIONS_COUNT
+                            )
+                          }
+                        />
+                      </>
                     ) : (
                       <div className={css.emptyState}>
                         <h3>No active sessions found</h3>

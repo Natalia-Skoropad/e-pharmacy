@@ -175,6 +175,8 @@ function ClientsPageContent({
     () => getClientsQueryParams(filters, rowsPerPage, currentPage),
     [currentPage, filters, rowsPerPage]
   );
+  const shouldPinDefaultClient =
+    currentPage === 1 && getActiveFiltersCount(filters) === 0;
 
   useEffect(() => {
     let isMounted = true;
@@ -183,10 +185,30 @@ function ClientsPageContent({
       setIsLoading(true);
 
       try {
-        const response = await getPharmacyClients(queryParams);
+        const [response, defaultClientResponse] = await Promise.all([
+          getPharmacyClients(queryParams),
+          shouldPinDefaultClient
+            ? getPharmacyClients({
+                page: 1,
+                perPage: 20,
+                name: 'Walk-in customer',
+              })
+            : Promise.resolve(null),
+        ]);
         if (!isMounted) return;
 
-        setClients(putDefaultClientFirst(response.items));
+        const nextClients = putDefaultClientFirst(response.items);
+        const defaultClient = defaultClientResponse?.items.find(isWalkInClient);
+
+        if (
+          defaultClient &&
+          !nextClients.some((client) => client.id === defaultClient.id)
+        ) {
+          nextClients.unshift(defaultClient);
+          nextClients.splice(rowsPerPage);
+        }
+
+        setClients(nextClients);
         setTotalClients(response.total);
         setEarliestCreatedAt(response.earliestCreatedAt);
       } catch {
@@ -205,7 +227,7 @@ function ClientsPageContent({
     return () => {
       isMounted = false;
     };
-  }, [queryParams]);
+  }, [queryParams, rowsPerPage, shouldPinDefaultClient]);
 
   useEffect(() => {
     const nextPath = buildClientsPath(filters);
