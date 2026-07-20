@@ -4,11 +4,13 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 
 import {
   createProductRequestSchema,
+  productRequestParamsSchema,
   productRequestsQuerySchema,
 } from '../schemas/product-request.schema';
 
 import {
   createProductRequestService,
+  getProductRequestByIdService,
   getProductRequestsService,
 } from '../services/product-request.service';
 
@@ -45,3 +47,23 @@ export async function getProductRequests(
     data,
   });
 }
+
+//===============================================================
+
+export async function getProductRequestById(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { requestId } = productRequestParamsSchema.parse(req.params);
+  const data = await getProductRequestByIdService(
+    req.user?.id ?? '',
+    requestId
+  );
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+

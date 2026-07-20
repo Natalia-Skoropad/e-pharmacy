@@ -76,6 +76,27 @@ export type ProductRequestRow = Readonly<{
   status: ProductRequestStatus;
 }>;
 
+export type ProductRequestDetails = ProductRequestRow &
+  Readonly<{
+    updatedAt: string;
+    name: string;
+    article: string;
+    productImage?: ProductRequestFile;
+    manufacturer?: string;
+    countryOfOrigin?: string;
+    dosage?: string;
+    packageSize?: string;
+    form?: string;
+    activeSubstance?: string;
+    prescriptionType?: string;
+    storageConditions?: string;
+    shortDescription?: string;
+    fullDescription?: string;
+    characteristics?: string;
+    pharmacyComment?: string;
+    additionalFiles?: ProductRequestFile[];
+  }>;
+
 export type ProductRequestsQueryParams = Readonly<{
   page?: number;
   perPage?: number;
@@ -97,6 +118,7 @@ export type ProductRequestsResponse = Readonly<{
 //=============================================================================
 
 export type PharmacyProductRequestRow = ProductRequestRow;
+export type PharmacyProductRequestDetails = ProductRequestDetails;
 export type PharmacyProductRequestsQueryParams = ProductRequestsQueryParams;
 export type PharmacyProductRequestsResponse = ProductRequestsResponse;
 export type CreatePharmacyProductRequestPayload = CreateProductRequestPayload;

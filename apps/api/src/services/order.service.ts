@@ -828,10 +828,7 @@ export async function createManagerOrderService(
   const session = await mongoose.startSession();
 
   try {
-    let createdOrder: OrderDocument | null = null;
-    let selectedClient: UserDocument | null = null;
-
-    await session.withTransaction(async () => {
+    const transactionResult = await session.withTransaction(async () => {
       const pharmacy = await Pharmacy.findOne({
         $or: [{ ownerId: actor.id }, { managerUserIds: actor.id }],
       })
@@ -1035,11 +1032,13 @@ export async function createManagerOrderService(
         { session }
       );
 
-      createdOrder = order.toObject() as OrderDocument;
-      selectedClient = client;
+      return {
+        order: order.toObject() as OrderDocument,
+        client,
+      };
     });
 
-    if (!createdOrder || !selectedClient) {
+    if (!transactionResult) {
       throw httpError(
         HTTP_STATUS.INTERNAL_SERVER_ERROR,
         'Order could not be created.'
@@ -1047,10 +1046,12 @@ export async function createManagerOrderService(
     }
 
     const clientMap: ClientUserMap = new Map([
-      [String(selectedClient._id), selectedClient],
+      [String(transactionResult.client._id), transactionResult.client],
     ]);
 
-    return { order: serializeOrder(createdOrder, undefined, clientMap) };
+    return {
+      order: serializeOrder(transactionResult.order, undefined, clientMap),
+    };
   } finally {
     await session.endSession();
   }

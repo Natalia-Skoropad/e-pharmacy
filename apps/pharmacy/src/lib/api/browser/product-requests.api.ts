@@ -5,6 +5,7 @@ import type { ApiSuccessResponse } from '@e-pharmacy/types';
 
 import type {
   CreatePharmacyProductRequestPayload,
+  PharmacyProductRequestDetails,
   PharmacyProductRequestRow,
   PharmacyProductRequestsQueryParams,
   PharmacyProductRequestsResponse,
@@ -14,6 +15,7 @@ import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharm
 
 import {
   normalizePharmacyProductRequest,
+  normalizePharmacyProductRequestDetails,
   normalizePharmacyProductRequestsResponse,
 } from '@/lib/product-requests/product-requests';
 
@@ -53,3 +55,23 @@ export async function getPharmacyProductRequests(
 
   return normalizePharmacyProductRequestsResponse(getResponseData(response));
 }
+
+//===================================================================
+
+export async function getPharmacyProductRequest(
+  requestId: string
+): Promise<PharmacyProductRequestDetails> {
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
+    PHARMACY_API_ROUTES.productRequests.details(requestId)
+  );
+
+  const data = getResponseData(response) as { request?: unknown };
+  const request = normalizePharmacyProductRequestDetails(data.request);
+
+  if (!request) {
+    throw new Error('Product request could not be loaded.');
+  }
+
+  return request;
+}
+

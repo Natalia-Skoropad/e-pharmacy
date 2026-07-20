@@ -71,6 +71,7 @@ import type {
 } from '@e-pharmacy/types';
 
 import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
+
 import {
   DEFAULT_ORDER_SALES_STATISTICS,
   DEFAULT_ORDER_STATISTICS,
@@ -1426,14 +1427,23 @@ function AllProductDetailsPageContent({
                         : 'This product is not added to your pharmacy yet'}
                     </p>
 
-                    <dl className={css.detailsList}>
-                      {summaryItems.map((item) => (
-                        <div key={item.label}>
-                          <dt>{item.label}</dt>
-                          <dd>{item.value}</dd>
-                        </div>
-                      ))}
-                    </dl>
+                    <div className={css.detailsColumns}>
+                      {[summaryItems.slice(0, 3), summaryItems.slice(3)]
+                        .filter((items) => items.length > 0)
+                        .map((items, columnIndex) => (
+                          <dl
+                            className={css.detailsList}
+                            key={`summary-column-${columnIndex}`}
+                          >
+                            {items.map((item) => (
+                              <div key={item.label}>
+                                <dt>{item.label}</dt>
+                                <dd>{item.value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        ))}
+                    </div>
 
                     <div className={css.actions}>
                       {showAddAction ? (
@@ -1501,22 +1511,24 @@ function AllProductDetailsPageContent({
                     <div className={css.productSalesToolbar}>
                       <div className={css.productSalesHeading}>
                         <BarChart3 size={22} aria-hidden="true" />
-                        <div>
+                        <div className={css.productSalesHeadingContent}>
                           <h3>Product sales analytics</h3>
                           <p>
                             Successful sales of this product for the selected
                             year or month.
                           </p>
+
+                          <SalesPeriodFilters
+                            idPrefix={`product-${productId}-sales`}
+                            year={productSalesYear}
+                            month={productSalesMonth}
+                            onYearChange={setProductSalesYear}
+                            onMonthChange={setProductSalesMonth}
+                            className={css.productSalesFilters}
+                            showAppliedPeriod
+                          />
                         </div>
                       </div>
-
-                      <SalesPeriodFilters
-                        idPrefix={`product-${productId}-sales`}
-                        year={productSalesYear}
-                        month={productSalesMonth}
-                        onYearChange={setProductSalesYear}
-                        onMonthChange={setProductSalesMonth}
-                      />
                     </div>
 
                     {isProductSalesLoading ? (

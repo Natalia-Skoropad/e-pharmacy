@@ -1,13 +1,41 @@
 .filters {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px 12px;
   width: min(100%, 440px);
+}
+
+.appliedPeriod {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 30px;
+  margin: 0;
+  padding: 5px 10px;
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-pill);
+}
+
+.appliedPeriod span {
+  font-weight: var(--fw-medium);
+}
+
+.appliedPeriod strong {
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
 }
 
 @media only screen and (min-width: 768px) {
   .filters {
-    grid-template-columns: minmax(0, 1fr);
-    width: 100%;
+    grid-template-columns: repeat(2, minmax(150px, 180px));
+    width: min(100%, 372px);
   }
 }

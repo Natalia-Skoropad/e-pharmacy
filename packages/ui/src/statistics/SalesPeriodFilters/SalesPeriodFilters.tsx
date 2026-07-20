@@ -31,6 +31,7 @@ type SalesPeriodFiltersProps = Readonly<{
   onMonthChange: (value: SalesPeriodMonth) => void;
   className?: string;
   yearsBack?: number;
+  showAppliedPeriod?: boolean;
 }>;
 
 //===================================================================
@@ -96,12 +97,17 @@ function SalesPeriodFilters({
   onMonthChange,
   className,
   yearsBack = 2,
+  showAppliedPeriod = false,
 }: SalesPeriodFiltersProps) {
   const yearOptions = Array.from({ length: yearsBack + 1 }, (_, index) => {
     const optionYear = CURRENT_YEAR - index;
 
     return { value: String(optionYear), label: String(optionYear) };
   });
+
+  const selectedMonthLabel =
+    MONTH_OPTIONS.find((option) => option.value === month)?.label ??
+    'All months';
 
   return (
     <div className={clsx(css.filters, className)}>
@@ -120,6 +126,15 @@ function SalesPeriodFilters({
         options={MONTH_OPTIONS}
         onChange={onMonthChange}
       />
+
+      {showAppliedPeriod ? (
+        <p className={css.appliedPeriod} aria-live="polite">
+          <span>Filters applied</span>
+          <strong>
+            {year} · {selectedMonthLabel}
+          </strong>
+        </p>
+      ) : null}
     </div>
   );
 }

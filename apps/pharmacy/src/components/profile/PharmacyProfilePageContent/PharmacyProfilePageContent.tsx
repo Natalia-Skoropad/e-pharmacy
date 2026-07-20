@@ -118,6 +118,7 @@ import css from './PharmacyProfilePageContent.module.css';
 //===================================================================
 
 type AuthUser = NonNullable<ReturnType<typeof useAuth>['user']>;
+type ProfileUserDefaults = Pick<AuthUser, 'email' | 'name' | 'phone'>;
 
 //===================================================================
 
@@ -174,7 +175,7 @@ function createOwnerInitialValues(user: AuthUser): DataProfileFormValues {
 //===================================================================
 
 function createPharmacyInitialValues(
-  user: AuthUser,
+  user: ProfileUserDefaults,
   pharmacy: PharmacyProfile
 ): PharmacyContactFormValues {
   return {
@@ -198,7 +199,7 @@ function createAboutInitialValues(
 //===================================================================
 
 function createPaymentInitialValues(
-  user: AuthUser,
+  user: ProfileUserDefaults,
   pharmacy: PharmacyProfile
 ): PharmacyPaymentFormValues {
   const recipientName = pharmacy.bankDetails?.recipientName?.trim() ?? '';
@@ -220,7 +221,7 @@ function createPaymentInitialValues(
 //===================================================================
 
 function createPharmacyNameInitialValue(
-  user: AuthUser,
+  user: ProfileUserDefaults,
   pharmacy: PharmacyProfile
 ): string {
   const pharmacyName = pharmacy.name?.trim() ?? '';
@@ -478,12 +479,24 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     {}
   );
 
+  const profileUserDefaults = useMemo<ProfileUserDefaults>(
+    () => ({
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+    }),
+    [user.email, user.name, user.phone]
+  );
+
   const [passwordValues, setPasswordValues] =
     useState<ChangePasswordFormValues>(CHANGE_PASSWORD_INITIAL_VALUES);
+
   const [passwordTouched, setPasswordTouched] =
     useState<ChangePasswordTouchedFields>({});
+
   const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] =
     useState(false);
+
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
 
   const [pharmacyName, setPharmacyName] = useState('');
@@ -568,17 +581,17 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
         const nextPharmacy = response.pharmacy;
         const nextPharmacyValues = createPharmacyInitialValues(
-          user,
+          profileUserDefaults,
           nextPharmacy
         );
         const nextAboutValues = createAboutInitialValues(nextPharmacy);
         const nextPaymentValues = createPaymentInitialValues(
-          user,
+          profileUserDefaults,
           nextPharmacy
         );
 
         const nextPharmacyName = createPharmacyNameInitialValue(
-          user,
+          profileUserDefaults,
           nextPharmacy
         );
         const nextDocumentValues = createDocumentValues(nextPharmacy.documents);
@@ -612,7 +625,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     return () => {
       isMounted = false;
     };
-  }, [user.email, user.id, user.name, user.phone]);
+  }, [profileUserDefaults, user.id]);
 
   useEffect(() => {
     let isMounted = true;
@@ -1466,7 +1479,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                     </div>
 
                     <PictureCard
-                      name={pharmacyName || pharmacy.name || 'Pharmacy'}
+                      name={summaryPharmacyName}
                       pictureUrl={pharmacyPictureUrl}
                       isSaving={isPharmacyPictureSaving}
                       disabled={isProfileReadonly}

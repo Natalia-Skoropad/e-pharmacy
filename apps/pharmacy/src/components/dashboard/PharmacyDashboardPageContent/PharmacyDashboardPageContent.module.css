@@ -145,13 +145,3 @@
   }
 }
 
-.salesToolbar {
-  display: flex;
-  justify-content: flex-start;
-}
-
-@media only screen and (min-width: 768px) {
-  .salesToolbar {
-    justify-content: flex-end;
-  }
-}

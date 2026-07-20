@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   createProductRequest,
+  getProductRequestById,
   getProductRequests,
 } from '../controllers/product-request.controller';
 
@@ -10,6 +11,7 @@ import { validate } from '../middlewares/validate.middleware';
 
 import {
   createProductRequestSchema,
+  productRequestParamsSchema,
   productRequestsQuerySchema,
 } from '../schemas/product-request.schema';
 
@@ -29,6 +31,14 @@ productRequestRoutes.get(
   '/',
   validate({ query: productRequestsQuerySchema }),
   ctrlWrapper(getProductRequests)
+);
+
+//=================================================================================
+
+productRequestRoutes.get(
+  '/:requestId',
+  validate({ params: productRequestParamsSchema }),
+  ctrlWrapper(getProductRequestById)
 );
 
 //=================================================================================

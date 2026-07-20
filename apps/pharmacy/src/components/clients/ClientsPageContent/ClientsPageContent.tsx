@@ -74,12 +74,24 @@ function getActiveFiltersCount(filters: ClientsFilterState): number {
 
 //===================================================================
 
+function isWalkInClient(client: PharmacyClientRow): boolean {
+  return (
+    client.isDefault ||
+    client.name.trim().toLowerCase() === 'walk-in customer'
+  );
+}
+
+//===================================================================
+
 function putDefaultClientFirst(
   clients: PharmacyClientRow[]
 ): PharmacyClientRow[] {
   return [...clients].sort((first, second) => {
-    if (first.isDefault !== second.isDefault) {
-      return first.isDefault ? -1 : 1;
+    const firstIsWalkIn = isWalkInClient(first);
+    const secondIsWalkIn = isWalkInClient(second);
+
+    if (firstIsWalkIn !== secondIsWalkIn) {
+      return firstIsWalkIn ? -1 : 1;
     }
 
     return 0;

@@ -174,9 +174,21 @@ function serializeClient(
 
 //===============================================================
 
+function isWalkInClient(client: ClientRow): boolean {
+  return (
+    client.isDefault ||
+    client.name.trim().toLowerCase() === 'walk-in customer'
+  );
+}
+
+//===============================================================
+
 function compareClientRows(first: ClientRow, second: ClientRow): number {
-  if (first.isDefault !== second.isDefault) {
-    return first.isDefault ? -1 : 1;
+  const firstIsWalkIn = isWalkInClient(first);
+  const secondIsWalkIn = isWalkInClient(second);
+
+  if (firstIsWalkIn !== secondIsWalkIn) {
+    return firstIsWalkIn ? -1 : 1;
   }
 
   return second.firstOrderAt.localeCompare(first.firstOrderAt);
@@ -337,8 +349,8 @@ export async function getClientsService(userId: string, query: ClientsQuery) {
   ]);
 
   const orderedClients = [
-    ...clients.filter((client) => client.isDefault),
-    ...clients.filter((client) => !client.isDefault),
+    ...clients.filter(isWalkInClient),
+    ...clients.filter((client) => !isWalkInClient(client)),
   ];
   const skip = (query.page - 1) * query.perPage;
   const items = orderedClients.slice(skip, skip + query.perPage);

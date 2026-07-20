@@ -273,3 +273,30 @@ export async function getProductRequestsService(
       : null,
   };
 }
+
+//===============================================================
+
+export async function getProductRequestByIdService(
+  userId: string,
+  requestId: string
+) {
+  const pharmacyId = await getCurrentPharmacyId(userId);
+
+  if (!pharmacyId || !Types.ObjectId.isValid(requestId)) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
+  }
+
+  const request = await ProductRequest.findOne({
+    _id: new Types.ObjectId(requestId),
+    pharmacyId,
+  })
+    .populate('productId', 'imageUrl article name')
+    .lean<ProductRequestDocument | null>();
+
+  if (!request) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
+  }
+
+  return { request: serializeProductRequest(request) };
+}
+

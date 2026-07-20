@@ -464,22 +464,22 @@ function PharmacyDashboardPageContent() {
               className={css.section}
               aria-label="Sales value statistics"
             >
-              <div className={css.salesToolbar}>
-                <SalesPeriodFilters
-                  idPrefix="dashboard-sales"
-                  year={selectedSalesYear}
-                  month={selectedSalesMonth}
-                  onYearChange={setSelectedSalesYear}
-                  onMonthChange={setSelectedSalesMonth}
-                />
-              </div>
-
               {isSalesLoading ? (
                 <LoadingSpinner label="Loading sales chart..." />
               ) : (
                 <SalesValueChart
                   key={`${selectedSalesYear}-${selectedSalesMonth}`}
                   data={salesData}
+                  headerContent={
+                    <SalesPeriodFilters
+                      idPrefix="dashboard-sales"
+                      year={selectedSalesYear}
+                      month={selectedSalesMonth}
+                      onYearChange={setSelectedSalesYear}
+                      onMonthChange={setSelectedSalesMonth}
+                      showAppliedPeriod
+                    />
+                  }
                 />
               )}
             </section>

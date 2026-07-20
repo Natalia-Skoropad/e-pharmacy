@@ -2,13 +2,16 @@ import { isProductCategory } from '@e-pharmacy/types/products';
 import { normalizePaginatedResponse } from '@e-pharmacy/utils/api';
 
 import {
+  getNumberValue,
   getStringValue,
   isRecord,
 } from '@e-pharmacy/utils/guards';
 
 import {
   normalizeProductRequestStatus,
+  type PharmacyProductRequestDetails,
   type PharmacyProductRequestRow,
+  type ProductRequestFile,
   type PharmacyProductRequestsResponse,
 } from '@e-pharmacy/types/product-requests';
 
@@ -18,6 +21,7 @@ export {
 } from '@e-pharmacy/types/product-requests';
 
 export type {
+  PharmacyProductRequestDetails,
   PharmacyProductRequestRow,
   PharmacyProductRequestsQueryParams,
   PharmacyProductRequestsResponse,
@@ -26,6 +30,25 @@ export type {
   ProductRequestStatusFilter,
   ProductRequestsFilterState,
 } from '@e-pharmacy/types/product-requests';
+
+//===================================================================
+
+function normalizeProductRequestFile(
+  rawFile: unknown
+): ProductRequestFile | null {
+  if (!isRecord(rawFile)) return null;
+
+  const name = getStringValue(rawFile.name);
+  const size = getNumberValue(rawFile.size);
+
+  if (!name || size === undefined) return null;
+
+  return {
+    name,
+    type: getStringValue(rawFile.type) ?? 'application/octet-stream',
+    size,
+  };
+}
 
 //===================================================================
 
@@ -79,6 +102,67 @@ export function normalizePharmacyProductRequest(
       ? rawRequest.category
       : 'other',
     status: normalizeProductRequestStatus(rawRequest.status),
+  };
+}
+
+//===================================================================
+
+export function normalizePharmacyProductRequestDetails(
+  rawRequest: unknown
+): PharmacyProductRequestDetails | null {
+  const request = normalizePharmacyProductRequest(rawRequest);
+  if (!request || !isRecord(rawRequest)) return null;
+
+  const productImage = normalizeProductRequestFile(rawRequest.productImage);
+  const additionalFiles = Array.isArray(rawRequest.additionalFiles)
+    ? rawRequest.additionalFiles
+        .map(normalizeProductRequestFile)
+        .filter((file): file is ProductRequestFile => Boolean(file))
+    : [];
+
+  return {
+    ...request,
+    updatedAt: getStringValue(rawRequest.updatedAt) ?? request.createdAt,
+    name: getStringValue(rawRequest.name) ?? request.productName,
+    article: getStringValue(rawRequest.article) ?? request.productArticle,
+    ...(productImage ? { productImage } : {}),
+    ...(getStringValue(rawRequest.manufacturer)
+      ? { manufacturer: getStringValue(rawRequest.manufacturer) }
+      : {}),
+    ...(getStringValue(rawRequest.countryOfOrigin)
+      ? { countryOfOrigin: getStringValue(rawRequest.countryOfOrigin) }
+      : {}),
+    ...(getStringValue(rawRequest.dosage)
+      ? { dosage: getStringValue(rawRequest.dosage) }
+      : {}),
+    ...(getStringValue(rawRequest.packageSize)
+      ? { packageSize: getStringValue(rawRequest.packageSize) }
+      : {}),
+    ...(getStringValue(rawRequest.form)
+      ? { form: getStringValue(rawRequest.form) }
+      : {}),
+    ...(getStringValue(rawRequest.activeSubstance)
+      ? { activeSubstance: getStringValue(rawRequest.activeSubstance) }
+      : {}),
+    ...(getStringValue(rawRequest.prescriptionType)
+      ? { prescriptionType: getStringValue(rawRequest.prescriptionType) }
+      : {}),
+    ...(getStringValue(rawRequest.storageConditions)
+      ? { storageConditions: getStringValue(rawRequest.storageConditions) }
+      : {}),
+    ...(getStringValue(rawRequest.shortDescription)
+      ? { shortDescription: getStringValue(rawRequest.shortDescription) }
+      : {}),
+    ...(getStringValue(rawRequest.fullDescription)
+      ? { fullDescription: getStringValue(rawRequest.fullDescription) }
+      : {}),
+    ...(getStringValue(rawRequest.characteristics)
+      ? { characteristics: getStringValue(rawRequest.characteristics) }
+      : {}),
+    ...(getStringValue(rawRequest.pharmacyComment)
+      ? { pharmacyComment: getStringValue(rawRequest.pharmacyComment) }
+      : {}),
+    ...(additionalFiles.length ? { additionalFiles } : {}),
   };
 }
 

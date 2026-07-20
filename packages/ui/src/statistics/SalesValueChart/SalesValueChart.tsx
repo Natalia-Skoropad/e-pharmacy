@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 
 import {
@@ -48,6 +48,7 @@ type SalesValueChartProps = Readonly<{
   title?: string;
   description?: string;
   categoryControlsLabel?: string;
+  headerContent?: ReactNode;
 }>;
 
 type ChartSeries = Readonly<{
@@ -152,6 +153,7 @@ function SalesValueChart({
   title = 'Sales value by product category',
   description = 'Lines show successful sales grouped by sold product categories for the selected period.',
   categoryControlsLabel = 'Product categories shown on the chart',
+  headerContent,
 }: SalesValueChartProps) {
   const [activePointIndex, setActivePointIndex] = useState<number | null>(null);
   const [hiddenCategories, setHiddenCategories] = useState<ProductCategory[]>(
@@ -229,6 +231,9 @@ function SalesValueChart({
           <p className={css.kicker}>{kicker}</p>
           <h3 className={css.title}>{title}</h3>
           <p className={css.description}>{description}</p>
+          {headerContent ? (
+            <div className={css.headerContent}>{headerContent}</div>
+          ) : null}
         </div>
       </div>
 
