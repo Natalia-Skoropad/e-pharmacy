@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { USER_ROLES } from '../constants/auth';
 
 import {
   createProductReviewSchema,
@@ -53,7 +54,10 @@ export async function getProductFilters(
 
 export async function getProducts(req: Request, res: Response): Promise<void> {
   const query = productsQuerySchema.parse(req.query);
-  const data = await getProductsService(query, req.user?.id);
+  const data = await getProductsService(
+    query,
+    req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
+  );
 
   sendSuccessResponse({
     res,
@@ -101,7 +105,10 @@ export async function getProductDetails(
 ): Promise<void> {
   const { productId } = req.params as ProductParams;
 
-  const data = await getProductDetailsService(productId, req.user?.id);
+  const data = await getProductDetailsService(
+    productId,
+    req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
+  );
 
   sendSuccessResponse({
     res,

@@ -12,9 +12,9 @@ import {
 
 import { Button, ButtonLink } from '@e-pharmacy/ui/common';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { useAuth } from '@e-pharmacy/auth/core';
 
 import { ROUTES } from '@/lib/routes';
+import { useClientAuthCapabilities } from '@/hooks';
 
 import css from './HomeFeatureCards.module.css';
 
@@ -66,12 +66,22 @@ const FEATURE_CARDS: FeatureCard[] = [
 
 function HomeFeatureCards() {
   const router = useRouter();
-  const { isAuthenticated, isAuthReady } = useAuth();
+  const { isAuthenticated, isAuthReady, canUseClientFeatures, isPharmacy } =
+    useClientAuthCapabilities();
   const toast = useToast();
 
   const handleProtectedClick = (href: string) => {
     if (!isAuthReady || !isAuthenticated) {
       toast.error('Please log in to open this private page.');
+      return;
+    }
+
+    if (!canUseClientFeatures) {
+      toast.info(
+        isPharmacy
+          ? 'Cart and personal client pages are available only for client accounts.'
+          : 'This page is available only for client accounts.'
+      );
       return;
     }
 

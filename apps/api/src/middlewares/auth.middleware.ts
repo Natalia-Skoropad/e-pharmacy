@@ -8,8 +8,34 @@ import {
   assertActiveSessionService,
   getUserByIdService,
 } from '../services/auth.service';
+
 import { httpError } from '../utils/httpError';
 import { verifyToken } from '../utils/jwt';
+
+//===============================================================
+
+type ErrorWithStatus = {
+  status?: unknown;
+  name?: unknown;
+};
+
+//===============================================================
+
+function isAuthenticationCandidateError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+
+  const { status, name } = error as ErrorWithStatus;
+
+  if (status === HTTP_STATUS.UNAUTHORIZED || status === HTTP_STATUS.FORBIDDEN) {
+    return true;
+  }
+
+  return (
+    name === 'JsonWebTokenError' ||
+    name === 'TokenExpiredError' ||
+    name === 'NotBeforeError'
+  );
+}
 
 //===============================================================
 
@@ -88,7 +114,9 @@ async function authenticateToken(req: Request): Promise<void> {
       req.user = user;
 
       return;
-    } catch {
+    } catch (error) {
+      if (!isAuthenticationCandidateError(error)) throw error;
+
       // Keep checking the remaining cookie candidates. Browsers can send
       // duplicate auth cookies after deployments or domain/path changes, and
       // the first one can be stale while a later one is valid.
@@ -109,8 +137,13 @@ export async function authenticate(
     await authenticateToken(req);
 
     next();
-  } catch {
-    next(httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_TOKEN));
+  } catch (error) {
+    if (isAuthenticationCandidateError(error)) {
+      next(httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_TOKEN));
+      return;
+    }
+
+    next(error);
   }
 }
 
@@ -131,7 +164,12 @@ export async function optionalAuthenticate(
 
     await authenticateToken(req);
     next();
-  } catch {
-    next();
+  } catch (error) {
+    if (isAuthenticationCandidateError(error)) {
+      next();
+      return;
+    }
+
+    next(error);
   }
 }

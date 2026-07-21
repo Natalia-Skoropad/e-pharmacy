@@ -8,7 +8,9 @@ import {
   updateCartItem,
 } from '../controllers/cart.controller';
 
+import { USER_ROLES } from '../constants/auth';
 import { authenticate } from '../middlewares/auth.middleware';
+import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
 
 import {
@@ -25,7 +27,7 @@ export const cartRoutes = Router();
 
 //===============================================================
 
-cartRoutes.use(authenticate);
+cartRoutes.use(authenticate, authorizeRoles(USER_ROLES.CLIENT));
 
 //=================================================================================
 

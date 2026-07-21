@@ -15,11 +15,11 @@ import {
 } from '@e-pharmacy/utils/formatters';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { useAuth } from '@e-pharmacy/auth/core';
 import type { Product } from '@e-pharmacy/types';
 
 import {
   invalidateFavoriteProductIdsCache,
+  useClientAuthCapabilities,
   useFavoriteActions,
   useProductFavoriteRefresh,
 } from '@/hooks';
@@ -47,11 +47,11 @@ function ProductCard({
   skipFavoriteRefresh = false,
   onFavoriteChange,
 }: ProductCardProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthReady, canUseClientFeatures } =
+    useClientAuthCapabilities();
   const toast = useToast();
 
   const {
-    isAuthReady,
     isFavorite,
     isFavoriteLoading,
     handleFavoriteClick,
@@ -83,7 +83,7 @@ function ProductCard({
 
   useProductFavoriteRefresh({
     id: product.id,
-    isEnabled: !skipFavoriteRefresh && isAuthReady && isAuthenticated,
+    isEnabled: !skipFavoriteRefresh && canUseClientFeatures,
     onRefresh: setIsFavorite,
   });
 
@@ -106,15 +106,17 @@ function ProductCard({
           </div>
         )}
 
-        <div className={css.favoriteWrap}>
-          <FavoriteToggleButton
-            isActive={isFavorite}
-            disabled={isFavoriteLoading}
-            onClick={handleFavoriteClick}
-            activeLabel="Remove product from favorites"
-            inactiveLabel="Add product to favorites"
-          />
-        </div>
+        {isAuthReady && (!isAuthenticated || canUseClientFeatures) ? (
+          <div className={css.favoriteWrap}>
+            <FavoriteToggleButton
+              isActive={isFavorite}
+              disabled={isFavoriteLoading}
+              onClick={handleFavoriteClick}
+              activeLabel="Remove product from favorites"
+              inactiveLabel="Add product to favorites"
+            />
+          </div>
+        ) : null}
       </div>
 
       <div className={css.content}>

@@ -19,7 +19,6 @@ import {
 } from '@e-pharmacy/ui/form-fields';
 
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { useAuth } from '@e-pharmacy/auth/core';
 import type { BreadcrumbItem } from '@e-pharmacy/types';
 import type { PaymentMethod, DeliveryMethod } from '@e-pharmacy/types/orders';
 
@@ -44,6 +43,7 @@ import {
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo';
 import { ROUTES } from '@/lib/routes';
+import { useClientAuthCapabilities } from '@/hooks';
 
 import CheckoutOrderPanel from '../CheckoutOrderPanel';
 import CheckoutPaymentMethod from '../CheckoutPaymentMethod/CheckoutPaymentMethod';
@@ -72,7 +72,8 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
 //===================================================================
 
 function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
-  const { isAuthenticated, isAuthReady, user } = useAuth();
+  const { isAuthReady, user, canUseClientFeatures } =
+    useClientAuthCapabilities();
   const searchParams = useSearchParams();
   const queryPharmacyId = searchParams.get('pharmacyId');
   const selectedPharmacyIdFromRoute = checkoutPharmacyId ?? queryPharmacyId;
@@ -86,7 +87,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
   const { cart, error, isLoading, setCart, setError } = useCheckoutCart(
     isAuthReady,
-    isAuthenticated
+    canUseClientFeatures
   );
 
   const orderGroups = useMemo(() => groupCartByPharmacy(cart), [cart]);
@@ -151,7 +152,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     Boolean(selectedOrderGroup) && isDeliveryFormValid && canUseSelectedPayment;
 
   const { isSubmitting, handleSubmit } = useCheckoutSubmit({
-    isAuthenticated,
+    isAuthenticated: canUseClientFeatures,
     selectedOrderGroup,
     paymentMethod,
     deliveryMethod,

@@ -62,6 +62,7 @@ productRoutes.get('/filters', ctrlWrapper(getProductFilters));
 productRoutes.get(
   '/favorites/ids',
   authenticate,
+  authorizeRoles(USER_ROLES.CLIENT),
   ctrlWrapper(getFavoriteProductIds)
 );
 
@@ -70,6 +71,7 @@ productRoutes.get(
 productRoutes.get(
   '/favorites',
   authenticate,
+  authorizeRoles(USER_ROLES.CLIENT),
   validate({
     query: productsQuerySchema,
   }),
@@ -140,6 +142,7 @@ productRoutes.post(
   '/:productId/reviews',
   reviewRateLimit,
   authenticate,
+  authorizeRoles(USER_ROLES.CLIENT),
   validate({
     params: productIdParamsSchema,
     body: createProductReviewSchema,
@@ -165,6 +168,7 @@ productRoutes.patch(
 productRoutes.put(
   '/:productId/favorite',
   authenticate,
+  authorizeRoles(USER_ROLES.CLIENT),
   validate({
     params: productIdParamsSchema,
   }),
@@ -176,6 +180,7 @@ productRoutes.put(
 productRoutes.delete(
   '/:productId/favorite',
   authenticate,
+  authorizeRoles(USER_ROLES.CLIENT),
   validate({
     params: productIdParamsSchema,
   }),

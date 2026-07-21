@@ -924,16 +924,16 @@ export async function setFavoriteProductService(
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
   }
 
-  await Client.updateOne(
+  const result = await Client.updateOne(
     { userId },
     isFavorite
-      ? {
-          $setOnInsert: { userId },
-          $addToSet: { favoriteProductIds: productId },
-        }
-      : { $pull: { favoriteProductIds: productId } },
-    { upsert: isFavorite }
+      ? { $addToSet: { favoriteProductIds: productId } }
+      : { $pull: { favoriteProductIds: productId } }
   );
+
+  if (result.matchedCount === 0) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.FORBIDDEN_ROLE);
+  }
 
   return {
     isFavorite,

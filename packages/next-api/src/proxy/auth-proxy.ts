@@ -3,7 +3,6 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
 import { createBackendApiUrl } from '../server/backend-api-request';
-import { copySetCookieHeader } from './proxy-response';
 import { createProxyTransportErrorResponse } from './proxy-transport-error';
 import { createProxyHeaders, getProxyBody } from './proxy-headers';
 
@@ -53,14 +52,19 @@ async function createAuthProxyResponse(
 
   nextResponse.headers.set('Cache-Control', 'no-store');
 
-  // Keep backward compatibility with backend Set-Cookie when it is visible to
-  // the Next runtime, but do not rely on it. On Vercel it can be unavailable
-  // for cross-origin fetch responses, so tokens are also passed in the BFF-only
-  // JSON field and converted to httpOnly frontend-domain cookies below.
-  copySetCookieHeader(response, nextResponse);
+  // The BFF is the only component that writes browser auth cookies.
+  // Backend Set-Cookie headers are intentionally not forwarded because doing
+  // both creates duplicate domain/path variants and makes refresh behavior
+  // depend on browser cookie ordering.
 
   if (response.ok && markerAction === 'set') {
+    clearClientAuthCookies(nextResponse, request);
     setClientAuthCookies(nextResponse, request, tokens);
+  } else if (
+    markerAction === 'set' &&
+    (response.status === 401 || response.status === 403)
+  ) {
+    clearClientAuthCookies(nextResponse, request);
   }
 
   if (markerAction === 'delete') {

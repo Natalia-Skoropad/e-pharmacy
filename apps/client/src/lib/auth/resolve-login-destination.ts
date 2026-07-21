@@ -9,7 +9,7 @@ const PHARMACY_DASHBOARD_PATH = '/pharmacy/dashboard';
 
 //===================================================================
 
-function getPharmacyDashboardUrl(): string {
+export function getPharmacyDashboardUrl(): string {
   const pharmacyAppUrl = process.env.NEXT_PUBLIC_PHARMACY_APP_URL?.trim();
 
   if (pharmacyAppUrl) {

@@ -153,6 +153,7 @@ export async function proxyBackendRequest({
   if (response.status !== 401) {
     const nextResponse = await createProxyResponse(response, {
       cacheControl: 'no-store',
+      copySetCookie: false,
     });
 
     if (response.ok && clearAuthCookiesOnSuccess) {
@@ -178,6 +179,7 @@ export async function proxyBackendRequest({
   if (!refreshResponse.ok) {
     const nextResponse = await createProxyResponse(response, {
       cacheControl: 'no-store',
+      copySetCookie: false,
     });
 
     if (clearAuthCookiesOnRefreshFailure) {
@@ -204,6 +206,7 @@ export async function proxyBackendRequest({
 
   const nextResponse = await createProxyResponse(retryResponse, {
     cacheControl: 'no-store',
+    copySetCookie: false,
   });
 
   setClientAuthCookies(nextResponse, request, tokens);
@@ -213,7 +216,10 @@ export async function proxyBackendRequest({
     return nextResponse;
   }
 
-  if (retryResponse.status === 401) {
+  if (
+    retryResponse.status === 401 &&
+    clearAuthCookiesOnRefreshFailure
+  ) {
     clearClientAuthCookies(nextResponse, request);
   }
 

@@ -17,7 +17,6 @@ import { type TabItem } from '@e-pharmacy/ui/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useToast } from '@e-pharmacy/ui/feedback';
 
-import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
   formatAvailableProductsCount,
@@ -33,6 +32,7 @@ import type {
 } from '@e-pharmacy/types';
 
 import {
+  useClientAuthCapabilities,
   useFavoriteActions,
   useReviewForm,
   usePharmacyFavoriteRefresh,
@@ -155,7 +155,8 @@ function PharmacyDetailsPageContent({
   reviewsTotal,
   areReviewsUnavailable = false,
 }: PharmacyDetailsPageContentProps) {
-  const { isAuthenticated, isAuthReady } = useAuth();
+  const { isAuthenticated, isAuthReady, canUseClientFeatures } =
+    useClientAuthCapabilities();
 
   const [activeTab, setActiveTab] = useState<PharmacyTab>('details');
   const [visibleReviewsCount, setVisibleReviewsCount] = useState(
@@ -172,7 +173,7 @@ function PharmacyDetailsPageContent({
     useState(false);
   const toast = useToast();
 
-  const canShowBankDetailsTab = isAuthReady && isAuthenticated;
+  const canShowBankDetailsTab = canUseClientFeatures;
   const currentTab: PharmacyTab =
     activeTab === 'payment' && !canShowBankDetailsTab ? 'details' : activeTab;
 
@@ -260,7 +261,7 @@ function PharmacyDetailsPageContent({
 
   usePharmacyFavoriteRefresh({
     id: pharmacy.id,
-    isEnabled: isAuthReady && isAuthenticated,
+    isEnabled: canUseClientFeatures,
     onRefresh: setIsFavorite,
   });
 
@@ -271,6 +272,7 @@ function PharmacyDetailsPageContent({
     reviewTouchedFields,
     isReviewValid,
     isReviewSubmitting,
+    canSubmitReview,
     handleReviewTextChange,
     handleReviewRatingChange,
     handleReviewSubmit,
@@ -365,13 +367,15 @@ function PharmacyDetailsPageContent({
                     {pharmacy.city ?? 'Pharmacy pharmacy'}
                   </p>
 
-                  <FavoriteToggleButton
-                    isActive={isFavorite}
-                    disabled={isFavoriteLoading}
-                    onClick={handleFavoriteClick}
-                    activeLabel="Remove pharmacy from favorites"
-                    inactiveLabel="Add pharmacy to favorites"
-                  />
+                  {isAuthReady && (!isAuthenticated || canUseClientFeatures) ? (
+                    <FavoriteToggleButton
+                      isActive={isFavorite}
+                      disabled={isFavoriteLoading}
+                      onClick={handleFavoriteClick}
+                      activeLabel="Remove pharmacy from favorites"
+                      inactiveLabel="Add pharmacy to favorites"
+                    />
+                  ) : null}
                 </div>
 
                 <h2 className={css.title}>{pharmacy.name}</h2>
@@ -584,7 +588,7 @@ function PharmacyDetailsPageContent({
                 reviewError={reviewErrors.comment}
                 reviewTouchedFields={reviewTouchedFields}
                 isReviewSubmitting={isReviewSubmitting}
-                isAuthenticated={isAuthenticated}
+                isAuthenticated={canSubmitReview}
                 isAuthReady={isAuthReady}
                 isUnavailable={areReviewsUnavailable}
                 emptyText="Pharmacy reviews will appear here after clients share their feedback."

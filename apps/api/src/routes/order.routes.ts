@@ -13,7 +13,9 @@ import {
   updateOrderStatus,
 } from '../controllers/order.controller';
 
+import { USER_ROLES } from '../constants/auth';
 import { authenticate } from '../middlewares/auth.middleware';
+import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
 
 import {
@@ -43,6 +45,7 @@ orderRoutes.use(authenticate);
 
 orderRoutes.post(
   '/checkout',
+  authorizeRoles(USER_ROLES.CLIENT),
   validate({ body: checkoutOrderSchema }),
   ctrlWrapper(checkoutOrder)
 );
@@ -79,6 +82,8 @@ orderRoutes.get(
   ctrlWrapper(getOrderManagerComments)
 );
 
+//===============================================================
+
 orderRoutes.post(
   '/:orderId/comments',
   validate({
@@ -87,6 +92,8 @@ orderRoutes.post(
   }),
   ctrlWrapper(createOrderManagerComment)
 );
+
+//===============================================================
 
 orderRoutes.delete(
   '/:orderId/comments/:commentId',

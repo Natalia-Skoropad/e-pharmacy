@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useClientAuthCapabilities } from './useClientAuthCapabilities';
 
 import {
   REVIEW_FORM_FIELDS,
@@ -47,7 +47,8 @@ export function useReviewForm({
   errorMessage,
   authRequiredMessage,
 }: UseReviewFormParams) {
-  const { isAuthenticated, isAuthReady } = useAuth();
+  const { isAuthenticated, isAuthReady, canUseClientFeatures, isPharmacy } =
+    useClientAuthCapabilities();
 
   const [reviewValues, setReviewValues] = useState<ReviewFormValues>(
     REVIEW_INITIAL_VALUES
@@ -110,6 +111,15 @@ export function useReviewForm({
       return;
     }
 
+    if (!canUseClientFeatures) {
+      notifyError(
+        isPharmacy
+          ? 'Reviews are available only for client accounts.'
+          : authRequiredMessage ?? errorMessage
+      );
+      return;
+    }
+
     try {
       setIsReviewSubmitting(true);
 
@@ -135,6 +145,7 @@ export function useReviewForm({
     reviewErrors,
     reviewTouchedFields,
     isReviewValid: reviewFormIsValid,
+    canSubmitReview: canUseClientFeatures,
     isReviewSubmitting,
     handleReviewTextChange,
     handleReviewRatingChange,

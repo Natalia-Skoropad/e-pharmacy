@@ -6,7 +6,6 @@ import {
 } from '@e-pharmacy/config/auth';
 
 import { ROUTES } from '@/lib/routes';
-import { getSafeRedirectPath } from '@e-pharmacy/auth/routing';
 
 //===================================================================
 
@@ -16,20 +15,13 @@ const PROTECTED_ROUTE_PREFIXES = [
   ROUTES.PROFILE,
 ] as const;
 
-const GUEST_ONLY_ROUTE_PREFIXES = [
-  ROUTES.LOGIN,
-  ROUTES.REGISTER,
-  ROUTES.PASSWORD_RECOVERY,
-  ROUTES.RESET_PASSWORD,
-] as const;
-
-const DEFAULT_AUTHENTICATED_REDIRECT_PATH = ROUTES.PROFILE;
-
 //===================================================================
 
 function isRouteMatch(pathname: string, route: string): boolean {
   return pathname === route || pathname.startsWith(`${route}/`);
 }
+
+//===================================================================
 
 function isProtectedRoute(pathname: string): boolean {
   return PROTECTED_ROUTE_PREFIXES.some((route) =>
@@ -37,11 +29,7 @@ function isProtectedRoute(pathname: string): boolean {
   );
 }
 
-function isGuestOnlyRoute(pathname: string): boolean {
-  return GUEST_ONLY_ROUTE_PREFIXES.some((route) =>
-    isRouteMatch(pathname, route)
-  );
-}
+//===================================================================
 
 function hasServerAuthCookie(request: NextRequest): boolean {
   return Boolean(
@@ -70,42 +58,21 @@ function createLoginRedirect(request: NextRequest): NextResponse {
 
 //===================================================================
 
-function createAuthenticatedRedirect(request: NextRequest): NextResponse {
-  const redirectPath = getSafeRedirectPath(
-    request.nextUrl.searchParams.get('redirect'),
-    DEFAULT_AUTHENTICATED_REDIRECT_PATH
-  );
-
-  return NextResponse.redirect(new URL(redirectPath, request.url));
-}
-
-//===================================================================
-
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hasAuthCookie = hasServerAuthCookie(request);
 
-  if (isProtectedRoute(pathname) && !hasAuthCookie) {
+  if (isProtectedRoute(pathname) && !hasServerAuthCookie(request)) {
     return createLoginRedirect(request);
   }
 
-  if (isGuestOnlyRoute(pathname) && hasAuthCookie) {
-    return createAuthenticatedRedirect(request);
-  }
-
+  // Guest-only pages are intentionally not redirected here. Cookie presence
+  // does not reveal the account role, so the client auth guard resolves the
+  // correct destination after loading the current user.
   return NextResponse.next();
 }
 
 //===================================================================
 
 export const config = {
-  matcher: [
-    '/cart/:path*',
-    '/checkout/:path*',
-    '/profile/:path*',
-    '/login/:path*',
-    '/register/:path*',
-    '/password-recovery/:path*',
-    '/reset-password/:path*',
-  ],
+  matcher: ['/cart/:path*', '/checkout/:path*', '/profile/:path*'],
 };

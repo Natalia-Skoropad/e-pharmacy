@@ -77,6 +77,7 @@ function LoginForm() {
   const [touchedFields, setTouchedFields] = useState<LoginTouchedFields>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const loginFormIsValid = isLoginFormValid(values);
@@ -116,6 +117,8 @@ function LoginForm() {
       return;
     }
 
+    let didStartExternalRedirect = false;
+
     try {
       setIsSubmitting(true);
 
@@ -133,7 +136,9 @@ function LoginForm() {
       });
 
       if (destination.startsWith('http')) {
-        window.location.assign(destination);
+        didStartExternalRedirect = true;
+        setIsRedirecting(true);
+        window.location.replace(destination);
         return;
       }
 
@@ -148,7 +153,7 @@ function LoginForm() {
 
       toast.error(message);
     } finally {
-      setIsSubmitting(false);
+      if (!didStartExternalRedirect) setIsSubmitting(false);
     }
   };
 
@@ -216,9 +221,13 @@ function LoginForm() {
       <Button
         type="submit"
         fullWidth
-        disabled={isSubmitting || !isAuthReady || !loginFormIsValid}
+        disabled={
+          isSubmitting || isRedirecting || !isAuthReady || !loginFormIsValid
+        }
       >
-        {isSubmitting ? selectedCopy.loading : selectedCopy.button}
+        {isSubmitting || isRedirecting
+          ? selectedCopy.loading
+          : selectedCopy.button}
       </Button>
 
       <p className={css.footerText}>

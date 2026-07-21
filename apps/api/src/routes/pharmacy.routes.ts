@@ -101,6 +101,7 @@ pharmacyRoutes.get('/options', ctrlWrapper(getPharmacyOptions));
 pharmacyRoutes.get(
   '/favorites/ids',
   authenticate,
+  authorizeRoles(USER_ROLES.CLIENT),
   ctrlWrapper(getFavoritePharmacyIds)
 );
 
@@ -109,6 +110,7 @@ pharmacyRoutes.get(
 pharmacyRoutes.get(
   '/favorites',
   authenticate,
+  authorizeRoles(USER_ROLES.CLIENT),
   validate({
     query: pharmaciesQuerySchema,
   }),
@@ -132,6 +134,7 @@ pharmacyRoutes.get(
 pharmacyRoutes.get(
   '/:pharmacyId/checkout-details',
   authenticate,
+  authorizeRoles(USER_ROLES.CLIENT),
   validate({ params: pharmacyIdParamsSchema }),
   ctrlWrapper(getPharmacyCheckoutDetails)
 );
@@ -152,6 +155,7 @@ pharmacyRoutes.post(
   '/:pharmacyId/reviews',
   reviewRateLimit,
   authenticate,
+  authorizeRoles(USER_ROLES.CLIENT),
   validate({
     params: pharmacyIdParamsSchema,
     body: createPharmacyReviewSchema,
@@ -177,6 +181,7 @@ pharmacyRoutes.patch(
 pharmacyRoutes.put(
   '/:pharmacyId/favorite',
   authenticate,
+  authorizeRoles(USER_ROLES.CLIENT),
   validate({
     params: pharmacyIdParamsSchema,
   }),
@@ -188,6 +193,7 @@ pharmacyRoutes.put(
 pharmacyRoutes.delete(
   '/:pharmacyId/favorite',
   authenticate,
+  authorizeRoles(USER_ROLES.CLIENT),
   validate({
     params: pharmacyIdParamsSchema,
   }),

@@ -17,6 +17,7 @@ import {
 import { BurgerButton } from '@e-pharmacy/ui/layout';
 
 import { ROUTES, isActiveRoute } from '@/lib/routes';
+import { getPharmacyDashboardUrl } from '@/lib/auth';
 import { useCart } from '@/providers/CartProvider';
 
 import { usePublicAuthActionsState } from '@/components/layout/hooks/usePublicAuthActionsState';
@@ -37,15 +38,15 @@ function Header() {
     logout,
     isAuthReady,
     shouldShowGuestActions,
+    shouldShowClientActions,
+    shouldShowPharmacyActions,
     shouldShowAuthenticatedActions,
   } = usePublicAuthActionsState();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
   const { cart } = useCart();
-  const visibleCartItemsCount = shouldShowAuthenticatedActions
-    ? cart.totalItems
-    : 0;
+  const visibleCartItemsCount = shouldShowClientActions ? cart.totalItems : 0;
 
   const handleToggleMobileMenu = () => {
     setIsMobileMenuOpen((prev) => !prev);
@@ -91,7 +92,7 @@ function Header() {
         </nav>
 
         <div className={css.actions}>
-          {shouldShowAuthenticatedActions ? (
+          {shouldShowClientActions ? (
             <ButtonLink
               className={css.cartLink}
               href={ROUTES.CART}
@@ -109,21 +110,32 @@ function Header() {
             <div className={css.authSkeleton} aria-hidden="true" />
           ) : null}
 
-          {shouldShowAuthenticatedActions ? (
-            <>
-              <UserBadge
-                className={css.profileLink}
-                href={ROUTES.PROFILE}
-                name={user?.name}
-                pictureUrl={user?.pictureUrl}
-              />
+          {shouldShowClientActions ? (
+            <UserBadge
+              className={css.profileLink}
+              href={ROUTES.PROFILE}
+              name={user?.name}
+              pictureUrl={user?.pictureUrl}
+            />
+          ) : null}
 
-              <LogoutButton
-                isLoading={isLogoutLoading}
-                disabled={isLogoutLoading}
-                onClick={handleLogout}
-              />
-            </>
+          {shouldShowPharmacyActions ? (
+            <ButtonLink
+              className={css.pharmacyCabinetLink}
+              href={getPharmacyDashboardUrl()}
+              variant="secondary"
+              size="sm"
+            >
+              Pharmacy cabinet
+            </ButtonLink>
+          ) : null}
+
+          {shouldShowAuthenticatedActions ? (
+            <LogoutButton
+              isLoading={isLogoutLoading}
+              disabled={isLogoutLoading}
+              onClick={handleLogout}
+            />
           ) : null}
 
           {shouldShowGuestActions ? (
@@ -139,7 +151,7 @@ function Header() {
           ) : null}
         </div>
 
-        {shouldShowAuthenticatedActions ? (
+        {shouldShowClientActions ? (
           <ButtonLink
             className={css.mobileCartLink}
             href={ROUTES.CART}

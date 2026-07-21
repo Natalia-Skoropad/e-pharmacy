@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { USER_ROLES } from '../constants/auth';
 
 import {
   createPharmacyReviewSchema,
@@ -88,7 +89,10 @@ export async function sendMyPharmacyForVerification(
 
 export async function getPharmacies(req: Request, res: Response): Promise<void> {
   const query = pharmaciesQuerySchema.parse(req.query);
-  const data = await getPharmaciesService(query, req.user?.id);
+  const data = await getPharmaciesService(
+    query,
+    req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
+  );
 
   sendSuccessResponse({
     res,
@@ -167,7 +171,10 @@ export async function getPharmacyDetails(
 ): Promise<void> {
   const { pharmacyId } = req.params as PharmacyParams;
 
-  const data = await getPharmacyDetailsService(pharmacyId, req.user?.id);
+  const data = await getPharmacyDetailsService(
+    pharmacyId,
+    req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
+  );
 
   sendSuccessResponse({
     res,

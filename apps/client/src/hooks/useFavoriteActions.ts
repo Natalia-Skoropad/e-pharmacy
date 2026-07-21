@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useClientAuthCapabilities } from './useClientAuthCapabilities';
 
 //===================================================================
 
@@ -43,7 +43,8 @@ export function useFavoriteActions<TId extends string>({
   removeFavorite,
   onFavoriteChange,
 }: UseFavoriteActionsParams<TId>) {
-  const { isAuthenticated, isAuthReady } = useAuth();
+  const { isAuthenticated, isAuthReady, canUseClientFeatures, isPharmacy } =
+    useClientAuthCapabilities();
 
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
@@ -51,6 +52,15 @@ export function useFavoriteActions<TId extends string>({
   const handleFavoriteClick = async () => {
     if (!isAuthReady || !isAuthenticated) {
       notifier.info(loginMessage);
+      return;
+    }
+
+    if (!canUseClientFeatures) {
+      notifier.info(
+        isPharmacy
+          ? 'Favorites are available only for client accounts.'
+          : loginMessage
+      );
       return;
     }
 
@@ -72,6 +82,7 @@ export function useFavoriteActions<TId extends string>({
 
   return {
     isAuthReady,
+    canUseFavorites: canUseClientFeatures,
     isFavorite,
     isFavoriteLoading,
     handleFavoriteClick,

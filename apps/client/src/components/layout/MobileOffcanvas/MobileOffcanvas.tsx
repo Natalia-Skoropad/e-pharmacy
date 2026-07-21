@@ -16,6 +16,7 @@ import {
 import { MobileOffcanvasBase } from '@e-pharmacy/ui/layout';
 
 import { ROUTES, isActiveRoute } from '@/lib/routes';
+import { getPharmacyDashboardUrl } from '@/lib/auth';
 import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
 import { usePublicAuthActionsState } from '@/components/layout/hooks/usePublicAuthActionsState';
 
@@ -41,6 +42,8 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
     logout,
     isAuthReady,
     shouldShowGuestActions,
+    shouldShowClientActions,
+    shouldShowPharmacyActions,
     shouldShowAuthenticatedActions,
   } = usePublicAuthActionsState();
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
@@ -111,24 +114,35 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
           <div className={css.authSkeleton} aria-hidden="true" />
         ) : null}
 
-        {shouldShowAuthenticatedActions ? (
-          <>
-            <UserBadge
-              href={ROUTES.PROFILE}
-              name={user?.name}
-              pictureUrl={user?.pictureUrl}
-              variant="dark"
-              onClick={onClose}
-            />
+        {shouldShowClientActions ? (
+          <UserBadge
+            href={ROUTES.PROFILE}
+            name={user?.name}
+            pictureUrl={user?.pictureUrl}
+            variant="dark"
+            onClick={onClose}
+          />
+        ) : null}
 
-            <LogoutButton
-              fullWidth
-              tone="inverse"
-              isLoading={isLogoutLoading}
-              disabled={isLogoutLoading}
-              onClick={handleLogout}
-            />
-          </>
+        {shouldShowPharmacyActions ? (
+          <ButtonLink
+            href={getPharmacyDashboardUrl()}
+            variant="secondary"
+            fullWidth
+            onClick={onClose}
+          >
+            Pharmacy cabinet
+          </ButtonLink>
+        ) : null}
+
+        {shouldShowAuthenticatedActions ? (
+          <LogoutButton
+            fullWidth
+            tone="inverse"
+            isLoading={isLogoutLoading}
+            disabled={isLogoutLoading}
+            onClick={handleLogout}
+          />
         ) : null}
 
         {shouldShowGuestActions ? (

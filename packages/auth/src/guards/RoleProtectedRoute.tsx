@@ -51,6 +51,11 @@ export function RoleProtectedRoute({
     }
 
     if (!hasAllowedRole) {
+      if (/^https?:\/\//i.test(forbiddenPath)) {
+        window.location.replace(forbiddenPath);
+        return;
+      }
+
       router.replace(forbiddenPath);
     }
   }, [

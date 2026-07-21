@@ -23,7 +23,6 @@ import { type TabItem } from '@e-pharmacy/ui/common';
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { useAuth } from '@e-pharmacy/auth/core';
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
 
 import {
@@ -41,6 +40,7 @@ import type {
 
 import {
   invalidateFavoriteProductIdsCache,
+  useClientAuthCapabilities,
   useFavoriteActions,
   useReviewForm,
 } from '@/hooks';
@@ -152,8 +152,9 @@ function ProductDetailsPageContent({
   areReviewsUnavailable = false,
   contextPharmacyId,
 }: ProductDetailsPageContentProps) {
-  const { isAuthenticated, isAuthReady } = useAuth();
-  const canUseCart = isAuthReady && isAuthenticated;
+  const { isAuthenticated, isAuthReady, canUseClientFeatures, isPharmacy } =
+    useClientAuthCapabilities();
+  const canUseCart = canUseClientFeatures;
   const { cart, loadCart } = useCart();
 
   const {
@@ -360,6 +361,7 @@ function ProductDetailsPageContent({
     reviewTouchedFields,
     isReviewValid,
     isReviewSubmitting,
+    canSubmitReview,
     handleReviewTextChange,
     handleReviewRatingChange,
     handleReviewSubmit,
@@ -372,7 +374,7 @@ function ProductDetailsPageContent({
   });
 
   useEffect(() => {
-    if (!isAuthReady || !isAuthenticated) return;
+    if (!canUseClientFeatures) return;
 
     let isMounted = true;
 
@@ -399,8 +401,7 @@ function ProductDetailsPageContent({
       isMounted = false;
     };
   }, [
-    isAuthenticated,
-    isAuthReady,
+    canUseClientFeatures,
     loadCart,
     productDetails.id,
     setIsFavorite,
@@ -549,7 +550,7 @@ function ProductDetailsPageContent({
           </b>
         </p>
 
-        {isAuthenticated ? (
+        {canUseClientFeatures ? (
           <StockAvailability
             className={css.stockLine}
             stockQuantity={offer.availableQuantity}
@@ -609,13 +610,15 @@ function ProductDetailsPageContent({
                     {formatProductCategoryLabel(productDetails.category)}
                   </p>
 
-                  <FavoriteToggleButton
-                    isActive={isFavorite}
-                    disabled={isFavoriteLoading}
-                    onClick={handleFavoriteClick}
-                    activeLabel="Remove product from favorites"
-                    inactiveLabel="Add product to favorites"
-                  />
+                  {isAuthReady && (!isAuthenticated || canUseClientFeatures) ? (
+                    <FavoriteToggleButton
+                      isActive={isFavorite}
+                      disabled={isFavoriteLoading}
+                      onClick={handleFavoriteClick}
+                      activeLabel="Remove product from favorites"
+                      inactiveLabel="Add product to favorites"
+                    />
+                  ) : null}
                 </div>
 
                 <h2 className={css.title}>{productDetails.name}</h2>
@@ -679,9 +682,11 @@ function ProductDetailsPageContent({
                   <div className={css.sectionHeaderMain}>
                     <h2 className={css.panelTitle}>Pharmacies</h2>
 
-                    {!isAuthenticated && isAuthReady ? (
+                    {isAuthReady && !canUseClientFeatures ? (
                       <p className={css.authNote}>
-                        Only logged-in users can order and buy products.
+                        {isPharmacy
+                          ? 'Ordering is available only for client accounts.'
+                          : 'Only logged-in clients can order and buy products.'}
                       </p>
                     ) : null}
                   </div>
@@ -924,7 +929,7 @@ function ProductDetailsPageContent({
                   reviewError={reviewErrors.comment}
                   reviewTouchedFields={reviewTouchedFields}
                   isReviewSubmitting={isReviewSubmitting}
-                  isAuthenticated={isAuthenticated}
+                  isAuthenticated={canSubmitReview}
                   isAuthReady={isAuthReady}
                   isUnavailable={areReviewsUnavailable}
                   emptyText="Product reviews will appear here after clients share their feedback."

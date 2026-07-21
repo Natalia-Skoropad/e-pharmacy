@@ -13,7 +13,6 @@ import {
 
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { useAuth } from '@e-pharmacy/auth/core';
 import type { Cart } from '@e-pharmacy/types';
 
 import {
@@ -28,6 +27,7 @@ import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 import { ROUTES } from '@/lib/routes';
 import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
 import { useCartMutations } from '@/lib/cart/useCartMutations';
+import { useClientAuthCapabilities } from '@/hooks';
 
 import { useCart } from '@/providers/CartProvider';
 
@@ -50,8 +50,9 @@ const EMPTY_CART: Cart = {
 //===================================================================
 
 function CartPageContent() {
-  const { isAuthenticated, isAuthReady } = useAuth();
-  const canUseCart = isAuthReady && isAuthenticated;
+  const { isAuthReady, canUseClientFeatures } =
+    useClientAuthCapabilities();
+  const canUseCart = canUseClientFeatures;
 
   const { cart, setCart, isLoaded, isLoading, error: cartLoadError } = useCart();
   const [error, setError] = useState('');
@@ -126,7 +127,7 @@ function CartPageContent() {
 
   const visibleCart = canUseCart ? cart : EMPTY_CART;
   const shouldShowLoading =
-    !isAuthReady || (isAuthenticated && (!isLoaded || isLoading));
+    !isAuthReady || (canUseCart && (!isLoaded || isLoading));
 
   const groupedCartItems = useMemo(
     () => groupCartItemsByPharmacy(visibleCart.items),

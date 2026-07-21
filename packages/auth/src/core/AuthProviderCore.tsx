@@ -57,7 +57,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 //===================================================================
 
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 4_000;
-const AUTH_SESSION_REFRESH_INTERVAL_MS = 8 * 60 * 1000;
+const AUTH_SESSION_REFRESH_INTERVAL_MS = 6 * 60 * 1000;
+const AUTH_SESSION_REFRESH_RETRY_DELAY_MS = 1_500;
 
 //===================================================================
 class AuthBootstrapTimeoutError extends Error {
@@ -176,7 +177,6 @@ export function AuthProviderCore({
 
   const applyAuthenticatedUser = useCallback(
     (nextUser: AuthUser, publishSessionEvent = true) => {
-      sessionHintStorageRef.current.setHint();
       setAuthError(null);
       setIsRefreshingUser(false);
       setUser(nextUser);
@@ -251,11 +251,7 @@ export function AuthProviderCore({
           if (lifecycleVersion !== lifecycleVersionRef.current) return null;
 
           if (isInvalidSessionError(refreshError)) {
-            if (preserveAuthenticatedState) {
-              markAuthUnavailable(refreshError, true);
-            } else {
-              clearAuthState(false);
-            }
+            clearAuthState(false);
           } else {
             markAuthUnavailable(refreshError, preserveAuthenticatedState);
           }
@@ -326,6 +322,20 @@ export function AuthProviderCore({
     }
   }, [restoreCurrentUser]);
 
+  const refreshSessionWithRetry = useCallback(async () => {
+    try {
+      return await refreshSessionOnce();
+    } catch (error) {
+      if (isInvalidSessionError(error)) throw error;
+
+      await new Promise<void>((resolve) => {
+        window.setTimeout(resolve, AUTH_SESSION_REFRESH_RETRY_DELAY_MS);
+      });
+
+      return refreshSessionOnce();
+    }
+  }, [refreshSessionOnce]);
+
   const refreshActiveSession = useCallback(async () => {
     if (!userRef.current) return null;
 
@@ -333,7 +343,7 @@ export function AuthProviderCore({
     setIsRefreshingUser(true);
 
     try {
-      const response = await refreshSessionOnce();
+      const response = await refreshSessionWithRetry();
 
       if (lifecycleVersion !== lifecycleVersionRef.current) return null;
 
@@ -342,7 +352,11 @@ export function AuthProviderCore({
     } catch (refreshError) {
       if (lifecycleVersion !== lifecycleVersionRef.current) return null;
 
-      markAuthUnavailable(refreshError, true);
+      if (isInvalidSessionError(refreshError)) {
+        clearAuthState();
+      } else {
+        markAuthUnavailable(refreshError, true);
+      }
 
       return null;
     } finally {
@@ -354,7 +368,7 @@ export function AuthProviderCore({
     applyAuthenticatedUser,
     clearAuthState,
     markAuthUnavailable,
-    refreshSessionOnce,
+    refreshSessionWithRetry,
   ]);
 
   const login = useCallback(

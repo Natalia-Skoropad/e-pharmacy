@@ -56,6 +56,14 @@ export function GuestOnlyRoute({
       user,
       requestedRedirect
     );
+    if (
+      typeof authenticatedRedirectPath === 'function' &&
+      /^https?:\/\//i.test(fallbackRedirectPath)
+    ) {
+      window.location.replace(fallbackRedirectPath);
+      return;
+    }
+
     const redirectTo =
       typeof authenticatedRedirectPath === 'function'
         ? getSafeRedirectPath(fallbackRedirectPath)

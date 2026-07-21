@@ -11,10 +11,10 @@ import {
   type ReactNode,
 } from 'react';
 
-import { useAuth } from '@e-pharmacy/auth/core';
 import type { Cart } from '@e-pharmacy/types';
 
 import { getCart } from '@/lib/api/browser';
+import { useClientAuthCapabilities } from '@/hooks';
 
 import {
   CART_UPDATED_EVENT,
@@ -44,7 +44,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 //===================================================================
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { isAuthReady, isAuthenticated } = useAuth();
+  const { isAuthReady, canUseClientFeatures } = useClientAuthCapabilities();
 
   const [cart, setCartState] = useState<Cart>(EMPTY_CART);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -52,7 +52,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState('');
 
   const loadPromiseRef = useRef<Promise<Cart> | null>(null);
-  const previousAuthRef = useRef<boolean | null>(null);
+  const previousClientAccessRef = useRef<boolean | null>(null);
 
   const setCart = useCallback((nextCart: Cart) => {
     setCartState(nextCart);
@@ -61,6 +61,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadCart = useCallback(async () => {
+    if (!canUseClientFeatures) {
+      setCartState(EMPTY_CART);
+      setIsLoaded(true);
+      setError('');
+      return EMPTY_CART;
+    }
+
     if (loadPromiseRef.current) return loadPromiseRef.current;
 
     setIsLoading(true);
@@ -82,7 +89,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     loadPromiseRef.current = promise;
 
     return promise;
-  }, [setCart]);
+  }, [canUseClientFeatures, setCart]);
 
   const invalidateCart = useCallback(() => {
     setIsLoaded(false);
@@ -96,10 +103,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     queueMicrotask(() => {
       if (isCancelled) return;
 
-      const wasAuthenticated = previousAuthRef.current;
-      previousAuthRef.current = isAuthenticated;
+      const couldUseClientFeatures = previousClientAccessRef.current;
+      previousClientAccessRef.current = canUseClientFeatures;
 
-      if (!isAuthenticated) {
+      if (!canUseClientFeatures) {
         loadPromiseRef.current = null;
         setIsLoading(false);
         setCartState(EMPTY_CART);
@@ -108,7 +115,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (wasAuthenticated !== true) {
+      if (couldUseClientFeatures !== true) {
         setIsLoaded(false);
         void loadCart().catch(() => undefined);
         return;
@@ -122,10 +129,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => {
       isCancelled = true;
     };
-  }, [isAuthReady, isAuthenticated, isLoaded, isLoading, loadCart]);
+  }, [canUseClientFeatures, isAuthReady, isLoaded, isLoading, loadCart]);
 
   useEffect(() => {
     const onCartUpdated = (event: Event) => {
+      if (!canUseClientFeatures) return;
+
       const detail = (event as CustomEvent<CartUpdatedEventDetail>).detail;
 
       if (detail?.cart) {
@@ -146,7 +155,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener(CART_UPDATED_EVENT, onCartUpdated);
     };
-  }, [setCart]);
+  }, [canUseClientFeatures, setCart]);
 
   const value = useMemo(
     () => ({

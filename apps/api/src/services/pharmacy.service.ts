@@ -241,18 +241,22 @@ export async function getFavoritePharmaciesService(
 
   const favoriteIdsArray = client?.favoritePharmacyIds ?? [];
   const favoriteIds = new Set(favoriteIdsArray.map(String));
+
   const filter = {
     _id: { $in: favoriteIdsArray },
     status: PUBLIC_PHARMACY_STATUS_FILTER,
   };
+
   const sort: Record<string, 1 | -1> =
     query.sort === 'name-desc' ? { name: -1 } : { name: 1 };
+
   const skip = (query.page - 1) * query.perPage;
 
   const [pharmacies, total] = await Promise.all([
     Pharmacy.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
     Pharmacy.countDocuments(filter),
   ]);
+
   const countMap = await getAvailableProductsCountMap(
     pharmacies.map((pharmacy) => pharmacy._id)
   );
@@ -317,14 +321,17 @@ export async function getPharmaciesService(
             ? { rating: -1 }
             : { createdAt: -1 };
   const skip = (query.page - 1) * query.perPage;
+
   const [pharmacies, total, favoriteIds] = await Promise.all([
     Pharmacy.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
     Pharmacy.countDocuments(filter),
     getFavoritePharmacyIds(userId),
   ]);
+
   const countMap = await getAvailableProductsCountMap(
     pharmacies.map((pharmacy) => pharmacy._id)
   );
+
   return {
     items: pharmacies.map((pharmacy) =>
       serializePublicPharmacy(
@@ -350,12 +357,15 @@ export async function getPharmacyDetailsService(
     _id: pharmacyId,
     status: PUBLIC_PHARMACY_STATUS_FILTER,
   }).lean();
+
   if (!pharmacy)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+
   const [favoriteIds, countMap] = await Promise.all([
     getFavoritePharmacyIds(userId),
     getAvailableProductsCountMap([pharmacy._id]),
   ]);
+
   return {
     pharmacy: serializePublicPharmacy(
       pharmacy,
@@ -414,11 +424,14 @@ export async function getPharmacyReviewsService(pharmacyId: string) {
     _id: pharmacyId,
     status: PUBLIC_PHARMACY_STATUS_FILTER,
   });
+
   if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+
   const reviews = await PharmacyReview.find({ pharmacyId, status: 'approved' })
     .sort({ createdAt: -1 })
     .lean();
+
   const items: PharmacyReviewResponseDto[] = reviews.map((review) => ({
     id: String(review._id),
     userName: review.userName,
@@ -426,6 +439,7 @@ export async function getPharmacyReviewsService(pharmacyId: string) {
     comment: review.comment,
     createdAt: review.createdAt.toISOString(),
   }));
+
   return { items, total: items.length };
 }
 
@@ -439,8 +453,10 @@ export async function createPharmacyReviewService(
     _id: pharmacyId,
     status: PUBLIC_PHARMACY_STATUS_FILTER,
   });
+
   if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+
   await PharmacyReview.create({
     pharmacyId,
     userId: input.userId,
@@ -449,6 +465,7 @@ export async function createPharmacyReviewService(
     comment: input.comment,
     status: 'on_moderation',
   });
+
   return { message: 'Pharmacy review was submitted for moderation.' };
 }
 
@@ -458,6 +475,7 @@ export async function getPendingPharmacyReviewsService(
   query: PendingReviewsQuery
 ) {
   const skip = (query.page - 1) * query.perPage;
+
   const [reviews, total] = await Promise.all([
     PharmacyReview.find({ status: 'on_moderation' })
       .sort({ createdAt: -1 })
@@ -466,6 +484,7 @@ export async function getPendingPharmacyReviewsService(
       .lean(),
     PharmacyReview.countDocuments({ status: 'on_moderation' }),
   ]);
+
   const pharmacies = await Pharmacy.find({
     _id: { $in: reviews.map((review) => review.pharmacyId) },
   })
@@ -474,6 +493,7 @@ export async function getPendingPharmacyReviewsService(
   const names = new Map(
     pharmacies.map((pharmacy) => [String(pharmacy._id), pharmacy.name])
   );
+
   const items: PendingReviewDto[] = reviews.map((review) => ({
     pharmacyId: String(review.pharmacyId),
     pharmacyName: names.get(String(review.pharmacyId)) ?? 'Pharmacy',
@@ -484,6 +504,7 @@ export async function getPendingPharmacyReviewsService(
     status: review.status,
     createdAt: review.createdAt.toISOString(),
   }));
+
   return {
     items,
     page: query.page,
@@ -519,9 +540,11 @@ export async function moderatePharmacyReviewService(
 
   if (!review)
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy review was not found.');
+
   const approved = await PharmacyReview.find({ pharmacyId, status: 'approved' })
     .select('rating')
     .lean();
+
   const rating = approved.length
     ? Number(
         (
@@ -560,16 +583,16 @@ export async function setFavoritePharmacyService(
   if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
 
-  await Client.updateOne(
+  const result = await Client.updateOne(
     { userId },
     isFavorite
-      ? {
-          $setOnInsert: { userId },
-          $addToSet: { favoritePharmacyIds: pharmacyId },
-        }
-      : { $pull: { favoritePharmacyIds: pharmacyId } },
-    { upsert: isFavorite }
+      ? { $addToSet: { favoritePharmacyIds: pharmacyId } }
+      : { $pull: { favoritePharmacyIds: pharmacyId } }
   );
+
+  if (result.matchedCount === 0) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.FORBIDDEN_ROLE);
+  }
 
   return {
     isFavorite,

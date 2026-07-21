@@ -9,7 +9,6 @@ import {
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
-import { useAuth } from '@e-pharmacy/auth/core';
 import type { Pharmacy } from '@e-pharmacy/types';
 
 import { addFavoritePharmacy, removeFavoritePharmacy } from '@/lib/api/browser';
@@ -18,6 +17,7 @@ import { buildPharmacyPath } from '@/lib/routes';
 
 import {
   invalidateFavoritePharmacyIdsCache,
+  useClientAuthCapabilities,
   useFavoriteActions,
   usePharmacyFavoriteRefresh,
 } from '@/hooks';
@@ -41,11 +41,11 @@ function PharmacyCard({
   skipFavoriteRefresh = false,
   onFavoriteChange,
 }: PharmacyCardProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthReady, canUseClientFeatures } =
+    useClientAuthCapabilities();
   const toast = useToast();
 
   const {
-    isAuthReady,
     isFavorite,
     isFavoriteLoading,
     handleFavoriteClick,
@@ -73,7 +73,7 @@ function PharmacyCard({
 
   usePharmacyFavoriteRefresh({
     id: pharmacy.id,
-    isEnabled: !skipFavoriteRefresh && isAuthReady && isAuthenticated,
+    isEnabled: !skipFavoriteRefresh && canUseClientFeatures,
     onRefresh: setIsFavorite,
   });
 
@@ -96,15 +96,17 @@ function PharmacyCard({
           </div>
         )}
 
-        <div className={css.favoriteWrap}>
-          <FavoriteToggleButton
-            isActive={isFavorite}
-            disabled={isFavoriteLoading}
-            onClick={handleFavoriteClick}
-            activeLabel="Remove pharmacy from favorites"
-            inactiveLabel="Add pharmacy to favorites"
-          />
-        </div>
+        {isAuthReady && (!isAuthenticated || canUseClientFeatures) ? (
+          <div className={css.favoriteWrap}>
+            <FavoriteToggleButton
+              isActive={isFavorite}
+              disabled={isFavoriteLoading}
+              onClick={handleFavoriteClick}
+              activeLabel="Remove pharmacy from favorites"
+              inactiveLabel="Add pharmacy to favorites"
+            />
+          </div>
+        ) : null}
       </div>
 
       <div className={css.content}>
