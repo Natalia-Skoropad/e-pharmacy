@@ -768,36 +768,31 @@ function NewProductRequestPageContent({
     <main className={css.page} aria-labelledby="product-request-page-title">
       <section className={css.contentCard}>
         <PageHeader
+          className={
+            isDraft
+              ? `${css.requestPageHeader} ${css.draftPageHeader}`
+              : css.requestPageHeader
+          }
           title={
             <span className={css.titleWithTooltip}>
               <span>{pageTitle}</span>
-              <InfoTooltip
-                label="About saving and sending product requests"
-                title="Save or send the request"
-                icon={<FileCheck2 size={20} strokeWidth={2} />}
-              >
-                A draft remains editable. After sending, Admin starts reviewing
-                the request and the pharmacy can no longer edit it.
-              </InfoTooltip>
+              {!request || isDraft ? (
+                <InfoTooltip
+                  className={css.titleTooltip}
+                  label="About saving and sending product requests"
+                  title="Save or send the request"
+                  icon={<FileCheck2 size={20} strokeWidth={2} />}
+                >
+                  A draft remains editable. After sending, Admin starts reviewing
+                  the request and the pharmacy can no longer edit it.
+                </InfoTooltip>
+              ) : null}
             </span>
           }
           titleId="product-request-page-title"
           icon={<FilePlus2 size={23} aria-hidden="true" />}
           actions={headerActions}
         />
-
-        {request ? (
-          <div className={css.statusLine}>
-            <StatusBadge
-              status={request.status}
-              label={PRODUCT_REQUEST_STATUS_LABELS[request.status]}
-            />
-            <span>
-              <Clock3 size={16} aria-hidden="true" />
-              Last updated {formatOrderDateTime(request.updatedAt)}
-            </span>
-          </div>
-        ) : null}
 
         {bannerStatus ? (
           <StatusBanner
@@ -823,6 +818,12 @@ function NewProductRequestPageContent({
             label={PRODUCT_REQUEST_STATUS_LABELS[request.status]}
             title={statusMessage.title}
             message={statusMessage.message}
+            meta={
+              <span className={css.statusUpdatedAt}>
+                <Clock3 size={16} aria-hidden="true" />
+                Last updated {formatOrderDateTime(request.updatedAt)}
+              </span>
+            }
           />
         ) : null}
       </section>
@@ -1210,10 +1211,16 @@ function NewProductRequestPageContent({
               maxFiles={5}
               accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
               hint="Up to 5 files, no larger than 10 MB each."
+              confirmRemove
               labels={{
                 dropzoneTitle: 'Upload supporting files',
                 dropzoneText:
                   'PDF, DOC, JPG, PNG, or WEBP files are supported.',
+                removeTitle: 'Remove additional file?',
+                removeText: (fileName) =>
+                  `The file “${fileName}” will be removed from this request after you confirm and save the draft.`,
+                removeConfirm: 'Remove file',
+                removeCancel: 'Keep file',
               }}
               onChange={handleAdditionalFilesChange}
             />

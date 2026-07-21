@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react';
 import clsx from 'clsx';
 
 import {
   getStatusTone,
   type PharmacyStatusVariant,
 } from '../StatusBadge/status-types';
+
 import { StatusBadge } from '../StatusBadge/StatusBadge';
 
 import css from './StatusBanner.module.css';
@@ -16,6 +18,7 @@ type StatusBannerProps = Readonly<{
   message: string;
   label?: string;
   className?: string;
+  meta?: ReactNode;
 }>;
 
 //===================================================================
@@ -26,6 +29,7 @@ export function StatusBanner({
   message,
   label,
   className,
+  meta,
 }: StatusBannerProps) {
   const tone = getStatusTone(status);
 
@@ -36,6 +40,7 @@ export function StatusBanner({
         <StatusBadge status={status} label={label} />
       </div>
       <p className={css.message}>{message}</p>
+      {meta ? <div className={css.meta}>{meta}</div> : null}
     </section>
   );
 }
