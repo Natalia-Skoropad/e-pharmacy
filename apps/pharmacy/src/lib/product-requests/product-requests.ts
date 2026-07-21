@@ -48,6 +48,9 @@ function normalizeProductRequestFile(
     name,
     type: getStringValue(rawFile.type) ?? 'application/octet-stream',
     size,
+    ...(getStringValue(rawFile.dataUrl)
+      ? { dataUrl: getStringValue(rawFile.dataUrl) }
+      : {}),
   };
 }
 

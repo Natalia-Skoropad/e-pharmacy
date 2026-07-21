@@ -35,6 +35,11 @@ const productRequestFileSchema = new Schema(
       min: 0,
       max: 10 * 1024 * 1024,
     },
+    dataUrl: {
+      type: String,
+      required: false,
+      maxlength: 3 * 1024 * 1024,
+    },
   },
   { _id: false }
 );

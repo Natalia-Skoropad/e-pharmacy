@@ -39,6 +39,9 @@
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .dangerButton {
@@ -136,7 +139,8 @@
   display: flex;
   align-items: stretch;
   justify-content: stretch;
-  min-height: 250px;
+  height: 320px;
+  min-height: 320px;
   overflow: hidden;
   background-color: var(--color-background-soft);
   border: 1px solid var(--color-border);
@@ -147,8 +151,8 @@
   display: block;
   width: 100%;
   height: 100%;
-  min-height: 250px;
-  object-fit: cover;
+  min-height: 0;
+  object-fit: contain;
 }
 
 .imagePlaceholder {
@@ -167,112 +171,105 @@
   color: var(--color-accent);
 }
 
-.selectWrap {
-  position: relative;
+.imageUploadSlot {
+  min-width: 0;
+  height: 320px;
+  min-height: 320px;
+  overflow-y: auto;
 }
 
-.selectWrap::after {
-  position: absolute;
-  top: 50%;
-  right: 16px;
-  width: 8px;
-  height: 8px;
-  content: '';
-  pointer-events: none;
-  border-right: 2px solid var(--color-text-muted);
-  border-bottom: 2px solid var(--color-text-muted);
-  transform: translateY(-70%) rotate(45deg);
+.historyHeader {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 
-.formSelect {
-  width: 100%;
-  min-height: 48px;
-  padding: 12px 44px 12px 16px;
-  font: inherit;
-  font-size: var(--fz-16);
-  line-height: 1.4;
-  color: var(--color-text-primary);
-  appearance: none;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  outline: none;
-  transition:
-    border-color var(--transition-base),
-    box-shadow var(--transition-base);
-}
-
-.formSelect:not(:disabled):hover,
-.formSelect:focus {
-  border-color: var(--color-accent);
-}
-
-.formSelect:focus {
-  box-shadow: var(--shadow-accent-ring);
-}
-
-.formSelect:disabled {
-  color: var(--color-text-muted);
-  cursor: not-allowed;
-  background-color: var(--color-background-soft);
-}
-
-.formSelect[aria-invalid='true'] {
-  border-color: var(--color-error);
-  box-shadow: none;
+.historyHeader > div {
+  display: grid;
+  gap: 6px;
 }
 
 .historyList {
   display: grid;
   gap: 12px;
-  margin: 0;
   padding: 0;
+  margin: 0;
   list-style: none;
 }
 
-.historyItem {
+.historyList li {
   display: grid;
-  gap: 8px;
-  padding: 16px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 14px;
   background-color: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
 }
 
-.historyHead {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-  align-items: center;
-  justify-content: space-between;
+.historyList > li > svg {
+  margin-top: 2px;
+  color: var(--color-accent);
 }
 
-.historyHead time {
-  font-size: var(--fz-13);
-  color: var(--color-text-secondary);
+.historyContent {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  justify-items: start;
 }
 
-.historyItem h3,
-.historyItem p {
-  margin: 0;
-}
-
-.historyItem h3 {
-  font-size: var(--fz-16);
+.historyContent strong {
   color: var(--color-text-primary);
 }
 
-.historyItem p {
-  white-space: pre-wrap;
-  font-size: var(--fz-14);
-  line-height: 1.55;
+.historyContent time {
+  font-size: var(--fz-12);
+  color: var(--color-text-muted);
+}
+
+.historyContent p {
+  margin: 0;
   color: var(--color-text-secondary);
+  line-height: var(--lh-base);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.historyDanger {
+  background-color: var(--color-error-soft) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--color-error) 30%,
+    transparent
+  ) !important;
+}
+
+.historyWarning {
+  background-color: var(--color-warning-light) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--color-warning) 42%,
+    transparent
+  ) !important;
+}
+
+.historyInfo {
+  background-color: var(--color-info-soft) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--color-info) 30%,
+    transparent
+  ) !important;
 }
 
 @media only screen and (max-width: 767px) {
   .headerActions,
   .headerActions > * {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 }
 
@@ -289,7 +286,17 @@
 
   .imageGrid {
     grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
-    align-items: stretch;
+    align-items: start;
+  }
+
+  .imagePreview,
+  .imageUploadSlot {
+    height: 390px;
+    min-height: 390px;
+  }
+
+  .imageUploadSlot {
+    overflow-y: auto;
   }
 
   .primaryGrid,
@@ -298,10 +305,6 @@
   }
 
   .categoryGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .categoryGridWithCustom {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 

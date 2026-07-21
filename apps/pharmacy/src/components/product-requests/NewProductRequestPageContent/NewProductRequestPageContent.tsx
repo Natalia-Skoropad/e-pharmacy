@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
   Clock3,
   ExternalLink,
+  FileCheck2,
   FilePlus2,
+  History,
   ImagePlus,
   Save,
   Send,
@@ -16,9 +18,11 @@ import {
 import {
   Button,
   ButtonLink,
+  CountLabel,
   DocumentUpload,
   InfoTooltip,
   LoadingSpinner,
+  SelectField,
   Tabs,
   TextEditor,
   type DocumentUploadFile,
@@ -26,7 +30,7 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { EntityComments, useToast } from '@e-pharmacy/ui/feedback';
-import { FormFieldLayout, NameInput } from '@e-pharmacy/ui/form-fields';
+import { CommentInput, NameInput } from '@e-pharmacy/ui/form-fields';
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
@@ -49,6 +53,7 @@ import { formatOrderDateTime } from '@e-pharmacy/utils/formatters';
 import { sanitizeTextEditor } from '@e-pharmacy/validation';
 
 import {
+  checkPharmacyProductRequestArticle,
   createPharmacyNote,
   createPharmacyProductRequest,
   deletePharmacyNote,
@@ -184,12 +189,31 @@ function getRequestFormErrors(
 
 //===================================================================
 
-function toFileMetadata(file: DocumentUploadFile): ProductRequestFile {
+function toFileMetadata(
+  file: DocumentUploadFile,
+  dataUrl?: string | null
+): ProductRequestFile {
   return {
     name: file.name,
     type: file.type || 'application/octet-stream',
     size: file.size,
+    ...(dataUrl ? { dataUrl } : {}),
   };
+}
+
+//===================================================================
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () =>
+      typeof reader.result === 'string'
+        ? resolve(reader.result)
+        : reject(new Error('The selected image could not be read.'));
+    reader.onerror = () =>
+      reject(new Error('The selected image could not be read.'));
+    reader.readAsDataURL(file);
+  });
 }
 
 //===================================================================
@@ -224,62 +248,6 @@ function toFormState(request: PharmacyProductRequestDetails): RequestFormState {
     fullDescription: request.fullDescription ?? '',
     pharmacyComment: request.pharmacyComment ?? '',
   };
-}
-
-//===================================================================
-
-function ProductSelectField<TValue extends string>({
-  id,
-  label,
-  hint,
-  value,
-  options,
-  required = true,
-  disabled = false,
-  error,
-  isTouched,
-  onChange,
-}: Readonly<{
-  id: string;
-  label: string;
-  hint?: string;
-  value: TValue;
-  options: readonly { value: TValue; label: string }[];
-  required?: boolean;
-  disabled?: boolean;
-  error?: string;
-  isTouched?: boolean;
-  onChange: (value: TValue) => void;
-}>) {
-  return (
-    <FormFieldLayout
-      id={id}
-      label={label}
-      hint={hint}
-      required={required}
-      error={error}
-      isTouched={isTouched}
-    >
-      <div className={css.selectWrap}>
-        <select
-          className={css.formSelect}
-          id={id}
-          value={value}
-          disabled={disabled}
-          aria-invalid={Boolean(isTouched && error)}
-          onChange={(event: ChangeEvent<HTMLSelectElement>) =>
-            onChange(event.target.value as TValue)
-          }
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-    </FormFieldLayout>
-  );
 }
 
 //===================================================================
@@ -344,7 +312,8 @@ function NewProductRequestPageContent({
   const [productImagePreview, setProductImagePreview] = useState<string | null>(
     null
   );
-  const productImagePreviewUrlRef = useRef<string | null>(null);
+  const [isProductImageRemoved, setIsProductImageRemoved] = useState(false);
+  const [isImageProcessing, setIsImageProcessing] = useState(false);
   const [productImageError, setProductImageError] = useState('');
   const [additionalFilesError, setAdditionalFilesError] = useState('');
   const [validationMode, setValidationMode] = useState<ValidationMode>(null);
@@ -359,23 +328,42 @@ function NewProductRequestPageContent({
   const [commentsTotal, setCommentsTotal] = useState(0);
   const [isModerationConfirmOpen, setIsModerationConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isImageDeleteConfirmOpen, setIsImageDeleteConfirmOpen] =
+    useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [articleCheckStatus, setArticleCheckStatus] = useState<
+    'idle' | 'checking' | 'available' | 'unavailable'
+  >('idle');
+  const [articleCheckMessage, setArticleCheckMessage] = useState('');
 
-  const isExistingRequest = Boolean(requestId && request);
   const isDraft = request?.status === 'draft';
   const isReadonly = Boolean(request && request.status !== 'draft');
   const canEdit = !isReadonly && !isCreationLocked;
   const isSaving = savingStatus !== null;
-  const hasProductImage = productImage.length > 0;
+  const hasProductImage = productImage.length > 0 && !isProductImageRemoved;
+  const articleError =
+    articleCheckStatus === 'unavailable' ? articleCheckMessage : undefined;
 
-  const moderationErrors = useMemo(
-    () => getRequestFormErrors(values, hasProductImage, 'moderation'),
-    [hasProductImage, values]
-  );
-  const isModerationReady = Object.keys(moderationErrors).length === 0;
+  const moderationErrors = useMemo(() => {
+    const nextErrors = getRequestFormErrors(
+      values,
+      hasProductImage,
+      'moderation'
+    );
+
+    if (articleError) nextErrors.article = articleError;
+    return nextErrors;
+  }, [articleError, hasProductImage, values]);
+
+  const isModerationReady =
+    Object.keys(moderationErrors).length === 0 &&
+    articleCheckStatus === 'available' &&
+    !isImageProcessing;
   const errors = validationMode
     ? getRequestFormErrors(values, hasProductImage, validationMode)
     : {};
+
+  if (articleError) errors.article = articleError;
 
   const tabs = useMemo<TabItem<RequestTab>[]>(() => {
     const items: TabItem<RequestTab>[] = [
@@ -392,14 +380,6 @@ function NewProductRequestPageContent({
 
     return items;
   }, [commentsTotal, request]);
-
-  useEffect(() => {
-    return () => {
-      if (productImagePreviewUrlRef.current) {
-        URL.revokeObjectURL(productImagePreviewUrlRef.current);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const idToLoad = requestId ?? cloneSourceRequestId;
@@ -422,6 +402,8 @@ function NewProductRequestPageContent({
             ? [toUploadFile(loadedRequest.productImage, 'product-image')]
             : []
         );
+        setProductImagePreview(loadedRequest.productImage?.dataUrl ?? null);
+        setIsProductImageRemoved(false);
         setAdditionalFiles(
           (loadedRequest.additionalFiles ?? []).map((file, index) =>
             toUploadFile(file, `additional-${index}`)
@@ -447,30 +429,64 @@ function NewProductRequestPageContent({
     };
   }, [cloneSourceRequestId, requestId]);
 
-  const updateProductImagePreview = (file?: File) => {
-    if (productImagePreviewUrlRef.current) {
-      URL.revokeObjectURL(productImagePreviewUrlRef.current);
-    }
+  useEffect(() => {
+    const article = values.article.trim().toUpperCase();
+    if (!canEdit || !article) return;
 
-    const previewUrl = file ? URL.createObjectURL(file) : null;
-    productImagePreviewUrlRef.current = previewUrl;
-    setProductImagePreview(previewUrl);
-  };
+    let isCurrent = true;
+    const timeoutId = window.setTimeout(async () => {
+      setArticleCheckStatus('checking');
+
+      try {
+        const result = await checkPharmacyProductRequestArticle(
+          article,
+          requestId
+        );
+        if (!isCurrent) return;
+
+        setArticleCheckStatus(result.available ? 'available' : 'unavailable');
+        setArticleCheckMessage(
+          result.message ?? 'This article is already in use.'
+        );
+      } catch {
+        if (!isCurrent) return;
+        setArticleCheckStatus('unavailable');
+        setArticleCheckMessage(
+          'Could not verify the product article. Try again.'
+        );
+      }
+    }, 350);
+
+    return () => {
+      isCurrent = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [canEdit, requestId, values.article]);
 
   const updateValue = <TField extends keyof RequestFormState>(
     field: TField,
     value: RequestFormState[TField]
   ) => {
+    if (field === 'article') {
+      setArticleCheckStatus('idle');
+      setArticleCheckMessage('');
+    }
+
     setValues((current) => ({ ...current, [field]: value }));
   };
 
-  const handleProductImageChange = (files: DocumentUploadFile[]) => {
+  const clearProductImage = () => {
+    setProductImage([]);
+    setProductImagePreview(null);
+    setProductImageError('');
+    setIsProductImageRemoved(true);
+  };
+
+  const handleProductImageChange = async (files: DocumentUploadFile[]) => {
     const image = files[0];
 
     if (!image) {
-      updateProductImagePreview();
-      setProductImage([]);
-      setProductImageError('');
+      if (hasProductImage) setIsImageDeleteConfirmOpen(true);
       return;
     }
 
@@ -484,9 +500,30 @@ function NewProductRequestPageContent({
       return;
     }
 
-    updateProductImagePreview(image.file);
-    setProductImage([image]);
-    setProductImageError('');
+    if (!image.file) {
+      setProductImage([image]);
+      setProductImageError('');
+      setIsProductImageRemoved(false);
+      return;
+    }
+
+    setIsImageProcessing(true);
+
+    try {
+      const dataUrl = await readFileAsDataUrl(image.file);
+      setProductImage([image]);
+      setProductImagePreview(dataUrl);
+      setProductImageError('');
+      setIsProductImageRemoved(false);
+    } catch (error) {
+      setProductImageError(
+        error instanceof Error
+          ? error.message
+          : 'The selected image could not be read.'
+      );
+    } finally {
+      setIsImageProcessing(false);
+    }
   };
 
   const handleAdditionalFilesChange = (files: DocumentUploadFile[]) => {
@@ -516,7 +553,10 @@ function NewProductRequestPageContent({
       values.category === 'other'
         ? values.customCategory.trim() || undefined
         : undefined,
-    productImage: productImage[0] ? toFileMetadata(productImage[0]) : undefined,
+    productImage:
+      hasProductImage && productImage[0]
+        ? toFileMetadata(productImage[0], productImagePreview)
+        : undefined,
     manufacturer: values.manufacturer.trim() || undefined,
     countryOfOrigin: values.countryOfOrigin.trim() || undefined,
     dosage: values.dosage.trim() || undefined,
@@ -527,7 +567,7 @@ function NewProductRequestPageContent({
     fullDescription: values.fullDescription.trim() || undefined,
     pharmacyComment: values.pharmacyComment.trim() || undefined,
     additionalFiles: additionalFiles.length
-      ? additionalFiles.map(toFileMetadata)
+      ? additionalFiles.map((file) => toFileMetadata(file))
       : undefined,
   });
 
@@ -578,8 +618,17 @@ function NewProductRequestPageContent({
     setValidationMode('draft');
     const draftErrors = getRequestFormErrors(values, hasProductImage, 'draft');
 
+    if (articleError) draftErrors.article = articleError;
+
     if (Object.keys(draftErrors).length > 0) {
-      toast.error('Fill in the product name, article, and category.');
+      toast.error(
+        'Fill in the required draft fields and use a unique article.'
+      );
+      return;
+    }
+
+    if (articleCheckStatus !== 'available' || isImageProcessing) {
+      toast.error('Wait until the image and product article checks finish.');
       return;
     }
 
@@ -624,7 +673,9 @@ function NewProductRequestPageContent({
   const savedImageSrc = request?.productImageUrl
     ? getProductImageSrc(request.productImageUrl)
     : null;
-  const displayedImageSrc = productImagePreview ?? savedImageSrc;
+  const displayedImageSrc = isProductImageRemoved
+    ? null
+    : (productImagePreview ?? savedImageSrc);
 
   const headerActions = (
     <div className={css.headerActions}>
@@ -650,7 +701,12 @@ function NewProductRequestPageContent({
             variant="secondary"
             size="sm"
             isLoading={savingStatus === 'draft'}
-            disabled={isSaving || !canEdit}
+            disabled={
+              isSaving ||
+              !canEdit ||
+              articleCheckStatus !== 'available' ||
+              isImageProcessing
+            }
             iconLeft={<Save size={17} aria-hidden="true" />}
             onClick={handleSaveDraft}
           >
@@ -661,7 +717,9 @@ function NewProductRequestPageContent({
             type="button"
             size="sm"
             isLoading={savingStatus === 'new'}
-            disabled={isSaving || !canEdit || !isModerationReady}
+            disabled={
+              isSaving || !canEdit || !isModerationReady || isImageProcessing
+            }
             iconLeft={<Send size={17} aria-hidden="true" />}
             onClick={handleSendForModeration}
           >
@@ -716,6 +774,7 @@ function NewProductRequestPageContent({
               <InfoTooltip
                 label="About saving and sending product requests"
                 title="Save or send the request"
+                icon={<FileCheck2 size={20} strokeWidth={2} />}
               >
                 A draft remains editable. After sending, Admin starts reviewing
                 the request and the pharmacy can no longer edit it.
@@ -768,26 +827,31 @@ function NewProductRequestPageContent({
         ) : null}
       </section>
 
-      <section className={css.noticeCard} aria-labelledby="before-create-title">
-        <div>
-          <h2 className={css.noticeTitle} id="before-create-title">
-            Check the global catalog first
-          </h2>
-          <p className={css.noticeText}>
-            Create a request only when the product is not available in All
-            products. Search by name and article to avoid duplicates.
-          </p>
-        </div>
-
-        <ButtonLink
-          href={getPharmacyAllProductsPath()}
-          variant="secondary"
-          size="sm"
-          iconRight={<ExternalLink size={16} aria-hidden="true" />}
+      {!request ? (
+        <section
+          className={css.noticeCard}
+          aria-labelledby="before-create-title"
         >
-          Open All products
-        </ButtonLink>
-      </section>
+          <div>
+            <h2 className={css.noticeTitle} id="before-create-title">
+              Check the global catalog first
+            </h2>
+            <p className={css.noticeText}>
+              Create a request only when the product is not available in All
+              products. Search by name and article to avoid duplicates.
+            </p>
+          </div>
+
+          <ButtonLink
+            href={getPharmacyAllProductsPath()}
+            variant="secondary"
+            size="sm"
+            iconRight={<ExternalLink size={16} aria-hidden="true" />}
+          >
+            Open All products
+          </ButtonLink>
+        </section>
+      ) : null}
 
       <Tabs
         items={tabs}
@@ -825,28 +889,32 @@ function NewProductRequestPageContent({
                 )}
               </div>
 
-              <DocumentUpload
-                id="product-request-image"
-                name="productImage"
-                label="Product image"
-                value={productImage}
-                error={productImageError || errors.productImage}
-                isTouched={Boolean(
-                  productImageError || validationMode === 'moderation'
-                )}
-                required
-                disabled={!canEdit}
-                multiple={false}
-                maxFiles={1}
-                accept="image/jpeg,image/png,image/webp"
-                hint="JPG, PNG, or WEBP up to 2 MB."
-                labels={{
-                  dropzoneTitle: 'Choose product image',
-                  dropzoneText: 'Upload one clear product photo.',
-                  removeAriaLabel: (fileName) => `Remove image ${fileName}`,
-                }}
-                onChange={handleProductImageChange}
-              />
+              <div className={css.imageUploadSlot}>
+                <DocumentUpload
+                  id="product-request-image"
+                  name="productImage"
+                  label="Product image"
+                  value={productImage}
+                  error={productImageError || errors.productImage}
+                  isTouched={Boolean(
+                    productImageError || validationMode === 'moderation'
+                  )}
+                  required
+                  disabled={!canEdit || isImageProcessing}
+                  multiple={false}
+                  maxFiles={1}
+                  accept="image/jpeg,image/png,image/webp"
+                  hint="JPG, PNG, or WEBP up to 2 MB."
+                  labels={{
+                    dropzoneTitle: isImageProcessing
+                      ? 'Preparing image preview...'
+                      : 'Choose product image',
+                    dropzoneText: 'Upload one clear product photo.',
+                    removeAriaLabel: (fileName) => `Remove image ${fileName}`,
+                  }}
+                  onChange={(files) => void handleProductImageChange(files)}
+                />
+              </div>
             </div>
 
             <div className={css.primaryGrid}>
@@ -873,7 +941,10 @@ function NewProductRequestPageContent({
                 placeholder="Enter product article"
                 value={values.article}
                 error={errors.article}
-                isTouched={Boolean(validationMode)}
+                isTouched={
+                  Boolean(validationMode) ||
+                  articleCheckStatus === 'unavailable'
+                }
                 maxLength={40}
                 disabled={!canEdit}
                 autoComplete="off"
@@ -900,11 +971,7 @@ function NewProductRequestPageContent({
               />
             </div>
 
-            <div
-              className={`${css.categoryGrid} ${
-                values.category === 'other' ? css.categoryGridWithCustom : ''
-              }`}
-            >
+            <div className={css.categoryGrid}>
               <NameInput
                 id="product-request-country"
                 name="countryOfOrigin"
@@ -922,10 +989,11 @@ function NewProductRequestPageContent({
                 }
               />
 
-              <ProductSelectField
+              <SelectField
                 id="product-request-category"
                 label="Category"
                 hint="Select the closest catalog category."
+                required
                 value={values.category}
                 options={CATEGORY_OPTIONS}
                 disabled={!canEdit}
@@ -935,24 +1003,25 @@ function NewProductRequestPageContent({
                 }}
               />
 
-              {values.category === 'other' ? (
-                <NameInput
-                  id="product-request-custom-category"
-                  name="customCategory"
-                  label="Other category"
-                  hint="Enter the category Admin should use."
-                  placeholder="Enter category name"
-                  value={values.customCategory}
-                  error={errors.customCategory}
-                  isTouched={Boolean(validationMode)}
-                  maxLength={100}
-                  disabled={!canEdit}
-                  autoComplete="off"
-                  onChange={(event) =>
-                    updateValue('customCategory', event.target.value)
-                  }
-                />
-              ) : null}
+              <NameInput
+                id="product-request-custom-category"
+                name="customCategory"
+                label="Other category"
+                hint="Enter the category Admin should use."
+                placeholder="Enter category name"
+                value={values.customCategory}
+                error={errors.customCategory}
+                isTouched={
+                  values.category === 'other' && Boolean(validationMode)
+                }
+                required={values.category === 'other'}
+                maxLength={100}
+                disabled={!canEdit || values.category !== 'other'}
+                autoComplete="off"
+                onChange={(event) =>
+                  updateValue('customCategory', event.target.value)
+                }
+              />
             </div>
           </section>
 
@@ -1034,13 +1103,17 @@ function NewProductRequestPageContent({
                 }
               />
 
-              <ProductSelectField
+              <SelectField
                 id="product-request-prescription-type"
                 label="Prescription type"
+                required
                 value={values.prescriptionType}
-                options={PRESCRIPTION_OPTIONS}
-                error={errors.prescriptionType}
-                isTouched={validationMode === 'moderation'}
+                options={[...PRESCRIPTION_OPTIONS]}
+                error={
+                  validationMode === 'moderation'
+                    ? errors.prescriptionType
+                    : undefined
+                }
                 disabled={!canEdit}
                 onChange={(prescriptionType) =>
                   updateValue('prescriptionType', prescriptionType)
@@ -1098,7 +1171,7 @@ function NewProductRequestPageContent({
               </div>
             </div>
 
-            <TextEditor
+            <CommentInput
               id="product-request-pharmacy-comment"
               name="pharmacyComment"
               label="Pharmacy note for Admin"
@@ -1108,10 +1181,7 @@ function NewProductRequestPageContent({
               maxLength={1500}
               disabled={!canEdit}
               onChange={(event) =>
-                updateValue(
-                  'pharmacyComment',
-                  sanitizeTextEditor(event.target.value)
-                )
+                updateValue('pharmacyComment', event.target.value)
               }
             />
           </section>
@@ -1188,34 +1258,46 @@ function NewProductRequestPageContent({
           className={css.formCard}
           aria-labelledby="request-history-title"
         >
-          <div className={css.sectionHeader}>
-            <div>
-              <h2 className={css.sectionTitle} id="request-history-title">
-                Change history
-              </h2>
-              <p className={css.sectionText}>
-                Status changes and important request actions are shown newest
-                first.
-              </p>
-            </div>
+          <div className={css.historyHeader}>
+            <h2 className={css.sectionTitle} id="request-history-title">
+              Change history
+            </h2>
+
+            <CountLabel
+              shown={request.history.length}
+              total={request.history.length}
+              label="history events"
+            />
           </div>
 
           <ol className={css.historyList}>
-            {[...request.history].reverse().map((entry) => (
-              <li key={entry.id} className={css.historyItem}>
-                <div className={css.historyHead}>
-                  <StatusBadge
-                    status={entry.status}
-                    label={PRODUCT_REQUEST_STATUS_LABELS[entry.status]}
-                  />
-                  <time dateTime={entry.createdAt}>
-                    {formatOrderDateTime(entry.createdAt)}
-                  </time>
-                </div>
-                <h3>{entry.title}</h3>
-                <p>{entry.description}</p>
-              </li>
-            ))}
+            {[...request.history].reverse().map((entry) => {
+              const toneClassName =
+                entry.status === 'rejected'
+                  ? css.historyDanger
+                  : entry.status === 'in_progress'
+                    ? css.historyWarning
+                    : entry.status === 'new'
+                      ? css.historyInfo
+                      : undefined;
+
+              return (
+                <li key={entry.id} className={toneClassName}>
+                  <History size={18} aria-hidden="true" />
+                  <div className={css.historyContent}>
+                    <strong>{entry.title}</strong>
+                    <time dateTime={entry.createdAt}>
+                      {formatOrderDateTime(entry.createdAt)}
+                    </time>
+                    <StatusBadge
+                      status={entry.status}
+                      label={PRODUCT_REQUEST_STATUS_LABELS[entry.status]}
+                    />
+                    <p>{entry.description}</p>
+                  </div>
+                </li>
+              );
+            })}
           </ol>
         </section>
       ) : null}
@@ -1229,6 +1311,20 @@ function NewProductRequestPageContent({
           isLoading={savingStatus === 'new'}
           onConfirm={() => void handleConfirmModeration()}
           onCancel={() => setIsModerationConfirmOpen(false)}
+        />
+      ) : null}
+
+      {isImageDeleteConfirmOpen ? (
+        <ConfirmationModal
+          title="Remove product image?"
+          text="The image will be removed from this request after you confirm and save the draft."
+          confirmLabel="Remove image"
+          cancelLabel="Keep image"
+          onConfirm={() => {
+            clearProductImage();
+            setIsImageDeleteConfirmOpen(false);
+          }}
+          onCancel={() => setIsImageDeleteConfirmOpen(false)}
         />
       ) : null}
 

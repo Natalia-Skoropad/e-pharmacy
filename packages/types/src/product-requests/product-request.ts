@@ -24,6 +24,7 @@ export type ProductRequestFile = Readonly<{
   name: string;
   type: string;
   size: number;
+  dataUrl?: string;
 }>;
 
 export type ProductRequestHistoryEntry = Readonly<{

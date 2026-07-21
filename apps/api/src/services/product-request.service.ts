@@ -6,7 +6,7 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import { Pharmacy } from '../models/pharmacy.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
 import { ProductRequest } from '../models/productRequest.model';
-import '../models/product.model';
+import { Product } from '../models/product.model';
 
 import type {
   ProductRequestEntity,
@@ -17,6 +17,7 @@ import type {
 
 import type {
   CreateProductRequestInput,
+  ProductRequestArticleAvailabilityQuery,
   ProductRequestsQuery,
   UpdateProductRequestInput,
 } from '../schemas/product-request.schema';
@@ -50,6 +51,67 @@ type CurrentPharmacy = {
   _id: Types.ObjectId;
   status: string;
 };
+
+//===============================================================
+
+async function getArticleConflict(
+  article: string,
+  excludeRequestId?: string
+): Promise<string | null> {
+  const normalizedArticle = article.trim().toUpperCase();
+  if (!normalizedArticle) return null;
+
+  const requestFilter: Record<string, unknown> = {
+    article: normalizedArticle,
+    status: { $ne: 'rejected' },
+  };
+
+  if (excludeRequestId && Types.ObjectId.isValid(excludeRequestId)) {
+    requestFilter._id = { $ne: new Types.ObjectId(excludeRequestId) };
+  }
+
+  const [existingProduct, existingRequest] = await Promise.all([
+    Product.exists({ article: normalizedArticle }),
+    ProductRequest.exists(requestFilter),
+  ]);
+
+  if (existingProduct) {
+    return 'A product with this article already exists in the global catalog.';
+  }
+
+  if (existingRequest) {
+    return 'Another active product request already uses this article.';
+  }
+
+  return null;
+}
+
+async function assertArticleAvailable(
+  article: string,
+  excludeRequestId?: string
+): Promise<void> {
+  const conflict = await getArticleConflict(article, excludeRequestId);
+
+  if (conflict) {
+    throw httpError(HTTP_STATUS.CONFLICT, conflict);
+  }
+}
+
+//===============================================================
+
+export async function getProductRequestArticleAvailabilityService(
+  query: ProductRequestArticleAvailabilityQuery
+) {
+  const message = await getArticleConflict(
+    query.article,
+    query.excludeRequestId
+  );
+
+  return {
+    available: !message,
+    ...(message ? { message } : {}),
+  };
+}
 
 //===============================================================
 
@@ -192,8 +254,8 @@ function serializeProductRequest(
     requestNumber: String(request._id),
     productId: getProductRequestProductId(request.productId),
     productImageUrl: isProductRequestProductDocument(request.productId)
-      ? request.productId.imageUrl
-      : undefined,
+      ? request.productId.imageUrl || request.productImage?.dataUrl
+      : request.productImage?.dataUrl,
     productArticle: isProductRequestProductDocument(request.productId)
       ? request.productId.article || request.article
       : request.article,
@@ -285,6 +347,8 @@ export async function createProductRequestService(
     );
   }
 
+  await assertArticleAvailable(input.article);
+
   const now = new Date();
   const historyCopy = getStatusHistoryCopy(input.status);
   const request = await ProductRequest.create({
@@ -335,6 +399,8 @@ export async function updateProductRequestService(
       'Only draft product requests can be edited.'
     );
   }
+
+  await assertArticleAvailable(input.article, requestId);
 
   request.set({
     ...getRequestFormUpdate(input),

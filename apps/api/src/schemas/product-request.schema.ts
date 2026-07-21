@@ -36,6 +36,7 @@ const productRequestFileSchema = z.object({
     .int()
     .min(0)
     .max(10 * 1024 * 1024),
+  dataUrl: z.string().max(3 * 1024 * 1024).optional(),
 });
 
 const productImageSchema = productRequestFileSchema.extend({
@@ -44,6 +45,14 @@ const productImageSchema = productRequestFileSchema.extend({
     .int()
     .min(0)
     .max(2 * 1024 * 1024),
+  dataUrl: z
+    .string()
+    .max(3 * 1024 * 1024)
+    .regex(
+      /^data:image\/(jpeg|png|webp);base64,/i,
+      'Product image must be a valid image data URL'
+    )
+    .optional(),
 });
 
 //===============================================================
@@ -146,6 +155,13 @@ export const updateProductRequestSchema = productRequestFormSchema;
 
 //===============================================================
 
+export const productRequestArticleAvailabilityQuerySchema = z.object({
+  article: z.string().trim().min(1).max(40),
+  excludeRequestId: mongoIdSchema.optional(),
+});
+
+//===============================================================
+
 export const productRequestParamsSchema = z.object({
   requestId: mongoIdSchema,
 });
@@ -153,6 +169,10 @@ export const productRequestParamsSchema = z.object({
 //===============================================================
 
 export type ProductRequestsQuery = z.infer<typeof productRequestsQuerySchema>;
+
+export type ProductRequestArticleAvailabilityQuery = z.infer<
+  typeof productRequestArticleAvailabilityQuerySchema
+>;
 
 export type CreateProductRequestInput = z.infer<
   typeof createProductRequestSchema

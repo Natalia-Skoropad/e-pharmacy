@@ -17,6 +17,7 @@ export type ProductRequestFile = {
   name: string;
   type: string;
   size: number;
+  dataUrl?: string;
 };
 
 export type ProductRequestHistoryEntry = {

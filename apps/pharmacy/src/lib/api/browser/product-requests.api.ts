@@ -47,6 +47,30 @@ export async function createPharmacyProductRequest(
 
 //===================================================================
 
+export async function checkPharmacyProductRequestArticle(
+  article: string,
+  excludeRequestId?: string
+): Promise<{ available: boolean; message?: string }> {
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
+    `${PHARMACY_API_ROUTES.productRequests.list}/article-availability${buildQueryString({
+      article,
+      excludeRequestId,
+    })}`
+  );
+
+  const data = getResponseData(response) as {
+    available?: unknown;
+    message?: unknown;
+  };
+
+  return {
+    available: data.available === true,
+    ...(typeof data.message === 'string' ? { message: data.message } : {}),
+  };
+}
+
+//===================================================================
+
 export async function getPharmacyProductRequests(
   params: PharmacyProductRequestsQueryParams = {}
 ): Promise<PharmacyProductRequestsResponse> {
@@ -75,8 +99,6 @@ export async function getPharmacyProductRequest(
 
   return request;
 }
-
-
 
 //===================================================================
 

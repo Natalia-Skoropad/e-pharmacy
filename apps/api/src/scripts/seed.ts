@@ -3819,6 +3819,66 @@ async function seedProductRequests(): Promise<number> {
 
 //===============================================================
 
+const PRODUCT_REQUEST_COMMENT_TEMPLATES = [
+  'Double-check the package image before the request is sent to Admin.',
+  'The pharmacy plans to add this item to the seasonal assortment.',
+  'Confirm that the article matches the manufacturer label exactly.',
+  'The attached information was reviewed by the responsible pharmacist.',
+  'Keep the package quantity unchanged when updating this draft.',
+  'The product is not currently available in the global catalog.',
+  'Use the latest manufacturer details from the submitted documents.',
+  'The pharmacy may need this item for upcoming client reservations.',
+  'Check the prescription type before sending the request for moderation.',
+  'The product description should remain concise and package-specific.',
+  'Review the country of origin against the package before approval.',
+  'This is a private pharmacy note and is not visible to Admin or clients.',
+] as const;
+
+async function seedProductRequestComments(): Promise<number> {
+  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
+    .select('_id ownerId managerUserIds')
+    .lean<{
+      _id: Types.ObjectId;
+      ownerId?: Types.ObjectId;
+      managerUserIds?: Types.ObjectId[];
+    } | null>();
+
+  if (!pharmacy) return 0;
+
+  const createdBy = pharmacy.ownerId ?? pharmacy.managerUserIds?.[0];
+  if (!createdBy) return 0;
+
+  const requests = await ProductRequest.find({ pharmacyId: pharmacy._id })
+    .sort({ createdAt: 1, _id: 1 })
+    .select('_id name createdAt')
+    .lean<Array<{ _id: Types.ObjectId; name: string; createdAt: Date }>>();
+
+  const notes = requests.flatMap((request, requestIndex) =>
+    Array.from({ length: 12 }, (_, commentIndex) => {
+      const createdAt = new Date(
+        request.createdAt.getTime() + (commentIndex + 1) * 20 * 60 * 1000
+      );
+      const template =
+        PRODUCT_REQUEST_COMMENT_TEMPLATES[
+          (requestIndex + commentIndex) % PRODUCT_REQUEST_COMMENT_TEMPLATES.length
+        ];
+
+      return {
+        pharmacyId: pharmacy._id,
+        entityType: 'product_request' as const,
+        entityId: request._id,
+        text: `${request.name}: ${template}`,
+        createdBy,
+        createdAt,
+        updatedAt: createdAt,
+      };
+    })
+  );
+
+  await PharmacyNote.insertMany(notes);
+  return notes.length;
+}
+
 //===============================================================
 
 async function removeSeededDefaultPharmacyClients(): Promise<void> {
@@ -3953,6 +4013,7 @@ async function seedDatabase(): Promise<void> {
   const reconciledOffersCount = await reconcileActivePharmacyInventoryLedger();
 
   const productRequestsCount = await seedProductRequests();
+  const productRequestCommentsCount = await seedProductRequestComments();
   const productManagerNotesCount = await seedOwnProductManagerNotes();
   const clientManagerNotesCount = await seedClientManagerNotes();
   await assertDemoOrderStatusCounts();
@@ -3982,6 +4043,9 @@ async function seedDatabase(): Promise<void> {
   );
   console.log(
     `Seed completed: ${productRequestsCount} product requests created`
+  );
+  console.log(
+    `Seed completed: ${productRequestCommentsCount} product request comments created`
   );
   console.log(
     `Seed completed: ${productManagerNotesCount} product manager comments created`

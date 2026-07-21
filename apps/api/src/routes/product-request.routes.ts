@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   createProductRequest,
   deleteProductRequest,
+  getProductRequestArticleAvailability,
   getProductRequestById,
   getProductRequests,
   updateProductRequest,
@@ -13,6 +14,7 @@ import { validate } from '../middlewares/validate.middleware';
 
 import {
   createProductRequestSchema,
+  productRequestArticleAvailabilityQuerySchema,
   productRequestParamsSchema,
   productRequestsQuerySchema,
   updateProductRequestSchema,
@@ -34,6 +36,14 @@ productRequestRoutes.get(
   '/',
   validate({ query: productRequestsQuerySchema }),
   ctrlWrapper(getProductRequests)
+);
+
+//=================================================================================
+
+productRequestRoutes.get(
+  '/article-availability',
+  validate({ query: productRequestArticleAvailabilityQuerySchema }),
+  ctrlWrapper(getProductRequestArticleAvailability)
 );
 
 //=================================================================================

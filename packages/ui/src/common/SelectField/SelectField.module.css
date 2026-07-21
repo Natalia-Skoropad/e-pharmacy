@@ -4,12 +4,35 @@
   min-width: 0;
 }
 
+.formField {
+  position: relative;
+  padding-bottom: 12px;
+}
+
 .label {
   font-size: var(--fz-14);
   font-weight: var(--fw-medium);
   line-height: var(--lh-base);
   color: var(--color-text-primary);
   opacity: 0.5;
+}
+
+.formField .label {
+  display: inline-flex;
+  gap: 3px;
+  align-items: baseline;
+  opacity: 1;
+}
+
+.requiredMark {
+  color: var(--color-error);
+}
+
+.hint {
+  margin: -2px 0 0;
+  font-size: var(--fz-12);
+  line-height: 1.4;
+  color: var(--color-text-secondary);
 }
 
 .selectRoot {
@@ -162,6 +185,24 @@
   font-size: var(--fz-12);
   line-height: var(--lh-base);
   color: var(--color-error);
+}
+
+.formField .error {
+  position: absolute;
+  left: 16px;
+  bottom: 2px;
+  z-index: 2;
+  max-width: calc(100% - 32px);
+  padding-inline: 8px;
+  margin: 0;
+  line-height: 18px;
+  white-space: nowrap;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 
 @keyframes select-field-spin {

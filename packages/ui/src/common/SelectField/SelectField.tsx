@@ -26,6 +26,8 @@ export type SelectFieldProps<TValue extends string> = {
   value: TValue;
   options: SelectOption<TValue>[];
   placeholder?: string;
+  hint?: string;
+  required?: boolean;
   isActive?: boolean;
   isLoading?: boolean;
   disabled?: boolean;
@@ -42,6 +44,8 @@ function SelectField<TValue extends string>({
   value,
   options,
   placeholder = 'Select option',
+  hint,
+  required = false,
   isActive = false,
   isLoading = false,
   disabled = false,
@@ -53,7 +57,10 @@ function SelectField<TValue extends string>({
   const buttonId = id ?? generatedId;
   const listboxId = `${buttonId}-listbox`;
   const errorId = error ? `${buttonId}-error` : undefined;
-  const ariaDescribedBy = [describedBy, errorId].filter(Boolean).join(' ') || undefined;
+  const hintId = hint ? `${buttonId}-hint` : undefined;
+  const ariaDescribedBy = [describedBy, hintId, errorId]
+    .filter(Boolean)
+    .join(' ') || undefined;
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -138,10 +145,24 @@ function SelectField<TValue extends string>({
   };
 
   return (
-    <div className={css.field} ref={rootRef}>
+    <div
+      className={clsx(css.field, (hint || required) && css.formField)}
+      ref={rootRef}
+    >
       <span className={css.label} id={`${buttonId}-label`}>
         {label}
+        {required ? (
+          <span className={css.requiredMark} aria-hidden="true">
+            *
+          </span>
+        ) : null}
       </span>
+
+      {hint ? (
+        <p className={css.hint} id={hintId}>
+          {hint}
+        </p>
+      ) : null}
 
       <div className={css.selectRoot}>
         <button

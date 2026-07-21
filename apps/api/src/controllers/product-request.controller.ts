@@ -4,6 +4,7 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 
 import {
   createProductRequestSchema,
+  productRequestArticleAvailabilityQuerySchema,
   productRequestParamsSchema,
   productRequestsQuerySchema,
   updateProductRequestSchema,
@@ -12,6 +13,7 @@ import {
 import {
   createProductRequestService,
   deleteProductRequestService,
+  getProductRequestArticleAvailabilityService,
   getProductRequestByIdService,
   getProductRequestsService,
   updateProductRequestService,
@@ -31,6 +33,22 @@ export async function createProductRequest(
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.CREATED,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function getProductRequestArticleAvailability(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const query = productRequestArticleAvailabilityQuerySchema.parse(req.query);
+  const data = await getProductRequestArticleAvailabilityService(query);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
     data,
   });
 }
