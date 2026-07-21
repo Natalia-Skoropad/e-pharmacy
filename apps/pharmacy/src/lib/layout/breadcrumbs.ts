@@ -168,11 +168,12 @@ export function getNewProductRequestBreadcrumbs(): BreadcrumbItem[] {
 //===================================================================
 
 export function getProductRequestDetailsBreadcrumbs(
-  requestId: string
+  requestId: string,
+  currentLabel = `Product request ${requestId}`
 ): BreadcrumbItem[] {
   return getPharmacyBreadcrumbs(
     {
-      label: `Product request ${requestId}`,
+      label: currentLabel,
       href: getPharmacyRequestPath(requestId),
     },
     { label: 'Product requests', href: PHARMACY_PRODUCT_REQUESTS }
@@ -294,7 +295,7 @@ export function getPharmacyBreadcrumbsByPathname(
     }
 
     return id && !isFilterSegment(id)
-      ? getProductRequestDetailsBreadcrumbs(id)
+      ? getProductRequestDetailsBreadcrumbs(id, currentDetailLabel)
       : getProductRequestsBreadcrumbs();
   }
 

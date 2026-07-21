@@ -19,6 +19,13 @@ export type ProductRequestFile = {
   size: number;
 };
 
+export type ProductRequestHistoryEntry = {
+  status: ProductRequestStatus;
+  title: string;
+  description: string;
+  createdAt: Date;
+};
+
 //===============================================================
 
 export type ProductRequestEntity = {
@@ -26,6 +33,7 @@ export type ProductRequestEntity = {
   name: string;
   article: string;
   category: ProductCategory;
+  customCategory?: string;
   status: ProductRequestStatus;
   productId?: Types.ObjectId;
   productImage?: ProductRequestFile;
@@ -36,12 +44,11 @@ export type ProductRequestEntity = {
   form?: string;
   activeSubstance?: string;
   prescriptionType?: string;
-  storageConditions?: string;
-  shortDescription?: string;
   fullDescription?: string;
-  characteristics?: string;
   pharmacyComment?: string;
   additionalFiles?: ProductRequestFile[];
+  rejectionReason?: string;
+  history?: ProductRequestHistoryEntry[];
   createdAt: Date;
   updatedAt: Date;
 };
@@ -60,6 +67,7 @@ export type ProductRequestResponseDto = {
   article: string;
   name: string;
   category: ProductCategory;
+  customCategory?: string;
   status: ProductRequestStatus;
   productImage?: ProductRequestFile;
   manufacturer?: string;
@@ -69,12 +77,18 @@ export type ProductRequestResponseDto = {
   form?: string;
   activeSubstance?: string;
   prescriptionType?: string;
-  storageConditions?: string;
-  shortDescription?: string;
   fullDescription?: string;
-  characteristics?: string;
   pharmacyComment?: string;
   additionalFiles?: ProductRequestFile[];
+  rejectionReason?: string;
+  history?: Array<{
+    id: string;
+    status: ProductRequestStatus;
+    title: string;
+    description: string;
+    createdAt: string;
+  }>;
+  commentsTotal?: number;
 };
 
 //===============================================================

@@ -6,12 +6,15 @@ import {
   createProductRequestSchema,
   productRequestParamsSchema,
   productRequestsQuerySchema,
+  updateProductRequestSchema,
 } from '../schemas/product-request.schema';
 
 import {
   createProductRequestService,
+  deleteProductRequestService,
   getProductRequestByIdService,
   getProductRequestsService,
+  updateProductRequestService,
 } from '../services/product-request.service';
 
 import { sendSuccessResponse } from '../utils/apiResponse';
@@ -67,3 +70,42 @@ export async function getProductRequestById(
   });
 }
 
+//===============================================================
+
+export async function updateProductRequest(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { requestId } = productRequestParamsSchema.parse(req.params);
+  const body = updateProductRequestSchema.parse(req.body);
+  const data = await updateProductRequestService(
+    req.user?.id ?? '',
+    requestId,
+    body
+  );
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function deleteProductRequest(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const { requestId } = productRequestParamsSchema.parse(req.params);
+  const data = await deleteProductRequestService(
+    req.user?.id ?? '',
+    requestId
+  );
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}

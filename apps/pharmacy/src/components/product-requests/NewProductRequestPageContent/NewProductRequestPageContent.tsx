@@ -1,22 +1,35 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { ExternalLink, FilePlus2, ImagePlus, Save, Send } from 'lucide-react';
+
+import {
+  Clock3,
+  ExternalLink,
+  FilePlus2,
+  ImagePlus,
+  Save,
+  Send,
+  Trash2,
+} from 'lucide-react';
 
 import {
   Button,
   ButtonLink,
   DocumentUpload,
-  SelectField,
+  InfoTooltip,
+  LoadingSpinner,
+  Tabs,
+  TextEditor,
   type DocumentUploadFile,
+  type TabItem,
 } from '@e-pharmacy/ui/common';
 
-import { CommentInput, NameInput } from '@e-pharmacy/ui/form-fields';
-import { useToast } from '@e-pharmacy/ui/feedback';
+import { EntityComments, useToast } from '@e-pharmacy/ui/feedback';
+import { FormFieldLayout, NameInput } from '@e-pharmacy/ui/form-fields';
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { StatusBanner } from '@e-pharmacy/ui/statistics';
+import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import {
   PRODUCT_CATEGORIES,
@@ -24,15 +37,33 @@ import {
   type ProductCategory,
 } from '@e-pharmacy/types/products';
 
-import type {
-  CreatePharmacyProductRequestPayload,
-  ProductRequestFile,
+import {
+  PRODUCT_REQUEST_STATUS_LABELS,
+  type CreatePharmacyProductRequestPayload,
+  type PharmacyProductRequestDetails,
+  type ProductRequestFile,
+  type ProductRequestStatus,
 } from '@e-pharmacy/types/product-requests';
 
-import { createPharmacyProductRequest } from '@/lib/api/browser';
+import { formatOrderDateTime } from '@e-pharmacy/utils/formatters';
+import { sanitizeTextEditor } from '@e-pharmacy/validation';
+
+import {
+  createPharmacyNote,
+  createPharmacyProductRequest,
+  deletePharmacyNote,
+  deletePharmacyProductRequest,
+  getPharmacyNotes,
+  getPharmacyProductRequest,
+  updatePharmacyProductRequest,
+} from '@/lib/api/browser';
+
+import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
 import {
   getPharmacyAllProductsPath,
+  getPharmacyNewRequestPath,
+  getPharmacyRequestPath,
   getPharmacyProductRequestsPath,
 } from '@/lib/layout/routes';
 
@@ -41,6 +72,8 @@ import {
   getLockedFeatureBannerStatus,
   useCurrentPharmacyStatus,
 } from '@/lib/pharmacies/current-pharmacy-status';
+
+import { getProductImageSrc } from '@/lib/products/product-images';
 
 import css from './NewProductRequestPageContent.module.css';
 
@@ -56,14 +89,12 @@ const CATEGORY_OPTIONS = PRODUCT_CATEGORIES.map((category) => ({
   label: PRODUCT_CATEGORY_LABELS[category],
 }));
 
-//===================================================================
-
-const PRESCRIPTION_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: '', label: 'Not specified' },
+const PRESCRIPTION_OPTIONS = [
+  { value: '', label: 'Select prescription type' },
   { value: 'prescription', label: 'Prescription only' },
   { value: 'non_prescription', label: 'Without prescription' },
   { value: 'not_applicable', label: 'Not applicable' },
-];
+] as const;
 
 //===================================================================
 
@@ -71,6 +102,7 @@ type RequestFormState = {
   name: string;
   article: string;
   category: ProductCategory;
+  customCategory: string;
   manufacturer: string;
   countryOfOrigin: string;
   dosage: string;
@@ -78,15 +110,20 @@ type RequestFormState = {
   form: string;
   activeSubstance: string;
   prescriptionType: string;
-  storageConditions: string;
-  shortDescription: string;
   fullDescription: string;
-  characteristics: string;
   pharmacyComment: string;
 };
 
-type RequestFormErrors = Partial<Record<keyof RequestFormState, string>>;
+type RequestFormErrors = Partial<
+  Record<keyof RequestFormState | 'productImage', string>
+>;
 type ValidationMode = 'draft' | 'moderation' | null;
+type RequestTab = 'details' | 'comments' | 'history';
+
+export type NewProductRequestPageContentProps = Readonly<{
+  requestId?: string;
+  sourceRequestId?: string;
+}>;
 
 //===================================================================
 
@@ -94,6 +131,7 @@ const INITIAL_FORM_STATE: RequestFormState = {
   name: '',
   article: '',
   category: 'medicine',
+  customCategory: '',
   manufacturer: '',
   countryOfOrigin: '',
   dosage: '',
@@ -101,10 +139,7 @@ const INITIAL_FORM_STATE: RequestFormState = {
   form: '',
   activeSubstance: '',
   prescriptionType: '',
-  storageConditions: '',
-  shortDescription: '',
   fullDescription: '',
-  characteristics: '',
   pharmacyComment: '',
 };
 
@@ -112,24 +147,35 @@ const INITIAL_FORM_STATE: RequestFormState = {
 
 function getRequestFormErrors(
   values: RequestFormState,
+  hasProductImage: boolean,
   mode: Exclude<ValidationMode, null>
 ): RequestFormErrors {
   const errors: RequestFormErrors = {};
 
   if (!values.name.trim()) errors.name = 'Product name is required.';
   if (!values.article.trim()) errors.article = 'Product article is required.';
+  if (values.category === 'other' && !values.customCategory.trim()) {
+    errors.customCategory = 'Enter the category name.';
+  }
 
   if (mode === 'moderation') {
-    if (!values.manufacturer.trim()) {
-      errors.manufacturer = 'Manufacturer is required for moderation.';
+    if (!hasProductImage) errors.productImage = 'Product image is required.';
+    if (!values.manufacturer.trim())
+      errors.manufacturer = 'Manufacturer is required.';
+    if (!values.countryOfOrigin.trim())
+      errors.countryOfOrigin = 'Country is required.';
+    if (!values.dosage.trim()) errors.dosage = 'Dosage is required.';
+    if (!values.packageSize.trim())
+      errors.packageSize = 'Package size is required.';
+    if (!values.form.trim()) errors.form = 'Product form is required.';
+    if (!values.activeSubstance.trim()) {
+      errors.activeSubstance = 'Active substance is required.';
     }
-
-    if (!values.shortDescription.trim()) {
-      errors.shortDescription = 'Short description is required for moderation.';
+    if (!values.prescriptionType) {
+      errors.prescriptionType = 'Prescription type is required.';
     }
-
-    if (!values.pharmacyComment.trim()) {
-      errors.pharmacyComment = 'Pharmacy comment is required for moderation.';
+    if (!values.fullDescription.trim()) {
+      errors.fullDescription = 'Full description is required.';
     }
   }
 
@@ -148,14 +194,148 @@ function toFileMetadata(file: DocumentUploadFile): ProductRequestFile {
 
 //===================================================================
 
-function NewProductRequestPageContent() {
+function toUploadFile(
+  file: ProductRequestFile,
+  prefix: string
+): DocumentUploadFile {
+  return {
+    id: `${prefix}-${file.name}-${file.size}`,
+    name: file.name,
+    type: file.type,
+    size: file.size,
+  };
+}
+
+//===================================================================
+
+function toFormState(request: PharmacyProductRequestDetails): RequestFormState {
+  return {
+    name: request.name,
+    article: request.article,
+    category: request.category,
+    customCategory: request.customCategory ?? '',
+    manufacturer: request.manufacturer ?? '',
+    countryOfOrigin: request.countryOfOrigin ?? '',
+    dosage: request.dosage ?? '',
+    packageSize: request.packageSize ?? '',
+    form: request.form ?? '',
+    activeSubstance: request.activeSubstance ?? '',
+    prescriptionType: request.prescriptionType ?? '',
+    fullDescription: request.fullDescription ?? '',
+    pharmacyComment: request.pharmacyComment ?? '',
+  };
+}
+
+//===================================================================
+
+function ProductSelectField<TValue extends string>({
+  id,
+  label,
+  hint,
+  value,
+  options,
+  required = true,
+  disabled = false,
+  error,
+  isTouched,
+  onChange,
+}: Readonly<{
+  id: string;
+  label: string;
+  hint?: string;
+  value: TValue;
+  options: readonly { value: TValue; label: string }[];
+  required?: boolean;
+  disabled?: boolean;
+  error?: string;
+  isTouched?: boolean;
+  onChange: (value: TValue) => void;
+}>) {
+  return (
+    <FormFieldLayout
+      id={id}
+      label={label}
+      hint={hint}
+      required={required}
+      error={error}
+      isTouched={isTouched}
+    >
+      <div className={css.selectWrap}>
+        <select
+          className={css.formSelect}
+          id={id}
+          value={value}
+          disabled={disabled}
+          aria-invalid={Boolean(isTouched && error)}
+          onChange={(event: ChangeEvent<HTMLSelectElement>) =>
+            onChange(event.target.value as TValue)
+          }
+        >
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </FormFieldLayout>
+  );
+}
+
+//===================================================================
+
+function getStatusMessage(status: ProductRequestStatus) {
+  switch (status) {
+    case 'draft':
+      return {
+        title: 'This request is a draft',
+        message:
+          'You can edit the request, manage private pharmacy comments, or send it for moderation.',
+      };
+    case 'new':
+      return {
+        title: 'The request was sent for moderation',
+        message:
+          'The submitted information is locked while Admin reviews the request.',
+      };
+    case 'in_progress':
+      return {
+        title: 'Admin is reviewing this request',
+        message:
+          'The request is in work and all submitted fields are read-only.',
+      };
+    case 'approved':
+      return {
+        title: 'The product request was approved',
+        message:
+          'Admin approved the request and created or linked the catalog product.',
+      };
+    case 'rejected':
+      return {
+        title: 'The product request was rejected',
+        message:
+          'Review the reason in Change history and create a corrected request from this data.',
+      };
+  }
+}
+
+//===================================================================
+
+function NewProductRequestPageContent({
+  requestId,
+  sourceRequestId,
+}: NewProductRequestPageContentProps) {
   const router = useRouter();
   const toast = useToast();
   const currentPharmacyStatus = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
   const isBlocked = currentPharmacyStatus === 'blocked';
   const isCreationLocked = Boolean(bannerStatus || isBlocked);
+  const cloneSourceRequestId = requestId ? undefined : sourceRequestId;
 
+  const [request, setRequest] = useState<PharmacyProductRequestDetails | null>(
+    null
+  );
   const [values, setValues] = useState<RequestFormState>(INITIAL_FORM_STATE);
   const [productImage, setProductImage] = useState<DocumentUploadFile[]>([]);
   const [additionalFiles, setAdditionalFiles] = useState<DocumentUploadFile[]>(
@@ -168,15 +348,50 @@ function NewProductRequestPageContent() {
   const [productImageError, setProductImageError] = useState('');
   const [additionalFilesError, setAdditionalFilesError] = useState('');
   const [validationMode, setValidationMode] = useState<ValidationMode>(null);
-  const [savingStatus, setSavingStatus] = useState<
-    CreatePharmacyProductRequestPayload['status'] | null
-  >(null);
-  const isSaving = savingStatus !== null;
+  const [savingStatus, setSavingStatus] = useState<'draft' | 'new' | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(
+    Boolean(requestId || cloneSourceRequestId)
+  );
+  const [hasLoadError, setHasLoadError] = useState(false);
+  const [activeTab, setActiveTab] = useState<RequestTab>('details');
+  const [commentsTotal, setCommentsTotal] = useState(0);
   const [isModerationConfirmOpen, setIsModerationConfirmOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
+  const isExistingRequest = Boolean(requestId && request);
+  const isDraft = request?.status === 'draft';
+  const isReadonly = Boolean(request && request.status !== 'draft');
+  const canEdit = !isReadonly && !isCreationLocked;
+  const isSaving = savingStatus !== null;
+  const hasProductImage = productImage.length > 0;
+
+  const moderationErrors = useMemo(
+    () => getRequestFormErrors(values, hasProductImage, 'moderation'),
+    [hasProductImage, values]
+  );
+  const isModerationReady = Object.keys(moderationErrors).length === 0;
   const errors = validationMode
-    ? getRequestFormErrors(values, validationMode)
+    ? getRequestFormErrors(values, hasProductImage, validationMode)
     : {};
+
+  const tabs = useMemo<TabItem<RequestTab>[]>(() => {
+    const items: TabItem<RequestTab>[] = [
+      { value: 'details', label: 'Request details' },
+      { value: 'comments', label: `Comments (${commentsTotal})` },
+    ];
+
+    if (request) {
+      items.push({
+        value: 'history',
+        label: `Change history (${request.history.length})`,
+      });
+    }
+
+    return items;
+  }, [commentsTotal, request]);
 
   useEffect(() => {
     return () => {
@@ -186,13 +401,58 @@ function NewProductRequestPageContent() {
     };
   }, []);
 
+  useEffect(() => {
+    const idToLoad = requestId ?? cloneSourceRequestId;
+    if (!idToLoad) return;
+    const requestIdToLoad = idToLoad;
+
+    let isMounted = true;
+
+    async function loadRequest() {
+      setIsLoading(true);
+      setHasLoadError(false);
+
+      try {
+        const loadedRequest = await getPharmacyProductRequest(requestIdToLoad);
+        if (!isMounted) return;
+
+        setValues(toFormState(loadedRequest));
+        setProductImage(
+          loadedRequest.productImage
+            ? [toUploadFile(loadedRequest.productImage, 'product-image')]
+            : []
+        );
+        setAdditionalFiles(
+          (loadedRequest.additionalFiles ?? []).map((file, index) =>
+            toUploadFile(file, `additional-${index}`)
+          )
+        );
+
+        if (requestId) {
+          setRequest(loadedRequest);
+          setCommentsTotal(loadedRequest.commentsTotal);
+          dispatchPharmacyBreadcrumbLabel(loadedRequest.name);
+        }
+      } catch {
+        if (isMounted) setHasLoadError(true);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    void loadRequest();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [cloneSourceRequestId, requestId]);
+
   const updateProductImagePreview = (file?: File) => {
     if (productImagePreviewUrlRef.current) {
       URL.revokeObjectURL(productImagePreviewUrlRef.current);
     }
 
     const previewUrl = file ? URL.createObjectURL(file) : null;
-
     productImagePreviewUrlRef.current = previewUrl;
     setProductImagePreview(previewUrl);
   };
@@ -252,6 +512,10 @@ function NewProductRequestPageContent() {
     name: values.name.trim(),
     article: values.article.trim(),
     category: values.category,
+    customCategory:
+      values.category === 'other'
+        ? values.customCategory.trim() || undefined
+        : undefined,
     productImage: productImage[0] ? toFileMetadata(productImage[0]) : undefined,
     manufacturer: values.manufacturer.trim() || undefined,
     countryOfOrigin: values.countryOfOrigin.trim() || undefined,
@@ -260,37 +524,50 @@ function NewProductRequestPageContent() {
     form: values.form.trim() || undefined,
     activeSubstance: values.activeSubstance.trim() || undefined,
     prescriptionType: values.prescriptionType || undefined,
-    storageConditions: values.storageConditions.trim() || undefined,
-    shortDescription: values.shortDescription.trim() || undefined,
     fullDescription: values.fullDescription.trim() || undefined,
-    characteristics: values.characteristics.trim() || undefined,
     pharmacyComment: values.pharmacyComment.trim() || undefined,
     additionalFiles: additionalFiles.length
       ? additionalFiles.map(toFileMetadata)
       : undefined,
   });
 
-  const createRequest = async (
-    status: CreatePharmacyProductRequestPayload['status']
-  ) => {
+  const saveRequest = async (status: 'draft' | 'new') => {
     setSavingStatus(status);
 
     try {
-      await createPharmacyProductRequest(buildPayload(status));
+      if (requestId) {
+        const updatedRequest = await updatePharmacyProductRequest(
+          requestId,
+          buildPayload(status)
+        );
+        setRequest(updatedRequest);
+        setCommentsTotal(updatedRequest.commentsTotal);
+        toast.success(
+          status === 'draft'
+            ? 'Request draft saved.'
+            : 'Request sent for Admin moderation.'
+        );
+        router.refresh();
+        return;
+      }
 
+      const createdRequest = await createPharmacyProductRequest(
+        buildPayload(status)
+      );
       toast.success(
         status === 'draft'
           ? 'Request draft saved.'
           : 'Request sent for Admin moderation.'
       );
-
-      router.push(getPharmacyProductRequestsPath());
+      router.push(getPharmacyRequestPath(createdRequest.id));
       router.refresh();
-    } catch {
+    } catch (error) {
       toast.error(
-        status === 'draft'
-          ? 'Could not save draft. Please try again.'
-          : 'Could not send request. Please try again.'
+        error instanceof Error && error.message
+          ? error.message
+          : status === 'draft'
+            ? 'Could not save draft. Please try again.'
+            : 'Could not send request. Please try again.'
       );
     } finally {
       setSavingStatus(null);
@@ -299,61 +576,176 @@ function NewProductRequestPageContent() {
 
   const handleSaveDraft = () => {
     setValidationMode('draft');
-    const draftErrors = getRequestFormErrors(values, 'draft');
+    const draftErrors = getRequestFormErrors(values, hasProductImage, 'draft');
 
     if (Object.keys(draftErrors).length > 0) {
       toast.error('Fill in the product name, article, and category.');
       return;
     }
 
-    void createRequest('draft');
+    void saveRequest('draft');
   };
 
   const handleSendForModeration = () => {
+    if (!isModerationReady) return;
     setValidationMode('moderation');
-    const moderationErrors = getRequestFormErrors(values, 'moderation');
-
-    if (Object.keys(moderationErrors).length > 0) {
-      toast.error('Fill in all fields required for moderation.');
-      return;
-    }
-
     setIsModerationConfirmOpen(true);
   };
 
   const handleConfirmModeration = async () => {
     setIsModerationConfirmOpen(false);
-    await createRequest('new');
+    await saveRequest('new');
   };
 
+  const handleDeleteDraft = async () => {
+    if (!requestId) return;
+
+    setIsDeleteConfirmOpen(false);
+    setIsDeleting(true);
+
+    try {
+      await deletePharmacyProductRequest(requestId);
+      toast.success('Product request draft deleted.');
+      router.push(getPharmacyProductRequestsPath());
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : 'Could not delete the draft.'
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const pageTitle = request?.name ?? 'New product request';
+  const statusMessage = request ? getStatusMessage(request.status) : null;
+  const savedImageSrc = request?.productImageUrl
+    ? getProductImageSrc(request.productImageUrl)
+    : null;
+  const displayedImageSrc = productImagePreview ?? savedImageSrc;
+
+  const headerActions = (
+    <div className={css.headerActions}>
+      {!request || isDraft ? (
+        <>
+          {isDraft ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className={css.dangerButton}
+              disabled={isSaving || isDeleting || !canEdit}
+              isLoading={isDeleting}
+              iconLeft={<Trash2 size={17} aria-hidden="true" />}
+              onClick={() => setIsDeleteConfirmOpen(true)}
+            >
+              Delete draft
+            </Button>
+          ) : null}
+
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            isLoading={savingStatus === 'draft'}
+            disabled={isSaving || !canEdit}
+            iconLeft={<Save size={17} aria-hidden="true" />}
+            onClick={handleSaveDraft}
+          >
+            Save draft
+          </Button>
+
+          <Button
+            type="button"
+            size="sm"
+            isLoading={savingStatus === 'new'}
+            disabled={isSaving || !canEdit || !isModerationReady}
+            iconLeft={<Send size={17} aria-hidden="true" />}
+            onClick={handleSendForModeration}
+          >
+            Send for moderation
+          </Button>
+        </>
+      ) : null}
+
+      {request?.status === 'rejected' ? (
+        <ButtonLink
+          href={`${getPharmacyNewRequestPath()}?source=${request.id}`}
+          size="sm"
+          iconRight={<FilePlus2 size={17} aria-hidden="true" />}
+        >
+          Create new based on rejected
+        </ButtonLink>
+      ) : null}
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <main className={css.page}>
+        <section className={css.contentCard}>
+          <LoadingSpinner label="Loading product request..." />
+        </section>
+      </main>
+    );
+  }
+
+  if (hasLoadError) {
+    return (
+      <main className={css.page}>
+        <section className={css.contentCard}>
+          <StatusBanner
+            status="rejected"
+            title="Product request was not found"
+            message="The request may have been removed, or it does not belong to the current pharmacy."
+          />
+        </section>
+      </main>
+    );
+  }
+
   return (
-    <main className={css.page} aria-labelledby="new-request-page-title">
+    <main className={css.page} aria-labelledby="product-request-page-title">
       <section className={css.contentCard}>
         <PageHeader
-          title="New product request"
-          titleId="new-request-page-title"
-          icon={<FilePlus2 size={23} aria-hidden="true" />}
-          actions={
-            <ButtonLink
-              href={getPharmacyProductRequestsPath()}
-              variant="secondary"
-              size="sm"
-            >
-              Back to requests
-            </ButtonLink>
+          title={
+            <span className={css.titleWithTooltip}>
+              <span>{pageTitle}</span>
+              <InfoTooltip
+                label="About saving and sending product requests"
+                title="Save or send the request"
+              >
+                A draft remains editable. After sending, Admin starts reviewing
+                the request and the pharmacy can no longer edit it.
+              </InfoTooltip>
+            </span>
           }
+          titleId="product-request-page-title"
+          icon={<FilePlus2 size={23} aria-hidden="true" />}
+          actions={headerActions}
         />
+
+        {request ? (
+          <div className={css.statusLine}>
+            <StatusBadge
+              status={request.status}
+              label={PRODUCT_REQUEST_STATUS_LABELS[request.status]}
+            />
+            <span>
+              <Clock3 size={16} aria-hidden="true" />
+              Last updated {formatOrderDateTime(request.updatedAt)}
+            </span>
+          </div>
+        ) : null}
 
         {bannerStatus ? (
           <StatusBanner
             status={bannerStatus}
             label={getLockedFeatureBannerLabel(bannerStatus)}
-            title="Product request creation is locked for now"
-            message={
-              bannerStatus === 'on_verification'
-                ? 'Creating product requests is paused while Admin reviews the submitted pharmacy profile.'
-                : 'Creating product requests opens after Admin verifies and activates the pharmacy profile.'
-            }
+            title="Product request management is locked for now"
+            message="Creating and editing requests becomes available after Admin verifies the pharmacy profile."
           />
         ) : null}
 
@@ -361,418 +753,494 @@ function NewProductRequestPageContent() {
           <StatusBanner
             status="blocked"
             label="Blocked"
-            title="Product request creation is unavailable"
+            title="Product request management is unavailable"
             message="Your account is temporarily blocked. Contact Admin to restore access."
+          />
+        ) : null}
+
+        {request && statusMessage ? (
+          <StatusBanner
+            status={request.status}
+            label={PRODUCT_REQUEST_STATUS_LABELS[request.status]}
+            title={statusMessage.title}
+            message={statusMessage.message}
           />
         ) : null}
       </section>
 
-      {!isCreationLocked ? (
-        <>
-          <section
-            className={css.noticeCard}
-            aria-labelledby="before-create-title"
-          >
-            <div>
-              <h2 className={css.noticeTitle} id="before-create-title">
-                Check the global catalog first
-              </h2>
-              <p className={css.noticeText}>
-                Create a request only when the product is not available in All
-                products. Search by name and article to avoid duplicates.
-              </p>
+      <section className={css.noticeCard} aria-labelledby="before-create-title">
+        <div>
+          <h2 className={css.noticeTitle} id="before-create-title">
+            Check the global catalog first
+          </h2>
+          <p className={css.noticeText}>
+            Create a request only when the product is not available in All
+            products. Search by name and article to avoid duplicates.
+          </p>
+        </div>
+
+        <ButtonLink
+          href={getPharmacyAllProductsPath()}
+          variant="secondary"
+          size="sm"
+          iconRight={<ExternalLink size={16} aria-hidden="true" />}
+        >
+          Open All products
+        </ButtonLink>
+      </section>
+
+      <Tabs
+        items={tabs}
+        activeValue={activeTab}
+        ariaLabel="Product request sections"
+        mobileVisibleCount={1}
+        tabletVisibleCount={3}
+        onChange={setActiveTab}
+      />
+
+      {activeTab === 'details' ? (
+        <form className={css.form} onSubmit={(event) => event.preventDefault()}>
+          <section className={css.formCard} aria-labelledby="basic-info-title">
+            <div className={css.sectionHeader}>
+              <div>
+                <h2 className={css.sectionTitle} id="basic-info-title">
+                  Basic information
+                </h2>
+                <p className={css.sectionText}>
+                  Name, article, and category are enough to save a draft.
+                </p>
+              </div>
             </div>
 
-            <ButtonLink
-              href={getPharmacyAllProductsPath()}
-              variant="secondary"
-              size="sm"
-              iconRight={<ExternalLink size={16} aria-hidden="true" />}
-            >
-              Open All products
-            </ButtonLink>
-          </section>
-
-          <form
-            className={css.form}
-            onSubmit={(event) => event.preventDefault()}
-          >
-            <section
-              className={css.formCard}
-              aria-labelledby="basic-info-title"
-            >
-              <div className={css.sectionHeader}>
-                <div>
-                  <h2 className={css.sectionTitle} id="basic-info-title">
-                    Basic information
-                  </h2>
-                  <p className={css.sectionText}>
-                    Name, article, and category are enough to save a draft.
-                  </p>
-                </div>
-              </div>
-
-              <div className={css.imageGrid}>
-                <div className={css.imagePreview}>
-                  {productImagePreview ? (
-                    // The preview uses a temporary browser URL for the selected local file.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={productImagePreview}
-                      alt="Selected product preview"
-                    />
-                  ) : (
-                    <div className={css.imagePlaceholder}>
-                      <ImagePlus size={34} aria-hidden="true" />
-                      <span>Product image</span>
-                    </div>
-                  )}
-                </div>
-
-                <DocumentUpload
-                  id="product-request-image"
-                  name="productImage"
-                  label="Product image"
-                  value={productImage}
-                  error={productImageError}
-                  isTouched={Boolean(productImageError)}
-                  multiple={false}
-                  maxFiles={1}
-                  accept="image/jpeg,image/png,image/webp"
-                  hint="JPG, PNG, or WEBP up to 2 MB. The file metadata is attached to the request."
-                  labels={{
-                    dropzoneTitle: 'Choose product image',
-                    dropzoneText: 'Upload one clear product photo.',
-                    removeAriaLabel: (fileName) => `Remove image ${fileName}`,
-                  }}
-                  onChange={handleProductImageChange}
-                />
-              </div>
-
-              <div className={css.formGrid}>
-                <NameInput
-                  id="product-request-name"
-                  name="name"
-                  label="Product name"
-                  placeholder="Enter product name"
-                  value={values.name}
-                  error={errors.name}
-                  isTouched={Boolean(validationMode)}
-                  maxLength={160}
-                  autoComplete="off"
-                  onChange={(event) => updateValue('name', event.target.value)}
-                />
-
-                <NameInput
-                  id="product-request-article"
-                  name="article"
-                  label="Product article"
-                  placeholder="Enter product article"
-                  value={values.article}
-                  error={errors.article}
-                  isTouched={Boolean(validationMode)}
-                  maxLength={40}
-                  autoComplete="off"
-                  onChange={(event) =>
-                    updateValue('article', event.target.value.toUpperCase())
-                  }
-                />
-
-                <SelectField
-                  id="product-request-category"
-                  label="Category"
-                  value={values.category}
-                  options={CATEGORY_OPTIONS}
-                  isActive
-                  onChange={(category) => updateValue('category', category)}
-                />
-
-                <NameInput
-                  id="product-request-manufacturer"
-                  name="manufacturer"
-                  label="Manufacturer"
-                  placeholder="Enter manufacturer"
-                  value={values.manufacturer}
-                  error={errors.manufacturer}
-                  isTouched={validationMode === 'moderation'}
-                  required={false}
-                  hint="Required when sending the request for moderation."
-                  maxLength={160}
-                  autoComplete="off"
-                  onChange={(event) =>
-                    updateValue('manufacturer', event.target.value)
-                  }
-                />
-
-                <NameInput
-                  id="product-request-country"
-                  name="countryOfOrigin"
-                  label="Country of origin"
-                  placeholder="Enter country"
-                  value={values.countryOfOrigin}
-                  required={false}
-                  maxLength={100}
-                  autoComplete="off"
-                  onChange={(event) =>
-                    updateValue('countryOfOrigin', event.target.value)
-                  }
-                />
-              </div>
-            </section>
-
-            <section
-              className={css.formCard}
-              aria-labelledby="product-data-title"
-            >
-              <div className={css.sectionHeader}>
-                <div>
-                  <h2 className={css.sectionTitle} id="product-data-title">
-                    Product data
-                  </h2>
-                  <p className={css.sectionText}>
-                    Add the details Admin will need to create the catalog
-                    product.
-                  </p>
-                </div>
-              </div>
-
-              <div className={css.formGrid}>
-                <NameInput
-                  id="product-request-dosage"
-                  name="dosage"
-                  label="Dosage"
-                  placeholder="Example: 500 mg"
-                  value={values.dosage}
-                  required={false}
-                  maxLength={100}
-                  autoComplete="off"
-                  onChange={(event) =>
-                    updateValue('dosage', event.target.value)
-                  }
-                />
-
-                <NameInput
-                  id="product-request-package-size"
-                  name="packageSize"
-                  label="Package size"
-                  placeholder="Example: №20 (10x2)"
-                  value={values.packageSize}
-                  required={false}
-                  maxLength={100}
-                  autoComplete="off"
-                  onChange={(event) =>
-                    updateValue('packageSize', event.target.value)
-                  }
-                />
-
-                <NameInput
-                  id="product-request-form"
-                  name="form"
-                  label="Form"
-                  placeholder="Example: tablets"
-                  value={values.form}
-                  required={false}
-                  maxLength={100}
-                  autoComplete="off"
-                  onChange={(event) => updateValue('form', event.target.value)}
-                />
-
-                <NameInput
-                  id="product-request-active-substance"
-                  name="activeSubstance"
-                  label="Active substance"
-                  placeholder="Enter active substance"
-                  value={values.activeSubstance}
-                  required={false}
-                  maxLength={180}
-                  autoComplete="off"
-                  onChange={(event) =>
-                    updateValue('activeSubstance', event.target.value)
-                  }
-                />
-
-                <SelectField
-                  id="product-request-prescription-type"
-                  label="Prescription type"
-                  value={values.prescriptionType}
-                  options={[...PRESCRIPTION_OPTIONS]}
-                  onChange={(prescriptionType) =>
-                    updateValue('prescriptionType', prescriptionType)
-                  }
-                />
-
-                <NameInput
-                  id="product-request-storage"
-                  name="storageConditions"
-                  className={css.fieldWide}
-                  label="Storage conditions"
-                  placeholder="Describe temperature and storage requirements"
-                  value={values.storageConditions}
-                  required={false}
-                  maxLength={500}
-                  autoComplete="off"
-                  onChange={(event) =>
-                    updateValue('storageConditions', event.target.value)
-                  }
-                />
-              </div>
-            </section>
-
-            <section
-              className={css.formCard}
-              aria-labelledby="descriptions-title"
-            >
-              <div className={css.sectionHeader}>
-                <div>
-                  <h2 className={css.sectionTitle} id="descriptions-title">
-                    Descriptions and comment
-                  </h2>
-                  <p className={css.sectionText}>
-                    Give Admin enough context to verify and create the product.
-                  </p>
-                </div>
-              </div>
-
-              <div className={css.textareaGrid}>
-                <CommentInput
-                  id="product-request-short-description"
-                  name="shortDescription"
-                  label="Short description"
-                  placeholder="Add a concise product description"
-                  value={values.shortDescription}
-                  error={errors.shortDescription}
-                  isTouched={validationMode === 'moderation'}
-                  required={false}
-                  hint="Required when sending the request for moderation."
-                  maxLength={1000}
-                  onChange={(event) =>
-                    updateValue('shortDescription', event.target.value)
-                  }
-                />
-
-                <CommentInput
-                  id="product-request-full-description"
-                  name="fullDescription"
-                  label="Full description"
-                  placeholder="Add detailed product information"
-                  value={values.fullDescription}
-                  required={false}
-                  maxLength={5000}
-                  onChange={(event) =>
-                    updateValue('fullDescription', event.target.value)
-                  }
-                />
-
-                <CommentInput
-                  id="product-request-characteristics"
-                  name="characteristics"
-                  label="Characteristics"
-                  placeholder="List important characteristics, composition, or package details"
-                  value={values.characteristics}
-                  required={false}
-                  maxLength={3000}
-                  onChange={(event) =>
-                    updateValue('characteristics', event.target.value)
-                  }
-                />
-
-                <CommentInput
-                  id="product-request-pharmacy-comment"
-                  name="pharmacyComment"
-                  label="Pharmacy comment"
-                  placeholder="Explain why this product should be added to the catalog"
-                  value={values.pharmacyComment}
-                  error={errors.pharmacyComment}
-                  isTouched={validationMode === 'moderation'}
-                  required={false}
-                  hint="Required when sending the request for moderation."
-                  maxLength={1500}
-                  onChange={(event) =>
-                    updateValue('pharmacyComment', event.target.value)
-                  }
-                />
-              </div>
-            </section>
-
-            <section className={css.formCard} aria-labelledby="documents-title">
-              <div className={css.sectionHeader}>
-                <div>
-                  <h2 className={css.sectionTitle} id="documents-title">
-                    Additional files
-                  </h2>
-                  <p className={css.sectionText}>
-                    Attach instructions, package photos, certificates, or other
-                    supporting documents if needed.
-                  </p>
-                </div>
+            <div className={css.imageGrid}>
+              <div className={css.imagePreview}>
+                {displayedImageSrc ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={displayedImageSrc} alt="Selected product preview" />
+                ) : (
+                  <div className={css.imagePlaceholder}>
+                    <ImagePlus size={34} aria-hidden="true" />
+                    <span>{productImage[0]?.name ?? 'Product image'}</span>
+                  </div>
+                )}
               </div>
 
               <DocumentUpload
-                id="product-request-documents"
-                name="additionalFiles"
-                label="Files and documents"
-                value={additionalFiles}
-                error={additionalFilesError}
-                isTouched={Boolean(additionalFilesError)}
-                maxFiles={5}
-                accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
-                hint="Up to 5 files, no larger than 10 MB each."
+                id="product-request-image"
+                name="productImage"
+                label="Product image"
+                value={productImage}
+                error={productImageError || errors.productImage}
+                isTouched={Boolean(
+                  productImageError || validationMode === 'moderation'
+                )}
+                required
+                disabled={!canEdit}
+                multiple={false}
+                maxFiles={1}
+                accept="image/jpeg,image/png,image/webp"
+                hint="JPG, PNG, or WEBP up to 2 MB."
                 labels={{
-                  dropzoneTitle: 'Upload supporting files',
-                  dropzoneText:
-                    'PDF, DOC, JPG, PNG, or WEBP files are supported.',
+                  dropzoneTitle: 'Choose product image',
+                  dropzoneText: 'Upload one clear product photo.',
+                  removeAriaLabel: (fileName) => `Remove image ${fileName}`,
                 }}
-                onChange={handleAdditionalFilesChange}
+                onChange={handleProductImageChange}
               />
-            </section>
+            </div>
 
-            <section className={css.actionsCard} aria-label="Request actions">
-              <div className={css.actionsText}>
-                <h2>Save or send the request</h2>
-                <p>
-                  A draft remains editable. After sending, Admin starts
-                  reviewing the request and the pharmacy can no longer edit it.
+            <div className={css.primaryGrid}>
+              <NameInput
+                id="product-request-name"
+                name="name"
+                label="Product name"
+                hint="Use the official name shown on the package."
+                placeholder="Enter product name"
+                value={values.name}
+                error={errors.name}
+                isTouched={Boolean(validationMode)}
+                maxLength={160}
+                disabled={!canEdit}
+                autoComplete="off"
+                onChange={(event) => updateValue('name', event.target.value)}
+              />
+
+              <NameInput
+                id="product-request-article"
+                name="article"
+                label="Product article"
+                hint="Enter the unique manufacturer or supplier article."
+                placeholder="Enter product article"
+                value={values.article}
+                error={errors.article}
+                isTouched={Boolean(validationMode)}
+                maxLength={40}
+                disabled={!canEdit}
+                autoComplete="off"
+                onChange={(event) =>
+                  updateValue('article', event.target.value.toUpperCase())
+                }
+              />
+
+              <NameInput
+                id="product-request-manufacturer"
+                name="manufacturer"
+                label="Manufacturer"
+                hint="Enter the full manufacturer name."
+                placeholder="Enter manufacturer"
+                value={values.manufacturer}
+                error={errors.manufacturer}
+                isTouched={validationMode === 'moderation'}
+                maxLength={160}
+                disabled={!canEdit}
+                autoComplete="off"
+                onChange={(event) =>
+                  updateValue('manufacturer', event.target.value)
+                }
+              />
+            </div>
+
+            <div
+              className={`${css.categoryGrid} ${
+                values.category === 'other' ? css.categoryGridWithCustom : ''
+              }`}
+            >
+              <NameInput
+                id="product-request-country"
+                name="countryOfOrigin"
+                label="Country of origin"
+                hint="Use the country printed on the product package."
+                placeholder="Enter country"
+                value={values.countryOfOrigin}
+                error={errors.countryOfOrigin}
+                isTouched={validationMode === 'moderation'}
+                maxLength={100}
+                disabled={!canEdit}
+                autoComplete="off"
+                onChange={(event) =>
+                  updateValue('countryOfOrigin', event.target.value)
+                }
+              />
+
+              <ProductSelectField
+                id="product-request-category"
+                label="Category"
+                hint="Select the closest catalog category."
+                value={values.category}
+                options={CATEGORY_OPTIONS}
+                disabled={!canEdit}
+                onChange={(category) => {
+                  updateValue('category', category);
+                  if (category !== 'other') updateValue('customCategory', '');
+                }}
+              />
+
+              {values.category === 'other' ? (
+                <NameInput
+                  id="product-request-custom-category"
+                  name="customCategory"
+                  label="Other category"
+                  hint="Enter the category Admin should use."
+                  placeholder="Enter category name"
+                  value={values.customCategory}
+                  error={errors.customCategory}
+                  isTouched={Boolean(validationMode)}
+                  maxLength={100}
+                  disabled={!canEdit}
+                  autoComplete="off"
+                  onChange={(event) =>
+                    updateValue('customCategory', event.target.value)
+                  }
+                />
+              ) : null}
+            </div>
+          </section>
+
+          <section
+            className={css.formCard}
+            aria-labelledby="product-data-title"
+          >
+            <div className={css.sectionHeader}>
+              <div>
+                <h2 className={css.sectionTitle} id="product-data-title">
+                  Product data
+                </h2>
+                <p className={css.sectionText}>
+                  Add the details Admin will need to create the catalog product.
                 </p>
               </div>
+            </div>
 
-              <div className={css.actions}>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="md"
-                  isLoading={savingStatus === 'draft'}
-                  disabled={isSaving}
-                  iconLeft={<Save size={18} aria-hidden="true" />}
-                  onClick={handleSaveDraft}
-                >
-                  Save draft
-                </Button>
+            <div className={css.productGrid}>
+              <NameInput
+                id="product-request-dosage"
+                name="dosage"
+                label="Dosage"
+                placeholder="Example: 500 mg"
+                value={values.dosage}
+                error={errors.dosage}
+                isTouched={validationMode === 'moderation'}
+                maxLength={100}
+                disabled={!canEdit}
+                autoComplete="off"
+                onChange={(event) => updateValue('dosage', event.target.value)}
+              />
 
-                <Button
-                  type="button"
-                  size="md"
-                  isLoading={savingStatus === 'new'}
-                  disabled={isSaving}
-                  iconLeft={<Send size={18} aria-hidden="true" />}
-                  onClick={handleSendForModeration}
-                >
-                  Send for moderation
-                </Button>
+              <NameInput
+                id="product-request-package-size"
+                name="packageSize"
+                label="Package size"
+                placeholder="Example: №20 (10x2)"
+                value={values.packageSize}
+                error={errors.packageSize}
+                isTouched={validationMode === 'moderation'}
+                maxLength={100}
+                disabled={!canEdit}
+                autoComplete="off"
+                onChange={(event) =>
+                  updateValue('packageSize', event.target.value)
+                }
+              />
+
+              <NameInput
+                id="product-request-form"
+                name="form"
+                label="Form"
+                placeholder="Example: tablets"
+                value={values.form}
+                error={errors.form}
+                isTouched={validationMode === 'moderation'}
+                maxLength={100}
+                disabled={!canEdit}
+                autoComplete="off"
+                onChange={(event) => updateValue('form', event.target.value)}
+              />
+            </div>
+
+            <div className={css.substanceGrid}>
+              <NameInput
+                id="product-request-active-substance"
+                name="activeSubstance"
+                label="Active substance"
+                placeholder="Enter active substance"
+                value={values.activeSubstance}
+                error={errors.activeSubstance}
+                isTouched={validationMode === 'moderation'}
+                maxLength={180}
+                disabled={!canEdit}
+                autoComplete="off"
+                onChange={(event) =>
+                  updateValue('activeSubstance', event.target.value)
+                }
+              />
+
+              <ProductSelectField
+                id="product-request-prescription-type"
+                label="Prescription type"
+                value={values.prescriptionType}
+                options={PRESCRIPTION_OPTIONS}
+                error={errors.prescriptionType}
+                isTouched={validationMode === 'moderation'}
+                disabled={!canEdit}
+                onChange={(prescriptionType) =>
+                  updateValue('prescriptionType', prescriptionType)
+                }
+              />
+            </div>
+          </section>
+
+          <section className={css.formCard} aria-labelledby="description-title">
+            <div className={css.sectionHeader}>
+              <div>
+                <h2 className={css.sectionTitle} id="description-title">
+                  Full description
+                </h2>
+                <p className={css.sectionText}>
+                  Add complete product information using the same editor as the
+                  pharmacy public description.
+                </p>
               </div>
-            </section>
-          </form>
-        </>
+            </div>
+
+            <TextEditor
+              id="product-request-full-description"
+              name="fullDescription"
+              label="Full description"
+              placeholder="Describe the product, composition, use, package, and other important details."
+              hint="You can use simple formatting buttons or type plain text."
+              value={values.fullDescription}
+              error={errors.fullDescription}
+              isTouched={validationMode === 'moderation'}
+              maxLength={5000}
+              disabled={!canEdit}
+              onChange={(event) =>
+                updateValue(
+                  'fullDescription',
+                  sanitizeTextEditor(event.target.value)
+                )
+              }
+            />
+          </section>
+
+          <section
+            className={css.formCard}
+            aria-labelledby="admin-comment-title"
+          >
+            <div className={css.sectionHeader}>
+              <div>
+                <h2 className={css.sectionTitle} id="admin-comment-title">
+                  Additional note for Admin
+                </h2>
+                <p className={css.sectionText}>
+                  This field is optional. Use it only when the pharmacy wants to
+                  explain something directly to Admin.
+                </p>
+              </div>
+            </div>
+
+            <TextEditor
+              id="product-request-pharmacy-comment"
+              name="pharmacyComment"
+              label="Pharmacy note for Admin"
+              placeholder="Add an optional note for Admin."
+              value={values.pharmacyComment}
+              required={false}
+              maxLength={1500}
+              disabled={!canEdit}
+              onChange={(event) =>
+                updateValue(
+                  'pharmacyComment',
+                  sanitizeTextEditor(event.target.value)
+                )
+              }
+            />
+          </section>
+
+          <section className={css.formCard} aria-labelledby="documents-title">
+            <div className={css.sectionHeader}>
+              <div>
+                <h2 className={css.sectionTitle} id="documents-title">
+                  Additional files
+                </h2>
+                <p className={css.sectionText}>
+                  Attach instructions, package photos, certificates, or other
+                  supporting documents if needed.
+                </p>
+              </div>
+            </div>
+
+            <DocumentUpload
+              id="product-request-documents"
+              name="additionalFiles"
+              label="Files and documents"
+              value={additionalFiles}
+              error={additionalFilesError}
+              isTouched={Boolean(additionalFilesError)}
+              disabled={!canEdit}
+              maxFiles={5}
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
+              hint="Up to 5 files, no larger than 10 MB each."
+              labels={{
+                dropzoneTitle: 'Upload supporting files',
+                dropzoneText:
+                  'PDF, DOC, JPG, PNG, or WEBP files are supported.',
+              }}
+              onChange={handleAdditionalFilesChange}
+            />
+          </section>
+        </form>
+      ) : null}
+
+      {activeTab === 'comments' ? (
+        request ? (
+          <EntityComments
+            entityKey={`product-request:${request.id}`}
+            title="Private pharmacy comments"
+            commentTitle="Pharmacy comment"
+            placeholder="Write a private comment about this product request..."
+            emptyText="No private pharmacy comments have been added yet."
+            initialTotal={commentsTotal}
+            isEditable={request.status === 'draft'}
+            load={(page) =>
+              getPharmacyNotes('product_request', request.id, page)
+            }
+            create={(text) =>
+              createPharmacyNote('product_request', request.id, text)
+            }
+            remove={(id) =>
+              deletePharmacyNote('product_request', request.id, id)
+            }
+            onTotalChange={setCommentsTotal}
+          />
+        ) : (
+          <section className={css.formCard}>
+            <StatusBanner
+              status="draft"
+              title="Comments are not available yet"
+              message="Save the request as a draft first. Private pharmacy comments will become available after the draft is created."
+            />
+          </section>
+        )
+      ) : null}
+
+      {activeTab === 'history' && request ? (
+        <section
+          className={css.formCard}
+          aria-labelledby="request-history-title"
+        >
+          <div className={css.sectionHeader}>
+            <div>
+              <h2 className={css.sectionTitle} id="request-history-title">
+                Change history
+              </h2>
+              <p className={css.sectionText}>
+                Status changes and important request actions are shown newest
+                first.
+              </p>
+            </div>
+          </div>
+
+          <ol className={css.historyList}>
+            {[...request.history].reverse().map((entry) => (
+              <li key={entry.id} className={css.historyItem}>
+                <div className={css.historyHead}>
+                  <StatusBadge
+                    status={entry.status}
+                    label={PRODUCT_REQUEST_STATUS_LABELS[entry.status]}
+                  />
+                  <time dateTime={entry.createdAt}>
+                    {formatOrderDateTime(entry.createdAt)}
+                  </time>
+                </div>
+                <h3>{entry.title}</h3>
+                <p>{entry.description}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
       ) : null}
 
       {isModerationConfirmOpen ? (
         <ConfirmationModal
           title="Send request for moderation?"
-          text="After sending, you will not be able to edit this request until Admin reviews it."
+          text="After sending, all fields and private comments become read-only while Admin reviews the request."
           confirmLabel="Send for moderation"
           cancelLabel="Keep editing"
           isLoading={savingStatus === 'new'}
           onConfirm={() => void handleConfirmModeration()}
           onCancel={() => setIsModerationConfirmOpen(false)}
+        />
+      ) : null}
+
+      {isDeleteConfirmOpen ? (
+        <ConfirmationModal
+          title="Delete product request draft?"
+          text="The draft and all its private pharmacy comments will be deleted permanently."
+          confirmLabel="Delete draft"
+          cancelLabel="Keep draft"
+          isLoading={isDeleting}
+          onConfirm={() => void handleDeleteDraft()}
+          onCancel={() => setIsDeleteConfirmOpen(false)}
         />
       ) : null}
     </main>

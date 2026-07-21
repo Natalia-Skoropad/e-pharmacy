@@ -12,6 +12,7 @@ import {
   type PharmacyProductRequestDetails,
   type PharmacyProductRequestRow,
   type ProductRequestFile,
+  type ProductRequestHistoryEntry,
   type PharmacyProductRequestsResponse,
 } from '@e-pharmacy/types/product-requests';
 
@@ -47,6 +48,32 @@ function normalizeProductRequestFile(
     name,
     type: getStringValue(rawFile.type) ?? 'application/octet-stream',
     size,
+  };
+}
+
+//===================================================================
+
+function normalizeProductRequestHistoryEntry(
+  rawEntry: unknown,
+  index: number
+): ProductRequestHistoryEntry | null {
+  if (!isRecord(rawEntry)) return null;
+
+  const createdAt = getStringValue(rawEntry.createdAt);
+  const title = getStringValue(rawEntry.title);
+  const description = getStringValue(rawEntry.description);
+
+  if (!createdAt || !title || !description) return null;
+
+  return {
+    id:
+      getStringValue(rawEntry.id) ??
+      getStringValue(rawEntry._id) ??
+      `history-${index}`,
+    status: normalizeProductRequestStatus(rawEntry.status),
+    title,
+    description,
+    createdAt,
   };
 }
 
@@ -101,6 +128,9 @@ export function normalizePharmacyProductRequest(
     category: isProductCategory(rawRequest.category)
       ? rawRequest.category
       : 'other',
+    ...(getStringValue(rawRequest.customCategory)
+      ? { customCategory: getStringValue(rawRequest.customCategory) }
+      : {}),
     status: normalizeProductRequestStatus(rawRequest.status),
   };
 }
@@ -118,6 +148,11 @@ export function normalizePharmacyProductRequestDetails(
     ? rawRequest.additionalFiles
         .map(normalizeProductRequestFile)
         .filter((file): file is ProductRequestFile => Boolean(file))
+    : [];
+  const history = Array.isArray(rawRequest.history)
+    ? rawRequest.history
+        .map(normalizeProductRequestHistoryEntry)
+        .filter((entry): entry is ProductRequestHistoryEntry => Boolean(entry))
     : [];
 
   return {
@@ -147,22 +182,18 @@ export function normalizePharmacyProductRequestDetails(
     ...(getStringValue(rawRequest.prescriptionType)
       ? { prescriptionType: getStringValue(rawRequest.prescriptionType) }
       : {}),
-    ...(getStringValue(rawRequest.storageConditions)
-      ? { storageConditions: getStringValue(rawRequest.storageConditions) }
-      : {}),
-    ...(getStringValue(rawRequest.shortDescription)
-      ? { shortDescription: getStringValue(rawRequest.shortDescription) }
-      : {}),
     ...(getStringValue(rawRequest.fullDescription)
       ? { fullDescription: getStringValue(rawRequest.fullDescription) }
-      : {}),
-    ...(getStringValue(rawRequest.characteristics)
-      ? { characteristics: getStringValue(rawRequest.characteristics) }
       : {}),
     ...(getStringValue(rawRequest.pharmacyComment)
       ? { pharmacyComment: getStringValue(rawRequest.pharmacyComment) }
       : {}),
     ...(additionalFiles.length ? { additionalFiles } : {}),
+    ...(getStringValue(rawRequest.rejectionReason)
+      ? { rejectionReason: getStringValue(rawRequest.rejectionReason) }
+      : {}),
+    history,
+    commentsTotal: getNumberValue(rawRequest.commentsTotal) ?? 0,
   };
 }
 

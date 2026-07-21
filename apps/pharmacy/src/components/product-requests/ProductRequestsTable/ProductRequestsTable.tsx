@@ -113,7 +113,10 @@ function ProductRequestsTable({
       {
         key: 'category',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
-        render: (request) => PRODUCT_CATEGORY_LABELS[request.category],
+        render: (request) =>
+          request.category === 'other' && request.customCategory
+            ? request.customCategory
+            : PRODUCT_CATEGORY_LABELS[request.category],
       },
       {
         key: 'status',

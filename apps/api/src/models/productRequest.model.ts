@@ -39,6 +39,20 @@ const productRequestFileSchema = new Schema(
   { _id: false }
 );
 
+const productRequestHistorySchema = new Schema(
+  {
+    status: {
+      type: String,
+      enum: PRODUCT_REQUEST_STATUSES,
+      required: true,
+    },
+    title: { type: String, trim: true, required: true, maxlength: 180 },
+    description: { type: String, trim: true, required: true, maxlength: 1000 },
+    createdAt: { type: Date, required: true },
+  },
+  { _id: true }
+);
+
 //===============================================================
 
 const productRequestSchema = new Schema<ProductRequestEntity>(
@@ -72,6 +86,8 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
       required: true,
     },
 
+    customCategory: { type: String, trim: true, maxlength: 100 },
+
     status: {
       type: String,
       enum: PRODUCT_REQUEST_STATUSES,
@@ -99,10 +115,7 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     form: { type: String, trim: true, maxlength: 100 },
     activeSubstance: { type: String, trim: true, maxlength: 180 },
     prescriptionType: { type: String, trim: true, maxlength: 80 },
-    storageConditions: { type: String, trim: true, maxlength: 500 },
-    shortDescription: { type: String, trim: true, maxlength: 1000 },
     fullDescription: { type: String, trim: true, maxlength: 5000 },
-    characteristics: { type: String, trim: true, maxlength: 3000 },
     pharmacyComment: { type: String, trim: true, maxlength: 1500 },
 
     additionalFiles: {
@@ -113,6 +126,9 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
         message: 'A product request can contain at most 5 additional files',
       },
     },
+
+    rejectionReason: { type: String, trim: true, maxlength: 1000 },
+    history: { type: [productRequestHistorySchema], default: [] },
   },
   {
     timestamps: true,

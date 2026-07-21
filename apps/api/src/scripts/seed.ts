@@ -3639,11 +3639,11 @@ const PRODUCT_REQUEST_SEED_NAMES = [
 ] as const;
 
 const PRODUCT_REQUEST_SEED_STATUSES = [
-  'draft',
-  'new',
-  'in_progress',
-  'approved',
-  'rejected',
+  ...Array.from({ length: 14 }, () => 'approved' as const),
+  ...Array.from({ length: 5 }, () => 'rejected' as const),
+  ...Array.from({ length: 2 }, () => 'draft' as const),
+  ...Array.from({ length: 3 }, () => 'new' as const),
+  'in_progress' as const,
 ] as const;
 
 const PRODUCT_REQUEST_SEED_CATEGORIES = [
@@ -3657,6 +3657,68 @@ const PRODUCT_REQUEST_SEED_CATEGORIES = [
 
 //===============================================================
 
+function createProductRequestSeedHistory(
+  status: (typeof PRODUCT_REQUEST_SEED_STATUSES)[number],
+  createdAt: Date,
+  rejectionReason?: string
+) {
+  const entries: Array<{
+    status: (typeof PRODUCT_REQUEST_SEED_STATUSES)[number];
+    title: string;
+    description: string;
+    createdAt: Date;
+  }> = [
+    {
+      status: 'draft' as const,
+      title: 'Draft created',
+      description: 'The pharmacy saved the product request as a draft.',
+      createdAt,
+    },
+  ];
+
+  if (status !== 'draft') {
+    entries.push({
+      status: 'new',
+      title: 'Sent for moderation',
+      description: 'The pharmacy sent the product request to Admin.',
+      createdAt: new Date(createdAt.getTime() + 60 * 60 * 1000),
+    });
+  }
+
+  if (status === 'in_progress' || status === 'approved' || status === 'rejected') {
+    entries.push({
+      status: 'in_progress',
+      title: 'Review started',
+      description: 'Admin started reviewing the submitted product data.',
+      createdAt: new Date(createdAt.getTime() + 2 * 60 * 60 * 1000),
+    });
+  }
+
+  if (status === 'approved') {
+    entries.push({
+      status: 'approved',
+      title: 'Request approved',
+      description: 'Admin approved the request and created or linked the product.',
+      createdAt: new Date(createdAt.getTime() + 3 * 60 * 60 * 1000),
+    });
+  }
+
+  if (status === 'rejected') {
+    entries.push({
+      status: 'rejected',
+      title: 'Request rejected',
+      description:
+        rejectionReason ??
+        'Admin rejected the request because the submitted information needs correction.',
+      createdAt: new Date(createdAt.getTime() + 3 * 60 * 60 * 1000),
+    });
+  }
+
+  return entries;
+}
+
+//===============================================================
+
 async function seedProductRequests(): Promise<number> {
   const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
     .select('_id')
@@ -3666,7 +3728,7 @@ async function seedProductRequests(): Promise<number> {
 
   const approvedProducts = await Product.find({ status: 'active' })
     .sort({ createdAt: 1 })
-    .limit(5)
+    .limit(14)
     .select('_id name article category manufacturer')
     .lean<
       Array<{
@@ -3680,10 +3742,10 @@ async function seedProductRequests(): Promise<number> {
 
   const baseDate = new Date('2026-06-25T08:30:00.000Z');
   const requests = PRODUCT_REQUEST_SEED_NAMES.map((seedName, index) => {
-    const status = PRODUCT_REQUEST_SEED_STATUSES[index % 5];
+    const status = PRODUCT_REQUEST_SEED_STATUSES[index];
     const approvedProduct =
       status === 'approved' && approvedProducts.length > 0
-        ? approvedProducts[Math.floor(index / 5) % approvedProducts.length]
+        ? approvedProducts[index % approvedProducts.length]
         : undefined;
     const createdAt = new Date(baseDate.getTime() + index * 24 * 60 * 60 * 1000);
     const category =
@@ -3694,14 +3756,29 @@ async function seedProductRequests(): Promise<number> {
     const name = approvedProduct?.name ?? seedName;
     const article =
       approvedProduct?.article ?? `REQ-${String(index + 1).padStart(4, '0')}`;
+    const rejectionReason =
+      status === 'rejected'
+        ? 'The manufacturer document does not match the package data. Correct the document and create a new request.'
+        : undefined;
+    const history = createProductRequestSeedHistory(
+      status,
+      createdAt,
+      rejectionReason
+    );
 
     return {
       pharmacyId: pharmacy._id,
       name,
       article,
       category,
+      customCategory: category === 'other' ? 'Wellness accessories' : undefined,
       status,
       productId: approvedProduct?._id,
+      productImage: {
+        name: `product-image-${index + 1}.jpg`,
+        type: 'image/jpeg',
+        size: 320000 + index * 1500,
+      },
       manufacturer:
         approvedProduct?.manufacturer ??
         ['Medica Nova', 'HealthLab', 'CareLine', 'VitaWorks'][index % 4],
@@ -3710,19 +3787,15 @@ async function seedProductRequests(): Promise<number> {
       packageSize: index % 2 === 0 ? '№30' : '100 ml',
       form: ['tablets', 'spray', 'capsules', 'medical device'][index % 4],
       activeSubstance:
-        category === 'medical_devices' ? undefined : `Active component ${index + 1}`,
+        category === 'medical_devices'
+          ? 'Not applicable / device material'
+          : `Active component ${index + 1}`,
       prescriptionType:
         category === 'medicine' ? 'non_prescription' : 'not_applicable',
-      storageConditions: 'Store in a dry place below 25°C and keep away from direct sunlight.',
-      shortDescription: `${name} is a demo product submitted by the pharmacy for catalog review.`,
       fullDescription:
-        'The request contains sample product data for checking the pharmacy request list, filters, pagination, and moderation statuses.',
-      characteristics:
-        'Demo package information, composition, dosage form, and storage requirements.',
+        'The request contains complete sample product information for checking draft editing, moderation states, internal comments, and the change history.',
       pharmacyComment:
-        status === 'rejected'
-          ? 'Please review the package information and manufacturer documents before creating a new request based on this one.'
-          : 'The product is planned for the pharmacy assortment and is not currently available in the global catalog.',
+        'Optional note for Admin: the product is planned for the pharmacy assortment and is not currently available in the global catalog.',
       additionalFiles:
         index % 4 === 0
           ? [
@@ -3733,14 +3806,18 @@ async function seedProductRequests(): Promise<number> {
               },
             ]
           : undefined,
+      rejectionReason,
+      history,
       createdAt,
-      updatedAt: new Date(createdAt.getTime() + (index % 3) * 60 * 60 * 1000),
+      updatedAt: history.at(-1)?.createdAt ?? createdAt,
     };
   });
 
   await ProductRequest.insertMany(requests);
   return requests.length;
 }
+
+//===============================================================
 
 //===============================================================
 

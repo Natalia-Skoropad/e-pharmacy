@@ -4,7 +4,16 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import { Pharmacy } from '../models/pharmacy.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
 import { ProductOffer } from '../models/productOffer.model';
+import { ProductRequest } from '../models/productRequest.model';
 import { httpError } from '../utils/httpError';
+
+//===============================================================
+
+type PharmacyNoteEntityType =
+  | 'client'
+  | 'product'
+  | 'pharmacy'
+  | 'product_request';
 
 //===============================================================
 
@@ -21,22 +30,43 @@ async function getPharmacyId(userId: string) {
 
 //===============================================================
 
-async function assertProductIsAdded(
+async function assertEntityAccess(
   pharmacyId: Types.ObjectId,
-  entityType: 'client' | 'product' | 'pharmacy',
-  entityId: string
+  entityType: PharmacyNoteEntityType,
+  entityId: string,
+  requireDraft = false
 ) {
-  if (entityType !== 'product') return;
+  if (entityType === 'product') {
+    const offerExists = await ProductOffer.exists({
+      pharmacyId,
+      productId: new Types.ObjectId(entityId),
+    });
 
-  const offerExists = await ProductOffer.exists({
+    if (!offerExists) {
+      throw httpError(
+        HTTP_STATUS.FORBIDDEN,
+        'Add this product to your pharmacy before creating comments.'
+      );
+    }
+  }
+
+  if (entityType !== 'product_request') return;
+
+  const request = await ProductRequest.findOne({
+    _id: new Types.ObjectId(entityId),
     pharmacyId,
-    productId: new Types.ObjectId(entityId),
-  });
+  })
+    .select('status')
+    .lean<{ status: string } | null>();
 
-  if (!offerExists) {
+  if (!request) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
+  }
+
+  if (requireDraft && request.status !== 'draft') {
     throw httpError(
-      HTTP_STATUS.FORBIDDEN,
-      'Add this product to your pharmacy before creating comments.'
+      HTTP_STATUS.CONFLICT,
+      'Product request comments can be edited only while the request is a draft.'
     );
   }
 }
@@ -45,12 +75,14 @@ async function assertProductIsAdded(
 
 export async function getPharmacyNotesService(
   userId: string,
-  entityType: 'client' | 'product' | 'pharmacy',
+  entityType: PharmacyNoteEntityType,
   entityId: string,
   page: number,
   perPage: number
 ) {
   const pharmacyId = await getPharmacyId(userId);
+  await assertEntityAccess(pharmacyId, entityType, entityId);
+
   const filter = {
     pharmacyId,
     entityType,
@@ -81,12 +113,17 @@ export async function getPharmacyNotesService(
 
 export async function createPharmacyNoteService(
   userId: string,
-  entityType: 'client' | 'product' | 'pharmacy',
+  entityType: PharmacyNoteEntityType,
   entityId: string,
   text: string
 ) {
   const pharmacyId = await getPharmacyId(userId);
-  await assertProductIsAdded(pharmacyId, entityType, entityId);
+  await assertEntityAccess(
+    pharmacyId,
+    entityType,
+    entityId,
+    entityType === 'product_request'
+  );
 
   const note = await PharmacyNote.create({
     pharmacyId,
@@ -108,11 +145,18 @@ export async function createPharmacyNoteService(
 
 export async function deletePharmacyNoteService(
   userId: string,
-  entityType: 'client' | 'product' | 'pharmacy',
+  entityType: PharmacyNoteEntityType,
   entityId: string,
   noteId: string
 ) {
   const pharmacyId = await getPharmacyId(userId);
+  await assertEntityAccess(
+    pharmacyId,
+    entityType,
+    entityId,
+    entityType === 'product_request'
+  );
+
   const deleted = await PharmacyNote.findOneAndDelete({
     _id: noteId,
     pharmacyId,

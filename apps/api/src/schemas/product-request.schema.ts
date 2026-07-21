@@ -31,7 +31,19 @@ const optionalText = (maxLength: number) =>
 const productRequestFileSchema = z.object({
   name: z.string().trim().min(1).max(180),
   type: z.string().trim().max(120).default('application/octet-stream'),
-  size: z.number().int().min(0).max(10 * 1024 * 1024),
+  size: z
+    .number()
+    .int()
+    .min(0)
+    .max(10 * 1024 * 1024),
+});
+
+const productImageSchema = productRequestFileSchema.extend({
+  size: z
+    .number()
+    .int()
+    .min(0)
+    .max(2 * 1024 * 1024),
 });
 
 //===============================================================
@@ -71,13 +83,14 @@ export const productRequestsQuerySchema = z.preprocess(
 
 //===============================================================
 
-export const createProductRequestSchema = z
+const productRequestFormSchema = z
   .object({
     status: z.enum(['draft', 'new']).default('draft'),
     name: z.string().trim().min(1, 'Product name is required').max(160),
     article: z.string().trim().min(1, 'Product article is required').max(40),
     category: z.enum(PRODUCT_CATEGORIES),
-    productImage: productRequestFileSchema.optional(),
+    customCategory: optionalText(100),
+    productImage: productImageSchema.optional(),
     manufacturer: optionalText(160),
     countryOfOrigin: optionalText(100),
     dosage: optionalText(100),
@@ -85,24 +98,40 @@ export const createProductRequestSchema = z
     form: optionalText(100),
     activeSubstance: optionalText(180),
     prescriptionType: optionalText(80),
-    storageConditions: optionalText(500),
-    shortDescription: optionalText(1000),
     fullDescription: optionalText(5000),
-    characteristics: optionalText(3000),
     pharmacyComment: optionalText(1500),
     additionalFiles: z.array(productRequestFileSchema).max(5).optional(),
   })
   .superRefine((value, context) => {
+    if (value.category === 'other' && !value.customCategory?.trim()) {
+      context.addIssue({
+        code: 'custom',
+        path: ['customCategory'],
+        message: 'Enter the custom category name',
+      });
+    }
+
     if (value.status !== 'new') return;
 
     const requiredForModeration = [
+      ['productImage', value.productImage],
       ['manufacturer', value.manufacturer],
-      ['shortDescription', value.shortDescription],
-      ['pharmacyComment', value.pharmacyComment],
+      ['countryOfOrigin', value.countryOfOrigin],
+      ['dosage', value.dosage],
+      ['packageSize', value.packageSize],
+      ['form', value.form],
+      ['activeSubstance', value.activeSubstance],
+      ['prescriptionType', value.prescriptionType],
+      ['fullDescription', value.fullDescription],
     ] as const;
 
     for (const [field, fieldValue] of requiredForModeration) {
-      if (fieldValue?.trim()) continue;
+      const isFilled =
+        typeof fieldValue === 'string'
+          ? Boolean(fieldValue.trim())
+          : Boolean(fieldValue);
+
+      if (isFilled) continue;
 
       context.addIssue({
         code: 'custom',
@@ -111,6 +140,9 @@ export const createProductRequestSchema = z
       });
     }
   });
+
+export const createProductRequestSchema = productRequestFormSchema;
+export const updateProductRequestSchema = productRequestFormSchema;
 
 //===============================================================
 
@@ -121,6 +153,11 @@ export const productRequestParamsSchema = z.object({
 //===============================================================
 
 export type ProductRequestsQuery = z.infer<typeof productRequestsQuerySchema>;
+
 export type CreateProductRequestInput = z.infer<
   typeof createProductRequestSchema
+>;
+
+export type UpdateProductRequestInput = z.infer<
+  typeof updateProductRequestSchema
 >;

@@ -26,11 +26,20 @@ export type ProductRequestFile = Readonly<{
   size: number;
 }>;
 
-export type CreateProductRequestPayload = Readonly<{
+export type ProductRequestHistoryEntry = Readonly<{
+  id: string;
+  status: ProductRequestStatus;
+  title: string;
+  description: string;
+  createdAt: string;
+}>;
+
+export type ProductRequestFormPayload = Readonly<{
   status: Extract<ProductRequestStatus, 'draft' | 'new'>;
   name: string;
   article: string;
   category: ProductCategory;
+  customCategory?: string;
   productImage?: ProductRequestFile;
   manufacturer?: string;
   countryOfOrigin?: string;
@@ -39,13 +48,13 @@ export type CreateProductRequestPayload = Readonly<{
   form?: string;
   activeSubstance?: string;
   prescriptionType?: string;
-  storageConditions?: string;
-  shortDescription?: string;
   fullDescription?: string;
-  characteristics?: string;
   pharmacyComment?: string;
   additionalFiles?: ProductRequestFile[];
 }>;
+
+export type CreateProductRequestPayload = ProductRequestFormPayload;
+export type UpdateProductRequestPayload = ProductRequestFormPayload;
 
 //=============================================================================
 
@@ -73,6 +82,7 @@ export type ProductRequestRow = Readonly<{
   productArticle: string;
   productName: string;
   category: ProductCategory;
+  customCategory?: string;
   status: ProductRequestStatus;
 }>;
 
@@ -89,12 +99,12 @@ export type ProductRequestDetails = ProductRequestRow &
     form?: string;
     activeSubstance?: string;
     prescriptionType?: string;
-    storageConditions?: string;
-    shortDescription?: string;
     fullDescription?: string;
-    characteristics?: string;
     pharmacyComment?: string;
     additionalFiles?: ProductRequestFile[];
+    rejectionReason?: string;
+    history: ProductRequestHistoryEntry[];
+    commentsTotal: number;
   }>;
 
 export type ProductRequestsQueryParams = Readonly<{
@@ -122,6 +132,7 @@ export type PharmacyProductRequestDetails = ProductRequestDetails;
 export type PharmacyProductRequestsQueryParams = ProductRequestsQueryParams;
 export type PharmacyProductRequestsResponse = ProductRequestsResponse;
 export type CreatePharmacyProductRequestPayload = CreateProductRequestPayload;
+export type UpdatePharmacyProductRequestPayload = UpdateProductRequestPayload;
 
 //=============================================================================
 

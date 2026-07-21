@@ -11,7 +11,11 @@ import type {
 
 //===================================================================
 
-export type PharmacyNoteEntityType = 'client' | 'product' | 'pharmacy';
+export type PharmacyNoteEntityType =
+  | 'client'
+  | 'product'
+  | 'pharmacy'
+  | 'product_request';
 
 //===================================================================
 

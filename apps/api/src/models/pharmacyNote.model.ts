@@ -4,7 +4,7 @@ import { Schema, model, models } from 'mongoose';
 
 export type PharmacyNoteEntity = {
   pharmacyId: Schema.Types.ObjectId;
-  entityType: 'client' | 'product' | 'pharmacy';
+  entityType: 'client' | 'product' | 'pharmacy' | 'product_request';
   entityId: Schema.Types.ObjectId;
   text: string;
   createdBy: Schema.Types.ObjectId;
@@ -25,7 +25,7 @@ const pharmacyNoteSchema = new Schema<PharmacyNoteEntity>(
 
     entityType: {
       type: String,
-      enum: ['client', 'product', 'pharmacy'],
+      enum: ['client', 'product', 'pharmacy', 'product_request'],
       required: true,
       index: true,
     },

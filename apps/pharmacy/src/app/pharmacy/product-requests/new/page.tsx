@@ -11,8 +11,20 @@ export const metadata: Metadata = {
 
 //===================================================================
 
-function NewProductRequestPage() {
-  return <NewProductRequestPageContent />;
+type NewProductRequestPageProps = Readonly<{
+  searchParams: Promise<{ source?: string | string[] }>;
+}>;
+
+//===================================================================
+
+async function NewProductRequestPage({
+  searchParams,
+}: NewProductRequestPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const source = resolvedSearchParams.source;
+  const sourceRequestId = Array.isArray(source) ? source[0] : source;
+
+  return <NewProductRequestPageContent sourceRequestId={sourceRequestId} />;
 }
 
 export default NewProductRequestPage;

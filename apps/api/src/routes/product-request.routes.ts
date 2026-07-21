@@ -2,8 +2,10 @@ import { Router } from 'express';
 
 import {
   createProductRequest,
+  deleteProductRequest,
   getProductRequestById,
   getProductRequests,
+  updateProductRequest,
 } from '../controllers/product-request.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
@@ -13,6 +15,7 @@ import {
   createProductRequestSchema,
   productRequestParamsSchema,
   productRequestsQuerySchema,
+  updateProductRequestSchema,
 } from '../schemas/product-request.schema';
 
 import { ctrlWrapper } from '../utils/ctrlWrapper';
@@ -47,4 +50,23 @@ productRequestRoutes.post(
   '/',
   validate({ body: createProductRequestSchema }),
   ctrlWrapper(createProductRequest)
+);
+
+//=================================================================================
+
+productRequestRoutes.patch(
+  '/:requestId',
+  validate({
+    params: productRequestParamsSchema,
+    body: updateProductRequestSchema,
+  }),
+  ctrlWrapper(updateProductRequest)
+);
+
+//=================================================================================
+
+productRequestRoutes.delete(
+  '/:requestId',
+  validate({ params: productRequestParamsSchema }),
+  ctrlWrapper(deleteProductRequest)
 );

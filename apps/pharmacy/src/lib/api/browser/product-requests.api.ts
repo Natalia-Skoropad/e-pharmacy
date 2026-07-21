@@ -9,6 +9,7 @@ import type {
   PharmacyProductRequestRow,
   PharmacyProductRequestsQueryParams,
   PharmacyProductRequestsResponse,
+  UpdatePharmacyProductRequestPayload,
 } from '@e-pharmacy/types/product-requests';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
@@ -75,3 +76,39 @@ export async function getPharmacyProductRequest(
   return request;
 }
 
+
+
+//===================================================================
+
+export async function updatePharmacyProductRequest(
+  requestId: string,
+  payload: UpdatePharmacyProductRequestPayload
+): Promise<PharmacyProductRequestDetails> {
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
+    PHARMACY_API_ROUTES.productRequests.details(requestId),
+    {
+      method: 'PATCH',
+      body: payload,
+    }
+  );
+
+  const data = getResponseData(response) as { request?: unknown };
+  const request = normalizePharmacyProductRequestDetails(data.request);
+
+  if (!request) {
+    throw new Error('Product request could not be updated.');
+  }
+
+  return request;
+}
+
+//===================================================================
+
+export async function deletePharmacyProductRequest(
+  requestId: string
+): Promise<void> {
+  await localApiRequest(
+    PHARMACY_API_ROUTES.productRequests.details(requestId),
+    { method: 'DELETE' }
+  );
+}
