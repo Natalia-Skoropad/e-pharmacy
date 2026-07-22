@@ -4,7 +4,8 @@ import { VALIDATION_MESSAGES } from '../constants/validation';
 
 import {
   sharedEmailSchema,
-  sharedNameSchema,
+  sharedUserNameSchema,
+  sharedPharmacyNameSchema,
   sharedOptionalAddressSchema,
   sharedPasswordSchema,
   sharedRequiredPasswordSchema,
@@ -25,7 +26,7 @@ const optionalPhoneSchema = sharedRequiredPhoneSchema.optional();
 //===============================================================
 
 export const registerSchema = z.object({
-  name: sharedNameSchema,
+  name: sharedUserNameSchema,
   email: sharedEmailSchema,
   password: sharedPasswordSchema,
 
@@ -64,12 +65,12 @@ export const registerSchema = z.object({
 //===============================================================
 
 export const createPharmacyUserSchema = z.object({
-  name: sharedNameSchema,
+  name: sharedUserNameSchema,
   email: sharedEmailSchema,
   password: sharedPasswordSchema,
   phone: sharedRequiredPhoneSchema,
   address: sharedOptionalAddressSchema,
-  pharmacyName: sharedNameSchema.optional(),
+  pharmacyName: sharedPharmacyNameSchema.optional(),
   pharmacyDocuments: z
     .array(
       z.object({
@@ -122,7 +123,7 @@ export const resetPasswordSchema = z.object({
 
 export const updateProfileSchema = z
   .object({
-    name: sharedNameSchema.optional(),
+    name: sharedUserNameSchema.optional(),
     phone: optionalPhoneSchema,
     address: sharedOptionalAddressSchema,
     pictureUrl: sharedPictureUrlSchema,

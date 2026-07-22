@@ -4,10 +4,7 @@ import {
   ORDER_DELIVERY_INITIAL_VALUES,
   hasValidationErrors,
   isOrderDeliveryFormValid,
-  sanitizeAddress,
-  sanitizeName,
-  sanitizeOrderComment,
-  sanitizePhone,
+  normalizePhoneInput,
   validateOrderDeliveryForm,
   type OrderDeliveryFormErrors,
   type OrderDeliveryFormValues,
@@ -32,14 +29,11 @@ type UseCheckoutDeliveryFormParams = {
 
 //===================================================================
 
-function sanitizeDeliveryFieldValue(
+function normalizeDeliveryFieldValue(
   field: keyof OrderDeliveryFormValues,
   value: string
 ): string {
-  if (field === 'recipientName') return sanitizeName(value);
-  if (field === 'recipientPhone') return sanitizePhone(value);
-  if (field === 'deliveryAddress') return sanitizeAddress(value);
-  return sanitizeOrderComment(value);
+  return field === 'recipientPhone' ? normalizePhoneInput(value) : value;
 }
 
 //===================================================================
@@ -96,7 +90,7 @@ export function useCheckoutDeliveryForm({
     field: keyof OrderDeliveryFormValues,
     value: string
   ) => {
-    const sanitizedValue = sanitizeDeliveryFieldValue(field, value);
+    const normalizedValue = normalizeDeliveryFieldValue(field, value);
 
     setTouchedFields((current) => ({
       ...current,
@@ -105,7 +99,7 @@ export function useCheckoutDeliveryForm({
 
     setDraftValues((current) => ({
       ...current,
-      [field]: sanitizedValue,
+      [field]: normalizedValue,
     }));
   };
 

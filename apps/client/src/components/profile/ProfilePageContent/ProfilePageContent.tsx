@@ -54,10 +54,7 @@ import {
   buildPictureFileError,
   buildPictureUrlError,
   normalizeDataProfileValues,
-  sanitizeAddress,
-  sanitizeName,
-  sanitizePassword,
-  sanitizePhone,
+  normalizePhoneInput,
   validateChangePasswordForm,
   validateDataProfileForm,
   type ChangePasswordFormValues,
@@ -645,7 +642,7 @@ function ProfilePageContent() {
 
     setPasswordValues((prev) => ({
       ...prev,
-      [field]: field === 'newPassword' ? sanitizePassword(value) : value,
+      [field]: value,
     }));
   };
 
@@ -763,7 +760,7 @@ function ProfilePageContent() {
                         onChange={(event) =>
                           handleProfileChange(
                             'name',
-                            sanitizeName(event.target.value)
+                            event.target.value
                           )
                         }
                       />
@@ -778,7 +775,7 @@ function ProfilePageContent() {
                         onChange={(event) =>
                           handleProfileChange(
                             'phone',
-                            sanitizePhone(event.target.value)
+                            normalizePhoneInput(event.target.value)
                           )
                         }
                       />
@@ -795,7 +792,7 @@ function ProfilePageContent() {
                         onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
                           handleProfileChange(
                             'address',
-                            sanitizeAddress(event.target.value)
+                            event.target.value
                           )
                         }
                       />

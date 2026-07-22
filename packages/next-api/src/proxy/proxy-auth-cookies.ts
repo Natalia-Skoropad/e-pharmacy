@@ -40,6 +40,8 @@ function isSecureRequest(request: NextRequest): boolean {
 
 type ProxyCookieSameSite = 'lax' | 'strict' | 'none';
 
+//===================================================================
+
 type RuntimeEnvironment = {
   AUTH_COOKIE_DOMAIN?: string;
   AUTH_COOKIE_SAME_SITE?: string;

@@ -1,15 +1,11 @@
 import type { Types } from 'mongoose';
 
+import type { PRODUCT_REQUEST_STATUSES } from '../constants/product-request-validation';
 import type { ProductCategory } from './categories';
 
 //===============================================================
 
-export type ProductRequestStatus =
-  | 'draft'
-  | 'new'
-  | 'in_progress'
-  | 'approved'
-  | 'rejected';
+export type ProductRequestStatus = (typeof PRODUCT_REQUEST_STATUSES)[number];
 
 //===============================================================
 
@@ -82,6 +78,7 @@ export type ProductRequestResponseDto = {
   pharmacyComment?: string;
   additionalFiles?: ProductRequestFile[];
   rejectionReason?: string;
+
   history?: Array<{
     id: string;
     status: ProductRequestStatus;
@@ -89,6 +86,7 @@ export type ProductRequestResponseDto = {
     description: string;
     createdAt: string;
   }>;
+
   commentsTotal?: number;
 };
 

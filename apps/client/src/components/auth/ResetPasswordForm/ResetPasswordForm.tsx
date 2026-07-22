@@ -17,7 +17,6 @@ import {
   hasValidationErrors,
   isResetPasswordFormValid,
   markAllFieldsTouched,
-  sanitizePassword,
   validateResetPasswordForm,
   type ResetPasswordFormErrors,
   type ResetPasswordFormValues,
@@ -67,7 +66,7 @@ function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
     (event: ChangeEvent<HTMLInputElement>) => {
       const nextValues = {
         ...values,
-        [field]: sanitizePassword(event.target.value),
+        [field]: event.target.value,
       };
 
       const nextErrors = validateResetPasswordForm(nextValues);

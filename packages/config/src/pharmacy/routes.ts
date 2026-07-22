@@ -26,21 +26,31 @@ export function getPharmacyOrderPath(orderId: string): string {
   return appendRouteParam(PHARMACY_ROUTES.ORDERS, orderId);
 }
 
+//===================================================================
+
 export function getPharmacyClientPath(clientId: string): string {
   return appendRouteParam(PHARMACY_ROUTES.CLIENTS, clientId);
 }
+
+//===================================================================
 
 export function getPharmacyProductPath(productId: string): string {
   return appendRouteParam(PHARMACY_ROUTES.PRODUCTS, productId);
 }
 
+//===================================================================
+
 export function getPharmacyAllProductPath(productId: string): string {
   return appendRouteParam(PHARMACY_ROUTES.ALL_PRODUCTS, productId);
 }
 
+//===================================================================
+
 export function getPharmacyRequestPath(requestId: string): string {
   return appendRouteParam(PHARMACY_ROUTES.PRODUCT_REQUESTS, requestId);
 }
+
+//===================================================================
 
 export function getPharmacyRequestEditPath(requestId: string): string {
   return `${getPharmacyRequestPath(requestId)}/edit`;

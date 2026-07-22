@@ -1,70 +1,42 @@
-export const VALIDATION_LIMITS = {
-  nameMin: 2,
-  nameMax: 50,
+export const USER_NAME_MIN_LENGTH = 2;
+export const USER_NAME_MAX_LENGTH = 50;
 
-  emailMax: 64,
-  phoneMax: 13,
+export const PHARMACY_NAME_MIN_LENGTH = 2;
+export const PHARMACY_NAME_MAX_LENGTH = 100;
 
-  passwordMin: 8,
-  passwordMax: 20,
+export const BANK_RECIPIENT_NAME_MIN_LENGTH = 2;
+export const BANK_RECIPIENT_NAME_MAX_LENGTH = 160;
 
-  addressMin: 10,
-  addressMax: 200,
+export const BANK_NAME_MIN_LENGTH = 2;
+export const BANK_NAME_MAX_LENGTH = 120;
 
-  searchMax: 80,
+export const USER_EMAIL_MAX_LENGTH = 64;
+export const USER_PHONE_MAX_LENGTH = 13;
 
-  reviewCommentMin: 10,
-  reviewCommentMax: 500,
+export const USER_PASSWORD_MIN_LENGTH = 8;
+export const USER_PASSWORD_MAX_LENGTH = 20;
 
-  reviewRatingMin: 1,
-  reviewRatingMax: 5,
+export const USER_ADDRESS_MIN_LENGTH = 10;
+export const USER_ADDRESS_MAX_LENGTH = 200;
 
-  orderCommentMax: 500,
+export const USER_SEARCH_MAX_LENGTH = 80;
 
-  workingHoursMax: 160,
-  textEditorMax: 5000,
-  taxIdMin: 8,
-  taxIdMax: 10,
-  ibanMax: 29,
-  paymentPurposeMax: 500,
+export const USER_REVIEW_COMMENT_MIN_LENGTH = 10;
+export const USER_REVIEW_COMMENT_MAX_LENGTH = 500;
 
-  pictureUrlMax: 700000,
-  pictureFileMaxSizeBytes: 450 * 1024,
-} as const;
+export const MIN_REVIEW_RATING = 1;
+export const MAX_REVIEW_RATING = 5;
 
-//=============================================================================
+export const USER_ORDER_COMMENT_MAX_LENGTH = 500;
 
-export const USER_NAME_MIN_LENGTH = VALIDATION_LIMITS.nameMin;
-export const USER_NAME_MAX_LENGTH = VALIDATION_LIMITS.nameMax;
+export const WORKING_HOURS_MAX_LENGTH = 160;
+export const TEXT_EDITOR_MAX_LENGTH = 5000;
 
-export const USER_EMAIL_MAX_LENGTH = VALIDATION_LIMITS.emailMax;
-export const USER_PHONE_MAX_LENGTH = VALIDATION_LIMITS.phoneMax;
+export const TAX_ID_MIN_LENGTH = 8;
+export const TAX_ID_MAX_LENGTH = 10;
 
-export const USER_PASSWORD_MIN_LENGTH = VALIDATION_LIMITS.passwordMin;
-export const USER_PASSWORD_MAX_LENGTH = VALIDATION_LIMITS.passwordMax;
+export const IBAN_MAX_LENGTH = 29;
+export const PAYMENT_PURPOSE_MAX_LENGTH = 500;
 
-export const USER_ADDRESS_MIN_LENGTH = VALIDATION_LIMITS.addressMin;
-export const USER_ADDRESS_MAX_LENGTH = VALIDATION_LIMITS.addressMax;
-
-export const USER_SEARCH_MAX_LENGTH = VALIDATION_LIMITS.searchMax;
-
-export const USER_REVIEW_COMMENT_MIN_LENGTH =
-  VALIDATION_LIMITS.reviewCommentMin;
-export const USER_REVIEW_COMMENT_MAX_LENGTH =
-  VALIDATION_LIMITS.reviewCommentMax;
-
-export const MIN_REVIEW_RATING = VALIDATION_LIMITS.reviewRatingMin;
-export const MAX_REVIEW_RATING = VALIDATION_LIMITS.reviewRatingMax;
-
-export const USER_ORDER_COMMENT_MAX_LENGTH = VALIDATION_LIMITS.orderCommentMax;
-
-export const WORKING_HOURS_MAX_LENGTH = VALIDATION_LIMITS.workingHoursMax;
-export const TEXT_EDITOR_MAX_LENGTH = VALIDATION_LIMITS.textEditorMax;
-export const TAX_ID_MIN_LENGTH = VALIDATION_LIMITS.taxIdMin;
-export const TAX_ID_MAX_LENGTH = VALIDATION_LIMITS.taxIdMax;
-export const IBAN_MAX_LENGTH = VALIDATION_LIMITS.ibanMax;
-export const PAYMENT_PURPOSE_MAX_LENGTH = VALIDATION_LIMITS.paymentPurposeMax;
-
-export const PICTURE_URL_MAX_LENGTH = VALIDATION_LIMITS.pictureUrlMax;
-export const PICTURE_FILE_MAX_SIZE_BYTES =
-  VALIDATION_LIMITS.pictureFileMaxSizeBytes;
+export const PICTURE_URL_MAX_LENGTH = 700000;
+export const PICTURE_FILE_MAX_SIZE_BYTES = 450 * 1024;

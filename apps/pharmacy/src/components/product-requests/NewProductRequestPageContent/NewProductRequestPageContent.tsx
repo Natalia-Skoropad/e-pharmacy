@@ -38,19 +38,36 @@ import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 import {
   PRODUCT_CATEGORIES,
   PRODUCT_CATEGORY_LABELS,
-  type ProductCategory,
 } from '@e-pharmacy/types/products';
 
 import {
   PRODUCT_REQUEST_STATUS_LABELS,
-  type CreatePharmacyProductRequestPayload,
-  type PharmacyProductRequestDetails,
+  type ProductRequestFormPayload,
+  type ProductRequestDetails,
   type ProductRequestFile,
   type ProductRequestStatus,
 } from '@e-pharmacy/types/product-requests';
 
 import { formatOrderDateTime } from '@e-pharmacy/utils/formatters';
-import { sanitizeTextEditor } from '@e-pharmacy/validation';
+
+import {
+  PRODUCT_REQUEST_ADDITIONAL_FILE_MAX_SIZE_MB,
+  PRODUCT_REQUEST_ADDITIONAL_FILES_ACCEPT,
+  PRODUCT_REQUEST_IMAGE_ACCEPT,
+  PRODUCT_REQUEST_IMAGE_MAX_SIZE_MB,
+  PRODUCT_REQUEST_INITIAL_VALUES,
+  PRODUCT_REQUEST_LIMITS,
+  isProductRequestDraftValid,
+  isProductRequestSubmissionValid,
+  normalizeProductRequestForm,
+  toProductRequestFileMetadata,
+  validateProductRequestAdditionalFiles,
+  validateProductRequestForm,
+  validateProductRequestImageFile,
+  type ProductRequestFormErrors,
+  type ProductRequestFormValues,
+  type ProductRequestValidationMode,
+} from '@e-pharmacy/validation/product-requests';
 
 import {
   checkPharmacyProductRequestArticle,
@@ -84,11 +101,6 @@ import css from './NewProductRequestPageContent.module.css';
 
 //===================================================================
 
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
-const MAX_ADDITIONAL_FILE_SIZE = 10 * 1024 * 1024;
-
-//===================================================================
-
 const CATEGORY_OPTIONS = PRODUCT_CATEGORIES.map((category) => ({
   value: category,
   label: PRODUCT_CATEGORY_LABELS[category],
@@ -101,105 +113,13 @@ const PRESCRIPTION_OPTIONS = [
   { value: 'not_applicable', label: 'Not applicable' },
 ] as const;
 
-//===================================================================
-
-type RequestFormState = {
-  name: string;
-  article: string;
-  category: ProductCategory;
-  customCategory: string;
-  manufacturer: string;
-  countryOfOrigin: string;
-  dosage: string;
-  packageSize: string;
-  form: string;
-  activeSubstance: string;
-  prescriptionType: string;
-  fullDescription: string;
-  pharmacyComment: string;
-};
-
-type RequestFormErrors = Partial<
-  Record<keyof RequestFormState | 'productImage', string>
->;
-type ValidationMode = 'draft' | 'moderation' | null;
+type ValidationMode = ProductRequestValidationMode | null;
 type RequestTab = 'details' | 'comments' | 'history';
 
 export type NewProductRequestPageContentProps = Readonly<{
   requestId?: string;
   sourceRequestId?: string;
 }>;
-
-//===================================================================
-
-const INITIAL_FORM_STATE: RequestFormState = {
-  name: '',
-  article: '',
-  category: 'medicine',
-  customCategory: '',
-  manufacturer: '',
-  countryOfOrigin: '',
-  dosage: '',
-  packageSize: '',
-  form: '',
-  activeSubstance: '',
-  prescriptionType: '',
-  fullDescription: '',
-  pharmacyComment: '',
-};
-
-//===================================================================
-
-function getRequestFormErrors(
-  values: RequestFormState,
-  hasProductImage: boolean,
-  mode: Exclude<ValidationMode, null>
-): RequestFormErrors {
-  const errors: RequestFormErrors = {};
-
-  if (!values.name.trim()) errors.name = 'Product name is required.';
-  if (!values.article.trim()) errors.article = 'Product article is required.';
-  if (values.category === 'other' && !values.customCategory.trim()) {
-    errors.customCategory = 'Enter the category name.';
-  }
-
-  if (mode === 'moderation') {
-    if (!hasProductImage) errors.productImage = 'Product image is required.';
-    if (!values.manufacturer.trim())
-      errors.manufacturer = 'Manufacturer is required.';
-    if (!values.countryOfOrigin.trim())
-      errors.countryOfOrigin = 'Country is required.';
-    if (!values.dosage.trim()) errors.dosage = 'Dosage is required.';
-    if (!values.packageSize.trim())
-      errors.packageSize = 'Package size is required.';
-    if (!values.form.trim()) errors.form = 'Product form is required.';
-    if (!values.activeSubstance.trim()) {
-      errors.activeSubstance = 'Active substance is required.';
-    }
-    if (!values.prescriptionType) {
-      errors.prescriptionType = 'Prescription type is required.';
-    }
-    if (!values.fullDescription.trim()) {
-      errors.fullDescription = 'Full description is required.';
-    }
-  }
-
-  return errors;
-}
-
-//===================================================================
-
-function toFileMetadata(
-  file: DocumentUploadFile,
-  dataUrl?: string | null
-): ProductRequestFile {
-  return {
-    name: file.name,
-    type: file.type || 'application/octet-stream',
-    size: file.size,
-    ...(dataUrl ? { dataUrl } : {}),
-  };
-}
 
 //===================================================================
 
@@ -232,7 +152,9 @@ function toUploadFile(
 
 //===================================================================
 
-function toFormState(request: PharmacyProductRequestDetails): RequestFormState {
+function toFormState(
+  request: ProductRequestDetails
+): ProductRequestFormValues {
   return {
     name: request.name,
     article: request.article,
@@ -301,10 +223,12 @@ function NewProductRequestPageContent({
   const isCreationLocked = Boolean(bannerStatus || isBlocked);
   const cloneSourceRequestId = requestId ? undefined : sourceRequestId;
 
-  const [request, setRequest] = useState<PharmacyProductRequestDetails | null>(
+  const [request, setRequest] = useState<ProductRequestDetails | null>(
     null
   );
-  const [values, setValues] = useState<RequestFormState>(INITIAL_FORM_STATE);
+  const [values, setValues] = useState<ProductRequestFormValues>(
+    PRODUCT_REQUEST_INITIAL_VALUES
+  );
   const [productImage, setProductImage] = useState<DocumentUploadFile[]>([]);
   const [additionalFiles, setAdditionalFiles] = useState<DocumentUploadFile[]>(
     []
@@ -344,26 +268,25 @@ function NewProductRequestPageContent({
   const articleError =
     articleCheckStatus === 'unavailable' ? articleCheckMessage : undefined;
 
-  const moderationErrors = useMemo(() => {
-    const nextErrors = getRequestFormErrors(
-      values,
+  const validationContext = useMemo(
+    () => ({
       hasProductImage,
-      'moderation'
-    );
-
-    if (articleError) nextErrors.article = articleError;
-    return nextErrors;
-  }, [articleError, hasProductImage, values]);
+      productImage: productImage[0] ?? null,
+      additionalFiles,
+    }),
+    [additionalFiles, hasProductImage, productImage]
+  );
 
   const isModerationReady =
-    Object.keys(moderationErrors).length === 0 &&
+    isProductRequestSubmissionValid(values, validationContext) &&
     articleCheckStatus === 'available' &&
     !isImageProcessing;
-  const errors = validationMode
-    ? getRequestFormErrors(values, hasProductImage, validationMode)
+  const formErrors: ProductRequestFormErrors = validationMode
+    ? validateProductRequestForm(values, validationMode, validationContext)
     : {};
-
-  if (articleError) errors.article = articleError;
+  const errors: ProductRequestFormErrors = articleError
+    ? { ...formErrors, article: articleError }
+    : formErrors;
 
   const tabs = useMemo<TabItem<RequestTab>[]>(() => {
     const items: TabItem<RequestTab>[] = [
@@ -463,9 +386,9 @@ function NewProductRequestPageContent({
     };
   }, [canEdit, requestId, values.article]);
 
-  const updateValue = <TField extends keyof RequestFormState>(
+  const updateValue = <TField extends keyof ProductRequestFormValues>(
     field: TField,
-    value: RequestFormState[TField]
+    value: ProductRequestFormValues[TField]
   ) => {
     if (field === 'article') {
       setArticleCheckStatus('idle');
@@ -490,13 +413,9 @@ function NewProductRequestPageContent({
       return;
     }
 
-    if (!image.type.startsWith('image/')) {
-      setProductImageError('Choose a JPG, PNG, or WEBP image.');
-      return;
-    }
-
-    if (image.size > MAX_IMAGE_SIZE) {
-      setProductImageError('The product image must be no larger than 2 MB.');
+    const imageError = validateProductRequestImageFile(image);
+    if (imageError) {
+      setProductImageError(imageError);
       return;
     }
 
@@ -527,14 +446,9 @@ function NewProductRequestPageContent({
   };
 
   const handleAdditionalFilesChange = (files: DocumentUploadFile[]) => {
-    const oversizedFile = files.find(
-      (file) => file.size > MAX_ADDITIONAL_FILE_SIZE
-    );
-
-    if (oversizedFile) {
-      setAdditionalFilesError(
-        `The file “${oversizedFile.name}” must be no larger than 10 MB.`
-      );
+    const filesError = validateProductRequestAdditionalFiles(files);
+    if (filesError) {
+      setAdditionalFilesError(filesError);
       return;
     }
 
@@ -543,33 +457,17 @@ function NewProductRequestPageContent({
   };
 
   const buildPayload = (
-    status: CreatePharmacyProductRequestPayload['status']
-  ): CreatePharmacyProductRequestPayload => ({
-    status,
-    name: values.name.trim(),
-    article: values.article.trim(),
-    category: values.category,
-    customCategory:
-      values.category === 'other'
-        ? values.customCategory.trim() || undefined
+    status: ProductRequestFormPayload['status']
+  ): ProductRequestFormPayload =>
+    normalizeProductRequestForm(values, status, {
+      productImage:
+        hasProductImage && productImage[0]
+          ? toProductRequestFileMetadata(productImage[0], productImagePreview)
+          : undefined,
+      additionalFiles: additionalFiles.length
+        ? additionalFiles.map((file) => toProductRequestFileMetadata(file))
         : undefined,
-    productImage:
-      hasProductImage && productImage[0]
-        ? toFileMetadata(productImage[0], productImagePreview)
-        : undefined,
-    manufacturer: values.manufacturer.trim() || undefined,
-    countryOfOrigin: values.countryOfOrigin.trim() || undefined,
-    dosage: values.dosage.trim() || undefined,
-    packageSize: values.packageSize.trim() || undefined,
-    form: values.form.trim() || undefined,
-    activeSubstance: values.activeSubstance.trim() || undefined,
-    prescriptionType: values.prescriptionType || undefined,
-    fullDescription: values.fullDescription.trim() || undefined,
-    pharmacyComment: values.pharmacyComment.trim() || undefined,
-    additionalFiles: additionalFiles.length
-      ? additionalFiles.map((file) => toFileMetadata(file))
-      : undefined,
-  });
+    });
 
   const saveRequest = async (status: 'draft' | 'new') => {
     setSavingStatus(status);
@@ -616,11 +514,11 @@ function NewProductRequestPageContent({
 
   const handleSaveDraft = () => {
     setValidationMode('draft');
-    const draftErrors = getRequestFormErrors(values, hasProductImage, 'draft');
 
-    if (articleError) draftErrors.article = articleError;
-
-    if (Object.keys(draftErrors).length > 0) {
+    if (
+      !isProductRequestDraftValid(values, validationContext) ||
+      Boolean(articleError)
+    ) {
       toast.error(
         'Fill in the required draft fields and use a unique article.'
       );
@@ -903,9 +801,9 @@ function NewProductRequestPageContent({
                   required
                   disabled={!canEdit || isImageProcessing}
                   multiple={false}
-                  maxFiles={1}
-                  accept="image/jpeg,image/png,image/webp"
-                  hint="JPG, PNG, or WEBP up to 2 MB."
+                  maxFiles={PRODUCT_REQUEST_LIMITS.productImageFilesMax}
+                  accept={PRODUCT_REQUEST_IMAGE_ACCEPT}
+                  hint={`JPG, PNG, or WEBP up to ${PRODUCT_REQUEST_IMAGE_MAX_SIZE_MB} MB.`}
                   labels={{
                     dropzoneTitle: isImageProcessing
                       ? 'Preparing image preview...'
@@ -928,7 +826,7 @@ function NewProductRequestPageContent({
                 value={values.name}
                 error={errors.name}
                 isTouched={Boolean(validationMode)}
-                maxLength={160}
+                maxLength={PRODUCT_REQUEST_LIMITS.nameMax}
                 disabled={!canEdit}
                 autoComplete="off"
                 onChange={(event) => updateValue('name', event.target.value)}
@@ -946,7 +844,7 @@ function NewProductRequestPageContent({
                   Boolean(validationMode) ||
                   articleCheckStatus === 'unavailable'
                 }
-                maxLength={40}
+                maxLength={PRODUCT_REQUEST_LIMITS.articleMax}
                 disabled={!canEdit}
                 autoComplete="off"
                 onChange={(event) =>
@@ -963,7 +861,7 @@ function NewProductRequestPageContent({
                 value={values.manufacturer}
                 error={errors.manufacturer}
                 isTouched={validationMode === 'moderation'}
-                maxLength={160}
+                maxLength={PRODUCT_REQUEST_LIMITS.manufacturerMax}
                 disabled={!canEdit}
                 autoComplete="off"
                 onChange={(event) =>
@@ -982,7 +880,7 @@ function NewProductRequestPageContent({
                 value={values.countryOfOrigin}
                 error={errors.countryOfOrigin}
                 isTouched={validationMode === 'moderation'}
-                maxLength={100}
+                maxLength={PRODUCT_REQUEST_LIMITS.countryOfOriginMax}
                 disabled={!canEdit}
                 autoComplete="off"
                 onChange={(event) =>
@@ -1016,7 +914,7 @@ function NewProductRequestPageContent({
                   values.category === 'other' && Boolean(validationMode)
                 }
                 required={values.category === 'other'}
-                maxLength={100}
+                maxLength={PRODUCT_REQUEST_LIMITS.customCategoryMax}
                 disabled={!canEdit || values.category !== 'other'}
                 autoComplete="off"
                 onChange={(event) =>
@@ -1050,7 +948,7 @@ function NewProductRequestPageContent({
                 value={values.dosage}
                 error={errors.dosage}
                 isTouched={validationMode === 'moderation'}
-                maxLength={100}
+                maxLength={PRODUCT_REQUEST_LIMITS.dosageMax}
                 disabled={!canEdit}
                 autoComplete="off"
                 onChange={(event) => updateValue('dosage', event.target.value)}
@@ -1064,7 +962,7 @@ function NewProductRequestPageContent({
                 value={values.packageSize}
                 error={errors.packageSize}
                 isTouched={validationMode === 'moderation'}
-                maxLength={100}
+                maxLength={PRODUCT_REQUEST_LIMITS.packageSizeMax}
                 disabled={!canEdit}
                 autoComplete="off"
                 onChange={(event) =>
@@ -1080,7 +978,7 @@ function NewProductRequestPageContent({
                 value={values.form}
                 error={errors.form}
                 isTouched={validationMode === 'moderation'}
-                maxLength={100}
+                maxLength={PRODUCT_REQUEST_LIMITS.formMax}
                 disabled={!canEdit}
                 autoComplete="off"
                 onChange={(event) => updateValue('form', event.target.value)}
@@ -1096,7 +994,7 @@ function NewProductRequestPageContent({
                 value={values.activeSubstance}
                 error={errors.activeSubstance}
                 isTouched={validationMode === 'moderation'}
-                maxLength={180}
+                maxLength={PRODUCT_REQUEST_LIMITS.activeSubstanceMax}
                 disabled={!canEdit}
                 autoComplete="off"
                 onChange={(event) =>
@@ -1145,13 +1043,10 @@ function NewProductRequestPageContent({
               value={values.fullDescription}
               error={errors.fullDescription}
               isTouched={validationMode === 'moderation'}
-              maxLength={5000}
+              maxLength={PRODUCT_REQUEST_LIMITS.fullDescriptionMax}
               disabled={!canEdit}
               onChange={(event) =>
-                updateValue(
-                  'fullDescription',
-                  sanitizeTextEditor(event.target.value)
-                )
+                updateValue('fullDescription', event.target.value)
               }
             />
           </section>
@@ -1179,7 +1074,7 @@ function NewProductRequestPageContent({
               placeholder="Add an optional note for Admin."
               value={values.pharmacyComment}
               required={false}
-              maxLength={1500}
+              maxLength={PRODUCT_REQUEST_LIMITS.pharmacyCommentMax}
               disabled={!canEdit}
               onChange={(event) =>
                 updateValue('pharmacyComment', event.target.value)
@@ -1205,12 +1100,14 @@ function NewProductRequestPageContent({
               name="additionalFiles"
               label="Files and documents"
               value={additionalFiles}
-              error={additionalFilesError}
-              isTouched={Boolean(additionalFilesError)}
+              error={additionalFilesError || errors.additionalFiles}
+              isTouched={Boolean(
+                additionalFilesError || errors.additionalFiles
+              )}
               disabled={!canEdit}
-              maxFiles={5}
-              accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
-              hint="Up to 5 files, no larger than 10 MB each."
+              maxFiles={PRODUCT_REQUEST_LIMITS.additionalFilesMax}
+              accept={PRODUCT_REQUEST_ADDITIONAL_FILES_ACCEPT}
+              hint={`Up to ${PRODUCT_REQUEST_LIMITS.additionalFilesMax} files, no larger than ${PRODUCT_REQUEST_ADDITIONAL_FILE_MAX_SIZE_MB} MB each.`}
               confirmRemove
               labels={{
                 dropzoneTitle: 'Upload supporting files',

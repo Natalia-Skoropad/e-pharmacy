@@ -3,11 +3,10 @@ import type { Request, Response } from 'express';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
 import {
-  createProductRequestSchema,
   productRequestArticleAvailabilityQuerySchema,
+  productRequestFormSchema,
   productRequestParamsSchema,
   productRequestsQuerySchema,
-  updateProductRequestSchema,
 } from '../schemas/product-request.schema';
 
 import {
@@ -27,7 +26,7 @@ export async function createProductRequest(
   req: Request,
   res: Response
 ): Promise<void> {
-  const body = createProductRequestSchema.parse(req.body);
+  const body = productRequestFormSchema.parse(req.body);
   const data = await createProductRequestService(req.user?.id ?? '', body);
 
   sendSuccessResponse({
@@ -95,7 +94,7 @@ export async function updateProductRequest(
   res: Response
 ): Promise<void> {
   const { requestId } = productRequestParamsSchema.parse(req.params);
-  const body = updateProductRequestSchema.parse(req.body);
+  const body = productRequestFormSchema.parse(req.body);
   const data = await updateProductRequestService(
     req.user?.id ?? '',
     requestId,

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import {
-  sharedNameSchema,
+  sharedUserNameSchema,
   sharedOrderCommentSchema,
   sharedRequiredAddressSchema,
   sharedRequiredPhoneSchema,
@@ -69,10 +69,14 @@ export const ordersQuerySchema = z.preprocess(
 
 export const orderParamsSchema = z.object({ orderId: orderRouteIdSchema });
 
+//===============================================================
+
 export const orderCommentParamsSchema = z.object({
   orderId: orderRouteIdSchema,
   commentId: orderRouteIdSchema,
 });
+
+//===============================================================
 
 export const orderCommentsQuerySchema = z.preprocess(
   normalizePaginationQuery,
@@ -81,6 +85,8 @@ export const orderCommentsQuerySchema = z.preprocess(
     perPage: z.coerce.number().int().min(1).max(50).default(5),
   })
 );
+
+//===============================================================
 
 export const createOrderManagerCommentSchema = z.object({
   text: z.string().trim().min(1, 'Comment is required').max(1000),
@@ -114,7 +120,7 @@ export const checkoutOrderSchema = z.discriminatedUnion('deliveryMethod', [
   baseCheckoutSchema.extend({
     deliveryMethod: z.literal('postal_delivery'),
     deliveryDetails: z.object({
-      recipientName: sharedNameSchema,
+      recipientName: sharedUserNameSchema,
       recipientPhone: sharedRequiredPhoneSchema,
       address: sharedRequiredAddressSchema,
     }),
@@ -147,7 +153,7 @@ export const createManagerOrderSchema = z.discriminatedUnion('deliveryMethod', [
   managerOrderBaseSchema.extend({
     deliveryMethod: z.literal('postal_delivery'),
     deliveryDetails: z.object({
-      recipientName: sharedNameSchema,
+      recipientName: sharedUserNameSchema,
       recipientPhone: sharedRequiredPhoneSchema,
       address: sharedRequiredAddressSchema,
     }),
@@ -163,7 +169,7 @@ export const updateOrderDetailsSchema = z
     deliveryMethod: z.enum(['pickup', 'postal_delivery']).optional(),
     deliveryDetails: z
       .object({
-        recipientName: sharedNameSchema,
+        recipientName: sharedUserNameSchema,
         recipientPhone: sharedRequiredPhoneSchema,
         address: sharedRequiredAddressSchema,
       })

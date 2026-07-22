@@ -33,10 +33,8 @@ import {
   hasValidationErrors,
   isRegisterFormValid,
   markAllFieldsTouched,
-  sanitizeName,
-  sanitizePhone,
+  normalizePhoneInput,
   sanitizeEmail,
-  sanitizePassword,
   validateRegisterForm,
   type RegisterFormErrors,
   type RegisterFormValues,
@@ -134,13 +132,11 @@ function RegisterForm() {
     (event: ChangeEvent<HTMLInputElement>) => {
       const rawValue = event.target.value;
       const nextValue =
-        field === 'name'
-          ? sanitizeName(rawValue)
-          : field === 'email'
-            ? sanitizeEmail(rawValue)
-            : field === 'phone'
-              ? sanitizePhone(rawValue)
-              : sanitizePassword(rawValue);
+        field === 'email'
+          ? sanitizeEmail(rawValue)
+          : field === 'phone'
+            ? normalizePhoneInput(rawValue)
+            : rawValue;
 
       const nextValues = {
         ...values,

@@ -55,6 +55,9 @@ import {
   USER_ADDRESS_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
+  PHARMACY_NAME_MAX_LENGTH,
+  BANK_RECIPIENT_NAME_MAX_LENGTH,
+  BANK_NAME_MAX_LENGTH,
   USER_PASSWORD_MAX_LENGTH,
   USER_PHONE_MAX_LENGTH,
   WORKING_HOURS_MAX_LENGTH,
@@ -72,16 +75,10 @@ import {
   isPharmacyContactFormDirty,
   isPharmacyPaymentFormDirty,
   markAllFieldsTouched,
-  sanitizeAddress,
   sanitizeEmail,
   sanitizeIban,
-  sanitizeName,
-  sanitizePassword,
-  sanitizePaymentPurpose,
-  sanitizePhone,
+  normalizePhoneInput,
   sanitizeTaxId,
-  sanitizeTextEditor,
-  sanitizeWorkingHours,
   validateChangePasswordForm,
   validateDataProfileForm,
   validatePharmacyAboutForm,
@@ -119,6 +116,7 @@ import css from './PharmacyProfilePageContent.module.css';
 //===================================================================
 
 type AuthUser = NonNullable<ReturnType<typeof useAuth>['user']>;
+
 type ProfileUserDefaults = Pick<AuthUser, 'email' | 'name' | 'phone'>;
 
 //===================================================================
@@ -181,6 +179,7 @@ function createPharmacyInitialValues(
   pharmacy: PharmacyProfile
 ): PharmacyContactFormValues {
   return {
+    name: createPharmacyNameInitialValue(user, pharmacy),
     address: pharmacy.address ?? '',
     phone: pharmacy.phone ?? user.phone ?? '',
     email: pharmacy.email ?? user.email ?? '',
@@ -384,11 +383,10 @@ function formatSessionDate(value: string): string {
 //===================================================================
 
 function buildProfilePayload(
-  values: PharmacyContactFormValues,
-  pharmacyName: string
+  values: PharmacyContactFormValues
 ): UpdateMyPharmacyProfilePayload {
   return {
-    name: pharmacyName.trim(),
+    name: values.name.trim(),
     address: values.address.trim(),
     phone: values.phone.trim(),
     email: values.email.trim(),
@@ -505,8 +503,6 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
 
-  const [pharmacyName, setPharmacyName] = useState('');
-  const [initialPharmacyName, setInitialPharmacyName] = useState('');
   const [ownerPictureUrl, setOwnerPictureUrl] = useState<string | null>(
     user.pictureUrl ?? null
   );
@@ -519,6 +515,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
   const [pharmacyValues, setPharmacyValues] =
     useState<PharmacyContactFormValues>({
+      name: '',
       address: '',
       phone: '',
       email: '',
@@ -596,15 +593,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
           nextPharmacy
         );
 
-        const nextPharmacyName = createPharmacyNameInitialValue(
-          profileUserDefaults,
-          nextPharmacy
-        );
         const nextDocumentValues = createDocumentValues(nextPharmacy.documents);
 
         setPharmacy(nextPharmacy);
-        setPharmacyName(nextPharmacyName);
-        setInitialPharmacyName(nextPharmacyName);
         setPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
         setInitialPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
         setPharmacyValues(nextPharmacyValues);
@@ -707,12 +698,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const passwordFormIsDirty = isChangePasswordFormDirty(passwordValues);
   const passwordFormIsValid = isChangePasswordFormValid(passwordValues);
 
-  const pharmacyNameIsDirty =
-    pharmacyName.trim() !== initialPharmacyName.trim();
-
-  const pharmacyFormIsDirty =
-    pharmacyNameIsDirty ||
-    isPharmacyContactFormDirty(pharmacyValues, initialPharmacyValues);
+  const pharmacyFormIsDirty = isPharmacyContactFormDirty(
+    pharmacyValues,
+    initialPharmacyValues
+  );
 
   const aboutFormIsDirty = isPharmacyAboutFormDirty(
     aboutValues,
@@ -734,8 +723,6 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
   const pharmacyStatus = pharmacy?.status ?? 'new';
   const isProfileReadonly = isReadonlyStatus(pharmacyStatus);
-  const pharmacyNameIsValid = pharmacyName.trim().length > 0;
-
   const pharmacyDocumentsAreReady =
     documentValues.length > 0 && !documentsFormIsDirty;
 
@@ -746,7 +733,6 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     pharmacyStatus === 'new' &&
     pharmacyDocumentsAreReady &&
     pharmacyPictureIsReady &&
-    pharmacyNameIsValid &&
     !hasValidationErrors(pharmacyErrors) &&
     !hasValidationErrors(aboutErrors) &&
     !hasValidationErrors(paymentErrors) &&
@@ -767,7 +753,6 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     pharmacyPictureIsDirty;
 
   const moderationFormIsValid =
-    pharmacyNameIsValid &&
     pharmacyPictureIsReady &&
     !hasValidationErrors(pharmacyErrors) &&
     !hasValidationErrors(aboutErrors) &&
@@ -818,10 +803,6 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   ) => {
     createTouchedUpdater(setPasswordTouched, field);
     setPasswordValues((current) => ({ ...current, [field]: value }));
-  };
-
-  const handlePharmacyNameChange = (value: string) => {
-    setPharmacyName(value);
   };
 
   const handlePharmacyChange = (
@@ -959,7 +940,6 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
     if (
       !pharmacy ||
-      !pharmacyNameIsValid ||
       hasValidationErrors(pharmacyErrors) ||
       !pharmacyFormIsDirty ||
       isProfileReadonly
@@ -971,13 +951,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
     try {
       const response = await updateMyPharmacyProfile(
-        buildProfilePayload(pharmacyValues, pharmacyName)
+        buildProfilePayload(pharmacyValues)
       );
       const nextValues = createPharmacyInitialValues(user, response.pharmacy);
-      const nextPharmacyName = response.pharmacy.name ?? '';
       setPharmacy(response.pharmacy);
-      setPharmacyName(nextPharmacyName);
-      setInitialPharmacyName(nextPharmacyName);
       setPharmacyValues(nextValues);
       setInitialPharmacyValues(nextValues);
       setPharmacyTouched({});
@@ -1101,7 +1078,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     const payload: UpdateMyPharmacyProfilePayload = {};
 
     if (pharmacyFormIsDirty) {
-      Object.assign(payload, buildProfilePayload(pharmacyValues, pharmacyName));
+      Object.assign(payload, buildProfilePayload(pharmacyValues));
     }
 
     if (pharmacyPictureIsDirty) {
@@ -1127,12 +1104,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     const nextPharmacyValues = createPharmacyInitialValues(user, nextPharmacy);
     const nextAboutValues = createAboutInitialValues(nextPharmacy);
     const nextPaymentValues = createPaymentInitialValues(user, nextPharmacy);
-    const nextPharmacyName = createPharmacyNameInitialValue(user, nextPharmacy);
     const nextDocumentValues = createDocumentValues(nextPharmacy.documents);
 
     setPharmacy(nextPharmacy);
-    setPharmacyName(nextPharmacyName);
-    setInitialPharmacyName(nextPharmacyName);
     setPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
     setInitialPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
     setPharmacyValues(nextPharmacyValues);
@@ -1255,7 +1229,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const summaryOwnerName = ownerValues.name || user.name || 'Pharmacy owner';
 
   const summaryPharmacyName =
-    pharmacyName || pharmacy.name || 'Pharmacy profile';
+    pharmacyValues.name || pharmacy.name || 'Pharmacy profile';
 
   return (
     <main className={css.page}>
@@ -1388,10 +1362,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         isTouched={Boolean(ownerTouched.name)}
                         maxLength={USER_NAME_MAX_LENGTH}
                         onChange={(event) =>
-                          handleOwnerChange(
-                            'name',
-                            sanitizeName(event.target.value)
-                          )
+                          handleOwnerChange('name', event.target.value)
                         }
                       />
 
@@ -1405,7 +1376,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         onChange={(event) =>
                           handleOwnerChange(
                             'phone',
-                            sanitizePhone(event.target.value)
+                            normalizePhoneInput(event.target.value)
                           )
                         }
                       />
@@ -1456,7 +1427,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         onChange={(event) =>
                           handlePasswordChange(
                             'currentPassword',
-                            sanitizePassword(event.target.value)
+                            event.target.value
                           )
                         }
                       />
@@ -1477,7 +1448,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         onChange={(event) =>
                           handlePasswordChange(
                             'newPassword',
-                            sanitizePassword(event.target.value)
+                            event.target.value
                           )
                         }
                       />
@@ -1583,19 +1554,13 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         hint="Clients will see this Pharmacy name in the pharmacy profile on the website."
                         label="Pharmacy name"
                         placeholder="Enter pharmacy name"
-                        value={pharmacyName}
-                        error={
-                          !pharmacyNameIsValid
-                            ? 'Pharmacy name is required.'
-                            : undefined
-                        }
-                        isTouched={!pharmacyNameIsValid && pharmacyFormIsDirty}
+                        value={pharmacyValues.name}
+                        error={pharmacyErrors.name}
+                        isTouched={Boolean(pharmacyTouched.name)}
                         disabled={isProfileReadonly}
-                        maxLength={USER_NAME_MAX_LENGTH}
+                        maxLength={PHARMACY_NAME_MAX_LENGTH}
                         onChange={(event) =>
-                          handlePharmacyNameChange(
-                            sanitizeName(event.target.value)
-                          )
+                          handlePharmacyChange('name', event.target.value)
                         }
                       />
 
@@ -1628,7 +1593,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         onChange={(event) =>
                           handlePharmacyChange(
                             'phone',
-                            sanitizePhone(event.target.value)
+                            normalizePhoneInput(event.target.value)
                           )
                         }
                       />
@@ -1646,10 +1611,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         disabled={isProfileReadonly}
                         maxLength={USER_ADDRESS_MAX_LENGTH}
                         onChange={(event) =>
-                          handlePharmacyChange(
-                            'address',
-                            sanitizeAddress(event.target.value)
-                          )
+                          handlePharmacyChange('address', event.target.value)
                         }
                       />
 
@@ -1665,7 +1627,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                           onChange={(event) =>
                             handlePharmacyChange(
                               'workingHours',
-                              sanitizeWorkingHours(event.target.value)
+                              event.target.value
                             )
                           }
                         />
@@ -1676,7 +1638,6 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       <Button
                         type="button"
                         disabled={
-                          !pharmacyNameIsValid ||
                           hasValidationErrors(pharmacyErrors) ||
                           !pharmacyFormIsDirty ||
                           isPharmacySaving ||
@@ -1733,9 +1694,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       maxLength={TEXT_EDITOR_MAX_LENGTH}
                       disabled={isProfileReadonly}
                       onChange={(event) =>
-                        handleAboutChange(
-                          sanitizeTextEditor(event.target.value)
-                        )
+                        handleAboutChange(event.target.value)
                       }
                     />
 
@@ -1825,11 +1784,11 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         error={paymentErrors.recipientName}
                         isTouched={Boolean(paymentTouched.recipientName)}
                         disabled={isProfileReadonly}
-                        maxLength={USER_NAME_MAX_LENGTH}
+                        maxLength={BANK_RECIPIENT_NAME_MAX_LENGTH}
                         onChange={(event) =>
                           handlePaymentChange(
                             'recipientName',
-                            sanitizeName(event.target.value)
+                            event.target.value
                           )
                         }
                       />
@@ -1875,12 +1834,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         error={paymentErrors.bankName}
                         isTouched={Boolean(paymentTouched.bankName)}
                         disabled={isProfileReadonly}
-                        maxLength={USER_NAME_MAX_LENGTH}
+                        maxLength={BANK_NAME_MAX_LENGTH}
                         onChange={(event) =>
-                          handlePaymentChange(
-                            'bankName',
-                            sanitizeName(event.target.value)
-                          )
+                          handlePaymentChange('bankName', event.target.value)
                         }
                       />
 
@@ -1915,7 +1871,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         onChange={(event) =>
                           handlePaymentChange(
                             'paymentPurpose',
-                            sanitizePaymentPurpose(event.target.value)
+                            event.target.value
                           )
                         }
                       />

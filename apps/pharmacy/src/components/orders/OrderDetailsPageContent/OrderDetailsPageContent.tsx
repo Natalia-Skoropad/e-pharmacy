@@ -87,10 +87,7 @@ import {
   USER_NAME_MAX_LENGTH,
   USER_PHONE_MAX_LENGTH,
   hasValidationErrors,
-  sanitizeAddress,
-  sanitizeName,
-  sanitizeOrderComment,
-  sanitizePhone,
+  normalizePhoneInput,
   validateOrderDeliveryForm,
   type OrderDeliveryFormErrors,
   type OrderDeliveryTouchedFields,
@@ -1820,20 +1817,20 @@ function OrderDetailsPageContent({
     if (value !== 'postal_delivery' || !order) return;
 
     if (!recipientName.trim()) {
-      setRecipientName(sanitizeName(order.recipientName ?? order.client));
+      setRecipientName(order.recipientName ?? order.client);
     }
 
     if (!recipientPhone.trim() && order.clientPhone) {
-      setRecipientPhone(sanitizePhone(order.clientPhone));
+      setRecipientPhone(normalizePhoneInput(order.clientPhone));
     }
 
     if (!deliveryAddress.trim() && order.clientAddress) {
-      setDeliveryAddress(sanitizeAddress(order.clientAddress));
+      setDeliveryAddress(order.clientAddress);
     }
   };
 
   const handleRecipientNameChange = (value: string) => {
-    setRecipientName(sanitizeName(value));
+    setRecipientName(value);
     setDeliveryTouchedFields((current) => ({
       ...current,
       recipientName: true,
@@ -1841,7 +1838,7 @@ function OrderDetailsPageContent({
   };
 
   const handleRecipientPhoneChange = (value: string) => {
-    setRecipientPhone(sanitizePhone(value));
+    setRecipientPhone(normalizePhoneInput(value));
     setDeliveryTouchedFields((current) => ({
       ...current,
       recipientPhone: true,
@@ -1849,7 +1846,7 @@ function OrderDetailsPageContent({
   };
 
   const handleDeliveryAddressChange = (value: string) => {
-    setDeliveryAddress(sanitizeAddress(value));
+    setDeliveryAddress(value);
     setDeliveryTouchedFields((current) => ({
       ...current,
       deliveryAddress: true,
@@ -2476,7 +2473,7 @@ function OrderDetailsPageContent({
           maxLength={REJECTION_REASON_MAX_LENGTH}
           onChange={(value) =>
             setRejectionReason(
-              sanitizeOrderComment(value).slice(0, REJECTION_REASON_MAX_LENGTH)
+              value.slice(0, REJECTION_REASON_MAX_LENGTH)
             )
           }
           onCancel={() => {

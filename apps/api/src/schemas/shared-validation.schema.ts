@@ -4,7 +4,10 @@ import {
   ADDRESS_PATTERN,
   MAX_REVIEW_RATING,
   MIN_REVIEW_RATING,
-  NAME_PATTERN,
+  BANK_NAME_PATTERN,
+  BANK_RECIPIENT_NAME_PATTERN,
+  PHARMACY_NAME_PATTERN,
+  USER_NAME_PATTERN,
   ORDER_COMMENT_PATTERN,
   PAYMENT_PURPOSE_PATTERN,
   PASSWORD_PATTERN,
@@ -20,6 +23,12 @@ import {
   USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_NAME_MIN_LENGTH,
+  PHARMACY_NAME_MAX_LENGTH,
+  PHARMACY_NAME_MIN_LENGTH,
+  BANK_RECIPIENT_NAME_MAX_LENGTH,
+  BANK_RECIPIENT_NAME_MIN_LENGTH,
+  BANK_NAME_MAX_LENGTH,
+  BANK_NAME_MIN_LENGTH,
   USER_ORDER_COMMENT_MAX_LENGTH,
   USER_PASSWORD_MAX_LENGTH,
   USER_PASSWORD_MIN_LENGTH,
@@ -41,12 +50,48 @@ import {
 
 //===============================================================
 
-export const sharedNameSchema = z
+export const sharedUserNameSchema = z
   .string()
   .trim()
   .min(USER_NAME_MIN_LENGTH, VALIDATION_MESSAGES.limits.nameMin)
   .max(USER_NAME_MAX_LENGTH, VALIDATION_MESSAGES.limits.nameMax)
-  .regex(NAME_PATTERN, VALIDATION_MESSAGES.format.name);
+  .regex(USER_NAME_PATTERN, VALIDATION_MESSAGES.format.name);
+
+//===============================================================
+
+export const sharedPharmacyNameSchema = z
+  .string()
+  .trim()
+  .min(PHARMACY_NAME_MIN_LENGTH, VALIDATION_MESSAGES.limits.pharmacyNameMin)
+  .max(PHARMACY_NAME_MAX_LENGTH, VALIDATION_MESSAGES.limits.pharmacyNameMax)
+  .regex(PHARMACY_NAME_PATTERN, VALIDATION_MESSAGES.format.pharmacyName);
+
+//===============================================================
+
+export const sharedBankRecipientNameSchema = z
+  .string()
+  .trim()
+  .min(
+    BANK_RECIPIENT_NAME_MIN_LENGTH,
+    VALIDATION_MESSAGES.limits.bankRecipientNameMin
+  )
+  .max(
+    BANK_RECIPIENT_NAME_MAX_LENGTH,
+    VALIDATION_MESSAGES.limits.bankRecipientNameMax
+  )
+  .regex(
+    BANK_RECIPIENT_NAME_PATTERN,
+    VALIDATION_MESSAGES.format.bankRecipientName
+  );
+
+//===============================================================
+
+export const sharedBankNameSchema = z
+  .string()
+  .trim()
+  .min(BANK_NAME_MIN_LENGTH, VALIDATION_MESSAGES.limits.bankNameMin)
+  .max(BANK_NAME_MAX_LENGTH, VALIDATION_MESSAGES.limits.bankNameMax)
+  .regex(BANK_NAME_PATTERN, VALIDATION_MESSAGES.format.bankName);
 
 //===============================================================
 
@@ -242,20 +287,28 @@ export const sharedOptionalWorkingHoursSchema = z.preprocess(
   sharedWorkingHoursSchema.optional()
 );
 
+//===============================================================
+
 export const sharedOptionalTextEditorSchema = z.preprocess(
   emptyStringToUndefined,
   sharedTextEditorSchema.optional()
 );
+
+//===============================================================
 
 export const sharedOptionalTaxIdSchema = z.preprocess(
   emptyStringToUndefined,
   sharedTaxIdSchema.optional()
 );
 
+//===============================================================
+
 export const sharedOptionalIbanSchema = z.preprocess(
   emptyStringToUndefined,
   sharedIbanSchema.optional()
 );
+
+//===============================================================
 
 export const sharedOptionalPaymentPurposeSchema = z.preprocess(
   emptyStringToUndefined,

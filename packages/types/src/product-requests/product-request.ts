@@ -13,7 +13,48 @@ export const PRODUCT_REQUEST_STATUSES = [
 
 //=============================================================================
 
+export const DEFAULT_PRODUCT_REQUEST_STATISTICS: ProductRequestStatisticsCounts =
+  {
+    draft: 0,
+    new: 0,
+    in_progress: 0,
+    approved: 0,
+    rejected: 0,
+  };
+
+//=============================================================================
+
+export const PRODUCT_REQUEST_STATUS_LABELS: Record<
+  ProductRequestStatus,
+  string
+> = {
+  draft: 'Draft',
+  new: 'New',
+  in_progress: 'In work',
+  approved: 'Approved',
+  rejected: 'Rejected',
+};
+
+//=============================================================================
+
+export const DEFAULT_PRODUCT_REQUESTS_FILTERS: ProductRequestsFilterState = {
+  date: {
+    from: '',
+    to: '',
+  },
+
+  requestNumber: '',
+  productArticle: '',
+  productName: '',
+  category: 'all',
+  status: 'all',
+};
+
+//=============================================================================
+
 export type ProductRequestStatus = (typeof PRODUCT_REQUEST_STATUSES)[number];
+
+//=============================================================================
 
 export type ProductRequestCategoryFilter = 'all' | ProductCategory;
 export type ProductRequestStatusFilter = 'all' | ProductRequestStatus;
@@ -53,9 +94,6 @@ export type ProductRequestFormPayload = Readonly<{
   pharmacyComment?: string;
   additionalFiles?: ProductRequestFile[];
 }>;
-
-export type CreateProductRequestPayload = ProductRequestFormPayload;
-export type UpdateProductRequestPayload = ProductRequestFormPayload;
 
 //=============================================================================
 
@@ -128,58 +166,10 @@ export type ProductRequestsResponse = Readonly<{
 
 //=============================================================================
 
-export type PharmacyProductRequestRow = ProductRequestRow;
-export type PharmacyProductRequestDetails = ProductRequestDetails;
-export type PharmacyProductRequestsQueryParams = ProductRequestsQueryParams;
-export type PharmacyProductRequestsResponse = ProductRequestsResponse;
-export type CreatePharmacyProductRequestPayload = CreateProductRequestPayload;
-export type UpdatePharmacyProductRequestPayload = UpdateProductRequestPayload;
-
-//=============================================================================
-
 export type ProductRequestStatisticsCounts = Record<
   ProductRequestStatus,
   number
 >;
-
-//=============================================================================
-
-export const DEFAULT_PRODUCT_REQUEST_STATISTICS: ProductRequestStatisticsCounts =
-  {
-    draft: 0,
-    new: 0,
-    in_progress: 0,
-    approved: 0,
-    rejected: 0,
-  };
-
-//=============================================================================
-
-export const PRODUCT_REQUEST_STATUS_LABELS: Record<
-  ProductRequestStatus,
-  string
-> = {
-  draft: 'Draft',
-  new: 'New',
-  in_progress: 'In work',
-  approved: 'Approved',
-  rejected: 'Rejected',
-};
-
-//=============================================================================
-
-export const DEFAULT_PRODUCT_REQUESTS_FILTERS: ProductRequestsFilterState = {
-  date: {
-    from: '',
-    to: '',
-  },
-
-  requestNumber: '',
-  productArticle: '',
-  productName: '',
-  category: 'all',
-  status: 'all',
-};
 
 //=============================================================================
 

@@ -1,6 +1,19 @@
 import { Schema, model, models } from 'mongoose';
 
-import { MAX_REVIEW_RATING } from '../constants/validation';
+import {
+  BANK_NAME_MAX_LENGTH,
+  BANK_NAME_MIN_LENGTH,
+  BANK_NAME_PATTERN,
+  BANK_RECIPIENT_NAME_MAX_LENGTH,
+  BANK_RECIPIENT_NAME_MIN_LENGTH,
+  BANK_RECIPIENT_NAME_PATTERN,
+  MAX_REVIEW_RATING,
+  PHARMACY_NAME_MAX_LENGTH,
+  PHARMACY_NAME_MIN_LENGTH,
+  PHARMACY_NAME_PATTERN,
+  VALIDATION_MESSAGES,
+} from '../constants/validation';
+
 import { PHARMACY_STATUSES } from '../constants/auth';
 import type { PharmacyEntity } from '../types/pharmacy';
 
@@ -13,7 +26,22 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       required: false,
       trim: true,
       default: '',
-      maxlength: [100, 'Pharmacy name must be at most 100 characters'],
+      maxlength: [
+        PHARMACY_NAME_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.pharmacyNameMax,
+      ],
+      validate: [
+        {
+          validator: (value: string) =>
+            !value || value.length >= PHARMACY_NAME_MIN_LENGTH,
+          message: VALIDATION_MESSAGES.limits.pharmacyNameMin,
+        },
+        {
+          validator: (value: string) =>
+            !value || PHARMACY_NAME_PATTERN.test(value),
+          message: VALIDATION_MESSAGES.format.pharmacyName,
+        },
+      ],
     },
 
     address: {
@@ -56,7 +84,22 @@ const pharmacySchema = new Schema<PharmacyEntity>(
         type: String,
         required: false,
         trim: true,
-        maxlength: [160, 'Bank recipient name must be at most 160 characters'],
+        maxlength: [
+          BANK_RECIPIENT_NAME_MAX_LENGTH,
+          VALIDATION_MESSAGES.limits.bankRecipientNameMax,
+        ],
+        validate: [
+          {
+            validator: (value?: string) =>
+              !value || value.length >= BANK_RECIPIENT_NAME_MIN_LENGTH,
+            message: VALIDATION_MESSAGES.limits.bankRecipientNameMin,
+          },
+          {
+            validator: (value?: string) =>
+              !value || BANK_RECIPIENT_NAME_PATTERN.test(value),
+            message: VALIDATION_MESSAGES.format.bankRecipientName,
+          },
+        ],
       },
 
       taxId: {
@@ -81,7 +124,22 @@ const pharmacySchema = new Schema<PharmacyEntity>(
         type: String,
         required: false,
         trim: true,
-        maxlength: [120, 'Bank name must be at most 120 characters'],
+        maxlength: [
+          BANK_NAME_MAX_LENGTH,
+          VALIDATION_MESSAGES.limits.bankNameMax,
+        ],
+        validate: [
+          {
+            validator: (value?: string) =>
+              !value || value.length >= BANK_NAME_MIN_LENGTH,
+            message: VALIDATION_MESSAGES.limits.bankNameMin,
+          },
+          {
+            validator: (value?: string) =>
+              !value || BANK_NAME_PATTERN.test(value),
+            message: VALIDATION_MESSAGES.format.bankName,
+          },
+        ],
       },
 
       paymentPurpose: {

@@ -14,7 +14,7 @@ import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 
 import {
   PRODUCT_REQUEST_STATUS_LABELS,
-  type PharmacyProductRequestRow,
+  type ProductRequestRow,
 } from '@e-pharmacy/types/product-requests';
 
 import {
@@ -29,14 +29,14 @@ import css from './ProductRequestsTable.module.css';
 //===================================================================
 
 type ProductRequestsTableProps = Readonly<{
-  requests: PharmacyProductRequestRow[];
+  requests: ProductRequestRow[];
   emptyMessage: string;
   isLoading?: boolean;
 }>;
 
 //===================================================================
 
-function getProductHref(request: PharmacyProductRequestRow) {
+function getProductHref(request: ProductRequestRow) {
   return request.status === 'approved' && request.productId
     ? getPharmacyAllProductPath(request.productId)
     : null;
@@ -49,7 +49,7 @@ function ProductRequestsTable({
   emptyMessage,
   isLoading = false,
 }: ProductRequestsTableProps) {
-  const columns = useMemo<Array<DataTableColumn<PharmacyProductRequestRow>>>(
+  const columns = useMemo<Array<DataTableColumn<ProductRequestRow>>>(
     () => [
       {
         key: 'createdAt',
@@ -149,4 +149,3 @@ function ProductRequestsTable({
 
 export default ProductRequestsTable;
 export { ProductRequestsTable };
-export type { PharmacyProductRequestRow };

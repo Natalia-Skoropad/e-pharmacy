@@ -31,8 +31,8 @@ import {
 import {
   DEFAULT_PRODUCT_REQUESTS_FILTERS,
   DEFAULT_PRODUCT_REQUEST_STATISTICS,
-  type PharmacyProductRequestRow,
-  type PharmacyProductRequestsQueryParams,
+  type ProductRequestRow,
+  type ProductRequestsQueryParams,
   type ProductRequestStatisticsCounts,
   type ProductRequestsFilterState,
 } from '@e-pharmacy/types/product-requests';
@@ -77,7 +77,7 @@ function getProductRequestsQueryParams(
   filters: ProductRequestsFilterState,
   rowsPerPage: RowsPerPageValue,
   page: number
-): PharmacyProductRequestsQueryParams {
+): ProductRequestsQueryParams {
   return {
     page,
     perPage: rowsPerPage,
@@ -110,7 +110,7 @@ function ProductRequestsPageContent({
 
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [currentPage, setCurrentPage] = useState(1);
-  const [requests, setRequests] = useState<PharmacyProductRequestRow[]>([]);
+  const [requests, setRequests] = useState<ProductRequestRow[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
   const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
     null

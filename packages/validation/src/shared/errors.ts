@@ -1,6 +1,10 @@
 import { PICTURE_ALLOWED_TYPES, isHttpUrl } from '../picture';
 
 import {
+  BANK_NAME_MAX_LENGTH,
+  BANK_NAME_MIN_LENGTH,
+  BANK_RECIPIENT_NAME_MAX_LENGTH,
+  BANK_RECIPIENT_NAME_MIN_LENGTH,
   MAX_REVIEW_RATING,
   MIN_REVIEW_RATING,
   USER_ADDRESS_MAX_LENGTH,
@@ -8,6 +12,8 @@ import {
   PICTURE_FILE_MAX_SIZE_BYTES,
   PICTURE_URL_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
+  PHARMACY_NAME_MAX_LENGTH,
+  PHARMACY_NAME_MIN_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_NAME_MIN_LENGTH,
   USER_ORDER_COMMENT_MAX_LENGTH,
@@ -23,10 +29,14 @@ import {
 
 import {
   ADDRESS_PATTERN,
+  BANK_NAME_PATTERN,
+  BANK_RECIPIENT_NAME_PATTERN,
   PICTURE_DATA_URL_PATTERN,
   EMAIL_PATTERN,
-  NAME_PATTERN,
+  PHARMACY_NAME_PATTERN,
+  USER_NAME_PATTERN,
   ORDER_COMMENT_PATTERN,
+  PAYMENT_PURPOSE_PATTERN,
   PASSWORD_PATTERN,
   PHONE_PATTERN,
   TAX_ID_PATTERN,
@@ -40,6 +50,15 @@ import { VALIDATION_MESSAGES } from './messages';
 
 //=============================================================================
 
+type NameErrorOptions = { required?: boolean; trailingDot?: boolean };
+
+//=============================================================================
+
+const WORKING_HOURS_RANGE_PATTERN =
+  /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(Closed|([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d)\b/g;
+
+//=============================================================================
+
 function formatValidationMessage(
   message: string,
   options: { trailingDot?: boolean } = {}
@@ -49,30 +68,137 @@ function formatValidationMessage(
 
 //=============================================================================
 
-export function buildNameError(
+function buildDomainNameError(
   value: string,
-  options: { required?: boolean; trailingDot?: boolean } = {}
+  config: Readonly<{
+    minLength: number;
+    maxLength: number;
+    pattern: RegExp;
+    requiredMessage: string;
+    minMessage: string;
+    maxMessage: string;
+    formatMessage: string;
+  }>,
+  options: NameErrorOptions = {}
 ): string {
   const name = value.trim();
 
-  if (!name) return options.required ? VALIDATION_MESSAGES.required.name : '';
+  if (!name) return options.required ? config.requiredMessage : '';
 
-  if (name.length < USER_NAME_MIN_LENGTH) {
-    const message = VALIDATION_MESSAGES.limits.nameMin;
-    return formatValidationMessage(message, options);
+  if (name.length < config.minLength) {
+    return formatValidationMessage(config.minMessage, options);
   }
 
-  if (name.length > USER_NAME_MAX_LENGTH) {
-    const message = VALIDATION_MESSAGES.limits.nameMax;
-    return formatValidationMessage(message, options);
+  if (name.length > config.maxLength) {
+    return formatValidationMessage(config.maxMessage, options);
   }
 
-  if (!NAME_PATTERN.test(name)) {
-    const message = VALIDATION_MESSAGES.format.name;
-    return formatValidationMessage(message, options);
+  if (!config.pattern.test(name)) {
+    return formatValidationMessage(config.formatMessage, options);
   }
 
   return '';
+}
+
+//=============================================================================
+
+function hasValidWorkingHoursRanges(value: string): boolean {
+  const entries = [...value.matchAll(WORKING_HOURS_RANGE_PATTERN)];
+
+  if (entries.length === 0) return true;
+
+  return entries.every((entry) => {
+    if (entry[1] === 'Closed') return true;
+
+    const from = entry[2];
+    const to = entry[3];
+
+    return Boolean(from && to && from < to);
+  });
+}
+
+//=============================================================================
+
+export function buildUserNameError(
+  value: string,
+  options: NameErrorOptions = {}
+): string {
+  return buildDomainNameError(
+    value,
+    {
+      minLength: USER_NAME_MIN_LENGTH,
+      maxLength: USER_NAME_MAX_LENGTH,
+      pattern: USER_NAME_PATTERN,
+      requiredMessage: VALIDATION_MESSAGES.required.name,
+      minMessage: VALIDATION_MESSAGES.limits.nameMin,
+      maxMessage: VALIDATION_MESSAGES.limits.nameMax,
+      formatMessage: VALIDATION_MESSAGES.format.name,
+    },
+    options
+  );
+}
+
+//=============================================================================
+
+export function buildPharmacyNameError(
+  value: string,
+  options: NameErrorOptions = {}
+): string {
+  return buildDomainNameError(
+    value,
+    {
+      minLength: PHARMACY_NAME_MIN_LENGTH,
+      maxLength: PHARMACY_NAME_MAX_LENGTH,
+      pattern: PHARMACY_NAME_PATTERN,
+      requiredMessage: VALIDATION_MESSAGES.required.pharmacyName,
+      minMessage: VALIDATION_MESSAGES.limits.pharmacyNameMin,
+      maxMessage: VALIDATION_MESSAGES.limits.pharmacyNameMax,
+      formatMessage: VALIDATION_MESSAGES.format.pharmacyName,
+    },
+    options
+  );
+}
+
+//=============================================================================
+
+export function buildBankRecipientNameError(
+  value: string,
+  options: NameErrorOptions = {}
+): string {
+  return buildDomainNameError(
+    value,
+    {
+      minLength: BANK_RECIPIENT_NAME_MIN_LENGTH,
+      maxLength: BANK_RECIPIENT_NAME_MAX_LENGTH,
+      pattern: BANK_RECIPIENT_NAME_PATTERN,
+      requiredMessage: VALIDATION_MESSAGES.required.bankRecipientName,
+      minMessage: VALIDATION_MESSAGES.limits.bankRecipientNameMin,
+      maxMessage: VALIDATION_MESSAGES.limits.bankRecipientNameMax,
+      formatMessage: VALIDATION_MESSAGES.format.bankRecipientName,
+    },
+    options
+  );
+}
+
+//=============================================================================
+
+export function buildBankNameError(
+  value: string,
+  options: NameErrorOptions = {}
+): string {
+  return buildDomainNameError(
+    value,
+    {
+      minLength: BANK_NAME_MIN_LENGTH,
+      maxLength: BANK_NAME_MAX_LENGTH,
+      pattern: BANK_NAME_PATTERN,
+      requiredMessage: VALIDATION_MESSAGES.required.bankName,
+      minMessage: VALIDATION_MESSAGES.limits.bankNameMin,
+      maxMessage: VALIDATION_MESSAGES.limits.bankNameMax,
+      formatMessage: VALIDATION_MESSAGES.format.bankName,
+    },
+    options
+  );
 }
 
 //=============================================================================
@@ -238,26 +364,7 @@ export function buildOrderCommentError(
   return '';
 }
 
-
 //=============================================================================
-
-const WORKING_HOURS_RANGE_PATTERN =
-  /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(Closed|([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d)\b/g;
-
-function hasValidWorkingHoursRanges(value: string): boolean {
-  const entries = [...value.matchAll(WORKING_HOURS_RANGE_PATTERN)];
-
-  if (entries.length === 0) return true;
-
-  return entries.every((entry) => {
-    if (entry[1] === 'Closed') return true;
-
-    const from = entry[2];
-    const to = entry[3];
-
-    return Boolean(from && to && from < to);
-  });
-}
 
 export function buildWorkingHoursError(
   value: string,
@@ -267,16 +374,25 @@ export function buildWorkingHoursError(
 
   if (!workingHours) {
     return options.required
-      ? formatValidationMessage(VALIDATION_MESSAGES.required.workingHours, options)
+      ? formatValidationMessage(
+          VALIDATION_MESSAGES.required.workingHours,
+          options
+        )
       : '';
   }
 
   if (workingHours.length > WORKING_HOURS_MAX_LENGTH) {
-    return formatValidationMessage(VALIDATION_MESSAGES.limits.workingHoursMax, options);
+    return formatValidationMessage(
+      VALIDATION_MESSAGES.limits.workingHoursMax,
+      options
+    );
   }
 
   if (!WORKING_HOURS_PATTERN.test(workingHours)) {
-    return formatValidationMessage(VALIDATION_MESSAGES.format.workingHours, options);
+    return formatValidationMessage(
+      VALIDATION_MESSAGES.format.workingHours,
+      options
+    );
   }
 
   if (!hasValidWorkingHoursRanges(workingHours)) {
@@ -299,16 +415,25 @@ export function buildTextEditorError(
 
   if (!text) {
     return options.required
-      ? formatValidationMessage(VALIDATION_MESSAGES.required.textEditor, options)
+      ? formatValidationMessage(
+          VALIDATION_MESSAGES.required.textEditor,
+          options
+        )
       : '';
   }
 
   if (text.length > TEXT_EDITOR_MAX_LENGTH) {
-    return formatValidationMessage(VALIDATION_MESSAGES.limits.textEditorMax, options);
+    return formatValidationMessage(
+      VALIDATION_MESSAGES.limits.textEditorMax,
+      options
+    );
   }
 
   if (!TEXT_EDITOR_PATTERN.test(text)) {
-    return formatValidationMessage(VALIDATION_MESSAGES.format.textEditor, options);
+    return formatValidationMessage(
+      VALIDATION_MESSAGES.format.textEditor,
+      options
+    );
   }
 
   return '';
@@ -366,16 +491,25 @@ export function buildPaymentPurposeError(
 
   if (!paymentPurpose) {
     return options.required
-      ? formatValidationMessage(VALIDATION_MESSAGES.required.paymentPurpose, options)
+      ? formatValidationMessage(
+          VALIDATION_MESSAGES.required.paymentPurpose,
+          options
+        )
       : '';
   }
 
   if (paymentPurpose.length > PAYMENT_PURPOSE_MAX_LENGTH) {
-    return formatValidationMessage(VALIDATION_MESSAGES.limits.paymentPurposeMax, options);
+    return formatValidationMessage(
+      VALIDATION_MESSAGES.limits.paymentPurposeMax,
+      options
+    );
   }
 
-  if (!ORDER_COMMENT_PATTERN.test(paymentPurpose)) {
-    return formatValidationMessage(VALIDATION_MESSAGES.format.paymentPurpose, options);
+  if (!PAYMENT_PURPOSE_PATTERN.test(paymentPurpose)) {
+    return formatValidationMessage(
+      VALIDATION_MESSAGES.format.paymentPurpose,
+      options
+    );
   }
 
   return '';

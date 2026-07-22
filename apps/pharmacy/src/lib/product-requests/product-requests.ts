@@ -9,11 +9,11 @@ import {
 
 import {
   normalizeProductRequestStatus,
-  type PharmacyProductRequestDetails,
-  type PharmacyProductRequestRow,
+  type ProductRequestDetails,
+  type ProductRequestRow,
   type ProductRequestFile,
   type ProductRequestHistoryEntry,
-  type PharmacyProductRequestsResponse,
+  type ProductRequestsResponse,
 } from '@e-pharmacy/types/product-requests';
 
 export {
@@ -22,10 +22,10 @@ export {
 } from '@e-pharmacy/types/product-requests';
 
 export type {
-  PharmacyProductRequestDetails,
-  PharmacyProductRequestRow,
-  PharmacyProductRequestsQueryParams,
-  PharmacyProductRequestsResponse,
+  ProductRequestDetails,
+  ProductRequestRow,
+  ProductRequestsQueryParams,
+  ProductRequestsResponse,
   ProductRequestCategoryFilter,
   ProductRequestStatus,
   ProductRequestStatusFilter,
@@ -82,9 +82,9 @@ function normalizeProductRequestHistoryEntry(
 
 //===================================================================
 
-export function normalizePharmacyProductRequest(
+export function normalizeProductRequest(
   rawRequest: unknown
-): PharmacyProductRequestRow | null {
+): ProductRequestRow | null {
   if (!isRecord(rawRequest)) return null;
 
   const id = getStringValue(rawRequest.id) ?? getStringValue(rawRequest._id);
@@ -140,10 +140,10 @@ export function normalizePharmacyProductRequest(
 
 //===================================================================
 
-export function normalizePharmacyProductRequestDetails(
+export function normalizeProductRequestDetails(
   rawRequest: unknown
-): PharmacyProductRequestDetails | null {
-  const request = normalizePharmacyProductRequest(rawRequest);
+): ProductRequestDetails | null {
+  const request = normalizeProductRequest(rawRequest);
   if (!request || !isRecord(rawRequest)) return null;
 
   const productImage = normalizeProductRequestFile(rawRequest.productImage);
@@ -202,12 +202,12 @@ export function normalizePharmacyProductRequestDetails(
 
 //===================================================================
 
-export function normalizePharmacyProductRequestsResponse(
+export function normalizeProductRequestsResponse(
   payload: unknown
-): PharmacyProductRequestsResponse {
+): ProductRequestsResponse {
   const response = normalizePaginatedResponse(payload, {
     itemKeys: ['items', 'requests'],
-    normalizeItem: normalizePharmacyProductRequest,
+    normalizeItem: normalizeProductRequest,
   });
 
   return {

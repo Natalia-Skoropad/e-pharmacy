@@ -3,15 +3,16 @@ import { z } from 'zod';
 import { sharedSearchSchema } from './shared-validation.schema';
 import { PRODUCT_CATEGORIES } from '../types/categories';
 
-//===============================================================
-
-export const PRODUCT_REQUEST_STATUS_OPTIONS = [
-  'draft',
-  'new',
-  'in_progress',
-  'approved',
-  'rejected',
-] as const;
+import {
+  PRODUCT_REQUEST_ADDITIONAL_FILE_MIME_TYPES,
+  PRODUCT_REQUEST_ADDITIONAL_FILE_NAME_PATTERN,
+  PRODUCT_REQUEST_IMAGE_DATA_URL_PATTERN,
+  PRODUCT_REQUEST_IMAGE_FILE_NAME_PATTERN,
+  PRODUCT_REQUEST_IMAGE_MIME_TYPES,
+  PRODUCT_REQUEST_LIMITS,
+  PRODUCT_REQUEST_STATUSES,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES,
+} from '../constants/product-request-validation';
 
 //===============================================================
 
@@ -19,38 +20,82 @@ const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
 const perPageSchema = z.coerce.number().int().min(1).max(200).default(20);
 
+//===============================================================
+
 const dateFilterSchema = z
   .string()
   .trim()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must use YYYY-MM-DD format')
   .optional();
 
-const optionalText = (maxLength: number) =>
-  z.string().trim().max(maxLength).optional().or(z.literal(''));
+//===============================================================
+
+const optionalText = (maxLength: number, message: string) =>
+  z.string().trim().max(maxLength, message).optional().or(z.literal(''));
+
+//===============================================================
 
 const productRequestFileSchema = z.object({
-  name: z.string().trim().min(1).max(180),
-  type: z.string().trim().max(120).default('application/octet-stream'),
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(
+      PRODUCT_REQUEST_LIMITS.fileNameMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileName
+    )
+    .regex(
+      PRODUCT_REQUEST_ADDITIONAL_FILE_NAME_PATTERN,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.format.additionalFile
+    ),
+
+  type: z.enum(PRODUCT_REQUEST_ADDITIONAL_FILE_MIME_TYPES),
+
   size: z
     .number()
     .int()
     .min(0)
-    .max(10 * 1024 * 1024),
-  dataUrl: z.string().max(3 * 1024 * 1024).optional(),
+    .max(
+      PRODUCT_REQUEST_LIMITS.additionalFileMaxSizeBytes,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.additionalFileSize
+    ),
+
+  dataUrl: z.string().max(PRODUCT_REQUEST_LIMITS.dataUrlMaxLength).optional(),
 });
 
+//===============================================================
+
 const productImageSchema = productRequestFileSchema.extend({
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(
+      PRODUCT_REQUEST_LIMITS.fileNameMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileName
+    )
+    .regex(
+      PRODUCT_REQUEST_IMAGE_FILE_NAME_PATTERN,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.format.productImage
+    ),
+
+  type: z.enum(PRODUCT_REQUEST_IMAGE_MIME_TYPES),
+
   size: z
     .number()
     .int()
     .min(0)
-    .max(2 * 1024 * 1024),
+    .max(
+      PRODUCT_REQUEST_LIMITS.productImageMaxSizeBytes,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.productImageSize
+    ),
+
   dataUrl: z
     .string()
-    .max(3 * 1024 * 1024)
+    .max(PRODUCT_REQUEST_LIMITS.dataUrlMaxLength)
     .regex(
-      /^data:image\/(jpeg|png|webp);base64,/i,
-      'Product image must be a valid image data URL'
+      PRODUCT_REQUEST_IMAGE_DATA_URL_PATTERN,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.format.productImage
     )
     .optional(),
 });
@@ -86,55 +131,151 @@ export const productRequestsQuerySchema = z.preprocess(
     name: sharedSearchSchema,
     article: sharedSearchSchema,
     category: z.enum(PRODUCT_CATEGORIES).optional(),
-    status: z.enum(PRODUCT_REQUEST_STATUS_OPTIONS).optional(),
+    status: z.enum(PRODUCT_REQUEST_STATUSES).optional(),
   })
 );
 
 //===============================================================
 
-const productRequestFormSchema = z
+export const productRequestFormSchema = z
   .object({
     status: z.enum(['draft', 'new']).default('draft'),
-    name: z.string().trim().min(1, 'Product name is required').max(160),
-    article: z.string().trim().min(1, 'Product article is required').max(40),
+
+    name: z
+      .string()
+      .trim()
+      .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.name)
+      .max(
+        PRODUCT_REQUEST_LIMITS.nameMax,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.name
+      ),
+
+    article: z
+      .string()
+      .trim()
+      .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article)
+      .max(
+        PRODUCT_REQUEST_LIMITS.articleMax,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.article
+      ),
+
     category: z.enum(PRODUCT_CATEGORIES),
-    customCategory: optionalText(100),
+
+    customCategory: optionalText(
+      PRODUCT_REQUEST_LIMITS.customCategoryMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.customCategory
+    ),
     productImage: productImageSchema.optional(),
-    manufacturer: optionalText(160),
-    countryOfOrigin: optionalText(100),
-    dosage: optionalText(100),
-    packageSize: optionalText(100),
-    form: optionalText(100),
-    activeSubstance: optionalText(180),
-    prescriptionType: optionalText(80),
-    fullDescription: optionalText(5000),
-    pharmacyComment: optionalText(1500),
-    additionalFiles: z.array(productRequestFileSchema).max(5).optional(),
+    manufacturer: optionalText(
+      PRODUCT_REQUEST_LIMITS.manufacturerMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.manufacturer
+    ),
+
+    countryOfOrigin: optionalText(
+      PRODUCT_REQUEST_LIMITS.countryOfOriginMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.countryOfOrigin
+    ),
+
+    dosage: optionalText(
+      PRODUCT_REQUEST_LIMITS.dosageMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.dosage
+    ),
+
+    packageSize: optionalText(
+      PRODUCT_REQUEST_LIMITS.packageSizeMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.packageSize
+    ),
+
+    form: optionalText(
+      PRODUCT_REQUEST_LIMITS.formMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.form
+    ),
+
+    activeSubstance: optionalText(
+      PRODUCT_REQUEST_LIMITS.activeSubstanceMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeSubstance
+    ),
+
+    prescriptionType: optionalText(
+      PRODUCT_REQUEST_LIMITS.prescriptionTypeMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.prescriptionType
+    ),
+
+    fullDescription: optionalText(
+      PRODUCT_REQUEST_LIMITS.fullDescriptionMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fullDescription
+    ),
+
+    pharmacyComment: optionalText(
+      PRODUCT_REQUEST_LIMITS.pharmacyCommentMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.pharmacyComment
+    ),
+
+    additionalFiles: z
+      .array(productRequestFileSchema)
+      .max(
+        PRODUCT_REQUEST_LIMITS.additionalFilesMax,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.additionalFilesCount
+      )
+      .optional(),
   })
+
   .superRefine((value, context) => {
     if (value.category === 'other' && !value.customCategory?.trim()) {
       context.addIssue({
         code: 'custom',
         path: ['customCategory'],
-        message: 'Enter the custom category name',
+        message: PRODUCT_REQUEST_VALIDATION_MESSAGES.required.customCategory,
       });
     }
 
     if (value.status !== 'new') return;
 
     const requiredForModeration = [
-      ['productImage', value.productImage],
-      ['manufacturer', value.manufacturer],
-      ['countryOfOrigin', value.countryOfOrigin],
-      ['dosage', value.dosage],
-      ['packageSize', value.packageSize],
-      ['form', value.form],
-      ['activeSubstance', value.activeSubstance],
-      ['prescriptionType', value.prescriptionType],
-      ['fullDescription', value.fullDescription],
+      [
+        'productImage',
+        value.productImage,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.productImage,
+      ],
+      [
+        'manufacturer',
+        value.manufacturer,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.manufacturer,
+      ],
+      [
+        'countryOfOrigin',
+        value.countryOfOrigin,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.countryOfOrigin,
+      ],
+      [
+        'dosage',
+        value.dosage,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.dosage,
+      ],
+      [
+        'packageSize',
+        value.packageSize,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.packageSize,
+      ],
+      ['form', value.form, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.form],
+      [
+        'activeSubstance',
+        value.activeSubstance,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.activeSubstance,
+      ],
+      [
+        'prescriptionType',
+        value.prescriptionType,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.prescriptionType,
+      ],
+      [
+        'fullDescription',
+        value.fullDescription,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.fullDescription,
+      ],
     ] as const;
 
-    for (const [field, fieldValue] of requiredForModeration) {
+    for (const [field, fieldValue, message] of requiredForModeration) {
       const isFilled =
         typeof fieldValue === 'string'
           ? Boolean(fieldValue.trim())
@@ -145,18 +286,22 @@ const productRequestFormSchema = z
       context.addIssue({
         code: 'custom',
         path: [field],
-        message: 'This field is required for moderation',
+        message,
       });
     }
   });
 
-export const createProductRequestSchema = productRequestFormSchema;
-export const updateProductRequestSchema = productRequestFormSchema;
-
 //===============================================================
 
 export const productRequestArticleAvailabilityQuerySchema = z.object({
-  article: z.string().trim().min(1).max(40),
+  article: z
+    .string()
+    .trim()
+    .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article)
+    .max(
+      PRODUCT_REQUEST_LIMITS.articleMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.article
+    ),
   excludeRequestId: mongoIdSchema.optional(),
 });
 
@@ -174,10 +319,4 @@ export type ProductRequestArticleAvailabilityQuery = z.infer<
   typeof productRequestArticleAvailabilityQuerySchema
 >;
 
-export type CreateProductRequestInput = z.infer<
-  typeof createProductRequestSchema
->;
-
-export type UpdateProductRequestInput = z.infer<
-  typeof updateProductRequestSchema
->;
+export type ProductRequestFormInput = z.infer<typeof productRequestFormSchema>;

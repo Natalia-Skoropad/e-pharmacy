@@ -1,5 +1,7 @@
 type RequestDestination = 'backend' | 'bff';
 
+//===================================================================
+
 type ApiRequestLogEntry = {
   method: string;
   path: string;

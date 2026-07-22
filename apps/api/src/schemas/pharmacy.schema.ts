@@ -5,7 +5,9 @@ import {
   sharedReviewRatingSchema,
   sharedSearchSchema,
   sharedEmailSchema,
-  sharedNameSchema,
+  sharedPharmacyNameSchema,
+  sharedBankRecipientNameSchema,
+  sharedBankNameSchema,
   sharedRequiredAddressSchema,
   sharedRequiredPhoneSchema,
   sharedPictureUrlSchema,
@@ -41,6 +43,7 @@ const pharmacyDocumentSchema = z.object({
 });
 
 //===============================================================
+
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
 const perPageSchema = z.coerce.number().int().min(1).max(100).default(12);
 
@@ -102,7 +105,7 @@ export const createPharmacyReviewSchema = z.object({
 
 export const updateMyPharmacyProfileSchema = z
   .object({
-    name: sharedNameSchema.optional(),
+    name: sharedPharmacyNameSchema.optional(),
     address: sharedRequiredAddressSchema.optional(),
     city: sharedSearchSchema,
     phone: sharedRequiredPhoneSchema.optional(),
@@ -111,17 +114,19 @@ export const updateMyPharmacyProfileSchema = z
     imageUrl: sharedPictureUrlSchema,
     description: sharedOptionalTextEditorSchema,
     documents: z.array(pharmacyDocumentSchema).max(6).optional(),
+
     bankDetails: z
       .object({
-        recipientName: sharedNameSchema.optional(),
+        recipientName: sharedBankRecipientNameSchema.optional(),
         taxId: sharedOptionalTaxIdSchema,
         iban: sharedOptionalIbanSchema,
-        bankName: sharedNameSchema.optional(),
+        bankName: sharedBankNameSchema.optional(),
         receiptEmail: sharedEmailSchema.optional(),
         paymentPurpose: sharedOptionalPaymentPurposeSchema,
       })
       .optional(),
   })
+
   .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one field is required',
   });

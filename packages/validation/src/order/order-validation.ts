@@ -1,6 +1,6 @@
 import {
   buildAddressError,
-  buildNameError,
+  buildUserNameError,
   buildOrderCommentError,
   buildPhoneError,
   isValidationResultValid,
@@ -35,6 +35,8 @@ export const ORDER_DELIVERY_INITIAL_VALUES: OrderDeliveryFormValues = {
   comment: '',
 };
 
+//===================================================================
+
 export const ORDER_DELIVERY_FORM_FIELDS: Array<keyof OrderDeliveryFormValues> =
   ['recipientName', 'recipientPhone', 'deliveryAddress', 'comment'];
 
@@ -53,7 +55,7 @@ export function validateOrderDeliveryForm(
   if (commentError) errors.comment = commentError;
   if (deliveryMethod === 'pickup') return errors;
 
-  const nameError = buildNameError(values.recipientName, {
+  const nameError = buildUserNameError(values.recipientName, {
     required: true,
     trailingDot: true,
   });

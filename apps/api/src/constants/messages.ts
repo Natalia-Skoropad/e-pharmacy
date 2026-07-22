@@ -11,6 +11,7 @@ export const API_MESSAGES = {
 
   PASSWORD_RESET_EMAIL_SENT:
     'If an account with that email exists, password reset instructions were sent.',
+
   PASSWORD_RESET_SUCCESS: 'Password was reset successfully',
   PASSWORD_RESET_TOKEN_INVALID: 'Password reset link is invalid or expired',
 

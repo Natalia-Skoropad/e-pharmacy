@@ -1,5 +1,7 @@
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+//===================================================================
+
 export type ApiRequestBody = BodyInit | Record<string, unknown> | unknown;
 
 //===================================================================

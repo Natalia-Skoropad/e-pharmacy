@@ -11,7 +11,7 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
     "migrate:domain": "tsx src/scripts/migrate-domain-entities.ts",
-    "test": "tsx --test src/services/order-status.test.ts src/schemas/auth-validation.contract.test.ts"
+    "test": "tsx --test src/services/order-status.test.ts src/schemas/auth-validation.contract.test.ts src/schemas/name-validation.contract.test.ts src/schemas/product-request-validation.contract.test.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

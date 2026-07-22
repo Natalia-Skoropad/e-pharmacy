@@ -3,7 +3,9 @@ import { Schema, model, models } from 'mongoose';
 import {
   USER_ADDRESS_MAX_LENGTH,
   PICTURE_URL_MAX_LENGTH,
+  USER_NAME_MIN_LENGTH,
   USER_NAME_MAX_LENGTH,
+  USER_NAME_PATTERN,
   USER_PHONE_MIN_LENGTH,
   USER_PHONE_MAX_LENGTH,
   PHONE_PATTERN,
@@ -26,7 +28,9 @@ const userSchema = new Schema<UserEntity>(
       type: String,
       required: [true, VALIDATION_MESSAGES.required.name],
       trim: true,
+      minlength: [USER_NAME_MIN_LENGTH, VALIDATION_MESSAGES.limits.nameMin],
       maxlength: [USER_NAME_MAX_LENGTH, VALIDATION_MESSAGES.limits.nameMax],
+      match: [USER_NAME_PATTERN, VALIDATION_MESSAGES.format.name],
     },
 
     email: {

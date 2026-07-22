@@ -4,20 +4,19 @@ import { buildQueryString, getResponseData } from '@e-pharmacy/api-client/core';
 import type { ApiSuccessResponse } from '@e-pharmacy/types';
 
 import type {
-  CreatePharmacyProductRequestPayload,
-  PharmacyProductRequestDetails,
-  PharmacyProductRequestRow,
-  PharmacyProductRequestsQueryParams,
-  PharmacyProductRequestsResponse,
-  UpdatePharmacyProductRequestPayload,
+  ProductRequestFormPayload,
+  ProductRequestDetails,
+  ProductRequestRow,
+  ProductRequestsQueryParams,
+  ProductRequestsResponse,
 } from '@e-pharmacy/types/product-requests';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
 import {
-  normalizePharmacyProductRequest,
-  normalizePharmacyProductRequestDetails,
-  normalizePharmacyProductRequestsResponse,
+  normalizeProductRequest,
+  normalizeProductRequestDetails,
+  normalizeProductRequestsResponse,
 } from '@/lib/product-requests/product-requests';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
@@ -25,8 +24,8 @@ import { localApiRequest } from '@e-pharmacy/next-api/browser';
 //===================================================================
 
 export async function createPharmacyProductRequest(
-  payload: CreatePharmacyProductRequestPayload
-): Promise<PharmacyProductRequestRow> {
+  payload: ProductRequestFormPayload
+): Promise<ProductRequestRow> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     PHARMACY_API_ROUTES.productRequests.list,
     {
@@ -36,7 +35,7 @@ export async function createPharmacyProductRequest(
   );
 
   const data = getResponseData(response) as { request?: unknown };
-  const request = normalizePharmacyProductRequest(data.request);
+  const request = normalizeProductRequest(data.request);
 
   if (!request) {
     throw new Error('Product request could not be created.');
@@ -72,26 +71,26 @@ export async function checkPharmacyProductRequestArticle(
 //===================================================================
 
 export async function getPharmacyProductRequests(
-  params: PharmacyProductRequestsQueryParams = {}
-): Promise<PharmacyProductRequestsResponse> {
+  params: ProductRequestsQueryParams = {}
+): Promise<ProductRequestsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     `${PHARMACY_API_ROUTES.productRequests.list}${buildQueryString(params)}`
   );
 
-  return normalizePharmacyProductRequestsResponse(getResponseData(response));
+  return normalizeProductRequestsResponse(getResponseData(response));
 }
 
 //===================================================================
 
 export async function getPharmacyProductRequest(
   requestId: string
-): Promise<PharmacyProductRequestDetails> {
+): Promise<ProductRequestDetails> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     PHARMACY_API_ROUTES.productRequests.details(requestId)
   );
 
   const data = getResponseData(response) as { request?: unknown };
-  const request = normalizePharmacyProductRequestDetails(data.request);
+  const request = normalizeProductRequestDetails(data.request);
 
   if (!request) {
     throw new Error('Product request could not be loaded.');
@@ -104,8 +103,8 @@ export async function getPharmacyProductRequest(
 
 export async function updatePharmacyProductRequest(
   requestId: string,
-  payload: UpdatePharmacyProductRequestPayload
-): Promise<PharmacyProductRequestDetails> {
+  payload: ProductRequestFormPayload
+): Promise<ProductRequestDetails> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     PHARMACY_API_ROUTES.productRequests.details(requestId),
     {
@@ -115,7 +114,7 @@ export async function updatePharmacyProductRequest(
   );
 
   const data = getResponseData(response) as { request?: unknown };
-  const request = normalizePharmacyProductRequestDetails(data.request);
+  const request = normalizeProductRequestDetails(data.request);
 
   if (!request) {
     throw new Error('Product request could not be updated.');

@@ -1,6 +1,22 @@
+import {
+  BANK_NAME_MAX_LENGTH,
+  BANK_NAME_MIN_LENGTH,
+  BANK_RECIPIENT_NAME_MAX_LENGTH,
+  BANK_RECIPIENT_NAME_MIN_LENGTH,
+  PHARMACY_NAME_MAX_LENGTH,
+  PHARMACY_NAME_MIN_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_NAME_MIN_LENGTH,
+} from './limits';
+
+//=============================================================================
+
 export const VALIDATION_MESSAGES = {
   required: {
     name: 'Name is required',
+    pharmacyName: 'Pharmacy name is required',
+    bankRecipientName: 'Bank recipient name is required',
+    bankName: 'Bank name is required',
     email: 'Email is required',
     phone: 'Phone is required',
     password: 'Password is required',
@@ -19,34 +35,53 @@ export const VALIDATION_MESSAGES = {
   },
 
   format: {
-    name: 'Use only Latin letters, spaces, apostrophe or hyphen',
+    name: 'Use letters, spaces, apostrophe or hyphen',
+    pharmacyName: 'Use letters, numbers, spaces and common name punctuation',
+
+    bankRecipientName:
+      'Use letters, numbers, spaces and common name punctuation',
+
+    bankName: 'Use letters, numbers, spaces and common name punctuation',
     email: 'Enter a valid email address',
     emailApi: 'Email must be valid',
     phone: 'Enter phone in format +380XXXXXXXXX',
     password: 'Password must not contain spaces',
     passwordMatch: 'Passwords do not match',
+
     address:
-      'Use Latin letters, numbers, spaces, comma, dot, slash, apostrophe, # or hyphen',
+      'Use letters, numbers, spaces, comma, dot, slash, apostrophe, #, &, parentheses or hyphen',
+
     reviewComment:
-      'Review may contain only Latin letters, numbers, spaces and basic punctuation',
+      'Review may contain letters, numbers, spaces and basic punctuation',
+
     reviewRating: 'Choose a rating from 1 to 5 stars',
+
     orderComment:
-      'Order comment may contain only Latin letters, numbers, spaces and basic punctuation',
-    workingHours: 'Use Latin letters, numbers, spaces and basic punctuation',
+      'Order comment may contain letters, numbers, spaces and basic punctuation',
+
+    workingHours: 'Use letters, numbers, spaces and basic punctuation',
     workingHoursRange: 'Closing time must be later than opening time',
-    textEditor: 'Use Latin letters, numbers, line breaks and basic punctuation',
+    textEditor: 'Use letters, numbers, line breaks and basic punctuation',
     taxId: 'Use 8–10 digits',
     iban: 'Use Ukrainian IBAN format: UA + 27 digits',
+
     paymentPurpose:
-      'Payment purpose may contain only Latin letters, numbers, spaces and basic punctuation',
+      'Payment purpose may contain letters, numbers, spaces and basic punctuation',
+
     picture: 'Photo must be a valid image URL or JPG/PNG/WEBP upload',
     pictureFileType: 'Please choose a JPG, PNG, or WEBP image',
     search: 'Search may contain only allowed text characters',
   },
 
   limits: {
-    nameMin: 'Name must be at least 2 characters',
-    nameMax: 'Name must be at most 50 characters',
+    nameMin: `Name must be at least ${USER_NAME_MIN_LENGTH} characters`,
+    nameMax: `Name must be at most ${USER_NAME_MAX_LENGTH} characters`,
+    pharmacyNameMin: `Pharmacy name must be at least ${PHARMACY_NAME_MIN_LENGTH} characters`,
+    pharmacyNameMax: `Pharmacy name must be at most ${PHARMACY_NAME_MAX_LENGTH} characters`,
+    bankRecipientNameMin: `Bank recipient name must be at least ${BANK_RECIPIENT_NAME_MIN_LENGTH} characters`,
+    bankRecipientNameMax: `Bank recipient name must be at most ${BANK_RECIPIENT_NAME_MAX_LENGTH} characters`,
+    bankNameMin: `Bank name must be at least ${BANK_NAME_MIN_LENGTH} characters`,
+    bankNameMax: `Bank name must be at most ${BANK_NAME_MAX_LENGTH} characters`,
     emailMax: 'Email must be at most 64 characters',
     phoneMax: 'Phone must be at most 13 characters',
     passwordMin: 'Password must be at least 8 characters',

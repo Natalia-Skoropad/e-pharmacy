@@ -1,5 +1,5 @@
 import {
-  buildNameError,
+  buildUserNameError,
   buildEmailError,
   buildPhoneError,
   buildPasswordError,
@@ -39,13 +39,12 @@ export type RegisterFormErrors = FormErrors<RegisterFormValues>;
 export type LoginFormErrors = FormErrors<LoginFormValues>;
 export type ForgotPasswordFormErrors = FormErrors<ForgotPasswordFormValues>;
 export type ResetPasswordFormErrors = FormErrors<ResetPasswordFormValues>;
-
-//===================================================================
-
 export type RegisterTouchedFields = FormTouchedFields<RegisterFormValues>;
 export type LoginTouchedFields = FormTouchedFields<LoginFormValues>;
+
 export type ForgotPasswordTouchedFields =
   FormTouchedFields<ForgotPasswordFormValues>;
+
 export type ResetPasswordTouchedFields =
   FormTouchedFields<ResetPasswordFormValues>;
 
@@ -100,7 +99,7 @@ export function validateRegisterForm(
 ): RegisterFormErrors {
   const errors: RegisterFormErrors = {};
 
-  const nameError = buildNameError(values.name, { required: true });
+  const nameError = buildUserNameError(values.name, { required: true });
   const emailError = buildEmailError(values.email);
   const phoneError = buildPhoneError(values.phone, { required: true });
   const passwordError = buildPasswordError(values.password);
@@ -165,15 +164,21 @@ export function isRegisterFormValid(values: RegisterFormValues): boolean {
   return isValidationResultValid(validateRegisterForm(values));
 }
 
+//===================================================================
+
 export function isLoginFormValid(values: LoginFormValues): boolean {
   return isValidationResultValid(validateLoginForm(values));
 }
+
+//===================================================================
 
 export function isForgotPasswordFormValid(
   values: ForgotPasswordFormValues
 ): boolean {
   return isValidationResultValid(validateForgotPasswordForm(values));
 }
+
+//===================================================================
 
 export function isResetPasswordFormValid(
   values: ResetPasswordFormValues,

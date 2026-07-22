@@ -16,10 +16,9 @@ import type {
 } from '../types/product-request';
 
 import type {
-  CreateProductRequestInput,
   ProductRequestArticleAvailabilityQuery,
+  ProductRequestFormInput,
   ProductRequestsQuery,
-  UpdateProductRequestInput,
 } from '../schemas/product-request.schema';
 
 import { httpError } from '../utils/httpError';
@@ -86,6 +85,8 @@ async function getArticleConflict(
   return null;
 }
 
+//===============================================================
+
 async function assertArticleAvailable(
   article: string,
   excludeRequestId?: string
@@ -129,7 +130,9 @@ function getEndOfDay(value: string): Date {
 
 //===============================================================
 
-async function getCurrentPharmacy(userId: string): Promise<CurrentPharmacy | null> {
+async function getCurrentPharmacy(
+  userId: string
+): Promise<CurrentPharmacy | null> {
   if (!Types.ObjectId.isValid(userId)) return null;
 
   return Pharmacy.findOne({
@@ -153,9 +156,9 @@ function isProductRequestProductDocument(
 ): value is ProductRequestProductDocument {
   return Boolean(
     value &&
-      typeof value === 'object' &&
-      '_id' in value &&
-      !(value instanceof Types.ObjectId)
+    typeof value === 'object' &&
+    '_id' in value &&
+    !(value instanceof Types.ObjectId)
   );
 }
 
@@ -183,21 +186,26 @@ function getStatusHistoryCopy(
         title: 'Draft created',
         description: 'The pharmacy saved the product request as a draft.',
       };
+
     case 'new':
       return {
         title: 'Sent for moderation',
         description: 'The pharmacy sent the product request to Admin.',
       };
+
     case 'in_progress':
       return {
         title: 'Review started',
         description: 'Admin started reviewing the submitted product data.',
       };
+
     case 'approved':
       return {
         title: 'Request approved',
-        description: 'Admin approved the request and created or linked the product.',
+        description:
+          'Admin approved the request and created or linked the product.',
       };
+
     case 'rejected':
       return {
         title: 'Request rejected',
@@ -216,15 +224,23 @@ function getFallbackHistory(
   const statusSequence: ProductRequestStatus[] = ['draft'];
 
   if (request.status !== 'draft') statusSequence.push('new');
-  if (request.status === 'in_progress' || request.status === 'approved' || request.status === 'rejected') {
+  if (
+    request.status === 'in_progress' ||
+    request.status === 'approved' ||
+    request.status === 'rejected'
+  ) {
     statusSequence.push('in_progress');
   }
+
   if (request.status === 'approved') statusSequence.push('approved');
   if (request.status === 'rejected') statusSequence.push('rejected');
 
   const start = request.createdAt.getTime();
   const end = request.updatedAt.getTime();
-  const step = statusSequence.length > 1 ? Math.max(1, (end - start) / (statusSequence.length - 1)) : 0;
+  const step =
+    statusSequence.length > 1
+      ? Math.max(1, (end - start) / (statusSequence.length - 1))
+      : 0;
 
   return statusSequence.map((status, index) => {
     const copy = getStatusHistoryCopy(status, request.rejectionReason);
@@ -299,7 +315,7 @@ function normalizeOptionalText(value?: string): string | undefined {
 
 //===============================================================
 
-function getRequestFormUpdate(input: CreateProductRequestInput | UpdateProductRequestInput) {
+function getRequestFormUpdate(input: ProductRequestFormInput) {
   return {
     name: input.name.trim(),
     article: input.article.trim().toUpperCase(),
@@ -328,7 +344,7 @@ function getRequestFormUpdate(input: CreateProductRequestInput | UpdateProductRe
 
 export async function createProductRequestService(
   userId: string,
-  input: CreateProductRequestInput
+  input: ProductRequestFormInput
 ) {
   const pharmacy = await getCurrentPharmacy(userId);
 
@@ -376,7 +392,7 @@ export async function createProductRequestService(
 export async function updateProductRequestService(
   userId: string,
   requestId: string,
-  input: UpdateProductRequestInput
+  input: ProductRequestFormInput
 ) {
   const pharmacyId = await getCurrentPharmacyId(userId);
 

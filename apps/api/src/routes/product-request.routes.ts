@@ -13,11 +13,10 @@ import { authenticate } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validate.middleware';
 
 import {
-  createProductRequestSchema,
   productRequestArticleAvailabilityQuerySchema,
+  productRequestFormSchema,
   productRequestParamsSchema,
   productRequestsQuerySchema,
-  updateProductRequestSchema,
 } from '../schemas/product-request.schema';
 
 import { ctrlWrapper } from '../utils/ctrlWrapper';
@@ -58,7 +57,7 @@ productRequestRoutes.get(
 
 productRequestRoutes.post(
   '/',
-  validate({ body: createProductRequestSchema }),
+  validate({ body: productRequestFormSchema }),
   ctrlWrapper(createProductRequest)
 );
 
@@ -68,7 +67,7 @@ productRequestRoutes.patch(
   '/:requestId',
   validate({
     params: productRequestParamsSchema,
-    body: updateProductRequestSchema,
+    body: productRequestFormSchema,
   }),
   ctrlWrapper(updateProductRequest)
 );

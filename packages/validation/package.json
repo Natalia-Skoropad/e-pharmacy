@@ -11,13 +11,14 @@
     "./picture": "./src/picture/index.ts",
     "./reviews": "./src/reviews/index.ts",
     "./shared": "./src/shared/index.ts",
-    "./order": "./src/order/index.ts"
+    "./order": "./src/order/index.ts",
+    "./product-requests": "./src/product-requests/index.ts"
   },
   "scripts": {
     "build": "tsc",
     "lint": "tsc --noEmit",
     "type-check": "tsc --noEmit",
-    "test": "tsx --test src/shared/auth-contract.test.ts"
+    "test": "tsx --test src/shared/auth-contract.test.ts src/shared/sanitizers.test.ts src/product-requests/product-request-validation.test.ts"
   },
   "devDependencies": {
     "typescript": "^5",

@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-
 import { useClientAuthCapabilities } from './useClientAuthCapabilities';
 
 import {
@@ -10,7 +9,6 @@ import {
   hasValidationErrors,
   isReviewFormValid,
   markAllFieldsTouched,
-  sanitizeReviewComment,
   validateReviewForm,
   type ReviewFormValues,
   type ReviewTouchedFields,
@@ -88,7 +86,7 @@ export function useReviewForm({
     setReviewTouchedFields((prev) => ({ ...prev, comment: true }));
     setReviewValues((prev) => ({
       ...prev,
-      comment: sanitizeReviewComment(value),
+      comment: value,
     }));
   };
 
@@ -115,7 +113,7 @@ export function useReviewForm({
       notifyError(
         isPharmacy
           ? 'Reviews are available only for client accounts.'
-          : authRequiredMessage ?? errorMessage
+          : (authRequiredMessage ?? errorMessage)
       );
       return;
     }
