@@ -98,6 +98,7 @@ import {
   getPharmacyClientPath,
   getPharmacyOrderPath,
 } from '@/lib/layout/routes';
+
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
 import {
@@ -156,20 +157,22 @@ type CharacteristicItem = Readonly<{
   value: string;
 }>;
 
-type ProductTabDateFilter = DateFilterValue;
+//===================================================================
 
 type StockMovementFilters = Readonly<{
-  date: ProductTabDateFilter;
+  date: DateFilterValue;
   eventType: 'all' | StockMovementEventType;
   source: 'all' | StockMovementSource;
   orderStatus: 'all' | OrderStatus;
 }>;
 
 type RelatedOrdersFilters = Readonly<{
-  date: ProductTabDateFilter;
+  date: DateFilterValue;
   orderStatus: 'all' | OrderStatus;
   createdByType: 'all' | OrderCreatedByType;
 }>;
+
+//===================================================================
 
 type StockMovementRow = Readonly<{
   id: string;
@@ -221,7 +224,7 @@ const PRODUCT_DETAILS_TABS: Array<TabItem<ProductDetailsTab>> = [
 
 //===================================================================
 
-const DEFAULT_PRODUCT_TAB_DATE_FILTER: ProductTabDateFilter = {
+const DEFAULT_PRODUCT_TAB_DATE_FILTER: DateFilterValue = {
   from: '',
   to: '',
 };
@@ -239,6 +242,8 @@ const DEFAULT_RELATED_ORDERS_FILTERS: RelatedOrdersFilters = {
   createdByType: 'all',
 };
 
+//===================================================================
+
 const ORDER_STATUS_OPTIONS: Array<SelectOption<'all' | OrderStatus>> = [
   { value: 'all', label: 'All' },
   { value: 'new', label: ORDER_STATUS_LABELS.new },
@@ -246,6 +251,8 @@ const ORDER_STATUS_OPTIONS: Array<SelectOption<'all' | OrderStatus>> = [
   { value: 'successful', label: ORDER_STATUS_LABELS.successful },
   { value: 'rejected', label: ORDER_STATUS_LABELS.rejected },
 ];
+
+//===================================================================
 
 const ORDER_CREATED_BY_OPTIONS: Array<
   SelectOption<'all' | OrderCreatedByType>
@@ -255,7 +262,9 @@ const ORDER_CREATED_BY_OPTIONS: Array<
     value: createdByType,
     label: ORDER_CREATED_BY_LABELS[createdByType],
   })),
-];
+  ];
+
+  //===================================================================
 
 const STOCK_EVENT_TYPE_OPTIONS: Array<
   SelectOption<'all' | StockMovementEventType>
@@ -268,15 +277,20 @@ const STOCK_EVENT_TYPE_OPTIONS: Array<
   { value: 'adjustment', label: 'Stock adjustment' },
 ];
 
+//===================================================================
+
 const STOCK_SOURCE_OPTIONS: Array<SelectOption<'all' | StockMovementSource>> = [
   { value: 'all', label: 'All' },
   { value: 'pharmacy_stock', label: 'Pharmacy stock' },
   { value: 'client_order', label: 'Client order' },
 ];
 
-const PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS: RowsPerPageValue[] = [20, 50, 100];
+//===================================================================
 
+const PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS: RowsPerPageValue[] = [20, 50, 100];
 const CURRENT_YEAR = new Date().getFullYear();
+
+//===================================================================
 
 const STOCK_EVENT_LABELS: Record<StockMovementEventType, string> = {
   arrival: 'Stock arrival',
@@ -285,6 +299,8 @@ const STOCK_EVENT_LABELS: Record<StockMovementEventType, string> = {
   write_off: 'Stock write-off',
   adjustment: 'Stock adjustment',
 };
+
+//===================================================================
 
 const STOCK_SOURCE_LABELS: Record<StockMovementSource, string> = {
   pharmacy_stock: 'Pharmacy stock',
@@ -297,6 +313,8 @@ const DEFAULT_BANNER_TITLE = 'Adding this product is locked';
 
 const DEFAULT_BANNER_MESSAGE =
   'You can review active Admin product details now. Add-to-my-pharmacy actions unlock after Admin verifies your pharmacy profile.';
+
+//===================================================================
 
 function getProductDetailsError(error: unknown): ProductDetailsError {
   if (isApiError(error) && [400, 404, 422].includes(error.status)) {

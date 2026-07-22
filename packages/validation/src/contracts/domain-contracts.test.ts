@@ -7,7 +7,7 @@ import {
   normalizePharmacyPaymentForm,
   validatePharmacyContactForm,
   validatePharmacyPaymentForm,
-} from '../profile';
+} from '../pharmacy';
 
 import {
   PICTURE_DATA_URL_MAX_LENGTH,
@@ -18,7 +18,12 @@ import {
 
 import { isCalendarDate, isDateRangeValid, validateDateRange } from '../url';
 
-import { ORDER_COMMENT_PATTERN, PAYMENT_PURPOSE_PATTERN } from './patterns';
+import {
+  ORDER_COMMENT_PATTERN,
+  PAYMENT_PURPOSE_PATTERN,
+} from '../shared/patterns';
+
+//=============================================================================
 
 const validWorkingHours = [
   'Mon: 09:00-18:00',
@@ -47,10 +52,12 @@ test('working hours require exactly one entry for every day', () => {
     buildWorkingHoursError(validWorkingHours.replace('; Sun: Closed', '')),
     ''
   );
+
   assert.notEqual(
     buildWorkingHoursError(`${validWorkingHours}; Mon: Closed`),
     ''
   );
+
   assert.notEqual(
     buildWorkingHoursError(
       validWorkingHours.replace('09:00-18:00', '18:00-09:00')
@@ -66,14 +73,17 @@ test('calendar dates reject impossible dates and inverted ranges', () => {
   assert.equal(isCalendarDate('2024-02-29'), true);
   assert.equal(isCalendarDate('2026-02-29'), false);
   assert.equal(isCalendarDate('2026-99-45'), false);
+
   assert.equal(
     isDateRangeValid({ from: '2026-07-01', to: '2026-07-31' }),
     true
   );
+
   assert.equal(
     isDateRangeValid({ from: '2026-08-01', to: '2026-07-31' }),
     false
   );
+
   assert.ok(validateDateRange({ from: '2026-99-45' }).from);
 });
 

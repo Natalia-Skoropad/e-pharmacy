@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import Image from 'next/image';
 
 import { ButtonLink, Container } from '@e-pharmacy/ui/common';
-import type { Product, Pharmacy } from '@e-pharmacy/types';
+import type { Product, PublicPharmacy } from '@e-pharmacy/types';
 
 import {
   BENEFITS,
@@ -41,7 +41,7 @@ type FeaturedResult<T> = { items: T[]; hasError: boolean };
 
 //===================================================================
 
-async function getFeaturedPharmacies(): Promise<FeaturedResult<Pharmacy>> {
+async function getFeaturedPharmacies(): Promise<FeaturedResult<PublicPharmacy>> {
   try {
     const response = await getPharmacies(
       {

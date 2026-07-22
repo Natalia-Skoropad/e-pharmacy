@@ -149,12 +149,18 @@ type PendingPriceQuantityChange = Readonly<{
   quantity: number;
 }>;
 
+//===================================================================
+
 type OrderTab = 'products' | 'delivery' | 'payment' | 'comment' | 'history';
+
+//===================================================================
 
 type CategoryOption = Readonly<{
   value: ProductCategory;
   label: string;
 }>;
+
+//===================================================================
 
 type OrderHistoryEntry =
   | Readonly<{
@@ -1412,7 +1418,8 @@ function OrderDetailsPageContent({
             (client) => client.status === 'active'
           );
           const defaultClient =
-            activeClients.find((client) => client.isDefault) ?? activeClients[0];
+            activeClients.find((client) => client.isDefault) ??
+            activeClients[0];
 
           if (!defaultClient) {
             throw new Error(
@@ -1889,7 +1896,7 @@ function OrderDetailsPageContent({
               ...(deliveryMethod === 'postal_delivery'
                 ? {
                     recipientName: recipientName.trim(),
-                    recipientPhone: recipientPhone.trim(),
+                    recipientPhone: normalizePhoneInput(recipientPhone),
                     deliveryAddress: deliveryAddress.trim(),
                   }
                 : {
@@ -1911,7 +1918,7 @@ function OrderDetailsPageContent({
             deliveryMethod,
             deliveryDetails: {
               recipientName: recipientName.trim(),
-              recipientPhone: recipientPhone.trim(),
+              recipientPhone: normalizePhoneInput(recipientPhone),
               address: deliveryAddress.trim(),
             },
           };
@@ -2042,7 +2049,7 @@ function OrderDetailsPageContent({
           ? {
               deliveryDetails: {
                 recipientName: recipientName.trim(),
-                recipientPhone: recipientPhone.trim(),
+                recipientPhone: normalizePhoneInput(recipientPhone),
                 address: deliveryAddress.trim(),
               },
             }
@@ -2089,7 +2096,9 @@ function OrderDetailsPageContent({
             <div className={css.errorCopy}>
               <p className={css.errorKicker}>Order workspace</p>
               <h1 id="order-details-page-title">
-                {isCreateMode ? 'Order could not be prepared' : 'Order not found'}
+                {isCreateMode
+                  ? 'Order could not be prepared'
+                  : 'Order not found'}
               </h1>
               <p className={css.errorText}>{error ?? 'Order not found.'}</p>
               {error === 'Authorization token is invalid' ? (
@@ -2145,8 +2154,8 @@ function OrderDetailsPageContent({
                     title="Client selection"
                     icon={<UsersRound size={20} aria-hidden="true" />}
                   >
-                    The default walk-in customer is selected automatically.
-                    Only active clients can be used for a new order.
+                    The default walk-in customer is selected automatically. Only
+                    active clients can be used for a new order.
                   </InfoTooltip>
                 }
                 value={selectedClientId}

@@ -1,6 +1,6 @@
 import 'server-only';
 
-import type { Pharmacy } from '@e-pharmacy/types';
+import type { PublicPharmacy } from '@e-pharmacy/types';
 
 import {
   PUBLIC_API_CACHE_OPTIONS,
@@ -18,7 +18,7 @@ import {
 //===================================================================
 
 type PharmaciesCatalogPageData = {
-  pharmacies: Pharmacy[];
+  pharmacies: PublicPharmacy[];
   total: number;
   totalPages: number;
   filters: PharmacyFilters;

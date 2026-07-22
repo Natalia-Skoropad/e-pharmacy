@@ -1,6 +1,6 @@
 import { Container, Pagination } from '@e-pharmacy/ui/common';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import type { Pharmacy } from '@e-pharmacy/types';
+import type { PublicPharmacy } from '@e-pharmacy/types';
 
 import {
   buildPharmacyPath,
@@ -21,7 +21,7 @@ import css from './PharmaciesPageContent.module.css';
 //===================================================================
 
 type PharmaciesPageContentProps = {
-  pharmacies: Pharmacy[];
+  pharmacies: PublicPharmacy[];
   total: number;
   totalPages: number;
   filters: PharmacyFilters;

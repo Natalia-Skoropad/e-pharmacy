@@ -202,7 +202,8 @@ export const productRequestFormSchema = z
       .regex(
         PRODUCT_REQUEST_ARTICLE_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
-      ),
+      )
+      .transform((value) => value.toUpperCase()),
 
     category: z.enum(PRODUCT_CATEGORIES),
 
@@ -371,7 +372,12 @@ export const productRequestArticleAvailabilityQuerySchema = z.object({
     .max(
       PRODUCT_REQUEST_LIMITS.articleMax,
       PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.article
-    ),
+    )
+    .regex(
+      PRODUCT_REQUEST_ARTICLE_PATTERN,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
+    )
+    .transform((value) => value.toUpperCase()),
   excludeRequestId: mongoIdSchema.optional(),
 });
 

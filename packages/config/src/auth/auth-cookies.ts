@@ -4,24 +4,12 @@
  * Keep the token cookie names logically aligned with the backend-local auth
  * constants. The backend must not import this frontend package.
  */
-const AUTH_COOKIES = {
-  ACCESS_TOKEN: 'e_pharmacy_access_token',
-  REFRESH_TOKEN: 'e_pharmacy_refresh_token',
-  LEGACY_AUTH_TOKEN: 'e_pharmacy_auth_token',
-  AUTH_READY: 'e_pharmacy_auth_ready',
-} as const;
-
-//===================================================================
+export const ACCESS_TOKEN_COOKIE_NAME = 'e_pharmacy_access_token';
+export const REFRESH_TOKEN_COOKIE_NAME = 'e_pharmacy_refresh_token';
+export const LEGACY_AUTH_COOKIE_NAME = 'e_pharmacy_auth_token';
 
 // Client-readable auth hint used only for auth bootstrap and redirects.
-export const AUTH_READY_COOKIE_NAME = AUTH_COOKIES.AUTH_READY;
-
-//===================================================================
-
-// HttpOnly cookies issued by the backend through the Next API proxy.
-export const ACCESS_TOKEN_COOKIE_NAME = AUTH_COOKIES.ACCESS_TOKEN;
-export const REFRESH_TOKEN_COOKIE_NAME = AUTH_COOKIES.REFRESH_TOKEN;
-export const LEGACY_AUTH_COOKIE_NAME = AUTH_COOKIES.LEGACY_AUTH_TOKEN;
+export const AUTH_READY_COOKIE_NAME = 'e_pharmacy_auth_ready';
 
 //===================================================================
 

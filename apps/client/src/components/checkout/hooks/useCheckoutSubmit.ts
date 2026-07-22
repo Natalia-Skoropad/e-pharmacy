@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 
 import type { Cart, CheckoutOrderPayload } from '@e-pharmacy/types';
 import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types/orders';
+import { normalizePhoneInput } from '@e-pharmacy/validation/order';
 
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { groupCartByPharmacy } from '@/lib/cart/cart-groups';
@@ -86,7 +87,7 @@ export function useCheckoutSubmit({
               deliveryMethod,
               deliveryDetails: {
                 recipientName: recipientNameValue.trim(),
-                recipientPhone: recipientPhoneValue.trim(),
+                recipientPhone: normalizePhoneInput(recipientPhoneValue),
                 address: deliveryAddressValue.trim(),
               },
               ...(trimmedComment ? { comment: trimmedComment } : {}),

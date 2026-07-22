@@ -1,5 +1,5 @@
 import type {
-  Pharmacy,
+  PublicPharmacy,
   PharmacyBankDetails,
   PharmacyCheckoutDetails,
 } from '@e-pharmacy/types';
@@ -8,16 +8,24 @@ import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 
 //===================================================================
 
-export function getPharmacyEmail(pharmacy?: Partial<Pharmacy> | null): string {
+export function getPharmacyEmail(
+  pharmacy?: Partial<PublicPharmacy> | null
+): string {
   return pharmacy?.email?.trim() ?? '';
 }
 
-export function getPharmacyPhone(pharmacy?: Partial<Pharmacy> | null): string {
+//===================================================================
+
+export function getPharmacyPhone(
+  pharmacy?: Partial<PublicPharmacy> | null
+): string {
   return pharmacy?.phone?.trim() ?? '';
 }
 
+//===================================================================
+
 export function getPharmacyWorkingHours(
-  pharmacy?: Partial<Pharmacy> | null
+  pharmacy?: Partial<PublicPharmacy> | null
 ): string {
   return pharmacy?.workingHours?.trim() ?? '';
 }
@@ -25,7 +33,7 @@ export function getPharmacyWorkingHours(
 //===================================================================
 
 export function getPharmacyAddress(
-  pharmacy?: Partial<Pharmacy> | null
+  pharmacy?: Partial<PublicPharmacy> | null
 ): string {
   if (!pharmacy) return '';
 
@@ -38,7 +46,7 @@ export function getPharmacyAddress(
 //===================================================================
 
 export function getPharmacyBankDetails(
-  pharmacy?: (Partial<Pharmacy> & PharmacyCheckoutDetails) | null
+  pharmacy?: (Partial<PublicPharmacy> & PharmacyCheckoutDetails) | null
 ): PharmacyBankDetails | null {
   return pharmacy?.bankDetails ?? null;
 }

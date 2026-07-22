@@ -1,0 +1,449 @@
+{
+  "version": 1,
+  "language": "en",
+  "cases": [
+    {
+      "id": "user-name-empty",
+      "contract": "userName",
+      "input": "",
+      "valid": false
+    },
+    {
+      "id": "user-name-min-minus-one",
+      "contract": "userName",
+      "input": "A",
+      "valid": false
+    },
+    {
+      "id": "user-name-min",
+      "contract": "userName",
+      "input": "Al",
+      "valid": true,
+      "normalized": "Al"
+    },
+    {
+      "id": "user-name-max",
+      "contract": "userName",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": true,
+      "normalized": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "id": "user-name-max-plus-one",
+      "contract": "userName",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": false
+    },
+    {
+      "id": "user-name-hyphen",
+      "contract": "userName",
+      "input": "Mary-Jane",
+      "valid": true,
+      "normalized": "Mary-Jane"
+    },
+    {
+      "id": "user-name-cyrillic",
+      "contract": "userName",
+      "input": "\u041d\u0430\u0442\u0430\u043b\u0456\u044f",
+      "valid": false
+    },
+    {
+      "id": "pharmacy-name-min-minus-one",
+      "contract": "pharmacyName",
+      "input": "A",
+      "valid": false
+    },
+    {
+      "id": "pharmacy-name-max",
+      "contract": "pharmacyName",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": true,
+      "normalized": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "id": "pharmacy-name-max-plus-one",
+      "contract": "pharmacyName",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": false
+    },
+    {
+      "id": "pharmacy-name-punctuation",
+      "contract": "pharmacyName",
+      "input": "Health & Care (24/7)",
+      "valid": true,
+      "normalized": "Health & Care (24/7)"
+    },
+    {
+      "id": "pharmacy-name-cyrillic",
+      "contract": "pharmacyName",
+      "input": "\u0410\u043f\u0442\u0435\u043a\u0430",
+      "valid": false
+    },
+    {
+      "id": "recipient-name-max",
+      "contract": "bankRecipientName",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": true,
+      "normalized": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "id": "recipient-name-max-plus-one",
+      "contract": "bankRecipientName",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": false
+    },
+    {
+      "id": "bank-name-max",
+      "contract": "bankName",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": true,
+      "normalized": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "id": "bank-name-max-plus-one",
+      "contract": "bankName",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": false
+    },
+    {
+      "id": "email-normalization",
+      "contract": "email",
+      "input": "  User@Example.COM  ",
+      "valid": true,
+      "normalized": "user@example.com"
+    },
+    {
+      "id": "email-internal-space",
+      "contract": "email",
+      "input": "john @example.com",
+      "valid": false
+    },
+    {
+      "id": "email-max",
+      "contract": "email",
+      "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+      "valid": true,
+      "normalized": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com"
+    },
+    {
+      "id": "email-max-plus-one",
+      "contract": "email",
+      "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+      "valid": false
+    },
+    {
+      "id": "email-cyrillic",
+      "contract": "email",
+      "input": "\u043a\u043e\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0447@example.com",
+      "valid": false
+    },
+    {
+      "id": "password-min-minus-one",
+      "contract": "password",
+      "input": "aaaaaaa",
+      "valid": false
+    },
+    {
+      "id": "password-min",
+      "contract": "password",
+      "input": "aaaaaaaa",
+      "valid": true,
+      "normalized": "aaaaaaaa"
+    },
+    {
+      "id": "password-max",
+      "contract": "password",
+      "input": "aaaaaaaaaaaaaaaaaaaa",
+      "valid": true,
+      "normalized": "aaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "id": "password-max-plus-one",
+      "contract": "password",
+      "input": "aaaaaaaaaaaaaaaaaaaaa",
+      "valid": false
+    },
+    {
+      "id": "password-space",
+      "contract": "password",
+      "input": "my pass word",
+      "valid": false
+    },
+    {
+      "id": "phone-valid",
+      "contract": "phone",
+      "input": "+380501234567",
+      "valid": true,
+      "normalized": "+380501234567"
+    },
+    {
+      "id": "phone-without-plus",
+      "contract": "phone",
+      "input": "380501234567",
+      "valid": false
+    },
+    {
+      "id": "phone-extra-digit",
+      "contract": "phone",
+      "input": "+3805012345678",
+      "valid": false
+    },
+    {
+      "id": "address-min-minus-one",
+      "contract": "address",
+      "input": "AAAAAAAAA",
+      "valid": false
+    },
+    {
+      "id": "address-min",
+      "contract": "address",
+      "input": "AAAAAAAAAA",
+      "valid": true,
+      "normalized": "AAAAAAAAAA"
+    },
+    {
+      "id": "address-max",
+      "contract": "address",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": true,
+      "normalized": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "id": "address-max-plus-one",
+      "contract": "address",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": false
+    },
+    {
+      "id": "address-cyrillic",
+      "contract": "address",
+      "input": "Kyiv, \u0432\u0443\u043b\u0438\u0446\u044f Main 10",
+      "valid": false
+    },
+    {
+      "id": "review-min-minus-one",
+      "contract": "reviewComment",
+      "input": "AAAAAAAAA",
+      "valid": false
+    },
+    {
+      "id": "review-min",
+      "contract": "reviewComment",
+      "input": "AAAAAAAAAA",
+      "valid": true,
+      "normalized": "AAAAAAAAAA"
+    },
+    {
+      "id": "review-max",
+      "contract": "reviewComment",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": true,
+      "normalized": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "id": "review-max-plus-one",
+      "contract": "reviewComment",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": false
+    },
+    {
+      "id": "review-cyrillic",
+      "contract": "reviewComment",
+      "input": "Excellent \u0441\u0435\u0440\u0432\u0456\u0441",
+      "valid": false
+    },
+    {
+      "id": "order-comment-empty",
+      "contract": "orderComment",
+      "input": "",
+      "valid": true,
+      "normalized": ""
+    },
+    {
+      "id": "order-comment-max",
+      "contract": "orderComment",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": true,
+      "normalized": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "id": "order-comment-max-plus-one",
+      "contract": "orderComment",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": false
+    },
+    {
+      "id": "payment-purpose-empty",
+      "contract": "paymentPurpose",
+      "input": "",
+      "valid": false
+    },
+    {
+      "id": "payment-purpose-valid",
+      "contract": "paymentPurpose",
+      "input": "Payment for medicines #123",
+      "valid": true,
+      "normalized": "Payment for medicines #123"
+    },
+    {
+      "id": "payment-purpose-max",
+      "contract": "paymentPurpose",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": true,
+      "normalized": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "id": "payment-purpose-max-plus-one",
+      "contract": "paymentPurpose",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": false
+    },
+    {
+      "id": "payment-purpose-cyrillic",
+      "contract": "paymentPurpose",
+      "input": "\u041e\u043f\u043b\u0430\u0442\u0430 \u0437\u0430\u043c\u043e\u0432\u043b\u0435\u043d\u043d\u044f",
+      "valid": false
+    },
+    {
+      "id": "iban-normalization",
+      "contract": "iban",
+      "input": " ua123456789012345678901234567 ",
+      "valid": true,
+      "normalized": "UA123456789012345678901234567"
+    },
+    {
+      "id": "iban-invalid-letter",
+      "contract": "iban",
+      "input": "UA12345678901234567890123456A",
+      "valid": false
+    },
+    {
+      "id": "iban-max-plus-one",
+      "contract": "iban",
+      "input": "ua1111111111111111111111111111",
+      "valid": false
+    },
+    {
+      "id": "working-hours-valid",
+      "contract": "workingHours",
+      "input": "Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: Closed; Sun: Closed",
+      "valid": true,
+      "normalized": "Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: Closed; Sun: Closed"
+    },
+    {
+      "id": "working-hours-free-text",
+      "contract": "workingHours",
+      "input": "Open every day",
+      "valid": false
+    },
+    {
+      "id": "working-hours-missing-day",
+      "contract": "workingHours",
+      "input": "Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: Closed",
+      "valid": false
+    },
+    {
+      "id": "working-hours-duplicate-day",
+      "contract": "workingHours",
+      "input": "Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: Closed; Sun: Closed; Mon: Closed",
+      "valid": false
+    },
+    {
+      "id": "working-hours-inverted-range",
+      "contract": "workingHours",
+      "input": "Mon: 18:00-09:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: Closed; Sun: Closed",
+      "valid": false
+    },
+    {
+      "id": "picture-http",
+      "contract": "pictureUrl",
+      "input": "https://example.com/image.webp",
+      "valid": true,
+      "normalized": "https://example.com/image.webp"
+    },
+    {
+      "id": "picture-data-url",
+      "contract": "pictureUrl",
+      "input": "data:image/webp;base64,AA==",
+      "valid": true,
+      "normalized": "data:image/webp;base64,AA=="
+    },
+    {
+      "id": "picture-jpg-alias",
+      "contract": "pictureUrl",
+      "input": "data:image/jpg;base64,AA==",
+      "valid": false
+    },
+    {
+      "id": "picture-blob",
+      "contract": "pictureUrl",
+      "input": "blob:https://example.com/preview",
+      "valid": false
+    },
+    {
+      "id": "date-valid",
+      "contract": "calendarDate",
+      "input": "2026-02-28",
+      "valid": true,
+      "normalized": "2026-02-28"
+    },
+    {
+      "id": "date-leap-valid",
+      "contract": "calendarDate",
+      "input": "2024-02-29",
+      "valid": true,
+      "normalized": "2024-02-29"
+    },
+    {
+      "id": "date-leap-invalid",
+      "contract": "calendarDate",
+      "input": "2026-02-29",
+      "valid": false
+    },
+    {
+      "id": "date-impossible",
+      "contract": "calendarDate",
+      "input": "2026-99-45",
+      "valid": false
+    },
+    {
+      "id": "product-article-normalization",
+      "contract": "productRequestArticle",
+      "input": " med-001 ",
+      "valid": true,
+      "normalized": "MED-001"
+    },
+    {
+      "id": "product-article-max",
+      "contract": "productRequestArticle",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": true,
+      "normalized": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "id": "product-article-max-plus-one",
+      "contract": "productRequestArticle",
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "valid": false
+    },
+    {
+      "id": "product-article-cyrillic",
+      "contract": "productRequestArticle",
+      "input": "\u041c\u0415\u0414-001",
+      "valid": false
+    },
+    {
+      "id": "product-long-text-english",
+      "contract": "productRequestLongText",
+      "input": "Complete product description in English.",
+      "valid": true,
+      "normalized": "Complete product description in English."
+    },
+    {
+      "id": "product-long-text-cyrillic",
+      "contract": "productRequestLongText",
+      "input": "\u041e\u043f\u0438\u0441 \u043f\u0440\u0435\u043f\u0430\u0440\u0430\u0442\u0443",
+      "valid": false
+    }
+  ]
+}

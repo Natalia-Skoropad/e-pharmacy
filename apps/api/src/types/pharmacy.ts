@@ -8,11 +8,13 @@ import type { z } from 'zod';
 export type PharmacyStatus =
   (typeof PHARMACY_STATUSES)[keyof typeof PHARMACY_STATUSES];
 
+//===============================================================
+
 export type ReviewModerationStatus = 'on_moderation' | 'approved' | 'rejected';
 
 //===============================================================
 
-export type PharmacyVerificationDocument = {
+export type PharmacyVerificationDocumentMetadata = {
   name: string;
   size: number;
   type?: string;
@@ -36,7 +38,7 @@ export type PharmacyPendingModeration = {
   workingHours?: string;
   imageUrl?: string | null;
   description?: string;
-  documents?: PharmacyVerificationDocument[];
+  documents?: PharmacyVerificationDocumentMetadata[];
   bankDetails?: Partial<PharmacyBankDetails>;
 };
 
@@ -49,7 +51,7 @@ export type PharmacyEntity = {
   workingHours?: string;
   bankDetails?: PharmacyBankDetails;
   license?: string;
-  documents: PharmacyVerificationDocument[];
+  documents: PharmacyVerificationDocumentMetadata[];
   status: PharmacyStatus;
   rating: number;
   imageUrl?: string;
@@ -122,7 +124,7 @@ export type PharmacyProfileResponseDto = {
   workingHours?: string;
   bankDetails?: PharmacyBankDetails;
   bankTransferAvailable: boolean;
-  documents: PharmacyVerificationDocument[];
+  documents: PharmacyVerificationDocumentMetadata[];
   status: PharmacyStatus;
   rating: number;
   imageUrl?: string;

@@ -1,4 +1,4 @@
-import { getWorkingHoursValidationIssue } from '../shared/working-hours';
+import { getWorkingHoursValidationIssue } from './working-hours';
 
 import {
   BANK_NAME_MAX_LENGTH,

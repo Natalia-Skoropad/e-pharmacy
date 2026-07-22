@@ -14,7 +14,7 @@ export type PharmacyBankDetails = {
   paymentPurpose: string;
 };
 
-export type PharmacyVerificationDocument = {
+export type PharmacyVerificationDocumentMetadata = {
   name: string;
   size: number;
   type: string;
@@ -60,7 +60,7 @@ export type PharmacyPendingModeration = {
   workingHours?: string;
   imageUrl?: string | null;
   description?: string;
-  documents?: PharmacyVerificationDocument[];
+  documents?: PharmacyVerificationDocumentMetadata[];
   bankDetails?: Partial<PharmacyBankDetails>;
 };
 
@@ -80,7 +80,7 @@ export type PharmacyProfile = {
   workingHours?: string;
   bankDetails?: PharmacyBankDetails;
   bankTransferAvailable: boolean;
-  documents: PharmacyVerificationDocument[];
+  documents: PharmacyVerificationDocumentMetadata[];
   status: PharmacyStatus;
   rating: number;
   imageUrl?: string;
@@ -90,9 +90,6 @@ export type PharmacyProfile = {
   reviewsCount: number;
   updatedAt: ISODateString;
 };
-
-/** Backward-compatible storefront alias. */
-export type Pharmacy = PublicPharmacy;
 
 export type PharmacyReview = {
   id: EntityId;
@@ -137,7 +134,7 @@ export type PharmaciesQueryParams = {
 
 //=============================================================================
 
-export type PharmaciesResponse = ApiPaginationResponse<Pharmacy>;
+export type PharmaciesResponse = ApiPaginationResponse<PublicPharmacy>;
 export type PharmacyFilterOption = { value: string; label: string };
 export type PharmacyOption = { id: EntityId; name: string };
 export type PharmacyOptionsResponse = { items: PharmacyOption[] };
@@ -150,7 +147,7 @@ export type PharmacyFilterOptionsResponse = {
   sort: Array<{ value: PharmaciesSortFilter; label: string }>;
 };
 
-export type PharmacyDetailsResponse = { pharmacy: Pharmacy };
+export type PharmacyDetailsResponse = { pharmacy: PublicPharmacy };
 
 export type PharmacyCheckoutDetailsResponse = {
   pharmacy: PharmacyCheckoutDetails;
@@ -215,7 +212,7 @@ export type UpdateMyPharmacyProfilePayload = {
   workingHours?: string;
   imageUrl?: string | null;
   description?: string;
-  documents?: PharmacyVerificationDocument[];
+  documents?: PharmacyVerificationDocumentMetadata[];
   bankDetails?: Partial<PharmacyBankDetails>;
 };
 

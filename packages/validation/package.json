@@ -9,17 +9,17 @@
     "./auth": "./src/auth/index.ts",
     "./files": "./src/files/index.ts",
     "./order": "./src/order/index.ts",
+    "./pharmacy": "./src/pharmacy/index.ts",
     "./product-requests": "./src/product-requests/index.ts",
     "./profile": "./src/profile/index.ts",
     "./reviews": "./src/reviews/index.ts",
-    "./shared": "./src/shared/index.ts",
     "./url": "./src/url/index.ts"
   },
   "scripts": {
     "build": "tsc",
-    "lint": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
-    "test": "tsx --test src/shared/auth-contract.test.ts src/shared/sanitizers.test.ts src/shared/domain-contracts.test.ts src/product-requests/product-request-validation.test.ts"
+    "test": "node ../../scripts/run-tsx-tests.mjs src"
   },
   "devDependencies": {
     "typescript": "^5",

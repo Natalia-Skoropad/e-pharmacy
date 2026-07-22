@@ -14,13 +14,13 @@ import { createPageMetadata } from '@/lib/seo';
 import { getPharmacyDetails, getPharmacyReviews } from '@/lib/api/server';
 
 import { ApiError } from '@e-pharmacy/api-client/core';
-import type { Pharmacy } from '@e-pharmacy/types';
+import type { PublicPharmacy } from '@e-pharmacy/types';
 import type { DataUnavailableReason } from '@/lib/api/server';
 
 //===================================================================
 
 export type PharmacyDetailLookupResult =
-  | { status: 'found'; pharmacy: Pharmacy }
+  | { status: 'found'; pharmacy: PublicPharmacy }
   | { status: 'not_found' }
   | { status: 'unavailable'; reason: DataUnavailableReason };
 
@@ -62,7 +62,7 @@ export async function lookupPharmacyBySlugId(
 
 export async function getPharmacyBySlugId(
   slugId: string
-): Promise<Pharmacy | null> {
+): Promise<PublicPharmacy | null> {
   const result = await lookupPharmacyBySlugId(slugId);
 
   return result.status === 'found' ? result.pharmacy : null;
@@ -70,7 +70,7 @@ export async function getPharmacyBySlugId(
 
 //===================================================================
 
-export function createPharmacyDetailMetadata(pharmacy: Pharmacy): Metadata {
+export function createPharmacyDetailMetadata(pharmacy: PublicPharmacy): Metadata {
   return createPageMetadata({
     title: `${pharmacy.name} pharmacy details`,
     description:
@@ -84,7 +84,7 @@ export function createPharmacyDetailMetadata(pharmacy: Pharmacy): Metadata {
 
 //===================================================================
 
-export async function renderPharmacyDetailPage(pharmacy: Pharmacy) {
+export async function renderPharmacyDetailPage(pharmacy: PublicPharmacy) {
   const reviewsData = await getPharmacyReviews(
     pharmacy.id,
     PUBLIC_API_CACHE_OPTIONS

@@ -70,7 +70,7 @@ import type {
   ActiveSession,
   Order,
   Product,
-  Pharmacy,
+  PublicPharmacy,
 } from '@e-pharmacy/types';
 
 import { PROFILE_TITLE } from '@/lib/seo';
@@ -164,7 +164,7 @@ function ProfilePageContent() {
     useState(ORDERS_VISIBLE_STEP);
 
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
-  const [favoritePharmacies, setFavoritePharmacies] = useState<Pharmacy[]>([]);
+  const [favoritePharmacies, setFavoritePharmacies] = useState<PublicPharmacy[]>([]);
   const [favoriteProductsError, setFavoriteProductsError] = useState('');
   const [favoritePharmaciesError, setFavoritePharmaciesError] = useState('');
   const [favoriteProductsCount, setFavoriteProductsCount] = useState(0);

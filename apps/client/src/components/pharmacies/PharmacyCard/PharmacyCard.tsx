@@ -9,7 +9,7 @@ import {
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
-import type { Pharmacy } from '@e-pharmacy/types';
+import type { PublicPharmacy } from '@e-pharmacy/types';
 
 import { addFavoritePharmacy, removeFavoritePharmacy } from '@/lib/api/browser';
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
@@ -29,7 +29,7 @@ import css from './PharmacyCard.module.css';
 //===================================================================
 
 type PharmacyCardProps = {
-  pharmacy: Pharmacy;
+  pharmacy: PublicPharmacy;
   skipFavoriteRefresh?: boolean;
   onFavoriteChange?: (pharmacyId: string, isFavorite: boolean) => void;
 };

@@ -79,9 +79,3 @@ export function clearAuthCookies(res: Response): void {
   // Remove the legacy cookie if it was issued before the migration.
   res.clearCookie(AUTH_COOKIE_NAME, options);
 }
-
-//===============================================================
-
-// Backward-compatible wrappers for older imports.
-export const setAuthCookie = setAccessTokenCookie;
-export const clearAuthCookie = clearAuthCookies;

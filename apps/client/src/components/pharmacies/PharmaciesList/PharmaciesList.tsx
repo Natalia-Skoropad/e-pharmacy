@@ -1,4 +1,4 @@
-import type { Pharmacy } from '@e-pharmacy/types';
+import type { PublicPharmacy } from '@e-pharmacy/types';
 
 import PharmacyCard from '@/components/pharmacies/PharmacyCard';
 
@@ -7,7 +7,7 @@ import css from './PharmaciesList.module.css';
 //===================================================================
 
 type PharmaciesListProps = {
-  pharmacies: Pharmacy[];
+  pharmacies: PublicPharmacy[];
 };
 
 //===================================================================

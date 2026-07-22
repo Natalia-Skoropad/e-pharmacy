@@ -313,10 +313,12 @@ function serializeProductRequest(
 function getRequestFormUpdate(input: ProductRequestFormInput) {
   return {
     name: input.name.trim(),
-    article: input.article.trim().toUpperCase(),
+    article: input.article,
     category: input.category,
+
     customCategory:
       input.category === 'other' ? input.customCategory : undefined,
+    
     productImage: input.productImage,
     manufacturer: input.manufacturer,
     countryOfOrigin: input.countryOfOrigin,
@@ -327,6 +329,7 @@ function getRequestFormUpdate(input: ProductRequestFormInput) {
     prescriptionType: input.prescriptionType,
     fullDescription: input.fullDescription,
     pharmacyComment: input.pharmacyComment,
+    
     additionalFiles: input.additionalFiles?.length
       ? input.additionalFiles
       : undefined,

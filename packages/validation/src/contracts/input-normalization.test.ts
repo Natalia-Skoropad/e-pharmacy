@@ -7,20 +7,20 @@ import {
   buildPasswordError,
   buildTextEditorError,
   buildUserNameError,
-} from './errors';
+} from '../shared/errors';
 
 import {
   buildBankNameError,
   buildBankRecipientNameError,
   buildPharmacyNameError,
-} from '../profile/pharmacy-field-errors';
+} from '../pharmacy/pharmacy-field-errors';
 
 import {
   normalizePhoneInput,
   normalizeEmail,
   normalizeIban,
   validateNormalizedPhone,
-} from './sanitizers';
+} from '../shared/sanitizers';
 
 //=============================================================================
 

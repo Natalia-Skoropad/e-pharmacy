@@ -1,5 +1,5 @@
 import { sanitizeTextParam } from '@e-pharmacy/validation/url';
-import type { Pharmacy, PharmaciesSortFilter } from '@e-pharmacy/types';
+import type { PublicPharmacy, PharmaciesSortFilter } from '@e-pharmacy/types';
 
 import { parsePositivePageParam } from './catalog-param-utils';
 
@@ -92,7 +92,7 @@ export function sortCities(cities: string[]): string[] {
 
 //===================================================================
 
-export function getUniquePharmacyCities(pharmacies: Pharmacy[]): string[] {
+export function getUniquePharmacyCities(pharmacies: PublicPharmacy[]): string[] {
   const cities = pharmacies
     .map((pharmacy) => pharmacy.city?.trim())
     .filter((city): city is string => Boolean(city));

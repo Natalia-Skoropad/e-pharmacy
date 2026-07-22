@@ -1,16 +1,12 @@
 import {
   buildAddressError,
   buildEmailError,
-  buildPasswordError,
   buildPhoneError,
-  buildRequiredPasswordError,
   buildTextEditorError,
-  buildUserNameError,
-  isValidationResultValid,
   normalizeEmail,
   normalizeIban,
   normalizeOptionalText,
-  VALIDATION_MESSAGES,
+  normalizePhoneInput,
   BANK_NAME_MAX_LENGTH,
   BANK_RECIPIENT_NAME_MAX_LENGTH,
   IBAN_MAX_LENGTH,
@@ -20,8 +16,6 @@ import {
   TEXT_EDITOR_MAX_LENGTH,
   USER_ADDRESS_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
-  USER_NAME_MAX_LENGTH,
-  USER_PASSWORD_MAX_LENGTH,
   USER_PHONE_MAX_LENGTH,
   WORKING_HOURS_MAX_LENGTH,
   type FormErrors,
@@ -43,17 +37,6 @@ import {
 export type PharmacyValidationMode = 'draft' | 'verification';
 
 //===================================================================
-
-export type DataProfileFormValues = {
-  name: string;
-  phone: string;
-  address: string;
-};
-
-export type ChangePasswordFormValues = {
-  currentPassword: string;
-  newPassword: string;
-};
 
 export type PharmacyContactFormValues = {
   name: string;
@@ -78,15 +61,9 @@ export type PharmacyPaymentFormValues = {
 
 //===================================================================
 
-export type DataProfileFormErrors = FormErrors<DataProfileFormValues>;
-export type ChangePasswordFormErrors = FormErrors<ChangePasswordFormValues>;
 export type PharmacyContactFormErrors = FormErrors<PharmacyContactFormValues>;
 export type PharmacyAboutFormErrors = FormErrors<PharmacyAboutFormValues>;
 export type PharmacyPaymentFormErrors = FormErrors<PharmacyPaymentFormValues>;
-export type DataProfileTouchedFields = FormTouchedFields<DataProfileFormValues>;
-
-export type ChangePasswordTouchedFields =
-  FormTouchedFields<ChangePasswordFormValues>;
 
 export type PharmacyContactTouchedFields =
   FormTouchedFields<PharmacyContactFormValues>;
@@ -98,17 +75,6 @@ export type PharmacyPaymentTouchedFields =
   FormTouchedFields<PharmacyPaymentFormValues>;
 
 //===================================================================
-
-export const DATA_PROFILE_INITIAL_VALUES: DataProfileFormValues = {
-  name: '',
-  phone: '',
-  address: '',
-};
-
-export const CHANGE_PASSWORD_INITIAL_VALUES: ChangePasswordFormValues = {
-  currentPassword: '',
-  newPassword: '',
-};
 
 export const PHARMACY_CONTACT_INITIAL_VALUES: PharmacyContactFormValues = {
   name: '',
@@ -133,16 +99,6 @@ export const PHARMACY_PAYMENT_INITIAL_VALUES: PharmacyPaymentFormValues = {
 
 //===================================================================
 
-export const DATA_PROFILE_FORM_FIELDS: Array<keyof DataProfileFormValues> = [
-  'name',
-  'phone',
-  'address',
-];
-
-export const CHANGE_PASSWORD_FORM_FIELDS: Array<
-  keyof ChangePasswordFormValues
-> = ['currentPassword', 'newPassword'];
-
 export const PHARMACY_CONTACT_FORM_FIELDS: Array<
   keyof PharmacyContactFormValues
 > = ['name', 'address', 'phone', 'email', 'workingHours'];
@@ -160,110 +116,6 @@ export const PHARMACY_PAYMENT_FORM_FIELDS: Array<
   'receiptEmail',
   'paymentPurpose',
 ];
-
-//===================================================================
-
-export function normalizeDataProfileValue(value: string): string {
-  return value.trim();
-}
-
-//===================================================================
-
-export function normalizeDataProfileValues(
-  values: DataProfileFormValues
-): DataProfileFormValues {
-  return {
-    name: normalizeDataProfileValue(values.name),
-    phone: normalizeDataProfileValue(values.phone),
-    address: normalizeDataProfileValue(values.address),
-  };
-}
-
-//===================================================================
-
-export function isDataProfileFormDirty(
-  values: DataProfileFormValues,
-  initialValues: DataProfileFormValues
-): boolean {
-  return DATA_PROFILE_FORM_FIELDS.some(
-    (field) =>
-      normalizeDataProfileValue(values[field]) !==
-      normalizeDataProfileValue(initialValues[field])
-  );
-}
-
-//===================================================================
-
-export function isChangePasswordFormDirty(
-  values: ChangePasswordFormValues
-): boolean {
-  return CHANGE_PASSWORD_FORM_FIELDS.some((field) => values[field].length > 0);
-}
-
-//===================================================================
-
-export function isDataProfileFormValid(values: DataProfileFormValues): boolean {
-  return isValidationResultValid(validateDataProfileForm(values));
-}
-
-//===================================================================
-
-export function isChangePasswordFormValid(
-  values: ChangePasswordFormValues
-): boolean {
-  return (
-    isChangePasswordFormDirty(values) &&
-    isValidationResultValid(validateChangePasswordForm(values))
-  );
-}
-
-//===================================================================
-
-export function validateDataProfileForm(
-  values: DataProfileFormValues
-): DataProfileFormErrors {
-  const errors: DataProfileFormErrors = {};
-
-  const nameError = buildUserNameError(values.name, {
-    required: true,
-  });
-
-  const phoneError = buildPhoneError(values.phone, {
-    required: true,
-  });
-
-  const addressError = buildAddressError(values.address);
-
-  if (nameError) errors.name = nameError;
-  if (phoneError) errors.phone = phoneError;
-  if (addressError) errors.address = addressError;
-
-  return errors;
-}
-
-//===================================================================
-
-export function validateChangePasswordForm(
-  values: ChangePasswordFormValues
-): ChangePasswordFormErrors {
-  const errors: ChangePasswordFormErrors = {};
-  const currentPassword = values.currentPassword;
-  const newPassword = values.newPassword;
-
-  if (!currentPassword && !newPassword) return errors;
-
-  const currentPasswordError = buildRequiredPasswordError(
-    currentPassword,
-    VALIDATION_MESSAGES.required.currentPassword
-  );
-
-  if (currentPasswordError) errors.currentPassword = currentPasswordError;
-
-  const newPasswordError = buildPasswordError(newPassword);
-  if (newPasswordError) errors.newPassword = newPasswordError;
-
-  return errors;
-}
 
 //===================================================================
 
@@ -307,17 +159,10 @@ export function validatePharmacyContactForm(
   const errors: PharmacyContactFormErrors = {};
   const required = mode === 'verification';
 
-  const nameError = buildPharmacyNameError(values.name, {
-    required,
-  });
+  const nameError = buildPharmacyNameError(values.name, { required });
+  const addressError = buildAddressError(values.address, { required });
 
-  const addressError = buildAddressError(values.address, {
-    required,
-  });
-
-  const phoneError = buildPhoneError(values.phone, {
-    required,
-  });
+  const phoneError = buildPhoneError(values.phone, { required });
 
   const emailError =
     values.email.trim() || required ? buildEmailError(values.email) : '';
@@ -344,7 +189,9 @@ export function normalizePharmacyContactForm(
   const normalized = {
     name: normalizeOptionalText(values.name),
     address: normalizeOptionalText(values.address),
-    phone: normalizeOptionalText(values.phone),
+    phone: normalizeOptionalText(values.phone)
+      ? normalizePhoneInput(values.phone)
+      : undefined,
     email: normalizeOptionalText(values.email)
       ? normalizeEmail(values.email)
       : undefined,
@@ -379,13 +226,11 @@ export function validatePharmacyAboutForm(
   mode: PharmacyValidationMode = 'verification'
 ): PharmacyAboutFormErrors {
   const errors: PharmacyAboutFormErrors = {};
-
   const descriptionError = buildTextEditorError(values.description, {
     required: mode === 'verification',
   });
 
   if (descriptionError) errors.description = descriptionError;
-
   return errors;
 }
 
@@ -413,18 +258,9 @@ export function validatePharmacyPaymentForm(
   const recipientNameError = buildBankRecipientNameError(values.recipientName, {
     required,
   });
-
-  const taxIdError = buildTaxIdError(values.taxId, {
-    required,
-  });
-
-  const ibanError = buildIbanError(values.iban, {
-    required,
-  });
-
-  const bankNameError = buildBankNameError(values.bankName, {
-    required,
-  });
+  const taxIdError = buildTaxIdError(values.taxId, { required });
+  const ibanError = buildIbanError(values.iban, { required });
+  const bankNameError = buildBankNameError(values.bankName, { required });
 
   const receiptEmailError =
     values.receiptEmail.trim() || required
@@ -494,13 +330,11 @@ export function normalizePharmacyPaymentForm(
 //===================================================================
 
 export {
-  USER_NAME_MAX_LENGTH,
   PHARMACY_NAME_MAX_LENGTH,
   BANK_RECIPIENT_NAME_MAX_LENGTH,
   BANK_NAME_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
   USER_PHONE_MAX_LENGTH,
-  USER_PASSWORD_MAX_LENGTH,
   USER_ADDRESS_MAX_LENGTH,
   WORKING_HOURS_MAX_LENGTH,
   TEXT_EDITOR_MAX_LENGTH,

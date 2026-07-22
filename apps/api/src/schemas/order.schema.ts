@@ -194,6 +194,24 @@ export const updateOrderDetailsSchema = z
         path: ['deliveryDetails'],
         message: 'Delivery details are required for postal delivery',
       });
+      return;
+    }
+
+    if (value.deliveryMethod === 'pickup' && value.deliveryDetails) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['deliveryDetails'],
+        message: 'Delivery details are not allowed for pickup',
+      });
+      return;
+    }
+
+    if (!value.deliveryMethod && value.deliveryDetails) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['deliveryMethod'],
+        message: 'Delivery method is required when delivery details are sent',
+      });
     }
   });
 
@@ -202,6 +220,7 @@ export const updateOrderDetailsSchema = z
 export const updateOrderStatusSchema = z
   .object({
     status: z.enum(['in_progress', 'successful', 'rejected']),
+
     rejectionReason: z
       .string()
       .trim()
@@ -214,6 +233,7 @@ export const updateOrderStatusSchema = z
         ORDER_STATUS_VALIDATION_MESSAGES.rejectionReasonMax
       )
       .optional(),
+
     comment: z
       .string()
       .trim()

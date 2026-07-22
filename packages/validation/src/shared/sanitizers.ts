@@ -1,8 +1,4 @@
-import {
-  USER_SEARCH_MAX_LENGTH,
-  TAX_ID_MAX_LENGTH,
-  IBAN_MAX_LENGTH,
-} from './limits';
+import { USER_SEARCH_MAX_LENGTH, TAX_ID_MAX_LENGTH } from './limits';
 
 import { PHONE_PATTERN } from './patterns';
 
@@ -49,5 +45,5 @@ export function sanitizeTaxId(value: string): string {
 //=============================================================================
 
 export function normalizeIban(value: string): string {
-  return value.replace(/\s/g, '').toUpperCase().slice(0, IBAN_MAX_LENGTH);
+  return value.replace(/\s/g, '').toUpperCase();
 }

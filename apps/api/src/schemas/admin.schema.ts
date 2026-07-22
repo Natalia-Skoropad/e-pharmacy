@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { mongoIdSchema } from './shared';
-import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
+import { PHARMACY_STATUSES } from '../constants/auth';
 
 //===============================================================
 
@@ -20,11 +20,6 @@ export const updateAdminPharmacyStatusSchema = z.object({
   ]),
   reason: z.string().trim().max(1000).optional(),
 });
-
-//===============================================================
-
-export const adminOnlyPharmacyRole = USER_ROLES.PHARMACY;
-export const activePharmacyStatus = PHARMACY_STATUSES.ACTIVE;
 
 //===============================================================
 

@@ -26,7 +26,7 @@ import {
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 
 import type {
-  Pharmacy,
+  PublicPharmacy,
   PharmacyBankDetails,
   PharmacyReview,
 } from '@e-pharmacy/types';
@@ -64,7 +64,7 @@ type PharmacyTab = 'details' | 'payment' | 'about' | 'reviews';
 //===================================================================
 
 type PharmacyDetailsPageContentProps = {
-  pharmacy: Pharmacy;
+  pharmacy: PublicPharmacy;
   reviews: PharmacyReview[];
   reviewsTotal: number;
   areReviewsUnavailable?: boolean;

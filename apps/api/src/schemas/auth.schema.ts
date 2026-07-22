@@ -15,6 +15,7 @@ import {
 
 import { AUTH_APPLICATIONS, USER_ROLES } from '../constants/auth';
 import { pharmacyDocumentsSchema } from './shared/pharmacy-document.schema';
+import { hasMeaningfulValue } from './shared/meaningful-value';
 
 //===============================================================
 
@@ -44,6 +45,7 @@ export const registerSchema = z
     address: sharedOptionalAddressSchema,
     pharmacyDocuments: pharmacyDocumentsSchema.optional(),
   })
+
   .superRefine((data, ctx) => {
     if (data.role !== USER_ROLES.PHARMACY) return;
 
@@ -84,6 +86,7 @@ export const createPharmacyUserSchema = z
 export const loginSchema = z.object({
   email: sharedEmailSchema,
   password: sharedRequiredPasswordSchema,
+
   application: z
     .enum([AUTH_APPLICATIONS.CLIENT, AUTH_APPLICATIONS.PHARMACY])
     .optional(),
@@ -116,7 +119,8 @@ export const updateProfileSchema = z
     address: sharedOptionalAddressSchema,
     pictureUrl: sharedPictureUrlSchema,
   })
-  .refine((data) => Object.keys(data).length > 0, {
+
+  .refine((data) => Object.values(data).some(hasMeaningfulValue), {
     message: VALIDATION_MESSAGES.object.atLeastOneField,
   });
 

@@ -1,12 +1,12 @@
 export const USER_NAME_PATTERN = /^[A-Za-z]+(?:[ '’\-][A-Za-z]+)*$/;
 
 export const PHARMACY_NAME_PATTERN =
-  /^[A-Za-z0-9][A-Za-z0-9 '’&().,\-]*$/;
+  /^[A-Za-z0-9][A-Za-z0-9 '’&().,/\-]*$/;
 
 export const BANK_RECIPIENT_NAME_PATTERN =
-  /^[A-Za-z0-9][A-Za-z0-9 '’&().,\-]*$/;
+  /^[A-Za-z0-9][A-Za-z0-9 '’&().,/\-]*$/;
 
-export const BANK_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 '’&().,\-]*$/;
+export const BANK_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 '’&().,/\-]*$/;
 
 export const EMAIL_PATTERN =
   /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;
