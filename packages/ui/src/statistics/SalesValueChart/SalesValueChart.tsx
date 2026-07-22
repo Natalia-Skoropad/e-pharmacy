@@ -3,10 +3,8 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 
-import {
-  formatProductCategoryLabel,
-  type ProductCategory,
-} from '@e-pharmacy/types/products';
+import { formatProductCategoryLabel } from '@e-pharmacy/config/products';
+import { type ProductCategory } from '@e-pharmacy/types/products';
 
 import type {
   OrderSalesStatistics,

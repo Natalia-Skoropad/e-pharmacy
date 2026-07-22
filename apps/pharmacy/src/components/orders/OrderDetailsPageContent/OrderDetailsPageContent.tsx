@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect, useId, useMemo, useState } from 'react';
 
 import {
   CircleMinus,
@@ -25,7 +26,7 @@ import {
   Wallet,
 } from 'lucide-react';
 
-import { useEffect, useId, useMemo, useState } from 'react';
+import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
 
 import {
   Button,
@@ -73,11 +74,10 @@ import type {
   ProductCategory,
 } from '@e-pharmacy/types';
 
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
-
 import {
   getProductCategoryOptions,
   type ProductCategoryOption,
+  PRODUCT_CATEGORY_LABELS,
 } from '@e-pharmacy/config/products';
 
 import { formatMoney } from '@e-pharmacy/utils/money';
@@ -117,13 +117,17 @@ import {
 import type { PharmacyClientRow } from '@/lib/clients/clients';
 
 import {
-  ORDER_STATUS_LABELS,
   type PharmacyOrderActivityHistoryItem,
   type PharmacyOrderDetails,
   type PharmacyOrderItem,
 } from '@/lib/orders/orders';
 
-import { getPharmacyClientPath, getPharmacyOrderPath, getPharmacyOrdersPath, getPharmacyProductPath } from '@e-pharmacy/config/pharmacy';
+import {
+  getPharmacyClientPath,
+  getPharmacyOrderPath,
+  getPharmacyOrdersPath,
+  getPharmacyProductPath,
+} from '@e-pharmacy/config/pharmacy';
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getProductImageSrc } from '@/lib/products/product-images';
@@ -152,7 +156,6 @@ type PendingPriceQuantityChange = Readonly<{
 type OrderTab = 'products' | 'delivery' | 'payment' | 'comment' | 'history';
 
 //===================================================================
-
 
 //===================================================================
 
@@ -191,7 +194,6 @@ function getOrderTabs(
     { value: 'history', label: `Order history (${historyCount})` },
   ];
 }
-
 
 //===================================================================
 
@@ -233,7 +235,6 @@ function getStatusModalText(status: PendingStatusChange['status']) {
 function getProductOffer(product: Product, pharmacyId: string) {
   return product.offers.find((offer) => offer.pharmacyId === pharmacyId);
 }
-
 
 //===================================================================
 
@@ -426,7 +427,9 @@ function ProductPickerModal({
   const [selectedCategory, setSelectedCategory] = useState<
     ProductCategory | 'all'
   >('all');
-  const [categoryOptions, setCategoryOptions] = useState<ProductCategoryOption[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<
+    ProductCategoryOption[]
+  >([]);
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);

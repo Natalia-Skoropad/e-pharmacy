@@ -9,9 +9,9 @@ import {
   SvgIcon,
 } from '@e-pharmacy/ui/common';
 
+import { formatProductCategoryLabel } from '@e-pharmacy/config/products';
 import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
 import { formatMoneyRange, getNumericRange } from '@e-pharmacy/utils/money';
-
 import { useToast } from '@e-pharmacy/ui/feedback';
 import type { Product } from '@e-pharmacy/types';
 
@@ -23,7 +23,6 @@ import {
 } from '@/hooks';
 
 import { addFavoriteProduct, removeFavoriteProduct } from '@/lib/api/browser';
-import { formatProductCategoryLabel } from '@e-pharmacy/types/products';
 import { buildProductPath } from '@/lib/routes';
 
 import { FavoriteToggleButton } from '@/components/common';
@@ -49,26 +48,22 @@ function ProductCard({
     useClientAuthCapabilities();
   const toast = useToast();
 
-  const {
-    isFavorite,
-    isFavoriteLoading,
-    handleFavoriteClick,
-    setIsFavorite,
-  } = useFavoriteActions({
-    id: product.id,
-    initialIsFavorite: Boolean(product.isFavorite),
-    notifier: toast,
-    loginMessage: 'Please log in to add products to favorites.',
-    addedMessage: 'Product was added to favorites.',
-    removedMessage: 'Product was removed from favorites.',
-    errorMessage: 'Could not update favorites.',
-    addFavorite: addFavoriteProduct,
-    removeFavorite: removeFavoriteProduct,
-    onFavoriteChange: (productId, nextIsFavorite) => {
-      invalidateFavoriteProductIdsCache();
-      onFavoriteChange?.(productId, nextIsFavorite);
-    },
-  });
+  const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
+    useFavoriteActions({
+      id: product.id,
+      initialIsFavorite: Boolean(product.isFavorite),
+      notifier: toast,
+      loginMessage: 'Please log in to add products to favorites.',
+      addedMessage: 'Product was added to favorites.',
+      removedMessage: 'Product was removed from favorites.',
+      errorMessage: 'Could not update favorites.',
+      addFavorite: addFavoriteProduct,
+      removeFavorite: removeFavoriteProduct,
+      onFavoriteChange: (productId, nextIsFavorite) => {
+        invalidateFavoriteProductIdsCache();
+        onFavoriteChange?.(productId, nextIsFavorite);
+      },
+    });
 
   const productHref = buildProductPath(product.name, product.id);
 
@@ -151,7 +146,9 @@ function ProductCard({
           {isAvailable ? (
             <div className={css.summaryItem}>
               <dt>Found in pharmacies</dt>
-              <dd>{formatPharmaciesCount(product.foundInPharmaciesCount) ?? '—'}</dd>
+              <dd>
+                {formatPharmaciesCount(product.foundInPharmaciesCount) ?? '—'}
+              </dd>
             </div>
           ) : null}
         </dl>

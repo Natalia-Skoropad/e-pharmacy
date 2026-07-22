@@ -8,11 +8,8 @@ import {
   type SelectOption,
 } from '@e-pharmacy/ui/common';
 
-import {
-  PRODUCT_CATEGORIES,
-  PRODUCT_CATEGORY_LABELS,
-} from '@e-pharmacy/types/products';
-
+import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
 
 import {

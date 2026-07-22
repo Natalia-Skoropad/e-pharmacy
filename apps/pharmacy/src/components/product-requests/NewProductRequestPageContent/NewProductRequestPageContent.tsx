@@ -29,19 +29,16 @@ import {
   type TabItem,
 } from '@e-pharmacy/ui/common';
 
+import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { EntityComments, useToast } from '@e-pharmacy/ui/feedback';
 import { CommentInput, NameInput } from '@e-pharmacy/ui/form-fields';
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
 
 import {
-  PRODUCT_CATEGORIES,
-  PRODUCT_CATEGORY_LABELS,
-} from '@e-pharmacy/types/products';
-
-import {
-  PRODUCT_REQUEST_STATUS_LABELS,
   type ProductRequestFormPayload,
   type ProductRequestDetails,
   type ProductRequestFile,
@@ -84,7 +81,12 @@ import {
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
-import { getPharmacyAllProductsPath, getPharmacyNewRequestPath, getPharmacyRequestPath, getPharmacyProductRequestsPath } from '@e-pharmacy/config/pharmacy';
+import {
+  getPharmacyAllProductsPath,
+  getPharmacyNewRequestPath,
+  getPharmacyRequestPath,
+  getPharmacyProductRequestsPath,
+} from '@e-pharmacy/config/pharmacy';
 
 import {
   getLockedFeatureBannerLabel,

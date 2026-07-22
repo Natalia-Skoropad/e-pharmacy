@@ -29,12 +29,11 @@ test('rejects non-finite money values', () => {
 //===================================================================
 
 test('calculates and formats numeric ranges without UI fallback text', () => {
-  assert.deepEqual(getNumericRange([10, 4, Number.NaN, 7]), {
-    min: 4,
-    max: 10,
-  });
+  assert.deepEqual(getNumericRange([10, 4, 7]), { min: 4, max: 10 });
   assert.equal(formatMoneyRange({ min: 4, max: 10 }), '4.00 UAH – 10.00 UAH');
   assert.equal(formatMoneyRange({ min: 4, max: 4 }), '4.00 UAH');
-  assert.equal(getNumericRange([Number.NaN, Number.POSITIVE_INFINITY]), null);
+  assert.equal(getNumericRange([]), null);
+  assert.equal(getNumericRange([10, Number.NaN]), null);
+  assert.equal(getNumericRange([Number.POSITIVE_INFINITY]), null);
   assert.equal(formatMoneyRange({ min: 10, max: 4 }), null);
 });

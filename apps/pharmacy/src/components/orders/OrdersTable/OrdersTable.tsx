@@ -1,6 +1,12 @@
 import { useMemo } from 'react';
 
 import {
+  ORDER_CREATED_BY_LABELS,
+  PAYMENT_METHOD_LABELS,
+  DELIVERY_METHOD_LABELS,
+} from '@e-pharmacy/config/orders';
+
+import {
   DataTable,
   formatInitials,
   TableDateTime,
@@ -13,16 +19,13 @@ import {
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { formatAmount } from '@e-pharmacy/utils/money';
 
-import {
-  DELIVERY_METHOD_LABELS,
-  ORDER_CREATED_BY_LABELS,
-  PAYMENT_METHOD_LABELS,
-  type PharmacyOrderRow,
-} from '@/lib/orders/orders';
-
+import { type PharmacyOrderRow } from '@/lib/orders/orders';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import { getPharmacyClientPath, getPharmacyOrderPath } from '@e-pharmacy/config/pharmacy';
+import {
+  getPharmacyClientPath,
+  getPharmacyOrderPath,
+} from '@e-pharmacy/config/pharmacy';
 
 //===================================================================
 

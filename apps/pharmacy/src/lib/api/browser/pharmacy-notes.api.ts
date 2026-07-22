@@ -1,7 +1,15 @@
 import 'client-only';
 
 import { buildQueryString, getResponseData } from '@e-pharmacy/api-client/core';
+
+import {
+  normalizePaginatedResponse,
+  requirePaginatedResponse,
+} from '@e-pharmacy/api-client/response';
+
 import type { ApiSuccessResponse } from '@e-pharmacy/types';
+import { isRecord } from '@e-pharmacy/utils/guards';
+import { getTrimmedString } from '@e-pharmacy/utils/strings';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
@@ -20,13 +28,13 @@ export type PharmacyNoteEntityType =
 //===================================================================
 
 function normalizeComment(value: unknown): EntityComment | null {
-  if (!value || typeof value !== 'object') return null;
-  const record = value as Record<string, unknown>;
-  return typeof record.id === 'string' &&
-    typeof record.text === 'string' &&
-    typeof record.createdAt === 'string'
-    ? { id: record.id, text: record.text, createdAt: record.createdAt }
-    : null;
+  if (!isRecord(value)) return null;
+
+  const id = getTrimmedString(value.id);
+  const text = getTrimmedString(value.text);
+  const createdAt = getTrimmedString(value.createdAt);
+
+  return id && text && createdAt ? { id, text, createdAt } : null;
 }
 
 //===================================================================
@@ -40,18 +48,18 @@ export async function getPharmacyNotes(
     `/api/pharmacy-notes/${type}/${entityId}${buildQueryString({ page, perPage: 10 })}`
   );
 
-  const data = getResponseData(response) as Record<string, unknown>;
+  const pagination = requirePaginatedResponse(
+    normalizePaginatedResponse(getResponseData(response), {
+      normalizeItem: normalizeComment,
+    }),
+    'pharmacy notes response'
+  );
 
   return {
-    items: Array.isArray(data.items)
-      ? data.items
-          .map(normalizeComment)
-          .filter((item): item is EntityComment => Boolean(item))
-      : [],
-
-    page: typeof data.page === 'number' ? data.page : page,
-    total: typeof data.total === 'number' ? data.total : 0,
-    totalPages: typeof data.totalPages === 'number' ? data.totalPages : 1,
+    items: pagination.items,
+    page: pagination.page,
+    total: pagination.total,
+    totalPages: pagination.totalPages,
   };
 }
 

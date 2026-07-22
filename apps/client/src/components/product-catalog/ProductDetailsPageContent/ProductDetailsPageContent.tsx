@@ -19,6 +19,7 @@ import {
   Tabs,
 } from '@e-pharmacy/ui/common';
 
+import { formatProductCategoryLabel } from '@e-pharmacy/config/products';
 import { type TabItem } from '@e-pharmacy/ui/common';
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
@@ -49,7 +50,7 @@ import {
 
 import { ROUTES, buildPharmacyPath } from '@/lib/routes';
 import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
-import { formatProductCategoryLabel } from '@e-pharmacy/types/products';
+
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 

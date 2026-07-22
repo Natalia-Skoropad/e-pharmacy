@@ -312,6 +312,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@e-pharmacy/config':
+        specifier: workspace:*
+        version: link:../config
       '@e-pharmacy/hooks':
         specifier: workspace:*
         version: link:../hooks

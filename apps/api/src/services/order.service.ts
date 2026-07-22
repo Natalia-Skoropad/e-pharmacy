@@ -1,6 +1,7 @@
 import mongoose, { Types } from 'mongoose';
 
 import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
+
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
@@ -12,7 +13,9 @@ import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
 
 import { httpError } from '../utils/httpError';
+
 import { getEndOfDay, getStartOfDay } from '../utils/date-range';
+
 import { createSafeRegExp } from '../utils/regexp';
 
 import {
@@ -46,7 +49,9 @@ import type {
 } from '../types/order';
 
 import { PRODUCT_CATEGORIES, type ProductCategory } from '../types/categories';
+
 import type { ProductEntity, ProductOfferEntity } from '../types/product';
+
 import type { PharmacyEntity } from '../types/pharmacy';
 import type { UserRole } from '../types/user';
 
@@ -1835,6 +1840,20 @@ function createSalesPeriodKey(
 
 //===============================================================
 
+const SALES_DAY_LABEL_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: 'short',
+  timeZone: 'UTC',
+});
+
+const SALES_MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+//===============================================================
+
 function formatSalesPeriodLabel(
   key: string,
   groupBy: OrderSalesStatisticsGroupBy
@@ -1843,11 +1862,9 @@ function formatSalesPeriodLabel(
     `${key}${groupBy === 'month' ? '-01' : ''}T00:00:00.000Z`
   );
 
-  return new Intl.DateTimeFormat('en-GB', {
-    ...(groupBy === 'day' ? { day: '2-digit' } : {}),
-    month: 'short',
-    ...(groupBy === 'month' ? { year: 'numeric' } : {}),
-  }).format(date);
+  return groupBy === 'day'
+    ? SALES_DAY_LABEL_FORMATTER.format(date)
+    : SALES_MONTH_LABEL_FORMATTER.format(date);
 }
 
 //===============================================================

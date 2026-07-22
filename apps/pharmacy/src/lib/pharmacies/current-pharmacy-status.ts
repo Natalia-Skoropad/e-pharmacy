@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 
+import { PHARMACY_STATUS_LABELS } from '@e-pharmacy/config/pharmacy';
 import type { PharmacyStatus } from '@e-pharmacy/types';
+
 import { getMyPharmacyProfile } from '@/lib/api/browser';
-import { PHARMACY_STATUS_LABELS } from '@/lib/pharmacies/status';
 
 //===================================================================
 

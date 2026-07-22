@@ -10,10 +10,9 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
-
 import type { EntityId } from '@e-pharmacy/types';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import { formatAmount } from '@e-pharmacy/utils/money';
 
 import {
@@ -114,8 +113,7 @@ function OwnProductsTable({
         key: 'currentPrice',
         width: '50px',
         title: <TableHeaderTitle parts={['Current', ' price, ', 'UAH']} />,
-        render: (product) =>
-          formatAmount(product.currentPrice) ?? '—',
+        render: (product) => formatAmount(product.currentPrice) ?? '—',
       },
       {
         key: 'status',

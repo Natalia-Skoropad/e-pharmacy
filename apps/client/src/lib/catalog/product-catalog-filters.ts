@@ -1,7 +1,6 @@
-import {
-  PRODUCT_CATEGORIES,
-  PRODUCT_CATEGORY_LABELS,
-} from '@e-pharmacy/types/products';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
+import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
 
 import type {
   ProductCategory,
@@ -39,7 +38,7 @@ export const FALLBACK_PRODUCT_FILTER_OPTIONS: ProductFilterOptionsResponse = {
     { value: 'in-stock', label: 'Available in pharmacies' },
     { value: 'out-of-stock', label: 'Not available in pharmacies' },
   ],
-  
+
   sort: [
     { value: 'newest', label: 'Newest first' },
     { value: 'rating-desc', label: 'Rating: highest first' },
@@ -239,13 +238,13 @@ export function buildProductCatalogApiParams(
 export function getProductCatalogActiveFiltersCount(
   filters: ProductCatalogFilters
 ): number {
-  return [
-    filters.name,
-    filters.article,
+  return countTrueConditions(
+    Boolean(filters.name),
+    Boolean(filters.article),
     filters.category !== 'all',
     filters.availability !== 'all',
-    Boolean(filters.pharmacyId),
-  ].filter(Boolean).length;
+    Boolean(filters.pharmacyId)
+  );
 }
 
 //===================================================================

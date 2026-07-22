@@ -1,6 +1,13 @@
 import type { MouseEventHandler } from 'react';
 
 import {
+  ORDER_CREATED_BY_LABELS,
+  ORDER_STATUS_LABELS,
+  PAYMENT_METHOD_LABELS,
+  DELIVERY_METHOD_LABELS,
+} from '@e-pharmacy/config/orders';
+
+import {
   CloseIconButton,
   DateFilter,
   ResetFiltersButton,
@@ -11,13 +18,9 @@ import {
 import { getPharmacyOrdersPath } from '@e-pharmacy/config/pharmacy';
 
 import {
-  DELIVERY_METHOD_LABELS,
   DELIVERY_METHODS,
-  ORDER_CREATED_BY_LABELS,
   ORDER_CREATED_BY_TYPES,
-  ORDER_STATUS_LABELS,
   ORDER_STATUSES,
-  PAYMENT_METHOD_LABELS,
   PAYMENT_METHODS,
 } from '@/lib/orders/orders';
 

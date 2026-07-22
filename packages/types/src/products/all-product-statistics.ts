@@ -22,15 +22,3 @@ export const DEFAULT_ALL_PRODUCT_STATISTICS: AllProductStatisticsCounts = {
   addedToPharmacy: 0,
   notAddedToPharmacy: 0,
 };
-
-//===================================================================
-
-export const ALL_PRODUCT_STATISTICS_LABELS: Record<
-  AllProductStatisticsKey,
-  string
-> = {
-  active: 'Active products',
-  blocked: 'Blocked products',
-  addedToPharmacy: 'Added to pharmacy',
-  notAddedToPharmacy: 'Not added yet',
-};

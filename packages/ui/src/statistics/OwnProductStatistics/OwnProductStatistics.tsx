@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import clsx from 'clsx';
 import type { CSSProperties } from 'react';
 
 import {
@@ -9,10 +10,9 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import clsx from 'clsx';
+import { OWN_PRODUCT_STATISTICS_LABELS } from '@e-pharmacy/config/products';
 
 import {
-  OWN_PRODUCT_STATISTICS_LABELS,
   type OwnProductStatisticsCounts,
   type OwnProductStatisticsKey,
   type OwnProductStatisticsValue,
@@ -40,6 +40,8 @@ type OwnProductStatisticsProps = Readonly<{
   visibleKeys?: readonly OwnProductStatisticsKey[];
   getStatisticHref?: (key: OwnProductStatisticsKey) => string | undefined;
 }>;
+
+//===================================================================
 
 type OwnProductStatisticsStyle = CSSProperties & {
   '--own-product-stat-columns'?: string;

@@ -1,6 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import {
   CalendarDays,
@@ -14,6 +19,9 @@ import {
   UserRound,
 } from 'lucide-react';
 
+import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+
 import {
   ButtonLink,
   Container,
@@ -26,9 +34,12 @@ import {
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { useAuth } from '@e-pharmacy/auth/core';
-import type { BreadcrumbItem, Order } from '@e-pharmacy/types';
 
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
+import type {
+  BreadcrumbItem,
+  Order,
+} from '@e-pharmacy/types';
+
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import { formatMoney } from '@e-pharmacy/utils/money';
 
@@ -40,7 +51,6 @@ import {
 } from '@/lib/routes';
 
 import { getOrderDetails } from '@/lib/api/browser';
-import { ORDER_STATUS_LABELS } from '@/lib/orders/order-status';
 
 import css from './OrderDetailsPageContent.module.css';
 

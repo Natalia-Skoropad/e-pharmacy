@@ -2,3 +2,7 @@ export * from './admin';
 export * from './auth';
 export * from './pharmacy';
 export * from './products';
+export * from './orders';
+export * from './product-requests';
+export * from './users';
+export * from './clients';

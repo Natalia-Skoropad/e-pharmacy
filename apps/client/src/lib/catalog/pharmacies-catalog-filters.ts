@@ -1,4 +1,5 @@
 import { sanitizeTextParam } from '@e-pharmacy/validation/url';
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import type { PublicPharmacy, PharmaciesSortFilter } from '@e-pharmacy/types';
 
 import { parsePositivePageParam } from './catalog-param-utils';
@@ -92,7 +93,9 @@ export function sortCities(cities: string[]): string[] {
 
 //===================================================================
 
-export function getUniquePharmacyCities(pharmacies: PublicPharmacy[]): string[] {
+export function getUniquePharmacyCities(
+  pharmacies: PublicPharmacy[]
+): string[] {
   const cities = pharmacies
     .map((pharmacy) => pharmacy.city?.trim())
     .filter((city): city is string => Boolean(city));
@@ -162,7 +165,11 @@ export function buildPharmacyApiParams(
 export function getPharmacyActiveFiltersCount(
   filters: PharmacyFilters
 ): number {
-  return [filters.name, filters.address, filters.city].filter(Boolean).length;
+  return countTrueConditions(
+    Boolean(filters.name),
+    Boolean(filters.address),
+    Boolean(filters.city)
+  );
 }
 
 //===================================================================

@@ -15,11 +15,27 @@ export type TableDateTimeParts = Readonly<{
 
 //===================================================================
 
+const CALENDAR_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+const ISO_DATE_TIME_WITH_ZONE_PATTERN =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})$/i;
+
+//===================================================================
+
 const SHORT_DATE_FORMATTER = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
   day: '2-digit',
   month: 'short',
   year: 'numeric',
   timeZone: BUSINESS_TIME_ZONE,
+});
+
+//===================================================================
+
+const CALENDAR_DATE_FORMATTER = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
 });
 
 //===================================================================
@@ -60,25 +76,70 @@ const TABLE_TIME_FORMATTER = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
 
 //===================================================================
 
-export function parseDateInput(value: DateInput): Date | null {
-  if (typeof value === 'string' && value.trim() === '') return null;
+export function parseCalendarDate(value: string): Date | null {
+  const match = value.trim().match(CALENDAR_DATE_PATTERN);
+  if (!match) return null;
 
-  const date =
-    value instanceof Date ? new Date(value.getTime()) : new Date(value);
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day, 12));
+
+  return date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+    ? date
+    : null;
+}
+
+//===================================================================
+
+export function parseInstantDate(value: DateInput): Date | null {
+  if (value instanceof Date) {
+    const date = new Date(value.getTime());
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (typeof value === 'number') {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  const normalizedValue = value.trim();
+  if (!normalizedValue) return null;
+
+  // Offset-less date-times are environment-dependent in JavaScript and can
+  // produce different SSR and browser output. API instants must include Z or
+  // an explicit numeric offset.
+  if (!ISO_DATE_TIME_WITH_ZONE_PATTERN.test(normalizedValue)) return null;
+
+  const date = new Date(normalizedValue);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
 //===================================================================
 
+export function formatCalendarDate(value: string): string | null {
+  const date = parseCalendarDate(value);
+  return date ? CALENDAR_DATE_FORMATTER.format(date) : null;
+}
+
+//===================================================================
+
 export function formatShortDate(value: DateInput): string | null {
-  const date = parseDateInput(value);
+  if (typeof value === 'string') {
+    const calendarDate = parseCalendarDate(value);
+    if (calendarDate) return CALENDAR_DATE_FORMATTER.format(calendarDate);
+  }
+
+  const date = parseInstantDate(value);
   return date ? SHORT_DATE_FORMATTER.format(date) : null;
 }
 
 //===================================================================
 
 export function formatDateTime(value: DateInput): string | null {
-  const date = parseDateInput(value);
+  const date = parseInstantDate(value);
   return date ? DATE_TIME_FORMATTER.format(date) : null;
 }
 
@@ -87,7 +148,7 @@ export function formatDateTime(value: DateInput): string | null {
 export function formatTableDateTimeParts(
   value: DateInput
 ): TableDateTimeParts | null {
-  const date = parseDateInput(value);
+  const date = parseInstantDate(value);
   if (!date) return null;
 
   return {

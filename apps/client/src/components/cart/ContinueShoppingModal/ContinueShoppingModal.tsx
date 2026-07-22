@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useMemo, useState } from 'react';
+
 import { ShoppingCart } from 'lucide-react';
 
 import {
@@ -17,9 +18,9 @@ import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
 import {
   getProductCategoryOptions,
   type ProductCategoryOption,
+  PRODUCT_CATEGORY_LABELS,
 } from '@e-pharmacy/config/products';
 
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatStockLabel } from '@e-pharmacy/utils/numbers';
 import type { Cart, Product, ProductCategory } from '@e-pharmacy/types';

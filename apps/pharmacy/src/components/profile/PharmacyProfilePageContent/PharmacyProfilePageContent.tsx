@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { KeyRound, MonitorSmartphone } from 'lucide-react';
 
+import { PHARMACY_STATUS_LABELS } from '@e-pharmacy/config/pharmacy';
+
 import {
   Button,
   Container,
@@ -122,8 +124,6 @@ import {
   updateCurrentUserPassword,
   updateMyPharmacyProfile,
 } from '@/lib/api/browser';
-
-import { PHARMACY_STATUS_LABELS } from '@/lib/pharmacies/status';
 
 import css from './PharmacyProfilePageContent.module.css';
 

@@ -4,7 +4,7 @@ import type {
   PaymentMethod,
 } from '@e-pharmacy/types';
 
-import type { OrderCreatedByType } from './orders';
+import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
 
 //===================================================================
 

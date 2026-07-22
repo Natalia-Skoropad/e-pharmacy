@@ -18,10 +18,7 @@ import {
   type ProductRequestsResponse,
 } from '@e-pharmacy/types/product-requests';
 
-export {
-  DEFAULT_PRODUCT_REQUESTS_FILTERS,
-  PRODUCT_REQUEST_STATUS_LABELS,
-} from '@e-pharmacy/types/product-requests';
+export { DEFAULT_PRODUCT_REQUESTS_FILTERS } from '@e-pharmacy/types/product-requests';
 
 export type {
   ProductRequestDetails,

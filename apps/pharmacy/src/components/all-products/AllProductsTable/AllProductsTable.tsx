@@ -10,9 +10,9 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import type { EntityId, Product } from '@e-pharmacy/types';
 
 import { PRODUCT_STATUS_LABELS } from '@/lib/products/products';
@@ -78,11 +78,7 @@ function AllProductsTable({
         key: 'createdAt',
         title: <TableHeaderTitle parts={['Created', 'date']} />,
         render: (product) =>
-          product.createdAt ? (
-            <TableDateTime value={product.createdAt} />
-          ) : (
-            '—'
-          ),
+          product.createdAt ? <TableDateTime value={product.createdAt} /> : '—',
       },
       {
         key: 'productPhoto',

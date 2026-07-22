@@ -19,6 +19,7 @@ import type {
   DeliveryMethod,
   EntityId,
   OrderActivityType,
+  OrderCreatedByType,
   OrderStatus,
   PharmacyBankDetails,
   ProductCategory,
@@ -39,9 +40,10 @@ export const PAYMENT_METHODS = [
 
 //===================================================================
 
-export const ORDER_CREATED_BY_TYPES = ['client', 'manager'] as const;
-
-export type OrderCreatedByType = (typeof ORDER_CREATED_BY_TYPES)[number];
+export const ORDER_CREATED_BY_TYPES = [
+  'client',
+  'manager',
+] as const satisfies readonly OrderCreatedByType[];
 
 //===================================================================
 
@@ -167,30 +169,6 @@ export type PharmacyOrdersResponse = Readonly<
     earliestCreatedAt: string | null;
   }
 >;
-
-//===================================================================
-
-export const DELIVERY_METHOD_LABELS: Record<DeliveryMethod, string> = {
-  pickup: 'Pickup from pharmacy',
-  postal_delivery: 'Post delivery',
-};
-
-export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
-  cash: 'Cash on pickup / delivery',
-  bank_transfer: 'Bank transfer',
-};
-
-export const ORDER_CREATED_BY_LABELS: Record<OrderCreatedByType, string> = {
-  client: 'Client',
-  manager: 'Manager',
-};
-
-export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  new: 'New',
-  in_progress: 'In progress',
-  successful: 'Successful',
-  rejected: 'Rejected',
-};
 
 //===================================================================
 

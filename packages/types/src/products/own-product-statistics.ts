@@ -32,15 +32,3 @@ export const DEFAULT_OWN_PRODUCT_STATISTICS: OwnProductStatisticsCounts = {
   available: { quantity: 0, amount: 0 },
   outOfStock: { quantity: 0 },
 };
-
-//===================================================================
-
-export const OWN_PRODUCT_STATISTICS_LABELS: Record<
-  OwnProductStatisticsKey,
-  string
-> = {
-  inStock: 'Products in stock',
-  reserved: 'Reserved products',
-  available: 'Available products',
-  outOfStock: 'Out of stock products',
-};

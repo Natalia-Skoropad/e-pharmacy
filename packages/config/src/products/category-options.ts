@@ -1,8 +1,9 @@
-import {
-  PRODUCT_CATEGORY_LABELS,
-  type Product,
-  type ProductCategory,
+import type {
+  Product,
+  ProductCategory,
 } from '@e-pharmacy/types/products';
+
+import { PRODUCT_CATEGORY_LABELS } from './category-labels';
 
 //===================================================================
 
@@ -23,5 +24,5 @@ export function getProductCategoryOptions(
       value: category,
       label: PRODUCT_CATEGORY_LABELS[category],
     }))
-    .sort((first, second) => first.label.localeCompare(second.label, 'en'));
+    .sort((first, second) => first.label.localeCompare(second.label, 'en-GB'));
 }

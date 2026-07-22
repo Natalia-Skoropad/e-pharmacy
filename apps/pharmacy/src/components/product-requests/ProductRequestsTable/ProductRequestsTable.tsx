@@ -10,14 +10,14 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
+import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+import { type ProductRequestRow } from '@e-pharmacy/types/product-requests';
 
 import {
-  PRODUCT_REQUEST_STATUS_LABELS,
-  type ProductRequestRow,
-} from '@e-pharmacy/types/product-requests';
-
-import { getPharmacyAllProductPath, getPharmacyRequestPath } from '@e-pharmacy/config/pharmacy';
+  getPharmacyAllProductPath,
+  getPharmacyRequestPath,
+} from '@e-pharmacy/config/pharmacy';
 
 import { getProductImageSrc } from '@/lib/products/product-images';
 

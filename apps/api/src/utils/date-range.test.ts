@@ -16,3 +16,11 @@ test('creates UTC day boundaries for validated calendar dates', () => {
     '2026-07-22T23:59:59.999Z'
   );
 });
+
+//===============================================================
+
+test('rejects malformed and non-existent calendar dates', () => {
+  assert.throws(() => getStartOfDay('not-a-date'), RangeError);
+  assert.throws(() => getEndOfDay('2026-02-29'), RangeError);
+  assert.throws(() => getEndOfDay('2026-99-45'), RangeError);
+});

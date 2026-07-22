@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import clsx from 'clsx';
 
 import {
   Ban,
@@ -7,10 +8,10 @@ import {
   PackageX,
   type LucideIcon,
 } from 'lucide-react';
-import clsx from 'clsx';
+
+import { ALL_PRODUCT_STATISTICS_LABELS } from '@e-pharmacy/config/products';
 
 import {
-  ALL_PRODUCT_STATISTICS_LABELS,
   type AllProductStatisticsCounts,
   type AllProductStatisticsKey,
 } from '@e-pharmacy/types/products';
@@ -20,6 +21,8 @@ import css from './AllProductStatistics.module.css';
 //===================================================================
 
 type AllProductStatisticTone = 'green' | 'red' | 'success' | 'yellow';
+
+//===================================================================
 
 type AllProductStatisticConfig = Readonly<{
   key: AllProductStatisticsKey;

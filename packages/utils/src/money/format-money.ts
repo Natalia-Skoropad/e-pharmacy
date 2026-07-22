@@ -43,15 +43,19 @@ export function formatMoney(value: number): string | null {
 export function getNumericRange(
   values: readonly number[]
 ): NumericRange | null {
-  const finiteValues = values
-    .map(normalizeFiniteNumber)
-    .filter((value): value is number => value !== null);
+  if (values.length === 0) return null;
 
-  if (finiteValues.length === 0) return null;
+  const numbers: number[] = [];
+
+  for (const value of values) {
+    const normalizedValue = normalizeFiniteNumber(value);
+    if (normalizedValue === null) return null;
+    numbers.push(normalizedValue);
+  }
 
   return {
-    min: Math.min(...finiteValues),
-    max: Math.max(...finiteValues),
+    min: Math.min(...numbers),
+    max: Math.max(...numbers),
   };
 }
 

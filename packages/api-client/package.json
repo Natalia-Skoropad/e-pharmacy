@@ -10,7 +10,8 @@
     "./response": "./src/response/index.ts"
   },
   "scripts": {
-    "lint": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
     "test": "node ../../scripts/run-tsx-tests.mjs src"
   },

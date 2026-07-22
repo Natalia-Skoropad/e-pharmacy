@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import clsx from 'clsx';
 
 import {
   Ban,
@@ -7,10 +8,10 @@ import {
   UsersRound,
   type LucideIcon,
 } from 'lucide-react';
-import clsx from 'clsx';
+
+import { CLIENT_STATISTICS_LABELS } from '@e-pharmacy/config/clients';
 
 import {
-  CLIENT_STATISTICS_LABELS,
   type ClientStatisticsCounts,
   type ClientStatisticsKey,
 } from '@e-pharmacy/types/clients';
@@ -20,6 +21,8 @@ import css from './ClientStatistics.module.css';
 //===================================================================
 
 type ClientStatisticTone = 'accent' | 'blue' | 'green' | 'red';
+
+//===================================================================
 
 type ClientStatisticConfig = Readonly<{
   key: ClientStatisticsKey;
@@ -75,7 +78,11 @@ function ClientStatisticCard({
 
   if (href) {
     return (
-      <Link className={className} href={href} aria-label={`${title} statistics`}>
+      <Link
+        className={className}
+        href={href}
+        aria-label={`${title} statistics`}
+      >
         {content}
       </Link>
     );

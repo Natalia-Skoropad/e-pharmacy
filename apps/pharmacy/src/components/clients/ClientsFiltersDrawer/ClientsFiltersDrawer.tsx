@@ -1,5 +1,7 @@
 import type { MouseEventHandler } from 'react';
 
+import { CLIENT_SUCCESSFUL_ORDERS_FILTER_LABELS } from '@e-pharmacy/config/clients';
+
 import {
   CloseIconButton,
   DateFilter,
@@ -8,11 +10,7 @@ import {
   type SelectOption,
 } from '@e-pharmacy/ui/common';
 
-import {
-  CLIENT_SUCCESSFUL_ORDERS_FILTER_LABELS,
-  CLIENT_SUCCESSFUL_ORDERS_FILTERS,
-} from '@e-pharmacy/types/clients';
-
+import { CLIENT_SUCCESSFUL_ORDERS_FILTERS } from '@e-pharmacy/types/clients';
 import { getPharmacyClientsPath } from '@e-pharmacy/config/pharmacy';
 import { CLIENT_STATUSES, CLIENT_STATUS_LABELS } from '@/lib/clients/clients';
 import type { ClientsFilterState } from '@/lib/clients/client-paths';

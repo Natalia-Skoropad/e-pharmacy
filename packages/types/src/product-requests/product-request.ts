@@ -25,19 +25,6 @@ export const DEFAULT_PRODUCT_REQUEST_STATISTICS: ProductRequestStatisticsCounts 
 
 //=============================================================================
 
-export const PRODUCT_REQUEST_STATUS_LABELS: Record<
-  ProductRequestStatus,
-  string
-> = {
-  draft: 'Draft',
-  new: 'New',
-  in_progress: 'In work',
-  approved: 'Approved',
-  rejected: 'Rejected',
-};
-
-//=============================================================================
-
 export const DEFAULT_PRODUCT_REQUESTS_FILTERS: ProductRequestsFilterState = {
   date: {
     from: '',

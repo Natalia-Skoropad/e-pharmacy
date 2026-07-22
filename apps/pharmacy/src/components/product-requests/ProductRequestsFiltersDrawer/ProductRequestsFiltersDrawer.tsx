@@ -10,16 +10,16 @@ import {
 
 import {
   PRODUCT_CATEGORIES,
-  PRODUCT_CATEGORY_LABELS,
   type ProductCategory,
 } from '@e-pharmacy/types/products';
 
 import {
   PRODUCT_REQUEST_STATUSES,
-  PRODUCT_REQUEST_STATUS_LABELS,
   type ProductRequestsFilterState,
 } from '@e-pharmacy/types/product-requests';
 
+import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { getPharmacyProductRequestsPath } from '@e-pharmacy/config/pharmacy';
 
 import css from './ProductRequestsFiltersDrawer.module.css';

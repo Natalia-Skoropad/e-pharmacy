@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import clsx from 'clsx';
 import type { CSSProperties } from 'react';
+
 import {
   CheckCircle2,
   Clock3,
@@ -8,10 +10,10 @@ import {
   XCircle,
   type LucideIcon,
 } from 'lucide-react';
-import clsx from 'clsx';
+
+import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
 
 import {
-  PRODUCT_REQUEST_STATUS_LABELS,
   type ProductRequestStatisticsCounts,
   type ProductRequestStatus,
 } from '@e-pharmacy/types/product-requests';
@@ -21,6 +23,8 @@ import css from './ProductRequestStatistics.module.css';
 //===================================================================
 
 type ProductRequestStatisticTone = 'blue' | 'yellow' | 'green' | 'red' | 'gray';
+
+//===================================================================
 
 type ProductRequestStatisticConfig = Readonly<{
   status: ProductRequestStatus;
@@ -34,6 +38,8 @@ type ProductRequestStatisticsProps = Readonly<{
   showDraft?: boolean;
   getStatusHref?: (status: ProductRequestStatus) => string | undefined;
 }>;
+
+//===================================================================
 
 type ProductRequestStatisticsStyle = CSSProperties & {
   '--product-request-stat-columns'?: string;

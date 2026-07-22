@@ -4,6 +4,14 @@ import Link from 'next/link';
 import { BarChart3, History, PackageSearch } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+
+import {
+  ORDER_STATUS_LABELS,
+  ORDER_CREATED_BY_LABELS,
+} from '@e-pharmacy/config/orders';
+
 import {
   Button,
   ButtonLink,
@@ -51,11 +59,7 @@ import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { EntityComments, useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/core';
-
-import {
-  PRODUCT_CATEGORY_LABELS,
-  type OwnProductStatisticsCounts,
-} from '@e-pharmacy/types/products';
+import { type OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
 
 import type {
   EntityId,
@@ -70,6 +74,7 @@ import type {
   StockMovementSource,
 } from '@e-pharmacy/types';
 
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { formatAmount, formatMoney } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
 
@@ -94,15 +99,16 @@ import {
   deletePharmacyNote,
 } from '@/lib/api/browser';
 
-import { getPharmacyAllProductsPath, getPharmacyClientPath, getPharmacyOrderPath } from '@e-pharmacy/config/pharmacy';
+import {
+  getPharmacyAllProductsPath,
+  getPharmacyClientPath,
+  getPharmacyOrderPath,
+} from '@e-pharmacy/config/pharmacy';
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
 import {
-  ORDER_CREATED_BY_LABELS,
   ORDER_CREATED_BY_TYPES,
-  ORDER_STATUS_LABELS,
-  type OrderCreatedByType,
   type PharmacyOrderRow,
 } from '@/lib/orders/orders';
 
@@ -259,9 +265,9 @@ const ORDER_CREATED_BY_OPTIONS: Array<
     value: createdByType,
     label: ORDER_CREATED_BY_LABELS[createdByType],
   })),
-  ];
+];
 
-  //===================================================================
+//===================================================================
 
 const STOCK_EVENT_TYPE_OPTIONS: Array<
   SelectOption<'all' | StockMovementEventType>
@@ -365,7 +371,7 @@ function getProductStatusLabel(product: Product): string {
 function getProductPriceLabel(product: Product, offer: ProductOffer | null) {
   if (offer) return formatMoney(offer.price) ?? '—';
 
-  return product.price > 0 ? formatMoney(product.price) ?? '—' : '—';
+  return product.price > 0 ? (formatMoney(product.price) ?? '—') : '—';
 }
 
 //===================================================================
@@ -1094,22 +1100,22 @@ function AllProductDetailsPageContent({
     relatedRowsPerPage
   );
 
-  const stockActiveFiltersCount = [
-    stockFilters.date.from || stockFilters.date.to,
+  const stockActiveFiltersCount = countTrueConditions(
+    Boolean(stockFilters.date.from || stockFilters.date.to),
     stockFilters.eventType !== 'all',
     stockFilters.source !== 'all',
     stockFilters.orderStatus !== 'all',
-    stockOrderNumberSearch.trim(),
-    stockCommentSearch.trim(),
-  ].filter(Boolean).length;
+    Boolean(stockOrderNumberSearch.trim()),
+    Boolean(stockCommentSearch.trim())
+  );
 
-  const relatedActiveFiltersCount = [
-    relatedFilters.date.from || relatedFilters.date.to,
+  const relatedActiveFiltersCount = countTrueConditions(
+    Boolean(relatedFilters.date.from || relatedFilters.date.to),
     relatedFilters.orderStatus !== 'all',
     relatedFilters.createdByType !== 'all',
-    relatedOrderNumberSearch.trim(),
-    relatedClientSearch.trim(),
-  ].filter(Boolean).length;
+    Boolean(relatedOrderNumberSearch.trim()),
+    Boolean(relatedClientSearch.trim())
+  );
 
   const reviewItems = mapReviewsToListItems(reviews);
 

@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useMemo, useState, type MouseEventHandler } from 'react';
+
 import {
   Mail,
   MapPin,
@@ -10,7 +12,16 @@ import {
   Users,
 } from 'lucide-react';
 
-import { useEffect, useMemo, useState, type MouseEventHandler } from 'react';
+import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
+
+import {
+  ORDER_CREATED_BY_LABELS,
+  ORDER_STATUS_LABELS,
+  PAYMENT_METHOD_LABELS,
+  DELIVERY_METHOD_LABELS,
+} from '@e-pharmacy/config/orders';
+
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 
 import {
   ButtonLink,
@@ -57,7 +68,6 @@ import type {
 
 import {
   PRODUCT_CATEGORIES,
-  PRODUCT_CATEGORY_LABELS,
   type ProductCategory,
   type ProductStatus,
 } from '@e-pharmacy/types/products';
@@ -68,6 +78,7 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { formatAmount } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
 
@@ -90,15 +101,15 @@ import type {
 
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import { getPharmacyClientPath, getPharmacyClientsPath, getPharmacyOrderPath, getPharmacyProductPath } from '@e-pharmacy/config/pharmacy';
+import {
+  getPharmacyClientPath,
+  getPharmacyClientsPath,
+  getPharmacyOrderPath,
+  getPharmacyProductPath,
+} from '@e-pharmacy/config/pharmacy';
 
 import {
-  DELIVERY_METHOD_LABELS,
-  ORDER_CREATED_BY_LABELS,
   ORDER_CREATED_BY_TYPES,
-  ORDER_STATUS_LABELS,
-  PAYMENT_METHOD_LABELS,
-  type OrderCreatedByType,
   type PharmacyOrderRow,
 } from '@/lib/orders/orders';
 
@@ -773,22 +784,22 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
     [commentsTotal, ordersOverallTotal, productsOverallTotal]
   );
 
-  const orderFiltersCount = [
-    orderFilters.date.from || orderFilters.date.to,
+  const orderFiltersCount = countTrueConditions(
+    Boolean(orderFilters.date.from || orderFilters.date.to),
     orderFilters.status !== 'all',
     orderFilters.deliveryMethod !== 'all',
     orderFilters.paymentMethod !== 'all',
     orderFilters.clientCommentPresence !== 'all',
-    orderFilters.createdByType !== 'all',
-  ].filter(Boolean).length;
+    orderFilters.createdByType !== 'all'
+  );
 
   const hasOrderFilters = orderFiltersCount > 0;
 
-  const productFiltersCount = [
-    productFilters.date.from || productFilters.date.to,
+  const productFiltersCount = countTrueConditions(
+    Boolean(productFilters.date.from || productFilters.date.to),
     productFilters.category !== 'all',
-    productFilters.status !== 'all',
-  ].filter(Boolean).length;
+    productFilters.status !== 'all'
+  );
 
   const hasProductFilters = productFiltersCount > 0;
 

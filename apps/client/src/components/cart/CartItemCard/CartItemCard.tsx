@@ -7,9 +7,9 @@ import {
   SvgIcon,
 } from '@e-pharmacy/ui/common';
 
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import type { CartItem } from '@e-pharmacy/types';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 
 import { StockAvailability } from '@/components/common';
 import { buildProductPath } from '@/lib/routes';

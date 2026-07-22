@@ -1,7 +1,13 @@
 'use client';
 
+import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
+
+import { USER_ROLE_LABELS, USER_STATUS_LABELS } from '@e-pharmacy/config/users';
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
+
 import type { ChangeEvent } from 'react';
+
 import { Building2, Heart, KeyRound, MonitorSmartphone } from 'lucide-react';
 
 import {
@@ -28,8 +34,6 @@ import { useAuth } from '@e-pharmacy/auth/core';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
-
-import { capitalizeFirst } from '@e-pharmacy/utils/strings';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
 
@@ -72,7 +76,6 @@ import type {
 } from '@e-pharmacy/types';
 
 import { PROFILE_TITLE } from '@/lib/seo';
-import { ORDER_STATUS_LABELS } from '@/lib/orders/order-status';
 
 import {
   ROUTES,
@@ -162,7 +165,9 @@ function ProfilePageContent() {
     useState(ORDERS_VISIBLE_STEP);
 
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
-  const [favoritePharmacies, setFavoritePharmacies] = useState<PublicPharmacy[]>([]);
+  const [favoritePharmacies, setFavoritePharmacies] = useState<
+    PublicPharmacy[]
+  >([]);
   const [favoriteProductsError, setFavoriteProductsError] = useState('');
   const [favoritePharmaciesError, setFavoritePharmaciesError] = useState('');
   const [favoriteProductsCount, setFavoriteProductsCount] = useState(0);
@@ -716,11 +721,11 @@ function ProfilePageContent() {
               <dl className={css.compactDetails}>
                 <div>
                   <dt>Role</dt>
-                  <dd>{capitalizeFirst(user.role)}</dd>
+                  <dd>{USER_ROLE_LABELS[user.role]}</dd>
                 </div>
                 <div>
                   <dt>Status</dt>
-                  <dd>{capitalizeFirst(user.status)}</dd>
+                  <dd>{USER_STATUS_LABELS[user.status]}</dd>
                 </div>
               </dl>
             </aside>

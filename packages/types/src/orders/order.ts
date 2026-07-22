@@ -1,4 +1,5 @@
 import type { EntityId, ISODateString } from '../shared';
+
 import type { PharmacyBankDetails } from '../pharmacies';
 import type { Cart } from '../cart';
 import type { ProductCategory } from '../products/categories';
@@ -9,6 +10,7 @@ export type OrderStatus = 'new' | 'in_progress' | 'successful' | 'rejected';
 export type PaymentMethod = 'cash' | 'bank_transfer';
 export type DeliveryMethod = 'pickup' | 'postal_delivery';
 export type Currency = 'UAH';
+export type OrderCreatedByType = 'client' | 'manager';
 
 export type OrderActivityType =
   | 'product_added'
@@ -162,6 +164,8 @@ export type UpdateOrderStatusPayload =
       comment?: string;
     };
 
+//=============================================================================
+
 export type OrderManagerCommentsResponse = {
   items: OrderManagerComment[];
   page: number;
@@ -169,6 +173,8 @@ export type OrderManagerCommentsResponse = {
   total: number;
   totalPages: number;
 };
+
+//=============================================================================
 
 export type CreateOrderManagerCommentPayload = { text: string };
 
