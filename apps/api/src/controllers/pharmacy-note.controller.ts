@@ -1,12 +1,12 @@
-import type { Request, Response } from 'express';
+import type { Request } from 'express';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 
-import {
-  createPharmacyNoteSchema,
-  pharmacyNoteDeleteParamsSchema,
-  pharmacyNoteParamsSchema,
-  pharmacyNotesQuerySchema,
+import type {
+  CreatePharmacyNoteInput,
+  PharmacyNoteDeleteParams,
+  PharmacyNoteParams,
+  PharmacyNotesQuery,
 } from '../schemas/pharmacy-note.schema';
 
 import {
@@ -15,13 +15,16 @@ import {
   getPharmacyNotesService,
 } from '../services/pharmacy-note.service';
 
+import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
 
-export async function getPharmacyNotes(req: Request, res: Response) {
-  const params = pharmacyNoteParamsSchema.parse(req.params);
-  const query = pharmacyNotesQuerySchema.parse(req.query);
+export async function getPharmacyNotes(
+  req: Request,
+  res: ValidatedResponse<unknown, PharmacyNoteParams, PharmacyNotesQuery>
+) {
+  const { params, query } = res.locals.validated;
   const data = await getPharmacyNotesService(
     req.user?.id ?? '',
     params.entityType,
@@ -29,32 +32,40 @@ export async function getPharmacyNotes(req: Request, res: Response) {
     query.page,
     query.perPage
   );
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
-export async function createPharmacyNote(req: Request, res: Response) {
-  const params = pharmacyNoteParamsSchema.parse(req.params);
-  const body = createPharmacyNoteSchema.parse(req.body);
+export async function createPharmacyNote(
+  req: Request,
+  res: ValidatedResponse<CreatePharmacyNoteInput, PharmacyNoteParams>
+) {
+  const { body, params } = res.locals.validated;
   const data = await createPharmacyNoteService(
     req.user?.id ?? '',
     params.entityType,
     params.entityId,
     body.text
   );
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
 }
 
 //===============================================================
 
-export async function deletePharmacyNote(req: Request, res: Response) {
-  const params = pharmacyNoteDeleteParamsSchema.parse(req.params);
+export async function deletePharmacyNote(
+  req: Request,
+  res: ValidatedResponse<unknown, PharmacyNoteDeleteParams>
+) {
+  const { params } = res.locals.validated;
   const data = await deletePharmacyNoteService(
     req.user?.id ?? '',
     params.entityType,
     params.entityId,
     params.noteId
   );
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

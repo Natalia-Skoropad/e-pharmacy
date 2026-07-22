@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+import {
+  createPerPageSchema,
+  mongoIdSchema,
+  normalizePaginationQuery,
+  positivePageSchema,
+} from './shared';
+
 import { pharmacyDocumentsSchema } from './shared/pharmacy-document.schema';
 
 import {
@@ -22,22 +29,6 @@ import {
 
 //===============================================================
 
-function normalizePaginationQuery(value: unknown): unknown {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return value;
-  }
-
-  const query = { ...(value as Record<string, unknown>) };
-
-  if (query.perPage === undefined && query.limit !== undefined) {
-    query.perPage = query.limit;
-  }
-
-  return query;
-}
-
-//===============================================================
-
 function hasMeaningfulValue(value: unknown): boolean {
   if (value === null) return true;
   if (value === undefined) return false;
@@ -52,8 +43,10 @@ function hasMeaningfulValue(value: unknown): boolean {
 
 //===============================================================
 
-const positivePageSchema = z.coerce.number().int().min(1).default(1);
-const perPageSchema = z.coerce.number().int().min(1).max(100).default(12);
+const pharmaciesPerPageSchema = createPerPageSchema({
+  defaultValue: 12,
+  max: 100,
+});
 
 //===============================================================
 
@@ -61,7 +54,7 @@ export const pharmaciesQuerySchema = z.preprocess(
   normalizePaginationQuery,
   z.object({
     page: positivePageSchema,
-    perPage: perPageSchema,
+    perPage: pharmaciesPerPageSchema,
     keyword: sharedSearchSchema,
     nameKeyword: sharedSearchSchema,
     addressKeyword: sharedSearchSchema,
@@ -75,14 +68,14 @@ export const pharmaciesQuerySchema = z.preprocess(
 //===============================================================
 
 export const pharmacyIdParamsSchema = z.object({
-  pharmacyId: z.string().regex(/^[a-f\d]{24}$/i, 'Pharmacy ID must be valid'),
+  pharmacyId: mongoIdSchema,
 });
 
 //===============================================================
 
 export const pharmacyReviewParamsSchema = z.object({
-  pharmacyId: z.string().regex(/^[a-f\d]{24}$/i, 'Pharmacy ID must be valid'),
-  reviewId: z.string().regex(/^[a-f\d]{24}$/i, 'Review ID must be valid'),
+  pharmacyId: mongoIdSchema,
+  reviewId: mongoIdSchema,
 });
 
 //===============================================================
@@ -91,7 +84,7 @@ export const pendingPharmacyReviewsQuerySchema = z.preprocess(
   normalizePaginationQuery,
   z.object({
     page: positivePageSchema,
-    perPage: perPageSchema,
+    perPage: pharmaciesPerPageSchema,
   })
 );
 
@@ -144,3 +137,29 @@ export const updateMyPharmacyProfileSchema = z
 export const sendMyPharmacyForVerificationSchema = z.object({
   comment: z.string().trim().max(500).optional(),
 });
+
+//===============================================================
+
+export type PharmaciesQuery = z.infer<typeof pharmaciesQuerySchema>;
+export type PharmacyIdParams = z.infer<typeof pharmacyIdParamsSchema>;
+export type PharmacyReviewParams = z.infer<typeof pharmacyReviewParamsSchema>;
+
+export type PendingPharmacyReviewsQuery = z.infer<
+  typeof pendingPharmacyReviewsQuerySchema
+>;
+
+export type UpdateMyPharmacyProfileInput = z.infer<
+  typeof updateMyPharmacyProfileSchema
+>;
+
+export type SendMyPharmacyForVerificationInput = z.infer<
+  typeof sendMyPharmacyForVerificationSchema
+>;
+
+export type CreatePharmacyReviewInput = z.infer<
+  typeof createPharmacyReviewSchema
+>;
+
+export type ModeratePharmacyReviewInput = z.infer<
+  typeof moderatePharmacyReviewSchema
+>;

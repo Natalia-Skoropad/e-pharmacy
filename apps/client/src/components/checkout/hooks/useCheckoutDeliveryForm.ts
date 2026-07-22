@@ -9,7 +9,7 @@ import {
   type OrderDeliveryFormErrors,
   type OrderDeliveryFormValues,
   type OrderDeliveryTouchedFields,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/order';
 
 import type { DeliveryMethod } from '@e-pharmacy/types/orders';
 

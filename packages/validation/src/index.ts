@@ -1,7 +1,9 @@
-export * from './auth';
-export * from './order';
-export * from './picture';
-export * from './product-requests';
-export * from './profile';
-export * from './reviews';
-export * from './shared';
+export {
+  hasValidationErrors,
+  isValidationResultValid,
+  markAllFieldsTouched,
+  type FormErrors,
+  type FormTouchedFields,
+} from './shared/form-utils';
+
+export { normalizeOptionalText } from './shared/optional-values';

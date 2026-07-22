@@ -13,7 +13,7 @@ import type {
 import {
   sanitizeArticleParam,
   sanitizeTextParam,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/url';
 
 import { isValidObjectId } from '@/lib/routes';
 

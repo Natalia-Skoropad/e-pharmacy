@@ -1,3 +1,4 @@
+import type { ApiPaginationResponse } from '../api';
 import type { EntityId } from '../shared';
 import type { ProductCategory } from '../products/categories';
 
@@ -158,11 +159,11 @@ export type ProductRequestsQueryParams = Readonly<{
   status?: ProductRequestStatus;
 }>;
 
-export type ProductRequestsResponse = Readonly<{
-  items: ProductRequestRow[];
-  total: number;
-  earliestCreatedAt: string | null;
-}>;
+export type ProductRequestsResponse = Readonly<
+  ApiPaginationResponse<ProductRequestRow> & {
+    earliestCreatedAt: string | null;
+  }
+>;
 
 //=============================================================================
 

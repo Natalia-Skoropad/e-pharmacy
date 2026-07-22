@@ -86,7 +86,7 @@ function validateFileMetadata(file: ProductRequestFileLike): string {
   const fileName = file.name.trim();
   const fileType = file.type.trim();
 
-  if (!fileName) return 'File name is required.';
+  if (!fileName) return 'File name is required';
   if (fileName.length > PRODUCT_REQUEST_LIMITS.fileNameMax) {
     return PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileName;
   }

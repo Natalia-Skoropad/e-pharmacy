@@ -2,7 +2,7 @@ import {
   deslugifyArticleSegment,
   deslugifyNameSegment,
   slugifySegment,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/url';
 
 import type { PharmacyOption } from '@e-pharmacy/types';
 

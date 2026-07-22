@@ -37,7 +37,7 @@ export const calendarDateSchema = z
   .trim()
   .refine(isCalendarDate, DATE_FORMAT_MESSAGE);
 
-export const optionalCalendarDateSchema = z.preprocess(
+export const dateQuerySchema = z.preprocess(
   emptyStringToUndefined,
   calendarDateSchema.optional()
 );

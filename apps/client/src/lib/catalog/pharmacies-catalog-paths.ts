@@ -1,4 +1,4 @@
-import { deslugifyNameSegment, slugifySegment } from '@e-pharmacy/validation';
+import { deslugifyNameSegment, slugifySegment } from '@e-pharmacy/validation/url';
 
 import { parsePositivePageParam } from './catalog-param-utils';
 

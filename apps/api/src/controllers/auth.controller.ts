@@ -29,6 +29,7 @@ import type {
 } from '../types/auth';
 
 import type { SessionContext } from '../types/session';
+import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
 import { clearAuthCookies, setAuthCookies } from '../utils/authCookie';
 import { httpError } from '../utils/httpError';
@@ -120,8 +121,11 @@ function getRefreshTokensFromCookies(req: Request): string[] {
 
 //===============================================================
 
-export async function registerUser(req: Request, res: Response): Promise<void> {
-  const input = req.body as RegisterInput;
+export async function registerUser(
+  req: Request,
+  res: ValidatedResponse<RegisterInput>
+): Promise<void> {
+  const input = res.locals.validated.body;
 
   const data = await registerUserService(input, getSessionContext(req));
 
@@ -137,8 +141,11 @@ export async function registerUser(req: Request, res: Response): Promise<void> {
 
 //===============================================================
 
-export async function loginUser(req: Request, res: Response): Promise<void> {
-  const input = req.body as LoginInput;
+export async function loginUser(
+  req: Request,
+  res: ValidatedResponse<LoginInput>
+): Promise<void> {
+  const input = res.locals.validated.body;
 
   const data = await loginUserService(input, getSessionContext(req));
 
@@ -190,9 +197,9 @@ export async function refreshAuthSession(
 
 export async function requestPasswordReset(
   req: Request,
-  res: Response
+  res: ValidatedResponse<ForgotPasswordInput>
 ): Promise<void> {
-  const input = req.body as ForgotPasswordInput;
+  const input = res.locals.validated.body;
 
   await requestPasswordResetService(input);
 
@@ -207,9 +214,9 @@ export async function requestPasswordReset(
 
 export async function resetPassword(
   req: Request,
-  res: Response
+  res: ValidatedResponse<ResetPasswordInput>
 ): Promise<void> {
-  const input = req.body as ResetPasswordInput;
+  const input = res.locals.validated.body;
 
   await resetPasswordService(input);
   clearAuthCookies(res);
@@ -237,9 +244,9 @@ export function getCurrentUser(req: Request, res: Response): void {
 
 export async function updateCurrentUser(
   req: Request,
-  res: Response
+  res: ValidatedResponse<UpdateProfileInput>
 ): Promise<void> {
-  const input = req.body as UpdateProfileInput;
+  const input = res.locals.validated.body;
   const userId = req.user?.id;
 
   if (!userId) return;
@@ -260,9 +267,9 @@ export async function updateCurrentUser(
 
 export async function updateCurrentUserPassword(
   req: Request,
-  res: Response
+  res: ValidatedResponse<UpdatePasswordInput>
 ): Promise<void> {
-  const input = req.body as UpdatePasswordInput;
+  const input = res.locals.validated.body;
   const userId = req.user?.id;
 
   if (!userId) return;

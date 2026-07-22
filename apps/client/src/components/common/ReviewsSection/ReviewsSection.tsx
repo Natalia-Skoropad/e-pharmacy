@@ -6,7 +6,7 @@ import { Star } from 'lucide-react';
 import { Button, LazyLoadButton } from '@e-pharmacy/ui/common';
 import { CommentInput } from '@e-pharmacy/ui/form-fields';
 import { formatReviewDate } from '@e-pharmacy/utils/formatters';
-import type { ReviewTouchedFields } from '@e-pharmacy/validation';
+import type { ReviewTouchedFields } from '@e-pharmacy/validation/reviews';
 
 import css from './ReviewsSection.module.css';
 

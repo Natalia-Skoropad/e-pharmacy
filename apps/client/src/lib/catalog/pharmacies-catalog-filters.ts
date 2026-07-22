@@ -1,4 +1,4 @@
-import { sanitizeTextParam } from '@e-pharmacy/validation';
+import { sanitizeTextParam } from '@e-pharmacy/validation/url';
 import type { Pharmacy, PharmaciesSortFilter } from '@e-pharmacy/types';
 
 import { parsePositivePageParam } from './catalog-param-utils';

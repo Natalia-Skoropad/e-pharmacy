@@ -47,12 +47,9 @@ import {
   CHANGE_PASSWORD_FORM_FIELDS,
   CHANGE_PASSWORD_INITIAL_VALUES,
   DATA_PROFILE_FORM_FIELDS,
-  PICTURE_ACCEPT,
   PHARMACY_ABOUT_FORM_FIELDS,
   PHARMACY_PAYMENT_FORM_FIELDS,
   PHARMACY_CONTACT_FORM_FIELDS,
-  PHARMACY_DOCUMENT_ACCEPT,
-  PHARMACY_DOCUMENT_RULES,
   PAYMENT_PURPOSE_MAX_LENGTH,
   USER_ADDRESS_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
@@ -66,8 +63,6 @@ import {
   TEXT_EDITOR_MAX_LENGTH,
   TAX_ID_MAX_LENGTH,
   IBAN_MAX_LENGTH,
-  buildPictureFileError,
-  buildPictureUrlError,
   hasValidationErrors,
   isChangePasswordFormDirty,
   isChangePasswordFormValid,
@@ -79,17 +74,15 @@ import {
   markAllFieldsTouched,
   normalizePharmacyAboutForm,
   normalizePharmacyContactForm,
-  normalizePharmacyDocument,
   normalizePharmacyPaymentForm,
-  sanitizeEmail,
-  sanitizeIban,
+  normalizeEmail,
+  normalizeIban,
   normalizePhoneInput,
   sanitizeTaxId,
   validateChangePasswordForm,
   validateDataProfileForm,
   validatePharmacyAboutForm,
   validatePharmacyContactForm,
-  validatePharmacyDocuments,
   validatePharmacyPaymentForm,
   type ChangePasswordFormValues,
   type ChangePasswordTouchedFields,
@@ -102,7 +95,17 @@ import {
   type PharmacyPaymentFormValues,
   type PharmacyPaymentTouchedFields,
   type PharmacyValidationMode,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/profile';
+
+import {
+  PICTURE_ACCEPT,
+  PHARMACY_DOCUMENT_ACCEPT,
+  PHARMACY_DOCUMENT_RULES,
+  buildPictureFileError,
+  buildPictureUrlError,
+  normalizePharmacyDocument,
+  validatePharmacyDocuments,
+} from '@e-pharmacy/validation/files';
 
 import {
   createPharmacyNote,
@@ -1108,7 +1111,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     const payload: UpdateMyPharmacyProfilePayload = {};
 
     if (pharmacyFormIsDirty) {
-      Object.assign(payload, buildProfilePayload(pharmacyValues, 'verification'));
+      Object.assign(
+        payload,
+        buildProfilePayload(pharmacyValues, 'verification')
+      );
     }
 
     if (pharmacyPictureIsDirty) {
@@ -1120,7 +1126,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     }
 
     if (paymentFormIsDirty) {
-      Object.assign(payload, buildPaymentPayload(paymentValues, 'verification'));
+      Object.assign(
+        payload,
+        buildPaymentPayload(paymentValues, 'verification')
+      );
     }
 
     if (documentsFormIsDirty) {
@@ -1607,7 +1616,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         onChange={(event) =>
                           handlePharmacyChange(
                             'email',
-                            sanitizeEmail(event.target.value)
+                            normalizeEmail(event.target.value)
                           )
                         }
                       />
@@ -1852,7 +1861,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         onChange={(event) =>
                           handlePaymentChange(
                             'iban',
-                            sanitizeIban(event.target.value)
+                            normalizeIban(event.target.value)
                           )
                         }
                       />
@@ -1883,7 +1892,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         onChange={(event) =>
                           handlePaymentChange(
                             'receiptEmail',
-                            sanitizeEmail(event.target.value)
+                            normalizeEmail(event.target.value)
                           )
                         }
                       />

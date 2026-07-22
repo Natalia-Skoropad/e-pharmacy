@@ -1,8 +1,6 @@
 import { z } from 'zod';
 
-//===============================================================
-
-const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
+import { mongoIdSchema } from './shared';
 
 //===============================================================
 
@@ -19,3 +17,10 @@ export const addCartItemSchema = z.object({
 export const updateCartItemSchema = z.object({
   quantity: z.coerce.number().int().min(1).max(99),
 });
+
+
+//===============================================================
+
+export type CartItemParams = z.infer<typeof cartItemParamsSchema>;
+export type AddCartItemInput = z.infer<typeof addCartItemSchema>;
+export type UpdateCartItemInput = z.infer<typeof updateCartItemSchema>;

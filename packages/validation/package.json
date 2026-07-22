@@ -7,12 +7,13 @@
   "exports": {
     ".": "./src/index.ts",
     "./auth": "./src/auth/index.ts",
+    "./files": "./src/files/index.ts",
+    "./order": "./src/order/index.ts",
+    "./product-requests": "./src/product-requests/index.ts",
     "./profile": "./src/profile/index.ts",
-    "./picture": "./src/picture/index.ts",
     "./reviews": "./src/reviews/index.ts",
     "./shared": "./src/shared/index.ts",
-    "./order": "./src/order/index.ts",
-    "./product-requests": "./src/product-requests/index.ts"
+    "./url": "./src/url/index.ts"
   },
   "scripts": {
     "build": "tsc",

@@ -86,13 +86,16 @@ import {
   USER_ADDRESS_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_PHONE_MAX_LENGTH,
+  ORDER_REJECTION_REASON_MIN_LENGTH,
+  ORDER_REJECTION_REASON_MAX_LENGTH,
+  buildOrderRejectionReasonError,
   hasValidationErrors,
   normalizePhoneInput,
   validateOrderDeliveryForm,
   type OrderDeliveryFormErrors,
   type OrderDeliveryTouchedFields,
   type OrderDeliveryFormValues,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/order';
 
 import {
   createPharmacyOrder,
@@ -171,7 +174,6 @@ type OrderHistoryEntry =
 
 const PRODUCT_PICKER_LIMIT = 150;
 const COMMENTS_PER_PAGE = 10;
-const REJECTION_REASON_MAX_LENGTH = 500;
 const HISTORY_INITIAL_VISIBLE_COUNT = 10;
 const HISTORY_LOAD_STEP = 5;
 
@@ -1962,6 +1964,16 @@ function OrderDetailsPageContent({
   const handleConfirmStatus = async () => {
     if (!order || !pendingStatus || isCreateMode) return;
 
+    if (pendingStatus.status === 'rejected') {
+      const rejectionReasonError =
+        buildOrderRejectionReasonError(rejectionReason);
+
+      if (rejectionReasonError) {
+        toast.error(rejectionReasonError);
+        return;
+      }
+    }
+
     setIsUpdatingStatus(true);
 
     try {
@@ -2469,11 +2481,11 @@ function OrderDetailsPageContent({
         <OrderCancellationModal
           value={rejectionReason}
           isLoading={isUpdatingStatus}
-          minLength={100}
-          maxLength={REJECTION_REASON_MAX_LENGTH}
+          minLength={ORDER_REJECTION_REASON_MIN_LENGTH}
+          maxLength={ORDER_REJECTION_REASON_MAX_LENGTH}
           onChange={(value) =>
             setRejectionReason(
-              value.slice(0, REJECTION_REASON_MAX_LENGTH)
+              value.slice(0, ORDER_REJECTION_REASON_MAX_LENGTH)
             )
           }
           onCancel={() => {

@@ -19,12 +19,12 @@ import {
   hasValidationErrors,
   isLoginFormValid,
   markAllFieldsTouched,
-  sanitizeEmail,
+  normalizeEmail,
   validateLoginForm,
   type LoginFormErrors,
   type LoginFormValues,
   type LoginTouchedFields,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/auth';
 
 import { ROUTES } from '@/lib/routes';
 import { LOGIN_TITLE } from '@/lib/seo';
@@ -53,6 +53,7 @@ const LOGIN_COPY: Record<
     button: 'Log in',
     loading: 'Logging in...',
   },
+
   pharmacy: {
     title: 'Pharmacy owner account',
     text: 'Use your pharmacy owner email and password. E-PHARMACY checks the account role and opens the pharmacy dashboard automatically.',
@@ -88,7 +89,7 @@ function LoginForm() {
     (event: ChangeEvent<HTMLInputElement>) => {
       const nextValue =
         field === 'email'
-          ? sanitizeEmail(event.target.value)
+          ? normalizeEmail(event.target.value)
           : event.target.value;
 
       const nextValues = {

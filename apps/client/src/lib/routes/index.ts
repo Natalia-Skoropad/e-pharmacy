@@ -9,4 +9,4 @@ export * from './routes';
 export {
   getIdFromSlugId,
   isValidObjectId,
-} from '@e-pharmacy/validation/shared';
+} from '@e-pharmacy/validation/url';

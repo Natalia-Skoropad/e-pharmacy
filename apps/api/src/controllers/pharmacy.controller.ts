@@ -1,302 +1,229 @@
-import type { Request, Response } from 'express';
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { USER_ROLES } from '../constants/auth';
+import type { Request } from 'express';
 
-import {
-  createPharmacyReviewSchema,
-  moderatePharmacyReviewSchema,
-  sendMyPharmacyForVerificationSchema,
-  updateMyPharmacyProfileSchema,
-  pendingPharmacyReviewsQuerySchema,
-  pharmaciesQuerySchema,
+import { USER_ROLES } from '../constants/auth';
+import { HTTP_STATUS } from '../constants/httpStatus';
+
+import type {
+  CreatePharmacyReviewInput,
+  ModeratePharmacyReviewInput,
+  PendingPharmacyReviewsQuery,
+  PharmaciesQuery,
+  PharmacyIdParams,
+  PharmacyReviewParams,
+  SendMyPharmacyForVerificationInput,
+  UpdateMyPharmacyProfileInput,
 } from '../schemas/pharmacy.schema';
 
 import {
   createPharmacyReviewService,
   getFavoritePharmacyIdsService,
   getFavoritePharmaciesService,
+  getMyPharmacyProfileService,
+  getPendingPharmacyReviewsService,
+  getPharmaciesService,
   getPharmacyCheckoutDetailsService,
   getPharmacyDetailsService,
   getPharmacyFiltersService,
-  getMyPharmacyProfileService,
   getPharmacyOptionsService,
-  getPendingPharmacyReviewsService,
   getPharmacyReviewsService,
-  getPharmaciesService,
   moderatePharmacyReviewService,
   sendMyPharmacyForVerificationService,
   setFavoritePharmacyService,
   updateMyPharmacyProfileService,
 } from '../services/pharmacy.service';
 
+import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
-
-//===============================================================
-
-type PharmacyParams = {
-  pharmacyId: string;
-};
 
 //===============================================================
 
 export async function getMyPharmacyProfile(
   req: Request,
-  res: Response
+  res: ValidatedResponse
 ): Promise<void> {
   const data = await getMyPharmacyProfileService(req.user?.id ?? '');
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function updateMyPharmacyProfile(
   req: Request,
-  res: Response
+  res: ValidatedResponse<UpdateMyPharmacyProfileInput>
 ): Promise<void> {
-  const body = updateMyPharmacyProfileSchema.parse(req.body);
+  const { body } = res.locals.validated;
   const data = await updateMyPharmacyProfileService(req.user?.id ?? '', body);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function sendMyPharmacyForVerification(
   req: Request,
-  res: Response
+  res: ValidatedResponse<SendMyPharmacyForVerificationInput>
 ): Promise<void> {
-  sendMyPharmacyForVerificationSchema.parse(req.body ?? {});
-
   const data = await sendMyPharmacyForVerificationService(req.user?.id ?? '');
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
-export async function getPharmacies(req: Request, res: Response): Promise<void> {
-  const query = pharmaciesQuerySchema.parse(req.query);
+export async function getPharmacies(
+  req: Request,
+  res: ValidatedResponse<unknown, unknown, PharmaciesQuery>
+): Promise<void> {
+  const { query } = res.locals.validated;
   const data = await getPharmaciesService(
     query,
     req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getPharmacyFilters(
   _req: Request,
-  res: Response
+  res: ValidatedResponse
 ): Promise<void> {
   const data = await getPharmacyFiltersService();
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getPharmacyOptions(
   _req: Request,
-  res: Response
+  res: ValidatedResponse
 ): Promise<void> {
   const data = await getPharmacyOptionsService();
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
-
 
 //===============================================================
 
 export async function getFavoritePharmacyIds(
   req: Request,
-  res: Response
+  res: ValidatedResponse
 ): Promise<void> {
   const data = await getFavoritePharmacyIdsService(req.user?.id ?? '');
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getFavoritePharmacies(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, unknown, PharmaciesQuery>
 ): Promise<void> {
-  const query = pharmaciesQuerySchema.parse(req.query);
+  const { query } = res.locals.validated;
   const data = await getFavoritePharmaciesService(query, req.user?.id ?? '');
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getPharmacyDetails(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, PharmacyIdParams>
 ): Promise<void> {
-  const { pharmacyId } = req.params as PharmacyParams;
-
+  const { pharmacyId } = res.locals.validated.params;
   const data = await getPharmacyDetailsService(
     pharmacyId,
     req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
-
 export async function getPharmacyCheckoutDetails(
-  req: Request,
-  res: Response
+  _req: Request,
+  res: ValidatedResponse<unknown, PharmacyIdParams>
 ): Promise<void> {
-  const { pharmacyId } = req.params as PharmacyParams;
+  const { pharmacyId } = res.locals.validated.params;
   const data = await getPharmacyCheckoutDetailsService(pharmacyId);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getPendingPharmacyReviews(
-  req: Request,
-  res: Response
+  _req: Request,
+  res: ValidatedResponse<unknown, unknown, PendingPharmacyReviewsQuery>
 ): Promise<void> {
-  const query = pendingPharmacyReviewsQuerySchema.parse(req.query);
+  const { query } = res.locals.validated;
   const data = await getPendingPharmacyReviewsService(query);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getPharmacyReviews(
-  req: Request,
-  res: Response
+  _req: Request,
+  res: ValidatedResponse<unknown, PharmacyIdParams>
 ): Promise<void> {
-  const { pharmacyId } = req.params as PharmacyParams;
-
+  const { pharmacyId } = res.locals.validated.params;
   const data = await getPharmacyReviewsService(pharmacyId);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function createPharmacyReview(
   req: Request,
-  res: Response
+  res: ValidatedResponse<CreatePharmacyReviewInput, PharmacyIdParams>
 ): Promise<void> {
-  const { pharmacyId } = req.params as PharmacyParams;
-  const body = createPharmacyReviewSchema.parse(req.body);
-
-  const data = await createPharmacyReviewService(pharmacyId, {
+  const { body, params } = res.locals.validated;
+  const data = await createPharmacyReviewService(params.pharmacyId, {
     userId: req.user?.id ?? '',
     userName: req.user?.name ?? 'client',
     rating: body.rating,
     comment: body.comment,
   });
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.CREATED,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
 }
 
 //===============================================================
 
 export async function moderatePharmacyReview(
   req: Request,
-  res: Response
+  res: ValidatedResponse<ModeratePharmacyReviewInput, PharmacyReviewParams>
 ): Promise<void> {
-  const { pharmacyId, reviewId } = req.params as PharmacyParams & {
-    reviewId: string;
-  };
-  const body = moderatePharmacyReviewSchema.parse(req.body);
+  const { body, params } = res.locals.validated;
+  const data = await moderatePharmacyReviewService(
+    params.pharmacyId,
+    params.reviewId,
+    {
+      status: body.status,
+      reason: body.reason,
+      moderatorId: req.user?.id ?? '',
+    }
+  );
 
-  const data = await moderatePharmacyReviewService(pharmacyId, reviewId, {
-    status: body.status,
-    reason: body.reason,
-    moderatorId: req.user?.id ?? '',
-  });
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function setFavoritePharmacy(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, PharmacyIdParams>
 ): Promise<void> {
-  const { pharmacyId } = req.params as PharmacyParams;
-
+  const { pharmacyId } = res.locals.validated.params;
   const data = await setFavoritePharmacyService(
     pharmacyId,
     req.user?.id ?? '',
     req.method === 'PUT'
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

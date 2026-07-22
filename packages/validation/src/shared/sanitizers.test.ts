@@ -2,10 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  buildBankNameError,
-  buildBankRecipientNameError,
   buildEmailError,
-  buildPharmacyNameError,
   buildPhoneError,
   buildPasswordError,
   buildTextEditorError,
@@ -13,8 +10,15 @@ import {
 } from './errors';
 
 import {
+  buildBankNameError,
+  buildBankRecipientNameError,
+  buildPharmacyNameError,
+} from '../profile/pharmacy-field-errors';
+
+import {
   normalizePhoneInput,
-  sanitizeEmail,
+  normalizeEmail,
+  normalizeIban,
   validateNormalizedPhone,
 } from './sanitizers';
 
@@ -29,10 +33,20 @@ test('password validation reports spaces without changing the input', () => {
 
 //=============================================================================
 
-test('email sanitizer trims only surrounding whitespace', () => {
-  assert.equal(sanitizeEmail('  john@example.com  '), 'john@example.com');
-  assert.equal(sanitizeEmail('john @example.com'), 'john @example.com');
-  assert.notEqual(buildEmailError(sanitizeEmail('john @example.com')), '');
+test('email normalization trims surrounding whitespace and lowercases', () => {
+  assert.equal(normalizeEmail('  John@Example.COM  '), 'john@example.com');
+  assert.equal(normalizeEmail('john @example.com'), 'john @example.com');
+  assert.notEqual(buildEmailError(normalizeEmail('john @example.com')), '');
+});
+
+
+//=============================================================================
+
+test('IBAN normalization removes spaces and uppercases the value', () => {
+  assert.equal(
+    normalizeIban(' ua12 3456789012345678901234567 '),
+    'UA123456789012345678901234567'
+  );
 });
 
 //=============================================================================

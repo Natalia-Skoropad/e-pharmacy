@@ -29,10 +29,12 @@ test('working hours require every day exactly once', () => {
     sharedWorkingHoursSchema.safeParse(validWorkingHours).success,
     true
   );
+
   assert.equal(
     sharedWorkingHoursSchema.safeParse('Open every day').success,
     false
   );
+
   assert.equal(
     sharedWorkingHoursSchema.safeParse(
       validWorkingHours.replace('; Sun: Closed', '')
@@ -75,6 +77,7 @@ test('query schemas validate real calendar dates and ordered ranges', () => {
     }).success,
     false
   );
+
   assert.equal(
     clientProductsQuerySchema.safeParse(invertedRange).success,
     false
@@ -88,12 +91,16 @@ test('empty nested bank details do not count as a profile change', () => {
     updateMyPharmacyProfileSchema.safeParse({ bankDetails: {} }).success,
     false
   );
-  assert.equal(
-    updateMyPharmacyProfileSchema.safeParse({
-      bankDetails: { iban: ' ua123456789012345678901234567 ' },
-    }).success,
-    true
-  );
+
+  const normalized = updateMyPharmacyProfileSchema.parse({
+    bankDetails: {
+      iban: ' ua123456789012345678901234567 ',
+      receiptEmail: ' Billing@Example.COM ',
+    },
+  });
+
+  assert.equal(normalized.bankDetails?.iban, 'UA123456789012345678901234567');
+  assert.equal(normalized.bankDetails?.receiptEmail, 'billing@example.com');
 });
 
 //===============================================================

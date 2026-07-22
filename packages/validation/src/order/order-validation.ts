@@ -48,26 +48,21 @@ export function validateOrderDeliveryForm(
 ): OrderDeliveryFormErrors {
   const errors: OrderDeliveryFormErrors = {};
 
-  const commentError = buildOrderCommentError(values.comment, {
-    trailingDot: true,
-  });
+  const commentError = buildOrderCommentError(values.comment);
 
   if (commentError) errors.comment = commentError;
   if (deliveryMethod === 'pickup') return errors;
 
   const nameError = buildUserNameError(values.recipientName, {
     required: true,
-    trailingDot: true,
   });
 
   const phoneError = buildPhoneError(values.recipientPhone, {
     required: true,
-    trailingDot: true,
   });
 
   const addressError = buildAddressError(values.deliveryAddress, {
     required: true,
-    trailingDot: true,
   });
 
   if (nameError) errors.recipientName = nameError;

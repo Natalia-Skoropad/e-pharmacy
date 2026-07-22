@@ -12,7 +12,7 @@ import {
   validateReviewForm,
   type ReviewFormValues,
   type ReviewTouchedFields,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/reviews';
 
 //===================================================================
 

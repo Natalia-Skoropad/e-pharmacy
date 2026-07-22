@@ -25,8 +25,6 @@ import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
   REGISTER_FORM_FIELDS,
-  PHARMACY_DOCUMENT_ACCEPT,
-  PHARMACY_DOCUMENT_RULES,
   USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_PASSWORD_MAX_LENGTH,
@@ -35,15 +33,20 @@ import {
   hasValidationErrors,
   isRegisterFormValid,
   markAllFieldsTouched,
-  normalizePharmacyDocument,
   normalizePhoneInput,
-  sanitizeEmail,
-  validatePharmacyDocuments,
+  normalizeEmail,
   validateRegisterForm,
   type RegisterFormErrors,
   type RegisterFormValues,
   type RegisterTouchedFields,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/auth';
+
+import {
+  PHARMACY_DOCUMENT_ACCEPT,
+  PHARMACY_DOCUMENT_RULES,
+  normalizePharmacyDocument,
+  validatePharmacyDocuments,
+} from '@e-pharmacy/validation/files';
 
 import { getClientAuthErrorMessage, resolveLoginDestination } from '@/lib/auth';
 import { ROUTES } from '@/lib/routes';
@@ -132,7 +135,7 @@ function RegisterForm() {
       const rawValue = event.target.value;
       const nextValue =
         field === 'email'
-          ? sanitizeEmail(rawValue)
+          ? normalizeEmail(rawValue)
           : field === 'phone'
             ? normalizePhoneInput(rawValue)
             : rawValue;

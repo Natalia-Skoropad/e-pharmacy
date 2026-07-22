@@ -1,9 +1,16 @@
 import { z } from 'zod';
 
 import {
+  createPerPageSchema,
+  mongoIdSchema,
+  normalizePaginationQuery,
+  positivePageSchema,
+} from './shared';
+
+import {
   DATE_RANGE_MESSAGE,
   isDateRangeOrdered,
-  optionalCalendarDateSchema,
+  dateQuerySchema,
 } from './shared/date.schema';
 
 import { PRODUCT_CATEGORIES } from '../types/categories';
@@ -11,25 +18,10 @@ import { sharedSearchSchema } from './shared-validation.schema';
 
 //===============================================================
 
-const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
-const positivePageSchema = z.coerce.number().int().min(1).default(1);
-const perPageSchema = z.coerce.number().int().min(1).max(200).default(20);
-
-//===============================================================
-
-function normalizePaginationQuery(value: unknown): unknown {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return value;
-  }
-
-  const query = { ...(value as Record<string, unknown>) };
-
-  if (query.perPage === undefined && query.limit !== undefined) {
-    query.perPage = query.limit;
-  }
-
-  return query;
-}
+const clientsPerPageSchema = createPerPageSchema({
+  defaultValue: 20,
+  max: 200,
+});
 
 //===============================================================
 
@@ -38,9 +30,9 @@ export const clientsQuerySchema = z.preprocess(
   z
     .object({
       page: positivePageSchema,
-      perPage: perPageSchema,
-      firstOrderFrom: optionalCalendarDateSchema,
-      firstOrderTo: optionalCalendarDateSchema,
+      perPage: clientsPerPageSchema,
+      firstOrderFrom: dateQuerySchema,
+      firstOrderTo: dateQuerySchema,
       name: sharedSearchSchema,
       clientId: sharedSearchSchema,
       contact: sharedSearchSchema,
@@ -64,9 +56,9 @@ export const clientProductsQuerySchema = z.preprocess(
   z
     .object({
       page: positivePageSchema,
-      perPage: perPageSchema,
-      dateFrom: optionalCalendarDateSchema,
-      dateTo: optionalCalendarDateSchema,
+      perPage: clientsPerPageSchema,
+      dateFrom: dateQuerySchema,
+      dateTo: dateQuerySchema,
       article: sharedSearchSchema,
       name: sharedSearchSchema,
       category: z.enum(PRODUCT_CATEGORIES).optional(),
@@ -81,8 +73,6 @@ export const clientProductsQuerySchema = z.preprocess(
 //===============================================================
 
 export const clientParamsSchema = z.object({ clientId: mongoIdSchema });
-
-//===============================================================
-
 export type ClientsQuery = z.infer<typeof clientsQuerySchema>;
 export type ClientProductsQuery = z.infer<typeof clientProductsQuerySchema>;
+export type ClientParams = z.infer<typeof clientParamsSchema>;

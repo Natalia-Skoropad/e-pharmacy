@@ -31,6 +31,7 @@ import {
   createProductReviewSchema,
   moderateProductReviewSchema,
   pendingProductReviewsQuerySchema,
+  productFiltersQuerySchema,
   productIdParamsSchema,
   productReviewParamsSchema,
   productsQuerySchema,
@@ -55,7 +56,11 @@ productRoutes.get(
 
 //=================================================================================
 
-productRoutes.get('/filters', ctrlWrapper(getProductFilters));
+productRoutes.get(
+  '/filters',
+  validate({ query: productFiltersQuerySchema }),
+  ctrlWrapper(getProductFilters)
+);
 
 //=================================================================================
 

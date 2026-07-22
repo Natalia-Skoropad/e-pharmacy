@@ -1,2 +1,1 @@
 export const CATALOG_SEARCH_UPDATE_DELAY = 450;
-export const CATALOG_SEARCH_MAX_LENGTH = 80;

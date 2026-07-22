@@ -16,12 +16,12 @@ import {
   hasValidationErrors,
   isForgotPasswordFormValid,
   markAllFieldsTouched,
-  sanitizeEmail,
+  normalizeEmail,
   validateForgotPasswordForm,
   type ForgotPasswordFormErrors,
   type ForgotPasswordFormValues,
   type ForgotPasswordTouchedFields,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/auth';
 
 import { getClientAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/routes';
@@ -35,11 +35,15 @@ type RecoveryAccountType = 'client' | 'pharmacy';
 
 //===================================================================
 
-const RECOVERY_COPY: Record<RecoveryAccountType, { title: string; text: string }> = {
+const RECOVERY_COPY: Record<
+  RecoveryAccountType,
+  { title: string; text: string }
+> = {
   client: {
     title: 'Client account',
     text: 'Enter the email from your personal account. We will send a reset link for your client login, saved orders, favorites, and profile access.',
   },
+
   pharmacy: {
     title: 'Pharmacy owner account',
     text: 'Enter the email from your pharmacy owner account. We will send a reset link for access to the pharmacy dashboard.',
@@ -52,8 +56,7 @@ function PasswordRecoveryForm() {
   const toast = useToast();
   const { isAuthReady } = useAuth();
 
-  const [accountType, setAccountType] =
-    useState<RecoveryAccountType>('client');
+  const [accountType, setAccountType] = useState<RecoveryAccountType>('client');
 
   const [values, setValues] = useState<ForgotPasswordFormValues>(
     FORGOT_PASSWORD_INITIAL_VALUES
@@ -70,7 +73,7 @@ function PasswordRecoveryForm() {
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const nextValues = {
-      email: sanitizeEmail(event.target.value),
+      email: normalizeEmail(event.target.value),
     };
 
     const nextErrors = validateForgotPasswordForm(nextValues);

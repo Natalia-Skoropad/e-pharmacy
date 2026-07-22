@@ -1,5 +1,5 @@
 import type { PharmacyProfile } from '@e-pharmacy/types';
-import { buildSlugId } from '@e-pharmacy/validation/shared';
+import { buildSlugId } from '@e-pharmacy/validation/url';
 
 //===================================================================
 

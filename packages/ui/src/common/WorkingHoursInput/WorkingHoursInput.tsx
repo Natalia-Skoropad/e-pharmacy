@@ -13,7 +13,7 @@ import {
   formatWorkingHoursValue,
   parseWorkingHoursValue,
   type WorkingHoursValue,
-} from '@e-pharmacy/validation/shared';
+} from '@e-pharmacy/validation/profile';
 
 import css from './WorkingHoursInput.module.css';
 

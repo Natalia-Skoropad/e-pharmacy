@@ -34,7 +34,18 @@ export type WorkingHoursValidationIssue =
 
 //===================================================================
 
-const WORKING_DAY_KEYS = WORKING_DAYS.map((day) => day.key);
+const WORKING_DAY_KEYS: readonly WorkingDayKey[] = WORKING_DAYS.map(
+  (day) => day.key
+);
+
+//===================================================================
+
+function isWorkingDayKey(value: string): value is WorkingDayKey {
+  return WORKING_DAY_KEYS.some((day) => day === value);
+}
+
+//===================================================================
+
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const WORKING_HOURS_ENTRY_PATTERN =
@@ -43,9 +54,21 @@ const WORKING_HOURS_ENTRY_PATTERN =
 //===================================================================
 
 export function createEmptyWorkingHoursValue(): WorkingHoursValue {
-  return Object.fromEntries(
-    WORKING_DAYS.map((day) => [day.key, { from: '', to: '', isClosed: false }])
-  ) as WorkingHoursValue;
+  const emptyDay = (): WorkingDayValue => ({
+    from: '',
+    to: '',
+    isClosed: false,
+  });
+
+  return {
+    Mon: emptyDay(),
+    Tue: emptyDay(),
+    Wed: emptyDay(),
+    Thu: emptyDay(),
+    Fri: emptyDay(),
+    Sat: emptyDay(),
+    Sun: emptyDay(),
+  };
 }
 
 //===================================================================
@@ -60,8 +83,9 @@ export function parseWorkingHoursValue(value: string): WorkingHoursValue {
     const match = part.match(WORKING_HOURS_ENTRY_PATTERN);
     if (!match) continue;
 
-    const day = match[1] as WorkingDayKey;
+    const day = match[1];
     const rawHours = match[2];
+    if (!day || !isWorkingDayKey(day)) continue;
 
     if (rawHours === 'Closed') {
       result[day] = { from: '', to: '', isClosed: true };
@@ -110,7 +134,8 @@ export function getWorkingHoursValidationIssue(
     const match = part.match(WORKING_HOURS_ENTRY_PATTERN);
     if (!match) return 'format';
 
-    const day = match[1] as WorkingDayKey;
+    const day = match[1];
+    if (!day || !isWorkingDayKey(day)) return 'format';
     if (seenDays.has(day)) return 'duplicate-days';
     seenDays.add(day);
 

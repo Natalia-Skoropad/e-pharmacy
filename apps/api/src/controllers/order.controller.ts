@@ -1,16 +1,18 @@
-import type { Request, Response } from 'express';
+import type { Request } from 'express';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 
-import {
-  checkoutOrderSchema,
-  createManagerOrderSchema,
-  createOrderManagerCommentSchema,
-  orderCommentsQuerySchema,
-  orderSalesStatisticsQuerySchema,
-  ordersQuerySchema,
-  updateOrderDetailsSchema,
-  updateOrderStatusSchema,
+import type {
+  CheckoutOrderInput,
+  CreateManagerOrderInput,
+  CreateOrderManagerCommentInput,
+  OrderCommentParams,
+  OrderCommentsQuery,
+  OrderParams,
+  OrdersQuery,
+  OrderSalesStatisticsQuery,
+  UpdateOrderDetailsInput,
+  UpdateOrderStatusInput,
 } from '../schemas/order.schema';
 
 import {
@@ -26,41 +28,28 @@ import {
   updateOrderStatusService,
 } from '../services/order.service';
 
+import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
-
-//===============================================================
-
-type OrderParams = {
-  orderId: string;
-};
-
-type OrderCommentParams = OrderParams & { commentId: string };
 
 //===============================================================
 
 export async function checkoutOrder(
   req: Request,
-  res: Response
+  res: ValidatedResponse<CheckoutOrderInput>
 ): Promise<void> {
-  const body = checkoutOrderSchema.parse(req.body);
+  const { body } = res.locals.validated;
   const data = await checkoutOrderService(req.user?.id ?? '', body);
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.CREATED,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
 }
 
 //===============================================================
 
 export async function createManagerOrder(
   req: Request,
-  res: Response
+  res: ValidatedResponse<CreateManagerOrderInput>
 ): Promise<void> {
-  const body = createManagerOrderSchema.parse(req.body);
+  const { body } = res.locals.validated;
   const user = req.user;
-
   if (!user) return;
 
   const data = await createManagerOrderService(
@@ -68,82 +57,66 @@ export async function createManagerOrder(
     body
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.CREATED,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
 }
 
 //===============================================================
 
-export async function getOrders(req: Request, res: Response): Promise<void> {
-  const query = ordersQuerySchema.parse(req.query);
-  const data = await getOrdersService(
-    req.user?.id ?? '',
-    query,
-    req.user?.role
-  );
+export async function getOrders(
+  req: Request,
+  res: ValidatedResponse<unknown, unknown, OrdersQuery>
+): Promise<void> {
+  const { query } = res.locals.validated;
+  const data = await getOrdersService(req.user?.id ?? '', query, req.user?.role);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getOrderSalesStatistics(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, unknown, OrderSalesStatisticsQuery>
 ): Promise<void> {
-  const query = orderSalesStatisticsQuerySchema.parse(req.query);
+  const { query } = res.locals.validated;
   const data = await getOrderSalesStatisticsService(
     req.user?.id ?? '',
     query,
     req.user?.role
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
-export async function getOrderById(req: Request, res: Response): Promise<void> {
-  const { orderId } = req.params as OrderParams;
+export async function getOrderById(
+  req: Request,
+  res: ValidatedResponse<unknown, OrderParams>
+): Promise<void> {
+  const { orderId } = res.locals.validated.params;
   const data = await getOrderByIdService(
     req.user?.id ?? '',
     orderId,
     req.user?.role
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getOrderManagerComments(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, OrderParams, OrderCommentsQuery>
 ): Promise<void> {
-  const { orderId } = req.params as OrderParams;
-  const query = orderCommentsQuerySchema.parse(req.query);
+  const { params, query } = res.locals.validated;
   const user = req.user;
-
   if (!user) return;
 
   const data = await getOrderManagerCommentsService(
     { id: user.id, role: user.role },
-    orderId,
+    params.orderId,
     query
   );
 
@@ -154,17 +127,15 @@ export async function getOrderManagerComments(
 
 export async function createOrderManagerComment(
   req: Request,
-  res: Response
+  res: ValidatedResponse<CreateOrderManagerCommentInput, OrderParams>
 ): Promise<void> {
-  const { orderId } = req.params as OrderParams;
-  const body = createOrderManagerCommentSchema.parse(req.body);
+  const { body, params } = res.locals.validated;
   const user = req.user;
-
   if (!user) return;
 
   const data = await createOrderManagerCommentService(
     { id: user.id, role: user.role },
-    orderId,
+    params.orderId,
     body
   );
 
@@ -175,11 +146,10 @@ export async function createOrderManagerComment(
 
 export async function deleteOrderManagerComment(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, OrderCommentParams>
 ): Promise<void> {
-  const { orderId, commentId } = req.params as OrderCommentParams;
+  const { orderId, commentId } = res.locals.validated.params;
   const user = req.user;
-
   if (!user) return;
 
   const data = await deleteOrderManagerCommentService(
@@ -195,17 +165,15 @@ export async function deleteOrderManagerComment(
 
 export async function updateOrderDetails(
   req: Request,
-  res: Response
+  res: ValidatedResponse<UpdateOrderDetailsInput, OrderParams>
 ): Promise<void> {
-  const { orderId } = req.params as OrderParams;
-  const body = updateOrderDetailsSchema.parse(req.body);
+  const { body, params } = res.locals.validated;
   const user = req.user;
-
   if (!user) return;
 
   const data = await updateOrderDetailsService(
     { id: user.id, role: user.role },
-    orderId,
+    params.orderId,
     body
   );
 
@@ -216,17 +184,17 @@ export async function updateOrderDetails(
 
 export async function updateOrderStatus(
   req: Request,
-  res: Response
+  res: ValidatedResponse<UpdateOrderStatusInput, OrderParams>
 ): Promise<void> {
-  const { orderId } = req.params as OrderParams;
-  const body = updateOrderStatusSchema.parse(req.body);
+  const { body, params } = res.locals.validated;
   const user = req.user;
-
   if (!user) return;
+
   const data = await updateOrderStatusService(
     { id: user.id, role: user.role },
-    orderId,
+    params.orderId,
     body
   );
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

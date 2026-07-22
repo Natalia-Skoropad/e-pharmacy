@@ -8,7 +8,7 @@ import {
   sanitizeTextParam,
   slugifySegment,
   slugifyStatus,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/url';
 
 import {
   CLIENT_SUCCESSFUL_ORDERS_FILTERS,

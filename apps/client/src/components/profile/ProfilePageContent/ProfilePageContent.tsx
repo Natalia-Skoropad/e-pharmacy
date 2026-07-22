@@ -38,7 +38,6 @@ import {
 import {
   CHANGE_PASSWORD_FORM_FIELDS,
   CHANGE_PASSWORD_INITIAL_VALUES,
-  PICTURE_ACCEPT,
   USER_ADDRESS_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_PASSWORD_MAX_LENGTH,
@@ -51,8 +50,6 @@ import {
   isDataProfileFormDirty,
   isDataProfileFormValid,
   markAllFieldsTouched,
-  buildPictureFileError,
-  buildPictureUrlError,
   normalizeDataProfileValues,
   normalizePhoneInput,
   validateChangePasswordForm,
@@ -61,7 +58,13 @@ import {
   type ChangePasswordTouchedFields,
   type DataProfileFormValues,
   type DataProfileTouchedFields,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/profile';
+
+import {
+  PICTURE_ACCEPT,
+  buildPictureFileError,
+  buildPictureUrlError,
+} from '@e-pharmacy/validation/files';
 
 import type {
   ActiveSession,
@@ -758,10 +761,7 @@ function ProfilePageContent() {
                         isTouched={Boolean(profileTouchedFields.name)}
                         maxLength={USER_NAME_MAX_LENGTH}
                         onChange={(event) =>
-                          handleProfileChange(
-                            'name',
-                            event.target.value
-                          )
+                          handleProfileChange('name', event.target.value)
                         }
                       />
 
@@ -790,10 +790,7 @@ function ProfilePageContent() {
                         required={false}
                         maxLength={USER_ADDRESS_MAX_LENGTH}
                         onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-                          handleProfileChange(
-                            'address',
-                            event.target.value
-                          )
+                          handleProfileChange('address', event.target.value)
                         }
                       />
                     </div>

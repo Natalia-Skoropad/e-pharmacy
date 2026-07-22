@@ -84,21 +84,21 @@ export function validatePharmacyDocuments(
 ): string {
   if (files.length === 0) {
     return options.required
-      ? 'Upload at least one document before verification.'
+      ? 'Upload at least one document before verification'
       : '';
   }
 
   if (files.length > PHARMACY_DOCUMENT_RULES.maxFiles) {
-    return `You can upload up to ${PHARMACY_DOCUMENT_RULES.maxFiles} documents.`;
+    return `You can upload up to ${PHARMACY_DOCUMENT_RULES.maxFiles} documents`;
   }
 
   for (const file of files) {
     const normalized = normalizePharmacyDocument(file);
     const extension = getExtension(normalized.name);
 
-    if (!normalized.name) return 'Document name is required.';
+    if (!normalized.name) return 'Document name is required';
     if (normalized.name.length > PHARMACY_DOCUMENT_RULES.fileNameMaxLength) {
-      return `Document name must be at most ${PHARMACY_DOCUMENT_RULES.fileNameMaxLength} characters.`;
+      return `Document name must be at most ${PHARMACY_DOCUMENT_RULES.fileNameMaxLength} characters`;
     }
 
     if (
@@ -109,15 +109,15 @@ export function validatePharmacyDocuments(
         (allowedType) => allowedType === normalized.type
       )
     ) {
-      return 'Choose a PDF, DOC, DOCX, JPG, PNG, or WEBP document.';
+      return 'Choose a PDF, DOC, DOCX, JPG, PNG, or WEBP document';
     }
 
     if (!Number.isInteger(normalized.size) || normalized.size < 0) {
-      return 'Document size is invalid.';
+      return 'Document size is invalid';
     }
 
     if (normalized.size > PHARMACY_DOCUMENT_RULES.maxSizeBytes) {
-      return `The document “${normalized.name}” must be no larger than 10 MB.`;
+      return `The document “${normalized.name}” must be no larger than 10 MB`;
     }
   }
 

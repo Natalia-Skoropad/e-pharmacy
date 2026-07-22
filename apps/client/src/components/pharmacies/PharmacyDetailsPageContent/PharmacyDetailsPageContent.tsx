@@ -23,7 +23,7 @@ import {
   parseWorkingHours,
 } from '@e-pharmacy/utils/formatters';
 
-import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
+import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 
 import type {
   Pharmacy,

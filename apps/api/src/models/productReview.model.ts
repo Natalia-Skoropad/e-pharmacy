@@ -3,6 +3,7 @@ import { Schema, model, models } from 'mongoose';
 import {
   MAX_REVIEW_RATING,
   MIN_REVIEW_RATING,
+  REVIEW_COMMENT_PATTERN,
   USER_REVIEW_COMMENT_MAX_LENGTH,
   USER_REVIEW_COMMENT_MIN_LENGTH,
   VALIDATION_MESSAGES,
@@ -67,6 +68,10 @@ const productReviewSchema = new Schema<ProductReviewEntity>(
       maxlength: [
         USER_REVIEW_COMMENT_MAX_LENGTH,
         VALIDATION_MESSAGES.limits.reviewCommentMax,
+      ],
+      match: [
+        REVIEW_COMMENT_PATTERN,
+        VALIDATION_MESSAGES.format.reviewComment,
       ],
     },
 

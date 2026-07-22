@@ -9,3 +9,7 @@ export const healthEchoSchema = z.object({
     .min(1, 'Message is required')
     .max(100, 'Message must be at most 100 characters'),
 });
+
+//===============================================================
+
+export type HealthEchoInput = z.infer<typeof healthEchoSchema>;

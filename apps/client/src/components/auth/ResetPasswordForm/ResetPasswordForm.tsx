@@ -21,7 +21,7 @@ import {
   type ResetPasswordFormErrors,
   type ResetPasswordFormValues,
   type ResetPasswordTouchedFields,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/auth';
 
 import { getClientAuthErrorMessage } from '@/lib/auth';
 import { ROUTES } from '@/lib/routes';

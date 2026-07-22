@@ -1,13 +1,16 @@
-import type { Request, Response } from 'express';
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { USER_ROLES } from '../constants/auth';
+import type { Request } from 'express';
 
-import {
-  createProductReviewSchema,
-  moderateProductReviewSchema,
-  pendingProductReviewsQuerySchema,
-  productFiltersQuerySchema,
-  productsQuerySchema,
+import { USER_ROLES } from '../constants/auth';
+import { HTTP_STATUS } from '../constants/httpStatus';
+
+import type {
+  CreateProductReviewInput,
+  ModerateProductReviewInput,
+  PendingProductReviewsQuery,
+  ProductFiltersQuery,
+  ProductIdParams,
+  ProductReviewParams,
+  ProductsQuery,
 } from '../schemas/product.schema';
 
 import {
@@ -26,251 +29,191 @@ import {
 } from '../services/product.service';
 
 import { getProductStockMovementsService } from '../services/stockMovement.service';
+import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
 
-type ProductParams = {
-  productId: string;
-};
-
-//===============================================================
-
 export async function getProductFilters(
-  req: Request,
-  res: Response
+  _req: Request,
+  res: ValidatedResponse<unknown, unknown, ProductFiltersQuery>
 ): Promise<void> {
-  const query = productFiltersQuerySchema.parse(req.query);
+  const { query } = res.locals.validated;
   const data = await getProductFiltersService(query);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
-export async function getProducts(req: Request, res: Response): Promise<void> {
-  const query = productsQuerySchema.parse(req.query);
+export async function getProducts(
+  req: Request,
+  res: ValidatedResponse<unknown, unknown, ProductsQuery>
+): Promise<void> {
+  const { query } = res.locals.validated;
   const data = await getProductsService(
     query,
     req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getFavoriteProductIds(
   req: Request,
-  res: Response
+  res: ValidatedResponse
 ): Promise<void> {
   const data = await getFavoriteProductIdsService(req.user?.id ?? '');
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getFavoriteProducts(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, unknown, ProductsQuery>
 ): Promise<void> {
-  const query = productsQuerySchema.parse(req.query);
+  const { query } = res.locals.validated;
   const data = await getFavoriteProductsService(query, req.user?.id ?? '');
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getProductDetails(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, ProductIdParams>
 ): Promise<void> {
-  const { productId } = req.params as ProductParams;
-
+  const { productId } = res.locals.validated.params;
   const data = await getProductDetailsService(
     productId,
     req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getProductStockMovements(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, ProductIdParams>
 ): Promise<void> {
-  const { productId } = req.params as ProductParams;
+  const { productId } = res.locals.validated.params;
   const data = await getProductStockMovementsService(
     productId,
     req.user?.id ?? ''
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function addProductToMyPharmacy(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, ProductIdParams>
 ): Promise<void> {
-  const { productId } = req.params as ProductParams;
+  const { productId } = res.locals.validated.params;
   const data = await addProductToMyPharmacyService(
     productId,
     req.user?.id ?? ''
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.CREATED,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
 }
 
 //===============================================================
 
 export async function removeProductFromMyPharmacy(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, ProductIdParams>
 ): Promise<void> {
-  const { productId } = req.params as ProductParams;
+  const { productId } = res.locals.validated.params;
   const data = await removeProductFromMyPharmacyService(
     productId,
     req.user?.id ?? ''
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getPendingProductReviews(
-  req: Request,
-  res: Response
+  _req: Request,
+  res: ValidatedResponse<unknown, unknown, PendingProductReviewsQuery>
 ): Promise<void> {
-  const query = pendingProductReviewsQuerySchema.parse(req.query);
+  const { query } = res.locals.validated;
   const data = await getPendingProductReviewsService(query);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getProductReviews(
-  req: Request,
-  res: Response
+  _req: Request,
+  res: ValidatedResponse<unknown, ProductIdParams>
 ): Promise<void> {
-  const { productId } = req.params as ProductParams;
-
+  const { productId } = res.locals.validated.params;
   const data = await getProductReviewsService(productId);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function createProductReview(
   req: Request,
-  res: Response
+  res: ValidatedResponse<CreateProductReviewInput, ProductIdParams>
 ): Promise<void> {
-  const { productId } = req.params as ProductParams;
-  const body = createProductReviewSchema.parse(req.body);
-
-  const data = await createProductReviewService(productId, {
+  const { body, params } = res.locals.validated;
+  const data = await createProductReviewService(params.productId, {
     userId: req.user?.id ?? '',
     userName: req.user?.name ?? 'Client',
     rating: body.rating,
     comment: body.comment,
   });
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.CREATED,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
 }
 
 //===============================================================
 
 export async function moderateProductReview(
   req: Request,
-  res: Response
+  res: ValidatedResponse<ModerateProductReviewInput, ProductReviewParams>
 ): Promise<void> {
-  const { productId, reviewId } = req.params as ProductParams & {
-    reviewId: string;
-  };
-  const body = moderateProductReviewSchema.parse(req.body);
+  const { body, params } = res.locals.validated;
+  const data = await moderateProductReviewService(
+    params.productId,
+    params.reviewId,
+    {
+      status: body.status,
+      reason: body.reason,
+      moderatorId: req.user?.id ?? '',
+    }
+  );
 
-  const data = await moderateProductReviewService(productId, reviewId, {
-    status: body.status,
-    reason: body.reason,
-    moderatorId: req.user?.id ?? '',
-  });
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function setFavoriteProduct(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, ProductIdParams>
 ): Promise<void> {
-  const { productId } = req.params as ProductParams;
-
+  const { productId } = res.locals.validated.params;
   const data = await setFavoriteProductService(
     productId,
     req.user?.id ?? '',
     req.method === 'PUT'
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

@@ -1,15 +1,19 @@
 import { Schema, model, models } from 'mongoose';
 
 import {
-  USER_ADDRESS_MAX_LENGTH,
+  ADDRESS_PATTERN,
+  EMAIL_PATTERN,
+  PHONE_PATTERN,
   PICTURE_DATA_URL_MAX_LENGTH,
   PICTURE_HTTP_URL_MAX_LENGTH,
-  USER_NAME_MIN_LENGTH,
+  USER_ADDRESS_MAX_LENGTH,
+  USER_ADDRESS_MIN_LENGTH,
+  USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
+  USER_NAME_MIN_LENGTH,
   USER_NAME_PATTERN,
-  USER_PHONE_MIN_LENGTH,
   USER_PHONE_MAX_LENGTH,
-  PHONE_PATTERN,
+  USER_PHONE_MIN_LENGTH,
   VALIDATION_MESSAGES,
   isHttpUrl,
   isPictureDataUrl,
@@ -42,6 +46,8 @@ const userSchema = new Schema<UserEntity>(
       unique: true,
       lowercase: true,
       trim: true,
+      maxlength: [USER_EMAIL_MAX_LENGTH, VALIDATION_MESSAGES.limits.emailMax],
+      match: [EMAIL_PATTERN, VALIDATION_MESSAGES.format.emailApi],
     },
 
     password: {
@@ -84,10 +90,15 @@ const userSchema = new Schema<UserEntity>(
     address: {
       type: String,
       trim: true,
+      minlength: [
+        USER_ADDRESS_MIN_LENGTH,
+        VALIDATION_MESSAGES.limits.addressMin,
+      ],
       maxlength: [
         USER_ADDRESS_MAX_LENGTH,
         VALIDATION_MESSAGES.limits.addressMax,
       ],
+      match: [ADDRESS_PATTERN, VALIDATION_MESSAGES.format.address],
       default: undefined,
     },
 

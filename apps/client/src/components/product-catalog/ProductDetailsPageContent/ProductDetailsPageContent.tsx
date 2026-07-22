@@ -23,7 +23,7 @@ import { type TabItem } from '@e-pharmacy/ui/common';
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation';
+import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 
 import {
   formatPharmaciesCount,
@@ -46,7 +46,7 @@ import {
 } from '@/hooks';
 
 import { ROUTES, buildPharmacyPath } from '@/lib/routes';
-import { CATALOG_SEARCH_MAX_LENGTH } from '@/lib/catalog/catalog-config';
+import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
 import { formatProductCategoryLabel } from '@e-pharmacy/types/products';
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
@@ -730,7 +730,7 @@ function ProductDetailsPageContent({
                     label="Search by pharmacy"
                     value={pharmacyNameQuery}
                     placeholder="Enter pharmacy name"
-                    maxLength={CATALOG_SEARCH_MAX_LENGTH}
+                    maxLength={USER_SEARCH_MAX_LENGTH}
                     sanitizeValue={sanitizeCatalogTextSearch}
                     onChange={handlePharmacyNameQueryChange}
                   />
@@ -740,7 +740,7 @@ function ProductDetailsPageContent({
                     label="Search by address"
                     value={pharmacyAddressQuery}
                     placeholder="Enter city or address"
-                    maxLength={CATALOG_SEARCH_MAX_LENGTH}
+                    maxLength={USER_SEARCH_MAX_LENGTH}
                     sanitizeValue={sanitizeCatalogTextSearch}
                     onChange={handlePharmacyAddressQueryChange}
                   />

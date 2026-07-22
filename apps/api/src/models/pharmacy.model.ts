@@ -1,20 +1,32 @@
 import { Schema, model, models } from 'mongoose';
 
 import {
+  ADDRESS_PATTERN,
   BANK_NAME_MAX_LENGTH,
   BANK_NAME_MIN_LENGTH,
   BANK_NAME_PATTERN,
   BANK_RECIPIENT_NAME_MAX_LENGTH,
   BANK_RECIPIENT_NAME_MIN_LENGTH,
   BANK_RECIPIENT_NAME_PATTERN,
+  EMAIL_PATTERN,
+  IBAN_PATTERN,
   MAX_REVIEW_RATING,
+  PAYMENT_PURPOSE_MAX_LENGTH,
+  PAYMENT_PURPOSE_PATTERN,
+  PHONE_PATTERN,
   PHARMACY_NAME_MAX_LENGTH,
   PHARMACY_NAME_MIN_LENGTH,
   PHARMACY_NAME_PATTERN,
-  PAYMENT_PURPOSE_MAX_LENGTH,
-  PAYMENT_PURPOSE_PATTERN,
   PICTURE_DATA_URL_MAX_LENGTH,
   PICTURE_HTTP_URL_MAX_LENGTH,
+  TAX_ID_PATTERN,
+  TEXT_EDITOR_MAX_LENGTH,
+  TEXT_EDITOR_PATTERN,
+  USER_ADDRESS_MAX_LENGTH,
+  USER_ADDRESS_MIN_LENGTH,
+  USER_EMAIL_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  USER_PHONE_MIN_LENGTH,
   VALIDATION_MESSAGES,
   WORKING_HOURS_MAX_LENGTH,
   WORKING_HOURS_PATTERN,
@@ -64,7 +76,16 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       type: String,
       required: false,
       trim: true,
-      maxlength: [200, 'Pharmacy address must be at most 200 characters'],
+      minlength: [
+        USER_ADDRESS_MIN_LENGTH,
+        VALIDATION_MESSAGES.limits.addressMin,
+      ],
+      maxlength: [
+        USER_ADDRESS_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.addressMax,
+      ],
+      match: [ADDRESS_PATTERN, VALIDATION_MESSAGES.format.address],
+      default: undefined,
     },
 
     city: {
@@ -77,7 +98,9 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     phone: {
       type: String,
       trim: true,
-      maxlength: [30, 'Phone must be at most 30 characters'],
+      minlength: [USER_PHONE_MIN_LENGTH, VALIDATION_MESSAGES.limits.phoneMin],
+      maxlength: [USER_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.limits.phoneMax],
+      match: [PHONE_PATTERN, VALIDATION_MESSAGES.format.phone],
       default: undefined,
     },
 
@@ -85,6 +108,8 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       type: String,
       trim: true,
       lowercase: true,
+      maxlength: [USER_EMAIL_MAX_LENGTH, VALIDATION_MESSAGES.limits.emailMax],
+      match: [EMAIL_PATTERN, VALIDATION_MESSAGES.format.emailApi],
       default: undefined,
     },
 
@@ -131,7 +156,7 @@ const pharmacySchema = new Schema<PharmacyEntity>(
         type: String,
         required: false,
         trim: true,
-        match: [/^\d{8}(?:\d{2})?$/, 'Bank tax ID must contain 8 or 10 digits'],
+        match: [TAX_ID_PATTERN, VALIDATION_MESSAGES.format.taxId],
       },
 
       iban: {
@@ -139,10 +164,7 @@ const pharmacySchema = new Schema<PharmacyEntity>(
         required: false,
         trim: true,
         uppercase: true,
-        match: [
-          /^UA[A-Z0-9]{27}$/,
-          'IBAN must start with UA and contain 29 characters',
-        ],
+        match: [IBAN_PATTERN, VALIDATION_MESSAGES.format.iban],
       },
 
       bankName: {
@@ -186,7 +208,8 @@ const pharmacySchema = new Schema<PharmacyEntity>(
         required: false,
         trim: true,
         lowercase: true,
-        maxlength: [64, 'Receipt email must be at most 64 characters'],
+        maxlength: [USER_EMAIL_MAX_LENGTH, VALIDATION_MESSAGES.limits.emailMax],
+        match: [EMAIL_PATTERN, VALIDATION_MESSAGES.format.emailApi],
       },
     },
 
@@ -225,7 +248,8 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     description: {
       type: String,
       trim: true,
-      maxlength: [5000, 'Description must be at most 5000 characters'],
+      maxlength: [TEXT_EDITOR_MAX_LENGTH, VALIDATION_MESSAGES.limits.textEditorMax],
+      match: [TEXT_EDITOR_PATTERN, VALIDATION_MESSAGES.format.textEditor],
       default: undefined,
     },
 

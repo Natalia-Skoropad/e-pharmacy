@@ -29,7 +29,7 @@ import {
   USER_PHONE_MAX_LENGTH,
   hasValidationErrors,
   validateOrderDeliveryForm,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/order';
 
 import { groupCartByPharmacy } from '@/lib/cart/cart-groups';
 

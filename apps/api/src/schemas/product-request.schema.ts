@@ -1,11 +1,18 @@
 import { z } from 'zod';
 
+import {
+  createPerPageSchema,
+  mongoIdSchema,
+  normalizePaginationQuery,
+  positivePageSchema,
+} from './shared';
+
 import { sharedSearchSchema } from './shared-validation.schema';
 
 import {
   DATE_RANGE_MESSAGE,
   isDateRangeOrdered,
-  optionalCalendarDateSchema,
+  dateQuerySchema,
 } from './shared/date.schema';
 
 import { optionalTrimmedTextSchema } from './shared/optional-text.schema';
@@ -24,9 +31,10 @@ import {
 
 //===============================================================
 
-const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
-const positivePageSchema = z.coerce.number().int().min(1).default(1);
-const perPageSchema = z.coerce.number().int().min(1).max(200).default(20);
+const productRequestsPerPageSchema = createPerPageSchema({
+  defaultValue: 20,
+  max: 200,
+});
 
 //===============================================================
 
@@ -105,6 +113,7 @@ function createProductRequestFileSchema(
       }
 
       const dataUrlSize = getDataUrlByteSize(file.dataUrl);
+
       if (dataUrlSize === null || dataUrlSize !== file.size) {
         context.addIssue({
           code: 'custom',
@@ -141,30 +150,14 @@ const productImageSchema = createProductRequestFileSchema(
 
 //===============================================================
 
-function normalizePaginationQuery(value: unknown): unknown {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return value;
-  }
-
-  const query = { ...(value as Record<string, unknown>) };
-
-  if (query.perPage === undefined && query.limit !== undefined) {
-    query.perPage = query.limit;
-  }
-
-  return query;
-}
-
-//===============================================================
-
 export const productRequestsQuerySchema = z.preprocess(
   normalizePaginationQuery,
   z
     .object({
       page: positivePageSchema,
-      perPage: perPageSchema,
-      dateFrom: optionalCalendarDateSchema,
-      dateTo: optionalCalendarDateSchema,
+      perPage: productRequestsPerPageSchema,
+      dateFrom: dateQuerySchema,
+      dateTo: dateQuerySchema,
       requestNumber: sharedSearchSchema,
       productName: sharedSearchSchema,
       productArticle: sharedSearchSchema,
@@ -390,6 +383,7 @@ export const productRequestParamsSchema = z.object({
 
 //===============================================================
 
+export type ProductRequestParams = z.infer<typeof productRequestParamsSchema>;
 export type ProductRequestsQuery = z.infer<typeof productRequestsQuerySchema>;
 
 export type ProductRequestArticleAvailabilityQuery = z.infer<

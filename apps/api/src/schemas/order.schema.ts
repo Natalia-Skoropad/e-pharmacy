@@ -1,9 +1,16 @@
 import { z } from 'zod';
 
 import {
+  createPerPageSchema,
+  mongoIdSchema,
+  normalizePaginationQuery,
+  positivePageSchema,
+} from './shared';
+
+import {
   DATE_RANGE_MESSAGE,
   isDateRangeOrdered,
-  optionalCalendarDateSchema,
+  dateQuerySchema,
 } from './shared/date.schema';
 
 import {
@@ -14,31 +21,22 @@ import {
   sharedSearchSchema,
 } from './shared-validation.schema';
 
+import {
+  ORDER_REJECTION_REASON_MAX_LENGTH,
+  ORDER_REJECTION_REASON_MIN_LENGTH,
+  ORDER_STATUS_COMMENT_MAX_LENGTH,
+  ORDER_STATUS_VALIDATION_MESSAGES,
+} from '../constants/order-validation';
+
 //===============================================================
 
-const mongoIdSchema = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
 const orderRouteIdSchema = z.string().trim().min(1, 'ID is required');
+const ordersPerPageSchema = createPerPageSchema({ defaultValue: 20, max: 200 });
 
-//===============================================================
-
-const positivePageSchema = z.coerce.number().int().min(1).default(1);
-const perPageSchema = z.coerce.number().int().min(1).max(200).default(20);
-
-//===============================================================
-
-function normalizePaginationQuery(value: unknown): unknown {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return value;
-  }
-
-  const query = { ...(value as Record<string, unknown>) };
-
-  if (query.perPage === undefined && query.limit !== undefined) {
-    query.perPage = query.limit;
-  }
-
-  return query;
-}
+const orderCommentsPerPageSchema = createPerPageSchema({
+  defaultValue: 5,
+  max: 50,
+});
 
 //===============================================================
 
@@ -47,9 +45,9 @@ export const ordersQuerySchema = z.preprocess(
   z
     .object({
       page: positivePageSchema,
-      perPage: perPageSchema,
-      dateFrom: optionalCalendarDateSchema,
-      dateTo: optionalCalendarDateSchema,
+      perPage: ordersPerPageSchema,
+      dateFrom: dateQuerySchema,
+      dateTo: dateQuerySchema,
       client: sharedSearchSchema,
       clientId: mongoIdSchema.optional(),
       orderNumber: sharedSearchSchema,
@@ -88,7 +86,7 @@ export const orderCommentsQuerySchema = z.preprocess(
   normalizePaginationQuery,
   z.object({
     page: positivePageSchema,
-    perPage: z.coerce.number().int().min(1).max(50).default(5),
+    perPage: orderCommentsPerPageSchema,
   })
 );
 
@@ -102,8 +100,8 @@ export const createOrderManagerCommentSchema = z.object({
 
 export const orderSalesStatisticsQuerySchema = z
   .object({
-    dateFrom: optionalCalendarDateSchema,
-    dateTo: optionalCalendarDateSchema,
+    dateFrom: dateQuerySchema,
+    dateTo: dateQuerySchema,
     groupBy: z.enum(['day', 'month']).default('month'),
     productId: mongoIdSchema.optional(),
   })
@@ -161,6 +159,7 @@ export const createManagerOrderSchema = z.discriminatedUnion('deliveryMethod', [
     deliveryMethod: z.literal('pickup'),
     deliveryDetails: z.never().optional(),
   }),
+
   managerOrderBaseSchema.extend({
     deliveryMethod: z.literal('postal_delivery'),
     deliveryDetails: z.object({
@@ -203,8 +202,26 @@ export const updateOrderDetailsSchema = z
 export const updateOrderStatusSchema = z
   .object({
     status: z.enum(['in_progress', 'successful', 'rejected']),
-    rejectionReason: z.string().trim().min(100).max(500).optional(),
-    comment: z.string().trim().max(500).optional(),
+    rejectionReason: z
+      .string()
+      .trim()
+      .min(
+        ORDER_REJECTION_REASON_MIN_LENGTH,
+        ORDER_STATUS_VALIDATION_MESSAGES.rejectionReasonMin
+      )
+      .max(
+        ORDER_REJECTION_REASON_MAX_LENGTH,
+        ORDER_STATUS_VALIDATION_MESSAGES.rejectionReasonMax
+      )
+      .optional(),
+    comment: z
+      .string()
+      .trim()
+      .max(
+        ORDER_STATUS_COMMENT_MAX_LENGTH,
+        ORDER_STATUS_VALIDATION_MESSAGES.commentMax
+      )
+      .optional(),
   })
 
   .superRefine((value, ctx) => {
@@ -212,12 +229,21 @@ export const updateOrderStatusSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['rejectionReason'],
-        message: 'Rejection reason is required',
+        message: ORDER_STATUS_VALIDATION_MESSAGES.requiredRejectionReason,
       });
     }
   });
 
 //===============================================================
+
+export type OrderParams = z.infer<typeof orderParamsSchema>;
+export type OrderCommentParams = z.infer<typeof orderCommentParamsSchema>;
+export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
+export type UpdateOrderDetailsInput = z.infer<typeof updateOrderDetailsSchema>;
+
+export type CreateOrderManagerCommentInput = z.infer<
+  typeof createOrderManagerCommentSchema
+>;
 
 export type OrdersQuery = z.infer<typeof ordersQuerySchema>;
 
@@ -227,10 +253,4 @@ export type OrderSalesStatisticsQuery = z.infer<
 
 export type CheckoutOrderInput = z.infer<typeof checkoutOrderSchema>;
 export type CreateManagerOrderInput = z.infer<typeof createManagerOrderSchema>;
-export type UpdateOrderDetailsInput = z.infer<typeof updateOrderDetailsSchema>;
-export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
 export type OrderCommentsQuery = z.infer<typeof orderCommentsQuerySchema>;
-
-export type CreateOrderManagerCommentInput = z.infer<
-  typeof createOrderManagerCommentSchema
->;

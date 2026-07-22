@@ -112,6 +112,7 @@ function ProductRequestsPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [requests, setRequests] = useState<ProductRequestRow[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
     null
   );
@@ -173,12 +174,14 @@ function ProductRequestsPageContent({
 
         setRequests(response.items);
         setTotalRequests(response.total);
+        setTotalPages(response.totalPages);
         setEarliestCreatedAt(response.earliestCreatedAt);
       } catch {
         if (!isMounted) return;
 
         setRequests([]);
         setTotalRequests(0);
+        setTotalPages(0);
         setEarliestCreatedAt(null);
       } finally {
         if (isMounted) setIsLoading(false);
@@ -206,7 +209,6 @@ function ProductRequestsPageContent({
 
   const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
-  const totalPages = Math.ceil(totalRequests / rowsPerPage);
 
   const handleFiltersChange = (nextFilters: ProductRequestsFilterState) => {
     setFilters(nextFilters);

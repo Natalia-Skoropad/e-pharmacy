@@ -1,5 +1,5 @@
 import { isCalendarDate } from './date-validation';
-import { USER_SEARCH_MAX_LENGTH } from './limits';
+import { USER_SEARCH_MAX_LENGTH } from '../shared/limits';
 
 //===================================================================
 
@@ -81,13 +81,21 @@ export function deslugifyArticleSegment(value: string): string {
 
 //===================================================================
 
+function isAllowedEnumValue<TValue extends string>(
+  value: string,
+  allowedValues: readonly TValue[]
+): value is TValue {
+  return allowedValues.some((allowedValue) => allowedValue === value);
+}
+
+//===================================================================
+
 export function normalizeSlugEnumValue<TValue extends string>(
   value: string,
   allowedValues: readonly TValue[]
 ): TValue | null {
-  const normalized = value.replace(/-/g, '_') as TValue;
-
-  return allowedValues.includes(normalized) ? normalized : null;
+  const normalized = value.replace(/-/g, '_');
+  return isAllowedEnumValue(normalized, allowedValues) ? normalized : null;
 }
 
 //===================================================================

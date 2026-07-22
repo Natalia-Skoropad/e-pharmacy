@@ -1,27 +1,29 @@
 import { z } from 'zod';
 
-//===============================================================
-
-const mongoId = z.string().regex(/^[a-f\d]{24}$/i, 'ID must be valid');
+import {
+  createPerPageSchema,
+  mongoIdSchema,
+  positivePageSchema,
+} from './shared';
 
 //===============================================================
 
 export const pharmacyNoteParamsSchema = z.object({
   entityType: z.enum(['client', 'product', 'pharmacy', 'product_request']),
-  entityId: mongoId,
+  entityId: mongoIdSchema,
 });
 
 //===============================================================
 
 export const pharmacyNoteDeleteParamsSchema = pharmacyNoteParamsSchema.extend({
-  noteId: mongoId,
+  noteId: mongoIdSchema,
 });
 
 //===============================================================
 
 export const pharmacyNotesQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  perPage: z.coerce.number().int().min(1).max(100).default(10),
+  page: positivePageSchema,
+  perPage: createPerPageSchema({ defaultValue: 10, max: 100 }),
 });
 
 //===============================================================
@@ -29,3 +31,15 @@ export const pharmacyNotesQuerySchema = z.object({
 export const createPharmacyNoteSchema = z.object({
   text: z.string().trim().min(1).max(1000),
 });
+
+//===============================================================
+
+export type PharmacyNoteParams = z.infer<typeof pharmacyNoteParamsSchema>;
+
+export type PharmacyNoteDeleteParams = z.infer<
+  typeof pharmacyNoteDeleteParamsSchema
+>;
+
+export type PharmacyNotesQuery = z.infer<typeof pharmacyNotesQuerySchema>;
+
+export type CreatePharmacyNoteInput = z.infer<typeof createPharmacyNoteSchema>;

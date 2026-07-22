@@ -6,7 +6,7 @@ import {
   normalizeSlugEnumValue,
   slugifySegment,
   slugifyStatus,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/url';
 
 import { isProductCategory } from '@e-pharmacy/types/products';
 

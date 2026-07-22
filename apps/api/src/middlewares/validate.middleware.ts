@@ -36,24 +36,27 @@ function getValidationErrorDetails(
 //===============================================================
 
 export function validate(schemas: ValidateSchemas) {
-  return (req: Request, _res: Response, next: NextFunction): void => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     try {
+      const validated: {
+        body?: unknown;
+        params?: unknown;
+        query?: unknown;
+      } = {};
+
       if (schemas.body) {
-        req.body = schemas.body.parse(req.body);
+        validated.body = schemas.body.parse(req.body);
       }
 
       if (schemas.params) {
-        req.params = schemas.params.parse(req.params) as typeof req.params;
+        validated.params = schemas.params.parse(req.params);
       }
 
       if (schemas.query) {
-        // Express 5 exposes req.query as a getter-only property. Assigning to it
-        // throws a TypeError, which was converted to a 400 response by this
-        // middleware. We only validate query params here; controllers parse the
-        // original req.query again before passing typed values to services.
-        schemas.query.parse(req.query);
+        validated.query = schemas.query.parse(req.query);
       }
 
+      res.locals.validated = validated;
       next();
     } catch (error) {
       next(

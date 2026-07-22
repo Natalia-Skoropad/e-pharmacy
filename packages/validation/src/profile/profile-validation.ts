@@ -1,37 +1,42 @@
 import {
-  buildUserNameError,
-  buildPharmacyNameError,
-  buildBankRecipientNameError,
-  buildBankNameError,
-  buildPhoneError,
   buildAddressError,
-  buildPasswordError,
-  buildRequiredPasswordError,
   buildEmailError,
-  buildWorkingHoursError,
+  buildPasswordError,
+  buildPhoneError,
+  buildRequiredPasswordError,
   buildTextEditorError,
-  buildTaxIdError,
-  buildIbanError,
-  buildPaymentPurposeError,
+  buildUserNameError,
   isValidationResultValid,
+  normalizeEmail,
+  normalizeIban,
+  normalizeOptionalText,
   VALIDATION_MESSAGES,
-  USER_EMAIL_MAX_LENGTH,
-  USER_NAME_MAX_LENGTH,
-  PHARMACY_NAME_MAX_LENGTH,
-  BANK_RECIPIENT_NAME_MAX_LENGTH,
   BANK_NAME_MAX_LENGTH,
-  USER_PHONE_MAX_LENGTH,
-  USER_PASSWORD_MAX_LENGTH,
-  USER_ADDRESS_MAX_LENGTH,
-  WORKING_HOURS_MAX_LENGTH,
-  TEXT_EDITOR_MAX_LENGTH,
-  TAX_ID_MAX_LENGTH,
+  BANK_RECIPIENT_NAME_MAX_LENGTH,
   IBAN_MAX_LENGTH,
   PAYMENT_PURPOSE_MAX_LENGTH,
+  PHARMACY_NAME_MAX_LENGTH,
+  TAX_ID_MAX_LENGTH,
+  TEXT_EDITOR_MAX_LENGTH,
+  USER_ADDRESS_MAX_LENGTH,
+  USER_EMAIL_MAX_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_PASSWORD_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  WORKING_HOURS_MAX_LENGTH,
   type FormErrors,
-  normalizeOptionalText,
   type FormTouchedFields,
 } from '../shared';
+
+import {
+  buildBankNameError,
+  buildBankRecipientNameError,
+  buildIbanError,
+  buildPaymentPurposeError,
+  buildPharmacyNameError,
+  buildTaxIdError,
+  buildWorkingHoursError,
+} from './pharmacy-field-errors';
 
 //===================================================================
 
@@ -221,15 +226,13 @@ export function validateDataProfileForm(
 
   const nameError = buildUserNameError(values.name, {
     required: true,
-    trailingDot: true,
   });
 
   const phoneError = buildPhoneError(values.phone, {
     required: true,
-    trailingDot: true,
   });
 
-  const addressError = buildAddressError(values.address, { trailingDot: true });
+  const addressError = buildAddressError(values.address);
 
   if (nameError) errors.name = nameError;
   if (phoneError) errors.phone = phoneError;
@@ -306,17 +309,14 @@ export function validatePharmacyContactForm(
 
   const nameError = buildPharmacyNameError(values.name, {
     required,
-    trailingDot: true,
   });
 
   const addressError = buildAddressError(values.address, {
     required,
-    trailingDot: true,
   });
 
   const phoneError = buildPhoneError(values.phone, {
     required,
-    trailingDot: true,
   });
 
   const emailError =
@@ -324,7 +324,6 @@ export function validatePharmacyContactForm(
 
   const workingHoursError = buildWorkingHoursError(values.workingHours, {
     required,
-    trailingDot: true,
   });
 
   if (nameError) errors.name = nameError;
@@ -346,7 +345,9 @@ export function normalizePharmacyContactForm(
     name: normalizeOptionalText(values.name),
     address: normalizeOptionalText(values.address),
     phone: normalizeOptionalText(values.phone),
-    email: normalizeOptionalText(values.email)?.toLowerCase(),
+    email: normalizeOptionalText(values.email)
+      ? normalizeEmail(values.email)
+      : undefined,
     workingHours: normalizeOptionalText(values.workingHours),
   };
 
@@ -360,9 +361,15 @@ export function normalizePharmacyContactForm(
     };
   }
 
-  return Object.fromEntries(
-    Object.entries(normalized).filter(([, value]) => value !== undefined)
-  ) as Partial<PharmacyContactFormValues>;
+  const result: Partial<PharmacyContactFormValues> = {};
+  if (normalized.name !== undefined) result.name = normalized.name;
+  if (normalized.address !== undefined) result.address = normalized.address;
+  if (normalized.phone !== undefined) result.phone = normalized.phone;
+  if (normalized.email !== undefined) result.email = normalized.email;
+  if (normalized.workingHours !== undefined) {
+    result.workingHours = normalized.workingHours;
+  }
+  return result;
 }
 
 //===================================================================
@@ -375,7 +382,6 @@ export function validatePharmacyAboutForm(
 
   const descriptionError = buildTextEditorError(values.description, {
     required: mode === 'verification',
-    trailingDot: true,
   });
 
   if (descriptionError) errors.description = descriptionError;
@@ -406,22 +412,18 @@ export function validatePharmacyPaymentForm(
 
   const recipientNameError = buildBankRecipientNameError(values.recipientName, {
     required,
-    trailingDot: true,
   });
 
   const taxIdError = buildTaxIdError(values.taxId, {
     required,
-    trailingDot: true,
   });
 
   const ibanError = buildIbanError(values.iban, {
     required,
-    trailingDot: true,
   });
 
   const bankNameError = buildBankNameError(values.bankName, {
     required,
-    trailingDot: true,
   });
 
   const receiptEmailError =
@@ -431,7 +433,6 @@ export function validatePharmacyPaymentForm(
 
   const paymentPurposeError = buildPaymentPurposeError(values.paymentPurpose, {
     required,
-    trailingDot: true,
   });
 
   if (recipientNameError) errors.recipientName = recipientNameError;
@@ -453,9 +454,13 @@ export function normalizePharmacyPaymentForm(
   const normalized = {
     recipientName: normalizeOptionalText(values.recipientName),
     taxId: normalizeOptionalText(values.taxId),
-    iban: normalizeOptionalText(values.iban)?.toUpperCase(),
+    iban: normalizeOptionalText(values.iban)
+      ? normalizeIban(values.iban)
+      : undefined,
     bankName: normalizeOptionalText(values.bankName),
-    receiptEmail: normalizeOptionalText(values.receiptEmail)?.toLowerCase(),
+    receiptEmail: normalizeOptionalText(values.receiptEmail)
+      ? normalizeEmail(values.receiptEmail)
+      : undefined,
     paymentPurpose: normalizeOptionalText(values.paymentPurpose),
   };
 
@@ -470,9 +475,20 @@ export function normalizePharmacyPaymentForm(
     };
   }
 
-  return Object.fromEntries(
-    Object.entries(normalized).filter(([, value]) => value !== undefined)
-  ) as Partial<PharmacyPaymentFormValues>;
+  const result: Partial<PharmacyPaymentFormValues> = {};
+  if (normalized.recipientName !== undefined) {
+    result.recipientName = normalized.recipientName;
+  }
+  if (normalized.taxId !== undefined) result.taxId = normalized.taxId;
+  if (normalized.iban !== undefined) result.iban = normalized.iban;
+  if (normalized.bankName !== undefined) result.bankName = normalized.bankName;
+  if (normalized.receiptEmail !== undefined) {
+    result.receiptEmail = normalized.receiptEmail;
+  }
+  if (normalized.paymentPurpose !== undefined) {
+    result.paymentPurpose = normalized.paymentPurpose;
+  }
+  return result;
 }
 
 //===================================================================

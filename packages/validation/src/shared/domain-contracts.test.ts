@@ -3,26 +3,22 @@ import test from 'node:test';
 
 import {
   buildPaymentPurposeError,
-  buildPictureUrlError,
   buildWorkingHoursError,
-  isCalendarDate,
-  isDateRangeValid,
-  validateDateRange,
-} from './index';
+  normalizePharmacyPaymentForm,
+  validatePharmacyContactForm,
+  validatePharmacyPaymentForm,
+} from '../profile';
 
 import {
   PICTURE_DATA_URL_MAX_LENGTH,
   PICTURE_HTTP_URL_MAX_LENGTH,
-} from '../picture';
+  buildPictureUrlError,
+  validatePharmacyDocuments,
+} from '../files';
+
+import { isCalendarDate, isDateRangeValid, validateDateRange } from '../url';
 
 import { ORDER_COMMENT_PATTERN, PAYMENT_PURPOSE_PATTERN } from './patterns';
-
-import {
-  normalizePharmacyPaymentForm,
-  validatePharmacyContactForm,
-  validatePharmacyDocuments,
-  validatePharmacyPaymentForm,
-} from '../profile';
 
 const validWorkingHours = [
   'Mon: 09:00-18:00',
@@ -125,20 +121,44 @@ test('pharmacy draft and verification validation modes are explicit', () => {
   };
 
   assert.deepEqual(validatePharmacyContactForm(emptyContact, 'draft'), {});
-
   assert.notDeepEqual(
     validatePharmacyContactForm(emptyContact, 'verification'),
     {}
   );
 
   assert.deepEqual(validatePharmacyPaymentForm(emptyPayment, 'draft'), {});
-
   assert.notDeepEqual(
     validatePharmacyPaymentForm(emptyPayment, 'verification'),
     {}
   );
 
   assert.deepEqual(normalizePharmacyPaymentForm(emptyPayment, 'draft'), {});
+});
+
+//=============================================================================
+
+test('pharmacy payment normalization lowercases email and uppercases IBAN', () => {
+  assert.deepEqual(
+    normalizePharmacyPaymentForm(
+      {
+        recipientName: 'Health Pharmacy LLC',
+        taxId: '12345678',
+        iban: ' ua123456789012345678901234567 ',
+        bankName: 'Example Bank',
+        receiptEmail: ' Billing@Example.COM ',
+        paymentPurpose: 'Payment for medicines',
+      },
+      'verification'
+    ),
+    {
+      recipientName: 'Health Pharmacy LLC',
+      taxId: '12345678',
+      iban: 'UA123456789012345678901234567',
+      bankName: 'Example Bank',
+      receiptEmail: 'billing@example.com',
+      paymentPurpose: 'Payment for medicines',
+    }
+  );
 });
 
 //=============================================================================
@@ -152,7 +172,6 @@ test('pharmacy document validation checks count, MIME, extension and size', () =
 
   assert.equal(validatePharmacyDocuments([validDocument]), '');
   assert.equal(validatePharmacyDocuments([{ ...validDocument, type: '' }]), '');
-
   assert.notEqual(
     validatePharmacyDocuments([
       { name: 'license.exe', type: 'application/octet-stream', size: 1024 },

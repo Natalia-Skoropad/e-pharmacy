@@ -1,12 +1,12 @@
-import type { Request, Response } from 'express';
+import type { Request } from 'express';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 
-import {
-  productRequestArticleAvailabilityQuerySchema,
-  productRequestFormSchema,
-  productRequestParamsSchema,
-  productRequestsQuerySchema,
+import type {
+  ProductRequestArticleAvailabilityQuery,
+  ProductRequestFormInput,
+  ProductRequestParams,
+  ProductRequestsQuery,
 } from '../schemas/product-request.schema';
 
 import {
@@ -18,111 +18,81 @@ import {
   updateProductRequestService,
 } from '../services/product-request.service';
 
+import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
 
 export async function createProductRequest(
   req: Request,
-  res: Response
+  res: ValidatedResponse<ProductRequestFormInput>
 ): Promise<void> {
-  const body = productRequestFormSchema.parse(req.body);
+  const { body } = res.locals.validated;
   const data = await createProductRequestService(req.user?.id ?? '', body);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.CREATED,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
 }
 
 //===============================================================
 
 export async function getProductRequestArticleAvailability(
-  req: Request,
-  res: Response
+  _req: Request,
+  res: ValidatedResponse<unknown, unknown, ProductRequestArticleAvailabilityQuery>
 ): Promise<void> {
-  const query = productRequestArticleAvailabilityQuerySchema.parse(req.query);
+  const { query } = res.locals.validated;
   const data = await getProductRequestArticleAvailabilityService(query);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getProductRequests(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, unknown, ProductRequestsQuery>
 ): Promise<void> {
-  const query = productRequestsQuerySchema.parse(req.query);
+  const { query } = res.locals.validated;
   const data = await getProductRequestsService(req.user?.id ?? '', query);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function getProductRequestById(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, ProductRequestParams>
 ): Promise<void> {
-  const { requestId } = productRequestParamsSchema.parse(req.params);
-  const data = await getProductRequestByIdService(
-    req.user?.id ?? '',
-    requestId
-  );
+  const { requestId } = res.locals.validated.params;
+  const data = await getProductRequestByIdService(req.user?.id ?? '', requestId);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function updateProductRequest(
   req: Request,
-  res: Response
+  res: ValidatedResponse<ProductRequestFormInput, ProductRequestParams>
 ): Promise<void> {
-  const { requestId } = productRequestParamsSchema.parse(req.params);
-  const body = productRequestFormSchema.parse(req.body);
+  const { body, params } = res.locals.validated;
   const data = await updateProductRequestService(
     req.user?.id ?? '',
-    requestId,
+    params.requestId,
     body
   );
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================
 
 export async function deleteProductRequest(
   req: Request,
-  res: Response
+  res: ValidatedResponse<unknown, ProductRequestParams>
 ): Promise<void> {
-  const { requestId } = productRequestParamsSchema.parse(req.params);
-  const data = await deleteProductRequestService(
-    req.user?.id ?? '',
-    requestId
-  );
+  const { requestId } = res.locals.validated.params;
+  const data = await deleteProductRequestService(req.user?.id ?? '', requestId);
 
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    data,
-  });
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

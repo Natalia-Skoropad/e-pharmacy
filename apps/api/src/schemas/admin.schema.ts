@@ -1,17 +1,11 @@
 import { z } from 'zod';
+import { mongoIdSchema } from './shared';
 import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
 
 //===============================================================
 
-const objectIdSchema = z
-  .string()
-  .trim()
-  .regex(/^[0-9a-fA-F]{24}$/, 'Invalid id');
-
-//===============================================================
-
 export const pharmacyIdParamsSchema = z.object({
-  pharmacyId: objectIdSchema,
+  pharmacyId: mongoIdSchema,
 });
 
 //===============================================================
@@ -31,3 +25,11 @@ export const updateAdminPharmacyStatusSchema = z.object({
 
 export const adminOnlyPharmacyRole = USER_ROLES.PHARMACY;
 export const activePharmacyStatus = PHARMACY_STATUSES.ACTIVE;
+
+//===============================================================
+
+export type AdminPharmacyParams = z.infer<typeof pharmacyIdParamsSchema>;
+
+export type UpdateAdminPharmacyStatusInput = z.infer<
+  typeof updateAdminPharmacyStatusSchema
+>;

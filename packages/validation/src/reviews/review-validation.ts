@@ -37,7 +37,6 @@ export function validateReviewForm(values: ReviewFormValues): ReviewFormErrors {
 
   const commentError = buildReviewCommentError(values.comment, {
     required: true,
-    trailingDot: true,
   });
   const ratingError = buildReviewRatingError(values.rating);
 

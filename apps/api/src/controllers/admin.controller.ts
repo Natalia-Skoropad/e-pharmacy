@@ -1,28 +1,33 @@
-import type { Request, Response } from 'express';
+import type { Request } from 'express';
+
 import { HTTP_STATUS } from '../constants/httpStatus';
+
+import type {
+  AdminPharmacyParams,
+  UpdateAdminPharmacyStatusInput,
+} from '../schemas/admin.schema';
+
+import type { CreatePharmacyUserInput } from '../schemas/auth.schema';
 
 import {
   createPharmacyUserByAdminService,
   updatePharmacyStatusByAdminService,
 } from '../services/admin.service';
 
+import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
-
-//===============================================================
-
-type AdminPharmacyParams = { pharmacyId: string };
 
 //===============================================================
 
 export async function createPharmacyUserByAdmin(
   req: Request,
-  res: Response
+  res: ValidatedResponse<CreatePharmacyUserInput>
 ): Promise<void> {
   const adminUserId = req.user?.id;
   if (!adminUserId) return;
 
   const pharmacy = await createPharmacyUserByAdminService(
-    req.body,
+    res.locals.validated.body,
     adminUserId
   );
   sendSuccessResponse({
@@ -37,15 +42,15 @@ export async function createPharmacyUserByAdmin(
 
 export async function updatePharmacyStatusByAdmin(
   req: Request,
-  res: Response
+  res: ValidatedResponse<UpdateAdminPharmacyStatusInput, AdminPharmacyParams>
 ): Promise<void> {
   const adminUserId = req.user?.id;
   if (!adminUserId) return;
 
-  const { pharmacyId } = req.params as AdminPharmacyParams;
+  const { pharmacyId } = res.locals.validated.params;
   const pharmacy = await updatePharmacyStatusByAdminService(
     pharmacyId,
-    req.body,
+    res.locals.validated.body,
     adminUserId
   );
 

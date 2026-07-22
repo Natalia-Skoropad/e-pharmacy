@@ -6,7 +6,7 @@ import {
   normalizeSlugEnumValue,
   slugifySegment,
   slugifyStatus,
-} from '@e-pharmacy/validation';
+} from '@e-pharmacy/validation/url';
 
 import { PHARMACY_ORDERS } from '@/lib/layout/routes';
 

@@ -24,10 +24,8 @@ import type {
   PharmacyOption,
 } from '@e-pharmacy/types';
 
-import {
-  CATALOG_SEARCH_MAX_LENGTH,
-  CATALOG_SEARCH_UPDATE_DELAY,
-} from '@/lib/catalog/catalog-config';
+import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
+import { CATALOG_SEARCH_UPDATE_DELAY } from '@/lib/catalog/catalog-config';
 
 import {
   buildProductCatalogPath,
@@ -267,7 +265,7 @@ function ProductCatalogFiltersForm({
         placeholder="All pharmacies"
         emptyMessage="No pharmacies found"
         isActive={Boolean(filters.pharmacyId)}
-        maxLength={CATALOG_SEARCH_MAX_LENGTH}
+        maxLength={USER_SEARCH_MAX_LENGTH}
         sanitizeQuery={sanitizeCatalogTextSearch}
         onChange={handlePharmacyChange}
       />
@@ -284,7 +282,7 @@ function ProductCatalogFiltersForm({
             value={name}
             placeholder="Product name"
             isActive={Boolean(filters.name)}
-            maxLength={CATALOG_SEARCH_MAX_LENGTH}
+            maxLength={USER_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogTextSearch}
             onChange={handleNameChange}
           />
@@ -295,7 +293,7 @@ function ProductCatalogFiltersForm({
             value={article}
             placeholder="Article"
             isActive={Boolean(filters.article)}
-            maxLength={CATALOG_SEARCH_MAX_LENGTH}
+            maxLength={USER_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogArticleSearch}
             onChange={handleArticleChange}
           />

@@ -8,8 +8,8 @@ import { PHONE_PATTERN } from './patterns';
 
 //=============================================================================
 
-export function sanitizeEmail(value: string): string {
-  return value.trim();
+export function normalizeEmail(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 //=============================================================================
@@ -48,6 +48,6 @@ export function sanitizeTaxId(value: string): string {
 
 //=============================================================================
 
-export function sanitizeIban(value: string): string {
+export function normalizeIban(value: string): string {
   return value.replace(/\s/g, '').toUpperCase().slice(0, IBAN_MAX_LENGTH);
 }

@@ -3,7 +3,7 @@ import { cache } from 'react';
 
 import { isReservedRootSlug } from '@/lib/routes';
 
-import { buildSlugId } from '@e-pharmacy/validation/shared';
+import { buildSlugId } from '@e-pharmacy/validation/url';
 import { buildProductPath, buildPharmacyPath } from '@/lib/routes';
 
 import { lookupProductBySlugId } from '@/lib/details/server/product-detail-page';
