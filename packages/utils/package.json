@@ -7,15 +7,22 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./formatters": "./src/formatters/index.ts",
+    "./collections": "./src/collections/index.ts",
+    "./date": "./src/date/index.ts",
     "./guards": "./src/guards/index.ts",
-    "./api": "./src/api/index.ts"
+    "./money": "./src/money/index.ts",
+    "./numbers": "./src/numbers/index.ts",
+    "./strings": "./src/strings/index.ts"
   },
   "scripts": {
-    "lint": "tsc --noEmit",
-    "type-check": "tsc --noEmit"
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit",
+    "test": "node ../../scripts/run-tsx-tests.mjs src"
   },
   "devDependencies": {
-    "typescript": "^5"
+    "typescript": "^5",
+    "tsx": "latest",
+    "@types/node": "latest"
   }
 }

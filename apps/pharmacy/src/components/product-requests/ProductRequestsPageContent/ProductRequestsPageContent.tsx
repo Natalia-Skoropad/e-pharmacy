@@ -1,5 +1,7 @@
 'use client';
 
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
+
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { FilePlus2 } from 'lucide-react';
@@ -39,10 +41,8 @@ import {
 
 import { getPharmacyProductRequests } from '@/lib/api/browser';
 
-import {
-  getPharmacyNewRequestPath,
-  getPharmacyRequestsFilterPath,
-} from '@/lib/layout/routes';
+import { getPharmacyNewRequestPath } from '@e-pharmacy/config/pharmacy';
+import { getPharmacyRequestsFilterPath } from '@/lib/layout/routes';
 
 import { buildProductRequestsPath } from '@/lib/product-requests/product-request-paths';
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
@@ -57,19 +57,6 @@ import { ProductRequestsFiltersDrawer } from '@/components/product-requests/Prod
 import { ProductRequestsTable } from '@/components/product-requests/ProductRequestsTable';
 
 import css from './ProductRequestsPageContent.module.css';
-
-//===================================================================
-
-function getActiveFiltersCount(filters: ProductRequestsFilterState): number {
-  return [
-    filters.date.from || filters.date.to,
-    filters.requestNumber.trim(),
-    filters.productArticle.trim(),
-    filters.productName.trim(),
-    filters.category !== 'all',
-    filters.status !== 'all',
-  ].filter(Boolean).length;
-}
 
 //===================================================================
 
@@ -207,7 +194,14 @@ function ProductRequestsPageContent({
     return () => window.clearTimeout(timeoutId);
   }, [filters, pathname, router]);
 
-  const activeFiltersCount = getActiveFiltersCount(filters);
+  const activeFiltersCount = countTrueConditions(
+    Boolean(filters.date.from || filters.date.to),
+    Boolean(filters.requestNumber.trim()),
+    Boolean(filters.productArticle.trim()),
+    Boolean(filters.productName.trim()),
+    filters.category !== 'all',
+    filters.status !== 'all'
+  );
   const hasActiveFilters = activeFiltersCount > 0;
 
   const handleFiltersChange = (nextFilters: ProductRequestsFilterState) => {

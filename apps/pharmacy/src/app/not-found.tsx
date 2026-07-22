@@ -1,6 +1,6 @@
 import { NotFoundPage as SharedNotFoundPage } from '@e-pharmacy/ui/status-pages';
 
-import { getPharmacyDashboardPath } from '@/lib/layout/routes';
+import { getPharmacyDashboardPath } from '@e-pharmacy/config/pharmacy';
 
 //===================================================================
 

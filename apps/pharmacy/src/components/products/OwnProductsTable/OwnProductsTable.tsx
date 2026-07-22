@@ -14,14 +14,14 @@ import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import type { EntityId } from '@e-pharmacy/types';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
-import { formatPrice } from '@e-pharmacy/utils/formatters';
+import { formatAmount } from '@e-pharmacy/utils/money';
 
 import {
   PRODUCT_STATUS_LABELS,
   type PharmacyProductRow,
 } from '@/lib/products/products';
 
-import { getPharmacyProductPath } from '@/lib/layout/routes';
+import { getPharmacyProductPath } from '@e-pharmacy/config/pharmacy';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
 import css from './OwnProductsTable.module.css';
@@ -115,7 +115,7 @@ function OwnProductsTable({
         width: '50px',
         title: <TableHeaderTitle parts={['Current', ' price, ', 'UAH']} />,
         render: (product) =>
-          formatPrice(product.currentPrice).replace(' UAH', ''),
+          formatAmount(product.currentPrice) ?? '—',
       },
       {
         key: 'status',

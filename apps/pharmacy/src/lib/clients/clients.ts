@@ -1,10 +1,12 @@
-import { normalizePaginatedResponse } from '@e-pharmacy/utils/api';
-
 import {
-  getNumberValue,
-  getStringValue,
-  isRecord,
-} from '@e-pharmacy/utils/guards';
+  normalizePaginatedResponse,
+  requirePaginatedResponse,
+} from '@e-pharmacy/api-client/response';
+
+import { isRecord } from '@e-pharmacy/utils/guards';
+import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
+import { getTrimmedString } from '@e-pharmacy/utils/strings';
+import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
 
 import type {
   EntityId,
@@ -60,11 +62,11 @@ export type PharmacyClientsQueryParams = Readonly<{
   successfulOrders?: ClientSuccessfulOrdersFilter;
 }>;
 
-export type PharmacyClientsResponse = Readonly<{
-  items: PharmacyClientRow[];
-  total: number;
-  earliestCreatedAt: string | null;
-}>;
+export type PharmacyClientsResponse = Readonly<
+  ApiPaginationResponse<PharmacyClientRow> & {
+    earliestCreatedAt: string | null;
+  }
+>;
 
 export type PharmacyClientPurchasedProduct = Readonly<{
   id: string;
@@ -91,14 +93,11 @@ export type PharmacyClientProductsQueryParams = Readonly<{
   status?: ProductStatus;
 }>;
 
-export type PharmacyClientProductsResponse = Readonly<{
-  items: PharmacyClientPurchasedProduct[];
-  page: number;
-  perPage: number;
-  total: number;
-  totalPages: number;
-  earliestCreatedAt: string | null;
-}>;
+export type PharmacyClientProductsResponse = Readonly<
+  ApiPaginationResponse<PharmacyClientPurchasedProduct> & {
+    earliestCreatedAt: string | null;
+  }
+>;
 
 //===================================================================
 
@@ -128,9 +127,9 @@ function getNestedRecord(
 
 function getClientId(client: Record<string, unknown>): string | undefined {
   return (
-    getStringValue(client.id) ??
-    getStringValue(client.clientId) ??
-    getStringValue(client._id)
+    getTrimmedString(client.id) ??
+    getTrimmedString(client.clientId) ??
+    getTrimmedString(client._id)
   );
 }
 
@@ -141,11 +140,11 @@ function getClientName(client: Record<string, unknown>): string {
   const profile = getNestedRecord(client, 'profile');
 
   return (
-    getStringValue(client.name) ??
-    getStringValue(client.fullName) ??
-    (nestedClient ? getStringValue(nestedClient.name) : undefined) ??
-    (nestedClient ? getStringValue(nestedClient.fullName) : undefined) ??
-    (profile ? getStringValue(profile.name) : undefined) ??
+    getTrimmedString(client.name) ??
+    getTrimmedString(client.fullName) ??
+    (nestedClient ? getTrimmedString(nestedClient.name) : undefined) ??
+    (nestedClient ? getTrimmedString(nestedClient.fullName) : undefined) ??
+    (profile ? getTrimmedString(profile.name) : undefined) ??
     'Not specified'
   );
 }
@@ -157,9 +156,9 @@ function getClientEmail(client: Record<string, unknown>): string {
   const profile = getNestedRecord(client, 'profile');
 
   return (
-    getStringValue(client.email) ??
-    (nestedClient ? getStringValue(nestedClient.email) : undefined) ??
-    (profile ? getStringValue(profile.email) : undefined) ??
+    getTrimmedString(client.email) ??
+    (nestedClient ? getTrimmedString(nestedClient.email) : undefined) ??
+    (profile ? getTrimmedString(profile.email) : undefined) ??
     'Not specified'
   );
 }
@@ -171,9 +170,9 @@ function getClientPhone(client: Record<string, unknown>): string {
   const profile = getNestedRecord(client, 'profile');
 
   return (
-    getStringValue(client.phone) ??
-    (nestedClient ? getStringValue(nestedClient.phone) : undefined) ??
-    (profile ? getStringValue(profile.phone) : undefined) ??
+    getTrimmedString(client.phone) ??
+    (nestedClient ? getTrimmedString(nestedClient.phone) : undefined) ??
+    (profile ? getTrimmedString(profile.phone) : undefined) ??
     'Not specified'
   );
 }
@@ -185,9 +184,9 @@ function getClientAddress(client: Record<string, unknown>): string {
   const profile = getNestedRecord(client, 'profile');
 
   return (
-    getStringValue(client.address) ??
-    (nestedClient ? getStringValue(nestedClient.address) : undefined) ??
-    (profile ? getStringValue(profile.address) : undefined) ??
+    getTrimmedString(client.address) ??
+    (nestedClient ? getTrimmedString(nestedClient.address) : undefined) ??
+    (profile ? getTrimmedString(profile.address) : undefined) ??
     'Not specified'
   );
 }
@@ -199,13 +198,13 @@ function getClientPhoto(client: Record<string, unknown>): string | null {
   const profile = getNestedRecord(client, 'profile');
 
   return (
-    getStringValue(client.photoUrl) ??
-    getStringValue(client.pictureUrl) ??
-    getStringValue(client.avatarUrl) ??
-    (nestedClient ? getStringValue(nestedClient.photoUrl) : undefined) ??
-    (nestedClient ? getStringValue(nestedClient.pictureUrl) : undefined) ??
-    (profile ? getStringValue(profile.photoUrl) : undefined) ??
-    (profile ? getStringValue(profile.pictureUrl) : undefined) ??
+    getTrimmedString(client.photoUrl) ??
+    getTrimmedString(client.pictureUrl) ??
+    getTrimmedString(client.avatarUrl) ??
+    (nestedClient ? getTrimmedString(nestedClient.photoUrl) : undefined) ??
+    (nestedClient ? getTrimmedString(nestedClient.pictureUrl) : undefined) ??
+    (profile ? getTrimmedString(profile.photoUrl) : undefined) ??
+    (profile ? getTrimmedString(profile.pictureUrl) : undefined) ??
     null
   );
 }
@@ -219,12 +218,12 @@ function getSuccessfulOrdersCount(client: Record<string, unknown>): number {
     : undefined;
 
   return (
-    getNumberValue(client.successfulOrdersCount) ??
-    getNumberValue(client.successfulOrders) ??
+    getFiniteNumber(client.successfulOrdersCount) ??
+    getFiniteNumber(client.successfulOrders) ??
     (statistics
-      ? getNumberValue(statistics.successfulOrdersCount)
+      ? getFiniteNumber(statistics.successfulOrdersCount)
       : undefined) ??
-    (successful ? getNumberValue(successful.count) : undefined) ??
+    (successful ? getFiniteNumber(successful.count) : undefined) ??
     0
   );
 }
@@ -238,12 +237,12 @@ function getSuccessfulOrdersAmount(client: Record<string, unknown>): number {
     : undefined;
 
   return (
-    getNumberValue(client.successfulOrdersAmount) ??
-    getNumberValue(client.successfulOrdersTotal) ??
+    getFiniteNumber(client.successfulOrdersAmount) ??
+    getFiniteNumber(client.successfulOrdersTotal) ??
     (statistics
-      ? getNumberValue(statistics.successfulOrdersAmount)
+      ? getFiniteNumber(statistics.successfulOrdersAmount)
       : undefined) ??
-    (successful ? getNumberValue(successful.amount) : undefined) ??
+    (successful ? getFiniteNumber(successful.amount) : undefined) ??
     0
   );
 }
@@ -264,9 +263,9 @@ export function normalizePharmacyClient(
     id,
     photoUrl: getClientPhoto(rawClient),
     firstOrderAt:
-      getStringValue(rawClient.firstOrderAt) ??
-      getStringValue(rawClient.firstOrderDate) ??
-      getStringValue(rawClient.createdAt) ??
+      getTrimmedString(rawClient.firstOrderAt) ??
+      getTrimmedString(rawClient.firstOrderDate) ??
+      getTrimmedString(rawClient.createdAt) ??
       '',
     name: getClientName(rawClient),
     email: isDefault ? '' : getClientEmail(rawClient),
@@ -279,8 +278,8 @@ export function normalizePharmacyClient(
       : isClientStatus(rawClient.status)
         ? rawClient.status
         : 'active',
-    ...(getStringValue(rawClient.statusReason)
-      ? { statusReason: getStringValue(rawClient.statusReason) }
+    ...(getTrimmedString(rawClient.statusReason)
+      ? { statusReason: getTrimmedString(rawClient.statusReason) }
       : {}),
     isDefault,
   };
@@ -291,15 +290,18 @@ export function normalizePharmacyClient(
 export function normalizePharmacyClientsResponse(
   payload: unknown
 ): PharmacyClientsResponse {
-  const response = normalizePaginatedResponse(payload, {
-    itemKeys: ['items', 'clients'],
-    normalizeItem: normalizePharmacyClient,
-  });
+  const response = requirePaginatedResponse(
+    normalizePaginatedResponse(payload, {
+      itemKeys: ['items', 'clients'],
+      normalizeItem: normalizePharmacyClient,
+    }),
+    'pharmacy clients response'
+  );
 
   return {
     ...response,
     earliestCreatedAt: isRecord(payload)
-      ? (getStringValue(payload.earliestCreatedAt) ?? null)
+      ? (getTrimmedString(payload.earliestCreatedAt) ?? null)
       : null,
   };
 }
@@ -317,12 +319,12 @@ function normalizePharmacyClientPurchasedProduct(
 ): PharmacyClientPurchasedProduct | null {
   if (!isRecord(payload)) return null;
 
-  const id = getStringValue(payload.id);
-  const orderId = getStringValue(payload.orderId);
-  const orderDate = getStringValue(payload.orderDate);
-  const productId = getStringValue(payload.productId);
-  const article = getStringValue(payload.article);
-  const name = getStringValue(payload.name);
+  const id = getTrimmedString(payload.id);
+  const orderId = getTrimmedString(payload.orderId);
+  const orderDate = getTrimmedString(payload.orderDate);
+  const productId = getTrimmedString(payload.productId);
+  const article = getTrimmedString(payload.article);
+  const name = getTrimmedString(payload.name);
   const category = payload.category;
   const status = payload.status;
 
@@ -344,12 +346,12 @@ function normalizePharmacyClientPurchasedProduct(
     orderId,
     orderDate,
     productId,
-    photoUrl: getStringValue(payload.photoUrl) ?? null,
+    photoUrl: getTrimmedString(payload.photoUrl) ?? null,
     article,
     name,
     category,
-    quantity: getNumberValue(payload.quantity) ?? 0,
-    totalAmount: getNumberValue(payload.totalAmount) ?? 0,
+    quantity: getFiniteNumber(payload.quantity) ?? 0,
+    totalAmount: getFiniteNumber(payload.totalAmount) ?? 0,
     status,
   };
 }
@@ -359,19 +361,18 @@ function normalizePharmacyClientPurchasedProduct(
 export function normalizePharmacyClientProductsResponse(
   payload: unknown
 ): PharmacyClientProductsResponse {
-  const response = normalizePaginatedResponse(payload, {
-    itemKeys: ['items', 'products'],
-    normalizeItem: normalizePharmacyClientPurchasedProduct,
-  });
-
-  const record = isRecord(payload) ? payload : {};
+  const response = requirePaginatedResponse(
+    normalizePaginatedResponse(payload, {
+      itemKeys: ['items', 'products'],
+      normalizeItem: normalizePharmacyClientPurchasedProduct,
+    }),
+    'pharmacy client products response'
+  );
 
   return {
-    items: response.items,
-    page: Math.max(1, getNumberValue(record.page) ?? 1),
-    perPage: Math.max(1, getNumberValue(record.perPage) ?? 20),
-    total: response.total,
-    totalPages: Math.max(0, getNumberValue(record.totalPages) ?? 0),
-    earliestCreatedAt: getStringValue(record.earliestCreatedAt) ?? null,
+    ...response,
+    earliestCreatedAt: isRecord(payload)
+      ? (getTrimmedString(payload.earliestCreatedAt) ?? null)
+      : null,
   };
 }

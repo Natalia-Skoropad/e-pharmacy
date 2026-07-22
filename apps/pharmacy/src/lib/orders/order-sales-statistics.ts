@@ -1,4 +1,6 @@
-import { getNumberValue, getStringValue, isRecord } from '@e-pharmacy/utils/guards';
+import { isRecord } from '@e-pharmacy/utils/guards';
+import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
+import { getTrimmedString } from '@e-pharmacy/utils/strings';
 
 import {
   DEFAULT_ORDER_SALES_STATISTICS,
@@ -34,8 +36,8 @@ function normalizeSalesValue(value: unknown): OrderSalesStatisticsValue {
   if (!isRecord(value)) return { quantity: 0, amount: 0 };
 
   return {
-    quantity: getNumberValue(value.quantity) ?? 0,
-    amount: getNumberValue(value.amount) ?? 0,
+    quantity: getFiniteNumber(value.quantity) ?? 0,
+    amount: getFiniteNumber(value.amount) ?? 0,
   };
 }
 
@@ -47,8 +49,8 @@ function normalizeSalesPoint(
 ): OrderSalesStatisticsPoint | null {
   if (!isRecord(value)) return null;
 
-  const key = getStringValue(value.key);
-  const label = getStringValue(value.label);
+  const key = getTrimmedString(value.key);
+  const label = getTrimmedString(value.label);
 
   if (!key || !label) return null;
 

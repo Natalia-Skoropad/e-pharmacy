@@ -45,9 +45,23 @@ export function getStatusTone(
 
 //===================================================================
 
-export function formatStatusLabel(status: PharmacyStatusVariant) {
-  return status
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+const STATUS_LABELS: Record<PharmacyStatusVariant, string> = {
+  new: 'New',
+  in_work: 'In work',
+  in_progress: 'In progress',
+  on_moderation: 'On moderation',
+  on_verification: 'On verification',
+  active: 'Active',
+  successful: 'Successful',
+  approved: 'Approved',
+  blocked: 'Blocked',
+  rejected: 'Rejected',
+  draft: 'Draft',
+  empty: 'Empty',
+};
+
+//===================================================================
+
+export function formatStatusLabel(status: PharmacyStatusVariant): string {
+  return STATUS_LABELS[status];
 }

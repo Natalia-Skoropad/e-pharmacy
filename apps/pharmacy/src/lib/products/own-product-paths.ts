@@ -9,8 +9,7 @@ import {
 } from '@e-pharmacy/validation/url';
 
 import { isProductCategory } from '@e-pharmacy/types/products';
-
-import { PHARMACY_PRODUCTS } from '@/lib/layout/routes';
+import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
 
 import {
   DEFAULT_OWN_PRODUCTS_FILTERS,
@@ -18,11 +17,7 @@ import {
   type OwnProductsStockFilter,
 } from './own-products-filters';
 
-import {
-  OWN_PRODUCT_STATUSES,
-  STOCK_AVAILABILITY_FILTERS,
-  type OwnProductStatus,
-} from './products';
+import { OWN_PRODUCT_STATUSES, STOCK_AVAILABILITY_FILTERS } from './products';
 
 //===================================================================
 
@@ -43,12 +38,6 @@ type OwnProductsFilterDraft = {
 export type OwnProductsRouteParams = Readonly<{
   filters?: string[];
 }>;
-
-//===================================================================
-
-function normalizeStatusSegment(value: string): OwnProductStatus | null {
-  return normalizeSlugEnumValue(value, OWN_PRODUCT_STATUSES);
-}
 
 //===================================================================
 
@@ -130,7 +119,10 @@ export function parseOwnProductsSegments(
     }
 
     if (segment.startsWith('status-')) {
-      const status = normalizeStatusSegment(segment.replace('status-', ''));
+      const status = normalizeSlugEnumValue(
+        segment.replace('status-', ''),
+        OWN_PRODUCT_STATUSES
+      );
 
       if (status) {
         filters.status = status;
@@ -218,6 +210,6 @@ export function buildOwnProductsPath(filters: OwnProductsFilterState): string {
   }
 
   return segments.length
-    ? `${PHARMACY_PRODUCTS}/${segments.join('/')}`
-    : PHARMACY_PRODUCTS;
+    ? `${PHARMACY_ROUTES.PRODUCTS}/${segments.join('/')}`
+    : PHARMACY_ROUTES.PRODUCTS;
 }

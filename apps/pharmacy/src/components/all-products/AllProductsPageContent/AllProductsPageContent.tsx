@@ -17,6 +17,7 @@ import { AllProductStatistics, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
 
 import {
   useBackdropClick,
@@ -55,19 +56,6 @@ import { AllProductsFiltersDrawer } from '@/components/all-products/AllProductsF
 import { AllProductsTable } from '@/components/all-products/AllProductsTable';
 
 import css from './AllProductsPageContent.module.css';
-
-//===================================================================
-
-function getActiveFiltersCount(filters: AllProductsFilterState): number {
-  return [
-    filters.createdDate.from || filters.createdDate.to,
-    filters.name.trim(),
-    filters.article.trim(),
-    filters.category !== 'all',
-    filters.status !== 'all',
-    filters.addedToMyPharmacy !== 'all',
-  ].filter(Boolean).length;
-}
 
 //===================================================================
 
@@ -271,7 +259,14 @@ function AllProductsPageContent({
     return () => window.clearTimeout(timeoutId);
   }, [filters, pathname, router]);
 
-  const activeFiltersCount = getActiveFiltersCount(filters);
+  const activeFiltersCount = countTrueConditions(
+    Boolean(filters.createdDate.from || filters.createdDate.to),
+    Boolean(filters.name.trim()),
+    Boolean(filters.article.trim()),
+    filters.category !== 'all',
+    filters.status !== 'all',
+    filters.addedToMyPharmacy !== 'all'
+  );
   const hasActiveFilters = activeFiltersCount > 0;
 
   const handleFiltersChange = (nextFilters: AllProductsFilterState) => {

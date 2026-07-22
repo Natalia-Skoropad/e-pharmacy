@@ -64,17 +64,8 @@ import {
   getPharmacyOwnProductStatistics,
 } from '@/lib/products/product-statistics';
 
-import {
-  getPharmacyAllProductsPath,
-  getPharmacyClientsFilterPath,
-  getPharmacyClientsPath,
-  getPharmacyOrdersFilterPath,
-  getPharmacyOrdersPath,
-  getPharmacyProductsFilterPath,
-  getPharmacyProductsPath,
-  getPharmacyProductRequestsPath,
-  getPharmacyRequestsFilterPath,
-} from '@/lib/layout/routes';
+import { getPharmacyAllProductsPath, getPharmacyClientsPath, getPharmacyOrdersPath, getPharmacyProductsPath, getPharmacyProductRequestsPath } from '@e-pharmacy/config/pharmacy';
+import { getPharmacyClientsFilterPath, getPharmacyOrdersFilterPath, getPharmacyProductsFilterPath, getPharmacyRequestsFilterPath } from '@/lib/layout/routes';
 
 import css from './PharmacyDashboardPageContent.module.css';
 

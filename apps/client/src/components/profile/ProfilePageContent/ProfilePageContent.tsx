@@ -29,11 +29,9 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
-import {
-  formatCapitalizedLabel,
-  formatPrice,
-  formatShortDate,
-} from '@e-pharmacy/utils/formatters';
+import { capitalizeFirst } from '@e-pharmacy/utils/strings';
+import { formatMoney } from '@e-pharmacy/utils/money';
+import { formatShortDate } from '@e-pharmacy/utils/date';
 
 import {
   CHANGE_PASSWORD_FORM_FIELDS,
@@ -271,7 +269,7 @@ function ProfilePageContent() {
       {
         key: 'date',
         title: 'Date',
-        render: (order) => formatShortDate(order.createdAt),
+        render: (order) => formatShortDate(order.createdAt) ?? '—',
       },
       {
         key: 'orderNumber',
@@ -300,7 +298,7 @@ function ProfilePageContent() {
       {
         key: 'amount',
         title: 'Order amount',
-        render: (order) => formatPrice(order.totalPrice),
+        render: (order) => formatMoney(order.totalPrice) ?? '—',
       },
       {
         key: 'status',
@@ -718,11 +716,11 @@ function ProfilePageContent() {
               <dl className={css.compactDetails}>
                 <div>
                   <dt>Role</dt>
-                  <dd>{formatCapitalizedLabel(user.role)}</dd>
+                  <dd>{capitalizeFirst(user.role)}</dd>
                 </div>
                 <div>
                   <dt>Status</dt>
-                  <dd>{formatCapitalizedLabel(user.status)}</dd>
+                  <dd>{capitalizeFirst(user.status)}</dd>
                 </div>
               </dl>
             </aside>
@@ -919,7 +917,7 @@ function ProfilePageContent() {
                               <span>{session.ip || 'IP unavailable'}</span>
                               <span>
                                 Last active:{' '}
-                                {formatShortDate(session.lastUsedAt)}
+                                {formatShortDate(session.lastUsedAt) ?? '—'}
                               </span>
                             </div>
                             {session.isCurrent ? (

@@ -15,7 +15,7 @@ import {
   type ClientSuccessfulOrdersFilter as ClientSuccessfulOrdersValue,
 } from '@e-pharmacy/types/clients';
 
-import { PHARMACY_CLIENTS } from '@/lib/layout/routes';
+import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
 
 import { CLIENT_STATUSES, type ClientStatus } from './clients';
 
@@ -32,9 +32,8 @@ const CLIENT_SLUG_OPTIONS = {
 //===================================================================
 
 export type ClientStatusFilter = 'all' | ClientStatus;
-export type ClientSuccessfulOrdersFilter =
-  | 'all'
-  | ClientSuccessfulOrdersValue;
+
+export type ClientSuccessfulOrdersFilter = 'all' | ClientSuccessfulOrdersValue;
 
 //===================================================================
 
@@ -77,12 +76,6 @@ type ClientsFilterDraft = {
   status: ClientsFilterState['status'];
   successfulOrders: ClientsFilterState['successfulOrders'];
 };
-
-//===================================================================
-
-function normalizeStatusSegment(value: string): ClientStatus | null {
-  return normalizeSlugEnumValue(value, CLIENT_STATUSES);
-}
 
 //===================================================================
 
@@ -161,7 +154,9 @@ export function parseClientsSegments(
     }
 
     if (segment.startsWith('contact-')) {
-      filters.contact = deslugifyContactSegment(segment.replace('contact-', ''));
+      filters.contact = deslugifyContactSegment(
+        segment.replace('contact-', '')
+      );
       continue;
     }
 
@@ -176,12 +171,17 @@ export function parseClientsSegments(
     }
 
     if (segment.startsWith('address-')) {
-      filters.contact = deslugifyContactSegment(segment.replace('address-', ''));
+      filters.contact = deslugifyContactSegment(
+        segment.replace('address-', '')
+      );
       continue;
     }
 
     if (segment.startsWith('status-')) {
-      const status = normalizeStatusSegment(segment.replace('status-', ''));
+      const status = normalizeSlugEnumValue(
+        segment.replace('status-', ''),
+        CLIENT_STATUSES
+      );
 
       if (status) {
         filters.status = status;
@@ -272,6 +272,6 @@ export function buildClientsPath(filters: ClientsFilterState): string {
   }
 
   return segments.length
-    ? `${PHARMACY_CLIENTS}/${segments.join('/')}`
-    : PHARMACY_CLIENTS;
+    ? `${PHARMACY_ROUTES.CLIENTS}/${segments.join('/')}`
+    : PHARMACY_ROUTES.CLIENTS;
 }

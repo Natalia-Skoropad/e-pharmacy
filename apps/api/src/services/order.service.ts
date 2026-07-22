@@ -12,6 +12,8 @@ import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
 
 import { httpError } from '../utils/httpError';
+import { getEndOfDay, getStartOfDay } from '../utils/date-range';
+import { createSafeRegExp } from '../utils/regexp';
 
 import {
   commitReservedStock,
@@ -159,18 +161,10 @@ async function hydrateOrderPharmacyDetails(
 ): Promise<OrderDocument> {
   const pharmacy = await Pharmacy.findById(order.pharmacyId)
     .select('bankDetails email phone address city workingHours')
-    .lean<
-      | Pick<
-          PharmacyDocument,
-          | 'bankDetails'
-          | 'email'
-          | 'phone'
-          | 'address'
-          | 'city'
-          | 'workingHours'
-        >
-      | null
-    >();
+    .lean<Pick<
+      PharmacyDocument,
+      'bankDetails' | 'email' | 'phone' | 'address' | 'city' | 'workingHours'
+    > | null>();
 
   if (!pharmacy) return order;
 
@@ -186,9 +180,7 @@ async function hydrateOrderPharmacyDetails(
       ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
       ...(pharmacy.address ? { address: pharmacy.address } : {}),
       ...(pharmacy.city ? { city: pharmacy.city } : {}),
-      ...(pharmacy.workingHours
-        ? { workingHours: pharmacy.workingHours }
-        : {}),
+      ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
       ...(bankDetails ? { bankDetails } : {}),
     },
   };
@@ -278,7 +270,7 @@ function serializeOrder(
     clientName: clientUser?.name ?? undefined,
     clientPhotoUrl: clientUser?.isDefaultPharmacyClient
       ? order.pharmacySnapshot.imageUrl
-      : clientUser?.pictureUrl ?? undefined,
+      : (clientUser?.pictureUrl ?? undefined),
     ...(!clientUser?.isDefaultPharmacyClient && clientUser?.phone
       ? { clientPhone: clientUser.phone }
       : {}),
@@ -859,7 +851,7 @@ export async function createManagerOrderService(
 
       const isDefaultClient = Boolean(
         client.isDefaultPharmacyClient &&
-          client.defaultClientPharmacyId?.equals(pharmacy._id)
+        client.defaultClientPharmacyId?.equals(pharmacy._id)
       );
 
       if (!isDefaultClient) {
@@ -1406,7 +1398,9 @@ export async function updateOrderDetailsService(
       getOrderProductFallbacks(updatedOrder),
       getOrderOfferFallbacks(updatedOrder),
       User.findById(updatedOrder.userId)
-        .select('name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId')
+        .select(
+          'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
+        )
         .lean<UserDocument | null>(),
     ]);
 
@@ -1704,7 +1698,9 @@ export async function updateOrderStatusService(
       getOrderProductFallbacks(updatedOrder),
       getOrderOfferFallbacks(updatedOrder),
       User.findById(updatedOrder.userId)
-        .select('name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId')
+        .select(
+          'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
+        )
         .lean<UserDocument | null>(),
     ]);
 
@@ -1723,26 +1719,6 @@ export async function updateOrderStatusService(
   } finally {
     await session.endSession();
   }
-}
-
-//===============================================================
-
-function getStartOfDay(value: string): Date {
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return Number.isNaN(date.getTime()) ? new Date(0) : date;
-}
-
-//===============================================================
-
-function getEndOfDay(value: string): Date {
-  const date = new Date(`${value}T23:59:59.999Z`);
-  return Number.isNaN(date.getTime()) ? new Date(0) : date;
-}
-
-//===============================================================
-
-function createOrderSearchRegExp(value: string): RegExp {
-  return new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
 }
 
 //===============================================================
@@ -2069,11 +2045,11 @@ export async function getOrdersService(
   }
 
   if (query.orderNumber?.trim()) {
-    filter.orderNumber = createOrderSearchRegExp(query.orderNumber.trim());
+    filter.orderNumber = createSafeRegExp(query.orderNumber.trim());
   }
 
   if (query.client?.trim()) {
-    filter['delivery.details.recipientName'] = createOrderSearchRegExp(
+    filter['delivery.details.recipientName'] = createSafeRegExp(
       query.client.trim()
     );
   }
@@ -2101,7 +2077,7 @@ export async function getOrdersService(
   }
 
   if (query.comment?.trim()) {
-    const commentRegExp = createOrderSearchRegExp(query.comment.trim());
+    const commentRegExp = createSafeRegExp(query.comment.trim());
 
     filter.$or = [
       { comment: commentRegExp },
@@ -2112,7 +2088,7 @@ export async function getOrdersService(
   }
 
   if (query.clientComment?.trim()) {
-    filter.comment = createOrderSearchRegExp(query.clientComment.trim());
+    filter.comment = createSafeRegExp(query.clientComment.trim());
   }
 
   if (query.clientCommentPresence === 'with') {
@@ -2158,7 +2134,9 @@ export async function getOrdersService(
   const clients = await User.find({
     _id: { $in: orders.map((order) => order.userId) },
   })
-    .select('name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId')
+    .select(
+      'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
+    )
     .lean<UserDocument[]>();
 
   const clientMap: ClientUserMap = new Map(
@@ -2217,7 +2195,9 @@ export async function getOrderByIdService(
     getOrderProductFallbacks(hydratedOrder),
     getOrderOfferFallbacks(hydratedOrder),
     User.findById(order.userId)
-      .select('name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId')
+      .select(
+        'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
+      )
       .lean<UserDocument | null>(),
   ]);
 

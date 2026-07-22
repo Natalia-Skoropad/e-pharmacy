@@ -1,10 +1,11 @@
-import { normalizePaginatedResponse } from '@e-pharmacy/utils/api';
-
 import {
-  getNumberValue,
-  getStringValue,
-  isRecord,
-} from '@e-pharmacy/utils/guards';
+  normalizePaginatedResponse,
+  requirePaginatedResponse,
+} from '@e-pharmacy/api-client/response';
+
+import { isRecord } from '@e-pharmacy/utils/guards';
+import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
+import { getTrimmedString } from '@e-pharmacy/utils/strings';
 
 import {
   DEFAULT_ORDER_STATISTICS,
@@ -14,6 +15,7 @@ import {
 import { isProductCategory } from '@e-pharmacy/types/products';
 
 import type {
+  ApiPaginationResponse,
   DeliveryMethod,
   EntityId,
   OrderActivityType,
@@ -35,9 +37,13 @@ export const PAYMENT_METHODS = [
   'bank_transfer',
 ] as const satisfies readonly PaymentMethod[];
 
+//===================================================================
+
 export const ORDER_CREATED_BY_TYPES = ['client', 'manager'] as const;
 
 export type OrderCreatedByType = (typeof ORDER_CREATED_BY_TYPES)[number];
+
+//===================================================================
 
 export const ORDER_STATUSES = [
   'new',
@@ -133,13 +139,9 @@ export type PharmacyOrderDetails = PharmacyOrderRow &
     managerCommentsCount: number;
   }>;
 
-export type PharmacyOrderManagerCommentsResponse = Readonly<{
-  items: PharmacyOrderManagerComment[];
-  page: number;
-  perPage: number;
-  total: number;
-  totalPages: number;
-}>;
+export type PharmacyOrderManagerCommentsResponse = Readonly<
+  ApiPaginationResponse<PharmacyOrderManagerComment>
+>;
 
 export type PharmacyOrdersQueryParams = Readonly<{
   page?: number;
@@ -159,12 +161,12 @@ export type PharmacyOrdersQueryParams = Readonly<{
   clientCommentPresence?: 'with' | 'without';
 }>;
 
-export type PharmacyOrdersResponse = Readonly<{
-  items: PharmacyOrderRow[];
-  total: number;
-  statistics: OrderStatisticsCounts;
-  earliestCreatedAt: string | null;
-}>;
+export type PharmacyOrdersResponse = Readonly<
+  ApiPaginationResponse<PharmacyOrderRow> & {
+    statistics: OrderStatisticsCounts;
+    earliestCreatedAt: string | null;
+  }
+>;
 
 //===================================================================
 
@@ -248,14 +250,14 @@ function getClientId(order: Record<string, unknown>): string | null {
   const user = getNestedRecord(order, 'user');
 
   return (
-    getStringValue(order.clientId) ??
-    getStringValue(order.customerId) ??
-    getStringValue(order.userId) ??
-    (client ? getStringValue(client.id) : undefined) ??
-    (client ? getStringValue(client.clientId) : undefined) ??
-    (client ? getStringValue(client._id) : undefined) ??
-    (customer ? getStringValue(customer.id) : undefined) ??
-    (user ? getStringValue(user.id) : undefined) ??
+    getTrimmedString(order.clientId) ??
+    getTrimmedString(order.customerId) ??
+    getTrimmedString(order.userId) ??
+    (client ? getTrimmedString(client.id) : undefined) ??
+    (client ? getTrimmedString(client.clientId) : undefined) ??
+    (client ? getTrimmedString(client._id) : undefined) ??
+    (customer ? getTrimmedString(customer.id) : undefined) ??
+    (user ? getTrimmedString(user.id) : undefined) ??
     null
   );
 }
@@ -269,16 +271,16 @@ function getClientPhotoUrl(order: Record<string, unknown>): string | null {
   const profile = client ? getNestedRecord(client, 'profile') : undefined;
 
   return (
-    getStringValue(order.clientPhotoUrl) ??
-    getStringValue(order.clientAvatarUrl) ??
-    getStringValue(order.photoUrl) ??
-    (client ? getStringValue(client.photoUrl) : undefined) ??
-    (client ? getStringValue(client.pictureUrl) : undefined) ??
-    (client ? getStringValue(client.avatarUrl) : undefined) ??
-    (customer ? getStringValue(customer.photoUrl) : undefined) ??
-    (user ? getStringValue(user.photoUrl) : undefined) ??
-    (profile ? getStringValue(profile.photoUrl) : undefined) ??
-    (profile ? getStringValue(profile.pictureUrl) : undefined) ??
+    getTrimmedString(order.clientPhotoUrl) ??
+    getTrimmedString(order.clientAvatarUrl) ??
+    getTrimmedString(order.photoUrl) ??
+    (client ? getTrimmedString(client.photoUrl) : undefined) ??
+    (client ? getTrimmedString(client.pictureUrl) : undefined) ??
+    (client ? getTrimmedString(client.avatarUrl) : undefined) ??
+    (customer ? getTrimmedString(customer.photoUrl) : undefined) ??
+    (user ? getTrimmedString(user.photoUrl) : undefined) ??
+    (profile ? getTrimmedString(profile.photoUrl) : undefined) ??
+    (profile ? getTrimmedString(profile.pictureUrl) : undefined) ??
     null
   );
 }
@@ -299,21 +301,21 @@ function getDeliveryMethod(order: Record<string, unknown>): DeliveryMethod {
 //===================================================================
 
 function getClientName(order: Record<string, unknown>): string {
-  const directClientName = getStringValue(order.clientName);
+  const directClientName = getTrimmedString(order.clientName);
   if (directClientName) return directClientName;
 
-  const directClient = getStringValue(order.client);
+  const directClient = getTrimmedString(order.client);
   if (directClient) return directClient;
 
   const client = order.client;
   if (isRecord(client)) {
-    const fullName = getStringValue(client.name);
+    const fullName = getTrimmedString(client.name);
     if (fullName) return fullName;
   }
 
   const delivery = order.delivery;
   if (isRecord(delivery) && isRecord(delivery.details)) {
-    const recipientName = getStringValue(delivery.details.recipientName);
+    const recipientName = getTrimmedString(delivery.details.recipientName);
     if (recipientName) return recipientName;
   }
 
@@ -327,11 +329,11 @@ function normalizePharmacyOrderItem(
 ): PharmacyOrderItem | null {
   if (!isRecord(rawItem)) return null;
 
-  const id = getStringValue(rawItem.id) ?? getStringValue(rawItem._id);
-  const productId = getStringValue(rawItem.productId);
-  const productOfferId = getStringValue(rawItem.productOfferId);
-  const name = getStringValue(rawItem.name) ?? 'Product';
-  const article = getStringValue(rawItem.article) ?? '—';
+  const id = getTrimmedString(rawItem.id) ?? getTrimmedString(rawItem._id);
+  const productId = getTrimmedString(rawItem.productId);
+  const productOfferId = getTrimmedString(rawItem.productOfferId);
+  const name = getTrimmedString(rawItem.name) ?? 'Product';
+  const article = getTrimmedString(rawItem.article) ?? '—';
   const category = rawItem.category;
 
   if (!id || !productId || !productOfferId) return null;
@@ -343,23 +345,23 @@ function normalizePharmacyOrderItem(
     name,
     article,
     ...(isProductCategory(category) ? { category } : {}),
-    ...(getStringValue(rawItem.imageUrl)
-      ? { imageUrl: getStringValue(rawItem.imageUrl) }
+    ...(getTrimmedString(rawItem.imageUrl)
+      ? { imageUrl: getTrimmedString(rawItem.imageUrl) }
       : {}),
-    ...(typeof getNumberValue(rawItem.rating) === 'number'
-      ? { rating: getNumberValue(rawItem.rating) }
+    ...(typeof getFiniteNumber(rawItem.rating) === 'number'
+      ? { rating: getFiniteNumber(rawItem.rating) }
       : {}),
-    ...(typeof getNumberValue(rawItem.reviewsCount) === 'number'
-      ? { reviewsCount: getNumberValue(rawItem.reviewsCount) }
+    ...(typeof getFiniteNumber(rawItem.reviewsCount) === 'number'
+      ? { reviewsCount: getFiniteNumber(rawItem.reviewsCount) }
       : {}),
-    quantity: getNumberValue(rawItem.quantity) ?? 0,
-    unitPrice: getNumberValue(rawItem.unitPrice) ?? 0,
-    totalPrice: getNumberValue(rawItem.totalPrice) ?? 0,
-    ...(typeof getNumberValue(rawItem.availableQuantity) === 'number'
-      ? { availableQuantity: getNumberValue(rawItem.availableQuantity) }
+    quantity: getFiniteNumber(rawItem.quantity) ?? 0,
+    unitPrice: getFiniteNumber(rawItem.unitPrice) ?? 0,
+    totalPrice: getFiniteNumber(rawItem.totalPrice) ?? 0,
+    ...(typeof getFiniteNumber(rawItem.availableQuantity) === 'number'
+      ? { availableQuantity: getFiniteNumber(rawItem.availableQuantity) }
       : {}),
-    ...(typeof getNumberValue(rawItem.currentPrice) === 'number'
-      ? { currentPrice: getNumberValue(rawItem.currentPrice) }
+    ...(typeof getFiniteNumber(rawItem.currentPrice) === 'number'
+      ? { currentPrice: getFiniteNumber(rawItem.currentPrice) }
       : {}),
   };
 }
@@ -371,10 +373,11 @@ export function normalizePharmacyOrder(
 ): PharmacyOrderRow | null {
   if (!isRecord(rawOrder)) return null;
 
-  const id = getStringValue(rawOrder.id);
-  const orderNumber = getStringValue(rawOrder.orderNumber) ?? id;
+  const id = getTrimmedString(rawOrder.id);
+  const orderNumber = getTrimmedString(rawOrder.orderNumber) ?? id;
   const orderDate =
-    getStringValue(rawOrder.orderDate) ?? getStringValue(rawOrder.createdAt);
+    getTrimmedString(rawOrder.orderDate) ??
+    getTrimmedString(rawOrder.createdAt);
 
   if (!id || !orderNumber || !orderDate) return null;
 
@@ -392,23 +395,23 @@ export function normalizePharmacyOrder(
     id,
     orderNumber,
     orderDate,
-    pharmacyName: getStringValue(rawOrder.pharmacyName) ?? 'Pharmacy',
+    pharmacyName: getTrimmedString(rawOrder.pharmacyName) ?? 'Pharmacy',
     client: getClientName(rawOrder),
     clientId: getClientId(rawOrder),
     clientPhotoUrl: getClientPhotoUrl(rawOrder),
     deliveryMethod: getDeliveryMethod(rawOrder),
     paymentMethod,
     clientComment:
-      getStringValue(rawOrder.clientComment) ??
-      getStringValue(rawOrder.comment) ??
+      getTrimmedString(rawOrder.clientComment) ??
+      getTrimmedString(rawOrder.comment) ??
       '',
     totalQuantity:
-      getNumberValue(rawOrder.totalQuantity) ??
-      getNumberValue(rawOrder.totalItems) ??
+      getFiniteNumber(rawOrder.totalQuantity) ??
+      getFiniteNumber(rawOrder.totalItems) ??
       0,
     totalAmount:
-      getNumberValue(rawOrder.totalAmount) ??
-      getNumberValue(rawOrder.totalPrice) ??
+      getFiniteNumber(rawOrder.totalAmount) ??
+      getFiniteNumber(rawOrder.totalPrice) ??
       0,
     status,
     createdByType: isOrderCreatedByType(rawOrder.createdByType)
@@ -430,8 +433,8 @@ function normalizeStatusHistory(
       if (!isRecord(entry)) return null;
 
       const status = isOrderStatus(entry.status) ? entry.status : null;
-      const changedAt = getStringValue(entry.changedAt);
-      const changedBy = getStringValue(entry.changedBy);
+      const changedAt = getTrimmedString(entry.changedAt);
+      const changedBy = getTrimmedString(entry.changedBy);
 
       if (!status || !changedAt || !changedBy) return null;
 
@@ -439,8 +442,8 @@ function normalizeStatusHistory(
         status,
         changedAt,
         changedBy,
-        ...(getStringValue(entry.comment)
-          ? { comment: getStringValue(entry.comment) }
+        ...(getTrimmedString(entry.comment)
+          ? { comment: getTrimmedString(entry.comment) }
           : {}),
       };
     })
@@ -458,16 +461,16 @@ function normalizeActivityHistory(
     .map((entry) => {
       if (!isRecord(entry) || !isOrderActivityType(entry.type)) return null;
 
-      const occurredAt = getStringValue(entry.occurredAt);
-      const changedBy = getStringValue(entry.changedBy);
-      const productId = getStringValue(entry.productId);
-      const productOfferId = getStringValue(entry.productOfferId);
-      const productName = getStringValue(entry.productName);
-      const previousQuantity = getNumberValue(entry.previousQuantity);
-      const quantity = getNumberValue(entry.quantity);
-      const quantityDelta = getNumberValue(entry.quantityDelta);
-      const previousUnitPrice = getNumberValue(entry.previousUnitPrice);
-      const unitPrice = getNumberValue(entry.unitPrice);
+      const occurredAt = getTrimmedString(entry.occurredAt);
+      const changedBy = getTrimmedString(entry.changedBy);
+      const productId = getTrimmedString(entry.productId);
+      const productOfferId = getTrimmedString(entry.productOfferId);
+      const productName = getTrimmedString(entry.productName);
+      const previousQuantity = getFiniteNumber(entry.previousQuantity);
+      const quantity = getFiniteNumber(entry.quantity);
+      const quantityDelta = getFiniteNumber(entry.quantityDelta);
+      const previousUnitPrice = getFiniteNumber(entry.previousUnitPrice);
+      const unitPrice = getFiniteNumber(entry.unitPrice);
 
       if (
         !occurredAt ||
@@ -510,10 +513,10 @@ export function normalizePharmacyOrderManagerComment(
 ): PharmacyOrderManagerComment | null {
   if (!isRecord(payload)) return null;
 
-  const id = getStringValue(payload.id) ?? getStringValue(payload._id);
-  const text = getStringValue(payload.text);
-  const createdAt = getStringValue(payload.createdAt);
-  const createdBy = getStringValue(payload.createdBy);
+  const id = getTrimmedString(payload.id) ?? getTrimmedString(payload._id);
+  const text = getTrimmedString(payload.text);
+  const createdAt = getTrimmedString(payload.createdAt);
+  const createdBy = getTrimmedString(payload.createdBy);
 
   if (!id || !text || !createdAt || !createdBy) return null;
 
@@ -523,23 +526,12 @@ export function normalizePharmacyOrderManagerComment(
 export function normalizePharmacyOrderManagerCommentsResponse(
   payload: unknown
 ): PharmacyOrderManagerCommentsResponse {
-  if (!isRecord(payload)) {
-    return { items: [], page: 1, perPage: 5, total: 0, totalPages: 1 };
-  }
-
-  const items = Array.isArray(payload.items)
-    ? payload.items
-        .map(normalizePharmacyOrderManagerComment)
-        .filter((item): item is PharmacyOrderManagerComment => Boolean(item))
-    : [];
-
-  return {
-    items,
-    page: Math.max(1, getNumberValue(payload.page) ?? 1),
-    perPage: Math.max(1, getNumberValue(payload.perPage) ?? 5),
-    total: Math.max(0, getNumberValue(payload.total) ?? items.length),
-    totalPages: Math.max(1, getNumberValue(payload.totalPages) ?? 1),
-  };
+  return requirePaginatedResponse(
+    normalizePaginatedResponse(payload, {
+      normalizeItem: normalizePharmacyOrderManagerComment,
+    }),
+    'pharmacy order comments response'
+  );
 }
 
 //===================================================================
@@ -547,11 +539,11 @@ export function normalizePharmacyOrderManagerCommentsResponse(
 function normalizeBankDetails(payload: unknown): PharmacyBankDetails | null {
   if (!isRecord(payload)) return null;
 
-  const recipientName = getStringValue(payload.recipientName);
-  const taxId = getStringValue(payload.taxId);
-  const iban = getStringValue(payload.iban);
-  const bankName = getStringValue(payload.bankName);
-  const paymentPurpose = getStringValue(payload.paymentPurpose);
+  const recipientName = getTrimmedString(payload.recipientName);
+  const taxId = getTrimmedString(payload.taxId);
+  const iban = getTrimmedString(payload.iban);
+  const bankName = getTrimmedString(payload.bankName);
+  const paymentPurpose = getTrimmedString(payload.paymentPurpose);
 
   if (!recipientName || !taxId || !iban || !bankName || !paymentPurpose) {
     return null;
@@ -563,8 +555,8 @@ function normalizeBankDetails(payload: unknown): PharmacyBankDetails | null {
     iban,
     bankName,
     paymentPurpose,
-    ...(getStringValue(payload.receiptEmail)
-      ? { receiptEmail: getStringValue(payload.receiptEmail) }
+    ...(getTrimmedString(payload.receiptEmail)
+      ? { receiptEmail: getTrimmedString(payload.receiptEmail) }
       : {}),
   };
 }
@@ -587,54 +579,54 @@ export function normalizePharmacyOrderDetails(
   return {
     ...row,
     currency: 'UAH',
-    pharmacyId: getStringValue(payload.pharmacyId) ?? '',
+    pharmacyId: getTrimmedString(payload.pharmacyId) ?? '',
     statusHistory: normalizeStatusHistory(payload.statusHistory),
     activityHistory: normalizeActivityHistory(payload.activityHistory),
     managerCommentsCount:
-      getNumberValue(payload.managerCommentsCount) ??
+      getFiniteNumber(payload.managerCommentsCount) ??
       (Array.isArray(payload.managerComments)
         ? payload.managerComments.length
-        : getStringValue(payload.managerComment)
+        : getTrimmedString(payload.managerComment)
           ? 1
           : 0),
-    ...(getStringValue(payload.clientPhone)
-      ? { clientPhone: getStringValue(payload.clientPhone) }
+    ...(getTrimmedString(payload.clientPhone)
+      ? { clientPhone: getTrimmedString(payload.clientPhone) }
       : {}),
-    ...(getStringValue(payload.clientAddress)
-      ? { clientAddress: getStringValue(payload.clientAddress) }
+    ...(getTrimmedString(payload.clientAddress)
+      ? { clientAddress: getTrimmedString(payload.clientAddress) }
       : {}),
-    ...(getStringValue(payload.pharmacyPhone)
-      ? { pharmacyPhone: getStringValue(payload.pharmacyPhone) }
+    ...(getTrimmedString(payload.pharmacyPhone)
+      ? { pharmacyPhone: getTrimmedString(payload.pharmacyPhone) }
       : {}),
-    ...(getStringValue(payload.pharmacyAddress)
-      ? { pharmacyAddress: getStringValue(payload.pharmacyAddress) }
+    ...(getTrimmedString(payload.pharmacyAddress)
+      ? { pharmacyAddress: getTrimmedString(payload.pharmacyAddress) }
       : {}),
-    ...(getStringValue(payload.pharmacyWorkingHours)
+    ...(getTrimmedString(payload.pharmacyWorkingHours)
       ? {
-          pharmacyWorkingHours: getStringValue(payload.pharmacyWorkingHours),
+          pharmacyWorkingHours: getTrimmedString(payload.pharmacyWorkingHours),
         }
       : {}),
-    ...(getStringValue(payload.pharmacyEmail)
-      ? { pharmacyEmail: getStringValue(payload.pharmacyEmail) }
+    ...(getTrimmedString(payload.pharmacyEmail)
+      ? { pharmacyEmail: getTrimmedString(payload.pharmacyEmail) }
       : {}),
     ...(bankDetails ? { bankDetails } : {}),
-    ...(getStringValue(deliveryDetails?.address)
-      ? { deliveryAddress: getStringValue(deliveryDetails?.address) }
+    ...(getTrimmedString(deliveryDetails?.address)
+      ? { deliveryAddress: getTrimmedString(deliveryDetails?.address) }
       : {}),
-    ...(getStringValue(deliveryDetails?.recipientName)
-      ? { recipientName: getStringValue(deliveryDetails?.recipientName) }
+    ...(getTrimmedString(deliveryDetails?.recipientName)
+      ? { recipientName: getTrimmedString(deliveryDetails?.recipientName) }
       : {}),
-    ...(getStringValue(deliveryDetails?.recipientPhone)
-      ? { recipientPhone: getStringValue(deliveryDetails?.recipientPhone) }
+    ...(getTrimmedString(deliveryDetails?.recipientPhone)
+      ? { recipientPhone: getTrimmedString(deliveryDetails?.recipientPhone) }
       : {}),
-    ...(getStringValue(payload.pharmacyComment)
-      ? { pharmacyComment: getStringValue(payload.pharmacyComment) }
+    ...(getTrimmedString(payload.pharmacyComment)
+      ? { pharmacyComment: getTrimmedString(payload.pharmacyComment) }
       : {}),
-    ...(getStringValue(payload.managerComment)
-      ? { managerComment: getStringValue(payload.managerComment) }
+    ...(getTrimmedString(payload.managerComment)
+      ? { managerComment: getTrimmedString(payload.managerComment) }
       : {}),
-    ...(getStringValue(payload.rejectionReason)
-      ? { rejectionReason: getStringValue(payload.rejectionReason) }
+    ...(getTrimmedString(payload.rejectionReason)
+      ? { rejectionReason: getTrimmedString(payload.rejectionReason) }
       : {}),
   };
 }
@@ -652,8 +644,8 @@ function normalizeOrderStatistics(payload: unknown): OrderStatisticsCounts {
     return {
       ...acc,
       [status]: {
-        count: getNumberValue(value.count) ?? 0,
-        amount: getNumberValue(value.amount) ?? 0,
+        count: getFiniteNumber(value.count) ?? 0,
+        amount: getFiniteNumber(value.amount) ?? 0,
       },
     };
   }, DEFAULT_ORDER_STATISTICS);
@@ -664,9 +656,12 @@ function normalizeOrderStatistics(payload: unknown): OrderStatisticsCounts {
 export function normalizePharmacyOrdersResponse(
   payload: unknown
 ): PharmacyOrdersResponse {
-  const response = normalizePaginatedResponse(payload, {
-    normalizeItem: normalizePharmacyOrder,
-  });
+  const response = requirePaginatedResponse(
+    normalizePaginatedResponse(payload, {
+      normalizeItem: normalizePharmacyOrder,
+    }),
+    'pharmacy orders response'
+  );
 
   return {
     ...response,
@@ -674,7 +669,7 @@ export function normalizePharmacyOrdersResponse(
       ? normalizeOrderStatistics(payload.statistics)
       : DEFAULT_ORDER_STATISTICS,
     earliestCreatedAt: isRecord(payload)
-      ? (getStringValue(payload.earliestCreatedAt) ?? null)
+      ? (getTrimmedString(payload.earliestCreatedAt) ?? null)
       : null,
   };
 }

@@ -17,10 +17,7 @@ import {
   type ProductRequestRow,
 } from '@e-pharmacy/types/product-requests';
 
-import {
-  getPharmacyAllProductPath,
-  getPharmacyRequestPath,
-} from '@/lib/layout/routes';
+import { getPharmacyAllProductPath, getPharmacyRequestPath } from '@e-pharmacy/config/pharmacy';
 
 import { getProductImageSrc } from '@/lib/products/product-images';
 

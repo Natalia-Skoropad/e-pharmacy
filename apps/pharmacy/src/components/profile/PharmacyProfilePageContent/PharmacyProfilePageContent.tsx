@@ -34,7 +34,7 @@ import {
 import { EntityComments, useToast } from '@e-pharmacy/ui/feedback';
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { useAuth } from '@e-pharmacy/auth/core';
-import { formatOrderDateTime } from '@e-pharmacy/utils/formatters';
+import { formatDateTime } from '@e-pharmacy/utils/date';
 
 import type {
   ActiveSession,
@@ -380,13 +380,7 @@ function PendingModerationBox({
 //===================================================================
 
 function formatSessionDate(value: string): string {
-  if (!value) return 'Unknown';
-
-  try {
-    return formatOrderDateTime(value);
-  } catch {
-    return value;
-  }
+  return formatDateTime(value) ?? 'Unknown';
 }
 
 //===================================================================

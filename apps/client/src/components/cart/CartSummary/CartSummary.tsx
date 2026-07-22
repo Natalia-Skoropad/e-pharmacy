@@ -1,7 +1,7 @@
 import { ShieldAlert } from 'lucide-react';
 
 import { Button, ButtonLink } from '@e-pharmacy/ui/common';
-import { formatPrice } from '@e-pharmacy/utils/formatters';
+import { formatMoney } from '@e-pharmacy/utils/money';
 
 import css from './CartSummary.module.css';
 
@@ -40,7 +40,7 @@ function CartSummary({
 
         <div className={css.row}>
           <dt>Total</dt>
-          <dd>{formatPrice(totalPrice)}</dd>
+          <dd>{formatMoney(totalPrice) ?? '—'}</dd>
         </div>
       </dl>
 

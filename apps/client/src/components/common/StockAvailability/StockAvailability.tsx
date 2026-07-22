@@ -1,4 +1,4 @@
-import { formatStockLabel } from '@e-pharmacy/utils/formatters';
+import { formatStockLabel } from '@e-pharmacy/utils/numbers';
 
 //===================================================================
 
@@ -21,7 +21,7 @@ function StockAvailability({
 }: StockAvailabilityProps) {
   return (
     <p className={className}>
-      {formatStockLabel(normalizeStockQuantity(stockQuantity))}
+      {formatStockLabel(normalizeStockQuantity(stockQuantity)) ?? '—'}
     </p>
   );
 }

@@ -48,7 +48,7 @@ import {
   type ProductRequestStatus,
 } from '@e-pharmacy/types/product-requests';
 
-import { formatOrderDateTime } from '@e-pharmacy/utils/formatters';
+import { formatDateTime } from '@e-pharmacy/utils/date';
 
 import {
   PRODUCT_REQUEST_ATTACHMENT_MAX_SIZE_MB,
@@ -84,12 +84,7 @@ import {
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
-import {
-  getPharmacyAllProductsPath,
-  getPharmacyNewRequestPath,
-  getPharmacyRequestPath,
-  getPharmacyProductRequestsPath,
-} from '@/lib/layout/routes';
+import { getPharmacyAllProductsPath, getPharmacyNewRequestPath, getPharmacyRequestPath, getPharmacyProductRequestsPath } from '@e-pharmacy/config/pharmacy';
 
 import {
   getLockedFeatureBannerLabel,
@@ -764,7 +759,7 @@ function NewProductRequestPageContent({
             meta={
               <span className={css.statusUpdatedAt}>
                 <Clock3 size={16} aria-hidden="true" />
-                Last updated {formatOrderDateTime(request.updatedAt)}
+                Last updated {formatDateTime(request.updatedAt) ?? '—'}
               </span>
             }
           />
@@ -1237,7 +1232,7 @@ function NewProductRequestPageContent({
                   <div className={css.historyContent}>
                     <strong>{entry.title}</strong>
                     <time dateTime={entry.createdAt}>
-                      {formatOrderDateTime(entry.createdAt)}
+                      {formatDateTime(entry.createdAt) ?? '—'}
                     </time>
                     <StatusBadge
                       status={entry.status}

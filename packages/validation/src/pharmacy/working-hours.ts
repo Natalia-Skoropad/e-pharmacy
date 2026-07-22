@@ -155,3 +155,31 @@ export function getWorkingHoursValidationIssue(
 
   return null;
 }
+
+//===================================================================
+
+export type WorkingHoursDisplayItem = Readonly<{
+  day: WorkingDayKey;
+  label: string;
+  hours: string;
+}>;
+
+//===================================================================
+
+export function getWorkingHoursDisplayItems(
+  value: string
+): WorkingHoursDisplayItem[] | null {
+  if (getWorkingHoursValidationIssue(value) !== null) return null;
+
+  const parsedValue = parseWorkingHoursValue(value);
+
+  return WORKING_DAYS.map(({ key, label }) => {
+    const dayValue = parsedValue[key];
+
+    return {
+      day: key,
+      label,
+      hours: dayValue.isClosed ? 'Closed' : `${dayValue.from}-${dayValue.to}`,
+    };
+  });
+}

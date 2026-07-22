@@ -16,7 +16,7 @@ import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 import type { EntityId, Product } from '@e-pharmacy/types';
 
 import { PRODUCT_STATUS_LABELS } from '@/lib/products/products';
-import { getPharmacyAllProductPath } from '@/lib/layout/routes';
+import { getPharmacyAllProductPath } from '@e-pharmacy/config/pharmacy';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
 //===================================================================

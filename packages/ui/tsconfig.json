@@ -28,6 +28,10 @@
       "@e-pharmacy/validation/*": [
         "../validation/src/*/index.ts",
         "../validation/src/*.ts"
+      ],
+      "@e-pharmacy/utils/*": [
+        "../utils/src/*/index.ts",
+        "../utils/src/*.ts"
       ]
     }
   }

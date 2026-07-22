@@ -8,13 +8,9 @@ import {
   slugifyStatus,
 } from '@e-pharmacy/validation/url';
 
-import { PHARMACY_ORDERS } from '@/lib/layout/routes';
+import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
 
-import type {
-  DeliveryMethod,
-  OrderStatus,
-  PaymentMethod,
-} from '@e-pharmacy/types';
+import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types';
 
 import { DELIVERY_METHODS, ORDER_STATUSES, PAYMENT_METHODS } from './orders';
 
@@ -48,12 +44,6 @@ function normalizeDeliveryMethodSegment(value: string): DeliveryMethod | null {
 
 function normalizePaymentMethodSegment(value: string): PaymentMethod | null {
   return normalizeSlugEnumValue(value, PAYMENT_METHODS);
-}
-
-//===================================================================
-
-function normalizeStatusSegment(value: string): OrderStatus | null {
-  return normalizeSlugEnumValue(value, ORDER_STATUSES);
 }
 
 //===================================================================
@@ -131,7 +121,10 @@ export function parseOrdersSegments(
     }
 
     if (segment.startsWith('status-')) {
-      const status = normalizeStatusSegment(segment.replace('status-', ''));
+      const status = normalizeSlugEnumValue(
+        segment.replace('status-', ''),
+        ORDER_STATUSES
+      );
 
       if (status) {
         filters.status = status;
@@ -221,6 +214,6 @@ export function buildOrdersPath(filters: OrdersFilterState): string {
   }
 
   return segments.length
-    ? `${PHARMACY_ORDERS}/${segments.join('/')}`
-    : PHARMACY_ORDERS;
+    ? `${PHARMACY_ROUTES.ORDERS}/${segments.join('/')}`
+    : PHARMACY_ROUTES.ORDERS;
 }

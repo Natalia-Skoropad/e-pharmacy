@@ -1,11 +1,13 @@
 import { isProductCategory } from '@e-pharmacy/types/products';
-import { normalizePaginatedResponse } from '@e-pharmacy/utils/api';
 
 import {
-  getNumberValue,
-  getStringValue,
-  isRecord,
-} from '@e-pharmacy/utils/guards';
+  normalizePaginatedResponse,
+  requirePaginatedResponse,
+} from '@e-pharmacy/api-client/response';
+
+import { isRecord } from '@e-pharmacy/utils/guards';
+import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
+import { getTrimmedString } from '@e-pharmacy/utils/strings';
 
 import {
   normalizeProductRequestStatus,
@@ -39,17 +41,17 @@ function normalizeProductRequestFile(
 ): ProductRequestFile | null {
   if (!isRecord(rawFile)) return null;
 
-  const name = getStringValue(rawFile.name);
-  const size = getNumberValue(rawFile.size);
+  const name = getTrimmedString(rawFile.name);
+  const size = getFiniteNumber(rawFile.size);
 
   if (!name || size === undefined) return null;
 
   return {
     name,
-    type: getStringValue(rawFile.type) ?? 'application/octet-stream',
+    type: getTrimmedString(rawFile.type) ?? 'application/octet-stream',
     size,
-    ...(getStringValue(rawFile.dataUrl)
-      ? { dataUrl: getStringValue(rawFile.dataUrl) }
+    ...(getTrimmedString(rawFile.dataUrl)
+      ? { dataUrl: getTrimmedString(rawFile.dataUrl) }
       : {}),
   };
 }
@@ -62,16 +64,16 @@ function normalizeProductRequestHistoryEntry(
 ): ProductRequestHistoryEntry | null {
   if (!isRecord(rawEntry)) return null;
 
-  const createdAt = getStringValue(rawEntry.createdAt);
-  const title = getStringValue(rawEntry.title);
-  const description = getStringValue(rawEntry.description);
+  const createdAt = getTrimmedString(rawEntry.createdAt);
+  const title = getTrimmedString(rawEntry.title);
+  const description = getTrimmedString(rawEntry.description);
 
   if (!createdAt || !title || !description) return null;
 
   return {
     id:
-      getStringValue(rawEntry.id) ??
-      getStringValue(rawEntry._id) ??
+      getTrimmedString(rawEntry.id) ??
+      getTrimmedString(rawEntry._id) ??
       `history-${index}`,
     status: normalizeProductRequestStatus(rawEntry.status),
     title,
@@ -87,11 +89,12 @@ export function normalizeProductRequest(
 ): ProductRequestRow | null {
   if (!isRecord(rawRequest)) return null;
 
-  const id = getStringValue(rawRequest.id) ?? getStringValue(rawRequest._id);
+  const id =
+    getTrimmedString(rawRequest.id) ?? getTrimmedString(rawRequest._id);
   const createdAt =
-    getStringValue(rawRequest.createdAt) ??
-    getStringValue(rawRequest.createdDate) ??
-    getStringValue(rawRequest.updatedAt);
+    getTrimmedString(rawRequest.createdAt) ??
+    getTrimmedString(rawRequest.createdDate) ??
+    getTrimmedString(rawRequest.updatedAt);
 
   if (!id || !createdAt) return null;
 
@@ -100,29 +103,29 @@ export function normalizeProductRequest(
     : undefined;
 
   const productId =
-    getStringValue(rawRequest.productId) ??
-    getStringValue(rawProduct?.id) ??
-    getStringValue(rawProduct?._id) ??
-    getStringValue(rawRequest.product);
+    getTrimmedString(rawRequest.productId) ??
+    getTrimmedString(rawProduct?.id) ??
+    getTrimmedString(rawProduct?._id) ??
+    getTrimmedString(rawRequest.product);
 
   const productImageUrl =
-    getStringValue(rawRequest.productImageUrl) ??
-    getStringValue(rawRequest.imageUrl) ??
-    getStringValue(rawProduct?.imageUrl);
+    getTrimmedString(rawRequest.productImageUrl) ??
+    getTrimmedString(rawRequest.imageUrl) ??
+    getTrimmedString(rawProduct?.imageUrl);
 
   const productArticle =
-    getStringValue(rawRequest.productArticle) ??
-    getStringValue(rawRequest.article) ??
+    getTrimmedString(rawRequest.productArticle) ??
+    getTrimmedString(rawRequest.article) ??
     '—';
 
   const productName =
-    getStringValue(rawRequest.productName) ??
-    getStringValue(rawRequest.name) ??
+    getTrimmedString(rawRequest.productName) ??
+    getTrimmedString(rawRequest.name) ??
     'Unnamed request';
 
   return {
     id,
-    requestNumber: getStringValue(rawRequest.requestNumber) ?? id,
+    requestNumber: getTrimmedString(rawRequest.requestNumber) ?? id,
     createdAt,
     productId,
     productImageUrl,
@@ -131,8 +134,8 @@ export function normalizeProductRequest(
     category: isProductCategory(rawRequest.category)
       ? rawRequest.category
       : 'other',
-    ...(getStringValue(rawRequest.customCategory)
-      ? { customCategory: getStringValue(rawRequest.customCategory) }
+    ...(getTrimmedString(rawRequest.customCategory)
+      ? { customCategory: getTrimmedString(rawRequest.customCategory) }
       : {}),
     status: normalizeProductRequestStatus(rawRequest.status),
   };
@@ -160,43 +163,43 @@ export function normalizeProductRequestDetails(
 
   return {
     ...request,
-    updatedAt: getStringValue(rawRequest.updatedAt) ?? request.createdAt,
-    name: getStringValue(rawRequest.name) ?? request.productName,
-    article: getStringValue(rawRequest.article) ?? request.productArticle,
+    updatedAt: getTrimmedString(rawRequest.updatedAt) ?? request.createdAt,
+    name: getTrimmedString(rawRequest.name) ?? request.productName,
+    article: getTrimmedString(rawRequest.article) ?? request.productArticle,
     ...(productImage ? { productImage } : {}),
-    ...(getStringValue(rawRequest.manufacturer)
-      ? { manufacturer: getStringValue(rawRequest.manufacturer) }
+    ...(getTrimmedString(rawRequest.manufacturer)
+      ? { manufacturer: getTrimmedString(rawRequest.manufacturer) }
       : {}),
-    ...(getStringValue(rawRequest.countryOfOrigin)
-      ? { countryOfOrigin: getStringValue(rawRequest.countryOfOrigin) }
+    ...(getTrimmedString(rawRequest.countryOfOrigin)
+      ? { countryOfOrigin: getTrimmedString(rawRequest.countryOfOrigin) }
       : {}),
-    ...(getStringValue(rawRequest.dosage)
-      ? { dosage: getStringValue(rawRequest.dosage) }
+    ...(getTrimmedString(rawRequest.dosage)
+      ? { dosage: getTrimmedString(rawRequest.dosage) }
       : {}),
-    ...(getStringValue(rawRequest.packageSize)
-      ? { packageSize: getStringValue(rawRequest.packageSize) }
+    ...(getTrimmedString(rawRequest.packageSize)
+      ? { packageSize: getTrimmedString(rawRequest.packageSize) }
       : {}),
-    ...(getStringValue(rawRequest.form)
-      ? { form: getStringValue(rawRequest.form) }
+    ...(getTrimmedString(rawRequest.form)
+      ? { form: getTrimmedString(rawRequest.form) }
       : {}),
-    ...(getStringValue(rawRequest.activeSubstance)
-      ? { activeSubstance: getStringValue(rawRequest.activeSubstance) }
+    ...(getTrimmedString(rawRequest.activeSubstance)
+      ? { activeSubstance: getTrimmedString(rawRequest.activeSubstance) }
       : {}),
-    ...(getStringValue(rawRequest.prescriptionType)
-      ? { prescriptionType: getStringValue(rawRequest.prescriptionType) }
+    ...(getTrimmedString(rawRequest.prescriptionType)
+      ? { prescriptionType: getTrimmedString(rawRequest.prescriptionType) }
       : {}),
-    ...(getStringValue(rawRequest.fullDescription)
-      ? { fullDescription: getStringValue(rawRequest.fullDescription) }
+    ...(getTrimmedString(rawRequest.fullDescription)
+      ? { fullDescription: getTrimmedString(rawRequest.fullDescription) }
       : {}),
-    ...(getStringValue(rawRequest.pharmacyComment)
-      ? { pharmacyComment: getStringValue(rawRequest.pharmacyComment) }
+    ...(getTrimmedString(rawRequest.pharmacyComment)
+      ? { pharmacyComment: getTrimmedString(rawRequest.pharmacyComment) }
       : {}),
     ...(additionalFiles.length ? { additionalFiles } : {}),
-    ...(getStringValue(rawRequest.rejectionReason)
-      ? { rejectionReason: getStringValue(rawRequest.rejectionReason) }
+    ...(getTrimmedString(rawRequest.rejectionReason)
+      ? { rejectionReason: getTrimmedString(rawRequest.rejectionReason) }
       : {}),
     history,
-    commentsTotal: getNumberValue(rawRequest.commentsTotal) ?? 0,
+    commentsTotal: getFiniteNumber(rawRequest.commentsTotal) ?? 0,
   };
 }
 
@@ -205,15 +208,18 @@ export function normalizeProductRequestDetails(
 export function normalizeProductRequestsResponse(
   payload: unknown
 ): ProductRequestsResponse {
-  const response = normalizePaginatedResponse(payload, {
-    itemKeys: ['items', 'requests'],
-    normalizeItem: normalizeProductRequest,
-  });
+  const response = requirePaginatedResponse(
+    normalizePaginatedResponse(payload, {
+      itemKeys: ['items', 'requests'],
+      normalizeItem: normalizeProductRequest,
+    }),
+    'product requests response'
+  );
 
   return {
     ...response,
     earliestCreatedAt: isRecord(payload)
-      ? (getStringValue(payload.earliestCreatedAt) ?? null)
+      ? (getTrimmedString(payload.earliestCreatedAt) ?? null)
       : null,
   };
 }

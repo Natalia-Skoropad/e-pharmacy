@@ -4,15 +4,17 @@ import {
   type OwnProductStatisticsCounts,
 } from '@e-pharmacy/types/products';
 
-import { normalizePaginatedResponse } from '@e-pharmacy/utils/api';
-
 import {
-  getNumberValue,
-  getStringValue,
-  isRecord,
-} from '@e-pharmacy/utils/guards';
+  normalizePaginatedResponse,
+  requirePaginatedResponse,
+} from '@e-pharmacy/api-client/response';
+
+import { isRecord } from '@e-pharmacy/utils/guards';
+import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
+import { getTrimmedString } from '@e-pharmacy/utils/strings';
 
 import type {
+  ApiPaginationResponse,
   EntityId,
   ProductCategory,
   ProductStatus,
@@ -69,12 +71,12 @@ export type PharmacyProductsQueryParams = Readonly<{
   stock?: StockAvailabilityFilter;
 }>;
 
-export type PharmacyProductsResponse = Readonly<{
-  items: PharmacyProductRow[];
-  total: number;
-  statistics: OwnProductStatisticsCounts;
-  earliestCreatedAt: string | null;
-}>;
+export type PharmacyProductsResponse = Readonly<
+  ApiPaginationResponse<PharmacyProductRow> & {
+    statistics: OwnProductStatisticsCounts;
+    earliestCreatedAt: string | null;
+  }
+>;
 
 //===================================================================
 
@@ -102,13 +104,13 @@ function isOwnProductStatus(value: unknown): value is OwnProductStatus {
 //===================================================================
 
 function getProductId(product: Record<string, unknown>): string | undefined {
-  return getStringValue(product.id) ?? getStringValue(product._id);
+  return getTrimmedString(product.id) ?? getTrimmedString(product._id);
 }
 
 //===================================================================
 
 function getOfferId(offer: Record<string, unknown>): string | undefined {
-  return getStringValue(offer.id) ?? getStringValue(offer._id);
+  return getTrimmedString(offer.id) ?? getTrimmedString(offer._id);
 }
 
 //===================================================================
@@ -116,7 +118,7 @@ function getOfferId(offer: Record<string, unknown>): string | undefined {
 function getOfferPharmacyId(
   offer: Record<string, unknown>
 ): string | undefined {
-  return getStringValue(offer.pharmacyId);
+  return getTrimmedString(offer.pharmacyId);
 }
 
 //===================================================================
@@ -144,8 +146,8 @@ function getProductOffer(
 
 function getStockQuantity(offer: Record<string, unknown>): number {
   return (
-    getNumberValue(offer.stockQuantity) ??
-    getNumberValue(offer.totalQuantity) ??
+    getFiniteNumber(offer.stockQuantity) ??
+    getFiniteNumber(offer.totalQuantity) ??
     0
   );
 }
@@ -153,7 +155,7 @@ function getStockQuantity(offer: Record<string, unknown>): number {
 //===================================================================
 
 function getReservedQuantity(offer: Record<string, unknown>): number {
-  return getNumberValue(offer.reservedQuantity) ?? 0;
+  return getFiniteNumber(offer.reservedQuantity) ?? 0;
 }
 
 //===================================================================
@@ -163,7 +165,7 @@ function getAvailableQuantity(offer: Record<string, unknown>): number {
   const reservedQuantity = getReservedQuantity(offer);
 
   return (
-    getNumberValue(offer.availableQuantity) ??
+    getFiniteNumber(offer.availableQuantity) ??
     Math.max(0, stockQuantity - reservedQuantity)
   );
 }
@@ -193,30 +195,30 @@ export function normalizePharmacyProduct(
   return {
     id,
     addedAt:
-      getStringValue(offer.addedAt) ??
-      getStringValue(offer.createdAt) ??
-      getStringValue(rawProduct.addedAt) ??
-      getStringValue(rawProduct.updatedAt) ??
+      getTrimmedString(offer.addedAt) ??
+      getTrimmedString(offer.createdAt) ??
+      getTrimmedString(rawProduct.addedAt) ??
+      getTrimmedString(rawProduct.updatedAt) ??
       '',
 
-    article: getStringValue(rawProduct.article) ?? '—',
-    name: getStringValue(rawProduct.name) ?? 'Product',
+    article: getTrimmedString(rawProduct.article) ?? '—',
+    name: getTrimmedString(rawProduct.name) ?? 'Product',
     category,
     stockQuantity: getStockQuantity(offer),
     reservedQuantity: getReservedQuantity(offer),
     availableQuantity: getAvailableQuantity(offer),
 
     currentPrice:
-      getNumberValue(offer.currentPrice) ??
-      getNumberValue(offer.price) ??
-      getNumberValue(rawProduct.currentPrice) ??
-      getNumberValue(rawProduct.price) ??
+      getFiniteNumber(offer.currentPrice) ??
+      getFiniteNumber(offer.price) ??
+      getFiniteNumber(rawProduct.currentPrice) ??
+      getFiniteNumber(rawProduct.price) ??
       0,
 
     imageUrl:
-      getStringValue(rawProduct.imageUrl) ??
-      getStringValue(rawProduct.pictureUrl) ??
-      getStringValue(rawProduct.photoUrl),
+      getTrimmedString(rawProduct.imageUrl) ??
+      getTrimmedString(rawProduct.pictureUrl) ??
+      getTrimmedString(rawProduct.photoUrl),
     status,
 
     hasRelatedOrders: Boolean(offer.hasRelatedOrders),
@@ -228,10 +230,10 @@ export function normalizePharmacyProduct(
 function normalizeStatisticValue(value: unknown) {
   if (!isRecord(value)) return { quantity: 0 };
 
-  const amount = getNumberValue(value.amount);
+  const amount = getFiniteNumber(value.amount);
 
   return {
-    quantity: getNumberValue(value.quantity) ?? 0,
+    quantity: getFiniteNumber(value.quantity) ?? 0,
     ...(typeof amount === 'number' ? { amount } : {}),
   };
 }
@@ -257,9 +259,12 @@ export function normalizePharmacyProductsResponse(
   payload: unknown,
   pharmacyId?: EntityId
 ): PharmacyProductsResponse {
-  const response = normalizePaginatedResponse(payload, {
-    normalizeItem: (item) => normalizePharmacyProduct(item, pharmacyId),
-  });
+  const response = requirePaginatedResponse(
+    normalizePaginatedResponse(payload, {
+      normalizeItem: (item) => normalizePharmacyProduct(item, pharmacyId),
+    }),
+    'pharmacy products response'
+  );
 
   return {
     ...response,
@@ -267,7 +272,7 @@ export function normalizePharmacyProductsResponse(
       ? normalizeOwnProductStatistics(payload.ownProductStatistics)
       : DEFAULT_OWN_PRODUCT_STATISTICS,
     earliestCreatedAt: isRecord(payload)
-      ? (getStringValue(payload.earliestCreatedAt) ?? null)
+      ? (getTrimmedString(payload.earliestCreatedAt) ?? null)
       : null,
   };
 }

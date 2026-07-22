@@ -70,7 +70,8 @@ import type {
   StockMovementSource,
 } from '@e-pharmacy/types';
 
-import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
+import { formatAmount, formatMoney } from '@e-pharmacy/utils/money';
+import { formatShortDate } from '@e-pharmacy/utils/date';
 
 import {
   DEFAULT_ORDER_SALES_STATISTICS,
@@ -93,11 +94,7 @@ import {
   deletePharmacyNote,
 } from '@/lib/api/browser';
 
-import {
-  getPharmacyAllProductsPath,
-  getPharmacyClientPath,
-  getPharmacyOrderPath,
-} from '@/lib/layout/routes';
+import { getPharmacyAllProductsPath, getPharmacyClientPath, getPharmacyOrderPath } from '@e-pharmacy/config/pharmacy';
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
@@ -366,9 +363,9 @@ function getProductStatusLabel(product: Product): string {
 //===================================================================
 
 function getProductPriceLabel(product: Product, offer: ProductOffer | null) {
-  if (offer) return formatPrice(offer.price);
+  if (offer) return formatMoney(offer.price) ?? '—';
 
-  return product.price > 0 ? formatPrice(product.price) : '—';
+  return product.price > 0 ? formatMoney(product.price) ?? '—' : '—';
 }
 
 //===================================================================
@@ -406,21 +403,21 @@ function getProductSummaryItems(
   if (product.createdAt) {
     items.push({
       label: 'Admin creation date',
-      value: formatShortDate(product.createdAt),
+      value: formatShortDate(product.createdAt) ?? '—',
     });
   }
 
   if (product.updatedAt) {
     items.push({
       label: 'Admin last update date',
-      value: formatShortDate(product.updatedAt),
+      value: formatShortDate(product.updatedAt) ?? '—',
     });
   }
 
   if (offer?.createdAt) {
     items.push({
       label: 'Date added to pharmacy',
-      value: formatShortDate(offer.createdAt),
+      value: formatShortDate(offer.createdAt) ?? '—',
     });
   }
 
@@ -503,14 +500,14 @@ function getStockMovementRows(
       return {
         id: movement.id,
         ...(movement.orderId ? { orderId: movement.orderId } : {}),
-        date: formatShortDate(movement.occurredAt),
+        date: formatShortDate(movement.occurredAt) ?? '—',
         dateValue: movement.occurredAt,
         eventType: STOCK_EVENT_LABELS[movement.eventType],
         eventTypeValue: movement.eventType,
         quantity: `${quantityValue > 0 ? '+' : ''}${quantityValue}`,
         quantityValue,
-        price: formatPrice(movement.unitPrice).replace(' UAH', ''),
-        totalAmount: formatPrice(movement.movementValue).replace(' UAH', ''),
+        price: formatAmount(movement.unitPrice) ?? '—',
+        totalAmount: formatAmount(movement.movementValue) ?? '—',
         orderNumber: movement.orderNumber ?? '—',
         ...(movement.orderStatus ? { orderStatus: movement.orderStatus } : {}),
         source: STOCK_SOURCE_LABELS[movement.source],
@@ -589,16 +586,16 @@ function getRelatedOrderRows(
         id: `${order.id}-${item.id}`,
         orderId: order.id,
         orderNumber: order.orderNumber,
-        orderDate: formatShortDate(order.orderDate),
+        orderDate: formatShortDate(order.orderDate) ?? '—',
         orderDateValue: order.orderDate,
         client: order.client,
         clientId: order.clientId,
         clientPhotoUrl: order.clientPhotoUrl,
         quantity: String(item.quantity),
         quantityValue: item.quantity,
-        fixedUnitPrice: formatPrice(item.unitPrice).replace(' UAH', ''),
+        fixedUnitPrice: formatAmount(item.unitPrice) ?? '—',
         unitPriceValue: item.unitPrice,
-        amount: formatPrice(item.totalPrice).replace(' UAH', ''),
+        amount: formatAmount(item.totalPrice) ?? '—',
         amountValue: item.totalPrice,
         status: order.status,
         createdByType: order.createdByType,

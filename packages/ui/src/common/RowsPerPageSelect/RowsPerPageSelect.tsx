@@ -4,6 +4,8 @@ import { SelectField, type SelectOption } from '../SelectField';
 
 export type RowsPerPageValue = 20 | 50 | 100;
 
+//===================================================================
+
 export type RowsPerPageSelectProps = Readonly<{
   id?: string;
   label?: string;
@@ -17,9 +19,13 @@ export type RowsPerPageSelectProps = Readonly<{
 
 const DEFAULT_ROWS_PER_PAGE_OPTIONS: readonly RowsPerPageValue[] = [20, 50, 100];
 
+//===================================================================
+
 function isRowsPerPageValue(value: number): value is RowsPerPageValue {
   return DEFAULT_ROWS_PER_PAGE_OPTIONS.includes(value as RowsPerPageValue);
 }
+
+//===================================================================
 
 function RowsPerPageSelect({
   id = 'rows-per-page',

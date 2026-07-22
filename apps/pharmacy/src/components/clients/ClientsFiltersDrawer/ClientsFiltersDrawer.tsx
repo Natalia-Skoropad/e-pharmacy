@@ -13,7 +13,7 @@ import {
   CLIENT_SUCCESSFUL_ORDERS_FILTERS,
 } from '@e-pharmacy/types/clients';
 
-import { getPharmacyClientsPath } from '@/lib/layout/routes';
+import { getPharmacyClientsPath } from '@e-pharmacy/config/pharmacy';
 import { CLIENT_STATUSES, CLIENT_STATUS_LABELS } from '@/lib/clients/clients';
 import type { ClientsFilterState } from '@/lib/clients/client-paths';
 

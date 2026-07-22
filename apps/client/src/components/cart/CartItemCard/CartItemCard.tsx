@@ -7,7 +7,7 @@ import {
   SvgIcon,
 } from '@e-pharmacy/ui/common';
 
-import { formatPrice } from '@e-pharmacy/utils/formatters';
+import { formatMoney } from '@e-pharmacy/utils/money';
 import type { CartItem } from '@e-pharmacy/types';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 
@@ -79,11 +79,11 @@ function CartItemCard({
           <dl className={css.prices}>
             <div className={css.totalPriceRow}>
               <dt>Total amount</dt>
-              <dd>{formatPrice(item.totalPrice)}</dd>
+              <dd>{formatMoney(item.totalPrice) ?? '—'}</dd>
             </div>
             <div className={css.unitPriceRow}>
               <dt>Unit price</dt>
-              <dd>{formatPrice(item.unitPrice)}</dd>
+              <dd>{formatMoney(item.unitPrice) ?? '—'}</dd>
             </div>
           </dl>
         </div>

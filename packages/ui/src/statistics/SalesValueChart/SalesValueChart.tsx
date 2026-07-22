@@ -13,7 +13,7 @@ import type {
   OrderSalesStatisticsPoint,
 } from '@e-pharmacy/types/orders';
 
-import { formatPrice } from '@e-pharmacy/utils/formatters';
+import { formatMoney } from '@e-pharmacy/utils/money';
 
 import css from './SalesValueChart.module.css';
 
@@ -35,8 +35,10 @@ const CHART_PADDING = {
 
 const CHART_INNER_WIDTH =
   CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right;
+
 const CHART_INNER_HEIGHT =
   CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
+
 const GRID_LINES_COUNT = 4;
 
 //===================================================================
@@ -394,7 +396,7 @@ function SalesValueChart({
                         }}
                       />
                       <span>{formatProductCategoryLabel(category)}</span>
-                      <strong>{formatPrice(value?.amount ?? 0)}</strong>
+                      <strong>{formatMoney(value?.amount ?? 0) ?? '—'}</strong>
                     </li>
                   );
                 })}

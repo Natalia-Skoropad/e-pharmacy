@@ -20,7 +20,7 @@ import {
   type ProductRequestsFilterState,
 } from '@e-pharmacy/types/product-requests';
 
-import { getPharmacyProductRequestsPath } from '@/lib/layout/routes';
+import { getPharmacyProductRequestsPath } from '@e-pharmacy/config/pharmacy';
 
 import css from './ProductRequestsFiltersDrawer.module.css';
 

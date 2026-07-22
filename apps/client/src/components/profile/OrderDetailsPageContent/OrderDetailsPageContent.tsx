@@ -28,11 +28,9 @@ import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { useAuth } from '@e-pharmacy/auth/core';
 import type { BreadcrumbItem, Order } from '@e-pharmacy/types';
 
-import {
-  formatCapitalizedLabel,
-  formatOrderDateTime,
-  formatPrice,
-} from '@e-pharmacy/utils/formatters';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
+import { formatDateTime } from '@e-pharmacy/utils/date';
+import { formatMoney } from '@e-pharmacy/utils/money';
 
 import {
   ROUTES,
@@ -241,9 +239,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                           <div>
                             {item.category ? (
                               <p className={css.itemCategory}>
-                                {formatCapitalizedLabel(
-                                  item.category.replaceAll('_', ' ')
-                                )}
+                                {PRODUCT_CATEGORY_LABELS[item.category]}
                               </p>
                             ) : null}
 
@@ -258,11 +254,11 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                           <dl className={css.itemPrices}>
                             <div className={css.totalPriceRow}>
                               <dt>Total amount</dt>
-                              <dd>{formatPrice(item.totalPrice)}</dd>
+                              <dd>{formatMoney(item.totalPrice) ?? '—'}</dd>
                             </div>
                             <div className={css.unitPriceRow}>
                               <dt>Unit price</dt>
-                              <dd>{formatPrice(item.unitPrice)}</dd>
+                              <dd>{formatMoney(item.unitPrice) ?? '—'}</dd>
                             </div>
                           </dl>
                         </div>
@@ -298,7 +294,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                   <dt>
                     <CalendarDays size={16} aria-hidden="true" /> Date
                   </dt>
-                  <dd>{formatOrderDateTime(order.createdAt)}</dd>
+                  <dd>{formatDateTime(order.createdAt) ?? '—'}</dd>
                 </div>
                 <div>
                   <dt>
@@ -351,7 +347,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                   <dt>
                     <CircleDollarSign size={16} aria-hidden="true" /> Total
                   </dt>
-                  <dd>{formatPrice(order.totalPrice)}</dd>
+                  <dd>{formatMoney(order.totalPrice) ?? '—'}</dd>
                 </div>
               </dl>
 

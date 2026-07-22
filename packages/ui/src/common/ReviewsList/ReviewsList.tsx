@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Star } from 'lucide-react';
 
-import { formatReviewDate } from '@e-pharmacy/utils/formatters';
+import { formatShortDate } from '@e-pharmacy/utils/date';
 
 import CountLabel from '../CountLabel/CountLabel';
 import LazyLoadButton from '../LazyLoadButton/LazyLoadButton';
@@ -88,7 +88,7 @@ function ReviewsList({
                       <h3 className={css.author}>{review.userName}</h3>
 
                       <time className={css.date} dateTime={review.createdAt}>
-                        {formatReviewDate(review.createdAt)}
+                        {formatShortDate(review.createdAt) ?? '—'}
                       </time>
                     </div>
 

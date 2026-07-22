@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type ChangeEventHandler,
-} from 'react';
+import { useEffect, useRef, useState, type ChangeEventHandler } from 'react';
 
 import {
   WORKING_DAYS,
@@ -14,6 +8,8 @@ import {
   parseWorkingHoursValue,
   type WorkingHoursValue,
 } from '@e-pharmacy/validation/pharmacy';
+
+import { createTextareaChangeEvent } from '../../internal/create-textarea-change-event';
 
 import css from './WorkingHoursInput.module.css';
 
@@ -33,21 +29,6 @@ export type WorkingHoursInputProps = {
   maxLength?: number;
   onChange: ChangeEventHandler<HTMLTextAreaElement>;
 };
-
-//===================================================================
-
-function createSyntheticTextareaEvent(
-  id: string,
-  name: string,
-  value: string
-): ChangeEvent<HTMLTextAreaElement> {
-  const target = { id, name, value } as HTMLTextAreaElement;
-
-  return {
-    target,
-    currentTarget: target,
-  } as ChangeEvent<HTMLTextAreaElement>;
-}
 
 //===================================================================
 
@@ -85,7 +66,7 @@ function WorkingHoursInput({
 
     lastEmittedValueRef.current = formattedValue;
     setCurrentValue(nextValue);
-    onChange(createSyntheticTextareaEvent(id, name, formattedValue));
+    onChange(createTextareaChangeEvent({ id, name }, formattedValue));
   };
 
   const updateDay = (

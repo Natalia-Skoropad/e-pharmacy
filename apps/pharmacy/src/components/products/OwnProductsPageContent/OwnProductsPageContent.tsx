@@ -1,5 +1,7 @@
 'use client';
 
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
+
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Boxes, PackageCheck } from 'lucide-react';
@@ -58,28 +60,13 @@ import {
 import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
 import { getPharmacyOwnProductStatistics } from '@/lib/products/product-statistics';
 
-import {
-  getPharmacyProductsFilterPath,
-  getPharmacyProductsPath,
-} from '@/lib/layout/routes';
+import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
+import { getPharmacyProductsFilterPath } from '@/lib/layout/routes';
 
 import { OwnProductsFiltersDrawer } from '@/components/products/OwnProductsFiltersDrawer';
 import { OwnProductsTable } from '@/components/products/OwnProductsTable';
 
 import css from './OwnProductsPageContent.module.css';
-
-//===================================================================
-
-function getActiveFiltersCount(filters: OwnProductsFilterState): number {
-  return [
-    filters.createdDate.from || filters.createdDate.to,
-    filters.name.trim(),
-    filters.article.trim(),
-    filters.category !== 'all',
-    filters.status !== 'all',
-    filters.stock !== 'all',
-  ].filter(Boolean).length;
-}
 
 //===================================================================
 
@@ -155,6 +142,7 @@ function OwnProductsPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<PharmacyProductRow[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(null);
 
   const [productStatistics, setProductStatistics] =
@@ -262,12 +250,14 @@ function OwnProductsPageContent({
 
         setProducts(response.items);
         setTotalProducts(response.total);
+        setTotalPages(response.totalPages);
         setEarliestCreatedAt(response.earliestCreatedAt);
       } catch {
         if (!isMounted) return;
 
         setProducts([]);
         setTotalProducts(0);
+        setTotalPages(0);
         setEarliestCreatedAt(null);
       } finally {
         if (isMounted) setIsLoading(false);
@@ -293,9 +283,15 @@ function OwnProductsPageContent({
     return () => window.clearTimeout(timeoutId);
   }, [filters, pathname, router]);
 
-  const activeFiltersCount = getActiveFiltersCount(filters);
+  const activeFiltersCount = countTrueConditions(
+    Boolean(filters.createdDate.from || filters.createdDate.to),
+    Boolean(filters.name.trim()),
+    Boolean(filters.article.trim()),
+    filters.category !== 'all',
+    filters.status !== 'all',
+    filters.stock !== 'all'
+  );
   const hasActiveFilters = activeFiltersCount > 0;
-  const totalPages = Math.ceil(totalProducts / rowsPerPage);
 
   const handleFiltersChange = (nextFilters: OwnProductsFilterState) => {
     setFilters(nextFilters);

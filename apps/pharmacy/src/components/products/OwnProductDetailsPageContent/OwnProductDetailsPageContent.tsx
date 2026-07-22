@@ -1,6 +1,6 @@
 import { AllProductDetailsPageContent } from '@/components/all-products/AllProductDetailsPageContent';
 
-import { getPharmacyProductsPath } from '@/lib/layout/routes';
+import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
 
 //===================================================================
 

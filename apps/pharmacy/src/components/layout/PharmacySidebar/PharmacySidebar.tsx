@@ -6,13 +6,13 @@ import { useEffect, useState } from 'react';
 
 import { CabinetSidebar } from '@e-pharmacy/ui/layout';
 
-import { getPharmacyOrders } from '@/lib/api/browser';
-import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
-
 import {
   getPharmacyDashboardPath,
   getPharmacyOrdersPath,
-} from '@/lib/layout/routes';
+} from '@e-pharmacy/config/pharmacy';
+
+import { getPharmacyOrders } from '@/lib/api/browser';
+import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
 
 import css from './PharmacySidebar.module.css';
 

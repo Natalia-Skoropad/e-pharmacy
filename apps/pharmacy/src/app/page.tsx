@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { getPharmacyDashboardPath } from '@/lib/layout/routes';
+import { getPharmacyDashboardPath } from '@e-pharmacy/config/pharmacy';
 
 //===================================================================
 

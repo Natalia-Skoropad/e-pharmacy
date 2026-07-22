@@ -6,6 +6,8 @@ import { Product } from '../models/product.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
 import { httpError } from '../utils/httpError';
+import { getEndOfDay, getStartOfDay } from '../utils/date-range';
+import { createSafeRegExp } from '../utils/regexp';
 
 import type {
   ClientProductsQuery,
@@ -58,26 +60,6 @@ type ClientPurchasedProductRow = Readonly<{
 
 //===============================================================
 
-function getStartOfDay(value: string): Date {
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return Number.isNaN(date.getTime()) ? new Date(0) : date;
-}
-
-//===============================================================
-
-function getEndOfDay(value: string): Date {
-  const date = new Date(`${value}T23:59:59.999Z`);
-  return Number.isNaN(date.getTime()) ? new Date(0) : date;
-}
-
-//===============================================================
-
-function createClientSearchRegExp(value: string): RegExp {
-  return new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-}
-
-//===============================================================
-
 async function getCurrentPharmacyId(userId: string) {
   if (!Types.ObjectId.isValid(userId)) return null;
 
@@ -113,10 +95,7 @@ function getClientAddress(user: UserDocument, orders: OrderDocument[]): string {
 
 //===============================================================
 
-function getFirstOrderDate(
-  orders: OrderDocument[],
-  fallbackDate: Date
-): Date {
+function getFirstOrderDate(orders: OrderDocument[], fallbackDate: Date): Date {
   return orders.reduce(
     (earliest, order) =>
       order.createdAt < earliest ? order.createdAt : earliest,
@@ -146,7 +125,9 @@ function serializeClient(
 
   return {
     id: String(user._id),
-    photoUrl: isDefault ? pharmacy.imageUrl ?? null : user.pictureUrl ?? null,
+    photoUrl: isDefault
+      ? (pharmacy.imageUrl ?? null)
+      : (user.pictureUrl ?? null),
     firstOrderAt: (isDefault
       ? fallbackDate
       : getFirstOrderDate(orders, fallbackDate)
@@ -176,8 +157,7 @@ function serializeClient(
 
 function isWalkInClient(client: ClientRow): boolean {
   return (
-    client.isDefault ||
-    client.name.trim().toLowerCase() === 'walk-in customer'
+    client.isDefault || client.name.trim().toLowerCase() === 'walk-in customer'
   );
 }
 
@@ -203,13 +183,13 @@ function matchesClientFilters(client: ClientRow, query: ClientsQuery): boolean {
 
   if (
     query.name?.trim() &&
-    !createClientSearchRegExp(query.name.trim()).test(client.name)
+    !createSafeRegExp(query.name.trim()).test(client.name)
   ) {
     return false;
   }
 
   if (query.contact?.trim()) {
-    const contactSearchRegExp = createClientSearchRegExp(query.contact.trim());
+    const contactSearchRegExp = createSafeRegExp(query.contact.trim());
 
     if (
       !contactSearchRegExp.test(client.email) &&
@@ -222,21 +202,21 @@ function matchesClientFilters(client: ClientRow, query: ClientsQuery): boolean {
 
   if (
     query.email?.trim() &&
-    !createClientSearchRegExp(query.email.trim()).test(client.email)
+    !createSafeRegExp(query.email.trim()).test(client.email)
   ) {
     return false;
   }
 
   if (
     query.phone?.trim() &&
-    !createClientSearchRegExp(query.phone.trim()).test(client.phone)
+    !createSafeRegExp(query.phone.trim()).test(client.phone)
   ) {
     return false;
   }
 
   if (
     query.address?.trim() &&
-    !createClientSearchRegExp(query.address.trim()).test(client.address)
+    !createSafeRegExp(query.address.trim()).test(client.address)
   ) {
     return false;
   }
@@ -268,13 +248,10 @@ async function getClientRowsForPharmacy(
 ): Promise<ClientRow[]> {
   const pharmacy = await Pharmacy.findById(pharmacyId)
     .select('imageUrl activatedAt approvedAt createdAt')
-    .lean<
-      | Pick<
-          PharmacyDocument,
-          '_id' | 'imageUrl' | 'activatedAt' | 'approvedAt' | 'createdAt'
-        >
-      | null
-    >();
+    .lean<Pick<
+      PharmacyDocument,
+      '_id' | 'imageUrl' | 'activatedAt' | 'approvedAt' | 'createdAt'
+    > | null>();
 
   if (!pharmacy) return [];
 
@@ -400,14 +377,14 @@ function matchesClientProductFilters(
 ): boolean {
   if (
     query.article?.trim() &&
-    !createClientSearchRegExp(query.article.trim()).test(row.article)
+    !createSafeRegExp(query.article.trim()).test(row.article)
   ) {
     return false;
   }
 
   if (
     query.name?.trim() &&
-    !createClientSearchRegExp(query.name.trim()).test(row.name)
+    !createSafeRegExp(query.name.trim()).test(row.name)
   ) {
     return false;
   }

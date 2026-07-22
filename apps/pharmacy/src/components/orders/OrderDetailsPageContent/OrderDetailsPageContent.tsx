@@ -76,11 +76,14 @@ import type {
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
 
 import {
-  formatPrice,
-  formatShortDate,
-  formatStockLabel,
-  parseWorkingHours,
-} from '@e-pharmacy/utils/formatters';
+  getProductCategoryOptions,
+  type ProductCategoryOption,
+} from '@e-pharmacy/config/products';
+
+import { formatMoney } from '@e-pharmacy/utils/money';
+import { formatDateTime } from '@e-pharmacy/utils/date';
+import { formatStockLabel } from '@e-pharmacy/utils/numbers';
+import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
 
 import {
   USER_ADDRESS_MAX_LENGTH,
@@ -120,12 +123,7 @@ import {
   type PharmacyOrderItem,
 } from '@/lib/orders/orders';
 
-import {
-  getPharmacyClientPath,
-  getPharmacyOrderPath,
-  getPharmacyOrdersPath,
-  getPharmacyProductPath,
-} from '@/lib/layout/routes';
+import { getPharmacyClientPath, getPharmacyOrderPath, getPharmacyOrdersPath, getPharmacyProductPath } from '@e-pharmacy/config/pharmacy';
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getProductImageSrc } from '@/lib/products/product-images';
@@ -155,10 +153,6 @@ type OrderTab = 'products' | 'delivery' | 'payment' | 'comment' | 'history';
 
 //===================================================================
 
-type CategoryOption = Readonly<{
-  value: ProductCategory;
-  label: string;
-}>;
 
 //===================================================================
 
@@ -198,21 +192,6 @@ function getOrderTabs(
   ];
 }
 
-//===================================================================
-
-function formatOrderDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return formatShortDate(value);
-
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-}
 
 //===================================================================
 
@@ -255,18 +234,6 @@ function getProductOffer(product: Product, pharmacyId: string) {
   return product.offers.find((offer) => offer.pharmacyId === pharmacyId);
 }
 
-//===================================================================
-
-function getCategoryOptionsFromProducts(products: Product[]): CategoryOption[] {
-  const categories = new Set(products.map((product) => product.category));
-
-  return [...categories]
-    .map((category) => ({
-      value: category,
-      label: PRODUCT_CATEGORY_LABELS[category] ?? category,
-    }))
-    .sort((first, second) => first.label.localeCompare(second.label));
-}
 
 //===================================================================
 
@@ -384,11 +351,11 @@ function OrderProductCard({
           <dl className={css.itemPrices}>
             <div className={css.totalPriceRow}>
               <dt>Total amount</dt>
-              <dd>{formatPrice(item.totalPrice)}</dd>
+              <dd>{formatMoney(item.totalPrice) ?? '—'}</dd>
             </div>
             <div className={css.unitPriceRow}>
               <dt>Unit price</dt>
-              <dd>{formatPrice(item.unitPrice)}</dd>
+              <dd>{formatMoney(item.unitPrice) ?? '—'}</dd>
             </div>
           </dl>
         </div>
@@ -459,7 +426,7 @@ function ProductPickerModal({
   const [selectedCategory, setSelectedCategory] = useState<
     ProductCategory | 'all'
   >('all');
-  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<ProductCategoryOption[]>([]);
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -483,7 +450,7 @@ function ProductPickerModal({
           { signal: controller.signal }
         );
 
-        setCategoryOptions(getCategoryOptionsFromProducts(response.items));
+        setCategoryOptions(getProductCategoryOptions(response.items));
       } catch {
         if (!controller.signal.aborted) {
           setError('Could not load product categories for this pharmacy.');
@@ -585,7 +552,7 @@ function ProductPickerModal({
           />
 
           <p className={css.productModalAvailableCount}>
-            {formatStockLabel(availableProductsCount)}
+            {formatStockLabel(availableProductsCount) ?? '—'}
           </p>
         </div>
 
@@ -687,7 +654,7 @@ function ProductPickerModal({
                     </div>
 
                     <p className={css.productModalPrice}>
-                      {formatPrice(offer?.price ?? product.price)}
+                      {formatMoney(offer?.price ?? product.price) ?? '—'}
                     </p>
 
                     <Button
@@ -795,7 +762,7 @@ function OrderProductsTab({
 
           <div>
             <dt>Total</dt>
-            <dd>{formatPrice(order.totalAmount)}</dd>
+            <dd>{formatMoney(order.totalAmount) ?? '—'}</dd>
           </div>
         </dl>
 
@@ -854,7 +821,8 @@ function DeliveryTab({
   onDeliveryAddressChange: (value: string) => void;
   onSave: () => void;
 }>) {
-  const workingHours = parseWorkingHours(order.pharmacyWorkingHours ?? '');
+  const workingHours =
+    getWorkingHoursDisplayItems(order.pharmacyWorkingHours ?? '') ?? [];
 
   return (
     <section className={css.methodCard} aria-labelledby="delivery-title">
@@ -916,15 +884,11 @@ function DeliveryTab({
                   <Clock size={18} aria-hidden="true" />
                   {workingHours.length > 0 ? (
                     <span className={css.workingHoursList}>
-                      {workingHours.map((item, index) =>
-                        typeof item === 'string' ? (
-                          <span key={`${item}-${index}`}>{item}</span>
-                        ) : (
-                          <span key={`${item.day}-${index}`}>
-                            <strong>{item.day}:</strong> {item.hours}
-                          </span>
-                        )
-                      )}
+                      {workingHours.map((item) => (
+                        <span key={item.day}>
+                          <strong>{item.day}:</strong> {item.hours}
+                        </span>
+                      ))}
                     </span>
                   ) : (
                     <span>Working hours are not specified.</span>
@@ -1245,7 +1209,7 @@ function HistoryTab({
                 <div className={css.historyContent}>
                   <strong>{ORDER_STATUS_LABELS[entry.status]}</strong>
                   <time dateTime={entry.changedAt}>
-                    {formatOrderDate(entry.changedAt)}
+                    {formatDateTime(entry.changedAt) ?? '—'}
                   </time>
                   {entry.comment ? <p>{entry.comment}</p> : null}
                   {entry.status === 'rejected' && rejectionReason ? (
@@ -1283,7 +1247,7 @@ function HistoryTab({
               <div className={css.historyContent}>
                 <strong>{getOrderActivityLabel(activity)}</strong>
                 <time dateTime={activity.occurredAt}>
-                  {formatOrderDate(activity.occurredAt)}
+                  {formatDateTime(activity.occurredAt) ?? '—'}
                 </time>
                 <p>
                   <b>{activity.productName}</b>: {activity.previousQuantity} →{' '}
@@ -1300,8 +1264,8 @@ function HistoryTab({
                 {priceChanged ? (
                   <p className={css.historyPriceChange}>
                     Unit price changed from{' '}
-                    {formatPrice(activity.previousUnitPrice)} to{' '}
-                    {formatPrice(activity.unitPrice)}.
+                    {formatMoney(activity.previousUnitPrice) ?? '—'} to{' '}
+                    {formatMoney(activity.unitPrice) ?? '—'}.
                   </p>
                 ) : null}
               </div>
@@ -2202,7 +2166,7 @@ function OrderDetailsPageContent({
                 icon={<ShoppingBag size={23} aria-hidden="true" />}
               />
               <p className={css.metaText}>
-                Created on {formatOrderDate(order.orderDate)}
+                Created on {formatDateTime(order.orderDate) ?? '—'}
               </p>
             </div>
 
@@ -2420,14 +2384,14 @@ function OrderDetailsPageContent({
             <>
               {pendingPriceQuantityChange.item.name} now costs{' '}
               <strong>
-                {formatPrice(
+                {formatMoney(
                   pendingPriceQuantityChange.item.currentPrice ??
                     pendingPriceQuantityChange.item.unitPrice
-                )}
+                ) ?? '—'}
               </strong>{' '}
               instead of{' '}
               <strong>
-                {formatPrice(pendingPriceQuantityChange.item.unitPrice)}
+                {formatMoney(pendingPriceQuantityChange.item.unitPrice) ?? '—'}
               </strong>
               . Increasing the quantity from{' '}
               {pendingPriceQuantityChange.item.quantity} to{' '}

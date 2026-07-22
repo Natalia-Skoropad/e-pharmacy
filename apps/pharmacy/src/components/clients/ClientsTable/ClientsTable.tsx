@@ -12,11 +12,11 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
-import { formatPrice } from '@e-pharmacy/utils/formatters';
+import { formatAmount } from '@e-pharmacy/utils/money';
 
 import type { PharmacyClientRow } from '@/lib/clients/clients';
 import { getProductImageSrc } from '@/lib/products/product-images';
-import { getPharmacyClientPath } from '@/lib/layout/routes';
+import { getPharmacyClientPath } from '@e-pharmacy/config/pharmacy';
 
 import css from './ClientsTable.module.css';
 
@@ -119,7 +119,7 @@ function ClientsTable({
         key: 'successfulOrdersAmount',
         title: <TableHeaderTitle parts={['Orders', ' amount, ', 'UAH']} />,
         render: (client) =>
-          formatPrice(client.successfulOrdersAmount).replace(' UAH', ''),
+          formatAmount(client.successfulOrdersAmount) ?? '—',
       },
       {
         key: 'status',

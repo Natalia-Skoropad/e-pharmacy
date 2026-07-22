@@ -1,4 +1,4 @@
-import { getPharmacyDashboardPath } from '../layout/routes';
+import { getPharmacyDashboardPath } from '@e-pharmacy/config/pharmacy';
 
 //===================================================================
 

@@ -1,5 +1,7 @@
 'use client';
 
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
+
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ShoppingBag } from 'lucide-react';
@@ -15,7 +17,6 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { OrderStatistics, StatusBanner } from '@e-pharmacy/ui/statistics';
-
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import {
@@ -25,13 +26,10 @@ import {
 } from '@e-pharmacy/hooks';
 
 import { DEFAULT_ORDER_STATISTICS } from '@e-pharmacy/types/orders';
+import { getPharmacyNewOrderPath } from '@e-pharmacy/config/pharmacy';
 
 import { getPharmacyOrders } from '@/lib/api/browser';
-
-import {
-  getPharmacyNewOrderPath,
-  getPharmacyOrdersFilterPath,
-} from '@/lib/layout/routes';
+import { getPharmacyOrdersFilterPath } from '@/lib/layout/routes';
 
 import {
   getLockedFeatureBannerLabel,
@@ -55,20 +53,6 @@ import { OrdersFiltersDrawer } from '@/components/orders/OrdersFiltersDrawer';
 import { OrdersTable } from '@/components/orders/OrdersTable/OrdersTable';
 
 import css from './OrdersPageContent.module.css';
-
-//===================================================================
-
-function getActiveFiltersCount(filters: OrdersFilterState): number {
-  return [
-    filters.date.from || filters.date.to,
-    filters.client.trim(),
-    filters.orderNumber.trim(),
-    filters.deliveryMethod !== 'all',
-    filters.paymentMethod !== 'all',
-    filters.status !== 'all',
-    filters.createdByType !== 'all',
-  ].filter(Boolean).length;
-}
 
 //===================================================================
 
@@ -112,6 +96,7 @@ function OrdersPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
     null
   );
@@ -151,6 +136,7 @@ function OrdersPageContent({
 
         setOrders(response.items);
         setTotalOrders(response.total);
+        setTotalPages(response.totalPages);
         setEarliestCreatedAt(response.earliestCreatedAt);
         setOrderStatistics(response.statistics);
       } catch {
@@ -158,6 +144,7 @@ function OrdersPageContent({
 
         setOrders([]);
         setTotalOrders(0);
+        setTotalPages(0);
         setEarliestCreatedAt(null);
         setOrderStatistics(DEFAULT_ORDER_STATISTICS);
       } finally {
@@ -184,9 +171,16 @@ function OrdersPageContent({
     return () => window.clearTimeout(timeoutId);
   }, [filters, pathname, router]);
 
-  const activeFiltersCount = getActiveFiltersCount(filters);
+  const activeFiltersCount = countTrueConditions(
+    Boolean(filters.date.from || filters.date.to),
+    Boolean(filters.client.trim()),
+    Boolean(filters.orderNumber.trim()),
+    filters.deliveryMethod !== 'all',
+    filters.paymentMethod !== 'all',
+    filters.status !== 'all',
+    filters.createdByType !== 'all'
+  );
   const hasActiveFilters = activeFiltersCount > 0;
-  const totalPages = Math.ceil(totalOrders / rowsPerPage);
 
   const handleFiltersChange = (nextFilters: OrdersFilterState) => {
     setFilters(nextFilters);

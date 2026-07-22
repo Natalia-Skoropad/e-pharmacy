@@ -15,12 +15,9 @@ import {
   PRODUCT_REQUEST_STATUSES,
 } from '@e-pharmacy/types/product-requests';
 
-import { PHARMACY_PRODUCT_REQUESTS } from '../layout/routes';
+import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
 
-import type {
-  ProductRequestStatus,
-  ProductRequestsFilterState,
-} from './product-requests';
+import type { ProductRequestsFilterState } from './product-requests';
 
 //===================================================================
 
@@ -46,12 +43,6 @@ type ProductRequestsFilterDraft = {
 export type ProductRequestsRouteParams = Readonly<{
   filters?: string[];
 }>;
-
-//===================================================================
-
-function normalizeStatusSegment(value: string): ProductRequestStatus | null {
-  return normalizeSlugEnumValue(value, PRODUCT_REQUEST_STATUSES);
-}
 
 //===================================================================
 
@@ -134,7 +125,10 @@ export function parseProductRequestsSegments(
     }
 
     if (segment.startsWith('status-')) {
-      const status = normalizeStatusSegment(segment.replace('status-', ''));
+      const status = normalizeSlugEnumValue(
+        segment.replace('status-', ''),
+        PRODUCT_REQUEST_STATUSES
+      );
 
       if (status) {
         filters.status = status;
@@ -215,6 +209,6 @@ export function buildProductRequestsPath(
   }
 
   return segments.length
-    ? `${PHARMACY_PRODUCT_REQUESTS}/${segments.join('/')}`
-    : PHARMACY_PRODUCT_REQUESTS;
+    ? `${PHARMACY_ROUTES.PRODUCT_REQUESTS}/${segments.join('/')}`
+    : PHARMACY_ROUTES.PRODUCT_REQUESTS;
 }

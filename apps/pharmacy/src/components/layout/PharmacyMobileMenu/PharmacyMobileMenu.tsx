@@ -17,6 +17,11 @@ import {
 import { MobileOffcanvasBase, SideMenu } from '@e-pharmacy/ui/layout';
 import { useAuth } from '@e-pharmacy/auth/core';
 
+import {
+  getPharmacyDashboardPath,
+  getPharmacyProfilePath,
+} from '@e-pharmacy/config/pharmacy';
+
 import { getMyPharmacyProfile } from '@/lib/api/browser';
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 
@@ -27,11 +32,6 @@ import {
 } from '@/lib/layout/external-links';
 
 import { PHARMACY_MOBILE_NAVIGATION } from '@/lib/layout/navigation';
-
-import {
-  getPharmacyDashboardPath,
-  getPharmacyProfilePath,
-} from '@/lib/layout/routes';
 
 import css from './PharmacyMobileMenu.module.css';
 

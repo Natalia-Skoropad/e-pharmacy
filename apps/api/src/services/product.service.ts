@@ -29,11 +29,14 @@ import {
 
 import { recordInitialStockArrival } from './stockMovement.service';
 import { httpError } from '../utils/httpError';
+import { getEndOfDay, getStartOfDay } from '../utils/date-range';
 import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
 
 //===============================================================
 
 type ProductDocument = ProductEntity & { _id: Types.ObjectId };
+
+//===============================================================
 
 type ProductsQuery = {
   page: number;
@@ -53,6 +56,7 @@ type ProductsQuery = {
   stock?: 'in-stock' | 'available' | 'empty' | 'reserved';
   addedFrom?: string;
   addedTo?: string;
+
   sort?:
     | 'price-asc'
     | 'price-desc'
@@ -62,6 +66,8 @@ type ProductsQuery = {
     | 'name-desc'
     | 'newest';
 };
+
+//===============================================================
 
 type CreateReviewInput = {
   userId: string;
@@ -306,20 +312,6 @@ export async function getProductFiltersService(
 
 //===============================================================
 
-function getStartOfDay(value: string): Date {
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return Number.isNaN(date.getTime()) ? new Date(0) : date;
-}
-
-//===============================================================
-
-function getEndOfDay(value: string): Date {
-  const date = new Date(`${value}T23:59:59.999Z`);
-  return Number.isNaN(date.getTime()) ? new Date(0) : date;
-}
-
-//===============================================================
-
 function toObjectIdStrings(values: unknown[]): string[] {
   return values.map(String);
 }
@@ -340,7 +332,8 @@ function applyProductIdIncludeFilter(
 ): void {
   const ids = toObjectIdStrings(productIds);
   const current = filter._id as
-    { $in?: unknown[]; $nin?: unknown[] } | undefined;
+    | { $in?: unknown[]; $nin?: unknown[] }
+    | undefined;
   const currentIn = current?.$in ? toObjectIdStrings(current.$in) : undefined;
 
   filter._id = {
@@ -357,7 +350,8 @@ function applyProductIdExcludeFilter(
 ): void {
   const ids = toObjectIdStrings(productIds);
   const current = filter._id as
-    { $in?: unknown[]; $nin?: unknown[] } | undefined;
+    | { $in?: unknown[]; $nin?: unknown[] }
+    | undefined;
   const currentNin = current?.$nin ? toObjectIdStrings(current.$nin) : [];
 
   filter._id = {

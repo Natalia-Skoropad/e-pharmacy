@@ -25,11 +25,13 @@ import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 
+import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
+
 import {
-  formatPharmaciesCount,
-  formatPrice,
-  formatPriceRange,
-} from '@e-pharmacy/utils/formatters';
+  formatMoney,
+  formatMoneyRange,
+  getNumericRange,
+} from '@e-pharmacy/utils/money';
 
 import type {
   Cart,
@@ -211,9 +213,15 @@ function ProductDetailsPageContent({
     [availableOffers.length, reviewsTotal]
   );
 
-  const pharmaciesCountLabel = formatPharmaciesCount(availableOffers.length);
+  const pharmaciesCountLabel =
+    formatPharmaciesCount(availableOffers.length) ?? '—';
 
-  const priceRangeLabel = formatPriceRange(availableOffers);
+  const priceRange = getNumericRange(
+    availableOffers.map((offer) => offer.price)
+  );
+  const priceRangeLabel = priceRange
+    ? (formatMoneyRange(priceRange) ?? '—')
+    : 'No pharmacy prices yet';
   const longDescription = getLongDescription(productDetails);
 
   const cityOptions = useMemo(
@@ -400,13 +408,7 @@ function ProductDetailsPageContent({
     return () => {
       isMounted = false;
     };
-  }, [
-    canUseClientFeatures,
-    loadCart,
-    productDetails.id,
-    setIsFavorite,
-    toast,
-  ]);
+  }, [canUseClientFeatures, loadCart, productDetails.id, setIsFavorite, toast]);
 
   const handleAddUnit = async (offer: ProductOffer) => {
     if (!canUseCart || !offer.inStock) return;
@@ -544,7 +546,7 @@ function ProductDetailsPageContent({
         <p className={css.totalLine}>
           Total:{' '}
           <b>
-            {formatPrice(
+            {formatMoney(
               (cartItem?.quantity ?? pendingQuantity ?? 0) * offer.price
             )}
           </b>
@@ -819,7 +821,7 @@ function ProductDetailsPageContent({
 
                           <div className={css.offerAside}>
                             <p className={css.offerPrice}>
-                              {formatPrice(offer.price)}
+                              {formatMoney(offer.price) ?? '—'}
                             </p>
 
                             {renderQuantityControl(offer)}

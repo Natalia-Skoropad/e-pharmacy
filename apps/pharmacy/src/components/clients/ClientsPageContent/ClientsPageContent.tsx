@@ -16,6 +16,7 @@ import {
 
 import { ClientStatistics, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
 
 import {
   useBackdropClick,
@@ -52,32 +53,16 @@ import {
 import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer/ClientsFiltersDrawer';
 import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
 
-import {
-  getPharmacyClientsFilterPath,
-  getPharmacyClientsPath,
-} from '@/lib/layout/routes';
+import { getPharmacyClientsPath } from '@e-pharmacy/config/pharmacy';
+import { getPharmacyClientsFilterPath } from '@/lib/layout/routes';
 
 import css from './ClientsPageContent.module.css';
 
 //===================================================================
 
-function getActiveFiltersCount(filters: ClientsFilterState): number {
-  return [
-    filters.firstOrderDate.from || filters.firstOrderDate.to,
-    filters.name.trim(),
-    filters.clientId.trim(),
-    filters.contact.trim(),
-    filters.status !== 'all',
-    filters.successfulOrders !== 'all',
-  ].filter(Boolean).length;
-}
-
-//===================================================================
-
 function isWalkInClient(client: PharmacyClientRow): boolean {
   return (
-    client.isDefault ||
-    client.name.trim().toLowerCase() === 'walk-in customer'
+    client.isDefault || client.name.trim().toLowerCase() === 'walk-in customer'
   );
 }
 
@@ -137,11 +122,14 @@ function ClientsPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
   const [totalClients, setTotalClients] = useState(0);
-  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(null);
+  const [totalPages, setTotalPages] = useState(0);
+  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
+    null
+  );
 
   const [clientStatistics, setClientStatistics] =
     useState<ClientStatisticsCounts>(DEFAULT_CLIENT_STATISTICS);
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -175,8 +163,15 @@ function ClientsPageContent({
     () => getClientsQueryParams(filters, rowsPerPage, currentPage),
     [currentPage, filters, rowsPerPage]
   );
-  const shouldPinDefaultClient =
-    currentPage === 1 && getActiveFiltersCount(filters) === 0;
+  const activeFiltersCount = countTrueConditions(
+    Boolean(filters.firstOrderDate.from || filters.firstOrderDate.to),
+    Boolean(filters.name.trim()),
+    Boolean(filters.clientId.trim()),
+    Boolean(filters.contact.trim()),
+    filters.status !== 'all',
+    filters.successfulOrders !== 'all'
+  );
+  const shouldPinDefaultClient = currentPage === 1 && activeFiltersCount === 0;
 
   useEffect(() => {
     let isMounted = true;
@@ -210,12 +205,14 @@ function ClientsPageContent({
 
         setClients(nextClients);
         setTotalClients(response.total);
+        setTotalPages(response.totalPages);
         setEarliestCreatedAt(response.earliestCreatedAt);
       } catch {
         if (!isMounted) return;
 
         setClients([]);
         setTotalClients(0);
+        setTotalPages(0);
         setEarliestCreatedAt(null);
       } finally {
         if (isMounted) setIsLoading(false);
@@ -241,9 +238,7 @@ function ClientsPageContent({
     return () => window.clearTimeout(timeoutId);
   }, [filters, pathname, router]);
 
-  const activeFiltersCount = getActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
-  const totalPages = Math.ceil(totalClients / rowsPerPage);
 
   const handleFiltersChange = (nextFilters: ClientsFilterState) => {
     setFilters(nextFilters);

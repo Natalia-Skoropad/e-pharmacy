@@ -1,17 +1,11 @@
 import type { BreadcrumbItem } from '@e-pharmacy/ui/layout';
 
 import {
-  PHARMACY_ALL_PRODUCTS,
-  PHARMACY_CLIENTS,
-  PHARMACY_DASHBOARD,
-  PHARMACY_ORDERS,
-  PHARMACY_PRODUCTS,
-  PHARMACY_PRODUCT_REQUESTS,
-  PHARMACY_PROFILE,
+  PHARMACY_ROUTES,
   getPharmacyAllProductPath,
   getPharmacyProductPath,
   getPharmacyRequestPath,
-} from './routes';
+} from '@e-pharmacy/config/pharmacy';
 
 //===================================================================
 
@@ -78,7 +72,7 @@ export function getOrderDetailsBreadcrumbs(
 ): BreadcrumbItem[] {
   return getPharmacyBreadcrumbs(
     { label: orderLabel ?? `Order #${orderId}` },
-    { label: 'Orders', href: PHARMACY_ORDERS }
+    { label: 'Orders', href: PHARMACY_ROUTES.ORDERS }
   );
 }
 
@@ -98,7 +92,7 @@ export function getClientDetailsBreadcrumbs(
 ): BreadcrumbItem[] {
   return getPharmacyBreadcrumbs(
     { label: clientLabel ?? `Client #${clientId}` },
-    { label: 'Clients', href: PHARMACY_CLIENTS }
+    { label: 'Clients', href: PHARMACY_ROUTES.CLIENTS }
   );
 }
 
@@ -121,7 +115,7 @@ export function getProductDetailsBreadcrumbs(
       label: productName ?? `Product ${productId}`,
       href: getPharmacyProductPath(productId),
     },
-    { label: 'Own products', href: PHARMACY_PRODUCTS }
+    { label: 'Own products', href: PHARMACY_ROUTES.PRODUCTS }
   );
 }
 
@@ -144,7 +138,7 @@ export function getAllProductDetailsBreadcrumbs(
       label: productName ?? `Global product ${productId}`,
       href: getPharmacyAllProductPath(productId),
     },
-    { label: 'All products', href: PHARMACY_ALL_PRODUCTS }
+    { label: 'All products', href: PHARMACY_ROUTES.ALL_PRODUCTS }
   );
 }
 
@@ -161,7 +155,7 @@ export function getProductRequestsBreadcrumbs(
 export function getNewProductRequestBreadcrumbs(): BreadcrumbItem[] {
   return getPharmacyBreadcrumbs(
     { label: 'New product request' },
-    { label: 'Product requests', href: PHARMACY_PRODUCT_REQUESTS }
+    { label: 'Product requests', href: PHARMACY_ROUTES.PRODUCT_REQUESTS }
   );
 }
 
@@ -176,7 +170,7 @@ export function getProductRequestDetailsBreadcrumbs(
       label: currentLabel,
       href: getPharmacyRequestPath(requestId),
     },
-    { label: 'Product requests', href: PHARMACY_PRODUCT_REQUESTS }
+    { label: 'Product requests', href: PHARMACY_ROUTES.PRODUCT_REQUESTS }
   );
 }
 
@@ -197,13 +191,13 @@ export function getEditProductRequestBreadcrumbs(
 //===================================================================
 
 export const PHARMACY_BREADCRUMB_ROOTS = {
-  dashboard: PHARMACY_DASHBOARD,
-  profile: PHARMACY_PROFILE,
-  orders: PHARMACY_ORDERS,
-  clients: PHARMACY_CLIENTS,
-  products: PHARMACY_PRODUCTS,
-  allProducts: PHARMACY_ALL_PRODUCTS,
-  productRequests: PHARMACY_PRODUCT_REQUESTS,
+  dashboard: PHARMACY_ROUTES.DASHBOARD,
+  profile: PHARMACY_ROUTES.PROFILE,
+  orders: PHARMACY_ROUTES.ORDERS,
+  clients: PHARMACY_ROUTES.CLIENTS,
+  products: PHARMACY_ROUTES.PRODUCTS,
+  allProducts: PHARMACY_ROUTES.ALL_PRODUCTS,
+  productRequests: PHARMACY_ROUTES.PRODUCT_REQUESTS,
 } as const;
 
 //===================================================================
@@ -258,7 +252,7 @@ export function getPharmacyBreadcrumbsByPathname(
     if (id === 'new') {
       return getPharmacyBreadcrumbs(
         { label: 'New order' },
-        { label: 'Orders', href: PHARMACY_ORDERS }
+        { label: 'Orders', href: PHARMACY_ROUTES.ORDERS }
       );
     }
 

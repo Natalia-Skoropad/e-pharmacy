@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { AllProductDetailsPageContent } from '@/components/all-products/AllProductDetailsPageContent';
+import { AllProductDetailsPageContent } from '@/components/all-products/AllProductDetailsPageContent/AllProductDetailsPageContent';
 import { AllProductsPageContent } from '@/components/all-products/AllProductsPageContent';
 
 import {

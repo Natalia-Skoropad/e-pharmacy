@@ -1,6 +1,7 @@
 'use client';
 
 import { Trash2 } from 'lucide-react';
+import { formatDateTime } from '@e-pharmacy/utils/date';
 import { useEffect, useRef, useState } from 'react';
 
 import { Button, CountLabel, LoadingSpinner, Pagination } from '../../common';
@@ -42,22 +43,6 @@ export type EntityCommentsProps = Readonly<{
 //===================================================================
 
 const COMMENT_MAX_LENGTH = 1000;
-
-//===================================================================
-
-function formatCommentDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return value;
-
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-}
 
 //===================================================================
 
@@ -233,7 +218,7 @@ export function EntityComments({
                   <div>
                     <strong>{commentTitle}</strong>
                     <time dateTime={comment.createdAt}>
-                      {formatCommentDate(comment.createdAt)}
+                      {formatDateTime(comment.createdAt) ?? '—'}
                     </time>
                   </div>
 

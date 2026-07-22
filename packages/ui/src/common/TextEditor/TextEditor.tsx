@@ -6,6 +6,7 @@ import { useRef } from 'react';
 import { Bold, Italic, List, Pilcrow } from 'lucide-react';
 
 import FormFieldLayout from '../../form-fields/FormFieldLayout/FormFieldLayout';
+import { createTextareaChangeEvent } from '../../internal/create-textarea-change-event';
 
 import css from './TextEditor.module.css';
 
@@ -27,30 +28,17 @@ export type TextEditorProps = Readonly<{
   onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
 }>;
 
+//===================================================================
+
 type TextareaRef = RefObject<HTMLTextAreaElement | null>;
 
 //===================================================================
 
-function createSyntheticTextareaEvent(
-  textarea: HTMLTextAreaElement,
-  value: string
-): ChangeEvent<HTMLTextAreaElement> {
-  const target = {
-    ...textarea,
-    value,
-    name: textarea.name,
-    id: textarea.id,
-  } as HTMLTextAreaElement;
-
-  return {
-    target,
-    currentTarget: target,
-  } as ChangeEvent<HTMLTextAreaElement>;
-}
-
 function getLimitedValue(value: string, maxLength?: number): string {
   return typeof maxLength === 'number' ? value.slice(0, maxLength) : value;
 }
+
+//===================================================================
 
 function insertSnippet({
   textareaRef,
@@ -76,11 +64,14 @@ function insertSnippet({
     maxLength
   );
 
-  onChange(createSyntheticTextareaEvent(textarea, nextValue));
+  onChange(createTextareaChangeEvent(textarea, nextValue));
   textarea.focus();
 
   window.requestAnimationFrame(() => {
-    const cursorPosition = Math.min(selectionStart + nextText.length, nextValue.length);
+    const cursorPosition = Math.min(
+      selectionStart + nextText.length,
+      nextValue.length
+    );
     textarea.setSelectionRange(cursorPosition, cursorPosition);
   });
 }

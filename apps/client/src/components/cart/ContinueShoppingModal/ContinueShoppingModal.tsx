@@ -13,8 +13,15 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
+
+import {
+  getProductCategoryOptions,
+  type ProductCategoryOption,
+} from '@e-pharmacy/config/products';
+
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/types/products';
-import { formatPrice, formatStockLabel } from '@e-pharmacy/utils/formatters';
+import { formatMoney } from '@e-pharmacy/utils/money';
+import { formatStockLabel } from '@e-pharmacy/utils/numbers';
 import type { Cart, Product, ProductCategory } from '@e-pharmacy/types';
 
 import { getProducts } from '@/lib/api/browser';
@@ -35,11 +42,6 @@ type ContinueShoppingModalProps = {
   onCartChange: (cart: Cart) => void;
 };
 
-type CategoryOption = {
-  value: ProductCategory;
-  label: string;
-};
-
 //===================================================================
 
 const PRODUCTS_LIMIT = 150;
@@ -52,19 +54,6 @@ function getProductOfferPrice(product: Product, pharmacyId: string): number {
   );
 
   return pharmacyOffer?.price ?? product.price;
-}
-
-//===================================================================
-
-function getCategoryOptionsFromProducts(products: Product[]): CategoryOption[] {
-  const categories = new Set(products.map((product) => product.category));
-
-  return [...categories]
-    .map((category) => ({
-      value: category,
-      label: PRODUCT_CATEGORY_LABELS[category],
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label));
 }
 
 //===================================================================
@@ -84,7 +73,9 @@ function ContinueShoppingModal({
     ProductCategory | 'all'
   >('all');
 
-  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<
+    ProductCategoryOption[]
+  >([]);
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,7 +110,7 @@ function ContinueShoppingModal({
           }
         );
 
-        const nextOptions = getCategoryOptionsFromProducts(response.items);
+        const nextOptions = getProductCategoryOptions(response.items);
 
         setCategoryOptions(nextOptions);
 
@@ -249,7 +240,7 @@ function ContinueShoppingModal({
           />
 
           <p className={css.availableCount}>
-            {formatStockLabel(availableProductsCount)}
+            {formatStockLabel(availableProductsCount) ?? '—'}
           </p>
         </div>
 
@@ -343,7 +334,8 @@ function ContinueShoppingModal({
                     </div>
 
                     <p className={css.productPrice}>
-                      {formatPrice(getProductOfferPrice(product, pharmacyId))}
+                      {formatMoney(getProductOfferPrice(product, pharmacyId)) ??
+                        '—'}
                     </p>
 
                     <Button

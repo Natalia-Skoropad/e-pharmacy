@@ -5,7 +5,7 @@ import { Star } from 'lucide-react';
 
 import { Button, LazyLoadButton } from '@e-pharmacy/ui/common';
 import { CommentInput } from '@e-pharmacy/ui/form-fields';
-import { formatReviewDate } from '@e-pharmacy/utils/formatters';
+import { formatShortDate } from '@e-pharmacy/utils/date';
 import type { ReviewTouchedFields } from '@e-pharmacy/validation/reviews';
 
 import css from './ReviewsSection.module.css';
@@ -177,7 +177,7 @@ function ReviewsSection({
                       <h3 className={css.author}>{review.userName}</h3>
 
                       <time className={css.date} dateTime={review.createdAt}>
-                        {formatReviewDate(review.createdAt)}
+                        {formatShortDate(review.createdAt) ?? '—'}
                       </time>
                     </div>
 

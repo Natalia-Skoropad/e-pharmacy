@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
 import { useAuth } from '@e-pharmacy/auth/core';
-import { getPharmacyDashboardPath } from '@/lib/layout/routes';
+import { getPharmacyDashboardPath } from '@e-pharmacy/config/pharmacy';
 
 import {
   getSharedLoginUrl,

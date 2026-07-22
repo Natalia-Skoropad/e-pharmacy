@@ -18,13 +18,15 @@ import {
   type OwnProductStatisticsValue,
 } from '@e-pharmacy/types/products';
 
-import { formatPrice } from '@e-pharmacy/utils/formatters';
+import { formatMoney } from '@e-pharmacy/utils/money';
 
 import css from './OwnProductStatistics.module.css';
 
 //===================================================================
 
 type OwnProductStatisticTone = 'accent' | 'blue' | 'green' | 'gray' | 'yellow';
+
+//===================================================================
 
 type OwnProductStatisticConfig = Readonly<{
   key: OwnProductStatisticsKey;
@@ -81,7 +83,7 @@ function OwnProductStatisticCard({
       <div className={css.cardValues}>
         <p className={css.cardValue}>{value.quantity}</p>
         {typeof value.amount === 'number' ? (
-          <p className={css.cardAmount}>{formatPrice(value.amount)}</p>
+          <p className={css.cardAmount}>{formatMoney(value.amount) ?? '—'}</p>
         ) : null}
       </div>
     </>
@@ -116,7 +118,8 @@ function OwnProductStatistics({
 
   const style: OwnProductStatisticsStyle = {
     '--own-product-stat-columns': String(cards.length),
-    '--own-product-stat-tablet-columns': cards.length > 2 ? '2' : String(cards.length),
+    '--own-product-stat-tablet-columns':
+      cards.length > 2 ? '2' : String(cards.length),
   };
 
   return (

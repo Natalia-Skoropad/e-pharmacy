@@ -12,13 +12,15 @@ import clsx from 'clsx';
 
 import type { OrderStatus } from '@e-pharmacy/types/orders';
 import type { OrderStatisticsCounts } from '@e-pharmacy/types/orders';
-import { formatPrice } from '@e-pharmacy/utils/formatters';
+import { formatMoney } from '@e-pharmacy/utils/money';
 
 import css from './OrderStatistics.module.css';
 
 //===================================================================
 
 type OrderStatisticTone = 'blue' | 'yellow' | 'green' | 'red';
+
+//===================================================================
 
 type OrderStatisticConfig = Readonly<{
   key: OrderStatus;
@@ -74,7 +76,7 @@ function OrderStatisticCard({
       </div>
       <div className={css.cardValues}>
         <p className={css.cardValue}>{count}</p>
-        <p className={css.cardAmount}>{formatPrice(amount)}</p>
+        <p className={css.cardAmount}>{formatMoney(amount) ?? '—'}</p>
       </div>
     </>
   );

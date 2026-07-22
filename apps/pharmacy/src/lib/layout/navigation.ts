@@ -10,15 +10,7 @@ import {
 } from 'lucide-react';
 
 import type { SideMenuItem } from '@e-pharmacy/ui/layout';
-
-import {
-  PHARMACY_ALL_PRODUCTS,
-  PHARMACY_CLIENTS,
-  PHARMACY_DASHBOARD,
-  PHARMACY_ORDERS,
-  PHARMACY_PRODUCTS,
-  PHARMACY_PRODUCT_REQUESTS,
-} from './routes';
+import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
 
 //===================================================================
 
@@ -29,32 +21,32 @@ const ICON_SIZE = 18;
 export const PHARMACY_NAVIGATION: readonly SideMenuItem[] = [
   {
     label: 'Dashboard',
-    href: PHARMACY_DASHBOARD,
+    href: PHARMACY_ROUTES.DASHBOARD,
     icon: createElement(LayoutDashboard, { size: ICON_SIZE }),
   },
   {
     label: 'Orders',
-    href: PHARMACY_ORDERS,
+    href: PHARMACY_ROUTES.ORDERS,
     icon: createElement(ShoppingBag, { size: ICON_SIZE }),
   },
   {
     label: 'Clients',
-    href: PHARMACY_CLIENTS,
+    href: PHARMACY_ROUTES.CLIENTS,
     icon: createElement(Users, { size: ICON_SIZE }),
   },
   {
     label: 'Own products',
-    href: PHARMACY_PRODUCTS,
+    href: PHARMACY_ROUTES.PRODUCTS,
     icon: createElement(Boxes, { size: ICON_SIZE }),
   },
   {
     label: 'All products',
-    href: PHARMACY_ALL_PRODUCTS,
+    href: PHARMACY_ROUTES.ALL_PRODUCTS,
     icon: createElement(PackageSearch, { size: ICON_SIZE }),
   },
   {
     label: 'Product requests',
-    href: PHARMACY_PRODUCT_REQUESTS,
+    href: PHARMACY_ROUTES.PRODUCT_REQUESTS,
     icon: createElement(FilePlus2, { size: ICON_SIZE }),
   },
 ];

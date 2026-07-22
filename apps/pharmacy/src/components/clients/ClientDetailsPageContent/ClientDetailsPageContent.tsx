@@ -68,7 +68,8 @@ import {
   useEscapeToClose,
 } from '@e-pharmacy/hooks';
 
-import { formatPrice, formatShortDate } from '@e-pharmacy/utils/formatters';
+import { formatAmount } from '@e-pharmacy/utils/money';
+import { formatShortDate } from '@e-pharmacy/utils/date';
 
 import {
   createPharmacyNote,
@@ -89,12 +90,7 @@ import type {
 
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import {
-  getPharmacyClientPath,
-  getPharmacyClientsPath,
-  getPharmacyOrderPath,
-  getPharmacyProductPath,
-} from '@/lib/layout/routes';
+import { getPharmacyClientPath, getPharmacyClientsPath, getPharmacyOrderPath, getPharmacyProductPath } from '@e-pharmacy/config/pharmacy';
 
 import {
   DELIVERY_METHOD_LABELS,
@@ -230,17 +226,13 @@ const PRODUCT_STATUS_LABELS: Record<ProductStatus, string> = {
 //===================================================================
 
 function formatClientDate(value: string): string {
-  const date = new Date(value);
-
-  return Number.isNaN(date.getTime())
-    ? 'Not specified'
-    : formatShortDate(value);
+  return formatShortDate(value) ?? 'Not specified';
 }
 
 //===================================================================
 
-function formatAmount(value: number): string {
-  return formatPrice(value).replace(/\sUAH$/, '');
+function formatAmountValue(value: number): string {
+  return formatAmount(value) ?? '—';
 }
 
 //===================================================================
@@ -638,7 +630,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
 
         setOrders(response.items);
         setOrdersTotal(response.total);
-        setOrdersTotalPages(Math.ceil(response.total / ordersRowsPerPage));
+        setOrdersTotalPages(response.totalPages);
         setOrdersEarliestCreatedAt(response.earliestCreatedAt);
 
         const hasSearchOrFilters = Boolean(
@@ -839,7 +831,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       {
         key: 'amount',
         title: <TableHeaderTitle parts={['Order', ' amount, ', 'UAH']} />,
-        render: (order) => formatAmount(order.totalAmount),
+        render: (order) => formatAmountValue(order.totalAmount),
       },
       {
         key: 'createdByType',
@@ -911,7 +903,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       {
         key: 'amount',
         title: <TableHeaderTitle parts={['Purchased amount,', 'UAH']} />,
-        render: (item) => formatAmount(item.totalAmount),
+        render: (item) => formatAmountValue(item.totalAmount),
       },
       {
         key: 'status',

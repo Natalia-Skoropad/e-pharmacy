@@ -22,9 +22,7 @@ import {
 import type { PharmacyProfile } from '@e-pharmacy/types';
 import type { BreadcrumbItem } from '@e-pharmacy/ui/layout';
 import { BurgerButton, CabinetTopBar } from '@e-pharmacy/ui/layout';
-
 import { TextActionButton, UserBadge } from '@e-pharmacy/ui/common';
-
 import { useAuth } from '@e-pharmacy/auth/core';
 
 import { getMyPharmacyProfile } from '@/lib/api/browser';
@@ -36,8 +34,8 @@ import {
   getClientPharmacyUrl,
 } from '@/lib/layout/external-links';
 
-import { getPharmacyProfilePath } from '@/lib/layout/routes';
-import { PharmacyMobileMenu } from '@/components/layout/PharmacyMobileMenu';
+import { getPharmacyProfilePath } from '@e-pharmacy/config/pharmacy';
+import { PharmacyMobileMenu } from '@/components/layout/PharmacyMobileMenu/PharmacyMobileMenu';
 
 import css from './PharmacyHeader.module.css';
 
@@ -300,7 +298,9 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
                       onClick={handleLogout}
                     >
                       <LogOut size={16} aria-hidden="true" />
-                      <span>{isLogoutLoading ? 'Logging out...' : 'Log out'}</span>
+                      <span>
+                        {isLogoutLoading ? 'Logging out...' : 'Log out'}
+                      </span>
                     </button>
                   </div>
                 ) : null}

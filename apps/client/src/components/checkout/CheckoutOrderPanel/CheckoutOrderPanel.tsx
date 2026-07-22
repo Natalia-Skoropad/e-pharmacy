@@ -1,7 +1,7 @@
 import { ShieldAlert } from 'lucide-react';
 
 import { Button } from '@e-pharmacy/ui/common';
-import { formatPrice } from '@e-pharmacy/utils/formatters';
+import { formatMoney } from '@e-pharmacy/utils/money';
 import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 
 import css from './CheckoutOrderPanel.module.css';
@@ -48,7 +48,7 @@ function CheckoutOrderPanel({
         </div>
         <div>
           <dt>Total</dt>
-          <dd>{formatPrice(orderGroup.totalPrice)}</dd>
+          <dd>{formatMoney(orderGroup.totalPrice) ?? '—'}</dd>
         </div>
       </dl>
 

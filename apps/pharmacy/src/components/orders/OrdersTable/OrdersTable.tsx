@@ -11,7 +11,7 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
-import { formatPrice } from '@e-pharmacy/utils/formatters';
+import { formatAmount } from '@e-pharmacy/utils/money';
 
 import {
   DELIVERY_METHOD_LABELS,
@@ -22,10 +22,7 @@ import {
 
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import {
-  getPharmacyClientPath,
-  getPharmacyOrderPath,
-} from '@/lib/layout/routes';
+import { getPharmacyClientPath, getPharmacyOrderPath } from '@e-pharmacy/config/pharmacy';
 
 //===================================================================
 
@@ -115,7 +112,7 @@ function OrdersTable({
       {
         key: 'totalAmount',
         title: <TableHeaderTitle parts={['Total ', 'amount, ', 'UAH']} />,
-        render: (order) => formatPrice(order.totalAmount).replace(' UAH', ''),
+        render: (order) => formatAmount(order.totalAmount) ?? '—',
       },
       {
         key: 'createdByType',

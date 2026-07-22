@@ -116,12 +116,19 @@ packages/
 
 Current shared packages are intentionally small and are used where reuse already makes sense.
 
-- `@e-pharmacy/api-client` — shared API response types and request constants
-- `@e-pharmacy/config` — shared app names, route segments, and TypeScript config
-- `@e-pharmacy/types` — generic shared TypeScript types
-- `@e-pharmacy/ui` — shared UI contracts such as button variants and sizes
-- `@e-pharmacy/utils` — shared helpers such as slug builders
-- `@e-pharmacy/validation` — shared validation limits, patterns, and sanitizers
+- `@e-pharmacy/api-client` — HTTP contracts and normalization of external API responses, including strict pagination parsing
+- `@e-pharmacy/config` — shared application configuration, route builders, navigation values, and product presentation options
+- `@e-pharmacy/types` — shared TypeScript domain and API contract types
+- `@e-pharmacy/ui` — reusable React components and UI-only helpers
+- `@e-pharmacy/utils` — pure environment-independent utilities for money, dates, numbers, strings, collections, and type guards
+- `@e-pharmacy/validation` — frontend validation contracts, canonical domain parsers, normalizers, limits, and patterns
+
+Dependency rules:
+
+- `packages/utils` must not depend on React, Next.js, browser globals, API transport, or application code.
+- API response parsing belongs to `packages/api-client`; route configuration belongs to `packages/config`.
+- Canonical working-hours parsing belongs to `packages/validation/pharmacy`.
+- Backend-only helpers remain inside `apps/api` and must not import workspace packages.
 
 ## Environment Variables
 

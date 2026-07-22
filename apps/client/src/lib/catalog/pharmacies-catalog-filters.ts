@@ -71,7 +71,7 @@ function normalizeCityKey(value: string): string {
 
 //===================================================================
 
-function capitalizeWord(value: string): string {
+function capitalizeCityWord(value: string): string {
   return value ? value[0].toUpperCase() + value.slice(1).toLowerCase() : '';
 }
 
@@ -80,7 +80,7 @@ function capitalizeWord(value: string): string {
 function formatCityFallback(value: string): string {
   return value
     .split(/([ -]+)/)
-    .map((part) => (/^[A-Za-z]+$/.test(part) ? capitalizeWord(part) : part))
+    .map((part) => (/^[A-Za-z]+$/.test(part) ? capitalizeCityWord(part) : part))
     .join('');
 }
 

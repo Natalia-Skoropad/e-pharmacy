@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./admin": "./src/admin/index.ts",
     "./auth": "./src/auth/index.ts",
-    "./pharmacy": "./src/pharmacy/index.ts"
+    "./pharmacy": "./src/pharmacy/index.ts",
+    "./products": "./src/products/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",
@@ -15,5 +16,8 @@
   },
   "devDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@e-pharmacy/types": "workspace:*"
   }
 }

@@ -18,10 +18,8 @@ import { Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useToast } from '@e-pharmacy/ui/feedback';
 
 
-import {
-  formatAvailableProductsCount,
-  parseWorkingHours,
-} from '@e-pharmacy/utils/formatters';
+import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
+import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
 
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 
@@ -432,15 +430,11 @@ function PharmacyDetailsPageContent({
                         Working hours
                       </dt>
                       <dd className={css.workingHoursValue}>
-                        {parseWorkingHours(workingHours).map((item) =>
-                          typeof item === 'string' ? (
-                            <span key={item}>{item}</span>
-                          ) : (
-                            <span key={item.day}>
-                              <strong>{item.day}</strong>: {item.hours}
-                            </span>
-                          )
-                        )}
+                        {getWorkingHoursDisplayItems(workingHours)?.map((item) => (
+                          <span key={item.day}>
+                            <strong>{item.label}</strong>: {item.hours}
+                          </span>
+                        ))}
                       </dd>
                     </div>
                   ) : null}

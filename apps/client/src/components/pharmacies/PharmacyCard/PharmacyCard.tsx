@@ -8,7 +8,7 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { formatAvailableProductsCount } from '@e-pharmacy/utils/formatters';
+import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
 import type { PublicPharmacy } from '@e-pharmacy/types';
 
 import { addFavoritePharmacy, removeFavoritePharmacy } from '@/lib/api/browser';
@@ -147,7 +147,7 @@ function PharmacyCard({
           <div className={css.summaryItem}>
             <dt>Products</dt>
             <dd>
-              {formatAvailableProductsCount(pharmacy.availableProductsCount)}
+              {formatAvailableProductsCount(pharmacy.availableProductsCount) ?? '—'}
             </dd>
           </div>
         </dl>

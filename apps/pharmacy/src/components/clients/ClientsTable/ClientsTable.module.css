@@ -6,5 +6,13 @@
   word-break: break-word;
 }
 
-.headerWithHelp { display:inline-flex; gap:6px; align-items:center; }
-.headerWithHelp button { width:24px; height:24px; }
+.headerWithHelp {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.headerWithHelp button {
+  width: 24px;
+  height: 24px;
+}

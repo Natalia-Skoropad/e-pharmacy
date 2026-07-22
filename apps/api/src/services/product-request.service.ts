@@ -22,6 +22,7 @@ import type {
 } from '../schemas/product-request.schema';
 
 import { httpError } from '../utils/httpError';
+import { getEndOfDay, getStartOfDay } from '../utils/date-range';
 import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
 
 //===============================================================
@@ -112,20 +113,6 @@ export async function getProductRequestArticleAvailabilityService(
     available: !message,
     ...(message ? { message } : {}),
   };
-}
-
-//===============================================================
-
-function getStartOfDay(value: string): Date {
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return Number.isNaN(date.getTime()) ? new Date(0) : date;
-}
-
-//===============================================================
-
-function getEndOfDay(value: string): Date {
-  const date = new Date(`${value}T23:59:59.999Z`);
-  return Number.isNaN(date.getTime()) ? new Date(0) : date;
 }
 
 //===============================================================
@@ -308,8 +295,6 @@ function serializeProductRequest(
 
 //===============================================================
 
-//===============================================================
-
 function getRequestFormUpdate(input: ProductRequestFormInput) {
   return {
     name: input.name.trim(),
@@ -318,7 +303,7 @@ function getRequestFormUpdate(input: ProductRequestFormInput) {
 
     customCategory:
       input.category === 'other' ? input.customCategory : undefined,
-    
+
     productImage: input.productImage,
     manufacturer: input.manufacturer,
     countryOfOrigin: input.countryOfOrigin,
@@ -329,7 +314,7 @@ function getRequestFormUpdate(input: ProductRequestFormInput) {
     prescriptionType: input.prescriptionType,
     fullDescription: input.fullDescription,
     pharmacyComment: input.pharmacyComment,
-    
+
     additionalFiles: input.additionalFiles?.length
       ? input.additionalFiles
       : undefined,

@@ -9,10 +9,8 @@ import {
   SvgIcon,
 } from '@e-pharmacy/ui/common';
 
-import {
-  formatPharmaciesCount,
-  formatPriceRange,
-} from '@e-pharmacy/utils/formatters';
+import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
+import { formatMoneyRange, getNumericRange } from '@e-pharmacy/utils/money';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 import type { Product } from '@e-pharmacy/types';
@@ -76,10 +74,17 @@ function ProductCard({
 
   const isAvailable = product.inStock && product.foundInPharmaciesCount > 0;
 
-  const priceRangeLabel = useMemo(
-    () => formatPriceRange(product.offers),
-    [product.offers]
-  );
+  const priceRangeLabel = useMemo(() => {
+    const priceRange = getNumericRange(
+      product.offers
+        .filter((offer) => offer.inStock)
+        .map((offer) => offer.price)
+    );
+
+    return priceRange
+      ? (formatMoneyRange(priceRange) ?? '—')
+      : 'No pharmacy prices yet';
+  }, [product.offers]);
 
   useProductFavoriteRefresh({
     id: product.id,
@@ -146,7 +151,7 @@ function ProductCard({
           {isAvailable ? (
             <div className={css.summaryItem}>
               <dt>Found in pharmacies</dt>
-              <dd>{formatPharmaciesCount(product.foundInPharmaciesCount)}</dd>
+              <dd>{formatPharmaciesCount(product.foundInPharmaciesCount) ?? '—'}</dd>
             </div>
           ) : null}
         </dl>

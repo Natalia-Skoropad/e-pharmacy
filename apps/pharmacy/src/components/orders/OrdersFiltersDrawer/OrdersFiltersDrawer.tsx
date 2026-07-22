@@ -8,7 +8,7 @@ import {
   type SelectOption,
 } from '@e-pharmacy/ui/common';
 
-import { getPharmacyOrdersPath } from '@/lib/layout/routes';
+import { getPharmacyOrdersPath } from '@e-pharmacy/config/pharmacy';
 
 import {
   DELIVERY_METHOD_LABELS,

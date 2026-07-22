@@ -1,10 +1,4 @@
-export const PHARMACY_DASHBOARD = '/pharmacy/dashboard';
-export const PHARMACY_PROFILE = '/pharmacy/profile';
-export const PHARMACY_ORDERS = '/pharmacy/orders';
-export const PHARMACY_CLIENTS = '/pharmacy/clients';
-export const PHARMACY_PRODUCTS = '/pharmacy/products';
-export const PHARMACY_ALL_PRODUCTS = '/pharmacy/all-products';
-export const PHARMACY_PRODUCT_REQUESTS = '/pharmacy/product-requests';
+import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
 
 //===================================================================
 
@@ -35,7 +29,7 @@ const FILTER_PREFIXES = {
 
 function encodeFilterValue(
   value: Exclude<PharmacyFilterValue, null | undefined>
-) {
+): string {
   return encodeURIComponent(
     String(value).trim().toLowerCase().replaceAll(' ', '-')
   );
@@ -43,14 +37,15 @@ function encodeFilterValue(
 
 //===================================================================
 
-function buildFilterPath(basePath: string, filters: PharmacyFilterMap = {}) {
-  const segments = Object.entries(filters).flatMap(([key, value]) => {
-    if (value === undefined || value === null || value === '') {
-      return [];
-    }
-
-    return [`${key}-${encodeFilterValue(value)}`];
-  });
+function buildFilterPath(
+  basePath: string,
+  filters: PharmacyFilterMap = {}
+): string {
+  const segments = Object.entries(filters).flatMap(([key, value]) =>
+    value === undefined || value === null || value === ''
+      ? []
+      : [`${key}-${encodeFilterValue(value)}`]
+  );
 
   return segments.length > 0 ? `${basePath}/${segments.join('/')}` : basePath;
 }
@@ -60,21 +55,16 @@ function buildFilterPath(basePath: string, filters: PharmacyFilterMap = {}) {
 function parseFilterSegments(
   segments: string[] | undefined,
   allowedKeys: readonly string[]
-) {
+): Record<string, string> {
   const filters: Record<string, string> = {};
 
   for (const segment of segments ?? []) {
     const matchedKey = allowedKeys.find((key) => segment.startsWith(`${key}-`));
 
-    if (!matchedKey) {
-      continue;
-    }
+    if (!matchedKey) continue;
 
     const value = segment.slice(matchedKey.length + 1);
-
-    if (value) {
-      filters[matchedKey] = decodeURIComponent(value);
-    }
+    if (value) filters[matchedKey] = decodeURIComponent(value);
   }
 
   return filters;
@@ -82,102 +72,55 @@ function parseFilterSegments(
 
 //===================================================================
 
-export function getPharmacyDashboardPath() {
-  return PHARMACY_DASHBOARD;
-}
-
-export function getPharmacyProfilePath() {
-  return PHARMACY_PROFILE;
-}
-
-export function getPharmacyOrdersPath() {
-  return PHARMACY_ORDERS;
-}
-
-export function getPharmacyNewOrderPath() {
-  return `${PHARMACY_ORDERS}/new`;
-}
-
-export function getPharmacyClientsPath() {
-  return PHARMACY_CLIENTS;
-}
-
-export function getPharmacyProductsPath() {
-  return PHARMACY_PRODUCTS;
-}
-
-export function getPharmacyAllProductsPath() {
-  return PHARMACY_ALL_PRODUCTS;
-}
-
-export function getPharmacyProductRequestsPath() {
-  return PHARMACY_PRODUCT_REQUESTS;
-}
-
-export function getPharmacyOrderPath(orderId: string | number) {
-  return `${PHARMACY_ORDERS}/${encodeURIComponent(String(orderId))}`;
-}
-
-export function getPharmacyClientPath(clientId: string | number) {
-  return `${PHARMACY_CLIENTS}/${encodeURIComponent(String(clientId))}`;
-}
-
-export function getPharmacyProductPath(productId: string | number) {
-  return `${PHARMACY_PRODUCTS}/${encodeURIComponent(String(productId))}`;
-}
-
-export function getPharmacyAllProductPath(productId: string | number) {
-  return `${PHARMACY_ALL_PRODUCTS}/${encodeURIComponent(String(productId))}`;
-}
-
-export function getPharmacyRequestPath(requestId: string | number) {
-  return `${PHARMACY_PRODUCT_REQUESTS}/${encodeURIComponent(String(requestId))}`;
-}
-
-export function getPharmacyRequestEditPath(requestId: string | number) {
-  return `${getPharmacyRequestPath(requestId)}/edit`;
-}
-
-export function getPharmacyNewRequestPath() {
-  return `${PHARMACY_PRODUCT_REQUESTS}/new`;
-}
-
-export function getPharmacyOrdersFilterPath(filters: PharmacyFilterMap) {
-  return buildFilterPath(PHARMACY_ORDERS, filters);
-}
-
-export function getPharmacyClientsFilterPath(filters: PharmacyFilterMap) {
-  return buildFilterPath(PHARMACY_CLIENTS, filters);
-}
-
-export function getPharmacyProductsFilterPath(filters: PharmacyFilterMap) {
-  return buildFilterPath(PHARMACY_PRODUCTS, filters);
-}
-
-export function getPharmacyAllProductsFilterPath(filters: PharmacyFilterMap) {
-  return buildFilterPath(PHARMACY_ALL_PRODUCTS, filters);
+export function getPharmacyOrdersFilterPath(
+  filters: PharmacyFilterMap
+): string {
+  return buildFilterPath(PHARMACY_ROUTES.ORDERS, filters);
 }
 
 //===================================================================
 
-export function getPharmacyRequestsFilterPath(filters: PharmacyFilterMap) {
+export function getPharmacyClientsFilterPath(
+  filters: PharmacyFilterMap
+): string {
+  return buildFilterPath(PHARMACY_ROUTES.CLIENTS, filters);
+}
+
+//===================================================================
+
+export function getPharmacyProductsFilterPath(
+  filters: PharmacyFilterMap
+): string {
+  return buildFilterPath(PHARMACY_ROUTES.PRODUCTS, filters);
+}
+
+//===================================================================
+
+export function getPharmacyAllProductsFilterPath(
+  filters: PharmacyFilterMap
+): string {
+  return buildFilterPath(PHARMACY_ROUTES.ALL_PRODUCTS, filters);
+}
+
+//===================================================================
+
+export function getPharmacyRequestsFilterPath(
+  filters: PharmacyFilterMap
+): string {
   const segments: string[] = [];
   const requestNumber = filters.requestNumber
     ? String(filters.requestNumber).trim()
     : '';
-
   const name = filters.productName
     ? String(filters.productName).trim()
     : filters.name
       ? String(filters.name).trim()
       : '';
-
   const article = filters.productArticle
     ? String(filters.productArticle).trim()
     : filters.article
       ? String(filters.article).trim()
       : '';
-
   const category = filters.category ? String(filters.category).trim() : '';
   const status = filters.status ? String(filters.status).trim() : '';
   const dateFrom = filters.dateFrom ? String(filters.dateFrom).trim() : '';
@@ -186,8 +129,12 @@ export function getPharmacyRequestsFilterPath(filters: PharmacyFilterMap) {
   if (requestNumber) {
     segments.push(`request-number-${encodeFilterValue(requestNumber)}`);
   }
-  if (article) segments.push(`product-article-${encodeFilterValue(article)}`);
-  if (name) segments.push(`product-name-${encodeFilterValue(name)}`);
+  if (article) {
+    segments.push(`product-article-${encodeFilterValue(article)}`);
+  }
+  if (name) {
+    segments.push(`product-name-${encodeFilterValue(name)}`);
+  }
   if (category && category !== 'all') {
     segments.push(`category-${category.replaceAll('_', '-')}`);
   }
@@ -198,13 +145,15 @@ export function getPharmacyRequestsFilterPath(filters: PharmacyFilterMap) {
   if (dateTo) segments.push(`date-to-${dateTo}`);
 
   return segments.length
-    ? `${PHARMACY_PRODUCT_REQUESTS}/${segments.join('/')}`
-    : PHARMACY_PRODUCT_REQUESTS;
+    ? `${PHARMACY_ROUTES.PRODUCT_REQUESTS}/${segments.join('/')}`
+    : PHARMACY_ROUTES.PRODUCT_REQUESTS;
 }
 
 //===================================================================
 
-export function parsePharmacyOrderFilters(segments?: string[]) {
+export function parsePharmacyOrderFilters(
+  segments?: string[]
+): Record<string, string> {
   return parseFilterSegments(segments, [
     FILTER_PREFIXES.status,
     FILTER_PREFIXES.delivery,
@@ -216,7 +165,9 @@ export function parsePharmacyOrderFilters(segments?: string[]) {
 
 //===================================================================
 
-export function parsePharmacyClientFilters(segments?: string[]) {
+export function parsePharmacyClientFilters(
+  segments?: string[]
+): Record<string, string> {
   return parseFilterSegments(segments, [
     FILTER_PREFIXES.status,
     FILTER_PREFIXES.date,
@@ -233,7 +184,9 @@ export function parsePharmacyClientFilters(segments?: string[]) {
 
 //===================================================================
 
-export function parsePharmacyProductFilters(segments?: string[]) {
+export function parsePharmacyProductFilters(
+  segments?: string[]
+): Record<string, string> {
   return parseFilterSegments(segments, [
     FILTER_PREFIXES.date,
     FILTER_PREFIXES.name,
@@ -246,20 +199,17 @@ export function parsePharmacyProductFilters(segments?: string[]) {
 
 //===================================================================
 
-export function parsePharmacyAllProductFilters(segments?: string[]) {
-  return parseFilterSegments(segments, [
-    FILTER_PREFIXES.date,
-    FILTER_PREFIXES.name,
-    FILTER_PREFIXES.article,
-    FILTER_PREFIXES.category,
-    FILTER_PREFIXES.status,
-    FILTER_PREFIXES.stock,
-  ]);
+export function parsePharmacyAllProductFilters(
+  segments?: string[]
+): Record<string, string> {
+  return parsePharmacyProductFilters(segments);
 }
 
 //===================================================================
 
-export function parsePharmacyRequestFilters(segments?: string[]) {
+export function parsePharmacyRequestFilters(
+  segments?: string[]
+): Record<string, string> {
   return parseFilterSegments(segments, [
     FILTER_PREFIXES.date,
     FILTER_PREFIXES.name,

@@ -13,7 +13,7 @@ import {
   PRODUCT_CATEGORY_LABELS,
 } from '@e-pharmacy/types/products';
 
-import { getPharmacyProductsPath } from '@/lib/layout/routes';
+import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
 
 import {
   OWN_PRODUCT_STATUSES,

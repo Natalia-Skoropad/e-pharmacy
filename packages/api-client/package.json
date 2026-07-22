@@ -6,17 +6,22 @@
   "exports": {
     ".": "./src/index.ts",
     "./contracts": "./src/contracts/index.ts",
-    "./core": "./src/core/index.ts"
+    "./core": "./src/core/index.ts",
+    "./response": "./src/response/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "node ../../scripts/run-tsx-tests.mjs src"
   },
   "devDependencies": {
-    "typescript": "^5"
+    "typescript": "^5",
+    "tsx": "latest",
+    "@types/node": "latest"
   },
   "dependencies": {
     "@e-pharmacy/config": "workspace:*",
-    "@e-pharmacy/types": "workspace:*"
+    "@e-pharmacy/types": "workspace:*",
+    "@e-pharmacy/utils": "workspace:*"
   }
 }
