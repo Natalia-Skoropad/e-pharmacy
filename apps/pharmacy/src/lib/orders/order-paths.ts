@@ -2,6 +2,7 @@ import {
   deslugifyArticleSegment,
   deslugifyNameSegment,
   isDateParam,
+  isDateRangeValid,
   normalizeSlugEnumValue,
   slugifySegment,
   slugifyStatus,
@@ -172,6 +173,10 @@ export function parseOrdersSegments(
     }
   }
 
+  if (!isDateRangeValid(filters.date)) {
+    filters.date = { ...DEFAULT_ORDERS_FILTERS.date };
+  }
+
   return filters;
 }
 
@@ -179,6 +184,7 @@ export function parseOrdersSegments(
 
 export function buildOrdersPath(filters: OrdersFilterState): string {
   const segments: string[] = [];
+  const dateRangeIsValid = isDateRangeValid(filters.date);
   const client = filters.client.trim();
   const orderNumber = filters.orderNumber.trim();
 
@@ -206,11 +212,11 @@ export function buildOrdersPath(filters: OrdersFilterState): string {
     segments.push(`created-by-${filters.createdByType}`);
   }
 
-  if (filters.date.from) {
+  if (dateRangeIsValid && filters.date.from) {
     segments.push(`date-from-${filters.date.from}`);
   }
 
-  if (filters.date.to) {
+  if (dateRangeIsValid && filters.date.to) {
     segments.push(`date-to-${filters.date.to}`);
   }
 

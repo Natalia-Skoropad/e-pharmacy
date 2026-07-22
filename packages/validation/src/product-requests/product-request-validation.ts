@@ -3,7 +3,10 @@ import { isProductCategory } from '@e-pharmacy/types/products';
 import { isValidationResultValid } from '../shared';
 
 import {
+  PRODUCT_REQUEST_ARTICLE_PATTERN,
   PRODUCT_REQUEST_LIMITS,
+  PRODUCT_REQUEST_LONG_TEXT_PATTERN,
+  PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
   PRODUCT_REQUEST_VALIDATION_MESSAGES,
 } from './product-request-constants';
 
@@ -33,6 +36,17 @@ function buildMaxLengthError(
   message: string
 ): string {
   return value.trim().length > maxLength ? message : '';
+}
+
+//===================================================================
+
+function buildPatternError(
+  value: string,
+  pattern: RegExp,
+  message: string
+): string {
+  const normalizedValue = value.trim();
+  return normalizedValue && !pattern.test(normalizedValue) ? message : '';
 }
 
 //===================================================================
@@ -132,6 +146,54 @@ export function validateProductRequestForm(
     if (error) errors[field] = error;
   }
 
+  const articleFormatError = buildPatternError(
+    values.article,
+    PRODUCT_REQUEST_ARTICLE_PATTERN,
+    PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
+  );
+
+  if (!errors.article && articleFormatError) errors.article = articleFormatError;
+
+  const shortTextFields: Array<keyof ProductRequestFormValues> = [
+    'name',
+    'customCategory',
+    'manufacturer',
+    'countryOfOrigin',
+    'dosage',
+    'packageSize',
+    'form',
+    'activeSubstance',
+  ];
+
+  for (const field of shortTextFields) {
+    if (errors[field]) continue;
+
+    const error = buildPatternError(
+      values[field],
+      PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText
+    );
+
+    if (error) errors[field] = error;
+  }
+
+  const longTextFields: Array<keyof ProductRequestFormValues> = [
+    'fullDescription',
+    'pharmacyComment',
+  ];
+
+  for (const field of longTextFields) {
+    if (errors[field]) continue;
+
+    const error = buildPatternError(
+      values[field],
+      PRODUCT_REQUEST_LONG_TEXT_PATTERN,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.format.longText
+    );
+
+    if (error) errors[field] = error;
+  }
+
   if (values.category === 'other' && !values.customCategory.trim()) {
     errors.customCategory =
       PRODUCT_REQUEST_VALIDATION_MESSAGES.required.customCategory;
@@ -147,7 +209,8 @@ export function validateProductRequestForm(
 
   if (context.additionalFiles) {
     const filesError = validateProductRequestAdditionalFiles(
-      context.additionalFiles
+      context.additionalFiles,
+      { requireDataUrl: true }
     );
     if (filesError) errors.additionalFiles = filesError;
   }

@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  PRODUCT_REQUEST_ATTACHMENT_RULES,
+  PRODUCT_REQUEST_IMAGE_RULES,
   PRODUCT_REQUEST_INITIAL_VALUES,
   PRODUCT_REQUEST_LIMITS,
   isProductRequestDraftValid,
@@ -45,7 +47,8 @@ const FIELD_LIMIT_CASES: ReadonlyArray<
 const validImage = {
   name: 'product.webp',
   type: 'image/webp',
-  size: PRODUCT_REQUEST_LIMITS.productImageMaxSizeBytes,
+  size: 1,
+  dataUrl: 'data:image/webp;base64,AA==',
 } as const;
 
 //=============================================================================
@@ -55,7 +58,7 @@ function createDraftValues(
 ): ProductRequestFormValues {
   return {
     ...PRODUCT_REQUEST_INITIAL_VALUES,
-    name: 'Парацетамол',
+    name: 'Paracetamol',
     article: 'med-001',
     ...overrides,
   };
@@ -67,14 +70,14 @@ function createSubmissionValues(
   overrides: Partial<ProductRequestFormValues> = {}
 ): ProductRequestFormValues {
   return createDraftValues({
-    manufacturer: 'Фармак',
-    countryOfOrigin: 'Україна',
-    dosage: '500 мг',
-    packageSize: '20 таблеток',
-    form: 'Таблетки',
-    activeSubstance: 'Парацетамол',
+    manufacturer: 'Pharmaco',
+    countryOfOrigin: 'United Kingdom',
+    dosage: '500 mg',
+    packageSize: '20 tablets',
+    form: 'Tablets',
+    activeSubstance: 'Paracetamol',
     prescriptionType: 'non_prescription',
-    fullDescription: 'Повний опис препарату українською мовою.',
+    fullDescription: 'Complete product description in English.',
     ...overrides,
   });
 }
@@ -96,7 +99,6 @@ test('draft validation requires name and article', () => {
     isProductRequestDraftValid(PRODUCT_REQUEST_INITIAL_VALUES),
     false
   );
-
   assert.equal(isProductRequestDraftValid(createDraftValues()), true);
 });
 
@@ -107,12 +109,12 @@ test('validation enforces every field boundary without relying on JSX', () => {
 
   for (const [field, maxLength] of FIELD_LIMIT_CASES) {
     const boundaryErrors = validateProductRequestForm(
-      withTextField(baseValues, field, 'а'.repeat(maxLength)),
+      withTextField(baseValues, field, 'A'.repeat(maxLength)),
       'draft'
     );
 
     const overflowErrors = validateProductRequestForm(
-      withTextField(baseValues, field, 'а'.repeat(maxLength + 1)),
+      withTextField(baseValues, field, 'A'.repeat(maxLength + 1)),
       'draft'
     );
 
@@ -123,13 +125,28 @@ test('validation enforces every field boundary without relying on JSX', () => {
 
 //=============================================================================
 
+test('validation rejects non-English product text without changing it', () => {
+  const values = createDraftValues({
+    name: 'Парацетамол',
+    fullDescription: 'Опис українською мовою.',
+  });
+
+  const errors = validateProductRequestForm(values, 'draft');
+  const payload = normalizeProductRequestForm(values, 'draft');
+
+  assert.ok(errors.name);
+  assert.ok(errors.fullDescription);
+  assert.equal(payload.name, 'Парацетамол');
+  assert.equal(payload.fullDescription, 'Опис українською мовою.');
+});
+
+//=============================================================================
+
 test('validation rejects an unsupported category', () => {
   const values = createDraftValues();
   Reflect.set(values, 'category', 'unsupported');
 
-  const errors = validateProductRequestForm(values, 'draft');
-
-  assert.ok(errors.category);
+  assert.ok(validateProductRequestForm(values, 'draft').category);
 });
 
 //=============================================================================
@@ -139,7 +156,6 @@ test('custom category is required only for the other category', () => {
     createDraftValues({ category: 'other', customCategory: '   ' }),
     'draft'
   );
-
   const regularCategory = validateProductRequestForm(
     createDraftValues({ category: 'medicine', customCategory: '' }),
     'draft'
@@ -153,7 +169,6 @@ test('custom category is required only for the other category', () => {
 
 test('moderation validation requires complete data and product image', () => {
   assert.equal(isProductRequestSubmissionValid(createDraftValues()), false);
-
   assert.equal(
     isProductRequestSubmissionValid(createSubmissionValues(), {
       productImage: validImage,
@@ -164,7 +179,7 @@ test('moderation validation requires complete data and product image', () => {
 
 //=============================================================================
 
-test('product image validation checks MIME type and file size', () => {
+test('product image validation checks MIME, extension and size', () => {
   assert.equal(validateProductRequestImageFile(validImage), '');
   assert.notEqual(
     validateProductRequestImageFile({
@@ -187,7 +202,7 @@ test('product image validation checks MIME type and file size', () => {
   assert.notEqual(
     validateProductRequestImageFile({
       ...validImage,
-      size: PRODUCT_REQUEST_LIMITS.productImageMaxSizeBytes + 1,
+      size: PRODUCT_REQUEST_IMAGE_RULES.maxSizeBytes + 1,
     }),
     ''
   );
@@ -195,19 +210,27 @@ test('product image validation checks MIME type and file size', () => {
 
 //=============================================================================
 
-test('additional file validation checks count, type and size', () => {
+test('additional file validation checks count, MIME, size and data URL', () => {
   const validFile = {
     name: 'instruction.pdf',
     type: 'application/pdf',
-    size: 100,
+    size: 1,
+    dataUrl: 'data:application/pdf;base64,AA==',
   } as const;
 
   assert.equal(validateProductRequestAdditionalFiles([validFile]), '');
+  assert.notEqual(
+    validateProductRequestAdditionalFiles(
+      [{ ...validFile, dataUrl: undefined }],
+      { requireDataUrl: true }
+    ),
+    ''
+  );
 
   assert.notEqual(
     validateProductRequestAdditionalFiles(
       Array.from(
-        { length: PRODUCT_REQUEST_LIMITS.additionalFilesMax + 1 },
+        { length: PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles + 1 },
         () => validFile
       )
     ),
@@ -225,21 +248,32 @@ test('additional file validation checks count, type and size', () => {
     validateProductRequestAdditionalFiles([
       {
         ...validFile,
-        size: PRODUCT_REQUEST_LIMITS.additionalFileMaxSizeBytes + 1,
+        size: PRODUCT_REQUEST_ATTACHMENT_RULES.maxSizeBytes + 1,
       },
     ]),
+    ''
+  );
+
+  assert.notEqual(
+    validateProductRequestAdditionalFiles([
+      { ...validFile, dataUrl: 'data:image/png;base64,AA==' },
+    ]),
+    ''
+  );
+  assert.notEqual(
+    validateProductRequestAdditionalFiles([{ ...validFile, size: 2 }]),
     ''
   );
 });
 
 //=============================================================================
 
-test('normalization preserves Unicode and normalizes optional values', () => {
+test('normalization trims values, uppercases article and removes empty optional fields', () => {
   const payload = normalizeProductRequestForm(
     createSubmissionValues({
       article: ' med-001 ',
-      customCategory: '  Не використовується  ',
-      fullDescription: '  Український опис препарату.  ',
+      customCategory: '  Not used  ',
+      fullDescription: '  Complete English description.  ',
       pharmacyComment: '   ',
     }),
     'new',
@@ -248,25 +282,20 @@ test('normalization preserves Unicode and normalizes optional values', () => {
 
   assert.equal(payload.article, 'MED-001');
   assert.equal(payload.customCategory, undefined);
-  assert.equal(payload.fullDescription, 'Український опис препарату.');
+  assert.equal(payload.fullDescription, 'Complete English description.');
   assert.equal(payload.pharmacyComment, undefined);
 });
 
 //=============================================================================
 
-test('file metadata infers a supported MIME type from extension', () => {
-  const fileWithoutType = toProductRequestFileMetadata({
+test('file metadata infers MIME and preserves actual file data', () => {
+  const file = toProductRequestFileMetadata({
     name: 'instruction.pdf',
     type: '',
-    size: 100,
+    size: 1,
+    dataUrl: 'data:application/pdf;base64,AA==',
   });
 
-  const legacyFile = toProductRequestFileMetadata({
-    name: 'instruction.pdf',
-    type: 'application/octet-stream',
-    size: 100,
-  });
-
-  assert.equal(fileWithoutType.type, 'application/pdf');
-  assert.equal(legacyFile.type, 'application/pdf');
+  assert.equal(file.type, 'application/pdf');
+  assert.equal(file.dataUrl, 'data:application/pdf;base64,AA==');
 });

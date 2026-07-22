@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type ChangeEvent } from 'react';
-import { FileText, UploadCloud, X } from 'lucide-react';
+import { Download, FileText, UploadCloud, X } from 'lucide-react';
 import clsx from 'clsx';
 
 import ConfirmationModal from '../../modals/ConfirmationModal/ConfirmationModal';
@@ -16,6 +16,7 @@ export type DocumentUploadFile = {
   size: number;
   type: string;
   file?: File;
+  dataUrl?: string;
 };
 
 //===================================================================
@@ -47,6 +48,7 @@ type DocumentUploadProps = {
   confirmRemove?: boolean;
   labels?: DocumentUploadLabels;
   onChange: (files: DocumentUploadFile[]) => void;
+  onSelectionError?: (message: string) => void;
 };
 
 //===================================================================
@@ -95,18 +97,22 @@ function DocumentUpload({
   confirmRemove = false,
   labels,
   onChange,
+  onSelectionError,
 }: DocumentUploadProps) {
   const [pendingRemoveFileId, setPendingRemoveFileId] = useState<string | null>(
     null
   );
+
   const mergedLabels = { ...DEFAULT_LABELS, ...labels };
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
   const limitId = `${id}-limit`;
   const metaId = `${id}-meta`;
   const hasError = Boolean(isTouched && error);
+
   const hasReachedLimit =
     typeof maxFiles === 'number' && value.length >= maxFiles;
+
   const pendingRemoveFile =
     value.find((file) => file.id === pendingRemoveFileId) ?? null;
 
@@ -127,12 +133,14 @@ function DocumentUpload({
     const uniqueFiles = Array.from(
       new Map(nextFiles.map((file) => [file.id, file])).values()
     );
-    const limitedFiles =
-      typeof maxFiles === 'number'
-        ? uniqueFiles.slice(0, maxFiles)
-        : uniqueFiles;
 
-    onChange(limitedFiles);
+    if (typeof maxFiles === 'number' && uniqueFiles.length > maxFiles) {
+      onSelectionError?.(`You can upload up to ${maxFiles} files.`);
+      event.target.value = '';
+      return;
+    }
+
+    onChange(uniqueFiles);
     event.target.value = '';
   };
 
@@ -212,7 +220,18 @@ function DocumentUpload({
             <li className={css.fileItem} key={file.id}>
               <FileText className={css.fileIcon} size={18} aria-hidden="true" />
               <div className={css.fileMeta}>
-                <p className={css.fileName}>{file.name}</p>
+                {file.dataUrl ? (
+                  <a
+                    className={css.fileLink}
+                    href={file.dataUrl}
+                    download={file.name}
+                  >
+                    <span className={css.fileName}>{file.name}</span>
+                    <Download size={14} aria-hidden="true" />
+                  </a>
+                ) : (
+                  <p className={css.fileName}>{file.name}</p>
+                )}
                 <p className={css.fileSize}>{formatFileSize(file.size)}</p>
               </div>
               <button

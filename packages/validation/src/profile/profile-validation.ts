@@ -29,8 +29,13 @@ import {
   IBAN_MAX_LENGTH,
   PAYMENT_PURPOSE_MAX_LENGTH,
   type FormErrors,
+  normalizeOptionalText,
   type FormTouchedFields,
 } from '../shared';
+
+//===================================================================
+
+export type PharmacyValidationMode = 'draft' | 'verification';
 
 //===================================================================
 
@@ -293,29 +298,32 @@ export function isPharmacyPaymentFormDirty(
 //===================================================================
 
 export function validatePharmacyContactForm(
-  values: PharmacyContactFormValues
+  values: PharmacyContactFormValues,
+  mode: PharmacyValidationMode = 'verification'
 ): PharmacyContactFormErrors {
   const errors: PharmacyContactFormErrors = {};
+  const required = mode === 'verification';
 
   const nameError = buildPharmacyNameError(values.name, {
-    required: true,
+    required,
     trailingDot: true,
   });
 
   const addressError = buildAddressError(values.address, {
-    required: true,
+    required,
     trailingDot: true,
   });
 
   const phoneError = buildPhoneError(values.phone, {
-    required: true,
+    required,
     trailingDot: true,
   });
 
-  const emailError = buildEmailError(values.email);
+  const emailError =
+    values.email.trim() || required ? buildEmailError(values.email) : '';
 
   const workingHoursError = buildWorkingHoursError(values.workingHours, {
-    required: true,
+    required,
     trailingDot: true,
   });
 
@@ -330,13 +338,43 @@ export function validatePharmacyContactForm(
 
 //===================================================================
 
+export function normalizePharmacyContactForm(
+  values: PharmacyContactFormValues,
+  mode: PharmacyValidationMode = 'verification'
+): Partial<PharmacyContactFormValues> {
+  const normalized = {
+    name: normalizeOptionalText(values.name),
+    address: normalizeOptionalText(values.address),
+    phone: normalizeOptionalText(values.phone),
+    email: normalizeOptionalText(values.email)?.toLowerCase(),
+    workingHours: normalizeOptionalText(values.workingHours),
+  };
+
+  if (mode === 'verification') {
+    return {
+      name: normalized.name ?? '',
+      address: normalized.address ?? '',
+      phone: normalized.phone ?? '',
+      email: normalized.email ?? '',
+      workingHours: normalized.workingHours ?? '',
+    };
+  }
+
+  return Object.fromEntries(
+    Object.entries(normalized).filter(([, value]) => value !== undefined)
+  ) as Partial<PharmacyContactFormValues>;
+}
+
+//===================================================================
+
 export function validatePharmacyAboutForm(
-  values: PharmacyAboutFormValues
+  values: PharmacyAboutFormValues,
+  mode: PharmacyValidationMode = 'verification'
 ): PharmacyAboutFormErrors {
   const errors: PharmacyAboutFormErrors = {};
 
   const descriptionError = buildTextEditorError(values.description, {
-    required: true,
+    required: mode === 'verification',
     trailingDot: true,
   });
 
@@ -347,35 +385,52 @@ export function validatePharmacyAboutForm(
 
 //===================================================================
 
+export function normalizePharmacyAboutForm(
+  values: PharmacyAboutFormValues,
+  mode: PharmacyValidationMode = 'verification'
+): Partial<PharmacyAboutFormValues> {
+  const description = normalizeOptionalText(values.description);
+
+  if (mode === 'verification') return { description: description ?? '' };
+  return description ? { description } : {};
+}
+
+//===================================================================
+
 export function validatePharmacyPaymentForm(
-  values: PharmacyPaymentFormValues
+  values: PharmacyPaymentFormValues,
+  mode: PharmacyValidationMode = 'verification'
 ): PharmacyPaymentFormErrors {
   const errors: PharmacyPaymentFormErrors = {};
+  const required = mode === 'verification';
 
   const recipientNameError = buildBankRecipientNameError(values.recipientName, {
-    required: true,
+    required,
     trailingDot: true,
   });
 
   const taxIdError = buildTaxIdError(values.taxId, {
-    required: true,
+    required,
     trailingDot: true,
   });
 
   const ibanError = buildIbanError(values.iban, {
-    required: true,
+    required,
     trailingDot: true,
   });
 
   const bankNameError = buildBankNameError(values.bankName, {
-    required: true,
+    required,
     trailingDot: true,
   });
 
-  const receiptEmailError = buildEmailError(values.receiptEmail);
+  const receiptEmailError =
+    values.receiptEmail.trim() || required
+      ? buildEmailError(values.receiptEmail)
+      : '';
 
   const paymentPurposeError = buildPaymentPurposeError(values.paymentPurpose, {
-    required: true,
+    required,
     trailingDot: true,
   });
 
@@ -387,6 +442,37 @@ export function validatePharmacyPaymentForm(
   if (paymentPurposeError) errors.paymentPurpose = paymentPurposeError;
 
   return errors;
+}
+
+//===================================================================
+
+export function normalizePharmacyPaymentForm(
+  values: PharmacyPaymentFormValues,
+  mode: PharmacyValidationMode = 'verification'
+): Partial<PharmacyPaymentFormValues> {
+  const normalized = {
+    recipientName: normalizeOptionalText(values.recipientName),
+    taxId: normalizeOptionalText(values.taxId),
+    iban: normalizeOptionalText(values.iban)?.toUpperCase(),
+    bankName: normalizeOptionalText(values.bankName),
+    receiptEmail: normalizeOptionalText(values.receiptEmail)?.toLowerCase(),
+    paymentPurpose: normalizeOptionalText(values.paymentPurpose),
+  };
+
+  if (mode === 'verification') {
+    return {
+      recipientName: normalized.recipientName ?? '',
+      taxId: normalized.taxId ?? '',
+      iban: normalized.iban ?? '',
+      bankName: normalized.bankName ?? '',
+      receiptEmail: normalized.receiptEmail ?? '',
+      paymentPurpose: normalized.paymentPurpose ?? '',
+    };
+  }
+
+  return Object.fromEntries(
+    Object.entries(normalized).filter(([, value]) => value !== undefined)
+  ) as Partial<PharmacyPaymentFormValues>;
 }
 
 //===================================================================

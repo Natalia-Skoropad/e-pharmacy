@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
 import {
+  DATE_RANGE_MESSAGE,
+  isDateRangeOrdered,
+  optionalCalendarDateSchema,
+} from './shared/date.schema';
+
+import {
   sharedUserNameSchema,
   sharedOrderCommentSchema,
   sharedRequiredAddressSchema,
@@ -17,14 +23,6 @@ const orderRouteIdSchema = z.string().trim().min(1, 'ID is required');
 
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
 const perPageSchema = z.coerce.number().int().min(1).max(200).default(20);
-
-//===============================================================
-
-const dateFilterSchema = z
-  .string()
-  .trim()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must use YYYY-MM-DD format')
-  .optional();
 
 //===============================================================
 
@@ -46,23 +44,31 @@ function normalizePaginationQuery(value: unknown): unknown {
 
 export const ordersQuerySchema = z.preprocess(
   normalizePaginationQuery,
-  z.object({
-    page: positivePageSchema,
-    perPage: perPageSchema,
-    dateFrom: dateFilterSchema,
-    dateTo: dateFilterSchema,
-    client: sharedSearchSchema,
-    clientId: mongoIdSchema.optional(),
-    orderNumber: sharedSearchSchema,
-    deliveryMethod: z.enum(['pickup', 'postal_delivery']).optional(),
-    paymentMethod: z.enum(['cash', 'bank_transfer']).optional(),
-    status: z.enum(['new', 'in_progress', 'successful', 'rejected']).optional(),
-    createdByType: z.enum(['client', 'manager']).optional(),
-    productId: mongoIdSchema.optional(),
-    comment: sharedSearchSchema,
-    clientComment: sharedSearchSchema,
-    clientCommentPresence: z.enum(['with', 'without']).optional(),
-  })
+  z
+    .object({
+      page: positivePageSchema,
+      perPage: perPageSchema,
+      dateFrom: optionalCalendarDateSchema,
+      dateTo: optionalCalendarDateSchema,
+      client: sharedSearchSchema,
+      clientId: mongoIdSchema.optional(),
+      orderNumber: sharedSearchSchema,
+      deliveryMethod: z.enum(['pickup', 'postal_delivery']).optional(),
+      paymentMethod: z.enum(['cash', 'bank_transfer']).optional(),
+      status: z
+        .enum(['new', 'in_progress', 'successful', 'rejected'])
+        .optional(),
+      createdByType: z.enum(['client', 'manager']).optional(),
+      productId: mongoIdSchema.optional(),
+      comment: sharedSearchSchema,
+      clientComment: sharedSearchSchema,
+      clientCommentPresence: z.enum(['with', 'without']).optional(),
+    })
+
+    .refine(({ dateFrom, dateTo }) => isDateRangeOrdered(dateFrom, dateTo), {
+      message: DATE_RANGE_MESSAGE,
+      path: ['dateTo'],
+    })
 );
 
 //===============================================================
@@ -94,12 +100,17 @@ export const createOrderManagerCommentSchema = z.object({
 
 //===============================================================
 
-export const orderSalesStatisticsQuerySchema = z.object({
-  dateFrom: dateFilterSchema,
-  dateTo: dateFilterSchema,
-  groupBy: z.enum(['day', 'month']).default('month'),
-  productId: mongoIdSchema.optional(),
-});
+export const orderSalesStatisticsQuerySchema = z
+  .object({
+    dateFrom: optionalCalendarDateSchema,
+    dateTo: optionalCalendarDateSchema,
+    groupBy: z.enum(['day', 'month']).default('month'),
+    productId: mongoIdSchema.optional(),
+  })
+  .refine(({ dateFrom, dateTo }) => isDateRangeOrdered(dateFrom, dateTo), {
+    message: DATE_RANGE_MESSAGE,
+    path: ['dateTo'],
+  });
 
 //===============================================================
 
@@ -176,6 +187,7 @@ export const updateOrderDetailsSchema = z
       .optional(),
     managerComment: z.string().trim().max(1000).optional(),
   })
+
   .superRefine((value, ctx) => {
     if (value.deliveryMethod === 'postal_delivery' && !value.deliveryDetails) {
       ctx.addIssue({

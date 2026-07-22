@@ -33,7 +33,8 @@ import {
   USER_PASSWORD_MAX_LENGTH,
   USER_PASSWORD_MIN_LENGTH,
   USER_PHONE_MAX_LENGTH,
-  PICTURE_URL_MAX_LENGTH,
+  PICTURE_DATA_URL_MAX_LENGTH,
+  PICTURE_HTTP_URL_MAX_LENGTH,
   USER_REVIEW_COMMENT_MAX_LENGTH,
   USER_REVIEW_COMMENT_MIN_LENGTH,
   USER_SEARCH_MAX_LENGTH,
@@ -47,6 +48,9 @@ import {
   isHttpUrl,
   isPictureDataUrl,
 } from '../constants/validation';
+
+import { optionalSchema } from './shared/optional-text.schema';
+import { getWorkingHoursValidationIssue } from '../utils/validation/working-hours';
 
 //===============================================================
 
@@ -183,11 +187,32 @@ export const sharedOrderCommentSchema = z
 export const sharedPictureUrlSchema = z
   .string()
   .trim()
-  .max(PICTURE_URL_MAX_LENGTH, VALIDATION_MESSAGES.limits.picturePayloadMax)
-  .refine(
-    (value: string) => isPictureDataUrl(value) || isHttpUrl(value),
-    VALIDATION_MESSAGES.format.picture
-  )
+  .superRefine((value, context) => {
+    if (isPictureDataUrl(value)) {
+      if (value.length > PICTURE_DATA_URL_MAX_LENGTH) {
+        context.addIssue({
+          code: 'custom',
+          message: VALIDATION_MESSAGES.limits.pictureDataUrlMax,
+        });
+      }
+      return;
+    }
+
+    if (isHttpUrl(value)) {
+      if (value.length > PICTURE_HTTP_URL_MAX_LENGTH) {
+        context.addIssue({
+          code: 'custom',
+          message: VALIDATION_MESSAGES.limits.pictureHttpUrlMax,
+        });
+      }
+      return;
+    }
+
+    context.addIssue({
+      code: 'custom',
+      message: VALIDATION_MESSAGES.format.picture,
+    });
+  })
   .optional()
   .nullable();
 
@@ -202,38 +227,27 @@ export const sharedSearchSchema = z
 
 //===============================================================
 
-const WORKING_HOURS_RANGE_PATTERN =
-  /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(Closed|([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d)\b/g;
-
-//===============================================================
-
-function hasValidWorkingHoursRanges(value: string): boolean {
-  const entries = [...value.matchAll(WORKING_HOURS_RANGE_PATTERN)];
-
-  if (entries.length === 0) return true;
-
-  return entries.every((entry) => {
-    if (entry[1] === 'Closed') return true;
-
-    const from = entry[2];
-    const to = entry[3];
-
-    return Boolean(from && to && from < to);
-  });
-}
-
-//===============================================================
-
 export const sharedWorkingHoursSchema = z
   .string()
   .trim()
   .min(1, VALIDATION_MESSAGES.required.workingHours)
   .max(WORKING_HOURS_MAX_LENGTH, VALIDATION_MESSAGES.limits.workingHoursMax)
   .regex(WORKING_HOURS_PATTERN, VALIDATION_MESSAGES.format.workingHours)
-  .refine(
-    hasValidWorkingHoursRanges,
-    VALIDATION_MESSAGES.format.workingHoursRange
-  );
+  .superRefine((value, context) => {
+    const issue = getWorkingHoursValidationIssue(value);
+    if (!issue) return;
+
+    const message =
+      issue === 'missing-days'
+        ? VALIDATION_MESSAGES.format.workingHoursMissingDays
+        : issue === 'duplicate-days'
+          ? VALIDATION_MESSAGES.format.workingHoursDuplicateDays
+          : issue === 'range'
+            ? VALIDATION_MESSAGES.format.workingHoursRange
+            : VALIDATION_MESSAGES.format.workingHours;
+
+    context.addIssue({ code: 'custom', message });
+  });
 
 //===============================================================
 
@@ -273,44 +287,17 @@ export const sharedPaymentPurposeSchema = z
 
 //===============================================================
 
-function emptyStringToUndefined(value: unknown): unknown {
-  if (typeof value !== 'string') return value;
-
-  const normalizedValue = value.trim();
-  return normalizedValue === '' ? undefined : normalizedValue;
-}
-
-//===============================================================
-
-export const sharedOptionalWorkingHoursSchema = z.preprocess(
-  emptyStringToUndefined,
-  sharedWorkingHoursSchema.optional()
+export const sharedOptionalWorkingHoursSchema = optionalSchema(
+  sharedWorkingHoursSchema
 );
 
-//===============================================================
-
-export const sharedOptionalTextEditorSchema = z.preprocess(
-  emptyStringToUndefined,
-  sharedTextEditorSchema.optional()
+export const sharedOptionalTextEditorSchema = optionalSchema(
+  sharedTextEditorSchema
 );
 
-//===============================================================
+export const sharedOptionalTaxIdSchema = optionalSchema(sharedTaxIdSchema);
+export const sharedOptionalIbanSchema = optionalSchema(sharedIbanSchema);
 
-export const sharedOptionalTaxIdSchema = z.preprocess(
-  emptyStringToUndefined,
-  sharedTaxIdSchema.optional()
-);
-
-//===============================================================
-
-export const sharedOptionalIbanSchema = z.preprocess(
-  emptyStringToUndefined,
-  sharedIbanSchema.optional()
-);
-
-//===============================================================
-
-export const sharedOptionalPaymentPurposeSchema = z.preprocess(
-  emptyStringToUndefined,
-  sharedPaymentPurposeSchema.optional()
+export const sharedOptionalPaymentPurposeSchema = optionalSchema(
+  sharedPaymentPurposeSchema
 );

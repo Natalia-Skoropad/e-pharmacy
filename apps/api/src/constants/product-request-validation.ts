@@ -23,38 +23,46 @@ export const PRODUCT_REQUEST_LIMITS = {
   pharmacyCommentMax: 1500,
   fileNameMax: 180,
   fileTypeMax: 120,
-  productImageMaxSizeBytes: 2 * 1024 * 1024,
-  additionalFileMaxSizeBytes: 10 * 1024 * 1024,
-  additionalFilesMax: 5,
-  dataUrlMaxLength: 3 * 1024 * 1024,
 } as const;
 
 //===============================================================
 
-export const PRODUCT_REQUEST_IMAGE_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-] as const;
+export const PRODUCT_REQUEST_IMAGE_RULES = {
+  maxFiles: 1,
+  maxSizeBytes: 2 * 1024 * 1024,
+  maxDataUrlLength: 3 * 1024 * 1024,
+  mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  fileNamePattern: /\.(?:jpe?g|png|webp)$/i,
+  dataUrlPattern: /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/,
+} as const;
 
 //===============================================================
 
-export const PRODUCT_REQUEST_ADDITIONAL_FILE_MIME_TYPES = [
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  ...PRODUCT_REQUEST_IMAGE_MIME_TYPES,
-] as const;
+export const PRODUCT_REQUEST_ATTACHMENT_RULES = {
+  maxFiles: 5,
+  maxSizeBytes: 5 * 1024 * 1024,
+  maxTotalSizeBytes: 20 * 1024 * 1024,
+  maxDataUrlLength: 7 * 1024 * 1024,
+  mimeTypes: [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ...PRODUCT_REQUEST_IMAGE_RULES.mimeTypes,
+  ],
+  fileNamePattern: /\.(?:pdf|docx?|jpe?g|png|webp)$/i,
+  dataUrlPattern:
+    /^data:(?:application\/pdf|application\/msword|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|image\/(?:jpeg|png|webp));base64,[A-Za-z0-9+/=]+$/,
+} as const;
 
 //===============================================================
 
-export const PRODUCT_REQUEST_IMAGE_FILE_NAME_PATTERN = /\.(?:jpe?g|png|webp)$/i;
+export const PRODUCT_REQUEST_ARTICLE_PATTERN = /^[A-Za-z0-9._/\-]+$/;
 
-export const PRODUCT_REQUEST_ADDITIONAL_FILE_NAME_PATTERN =
-  /\.(?:pdf|docx?|jpe?g|png|webp)$/i;
+export const PRODUCT_REQUEST_SHORT_TEXT_PATTERN =
+  /^[A-Za-z0-9][A-Za-z0-9\s.,'’"()/%+&\-]*$/;
 
-export const PRODUCT_REQUEST_IMAGE_DATA_URL_PATTERN =
-  /^data:image\/(?:jpeg|png|webp);base64,/i;
+export const PRODUCT_REQUEST_LONG_TEXT_PATTERN =
+  /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*&\n\r]+$/;
 
 //===============================================================
 
@@ -75,8 +83,14 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
   },
 
   format: {
+    article: 'Use English letters, numbers, dot, slash, underscore or hyphen.',
+    shortText: 'Use English letters, numbers, spaces and basic punctuation.',
+    longText:
+      'Use English letters, numbers, line breaks and basic punctuation.',
     productImage: 'Choose a JPG, PNG, or WEBP image.',
-    additionalFile: 'Choose a PDF, DOC, DOCX, JPG, PNG, or WEBP file.',
+    attachment: 'Choose a PDF, DOC, DOCX, JPG, PNG, or WEBP file.',
+    attachmentData: 'The attached file data does not match its MIME type.',
+    fileSizeMismatch: 'The uploaded file size does not match its content.',
   },
 
   limits: {
@@ -95,7 +109,11 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
     fileName: `File name must be at most ${PRODUCT_REQUEST_LIMITS.fileNameMax} characters.`,
     fileType: `File type must be at most ${PRODUCT_REQUEST_LIMITS.fileTypeMax} characters.`,
     productImageSize: 'The product image must be no larger than 2 MB.',
-    additionalFileSize: 'Additional files must be no larger than 10 MB.',
-    additionalFilesCount: `A product request can contain at most ${PRODUCT_REQUEST_LIMITS.additionalFilesMax} additional files.`,
+    productImageData: 'The product image data is too large.',
+    attachmentSize: 'Additional files must be no larger than 5 MB.',
+    attachmentData: 'Additional file data is too large.',
+    attachmentDataRequired: 'Additional file content is required.',
+    attachmentsTotalSize: 'The combined attachment size must not exceed 20 MB.',
+    attachmentsCount: `A product request can contain at most ${PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles} additional files.`,
   },
 } as const;

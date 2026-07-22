@@ -38,44 +38,47 @@ export const TAX_ID_MAX_LENGTH = 10;
 export const IBAN_MAX_LENGTH = 29;
 export const PAYMENT_PURPOSE_MAX_LENGTH = 500;
 
-export const PICTURE_URL_MAX_LENGTH = 700000;
-export const PICTURE_FILE_MAX_SIZE_BYTES = 450 * 1024;
+export const PICTURE_FILE_MAX_BYTES = 450 * 1024;
+export const PICTURE_DATA_URL_MAX_LENGTH = 700_000;
+export const PICTURE_HTTP_URL_MAX_LENGTH = 2_048;
 
 //===============================================================
 
-export const USER_NAME_PATTERN = /^\p{L}+(?:[ '’\-]\p{L}+)*$/u;
+export const USER_NAME_PATTERN = /^[A-Za-z]+(?:[ '’\-][A-Za-z]+)*$/;
 
-export const PHARMACY_NAME_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} '’&().,\-]*$/u;
+export const PHARMACY_NAME_PATTERN =
+  /^[A-Za-z0-9][A-Za-z0-9 '’&().,\-]*$/;
 
 export const BANK_RECIPIENT_NAME_PATTERN =
-  /^[\p{L}\p{N}][\p{L}\p{N} '’&().,\-]*$/u;
+  /^[A-Za-z0-9][A-Za-z0-9 '’&().,\-]*$/;
 
-export const BANK_NAME_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} '’&().,\-]*$/u;
+export const BANK_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 '’&().,\-]*$/;
 
 export const PHONE_PATTERN = /^\+380\d{9}$/;
 export const PASSWORD_PATTERN = /^\S+$/;
-export const ADDRESS_PATTERN = /^[\p{L}\p{N} .,'’/#&()\-]+$/u;
-export const SEARCH_TEXT_PATTERN = /^[\p{L}\p{N} .,'’/#&()\-]*$/u;
+export const ADDRESS_PATTERN = /^[A-Za-z0-9 .,'’/#&()\-]+$/;
+export const SEARCH_TEXT_PATTERN = /^[A-Za-z0-9 .,'’/#&()\-]*$/;
 
 export const REVIEW_COMMENT_PATTERN =
-  /^[\p{L}\p{N}\s.,!?;:'"“”«»()\-–—/#%+*]+$/u;
+  /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*]+$/;
 
 export const ORDER_COMMENT_PATTERN =
-  /^[\p{L}\p{N}\s.,!?;:'"“”«»()\-–—/#%+*]*$/u;
+  /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*]*$/;
+
+export const PAYMENT_PURPOSE_PATTERN =
+  /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*]+$/;
 
 export const TAX_ID_PATTERN = /^\d{8,10}$/;
 export const IBAN_PATTERN = /^UA\d{27}$/;
 
-export const WORKING_HOURS_PATTERN = /^[\p{L}\p{N}\s.,:;–—'’/#()\-]+$/u;
+export const WORKING_HOURS_PATTERN =
+  /^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(?:Closed|(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d)(?:;\s*(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(?:Closed|(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d))*$/;
 
 export const TEXT_EDITOR_PATTERN =
-  /^[\p{L}\p{N}\s.,!?;:'"“”«»()\-–—/#%+*\n\r]+$/u;
-
-export const PAYMENT_PURPOSE_PATTERN =
-  /^[\p{L}\p{N}\s.,!?;:'"“”«»()\-–—/#%+*]+$/u;
+  /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*\n\r]+$/;
 
 export const PICTURE_DATA_URL_PATTERN =
-  /^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+  /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 
 //===============================================================
 
@@ -121,21 +124,24 @@ export const VALIDATION_MESSAGES = {
       'Use letters, numbers, spaces, comma, dot, slash, apostrophe, #, &, parentheses or hyphen',
 
     reviewComment:
-      'Review may contain letters, numbers, spaces and basic punctuation',
+      'Review may contain English letters, numbers, spaces and basic punctuation',
 
     reviewRating: `Choose a rating from ${MIN_REVIEW_RATING} to ${MAX_REVIEW_RATING} stars`,
 
     orderComment:
-      'Order comment may contain letters, numbers, spaces and basic punctuation',
+      'Order comment may contain English letters, numbers, spaces and basic punctuation',
 
-    workingHours: 'Use letters, numbers, spaces and basic punctuation',
+    workingHours:
+      'Use the format Mon: 09:00-18:00; Tue: Closed and include all seven days',
     workingHoursRange: 'Closing time must be later than opening time',
-    textEditor: 'Use letters, numbers, line breaks and basic punctuation',
+    workingHoursMissingDays: 'Working hours must include every day from Mon to Sun',
+    workingHoursDuplicateDays: 'Each weekday must appear exactly once',
+    textEditor: 'Use English letters, numbers, line breaks and basic punctuation',
     taxId: 'Use 8–10 digits',
     iban: 'Use Ukrainian IBAN format: UA + 27 digits',
 
     paymentPurpose:
-      'Payment purpose may contain letters, numbers, spaces and basic punctuation',
+      'Payment purpose may contain English letters, numbers, spaces and basic punctuation',
 
     picture: 'Photo must be a valid image URL or JPG/PNG/WEBP upload',
     pictureFileType: 'Please choose a JPG, PNG, or WEBP image',
@@ -165,8 +171,8 @@ export const VALIDATION_MESSAGES = {
     workingHoursMax: `Working hours must be at most ${WORKING_HOURS_MAX_LENGTH} characters`,
     textEditorMax: `Text must be at most ${TEXT_EDITOR_MAX_LENGTH} characters`,
     paymentPurposeMax: `Payment purpose must be at most ${PAYMENT_PURPOSE_MAX_LENGTH} characters`,
-    pictureMax: 'Photo is too large. Use a smaller image',
-    picturePayloadMax: 'Photo is too large. Use an image up to 450 KB',
+    pictureDataUrlMax: 'Photo is too large. Use an image up to 450 KB',
+    pictureHttpUrlMax: 'Photo URL must be at most 2048 characters',
     pictureFileSize: 'Photo must be up to 450 KB',
   },
 

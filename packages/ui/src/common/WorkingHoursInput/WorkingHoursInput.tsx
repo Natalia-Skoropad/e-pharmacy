@@ -8,6 +8,13 @@ import {
   type ChangeEventHandler,
 } from 'react';
 
+import {
+  WORKING_DAYS,
+  formatWorkingHoursValue,
+  parseWorkingHoursValue,
+  type WorkingHoursValue,
+} from '@e-pharmacy/validation/shared';
+
 import css from './WorkingHoursInput.module.css';
 
 //===================================================================
@@ -26,101 +33,6 @@ export type WorkingHoursInputProps = {
   maxLength?: number;
   onChange: ChangeEventHandler<HTMLTextAreaElement>;
 };
-
-type WorkingDay = {
-  key: string;
-  label: string;
-};
-
-type DayValue = {
-  from: string;
-  to: string;
-  isClosed: boolean;
-};
-
-type WorkingHoursValue = Record<string, DayValue>;
-
-//===================================================================
-
-const WORKING_DAYS: WorkingDay[] = [
-  { key: 'Mon', label: 'Monday' },
-  { key: 'Tue', label: 'Tuesday' },
-  { key: 'Wed', label: 'Wednesday' },
-  { key: 'Thu', label: 'Thursday' },
-  { key: 'Fri', label: 'Friday' },
-  { key: 'Sat', label: 'Saturday' },
-  { key: 'Sun', label: 'Sunday' },
-];
-
-//===================================================================
-
-const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
-
-//===================================================================
-
-function createEmptyValue(): WorkingHoursValue {
-  return Object.fromEntries(
-    WORKING_DAYS.map((day) => [
-      day.key,
-      {
-        from: '',
-        to: '',
-        isClosed: false,
-      },
-    ])
-  ) as WorkingHoursValue;
-}
-
-//===================================================================
-
-function parseWorkingHours(value: string): WorkingHoursValue {
-  const result = createEmptyValue();
-
-  value
-    .split(';')
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .forEach((part) => {
-      const separatorIndex = part.indexOf(':');
-
-      if (separatorIndex < 0) return;
-
-      const dayKey = part.slice(0, separatorIndex).trim();
-      const rawHours = part.slice(separatorIndex + 1).trim();
-
-      if (!dayKey || !rawHours || !(dayKey in result)) return;
-
-      if (rawHours.toLowerCase() === 'closed') {
-        result[dayKey] = { from: '', to: '', isClosed: true };
-        return;
-      }
-
-      const [from, to] = rawHours.split('-').map((item) => item.trim());
-
-      if (TIME_PATTERN.test(from) && TIME_PATTERN.test(to)) {
-        result[dayKey] = { from, to, isClosed: false };
-      }
-    });
-
-  return result;
-}
-
-//===================================================================
-
-function formatWorkingHours(value: WorkingHoursValue): string {
-  return WORKING_DAYS.map((day) => {
-    const dayValue = value[day.key];
-
-    if (dayValue.isClosed) return `${day.key}: Closed`;
-    if (dayValue.from && dayValue.to) {
-      return `${day.key}: ${dayValue.from}-${dayValue.to}`;
-    }
-
-    return '';
-  })
-    .filter(Boolean)
-    .join('; ');
-}
 
 //===================================================================
 
@@ -144,7 +56,7 @@ function WorkingHoursInput({
   name,
   value,
   label = 'Working hours',
-  hint = 'Choose opening and closing time for each working day.',
+  hint = 'Choose opening and closing time for all seven days.',
   error,
   isTouched,
   required = true,
@@ -156,7 +68,7 @@ function WorkingHoursInput({
   const hasError = Boolean(isTouched && error);
   const lastEmittedValueRef = useRef<string | null>(null);
   const [currentValue, setCurrentValue] = useState<WorkingHoursValue>(() =>
-    parseWorkingHours(value)
+    parseWorkingHoursValue(value)
   );
 
   useEffect(() => {
@@ -165,18 +77,21 @@ function WorkingHoursInput({
       return;
     }
 
-    setCurrentValue(parseWorkingHours(value));
+    setCurrentValue(parseWorkingHoursValue(value));
   }, [value]);
 
   const emitChange = (nextValue: WorkingHoursValue) => {
-    const formattedValue = formatWorkingHours(nextValue);
+    const formattedValue = formatWorkingHoursValue(nextValue);
 
     lastEmittedValueRef.current = formattedValue;
     setCurrentValue(nextValue);
     onChange(createSyntheticTextareaEvent(id, name, formattedValue));
   };
 
-  const updateDay = (dayKey: string, patch: Partial<DayValue>) => {
+  const updateDay = (
+    dayKey: keyof WorkingHoursValue,
+    patch: Partial<WorkingHoursValue[keyof WorkingHoursValue]>
+  ) => {
     emitChange({
       ...currentValue,
       [dayKey]: {

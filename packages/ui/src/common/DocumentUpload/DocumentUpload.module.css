@@ -111,6 +111,25 @@
   min-width: 0;
 }
 
+.fileLink {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  max-width: 100%;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.fileLink:hover,
+.fileLink:focus-visible {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.fileLink .fileName {
+  min-width: 0;
+}
+
 .fileName {
   overflow: hidden;
   font-size: var(--fz-14);
@@ -173,7 +192,6 @@
     align-items: baseline;
     column-gap: 16px;
   }
-
 
   .list {
     grid-template-columns: repeat(2, minmax(0, 1fr));

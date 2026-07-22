@@ -51,10 +51,12 @@ import {
 import { formatOrderDateTime } from '@e-pharmacy/utils/formatters';
 
 import {
-  PRODUCT_REQUEST_ADDITIONAL_FILE_MAX_SIZE_MB,
-  PRODUCT_REQUEST_ADDITIONAL_FILES_ACCEPT,
+  PRODUCT_REQUEST_ATTACHMENT_MAX_SIZE_MB,
+  PRODUCT_REQUEST_ATTACHMENTS_ACCEPT,
+  PRODUCT_REQUEST_ATTACHMENT_RULES,
   PRODUCT_REQUEST_IMAGE_ACCEPT,
   PRODUCT_REQUEST_IMAGE_MAX_SIZE_MB,
+  PRODUCT_REQUEST_IMAGE_RULES,
   PRODUCT_REQUEST_INITIAL_VALUES,
   PRODUCT_REQUEST_LIMITS,
   isProductRequestDraftValid,
@@ -129,9 +131,9 @@ function readFileAsDataUrl(file: File): Promise<string> {
     reader.onload = () =>
       typeof reader.result === 'string'
         ? resolve(reader.result)
-        : reject(new Error('The selected image could not be read.'));
+        : reject(new Error('The selected file could not be read.'));
     reader.onerror = () =>
-      reject(new Error('The selected image could not be read.'));
+      reject(new Error('The selected file could not be read.'));
     reader.readAsDataURL(file);
   });
 }
@@ -147,14 +149,13 @@ function toUploadFile(
     name: file.name,
     type: file.type,
     size: file.size,
+    dataUrl: file.dataUrl,
   };
 }
 
 //===================================================================
 
-function toFormState(
-  request: ProductRequestDetails
-): ProductRequestFormValues {
+function toFormState(request: ProductRequestDetails): ProductRequestFormValues {
   return {
     name: request.name,
     article: request.article,
@@ -182,24 +183,28 @@ function getStatusMessage(status: ProductRequestStatus) {
         message:
           'You can edit the request, manage private pharmacy comments, or send it for moderation.',
       };
+
     case 'new':
       return {
         title: 'The request was sent for moderation',
         message:
           'The submitted information is locked while Admin reviews the request.',
       };
+
     case 'in_progress':
       return {
         title: 'Admin is reviewing this request',
         message:
           'The request is in work and all submitted fields are read-only.',
       };
+
     case 'approved':
       return {
         title: 'The product request was approved',
         message:
           'Admin approved the request and created or linked the catalog product.',
       };
+
     case 'rejected':
       return {
         title: 'The product request was rejected',
@@ -223,41 +228,51 @@ function NewProductRequestPageContent({
   const isCreationLocked = Boolean(bannerStatus || isBlocked);
   const cloneSourceRequestId = requestId ? undefined : sourceRequestId;
 
-  const [request, setRequest] = useState<ProductRequestDetails | null>(
-    null
-  );
+  const [request, setRequest] = useState<ProductRequestDetails | null>(null);
+
   const [values, setValues] = useState<ProductRequestFormValues>(
     PRODUCT_REQUEST_INITIAL_VALUES
   );
+
   const [productImage, setProductImage] = useState<DocumentUploadFile[]>([]);
+
   const [additionalFiles, setAdditionalFiles] = useState<DocumentUploadFile[]>(
     []
   );
+
   const [productImagePreview, setProductImagePreview] = useState<string | null>(
     null
   );
+
   const [isProductImageRemoved, setIsProductImageRemoved] = useState(false);
   const [isImageProcessing, setIsImageProcessing] = useState(false);
   const [productImageError, setProductImageError] = useState('');
   const [additionalFilesError, setAdditionalFilesError] = useState('');
   const [validationMode, setValidationMode] = useState<ValidationMode>(null);
+
   const [savingStatus, setSavingStatus] = useState<'draft' | 'new' | null>(
     null
   );
+
   const [isLoading, setIsLoading] = useState(
     Boolean(requestId || cloneSourceRequestId)
   );
+
   const [hasLoadError, setHasLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState<RequestTab>('details');
   const [commentsTotal, setCommentsTotal] = useState(0);
   const [isModerationConfirmOpen, setIsModerationConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
   const [isImageDeleteConfirmOpen, setIsImageDeleteConfirmOpen] =
     useState(false);
+
   const [isDeleting, setIsDeleting] = useState(false);
+
   const [articleCheckStatus, setArticleCheckStatus] = useState<
     'idle' | 'checking' | 'available' | 'unavailable'
   >('idle');
+
   const [articleCheckMessage, setArticleCheckMessage] = useState('');
 
   const isDraft = request?.status === 'draft';
@@ -265,6 +280,7 @@ function NewProductRequestPageContent({
   const canEdit = !isReadonly && !isCreationLocked;
   const isSaving = savingStatus !== null;
   const hasProductImage = productImage.length > 0 && !isProductImageRemoved;
+
   const articleError =
     articleCheckStatus === 'unavailable' ? articleCheckMessage : undefined;
 
@@ -281,9 +297,11 @@ function NewProductRequestPageContent({
     isProductRequestSubmissionValid(values, validationContext) &&
     articleCheckStatus === 'available' &&
     !isImageProcessing;
+
   const formErrors: ProductRequestFormErrors = validationMode
     ? validateProductRequestForm(values, validationMode, validationContext)
     : {};
+
   const errors: ProductRequestFormErrors = articleError
     ? { ...formErrors, article: articleError }
     : formErrors;
@@ -430,7 +448,7 @@ function NewProductRequestPageContent({
 
     try {
       const dataUrl = await readFileAsDataUrl(image.file);
-      setProductImage([image]);
+      setProductImage([{ ...image, dataUrl }]);
       setProductImagePreview(dataUrl);
       setProductImageError('');
       setIsProductImageRemoved(false);
@@ -438,22 +456,49 @@ function NewProductRequestPageContent({
       setProductImageError(
         error instanceof Error
           ? error.message
-          : 'The selected image could not be read.'
+          : 'The selected file could not be read.'
       );
     } finally {
       setIsImageProcessing(false);
     }
   };
 
-  const handleAdditionalFilesChange = (files: DocumentUploadFile[]) => {
-    const filesError = validateProductRequestAdditionalFiles(files);
-    if (filesError) {
-      setAdditionalFilesError(filesError);
+  const handleAdditionalFilesChange = async (files: DocumentUploadFile[]) => {
+    const metadataError = validateProductRequestAdditionalFiles(files);
+    if (metadataError) {
+      setAdditionalFilesError(metadataError);
       return;
     }
 
-    setAdditionalFiles(files);
-    setAdditionalFilesError('');
+    try {
+      const filesWithData = await Promise.all(
+        files.map(async (file) => {
+          if (file.dataUrl || !file.file) return file;
+
+          return {
+            ...file,
+            dataUrl: await readFileAsDataUrl(file.file),
+          };
+        })
+      );
+
+      const filesError = validateProductRequestAdditionalFiles(filesWithData, {
+        requireDataUrl: true,
+      });
+      if (filesError) {
+        setAdditionalFilesError(filesError);
+        return;
+      }
+
+      setAdditionalFiles(filesWithData);
+      setAdditionalFilesError('');
+    } catch (error) {
+      setAdditionalFilesError(
+        error instanceof Error
+          ? error.message
+          : 'The selected file could not be read.'
+      );
+    }
   };
 
   const buildPayload = (
@@ -681,8 +726,8 @@ function NewProductRequestPageContent({
                   title="Save or send the request"
                   icon={<FileCheck2 size={20} strokeWidth={2} />}
                 >
-                  A draft remains editable. After sending, Admin starts reviewing
-                  the request and the pharmacy can no longer edit it.
+                  A draft remains editable. After sending, Admin starts
+                  reviewing the request and the pharmacy can no longer edit it.
                 </InfoTooltip>
               ) : null}
             </span>
@@ -801,7 +846,7 @@ function NewProductRequestPageContent({
                   required
                   disabled={!canEdit || isImageProcessing}
                   multiple={false}
-                  maxFiles={PRODUCT_REQUEST_LIMITS.productImageFilesMax}
+                  maxFiles={PRODUCT_REQUEST_IMAGE_RULES.maxFiles}
                   accept={PRODUCT_REQUEST_IMAGE_ACCEPT}
                   hint={`JPG, PNG, or WEBP up to ${PRODUCT_REQUEST_IMAGE_MAX_SIZE_MB} MB.`}
                   labels={{
@@ -1105,9 +1150,9 @@ function NewProductRequestPageContent({
                 additionalFilesError || errors.additionalFiles
               )}
               disabled={!canEdit}
-              maxFiles={PRODUCT_REQUEST_LIMITS.additionalFilesMax}
-              accept={PRODUCT_REQUEST_ADDITIONAL_FILES_ACCEPT}
-              hint={`Up to ${PRODUCT_REQUEST_LIMITS.additionalFilesMax} files, no larger than ${PRODUCT_REQUEST_ADDITIONAL_FILE_MAX_SIZE_MB} MB each.`}
+              maxFiles={PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles}
+              accept={PRODUCT_REQUEST_ATTACHMENTS_ACCEPT}
+              hint={`Up to ${PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles} files, no larger than ${PRODUCT_REQUEST_ATTACHMENT_MAX_SIZE_MB} MB each.`}
               confirmRemove
               labels={{
                 dropzoneTitle: 'Upload supporting files',
@@ -1119,7 +1164,8 @@ function NewProductRequestPageContent({
                 removeConfirm: 'Remove file',
                 removeCancel: 'Keep file',
               }}
-              onChange={handleAdditionalFilesChange}
+              onSelectionError={setAdditionalFilesError}
+              onChange={(files) => void handleAdditionalFilesChange(files)}
             />
           </section>
         </form>

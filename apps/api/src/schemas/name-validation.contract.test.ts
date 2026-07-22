@@ -10,48 +10,52 @@ import {
 
 //===============================================================
 
-test('domain name schemas accept Ukrainian values', () => {
-  assert.equal(sharedUserNameSchema.safeParse('Наталія').success, true);
-
+test('domain name schemas accept English and reject Cyrillic values', () => {
+  assert.equal(sharedUserNameSchema.safeParse('Natalia').success, true);
   assert.equal(
-    sharedPharmacyNameSchema.safeParse('Аптека Здоров’я').success,
+    sharedPharmacyNameSchema.safeParse('Health Pharmacy').success,
     true
   );
-
   assert.equal(
-    sharedBankRecipientNameSchema.safeParse('ТОВ Аптека Здоров’я').success,
+    sharedBankRecipientNameSchema.safeParse('Health Pharmacy LLC').success,
     true
   );
+  assert.equal(sharedBankNameSchema.safeParse('Example Bank').success, true);
 
-  assert.equal(sharedBankNameSchema.safeParse('Банк Україна').success, true);
+  assert.equal(sharedUserNameSchema.safeParse('Наталія').success, false);
+  assert.equal(sharedPharmacyNameSchema.safeParse('Аптека').success, false);
+  assert.equal(
+    sharedBankRecipientNameSchema.safeParse('ТОВ Аптека').success,
+    false
+  );
+  assert.equal(sharedBankNameSchema.safeParse('Банк').success, false);
 });
 
 //===============================================================
 
 test('domain name schemas use their own maximum lengths', () => {
-  assert.equal(sharedUserNameSchema.safeParse('а'.repeat(50)).success, true);
-  assert.equal(sharedUserNameSchema.safeParse('а'.repeat(51)).success, false);
-
+  assert.equal(sharedUserNameSchema.safeParse('A'.repeat(50)).success, true);
+  assert.equal(sharedUserNameSchema.safeParse('A'.repeat(51)).success, false);
   assert.equal(
-    sharedPharmacyNameSchema.safeParse('а'.repeat(100)).success,
+    sharedPharmacyNameSchema.safeParse('A'.repeat(100)).success,
     true
   );
 
   assert.equal(
-    sharedPharmacyNameSchema.safeParse('а'.repeat(101)).success,
+    sharedPharmacyNameSchema.safeParse('A'.repeat(101)).success,
     false
   );
 
   assert.equal(
-    sharedBankRecipientNameSchema.safeParse('а'.repeat(160)).success,
+    sharedBankRecipientNameSchema.safeParse('A'.repeat(160)).success,
     true
   );
 
   assert.equal(
-    sharedBankRecipientNameSchema.safeParse('а'.repeat(161)).success,
+    sharedBankRecipientNameSchema.safeParse('A'.repeat(161)).success,
     false
   );
 
-  assert.equal(sharedBankNameSchema.safeParse('а'.repeat(120)).success, true);
-  assert.equal(sharedBankNameSchema.safeParse('а'.repeat(121)).success, false);
+  assert.equal(sharedBankNameSchema.safeParse('A'.repeat(120)).success, true);
+  assert.equal(sharedBankNameSchema.safeParse('A'.repeat(121)).success, false);
 });

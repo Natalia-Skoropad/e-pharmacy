@@ -38,5 +38,3 @@ export const TAX_ID_MAX_LENGTH = 10;
 export const IBAN_MAX_LENGTH = 29;
 export const PAYMENT_PURPOSE_MAX_LENGTH = 500;
 
-export const PICTURE_URL_MAX_LENGTH = 700000;
-export const PICTURE_FILE_MAX_SIZE_BYTES = 450 * 1024;

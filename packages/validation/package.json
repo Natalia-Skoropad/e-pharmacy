@@ -18,7 +18,7 @@
     "build": "tsc",
     "lint": "tsc --noEmit",
     "type-check": "tsc --noEmit",
-    "test": "tsx --test src/shared/auth-contract.test.ts src/shared/sanitizers.test.ts src/product-requests/product-request-validation.test.ts"
+    "test": "tsx --test src/shared/auth-contract.test.ts src/shared/sanitizers.test.ts src/shared/domain-contracts.test.ts src/product-requests/product-request-validation.test.ts"
   },
   "devDependencies": {
     "typescript": "^5",

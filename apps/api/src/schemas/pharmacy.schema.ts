@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { pharmacyDocumentsSchema } from './shared/pharmacy-document.schema';
+
 import {
   sharedReviewCommentSchema,
   sharedReviewRatingSchema,
@@ -36,11 +38,17 @@ function normalizePaginationQuery(value: unknown): unknown {
 
 //===============================================================
 
-const pharmacyDocumentSchema = z.object({
-  name: z.string().trim().min(1, 'Document name is required'),
-  size: z.number().int().nonnegative(),
-  type: z.string().trim().optional().default(''),
-});
+function hasMeaningfulValue(value: unknown): boolean {
+  if (value === null) return true;
+  if (value === undefined) return false;
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (Array.isArray(value)) return true;
+  if (typeof value === 'object') {
+    return Object.values(value).some(hasMeaningfulValue);
+  }
+
+  return true;
+}
 
 //===============================================================
 
@@ -113,7 +121,7 @@ export const updateMyPharmacyProfileSchema = z
     workingHours: sharedOptionalWorkingHoursSchema,
     imageUrl: sharedPictureUrlSchema,
     description: sharedOptionalTextEditorSchema,
-    documents: z.array(pharmacyDocumentSchema).max(6).optional(),
+    documents: pharmacyDocumentsSchema.optional(),
 
     bankDetails: z
       .object({
@@ -127,7 +135,7 @@ export const updateMyPharmacyProfileSchema = z
       .optional(),
   })
 
-  .refine((data) => Object.keys(data).length > 0, {
+  .refine((data) => Object.values(data).some(hasMeaningfulValue), {
     message: 'At least one field is required',
   });
 

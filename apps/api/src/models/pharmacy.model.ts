@@ -11,10 +11,25 @@ import {
   PHARMACY_NAME_MAX_LENGTH,
   PHARMACY_NAME_MIN_LENGTH,
   PHARMACY_NAME_PATTERN,
+  PAYMENT_PURPOSE_MAX_LENGTH,
+  PAYMENT_PURPOSE_PATTERN,
+  PICTURE_DATA_URL_MAX_LENGTH,
+  PICTURE_HTTP_URL_MAX_LENGTH,
   VALIDATION_MESSAGES,
+  WORKING_HOURS_MAX_LENGTH,
+  WORKING_HOURS_PATTERN,
+  isHttpUrl,
+  isPictureDataUrl,
 } from '../constants/validation';
 
 import { PHARMACY_STATUSES } from '../constants/auth';
+
+import {
+  PHARMACY_DOCUMENT_RULES,
+  PHARMACY_DOCUMENT_VALIDATION_MESSAGES,
+} from '../constants/pharmacy-document-validation';
+
+import { getWorkingHoursValidationIssue } from '../utils/validation/working-hours';
 import type { PharmacyEntity } from '../types/pharmacy';
 
 //===============================================================
@@ -30,6 +45,7 @@ const pharmacySchema = new Schema<PharmacyEntity>(
         PHARMACY_NAME_MAX_LENGTH,
         VALIDATION_MESSAGES.limits.pharmacyNameMax,
       ],
+
       validate: [
         {
           validator: (value: string) =>
@@ -75,7 +91,16 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     workingHours: {
       type: String,
       trim: true,
-      maxlength: [160, 'Working hours must be at most 160 characters'],
+      maxlength: [
+        WORKING_HOURS_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.workingHoursMax,
+      ],
+      match: [WORKING_HOURS_PATTERN, VALIDATION_MESSAGES.format.workingHours],
+      validate: {
+        validator: (value?: string) =>
+          !value || getWorkingHoursValidationIssue(value) === null,
+        message: VALIDATION_MESSAGES.format.workingHours,
+      },
       default: undefined,
     },
 
@@ -146,7 +171,14 @@ const pharmacySchema = new Schema<PharmacyEntity>(
         type: String,
         required: false,
         trim: true,
-        maxlength: [500, 'Payment purpose must be at most 500 characters'],
+        maxlength: [
+          PAYMENT_PURPOSE_MAX_LENGTH,
+          VALIDATION_MESSAGES.limits.paymentPurposeMax,
+        ],
+        match: [
+          PAYMENT_PURPOSE_PATTERN,
+          VALIDATION_MESSAGES.format.paymentPurpose,
+        ],
       },
 
       receiptEmail: {
@@ -175,6 +207,18 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     imageUrl: {
       type: String,
       trim: true,
+      validate: {
+        validator: (value?: string) => {
+          if (!value) return true;
+          if (isPictureDataUrl(value)) {
+            return value.length <= PICTURE_DATA_URL_MAX_LENGTH;
+          }
+          if (isHttpUrl(value))
+            return value.length <= PICTURE_HTTP_URL_MAX_LENGTH;
+          return false;
+        },
+        message: VALIDATION_MESSAGES.format.picture,
+      },
       default: undefined,
     },
 
@@ -220,11 +264,44 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     documents: {
       type: [
         {
-          name: { type: String, required: true, trim: true },
-          size: { type: Number, required: true, min: 0 },
-          type: { type: String, trim: true, default: '' },
+          name: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: [
+              PHARMACY_DOCUMENT_RULES.fileNameMaxLength,
+              PHARMACY_DOCUMENT_VALIDATION_MESSAGES.nameLength,
+            ],
+            match: [
+              PHARMACY_DOCUMENT_RULES.fileNamePattern,
+              PHARMACY_DOCUMENT_VALIDATION_MESSAGES.format,
+            ],
+          },
+          size: {
+            type: Number,
+            required: true,
+            min: 0,
+            max: [
+              PHARMACY_DOCUMENT_RULES.maxSizeBytes,
+              PHARMACY_DOCUMENT_VALIDATION_MESSAGES.size,
+            ],
+          },
+          type: {
+            type: String,
+            required: true,
+            trim: true,
+            enum: {
+              values: [...PHARMACY_DOCUMENT_RULES.mimeTypes],
+              message: PHARMACY_DOCUMENT_VALIDATION_MESSAGES.format,
+            },
+          },
         },
       ],
+      validate: {
+        validator: (documents: unknown[]) =>
+          documents.length <= PHARMACY_DOCUMENT_RULES.maxFiles,
+        message: PHARMACY_DOCUMENT_VALIDATION_MESSAGES.count,
+      },
       default: [],
     },
 

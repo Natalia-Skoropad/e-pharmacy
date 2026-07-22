@@ -7,7 +7,7 @@ import { productRequestFormSchema } from './product-request.schema';
 
 const validDraft = {
   status: 'draft' as const,
-  name: 'Парацетамол',
+  name: 'Paracetamol',
   article: 'MED-001',
   category: 'medicine' as const,
 };
@@ -15,7 +15,7 @@ const validDraft = {
 const validProductImage = {
   name: 'product.webp',
   type: 'image/webp' as const,
-  size: 2 * 1024 * 1024,
+  size: 1,
   dataUrl: 'data:image/webp;base64,AA==',
 };
 
@@ -23,24 +23,33 @@ const validSubmission = {
   ...validDraft,
   status: 'new' as const,
   productImage: validProductImage,
-  manufacturer: 'Фармак',
-  countryOfOrigin: 'Україна',
-  dosage: '500 мг',
-  packageSize: '20 таблеток',
-  form: 'Таблетки',
-  activeSubstance: 'Парацетамол',
+  manufacturer: 'Pharmaco',
+  countryOfOrigin: 'United Kingdom',
+  dosage: '500 mg',
+  packageSize: '20 tablets',
+  form: 'Tablets',
+  activeSubstance: 'Paracetamol',
   prescriptionType: 'non_prescription',
-  fullDescription: 'Повний опис препарату українською мовою.',
+  fullDescription: 'Complete product description in English.',
 };
 
 //===============================================================
 
-test('product request schema accepts Ukrainian draft and submission values', () => {
+test('product request schema accepts English draft and submission values', () => {
   assert.equal(productRequestFormSchema.safeParse(validDraft).success, true);
-
   assert.equal(
     productRequestFormSchema.safeParse(validSubmission).success,
     true
+  );
+});
+
+//===============================================================
+
+test('product request schema rejects non-English text', () => {
+  assert.equal(
+    productRequestFormSchema.safeParse({ ...validDraft, name: 'Парацетамол' })
+      .success,
+    false
   );
 });
 
@@ -50,17 +59,15 @@ test('product request schema enforces field length boundaries', () => {
   assert.equal(
     productRequestFormSchema.safeParse({
       ...validDraft,
-      name: 'а'.repeat(160),
+      name: 'A'.repeat(160),
       article: 'A'.repeat(40),
     }).success,
     true
   );
 
   assert.equal(
-    productRequestFormSchema.safeParse({
-      ...validDraft,
-      name: 'а'.repeat(161),
-    }).success,
+    productRequestFormSchema.safeParse({ ...validDraft, name: 'A'.repeat(161) })
+      .success,
     false
   );
 
@@ -71,6 +78,19 @@ test('product request schema enforces field length boundaries', () => {
     }).success,
     false
   );
+});
+
+//===============================================================
+
+test('product request schema normalizes blank optional text to undefined', () => {
+  const parsed = productRequestFormSchema.parse({
+    ...validDraft,
+    manufacturer: '   ',
+    pharmacyComment: '',
+  });
+
+  assert.equal(parsed.manufacturer, undefined);
+  assert.equal(parsed.pharmacyComment, undefined);
 });
 
 //===============================================================
@@ -89,7 +109,7 @@ test('product request schema requires custom category for other', () => {
     productRequestFormSchema.safeParse({
       ...validDraft,
       category: 'other',
-      customCategory: 'Інше',
+      customCategory: 'Other medicine',
     }).success,
     true
   );
@@ -103,7 +123,6 @@ test('product request schema enforces moderation-required fields', () => {
       .success,
     false
   );
-
   assert.equal(
     productRequestFormSchema.safeParse(validSubmission).success,
     true
@@ -128,10 +147,7 @@ test('product request schema enforces image MIME, extension and size', () => {
   assert.equal(
     productRequestFormSchema.safeParse({
       ...validSubmission,
-      productImage: {
-        ...validProductImage,
-        size: 2 * 1024 * 1024 + 1,
-      },
+      productImage: { ...validProductImage, size: 2 * 1024 * 1024 + 1 },
     }).success,
     false
   );
@@ -139,31 +155,42 @@ test('product request schema enforces image MIME, extension and size', () => {
 
 //===============================================================
 
-test('product request schema enforces attachment MIME and extension', () => {
+test('product request schema stores attachment data and checks MIME consistency', () => {
+  const validFile = {
+    name: 'instruction.pdf',
+    type: 'application/pdf' as const,
+    size: 1,
+    dataUrl: 'data:application/pdf;base64,AA==',
+  };
+
+  const parsed = productRequestFormSchema.parse({
+    ...validSubmission,
+    additionalFiles: [validFile],
+  });
+
+  assert.equal(parsed.additionalFiles?.[0]?.dataUrl, validFile.dataUrl);
   assert.equal(
     productRequestFormSchema.safeParse({
       ...validSubmission,
-      additionalFiles: [
-        {
-          name: 'instruction.pdf',
-          type: 'application/pdf',
-          size: 100,
-        },
-      ],
+      additionalFiles: [{ ...validFile, dataUrl: undefined }],
     }).success,
-    true
+    false
   );
 
   assert.equal(
     productRequestFormSchema.safeParse({
       ...validSubmission,
       additionalFiles: [
-        {
-          name: 'archive.zip',
-          type: 'application/pdf',
-          size: 100,
-        },
+        { ...validFile, dataUrl: 'data:image/png;base64,AA==' },
       ],
+    }).success,
+    false
+  );
+
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      ...validSubmission,
+      additionalFiles: [{ ...validFile, size: 2 }],
     }).success,
     false
   );

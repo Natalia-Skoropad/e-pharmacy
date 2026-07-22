@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
 import {
+  DATE_RANGE_MESSAGE,
+  isDateRangeOrdered,
+  optionalCalendarDateSchema,
+} from './shared/date.schema';
+
+import {
   sharedReviewCommentSchema,
   sharedReviewRatingSchema,
   sharedSearchSchema,
@@ -57,63 +63,63 @@ function normalizePaginationQuery(value: unknown): unknown {
 
 const positivePageSchema = z.coerce.number().int().min(1).default(1);
 const perPageSchema = z.coerce.number().int().min(1).max(200).default(12);
-const dateFilterSchema = z
-  .string()
-  .trim()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must use YYYY-MM-DD format')
-  .optional();
 
 //===============================================================
 
 export const productsQuerySchema = z.preprocess(
   normalizePaginationQuery,
-  z.object({
-    page: positivePageSchema,
-    perPage: perPageSchema,
-    keyword: sharedSearchSchema,
-    nameKeyword: sharedSearchSchema,
-    articleKeyword: sharedSearchSchema,
-    category: z.enum(PRODUCT_CATEGORIES).optional(),
-    status: z.enum(PRODUCT_STATUS_FILTER_OPTIONS).optional(),
+  z
+    .object({
+      page: positivePageSchema,
+      perPage: perPageSchema,
+      keyword: sharedSearchSchema,
+      nameKeyword: sharedSearchSchema,
+      articleKeyword: sharedSearchSchema,
+      category: z.enum(PRODUCT_CATEGORIES).optional(),
+      status: z.enum(PRODUCT_STATUS_FILTER_OPTIONS).optional(),
 
-    includeBlocked: z
-      .preprocess((value) => {
-        if (value === 'true') return true;
-        if (value === 'false') return false;
+      includeBlocked: z
+        .preprocess((value) => {
+          if (value === 'true') return true;
+          if (value === 'false') return false;
 
-        return value;
-      }, z.boolean())
-      .optional(),
-    
-    pharmacyId: mongoIdSchema.optional(),
-    addedToPharmacyId: mongoIdSchema.optional(),
+          return value;
+        }, z.boolean())
+        .optional(),
 
-    addedToMyPharmacy: z
-      .preprocess((value) => {
-        if (value === 'true') return true;
-        if (value === 'false') return false;
+      pharmacyId: mongoIdSchema.optional(),
+      addedToPharmacyId: mongoIdSchema.optional(),
 
-        return value;
-      }, z.boolean())
-      .optional(),
-    
-    minPrice: z.coerce.number().min(0).optional(),
-    maxPrice: z.coerce.number().min(0).optional(),
+      addedToMyPharmacy: z
+        .preprocess((value) => {
+          if (value === 'true') return true;
+          if (value === 'false') return false;
 
-    inStock: z
-      .preprocess((value) => {
-        if (value === 'true') return true;
-        if (value === 'false') return false;
+          return value;
+        }, z.boolean())
+        .optional(),
 
-        return value;
-      }, z.boolean())
-      .optional(),
-    stock: z.enum(PRODUCT_STOCK_FILTER_OPTIONS).optional(),
-    
-    addedFrom: dateFilterSchema,
-    addedTo: dateFilterSchema,
-    sort: z.enum(PRODUCT_SORT_OPTIONS).optional(),
-  })
+      minPrice: z.coerce.number().min(0).optional(),
+      maxPrice: z.coerce.number().min(0).optional(),
+
+      inStock: z
+        .preprocess((value) => {
+          if (value === 'true') return true;
+          if (value === 'false') return false;
+
+          return value;
+        }, z.boolean())
+        .optional(),
+      stock: z.enum(PRODUCT_STOCK_FILTER_OPTIONS).optional(),
+
+      addedFrom: optionalCalendarDateSchema,
+      addedTo: optionalCalendarDateSchema,
+      sort: z.enum(PRODUCT_SORT_OPTIONS).optional(),
+    })
+    .refine(
+      ({ addedFrom, addedTo }) => isDateRangeOrdered(addedFrom, addedTo),
+      { message: DATE_RANGE_MESSAGE, path: ['addedTo'] }
+    )
 );
 
 //===============================================================

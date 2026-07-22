@@ -14,6 +14,7 @@ import {
 } from './shared-validation.schema';
 
 import { AUTH_APPLICATIONS, USER_ROLES } from '../constants/auth';
+import { pharmacyDocumentsSchema } from './shared/pharmacy-document.schema';
 
 //===============================================================
 
@@ -40,16 +41,7 @@ export const registerSchema = z.object({
 
   phone: sharedRequiredPhoneSchema,
   address: sharedOptionalAddressSchema,
-  pharmacyDocuments: z
-    .array(
-      z.object({
-        name: z.string().trim().min(1),
-        size: z.number().nonnegative(),
-        type: z.string().trim().optional().default(''),
-      })
-    )
-    .max(6)
-    .optional(),
+  pharmacyDocuments: pharmacyDocumentsSchema.optional(),
 }).superRefine((data, ctx) => {
   if (data.role !== USER_ROLES.PHARMACY) return;
 
@@ -71,16 +63,7 @@ export const createPharmacyUserSchema = z.object({
   phone: sharedRequiredPhoneSchema,
   address: sharedOptionalAddressSchema,
   pharmacyName: sharedPharmacyNameSchema.optional(),
-  pharmacyDocuments: z
-    .array(
-      z.object({
-        name: z.string().trim().min(1),
-        size: z.number().nonnegative(),
-        type: z.string().trim().optional().default(''),
-      })
-    )
-    .max(6)
-    .optional(),
+  pharmacyDocuments: pharmacyDocumentsSchema.optional(),
 }).superRefine((data, ctx) => {
   if (!data.pharmacyDocuments || data.pharmacyDocuments.length === 0) {
     ctx.addIssue({

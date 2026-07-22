@@ -2,6 +2,7 @@ import {
   deslugifyArticleSegment,
   deslugifyNameSegment,
   isDateParam,
+  isDateRangeValid,
   normalizeSlugEnumValue,
   slugifySegment,
   slugifyStatus,
@@ -167,6 +168,10 @@ export function parseProductRequestsSegments(
     }
   }
 
+  if (!isDateRangeValid(filters.date)) {
+    filters.date = { ...DEFAULT_PRODUCT_REQUESTS_FILTERS.date };
+  }
+
   return filters;
 }
 
@@ -176,6 +181,7 @@ export function buildProductRequestsPath(
   filters: ProductRequestsFilterState
 ): string {
   const segments: string[] = [];
+  const dateRangeIsValid = isDateRangeValid(filters.date);
   const requestNumber = filters.requestNumber.trim();
   const productArticle = filters.productArticle.trim();
   const productName = filters.productName.trim();
@@ -200,11 +206,11 @@ export function buildProductRequestsPath(
     segments.push(`status-${slugifyStatus(filters.status)}`);
   }
 
-  if (filters.date.from) {
+  if (dateRangeIsValid && filters.date.from) {
     segments.push(`date-from-${filters.date.from}`);
   }
 
-  if (filters.date.to) {
+  if (dateRangeIsValid && filters.date.to) {
     segments.push(`date-to-${filters.date.to}`);
   }
 

@@ -1,16 +1,11 @@
 import type { ProductRequestFormPayload } from '@e-pharmacy/types/product-requests';
 
+import { normalizeOptionalText } from '../shared';
+
 import type {
   ProductRequestFormValues,
   ProductRequestPayloadFiles,
 } from './product-request-types';
-
-//===================================================================
-
-function normalizeOptionalText(value: string): string | undefined {
-  const normalizedValue = value.trim();
-  return normalizedValue || undefined;
-}
 
 //===================================================================
 

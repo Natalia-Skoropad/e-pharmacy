@@ -51,6 +51,8 @@ import {
   PHARMACY_ABOUT_FORM_FIELDS,
   PHARMACY_PAYMENT_FORM_FIELDS,
   PHARMACY_CONTACT_FORM_FIELDS,
+  PHARMACY_DOCUMENT_ACCEPT,
+  PHARMACY_DOCUMENT_RULES,
   PAYMENT_PURPOSE_MAX_LENGTH,
   USER_ADDRESS_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
@@ -75,6 +77,10 @@ import {
   isPharmacyContactFormDirty,
   isPharmacyPaymentFormDirty,
   markAllFieldsTouched,
+  normalizePharmacyAboutForm,
+  normalizePharmacyContactForm,
+  normalizePharmacyDocument,
+  normalizePharmacyPaymentForm,
   sanitizeEmail,
   sanitizeIban,
   normalizePhoneInput,
@@ -83,6 +89,7 @@ import {
   validateDataProfileForm,
   validatePharmacyAboutForm,
   validatePharmacyContactForm,
+  validatePharmacyDocuments,
   validatePharmacyPaymentForm,
   type ChangePasswordFormValues,
   type ChangePasswordTouchedFields,
@@ -94,6 +101,7 @@ import {
   type PharmacyContactTouchedFields,
   type PharmacyPaymentFormValues,
   type PharmacyPaymentTouchedFields,
+  type PharmacyValidationMode,
 } from '@e-pharmacy/validation';
 
 import {
@@ -147,7 +155,6 @@ type PendingModerationItem = {
 
 const INITIAL_VISIBLE_REVIEWS_COUNT = 10;
 const INITIAL_VISIBLE_SESSIONS_COUNT = 10;
-const PHARMACY_DOCUMENTS_LIMIT = 6;
 
 //===================================================================
 
@@ -258,11 +265,7 @@ function createDocumentValues(
 //===================================================================
 
 function normalizeDocumentValues(files: DocumentUploadFile[]) {
-  return files.map(({ name, size, type }) => ({
-    name: name.trim(),
-    size,
-    type: type.trim(),
-  }));
+  return files.map(normalizePharmacyDocument);
 }
 
 //===================================================================
@@ -383,42 +386,30 @@ function formatSessionDate(value: string): string {
 //===================================================================
 
 function buildProfilePayload(
-  values: PharmacyContactFormValues
+  values: PharmacyContactFormValues,
+  mode: PharmacyValidationMode
 ): UpdateMyPharmacyProfilePayload {
-  return {
-    name: values.name.trim(),
-    address: values.address.trim(),
-    phone: values.phone.trim(),
-    email: values.email.trim(),
-    workingHours: values.workingHours.trim(),
-  };
+  return normalizePharmacyContactForm(values, mode);
 }
 
 //===================================================================
 
 function buildAboutPayload(
-  values: PharmacyAboutFormValues
+  values: PharmacyAboutFormValues,
+  mode: PharmacyValidationMode
 ): UpdateMyPharmacyProfilePayload {
-  return {
-    description: values.description.trim(),
-  };
+  return normalizePharmacyAboutForm(values, mode);
 }
 
 //===================================================================
 
 function buildPaymentPayload(
-  values: PharmacyPaymentFormValues
+  values: PharmacyPaymentFormValues,
+  mode: PharmacyValidationMode
 ): UpdateMyPharmacyProfilePayload {
-  return {
-    bankDetails: {
-      recipientName: values.recipientName.trim(),
-      taxId: values.taxId.trim(),
-      iban: values.iban.trim(),
-      bankName: values.bankName.trim(),
-      receiptEmail: values.receiptEmail.trim(),
-      paymentPurpose: values.paymentPurpose.trim(),
-    },
-  };
+  const bankDetails = normalizePharmacyPaymentForm(values, mode);
+
+  return Object.keys(bankDetails).length > 0 ? { bankDetails } : {};
 }
 
 //===================================================================
@@ -559,6 +550,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     DocumentUploadFile[]
   >([]);
   const [documentsTouched, setDocumentsTouched] = useState(false);
+  const [documentsError, setDocumentsError] = useState('');
 
   const [isOwnerSaving, setIsOwnerSaving] = useState(false);
   const [isOwnerPictureSaving, setIsOwnerPictureSaving] = useState(false);
@@ -607,6 +599,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
         setDocumentValues(nextDocumentValues);
         setInitialDocumentValues(nextDocumentValues);
         setDocumentsTouched(false);
+        setDocumentsError('');
       } catch (error) {
         if (!isMounted) return;
         setLoadError(
@@ -677,16 +670,32 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     () => validateChangePasswordForm(passwordValues),
     [passwordValues]
   );
+  const pharmacyStatus = pharmacy?.status ?? 'new';
+  const pharmacyValidationMode: PharmacyValidationMode =
+    pharmacyStatus === 'new' ? 'draft' : 'verification';
+
   const pharmacyErrors = useMemo(
-    () => validatePharmacyContactForm(pharmacyValues),
+    () => validatePharmacyContactForm(pharmacyValues, pharmacyValidationMode),
+    [pharmacyValidationMode, pharmacyValues]
+  );
+  const pharmacyVerificationErrors = useMemo(
+    () => validatePharmacyContactForm(pharmacyValues, 'verification'),
     [pharmacyValues]
   );
   const aboutErrors = useMemo(
-    () => validatePharmacyAboutForm(aboutValues),
+    () => validatePharmacyAboutForm(aboutValues, pharmacyValidationMode),
+    [aboutValues, pharmacyValidationMode]
+  );
+  const aboutVerificationErrors = useMemo(
+    () => validatePharmacyAboutForm(aboutValues, 'verification'),
     [aboutValues]
   );
   const paymentErrors = useMemo(
-    () => validatePharmacyPaymentForm(paymentValues),
+    () => validatePharmacyPaymentForm(paymentValues, pharmacyValidationMode),
+    [paymentValues, pharmacyValidationMode]
+  );
+  const paymentVerificationErrors = useMemo(
+    () => validatePharmacyPaymentForm(paymentValues, 'verification'),
     [paymentValues]
   );
 
@@ -721,10 +730,12 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const pharmacyPictureIsDirty =
     (pharmacyPictureUrl ?? '') !== (initialPharmacyPictureUrl ?? '');
 
-  const pharmacyStatus = pharmacy?.status ?? 'new';
   const isProfileReadonly = isReadonlyStatus(pharmacyStatus);
+  const pharmacyDocumentsError = validatePharmacyDocuments(documentValues, {
+    required: true,
+  });
   const pharmacyDocumentsAreReady =
-    documentValues.length > 0 && !documentsFormIsDirty;
+    !pharmacyDocumentsError && !documentsFormIsDirty;
 
   const pharmacyPictureIsReady = Boolean(pharmacyPictureUrl);
 
@@ -733,9 +744,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     pharmacyStatus === 'new' &&
     pharmacyDocumentsAreReady &&
     pharmacyPictureIsReady &&
-    !hasValidationErrors(pharmacyErrors) &&
-    !hasValidationErrors(aboutErrors) &&
-    !hasValidationErrors(paymentErrors) &&
+    !hasValidationErrors(pharmacyVerificationErrors) &&
+    !hasValidationErrors(aboutVerificationErrors) &&
+    !hasValidationErrors(paymentVerificationErrors) &&
     !pharmacyFormIsDirty &&
     !aboutFormIsDirty &&
     !paymentFormIsDirty &&
@@ -754,9 +765,10 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
   const moderationFormIsValid =
     pharmacyPictureIsReady &&
-    !hasValidationErrors(pharmacyErrors) &&
-    !hasValidationErrors(aboutErrors) &&
-    !hasValidationErrors(paymentErrors);
+    !hasValidationErrors(pharmacyVerificationErrors) &&
+    !hasValidationErrors(aboutVerificationErrors) &&
+    !hasValidationErrors(paymentVerificationErrors) &&
+    !pharmacyDocumentsError;
 
   const canSendForModeration =
     Boolean(pharmacy) &&
@@ -951,7 +963,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
     try {
       const response = await updateMyPharmacyProfile(
-        buildProfilePayload(pharmacyValues)
+        buildProfilePayload(pharmacyValues, pharmacyValidationMode)
       );
       const nextValues = createPharmacyInitialValues(user, response.pharmacy);
       setPharmacy(response.pharmacy);
@@ -985,7 +997,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
     try {
       const response = await updateMyPharmacyProfile(
-        buildAboutPayload(aboutValues)
+        buildAboutPayload(aboutValues, pharmacyValidationMode)
       );
       const nextValues = createAboutInitialValues(response.pharmacy);
       setPharmacy(response.pharmacy);
@@ -1019,7 +1031,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
     try {
       const response = await updateMyPharmacyProfile(
-        buildPaymentPayload(paymentValues)
+        buildPaymentPayload(paymentValues, pharmacyValidationMode)
       );
       const nextValues = createPaymentInitialValues(user, response.pharmacy);
       setPharmacy(response.pharmacy);
@@ -1040,13 +1052,30 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
   const handleDocumentsChange = (files: DocumentUploadFile[]) => {
     setDocumentsTouched(true);
+
+    const error = validatePharmacyDocuments(files);
+    if (error) {
+      setDocumentsError(error);
+      return;
+    }
+
     setDocumentValues(files);
+    setDocumentsError('');
   };
 
   const handleDocumentsSubmit = async () => {
     setDocumentsTouched(true);
 
-    if (!pharmacy || !documentsFormIsDirty || isProfileReadonly) return;
+    const validationError = validatePharmacyDocuments(documentValues);
+    setDocumentsError(validationError);
+
+    if (
+      !pharmacy ||
+      validationError ||
+      !documentsFormIsDirty ||
+      isProfileReadonly
+    )
+      return;
 
     setIsDocumentsSaving(true);
 
@@ -1062,6 +1091,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       setDocumentValues(nextDocumentValues);
       setInitialDocumentValues(nextDocumentValues);
       setDocumentsTouched(false);
+      setDocumentsError('');
       toast.success(
         response.pharmacy.status === 'on_moderation'
           ? 'Changes sent for moderation.'
@@ -1078,7 +1108,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     const payload: UpdateMyPharmacyProfilePayload = {};
 
     if (pharmacyFormIsDirty) {
-      Object.assign(payload, buildProfilePayload(pharmacyValues));
+      Object.assign(payload, buildProfilePayload(pharmacyValues, 'verification'));
     }
 
     if (pharmacyPictureIsDirty) {
@@ -1086,11 +1116,11 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     }
 
     if (aboutFormIsDirty) {
-      Object.assign(payload, buildAboutPayload(aboutValues));
+      Object.assign(payload, buildAboutPayload(aboutValues, 'verification'));
     }
 
     if (paymentFormIsDirty) {
-      Object.assign(payload, buildPaymentPayload(paymentValues));
+      Object.assign(payload, buildPaymentPayload(paymentValues, 'verification'));
     }
 
     if (documentsFormIsDirty) {
@@ -1121,6 +1151,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     setAboutTouched({});
     setPaymentTouched({});
     setDocumentsTouched(false);
+    setDocumentsError('');
   };
 
   const handleSendForModeration = async () => {
@@ -1929,16 +1960,15 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       id="pharmacy-profile-documents"
                       name="documents"
                       value={documentValues}
-                      error={
-                        documentValues.length === 0
-                          ? 'Upload at least one document before verification.'
-                          : undefined
-                      }
+                      error={documentsError || pharmacyDocumentsError}
                       isTouched={documentsTouched}
                       required
                       disabled={isProfileReadonly || isDocumentsSaving}
-                      maxFiles={PHARMACY_DOCUMENTS_LIMIT}
+                      maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
+                      accept={PHARMACY_DOCUMENT_ACCEPT}
+                      hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
                       confirmRemove
+                      onSelectionError={setDocumentsError}
                       onChange={handleDocumentsChange}
                     />
 
@@ -1947,6 +1977,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                         type="button"
                         disabled={
                           !documentsFormIsDirty ||
+                          Boolean(documentsError) ||
                           isDocumentsSaving ||
                           isProfileReadonly
                         }

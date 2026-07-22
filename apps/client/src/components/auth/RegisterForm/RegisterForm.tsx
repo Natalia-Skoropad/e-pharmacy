@@ -25,6 +25,8 @@ import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
   REGISTER_FORM_FIELDS,
+  PHARMACY_DOCUMENT_ACCEPT,
+  PHARMACY_DOCUMENT_RULES,
   USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_PASSWORD_MAX_LENGTH,
@@ -33,8 +35,10 @@ import {
   hasValidationErrors,
   isRegisterFormValid,
   markAllFieldsTouched,
+  normalizePharmacyDocument,
   normalizePhoneInput,
   sanitizeEmail,
+  validatePharmacyDocuments,
   validateRegisterForm,
   type RegisterFormErrors,
   type RegisterFormValues,
@@ -89,10 +93,6 @@ const REGISTER_COPY: Record<
 
 //===================================================================
 
-const PHARMACY_DOCUMENTS_LIMIT = 6;
-
-//===================================================================
-
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -119,13 +119,12 @@ function RegisterForm() {
 
   const selectedCopy = REGISTER_COPY[accountType];
   const pharmacyDocumentsError =
-    accountType === 'pharmacy' && pharmacyDocuments.length === 0
-      ? 'Please upload pharmacy documents.'
-      : undefined;
+    accountType === 'pharmacy'
+      ? validatePharmacyDocuments(pharmacyDocuments, { required: true })
+      : '';
 
   const registerFormIsValid =
-    isRegisterFormValid(values) &&
-    (accountType === 'client' || pharmacyDocuments.length > 0);
+    isRegisterFormValid(values) && !pharmacyDocumentsError;
 
   const handleChange =
     (field: keyof RegisterFormValues) =>
@@ -169,13 +168,16 @@ function RegisterForm() {
   };
 
   const handleDocumentsChange = (files: DocumentUploadFile[]) => {
-    setPharmacyDocuments(files);
+    const documentsError = validatePharmacyDocuments(files, { required: true });
+
     setTouchedFields((prev) => ({ ...prev, pharmacyDocuments: true }));
     setErrors((prev) => ({
       ...prev,
-      pharmacyDocuments:
-        files.length === 0 ? 'Please upload pharmacy documents.' : undefined,
+      pharmacyDocuments: documentsError || undefined,
     }));
+
+    if (documentsError && files.length > 0) return;
+    setPharmacyDocuments(files);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -188,8 +190,10 @@ function RegisterForm() {
       return;
     }
 
-    if (accountType === 'pharmacy' && pharmacyDocuments.length === 0) {
-      nextErrors.pharmacyDocuments = 'Please upload pharmacy documents.';
+    if (accountType === 'pharmacy') {
+      nextErrors.pharmacyDocuments =
+        validatePharmacyDocuments(pharmacyDocuments, { required: true }) ||
+        undefined;
     }
 
     if (hasValidationErrors(nextErrors)) {
@@ -212,11 +216,7 @@ function RegisterForm() {
         role: accountType,
         pharmacyDocuments:
           accountType === 'pharmacy'
-            ? pharmacyDocuments.map(({ name, size, type }) => ({
-                name,
-                size,
-                type,
-              }))
+            ? pharmacyDocuments.map(normalizePharmacyDocument)
             : undefined,
       });
 
@@ -328,7 +328,15 @@ function RegisterForm() {
             isTouched={touchedFields.pharmacyDocuments}
             required
             confirmRemove
-            maxFiles={PHARMACY_DOCUMENTS_LIMIT}
+            maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
+            accept={PHARMACY_DOCUMENT_ACCEPT}
+            hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
+            onSelectionError={(message) =>
+              setErrors((prev) => ({
+                ...prev,
+                pharmacyDocuments: message,
+              }))
+            }
             onChange={handleDocumentsChange}
           />
         ) : null}

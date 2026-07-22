@@ -1,4 +1,13 @@
-import { PICTURE_ALLOWED_TYPES, isHttpUrl } from '../picture';
+import {
+  PICTURE_ALLOWED_MIME_TYPES,
+  PICTURE_DATA_URL_MAX_LENGTH,
+  PICTURE_FILE_MAX_BYTES,
+  PICTURE_HTTP_URL_MAX_LENGTH,
+  isHttpUrl,
+  isPictureDataUrl,
+} from '../picture';
+
+import { getWorkingHoursValidationIssue } from './working-hours';
 
 import {
   BANK_NAME_MAX_LENGTH,
@@ -9,8 +18,6 @@ import {
   MIN_REVIEW_RATING,
   USER_ADDRESS_MAX_LENGTH,
   USER_ADDRESS_MIN_LENGTH,
-  PICTURE_FILE_MAX_SIZE_BYTES,
-  PICTURE_URL_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
   PHARMACY_NAME_MAX_LENGTH,
   PHARMACY_NAME_MIN_LENGTH,
@@ -31,7 +38,6 @@ import {
   ADDRESS_PATTERN,
   BANK_NAME_PATTERN,
   BANK_RECIPIENT_NAME_PATTERN,
-  PICTURE_DATA_URL_PATTERN,
   EMAIL_PATTERN,
   PHARMACY_NAME_PATTERN,
   USER_NAME_PATTERN,
@@ -51,11 +57,6 @@ import { VALIDATION_MESSAGES } from './messages';
 //=============================================================================
 
 type NameErrorOptions = { required?: boolean; trailingDot?: boolean };
-
-//=============================================================================
-
-const WORKING_HOURS_RANGE_PATTERN =
-  /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(Closed|([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d)\b/g;
 
 //=============================================================================
 
@@ -98,23 +99,6 @@ function buildDomainNameError(
   }
 
   return '';
-}
-
-//=============================================================================
-
-function hasValidWorkingHoursRanges(value: string): boolean {
-  const entries = [...value.matchAll(WORKING_HOURS_RANGE_PATTERN)];
-
-  if (entries.length === 0) return true;
-
-  return entries.every((entry) => {
-    if (entry[1] === 'Closed') return true;
-
-    const from = entry[2];
-    const to = entry[3];
-
-    return Boolean(from && to && from < to);
-  });
 }
 
 //=============================================================================
@@ -395,9 +379,32 @@ export function buildWorkingHoursError(
     );
   }
 
-  if (!hasValidWorkingHoursRanges(workingHours)) {
+  const validationIssue = getWorkingHoursValidationIssue(workingHours);
+
+  if (validationIssue === 'missing-days') {
+    return formatValidationMessage(
+      VALIDATION_MESSAGES.format.workingHoursMissingDays,
+      options
+    );
+  }
+
+  if (validationIssue === 'duplicate-days') {
+    return formatValidationMessage(
+      VALIDATION_MESSAGES.format.workingHoursDuplicateDays,
+      options
+    );
+  }
+
+  if (validationIssue === 'range') {
     return formatValidationMessage(
       VALIDATION_MESSAGES.format.workingHoursRange,
+      options
+    );
+  }
+
+  if (validationIssue === 'format') {
+    return formatValidationMessage(
+      VALIDATION_MESSAGES.format.workingHours,
       options
     );
   }
@@ -518,11 +525,15 @@ export function buildPaymentPurposeError(
 //=============================================================================
 
 export function buildPictureFileError(file: File): string {
-  if (!PICTURE_ALLOWED_TYPES.includes(file.type as never)) {
+  if (
+    !PICTURE_ALLOWED_MIME_TYPES.some(
+      (allowedType) => allowedType === file.type
+    )
+  ) {
     return VALIDATION_MESSAGES.format.pictureFileType;
   }
 
-  if (file.size > PICTURE_FILE_MAX_SIZE_BYTES) {
+  if (file.size > PICTURE_FILE_MAX_BYTES) {
     return VALIDATION_MESSAGES.limits.pictureFileSize;
   }
 
@@ -541,15 +552,28 @@ export function buildPictureUrlError(
     return options.required ? VALIDATION_MESSAGES.required.picture : '';
   }
 
-  if (pictureUrl.length > PICTURE_URL_MAX_LENGTH) {
-    const message = VALIDATION_MESSAGES.limits.picturePayloadMax;
-    return formatValidationMessage(message, options);
+  if (isPictureDataUrl(pictureUrl)) {
+    if (pictureUrl.length > PICTURE_DATA_URL_MAX_LENGTH) {
+      return formatValidationMessage(
+        VALIDATION_MESSAGES.limits.pictureDataUrlMax,
+        options
+      );
+    }
+
+    return '';
   }
 
-  if (!PICTURE_DATA_URL_PATTERN.test(pictureUrl) && !isHttpUrl(pictureUrl)) {
-    const message = VALIDATION_MESSAGES.format.picture;
-    return formatValidationMessage(message, options);
+  if (isHttpUrl(pictureUrl)) {
+    if (pictureUrl.length > PICTURE_HTTP_URL_MAX_LENGTH) {
+      return formatValidationMessage(
+        VALIDATION_MESSAGES.limits.pictureHttpUrlMax,
+        options
+      );
+    }
+
+    return '';
   }
 
-  return '';
+  const message = VALIDATION_MESSAGES.format.picture;
+  return formatValidationMessage(message, options);
 }

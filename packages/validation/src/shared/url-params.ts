@@ -1,3 +1,4 @@
+import { isCalendarDate } from './date-validation';
 import { USER_SEARCH_MAX_LENGTH } from './limits';
 
 //===================================================================
@@ -10,7 +11,6 @@ export const URL_CLIENT_TEXT_PARAM_DISALLOWED_CHARS_PATTERN =
 
 export const SLUG_SEGMENT_SEPARATOR_PATTERN = /[^a-z0-9]+/g;
 export const CLIENT_SLUG_SEGMENT_SEPARATOR_PATTERN = /[^a-z0-9.@_+]+/g;
-export const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 //===================================================================
 
@@ -93,7 +93,7 @@ export function normalizeSlugEnumValue<TValue extends string>(
 //===================================================================
 
 export function isDateParam(value?: string): boolean {
-  return Boolean(value && DATE_PATTERN.test(value));
+  return isCalendarDate(value);
 }
 
 //===================================================================

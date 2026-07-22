@@ -1,15 +1,23 @@
 import { z } from 'zod';
 
 import { sharedSearchSchema } from './shared-validation.schema';
+
+import {
+  DATE_RANGE_MESSAGE,
+  isDateRangeOrdered,
+  optionalCalendarDateSchema,
+} from './shared/date.schema';
+
+import { optionalTrimmedTextSchema } from './shared/optional-text.schema';
 import { PRODUCT_CATEGORIES } from '../types/categories';
 
 import {
-  PRODUCT_REQUEST_ADDITIONAL_FILE_MIME_TYPES,
-  PRODUCT_REQUEST_ADDITIONAL_FILE_NAME_PATTERN,
-  PRODUCT_REQUEST_IMAGE_DATA_URL_PATTERN,
-  PRODUCT_REQUEST_IMAGE_FILE_NAME_PATTERN,
-  PRODUCT_REQUEST_IMAGE_MIME_TYPES,
+  PRODUCT_REQUEST_ARTICLE_PATTERN,
+  PRODUCT_REQUEST_ATTACHMENT_RULES,
+  PRODUCT_REQUEST_IMAGE_RULES,
   PRODUCT_REQUEST_LIMITS,
+  PRODUCT_REQUEST_LONG_TEXT_PATTERN,
+  PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
   PRODUCT_REQUEST_STATUSES,
   PRODUCT_REQUEST_VALIDATION_MESSAGES,
 } from '../constants/product-request-validation';
@@ -22,83 +30,114 @@ const perPageSchema = z.coerce.number().int().min(1).max(200).default(20);
 
 //===============================================================
 
-const dateFilterSchema = z
-  .string()
-  .trim()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must use YYYY-MM-DD format')
-  .optional();
+function getDataUrlByteSize(dataUrl: string): number | null {
+  const commaIndex = dataUrl.indexOf(',');
+  if (commaIndex < 0) return null;
+
+  const base64 = dataUrl.slice(commaIndex + 1);
+  const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+
+  return Math.floor((base64.length * 3) / 4) - padding;
+}
 
 //===============================================================
 
-const optionalText = (maxLength: number, message: string) =>
-  z.string().trim().max(maxLength, message).optional().or(z.literal(''));
+type ProductRequestFileRules = Readonly<{
+  maxSizeBytes: number;
+  requireDataUrl?: boolean;
+  maxDataUrlLength: number;
+  mimeTypes: readonly [string, ...string[]];
+  fileNamePattern: RegExp;
+  dataUrlPattern: RegExp;
+}>;
 
 //===============================================================
 
-const productRequestFileSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1)
-    .max(
-      PRODUCT_REQUEST_LIMITS.fileNameMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileName
-    )
-    .regex(
-      PRODUCT_REQUEST_ADDITIONAL_FILE_NAME_PATTERN,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.format.additionalFile
-    ),
+function createProductRequestFileSchema(
+  rules: ProductRequestFileRules,
+  formatMessage: string,
+  sizeMessage: string,
+  dataMessage: string
+) {
+  return z
+    .object({
+      name: z
+        .string()
+        .trim()
+        .min(1, 'File name is required.')
+        .max(
+          PRODUCT_REQUEST_LIMITS.fileNameMax,
+          PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileName
+        )
+        .regex(rules.fileNamePattern, formatMessage),
+      type: z.enum(rules.mimeTypes),
+      size: z.number().int().min(0).max(rules.maxSizeBytes, sizeMessage),
+      dataUrl: z
+        .string()
+        .max(rules.maxDataUrlLength, dataMessage)
+        .regex(rules.dataUrlPattern, formatMessage)
+        .optional(),
+    })
 
-  type: z.enum(PRODUCT_REQUEST_ADDITIONAL_FILE_MIME_TYPES),
+    .superRefine((file, context) => {
+      if (!file.dataUrl) {
+        if (rules.requireDataUrl) {
+          context.addIssue({
+            code: 'custom',
+            path: ['dataUrl'],
+            message:
+              PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentDataRequired,
+          });
+        }
 
-  size: z
-    .number()
-    .int()
-    .min(0)
-    .max(
-      PRODUCT_REQUEST_LIMITS.additionalFileMaxSizeBytes,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.additionalFileSize
-    ),
+        return;
+      }
 
-  dataUrl: z.string().max(PRODUCT_REQUEST_LIMITS.dataUrlMaxLength).optional(),
-});
+      const dataUrlMimeType = file.dataUrl.match(
+        /^data:([^;,]+);base64,/i
+      )?.[1];
+      if (dataUrlMimeType?.toLowerCase() !== file.type.toLowerCase()) {
+        context.addIssue({
+          code: 'custom',
+          path: ['dataUrl'],
+          message: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.attachmentData,
+        });
+      }
+
+      const dataUrlSize = getDataUrlByteSize(file.dataUrl);
+      if (dataUrlSize === null || dataUrlSize !== file.size) {
+        context.addIssue({
+          code: 'custom',
+          path: ['size'],
+          message: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.fileSizeMismatch,
+        });
+      } else if (dataUrlSize > rules.maxSizeBytes) {
+        context.addIssue({
+          code: 'custom',
+          path: ['dataUrl'],
+          message: sizeMessage,
+        });
+      }
+    });
+}
 
 //===============================================================
 
-const productImageSchema = productRequestFileSchema.extend({
-  name: z
-    .string()
-    .trim()
-    .min(1)
-    .max(
-      PRODUCT_REQUEST_LIMITS.fileNameMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileName
-    )
-    .regex(
-      PRODUCT_REQUEST_IMAGE_FILE_NAME_PATTERN,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.format.productImage
-    ),
+const productRequestFileSchema = createProductRequestFileSchema(
+  { ...PRODUCT_REQUEST_ATTACHMENT_RULES, requireDataUrl: true },
+  PRODUCT_REQUEST_VALIDATION_MESSAGES.format.attachment,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentSize,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentData
+);
 
-  type: z.enum(PRODUCT_REQUEST_IMAGE_MIME_TYPES),
+//===============================================================
 
-  size: z
-    .number()
-    .int()
-    .min(0)
-    .max(
-      PRODUCT_REQUEST_LIMITS.productImageMaxSizeBytes,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.productImageSize
-    ),
-
-  dataUrl: z
-    .string()
-    .max(PRODUCT_REQUEST_LIMITS.dataUrlMaxLength)
-    .regex(
-      PRODUCT_REQUEST_IMAGE_DATA_URL_PATTERN,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.format.productImage
-    )
-    .optional(),
-});
+const productImageSchema = createProductRequestFileSchema(
+  PRODUCT_REQUEST_IMAGE_RULES,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES.format.productImage,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.productImageSize,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.productImageData
+);
 
 //===============================================================
 
@@ -120,19 +159,24 @@ function normalizePaginationQuery(value: unknown): unknown {
 
 export const productRequestsQuerySchema = z.preprocess(
   normalizePaginationQuery,
-  z.object({
-    page: positivePageSchema,
-    perPage: perPageSchema,
-    dateFrom: dateFilterSchema,
-    dateTo: dateFilterSchema,
-    requestNumber: sharedSearchSchema,
-    productName: sharedSearchSchema,
-    productArticle: sharedSearchSchema,
-    name: sharedSearchSchema,
-    article: sharedSearchSchema,
-    category: z.enum(PRODUCT_CATEGORIES).optional(),
-    status: z.enum(PRODUCT_REQUEST_STATUSES).optional(),
-  })
+  z
+    .object({
+      page: positivePageSchema,
+      perPage: perPageSchema,
+      dateFrom: optionalCalendarDateSchema,
+      dateTo: optionalCalendarDateSchema,
+      requestNumber: sharedSearchSchema,
+      productName: sharedSearchSchema,
+      productArticle: sharedSearchSchema,
+      name: sharedSearchSchema,
+      article: sharedSearchSchema,
+      category: z.enum(PRODUCT_CATEGORIES).optional(),
+      status: z.enum(PRODUCT_REQUEST_STATUSES).optional(),
+    })
+    .refine((query) => isDateRangeOrdered(query.dateFrom, query.dateTo), {
+      path: ['dateTo'],
+      message: DATE_RANGE_MESSAGE,
+    })
 );
 
 //===============================================================
@@ -148,6 +192,10 @@ export const productRequestFormSchema = z
       .max(
         PRODUCT_REQUEST_LIMITS.nameMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.name
+      )
+      .regex(
+        PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText
       ),
 
     article: z
@@ -157,65 +205,94 @@ export const productRequestFormSchema = z
       .max(
         PRODUCT_REQUEST_LIMITS.articleMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.article
+      )
+      .regex(
+        PRODUCT_REQUEST_ARTICLE_PATTERN,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
       ),
 
     category: z.enum(PRODUCT_CATEGORIES),
 
-    customCategory: optionalText(
-      PRODUCT_REQUEST_LIMITS.customCategoryMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.customCategory
-    ),
+    customCategory: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.customCategoryMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.customCategory,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
+
     productImage: productImageSchema.optional(),
-    manufacturer: optionalText(
-      PRODUCT_REQUEST_LIMITS.manufacturerMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.manufacturer
-    ),
+    manufacturer: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.manufacturerMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.manufacturer,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
 
-    countryOfOrigin: optionalText(
-      PRODUCT_REQUEST_LIMITS.countryOfOriginMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.countryOfOrigin
-    ),
+    countryOfOrigin: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.countryOfOriginMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.countryOfOrigin,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
 
-    dosage: optionalText(
-      PRODUCT_REQUEST_LIMITS.dosageMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.dosage
-    ),
+    dosage: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.dosageMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.dosage,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
 
-    packageSize: optionalText(
-      PRODUCT_REQUEST_LIMITS.packageSizeMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.packageSize
-    ),
+    packageSize: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.packageSizeMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.packageSize,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
 
-    form: optionalText(
-      PRODUCT_REQUEST_LIMITS.formMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.form
-    ),
+    form: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.formMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.form,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
 
-    activeSubstance: optionalText(
-      PRODUCT_REQUEST_LIMITS.activeSubstanceMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeSubstance
-    ),
+    activeSubstance: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.activeSubstanceMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeSubstance,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
 
-    prescriptionType: optionalText(
-      PRODUCT_REQUEST_LIMITS.prescriptionTypeMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.prescriptionType
-    ),
+    prescriptionType: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.prescriptionTypeMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.prescriptionType,
+    }),
 
-    fullDescription: optionalText(
-      PRODUCT_REQUEST_LIMITS.fullDescriptionMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fullDescription
-    ),
+    fullDescription: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.fullDescriptionMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fullDescription,
+      pattern: PRODUCT_REQUEST_LONG_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.longText,
+    }),
 
-    pharmacyComment: optionalText(
-      PRODUCT_REQUEST_LIMITS.pharmacyCommentMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.pharmacyComment
-    ),
+    pharmacyComment: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.pharmacyCommentMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.pharmacyComment,
+      pattern: PRODUCT_REQUEST_LONG_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.longText,
+    }),
 
     additionalFiles: z
       .array(productRequestFileSchema)
       .max(
-        PRODUCT_REQUEST_LIMITS.additionalFilesMax,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.additionalFilesCount
+        PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentsCount
+      )
+      .refine(
+        (files) =>
+          files.reduce((total, file) => total + file.size, 0) <=
+          PRODUCT_REQUEST_ATTACHMENT_RULES.maxTotalSizeBytes,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentsTotalSize
       )
       .optional(),
   })

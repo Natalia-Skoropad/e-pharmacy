@@ -308,11 +308,6 @@ function serializeProductRequest(
 
 //===============================================================
 
-function normalizeOptionalText(value?: string): string | undefined {
-  const normalized = value?.trim();
-  return normalized || undefined;
-}
-
 //===============================================================
 
 function getRequestFormUpdate(input: ProductRequestFormInput) {
@@ -321,19 +316,17 @@ function getRequestFormUpdate(input: ProductRequestFormInput) {
     article: input.article.trim().toUpperCase(),
     category: input.category,
     customCategory:
-      input.category === 'other'
-        ? normalizeOptionalText(input.customCategory)
-        : undefined,
+      input.category === 'other' ? input.customCategory : undefined,
     productImage: input.productImage,
-    manufacturer: normalizeOptionalText(input.manufacturer),
-    countryOfOrigin: normalizeOptionalText(input.countryOfOrigin),
-    dosage: normalizeOptionalText(input.dosage),
-    packageSize: normalizeOptionalText(input.packageSize),
-    form: normalizeOptionalText(input.form),
-    activeSubstance: normalizeOptionalText(input.activeSubstance),
-    prescriptionType: normalizeOptionalText(input.prescriptionType),
-    fullDescription: normalizeOptionalText(input.fullDescription),
-    pharmacyComment: normalizeOptionalText(input.pharmacyComment),
+    manufacturer: input.manufacturer,
+    countryOfOrigin: input.countryOfOrigin,
+    dosage: input.dosage,
+    packageSize: input.packageSize,
+    form: input.form,
+    activeSubstance: input.activeSubstance,
+    prescriptionType: input.prescriptionType,
+    fullDescription: input.fullDescription,
+    pharmacyComment: input.pharmacyComment,
     additionalFiles: input.additionalFiles?.length
       ? input.additionalFiles
       : undefined,

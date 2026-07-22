@@ -3,6 +3,7 @@ import {
   URL_CLIENT_TEXT_PARAM_DISALLOWED_CHARS_PATTERN,
   deslugifyNameSegment,
   isDateParam,
+  isDateRangeValid,
   normalizeSlugEnumValue,
   sanitizeTextParam,
   slugifySegment,
@@ -226,6 +227,10 @@ export function parseClientsSegments(
     }
   }
 
+  if (!isDateRangeValid(filters.firstOrderDate)) {
+    filters.firstOrderDate = { ...DEFAULT_CLIENTS_FILTERS.firstOrderDate };
+  }
+
   return filters;
 }
 
@@ -233,6 +238,7 @@ export function parseClientsSegments(
 
 export function buildClientsPath(filters: ClientsFilterState): string {
   const segments: string[] = [];
+  const dateRangeIsValid = isDateRangeValid(filters.firstOrderDate);
   const name = filters.name.trim();
   const clientId = filters.clientId.trim();
   const contact = filters.contact.trim();
@@ -257,11 +263,11 @@ export function buildClientsPath(filters: ClientsFilterState): string {
     segments.push(`successful-orders-${filters.successfulOrders}`);
   }
 
-  if (filters.firstOrderDate.from) {
+  if (dateRangeIsValid && filters.firstOrderDate.from) {
     segments.push(`date-from-${filters.firstOrderDate.from}`);
   }
 
-  if (filters.firstOrderDate.to) {
+  if (dateRangeIsValid && filters.firstOrderDate.to) {
     segments.push(`date-to-${filters.firstOrderDate.to}`);
   }
 

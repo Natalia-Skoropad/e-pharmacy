@@ -2,6 +2,7 @@ import {
   deslugifyArticleSegment,
   deslugifyNameSegment,
   isDateParam,
+  isDateRangeValid,
   normalizeSlugEnumValue,
   slugifySegment,
   slugifyStatus,
@@ -178,6 +179,10 @@ export function parseAllProductsSegments(
     }
   }
 
+  if (!isDateRangeValid(filters.createdDate)) {
+    filters.createdDate = { ...DEFAULT_ALL_PRODUCTS_FILTERS.createdDate };
+  }
+
   return filters;
 }
 
@@ -185,6 +190,7 @@ export function parseAllProductsSegments(
 
 export function buildAllProductsPath(filters: AllProductsFilterState): string {
   const segments: string[] = [];
+  const dateRangeIsValid = isDateRangeValid(filters.createdDate);
   const name = filters.name.trim();
   const article = filters.article.trim();
 
@@ -208,11 +214,11 @@ export function buildAllProductsPath(filters: AllProductsFilterState): string {
     segments.push(`added-to-my-pharmacy-${filters.addedToMyPharmacy}`);
   }
 
-  if (filters.createdDate.from) {
+  if (dateRangeIsValid && filters.createdDate.from) {
     segments.push(`date-from-${filters.createdDate.from}`);
   }
 
-  if (filters.createdDate.to) {
+  if (dateRangeIsValid && filters.createdDate.to) {
     segments.push(`date-to-${filters.createdDate.to}`);
   }
 

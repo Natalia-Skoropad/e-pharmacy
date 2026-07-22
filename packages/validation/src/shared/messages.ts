@@ -52,21 +52,24 @@ export const VALIDATION_MESSAGES = {
       'Use letters, numbers, spaces, comma, dot, slash, apostrophe, #, &, parentheses or hyphen',
 
     reviewComment:
-      'Review may contain letters, numbers, spaces and basic punctuation',
+      'Review may contain English letters, numbers, spaces and basic punctuation',
 
     reviewRating: 'Choose a rating from 1 to 5 stars',
 
     orderComment:
-      'Order comment may contain letters, numbers, spaces and basic punctuation',
+      'Order comment may contain English letters, numbers, spaces and basic punctuation',
 
-    workingHours: 'Use letters, numbers, spaces and basic punctuation',
+    workingHours:
+      'Use the format Mon: 09:00-18:00; Tue: Closed and include all seven days',
     workingHoursRange: 'Closing time must be later than opening time',
-    textEditor: 'Use letters, numbers, line breaks and basic punctuation',
+    workingHoursMissingDays: 'Working hours must include every day from Mon to Sun',
+    workingHoursDuplicateDays: 'Each weekday must appear exactly once',
+    textEditor: 'Use English letters, numbers, line breaks and basic punctuation',
     taxId: 'Use 8–10 digits',
     iban: 'Use Ukrainian IBAN format: UA + 27 digits',
 
     paymentPurpose:
-      'Payment purpose may contain letters, numbers, spaces and basic punctuation',
+      'Payment purpose may contain English letters, numbers, spaces and basic punctuation',
 
     picture: 'Photo must be a valid image URL or JPG/PNG/WEBP upload',
     pictureFileType: 'Please choose a JPG, PNG, or WEBP image',
@@ -95,8 +98,8 @@ export const VALIDATION_MESSAGES = {
     workingHoursMax: 'Working hours must be at most 160 characters',
     textEditorMax: 'Text must be at most 5000 characters',
     paymentPurposeMax: 'Payment purpose must be at most 500 characters',
-    pictureMax: 'Photo is too large. Use a smaller image',
-    picturePayloadMax: 'Photo is too large. Use an image up to 450 KB',
+    pictureDataUrlMax: 'Photo is too large. Use an image up to 450 KB',
+    pictureHttpUrlMax: 'Photo URL must be at most 2048 characters',
     pictureFileSize: 'Photo must be up to 450 KB',
   },
 

@@ -2,7 +2,8 @@ import { Schema, model, models } from 'mongoose';
 
 import {
   USER_ADDRESS_MAX_LENGTH,
-  PICTURE_URL_MAX_LENGTH,
+  PICTURE_DATA_URL_MAX_LENGTH,
+  PICTURE_HTTP_URL_MAX_LENGTH,
   USER_NAME_MIN_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_NAME_PATTERN,
@@ -10,6 +11,8 @@ import {
   USER_PHONE_MAX_LENGTH,
   PHONE_PATTERN,
   VALIDATION_MESSAGES,
+  isHttpUrl,
+  isPictureDataUrl,
 } from '../constants/validation';
 
 import {
@@ -91,10 +94,19 @@ const userSchema = new Schema<UserEntity>(
     pictureUrl: {
       type: String,
       trim: true,
-      maxlength: [
-        PICTURE_URL_MAX_LENGTH,
-        VALIDATION_MESSAGES.limits.pictureMax,
-      ],
+      validate: {
+        validator: (value?: string) => {
+          if (!value) return true;
+          if (isPictureDataUrl(value)) {
+            return value.length <= PICTURE_DATA_URL_MAX_LENGTH;
+          }
+          if (isHttpUrl(value)) {
+            return value.length <= PICTURE_HTTP_URL_MAX_LENGTH;
+          }
+          return false;
+        },
+        message: VALIDATION_MESSAGES.format.picture,
+      },
       default: undefined,
     },
 
