@@ -21,10 +21,12 @@ import {
 
 import type { PharmacyProfile } from '@e-pharmacy/types';
 import type { BreadcrumbItem } from '@e-pharmacy/types/navigation';
-import { BurgerButton } from '@e-pharmacy/ui/layout';
+import { BurgerButton } from '@e-pharmacy/ui/cabinet';
 import { CabinetTopBar } from '@e-pharmacy/ui/cabinet';
-import { TextActionButton, UserBadge } from '@e-pharmacy/ui/common';
+import { TextActionButton } from '@e-pharmacy/ui/primitives';
+import { UserBadge } from '@e-pharmacy/ui/data-display';
 import { useAuth } from '@e-pharmacy/auth/core';
+import { getPharmacyProfilePath } from '@e-pharmacy/config/pharmacy';
 
 import { getMyPharmacyProfile } from '@/lib/api/browser';
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
@@ -35,7 +37,6 @@ import {
   getClientPharmacyUrl,
 } from '@/lib/layout/external-links';
 
-import { getPharmacyProfilePath } from '@e-pharmacy/config/pharmacy';
 import { PharmacyMobileMenu } from '@/components/layout/PharmacyMobileMenu/PharmacyMobileMenu';
 
 import css from './PharmacyHeader.module.css';

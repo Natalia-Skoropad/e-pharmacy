@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Facebook, Instagram, Youtube } from 'lucide-react';
 
-import { Logo } from '@e-pharmacy/ui/common';
+import { Logo } from '@e-pharmacy/ui/media';
 import { Container } from '@e-pharmacy/ui/layout';
 
 import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';

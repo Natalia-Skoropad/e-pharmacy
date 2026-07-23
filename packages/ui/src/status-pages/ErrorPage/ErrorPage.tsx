@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, ButtonLink } from '../../common';
+import { Button, ButtonLink } from '../../primitives';
 
 import StatusPageLayout, {
   type StatusPageLayoutImage,

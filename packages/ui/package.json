@@ -7,28 +7,26 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./common": "./src/common/index.ts",
-    "./feedback": "./src/feedback/index.ts",
-    "./form-fields": "./src/form-fields/index.ts",
-    "./layout": "./src/layout/index.ts",
-    "./modals": "./src/modals/index.ts",
-    "./status-pages": "./src/status-pages/index.ts",
-    "./statistics": "./src/statistics/index.ts",
-    "./styles/*.css": "./src/styles/*.css",
     "./primitives": "./src/primitives/index.ts",
     "./forms": "./src/forms/index.ts",
     "./data-display": "./src/data-display/index.ts",
     "./navigation": "./src/navigation/index.ts",
     "./overlays": "./src/overlays/index.ts",
     "./media": "./src/media/index.ts",
-    "./cabinet": "./src/cabinet/index.ts"
+    "./layout": "./src/layout/index.ts",
+    "./cabinet": "./src/cabinet/index.ts",
+    "./feedback": "./src/feedback/index.ts",
+    "./status-pages": "./src/status-pages/index.ts",
+    "./statistics": "./src/statistics/index.ts",
+    "./styles/*.css": "./src/styles/*.css"
   },
   "scripts": {
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
     "test": "node ../../scripts/run-node-ts-tests.mjs src",
-    "test:a11y": "node ../../scripts/run-node-ts-tests.mjs src/a11y"
+    "test:a11y": "node ../../scripts/run-node-ts-tests.mjs src/a11y",
+    "check:styles": "node ../../scripts/check-ui-style-contracts.mjs"
   },
   "peerDependencies": {
     "clsx": ">=2.1.1",

@@ -2,13 +2,9 @@
 
 import { useMemo } from 'react';
 
-import {
-  ButtonLink,
-  RatingSummary,
-  ShimmerImage,
-  SvgIcon,
-} from '@e-pharmacy/ui/common';
-
+import { ButtonLink, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { RatingSummary } from '@e-pharmacy/ui/data-display';
+import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { formatProductCategoryLabel } from '@e-pharmacy/config/products';
 import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
 import { formatMoneyRange, getNumericRange } from '@e-pharmacy/utils/money';

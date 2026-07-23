@@ -25,29 +25,33 @@ import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 
 import {
   ButtonLink,
+  FiltersButton,
+  LoadingSpinner,
+  TextActionButton,
+} from '@e-pharmacy/ui/primitives';
+
+import {
   CountLabel,
   DataTable,
-  DateFilter,
-  FiltersButton,
   formatInitials,
-  InfoTooltip,
-  LoadingSpinner,
+  TableDateTime,
+  TableHeaderTitle,
+  type DataTableColumn,
+} from '@e-pharmacy/ui/data-display';
+
+import {
+  DateFilter,
   RowsPerPageSelect,
   SearchInput,
   SelectField,
-  ShimmerImage,
-  TableDateTime,
-  TableHeaderTitle,
-  TableImagePreview,
-  Tabs,
-  TextActionButton,
-  type DataTableColumn,
   type DateFilterValue,
   type RowsPerPageValue,
   type SelectOption,
-  type TabItem,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { ShimmerImage, TableImagePreview } from '@e-pharmacy/ui/media';
+import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
@@ -106,7 +110,7 @@ import {
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
-import { EntityComments } from '@/components/common/EntityComments';
+import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderStatistics } from '@/components/statistics';
 import { StatusBadge } from '@/components/common/StatusPresentation';
 

@@ -1,8 +1,8 @@
 .container {
   width: 100%;
-  max-width: 375px;
-  padding: 0 20px;
-  margin: 0 auto;
+  max-width: var(--container-max-mobile);
+  padding-inline: var(--container-padding-mobile);
+  margin-inline: auto;
 }
 
 .visually-hidden {
@@ -23,14 +23,14 @@
 
 @media only screen and (min-width: 768px) {
   .container {
-    max-width: 768px;
-    padding: 0 32px;
+    max-width: var(--container-max-tablet);
+    padding-inline: var(--container-padding-tablet);
   }
 }
 
 @media only screen and (min-width: 1440px) {
   .container {
-    max-width: 1440px;
-    padding: 0 64px;
+    max-width: var(--container-max-desktop);
+    padding-inline: var(--container-padding-desktop);
   }
 }

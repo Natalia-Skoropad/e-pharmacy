@@ -279,42 +279,6 @@
   border-radius: var(--radius-lg);
 }
 
-@media only screen and (min-width: 768px) {
-  .statsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .actions {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, auto);
-    align-items: center;
-  }
-}
-
-@media only screen and (min-width: 1440px) {
-  .detailsGrid {
-    grid-template-columns: minmax(280px, 0.44fr) minmax(0, 0.56fr);
-    align-items: start;
-  }
-
-  .visualCard {
-    height: auto;
-    min-height: 250px;
-  }
-
-  .imageFrame {
-    min-height: 250px;
-  }
-
-  .statsGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .actions {
-    grid-template-columns: minmax(0, 1fr) minmax(250px, auto);
-    align-items: center;
-  }
-}
-
 .singleProductStatistics {
   display: none;
   min-width: 0;
@@ -387,12 +351,6 @@
   color: var(--color-text-secondary);
 }
 
-@media only screen and (min-width: 768px) {
-  .searchGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(150px, auto);
-  }
-}
-
 .sectionStack {
   display: grid;
   gap: 20px;
@@ -423,34 +381,6 @@
 .rowsControl {
   width: 100%;
   min-width: 0;
-}
-
-@media only screen and (min-width: 768px) {
-  .singleProductStatistics {
-    display: grid;
-  }
-
-  .relatedStatistics {
-    display: grid;
-  }
-
-  .tableToolbar {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: end;
-  }
-
-  .countLabel {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: end;
-    width: unset;
-  }
-
-  .rowsControl {
-    grid-column: 1;
-    grid-row: 1;
-    width: auto;
-  }
 }
 
 .productSalesSection {
@@ -505,8 +435,72 @@
 }
 
 @media only screen and (min-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .actions {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, auto);
+    align-items: center;
+  }
+
+  .searchGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(150px, auto);
+  }
+
+  .singleProductStatistics {
+    display: grid;
+  }
+
+  .relatedStatistics {
+    display: grid;
+  }
+
+  .tableToolbar {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .countLabel {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    width: unset;
+  }
+
+  .rowsControl {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+  }
+
   .detailsColumns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .detailsGrid {
+    grid-template-columns: minmax(280px, 0.44fr) minmax(0, 0.56fr);
+    align-items: start;
+  }
+
+  .visualCard {
+    height: auto;
+    min-height: 250px;
+  }
+
+  .imageFrame {
+    min-height: 250px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .actions {
+    grid-template-columns: minmax(0, 1fr) minmax(250px, auto);
+    align-items: center;
   }
 }

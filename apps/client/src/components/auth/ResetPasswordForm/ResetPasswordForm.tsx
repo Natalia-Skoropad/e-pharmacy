@@ -3,10 +3,9 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { Button, TextActionButton } from '@e-pharmacy/ui/common';
-import { PasswordInput } from '@e-pharmacy/ui/form-fields';
+import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
+import { PasswordInput } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
-
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { useAuth } from '@e-pharmacy/auth/core';
 
@@ -45,7 +44,7 @@ function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
   const { isAuthReady } = useAuth();
 
   const [values, setValues] = useState<ResetPasswordFormValues>(
-    RESET_PASSWORD_INITIAL_VALUES,
+    RESET_PASSWORD_INITIAL_VALUES
   );
   const [errors, setErrors] = useState<ResetPasswordFormErrors>({});
 
@@ -102,7 +101,7 @@ function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
       toast.success('Password changed successfully.');
     } catch (error) {
       toast.error(
-        getClientAuthErrorMessage(getAuthErrorCode(error, 'reset-password')),
+        getClientAuthErrorMessage(getAuthErrorCode(error, 'reset-password'))
       );
     } finally {
       setIsSubmitting(false);

@@ -2,10 +2,10 @@
 
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 
-import { Button, RadioOption, TextActionButton } from '@e-pharmacy/ui/common';
-import { EmailInput } from '@e-pharmacy/ui/form-fields';
+import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
+import { RadioOption } from '@e-pharmacy/ui/forms';
+import { EmailInput } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
-
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { useAuth } from '@e-pharmacy/auth/core';
 

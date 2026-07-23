@@ -1,4 +1,6 @@
-import { Container, Breadcrumbs, SideMenu } from '@e-pharmacy/ui/layout';
+import { Container } from '@e-pharmacy/ui/layout';
+import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
+import { SideMenu } from '@e-pharmacy/ui/cabinet';
 
 import { createBreadcrumbs } from '@/lib/routes';
 

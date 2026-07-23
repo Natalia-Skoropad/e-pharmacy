@@ -1,4 +1,4 @@
-import { ConfirmationModal } from '@e-pharmacy/ui/modals';
+import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 
 import {
   CART_ORDER_LIMIT_ERROR_MESSAGE,

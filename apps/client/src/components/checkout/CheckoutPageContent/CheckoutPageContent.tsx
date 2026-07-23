@@ -4,16 +4,19 @@ import { useMemo, useState, type ChangeEvent } from 'react';
 import { Clock, Info, MapPin, Phone, Truck } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
-import { ButtonLink, LoadingSpinner, RadioOption } from '@e-pharmacy/ui/common';
+import { ButtonLink, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+
+import { RadioOption } from '@e-pharmacy/ui/forms';
 
 import {
   AddressInput,
   CommentInput,
   NameInput,
   PhoneInput,
-} from '@e-pharmacy/ui/form-fields';
+} from '@e-pharmacy/ui/forms';
 
-import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { Container } from '@e-pharmacy/ui/layout';
+import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import type { BreadcrumbItem } from '@e-pharmacy/types';
 import type { PaymentMethod, DeliveryMethod } from '@e-pharmacy/types/orders';
 
@@ -42,7 +45,6 @@ import { useClientAuthCapabilities } from '@/hooks';
 
 import CheckoutOrderPanel from '../CheckoutOrderPanel';
 import CheckoutPaymentMethod from '../CheckoutPaymentMethod/CheckoutPaymentMethod';
-
 import { useCheckoutCart } from '../hooks/useCheckoutCart';
 import { useCheckoutPharmacy } from '../hooks/useCheckoutPharmacy';
 import { useCheckoutSubmit } from '../hooks/useCheckoutSubmit';

@@ -4,16 +4,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { PackageSearch } from 'lucide-react';
 
+import { CountLabel } from '@e-pharmacy/ui/data-display';
+import { FiltersButton } from '@e-pharmacy/ui/primitives';
+
 import {
-  CountLabel,
-  FiltersButton,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
 import { PaginationView } from '@e-pharmacy/ui/navigation';
-import { ConfirmationModal } from '@e-pharmacy/ui/modals';
+import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
@@ -46,7 +47,6 @@ import { getPharmacyAllProductStatistics } from '@/lib/products/product-statisti
 
 import { AllProductStatistics } from '@/components/statistics';
 import { StatusBanner } from '@/components/common/StatusPresentation';
-
 import { AllProductsFiltersDrawer } from '@/components/all-products/AllProductsFiltersDrawer';
 import { AllProductsTable } from '@/components/all-products/AllProductsTable';
 

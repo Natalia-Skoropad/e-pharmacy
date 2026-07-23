@@ -42,9 +42,8 @@
   border-color: var(--color-border);
 }
 
-
 .beauty {
-  color: var(--color-chart-beauty);
-  background-color: var(--color-chart-beauty-soft);
-  border-color: var(--color-chart-beauty);
+  color: var(--color-status-beauty);
+  background-color: var(--color-status-beauty-soft);
+  border-color: var(--color-status-beauty-border);
 }

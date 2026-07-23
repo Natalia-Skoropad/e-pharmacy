@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -15,26 +15,18 @@ import {
   Trash2,
 } from 'lucide-react';
 
-import {
-  Button,
-  ButtonLink,
-  CountLabel,
-  DocumentUpload,
-  InfoTooltip,
-  LoadingSpinner,
-  SelectField,
-  Tabs,
-  TextEditor,
-  type TabItem,
-} from '@e-pharmacy/ui/common';
-
+import { Button, ButtonLink, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { CountLabel } from '@e-pharmacy/ui/data-display';
+import { DocumentUpload, SelectField, TextEditor } from '@e-pharmacy/ui/forms';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import type { UploadFileValue } from '@e-pharmacy/types/files';
 import { readFileAsDataUrl } from '@e-pharmacy/ui/media';
 import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { CommentInput, NameInput } from '@e-pharmacy/ui/form-fields';
-import { ConfirmationModal } from '@e-pharmacy/ui/modals';
+import { CommentInput, NameInput } from '@e-pharmacy/ui/forms';
+import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
 
@@ -101,7 +93,7 @@ import {
   StatusBanner,
 } from '@/components/common/StatusPresentation';
 
-import { EntityComments } from '@/components/common/EntityComments';
+import { EntityComments } from '@/components/comments/EntityComments';
 
 import css from './NewProductRequestPageContent.module.css';
 
@@ -233,6 +225,8 @@ function NewProductRequestPageContent({
 
   const [isProductImageRemoved, setIsProductImageRemoved] = useState(false);
   const [isImageProcessing, setIsImageProcessing] = useState(false);
+  const imageReadControllerRef = useRef<AbortController | null>(null);
+  const additionalFilesReadControllerRef = useRef<AbortController | null>(null);
   const [productImageError, setProductImageError] = useState('');
   const [additionalFilesError, setAdditionalFilesError] = useState('');
   const [validationMode, setValidationMode] = useState<ValidationMode>(null);
@@ -308,6 +302,14 @@ function NewProductRequestPageContent({
 
     return items;
   }, [commentsTotal, request]);
+
+  useEffect(
+    () => () => {
+      imageReadControllerRef.current?.abort();
+      additionalFilesReadControllerRef.current?.abort();
+    },
+    []
+  );
 
   useEffect(() => {
     const idToLoad = requestId ?? cloneSourceRequestId;
@@ -431,22 +433,30 @@ function NewProductRequestPageContent({
       return;
     }
 
+    imageReadControllerRef.current?.abort();
+    const controller = new AbortController();
+    imageReadControllerRef.current = controller;
     setIsImageProcessing(true);
 
     try {
-      const dataUrl = await readFileAsDataUrl(image.file);
+      const dataUrl = await readFileAsDataUrl(image.file, controller.signal);
       setProductImage([{ ...image, dataUrl }]);
       setProductImagePreview(dataUrl);
       setProductImageError('');
       setIsProductImageRemoved(false);
     } catch (error) {
-      setProductImageError(
-        error instanceof Error
-          ? error.message
-          : 'The selected file could not be read.'
-      );
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        setProductImageError(
+          error instanceof Error
+            ? error.message
+            : 'The selected file could not be read.'
+        );
+      }
     } finally {
-      setIsImageProcessing(false);
+      if (imageReadControllerRef.current === controller) {
+        imageReadControllerRef.current = null;
+        setIsImageProcessing(false);
+      }
     }
   };
 
@@ -457,6 +467,10 @@ function NewProductRequestPageContent({
       return;
     }
 
+    additionalFilesReadControllerRef.current?.abort();
+    const controller = new AbortController();
+    additionalFilesReadControllerRef.current = controller;
+
     try {
       const filesWithData = await Promise.all(
         files.map(async (file) => {
@@ -464,7 +478,7 @@ function NewProductRequestPageContent({
 
           return {
             ...file,
-            dataUrl: await readFileAsDataUrl(file.file),
+            dataUrl: await readFileAsDataUrl(file.file, controller.signal),
           };
         })
       );
@@ -480,11 +494,17 @@ function NewProductRequestPageContent({
       setAdditionalFiles(filesWithData);
       setAdditionalFilesError('');
     } catch (error) {
-      setAdditionalFilesError(
-        error instanceof Error
-          ? error.message
-          : 'The selected file could not be read.'
-      );
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        setAdditionalFilesError(
+          error instanceof Error
+            ? error.message
+            : 'The selected file could not be read.'
+        );
+      }
+    } finally {
+      if (additionalFilesReadControllerRef.current === controller) {
+        additionalFilesReadControllerRef.current = null;
+      }
     }
   };
 
@@ -836,6 +856,9 @@ function NewProductRequestPageContent({
                   maxFiles={PRODUCT_REQUEST_IMAGE_RULES.maxFiles}
                   accept={PRODUCT_REQUEST_IMAGE_ACCEPT}
                   hint={`JPG, PNG, or WEBP up to ${PRODUCT_REQUEST_IMAGE_MAX_SIZE_MB} MB.`}
+                  validateSelection={(files) =>
+                    files[0] ? validateProductRequestImageFile(files[0]) : ''
+                  }
                   labels={{
                     dropzoneTitle: isImageProcessing
                       ? 'Preparing image preview...'
@@ -1140,6 +1163,9 @@ function NewProductRequestPageContent({
               maxFiles={PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles}
               accept={PRODUCT_REQUEST_ATTACHMENTS_ACCEPT}
               hint={`Up to ${PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles} files, no larger than ${PRODUCT_REQUEST_ATTACHMENT_MAX_SIZE_MB} MB each.`}
+              validateSelection={(files) =>
+                validateProductRequestAdditionalFiles(files)
+              }
               confirmRemove
               labels={{
                 dropzoneTitle: 'Upload supporting files',

@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 
 import { RoleProtectedRoute } from '@e-pharmacy/auth/guards';
 import { useAuth } from '@e-pharmacy/auth/core';
-import { LoadingSpinner } from '@e-pharmacy/ui/common';
+import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
 
 import { ROUTES } from '@/lib/routes';
 import { resolveLoginDestination } from '@/lib/auth';

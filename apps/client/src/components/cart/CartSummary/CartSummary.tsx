@@ -1,6 +1,6 @@
 import { ShieldAlert } from 'lucide-react';
 
-import { Button, ButtonLink } from '@e-pharmacy/ui/common';
+import { Button, ButtonLink } from '@e-pharmacy/ui/primitives';
 import { formatMoney } from '@e-pharmacy/utils/money';
 
 import css from './CartSummary.module.css';

@@ -1,17 +1,16 @@
 import { useMemo } from 'react';
 
+import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 import {
-  Button,
   DataTable,
   TableDateTime,
   TableHeaderTitle,
-  TableImagePreview,
-  TextActionButton,
   type DataTableColumn,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/data-display';
 
+import { TableImagePreview } from '@e-pharmacy/ui/media';
+import { getPharmacyProductPath } from '@e-pharmacy/config/pharmacy';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
-import { StatusBadge } from '@/components/common/StatusPresentation';
 import type { EntityId } from '@e-pharmacy/types';
 import { formatAmount } from '@e-pharmacy/utils/money';
 
@@ -20,8 +19,9 @@ import {
   type PharmacyProductRow,
 } from '@/lib/products/products';
 
-import { getPharmacyProductPath } from '@e-pharmacy/config/pharmacy';
 import { getProductImageSrc } from '@/lib/products/product-images';
+
+import { StatusBadge } from '@/components/common/StatusPresentation';
 
 import css from './OwnProductsTable.module.css';
 

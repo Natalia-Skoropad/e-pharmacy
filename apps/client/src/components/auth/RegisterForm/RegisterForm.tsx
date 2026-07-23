@@ -3,15 +3,9 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import {
-  Button,
-  DocumentUpload,
-  RadioOption,
-  TextActionButton,
-} from '@e-pharmacy/ui/common';
-
+import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
+import { DocumentUpload, RadioOption } from '@e-pharmacy/ui/forms';
 import type { UploadFileValue } from '@e-pharmacy/types/files';
-
 import { useToast } from '@e-pharmacy/ui/feedback';
 
 import {
@@ -19,7 +13,7 @@ import {
   NameInput,
   PasswordInput,
   PhoneInput,
-} from '@e-pharmacy/ui/form-fields';
+} from '@e-pharmacy/ui/forms';
 
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { useAuth } from '@e-pharmacy/auth/core';
@@ -335,6 +329,7 @@ function RegisterForm() {
             maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
             accept={PHARMACY_DOCUMENT_ACCEPT}
             hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
+            validateSelection={(files) => validatePharmacyDocuments(files)}
             onSelectionError={(message) =>
               setErrors((prev) => ({
                 ...prev,

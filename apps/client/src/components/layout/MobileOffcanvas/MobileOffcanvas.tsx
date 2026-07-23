@@ -8,15 +8,16 @@ import clsx from 'clsx';
 import {
   ButtonLink,
   CloseIconButton,
-  Logo,
   LogoutButton,
-  UserBadge,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/primitives';
 
-import { MobileOffcanvasBase } from '@e-pharmacy/ui/layout';
+import { Logo } from '@e-pharmacy/ui/media';
+import { UserBadge } from '@e-pharmacy/ui/data-display';
+import { MobileOffcanvasBase } from '@e-pharmacy/ui/overlays';
 
 import { ROUTES, isActiveRoute } from '@/lib/routes';
 import { getPharmacyDashboardUrl } from '@/lib/auth';
+
 import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
 import { usePublicAuthActionsState } from '@/components/layout/hooks/usePublicAuthActionsState';
 

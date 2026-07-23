@@ -16,20 +16,13 @@ import {
 
 import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
-
-import {
-  ButtonLink,
-  LoadingSpinner,
-  RatingSummary,
-  ShimmerImage,
-  SvgIcon,
-} from '@e-pharmacy/ui/common';
-
-import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { ButtonLink, LoadingSpinner, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { RatingSummary } from '@e-pharmacy/ui/data-display';
+import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { Container } from '@e-pharmacy/ui/layout';
+import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import { useAuth } from '@e-pharmacy/auth/core';
-
 import type { BreadcrumbItem, Order } from '@e-pharmacy/types';
-
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import { formatMoney } from '@e-pharmacy/utils/money';
 

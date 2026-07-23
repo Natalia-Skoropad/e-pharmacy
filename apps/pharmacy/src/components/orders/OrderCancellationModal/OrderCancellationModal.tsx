@@ -3,9 +3,9 @@
 import { MessageSquareText } from 'lucide-react';
 import { useId } from 'react';
 
-import { Button, CloseIconButton } from '@e-pharmacy/ui/common';
-import { CommentInput } from '@e-pharmacy/ui/form-fields';
-import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
+import { Button, CloseIconButton } from '@e-pharmacy/ui/primitives';
+import { CommentInput } from '@e-pharmacy/ui/forms';
+import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 
 import {
   ORDER_REJECTION_REASON_MAX_LENGTH,

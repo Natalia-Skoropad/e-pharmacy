@@ -5,27 +5,33 @@ import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 
 import {
   DEFAULT_VISIBLE_REVIEWS_COUNT,
+  CountLabel,
+  RatingSummary,
+} from '@e-pharmacy/ui/data-display';
+
+import {
   Button,
   ButtonLink,
-  CountLabel,
   LazyLoadButton,
+  SvgIcon,
+} from '@e-pharmacy/ui/primitives';
+
+import {
   QuantityCounter,
-  RatingSummary,
   SearchInput,
   SearchableSelect,
   SelectField,
-  ShimmerImage,
-  SvgIcon,
-  Tabs,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
+import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { Tabs } from '@e-pharmacy/ui/navigation';
 import { formatProductCategoryLabel } from '@e-pharmacy/config/products';
-import { type TabItem } from '@e-pharmacy/ui/common';
-import { ConfirmationModal } from '@e-pharmacy/ui/modals';
-import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { type TabItem } from '@e-pharmacy/ui/navigation';
+import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
+import { Container } from '@e-pharmacy/ui/layout';
+import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
-
 import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
 
 import {
@@ -50,7 +56,6 @@ import {
 
 import { ROUTES, buildPharmacyPath } from '@/lib/routes';
 import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
-
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 

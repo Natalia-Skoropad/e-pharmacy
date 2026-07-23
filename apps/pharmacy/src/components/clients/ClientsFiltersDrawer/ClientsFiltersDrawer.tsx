@@ -4,10 +4,9 @@ import {
   DateFilter,
   SelectField,
   type SelectOption,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
-
 import { CLIENT_SUCCESSFUL_ORDERS_FILTERS } from '@e-pharmacy/types/clients';
 import { getPharmacyClientsPath } from '@e-pharmacy/config/pharmacy';
 

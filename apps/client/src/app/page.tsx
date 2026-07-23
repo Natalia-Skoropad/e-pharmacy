@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
 
-import { ButtonLink } from '@e-pharmacy/ui/common';
+import { ButtonLink } from '@e-pharmacy/ui/primitives';
 import type { Product, PublicPharmacy } from '@e-pharmacy/types';
 import { Container } from '@e-pharmacy/ui/layout';
 

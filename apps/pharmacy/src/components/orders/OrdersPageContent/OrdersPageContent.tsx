@@ -4,19 +4,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ShoppingBag } from 'lucide-react';
 
+import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
+import { CountLabel } from '@e-pharmacy/ui/data-display';
+
 import {
-  Button,
-  CountLabel,
-  FiltersButton,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-
 import { DEFAULT_ORDER_STATISTICS } from '@e-pharmacy/types/orders';
 import { getPharmacyNewOrderPath } from '@e-pharmacy/config/pharmacy';
 
@@ -43,7 +42,6 @@ import type {
 
 import { OrderStatistics } from '@/components/statistics';
 import { StatusBanner } from '@/components/common/StatusPresentation';
-
 import { OrdersFiltersDrawer } from '@/components/orders/OrdersFiltersDrawer';
 import { OrdersTable } from '@/components/orders/OrdersTable/OrdersTable';
 

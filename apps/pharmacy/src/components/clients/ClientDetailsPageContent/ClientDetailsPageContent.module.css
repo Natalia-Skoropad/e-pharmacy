@@ -223,6 +223,38 @@
   min-width: 0;
 }
 
+.contentCard,
+.sectionCard,
+.detailsCard {
+  padding: 14px;
+}
+
+.sectionHead {
+  display: grid;
+}
+
+.detailsList div {
+  display: grid;
+}
+
+.detailsList dd,
+.detailsList a,
+.detailValueWithIcon {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.titleWithTooltip {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.titleWithTooltip h2 {
+  min-width: 0;
+}
+
 @media only screen and (min-width: 768px) {
   .orderStatistics {
     display: grid;
@@ -261,38 +293,4 @@
   .imageFrame {
     min-height: 420px;
   }
-}
-
-@media only screen and (max-width: 767px) {
-  .contentCard,
-  .sectionCard,
-  .detailsCard {
-    padding: 14px;
-  }
-
-  .sectionHead {
-    display: grid;
-  }
-
-  .detailsList div {
-    display: grid;
-  }
-
-  .detailsList dd,
-  .detailsList a,
-  .detailValueWithIcon {
-    justify-content: flex-start;
-    text-align: left;
-  }
-}
-
-.titleWithTooltip {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  min-width: 0;
-}
-
-.titleWithTooltip h2 {
-  min-width: 0;
 }

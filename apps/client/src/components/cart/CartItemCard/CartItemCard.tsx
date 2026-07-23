@@ -1,18 +1,14 @@
-import {
-  Button,
-  ButtonLink,
-  QuantityCounter,
-  RatingSummary,
-  ShimmerImage,
-  SvgIcon,
-} from '@e-pharmacy/ui/common';
-
+import { Button, ButtonLink, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { QuantityCounter } from '@e-pharmacy/ui/forms';
+import { RatingSummary } from '@e-pharmacy/ui/data-display';
+import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import type { CartItem } from '@e-pharmacy/types';
 
-import { StockAvailability } from '@/components/common';
 import { buildProductPath } from '@/lib/routes';
+
+import { StockAvailability } from '@/components/common';
 
 import css from './CartItemCard.module.css';
 

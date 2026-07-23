@@ -1,4 +1,4 @@
-export * from './PaginationView';
+export * from './Breadcrumbs';
 export * from './LinkPagination';
-export * from '../layout/Breadcrumbs';
-export * from '../layout/SideMenu';
+export * from './PaginationView';
+export * from './Tabs';

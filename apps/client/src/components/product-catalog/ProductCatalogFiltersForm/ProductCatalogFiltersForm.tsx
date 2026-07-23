@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { CountLabel } from '@e-pharmacy/ui/data-display';
+import { FiltersButton, ResetFiltersButton } from '@e-pharmacy/ui/primitives';
+
 import {
-  CountLabel,
-  FiltersButton,
-  ResetFiltersButton,
   SearchableSelect,
   SearchInput,
   SelectField,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 

@@ -11,7 +11,7 @@ async function readSource(path: string) {
 //===================================================================
 
 test('modal foundation requires a real accessible name', async () => {
-  const source = await readSource('../modals/ModalBase/ModalBase.tsx');
+  const source = await readSource('../overlays/ModalBase/ModalBase.tsx');
   assert.match(source, /labelledBy: string/);
   assert.match(source, /ariaLabel: string/);
   assert.doesNotMatch(source, /fallbackTitleId/);
@@ -21,7 +21,7 @@ test('modal foundation requires a real accessible name', async () => {
 
 test('working hours are exposed as a labelled field group', async () => {
   const source = await readSource(
-    '../common/WorkingHoursInput/WorkingHoursInput.tsx'
+    '../forms/WorkingHoursInput/WorkingHoursInput.tsx'
   );
 
   assert.match(source, /<fieldset/);
@@ -33,8 +33,10 @@ test('working hours are exposed as a labelled field group', async () => {
 //===================================================================
 
 test('data table preserves consumer order and alignment classes are truthful', async () => {
-  const component = await readSource('../common/DataTable/DataTable.tsx');
-  const styles = await readSource('../common/DataTable/DataTable.module.css');
+  const component = await readSource('../data-display/DataTable/DataTable.tsx');
+  const styles = await readSource(
+    '../data-display/DataTable/DataTable.module.css'
+  );
   assert.doesNotMatch(component, /newestFirst|getSortDateValue/);
   assert.match(styles, /\.alignRight\s*\{[\s\S]*?text-align:\s*right/);
   assert.match(styles, /\.alignCenter\s*\{[\s\S]*?text-align:\s*center/);
@@ -44,7 +46,7 @@ test('data table preserves consumer order and alignment classes are truthful', a
 
 test('overlay foundation coordinates stacked dialogs through one manager', async () => {
   const hook = await readSource('../../../hooks/src/dom/useOverlayLayer.ts');
-  const modal = await readSource('../modals/ModalBase/ModalBase.tsx');
+  const modal = await readSource('../overlays/ModalBase/ModalBase.tsx');
 
   assert.match(hook, /const overlayStack: OverlayEntry\[\]/);
   assert.match(hook, /getTopOverlay/);
@@ -62,7 +64,7 @@ test('overlay foundation coordinates stacked dialogs through one manager', async
 //===================================================================
 
 test('date filter uses business calendar dates and synchronizes draft state', async () => {
-  const source = await readSource('../common/DateFilter/DateFilter.tsx');
+  const source = await readSource('../forms/DateFilter/DateFilter.tsx');
 
   assert.match(source, /getBusinessCalendarDate/);
   assert.match(source, /setDraftValue\(value\)/);
@@ -73,9 +75,9 @@ test('date filter uses business calendar dates and synchronizes draft state', as
 //===================================================================
 
 test('select foundations expose safe option ids and complete navigation keys', async () => {
-  const select = await readSource('../common/SelectField/SelectField.tsx');
+  const select = await readSource('../forms/SelectField/SelectField.tsx');
   const searchable = await readSource(
-    '../common/SearchableSelect/SearchableSelect.tsx'
+    '../forms/SearchableSelect/SearchableSelect.tsx'
   );
 
   for (const source of [select, searchable]) {
@@ -86,5 +88,74 @@ test('select foundations expose safe option ids and complete navigation keys', a
     assert.match(source, /End/);
     assert.match(source, /scrollIntoView/);
     assert.match(source, /aria-activedescendant/);
+  }
+});
+
+//===================================================================
+
+test('document upload delegates file rules to validation and exposes a labelled input', async () => {
+  const source = await readSource('../forms/DocumentUpload/DocumentUpload.tsx');
+
+  assert.match(source, /validateSelection/);
+  assert.match(source, /<label className=\{css\.label\} htmlFor=\{id\}>/);
+  assert.match(source, /required=\{required\}/);
+  assert.match(source, /aria-errormessage/);
+  assert.doesNotMatch(source, /type DocumentUploadFile/);
+});
+
+//===================================================================
+
+test('status pages have one image API and truthful image semantics', async () => {
+  const layout = await readSource(
+    '../status-pages/StatusPageLayout/StatusPageLayout.tsx'
+  );
+
+  const errorPage = await readSource('../status-pages/ErrorPage/ErrorPage.tsx');
+  const notFoundPage = await readSource(
+    '../status-pages/NotFoundPage/NotFoundPage.tsx'
+  );
+
+  for (const source of [layout, errorPage, notFoundPage]) {
+    assert.doesNotMatch(source, /imageSrc/);
+    assert.doesNotMatch(source, /(error|not-found|status-page)-title/);
+  }
+
+  assert.match(layout, /imageIsDecorative/);
+  assert.match(layout, /aria-hidden=\{imageIsDecorative \|\| undefined\}/);
+  assert.match(layout, /alt=\{image\.alt \?\? ''\}/);
+});
+
+//===================================================================
+
+test('sales chart provides keyboard navigation, values, summary, and a data table', async () => {
+  const source = await readSource(
+    '../../../../apps/pharmacy/src/components/sales/SalesValueChart/SalesValueChart.tsx'
+  );
+
+  assert.doesNotMatch(source, /role="img"/);
+  assert.match(source, /role="group"/);
+  assert.match(source, /ArrowLeft/);
+  assert.match(source, /ArrowRight/);
+  assert.match(source, /getPointAriaLabel/);
+  assert.match(source, /<table/);
+  assert.match(source, /<caption>/);
+  assert.match(source, /View sales data table/);
+});
+
+//===================================================================
+
+test('public UI folders contain implementations rather than legacy forwarding barrels', async () => {
+  const entrypoints = await Promise.all([
+    readSource('../cabinet/index.ts'),
+    readSource('../data-display/index.ts'),
+    readSource('../forms/index.ts'),
+    readSource('../media/index.ts'),
+    readSource('../navigation/index.ts'),
+    readSource('../overlays/index.ts'),
+    readSource('../primitives/index.ts'),
+  ]);
+
+  for (const source of entrypoints) {
+    assert.doesNotMatch(source, /export \* from '\.\.\//);
   }
 });

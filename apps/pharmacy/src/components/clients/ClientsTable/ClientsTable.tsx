@@ -2,15 +2,15 @@ import { useMemo } from 'react';
 
 import {
   DataTable,
-  InfoTooltip,
   formatInitials,
   TableDateTime,
   TableHeaderTitle,
-  TableImagePreview,
-  TextActionButton,
   type DataTableColumn,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/data-display';
 
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { TableImagePreview } from '@e-pharmacy/ui/media';
+import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { getPharmacyClientPath } from '@e-pharmacy/config/pharmacy';
 import { formatAmount } from '@e-pharmacy/utils/money';
 

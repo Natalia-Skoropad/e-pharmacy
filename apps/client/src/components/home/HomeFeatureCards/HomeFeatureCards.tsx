@@ -10,7 +10,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { Button, ButtonLink } from '@e-pharmacy/ui/common';
+import { Button, ButtonLink } from '@e-pharmacy/ui/primitives';
 import { useToast } from '@e-pharmacy/ui/feedback';
 
 import { ROUTES } from '@/lib/routes';
@@ -28,6 +28,8 @@ type FeatureCard = {
   isProtected?: boolean;
   icon: LucideIcon;
 };
+
+//===================================================================
 
 const FEATURE_CARDS: FeatureCard[] = [
   {

@@ -1,0 +1,244 @@
+.field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.labelRow {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  justify-self: start;
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  color: var(--color-text-primary);
+  opacity: 0.5;
+}
+
+.selectRoot {
+  position: relative;
+  min-width: 0;
+}
+
+.combobox {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding-inline: 16px 8px;
+  color: var(--color-text-muted);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.combobox:hover,
+.combobox:focus-within,
+.comboboxOpen,
+.comboboxActive {
+  background-color: var(--color-surface);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-accent-ring);
+}
+
+.searchIcon {
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  font: inherit;
+  font-size: var(--fz-16);
+  line-height: var(--lh-base);
+  color: var(--color-text-primary);
+  appearance: none;
+  background-color: transparent;
+  border: 0;
+  outline: none;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input::-webkit-search-decoration,
+.input::-webkit-search-cancel-button,
+.input::-webkit-search-results-button,
+.input::-webkit-search-results-decoration {
+  display: none;
+  appearance: none;
+}
+
+.toggleButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--color-text-muted);
+  background-color: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.toggleButton:hover,
+.toggleButton:focus-visible,
+.comboboxActive .toggleButton,
+.comboboxOpen .toggleButton {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+}
+
+.chevron {
+  transition: transform var(--transition-base);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.options {
+  position: absolute;
+  z-index: var(--z-dropdown);
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 4px;
+  max-height: 260px;
+  padding: 8px;
+  overflow-y: auto;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
+}
+
+.option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 12px;
+  font-size: var(--fz-15);
+  line-height: var(--lh-base);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  border-radius: 14px;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.optionWithLeading {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.optionLeading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.optionLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.option:hover,
+.option:focus-visible,
+.optionActive,
+.optionSelected {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+}
+
+.optionSelected {
+  font-weight: var(--fw-medium);
+}
+
+.checkIcon {
+  color: var(--color-accent);
+}
+
+.empty {
+  padding: 12px;
+  font-size: var(--fz-14);
+  color: var(--color-text-muted);
+}
+
+.comboboxError {
+  border-color: var(--color-error);
+}
+
+.comboboxError:hover,
+.comboboxError:focus-within {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 18%, transparent);
+}
+
+.comboboxDisabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.comboboxDisabled:hover,
+.comboboxDisabled:focus-within {
+  background-color: var(--color-white);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+.input:disabled,
+.toggleButton:disabled {
+  cursor: not-allowed;
+}
+
+.spinner {
+  animation: searchable-select-spin 800ms linear infinite;
+}
+
+.error {
+  margin-top: 6px;
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  color: var(--color-error);
+}
+
+@keyframes searchable-select-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.optionDisabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

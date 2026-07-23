@@ -5,9 +5,9 @@ import { Trash2 } from 'lucide-react';
 import type { EntityComment } from '@e-pharmacy/types/comments';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
-import Button from '../../common/Button/Button';
-import LoadingSpinner from '../../common/LoadingSpinner/LoadingSpinner';
-import CommentInput from '../../form-fields/CommentInput/CommentInput';
+import Button from '../../primitives/Button/Button';
+import LoadingSpinner from '../../primitives/LoadingSpinner/LoadingSpinner';
+import CommentInput from '../../forms/CommentInput/CommentInput';
 
 import css from './Comments.module.css';
 

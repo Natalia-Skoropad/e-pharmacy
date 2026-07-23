@@ -1,7 +1,7 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  z-index: calc(var(--z-overlay) + 20);
+  z-index: var(--z-drawer);
   pointer-events: none;
   background-color: var(--color-overlay);
   touch-action: none;

@@ -6,20 +6,22 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Boxes, PackageCheck } from 'lucide-react';
 
+import { CountLabel } from '@e-pharmacy/ui/data-display';
+import { FiltersButton } from '@e-pharmacy/ui/primitives';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+
 import {
-  CountLabel,
-  FiltersButton,
-  InfoTooltip,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
 import { PaginationView } from '@e-pharmacy/ui/navigation';
-import { ConfirmationModal } from '@e-pharmacy/ui/modals';
+import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { EntityId, PharmacyStatus } from '@e-pharmacy/types';
+import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
 
 import {
   DEFAULT_OWN_PRODUCT_STATISTICS,
@@ -50,13 +52,10 @@ import {
 
 import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
 import { getPharmacyOwnProductStatistics } from '@/lib/products/product-statistics';
-
-import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
 import { getPharmacyProductsFilterPath } from '@/lib/layout/routes';
 
 import { OwnProductStatistics } from '@/components/statistics';
 import { StatusBanner } from '@/components/common/StatusPresentation';
-
 import { OwnProductsFiltersDrawer } from '@/components/products/OwnProductsFiltersDrawer';
 import { OwnProductsTable } from '@/components/products/OwnProductsTable';
 

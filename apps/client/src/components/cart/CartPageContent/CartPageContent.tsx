@@ -2,16 +2,11 @@
 
 import { useMemo, useState } from 'react';
 
-import {
-  Button,
-  ButtonLink,
-  CountLabel,
-  LoadingSpinner,
-  RatingSummary,
-} from '@e-pharmacy/ui/common';
-
-import { ConfirmationModal } from '@e-pharmacy/ui/modals';
-import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { Button, ButtonLink, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { CountLabel, RatingSummary } from '@e-pharmacy/ui/data-display';
+import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
+import { Container } from '@e-pharmacy/ui/layout';
+import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import type { Cart } from '@e-pharmacy/types';
 
 import {

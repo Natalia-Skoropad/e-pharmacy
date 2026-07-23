@@ -39,7 +39,6 @@
   color: var(--color-text-secondary);
 }
 
-
 .status,
 .notice,
 .empty {
@@ -173,7 +172,7 @@
 .confirmBackdrop {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -208,6 +207,12 @@
   display: grid;
   gap: 10px;
   margin-top: 22px;
+}
+
+.emptyButton,
+.pharmacyActions,
+.pharmacyActions > * {
+  width: 100%;
 }
 
 @media only screen and (min-width: 768px) {
@@ -267,13 +272,5 @@
   .orderGrid {
     grid-template-columns: minmax(0, 1fr) 360px;
     align-items: start;
-  }
-}
-
-@media only screen and (max-width: 767px) {
-  .emptyButton,
-  .pharmacyActions,
-  .pharmacyActions > * {
-    width: 100%;
   }
 }

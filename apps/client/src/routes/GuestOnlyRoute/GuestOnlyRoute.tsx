@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 
 import { GuestOnlyRoute as SharedGuestOnlyRoute } from '@e-pharmacy/auth/guards';
-import { LoadingSpinner } from '@e-pharmacy/ui/common';
+import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
 
 import { resolveAuthenticatedRouteForClientApp } from '@/lib/auth';
 

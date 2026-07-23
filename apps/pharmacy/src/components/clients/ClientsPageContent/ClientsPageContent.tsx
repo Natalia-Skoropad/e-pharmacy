@@ -4,14 +4,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
 
+import { CountLabel } from '@e-pharmacy/ui/data-display';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { FiltersButton } from '@e-pharmacy/ui/primitives';
+
 import {
-  CountLabel,
-  InfoTooltip,
-  FiltersButton,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
@@ -47,7 +48,6 @@ import type {
 
 import { ClientStatistics } from '@/components/statistics';
 import { StatusBanner } from '@/components/common/StatusPresentation';
-
 import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer/ClientsFiltersDrawer';
 import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
 

@@ -1,5 +1,5 @@
 .backdrop {
-  z-index: var(--z-drawer, 900);
+  z-index: var(--z-drawer);
   align-items: stretch;
   justify-content: flex-end;
   padding: 0;

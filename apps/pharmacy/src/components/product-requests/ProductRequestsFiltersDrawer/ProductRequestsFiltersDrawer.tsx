@@ -2,7 +2,7 @@ import {
   DateFilter,
   SelectField,
   type SelectOption,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 

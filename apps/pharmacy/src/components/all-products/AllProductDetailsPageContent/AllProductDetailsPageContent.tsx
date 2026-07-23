@@ -15,35 +15,39 @@ import {
 import {
   Button,
   ButtonLink,
+  FiltersButton,
+  LoadingSpinner,
+  TextActionButton,
+} from '@e-pharmacy/ui/primitives';
+
+import {
   CountLabel,
   DataTable,
-  DateFilter,
-  FiltersButton,
   formatInitials,
-  InfoTooltip,
-  LoadingSpinner,
-  ShimmerImage,
   RatingSummary,
   ReviewsList,
+  TableDateTime,
+  TableHeaderTitle,
+  type DataTableColumn,
+  type ReviewsListItem,
+} from '@e-pharmacy/ui/data-display';
+
+import {
+  DateFilter,
   RowsPerPageSelect,
   SearchInput,
   SelectField,
-  TableDateTime,
-  TableHeaderTitle,
-  TableImagePreview,
-  Tabs,
-  TextActionButton,
-  type DataTableColumn,
   type DateFilterValue,
-  type ReviewsListItem,
   type RowsPerPageValue,
   type SelectOption,
-  type TabItem,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { ShimmerImage, TableImagePreview } from '@e-pharmacy/ui/media';
+import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
-import { ConfirmationModal } from '@e-pharmacy/ui/modals';
+import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/core';
@@ -107,16 +111,16 @@ import {
 
 import { getProductImageSrc } from '@/lib/products/product-images';
 
+import { OrderStatistics, OwnProductStatistics } from '@/components/statistics';
+
 import {
-  OrderStatistics,
-  OwnProductStatistics,
   SalesPeriodFilters,
   SalesValueChart,
   getSalesPeriodDateRange,
   type SalesPeriodMonth,
-} from '@/components/statistics';
+} from '@/components/sales';
 
-import { EntityComments } from '@/components/common/EntityComments';
+import { EntityComments } from '@/components/comments/EntityComments';
 
 import {
   StatusBadge,

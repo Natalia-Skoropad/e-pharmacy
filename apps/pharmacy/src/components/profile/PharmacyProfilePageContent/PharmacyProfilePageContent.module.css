@@ -131,7 +131,6 @@
   border-radius: var(--radius-lg);
 }
 
-
 .statusNoteBeauty {
   background-color: var(--color-chart-beauty-soft);
   border-color: var(--color-chart-beauty);
@@ -358,17 +357,15 @@
   word-break: break-word;
 }
 
-@media only screen and (max-width: 767.98px) {
-  .panelSection > button {
-    width: 100%;
-    justify-content: center;
-  }
+.panelSection > button {
+  width: 100%;
+  justify-content: center;
+}
 
-  .sessionCard > button {
-    grid-column: 1 / -1;
-    width: 100%;
-    justify-content: center;
-  }
+.sessionCard > button {
+  grid-column: 1 / -1;
+  width: 100%;
+  justify-content: center;
 }
 
 @media only screen and (min-width: 768px) {

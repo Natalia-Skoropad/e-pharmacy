@@ -3,18 +3,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { CountLabel } from '@e-pharmacy/ui/data-display';
+import { FiltersButton, ResetFiltersButton } from '@e-pharmacy/ui/primitives';
+
 import {
-  CountLabel,
-  FiltersButton,
-  ResetFiltersButton,
   SearchableSelect,
   SearchInput,
   SelectField,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import type { PharmaciesSortFilter } from '@e-pharmacy/types';
 import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
+
 import { CATALOG_SEARCH_UPDATE_DELAY } from '@/lib/catalog/catalog-config';
 
 import {

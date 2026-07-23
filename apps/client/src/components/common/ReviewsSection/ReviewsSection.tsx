@@ -2,14 +2,15 @@
 
 import { Star } from 'lucide-react';
 
+import { Button } from '@e-pharmacy/ui/primitives';
+
 import {
-  Button,
   ReviewsList,
   DEFAULT_VISIBLE_REVIEWS_COUNT,
   type ReviewsListItem,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/data-display';
 
-import { CommentInput } from '@e-pharmacy/ui/form-fields';
+import { CommentInput } from '@e-pharmacy/ui/forms';
 import type { ReviewTouchedFields } from '@e-pharmacy/validation/reviews';
 
 import css from './ReviewsSection.module.css';

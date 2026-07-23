@@ -32,30 +32,35 @@ import {
   Button,
   ButtonLink,
   CloseIconButton,
-  CountLabel,
-  InfoTooltip,
   LazyLoadButton,
   LoadingSpinner,
-  QuantityCounter,
-  RadioOption,
-  RatingSummary,
-  SearchableSelect,
-  SearchInput,
-  ShimmerImage,
   SvgIcon,
-  TableImagePreview,
-  Tabs,
-  formatInitials,
-  type TabItem,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/primitives';
 
 import {
-  AddressInput,
-  NameInput,
-  PhoneInput,
-} from '@e-pharmacy/ui/form-fields';
+  CountLabel,
+  RatingSummary,
+  formatInitials,
+} from '@e-pharmacy/ui/data-display';
 
-import { ConfirmationModal, ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+
+import {
+  QuantityCounter,
+  RadioOption,
+  SearchableSelect,
+  SearchInput,
+} from '@e-pharmacy/ui/forms';
+
+import { ShimmerImage, TableImagePreview } from '@e-pharmacy/ui/media';
+import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
+import { AddressInput, NameInput, PhoneInput } from '@e-pharmacy/ui/forms';
+
+import {
+  ConfirmationModal,
+  ModalBase,
+  ModalRoot,
+} from '@e-pharmacy/ui/overlays';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
@@ -93,6 +98,13 @@ import {
 } from '@e-pharmacy/validation/order';
 
 import {
+  getPharmacyClientPath,
+  getPharmacyOrderPath,
+  getPharmacyOrdersPath,
+  getPharmacyProductPath,
+} from '@e-pharmacy/config/pharmacy';
+
+import {
   createPharmacyOrder,
   createPharmacyOrderComment,
   deletePharmacyOrderComment,
@@ -114,17 +126,10 @@ import {
   type PharmacyOrderItem,
 } from '@/lib/orders/orders';
 
-import {
-  getPharmacyClientPath,
-  getPharmacyOrderPath,
-  getPharmacyOrdersPath,
-  getPharmacyProductPath,
-} from '@e-pharmacy/config/pharmacy';
-
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import { EntityComments } from '@/components/common/EntityComments';
+import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderCancellationModal } from '@/components/orders/OrderCancellationModal';
 import { StatusBadge } from '@/components/common/StatusPresentation';
 
@@ -150,8 +155,6 @@ type PendingPriceQuantityChange = Readonly<{
 //===================================================================
 
 type OrderTab = 'products' | 'delivery' | 'payment' | 'comment' | 'history';
-
-//===================================================================
 
 //===================================================================
 

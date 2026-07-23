@@ -1,4 +1,5 @@
-import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { Container } from '@e-pharmacy/ui/layout';
+import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import type { PublicPharmacy } from '@e-pharmacy/types';
 import { LinkPagination } from '@e-pharmacy/ui/navigation';
 

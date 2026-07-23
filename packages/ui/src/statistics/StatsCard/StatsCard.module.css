@@ -88,7 +88,7 @@
 .red,
 .gray {
   color: var(--color-white);
-  border-color: rgba(255, 255, 255, 0.24);
+  border-color: var(--color-white-alpha-24);
 }
 
 .accent::before,
@@ -108,7 +108,7 @@
   position: absolute;
   z-index: -1;
   content: '';
-  background-color: rgba(255, 255, 255, 0.16);
+  background-color: var(--color-white-alpha-16);
   border-radius: 50%;
 }
 
@@ -162,7 +162,7 @@
 .yellow .meta,
 .red .meta,
 .gray .meta {
-  color: rgba(255, 255, 255, 0.88);
+  color: var(--color-white-alpha-88);
 }
 
 .accent .icon,
@@ -173,9 +173,9 @@
 .red .icon,
 .gray .icon {
   color: var(--color-white);
-  background-color: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12));
+  background-color: var(--color-white-alpha-16);
+  border: 1px solid var(--color-white-alpha-24);
+  filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--color-black) 12%, transparent));
 }
 
 .accent,
@@ -184,23 +184,23 @@
 }
 
 .success {
-  background: linear-gradient(135deg, #66bb6a 0%, #2e7d32 100%);
+  background: var(--gradient-stat-success);
 }
 
 .blue {
-  background: linear-gradient(135deg, #60a5fa 0%, var(--color-info) 100%);
+  background: var(--gradient-stat-info);
 }
 
 .yellow {
-  background: linear-gradient(135deg, #fbbf24 0%, var(--color-warning) 100%);
+  background: var(--gradient-stat-warning);
 }
 
 .red {
-  background: linear-gradient(135deg, #ff6b6b 0%, var(--color-error) 100%);
+  background: var(--gradient-stat-danger);
 }
 
 .gray {
-  background: linear-gradient(135deg, #8a8f98 0%, #6a6f7a 100%);
+  background: var(--gradient-stat-neutral);
 }
 
 @media (prefers-reduced-motion: reduce) {

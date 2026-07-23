@@ -6,14 +6,11 @@ import { useId, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import clsx from 'clsx';
 
-import {
-  ButtonLink,
-  Logo,
-  LogoutButton,
-  UserBadge,
-} from '@e-pharmacy/ui/common';
-
-import { Container, BurgerButton } from '@e-pharmacy/ui/layout';
+import { ButtonLink, LogoutButton } from '@e-pharmacy/ui/primitives';
+import { Logo } from '@e-pharmacy/ui/media';
+import { UserBadge } from '@e-pharmacy/ui/data-display';
+import { Container } from '@e-pharmacy/ui/layout';
+import { BurgerButton } from '@e-pharmacy/ui/cabinet';
 
 import { ROUTES, isActiveRoute } from '@/lib/routes';
 import { getPharmacyDashboardUrl } from '@/lib/auth';

@@ -140,6 +140,30 @@
   border-color: var(--color-error);
 }
 
+.card {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.imageWrap,
+.imageFallback {
+  width: 100%;
+  min-height: 220px;
+}
+
+.image {
+  object-fit: cover;
+  object-position: center;
+}
+
+.prices {
+  min-width: 0;
+}
+
+.actions,
+.actions > * {
+  width: 100%;
+}
+
 @media only screen and (min-width: 768px) {
   .card {
     grid-template-columns: 140px minmax(0, 1fr);
@@ -170,35 +194,7 @@
   .actions {
     justify-content: flex-end;
   }
-}
 
-@media only screen and (max-width: 767px) {
-  .card {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .imageWrap,
-  .imageFallback {
-    width: 100%;
-    min-height: 220px;
-  }
-
-  .image {
-    object-fit: cover;
-    object-position: center;
-  }
-
-  .prices {
-    min-width: 0;
-  }
-
-  .actions,
-  .actions > * {
-    width: 100%;
-  }
-}
-
-@media only screen and (min-width: 768px) and (max-width: 1439px) {
   .actions {
     flex-wrap: nowrap;
     justify-content: flex-end;

@@ -1,0 +1,217 @@
+.field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.formField {
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.label {
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  color: var(--color-text-primary);
+  opacity: 0.5;
+}
+
+.formField .label {
+  display: inline-flex;
+  gap: 3px;
+  align-items: baseline;
+  opacity: 1;
+}
+
+.requiredMark {
+  color: var(--color-error);
+}
+
+.hint {
+  margin: -2px 0 0;
+  font-size: var(--fz-12);
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+.selectRoot {
+  position: relative;
+  min-width: 0;
+}
+
+.trigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: var(--fz-16);
+  line-height: var(--lh-base);
+  color: var(--color-text-primary);
+  text-align: left;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  outline: none;
+  box-shadow: none;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.trigger:hover,
+.trigger:focus-visible,
+.triggerOpen,
+.triggerActive {
+  background-color: var(--color-surface);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-accent-ring);
+}
+
+.triggerText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.triggerActive .chevron {
+  color: var(--color-accent);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition:
+    color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.chevronOpen {
+  color: var(--color-accent);
+  transform: rotate(180deg);
+}
+
+.options {
+  position: absolute;
+  z-index: var(--z-dropdown);
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 4px;
+  max-height: 260px;
+  padding: 8px;
+  overflow-y: auto;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
+}
+
+.option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 12px;
+  font-size: var(--fz-15);
+  line-height: var(--lh-base);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  border-radius: 14px;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.option:hover,
+.option:focus-visible,
+.optionActive {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+}
+
+.optionSelected {
+  font-weight: var(--fw-medium);
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+}
+
+.checkIcon {
+  color: var(--color-accent);
+}
+
+.placeholder {
+  color: var(--color-text-muted);
+}
+
+.triggerError {
+  border-color: var(--color-error);
+}
+
+.triggerError:hover,
+.triggerError:focus-visible {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 18%, transparent);
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.trigger:disabled:hover,
+.trigger:disabled:focus-visible {
+  background-color: var(--color-white);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+.spinner {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  animation: select-field-spin 800ms linear infinite;
+}
+
+.error {
+  margin-top: 6px;
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  color: var(--color-error);
+}
+
+.formField .error {
+  position: absolute;
+  left: 16px;
+  bottom: 2px;
+  z-index: 2;
+  max-width: calc(100% - 32px);
+  padding-inline: 8px;
+  margin: 0;
+  line-height: 18px;
+  white-space: nowrap;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+@keyframes select-field-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.optionDisabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

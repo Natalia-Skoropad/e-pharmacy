@@ -1,15 +1,15 @@
 import { useMemo } from 'react';
 
+import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
+
 import {
-  Button,
   DataTable,
   TableDateTime,
   TableHeaderTitle,
-  TableImagePreview,
-  TextActionButton,
   type DataTableColumn,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/data-display';
 
+import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import type { EntityId, Product } from '@e-pharmacy/types';
 import { getPharmacyAllProductPath } from '@e-pharmacy/config/pharmacy';

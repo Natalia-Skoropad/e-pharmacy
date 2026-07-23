@@ -8,12 +8,12 @@ import {
   Button,
   CloseIconButton,
   LoadingSpinner,
-  SearchInput,
-  ShimmerImage,
   SvgIcon,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/primitives';
 
-import { ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
+import { SearchInput } from '@e-pharmacy/ui/forms';
+import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 
 import {
   getProductCategoryOptions,

@@ -8,16 +8,19 @@ import { PHARMACY_STATUS_LABELS } from '@e-pharmacy/config/pharmacy';
 
 import {
   Button,
-  DocumentUpload,
   LazyLoadButton,
   LoadingSpinner,
-  PictureCard,
-  ReviewsList,
-  Tabs,
+} from '@e-pharmacy/ui/primitives';
+
+import {
+  DocumentUpload,
   TextEditor,
   WorkingHoursInput,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
+import { PictureCard } from '@e-pharmacy/ui/media';
+import { ReviewsList } from '@e-pharmacy/ui/data-display';
+import { Tabs } from '@e-pharmacy/ui/navigation';
 import { Container } from '@e-pharmacy/ui/layout';
 import type { UploadFileValue } from '@e-pharmacy/types/files';
 
@@ -35,10 +38,9 @@ import {
   PasswordInput,
   PhoneInput,
   TaxIdInput,
-} from '@e-pharmacy/ui/form-fields';
+} from '@e-pharmacy/ui/forms';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { EntityComments } from '@/components/common/EntityComments';
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { formatDateTime } from '@e-pharmacy/utils/date';
@@ -128,6 +130,8 @@ import {
   updateCurrentUserPassword,
   updateMyPharmacyProfile,
 } from '@/lib/api/browser';
+
+import { EntityComments } from '@/components/comments/EntityComments';
 
 import css from './PharmacyProfilePageContent.module.css';
 
@@ -1968,6 +1972,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
                       accept={PHARMACY_DOCUMENT_ACCEPT}
                       hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
+                      validateSelection={(files) =>
+                        validatePharmacyDocuments(files)
+                      }
                       confirmRemove
                       onSelectionError={setDocumentsError}
                       onChange={handleDocumentsChange}

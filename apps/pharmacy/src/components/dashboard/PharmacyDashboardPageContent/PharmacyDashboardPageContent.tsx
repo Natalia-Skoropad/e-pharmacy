@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { LayoutDashboard } from 'lucide-react';
 
-import { ButtonLink, LoadingSpinner } from '@e-pharmacy/ui/common';
+import { ButtonLink, LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { PharmacyStatus } from '@e-pharmacy/types';
 
@@ -35,6 +35,14 @@ import {
 } from '@e-pharmacy/types/product-requests';
 
 import {
+  getPharmacyAllProductsPath,
+  getPharmacyClientsPath,
+  getPharmacyOrdersPath,
+  getPharmacyProductsPath,
+  getPharmacyProductRequestsPath,
+} from '@e-pharmacy/config/pharmacy';
+
+import {
   getMyPharmacyProfile,
   getPharmacyOrderSalesStatistics,
   getPharmacyOrders,
@@ -51,14 +59,6 @@ import {
 } from '@/lib/products/product-statistics';
 
 import {
-  getPharmacyAllProductsPath,
-  getPharmacyClientsPath,
-  getPharmacyOrdersPath,
-  getPharmacyProductsPath,
-  getPharmacyProductRequestsPath,
-} from '@e-pharmacy/config/pharmacy';
-
-import {
   getPharmacyClientsFilterPath,
   getPharmacyOrdersFilterPath,
   getPharmacyProductsFilterPath,
@@ -71,11 +71,14 @@ import {
   OrderStatistics,
   OwnProductStatistics,
   ProductRequestStatistics,
+} from '@/components/statistics';
+
+import {
   SalesPeriodFilters,
   SalesValueChart,
   getSalesPeriodDateRange,
   type SalesPeriodMonth,
-} from '@/components/statistics';
+} from '@/components/sales';
 
 import { StatusBanner } from '@/components/common/StatusPresentation';
 

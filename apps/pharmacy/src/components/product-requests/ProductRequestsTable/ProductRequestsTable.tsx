@@ -4,12 +4,11 @@ import {
   DataTable,
   TableDateTime,
   TableHeaderTitle,
-  TableImagePreview,
-  TextActionButton,
   type DataTableColumn,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/data-display';
 
-import { StatusBadge } from '@/components/common/StatusPresentation';
+import { TableImagePreview } from '@e-pharmacy/ui/media';
+import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { type ProductRequestRow } from '@e-pharmacy/types/product-requests';
@@ -20,6 +19,8 @@ import {
 } from '@e-pharmacy/config/pharmacy';
 
 import { getProductImageSrc } from '@/lib/products/product-images';
+
+import { StatusBadge } from '@/components/common/StatusPresentation';
 
 import css from './ProductRequestsTable.module.css';
 

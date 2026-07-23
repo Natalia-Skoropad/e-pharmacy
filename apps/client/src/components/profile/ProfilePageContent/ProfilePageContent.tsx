@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
-
 import { Building2, Heart, KeyRound, MonitorSmartphone } from 'lucide-react';
 
 import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
@@ -11,26 +10,30 @@ import { USER_ROLE_LABELS, USER_STATUS_LABELS } from '@e-pharmacy/config/users';
 import {
   Button,
   ButtonLink,
+  LoadingSpinner,
+  TextActionButton,
+} from '@e-pharmacy/ui/primitives';
+
+import {
   CountLabel,
   DataTable,
-  LoadingSpinner,
-  PictureCard,
-  Tabs,
-  TextActionButton,
   type DataTableColumn,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/data-display';
+
+import { PictureCard } from '@e-pharmacy/ui/media';
+import { Tabs } from '@e-pharmacy/ui/navigation';
 
 import {
   AddressInput,
   NameInput,
   PasswordInput,
   PhoneInput,
-} from '@e-pharmacy/ui/form-fields';
+} from '@e-pharmacy/ui/forms';
 
 import { useAuth } from '@e-pharmacy/auth/core';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
-
+import { Container } from '@e-pharmacy/ui/layout';
+import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
 

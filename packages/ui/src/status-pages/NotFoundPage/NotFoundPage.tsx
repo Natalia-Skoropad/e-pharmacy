@@ -1,5 +1,5 @@
-import type { ButtonVariant } from '../../common/Button';
-import ButtonLink from '../../common/ButtonLink/ButtonLink';
+import type { ButtonVariant } from '../../primitives/Button';
+import ButtonLink from '../../primitives/ButtonLink/ButtonLink';
 
 import StatusPageLayout, {
   type StatusPageLayoutImage,

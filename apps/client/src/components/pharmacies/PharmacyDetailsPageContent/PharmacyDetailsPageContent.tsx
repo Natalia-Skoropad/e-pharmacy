@@ -5,21 +5,19 @@ import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 
 import {
   DEFAULT_VISIBLE_REVIEWS_COUNT,
-  ButtonLink,
   CountLabel,
   RatingSummary,
-  ShimmerImage,
-  SvgIcon,
-  Tabs,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/data-display';
 
-import { type TabItem } from '@e-pharmacy/ui/common';
-import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { ButtonLink, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { Tabs } from '@e-pharmacy/ui/navigation';
+import { type TabItem } from '@e-pharmacy/ui/navigation';
+import { Container } from '@e-pharmacy/ui/layout';
+import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import { useToast } from '@e-pharmacy/ui/feedback';
-
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
 import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
-
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 
 import type {

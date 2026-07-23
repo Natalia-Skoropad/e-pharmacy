@@ -1,5 +1,5 @@
 .backdrop {
-  --modal-z-index: 220;
+  --modal-z-index: var(--z-modal);
   --modal-padding: 16px;
   --modal-backdrop: var(--color-backdrop-strong);
   --modal-width: 680px;

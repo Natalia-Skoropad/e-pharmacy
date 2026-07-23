@@ -4,19 +4,19 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { FilePlus2 } from 'lucide-react';
 
+import { Button, ButtonLink, FiltersButton } from '@e-pharmacy/ui/primitives';
+import { CountLabel } from '@e-pharmacy/ui/data-display';
+
 import {
-  Button,
-  ButtonLink,
-  CountLabel,
-  FiltersButton,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/forms';
 
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { getPharmacyNewRequestPath } from '@e-pharmacy/config/pharmacy';
 
 import {
   DEFAULT_PRODUCT_REQUESTS_FILTERS,
@@ -28,9 +28,7 @@ import {
 } from '@e-pharmacy/types/product-requests';
 
 import { getPharmacyProductRequests } from '@/lib/api/browser';
-import { getPharmacyNewRequestPath } from '@e-pharmacy/config/pharmacy';
 import { getPharmacyRequestsFilterPath } from '@/lib/layout/routes';
-
 import { buildProductRequestsPath } from '@/lib/product-requests/product-request-paths';
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 
@@ -42,7 +40,6 @@ import {
 
 import { ProductRequestStatistics } from '@/components/statistics';
 import { StatusBanner } from '@/components/common/StatusPresentation';
-
 import { ProductRequestsFiltersDrawer } from '@/components/product-requests/ProductRequestsFiltersDrawer';
 import { ProductRequestsTable } from '@/components/product-requests/ProductRequestsTable';
 

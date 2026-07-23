@@ -1,16 +1,11 @@
 'use client';
 
-import {
-  ButtonLink,
-  RatingSummary,
-  ShimmerImage,
-  SvgIcon,
-} from '@e-pharmacy/ui/common';
-
+import { ButtonLink, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { RatingSummary } from '@e-pharmacy/ui/data-display';
+import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
 import type { PublicPharmacy } from '@e-pharmacy/types';
-
 import { addFavoritePharmacy, removeFavoritePharmacy } from '@/lib/api/browser';
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
 import { buildPharmacyPath } from '@/lib/routes';
@@ -45,26 +40,22 @@ function PharmacyCard({
     useClientAuthCapabilities();
   const toast = useToast();
 
-  const {
-    isFavorite,
-    isFavoriteLoading,
-    handleFavoriteClick,
-    setIsFavorite,
-  } = useFavoriteActions({
-    id: pharmacy.id,
-    initialIsFavorite: Boolean(pharmacy.isFavorite),
-    notifier: toast,
-    loginMessage: 'Please log in to add pharmacies to favorites.',
-    addedMessage: 'Pharmacy was added to favorites.',
-    removedMessage: 'Pharmacy was removed from favorites.',
-    errorMessage: 'Could not update pharmacy favorites.',
-    addFavorite: addFavoritePharmacy,
-    removeFavorite: removeFavoritePharmacy,
-    onFavoriteChange: (pharmacyId, nextIsFavorite) => {
-      invalidateFavoritePharmacyIdsCache();
-      onFavoriteChange?.(pharmacyId, nextIsFavorite);
-    },
-  });
+  const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
+    useFavoriteActions({
+      id: pharmacy.id,
+      initialIsFavorite: Boolean(pharmacy.isFavorite),
+      notifier: toast,
+      loginMessage: 'Please log in to add pharmacies to favorites.',
+      addedMessage: 'Pharmacy was added to favorites.',
+      removedMessage: 'Pharmacy was removed from favorites.',
+      errorMessage: 'Could not update pharmacy favorites.',
+      addFavorite: addFavoritePharmacy,
+      removeFavorite: removeFavoritePharmacy,
+      onFavoriteChange: (pharmacyId, nextIsFavorite) => {
+        invalidateFavoritePharmacyIdsCache();
+        onFavoriteChange?.(pharmacyId, nextIsFavorite);
+      },
+    });
 
   const productsHref = buildProductCatalogPath({ pharmacyId: pharmacy.id }, [
     pharmacy,
@@ -147,7 +138,8 @@ function PharmacyCard({
           <div className={css.summaryItem}>
             <dt>Products</dt>
             <dd>
-              {formatAvailableProductsCount(pharmacy.availableProductsCount) ?? '—'}
+              {formatAvailableProductsCount(pharmacy.availableProductsCount) ??
+                '—'}
             </dd>
           </div>
         </dl>

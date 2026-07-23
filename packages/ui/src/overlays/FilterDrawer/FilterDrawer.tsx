@@ -2,10 +2,10 @@
 
 import type { ReactNode } from 'react';
 
-import CloseIconButton from '../../common/CloseIconButton/CloseIconButton';
-import ResetFiltersButton from '../../common/ResetFiltersButton/ResetFiltersButton';
-import ModalBase from '../../modals/ModalBase/ModalBase';
-import ModalRoot from '../../modals/ModalRoot/ModalRoot';
+import CloseIconButton from '../../primitives/CloseIconButton/CloseIconButton';
+import ResetFiltersButton from '../../primitives/ResetFiltersButton/ResetFiltersButton';
+import ModalBase from '../ModalBase/ModalBase';
+import ModalRoot from '../ModalRoot/ModalRoot';
 
 import css from './FilterDrawer.module.css';
 

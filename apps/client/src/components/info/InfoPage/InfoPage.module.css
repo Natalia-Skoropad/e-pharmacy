@@ -182,6 +182,38 @@
   color: var(--color-text-secondary);
 }
 
+.page {
+  padding-block: 16px 48px;
+}
+
+.layout {
+  gap: 22px;
+}
+
+.header {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.title {
+  font-size: var(--fz-28);
+}
+
+.description,
+.sectionBody p {
+  font-size: var(--fz-16);
+}
+
+.highlightCard,
+.indexCard {
+  padding: 18px;
+  border-radius: var(--radius-lg);
+}
+
+.sectionHead h2 {
+  font-size: var(--fz-20);
+}
+
 @media only screen and (min-width: 768px) {
   .page {
     padding-block: 20px 80px;
@@ -193,40 +225,6 @@
 
   .highlights {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media only screen and (max-width: 767px) {
-  .page {
-    padding-block: 16px 48px;
-  }
-
-  .layout {
-    gap: 22px;
-  }
-
-  .header {
-    margin-bottom: 24px;
-    text-align: left;
-  }
-
-  .title {
-    font-size: var(--fz-28);
-  }
-
-  .description,
-  .sectionBody p {
-    font-size: var(--fz-16);
-  }
-
-  .highlightCard,
-  .indexCard {
-    padding: 18px;
-    border-radius: var(--radius-lg);
-  }
-
-  .sectionHead h2 {
-    font-size: var(--fz-20);
   }
 }
 

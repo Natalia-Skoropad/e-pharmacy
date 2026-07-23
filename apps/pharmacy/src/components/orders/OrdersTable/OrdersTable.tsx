@@ -11,10 +11,11 @@ import {
   formatInitials,
   TableDateTime,
   TableHeaderTitle,
-  TableImagePreview,
-  TextActionButton,
   type DataTableColumn,
-} from '@e-pharmacy/ui/common';
+} from '@e-pharmacy/ui/data-display';
+
+import { TableImagePreview } from '@e-pharmacy/ui/media';
+import { TextActionButton } from '@e-pharmacy/ui/primitives';
 
 import {
   getPharmacyClientPath,

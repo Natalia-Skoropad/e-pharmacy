@@ -6,15 +6,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Globe2, Store } from 'lucide-react';
 
 import type { PharmacyProfile } from '@e-pharmacy/types';
-
-import {
-  CloseIconButton,
-  Logo,
-  LogoutButton,
-  UserBadge,
-} from '@e-pharmacy/ui/common';
-
-import { MobileOffcanvasBase, SideMenu } from '@e-pharmacy/ui/layout';
+import { CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
+import { Logo } from '@e-pharmacy/ui/media';
+import { UserBadge } from '@e-pharmacy/ui/data-display';
+import { MobileOffcanvasBase } from '@e-pharmacy/ui/overlays';
+import { SideMenu } from '@e-pharmacy/ui/cabinet';
 import { useAuth } from '@e-pharmacy/auth/core';
 
 import {
