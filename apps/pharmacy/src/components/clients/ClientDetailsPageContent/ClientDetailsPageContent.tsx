@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState, type MouseEventHandler } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   Mail,
@@ -25,7 +25,6 @@ import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 
 import {
   ButtonLink,
-  CloseIconButton,
   CountLabel,
   DataTable,
   DateFilter,
@@ -33,8 +32,6 @@ import {
   formatInitials,
   InfoTooltip,
   LoadingSpinner,
-  Pagination,
-  ResetFiltersButton,
   RowsPerPageSelect,
   SearchInput,
   SelectField,
@@ -51,9 +48,9 @@ import {
   type TabItem,
 } from '@e-pharmacy/ui/common';
 
-import { EntityComments } from '@e-pharmacy/ui/feedback';
+import { PaginationView } from '@e-pharmacy/ui/navigation';
+import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { OrderStatistics, StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import {
   DEFAULT_ORDER_STATISTICS,
@@ -72,15 +69,16 @@ import {
   type ProductStatus,
 } from '@e-pharmacy/types/products';
 
-import {
-  useBackdropClick,
-  useBodyScrollLock,
-  useEscapeToClose,
-} from '@e-pharmacy/hooks';
-
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { formatAmount } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
+
+import {
+  getPharmacyClientPath,
+  getPharmacyClientsPath,
+  getPharmacyOrderPath,
+  getPharmacyProductPath,
+} from '@e-pharmacy/config/pharmacy';
 
 import {
   createPharmacyNote,
@@ -102,18 +100,15 @@ import type {
 import { getProductImageSrc } from '@/lib/products/product-images';
 
 import {
-  getPharmacyClientPath,
-  getPharmacyClientsPath,
-  getPharmacyOrderPath,
-  getPharmacyProductPath,
-} from '@e-pharmacy/config/pharmacy';
-
-import {
   ORDER_CREATED_BY_TYPES,
   type PharmacyOrderRow,
 } from '@/lib/orders/orders';
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
+
+import { EntityComments } from '@/components/common/EntityComments';
+import { OrderStatistics } from '@/components/statistics';
+import { StatusBadge } from '@/components/common/StatusPresentation';
 
 import css from './ClientDetailsPageContent.module.css';
 
@@ -253,7 +248,6 @@ type ClientOrdersFiltersDrawerProps = Readonly<{
   hasActiveFilters: boolean;
   minDate?: string;
   resetHref: string;
-  onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
   onChange: (filters: ClientOrderFilters) => void;
   onClose: () => void;
   onReset: () => void;
@@ -266,117 +260,83 @@ function ClientOrdersFiltersDrawer({
   hasActiveFilters,
   minDate,
   resetHref,
-  onBackdropMouseDown,
   onChange,
   onClose,
   onReset,
 }: ClientOrdersFiltersDrawerProps) {
   return (
-    <div
-      className={css.filtersBackdrop}
-      role="presentation"
-      onMouseDown={onBackdropMouseDown}
+    <FilterDrawer
+      id="client-orders-filters-panel"
+      eyebrow="Client orders"
+      hasActiveFilters={hasActiveFilters}
+      resetHref={resetHref}
+      onClose={onClose}
+      onReset={() => {
+        onReset();
+        onClose();
+      }}
     >
-      <aside
-        className={css.filtersPanel}
-        id="client-orders-filters-panel"
-        aria-labelledby="client-orders-filters-title"
-        aria-modal="true"
-        role="dialog"
-      >
-        <div className={css.filtersHeader}>
-          <div>
-            <p className={css.filtersKicker}>Client orders</p>
-            <h2 className={css.filtersTitle} id="client-orders-filters-title">
-              Filters
-            </h2>
-          </div>
+      <DateFilter
+        id="client-orders-date"
+        minDate={minDate}
+        disabled={!minDate}
+        label="Order date"
+        value={filters.date}
+        isActive={Boolean(filters.date.from || filters.date.to)}
+        applyOnSubmit
+        applyLabel="Apply"
+        onChange={(date) => onChange({ ...filters, date })}
+      />
 
-          <CloseIconButton label="Close filters" onClick={onClose} />
-        </div>
+      <SelectField
+        id="client-orders-status"
+        label="Order status"
+        value={filters.status}
+        options={ORDER_STATUS_OPTIONS}
+        isActive={filters.status !== 'all'}
+        onChange={(status) => onChange({ ...filters, status })}
+      />
 
-        <div className={css.filtersControls}>
-          <DateFilter
-            id="client-orders-date"
-            minDate={minDate}
-            disabled={!minDate}
-            label="Order date"
-            value={filters.date}
-            isActive={Boolean(filters.date.from || filters.date.to)}
-            applyOnSubmit
-            applyLabel="Apply"
-            onChange={(date) => onChange({ ...filters, date })}
-          />
+      <SelectField
+        id="client-orders-delivery"
+        label="Delivery method"
+        value={filters.deliveryMethod}
+        options={DELIVERY_METHOD_OPTIONS}
+        isActive={filters.deliveryMethod !== 'all'}
+        onChange={(deliveryMethod) => onChange({ ...filters, deliveryMethod })}
+      />
 
-          <SelectField
-            id="client-orders-status"
-            label="Order status"
-            value={filters.status}
-            options={ORDER_STATUS_OPTIONS}
-            isActive={filters.status !== 'all'}
-            onChange={(status) => onChange({ ...filters, status })}
-          />
+      <SelectField
+        id="client-orders-payment"
+        label="Payment method"
+        value={filters.paymentMethod}
+        options={PAYMENT_METHOD_OPTIONS}
+        isActive={filters.paymentMethod !== 'all'}
+        onChange={(paymentMethod) => onChange({ ...filters, paymentMethod })}
+      />
 
-          <SelectField
-            id="client-orders-delivery"
-            label="Delivery method"
-            value={filters.deliveryMethod}
-            options={DELIVERY_METHOD_OPTIONS}
-            isActive={filters.deliveryMethod !== 'all'}
-            onChange={(deliveryMethod) =>
-              onChange({ ...filters, deliveryMethod })
-            }
-          />
+      <SelectField
+        id="client-orders-comment-presence"
+        label="Client comment"
+        value={filters.clientCommentPresence}
+        options={CLIENT_COMMENT_OPTIONS}
+        isActive={filters.clientCommentPresence !== 'all'}
+        onChange={(clientCommentPresence) =>
+          onChange({ ...filters, clientCommentPresence })
+        }
+      />
 
-          <SelectField
-            id="client-orders-payment"
-            label="Payment method"
-            value={filters.paymentMethod}
-            options={PAYMENT_METHOD_OPTIONS}
-            isActive={filters.paymentMethod !== 'all'}
-            onChange={(paymentMethod) =>
-              onChange({ ...filters, paymentMethod })
-            }
-          />
-
-          <SelectField
-            id="client-orders-comment-presence"
-            label="Client comment"
-            value={filters.clientCommentPresence}
-            options={CLIENT_COMMENT_OPTIONS}
-            isActive={filters.clientCommentPresence !== 'all'}
-            onChange={(clientCommentPresence) =>
-              onChange({ ...filters, clientCommentPresence })
-            }
-          />
-
-          <SelectField
-            id="client-orders-created-by"
-            label="Created by"
-            value={filters.createdByType}
-            options={ORDER_CREATED_BY_OPTIONS}
-            isActive={filters.createdByType !== 'all'}
-            onChange={(createdByType) =>
-              onChange({ ...filters, createdByType })
-            }
-          />
-        </div>
-
-        {hasActiveFilters ? (
-          <ResetFiltersButton
-            className={css.resetButton}
-            href={resetHref}
-            onClick={() => {
-              onReset();
-              onClose();
-            }}
-          />
-        ) : null}
-      </aside>
-    </div>
+      <SelectField
+        id="client-orders-created-by"
+        label="Created by"
+        value={filters.createdByType}
+        options={ORDER_CREATED_BY_OPTIONS}
+        isActive={filters.createdByType !== 'all'}
+        onChange={(createdByType) => onChange({ ...filters, createdByType })}
+      />
+    </FilterDrawer>
   );
 }
-
 //===================================================================
 
 type ClientProductsFiltersDrawerProps = Readonly<{
@@ -384,7 +344,6 @@ type ClientProductsFiltersDrawerProps = Readonly<{
   hasActiveFilters: boolean;
   minDate?: string;
   resetHref: string;
-  onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
   onChange: (filters: ClientProductFilters) => void;
   onClose: () => void;
   onReset: () => void;
@@ -395,82 +354,54 @@ function ClientProductsFiltersDrawer({
   hasActiveFilters,
   minDate,
   resetHref,
-  onBackdropMouseDown,
   onChange,
   onClose,
   onReset,
 }: ClientProductsFiltersDrawerProps) {
   return (
-    <div
-      className={css.filtersBackdrop}
-      role="presentation"
-      onMouseDown={onBackdropMouseDown}
+    <FilterDrawer
+      id="client-products-filters-panel"
+      eyebrow="Client products"
+      hasActiveFilters={hasActiveFilters}
+      resetHref={resetHref}
+      onClose={onClose}
+      onReset={() => {
+        onReset();
+        onClose();
+      }}
     >
-      <aside
-        className={css.filtersPanel}
-        id="client-products-filters-panel"
-        aria-labelledby="client-products-filters-title"
-        aria-modal="true"
-        role="dialog"
-      >
-        <div className={css.filtersHeader}>
-          <div>
-            <p className={css.filtersKicker}>Client products</p>
-            <h2 className={css.filtersTitle} id="client-products-filters-title">
-              Filters
-            </h2>
-          </div>
+      <DateFilter
+        id="client-products-order-date"
+        minDate={minDate}
+        disabled={!minDate}
+        label="Order date"
+        value={filters.date}
+        isActive={Boolean(filters.date.from || filters.date.to)}
+        applyOnSubmit
+        applyLabel="Apply"
+        onChange={(date) => onChange({ ...filters, date })}
+      />
 
-          <CloseIconButton label="Close filters" onClick={onClose} />
-        </div>
+      <SelectField
+        id="client-products-category"
+        label="Product category"
+        value={filters.category}
+        options={PRODUCT_CATEGORY_OPTIONS}
+        isActive={filters.category !== 'all'}
+        onChange={(category) => onChange({ ...filters, category })}
+      />
 
-        <div className={css.filtersControls}>
-          <DateFilter
-            id="client-products-order-date"
-            minDate={minDate}
-            disabled={!minDate}
-            label="Order date"
-            value={filters.date}
-            isActive={Boolean(filters.date.from || filters.date.to)}
-            applyOnSubmit
-            applyLabel="Apply"
-            onChange={(date) => onChange({ ...filters, date })}
-          />
-
-          <SelectField
-            id="client-products-category"
-            label="Product category"
-            value={filters.category}
-            options={PRODUCT_CATEGORY_OPTIONS}
-            isActive={filters.category !== 'all'}
-            onChange={(category) => onChange({ ...filters, category })}
-          />
-
-          <SelectField
-            id="client-products-status"
-            label="Product status"
-            value={filters.status}
-            options={PRODUCT_STATUS_OPTIONS}
-            isActive={filters.status !== 'all'}
-            onChange={(status) => onChange({ ...filters, status })}
-          />
-        </div>
-
-        {hasActiveFilters ? (
-          <ResetFiltersButton
-            className={css.resetButton}
-            href={resetHref}
-            onClick={() => {
-              onReset();
-              onClose();
-            }}
-          />
-        ) : null}
-      </aside>
-    </div>
+      <SelectField
+        id="client-products-status"
+        label="Product status"
+        value={filters.status}
+        options={PRODUCT_STATUS_OPTIONS}
+        isActive={filters.status !== 'all'}
+        onChange={(status) => onChange({ ...filters, status })}
+      />
+    </FilterDrawer>
   );
 }
-
 //===================================================================
 
 function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
@@ -535,26 +466,6 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState('');
   const [isProductsFiltersOpen, setIsProductsFiltersOpen] = useState(false);
-
-  useBodyScrollLock(isProductsFiltersOpen || isOrdersFiltersOpen);
-
-  useEscapeToClose({
-    isOpen: isProductsFiltersOpen,
-    onClose: () => setIsProductsFiltersOpen(false),
-  });
-
-  useEscapeToClose({
-    isOpen: isOrdersFiltersOpen,
-    onClose: () => setIsOrdersFiltersOpen(false),
-  });
-
-  const handleProductsFiltersBackdrop = useBackdropClick({
-    onClose: () => setIsProductsFiltersOpen(false),
-  });
-
-  const handleOrdersFiltersBackdrop = useBackdropClick({
-    onClose: () => setIsOrdersFiltersOpen(false),
-  });
 
   useEffect(() => {
     let mounted = true;
@@ -1167,27 +1078,12 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
                     }}
                   />
 
-                  <Pagination
+                  <PaginationView
                     currentPage={ordersPage}
                     totalPages={ordersTotalPages}
-                    getPageHref={(page) => String(page)}
                     ariaLabel="Client orders pagination"
-                    renderLink={({
-                      href,
-                      className,
-                      children,
-                      'aria-label': ariaLabel,
-                    }) => (
-                      <button
-                        className={className}
-                        type="button"
-                        aria-label={ariaLabel}
-                        disabled={ordersLoading}
-                        onClick={() => setOrdersPage(Number(href))}
-                      >
-                        {children}
-                      </button>
-                    )}
+                    disabled={ordersLoading}
+                    onPageChange={setOrdersPage}
                   />
                 </div>
               </section>
@@ -1285,25 +1181,10 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
                     }}
                   />
 
-                  <Pagination
+                  <PaginationView
                     currentPage={productsPage}
                     totalPages={productsTotalPages}
-                    getPageHref={(page) => String(page)}
-                    renderLink={({
-                      href,
-                      className,
-                      children,
-                      'aria-label': ariaLabel,
-                    }) => (
-                      <button
-                        className={className}
-                        type="button"
-                        aria-label={ariaLabel}
-                        onClick={() => setProductsPage(Number(href))}
-                      >
-                        {children}
-                      </button>
-                    )}
+                    onPageChange={setProductsPage}
                   />
                 </div>
               </section>
@@ -1329,7 +1210,6 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
           hasActiveFilters={hasOrderFilters}
           minDate={ordersEarliestCreatedAt ?? undefined}
           resetHref={getPharmacyClientPath(clientId)}
-          onBackdropMouseDown={handleOrdersFiltersBackdrop}
           onChange={(filters) => {
             setOrderFilters(filters);
             setOrdersPage(1);
@@ -1348,7 +1228,6 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
           hasActiveFilters={hasProductFilters}
           minDate={productsEarliestCreatedAt ?? undefined}
           resetHref={getPharmacyClientPath(clientId)}
-          onBackdropMouseDown={handleProductsFiltersBackdrop}
           onChange={(filters) => {
             setProductFilters(filters);
             setProductsPage(1);

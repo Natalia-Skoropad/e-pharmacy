@@ -1,7 +1,10 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
+
+import { getBusinessCalendarDate } from '@e-pharmacy/utils/date';
+import { validateDateRange } from '@e-pharmacy/validation/url';
 
 import css from './DateFilter.module.css';
 
@@ -25,29 +28,15 @@ export type DateFilterProps = Readonly<{
   maxDate?: string;
   applyOnSubmit?: boolean;
   applyLabel?: string;
+  rangeMode?: 'partial' | 'full';
   onChange: (value: DateFilterValue) => void;
 }>;
 
 //===================================================================
 
-function getTodayIsoDate() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-//===================================================================
-
-function getMinDate(value: string | undefined) {
-  return value || undefined;
-}
-
-//===================================================================
-
 function getMaxDate(...values: Array<string | undefined>) {
   const validValues = values.filter(Boolean) as string[];
-
-  if (!validValues.length) return undefined;
-
-  return validValues.sort()[0];
+  return validValues.length ? [...validValues].sort()[0] : undefined;
 }
 
 //===================================================================
@@ -58,7 +47,7 @@ function areDatesEqual(first: DateFilterValue, second: DateFilterValue) {
 
 //===================================================================
 
-function DateFilter({
+export function DateFilter({
   id,
   label = 'Date',
   value,
@@ -68,24 +57,36 @@ function DateFilter({
   disabled = false,
   className,
   minDate,
-  maxDate = getTodayIsoDate(),
+  maxDate = getBusinessCalendarDate() ?? undefined,
   applyOnSubmit = false,
   applyLabel = 'Apply',
+  rangeMode = 'partial',
   onChange,
 }: DateFilterProps) {
   const fromInputRef = useRef<HTMLInputElement>(null);
   const toInputRef = useRef<HTMLInputElement>(null);
+  const generatedErrorId = useId();
   const [draftValue, setDraftValue] = useState<DateFilterValue>(value);
   const currentValue = applyOnSubmit ? draftValue : value;
+  const validation = validateDateRange(currentValue);
+  const rangeError = validation.from ?? validation.to ?? validation.range;
+  const errorId = `${id}-${generatedErrorId}-error`;
+
+  useEffect(() => {
+    setDraftValue(value);
+  }, [value.from, value.to]);
 
   const fromId = `${id}-from`;
   const toId = `${id}-to`;
-  const applyButtonId = `${id}-apply`;
-
+  const requiresFullRange = rangeMode === 'full';
+  const hasAnyDate = Boolean(currentValue.from || currentValue.to);
+  const hasRequiredDates = requiresFullRange
+    ? Boolean(currentValue.from && currentValue.to)
+    : hasAnyDate;
   const isApplyDisabled =
     disabled ||
-    !currentValue.from ||
-    !currentValue.to ||
+    !hasRequiredDates ||
+    Boolean(rangeError) ||
     areDatesEqual(currentValue, value);
 
   const updateValue = (nextValue: DateFilterValue) => {
@@ -99,24 +100,16 @@ function DateFilter({
     onChange(nextValue);
   };
 
-  const handleFromChange = (from: string) => {
-    updateValue({ ...currentValue, from });
-  };
-
-  const handleToChange = (to: string) => {
-    updateValue({ ...currentValue, to });
-  };
-
   const handleApply = () => {
-    if (isApplyDisabled) return;
-
-    onChange(currentValue);
+    if (!isApplyDisabled) onChange(currentValue);
   };
 
   return (
     <fieldset
       className={clsx(css.field, applyOnSubmit && css.withApply, className)}
       disabled={disabled}
+      aria-invalid={Boolean(rangeError) || undefined}
+      aria-describedby={rangeError ? errorId : undefined}
     >
       <legend className={css.label}>{label}</legend>
 
@@ -132,11 +125,16 @@ function DateFilter({
             )}
             type="date"
             value={currentValue.from}
-            min={minDate}
+            min={minDate || undefined}
             max={getMaxDate(currentValue.to, maxDate)}
+            aria-invalid={
+              Boolean(validation.from || validation.range) || undefined
+            }
+            aria-describedby={rangeError ? errorId : undefined}
             onClick={() => fromInputRef.current?.showPicker?.()}
-            aria-describedby={applyOnSubmit ? applyButtonId : undefined}
-            onChange={(event) => handleFromChange(event.target.value)}
+            onChange={(event) =>
+              updateValue({ ...currentValue, from: event.target.value })
+            }
           />
         </label>
 
@@ -151,19 +149,29 @@ function DateFilter({
             )}
             type="date"
             value={currentValue.to}
-            min={getMinDate(currentValue.from || minDate)}
+            min={currentValue.from || minDate || undefined}
             max={maxDate}
+            aria-invalid={
+              Boolean(validation.to || validation.range) || undefined
+            }
+            aria-describedby={rangeError ? errorId : undefined}
             onClick={() => toInputRef.current?.showPicker?.()}
-            aria-describedby={applyOnSubmit ? applyButtonId : undefined}
-            onChange={(event) => handleToChange(event.target.value)}
+            onChange={(event) =>
+              updateValue({ ...currentValue, to: event.target.value })
+            }
           />
         </label>
       </div>
 
+      {rangeError ? (
+        <p className={css.error} id={errorId} role="alert">
+          {rangeError}
+        </p>
+      ) : null}
+
       {applyOnSubmit ? (
         <button
           className={css.applyButton}
-          id={applyButtonId}
           type="button"
           disabled={isApplyDisabled}
           onClick={handleApply}
@@ -176,4 +184,3 @@ function DateFilter({
 }
 
 export default DateFilter;
-export { DateFilter };

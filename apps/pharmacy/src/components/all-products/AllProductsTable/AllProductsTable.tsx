@@ -11,13 +11,13 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
-
 import type { EntityId, Product } from '@e-pharmacy/types';
+import { getPharmacyAllProductPath } from '@e-pharmacy/config/pharmacy';
 
 import { PRODUCT_STATUS_LABELS } from '@/lib/products/products';
-import { getPharmacyAllProductPath } from '@e-pharmacy/config/pharmacy';
 import { getProductImageSrc } from '@/lib/products/product-images';
+
+import { StatusBadge } from '@/components/common/StatusPresentation';
 
 //===================================================================
 

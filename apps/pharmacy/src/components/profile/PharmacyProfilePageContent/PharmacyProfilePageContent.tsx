@@ -8,7 +8,6 @@ import { PHARMACY_STATUS_LABELS } from '@e-pharmacy/config/pharmacy';
 
 import {
   Button,
-  Container,
   DocumentUpload,
   LazyLoadButton,
   LoadingSpinner,
@@ -17,10 +16,15 @@ import {
   Tabs,
   TextEditor,
   WorkingHoursInput,
-  type DocumentUploadFile,
 } from '@e-pharmacy/ui/common';
 
-import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { Container } from '@e-pharmacy/ui/layout';
+import type { UploadFileValue } from '@e-pharmacy/types/files';
+
+import {
+  StatusBadge,
+  StatusBanner,
+} from '@/components/common/StatusPresentation';
 
 import {
   AddressInput,
@@ -33,7 +37,8 @@ import {
   TaxIdInput,
 } from '@e-pharmacy/ui/form-fields';
 
-import { EntityComments, useToast } from '@e-pharmacy/ui/feedback';
+import { useToast } from '@e-pharmacy/ui/feedback';
+import { EntityComments } from '@/components/common/EntityComments';
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { formatDateTime } from '@e-pharmacy/utils/date';
@@ -77,7 +82,6 @@ import {
   PHARMACY_NAME_MAX_LENGTH,
   BANK_RECIPIENT_NAME_MAX_LENGTH,
   BANK_NAME_MAX_LENGTH,
-  WORKING_HOURS_MAX_LENGTH,
   TEXT_EDITOR_MAX_LENGTH,
   TAX_ID_MAX_LENGTH,
   IBAN_MAX_LENGTH,
@@ -259,7 +263,7 @@ function createDocumentId(
 
 function createDocumentValues(
   documents: PharmacyProfile['documents']
-): DocumentUploadFile[] {
+): UploadFileValue[] {
   return documents.map((document, index) => ({
     id: createDocumentId(document, index),
     name: document.name,
@@ -270,15 +274,15 @@ function createDocumentValues(
 
 //===================================================================
 
-function normalizeDocumentValues(files: DocumentUploadFile[]) {
+function normalizeDocumentValues(files: UploadFileValue[]) {
   return files.map(normalizePharmacyDocument);
 }
 
 //===================================================================
 
 function areDocumentValuesEqual(
-  first: DocumentUploadFile[],
-  second: DocumentUploadFile[]
+  first: UploadFileValue[],
+  second: UploadFileValue[]
 ): boolean {
   return (
     JSON.stringify(normalizeDocumentValues(first)) ===
@@ -415,7 +419,7 @@ function buildPaymentPayload(
 //===================================================================
 
 function buildDocumentsPayload(
-  files: DocumentUploadFile[]
+  files: UploadFileValue[]
 ): UpdateMyPharmacyProfilePayload {
   return {
     documents: normalizeDocumentValues(files),
@@ -543,11 +547,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const [paymentTouched, setPaymentTouched] =
     useState<PharmacyPaymentTouchedFields>({});
 
-  const [documentValues, setDocumentValues] = useState<DocumentUploadFile[]>(
-    []
-  );
+  const [documentValues, setDocumentValues] = useState<UploadFileValue[]>([]);
   const [initialDocumentValues, setInitialDocumentValues] = useState<
-    DocumentUploadFile[]
+    UploadFileValue[]
   >([]);
   const [documentsTouched, setDocumentsTouched] = useState(false);
   const [documentsError, setDocumentsError] = useState('');
@@ -1050,7 +1052,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     }
   };
 
-  const handleDocumentsChange = (files: DocumentUploadFile[]) => {
+  const handleDocumentsChange = (files: UploadFileValue[]) => {
     setDocumentsTouched(true);
 
     const error = validatePharmacyDocuments(files);
@@ -1655,17 +1657,12 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       <div className={css.fieldWide}>
                         <WorkingHoursInput
                           id="pharmacy-working-hours"
-                          name="workingHours"
                           value={pharmacyValues.workingHours}
                           error={pharmacyErrors.workingHours}
                           isTouched={Boolean(pharmacyTouched.workingHours)}
-                          maxLength={WORKING_HOURS_MAX_LENGTH}
                           disabled={isProfileReadonly}
-                          onChange={(event) =>
-                            handlePharmacyChange(
-                              'workingHours',
-                              event.target.value
-                            )
+                          onValueChange={(nextValue) =>
+                            handlePharmacyChange('workingHours', nextValue)
                           }
                         />
                       </div>
@@ -1730,9 +1727,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       isTouched={Boolean(aboutTouched.description)}
                       maxLength={TEXT_EDITOR_MAX_LENGTH}
                       disabled={isProfileReadonly}
-                      onChange={(event) =>
-                        handleAboutChange(event.target.value)
-                      }
+                      onValueChange={handleAboutChange}
                     />
 
                     {pharmacy.status === 'new' ? (

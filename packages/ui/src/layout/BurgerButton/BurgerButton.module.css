@@ -12,7 +12,6 @@
     background-color var(--transition-base);
 }
 
-
 .default {
   color: var(--color-text-primary);
   background-color: var(--color-surface);
@@ -31,8 +30,6 @@
   background-color: var(--color-white-alpha-28);
   border-color: var(--color-white-alpha-72);
 }
-
-
 
 .default:hover,
 .default:focus-visible {

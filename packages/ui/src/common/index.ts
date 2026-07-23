@@ -1,9 +1,7 @@
 export * from './Button';
 export * from './ButtonLink';
 export * from './CloseIconButton';
-export * from '../layout/Container';
 export * from './LoadingSpinner';
-export * from './Pagination';
 export * from './SearchInput';
 export * from './SelectField';
 export * from './Logo';
@@ -18,7 +16,6 @@ export * from './SearchableSelect';
 export * from './QuantityCounter';
 export * from './SvgIcon';
 export * from './UserBadge';
-export * from './PictureUpload';
 export * from './PictureCard';
 export * from './RatingSummary';
 export * from './ShimmerImage';

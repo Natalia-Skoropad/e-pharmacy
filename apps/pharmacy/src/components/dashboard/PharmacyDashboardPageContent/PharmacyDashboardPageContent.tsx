@@ -5,20 +5,6 @@ import Link from 'next/link';
 import { LayoutDashboard } from 'lucide-react';
 
 import { ButtonLink, LoadingSpinner } from '@e-pharmacy/ui/common';
-
-import {
-  AllProductStatistics,
-  ClientStatistics,
-  OrderStatistics,
-  OwnProductStatistics,
-  SalesValueChart,
-  SalesPeriodFilters,
-  getSalesPeriodDateRange,
-  type SalesPeriodMonth,
-  ProductRequestStatistics,
-  StatusBanner,
-} from '@e-pharmacy/ui/statistics';
-
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { PharmacyStatus } from '@e-pharmacy/types';
 
@@ -64,8 +50,34 @@ import {
   getPharmacyOwnProductStatistics,
 } from '@/lib/products/product-statistics';
 
-import { getPharmacyAllProductsPath, getPharmacyClientsPath, getPharmacyOrdersPath, getPharmacyProductsPath, getPharmacyProductRequestsPath } from '@e-pharmacy/config/pharmacy';
-import { getPharmacyClientsFilterPath, getPharmacyOrdersFilterPath, getPharmacyProductsFilterPath, getPharmacyRequestsFilterPath } from '@/lib/layout/routes';
+import {
+  getPharmacyAllProductsPath,
+  getPharmacyClientsPath,
+  getPharmacyOrdersPath,
+  getPharmacyProductsPath,
+  getPharmacyProductRequestsPath,
+} from '@e-pharmacy/config/pharmacy';
+
+import {
+  getPharmacyClientsFilterPath,
+  getPharmacyOrdersFilterPath,
+  getPharmacyProductsFilterPath,
+  getPharmacyRequestsFilterPath,
+} from '@/lib/layout/routes';
+
+import {
+  AllProductStatistics,
+  ClientStatistics,
+  OrderStatistics,
+  OwnProductStatistics,
+  ProductRequestStatistics,
+  SalesPeriodFilters,
+  SalesValueChart,
+  getSalesPeriodDateRange,
+  type SalesPeriodMonth,
+} from '@/components/statistics';
+
+import { StatusBanner } from '@/components/common/StatusPresentation';
 
 import css from './PharmacyDashboardPageContent.module.css';
 

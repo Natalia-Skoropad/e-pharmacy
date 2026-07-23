@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type ChangeEventHandler } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   WORKING_DAYS,
@@ -9,32 +9,26 @@ import {
   type WorkingHoursValue,
 } from '@e-pharmacy/validation/pharmacy';
 
-import { createTextareaChangeEvent } from '../../internal/create-textarea-change-event';
-
 import css from './WorkingHoursInput.module.css';
 
 //===================================================================
 
-export type WorkingHoursInputProps = {
+export type WorkingHoursInputProps = Readonly<{
   id: string;
-  name: string;
   value: string;
   label?: string;
-  placeholder?: string;
   hint?: string;
   error?: string;
   isTouched?: boolean;
   required?: boolean;
   disabled?: boolean;
-  maxLength?: number;
-  onChange: ChangeEventHandler<HTMLTextAreaElement>;
-};
+  onValueChange: (value: string) => void;
+}>;
 
 //===================================================================
 
 function WorkingHoursInput({
   id,
-  name,
   value,
   label = 'Working hours',
   hint = 'Choose opening and closing time for all seven days.',
@@ -42,11 +36,14 @@ function WorkingHoursInput({
   isTouched,
   required = true,
   disabled = false,
-  onChange,
+  onValueChange,
 }: WorkingHoursInputProps) {
   const errorId = `${id}-error`;
-  const hintId = `${id}-hint`;
+  const hintId = hint ? `${id}-hint` : undefined;
   const hasError = Boolean(isTouched && error);
+  const describedBy =
+    [hintId, hasError ? errorId : undefined].filter(Boolean).join(' ') ||
+    undefined;
   const lastEmittedValueRef = useRef<string | null>(null);
   const [currentValue, setCurrentValue] = useState<WorkingHoursValue>(() =>
     parseWorkingHoursValue(value)
@@ -66,7 +63,7 @@ function WorkingHoursInput({
 
     lastEmittedValueRef.current = formattedValue;
     setCurrentValue(nextValue);
-    onChange(createTextareaChangeEvent({ id, name }, formattedValue));
+    onValueChange(formattedValue);
   };
 
   const updateDay = (
@@ -83,15 +80,21 @@ function WorkingHoursInput({
   };
 
   return (
-    <div className={css.field}>
-      <label className={css.label} htmlFor={`${id}-Mon-from`}>
+    <fieldset
+      className={css.field}
+      disabled={disabled}
+      aria-required={required || undefined}
+      aria-invalid={hasError || undefined}
+      aria-describedby={describedBy}
+    >
+      <legend className={css.label}>
         {label}
         {required ? (
           <span className={css.requiredMark} aria-hidden="true">
             *
           </span>
         ) : null}
-      </label>
+      </legend>
 
       {hint ? (
         <p className={css.hint} id={hintId}>
@@ -99,11 +102,7 @@ function WorkingHoursInput({
         </p>
       ) : null}
 
-      <div
-        className={css.schedule}
-        aria-invalid={hasError}
-        aria-describedby={`${hintId} ${errorId}`}
-      >
+      <div className={css.schedule}>
         {WORKING_DAYS.map((day) => {
           const dayValue = currentValue[day.key];
           const fromId = `${id}-${day.key}-from`;
@@ -111,8 +110,15 @@ function WorkingHoursInput({
           const closedId = `${id}-${day.key}-closed`;
 
           return (
-            <div className={css.dayRow} key={day.key}>
-              <span className={css.dayName}>{day.label}</span>
+            <div
+              className={css.dayRow}
+              key={day.key}
+              role="group"
+              aria-label={day.label}
+            >
+              <span className={css.dayName} aria-hidden="true">
+                {day.label}
+              </span>
 
               <label className={css.timeLabel} htmlFor={fromId}>
                 <span>From</span>
@@ -121,7 +127,11 @@ function WorkingHoursInput({
                   id={fromId}
                   type="time"
                   value={dayValue.from}
+                  required={required && !dayValue.isClosed}
                   disabled={disabled || dayValue.isClosed}
+                  aria-label={`${day.label} opening time`}
+                  aria-invalid={hasError || undefined}
+                  aria-describedby={describedBy}
                   onChange={(event) =>
                     updateDay(day.key, { from: event.target.value })
                   }
@@ -135,7 +145,11 @@ function WorkingHoursInput({
                   id={toId}
                   type="time"
                   value={dayValue.to}
+                  required={required && !dayValue.isClosed}
                   disabled={disabled || dayValue.isClosed}
+                  aria-label={`${day.label} closing time`}
+                  aria-invalid={hasError || undefined}
+                  aria-describedby={describedBy}
                   onChange={(event) =>
                     updateDay(day.key, { to: event.target.value })
                   }
@@ -148,6 +162,9 @@ function WorkingHoursInput({
                   type="checkbox"
                   checked={dayValue.isClosed}
                   disabled={disabled}
+                  aria-label={`${day.label} is closed`}
+                  aria-invalid={hasError || undefined}
+                  aria-describedby={describedBy}
                   onChange={(event) =>
                     updateDay(day.key, {
                       isClosed: event.target.checked,
@@ -164,11 +181,11 @@ function WorkingHoursInput({
       </div>
 
       <div className={css.metaRow}>
-        <p className={css.error} id={errorId}>
+        <p className={css.error} id={errorId} aria-live="polite">
           {isTouched ? (error ?? '') : ''}
         </p>
       </div>
-    </div>
+    </fieldset>
   );
 }
 

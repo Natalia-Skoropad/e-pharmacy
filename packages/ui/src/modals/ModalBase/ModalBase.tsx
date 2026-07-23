@@ -1,23 +1,23 @@
 'use client';
 
-import { type CSSProperties, type ReactNode, useId, useRef } from 'react';
+import { type CSSProperties, type ReactNode, useRef } from 'react';
 import clsx from 'clsx';
 
-import {
-  useBackdropClick,
-  useBodyScrollLock,
-  useEscapeToClose,
-  useFocusTrap,
-} from '@e-pharmacy/hooks';
+import { useBackdropClick, useOverlayLayer } from '@e-pharmacy/hooks';
 
 import css from './ModalBase.module.css';
 
 //===================================================================
 
-export type ModalBaseProps = {
+type AccessibleNameProps =
+  | Readonly<{ labelledBy: string; ariaLabel?: never }>
+  | Readonly<{ ariaLabel: string; labelledBy?: never }>;
+
+//===================================================================
+
+type ModalBaseCommonProps = Readonly<{
   children: ReactNode;
   isOpen?: boolean;
-  labelledBy?: string;
   describedBy?: string;
   className?: string;
   dialogClassName?: string;
@@ -25,7 +25,11 @@ export type ModalBaseProps = {
   closeOnBackdrop?: boolean;
   closeOnEscape?: boolean;
   onClose: () => void;
-};
+}>;
+
+//===================================================================
+
+export type ModalBaseProps = ModalBaseCommonProps & AccessibleNameProps;
 
 //===================================================================
 
@@ -33,6 +37,7 @@ function ModalBase({
   children,
   isOpen = true,
   labelledBy,
+  ariaLabel,
   describedBy,
   className,
   dialogClassName,
@@ -41,16 +46,17 @@ function ModalBase({
   closeOnEscape = true,
   onClose,
 }: ModalBaseProps) {
-  const fallbackTitleId = useId();
-  const titleId = labelledBy ?? fallbackTitleId;
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const handleBackdropMouseDown = useBackdropClick({
     onClose: closeOnBackdrop ? onClose : () => {},
   });
 
-  useBodyScrollLock(isOpen);
-  useEscapeToClose({ isOpen: isOpen && closeOnEscape, onClose });
-  useFocusTrap({ isOpen, containerRef: dialogRef });
+  useOverlayLayer({
+    isOpen,
+    containerRef: dialogRef,
+    onClose,
+    closeOnEscape,
+  });
 
   if (!isOpen) return null;
 
@@ -66,7 +72,8 @@ function ModalBase({
         className={clsx(css.dialog, dialogClassName)}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={titleId}
+        aria-labelledby={labelledBy}
+        aria-label={ariaLabel}
         aria-describedby={describedBy}
         tabIndex={-1}
       >
@@ -77,5 +84,4 @@ function ModalBase({
 }
 
 export default ModalBase;
-
 export { ModalBase };

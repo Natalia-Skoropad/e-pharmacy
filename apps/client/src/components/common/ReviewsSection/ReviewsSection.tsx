@@ -1,27 +1,23 @@
 'use client';
 
-import { useState } from 'react';
 import { Star } from 'lucide-react';
 
-import { Button, LazyLoadButton } from '@e-pharmacy/ui/common';
+import {
+  Button,
+  ReviewsList,
+  DEFAULT_VISIBLE_REVIEWS_COUNT,
+  type ReviewsListItem,
+} from '@e-pharmacy/ui/common';
+
 import { CommentInput } from '@e-pharmacy/ui/form-fields';
-import { formatShortDate } from '@e-pharmacy/utils/date';
 import type { ReviewTouchedFields } from '@e-pharmacy/validation/reviews';
 
 import css from './ReviewsSection.module.css';
 
 //===================================================================
 
-export type ReviewItem = {
-  id: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
-};
-
-type ReviewsSectionProps = {
-  reviews: ReviewItem[];
+type ReviewsSectionProps = Readonly<{
+  reviews: readonly ReviewsListItem[];
   reviewText: string;
   reviewRating: number;
   isReviewValid: boolean;
@@ -42,12 +38,7 @@ type ReviewsSectionProps = {
   visibleCount?: number;
   step?: number;
   onVisibleCountChange?: (value: number) => void;
-};
-
-//===================================================================
-
-export const DEFAULT_VISIBLE_REVIEWS_COUNT = 10;
-const REVIEWS_LOAD_DELAY_MS = 250;
+}>;
 
 //===================================================================
 
@@ -73,29 +64,6 @@ function ReviewsSection({
   step = DEFAULT_VISIBLE_REVIEWS_COUNT,
   onVisibleCountChange,
 }: ReviewsSectionProps) {
-  const [internalVisibleCount, setInternalVisibleCount] =
-    useState(initialVisibleCount);
-
-  const visibleReviewsCount = visibleCount ?? internalVisibleCount;
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  const visibleReviews = reviews.slice(0, visibleReviewsCount);
-
-  const handleLoadMore = () => {
-    setIsLoadingMore(true);
-
-    window.setTimeout(() => {
-      const nextVisibleCount = visibleReviewsCount + step;
-
-      if (onVisibleCountChange) {
-        onVisibleCountChange(nextVisibleCount);
-      } else {
-        setInternalVisibleCount(nextVisibleCount);
-      }
-      setIsLoadingMore(false);
-    }, REVIEWS_LOAD_DELAY_MS);
-  };
-
   return (
     <>
       <form
@@ -161,46 +129,17 @@ function ReviewsSection({
           Reviews are temporarily unavailable. Please check that the backend API
           is running.
         </div>
-      ) : reviews.length === 0 ? (
-        <div className={css.empty}>
-          <h3 className={css.emptyTitle}>{emptyTitle}</h3>
-          <p className={css.emptyText}>{emptyText}</p>
-        </div>
       ) : (
-        <>
-          <ul className={css.list}>
-            {visibleReviews.map((review) => (
-              <li className={css.item} key={review.id}>
-                <article className={css.card}>
-                  <div className={css.header}>
-                    <div>
-                      <h3 className={css.author}>{review.userName}</h3>
-
-                      <time className={css.date} dateTime={review.createdAt}>
-                        {formatShortDate(review.createdAt) ?? '—'}
-                      </time>
-                    </div>
-
-                    <span className={css.rating}>
-                      <Star className={css.star} size={16} aria-hidden="true" />
-                      {review.rating}
-                    </span>
-                  </div>
-
-                  <p className={css.comment}>{review.comment}</p>
-                </article>
-              </li>
-            ))}
-          </ul>
-
-          <LazyLoadButton
-            visibleCount={visibleReviews.length}
-            totalCount={reviews.length}
-            label="Show more reviews"
-            isLoading={isLoadingMore}
-            onLoadMore={handleLoadMore}
-          />
-        </>
+        <ReviewsList
+          reviews={reviews}
+          title={null}
+          emptyTitle={emptyTitle}
+          emptyText={emptyText}
+          initialVisibleCount={initialVisibleCount}
+          visibleCount={visibleCount}
+          step={step}
+          onVisibleCountChange={onVisibleCountChange}
+        />
       )}
     </>
   );

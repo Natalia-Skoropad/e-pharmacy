@@ -130,13 +130,20 @@
   opacity: 0.45;
 }
 
-@media only screen and (min-width: 480px) {
+.error {
+  margin: 0;
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  color: var(--color-error);
+}
+
+@media only screen and (min-width: 768px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media only screen and (max-width: 359px) {
+@media only screen and (min-width: 1440px) {
   .withApply {
     grid-template-columns: 1fr;
   }

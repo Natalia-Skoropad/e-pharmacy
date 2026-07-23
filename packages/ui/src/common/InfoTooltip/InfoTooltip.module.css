@@ -121,24 +121,6 @@
   white-space: normal;
 }
 
-@media only screen and (max-width: 768px) {
-  .tooltip {
-    left: 0;
-    width: min(300px, calc(100vw - 24px));
-    transform: translate(0, -6px);
-  }
-
-  .tooltip::before {
-    left: 12px;
-    transform: rotate(45deg);
-  }
-
-  .root:hover .tooltip,
-  .root:focus-within .tooltip {
-    transform: translate(0, 0);
-  }
-}
-
 .items {
   display: grid;
   gap: 10px;
@@ -167,4 +149,22 @@
   font-size: var(--fz-14);
   font-weight: var(--fw-regular);
   line-height: var(--lh-base);
+}
+
+@media only screen and (min-width: 768px) {
+  .tooltip {
+    left: 0;
+    width: min(300px, calc(100vw - 24px));
+    transform: translate(0, -6px);
+  }
+
+  .tooltip::before {
+    left: 12px;
+    transform: rotate(45deg);
+  }
+
+  .root:hover .tooltip,
+  .root:focus-within .tooltip {
+    transform: translate(0, 0);
+  }
 }

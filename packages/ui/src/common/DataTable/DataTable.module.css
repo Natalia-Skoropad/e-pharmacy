@@ -35,11 +35,11 @@
 }
 
 .alignRight {
-  text-align: left !important;
+  text-align: right !important;
 }
 
 .alignCenter {
-  text-align: left !important;
+  text-align: center !important;
 }
 
 .stateCell {

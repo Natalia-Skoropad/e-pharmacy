@@ -15,7 +15,6 @@ import {
 import {
   Button,
   ButtonLink,
-  CloseIconButton,
   CountLabel,
   DataTable,
   DateFilter,
@@ -26,8 +25,6 @@ import {
   ShimmerImage,
   RatingSummary,
   ReviewsList,
-  Pagination,
-  ResetFiltersButton,
   RowsPerPageSelect,
   SearchInput,
   SelectField,
@@ -44,19 +41,10 @@ import {
   type TabItem,
 } from '@e-pharmacy/ui/common';
 
-import {
-  OrderStatistics,
-  OwnProductStatistics,
-  SalesPeriodFilters,
-  SalesValueChart,
-  getSalesPeriodDateRange,
-  type SalesPeriodMonth,
-  StatusBadge,
-  StatusBanner,
-} from '@e-pharmacy/ui/statistics';
-
+import { PaginationView } from '@e-pharmacy/ui/navigation';
+import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
-import { EntityComments, useToast } from '@e-pharmacy/ui/feedback';
+import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/core';
 import { type OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
@@ -86,6 +74,12 @@ import {
 } from '@e-pharmacy/types/orders';
 
 import {
+  getPharmacyAllProductsPath,
+  getPharmacyClientPath,
+  getPharmacyOrderPath,
+} from '@e-pharmacy/config/pharmacy';
+
+import {
   addProductToMyPharmacy,
   removeProductFromMyPharmacy,
   getMyPharmacyProfile,
@@ -98,12 +92,6 @@ import {
   createPharmacyNote,
   deletePharmacyNote,
 } from '@/lib/api/browser';
-
-import {
-  getPharmacyAllProductsPath,
-  getPharmacyClientPath,
-  getPharmacyOrderPath,
-} from '@e-pharmacy/config/pharmacy';
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
@@ -118,6 +106,22 @@ import {
 } from '@/lib/pharmacies/current-pharmacy-status';
 
 import { getProductImageSrc } from '@/lib/products/product-images';
+
+import {
+  OrderStatistics,
+  OwnProductStatistics,
+  SalesPeriodFilters,
+  SalesValueChart,
+  getSalesPeriodDateRange,
+  type SalesPeriodMonth,
+} from '@/components/statistics';
+
+import { EntityComments } from '@/components/common/EntityComments';
+
+import {
+  StatusBadge,
+  StatusBanner,
+} from '@/components/common/StatusPresentation';
 
 import css from './AllProductDetailsPageContent.module.css';
 
@@ -661,62 +665,6 @@ function EmptyPanel({ children }: Readonly<{ children: string }>) {
 }
 
 //===================================================================
-
-type ProductTabFiltersDrawerProps = Readonly<{
-  id: string;
-  title: string;
-  children: ReactNode;
-  hasActiveFilters: boolean;
-  onReset: () => void;
-  onClose: () => void;
-}>;
-
-//===================================================================
-
-function ProductTabFiltersDrawer({
-  id,
-  title,
-  children,
-  hasActiveFilters,
-  onReset,
-  onClose,
-}: ProductTabFiltersDrawerProps) {
-  return (
-    <div className={css.filtersBackdrop} role="presentation">
-      <aside
-        id={id}
-        className={css.filtersPanel}
-        aria-labelledby={`${id}-title`}
-        aria-modal="true"
-        role="dialog"
-      >
-        <div className={css.filtersHeader}>
-          <div>
-            <p className={css.filtersKicker}>Product details</p>
-            <h2 className={css.filtersTitle} id={`${id}-title`}>
-              {title}
-            </h2>
-          </div>
-
-          <CloseIconButton label="Close filters" onClick={onClose} />
-        </div>
-
-        <div className={css.filtersControls}>{children}</div>
-
-        {hasActiveFilters ? (
-          <ResetFiltersButton
-            className={css.resetButton}
-            href="#"
-            onClick={() => {
-              onReset();
-              onClose();
-            }}
-          />
-        ) : null}
-      </aside>
-    </div>
-  );
-}
 
 //===================================================================
 
@@ -1669,33 +1617,15 @@ function AllProductDetailsPageContent({
                               items={paginatedStockMovementRows}
                               getItemKey={(row) => row.id}
                               minWidth={0}
-                              newestFirst={false}
                               labels={{
                                 empty: 'Stock movement history is empty.',
                               }}
                             />
 
-                            <Pagination
+                            <PaginationView
                               currentPage={stockCurrentPage}
                               totalPages={stockMovementTotalPages}
-                              getPageHref={(page) => String(page)}
-                              renderLink={({
-                                href,
-                                className,
-                                children,
-                                'aria-label': ariaLabel,
-                              }) => (
-                                <button
-                                  className={className}
-                                  type="button"
-                                  aria-label={ariaLabel}
-                                  onClick={() =>
-                                    setStockCurrentPage(Number(href))
-                                  }
-                                >
-                                  {children}
-                                </button>
-                              )}
+                              onPageChange={setStockCurrentPage}
                             />
                           </div>
                         </section>
@@ -1809,27 +1739,10 @@ function AllProductDetailsPageContent({
                               }}
                             />
 
-                            <Pagination
+                            <PaginationView
                               currentPage={relatedCurrentPage}
                               totalPages={relatedOrdersTotalPages}
-                              getPageHref={(page) => String(page)}
-                              renderLink={({
-                                href,
-                                className,
-                                children,
-                                'aria-label': ariaLabel,
-                              }) => (
-                                <button
-                                  className={className}
-                                  type="button"
-                                  aria-label={ariaLabel}
-                                  onClick={() =>
-                                    setRelatedCurrentPage(Number(href))
-                                  }
-                                >
-                                  {children}
-                                </button>
-                              )}
+                              onPageChange={setRelatedCurrentPage}
                             />
                           </div>
                         </section>
@@ -1921,10 +1834,12 @@ function AllProductDetailsPageContent({
       ) : null}
 
       {isStockFiltersOpen ? (
-        <ProductTabFiltersDrawer
+        <FilterDrawer
           id="stock-movement-filters-panel"
+          eyebrow="Product details"
           title="Stock movement filters"
           hasActiveFilters={stockActiveFiltersCount > 0}
+          resetHref="#"
           onReset={() => {
             setStockFilters(DEFAULT_STOCK_MOVEMENT_FILTERS);
             setStockOrderNumberSearch('');
@@ -1992,14 +1907,16 @@ function AllProductDetailsPageContent({
               setStockCurrentPage(1);
             }}
           />
-        </ProductTabFiltersDrawer>
+        </FilterDrawer>
       ) : null}
 
       {isRelatedFiltersOpen ? (
-        <ProductTabFiltersDrawer
+        <FilterDrawer
           id="related-orders-filters-panel"
+          eyebrow="Product details"
           title="Related orders filters"
           hasActiveFilters={relatedActiveFiltersCount > 0}
+          resetHref="#"
           onReset={() => {
             setRelatedFilters(DEFAULT_RELATED_ORDERS_FILTERS);
             setRelatedOrderNumberSearch('');
@@ -2055,7 +1972,7 @@ function AllProductDetailsPageContent({
               setRelatedCurrentPage(1);
             }}
           />
-        </ProductTabFiltersDrawer>
+        </FilterDrawer>
       ) : null}
 
       <ConfirmationModal

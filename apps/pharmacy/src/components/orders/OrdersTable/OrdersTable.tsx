@@ -16,16 +16,17 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+import {
+  getPharmacyClientPath,
+  getPharmacyOrderPath,
+} from '@e-pharmacy/config/pharmacy';
+
 import { formatAmount } from '@e-pharmacy/utils/money';
 
 import { type PharmacyOrderRow } from '@/lib/orders/orders';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import {
-  getPharmacyClientPath,
-  getPharmacyOrderPath,
-} from '@e-pharmacy/config/pharmacy';
+import { StatusBadge } from '@/components/common/StatusPresentation';
 
 //===================================================================
 

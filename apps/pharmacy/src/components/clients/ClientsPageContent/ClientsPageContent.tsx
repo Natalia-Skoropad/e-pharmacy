@@ -8,24 +8,25 @@ import {
   CountLabel,
   InfoTooltip,
   FiltersButton,
-  Pagination,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
 
-import { ClientStatistics, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
+import { getPharmacyClientsPath } from '@e-pharmacy/config/pharmacy';
 
 import {
-  useBackdropClick,
-  useBodyScrollLock,
-  useEscapeToClose,
-} from '@e-pharmacy/hooks';
+  DEFAULT_CLIENT_STATISTICS,
+  type ClientStatisticsCounts,
+  type ClientStatisticsKey,
+} from '@e-pharmacy/types/clients';
 
 import { getPharmacyClients } from '@/lib/api/browser';
 import { getPharmacyClientStatistics } from '@/lib/clients/client-statistics';
+import { getPharmacyClientsFilterPath } from '@/lib/layout/routes';
 
 import {
   getLockedFeatureBannerLabel,
@@ -44,17 +45,11 @@ import type {
   PharmacyClientsQueryParams,
 } from '@/lib/clients/clients';
 
-import {
-  DEFAULT_CLIENT_STATISTICS,
-  type ClientStatisticsCounts,
-  type ClientStatisticsKey,
-} from '@e-pharmacy/types/clients';
+import { ClientStatistics } from '@/components/statistics';
+import { StatusBanner } from '@/components/common/StatusPresentation';
 
 import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer/ClientsFiltersDrawer';
 import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
-
-import { getPharmacyClientsPath } from '@e-pharmacy/config/pharmacy';
-import { getPharmacyClientsFilterPath } from '@/lib/layout/routes';
 
 import css from './ClientsPageContent.module.css';
 
@@ -132,17 +127,6 @@ function ClientsPageContent({
 
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-
-  useBodyScrollLock(isFiltersOpen);
-
-  useEscapeToClose({
-    isOpen: isFiltersOpen,
-    onClose: () => setIsFiltersOpen(false),
-  });
-
-  const handleBackdropClick = useBackdropClick({
-    onClose: () => setIsFiltersOpen(false),
-  });
 
   useEffect(() => {
     let isMounted = true;
@@ -401,25 +385,10 @@ function ClientsPageContent({
           }
         />
 
-        <Pagination
+        <PaginationView
           currentPage={currentPage}
           totalPages={totalPages}
-          getPageHref={(page) => String(page)}
-          renderLink={({
-            href,
-            className,
-            children,
-            'aria-label': ariaLabel,
-          }) => (
-            <button
-              className={className}
-              type="button"
-              aria-label={ariaLabel}
-              onClick={() => setCurrentPage(Number(href))}
-            >
-              {children}
-            </button>
-          )}
+          onPageChange={setCurrentPage}
         />
       </section>
 
@@ -428,7 +397,6 @@ function ClientsPageContent({
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           minDate={earliestCreatedAt ?? undefined}
-          onBackdropMouseDown={handleBackdropClick}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}

@@ -57,6 +57,7 @@ function PasswordInput({
           autoComplete={autoComplete}
           maxLength={maxLength}
           pattern={pattern}
+          required={required}
           disabled={disabled}
           aria-invalid={hasError}
           aria-describedby={describedBy}

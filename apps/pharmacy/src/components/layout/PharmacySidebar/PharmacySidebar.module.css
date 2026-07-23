@@ -2,15 +2,6 @@
   display: none;
 }
 
-@media only screen and (min-width: 1440px) {
-  .sidebar {
-    position: sticky;
-    top: 32px;
-    display: block;
-    align-self: start;
-  }
-}
-
 .orderCounters {
   display: inline-flex;
   gap: 8px;
@@ -38,4 +29,13 @@
 .progressCounter {
   background-color: var(--color-warning);
   opacity: 0.8;
+}
+
+@media only screen and (min-width: 1440px) {
+  .sidebar {
+    position: sticky;
+    top: 32px;
+    display: block;
+    align-self: start;
+  }
 }

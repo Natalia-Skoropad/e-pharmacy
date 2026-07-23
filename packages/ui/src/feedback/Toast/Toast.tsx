@@ -15,7 +15,6 @@ type ToastProps = {
   message: string;
   isVisible?: boolean;
   variant?: ToastVariant;
-  type?: Extract<ToastVariant, 'success' | 'error'>;
   onClose?: () => void;
   duration?: number;
   offsetIndex?: number;
@@ -24,6 +23,8 @@ type ToastProps = {
 //===================================================================
 
 export const DEFAULT_TOAST_DURATION = 5000;
+
+//===================================================================
 
 const TOAST_LABELS: Record<ToastVariant, string> = {
   success: 'Success notification',
@@ -37,13 +38,12 @@ const TOAST_LABELS: Record<ToastVariant, string> = {
 function Toast({
   message,
   isVisible = true,
-  variant,
-  type,
+  variant = 'success',
   onClose,
   duration = DEFAULT_TOAST_DURATION,
   offsetIndex = 0,
 }: ToastProps) {
-  const resolvedVariant = type ?? variant ?? 'success';
+  const resolvedVariant = variant;
   const shouldShow = Boolean(isVisible && message.trim());
 
   useEffect(() => {

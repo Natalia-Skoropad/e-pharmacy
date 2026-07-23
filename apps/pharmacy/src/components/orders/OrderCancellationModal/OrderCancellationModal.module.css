@@ -1,0 +1,84 @@
+.dialog {
+  width: min(620px, calc(100vw - 32px));
+  max-height: min(820px, calc(100vh - 32px));
+  overflow: auto;
+}
+
+.header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  margin-bottom: 4px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.title {
+  font-size: var(--fz-24);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+  background-color: var(--color-error-soft);
+  border: 1px solid color-mix(in srgb, var(--color-error) 25%, transparent);
+  border-radius: var(--radius-lg);
+}
+
+.notice svg {
+  margin-top: 1px;
+  color: var(--color-error);
+}
+
+.dialog textarea {
+  height: 190px;
+  min-height: 190px;
+  max-height: 190px;
+  resize: none;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.confirmButton {
+  color: var(--color-white);
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.confirmButton:hover:not(:disabled),
+.confirmButton:focus-visible:not(:disabled) {
+  color: var(--color-white);
+  background-color: color-mix(in srgb, var(--color-error) 86%, black);
+  border-color: color-mix(in srgb, var(--color-error) 86%, black);
+}
+
+@media only screen and (min-width: 768px) {
+  .actions,
+  .actions > * {
+    width: 100%;
+  }
+}

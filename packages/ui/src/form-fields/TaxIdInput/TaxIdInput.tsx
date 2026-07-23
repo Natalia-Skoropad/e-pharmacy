@@ -1,65 +1,31 @@
-import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
-import type { AuthFieldBaseProps } from '../types';
+import { TAX_ID_INPUT_ATTRIBUTES } from '@e-pharmacy/validation/pharmacy';
 
-import css from '../FormFieldLayout/FormField.module.css';
+import { TextInputControl } from '../FormFieldLayout/FieldControls';
+import type { TextFieldProps } from '../types';
 
 //===================================================================
 
 function TaxIdInput({
-  id,
-  name,
-  value,
-  error,
-  isTouched,
-  required = true,
-  disabled = false,
-  className,
   label = 'Tax ID / EDRPOU',
-  placeholder = '12345678',
+  placeholder = TAX_ID_INPUT_ATTRIBUTES.placeholder,
   autoComplete = 'off',
-  maxLength = 10,
-  hint = 'Use 8–10 digits.',
-  ariaDescribedBy,
-  onChange,
-}: AuthFieldBaseProps) {
-  const hasError = Boolean(isTouched && error);
-  const describedBy =
-    [hint ? `${id}-hint` : null, hasError ? `${id}-error` : null, ariaDescribedBy]
-      .filter(Boolean)
-      .join(' ') || undefined;
-
+  maxLength = TAX_ID_INPUT_ATTRIBUTES.maxLength,
+  pattern = TAX_ID_INPUT_ATTRIBUTES.pattern,
+  hint = TAX_ID_INPUT_ATTRIBUTES.hint,
+  ...props
+}: TextFieldProps) {
   return (
-    <FormFieldLayout
-      id={id}
+    <TextInputControl
+      {...props}
       label={label}
-      required={required}
-      className={className}
-      error={error}
-      isTouched={isTouched}
+      placeholder={placeholder}
+      autoComplete={autoComplete}
+      maxLength={maxLength}
+      pattern={pattern}
       hint={hint}
-    >
-      <div className={css.inputWrap}>
-        <input
-          className={css.input}
-          id={id}
-          name={name}
-          type="text"
-          inputMode="numeric"
-          value={value}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          maxLength={maxLength}
-          pattern="[0-9]{8,10}"
-          disabled={disabled}
-          aria-invalid={hasError}
-          aria-describedby={describedBy}
-          onChange={onChange}
-        />
-        <span className={css.inputCounter} aria-hidden="true">
-          {value.length}/{maxLength}
-        </span>
-      </div>
-    </FormFieldLayout>
+      type="text"
+      inputMode="numeric"
+    />
   );
 }
 

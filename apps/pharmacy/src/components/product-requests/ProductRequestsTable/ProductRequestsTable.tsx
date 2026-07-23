@@ -9,7 +9,7 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/common';
 
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+import { StatusBadge } from '@/components/common/StatusPresentation';
 import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { type ProductRequestRow } from '@e-pharmacy/types/product-requests';

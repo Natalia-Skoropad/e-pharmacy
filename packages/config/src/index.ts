@@ -6,3 +6,4 @@ export * from './orders';
 export * from './product-requests';
 export * from './users';
 export * from './clients';
+export * from './status';

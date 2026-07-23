@@ -6,7 +6,9 @@ export type FieldAriaProps = {
   ariaDescribedBy?: string;
 };
 
-export type AuthFieldBaseProps = FieldAriaProps & {
+//===================================================================
+
+export type BaseFieldProps = FieldAriaProps & {
   id: string;
   name: string;
   value: string;
@@ -17,27 +19,28 @@ export type AuthFieldBaseProps = FieldAriaProps & {
   className?: string;
   label?: string;
   placeholder?: string;
-  autoComplete?: string;
   maxLength?: number;
-  pattern?: string;
   hint?: string;
+};
+
+//===================================================================
+
+export type TextFieldProps = BaseFieldProps & {
+  autoComplete?: string;
+  pattern?: string;
   onChange: ChangeEventHandler<HTMLInputElement>;
 };
 
 //===================================================================
 
-export type AddressFieldProps = Omit<
-  AuthFieldBaseProps,
-  'onChange' | 'autoComplete' | 'pattern'
-> & {
-  autoComplete?: string;
+export type AddressFieldProps = Omit<TextFieldProps, 'onChange' | 'pattern'> & {
   onChange: ChangeEventHandler<HTMLTextAreaElement>;
 };
 
 //===================================================================
 
 export type CommentFieldProps = Omit<
-  AuthFieldBaseProps,
+  TextFieldProps,
   'onChange' | 'autoComplete' | 'pattern'
 > & {
   errorClassName?: string;
@@ -46,7 +49,7 @@ export type CommentFieldProps = Omit<
 
 //===================================================================
 
-export type PasswordFieldProps = AuthFieldBaseProps & {
+export type PasswordFieldProps = TextFieldProps & {
   autoComplete: 'current-password' | 'new-password';
   isVisible: boolean;
   labelAction?: ReactNode;

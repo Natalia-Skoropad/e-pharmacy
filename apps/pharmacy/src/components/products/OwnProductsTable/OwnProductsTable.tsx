@@ -11,7 +11,7 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+import { StatusBadge } from '@/components/common/StatusPresentation';
 import type { EntityId } from '@e-pharmacy/types';
 import { formatAmount } from '@e-pharmacy/utils/money';
 

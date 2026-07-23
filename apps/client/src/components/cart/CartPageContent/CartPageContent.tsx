@@ -5,14 +5,13 @@ import { useMemo, useState } from 'react';
 import {
   Button,
   ButtonLink,
-  Container,
   CountLabel,
   LoadingSpinner,
   RatingSummary,
 } from '@e-pharmacy/ui/common';
 
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
-import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
 import type { Cart } from '@e-pharmacy/types';
 
 import {
@@ -28,7 +27,6 @@ import { ROUTES } from '@/lib/routes';
 import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
 import { useCartMutations } from '@/lib/cart/useCartMutations';
 import { useClientAuthCapabilities } from '@/hooks';
-
 import { useCart } from '@/providers/CartProvider';
 
 import {
@@ -50,11 +48,16 @@ const EMPTY_CART: Cart = {
 //===================================================================
 
 function CartPageContent() {
-  const { isAuthReady, canUseClientFeatures } =
-    useClientAuthCapabilities();
+  const { isAuthReady, canUseClientFeatures } = useClientAuthCapabilities();
   const canUseCart = canUseClientFeatures;
 
-  const { cart, setCart, isLoaded, isLoading, error: cartLoadError } = useCart();
+  const {
+    cart,
+    setCart,
+    isLoaded,
+    isLoading,
+    error: cartLoadError,
+  } = useCart();
   const [error, setError] = useState('');
 
   const {

@@ -8,13 +8,12 @@ import clsx from 'clsx';
 
 import {
   ButtonLink,
-  Container,
   Logo,
   LogoutButton,
   UserBadge,
 } from '@e-pharmacy/ui/common';
 
-import { BurgerButton } from '@e-pharmacy/ui/layout';
+import { Container, BurgerButton } from '@e-pharmacy/ui/layout';
 
 import { ROUTES, isActiveRoute } from '@/lib/routes';
 import { getPharmacyDashboardUrl } from '@/lib/auth';

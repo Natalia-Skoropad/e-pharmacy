@@ -4,20 +4,11 @@ import { useState, type ChangeEvent } from 'react';
 import { Download, FileText, UploadCloud, X } from 'lucide-react';
 import clsx from 'clsx';
 
+import type { UploadFileValue } from '@e-pharmacy/types/files';
+
 import ConfirmationModal from '../../modals/ConfirmationModal/ConfirmationModal';
 
 import css from './DocumentUpload.module.css';
-
-//===================================================================
-
-export type DocumentUploadFile = {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  file?: File;
-  dataUrl?: string;
-};
 
 //===================================================================
 
@@ -35,7 +26,7 @@ type DocumentUploadProps = {
   id: string;
   name: string;
   label?: string;
-  value: DocumentUploadFile[];
+  value: UploadFileValue[];
   error?: string;
   isTouched?: boolean;
   required?: boolean;
@@ -47,7 +38,7 @@ type DocumentUploadProps = {
   className?: string;
   confirmRemove?: boolean;
   labels?: DocumentUploadLabels;
-  onChange: (files: DocumentUploadFile[]) => void;
+  onChange: (files: UploadFileValue[]) => void;
   onSelectionError?: (message: string) => void;
 };
 

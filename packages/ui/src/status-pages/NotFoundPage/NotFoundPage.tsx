@@ -1,3 +1,4 @@
+import type { ButtonVariant } from '../../common/Button';
 import ButtonLink from '../../common/ButtonLink/ButtonLink';
 
 import StatusPageLayout, {
@@ -7,13 +8,13 @@ import StatusPageLayout, {
 
 //===================================================================
 
-type NotFoundPageAction = {
+export type NotFoundPageAction = Readonly<{
   href: string;
   label: string;
-  variant?: 'primary' | 'secondary' | 'ghost';
-};
+  variant?: ButtonVariant;
+}>;
 
-type NotFoundPageProps = {
+export type NotFoundPageProps = Readonly<{
   title: string;
   description: string;
   homeHref: string;
@@ -21,9 +22,8 @@ type NotFoundPageProps = {
   eyebrow?: string;
   secondaryAction?: NotFoundPageAction;
   image?: StatusPageLayoutImage;
-  imageSrc?: string;
   variant?: StatusPageLayoutVariant;
-};
+}>;
 
 //===================================================================
 
@@ -35,35 +35,20 @@ function NotFoundPage({
   eyebrow = '404',
   secondaryAction,
   image,
-  imageSrc,
   variant,
 }: NotFoundPageProps) {
-  const pageImage =
-    image ??
-    (imageSrc
-      ? {
-          src: imageSrc,
-          alt: '',
-          width: 749,
-          height: 508,
-          priority: true,
-        }
-      : undefined);
-
   return (
     <StatusPageLayout
       eyebrow={eyebrow}
       title={title}
-      titleId="not-found-title"
       description={description}
-      image={pageImage}
+      image={image}
       variant={variant}
       actions={
         <>
           <ButtonLink href={homeHref} size="lg">
             {homeLabel}
           </ButtonLink>
-
           {secondaryAction ? (
             <ButtonLink
               href={secondaryAction.href}
@@ -80,5 +65,4 @@ function NotFoundPage({
 }
 
 export default NotFoundPage;
-
 export { NotFoundPage };

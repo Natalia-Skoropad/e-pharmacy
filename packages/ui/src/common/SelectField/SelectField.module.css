@@ -210,3 +210,8 @@
     transform: rotate(360deg);
   }
 }
+
+.optionDisabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

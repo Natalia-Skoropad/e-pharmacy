@@ -20,8 +20,9 @@ import {
 } from 'lucide-react';
 
 import type { PharmacyProfile } from '@e-pharmacy/types';
-import type { BreadcrumbItem } from '@e-pharmacy/ui/layout';
-import { BurgerButton, CabinetTopBar } from '@e-pharmacy/ui/layout';
+import type { BreadcrumbItem } from '@e-pharmacy/types/navigation';
+import { BurgerButton } from '@e-pharmacy/ui/layout';
+import { CabinetTopBar } from '@e-pharmacy/ui/cabinet';
 import { TextActionButton, UserBadge } from '@e-pharmacy/ui/common';
 import { useAuth } from '@e-pharmacy/auth/core';
 

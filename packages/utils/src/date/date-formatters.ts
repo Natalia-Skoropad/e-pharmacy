@@ -157,3 +157,27 @@ export function formatTableDateTimeParts(
     time: TABLE_TIME_FORMATTER.format(date),
   };
 }
+
+//===================================================================
+
+const CALENDAR_DATE_PARTS_FORMATTER = new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  timeZone: BUSINESS_TIME_ZONE,
+});
+
+//===================================================================
+
+export function getBusinessCalendarDate(
+  value: Date = new Date()
+): string | null {
+  if (Number.isNaN(value.getTime())) return null;
+
+  const parts = CALENDAR_DATE_PARTS_FORMATTER.formatToParts(value);
+  const year = parts.find((part) => part.type === 'year')?.value;
+  const month = parts.find((part) => part.type === 'month')?.value;
+  const day = parts.find((part) => part.type === 'day')?.value;
+
+  return year && month && day ? `${year}-${month}-${day}` : null;
+}

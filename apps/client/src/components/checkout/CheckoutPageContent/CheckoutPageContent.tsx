@@ -4,12 +4,7 @@ import { useMemo, useState, type ChangeEvent } from 'react';
 import { Clock, Info, MapPin, Phone, Truck } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
-import {
-  ButtonLink,
-  Container,
-  LoadingSpinner,
-  RadioOption,
-} from '@e-pharmacy/ui/common';
+import { ButtonLink, LoadingSpinner, RadioOption } from '@e-pharmacy/ui/common';
 
 import {
   AddressInput,
@@ -18,7 +13,7 @@ import {
   PhoneInput,
 } from '@e-pharmacy/ui/form-fields';
 
-import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
 import type { BreadcrumbItem } from '@e-pharmacy/types';
 import type { PaymentMethod, DeliveryMethod } from '@e-pharmacy/types/orders';
 

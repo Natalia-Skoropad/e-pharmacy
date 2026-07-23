@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
-  CloseIconButton,
   CountLabel,
   FiltersButton,
   ResetFiltersButton,
@@ -13,14 +12,8 @@ import {
   SelectField,
 } from '@e-pharmacy/ui/common';
 
-import {
-  useBackdropClick,
-  useBodyScrollLock,
-  useEscapeToClose,
-} from '@e-pharmacy/hooks';
-
+import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import type { PharmaciesSortFilter } from '@e-pharmacy/types';
-
 import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
 import { CATALOG_SEARCH_UPDATE_DELAY } from '@/lib/catalog/catalog-config';
 
@@ -84,17 +77,6 @@ function PharmaciesCatalogFiltersForm({
   const [name, setName] = useState(filters.name);
   const [address, setAddress] = useState(filters.address);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-
-  useBodyScrollLock(isFiltersOpen);
-
-  useEscapeToClose({
-    isOpen: isFiltersOpen,
-    onClose: () => setIsFiltersOpen(false),
-  });
-
-  const handleBackdropClick = useBackdropClick({
-    onClose: () => setIsFiltersOpen(false),
-  });
 
   const activeFiltersCount = getPharmacyActiveFiltersCount(filters);
   const hasActiveFilters = activeFiltersCount > 0;
@@ -235,64 +217,31 @@ function PharmaciesCatalogFiltersForm({
         </div>
       </div>
 
-      {isFiltersOpen ? (
-        <div
-          className={css.offcanvasBackdrop}
-          role="presentation"
-          onMouseDown={handleBackdropClick}
-        >
-          <aside
-            className={css.offcanvas}
-            id="pharmacies-filters-panel"
-            aria-labelledby="pharmacies-filters-title"
-            aria-modal="true"
-            role="dialog"
-          >
-            <div className={css.offcanvasHeader}>
-              <div>
-                <p className={css.offcanvasKicker}>Pharmacies</p>
+      <FilterDrawer
+        id="pharmacies-filters-panel"
+        eyebrow="Pharmacies"
+        title="Filters and sorting"
+        isOpen={isFiltersOpen}
+        hasActiveFilters={hasActiveFilters}
+        resetHref={resetHref}
+        onClose={() => setIsFiltersOpen(false)}
+        onReset={() => {
+          setName('');
+          setAddress('');
+          setIsFiltersOpen(false);
+        }}
+      >
+        {renderFiltersControls('mobile')}
 
-                <h2
-                  className={css.offcanvasTitle}
-                  id="pharmacies-filters-title"
-                >
-                  Filters and sorting
-                </h2>
-              </div>
-
-              <CloseIconButton
-                label="Close filters"
-                onClick={() => setIsFiltersOpen(false)}
-              />
-            </div>
-
-            <div className={css.offcanvasControls}>
-              {renderFiltersControls('mobile')}
-
-              <SelectField
-                id="pharmacies-sort-mobile"
-                label="Sort by"
-                value={filters.sort}
-                options={PHARMACIES_SORT_OPTIONS}
-                isActive={filters.sort !== 'newest'}
-                onChange={handleSortChange}
-              />
-            </div>
-
-            {hasActiveFilters ? (
-              <ResetFiltersButton
-                className={css.offcanvasReset}
-                href={resetHref}
-                onClick={() => {
-                  setName('');
-                  setAddress('');
-                  setIsFiltersOpen(false);
-                }}
-              />
-            ) : null}
-          </aside>
-        </div>
-      ) : null}
+        <SelectField
+          id="pharmacies-sort-mobile"
+          label="Sort by"
+          value={filters.sort}
+          options={PHARMACIES_SORT_OPTIONS}
+          isActive={filters.sort !== 'newest'}
+          onChange={handleSortChange}
+        />
+      </FilterDrawer>
     </>
   );
 }

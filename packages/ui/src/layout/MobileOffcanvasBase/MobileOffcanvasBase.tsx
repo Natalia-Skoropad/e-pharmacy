@@ -1,15 +1,10 @@
 'use client';
 
-import { useRef, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import type { ReactNode } from 'react';
 import clsx from 'clsx';
 
-import {
-  useBackdropClick,
-  useBodyScrollLock,
-  useEscapeToClose,
-  useFocusTrap,
-} from '@e-pharmacy/hooks';
+import ModalBase from '../../modals/ModalBase/ModalBase';
+import ModalRoot from '../../modals/ModalRoot/ModalRoot';
 
 //===================================================================
 
@@ -38,42 +33,27 @@ function MobileOffcanvasBase({
   children,
   classNames,
 }: MobileOffcanvasBaseProps) {
-  const panelRef = useRef<HTMLElement | null>(null);
-  const handleBackdropMouseDown = useBackdropClick({ onClose });
+  const titleId = `${id}-title`;
 
-  useEscapeToClose({ isOpen, onClose });
-  useBodyScrollLock(isOpen);
-  useFocusTrap({ isOpen, containerRef: panelRef });
+  if (!isOpen) return null;
 
-  const portalRoot = typeof document === 'undefined' ? null : document.body;
-  if (!isOpen || !portalRoot) return null;
-
-  return createPortal(
-    <div
-      className={clsx(classNames.backdrop, isOpen && classNames.backdropOpen)}
-      aria-hidden={!isOpen}
-      onMouseDown={handleBackdropMouseDown}
-    >
-      <aside
-        ref={panelRef}
-        className={classNames.panel}
-        id={id}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={`${id}-title`}
-        tabIndex={-1}
+  return (
+    <ModalRoot>
+      <ModalBase
+        isOpen={isOpen}
+        labelledBy={titleId}
+        className={clsx(classNames.backdrop, classNames.backdropOpen)}
+        dialogClassName={classNames.panel}
+        onClose={onClose}
       >
-        <h2 className="visually-hidden" id={`${id}-title`}>
+        <h2 className="visually-hidden" id={titleId}>
           {title}
         </h2>
-
         {children}
-      </aside>
-    </div>,
-    portalRoot
+      </ModalBase>
+    </ModalRoot>
   );
 }
 
 export default MobileOffcanvasBase;
-
 export { MobileOffcanvasBase };

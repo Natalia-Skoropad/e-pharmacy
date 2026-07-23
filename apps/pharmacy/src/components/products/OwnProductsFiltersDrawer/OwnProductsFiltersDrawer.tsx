@@ -1,13 +1,10 @@
-import type { MouseEventHandler } from 'react';
-
 import {
-  CloseIconButton,
   DateFilter,
-  ResetFiltersButton,
   SelectField,
   type SelectOption,
 } from '@e-pharmacy/ui/common';
 
+import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
@@ -21,15 +18,12 @@ import {
 
 import type { OwnProductsFilterState } from '@/lib/products/own-products-filters';
 
-import css from './OwnProductsFiltersDrawer.module.css';
-
 //===================================================================
 
 type OwnProductsFiltersDrawerProps = Readonly<{
   filters: OwnProductsFilterState;
   hasActiveFilters: boolean;
   minDate?: string;
-  onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
   onChange: (filters: OwnProductsFilterState) => void;
   onClose: () => void;
   onReset: () => void;
@@ -69,90 +63,61 @@ function OwnProductsFiltersDrawer({
   filters,
   hasActiveFilters,
   minDate,
-  onBackdropMouseDown,
   onChange,
   onClose,
   onReset,
 }: OwnProductsFiltersDrawerProps) {
   return (
-    <div
-      className={css.backdrop}
-      role="presentation"
-      onMouseDown={onBackdropMouseDown}
+    <FilterDrawer
+      id="own-products-filters-panel"
+      eyebrow="Own products"
+      hasActiveFilters={hasActiveFilters}
+      resetHref={getPharmacyProductsPath()}
+      onClose={onClose}
+      onReset={() => {
+        onReset();
+        onClose();
+      }}
     >
-      <aside
-        className={css.panel}
-        id="own-products-filters-panel"
-        aria-labelledby="own-products-filters-title"
-        aria-modal="true"
-        role="dialog"
-      >
-        <div className={css.header}>
-          <div>
-            <p className={css.kicker}>Own products</p>
-            <h2 className={css.title} id="own-products-filters-title">
-              Filters
-            </h2>
-          </div>
+      <DateFilter
+        id="own-products-added-date-filter"
+        minDate={minDate}
+        disabled={!minDate}
+        label="Added date"
+        value={filters.createdDate}
+        isActive={Boolean(filters.createdDate.from || filters.createdDate.to)}
+        applyOnSubmit
+        applyLabel="Apply"
+        onChange={(createdDate) => onChange({ ...filters, createdDate })}
+      />
 
-          <CloseIconButton label="Close filters" onClick={onClose} />
-        </div>
+      <SelectField
+        id="own-products-category"
+        label="Product category"
+        value={filters.category}
+        options={CATEGORY_OPTIONS}
+        isActive={filters.category !== 'all'}
+        onChange={(category) => onChange({ ...filters, category })}
+      />
 
-        <div className={css.controls}>
-          <DateFilter
-            id="own-products-added-date-filter"
-            minDate={minDate}
-            disabled={!minDate}
-            label="Added date"
-            value={filters.createdDate}
-            isActive={Boolean(
-              filters.createdDate.from || filters.createdDate.to
-            )}
-            applyOnSubmit
-            applyLabel="Apply"
-            onChange={(createdDate) => onChange({ ...filters, createdDate })}
-          />
+      <SelectField
+        id="own-products-status"
+        label="Product status"
+        value={filters.status}
+        options={STATUS_OPTIONS}
+        isActive={filters.status !== 'all'}
+        onChange={(status) => onChange({ ...filters, status })}
+      />
 
-          <SelectField
-            id="own-products-category"
-            label="Product category"
-            value={filters.category}
-            options={CATEGORY_OPTIONS}
-            isActive={filters.category !== 'all'}
-            onChange={(category) => onChange({ ...filters, category })}
-          />
-
-          <SelectField
-            id="own-products-status"
-            label="Product status"
-            value={filters.status}
-            options={STATUS_OPTIONS}
-            isActive={filters.status !== 'all'}
-            onChange={(status) => onChange({ ...filters, status })}
-          />
-
-          <SelectField
-            id="own-products-stock"
-            label="Stock availability"
-            value={filters.stock}
-            options={STOCK_OPTIONS}
-            isActive={filters.stock !== 'all'}
-            onChange={(stock) => onChange({ ...filters, stock })}
-          />
-        </div>
-
-        {hasActiveFilters ? (
-          <ResetFiltersButton
-            className={css.resetButton}
-            href={getPharmacyProductsPath()}
-            onClick={() => {
-              onReset();
-              onClose();
-            }}
-          />
-        ) : null}
-      </aside>
-    </div>
+      <SelectField
+        id="own-products-stock"
+        label="Stock availability"
+        value={filters.stock}
+        options={STOCK_OPTIONS}
+        isActive={filters.stock !== 'all'}
+        onChange={(stock) => onChange({ ...filters, stock })}
+      />
+    </FilterDrawer>
   );
 }
 

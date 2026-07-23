@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { Facebook, Instagram, Youtube } from 'lucide-react';
 
-import { Container, Logo } from '@e-pharmacy/ui/common';
+import { Logo } from '@e-pharmacy/ui/common';
+import { Container } from '@e-pharmacy/ui/layout';
 
 import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
 import { INFO_NAV_LINKS } from '@/components/info/config/navigation';
@@ -29,8 +30,8 @@ function Footer() {
             <Logo className={css.footerLogo} variant="white" />
 
             <p className={css.text}>
-              E-PHARMACY helps clients explore pharmacies, find products,
-              and prepare online orders.
+              E-PHARMACY helps clients explore pharmacies, find products, and
+              prepare online orders.
             </p>
           </div>
 

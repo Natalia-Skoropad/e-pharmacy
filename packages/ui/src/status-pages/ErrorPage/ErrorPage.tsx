@@ -9,7 +9,7 @@ import StatusPageLayout, {
 
 //===================================================================
 
-type ErrorPageProps = {
+export type ErrorPageProps = Readonly<{
   title: string;
   description: string;
   onRetry: () => void;
@@ -18,9 +18,8 @@ type ErrorPageProps = {
   retryLabel?: string;
   eyebrow?: string;
   image?: StatusPageLayoutImage;
-  imageSrc?: string;
   variant?: StatusPageLayoutVariant;
-};
+}>;
 
 //===================================================================
 
@@ -33,35 +32,20 @@ function ErrorPage({
   retryLabel = 'Try again',
   eyebrow = 'Page error',
   image,
-  imageSrc,
   variant,
 }: ErrorPageProps) {
-  const pageImage =
-    image ??
-    (imageSrc
-      ? {
-          src: imageSrc,
-          alt: '',
-          width: 749,
-          height: 508,
-          priority: true,
-        }
-      : undefined);
-
   return (
     <StatusPageLayout
       eyebrow={eyebrow}
       title={title}
-      titleId="error-title"
       description={description}
-      image={pageImage}
+      image={image}
       variant={variant}
       actions={
         <>
           <Button type="button" size="lg" onClick={onRetry}>
             {retryLabel}
           </Button>
-
           <ButtonLink href={homeHref} variant="secondary" size="lg">
             {homeLabel}
           </ButtonLink>
@@ -72,5 +56,4 @@ function ErrorPage({
 }
 
 export default ErrorPage;
-
 export { ErrorPage };

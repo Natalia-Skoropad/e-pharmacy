@@ -1,19 +1,14 @@
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
 
-import {
-  getStatusTone,
-  type PharmacyStatusVariant,
-} from '../StatusBadge/status-types';
-
-import { StatusBadge } from '../StatusBadge/StatusBadge';
+import { StatusBadge, type StatusTone } from '../StatusBadge/StatusBadge';
 
 import css from './StatusBanner.module.css';
 
 //===================================================================
 
-type StatusBannerProps = Readonly<{
-  status: PharmacyStatusVariant;
+export type StatusBannerProps = Readonly<{
+  tone: StatusTone;
   title: string;
   message: string;
   label?: string;
@@ -24,20 +19,18 @@ type StatusBannerProps = Readonly<{
 //===================================================================
 
 export function StatusBanner({
-  status,
+  tone,
   title,
   message,
   label,
   className,
   meta,
 }: StatusBannerProps) {
-  const tone = getStatusTone(status);
-
   return (
     <section className={clsx(css.banner, css[tone], className)}>
       <div className={css.header}>
         <h2 className={css.title}>{title}</h2>
-        <StatusBadge status={status} label={label} />
+        {label ? <StatusBadge tone={tone} label={label} /> : null}
       </div>
       <p className={css.message}>{message}</p>
       {meta ? <div className={css.meta}>{meta}</div> : null}

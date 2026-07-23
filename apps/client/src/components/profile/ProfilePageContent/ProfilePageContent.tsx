@@ -1,19 +1,16 @@
 'use client';
 
-import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
-
-import { USER_ROLE_LABELS, USER_STATUS_LABELS } from '@e-pharmacy/config/users';
-
 import { useCallback, useEffect, useMemo, useState } from 'react';
-
 import type { ChangeEvent } from 'react';
 
 import { Building2, Heart, KeyRound, MonitorSmartphone } from 'lucide-react';
 
+import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
+import { USER_ROLE_LABELS, USER_STATUS_LABELS } from '@e-pharmacy/config/users';
+
 import {
   Button,
   ButtonLink,
-  Container,
   CountLabel,
   DataTable,
   LoadingSpinner,
@@ -32,8 +29,8 @@ import {
 
 import { useAuth } from '@e-pharmacy/auth/core';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
+
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
 
@@ -96,6 +93,7 @@ import {
 
 import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
+import { StatusBadge } from '@/components/common/StatusPresentation';
 
 import css from './ProfilePageContent.module.css';
 

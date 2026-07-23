@@ -1,6 +1,6 @@
-import { Container, Pagination } from '@e-pharmacy/ui/common';
-import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
 import type { PublicPharmacy } from '@e-pharmacy/types';
+import { LinkPagination } from '@e-pharmacy/ui/navigation';
 
 import {
   buildPharmacyPath,
@@ -88,7 +88,7 @@ function PharmaciesPageContent({
 
           <PharmaciesList pharmacies={pharmacies} />
 
-          <Pagination
+          <LinkPagination
             currentPage={filters.page}
             totalPages={totalPages}
             getPageHref={(page) => buildPharmacyPageHref(filters, page)}

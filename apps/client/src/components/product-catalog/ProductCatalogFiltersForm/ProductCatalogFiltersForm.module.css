@@ -28,69 +28,12 @@
   margin-bottom: 24px;
 }
 
-
 .filterButton {
   flex-shrink: 0;
 }
 
-
 .desktopSort {
   display: none;
-}
-
-.offcanvasBackdrop {
-  position: fixed;
-  z-index: 100;
-  inset: 0;
-  display: flex;
-  justify-content: flex-end;
-  background-color: var(--color-overlay);
-}
-
-.offcanvas {
-  display: flex;
-  flex-direction: column;
-  width: min(100%, 390px);
-  height: 100%;
-  padding: 22px 20px 28px;
-  overflow-y: auto;
-  background-color: var(--color-white);
-  box-shadow: var(--shadow-card);
-}
-
-.offcanvasHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 28px;
-}
-
-.offcanvasKicker {
-  margin-bottom: 4px;
-  font-size: var(--fz-12);
-  font-weight: var(--fw-medium);
-  line-height: 1.3;
-  color: var(--color-accent);
-  text-transform: uppercase;
-  letter-spacing: var(--ls-wide);
-}
-
-.offcanvasTitle {
-  font-size: var(--fz-24);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-heading);
-  color: var(--color-text-primary);
-}
-
-.offcanvasControls {
-  display: grid;
-  gap: 18px;
-}
-
-.offcanvasReset {
-  width: 100%;
-  margin-top: 24px;
 }
 
 @media only screen and (min-width: 768px) {
@@ -114,7 +57,10 @@
   }
 
   .searchGrid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(
+        0,
+        1fr
+      ) minmax(0, 1fr) auto;
     align-items: end;
   }
 

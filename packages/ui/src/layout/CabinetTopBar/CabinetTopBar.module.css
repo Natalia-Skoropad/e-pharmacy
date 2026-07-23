@@ -137,7 +137,7 @@
   margin-left: auto;
 }
 
-@media only screen and (max-width: 767px) {
+@media only screen and (min-width: 768px) {
   .topbar {
     gap: 8px;
     min-height: 52px;

@@ -1,4 +1,5 @@
 import { createElement } from 'react';
+import type { ReactNode } from 'react';
 
 import {
   Boxes,
@@ -9,7 +10,7 @@ import {
   Users,
 } from 'lucide-react';
 
-import type { SideMenuItem } from '@e-pharmacy/ui/layout';
+import type { NavigationItem } from '@e-pharmacy/types/navigation';
 import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
 
 //===================================================================
@@ -18,7 +19,7 @@ const ICON_SIZE = 18;
 
 //===================================================================
 
-export const PHARMACY_NAVIGATION: readonly SideMenuItem[] = [
+export const PHARMACY_NAVIGATION: readonly NavigationItem<ReactNode>[] = [
   {
     label: 'Dashboard',
     href: PHARMACY_ROUTES.DASHBOARD,
@@ -53,5 +54,5 @@ export const PHARMACY_NAVIGATION: readonly SideMenuItem[] = [
 
 //===================================================================
 
-export const PHARMACY_MOBILE_NAVIGATION: readonly SideMenuItem[] =
+export const PHARMACY_MOBILE_NAVIGATION: readonly NavigationItem<ReactNode>[] =
   PHARMACY_NAVIGATION;

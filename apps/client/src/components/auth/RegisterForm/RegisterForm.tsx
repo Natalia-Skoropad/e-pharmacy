@@ -8,8 +8,9 @@ import {
   DocumentUpload,
   RadioOption,
   TextActionButton,
-  type DocumentUploadFile,
 } from '@e-pharmacy/ui/common';
+
+import type { UploadFileValue } from '@e-pharmacy/types/files';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 
@@ -109,9 +110,9 @@ function RegisterForm() {
     REGISTER_INITIAL_VALUES
   );
 
-  const [pharmacyDocuments, setPharmacyDocuments] = useState<
-    DocumentUploadFile[]
-  >([]);
+  const [pharmacyDocuments, setPharmacyDocuments] = useState<UploadFileValue[]>(
+    []
+  );
 
   const [errors, setErrors] = useState<PharmacyRegisterErrors>({});
   const [touchedFields, setTouchedFields] =
@@ -170,7 +171,7 @@ function RegisterForm() {
     }
   };
 
-  const handleDocumentsChange = (files: DocumentUploadFile[]) => {
+  const handleDocumentsChange = (files: UploadFileValue[]) => {
     const documentsError = validatePharmacyDocuments(files, { required: true });
 
     setTouchedFields((prev) => ({ ...prev, pharmacyDocuments: true }));

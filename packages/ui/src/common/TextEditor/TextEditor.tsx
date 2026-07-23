@@ -1,12 +1,11 @@
 'use client';
 
 import clsx from 'clsx';
-import type { ChangeEvent, RefObject } from 'react';
+import type { RefObject } from 'react';
 import { useRef } from 'react';
 import { Bold, Italic, List, Pilcrow } from 'lucide-react';
 
 import FormFieldLayout from '../../form-fields/FormFieldLayout/FormFieldLayout';
-import { createTextareaChangeEvent } from '../../internal/create-textarea-change-event';
 
 import css from './TextEditor.module.css';
 
@@ -25,7 +24,7 @@ export type TextEditorProps = Readonly<{
   className?: string;
   maxLength?: number;
   hint?: string;
-  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  onValueChange: (value: string) => void;
 }>;
 
 //===================================================================
@@ -45,13 +44,13 @@ function insertSnippet({
   snippet,
   value,
   maxLength,
-  onChange,
+  onValueChange,
 }: {
   textareaRef: TextareaRef;
   snippet: string;
   value: string;
   maxLength?: number;
-  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  onValueChange: (value: string) => void;
 }) {
   const textarea = textareaRef.current;
   if (!textarea) return;
@@ -64,7 +63,7 @@ function insertSnippet({
     maxLength
   );
 
-  onChange(createTextareaChangeEvent(textarea, nextValue));
+  onValueChange(nextValue);
   textarea.focus();
 
   window.requestAnimationFrame(() => {
@@ -91,7 +90,7 @@ function TextEditor({
   className,
   maxLength,
   hint,
-  onChange,
+  onValueChange,
 }: TextEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const hasError = Boolean(isTouched && error);
@@ -101,7 +100,7 @@ function TextEditor({
       .join(' ') || undefined;
 
   const insert = (snippet: string) => {
-    insertSnippet({ textareaRef, snippet, value, maxLength, onChange });
+    insertSnippet({ textareaRef, snippet, value, maxLength, onValueChange });
   };
 
   return (
@@ -163,10 +162,11 @@ function TextEditor({
             value={value}
             placeholder={placeholder}
             maxLength={maxLength}
+            required={required}
             disabled={disabled}
             aria-invalid={hasError}
             aria-describedby={describedBy}
-            onChange={onChange}
+            onChange={(event) => onValueChange(event.target.value)}
           />
           {typeof maxLength === 'number' ? (
             <span className={css.counter} aria-hidden="true">

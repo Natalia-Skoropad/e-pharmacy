@@ -11,11 +11,10 @@ import type { ApiSuccessResponse } from '@e-pharmacy/types';
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
-
 import type {
   EntityComment,
   EntityCommentsPage,
-} from '@e-pharmacy/ui/feedback';
+} from '@e-pharmacy/types/comments';
 
 //===================================================================
 

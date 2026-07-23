@@ -1,30 +1,26 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Check, ChevronDown, LoaderCircle } from 'lucide-react';
 import clsx from 'clsx';
-
-import {
-  isListboxOpenKey,
-  isListboxSelectKey,
-} from '../helpers/listbox-keyboard';
 
 import { useListboxNavigation } from '../helpers/useListboxNavigation';
 
 import css from './SelectField.module.css';
 
-//===================================================================
+//===============================================================
 
-export type SelectOption<TValue extends string> = {
+export type SelectOption<TValue extends string> = Readonly<{
   value: TValue;
   label: string;
-};
+  disabled?: boolean;
+}>;
 
-export type SelectFieldProps<TValue extends string> = {
+export type SelectFieldProps<TValue extends string> = Readonly<{
   id?: string;
   label: string;
   value: TValue;
-  options: SelectOption<TValue>[];
+  options: readonly SelectOption<TValue>[];
   placeholder?: string;
   hint?: string;
   required?: boolean;
@@ -34,9 +30,13 @@ export type SelectFieldProps<TValue extends string> = {
   error?: string;
   describedBy?: string;
   onChange: (value: TValue) => void;
-};
+}>;
 
-//===================================================================
+//===============================================================
+
+const TYPEAHEAD_RESET_DELAY = 700;
+
+//===============================================================
 
 function SelectField<TValue extends string>({
   id,
@@ -54,93 +54,139 @@ function SelectField<TValue extends string>({
   onChange,
 }: SelectFieldProps<TValue>) {
   const generatedId = useId();
-  const buttonId = id ?? generatedId;
+  const buttonId = id ?? `select-${generatedId}`;
   const listboxId = `${buttonId}-listbox`;
   const errorId = error ? `${buttonId}-error` : undefined;
   const hintId = hint ? `${buttonId}-hint` : undefined;
-  const ariaDescribedBy = [describedBy, hintId, errorId]
-    .filter(Boolean)
-    .join(' ') || undefined;
+
+  const ariaDescribedBy =
+    [describedBy, hintId, errorId].filter(Boolean).join(' ') || undefined;
 
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const optionRefs = useRef<Array<HTMLLIElement | null>>([]);
+  const typeaheadRef = useRef('');
+  const typeaheadTimerRef = useRef<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
   const selectedOption = options.find((option) => option.value === value);
-  const selectedIndex = useMemo(
-    () =>
-      Math.max(
-        0,
-        options.findIndex((option) => option.value === value)
-      ),
-    [options, value]
+  const selectedIndex = options.findIndex((option) => option.value === value);
+
+  const isOptionDisabled = useCallback(
+    (index: number) => Boolean(options[index]?.disabled),
+    [options]
   );
-  const { activeIndex, moveActiveIndex, resetActiveIndex, setActiveIndex } =
-    useListboxNavigation(options.length, selectedIndex);
-  const activeOption = options[activeIndex];
+
+  const {
+    activeIndex,
+    moveActiveIndex,
+    moveToStart,
+    moveToEnd,
+    resetActiveIndex,
+    setActiveIndex,
+  } = useListboxNavigation(
+    options.length,
+    Math.max(selectedIndex, 0),
+    isOptionDisabled
+  );
+  const activeOption = activeIndex >= 0 ? options[activeIndex] : undefined;
+  const activeOptionId =
+    isOpen && activeIndex >= 0
+      ? `${listboxId}-option-${activeIndex}`
+      : undefined;
+
+  useEffect(() => {
+    if (!isOpen || activeIndex < 0) return;
+    optionRefs.current[activeIndex]?.scrollIntoView({ block: 'nearest' });
+  }, [activeIndex, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
 
     const handleDocumentClick = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
+      if (!rootRef.current?.contains(event.target as Node)) setIsOpen(false);
     };
 
     document.addEventListener('mousedown', handleDocumentClick);
-
-    return () => {
-      document.removeEventListener('mousedown', handleDocumentClick);
-    };
+    return () => document.removeEventListener('mousedown', handleDocumentClick);
   }, [isOpen]);
+
+  useEffect(
+    () => () => {
+      if (typeaheadTimerRef.current !== null) {
+        window.clearTimeout(typeaheadTimerRef.current);
+      }
+    },
+    []
+  );
 
   const openSelect = () => {
     if (disabled || isLoading) return;
-
-    resetActiveIndex(selectedIndex);
+    resetActiveIndex(Math.max(selectedIndex, 0));
     setIsOpen(true);
   };
 
-  const handleSelect = (nextValue: TValue) => {
-    if (disabled || isLoading) return;
-
-    onChange(nextValue);
+  const handleSelect = (option: SelectOption<TValue> | undefined) => {
+    if (!option || option.disabled || disabled || isLoading) return;
+    onChange(option.value);
     setIsOpen(false);
+  };
+
+  const handleTypeahead = (key: string) => {
+    typeaheadRef.current += key.toLocaleLowerCase();
+
+    if (typeaheadTimerRef.current !== null) {
+      window.clearTimeout(typeaheadTimerRef.current);
+    }
+
+    typeaheadTimerRef.current = window.setTimeout(() => {
+      typeaheadRef.current = '';
+    }, TYPEAHEAD_RESET_DELAY);
+
+    const matchIndex = options.findIndex(
+      (option) =>
+        !option.disabled &&
+        option.label.toLocaleLowerCase().startsWith(typeaheadRef.current)
+    );
+
+    if (matchIndex >= 0) {
+      setActiveIndex(matchIndex);
+      if (!isOpen) setIsOpen(true);
+    }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (disabled || isLoading) return;
 
-    if (isListboxOpenKey(event.key)) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
-
-      if (!isOpen) {
-        openSelect();
-        return;
-      }
-
-      moveActiveIndex(event.key === 'ArrowDown' ? 1 : -1);
+      if (!isOpen) openSelect();
+      else moveActiveIndex(event.key === 'ArrowDown' ? 1 : -1);
       return;
     }
 
-    if (isListboxSelectKey(event.key)) {
+    if (event.key === 'Home' || event.key === 'End') {
       event.preventDefault();
-
-      if (!isOpen) {
-        openSelect();
-        return;
-      }
-
-      if (activeOption) {
-        handleSelect(activeOption.value);
-      }
-
+      if (!isOpen) setIsOpen(true);
+      if (event.key === 'Home') moveToStart();
+      else moveToEnd();
       return;
     }
 
-    if (event.key === 'Escape') {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      if (!isOpen) openSelect();
+      else handleSelect(activeOption);
+      return;
+    }
+
+    if (event.key === 'Escape' && isOpen) {
       event.preventDefault();
       setIsOpen(false);
+      return;
+    }
+
+    if (event.key.length === 1 && /\S/.test(event.key)) {
+      handleTypeahead(event.key);
     }
   };
 
@@ -174,29 +220,34 @@ function SelectField<TValue extends string>({
             error && css.triggerError
           )}
           type="button"
+          role="combobox"
           disabled={disabled || isLoading}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           aria-labelledby={`${buttonId}-label ${buttonId}`}
           aria-controls={isOpen ? listboxId : undefined}
+          aria-activedescendant={activeOptionId}
+          aria-required={required || undefined}
           aria-invalid={Boolean(error) || undefined}
           aria-describedby={ariaDescribedBy}
-          onClick={() => {
-            if (isOpen) {
-              setIsOpen(false);
-              return;
-            }
-
-            openSelect();
-          }}
+          onClick={() => (isOpen ? setIsOpen(false) : openSelect())}
           onKeyDown={handleKeyDown}
         >
-          <span className={clsx(css.triggerText, !selectedOption && css.placeholder)}>
+          <span
+            className={clsx(
+              css.triggerText,
+              !selectedOption && css.placeholder
+            )}
+          >
             {selectedOption?.label ?? placeholder}
           </span>
 
           {isLoading ? (
-            <LoaderCircle className={css.spinner} size={18} aria-hidden="true" />
+            <LoaderCircle
+              className={css.spinner}
+              size={18}
+              aria-hidden="true"
+            />
           ) : (
             <ChevronDown
               className={clsx(css.chevron, isOpen && css.chevronOpen)}
@@ -218,7 +269,6 @@ function SelectField<TValue extends string>({
             id={listboxId}
             role="listbox"
             aria-labelledby={`${buttonId}-label`}
-            tabIndex={-1}
           >
             {options.map((option, index) => {
               const isSelected = option.value === value;
@@ -226,22 +276,33 @@ function SelectField<TValue extends string>({
 
               return (
                 <li
+                  ref={(element) => {
+                    optionRefs.current[index] = element;
+                  }}
                   className={clsx(
                     css.option,
                     isOptionActive && css.optionActive,
-                    isSelected && css.optionSelected
+                    isSelected && css.optionSelected,
+                    option.disabled && css.optionDisabled
                   )}
-                  id={`${listboxId}-option-${option.value}`}
-                  key={option.value}
+                  id={`${listboxId}-option-${index}`}
+                  key={`${option.value}-${index}`}
                   role="option"
                   aria-selected={isSelected}
-                  onMouseEnter={() => setActiveIndex(index)}
-                  onClick={() => handleSelect(option.value)}
+                  aria-disabled={option.disabled || undefined}
+                  onMouseEnter={() => {
+                    if (!option.disabled) setActiveIndex(index);
+                  }}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => handleSelect(option)}
                 >
                   <span>{option.label}</span>
-
                   {isSelected ? (
-                    <Check className={css.checkIcon} size={16} aria-hidden />
+                    <Check
+                      className={css.checkIcon}
+                      size={16}
+                      aria-hidden="true"
+                    />
                   ) : null}
                 </li>
               );
@@ -254,5 +315,4 @@ function SelectField<TValue extends string>({
 }
 
 export default SelectField;
-
 export { SelectField };

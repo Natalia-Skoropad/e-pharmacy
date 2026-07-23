@@ -1,7 +1,7 @@
-import { Container } from '@e-pharmacy/ui/common';
-import { Breadcrumbs, SideMenu } from '@e-pharmacy/ui/layout';
+import { Container, Breadcrumbs, SideMenu } from '@e-pharmacy/ui/layout';
 
 import { createBreadcrumbs } from '@/lib/routes';
+
 import { INFO_NAV_LINKS } from '@/components/info/config/navigation';
 
 import css from './InfoPage.module.css';

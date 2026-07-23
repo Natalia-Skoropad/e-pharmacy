@@ -1,27 +1,38 @@
 import Link from 'next/link';
 import clsx from 'clsx';
+import type { ReactNode } from 'react';
 
-import { StatusBadge } from '../StatusBadge/StatusBadge';
-import type { PharmacyStatusVariant } from '../StatusBadge/status-types';
+import { StatusBadge, type StatusTone } from '../StatusBadge/StatusBadge';
 
 import css from './StatsCard.module.css';
 
 //===================================================================
 
-type StatsCardContentProps = Readonly<{
+export type StatsCardTone =
+  | 'neutral'
+  | 'accent'
+  | 'blue'
+  | 'green'
+  | 'success'
+  | 'yellow'
+  | 'red'
+  | 'gray';
+
+//===================================================================
+
+export type StatsCardProps = Readonly<{
   title: string;
   value: string | number;
   description?: string;
-  status?: PharmacyStatusVariant;
-  statusLabel?: string;
+  status?: Readonly<{ label: string; tone: StatusTone }>;
   meta?: string;
+  icon?: ReactNode;
+  tone?: StatsCardTone;
+  href?: string;
+  onClick?: () => void;
+  ariaLabel?: string;
+  className?: string;
 }>;
-
-type StatsCardProps = StatsCardContentProps &
-  Readonly<{
-    href?: string;
-    className?: string;
-  }>;
 
 //===================================================================
 
@@ -30,14 +41,18 @@ function StatsCardContent({
   value,
   description,
   status,
-  statusLabel,
   meta,
-}: StatsCardContentProps) {
+  icon,
+}: Pick<
+  StatsCardProps,
+  'title' | 'value' | 'description' | 'status' | 'meta' | 'icon'
+>) {
   return (
     <>
       <div className={css.header}>
         <p className={css.title}>{title}</p>
-        {status ? <StatusBadge status={status} label={statusLabel} /> : null}
+        {icon ? <span className={css.icon}>{icon}</span> : null}
+        {!icon && status ? <StatusBadge {...status} /> : null}
       </div>
       <p className={css.value}>{value}</p>
       {description ? <p className={css.description}>{description}</p> : null}
@@ -46,25 +61,45 @@ function StatsCardContent({
   );
 }
 
-//===================================================================
-
 export function StatsCard({
   href,
+  onClick,
+  ariaLabel,
   className,
+  tone = 'neutral',
   ...contentProps
 }: StatsCardProps) {
-  const classNames = clsx(css.card, href && css.clickable, className);
+  const isInteractive = Boolean(href || onClick);
+  const classNames = clsx(
+    css.card,
+    css[tone],
+    isInteractive && css.clickable,
+    className
+  );
 
   if (href) {
     return (
-      <Link className={classNames} href={href}>
+      <Link className={classNames} href={href} aria-label={ariaLabel}>
         <StatsCardContent {...contentProps} />
       </Link>
     );
   }
 
+  if (onClick) {
+    return (
+      <button
+        className={classNames}
+        type="button"
+        aria-label={ariaLabel}
+        onClick={onClick}
+      >
+        <StatsCardContent {...contentProps} />
+      </button>
+    );
+  }
+
   return (
-    <article className={classNames}>
+    <article className={classNames} aria-label={ariaLabel}>
       <StatsCardContent {...contentProps} />
     </article>
   );

@@ -119,7 +119,7 @@ Current shared packages are intentionally small and are used where reuse already
 - `@e-pharmacy/api-client` — HTTP contracts and normalization of external API responses, including strict pagination parsing
 - `@e-pharmacy/config` — shared application configuration, route builders, navigation values, and explicit presentation labels for domain enums
 - `@e-pharmacy/types` — shared TypeScript domain and API contract types
-- `@e-pharmacy/ui` — reusable React components and UI-only helpers
+- `@e-pharmacy/ui` — shared React 19/Next.js 16 UI system with explicit primitives, forms, navigation, overlays, layout, cabinet, media, feedback, status-page, and statistics entrypoints
 - `@e-pharmacy/utils` — pure environment-independent utilities for money, dates, numbers, strings, collections, and type guards
 - `@e-pharmacy/validation` — frontend validation contracts, canonical domain parsers, normalizers, limits, and patterns
 
@@ -130,6 +130,7 @@ Dependency rules:
 - Canonical working-hours parsing belongs to `packages/validation/pharmacy`.
 - Presentation labels belong to `packages/config`; `packages/types` contains data contracts and domain types only.
 - Calendar dates (`YYYY-MM-DD`) and API instants are separate contracts: instants must include `Z` or an explicit offset, while date-only values use the calendar-date formatter.
+- Data/API layers must not import UI types; reusable data contracts live in `packages/types`.
 - Backend-only helpers remain inside `apps/api` and must not import workspace packages.
 
 ## Environment Variables

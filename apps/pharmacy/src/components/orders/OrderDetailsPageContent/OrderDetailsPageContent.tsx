@@ -55,16 +55,10 @@ import {
   PhoneInput,
 } from '@e-pharmacy/ui/form-fields';
 
-import {
-  ConfirmationModal,
-  ModalBase,
-  ModalRoot,
-  OrderCancellationModal,
-} from '@e-pharmacy/ui/modals';
+import { ConfirmationModal, ModalBase, ModalRoot } from '@e-pharmacy/ui/modals';
 
-import { EntityComments, useToast } from '@e-pharmacy/ui/feedback';
+import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import type {
   DeliveryMethod,
@@ -89,8 +83,6 @@ import {
   USER_ADDRESS_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
   USER_PHONE_MAX_LENGTH,
-  ORDER_REJECTION_REASON_MIN_LENGTH,
-  ORDER_REJECTION_REASON_MAX_LENGTH,
   buildOrderRejectionReasonError,
   hasValidationErrors,
   normalizePhoneInput,
@@ -131,6 +123,10 @@ import {
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getProductImageSrc } from '@/lib/products/product-images';
+
+import { EntityComments } from '@/components/common/EntityComments';
+import { OrderCancellationModal } from '@/components/orders/OrderCancellationModal';
+import { StatusBadge } from '@/components/common/StatusPresentation';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -2457,13 +2453,7 @@ function OrderDetailsPageContent({
         <OrderCancellationModal
           value={rejectionReason}
           isLoading={isUpdatingStatus}
-          minLength={ORDER_REJECTION_REASON_MIN_LENGTH}
-          maxLength={ORDER_REJECTION_REASON_MAX_LENGTH}
-          onChange={(value) =>
-            setRejectionReason(
-              value.slice(0, ORDER_REJECTION_REASON_MAX_LENGTH)
-            )
-          }
+          onValueChange={setRejectionReason}
           onCancel={() => {
             if (!isUpdatingStatus) setPendingStatus(null);
           }}

@@ -10,24 +10,15 @@ import {
   CountLabel,
   FiltersButton,
   InfoTooltip,
-  Pagination,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
 
+import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { useToast } from '@e-pharmacy/ui/feedback';
-
-import { OwnProductStatistics, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-
-import {
-  useBackdropClick,
-  useBodyScrollLock,
-  useEscapeToClose,
-} from '@e-pharmacy/hooks';
-
 import type { EntityId, PharmacyStatus } from '@e-pharmacy/types';
 
 import {
@@ -62,6 +53,9 @@ import { getPharmacyOwnProductStatistics } from '@/lib/products/product-statisti
 
 import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
 import { getPharmacyProductsFilterPath } from '@/lib/layout/routes';
+
+import { OwnProductStatistics } from '@/components/statistics';
+import { StatusBanner } from '@/components/common/StatusPresentation';
 
 import { OwnProductsFiltersDrawer } from '@/components/products/OwnProductsFiltersDrawer';
 import { OwnProductsTable } from '@/components/products/OwnProductsTable';
@@ -143,7 +137,9 @@ function OwnProductsPageContent({
   const [products, setProducts] = useState<PharmacyProductRow[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(null);
+  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
+    null
+  );
 
   const [productStatistics, setProductStatistics] =
     useState<OwnProductStatisticsCounts>(DEFAULT_OWN_PRODUCT_STATISTICS);
@@ -166,17 +162,6 @@ function OwnProductsPageContent({
   );
 
   const [refreshVersion, setRefreshVersion] = useState(0);
-
-  useBodyScrollLock(isFiltersOpen);
-
-  useEscapeToClose({
-    isOpen: isFiltersOpen,
-    onClose: () => setIsFiltersOpen(false),
-  });
-
-  const handleBackdropClick = useBackdropClick({
-    onClose: () => setIsFiltersOpen(false),
-  });
 
   useEffect(() => {
     let isMounted = true;
@@ -457,25 +442,10 @@ function OwnProductsPageContent({
           onRemoveProduct={handleRemoveProduct}
         />
 
-        <Pagination
+        <PaginationView
           currentPage={currentPage}
           totalPages={totalPages}
-          getPageHref={(page) => String(page)}
-          renderLink={({
-            href,
-            className,
-            children,
-            'aria-label': ariaLabel,
-          }) => (
-            <button
-              className={className}
-              type="button"
-              aria-label={ariaLabel}
-              onClick={() => setCurrentPage(Number(href))}
-            >
-              {children}
-            </button>
-          )}
+          onPageChange={setCurrentPage}
         />
       </section>
 
@@ -500,7 +470,6 @@ function OwnProductsPageContent({
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           minDate={earliestCreatedAt ?? undefined}
-          onBackdropMouseDown={handleBackdropClick}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}

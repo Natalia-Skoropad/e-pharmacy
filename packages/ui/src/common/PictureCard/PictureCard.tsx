@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import { ImageOff, Upload } from 'lucide-react';
 
-import PictureUpload from '../PictureUpload/PictureUpload';
+import { ImagePreview, readFileAsDataUrl } from '../../media';
 import Button from '../Button/Button';
 import ConfirmationModal from '../../modals/ConfirmationModal/ConfirmationModal';
 import { formatInitials } from '../helpers/format-initials';
@@ -59,26 +59,6 @@ const DEFAULT_LABELS: Required<PictureCardLabels> = {
   removeCancel: 'Keep photo',
   uploadError: 'Could not upload photo.',
 };
-
-//===================================================================
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result);
-        return;
-      }
-
-      reject(new Error('Could not read selected image.'));
-    };
-
-    reader.onerror = () => reject(new Error('Could not read selected image.'));
-    reader.readAsDataURL(file);
-  });
-}
 
 //===================================================================
 
@@ -139,7 +119,7 @@ function PictureCard({
     <div className={css.card}>
       <div className={css.picture} aria-hidden="true">
         {pictureUrl ? (
-          <PictureUpload className={css.pictureImage} src={pictureUrl} />
+          <ImagePreview className={css.pictureImage} src={pictureUrl} />
         ) : (
           <span>{formatInitials(name)}</span>
         )}
@@ -156,7 +136,9 @@ function PictureCard({
           onChange={(event) => void handleFileChange(event)}
         />
 
-        {mergedLabels.hint ? <p className={css.hint}>{mergedLabels.hint}</p> : null}
+        {mergedLabels.hint ? (
+          <p className={css.hint}>{mergedLabels.hint}</p>
+        ) : null}
 
         <div className={css.buttons}>
           <Button

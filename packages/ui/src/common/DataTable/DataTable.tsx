@@ -5,82 +5,30 @@ import css from './DataTable.module.css';
 
 //===================================================================
 
-export type DataTableColumn<TItem> = {
+export type DataTableColumn<TItem> = Readonly<{
   key: string;
   title: ReactNode;
   width?: string;
   align?: 'left' | 'right' | 'center';
   render: (item: TItem) => ReactNode;
-};
+}>;
 
-export type DataTableLabels = {
+export type DataTableLabels = Readonly<{
   loading?: string;
   empty?: string;
-};
+}>;
 
-type DataTableProps<TItem> = {
-  columns: Array<DataTableColumn<TItem>>;
-  items: TItem[];
+export type DataTableProps<TItem> = Readonly<{
+  columns: readonly DataTableColumn<TItem>[];
+  items: readonly TItem[];
   getItemKey: (item: TItem) => string;
   isLoading?: boolean;
   minWidth?: number;
   labels?: DataTableLabels;
   className?: string;
-  newestFirst?: boolean;
-};
-
-//===================================================================
-
-function getSortableTimestamp(item: unknown): number | null {
-  if (!item || typeof item !== 'object') return null;
-
-  const record = item as Record<string, unknown>;
-  const value =
-    record.createdAt ??
-    record.addedAt ??
-    record.orderDate ??
-    record.firstOrderAt ??
-    record.dateValue ??
-    record.date ??
-    record.updatedAt;
-
-  if (
-    typeof value !== 'string' &&
-    typeof value !== 'number' &&
-    !(value instanceof Date)
-  ) {
-    return null;
-  }
-
-  const timestamp =
-    value instanceof Date ? value.getTime() : new Date(value).getTime();
-
-  return Number.isNaN(timestamp) ? null : timestamp;
-}
-
-//===================================================================
-
-function getNewestFirstItems<TItem>(items: TItem[], enabled: boolean): TItem[] {
-  if (!enabled || items.length < 2) return items;
-
-  return items
-    .map((item, index) => ({
-      item,
-      index,
-      timestamp: getSortableTimestamp(item),
-    }))
-    .sort((first, second) => {
-      if (first.timestamp === null && second.timestamp === null) {
-        return first.index - second.index;
-      }
-
-      if (first.timestamp === null) return 1;
-      if (second.timestamp === null) return -1;
-
-      return second.timestamp - first.timestamp || first.index - second.index;
-    })
-    .map(({ item }) => item);
-}
+  caption?: string;
+  ariaLabel?: string;
+}>;
 
 //===================================================================
 
@@ -92,14 +40,17 @@ function DataTable<TItem>({
   minWidth = 720,
   labels,
   className,
-  newestFirst = true,
+  caption,
+  ariaLabel,
 }: DataTableProps<TItem>) {
   const tableStyle = { minWidth } satisfies CSSProperties;
-  const renderedItems = getNewestFirstItems(items, newestFirst);
 
   return (
     <div className={clsx(css.tableWrap, className)}>
-      <table className={css.table} style={tableStyle}>
+      <table className={css.table} style={tableStyle} aria-label={ariaLabel}>
+        {caption ? (
+          <caption className="visually-hidden">{caption}</caption>
+        ) : null}
         <thead>
           <tr>
             {columns.map((column) => (
@@ -118,15 +69,15 @@ function DataTable<TItem>({
           </tr>
         </thead>
 
-        <tbody>
+        <tbody aria-busy={isLoading || undefined}>
           {isLoading ? (
             <tr>
               <td className={css.stateCell} colSpan={columns.length}>
                 {labels?.loading ?? 'Loading table data...'}
               </td>
             </tr>
-          ) : renderedItems.length > 0 ? (
-            renderedItems.map((item) => (
+          ) : items.length > 0 ? (
+            items.map((item) => (
               <tr key={getItemKey(item)}>
                 {columns.map((column) => (
                   <td

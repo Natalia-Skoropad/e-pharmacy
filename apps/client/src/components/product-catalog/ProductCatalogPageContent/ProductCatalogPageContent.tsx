@@ -1,5 +1,5 @@
-import { Container, Pagination } from '@e-pharmacy/ui/common';
-import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { LinkPagination } from '@e-pharmacy/ui/navigation';
 
 import type {
   Product,
@@ -124,7 +124,7 @@ function ProductCatalogPageContent({
 
           <ProductsList products={products} />
 
-          <Pagination
+          <LinkPagination
             currentPage={filters.page}
             totalPages={totalPages}
             getPageHref={(page) =>

@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 
 import {
+  DEFAULT_VISIBLE_REVIEWS_COUNT,
   Button,
   ButtonLink,
-  Container,
   CountLabel,
   LazyLoadButton,
   QuantityCounter,
@@ -22,7 +22,7 @@ import {
 import { formatProductCategoryLabel } from '@e-pharmacy/config/products';
 import { type TabItem } from '@e-pharmacy/ui/common';
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
-import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 
@@ -79,7 +79,6 @@ import {
   DeliveryInfoCard,
   FavoriteToggleButton,
   PaymentInfoCard,
-  DEFAULT_VISIBLE_REVIEWS_COUNT,
   ReviewsSection,
   StockAvailability,
   CartOrderLimitModal,

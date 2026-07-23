@@ -1,11 +1,4 @@
-export * from './AllProductStatistics';
-export * from './ClientStatistics';
-export * from './OrderStatistics';
-export * from './OwnProductStatistics';
-export * from './ProductRequestStatistics';
 export * from './StatsCard';
+export * from './StatsGrid';
 export * from './StatusBadge';
 export * from './StatusBanner';
-export * from './SalesValueChart';
-
-export * from './SalesPeriodFilters';

@@ -1,11 +1,6 @@
 'use client';
 
-
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   CalendarDays,
@@ -24,21 +19,16 @@ import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 
 import {
   ButtonLink,
-  Container,
   LoadingSpinner,
   RatingSummary,
   ShimmerImage,
   SvgIcon,
 } from '@e-pharmacy/ui/common';
 
-import { Breadcrumbs } from '@e-pharmacy/ui/layout';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useAuth } from '@e-pharmacy/auth/core';
 
-import type {
-  BreadcrumbItem,
-  Order,
-} from '@e-pharmacy/types';
+import type { BreadcrumbItem, Order } from '@e-pharmacy/types';
 
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import { formatMoney } from '@e-pharmacy/utils/money';
@@ -51,6 +41,8 @@ import {
 } from '@/lib/routes';
 
 import { getOrderDetails } from '@/lib/api/browser';
+
+import { StatusBadge } from '@/components/common/StatusPresentation';
 
 import css from './OrderDetailsPageContent.module.css';
 

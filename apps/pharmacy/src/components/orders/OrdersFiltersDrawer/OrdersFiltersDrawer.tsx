@@ -1,5 +1,3 @@
-import type { MouseEventHandler } from 'react';
-
 import {
   ORDER_CREATED_BY_LABELS,
   ORDER_STATUS_LABELS,
@@ -8,13 +6,12 @@ import {
 } from '@e-pharmacy/config/orders';
 
 import {
-  CloseIconButton,
   DateFilter,
-  ResetFiltersButton,
   SelectField,
   type SelectOption,
 } from '@e-pharmacy/ui/common';
 
+import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { getPharmacyOrdersPath } from '@e-pharmacy/config/pharmacy';
 
 import {
@@ -26,15 +23,12 @@ import {
 
 import type { OrdersFilterState } from '@/lib/orders/orders-filters';
 
-import css from './OrdersFiltersDrawer.module.css';
-
 //===================================================================
 
 type OrdersFiltersDrawerProps = Readonly<{
   filters: OrdersFilterState;
   hasActiveFilters: boolean;
   minDate?: string;
-  onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
   onChange: (filters: OrdersFilterState) => void;
   onClose: () => void;
   onReset: () => void;
@@ -86,103 +80,70 @@ function OrdersFiltersDrawer({
   filters,
   hasActiveFilters,
   minDate,
-  onBackdropMouseDown,
   onChange,
   onClose,
   onReset,
 }: OrdersFiltersDrawerProps) {
   return (
-    <div
-      className={css.backdrop}
-      role="presentation"
-      onMouseDown={onBackdropMouseDown}
+    <FilterDrawer
+      id="orders-filters-panel"
+      eyebrow="Orders"
+      hasActiveFilters={hasActiveFilters}
+      resetHref={getPharmacyOrdersPath()}
+      onClose={onClose}
+      onReset={() => {
+        onReset();
+        onClose();
+      }}
     >
-      <aside
-        className={css.panel}
-        id="orders-filters-panel"
-        aria-labelledby="orders-filters-title"
-        aria-modal="true"
-        role="dialog"
-      >
-        <div className={css.header}>
-          <div>
-            <p className={css.kicker}>Orders</p>
-            <h2 className={css.title} id="orders-filters-title">
-              Filters
-            </h2>
-          </div>
+      <DateFilter
+        id="orders-date-filter"
+        minDate={minDate}
+        disabled={!minDate}
+        label="Order date"
+        value={filters.date}
+        isActive={Boolean(filters.date.from || filters.date.to)}
+        applyOnSubmit
+        applyLabel="Apply"
+        onChange={(date) => onChange({ ...filters, date })}
+      />
 
-          <CloseIconButton label="Close filters" onClick={onClose} />
-        </div>
+      <SelectField
+        id="orders-delivery-method"
+        label="Delivery method"
+        value={filters.deliveryMethod}
+        options={DELIVERY_METHOD_OPTIONS}
+        isActive={filters.deliveryMethod !== 'all'}
+        onChange={(deliveryMethod) => onChange({ ...filters, deliveryMethod })}
+      />
 
-        <div className={css.controls}>
-          <DateFilter
-            id="orders-date-filter"
-            minDate={minDate}
-            disabled={!minDate}
-            label="Order date"
-            value={filters.date}
-            isActive={Boolean(filters.date.from || filters.date.to)}
-            applyOnSubmit
-            applyLabel="Apply"
-            onChange={(date) => onChange({ ...filters, date })}
-          />
+      <SelectField
+        id="orders-payment-method"
+        label="Payment method"
+        value={filters.paymentMethod}
+        options={PAYMENT_METHOD_OPTIONS}
+        isActive={filters.paymentMethod !== 'all'}
+        onChange={(paymentMethod) => onChange({ ...filters, paymentMethod })}
+      />
 
-          <SelectField
-            id="orders-delivery-method"
-            label="Delivery method"
-            value={filters.deliveryMethod}
-            options={DELIVERY_METHOD_OPTIONS}
-            isActive={filters.deliveryMethod !== 'all'}
-            onChange={(deliveryMethod) =>
-              onChange({ ...filters, deliveryMethod })
-            }
-          />
+      <SelectField
+        id="orders-status"
+        label="Order status"
+        value={filters.status}
+        options={ORDER_STATUS_OPTIONS}
+        isActive={filters.status !== 'all'}
+        onChange={(status) => onChange({ ...filters, status })}
+      />
 
-          <SelectField
-            id="orders-payment-method"
-            label="Payment method"
-            value={filters.paymentMethod}
-            options={PAYMENT_METHOD_OPTIONS}
-            isActive={filters.paymentMethod !== 'all'}
-            onChange={(paymentMethod) =>
-              onChange({ ...filters, paymentMethod })
-            }
-          />
-
-          <SelectField
-            id="orders-status"
-            label="Order status"
-            value={filters.status}
-            options={ORDER_STATUS_OPTIONS}
-            isActive={filters.status !== 'all'}
-            onChange={(status) => onChange({ ...filters, status })}
-          />
-
-          <SelectField
-            id="orders-created-by"
-            label="Created by"
-            value={filters.createdByType}
-            options={ORDER_CREATED_BY_OPTIONS}
-            isActive={filters.createdByType !== 'all'}
-            onChange={(createdByType) =>
-              onChange({ ...filters, createdByType })
-            }
-          />
-        </div>
-
-        {hasActiveFilters ? (
-          <ResetFiltersButton
-            className={css.resetButton}
-            href={getPharmacyOrdersPath()}
-            onClick={() => {
-              onReset();
-              onClose();
-            }}
-          />
-        ) : null}
-      </aside>
-    </div>
+      <SelectField
+        id="orders-created-by"
+        label="Created by"
+        value={filters.createdByType}
+        options={ORDER_CREATED_BY_OPTIONS}
+        isActive={filters.createdByType !== 'all'}
+        onChange={(createdByType) => onChange({ ...filters, createdByType })}
+      />
+    </FilterDrawer>
   );
 }
 

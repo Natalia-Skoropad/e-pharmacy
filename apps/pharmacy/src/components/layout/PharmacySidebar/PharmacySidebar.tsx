@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { CabinetSidebar } from '@e-pharmacy/ui/layout';
+import { CabinetSidebar } from '@e-pharmacy/ui/cabinet';
 
 import {
   getPharmacyDashboardPath,

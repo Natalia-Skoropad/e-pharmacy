@@ -1,16 +1,19 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import type { NavigationItem } from '@e-pharmacy/types/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 import Logo from '../../common/Logo/Logo';
-import type { SideMenuItem } from '../SideMenu/SideMenu';
+import { isNavigationItemActive } from '../internal/is-navigation-item-active';
 
 import css from './CabinetSidebar.module.css';
 
 //===================================================================
+
+type SideMenuItem = NavigationItem<ReactNode>;
 
 type CabinetSidebarLogoRenderProps = {
   href: string;
@@ -29,6 +32,8 @@ type CabinetSidebarLinkRenderProps = {
   onClick?: () => void;
 };
 
+//===================================================================
+
 export type CabinetSidebarProps = Readonly<{
   items: readonly SideMenuItem[];
   activePath?: string;
@@ -42,23 +47,16 @@ export type CabinetSidebarProps = Readonly<{
   className?: string;
   onToggleCollapsed?: () => void;
   onNavigate?: () => void;
+
   isActive?: (
     itemHref: string,
     activePath: string,
     item: SideMenuItem
   ) => boolean;
+
   renderLogoLink?: (props: CabinetSidebarLogoRenderProps) => ReactNode;
   renderLink?: (props: CabinetSidebarLinkRenderProps) => ReactNode;
 }>;
-
-//===================================================================
-
-function getDefaultIsActive(item: SideMenuItem, activePath?: string) {
-  if (!activePath) return false;
-  if (item.exact) return activePath === item.href;
-
-  return activePath === item.href || activePath.startsWith(`${item.href}/`);
-}
 
 //===================================================================
 
@@ -118,7 +116,7 @@ function CabinetSidebar({
           {items.map((item) => {
             const active = isActive
               ? isActive(item.href, activePath ?? '', item)
-              : getDefaultIsActive(item, activePath);
+              : isNavigationItemActive(item, activePath);
             const linkClassName = clsx(
               css.link,
               active && css.active,

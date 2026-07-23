@@ -1,21 +1,18 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import type { NavigationItem } from '@e-pharmacy/types/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { ChevronRight } from 'lucide-react';
+
+import { isNavigationItemActive } from '../internal/is-navigation-item-active';
 
 import css from './SideMenu.module.css';
 
 //===================================================================
 
-export type SideMenuItem = {
-  label: string;
-  href: string;
-  icon?: ReactNode;
-  disabled?: boolean;
-  exact?: boolean;
-};
+type SideMenuItem = NavigationItem<ReactNode>;
 
 type SideMenuLinkRenderProps = {
   item: SideMenuItem;
@@ -33,18 +30,13 @@ export type SideMenuProps = {
   className?: string;
   showChevron?: boolean;
   onNavigate?: () => void;
-  isActive?: (itemHref: string, activePath: string, item: SideMenuItem) => boolean;
+  isActive?: (
+    itemHref: string,
+    activePath: string,
+    item: SideMenuItem
+  ) => boolean;
   renderLink?: (props: SideMenuLinkRenderProps) => ReactNode;
 };
-
-//===================================================================
-
-function getDefaultIsActive(item: SideMenuItem, activePath?: string) {
-  if (!activePath) return false;
-  if (item.exact) return activePath === item.href;
-
-  return activePath === item.href || activePath.startsWith(`${item.href}/`);
-}
 
 //===================================================================
 
@@ -66,7 +58,7 @@ function SideMenu({
         {items.map((item) => {
           const active = isActive
             ? isActive(item.href, activePath ?? '', item)
-            : getDefaultIsActive(item, activePath);
+            : isNavigationItemActive(item, activePath);
           const linkClassName = clsx(
             css.link,
             active && css.active,
@@ -83,7 +75,11 @@ function SideMenu({
               <span className={css.label}>{item.label}</span>
 
               {showChevron ? (
-                <ChevronRight className={css.chevron} size={18} aria-hidden="true" />
+                <ChevronRight
+                  className={css.chevron}
+                  size={18}
+                  aria-hidden="true"
+                />
               ) : null}
             </>
           );

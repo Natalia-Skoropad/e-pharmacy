@@ -137,7 +137,7 @@
   border-color: var(--color-accent);
 }
 
-@media only screen and (min-width: 768px) and (max-width: 1439px) {
+@media only screen and (min-width: 768px) {
   .tabs {
     overflow: visible;
   }

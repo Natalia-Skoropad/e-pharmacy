@@ -1,7 +1,5 @@
 'use client';
 
-import { countTrueConditions } from '@e-pharmacy/utils/collections';
-
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ShoppingBag } from 'lucide-react';
@@ -10,20 +8,14 @@ import {
   Button,
   CountLabel,
   FiltersButton,
-  Pagination,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
 
-import { OrderStatistics, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { PaginationView } from '@e-pharmacy/ui/navigation';
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-
-import {
-  useBackdropClick,
-  useBodyScrollLock,
-  useEscapeToClose,
-} from '@e-pharmacy/hooks';
 
 import { DEFAULT_ORDER_STATISTICS } from '@e-pharmacy/types/orders';
 import { getPharmacyNewOrderPath } from '@e-pharmacy/config/pharmacy';
@@ -48,6 +40,9 @@ import type {
   PharmacyOrdersQueryParams,
   PharmacyOrderRow,
 } from '@/lib/orders/orders';
+
+import { OrderStatistics } from '@/components/statistics';
+import { StatusBanner } from '@/components/common/StatusPresentation';
 
 import { OrdersFiltersDrawer } from '@/components/orders/OrdersFiltersDrawer';
 import { OrdersTable } from '@/components/orders/OrdersTable/OrdersTable';
@@ -107,17 +102,6 @@ function OrdersPageContent({
 
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-
-  useBodyScrollLock(isFiltersOpen);
-
-  useEscapeToClose({
-    isOpen: isFiltersOpen,
-    onClose: () => setIsFiltersOpen(false),
-  });
-
-  const handleBackdropClick = useBackdropClick({
-    onClose: () => setIsFiltersOpen(false),
-  });
 
   const queryParams = useMemo(
     () => getOrdersQueryParams(filters, rowsPerPage, currentPage),
@@ -308,25 +292,10 @@ function OrdersPageContent({
           }
         />
 
-        <Pagination
+        <PaginationView
           currentPage={currentPage}
           totalPages={totalPages}
-          getPageHref={(page) => String(page)}
-          renderLink={({
-            href,
-            className,
-            children,
-            'aria-label': ariaLabel,
-          }) => (
-            <button
-              className={className}
-              type="button"
-              aria-label={ariaLabel}
-              onClick={() => setCurrentPage(Number(href))}
-            >
-              {children}
-            </button>
-          )}
+          onPageChange={setCurrentPage}
         />
       </section>
 
@@ -335,7 +304,6 @@ function OrdersPageContent({
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           minDate={earliestCreatedAt ?? undefined}
-          onBackdropMouseDown={handleBackdropClick}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}

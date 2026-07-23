@@ -1,21 +1,18 @@
-import type { MouseEventHandler } from 'react';
-
 import { CLIENT_SUCCESSFUL_ORDERS_FILTER_LABELS } from '@e-pharmacy/config/clients';
 
 import {
-  CloseIconButton,
   DateFilter,
-  ResetFiltersButton,
   SelectField,
   type SelectOption,
 } from '@e-pharmacy/ui/common';
 
+import { FilterDrawer } from '@e-pharmacy/ui/overlays';
+
 import { CLIENT_SUCCESSFUL_ORDERS_FILTERS } from '@e-pharmacy/types/clients';
 import { getPharmacyClientsPath } from '@e-pharmacy/config/pharmacy';
+
 import { CLIENT_STATUSES, CLIENT_STATUS_LABELS } from '@/lib/clients/clients';
 import type { ClientsFilterState } from '@/lib/clients/client-paths';
-
-import css from './ClientsFiltersDrawer.module.css';
 
 //===================================================================
 
@@ -23,7 +20,6 @@ type ClientsFiltersDrawerProps = Readonly<{
   filters: ClientsFilterState;
   hasActiveFilters: boolean;
   minDate?: string;
-  onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
   onChange: (filters: ClientsFilterState) => void;
   onClose: () => void;
   onReset: () => void;
@@ -56,85 +52,56 @@ function ClientsFiltersDrawer({
   filters,
   hasActiveFilters,
   minDate,
-  onBackdropMouseDown,
   onChange,
   onClose,
   onReset,
 }: ClientsFiltersDrawerProps) {
   return (
-    <div
-      className={css.backdrop}
-      role="presentation"
-      onMouseDown={onBackdropMouseDown}
+    <FilterDrawer
+      id="clients-filters-panel"
+      eyebrow="Clients"
+      hasActiveFilters={hasActiveFilters}
+      resetHref={getPharmacyClientsPath()}
+      onClose={onClose}
+      onReset={() => {
+        onReset();
+        onClose();
+      }}
     >
-      <aside
-        className={css.panel}
-        id="clients-filters-panel"
-        aria-labelledby="clients-filters-title"
-        aria-modal="true"
-        role="dialog"
-      >
-        <div className={css.header}>
-          <div>
-            <p className={css.kicker}>Clients</p>
-            <h2 className={css.title} id="clients-filters-title">
-              Filters
-            </h2>
-          </div>
+      <DateFilter
+        id="clients-first-order-date-filter"
+        minDate={minDate}
+        disabled={!minDate}
+        label="Client added"
+        value={filters.firstOrderDate}
+        isActive={Boolean(
+          filters.firstOrderDate.from || filters.firstOrderDate.to
+        )}
+        applyOnSubmit
+        applyLabel="Apply"
+        onChange={(firstOrderDate) => onChange({ ...filters, firstOrderDate })}
+      />
 
-          <CloseIconButton label="Close filters" onClick={onClose} />
-        </div>
+      <SelectField
+        id="clients-status"
+        label="Client status"
+        value={filters.status}
+        options={CLIENT_STATUS_OPTIONS}
+        isActive={filters.status !== 'all'}
+        onChange={(status) => onChange({ ...filters, status })}
+      />
 
-        <div className={css.controls}>
-          <DateFilter
-            id="clients-first-order-date-filter"
-            minDate={minDate}
-            disabled={!minDate}
-            label="Client added"
-            value={filters.firstOrderDate}
-            isActive={Boolean(
-              filters.firstOrderDate.from || filters.firstOrderDate.to
-            )}
-            applyOnSubmit
-            applyLabel="Apply"
-            onChange={(firstOrderDate) =>
-              onChange({ ...filters, firstOrderDate })
-            }
-          />
-
-          <SelectField
-            id="clients-status"
-            label="Client status"
-            value={filters.status}
-            options={CLIENT_STATUS_OPTIONS}
-            isActive={filters.status !== 'all'}
-            onChange={(status) => onChange({ ...filters, status })}
-          />
-
-          <SelectField
-            id="clients-successful-orders"
-            label="Successful orders"
-            value={filters.successfulOrders}
-            options={SUCCESSFUL_ORDERS_OPTIONS}
-            isActive={filters.successfulOrders !== 'all'}
-            onChange={(successfulOrders) =>
-              onChange({ ...filters, successfulOrders })
-            }
-          />
-        </div>
-
-        {hasActiveFilters ? (
-          <ResetFiltersButton
-            className={css.resetButton}
-            href={getPharmacyClientsPath()}
-            onClick={() => {
-              onReset();
-              onClose();
-            }}
-          />
-        ) : null}
-      </aside>
-    </div>
+      <SelectField
+        id="clients-successful-orders"
+        label="Successful orders"
+        value={filters.successfulOrders}
+        options={SUCCESSFUL_ORDERS_OPTIONS}
+        isActive={filters.successfulOrders !== 'all'}
+        onChange={(successfulOrders) =>
+          onChange({ ...filters, successfulOrders })
+        }
+      />
+    </FilterDrawer>
   );
 }
 

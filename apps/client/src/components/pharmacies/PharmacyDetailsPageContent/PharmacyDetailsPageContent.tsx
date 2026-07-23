@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 
 import {
+  DEFAULT_VISIBLE_REVIEWS_COUNT,
   ButtonLink,
-  Container,
   CountLabel,
   RatingSummary,
   ShimmerImage,
@@ -14,9 +14,8 @@ import {
 } from '@e-pharmacy/ui/common';
 
 import { type TabItem } from '@e-pharmacy/ui/common';
-import { Breadcrumbs } from '@e-pharmacy/ui/layout';
+import { Container, Breadcrumbs } from '@e-pharmacy/ui/layout';
 import { useToast } from '@e-pharmacy/ui/feedback';
-
 
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
 import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
@@ -47,11 +46,7 @@ import {
   getPharmacyCheckoutDetails,
 } from '@/lib/api/browser';
 
-import {
-  DEFAULT_VISIBLE_REVIEWS_COUNT,
-  FavoriteToggleButton,
-  ReviewsSection,
-} from '@/components/common';
+import { FavoriteToggleButton, ReviewsSection } from '@/components/common';
 
 import css from './PharmacyDetailsPageContent.module.css';
 
@@ -430,11 +425,13 @@ function PharmacyDetailsPageContent({
                         Working hours
                       </dt>
                       <dd className={css.workingHoursValue}>
-                        {getWorkingHoursDisplayItems(workingHours)?.map((item) => (
-                          <span key={item.day}>
-                            <strong>{item.label}</strong>: {item.hours}
-                          </span>
-                        ))}
+                        {getWorkingHoursDisplayItems(workingHours)?.map(
+                          (item) => (
+                            <span key={item.day}>
+                              <strong>{item.label}</strong>: {item.hours}
+                            </span>
+                          )
+                        )}
                       </dd>
                     </div>
                   ) : null}

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 
-import PictureUpload from '../PictureUpload/PictureUpload';
+import { ImagePreview } from '../../media/ImagePreview';
 import { formatInitials } from '../helpers/format-initials';
 
 import css from './UserBadge.module.css';
@@ -10,6 +10,8 @@ import css from './UserBadge.module.css';
 //===================================================================
 
 export type UserBadgeVariant = 'light' | 'dark';
+
+//===================================================================
 
 type UserBadgeLinkRenderProps = {
   href: string;
@@ -54,7 +56,7 @@ function UserBadge({
     <>
       <span className={css.picture} aria-hidden={!pictureAlt}>
         {pictureUrl ? (
-          <PictureUpload src={pictureUrl} alt={pictureAlt} />
+          <ImagePreview src={pictureUrl} alt={pictureAlt} />
         ) : (
           formatInitials(label)
         )}
@@ -62,7 +64,9 @@ function UserBadge({
 
       <span className={css.textWrap}>
         <span className={css.name}>{label}</span>
-        {secondaryText ? <span className={css.meta}>{secondaryText}</span> : null}
+        {secondaryText ? (
+          <span className={css.meta}>{secondaryText}</span>
+        ) : null}
       </span>
     </>
   );

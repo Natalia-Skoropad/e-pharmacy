@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useCallback,
   useEffect,
   useId,
   useMemo,
@@ -12,25 +13,25 @@ import {
 import { Check, ChevronDown, LoaderCircle, Search } from 'lucide-react';
 import clsx from 'clsx';
 
-import { isListboxOpenKey } from '../helpers/listbox-keyboard';
 import { useListboxNavigation } from '../helpers/useListboxNavigation';
 
 import css from './SearchableSelect.module.css';
 
 //===================================================================
 
-export type SearchableSelectOption<TValue extends string = string> = {
+export type SearchableSelectOption<TValue extends string = string> = Readonly<{
   value: TValue;
   label: string;
   leading?: ReactNode;
-};
+  disabled?: boolean;
+}>;
 
-export type SearchableSelectProps<TValue extends string = string> = {
+export type SearchableSelectProps<TValue extends string = string> = Readonly<{
   id?: string;
   label: string;
   labelAccessory?: ReactNode;
   value: TValue;
-  options: SearchableSelectOption<TValue>[];
+  options: readonly SearchableSelectOption<TValue>[];
   placeholder?: string;
   emptyMessage?: string;
   isActive?: boolean;
@@ -41,7 +42,7 @@ export type SearchableSelectProps<TValue extends string = string> = {
   maxLength?: number;
   sanitizeQuery?: (value: string) => string;
   onChange: (value: TValue) => void;
-};
+}>;
 
 //===================================================================
 
@@ -63,7 +64,7 @@ function SearchableSelect<TValue extends string = string>({
   onChange,
 }: SearchableSelectProps<TValue>) {
   const generatedId = useId();
-  const inputId = id ?? generatedId;
+  const inputId = id ?? `searchable-select-${generatedId}`;
   const listboxId = `${inputId}-listbox`;
   const errorId = error ? `${inputId}-error` : undefined;
   const ariaDescribedBy =
@@ -71,6 +72,7 @@ function SearchableSelect<TValue extends string = string>({
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const optionRefs = useRef<Array<HTMLLIElement | null>>([]);
 
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -79,21 +81,37 @@ function SearchableSelect<TValue extends string = string>({
   const inputValue = isOpen ? query : (selectedOption?.label ?? '');
 
   const filteredOptions = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-
+    const normalizedQuery = query.trim().toLocaleLowerCase();
     if (!normalizedQuery) return options;
 
     return options.filter((option) =>
-      option.label.toLowerCase().includes(normalizedQuery)
+      option.label.toLocaleLowerCase().includes(normalizedQuery)
     );
   }, [options, query]);
 
-  const { activeIndex, moveActiveIndex, resetActiveIndex, setActiveIndex } =
-    useListboxNavigation(filteredOptions.length);
-  const activeOption = filteredOptions[activeIndex];
-  const activeOptionId = activeOption
-    ? `${listboxId}-option-${activeOption.value}`
-    : undefined;
+  const isOptionDisabled = useCallback(
+    (index: number) => Boolean(filteredOptions[index]?.disabled),
+    [filteredOptions]
+  );
+  const {
+    activeIndex,
+    moveActiveIndex,
+    moveToStart,
+    moveToEnd,
+    resetActiveIndex,
+    setActiveIndex,
+  } = useListboxNavigation(filteredOptions.length, 0, isOptionDisabled);
+  const activeOption =
+    activeIndex >= 0 ? filteredOptions[activeIndex] : undefined;
+  const activeOptionId =
+    isOpen && activeIndex >= 0
+      ? `${listboxId}-option-${activeIndex}`
+      : undefined;
+
+  useEffect(() => {
+    if (!isOpen || activeIndex < 0) return;
+    optionRefs.current[activeIndex]?.scrollIntoView({ block: 'nearest' });
+  }, [activeIndex, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -106,10 +124,7 @@ function SearchableSelect<TValue extends string = string>({
     };
 
     document.addEventListener('mousedown', handleDocumentClick);
-
-    return () => {
-      document.removeEventListener('mousedown', handleDocumentClick);
-    };
+    return () => document.removeEventListener('mousedown', handleDocumentClick);
   }, [isOpen]);
 
   const closeSelect = () => {
@@ -119,25 +134,22 @@ function SearchableSelect<TValue extends string = string>({
 
   const openSelect = () => {
     if (disabled || isLoading) return;
-
     setIsOpen(true);
     setQuery('');
     resetActiveIndex(0);
   };
 
-  const handleSelect = (nextValue: TValue) => {
-    if (disabled || isLoading) return;
-
-    onChange(nextValue);
+  const handleSelect = (option: SearchableSelectOption<TValue> | undefined) => {
+    if (!option || option.disabled || disabled || isLoading) return;
+    onChange(option.value);
     closeSelect();
-    inputRef.current?.blur();
+    inputRef.current?.focus();
   };
 
   const handleInputChange = (nextQuery: string) => {
     if (disabled || isLoading) return;
 
     const sanitizedQuery = sanitizeQuery ? sanitizeQuery(nextQuery) : nextQuery;
-
     setQuery(sanitizedQuery.slice(0, maxLength));
     resetActiveIndex(0);
     setIsOpen(true);
@@ -146,32 +158,30 @@ function SearchableSelect<TValue extends string = string>({
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (disabled || isLoading) return;
 
-    if (isListboxOpenKey(event.key)) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
-
-      if (!isOpen) {
-        setIsOpen(true);
-        return;
-      }
-
-      moveActiveIndex(event.key === 'ArrowDown' ? 1 : -1);
+      if (!isOpen) openSelect();
+      else moveActiveIndex(event.key === 'ArrowDown' ? 1 : -1);
       return;
     }
 
-    if (event.key === 'Enter') {
+    if (event.key === 'Home' || event.key === 'End') {
+      if (!isOpen) return;
       event.preventDefault();
-
-      if (activeOption) {
-        handleSelect(activeOption.value);
-      }
-
+      if (event.key === 'Home') moveToStart();
+      else moveToEnd();
       return;
     }
 
-    if (event.key === 'Escape') {
+    if (event.key === 'Enter' && isOpen) {
+      event.preventDefault();
+      handleSelect(activeOption);
+      return;
+    }
+
+    if (event.key === 'Escape' && isOpen) {
       event.preventDefault();
       closeSelect();
-      inputRef.current?.blur();
     }
   };
 
@@ -211,7 +221,7 @@ function SearchableSelect<TValue extends string = string>({
             aria-expanded={isOpen}
             aria-controls={isOpen ? listboxId : undefined}
             aria-haspopup="listbox"
-            aria-activedescendant={isOpen ? activeOptionId : undefined}
+            aria-activedescendant={activeOptionId}
             aria-invalid={Boolean(error) || undefined}
             aria-describedby={ariaDescribedBy}
             onFocus={openSelect}
@@ -227,12 +237,8 @@ function SearchableSelect<TValue extends string = string>({
             aria-expanded={isOpen}
             aria-controls={isOpen ? listboxId : undefined}
             onClick={() => {
-              if (isOpen) {
-                closeSelect();
-              } else {
-                openSelect();
-              }
-
+              if (isOpen) closeSelect();
+              else openSelect();
               inputRef.current?.focus();
             }}
           >
@@ -272,36 +278,47 @@ function SearchableSelect<TValue extends string = string>({
 
                 return (
                   <li
+                    ref={(element) => {
+                      optionRefs.current[index] = element;
+                    }}
                     className={clsx(
                       css.option,
                       option.leading && css.optionWithLeading,
                       isOptionActive && css.optionActive,
-                      isSelected && css.optionSelected
+                      isSelected && css.optionSelected,
+                      option.disabled && css.optionDisabled
                     )}
-                    id={`${listboxId}-option-${option.value}`}
-                    key={option.value}
+                    id={`${listboxId}-option-${index}`}
+                    key={`${option.value}-${index}`}
                     role="option"
                     aria-selected={isSelected}
-                    onMouseEnter={() => setActiveIndex(index)}
+                    aria-disabled={option.disabled || undefined}
+                    onMouseEnter={() => {
+                      if (!option.disabled) setActiveIndex(index);
+                    }}
                     onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => handleSelect(option.value)}
+                    onClick={() => handleSelect(option)}
                   >
                     {option.leading ? (
                       <span className={css.optionLeading}>
                         {option.leading}
                       </span>
                     ) : null}
-
                     <span className={css.optionLabel}>{option.label}</span>
-
                     {isSelected ? (
-                      <Check className={css.checkIcon} size={16} aria-hidden />
+                      <Check
+                        className={css.checkIcon}
+                        size={16}
+                        aria-hidden="true"
+                      />
                     ) : null}
                   </li>
                 );
               })
             ) : (
-              <li className={css.empty}>{emptyMessage}</li>
+              <li className={css.empty} role="status">
+                {emptyMessage}
+              </li>
             )}
           </ul>
         ) : null}
@@ -311,5 +328,4 @@ function SearchableSelect<TValue extends string = string>({
 }
 
 export default SearchableSelect;
-
 export { SearchableSelect };

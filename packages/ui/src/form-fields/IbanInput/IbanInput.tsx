@@ -1,64 +1,30 @@
-import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
-import type { AuthFieldBaseProps } from '../types';
+import { IBAN_INPUT_ATTRIBUTES } from '@e-pharmacy/validation/pharmacy';
 
-import css from '../FormFieldLayout/FormField.module.css';
+import { TextInputControl } from '../FormFieldLayout/FieldControls';
+import type { TextFieldProps } from '../types';
 
 //===================================================================
 
 function IbanInput({
-  id,
-  name,
-  value,
-  error,
-  isTouched,
-  required = true,
-  disabled = false,
-  className,
   label = 'IBAN',
-  placeholder = 'UA123456789012345678901234567',
+  placeholder = IBAN_INPUT_ATTRIBUTES.placeholder,
   autoComplete = 'off',
-  maxLength = 29,
-  hint = 'Use the Ukrainian IBAN format: UA + 27 digits.',
-  ariaDescribedBy,
-  onChange,
-}: AuthFieldBaseProps) {
-  const hasError = Boolean(isTouched && error);
-  const describedBy =
-    [hint ? `${id}-hint` : null, hasError ? `${id}-error` : null, ariaDescribedBy]
-      .filter(Boolean)
-      .join(' ') || undefined;
-
+  maxLength = IBAN_INPUT_ATTRIBUTES.maxLength,
+  pattern = IBAN_INPUT_ATTRIBUTES.pattern,
+  hint = IBAN_INPUT_ATTRIBUTES.hint,
+  ...props
+}: TextFieldProps) {
   return (
-    <FormFieldLayout
-      id={id}
+    <TextInputControl
+      {...props}
       label={label}
-      required={required}
-      className={className}
-      error={error}
-      isTouched={isTouched}
+      placeholder={placeholder}
+      autoComplete={autoComplete}
+      maxLength={maxLength}
+      pattern={pattern}
       hint={hint}
-    >
-      <div className={css.inputWrap}>
-        <input
-          className={css.input}
-          id={id}
-          name={name}
-          type="text"
-          value={value}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          maxLength={maxLength}
-          pattern="UA[0-9]{27}"
-          disabled={disabled}
-          aria-invalid={hasError}
-          aria-describedby={describedBy}
-          onChange={onChange}
-        />
-        <span className={css.inputCounter} aria-hidden="true">
-          {value.length}/{maxLength}
-        </span>
-      </div>
-    </FormFieldLayout>
+      type="text"
+    />
   );
 }
 

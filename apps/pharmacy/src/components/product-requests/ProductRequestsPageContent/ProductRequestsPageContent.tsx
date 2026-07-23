@@ -1,7 +1,5 @@
 'use client';
 
-import { countTrueConditions } from '@e-pharmacy/utils/collections';
-
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { FilePlus2 } from 'lucide-react';
@@ -11,24 +9,14 @@ import {
   ButtonLink,
   CountLabel,
   FiltersButton,
-  Pagination,
   RowsPerPageSelect,
   SearchInput,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/common';
 
-import {
-  ProductRequestStatistics,
-  StatusBanner,
-} from '@e-pharmacy/ui/statistics';
-
+import { PaginationView } from '@e-pharmacy/ui/navigation';
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-
-import {
-  useBackdropClick,
-  useBodyScrollLock,
-  useEscapeToClose,
-} from '@e-pharmacy/hooks';
 
 import {
   DEFAULT_PRODUCT_REQUESTS_FILTERS,
@@ -40,7 +28,6 @@ import {
 } from '@e-pharmacy/types/product-requests';
 
 import { getPharmacyProductRequests } from '@/lib/api/browser';
-
 import { getPharmacyNewRequestPath } from '@e-pharmacy/config/pharmacy';
 import { getPharmacyRequestsFilterPath } from '@/lib/layout/routes';
 
@@ -52,6 +39,9 @@ import {
   getLockedFeatureBannerStatus,
   useCurrentPharmacyStatus,
 } from '@/lib/pharmacies/current-pharmacy-status';
+
+import { ProductRequestStatistics } from '@/components/statistics';
+import { StatusBanner } from '@/components/common/StatusPresentation';
 
 import { ProductRequestsFiltersDrawer } from '@/components/product-requests/ProductRequestsFiltersDrawer';
 import { ProductRequestsTable } from '@/components/product-requests/ProductRequestsTable';
@@ -111,17 +101,6 @@ function ProductRequestsPageContent({
 
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-
-  useBodyScrollLock(isFiltersOpen);
-
-  useEscapeToClose({
-    isOpen: isFiltersOpen,
-    onClose: () => setIsFiltersOpen(false),
-  });
-
-  const handleBackdropClick = useBackdropClick({
-    onClose: () => setIsFiltersOpen(false),
-  });
 
   const queryParams = useMemo(
     () => getProductRequestsQueryParams(filters, rowsPerPage, currentPage),
@@ -364,25 +343,10 @@ function ProductRequestsPageContent({
           }
         />
 
-        <Pagination
+        <PaginationView
           currentPage={currentPage}
           totalPages={totalPages}
-          getPageHref={(page) => String(page)}
-          renderLink={({
-            href,
-            className,
-            children,
-            'aria-label': ariaLabel,
-          }) => (
-            <button
-              className={className}
-              type="button"
-              aria-label={ariaLabel}
-              onClick={() => setCurrentPage(Number(href))}
-            >
-              {children}
-            </button>
-          )}
+          onPageChange={setCurrentPage}
         />
       </section>
 
@@ -391,7 +355,6 @@ function ProductRequestsPageContent({
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           minDate={earliestCreatedAt ?? undefined}
-          onBackdropMouseDown={handleBackdropClick}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}

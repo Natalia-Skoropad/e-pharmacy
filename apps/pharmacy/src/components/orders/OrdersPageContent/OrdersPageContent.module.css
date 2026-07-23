@@ -66,6 +66,10 @@
   display: none;
 }
 
+.createButton {
+  width: 100%;
+}
+
 @media only screen and (min-width: 768px) {
   .searchGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(140px, 80px);
@@ -94,7 +98,14 @@
     display: grid;
     gap: 14px;
   }
-}
 
-.createButton { width:100%; }
-@media only screen and (min-width:768px){ .toolbar{grid-template-columns:auto minmax(0,1fr) auto;} .createButton{grid-column:3;grid-row:1;width:auto;} }
+  .toolbar {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .createButton {
+    grid-column: 3;
+    grid-row: 1;
+    width: auto;
+  }
+}

@@ -1,20 +1,17 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import clsx from 'clsx';
 import { ChevronRight } from 'lucide-react';
 
-import type { BreadcrumbItem } from '../Breadcrumbs/Breadcrumbs';
+import type { BreadcrumbItem } from '@e-pharmacy/types/navigation';
+
+import {
+  BreadcrumbTrail,
+  type BreadcrumbLinkRenderProps,
+} from '../internal/BreadcrumbTrail';
 
 import css from './CabinetTopBar.module.css';
 
 //===================================================================
-
-type CabinetTopBarLinkRenderProps = {
-  item: BreadcrumbItem;
-  href: string;
-  className: string;
-  children: ReactNode;
-};
 
 export type CabinetTopBarProps = Readonly<{
   items: readonly BreadcrumbItem[];
@@ -23,7 +20,7 @@ export type CabinetTopBarProps = Readonly<{
   navigationToggle?: ReactNode;
   className?: string;
   ariaLabel?: string;
-  renderLink?: (props: CabinetTopBarLinkRenderProps) => ReactNode;
+  renderLink?: (props: BreadcrumbLinkRenderProps) => ReactNode;
 }>;
 
 //===================================================================
@@ -37,66 +34,27 @@ function CabinetTopBar({
   ariaLabel = 'Current cabinet page',
   renderLink,
 }: CabinetTopBarProps) {
-  const hasPathItems = items.length > 0;
-
-  const renderTopBarLink = (
-    item: BreadcrumbItem,
-    href: string,
-    children: ReactNode
-  ) => {
-    if (renderLink) {
-      return renderLink({ item, href, className: css.link, children });
-    }
-
-    return (
-      <Link href={href} className={css.link}>
-        {children}
-      </Link>
-    );
-  };
-
   return (
     <div className={clsx(css.topbar, className)}>
-      {hasPathItems ? (
-        <nav className={css.pathNav} aria-label={ariaLabel}>
-          <ol className={css.pathList}>
-            {items.map((item, index) => {
-              const isLast = index === items.length - 1;
-              const isLinked = Boolean(item.href) && !isLast;
-              const text = <span className={css.text}>{item.label}</span>;
-
-              return (
-                <li className={css.pathItem} key={`${item.label}-${index}`}>
-                  {index === 0 && leadingIcon ? (
-                    <span className={css.leadingIcon} aria-hidden="true">
-                      {leadingIcon}
-                    </span>
-                  ) : null}
-
-                  {isLinked ? (
-                    renderTopBarLink(item, item.href!, text)
-                  ) : (
-                    <span className={css.current} aria-current="page">
-                      {text}
-                    </span>
-                  )}
-
-                  {!isLast ? (
-                    <ChevronRight
-                      className={css.separator}
-                      size={17}
-                      aria-hidden="true"
-                    />
-                  ) : null}
-                </li>
-              );
-            })}
-          </ol>
-        </nav>
-      ) : null}
+      <BreadcrumbTrail
+        items={items}
+        ariaLabel={ariaLabel}
+        leadingIcon={leadingIcon}
+        separatorIcon={<ChevronRight size={17} />}
+        renderLink={renderLink}
+        classNames={{
+          nav: css.pathNav,
+          list: css.pathList,
+          item: css.pathItem,
+          link: css.link,
+          current: css.current,
+          text: css.text,
+          separator: css.separator,
+          leadingIcon: css.leadingIcon,
+        }}
+      />
 
       {actions ? <div className={css.actions}>{actions}</div> : null}
-
       {navigationToggle ? (
         <div className={css.navigationToggle}>{navigationToggle}</div>
       ) : null}

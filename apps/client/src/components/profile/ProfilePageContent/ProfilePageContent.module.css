@@ -425,6 +425,7 @@
     padding: 10px;
   }
 }
+
 .sessionsList {
   display: grid;
   gap: 12px;

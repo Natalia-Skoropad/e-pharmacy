@@ -8,7 +8,8 @@ export * from './PhoneInput';
 
 export type {
   AddressFieldProps,
-  AuthFieldBaseProps,
+  BaseFieldProps,
+  TextFieldProps,
   CommentFieldProps,
   FormFieldLayoutProps,
   PasswordFieldProps,

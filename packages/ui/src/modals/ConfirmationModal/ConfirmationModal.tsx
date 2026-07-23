@@ -74,9 +74,9 @@ function ConfirmationModal({
         </h2>
 
         {modalDescription ? (
-          <p className={css.text} id={descriptionId}>
+          <div className={css.text} id={descriptionId}>
             {modalDescription}
-          </p>
+          </div>
         ) : null}
 
         <div className={css.actions}>

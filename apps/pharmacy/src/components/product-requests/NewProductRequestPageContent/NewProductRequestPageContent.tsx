@@ -25,17 +25,17 @@ import {
   SelectField,
   Tabs,
   TextEditor,
-  type DocumentUploadFile,
   type TabItem,
 } from '@e-pharmacy/ui/common';
 
+import type { UploadFileValue } from '@e-pharmacy/types/files';
+import { readFileAsDataUrl } from '@e-pharmacy/ui/media';
 import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
-import { EntityComments, useToast } from '@e-pharmacy/ui/feedback';
+import { useToast } from '@e-pharmacy/ui/feedback';
 import { CommentInput, NameInput } from '@e-pharmacy/ui/form-fields';
 import { ConfirmationModal } from '@e-pharmacy/ui/modals';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
 
 import {
@@ -69,6 +69,13 @@ import {
 } from '@e-pharmacy/validation/product-requests';
 
 import {
+  getPharmacyAllProductsPath,
+  getPharmacyNewRequestPath,
+  getPharmacyRequestPath,
+  getPharmacyProductRequestsPath,
+} from '@e-pharmacy/config/pharmacy';
+
+import {
   checkPharmacyProductRequestArticle,
   createPharmacyNote,
   createPharmacyProductRequest,
@@ -82,19 +89,19 @@ import {
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
 import {
-  getPharmacyAllProductsPath,
-  getPharmacyNewRequestPath,
-  getPharmacyRequestPath,
-  getPharmacyProductRequestsPath,
-} from '@e-pharmacy/config/pharmacy';
-
-import {
   getLockedFeatureBannerLabel,
   getLockedFeatureBannerStatus,
   useCurrentPharmacyStatus,
 } from '@/lib/pharmacies/current-pharmacy-status';
 
 import { getProductImageSrc } from '@/lib/products/product-images';
+
+import {
+  StatusBadge,
+  StatusBanner,
+} from '@/components/common/StatusPresentation';
+
+import { EntityComments } from '@/components/common/EntityComments';
 
 import css from './NewProductRequestPageContent.module.css';
 
@@ -122,25 +129,10 @@ export type NewProductRequestPageContentProps = Readonly<{
 
 //===================================================================
 
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () =>
-      typeof reader.result === 'string'
-        ? resolve(reader.result)
-        : reject(new Error('The selected file could not be read.'));
-    reader.onerror = () =>
-      reject(new Error('The selected file could not be read.'));
-    reader.readAsDataURL(file);
-  });
-}
-
-//===================================================================
-
 function toUploadFile(
   file: ProductRequestFile,
   prefix: string
-): DocumentUploadFile {
+): UploadFileValue {
   return {
     id: `${prefix}-${file.name}-${file.size}`,
     name: file.name,
@@ -231,11 +223,9 @@ function NewProductRequestPageContent({
     PRODUCT_REQUEST_INITIAL_VALUES
   );
 
-  const [productImage, setProductImage] = useState<DocumentUploadFile[]>([]);
+  const [productImage, setProductImage] = useState<UploadFileValue[]>([]);
 
-  const [additionalFiles, setAdditionalFiles] = useState<DocumentUploadFile[]>(
-    []
-  );
+  const [additionalFiles, setAdditionalFiles] = useState<UploadFileValue[]>([]);
 
   const [productImagePreview, setProductImagePreview] = useState<string | null>(
     null
@@ -420,7 +410,7 @@ function NewProductRequestPageContent({
     setIsProductImageRemoved(true);
   };
 
-  const handleProductImageChange = async (files: DocumentUploadFile[]) => {
+  const handleProductImageChange = async (files: UploadFileValue[]) => {
     const image = files[0];
 
     if (!image) {
@@ -460,7 +450,7 @@ function NewProductRequestPageContent({
     }
   };
 
-  const handleAdditionalFilesChange = async (files: DocumentUploadFile[]) => {
+  const handleAdditionalFilesChange = async (files: UploadFileValue[]) => {
     const metadataError = validateProductRequestAdditionalFiles(files);
     if (metadataError) {
       setAdditionalFilesError(metadataError);
@@ -1087,8 +1077,8 @@ function NewProductRequestPageContent({
               isTouched={validationMode === 'moderation'}
               maxLength={PRODUCT_REQUEST_LIMITS.fullDescriptionMax}
               disabled={!canEdit}
-              onChange={(event) =>
-                updateValue('fullDescription', event.target.value)
+              onValueChange={(nextValue) =>
+                updateValue('fullDescription', nextValue)
               }
             />
           </section>
