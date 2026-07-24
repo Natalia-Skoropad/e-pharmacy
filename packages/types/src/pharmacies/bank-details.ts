@@ -7,20 +7,20 @@ export type EditablePharmacyBankDetails = Partial<{
   paymentPurpose: string;
 }>;
 
-export type CompletePharmacyBankDetails = {
+export type CompletePharmacyBankDetails = Readonly<{
   recipientName: string;
   taxId: string;
   iban: string;
   bankName: string;
   receiptEmail: string;
   paymentPurpose: string;
-};
+}>;
 
-export type PublicPaymentBankDetails = {
+export type PublicPaymentBankDetails = Readonly<{
   recipientName: string;
   taxId: string;
   iban: string;
   bankName: string;
   receiptEmail: string;
   paymentPurpose: string;
-};
+}>;

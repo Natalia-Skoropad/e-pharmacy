@@ -1,6 +1,5 @@
 import type { ApiPaginationResponse } from '../api';
 import type { EntityId } from '../primitives';
-import type { Review } from '../reviews';
 import type { PharmacyProfile } from './pharmacy-profile';
 
 import type {
@@ -61,11 +60,6 @@ export type PharmacyCheckoutDetailsResponse = Readonly<{
 }>;
 
 //=============================================================================
-
-export type PharmacyReviewsResponse = Readonly<{
-  items: readonly Review[];
-  total: number;
-}>;
 
 export type PendingPharmacyReviewTarget = Readonly<{
   pharmacyId: EntityId;

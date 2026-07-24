@@ -8,7 +8,7 @@ import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 import type {
   CheckoutOrderPayload,
   CheckoutOrderResponse,
-  OrderDetailsResponse,
+  ClientOrderDetailsResponse,
   ClientOrdersResponse,
 } from '@e-pharmacy/types/orders';
 
@@ -43,9 +43,9 @@ export async function getOrders(): Promise<ClientOrdersResponse> {
 
 export async function getOrderDetails(
   orderId: string
-): Promise<OrderDetailsResponse> {
+): Promise<ClientOrderDetailsResponse> {
   const response = await localApiRequest<
-    ApiSuccessResponse<OrderDetailsResponse>
+    ApiSuccessResponse<ClientOrderDetailsResponse>
   >(CLIENT_API_ROUTES.orders.details(orderId));
 
   return getResponseData(response);

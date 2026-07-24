@@ -15,12 +15,14 @@ export type OrderSalesStatisticsValue = Readonly<{
 export type OrderSalesStatisticsPoint = Readonly<{
   key: string;
   label: string;
-  values: Partial<Record<ProductCategory, OrderSalesStatisticsValue>>;
+  values: Readonly<
+    Partial<Record<ProductCategory, OrderSalesStatisticsValue>>
+  >;
 }>;
 
 export type OrderSalesStatistics = Readonly<{
   currency: Currency;
   groupBy: OrderSalesStatisticsGroupBy;
-  categories: ProductCategory[];
-  points: OrderSalesStatisticsPoint[];
+  categories: readonly ProductCategory[];
+  points: readonly OrderSalesStatisticsPoint[];
 }>;

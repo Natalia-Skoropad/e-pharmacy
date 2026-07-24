@@ -7,4 +7,6 @@ type OrderStatisticsValue = Readonly<{
   amount: number;
 }>;
 
-export type OrderStatisticsCounts = Record<OrderStatus, OrderStatisticsValue>;
+export type OrderStatisticsCounts = Readonly<
+  Record<OrderStatus, OrderStatisticsValue>
+>;

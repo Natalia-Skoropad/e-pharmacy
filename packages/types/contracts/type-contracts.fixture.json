@@ -128,14 +128,15 @@
       ],
       "optional": []
     },
-    "serializedUploadFile": {
+    "productRequestFile": {
       "required": [
         "name",
         "size",
-        "type",
-        "dataUrl"
+        "type"
       ],
-      "optional": []
+      "optional": [
+        "dataUrl"
+      ]
     },
     "createReviewPayload": {
       "required": [
@@ -177,6 +178,72 @@
         "details"
       ],
       "optional": []
+    },
+    "clientOrder": {
+      "required": [
+        "id",
+        "orderNumber",
+        "createdAt",
+        "pharmacyId",
+        "pharmacyName",
+        "totalItems",
+        "totalPrice",
+        "currency",
+        "status",
+        "createdByType",
+        "statusHistory",
+        "activityHistory",
+        "paymentMethod",
+        "delivery",
+        "managerCommentsCount",
+        "items"
+      ],
+      "optional": [
+        "userId",
+        "clientId",
+        "clientName",
+        "clientPhotoUrl",
+        "clientPhone",
+        "clientAddress",
+        "client",
+        "pharmacyRating",
+        "pharmacyReviewsCount",
+        "pharmacyPhone",
+        "pharmacyEmail",
+        "pharmacyAddress",
+        "pharmacyWorkingHours",
+        "rejectionReason",
+        "rejectedAt",
+        "rejectedBy",
+        "comment",
+        "managerComment",
+        "managerComments",
+        "bankDetails"
+      ]
+    },
+    "clientOrderItem": {
+      "required": [
+        "id",
+        "productId",
+        "productOfferId",
+        "name",
+        "article",
+        "quantity",
+        "unitPrice",
+        "totalPrice"
+      ],
+      "optional": [
+        "slug",
+        "category",
+        "imageUrl",
+        "manufacturer",
+        "dosage",
+        "packageQuantity",
+        "rating",
+        "reviewsCount",
+        "availableQuantity",
+        "currentPrice"
+      ]
     },
     "productRequestResponse": {
       "required": [

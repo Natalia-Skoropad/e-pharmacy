@@ -3,7 +3,7 @@ import type { UserRole } from './role';
 
 //===================================================================
 
-export type ActiveSession = {
+export type ActiveSession = Readonly<{
   id: EntityId;
   deviceName?: string;
   userAgent?: string;
@@ -13,10 +13,10 @@ export type ActiveSession = {
   lastUsedAt: ISODateTimeString;
   expiresAt: ISODateTimeString;
   isCurrent: boolean;
-};
+}>;
 
 //===================================================================
 
-export type ActiveSessionsResponse = {
-  sessions: ActiveSession[];
-};
+export type ActiveSessionsResponse = Readonly<{
+  sessions: readonly ActiveSession[];
+}>;

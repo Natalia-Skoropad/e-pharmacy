@@ -70,7 +70,7 @@ import {
 } from '@e-pharmacy/validation/files';
 
 import type { ActiveSession } from '@e-pharmacy/types/auth';
-import type { Order } from '@e-pharmacy/types/orders';
+import type { ClientOrder } from '@e-pharmacy/types/orders';
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 import type { ProductDetails } from '@e-pharmacy/types/products';
 
@@ -156,7 +156,7 @@ function ProfilePageContent() {
 
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<ClientOrder[]>([]);
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
   const [isSessionsLoading, setIsSessionsLoading] = useState(false);
   const [sessionsError, setSessionsError] = useState('');
@@ -269,7 +269,7 @@ function ProfilePageContent() {
 
   const hiddenOrdersCount = Math.max(orders.length - visibleOrders.length, 0);
 
-  const orderColumns = useMemo<Array<DataTableColumn<Order>>>(
+  const orderColumns = useMemo<Array<DataTableColumn<ClientOrder>>>(
     () => [
       {
         key: 'date',
@@ -503,7 +503,7 @@ function ProfilePageContent() {
         setIsSessionsLoading(true);
         setSessionsError('');
         const response = await getActiveSessions();
-        if (isMounted) setSessions(response.sessions);
+        if (isMounted) setSessions([...response.sessions]);
       } catch {
         if (isMounted) setSessionsError('Could not load active sessions.');
       } finally {

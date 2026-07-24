@@ -1,6 +1,5 @@
 import type { ApiPaginationResponse } from '../api';
 import type { CalendarDateString, EntityId } from '../primitives';
-import type { Review } from '../reviews';
 import type { ProductCategory } from './category';
 import type { ProductDetails } from './product-details';
 import type { ProductStatus } from './product-summary';
@@ -59,15 +58,6 @@ export type PharmacyProductsQueryParams = BaseProductsQueryParams &
 
 //===================================================================
 
-export type AdminProductsQueryParams = BaseProductsQueryParams &
-  Readonly<{
-    pharmacyId?: EntityId;
-    status?: ProductStatus;
-    includeBlocked?: boolean;
-  }>;
-
-//===================================================================
-
 type ProductFilterOption<TValue extends string = string> = Readonly<{
   value: TValue;
   label: string;
@@ -100,11 +90,6 @@ export type PharmacyProductMutationResponse = Readonly<
     message: string;
   }
 >;
-
-export type ProductReviewsResponse = Readonly<{
-  items: readonly Review[];
-  total: number;
-}>;
 
 export type PendingProductReviewTarget = Readonly<{
   productId: EntityId;

@@ -2,7 +2,7 @@ import type { EntityId, ISODateTimeString } from '../primitives';
 
 //===================================================================
 
-export type ProductOffer = {
+export type ProductOffer = Readonly<{
   id: EntityId;
   pharmacyId: EntityId;
   pharmacyName: string;
@@ -21,4 +21,4 @@ export type ProductOffer = {
   hasRelatedOrders?: boolean;
   createdAt: ISODateTimeString;
   updatedAt: ISODateTimeString;
-};
+}>;

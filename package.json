@@ -34,7 +34,8 @@
     "check:validation-contracts": "node scripts/check-validation-contract-parity.mjs",
     "check:ui-styles": "node scripts/check-ui-style-contracts.mjs",
     "check:ui-boundaries": "node scripts/check-ui-boundaries.mjs",
-    "check:type-contracts": "node scripts/check-types-public-api.mjs && node scripts/check-type-contract-parity.mjs"
+    "check:type-contracts": "node scripts/check-types-public-api.mjs && node scripts/check-types-unused-exports.mjs && node scripts/check-type-contract-parity.mjs",
+    "check:types-unused-exports": "node scripts/check-types-unused-exports.mjs"
   },
   "devDependencies": {
     "turbo": "latest",

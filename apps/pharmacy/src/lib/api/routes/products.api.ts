@@ -8,12 +8,12 @@ import {
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
+import type { ReviewsResponse } from '@e-pharmacy/types/reviews';
 
 import type {
   PharmacyProductMutationResponse,
   ProductDetails,
   ProductDetailsResponse,
-  ProductReviewsResponse,
   ProductStockMovementsResponse,
   PharmacyProductsQueryParams as PharmacyProductsApiQueryParams,
   ProductsResponse,
@@ -115,9 +115,9 @@ export async function getProductStockMovements(
 
 export async function getProductReviews(
   productId: ProductDetails['id']
-): Promise<ProductReviewsResponse> {
+): Promise<ReviewsResponse> {
   const response = await localApiRequest<
-    ApiSuccessResponse<ProductReviewsResponse>
+    ApiSuccessResponse<ReviewsResponse>
   >(PHARMACY_API_ROUTES.products.reviews(productId));
 
   return getResponseData(response);

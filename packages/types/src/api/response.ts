@@ -15,8 +15,6 @@ export type ApiEmptySuccessResponse = Readonly<{
 
 //===================================================================
 
-export type MutationResponse = Readonly<{ message: string }>;
-
 export type FavoriteIdsResponse = Readonly<{
   ids: readonly EntityId[];
 }>;

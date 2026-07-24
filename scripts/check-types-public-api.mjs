@@ -78,11 +78,62 @@ assert.deepEqual(
 
 //===================================================================
 
+const rootIndexSource = await readFile(
+  path.join(ROOT_DIR, 'packages', 'types', 'src', 'index.ts'),
+  'utf8'
+);
+
+//===================================================================
+
+const rootTypeExports = [
+  ...rootIndexSource.matchAll(/export\s+type\s+\*\s+from\s+['"]([^'"]+)['"]/g),
+].map((match) => match[1]);
+
+//===================================================================
+
+assert.deepEqual(
+  rootTypeExports.sort(),
+  ['./api', './primitives'],
+  'The root types entrypoint may export only basic API and primitive contracts'
+);
+
+//===================================================================
+
+assert.equal(
+  /export\s+(?!type\b)/.test(rootIndexSource),
+  false,
+  'The root types entrypoint must not expose runtime values'
+);
+
+//===================================================================
+
 const sourceFiles = [
   ...(await collectSourceFiles(path.join(ROOT_DIR, 'apps'))),
   ...(await collectSourceFiles(path.join(ROOT_DIR, 'packages'))),
   ...(await collectSourceFiles(path.join(ROOT_DIR, 'scripts'))),
 ];
+
+//===================================================================
+
+const typeSourceFiles = await collectSourceFiles(
+  path.join(ROOT_DIR, 'packages', 'types', 'src')
+);
+
+const runtimeExports = [];
+
+for (const file of typeSourceFiles) {
+  const source = await readFile(file, 'utf8');
+
+  if (/^export\s+(?:const|function|class|enum)\b/m.test(source)) {
+    runtimeExports.push(path.relative(ROOT_DIR, file));
+  }
+}
+
+assert.deepEqual(
+  runtimeExports,
+  [],
+  `@e-pharmacy/types must remain runtime-free:\n${runtimeExports.join('\n')}`
+);
 
 //===================================================================
 

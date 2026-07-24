@@ -3,7 +3,7 @@ import type { PublicPaymentBankDetails } from './bank-details';
 
 //=============================================================================
 
-export type PublicPharmacy = {
+export type PublicPharmacy = Readonly<{
   id: EntityId;
   name: string;
   address?: string;
@@ -20,9 +20,9 @@ export type PublicPharmacy = {
   bankTransferAvailable: boolean;
   bankDetails?: PublicPaymentBankDetails;
   updatedAt: ISODateTimeString;
-};
+}>;
 
-export type PharmacyCheckoutDetails = {
+export type PharmacyCheckoutDetails = Readonly<{
   id: EntityId;
   name: string;
   address?: string;
@@ -32,4 +32,4 @@ export type PharmacyCheckoutDetails = {
   workingHours?: string;
   bankTransferAvailable: boolean;
   bankDetails?: PublicPaymentBankDetails;
-};
+}>;

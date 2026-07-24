@@ -3,7 +3,7 @@ import type { UserRole, UserStatus } from './role';
 
 //===================================================================
 
-export type AuthUser = {
+export type AuthUser = Readonly<{
   id: EntityId;
   name: string;
   email: string;
@@ -12,4 +12,4 @@ export type AuthUser = {
   phone: string;
   address?: string;
   pictureUrl?: string;
-};
+}>;

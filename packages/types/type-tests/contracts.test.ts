@@ -1,5 +1,12 @@
+// cspell:words iban
+
 import type { ApiPaginationResponse } from '../src/api';
-import type { CheckoutOrderPayload, OrderStatus } from '../src/orders';
+
+import type {
+  CheckoutOrderPayload,
+  ClientOrder,
+  OrderStatus,
+} from '../src/orders';
 
 import type {
   CompletePharmacyBankDetails,
@@ -79,11 +86,11 @@ void row;
 
 declare const paginated: ApiPaginationResponse<{ id: EntityId }>;
 
-paginated.page;
-paginated.perPage;
-paginated.total;
-paginated.totalPages;
-paginated.items;
+void paginated.page;
+void paginated.perPage;
+void paginated.total;
+void paginated.totalPages;
+void paginated.items;
 
 // @ts-expect-error API response arrays are readonly snapshots.
 paginated.items.push({ id: pharmacyId });
@@ -97,6 +104,23 @@ const incompletePagination: ApiPaginationResponse<{ id: EntityId }> = {
 };
 
 void incompletePagination;
+
+//===================================================================
+// Client-order snapshots match the transport contract and stay readonly.
+
+declare const clientOrder: ClientOrder;
+
+void clientOrder.createdByType;
+void clientOrder.managerCommentsCount;
+void clientOrder.pharmacyWorkingHours;
+void clientOrder.items[0]?.availableQuantity;
+void clientOrder.items[0]?.currentPrice;
+
+// @ts-expect-error API response fields are readonly snapshots.
+clientOrder.managerCommentsCount = 0;
+
+// @ts-expect-error API response item arrays are readonly snapshots.
+clientOrder.items.push(clientOrder.items[0]);
 
 //===================================================================
 // Status mappings must remain exhaustive.

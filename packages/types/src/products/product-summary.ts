@@ -7,7 +7,7 @@ export type ProductStatus = 'new' | 'active' | 'blocked';
 
 //===================================================================
 
-export type ProductSummary = {
+export type ProductSummary = Readonly<{
   id: EntityId;
   name: string;
   slug?: string;
@@ -27,4 +27,4 @@ export type ProductSummary = {
   isFavorite: boolean;
   createdAt: ISODateTimeString;
   updatedAt: ISODateTimeString;
-};
+}>;

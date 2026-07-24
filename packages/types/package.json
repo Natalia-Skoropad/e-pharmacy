@@ -18,12 +18,16 @@
     "./reviews": "./src/reviews/index.ts"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "lint": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.type-tests.json --noEmit",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "lint": "eslint src type-tests --ext .ts",
     "type-check": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.type-tests.json --noEmit",
-    "test": "tsc -p tsconfig.type-tests.json --noEmit"
+    "test:types": "tsc -p tsconfig.type-tests.json --noEmit",
+    "test": "pnpm run test:types",
+    "build": "pnpm run clean && tsc -p tsconfig.build.json"
   },
   "devDependencies": {
     "typescript": "^5"
-  }
+  },
+  "type": "module",
+  "sideEffects": false
 }

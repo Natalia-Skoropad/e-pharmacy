@@ -4,7 +4,7 @@ import type { PharmacyStatus } from './status';
 
 //=============================================================================
 
-export type PharmacyPendingModeration = {
+export type PharmacyPendingModeration = Readonly<{
   name?: string;
   address?: string;
   city?: string;
@@ -13,13 +13,13 @@ export type PharmacyPendingModeration = {
   workingHours?: string;
   imageUrl?: string | null;
   description?: string;
-  documents?: FileMetadata[];
+  documents?: readonly FileMetadata[];
   bankDetails?: EditablePharmacyBankDetails;
-};
+}>;
 
 //=============================================================================
 
-export type PharmacyProfile = {
+export type PharmacyProfile = Readonly<{
   id: EntityId;
   name: string;
   address?: string;
@@ -29,7 +29,7 @@ export type PharmacyProfile = {
   workingHours?: string;
   bankDetails?: EditablePharmacyBankDetails;
   bankTransferAvailable: boolean;
-  documents: FileMetadata[];
+  documents: readonly FileMetadata[];
   status: PharmacyStatus;
   rating: number;
   imageUrl?: string;
@@ -38,7 +38,7 @@ export type PharmacyProfile = {
   pendingModeration?: PharmacyPendingModeration;
   reviewsCount: number;
   updatedAt: ISODateTimeString;
-};
+}>;
 
 //=============================================================================
 

@@ -649,7 +649,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
 
       try {
         const response = await getActiveSessions();
-        if (isMounted) setSessions(response.sessions);
+        if (isMounted) setSessions([...response.sessions]);
       } catch {
         if (isMounted) setSessions([]);
       } finally {

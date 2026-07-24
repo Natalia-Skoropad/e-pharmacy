@@ -23,7 +23,7 @@ import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import { useAuth } from '@e-pharmacy/auth/core';
-import type { Order } from '@e-pharmacy/types/orders';
+import type { ClientOrder } from '@e-pharmacy/types/orders';
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import { formatMoney } from '@e-pharmacy/utils/money';
@@ -49,7 +49,7 @@ type OrderDetailsPageContentProps = {
 
 //===================================================================
 
-function formatPaymentMethod(method: Order['paymentMethod']): string {
+function formatPaymentMethod(method: ClientOrder['paymentMethod']): string {
   return method === 'bank_transfer'
     ? 'Bank transfer'
     : 'Cash on pickup / delivery';
@@ -57,7 +57,7 @@ function formatPaymentMethod(method: Order['paymentMethod']): string {
 
 //===================================================================
 
-function formatDeliveryMethod(method: Order['delivery']['method']): string {
+function formatDeliveryMethod(method: ClientOrder['delivery']['method']): string {
   return method === 'postal_delivery'
     ? 'Postal delivery'
     : 'Pickup from pharmacy';
@@ -67,7 +67,7 @@ function formatDeliveryMethod(method: Order['delivery']['method']): string {
 
 function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const { isAuthenticated, isAuthReady } = useAuth();
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<ClientOrder | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState('');
   const cleanOrderId = getOrderIdFromPathParam(orderId);

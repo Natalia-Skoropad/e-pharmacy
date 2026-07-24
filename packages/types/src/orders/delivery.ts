@@ -1,10 +1,10 @@
 export type Delivery =
-  | { method: 'pickup'; details?: never }
-  | {
+  | Readonly<{ method: 'pickup'; details?: never }>
+  | Readonly<{
       method: 'postal_delivery';
-      details: {
+      details: Readonly<{
         recipientName: string;
         recipientPhone: string;
         address: string;
-      };
-    };
+      }>;
+    }>;

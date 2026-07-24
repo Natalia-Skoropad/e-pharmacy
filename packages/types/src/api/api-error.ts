@@ -1,5 +1,5 @@
-export type ApiErrorResponse = {
+export type ApiErrorResponse = Readonly<{
   status: 'error';
   message: string;
-  details?: Record<string, string[]>;
-};
+  details?: Readonly<Record<string, readonly string[]>>;
+}>;

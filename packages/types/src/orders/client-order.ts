@@ -6,22 +6,23 @@ import type { Delivery } from './delivery';
 import type {
   Currency,
   OrderActivityType,
+  OrderCreatedByType,
   OrderStatus,
   PaymentMethod,
 } from './status';
 
 //=============================================================================
 
-export type OrderStatusHistoryItem = {
+export type ClientOrderStatusHistoryItem = Readonly<{
   status: OrderStatus;
   changedAt: ISODateTimeString;
   changedBy: EntityId;
   comment?: string;
-};
+}>;
 
 //=============================================================================
 
-export type OrderActivityHistoryItem = {
+export type ClientOrderActivityHistoryItem = Readonly<{
   type: OrderActivityType;
   occurredAt: ISODateTimeString;
   changedBy: EntityId;
@@ -33,20 +34,20 @@ export type OrderActivityHistoryItem = {
   quantityDelta: number;
   previousUnitPrice: number;
   unitPrice: number;
-};
+}>;
 
 //=============================================================================
 
-export type OrderManagerComment = {
+export type OrderManagerCommentResponseDto = Readonly<{
   id: EntityId;
   text: string;
   createdAt: ISODateTimeString;
   createdBy: EntityId;
-};
+}>;
 
 //=============================================================================
 
-type OrderItem = {
+export type ClientOrderItem = Readonly<{
   id: EntityId;
   productId: EntityId;
   productOfferId: EntityId;
@@ -63,11 +64,13 @@ type OrderItem = {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
-};
+  availableQuantity?: number;
+  currentPrice?: number;
+}>;
 
 //=============================================================================
 
-export type Order = {
+export type ClientOrder = Readonly<{
   id: EntityId;
   orderNumber: string;
   createdAt: ISODateTimeString;
@@ -75,12 +78,14 @@ export type Order = {
   clientId?: EntityId;
   clientName?: string;
   clientPhotoUrl?: string;
+  clientPhone?: string;
+  clientAddress?: string;
 
-  client?: {
+  client?: Readonly<{
     id: EntityId;
     name: string;
     photoUrl?: string;
-  };
+  }>;
 
   pharmacyId: EntityId;
   pharmacyName: string;
@@ -89,19 +94,23 @@ export type Order = {
   pharmacyPhone?: string;
   pharmacyEmail?: string;
   pharmacyAddress?: string;
+  pharmacyWorkingHours?: string;
   totalItems: number;
   totalPrice: number;
   currency: Currency;
   status: OrderStatus;
-  statusHistory: OrderStatusHistoryItem[];
-  activityHistory: OrderActivityHistoryItem[];
+  createdByType: OrderCreatedByType;
+  statusHistory: readonly ClientOrderStatusHistoryItem[];
+  activityHistory: readonly ClientOrderActivityHistoryItem[];
   rejectionReason?: string;
   rejectedAt?: ISODateTimeString;
   rejectedBy?: EntityId;
   paymentMethod: PaymentMethod;
   delivery: Delivery;
   comment?: string;
+  managerComment?: string;
+  managerCommentsCount: number;
   bankDetails?: CompletePharmacyBankDetails;
-  managerComments?: OrderManagerComment[];
-  items: OrderItem[];
-};
+  managerComments?: readonly OrderManagerCommentResponseDto[];
+  items: readonly ClientOrderItem[];
+}>;
