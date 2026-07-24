@@ -3,13 +3,14 @@ import 'client-only';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { getResponseData } from '@e-pharmacy/api-client/core';
 
+import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
+
 import type {
-  ApiSuccessResponse,
   CheckoutOrderPayload,
   CheckoutOrderResponse,
   OrderDetailsResponse,
   ClientOrdersResponse,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/orders';
 
 import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 

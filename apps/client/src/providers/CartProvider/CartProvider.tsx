@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import type { Cart } from '@e-pharmacy/types';
+import type { Cart } from '@e-pharmacy/types/cart';
 
 import { getCart } from '@/lib/api/browser';
 import { useClientAuthCapabilities } from '@/hooks';

@@ -1,4 +1,4 @@
-import type { PharmacyProfile } from '@e-pharmacy/types';
+import type { PharmacyProfile } from '@e-pharmacy/types/pharmacies';
 import { buildSlugId } from '@e-pharmacy/validation/url';
 
 //===================================================================

@@ -46,7 +46,7 @@ export type OrderManagerComment = {
 
 //=============================================================================
 
-export type OrderItem = {
+type OrderItem = {
   id: EntityId;
   productId: EntityId;
   productOfferId: EntityId;

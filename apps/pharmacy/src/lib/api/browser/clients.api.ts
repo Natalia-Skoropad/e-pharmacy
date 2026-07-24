@@ -1,7 +1,7 @@
 import 'client-only';
 
 import { buildQueryString, getResponseData } from '@e-pharmacy/api-client/core';
-import type { ApiSuccessResponse } from '@e-pharmacy/types';
+import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 

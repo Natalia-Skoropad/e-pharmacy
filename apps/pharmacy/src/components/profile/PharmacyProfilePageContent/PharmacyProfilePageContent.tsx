@@ -35,13 +35,13 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { formatDateTime } from '@e-pharmacy/utils/date';
+import type { ActiveSession } from '@e-pharmacy/types/auth';
 
 import type {
-  ActiveSession,
   PharmacyProfile,
   PharmacyStatus,
   UpdateMyPharmacyProfilePayload,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/pharmacies';
 
 import {
   CHANGE_PASSWORD_FORM_FIELDS,

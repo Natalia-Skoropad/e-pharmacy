@@ -19,7 +19,7 @@ import {
   Users,
 } from 'lucide-react';
 
-import type { PharmacyProfile } from '@e-pharmacy/types';
+import type { PharmacyProfile } from '@e-pharmacy/types/pharmacies';
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import { BurgerButton } from '@e-pharmacy/ui/cabinet';
 import { CabinetTopBar } from '@e-pharmacy/ui/cabinet';

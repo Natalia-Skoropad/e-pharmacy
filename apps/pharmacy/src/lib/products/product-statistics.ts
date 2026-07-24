@@ -1,11 +1,11 @@
 import {
-  type AllProductStatisticsCounts,
-  type OwnProductStatisticsCounts,
+  AllProductStatisticsCounts,
+  OwnProductStatisticsCounts,
 } from '@e-pharmacy/types/products';
 
 import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { DEFAULT_ALL_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
-import type { EntityId } from '@e-pharmacy/types';
+import type { EntityId } from '@e-pharmacy/types/primitives';
 import { getPharmacyProducts, getProducts } from '@/lib/api/browser';
 
 import type { PharmacyProductRow } from './products';

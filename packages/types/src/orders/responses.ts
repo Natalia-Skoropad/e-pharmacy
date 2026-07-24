@@ -6,17 +6,20 @@ import type { OrderStatisticsCounts } from './order-statistics';
 
 //=============================================================================
 
-export type ClientOrdersResponse = ApiPaginationResponse<Order> & {
-  statistics: OrderStatisticsCounts;
-  earliestCreatedAt: CalendarDateString | null;
-};
+export type ClientOrdersResponse = Readonly<
+  ApiPaginationResponse<Order> & {
+    statistics: OrderStatisticsCounts;
+    earliestCreatedAt: CalendarDateString | null;
+  }
+>;
 
-export type CheckoutOrderResponse = { order: Order; cart: Cart };
-export type OrderDetailsResponse = { order: Order };
+export type CheckoutOrderResponse = Readonly<{ order: Order; cart: Cart }>;
+export type OrderDetailsResponse = Readonly<{ order: Order }>;
 
-export type OrderManagerCommentsResponse =
-  ApiPaginationResponse<OrderManagerComment>;
+export type OrderManagerCommentsResponse = Readonly<
+  ApiPaginationResponse<OrderManagerComment>
+>;
 
-export type CreateOrderManagerCommentResponse = {
+export type CreateOrderManagerCommentResponse = Readonly<{
   comment: OrderManagerComment;
-};
+}>;

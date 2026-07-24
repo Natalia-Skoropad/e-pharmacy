@@ -18,6 +18,12 @@ async function readSource(...segments) {
 
 //===================================================================
 
+async function readJson(...segments) {
+  return JSON.parse(await readSource(...segments));
+}
+
+//===================================================================
+
 function extractQuotedValues(source, constName, opening, closing) {
   const pattern = new RegExp(
     `export\\s+const\\s+${constName}\\s*=\\s*\\${opening}([\\s\\S]*?)\\${closing}\\s*as\\s+const`
@@ -45,6 +51,19 @@ function extractObjectValues(source, constName) {
 
 //===================================================================
 
+function extractTypeUnionValues(source, typeName) {
+  const pattern = new RegExp(`export\\s+type\\s+${typeName}\\s*=([\\s\\S]*?);`);
+  const match = source.match(pattern);
+
+  assert.ok(match, `Could not read ${typeName}`);
+
+  return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map(
+    (valueMatch) => valueMatch[1]
+  );
+}
+
+//===================================================================
+
 function extractNumber(source, constName) {
   const pattern = new RegExp(`export\\s+const\\s+${constName}\\s*=\\s*(\\d+)`);
   const match = source.match(pattern);
@@ -66,22 +85,53 @@ function assertSameValues(label, frontendValues, backendValues) {
 
 //===================================================================
 
+const [frontendFixture, backendFixture] = await Promise.all([
+  readJson('packages', 'types', 'contracts', 'type-contracts.fixture.json'),
+  readJson('apps', 'api', 'src', 'contracts', 'type-contracts.fixture.json'),
+]);
+
+//===================================================================
+
+assert.deepEqual(
+  backendFixture,
+  frontendFixture,
+  'Frontend and backend type-contract fixtures differ'
+);
+
+//===================================================================
+
 const [
   frontendAuth,
-  backendAuth,
+  frontendUser,
+  frontendPharmacy,
+  frontendProduct,
   frontendCategories,
-  backendCategories,
   frontendRequestStatuses,
-  backendRequestStatuses,
+  frontendReview,
+  frontendOrder,
+  frontendNotes,
   frontendCart,
+  backendAuth,
+  backendProduct,
+  backendCategories,
+  backendRequestStatuses,
+  backendOrder,
+  backendPharmacyNote,
   backendCart,
 ] = await Promise.all([
   readSource('packages', 'config', 'src', 'auth', 'domain-values.ts'),
-  readSource('apps', 'api', 'src', 'constants', 'auth.ts'),
+  readSource('packages', 'types', 'src', 'auth', 'role.ts'),
+  readSource('packages', 'types', 'src', 'pharmacies', 'status.ts'),
+  readSource('packages', 'types', 'src', 'products', 'product-summary.ts'),
   readSource('packages', 'config', 'src', 'products', 'categories.ts'),
-  readSource('apps', 'api', 'src', 'types', 'categories.ts'),
-
   readSource('packages', 'config', 'src', 'product-requests', 'statuses.ts'),
+  readSource('packages', 'types', 'src', 'reviews', 'review.ts'),
+  readSource('packages', 'types', 'src', 'orders', 'status.ts'),
+  readSource('packages', 'types', 'src', 'notes', 'pharmacy-note.ts'),
+  readSource('packages', 'config', 'src', 'cart', 'cart-constants.ts'),
+  readSource('apps', 'api', 'src', 'constants', 'auth.ts'),
+  readSource('apps', 'api', 'src', 'types', 'product.ts'),
+  readSource('apps', 'api', 'src', 'types', 'categories.ts'),
 
   readSource(
     'apps',
@@ -91,7 +141,8 @@ const [
     'product-request-validation.ts'
   ),
 
-  readSource('packages', 'config', 'src', 'cart', 'cart-constants.ts'),
+  readSource('apps', 'api', 'src', 'types', 'order.ts'),
+  readSource('apps', 'api', 'src', 'models', 'pharmacyNote.model.ts'),
   readSource('apps', 'api', 'src', 'constants', 'cart.ts'),
 ]);
 
@@ -114,6 +165,62 @@ assertSameValues(
 //===================================================================
 
 assertSameValues(
+  'User statuses',
+  extractTypeUnionValues(frontendUser, 'UserStatus'),
+  extractObjectValues(backendAuth, 'USER_STATUSES')
+);
+
+//===================================================================
+
+assertSameValues(
+  'Pharmacy statuses',
+  extractTypeUnionValues(frontendPharmacy, 'PharmacyStatus'),
+  extractObjectValues(backendAuth, 'PHARMACY_STATUSES')
+);
+
+//===================================================================
+
+assertSameValues(
+  'Product statuses',
+  extractTypeUnionValues(frontendProduct, 'ProductStatus'),
+  extractTypeUnionValues(backendProduct, 'ProductStatus')
+);
+
+//===================================================================
+
+assertSameValues(
+  'Review moderation statuses',
+  extractTypeUnionValues(frontendReview, 'ReviewModerationStatus'),
+  extractTypeUnionValues(backendProduct, 'ReviewModerationStatus')
+);
+
+//===================================================================
+
+assertSameValues(
+  'Order statuses',
+  extractTypeUnionValues(frontendOrder, 'OrderStatus'),
+  extractTypeUnionValues(backendOrder, 'OrderStatus')
+);
+
+//===================================================================
+
+assertSameValues(
+  'Delivery methods',
+  extractTypeUnionValues(frontendOrder, 'DeliveryMethod'),
+  extractTypeUnionValues(backendOrder, 'DeliveryMethod')
+);
+
+//===================================================================
+
+assertSameValues(
+  'Payment methods',
+  extractTypeUnionValues(frontendOrder, 'PaymentMethod'),
+  extractTypeUnionValues(backendOrder, 'PaymentMethod')
+);
+
+//===================================================================
+
+assertSameValues(
   'Product categories',
   extractArrayValues(frontendCategories, 'PRODUCT_CATEGORIES'),
   extractArrayValues(backendCategories, 'PRODUCT_CATEGORIES')
@@ -129,6 +236,22 @@ assertSameValues(
 
 //===================================================================
 
+assertSameValues(
+  'Pharmacy note entity types',
+  extractTypeUnionValues(frontendNotes, 'PharmacyNoteEntityType'),
+  [
+    ...new Set(
+      [
+        ...backendPharmacyNote.matchAll(
+          /['\"](client|product|pharmacy|product_request)['\"]/g
+        ),
+      ].map((match) => match[1])
+    ),
+  ]
+);
+
+//===================================================================
+
 assert.equal(
   extractNumber(frontendCart, 'MAX_PHARMACY_GROUPS_PER_CART'),
   extractNumber(backendCart, 'MAX_PHARMACY_GROUPS_PER_CART'),
@@ -137,6 +260,22 @@ assert.equal(
 
 //===================================================================
 
+assert.match(frontendFixture.dateExamples.calendarDate, /^\d{4}-\d{2}-\d{2}$/);
+
+assert.equal(
+  new Date(frontendFixture.dateExamples.dateTime).toISOString(),
+  frontendFixture.dateExamples.dateTime,
+  'Date-time fixture is not a canonical ISO timestamp'
+);
+
+assert.equal(
+  frontendFixture.dateExamples.calendarDate.includes('T'),
+  false,
+  'Calendar date fixture must not contain a time component'
+);
+
+//===================================================================
+
 console.log(
-  'Type contract parity check passed (auth applications, roles, product categories, product request statuses, cart limit).'
+  'Type contract parity check passed (value sets, cart limit, contract shapes, and date examples).'
 );

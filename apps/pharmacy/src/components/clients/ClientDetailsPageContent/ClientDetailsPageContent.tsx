@@ -1,7 +1,5 @@
 'use client';
 
-import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -14,6 +12,7 @@ import {
   Users,
 } from 'lucide-react';
 
+import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
 
 import {
@@ -59,21 +58,15 @@ import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
-import {
-  type OrderStatisticsCounts
-} from '@e-pharmacy/types/orders';
+import { OrderStatisticsCounts } from '@e-pharmacy/types/orders';
 
 import type {
   DeliveryMethod,
   OrderStatus,
   PaymentMethod,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/orders';
 
-import {
-  type ProductCategory,
-  type ProductStatus
-} from '@e-pharmacy/types/products';
-
+import { ProductCategory, ProductStatus } from '@e-pharmacy/types/products';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { formatAmount } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
@@ -102,6 +95,7 @@ import type {
   PharmacyClientRow,
 } from '@/lib/clients/clients';
 
+import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
 import {
@@ -555,7 +549,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
 
         if (!mounted) return;
 
-        setOrders(response.items);
+        setOrders([...response.items]);
         setOrdersTotal(response.total);
         setOrdersTotalPages(response.totalPages);
         setOrdersEarliestCreatedAt(response.earliestCreatedAt);
@@ -632,7 +626,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
 
         if (!mounted) return;
 
-        setProducts(response.items);
+        setProducts([...response.items]);
         setProductsTotal(response.total);
         setProductsEarliestCreatedAt(response.earliestCreatedAt);
         setProductsTotalPages(response.totalPages);

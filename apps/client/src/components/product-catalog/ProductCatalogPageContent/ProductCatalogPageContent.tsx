@@ -2,11 +2,12 @@ import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import { LinkPagination } from '@e-pharmacy/ui/navigation';
 
+import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
+
 import type {
   ProductDetails,
   ProductFilterOptionsResponse,
-  PharmacyOption,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/products';
 
 import {
   buildProductCatalogPath,
@@ -91,7 +92,10 @@ function ProductCatalogPageContent({
           <Breadcrumbs
             items={[
               { label: 'Home', href: ROUTES.HOME },
-              { label: 'ProductDetails catalog', href: ROUTES.PRODUCTS_CATALOG },
+              {
+                label: 'ProductDetails catalog',
+                href: ROUTES.PRODUCTS_CATALOG,
+              },
               ...(filters.category !== 'all' && seoContext.categoryLabel
                 ? [{ label: seoContext.categoryLabel }]
                 : []),

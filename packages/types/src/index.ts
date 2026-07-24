@@ -1,10 +1,8 @@
+/**
+ * Minimal root API.
+ *
+ * Application code must import domain contracts from explicit subpaths such as
+ * `@e-pharmacy/types/orders` or `@e-pharmacy/types/products`.
+ */
 export type * from './api';
-export type * from './auth';
-export type * from './cart';
-export type * from './notes';
-export type * from './orders';
-export type * from './pharmacies';
 export type * from './primitives';
-export type * from './product-requests';
-export type * from './products';
-export type * from './reviews';

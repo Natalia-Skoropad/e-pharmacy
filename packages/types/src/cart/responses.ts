@@ -2,4 +2,4 @@ import type { Cart } from './cart';
 
 //===================================================================
 
-export type CartResponse = { cart: Cart };
+export type CartResponse = Readonly<{ cart: Cart }>;

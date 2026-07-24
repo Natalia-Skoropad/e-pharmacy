@@ -9,13 +9,13 @@ import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
 import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
+import type { UserStatus } from '@e-pharmacy/types/auth';
+import type { EntityId } from '@e-pharmacy/types/primitives';
 
 import type {
-  EntityId,
   ProductCategory,
   ProductStatus,
-  UserStatus,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/products';
 
 //===================================================================
 

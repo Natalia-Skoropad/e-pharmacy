@@ -24,8 +24,9 @@ import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 import type {
   PublicPharmacy,
   PublicPaymentBankDetails,
-  Review,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/pharmacies';
+
+import type { Review } from '@e-pharmacy/types/reviews';
 
 import {
   useClientAuthCapabilities,

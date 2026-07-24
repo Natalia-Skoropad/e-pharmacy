@@ -19,6 +19,8 @@ import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { getPharmacyNewRequestPath } from '@e-pharmacy/config/pharmacy';
 
+import { isCalendarDateString } from '@e-pharmacy/validation/dates';
+
 import {
   DEFAULT_PRODUCT_REQUESTS_FILTERS,
   DEFAULT_PRODUCT_REQUEST_STATISTICS,
@@ -27,7 +29,6 @@ import {
   type ProductRequestStatisticsCounts,
   type ProductRequestsFilterState,
 } from '@/lib/product-requests/product-requests';
-import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 
 import { getPharmacyProductRequests } from '@/lib/api/browser';
 import { getPharmacyRequestsFilterPath } from '@/lib/layout/routes';
@@ -139,7 +140,7 @@ function ProductRequestsPageContent({
         const response = await getPharmacyProductRequests(queryParams);
         if (!isMounted) return;
 
-        setRequests(response.items);
+        setRequests([...response.items]);
         setTotalRequests(response.total);
         setTotalPages(response.totalPages);
         setEarliestCreatedAt(response.earliestCreatedAt);

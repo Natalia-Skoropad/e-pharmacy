@@ -4,13 +4,13 @@ import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
 
 import {
-  type OrderSalesStatistics,
-  type OrderSalesStatisticsGroupBy,
-  type OrderSalesStatisticsPoint,
-  type OrderSalesStatisticsValue,
+  OrderSalesStatistics,
+  OrderSalesStatisticsGroupBy,
+  OrderSalesStatisticsPoint,
+  OrderSalesStatisticsValue,
 } from '@e-pharmacy/types/orders';
 
-import { type ProductCategory } from '@e-pharmacy/types/products';
+import { ProductCategory } from '@e-pharmacy/types/products';
 
 import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
 

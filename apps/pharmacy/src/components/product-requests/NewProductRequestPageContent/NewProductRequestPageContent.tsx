@@ -18,7 +18,13 @@ import {
 import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
-import { DocumentUpload, SelectField, MarkdownTextarea } from '@e-pharmacy/ui/forms';
+
+import {
+  DocumentUpload,
+  SelectField,
+  MarkdownTextarea,
+} from '@e-pharmacy/ui/forms';
+
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
@@ -32,11 +38,10 @@ import { PageHeader } from '@e-pharmacy/ui/layout';
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 
 import {
-  type ProductRequestFormPayload,
-  type ProductRequestFile,
-  type ProductRequestStatus,
+  ProductRequestFormPayload,
+  ProductRequestFile,
+  ProductRequestStatus,
 } from '@e-pharmacy/types/product-requests';
-import type { ProductRequestDetailsViewModel } from '@/lib/product-requests/product-requests';
 
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
@@ -79,6 +84,7 @@ import {
   updatePharmacyProductRequest,
 } from '@/lib/api/browser';
 
+import type { ProductRequestDetailsViewModel } from '@/lib/product-requests/product-requests';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
 import {
@@ -137,7 +143,9 @@ function toUploadFile(
 
 //===================================================================
 
-function toFormState(request: ProductRequestDetailsViewModel): ProductRequestFormValues {
+function toFormState(
+  request: ProductRequestDetailsViewModel
+): ProductRequestFormValues {
   return {
     name: request.name,
     article: request.article,
@@ -210,7 +218,9 @@ function NewProductRequestPageContent({
   const isCreationLocked = Boolean(bannerStatus || isBlocked);
   const cloneSourceRequestId = requestId ? undefined : sourceRequestId;
 
-  const [request, setRequest] = useState<ProductRequestDetailsViewModel | null>(null);
+  const [request, setRequest] = useState<ProductRequestDetailsViewModel | null>(
+    null
+  );
 
   const [values, setValues] = useState<ProductRequestFormValues>(
     PRODUCT_REQUEST_INITIAL_VALUES
@@ -218,7 +228,9 @@ function NewProductRequestPageContent({
 
   const [productImage, setProductImage] = useState<BrowserUploadFile[]>([]);
 
-  const [additionalFiles, setAdditionalFiles] = useState<BrowserUploadFile[]>([]);
+  const [additionalFiles, setAdditionalFiles] = useState<BrowserUploadFile[]>(
+    []
+  );
 
   const [productImagePreview, setProductImagePreview] = useState<string | null>(
     null

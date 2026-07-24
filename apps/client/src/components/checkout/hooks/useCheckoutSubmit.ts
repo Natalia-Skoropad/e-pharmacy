@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import type { Cart, CheckoutOrderPayload } from '@e-pharmacy/types';
+import type { Cart } from '@e-pharmacy/types/cart';
+import type { CheckoutOrderPayload } from '@e-pharmacy/types/orders';
 import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types/orders';
 import { normalizePhoneInput } from '@e-pharmacy/validation/order';
 

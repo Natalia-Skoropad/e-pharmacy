@@ -36,12 +36,9 @@ import {
   getNumericRange,
 } from '@e-pharmacy/utils/money';
 
-import type {
-  Cart,
-  ProductDetails,
-  ProductOffer,
-  Review,
-} from '@e-pharmacy/types';
+import type { Cart } from '@e-pharmacy/types/cart';
+import type { ProductDetails, ProductOffer } from '@e-pharmacy/types/products';
+import type { Review } from '@e-pharmacy/types/reviews';
 
 import {
   invalidateFavoriteProductIdsCache,

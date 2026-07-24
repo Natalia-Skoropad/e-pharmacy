@@ -7,17 +7,17 @@ import {
 } from '@e-pharmacy/api-client/core';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
+import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 
 import type {
   PharmacyProductMutationResponse,
-  ApiSuccessResponse,
   ProductDetails,
   ProductDetailsResponse,
   ProductReviewsResponse,
   ProductStockMovementsResponse,
-  ProductsQueryParams,
+  PharmacyProductsQueryParams as PharmacyProductsApiQueryParams,
   ProductsResponse,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/products';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
@@ -31,7 +31,7 @@ import {
 //===================================================================
 
 export async function getProducts(
-  params: ProductsQueryParams = {},
+  params: PharmacyProductsApiQueryParams = {},
   options: RequestOptions = {}
 ): Promise<ProductsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<ProductsResponse>>(

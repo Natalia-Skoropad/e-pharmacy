@@ -2,7 +2,8 @@ import { Suspense } from 'react';
 import Image from 'next/image';
 
 import { LinkButton } from '@e-pharmacy/ui/navigation';
-import type { ProductDetails, PublicPharmacy } from '@e-pharmacy/types';
+import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
+import type { ProductDetails } from '@e-pharmacy/types/products';
 import { Container } from '@e-pharmacy/ui/layout';
 
 import {
@@ -38,7 +39,7 @@ export const metadata = createPageMetadata({
 
 //===================================================================
 
-type FeaturedResult<T> = { items: T[]; hasError: boolean };
+type FeaturedResult<T> = { items: readonly T[]; hasError: boolean };
 
 //===================================================================
 

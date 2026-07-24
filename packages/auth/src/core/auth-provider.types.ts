@@ -2,7 +2,7 @@ import type {
   AuthResponse,
   LoginPayload,
   RegisterPayload,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/auth';
 
 //===================================================================
 

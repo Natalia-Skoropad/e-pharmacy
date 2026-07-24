@@ -6,7 +6,7 @@ export type OwnProductStatisticsKey =
 
 //===================================================================
 
-export type OwnProductStatisticsValue = Readonly<{
+type OwnProductStatisticsValue = Readonly<{
   quantity: number;
   amount?: number;
 }>;

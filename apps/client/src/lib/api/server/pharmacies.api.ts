@@ -9,15 +9,17 @@ import {
 import { apiRoutes as ROUTES } from '@e-pharmacy/api-client/contracts';
 import { backendApiRequest } from '@e-pharmacy/next-api/server';
 
+import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
+
 import type {
-  ApiSuccessResponse,
   PharmacyDetailsResponse,
   PharmacyFilterOptionsResponse,
-  ReviewsResponse,
   PharmaciesQueryParams,
   PharmaciesResponse,
   PharmacyOptionsResponse,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/pharmacies';
+
+import type { ReviewsResponse } from '@e-pharmacy/types/reviews';
 
 //===================================================================
 

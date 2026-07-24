@@ -1,7 +1,9 @@
 import 'server-only';
 import type { Metadata } from 'next';
 
-import { PharmacyDetailsPageContent } from '@/components/pharmacies';
+import { ApiError } from '@e-pharmacy/api-client/core';
+import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
+
 import { buildPharmacyPath, getIdFromSlugId } from '@/lib/routes';
 
 import {
@@ -10,12 +12,10 @@ import {
 } from '@/lib/api/server';
 
 import { createPageMetadata } from '@/lib/seo';
-
 import { getPharmacyDetails, getPharmacyReviews } from '@/lib/api/server';
-
-import { ApiError } from '@e-pharmacy/api-client/core';
-import type { PublicPharmacy } from '@e-pharmacy/types';
 import type { DataUnavailableReason } from '@/lib/api/server';
+
+import { PharmacyDetailsPageContent } from '@/components/pharmacies';
 
 //===================================================================
 
@@ -70,7 +70,9 @@ export async function getPharmacyBySlugId(
 
 //===================================================================
 
-export function createPharmacyDetailMetadata(pharmacy: PublicPharmacy): Metadata {
+export function createPharmacyDetailMetadata(
+  pharmacy: PublicPharmacy
+): Metadata {
   return createPageMetadata({
     title: `${pharmacy.name} pharmacy details`,
     description:
@@ -93,7 +95,7 @@ export async function renderPharmacyDetailPage(pharmacy: PublicPharmacy) {
   return (
     <PharmacyDetailsPageContent
       pharmacy={pharmacy}
-      reviews={reviewsData?.items ?? []}
+      reviews={[...(reviewsData?.items ?? [])]}
       reviewsTotal={reviewsData?.total ?? pharmacy.reviewsCount ?? 0}
       areReviewsUnavailable={!reviewsData}
     />

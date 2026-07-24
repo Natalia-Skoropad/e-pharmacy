@@ -10,7 +10,7 @@ import { formatProductCategoryLabel } from '@e-pharmacy/config/products';
 import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
 import { formatMoneyRange, getNumericRange } from '@e-pharmacy/utils/money';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import type { ProductDetails } from '@e-pharmacy/types';
+import type { ProductDetails } from '@e-pharmacy/types/products';
 
 import {
   invalidateFavoriteProductIdsCache,

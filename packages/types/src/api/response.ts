@@ -2,23 +2,26 @@ import type { EntityId } from '../primitives';
 
 //===================================================================
 
-export type ApiSuccessResponse<TData = unknown> = {
+export type ApiSuccessResponse<TData = unknown> = Readonly<{
   status: 'success';
   message?: string;
   data: TData;
-};
+}>;
 
-export type ApiEmptySuccessResponse = {
+export type ApiEmptySuccessResponse = Readonly<{
   status: 'success';
   message?: string;
-};
+}>;
 
 //===================================================================
 
-export type MutationResponse = { message: string };
-export type FavoriteIdsResponse = { ids: EntityId[] };
+export type MutationResponse = Readonly<{ message: string }>;
 
-export type FavoriteMutationResponse = {
+export type FavoriteIdsResponse = Readonly<{
+  ids: readonly EntityId[];
+}>;
+
+export type FavoriteMutationResponse = Readonly<{
   isFavorite: boolean;
   message: string;
-};
+}>;

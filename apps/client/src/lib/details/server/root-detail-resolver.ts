@@ -1,7 +1,8 @@
 import 'server-only';
 import { cache } from 'react';
 
-import type { ProductDetails, PublicPharmacy } from '@e-pharmacy/types';
+import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
+import type { ProductDetails } from '@e-pharmacy/types/products';
 import { buildSlugId } from '@e-pharmacy/validation/url';
 
 import { isReservedRootSlug } from '@/lib/routes';

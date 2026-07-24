@@ -1,5 +1,5 @@
 import { isProductCategory } from '@e-pharmacy/validation/products';
-import { type OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
+import { OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
 
 import {
   normalizePaginatedResponse,
@@ -10,12 +10,13 @@ import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
 
+import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
+import type { EntityId } from '@e-pharmacy/types/primitives';
+
 import type {
-  ApiPaginationResponse,
-  EntityId,
   ProductCategory,
   ProductStatus,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/products';
 
 import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 

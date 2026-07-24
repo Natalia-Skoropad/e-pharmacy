@@ -1,4 +1,4 @@
-import type { ProductDetails } from '@e-pharmacy/types';
+import type { ProductDetails } from '@e-pharmacy/types/products';
 
 import ProductCard from '@/components/product-catalog/ProductCard';
 

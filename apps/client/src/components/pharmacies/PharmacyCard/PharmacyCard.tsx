@@ -6,7 +6,7 @@ import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
-import type { PublicPharmacy } from '@e-pharmacy/types';
+import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 
 import { addFavoritePharmacy, removeFavoritePharmacy } from '@/lib/api/browser';
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';

@@ -1,4 +1,4 @@
-import type { PublicPharmacy } from '@e-pharmacy/types';
+import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 
 import PharmacyCard from '@/components/pharmacies/PharmacyCard';
 

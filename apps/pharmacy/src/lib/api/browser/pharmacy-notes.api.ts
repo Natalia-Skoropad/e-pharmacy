@@ -7,23 +7,17 @@ import {
   requirePaginatedResponse,
 } from '@e-pharmacy/api-client/response';
 
-import type { ApiSuccessResponse } from '@e-pharmacy/types';
+import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
+import { isISODateTimeString } from '@e-pharmacy/validation/dates';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
   PharmacyNote,
+  PharmacyNoteEntityType,
   PharmacyNotesResponse,
 } from '@e-pharmacy/types/notes';
-
-//===================================================================
-
-export type PharmacyNoteEntityType =
-  | 'client'
-  | 'product'
-  | 'pharmacy'
-  | 'product_request';
 
 //===================================================================
 
@@ -34,7 +28,9 @@ function normalizeComment(value: unknown): PharmacyNote | null {
   const text = getTrimmedString(value.text);
   const createdAt = getTrimmedString(value.createdAt);
 
-  return id && text && createdAt ? { id, text, createdAt } : null;
+  return id && text && isISODateTimeString(createdAt)
+    ? { id, text, createdAt }
+    : null;
 }
 
 //===================================================================

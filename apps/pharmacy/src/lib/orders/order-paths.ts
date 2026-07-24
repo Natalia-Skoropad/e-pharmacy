@@ -9,8 +9,7 @@ import {
 } from '@e-pharmacy/validation/url';
 
 import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
-
-import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types';
+import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types/orders';
 
 import { DELIVERY_METHODS, ORDER_STATUSES, PAYMENT_METHODS } from './orders';
 

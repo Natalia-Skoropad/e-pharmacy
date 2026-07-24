@@ -1,12 +1,12 @@
+import type { Cart } from '@e-pharmacy/types/cart';
 import { buildCheckoutPath } from '@/lib/routes';
-import type { Cart } from '@e-pharmacy/types';
 
 //===================================================================
 
 export type CartPharmacyGroup = {
   pharmacyId: string;
   pharmacyName: string;
-  items: Cart['items'];
+  items: Array<Cart['items'][number]>;
   totalItems: number;
   totalPrice: number;
   pharmacyRating?: number;

@@ -1,7 +1,7 @@
 import { Copy, CreditCard, Mail, Wallet } from 'lucide-react';
 
 import { RadioOption } from '@e-pharmacy/ui/forms';
-import type { PublicPaymentBankDetails } from '@e-pharmacy/types';
+import type { PublicPaymentBankDetails } from '@e-pharmacy/types/pharmacies';
 import type { PaymentMethod } from '@e-pharmacy/types/orders';
 
 import css from './CheckoutPaymentMethod.module.css';

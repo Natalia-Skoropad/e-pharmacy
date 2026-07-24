@@ -1,15 +1,15 @@
+import type {
+  AddCartItemPayload,
+  CartResponse,
+  UpdateCartItemPayload,
+} from '@e-pharmacy/types/cart';
+
 import {
   addCartItem as addCartItemRequest,
   clearCart as clearCartRequest,
   removeCartItem as removeCartItemRequest,
   updateCartItem as updateCartItemRequest,
 } from '@/lib/api/browser';
-
-import type {
-  AddCartItemPayload,
-  CartResponse,
-  UpdateCartItemPayload,
-} from '@e-pharmacy/types';
 
 //===================================================================
 

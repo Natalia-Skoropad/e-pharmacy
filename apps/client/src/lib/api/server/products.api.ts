@@ -9,19 +9,21 @@ import {
 import { apiRoutes as ROUTES } from '@e-pharmacy/api-client/contracts';
 import { backendApiRequest } from '@e-pharmacy/next-api/server';
 
+import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
+
 import type {
-  ApiSuccessResponse,
   ProductDetailsResponse,
   ProductFilterOptionsResponse,
-  ReviewsResponse,
-  ProductsQueryParams,
+  CatalogProductsQueryParams,
   ProductsResponse,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/products';
+
+import type { ReviewsResponse } from '@e-pharmacy/types/reviews';
 
 //===================================================================
 
 type ProductFiltersQueryParams = Pick<
-  ProductsQueryParams,
+  CatalogProductsQueryParams,
   'pharmacyId' | 'inStock'
 >;
 
@@ -47,7 +49,7 @@ function isRequestOptions(value: unknown): value is RequestOptions {
 //===================================================================
 
 export async function getProductsFromBackend(
-  params: ProductsQueryParams = {},
+  params: CatalogProductsQueryParams = {},
   options?: RequestOptions
 ): Promise<ProductsResponse> {
   return getResponseData(

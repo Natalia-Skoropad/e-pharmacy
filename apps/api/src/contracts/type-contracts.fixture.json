@@ -1,0 +1,219 @@
+{
+  "values": {
+    "authApplications": [
+      "client",
+      "pharmacy",
+      "admin"
+    ],
+    "userRoles": [
+      "client",
+      "pharmacy",
+      "admin"
+    ],
+    "userStatuses": [
+      "active",
+      "blocked"
+    ],
+    "pharmacyStatuses": [
+      "new",
+      "on_verification",
+      "on_moderation",
+      "active",
+      "blocked"
+    ],
+    "productStatuses": [
+      "new",
+      "active",
+      "blocked"
+    ],
+    "reviewStatuses": [
+      "on_moderation",
+      "approved",
+      "rejected"
+    ],
+    "orderStatuses": [
+      "new",
+      "in_progress",
+      "successful",
+      "rejected"
+    ],
+    "productRequestStatuses": [
+      "draft",
+      "new",
+      "in_progress",
+      "approved",
+      "rejected"
+    ],
+    "productCategories": [
+      "medicine",
+      "vitamins",
+      "beauty",
+      "hygiene",
+      "medical_devices",
+      "other"
+    ],
+    "deliveryMethods": [
+      "pickup",
+      "postal_delivery"
+    ],
+    "paymentMethods": [
+      "cash",
+      "bank_transfer"
+    ],
+    "noteEntityTypes": [
+      "client",
+      "product",
+      "pharmacy",
+      "product_request"
+    ]
+  },
+  "cartPharmacyLimit": 15,
+  "shapes": {
+    "pagination": {
+      "required": [
+        "items",
+        "page",
+        "perPage",
+        "total",
+        "totalPages"
+      ],
+      "optional": []
+    },
+    "editableBankDetails": {
+      "required": [],
+      "optional": [
+        "recipientName",
+        "taxId",
+        "iban",
+        "bankName",
+        "receiptEmail",
+        "paymentPurpose"
+      ]
+    },
+    "completeBankDetails": {
+      "required": [
+        "recipientName",
+        "taxId",
+        "iban",
+        "bankName",
+        "receiptEmail",
+        "paymentPurpose"
+      ],
+      "optional": []
+    },
+    "publicBankDetails": {
+      "required": [
+        "recipientName",
+        "taxId",
+        "iban",
+        "bankName",
+        "receiptEmail",
+        "paymentPurpose"
+      ],
+      "optional": []
+    },
+    "verificationDocument": {
+      "required": [
+        "name",
+        "size",
+        "type"
+      ],
+      "optional": []
+    },
+    "fileMetadata": {
+      "required": [
+        "name",
+        "size",
+        "type"
+      ],
+      "optional": []
+    },
+    "serializedUploadFile": {
+      "required": [
+        "name",
+        "size",
+        "type",
+        "dataUrl"
+      ],
+      "optional": []
+    },
+    "createReviewPayload": {
+      "required": [
+        "rating",
+        "comment"
+      ],
+      "optional": []
+    },
+    "moderateReviewPayload": {
+      "required": [
+        "status"
+      ],
+      "optional": [
+        "reason"
+      ]
+    },
+    "favoriteIdsResponse": {
+      "required": [
+        "ids"
+      ],
+      "optional": []
+    },
+    "favoriteMutationResponse": {
+      "required": [
+        "isFavorite",
+        "message"
+      ],
+      "optional": []
+    },
+    "pickupDelivery": {
+      "required": [
+        "method"
+      ],
+      "optional": []
+    },
+    "postalDelivery": {
+      "required": [
+        "method",
+        "details"
+      ],
+      "optional": []
+    },
+    "productRequestResponse": {
+      "required": [
+        "id",
+        "createdAt",
+        "article",
+        "name",
+        "category",
+        "status"
+      ],
+      "optional": [
+        "updatedAt",
+        "requestNumber",
+        "productId",
+        "productImageUrl",
+        "productArticle",
+        "productName",
+        "customCategory",
+        "productImage",
+        "manufacturer",
+        "countryOfOrigin",
+        "dosage",
+        "packageSize",
+        "form",
+        "activeSubstance",
+        "prescriptionType",
+        "fullDescription",
+        "pharmacyComment",
+        "additionalFiles",
+        "rejectionReason",
+        "history",
+        "commentsTotal"
+      ]
+    }
+  },
+  "dateExamples": {
+    "calendarDate": "2026-07-24",
+    "dateTime": "2026-07-24T08:30:00.000Z"
+  }
+}

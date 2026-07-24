@@ -1,10 +1,11 @@
 import 'server-only';
 
+import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
+
 import type {
-  PharmacyOption,
   ProductDetails,
   ProductFilterOptionsResponse,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/products';
 
 import {
   PUBLIC_API_CACHE_OPTIONS,
@@ -66,7 +67,7 @@ export async function loadProductCatalogPageData(
   );
 
   return {
-    products: productsData?.items ?? [],
+    products: [...(productsData?.items ?? [])],
     pharmacies,
     filterOptions,
     total: productsData?.total ?? 0,

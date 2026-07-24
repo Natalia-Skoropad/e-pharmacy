@@ -19,7 +19,7 @@ export type PharmaciesSortFilter =
 
 //=============================================================================
 
-export type PharmaciesQueryParams = {
+export type PharmaciesQueryParams = Readonly<{
   page?: number;
   perPage?: number;
   keyword?: string;
@@ -27,46 +27,56 @@ export type PharmaciesQueryParams = {
   addressKeyword?: string;
   city?: string;
   sort?: PharmaciesSortFilter;
-};
+}>;
 
 //=============================================================================
 
 export type PharmaciesResponse = ApiPaginationResponse<PublicPharmacy>;
-export type PharmacyOption = { id: EntityId; name: string };
-export type PharmacyOptionsResponse = { items: PharmacyOption[] };
+export type PharmacyOption = Readonly<{ id: EntityId; name: string }>;
+
+export type PharmacyOptionsResponse = Readonly<{
+  items: readonly PharmacyOption[];
+}>;
 
 //=============================================================================
 
-export type PharmacyFilterOption = { value: string; label: string };
-export type PharmacyFilterOptionsResponse = {
-  cities: PharmacyFilterOption[];
-  sort: Array<{ value: PharmaciesSortFilter; label: string }>;
-};
+type PharmacyFilterOption = Readonly<{ value: string; label: string }>;
+
+export type PharmacyFilterOptionsResponse = Readonly<{
+  cities: readonly PharmacyFilterOption[];
+  sort: readonly Readonly<{
+    value: PharmaciesSortFilter;
+    label: string;
+  }>[];
+}>;
 
 //=============================================================================
 
-export type PharmacyDetailsResponse = { pharmacy: PublicPharmacy };
-export type PharmacyCheckoutDetailsResponse = {
+export type PharmacyDetailsResponse = Readonly<{
+  pharmacy: PublicPharmacy;
+}>;
+
+export type PharmacyCheckoutDetailsResponse = Readonly<{
   pharmacy: PharmacyCheckoutDetails;
-};
+}>;
 
 //=============================================================================
 
-export type PharmacyReviewsResponse = {
-  items: Review[];
+export type PharmacyReviewsResponse = Readonly<{
+  items: readonly Review[];
   total: number;
-};
+}>;
 
-export type PendingPharmacyReviewTarget = {
+export type PendingPharmacyReviewTarget = Readonly<{
   pharmacyId: EntityId;
   pharmacyName: string;
-};
+}>;
 
-export type PharmacyProfileResponse = {
+export type PharmacyProfileResponse = Readonly<{
   pharmacy: PharmacyProfile;
-};
+}>;
 
-export type SendPharmacyForVerificationResponse = {
+export type SendPharmacyForVerificationResponse = Readonly<{
   pharmacy: PharmacyProfile;
   message: string;
-};
+}>;

@@ -11,7 +11,8 @@ import {
 
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
-import type { EntityId, ProductDetails } from '@e-pharmacy/types';
+import type { EntityId } from '@e-pharmacy/types/primitives';
+import type { ProductDetails } from '@e-pharmacy/types/products';
 import { getPharmacyAllProductPath } from '@e-pharmacy/config/pharmacy';
 
 import { PRODUCT_STATUS_LABELS } from '@/lib/products/products';

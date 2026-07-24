@@ -2,7 +2,7 @@ import type {
   PublicPharmacy,
   PublicPaymentBankDetails,
   PharmacyCheckoutDetails,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/pharmacies';
 
 import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 

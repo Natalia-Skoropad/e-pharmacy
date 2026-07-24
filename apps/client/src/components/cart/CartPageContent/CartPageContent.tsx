@@ -8,7 +8,7 @@ import { CountLabel, RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
-import type { Cart } from '@e-pharmacy/types';
+import type { Cart } from '@e-pharmacy/types/cart';
 
 import {
   getCartOrderPath,

@@ -1,10 +1,11 @@
-export type PaginationMeta = {
+type PaginationMeta = Readonly<{
   page: number;
   perPage: number;
   total: number;
   totalPages: number;
-};
+}>;
 
-export type ApiPaginationResponse<TItem> = {
-  items: TItem[];
-} & PaginationMeta;
+export type ApiPaginationResponse<TItem> = Readonly<{
+  items: readonly TItem[];
+}> &
+  PaginationMeta;

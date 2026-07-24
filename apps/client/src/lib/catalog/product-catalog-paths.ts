@@ -4,7 +4,7 @@ import {
   slugifySegment,
 } from '@e-pharmacy/validation/url';
 
-import type { PharmacyOption } from '@e-pharmacy/types';
+import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
 
 import { isValidObjectId } from '@/lib/routes';
 

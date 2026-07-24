@@ -2,6 +2,14 @@ import type { EntityId, ISODateTimeString } from '../primitives';
 
 //===================================================================
 
+export type PharmacyNoteEntityType =
+  | 'client'
+  | 'product'
+  | 'pharmacy'
+  | 'product_request';
+
+//===================================================================
+
 export type PharmacyNote = Readonly<{
   id: EntityId;
   text: string;

@@ -2,7 +2,7 @@ import type {
   DeliveryMethod,
   OrderStatus,
   PaymentMethod,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/orders';
 
 import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
 

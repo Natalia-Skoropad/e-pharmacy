@@ -1,7 +1,5 @@
 'use client';
 
-import { isCompletePharmacyBankDetails } from '@e-pharmacy/validation/pharmacy';
-
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useState } from 'react';
@@ -29,6 +27,7 @@ import {
 } from 'lucide-react';
 
 import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
+import { isCompletePharmacyBankDetails } from '@e-pharmacy/validation/pharmacy';
 
 import {
   Button,
@@ -71,10 +70,14 @@ import { PageHeader } from '@e-pharmacy/ui/layout';
 import type {
   DeliveryMethod,
   OrderStatus,
+  UpdateOrderStatusPayload,
   PaymentMethod,
+} from '@e-pharmacy/types/orders';
+
+import type {
   ProductDetails,
   ProductCategory,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/products';
 
 import {
   getProductCategoryOptions,
@@ -487,7 +490,7 @@ function ProductPickerModal({
           { signal: controller.signal }
         );
 
-        setProducts(response.items);
+        setProducts([...response.items]);
         setAvailableProductsCount(response.total);
       } catch {
         if (!controller.signal.aborted) {
@@ -1953,13 +1956,16 @@ function OrderDetailsPageContent({
     setIsUpdatingStatus(true);
 
     try {
-      const payload =
-        pendingStatus.status === 'rejected'
-          ? {
-              status: pendingStatus.status,
-              rejectionReason: rejectionReason.trim(),
-            }
-          : pendingStatus;
+      let payload: UpdateOrderStatusPayload;
+
+      if (pendingStatus.status === 'rejected') {
+        payload = {
+          status: 'rejected',
+          rejectionReason: rejectionReason.trim(),
+        };
+      } else {
+        payload = { status: pendingStatus.status };
+      }
 
       const updatedOrder = await updatePharmacyOrderStatus(order.id, payload);
 

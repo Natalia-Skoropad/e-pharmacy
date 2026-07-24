@@ -18,8 +18,10 @@
     "./reviews": "./src/reviews/index.ts"
   },
   "scripts": {
-    "lint": "tsc --noEmit",
-    "type-check": "tsc --noEmit"
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.type-tests.json --noEmit",
+    "type-check": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.type-tests.json --noEmit",
+    "test": "tsc -p tsconfig.type-tests.json --noEmit"
   },
   "devDependencies": {
     "typescript": "^5"

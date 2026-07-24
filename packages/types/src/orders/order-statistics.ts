@@ -2,7 +2,7 @@ import type { OrderStatus } from './status';
 
 //=============================================================================
 
-export type OrderStatisticsValue = Readonly<{
+type OrderStatisticsValue = Readonly<{
   count: number;
   amount: number;
 }>;

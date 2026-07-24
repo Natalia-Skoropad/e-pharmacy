@@ -1,4 +1,4 @@
-import type { Order } from '@e-pharmacy/types';
+import type { Order } from '@e-pharmacy/types/orders';
 
 import { ROUTES } from './routes';
 import { buildSlugId } from '@e-pharmacy/validation/url';

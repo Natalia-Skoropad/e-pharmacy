@@ -10,23 +10,29 @@ import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
   ApiSuccessResponse,
-  CreateReviewPayload,
-  ReviewMutationResponse,
-  ProductDetailsResponse,
-  ProductFilterOptionsResponse,
-  ReviewsResponse,
-  ProductsQueryParams,
-  ProductsResponse,
   FavoriteMutationResponse,
   FavoriteIdsResponse,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/api';
+
+import type {
+  ProductDetailsResponse,
+  ProductFilterOptionsResponse,
+  CatalogProductsQueryParams,
+  ProductsResponse,
+} from '@e-pharmacy/types/products';
+
+import type {
+  CreateReviewPayload,
+  ReviewMutationResponse,
+  ReviewsResponse,
+} from '@e-pharmacy/types/reviews';
 
 import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
 
 //===================================================================
 
 type ProductFiltersQueryParams = Pick<
-  ProductsQueryParams,
+  CatalogProductsQueryParams,
   'pharmacyId' | 'inStock'
 >;
 
@@ -52,7 +58,7 @@ function isRequestOptions(value: unknown): value is RequestOptions {
 //===================================================================
 
 export async function getProductsFromClientApi(
-  params: ProductsQueryParams = {},
+  params: CatalogProductsQueryParams = {},
   options?: RequestOptions
 ): Promise<ProductsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<ProductsResponse>>(
@@ -65,7 +71,7 @@ export async function getProductsFromClientApi(
 //===================================================================
 
 export async function getFavoriteProductsFromClientApi(
-  params: ProductsQueryParams = {},
+  params: CatalogProductsQueryParams = {},
   options?: RequestOptions
 ): Promise<ProductsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<ProductsResponse>>(

@@ -1,7 +1,5 @@
 'use client';
 
-import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
-import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 import Link from 'next/link';
 import { BarChart3, History, PackageSearch } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -54,28 +52,28 @@ import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/core';
-import { type OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
+import { OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
+import type { OrderStatus } from '@e-pharmacy/types/orders';
+import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
+import type { EntityId } from '@e-pharmacy/types/primitives';
 
 import type {
-  EntityId,
-  PharmacyStatus,
   ProductDetails,
   ProductOffer,
-  Review,
-  OrderStatus,
   ProductStockBalance,
   ProductStockMovement,
   StockMovementEventType,
   StockMovementSource,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/products';
 
+import type { Review } from '@e-pharmacy/types/reviews';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { formatAmount, formatMoney } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
 
 import {
-  type OrderSalesStatistics,
-  type OrderStatisticsCounts
+  OrderSalesStatistics,
+  OrderStatisticsCounts,
 } from '@e-pharmacy/types/orders';
 
 import {
@@ -99,6 +97,8 @@ import {
 } from '@/lib/api/browser';
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
+import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
+import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 
 import {
   ORDER_CREATED_BY_TYPES,
@@ -377,7 +377,10 @@ function getProductStatusLabel(product: ProductDetails): string {
 
 //===================================================================
 
-function getProductPriceLabel(product: ProductDetails, offer: ProductOffer | null) {
+function getProductPriceLabel(
+  product: ProductDetails,
+  offer: ProductOffer | null
+) {
   if (offer) return formatMoney(offer.price) ?? '—';
 
   return product.price > 0 ? (formatMoney(product.price) ?? '—') : '—';
@@ -441,7 +444,9 @@ function getProductSummaryItems(
 
 //===================================================================
 
-function getProductCharacteristics(product: ProductDetails): CharacteristicItem[] {
+function getProductCharacteristics(
+  product: ProductDetails
+): CharacteristicItem[] {
   return [
     product.manufacturer
       ? { label: 'Manufacturer', value: product.manufacturer }
@@ -788,12 +793,12 @@ function AllProductDetailsPageContent({
         if (!isMounted) return;
 
         setProduct(productResponse.product);
-        setReviews(reviewsResponse?.items ?? []);
+        setReviews([...(reviewsResponse?.items ?? [])]);
         setReviewsTotal(
           reviewsResponse?.total ?? productResponse.product.reviewsCount ?? 0
         );
 
-        setRelatedOrders(ordersResponse?.items ?? []);
+        setRelatedOrders([...(ordersResponse?.items ?? [])]);
         setRelatedOrderStatistics(
           ordersResponse?.statistics ?? DEFAULT_ORDER_STATISTICS
         );
@@ -802,7 +807,7 @@ function AllProductDetailsPageContent({
           ordersResponse?.earliestCreatedAt ?? null
         );
 
-        setStockMovements(stockMovementsResponse?.items ?? []);
+        setStockMovements([...(stockMovementsResponse?.items ?? [])]);
         setStockEarliestCreatedAt(
           stockMovementsResponse?.earliestCreatedAt ?? null
         );
@@ -869,7 +874,7 @@ function AllProductDetailsPageContent({
       });
 
       if (isMounted) {
-        setRelatedOrders(response.items);
+        setRelatedOrders([...response.items]);
         setRelatedOrderStatistics(response.statistics);
         setRelatedOrdersEarliestCreatedAt(response.earliestCreatedAt);
       }
@@ -1258,11 +1263,13 @@ function AllProductDetailsPageContent({
       const stockResponse = await getProductStockMovements(product.id);
 
       setProduct(response.product);
-      setStockMovements(stockResponse.items);
+      setStockMovements([...stockResponse.items]);
       setStockEarliestCreatedAt(stockResponse.earliestCreatedAt);
       setStockBalance(stockResponse.stock);
       setIsAddModalOpen(false);
-      toast.success(response.message || 'ProductDetails added to your pharmacy.');
+      toast.success(
+        response.message || 'ProductDetails added to your pharmacy.'
+      );
     } catch (addError) {
       toast.error(getProductActionErrorMessage(addError));
     } finally {

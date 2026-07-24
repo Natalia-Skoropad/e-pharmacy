@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Globe2, Store } from 'lucide-react';
 
-import type { PharmacyProfile } from '@e-pharmacy/types';
+import type { PharmacyProfile } from '@e-pharmacy/types/pharmacies';
 import { CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
 import { Logo } from '@e-pharmacy/ui/media';
 import { UserBadge } from '@e-pharmacy/ui/data-display';

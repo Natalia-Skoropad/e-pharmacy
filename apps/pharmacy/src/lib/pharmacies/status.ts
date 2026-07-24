@@ -1,4 +1,4 @@
-import type { PharmacyStatus } from '@e-pharmacy/types';
+import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 
 //===================================================================
 

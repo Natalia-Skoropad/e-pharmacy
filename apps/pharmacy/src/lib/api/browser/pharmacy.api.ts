@@ -4,16 +4,22 @@ import { getResponseData } from '@e-pharmacy/api-client/core';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
-  ActiveSessionsResponse,
   ApiEmptySuccessResponse,
   ApiSuccessResponse,
+} from '@e-pharmacy/types/api';
+
+import type {
+  ActiveSessionsResponse,
   AuthResponse,
+  UpdatePasswordPayload,
+  UpdateProfilePayload,
+} from '@e-pharmacy/types/auth';
+
+import type {
   PharmacyProfileResponse,
   SendPharmacyForVerificationResponse,
   UpdateMyPharmacyProfilePayload,
-  UpdatePasswordPayload,
-  UpdateProfilePayload,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/pharmacies';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 

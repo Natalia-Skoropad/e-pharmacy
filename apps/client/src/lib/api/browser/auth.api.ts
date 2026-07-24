@@ -2,11 +2,13 @@ import 'client-only';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { getResponseData } from '@e-pharmacy/api-client/core';
-import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 
 import type {
   ApiEmptySuccessResponse,
   ApiSuccessResponse,
+} from '@e-pharmacy/types/api';
+
+import type {
   AuthResponse,
   ForgotPasswordPayload,
   LoginPayload,
@@ -15,7 +17,9 @@ import type {
   UpdatePasswordPayload,
   UpdateProfilePayload,
   ActiveSessionsResponse,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/auth';
+
+import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 
 //===================================================================
 
@@ -78,11 +82,12 @@ export async function resetPassword(
 //===================================================================
 
 export async function refreshSession(): Promise<AuthResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<AuthResponse>
-  >(CLIENT_API_ROUTES.auth.refresh, {
-    method: 'POST',
-  });
+  const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
+    CLIENT_API_ROUTES.auth.refresh,
+    {
+      method: 'POST',
+    }
+  );
 
   return getResponseData(response);
 }
@@ -90,9 +95,9 @@ export async function refreshSession(): Promise<AuthResponse> {
 //===================================================================
 
 export async function getCurrentUser(): Promise<AuthResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<AuthResponse>
-  >(CLIENT_API_ROUTES.auth.current);
+  const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
+    CLIENT_API_ROUTES.auth.current
+  );
 
   return getResponseData(response);
 }
@@ -124,12 +129,13 @@ export async function logoutAllUserSessions(): Promise<void> {
 export async function updateCurrentUser(
   payload: UpdateProfilePayload
 ): Promise<AuthResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<AuthResponse>
-  >(CLIENT_API_ROUTES.auth.current, {
-    method: 'PATCH',
-    body: payload,
-  });
+  const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
+    CLIENT_API_ROUTES.auth.current,
+    {
+      method: 'PATCH',
+      body: payload,
+    }
+  );
 
   return getResponseData(response);
 }

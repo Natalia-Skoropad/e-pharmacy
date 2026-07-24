@@ -2,12 +2,13 @@ import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 
+import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
+
 import type {
   ProductCategory,
   ProductFilterOptionsResponse,
-  ProductsQueryParams,
-  PharmacyOption,
-} from '@e-pharmacy/types';
+  CatalogProductsQueryParams,
+} from '@e-pharmacy/types/products';
 
 import {
   sanitizeArticleParam,
@@ -145,7 +146,7 @@ export function getProductCategoryLabel(
 //===================================================================
 
 export function sortPharmaciesByName(
-  pharmacies: PharmacyOption[]
+  pharmacies: readonly PharmacyOption[]
 ): PharmacyOption[] {
   return [...pharmacies].sort((a, b) => a.name.localeCompare(b.name, 'en'));
 }
@@ -214,7 +215,7 @@ export function mergeProductCatalogFilters(
 
 export function buildProductCatalogApiParams(
   filters: ProductCatalogFilters
-): ProductsQueryParams {
+): CatalogProductsQueryParams {
   return {
     page: filters.page,
     perPage: PRODUCTS_CATALOG_PER_PAGE,

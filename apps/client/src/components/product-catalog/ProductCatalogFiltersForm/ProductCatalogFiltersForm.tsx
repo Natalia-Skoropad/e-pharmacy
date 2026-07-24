@@ -14,10 +14,8 @@ import {
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 
-import type {
-  ProductFilterOptionsResponse,
-  PharmacyOption,
-} from '@e-pharmacy/types';
+import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
+import type { ProductFilterOptionsResponse } from '@e-pharmacy/types/products';
 
 import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
 import { CATALOG_SEARCH_UPDATE_DELAY } from '@/lib/catalog/catalog-config';

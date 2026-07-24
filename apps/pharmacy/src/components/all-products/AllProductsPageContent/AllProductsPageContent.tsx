@@ -1,6 +1,5 @@
 'use client';
 
-import { DEFAULT_ALL_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { PackageSearch } from 'lucide-react';
@@ -19,11 +18,18 @@ import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
-import type { EntityId, PharmacyStatus, ProductDetails } from '@e-pharmacy/types';
+import { isCalendarDateString } from '@e-pharmacy/validation/dates';
+import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
+import type { EntityId } from '@e-pharmacy/types/primitives';
+
+import type {
+  PharmacyProductsQueryParams,
+  ProductDetails,
+} from '@e-pharmacy/types/products';
 
 import {
-  type AllProductStatisticsCounts,
-  type AllProductStatisticsKey
+  AllProductStatisticsCounts,
+  AllProductStatisticsKey,
 } from '@e-pharmacy/types/products';
 
 import {
@@ -42,6 +48,7 @@ import {
   type AllProductsFilterState,
 } from '@/lib/products/all-products-filters';
 
+import { DEFAULT_ALL_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { buildAllProductsPath } from '@/lib/products/all-product-paths';
 import { getPharmacyAllProductStatistics } from '@/lib/products/product-statistics';
 
@@ -59,15 +66,19 @@ function getProductsQueryParams(
   rowsPerPage: RowsPerPageValue,
   page: number,
   currentPharmacyId: EntityId | null
-) {
+): PharmacyProductsQueryParams {
   const isAddedToMyPharmacyFilterActive = filters.addedToMyPharmacy !== 'all';
 
   return {
     page,
     perPage: rowsPerPage,
     includeBlocked: true,
-    addedFrom: filters.createdDate.from || undefined,
-    addedTo: filters.createdDate.to || undefined,
+    addedFrom: isCalendarDateString(filters.createdDate.from)
+      ? filters.createdDate.from
+      : undefined,
+    addedTo: isCalendarDateString(filters.createdDate.to)
+      ? filters.createdDate.to
+      : undefined,
     nameKeyword: filters.name.trim() || undefined,
     articleKeyword: filters.article.trim() || undefined,
     category: filters.category === 'all' ? undefined : filters.category,
@@ -210,7 +221,7 @@ function AllProductsPageContent({
         const response = await getProducts(queryParams);
         if (!isMounted) return;
 
-        setProducts(response.items);
+        setProducts([...response.items]);
         setTotalProducts(response.total);
         setEarliestCreatedAt(response.earliestCreatedAt);
         setTotalPages(Math.max(1, response.totalPages));
@@ -290,7 +301,9 @@ function AllProductsPageContent({
       );
       setProductToAdd(null);
       setRefreshVersion((value) => value + 1);
-      toast.success(response.message || 'ProductDetails added to your pharmacy.');
+      toast.success(
+        response.message || 'ProductDetails added to your pharmacy.'
+      );
     } catch (addError) {
       toast.error(getAddProductErrorMessage(addError));
     } finally {

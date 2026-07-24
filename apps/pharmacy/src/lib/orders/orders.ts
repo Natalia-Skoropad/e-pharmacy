@@ -1,3 +1,4 @@
+import { isISODateTimeString } from '@e-pharmacy/validation/dates';
 import { isProductCategory } from '@e-pharmacy/validation/products';
 
 import {
@@ -8,19 +9,20 @@ import {
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
-import { type OrderStatisticsCounts } from '@e-pharmacy/types/orders';
+import { OrderStatisticsCounts } from '@e-pharmacy/types/orders';
+import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
 
 import type {
-  ApiPaginationResponse,
   DeliveryMethod,
-  EntityId,
   OrderActivityType,
   OrderCreatedByType,
   OrderStatus,
-  CompletePharmacyBankDetails,
-  ProductCategory,
   PaymentMethod,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/orders';
+
+import type { CompletePharmacyBankDetails } from '@e-pharmacy/types/pharmacies';
+import type { EntityId, ISODateTimeString } from '@e-pharmacy/types/primitives';
+import type { ProductCategory } from '@e-pharmacy/types/products';
 
 import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 
@@ -115,7 +117,7 @@ export type PharmacyOrderActivityHistoryItem = Readonly<{
 export type PharmacyOrderManagerComment = Readonly<{
   id: EntityId;
   text: string;
-  createdAt: string;
+  createdAt: ISODateTimeString;
   createdBy: EntityId;
 }>;
 
@@ -496,7 +498,9 @@ export function normalizePharmacyOrderManagerComment(
   const createdAt = getTrimmedString(payload.createdAt);
   const createdBy = getTrimmedString(payload.createdBy);
 
-  if (!id || !text || !createdAt || !createdBy) return null;
+  if (!id || !text || !isISODateTimeString(createdAt) || !createdBy) {
+    return null;
+  }
 
   return { id, text, createdAt, createdBy };
 }

@@ -2,6 +2,6 @@ import type { AuthUser } from './user';
 
 //===================================================================
 
-export type AuthResponse = {
+export type AuthResponse = Readonly<{
   user: AuthUser;
-};
+}>;

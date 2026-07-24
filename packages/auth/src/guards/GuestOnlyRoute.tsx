@@ -3,10 +3,10 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
+import type { AuthUser } from '@e-pharmacy/types/auth';
+
 import { useAuth } from '../core/AuthProviderCore';
 import { getSafeRedirectPath } from '../routing/redirects';
-
-import type { AuthUser } from '@e-pharmacy/types';
 
 //===================================================================
 

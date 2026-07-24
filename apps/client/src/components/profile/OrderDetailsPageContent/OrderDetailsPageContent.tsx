@@ -23,7 +23,7 @@ import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import { useAuth } from '@e-pharmacy/auth/core';
-import type { Order } from '@e-pharmacy/types';
+import type { Order } from '@e-pharmacy/types/orders';
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import { formatMoney } from '@e-pharmacy/utils/money';

@@ -5,7 +5,7 @@ import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { formatMoney } from '@e-pharmacy/utils/money';
-import type { CartItem } from '@e-pharmacy/types';
+import type { CartItem } from '@e-pharmacy/types/cart';
 
 import { buildProductPath } from '@/lib/routes';
 

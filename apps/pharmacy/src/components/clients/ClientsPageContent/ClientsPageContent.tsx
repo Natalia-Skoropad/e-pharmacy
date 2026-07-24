@@ -1,6 +1,5 @@
 'use client';
 
-import { DEFAULT_CLIENT_STATISTICS } from '@/lib/statistics/defaults';
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
@@ -46,6 +45,8 @@ import type {
   PharmacyClientsQueryParams,
 } from '@/lib/clients/clients';
 
+import { DEFAULT_CLIENT_STATISTICS } from '@/lib/statistics/defaults';
+
 import { ClientStatistics } from '@/components/statistics';
 import { StatusBanner } from '@/components/common/StatusPresentation';
 import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer/ClientsFiltersDrawer';
@@ -64,7 +65,7 @@ function isWalkInClient(client: PharmacyClientRow): boolean {
 //===================================================================
 
 function putDefaultClientFirst(
-  clients: PharmacyClientRow[]
+  clients: readonly PharmacyClientRow[]
 ): PharmacyClientRow[] {
   return [...clients].sort((first, second) => {
     const firstIsWalkIn = isWalkInClient(first);

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { PHARMACY_STATUS_LABELS } from '@e-pharmacy/config/pharmacy';
-import type { PharmacyStatus } from '@e-pharmacy/types';
+import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 
 import { getMyPharmacyProfile } from '@/lib/api/browser';
 

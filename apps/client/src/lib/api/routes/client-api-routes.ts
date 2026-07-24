@@ -1,4 +1,4 @@
-import type { EntityId } from '@e-pharmacy/types';
+import type { EntityId } from '@e-pharmacy/types/primitives';
 
 //===================================================================
 

@@ -10,18 +10,24 @@ import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
   ApiSuccessResponse,
-  CreateReviewPayload,
-  ReviewMutationResponse,
+  FavoriteMutationResponse,
+  FavoriteIdsResponse,
+} from '@e-pharmacy/types/api';
+
+import type {
   PharmacyCheckoutDetailsResponse,
   PharmacyDetailsResponse,
   PharmacyFilterOptionsResponse,
-  ReviewsResponse,
   PharmaciesQueryParams,
   PharmaciesResponse,
-  FavoriteMutationResponse,
-  FavoriteIdsResponse,
   PharmacyOptionsResponse,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/pharmacies';
+
+import type {
+  CreateReviewPayload,
+  ReviewMutationResponse,
+  ReviewsResponse,
+} from '@e-pharmacy/types/reviews';
 
 import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
 

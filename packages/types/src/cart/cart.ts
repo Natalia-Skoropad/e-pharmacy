@@ -3,7 +3,7 @@ import type { ProductCategory } from '../products';
 
 //===================================================================
 
-export type CartProduct = {
+type CartProduct = Readonly<{
   id: EntityId;
   name: string;
   article: string;
@@ -14,11 +14,11 @@ export type CartProduct = {
   inStock: boolean;
   rating?: number;
   reviewsCount?: number;
-};
+}>;
 
 //===================================================================
 
-export type CartItem = {
+export type CartItem = Readonly<{
   id: EntityId;
   productOfferId: EntityId;
   productId: EntityId;
@@ -32,12 +32,12 @@ export type CartItem = {
   unitPrice: number;
   totalPrice: number;
   expiresAt: ISODateTimeString;
-};
+}>;
 
 //===================================================================
 
-export type Cart = {
-  items: CartItem[];
+export type Cart = Readonly<{
+  items: readonly CartItem[];
   totalItems: number;
   totalPrice: number;
-};
+}>;

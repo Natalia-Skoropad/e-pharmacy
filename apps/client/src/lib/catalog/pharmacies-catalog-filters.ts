@@ -1,6 +1,10 @@
 import { sanitizeTextParam } from '@e-pharmacy/validation/url';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
-import type { PublicPharmacy, PharmaciesSortFilter } from '@e-pharmacy/types';
+
+import type {
+  PublicPharmacy,
+  PharmaciesSortFilter,
+} from '@e-pharmacy/types/pharmacies';
 
 import { parsePositivePageParam } from './catalog-param-utils';
 

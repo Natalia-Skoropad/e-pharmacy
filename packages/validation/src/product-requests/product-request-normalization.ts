@@ -1,4 +1,6 @@
-import type { ProductRequestFormPayload } from '@e-pharmacy/types/product-requests';
+import type {
+  ProductRequestFormPayload,
+} from '@e-pharmacy/types/product-requests';
 
 import { normalizeOptionalText } from '../shared';
 

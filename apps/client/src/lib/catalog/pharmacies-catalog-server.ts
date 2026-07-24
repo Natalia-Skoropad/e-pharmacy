@@ -1,6 +1,6 @@
 import 'server-only';
 
-import type { PublicPharmacy } from '@e-pharmacy/types';
+import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 
 import {
   PUBLIC_API_CACHE_OPTIONS,
@@ -60,7 +60,7 @@ export async function loadPharmaciesCatalogPageData(
     pharmaciesState.status === 'success' ? pharmaciesState.data : null;
 
   return {
-    pharmacies: pharmaciesData?.items ?? [],
+    pharmacies: [...(pharmaciesData?.items ?? [])],
     total: pharmaciesData?.total ?? 0,
     totalPages: pharmaciesData?.totalPages ?? 0,
     filters,

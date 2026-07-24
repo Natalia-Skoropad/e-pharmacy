@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
+
 import {
   DataTable,
   TableDateTime,
@@ -11,7 +12,7 @@ import {
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { getPharmacyProductPath } from '@e-pharmacy/config/pharmacy';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
-import type { EntityId } from '@e-pharmacy/types';
+import type { EntityId } from '@e-pharmacy/types/primitives';
 import { formatAmount } from '@e-pharmacy/utils/money';
 
 import {

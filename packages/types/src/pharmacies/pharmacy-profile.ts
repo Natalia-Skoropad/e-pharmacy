@@ -19,14 +19,6 @@ export type PharmacyPendingModeration = {
 
 //=============================================================================
 
-export type PharmacyModerationDetails = {
-  status: PharmacyStatus;
-  statusReason?: string;
-  pendingModeration?: PharmacyPendingModeration;
-};
-
-//=============================================================================
-
 export type PharmacyProfile = {
   id: EntityId;
   name: string;

@@ -1,4 +1,4 @@
-import type { ProductCategory } from '@e-pharmacy/types';
+import type { ProductCategory } from '@e-pharmacy/types/products';
 
 import type { OwnProductStatus } from './products';
 

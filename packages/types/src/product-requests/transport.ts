@@ -1,39 +1,36 @@
-import type { EntityId } from '../primitives';
+import type { EntityId, ISODateTimeString } from '../primitives';
+import type { ProductCategory } from '../products';
 import type { ProductRequestFile } from './payload';
+import type { ProductRequestStatus } from './status';
 
 //=============================================================================
 
-/** Raw transport shape. External values remain optional until runtime parsing succeeds. */
+/** Raw history shape guaranteed by the product-request API. */
 export type ProductRequestHistoryResponseDto = Readonly<{
-  id?: EntityId;
-  _id?: EntityId;
-  status?: unknown;
-  title?: string;
-  description?: string;
-  createdAt?: string;
+  id: EntityId;
+  status: ProductRequestStatus;
+  title: string;
+  description: string;
+  createdAt: ISODateTimeString;
 }>;
 
 //=============================================================================
 
 /** Raw transport shape returned by product-request endpoints. */
 export type ProductRequestResponseDto = Readonly<{
-  id?: EntityId;
-  _id?: EntityId;
-  createdAt?: string;
-  createdDate?: string;
-  updatedAt?: string;
+  id: EntityId;
+  createdAt: ISODateTimeString;
+  updatedAt?: ISODateTimeString;
   requestNumber?: string;
   productId?: EntityId;
-  product?: unknown;
   productImageUrl?: string;
-  imageUrl?: string;
   productArticle?: string;
   productName?: string;
-  article?: string;
-  name?: string;
-  category?: unknown;
+  article: string;
+  name: string;
+  category: ProductCategory;
   customCategory?: string;
-  status?: unknown;
+  status: ProductRequestStatus;
   productImage?: ProductRequestFile;
   manufacturer?: string;
   countryOfOrigin?: string;
@@ -44,8 +41,8 @@ export type ProductRequestResponseDto = Readonly<{
   prescriptionType?: string;
   fullDescription?: string;
   pharmacyComment?: string;
-  additionalFiles?: ProductRequestFile[];
+  additionalFiles?: readonly ProductRequestFile[];
   rejectionReason?: string;
-  history?: ProductRequestHistoryResponseDto[];
+  history?: readonly ProductRequestHistoryResponseDto[];
   commentsTotal?: number;
 }>;

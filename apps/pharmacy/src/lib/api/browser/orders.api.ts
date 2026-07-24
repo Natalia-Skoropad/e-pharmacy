@@ -1,14 +1,17 @@
 import 'client-only';
 
 import { buildQueryString, getResponseData } from '@e-pharmacy/api-client/core';
-import type { ApiSuccessResponse } from '@e-pharmacy/types';
+import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
+  CreateOrderManagerCommentPayload,
+  CreateOrderManagerCommentResponse,
   DeliveryMethod,
-  OrderStatus,
+  OrderManagerCommentsResponse,
   PaymentMethod,
-} from '@e-pharmacy/types';
+  UpdateOrderStatusPayload,
+} from '@e-pharmacy/types/orders';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
@@ -135,10 +138,7 @@ export async function updatePharmacyOrder(
 
 export async function updatePharmacyOrderStatus(
   orderId: string,
-  payload: {
-    status: Extract<OrderStatus, 'in_progress' | 'successful' | 'rejected'>;
-    rejectionReason?: string;
-  }
+  payload: UpdateOrderStatusPayload
 ): Promise<PharmacyOrderDetails> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     PHARMACY_API_ROUTES.orders.status(orderId),
@@ -164,7 +164,9 @@ export async function getPharmacyOrderComments(
   orderId: string,
   params: { page?: number; perPage?: number } = {}
 ): Promise<PharmacyOrderManagerCommentsResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
+  const response = await localApiRequest<
+    ApiSuccessResponse<OrderManagerCommentsResponse>
+  >(
     `${PHARMACY_API_ROUTES.orders.comments(orderId)}${buildQueryString(params)}`
   );
 
@@ -179,12 +181,15 @@ export async function createPharmacyOrderComment(
   orderId: string,
   text: string
 ): Promise<PharmacyOrderManagerComment> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    PHARMACY_API_ROUTES.orders.comments(orderId),
-    { method: 'POST', body: { text } }
-  );
+  const payload: CreateOrderManagerCommentPayload = { text };
+  const response = await localApiRequest<
+    ApiSuccessResponse<CreateOrderManagerCommentResponse>
+  >(PHARMACY_API_ROUTES.orders.comments(orderId), {
+    method: 'POST',
+    body: payload,
+  });
 
-  const data = getResponseData(response) as { comment?: unknown };
+  const data = getResponseData(response);
   const comment = normalizePharmacyOrderManagerComment(data.comment);
 
   if (!comment) throw new Error('Comment could not be created.');

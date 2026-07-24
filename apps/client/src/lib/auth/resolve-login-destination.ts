@@ -1,7 +1,7 @@
 import { getSafeApplicationRedirectPath } from '@e-pharmacy/auth/routing';
-import { ROUTES, CLIENT_ALLOWED_REDIRECT_PREFIXES } from '@/lib/routes';
+import type { AuthUser } from '@e-pharmacy/types/auth';
 
-import type { AuthUser } from '@e-pharmacy/types';
+import { ROUTES, CLIENT_ALLOWED_REDIRECT_PREFIXES } from '@/lib/routes';
 
 //===================================================================
 
@@ -54,7 +54,7 @@ export function resolveLoginDestination({
 
 export function resolveAuthenticatedRouteForClientApp(
   user: AuthUser,
-  requestedRedirect: string | null,
+  requestedRedirect: string | null
 ): string {
   return resolveLoginDestination({ user, requestedRedirect });
 }

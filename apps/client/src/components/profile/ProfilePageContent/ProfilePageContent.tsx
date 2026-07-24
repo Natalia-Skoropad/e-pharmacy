@@ -69,12 +69,10 @@ import {
   buildPictureUrlError,
 } from '@e-pharmacy/validation/files';
 
-import type {
-  ActiveSession,
-  Order,
-  ProductDetails,
-  PublicPharmacy,
-} from '@e-pharmacy/types';
+import type { ActiveSession } from '@e-pharmacy/types/auth';
+import type { Order } from '@e-pharmacy/types/orders';
+import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
+import type { ProductDetails } from '@e-pharmacy/types/products';
 
 import { PROFILE_TITLE } from '@/lib/seo';
 
@@ -342,7 +340,7 @@ function ProfilePageContent() {
         sort: 'name-asc',
       });
       setFavoriteProducts((current) =>
-        page === 1 ? response.items : [...current, ...response.items]
+        page === 1 ? [...response.items] : [...current, ...response.items]
       );
       setFavoriteProductsCount(response.total);
       setFavoriteProductsPage(response.page);
@@ -365,7 +363,7 @@ function ProfilePageContent() {
         sort: 'name-asc',
       });
       setFavoritePharmacies((current) =>
-        page === 1 ? response.items : [...current, ...response.items]
+        page === 1 ? [...response.items] : [...current, ...response.items]
       );
       setFavoritePharmaciesCount(response.total);
       setFavoritePharmaciesPage(response.page);
@@ -477,7 +475,7 @@ function ProfilePageContent() {
 
         if (!isMounted) return;
 
-        setOrders(response.items);
+        setOrders([...response.items]);
       } catch {
         if (!isMounted) return;
 

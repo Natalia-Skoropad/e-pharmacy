@@ -2,6 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type {
+  AddCartItemPayload,
+  Cart,
+  CartResponse,
+  UpdateCartItemPayload,
+} from '@e-pharmacy/types/cart';
+
 import { useCart } from '@/providers/CartProvider';
 import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 
@@ -11,13 +18,6 @@ import {
   removeCartItem,
   updateCartItem,
 } from '@/lib/cart/cart-commands';
-
-import type {
-  AddCartItemPayload,
-  Cart,
-  CartResponse,
-  UpdateCartItemPayload,
-} from '@e-pharmacy/types';
 
 //===================================================================
 
@@ -53,11 +53,15 @@ function getCartWithUpdatedQuantity(
   };
 }
 
+//===================================================================
+
 function addToSet(current: Set<string>, id: string): Set<string> {
   const next = new Set(current);
   next.add(id);
   return next;
 }
+
+//===================================================================
 
 function removeFromSet(current: Set<string>, id: string): Set<string> {
   const next = new Set(current);

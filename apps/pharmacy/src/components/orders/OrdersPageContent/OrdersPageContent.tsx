@@ -1,6 +1,5 @@
 'use client';
 
-import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ShoppingBag } from 'lucide-react';
@@ -17,7 +16,6 @@ import {
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-
 import { getPharmacyNewOrderPath } from '@e-pharmacy/config/pharmacy';
 
 import { getPharmacyOrders } from '@/lib/api/browser';
@@ -30,6 +28,7 @@ import {
 } from '@/lib/pharmacies/current-pharmacy-status';
 
 import { buildOrdersPath } from '@/lib/orders/order-paths';
+import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 
 import {
   DEFAULT_ORDERS_FILTERS,
@@ -117,7 +116,7 @@ function OrdersPageContent({
         const response = await getPharmacyOrders(queryParams);
         if (!isMounted) return;
 
-        setOrders(response.items);
+        setOrders([...response.items]);
         setTotalOrders(response.total);
         setTotalPages(response.totalPages);
         setEarliestCreatedAt(response.earliestCreatedAt);

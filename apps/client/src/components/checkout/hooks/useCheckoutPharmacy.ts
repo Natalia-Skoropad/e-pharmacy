@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import type { PharmacyCheckoutDetails } from '@e-pharmacy/types';
+import type { PharmacyCheckoutDetails } from '@e-pharmacy/types/pharmacies';
+
 import { getPharmacyCheckoutDetails } from '@/lib/api/browser';
 import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 

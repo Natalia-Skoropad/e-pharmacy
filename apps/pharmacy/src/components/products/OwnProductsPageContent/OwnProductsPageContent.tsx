@@ -1,12 +1,10 @@
 'use client';
 
-import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
-import { countTrueConditions } from '@e-pharmacy/utils/collections';
-
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Boxes, PackageCheck } from 'lucide-react';
 
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { FiltersButton } from '@e-pharmacy/ui/primitives';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
@@ -21,12 +19,13 @@ import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import type { EntityId, PharmacyStatus } from '@e-pharmacy/types';
+import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
+import type { EntityId } from '@e-pharmacy/types/primitives';
 import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
 
 import {
-  type OwnProductStatisticsCounts,
-  type OwnProductStatisticsKey
+  OwnProductStatisticsCounts,
+  OwnProductStatisticsKey,
 } from '@e-pharmacy/types/products';
 
 import {
@@ -50,6 +49,7 @@ import {
   type OwnProductsFilterState,
 } from '@/lib/products/own-products-filters';
 
+import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
 import { getPharmacyOwnProductStatistics } from '@/lib/products/product-statistics';
 import { getPharmacyProductsFilterPath } from '@/lib/layout/routes';
@@ -232,7 +232,7 @@ function OwnProductsPageContent({
         const response = await getPharmacyProducts(params);
         if (!isMounted) return;
 
-        setProducts(response.items);
+        setProducts([...response.items]);
         setTotalProducts(response.total);
         setTotalPages(response.totalPages);
         setEarliestCreatedAt(response.earliestCreatedAt);

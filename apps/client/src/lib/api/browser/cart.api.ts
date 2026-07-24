@@ -2,14 +2,15 @@ import 'client-only';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { getResponseData } from '@e-pharmacy/api-client/core';
-import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
+import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 
 import type {
   AddCartItemPayload,
-  ApiSuccessResponse,
   CartResponse,
   UpdateCartItemPayload,
-} from '@e-pharmacy/types';
+} from '@e-pharmacy/types/cart';
+
+import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 
 //===================================================================
 
@@ -64,7 +65,9 @@ export async function updateCartItem(
 
 //===================================================================
 
-export async function removeCartItem(cartItemId: string): Promise<CartResponse> {
+export async function removeCartItem(
+  cartItemId: string
+): Promise<CartResponse> {
   const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
     CLIENT_API_ROUTES.cart.removeItem(cartItemId),
     {

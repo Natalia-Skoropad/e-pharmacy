@@ -2,7 +2,7 @@ import 'server-only';
 import type { Metadata } from 'next';
 
 import { ApiError } from '@e-pharmacy/api-client/core';
-import type { ProductDetails } from '@e-pharmacy/types';
+import type { ProductDetails } from '@e-pharmacy/types/products';
 
 import {
   getDataUnavailableReason,
@@ -21,6 +21,8 @@ import { ProductDetailsPageContent } from '@/components/product-catalog';
 type ProductDetailSearchParams = {
   pharmacyId?: string;
 };
+
+//===================================================================
 
 export type ProductDetailLookupResult =
   | { status: 'found'; product: ProductDetails }
@@ -99,7 +101,7 @@ export async function renderProductDetailPage(
   return (
     <ProductDetailsPageContent
       product={product}
-      reviews={reviewsData?.items ?? []}
+      reviews={[...(reviewsData?.items ?? [])]}
       reviewsTotal={reviewsData?.total ?? 0}
       contextPharmacyId={searchParams?.pharmacyId}
       areReviewsUnavailable={!reviewsData}
