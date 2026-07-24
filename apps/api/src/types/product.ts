@@ -1,6 +1,7 @@
 import type { Types } from 'mongoose';
 
 import type { ProductCategory } from './categories';
+import type { ISODateTimeString } from './date';
 
 //===============================================================
 
@@ -61,8 +62,8 @@ export type ProductOfferResponseDto = {
   reservedQuantity: number;
   inStock: boolean;
   hasRelatedOrders?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: ISODateTimeString;
+  updatedAt: ISODateTimeString;
 };
 
 export type ProductResponseDto = {
@@ -84,11 +85,11 @@ export type ProductResponseDto = {
   availableInPharmaciesCount: number;
   offers: ProductOfferResponseDto[];
   inStock: boolean;
-  rating?: number;
-  reviewsCount?: number;
-  isFavorite?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  rating: number;
+  reviewsCount: number;
+  isFavorite: boolean;
+  createdAt: ISODateTimeString;
+  updatedAt: ISODateTimeString;
 };
 
 export type ProductFilterOptionDto<TValue extends string = string> = {
@@ -115,5 +116,5 @@ export type ProductReviewResponseDto = {
   userName: string;
   rating: number;
   comment: string;
-  createdAt: string;
+  createdAt: ISODateTimeString;
 };

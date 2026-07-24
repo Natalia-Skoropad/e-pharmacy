@@ -1,24 +1,12 @@
-export const ALL_PRODUCT_STATISTICS_KEYS = [
-  'active',
-  'blocked',
-  'addedToPharmacy',
-  'notAddedToPharmacy',
-] as const;
-
-//===================================================================
-
 export type AllProductStatisticsKey =
-  (typeof ALL_PRODUCT_STATISTICS_KEYS)[number];
+  | 'active'
+  | 'blocked'
+  | 'addedToPharmacy'
+  | 'notAddedToPharmacy';
 
 //===================================================================
 
-export type AllProductStatisticsCounts = Record<AllProductStatisticsKey, number>;
-
-//===================================================================
-
-export const DEFAULT_ALL_PRODUCT_STATISTICS: AllProductStatisticsCounts = {
-  active: 0,
-  blocked: 0,
-  addedToPharmacy: 0,
-  notAddedToPharmacy: 0,
-};
+export type AllProductStatisticsCounts = Record<
+  AllProductStatisticsKey,
+  number
+>;

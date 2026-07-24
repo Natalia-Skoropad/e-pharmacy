@@ -1,4 +1,4 @@
-import type { EntityId, ISODateString } from '../shared';
+import type { EntityId, ISODateTimeString } from '../primitives';
 import type { UserRole } from './role';
 
 //===================================================================
@@ -9,9 +9,9 @@ export type ActiveSession = {
   userAgent?: string;
   ip?: string;
   roleAtLogin: UserRole;
-  createdAt?: ISODateString;
-  lastUsedAt: ISODateString;
-  expiresAt: ISODateString;
+  createdAt?: ISODateTimeString;
+  lastUsedAt: ISODateTimeString;
+  expiresAt: ISODateTimeString;
   isCurrent: boolean;
 };
 

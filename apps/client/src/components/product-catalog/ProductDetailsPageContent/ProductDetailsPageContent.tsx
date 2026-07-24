@@ -38,9 +38,9 @@ import {
 
 import type {
   Cart,
-  Product,
+  ProductDetails,
   ProductOffer,
-  ProductReview,
+  Review,
 } from '@e-pharmacy/types';
 
 import {
@@ -94,8 +94,8 @@ type ProductTab = 'about' | 'prices' | 'characteristics' | 'reviews';
 //===================================================================
 
 type ProductDetailsPageContentProps = {
-  product: Product;
-  reviews: ProductReview[];
+  product: ProductDetails;
+  reviews: Review[];
   reviewsTotal: number;
   areReviewsUnavailable?: boolean;
   contextPharmacyId?: string;
@@ -139,7 +139,7 @@ function getUniqueOfferCities(offers: ProductOffer[]): string[] {
 
 //===================================================================
 
-function getLongDescription(product: Product): string {
+function getLongDescription(product: ProductDetails): string {
   return (
     product.description ??
     `${product.name} is available in the E-PHARMACY catalog with clear information about dosage, manufacturer, package details, pharmacy prices, client reviews, and availability. Use this page to compare offers from different pharmacies, check the product characteristics, and choose the most suitable pharmacy before adding the product to your cart.`
@@ -355,8 +355,8 @@ function ProductDetailsPageContent({
       initialIsFavorite: Boolean(product.isFavorite),
       notifier: toast,
       loginMessage: 'Please log in to add products to favorites.',
-      addedMessage: 'Product was added to favorites.',
-      removedMessage: 'Product was removed from favorites.',
+      addedMessage: 'ProductDetails was added to favorites.',
+      removedMessage: 'ProductDetails was removed from favorites.',
       errorMessage: 'Could not update favorites.',
       addFavorite: addFavoriteProduct,
       removeFavorite: removeFavoriteProduct,
@@ -539,7 +539,7 @@ function ProductDetailsPageContent({
             isOfferPending ||
             (cartItem ? pendingItemIds.has(cartItem.id) : false)
           }
-          ariaLabel="Product quantity controls"
+          ariaLabel="ProductDetails quantity controls"
           onIncrement={() => handleAddUnit(offer)}
           onDecrement={() => handleRemoveUnit(offer)}
         />
@@ -570,7 +570,7 @@ function ProductDetailsPageContent({
           <Breadcrumbs
             items={[
               { label: 'Home', href: ROUTES.HOME },
-              { label: 'Product catalog', href: ROUTES.PRODUCTS_CATALOG },
+              { label: 'ProductDetails catalog', href: ROUTES.PRODUCTS_CATALOG },
               { label: productDetails.name },
             ]}
             includeStructuredData
@@ -584,7 +584,7 @@ function ProductDetailsPageContent({
           <Tabs
             items={tabs}
             activeValue={activeTab}
-            ariaLabel="Product information tabs"
+            ariaLabel="ProductDetails information tabs"
             onChange={setActiveTab}
           />
 
@@ -828,7 +828,7 @@ function ProductDetailsPageContent({
                             {renderQuantityControl(offer)}
 
                             <p className={css.cartNote}>
-                              Product stays in the cart for 3 days and is
+                              ProductDetails stays in the cart for 3 days and is
                               removed if the order is not confirmed.
                             </p>
 
@@ -935,7 +935,7 @@ function ProductDetailsPageContent({
                   isAuthenticated={canSubmitReview}
                   isAuthReady={isAuthReady}
                   isUnavailable={areReviewsUnavailable}
-                  emptyText="Product reviews will appear here after clients share their feedback."
+                  emptyText="ProductDetails reviews will appear here after clients share their feedback."
                   textareaId="product-review"
                   maxLength={USER_REVIEW_COMMENT_MAX_LENGTH}
                   onReviewTextChange={handleReviewTextChange}

@@ -23,8 +23,8 @@ import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
 
 import type {
   PublicPharmacy,
-  PharmacyBankDetails,
-  PharmacyReview,
+  PublicPaymentBankDetails,
+  Review,
 } from '@e-pharmacy/types';
 
 import {
@@ -57,7 +57,7 @@ type PharmacyTab = 'details' | 'payment' | 'about' | 'reviews';
 
 type PharmacyDetailsPageContentProps = {
   pharmacy: PublicPharmacy;
-  reviews: PharmacyReview[];
+  reviews: Review[];
   reviewsTotal: number;
   areReviewsUnavailable?: boolean;
 };
@@ -155,7 +155,7 @@ function PharmacyDetailsPageContent({
     DEFAULT_VISIBLE_REVIEWS_COUNT
   );
   const [bankDetails, setBankDetails] = useState<
-    PharmacyBankDetails | null | undefined
+    PublicPaymentBankDetails | null | undefined
   >(pharmacy.bankDetails);
   const bankDetailsRequestStatusRef = useRef<'idle' | 'loading' | 'done'>(
     pharmacy.bankDetails ? 'done' : 'idle'

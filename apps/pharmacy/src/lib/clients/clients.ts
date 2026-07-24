@@ -1,3 +1,5 @@
+import { isProductCategory } from '@e-pharmacy/validation/products';
+
 import {
   normalizePaginatedResponse,
   requirePaginatedResponse,
@@ -14,8 +16,6 @@ import type {
   ProductStatus,
   UserStatus,
 } from '@e-pharmacy/types';
-
-import { isProductCategory } from '@e-pharmacy/types/products';
 
 //===================================================================
 

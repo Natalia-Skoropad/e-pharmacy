@@ -1,6 +1,6 @@
 import type {
   PublicPharmacy,
-  PharmacyBankDetails,
+  PublicPaymentBankDetails,
   PharmacyCheckoutDetails,
 } from '@e-pharmacy/types';
 
@@ -47,7 +47,7 @@ export function getPharmacyAddress(
 
 export function getPharmacyBankDetails(
   pharmacy?: (Partial<PublicPharmacy> & PharmacyCheckoutDetails) | null
-): PharmacyBankDetails | null {
+): PublicPaymentBankDetails | null {
   return pharmacy?.bankDetails ?? null;
 }
 

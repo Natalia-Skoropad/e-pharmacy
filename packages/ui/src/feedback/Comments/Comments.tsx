@@ -2,7 +2,7 @@
 
 import { Trash2 } from 'lucide-react';
 
-import type { EntityComment } from '@e-pharmacy/types/comments';
+import type { PharmacyNote } from '@e-pharmacy/types/notes';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
 import Button from '../../primitives/Button/Button';
@@ -67,11 +67,11 @@ export function CommentComposer({
 //===================================================================
 
 export type CommentItemProps = Readonly<{
-  comment: EntityComment;
+  comment: PharmacyNote;
   title?: string;
   isDeleting?: boolean;
   deleteDisabled?: boolean;
-  onDelete?: (comment: EntityComment) => void;
+  onDelete?: (comment: PharmacyNote) => void;
 }>;
 
 //===================================================================
@@ -117,7 +117,7 @@ export function CommentItem({
 //===================================================================
 
 export type CommentsListProps = Readonly<{
-  items: readonly EntityComment[];
+  items: readonly PharmacyNote[];
   title?: string;
   commentTitle?: string;
   emptyText?: string;
@@ -125,7 +125,7 @@ export type CommentsListProps = Readonly<{
   isLoading?: boolean;
   deletingId?: string | null;
   deleteDisabled?: boolean;
-  onDelete?: (comment: EntityComment) => void;
+  onDelete?: (comment: PharmacyNote) => void;
 }>;
 
 //===================================================================

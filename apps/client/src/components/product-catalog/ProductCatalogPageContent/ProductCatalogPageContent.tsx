@@ -3,7 +3,7 @@ import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import { LinkPagination } from '@e-pharmacy/ui/navigation';
 
 import type {
-  Product,
+  ProductDetails,
   ProductFilterOptionsResponse,
   PharmacyOption,
 } from '@e-pharmacy/types';
@@ -28,7 +28,7 @@ import css from './ProductCatalogPageContent.module.css';
 //===================================================================
 
 type ProductCatalogPageContentProps = {
-  products: Product[];
+  products: ProductDetails[];
   pharmacies: PharmacyOption[];
   filterOptions: ProductFilterOptionsResponse;
   total: number;
@@ -91,7 +91,7 @@ function ProductCatalogPageContent({
           <Breadcrumbs
             items={[
               { label: 'Home', href: ROUTES.HOME },
-              { label: 'Product catalog', href: ROUTES.PRODUCTS_CATALOG },
+              { label: 'ProductDetails catalog', href: ROUTES.PRODUCTS_CATALOG },
               ...(filters.category !== 'all' && seoContext.categoryLabel
                 ? [{ label: seoContext.categoryLabel }]
                 : []),
@@ -131,7 +131,7 @@ function ProductCatalogPageContent({
             getPageHref={(page) =>
               buildProductsPageHref(filters, page, pharmacies)
             }
-            ariaLabel="Product catalog pagination"
+            ariaLabel="ProductDetails catalog pagination"
           />
 
           {showSeoText ? (

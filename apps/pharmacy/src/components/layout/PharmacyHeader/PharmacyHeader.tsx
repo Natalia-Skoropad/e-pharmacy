@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 import type { PharmacyProfile } from '@e-pharmacy/types';
-import type { BreadcrumbItem } from '@e-pharmacy/types/navigation';
+import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import { BurgerButton } from '@e-pharmacy/ui/cabinet';
 import { CabinetTopBar } from '@e-pharmacy/ui/cabinet';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';

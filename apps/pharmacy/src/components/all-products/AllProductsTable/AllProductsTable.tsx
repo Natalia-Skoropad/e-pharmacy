@@ -11,7 +11,7 @@ import {
 
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
-import type { EntityId, Product } from '@e-pharmacy/types';
+import type { EntityId, ProductDetails } from '@e-pharmacy/types';
 import { getPharmacyAllProductPath } from '@e-pharmacy/config/pharmacy';
 
 import { PRODUCT_STATUS_LABELS } from '@/lib/products/products';
@@ -23,18 +23,18 @@ import { StatusBadge } from '@/components/common/StatusPresentation';
 
 type AllProductsTableProps = Readonly<{
   currentPharmacyId: EntityId | null;
-  products: Product[];
+  products: ProductDetails[];
   emptyMessage: string;
   isLoading?: boolean;
   isAddActionDisabled?: boolean;
   addingProductId?: EntityId | null;
-  onAddProduct?: (product: Product) => void;
+  onAddProduct?: (product: ProductDetails) => void;
 }>;
 
 //===================================================================
 
 function isProductAddedToCurrentPharmacy(
-  product: Product,
+  product: ProductDetails,
   currentPharmacyId: EntityId | null
 ): boolean {
   if (!currentPharmacyId) return false;
@@ -46,7 +46,7 @@ function isProductAddedToCurrentPharmacy(
 
 //===================================================================
 
-function getStatusLabel(product: Product): string {
+function getStatusLabel(product: ProductDetails): string {
   return product.status === 'new'
     ? 'New'
     : PRODUCT_STATUS_LABELS[product.status];
@@ -54,7 +54,7 @@ function getStatusLabel(product: Product): string {
 
 //===================================================================
 
-function getActionLabel(product: Product, isAddedToCurrentPharmacy: boolean) {
+function getActionLabel(product: ProductDetails, isAddedToCurrentPharmacy: boolean) {
   if (product.status === 'blocked') return 'Unavailable';
   if (isAddedToCurrentPharmacy) return 'Added to your pharmacy';
 
@@ -72,7 +72,7 @@ function AllProductsTable({
   addingProductId = null,
   onAddProduct,
 }: AllProductsTableProps) {
-  const columns = useMemo<Array<DataTableColumn<Product>>>(
+  const columns = useMemo<Array<DataTableColumn<ProductDetails>>>(
     () => [
       {
         key: 'createdAt',
@@ -82,7 +82,7 @@ function AllProductsTable({
       },
       {
         key: 'productPhoto',
-        title: <TableHeaderTitle parts={['Product', 'photo']} />,
+        title: <TableHeaderTitle parts={['ProductDetails', 'photo']} />,
         render: (product) => (
           <TableImagePreview
             src={getProductImageSrc(product.imageUrl)}
@@ -93,7 +93,7 @@ function AllProductsTable({
       },
       {
         key: 'article',
-        title: <TableHeaderTitle parts={['Product', 'article']} />,
+        title: <TableHeaderTitle parts={['ProductDetails', 'article']} />,
         render: (product) => (
           <TextActionButton href={getPharmacyAllProductPath(product.id)}>
             {product.article}
@@ -102,7 +102,7 @@ function AllProductsTable({
       },
       {
         key: 'name',
-        title: <TableHeaderTitle parts={['Product', 'name']} />,
+        title: <TableHeaderTitle parts={['ProductDetails', 'name']} />,
         render: (product) => (
           <TextActionButton href={getPharmacyAllProductPath(product.id)}>
             {product.name}
@@ -111,12 +111,12 @@ function AllProductsTable({
       },
       {
         key: 'category',
-        title: <TableHeaderTitle parts={['Product', 'category']} />,
+        title: <TableHeaderTitle parts={['ProductDetails', 'category']} />,
         render: (product) => PRODUCT_CATEGORY_LABELS[product.category],
       },
       {
         key: 'status',
-        title: <TableHeaderTitle parts={['Product', 'status']} />,
+        title: <TableHeaderTitle parts={['ProductDetails', 'status']} />,
         render: (product) => (
           <StatusBadge
             status={product.status}

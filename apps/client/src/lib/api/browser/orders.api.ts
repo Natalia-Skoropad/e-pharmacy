@@ -2,15 +2,16 @@ import 'client-only';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { getResponseData } from '@e-pharmacy/api-client/core';
-import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 
 import type {
   ApiSuccessResponse,
   CheckoutOrderPayload,
   CheckoutOrderResponse,
   OrderDetailsResponse,
-  OrdersResponse,
+  ClientOrdersResponse,
 } from '@e-pharmacy/types';
+
+import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 
 //===================================================================
 
@@ -29,10 +30,10 @@ export async function checkoutOrder(
 
 //===================================================================
 
-export async function getOrders(): Promise<OrdersResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<OrdersResponse>>(
-    CLIENT_API_ROUTES.orders.list
-  );
+export async function getOrders(): Promise<ClientOrdersResponse> {
+  const response = await localApiRequest<
+    ApiSuccessResponse<ClientOrdersResponse>
+  >(CLIENT_API_ROUTES.orders.list);
 
   return getResponseData(response);
 }
@@ -48,4 +49,3 @@ export async function getOrderDetails(
 
   return getResponseData(response);
 }
-

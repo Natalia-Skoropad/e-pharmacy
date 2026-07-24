@@ -17,7 +17,7 @@ import {
 
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
-import type { BreadcrumbItem } from '@e-pharmacy/types';
+import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import type { PaymentMethod, DeliveryMethod } from '@e-pharmacy/types/orders';
 
 import {

@@ -4,10 +4,8 @@ import { useMemo, useState, type ChangeEvent } from 'react';
 import { Download, FileText, UploadCloud, X } from 'lucide-react';
 import clsx from 'clsx';
 
-import type { UploadFileValue } from '@e-pharmacy/types/files';
-
+import type { BrowserUploadFile } from '../types';
 import ConfirmationModal from '../../overlays/ConfirmationModal/ConfirmationModal';
-
 import { mergeUploadFileSelection } from './document-upload-selection';
 
 import css from './DocumentUpload.module.css';
@@ -28,7 +26,7 @@ export type DocumentUploadProps = {
   id: string;
   name: string;
   label?: string;
-  value: UploadFileValue[];
+  value: BrowserUploadFile[];
   error?: string;
   isTouched?: boolean;
   required?: boolean;
@@ -40,8 +38,8 @@ export type DocumentUploadProps = {
   className?: string;
   confirmRemove?: boolean;
   labels?: DocumentUploadLabels;
-  onChange: (files: UploadFileValue[]) => void;
-  validateSelection?: (files: readonly UploadFileValue[]) => string;
+  onChange: (files: BrowserUploadFile[]) => void;
+  validateSelection?: (files: readonly BrowserUploadFile[]) => string;
   onSelectionError?: (message: string) => void;
 };
 
@@ -268,5 +266,4 @@ function DocumentUpload({
 }
 
 export default DocumentUpload;
-
 export { DocumentUpload };

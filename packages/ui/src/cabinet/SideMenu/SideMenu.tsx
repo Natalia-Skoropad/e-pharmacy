@@ -1,11 +1,11 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import type { NavigationItem } from '@e-pharmacy/types/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { ChevronRight } from 'lucide-react';
 
+import type { NavigationItem } from '../../navigation/types';
 import { isNavigationItemActive } from '../internal/is-navigation-item-active';
 
 import css from './SideMenu.module.css';

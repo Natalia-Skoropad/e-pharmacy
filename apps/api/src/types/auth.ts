@@ -48,9 +48,3 @@ export type AuthSessionResult = {
   user: AuthUserResponse;
   tokens: AuthTokens;
 };
-
-//===============================================================
-
-export type CurrentUserResponse = {
-  user: AuthUserResponse;
-};

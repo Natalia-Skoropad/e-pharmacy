@@ -1,4 +1,4 @@
-import type { NavigationItem } from '@e-pharmacy/types/navigation';
+import type { NavigationItem } from '../../navigation/types';
 
 //===================================================================
 

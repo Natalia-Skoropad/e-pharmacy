@@ -8,17 +8,15 @@ import {
 } from 'lucide-react';
 
 import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
-
-import type {
-  ProductRequestStatisticsCounts,
-  ProductRequestStatus,
-} from '@e-pharmacy/types/product-requests';
+import type { ProductRequestStatus } from '@e-pharmacy/types/product-requests';
 
 import {
   StatsCard,
   StatsGrid,
   type StatsCardTone,
 } from '@e-pharmacy/ui/statistics';
+
+import type { ProductRequestStatisticsCounts } from '@/lib/product-requests/product-requests';
 
 //===================================================================
 

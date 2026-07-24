@@ -7,22 +7,23 @@ import {
 } from '@e-pharmacy/api-client/core';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
-import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
 
 import type {
   ApiSuccessResponse,
-  CreatePharmacyReviewPayload,
-  CreatePharmacyReviewResponse,
+  CreateReviewPayload,
+  ReviewMutationResponse,
   PharmacyCheckoutDetailsResponse,
   PharmacyDetailsResponse,
   PharmacyFilterOptionsResponse,
-  PharmacyReviewsResponse,
+  ReviewsResponse,
   PharmaciesQueryParams,
   PharmaciesResponse,
-  FavoritePharmacyResponse,
-  FavoritePharmacyIdsResponse,
+  FavoriteMutationResponse,
+  FavoriteIdsResponse,
   PharmacyOptionsResponse,
 } from '@e-pharmacy/types';
+
+import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
 
 //===================================================================
 
@@ -65,14 +66,13 @@ export async function getPharmacyOptionsFromClientApi(
   );
 }
 
-
 //===================================================================
 
 export async function getFavoritePharmacyIdsFromClientApi(
   options?: RequestOptions
-): Promise<FavoritePharmacyIdsResponse> {
+): Promise<FavoriteIdsResponse> {
   const response = await localApiRequest<
-    ApiSuccessResponse<FavoritePharmacyIdsResponse>
+    ApiSuccessResponse<FavoriteIdsResponse>
   >(ROUTES.pharmacies.favoriteIds, options);
   return getResponseData(response);
 }
@@ -123,9 +123,9 @@ export async function getPharmacyCheckoutDetails(
 export async function getPharmacyReviewsFromClientApi(
   id: string,
   options?: RequestOptions
-): Promise<PharmacyReviewsResponse> {
+): Promise<ReviewsResponse> {
   return getResponseData(
-    await localApiRequest<ApiSuccessResponse<PharmacyReviewsResponse>>(
+    await localApiRequest<ApiSuccessResponse<ReviewsResponse>>(
       ROUTES.pharmacies.reviews(id),
       options
     )
@@ -136,10 +136,10 @@ export async function getPharmacyReviewsFromClientApi(
 
 export async function createPharmacyReview(
   id: string,
-  payload: CreatePharmacyReviewPayload
-): Promise<CreatePharmacyReviewResponse> {
+  payload: CreateReviewPayload
+): Promise<ReviewMutationResponse> {
   return getResponseData(
-    await localApiRequest<ApiSuccessResponse<CreatePharmacyReviewResponse>>(
+    await localApiRequest<ApiSuccessResponse<ReviewMutationResponse>>(
       ROUTES.pharmacies.reviews(id),
       { method: 'POST', body: payload }
     )
@@ -150,9 +150,9 @@ export async function createPharmacyReview(
 
 export async function addFavoritePharmacy(
   id: string
-): Promise<FavoritePharmacyResponse> {
+): Promise<FavoriteMutationResponse> {
   return getResponseData(
-    await localApiRequest<ApiSuccessResponse<FavoritePharmacyResponse>>(
+    await localApiRequest<ApiSuccessResponse<FavoriteMutationResponse>>(
       ROUTES.pharmacies.favorite(id),
       { method: 'PUT' }
     )
@@ -163,9 +163,9 @@ export async function addFavoritePharmacy(
 
 export async function removeFavoritePharmacy(
   id: string
-): Promise<FavoritePharmacyResponse> {
+): Promise<FavoriteMutationResponse> {
   return getResponseData(
-    await localApiRequest<ApiSuccessResponse<FavoritePharmacyResponse>>(
+    await localApiRequest<ApiSuccessResponse<FavoriteMutationResponse>>(
       ROUTES.pharmacies.favorite(id),
       { method: 'DELETE' }
     )

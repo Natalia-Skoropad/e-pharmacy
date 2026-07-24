@@ -11,7 +11,8 @@ import { PharmacyReview } from '../models/pharmacyReview.model';
 import { ProductOffer } from '../models/productOffer.model';
 
 import type {
-  PharmacyBankDetails,
+  CompletePharmacyBankDetails,
+  EditablePharmacyBankDetails,
   PharmacyEntity,
   PharmacyFilterOptionsResponseDto,
   PharmacyPendingModeration,
@@ -24,6 +25,7 @@ import type {
 
 import { httpError } from '../utils/httpError';
 import { createSafeRegExp } from '../utils/regexp';
+import { requireISODateTime } from '../utils/date-contract';
 
 //===============================================================
 
@@ -77,8 +79,8 @@ const PUBLIC_PHARMACY_STATUS_FILTER = {
 //===============================================================
 
 function hasCompleteBankDetails(
-  details?: Partial<PharmacyBankDetails> | null
-): boolean {
+  details?: EditablePharmacyBankDetails | null
+): details is CompletePharmacyBankDetails {
   return Boolean(
     details?.recipientName &&
     details?.taxId &&
@@ -125,9 +127,11 @@ function serializePublicPharmacy(
   favoriteIds: Set<string>,
   options: { includeBankDetails?: boolean } = {}
 ): PublicPharmacyResponseDto {
+  const completeBankDetails = hasCompleteBankDetails(pharmacy.bankDetails)
+    ? pharmacy.bankDetails
+    : null;
   const shouldIncludeBankDetails =
-    Boolean(options.includeBankDetails) &&
-    hasCompleteBankDetails(pharmacy.bankDetails);
+    Boolean(options.includeBankDetails) && Boolean(completeBankDetails);
 
   return {
     id: String(pharmacy._id),
@@ -138,15 +142,16 @@ function serializePublicPharmacy(
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
     bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
-    ...(shouldIncludeBankDetails ? { bankDetails: pharmacy.bankDetails } : {}),
+    ...(shouldIncludeBankDetails && completeBankDetails
+      ? { bankDetails: completeBankDetails }
+      : {}),
     rating: pharmacy.rating ?? 0,
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
     availableProductsCount,
     reviewsCount: pharmacy.reviewsCount ?? 0,
     isFavorite: favoriteIds.has(String(pharmacy._id)),
-    updatedAt:
-      pharmacy.updatedAt?.toISOString?.() ?? String(pharmacy.updatedAt ?? ''),
+    updatedAt: requireISODateTime(pharmacy.updatedAt, 'pharmacy.updatedAt'),
   };
 }
 
@@ -175,8 +180,7 @@ function serializePharmacyProfile(
       ? { pendingModeration: pharmacy.pendingModeration }
       : {}),
     reviewsCount: pharmacy.reviewsCount ?? 0,
-    updatedAt:
-      pharmacy.updatedAt?.toISOString?.() ?? String(pharmacy.updatedAt ?? ''),
+    updatedAt: requireISODateTime(pharmacy.updatedAt, 'pharmacy.updatedAt'),
   };
 }
 

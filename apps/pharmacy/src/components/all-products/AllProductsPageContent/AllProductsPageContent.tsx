@@ -1,5 +1,6 @@
 'use client';
 
+import { DEFAULT_ALL_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { PackageSearch } from 'lucide-react';
@@ -18,12 +19,11 @@ import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
-import type { EntityId, PharmacyStatus, Product } from '@e-pharmacy/types';
+import type { EntityId, PharmacyStatus, ProductDetails } from '@e-pharmacy/types';
 
 import {
-  DEFAULT_ALL_PRODUCT_STATISTICS,
   type AllProductStatisticsCounts,
-  type AllProductStatisticsKey,
+  type AllProductStatisticsKey
 } from '@e-pharmacy/types/products';
 
 import {
@@ -111,7 +111,7 @@ function AllProductsPageContent({
 
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [currentPage, setCurrentPage] = useState(1);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductDetails[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
     null
@@ -121,7 +121,7 @@ function AllProductsPageContent({
   const [productStatistics, setProductStatistics] =
     useState<AllProductStatisticsCounts>(DEFAULT_ALL_PRODUCT_STATISTICS);
 
-  const [productToAdd, setProductToAdd] = useState<Product | null>(null);
+  const [productToAdd, setProductToAdd] = useState<ProductDetails | null>(null);
   const [addingProductId, setAddingProductId] = useState<EntityId | null>(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
 
@@ -290,7 +290,7 @@ function AllProductsPageContent({
       );
       setProductToAdd(null);
       setRefreshVersion((value) => value + 1);
-      toast.success(response.message || 'Product added to your pharmacy.');
+      toast.success(response.message || 'ProductDetails added to your pharmacy.');
     } catch (addError) {
       toast.error(getAddProductErrorMessage(addError));
     } finally {
@@ -365,9 +365,9 @@ function AllProductsPageContent({
         <div className={css.searchGrid}>
           <SearchInput
             id="all-products-product-article-search"
-            label="Product article search"
+            label="ProductDetails article search"
             value={filters.article}
-            placeholder="Product article"
+            placeholder="ProductDetails article"
             isActive={Boolean(filters.article)}
             onChange={(article) =>
               handleFiltersChange({
@@ -379,9 +379,9 @@ function AllProductsPageContent({
 
           <SearchInput
             id="all-products-product-name-search"
-            label="Product name search"
+            label="ProductDetails name search"
             value={filters.name}
-            placeholder="Product name"
+            placeholder="ProductDetails name"
             isActive={Boolean(filters.name)}
             onChange={(name) =>
               handleFiltersChange({

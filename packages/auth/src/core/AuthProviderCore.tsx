@@ -11,6 +11,13 @@ import {
   type ReactNode,
 } from 'react';
 
+import type {
+  AuthUser,
+  AuthResponse,
+  LoginPayload,
+  RegisterPayload,
+} from '@e-pharmacy/types';
+
 import {
   createBrowserAuthSessionSync,
   type AuthSessionSync,
@@ -18,13 +25,6 @@ import {
 
 import type { AuthSessionHintStorage } from '../session/session-hint-storage';
 import type { AuthProviderServices } from './auth-provider.types';
-
-import type {
-  AuthUser,
-  CurrentUserResponse,
-  LoginPayload,
-  RegisterPayload,
-} from '@e-pharmacy/types';
 
 //===================================================================
 
@@ -89,23 +89,20 @@ type AuthProviderCoreProps = AuthProviderServices & {
 
 const currentUserPromises = new WeakMap<
   AuthProviderServices['getCurrentUser'],
-  Promise<CurrentUserResponse>
+  Promise<AuthResponse>
 >();
 
 const refreshPromises = new WeakMap<
   AuthProviderServices['refreshSession'],
-  Promise<CurrentUserResponse>
+  Promise<AuthResponse>
 >();
 
 //===================================================================
 
 function runSingleFlight(
-  service: () => Promise<CurrentUserResponse>,
-  store: WeakMap<
-    () => Promise<CurrentUserResponse>,
-    Promise<CurrentUserResponse>
-  >
-): Promise<CurrentUserResponse> {
+  service: () => Promise<AuthResponse>,
+  store: WeakMap<() => Promise<AuthResponse>, Promise<AuthResponse>>
+): Promise<AuthResponse> {
   const pending = store.get(service);
   if (pending) return pending;
 
@@ -435,7 +432,10 @@ export function AuthProviderCore({
       sessionSyncRef.current = null;
       if (revalidateOnFocus) {
         window.removeEventListener('focus', revalidateOnFocusHandler);
-        document.removeEventListener('visibilitychange', revalidateOnFocusHandler);
+        document.removeEventListener(
+          'visibilitychange',
+          revalidateOnFocusHandler
+        );
       }
     };
   }, [clearAuthState, restoreCurrentUser, revalidateOnFocus, sessionSync]);

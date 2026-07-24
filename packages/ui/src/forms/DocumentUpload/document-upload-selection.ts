@@ -1,9 +1,9 @@
-import type { UploadFileValue } from '@e-pharmacy/types/files';
+import type { BrowserUploadFile } from '../types';
 
 //===================================================================
 
 export type UploadFileSelectionResult = Readonly<{
-  files: UploadFileValue[];
+  files: BrowserUploadFile[];
   duplicateCount: number;
 }>;
 
@@ -30,13 +30,13 @@ function createFileFingerprint(file: File): string {
 
 //===================================================================
 
-function createStoredFileFingerprint(file: UploadFileValue): string | null {
+function createStoredFileFingerprint(file: BrowserUploadFile): string | null {
   return file.file ? createFileFingerprint(file.file) : null;
 }
 
 //===================================================================
 
-function toUploadFileValue(file: File): UploadFileValue {
+function toBrowserUploadFile(file: File): BrowserUploadFile {
   return {
     id: createUploadFileId(),
     name: file.name,
@@ -49,7 +49,7 @@ function toUploadFileValue(file: File): UploadFileValue {
 //===================================================================
 
 export function mergeUploadFileSelection(
-  currentFiles: readonly UploadFileValue[],
+  currentFiles: readonly BrowserUploadFile[],
   selectedFiles: readonly File[],
   multiple: boolean
 ): UploadFileSelectionResult {
@@ -66,7 +66,7 @@ export function mergeUploadFileSelection(
       .filter((fingerprint): fingerprint is string => fingerprint !== null)
   );
 
-  const acceptedFiles: UploadFileValue[] = [];
+  const acceptedFiles: BrowserUploadFile[] = [];
   let duplicateCount = 0;
 
   for (const file of selectedFiles) {
@@ -78,7 +78,7 @@ export function mergeUploadFileSelection(
     }
 
     fingerprints.add(fingerprint);
-    acceptedFiles.push(toUploadFileValue(file));
+    acceptedFiles.push(toBrowserUploadFile(file));
 
     if (!multiple) break;
   }

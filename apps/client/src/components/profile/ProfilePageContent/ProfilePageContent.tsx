@@ -72,7 +72,7 @@ import {
 import type {
   ActiveSession,
   Order,
-  Product,
+  ProductDetails,
   PublicPharmacy,
 } from '@e-pharmacy/types';
 
@@ -166,7 +166,7 @@ function ProfilePageContent() {
   const [ordersVisibleCount, setOrdersVisibleCount] =
     useState(ORDERS_VISIBLE_STEP);
 
-  const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
+  const [favoriteProducts, setFavoriteProducts] = useState<ProductDetails[]>([]);
   const [favoritePharmacies, setFavoritePharmacies] = useState<
     PublicPharmacy[]
   >([]);

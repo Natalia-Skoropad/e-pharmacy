@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 
-import type { BreadcrumbItem } from '@e-pharmacy/types/navigation';
+import type { BreadcrumbItem } from '../types';
 
 //===================================================================
 

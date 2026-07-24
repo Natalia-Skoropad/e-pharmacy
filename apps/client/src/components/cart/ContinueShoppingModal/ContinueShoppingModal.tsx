@@ -23,7 +23,7 @@ import {
 
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatStockLabel } from '@e-pharmacy/utils/numbers';
-import type { Cart, Product, ProductCategory } from '@e-pharmacy/types';
+import type { Cart, ProductDetails, ProductCategory } from '@e-pharmacy/types';
 
 import { getProducts } from '@/lib/api/browser';
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
@@ -49,7 +49,7 @@ const PRODUCTS_LIMIT = 150;
 
 //===================================================================
 
-function getProductOfferPrice(product: Product, pharmacyId: string): number {
+function getProductOfferPrice(product: ProductDetails, pharmacyId: string): number {
   const pharmacyOffer = product.offers?.find(
     (offer) => offer.pharmacyId === pharmacyId
   );
@@ -78,7 +78,7 @@ function ContinueShoppingModal({
     ProductCategoryOption[]
   >([]);
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [addingProductIds, setAddingProductIds] = useState<Set<string>>(
     () => new Set()
@@ -248,7 +248,7 @@ function ContinueShoppingModal({
         {categoryOptions.length > 0 ? (
           <div
             className={css.categories}
-            aria-label="Product categories in this pharmacy"
+            aria-label="ProductDetails categories in this pharmacy"
           >
             <button
               className={

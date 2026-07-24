@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import { ChevronRight } from 'lucide-react';
 
-import type { BreadcrumbItem } from '@e-pharmacy/types/navigation';
+import type { BreadcrumbItem } from '../types';
 
 import {
   BreadcrumbTrail,

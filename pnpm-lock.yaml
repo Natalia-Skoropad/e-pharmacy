@@ -318,15 +318,15 @@ importers:
       '@e-pharmacy/hooks':
         specifier: workspace:*
         version: link:../hooks
-      '@e-pharmacy/validation':
-        specifier: workspace:*
-        version: link:../validation
       '@e-pharmacy/types':
         specifier: workspace:*
         version: link:../types
       '@e-pharmacy/utils':
         specifier: workspace:*
         version: link:../utils
+      '@e-pharmacy/validation':
+        specifier: workspace:*
+        version: link:../validation
       react:
         specifier: '>=19'
         version: 19.2.4
@@ -370,6 +370,9 @@ importers:
 
   packages/validation:
     dependencies:
+      '@e-pharmacy/config':
+        specifier: workspace:*
+        version: link:../config
       '@e-pharmacy/types':
         specifier: workspace:*
         version: link:../types

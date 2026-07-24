@@ -1,3 +1,4 @@
+import { CLIENT_SUCCESSFUL_ORDERS_FILTERS } from '@e-pharmacy/config/clients';
 import { CLIENT_SUCCESSFUL_ORDERS_FILTER_LABELS } from '@e-pharmacy/config/clients';
 
 import {
@@ -7,7 +8,7 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
-import { CLIENT_SUCCESSFUL_ORDERS_FILTERS } from '@e-pharmacy/types/clients';
+
 import { getPharmacyClientsPath } from '@e-pharmacy/config/pharmacy';
 
 import { CLIENT_STATUSES, CLIENT_STATUS_LABELS } from '@/lib/clients/clients';

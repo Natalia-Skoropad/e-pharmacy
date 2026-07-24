@@ -8,15 +8,11 @@ import {
   slugifyStatus,
 } from '@e-pharmacy/validation/url';
 
-import { isProductCategory } from '@e-pharmacy/types/products';
-
-import {
-  DEFAULT_PRODUCT_REQUESTS_FILTERS,
-  PRODUCT_REQUEST_STATUSES,
-} from '@e-pharmacy/types/product-requests';
-
+import { PRODUCT_REQUEST_STATUSES } from '@e-pharmacy/config/product-requests';
+import { isProductCategory } from '@e-pharmacy/validation/products';
 import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
 
+import { DEFAULT_PRODUCT_REQUESTS_FILTERS } from './product-requests';
 import type { ProductRequestsFilterState } from './product-requests';
 
 //===================================================================

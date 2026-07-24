@@ -16,3 +16,4 @@ export {
 } from '../shared/sanitizers';
 
 export * from './pharmacy-note-validation';
+export * from './bank-details';

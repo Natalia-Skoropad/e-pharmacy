@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import type {
-  EntityComment,
-  EntityCommentsPage,
-} from '@e-pharmacy/types/comments';
+  PharmacyNote,
+  PharmacyNotesResponse,
+} from '@e-pharmacy/types/notes';
 
 import { PHARMACY_NOTE_MAX_LENGTH } from '@e-pharmacy/validation/pharmacy';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
@@ -31,7 +31,7 @@ export type EntityCommentsProps = Readonly<{
   emptyText?: string;
   initialTotal?: number;
   isEditable?: boolean;
-  load: (page: number) => Promise<EntityCommentsPage>;
+  load: (page: number) => Promise<PharmacyNotesResponse>;
   create: (text: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
   onTotalChange?: (total: number) => void;
@@ -63,9 +63,10 @@ function EntityCommentsContent({
   const titleId = `${entityKey}-${generatedId}-comments-title`;
   const loadRef = useRef(load);
   const onTotalChangeRef = useRef(onTotalChange);
-  const [data, setData] = useState<EntityCommentsPage>({
+  const [data, setData] = useState<PharmacyNotesResponse>({
     items: [],
     page: 1,
+    perPage: 10,
     total: initialTotal,
     totalPages: 1,
   });
@@ -73,7 +74,7 @@ function EntityCommentsContent({
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [commentToDelete, setCommentToDelete] = useState<EntityComment | null>(
+  const [commentToDelete, setCommentToDelete] = useState<PharmacyNote | null>(
     null
   );
   const [error, setError] = useState('');

@@ -2,6 +2,7 @@ import type { Types } from 'mongoose';
 import type { PHARMACY_STATUSES } from '../constants/auth';
 import type { updateMyPharmacyProfileSchema } from '../schemas/pharmacy.schema';
 import type { z } from 'zod';
+import type { ISODateTimeString } from './date';
 
 //===============================================================
 
@@ -17,10 +18,28 @@ export type ReviewModerationStatus = 'on_moderation' | 'approved' | 'rejected';
 export type PharmacyVerificationDocumentMetadata = {
   name: string;
   size: number;
-  type?: string;
+  type: string;
 };
 
-export type PharmacyBankDetails = {
+export type EditablePharmacyBankDetails = Partial<{
+  recipientName: string;
+  taxId: string;
+  iban: string;
+  bankName: string;
+  receiptEmail: string;
+  paymentPurpose: string;
+}>;
+
+export type CompletePharmacyBankDetails = {
+  recipientName: string;
+  taxId: string;
+  iban: string;
+  bankName: string;
+  receiptEmail: string;
+  paymentPurpose: string;
+};
+
+export type PublicPaymentBankDetails = {
   recipientName: string;
   taxId: string;
   iban: string;
@@ -39,7 +58,7 @@ export type PharmacyPendingModeration = {
   imageUrl?: string | null;
   description?: string;
   documents?: PharmacyVerificationDocumentMetadata[];
-  bankDetails?: Partial<PharmacyBankDetails>;
+  bankDetails?: EditablePharmacyBankDetails;
 };
 
 export type PharmacyEntity = {
@@ -49,7 +68,7 @@ export type PharmacyEntity = {
   phone?: string;
   email?: string;
   workingHours?: string;
-  bankDetails?: PharmacyBankDetails;
+  bankDetails?: EditablePharmacyBankDetails;
   license?: string;
   documents: PharmacyVerificationDocumentMetadata[];
   status: PharmacyStatus;
@@ -96,14 +115,14 @@ export type PublicPharmacyResponseDto = {
   email?: string;
   workingHours?: string;
   bankTransferAvailable: boolean;
-  bankDetails?: PharmacyBankDetails;
-  rating?: number;
+  bankDetails?: PublicPaymentBankDetails;
+  rating: number;
   imageUrl?: string;
   description?: string;
   availableProductsCount: number;
   reviewsCount: number;
   isFavorite: boolean;
-  updatedAt: string;
+  updatedAt: ISODateTimeString;
 };
 
 export type PharmacyReviewResponseDto = {
@@ -111,7 +130,7 @@ export type PharmacyReviewResponseDto = {
   userName: string;
   rating: number;
   comment: string;
-  createdAt: string;
+  createdAt: ISODateTimeString;
 };
 
 export type PharmacyProfileResponseDto = {
@@ -122,7 +141,7 @@ export type PharmacyProfileResponseDto = {
   phone?: string;
   email?: string;
   workingHours?: string;
-  bankDetails?: PharmacyBankDetails;
+  bankDetails?: EditablePharmacyBankDetails;
   bankTransferAvailable: boolean;
   documents: PharmacyVerificationDocumentMetadata[];
   status: PharmacyStatus;
@@ -132,7 +151,7 @@ export type PharmacyProfileResponseDto = {
   statusReason?: string;
   pendingModeration?: PharmacyPendingModeration;
   reviewsCount: number;
-  updatedAt: string;
+  updatedAt: ISODateTimeString;
 };
 
 //===============================================================

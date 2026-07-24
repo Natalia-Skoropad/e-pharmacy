@@ -1,3 +1,4 @@
+import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 import {
   DateFilter,
   SelectField,
@@ -5,7 +6,7 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
+
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 import { getPharmacyAllProductsPath } from '@e-pharmacy/config/pharmacy';
 

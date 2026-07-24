@@ -32,6 +32,8 @@ import { httpError } from '../utils/httpError';
 import { getEndOfDay, getStartOfDay } from '../utils/date-range';
 import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
 
+import { requireISODateTime } from '../utils/date-contract';
+
 //===============================================================
 
 type ProductDocument = ProductEntity & { _id: Types.ObjectId };
@@ -174,10 +176,8 @@ async function getOffersByProductIds(
       reservedQuantity: offer.reservedQuantity,
       inStock: offer.availableQuantity > 0,
       hasRelatedOrders: relatedOfferIds.has(String(offer._id)),
-      createdAt:
-        offer.createdAt?.toISOString?.() ?? String(offer.createdAt ?? ''),
-      updatedAt:
-        offer.updatedAt?.toISOString?.() ?? String(offer.updatedAt ?? ''),
+      createdAt: requireISODateTime(offer.createdAt, 'productOffer.createdAt'),
+      updatedAt: requireISODateTime(offer.updatedAt, 'productOffer.updatedAt'),
     };
 
     const key = String(offer.productId);
@@ -226,10 +226,8 @@ function serializeProduct(
     rating: product.rating ?? 0,
     reviewsCount: product.reviewsCount ?? 0,
     isFavorite: favoriteIds.has(String(product._id)),
-    createdAt:
-      product.createdAt?.toISOString?.() ?? String(product.createdAt ?? ''),
-    updatedAt:
-      product.updatedAt?.toISOString?.() ?? String(product.updatedAt ?? ''),
+    createdAt: requireISODateTime(product.createdAt, 'product.createdAt'),
+    updatedAt: requireISODateTime(product.updatedAt, 'product.updatedAt'),
   };
 }
 

@@ -1,3 +1,5 @@
+import { CLIENT_SUCCESSFUL_ORDERS_FILTERS } from '@e-pharmacy/config/clients';
+
 import {
   CLIENT_SLUG_SEGMENT_SEPARATOR_PATTERN,
   URL_CLIENT_TEXT_PARAM_DISALLOWED_CHARS_PATTERN,
@@ -10,11 +12,7 @@ import {
   slugifyStatus,
 } from '@e-pharmacy/validation/url';
 
-import {
-  CLIENT_SUCCESSFUL_ORDERS_FILTERS,
-  type ClientSuccessfulOrdersFilter as ClientSuccessfulOrdersValue,
-} from '@e-pharmacy/types/clients';
-
+import { type ClientSuccessfulOrdersFilter as ClientSuccessfulOrdersValue } from '@e-pharmacy/config/clients';
 import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
 
 import { CLIENT_STATUSES, type ClientStatus } from './clients';

@@ -1,5 +1,16 @@
 import type { ChangeEventHandler, ReactNode } from 'react';
 
+import type { FileMetadata } from '@e-pharmacy/types/primitives';
+
+//===================================================================
+
+export type BrowserUploadFile = FileMetadata &
+  Readonly<{
+    id: string;
+    file?: File;
+    dataUrl?: string;
+  }>;
+
 //===================================================================
 
 export type FieldAriaProps = {

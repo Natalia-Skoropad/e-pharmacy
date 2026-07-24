@@ -21,7 +21,7 @@ import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { DocumentUpload, SelectField, MarkdownTextarea } from '@e-pharmacy/ui/forms';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
-import type { UploadFileValue } from '@e-pharmacy/types/files';
+import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 import { readFileAsDataUrl } from '@e-pharmacy/ui/media';
 import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
@@ -29,14 +29,14 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { CommentInput, NameInput } from '@e-pharmacy/ui/forms';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/types/products';
+import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 
 import {
   type ProductRequestFormPayload,
-  type ProductRequestDetails,
   type ProductRequestFile,
   type ProductRequestStatus,
 } from '@e-pharmacy/types/product-requests';
+import type { ProductRequestDetailsViewModel } from '@/lib/product-requests/product-requests';
 
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
@@ -125,7 +125,7 @@ export type NewProductRequestPageContentProps = Readonly<{
 function toUploadFile(
   file: ProductRequestFile,
   prefix: string
-): UploadFileValue {
+): BrowserUploadFile {
   return {
     id: `${prefix}-${file.name}-${file.size}`,
     name: file.name,
@@ -137,7 +137,7 @@ function toUploadFile(
 
 //===================================================================
 
-function toFormState(request: ProductRequestDetails): ProductRequestFormValues {
+function toFormState(request: ProductRequestDetailsViewModel): ProductRequestFormValues {
   return {
     name: request.name,
     article: request.article,
@@ -210,15 +210,15 @@ function NewProductRequestPageContent({
   const isCreationLocked = Boolean(bannerStatus || isBlocked);
   const cloneSourceRequestId = requestId ? undefined : sourceRequestId;
 
-  const [request, setRequest] = useState<ProductRequestDetails | null>(null);
+  const [request, setRequest] = useState<ProductRequestDetailsViewModel | null>(null);
 
   const [values, setValues] = useState<ProductRequestFormValues>(
     PRODUCT_REQUEST_INITIAL_VALUES
   );
 
-  const [productImage, setProductImage] = useState<UploadFileValue[]>([]);
+  const [productImage, setProductImage] = useState<BrowserUploadFile[]>([]);
 
-  const [additionalFiles, setAdditionalFiles] = useState<UploadFileValue[]>([]);
+  const [additionalFiles, setAdditionalFiles] = useState<BrowserUploadFile[]>([]);
 
   const [productImagePreview, setProductImagePreview] = useState<string | null>(
     null
@@ -413,7 +413,7 @@ function NewProductRequestPageContent({
     setIsProductImageRemoved(true);
   };
 
-  const handleProductImageChange = async (files: UploadFileValue[]) => {
+  const handleProductImageChange = async (files: BrowserUploadFile[]) => {
     const image = files[0];
 
     if (!image) {
@@ -461,7 +461,7 @@ function NewProductRequestPageContent({
     }
   };
 
-  const handleAdditionalFilesChange = async (files: UploadFileValue[]) => {
+  const handleAdditionalFilesChange = async (files: BrowserUploadFile[]) => {
     const metadataError = validateProductRequestAdditionalFiles(files);
     if (metadataError) {
       setAdditionalFilesError(metadataError);

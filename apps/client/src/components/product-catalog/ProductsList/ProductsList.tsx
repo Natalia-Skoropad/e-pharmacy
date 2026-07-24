@@ -1,4 +1,4 @@
-import type { Product } from '@e-pharmacy/types';
+import type { ProductDetails } from '@e-pharmacy/types';
 
 import ProductCard from '@/components/product-catalog/ProductCard';
 
@@ -7,7 +7,7 @@ import css from './ProductsList.module.css';
 //===================================================================
 
 type ProductsListProps = {
-  products: Product[];
+  products: ProductDetails[];
 };
 
 //===================================================================

@@ -10,7 +10,7 @@ import { formatProductCategoryLabel } from '@e-pharmacy/config/products';
 import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
 import { formatMoneyRange, getNumericRange } from '@e-pharmacy/utils/money';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import type { Product } from '@e-pharmacy/types';
+import type { ProductDetails } from '@e-pharmacy/types';
 
 import {
   invalidateFavoriteProductIdsCache,
@@ -29,7 +29,7 @@ import css from './ProductCard.module.css';
 //===================================================================
 
 type ProductCardProps = {
-  product: Product;
+  product: ProductDetails;
   skipFavoriteRefresh?: boolean;
   onFavoriteChange?: (productId: string, isFavorite: boolean) => void;
 };
@@ -51,8 +51,8 @@ function ProductCard({
       initialIsFavorite: Boolean(product.isFavorite),
       notifier: toast,
       loginMessage: 'Please log in to add products to favorites.',
-      addedMessage: 'Product was added to favorites.',
-      removedMessage: 'Product was removed from favorites.',
+      addedMessage: 'ProductDetails was added to favorites.',
+      removedMessage: 'ProductDetails was removed from favorites.',
       errorMessage: 'Could not update favorites.',
       addFavorite: addFavoriteProduct,
       removeFavorite: removeFavoriteProduct,

@@ -1,5 +1,6 @@
 'use client';
 
+import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ShoppingBag } from 'lucide-react';
@@ -16,7 +17,7 @@ import {
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { DEFAULT_ORDER_STATISTICS } from '@e-pharmacy/types/orders';
+
 import { getPharmacyNewOrderPath } from '@e-pharmacy/config/pharmacy';
 
 import { getPharmacyOrders } from '@/lib/api/browser';

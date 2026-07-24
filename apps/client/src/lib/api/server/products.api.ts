@@ -13,7 +13,7 @@ import type {
   ApiSuccessResponse,
   ProductDetailsResponse,
   ProductFilterOptionsResponse,
-  ProductReviewsResponse,
+  ReviewsResponse,
   ProductsQueryParams,
   ProductsResponse,
 } from '@e-pharmacy/types';
@@ -96,9 +96,9 @@ export async function getProductDetailsFromBackend(
 export async function getProductReviewsFromBackend(
   id: string,
   options?: RequestOptions
-): Promise<ProductReviewsResponse> {
+): Promise<ReviewsResponse> {
   return getResponseData(
-    await backendApiRequest<ApiSuccessResponse<ProductReviewsResponse>>(
+    await backendApiRequest<ApiSuccessResponse<ReviewsResponse>>(
       ROUTES.products.reviews(id),
       options
     )

@@ -1,22 +1,20 @@
 import 'server-only';
 import { cache } from 'react';
 
-import { isReservedRootSlug } from '@/lib/routes';
-
+import type { ProductDetails, PublicPharmacy } from '@e-pharmacy/types';
 import { buildSlugId } from '@e-pharmacy/validation/url';
-import { buildProductPath, buildPharmacyPath } from '@/lib/routes';
 
+import { isReservedRootSlug } from '@/lib/routes';
+import { buildProductPath, buildPharmacyPath } from '@/lib/routes';
 import { lookupProductBySlugId } from '@/lib/details/server/product-detail-page';
 import { lookupPharmacyBySlugId } from '@/lib/details/server/pharmacy-detail-page';
-
-import type { Product, PublicPharmacy } from '@e-pharmacy/types';
 import type { DataUnavailableReason } from '@/lib/api/server';
 
 //===================================================================
 
 type ProductRootDetail = {
   type: 'product';
-  product: Product;
+  product: ProductDetails;
   canonicalPath: string;
   isCanonicalSlug: boolean;
 };
@@ -43,7 +41,7 @@ export type RootDetailResolveResult =
 
 function createProductRootDetail(
   slugId: string,
-  product: Product
+  product: ProductDetails
 ): ProductRootDetail {
   const canonicalSlugId = buildSlugId(product.name, product.id);
 

@@ -2,7 +2,7 @@ import 'server-only';
 
 import type {
   PharmacyOption,
-  Product,
+  ProductDetails,
   ProductFilterOptionsResponse,
 } from '@e-pharmacy/types';
 
@@ -27,7 +27,7 @@ import {
 //===================================================================
 
 type ProductCatalogPageData = {
-  products: Product[];
+  products: ProductDetails[];
   pharmacies: PharmacyOption[];
   filterOptions: ProductFilterOptionsResponse;
   total: number;

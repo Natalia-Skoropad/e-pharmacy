@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import Image from 'next/image';
 
 import { LinkButton } from '@e-pharmacy/ui/navigation';
-import type { Product, PublicPharmacy } from '@e-pharmacy/types';
+import type { ProductDetails, PublicPharmacy } from '@e-pharmacy/types';
 import { Container } from '@e-pharmacy/ui/layout';
 
 import {
@@ -63,7 +63,7 @@ async function getFeaturedPharmacies(): Promise<
 
 //===================================================================
 
-async function getFeaturedProducts(): Promise<FeaturedResult<Product>> {
+async function getFeaturedProducts(): Promise<FeaturedResult<ProductDetails>> {
   try {
     const response = await getProducts(
       {
@@ -342,7 +342,7 @@ async function HomePage() {
       <section className={css.section} aria-labelledby="products-title">
         <Container>
           <div className={css.sectionHead}>
-            <p className={css.kicker}>Product catalog</p>
+            <p className={css.kicker}>ProductDetails catalog</p>
             <h2 className={css.sectionTitle} id="products-title">
               Browse products available in pharmacies
             </h2>

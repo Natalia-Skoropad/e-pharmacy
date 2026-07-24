@@ -1,4 +1,4 @@
-import type { EntityId } from '../shared';
+import type { EntityId } from '../primitives';
 import type { UserRole, UserStatus } from './role';
 
 //===================================================================

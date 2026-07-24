@@ -1,5 +1,7 @@
 'use client';
 
+import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
+import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -58,8 +60,7 @@ import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
 import {
-  DEFAULT_ORDER_STATISTICS,
-  type OrderStatisticsCounts,
+  type OrderStatisticsCounts
 } from '@e-pharmacy/types/orders';
 
 import type {
@@ -69,9 +70,8 @@ import type {
 } from '@e-pharmacy/types';
 
 import {
-  PRODUCT_CATEGORIES,
   type ProductCategory,
-  type ProductStatus,
+  type ProductStatus
 } from '@e-pharmacy/types/products';
 
 import { countTrueConditions } from '@e-pharmacy/utils/collections';

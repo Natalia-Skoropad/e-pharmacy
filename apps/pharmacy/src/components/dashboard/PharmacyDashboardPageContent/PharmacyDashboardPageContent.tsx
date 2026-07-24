@@ -1,5 +1,10 @@
 'use client';
 
+import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
+import { DEFAULT_ALL_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
+import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
+import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
+import { DEFAULT_CLIENT_STATISTICS } from '@/lib/statistics/defaults';
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { LayoutDashboard } from 'lucide-react';
@@ -10,30 +15,25 @@ import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { PharmacyStatus } from '@e-pharmacy/types';
 
 import {
-  DEFAULT_ALL_PRODUCT_STATISTICS,
-  DEFAULT_OWN_PRODUCT_STATISTICS,
   type AllProductStatisticsKey,
   type OwnProductStatisticsCounts,
-  type OwnProductStatisticsKey,
+  type OwnProductStatisticsKey
 } from '@e-pharmacy/types/products';
 
 import {
-  DEFAULT_ORDER_SALES_STATISTICS,
-  DEFAULT_ORDER_STATISTICS,
   type OrderSalesStatistics,
-  type OrderStatisticsCounts,
+  type OrderStatisticsCounts
 } from '@e-pharmacy/types/orders';
 
 import {
-  DEFAULT_CLIENT_STATISTICS,
   type ClientStatisticsCounts,
-  type ClientStatisticsKey,
-} from '@e-pharmacy/types/clients';
+  type ClientStatisticsKey
+} from '@e-pharmacy/config/clients';
 
 import {
   DEFAULT_PRODUCT_REQUEST_STATISTICS,
   type ProductRequestStatisticsCounts,
-} from '@e-pharmacy/types/product-requests';
+} from '@/lib/product-requests/product-requests';
 
 import {
   getPharmacyAllProductsPath,

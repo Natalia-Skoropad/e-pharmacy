@@ -1,5 +1,4 @@
-import { isProductCategory } from '@e-pharmacy/types/products';
-
+import { isProductCategory } from '../products';
 import { isValidationResultValid } from '../shared';
 
 import {
@@ -152,7 +151,8 @@ export function validateProductRequestForm(
     PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
   );
 
-  if (!errors.article && articleFormatError) errors.article = articleFormatError;
+  if (!errors.article && articleFormatError)
+    errors.article = articleFormatError;
 
   const shortTextFields: Array<keyof ProductRequestFormValues> = [
     'name',

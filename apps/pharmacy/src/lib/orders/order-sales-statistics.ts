@@ -1,19 +1,18 @@
+import { isProductCategory } from '@e-pharmacy/validation/products';
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
 
 import {
-  DEFAULT_ORDER_SALES_STATISTICS,
   type OrderSalesStatistics,
   type OrderSalesStatisticsGroupBy,
   type OrderSalesStatisticsPoint,
   type OrderSalesStatisticsValue,
 } from '@e-pharmacy/types/orders';
 
-import {
-  isProductCategory,
-  type ProductCategory,
-} from '@e-pharmacy/types/products';
+import { type ProductCategory } from '@e-pharmacy/types/products';
+
+import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
 
 //===================================================================
 
@@ -26,7 +25,9 @@ export type PharmacyOrderSalesStatisticsQueryParams = Readonly<{
 
 //===================================================================
 
-function isOrderSalesGroupBy(value: unknown): value is OrderSalesStatisticsGroupBy {
+function isOrderSalesGroupBy(
+  value: unknown
+): value is OrderSalesStatisticsGroupBy {
   return value === 'day' || value === 'month';
 }
 

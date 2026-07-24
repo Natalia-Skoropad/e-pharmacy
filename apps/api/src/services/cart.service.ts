@@ -14,9 +14,7 @@ import { ProductOffer } from '../models/productOffer.model';
 import { Pharmacy } from '../models/pharmacy.model';
 
 import { httpError } from '../utils/httpError';
-
-
-import type { CartResponseDto } from '../types/cart';
+import type { CartProductResponseDto, CartResponseDto } from '../types/cart';
 import type { ProductEntity } from '../types/product';
 
 //===============================================================
@@ -127,18 +125,9 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
 
   const productIds = offers.map((offer) => offer.productId);
   const pharmacyIds = offers.map((offer) => offer.pharmacyId);
-  const [products, pharmacies, offerCounts] = await Promise.all([
+  const [products, pharmacies] = await Promise.all([
     Product.find({ _id: { $in: productIds } }).lean<ProductDocument[]>(),
     Pharmacy.find({ _id: { $in: pharmacyIds } }).lean(),
-    ProductOffer.aggregate<{ _id: Types.ObjectId; count: number }>([
-      {
-        $match: {
-          productId: { $in: productIds },
-          availableQuantity: { $gt: 0 },
-        },
-      },
-      { $group: { _id: '$productId', count: { $sum: 1 } } },
-    ]),
   ]);
 
   const productMap = new Map(
@@ -147,10 +136,6 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
   const pharmacyMap = new Map(
     pharmacies.map((pharmacy) => [String(pharmacy._id), pharmacy])
   );
-  const offerCountMap = new Map(
-    offerCounts.map((row) => [String(row._id), row.count])
-  );
-
   const items = cart.items
     .map((item) => {
       const offer = offerMap.get(String(item.productOfferId));
@@ -161,26 +146,14 @@ async function serializeCart(cart: CartDocument): Promise<CartResponseDto> {
 
       // Cart prices remain live. The confirmed Order stores the immutable price snapshot.
       const unitPrice = offer.price;
-      const productDto = {
+      const productDto: CartProductResponseDto = {
         id: String(product._id),
         name: product.name,
-        ...(product.slug ? { slug: product.slug } : {}),
         article: product.article,
-        ...(product.description ? { description: product.description } : {}),
         category: product.category,
-        status: product.status,
         price: unitPrice,
         ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
-        ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
-        ...(product.dosage ? { dosage: product.dosage } : {}),
-        ...(product.packageQuantity
-          ? { packageQuantity: product.packageQuantity }
-          : {}),
-        pharmacyId: String(pharmacy._id),
         pharmacyName: pharmacy.name,
-        foundInPharmaciesCount: offerCountMap.get(String(product._id)) ?? 0,
-        availableInPharmaciesCount: offerCountMap.get(String(product._id)) ?? 0,
-        offers: [],
         inStock: offer.availableQuantity > 0,
         ...(typeof product.rating === 'number'
           ? { rating: product.rating }
@@ -334,7 +307,6 @@ export async function addCartItemService(
           );
         }
       }
-
 
       if (itemIndex >= 0) {
         const currentItem = cart.items[itemIndex];

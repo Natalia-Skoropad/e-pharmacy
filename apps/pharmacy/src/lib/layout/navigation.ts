@@ -10,7 +10,7 @@ import {
   Users,
 } from 'lucide-react';
 
-import type { NavigationItem } from '@e-pharmacy/types/navigation';
+import type { NavigationItem } from '@e-pharmacy/config/navigation';
 import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
 
 //===================================================================

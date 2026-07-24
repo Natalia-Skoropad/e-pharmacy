@@ -1,5 +1,7 @@
 'use client';
 
+import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
+import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 import Link from 'next/link';
 import { BarChart3, History, PackageSearch } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -57,9 +59,9 @@ import { type OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
 import type {
   EntityId,
   PharmacyStatus,
-  Product,
+  ProductDetails,
   ProductOffer,
-  ProductReview,
+  Review,
   OrderStatus,
   ProductStockBalance,
   ProductStockMovement,
@@ -72,10 +74,8 @@ import { formatAmount, formatMoney } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
 
 import {
-  DEFAULT_ORDER_SALES_STATISTICS,
-  DEFAULT_ORDER_STATISTICS,
   type OrderSalesStatistics,
-  type OrderStatisticsCounts,
+  type OrderStatisticsCounts
 } from '@e-pharmacy/types/orders';
 
 import {
@@ -331,13 +331,13 @@ const DEFAULT_BANNER_MESSAGE =
 function getProductDetailsError(error: unknown): ProductDetailsError {
   if (isApiError(error) && [400, 404, 422].includes(error.status)) {
     return {
-      title: 'Product not found',
+      title: 'ProductDetails not found',
       message: 'This product does not exist.',
     };
   }
 
   return {
-    title: 'Product could not be loaded',
+    title: 'ProductDetails could not be loaded',
     message: 'Could not load product data. Please try again.',
   };
 }
@@ -348,13 +348,13 @@ function getProductActionErrorMessage(error: unknown): string {
   if (isApiError(error) && error.message) return error.message;
   if (error instanceof Error && error.message) return error.message;
 
-  return 'Product action could not be completed. Please try again.';
+  return 'ProductDetails action could not be completed. Please try again.';
 }
 
 //===================================================================
 
 function getProductOffer(
-  product: Product,
+  product: ProductDetails,
   pharmacyId: EntityId | null
 ): ProductOffer | null {
   if (!pharmacyId) return null;
@@ -368,7 +368,7 @@ function getProductOffer(
 
 //===================================================================
 
-function getProductStatusLabel(product: Product): string {
+function getProductStatusLabel(product: ProductDetails): string {
   if (product.status === 'blocked') return 'Blocked';
   if (product.status === 'new') return 'New';
 
@@ -377,7 +377,7 @@ function getProductStatusLabel(product: Product): string {
 
 //===================================================================
 
-function getProductPriceLabel(product: Product, offer: ProductOffer | null) {
+function getProductPriceLabel(product: ProductDetails, offer: ProductOffer | null) {
   if (offer) return formatMoney(offer.price) ?? '—';
 
   return product.price > 0 ? (formatMoney(product.price) ?? '—') : '—';
@@ -398,7 +398,7 @@ function getReservedQuantity(offer: ProductOffer | null): number {
 //===================================================================
 
 function getProductSummaryItems(
-  product: Product,
+  product: ProductDetails,
   offer: ProductOffer | null
 ): SummaryItem[] {
   const items: SummaryItem[] = [
@@ -441,7 +441,7 @@ function getProductSummaryItems(
 
 //===================================================================
 
-function getProductCharacteristics(product: Product): CharacteristicItem[] {
+function getProductCharacteristics(product: ProductDetails): CharacteristicItem[] {
   return [
     product.manufacturer
       ? { label: 'Manufacturer', value: product.manufacturer }
@@ -653,7 +653,7 @@ function getTotalPages(total: number, perPage: number): number {
 
 //===================================================================
 
-function mapReviewsToListItems(reviews: ProductReview[]): ReviewsListItem[] {
+function mapReviewsToListItems(reviews: Review[]): ReviewsListItem[] {
   return reviews.map((review) => ({
     id: String(review.id),
     userName: review.userName,
@@ -682,8 +682,8 @@ function AllProductDetailsPageContent({
   showAddAction = true,
   showRemoveAction = false,
 }: AllProductDetailsPageContentProps) {
-  const [product, setProduct] = useState<Product | null>(null);
-  const [reviews, setReviews] = useState<ProductReview[]>([]);
+  const [product, setProduct] = useState<ProductDetails | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsTotal, setReviewsTotal] = useState(0);
   const [commentsTotal, setCommentsTotal] = useState(0);
   const [relatedOrders, setRelatedOrders] = useState<PharmacyOrderRow[]>([]);
@@ -1262,7 +1262,7 @@ function AllProductDetailsPageContent({
       setStockEarliestCreatedAt(stockResponse.earliestCreatedAt);
       setStockBalance(stockResponse.stock);
       setIsAddModalOpen(false);
-      toast.success(response.message || 'Product added to your pharmacy.');
+      toast.success(response.message || 'ProductDetails added to your pharmacy.');
     } catch (addError) {
       toast.error(getProductActionErrorMessage(addError));
     } finally {
@@ -1284,7 +1284,7 @@ function AllProductDetailsPageContent({
       setStockBalance(null);
       setIsRemoveModalOpen(false);
       toast.success(
-        response.message || 'Product was removed from your pharmacy.'
+        response.message || 'ProductDetails was removed from your pharmacy.'
       );
     } catch (removeError) {
       toast.error(getProductActionErrorMessage(removeError));
@@ -1346,12 +1346,12 @@ function AllProductDetailsPageContent({
       </section>
 
       {product ? (
-        <section className={css.contentCard} aria-label="Product data">
+        <section className={css.contentCard} aria-label="ProductDetails data">
           <div className={css.tabsSection}>
             <Tabs
               items={tabs}
               activeValue={activeTab}
-              ariaLabel="Product details tabs"
+              ariaLabel="ProductDetails details tabs"
               mobileVisibleCount={1}
               tabletVisibleCount={3}
               onChange={setActiveTab}
@@ -1480,13 +1480,13 @@ function AllProductDetailsPageContent({
                 {isAddedToPharmacy ? (
                   <section
                     className={css.productSalesSection}
-                    aria-label="Product sales value"
+                    aria-label="ProductDetails sales value"
                   >
                     <div className={css.productSalesToolbar}>
                       <div className={css.productSalesHeading}>
                         <BarChart3 size={22} aria-hidden="true" />
                         <div className={css.productSalesHeadingContent}>
-                          <h3>Product sales analytics</h3>
+                          <h3>ProductDetails sales analytics</h3>
                           <p>
                             Successful sales of this product for the selected
                             year or month.
@@ -1511,10 +1511,10 @@ function AllProductDetailsPageContent({
                       <SalesValueChart
                         key={`${productSalesYear}-${productSalesMonth}`}
                         data={productSalesData}
-                        kicker="Product sales"
+                        kicker="ProductDetails sales"
                         title="Sales value by product"
                         description="The line shows successful sales of this product for the selected period."
-                        categoryControlsLabel="Product category shown on the chart"
+                        categoryControlsLabel="ProductDetails category shown on the chart"
                       />
                     )}
                   </section>
@@ -1805,7 +1805,7 @@ function AllProductDetailsPageContent({
                     reviews={reviewItems}
                     title="Reviews"
                     emptyTitle="This product has no reviews yet."
-                    emptyText="Product reviews will appear here after clients share their feedback."
+                    emptyText="ProductDetails reviews will appear here after clients share their feedback."
                   />
                 ) : null}
 
@@ -1841,7 +1841,7 @@ function AllProductDetailsPageContent({
       {isStockFiltersOpen ? (
         <FilterDrawer
           id="stock-movement-filters-panel"
-          eyebrow="Product details"
+          eyebrow="ProductDetails details"
           title="Stock movement filters"
           hasActiveFilters={stockActiveFiltersCount > 0}
           resetHref="#"
@@ -1918,7 +1918,7 @@ function AllProductDetailsPageContent({
       {isRelatedFiltersOpen ? (
         <FilterDrawer
           id="related-orders-filters-panel"
-          eyebrow="Product details"
+          eyebrow="ProductDetails details"
           title="Related orders filters"
           hasActiveFilters={relatedActiveFiltersCount > 0}
           resetHref="#"

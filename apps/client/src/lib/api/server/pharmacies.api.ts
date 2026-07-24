@@ -13,7 +13,7 @@ import type {
   ApiSuccessResponse,
   PharmacyDetailsResponse,
   PharmacyFilterOptionsResponse,
-  PharmacyReviewsResponse,
+  ReviewsResponse,
   PharmaciesQueryParams,
   PharmaciesResponse,
   PharmacyOptionsResponse,
@@ -78,9 +78,9 @@ export async function getPharmacyDetailsFromBackend(
 export async function getPharmacyReviewsFromBackend(
   id: string,
   options?: RequestOptions
-): Promise<PharmacyReviewsResponse> {
+): Promise<ReviewsResponse> {
   return getResponseData(
-    await backendApiRequest<ApiSuccessResponse<PharmacyReviewsResponse>>(
+    await backendApiRequest<ApiSuccessResponse<ReviewsResponse>>(
       ROUTES.pharmacies.reviews(id),
       options
     )

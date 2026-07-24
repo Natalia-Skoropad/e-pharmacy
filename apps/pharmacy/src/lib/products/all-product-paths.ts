@@ -1,3 +1,5 @@
+import { isProductCategory } from '@e-pharmacy/validation/products';
+
 import {
   deslugifyArticleSegment,
   deslugifyNameSegment,
@@ -8,7 +10,6 @@ import {
   slugifyStatus,
 } from '@e-pharmacy/validation/url';
 
-import { isProductCategory } from '@e-pharmacy/types/products';
 import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
 
 import { OWN_PRODUCT_STATUSES } from './products';

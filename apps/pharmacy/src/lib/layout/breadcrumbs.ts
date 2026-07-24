@@ -1,4 +1,4 @@
-import type { BreadcrumbItem } from '@e-pharmacy/types/navigation';
+import type { BreadcrumbItem } from '@e-pharmacy/config/navigation';
 
 import {
   PHARMACY_ROUTES,

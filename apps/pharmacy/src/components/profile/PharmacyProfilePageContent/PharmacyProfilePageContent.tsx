@@ -18,7 +18,7 @@ import { WorkingHoursInput } from '../WorkingHoursInput';
 import { ReviewsList } from '@e-pharmacy/ui/data-display';
 import { Tabs } from '@e-pharmacy/ui/navigation';
 import { Container } from '@e-pharmacy/ui/layout';
-import type { UploadFileValue } from '@e-pharmacy/types/files';
+import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 
 import {
   AddressInput,
@@ -263,7 +263,7 @@ function createDocumentId(
 
 function createDocumentValues(
   documents: PharmacyProfile['documents']
-): UploadFileValue[] {
+): BrowserUploadFile[] {
   return documents.map((document, index) => ({
     id: createDocumentId(document, index),
     name: document.name,
@@ -274,15 +274,15 @@ function createDocumentValues(
 
 //===================================================================
 
-function normalizeDocumentValues(files: UploadFileValue[]) {
+function normalizeDocumentValues(files: BrowserUploadFile[]) {
   return files.map(normalizePharmacyDocument);
 }
 
 //===================================================================
 
 function areDocumentValuesEqual(
-  first: UploadFileValue[],
-  second: UploadFileValue[]
+  first: BrowserUploadFile[],
+  second: BrowserUploadFile[]
 ): boolean {
   return (
     JSON.stringify(normalizeDocumentValues(first)) ===
@@ -419,7 +419,7 @@ function buildPaymentPayload(
 //===================================================================
 
 function buildDocumentsPayload(
-  files: UploadFileValue[]
+  files: BrowserUploadFile[]
 ): UpdateMyPharmacyProfilePayload {
   return {
     documents: normalizeDocumentValues(files),
@@ -547,9 +547,9 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   const [paymentTouched, setPaymentTouched] =
     useState<PharmacyPaymentTouchedFields>({});
 
-  const [documentValues, setDocumentValues] = useState<UploadFileValue[]>([]);
+  const [documentValues, setDocumentValues] = useState<BrowserUploadFile[]>([]);
   const [initialDocumentValues, setInitialDocumentValues] = useState<
-    UploadFileValue[]
+    BrowserUploadFile[]
   >([]);
   const [documentsTouched, setDocumentsTouched] = useState(false);
   const [documentsError, setDocumentsError] = useState('');
@@ -1052,7 +1052,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     }
   };
 
-  const handleDocumentsChange = (files: UploadFileValue[]) => {
+  const handleDocumentsChange = (files: BrowserUploadFile[]) => {
     setDocumentsTouched(true);
 
     const error = validatePharmacyDocuments(files);

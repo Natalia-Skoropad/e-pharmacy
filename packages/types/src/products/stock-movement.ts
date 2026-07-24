@@ -1,14 +1,26 @@
+import type { ApiPaginationResponse } from '../api';
 import type { OrderStatus } from '../orders';
-import type { EntityId, ISODateString } from '../shared';
 
-//=============================================================================
+import type {
+  CalendarDateString,
+  EntityId,
+  ISODateTimeString,
+} from '../primitives';
+
+//===================================================================
 
 export type StockMovementEventType =
-  'arrival' | 'reserve' | 'release' | 'write_off' | 'adjustment';
+  | 'arrival'
+  | 'reserve'
+  | 'release'
+  | 'write_off'
+  | 'adjustment';
+
+//===================================================================
 
 export type StockMovementSource = 'pharmacy_stock' | 'client_order';
 
-//=============================================================================
+//===================================================================
 
 export type ProductStockBalance = {
   stockQuantity: number;
@@ -19,7 +31,7 @@ export type ProductStockBalance = {
 export type ProductStockMovement = {
   id: EntityId;
   sequence: number;
-  occurredAt: ISODateString;
+  occurredAt: ISODateTimeString;
   eventType: StockMovementEventType;
   source: StockMovementSource;
   quantity: number;
@@ -36,9 +48,10 @@ export type ProductStockMovement = {
   comment: string;
 };
 
-export type ProductStockMovementsResponse = {
-  items: ProductStockMovement[];
-  total: number;
-  stock: ProductStockBalance;
-  earliestCreatedAt: ISODateString | null;
-};
+//===================================================================
+
+export type ProductStockMovementsResponse =
+  ApiPaginationResponse<ProductStockMovement> & {
+    stock: ProductStockBalance;
+    earliestCreatedAt: CalendarDateString | null;
+  };

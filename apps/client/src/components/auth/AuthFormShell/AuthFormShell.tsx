@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
-import type { BreadcrumbItem } from '@e-pharmacy/types/navigation';
+import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 
 import css from './AuthFormShell.module.css';
 

@@ -11,7 +11,7 @@ import { CLIENT_STATISTICS_LABELS } from '@e-pharmacy/config/clients';
 import type {
   ClientStatisticsCounts,
   ClientStatisticsKey,
-} from '@e-pharmacy/types/clients';
+} from '@e-pharmacy/config/clients';
 
 import {
   StatsCard,

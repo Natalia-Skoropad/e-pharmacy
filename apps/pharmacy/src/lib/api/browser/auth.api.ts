@@ -5,7 +5,7 @@ import { getResponseData } from '@e-pharmacy/api-client/core';
 import type {
   ApiEmptySuccessResponse,
   ApiSuccessResponse,
-  CurrentUserResponse,
+  AuthResponse,
 } from '@e-pharmacy/types';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
@@ -14,9 +14,9 @@ import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 //===================================================================
 
-export async function refreshSession(): Promise<CurrentUserResponse> {
+export async function refreshSession(): Promise<AuthResponse> {
   const response = await localApiRequest<
-    ApiSuccessResponse<CurrentUserResponse>
+    ApiSuccessResponse<AuthResponse>
   >(PHARMACY_API_ROUTES.auth.refresh, {
     method: 'POST',
   });
@@ -26,9 +26,9 @@ export async function refreshSession(): Promise<CurrentUserResponse> {
 
 //===================================================================
 
-export async function getCurrentUser(): Promise<CurrentUserResponse> {
+export async function getCurrentUser(): Promise<AuthResponse> {
   const response = await localApiRequest<
-    ApiSuccessResponse<CurrentUserResponse>
+    ApiSuccessResponse<AuthResponse>
   >(PHARMACY_API_ROUTES.auth.current);
 
   return getResponseData(response);

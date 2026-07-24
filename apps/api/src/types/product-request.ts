@@ -2,6 +2,7 @@ import type { Types } from 'mongoose';
 
 import type { PRODUCT_REQUEST_STATUSES } from '../constants/product-request-validation';
 import type { ProductCategory } from './categories';
+import type { CalendarDateString, ISODateTimeString } from './date';
 
 //===============================================================
 
@@ -54,8 +55,8 @@ export type ProductRequestEntity = {
 
 export type ProductRequestResponseDto = {
   id: string;
-  createdAt: string;
-  updatedAt?: string;
+  createdAt: ISODateTimeString;
+  updatedAt?: ISODateTimeString;
   requestNumber?: string;
   productId?: string;
   productImageUrl?: string;
@@ -84,7 +85,7 @@ export type ProductRequestResponseDto = {
     status: ProductRequestStatus;
     title: string;
     description: string;
-    createdAt: string;
+    createdAt: ISODateTimeString;
   }>;
 
   commentsTotal?: number;
@@ -98,5 +99,5 @@ export type ProductRequestsResponseDto = {
   perPage: number;
   total: number;
   totalPages: number;
-  earliestCreatedAt: string | null;
+  earliestCreatedAt: CalendarDateString | null;
 };

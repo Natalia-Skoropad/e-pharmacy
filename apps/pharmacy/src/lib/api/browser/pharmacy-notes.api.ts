@@ -11,10 +11,11 @@ import type { ApiSuccessResponse } from '@e-pharmacy/types';
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
+
 import type {
-  EntityComment,
-  EntityCommentsPage,
-} from '@e-pharmacy/types/comments';
+  PharmacyNote,
+  PharmacyNotesResponse,
+} from '@e-pharmacy/types/notes';
 
 //===================================================================
 
@@ -26,7 +27,7 @@ export type PharmacyNoteEntityType =
 
 //===================================================================
 
-function normalizeComment(value: unknown): EntityComment | null {
+function normalizeComment(value: unknown): PharmacyNote | null {
   if (!isRecord(value)) return null;
 
   const id = getTrimmedString(value.id);
@@ -42,7 +43,7 @@ export async function getPharmacyNotes(
   type: PharmacyNoteEntityType,
   entityId: string,
   page = 1
-): Promise<EntityCommentsPage> {
+): Promise<PharmacyNotesResponse> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     `/api/pharmacy-notes/${type}/${entityId}${buildQueryString({ page, perPage: 10 })}`
   );
@@ -54,12 +55,7 @@ export async function getPharmacyNotes(
     'pharmacy notes response'
   );
 
-  return {
-    items: pagination.items,
-    page: pagination.page,
-    total: pagination.total,
-    totalPages: pagination.totalPages,
-  };
+  return pagination;
 }
 
 //===================================================================

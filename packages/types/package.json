@@ -9,16 +9,13 @@
     "./api": "./src/api/index.ts",
     "./auth": "./src/auth/index.ts",
     "./cart": "./src/cart/index.ts",
-    "./clients": "./src/clients/index.ts",
-    "./navigation": "./src/navigation/index.ts",
+    "./notes": "./src/notes/index.ts",
     "./orders": "./src/orders/index.ts",
     "./pharmacies": "./src/pharmacies/index.ts",
-    "./products": "./src/products/index.ts",
+    "./primitives": "./src/primitives/index.ts",
     "./product-requests": "./src/product-requests/index.ts",
-    "./reviews": "./src/reviews/index.ts",
-    "./shared": "./src/shared/index.ts",
-    "./comments": "./src/comments/index.ts",
-    "./files": "./src/files/index.ts"
+    "./products": "./src/products/index.ts",
+    "./reviews": "./src/reviews/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

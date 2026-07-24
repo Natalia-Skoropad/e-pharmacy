@@ -1,5 +1,8 @@
-export * from './categories';
-export type * from './product';
-export * from './own-product-statistics';
-export * from './all-product-statistics';
+export type * from './all-product-statistics';
+export type * from './category';
+export type * from './own-product-statistics';
+export type * from './product-details';
+export type * from './product-offer';
+export type * from './product-summary';
+export type * from './responses';
 export type * from './stock-movement';

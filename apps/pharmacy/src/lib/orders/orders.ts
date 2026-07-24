@@ -1,3 +1,5 @@
+import { isProductCategory } from '@e-pharmacy/validation/products';
+
 import {
   normalizePaginatedResponse,
   requirePaginatedResponse,
@@ -6,13 +8,7 @@ import {
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
-
-import {
-  DEFAULT_ORDER_STATISTICS,
-  type OrderStatisticsCounts,
-} from '@e-pharmacy/types/orders';
-
-import { isProductCategory } from '@e-pharmacy/types/products';
+import { type OrderStatisticsCounts } from '@e-pharmacy/types/orders';
 
 import type {
   ApiPaginationResponse,
@@ -21,10 +17,12 @@ import type {
   OrderActivityType,
   OrderCreatedByType,
   OrderStatus,
-  PharmacyBankDetails,
+  CompletePharmacyBankDetails,
   ProductCategory,
   PaymentMethod,
 } from '@e-pharmacy/types';
+
+import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 
 //===================================================================
 
@@ -32,6 +30,8 @@ export const DELIVERY_METHODS = [
   'pickup',
   'postal_delivery',
 ] as const satisfies readonly DeliveryMethod[];
+
+//===================================================================
 
 export const PAYMENT_METHODS = [
   'cash',
@@ -137,7 +137,7 @@ export type PharmacyOrderDetails = PharmacyOrderRow &
     pharmacyAddress?: string;
     pharmacyWorkingHours?: string;
     pharmacyEmail?: string;
-    bankDetails?: PharmacyBankDetails;
+    bankDetails?: CompletePharmacyBankDetails;
     managerCommentsCount: number;
   }>;
 
@@ -514,16 +514,26 @@ export function normalizePharmacyOrderManagerCommentsResponse(
 
 //===================================================================
 
-function normalizeBankDetails(payload: unknown): PharmacyBankDetails | null {
+function normalizeBankDetails(
+  payload: unknown
+): CompletePharmacyBankDetails | null {
   if (!isRecord(payload)) return null;
 
   const recipientName = getTrimmedString(payload.recipientName);
   const taxId = getTrimmedString(payload.taxId);
   const iban = getTrimmedString(payload.iban);
   const bankName = getTrimmedString(payload.bankName);
+  const receiptEmail = getTrimmedString(payload.receiptEmail);
   const paymentPurpose = getTrimmedString(payload.paymentPurpose);
 
-  if (!recipientName || !taxId || !iban || !bankName || !paymentPurpose) {
+  if (
+    !recipientName ||
+    !taxId ||
+    !iban ||
+    !bankName ||
+    !receiptEmail ||
+    !paymentPurpose
+  ) {
     return null;
   }
 
@@ -532,10 +542,8 @@ function normalizeBankDetails(payload: unknown): PharmacyBankDetails | null {
     taxId,
     iban,
     bankName,
+    receiptEmail,
     paymentPurpose,
-    ...(getTrimmedString(payload.receiptEmail)
-      ? { receiptEmail: getTrimmedString(payload.receiptEmail) }
-      : {}),
   };
 }
 

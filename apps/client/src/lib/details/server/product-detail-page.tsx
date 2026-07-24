@@ -1,8 +1,8 @@
 import 'server-only';
 import type { Metadata } from 'next';
 
-import { ProductDetailsPageContent } from '@/components/product-catalog';
-import { buildProductPath, getIdFromSlugId } from '@/lib/routes';
+import { ApiError } from '@e-pharmacy/api-client/core';
+import type { ProductDetails } from '@e-pharmacy/types';
 
 import {
   getDataUnavailableReason,
@@ -10,12 +10,11 @@ import {
 } from '@/lib/api/server';
 
 import { createPageMetadata } from '@/lib/seo';
-
 import { getProductDetails, getProductReviews } from '@/lib/api/server';
-
-import { ApiError } from '@e-pharmacy/api-client/core';
-import type { Product } from '@e-pharmacy/types';
 import type { DataUnavailableReason } from '@/lib/api/server';
+import { buildProductPath, getIdFromSlugId } from '@/lib/routes';
+
+import { ProductDetailsPageContent } from '@/components/product-catalog';
 
 //===================================================================
 
@@ -24,7 +23,7 @@ type ProductDetailSearchParams = {
 };
 
 export type ProductDetailLookupResult =
-  | { status: 'found'; product: Product }
+  | { status: 'found'; product: ProductDetails }
   | { status: 'not_found' }
   | { status: 'unavailable'; reason: DataUnavailableReason };
 
@@ -66,7 +65,7 @@ export async function lookupProductBySlugId(
 
 export async function getProductBySlugId(
   slugId: string
-): Promise<Product | null> {
+): Promise<ProductDetails | null> {
   const result = await lookupProductBySlugId(slugId);
 
   return result.status === 'found' ? result.product : null;
@@ -74,7 +73,7 @@ export async function getProductBySlugId(
 
 //===================================================================
 
-export function createProductDetailMetadata(product: Product): Metadata {
+export function createProductDetailMetadata(product: ProductDetails): Metadata {
   return createPageMetadata({
     title: product.name,
     description:
@@ -89,7 +88,7 @@ export function createProductDetailMetadata(product: Product): Metadata {
 //===================================================================
 
 export async function renderProductDetailPage(
-  product: Product,
+  product: ProductDetails,
   searchParams?: ProductDetailSearchParams
 ) {
   const reviewsData = await getProductReviews(

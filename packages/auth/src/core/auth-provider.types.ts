@@ -1,6 +1,5 @@
 import type {
   AuthResponse,
-  CurrentUserResponse,
   LoginPayload,
   RegisterPayload,
 } from '@e-pharmacy/types';
@@ -8,8 +7,8 @@ import type {
 //===================================================================
 
 export type AuthProviderServices = {
-  getCurrentUser: () => Promise<CurrentUserResponse>;
-  refreshSession: () => Promise<CurrentUserResponse>;
+  getCurrentUser: () => Promise<AuthResponse>;
+  refreshSession: () => Promise<AuthResponse>;
   login: (payload: LoginPayload) => Promise<AuthResponse>;
   register?: (payload: RegisterPayload) => Promise<AuthResponse>;
   logout: () => Promise<void>;

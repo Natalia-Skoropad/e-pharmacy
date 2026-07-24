@@ -47,7 +47,13 @@ import type {
 
 import { PRODUCT_CATEGORIES, type ProductCategory } from '../types/categories';
 import type { ProductEntity, ProductOfferEntity } from '../types/product';
-import type { PharmacyEntity } from '../types/pharmacy';
+
+import type {
+  CompletePharmacyBankDetails,
+  EditablePharmacyBankDetails,
+  PharmacyEntity,
+} from '../types/pharmacy';
+
 import type { UserRole } from '../types/user';
 
 //===============================================================
@@ -143,13 +149,14 @@ function isCheckoutPharmacyStatus(status: PharmacyEntity['status']): boolean {
 //===============================================================
 
 function hasCompleteBankDetails(
-  bankDetails?: import('../types/pharmacy').PharmacyBankDetails
-): boolean {
+  bankDetails?: EditablePharmacyBankDetails
+): bankDetails is CompletePharmacyBankDetails {
   return Boolean(
     bankDetails?.recipientName &&
     bankDetails.taxId &&
     bankDetails.iban &&
     bankDetails.bankName &&
+    bankDetails.receiptEmail &&
     bankDetails.paymentPurpose
   );
 }
@@ -168,9 +175,14 @@ async function hydrateOrderPharmacyDetails(
 
   if (!pharmacy) return order;
 
+  const snapshotBankDetails = hasCompleteBankDetails(
+    order.pharmacySnapshot.bankDetails
+  )
+    ? order.pharmacySnapshot.bankDetails
+    : undefined;
   const bankDetails = hasCompleteBankDetails(pharmacy.bankDetails)
     ? pharmacy.bankDetails
-    : order.pharmacySnapshot.bankDetails;
+    : snapshotBankDetails;
 
   return {
     ...order,
@@ -347,7 +359,7 @@ function serializeOrder(
     ...(order.managerComment ? { managerComment: order.managerComment } : {}),
     managerCommentsCount: managerComments.length,
     ...(managerComments.length ? { managerComments } : {}),
-    ...(order.pharmacySnapshot.bankDetails
+    ...(hasCompleteBankDetails(order.pharmacySnapshot.bankDetails)
       ? { bankDetails: order.pharmacySnapshot.bankDetails }
       : {}),
     items: order.items.map((item) => {
@@ -2018,9 +2030,7 @@ export async function getOrdersService(
   userId: string,
   query: OrdersQuery,
   role?: UserRole
-): Promise<
-  OrdersResponseDto & { page: number; perPage: number; totalPages: number }
-> {
+): Promise<OrdersResponseDto> {
   const filter: Record<string, unknown> = {};
 
   if (role === USER_ROLES.PHARMACY) {

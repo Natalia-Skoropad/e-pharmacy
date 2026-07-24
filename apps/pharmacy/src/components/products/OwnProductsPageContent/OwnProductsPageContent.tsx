@@ -1,5 +1,6 @@
 'use client';
 
+import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 
 import { useEffect, useMemo, useState } from 'react';
@@ -24,9 +25,8 @@ import type { EntityId, PharmacyStatus } from '@e-pharmacy/types';
 import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
 
 import {
-  DEFAULT_OWN_PRODUCT_STATISTICS,
   type OwnProductStatisticsCounts,
-  type OwnProductStatisticsKey,
+  type OwnProductStatisticsKey
 } from '@e-pharmacy/types/products';
 
 import {

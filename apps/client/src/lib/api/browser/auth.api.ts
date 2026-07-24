@@ -8,7 +8,6 @@ import type {
   ApiEmptySuccessResponse,
   ApiSuccessResponse,
   AuthResponse,
-  CurrentUserResponse,
   ForgotPasswordPayload,
   LoginPayload,
   RegisterPayload,
@@ -78,9 +77,9 @@ export async function resetPassword(
 
 //===================================================================
 
-export async function refreshSession(): Promise<CurrentUserResponse> {
+export async function refreshSession(): Promise<AuthResponse> {
   const response = await localApiRequest<
-    ApiSuccessResponse<CurrentUserResponse>
+    ApiSuccessResponse<AuthResponse>
   >(CLIENT_API_ROUTES.auth.refresh, {
     method: 'POST',
   });
@@ -90,9 +89,9 @@ export async function refreshSession(): Promise<CurrentUserResponse> {
 
 //===================================================================
 
-export async function getCurrentUser(): Promise<CurrentUserResponse> {
+export async function getCurrentUser(): Promise<AuthResponse> {
   const response = await localApiRequest<
-    ApiSuccessResponse<CurrentUserResponse>
+    ApiSuccessResponse<AuthResponse>
   >(CLIENT_API_ROUTES.auth.current);
 
   return getResponseData(response);
@@ -124,9 +123,9 @@ export async function logoutAllUserSessions(): Promise<void> {
 
 export async function updateCurrentUser(
   payload: UpdateProfilePayload
-): Promise<CurrentUserResponse> {
+): Promise<AuthResponse> {
   const response = await localApiRequest<
-    ApiSuccessResponse<CurrentUserResponse>
+    ApiSuccessResponse<AuthResponse>
   >(CLIENT_API_ROUTES.auth.current, {
     method: 'PATCH',
     body: payload,

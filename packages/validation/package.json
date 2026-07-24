@@ -13,7 +13,9 @@
     "./product-requests": "./src/product-requests/index.ts",
     "./profile": "./src/profile/index.ts",
     "./reviews": "./src/reviews/index.ts",
-    "./url": "./src/url/index.ts"
+    "./url": "./src/url/index.ts",
+    "./dates": "./src/dates/index.ts",
+    "./products": "./src/products/index.ts"
   },
   "scripts": {
     "build": "tsc",
@@ -27,6 +29,7 @@
     "@types/node": "latest"
   },
   "dependencies": {
-    "@e-pharmacy/types": "workspace:*"
+    "@e-pharmacy/types": "workspace:*",
+    "@e-pharmacy/config": "workspace:*"
   }
 }

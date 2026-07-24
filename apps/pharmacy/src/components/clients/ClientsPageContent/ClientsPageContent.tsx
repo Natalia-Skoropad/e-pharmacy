@@ -1,5 +1,6 @@
 'use client';
 
+import { DEFAULT_CLIENT_STATISTICS } from '@/lib/statistics/defaults';
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
@@ -20,10 +21,9 @@ import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { getPharmacyClientsPath } from '@e-pharmacy/config/pharmacy';
 
 import {
-  DEFAULT_CLIENT_STATISTICS,
   type ClientStatisticsCounts,
   type ClientStatisticsKey,
-} from '@e-pharmacy/types/clients';
+} from '@e-pharmacy/config/clients';
 
 import { getPharmacyClients } from '@/lib/api/browser';
 import { getPharmacyClientStatistics } from '@/lib/clients/client-statistics';

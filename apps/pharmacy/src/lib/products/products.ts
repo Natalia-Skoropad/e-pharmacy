@@ -1,8 +1,5 @@
-import {
-  DEFAULT_OWN_PRODUCT_STATISTICS,
-  isProductCategory,
-  type OwnProductStatisticsCounts,
-} from '@e-pharmacy/types/products';
+import { isProductCategory } from '@e-pharmacy/validation/products';
+import { type OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
 
 import {
   normalizePaginatedResponse,
@@ -19,6 +16,8 @@ import type {
   ProductCategory,
   ProductStatus,
 } from '@e-pharmacy/types';
+
+import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 
 //===================================================================
 

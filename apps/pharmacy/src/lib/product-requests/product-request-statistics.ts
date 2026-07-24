@@ -1,10 +1,11 @@
-import {
-  DEFAULT_PRODUCT_REQUEST_STATISTICS,
-  PRODUCT_REQUEST_STATUSES,
-  type ProductRequestStatisticsCounts,
-} from '@e-pharmacy/types/product-requests';
+import { PRODUCT_REQUEST_STATUSES } from '@e-pharmacy/config/product-requests';
 
 import { getPharmacyProductRequests } from '@/lib/api/browser/product-requests.api';
+
+import {
+  DEFAULT_PRODUCT_REQUEST_STATISTICS,
+  type ProductRequestStatisticsCounts,
+} from './product-requests';
 
 //===================================================================
 

@@ -1,9 +1,7 @@
-import {
-  DEFAULT_CLIENT_STATISTICS,
-  type ClientStatisticsCounts,
-} from '@e-pharmacy/types/clients';
+import { type ClientStatisticsCounts } from '@e-pharmacy/config/clients';
 
 import { getPharmacyClients } from '@/lib/api/browser';
+import { DEFAULT_CLIENT_STATISTICS } from '@/lib/statistics/defaults';
 
 //===================================================================
 

@@ -22,11 +22,12 @@ import { getPharmacyNewRequestPath } from '@e-pharmacy/config/pharmacy';
 import {
   DEFAULT_PRODUCT_REQUESTS_FILTERS,
   DEFAULT_PRODUCT_REQUEST_STATISTICS,
-  type ProductRequestRow,
+  type ProductRequestRowViewModel,
   type ProductRequestsQueryParams,
   type ProductRequestStatisticsCounts,
   type ProductRequestsFilterState,
-} from '@e-pharmacy/types/product-requests';
+} from '@/lib/product-requests/product-requests';
+import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 
 import { getPharmacyProductRequests } from '@/lib/api/browser';
 import { getPharmacyRequestsFilterPath } from '@/lib/layout/routes';
@@ -56,8 +57,10 @@ function getProductRequestsQueryParams(
   return {
     page,
     perPage: rowsPerPage,
-    dateFrom: filters.date.from || undefined,
-    dateTo: filters.date.to || undefined,
+    dateFrom: isCalendarDateString(filters.date.from)
+      ? filters.date.from
+      : undefined,
+    dateTo: isCalendarDateString(filters.date.to) ? filters.date.to : undefined,
     requestNumber: filters.requestNumber.trim() || undefined,
     productName: filters.productName.trim() || undefined,
     productArticle: filters.productArticle.trim() || undefined,
@@ -85,7 +88,7 @@ function ProductRequestsPageContent({
 
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [currentPage, setCurrentPage] = useState(1);
-  const [requests, setRequests] = useState<ProductRequestRow[]>([]);
+  const [requests, setRequests] = useState<ProductRequestRowViewModel[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(

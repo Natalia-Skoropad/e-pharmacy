@@ -24,4 +24,5 @@ export type {
   CommentFieldProps,
   FormFieldLayoutProps,
   PasswordFieldProps,
+  BrowserUploadFile,
 } from './types';

@@ -1,6 +1,7 @@
 import type { Types } from 'mongoose';
-import type { PharmacyBankDetails } from './pharmacy';
+import type { CompletePharmacyBankDetails } from './pharmacy';
 import type { ProductCategory } from './categories';
+import type { CalendarDateString, ISODateTimeString } from './date';
 
 //===============================================================
 
@@ -9,6 +10,8 @@ export type PaymentMethod = 'cash' | 'bank_transfer';
 export type DeliveryMethod = 'pickup' | 'postal_delivery';
 export type Currency = 'UAH';
 export type OrderCreatedByType = 'client' | 'manager';
+
+//===============================================================
 
 export type OrderActivityType =
   | 'product_added'
@@ -28,7 +31,7 @@ export type OrderPharmacySnapshot = {
   imageUrl?: string;
   rating?: number;
   reviewsCount?: number;
-  bankDetails?: PharmacyBankDetails;
+  bankDetails?: CompletePharmacyBankDetails;
 };
 
 export type OrderProductSnapshot = {
@@ -146,7 +149,7 @@ export type OrderItemResponseDto = {
 export type OrderResponseDto = {
   id: string;
   orderNumber: string;
-  createdAt: string;
+  createdAt: ISODateTimeString;
   userId?: string;
   clientId?: string;
   clientName?: string;
@@ -173,16 +176,17 @@ export type OrderResponseDto = {
   currency: Currency;
   status: OrderStatus;
   createdByType: OrderCreatedByType;
+
   statusHistory: Array<{
     status: OrderStatus;
-    changedAt: string;
+    changedAt: ISODateTimeString;
     changedBy: string;
     comment?: string;
   }>;
 
   activityHistory: Array<{
     type: OrderActivityType;
-    occurredAt: string;
+    occurredAt: ISODateTimeString;
     changedBy: string;
     productId: string;
     productOfferId: string;
@@ -195,7 +199,7 @@ export type OrderResponseDto = {
   }>;
 
   rejectionReason?: string;
-  rejectedAt?: string;
+  rejectedAt?: ISODateTimeString;
   rejectedBy?: string;
   paymentMethod: PaymentMethod;
   delivery: Delivery;
@@ -206,11 +210,11 @@ export type OrderResponseDto = {
   managerComments?: Array<{
     id: string;
     text: string;
-    createdAt: string;
+    createdAt: ISODateTimeString;
     createdBy: string;
   }>;
 
-  bankDetails?: PharmacyBankDetails;
+  bankDetails?: CompletePharmacyBankDetails;
   items: OrderItemResponseDto[];
 };
 
@@ -241,7 +245,10 @@ export type OrderStatisticsDto = Record<OrderStatus, OrderStatisticsValueDto>;
 
 export type OrdersResponseDto = {
   items: OrderResponseDto[];
+  page: number;
+  perPage: number;
   total: number;
+  totalPages: number;
   statistics: OrderStatisticsDto;
-  earliestCreatedAt: string | null;
+  earliestCreatedAt: CalendarDateString | null;
 };

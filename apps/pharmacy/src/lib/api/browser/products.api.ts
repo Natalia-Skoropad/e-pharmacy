@@ -6,15 +6,16 @@ import {
   type RequestOptions,
 } from '@e-pharmacy/api-client/core';
 
+import { localApiRequest } from '@e-pharmacy/next-api/browser';
+
 import type {
-  AddProductToMyPharmacyResponse,
+  PharmacyProductMutationResponse,
   ApiSuccessResponse,
-  Product,
+  ProductDetails,
   ProductDetailsResponse,
   ProductReviewsResponse,
   ProductStockMovementsResponse,
   ProductsQueryParams,
-  RemoveProductFromMyPharmacyResponse,
   ProductsResponse,
 } from '@e-pharmacy/types';
 
@@ -26,8 +27,6 @@ import {
   type PharmacyProductsQueryParams,
   type PharmacyProductsResponse,
 } from '@/lib/products/products';
-
-import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 //===================================================================
 
@@ -63,7 +62,7 @@ export async function getPharmacyProducts(
 //===================================================================
 
 export async function getProductDetails(
-  productId: Product['id']
+  productId: ProductDetails['id']
 ): Promise<ProductDetailsResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<ProductDetailsResponse>
@@ -75,10 +74,10 @@ export async function getProductDetails(
 //===================================================================
 
 export async function addProductToMyPharmacy(
-  productId: Product['id']
-): Promise<AddProductToMyPharmacyResponse> {
+  productId: ProductDetails['id']
+): Promise<PharmacyProductMutationResponse> {
   const response = await localApiRequest<
-    ApiSuccessResponse<AddProductToMyPharmacyResponse>
+    ApiSuccessResponse<PharmacyProductMutationResponse>
   >(PHARMACY_API_ROUTES.products.addToMyPharmacy(productId), {
     method: 'POST',
   });
@@ -89,10 +88,10 @@ export async function addProductToMyPharmacy(
 //===================================================================
 
 export async function removeProductFromMyPharmacy(
-  productId: Product['id']
-): Promise<RemoveProductFromMyPharmacyResponse> {
+  productId: ProductDetails['id']
+): Promise<PharmacyProductMutationResponse> {
   const response = await localApiRequest<
-    ApiSuccessResponse<RemoveProductFromMyPharmacyResponse>
+    ApiSuccessResponse<PharmacyProductMutationResponse>
   >(PHARMACY_API_ROUTES.products.removeFromMyPharmacy(productId), {
     method: 'DELETE',
   });
@@ -103,7 +102,7 @@ export async function removeProductFromMyPharmacy(
 //===================================================================
 
 export async function getProductStockMovements(
-  productId: Product['id']
+  productId: ProductDetails['id']
 ): Promise<ProductStockMovementsResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<ProductStockMovementsResponse>
@@ -115,7 +114,7 @@ export async function getProductStockMovements(
 //===================================================================
 
 export async function getProductReviews(
-  productId: Product['id']
+  productId: ProductDetails['id']
 ): Promise<ProductReviewsResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<ProductReviewsResponse>

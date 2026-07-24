@@ -1,7 +1,7 @@
 import type {
   ClientStatisticsKey,
   ClientSuccessfulOrdersFilter,
-} from '@e-pharmacy/types/clients';
+} from './client-contracts';
 
 //===================================================================
 

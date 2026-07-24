@@ -6,15 +6,11 @@ import {
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 
-import {
-  PRODUCT_CATEGORIES,
-  type ProductCategory,
-} from '@e-pharmacy/types/products';
+import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
+import type { ProductCategory } from '@e-pharmacy/types/products';
 
-import {
-  PRODUCT_REQUEST_STATUSES,
-  type ProductRequestsFilterState,
-} from '@e-pharmacy/types/product-requests';
+import { PRODUCT_REQUEST_STATUSES } from '@e-pharmacy/config/product-requests';
+import type { ProductRequestsFilterState } from '@/lib/product-requests/product-requests';
 
 import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';

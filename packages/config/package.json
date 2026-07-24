@@ -13,7 +13,9 @@
     "./product-requests": "./src/product-requests/index.ts",
     "./users": "./src/users/index.ts",
     "./clients": "./src/clients/index.ts",
-    "./status": "./src/status/index.ts"
+    "./status": "./src/status/index.ts",
+    "./cart": "./src/cart/index.ts",
+    "./navigation": "./src/navigation/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

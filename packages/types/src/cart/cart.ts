@@ -1,12 +1,17 @@
-import type { EntityId, ISODateString } from '../shared';
-import type { Product } from '../products';
+import type { EntityId, ISODateTimeString } from '../primitives';
+import type { ProductCategory } from '../products';
 
 //===================================================================
 
-export type CartProduct = Omit<
-  Product,
-  'rating' | 'reviewsCount' | 'isFavorite' | 'updatedAt'
-> & {
+export type CartProduct = {
+  id: EntityId;
+  name: string;
+  article: string;
+  category: ProductCategory;
+  price: number;
+  imageUrl?: string;
+  pharmacyName?: string;
+  inStock: boolean;
   rating?: number;
   reviewsCount?: number;
 };
@@ -26,7 +31,7 @@ export type CartItem = {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
-  expiresAt: ISODateString;
+  expiresAt: ISODateTimeString;
 };
 
 //===================================================================
@@ -36,15 +41,3 @@ export type Cart = {
   totalItems: number;
   totalPrice: number;
 };
-
-export type CartResponse = { cart: Cart };
-
-//===================================================================
-
-export type AddCartItemPayload = {
-  productId: EntityId;
-  pharmacyId: EntityId;
-  quantity: number;
-};
-
-export type UpdateCartItemPayload = { quantity: number };

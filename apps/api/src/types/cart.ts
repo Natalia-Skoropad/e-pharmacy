@@ -1,5 +1,5 @@
 import type { Types } from 'mongoose';
-import type { ProductResponseDto } from './product';
+import type { ProductCategory } from './categories';
 
 //===============================================================
 
@@ -19,12 +19,27 @@ export type CartEntity = {
   updatedAt: Date;
 };
 
+export type CartProductResponseDto = {
+  id: string;
+  name: string;
+  article: string;
+  category: ProductCategory;
+  price: number;
+  imageUrl?: string;
+  pharmacyName?: string;
+  inStock: boolean;
+  rating?: number;
+  reviewsCount?: number;
+};
+
+//===============================================================
+
 export type CartItemResponseDto = {
   id: string;
   productOfferId: string;
   productId: string;
   pharmacyId: string;
-  product: ProductResponseDto;
+  product: CartProductResponseDto;
   pharmacyName: string;
   pharmacyRating?: number;
   pharmacyReviewsCount?: number;

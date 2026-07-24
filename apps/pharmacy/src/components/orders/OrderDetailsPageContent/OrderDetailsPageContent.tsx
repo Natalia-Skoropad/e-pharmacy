@@ -1,5 +1,7 @@
 'use client';
 
+import { isCompletePharmacyBankDetails } from '@e-pharmacy/validation/pharmacy';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useState } from 'react';
@@ -70,7 +72,7 @@ import type {
   DeliveryMethod,
   OrderStatus,
   PaymentMethod,
-  Product,
+  ProductDetails,
   ProductCategory,
 } from '@e-pharmacy/types';
 
@@ -232,7 +234,7 @@ function getStatusModalText(status: PendingStatusChange['status']) {
 
 //===================================================================
 
-function getProductOffer(product: Product, pharmacyId: string) {
+function getProductOffer(product: ProductDetails, pharmacyId: string) {
   return product.offers.find((offer) => offer.pharmacyId === pharmacyId);
 }
 
@@ -390,7 +392,7 @@ function OrderProductCard({
                 </Link>
               )}
             >
-              Product details
+              ProductDetails details
             </LinkButton>
 
             <Button
@@ -419,7 +421,7 @@ function ProductPickerModal({
 }: Readonly<{
   order: PharmacyOrderDetails;
   onClose: () => void;
-  onAddProduct: (product: Product) => Promise<void>;
+  onAddProduct: (product: ProductDetails) => Promise<void>;
 }>) {
   const titleId = useId();
   const searchId = useId();
@@ -431,7 +433,7 @@ function ProductPickerModal({
     ProductCategoryOption[]
   >([]);
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [addingProductIds, setAddingProductIds] = useState<Set<string>>(
@@ -502,7 +504,7 @@ function ProductPickerModal({
     };
   }, [order.pharmacyId, searchValue, selectedCategory]);
 
-  const handleAddProduct = async (product: Product) => {
+  const handleAddProduct = async (product: ProductDetails) => {
     if (addingProductIds.has(product.id)) return;
 
     setAddingProductIds((current) => {
@@ -562,7 +564,7 @@ function ProductPickerModal({
         {categoryOptions.length > 0 ? (
           <div
             className={css.productModalCategories}
-            aria-label="Product categories in this pharmacy"
+            aria-label="ProductDetails categories in this pharmacy"
           >
             <button
               className={
@@ -1158,8 +1160,8 @@ function ManagerCommentTab({
 function getOrderActivityLabel(
   activity: PharmacyOrderActivityHistoryItem
 ): string {
-  if (activity.type === 'product_added') return 'Product added';
-  if (activity.type === 'product_removed') return 'Product removed';
+  if (activity.type === 'product_added') return 'ProductDetails added';
+  if (activity.type === 'product_removed') return 'ProductDetails removed';
   if (activity.type === 'quantity_increased') return 'Quantity increased';
 
   return 'Quantity decreased';
@@ -1434,7 +1436,7 @@ function OrderDetailsPageContent({
               ? { pharmacyWorkingHours: pharmacy.workingHours }
               : {}),
             ...(pharmacy.email ? { pharmacyEmail: pharmacy.email } : {}),
-            ...(pharmacy.bankDetails
+            ...(isCompletePharmacyBankDetails(pharmacy.bankDetails)
               ? { bankDetails: pharmacy.bankDetails }
               : {}),
           };
@@ -1710,7 +1712,7 @@ function OrderDetailsPageContent({
     handleQuantityChange(item, 0);
   };
 
-  const handleAddProduct = async (product: Product): Promise<void> => {
+  const handleAddProduct = async (product: ProductDetails): Promise<void> => {
     if (!order || !isEditable || isOrderBusy) return;
 
     const offer = getProductOffer(product, order.pharmacyId);
@@ -2381,7 +2383,7 @@ function OrderDetailsPageContent({
 
       <ConfirmationModal
         isOpen={Boolean(pendingPriceQuantityChange)}
-        title="Product price changed"
+        title="ProductDetails price changed"
         description={
           pendingPriceQuantityChange ? (
             <>

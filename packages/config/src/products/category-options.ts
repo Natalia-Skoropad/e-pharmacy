@@ -1,5 +1,5 @@
 import type {
-  Product,
+  ProductDetails,
   ProductCategory,
 } from '@e-pharmacy/types/products';
 
@@ -15,7 +15,7 @@ export type ProductCategoryOption = Readonly<{
 //===================================================================
 
 export function getProductCategoryOptions(
-  products: readonly Pick<Product, 'category'>[]
+  products: readonly Pick<ProductDetails, 'category'>[]
 ): ProductCategoryOption[] {
   const categories = new Set(products.map((product) => product.category));
 

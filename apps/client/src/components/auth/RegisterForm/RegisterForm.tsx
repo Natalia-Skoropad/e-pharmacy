@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { DocumentUpload, RadioOption } from '@e-pharmacy/ui/forms';
-import type { UploadFileValue } from '@e-pharmacy/types/files';
+import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
 
 import {
@@ -104,7 +104,7 @@ function RegisterForm() {
     REGISTER_INITIAL_VALUES
   );
 
-  const [pharmacyDocuments, setPharmacyDocuments] = useState<UploadFileValue[]>(
+  const [pharmacyDocuments, setPharmacyDocuments] = useState<BrowserUploadFile[]>(
     []
   );
 
@@ -165,7 +165,7 @@ function RegisterForm() {
     }
   };
 
-  const handleDocumentsChange = (files: UploadFileValue[]) => {
+  const handleDocumentsChange = (files: BrowserUploadFile[]) => {
     const documentsError = validatePharmacyDocuments(files, { required: true });
 
     setTouchedFields((prev) => ({ ...prev, pharmacyDocuments: true }));

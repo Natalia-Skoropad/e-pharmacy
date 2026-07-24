@@ -1,15 +1,17 @@
+import { MAX_PHARMACY_GROUPS_PER_CART } from '@e-pharmacy/config/cart';
 import { ApiError } from '@e-pharmacy/api-client/core';
-import { MAX_PHARMACY_GROUPS_PER_CART } from '@e-pharmacy/types/cart';
 
 //===================================================================
 
 export const CART_ORDER_LIMIT_MODAL_TITLE = 'Cart order limit';
 
-export const CART_ORDER_LIMIT_ERROR_MESSAGE =
-  `You cannot add more than ${MAX_PHARMACY_GROUPS_PER_CART} orders to your cart. Please confirm the previous ones to continue shopping`;
+export const CART_ORDER_LIMIT_ERROR_MESSAGE = `You cannot add more than ${MAX_PHARMACY_GROUPS_PER_CART} orders to your cart. Please confirm the previous ones to continue shopping`;
 
 //===================================================================
 
 export function isCartOrderLimitError(error: unknown): boolean {
-  return error instanceof ApiError && error.message.includes(`${MAX_PHARMACY_GROUPS_PER_CART} orders`);
+  return (
+    error instanceof ApiError &&
+    error.message.includes(`${MAX_PHARMACY_GROUPS_PER_CART} orders`)
+  );
 }
