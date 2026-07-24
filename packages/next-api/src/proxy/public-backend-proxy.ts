@@ -1,72 +1,56 @@
 import 'server-only';
-import { NextResponse, type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-import { createBackendApiUrl } from '../server/backend-api-request';
-import { createProxyHeaders } from './proxy-headers';
-import { createProxyResponse } from './proxy-response';
+import { wait } from '@e-pharmacy/api-client/core';
+
+import { executeBackendFetch } from '../internal/backend-fetch';
+import { validateBackendJsonResponse } from '../internal/backend-response';
+import { createProxyResponse } from '../internal/proxy-response';
+
+import {
+  createProxyErrorResponse,
+  describeProxyError,
+} from '../internal/transport-error';
+
+import {
+  DEFAULT_PUBLIC_REVALIDATE_SECONDS,
+  DEFAULT_STALE_WHILE_REVALIDATE_SECONDS,
+  NEXT_API_TIMEOUTS_MS,
+  PUBLIC_READ_RETRY_POLICY,
+} from '../internal/transport-policy';
+
+import { logTransportRequest } from '../observability/logger';
 
 //===================================================================
 
-const DEFAULT_PUBLIC_REVALIDATE_SECONDS = 120;
-const STALE_WHILE_REVALIDATE_SECONDS = 300;
-const PUBLIC_GET_TIMEOUT_MS = 6_000;
-const PUBLIC_RETRY_DELAY_MS = 150;
-const PUBLIC_RETRYABLE_STATUSES = new Set([502, 503, 504]);
-const NO_STORE_CACHE_CONTROL = 'no-store';
-
-//===================================================================
-
-type PublicBackendProxyOptions = {
+type PublicBackendProxyOptions = Readonly<{
   backendPath: string;
   request: NextRequest;
-  revalidate?: number;
-};
+  requestId: string;
+  revalidate?: number | false;
+}>;
 
 //===================================================================
 
-function appendSearchParams(path: string, search: string): string {
-  return search
-    ? `${path}${search.startsWith('?') ? search : `?${search}`}`
-    : path;
-}
+function validateRevalidate(value: number | false | undefined): number | false {
+  if (value === false) return false;
+  const resolved = value ?? DEFAULT_PUBLIC_REVALIDATE_SECONDS;
 
-//===================================================================
-
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-//===================================================================
-
-function createPublicSuccessCacheControl(revalidate: number): string {
-  return `public, s-maxage=${revalidate}, stale-while-revalidate=${STALE_WHILE_REVALIDATE_SECONDS}`;
-}
-
-//===================================================================
-
-async function fetchPublicBackend(url: string, request: NextRequest) {
-  let response: Response;
-
-  for (let attempt = 1; ; attempt += 1) {
-    response = await fetch(url, {
-      method: 'GET',
-      headers: createProxyHeaders(request, {
-        forwardAccept: true,
-        forwardContentType: false,
-        forwardCookie: false,
-      }),
-      cache: 'no-store',
-      signal: AbortSignal.timeout(PUBLIC_GET_TIMEOUT_MS),
-    });
-
-    if (attempt >= 2 || !PUBLIC_RETRYABLE_STATUSES.has(response.status)) {
-      break;
-    }
-
-    await wait(PUBLIC_RETRY_DELAY_MS);
+  if (!Number.isInteger(resolved) || resolved < 0 || resolved > 86_400) {
+    throw new RangeError(
+      'Public revalidate must be an integer from 0 to 86400.'
+    );
   }
 
-  return response;
+  return resolved;
+}
+
+//===================================================================
+
+function createCacheControl(revalidate: number | false): string {
+  if (revalidate === false || revalidate === 0) return 'no-store';
+
+  return `public, s-maxage=${revalidate}, stale-while-revalidate=${DEFAULT_STALE_WHILE_REVALIDATE_SECONDS}`;
 }
 
 //===================================================================
@@ -74,39 +58,91 @@ async function fetchPublicBackend(url: string, request: NextRequest) {
 export async function proxyPublicBackendRequest({
   backendPath,
   request,
-  revalidate = DEFAULT_PUBLIC_REVALIDATE_SECONDS,
+  requestId,
+  revalidate,
 }: PublicBackendProxyOptions) {
-  const pathWithSearch = appendSearchParams(
-    backendPath,
-    request.nextUrl.search
-  );
+  const startedAt = Date.now();
+  const resolvedRevalidate = validateRevalidate(revalidate);
+  let response: Response | undefined;
+  let lastError: unknown;
+  let retryCount = 0;
 
-  let response: Response;
+  for (
+    let attempt = 1;
+    attempt <= PUBLIC_READ_RETRY_POLICY.attempts;
+    attempt += 1
+  ) {
+    try {
+      response = await executeBackendFetch({
+        request,
+        backendPath,
+        method: 'GET',
+        requestId,
+        timeoutMs: NEXT_API_TIMEOUTS_MS.publicRead,
+        authCookieMode: 'none',
+        forwardAccept: true,
+      });
+      await validateBackendJsonResponse(response);
 
-  try {
-    response = await fetchPublicBackend(
-      createBackendApiUrl(pathWithSearch),
-      request
-    );
-  } catch {
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'The service is temporarily unavailable.',
-      },
-      {
-        status: 503,
-        headers: {
-          'Cache-Control': NO_STORE_CACHE_CONTROL,
-        },
+      if (
+        attempt < PUBLIC_READ_RETRY_POLICY.attempts &&
+        PUBLIC_READ_RETRY_POLICY.statuses.includes(
+          response.status as (typeof PUBLIC_READ_RETRY_POLICY.statuses)[number]
+        )
+      ) {
+        retryCount += 1;
+        await wait(PUBLIC_READ_RETRY_POLICY.delayMs);
+        continue;
       }
-    );
+
+      break;
+    } catch (error) {
+      response = undefined;
+      lastError = error;
+
+      if (attempt < PUBLIC_READ_RETRY_POLICY.attempts) {
+        retryCount += 1;
+        await wait(PUBLIC_READ_RETRY_POLICY.delayMs);
+        continue;
+      }
+    }
   }
 
-  return createProxyResponse(response, {
-    cacheControl: response.ok
-      ? createPublicSuccessCacheControl(revalidate)
-      : NO_STORE_CACHE_CONTROL,
-    copySetCookie: false,
+  if (!response) {
+    const descriptor = describeProxyError(lastError);
+
+    logTransportRequest({
+      requestId,
+      method: 'GET',
+      path: backendPath,
+      destination: 'backend',
+      durationMs: Date.now() - startedAt,
+      status: descriptor.status,
+      retryCount,
+      authMode: 'public',
+      transportErrorCode: descriptor.code,
+      source: 'public-proxy',
+    });
+
+    return createProxyErrorResponse({ descriptor, requestId, request });
+  }
+
+  const cacheControl = response.ok
+    ? createCacheControl(resolvedRevalidate)
+    : 'no-store';
+
+  logTransportRequest({
+    requestId,
+    method: 'GET',
+    path: backendPath,
+    destination: 'backend',
+    durationMs: Date.now() - startedAt,
+    status: response.status,
+    retryCount,
+    authMode: 'public',
+    cachePolicy: cacheControl,
+    source: 'public-proxy',
   });
+
+  return createProxyResponse(response, { cacheControl, requestId });
 }

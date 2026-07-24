@@ -1,80 +1,83 @@
 import 'server-only';
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-import { createBackendApiUrl } from '../server/backend-api-request';
-import { createProxyHeaders } from './proxy-headers';
-import { createProxyResponse } from './proxy-response';
-import { createProxyTransportErrorResponse } from './proxy-transport-error';
+import { executeBackendFetch } from '../internal/backend-fetch';
+import { validateBackendJsonResponse } from '../internal/backend-response';
+import { createProxyResponse } from '../internal/proxy-response';
+
+import {
+  createProxyErrorResponse,
+  describeProxyError,
+} from '../internal/transport-error';
+
+import { NEXT_API_TIMEOUTS_MS } from '../internal/transport-policy';
+import { logTransportRequest } from '../observability/logger';
 
 //===================================================================
 
-const OPTIONAL_AUTH_REQUEST_TIMEOUT_MS = 12_000;
+export type OptionalAuthPolicy = 'public-fallback' | 'strict';
 
-//===================================================================
-
-type OptionalAuthBackendProxyOptions = {
+type OptionalAuthBackendProxyOptions = Readonly<{
   backendPath: string;
   request: NextRequest;
-};
+  requestId: string;
+  policy: OptionalAuthPolicy;
+}>;
 
 //===================================================================
 
-function appendSearchParams(path: string, search: string): string {
-  return search
-    ? `${path}${search.startsWith('?') ? search : `?${search}`}`
-    : path;
-}
-
-//===================================================================
-
-async function fetchOptionalAuthBackend(
-  request: NextRequest,
-  backendPath: string,
-  forwardCookie: boolean
-): Promise<Response> {
-  return fetch(createBackendApiUrl(backendPath), {
-    method: 'GET',
-    headers: createProxyHeaders(request, {
-      forwardAccept: true,
-      forwardContentType: false,
-      forwardCookie,
-    }),
-    cache: 'no-store',
-    signal: AbortSignal.timeout(OPTIONAL_AUTH_REQUEST_TIMEOUT_MS),
-  });
-}
-
-//===================================================================
-
-/**
- * Proxies public detail reads that may include user-specific fields, such as
- * `isFavorite`, when auth cookies are present. If stale cookies make the
- * backend reject the request, it retries once without cookies and returns the
- * public detail response instead of forcing a private auth refresh flow.
- */
 export async function proxyOptionalAuthBackendRequest({
   backendPath,
   request,
+  requestId,
+  policy,
 }: OptionalAuthBackendProxyOptions) {
-  const pathWithSearch = appendSearchParams(backendPath, request.nextUrl.search);
+  const startedAt = Date.now();
   let response: Response;
 
   try {
-    response = await fetchOptionalAuthBackend(request, pathWithSearch, true);
-  } catch {
-    return createProxyTransportErrorResponse({ request });
+    response = await executeBackendFetch({
+      request,
+      backendPath,
+      method: 'GET',
+      requestId,
+      timeoutMs: NEXT_API_TIMEOUTS_MS.privateRequest,
+      authCookieMode: 'access-only',
+      forwardAccept: true,
+    });
+
+    await validateBackendJsonResponse(response);
+
+    if (response.status === 401 && policy === 'public-fallback') {
+      response = await executeBackendFetch({
+        request,
+        backendPath,
+        method: 'GET',
+        requestId,
+        timeoutMs: NEXT_API_TIMEOUTS_MS.privateRequest,
+        authCookieMode: 'none',
+        forwardAccept: true,
+      });
+      await validateBackendJsonResponse(response);
+    }
+  } catch (error) {
+    const descriptor = describeProxyError(error);
+    return createProxyErrorResponse({ descriptor, requestId, request });
   }
 
-  if (response.status === 401) {
-    try {
-      response = await fetchOptionalAuthBackend(request, pathWithSearch, false);
-    } catch {
-      return createProxyTransportErrorResponse({ request });
-    }
-  }
+  logTransportRequest({
+    requestId,
+    method: 'GET',
+    path: backendPath,
+    destination: 'backend',
+    durationMs: Date.now() - startedAt,
+    status: response.status,
+    authMode: 'optional',
+    source: 'optional-auth-proxy',
+  });
 
   return createProxyResponse(response, {
     cacheControl: 'no-store',
-    copySetCookie: false,
+    requestId,
   });
 }

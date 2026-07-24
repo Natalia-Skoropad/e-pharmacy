@@ -1,0 +1,166 @@
+# @e-pharmacy/next-api
+
+Shared Next.js transport infrastructure for the client, pharmacy, and future admin applications.
+
+## Runtime policy
+
+- Next.js App Router.
+- Node.js runtime only for `server` and `proxy` entrypoints.
+- The package is a private workspace source package; applications transpile its TypeScript sources.
+- Browser code may import only `@e-pharmacy/next-api/browser`.
+- Route handlers may import only `@e-pharmacy/next-api/proxy`.
+- Server components and metadata routes may import `@e-pharmacy/next-api/server` for public backend reads.
+
+Edge route handlers are not supported because the proxy layer depends on Node/Next server APIs.
+
+## Public API
+
+```ts
+import { localApiRequest } from '@e-pharmacy/next-api/browser';
+
+import {
+  createTrustedBackendApiUrl,
+  publicBackendApiRequest,
+} from '@e-pharmacy/next-api/server';
+
+import {
+  createAuthProxyRoute,
+  createOptionalAuthGetProxyRoute,
+  createPrivateProxyRoute,
+  createPublicGetPrivatePostProxyRoute,
+  createPublicGetProxyRoute,
+} from '@e-pharmacy/next-api/proxy';
+```
+
+Low-level proxy executors, cookie functions, headers, environment parsing, logging, and request-body helpers are internal.
+
+## Browser contract
+
+`localApiRequest` accepts only relative same-origin paths under `/api/`. Absolute URLs, protocol-relative URLs, and non-BFF paths are rejected.
+
+Mutation requests automatically receive the BFF CSRF header. GET requests may be retried according to the shared API-client retry policy; mutations are not retried automatically.
+
+## Server contract
+
+`publicBackendApiRequest` is for public server-side reads. It does not read the current user's cookies and does not perform auth refresh.
+
+`createTrustedBackendApiUrl` accepts only a relative backend path beginning with one `/`. Absolute URLs, protocol-relative URLs, control characters, path traversal, and origin changes are rejected.
+
+Authenticated server-side reads require a separate explicit design and must not be added to the public helper implicitly.
+
+## Proxy access modes
+
+- `public`: no cookies; route-specific cache policy.
+- `optional`: access/legacy cookies only; explicit public fallback policy.
+- `private`: access/legacy cookies only; one refresh attempt on 401.
+- `auth`: explicit cookie mode per route. Login/register/password reset forward no auth cookies, logout uses access cookies, refresh uses only the refresh cookie.
+
+Unrelated browser cookies and refresh cookies are never forwarded to ordinary business endpoints.
+
+## Auth lifecycle
+
+```text
+login/register
+→ backend validates credentials
+→ trusted BFF response includes access + refresh tokens
+→ BFF runtime-validates tokens
+→ tokens are removed from the browser response body
+→ BFF writes httpOnly cookies
+```
+
+A successful auth response without valid tokens is converted to `502 INVALID_BACKEND_RESPONSE`; partial login success is forbidden.
+
+```text
+private request 401
+→ refresh-only backend request
+→ single-flight refresh per refresh token
+→ runtime token validation
+→ retry with new access token only
+→ update browser cookies
+```
+
+Refresh 401/403 and a repeated private 401/403 clear browser auth cookies. Timeout, network, and backend 5xx refresh failures do not clear the session automatically.
+
+Logout is local fail-closed: browser auth cookies are cleared even when the backend revoke request is temporarily unavailable. In that case the server-side session may remain active until expiry or a later successful logout-all request.
+
+The generic session revoke route is for other devices only. The backend rejects revocation of the current session with `409`; the current session must use the logout flow so BFF cookies are cleared consistently.
+
+## Request body policy
+
+The generic proxy is JSON/text-only and supports:
+
+- `application/json` and `+json`;
+- `text/plain`;
+- `application/x-www-form-urlencoded`.
+
+The same body contract applies to POST, PUT, PATCH, and DELETE. Multipart and binary requests return `415`. Request bodies are limited to 32 MiB and return `413` when exceeded.
+
+File uploads require a dedicated streaming/upload route factory rather than the generic JSON proxy.
+
+## Security
+
+- Mutations require the generated CSRF header and reject cross-site `Sec-Fetch-Site` or mismatched Origin/Referer values.
+- Dynamic params are parsed as Mongo-style entity IDs by default.
+- Enum path params must declare an `enumParams` allowlist.
+- Backend fetches use `redirect: 'manual'`.
+- The BFF marker and secret are generated server-side and cannot be overridden by the browser.
+- `BFF_PROXY_SECRET` and an HTTPS `API_BASE_URL` are required in production.
+- Request headers and response headers use explicit allowlists.
+- Every BFF request has an `X-Request-ID` that is sent to the backend and returned to the browser.
+- Logs never include request bodies, cookies, auth tokens, or the BFF secret.
+
+## Error contract
+
+BFF-generated errors use the canonical envelope:
+
+```json
+{
+  "status": "error",
+  "message": "...",
+  "code": "BAD_GATEWAY",
+  "requestId": "..."
+}
+```
+
+Main transport classifications:
+
+- `400 INVALID_ROUTE_PARAMETER`;
+- `403 CSRF_VALIDATION_FAILED`;
+- `413 PAYLOAD_TOO_LARGE`;
+- `415 UNSUPPORTED_MEDIA_TYPE`;
+- `500 CONFIGURATION_ERROR`;
+- `502 BAD_GATEWAY` or `INVALID_BACKEND_RESPONSE`;
+- `504 GATEWAY_TIMEOUT`.
+
+## Cache policy
+
+Private, auth, optional-auth, and failed public responses are `no-store`.
+
+Public GET routes define their own `revalidate` value. `false` or `0` means `no-store`. Health uses `no-store` so a cached success cannot hide an outage.
+
+## Required environment
+
+Server-only:
+
+- `API_BASE_URL`;
+- `BFF_PROXY_SECRET` in production;
+- `AUTH_COOKIE_DOMAIN` when a domain cookie is intentionally required;
+- `AUTH_COOKIE_SAME_SITE` (`lax`, `strict`, or `none`);
+- `NODE_ENV`.
+
+`BFF_PROXY_SECRET` must never use a `NEXT_PUBLIC_` prefix.
+
+## Checks
+
+```bash
+pnpm --filter @e-pharmacy/next-api lint
+pnpm --filter @e-pharmacy/next-api type-check
+pnpm --filter @e-pharmacy/next-api test
+pnpm --filter @e-pharmacy/next-api test:integration
+pnpm --filter @e-pharmacy/next-api test:security
+pnpm --filter @e-pharmacy/next-api build
+
+pnpm check:next-api-boundaries
+pnpm check:next-api-routes
+pnpm check:next-api-contracts
+```

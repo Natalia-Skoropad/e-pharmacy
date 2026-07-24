@@ -15,7 +15,8 @@
     "./clients": "./src/clients/index.ts",
     "./status": "./src/status/index.ts",
     "./cart": "./src/cart/index.ts",
-    "./navigation": "./src/navigation/index.ts"
+    "./navigation": "./src/navigation/index.ts",
+    "./notes": "./src/notes/index.ts"
   },
   "scripts": {
     "lint": "tsc --noEmit",

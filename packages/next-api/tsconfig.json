@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src"],
+  "include": ["src", "test", "test"],
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {
     "paths": {
@@ -11,7 +11,9 @@
       "@e-pharmacy/config/*": [
         "../config/src/*/index.ts",
         "../config/src/*.ts"
-      ]
-    }
+      ],
+      "@e-pharmacy/types/*": ["../types/src/*/index.ts", "../types/src/*.ts"]
+    },
+    "allowImportingTsExtensions": true
   }
 }

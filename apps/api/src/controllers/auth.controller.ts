@@ -1,6 +1,13 @@
 import type { Request, Response } from 'express';
 
 import { REFRESH_TOKEN_COOKIE_NAME } from '../constants/auth';
+
+import {
+  BFF_AUTH_PROXY_HEADER_NAME,
+  BFF_AUTH_PROXY_MARKER_VALUE,
+  BFF_PROXY_SECRET_HEADER_NAME,
+} from '../constants/bff';
+
 import { env } from '../config/env';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
@@ -57,11 +64,11 @@ function getSessionContext(req: Request): SessionContext {
 //===============================================================
 
 function isNextAuthProxyRequest(req: Request): boolean {
-  const marker = req.headers['x-e-pharmacy-auth-proxy'];
-  const secret = req.headers['x-e-pharmacy-bff-secret'];
+  const marker = req.headers[BFF_AUTH_PROXY_HEADER_NAME];
+  const secret = req.headers[BFF_PROXY_SECRET_HEADER_NAME];
   const configuredSecret = env.BFF_PROXY_SECRET?.trim();
 
-  if (marker !== 'next-bff') return false;
+  if (marker !== BFF_AUTH_PROXY_MARKER_VALUE) return false;
 
   if (!configuredSecret) {
     return env.NODE_ENV !== 'production';
@@ -377,6 +384,14 @@ export async function revokeActiveSession(
   const userId = req.user?.id;
   if (!userId) return;
   const sessionId = String(req.params.sessionId ?? '');
+
+  if (req.authSessionId && sessionId === req.authSessionId) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'Use the logout endpoint to revoke the current session.'
+    );
+  }
+
   await revokeUserSessionService(userId, sessionId);
   sendSuccessResponse({
     res,

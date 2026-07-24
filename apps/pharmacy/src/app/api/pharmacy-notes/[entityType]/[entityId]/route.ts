@@ -1,22 +1,28 @@
+import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
+import { PHARMACY_NOTE_ENTITY_TYPES } from '@e-pharmacy/config/notes';
 import { createPrivateProxyRoute } from '@e-pharmacy/next-api/proxy';
+import type { PharmacyNoteEntityType } from '@e-pharmacy/types/notes';
 
 //===================================================================
 
-type Params = { entityType: string; entityId: string };
+type Params = { entityType: PharmacyNoteEntityType; entityId: string };
 
-//===================================================================
-
-const backendPath = ({ entityType, entityId }: Params) =>
-  `/pharmacy-notes/${entityType}/${entityId}`;
+const routeOptions = {
+  backendPath: ({ entityType, entityId }: Params) =>
+    API_ROUTES.pharmacyNotes.list(entityType, entityId),
+  enumParams: { entityType: PHARMACY_NOTE_ENTITY_TYPES },
+} as const;
 
 //===================================================================
 
 export const GET = createPrivateProxyRoute<Params>({
-  backendPath,
+  ...routeOptions,
   method: 'GET',
 });
 
+//===================================================================
+
 export const POST = createPrivateProxyRoute<Params>({
-  backendPath,
+  ...routeOptions,
   method: 'POST',
 });

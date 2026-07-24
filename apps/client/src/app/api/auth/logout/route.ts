@@ -1,8 +1,10 @@
-import { AUTH_PROXY_ROUTES, createAuthProxyRoute } from '@e-pharmacy/next-api/proxy';
+import { authRoutes } from '@e-pharmacy/api-client/contracts';
+import { createAuthProxyRoute } from '@e-pharmacy/next-api/proxy';
 
 //===================================================================
 
 export const POST = createAuthProxyRoute({
-  backendPath: AUTH_PROXY_ROUTES.logout,
+  backendPath: authRoutes.logout,
   markerAction: 'delete',
+  authCookieMode: 'access-only',
 });

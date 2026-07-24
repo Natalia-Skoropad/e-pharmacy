@@ -18,7 +18,7 @@
     "type-check:api": "pnpm --filter @e-pharmacy/api type-check",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check:before-deploy": "pnpm check:api-boundaries && pnpm check:validation-contracts && pnpm check:type-contracts && pnpm check:ui-boundaries && pnpm check:ui-styles && pnpm lint && pnpm type-check && pnpm test && pnpm build",
+    "check:before-deploy": "pnpm check:api-boundaries && pnpm check:next-api-boundaries && pnpm check:next-api-routes && pnpm check:next-api-contracts && pnpm check:validation-contracts && pnpm check:type-contracts && pnpm check:ui-boundaries && pnpm check:ui-styles && pnpm lint && pnpm type-check && pnpm test && pnpm build",
     "check:client": "pnpm --filter @e-pharmacy/client lint && pnpm --filter @e-pharmacy/client type-check && pnpm --filter @e-pharmacy/client build",
     "check:api": "pnpm check:api-boundaries && pnpm --filter @e-pharmacy/api lint && pnpm --filter @e-pharmacy/api type-check && pnpm --filter @e-pharmacy/api test && pnpm --filter @e-pharmacy/api build",
     "lint:packages": "turbo lint --filter='./packages/*'",
@@ -35,7 +35,10 @@
     "check:ui-styles": "node scripts/check-ui-style-contracts.mjs",
     "check:ui-boundaries": "node scripts/check-ui-boundaries.mjs",
     "check:type-contracts": "node scripts/check-types-public-api.mjs && node scripts/check-types-unused-exports.mjs && node scripts/check-type-contract-parity.mjs",
-    "check:types-unused-exports": "node scripts/check-types-unused-exports.mjs"
+    "check:types-unused-exports": "node scripts/check-types-unused-exports.mjs",
+    "check:next-api-boundaries": "node scripts/check-next-api-boundaries.mjs",
+    "check:next-api-routes": "node scripts/check-next-api-routes.mjs",
+    "check:next-api-contracts": "node scripts/check-next-api-contracts.mjs"
   },
   "devDependencies": {
     "turbo": "latest",

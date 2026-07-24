@@ -1,4 +1,5 @@
-import { AUTH_PROXY_ROUTES, createAuthProxyRoute } from '@e-pharmacy/next-api/proxy';
+import { authRoutes } from '@e-pharmacy/api-client/contracts';
+import { createAuthProxyRoute } from '@e-pharmacy/next-api/proxy';
 
 //===================================================================
 
@@ -9,5 +10,5 @@ export const maxDuration = 30;
 //===================================================================
 
 export const POST = createAuthProxyRoute({
-  backendPath: AUTH_PROXY_ROUTES.passwordResetConfirm,
+  backendPath: authRoutes.passwordResetConfirm,
 });

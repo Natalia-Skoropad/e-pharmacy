@@ -7,6 +7,7 @@ import { env } from './config/env';
 import { errorMiddleware } from './middlewares/error.middleware';
 import { notFoundMiddleware } from './middlewares/notFound.middleware';
 import { validateMutationOrigin } from './middlewares/origin.middleware';
+import { attachRequestContext } from './middlewares/request-context.middleware';
 import { routes } from './routes';
 
 //===============================================================
@@ -48,6 +49,7 @@ app.use(
 
 //===============================================================
 
+app.use(attachRequestContext);
 app.use(validateMutationOrigin);
 
 //===============================================================

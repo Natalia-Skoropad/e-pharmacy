@@ -1,65 +1,139 @@
 import 'server-only';
-import { NextResponse, type NextRequest } from 'next/server';
-
-import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
-import { createBackendApiUrl } from '../server/backend-api-request';
-import { createProxyTransportErrorResponse } from './proxy-transport-error';
-import { createProxyHeaders, getProxyBody } from './proxy-headers';
-
-import {
-  clearClientAuthCookies,
-  extractTokensFromResponseBody,
-  setClientAuthCookies,
-} from './proxy-auth-cookies';
+import type { NextRequest } from 'next/server';
 
 import type { HttpMethod } from '@e-pharmacy/api-client/core';
 
-//===================================================================
+import { executeBackendFetch } from '../internal/backend-fetch';
+import { isJsonContentType } from '../internal/backend-response';
+import type { AuthCookieForwardMode } from '../internal/cookie-header';
 
-const AUTH_PROXY_TIMEOUT_MS = 20_000;
+import {
+  clearClientAuthCookies,
+  setClientAuthCookies,
+} from '../internal/auth-cookies';
+
+import { transformAuthResponseBody } from '../internal/auth-tokens';
+import { createTextProxyResponse } from '../internal/proxy-response';
+import { readProxyRequestBody } from '../internal/request-body';
+
+import {
+  createInvalidBackendResponse,
+  createProxyErrorResponse,
+  describeProxyError,
+} from '../internal/transport-error';
+
+import { NEXT_API_TIMEOUTS_MS } from '../internal/transport-policy';
+import { logTransportRequest } from '../observability/logger';
 
 //===================================================================
 
 export type AuthMarkerAction = 'set' | 'delete';
 
-//===================================================================
-
-type AuthProxyOptions = {
+type AuthProxyOptions = Readonly<{
   backendPath: string;
   request: NextRequest;
+  requestId: string;
   method?: Extract<HttpMethod, 'GET' | 'POST' | 'PATCH'>;
   markerAction?: AuthMarkerAction;
-};
+  authCookieMode: AuthCookieForwardMode;
+}>;
 
 //===================================================================
 
-async function createAuthProxyResponse(
-  response: Response,
-  request: NextRequest,
-  markerAction?: AuthMarkerAction
-): Promise<NextResponse> {
-  const contentType = response.headers.get('content-type');
-  const rawBody = await response.text();
-  const { body, tokens } = extractTokensFromResponseBody(rawBody);
+export async function proxyAuthRequest({
+  backendPath,
+  request,
+  requestId,
+  method = 'POST',
+  markerAction,
+  authCookieMode,
+}: AuthProxyOptions) {
+  const startedAt = Date.now();
+  let response: Response;
 
-  const nextResponse = new NextResponse(body || null, {
-    status: response.status,
-  });
+  try {
+    const body = await readProxyRequestBody(request, method);
 
-  if (contentType) {
-    nextResponse.headers.set('Content-Type', contentType);
+    response = await executeBackendFetch({
+      request,
+      backendPath,
+      method,
+      requestId,
+      timeoutMs: NEXT_API_TIMEOUTS_MS.authRequest,
+      authCookieMode,
+      body,
+      includeAuthProxyMarker: true,
+    });
+  } catch (error) {
+    const descriptor = describeProxyError(error);
+
+    logTransportRequest({
+      requestId,
+      method,
+      path: backendPath,
+      destination: 'backend',
+      durationMs: Date.now() - startedAt,
+      status: descriptor.status,
+      authMode: 'auth',
+      transportErrorCode: descriptor.code,
+      source: 'auth-proxy',
+    });
+
+    return createProxyErrorResponse({
+      descriptor,
+      requestId,
+      request,
+      clearAuthCookies: markerAction === 'delete',
+    });
   }
 
-  nextResponse.headers.set('Cache-Control', 'no-store');
+  const contentType = response.headers.get('content-type');
+  const rawBody = await response.text();
+  const transformed = transformAuthResponseBody(rawBody);
 
-  // The BFF is the only component that writes browser auth cookies.
-  // Backend Set-Cookie headers are intentionally not forwarded because doing
-  // both creates duplicate domain/path variants and makes refresh behavior
-  // depend on browser cookie ordering.
+  if (
+    (response.status !== 204 && !isJsonContentType(contentType)) ||
+    transformed.issue === 'invalid-json'
+  ) {
+    return createInvalidBackendResponse({
+      requestId,
+      request,
+      clearAuthCookies: markerAction === 'set',
+    });
+  }
 
-  if (response.ok && markerAction === 'set') {
+  if (response.ok && markerAction === 'set' && !transformed.tokens) {
+    logTransportRequest({
+      requestId,
+      method,
+      path: backendPath,
+      destination: 'backend',
+      durationMs: Date.now() - startedAt,
+      status: 502,
+      authMode: 'auth',
+      transportErrorCode: 'INVALID_BACKEND_RESPONSE',
+      source: 'auth-proxy',
+    });
+
+    return createInvalidBackendResponse({
+      requestId,
+      request,
+      clearAuthCookies: true,
+      message:
+        'Authentication succeeded without a valid session token response.',
+    });
+  }
+
+  const safeBody = transformed.body || rawBody;
+
+  const nextResponse = createTextProxyResponse(response, safeBody, {
+    cacheControl: 'no-store',
+    requestId,
+  });
+
+  if (response.ok && markerAction === 'set' && transformed.tokens) {
     clearClientAuthCookies(nextResponse, request);
-    setClientAuthCookies(nextResponse, request, tokens);
+    setClientAuthCookies(nextResponse, request, transformed.tokens);
   } else if (
     markerAction === 'set' &&
     (response.status === 401 || response.status === 403)
@@ -71,59 +145,16 @@ async function createAuthProxyResponse(
     clearClientAuthCookies(nextResponse, request);
   }
 
+  logTransportRequest({
+    requestId,
+    method,
+    path: backendPath,
+    destination: 'backend',
+    durationMs: Date.now() - startedAt,
+    status: response.status,
+    authMode: 'auth',
+    source: 'auth-proxy',
+  });
+
   return nextResponse;
 }
-
-//===================================================================
-
-export async function proxyAuthRequest({
-  backendPath,
-  request,
-  method = 'POST',
-  markerAction,
-}: AuthProxyOptions) {
-  let response: Response;
-
-  try {
-    response = await fetch(createBackendApiUrl(backendPath), {
-      method,
-      headers: createProxyHeaders(request, {
-        authCookieMode:
-          backendPath === API_ROUTES.auth.refresh ? 'refresh-only' : 'all',
-      }),
-      body: await getProxyBody(request, method),
-      cache: 'no-store',
-      signal: AbortSignal.timeout(AUTH_PROXY_TIMEOUT_MS),
-    });
-  } catch (error) {
-    console.error('[auth-proxy] Backend request failed', {
-      backendPath,
-      method,
-      apiBaseUrlConfigured: Boolean(process.env.API_BASE_URL?.trim()),
-      error,
-    });
-
-    return createProxyTransportErrorResponse({
-      request,
-      clearAuthCookies: markerAction === 'delete',
-    });
-  }
-
-  return createAuthProxyResponse(response, request, markerAction);
-}
-
-//===================================================================
-
-export const AUTH_PROXY_ROUTES = {
-  register: API_ROUTES.auth.register,
-  login: API_ROUTES.auth.login,
-  logout: API_ROUTES.auth.logout,
-  logoutAll: API_ROUTES.auth.logoutAll,
-  refresh: API_ROUTES.auth.refresh,
-  current: API_ROUTES.auth.current,
-  password: API_ROUTES.auth.password,
-  sessions: API_ROUTES.auth.sessions,
-  session: API_ROUTES.auth.session,
-  passwordResetRequest: API_ROUTES.auth.passwordResetRequest,
-  passwordResetConfirm: API_ROUTES.auth.passwordResetConfirm,
-} as const;

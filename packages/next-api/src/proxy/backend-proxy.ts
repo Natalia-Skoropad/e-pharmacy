@@ -1,227 +1,306 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
-import { type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
+import { authRoutes } from '@e-pharmacy/api-client/contracts';
 import { REFRESH_TOKEN_COOKIE_NAME } from '@e-pharmacy/config/auth';
 import type { HttpMethod } from '@e-pharmacy/api-client/core';
 
-import { createBackendApiUrl } from '../server/backend-api-request';
-import { createProxyHeaders, getProxyBody } from './proxy-headers';
+import { executeBackendFetch } from '../internal/backend-fetch';
+import { validateBackendJsonResponse } from '../internal/backend-response';
 
 import {
   clearClientAuthCookies,
-  createCookieHeaderWithTokens,
-  extractTokensFromResponseBody,
   setClientAuthCookies,
-} from './proxy-auth-cookies';
+} from '../internal/auth-cookies';
 
-import { createProxyResponse } from './proxy-response';
-import { createProxyTransportErrorResponse } from './proxy-transport-error';
+import {
+  transformAuthResponseBody,
+  type AuthProxyTokens,
+} from '../internal/auth-tokens';
+
+import {
+  createPrivateCookieHeaderWithAccessToken,
+  parseCookieHeader,
+} from '../internal/cookie-header';
+
+import { createProxyResponse } from '../internal/proxy-response';
+import { readProxyRequestBody } from '../internal/request-body';
+
+import {
+  createInvalidBackendResponse,
+  createProxyErrorResponse,
+  describeProxyError,
+} from '../internal/transport-error';
+
+import { NEXT_API_TIMEOUTS_MS } from '../internal/transport-policy';
+import { logTransportRequest } from '../observability/logger';
 
 //===================================================================
 
-type BackendProxyOptions = {
+type BackendProxyOptions = Readonly<{
   backendPath: string;
   request: NextRequest;
+  requestId: string;
   method?: HttpMethod;
   clearAuthCookiesOnSuccess?: boolean;
-  clearAuthCookiesOnRefreshFailure?: boolean;
-};
+}>;
 
-type RefreshResult = {
+type RefreshResult = Readonly<{
   response: Response;
-  tokens: ReturnType<typeof extractTokensFromResponseBody>['tokens'];
-};
-
-//===================================================================
-
-const PRIVATE_REQUEST_TIMEOUT_MS = 12_000;
-const AUTH_REFRESH_TIMEOUT_MS = 8_000;
-const REFRESH_PROMISE_FALLBACK_KEY = 'anonymous';
-
-//===================================================================
+  tokens?: AuthProxyTokens;
+  invalidTokenResponse: boolean;
+}>;
 
 const refreshPromises = new Map<string, Promise<RefreshResult>>();
 
 //===================================================================
 
-function appendSearchParams(path: string, search: string): string {
-  return search
-    ? `${path}${search.startsWith('?') ? search : `?${search}`}`
-    : path;
+function getRefreshToken(request: NextRequest): string | undefined {
+  return parseCookieHeader(request.headers.get('cookie') ?? '').get(
+    REFRESH_TOKEN_COOKIE_NAME
+  );
 }
 
 //===================================================================
 
-function getRefreshFingerprint(request: NextRequest): string {
-  const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE_NAME)?.value;
-  const cookieHeader = request.headers.get('cookie') ?? '';
-  const source = refreshToken || cookieHeader || REFRESH_PROMISE_FALLBACK_KEY;
-
-  return createHash('sha256').update(source).digest('hex');
+function getRefreshFingerprint(refreshToken: string): string {
+  return createHash('sha256').update(refreshToken).digest('hex');
 }
 
 //===================================================================
 
 async function refreshAuthCookies(
-  request: NextRequest
+  request: NextRequest,
+  requestId: string,
+  refreshToken: string
 ): Promise<RefreshResult> {
-  const refreshFingerprint = getRefreshFingerprint(request);
-  const existingRefreshPromise = refreshPromises.get(refreshFingerprint);
+  const fingerprint = getRefreshFingerprint(refreshToken);
+  const existing = refreshPromises.get(fingerprint);
+  if (existing) return existing;
 
-  if (existingRefreshPromise) return existingRefreshPromise;
-
-  const nextRefreshPromise = fetch(
-    createBackendApiUrl(API_ROUTES.auth.refresh),
-    {
-      method: 'POST',
-      headers: createProxyHeaders(request, { authCookieMode: 'refresh-only' }),
-      cache: 'no-store',
-      signal: AbortSignal.timeout(AUTH_REFRESH_TIMEOUT_MS),
-    }
-  )
+  const nextPromise = executeBackendFetch({
+    request,
+    backendPath: authRoutes.refresh,
+    method: 'POST',
+    requestId,
+    timeoutMs: NEXT_API_TIMEOUTS_MS.authRefresh,
+    authCookieMode: 'refresh-only',
+    includeAuthProxyMarker: true,
+    forwardSearchParams: false,
+  })
     .then(async (response) => {
-      const rawBody = await response.clone().text();
-      const { tokens } = extractTokensFromResponseBody(rawBody);
+      if (!response.ok) {
+        return { response, invalidTokenResponse: false };
+      }
 
-      return { response, tokens };
+      const transformed = transformAuthResponseBody(
+        await response.clone().text()
+      );
+
+      return {
+        response,
+        tokens: transformed.tokens,
+        invalidTokenResponse: !transformed.tokens,
+      };
     })
     .finally(() => {
-      refreshPromises.delete(refreshFingerprint);
+      refreshPromises.delete(fingerprint);
     });
 
-  refreshPromises.set(refreshFingerprint, nextRefreshPromise);
-
-  return nextRefreshPromise;
+  refreshPromises.set(fingerprint, nextPromise);
+  return nextPromise;
 }
 
 //===================================================================
 
-async function fetchBackend(
-  request: NextRequest,
-  backendPath: string,
-  method: HttpMethod,
-  body: string | undefined,
-  cookieHeader?: string
-): Promise<Response> {
-  const headers = createProxyHeaders(request);
-
-  if (cookieHeader) {
-    headers.set('Cookie', cookieHeader);
-  }
-
-  return fetch(createBackendApiUrl(backendPath), {
-    method,
-    headers,
-    body,
-    cache: 'no-store',
-    signal: AbortSignal.timeout(PRIVATE_REQUEST_TIMEOUT_MS),
-  });
-}
-
-//===================================================================
-
-/**
- * Proxies private same-origin `/api/*` requests to the backend API.
- * It forwards httpOnly cookies to the backend. If the access token is expired,
- * it refreshes once through the backend and retries with the fresh token before
- * returning the response to the browser.
- */
 export async function proxyBackendRequest({
   backendPath,
   request,
+  requestId,
   method = 'GET',
   clearAuthCookiesOnSuccess = false,
-  clearAuthCookiesOnRefreshFailure = false,
 }: BackendProxyOptions) {
-  const body = await getProxyBody(request, method);
-
-  const pathWithSearch =
-    method === 'GET'
-      ? appendSearchParams(backendPath, request.nextUrl.search)
-      : backendPath;
-
+  const startedAt = Date.now();
+  let body: string | undefined;
   let response: Response;
 
   try {
-    response = await fetchBackend(request, pathWithSearch, method, body);
-  } catch {
-    return createProxyTransportErrorResponse({ request });
+    body = await readProxyRequestBody(request, method);
+    response = await executeBackendFetch({
+      request,
+      backendPath,
+      method,
+      requestId,
+      timeoutMs: NEXT_API_TIMEOUTS_MS.privateRequest,
+      authCookieMode: 'access-only',
+      body,
+    });
+  } catch (error) {
+    const descriptor = describeProxyError(error);
+
+    logTransportRequest({
+      requestId,
+      method,
+      path: backendPath,
+      destination: 'backend',
+      durationMs: Date.now() - startedAt,
+      status: descriptor.status,
+      authMode: 'private',
+      transportErrorCode: descriptor.code,
+      source: 'private-proxy',
+    });
+
+    return createProxyErrorResponse({ descriptor, requestId, request });
+  }
+
+  try {
+    await validateBackendJsonResponse(response);
+  } catch (error) {
+    const descriptor = describeProxyError(error);
+    return createProxyErrorResponse({ descriptor, requestId, request });
   }
 
   if (response.status !== 401) {
-    const nextResponse = await createProxyResponse(response, {
+    const nextResponse = createProxyResponse(response, {
       cacheControl: 'no-store',
-      copySetCookie: false,
+      requestId,
     });
 
     if (response.ok && clearAuthCookiesOnSuccess) {
       clearClientAuthCookies(nextResponse, request);
     }
 
+    logTransportRequest({
+      requestId,
+      method,
+      path: backendPath,
+      destination: 'backend',
+      durationMs: Date.now() - startedAt,
+      status: response.status,
+      authMode: 'private',
+      source: 'private-proxy',
+    });
+
+    return nextResponse;
+  }
+
+  const refreshToken = getRefreshToken(request);
+
+  if (!refreshToken) {
+    const nextResponse = createProxyResponse(response, {
+      cacheControl: 'no-store',
+      requestId,
+    });
+    clearClientAuthCookies(nextResponse, request);
     return nextResponse;
   }
 
   let refreshResult: RefreshResult;
 
   try {
-    refreshResult = await refreshAuthCookies(request);
-  } catch {
-    return createProxyTransportErrorResponse({
-      request,
-      clearAuthCookies: clearAuthCookiesOnRefreshFailure,
+    refreshResult = await refreshAuthCookies(request, requestId, refreshToken);
+  } catch (error) {
+    const descriptor = describeProxyError(error);
+
+    logTransportRequest({
+      requestId,
+      method,
+      path: backendPath,
+      destination: 'backend',
+      durationMs: Date.now() - startedAt,
+      status: descriptor.status,
+      authMode: 'private',
+      refreshPerformed: true,
+      transportErrorCode: descriptor.code,
+      source: 'private-proxy',
     });
+
+    // Temporary refresh transport failures must not destroy browser cookies.
+    return createProxyErrorResponse({ descriptor, requestId, request });
   }
 
-  const { response: refreshResponse, tokens } = refreshResult;
-
-  if (!refreshResponse.ok) {
-    const nextResponse = await createProxyResponse(response, {
+  if (!refreshResult.response.ok) {
+    const nextResponse = createProxyResponse(refreshResult.response, {
       cacheControl: 'no-store',
-      copySetCookie: false,
+      requestId,
     });
 
-    if (clearAuthCookiesOnRefreshFailure) {
+    if (
+      refreshResult.response.status === 401 ||
+      refreshResult.response.status === 403
+    ) {
       clearClientAuthCookies(nextResponse, request);
     }
 
     return nextResponse;
   }
 
-  const cookieHeader = createCookieHeaderWithTokens(request, tokens);
+  if (refreshResult.invalidTokenResponse || !refreshResult.tokens) {
+    return createInvalidBackendResponse({
+      requestId,
+      request,
+      clearAuthCookies: true,
+      message: 'The session refresh response did not contain valid tokens.',
+    });
+  }
+
+  const cookieHeader = createPrivateCookieHeaderWithAccessToken(
+    request.headers.get('cookie'),
+    refreshResult.tokens.accessToken
+  );
+
   let retryResponse: Response;
 
   try {
-    retryResponse = await fetchBackend(
+    retryResponse = await executeBackendFetch({
       request,
-      pathWithSearch,
+      backendPath,
       method,
+      requestId,
+      timeoutMs: NEXT_API_TIMEOUTS_MS.privateRequest,
+      authCookieMode: 'none',
+      cookieHeaderOverride: cookieHeader,
       body,
-      cookieHeader
-    );
-  } catch {
-    return createProxyTransportErrorResponse({ request });
+    });
+  } catch (error) {
+    const descriptor = describeProxyError(error);
+    return createProxyErrorResponse({ descriptor, requestId, request });
   }
 
-  const nextResponse = await createProxyResponse(retryResponse, {
+  try {
+    await validateBackendJsonResponse(retryResponse);
+  } catch (error) {
+    const descriptor = describeProxyError(error);
+    return createProxyErrorResponse({ descriptor, requestId, request });
+  }
+
+  const nextResponse = createProxyResponse(retryResponse, {
     cacheControl: 'no-store',
-    copySetCookie: false,
+    requestId,
   });
 
-  setClientAuthCookies(nextResponse, request, tokens);
+  if (retryResponse.status === 401 || retryResponse.status === 403) {
+    clearClientAuthCookies(nextResponse, request);
+  } else {
+    setClientAuthCookies(nextResponse, request, refreshResult.tokens);
+  }
 
   if (retryResponse.ok && clearAuthCookiesOnSuccess) {
     clearClientAuthCookies(nextResponse, request);
-    return nextResponse;
   }
 
-  if (
-    retryResponse.status === 401 &&
-    clearAuthCookiesOnRefreshFailure
-  ) {
-    clearClientAuthCookies(nextResponse, request);
-  }
+  logTransportRequest({
+    requestId,
+    method,
+    path: backendPath,
+    destination: 'backend',
+    durationMs: Date.now() - startedAt,
+    status: retryResponse.status,
+    authMode: 'private',
+    refreshPerformed: true,
+    source: 'private-proxy',
+  });
 
   return nextResponse;
 }

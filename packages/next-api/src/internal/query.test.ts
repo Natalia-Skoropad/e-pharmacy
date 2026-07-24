@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+import { appendSearchParams } from './query.ts';
+
+//===================================================================
+
+test('appends search params to a path without query', () => {
+  assert.equal(
+    appendSearchParams('/products', '?page=2&search=%D0%BB%D1%96%D0%BA%D0%B8'),
+    '/products?page=2&search=%D0%BB%D1%96%D0%BA%D0%B8'
+  );
+});
+
+//===================================================================
+
+test('merges search params with an existing query', () => {
+  assert.equal(
+    appendSearchParams('/products?scope=public', '?page=2&page=3'),
+    '/products?scope=public&page=2&page=3'
+  );
+});
+
+//===================================================================
+
+test('keeps the original path when search is empty', () => {
+  assert.equal(
+    appendSearchParams('/products?scope=public', ''),
+    '/products?scope=public'
+  );
+});

@@ -1,4 +1,11 @@
+import type { PharmacyNoteEntityType } from '@e-pharmacy/types/notes';
 import type { EntityId } from '@e-pharmacy/types/primitives';
+
+import { encodeRouteSegment } from './route-segment';
+
+//===================================================================
+
+const segment = (value: string): string => encodeRouteSegment(value);
 
 //===================================================================
 
@@ -16,14 +23,16 @@ export const storefrontRoutes = {
     favorites: '/pharmacies/favorites',
     favoriteIds: '/pharmacies/favorites/ids',
     filters: '/pharmacies/filters',
-
-    details: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}`,
+    details: (pharmacyId: EntityId) => `/pharmacies/${segment(pharmacyId)}`,
 
     checkoutDetails: (pharmacyId: EntityId) =>
-      `/pharmacies/${pharmacyId}/checkout-details`,
+      `/pharmacies/${segment(pharmacyId)}/checkout-details`,
 
-    reviews: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}/reviews`,
-    favorite: (pharmacyId: EntityId) => `/pharmacies/${pharmacyId}/favorite`,
+    reviews: (pharmacyId: EntityId) =>
+      `/pharmacies/${segment(pharmacyId)}/reviews`,
+
+    favorite: (pharmacyId: EntityId) =>
+      `/pharmacies/${segment(pharmacyId)}/favorite`,
   },
 
   products: {
@@ -31,26 +40,28 @@ export const storefrontRoutes = {
     favorites: '/products/favorites',
     favoriteIds: '/products/favorites/ids',
     filters: '/products/filters',
-    details: (productId: EntityId) => `/products/${productId}`,
+    details: (productId: EntityId) => `/products/${segment(productId)}`,
 
     addToMyPharmacy: (productId: EntityId) =>
-      `/products/${productId}/my-pharmacy`,
+      `/products/${segment(productId)}/my-pharmacy`,
 
     removeFromMyPharmacy: (productId: EntityId) =>
-      `/products/${productId}/my-pharmacy`,
+      `/products/${segment(productId)}/my-pharmacy`,
 
     stockMovements: (productId: EntityId) =>
-      `/products/${productId}/stock-movements`,
+      `/products/${segment(productId)}/stock-movements`,
 
-    reviews: (productId: EntityId) => `/products/${productId}/reviews`,
-    favorite: (productId: EntityId) => `/products/${productId}/favorite`,
+    reviews: (productId: EntityId) => `/products/${segment(productId)}/reviews`,
+
+    favorite: (productId: EntityId) =>
+      `/products/${segment(productId)}/favorite`,
   },
 
   cart: {
     current: '/cart',
     addItem: '/cart/items',
-    updateItem: (cartItemId: EntityId) => `/cart/items/${cartItemId}`,
-    removeItem: (cartItemId: EntityId) => `/cart/items/${cartItemId}`,
+    updateItem: (cartItemId: EntityId) => `/cart/items/${segment(cartItemId)}`,
+    removeItem: (cartItemId: EntityId) => `/cart/items/${segment(cartItemId)}`,
     clear: '/cart/clear',
   },
 
@@ -58,21 +69,34 @@ export const storefrontRoutes = {
     checkout: '/orders/checkout',
     list: '/orders',
     salesStatistics: '/orders/sales-statistics',
-    details: (orderId: EntityId) => `/orders/${orderId}`,
-    comments: (orderId: EntityId) => `/orders/${orderId}/comments`,
+    details: (orderId: EntityId) => `/orders/${segment(orderId)}`,
+    status: (orderId: EntityId) => `/orders/${segment(orderId)}/status`,
+    comments: (orderId: EntityId) => `/orders/${segment(orderId)}/comments`,
 
     comment: (orderId: EntityId, commentId: EntityId) =>
-      `/orders/${orderId}/comments/${commentId}`,
+      `/orders/${segment(orderId)}/comments/${segment(commentId)}`,
   },
 
   clients: {
     list: '/clients',
-    details: (clientId: EntityId) => `/clients/${clientId}`,
-    products: (clientId: EntityId) => `/clients/${clientId}/products`,
+    details: (clientId: EntityId) => `/clients/${segment(clientId)}`,
+    products: (clientId: EntityId) => `/clients/${segment(clientId)}/products`,
   },
 
   productRequests: {
     list: '/product-requests',
-    details: (requestId: EntityId) => `/product-requests/${requestId}`,
+    details: (requestId: EntityId) => `/product-requests/${segment(requestId)}`,
+  },
+
+  pharmacyNotes: {
+    list: (entityType: PharmacyNoteEntityType, entityId: EntityId) =>
+      `/pharmacy-notes/${segment(entityType)}/${segment(entityId)}`,
+
+    details: (
+      entityType: PharmacyNoteEntityType,
+      entityId: EntityId,
+      noteId: EntityId
+    ) =>
+      `/pharmacy-notes/${segment(entityType)}/${segment(entityId)}/${segment(noteId)}`,
   },
 } as const;

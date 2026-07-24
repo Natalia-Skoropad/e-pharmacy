@@ -13,7 +13,20 @@ import {
   type RequestOptions,
 } from '@e-pharmacy/api-client/core';
 
-import { logApiRequest } from '../observability/request-logger';
+import {
+  BFF_CSRF_HEADER_NAME,
+  BFF_CSRF_HEADER_VALUE,
+} from '../internal/bff-contract';
+
+import { createRequestId } from '../internal/request-id';
+import { logTransportRequest } from '../observability/logger';
+import { assertLocalApiPath } from './local-api-path';
+
+//===================================================================
+
+function isMutationMethod(method: string): boolean {
+  return method !== 'GET';
+}
 
 //===================================================================
 
@@ -28,13 +41,23 @@ export async function localApiRequest<TData>(
     credentials = 'same-origin',
     timeoutMs = DEFAULT_API_REQUEST_TIMEOUT_MS,
     retry,
+    redirect = 'manual',
   }: RequestOptions = {}
 ): Promise<TData> {
+  assertLocalApiPath(path);
+
+  const requestId = createRequestId();
   const requestHeaders = new Headers(headers);
+
+  if (isMutationMethod(method)) {
+    requestHeaders.set(BFF_CSRF_HEADER_NAME, BFF_CSRF_HEADER_VALUE);
+  }
+
   const requestBody = prepareRequestBody(body, requestHeaders);
   const retryConfig = getRetryConfig(method, retry);
   const startedAt = Date.now();
   let response: Response;
+  let retryCount = 0;
 
   for (let attempt = 1; ; attempt += 1) {
     try {
@@ -43,24 +66,30 @@ export async function localApiRequest<TData>(
         headers: requestHeaders,
         body: requestBody,
         cache,
+        redirect,
         signal: getRequestSignal(signal, timeoutMs),
         credentials,
       });
     } catch (error) {
       if (attempt < retryConfig.attempts && !signal) {
+        retryCount += 1;
         await wait(retryConfig.delayMs);
         continue;
       }
 
       const transportError = toTransportError(error, { url: path, method });
 
-      logApiRequest({
+      logTransportRequest({
+        requestId,
         method,
         path,
         destination: 'bff',
         durationMs: Date.now() - startedAt,
         status: transportError.status,
-        cache,
+        retryCount,
+        cachePolicy: cache,
+        authMode: 'private',
+        transportErrorCode: transportError.code,
         source: 'browser-api',
       });
 
@@ -74,17 +103,41 @@ export async function localApiRequest<TData>(
       break;
     }
 
+    retryCount += 1;
     await wait(retryConfig.delayMs);
   }
 
-  const payload = await parseJsonSafe<TData>(response);
-  logApiRequest({
+  if (response.status === 204) {
+    logTransportRequest({
+      requestId,
+      method,
+      path,
+      destination: 'bff',
+      durationMs: Date.now() - startedAt,
+      status: response.status,
+      retryCount,
+      cachePolicy: cache,
+      authMode: 'private',
+      source: 'browser-api',
+    });
+
+    return undefined as TData;
+  }
+
+  const contentType = response.headers.get('content-type') ?? '';
+  const isJson = /(^|\/)json(?:;|$)|\+json(?:;|$)/i.test(contentType);
+  const payload = isJson ? await parseJsonSafe<TData>(response) : null;
+
+  logTransportRequest({
+    requestId,
     method,
     path,
     destination: 'bff',
     durationMs: Date.now() - startedAt,
     status: response.status,
-    cache,
+    retryCount,
+    cachePolicy: cache,
+    authMode: 'private',
     source: 'browser-api',
   });
 
@@ -96,5 +149,15 @@ export async function localApiRequest<TData>(
       { url: path, method, code: 'HTTP_ERROR' }
     );
   }
-  return payload as TData;
+
+  if (!isJson || payload === null) {
+    throw new ApiError(
+      'The API returned an invalid JSON response.',
+      502,
+      null,
+      { url: path, method, code: 'INVALID_RESPONSE' }
+    );
+  }
+
+  return payload;
 }

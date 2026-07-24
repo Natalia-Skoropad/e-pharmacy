@@ -10,6 +10,6 @@ type OrderStatusRouteParams = {
 //===================================================================
 
 export const PATCH = createPrivateProxyRoute<OrderStatusRouteParams>({
-  backendPath: ({ orderId }) => `${API_ROUTES.orders.details(orderId)}/status`,
+  backendPath: ({ orderId }) => API_ROUTES.orders.status(orderId),
   method: 'PATCH',
 });

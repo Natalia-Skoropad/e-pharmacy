@@ -1,5 +1,7 @@
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
+import { encodeRouteSegment } from './route-segment';
+
 //===================================================================
 
 export const authRoutes = {
@@ -11,7 +13,10 @@ export const authRoutes = {
   current: '/auth/current',
   password: '/auth/current/password',
   sessions: '/auth/sessions',
-  session: (sessionId: EntityId) => `/auth/sessions/${sessionId}`,
+
+  session: (sessionId: EntityId) =>
+    `/auth/sessions/${encodeRouteSegment(sessionId)}`,
+
   passwordResetRequest: '/auth/password-reset/request',
   passwordResetConfirm: '/auth/password-reset/confirm',
 } as const;

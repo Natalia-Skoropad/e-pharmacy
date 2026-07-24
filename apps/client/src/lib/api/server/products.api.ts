@@ -7,8 +7,7 @@ import {
 } from '@e-pharmacy/api-client/core';
 
 import { apiRoutes as ROUTES } from '@e-pharmacy/api-client/contracts';
-import { backendApiRequest } from '@e-pharmacy/next-api/server';
-
+import { publicBackendApiRequest } from '@e-pharmacy/next-api/server';
 import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 
 import type {
@@ -53,7 +52,7 @@ export async function getProductsFromBackend(
   options?: RequestOptions
 ): Promise<ProductsResponse> {
   return getResponseData(
-    await backendApiRequest<ApiSuccessResponse<ProductsResponse>>(
+    await publicBackendApiRequest<ApiSuccessResponse<ProductsResponse>>(
       `${ROUTES.products.list}${buildQueryString(params)}`,
       options
     )
@@ -72,10 +71,9 @@ export async function getProductFiltersFromBackend(
     : options;
 
   return getResponseData(
-    await backendApiRequest<ApiSuccessResponse<ProductFilterOptionsResponse>>(
-      `${ROUTES.products.filters}${buildQueryString(params)}`,
-      requestOptions
-    )
+    await publicBackendApiRequest<
+      ApiSuccessResponse<ProductFilterOptionsResponse>
+    >(`${ROUTES.products.filters}${buildQueryString(params)}`, requestOptions)
   );
 }
 
@@ -86,7 +84,7 @@ export async function getProductDetailsFromBackend(
   options?: RequestOptions
 ): Promise<ProductDetailsResponse> {
   return getResponseData(
-    await backendApiRequest<ApiSuccessResponse<ProductDetailsResponse>>(
+    await publicBackendApiRequest<ApiSuccessResponse<ProductDetailsResponse>>(
       ROUTES.products.details(id),
       options
     )
@@ -100,7 +98,7 @@ export async function getProductReviewsFromBackend(
   options?: RequestOptions
 ): Promise<ReviewsResponse> {
   return getResponseData(
-    await backendApiRequest<ApiSuccessResponse<ReviewsResponse>>(
+    await publicBackendApiRequest<ApiSuccessResponse<ReviewsResponse>>(
       ROUTES.products.reviews(id),
       options
     )

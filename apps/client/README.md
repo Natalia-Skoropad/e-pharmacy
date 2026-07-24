@@ -421,7 +421,7 @@ Public catalog data, SEO metadata, sitemap data, and read-only pages can be load
 
 Auth, cart, checkout, orders, profile updates, password updates, review/favorite mutations, and other client-only mutations go through the Next.js BFF route handlers under `apps/client/src/app/api/*`.
 
-This BFF layer keeps browser requests same-origin, forwards cookies to the backend, and copies backend `Set-Cookie` headers back to the client response. The backend remains the source of truth for private access through `authenticate` middleware and the httpOnly auth cookie.
+This BFF layer keeps browser requests same-origin and forwards only the required auth cookies. The Next.js BFF is the sole owner of browser auth cookies: backend `Set-Cookie` headers are intentionally not copied. The backend remains the source of truth for access and session validation.
 
 The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker for redirects and auth bootstrap. It is not a security token and does not authorize backend data access.
 
@@ -448,7 +448,7 @@ Main API areas used by the client:
 
 - Public catalog pages are rendered on the server and use cached/revalidated public API reads.
 - `apps/client/src/lib/api/server/cache-options.ts` centralizes public API revalidation settings.
-- `apps/client/src/lib/api/proxy/public-backend-proxy.ts` adds cache headers for read-only public proxy responses.
+- `packages/next-api` provides the shared public/private/optional-auth/auth proxy factories, cache policy, security checks, and auth-cookie handling.
 - Remote image patterns are configured in `next.config.ts` for deployed backend image assets.
 - Seed product and pharmacy images are client-owned runtime assets under `public/images/seed/**`; backend seed DTOs return same-origin relative paths for this portfolio deployment.
 - CSS Modules keep component styling scoped.

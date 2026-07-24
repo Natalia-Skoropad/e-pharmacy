@@ -5,5 +5,5 @@ import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
 
 export const GET = createPublicGetProxyRoute({
   backendPath: API_ROUTES.health,
-  revalidate: 60,
+  revalidate: false,
 });

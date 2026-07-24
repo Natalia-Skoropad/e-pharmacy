@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
-import { createBackendApiUrl } from '@e-pharmacy/next-api/server';
+import { createTrustedBackendApiUrl } from '@e-pharmacy/next-api/server';
 import { SITEMAP_INDEXABLE_ROUTES } from '@/lib/seo';
 
 import {
@@ -56,8 +56,9 @@ async function fetchSitemapPage<TItem>(
   path: string
 ): Promise<SitemapApiResponse<TItem> | null> {
   try {
-    const response = await fetch(createBackendApiUrl(path), {
+    const response = await fetch(createTrustedBackendApiUrl(path), {
       next: { revalidate: SITEMAP_REVALIDATE_SECONDS },
+      redirect: 'manual',
     });
 
     if (!response.ok) return null;

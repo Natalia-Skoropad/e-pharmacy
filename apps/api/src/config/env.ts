@@ -183,17 +183,25 @@ export const env = {
   MONGODB_URI: getRequiredEnv('MONGODB_URI'),
   JWT_SECRET: getRequiredEnv('JWT_SECRET'),
   JWT_EXPIRES_IN: (process.env.JWT_EXPIRES_IN || '15m') as StringValue,
+
   JWT_RESET_EXPIRES_IN: (process.env.JWT_RESET_EXPIRES_IN ||
     '15m') as StringValue,
+
   REFRESH_TOKEN_EXPIRES_IN: (process.env.REFRESH_TOKEN_EXPIRES_IN ||
     '30d') as StringValue,
+
   CLIENT_ORIGINS: getClientOrigins(),
   CLIENT_APP_URL: getClientAppUrl(),
   PHARMACY_APP_URL: process.env.PHARMACY_APP_URL,
   ADMIN_APP_URL: process.env.ADMIN_APP_URL,
   AUTH_COOKIE_DOMAIN: process.env.AUTH_COOKIE_DOMAIN,
   AUTH_COOKIE_SAME_SITE: getAuthCookieSameSite(),
-  BFF_PROXY_SECRET: process.env.BFF_PROXY_SECRET,
+
+  BFF_PROXY_SECRET:
+    NODE_ENV === 'production'
+      ? getRequiredEnv('BFF_PROXY_SECRET').trim()
+      : process.env.BFF_PROXY_SECRET?.trim(),
+
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: getOptionalNumberEnv('SMTP_PORT', 587),
   SMTP_FALLBACK_PORTS: getOptionalNumberListEnv('SMTP_FALLBACK_PORTS'),

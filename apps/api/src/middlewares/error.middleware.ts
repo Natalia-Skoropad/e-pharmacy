@@ -2,7 +2,6 @@ import type { ErrorRequestHandler } from 'express';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
-
 import type { HttpError } from '../types/errors';
 
 import {
@@ -55,6 +54,7 @@ export const errorMiddleware: ErrorRequestHandler = (error, req, res, next) => {
   const responseBody = {
     status: 'error',
     message,
+    ...(res.locals.requestId ? { requestId: res.locals.requestId } : {}),
     ...(isHttpError(error) && error.details ? { details: error.details } : {}),
     ...(!isProduction && error instanceof Error && error.stack
       ? { stack: error.stack }

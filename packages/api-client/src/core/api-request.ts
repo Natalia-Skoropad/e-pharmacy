@@ -29,6 +29,7 @@ export async function apiRequest<TData>(
     baseUrl,
     timeoutMs = DEFAULT_API_REQUEST_TIMEOUT_MS,
     retry,
+    redirect = 'follow',
   }: RequestOptions = {}
 ): Promise<TData> {
   const url = createApiUrl(path, baseUrl ?? '');
@@ -47,6 +48,7 @@ export async function apiRequest<TData>(
         cache,
         next,
         credentials,
+        redirect,
         signal: getRequestSignal(signal, timeoutMs),
       } as RequestInit & { next?: RequestOptions['next'] });
     } catch (error) {

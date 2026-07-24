@@ -1,9 +1,10 @@
-import { AUTH_PROXY_ROUTES, createPrivateProxyRoute } from '@e-pharmacy/next-api/proxy';
+import { authRoutes } from '@e-pharmacy/api-client/contracts';
+import { createPrivateProxyRoute } from '@e-pharmacy/next-api/proxy';
 
 //===================================================================
 
 export const PATCH = createPrivateProxyRoute({
-  backendPath: AUTH_PROXY_ROUTES.password,
+  backendPath: authRoutes.password,
   method: 'PATCH',
   clearAuthCookiesOnSuccess: true,
 });

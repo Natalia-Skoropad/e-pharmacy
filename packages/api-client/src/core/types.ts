@@ -30,4 +30,5 @@ export type RequestOptions = {
   baseUrl?: string;
   timeoutMs?: number;
   retry?: false | ApiRetryConfig;
+  redirect?: RequestRedirect;
 };

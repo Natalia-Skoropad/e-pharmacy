@@ -24,6 +24,10 @@ export const logger = {
     console.warn(message);
   },
 
+  request(meta: LogMeta): void {
+    console.info(JSON.stringify({ event: 'api_request', ...meta }));
+  },
+
   error(message: string, error?: unknown): void {
     if (error) {
       console.error(message, error);

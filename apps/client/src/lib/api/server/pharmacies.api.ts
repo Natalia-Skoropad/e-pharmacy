@@ -7,8 +7,7 @@ import {
 } from '@e-pharmacy/api-client/core';
 
 import { apiRoutes as ROUTES } from '@e-pharmacy/api-client/contracts';
-import { backendApiRequest } from '@e-pharmacy/next-api/server';
-
+import { publicBackendApiRequest } from '@e-pharmacy/next-api/server';
 import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 
 import type {
@@ -28,7 +27,7 @@ export async function getPharmaciesFromBackend(
   options?: RequestOptions
 ): Promise<PharmaciesResponse> {
   return getResponseData(
-    await backendApiRequest<ApiSuccessResponse<PharmaciesResponse>>(
+    await publicBackendApiRequest<ApiSuccessResponse<PharmaciesResponse>>(
       `${ROUTES.pharmacies.list}${buildQueryString(params)}`,
       options
     )
@@ -41,7 +40,7 @@ export async function getPharmacyOptionsFromBackend(
   options?: RequestOptions
 ): Promise<PharmacyOptionsResponse> {
   return getResponseData(
-    await backendApiRequest<ApiSuccessResponse<PharmacyOptionsResponse>>(
+    await publicBackendApiRequest<ApiSuccessResponse<PharmacyOptionsResponse>>(
       ROUTES.pharmacies.options,
       options
     )
@@ -54,10 +53,9 @@ export async function getPharmacyFiltersFromBackend(
   options?: RequestOptions
 ): Promise<PharmacyFilterOptionsResponse> {
   return getResponseData(
-    await backendApiRequest<ApiSuccessResponse<PharmacyFilterOptionsResponse>>(
-      ROUTES.pharmacies.filters,
-      options
-    )
+    await publicBackendApiRequest<
+      ApiSuccessResponse<PharmacyFilterOptionsResponse>
+    >(ROUTES.pharmacies.filters, options)
   );
 }
 
@@ -68,7 +66,7 @@ export async function getPharmacyDetailsFromBackend(
   options?: RequestOptions
 ): Promise<PharmacyDetailsResponse> {
   return getResponseData(
-    await backendApiRequest<ApiSuccessResponse<PharmacyDetailsResponse>>(
+    await publicBackendApiRequest<ApiSuccessResponse<PharmacyDetailsResponse>>(
       ROUTES.pharmacies.details(id),
       options
     )
@@ -82,7 +80,7 @@ export async function getPharmacyReviewsFromBackend(
   options?: RequestOptions
 ): Promise<ReviewsResponse> {
   return getResponseData(
-    await backendApiRequest<ApiSuccessResponse<ReviewsResponse>>(
+    await publicBackendApiRequest<ApiSuccessResponse<ReviewsResponse>>(
       ROUTES.pharmacies.reviews(id),
       options
     )
