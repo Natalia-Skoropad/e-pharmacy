@@ -1,5 +1,5 @@
 export * from './Button';
-export * from './ButtonLink';
+export * from './IconButton';
 export * from './CloseIconButton';
 export * from './FiltersButton';
 export * from './LazyLoadButton';

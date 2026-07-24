@@ -4,8 +4,8 @@ import { useMemo, useState, type ChangeEvent } from 'react';
 import { Clock, Info, MapPin, Phone, Truck } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
-import { ButtonLink, LoadingSpinner } from '@e-pharmacy/ui/primitives';
-
+import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RadioOption } from '@e-pharmacy/ui/forms';
 
 import {
@@ -449,7 +449,7 @@ function CheckoutSelectOrderState({ message }: { message: string }) {
       <h2 className={css.emptyTitle}>Choose a pharmacy order</h2>
       <p className={css.emptyText}>{message}</p>
       <div className={css.emptyActions}>
-        <ButtonLink href={ROUTES.CART}>Back to cart</ButtonLink>
+        <LinkButton href={ROUTES.CART}>Back to cart</LinkButton>
       </div>
     </div>
   );
@@ -465,11 +465,11 @@ function CheckoutEmptyState() {
         Add products first, then checkout will form pharmacy orders.
       </p>
       <div className={css.emptyActions}>
-        <ButtonLink href={ROUTES.CART} variant="secondary">
+        <LinkButton href={ROUTES.CART} variant="secondary">
           Back to cart
-        </ButtonLink>
+        </LinkButton>
 
-        <ButtonLink href={ROUTES.PRODUCTS_CATALOG}>Browse products</ButtonLink>
+        <LinkButton href={ROUTES.PRODUCTS_CATALOG}>Browse products</LinkButton>
       </div>
     </div>
   );

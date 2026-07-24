@@ -30,12 +30,13 @@ import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
 
 import {
   Button,
-  ButtonLink,
   CloseIconButton,
   LazyLoadButton,
   LoadingSpinner,
   SvgIcon,
 } from '@e-pharmacy/ui/primitives';
+
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 
 import {
   CountLabel,
@@ -379,7 +380,7 @@ function OrderProductCard({
           </div>
 
           <div className={css.itemActions}>
-            <ButtonLink
+            <LinkButton
               href={getPharmacyProductPath(item.productId)}
               variant="secondary"
               size="sm"
@@ -390,7 +391,7 @@ function OrderProductCard({
               )}
             >
               Product details
-            </ButtonLink>
+            </LinkButton>
 
             <Button
               className={css.removeButton}
@@ -2079,7 +2080,7 @@ function OrderDetailsPageContent({
               <Button type="button" onClick={() => window.location.reload()}>
                 Try again
               </Button>
-              <ButtonLink
+              <LinkButton
                 href={getPharmacyOrdersPath()}
                 variant="secondary"
                 renderLink={({ href, className, children, ...props }) => (
@@ -2089,7 +2090,7 @@ function OrderDetailsPageContent({
                 )}
               >
                 Back to orders
-              </ButtonLink>
+              </LinkButton>
             </div>
           </div>
         </section>

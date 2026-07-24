@@ -1,11 +1,13 @@
 'use client';
 
-import { ButtonLink, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { SvgIcon } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
 import type { PublicPharmacy } from '@e-pharmacy/types';
+
 import { addFavoritePharmacy, removeFavoritePharmacy } from '@/lib/api/browser';
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
 import { buildPharmacyPath } from '@/lib/routes';
@@ -145,18 +147,18 @@ function PharmacyCard({
         </dl>
 
         <div className={css.footer}>
-          <ButtonLink
+          <LinkButton
             className={css.detailsLink}
             href={pharmacyHref}
             size="sm"
             variant="secondary"
           >
             View details
-          </ButtonLink>
+          </LinkButton>
 
-          <ButtonLink className={css.detailsLink} href={productsHref} size="sm">
+          <LinkButton className={css.detailsLink} href={productsHref} size="sm">
             Products
-          </ButtonLink>
+          </LinkButton>
         </div>
       </div>
     </article>

@@ -9,10 +9,11 @@ import { USER_ROLE_LABELS, USER_STATUS_LABELS } from '@e-pharmacy/config/users';
 
 import {
   Button,
-  ButtonLink,
   LoadingSpinner,
   TextActionButton,
 } from '@e-pharmacy/ui/primitives';
+
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 
 import {
   CountLabel,
@@ -547,7 +548,7 @@ function ProfilePageContent() {
                 We could not load your profile data. Please log in again.
               </p>
 
-              <ButtonLink href={ROUTES.LOGIN}>Go to login</ButtonLink>
+              <LinkButton href={ROUTES.LOGIN}>Go to login</LinkButton>
             </div>
           </Container>
         </section>
@@ -1072,9 +1073,9 @@ function ProfilePageContent() {
                           nicely — no shelf drama included.
                         </p>
                       </div>
-                      <ButtonLink href={ROUTES.PRODUCTS_CATALOG}>
+                      <LinkButton href={ROUTES.PRODUCTS_CATALOG}>
                         Browse products
-                      </ButtonLink>
+                      </LinkButton>
                     </div>
                   )}
                 </div>
@@ -1165,9 +1166,9 @@ function ProfilePageContent() {
                           for quick access — loyal as a tiny green assistant.
                         </p>
                       </div>
-                      <ButtonLink href={ROUTES.PHARMACIES}>
+                      <LinkButton href={ROUTES.PHARMACIES}>
                         Browse pharmacies
-                      </ButtonLink>
+                      </LinkButton>
                     </div>
                   )}
                 </div>

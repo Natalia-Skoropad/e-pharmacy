@@ -2,6 +2,8 @@ import type { ButtonHTMLAttributes } from 'react';
 import { X } from 'lucide-react';
 import clsx from 'clsx';
 
+import IconButton from '../IconButton/IconButton';
+
 import css from './CloseIconButton.module.css';
 
 //===================================================================
@@ -14,26 +16,24 @@ type CloseIconButtonProps = {
   label?: string;
   className?: string;
   variant?: CloseIconButtonVariant;
-} & ButtonHTMLAttributes<HTMLButtonElement>;
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'aria-label' | 'children'>;
 
 //===================================================================
 
 function CloseIconButton({
   label = 'Close',
   className,
-  type = 'button',
   variant = 'light',
   ...props
 }: CloseIconButtonProps) {
   return (
-    <button
-      className={clsx(css.button, css[variant], className)}
-      type={type}
-      aria-label={label}
+    <IconButton
       {...props}
-    >
-      <X size={20} aria-hidden="true" />
-    </button>
+      className={clsx(css.button, css[variant], className)}
+      label={label}
+      size="sm"
+      icon={<X size={20} aria-hidden="true" />}
+    />
   );
 }
 

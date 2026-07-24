@@ -1,6 +1,7 @@
 import { ShieldAlert } from 'lucide-react';
 
-import { Button, ButtonLink } from '@e-pharmacy/ui/primitives';
+import { Button } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { formatMoney } from '@e-pharmacy/utils/money';
 
 import css from './CartSummary.module.css';
@@ -53,9 +54,9 @@ function CartSummary({
       </div>
 
       <div className={css.actions}>
-        <ButtonLink href={checkoutPath} fullWidth>
+        <LinkButton href={checkoutPath} fullWidth>
           Confirm order
-        </ButtonLink>
+        </LinkButton>
 
         <Button
           type="button"

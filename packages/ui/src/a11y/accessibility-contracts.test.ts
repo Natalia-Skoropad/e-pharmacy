@@ -21,7 +21,7 @@ test('modal foundation requires a real accessible name', async () => {
 
 test('working hours are exposed as a labelled field group', async () => {
   const source = await readSource(
-    '../forms/WorkingHoursInput/WorkingHoursInput.tsx'
+    '../../../../apps/pharmacy/src/components/profile/WorkingHoursInput/WorkingHoursInput.tsx'
   );
 
   assert.match(source, /<fieldset/);
@@ -158,4 +158,43 @@ test('public UI folders contain implementations rather than legacy forwarding ba
   for (const source of entrypoints) {
     assert.doesNotMatch(source, /export \* from '\.\.\//);
   }
+});
+
+//===================================================================
+
+test('icon controls share one accessible IconButton primitive', async () => {
+  const iconButton = await readSource(
+    '../primitives/IconButton/IconButton.tsx'
+  );
+
+  const closeButton = await readSource(
+    '../primitives/CloseIconButton/CloseIconButton.tsx'
+  );
+
+  const burgerButton = await readSource(
+    '../cabinet/BurgerButton/BurgerButton.tsx'
+  );
+
+  assert.match(iconButton, /label: string/);
+  assert.match(iconButton, /aria-label=\{label\}/);
+  assert.match(closeButton, /<IconButton/);
+  assert.match(burgerButton, /<IconButton/);
+});
+
+//===================================================================
+
+test('component names and physical placement describe their actual responsibility', async () => {
+  const primitives = await readSource('../primitives/index.ts');
+  const navigation = await readSource('../navigation/index.ts');
+  const forms = await readSource('../forms/index.ts');
+
+  const pharmacyWorkingHours = await readSource(
+    '../../../../apps/pharmacy/src/components/profile/WorkingHoursInput/WorkingHoursInput.tsx'
+  );
+
+  assert.doesNotMatch(primitives, /LinkButton|ButtonLink/);
+  assert.match(navigation, /LinkButton/);
+  assert.match(forms, /MarkdownTextarea/);
+  assert.doesNotMatch(forms, /TextEditor|WorkingHoursInput/);
+  assert.match(pharmacyWorkingHours, /parseWorkingHoursValue/);
 });

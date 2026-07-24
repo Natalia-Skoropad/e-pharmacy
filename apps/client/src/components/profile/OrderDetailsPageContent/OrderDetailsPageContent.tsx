@@ -16,7 +16,8 @@ import {
 
 import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
-import { ButtonLink, LoadingSpinner, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { LoadingSpinner, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { Container } from '@e-pharmacy/ui/layout';
@@ -138,7 +139,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                   'This private order is not available for this account.'}
               </p>
 
-              <ButtonLink href={ROUTES.PROFILE}>Back to profile</ButtonLink>
+              <LinkButton href={ROUTES.PROFILE}>Back to profile</LinkButton>
             </div>
           </Container>
         </section>
@@ -201,14 +202,14 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                     />
                   </div>
 
-                  <ButtonLink
+                  <LinkButton
                     className={css.pharmacyDetailsLink}
                     href={pharmacyHref}
                     variant="secondary"
                     size="sm"
                   >
                     Pharmacy details
-                  </ButtonLink>
+                  </LinkButton>
                 </div>
 
                 <ul className={css.itemList}>
@@ -263,14 +264,14 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                             Purchased quantity: <strong>{item.quantity}</strong>
                           </p>
 
-                          <ButtonLink
+                          <LinkButton
                             className={css.productDetailsLink}
                             href={buildProductPath(item.name, item.productId)}
                             variant="secondary"
                             size="sm"
                           >
                             Product details
-                          </ButtonLink>
+                          </LinkButton>
                         </div>
                       </div>
                     </li>

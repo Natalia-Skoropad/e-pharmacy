@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
 
-import { ButtonLink } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import type { Product, PublicPharmacy } from '@e-pharmacy/types';
 import { Container } from '@e-pharmacy/ui/layout';
 
@@ -170,17 +170,17 @@ async function HomePage() {
               </p>
 
               <div className={css.actions}>
-                <ButtonLink href={ROUTES.PRODUCTS_CATALOG} size="lg">
+                <LinkButton href={ROUTES.PRODUCTS_CATALOG} size="lg">
                   Buy product
-                </ButtonLink>
+                </LinkButton>
 
-                <ButtonLink
+                <LinkButton
                   href={ROUTES.PHARMACIES}
                   variant="secondary"
                   size="lg"
                 >
                   View pharmacies
-                </ButtonLink>
+                </LinkButton>
               </div>
             </div>
 
@@ -233,9 +233,9 @@ async function HomePage() {
           </Suspense>
 
           <div className={css.sectionAction}>
-            <ButtonLink href={ROUTES.PHARMACIES} variant="secondary">
+            <LinkButton href={ROUTES.PHARMACIES} variant="secondary">
               View all pharmacies
-            </ButtonLink>
+            </LinkButton>
           </div>
         </Container>
       </section>
@@ -278,9 +278,9 @@ async function HomePage() {
                 prepare pickup or postal delivery without the usual
                 pharmacy-queue side quest.
               </p>
-              <ButtonLink href={ROUTES.PRODUCTS_CATALOG} variant="secondary">
+              <LinkButton href={ROUTES.PRODUCTS_CATALOG} variant="secondary">
                 Browse catalog
-              </ButtonLink>
+              </LinkButton>
             </div>
 
             <div className={css.bannerMedia}>
@@ -357,9 +357,9 @@ async function HomePage() {
           </Suspense>
 
           <div className={css.sectionAction}>
-            <ButtonLink href={ROUTES.PRODUCTS_CATALOG} variant="secondary">
+            <LinkButton href={ROUTES.PRODUCTS_CATALOG} variant="secondary">
               View all products
-            </ButtonLink>
+            </LinkButton>
           </div>
         </Container>
       </section>

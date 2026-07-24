@@ -14,11 +14,12 @@ import {
 
 import {
   Button,
-  ButtonLink,
   FiltersButton,
   LoadingSpinner,
   TextActionButton,
 } from '@e-pharmacy/ui/primitives';
+
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 
 import {
   CountLabel,
@@ -1454,7 +1455,7 @@ function AllProductDetailsPageContent({
                         </Button>
                       ) : null}
 
-                      <ButtonLink
+                      <LinkButton
                         className={css.actionButton}
                         href={backHref}
                         variant="secondary"
@@ -1471,7 +1472,7 @@ function AllProductDetailsPageContent({
                         )}
                       >
                         {backLabel}
-                      </ButtonLink>
+                      </LinkButton>
                     </div>
                   </div>
                 </section>

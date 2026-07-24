@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { FilePlus2 } from 'lucide-react';
 
-import { Button, ButtonLink, FiltersButton } from '@e-pharmacy/ui/primitives';
+import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 
 import {
@@ -320,13 +321,13 @@ function ProductRequestsPageContent({
               Create request
             </Button>
           ) : (
-            <ButtonLink
+            <LinkButton
               className={css.createButton}
               href={getPharmacyNewRequestPath()}
               size="md"
             >
               Create request
-            </ButtonLink>
+            </LinkButton>
           )}
         </div>
 

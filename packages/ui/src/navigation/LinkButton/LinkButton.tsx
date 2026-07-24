@@ -3,11 +3,12 @@ import Link from 'next/link';
 import clsx from 'clsx';
 
 import type { ButtonSize, ButtonVariant } from '../../primitives/Button/Button';
-import css from '../../primitives/Button/Button.module.css';
+
+import css from '../../primitiv../../primitives/Button/Button.module.css';
 
 //===================================================================
 
-type ButtonLinkRenderProps = Omit<
+type LinkButtonRenderProps = Omit<
   ComponentPropsWithoutRef<typeof Link>,
   'children'
 > & {
@@ -15,7 +16,7 @@ type ButtonLinkRenderProps = Omit<
   className: string;
 };
 
-export type ButtonLinkProps = {
+export type LinkButtonProps = {
   children: ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -23,12 +24,12 @@ export type ButtonLinkProps = {
   iconLeft?: ReactNode;
   iconRight?: ReactNode;
   className?: string;
-  renderLink?: (props: ButtonLinkRenderProps) => ReactNode;
+  renderLink?: (props: LinkButtonRenderProps) => ReactNode;
 } & ComponentPropsWithoutRef<typeof Link>;
 
 //===================================================================
 
-function ButtonLink({
+function LinkButton({
   children,
   variant = 'primary',
   size = 'md',
@@ -38,7 +39,7 @@ function ButtonLink({
   className,
   renderLink,
   ...props
-}: ButtonLinkProps) {
+}: LinkButtonProps) {
   const classNames = clsx(
     css.button,
     css[variant],
@@ -65,5 +66,5 @@ function ButtonLink({
   );
 }
 
-export default ButtonLink;
-export { ButtonLink };
+export default LinkButton;
+export { LinkButton };

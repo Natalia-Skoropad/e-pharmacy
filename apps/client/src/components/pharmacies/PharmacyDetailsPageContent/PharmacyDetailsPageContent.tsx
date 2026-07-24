@@ -9,7 +9,8 @@ import {
   RatingSummary,
 } from '@e-pharmacy/ui/data-display';
 
-import { ButtonLink, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { SvgIcon } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { Tabs } from '@e-pharmacy/ui/navigation';
 import { type TabItem } from '@e-pharmacy/ui/navigation';
@@ -447,9 +448,9 @@ function PharmacyDetailsPageContent({
                   </div>
                 </dl>
 
-                <ButtonLink className={css.link} href={productsHref}>
+                <LinkButton className={css.link} href={productsHref}>
                   View products from this pharmacy
-                </ButtonLink>
+                </LinkButton>
               </div>
             </div>
           ) : null}

@@ -26,7 +26,8 @@
     "build": "tsc -p tsconfig.build.json",
     "test": "node ../../scripts/run-node-ts-tests.mjs src",
     "test:a11y": "node ../../scripts/run-node-ts-tests.mjs src/a11y",
-    "check:styles": "node ../../scripts/check-ui-style-contracts.mjs"
+    "check:styles": "node ../../scripts/check-ui-style-contracts.mjs",
+    "check:boundaries": "node ../../scripts/check-ui-boundaries.mjs"
   },
   "peerDependencies": {
     "clsx": ">=2.1.1",

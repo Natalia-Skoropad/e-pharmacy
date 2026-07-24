@@ -1,6 +1,8 @@
 import { Menu, X } from 'lucide-react';
 import clsx from 'clsx';
 
+import IconButton from '../../primitives/IconButton/IconButton';
+
 import css from './BurgerButton.module.css';
 
 //===================================================================
@@ -33,16 +35,14 @@ function BurgerButton({
   const Icon = isOpen ? X : Menu;
 
   return (
-    <button
+    <IconButton
       className={clsx(css.button, css[variant], className)}
-      type="button"
-      aria-label={isOpen ? closeLabel : openLabel}
+      label={isOpen ? closeLabel : openLabel}
+      icon={<Icon size={24} strokeWidth={2} aria-hidden="true" />}
       aria-expanded={isOpen}
       aria-controls={controlsId}
       onClick={onClick}
-    >
-      <Icon size={24} strokeWidth={2} aria-hidden="true" />
-    </button>
+    />
   );
 }
 

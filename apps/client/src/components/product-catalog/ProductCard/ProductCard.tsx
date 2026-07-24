@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react';
 
-import { ButtonLink, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { SvgIcon } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { formatProductCategoryLabel } from '@e-pharmacy/config/products';
@@ -156,9 +157,9 @@ function ProductCard({
             <p className={css.unavailableStatus}>Not available in pharmacies</p>
           )}
 
-          <ButtonLink className={css.detailsLink} href={productHref} size="sm">
+          <LinkButton className={css.detailsLink} href={productHref} size="sm">
             Details
-          </ButtonLink>
+          </LinkButton>
         </div>
       </div>
     </article>

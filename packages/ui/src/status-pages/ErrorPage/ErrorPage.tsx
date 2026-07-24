@@ -1,6 +1,7 @@
 'use client';
 
-import { Button, ButtonLink } from '../../primitives';
+import { Button } from '../../primitives';
+import { LinkButton } from '../../navigation';
 
 import StatusPageLayout, {
   type StatusPageLayoutImage,
@@ -46,9 +47,9 @@ function ErrorPage({
           <Button type="button" size="lg" onClick={onRetry}>
             {retryLabel}
           </Button>
-          <ButtonLink href={homeHref} variant="secondary" size="lg">
+          <LinkButton href={homeHref} variant="secondary" size="lg">
             {homeLabel}
-          </ButtonLink>
+          </LinkButton>
         </>
       }
     />

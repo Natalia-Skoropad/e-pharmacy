@@ -1,7 +1,6 @@
 import mongoose, { Types } from 'mongoose';
 
 import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
-
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
@@ -13,9 +12,7 @@ import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
 
 import { httpError } from '../utils/httpError';
-
 import { getEndOfDay, getStartOfDay } from '../utils/date-range';
-
 import { createSafeRegExp } from '../utils/regexp';
 
 import {
@@ -49,16 +46,14 @@ import type {
 } from '../types/order';
 
 import { PRODUCT_CATEGORIES, type ProductCategory } from '../types/categories';
-
 import type { ProductEntity, ProductOfferEntity } from '../types/product';
-
 import type { PharmacyEntity } from '../types/pharmacy';
 import type { UserRole } from '../types/user';
 
 //===============================================================
 
 const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
-  new: ['in_progress'],
+  new: ['in_progress', 'rejected'],
   in_progress: ['successful', 'rejected'],
   successful: [],
   rejected: [],

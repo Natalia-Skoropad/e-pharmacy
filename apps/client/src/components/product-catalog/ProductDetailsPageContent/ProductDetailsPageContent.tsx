@@ -9,12 +9,8 @@ import {
   RatingSummary,
 } from '@e-pharmacy/ui/data-display';
 
-import {
-  Button,
-  ButtonLink,
-  LazyLoadButton,
-  SvgIcon,
-} from '@e-pharmacy/ui/primitives';
+import { Button, LazyLoadButton, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 
 import {
   QuantityCounter,
@@ -836,13 +832,13 @@ function ProductDetailsPageContent({
                               removed if the order is not confirmed.
                             </p>
 
-                            <ButtonLink
+                            <LinkButton
                               className={css.offerLink}
                               href={getPharmacyHref(offer)}
                               variant="secondary"
                             >
                               View pharmacy
-                            </ButtonLink>
+                            </LinkButton>
                           </div>
                         </article>
                       </li>

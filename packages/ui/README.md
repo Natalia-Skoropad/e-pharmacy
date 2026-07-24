@@ -12,10 +12,10 @@ It does not contain API calls, data fetching, domain validation rules, order wor
 
 Public folders contain the real component implementations, not forwarding barrels to legacy locations:
 
-- `src/primitives` — buttons, icon controls, spinner, SVG primitives;
-- `src/forms` — form fields, selects, date filter, uploads, working hours;
+- `src/primitives` — framework-neutral buttons, shared `IconButton`, spinner, and SVG primitives;
+- `src/forms` — form fields, selects, date filter, uploads, and `MarkdownTextarea`;
 - `src/data-display` — tables, counts, reviews, user badges;
-- `src/navigation` — breadcrumbs, tabs, controlled and link pagination;
+- `src/navigation` — Next.js `LinkButton`, breadcrumbs, tabs, controlled pagination, and link pagination;
 - `src/overlays` — modal, drawer, tooltip, confirmation dialog;
 - `src/media` — logo, image previews, shimmer and file-reading helpers;
 - `src/layout` — `Container` and `PageHeader`;
@@ -42,7 +42,7 @@ The root entrypoint intentionally exports only stable primitives. Do not use dee
 
 ## Framework position
 
-The package is intentionally Next.js-specific. `next`, `react`, and `react-dom` are peer dependencies. Next-specific navigation and image components are exposed through explicit public entrypoints instead of hidden adapters.
+The package is intentionally Next.js-specific. `LinkButton` in the navigation entrypoint is the explicit Next.js link adapter; button-like links are not exposed through a misleading `ButtonLink` alias. `next`, `react`, and `react-dom` are peer dependencies. Next-specific navigation and image components are exposed through explicit public entrypoints instead of hidden adapters.
 
 ## Responsive policy
 
@@ -64,4 +64,4 @@ The canonical page container is:
 
 `types/config -> utils/validation/hooks -> ui -> apps`
 
-Data and API layers must never import UI types.
+Data and API layers must never import UI types. Pharmacy-only composites, such as `WorkingHoursInput`, stay in the pharmacy application until a second real consumer justifies a dedicated shared domain entrypoint.

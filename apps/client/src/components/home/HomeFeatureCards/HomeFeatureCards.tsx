@@ -10,7 +10,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { Button, ButtonLink } from '@e-pharmacy/ui/primitives';
+import { Button } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { useToast } from '@e-pharmacy/ui/feedback';
 
 import { ROUTES } from '@/lib/routes';
@@ -110,13 +111,13 @@ function HomeFeatureCards() {
               {feature.buttonLabel}
             </Button>
           ) : (
-            <ButtonLink
+            <LinkButton
               className={css.featureAction}
               href={feature.href}
               variant="secondary"
             >
               {feature.buttonLabel}
-            </ButtonLink>
+            </LinkButton>
           )}
         </article>
       ))}

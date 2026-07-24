@@ -1,5 +1,5 @@
 import type { ButtonVariant } from '../../primitives/Button';
-import ButtonLink from '../../primitives/ButtonLink/ButtonLink';
+import LinkButton from '../../navigation/LinkButton/LinkButton';
 
 import StatusPageLayout, {
   type StatusPageLayoutImage,
@@ -46,17 +46,17 @@ function NotFoundPage({
       variant={variant}
       actions={
         <>
-          <ButtonLink href={homeHref} size="lg">
+          <LinkButton href={homeHref} size="lg">
             {homeLabel}
-          </ButtonLink>
+          </LinkButton>
           {secondaryAction ? (
-            <ButtonLink
+            <LinkButton
               href={secondaryAction.href}
               variant={secondaryAction.variant ?? 'secondary'}
               size="lg"
             >
               {secondaryAction.label}
-            </ButtonLink>
+            </LinkButton>
           ) : null}
         </>
       }

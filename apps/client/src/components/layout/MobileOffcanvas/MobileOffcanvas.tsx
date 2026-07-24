@@ -5,12 +5,9 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import clsx from 'clsx';
 
-import {
-  ButtonLink,
-  CloseIconButton,
-  LogoutButton,
-} from '@e-pharmacy/ui/primitives';
+import { CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
 
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { Logo } from '@e-pharmacy/ui/media';
 import { UserBadge } from '@e-pharmacy/ui/data-display';
 import { MobileOffcanvasBase } from '@e-pharmacy/ui/overlays';
@@ -126,14 +123,14 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
         ) : null}
 
         {shouldShowPharmacyActions ? (
-          <ButtonLink
+          <LinkButton
             href={getPharmacyDashboardUrl()}
             variant="secondary"
             fullWidth
             onClick={onClose}
           >
             Pharmacy cabinet
-          </ButtonLink>
+          </LinkButton>
         ) : null}
 
         {shouldShowAuthenticatedActions ? (
@@ -148,23 +145,23 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
 
         {shouldShowGuestActions ? (
           <>
-            <ButtonLink
+            <LinkButton
               className={css.loginLink}
               href={ROUTES.LOGIN}
               variant="primary"
               fullWidth
             >
               Log in
-            </ButtonLink>
+            </LinkButton>
 
-            <ButtonLink
+            <LinkButton
               className={css.registerLink}
               href={ROUTES.REGISTER}
               variant="secondary"
               fullWidth
             >
               Register
-            </ButtonLink>
+            </LinkButton>
           </>
         ) : null}
       </div>

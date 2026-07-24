@@ -1,4 +1,5 @@
-import { Button, ButtonLink, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { Button, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { QuantityCounter } from '@e-pharmacy/ui/forms';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
@@ -103,9 +104,9 @@ function CartItemCard({
           </div>
 
           <div className={css.actions}>
-            <ButtonLink href={productHref} variant="secondary" size="sm">
+            <LinkButton href={productHref} variant="secondary" size="sm">
               Product details
-            </ButtonLink>
+            </LinkButton>
 
             <Button
               className={css.removeButton}

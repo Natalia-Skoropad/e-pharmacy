@@ -12,22 +12,13 @@ import {
   LoadingSpinner,
 } from '@e-pharmacy/ui/primitives';
 
-import {
-  DocumentUpload,
-  TextEditor,
-  WorkingHoursInput,
-} from '@e-pharmacy/ui/forms';
-
+import { DocumentUpload, MarkdownTextarea } from '@e-pharmacy/ui/forms';
 import { PictureCard } from '@e-pharmacy/ui/media';
+import { WorkingHoursInput } from '../WorkingHoursInput';
 import { ReviewsList } from '@e-pharmacy/ui/data-display';
 import { Tabs } from '@e-pharmacy/ui/navigation';
 import { Container } from '@e-pharmacy/ui/layout';
 import type { UploadFileValue } from '@e-pharmacy/types/files';
-
-import {
-  StatusBadge,
-  StatusBanner,
-} from '@/components/common/StatusPresentation';
 
 import {
   AddressInput,
@@ -130,6 +121,11 @@ import {
   updateCurrentUserPassword,
   updateMyPharmacyProfile,
 } from '@/lib/api/browser';
+
+import {
+  StatusBadge,
+  StatusBanner,
+} from '@/components/common/StatusPresentation';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 
@@ -1720,7 +1716,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                       />
                     ) : null}
 
-                    <TextEditor
+                    <MarkdownTextarea
                       id="pharmacy-description"
                       name="pharmacyDescription"
                       label="Description"

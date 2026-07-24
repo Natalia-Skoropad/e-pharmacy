@@ -4,7 +4,8 @@ import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { LayoutDashboard } from 'lucide-react';
 
-import { ButtonLink, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { PharmacyStatus } from '@e-pharmacy/types';
 
@@ -435,7 +436,7 @@ function PharmacyDashboardPageContent() {
                   </p>
                 </div>
 
-                <ButtonLink
+                <LinkButton
                   className={css.sectionButton}
                   href={getPharmacyOrdersPath()}
                   variant="secondary"
@@ -446,7 +447,7 @@ function PharmacyDashboardPageContent() {
                   )}
                 >
                   View orders
-                </ButtonLink>
+                </LinkButton>
               </div>
 
               <SalesPeriodFilters
@@ -506,7 +507,7 @@ function PharmacyDashboardPageContent() {
                   </p>
                 </div>
 
-                <ButtonLink
+                <LinkButton
                   className={css.sectionButton}
                   href={getPharmacyClientsPath()}
                   variant="secondary"
@@ -517,7 +518,7 @@ function PharmacyDashboardPageContent() {
                   )}
                 >
                   View clients
-                </ButtonLink>
+                </LinkButton>
               </div>
 
               <ClientStatistics
@@ -552,7 +553,7 @@ function PharmacyDashboardPageContent() {
                   </p>
                 </div>
 
-                <ButtonLink
+                <LinkButton
                   className={css.sectionButton}
                   href={getPharmacyProductsPath()}
                   variant="secondary"
@@ -563,7 +564,7 @@ function PharmacyDashboardPageContent() {
                   )}
                 >
                   View own products
-                </ButtonLink>
+                </LinkButton>
               </div>
 
               <OwnProductStatistics
@@ -605,7 +606,7 @@ function PharmacyDashboardPageContent() {
                   </p>
                 </div>
 
-                <ButtonLink
+                <LinkButton
                   className={css.sectionButton}
                   href={getPharmacyAllProductsPath()}
                   variant="secondary"
@@ -616,7 +617,7 @@ function PharmacyDashboardPageContent() {
                   )}
                 >
                   View all products
-                </ButtonLink>
+                </LinkButton>
               </div>
 
               <AllProductStatistics
@@ -640,7 +641,7 @@ function PharmacyDashboardPageContent() {
                     here.
                   </p>
                 </div>
-                <ButtonLink
+                <LinkButton
                   className={css.sectionButton}
                   href={getPharmacyProductRequestsPath()}
                   variant="secondary"
@@ -651,7 +652,7 @@ function PharmacyDashboardPageContent() {
                   )}
                 >
                   View requests
-                </ButtonLink>
+                </LinkButton>
               </div>
 
               <ProductRequestStatistics

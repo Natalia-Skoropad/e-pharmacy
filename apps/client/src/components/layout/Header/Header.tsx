@@ -6,7 +6,8 @@ import { useId, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import clsx from 'clsx';
 
-import { ButtonLink, LogoutButton } from '@e-pharmacy/ui/primitives';
+import { LogoutButton } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { Logo } from '@e-pharmacy/ui/media';
 import { UserBadge } from '@e-pharmacy/ui/data-display';
 import { Container } from '@e-pharmacy/ui/layout';
@@ -89,7 +90,7 @@ function Header() {
 
         <div className={css.actions}>
           {shouldShowClientActions ? (
-            <ButtonLink
+            <LinkButton
               className={css.cartLink}
               href={ROUTES.CART}
               variant="ghost"
@@ -99,7 +100,7 @@ function Header() {
               <ShoppingCart size={18} aria-hidden="true" />
               <span className={css.cartText}>Cart</span>
               <span className={css.cartCount}>{visibleCartItemsCount}</span>
-            </ButtonLink>
+            </LinkButton>
           ) : null}
 
           {!isAuthReady ? (
@@ -116,14 +117,14 @@ function Header() {
           ) : null}
 
           {shouldShowPharmacyActions ? (
-            <ButtonLink
+            <LinkButton
               className={css.pharmacyCabinetLink}
               href={getPharmacyDashboardUrl()}
               variant="secondary"
               size="sm"
             >
               Pharmacy cabinet
-            </ButtonLink>
+            </LinkButton>
           ) : null}
 
           {shouldShowAuthenticatedActions ? (
@@ -136,19 +137,19 @@ function Header() {
 
           {shouldShowGuestActions ? (
             <>
-              <ButtonLink href={ROUTES.LOGIN} variant="ghost" size="sm">
+              <LinkButton href={ROUTES.LOGIN} variant="ghost" size="sm">
                 Log in
-              </ButtonLink>
+              </LinkButton>
 
-              <ButtonLink href={ROUTES.REGISTER} size="sm">
+              <LinkButton href={ROUTES.REGISTER} size="sm">
                 Register
-              </ButtonLink>
+              </LinkButton>
             </>
           ) : null}
         </div>
 
         {shouldShowClientActions ? (
-          <ButtonLink
+          <LinkButton
             className={css.mobileCartLink}
             href={ROUTES.CART}
             variant="ghost"
@@ -157,7 +158,7 @@ function Header() {
           >
             <ShoppingCart size={18} aria-hidden="true" />
             <span className={css.cartCount}>{visibleCartItemsCount}</span>
-          </ButtonLink>
+          </LinkButton>
         ) : null}
 
         <BurgerButton

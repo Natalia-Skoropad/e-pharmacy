@@ -15,9 +15,10 @@ import {
   Trash2,
 } from 'lucide-react';
 
-import { Button, ButtonLink, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
-import { DocumentUpload, SelectField, TextEditor } from '@e-pharmacy/ui/forms';
+import { DocumentUpload, SelectField, MarkdownTextarea } from '@e-pharmacy/ui/forms';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import type { UploadFileValue } from '@e-pharmacy/types/files';
@@ -679,13 +680,13 @@ function NewProductRequestPageContent({
       ) : null}
 
       {request?.status === 'rejected' ? (
-        <ButtonLink
+        <LinkButton
           href={`${getPharmacyNewRequestPath()}?source=${request.id}`}
           size="sm"
           iconRight={<FilePlus2 size={17} aria-hidden="true" />}
         >
           Create new based on rejected
-        </ButtonLink>
+        </LinkButton>
       ) : null}
     </div>
   );
@@ -793,14 +794,14 @@ function NewProductRequestPageContent({
             </p>
           </div>
 
-          <ButtonLink
+          <LinkButton
             href={getPharmacyAllProductsPath()}
             variant="secondary"
             size="sm"
             iconRight={<ExternalLink size={16} aria-hidden="true" />}
           >
             Open All products
-          </ButtonLink>
+          </LinkButton>
         </section>
       ) : null}
 
@@ -1089,7 +1090,7 @@ function NewProductRequestPageContent({
               </div>
             </div>
 
-            <TextEditor
+            <MarkdownTextarea
               id="product-request-full-description"
               name="fullDescription"
               label="Full description"

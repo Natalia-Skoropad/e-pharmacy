@@ -15,8 +15,7 @@ export * from './SearchInput';
 export * from './SearchableSelect';
 export * from './SelectField';
 export * from './TaxIdInput';
-export * from './TextEditor';
-export * from './WorkingHoursInput';
+export * from './MarkdownTextarea';
 
 export type {
   AddressFieldProps,

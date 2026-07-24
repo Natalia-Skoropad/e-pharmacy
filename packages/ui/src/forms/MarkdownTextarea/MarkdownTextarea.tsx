@@ -7,11 +7,11 @@ import { Bold, Italic, List, Pilcrow } from 'lucide-react';
 
 import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
 
-import css from './TextEditor.module.css';
+import css from './MarkdownTextarea.module.css';
 
 //===================================================================
 
-export type TextEditorProps = Readonly<{
+export type MarkdownTextareaProps = Readonly<{
   id: string;
   name: string;
   value: string;
@@ -77,7 +77,7 @@ function insertSnippet({
 
 //===================================================================
 
-function TextEditor({
+function MarkdownTextarea({
   id,
   name,
   value,
@@ -91,7 +91,7 @@ function TextEditor({
   maxLength,
   hint,
   onValueChange,
-}: TextEditorProps) {
+}: MarkdownTextareaProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const hasError = Boolean(isTouched && error);
   const describedBy =
@@ -179,5 +179,5 @@ function TextEditor({
   );
 }
 
-export default TextEditor;
-export { TextEditor };
+export default MarkdownTextarea;
+export { MarkdownTextarea };

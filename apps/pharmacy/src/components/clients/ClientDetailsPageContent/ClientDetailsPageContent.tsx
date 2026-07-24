@@ -24,11 +24,12 @@ import {
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
 
 import {
-  ButtonLink,
   FiltersButton,
   LoadingSpinner,
   TextActionButton,
 } from '@e-pharmacy/ui/primitives';
+
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 
 import {
   CountLabel,
@@ -862,7 +863,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       <main className={css.page}>
         <section className={css.contentCard}>
           <p>{error || 'Client not found.'}</p>
-          <ButtonLink
+          <LinkButton
             href={getPharmacyClientsPath()}
             renderLink={({ href, className, children, ...props }) => (
               <Link href={href} className={className} {...props}>
@@ -871,7 +872,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
             )}
           >
             Back to clients
-          </ButtonLink>
+          </LinkButton>
         </section>
       </main>
     );

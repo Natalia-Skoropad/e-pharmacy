@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
-import { Button, ButtonLink, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { CountLabel, RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { Container } from '@e-pharmacy/ui/layout';
@@ -214,12 +215,12 @@ function CartPageContent() {
                 Add products from the catalog and they will appear here.
               </p>
 
-              <ButtonLink
+              <LinkButton
                 className={css.emptyButton}
                 href={ROUTES.PRODUCTS_CATALOG}
               >
                 Browse products
-              </ButtonLink>
+              </LinkButton>
             </div>
           ) : null}
 
@@ -246,7 +247,7 @@ function CartPageContent() {
                         </div>
 
                         <div className={css.pharmacyActions}>
-                          <ButtonLink
+                          <LinkButton
                             href={buildPharmacyPath(
                               group.pharmacyName,
                               group.pharmacyId
@@ -255,7 +256,7 @@ function CartPageContent() {
                             size="sm"
                           >
                             Pharmacy details
-                          </ButtonLink>
+                          </LinkButton>
 
                           <Button
                             className={css.dangerButton}
