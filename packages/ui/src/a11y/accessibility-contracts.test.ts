@@ -44,21 +44,23 @@ test('data table preserves consumer order and alignment classes are truthful', a
 
 //===================================================================
 
-test('overlay foundation coordinates stacked dialogs through one manager', async () => {
-  const hook = await readSource('../../../hooks/src/dom/useOverlayLayer.ts');
+test('overlay foundation coordinates stacked dialogs through one UI-owned manager', async () => {
+  const manager = await readSource('../internal/overlay/overlay-manager.ts');
   const modal = await readSource('../overlays/ModalBase/ModalBase.tsx');
 
-  assert.match(hook, /const overlayStack: OverlayEntry\[\]/);
-  assert.match(hook, /getTopOverlay/);
-  assert.match(hook, /overlayStack\.length === 0/);
+  assert.match(manager, /const overlayStack: OverlayEntry\[\]/);
+  assert.match(manager, /getTopOverlay/);
+  assert.match(manager, /event\.defaultPrevented/);
 
   assert.match(
-    hook,
-    /document\.addEventListener\('keydown', handleDocumentKeyDown, true\)/
+    manager,
+    /document\.addEventListener\('keydown', handleDocumentKeyDown\)/
   );
 
-  assert.match(hook, /document\.body\.style\.overflow = 'hidden'/);
+  assert.doesNotMatch(manager, /handleDocumentKeyDown, true/);
+  assert.match(manager, /window\.cancelAnimationFrame/);
   assert.match(modal, /useOverlayLayer/);
+  assert.match(modal, /useBackdropPointer/);
 });
 
 //===================================================================

@@ -74,9 +74,11 @@ function removeFromSet(current: Set<string>, id: string): Set<string> {
 export function useCartMutations({ canUseCart }: CartMutationOptions) {
   const { cart, setCart } = useCart();
   const cartRef = useRef(cart);
+  const mountedRef = useRef(true);
   const pendingItemIdsRef = useRef(new Set<string>());
   const pendingOfferIdsRef = useRef(new Set<string>());
-  const itemRequestVersionRef = useRef(new Map<string, number>());
+  const mutationVersionRef = useRef(0);
+  const clearingLockRef = useRef(false);
 
   const [pendingItemIds, setPendingItemIds] = useState<Set<string>>(
     () => new Set()
@@ -90,8 +92,34 @@ export function useCartMutations({ canUseCart }: CartMutationOptions) {
     cartRef.current = cart;
   }, [cart]);
 
+  useEffect(() => {
+    mountedRef.current = true;
+    const pendingItemIdsAtMount = pendingItemIdsRef.current;
+    const pendingOfferIdsAtMount = pendingOfferIdsRef.current;
+
+    return () => {
+      mountedRef.current = false;
+      mutationVersionRef.current += 1;
+      clearingLockRef.current = false;
+      pendingItemIdsAtMount.clear();
+      pendingOfferIdsAtMount.clear();
+    };
+  }, []);
+
+  const beginMutation = useCallback(() => {
+    mutationVersionRef.current += 1;
+    return mutationVersionRef.current;
+  }, []);
+
+  const isCurrentMutation = useCallback(
+    (version: number) =>
+      mountedRef.current && mutationVersionRef.current === version,
+    []
+  );
+
   const commitCart = useCallback(
     (nextCart: Cart) => {
+      cartRef.current = nextCart;
       setCart(nextCart);
       dispatchCartUpdated(nextCart);
     },
@@ -105,7 +133,9 @@ export function useCartMutations({ canUseCart }: CartMutationOptions) {
 
   const unmarkItemPending = useCallback((cartItemId: string) => {
     pendingItemIdsRef.current.delete(cartItemId);
-    setPendingItemIds((current) => removeFromSet(current, cartItemId));
+    if (mountedRef.current) {
+      setPendingItemIds((current) => removeFromSet(current, cartItemId));
+    }
   }, []);
 
   const markOfferPending = useCallback((offerId?: string) => {
@@ -119,7 +149,9 @@ export function useCartMutations({ canUseCart }: CartMutationOptions) {
     if (!offerId) return;
 
     pendingOfferIdsRef.current.delete(offerId);
-    setPendingOfferIds((current) => removeFromSet(current, offerId));
+    if (mountedRef.current) {
+      setPendingOfferIds((current) => removeFromSet(current, offerId));
+    }
   }, []);
 
   const updateItemQuantity = useCallback(
@@ -128,38 +160,28 @@ export function useCartMutations({ canUseCart }: CartMutationOptions) {
       payload: UpdateCartItemPayload,
       options: OfferMutationOptions = {}
     ): Promise<CartResponse | null> => {
-      if (!canUseCart || payload.quantity < 1) return null;
+      if (!canUseCart || clearingLockRef.current || payload.quantity < 1) {
+        return null;
+      }
       if (pendingItemIdsRef.current.has(cartItemId)) return null;
 
       const previousCart = cartRef.current;
-      const version = (itemRequestVersionRef.current.get(cartItemId) ?? 0) + 1;
-
-      itemRequestVersionRef.current.set(cartItemId, version);
+      const version = beginMutation();
 
       markItemPending(cartItemId);
       markOfferPending(options.offerId);
 
-      const optimisticCart = getCartWithUpdatedQuantity(
-        previousCart,
-        cartItemId,
-        payload.quantity
+      commitCart(
+        getCartWithUpdatedQuantity(previousCart, cartItemId, payload.quantity)
       );
-
-      commitCart(optimisticCart);
 
       try {
         const response = await updateCartItem(cartItemId, payload);
 
-        if (itemRequestVersionRef.current.get(cartItemId) === version) {
-          commitCart(response.cart);
-        }
-
+        if (isCurrentMutation(version)) commitCart(response.cart);
         return response;
       } catch (error) {
-        if (itemRequestVersionRef.current.get(cartItemId) === version) {
-          commitCart(previousCart);
-        }
-
+        if (isCurrentMutation(version)) commitCart(previousCart);
         throw error;
       } finally {
         unmarkItemPending(cartItemId);
@@ -167,8 +189,10 @@ export function useCartMutations({ canUseCart }: CartMutationOptions) {
       }
     },
     [
+      beginMutation,
       canUseCart,
       commitCart,
+      isCurrentMutation,
       markItemPending,
       markOfferPending,
       unmarkItemPending,
@@ -181,23 +205,31 @@ export function useCartMutations({ canUseCart }: CartMutationOptions) {
       payload: AddCartItemPayload,
       options: OfferMutationOptions = {}
     ): Promise<CartResponse | null> => {
-      if (!canUseCart) return null;
+      if (!canUseCart || clearingLockRef.current) return null;
 
       if (options.offerId && pendingOfferIdsRef.current.has(options.offerId)) {
         return null;
       }
 
+      const version = beginMutation();
       markOfferPending(options.offerId);
 
       try {
         const response = await addCartItem(payload);
-        commitCart(response.cart);
+        if (isCurrentMutation(version)) commitCart(response.cart);
         return response;
       } finally {
         unmarkOfferPending(options.offerId);
       }
     },
-    [canUseCart, commitCart, markOfferPending, unmarkOfferPending]
+    [
+      beginMutation,
+      canUseCart,
+      commitCart,
+      isCurrentMutation,
+      markOfferPending,
+      unmarkOfferPending,
+    ]
   );
 
   const removeItemFromCart = useCallback(
@@ -205,15 +237,16 @@ export function useCartMutations({ canUseCart }: CartMutationOptions) {
       cartItemId: string,
       options: OfferMutationOptions = {}
     ): Promise<CartResponse | null> => {
-      if (!canUseCart) return null;
+      if (!canUseCart || clearingLockRef.current) return null;
       if (pendingItemIdsRef.current.has(cartItemId)) return null;
 
+      const version = beginMutation();
       markItemPending(cartItemId);
       markOfferPending(options.offerId);
 
       try {
         const response = await removeCartItem(cartItemId);
-        commitCart(response.cart);
+        if (isCurrentMutation(version)) commitCart(response.cart);
         return response;
       } finally {
         unmarkItemPending(cartItemId);
@@ -221,8 +254,10 @@ export function useCartMutations({ canUseCart }: CartMutationOptions) {
       }
     },
     [
+      beginMutation,
       canUseCart,
       commitCart,
+      isCurrentMutation,
       markItemPending,
       markOfferPending,
       unmarkItemPending,
@@ -231,24 +266,43 @@ export function useCartMutations({ canUseCart }: CartMutationOptions) {
   );
 
   const clearAllCart = useCallback(async (): Promise<CartResponse | null> => {
-    if (!canUseCart || isClearing) return null;
+    if (
+      !canUseCart ||
+      clearingLockRef.current ||
+      pendingItemIdsRef.current.size > 0 ||
+      pendingOfferIdsRef.current.size > 0
+    ) {
+      return null;
+    }
 
+    clearingLockRef.current = true;
     setIsClearing(true);
+    const version = beginMutation();
 
     try {
       const response = await clearCart();
-      commitCart(response.cart);
+      if (isCurrentMutation(version)) commitCart(response.cart);
       return response;
     } finally {
-      setIsClearing(false);
+      clearingLockRef.current = false;
+      if (mountedRef.current) setIsClearing(false);
     }
-  }, [canUseCart, commitCart, isClearing]);
+  }, [beginMutation, canUseCart, commitCart, isCurrentMutation]);
 
   const removePharmacyOrder = useCallback(
     async (pharmacyId: string): Promise<Cart | null> => {
-      if (!canUseCart || isClearing) return null;
+      if (
+        !canUseCart ||
+        clearingLockRef.current ||
+        pendingItemIdsRef.current.size > 0 ||
+        pendingOfferIdsRef.current.size > 0
+      ) {
+        return null;
+      }
 
+      clearingLockRef.current = true;
       setIsClearing(true);
+      const version = beginMutation();
 
       try {
         const pharmacyItems = cartRef.current.items.filter(
@@ -260,15 +314,17 @@ export function useCartMutations({ canUseCart }: CartMutationOptions) {
         for (const item of pharmacyItems) {
           const response = await removeCartItem(item.id);
           nextCart = response.cart;
-          commitCart(nextCart);
+
+          if (isCurrentMutation(version)) commitCart(nextCart);
         }
 
         return nextCart;
       } finally {
-        setIsClearing(false);
+        clearingLockRef.current = false;
+        if (mountedRef.current) setIsClearing(false);
       }
     },
-    [canUseCart, commitCart, isClearing]
+    [beginMutation, canUseCart, commitCart, isCurrentMutation]
   );
 
   return {

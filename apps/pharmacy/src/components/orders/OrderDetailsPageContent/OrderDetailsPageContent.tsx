@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import {
   CircleMinus,
@@ -114,7 +114,6 @@ import {
   createPharmacyOrder,
   createPharmacyOrderComment,
   deletePharmacyOrderComment,
-  getMyPharmacyProfile,
   getPharmacyClients,
   getPharmacyOrderDetails,
   getPharmacyOrderComments,
@@ -136,6 +135,7 @@ import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
 import { EntityComments } from '@/components/comments/EntityComments';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { OrderCancellationModal } from '@/components/orders/OrderCancellationModal';
 import { StatusBadge } from '@/components/common/StatusPresentation';
 
@@ -1338,6 +1338,8 @@ function OrderDetailsPageContent({
   const router = useRouter();
   const toast = useToast();
   const isCreateMode = mode === 'create';
+  const { profile: pharmacyProfile, isLoading: isProfileLoading } =
+    usePharmacyProfile();
 
   const [order, setOrder] = useState<PharmacyOrderDetails | null>(null);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
@@ -1369,9 +1371,22 @@ function OrderDetailsPageContent({
     useState<OrderDeliveryTouchedFields>({});
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const copiedEmailTimerRef = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (copiedEmailTimerRef.current !== null) {
+        window.clearTimeout(copiedEmailTimerRef.current);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-    let isMounted = true;
+    if (isCreateMode && isProfileLoading) return;
+
+    const controller = new AbortController();
+    const requestOptions = { signal: controller.signal };
 
     async function loadPage() {
       setIsLoading(true);
@@ -1379,12 +1394,16 @@ function OrderDetailsPageContent({
 
       try {
         if (isCreateMode) {
-          const [profileResponse, clientsResponse] = await Promise.all([
-            getMyPharmacyProfile(),
-            getPharmacyClients({ page: 1, perPage: 200, status: 'active' }),
-          ]);
+          if (!pharmacyProfile) {
+            throw new Error('Pharmacy profile could not be loaded.');
+          }
 
-          if (!isMounted) return;
+          const clientsResponse = await getPharmacyClients(
+            { page: 1, perPage: 200, status: 'active' },
+            requestOptions
+          );
+
+          if (controller.signal.aborted) return;
 
           const activeClients = clientsResponse.items.filter(
             (client) => client.status === 'active'
@@ -1399,7 +1418,7 @@ function OrderDetailsPageContent({
             );
           }
 
-          const pharmacy = profileResponse.pharmacy;
+          const pharmacy = pharmacyProfile;
           const clientPhone = getOptionalClientValue(defaultClient.phone);
           const clientAddress = getOptionalClientValue(defaultClient.address);
           const createdAt = new Date().toISOString();
@@ -1463,22 +1482,28 @@ function OrderDetailsPageContent({
         let loadedOrder: PharmacyOrderDetails;
 
         try {
-          loadedOrder = await getPharmacyOrderDetails(orderId);
+          loadedOrder = await getPharmacyOrderDetails(orderId, requestOptions);
         } catch (detailsError) {
           if (!/^\d+$/.test(orderId)) throw detailsError;
 
-          const ordersResponse = await getPharmacyOrders({
-            page: 1,
-            perPage: 1,
-          });
+          const ordersResponse = await getPharmacyOrders(
+            {
+              page: 1,
+              perPage: 1,
+            },
+            requestOptions
+          );
           const fallbackOrder = ordersResponse.items[0];
 
           if (!fallbackOrder) throw detailsError;
 
-          loadedOrder = await getPharmacyOrderDetails(fallbackOrder.id);
+          loadedOrder = await getPharmacyOrderDetails(
+            fallbackOrder.id,
+            requestOptions
+          );
         }
 
-        if (isMounted) {
+        if (!controller.signal.aborted) {
           const formState = getOrderFormState(loadedOrder);
 
           setOrder(loadedOrder);
@@ -1491,7 +1516,7 @@ function OrderDetailsPageContent({
           setDeliveryTouchedFields({});
         }
       } catch (loadError) {
-        if (isMounted) {
+        if (!controller.signal.aborted) {
           setOrder(null);
           setError(
             loadError instanceof Error && loadError.message
@@ -1502,16 +1527,16 @@ function OrderDetailsPageContent({
           );
         }
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }
 
     void loadPage();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
-  }, [isCreateMode, orderId]);
+  }, [isCreateMode, isProfileLoading, orderId, pharmacyProfile]);
 
   useEffect(() => {
     if (isCreateMode || !order?.orderNumber) return;
@@ -1923,9 +1948,22 @@ function OrderDetailsPageContent({
 
     try {
       await navigator.clipboard.writeText(email);
+
+      if (copiedEmailTimerRef.current !== null) {
+        window.clearTimeout(copiedEmailTimerRef.current);
+      }
+
       setCopiedEmail(true);
-      window.setTimeout(() => setCopiedEmail(false), 1800);
+      copiedEmailTimerRef.current = window.setTimeout(() => {
+        copiedEmailTimerRef.current = null;
+        setCopiedEmail(false);
+      }, 1800);
     } catch {
+      if (copiedEmailTimerRef.current !== null) {
+        window.clearTimeout(copiedEmailTimerRef.current);
+        copiedEmailTimerRef.current = null;
+      }
+      setCopiedEmail(false);
       toast.error('Could not copy the pharmacy email.');
     }
   };

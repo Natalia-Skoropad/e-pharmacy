@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { PackageSearch } from 'lucide-react';
 
+import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { FiltersButton } from '@e-pharmacy/ui/primitives';
 
@@ -19,7 +20,6 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
-import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
 import type {
@@ -32,11 +32,7 @@ import {
   AllProductStatisticsKey,
 } from '@e-pharmacy/types/products';
 
-import {
-  addProductToMyPharmacy,
-  getMyPharmacyProfile,
-  getProducts,
-} from '@/lib/api/browser';
+import { addProductToMyPharmacy, getProducts } from '@/lib/api/browser';
 
 import {
   getLockedFeatureBannerLabel,
@@ -54,6 +50,7 @@ import { getPharmacyAllProductStatistics } from '@/lib/products/product-statisti
 
 import { AllProductStatistics } from '@/components/statistics';
 import { StatusBanner } from '@/components/common/StatusPresentation';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { AllProductsFiltersDrawer } from '@/components/all-products/AllProductsFiltersDrawer';
 import { AllProductsTable } from '@/components/all-products/AllProductsTable';
 
@@ -116,6 +113,11 @@ function AllProductsPageContent({
   const router = useRouter();
   const pathname = usePathname();
   const toast = useToast();
+  const { profile: pharmacyProfile, isLoading: isProfileLoading } =
+    usePharmacyProfile();
+  const currentPharmacyId = pharmacyProfile?.id ?? null;
+  const pharmacyStatus = pharmacyProfile?.status ?? null;
+  const isProfileLoaded = !isProfileLoading;
 
   const [filters, setFilters] =
     useState<AllProductsFilterState>(initialFilters);
@@ -136,65 +138,33 @@ function AllProductsPageContent({
   const [addingProductId, setAddingProductId] = useState<EntityId | null>(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
 
-  const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
-    null
-  );
-
-  const [pharmacyStatus, setPharmacyStatus] = useState<PharmacyStatus | null>(
-    null
-  );
-
-  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function loadPharmacyProfile() {
-      try {
-        const response = await getMyPharmacyProfile();
-        if (!isMounted) return;
-
-        setCurrentPharmacyId(response.pharmacy.id);
-        setPharmacyStatus(response.pharmacy.status);
-      } catch {
-        if (!isMounted) return;
-
-        setCurrentPharmacyId(null);
-        setPharmacyStatus('new');
-      } finally {
-        if (isMounted) setIsProfileLoaded(true);
-      }
-    }
-
-    void loadPharmacyProfile();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
     if (!currentPharmacyId) return;
 
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadProductStatistics(pharmacyId: EntityId) {
       try {
-        const nextStatistics =
-          await getPharmacyAllProductStatistics(pharmacyId);
+        const nextStatistics = await getPharmacyAllProductStatistics(
+          pharmacyId,
+          { signal: controller.signal }
+        );
 
-        if (isMounted) setProductStatistics(nextStatistics);
+        if (!controller.signal.aborted) setProductStatistics(nextStatistics);
       } catch {
-        if (isMounted) setProductStatistics(DEFAULT_ALL_PRODUCT_STATISTICS);
+        if (!controller.signal.aborted) {
+          setProductStatistics(DEFAULT_ALL_PRODUCT_STATISTICS);
+        }
       }
     }
 
     void loadProductStatistics(currentPharmacyId);
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [currentPharmacyId, refreshVersion]);
 
@@ -212,49 +182,50 @@ function AllProductsPageContent({
   useEffect(() => {
     if (!isProfileLoaded) return;
 
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadProducts() {
       setIsLoading(true);
 
       try {
-        const response = await getProducts(queryParams);
-        if (!isMounted) return;
+        const response = await getProducts(queryParams, {
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted) return;
 
         setProducts([...response.items]);
         setTotalProducts(response.total);
         setEarliestCreatedAt(response.earliestCreatedAt);
         setTotalPages(Math.max(1, response.totalPages));
       } catch {
-        if (!isMounted) return;
+        if (controller.signal.aborted) return;
 
         setProducts([]);
         setTotalProducts(0);
         setEarliestCreatedAt(null);
         setTotalPages(1);
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }
 
     void loadProducts();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [isProfileLoaded, queryParams, refreshVersion]);
 
-  useEffect(() => {
-    const nextPath = buildAllProductsPath(filters);
+  const debouncedFilters = useDebouncedValue(filters, 450);
 
+  useEffect(() => {
+    if (debouncedFilters !== filters) return;
+
+    const nextPath = buildAllProductsPath(debouncedFilters);
     if (pathname === nextPath) return;
 
-    const timeoutId = window.setTimeout(() => {
-      router.replace(nextPath, { scroll: false });
-    }, 450);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [filters, pathname, router]);
+    router.replace(nextPath, { scroll: false });
+  }, [debouncedFilters, filters, pathname, router]);
 
   const activeFiltersCount = countTrueConditions(
     Boolean(filters.createdDate.from || filters.createdDate.to),

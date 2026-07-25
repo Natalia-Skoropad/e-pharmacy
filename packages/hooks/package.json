@@ -3,19 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./dom": "./src/dom/index.ts"
+    "./dom": "./src/dom/index.ts",
+    "./timing": "./src/timing/index.ts"
   },
   "scripts": {
-    "lint": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
-    "build": "tsc"
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\""
   },
   "peerDependencies": {
-    "react": "19.2.4"
+    "react": ">=19 <20"
   },
   "devDependencies": {
     "@types/react": "^19",

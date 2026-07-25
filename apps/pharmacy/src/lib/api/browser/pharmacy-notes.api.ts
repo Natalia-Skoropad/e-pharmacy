@@ -1,6 +1,10 @@
 import 'client-only';
 
-import { buildQueryString, getResponseData } from '@e-pharmacy/api-client/core';
+import {
+  buildQueryString,
+  getResponseData,
+  type JsonResponseRequestOptions,
+} from '@e-pharmacy/api-client/core';
 
 import {
   normalizePaginatedResponse,
@@ -38,10 +42,12 @@ function normalizeComment(value: unknown): PharmacyNote | null {
 export async function getPharmacyNotes(
   type: PharmacyNoteEntityType,
   entityId: string,
-  page = 1
+  page = 1,
+  options?: JsonResponseRequestOptions
 ): Promise<PharmacyNotesResponse> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    `/api/pharmacy-notes/${type}/${entityId}${buildQueryString({ page, perPage: 10 })}`
+    `/api/pharmacy-notes/${type}/${entityId}${buildQueryString({ page, perPage: 10 })}`,
+    options
   );
 
   const pagination = requirePaginatedResponse(

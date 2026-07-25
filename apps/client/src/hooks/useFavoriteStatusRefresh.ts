@@ -7,6 +7,7 @@ import {
   getFavoritePharmacyIds,
 } from '@/lib/api/browser';
 
+import { useClientAuthCapabilities } from './useClientAuthCapabilities';
 import { useFavoriteRefresh } from './useFavoriteRefresh';
 
 //===================================================================
@@ -15,47 +16,8 @@ type UseFavoriteStatusRefreshParams = {
   id: string;
   isEnabled: boolean;
   onRefresh: (isFavorite: boolean) => void;
+  onError?: (error: unknown) => void;
 };
-
-//===================================================================
-
-// These promise caches deduplicate favorite status refreshes inside one browser
-// runtime. Invalidate them after each add/remove mutation so details pages and
-// catalog cards do not reuse stale favorite ids.
-let favoriteProductIdsPromise: Promise<Set<string>> | null = null;
-let favoritePharmacyIdsPromise: Promise<Set<string>> | null = null;
-
-//===================================================================
-
-async function getCachedFavoriteProductIds(): Promise<Set<string>> {
-  favoriteProductIdsPromise ??= getFavoriteProductIds().then(
-    (response) => new Set(response.ids)
-  );
-
-  return favoriteProductIdsPromise;
-}
-
-//===================================================================
-
-async function getCachedFavoritePharmacyIds(): Promise<Set<string>> {
-  favoritePharmacyIdsPromise ??= getFavoritePharmacyIds().then(
-    (response) => new Set(response.ids)
-  );
-
-  return favoritePharmacyIdsPromise;
-}
-
-//===================================================================
-
-export function invalidateFavoriteProductIdsCache(): void {
-  favoriteProductIdsPromise = null;
-}
-
-//===================================================================
-
-export function invalidateFavoritePharmacyIdsCache(): void {
-  favoritePharmacyIdsPromise = null;
-}
 
 //===================================================================
 
@@ -63,17 +25,25 @@ export function useProductFavoriteRefresh({
   id,
   isEnabled,
   onRefresh,
+  onError,
 }: UseFavoriteStatusRefreshParams): void {
-  const refreshFavorite = useCallback(async () => {
-    const favoriteIds = await getCachedFavoriteProductIds();
+  const { user } = useClientAuthCapabilities();
 
-    return favoriteIds.has(id);
-  }, [id]);
+  const refreshFavorite = useCallback(
+    async (signal: AbortSignal) => {
+      if (!user?.id) return false;
+
+      const response = await getFavoriteProductIds({ signal });
+      return response.ids.includes(id);
+    },
+    [id, user?.id]
+  );
 
   useFavoriteRefresh({
     isEnabled,
     refreshFavorite,
     onRefresh,
+    onError,
   });
 }
 
@@ -83,16 +53,24 @@ export function usePharmacyFavoriteRefresh({
   id,
   isEnabled,
   onRefresh,
+  onError,
 }: UseFavoriteStatusRefreshParams): void {
-  const refreshFavorite = useCallback(async () => {
-    const favoriteIds = await getCachedFavoritePharmacyIds();
+  const { user } = useClientAuthCapabilities();
 
-    return favoriteIds.has(id);
-  }, [id]);
+  const refreshFavorite = useCallback(
+    async (signal: AbortSignal) => {
+      if (!user?.id) return false;
+
+      const response = await getFavoritePharmacyIds({ signal });
+      return response.ids.includes(id);
+    },
+    [id, user?.id]
+  );
 
   useFavoriteRefresh({
     isEnabled,
     refreshFavorite,
     onRefresh,
+    onError,
   });
 }

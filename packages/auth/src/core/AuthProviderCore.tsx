@@ -160,9 +160,25 @@ export function AuthProviderCore({
 
   const lifecycleVersionRef = useRef(0);
   const bootstrapPromiseRef = useRef<Promise<AuthUser | null> | null>(null);
+  const bootstrapTimeoutIdRef = useRef<number | null>(null);
   const sessionHintStorageRef = useRef(sessionHintStorage);
   const sessionSyncRef = useRef<AuthSessionSync | null>(null);
   const userRef = useRef<AuthUser | null>(null);
+  const refreshRetryControllersRef = useRef(new Set<AbortController>());
+
+  const cancelRefreshRetries = useCallback(() => {
+    for (const controller of refreshRetryControllersRef.current) {
+      controller.abort();
+    }
+    refreshRetryControllersRef.current.clear();
+  }, []);
+
+  const cancelBootstrapTimeout = useCallback(() => {
+    if (bootstrapTimeoutIdRef.current === null) return;
+
+    window.clearTimeout(bootstrapTimeoutIdRef.current);
+    bootstrapTimeoutIdRef.current = null;
+  }, []);
 
   useEffect(() => {
     sessionHintStorageRef.current = sessionHintStorage;
@@ -186,16 +202,21 @@ export function AuthProviderCore({
     []
   );
 
-  const clearAuthState = useCallback((publishSessionEvent = true) => {
-    sessionHintStorageRef.current.clearHint();
-    setAuthError(null);
-    setIsRefreshingUser(false);
-    setUser(null);
-    setStatus('unauthenticated');
-    if (publishSessionEvent) {
-      sessionSyncRef.current?.publish('unauthenticated');
-    }
-  }, []);
+  const clearAuthState = useCallback(
+    (publishSessionEvent = true) => {
+      cancelBootstrapTimeout();
+      cancelRefreshRetries();
+      sessionHintStorageRef.current.clearHint();
+      setAuthError(null);
+      setIsRefreshingUser(false);
+      setUser(null);
+      setStatus('unauthenticated');
+      if (publishSessionEvent) {
+        sessionSyncRef.current?.publish('unauthenticated');
+      }
+    },
+    [cancelBootstrapTimeout, cancelRefreshRetries]
+  );
 
   const markAuthUnavailable = useCallback(
     (error: unknown, preserveAuthenticatedState: boolean) => {
@@ -285,11 +306,16 @@ export function AuthProviderCore({
 
       const restorePromise = restoreCurrentUser('bootstrap');
 
-      let timeoutId: number | null = null;
+      const lifecycleVersion = lifecycleVersionRef.current;
       const timeoutPromise = new Promise<AuthUser | null>((resolve) => {
-        timeoutId = window.setTimeout(() => {
-          const timeoutError = new AuthBootstrapTimeoutError();
-          markBootstrapTimeout(timeoutError);
+        bootstrapTimeoutIdRef.current = window.setTimeout(() => {
+          bootstrapTimeoutIdRef.current = null;
+
+          if (lifecycleVersion === lifecycleVersionRef.current) {
+            const timeoutError = new AuthBootstrapTimeoutError();
+            markBootstrapTimeout(timeoutError);
+          }
+
           resolve(null);
         }, AUTH_BOOTSTRAP_TIMEOUT_MS);
       });
@@ -298,13 +324,18 @@ export function AuthProviderCore({
         restorePromise,
         timeoutPromise,
       ]).finally(() => {
-        if (timeoutId !== null) window.clearTimeout(timeoutId);
+        cancelBootstrapTimeout();
         bootstrapPromiseRef.current = null;
       });
     }
 
     return bootstrapPromiseRef.current;
-  }, [clearAuthState, markBootstrapTimeout, restoreCurrentUser]);
+  }, [
+    cancelBootstrapTimeout,
+    clearAuthState,
+    markBootstrapTimeout,
+    restoreCurrentUser,
+  ]);
 
   const reloadCurrentUser = useCallback(async () => {
     const lifecycleVersion = lifecycleVersionRef.current;
@@ -325,10 +356,27 @@ export function AuthProviderCore({
     } catch (error) {
       if (isInvalidSessionError(error)) throw error;
 
-      await new Promise<void>((resolve) => {
-        window.setTimeout(resolve, AUTH_SESSION_REFRESH_RETRY_DELAY_MS);
+      const controller = new AbortController();
+      refreshRetryControllersRef.current.add(controller);
+
+      const shouldRetry = await new Promise<boolean>((resolve) => {
+        const timeoutId = window.setTimeout(() => {
+          resolve(true);
+        }, AUTH_SESSION_REFRESH_RETRY_DELAY_MS);
+
+        controller.signal.addEventListener(
+          'abort',
+          () => {
+            window.clearTimeout(timeoutId);
+            resolve(false);
+          },
+          { once: true }
+        );
+      }).finally(() => {
+        refreshRetryControllersRef.current.delete(controller);
       });
 
+      if (!shouldRetry) throw error;
       return refreshSessionOnce();
     }
   }, [refreshSessionOnce]);
@@ -371,11 +419,18 @@ export function AuthProviderCore({
   const login = useCallback(
     async (payload: LoginPayload) => {
       lifecycleVersionRef.current += 1;
+      cancelBootstrapTimeout();
+      cancelRefreshRetries();
       const response = await loginService(payload);
       applyAuthenticatedUser(response.user);
       return response.user;
     },
-    [applyAuthenticatedUser, loginService]
+    [
+      applyAuthenticatedUser,
+      cancelBootstrapTimeout,
+      cancelRefreshRetries,
+      loginService,
+    ]
   );
 
   const register = useMemo(() => {
@@ -383,21 +438,43 @@ export function AuthProviderCore({
 
     return async (payload: RegisterPayload) => {
       lifecycleVersionRef.current += 1;
+      cancelBootstrapTimeout();
+      cancelRefreshRetries();
       const response = await registerService(payload);
       applyAuthenticatedUser(response.user);
       return response.user;
     };
-  }, [applyAuthenticatedUser, registerService]);
+  }, [
+    applyAuthenticatedUser,
+    cancelBootstrapTimeout,
+    cancelRefreshRetries,
+    registerService,
+  ]);
 
   const logout = useCallback(async () => {
     lifecycleVersionRef.current += 1;
+    cancelBootstrapTimeout();
+    cancelRefreshRetries();
 
     try {
       await logoutService();
     } finally {
       clearAuthState();
     }
-  }, [clearAuthState, logoutService]);
+  }, [
+    cancelBootstrapTimeout,
+    cancelRefreshRetries,
+    clearAuthState,
+    logoutService,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      lifecycleVersionRef.current += 1;
+      cancelBootstrapTimeout();
+      cancelRefreshRetries();
+    };
+  }, [cancelBootstrapTimeout, cancelRefreshRetries]);
 
   useEffect(() => {
     const ownsSync = !sessionSync;

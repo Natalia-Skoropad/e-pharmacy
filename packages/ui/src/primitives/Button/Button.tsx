@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { LoaderCircle } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -25,24 +25,28 @@ export type ButtonProps = {
 
 //===================================================================
 
-function Button({
-  children,
-  variant = 'primary',
-  size = 'md',
-  fullWidth = false,
-  isLoading = false,
-  loadingLabel,
-  iconLeft,
-  iconRight,
-  className,
-  type = 'button',
-  disabled,
-  ...props
-}: ButtonProps) {
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  {
+    children,
+    variant = 'primary',
+    size = 'md',
+    fullWidth = false,
+    isLoading = false,
+    loadingLabel,
+    iconLeft,
+    iconRight,
+    className,
+    type = 'button',
+    disabled,
+    ...props
+  },
+  ref
+) {
   const isDisabled = disabled || isLoading;
 
   return (
     <button
+      ref={ref}
       className={clsx(
         css.button,
         css[variant],
@@ -69,7 +73,7 @@ function Button({
       {!isLoading ? iconRight : null}
     </button>
   );
-}
+});
 
 export default Button;
 export { Button };

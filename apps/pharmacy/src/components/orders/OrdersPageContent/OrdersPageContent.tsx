@@ -6,6 +6,7 @@ import { ShoppingBag } from 'lucide-react';
 
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
+import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 
 import {
   RowsPerPageSelect,
@@ -107,14 +108,16 @@ function OrdersPageContent({
   );
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadOrders() {
       setIsLoading(true);
 
       try {
-        const response = await getPharmacyOrders(queryParams);
-        if (!isMounted) return;
+        const response = await getPharmacyOrders(queryParams, {
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted) return;
 
         setOrders([...response.items]);
         setTotalOrders(response.total);
@@ -122,7 +125,7 @@ function OrdersPageContent({
         setEarliestCreatedAt(response.earliestCreatedAt);
         setOrderStatistics(response.statistics);
       } catch {
-        if (!isMounted) return;
+        if (controller.signal.aborted) return;
 
         setOrders([]);
         setTotalOrders(0);
@@ -130,28 +133,27 @@ function OrdersPageContent({
         setEarliestCreatedAt(null);
         setOrderStatistics(DEFAULT_ORDER_STATISTICS);
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }
 
     void loadOrders();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [queryParams]);
 
-  useEffect(() => {
-    const nextPath = buildOrdersPath(filters);
+  const debouncedFilters = useDebouncedValue(filters, 450);
 
+  useEffect(() => {
+    if (debouncedFilters !== filters) return;
+
+    const nextPath = buildOrdersPath(debouncedFilters);
     if (pathname === nextPath) return;
 
-    const timeoutId = window.setTimeout(() => {
-      router.replace(nextPath, { scroll: false });
-    }, 450);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [filters, pathname, router]);
+    router.replace(nextPath, { scroll: false });
+  }, [debouncedFilters, filters, pathname, router]);
 
   const activeFiltersCount = countTrueConditions(
     Boolean(filters.date.from || filters.date.to),
@@ -179,7 +181,7 @@ function OrdersPageContent({
     setCurrentPage(1);
   };
 
-  const currentPharmacyStatus = useCurrentPharmacyStatus();
+  const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
   const bannerLabel = bannerStatus
     ? getLockedFeatureBannerLabel(bannerStatus)

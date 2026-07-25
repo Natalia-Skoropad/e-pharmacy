@@ -1,6 +1,11 @@
 import 'client-only';
 
-import { buildQueryString, getResponseData } from '@e-pharmacy/api-client/core';
+import {
+  buildQueryString,
+  getResponseData,
+  type JsonResponseRequestOptions,
+} from '@e-pharmacy/api-client/core';
+
 import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
@@ -73,10 +78,12 @@ export async function createPharmacyOrder(
 //===================================================================
 
 export async function getPharmacyOrders(
-  params: PharmacyOrdersQueryParams = {}
+  params: PharmacyOrdersQueryParams = {},
+  options?: JsonResponseRequestOptions
 ): Promise<PharmacyOrdersResponse> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    `${PHARMACY_API_ROUTES.orders.list}${buildQueryString(params)}`
+    `${PHARMACY_API_ROUTES.orders.list}${buildQueryString(params)}`,
+    options
   );
 
   return normalizePharmacyOrdersResponse(getResponseData(response));
@@ -85,10 +92,12 @@ export async function getPharmacyOrders(
 //===================================================================
 
 export async function getPharmacyOrderDetails(
-  orderId: string
+  orderId: string,
+  options?: JsonResponseRequestOptions
 ): Promise<PharmacyOrderDetails> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    PHARMACY_API_ROUTES.orders.details(orderId)
+    PHARMACY_API_ROUTES.orders.details(orderId),
+    options
   );
 
   const responsePayload = getResponseData(response) as { order?: unknown };
@@ -212,10 +221,12 @@ export async function deletePharmacyOrderComment(
 //===================================================================
 
 export async function getPharmacyOrderSalesStatistics(
-  params: PharmacyOrderSalesStatisticsQueryParams = {}
+  params: PharmacyOrderSalesStatisticsQueryParams = {},
+  options?: JsonResponseRequestOptions
 ) {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    `${PHARMACY_API_ROUTES.orders.salesStatistics}${buildQueryString(params)}`
+    `${PHARMACY_API_ROUTES.orders.salesStatistics}${buildQueryString(params)}`,
+    options
   );
 
   return normalizeOrderSalesStatistics(getResponseData(response));

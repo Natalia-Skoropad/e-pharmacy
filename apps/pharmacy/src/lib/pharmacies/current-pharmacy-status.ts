@@ -1,11 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
 import { PHARMACY_STATUS_LABELS } from '@e-pharmacy/config/pharmacy';
 import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 
-import { getMyPharmacyProfile } from '@/lib/api/browser';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 //===================================================================
 
@@ -33,28 +31,13 @@ export function getLockedFeatureBannerLabel(
 
 //===================================================================
 
-export function useCurrentPharmacyStatus(): PharmacyStatus | null {
-  const [status, setStatus] = useState<PharmacyStatus | null>(null);
+export function useCurrentPharmacyStatus() {
+  const { profile, isLoading, error, refresh } = usePharmacyProfile();
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadStatus() {
-      try {
-        const response = await getMyPharmacyProfile();
-
-        if (isMounted) setStatus(response.pharmacy.status);
-      } catch {
-        if (isMounted) setStatus(null);
-      }
-    }
-
-    void loadStatus();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  return status;
+  return {
+    status: profile?.status ?? null,
+    isLoading,
+    error,
+    refresh,
+  };
 }

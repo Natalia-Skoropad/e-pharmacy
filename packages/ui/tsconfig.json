@@ -14,9 +14,6 @@
         "../config/src/*/index.ts",
         "../config/src/*.ts"
       ],
-      "@e-pharmacy/hooks": [
-        "../hooks/src/index.ts"
-      ],
       "@e-pharmacy/hooks/*": [
         "../hooks/src/*"
       ],

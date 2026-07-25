@@ -1,7 +1,12 @@
 import 'client-only';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
-import { getResponseData } from '@e-pharmacy/api-client/core';
+
+import {
+  getResponseData,
+  type JsonResponseRequestOptions,
+} from '@e-pharmacy/api-client/core';
+
 import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 
 import type {
@@ -22,9 +27,12 @@ export function getCartResponseData(
 
 //===================================================================
 
-export async function getCart(): Promise<CartResponse> {
+export async function getCart(
+  options?: JsonResponseRequestOptions
+): Promise<CartResponse> {
   const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.current
+    CLIENT_API_ROUTES.cart.current,
+    options
   );
 
   return getCartResponseData(response);

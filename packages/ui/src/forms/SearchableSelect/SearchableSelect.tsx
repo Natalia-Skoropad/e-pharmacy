@@ -10,8 +10,10 @@ import {
   type ReactNode,
 } from 'react';
 
-import { Check, ChevronDown, LoaderCircle, Search } from 'lucide-react';
 import clsx from 'clsx';
+import { Check, ChevronDown, LoaderCircle, Search } from 'lucide-react';
+
+import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
 
 import { useListboxNavigation } from '../../internal/listbox/useListboxNavigation';
 
@@ -113,19 +115,14 @@ function SearchableSelect<TValue extends string = string>({
     optionRefs.current[activeIndex]?.scrollIntoView({ block: 'nearest' });
   }, [activeIndex, isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleDocumentClick = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setIsOpen(false);
-        setQuery('');
-      }
-    };
-
-    document.addEventListener('mousedown', handleDocumentClick);
-    return () => document.removeEventListener('mousedown', handleDocumentClick);
-  }, [isOpen]);
+  useOutsidePointerDown({
+    refs: [rootRef],
+    enabled: isOpen,
+    onOutside: () => {
+      setIsOpen(false);
+      setQuery('');
+    },
+  });
 
   const closeSelect = () => {
     setIsOpen(false);

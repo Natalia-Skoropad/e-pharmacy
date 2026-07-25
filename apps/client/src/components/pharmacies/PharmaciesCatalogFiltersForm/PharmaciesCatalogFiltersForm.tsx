@@ -13,6 +13,7 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
+import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import type { PharmaciesSortFilter } from '@e-pharmacy/types/pharmacies';
 import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
 
@@ -75,8 +76,24 @@ function PharmaciesCatalogFiltersForm({
 }: PharmaciesCatalogFiltersFormProps) {
   const router = useRouter();
 
-  const [name, setName] = useState(filters.name);
-  const [address, setAddress] = useState(filters.address);
+  const [searchDraft, setSearchDraft] = useState(() => ({
+    name: filters.name,
+    address: filters.address,
+    sourceName: filters.name,
+    sourceAddress: filters.address,
+  }));
+
+  const name =
+    searchDraft.sourceName === filters.name ? searchDraft.name : filters.name;
+  const address =
+    searchDraft.sourceAddress === filters.address
+      ? searchDraft.address
+      : filters.address;
+
+  const debouncedSearchDraft = useDebouncedValue(
+    searchDraft,
+    CATALOG_SEARCH_UPDATE_DELAY
+  );
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const activeFiltersCount = getPharmacyActiveFiltersCount(filters);
@@ -92,27 +109,31 @@ function PharmaciesCatalogFiltersForm({
   );
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      const trimmedName = name.trim();
-      const trimmedAddress = address.trim();
+    if (
+      debouncedSearchDraft !== searchDraft ||
+      debouncedSearchDraft.sourceName !== filters.name ||
+      debouncedSearchDraft.sourceAddress !== filters.address
+    ) {
+      return;
+    }
 
-      if (trimmedName === filters.name && trimmedAddress === filters.address) {
-        return;
-      }
+    const trimmedName = debouncedSearchDraft.name.trim();
+    const trimmedAddress = debouncedSearchDraft.address.trim();
 
-      router.replace(
-        buildPharmacyFiltersHref({
-          ...filters,
-          name: trimmedName,
-          address: trimmedAddress,
-          page: 1,
-        }),
-        { scroll: false }
-      );
-    }, CATALOG_SEARCH_UPDATE_DELAY);
+    if (trimmedName === filters.name && trimmedAddress === filters.address) {
+      return;
+    }
 
-    return () => window.clearTimeout(timeoutId);
-  }, [address, filters, name, router]);
+    router.replace(
+      buildPharmacyFiltersHref({
+        ...filters,
+        name: trimmedName,
+        address: trimmedAddress,
+        page: 1,
+      }),
+      { scroll: false }
+    );
+  }, [debouncedSearchDraft, filters, router, searchDraft]);
 
   const updatePharmaciesCatalog = (nextFilters: PharmaciesHrefFilters) => {
     router.replace(buildPharmacyFiltersHref({ ...nextFilters, page: 1 }), {
@@ -160,7 +181,14 @@ function PharmaciesCatalogFiltersForm({
             isActive={Boolean(filters.name)}
             maxLength={USER_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogTextSearch}
-            onChange={setName}
+            onChange={(nextName) =>
+              setSearchDraft({
+                name: nextName,
+                address,
+                sourceName: filters.name,
+                sourceAddress: filters.address,
+              })
+            }
           />
 
           <SearchInput
@@ -171,7 +199,14 @@ function PharmaciesCatalogFiltersForm({
             isActive={Boolean(filters.address)}
             maxLength={USER_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogTextSearch}
-            onChange={setAddress}
+            onChange={(nextAddress) =>
+              setSearchDraft({
+                name,
+                address: nextAddress,
+                sourceName: filters.name,
+                sourceAddress: filters.address,
+              })
+            }
           />
 
           <div className={css.desktopFilters}>
@@ -183,8 +218,12 @@ function PharmaciesCatalogFiltersForm({
               href={resetHref}
               isVisible={hasActiveFilters}
               onClick={() => {
-                setName('');
-                setAddress('');
+                setSearchDraft({
+                  name: '',
+                  address: '',
+                  sourceName: '',
+                  sourceAddress: '',
+                });
               }}
             />
           </div>
@@ -227,8 +266,12 @@ function PharmaciesCatalogFiltersForm({
         resetHref={resetHref}
         onClose={() => setIsFiltersOpen(false)}
         onReset={() => {
-          setName('');
-          setAddress('');
+          setSearchDraft({
+            name: '',
+            address: '',
+            sourceName: '',
+            sourceAddress: '',
+          });
           setIsFiltersOpen(false);
         }}
       >

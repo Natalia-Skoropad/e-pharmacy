@@ -212,7 +212,7 @@ function NewProductRequestPageContent({
 }: NewProductRequestPageContentProps) {
   const router = useRouter();
   const toast = useToast();
-  const currentPharmacyStatus = useCurrentPharmacyStatus();
+  const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
   const isBlocked = currentPharmacyStatus === 'blocked';
   const isCreationLocked = Boolean(bannerStatus || isBlocked);

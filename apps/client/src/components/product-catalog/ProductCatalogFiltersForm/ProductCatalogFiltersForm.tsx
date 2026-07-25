@@ -13,6 +13,7 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
+import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 
 import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
 import type { ProductFilterOptionsResponse } from '@e-pharmacy/types/products';
@@ -108,6 +109,11 @@ function ProductCatalogFiltersForm({
       ? searchDraft.article
       : filters.article;
 
+  const debouncedSearchDraft = useDebouncedValue(
+    searchDraft,
+    CATALOG_SEARCH_UPDATE_DELAY
+  );
+
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const activeFiltersCount = getProductCatalogActiveFiltersCount(filters);
@@ -135,30 +141,34 @@ function ProductCatalogFiltersForm({
   );
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      const trimmedName = name.trim();
-      const trimmedArticle = article.trim();
+    if (
+      debouncedSearchDraft !== searchDraft ||
+      debouncedSearchDraft.sourceName !== filters.name ||
+      debouncedSearchDraft.sourceArticle !== filters.article
+    ) {
+      return;
+    }
 
-      if (trimmedName === filters.name && trimmedArticle === filters.article) {
-        return;
-      }
+    const trimmedName = debouncedSearchDraft.name.trim();
+    const trimmedArticle = debouncedSearchDraft.article.trim();
 
-      router.replace(
-        buildProductsFiltersHref(
-          {
-            ...filters,
-            name: trimmedName,
-            article: trimmedArticle,
-            page: 1,
-          },
-          pharmacies
-        ),
-        { scroll: false }
-      );
-    }, CATALOG_SEARCH_UPDATE_DELAY);
+    if (trimmedName === filters.name && trimmedArticle === filters.article) {
+      return;
+    }
 
-    return () => window.clearTimeout(timeoutId);
-  }, [article, filters, name, router, pharmacies]);
+    router.replace(
+      buildProductsFiltersHref(
+        {
+          ...filters,
+          name: trimmedName,
+          article: trimmedArticle,
+          page: 1,
+        },
+        pharmacies
+      ),
+      { scroll: false }
+    );
+  }, [debouncedSearchDraft, filters, pharmacies, router, searchDraft]);
 
   const handleNameChange = (nextName: string) => {
     setSearchDraft({

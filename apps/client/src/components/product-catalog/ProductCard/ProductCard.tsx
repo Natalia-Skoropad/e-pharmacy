@@ -13,7 +13,6 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import type { ProductDetails } from '@e-pharmacy/types/products';
 
 import {
-  invalidateFavoriteProductIdsCache,
   useClientAuthCapabilities,
   useFavoriteActions,
   useProductFavoriteRefresh,
@@ -57,7 +56,6 @@ function ProductCard({
       addFavorite: addFavoriteProduct,
       removeFavorite: removeFavoriteProduct,
       onFavoriteChange: (productId, nextIsFavorite) => {
-        invalidateFavoriteProductIdsCache();
         onFavoriteChange?.(productId, nextIsFavorite);
       },
     });

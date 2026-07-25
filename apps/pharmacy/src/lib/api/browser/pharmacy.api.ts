@@ -1,6 +1,10 @@
 import 'client-only';
 
-import { getResponseData } from '@e-pharmacy/api-client/core';
+import {
+  getResponseData,
+  type JsonResponseRequestOptions,
+} from '@e-pharmacy/api-client/core';
+
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
@@ -25,10 +29,12 @@ import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharm
 
 //===================================================================
 
-export async function getMyPharmacyProfile(): Promise<PharmacyProfileResponse> {
+export async function getMyPharmacyProfile(
+  options?: JsonResponseRequestOptions
+): Promise<PharmacyProfileResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<PharmacyProfileResponse>
-  >(PHARMACY_API_ROUTES.pharmacies.myProfile);
+  >(PHARMACY_API_ROUTES.pharmacies.myProfile, options);
 
   return getResponseData(response);
 }

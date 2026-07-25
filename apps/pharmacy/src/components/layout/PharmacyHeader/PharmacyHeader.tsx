@@ -19,16 +19,15 @@ import {
   Users,
 } from 'lucide-react';
 
-import type { PharmacyProfile } from '@e-pharmacy/types/pharmacies';
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import { BurgerButton } from '@e-pharmacy/ui/cabinet';
 import { CabinetTopBar } from '@e-pharmacy/ui/cabinet';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { UserBadge } from '@e-pharmacy/ui/data-display';
 import { useAuth } from '@e-pharmacy/auth/core';
+import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
 import { getPharmacyProfilePath } from '@e-pharmacy/config/pharmacy';
 
-import { getMyPharmacyProfile } from '@/lib/api/browser';
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 
 import {
@@ -38,6 +37,7 @@ import {
 } from '@/lib/layout/external-links';
 
 import { PharmacyMobileMenu } from '@/components/layout/PharmacyMobileMenu/PharmacyMobileMenu';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import css from './PharmacyHeader.module.css';
 
@@ -90,13 +90,12 @@ function getTopBarIcon(label?: string) {
 
 export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
   const { user, logout } = useAuth();
+  const { profile: pharmacyProfile } = usePharmacyProfile();
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [pharmacyProfile, setPharmacyProfile] =
-    useState<PharmacyProfile | null>(null);
 
   const topBarIcon = getTopBarIcon(breadcrumbs[0]?.label);
   const clientAppUrl = getClientAppUrl();
@@ -131,25 +130,6 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
   };
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function loadPharmacyProfile() {
-      try {
-        const response = await getMyPharmacyProfile();
-        if (isMounted) setPharmacyProfile(response.pharmacy);
-      } catch {
-        if (isMounted) setPharmacyProfile(null);
-      }
-    }
-
-    void loadPharmacyProfile();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(Boolean(document.fullscreenElement));
     };
@@ -161,14 +141,14 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
     };
   }, []);
 
+  useOutsidePointerDown({
+    refs: [menuRef],
+    enabled: isUserMenuOpen,
+    onOutside: () => setIsUserMenuOpen(false),
+  });
+
   useEffect(() => {
     if (!isUserMenuOpen) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        setIsUserMenuOpen(false);
-      }
-    };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -176,11 +156,9 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
       }
     };
 
-    window.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isUserMenuOpen]);

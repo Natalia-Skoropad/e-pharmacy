@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import type { Cart } from '@e-pharmacy/types/cart';
@@ -47,9 +47,29 @@ export function useCheckoutSubmit({
 }: UseCheckoutSubmitParams) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitLockRef = useRef(false);
+  const activeControllerRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+      submitLockRef.current = false;
+      activeControllerRef.current?.abort();
+      activeControllerRef.current = null;
+    };
+  }, []);
 
   const handleSubmit = async () => {
-    if (!isAuthenticated || !canSubmit || isSubmitting) return;
+    if (!isAuthenticated || !canSubmit || submitLockRef.current) return;
+    if (!selectedOrderGroup) return;
+
+    submitLockRef.current = true;
+    const controller = new AbortController();
+    activeControllerRef.current?.abort();
+    activeControllerRef.current = controller;
 
     let shouldResetSubmitting = true;
 
@@ -57,9 +77,9 @@ export function useCheckoutSubmit({
       setIsSubmitting(true);
       setError('');
 
-      if (!selectedOrderGroup) return;
+      const latestCartResponse = await getCart({ signal: controller.signal });
+      if (controller.signal.aborted) return;
 
-      const latestCartResponse = await getCart();
       const latestGroups = groupCartByPharmacy(latestCartResponse.cart);
       const latestOrderGroup = latestGroups.find(
         (group) => group.pharmacyId === selectedOrderGroup.pharmacyId
@@ -100,20 +120,33 @@ export function useCheckoutSubmit({
               ...(trimmedComment ? { comment: trimmedComment } : {}),
             };
 
-      const response = await checkoutOrder(orderPayload);
+      const response = await checkoutOrder(orderPayload, {
+        signal: controller.signal,
+      });
+
+      if (controller.signal.aborted || !mountedRef.current) return;
 
       setCart(response.cart);
       dispatchCartUpdated(response.cart);
       shouldResetSubmitting = false;
       router.push(buildOrderPath(response.order));
     } catch (error) {
+      if (controller.signal.aborted || !mountedRef.current) return;
+
       setError(
         getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.checkout.confirm,
         })
       );
     } finally {
-      if (shouldResetSubmitting) setIsSubmitting(false);
+      if (activeControllerRef.current === controller) {
+        activeControllerRef.current = null;
+        submitLockRef.current = false;
+
+        if (shouldResetSubmitting && mountedRef.current) {
+          setIsSubmitting(false);
+        }
+      }
     }
   };
 

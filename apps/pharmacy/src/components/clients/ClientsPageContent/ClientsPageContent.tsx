@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
 
+import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { FiltersButton } from '@e-pharmacy/ui/primitives';
@@ -130,17 +131,25 @@ function ClientsPageContent({
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadClientStatistics() {
-      const nextStatistics = await getPharmacyClientStatistics();
-      if (isMounted) setClientStatistics(nextStatistics);
+      try {
+        const nextStatistics = await getPharmacyClientStatistics({
+          signal: controller.signal,
+        });
+        if (!controller.signal.aborted) setClientStatistics(nextStatistics);
+      } catch {
+        if (!controller.signal.aborted) {
+          setClientStatistics(DEFAULT_CLIENT_STATISTICS);
+        }
+      }
     }
 
     void loadClientStatistics();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, []);
 
@@ -159,23 +168,27 @@ function ClientsPageContent({
   const shouldPinDefaultClient = currentPage === 1 && activeFiltersCount === 0;
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadClients() {
       setIsLoading(true);
 
       try {
+        const requestOptions = { signal: controller.signal };
         const [response, defaultClientResponse] = await Promise.all([
-          getPharmacyClients(queryParams),
+          getPharmacyClients(queryParams, requestOptions),
           shouldPinDefaultClient
-            ? getPharmacyClients({
-                page: 1,
-                perPage: 20,
-                name: 'Walk-in customer',
-              })
+            ? getPharmacyClients(
+                {
+                  page: 1,
+                  perPage: 20,
+                  name: 'Walk-in customer',
+                },
+                requestOptions
+              )
             : Promise.resolve(null),
         ]);
-        if (!isMounted) return;
+        if (controller.signal.aborted) return;
 
         const nextClients = putDefaultClientFirst(response.items);
         const defaultClient = defaultClientResponse?.items.find(isWalkInClient);
@@ -193,35 +206,34 @@ function ClientsPageContent({
         setTotalPages(response.totalPages);
         setEarliestCreatedAt(response.earliestCreatedAt);
       } catch {
-        if (!isMounted) return;
+        if (controller.signal.aborted) return;
 
         setClients([]);
         setTotalClients(0);
         setTotalPages(0);
         setEarliestCreatedAt(null);
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }
 
     void loadClients();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [queryParams, rowsPerPage, shouldPinDefaultClient]);
 
-  useEffect(() => {
-    const nextPath = buildClientsPath(filters);
+  const debouncedFilters = useDebouncedValue(filters, 450);
 
+  useEffect(() => {
+    if (debouncedFilters !== filters) return;
+
+    const nextPath = buildClientsPath(debouncedFilters);
     if (pathname === nextPath) return;
 
-    const timeoutId = window.setTimeout(() => {
-      router.replace(nextPath, { scroll: false });
-    }, 450);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [filters, pathname, router]);
+    router.replace(nextPath, { scroll: false });
+  }, [debouncedFilters, filters, pathname, router]);
 
   const hasActiveFilters = activeFiltersCount > 0;
 
@@ -256,7 +268,7 @@ function ClientsPageContent({
     return getPharmacyClientsPath();
   };
 
-  const currentPharmacyStatus = useCurrentPharmacyStatus();
+  const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
   const bannerLabel = bannerStatus
     ? getLockedFeatureBannerLabel(bannerStatus)

@@ -42,9 +42,6 @@
       "@e-pharmacy/ui/*": [
         "../../packages/ui/src/*/index.ts"
       ],
-      "@e-pharmacy/hooks": [
-        "../../packages/hooks/src/index.ts"
-      ],
       "@e-pharmacy/hooks/*": [
         "../../packages/hooks/src/*"
       ],

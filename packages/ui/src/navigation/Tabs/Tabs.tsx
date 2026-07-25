@@ -11,6 +11,8 @@ import {
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 
+import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
+
 import css from './Tabs.module.css';
 
 //===================================================================
@@ -95,6 +97,7 @@ function Tabs<TValue extends string = string>({
   const tabButtonRefs = useRef(new Map<TValue, HTMLButtonElement>());
   const mobileMoreButtonRef = useRef<HTMLButtonElement>(null);
   const tabletMoreButtonRef = useRef<HTMLButtonElement>(null);
+  const focusTimerRef = useRef<number | null>(null);
   const mobileMoreMenuId = useId();
   const tabletMoreMenuId = useId();
   const mergedLabels = { ...DEFAULT_LABELS, ...labels };
@@ -124,22 +127,17 @@ function Tabs<TValue extends string = string>({
     (item) => item.value === activeValue
   );
 
-  useEffect(() => {
-    if (!isMoreOpen) return;
-
-    const handleDocumentClick = (event: MouseEvent) => {
-      const target = event.target as Node;
-
-      if (
-        tabsRef.current?.contains(target) ||
-        moreMenuRef.current?.contains(target)
-      ) {
-        return;
-      }
-
+  useOutsidePointerDown({
+    refs: [tabsRef, moreMenuRef],
+    enabled: isMoreOpen,
+    onOutside: () => {
       setMoreMenuMode(null);
       setMoreMenuPosition(null);
-    };
+    },
+  });
+
+  useEffect(() => {
+    if (!isMoreOpen) return;
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -163,13 +161,11 @@ function Tabs<TValue extends string = string>({
       setMoreMenuPosition(getMoreMenuPosition(button));
     };
 
-    document.addEventListener('mousedown', handleDocumentClick);
     document.addEventListener('keydown', handleEscape);
     window.addEventListener('resize', updateMenuPosition);
     window.addEventListener('scroll', updateMenuPosition, true);
 
     return () => {
-      document.removeEventListener('mousedown', handleDocumentClick);
       document.removeEventListener('keydown', handleEscape);
       window.removeEventListener('resize', updateMenuPosition);
       window.removeEventListener('scroll', updateMenuPosition, true);
@@ -182,8 +178,22 @@ function Tabs<TValue extends string = string>({
     return element.offsetParent !== null;
   };
 
+  useEffect(
+    () => () => {
+      if (focusTimerRef.current !== null) {
+        window.clearTimeout(focusTimerRef.current);
+      }
+    },
+    []
+  );
+
   const focusVisibleTabControl = (value: TValue) => {
-    window.setTimeout(() => {
+    if (focusTimerRef.current !== null) {
+      window.clearTimeout(focusTimerRef.current);
+    }
+
+    focusTimerRef.current = window.setTimeout(() => {
+      focusTimerRef.current = null;
       const tabButton = tabButtonRefs.current.get(value);
 
       if (isElementVisible(tabButton ?? null)) {

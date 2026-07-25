@@ -1,7 +1,13 @@
 import 'client-only';
 
-import { buildQueryString, getResponseData } from '@e-pharmacy/api-client/core';
+import {
+  buildQueryString,
+  getResponseData,
+  type JsonResponseRequestOptions,
+} from '@e-pharmacy/api-client/core';
+
 import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
+import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
@@ -16,15 +22,15 @@ import {
   type PharmacyClientsResponse,
 } from '@/lib/clients/clients';
 
-import { localApiRequest } from '@e-pharmacy/next-api/browser';
-
 //===================================================================
 
 export async function getPharmacyClientDetails(
-  clientId: string
+  clientId: string,
+  options?: JsonResponseRequestOptions
 ): Promise<PharmacyClientRow> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    PHARMACY_API_ROUTES.clients.details(clientId)
+    PHARMACY_API_ROUTES.clients.details(clientId),
+    options
   );
 
   const data = getResponseData(response);
@@ -44,10 +50,12 @@ export async function getPharmacyClientDetails(
 //===================================================================
 
 export async function getPharmacyClients(
-  params: PharmacyClientsQueryParams = {}
+  params: PharmacyClientsQueryParams = {},
+  options?: JsonResponseRequestOptions
 ): Promise<PharmacyClientsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    `${PHARMACY_API_ROUTES.clients.list}${buildQueryString(params)}`
+    `${PHARMACY_API_ROUTES.clients.list}${buildQueryString(params)}`,
+    options
   );
 
   return normalizePharmacyClientsResponse(getResponseData(response));
@@ -57,10 +65,12 @@ export async function getPharmacyClients(
 
 export async function getPharmacyClientProducts(
   clientId: string,
-  params: PharmacyClientProductsQueryParams = {}
+  params: PharmacyClientProductsQueryParams = {},
+  options?: JsonResponseRequestOptions
 ): Promise<PharmacyClientProductsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    `${PHARMACY_API_ROUTES.clients.products(clientId)}${buildQueryString(params)}`
+    `${PHARMACY_API_ROUTES.clients.products(clientId)}${buildQueryString(params)}`,
+    options
   );
 
   return normalizePharmacyClientProductsResponse(getResponseData(response));

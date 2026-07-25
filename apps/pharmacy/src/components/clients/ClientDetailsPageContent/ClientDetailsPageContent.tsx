@@ -467,23 +467,27 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
   const [isProductsFiltersOpen, setIsProductsFiltersOpen] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
+    const controller = new AbortController();
+    const requestOptions = { signal: controller.signal };
 
     async function loadClient() {
-      await Promise.resolve();
-
       setLoading(true);
       setError('');
 
       try {
         const [loadedClient, ordersResponse, commentsResponse] =
           await Promise.all([
-            getPharmacyClientDetails(clientId),
-            getPharmacyOrders({ page: 1, perPage: 1, clientId }),
-            getPharmacyNotes('client', clientId, 1).catch(() => null),
+            getPharmacyClientDetails(clientId, requestOptions),
+            getPharmacyOrders(
+              { page: 1, perPage: 1, clientId },
+              requestOptions
+            ),
+            getPharmacyNotes('client', clientId, 1, requestOptions).catch(
+              () => null
+            ),
           ]);
 
-        if (!mounted) return;
+        if (controller.signal.aborted) return;
 
         setClient(loadedClient);
         setOrdersOverallTotal(ordersResponse.total);
@@ -491,16 +495,18 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
         setOrderStatistics(ordersResponse.statistics);
         setCommentsTotal(commentsResponse?.total ?? 0);
       } catch {
-        if (mounted) setError('Could not load client details.');
+        if (!controller.signal.aborted) {
+          setError('Could not load client details.');
+        }
       } finally {
-        if (mounted) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
 
     void loadClient();
 
     return () => {
-      mounted = false;
+      controller.abort();
     };
   }, [clientId]);
 
@@ -511,10 +517,9 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
   }, [client?.name]);
 
   useEffect(() => {
-    let mounted = true;
+    const controller = new AbortController();
 
     async function loadOrders() {
-      await Promise.resolve();
       setOrdersLoading(true);
       setOrdersError('');
 
@@ -545,9 +550,9 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
             orderFilters.createdByType === 'all'
               ? undefined
               : orderFilters.createdByType,
-        });
+        }, { signal: controller.signal });
 
-        if (!mounted) return;
+        if (controller.signal.aborted) return;
 
         setOrders([...response.items]);
         setOrdersTotal(response.total);
@@ -571,7 +576,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
           setOrderStatistics(response.statistics);
         }
       } catch (loadOrdersError) {
-        if (!mounted) return;
+        if (controller.signal.aborted) return;
         setOrders([]);
         setOrdersTotal(0);
         setOrdersTotalPages(0);
@@ -581,14 +586,14 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
             : 'Could not load client orders.'
         );
       } finally {
-        if (mounted) setOrdersLoading(false);
+        if (!controller.signal.aborted) setOrdersLoading(false);
       }
     }
 
     void loadOrders();
 
     return () => {
-      mounted = false;
+      controller.abort();
     };
   }, [
     clientId,
@@ -600,11 +605,9 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
   ]);
 
   useEffect(() => {
-    let mounted = true;
+    const controller = new AbortController();
 
     async function loadProducts() {
-      await Promise.resolve();
-
       setProductsLoading(true);
       setProductsError('');
 
@@ -622,9 +625,9 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
               : productFilters.category,
           status:
             productFilters.status === 'all' ? undefined : productFilters.status,
-        });
+        }, { signal: controller.signal });
 
-        if (!mounted) return;
+        if (controller.signal.aborted) return;
 
         setProducts([...response.items]);
         setProductsTotal(response.total);
@@ -644,7 +647,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
           setProductsOverallTotal(response.total);
         }
       } catch (loadProductsError) {
-        if (!mounted) return;
+        if (controller.signal.aborted) return;
 
         setProducts([]);
         setProductsTotal(0);
@@ -656,14 +659,14 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
             : 'Could not load purchased products.'
         );
       } finally {
-        if (mounted) setProductsLoading(false);
+        if (!controller.signal.aborted) setProductsLoading(false);
       }
     }
 
     void loadProducts();
 
     return () => {
-      mounted = false;
+      controller.abort();
     };
   }, [
     clientId,

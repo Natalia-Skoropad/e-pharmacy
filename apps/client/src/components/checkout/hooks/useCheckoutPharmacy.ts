@@ -7,52 +7,55 @@ import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 
 //===================================================================
 
+type CheckoutPharmacyState = Readonly<{
+  pharmacyId: string;
+  pharmacy: PharmacyCheckoutDetails | null;
+}>;
+
+//===================================================================
+
 export function useCheckoutPharmacy(
   selectedOrderGroup: CartPharmacyGroup | null
 ) {
-  const [pharmacy, setPharmacy] = useState<PharmacyCheckoutDetails | null>(
-    null
-  );
-  const [isPharmacyLoading, setIsPharmacyLoading] = useState(false);
+  const [pharmacyState, setPharmacyState] =
+    useState<CheckoutPharmacyState | null>(null);
+
+  const pharmacyId = selectedOrderGroup?.pharmacyId ?? null;
 
   useEffect(() => {
+    if (!pharmacyId) return;
+
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(async () => {
-      if (!selectedOrderGroup) {
-        setPharmacy(null);
-        setIsPharmacyLoading(false);
-        return;
-      }
 
-      try {
-        setIsPharmacyLoading(true);
-        const response = await getPharmacyCheckoutDetails(
-          selectedOrderGroup.pharmacyId,
-          {
-            signal: controller.signal,
-          }
-        );
-
-        setPharmacy(response.pharmacy);
-      } catch {
+    getPharmacyCheckoutDetails(pharmacyId, {
+      signal: controller.signal,
+    })
+      .then((response) => {
         if (controller.signal.aborted) return;
 
-        setPharmacy(null);
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsPharmacyLoading(false);
-        }
-      }
-    }, 0);
+        setPharmacyState({
+          pharmacyId,
+          pharmacy: response.pharmacy,
+        });
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+
+        setPharmacyState({
+          pharmacyId,
+          pharmacy: null,
+        });
+      });
 
     return () => {
       controller.abort();
-      window.clearTimeout(timeoutId);
     };
-  }, [selectedOrderGroup]);
+  }, [pharmacyId]);
+
+  const hasCurrentPharmacyState = pharmacyState?.pharmacyId === pharmacyId;
 
   return {
-    pharmacy,
-    isPharmacyLoading,
+    pharmacy: hasCurrentPharmacyState ? pharmacyState.pharmacy : null,
+    isPharmacyLoading: Boolean(pharmacyId) && !hasCurrentPharmacyState,
   };
 }

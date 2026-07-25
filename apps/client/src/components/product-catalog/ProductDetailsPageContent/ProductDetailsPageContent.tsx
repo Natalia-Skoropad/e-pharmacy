@@ -41,7 +41,6 @@ import type { ProductDetails, ProductOffer } from '@e-pharmacy/types/products';
 import type { Review } from '@e-pharmacy/types/reviews';
 
 import {
-  invalidateFavoriteProductIdsCache,
   useClientAuthCapabilities,
   useFavoriteActions,
   useReviewForm,
@@ -357,7 +356,6 @@ function ProductDetailsPageContent({
       errorMessage: 'Could not update favorites.',
       addFavorite: addFavoriteProduct,
       removeFavorite: removeFavoriteProduct,
-      onFavoriteChange: () => invalidateFavoriteProductIdsCache(),
     });
 
   const {

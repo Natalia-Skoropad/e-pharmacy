@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { FilePlus2 } from 'lucide-react';
 
+import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
@@ -110,14 +111,16 @@ function ProductRequestsPageContent({
   );
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadProductRequestStatistics() {
       try {
-        const statistics = await getPharmacyProductRequestStatistics();
-        if (isMounted) setRequestStatistics(statistics);
+        const statistics = await getPharmacyProductRequestStatistics({
+          signal: controller.signal,
+        });
+        if (!controller.signal.aborted) setRequestStatistics(statistics);
       } catch {
-        if (isMounted) {
+        if (!controller.signal.aborted) {
           setRequestStatistics(DEFAULT_PRODUCT_REQUEST_STATISTICS);
         }
       }
@@ -126,54 +129,55 @@ function ProductRequestsPageContent({
     void loadProductRequestStatistics();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadProductRequests() {
       setIsLoading(true);
 
       try {
-        const response = await getPharmacyProductRequests(queryParams);
-        if (!isMounted) return;
+        const response = await getPharmacyProductRequests(queryParams, {
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted) return;
 
         setRequests([...response.items]);
         setTotalRequests(response.total);
         setTotalPages(response.totalPages);
         setEarliestCreatedAt(response.earliestCreatedAt);
       } catch {
-        if (!isMounted) return;
+        if (controller.signal.aborted) return;
 
         setRequests([]);
         setTotalRequests(0);
         setTotalPages(0);
         setEarliestCreatedAt(null);
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }
 
     void loadProductRequests();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [queryParams]);
 
-  useEffect(() => {
-    const nextPath = buildProductRequestsPath(filters);
+  const debouncedFilters = useDebouncedValue(filters, 450);
 
+  useEffect(() => {
+    if (debouncedFilters !== filters) return;
+
+    const nextPath = buildProductRequestsPath(debouncedFilters);
     if (pathname === nextPath) return;
 
-    const timeoutId = window.setTimeout(() => {
-      router.replace(nextPath, { scroll: false });
-    }, 450);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [filters, pathname, router]);
+    router.replace(nextPath, { scroll: false });
+  }, [debouncedFilters, filters, pathname, router]);
 
   const activeFiltersCount = countTrueConditions(
     Boolean(filters.date.from || filters.date.to),
@@ -200,7 +204,7 @@ function ProductRequestsPageContent({
     setCurrentPage(1);
   };
 
-  const currentPharmacyStatus = useCurrentPharmacyStatus();
+  const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
   const bannerLabel = bannerStatus
     ? getLockedFeatureBannerLabel(bannerStatus)

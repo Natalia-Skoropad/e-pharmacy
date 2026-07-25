@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Clock, Info, MapPin, Phone, Truck } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
@@ -81,6 +81,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     useState<DeliveryMethod>('pickup');
 
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const copiedEmailTimerRef = useRef<number | null>(null);
 
   const { cart, error, isLoading, setCart, setError } = useCheckoutCart(
     isAuthReady,
@@ -167,6 +168,15 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     setDeliveryFieldValue('recipientName', event.target.value);
   };
 
+  useEffect(
+    () => () => {
+      if (copiedEmailTimerRef.current !== null) {
+        window.clearTimeout(copiedEmailTimerRef.current);
+      }
+    },
+    []
+  );
+
   const handleRecipientPhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (isSubmitting) return;
     setDeliveryFieldValue('recipientPhone', event.target.value);
@@ -189,9 +199,21 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
       if (isSubmitting || !pharmacyEmail) return;
 
       await navigator.clipboard.writeText(pharmacyEmail);
+
+      if (copiedEmailTimerRef.current !== null) {
+        window.clearTimeout(copiedEmailTimerRef.current);
+      }
+
       setCopiedEmail(true);
-      window.setTimeout(() => setCopiedEmail(false), 1800);
+      copiedEmailTimerRef.current = window.setTimeout(() => {
+        copiedEmailTimerRef.current = null;
+        setCopiedEmail(false);
+      }, 1800);
     } catch {
+      if (copiedEmailTimerRef.current !== null) {
+        window.clearTimeout(copiedEmailTimerRef.current);
+        copiedEmailTimerRef.current = null;
+      }
       setCopiedEmail(false);
     }
   };

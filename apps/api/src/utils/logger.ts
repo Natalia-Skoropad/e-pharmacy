@@ -25,7 +25,7 @@ export const logger = {
   },
 
   request(meta: LogMeta): void {
-    console.info(JSON.stringify({ event: 'api_request', ...meta }));
+    process.stdout.write(`${JSON.stringify({ event: 'api_request', ...meta })}\n`);
   },
 
   error(message: string, error?: unknown): void {

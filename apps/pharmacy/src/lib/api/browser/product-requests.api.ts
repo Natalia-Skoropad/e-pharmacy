@@ -1,6 +1,11 @@
 import 'client-only';
 
-import { buildQueryString, getResponseData } from '@e-pharmacy/api-client/core';
+import {
+  buildQueryString,
+  getResponseData,
+  type JsonResponseRequestOptions,
+} from '@e-pharmacy/api-client/core';
+
 import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
@@ -76,11 +81,15 @@ export async function checkPharmacyProductRequestArticle(
 //===================================================================
 
 export async function getPharmacyProductRequests(
-  params: ProductRequestsQueryParams = {}
+  params: ProductRequestsQueryParams = {},
+  options?: JsonResponseRequestOptions
 ): Promise<ProductRequestsViewModelResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<ProductRequestsResponseDto>
-  >(`${PHARMACY_API_ROUTES.productRequests.list}${buildQueryString(params)}`);
+  >(
+    `${PHARMACY_API_ROUTES.productRequests.list}${buildQueryString(params)}`,
+    options
+  );
 
   return normalizeProductRequestsResponse(getResponseData(response));
 }

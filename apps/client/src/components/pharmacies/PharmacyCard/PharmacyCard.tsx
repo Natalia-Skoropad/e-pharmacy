@@ -13,7 +13,6 @@ import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
 import { buildPharmacyPath } from '@/lib/routes';
 
 import {
-  invalidateFavoritePharmacyIdsCache,
   useClientAuthCapabilities,
   useFavoriteActions,
   usePharmacyFavoriteRefresh,
@@ -54,7 +53,6 @@ function PharmacyCard({
       addFavorite: addFavoritePharmacy,
       removeFavorite: removeFavoritePharmacy,
       onFavoriteChange: (pharmacyId, nextIsFavorite) => {
-        invalidateFavoritePharmacyIdsCache();
         onFavoriteChange?.(pharmacyId, nextIsFavorite);
       },
     });

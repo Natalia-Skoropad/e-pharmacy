@@ -37,6 +37,20 @@ type CartContextValue = {
   invalidateCart: () => void;
 };
 
+type CartSnapshot = Readonly<{
+  identity: string;
+  cart: Cart;
+  isLoaded: boolean;
+  error: string;
+}>;
+
+type ActiveCartLoad = Readonly<{
+  identity: string;
+  generation: number;
+  controller: AbortController;
+  promise: Promise<Cart>;
+}>;
+
 //===================================================================
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -44,96 +58,155 @@ const CartContext = createContext<CartContextValue | null>(null);
 //===================================================================
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { isAuthReady, canUseClientFeatures } = useClientAuthCapabilities();
+  const { user, isAuthReady, canUseClientFeatures } =
+    useClientAuthCapabilities();
 
-  const [cart, setCartState] = useState<Cart>(EMPTY_CART);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const clientIdentity = canUseClientFeatures ? (user?.id ?? null) : null;
 
-  const loadPromiseRef = useRef<Promise<Cart> | null>(null);
-  const previousClientAccessRef = useRef<boolean | null>(null);
+  const [snapshot, setSnapshot] = useState<CartSnapshot | null>(null);
+  const [loadingIdentity, setLoadingIdentity] = useState<string | null>(null);
 
-  const setCart = useCallback((nextCart: Cart) => {
-    setCartState(nextCart);
-    setIsLoaded(true);
-    setError('');
-  }, []);
+  const identityRef = useRef<string | null>(clientIdentity);
+  const loadGenerationRef = useRef(0);
+  const activeLoadRef = useRef<ActiveCartLoad | null>(null);
+
+  const currentSnapshot =
+    snapshot?.identity === clientIdentity ? snapshot : null;
+
+  const cart = currentSnapshot?.cart ?? EMPTY_CART;
+  const isLoaded = clientIdentity ? Boolean(currentSnapshot?.isLoaded) : true;
+  const isLoading = Boolean(
+    clientIdentity && loadingIdentity === clientIdentity
+  );
+  const error = currentSnapshot?.error ?? '';
+
+  useEffect(() => {
+    identityRef.current = clientIdentity;
+    loadGenerationRef.current += 1;
+    activeLoadRef.current?.controller.abort();
+    activeLoadRef.current = null;
+  }, [clientIdentity]);
+
+  const setCart = useCallback(
+    (nextCart: Cart) => {
+      if (!clientIdentity) return;
+
+      setSnapshot({
+        identity: clientIdentity,
+        cart: nextCart,
+        isLoaded: true,
+        error: '',
+      });
+    },
+    [clientIdentity]
+  );
 
   const loadCart = useCallback(async () => {
-    if (!canUseClientFeatures) {
-      setCartState(EMPTY_CART);
-      setIsLoaded(true);
-      setError('');
-      return EMPTY_CART;
-    }
+    const identity = clientIdentity;
 
-    if (loadPromiseRef.current) return loadPromiseRef.current;
+    if (!identity) return EMPTY_CART;
 
-    setIsLoading(true);
+    const activeLoad = activeLoadRef.current;
+    if (activeLoad?.identity === identity) return activeLoad.promise;
 
-    const promise = getCart()
+    activeLoad?.controller.abort();
+
+    const generation = loadGenerationRef.current + 1;
+    loadGenerationRef.current = generation;
+    const controller = new AbortController();
+    setLoadingIdentity(identity);
+
+    const promise = getCart({ signal: controller.signal })
       .then((response) => {
-        setCart(response.cart);
+        if (
+          controller.signal.aborted ||
+          identityRef.current !== identity ||
+          loadGenerationRef.current !== generation
+        ) {
+          return EMPTY_CART;
+        }
+
+        setSnapshot({
+          identity,
+          cart: response.cart,
+          isLoaded: true,
+          error: '',
+        });
+
         return response.cart;
       })
-      .catch((cause) => {
-        setError('Could not load cart.');
+      .catch((cause: unknown) => {
+        if (
+          controller.signal.aborted ||
+          identityRef.current !== identity ||
+          loadGenerationRef.current !== generation
+        ) {
+          return EMPTY_CART;
+        }
+
+        setSnapshot((current) => ({
+          identity,
+          cart: current?.identity === identity ? current.cart : EMPTY_CART,
+          isLoaded: true,
+          error: 'Could not load cart.',
+        }));
+
         throw cause;
       })
       .finally(() => {
-        setIsLoading(false);
-        loadPromiseRef.current = null;
+        const currentLoad = activeLoadRef.current;
+
+        if (
+          currentLoad?.identity === identity &&
+          currentLoad.generation === generation
+        ) {
+          activeLoadRef.current = null;
+          setLoadingIdentity((current) =>
+            current === identity ? null : current
+          );
+        }
       });
 
-    loadPromiseRef.current = promise;
+    activeLoadRef.current = {
+      identity,
+      generation,
+      controller,
+      promise,
+    };
 
     return promise;
-  }, [canUseClientFeatures, setCart]);
+  }, [clientIdentity]);
 
   const invalidateCart = useCallback(() => {
-    setIsLoaded(false);
-  }, []);
+    if (!clientIdentity) return;
+
+    setSnapshot((current) => ({
+      identity: clientIdentity,
+      cart: current?.identity === clientIdentity ? current.cart : EMPTY_CART,
+      isLoaded: false,
+      error: '',
+    }));
+  }, [clientIdentity]);
 
   useEffect(() => {
-    if (!isAuthReady) return;
+    if (!isAuthReady || !clientIdentity || isLoaded) return;
+    if (activeLoadRef.current?.identity === clientIdentity) return;
 
-    let isCancelled = false;
+    void loadCart().catch(() => undefined);
+  }, [clientIdentity, isAuthReady, isLoaded, loadCart]);
 
-    queueMicrotask(() => {
-      if (isCancelled) return;
-
-      const couldUseClientFeatures = previousClientAccessRef.current;
-      previousClientAccessRef.current = canUseClientFeatures;
-
-      if (!canUseClientFeatures) {
-        loadPromiseRef.current = null;
-        setIsLoading(false);
-        setCartState(EMPTY_CART);
-        setIsLoaded(true);
-        setError('');
-        return;
-      }
-
-      if (couldUseClientFeatures !== true) {
-        setIsLoaded(false);
-        void loadCart().catch(() => undefined);
-        return;
-      }
-
-      if (!isLoaded && !isLoading) {
-        void loadCart().catch(() => undefined);
-      }
-    });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [canUseClientFeatures, isAuthReady, isLoaded, isLoading, loadCart]);
+  useEffect(
+    () => () => {
+      loadGenerationRef.current += 1;
+      activeLoadRef.current?.controller.abort();
+      activeLoadRef.current = null;
+    },
+    []
+  );
 
   useEffect(() => {
     const onCartUpdated = (event: Event) => {
-      if (!canUseClientFeatures) return;
+      if (!identityRef.current) return;
 
       const detail = (event as CustomEvent<CartUpdatedEventDetail>).detail;
 
@@ -143,10 +216,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
 
       if (typeof detail?.totalItems === 'number') {
-        setCartState((current) => ({
-          ...current,
-          totalItems: detail.totalItems,
-        }));
+        setSnapshot((current) => {
+          const identity = identityRef.current;
+
+          if (!identity) return current;
+
+          const currentCart =
+            current?.identity === identity ? current.cart : EMPTY_CART;
+
+          return {
+            identity,
+            cart: {
+              ...currentCart,
+              totalItems: detail.totalItems,
+            },
+            isLoaded: true,
+            error: '',
+          };
+        });
       }
     };
 
@@ -155,7 +242,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener(CART_UPDATED_EVENT, onCartUpdated);
     };
-  }, [canUseClientFeatures, setCart]);
+  }, [setCart]);
 
   const value = useMemo(
     () => ({

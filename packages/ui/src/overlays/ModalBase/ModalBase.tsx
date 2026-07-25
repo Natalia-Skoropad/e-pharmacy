@@ -1,9 +1,16 @@
 'use client';
 
-import { type CSSProperties, type ReactNode, useRef } from 'react';
+import {
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+  useRef,
+} from 'react';
+
 import clsx from 'clsx';
 
-import { useBackdropClick, useOverlayLayer } from '@e-pharmacy/hooks';
+import { useBackdropPointer } from '../../internal/overlay/useBackdropPointer';
+import { useOverlayLayer } from '../../internal/overlay/useOverlayLayer';
 
 import css from './ModalBase.module.css';
 
@@ -22,8 +29,11 @@ type ModalBaseCommonProps = Readonly<{
   className?: string;
   dialogClassName?: string;
   style?: CSSProperties;
+  initialFocusRef?: RefObject<HTMLElement | null>;
+  fallbackFocusRef?: RefObject<HTMLElement | null>;
   closeOnBackdrop?: boolean;
   closeOnEscape?: boolean;
+  restoreFocus?: boolean;
   onClose: () => void;
 }>;
 
@@ -42,20 +52,30 @@ function ModalBase({
   className,
   dialogClassName,
   style,
+  initialFocusRef,
+  fallbackFocusRef,
   closeOnBackdrop = true,
   closeOnEscape = true,
+  restoreFocus = true,
   onClose,
 }: ModalBaseProps) {
   const dialogRef = useRef<HTMLDivElement | null>(null);
-  const handleBackdropMouseDown = useBackdropClick({
-    onClose: closeOnBackdrop ? onClose : () => {},
+  const overlayIdRef = useRef(Symbol('modal-overlay'));
+  const backdropPointerHandlers = useBackdropPointer({
+    overlayId: overlayIdRef.current,
+    enabled: closeOnBackdrop,
+    onClose,
   });
 
   useOverlayLayer({
+    id: overlayIdRef.current,
     isOpen,
     containerRef: dialogRef,
     onClose,
+    initialFocusRef,
+    fallbackFocusRef,
     closeOnEscape,
+    restoreFocus,
   });
 
   if (!isOpen) return null;
@@ -65,7 +85,7 @@ function ModalBase({
       className={clsx(css.backdrop, className)}
       role="presentation"
       style={style}
-      onMouseDown={handleBackdropMouseDown}
+      {...backdropPointerHandlers}
     >
       <div
         ref={dialogRef}

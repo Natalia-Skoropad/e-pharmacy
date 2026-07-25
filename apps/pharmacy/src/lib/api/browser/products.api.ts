@@ -46,12 +46,14 @@ export async function getProducts(
 //===================================================================
 
 export async function getPharmacyProducts(
-  params: PharmacyProductsQueryParams = {}
+  params: PharmacyProductsQueryParams = {},
+  options?: JsonResponseRequestOptions
 ): Promise<PharmacyProductsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     `${PHARMACY_API_ROUTES.products.list}${buildQueryString(
       getOwnProductBackendQuery(params)
-    )}`
+    )}`,
+    options
   );
 
   return normalizePharmacyProductsResponse(
@@ -63,11 +65,12 @@ export async function getPharmacyProducts(
 //===================================================================
 
 export async function getProductDetails(
-  productId: ProductDetails['id']
+  productId: ProductDetails['id'],
+  options?: JsonResponseRequestOptions
 ): Promise<ProductDetailsResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<ProductDetailsResponse>
-  >(PHARMACY_API_ROUTES.products.details(productId));
+  >(PHARMACY_API_ROUTES.products.details(productId), options);
 
   return getResponseData(response);
 }
@@ -103,11 +106,12 @@ export async function removeProductFromMyPharmacy(
 //===================================================================
 
 export async function getProductStockMovements(
-  productId: ProductDetails['id']
+  productId: ProductDetails['id'],
+  options?: JsonResponseRequestOptions
 ): Promise<ProductStockMovementsResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<ProductStockMovementsResponse>
-  >(PHARMACY_API_ROUTES.products.stockMovements(productId));
+  >(PHARMACY_API_ROUTES.products.stockMovements(productId), options);
 
   return getResponseData(response);
 }
@@ -115,11 +119,12 @@ export async function getProductStockMovements(
 //===================================================================
 
 export async function getProductReviews(
-  productId: ProductDetails['id']
+  productId: ProductDetails['id'],
+  options?: JsonResponseRequestOptions
 ): Promise<ReviewsResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<ReviewsResponse>
-  >(PHARMACY_API_ROUTES.products.reviews(productId));
+  >(PHARMACY_API_ROUTES.products.reviews(productId), options);
 
   return getResponseData(response);
 }

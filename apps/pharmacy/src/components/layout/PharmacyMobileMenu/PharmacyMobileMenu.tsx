@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Globe2, Store } from 'lucide-react';
 
-import type { PharmacyProfile } from '@e-pharmacy/types/pharmacies';
 import { CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
 import { Logo } from '@e-pharmacy/ui/media';
 import { UserBadge } from '@e-pharmacy/ui/data-display';
@@ -18,7 +17,6 @@ import {
   getPharmacyProfilePath,
 } from '@e-pharmacy/config/pharmacy';
 
-import { getMyPharmacyProfile } from '@/lib/api/browser';
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 
 import {
@@ -28,6 +26,7 @@ import {
 } from '@/lib/layout/external-links';
 
 import { PHARMACY_MOBILE_NAVIGATION } from '@/lib/layout/navigation';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import css from './PharmacyMobileMenu.module.css';
 
@@ -49,9 +48,8 @@ export function PharmacyMobileMenu({
   const pathname = usePathname();
   const previousPathnameRef = useRef(pathname);
   const { user, logout } = useAuth();
+  const { profile: pharmacyProfile } = usePharmacyProfile();
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
-  const [pharmacyProfile, setPharmacyProfile] =
-    useState<PharmacyProfile | null>(null);
 
   const clientAppUrl = getClientAppUrl();
   const clientPharmacyUrl = getClientPharmacyUrl(pharmacyProfile);
@@ -69,27 +67,6 @@ export function PharmacyMobileMenu({
       setIsLogoutLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    let isMounted = true;
-
-    async function loadPharmacyProfile() {
-      try {
-        const response = await getMyPharmacyProfile();
-        if (isMounted) setPharmacyProfile(response.pharmacy);
-      } catch {
-        if (isMounted) setPharmacyProfile(null);
-      }
-    }
-
-    void loadPharmacyProfile();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isOpen]);
 
   useEffect(() => {
     if (previousPathnameRef.current === pathname) return;

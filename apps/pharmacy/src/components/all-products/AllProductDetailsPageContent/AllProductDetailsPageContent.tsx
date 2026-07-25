@@ -54,8 +54,6 @@ import { PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/core';
 import { OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
 import type { OrderStatus } from '@e-pharmacy/types/orders';
-import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
-import type { EntityId } from '@e-pharmacy/types/primitives';
 
 import type {
   ProductDetails,
@@ -67,6 +65,7 @@ import type {
 } from '@e-pharmacy/types/products';
 
 import type { Review } from '@e-pharmacy/types/reviews';
+import type { EntityId } from '@e-pharmacy/types/primitives';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { formatAmount, formatMoney } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
@@ -85,7 +84,6 @@ import {
 import {
   addProductToMyPharmacy,
   removeProductFromMyPharmacy,
-  getMyPharmacyProfile,
   getPharmacyOrders,
   getPharmacyOrderSalesStatistics,
   getProductDetails,
@@ -122,6 +120,7 @@ import {
 } from '@/components/sales';
 
 import { EntityComments } from '@/components/comments/EntityComments';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import {
   StatusBadge,
@@ -687,6 +686,10 @@ function AllProductDetailsPageContent({
   showAddAction = true,
   showRemoveAction = false,
 }: AllProductDetailsPageContentProps) {
+  const { profile: pharmacyProfile } = usePharmacyProfile();
+  const currentPharmacyId = pharmacyProfile?.id ?? null;
+  const pharmacyStatus = pharmacyProfile?.status ?? null;
+
   const [product, setProduct] = useState<ProductDetails | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsTotal, setReviewsTotal] = useState(0);
@@ -720,14 +723,6 @@ function AllProductDetailsPageContent({
     useState<string | null>(null);
 
   const [stockBalance, setStockBalance] = useState<ProductStockBalance | null>(
-    null
-  );
-
-  const [currentPharmacyId, setCurrentPharmacyId] = useState<EntityId | null>(
-    null
-  );
-
-  const [pharmacyStatus, setPharmacyStatus] = useState<PharmacyStatus | null>(
     null
   );
 
@@ -767,7 +762,8 @@ function AllProductDetailsPageContent({
   const toast = useToast();
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
+    const requestOptions = { signal: controller.signal };
 
     async function loadProductData() {
       setIsLoading(true);
@@ -776,21 +772,22 @@ function AllProductDetailsPageContent({
       try {
         const [
           productResponse,
-          profileResponse,
           reviewsResponse,
           ordersResponse,
           stockMovementsResponse,
         ] = await Promise.all([
-          getProductDetails(productId),
-          getMyPharmacyProfile().catch(() => null),
-          getProductReviews(productId).catch(() => null),
-          getPharmacyOrders({ page: 1, perPage: 200, productId }).catch(
+          getProductDetails(productId, requestOptions),
+          getProductReviews(productId, requestOptions).catch(() => null),
+          getPharmacyOrders(
+            { page: 1, perPage: 200, productId },
+            requestOptions
+          ).catch(() => null),
+          getProductStockMovements(productId, requestOptions).catch(
             () => null
           ),
-          getProductStockMovements(productId).catch(() => null),
         ]);
 
-        if (!isMounted) return;
+        if (controller.signal.aborted) return;
 
         setProduct(productResponse.product);
         setReviews([...(reviewsResponse?.items ?? [])]);
@@ -813,10 +810,8 @@ function AllProductDetailsPageContent({
         );
 
         setStockBalance(stockMovementsResponse?.stock ?? null);
-        setCurrentPharmacyId(profileResponse?.pharmacy.id ?? null);
-        setPharmacyStatus(profileResponse?.pharmacy.status ?? 'new');
       } catch (loadError) {
-        if (!isMounted) return;
+        if (controller.signal.aborted) return;
 
         setProduct(null);
         setReviews([]);
@@ -828,17 +823,16 @@ function AllProductDetailsPageContent({
         setStockMovements([]);
         setStockEarliestCreatedAt(null);
         setStockBalance(null);
-        setPharmacyStatus('new');
         setError(getProductDetailsError(loadError));
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }
 
     void loadProductData();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [productId]);
 
@@ -851,37 +845,40 @@ function AllProductDetailsPageContent({
   useEffect(() => {
     if (!product || !currentPharmacyId) return;
 
+    const controller = new AbortController();
     const currentProductId = product.id;
-    let isMounted = true;
 
     async function loadRelatedOrders() {
-      const response = await getPharmacyOrders({
-        page: 1,
-        perPage: 200,
-        productId: currentProductId,
-        orderNumber: relatedOrderNumberSearch.trim() || undefined,
-        client: relatedClientSearch.trim() || undefined,
-        status:
-          relatedFilters.orderStatus === 'all'
-            ? undefined
-            : relatedFilters.orderStatus,
-        createdByType:
-          relatedFilters.createdByType === 'all'
-            ? undefined
-            : relatedFilters.createdByType,
-        dateFrom: relatedFilters.date.from || undefined,
-        dateTo: relatedFilters.date.to || undefined,
-      });
+      const response = await getPharmacyOrders(
+        {
+          page: 1,
+          perPage: 200,
+          productId: currentProductId,
+          orderNumber: relatedOrderNumberSearch.trim() || undefined,
+          client: relatedClientSearch.trim() || undefined,
+          status:
+            relatedFilters.orderStatus === 'all'
+              ? undefined
+              : relatedFilters.orderStatus,
+          createdByType:
+            relatedFilters.createdByType === 'all'
+              ? undefined
+              : relatedFilters.createdByType,
+          dateFrom: relatedFilters.date.from || undefined,
+          dateTo: relatedFilters.date.to || undefined,
+        },
+        { signal: controller.signal }
+      );
 
-      if (isMounted) {
-        setRelatedOrders([...response.items]);
-        setRelatedOrderStatistics(response.statistics);
-        setRelatedOrdersEarliestCreatedAt(response.earliestCreatedAt);
-      }
+      if (controller.signal.aborted) return;
+
+      setRelatedOrders([...response.items]);
+      setRelatedOrderStatistics(response.statistics);
+      setRelatedOrdersEarliestCreatedAt(response.earliestCreatedAt);
     }
 
     void loadRelatedOrders().catch(() => {
-      if (isMounted) {
+      if (!controller.signal.aborted) {
         setRelatedOrders([]);
         setRelatedOrderStatistics(DEFAULT_ORDER_STATISTICS);
         setRelatedOrdersEarliestCreatedAt(null);
@@ -889,7 +886,7 @@ function AllProductDetailsPageContent({
     });
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [
     currentPharmacyId,
@@ -908,7 +905,7 @@ function AllProductDetailsPageContent({
   useEffect(() => {
     if (!isAddedToPharmacy) return;
 
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadProductSales() {
       setIsProductSalesLoading(true);
@@ -918,53 +915,61 @@ function AllProductDetailsPageContent({
           productSalesYear,
           productSalesMonth
         );
-        const response = await getPharmacyOrderSalesStatistics({
-          ...period,
-          productId,
-        });
+        const response = await getPharmacyOrderSalesStatistics(
+          {
+            ...period,
+            productId,
+          },
+          { signal: controller.signal }
+        );
 
-        if (isMounted) setProductSalesData(response);
+        if (!controller.signal.aborted) setProductSalesData(response);
       } catch {
-        if (isMounted) setProductSalesData(DEFAULT_ORDER_SALES_STATISTICS);
+        if (!controller.signal.aborted) {
+          setProductSalesData(DEFAULT_ORDER_SALES_STATISTICS);
+        }
       } finally {
-        if (isMounted) setIsProductSalesLoading(false);
+        if (!controller.signal.aborted) setIsProductSalesLoading(false);
       }
     }
 
     void loadProductSales();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [isAddedToPharmacy, productId, productSalesMonth, productSalesYear]);
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadCommentsTotal() {
-      await Promise.resolve();
-
       if (!product || !currentPharmacyId) return;
 
       const offer = getProductOffer(product, currentPharmacyId);
 
       if (!offer) {
-        if (isMounted) setCommentsTotal(0);
+        setCommentsTotal(0);
         return;
       }
 
       try {
-        const response = await getPharmacyNotes('product', productId, 1);
-        if (isMounted) setCommentsTotal(response.total);
+        const response = await getPharmacyNotes(
+          'product',
+          productId,
+          1,
+          { signal: controller.signal }
+        );
+        if (!controller.signal.aborted) setCommentsTotal(response.total);
       } catch {
-        if (isMounted) setCommentsTotal(0);
+        if (!controller.signal.aborted) setCommentsTotal(0);
       }
     }
 
     void loadCommentsTotal();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [currentPharmacyId, product, productId]);
 

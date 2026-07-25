@@ -1,7 +1,11 @@
 import 'client-only';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
-import { getResponseData } from '@e-pharmacy/api-client/core';
+
+import {
+  getResponseData,
+  type JsonResponseRequestOptions,
+} from '@e-pharmacy/api-client/core';
 
 import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 
@@ -17,11 +21,13 @@ import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 //===================================================================
 
 export async function checkoutOrder(
-  payload: CheckoutOrderPayload
+  payload: CheckoutOrderPayload,
+  options: JsonResponseRequestOptions = {}
 ): Promise<CheckoutOrderResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<CheckoutOrderResponse>
   >(CLIENT_API_ROUTES.orders.checkout, {
+    ...options,
     method: 'POST',
     body: payload,
   });

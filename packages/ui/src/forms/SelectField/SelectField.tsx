@@ -1,8 +1,10 @@
 'use client';
 
+import clsx from 'clsx';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Check, ChevronDown, LoaderCircle } from 'lucide-react';
-import clsx from 'clsx';
+
+import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
 
 import { useListboxNavigation } from '../../internal/listbox/useListboxNavigation';
 
@@ -99,16 +101,11 @@ function SelectField<TValue extends string>({
     optionRefs.current[activeIndex]?.scrollIntoView({ block: 'nearest' });
   }, [activeIndex, isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleDocumentClick = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setIsOpen(false);
-    };
-
-    document.addEventListener('mousedown', handleDocumentClick);
-    return () => document.removeEventListener('mousedown', handleDocumentClick);
-  }, [isOpen]);
+  useOutsidePointerDown({
+    refs: [rootRef],
+    enabled: isOpen,
+    onOutside: () => setIsOpen(false),
+  });
 
   useEffect(
     () => () => {

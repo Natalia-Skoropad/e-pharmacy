@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
+import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/core';
 
 import {
   AllProductStatisticsKey,
@@ -39,7 +40,6 @@ import {
 } from '@e-pharmacy/config/pharmacy';
 
 import {
-  getMyPharmacyProfile,
   getPharmacyOrderSalesStatistics,
   getPharmacyOrders,
   getPharmacyProducts,
@@ -83,6 +83,7 @@ import {
 } from '@/components/sales';
 
 import { StatusBanner } from '@/components/common/StatusPresentation';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import css from './PharmacyDashboardPageContent.module.css';
 
@@ -104,6 +105,12 @@ type DashboardData = Readonly<{
   products: OwnProductStatisticsCounts;
   allProducts: typeof DEFAULT_ALL_PRODUCT_STATISTICS;
   requests: ProductRequestStatisticsCounts;
+}>;
+
+type DashboardSnapshot = Readonly<{
+  requestKey: string | null;
+  data: DashboardData;
+  isLoading: boolean;
 }>;
 
 //===================================================================
@@ -170,16 +177,17 @@ function getPharmacyBanner(status: PharmacyStatus | null) {
 //===================================================================
 
 async function loadDashboardData(
+  pharmacyId: string,
+  pharmacyStatus: PharmacyStatus,
   selectedYear: string,
-  selectedMonth: SalesPeriodMonth
+  selectedMonth: SalesPeriodMonth,
+  options?: JsonResponseRequestOptions
 ): Promise<DashboardData> {
   const { dateFrom, dateTo } = getSalesPeriodDateRange(
     selectedYear,
     selectedMonth
   );
   const dateRange = { dateFrom, dateTo };
-  const profileResponse = await getMyPharmacyProfile();
-  const pharmacyId = profileResponse.pharmacy.id;
 
   const [
     ordersResponse,
@@ -189,16 +197,16 @@ async function loadDashboardData(
     productStatistics,
     allProductStatistics,
   ] = await Promise.all([
-    getPharmacyOrders({ page: 1, perPage: 1, ...dateRange }),
-    getPharmacyClientStatistics(),
-    getPharmacyProducts({ page: 1, perPage: 100, pharmacyId }),
-    getPharmacyProductRequestStatistics(),
-    getPharmacyOwnProductStatistics(pharmacyId),
-    getPharmacyAllProductStatistics(pharmacyId),
+    getPharmacyOrders({ page: 1, perPage: 1, ...dateRange }, options),
+    getPharmacyClientStatistics(options),
+    getPharmacyProducts({ page: 1, perPage: 100, pharmacyId }, options),
+    getPharmacyProductRequestStatistics(options),
+    getPharmacyOwnProductStatistics(pharmacyId, options),
+    getPharmacyAllProductStatistics(pharmacyId, options),
   ]);
 
   return {
-    pharmacyStatus: profileResponse.pharmacy.status,
+    pharmacyStatus,
     overview: {
       orders: ordersResponse.total,
       revenue: ordersResponse.statistics.successful.amount,
@@ -240,6 +248,8 @@ function EmptyState({
 //===================================================================
 
 function PharmacyDashboardPageContent() {
+  const { profile: pharmacyProfile, isLoading: isProfileLoading } =
+    usePharmacyProfile();
   const [selectedYear, setSelectedYear] = useState(String(CURRENT_YEAR));
   const [selectedMonth, setSelectedMonth] = useState<SalesPeriodMonth>('all');
   const [selectedSalesYear, setSelectedSalesYear] = useState(
@@ -251,38 +261,92 @@ function PharmacyDashboardPageContent() {
     DEFAULT_ORDER_SALES_STATISTICS
   );
   const [isSalesLoading, setIsSalesLoading] = useState(true);
-  const [dashboardData, setDashboardData] =
-    useState<DashboardData>(DEFAULT_DATA);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dashboardSnapshot, setDashboardSnapshot] =
+    useState<DashboardSnapshot>({
+      requestKey: null,
+      data: DEFAULT_DATA,
+      isLoading: false,
+    });
+
+  const pharmacyId = pharmacyProfile?.id ?? null;
+  const pharmacyStatus = pharmacyProfile?.status ?? null;
+  const dashboardRequestKey =
+    pharmacyId && pharmacyStatus
+      ? `${pharmacyId}:${pharmacyStatus}:${selectedYear}:${selectedMonth}`
+      : null;
+
+  const hasCurrentDashboard =
+    dashboardRequestKey !== null &&
+    dashboardSnapshot.requestKey === dashboardRequestKey;
+
+  const dashboardData = hasCurrentDashboard
+    ? dashboardSnapshot.data
+    : DEFAULT_DATA;
+
+  const isLoading =
+    isProfileLoading ||
+    (dashboardRequestKey !== null &&
+      (!hasCurrentDashboard || dashboardSnapshot.isLoading));
 
   useEffect(() => {
-    let isMounted = true;
+    if (
+      isProfileLoading ||
+      !pharmacyId ||
+      !pharmacyStatus ||
+      !dashboardRequestKey
+    ) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const currentPharmacyId = pharmacyId;
+    const currentPharmacyStatus = pharmacyStatus;
+    const currentRequestKey = dashboardRequestKey;
 
     async function loadDashboard() {
-      setIsLoading(true);
       try {
-        const nextData = await loadDashboardData(selectedYear, selectedMonth);
-        if (!isMounted) return;
+        const nextData = await loadDashboardData(
+          currentPharmacyId,
+          currentPharmacyStatus,
+          selectedYear,
+          selectedMonth,
+          { signal: controller.signal }
+        );
 
-        setDashboardData(nextData);
+        if (!controller.signal.aborted) {
+          setDashboardSnapshot({
+            requestKey: currentRequestKey,
+            data: nextData,
+            isLoading: false,
+          });
+        }
       } catch {
-        if (!isMounted) return;
-
-        setDashboardData(DEFAULT_DATA);
-      } finally {
-        if (isMounted) setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setDashboardSnapshot({
+            requestKey: currentRequestKey,
+            data: DEFAULT_DATA,
+            isLoading: false,
+          });
+        }
       }
     }
 
     void loadDashboard();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
-  }, [selectedMonth, selectedYear]);
+  }, [
+    dashboardRequestKey,
+    isProfileLoading,
+    pharmacyId,
+    pharmacyStatus,
+    selectedMonth,
+    selectedYear,
+  ]);
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadSalesStatistics() {
       setIsSalesLoading(true);
@@ -292,20 +356,24 @@ function PharmacyDashboardPageContent() {
           selectedSalesYear,
           selectedSalesMonth
         );
-        const nextSalesData = await getPharmacyOrderSalesStatistics(period);
+        const nextSalesData = await getPharmacyOrderSalesStatistics(period, {
+          signal: controller.signal,
+        });
 
-        if (isMounted) setSalesData(nextSalesData);
+        if (!controller.signal.aborted) setSalesData(nextSalesData);
       } catch {
-        if (isMounted) setSalesData(DEFAULT_ORDER_SALES_STATISTICS);
+        if (!controller.signal.aborted) {
+          setSalesData(DEFAULT_ORDER_SALES_STATISTICS);
+        }
       } finally {
-        if (isMounted) setIsSalesLoading(false);
+        if (!controller.signal.aborted) setIsSalesLoading(false);
       }
     }
 
     void loadSalesStatistics();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [selectedSalesMonth, selectedSalesYear]);
 

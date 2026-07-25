@@ -1,8 +1,8 @@
 'use client';
 
 import clsx from 'clsx';
-import type { RefObject } from 'react';
-import { useRef } from 'react';
+import type { MutableRefObject, RefObject } from 'react';
+import { useEffect, useRef } from 'react';
 import { Bold, Italic, List, Pilcrow } from 'lucide-react';
 
 import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
@@ -41,12 +41,14 @@ function getLimitedValue(value: string, maxLength?: number): string {
 
 function insertSnippet({
   textareaRef,
+  frameRef,
   snippet,
   value,
   maxLength,
   onValueChange,
 }: {
   textareaRef: TextareaRef;
+  frameRef: MutableRefObject<number | null>;
   snippet: string;
   value: string;
   maxLength?: number;
@@ -66,7 +68,14 @@ function insertSnippet({
   onValueChange(nextValue);
   textarea.focus();
 
-  window.requestAnimationFrame(() => {
+  if (frameRef.current !== null) {
+    window.cancelAnimationFrame(frameRef.current);
+  }
+
+  frameRef.current = window.requestAnimationFrame(() => {
+    frameRef.current = null;
+    if (!textarea.isConnected) return;
+
     const cursorPosition = Math.min(
       selectionStart + nextText.length,
       nextValue.length
@@ -93,14 +102,31 @@ function MarkdownTextarea({
   onValueChange,
 }: MarkdownTextareaProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const frameRef = useRef<number | null>(null);
   const hasError = Boolean(isTouched && error);
   const describedBy =
     [hint ? `${id}-hint` : null, hasError ? `${id}-error` : null]
       .filter(Boolean)
       .join(' ') || undefined;
 
+  useEffect(
+    () => () => {
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+      }
+    },
+    []
+  );
+
   const insert = (snippet: string) => {
-    insertSnippet({ textareaRef, snippet, value, maxLength, onValueChange });
+    insertSnippet({
+      textareaRef,
+      frameRef,
+      snippet,
+      value,
+      maxLength,
+      onValueChange,
+    });
   };
 
   return (

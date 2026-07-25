@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useId } from 'react';
+import { type ReactNode, useId, useRef } from 'react';
 
 import Button, {
   type ButtonSize,
@@ -55,6 +55,7 @@ function ConfirmationModal({
 }: ConfirmationModalProps) {
   const titleId = useId();
   const descriptionId = useId();
+  const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
   const modalDescription = description ?? text;
 
   if (!isOpen) return null;
@@ -65,6 +66,7 @@ function ConfirmationModal({
         isOpen={isOpen}
         labelledBy={titleId}
         describedBy={modalDescription ? descriptionId : undefined}
+        initialFocusRef={cancelButtonRef}
         closeOnBackdrop={closeOnBackdrop}
         closeOnEscape={closeOnEscape}
         onClose={onCancel}
@@ -93,6 +95,7 @@ function ConfirmationModal({
           </Button>
 
           <Button
+            ref={cancelButtonRef}
             type="button"
             className={cancelButtonClassName}
             variant={cancelButtonVariant}

@@ -6,8 +6,9 @@ import { useEffect } from 'react';
 
 type UseFavoriteRefreshParams = {
   isEnabled: boolean;
-  refreshFavorite: () => Promise<boolean>;
+  refreshFavorite: (signal: AbortSignal) => Promise<boolean>;
   onRefresh: (isFavorite: boolean) => void;
+  onError?: (error: unknown) => void;
 };
 
 //===================================================================
@@ -16,20 +17,23 @@ export function useFavoriteRefresh({
   isEnabled,
   refreshFavorite,
   onRefresh,
+  onError,
 }: UseFavoriteRefreshParams): void {
   useEffect(() => {
     if (!isEnabled) return;
 
-    let isMounted = true;
+    const controller = new AbortController();
 
-    refreshFavorite()
+    refreshFavorite(controller.signal)
       .then((isFavorite) => {
-        if (isMounted) onRefresh(isFavorite);
+        if (!controller.signal.aborted) onRefresh(isFavorite);
       })
-      .catch(() => undefined);
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) onError?.(error);
+      });
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
-  }, [isEnabled, onRefresh, refreshFavorite]);
+  }, [isEnabled, onError, onRefresh, refreshFavorite]);
 }
