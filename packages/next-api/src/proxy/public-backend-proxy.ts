@@ -1,9 +1,14 @@
-import 'server-only';
 import type { NextRequest } from 'next/server';
 
 import { wait } from '@e-pharmacy/api-client/core';
 
 import { executeBackendFetch } from '../internal/backend-fetch';
+
+import {
+  createPublicCacheControl,
+  resolvePublicRevalidate,
+} from '../internal/cache-policy';
+
 import { validateBackendJsonResponse } from '../internal/backend-response';
 import { createProxyResponse } from '../internal/proxy-response';
 
@@ -13,8 +18,6 @@ import {
 } from '../internal/transport-error';
 
 import {
-  DEFAULT_PUBLIC_REVALIDATE_SECONDS,
-  DEFAULT_STALE_WHILE_REVALIDATE_SECONDS,
   NEXT_API_TIMEOUTS_MS,
   PUBLIC_READ_RETRY_POLICY,
 } from '../internal/transport-policy';
@@ -28,30 +31,8 @@ type PublicBackendProxyOptions = Readonly<{
   request: NextRequest;
   requestId: string;
   revalidate?: number | false;
+  staleWhileRevalidate?: number;
 }>;
-
-//===================================================================
-
-function validateRevalidate(value: number | false | undefined): number | false {
-  if (value === false) return false;
-  const resolved = value ?? DEFAULT_PUBLIC_REVALIDATE_SECONDS;
-
-  if (!Number.isInteger(resolved) || resolved < 0 || resolved > 86_400) {
-    throw new RangeError(
-      'Public revalidate must be an integer from 0 to 86400.'
-    );
-  }
-
-  return resolved;
-}
-
-//===================================================================
-
-function createCacheControl(revalidate: number | false): string {
-  if (revalidate === false || revalidate === 0) return 'no-store';
-
-  return `public, s-maxage=${revalidate}, stale-while-revalidate=${DEFAULT_STALE_WHILE_REVALIDATE_SECONDS}`;
-}
 
 //===================================================================
 
@@ -60,9 +41,10 @@ export async function proxyPublicBackendRequest({
   request,
   requestId,
   revalidate,
+  staleWhileRevalidate,
 }: PublicBackendProxyOptions) {
   const startedAt = Date.now();
-  const resolvedRevalidate = validateRevalidate(revalidate);
+  const resolvedRevalidate = resolvePublicRevalidate(revalidate);
   let response: Response | undefined;
   let lastError: unknown;
   let retryCount = 0;
@@ -128,7 +110,7 @@ export async function proxyPublicBackendRequest({
   }
 
   const cacheControl = response.ok
-    ? createCacheControl(resolvedRevalidate)
+    ? createPublicCacheControl(resolvedRevalidate, staleWhileRevalidate)
     : 'no-store';
 
   logTransportRequest({

@@ -76,6 +76,8 @@ test('concurrent private requests share one refresh call', async () => {
             tokens: {
               accessToken: 'new-access',
               refreshToken: 'new-refresh',
+              accessTokenExpiresIn: 900,
+              refreshTokenExpiresIn: 2_592_000,
             },
           },
         });

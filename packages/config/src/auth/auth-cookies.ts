@@ -13,5 +13,4 @@ export const AUTH_READY_COOKIE_NAME = 'e_pharmacy_auth_ready';
 
 //===================================================================
 
-export const REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 export const AUTH_READY_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;

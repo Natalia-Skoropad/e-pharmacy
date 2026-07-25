@@ -75,6 +75,8 @@ test('login/register/refresh strip valid tokens and set httpOnly cookies', async
             tokens: {
               accessToken: `${name}-access`,
               refreshToken: `${name}-refresh`,
+              accessTokenExpiresIn: 900,
+              refreshTokenExpiresIn: 2_592_000,
             },
           },
         });
@@ -96,6 +98,8 @@ test('login/register/refresh strip valid tokens and set httpOnly cookies', async
       const setCookie = response.headers.get('set-cookie') ?? '';
       assert.match(setCookie, new RegExp(ACCESS_TOKEN_COOKIE_NAME));
       assert.match(setCookie, new RegExp(REFRESH_TOKEN_COOKIE_NAME));
+      assert.match(setCookie, /Max-Age=900/);
+      assert.match(setCookie, /Max-Age=2592000/);
       assert.doesNotMatch(JSON.stringify(payload), /accessToken|refreshToken/);
     }
   } finally {

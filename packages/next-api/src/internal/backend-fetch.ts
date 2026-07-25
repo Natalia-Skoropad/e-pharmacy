@@ -1,4 +1,3 @@
-import 'server-only';
 import type { NextRequest } from 'next/server';
 
 import type { HttpMethod } from '@e-pharmacy/api-client/core';

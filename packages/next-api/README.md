@@ -164,3 +164,33 @@ pnpm check:next-api-boundaries
 pnpm check:next-api-routes
 pnpm check:next-api-contracts
 ```
+
+
+## Cookie ownership and expiry
+
+The Next.js BFF is the sole owner of browser-domain auth cookies. Trusted backend auth responses include `accessTokenExpiresIn` and `refreshTokenExpiresIn` in seconds, and the BFF uses those values directly for `Max-Age`. Client code only reads the non-HttpOnly auth hint; it does not duplicate cookie domain or SameSite settings through `NEXT_PUBLIC_*` variables.
+
+`AUTH_COOKIE_LEGACY_DOMAINS` may contain a comma-separated list of previous cookie domains that must be expired during migration. Current-domain and host-only variants are always cleared as well.
+
+## Cache policy
+
+- private, auth, optional-auth details and `/api/health` use `no-store`;
+- public product/pharmacy lists use the route factory default (`120s` plus SWR);
+- filters/options explicitly use `600s` plus SWR;
+- public reviews use `no-store` so a newly created review is immediately visible;
+- `publicBackendApiRequest` defaults to `cache: 'no-store'` unless a caller explicitly supplies `next.revalidate` or another cache policy;
+- sitemap requests explicitly use `next.revalidate: 3600` in the client app.
+
+Public cache seconds are validated as finite integers from `0` through `86400`.
+
+## Repository checks
+
+The repository exposes:
+
+```bash
+pnpm check:next-api-boundaries
+pnpm check:next-api-routes
+pnpm check:next-api-contracts
+```
+
+The package also provides real ESLint, type-check, build, unit/integration/security test and clean scripts.

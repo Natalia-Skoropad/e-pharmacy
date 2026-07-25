@@ -2,8 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  ACCESS_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from '@e-pharmacy/config/auth';
+
+import {
   createAllowedAuthCookieHeader,
   createPrivateCookieHeaderWithAccessToken,
+  parseCookieHeader,
 } from './cookie-header.ts';
 
 //===================================================================
@@ -47,5 +53,23 @@ test('private retry never copies unrelated or refresh cookies', () => {
   assert.equal(
     createPrivateCookieHeaderWithAccessToken(cookies, 'new-access'),
     'e_pharmacy_access_token=new-access; e_pharmacy_auth_token=legacy'
+  );
+});
+
+
+//===================================================================
+
+test('last duplicate wins and cookie values may contain equals signs', () => {
+  const parsed = parseCookieHeader(
+    `${ACCESS_TOKEN_COOKIE_NAME}=old; ${ACCESS_TOKEN_COOKIE_NAME}=new==; analytics=1`
+  );
+
+  assert.equal(parsed.get(ACCESS_TOKEN_COOKIE_NAME), 'new==');
+  assert.equal(
+    createAllowedAuthCookieHeader(
+      `${REFRESH_TOKEN_COOKIE_NAME}=refresh==; locale=uk`,
+      'refresh-only'
+    ),
+    `${REFRESH_TOKEN_COOKIE_NAME}=refresh==`
   );
 });

@@ -18,17 +18,20 @@ export { createTrustedBackendApiUrl } from '../internal/backend-url';
 
 export async function publicBackendApiRequest<TData>(
   path: string,
-  { method = 'GET', cache, ...options }: RequestOptions = {}
+  { method = 'GET', cache, next, ...options }: RequestOptions = {}
 ): Promise<TData> {
   const requestId = createRequestId();
   const startedAt = Date.now();
   const url = createTrustedBackendApiUrl(path);
+  const resolvedCache =
+    cache ?? (next?.revalidate === undefined ? 'no-store' : undefined);
 
   try {
     const data = await apiRequest<TData>(url, {
       ...options,
       method,
-      cache,
+      cache: resolvedCache,
+      next,
       redirect: 'manual',
     });
 
@@ -38,7 +41,7 @@ export async function publicBackendApiRequest<TData>(
       path,
       destination: 'backend',
       durationMs: Date.now() - startedAt,
-      cachePolicy: cache,
+      cachePolicy: resolvedCache ?? `revalidate:${String(next?.revalidate)}`,
       authMode: 'public',
       source: 'server-api',
     });
@@ -52,7 +55,7 @@ export async function publicBackendApiRequest<TData>(
       destination: 'backend',
       durationMs: Date.now() - startedAt,
       status: error instanceof ApiError ? error.status : undefined,
-      cachePolicy: cache,
+      cachePolicy: resolvedCache ?? `revalidate:${String(next?.revalidate)}`,
       authMode: 'public',
       transportErrorCode:
         error instanceof ApiError ? error.code : undefined,

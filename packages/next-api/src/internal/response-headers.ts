@@ -25,16 +25,30 @@ const FORWARDED_RESPONSE_HEADERS = [
 
 //===================================================================
 
+function getSafeResponseHeaderValue(value: string | null): string | undefined {
+  const normalized = value?.trim();
+
+  return normalized &&
+    normalized.length <= 4096 &&
+    !/[\u0000-\u001f\u007f]/.test(normalized)
+    ? normalized
+    : undefined;
+}
+
+//===================================================================
+
 function getSafeRelativeLocation(value: string | null): string | undefined {
-  const location = value?.trim();
+  const location = getSafeResponseHeaderValue(value);
+
   if (!location || !location.startsWith('/') || location.startsWith('//')) {
     return undefined;
   }
 
-  if (/[\u0000-\u001f\u007f\\]/.test(location)) return undefined;
+  if (/\\/.test(location)) return undefined;
 
   try {
     const decodedPath = decodeURIComponent(location.split(/[?#]/, 1)[0] ?? '');
+
     if (/(?:^|\/)\.{1,2}(?:\/|$)/.test(decodedPath)) return undefined;
   } catch {
     return undefined;
@@ -53,7 +67,7 @@ export function createProxyResponseHeaders(
   const headers = new Headers();
 
   FORWARDED_RESPONSE_HEADERS.forEach((name) => {
-    const value = source.get(name);
+    const value = getSafeResponseHeaderValue(source.get(name));
     if (value) headers.set(name, value);
   });
 

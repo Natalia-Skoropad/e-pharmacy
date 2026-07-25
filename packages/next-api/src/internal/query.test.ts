@@ -29,3 +29,13 @@ test('keeps the original path when search is empty', () => {
     '/products?scope=public'
   );
 });
+
+
+//===================================================================
+
+test('preserves repeated, encoded, and Unicode values while dropping fragments', () => {
+  assert.equal(
+    appendSearchParams('/products?tag=first#ignored', '?tag=second&name=%D0%90%D0%BF%D1%82%D0%B5%D0%BA%D0%B0&value=a%3Db'),
+    '/products?tag=first&tag=second&name=%D0%90%D0%BF%D1%82%D0%B5%D0%BA%D0%B0&value=a%3Db'
+  );
+});

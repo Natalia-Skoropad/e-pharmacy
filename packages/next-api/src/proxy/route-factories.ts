@@ -1,4 +1,3 @@
-import 'server-only';
 import type { NextRequest } from 'next/server';
 
 import type { HttpMethod } from '@e-pharmacy/api-client/core';
@@ -33,6 +32,7 @@ type RouteParams = Record<string, string>;
 type RawRouteParams<TParams extends RouteParams> = {
   [TKey in keyof TParams]: string;
 };
+
 type EnumParamValues<TParams extends RouteParams> = Partial<
   Record<keyof TParams, readonly string[]>
 >;
@@ -140,10 +140,12 @@ export function createPublicGetProxyRoute<
 >({
   backendPath,
   revalidate,
+  staleWhileRevalidate,
   enumParams,
 }: {
   backendPath: BackendPath<TParams>;
   revalidate?: number | false;
+  staleWhileRevalidate?: number;
   enumParams?: EnumParamValues<TParams>;
 }): ProxyRouteHandler<TParams> {
   return async (request, context) => {
@@ -155,6 +157,7 @@ export function createPublicGetProxyRoute<
         requestId,
         backendPath: await resolveBackendPath(backendPath, context, enumParams),
         revalidate,
+        staleWhileRevalidate,
       });
     } catch (error) {
       return handleRouteFactoryError(error, request, requestId);
@@ -198,17 +201,24 @@ export function createPublicGetPrivatePostProxyRoute<
 >({
   backendPath,
   revalidate,
+  staleWhileRevalidate,
   enumParams,
 }: {
   backendPath: BackendPath<TParams>;
   revalidate?: number | false;
+  staleWhileRevalidate?: number;
   enumParams?: EnumParamValues<TParams>;
 }): {
   GET: ProxyRouteHandler<TParams>;
   POST: ProxyRouteHandler<TParams>;
 } {
   return {
-    GET: createPublicGetProxyRoute({ backendPath, revalidate, enumParams }),
+    GET: createPublicGetProxyRoute({
+      backendPath,
+      revalidate,
+      staleWhileRevalidate,
+      enumParams,
+    }),
     POST: createPrivateProxyRoute({
       backendPath,
       method: 'POST',

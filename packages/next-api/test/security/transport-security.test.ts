@@ -17,6 +17,9 @@ test('browser transport cannot bypass the same-origin BFF', () => {
 test('backend proxy cannot become an open proxy', () => {
   assert.throws(() => assertTrustedBackendPath('https://metadata.internal/'));
   assert.throws(() => assertTrustedBackendPath('//metadata.internal/'));
+  assert.throws(() => assertTrustedBackendPath('/safe\\..\\secret'));
+  assert.throws(() => assertTrustedBackendPath('/safe/%2e%2e/secret'));
+  assert.throws(() => assertTrustedBackendPath('/safe\u0000secret'));
 });
 
 //===================================================================

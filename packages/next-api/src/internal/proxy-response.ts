@@ -1,4 +1,3 @@
-import 'server-only';
 import { NextResponse } from 'next/server';
 
 import { createProxyResponseHeaders } from './response-headers';

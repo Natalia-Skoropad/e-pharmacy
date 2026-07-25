@@ -1,4 +1,3 @@
-import 'server-only';
 import { createHash } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 
@@ -51,6 +50,8 @@ type RefreshResult = Readonly<{
   tokens?: AuthProxyTokens;
   invalidTokenResponse: boolean;
 }>;
+
+//===================================================================
 
 const refreshPromises = new Map<string, Promise<RefreshResult>>();
 

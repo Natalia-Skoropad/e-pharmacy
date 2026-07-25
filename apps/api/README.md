@@ -343,3 +343,19 @@ Allowed transitions are `new -> in_progress | rejected` and `in_progress -> succ
 ### Canonical shared names
 
 Use only `PaymentMethod`, `DeliveryMethod`, `postal_delivery`, `ProductCategory`, and `PRODUCT_CATEGORIES`.
+
+
+## Trusted BFF authentication response
+
+For a request carrying the validated BFF marker and shared secret, login, registration and refresh responses include a server-only token block:
+
+```ts
+tokens: {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresIn: number;
+  refreshTokenExpiresIn: number;
+}
+```
+
+Both expiry fields are integer seconds derived from `JWT_EXPIRES_IN` and `REFRESH_TOKEN_EXPIRES_IN`. The Next.js BFF removes this block from the browser response and uses the expiry metadata as the browser cookie `Max-Age`. Direct browser responses never receive the raw token block.

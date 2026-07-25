@@ -4,7 +4,7 @@ import { extname, join, relative, resolve } from 'node:path';
 
 //===================================================================
 
-const ROOT = resolve(import.meta.dirname, '..');
+const ROOT = resolve(import.meta.dirname, '..', '..', '..');
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx']);
 
 //===================================================================

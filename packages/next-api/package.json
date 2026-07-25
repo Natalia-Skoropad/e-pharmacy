@@ -12,10 +12,12 @@
   "scripts": {
     "lint": "eslint src test --ext .ts",
     "type-check": "tsc --noEmit",
-    "build": "tsc -p tsconfig.build.json",
-    "test": "node ../../scripts/run-tsx-tests.mjs src --server-only-test-loader && node ../../scripts/run-tsx-tests.mjs test --server-only-test-loader",
-    "test:integration": "node ../../scripts/run-tsx-tests.mjs test/integration --server-only-test-loader",
-    "test:security": "node ../../scripts/run-tsx-tests.mjs test/security --server-only-test-loader"
+    "build": "pnpm run clean && tsc -p tsconfig.build.json",
+    "test": "node ../../scripts/test-runners/run-tsx-tests.mjs src && node ../../scripts/test-runners/run-tsx-tests.mjs test",
+    "test:integration": "node ../../scripts/test-runners/run-tsx-tests.mjs test/integration",
+    "test:security": "node ../../scripts/test-runners/run-tsx-tests.mjs test/security",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "test:unit": "node ../../scripts/test-runners/run-tsx-tests.mjs src"
   },
   "dependencies": {
     "@e-pharmacy/api-client": "workspace:*",

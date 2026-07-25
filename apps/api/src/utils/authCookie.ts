@@ -8,19 +8,7 @@ import {
   REFRESH_TOKEN_COOKIE_NAME,
 } from '../constants/auth';
 
-import { parseDurationMs } from './duration';
-
-//===============================================================
-
-const ACCESS_TOKEN_COOKIE_MAX_AGE_MS = parseDurationMs(
-  String(env.JWT_EXPIRES_IN),
-  15 * 60 * 1000
-);
-
-const REFRESH_TOKEN_COOKIE_MAX_AGE_MS = parseDurationMs(
-  String(env.REFRESH_TOKEN_EXPIRES_IN),
-  30 * 24 * 60 * 60 * 1000
-);
+import type { AuthTokens } from '../types/auth';
 
 //===============================================================
 
@@ -39,33 +27,43 @@ function getAuthCookieOptions(): CookieOptions {
 
 //===============================================================
 
-export function setAccessTokenCookie(res: Response, token: string): void {
+export function setAccessTokenCookie(
+  res: Response,
+  token: string,
+  maxAgeSeconds: number
+): void {
   res.cookie(ACCESS_TOKEN_COOKIE_NAME, token, {
     ...getAuthCookieOptions(),
-    maxAge: ACCESS_TOKEN_COOKIE_MAX_AGE_MS,
+    maxAge: maxAgeSeconds * 1000,
   });
 }
 
 //===============================================================
 
-export function setRefreshTokenCookie(res: Response, token: string): void {
+export function setRefreshTokenCookie(
+  res: Response,
+  token: string,
+  maxAgeSeconds: number
+): void {
   res.cookie(REFRESH_TOKEN_COOKIE_NAME, token, {
     ...getAuthCookieOptions(),
-    maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS,
+    maxAge: maxAgeSeconds * 1000,
   });
 }
 
 //===============================================================
 
-export function setAuthCookies(
-  res: Response,
-  tokens: { accessToken: string; refreshToken?: string }
-): void {
-  setAccessTokenCookie(res, tokens.accessToken);
-
-  if (tokens.refreshToken) {
-    setRefreshTokenCookie(res, tokens.refreshToken);
-  }
+export function setAuthCookies(res: Response, tokens: AuthTokens): void {
+  setAccessTokenCookie(
+    res,
+    tokens.accessToken,
+    tokens.accessTokenExpiresIn
+  );
+  setRefreshTokenCookie(
+    res,
+    tokens.refreshToken,
+    tokens.refreshTokenExpiresIn
+  );
 }
 
 //===============================================================

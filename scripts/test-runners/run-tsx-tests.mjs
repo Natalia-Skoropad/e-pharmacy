@@ -2,15 +2,10 @@ import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 //===================================================================
 
 const argumentsList = process.argv.slice(2);
-const useServerOnlyTestLoader = argumentsList.includes(
-  '--server-only-test-loader'
-);
-
 const requestedDirectory =
   argumentsList.find((argument) => !argument.startsWith('--')) ?? 'src';
 
@@ -51,32 +46,11 @@ if (testFiles.length === 0) {
   );
 
   const tsxCliPath = requireFromPackage.resolve('tsx/cli');
-  const childEnvironment = { ...process.env };
-
-  if (useServerOnlyTestLoader) {
-    const loaderUrl = pathToFileURL(
-      path.resolve(
-        import.meta.dirname,
-        'register-server-only-test-loader.mjs'
-      )
-    ).href;
-
-    const loaderOption = `--import=${loaderUrl}`;
-
-    childEnvironment.NODE_OPTIONS = [
-      process.env.NODE_OPTIONS,
-      loaderOption,
-    ]
-      .filter(Boolean)
-      .join(' ');
-  }
-
   const result = spawnSync(
     process.execPath,
     [tsxCliPath, '--test', ...testFiles],
     {
       cwd: process.cwd(),
-      env: childEnvironment,
       stdio: 'inherit',
       shell: false,
     }

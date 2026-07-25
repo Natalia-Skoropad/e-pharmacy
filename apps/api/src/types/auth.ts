@@ -41,7 +41,9 @@ export type AuthResponse = {
 
 export type AuthTokens = {
   accessToken: string;
-  refreshToken?: string;
+  refreshToken: string;
+  accessTokenExpiresIn: number;
+  refreshTokenExpiresIn: number;
 };
 
 export type AuthSessionResult = {

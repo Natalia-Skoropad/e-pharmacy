@@ -12,7 +12,12 @@ for (const flow of ['login', 'register', 'refresh']) {
         status: 'success',
         data: {
           user: { id: '64b7ea389c68bbec640519ab' },
-          tokens: { accessToken: 'access', refreshToken: 'refresh' },
+          tokens: {
+            accessToken: 'access',
+            refreshToken: 'refresh',
+            accessTokenExpiresIn: 900,
+            refreshTokenExpiresIn: 2_592_000,
+          },
         },
       })
     );

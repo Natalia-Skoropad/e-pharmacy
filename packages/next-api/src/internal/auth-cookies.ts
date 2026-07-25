@@ -1,12 +1,9 @@
-import 'server-only';
 import type { NextRequest, NextResponse } from 'next/server';
 
 import {
   ACCESS_TOKEN_COOKIE_NAME,
-  AUTH_READY_COOKIE_MAX_AGE_SECONDS,
   AUTH_READY_COOKIE_NAME,
   LEGACY_AUTH_COOKIE_NAME,
-  REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS,
   REFRESH_TOKEN_COOKIE_NAME,
 } from '@e-pharmacy/config/auth';
 
@@ -14,8 +11,6 @@ import type { AuthProxyTokens } from './auth-tokens';
 import { getNextApiServerEnvironment } from './env';
 
 //===================================================================
-
-const ACCESS_TOKEN_MAX_AGE_SECONDS = 15 * 60;
 
 type ProxyCookieSameSite = 'lax' | 'strict' | 'none';
 
@@ -71,18 +66,59 @@ export function setClientAuthCookies(
 
   response.cookies.set(ACCESS_TOKEN_COOKIE_NAME, tokens.accessToken, {
     ...baseOptions,
-    maxAge: ACCESS_TOKEN_MAX_AGE_SECONDS,
+    maxAge: tokens.accessTokenExpiresIn,
   });
 
   response.cookies.set(REFRESH_TOKEN_COOKIE_NAME, tokens.refreshToken, {
     ...baseOptions,
-    maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS,
+    maxAge: tokens.refreshTokenExpiresIn,
   });
 
   response.cookies.set(AUTH_READY_COOKIE_NAME, '1', {
     ...getAuthHintCookieOptions(request),
-    maxAge: AUTH_READY_COOKIE_MAX_AGE_SECONDS,
+    maxAge: tokens.refreshTokenExpiresIn,
   });
+}
+
+//===================================================================
+
+function serializeExpiredCookie(
+  name: string,
+  request: NextRequest,
+  httpOnly: boolean,
+  domain?: string
+): string {
+  const configured = getAuthCookieBaseOptions(request);
+  const attributes = [
+    `${name}=`,
+    'Path=/',
+    'Max-Age=0',
+    'Expires=Thu, 01 Jan 1970 00:00:00 GMT',
+    ...(domain ? [`Domain=${domain}`] : []),
+    ...(configured.secure ? ['Secure'] : []),
+    ...(httpOnly ? ['HttpOnly'] : []),
+    `SameSite=${configured.sameSite}`,
+  ];
+
+  return attributes.join('; ');
+}
+
+//===================================================================
+
+function clearCookieVariant(
+  response: NextResponse,
+  name: string,
+  request: NextRequest,
+  httpOnly: boolean,
+  domain?: string
+): void {
+  // ResponseCookies replaces cookies that share a name and path, even when
+  // their domains differ. Append the raw headers so host-only, current-domain,
+  // and legacy-domain variants are all expired in the same response.
+  response.headers.append(
+    'set-cookie',
+    serializeExpiredCookie(name, request, httpOnly, domain)
+  );
 }
 
 //===================================================================
@@ -93,22 +129,16 @@ function clearCookieVariants(
   request: NextRequest,
   httpOnly: boolean
 ): void {
-  const configured = getAuthCookieBaseOptions(request);
-  const base = httpOnly
-    ? configured
-    : (() => {
-        const { httpOnly: _httpOnly, ...hintOptions } = configured;
-        void _httpOnly;
-        return hintOptions;
-      })();
+  const environment = getNextApiServerEnvironment();
+  const domains = [
+    undefined,
+    environment.authCookieDomain,
+    ...environment.authCookieLegacyDomains,
+  ];
 
-  response.cookies.set(name, '', { ...base, maxAge: 0 });
-
-  if ('domain' in base) {
-    const { domain: _domain, ...hostOnlyOptions } = base;
-    void _domain;
-    response.cookies.set(name, '', { ...hostOnlyOptions, maxAge: 0 });
-  }
+  Array.from(new Set(domains)).forEach((domain) => {
+    clearCookieVariant(response, name, request, httpOnly, domain);
+  });
 }
 
 //===================================================================

@@ -19,6 +19,21 @@ const backendCookies = await read('apps/api/src/constants/auth.ts');
 const backendEnv = await read('apps/api/src/config/env.ts');
 const nextApiEnv = await read('packages/next-api/src/internal/env.ts');
 
+const backendAuthTypes = await read('apps/api/src/types/auth.ts');
+const frontendAuthTokens = await read(
+  'packages/next-api/src/internal/auth-tokens.ts'
+);
+const frontendAuthCookieRuntime = await read(
+  'packages/next-api/src/internal/auth-cookies.ts'
+);
+const backendAuthCookieRuntime = await read('apps/api/src/utils/authCookie.ts');
+const clientAuthProvider = await read(
+  'apps/client/src/providers/AuthProvider/AuthProvider.tsx'
+);
+const pharmacyAuthProvider = await read(
+  'apps/pharmacy/src/providers/AuthProvider/AuthProvider.tsx'
+);
+
 const nextApiSources = [
   await read('packages/next-api/src/internal/transport-error.ts'),
   await read('packages/next-api/src/proxy/auth-proxy.ts'),
@@ -97,6 +112,72 @@ if (!/status:\s*'error'/.test(nextApiSources)) {
 
 if (!/INVALID_BACKEND_RESPONSE/.test(nextApiSources)) {
   violations.push('Invalid auth/backend response classification is missing');
+}
+
+for (const field of ['accessTokenExpiresIn', 'refreshTokenExpiresIn']) {
+  if (!backendAuthTypes.includes(field)) {
+    violations.push(`Backend auth token contract is missing ${field}`);
+  }
+
+  if (!frontendAuthTokens.includes(field)) {
+    violations.push(`BFF auth token parser is missing ${field}`);
+  }
+}
+
+for (const [label, source] of [
+  ['client', clientAuthProvider],
+  ['pharmacy', pharmacyAuthProvider],
+]) {
+  if (!source.includes('serverManagedBrowserAuthSessionHintStorage')) {
+    violations.push(
+      `${label} auth provider does not use the server-owned auth hint`
+    );
+  }
+
+  if (/NEXT_PUBLIC_AUTH_COOKIE_(?:DOMAIN|SAME_SITE)/.test(source)) {
+    violations.push(
+      `${label} auth provider duplicates server cookie configuration`
+    );
+  }
+}
+
+if (!/maxAge:\s*tokens\.accessTokenExpiresIn/.test(frontendAuthCookieRuntime)) {
+  violations.push('BFF access cookie does not use backend expiry metadata');
+}
+
+if (
+  !/maxAge:\s*tokens\.refreshTokenExpiresIn/.test(frontendAuthCookieRuntime)
+) {
+  violations.push('BFF refresh cookie does not use backend expiry metadata');
+}
+
+if (
+  !/tokens\.accessTokenExpiresIn/.test(backendAuthCookieRuntime) ||
+  !/tokens\.refreshTokenExpiresIn/.test(backendAuthCookieRuntime)
+) {
+  violations.push(
+    'Backend cookie writer does not use auth token expiry metadata'
+  );
+}
+
+if (
+  !/AUTH_COOKIE_LEGACY_DOMAINS/.test(nextApiEnv) ||
+  !/authCookieLegacyDomains/.test(frontendAuthCookieRuntime)
+) {
+  violations.push('BFF legacy cookie-domain cleanup contract is missing');
+}
+
+for (const [label, source] of [
+  ['backend', backendEnv],
+  ['BFF', nextApiEnv],
+]) {
+  if (
+    !source.includes("'lax'") ||
+    !source.includes("'strict'") ||
+    !source.includes("'none'")
+  ) {
+    violations.push(`${label} SameSite contract is incomplete`);
+  }
 }
 
 if (violations.length) {

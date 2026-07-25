@@ -1,3 +1,4 @@
+import { isIP } from 'node:net';
 import type { NextRequest } from 'next/server';
 
 import {
@@ -27,16 +28,41 @@ type ProxyHeadersOptions = Readonly<{
 
 //===================================================================
 
-const SAFE_HEADER_VALUE_PATTERN = /^[\u0020-\u007e]{1,512}$/;
-const IP_VALUE_PATTERN = /^[a-f\d:.,\s]{1,256}$/i;
+const SAFE_HEADER_VALUE_PATTERN = /^[ -~]+$/;
+const TRACEPARENT_PATTERN = /^(?!ff)[\da-f]{2}-(?!0{32})[\da-f]{32}-(?!0{16})[\da-f]{16}-[\da-f]{2}$/i;
+const TRACESTATE_PATTERN = /^[a-z0-9_\-*/@=,.; ]+$/i;
 
 //===================================================================
 
-function getSafeHeaderValue(value: string | null): string | undefined {
+function getSafeHeaderValue(
+  value: string | null,
+  maximumLength = 512
+): string | undefined {
   const normalized = value?.trim();
-  return normalized && SAFE_HEADER_VALUE_PATTERN.test(normalized)
+  return normalized &&
+    normalized.length <= maximumLength &&
+    SAFE_HEADER_VALUE_PATTERN.test(normalized)
     ? normalized
     : undefined;
+}
+
+//===================================================================
+
+function getSafeHttpUrlHeader(
+  value: string | null,
+  originOnly: boolean
+): string | undefined {
+  const normalized = getSafeHeaderValue(value, 2048);
+  if (!normalized) return undefined;
+
+  try {
+    const url = new URL(normalized);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return undefined;
+    if (url.username || url.password) return undefined;
+    return originOnly ? url.origin : url.toString();
+  } catch {
+    return undefined;
+  }
 }
 
 //===================================================================
@@ -50,8 +76,30 @@ function getTrustedClientIp(request: NextRequest): string | undefined {
       : null,
   ];
 
-  const value = candidates.find((candidate) => candidate?.trim())?.trim();
-  return value && IP_VALUE_PATTERN.test(value) ? value : undefined;
+  for (const candidate of candidates) {
+    const first = candidate?.split(',')[0]?.trim();
+    if (first && isIP(first)) return first;
+  }
+
+  return undefined;
+}
+
+//===================================================================
+
+function getTraceparent(value: string | null): string | undefined {
+  const normalized = getSafeHeaderValue(value, 55);
+  return normalized && TRACEPARENT_PATTERN.test(normalized)
+    ? normalized.toLowerCase()
+    : undefined;
+}
+
+//===================================================================
+
+function getTracestate(value: string | null): string | undefined {
+  const normalized = getSafeHeaderValue(value, 512);
+  return normalized && TRACESTATE_PATTERN.test(normalized)
+    ? normalized
+    : undefined;
 }
 
 //===================================================================
@@ -69,11 +117,12 @@ export function createProxyRequestHeaders(
   const headers = new Headers();
   const accept = getSafeHeaderValue(request.headers.get('accept'));
   const contentType = getSafeHeaderValue(request.headers.get('content-type'));
-  const origin = getSafeHeaderValue(request.headers.get('origin'));
-  const referer = getSafeHeaderValue(request.headers.get('referer'));
-  const userAgent = getSafeHeaderValue(request.headers.get('user-agent'));
+  const origin = getSafeHttpUrlHeader(request.headers.get('origin'), true);
+  const referer = getSafeHttpUrlHeader(request.headers.get('referer'), false);
+  const userAgent = getSafeHeaderValue(request.headers.get('user-agent'), 500);
   const deviceName = getSafeHeaderValue(
-    request.headers.get(DEVICE_NAME_HEADER_NAME)
+    request.headers.get(DEVICE_NAME_HEADER_NAME),
+    120
   );
   const clientIp = getTrustedClientIp(request);
   const cookie = createAllowedAuthCookieHeader(
@@ -93,8 +142,8 @@ export function createProxyRequestHeaders(
 
   headers.set(REQUEST_ID_HEADER_NAME, requestId);
 
-  const traceparent = getSafeHeaderValue(request.headers.get('traceparent'));
-  const tracestate = getSafeHeaderValue(request.headers.get('tracestate'));
+  const traceparent = getTraceparent(request.headers.get('traceparent'));
+  const tracestate = getTracestate(request.headers.get('tracestate'));
   if (traceparent) headers.set('traceparent', traceparent);
   if (tracestate) headers.set('tracestate', tracestate);
 

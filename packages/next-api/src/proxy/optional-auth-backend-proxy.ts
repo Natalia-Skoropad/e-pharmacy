@@ -1,4 +1,3 @@
-import 'server-only';
 import type { NextRequest } from 'next/server';
 
 import { executeBackendFetch } from '../internal/backend-fetch';
@@ -16,6 +15,8 @@ import { logTransportRequest } from '../observability/logger';
 //===================================================================
 
 export type OptionalAuthPolicy = 'public-fallback' | 'strict';
+
+//===================================================================
 
 type OptionalAuthBackendProxyOptions = Readonly<{
   backendPath: string;

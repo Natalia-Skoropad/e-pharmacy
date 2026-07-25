@@ -7,21 +7,13 @@ import {
   type AuthProviderServices,
 } from '@e-pharmacy/auth/core';
 
-import { createBrowserAuthSessionHintStorage } from '@e-pharmacy/auth/session';
+import { serverManagedBrowserAuthSessionHintStorage } from '@e-pharmacy/auth/session';
 
 import {
   getCurrentUser,
   logoutUser,
   refreshSession,
 } from '@/lib/api/browser';
-
-//===================================================================
-
-const pharmacyAuthSessionHintStorage = createBrowserAuthSessionHintStorage({
-  domain: process.env.NEXT_PUBLIC_AUTH_COOKIE_DOMAIN || undefined,
-  sameSite:
-    process.env.NEXT_PUBLIC_AUTH_COOKIE_SAME_SITE === 'none' ? 'None' : 'Lax',
-});
 
 //===================================================================
 
@@ -50,7 +42,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   return (
     <AuthProviderCore
       {...pharmacyAuthServices}
-      sessionHintStorage={pharmacyAuthSessionHintStorage}
+      sessionHintStorage={serverManagedBrowserAuthSessionHintStorage}
       revalidateOnFocus={false}
     >
       {children}

@@ -78,6 +78,21 @@ for (const file of routeFiles) {
       `${rel}: dynamic BFF route does not use validated route factories`
     );
   }
+
+
+  if (rel.endsWith('/health/route.ts') && !/revalidate:\s*false/.test(source)) {
+    violations.push(`${rel}: health route must use no-store`);
+  }
+
+  if (rel.endsWith('/reviews/route.ts') && /createPublicGetPrivatePostProxyRoute/.test(source) && !/revalidate:\s*false/.test(source)) {
+    violations.push(`${rel}: public reviews must use a fresh no-store policy`);
+  }
+
+  if (/(?:filters|options)\/route\.ts$/.test(rel) && /createPublicGetProxyRoute/.test(source)) {
+    if (!/revalidate:\s*600/.test(source) || !/staleWhileRevalidate:\s*600/.test(source)) {
+      violations.push(`${rel}: filters/options must use the explicit 600-second cache policy`);
+    }
+  }
 }
 
 //===================================================================

@@ -40,3 +40,33 @@ test('production requires an HTTPS backend URL and BFF proxy secret', () => {
     }
   }
 });
+
+
+//===================================================================
+
+test('rejects invalid SameSite and cookie-domain configuration', () => {
+  const previous = { ...process.env };
+
+  try {
+    process.env.NODE_ENV = 'test';
+    process.env.API_BASE_URL = 'http://backend.example';
+    process.env.AUTH_COOKIE_SAME_SITE = 'sometimes';
+    assert.throws(() => getNextApiServerEnvironment(), /AUTH_COOKIE_SAME_SITE/);
+
+    process.env.AUTH_COOKIE_SAME_SITE = 'lax';
+    process.env.AUTH_COOKIE_DOMAIN = 'https://example.com/path';
+    assert.throws(() => getNextApiServerEnvironment(), /AUTH_COOKIE_DOMAIN/);
+
+    delete process.env.AUTH_COOKIE_DOMAIN;
+    process.env.AUTH_COOKIE_LEGACY_DOMAINS = '.old.example.com,old.example.com';
+    assert.deepEqual(getNextApiServerEnvironment().authCookieLegacyDomains, [
+      '.old.example.com',
+      'old.example.com',
+    ]);
+  } finally {
+    for (const key of Object.keys(process.env)) {
+      if (!(key in previous)) delete process.env[key];
+    }
+    Object.assign(process.env, previous);
+  }
+});

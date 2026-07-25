@@ -6,6 +6,7 @@ import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
 const reviewsRoute = createPublicGetPrivatePostProxyRoute<{
   pharmacyId: string;
 }>({
+  revalidate: false,
   backendPath: ({ pharmacyId }) => API_ROUTES.pharmacies.reviews(pharmacyId),
 });
 

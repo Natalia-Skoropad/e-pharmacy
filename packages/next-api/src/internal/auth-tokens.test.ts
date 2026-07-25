@@ -14,30 +14,43 @@ function successBody(tokens: unknown): string {
 
 //===================================================================
 
-test('extracts valid tokens and removes them from the browser body', () => {
-  const result = transformAuthResponseBody(
-    successBody({ accessToken: 'access', refreshToken: 'refresh' })
-  );
+const validTokens = {
+  accessToken: 'access',
+  refreshToken: 'refresh',
+  accessTokenExpiresIn: 900,
+  refreshTokenExpiresIn: 2_592_000,
+};
 
-  assert.deepEqual(result.tokens, {
-    accessToken: 'access',
-    refreshToken: 'refresh',
-  });
+//===================================================================
+
+test('extracts valid tokens, expiry metadata, and removes them from the browser body', () => {
+  const result = transformAuthResponseBody(successBody(validTokens));
+
+  assert.deepEqual(result.tokens, validTokens);
   assert.equal(JSON.parse(result.body).data.tokens, undefined);
   assert.equal(JSON.parse(result.body).data.user.id, '1');
 });
 
 //===================================================================
 
-test('rejects missing and malformed token objects', () => {
+test('rejects missing, malformed, and unsafe token lifetime objects', () => {
   assert.equal(
     transformAuthResponseBody(JSON.stringify({ status: 'success', data: {} }))
       .issue,
     'missing-tokens'
   );
-  assert.equal(
-    transformAuthResponseBody(successBody({ accessToken: 1 })).issue,
-    'malformed-tokens'
-  );
+
+  for (const tokens of [
+    { accessToken: 1 },
+    { ...validTokens, accessTokenExpiresIn: 0 },
+    { ...validTokens, refreshTokenExpiresIn: Number.NaN },
+    { ...validTokens, refreshTokenExpiresIn: 400 * 24 * 60 * 60 },
+  ]) {
+    assert.equal(
+      transformAuthResponseBody(successBody(tokens)).issue,
+      'malformed-tokens'
+    );
+  }
+
   assert.equal(transformAuthResponseBody('<html>').issue, 'invalid-json');
 });

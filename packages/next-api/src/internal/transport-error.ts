@@ -1,4 +1,3 @@
-import 'server-only';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import type { ApiErrorResponse } from '@e-pharmacy/types/api';
@@ -23,10 +22,13 @@ export type ProxyTransportErrorCode =
   | 'PAYLOAD_TOO_LARGE'
   | 'UNSUPPORTED_MEDIA_TYPE';
 
-type ProxyErrorBody = ApiErrorResponse & Readonly<{
-  code: ProxyTransportErrorCode;
-  requestId: string;
-}>;
+//===================================================================
+
+type ProxyErrorBody = ApiErrorResponse &
+  Readonly<{
+    code: ProxyTransportErrorCode;
+    requestId: string;
+  }>;
 
 export type ProxyErrorDescriptor = Readonly<{
   status: number;
@@ -81,7 +83,10 @@ export function describeProxyError(error: unknown): ProxyErrorDescriptor {
     };
   }
 
-  if (error instanceof Error && /API_BASE_URL|BFF_PROXY_SECRET|AUTH_COOKIE/i.test(error.message)) {
+  if (
+    error instanceof Error &&
+    /API_BASE_URL|BFF_PROXY_SECRET|AUTH_COOKIE/i.test(error.message)
+  ) {
     return {
       status: 500,
       code: 'CONFIGURATION_ERROR',

@@ -7,6 +7,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
   '..'
 );
 

@@ -1,4 +1,4 @@
-import 'server-only';
+// This module is internal to the server-only proxy/server entrypoints.
 
 //===================================================================
 
@@ -12,12 +12,14 @@ export type NextApiServerEnvironment = Readonly<{
   apiBaseUrl: string;
   bffProxySecret?: string;
   authCookieDomain?: string;
+  authCookieLegacyDomains: readonly string[];
   authCookieSameSite: CookieSameSite;
 }>;
 
 //===================================================================
 
 const LOCAL_API_BASE_URL = 'http://localhost:4000';
+const COOKIE_DOMAIN_PATTERN = /^\.?[a-z\d](?:[a-z\d.-]*[a-z\d])?$/i;
 
 //===================================================================
 
@@ -40,6 +42,39 @@ function getCookieSameSite(): CookieSameSite {
   if (value === 'lax' || value === 'strict' || value === 'none') return value;
 
   throw new Error('AUTH_COOKIE_SAME_SITE must be lax, strict, or none.');
+}
+
+//===================================================================
+
+function parseCookieDomain(value: string, variableName: string): string {
+  const domain = value.trim().toLowerCase();
+
+  if (!domain || !COOKIE_DOMAIN_PATTERN.test(domain)) {
+    throw new Error(`${variableName} contains an invalid cookie domain.`);
+  }
+
+  return domain;
+}
+
+//===================================================================
+
+function getCookieDomain(): string | undefined {
+  const value = process.env.AUTH_COOKIE_DOMAIN?.trim();
+  return value ? parseCookieDomain(value, 'AUTH_COOKIE_DOMAIN') : undefined;
+}
+
+//===================================================================
+
+function getLegacyCookieDomains(currentDomain?: string): readonly string[] {
+  const domains = (process.env.AUTH_COOKIE_LEGACY_DOMAINS ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => parseCookieDomain(value, 'AUTH_COOKIE_LEGACY_DOMAINS'));
+
+  return Array.from(new Set(domains)).filter(
+    (domain) => domain !== currentDomain
+  );
 }
 
 //===================================================================
@@ -83,6 +118,7 @@ function getApiBaseUrl(nodeEnv: NodeEnvironment): string {
 export function getNextApiServerEnvironment(): NextApiServerEnvironment {
   const nodeEnv = getNodeEnvironment();
   const bffProxySecret = process.env.BFF_PROXY_SECRET?.trim() || undefined;
+  const authCookieDomain = getCookieDomain();
 
   if (nodeEnv === 'production' && !bffProxySecret) {
     throw new Error('BFF_PROXY_SECRET is required in production.');
@@ -92,7 +128,8 @@ export function getNextApiServerEnvironment(): NextApiServerEnvironment {
     nodeEnv,
     apiBaseUrl: getApiBaseUrl(nodeEnv),
     bffProxySecret,
-    authCookieDomain: process.env.AUTH_COOKIE_DOMAIN?.trim() || undefined,
+    authCookieDomain,
+    authCookieLegacyDomains: getLegacyCookieDomains(authCookieDomain),
     authCookieSameSite: getCookieSameSite(),
   };
 }

@@ -50,9 +50,21 @@ import { toAuthUserResponse } from '../utils/userResponse';
 
 const REFRESH_TOKEN_BYTES = 64;
 
+const ACCESS_TOKEN_TTL_SECONDS = Math.max(
+  1,
+  Math.floor(
+    parseDurationMs(String(env.JWT_EXPIRES_IN), 15 * 60 * 1000) / 1000
+  )
+);
+
 const REFRESH_TOKEN_TTL_MS = parseDurationMs(
   String(env.REFRESH_TOKEN_EXPIRES_IN),
   30 * 24 * 60 * 60 * 1000
+);
+
+const REFRESH_TOKEN_TTL_SECONDS = Math.max(
+  1,
+  Math.floor(REFRESH_TOKEN_TTL_MS / 1000)
 );
 
 //===============================================================
@@ -147,7 +159,12 @@ async function createAuthSession(
     sessionId: String(session._id),
   });
 
-  return { accessToken, refreshToken };
+  return {
+    accessToken,
+    refreshToken,
+    accessTokenExpiresIn: ACCESS_TOKEN_TTL_SECONDS,
+    refreshTokenExpiresIn: REFRESH_TOKEN_TTL_SECONDS,
+  };
 }
 
 //===============================================================
@@ -310,6 +327,8 @@ export async function refreshAuthSessionService(
       sessionId: String(session._id),
     }),
     refreshToken,
+    accessTokenExpiresIn: ACCESS_TOKEN_TTL_SECONDS,
+    refreshTokenExpiresIn: REFRESH_TOKEN_TTL_SECONDS,
   };
 
   // Keep the refresh token stable for the lifetime of this device session.

@@ -1,4 +1,3 @@
-import 'server-only';
 import type { NextRequest } from 'next/server';
 
 import type { HttpMethod } from '@e-pharmacy/api-client/core';
@@ -28,6 +27,8 @@ import { logTransportRequest } from '../observability/logger';
 //===================================================================
 
 export type AuthMarkerAction = 'set' | 'delete';
+
+//===================================================================
 
 type AuthProxyOptions = Readonly<{
   backendPath: string;

@@ -1,6 +1,8 @@
 export type AuthProxyTokens = Readonly<{
   accessToken: string;
   refreshToken: string;
+  accessTokenExpiresIn: number;
+  refreshTokenExpiresIn: number;
 }>;
 
 export type AuthBodyTransformResult = Readonly<{
@@ -8,6 +10,10 @@ export type AuthBodyTransformResult = Readonly<{
   tokens?: AuthProxyTokens;
   issue?: 'invalid-json' | 'missing-tokens' | 'malformed-tokens';
 }>;
+
+//===================================================================
+
+const MAX_AUTH_TOKEN_LIFETIME_SECONDS = 365 * 24 * 60 * 60;
 
 //===================================================================
 
@@ -19,6 +25,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+//===================================================================
+
+function isValidLifetime(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value > 0 &&
+    value <= MAX_AUTH_TOKEN_LIFETIME_SECONDS
+  );
 }
 
 //===================================================================
@@ -59,7 +76,9 @@ export function transformAuthResponseBody(
   if (
     !isRecord(rawTokens) ||
     !isNonEmptyString(rawTokens.accessToken) ||
-    !isNonEmptyString(rawTokens.refreshToken)
+    !isNonEmptyString(rawTokens.refreshToken) ||
+    !isValidLifetime(rawTokens.accessTokenExpiresIn) ||
+    !isValidLifetime(rawTokens.refreshTokenExpiresIn)
   ) {
     return { body: safeBody, issue: 'malformed-tokens' };
   }
@@ -69,6 +88,8 @@ export function transformAuthResponseBody(
     tokens: {
       accessToken: rawTokens.accessToken,
       refreshToken: rawTokens.refreshToken,
+      accessTokenExpiresIn: rawTokens.accessTokenExpiresIn,
+      refreshTokenExpiresIn: rawTokens.refreshTokenExpiresIn,
     },
   };
 }

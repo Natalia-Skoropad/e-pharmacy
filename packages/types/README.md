@@ -17,7 +17,7 @@ Application code must use explicit domain subpaths:
 - `@e-pharmacy/types/reviews`
 - `@e-pharmacy/types/notes`
 
-The root entrypoint contains only basic API and primitive types. Application source must not import it directly; `scripts/check-types-public-api.mjs` enforces this rule.
+The root entrypoint contains only basic API and primitive types. Application source must not import it directly; `scripts/checks/types/check-types-public-api.mjs` enforces this rule.
 
 ## Package policy
 
