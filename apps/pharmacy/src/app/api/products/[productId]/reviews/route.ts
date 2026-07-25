@@ -1,5 +1,5 @@
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
-import { createOptionalAuthGetProxyRoute } from '@e-pharmacy/next-api/proxy';
+import { createPublicGetProxyRoute } from '@e-pharmacy/next-api/proxy';
 
 //===================================================================
 
@@ -9,6 +9,7 @@ type ReviewsRouteParams = {
 
 //===================================================================
 
-export const GET = createOptionalAuthGetProxyRoute<ReviewsRouteParams>({
+export const GET = createPublicGetProxyRoute<ReviewsRouteParams>({
   backendPath: ({ productId }) => API_ROUTES.products.reviews(productId),
+  revalidate: false,
 });

@@ -3,7 +3,7 @@ import 'client-only';
 import {
   buildQueryString,
   getResponseData,
-  type RequestOptions,
+  type JsonResponseRequestOptions,
 } from '@e-pharmacy/api-client/core';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
@@ -38,7 +38,9 @@ type ProductFiltersQueryParams = Pick<
 
 //===================================================================
 
-function isRequestOptions(value: unknown): value is RequestOptions {
+function isRequestOptions(
+  value: unknown
+): value is JsonResponseRequestOptions {
   if (!value || typeof value !== 'object') return false;
 
   return [
@@ -52,6 +54,7 @@ function isRequestOptions(value: unknown): value is RequestOptions {
     'baseUrl',
     'timeoutMs',
     'retry',
+    'responseType',
   ].some((key) => key in value);
 }
 
@@ -59,7 +62,7 @@ function isRequestOptions(value: unknown): value is RequestOptions {
 
 export async function getProductsFromClientApi(
   params: CatalogProductsQueryParams = {},
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<ProductsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<ProductsResponse>>(
     `${ROUTES.products.list}${buildQueryString(params)}`,
@@ -72,7 +75,7 @@ export async function getProductsFromClientApi(
 
 export async function getFavoriteProductsFromClientApi(
   params: CatalogProductsQueryParams = {},
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<ProductsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<ProductsResponse>>(
     `${ROUTES.products.favorites}${buildQueryString(params)}`,
@@ -84,7 +87,7 @@ export async function getFavoriteProductsFromClientApi(
 //===================================================================
 
 export async function getFavoriteProductIdsFromClientApi(
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<FavoriteIdsResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<FavoriteIdsResponse>
@@ -95,10 +98,12 @@ export async function getFavoriteProductIdsFromClientApi(
 //===================================================================
 
 export async function getProductFiltersFromClientApi(
-  paramsOrOptions: ProductFiltersQueryParams | RequestOptions = {},
-  options?: RequestOptions
+  paramsOrOptions: ProductFiltersQueryParams | JsonResponseRequestOptions = {},
+  options?: JsonResponseRequestOptions
 ): Promise<ProductFilterOptionsResponse> {
-  const params = isRequestOptions(paramsOrOptions) ? {} : paramsOrOptions;
+  const params = isRequestOptions(paramsOrOptions)
+    ? {}
+    : paramsOrOptions;
   const requestOptions = isRequestOptions(paramsOrOptions)
     ? paramsOrOptions
     : options;
@@ -115,7 +120,7 @@ export async function getProductFiltersFromClientApi(
 
 export async function getProductDetailsFromClientApi(
   id: string,
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<ProductDetailsResponse> {
   return getResponseData(
     await localApiRequest<ApiSuccessResponse<ProductDetailsResponse>>(
@@ -129,7 +134,7 @@ export async function getProductDetailsFromClientApi(
 
 export async function getProductReviewsFromClientApi(
   id: string,
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<ReviewsResponse> {
   return getResponseData(
     await localApiRequest<ApiSuccessResponse<ReviewsResponse>>(

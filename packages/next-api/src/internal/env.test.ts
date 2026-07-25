@@ -70,3 +70,38 @@ test('rejects invalid SameSite and cookie-domain configuration', () => {
     Object.assign(process.env, previous);
   }
 });
+
+
+//===================================================================
+
+test('trusted client IP forwarding requires an explicit proxy provider', () => {
+  const previous = { ...process.env };
+
+  try {
+    process.env.NODE_ENV = 'test';
+    process.env.API_BASE_URL = 'http://backend.example';
+
+    delete process.env.BFF_TRUSTED_PROXY_PROVIDER;
+    assert.equal(getNextApiServerEnvironment().trustedProxyProvider, 'none');
+
+    process.env.BFF_TRUSTED_PROXY_PROVIDER = 'vercel';
+    assert.equal(getNextApiServerEnvironment().trustedProxyProvider, 'vercel');
+
+    process.env.BFF_TRUSTED_PROXY_PROVIDER = 'cloudflare';
+    assert.equal(
+      getNextApiServerEnvironment().trustedProxyProvider,
+      'cloudflare'
+    );
+
+    process.env.BFF_TRUSTED_PROXY_PROVIDER = 'browser-header';
+    assert.throws(
+      () => getNextApiServerEnvironment(),
+      /BFF_TRUSTED_PROXY_PROVIDER/
+    );
+  } finally {
+    for (const key of Object.keys(process.env)) {
+      if (!(key in previous)) delete process.env[key];
+    }
+    Object.assign(process.env, previous);
+  }
+});

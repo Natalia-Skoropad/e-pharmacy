@@ -24,12 +24,14 @@ test('generates trusted security headers and forwards only allowlisted context',
     NODE_ENV: process.env.NODE_ENV,
     API_BASE_URL: process.env.API_BASE_URL,
     BFF_PROXY_SECRET: process.env.BFF_PROXY_SECRET,
+    BFF_TRUSTED_PROXY_PROVIDER: process.env.BFF_TRUSTED_PROXY_PROVIDER,
   };
 
   try {
     process.env.NODE_ENV = 'test';
     process.env.API_BASE_URL = 'http://backend.example';
     process.env.BFF_PROXY_SECRET = 'server-owned-secret';
+    process.env.BFF_TRUSTED_PROXY_PROVIDER = 'vercel';
 
     const request = {
       headers: new Headers({
@@ -99,12 +101,14 @@ test('drops malformed context and never trusts browser marker, secret, request i
     NODE_ENV: process.env.NODE_ENV,
     API_BASE_URL: process.env.API_BASE_URL,
     BFF_PROXY_SECRET: process.env.BFF_PROXY_SECRET,
+    BFF_TRUSTED_PROXY_PROVIDER: process.env.BFF_TRUSTED_PROXY_PROVIDER,
   };
 
   try {
     process.env.NODE_ENV = 'production';
     process.env.API_BASE_URL = 'https://backend.example';
     process.env.BFF_PROXY_SECRET = 'server-secret';
+    process.env.BFF_TRUSTED_PROXY_PROVIDER = 'vercel';
 
     const request = {
       headers: new Headers({

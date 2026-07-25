@@ -4,6 +4,7 @@
 
 type NodeEnvironment = 'development' | 'test' | 'production';
 type CookieSameSite = 'lax' | 'strict' | 'none';
+type TrustedProxyProvider = 'none' | 'vercel' | 'cloudflare';
 
 //===================================================================
 
@@ -14,6 +15,7 @@ export type NextApiServerEnvironment = Readonly<{
   authCookieDomain?: string;
   authCookieLegacyDomains: readonly string[];
   authCookieSameSite: CookieSameSite;
+  trustedProxyProvider: TrustedProxyProvider;
 }>;
 
 //===================================================================
@@ -79,6 +81,21 @@ function getLegacyCookieDomains(currentDomain?: string): readonly string[] {
 
 //===================================================================
 
+function getTrustedProxyProvider(): TrustedProxyProvider {
+  const value =
+    process.env.BFF_TRUSTED_PROXY_PROVIDER?.trim().toLowerCase() || 'none';
+
+  if (value === 'none' || value === 'vercel' || value === 'cloudflare') {
+    return value;
+  }
+
+  throw new Error(
+    'BFF_TRUSTED_PROXY_PROVIDER must be none, vercel, or cloudflare.'
+  );
+}
+
+//===================================================================
+
 function getApiBaseUrl(nodeEnv: NodeEnvironment): string {
   const configured = process.env.API_BASE_URL?.trim();
   const value =
@@ -131,5 +148,6 @@ export function getNextApiServerEnvironment(): NextApiServerEnvironment {
     authCookieDomain,
     authCookieLegacyDomains: getLegacyCookieDomains(authCookieDomain),
     authCookieSameSite: getCookieSameSite(),
+    trustedProxyProvider: getTrustedProxyProvider(),
   };
 }

@@ -7,6 +7,8 @@ import {
 } from '@e-pharmacy/api-client/core';
 
 import { createTrustedBackendApiUrl } from '../internal/backend-url';
+import { getNextApiServerEnvironment } from '../internal/env';
+import { REQUEST_ID_HEADER_NAME } from '../internal/bff-contract';
 import { createRequestId } from '../internal/request-id';
 import { logTransportRequest } from '../observability/logger';
 
@@ -16,20 +18,28 @@ export { createTrustedBackendApiUrl } from '../internal/backend-url';
 
 //===================================================================
 
+type PublicBackendRequestOptions = Omit<RequestOptions, 'responseType'>;
+
+//===================================================================
+
 export async function publicBackendApiRequest<TData>(
   path: string,
-  { method = 'GET', cache, next, ...options }: RequestOptions = {}
+  { method = 'GET', cache, next, ...options }: PublicBackendRequestOptions = {}
 ): Promise<TData> {
   const requestId = createRequestId();
   const startedAt = Date.now();
-  const url = createTrustedBackendApiUrl(path);
+  createTrustedBackendApiUrl(path);
   const resolvedCache =
     cache ?? (next?.revalidate === undefined ? 'no-store' : undefined);
+  const requestHeaders = new Headers(options.headers);
+  requestHeaders.set(REQUEST_ID_HEADER_NAME, requestId);
 
   try {
-    const data = await apiRequest<TData>(url, {
+    const data = await apiRequest<TData>(path, {
       ...options,
+      baseUrl: getNextApiServerEnvironment().apiBaseUrl,
       method,
+      headers: requestHeaders,
       cache: resolvedCache,
       next,
       redirect: 'manual',

@@ -3,7 +3,7 @@ import 'client-only';
 import {
   buildQueryString,
   getResponseData,
-  type RequestOptions,
+  type JsonResponseRequestOptions,
 } from '@e-pharmacy/api-client/core';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
@@ -35,7 +35,7 @@ import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
 
 export async function getPharmaciesFromClientApi(
   params: PharmaciesQueryParams = {},
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<PharmaciesResponse> {
   return getResponseData(
     await localApiRequest<ApiSuccessResponse<PharmaciesResponse>>(
@@ -49,7 +49,7 @@ export async function getPharmaciesFromClientApi(
 
 export async function getFavoritePharmaciesFromClientApi(
   params: PharmaciesQueryParams = {},
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<PharmaciesResponse> {
   return getResponseData(
     await localApiRequest<ApiSuccessResponse<PharmaciesResponse>>(
@@ -62,7 +62,7 @@ export async function getFavoritePharmaciesFromClientApi(
 //===================================================================
 
 export async function getPharmacyOptionsFromClientApi(
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<PharmacyOptionsResponse> {
   return getResponseData(
     await localApiRequest<ApiSuccessResponse<PharmacyOptionsResponse>>(
@@ -75,7 +75,7 @@ export async function getPharmacyOptionsFromClientApi(
 //===================================================================
 
 export async function getFavoritePharmacyIdsFromClientApi(
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<FavoriteIdsResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<FavoriteIdsResponse>
@@ -86,7 +86,7 @@ export async function getFavoritePharmacyIdsFromClientApi(
 //===================================================================
 
 export async function getPharmacyFiltersFromClientApi(
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<PharmacyFilterOptionsResponse> {
   return getResponseData(
     await localApiRequest<ApiSuccessResponse<PharmacyFilterOptionsResponse>>(
@@ -100,7 +100,7 @@ export async function getPharmacyFiltersFromClientApi(
 
 export async function getPharmacyDetailsFromClientApi(
   id: string,
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<PharmacyDetailsResponse> {
   return getResponseData(
     await localApiRequest<ApiSuccessResponse<PharmacyDetailsResponse>>(
@@ -114,7 +114,7 @@ export async function getPharmacyDetailsFromClientApi(
 
 export async function getPharmacyCheckoutDetails(
   id: string,
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<PharmacyCheckoutDetailsResponse> {
   return getResponseData(
     await localApiRequest<ApiSuccessResponse<PharmacyCheckoutDetailsResponse>>(
@@ -128,7 +128,7 @@ export async function getPharmacyCheckoutDetails(
 
 export async function getPharmacyReviewsFromClientApi(
   id: string,
-  options?: RequestOptions
+  options?: JsonResponseRequestOptions
 ): Promise<ReviewsResponse> {
   return getResponseData(
     await localApiRequest<ApiSuccessResponse<ReviewsResponse>>(

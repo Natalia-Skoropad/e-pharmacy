@@ -26,13 +26,24 @@ function jsonResponse(payload: unknown, status = 200): Response {
 
 //===================================================================
 
-test('returns JSON and supports empty 204 responses', async () => {
+test('returns JSON and requires an explicit empty-response contract for 204', async () => {
   try {
     globalThis.fetch = async () => jsonResponse({ ok: true });
     assert.deepEqual(await localApiRequest('/api/example'), { ok: true });
 
     globalThis.fetch = async () => new Response(null, { status: 204 });
-    assert.equal(await localApiRequest('/api/example'), undefined);
+
+    await assert.rejects(
+      localApiRequest('/api/example'),
+      (error: unknown) =>
+        error instanceof ApiError && error.code === 'INVALID_RESPONSE'
+    );
+
+    globalThis.fetch = async () => new Response(null, { status: 204 });
+    assert.equal(
+      await localApiRequest('/api/example', { responseType: 'empty' }),
+      undefined
+    );
   } finally {
     restoreFetch();
   }
@@ -73,10 +84,27 @@ test('classifies timeout and caller abort separately', async () => {
   ): Promise<Response> =>
     new Promise((_resolve, reject) => {
       const signal = init?.signal;
-      if (!signal) return;
-      signal.addEventListener('abort', () => reject(signal.reason), {
-        once: true,
-      });
+
+      if (!signal) {
+        reject(new Error('Expected the request to include an AbortSignal.'));
+        return;
+      }
+
+      const failSafeTimer = setTimeout(() => {
+        reject(new Error('The mocked fetch request was not aborted.'));
+      }, 1_000);
+
+      const rejectWithAbortReason = (): void => {
+        clearTimeout(failSafeTimer);
+        reject(signal.reason);
+      };
+
+      if (signal.aborted) {
+        rejectWithAbortReason();
+        return;
+      }
+
+      signal.addEventListener('abort', rejectWithAbortReason, { once: true });
     });
 
   try {
@@ -84,6 +112,17 @@ test('classifies timeout and caller abort separately', async () => {
 
     await assert.rejects(
       localApiRequest('/api/timeout', { timeoutMs: 5, retry: false }),
+      (error: unknown) => error instanceof ApiError && error.code === 'TIMEOUT'
+    );
+
+    const inactiveController = new AbortController();
+
+    await assert.rejects(
+      localApiRequest('/api/combined-timeout', {
+        signal: inactiveController.signal,
+        timeoutMs: 5,
+        retry: false,
+      }),
       (error: unknown) => error instanceof ApiError && error.code === 'TIMEOUT'
     );
 

@@ -31,4 +31,23 @@ export type RequestOptions = {
   timeoutMs?: number;
   retry?: false | ApiRetryConfig;
   redirect?: RequestRedirect;
+  responseType?: 'json' | 'empty';
+};
+
+//===================================================================
+
+export type JsonResponseRequestOptions = Omit<
+  RequestOptions,
+  'responseType'
+> & {
+  responseType?: 'json';
+};
+
+//===================================================================
+
+export type EmptyResponseRequestOptions = Omit<
+  RequestOptions,
+  'responseType'
+> & {
+  responseType: 'empty';
 };

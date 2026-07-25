@@ -23,16 +23,46 @@ const backendAuthTypes = await read('apps/api/src/types/auth.ts');
 const frontendAuthTokens = await read(
   'packages/next-api/src/internal/auth-tokens.ts'
 );
+
 const frontendAuthCookieRuntime = await read(
   'packages/next-api/src/internal/auth-cookies.ts'
 );
+
 const backendAuthCookieRuntime = await read('apps/api/src/utils/authCookie.ts');
 const clientAuthProvider = await read(
   'apps/client/src/providers/AuthProvider/AuthProvider.tsx'
 );
+
 const pharmacyAuthProvider = await read(
   'apps/pharmacy/src/providers/AuthProvider/AuthProvider.tsx'
 );
+
+const frontendRequestHeaders = await read(
+  'packages/next-api/src/internal/request-headers.ts'
+);
+
+const optionalAuthProxy = await read(
+  'packages/next-api/src/proxy/optional-auth-backend-proxy.ts'
+);
+
+const browserApiRequest = await read(
+  'packages/next-api/src/browser/local-api-request-core.ts'
+);
+
+const sharedApiRequest = await read(
+  'packages/api-client/src/core/api-request.ts'
+);
+
+const sharedApiUrl = await read('packages/api-client/src/core/api-url.ts');
+const sharedRequestUtils = await read(
+  'packages/api-client/src/core/request-utils.ts'
+);
+
+const backendAuthController = await read(
+  'apps/api/src/controllers/auth.controller.ts'
+);
+
+//===================================================================
 
 const nextApiSources = [
   await read('packages/next-api/src/internal/transport-error.ts'),
@@ -114,6 +144,8 @@ if (!/INVALID_BACKEND_RESPONSE/.test(nextApiSources)) {
   violations.push('Invalid auth/backend response classification is missing');
 }
 
+//===================================================================
+
 for (const field of ['accessTokenExpiresIn', 'refreshTokenExpiresIn']) {
   if (!backendAuthTypes.includes(field)) {
     violations.push(`Backend auth token contract is missing ${field}`);
@@ -123,6 +155,8 @@ for (const field of ['accessTokenExpiresIn', 'refreshTokenExpiresIn']) {
     violations.push(`BFF auth token parser is missing ${field}`);
   }
 }
+
+//===================================================================
 
 for (const [label, source] of [
   ['client', clientAuthProvider],
@@ -140,6 +174,8 @@ for (const [label, source] of [
     );
   }
 }
+
+//===================================================================
 
 if (!/maxAge:\s*tokens\.accessTokenExpiresIn/.test(frontendAuthCookieRuntime)) {
   violations.push('BFF access cookie does not use backend expiry metadata');
@@ -178,6 +214,74 @@ for (const [label, source] of [
   ) {
     violations.push(`${label} SameSite contract is incomplete`);
   }
+}
+
+if (
+  !nextApiEnv.includes('BFF_TRUSTED_PROXY_PROVIDER') ||
+  !nextApiEnv.includes("'vercel'") ||
+  !nextApiEnv.includes("'cloudflare'") ||
+  !nextApiEnv.includes("'none'")
+) {
+  violations.push('Trusted proxy provider contract is missing or incomplete');
+}
+
+if (/headers\.get\(['"]x-forwarded-for['"]\)/.test(frontendRequestHeaders)) {
+  violations.push('BFF must not trust browser X-Forwarded-For directly');
+}
+
+if (
+  !frontendRequestHeaders.includes("trustedProxyProvider === 'vercel'") ||
+  !frontendRequestHeaders.includes("trustedProxyProvider === 'cloudflare'")
+) {
+  violations.push('Provider-owned client IP forwarding policy is missing');
+}
+
+if (
+  !optionalAuthProxy.includes("'refresh-aware'") ||
+  !optionalAuthProxy.includes('refreshAuthSession') ||
+  !optionalAuthProxy.includes('executePublicFallback')
+) {
+  violations.push('Refresh-aware optional-auth flow is missing');
+}
+
+for (const [label, source] of [
+  ['browser BFF request', browserApiRequest],
+  ['shared API request', sharedApiRequest],
+]) {
+  if (
+    !source.includes("responseType === 'empty'") ||
+    !source.includes('empty response where JSON was required')
+  ) {
+    violations.push(
+      `${label} does not enforce an explicit empty-response contract`
+    );
+  }
+}
+
+if (
+  !sharedApiUrl.includes('InvalidApiPathError') ||
+  !sharedApiUrl.includes('ABSOLUTE_SCHEME_PATTERN') ||
+  !sharedApiUrl.includes('TRAVERSAL_SEGMENT_PATTERN')
+) {
+  violations.push(
+    'Shared API URL construction does not reject absolute or traversing paths'
+  );
+}
+
+if (!sharedRequestUtils.includes('AbortSignal.any')) {
+  violations.push(
+    'Shared API requests do not combine caller cancellation with timeout enforcement'
+  );
+}
+
+const directCookieGuards = backendAuthController.match(
+  /if \(!isNextAuthProxyRequest\(req\)\) setAuthCookies\(res, data\.tokens\);/g
+);
+
+if ((directCookieGuards?.length ?? 0) !== 3) {
+  violations.push(
+    'Backend login/register/refresh must not emit API-domain auth cookies for trusted BFF requests'
+  );
 }
 
 if (violations.length) {

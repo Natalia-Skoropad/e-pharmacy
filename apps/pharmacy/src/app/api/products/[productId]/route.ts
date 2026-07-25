@@ -12,4 +12,5 @@ type ProductRouteParams = {
 
 export const GET = createOptionalAuthGetProxyRoute<ProductRouteParams>({
   backendPath: ({ productId }) => API_ROUTES.products.details(productId),
+  policy: 'refresh-aware',
 });

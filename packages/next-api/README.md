@@ -44,14 +44,16 @@ Mutation requests automatically receive the BFF CSRF header. GET requests may be
 
 `publicBackendApiRequest` is for public server-side reads. It does not read the current user's cookies and does not perform auth refresh.
 
-`createTrustedBackendApiUrl` accepts only a relative backend path beginning with one `/`. Absolute URLs, protocol-relative URLs, control characters, path traversal, and origin changes are rejected.
+`createTrustedBackendApiUrl` accepts only a relative backend path beginning with one `/`. Absolute URLs, protocol-relative URLs, control characters, path traversal, and origin changes are rejected. The shared `apiRequest` primitive also requires a relative path plus an explicit `baseUrl`, so callers cannot accidentally turn a future transport wrapper into an open proxy.
+
+Caller cancellation and request timeout remain active together through a combined `AbortSignal`; providing a caller signal does not disable the timeout.
 
 Authenticated server-side reads require a separate explicit design and must not be added to the public helper implicitly.
 
 ## Proxy access modes
 
 - `public`: no cookies; route-specific cache policy.
-- `optional`: access/legacy cookies only; explicit public fallback policy.
+- `optional`: access/legacy cookies only; an explicit `strict`, `public-fallback`, or `refresh-aware` policy.
 - `private`: access/legacy cookies only; one refresh attempt on 401.
 - `auth`: explicit cookie mode per route. Login/register/password reset forward no auth cookies, logout uses access cookies, refresh uses only the refresh cookie.
 
@@ -80,6 +82,8 @@ private request 401
 ```
 
 Refresh 401/403 and a repeated private 401/403 clear browser auth cookies. Timeout, network, and backend 5xx refresh failures do not clear the session automatically.
+
+Optional product/pharmacy detail reads use `refresh-aware`: after an access-token 401 the BFF attempts the same single-flight refresh, retries with the new access token, and only then falls back to anonymous public data. Invalid refresh credentials clear cookies; a temporary refresh outage preserves them.
 
 Logout is local fail-closed: browser auth cookies are cleared even when the backend revoke request is temporarily unavailable. In that case the server-side session may remain active until expiry or a later successful logout-all request.
 
@@ -132,12 +136,6 @@ Main transport classifications:
 - `502 BAD_GATEWAY` or `INVALID_BACKEND_RESPONSE`;
 - `504 GATEWAY_TIMEOUT`.
 
-## Cache policy
-
-Private, auth, optional-auth, and failed public responses are `no-store`.
-
-Public GET routes define their own `revalidate` value. `false` or `0` means `no-store`. Health uses `no-store` so a cached success cannot hide an outage.
-
 ## Required environment
 
 Server-only:
@@ -146,7 +144,8 @@ Server-only:
 - `BFF_PROXY_SECRET` in production;
 - `AUTH_COOKIE_DOMAIN` when a domain cookie is intentionally required;
 - `AUTH_COOKIE_SAME_SITE` (`lax`, `strict`, or `none`);
-- `NODE_ENV`.
+- `NODE_ENV`;
+- `BFF_TRUSTED_PROXY_PROVIDER` (`none`, `vercel`, or `cloudflare`).
 
 `BFF_PROXY_SECRET` must never use a `NEXT_PUBLIC_` prefix.
 
@@ -164,7 +163,6 @@ pnpm check:next-api-boundaries
 pnpm check:next-api-routes
 pnpm check:next-api-contracts
 ```
-
 
 ## Cookie ownership and expiry
 
@@ -194,3 +192,15 @@ pnpm check:next-api-contracts
 ```
 
 The package also provides real ESLint, type-check, build, unit/integration/security test and clean scripts.
+
+## Response body contract
+
+JSON requests require a valid JSON response. A `204` response is accepted only when the caller explicitly passes `responseType: 'empty'`; this keeps the return type honest instead of casting an empty response to arbitrary `TData`.
+
+## Trusted client IP
+
+The BFF never trusts browser-supplied `X-Forwarded-For`. Client IP forwarding is disabled by default. Set `BFF_TRUSTED_PROXY_PROVIDER=vercel` to read `X-Vercel-Forwarded-For`, or `cloudflare` to read `CF-Connecting-IP`, only when that provider owns the ingress path.
+
+## Route contract parity
+
+`scripts/checks/routes/next-api-route-contracts.json` is the explicit BFF contract. `pnpm check:next-api-routes` verifies every client/pharmacy route file, HTTP method, access mode, optional-auth policy, and corresponding Express method/path.

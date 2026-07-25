@@ -3,7 +3,7 @@ import 'client-only';
 import {
   buildQueryString,
   getResponseData,
-  type RequestOptions,
+  type JsonResponseRequestOptions,
 } from '@e-pharmacy/api-client/core';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
@@ -32,7 +32,7 @@ import {
 
 export async function getProducts(
   params: PharmacyProductsApiQueryParams = {},
-  options: RequestOptions = {}
+  options: JsonResponseRequestOptions = {}
 ): Promise<ProductsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<ProductsResponse>>(
     `${PHARMACY_API_ROUTES.products.list}${buildQueryString(params)}`,

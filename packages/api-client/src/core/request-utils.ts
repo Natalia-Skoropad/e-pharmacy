@@ -13,7 +13,8 @@ export function getRequestSignal(
   signal?: AbortSignal,
   timeoutMs = DEFAULT_API_REQUEST_TIMEOUT_MS
 ): AbortSignal {
-  return signal ?? AbortSignal.timeout(timeoutMs);
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
 }
 
 //===================================================================

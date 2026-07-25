@@ -8,6 +8,8 @@ import {
   prepareRequestBody,
   toTransportError,
   wait,
+  type EmptyResponseRequestOptions,
+  type JsonResponseRequestOptions,
   type RequestOptions,
 } from '@e-pharmacy/api-client/core';
 
@@ -28,7 +30,21 @@ function isMutationMethod(method: string): boolean {
 
 //===================================================================
 
-export async function localApiRequest<TData>(
+export function localApiRequest(
+  path: string,
+  options: EmptyResponseRequestOptions
+): Promise<void>;
+
+//===================================================================
+
+export function localApiRequest<TData>(
+  path: string,
+  options?: JsonResponseRequestOptions
+): Promise<TData>;
+
+//===================================================================
+
+export async function localApiRequest(
   path: string,
   {
     method = 'GET',
@@ -40,8 +56,9 @@ export async function localApiRequest<TData>(
     timeoutMs = DEFAULT_API_REQUEST_TIMEOUT_MS,
     retry,
     redirect = 'manual',
+    responseType = 'json',
   }: RequestOptions = {}
-): Promise<TData> {
+): Promise<unknown> {
   assertLocalApiPath(path);
 
   const requestId = createRequestId();
@@ -105,7 +122,7 @@ export async function localApiRequest<TData>(
     await wait(retryConfig.delayMs);
   }
 
-  if (response.status === 204) {
+  if (responseType === 'empty') {
     logTransportRequest({
       requestId,
       method,
@@ -119,12 +136,31 @@ export async function localApiRequest<TData>(
       source: 'browser-api',
     });
 
-    return undefined as TData;
+    if (!response.ok) {
+      const payload = await parseJsonSafe(response);
+      throw new ApiError(
+        getApiErrorMessage(payload, response.statusText),
+        response.status,
+        payload,
+        { url: path, method, code: 'HTTP_ERROR' }
+      );
+    }
+
+    return undefined;
+  }
+
+  if (response.status === 204) {
+    throw new ApiError(
+      'The API returned an empty response where JSON was required.',
+      502,
+      null,
+      { url: path, method, code: 'INVALID_RESPONSE' }
+    );
   }
 
   const contentType = response.headers.get('content-type') ?? '';
   const isJson = /(^|\/)json(?:;|$)|\+json(?:;|$)/i.test(contentType);
-  const payload = isJson ? await parseJsonSafe<TData>(response) : null;
+  const payload = isJson ? await parseJsonSafe(response) : null;
 
   logTransportRequest({
     requestId,

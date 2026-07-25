@@ -12,11 +12,29 @@ import {
   wait,
 } from './request-utils';
 
-import type { RequestOptions } from './types';
+import type {
+  EmptyResponseRequestOptions,
+  JsonResponseRequestOptions,
+  RequestOptions,
+} from './types';
 
 //===================================================================
 
-export async function apiRequest<TData>(
+export function apiRequest(
+  path: string,
+  options: EmptyResponseRequestOptions
+): Promise<void>;
+
+//===================================================================
+
+export function apiRequest<TData>(
+  path: string,
+  options?: JsonResponseRequestOptions
+): Promise<TData>;
+
+//===================================================================
+
+export async function apiRequest(
   path: string,
   {
     method = 'GET',
@@ -30,8 +48,9 @@ export async function apiRequest<TData>(
     timeoutMs = DEFAULT_API_REQUEST_TIMEOUT_MS,
     retry,
     redirect = 'follow',
+    responseType = 'json',
   }: RequestOptions = {}
-): Promise<TData> {
+): Promise<unknown> {
   const url = createApiUrl(path, baseUrl ?? '');
   const requestHeaders = new Headers(headers);
   const requestBody = prepareRequestBody(body, requestHeaders);
@@ -70,7 +89,30 @@ export async function apiRequest<TData>(
     await wait(retryConfig.delayMs);
   }
 
-  const payload = await parseJsonSafe<TData>(response);
+  if (responseType === 'empty') {
+    if (!response.ok) {
+      const payload = await parseJsonSafe(response);
+      throw new ApiError(
+        getApiErrorMessage(payload, response.statusText),
+        response.status,
+        payload,
+        { url, method, code: 'HTTP_ERROR' }
+      );
+    }
+
+    return undefined;
+  }
+
+  if (response.status === 204) {
+    throw new ApiError(
+      'The API returned an empty response where JSON was required.',
+      502,
+      null,
+      { url, method, code: 'INVALID_RESPONSE' }
+    );
+  }
+
+  const payload = await parseJsonSafe(response);
 
   if (!response.ok) {
     throw new ApiError(
@@ -81,5 +123,14 @@ export async function apiRequest<TData>(
     );
   }
 
-  return payload as TData;
+  if (payload === null) {
+    throw new ApiError(
+      'The API returned an invalid JSON response.',
+      502,
+      null,
+      { url, method, code: 'INVALID_RESPONSE' }
+    );
+  }
+
+  return payload;
 }

@@ -1,0 +1,379 @@
+[
+  {
+    "app": "client",
+    "route": "/auth/login",
+    "backend": "/auth/login",
+    "methods": { "POST": "auth" }
+  },
+  {
+    "app": "client",
+    "route": "/auth/logout",
+    "backend": "/auth/logout",
+    "methods": { "POST": "auth" }
+  },
+  {
+    "app": "client",
+    "route": "/auth/logout-all",
+    "backend": "/auth/logout-all",
+    "methods": { "POST": "auth" }
+  },
+  {
+    "app": "client",
+    "route": "/auth/me",
+    "backend": "/auth/current",
+    "methods": { "GET": "private", "PATCH": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/auth/password",
+    "backend": "/auth/current/password",
+    "methods": { "PATCH": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/auth/password-reset/confirm",
+    "backend": "/auth/password-reset/confirm",
+    "methods": { "POST": "auth" }
+  },
+  {
+    "app": "client",
+    "route": "/auth/password-reset/request",
+    "backend": "/auth/password-reset/request",
+    "methods": { "POST": "auth" }
+  },
+  {
+    "app": "client",
+    "route": "/auth/refresh",
+    "backend": "/auth/refresh",
+    "methods": { "POST": "auth" }
+  },
+  {
+    "app": "client",
+    "route": "/auth/register",
+    "backend": "/auth/register",
+    "methods": { "POST": "auth" }
+  },
+  {
+    "app": "client",
+    "route": "/auth/sessions",
+    "backend": "/auth/sessions",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/auth/sessions/[sessionId]",
+    "backend": "/auth/sessions/:sessionId",
+    "methods": { "DELETE": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/cart",
+    "backend": "/cart",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/cart/clear",
+    "backend": "/cart/clear",
+    "methods": { "DELETE": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/cart/items",
+    "backend": "/cart/items",
+    "methods": { "POST": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/cart/items/[cartItemId]",
+    "backend": "/cart/items/:cartItemId",
+    "methods": { "PATCH": "private", "DELETE": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/health",
+    "backend": "/health",
+    "methods": { "GET": "public" }
+  },
+  {
+    "app": "client",
+    "route": "/orders",
+    "backend": "/orders",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/orders/[orderId]",
+    "backend": "/orders/:orderId",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/orders/checkout",
+    "backend": "/orders/checkout",
+    "methods": { "POST": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/pharmacies",
+    "backend": "/pharmacies",
+    "methods": { "GET": "public" }
+  },
+  {
+    "app": "client",
+    "route": "/pharmacies/[pharmacyId]",
+    "backend": "/pharmacies/:pharmacyId",
+    "methods": { "GET": "optional" },
+    "optionalPolicy": "refresh-aware"
+  },
+  {
+    "app": "client",
+    "route": "/pharmacies/[pharmacyId]/checkout-details",
+    "backend": "/pharmacies/:pharmacyId/checkout-details",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/pharmacies/[pharmacyId]/favorite",
+    "backend": "/pharmacies/:pharmacyId/favorite",
+    "methods": { "PUT": "private", "DELETE": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/pharmacies/[pharmacyId]/reviews",
+    "backend": "/pharmacies/:pharmacyId/reviews",
+    "methods": { "GET": "public", "POST": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/pharmacies/favorites",
+    "backend": "/pharmacies/favorites",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/pharmacies/favorites/ids",
+    "backend": "/pharmacies/favorites/ids",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/pharmacies/filters",
+    "backend": "/pharmacies/filters",
+    "methods": { "GET": "public" }
+  },
+  {
+    "app": "client",
+    "route": "/pharmacies/options",
+    "backend": "/pharmacies/options",
+    "methods": { "GET": "public" }
+  },
+  {
+    "app": "client",
+    "route": "/products",
+    "backend": "/products",
+    "methods": { "GET": "public" }
+  },
+  {
+    "app": "client",
+    "route": "/products/[productId]",
+    "backend": "/products/:productId",
+    "methods": { "GET": "optional" },
+    "optionalPolicy": "refresh-aware"
+  },
+  {
+    "app": "client",
+    "route": "/products/[productId]/favorite",
+    "backend": "/products/:productId/favorite",
+    "methods": { "PUT": "private", "DELETE": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/products/[productId]/reviews",
+    "backend": "/products/:productId/reviews",
+    "methods": { "GET": "public", "POST": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/products/favorites",
+    "backend": "/products/favorites",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/products/favorites/ids",
+    "backend": "/products/favorites/ids",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "client",
+    "route": "/products/filters",
+    "backend": "/products/filters",
+    "methods": { "GET": "public" }
+  },
+
+  {
+    "app": "pharmacy",
+    "route": "/auth/logout",
+    "backend": "/auth/logout",
+    "methods": { "POST": "auth" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/auth/logout-all",
+    "backend": "/auth/logout-all",
+    "methods": { "POST": "auth" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/auth/me",
+    "backend": "/auth/current",
+    "methods": { "GET": "private", "PATCH": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/auth/password",
+    "backend": "/auth/current/password",
+    "methods": { "PATCH": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/auth/refresh",
+    "backend": "/auth/refresh",
+    "methods": { "POST": "auth" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/auth/sessions",
+    "backend": "/auth/sessions",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/auth/sessions/[sessionId]",
+    "backend": "/auth/sessions/:sessionId",
+    "methods": { "DELETE": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/clients",
+    "backend": "/clients",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/clients/[clientId]",
+    "backend": "/clients/:clientId",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/clients/[clientId]/products",
+    "backend": "/clients/:clientId/products",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/orders",
+    "backend": "/orders",
+    "methods": { "GET": "private", "POST": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/orders/[orderId]",
+    "backend": "/orders/:orderId",
+    "methods": { "GET": "private", "PATCH": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/orders/[orderId]/comments",
+    "backend": "/orders/:orderId/comments",
+    "methods": { "GET": "private", "POST": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/orders/[orderId]/comments/[commentId]",
+    "backend": "/orders/:orderId/comments/:commentId",
+    "methods": { "DELETE": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/orders/[orderId]/status",
+    "backend": "/orders/:orderId/status",
+    "methods": { "PATCH": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/orders/sales-statistics",
+    "backend": "/orders/sales-statistics",
+    "methods": { "GET": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/profile",
+    "backend": "/pharmacies/me/profile",
+    "methods": { "GET": "private", "PATCH": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/profile/send-for-verification",
+    "backend": "/pharmacies/me/profile/send-for-verification",
+    "methods": { "POST": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacy-notes/[entityType]/[entityId]",
+    "backend": "/pharmacy-notes/:entityType/:entityId",
+    "methods": { "GET": "private", "POST": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacy-notes/[entityType]/[entityId]/[noteId]",
+    "backend": "/pharmacy-notes/:entityType/:entityId/:noteId",
+    "methods": { "DELETE": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/product-requests",
+    "backend": "/product-requests",
+    "methods": { "GET": "private", "POST": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/product-requests/[requestId]",
+    "backend": "/product-requests/:requestId",
+    "methods": { "GET": "private", "PATCH": "private", "DELETE": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/products",
+    "backend": "/products",
+    "methods": { "GET": "optional" },
+    "optionalPolicy": "refresh-aware"
+  },
+  {
+    "app": "pharmacy",
+    "route": "/products/[productId]",
+    "backend": "/products/:productId",
+    "methods": { "GET": "optional" },
+    "optionalPolicy": "refresh-aware"
+  },
+  {
+    "app": "pharmacy",
+    "route": "/products/[productId]/my-pharmacy",
+    "backend": "/products/:productId/my-pharmacy",
+    "methods": { "POST": "private", "DELETE": "private" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/products/[productId]/reviews",
+    "backend": "/products/:productId/reviews",
+    "methods": { "GET": "public" }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/products/[productId]/stock-movements",
+    "backend": "/products/:productId/stock-movements",
+    "methods": { "GET": "private" }
+  }
+]

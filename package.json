@@ -38,7 +38,8 @@
     "check:types-unused-exports": "node scripts/checks/types/check-types-unused-exports.mjs",
     "check:next-api-boundaries": "node scripts/checks/boundaries/check-next-api-boundaries.mjs",
     "check:next-api-routes": "node scripts/checks/routes/check-next-api-routes.mjs",
-    "check:next-api-contracts": "node scripts/checks/contracts/check-next-api-contracts.mjs"
+    "check:next-api-contracts": "node scripts/checks/contracts/check-next-api-contracts.mjs",
+    "archive:source": "node scripts/archive/prepare-source-archive.mjs"
   },
   "devDependencies": {
     "turbo": "latest",

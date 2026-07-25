@@ -136,7 +136,7 @@ export async function registerUser(
 
   const data = await registerUserService(input, getSessionContext(req));
 
-  setAuthCookies(res, data.tokens);
+  if (!isNextAuthProxyRequest(req)) setAuthCookies(res, data.tokens);
 
   sendSuccessResponse({
     res,
@@ -156,7 +156,7 @@ export async function loginUser(
 
   const data = await loginUserService(input, getSessionContext(req));
 
-  setAuthCookies(res, data.tokens);
+  if (!isNextAuthProxyRequest(req)) setAuthCookies(res, data.tokens);
 
   sendSuccessResponse({
     res,
@@ -190,7 +190,7 @@ export async function refreshAuthSession(
     throw lastError;
   }
 
-  setAuthCookies(res, data.tokens);
+  if (!isNextAuthProxyRequest(req)) setAuthCookies(res, data.tokens);
 
   sendSuccessResponse({
     res,

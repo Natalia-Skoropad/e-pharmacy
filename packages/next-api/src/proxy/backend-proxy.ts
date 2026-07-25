@@ -1,8 +1,5 @@
-import { createHash } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 
-import { authRoutes } from '@e-pharmacy/api-client/contracts';
-import { REFRESH_TOKEN_COOKIE_NAME } from '@e-pharmacy/config/auth';
 import type { HttpMethod } from '@e-pharmacy/api-client/core';
 
 import { executeBackendFetch } from '../internal/backend-fetch';
@@ -14,14 +11,12 @@ import {
 } from '../internal/auth-cookies';
 
 import {
-  transformAuthResponseBody,
-  type AuthProxyTokens,
-} from '../internal/auth-tokens';
+  getRequestRefreshToken,
+  refreshAuthSession,
+  type AuthRefreshResult,
+} from '../internal/auth-refresh';
 
-import {
-  createPrivateCookieHeaderWithAccessToken,
-  parseCookieHeader,
-} from '../internal/cookie-header';
+import { createPrivateCookieHeaderWithAccessToken } from '../internal/cookie-header';
 
 import { createProxyResponse } from '../internal/proxy-response';
 import { readProxyRequestBody } from '../internal/request-body';
@@ -44,76 +39,6 @@ type BackendProxyOptions = Readonly<{
   method?: HttpMethod;
   clearAuthCookiesOnSuccess?: boolean;
 }>;
-
-type RefreshResult = Readonly<{
-  response: Response;
-  tokens?: AuthProxyTokens;
-  invalidTokenResponse: boolean;
-}>;
-
-//===================================================================
-
-const refreshPromises = new Map<string, Promise<RefreshResult>>();
-
-//===================================================================
-
-function getRefreshToken(request: NextRequest): string | undefined {
-  return parseCookieHeader(request.headers.get('cookie') ?? '').get(
-    REFRESH_TOKEN_COOKIE_NAME
-  );
-}
-
-//===================================================================
-
-function getRefreshFingerprint(refreshToken: string): string {
-  return createHash('sha256').update(refreshToken).digest('hex');
-}
-
-//===================================================================
-
-async function refreshAuthCookies(
-  request: NextRequest,
-  requestId: string,
-  refreshToken: string
-): Promise<RefreshResult> {
-  const fingerprint = getRefreshFingerprint(refreshToken);
-  const existing = refreshPromises.get(fingerprint);
-  if (existing) return existing;
-
-  const nextPromise = executeBackendFetch({
-    request,
-    backendPath: authRoutes.refresh,
-    method: 'POST',
-    requestId,
-    timeoutMs: NEXT_API_TIMEOUTS_MS.authRefresh,
-    authCookieMode: 'refresh-only',
-    includeAuthProxyMarker: true,
-    forwardSearchParams: false,
-  })
-    .then(async (response) => {
-      if (!response.ok) {
-        return { response, invalidTokenResponse: false };
-      }
-
-      const transformed = transformAuthResponseBody(
-        await response.clone().text()
-      );
-
-      return {
-        response,
-        tokens: transformed.tokens,
-        invalidTokenResponse: !transformed.tokens,
-      };
-    })
-    .finally(() => {
-      refreshPromises.delete(fingerprint);
-    });
-
-  refreshPromises.set(fingerprint, nextPromise);
-  return nextPromise;
-}
-
-//===================================================================
 
 export async function proxyBackendRequest({
   backendPath,
@@ -186,7 +111,7 @@ export async function proxyBackendRequest({
     return nextResponse;
   }
 
-  const refreshToken = getRefreshToken(request);
+  const refreshToken = getRequestRefreshToken(request);
 
   if (!refreshToken) {
     const nextResponse = createProxyResponse(response, {
@@ -197,10 +122,10 @@ export async function proxyBackendRequest({
     return nextResponse;
   }
 
-  let refreshResult: RefreshResult;
+  let refreshResult: AuthRefreshResult;
 
   try {
-    refreshResult = await refreshAuthCookies(request, requestId, refreshToken);
+    refreshResult = await refreshAuthSession(request, requestId, refreshToken);
   } catch (error) {
     const descriptor = describeProxyError(error);
 

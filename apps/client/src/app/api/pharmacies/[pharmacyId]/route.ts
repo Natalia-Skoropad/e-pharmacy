@@ -11,4 +11,5 @@ type PharmacyRouteParams = {
 
 export const GET = createOptionalAuthGetProxyRoute<PharmacyRouteParams>({
   backendPath: ({ pharmacyId }) => API_ROUTES.pharmacies.details(pharmacyId),
+  policy: 'refresh-aware',
 });

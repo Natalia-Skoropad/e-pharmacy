@@ -68,20 +68,16 @@ function getSafeHttpUrlHeader(
 //===================================================================
 
 function getTrustedClientIp(request: NextRequest): string | undefined {
-  const candidates = [
-    request.headers.get('x-vercel-forwarded-for'),
-    request.headers.get('cf-connecting-ip'),
-    process.env.NODE_ENV !== 'production'
-      ? request.headers.get('x-real-ip')
-      : null,
-  ];
+  const { trustedProxyProvider } = getNextApiServerEnvironment();
+  const candidate =
+    trustedProxyProvider === 'vercel'
+      ? request.headers.get('x-vercel-forwarded-for')
+      : trustedProxyProvider === 'cloudflare'
+        ? request.headers.get('cf-connecting-ip')
+        : null;
 
-  for (const candidate of candidates) {
-    const first = candidate?.split(',')[0]?.trim();
-    if (first && isIP(first)) return first;
-  }
-
-  return undefined;
+  const first = candidate?.split(',')[0]?.trim();
+  return first && isIP(first) ? first : undefined;
 }
 
 //===================================================================

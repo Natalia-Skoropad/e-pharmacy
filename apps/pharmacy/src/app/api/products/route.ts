@@ -6,4 +6,5 @@ import { createOptionalAuthGetProxyRoute } from '@e-pharmacy/next-api/proxy';
 
 export const GET = createOptionalAuthGetProxyRoute({
   backendPath: API_ROUTES.products.list,
+  policy: 'refresh-aware',
 });
