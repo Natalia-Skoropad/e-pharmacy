@@ -327,17 +327,21 @@ function NewProductRequestPageContent({
   useEffect(() => {
     const idToLoad = requestId ?? cloneSourceRequestId;
     if (!idToLoad) return;
-    const requestIdToLoad = idToLoad;
 
-    let isMounted = true;
+    const controller = new AbortController();
+    const requestIdToLoad = idToLoad;
 
     async function loadRequest() {
       setIsLoading(true);
       setHasLoadError(false);
 
       try {
-        const loadedRequest = await getPharmacyProductRequest(requestIdToLoad);
-        if (!isMounted) return;
+        const loadedRequest = await getPharmacyProductRequest(
+          requestIdToLoad,
+          { signal: controller.signal }
+        );
+
+        if (controller.signal.aborted) return;
 
         setValues(toFormState(loadedRequest));
         setProductImage(
@@ -359,16 +363,16 @@ function NewProductRequestPageContent({
           dispatchPharmacyBreadcrumbLabel(loadedRequest.name);
         }
       } catch {
-        if (isMounted) setHasLoadError(true);
+        if (!controller.signal.aborted) setHasLoadError(true);
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }
 
     void loadRequest();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [cloneSourceRequestId, requestId]);
 
@@ -376,23 +380,26 @@ function NewProductRequestPageContent({
     const article = values.article.trim().toUpperCase();
     if (!canEdit || !article) return;
 
-    let isCurrent = true;
+    const controller = new AbortController();
     const timeoutId = window.setTimeout(async () => {
       setArticleCheckStatus('checking');
 
       try {
         const result = await checkPharmacyProductRequestArticle(
           article,
-          requestId
+          requestId,
+          { signal: controller.signal }
         );
-        if (!isCurrent) return;
+
+        if (controller.signal.aborted) return;
 
         setArticleCheckStatus(result.available ? 'available' : 'unavailable');
         setArticleCheckMessage(
           result.message ?? 'This article is already in use.'
         );
       } catch {
-        if (!isCurrent) return;
+        if (controller.signal.aborted) return;
+
         setArticleCheckStatus('unavailable');
         setArticleCheckMessage(
           'Could not verify the product article. Try again.'
@@ -401,7 +408,7 @@ function NewProductRequestPageContent({
     }, 350);
 
     return () => {
-      isCurrent = false;
+      controller.abort();
       window.clearTimeout(timeoutId);
     };
   }, [canEdit, requestId, values.article]);
@@ -1207,8 +1214,8 @@ function NewProductRequestPageContent({
             emptyText="No private pharmacy comments have been added yet."
             initialTotal={commentsTotal}
             isEditable={request.status === 'draft'}
-            load={(page) =>
-              getPharmacyNotes('product_request', request.id, page)
+            load={(page, options) =>
+              getPharmacyNotes('product_request', request.id, page, options)
             }
             create={(text) =>
               createPharmacyNote('product_request', request.id, text)

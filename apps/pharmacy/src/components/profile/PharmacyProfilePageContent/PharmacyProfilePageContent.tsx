@@ -114,7 +114,6 @@ import {
   deletePharmacyNote,
   getActiveSessions,
   getPharmacyNotes,
-  getMyPharmacyProfile,
   revokeActiveSession,
   sendMyPharmacyForVerification,
   updateCurrentUser,
@@ -128,6 +127,8 @@ import {
 } from '@/components/common/StatusPresentation';
 
 import { EntityComments } from '@/components/comments/EntityComments';
+
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import css from './PharmacyProfilePageContent.module.css';
 
@@ -438,45 +439,77 @@ function hasProfilePayloadChanges(
 
 function PharmacyProfilePageContent() {
   const { user, isAuthReady } = useAuth();
+  const {
+    profile,
+    isLoading: isProfileLoading,
+    error: profileError,
+    syncProfile,
+  } = usePharmacyProfile();
 
-  if (!isAuthReady || !user) {
+  if (!isAuthReady || !user || isProfileLoading) {
     return <PageLoader label="Loading pharmacy profile..." />;
   }
 
-  return <PharmacyProfilePage key={user.id ?? user.email} user={user} />;
+  if (!profile) {
+    return (
+      <main className={css.page}>
+        <section
+          className={css.section}
+          aria-labelledby="pharmacy-profile-title"
+        >
+          <Container className={css.profileContainer}>
+            <StatusBanner
+              status="rejected"
+              title="Pharmacy profile could not be loaded"
+              message={
+                profileError
+                  ? getErrorMessage(
+                      profileError,
+                      'Could not load pharmacy profile.'
+                    )
+                  : 'Please refresh the page and try again.'
+              }
+            />
+          </Container>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <PharmacyProfilePage
+      key={user.id ?? user.email}
+      user={user}
+      initialPharmacy={profile}
+      initialLoadError={
+        profileError
+          ? getErrorMessage(profileError, 'Could not load pharmacy profile.')
+          : null
+      }
+      syncProfile={syncProfile}
+    />
+  );
 }
 
 //===================================================================
 
 type PharmacyProfilePageProps = Readonly<{
   user: AuthUser;
+  initialPharmacy: PharmacyProfile;
+  initialLoadError: string | null;
+  syncProfile: (profile: PharmacyProfile) => void;
 }>;
 
 //===================================================================
 
-function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
+function PharmacyProfilePage({
+  user,
+  initialPharmacy,
+  initialLoadError,
+  syncProfile,
+}: PharmacyProfilePageProps) {
   const toast = useToast();
   const { reloadCurrentUser } = useAuth();
-
-  const [activeTab, setActiveTab] = useState<ProfileTab>('data');
-  const [pharmacy, setPharmacy] = useState<PharmacyProfile | null>(null);
-  const [sessions, setSessions] = useState<ActiveSession[]>([]);
-  const [commentsTotal, setCommentsTotal] = useState(0);
-  const [visibleSessionsCount, setVisibleSessionsCount] = useState(
-    INITIAL_VISIBLE_SESSIONS_COUNT
-  );
-  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  const [ownerValues, setOwnerValues] = useState<DataProfileFormValues>(() =>
-    createOwnerInitialValues(user)
-  );
-  const [initialOwnerValues, setInitialOwnerValues] =
-    useState<DataProfileFormValues>(() => createOwnerInitialValues(user));
-  const [ownerTouched, setOwnerTouched] = useState<DataProfileTouchedFields>(
-    {}
-  );
 
   const profileUserDefaults = useMemo<ProfileUserDefaults>(
     () => ({
@@ -485,6 +518,28 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       phone: user.phone,
     }),
     [user.email, user.name, user.phone]
+  );
+
+  const [activeTab, setActiveTab] = useState<ProfileTab>('data');
+  const [pharmacy, setPharmacy] = useState<PharmacyProfile | null>(
+    initialPharmacy
+  );
+  const [sessions, setSessions] = useState<ActiveSession[]>([]);
+  const [commentsTotal, setCommentsTotal] = useState(0);
+  const [visibleSessionsCount, setVisibleSessionsCount] = useState(
+    INITIAL_VISIBLE_SESSIONS_COUNT
+  );
+  const [isLoadingProfile] = useState(false);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+  const [loadError] = useState<string | null>(initialLoadError);
+
+  const [ownerValues, setOwnerValues] = useState<DataProfileFormValues>(() =>
+    createOwnerInitialValues(user)
+  );
+  const [initialOwnerValues, setInitialOwnerValues] =
+    useState<DataProfileFormValues>(() => createOwnerInitialValues(user));
+  const [ownerTouched, setOwnerTouched] = useState<DataProfileTouchedFields>(
+    {}
   );
 
   const [passwordValues, setPasswordValues] =
@@ -502,55 +557,52 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     user.pictureUrl ?? null
   );
   const [pharmacyPictureUrl, setPharmacyPictureUrl] = useState<string | null>(
-    null
+    initialPharmacy?.imageUrl ?? null
   );
   const [initialPharmacyPictureUrl, setInitialPharmacyPictureUrl] = useState<
     string | null
-  >(null);
+  >(initialPharmacy?.imageUrl ?? null);
 
   const [pharmacyValues, setPharmacyValues] =
-    useState<PharmacyContactFormValues>({
-      name: '',
-      address: '',
-      phone: '',
-      email: '',
-      workingHours: '',
-    });
+    useState<PharmacyContactFormValues>(() =>
+      createPharmacyInitialValues(profileUserDefaults, initialPharmacy)
+    );
 
   const [initialPharmacyValues, setInitialPharmacyValues] =
-    useState<PharmacyContactFormValues>(pharmacyValues);
+    useState<PharmacyContactFormValues>(() =>
+      createPharmacyInitialValues(profileUserDefaults, initialPharmacy)
+    );
   const [pharmacyTouched, setPharmacyTouched] =
     useState<PharmacyContactTouchedFields>({});
 
-  const [aboutValues, setAboutValues] = useState<PharmacyAboutFormValues>({
-    description: '',
-  });
+  const [aboutValues, setAboutValues] = useState<PharmacyAboutFormValues>(
+    () => createAboutInitialValues(initialPharmacy)
+  );
 
   const [initialAboutValues, setInitialAboutValues] =
-    useState<PharmacyAboutFormValues>(aboutValues);
+    useState<PharmacyAboutFormValues>(() =>
+      createAboutInitialValues(initialPharmacy)
+    );
   const [aboutTouched, setAboutTouched] = useState<PharmacyAboutTouchedFields>(
     {}
   );
 
   const [paymentValues, setPaymentValues] = useState<PharmacyPaymentFormValues>(
-    {
-      recipientName: '',
-      taxId: '',
-      iban: '',
-      bankName: '',
-      receiptEmail: '',
-      paymentPurpose: '',
-    }
+    () => createPaymentInitialValues(profileUserDefaults, initialPharmacy)
   );
   const [initialPaymentValues, setInitialPaymentValues] =
-    useState<PharmacyPaymentFormValues>(paymentValues);
+    useState<PharmacyPaymentFormValues>(() =>
+      createPaymentInitialValues(profileUserDefaults, initialPharmacy)
+    );
   const [paymentTouched, setPaymentTouched] =
     useState<PharmacyPaymentTouchedFields>({});
 
-  const [documentValues, setDocumentValues] = useState<BrowserUploadFile[]>([]);
+  const [documentValues, setDocumentValues] = useState<BrowserUploadFile[]>(
+    () => createDocumentValues(initialPharmacy.documents)
+  );
   const [initialDocumentValues, setInitialDocumentValues] = useState<
     BrowserUploadFile[]
-  >([]);
+  >(() => createDocumentValues(initialPharmacy.documents));
   const [documentsTouched, setDocumentsTouched] = useState(false);
   const [documentsError, setDocumentsError] = useState('');
 
@@ -566,101 +618,53 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
   );
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function loadProfile() {
-      setIsLoadingProfile(true);
-      setLoadError(null);
-
-      try {
-        const response = await getMyPharmacyProfile();
-        if (!isMounted) return;
-
-        const nextPharmacy = response.pharmacy;
-        const nextPharmacyValues = createPharmacyInitialValues(
-          profileUserDefaults,
-          nextPharmacy
-        );
-        const nextAboutValues = createAboutInitialValues(nextPharmacy);
-        const nextPaymentValues = createPaymentInitialValues(
-          profileUserDefaults,
-          nextPharmacy
-        );
-
-        const nextDocumentValues = createDocumentValues(nextPharmacy.documents);
-
-        setPharmacy(nextPharmacy);
-        setPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
-        setInitialPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
-        setPharmacyValues(nextPharmacyValues);
-        setInitialPharmacyValues(nextPharmacyValues);
-        setAboutValues(nextAboutValues);
-        setInitialAboutValues(nextAboutValues);
-        setPaymentValues(nextPaymentValues);
-        setInitialPaymentValues(nextPaymentValues);
-        setDocumentValues(nextDocumentValues);
-        setInitialDocumentValues(nextDocumentValues);
-        setDocumentsTouched(false);
-        setDocumentsError('');
-      } catch (error) {
-        if (!isMounted) return;
-        setLoadError(
-          getErrorMessage(error, 'Could not load pharmacy profile.')
-        );
-      } finally {
-        if (isMounted) setIsLoadingProfile(false);
-      }
-    }
-
-    void loadProfile();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [profileUserDefaults, user.id]);
-
-  useEffect(() => {
     if (!pharmacy?.id) return;
 
+    const controller = new AbortController();
     const pharmacyId = pharmacy.id;
-    let isMounted = true;
 
     async function loadCommentsTotal() {
       try {
-        const response = await getPharmacyNotes('pharmacy', pharmacyId, 1);
-        if (isMounted) setCommentsTotal(response.total);
+        const response = await getPharmacyNotes('pharmacy', pharmacyId, 1, {
+          signal: controller.signal,
+        });
+
+        if (!controller.signal.aborted) setCommentsTotal(response.total);
       } catch {
-        if (isMounted) setCommentsTotal(0);
+        if (!controller.signal.aborted) setCommentsTotal(0);
       }
     }
 
     void loadCommentsTotal();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [pharmacy?.id]);
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadSessions() {
       setIsLoadingSessions(true);
 
       try {
-        const response = await getActiveSessions();
-        if (isMounted) setSessions([...response.sessions]);
+        const response = await getActiveSessions({
+          signal: controller.signal,
+        });
+
+        if (!controller.signal.aborted) setSessions([...response.sessions]);
       } catch {
-        if (isMounted) setSessions([]);
+        if (!controller.signal.aborted) setSessions([]);
       } finally {
-        if (isMounted) setIsLoadingSessions(false);
+        if (!controller.signal.aborted) setIsLoadingSessions(false);
       }
     }
 
     void loadSessions();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, []);
 
@@ -884,6 +888,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
         imageUrl: nextPictureUrl,
       });
       setPharmacy(response.pharmacy);
+      syncProfile(response.pharmacy);
       setPharmacyPictureUrl(response.pharmacy.imageUrl ?? null);
       setInitialPharmacyPictureUrl(response.pharmacy.imageUrl ?? null);
       toast.success(
@@ -969,6 +974,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       );
       const nextValues = createPharmacyInitialValues(user, response.pharmacy);
       setPharmacy(response.pharmacy);
+      syncProfile(response.pharmacy);
       setPharmacyValues(nextValues);
       setInitialPharmacyValues(nextValues);
       setPharmacyTouched({});
@@ -1003,6 +1009,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       );
       const nextValues = createAboutInitialValues(response.pharmacy);
       setPharmacy(response.pharmacy);
+      syncProfile(response.pharmacy);
       setAboutValues(nextValues);
       setInitialAboutValues(nextValues);
       setAboutTouched({});
@@ -1037,6 +1044,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       );
       const nextValues = createPaymentInitialValues(user, response.pharmacy);
       setPharmacy(response.pharmacy);
+      syncProfile(response.pharmacy);
       setPaymentValues(nextValues);
       setInitialPaymentValues(nextValues);
       setPaymentTouched({});
@@ -1090,6 +1098,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
       );
 
       setPharmacy(response.pharmacy);
+      syncProfile(response.pharmacy);
       setDocumentValues(nextDocumentValues);
       setInitialDocumentValues(nextDocumentValues);
       setDocumentsTouched(false);
@@ -1145,6 +1154,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     const nextDocumentValues = createDocumentValues(nextPharmacy.documents);
 
     setPharmacy(nextPharmacy);
+    syncProfile(nextPharmacy);
     setPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
     setInitialPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
     setPharmacyValues(nextPharmacyValues);
@@ -1206,6 +1216,7 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
     try {
       const response = await sendMyPharmacyForVerification();
       setPharmacy(response.pharmacy);
+      syncProfile(response.pharmacy);
       toast.success(response.message);
     } catch (error) {
       toast.error(
@@ -2012,8 +2023,8 @@ function PharmacyProfilePage({ user }: PharmacyProfilePageProps) {
                   <EntityComments
                     entityKey={`pharmacy:${pharmacy.id}`}
                     initialTotal={commentsTotal}
-                    load={(page) =>
-                      getPharmacyNotes('pharmacy', pharmacy.id, page)
+                    load={(page, options) =>
+                      getPharmacyNotes('pharmacy', pharmacy.id, page, options)
                     }
                     create={(text) =>
                       createPharmacyNote('pharmacy', pharmacy.id, text)

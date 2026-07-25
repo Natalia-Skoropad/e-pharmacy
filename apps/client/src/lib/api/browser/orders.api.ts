@@ -37,10 +37,12 @@ export async function checkoutOrder(
 
 //===================================================================
 
-export async function getOrders(): Promise<ClientOrdersResponse> {
+export async function getOrders(
+  options?: JsonResponseRequestOptions
+): Promise<ClientOrdersResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<ClientOrdersResponse>
-  >(CLIENT_API_ROUTES.orders.list);
+  >(CLIENT_API_ROUTES.orders.list, options);
 
   return getResponseData(response);
 }
@@ -48,11 +50,12 @@ export async function getOrders(): Promise<ClientOrdersResponse> {
 //===================================================================
 
 export async function getOrderDetails(
-  orderId: string
+  orderId: string,
+  options?: JsonResponseRequestOptions
 ): Promise<ClientOrderDetailsResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<ClientOrderDetailsResponse>
-  >(CLIENT_API_ROUTES.orders.details(orderId));
+  >(CLIENT_API_ROUTES.orders.details(orderId), options);
 
   return getResponseData(response);
 }

@@ -25,6 +25,7 @@
     "type-check": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
     "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src",
+    "test:dom": "node ../../scripts/test-runners/run-node-ts-tests.mjs src/internal/overlay",
     "test:a11y": "node ../../scripts/test-runners/run-node-ts-tests.mjs src/a11y",
     "check:styles": "node ../../scripts/checks/ui/check-ui-style-contracts.mjs",
     "check:boundaries": "node ../../scripts/checks/boundaries/check-ui-boundaries.mjs"

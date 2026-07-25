@@ -13,7 +13,8 @@
   },
   "scripts": {
     "lint": "eslint src",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src"
   },
   "dependencies": {
     "@e-pharmacy/config": "workspace:*",
@@ -23,7 +24,8 @@
     "@types/react": "^19",
     "next": "16.2.4",
     "typescript": "^5",
-    "react": ">=19"
+    "react": ">=19",
+    "@types/node": "latest"
   },
   "peerDependencies": {
     "react": ">=19",

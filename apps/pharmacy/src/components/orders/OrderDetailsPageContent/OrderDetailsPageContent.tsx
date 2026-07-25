@@ -1143,11 +1143,12 @@ function ManagerCommentTab({
       initialTotal={totalComments}
       isEditable={isEditable}
       placeholder="Write an internal comment for this order..."
-      load={(page) =>
-        getPharmacyOrderComments(orderId, {
-          page,
-          perPage: COMMENTS_PER_PAGE,
-        })
+      load={(page, options) =>
+        getPharmacyOrderComments(
+          orderId,
+          { page, perPage: COMMENTS_PER_PAGE },
+          options
+        )
       }
       create={async (text) => {
         await createPharmacyOrderComment(orderId, text);

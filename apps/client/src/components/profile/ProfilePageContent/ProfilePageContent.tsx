@@ -453,67 +453,66 @@ function ProfilePageContent() {
   }, [activeTab]);
 
   useEffect(() => {
-    let isMounted = true;
-
     if (!canUseAuthFeatures) {
       const timeoutId = window.setTimeout(() => {
-        if (isMounted) {
-          setOrders([]);
-        }
+        setOrders([]);
       }, 0);
 
-      return () => {
-        isMounted = false;
-        window.clearTimeout(timeoutId);
-      };
+      return () => window.clearTimeout(timeoutId);
     }
+
+    const controller = new AbortController();
 
     async function loadOrders() {
       try {
         setIsOrdersLoading(true);
-        const response = await getOrders();
+        const response = await getOrders({ signal: controller.signal });
 
-        if (!isMounted) return;
-
-        setOrders([...response.items]);
+        if (!controller.signal.aborted) {
+          setOrders([...response.items]);
+        }
       } catch {
-        if (!isMounted) return;
-
-        setOrders([]);
+        if (!controller.signal.aborted) setOrders([]);
       } finally {
-        if (!isMounted) return;
-
-        setIsOrdersLoading(false);
+        if (!controller.signal.aborted) setIsOrdersLoading(false);
       }
     }
 
     void loadOrders();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [canUseAuthFeatures]);
 
   useEffect(() => {
-    let isMounted = true;
     if (!canUseAuthFeatures || activeTab !== 'sessions') return;
+
+    const controller = new AbortController();
 
     async function loadSessions() {
       try {
         setIsSessionsLoading(true);
         setSessionsError('');
-        const response = await getActiveSessions();
-        if (isMounted) setSessions([...response.sessions]);
+        const response = await getActiveSessions({
+          signal: controller.signal,
+        });
+
+        if (!controller.signal.aborted) {
+          setSessions([...response.sessions]);
+        }
       } catch {
-        if (isMounted) setSessionsError('Could not load active sessions.');
+        if (!controller.signal.aborted) {
+          setSessionsError('Could not load active sessions.');
+        }
       } finally {
-        if (isMounted) setIsSessionsLoading(false);
+        if (!controller.signal.aborted) setIsSessionsLoading(false);
       }
     }
 
     void loadSessions();
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [activeTab, canUseAuthFeatures]);
 

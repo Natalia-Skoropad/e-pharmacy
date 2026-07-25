@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
+import { scheduleDebouncedValue } from './debounce-scheduler';
+
 //===================================================================
 
 export function useDebouncedValue<TValue>(
@@ -10,21 +12,19 @@ export function useDebouncedValue<TValue>(
 ): TValue {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
-  useEffect(() => {
-    if (!Number.isFinite(delayMs) || delayMs < 0) {
-      throw new RangeError(
-        'Debounce delay must be a finite non-negative number.'
-      );
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setDebouncedValue(value);
-    }, delayMs);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [delayMs, value]);
+  useEffect(
+    () =>
+      scheduleDebouncedValue({
+        value,
+        delayMs,
+        commit: setDebouncedValue,
+        timers: {
+          setTimeout: (callback, delay) => window.setTimeout(callback, delay),
+          clearTimeout: (timeoutId) => window.clearTimeout(timeoutId),
+        },
+      }),
+    [delayMs, value]
+  );
 
   return debouncedValue;
 }

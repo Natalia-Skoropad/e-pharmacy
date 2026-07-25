@@ -200,40 +200,42 @@ function PharmacyDetailsPageContent({
     if (paymentDetails || bankDetailsRequestStatusRef.current === 'done')
       return;
 
-    let isCancelled = false;
+    const controller = new AbortController();
 
     if (bankDetailsRequestStatusRef.current === 'idle') {
       bankDetailsRequestStatusRef.current = 'loading';
 
       queueMicrotask(() => {
-        if (isCancelled) return;
+        if (controller.signal.aborted) return;
 
         setIsBankDetailsLoading(true);
         setAreBankDetailsUnavailable(false);
       });
     }
 
-    getPharmacyCheckoutDetails(pharmacy.id)
+    getPharmacyCheckoutDetails(pharmacy.id, {
+      signal: controller.signal,
+    })
       .then((data) => {
-        if (isCancelled) return;
-
-        setBankDetails(data.pharmacy.bankDetails ?? null);
+        if (!controller.signal.aborted) {
+          setBankDetails(data.pharmacy.bankDetails ?? null);
+        }
       })
       .catch(() => {
-        if (isCancelled) return;
+        if (controller.signal.aborted) return;
 
         setBankDetails(null);
         setAreBankDetailsUnavailable(true);
       })
       .finally(() => {
-        if (isCancelled) return;
+        if (controller.signal.aborted) return;
 
         bankDetailsRequestStatusRef.current = 'done';
         setIsBankDetailsLoading(false);
       });
 
     return () => {
-      isCancelled = true;
+      controller.abort();
     };
   }, [canShowBankDetailsTab, currentTab, paymentDetails, pharmacy.id]);
 

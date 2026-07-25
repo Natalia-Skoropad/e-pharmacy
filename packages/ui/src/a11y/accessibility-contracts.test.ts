@@ -69,7 +69,10 @@ test('date filter uses business calendar dates and synchronizes draft state', as
   const source = await readSource('../forms/DateFilter/DateFilter.tsx');
 
   assert.match(source, /getBusinessCalendarDate/);
-  assert.match(source, /setDraftValue\(value\)/);
+  assert.match(source, /const valueFrom = value\.from/);
+  assert.match(source, /const valueTo = value\.to/);
+  assert.match(source, /setDraftValue\(\{ from: valueFrom, to: valueTo \}\)/);
+  assert.match(source, /\[valueFrom, valueTo\]/);
   assert.doesNotMatch(source, /toISOString\(\)\.slice\(0, 10\)/);
   assert.doesNotMatch(source, /aria-describedby=\{applyButtonId\}/);
 });

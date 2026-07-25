@@ -56,7 +56,8 @@ export async function createPharmacyProductRequest(
 
 export async function checkPharmacyProductRequestArticle(
   article: string,
-  excludeRequestId?: string
+  excludeRequestId?: string,
+  options?: JsonResponseRequestOptions
 ): Promise<{ available: boolean; message?: string }> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     `${PHARMACY_API_ROUTES.productRequests.list}/article-availability${buildQueryString(
@@ -64,7 +65,8 @@ export async function checkPharmacyProductRequestArticle(
         article,
         excludeRequestId,
       }
-    )}`
+    )}`,
+    options
   );
 
   const data = getResponseData(response) as {
@@ -97,11 +99,12 @@ export async function getPharmacyProductRequests(
 //===================================================================
 
 export async function getPharmacyProductRequest(
-  requestId: string
+  requestId: string,
+  options?: JsonResponseRequestOptions
 ): Promise<ProductRequestDetailsViewModel> {
   const response = await localApiRequest<
     ApiSuccessResponse<{ request?: ProductRequestResponseDto }>
-  >(PHARMACY_API_ROUTES.productRequests.details(requestId));
+  >(PHARMACY_API_ROUTES.productRequests.details(requestId), options);
 
   const data = getResponseData(response);
   const request = normalizeProductRequestDetails(data.request);

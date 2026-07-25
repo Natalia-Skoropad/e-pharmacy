@@ -32,7 +32,7 @@ export function dispatchPharmacyBreadcrumbLabel(label: string): void {
     return;
   }
 
-  window.setTimeout(dispatch, 0);
+  void Promise.resolve().then(dispatch);
 }
 
 //===================================================================

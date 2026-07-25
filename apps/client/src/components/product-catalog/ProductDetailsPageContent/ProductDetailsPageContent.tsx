@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 
 import {
@@ -185,6 +185,7 @@ function ProductDetailsPageContent({
     PRODUCT_OFFERS_PER_PAGE
   );
   const [isOffersLoadingMore, setIsOffersLoadingMore] = useState(false);
+  const offersLoadMoreTimerRef = useRef<number | null>(null);
   const [areOfferFiltersOpen, setAreOfferFiltersOpen] = useState(false);
   const [visibleReviewsCount, setVisibleReviewsCount] = useState(
     DEFAULT_VISIBLE_REVIEWS_COUNT
@@ -336,10 +337,22 @@ function ProductDetailsPageContent({
     setVisibleOffersCount(PRODUCT_OFFERS_PER_PAGE);
   };
 
+  useEffect(
+    () => () => {
+      if (offersLoadMoreTimerRef.current !== null) {
+        window.clearTimeout(offersLoadMoreTimerRef.current);
+      }
+    },
+    []
+  );
+
   const handleLoadMoreOffers = () => {
+    if (offersLoadMoreTimerRef.current !== null) return;
+
     setIsOffersLoadingMore(true);
 
-    window.setTimeout(() => {
+    offersLoadMoreTimerRef.current = window.setTimeout(() => {
+      offersLoadMoreTimerRef.current = null;
       setVisibleOffersCount((count) => count + PRODUCT_OFFERS_PER_PAGE);
       setIsOffersLoadingMore(false);
     }, 250);
@@ -380,29 +393,29 @@ function ProductDetailsPageContent({
   useEffect(() => {
     if (!canUseClientFeatures) return;
 
-    let isMounted = true;
+    const controller = new AbortController();
 
-    getProductDetails(productDetails.id)
+    getProductDetails(productDetails.id, { signal: controller.signal })
       .then((response) => {
-        if (isMounted) {
-          setProductDetails(response.product);
-          setIsFavorite(Boolean(response.product.isFavorite));
-        }
+        if (controller.signal.aborted) return;
+
+        setProductDetails(response.product);
+        setIsFavorite(Boolean(response.product.isFavorite));
       })
       .catch(() => undefined);
 
     loadCart().catch((error: unknown) => {
-      if (isMounted) {
-        toast.error(
-          getUserFacingErrorMessage(error, {
-            fallback: APP_ERROR_MESSAGES.products.loadCart,
-          })
-        );
-      }
+      if (controller.signal.aborted) return;
+
+      toast.error(
+        getUserFacingErrorMessage(error, {
+          fallback: APP_ERROR_MESSAGES.products.loadCart,
+        })
+      );
     });
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [canUseClientFeatures, loadCart, productDetails.id, setIsFavorite, toast]);
 

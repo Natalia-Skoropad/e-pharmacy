@@ -1,7 +1,11 @@
 import 'client-only';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
-import { getResponseData } from '@e-pharmacy/api-client/core';
+
+import {
+  getResponseData,
+  type JsonResponseRequestOptions,
+} from '@e-pharmacy/api-client/core';
 
 import type {
   ApiEmptySuccessResponse,
@@ -156,10 +160,12 @@ export async function updateCurrentUserPassword(
 
 //===================================================================
 
-export async function getActiveSessions(): Promise<ActiveSessionsResponse> {
+export async function getActiveSessions(
+  options?: JsonResponseRequestOptions
+): Promise<ActiveSessionsResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<ActiveSessionsResponse>
-  >(CLIENT_API_ROUTES.auth.sessions);
+  >(CLIENT_API_ROUTES.auth.sessions, options);
   return getResponseData(response);
 }
 

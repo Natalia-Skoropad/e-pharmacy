@@ -67,14 +67,16 @@ export function DateFilter({
   const toInputRef = useRef<HTMLInputElement>(null);
   const generatedErrorId = useId();
   const [draftValue, setDraftValue] = useState<DateFilterValue>(value);
+  const valueFrom = value.from;
+  const valueTo = value.to;
   const currentValue = applyOnSubmit ? draftValue : value;
   const validation = validateDateRange(currentValue);
   const rangeError = validation.from ?? validation.to ?? validation.range;
   const errorId = `${id}-${generatedErrorId}-error`;
 
   useEffect(() => {
-    setDraftValue(value);
-  }, [value.from, value.to]);
+    setDraftValue({ from: valueFrom, to: valueTo });
+  }, [valueFrom, valueTo]);
 
   const fromId = `${id}-from`;
   const toId = `${id}-to`;

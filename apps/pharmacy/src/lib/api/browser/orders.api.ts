@@ -171,12 +171,14 @@ export async function updatePharmacyOrderStatus(
 
 export async function getPharmacyOrderComments(
   orderId: string,
-  params: { page?: number; perPage?: number } = {}
+  params: { page?: number; perPage?: number } = {},
+  options?: JsonResponseRequestOptions
 ): Promise<PharmacyOrderManagerCommentsResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<OrderManagerCommentsResponse>
   >(
-    `${PHARMACY_API_ROUTES.orders.comments(orderId)}${buildQueryString(params)}`
+    `${PHARMACY_API_ROUTES.orders.comments(orderId)}${buildQueryString(params)}`,
+    options
   );
 
   return normalizePharmacyOrderManagerCommentsResponse(

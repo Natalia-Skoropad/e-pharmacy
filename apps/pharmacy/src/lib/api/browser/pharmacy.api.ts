@@ -99,10 +99,12 @@ export async function updateCurrentUserPassword(
 
 //===================================================================
 
-export async function getActiveSessions(): Promise<ActiveSessionsResponse> {
+export async function getActiveSessions(
+  options?: JsonResponseRequestOptions
+): Promise<ActiveSessionsResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<ActiveSessionsResponse>
-  >(PHARMACY_API_ROUTES.auth.sessions);
+  >(PHARMACY_API_ROUTES.auth.sessions, options);
 
   return getResponseData(response);
 }

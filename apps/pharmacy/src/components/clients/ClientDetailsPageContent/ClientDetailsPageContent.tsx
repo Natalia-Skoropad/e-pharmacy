@@ -1197,7 +1197,9 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
             <EntityComments
               entityKey={`client:${clientId}`}
               initialTotal={commentsTotal}
-              load={(page) => getPharmacyNotes('client', clientId, page)}
+              load={(page, options) =>
+                getPharmacyNotes('client', clientId, page, options)
+              }
               create={(text) => createPharmacyNote('client', clientId, text)}
               remove={(id) => deletePharmacyNote('client', clientId, id)}
               onTotalChange={setCommentsTotal}

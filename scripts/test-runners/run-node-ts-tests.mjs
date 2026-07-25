@@ -43,9 +43,22 @@ if (tests.length === 0) {
 
 //===================================================================
 
+const resolverRegisterUrl = new URL(
+  './register-typescript-resolver.mjs',
+  import.meta.url
+).href;
+
+//===================================================================
+
 const result = spawnSync(
   process.execPath,
-  ['--experimental-strip-types', '--test', ...tests],
+  [
+    '--experimental-strip-types',
+    '--import',
+    resolverRegisterUrl,
+    '--test',
+    ...tests,
+  ],
   { stdio: 'inherit' }
 );
 

@@ -1826,8 +1826,8 @@ function AllProductDetailsPageContent({
                     <EntityComments
                       entityKey={`product:${product.id}`}
                       initialTotal={commentsTotal}
-                      load={(page) =>
-                        getPharmacyNotes('product', productId, page)
+                      load={(page, options) =>
+                        getPharmacyNotes('product', productId, page, options)
                       }
                       create={(text) =>
                         createPharmacyNote('product', productId, text)

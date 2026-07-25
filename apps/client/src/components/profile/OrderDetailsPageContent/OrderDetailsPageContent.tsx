@@ -73,7 +73,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const cleanOrderId = getOrderIdFromPathParam(orderId);
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function fetchOrder() {
       if (!isAuthReady) return;
@@ -87,29 +87,28 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       try {
         setIsLoaded(false);
         setError('');
-        const response = await getOrderDetails(cleanOrderId);
+        const response = await getOrderDetails(cleanOrderId, {
+          signal: controller.signal,
+        });
 
-        if (!isMounted) return;
-
-        setOrder(response.order);
+        if (!controller.signal.aborted) setOrder(response.order);
       } catch {
-        if (!isMounted) return;
+        if (controller.signal.aborted) return;
 
         setOrder(null);
         setError('Order was not found or is not available for this account.');
       } finally {
-        if (!isMounted) return;
-
-        setIsLoaded(true);
+        if (!controller.signal.aborted) setIsLoaded(true);
       }
     }
 
     void fetchOrder();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [cleanOrderId, isAuthenticated, isAuthReady]);
+
 
   const breadcrumbs = useMemo<BreadcrumbItem[]>(
     () => [

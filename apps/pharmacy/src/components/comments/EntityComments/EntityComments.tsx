@@ -31,7 +31,10 @@ export type EntityCommentsProps = Readonly<{
   emptyText?: string;
   initialTotal?: number;
   isEditable?: boolean;
-  load: (page: number) => Promise<PharmacyNotesResponse>;
+  load: (
+    page: number,
+    options?: Readonly<{ signal?: AbortSignal }>
+  ) => Promise<PharmacyNotesResponse>;
   create: (text: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
   onTotalChange?: (total: number) => void;
@@ -62,7 +65,9 @@ function EntityCommentsContent({
   const generatedId = useId();
   const titleId = `${entityKey}-${generatedId}-comments-title`;
   const loadRef = useRef(load);
+  const activeLoadControllerRef = useRef<AbortController | null>(null);
   const onTotalChangeRef = useRef(onTotalChange);
+
   const [data, setData] = useState<PharmacyNotesResponse>({
     items: [],
     page: 1,
@@ -70,6 +75,7 @@ function EntityCommentsContent({
     total: initialTotal,
     totalPages: 1,
   });
+
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -77,6 +83,7 @@ function EntityCommentsContent({
   const [commentToDelete, setCommentToDelete] = useState<PharmacyNote | null>(
     null
   );
+
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -88,36 +95,57 @@ function EntityCommentsContent({
   }, [onTotalChange]);
 
   const loadPage = useCallback(async (page: number): Promise<void> => {
+    activeLoadControllerRef.current?.abort();
+    const controller = new AbortController();
+    activeLoadControllerRef.current = controller;
+
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await loadRef.current(page);
+      const response = await loadRef.current(page, {
+        signal: controller.signal,
+      });
+
+      if (controller.signal.aborted) return;
+
       setData(response);
       onTotalChangeRef.current?.(response.total);
     } catch (loadError) {
+      if (controller.signal.aborted) return;
+
       setError(
         loadError instanceof Error && loadError.message
           ? loadError.message
           : 'Could not load comments.'
       );
     } finally {
-      setIsLoading(false);
+      if (
+        activeLoadControllerRef.current === controller &&
+        !controller.signal.aborted
+      ) {
+        activeLoadControllerRef.current = null;
+        setIsLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    let isCancelled = false;
+    const controller = new AbortController();
+    activeLoadControllerRef.current = controller;
 
     const loadInitialPage = async (): Promise<void> => {
       try {
-        const response = await loadRef.current(1);
-        if (isCancelled) return;
+        const response = await loadRef.current(1, {
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
 
         setData(response);
         onTotalChangeRef.current?.(response.total);
       } catch (loadError) {
-        if (isCancelled) return;
+        if (controller.signal.aborted) return;
 
         setError(
           loadError instanceof Error && loadError.message
@@ -125,14 +153,23 @@ function EntityCommentsContent({
             : 'Could not load comments.'
         );
       } finally {
-        if (!isCancelled) setIsLoading(false);
+        if (
+          activeLoadControllerRef.current === controller &&
+          !controller.signal.aborted
+        ) {
+          activeLoadControllerRef.current = null;
+          setIsLoading(false);
+        }
       }
     };
 
     void loadInitialPage();
 
     return () => {
-      isCancelled = true;
+      controller.abort();
+      if (activeLoadControllerRef.current === controller) {
+        activeLoadControllerRef.current = null;
+      }
     };
   }, []);
 

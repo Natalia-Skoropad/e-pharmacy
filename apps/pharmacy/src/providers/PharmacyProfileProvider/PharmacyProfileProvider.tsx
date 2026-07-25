@@ -23,6 +23,7 @@ type PharmacyProfileContextValue = Readonly<{
   isLoading: boolean;
   error: unknown;
   refresh: () => Promise<PharmacyProfile | null>;
+  syncProfile: (profile: PharmacyProfile) => void;
 }>;
 
 type PharmacyProfileSnapshot = Readonly<{
@@ -97,6 +98,22 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
     },
     []
   );
+
+  const syncProfile = useCallback(
+    (profile: PharmacyProfile) => {
+      if (!identity) return;
+
+      setSnapshot({
+        identity,
+        profile,
+        isLoading: false,
+        error: null,
+      });
+    },
+    [identity]
+  );
+
+  //===================================================================
 
   const refresh = useCallback(async () => {
     if (!identity) return null;
@@ -202,6 +219,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
           (!hasCurrentSnapshot || snapshot.isLoading)),
       error: hasCurrentSnapshot ? snapshot.error : null,
       refresh,
+      syncProfile,
     }),
     [
       hasCurrentSnapshot,
@@ -209,6 +227,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
       isAuthReady,
       refresh,
       snapshot,
+      syncProfile,
     ]
   );
 

@@ -41,3 +41,9 @@ Thumbs.db
 
 # local generated source-archive staging
 .artifacts
+
+# test coverage
+coverage
+
+# source archives
+*.zip

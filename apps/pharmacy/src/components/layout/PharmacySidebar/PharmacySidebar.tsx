@@ -41,21 +41,28 @@ export function PharmacySidebar({
   });
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     async function loadOrderCounts() {
       try {
+        const requestOptions = { signal: controller.signal };
         const [newOrders, inProgressOrders] = await Promise.all([
-          getPharmacyOrders({ page: 1, perPage: 1, status: 'new' }),
-          getPharmacyOrders({ page: 1, perPage: 1, status: 'in_progress' }),
+          getPharmacyOrders(
+            { page: 1, perPage: 1, status: 'new' },
+            requestOptions
+          ),
+          getPharmacyOrders(
+            { page: 1, perPage: 1, status: 'in_progress' },
+            requestOptions
+          ),
         ]);
 
-        if (isMounted) {
-          setOrderCounts({
-            new: newOrders.total,
-            inProgress: inProgressOrders.total,
-          });
-        }
+        if (controller.signal.aborted) return;
+
+        setOrderCounts({
+          new: newOrders.total,
+          inProgress: inProgressOrders.total,
+        });
       } catch {
         // Navigation must stay usable when counters cannot be loaded.
       }
@@ -64,7 +71,7 @@ export function PharmacySidebar({
     void loadOrderCounts();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [pathname]);
 
