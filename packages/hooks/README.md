@@ -49,3 +49,38 @@ pnpm check:hooks-public-api
 ```
 
 The Node test runner resolves extensionless TypeScript imports in the same form used by production source. DOM-subscription tests use controlled event targets, and UI-owned overlay interaction tests live under `packages/ui/src/internal/overlay/__tests__`.
+
+## Ownership map
+
+The shared package deliberately contains only two generic contracts:
+
+| Contract | Owner | Typical consumers |
+|---|---|---|
+| `useOutsidePointerDown` | `@e-pharmacy/hooks/dom` | UI selects/tabs and the pharmacy header |
+| `useDebouncedValue` | `@e-pharmacy/hooks/timing` | Client catalog filters and pharmacy list filters |
+
+Related lifecycle code stays with the domain that owns it:
+
+- overlay stack, focus trap, backdrop, scroll lock, and background isolation — `packages/ui/src/internal/overlay`;
+- auth session lifecycle — `packages/auth`;
+- favorites, reviews, checkout, and cart mutations — client features;
+- pharmacy profile and status — `PharmacyProfileProvider` in the pharmacy app;
+- toast and listbox hooks — UI-internal/provider APIs.
+
+## Current architecture decisions
+
+- Data fetching remains explicit and abortable before deployment. A query library is deferred to a separate admin-readiness stage so loading and error contracts are not changed inside this refactor.
+- The overlay manager is a UI-internal module singleton with deterministic top-layer ownership and a test reset. A context manager is not introduced until multiple React roots require it.
+- Sidebar storage remains local to `PharmacyShell`; it uses an SSR snapshot, guarded storage access, and browser subscriptions instead of a generic `useLocalStorageState` abstraction.
+- The package exposes no universal `useEventListener` and no `useDebouncedEffect`. Only contracts with multiple independent consumers are public.
+- Feature network effects own their `AbortController` and stale-response policy. Generic async-effect wrappers are intentionally forbidden.
+
+## Regression checks
+
+```bash
+pnpm check:hooks-boundaries
+pnpm check:hooks-public-api
+pnpm check:hooks-lifecycle
+```
+
+The lifecycle check verifies overlay Escape ownership, session-scoped favorites/cart behavior, synchronous mutation locks, abortable effects, the seven shared debounce consumers, the single pharmacy-profile request owner, honest hooks tooling, and archive hygiene integration. It also prints current lifecycle metrics so drift is visible in CI.

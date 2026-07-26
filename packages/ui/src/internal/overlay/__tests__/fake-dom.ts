@@ -190,6 +190,33 @@ export class FakeKeyboardEvent extends Event {
 
 export const fakeDocument = new FakeDocument();
 
+//===================================================================
+
+export function dispatchBubblingKeyboardEvent(
+  target: FakeElement,
+  event: FakeKeyboardEvent
+): void {
+  const path: EventTarget[] = [];
+  let current: FakeElement | null = target;
+
+  while (current) {
+    path.push(current);
+    current = current.parentElement;
+  }
+
+  path.push(fakeDocument);
+
+  Object.defineProperty(event, 'composedPath', {
+    configurable: true,
+    value: () => [...path],
+  });
+
+  for (const eventTarget of path) {
+    eventTarget.dispatchEvent(event);
+    if (event.propagationStopped) break;
+  }
+}
+
 let nextFrameId = 1;
 const frameCallbacks = new Map<number, FrameRequestCallback>();
 

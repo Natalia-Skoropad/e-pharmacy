@@ -3,6 +3,7 @@ import test, { afterEach, before } from 'node:test';
 
 import {
   createFocusable,
+  dispatchBubblingKeyboardEvent,
   fakeDocument,
   flushAnimationFrames,
   getPendingAnimationFrameCount,
@@ -43,7 +44,18 @@ function createOverlay() {
 
 test('inner widgets own Escape when they prevent the event', () => {
   const { container } = createOverlay();
+  const innerSelect = new FakeElement('div');
+  container.appendChild(innerSelect);
   let closes = 0;
+  let selectCloses = 0;
+
+  innerSelect.addEventListener('keydown', (event) => {
+    const keyboardEvent = event as FakeKeyboardEvent;
+    if (keyboardEvent.key !== 'Escape') return;
+
+    selectCloses += 1;
+    keyboardEvent.preventDefault();
+  });
 
   const cleanup = manager.registerOverlay({
     id: Symbol('modal'),
@@ -55,9 +67,10 @@ test('inner widgets own Escape when they prevent the event', () => {
   });
 
   const event = new FakeKeyboardEvent('Escape');
-  event.preventDefault();
-  fakeDocument.dispatchEvent(event);
+  dispatchBubblingKeyboardEvent(innerSelect, event);
 
+  assert.equal(selectCloses, 1);
+  assert.equal(event.defaultPrevented, true);
   assert.equal(closes, 0);
   cleanup();
 });
