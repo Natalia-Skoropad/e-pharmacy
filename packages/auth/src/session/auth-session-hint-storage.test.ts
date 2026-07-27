@@ -1,29 +1,52 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import test from 'node:test';
+
+import { hasExactCookieValue } from './auth-session-hint-parser';
 
 //===================================================================
 
-test('exposes only a read-only browser auth-session hint policy', async () => {
-  const [publicApi, storage, core] = await Promise.all([
-    readFile(new URL('./index.ts', import.meta.url), 'utf8'),
-    readFile(
-      new URL(
-        './server-managed-browser-auth-session-hint-storage.ts',
-        import.meta.url
-      ),
-      'utf8'
-    ),
-    readFile(new URL('../core/AuthProviderCore.tsx', import.meta.url), 'utf8'),
-  ]);
+const COOKIE_NAME = 'e_pharmacy_auth_ready';
 
-  assert.match(publicApi, /server-managed-browser-auth-session-hint-storage/);
-  assert.doesNotMatch(
-    publicApi,
-    /setBrowserAuthSessionHint|clearBrowserAuthSessionHint|browserAuthSessionHintStorage/
+//===================================================================
+
+test('accepts only the exact BFF-owned auth hint value', () => {
+  assert.equal(hasExactCookieValue(`${COOKIE_NAME}=1`, COOKIE_NAME, '1'), true);
+
+  for (const value of ['', '0', 'false', 'broken', '2']) {
+    assert.equal(
+      hasExactCookieValue(`${COOKIE_NAME}=${value}`, COOKIE_NAME, '1'),
+      false
+    );
+  }
+});
+
+//===================================================================
+
+test('ignores malformed values and accepts a later valid duplicate', () => {
+  assert.equal(
+    hasExactCookieValue(
+      `${COOKIE_NAME}=%E0%A4%A; ${COOKIE_NAME}=1`,
+      COOKIE_NAME,
+      '1'
+    ),
+    true
   );
 
-  assert.match(storage, /hasHint:\s*hasBrowserAuthSessionHint/);
-  assert.doesNotMatch(storage, /setHint|clearHint/);
-  assert.doesNotMatch(core, /\.setHint\(|\.clearHint\(/);
+  assert.equal(
+    hasExactCookieValue(
+      `${COOKIE_NAME}=broken; ${COOKIE_NAME}=false`,
+      COOKIE_NAME,
+      '1'
+    ),
+    false
+  );
+});
+
+//===================================================================
+
+test('does not match cookie-name prefixes', () => {
+  assert.equal(
+    hasExactCookieValue(`${COOKIE_NAME}_legacy=1`, COOKIE_NAME, '1'),
+    false
+  );
 });

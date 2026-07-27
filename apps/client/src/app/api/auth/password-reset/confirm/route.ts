@@ -11,4 +11,5 @@ export const maxDuration = 30;
 
 export const POST = createAuthProxyRoute({
   backendPath: authRoutes.passwordResetConfirm,
+  markerAction: 'delete',
 });

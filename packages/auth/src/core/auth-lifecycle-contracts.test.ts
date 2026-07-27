@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
 import { readFile } from 'node:fs/promises';
+import test from 'node:test';
 
 //===================================================================
 
@@ -11,20 +11,24 @@ const source = await readFile(
 
 //===================================================================
 
-test('refresh retry timers are abortable and cleaned during lifecycle changes', () => {
-  assert.match(source, /refreshRetryControllersRef/);
-  assert.match(source, /new AbortController\(\)/);
-  assert.match(source, /window\.clearTimeout\(timeoutId\)/);
-  assert.match(source, /controller\.signal\.addEventListener/);
+test('provider delegates token refresh to the BFF and has no periodic refresh owner', () => {
+  assert.doesNotMatch(source, /refreshSession/);
+  assert.doesNotMatch(source, /setInterval/);
+  assert.match(source, /getCurrentUser\(\{ signal \}\)/);
 });
 
 //===================================================================
 
-test('global listeners and intervals have symmetric cleanup', () => {
-  assert.match(source, /window\.addEventListener\('focus'/);
-  assert.match(source, /window\.removeEventListener\('focus'/);
-  assert.match(source, /document\.addEventListener\(\s*'visibilitychange'/);
-  assert.match(source, /document\.removeEventListener\(\s*'visibilitychange'/);
-  assert.match(source, /window\.setInterval/);
-  assert.match(source, /window\.clearInterval/);
+test('provider uses lifecycle-scoped abortable request attempts', () => {
+  assert.match(source, /new AuthRequestManager\(\)/);
+  assert.match(source, /advanceLifecycle\(\)/);
+  assert.match(source, /manager\.cancel\(attempt\)/);
+  assert.doesNotMatch(source, /WeakMap/);
+});
+
+//===================================================================
+
+test('bootstrap policy is explicit and no silent no-hint default remains', () => {
+  assert.match(source, /bootstrapMode === 'session-hint'/);
+  assert.doesNotMatch(source, /noopSessionHintStorage/);
 });

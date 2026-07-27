@@ -29,6 +29,6 @@ export function usePublicAuthActionsState() {
     shouldShowClientActions: hasAuthenticatedUser && isClient,
     shouldShowPharmacyActions: hasAuthenticatedUser && isPharmacy,
     shouldShowAuthenticatedActions: hasAuthenticatedUser,
-    isAuthUnavailable: status === 'auth_unavailable',
+    isAuthUnavailable: status === 'unavailable',
   };
 }

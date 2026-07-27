@@ -33,7 +33,7 @@ import {
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useAuth } from '@e-pharmacy/auth/react';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import type { ActiveSession } from '@e-pharmacy/types/auth';
 
@@ -129,6 +129,7 @@ import {
 import { EntityComments } from '@/components/comments/EntityComments';
 
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
+import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 
 import css from './PharmacyProfilePageContent.module.css';
 
@@ -489,7 +490,7 @@ function PharmacyProfilePage({
   syncProfile,
 }: PharmacyProfilePageProps) {
   const toast = useToast();
-  const { reloadCurrentUser } = useAuth();
+  const { reloadCurrentUser, invalidateSession } = useAuth();
 
   const profileUserDefaults = useMemo<ProfileUserDefaults>(
     () => ({
@@ -922,11 +923,11 @@ function PharmacyProfilePage({
         currentPassword: passwordValues.currentPassword,
         newPassword: passwordValues.newPassword,
       });
+      invalidateSession('password_changed');
       setPasswordValues(CHANGE_PASSWORD_INITIAL_VALUES);
       setPasswordTouched({});
-      toast.success(
-        'Password changed successfully. Please sign in again if the session was refreshed.'
-      );
+      toast.success('Password changed. Sign in again.');
+      window.location.assign(getSharedLoginUrl());
     } catch (error) {
       toast.error(getErrorMessage(error, 'Could not change password.'));
     } finally {

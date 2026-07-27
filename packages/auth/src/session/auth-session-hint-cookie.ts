@@ -1,5 +1,11 @@
 import { AUTH_READY_COOKIE_NAME } from '@e-pharmacy/config/auth';
 
+import { hasExactCookieValue } from './auth-session-hint-parser';
+
+//===================================================================
+
+const AUTH_SESSION_HINT_VALUE = '1';
+
 //===================================================================
 
 function canUseBrowserCookies(): boolean {
@@ -8,22 +14,12 @@ function canUseBrowserCookies(): boolean {
 
 //===================================================================
 
-function getCookieValue(name: string): string | null {
-  if (!canUseBrowserCookies()) return null;
-
-  const cookie = document.cookie
-    .split(';')
-    .map((item) => item.trim())
-    .find((item) => item.startsWith(`${name}=`));
-
-  if (!cookie) return null;
-
-  const value = cookie.slice(name.length + 1);
-  return value ? decodeURIComponent(value) : null;
-}
-
-//===================================================================
-
 export function hasBrowserAuthSessionHint(): boolean {
-  return Boolean(getCookieValue(AUTH_READY_COOKIE_NAME));
+  if (!canUseBrowserCookies()) return false;
+
+  return hasExactCookieValue(
+    document.cookie,
+    AUTH_READY_COOKIE_NAME,
+    AUTH_SESSION_HINT_VALUE
+  );
 }

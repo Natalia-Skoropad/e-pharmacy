@@ -2,9 +2,10 @@
 
 import type { ReactNode } from 'react';
 
-import { RoleProtectedRoute } from '@e-pharmacy/auth/guards';
-import { useAuth } from '@e-pharmacy/auth/core';
+import { RoleProtectedRoute } from '@e-pharmacy/auth/next';
+import { useAuth } from '@e-pharmacy/auth/react';
 import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { ErrorPage } from '@e-pharmacy/ui/status-pages';
 
 import { ROUTES } from '@/lib/routes';
 import { resolveLoginDestination } from '@/lib/auth';
@@ -14,6 +15,22 @@ import { resolveLoginDestination } from '@/lib/auth';
 type ClientProtectedRouteProps = {
   children: ReactNode;
 };
+
+//===================================================================
+
+function AuthUnavailableState() {
+  const { retryAuthBootstrap } = useAuth();
+
+  return (
+    <ErrorPage
+      title="We could not verify your session"
+      description="The authentication service is temporarily unavailable. Try again before continuing."
+      homeHref={ROUTES.HOME}
+      retryLabel="Retry session check"
+      onRetry={() => void retryAuthBootstrap()}
+    />
+  );
+}
 
 //===================================================================
 
@@ -29,6 +46,7 @@ function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
       loginPath={ROUTES.LOGIN}
       forbiddenPath={pharmacyRedirect}
       loadingFallback={<LoadingSpinner label="Checking your session..." />}
+      authUnavailableFallback={<AuthUnavailableState />}
       redirectingFallback={<LoadingSpinner label="Redirecting to login..." />}
       forbiddenFallback={<LoadingSpinner label="Opening the right cabinet..." />}
     >

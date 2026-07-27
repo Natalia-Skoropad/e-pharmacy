@@ -10,7 +10,7 @@ import { getSafeRedirectPath } from '../routing/redirects';
 
 //===================================================================
 
-export type AuthenticatedRedirectPath =
+type AuthenticatedRedirectPath =
   | string
   | ((user: AuthUser, requestedRedirect: string | null) => string);
 
@@ -18,6 +18,7 @@ export type GuestOnlyRouteProps = {
   children: ReactNode;
   authenticatedRedirectPath: AuthenticatedRedirectPath;
   loadingFallback?: ReactNode;
+  authUnavailableFallback?: ReactNode;
 };
 
 //===================================================================
@@ -40,22 +41,23 @@ export function GuestOnlyRoute({
   children,
   authenticatedRedirectPath,
   loadingFallback = null,
+  authUnavailableFallback = children,
 }: GuestOnlyRouteProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedRedirect = searchParams.get('redirect');
 
-  const { user, status, isAuthenticated, isAuthReady } = useAuth();
-  const isAuthUnavailable = status === 'auth_unavailable';
+  const { user, isAuthenticated, isBootstrapping, isUnavailable } = useAuth();
 
   useEffect(() => {
-    if (!isAuthReady || isAuthUnavailable || !isAuthenticated) return;
+    if (isBootstrapping || isUnavailable || !isAuthenticated) return;
 
     const fallbackRedirectPath = resolveAuthenticatedRedirectPath(
       authenticatedRedirectPath,
       user,
       requestedRedirect
     );
+
     if (
       typeof authenticatedRedirectPath === 'function' &&
       /^https?:\/\//i.test(fallbackRedirectPath)
@@ -72,16 +74,16 @@ export function GuestOnlyRoute({
     router.replace(redirectTo);
   }, [
     authenticatedRedirectPath,
-    isAuthReady,
-    isAuthUnavailable,
     isAuthenticated,
+    isBootstrapping,
+    isUnavailable,
     router,
     requestedRedirect,
     user,
   ]);
 
-  if (!isAuthReady) return loadingFallback;
-  if (isAuthUnavailable) return children;
+  if (isBootstrapping) return loadingFallback;
+  if (isUnavailable) return authUnavailableFallback;
   if (isAuthenticated) return null;
 
   return children;

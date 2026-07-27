@@ -4,12 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./core": "./src/core/index.ts",
+    "./react": "./src/react/index.ts",
+    "./next": "./src/next/index.ts",
     "./errors": "./src/errors/index.ts",
-    "./guards": "./src/guards/index.ts",
-    "./routing": "./src/routing/index.ts",
-    "./session": "./src/session/index.ts"
+    "./routing": "./src/routing/index.ts"
   },
   "scripts": {
     "lint": "eslint src",

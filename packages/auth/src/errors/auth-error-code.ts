@@ -1,9 +1,3 @@
-export type AuthErrorContext =
-  | 'login'
-  | 'register'
-  | 'forgot-password'
-  | 'reset-password';
-
 export type AuthErrorCode =
   | 'invalid_credentials'
   | 'email_conflict'
@@ -11,11 +5,17 @@ export type AuthErrorCode =
   | 'account_blocked'
   | 'account_pending'
   | 'account_rejected'
+  | 'session_invalid'
+  | 'session_revoked'
   | 'invalid_reset_token'
   | 'rate_limited'
   | 'forbidden_origin'
+  | 'csrf_failed'
   | 'validation_error'
   | 'not_found'
   | 'network_error'
+  | 'timeout'
+  | 'service_unavailable'
+  | 'invalid_response'
   | 'server_error'
   | 'unknown';

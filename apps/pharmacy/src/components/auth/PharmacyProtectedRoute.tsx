@@ -3,15 +3,15 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useAuth } from '@e-pharmacy/auth/react';
+import { ErrorPage, PageLoader } from '@e-pharmacy/ui/status-pages';
+
 import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import {
   getSharedLoginUrl,
   getSharedLoginUrlForCurrentPharmacyPage,
 } from '@/lib/auth/shared-auth';
-
-import { PageLoader } from '@e-pharmacy/ui/status-pages';
 
 //===================================================================
 
@@ -41,12 +41,19 @@ export function PharmacyProtectedRoute({
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
 
-  const { status, isAuthenticated, isAuthReady, user, logout } = useAuth();
+  const {
+    isAuthenticated,
+    isBootstrapping,
+    isUnavailable,
+    user,
+    logout,
+    retryAuthBootstrap,
+  } = useAuth();
   const isPharmacy = user?.role === 'pharmacy';
   const isBlocked = user?.status === 'blocked';
 
   useEffect(() => {
-    if (!isAuthReady || status === 'auth_unavailable') return;
+    if (isBootstrapping || isUnavailable) return;
 
     if (!isAuthenticated) {
       const hash = typeof window === 'undefined' ? '' : window.location.hash;
@@ -68,20 +75,33 @@ export function PharmacyProtectedRoute({
       });
     }
   }, [
-    isAuthReady,
     isAuthenticated,
     isBlocked,
+    isBootstrapping,
     isPharmacy,
+    isUnavailable,
     logout,
     pathname,
     queryString,
     router,
-    status,
     user?.role,
   ]);
 
-  if (!isAuthReady || status === 'auth_unavailable') {
+  if (isBootstrapping) {
     return <PageLoader label="Checking pharmacy access..." />;
+  }
+
+  if (isUnavailable) {
+    return (
+      <ErrorPage
+        title="We could not verify pharmacy access"
+        description="The authentication service is temporarily unavailable. Retry the session check before opening the cabinet."
+        homeHref={getSharedLoginUrl()}
+        homeLabel="Open login"
+        retryLabel="Retry session check"
+        onRetry={() => void retryAuthBootstrap()}
+      />
+    );
   }
 
   if (!isAuthenticated || !isPharmacy || isBlocked) {

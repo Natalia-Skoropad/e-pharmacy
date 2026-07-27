@@ -8,59 +8,54 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from 'react';
 
 import type {
   AuthUser,
-  AuthResponse,
   LoginPayload,
   RegisterPayload,
 } from '@e-pharmacy/types/auth';
 
+import { serverManagedBrowserAuthSessionHintStorage } from '../session/server-managed-browser-auth-session-hint-storage';
+
 import {
   createBrowserAuthSessionSync,
+  type AuthSessionEvent,
   type AuthSessionSync,
 } from '../session/browser-auth-session-sync';
 
-import type { AuthSessionHintStorage } from '../session/session-hint-storage';
-import type { AuthProviderServices } from './auth-provider.types';
+import { waitForAuthAttempt } from './auth-attempt-timeout';
 
-//===================================================================
+import {
+  createAuthenticatedAuthState,
+  createBootstrappingAuthState,
+  createUnauthenticatedAuthState,
+  createUnavailableAuthState,
+} from './auth-state-transitions';
 
-type AuthStatus =
-  | 'loading'
-  | 'authenticated'
-  | 'unauthenticated'
-  | 'auth_unavailable';
+import { AuthRequestManager } from './auth-request-manager';
 
-//===================================================================
-
-type AuthContextValue = {
-  user: AuthUser | null;
-  status: AuthStatus;
-  authError: unknown;
-  isAuthenticated: boolean;
-  isAuthReady: boolean;
-  login: (payload: LoginPayload) => Promise<AuthUser | null>;
-  register?: (payload: RegisterPayload) => Promise<AuthUser | null>;
-  logout: () => Promise<void>;
-  isRefreshingUser: boolean;
-  reloadCurrentUser: () => Promise<AuthUser | null>;
-  retryAuthBootstrap: () => Promise<AuthUser | null>;
-};
+import type {
+  AuthContextValue,
+  AuthProviderCoreProps,
+  AuthState,
+  AuthUnauthenticatedReason,
+} from './auth-provider.types';
 
 //===================================================================
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+const DEFAULT_AUTH_BOOTSTRAP_TIMEOUT_MS = 4_000;
+
+const INVALID_SESSION_CODES = new Set([
+  'AUTH_SESSION_INVALID',
+  'AUTH_SESSION_REVOKED',
+]);
+
+const BLOCKED_USER_CODES = new Set(['AUTH_USER_BLOCKED']);
 
 //===================================================================
 
-const AUTH_BOOTSTRAP_TIMEOUT_MS = 4_000;
-const AUTH_SESSION_REFRESH_INTERVAL_MS = 6 * 60 * 1000;
-const AUTH_SESSION_REFRESH_RETRY_DELAY_MS = 1_500;
-
-//===================================================================
 class AuthBootstrapTimeoutError extends Error {
   constructor() {
     super('Auth bootstrap timed out.');
@@ -70,498 +65,437 @@ class AuthBootstrapTimeoutError extends Error {
 
 //===================================================================
 
-const noopSessionHintStorage: AuthSessionHintStorage = {
-  hasHint: () => false,
-};
-
-//===================================================================
-
-type AuthProviderCoreProps = AuthProviderServices & {
-  children: ReactNode;
-  sessionHintStorage?: AuthSessionHintStorage;
-  sessionSync?: AuthSessionSync;
-  revalidateOnFocus?: boolean;
-};
-
-//===================================================================
-
-const currentUserPromises = new WeakMap<
-  AuthProviderServices['getCurrentUser'],
-  Promise<AuthResponse>
->();
-
-const refreshPromises = new WeakMap<
-  AuthProviderServices['refreshSession'],
-  Promise<AuthResponse>
->();
-
-//===================================================================
-
-function runSingleFlight(
-  service: () => Promise<AuthResponse>,
-  store: WeakMap<() => Promise<AuthResponse>, Promise<AuthResponse>>
-): Promise<AuthResponse> {
-  const pending = store.get(service);
-  if (pending) return pending;
-
-  const request = service().finally(() => {
-    if (store.get(service) === request) store.delete(service);
-  });
-
-  store.set(service, request);
-  return request;
-}
-
-//===================================================================
-
-type ErrorWithStatus = {
+type ErrorLike = {
   status?: unknown;
-  response?: { status?: unknown };
+  code?: unknown;
+  payload?: unknown;
+  data?: unknown;
+  response?: unknown;
 };
 
 //===================================================================
 
 function getErrorStatus(error: unknown): number | null {
   if (!error || typeof error !== 'object') return null;
+  const value = error as ErrorLike;
 
-  const directStatus = (error as ErrorWithStatus).status;
-  if (typeof directStatus === 'number') return directStatus;
+  if (typeof value.status === 'number') return value.status;
+  if (value.response && typeof value.response === 'object') {
+    const responseStatus = (value.response as ErrorLike).status;
+    if (typeof responseStatus === 'number') return responseStatus;
+  }
 
-  const responseStatus = (error as ErrorWithStatus).response?.status;
-  return typeof responseStatus === 'number' ? responseStatus : null;
+  return null;
 }
 
 //===================================================================
 
-function isInvalidSessionError(error: unknown): boolean {
-  const status = getErrorStatus(error);
-  return status === 401 || status === 403;
+function readCode(value: unknown): string | null {
+  if (!value || typeof value !== 'object') return null;
+  const code = (value as ErrorLike).code;
+  return typeof code === 'string' ? code : null;
 }
 
 //===================================================================
 
-export function AuthProviderCore({
-  children,
-  getCurrentUser,
-  refreshSession,
-  login: loginService,
-  register: registerService,
-  logout: logoutService,
-  sessionHintStorage = noopSessionHintStorage,
-  sessionSync,
-  revalidateOnFocus = true,
-}: AuthProviderCoreProps) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [status, setStatus] = useState<AuthStatus>('loading');
-  const [authError, setAuthError] = useState<unknown>(null);
-  const [isRefreshingUser, setIsRefreshingUser] = useState(false);
+function getAuthBusinessCode(error: unknown): string | null {
+  if (!error || typeof error !== 'object') return null;
+  const value = error as ErrorLike;
 
-  const lifecycleVersionRef = useRef(0);
-  const bootstrapPromiseRef = useRef<Promise<AuthUser | null> | null>(null);
-  const bootstrapTimeoutIdRef = useRef<number | null>(null);
-  const sessionHintStorageRef = useRef(sessionHintStorage);
-  const sessionSyncRef = useRef<AuthSessionSync | null>(null);
-  const userRef = useRef<AuthUser | null>(null);
-  const refreshRetryControllersRef = useRef(new Set<AbortController>());
+  for (const candidate of [value.payload, value.data, value.response]) {
+    const directCode = readCode(candidate);
+    if (directCode) return directCode;
 
-  const cancelRefreshRetries = useCallback(() => {
-    for (const controller of refreshRetryControllersRef.current) {
-      controller.abort();
+    if (candidate && typeof candidate === 'object') {
+      const nestedData = (candidate as ErrorLike).data;
+      const nestedCode = readCode(nestedData);
+      if (nestedCode) return nestedCode;
     }
-    refreshRetryControllersRef.current.clear();
+  }
+
+  const directCode = readCode(error);
+  return directCode && directCode.startsWith('AUTH_') ? directCode : null;
+}
+
+//===================================================================
+
+function getInvalidSessionReason(
+  error: unknown
+): AuthUnauthenticatedReason | null {
+  const code = getAuthBusinessCode(error);
+
+  if (code && INVALID_SESSION_CODES.has(code)) {
+    return code === 'AUTH_SESSION_REVOKED'
+      ? 'session_revoked'
+      : 'session_invalid';
+  }
+
+  if (code && BLOCKED_USER_CODES.has(code)) return 'user_blocked';
+
+  // Temporary legacy fallback until every auth endpoint emits stable codes.
+  // A generic 403 is intentionally not treated as an invalid session.
+  return getErrorStatus(error) === 401 ? 'session_invalid' : null;
+}
+
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof DOMException && error.name === 'AbortError') ||
+    (error instanceof Error && error.name === 'AbortError')
+  );
+}
+
+//===================================================================
+
+export function AuthProviderCore(props: AuthProviderCoreProps) {
+  const {
+    children,
+    getCurrentUser,
+    login: loginService,
+    register: registerService,
+    logout: logoutService,
+    bootstrapMode,
+    bootstrapTimeoutMs = DEFAULT_AUTH_BOOTSTRAP_TIMEOUT_MS,
+    revalidateOnFocus = true,
+  } = props;
+
+  const sessionHintStorage =
+    bootstrapMode === 'session-hint'
+      ? (props.sessionHintStorage ?? serverManagedBrowserAuthSessionHintStorage)
+      : null;
+
+  const initialState = createBootstrappingAuthState();
+
+  const [state, setState] = useState<AuthState>(initialState);
+  const stateRef = useRef<AuthState>(initialState);
+  const mountedRef = useRef(true);
+  const requestManagerRef = useRef(new AuthRequestManager());
+  const bootstrapPromiseRef = useRef<Promise<AuthUser | null> | null>(null);
+  const sessionSyncRef = useRef<AuthSessionSync | null>(null);
+
+  const transition = useCallback((nextState: AuthState) => {
+    stateRef.current = nextState;
+    if (mountedRef.current) setState(nextState);
   }, []);
 
-  const cancelBootstrapTimeout = useCallback(() => {
-    if (bootstrapTimeoutIdRef.current === null) return;
-
-    window.clearTimeout(bootstrapTimeoutIdRef.current);
-    bootstrapTimeoutIdRef.current = null;
+  const publishSessionEvent = useCallback((event: AuthSessionEvent) => {
+    sessionSyncRef.current?.publish(event);
   }, []);
-
-  useEffect(() => {
-    sessionHintStorageRef.current = sessionHintStorage;
-  }, [sessionHintStorage]);
-
-  useEffect(() => {
-    userRef.current = user;
-  }, [user]);
 
   const applyAuthenticatedUser = useCallback(
-    (nextUser: AuthUser, publishSessionEvent = true) => {
-      setAuthError(null);
-      setIsRefreshingUser(false);
-      setUser(nextUser);
-      setStatus('authenticated');
+    (nextUser: AuthUser, publish = true) => {
+      transition(createAuthenticatedAuthState(nextUser));
 
-      if (publishSessionEvent) {
-        sessionSyncRef.current?.publish('authenticated');
-      }
+      if (publish) publishSessionEvent('authenticated');
     },
-    []
+    [publishSessionEvent, transition]
   );
 
   const clearAuthState = useCallback(
-    (publishSessionEvent = true) => {
-      cancelBootstrapTimeout();
-      cancelRefreshRetries();
-      setAuthError(null);
-      setIsRefreshingUser(false);
-      setUser(null);
-      setStatus('unauthenticated');
-      if (publishSessionEvent) {
-        sessionSyncRef.current?.publish('unauthenticated');
-      }
+    (reason: AuthUnauthenticatedReason, publish = true) => {
+      transition(createUnauthenticatedAuthState(reason));
+
+      if (publish) publishSessionEvent('unauthenticated');
     },
-    [cancelBootstrapTimeout, cancelRefreshRetries]
+    [publishSessionEvent, transition]
   );
 
-  const markAuthUnavailable = useCallback(
-    (error: unknown, preserveAuthenticatedState: boolean) => {
-      setAuthError(error);
-      setIsRefreshingUser(false);
-
-      if (!preserveAuthenticatedState) {
-        setUser(null);
-        setStatus('auth_unavailable');
-      }
+  const markUnavailable = useCallback(
+    (error: unknown, preservedUser: AuthUser | null) => {
+      transition(createUnavailableAuthState(error, preservedUser));
     },
-    []
+    [transition]
   );
 
-  const refreshSessionOnce = useCallback(
-    () => runSingleFlight(refreshSession, refreshPromises),
-    [refreshSession]
-  );
+  const executeCurrentUserAttempt = useCallback(
+    async (
+      mode: 'bootstrap' | 'reload',
+      timeoutMs?: number
+    ): Promise<AuthUser | null> => {
+      const manager = requestManagerRef.current;
+      const previousState = stateRef.current;
+      const preservedUser =
+        mode === 'reload' && previousState.user ? previousState.user : null;
 
-  const restoreCurrentUser = useCallback(
-    async (mode: 'bootstrap' | 'reload') => {
-      const lifecycleVersion = lifecycleVersionRef.current;
-      const preserveAuthenticatedState =
-        mode === 'reload' && Boolean(userRef.current);
-
-      try {
-        const response = await runSingleFlight(
-          getCurrentUser,
-          currentUserPromises
-        );
-
-        if (lifecycleVersion !== lifecycleVersionRef.current) return null;
-        applyAuthenticatedUser(response.user, false);
-        return response.user;
-      } catch (currentUserError) {
-        if (!isInvalidSessionError(currentUserError)) {
-          if (lifecycleVersion === lifecycleVersionRef.current) {
-            markAuthUnavailable(currentUserError, preserveAuthenticatedState);
-          }
-          return null;
-        }
-
-        try {
-          const response = await refreshSessionOnce();
-
-          if (lifecycleVersion !== lifecycleVersionRef.current) return null;
-          applyAuthenticatedUser(response.user, false);
-          return response.user;
-        } catch (refreshError) {
-          if (lifecycleVersion !== lifecycleVersionRef.current) return null;
-
-          if (isInvalidSessionError(refreshError)) {
-            clearAuthState(false);
-          } else {
-            markAuthUnavailable(refreshError, preserveAuthenticatedState);
-          }
-
-          return null;
-        }
+      if (mode === 'reload' && previousState.status === 'authenticated') {
+        transition(createAuthenticatedAuthState(previousState.user, true));
       }
+
+      const attempt = manager.start(
+        'current-user',
+        (signal) => getCurrentUser({ signal }),
+        { singleFlight: true }
+      );
+
+      const outcome = await waitForAuthAttempt(attempt, timeoutMs, () =>
+        manager.cancel(attempt)
+      );
+
+      if (outcome.type === 'timeout') {
+        markUnavailable(new AuthBootstrapTimeoutError(), null);
+        return null;
+      }
+
+      if (!manager.isCurrent(attempt)) return null;
+
+      if (outcome.type === 'response') {
+        applyAuthenticatedUser(outcome.response.user, false);
+        return outcome.response.user;
+      }
+
+      if (isAbortError(outcome.error)) return null;
+
+      const invalidReason = getInvalidSessionReason(outcome.error);
+      if (invalidReason) {
+        clearAuthState(invalidReason, mode !== 'bootstrap');
+        return null;
+      }
+
+      markUnavailable(outcome.error, preservedUser);
+      return null;
     },
     [
       applyAuthenticatedUser,
       clearAuthState,
       getCurrentUser,
-      markAuthUnavailable,
-      refreshSessionOnce,
+      markUnavailable,
+      transition,
     ]
   );
 
-  const markBootstrapTimeout = useCallback((error: unknown) => {
-    setAuthError(error);
-    setIsRefreshingUser(false);
-    setUser(null);
-    setStatus('auth_unavailable');
-  }, []);
-
-  const runBootstrap = useCallback(() => {
-    if (!sessionHintStorageRef.current.hasHint()) {
-      clearAuthState(false);
-      return Promise.resolve(null);
-    }
-
-    if (!bootstrapPromiseRef.current) {
-      setStatus('loading');
-      setAuthError(null);
-
-      const restorePromise = restoreCurrentUser('bootstrap');
-
-      const lifecycleVersion = lifecycleVersionRef.current;
-      const timeoutPromise = new Promise<AuthUser | null>((resolve) => {
-        bootstrapTimeoutIdRef.current = window.setTimeout(() => {
-          bootstrapTimeoutIdRef.current = null;
-
-          if (lifecycleVersion === lifecycleVersionRef.current) {
-            const timeoutError = new AuthBootstrapTimeoutError();
-            markBootstrapTimeout(timeoutError);
-          }
-
-          resolve(null);
-        }, AUTH_BOOTSTRAP_TIMEOUT_MS);
-      });
-
-      bootstrapPromiseRef.current = Promise.race([
-        restorePromise,
-        timeoutPromise,
-      ]).finally(() => {
-        cancelBootstrapTimeout();
+  const startBootstrap = useCallback(
+    (forceNewAttempt = false): Promise<AuthUser | null> => {
+      if (forceNewAttempt) {
+        requestManagerRef.current.advanceLifecycle();
         bootstrapPromiseRef.current = null;
-      });
-    }
-
-    return bootstrapPromiseRef.current;
-  }, [
-    cancelBootstrapTimeout,
-    clearAuthState,
-    markBootstrapTimeout,
-    restoreCurrentUser,
-  ]);
-
-  const reloadCurrentUser = useCallback(async () => {
-    const lifecycleVersion = lifecycleVersionRef.current;
-    setIsRefreshingUser(true);
-
-    try {
-      return await restoreCurrentUser('reload');
-    } finally {
-      if (lifecycleVersion === lifecycleVersionRef.current) {
-        setIsRefreshingUser(false);
+      } else if (bootstrapPromiseRef.current) {
+        return bootstrapPromiseRef.current;
       }
-    }
-  }, [restoreCurrentUser]);
 
-  const refreshSessionWithRetry = useCallback(async () => {
-    try {
-      return await refreshSessionOnce();
-    } catch (error) {
-      if (isInvalidSessionError(error)) throw error;
+      if (bootstrapMode === 'session-hint' && !sessionHintStorage?.hasHint()) {
+        requestManagerRef.current.advanceLifecycle();
+        clearAuthState('no_session_hint', false);
+        return Promise.resolve(null);
+      }
 
-      const controller = new AbortController();
-      refreshRetryControllersRef.current.add(controller);
+      requestManagerRef.current.advanceLifecycle();
+      transition(createBootstrappingAuthState());
 
-      const shouldRetry = await new Promise<boolean>((resolve) => {
-        const timeoutId = window.setTimeout(() => {
-          resolve(true);
-        }, AUTH_SESSION_REFRESH_RETRY_DELAY_MS);
-
-        controller.signal.addEventListener(
-          'abort',
-          () => {
-            window.clearTimeout(timeoutId);
-            resolve(false);
-          },
-          { once: true }
-        );
-      }).finally(() => {
-        refreshRetryControllersRef.current.delete(controller);
+      const promise = executeCurrentUserAttempt(
+        'bootstrap',
+        bootstrapTimeoutMs
+      ).finally(() => {
+        if (bootstrapPromiseRef.current === promise) {
+          bootstrapPromiseRef.current = null;
+        }
       });
 
-      if (!shouldRetry) throw error;
-      return refreshSessionOnce();
-    }
-  }, [refreshSessionOnce]);
-
-  const refreshActiveSession = useCallback(async () => {
-    if (!userRef.current) return null;
-
-    const lifecycleVersion = lifecycleVersionRef.current;
-    setIsRefreshingUser(true);
-
-    try {
-      const response = await refreshSessionWithRetry();
-
-      if (lifecycleVersion !== lifecycleVersionRef.current) return null;
-
-      applyAuthenticatedUser(response.user, false);
-      return response.user;
-    } catch (refreshError) {
-      if (lifecycleVersion !== lifecycleVersionRef.current) return null;
-
-      if (isInvalidSessionError(refreshError)) {
-        clearAuthState();
-      } else {
-        markAuthUnavailable(refreshError, true);
-      }
-
-      return null;
-    } finally {
-      if (lifecycleVersion === lifecycleVersionRef.current) {
-        setIsRefreshingUser(false);
-      }
-    }
-  }, [
-    applyAuthenticatedUser,
-    clearAuthState,
-    markAuthUnavailable,
-    refreshSessionWithRetry,
-  ]);
-
-  const login = useCallback(
-    async (payload: LoginPayload) => {
-      lifecycleVersionRef.current += 1;
-      cancelBootstrapTimeout();
-      cancelRefreshRetries();
-      const response = await loginService(payload);
-      applyAuthenticatedUser(response.user);
-      return response.user;
+      bootstrapPromiseRef.current = promise;
+      return promise;
     },
     [
-      applyAuthenticatedUser,
-      cancelBootstrapTimeout,
-      cancelRefreshRetries,
-      loginService,
+      bootstrapMode,
+      bootstrapTimeoutMs,
+      clearAuthState,
+      executeCurrentUserAttempt,
+      sessionHintStorage,
+      transition,
     ]
   );
 
-  const register = useMemo(() => {
+  const retryAuthBootstrap = useCallback(
+    () => startBootstrap(true),
+    [startBootstrap]
+  );
+
+  const reloadCurrentUser = useCallback(
+    () => executeCurrentUserAttempt('reload'),
+    [executeCurrentUserAttempt]
+  );
+
+  const login = useMemo<AuthContextValue['login']>(() => {
+    if (!loginService) return undefined;
+
+    return async (payload: LoginPayload) => {
+      const manager = requestManagerRef.current;
+      manager.advanceLifecycle();
+
+      const attempt = manager.start('login', (signal) =>
+        loginService(payload, { signal })
+      );
+
+      try {
+        const response = await attempt.promise;
+        if (!manager.isCurrent(attempt)) return null;
+        applyAuthenticatedUser(response.user);
+        return response.user;
+      } catch (error) {
+        if (!manager.isCurrent(attempt) || isAbortError(error)) return null;
+        throw error;
+      }
+    };
+  }, [applyAuthenticatedUser, loginService]);
+
+  const register = useMemo<AuthContextValue['register']>(() => {
     if (!registerService) return undefined;
 
     return async (payload: RegisterPayload) => {
-      lifecycleVersionRef.current += 1;
-      cancelBootstrapTimeout();
-      cancelRefreshRetries();
-      const response = await registerService(payload);
-      applyAuthenticatedUser(response.user);
-      return response.user;
+      const manager = requestManagerRef.current;
+      manager.advanceLifecycle();
+
+      const attempt = manager.start('register', (signal) =>
+        registerService(payload, { signal })
+      );
+
+      try {
+        const response = await attempt.promise;
+        if (!manager.isCurrent(attempt)) return null;
+        applyAuthenticatedUser(response.user);
+        return response.user;
+      } catch (error) {
+        if (!manager.isCurrent(attempt) || isAbortError(error)) return null;
+        throw error;
+      }
     };
-  }, [
-    applyAuthenticatedUser,
-    cancelBootstrapTimeout,
-    cancelRefreshRetries,
-    registerService,
-  ]);
+  }, [applyAuthenticatedUser, registerService]);
+
+  const invalidateSession = useCallback(
+    (reason: AuthUnauthenticatedReason = 'session_invalid') => {
+      requestManagerRef.current.advanceLifecycle();
+      bootstrapPromiseRef.current = null;
+      clearAuthState(reason);
+    },
+    [clearAuthState]
+  );
 
   const logout = useCallback(async () => {
-    lifecycleVersionRef.current += 1;
-    cancelBootstrapTimeout();
-    cancelRefreshRetries();
+    const manager = requestManagerRef.current;
+    manager.advanceLifecycle();
+    bootstrapPromiseRef.current = null;
+    clearAuthState('logout');
+
+    const attempt = manager.start('logout', (signal) =>
+      logoutService({ signal })
+    );
 
     try {
-      await logoutService();
-    } finally {
-      clearAuthState();
+      await attempt.promise;
+    } catch (error) {
+      if (!isAbortError(error) && manager.isCurrent(attempt)) throw error;
     }
-  }, [
-    cancelBootstrapTimeout,
-    cancelRefreshRetries,
-    clearAuthState,
-    logoutService,
-  ]);
+  }, [clearAuthState, logoutService]);
 
   useEffect(() => {
+    const requestManager = requestManagerRef.current;
+
+    mountedRef.current = true;
     return () => {
-      lifecycleVersionRef.current += 1;
-      cancelBootstrapTimeout();
-      cancelRefreshRetries();
+      mountedRef.current = false;
+      requestManager.advanceLifecycle();
+      bootstrapPromiseRef.current = null;
     };
-  }, [cancelBootstrapTimeout, cancelRefreshRetries]);
+  }, []);
 
   useEffect(() => {
-    const ownsSync = !sessionSync;
-    const sync = sessionSync ?? createBrowserAuthSessionSync();
+    const sync = createBrowserAuthSessionSync();
     sessionSyncRef.current = sync;
 
     const unsubscribe = sync.subscribe((event) => {
-      lifecycleVersionRef.current += 1;
+      requestManagerRef.current.advanceLifecycle();
+      bootstrapPromiseRef.current = null;
 
       if (event === 'unauthenticated') {
-        clearAuthState(false);
+        clearAuthState('external_session_event', false);
         return;
       }
 
-      void restoreCurrentUser('reload');
+      if (stateRef.current.user) {
+        void executeCurrentUserAttempt('reload');
+      } else {
+        transition(createBootstrappingAuthState());
+        void executeCurrentUserAttempt('bootstrap');
+      }
     });
 
-    const revalidateOnFocusHandler = () => {
-      if (document.visibilityState === 'visible' && userRef.current) {
-        void restoreCurrentUser('reload');
+    const handleFocusRevalidation = () => {
+      if (document.visibilityState === 'visible' && stateRef.current.user) {
+        void executeCurrentUserAttempt('reload');
       }
     };
 
     if (revalidateOnFocus) {
-      window.addEventListener('focus', revalidateOnFocusHandler);
-      document.addEventListener('visibilitychange', revalidateOnFocusHandler);
+      window.addEventListener('focus', handleFocusRevalidation);
+      document.addEventListener('visibilitychange', handleFocusRevalidation);
     }
 
     return () => {
       unsubscribe();
-      if (ownsSync) sync.close();
+      sync.close();
       sessionSyncRef.current = null;
+
       if (revalidateOnFocus) {
-        window.removeEventListener('focus', revalidateOnFocusHandler);
+        window.removeEventListener('focus', handleFocusRevalidation);
         document.removeEventListener(
           'visibilitychange',
-          revalidateOnFocusHandler
+          handleFocusRevalidation
         );
       }
     };
-  }, [clearAuthState, restoreCurrentUser, revalidateOnFocus, sessionSync]);
+  }, [
+    clearAuthState,
+    executeCurrentUserAttempt,
+    revalidateOnFocus,
+    transition,
+  ]);
 
   useEffect(() => {
-    if (status !== 'authenticated') return undefined;
+    void startBootstrap();
+  }, [startBootstrap]);
 
-    const intervalId = window.setInterval(() => {
-      void refreshActiveSession();
-    }, AUTH_SESSION_REFRESH_INTERVAL_MS);
+  const value = useMemo<AuthContextValue>(() => {
+    const isAuthenticated = state.status === 'authenticated';
+    const isBootstrapping = state.status === 'bootstrapping';
+    const isUnavailable = state.status === 'unavailable';
 
-    return () => window.clearInterval(intervalId);
-  }, [refreshActiveSession, status]);
-
-  useEffect(() => {
-    void runBootstrap();
-  }, [runBootstrap]);
-
-  const value = useMemo<AuthContextValue>(
-    () => ({
-      user,
-      status,
-      authError,
-      isAuthenticated: status === 'authenticated',
-      isAuthReady: status !== 'loading',
+    return {
+      state,
+      user: state.user,
+      status: state.status,
+      authError: state.status === 'unavailable' ? state.error : null,
+      capabilities: {
+        canLogin: Boolean(login),
+        canRegister: Boolean(register),
+      },
+      isAuthenticated,
+      isBootstrapping,
+      isUnavailable,
+      canRenderAuthenticatedContent: isAuthenticated,
+      canRenderGuestContent: state.status === 'unauthenticated',
+      isAuthReady: !isBootstrapping,
       login,
       register,
       logout,
-      isRefreshingUser,
+      invalidateSession,
+      isRefreshingUser:
+        state.status === 'authenticated' && state.isRevalidating,
       reloadCurrentUser,
-      retryAuthBootstrap: runBootstrap,
-    }),
-
-    [
-      authError,
-      login,
-      logout,
-      isRefreshingUser,
-      reloadCurrentUser,
-      register,
-      runBootstrap,
-      status,
-      user,
-    ]
-  );
+      retryAuthBootstrap,
+    };
+  }, [
+    invalidateSession,
+    login,
+    logout,
+    register,
+    reloadCurrentUser,
+    retryAuthBootstrap,
+    state,
+  ]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 //===================================================================
 
-export function useAuth() {
+export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
 
   if (!context) {

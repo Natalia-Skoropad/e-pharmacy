@@ -5,15 +5,12 @@ import type { ReactNode } from 'react';
 import {
   AuthProviderCore,
   type AuthProviderServices,
-} from '@e-pharmacy/auth/core';
-
-import { serverManagedBrowserAuthSessionHintStorage } from '@e-pharmacy/auth/session';
+} from '@e-pharmacy/auth/react';
 
 import {
   getCurrentUser,
   loginUser,
   logoutUser,
-  refreshSession,
   registerUser,
 } from '@/lib/api/browser';
 
@@ -21,7 +18,6 @@ import {
 
 const clientAuthServices = {
   getCurrentUser,
-  refreshSession,
   login: loginUser,
   register: registerUser,
   logout: logoutUser,
@@ -37,10 +33,7 @@ type AuthProviderProps = {
 
 function AuthProvider({ children }: AuthProviderProps) {
   return (
-    <AuthProviderCore
-      {...clientAuthServices}
-      sessionHintStorage={serverManagedBrowserAuthSessionHintStorage}
-    >
+    <AuthProviderCore {...clientAuthServices} bootstrapMode="always">
       {children}
     </AuthProviderCore>
   );

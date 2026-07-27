@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useAuth } from '@e-pharmacy/auth/react';
 
 //===================================================================
 

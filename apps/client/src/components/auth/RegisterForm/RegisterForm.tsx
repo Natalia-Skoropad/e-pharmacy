@@ -16,7 +16,7 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useAuth } from '@e-pharmacy/auth/react';
 
 import {
   REGISTER_FORM_FIELDS,

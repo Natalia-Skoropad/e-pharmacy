@@ -28,13 +28,15 @@ import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 //===================================================================
 
 export async function registerUser(
-  payload: RegisterPayload
+  payload: RegisterPayload,
+  options?: { signal?: AbortSignal }
 ): Promise<AuthResponse> {
   const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
     CLIENT_API_ROUTES.auth.register,
     {
       method: 'POST',
       body: payload,
+      signal: options?.signal,
     }
   );
 
@@ -43,12 +45,16 @@ export async function registerUser(
 
 //===================================================================
 
-export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
+export async function loginUser(
+  payload: LoginPayload,
+  options?: { signal?: AbortSignal }
+): Promise<AuthResponse> {
   const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
     CLIENT_API_ROUTES.auth.login,
     {
       method: 'POST',
       body: payload,
+      signal: options?.signal,
     }
   );
 
@@ -85,12 +91,12 @@ export async function resetPassword(
 
 //===================================================================
 
-export async function refreshSession(): Promise<AuthResponse> {
+export async function getCurrentUser(
+  options?: { signal?: AbortSignal }
+): Promise<AuthResponse> {
   const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
-    CLIENT_API_ROUTES.auth.refresh,
-    {
-      method: 'POST',
-    }
+    CLIENT_API_ROUTES.auth.current,
+    { signal: options?.signal }
   );
 
   return getResponseData(response);
@@ -98,21 +104,14 @@ export async function refreshSession(): Promise<AuthResponse> {
 
 //===================================================================
 
-export async function getCurrentUser(): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
-    CLIENT_API_ROUTES.auth.current
-  );
-
-  return getResponseData(response);
-}
-
-//===================================================================
-
-export async function logoutUser(): Promise<void> {
+export async function logoutUser(
+  options?: { signal?: AbortSignal }
+): Promise<void> {
   await localApiRequest<ApiEmptySuccessResponse>(
     CLIENT_API_ROUTES.auth.logout,
     {
       method: 'POST',
+      signal: options?.signal,
     }
   );
 }

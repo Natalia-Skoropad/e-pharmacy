@@ -16,6 +16,7 @@ export type RoleProtectedRouteProps = {
   loginPath: string;
   forbiddenPath?: string;
   loadingFallback?: ReactNode;
+  authUnavailableFallback?: ReactNode;
   redirectingFallback?: ReactNode;
   forbiddenFallback?: ReactNode;
 };
@@ -28,6 +29,7 @@ export function RoleProtectedRoute({
   loginPath,
   forbiddenPath = '/',
   loadingFallback = null,
+  authUnavailableFallback = loadingFallback,
   redirectingFallback = null,
   forbiddenFallback = null,
 }: RoleProtectedRouteProps) {
@@ -36,11 +38,16 @@ export function RoleProtectedRoute({
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
 
-  const { status, isAuthenticated, isAuthReady, user } = useAuth();
+  const {
+    isAuthenticated,
+    isBootstrapping,
+    isUnavailable,
+    user,
+  } = useAuth();
   const hasAllowedRole = Boolean(user && allowedRoles.includes(user.role));
 
   useEffect(() => {
-    if (!isAuthReady || status === 'auth_unavailable') return;
+    if (isBootstrapping || isUnavailable) return;
 
     if (!isAuthenticated) {
       const hash = typeof window === 'undefined' ? '' : window.location.hash;
@@ -61,16 +68,17 @@ export function RoleProtectedRoute({
   }, [
     forbiddenPath,
     hasAllowedRole,
-    isAuthReady,
     isAuthenticated,
-    status,
+    isBootstrapping,
+    isUnavailable,
     loginPath,
     pathname,
     queryString,
     router,
   ]);
 
-  if (!isAuthReady || status === 'auth_unavailable') return loadingFallback;
+  if (isBootstrapping) return loadingFallback;
+  if (isUnavailable) return authUnavailableFallback;
   if (!isAuthenticated) return redirectingFallback;
   if (!hasAllowedRole) return forbiddenFallback;
 

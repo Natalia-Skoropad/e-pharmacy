@@ -8,7 +8,7 @@ import { RadioOption } from '@e-pharmacy/ui/forms';
 import { EmailInput, PasswordInput } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useAuth } from '@e-pharmacy/auth/react';
 
 import {
   LOGIN_FORM_FIELDS,
@@ -110,6 +110,11 @@ function LoginForm() {
     event.preventDefault();
 
     const nextErrors = validateLoginForm(values);
+
+    if (!login) {
+      toast.error('Login is not available for this app.');
+      return;
+    }
 
     if (hasValidationErrors(nextErrors)) {
       setTouchedFields(markAllFieldsTouched(LOGIN_FORM_FIELDS));

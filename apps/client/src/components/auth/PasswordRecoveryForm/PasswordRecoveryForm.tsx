@@ -7,7 +7,7 @@ import { RadioOption } from '@e-pharmacy/ui/forms';
 import { EmailInput } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useAuth } from '@e-pharmacy/auth/react';
 
 import {
   FORGOT_PASSWORD_FORM_FIELDS,

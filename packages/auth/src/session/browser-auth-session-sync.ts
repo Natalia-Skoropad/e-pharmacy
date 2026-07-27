@@ -1,4 +1,7 @@
-export type AuthSessionEvent = 'authenticated' | 'unauthenticated';
+export type AuthSessionEvent =
+  | 'authenticated'
+  | 'unauthenticated'
+  | 'revalidate';
 
 //===================================================================
 
@@ -11,6 +14,11 @@ export type AuthSessionSync = {
 //===================================================================
 
 const AUTH_SESSION_CHANNEL = 'e-pharmacy-auth-session';
+const AUTH_SESSION_EVENTS = new Set<AuthSessionEvent>([
+  'authenticated',
+  'unauthenticated',
+  'revalidate',
+]);
 
 //===================================================================
 
@@ -31,9 +39,11 @@ export function createBrowserAuthSessionSync(): AuthSessionSync {
 
   channel.addEventListener('message', (message: MessageEvent<unknown>) => {
     const event = message.data;
-    if (event !== 'authenticated' && event !== 'unauthenticated') return;
+    if (typeof event !== 'string' || !AUTH_SESSION_EVENTS.has(event as AuthSessionEvent)) {
+      return;
+    }
 
-    listeners.forEach((listener) => listener(event));
+    listeners.forEach((listener) => listener(event as AuthSessionEvent));
   });
 
   return {

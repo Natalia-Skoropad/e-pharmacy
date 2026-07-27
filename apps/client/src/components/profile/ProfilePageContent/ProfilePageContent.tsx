@@ -35,7 +35,7 @@ import {
   PhoneInput,
 } from '@e-pharmacy/ui/forms';
 
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useAuth } from '@e-pharmacy/auth/react';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
@@ -134,7 +134,13 @@ const ORDERS_VISIBLE_STEP = 15;
 //===================================================================
 
 function ProfilePageContent() {
-  const { isAuthenticated, isAuthReady, user, reloadCurrentUser } = useAuth();
+  const {
+    isAuthenticated,
+    isAuthReady,
+    user,
+    reloadCurrentUser,
+    invalidateSession,
+  } = useAuth();
   const toast = useToast();
   const canUseAuthFeatures = isAuthReady && isAuthenticated;
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
@@ -673,9 +679,11 @@ function ProfilePageContent() {
       setPasswordSubmitError('');
 
       await updateCurrentUserPassword(passwordValues);
+      invalidateSession('password_changed');
       setPasswordValues(CHANGE_PASSWORD_INITIAL_VALUES);
       setPasswordTouchedFields({});
-      toast.success('Password was changed.');
+      toast.success('Password changed. Sign in again.');
+      window.location.assign(ROUTES.LOGIN);
     } catch (error) {
       const message =
         error instanceof Error && error.message

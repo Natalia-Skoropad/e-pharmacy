@@ -7,7 +7,7 @@ import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { PasswordInput } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useAuth } from '@e-pharmacy/auth/react';
 
 import {
   RESET_PASSWORD_FORM_FIELDS,
@@ -41,7 +41,7 @@ type ResetPasswordFormProps = {
 function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
   const toast = useToast();
   const router = useRouter();
-  const { isAuthReady } = useAuth();
+  const { isAuthReady, invalidateSession } = useAuth();
 
   const [values, setValues] = useState<ResetPasswordFormValues>(
     RESET_PASSWORD_INITIAL_VALUES
@@ -94,6 +94,7 @@ function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
         newPassword: values.password,
       });
 
+      invalidateSession('password_reset');
       setIsDone(true);
       setValues(RESET_PASSWORD_INITIAL_VALUES);
       setTouchedFields({});

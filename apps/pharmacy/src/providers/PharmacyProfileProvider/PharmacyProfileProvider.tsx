@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useAuth } from '@e-pharmacy/auth/react';
 import type { PharmacyProfile } from '@e-pharmacy/types/pharmacies';
 
 import { getMyPharmacyProfile } from '@/lib/api/browser';

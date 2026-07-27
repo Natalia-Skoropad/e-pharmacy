@@ -10,7 +10,7 @@ import { Logo } from '@e-pharmacy/ui/media';
 import { UserBadge } from '@e-pharmacy/ui/data-display';
 import { MobileOffcanvasBase } from '@e-pharmacy/ui/overlays';
 import { SideMenu } from '@e-pharmacy/ui/cabinet';
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useAuth } from '@e-pharmacy/auth/react';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 

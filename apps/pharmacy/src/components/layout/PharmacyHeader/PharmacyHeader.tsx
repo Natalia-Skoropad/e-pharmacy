@@ -24,7 +24,7 @@ import { BurgerButton } from '@e-pharmacy/ui/cabinet';
 import { CabinetTopBar } from '@e-pharmacy/ui/cabinet';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { UserBadge } from '@e-pharmacy/ui/data-display';
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useAuth } from '@e-pharmacy/auth/react';
 import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
 import { PHARMACY_ROUTES } from '@/lib/routes';
 

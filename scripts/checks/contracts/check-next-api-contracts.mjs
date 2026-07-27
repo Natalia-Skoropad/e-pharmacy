@@ -37,7 +37,8 @@ const pharmacyAuthProvider = await read(
   'apps/pharmacy/src/providers/AuthProvider/AuthProvider.tsx'
 );
 
-const authSessionPublicApi = await read('packages/auth/src/session/index.ts');
+const authReactPublicApi = await read('packages/auth/src/react/index.ts');
+const authPackage = JSON.parse(await read('packages/auth/package.json'));
 const authSessionCore = await read(
   'packages/auth/src/core/AuthProviderCore.tsx'
 );
@@ -167,10 +168,8 @@ for (const [label, source] of [
   ['client', clientAuthProvider],
   ['pharmacy', pharmacyAuthProvider],
 ]) {
-  if (!source.includes('serverManagedBrowserAuthSessionHintStorage')) {
-    violations.push(
-      `${label} auth provider does not use the server-owned auth hint`
-    );
+  if (!/bootstrapMode="(?:always|session-hint)"/.test(source)) {
+    violations.push(`${label} auth provider does not choose an explicit bootstrap mode`);
   }
 
   if (/NEXT_PUBLIC_AUTH_COOKIE_(?:DOMAIN|SAME_SITE)/.test(source)) {
@@ -207,10 +206,17 @@ if (/AUTH_READY_COOKIE_MAX_AGE_SECONDS/.test(frontendCookies)) {
 
 if (
   /setBrowserAuthSessionHint|clearBrowserAuthSessionHint|browserAuthSessionHintStorage|createBrowserAuthSessionHintStorage/.test(
-    authSessionPublicApi
+    authReactPublicApi
   )
 ) {
   violations.push('Auth package still exposes browser-owned auth-hint writers');
+}
+
+if (
+  Object.hasOwn(authPackage.exports ?? {}, '.') ||
+  Object.hasOwn(authPackage.exports ?? {}, './session')
+) {
+  violations.push('Auth package still exposes a broad root or session entrypoint');
 }
 
 if (/\.clearHint\(|\.setHint\(/.test(authSessionCore)) {

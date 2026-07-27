@@ -27,7 +27,7 @@ import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
-import { useAuth } from '@e-pharmacy/auth/core';
+import { useAuth } from '@e-pharmacy/auth/react';
 import type { ClientOrder } from '@e-pharmacy/types/orders';
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import { formatDateTime } from '@e-pharmacy/utils/date';
