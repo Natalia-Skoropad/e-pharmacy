@@ -1,5 +1,7 @@
 import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 
+import type { StatusPresentation } from './types';
+
 //===================================================================
 
 export const PHARMACY_STATUS_PRESENTATION = {
@@ -9,7 +11,7 @@ export const PHARMACY_STATUS_PRESENTATION = {
   active: { label: 'Active', tone: 'success' },
   blocked: { label: 'Blocked', tone: 'danger' },
 } as const satisfies Readonly<
-  Record<PharmacyStatus, Readonly<{ label: string; tone: string }>>
+  Record<PharmacyStatus, StatusPresentation>
 >;
 
 //===================================================================

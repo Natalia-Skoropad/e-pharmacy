@@ -251,8 +251,10 @@ JWT_SECRET=your-super-secret-jwt-key
 JWT_EXPIRES_IN=7d
 JWT_RESET_EXPIRES_IN=15m
 
-CLIENT_ORIGINS=http://localhost:3000
+CLIENT_ORIGINS=http://localhost:3000,http://localhost:3002,http://localhost:3001
 CLIENT_APP_URL=http://localhost:3000
+PHARMACY_APP_URL=http://localhost:3002
+ADMIN_APP_URL=http://localhost:3001
 
 SMTP_HOST=smtp-relay.brevo.com
 SMTP_PORT=587

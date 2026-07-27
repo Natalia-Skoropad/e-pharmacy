@@ -5,6 +5,8 @@ import type {
   PaymentMethod,
 } from '@e-pharmacy/types/orders';
 
+import type { StatusPresentation } from './types';
+
 //===================================================================
 
 export const DELIVERY_METHOD_LABELS = {
@@ -34,7 +36,7 @@ export const ORDER_STATUS_PRESENTATION = {
   successful: { label: 'Successful', tone: 'success' },
   rejected: { label: 'Rejected', tone: 'danger' },
 } as const satisfies Readonly<
-  Record<OrderStatus, Readonly<{ label: string; tone: string }>>
+  Record<OrderStatus, StatusPresentation>
 >;
 
 //===================================================================

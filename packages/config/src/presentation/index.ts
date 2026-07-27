@@ -1,3 +1,4 @@
+export type * from './types';
 export * from './orders';
 export * from './pharmacies';
 export * from './products';

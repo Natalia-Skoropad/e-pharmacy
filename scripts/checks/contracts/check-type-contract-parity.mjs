@@ -451,7 +451,7 @@ async function readJson(...segments) {
 
 function extractQuotedValues(source, constName, opening, closing) {
   const pattern = new RegExp(
-    `export\\s+const\\s+${constName}\\s*=\\s*\\${opening}([\\s\\S]*?)\\${closing}\\s*as\\s+const`
+    `(?:export\\s+)?const\\s+${constName}\\s*=\\s*\\${opening}([\\s\\S]*?)\\${closing}\\s*as\\s+const`
   );
   const match = source.match(pattern);
 
@@ -481,6 +481,21 @@ function extractTypeUnionValues(source, typeName) {
   const match = source.match(pattern);
 
   assert.ok(match, `Could not read ${typeName}`);
+
+  return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map(
+    (valueMatch) => valueMatch[1]
+  );
+}
+
+//===================================================================
+
+function extractZodEnumValues(source, propertyName) {
+  const pattern = new RegExp(
+    `${propertyName}\\s*:\\s*z\\.enum\\(\\[([\\s\\S]*?)\\]\\)`
+  );
+  const match = source.match(pattern);
+
+  assert.ok(match, `Could not read z.enum values for ${propertyName}`);
 
   return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map(
     (valueMatch) => valueMatch[1]
@@ -529,34 +544,49 @@ await assertActualTypeShapes(frontendFixture);
 
 const [
   frontendAuth,
-  frontendUser,
-  frontendPharmacy,
-  frontendProduct,
+  frontendUserStatuses,
+  frontendPharmacyStatuses,
+  frontendProductStatuses,
   frontendCategories,
   frontendRequestStatuses,
   frontendReview,
-  frontendOrder,
+  frontendOrderValues,
   frontendNotes,
+  frontendClientFilters,
   frontendCart,
   backendAuth,
-  backendProduct,
+  backendProductModel,
+  backendProductTypes,
   backendCategories,
   backendRequestStatuses,
   backendOrder,
   backendPharmacyNote,
+  backendClientSchema,
   backendCart,
 ] = await Promise.all([
   readSource('packages', 'config', 'src', 'auth', 'domain-values.ts'),
-  readSource('packages', 'types', 'src', 'auth', 'role.ts'),
-  readSource('packages', 'types', 'src', 'pharmacies', 'status.ts'),
-  readSource('packages', 'types', 'src', 'products', 'product-summary.ts'),
+  readSource('packages', 'config', 'src', 'users', 'domain-values.ts'),
+  readSource('packages', 'config', 'src', 'pharmacies', 'domain-values.ts'),
+  readSource('packages', 'config', 'src', 'products', 'domain-values.ts'),
   readSource('packages', 'config', 'src', 'products', 'categories.ts'),
   readSource('packages', 'config', 'src', 'product-requests', 'statuses.ts'),
   readSource('packages', 'types', 'src', 'reviews', 'review.ts'),
-  readSource('packages', 'types', 'src', 'orders', 'status.ts'),
-  readSource('packages', 'types', 'src', 'notes', 'pharmacy-note.ts'),
+  readSource('packages', 'config', 'src', 'orders', 'domain-values.ts'),
+  readSource('packages', 'config', 'src', 'notes', 'entity-types.ts'),
+
+  readSource(
+    'apps',
+    'pharmacy',
+    'src',
+    'lib',
+    'clients',
+    'config',
+    'successful-order-filters.ts'
+  ),
+
   readSource('packages', 'config', 'src', 'cart', 'limits.ts'),
   readSource('apps', 'api', 'src', 'constants', 'auth.ts'),
+  readSource('apps', 'api', 'src', 'models', 'product.model.ts'),
   readSource('apps', 'api', 'src', 'types', 'product.ts'),
   readSource('apps', 'api', 'src', 'types', 'categories.ts'),
 
@@ -570,6 +600,7 @@ const [
 
   readSource('apps', 'api', 'src', 'types', 'order.ts'),
   readSource('apps', 'api', 'src', 'models', 'pharmacyNote.model.ts'),
+  readSource('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
   readSource('apps', 'api', 'src', 'constants', 'cart.ts'),
 ]);
 
@@ -593,7 +624,7 @@ assertSameValues(
 
 assertSameValues(
   'User statuses',
-  extractTypeUnionValues(frontendUser, 'UserStatus'),
+  extractArrayValues(frontendUserStatuses, 'USER_STATUSES'),
   extractObjectValues(backendAuth, 'USER_STATUSES')
 );
 
@@ -601,7 +632,7 @@ assertSameValues(
 
 assertSameValues(
   'Pharmacy statuses',
-  extractTypeUnionValues(frontendPharmacy, 'PharmacyStatus'),
+  extractArrayValues(frontendPharmacyStatuses, 'PHARMACY_STATUSES'),
   extractObjectValues(backendAuth, 'PHARMACY_STATUSES')
 );
 
@@ -609,8 +640,8 @@ assertSameValues(
 
 assertSameValues(
   'Product statuses',
-  extractTypeUnionValues(frontendProduct, 'ProductStatus'),
-  extractTypeUnionValues(backendProduct, 'ProductStatus')
+  extractArrayValues(frontendProductStatuses, 'PRODUCT_STATUSES'),
+  extractArrayValues(backendProductModel, 'PRODUCT_STATUSES')
 );
 
 //===================================================================
@@ -618,14 +649,14 @@ assertSameValues(
 assertSameValues(
   'Review moderation statuses',
   extractTypeUnionValues(frontendReview, 'ReviewModerationStatus'),
-  extractTypeUnionValues(backendProduct, 'ReviewModerationStatus')
+  extractTypeUnionValues(backendProductTypes, 'ReviewModerationStatus')
 );
 
 //===================================================================
 
 assertSameValues(
   'Order statuses',
-  extractTypeUnionValues(frontendOrder, 'OrderStatus'),
+  extractArrayValues(frontendOrderValues, 'ORDER_STATUSES'),
   extractTypeUnionValues(backendOrder, 'OrderStatus')
 );
 
@@ -633,7 +664,7 @@ assertSameValues(
 
 assertSameValues(
   'Delivery methods',
-  extractTypeUnionValues(frontendOrder, 'DeliveryMethod'),
+  extractArrayValues(frontendOrderValues, 'DELIVERY_METHODS'),
   extractTypeUnionValues(backendOrder, 'DeliveryMethod')
 );
 
@@ -641,8 +672,16 @@ assertSameValues(
 
 assertSameValues(
   'Payment methods',
-  extractTypeUnionValues(frontendOrder, 'PaymentMethod'),
+  extractArrayValues(frontendOrderValues, 'PAYMENT_METHODS'),
   extractTypeUnionValues(backendOrder, 'PaymentMethod')
+);
+
+//===================================================================
+
+assertSameValues(
+  'Order creator types',
+  extractArrayValues(frontendOrderValues, 'ORDER_CREATED_BY_TYPES'),
+  extractTypeUnionValues(backendOrder, 'OrderCreatedByType')
 );
 
 //===================================================================
@@ -665,16 +704,27 @@ assertSameValues(
 
 assertSameValues(
   'Pharmacy note entity types',
-  extractTypeUnionValues(frontendNotes, 'PharmacyNoteEntityType'),
+  extractArrayValues(frontendNotes, 'PHARMACY_NOTE_ENTITY_TYPES'),
   [
     ...new Set(
       [
         ...backendPharmacyNote.matchAll(
-          /['\"](client|product|pharmacy|product_request)['\"]/g
+          /['"](client|product|pharmacy|product_request)['"]/g
         ),
       ].map((match) => match[1])
     ),
   ]
+);
+
+//===================================================================
+
+assertSameValues(
+  'Client successful-order filters',
+  extractArrayValues(
+    frontendClientFilters,
+    'CLIENT_SUCCESSFUL_ORDERS_FILTERS'
+  ),
+  extractZodEnumValues(backendClientSchema, 'successfulOrders')
 );
 
 //===================================================================
@@ -708,5 +758,5 @@ assert.equal(
 //===================================================================
 
 console.log(
-  'Type contract parity check passed (value sets, cart limit, contract shapes, and date examples).'
+  'Type contract parity check passed (runtime value sets, filters, cart limit, contract shapes, and date examples).'
 );

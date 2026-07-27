@@ -1,5 +1,7 @@
 import type { ProductCategory } from '@e-pharmacy/types/products';
 
+import type { Assert, IsExactValueSet } from '../internal/type-assertions';
+
 //===================================================================
 
 export const PRODUCT_CATEGORIES = [
@@ -10,3 +12,9 @@ export const PRODUCT_CATEGORIES = [
   'medical_devices',
   'other',
 ] as const satisfies readonly ProductCategory[];
+
+//===================================================================
+
+type _ProductCategoriesAreExhaustive = Assert<
+  IsExactValueSet<ProductCategory, typeof PRODUCT_CATEGORIES>
+>;

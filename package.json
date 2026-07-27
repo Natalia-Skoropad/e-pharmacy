@@ -18,7 +18,7 @@
     "type-check:api": "pnpm --filter @e-pharmacy/api type-check",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check:before-deploy": "pnpm check:api-boundaries && pnpm check:hooks-boundaries && pnpm check:hooks-public-api && pnpm check:hooks-lifecycle && pnpm check:next-api-boundaries && pnpm check:next-api-routes && pnpm check:next-api-contracts && pnpm check:validation-contracts && pnpm check:type-contracts && pnpm check:ui-boundaries && pnpm check:ui-styles && pnpm check:archive-hygiene && pnpm lint && pnpm type-check && pnpm test && pnpm build",
+    "check:before-deploy": "pnpm check:api-boundaries && pnpm check:hooks-boundaries && pnpm check:hooks-public-api && pnpm check:hooks-lifecycle && pnpm check:next-api-boundaries && pnpm check:next-api-routes && pnpm check:next-api-contracts && pnpm check:config-public-api && pnpm check:validation-contracts && pnpm check:type-contracts && pnpm check:ui-boundaries && pnpm check:ui-styles && pnpm check:archive-hygiene && pnpm lint && pnpm type-check && pnpm test && pnpm build",
     "check:client": "pnpm --filter @e-pharmacy/client lint && pnpm --filter @e-pharmacy/client type-check && pnpm --filter @e-pharmacy/client build",
     "check:api": "pnpm check:api-boundaries && pnpm --filter @e-pharmacy/api lint && pnpm --filter @e-pharmacy/api type-check && pnpm --filter @e-pharmacy/api test && pnpm --filter @e-pharmacy/api build",
     "lint:packages": "turbo lint --filter='./packages/*'",
@@ -43,7 +43,8 @@
     "check:hooks-boundaries": "node scripts/checks/boundaries/check-hooks-boundaries.mjs",
     "check:hooks-public-api": "node scripts/checks/hooks/check-hooks-public-api.mjs",
     "check:archive-hygiene": "node scripts/archive/check-source-archive-hygiene.mjs",
-    "check:hooks-lifecycle": "node scripts/checks/hooks/check-hooks-lifecycle-contracts.mjs"
+    "check:hooks-lifecycle": "node scripts/checks/hooks/check-hooks-lifecycle-contracts.mjs",
+    "check:config-public-api": "node scripts/checks/config/check-config-public-api.mjs"
   },
   "devDependencies": {
     "turbo": "latest",

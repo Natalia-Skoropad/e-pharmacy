@@ -155,8 +155,10 @@ NODE_ENV=development
 PORT=4000
 MONGODB_URI=mongodb+srv://...
 JWT_SECRET=...
-CLIENT_ORIGINS=http://localhost:3000
+CLIENT_ORIGINS=http://localhost:3000,http://localhost:3002,http://localhost:3001
 CLIENT_APP_URL=http://localhost:3000
+PHARMACY_APP_URL=http://localhost:3002
+ADMIN_APP_URL=http://localhost:3001
 AUTH_COOKIE_SAME_SITE=lax
 ```
 

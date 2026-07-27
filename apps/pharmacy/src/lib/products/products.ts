@@ -1,3 +1,4 @@
+import { PRODUCT_STATUSES } from '@e-pharmacy/config/products';
 import { isProductCategory } from '@e-pharmacy/validation/products';
 import { OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
 
@@ -13,10 +14,7 @@ import { getTrimmedString } from '@e-pharmacy/utils/strings';
 import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
-import type {
-  ProductCategory,
-  ProductStatus,
-} from '@e-pharmacy/types/products';
+import type { ProductCategory } from '@e-pharmacy/types/products';
 
 import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 
@@ -25,7 +23,7 @@ import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 export const OWN_PRODUCT_STATUSES = [
   'active',
   'blocked',
-] as const satisfies readonly ProductStatus[];
+] as const satisfies readonly (typeof PRODUCT_STATUSES)[number][];
 
 export const STOCK_AVAILABILITY_FILTERS = [
   'in-stock',

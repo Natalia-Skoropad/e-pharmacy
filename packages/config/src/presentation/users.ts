@@ -1,5 +1,7 @@
 import type { UserRole, UserStatus } from '@e-pharmacy/types/auth';
 
+import type { StatusPresentation } from './types';
+
 //===================================================================
 
 export const USER_ROLE_LABELS = {
@@ -14,7 +16,7 @@ export const USER_STATUS_PRESENTATION = {
   active: { label: 'Active', tone: 'success' },
   blocked: { label: 'Blocked', tone: 'danger' },
 } as const satisfies Readonly<
-  Record<UserStatus, Readonly<{ label: string; tone: string }>>
+  Record<UserStatus, StatusPresentation>
 >;
 
 //===================================================================

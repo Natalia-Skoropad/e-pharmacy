@@ -1,5 +1,7 @@
 import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 
+import type { Assert, IsExactValueSet } from '../internal/type-assertions';
+
 //===================================================================
 
 export const PHARMACY_STATUSES = [
@@ -9,3 +11,9 @@ export const PHARMACY_STATUSES = [
   'active',
   'blocked',
 ] as const satisfies readonly PharmacyStatus[];
+
+//===================================================================
+
+type _PharmacyStatusesAreExhaustive = Assert<
+  IsExactValueSet<PharmacyStatus, typeof PHARMACY_STATUSES>
+>;

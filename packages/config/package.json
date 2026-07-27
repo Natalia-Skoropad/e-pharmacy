@@ -19,7 +19,8 @@
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
-    "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs test"
+    "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs test",
+    "check:public-api": "node ../../scripts/checks/config/check-config-public-api.mjs"
   },
   "devDependencies": {
     "typescript": "^5"

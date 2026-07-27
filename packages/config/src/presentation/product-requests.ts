@@ -1,5 +1,7 @@
 import type { ProductRequestStatus } from '@e-pharmacy/types/product-requests';
 
+import type { StatusPresentation } from './types';
+
 //===================================================================
 
 export const PRODUCT_REQUEST_STATUS_PRESENTATION = {
@@ -9,7 +11,7 @@ export const PRODUCT_REQUEST_STATUS_PRESENTATION = {
   approved: { label: 'Approved', tone: 'success' },
   rejected: { label: 'Rejected', tone: 'danger' },
 } as const satisfies Readonly<
-  Record<ProductRequestStatus, Readonly<{ label: string; tone: string }>>
+  Record<ProductRequestStatus, StatusPresentation>
 >;
 
 //===================================================================

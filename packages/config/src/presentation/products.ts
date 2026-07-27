@@ -3,6 +3,8 @@ import type {
   ProductStatus,
 } from '@e-pharmacy/types/products';
 
+import type { StatusPresentation } from './types';
+
 //===================================================================
 
 export const PRODUCT_CATEGORY_LABELS = {
@@ -21,7 +23,7 @@ export const PRODUCT_STATUS_PRESENTATION = {
   active: { label: 'Active', tone: 'success' },
   blocked: { label: 'Blocked', tone: 'danger' },
 } as const satisfies Readonly<
-  Record<ProductStatus, Readonly<{ label: string; tone: string }>>
+  Record<ProductStatus, StatusPresentation>
 >;
 
 //===================================================================
