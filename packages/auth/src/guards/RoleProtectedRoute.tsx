@@ -14,6 +14,8 @@ import {
   type TrustedExternalRedirectResolver,
 } from './guard-navigation';
 
+import { getRoleGuardDecision } from './guard-state';
+
 //===================================================================
 
 export type RoleProtectedRouteProps = Readonly<{
@@ -46,18 +48,17 @@ export function RoleProtectedRoute({
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
 
-  const {
-    isAuthenticated,
+  const { isAuthenticated, isBootstrapping, isUnavailable, user } = useAuth();
+  const hasAllowedRole = Boolean(user && allowedRoles.includes(user.role));
+  const decision = getRoleGuardDecision({
     isBootstrapping,
     isUnavailable,
-    user,
-  } = useAuth();
-  const hasAllowedRole = Boolean(user && allowedRoles.includes(user.role));
+    isAuthenticated,
+    hasAllowedRole,
+  });
 
   useEffect(() => {
-    if (isBootstrapping || isUnavailable) return;
-
-    if (!isAuthenticated) {
+    if (decision === 'redirect-login') {
       const hash = typeof window === 'undefined' ? '' : window.location.hash;
       const currentPath = buildCurrentLocation({
         pathname,
@@ -69,7 +70,7 @@ export function RoleProtectedRoute({
       return;
     }
 
-    if (!hasAllowedRole) {
+    if (decision === 'forbidden') {
       const destination = resolveGuardNavigationDestination({
         candidate: forbiddenPath,
         resolveExternalRedirect,
@@ -84,10 +85,7 @@ export function RoleProtectedRoute({
     }
   }, [
     forbiddenPath,
-    hasAllowedRole,
-    isAuthenticated,
-    isBootstrapping,
-    isUnavailable,
+    decision,
     loginPath,
     pathname,
     queryString,
@@ -95,10 +93,10 @@ export function RoleProtectedRoute({
     router,
   ]);
 
-  if (isBootstrapping) return loadingFallback;
-  if (isUnavailable) return authUnavailableFallback;
-  if (!isAuthenticated) return redirectingFallback;
-  if (!hasAllowedRole) return forbiddenFallback;
+  if (decision === 'loading') return loadingFallback;
+  if (decision === 'unavailable') return authUnavailableFallback;
+  if (decision === 'redirect-login') return redirectingFallback;
+  if (decision === 'forbidden') return forbiddenFallback;
 
   return children;
 }

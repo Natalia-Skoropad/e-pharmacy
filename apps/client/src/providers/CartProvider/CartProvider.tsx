@@ -58,7 +58,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 //===================================================================
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { user, isAuthReady, canUseClientFeatures } =
+  const { user, isBootstrapping, canUseClientFeatures } =
     useClientAuthCapabilities();
 
   const clientIdentity = canUseClientFeatures ? (user?.id ?? null) : null;
@@ -189,11 +189,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [clientIdentity]);
 
   useEffect(() => {
-    if (!isAuthReady || !clientIdentity || isLoaded) return;
+    if (isBootstrapping || !clientIdentity || isLoaded) return;
     if (activeLoadRef.current?.identity === clientIdentity) return;
 
     void loadCart().catch(() => undefined);
-  }, [clientIdentity, isAuthReady, isLoaded, loadCart]);
+  }, [clientIdentity, isBootstrapping, isLoaded, loadCart]);
 
   useEffect(
     () => () => {

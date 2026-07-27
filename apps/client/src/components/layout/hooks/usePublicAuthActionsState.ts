@@ -1,34 +1,14 @@
 'use client';
 
-import { useClientAuthCapabilities } from '@/hooks';
+import { useAuth } from '@e-pharmacy/auth/react';
+
+import {
+  selectPublicAuthActionsState,
+  type PublicAuthActionsState,
+} from './public-auth-actions-state';
 
 //===================================================================
 
-export function usePublicAuthActionsState() {
-  const {
-    status,
-    isAuthenticated,
-    isAuthReady,
-    isClient,
-    isPharmacy,
-    user,
-    logout,
-  } = useClientAuthCapabilities();
-
-  const hasAuthenticatedUser = isAuthReady && isAuthenticated;
-
-  return {
-    user,
-    logout,
-    isAuthenticated: hasAuthenticatedUser,
-    isAuthReady,
-    isAuthLoading: !isAuthReady,
-    isClient,
-    isPharmacy,
-    shouldShowGuestActions: isAuthReady && !hasAuthenticatedUser,
-    shouldShowClientActions: hasAuthenticatedUser && isClient,
-    shouldShowPharmacyActions: hasAuthenticatedUser && isPharmacy,
-    shouldShowAuthenticatedActions: hasAuthenticatedUser,
-    isAuthUnavailable: status === 'unavailable',
-  };
+export function usePublicAuthActionsState(): PublicAuthActionsState {
+  return selectPublicAuthActionsState(useAuth());
 }

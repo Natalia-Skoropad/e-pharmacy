@@ -151,8 +151,12 @@ function ProductDetailsPageContent({
   areReviewsUnavailable = false,
   contextPharmacyId,
 }: ProductDetailsPageContentProps) {
-  const { isAuthenticated, isAuthReady, canUseClientFeatures, isPharmacy } =
-    useClientAuthCapabilities();
+  const {
+    isAuthenticated,
+    isBootstrapping,
+    canUseClientFeatures,
+    isActivePharmacyUser,
+  } = useClientAuthCapabilities();
   const canUseCart = canUseClientFeatures;
   const { cart, loadCart } = useCart();
 
@@ -621,7 +625,7 @@ function ProductDetailsPageContent({
                     {PRODUCT_CATEGORY_LABELS[productDetails.category]}
                   </p>
 
-                  {isAuthReady && (!isAuthenticated || canUseClientFeatures) ? (
+                  {!isBootstrapping && (!isAuthenticated || canUseClientFeatures) ? (
                     <FavoriteToggleButton
                       isActive={isFavorite}
                       disabled={isFavoriteLoading}
@@ -693,9 +697,9 @@ function ProductDetailsPageContent({
                   <div className={css.sectionHeaderMain}>
                     <h2 className={css.panelTitle}>Pharmacies</h2>
 
-                    {isAuthReady && !canUseClientFeatures ? (
+                    {!isBootstrapping && !canUseClientFeatures ? (
                       <p className={css.authNote}>
-                        {isPharmacy
+                        {isActivePharmacyUser
                           ? 'Ordering is available only for client accounts.'
                           : 'Only logged-in clients can order and buy products.'}
                       </p>
@@ -941,7 +945,7 @@ function ProductDetailsPageContent({
                   reviewTouchedFields={reviewTouchedFields}
                   isReviewSubmitting={isReviewSubmitting}
                   isAuthenticated={canSubmitReview}
-                  isAuthReady={isAuthReady}
+                  isAuthReady={!isBootstrapping}
                   isUnavailable={areReviewsUnavailable}
                   emptyText="ProductDetails reviews will appear here after clients share their feedback."
                   textareaId="product-review"

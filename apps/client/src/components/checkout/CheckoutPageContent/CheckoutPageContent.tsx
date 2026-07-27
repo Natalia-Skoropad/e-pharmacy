@@ -70,7 +70,7 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
 //===================================================================
 
 function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
-  const { isAuthReady, user, canUseClientFeatures } =
+  const { isBootstrapping, user, canUseClientFeatures } =
     useClientAuthCapabilities();
   const searchParams = useSearchParams();
   const queryPharmacyId = searchParams.get('pharmacyId');
@@ -85,7 +85,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const copiedEmailTimerRef = useRef<number | null>(null);
 
   const { cart, error, isLoading, setCart, setError } = useCheckoutCart(
-    isAuthReady,
+    !isBootstrapping,
     canUseClientFeatures
   );
 

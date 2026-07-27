@@ -69,19 +69,23 @@ const FEATURE_CARDS: FeatureCard[] = [
 
 function HomeFeatureCards() {
   const router = useRouter();
-  const { isAuthenticated, isAuthReady, canUseClientFeatures, isPharmacy } =
-    useClientAuthCapabilities();
+  const {
+    isAuthenticated,
+    isBootstrapping,
+    canUseClientFeatures,
+    isActivePharmacyUser,
+  } = useClientAuthCapabilities();
   const toast = useToast();
 
   const handleProtectedClick = (href: string) => {
-    if (!isAuthReady || !isAuthenticated) {
+    if (isBootstrapping || !isAuthenticated) {
       toast.error('Please log in to open this private page.');
       return;
     }
 
     if (!canUseClientFeatures) {
       toast.info(
-        isPharmacy
+        isActivePharmacyUser
           ? 'Cart and personal client pages are available only for client accounts.'
           : 'This page is available only for client accounts.'
       );

@@ -40,7 +40,7 @@ function ProductCard({
   skipFavoriteRefresh = false,
   onFavoriteChange,
 }: ProductCardProps) {
-  const { isAuthenticated, isAuthReady, canUseClientFeatures } =
+  const { isAuthenticated, isBootstrapping, canUseClientFeatures } =
     useClientAuthCapabilities();
   const toast = useToast();
 
@@ -101,7 +101,7 @@ function ProductCard({
           </div>
         )}
 
-        {isAuthReady && (!isAuthenticated || canUseClientFeatures) ? (
+        {!isBootstrapping && (!isAuthenticated || canUseClientFeatures) ? (
           <div className={css.favoriteWrap}>
             <FavoriteToggleButton
               isActive={isFavorite}

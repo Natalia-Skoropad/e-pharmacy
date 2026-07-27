@@ -10,9 +10,17 @@
     "./routing": "./src/routing/index.ts"
   },
   "scripts": {
-    "lint": "eslint src",
+    "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
-    "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src"
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "pnpm run clean && tsc -p tsconfig.build.json",
+    "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src",
+    "test:react": "node ../../scripts/test-runners/run-node-ts-tests.mjs src/core src/guards",
+    "test:integration": "node ../../scripts/test-runners/run-node-ts-tests.mjs src/session src/routing src/errors",
+    "check:boundaries": "node ../../scripts/checks/auth/check-auth-boundaries.mjs",
+    "check:public-api": "node ../../scripts/checks/auth/check-auth-public-api.mjs",
+    "check:lifecycle": "node ../../scripts/checks/auth/check-auth-lifecycle.mjs",
+    "check:contracts": "node ../../scripts/checks/auth/check-auth-contracts.mjs"
   },
   "dependencies": {
     "@e-pharmacy/config": "workspace:*",
@@ -33,5 +41,6 @@
     "next": {
       "optional": true
     }
-  }
+  },
+  "sideEffects": false
 }

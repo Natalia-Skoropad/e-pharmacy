@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { hasBrowserAuthSessionHint } from './auth-session-hint-cookie';
 import { hasExactCookieValue } from './auth-session-hint-parser';
 
 //===================================================================
@@ -49,4 +50,15 @@ test('does not match cookie-name prefixes', () => {
     hasExactCookieValue(`${COOKIE_NAME}_legacy=1`, COOKIE_NAME, '1'),
     false
   );
+});
+
+
+//===================================================================
+
+test('handles cookie whitespace and a non-browser environment', () => {
+  assert.equal(
+    hasExactCookieValue(`  ${COOKIE_NAME}=1  ; other=value`, COOKIE_NAME, '1'),
+    true
+  );
+  assert.equal(hasBrowserAuthSessionHint(), false);
 });

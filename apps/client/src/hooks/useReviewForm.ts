@@ -64,9 +64,9 @@ export function useReviewForm({
   const {
     user,
     isAuthenticated,
-    isAuthReady,
+    isBootstrapping,
     canUseClientFeatures,
-    isPharmacy,
+    isActivePharmacyUser,
   } = useClientAuthCapabilities();
 
   const identity = user?.id ?? null;
@@ -163,7 +163,7 @@ export function useReviewForm({
       return;
     }
 
-    if (!isAuthReady || !isAuthenticated) {
+    if (isBootstrapping || !isAuthenticated) {
       updateCurrentFormState((current) => ({
         ...current,
         touchedFields: markAllFieldsTouched(REVIEW_FORM_FIELDS),
@@ -174,7 +174,7 @@ export function useReviewForm({
 
     if (!canUseClientFeatures) {
       notifier.error(
-        isPharmacy
+        isActivePharmacyUser
           ? 'Reviews are available only for client accounts.'
           : (authRequiredMessage ?? errorMessage)
       );

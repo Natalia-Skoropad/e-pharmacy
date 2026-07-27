@@ -9,6 +9,7 @@ import type {
 
 import type { AuthResponse } from '@e-pharmacy/types/auth';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
+import { parseAuthResponse } from '@e-pharmacy/validation/auth';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
@@ -17,12 +18,12 @@ import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharm
 export async function getCurrentUser(options?: {
   signal?: AbortSignal;
 }): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     PHARMACY_API_ROUTES.auth.current,
     { signal: options?.signal }
   );
 
-  return getResponseData(response);
+  return parseAuthResponse(getResponseData(response));
 }
 
 //===================================================================

@@ -44,7 +44,7 @@ const EMPTY_CART: Cart = {
 //===================================================================
 
 function CartPageContent() {
-  const { isAuthReady, canUseClientFeatures } = useClientAuthCapabilities();
+  const { isBootstrapping, canUseClientFeatures } = useClientAuthCapabilities();
   const canUseCart = canUseClientFeatures;
 
   const {
@@ -126,7 +126,7 @@ function CartPageContent() {
 
   const visibleCart = canUseCart ? cart : EMPTY_CART;
   const shouldShowLoading =
-    !isAuthReady || (canUseCart && (!isLoaded || isLoading));
+    isBootstrapping || (canUseCart && (!isLoaded || isLoading));
 
   const groupedCartItems = useMemo(
     () => groupCartItemsByPharmacy(visibleCart.items),

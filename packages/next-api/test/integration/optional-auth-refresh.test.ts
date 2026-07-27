@@ -131,7 +131,14 @@ test('invalid refresh clears cookies and falls back to public data', async () =>
       const cookie = new Headers(init?.headers).get('cookie') ?? '';
 
       if (url.endsWith('/auth/refresh')) {
-        return json({ status: 'error', message: 'Invalid refresh' }, 401);
+        return json(
+          {
+            status: 'error',
+            message: 'Invalid refresh',
+            code: 'AUTH_SESSION_INVALID',
+          },
+          401
+        );
       }
 
       return cookie

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import clsx from 'clsx';
 
-import { CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
+import { Button, CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
 
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { Logo } from '@e-pharmacy/ui/media';
@@ -35,21 +35,19 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
   const router = useRouter();
   const previousPathnameRef = useRef(pathname);
 
-  const {
-    user,
-    logout,
-    isAuthReady,
-    shouldShowGuestActions,
-    shouldShowClientActions,
-    shouldShowPharmacyActions,
-    shouldShowAuthenticatedActions,
-  } = usePublicAuthActionsState();
+  const authActions = usePublicAuthActionsState();
+  const isClientMode = authActions.mode === 'authenticated-client';
+  const isPharmacyMode = authActions.mode === 'authenticated-pharmacy';
+  const logoutAction =
+    'logout' in authActions ? authActions.logout : null;
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
   const handleLogout = async () => {
+    if (!logoutAction) return;
+
     try {
       setIsLogoutLoading(true);
-      await logout();
+      await logoutAction();
       onClose();
       router.replace(ROUTES.HOME);
     } finally {
@@ -108,21 +106,31 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
       </nav>
 
       <div className={css.actions}>
-        {!isAuthReady ? (
+        {authActions.mode === 'loading' ? (
           <div className={css.authSkeleton} aria-hidden="true" />
         ) : null}
 
-        {shouldShowClientActions ? (
+        {authActions.mode === 'unavailable' ? (
+          <Button
+            variant="secondary"
+            fullWidth
+            onClick={() => void authActions.retryAuthBootstrap()}
+          >
+            Retry session
+          </Button>
+        ) : null}
+
+        {isClientMode ? (
           <UserBadge
             href={ROUTES.PROFILE}
-            name={user?.name}
-            pictureUrl={user?.pictureUrl}
+            name={authActions.user.name}
+            pictureUrl={authActions.user.pictureUrl}
             variant="dark"
             onClick={onClose}
           />
         ) : null}
 
-        {shouldShowPharmacyActions ? (
+        {isPharmacyMode ? (
           <LinkButton
             href={getPharmacyDashboardUrl()}
             variant="secondary"
@@ -133,7 +141,7 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
           </LinkButton>
         ) : null}
 
-        {shouldShowAuthenticatedActions ? (
+        {logoutAction ? (
           <LogoutButton
             fullWidth
             tone="inverse"
@@ -143,7 +151,7 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
           />
         ) : null}
 
-        {shouldShowGuestActions ? (
+        {authActions.mode === 'guest' ? (
           <>
             <LinkButton
               className={css.loginLink}

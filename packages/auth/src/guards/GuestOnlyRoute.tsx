@@ -13,6 +13,8 @@ import {
   type TrustedExternalRedirectResolver,
 } from './guard-navigation';
 
+import { getGuestGuardDecision } from './guard-state';
+
 //===================================================================
 
 type AuthenticatedRedirectPath =
@@ -60,9 +62,15 @@ export function GuestOnlyRoute({
   const requestedRedirect = searchParams.get('redirect');
 
   const { user, isAuthenticated, isBootstrapping, isUnavailable } = useAuth();
+  const decision = getGuestGuardDecision({
+    isBootstrapping,
+    isUnavailable,
+    isAuthenticated,
+    allowGuestContentWhenUnavailable,
+  });
 
   useEffect(() => {
-    if (isBootstrapping || isUnavailable || !isAuthenticated) return;
+    if (decision !== 'redirect-authenticated') return;
 
     const candidate = resolveAuthenticatedRedirectPath(
       authenticatedRedirectPath,
@@ -83,22 +91,16 @@ export function GuestOnlyRoute({
     router.replace(destination.href);
   }, [
     authenticatedRedirectPath,
-    isAuthenticated,
-    isBootstrapping,
-    isUnavailable,
+    decision,
     requestedRedirect,
     resolveExternalRedirect,
     router,
     user,
   ]);
 
-  if (isBootstrapping) return loadingFallback;
-  if (isUnavailable) {
-    return allowGuestContentWhenUnavailable
-      ? children
-      : authUnavailableFallback;
-  }
-  if (isAuthenticated) return null;
+  if (decision === 'loading') return loadingFallback;
+  if (decision === 'unavailable-fallback') return authUnavailableFallback;
+  if (decision === 'redirect-authenticated') return null;
 
   return children;
 }

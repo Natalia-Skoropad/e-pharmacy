@@ -57,7 +57,14 @@ test('clears cookies after invalid refresh credentials', async () => {
   try {
     globalThis.fetch = async (input) =>
       String(input).endsWith('/auth/refresh')
-        ? json({ status: 'error', message: 'Invalid refresh' }, 401)
+        ? json(
+            {
+              status: 'error',
+              message: 'Invalid refresh',
+              code: 'AUTH_SESSION_INVALID',
+            },
+            401
+          )
         : json({ status: 'error', message: 'Expired access' }, 401);
 
     const response = await proxyBackendRequest({

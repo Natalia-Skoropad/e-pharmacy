@@ -6,6 +6,7 @@ import {
 } from '@e-pharmacy/api-client/core';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
+import { parseAuthResponse } from '@e-pharmacy/validation/auth';
 
 import type {
   ApiEmptySuccessResponse,
@@ -72,7 +73,7 @@ export async function sendMyPharmacyForVerification(): Promise<SendPharmacyForVe
 export async function updateCurrentUser(
   payload: UpdateProfilePayload
 ): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     PHARMACY_API_ROUTES.auth.current,
     {
       method: 'PATCH',
@@ -80,7 +81,7 @@ export async function updateCurrentUser(
     }
   );
 
-  return getResponseData(response);
+  return parseAuthResponse(getResponseData(response));
 }
 
 //===================================================================

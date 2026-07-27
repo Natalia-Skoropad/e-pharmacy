@@ -6,7 +6,7 @@ import { useId, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import clsx from 'clsx';
 
-import { LogoutButton } from '@e-pharmacy/ui/primitives';
+import { Button, LogoutButton } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { Logo } from '@e-pharmacy/ui/media';
 import { UserBadge } from '@e-pharmacy/ui/data-display';
@@ -30,20 +30,16 @@ function Header() {
   const router = useRouter();
   const mobileNavigationId = useId();
 
-  const {
-    user,
-    logout,
-    isAuthReady,
-    shouldShowGuestActions,
-    shouldShowClientActions,
-    shouldShowPharmacyActions,
-    shouldShowAuthenticatedActions,
-  } = usePublicAuthActionsState();
+  const authActions = usePublicAuthActionsState();
+  const isClientMode = authActions.mode === 'authenticated-client';
+  const isPharmacyMode = authActions.mode === 'authenticated-pharmacy';
+
+  const logoutAction = 'logout' in authActions ? authActions.logout : null;
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
   const { cart } = useCart();
-  const visibleCartItemsCount = shouldShowClientActions ? cart.totalItems : 0;
+  const visibleCartItemsCount = isClientMode ? cart.totalItems : 0;
 
   const handleToggleMobileMenu = () => {
     setIsMobileMenuOpen((prev) => !prev);
@@ -54,9 +50,11 @@ function Header() {
   };
 
   const handleLogout = async () => {
+    if (!logoutAction) return;
+
     try {
       setIsLogoutLoading(true);
-      await logout();
+      await logoutAction();
       router.replace(ROUTES.HOME);
     } finally {
       setIsLogoutLoading(false);
@@ -89,7 +87,7 @@ function Header() {
         </nav>
 
         <div className={css.actions}>
-          {shouldShowClientActions ? (
+          {isClientMode ? (
             <LinkButton
               className={css.cartLink}
               href={ROUTES.CART}
@@ -103,20 +101,30 @@ function Header() {
             </LinkButton>
           ) : null}
 
-          {!isAuthReady ? (
+          {authActions.mode === 'loading' ? (
             <div className={css.authSkeleton} aria-hidden="true" />
           ) : null}
 
-          {shouldShowClientActions ? (
+          {authActions.mode === 'unavailable' ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void authActions.retryAuthBootstrap()}
+            >
+              Retry session
+            </Button>
+          ) : null}
+
+          {isClientMode ? (
             <UserBadge
               className={css.profileLink}
               href={ROUTES.PROFILE}
-              name={user?.name}
-              pictureUrl={user?.pictureUrl}
+              name={authActions.user.name}
+              pictureUrl={authActions.user.pictureUrl}
             />
           ) : null}
 
-          {shouldShowPharmacyActions ? (
+          {isPharmacyMode ? (
             <LinkButton
               className={css.pharmacyCabinetLink}
               href={getPharmacyDashboardUrl()}
@@ -127,7 +135,7 @@ function Header() {
             </LinkButton>
           ) : null}
 
-          {shouldShowAuthenticatedActions ? (
+          {logoutAction ? (
             <LogoutButton
               isLoading={isLogoutLoading}
               disabled={isLogoutLoading}
@@ -135,7 +143,7 @@ function Header() {
             />
           ) : null}
 
-          {shouldShowGuestActions ? (
+          {authActions.mode === 'guest' ? (
             <>
               <LinkButton href={ROUTES.LOGIN} variant="ghost" size="sm">
                 Log in
@@ -148,7 +156,7 @@ function Header() {
           ) : null}
         </div>
 
-        {shouldShowClientActions ? (
+        {isClientMode ? (
           <LinkButton
             className={css.mobileCartLink}
             href={ROUTES.CART}

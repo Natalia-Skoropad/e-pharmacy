@@ -147,7 +147,7 @@ function PharmacyDetailsPageContent({
   reviewsTotal,
   areReviewsUnavailable = false,
 }: PharmacyDetailsPageContentProps) {
-  const { isAuthenticated, isAuthReady, canUseClientFeatures } =
+  const { isAuthenticated, isBootstrapping, canUseClientFeatures } =
     useClientAuthCapabilities();
 
   const [activeTab, setActiveTab] = useState<PharmacyTab>('details');
@@ -360,7 +360,7 @@ function PharmacyDetailsPageContent({
                     {pharmacy.city ?? 'Pharmacy pharmacy'}
                   </p>
 
-                  {isAuthReady && (!isAuthenticated || canUseClientFeatures) ? (
+                  {!isBootstrapping && (!isAuthenticated || canUseClientFeatures) ? (
                     <FavoriteToggleButton
                       isActive={isFavorite}
                       disabled={isFavoriteLoading}
@@ -580,7 +580,7 @@ function PharmacyDetailsPageContent({
                 reviewTouchedFields={reviewTouchedFields}
                 isReviewSubmitting={isReviewSubmitting}
                 isAuthenticated={canSubmitReview}
-                isAuthReady={isAuthReady}
+                isAuthReady={!isBootstrapping}
                 isUnavailable={areReviewsUnavailable}
                 emptyText="Pharmacy reviews will appear here after clients share their feedback."
                 textareaId="pharmacy-review"

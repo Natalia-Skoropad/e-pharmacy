@@ -37,7 +37,7 @@ function PharmacyCard({
   skipFavoriteRefresh = false,
   onFavoriteChange,
 }: PharmacyCardProps) {
-  const { isAuthenticated, isAuthReady, canUseClientFeatures } =
+  const { isAuthenticated, isBootstrapping, canUseClientFeatures } =
     useClientAuthCapabilities();
   const toast = useToast();
 
@@ -87,7 +87,7 @@ function PharmacyCard({
           </div>
         )}
 
-        {isAuthReady && (!isAuthenticated || canUseClientFeatures) ? (
+        {!isBootstrapping && (!isAuthenticated || canUseClientFeatures) ? (
           <div className={css.favoriteWrap}>
             <FavoriteToggleButton
               isActive={isFavorite}

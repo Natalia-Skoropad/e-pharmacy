@@ -1,6 +1,7 @@
 import 'client-only';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
+import { parseAuthResponse } from '@e-pharmacy/validation/auth';
 
 import {
   getResponseData,
@@ -31,7 +32,7 @@ export async function registerUser(
   payload: RegisterPayload,
   options?: { signal?: AbortSignal }
 ): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     CLIENT_API_ROUTES.auth.register,
     {
       method: 'POST',
@@ -40,7 +41,7 @@ export async function registerUser(
     }
   );
 
-  return getResponseData(response);
+  return parseAuthResponse(getResponseData(response));
 }
 
 //===================================================================
@@ -49,7 +50,7 @@ export async function loginUser(
   payload: LoginPayload,
   options?: { signal?: AbortSignal }
 ): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     CLIENT_API_ROUTES.auth.login,
     {
       method: 'POST',
@@ -58,7 +59,7 @@ export async function loginUser(
     }
   );
 
-  return getResponseData(response);
+  return parseAuthResponse(getResponseData(response));
 }
 
 //===================================================================
@@ -94,12 +95,12 @@ export async function resetPassword(
 export async function getCurrentUser(
   options?: { signal?: AbortSignal }
 ): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     CLIENT_API_ROUTES.auth.current,
     { signal: options?.signal }
   );
 
-  return getResponseData(response);
+  return parseAuthResponse(getResponseData(response));
 }
 
 //===================================================================
@@ -132,7 +133,7 @@ export async function logoutAllUserSessions(): Promise<void> {
 export async function updateCurrentUser(
   payload: UpdateProfilePayload
 ): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<AuthResponse>>(
+  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
     CLIENT_API_ROUTES.auth.current,
     {
       method: 'PATCH',
@@ -140,7 +141,7 @@ export async function updateCurrentUser(
     }
   );
 
-  return getResponseData(response);
+  return parseAuthResponse(getResponseData(response));
 }
 
 //===================================================================

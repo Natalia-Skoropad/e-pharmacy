@@ -54,8 +54,12 @@ export function useFavoriteActions<TId extends string>({
   removeFavorite,
   onFavoriteChange,
 }: UseFavoriteActionsParams<TId>) {
-  const { isAuthenticated, isAuthReady, canUseClientFeatures, isPharmacy } =
-    useClientAuthCapabilities();
+  const {
+    isAuthenticated,
+    isBootstrapping,
+    canUseClientFeatures,
+    isActivePharmacyUser,
+  } = useClientAuthCapabilities();
 
   const [favoriteState, setFavoriteState] = useState<FavoriteState<TId>>({
     id,
@@ -102,14 +106,14 @@ export function useFavoriteActions<TId extends string>({
   }, []);
 
   const handleFavoriteClick = useCallback(async () => {
-    if (!isAuthReady || !isAuthenticated) {
+    if (isBootstrapping || !isAuthenticated) {
       notifier.info(loginMessage);
       return;
     }
 
     if (!canUseClientFeatures) {
       notifier.info(
-        isPharmacy
+        isActivePharmacyUser
           ? 'Favorites are available only for client accounts.'
           : loginMessage
       );
@@ -164,10 +168,10 @@ export function useFavoriteActions<TId extends string>({
     canUseClientFeatures,
     errorMessage,
     id,
-    isAuthReady,
+    isBootstrapping,
     isAuthenticated,
     isFavorite,
-    isPharmacy,
+    isActivePharmacyUser,
     loginMessage,
     notifier,
     onFavoriteChange,
@@ -177,7 +181,6 @@ export function useFavoriteActions<TId extends string>({
   ]);
 
   return {
-    isAuthReady,
     canUseFavorites: canUseClientFeatures,
     isFavorite,
     isFavoriteLoading,

@@ -1,3 +1,4 @@
+export * from './auth-response';
 export * from './auth-validation';
 
 export {
