@@ -4,8 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { Building2, Heart, KeyRound, MonitorSmartphone } from 'lucide-react';
 
-import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
-import { USER_ROLE_LABELS, USER_STATUS_LABELS } from '@e-pharmacy/config/users';
+import { ORDER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+
+import {
+  USER_ROLE_LABELS,
+  USER_STATUS_PRESENTATION,
+} from '@e-pharmacy/config/presentation';
 
 import {
   Button,
@@ -95,7 +99,7 @@ import {
 
 import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
-import { StatusBadge } from '@/components/common/StatusPresentation';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import css from './ProfilePageContent.module.css';
 
@@ -164,10 +168,14 @@ function ProfilePageContent() {
   const [ordersVisibleCount, setOrdersVisibleCount] =
     useState(ORDERS_VISIBLE_STEP);
 
-  const [favoriteProducts, setFavoriteProducts] = useState<ProductDetails[]>([]);
+  const [favoriteProducts, setFavoriteProducts] = useState<ProductDetails[]>(
+    []
+  );
+
   const [favoritePharmacies, setFavoritePharmacies] = useState<
     PublicPharmacy[]
   >([]);
+
   const [favoriteProductsError, setFavoriteProductsError] = useState('');
   const [favoritePharmaciesError, setFavoritePharmaciesError] = useState('');
   const [favoriteProductsCount, setFavoriteProductsCount] = useState(0);
@@ -309,10 +317,7 @@ function ProfilePageContent() {
         key: 'status',
         title: 'Status',
         render: (order) => (
-          <StatusBadge
-            status={order.status}
-            label={ORDER_STATUS_LABELS[order.status]}
-          />
+          <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
         ),
       },
     ],
@@ -724,7 +729,7 @@ function ProfilePageContent() {
                 </div>
                 <div>
                   <dt>Status</dt>
-                  <dd>{USER_STATUS_LABELS[user.status]}</dd>
+                  <dd>{USER_STATUS_PRESENTATION[user.status].label}</dd>
                 </div>
               </dl>
             </aside>

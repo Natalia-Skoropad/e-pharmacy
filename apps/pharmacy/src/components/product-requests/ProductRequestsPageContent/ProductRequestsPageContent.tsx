@@ -8,6 +8,7 @@ import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
+import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   RowsPerPageSelect,
@@ -18,7 +19,7 @@ import {
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { getPharmacyNewRequestPath } from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 
@@ -37,13 +38,12 @@ import { buildProductRequestsPath } from '@/lib/product-requests/product-request
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 
 import {
-  getLockedFeatureBannerLabel,
   getLockedFeatureBannerStatus,
   useCurrentPharmacyStatus,
 } from '@/lib/pharmacies/current-pharmacy-status';
 
 import { ProductRequestStatistics } from '@/components/statistics';
-import { StatusBanner } from '@/components/common/StatusPresentation';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { ProductRequestsFiltersDrawer } from '@/components/product-requests/ProductRequestsFiltersDrawer';
 import { ProductRequestsTable } from '@/components/product-requests/ProductRequestsTable';
 
@@ -206,9 +206,6 @@ function ProductRequestsPageContent({
 
   const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
-  const bannerLabel = bannerStatus
-    ? getLockedFeatureBannerLabel(bannerStatus)
-    : null;
   const isCreateRequestLocked =
     Boolean(bannerStatus) || currentPharmacyStatus === 'blocked';
 
@@ -226,8 +223,7 @@ function ProductRequestsPageContent({
 
         {bannerStatus ? (
           <StatusBanner
-            status={bannerStatus}
-            label={bannerLabel ?? undefined}
+            {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
             title="Verification is required"
             message={
               bannerStatus === 'on_verification'
@@ -331,7 +327,7 @@ function ProductRequestsPageContent({
           ) : (
             <LinkButton
               className={css.createButton}
-              href={getPharmacyNewRequestPath()}
+              href={PHARMACY_ROUTES.PRODUCT_REQUEST_NEW}
               size="md"
             >
               Create request

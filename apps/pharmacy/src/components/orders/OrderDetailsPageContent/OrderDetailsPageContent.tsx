@@ -26,7 +26,7 @@ import {
   Wallet,
 } from 'lucide-react';
 
-import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
+import { ORDER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { isCompletePharmacyBankDetails } from '@e-pharmacy/validation/pharmacy';
 
 import {
@@ -79,12 +79,7 @@ import type {
   ProductCategory,
 } from '@e-pharmacy/types/products';
 
-import {
-  getProductCategoryOptions,
-  type ProductCategoryOption,
-  PRODUCT_CATEGORY_LABELS,
-} from '@e-pharmacy/config/products';
-
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import { formatStockLabel } from '@e-pharmacy/utils/numbers';
@@ -106,9 +101,9 @@ import {
 import {
   getPharmacyClientPath,
   getPharmacyOrderPath,
-  getPharmacyOrdersPath,
+  PHARMACY_ROUTES,
   getPharmacyProductPath,
-} from '@e-pharmacy/config/pharmacy';
+} from '@/lib/routes';
 
 import {
   createPharmacyOrder,
@@ -122,6 +117,11 @@ import {
   updatePharmacyOrder,
   updatePharmacyOrderStatus,
 } from '@/lib/api/browser';
+
+import {
+  getProductCategoryOptions,
+  type ProductCategoryOption,
+} from '@/lib/products/product-category-options';
 
 import type { PharmacyClientRow } from '@/lib/clients/clients';
 
@@ -137,7 +137,7 @@ import { getProductImageSrc } from '@/lib/products/product-images';
 import { EntityComments } from '@/components/comments/EntityComments';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { OrderCancellationModal } from '@/components/orders/OrderCancellationModal';
-import { StatusBadge } from '@/components/common/StatusPresentation';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -1216,7 +1216,9 @@ function HistoryTab({
               <li key={historyEntry.id} className={toneClassName}>
                 <History size={18} aria-hidden="true" />
                 <div className={css.historyContent}>
-                  <strong>{ORDER_STATUS_LABELS[entry.status]}</strong>
+                  <strong>
+                    {ORDER_STATUS_PRESENTATION[entry.status].label}
+                  </strong>
                   <time dateTime={entry.changedAt}>
                     {formatDateTime(entry.changedAt) ?? '—'}
                   </time>
@@ -2128,7 +2130,7 @@ function OrderDetailsPageContent({
                 Try again
               </Button>
               <LinkButton
-                href={getPharmacyOrdersPath()}
+                href={PHARMACY_ROUTES.ORDERS}
                 variant="secondary"
                 renderLink={({ href, className, children, ...props }) => (
                   <Link href={href} className={className} {...props}>
@@ -2252,10 +2254,7 @@ function OrderDetailsPageContent({
                     : ''
                 }`}
               >
-                <StatusBadge
-                  status={order.status}
-                  label={ORDER_STATUS_LABELS[order.status]}
-                />
+                <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
 
                 {statusActions.map((status) => (
                   <Button

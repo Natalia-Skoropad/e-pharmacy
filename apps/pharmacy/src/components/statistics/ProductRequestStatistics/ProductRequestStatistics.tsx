@@ -7,7 +7,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
+import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import type { ProductRequestStatus } from '@e-pharmacy/types/product-requests';
 
 import {
@@ -64,7 +64,7 @@ function ProductRequestStatistics({
       ariaLabel="Product request statistics"
     >
       {cards.map(({ status, tone, icon: Icon }) => {
-        const title = PRODUCT_REQUEST_STATUS_LABELS[status];
+        const title = PRODUCT_REQUEST_STATUS_PRESENTATION[status].label;
 
         return (
           <StatsCard

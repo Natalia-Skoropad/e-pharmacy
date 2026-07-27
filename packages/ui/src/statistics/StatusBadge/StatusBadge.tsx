@@ -1,16 +1,12 @@
 import clsx from 'clsx';
 
+import type { StatusTone } from '../status-tone';
+
 import css from './StatusBadge.module.css';
 
 //===================================================================
 
-export type StatusTone =
-  | 'blue'
-  | 'yellow'
-  | 'green'
-  | 'red'
-  | 'gray'
-  | 'beauty';
+export type { StatusTone } from '../status-tone';
 
 //===================================================================
 

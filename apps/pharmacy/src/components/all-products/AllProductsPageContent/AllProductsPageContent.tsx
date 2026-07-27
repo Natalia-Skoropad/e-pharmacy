@@ -7,6 +7,7 @@ import { PackageSearch } from 'lucide-react';
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { FiltersButton } from '@e-pharmacy/ui/primitives';
+import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   RowsPerPageSelect,
@@ -34,10 +35,7 @@ import {
 
 import { addProductToMyPharmacy, getProducts } from '@/lib/api/browser';
 
-import {
-  getLockedFeatureBannerLabel,
-  getLockedFeatureBannerStatus,
-} from '@/lib/pharmacies/current-pharmacy-status';
+import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
 
 import {
   DEFAULT_ALL_PRODUCTS_FILTERS,
@@ -49,7 +47,7 @@ import { buildAllProductsPath } from '@/lib/products/all-product-paths';
 import { getPharmacyAllProductStatistics } from '@/lib/products/product-statistics';
 
 import { AllProductStatistics } from '@/components/statistics';
-import { StatusBanner } from '@/components/common/StatusPresentation';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { AllProductsFiltersDrawer } from '@/components/all-products/AllProductsFiltersDrawer';
 import { AllProductsTable } from '@/components/all-products/AllProductsTable';
@@ -253,9 +251,6 @@ function AllProductsPageContent({
   };
 
   const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
-  const bannerLabel = bannerStatus
-    ? getLockedFeatureBannerLabel(bannerStatus)
-    : null;
 
   const handleConfirmAddProduct = async () => {
     if (!productToAdd) return;
@@ -328,8 +323,7 @@ function AllProductsPageContent({
 
         {bannerStatus ? (
           <StatusBanner
-            status={bannerStatus}
-            label={bannerLabel ?? undefined}
+            {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
             title="Catalog is available in read-only mode"
             message="Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
           />

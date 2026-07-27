@@ -10,10 +10,6 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@e-pharmacy/config/*": [
-        "../config/src/*/index.ts",
-        "../config/src/*.ts"
-      ],
       "@e-pharmacy/hooks/*": [
         "../hooks/src/*"
       ],

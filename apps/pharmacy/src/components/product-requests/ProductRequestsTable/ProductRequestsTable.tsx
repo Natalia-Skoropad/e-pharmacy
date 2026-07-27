@@ -9,18 +9,18 @@ import {
 
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
-import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import type { ProductRequestRowViewModel } from '@/lib/product-requests/product-requests';
 
 import {
   getPharmacyAllProductPath,
   getPharmacyRequestPath,
-} from '@e-pharmacy/config/pharmacy';
+} from '@/lib/routes';
 
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import { StatusBadge } from '@/components/common/StatusPresentation';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import css from './ProductRequestsTable.module.css';
 
@@ -120,10 +120,8 @@ function ProductRequestsTable({
         key: 'status',
         title: <TableHeaderTitle parts={['Request', 'status']} />,
         render: (request) => (
-          <StatusBadge
-            status={request.status}
-            label={PRODUCT_REQUEST_STATUS_LABELS[request.status]}
-          />
+          <StatusBadge {...PRODUCT_REQUEST_STATUS_PRESENTATION[request.status]}
+           />
         ),
       },
     ],

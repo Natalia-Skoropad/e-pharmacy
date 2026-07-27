@@ -1,1 +1,1 @@
-export * from './order-labels';
+export * from './domain-values';

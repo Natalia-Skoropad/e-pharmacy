@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 
 import {
-  ORDER_CREATED_BY_LABELS,
-  PAYMENT_METHOD_LABELS,
   DELIVERY_METHOD_LABELS,
-} from '@e-pharmacy/config/orders';
+  ORDER_CREATED_BY_LABELS,
+  ORDER_STATUS_PRESENTATION,
+  PAYMENT_METHOD_LABELS,
+} from '@e-pharmacy/config/presentation';
 
 import {
   DataTable,
@@ -16,18 +17,12 @@ import {
 
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
-
-import {
-  getPharmacyClientPath,
-  getPharmacyOrderPath,
-} from '@e-pharmacy/config/pharmacy';
-
 import { formatAmount } from '@e-pharmacy/utils/money';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
+import { getPharmacyClientPath, getPharmacyOrderPath } from '@/lib/routes';
 import { type PharmacyOrderRow } from '@/lib/orders/orders';
 import { getProductImageSrc } from '@/lib/products/product-images';
-
-import { StatusBadge } from '@/components/common/StatusPresentation';
 
 //===================================================================
 
@@ -127,7 +122,9 @@ function OrdersTable({
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Order', 'status']} />,
-        render: (order) => <StatusBadge status={order.status} />,
+        render: (order) => (
+          <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
+        ),
       },
     ],
     []

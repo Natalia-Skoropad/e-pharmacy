@@ -224,9 +224,6 @@ importers:
 
   packages/api-client:
     dependencies:
-      '@e-pharmacy/config':
-        specifier: workspace:*
-        version: link:../config
       '@e-pharmacy/types':
         specifier: workspace:*
         version: link:../types
@@ -333,9 +330,6 @@ importers:
 
   packages/ui:
     dependencies:
-      '@e-pharmacy/config':
-        specifier: workspace:*
-        version: link:../config
       '@e-pharmacy/hooks':
         specifier: workspace:*
         version: link:../hooks

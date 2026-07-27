@@ -21,7 +21,7 @@ import {
 
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { Tabs } from '@e-pharmacy/ui/navigation';
-import { formatProductCategoryLabel } from '@e-pharmacy/config/products';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { type TabItem } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { Container } from '@e-pharmacy/ui/layout';
@@ -618,7 +618,7 @@ function ProductDetailsPageContent({
               <div className={css.content}>
                 <div className={css.topLine}>
                   <p className={css.category}>
-                    {formatProductCategoryLabel(productDetails.category)}
+                    {PRODUCT_CATEGORY_LABELS[productDetails.category]}
                   </p>
 
                   {isAuthReady && (!isAuthenticated || canUseClientFeatures) ? (
@@ -899,7 +899,7 @@ function ProductDetailsPageContent({
                   <div className={css.detailItem}>
                     <dt>Category</dt>
                     <dd>
-                      {formatProductCategoryLabel(productDetails.category)}
+                      {PRODUCT_CATEGORY_LABELS[productDetails.category]}
                     </dd>
                   </div>
                 </dl>

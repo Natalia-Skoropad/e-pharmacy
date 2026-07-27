@@ -1,5 +1,5 @@
-import { CLIENT_SUCCESSFUL_ORDERS_FILTERS } from '@e-pharmacy/config/clients';
-import { CLIENT_SUCCESSFUL_ORDERS_FILTER_LABELS } from '@e-pharmacy/config/clients';
+import { USER_STATUSES } from '@e-pharmacy/config/users';
+import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   DateFilter,
@@ -9,9 +9,9 @@ import {
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 
-import { getPharmacyClientsPath } from '@e-pharmacy/config/pharmacy';
-
-import { CLIENT_STATUSES, CLIENT_STATUS_LABELS } from '@/lib/clients/clients';
+import { PHARMACY_ROUTES } from '@/lib/routes';
+import { CLIENT_SUCCESSFUL_ORDERS_FILTERS } from '@/lib/clients/config';
+import { CLIENT_SUCCESSFUL_ORDERS_FILTER_LABELS } from '@/lib/clients/config';
 import type { ClientsFilterState } from '@/lib/clients/client-paths';
 
 //===================================================================
@@ -30,9 +30,9 @@ type ClientsFiltersDrawerProps = Readonly<{
 const CLIENT_STATUS_OPTIONS: Array<SelectOption<ClientsFilterState['status']>> =
   [
     { value: 'all', label: 'All' },
-    ...CLIENT_STATUSES.map((status) => ({
+    ...USER_STATUSES.map((status) => ({
       value: status,
-      label: CLIENT_STATUS_LABELS[status],
+      label: USER_STATUS_PRESENTATION[status].label,
     })),
   ];
 
@@ -61,7 +61,7 @@ function ClientsFiltersDrawer({
       id="clients-filters-panel"
       eyebrow="Clients"
       hasActiveFilters={hasActiveFilters}
-      resetHref={getPharmacyClientsPath()}
+      resetHref={PHARMACY_ROUTES.CLIENTS}
       onClose={onClose}
       onReset={() => {
         onReset();

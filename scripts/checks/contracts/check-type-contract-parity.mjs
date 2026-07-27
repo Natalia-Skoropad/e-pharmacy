@@ -555,7 +555,7 @@ const [
   readSource('packages', 'types', 'src', 'reviews', 'review.ts'),
   readSource('packages', 'types', 'src', 'orders', 'status.ts'),
   readSource('packages', 'types', 'src', 'notes', 'pharmacy-note.ts'),
-  readSource('packages', 'config', 'src', 'cart', 'cart-constants.ts'),
+  readSource('packages', 'config', 'src', 'cart', 'limits.ts'),
   readSource('apps', 'api', 'src', 'constants', 'auth.ts'),
   readSource('apps', 'api', 'src', 'types', 'product.ts'),
   readSource('apps', 'api', 'src', 'types', 'categories.ts'),

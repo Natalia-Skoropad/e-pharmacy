@@ -9,10 +9,6 @@
   ],
   "compilerOptions": {
     "paths": {
-      "@e-pharmacy/config/*": [
-        "../config/src/*/index.ts",
-        "../config/src/*.ts"
-      ],
       "@e-pharmacy/types": [
         "../types/src/index.ts"
       ],

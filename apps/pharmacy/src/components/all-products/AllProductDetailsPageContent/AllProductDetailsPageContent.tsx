@@ -5,12 +5,18 @@ import { BarChart3, History, PackageSearch } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+import { ORDER_CREATED_BY_TYPES } from '@e-pharmacy/config/orders';
 
 import {
-  ORDER_STATUS_LABELS,
+  PHARMACY_STATUS_PRESENTATION,
+  PRODUCT_CATEGORY_LABELS,
+  PRODUCT_STATUS_PRESENTATION,
+} from '@e-pharmacy/config/presentation';
+
+import {
+  ORDER_STATUS_PRESENTATION,
   ORDER_CREATED_BY_LABELS,
-} from '@e-pharmacy/config/orders';
+} from '@e-pharmacy/config/presentation';
 
 import {
   Button,
@@ -76,10 +82,10 @@ import {
 } from '@e-pharmacy/types/orders';
 
 import {
-  getPharmacyAllProductsPath,
+  PHARMACY_ROUTES,
   getPharmacyClientPath,
   getPharmacyOrderPath,
-} from '@e-pharmacy/config/pharmacy';
+} from '@/lib/routes';
 
 import {
   addProductToMyPharmacy,
@@ -98,15 +104,9 @@ import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
 import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 
-import {
-  ORDER_CREATED_BY_TYPES,
-  type PharmacyOrderRow,
-} from '@/lib/orders/orders';
+import { type PharmacyOrderRow } from '@/lib/orders/orders';
 
-import {
-  getLockedFeatureBannerLabel,
-  getLockedFeatureBannerStatus,
-} from '@/lib/pharmacies/current-pharmacy-status';
+import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
 
 import { getProductImageSrc } from '@/lib/products/product-images';
 
@@ -122,10 +122,7 @@ import {
 import { EntityComments } from '@/components/comments/EntityComments';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
-import {
-  StatusBadge,
-  StatusBanner,
-} from '@/components/common/StatusPresentation';
+import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import css from './AllProductDetailsPageContent.module.css';
 
@@ -257,10 +254,10 @@ const DEFAULT_RELATED_ORDERS_FILTERS: RelatedOrdersFilters = {
 
 const ORDER_STATUS_OPTIONS: Array<SelectOption<'all' | OrderStatus>> = [
   { value: 'all', label: 'All' },
-  { value: 'new', label: ORDER_STATUS_LABELS.new },
-  { value: 'in_progress', label: ORDER_STATUS_LABELS.in_progress },
-  { value: 'successful', label: ORDER_STATUS_LABELS.successful },
-  { value: 'rejected', label: ORDER_STATUS_LABELS.rejected },
+  { value: 'new', label: ORDER_STATUS_PRESENTATION.new.label },
+  { value: 'in_progress', label: ORDER_STATUS_PRESENTATION.in_progress.label },
+  { value: 'successful', label: ORDER_STATUS_PRESENTATION.successful.label },
+  { value: 'rejected', label: ORDER_STATUS_PRESENTATION.rejected.label },
 ];
 
 //===================================================================
@@ -367,15 +364,6 @@ function getProductOffer(
 
 //===================================================================
 
-function getProductStatusLabel(product: ProductDetails): string {
-  if (product.status === 'blocked') return 'Blocked';
-  if (product.status === 'new') return 'New';
-
-  return 'Active';
-}
-
-//===================================================================
-
 function getProductPriceLabel(
   product: ProductDetails,
   offer: ProductOffer | null
@@ -408,12 +396,7 @@ function getProductSummaryItems(
     { label: 'Category', value: PRODUCT_CATEGORY_LABELS[product.category] },
     {
       label: 'Status',
-      value: (
-        <StatusBadge
-          status={product.status}
-          label={getProductStatusLabel(product)}
-        />
-      ),
+      value: <StatusBadge {...PRODUCT_STATUS_PRESENTATION[product.status]} />,
     },
   ];
 
@@ -679,7 +662,7 @@ function EmptyPanel({ children }: Readonly<{ children: string }>) {
 
 function AllProductDetailsPageContent({
   productId,
-  backHref = getPharmacyAllProductsPath(),
+  backHref = PHARMACY_ROUTES.ALL_PRODUCTS,
   backLabel = 'Back to all products',
   bannerTitle = DEFAULT_BANNER_TITLE,
   bannerMessage = DEFAULT_BANNER_MESSAGE,
@@ -782,9 +765,7 @@ function AllProductDetailsPageContent({
             { page: 1, perPage: 200, productId },
             requestOptions
           ).catch(() => null),
-          getProductStockMovements(productId, requestOptions).catch(
-            () => null
-          ),
+          getProductStockMovements(productId, requestOptions).catch(() => null),
         ]);
 
         if (controller.signal.aborted) return;
@@ -954,12 +935,9 @@ function AllProductDetailsPageContent({
       }
 
       try {
-        const response = await getPharmacyNotes(
-          'product',
-          productId,
-          1,
-          { signal: controller.signal }
-        );
+        const response = await getPharmacyNotes('product', productId, 1, {
+          signal: controller.signal,
+        });
         if (!controller.signal.aborted) setCommentsTotal(response.total);
       } catch {
         if (!controller.signal.aborted) setCommentsTotal(0);
@@ -975,9 +953,6 @@ function AllProductDetailsPageContent({
 
   const productImageSrc = getProductImageSrc(product?.imageUrl);
   const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
-  const bannerLabel = bannerStatus
-    ? getLockedFeatureBannerLabel(bannerStatus)
-    : null;
 
   const canAddToPharmacy = Boolean(
     product &&
@@ -1158,10 +1133,7 @@ function AllProductDetailsPageContent({
         title: <TableHeaderTitle parts={['Order', 'status']} />,
         render: (row: StockMovementRow) =>
           row.orderStatus ? (
-            <StatusBadge
-              status={row.orderStatus}
-              label={ORDER_STATUS_LABELS[row.orderStatus]}
-            />
+            <StatusBadge {...ORDER_STATUS_PRESENTATION[row.orderStatus]} />
           ) : (
             '—'
           ),
@@ -1248,10 +1220,7 @@ function AllProductDetailsPageContent({
         key: 'status',
         title: <TableHeaderTitle parts={['Order', 'status']} />,
         render: (row: RelatedOrderRow) => (
-          <StatusBadge
-            status={row.status}
-            label={ORDER_STATUS_LABELS[row.status]}
-          />
+          <StatusBadge {...ORDER_STATUS_PRESENTATION[row.status]} />
         ),
       },
     ],
@@ -1341,7 +1310,8 @@ function AllProductDetailsPageContent({
 
           {error ? (
             <StatusBanner
-              status="rejected"
+              tone="danger"
+              label="Error"
               title={error.title}
               message={error.message}
             />
@@ -1373,8 +1343,7 @@ function AllProductDetailsPageContent({
               <div className={css.detailsTab}>
                 {bannerStatus ? (
                   <StatusBanner
-                    status={bannerStatus}
-                    label={bannerLabel ?? undefined}
+                    {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
                     title={bannerTitle}
                     message={bannerMessage}
                   />

@@ -26,7 +26,7 @@ import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { UserBadge } from '@e-pharmacy/ui/data-display';
 import { useAuth } from '@e-pharmacy/auth/core';
 import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
-import { getPharmacyProfilePath } from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 
@@ -223,7 +223,7 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
                   <div className={css.userMenu} role="menu">
                     <Link
                       className={css.userMenuItem}
-                      href={getPharmacyProfilePath()}
+                      href={PHARMACY_ROUTES.PROFILE}
                       role="menuitem"
                       onClick={() => setIsUserMenuOpen(false)}
                     >

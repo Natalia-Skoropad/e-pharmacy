@@ -1,6 +1,5 @@
 'use client';
 
-import { PHARMACY_STATUS_LABELS } from '@e-pharmacy/config/pharmacy';
 import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
@@ -19,14 +18,6 @@ export function getLockedFeatureBannerStatus(
   }
 
   return null;
-}
-
-//===================================================================
-
-export function getLockedFeatureBannerLabel(
-  status: LockedFeatureBannerStatus
-): string {
-  return PHARMACY_STATUS_LABELS[status] ?? status;
 }
 
 //===================================================================

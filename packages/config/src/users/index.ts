@@ -1,1 +1,1 @@
-export * from './user-labels';
+export * from './domain-values';

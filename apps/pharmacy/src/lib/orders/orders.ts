@@ -2,6 +2,13 @@ import { isISODateTimeString } from '@e-pharmacy/validation/dates';
 import { isProductCategory } from '@e-pharmacy/validation/products';
 
 import {
+  DELIVERY_METHODS,
+  ORDER_CREATED_BY_TYPES,
+  ORDER_STATUSES,
+  PAYMENT_METHODS,
+} from '@e-pharmacy/config/orders';
+
+import {
   normalizePaginatedResponse,
   requirePaginatedResponse,
 } from '@e-pharmacy/api-client/response';
@@ -26,35 +33,9 @@ import type { ProductCategory } from '@e-pharmacy/types/products';
 
 import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 
-//===================================================================
 
-export const DELIVERY_METHODS = [
-  'pickup',
-  'postal_delivery',
-] as const satisfies readonly DeliveryMethod[];
 
-//===================================================================
 
-export const PAYMENT_METHODS = [
-  'cash',
-  'bank_transfer',
-] as const satisfies readonly PaymentMethod[];
-
-//===================================================================
-
-export const ORDER_CREATED_BY_TYPES = [
-  'client',
-  'manager',
-] as const satisfies readonly OrderCreatedByType[];
-
-//===================================================================
-
-export const ORDER_STATUSES = [
-  'new',
-  'in_progress',
-  'successful',
-  'rejected',
-] as const satisfies readonly OrderStatus[];
 
 //===================================================================
 

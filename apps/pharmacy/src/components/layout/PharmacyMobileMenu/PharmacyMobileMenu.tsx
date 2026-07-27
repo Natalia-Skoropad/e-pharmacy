@@ -12,10 +12,7 @@ import { MobileOffcanvasBase } from '@e-pharmacy/ui/overlays';
 import { SideMenu } from '@e-pharmacy/ui/cabinet';
 import { useAuth } from '@e-pharmacy/auth/core';
 
-import {
-  getPharmacyDashboardPath,
-  getPharmacyProfilePath,
-} from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 
@@ -25,7 +22,7 @@ import {
   getClientPharmacyUrl,
 } from '@/lib/layout/external-links';
 
-import { PHARMACY_MOBILE_NAVIGATION } from '@/lib/layout/navigation';
+import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import css from './PharmacyMobileMenu.module.css';
@@ -90,7 +87,7 @@ export function PharmacyMobileMenu({
       <div className={css.head}>
         <Logo
           variant="white"
-          href={getPharmacyDashboardPath()}
+          href={PHARMACY_ROUTES.DASHBOARD}
           ariaLabel="E-PHARMACY pharmacy dashboard"
           renderLink={({ href, className, children, ...props }) => (
             <Link
@@ -114,7 +111,7 @@ export function PharmacyMobileMenu({
 
       <SideMenu
         className={css.menu}
-        items={PHARMACY_MOBILE_NAVIGATION}
+        items={PHARMACY_NAVIGATION}
         activePath={pathname}
         ariaLabel="Mobile pharmacy navigation"
         showChevron={false}
@@ -156,7 +153,7 @@ export function PharmacyMobileMenu({
 
       <div className={css.actions}>
         <UserBadge
-          href={getPharmacyProfilePath()}
+          href={PHARMACY_ROUTES.PROFILE}
           name={user?.name}
           pictureUrl={user?.pictureUrl}
           fallbackLabel="Profile"

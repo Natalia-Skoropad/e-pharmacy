@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { KeyRound, MonitorSmartphone } from 'lucide-react';
 
-import { PHARMACY_STATUS_LABELS } from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   Button,
@@ -124,7 +124,7 @@ import {
 import {
   StatusBadge,
   StatusBanner,
-} from '@/components/common/StatusPresentation';
+} from '@e-pharmacy/ui/statistics';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 
@@ -149,13 +149,6 @@ type ProfileTab =
   | 'reviews'
   | 'comments'
   | 'sessions';
-
-type ProfileStatusBadgeVariant =
-  | 'new'
-  | 'on_verification'
-  | 'on_moderation'
-  | 'active'
-  | 'blocked';
 
 type PendingModerationItem = {
   label: string;
@@ -306,19 +299,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
 }
 
-//===================================================================
 
-function getStatusLabel(status: PharmacyStatus): string {
-  return PHARMACY_STATUS_LABELS[status] ?? status;
-}
-
-//===================================================================
-
-function getStatusBadgeStatus(
-  status: PharmacyStatus
-): ProfileStatusBadgeVariant {
-  return status;
-}
 
 //===================================================================
 
@@ -368,7 +349,7 @@ function PendingModerationBox({
     <section className={css.pendingBox} aria-label={title}>
       <div className={css.pendingHeader}>
         <h3>{title}</h3>
-        <StatusBadge status="on_moderation" label="On moderation" />
+        <StatusBadge {...PHARMACY_STATUS_PRESENTATION.on_moderation} />
       </div>
       <dl className={css.pendingList}>
         {visibleItems.map((item) => (
@@ -458,8 +439,7 @@ function PharmacyProfilePageContent() {
           aria-labelledby="pharmacy-profile-title"
         >
           <Container className={css.profileContainer}>
-            <StatusBanner
-              status="rejected"
+            <StatusBanner tone="danger" label="Error"
               title="Pharmacy profile could not be loaded"
               message={
                 profileError
@@ -1265,8 +1245,7 @@ function PharmacyProfilePage({
           aria-labelledby="pharmacy-profile-title"
         >
           <Container className={css.profileContainer}>
-            <StatusBanner
-              status="rejected"
+            <StatusBanner tone="danger" label="Error"
               title="Pharmacy profile could not be loaded"
               message={loadError ?? 'Please refresh the page and try again.'}
             />
@@ -1315,17 +1294,14 @@ function PharmacyProfilePage({
                 </div>
                 <div>
                   <dt>Status</dt>
-                  <dd>{getStatusLabel(pharmacy.status)}</dd>
+                  <dd>{PHARMACY_STATUS_PRESENTATION[pharmacy.status].label}</dd>
                 </div>
               </dl>
 
               <div className={getStatusNoteClassName(pharmacy.status)}>
                 <div className={css.statusNoteHeader}>
                   <h3>Profile status</h3>
-                  <StatusBadge
-                    status={getStatusBadgeStatus(pharmacy.status)}
-                    label={getStatusLabel(pharmacy.status)}
-                  />
+                  <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
                 </div>
                 {pharmacy.status === 'new' && pharmacy.statusReason ? (
                   <p className={css.statusReason}>{pharmacy.statusReason}</p>

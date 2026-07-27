@@ -1,3 +1,4 @@
+import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 
 import {
@@ -7,12 +8,12 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
-import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
+
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import {
   OWN_PRODUCT_STATUSES,
-  PRODUCT_STATUS_LABELS,
   STOCK_AVAILABILITY_FILTERS,
   STOCK_AVAILABILITY_LABELS,
 } from '@/lib/products/products';
@@ -46,7 +47,7 @@ const STATUS_OPTIONS: Array<SelectOption<OwnProductsFilterState['status']>> = [
   { value: 'all', label: 'All' },
   ...OWN_PRODUCT_STATUSES.map((status) => ({
     value: status,
-    label: PRODUCT_STATUS_LABELS[status],
+    label: PRODUCT_STATUS_PRESENTATION[status].label,
   })),
 ];
 
@@ -73,7 +74,7 @@ function OwnProductsFiltersDrawer({
       id="own-products-filters-panel"
       eyebrow="Own products"
       hasActiveFilters={hasActiveFilters}
-      resetHref={getPharmacyProductsPath()}
+      resetHref={PHARMACY_ROUTES.PRODUCTS}
       onClose={onClose}
       onReset={() => {
         onReset();

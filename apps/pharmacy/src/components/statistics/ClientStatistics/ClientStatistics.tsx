@@ -6,12 +6,12 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { CLIENT_STATISTICS_LABELS } from '@e-pharmacy/config/clients';
+import { CLIENT_STATISTICS_LABELS } from '@/lib/statistics/config';
 
 import type {
   ClientStatisticsCounts,
   ClientStatisticsKey,
-} from '@e-pharmacy/config/clients';
+} from '@/lib/statistics/config';
 
 import {
   StatsCard,

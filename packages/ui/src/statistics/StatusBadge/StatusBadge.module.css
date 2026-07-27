@@ -12,37 +12,37 @@
   border-radius: var(--radius-pill);
 }
 
-.blue {
+.info {
   color: var(--color-info);
   background-color: var(--color-info-soft);
   border-color: var(--color-info-border);
 }
 
-.yellow {
+.pending {
   color: var(--color-warning);
   background-color: var(--color-warning-light);
   border-color: var(--color-warning);
 }
 
-.green {
+.success {
   color: var(--color-success);
   background-color: var(--color-success-soft);
   border-color: var(--color-success-border);
 }
 
-.red {
+.danger {
   color: var(--color-error);
   background-color: var(--color-error-soft);
   border-color: var(--color-error-border);
 }
 
-.gray {
+.neutral {
   color: var(--color-text-secondary);
   background-color: var(--color-background);
   border-color: var(--color-border);
 }
 
-.beauty {
+.warning {
   color: var(--color-status-beauty);
   background-color: var(--color-status-beauty-soft);
   border-color: var(--color-status-beauty-border);

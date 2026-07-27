@@ -9,6 +9,7 @@ import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { FiltersButton } from '@e-pharmacy/ui/primitives';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   RowsPerPageSelect,
@@ -21,7 +22,6 @@ import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { EntityId } from '@e-pharmacy/types/primitives';
-import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
 
 import {
   OwnProductStatisticsCounts,
@@ -33,10 +33,8 @@ import {
   removeProductFromMyPharmacy,
 } from '@/lib/api/browser';
 
-import {
-  getLockedFeatureBannerLabel,
-  getLockedFeatureBannerStatus,
-} from '@/lib/pharmacies/current-pharmacy-status';
+import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import type {
   PharmacyProductRow,
@@ -53,8 +51,8 @@ import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
 import { getPharmacyOwnProductStatistics } from '@/lib/products/product-statistics';
 import { getPharmacyProductsFilterPath } from '@/lib/layout/routes';
 
-import { OwnProductStatistics } from '@/components/statistics';
-import { StatusBanner } from '@/components/common/StatusPresentation';
+import { OwnProductStatistics } from '@/components/statistics/OwnProductStatistics/OwnProductStatistics';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { OwnProductsFiltersDrawer } from '@/components/products/OwnProductsFiltersDrawer';
 import { OwnProductsTable } from '@/components/products/OwnProductsTable';
@@ -116,7 +114,7 @@ function getOwnProductStatisticHref(key: OwnProductStatisticsKey) {
     return getPharmacyProductsFilterPath({ stock: 'in-stock' });
   }
 
-  return getPharmacyProductsPath();
+  return PHARMACY_ROUTES.PRODUCTS;
 }
 
 //===================================================================
@@ -295,9 +293,6 @@ function OwnProductsPageContent({
   };
 
   const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
-  const bannerLabel = bannerStatus
-    ? getLockedFeatureBannerLabel(bannerStatus)
-    : null;
 
   return (
     <main className={css.page} aria-labelledby="own-products-page-title">
@@ -331,8 +326,7 @@ function OwnProductsPageContent({
 
         {bannerStatus ? (
           <StatusBanner
-            status={bannerStatus}
-            label={bannerLabel ?? undefined}
+            {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
             title="Verification is required"
             message="Own products will appear only after verification, when adding products to this pharmacy becomes available."
           />

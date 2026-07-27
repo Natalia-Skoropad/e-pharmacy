@@ -3,7 +3,7 @@ import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { QuantityCounter } from '@e-pharmacy/ui/forms';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import type { CartItem } from '@e-pharmacy/types/cart';
 

@@ -1,3 +1,4 @@
+import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { useMemo } from 'react';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
@@ -10,19 +11,14 @@ import {
 } from '@e-pharmacy/ui/data-display';
 
 import { TableImagePreview } from '@e-pharmacy/ui/media';
-import { getPharmacyProductPath } from '@e-pharmacy/config/pharmacy';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+import { getPharmacyProductPath } from '@/lib/routes';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 import { formatAmount } from '@e-pharmacy/utils/money';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
-import {
-  PRODUCT_STATUS_LABELS,
-  type PharmacyProductRow,
-} from '@/lib/products/products';
-
+import { type PharmacyProductRow } from '@/lib/products/products';
 import { getProductImageSrc } from '@/lib/products/product-images';
-
-import { StatusBadge } from '@/components/common/StatusPresentation';
 
 import css from './OwnProductsTable.module.css';
 
@@ -121,10 +117,7 @@ function OwnProductsTable({
         width: '100px',
         title: <TableHeaderTitle parts={['Product', 'status']} />,
         render: (product) => (
-          <StatusBadge
-            status={product.status}
-            label={PRODUCT_STATUS_LABELS[product.status]}
-          />
+          <StatusBadge {...PRODUCT_STATUS_PRESENTATION[product.status]} />
         ),
       },
       {

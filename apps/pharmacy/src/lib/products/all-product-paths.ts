@@ -10,7 +10,7 @@ import {
   slugifyStatus,
 } from '@e-pharmacy/validation/url';
 
-import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import { OWN_PRODUCT_STATUSES } from './products';
 

@@ -1,11 +1,16 @@
-import type { BreadcrumbItem } from '@e-pharmacy/config/navigation';
-
 import {
   PHARMACY_ROUTES,
   getPharmacyAllProductPath,
   getPharmacyProductPath,
   getPharmacyRequestPath,
-} from '@e-pharmacy/config/pharmacy';
+} from '@/lib/routes';
+
+//===================================================================
+
+export type BreadcrumbItem = Readonly<{
+  label: string;
+  href?: string;
+}>;
 
 //===================================================================
 

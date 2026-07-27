@@ -1,4 +1,4 @@
-import { CLIENT_SUCCESSFUL_ORDERS_FILTERS } from '@e-pharmacy/config/clients';
+import { USER_STATUSES } from '@e-pharmacy/config/users';
 
 import {
   CLIENT_SLUG_SEGMENT_SEPARATOR_PATTERN,
@@ -12,10 +12,13 @@ import {
   slugifyStatus,
 } from '@e-pharmacy/validation/url';
 
-import { type ClientSuccessfulOrdersFilter as ClientSuccessfulOrdersValue } from '@e-pharmacy/config/clients';
-import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
+import {
+  CLIENT_SUCCESSFUL_ORDERS_FILTERS,
+  type ClientSuccessfulOrdersValue,
+} from '@/lib/clients/config';
 
-import { CLIENT_STATUSES, type ClientStatus } from './clients';
+import { PHARMACY_ROUTES } from '@/lib/routes';
+import { type ClientStatus } from '@/lib/clients/clients';
 
 //===================================================================
 
@@ -178,7 +181,7 @@ export function parseClientsSegments(
     if (segment.startsWith('status-')) {
       const status = normalizeSlugEnumValue(
         segment.replace('status-', ''),
-        CLIENT_STATUSES
+        USER_STATUSES
       );
 
       if (status) {

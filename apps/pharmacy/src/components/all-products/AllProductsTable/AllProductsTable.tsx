@@ -9,16 +9,16 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/data-display';
 
+import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 import type { ProductDetails } from '@e-pharmacy/types/products';
-import { getPharmacyAllProductPath } from '@e-pharmacy/config/pharmacy';
+import { getPharmacyAllProductPath } from '@/lib/routes';
 
-import { PRODUCT_STATUS_LABELS } from '@/lib/products/products';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import { StatusBadge } from '@/components/common/StatusPresentation';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 //===================================================================
 
@@ -47,15 +47,10 @@ function isProductAddedToCurrentPharmacy(
 
 //===================================================================
 
-function getStatusLabel(product: ProductDetails): string {
-  return product.status === 'new'
-    ? 'New'
-    : PRODUCT_STATUS_LABELS[product.status];
-}
-
-//===================================================================
-
-function getActionLabel(product: ProductDetails, isAddedToCurrentPharmacy: boolean) {
+function getActionLabel(
+  product: ProductDetails,
+  isAddedToCurrentPharmacy: boolean
+) {
   if (product.status === 'blocked') return 'Unavailable';
   if (isAddedToCurrentPharmacy) return 'Added to your pharmacy';
 
@@ -119,10 +114,7 @@ function AllProductsTable({
         key: 'status',
         title: <TableHeaderTitle parts={['ProductDetails', 'status']} />,
         render: (product) => (
-          <StatusBadge
-            status={product.status}
-            label={getStatusLabel(product)}
-          />
+          <StatusBadge {...PRODUCT_STATUS_PRESENTATION[product.status]} />
         ),
       },
       {

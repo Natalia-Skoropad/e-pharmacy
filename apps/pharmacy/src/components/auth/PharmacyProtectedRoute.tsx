@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
 import { useAuth } from '@e-pharmacy/auth/core';
-import { getPharmacyDashboardPath } from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import {
   getSharedLoginUrl,
@@ -64,7 +64,7 @@ export function PharmacyProtectedRoute({
 
     if (isBlocked) {
       void logout().finally(() => {
-        window.location.assign(getSharedLoginUrl(getPharmacyDashboardPath()));
+        window.location.assign(getSharedLoginUrl(PHARMACY_ROUTES.DASHBOARD));
       });
     }
   }, [

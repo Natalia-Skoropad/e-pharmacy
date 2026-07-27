@@ -1,4 +1,4 @@
-import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 //===================================================================
 

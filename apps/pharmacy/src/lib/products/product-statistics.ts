@@ -8,6 +8,7 @@ import type { EntityId } from '@e-pharmacy/types/primitives';
 
 import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { DEFAULT_ALL_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
+
 import { getPharmacyProducts, getProducts } from '@/lib/api/browser';
 
 import type { PharmacyProductRow } from './products';

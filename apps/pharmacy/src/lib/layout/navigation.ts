@@ -10,8 +10,7 @@ import {
   Users,
 } from 'lucide-react';
 
-import type { NavigationItem } from '@e-pharmacy/config/navigation';
-import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 //===================================================================
 
@@ -19,7 +18,17 @@ const ICON_SIZE = 18;
 
 //===================================================================
 
-export const PHARMACY_NAVIGATION: readonly NavigationItem<ReactNode>[] = [
+type PharmacyNavigationItem = Readonly<{
+  label: string;
+  href: string;
+  icon?: ReactNode;
+  exact?: boolean;
+  disabled?: boolean;
+}>;
+
+//===================================================================
+
+export const PHARMACY_NAVIGATION: readonly PharmacyNavigationItem[] = [
   {
     label: 'Dashboard',
     href: PHARMACY_ROUTES.DASHBOARD,
@@ -51,8 +60,3 @@ export const PHARMACY_NAVIGATION: readonly NavigationItem<ReactNode>[] = [
     icon: createElement(FilePlus2, { size: ICON_SIZE }),
   },
 ];
-
-//===================================================================
-
-export const PHARMACY_MOBILE_NAVIGATION: readonly NavigationItem<ReactNode>[] =
-  PHARMACY_NAVIGATION;

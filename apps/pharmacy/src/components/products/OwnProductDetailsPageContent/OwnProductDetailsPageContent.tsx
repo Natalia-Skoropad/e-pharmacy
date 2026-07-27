@@ -1,6 +1,6 @@
-import { AllProductDetailsPageContent } from '@/components/all-products/AllProductDetailsPageContent';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
-import { getPharmacyProductsPath } from '@e-pharmacy/config/pharmacy';
+import { AllProductDetailsPageContent } from '@/components/all-products/AllProductDetailsPageContent';
 
 //===================================================================
 
@@ -16,7 +16,7 @@ function OwnProductDetailsPageContent({
   return (
     <AllProductDetailsPageContent
       productId={productId}
-      backHref={getPharmacyProductsPath()}
+      backHref={PHARMACY_ROUTES.PRODUCTS}
       backLabel="Back to own products"
       pageDescription="View product details, stock, reserves, price, and sales statistics for your pharmacy."
       bannerTitle="Product management is locked for now"

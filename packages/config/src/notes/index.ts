@@ -1,1 +1,1 @@
-export * from './domain-values';
+export * from './entity-types';

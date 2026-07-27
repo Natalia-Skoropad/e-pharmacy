@@ -11,7 +11,7 @@ import {
 
 import clsx from 'clsx';
 
-import { formatProductCategoryLabel } from '@e-pharmacy/config/products';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import type { ProductCategory } from '@e-pharmacy/types/products';
 
 import type {
@@ -156,7 +156,7 @@ function getPointAriaLabel(
     .map((category) => {
       const value =
         formatMoney(getPointValue(point, category)) ?? 'not available';
-      return `${formatProductCategoryLabel(category)}: ${value}`;
+      return `${PRODUCT_CATEGORY_LABELS[category]}: ${value}`;
     })
     .join(', ');
 
@@ -305,7 +305,7 @@ function SalesValueChart({
         >
           {data.categories.map((category) => {
             const isActive = !hiddenCategories.includes(category);
-            const categoryLabel = formatProductCategoryLabel(category);
+            const categoryLabel = PRODUCT_CATEGORY_LABELS[category];
 
             return (
               <button
@@ -467,7 +467,7 @@ function SalesValueChart({
                           }}
                           aria-hidden="true"
                         />
-                        <span>{formatProductCategoryLabel(category)}</span>
+                        <span>{PRODUCT_CATEGORY_LABELS[category]}</span>
                         <strong>
                           {formatMoney(value?.amount ?? 0) ?? '—'}
                         </strong>
@@ -489,7 +489,7 @@ function SalesValueChart({
                     <th scope="col">Period</th>
                     {visibleCategories.map((category) => (
                       <th scope="col" key={category}>
-                        {formatProductCategoryLabel(category)}
+                        {PRODUCT_CATEGORY_LABELS[category]}
                       </th>
                     ))}
                   </tr>

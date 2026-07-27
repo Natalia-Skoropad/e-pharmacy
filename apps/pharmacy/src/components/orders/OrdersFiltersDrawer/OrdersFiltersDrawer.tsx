@@ -1,9 +1,16 @@
 import {
+  DELIVERY_METHODS,
+  ORDER_CREATED_BY_TYPES,
+  ORDER_STATUSES,
+  PAYMENT_METHODS,
+} from '@e-pharmacy/config/orders';
+
+import {
   ORDER_CREATED_BY_LABELS,
-  ORDER_STATUS_LABELS,
+  ORDER_STATUS_PRESENTATION,
   PAYMENT_METHOD_LABELS,
   DELIVERY_METHOD_LABELS,
-} from '@e-pharmacy/config/orders';
+} from '@e-pharmacy/config/presentation';
 
 import {
   DateFilter,
@@ -12,14 +19,7 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
-import { getPharmacyOrdersPath } from '@e-pharmacy/config/pharmacy';
-
-import {
-  DELIVERY_METHODS,
-  ORDER_CREATED_BY_TYPES,
-  ORDER_STATUSES,
-  PAYMENT_METHODS,
-} from '@/lib/orders/orders';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import type { OrdersFilterState } from '@/lib/orders/orders-filters';
 
@@ -60,7 +60,7 @@ const ORDER_STATUS_OPTIONS: Array<SelectOption<OrdersFilterState['status']>> = [
   { value: 'all', label: 'All' },
   ...ORDER_STATUSES.map((status) => ({
     value: status,
-    label: ORDER_STATUS_LABELS[status],
+    label: ORDER_STATUS_PRESENTATION[status].label,
   })),
 ];
 
@@ -89,7 +89,7 @@ function OrdersFiltersDrawer({
       id="orders-filters-panel"
       eyebrow="Orders"
       hasActiveFilters={hasActiveFilters}
-      resetHref={getPharmacyOrdersPath()}
+      resetHref={PHARMACY_ROUTES.ORDERS}
       onClose={onClose}
       onReset={() => {
         onReset();

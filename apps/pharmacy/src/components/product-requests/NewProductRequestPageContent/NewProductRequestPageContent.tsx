@@ -29,8 +29,13 @@ import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 import { readFileAsDataUrl } from '@e-pharmacy/ui/media';
-import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+
+import {
+  PHARMACY_STATUS_PRESENTATION,
+  PRODUCT_REQUEST_STATUS_PRESENTATION,
+} from '@e-pharmacy/config/presentation';
+
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { CommentInput, NameInput } from '@e-pharmacy/ui/forms';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
@@ -66,12 +71,7 @@ import {
   type ProductRequestValidationMode,
 } from '@e-pharmacy/validation/product-requests';
 
-import {
-  getPharmacyAllProductsPath,
-  getPharmacyNewRequestPath,
-  getPharmacyRequestPath,
-  getPharmacyProductRequestsPath,
-} from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES, getPharmacyRequestPath } from '@/lib/routes';
 
 import {
   checkPharmacyProductRequestArticle,
@@ -88,17 +88,13 @@ import type { ProductRequestDetailsViewModel } from '@/lib/product-requests/prod
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
 import {
-  getLockedFeatureBannerLabel,
   getLockedFeatureBannerStatus,
   useCurrentPharmacyStatus,
 } from '@/lib/pharmacies/current-pharmacy-status';
 
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import {
-  StatusBadge,
-  StatusBanner,
-} from '@/components/common/StatusPresentation';
+import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 
@@ -336,10 +332,9 @@ function NewProductRequestPageContent({
       setHasLoadError(false);
 
       try {
-        const loadedRequest = await getPharmacyProductRequest(
-          requestIdToLoad,
-          { signal: controller.signal }
-        );
+        const loadedRequest = await getPharmacyProductRequest(requestIdToLoad, {
+          signal: controller.signal,
+        });
 
         if (controller.signal.aborted) return;
 
@@ -625,7 +620,7 @@ function NewProductRequestPageContent({
     try {
       await deletePharmacyProductRequest(requestId);
       toast.success('Product request draft deleted.');
-      router.push(getPharmacyProductRequestsPath());
+      router.push(PHARMACY_ROUTES.PRODUCT_REQUESTS);
       router.refresh();
     } catch (error) {
       toast.error(
@@ -700,7 +695,7 @@ function NewProductRequestPageContent({
 
       {request?.status === 'rejected' ? (
         <LinkButton
-          href={`${getPharmacyNewRequestPath()}?source=${request.id}`}
+          href={`${PHARMACY_ROUTES.PRODUCT_REQUEST_NEW}?source=${request.id}`}
           size="sm"
           iconRight={<FilePlus2 size={17} aria-hidden="true" />}
         >
@@ -725,7 +720,7 @@ function NewProductRequestPageContent({
       <main className={css.page}>
         <section className={css.contentCard}>
           <StatusBanner
-            status="rejected"
+            {...PRODUCT_REQUEST_STATUS_PRESENTATION.rejected}
             title="Product request was not found"
             message="The request may have been removed, or it does not belong to the current pharmacy."
           />
@@ -766,8 +761,7 @@ function NewProductRequestPageContent({
 
         {bannerStatus ? (
           <StatusBanner
-            status={bannerStatus}
-            label={getLockedFeatureBannerLabel(bannerStatus)}
+            {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
             title="Product request management is locked for now"
             message="Creating and editing requests becomes available after Admin verifies the pharmacy profile."
           />
@@ -775,8 +769,7 @@ function NewProductRequestPageContent({
 
         {isBlocked ? (
           <StatusBanner
-            status="blocked"
-            label="Blocked"
+            {...PHARMACY_STATUS_PRESENTATION.blocked}
             title="Product request management is unavailable"
             message="Your account is temporarily blocked. Contact Admin to restore access."
           />
@@ -784,8 +777,7 @@ function NewProductRequestPageContent({
 
         {request && statusMessage ? (
           <StatusBanner
-            status={request.status}
-            label={PRODUCT_REQUEST_STATUS_LABELS[request.status]}
+            {...PRODUCT_REQUEST_STATUS_PRESENTATION[request.status]}
             title={statusMessage.title}
             message={statusMessage.message}
             meta={
@@ -814,7 +806,7 @@ function NewProductRequestPageContent({
           </div>
 
           <LinkButton
-            href={getPharmacyAllProductsPath()}
+            href={PHARMACY_ROUTES.ALL_PRODUCTS}
             variant="secondary"
             size="sm"
             iconRight={<ExternalLink size={16} aria-hidden="true" />}
@@ -1228,7 +1220,7 @@ function NewProductRequestPageContent({
         ) : (
           <section className={css.formCard}>
             <StatusBanner
-              status="draft"
+              {...PRODUCT_REQUEST_STATUS_PRESENTATION.draft}
               title="Comments are not available yet"
               message="Save the request as a draft first. Private pharmacy comments will become available after the draft is created."
             />
@@ -1273,8 +1265,7 @@ function NewProductRequestPageContent({
                       {formatDateTime(entry.createdAt) ?? '—'}
                     </time>
                     <StatusBadge
-                      status={entry.status}
-                      label={PRODUCT_REQUEST_STATUS_LABELS[entry.status]}
+                      {...PRODUCT_REQUEST_STATUS_PRESENTATION[entry.status]}
                     />
                     <p>{entry.description}</p>
                   </div>

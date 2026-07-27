@@ -16,13 +16,23 @@ import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
 
 import {
-  ORDER_CREATED_BY_LABELS,
-  ORDER_STATUS_LABELS,
-  PAYMENT_METHOD_LABELS,
-  DELIVERY_METHOD_LABELS,
+  ORDER_CREATED_BY_TYPES,
+  ORDER_STATUSES,
 } from '@e-pharmacy/config/orders';
 
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+import {
+  PRODUCT_STATUS_PRESENTATION,
+  USER_STATUS_PRESENTATION,
+} from '@e-pharmacy/config/presentation';
+
+import {
+  ORDER_CREATED_BY_LABELS,
+  ORDER_STATUS_PRESENTATION,
+  PAYMENT_METHOD_LABELS,
+  DELIVERY_METHOD_LABELS,
+} from '@e-pharmacy/config/presentation';
+
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 
 import {
   FiltersButton,
@@ -73,10 +83,10 @@ import { formatShortDate } from '@e-pharmacy/utils/date';
 
 import {
   getPharmacyClientPath,
-  getPharmacyClientsPath,
+  PHARMACY_ROUTES,
   getPharmacyOrderPath,
   getPharmacyProductPath,
-} from '@e-pharmacy/config/pharmacy';
+} from '@/lib/routes';
 
 import {
   createPharmacyNote,
@@ -98,16 +108,13 @@ import type {
 import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import {
-  ORDER_CREATED_BY_TYPES,
-  type PharmacyOrderRow,
-} from '@/lib/orders/orders';
+import { type PharmacyOrderRow } from '@/lib/orders/orders';
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderStatistics } from '@/components/statistics';
-import { StatusBadge } from '@/components/common/StatusPresentation';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import css from './ClientDetailsPageContent.module.css';
 
@@ -163,10 +170,10 @@ const DEFAULT_ORDER_FILTERS: ClientOrderFilters = {
 const ORDER_STATUS_OPTIONS: Array<SelectOption<ClientOrderFilters['status']>> =
   [
     { value: 'all', label: 'All' },
-    { value: 'new', label: 'New' },
-    { value: 'in_progress', label: 'In progress' },
-    { value: 'successful', label: 'Successful' },
-    { value: 'rejected', label: 'Rejected' },
+    ...ORDER_STATUSES.map((status) => ({
+      value: status,
+      label: ORDER_STATUS_PRESENTATION[status].label,
+    })),
   ];
 
 const DELIVERY_METHOD_OPTIONS: Array<
@@ -217,16 +224,13 @@ const PRODUCT_STATUS_OPTIONS: Array<
   SelectOption<ClientProductFilters['status']>
 > = [
   { value: 'all', label: 'All' },
-  { value: 'new', label: 'New' },
-  { value: 'active', label: 'Active' },
-  { value: 'blocked', label: 'Blocked' },
+  ...(Object.keys(PRODUCT_STATUS_PRESENTATION) as ProductStatus[]).map(
+    (status) => ({
+      value: status,
+      label: PRODUCT_STATUS_PRESENTATION[status].label,
+    })
+  ),
 ];
-
-const PRODUCT_STATUS_LABELS: Record<ProductStatus, string> = {
-  new: 'New',
-  active: 'Active',
-  blocked: 'Blocked',
-};
 
 //===================================================================
 
@@ -524,33 +528,36 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       setOrdersError('');
 
       try {
-        const response = await getPharmacyOrders({
-          page: ordersPage,
-          perPage: ordersRowsPerPage,
-          clientId,
-          orderNumber: orderNumberSearch.trim() || undefined,
-          clientComment: orderCommentSearch.trim() || undefined,
-          dateFrom: orderFilters.date.from || undefined,
-          dateTo: orderFilters.date.to || undefined,
-          status:
-            orderFilters.status === 'all' ? undefined : orderFilters.status,
-          deliveryMethod:
-            orderFilters.deliveryMethod === 'all'
-              ? undefined
-              : orderFilters.deliveryMethod,
-          paymentMethod:
-            orderFilters.paymentMethod === 'all'
-              ? undefined
-              : orderFilters.paymentMethod,
-          clientCommentPresence:
-            orderFilters.clientCommentPresence === 'all'
-              ? undefined
-              : orderFilters.clientCommentPresence,
-          createdByType:
-            orderFilters.createdByType === 'all'
-              ? undefined
-              : orderFilters.createdByType,
-        }, { signal: controller.signal });
+        const response = await getPharmacyOrders(
+          {
+            page: ordersPage,
+            perPage: ordersRowsPerPage,
+            clientId,
+            orderNumber: orderNumberSearch.trim() || undefined,
+            clientComment: orderCommentSearch.trim() || undefined,
+            dateFrom: orderFilters.date.from || undefined,
+            dateTo: orderFilters.date.to || undefined,
+            status:
+              orderFilters.status === 'all' ? undefined : orderFilters.status,
+            deliveryMethod:
+              orderFilters.deliveryMethod === 'all'
+                ? undefined
+                : orderFilters.deliveryMethod,
+            paymentMethod:
+              orderFilters.paymentMethod === 'all'
+                ? undefined
+                : orderFilters.paymentMethod,
+            clientCommentPresence:
+              orderFilters.clientCommentPresence === 'all'
+                ? undefined
+                : orderFilters.clientCommentPresence,
+            createdByType:
+              orderFilters.createdByType === 'all'
+                ? undefined
+                : orderFilters.createdByType,
+          },
+          { signal: controller.signal }
+        );
 
         if (controller.signal.aborted) return;
 
@@ -612,20 +619,26 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       setProductsError('');
 
       try {
-        const response = await getPharmacyClientProducts(clientId, {
-          page: productsPage,
-          perPage: productsRowsPerPage,
-          article: productArticleSearch.trim() || undefined,
-          name: productNameSearch.trim() || undefined,
-          dateFrom: productFilters.date.from || undefined,
-          dateTo: productFilters.date.to || undefined,
-          category:
-            productFilters.category === 'all'
-              ? undefined
-              : productFilters.category,
-          status:
-            productFilters.status === 'all' ? undefined : productFilters.status,
-        }, { signal: controller.signal });
+        const response = await getPharmacyClientProducts(
+          clientId,
+          {
+            page: productsPage,
+            perPage: productsRowsPerPage,
+            article: productArticleSearch.trim() || undefined,
+            name: productNameSearch.trim() || undefined,
+            dateFrom: productFilters.date.from || undefined,
+            dateTo: productFilters.date.to || undefined,
+            category:
+              productFilters.category === 'all'
+                ? undefined
+                : productFilters.category,
+            status:
+              productFilters.status === 'all'
+                ? undefined
+                : productFilters.status,
+          },
+          { signal: controller.signal }
+        );
 
         if (controller.signal.aborted) return;
 
@@ -766,10 +779,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
         key: 'status',
         title: <TableHeaderTitle parts={['Order', 'status']} />,
         render: (order) => (
-          <StatusBadge
-            status={order.status}
-            label={ORDER_STATUS_LABELS[order.status]}
-          />
+          <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
         ),
       },
     ],
@@ -833,10 +843,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
         key: 'status',
         title: <TableHeaderTitle parts={['Product', 'status']} />,
         render: (item) => (
-          <StatusBadge
-            status={item.status}
-            label={PRODUCT_STATUS_LABELS[item.status]}
-          />
+          <StatusBadge {...PRODUCT_STATUS_PRESENTATION[item.status]} />
         ),
       },
     ],
@@ -861,7 +868,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
         <section className={css.contentCard}>
           <p>{error || 'Client not found.'}</p>
           <LinkButton
-            href={getPharmacyClientsPath()}
+            href={PHARMACY_ROUTES.CLIENTS}
             renderLink={({ href, className, children, ...props }) => (
               <Link href={href} className={className} {...props}>
                 {children}
@@ -933,10 +940,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
                     <dt>Status</dt>
                     <dd>
                       <StatusBadge
-                        status={client.status}
-                        label={
-                          client.status === 'active' ? 'Active' : 'Blocked'
-                        }
+                        {...USER_STATUS_PRESENTATION[client.status]}
                       />
                     </dd>
                   </div>

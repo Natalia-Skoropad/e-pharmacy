@@ -18,9 +18,9 @@ import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 import {
   getProductCategoryOptions,
   type ProductCategoryOption,
-  PRODUCT_CATEGORY_LABELS,
-} from '@e-pharmacy/config/products';
+} from '@/lib/catalog/product-category-options';
 
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatStockLabel } from '@e-pharmacy/utils/numbers';
 import type { Cart } from '@e-pharmacy/types/cart';

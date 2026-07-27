@@ -1,7 +1,6 @@
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
-
 import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
 
 import type {

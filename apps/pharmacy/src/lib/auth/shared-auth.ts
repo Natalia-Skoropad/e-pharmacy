@@ -1,4 +1,4 @@
-import { getPharmacyDashboardPath } from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 //===================================================================
 
@@ -28,7 +28,7 @@ export function getSharedLoginUrl(redirect?: string): string {
 //===================================================================
 
 export function getSharedLoginUrlForCurrentPharmacyPage(
-  currentPath = getPharmacyDashboardPath()
+  currentPath: string = PHARMACY_ROUTES.DASHBOARD
 ): string {
   if (typeof window === 'undefined') {
     return getSharedLoginUrl(currentPath);

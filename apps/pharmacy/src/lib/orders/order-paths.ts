@@ -1,4 +1,10 @@
 import {
+  DELIVERY_METHODS,
+  ORDER_STATUSES,
+  PAYMENT_METHODS,
+} from '@e-pharmacy/config/orders';
+
+import {
   deslugifyArticleSegment,
   deslugifyNameSegment,
   isDateParam,
@@ -8,10 +14,8 @@ import {
   slugifyStatus,
 } from '@e-pharmacy/validation/url';
 
-import { PHARMACY_ROUTES } from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types/orders';
-
-import { DELIVERY_METHODS, ORDER_STATUSES, PAYMENT_METHODS } from './orders';
 
 import {
   DEFAULT_ORDERS_FILTERS,

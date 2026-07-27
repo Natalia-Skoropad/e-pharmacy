@@ -33,33 +33,33 @@
   justify-content: flex-end;
 }
 
-.blue {
+.info {
   background-color: var(--color-info-soft);
   border-color: var(--color-info-border);
 }
 
-.yellow {
+.pending {
   background-color: var(--color-warning-light);
   border-color: var(--color-warning);
 }
 
-.green {
+.success {
   background-color: var(--color-success-soft);
   border-color: var(--color-success-border);
 }
 
-.red {
+.danger {
   background-color: var(--color-error-soft);
   border-color: var(--color-error-border);
 }
 
-.gray {
+.neutral {
   background-color: var(--color-background);
   border-color: var(--color-border);
 }
 
 
-.beauty {
+.warning {
   color: var(--color-chart-beauty);
   background-color: var(--color-chart-beauty-soft);
   border-color: var(--color-chart-beauty);

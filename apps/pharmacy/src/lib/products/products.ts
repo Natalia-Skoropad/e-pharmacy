@@ -80,11 +80,6 @@ export type PharmacyProductsResponse = Readonly<
 
 //===================================================================
 
-export const PRODUCT_STATUS_LABELS: Record<OwnProductStatus, string> = {
-  active: 'Active',
-  blocked: 'Blocked',
-};
-
 export const STOCK_AVAILABILITY_LABELS: Record<
   StockAvailabilityFilter,
   string

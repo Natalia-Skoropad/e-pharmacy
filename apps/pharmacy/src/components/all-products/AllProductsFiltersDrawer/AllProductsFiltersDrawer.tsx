@@ -1,4 +1,6 @@
+import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
+
 import {
   DateFilter,
   SelectField,
@@ -6,15 +8,10 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
-import { getPharmacyAllProductsPath } from '@e-pharmacy/config/pharmacy';
-
-import {
-  OWN_PRODUCT_STATUSES,
-  PRODUCT_STATUS_LABELS,
-} from '@/lib/products/products';
-
+import { PHARMACY_ROUTES } from '@/lib/routes';
+import { OWN_PRODUCT_STATUSES } from '@/lib/products/products';
 import type { AllProductsFilterState } from '@/lib/products/all-products-filters';
 
 //===================================================================
@@ -44,7 +41,7 @@ const STATUS_OPTIONS: Array<SelectOption<AllProductsFilterState['status']>> = [
   { value: 'all', label: 'All' },
   ...OWN_PRODUCT_STATUSES.map((status) => ({
     value: status,
-    label: PRODUCT_STATUS_LABELS[status],
+    label: PRODUCT_STATUS_PRESENTATION[status].label,
   })),
 ];
 
@@ -71,7 +68,7 @@ function AllProductsFiltersDrawer({
       id="all-products-filters-panel"
       eyebrow="All products"
       hasActiveFilters={hasActiveFilters}
-      resetHref={getPharmacyAllProductsPath()}
+      resetHref={PHARMACY_ROUTES.ALL_PRODUCTS}
       onClose={onClose}
       onReset={() => {
         onReset();

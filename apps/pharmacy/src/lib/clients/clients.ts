@@ -9,6 +9,7 @@ import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
 import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
+import { USER_STATUSES } from '@e-pharmacy/config/users';
 import type { UserStatus } from '@e-pharmacy/types/auth';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
@@ -19,16 +20,7 @@ import type {
 
 //===================================================================
 
-export const CLIENT_STATUSES = [
-  'active',
-  'blocked',
-] as const satisfies readonly UserStatus[];
-
-//===================================================================
-
-export type ClientStatus = (typeof CLIENT_STATUSES)[number];
-
-export type ClientSuccessfulOrdersFilter = 'repeat' | 'successful' | 'other';
+export type ClientStatus = UserStatus;
 
 //===================================================================
 
@@ -59,7 +51,7 @@ export type PharmacyClientsQueryParams = Readonly<{
   phone?: string;
   address?: string;
   status?: ClientStatus;
-  successfulOrders?: ClientSuccessfulOrdersFilter;
+  successfulOrders?: import('./config').ClientSuccessfulOrdersValue;
 }>;
 
 export type PharmacyClientsResponse = Readonly<
@@ -101,15 +93,8 @@ export type PharmacyClientProductsResponse = Readonly<
 
 //===================================================================
 
-export const CLIENT_STATUS_LABELS: Record<ClientStatus, string> = {
-  active: 'Active',
-  blocked: 'Blocked',
-};
-
-//===================================================================
-
 function isClientStatus(value: unknown): value is ClientStatus {
-  return CLIENT_STATUSES.includes(value as ClientStatus);
+  return USER_STATUSES.includes(value as UserStatus);
 }
 
 //===================================================================

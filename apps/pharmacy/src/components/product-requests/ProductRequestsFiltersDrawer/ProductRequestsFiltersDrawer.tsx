@@ -8,13 +8,12 @@ import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 import type { ProductCategory } from '@e-pharmacy/types/products';
-
 import { PRODUCT_REQUEST_STATUSES } from '@e-pharmacy/config/product-requests';
-import type { ProductRequestsFilterState } from '@/lib/product-requests/product-requests';
+import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 
-import { PRODUCT_REQUEST_STATUS_LABELS } from '@e-pharmacy/config/product-requests';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
-import { getPharmacyProductRequestsPath } from '@e-pharmacy/config/pharmacy';
+import type { ProductRequestsFilterState } from '@/lib/product-requests/product-requests';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 //===================================================================
 
@@ -47,7 +46,7 @@ const STATUS_OPTIONS: Array<
   { value: 'all', label: 'All' },
   ...PRODUCT_REQUEST_STATUSES.map((status) => ({
     value: status,
-    label: PRODUCT_REQUEST_STATUS_LABELS[status],
+    label: PRODUCT_REQUEST_STATUS_PRESENTATION[status].label,
   })),
 ];
 
@@ -66,7 +65,7 @@ function ProductRequestsFiltersDrawer({
       id="product-requests-filters-panel"
       eyebrow="Product requests"
       hasActiveFilters={hasActiveFilters}
-      resetHref={getPharmacyProductRequestsPath()}
+      resetHref={PHARMACY_ROUTES.PRODUCT_REQUESTS}
       onClose={onClose}
       onReset={() => {
         onReset();

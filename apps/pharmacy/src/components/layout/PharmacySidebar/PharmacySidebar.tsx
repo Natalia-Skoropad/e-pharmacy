@@ -6,11 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { CabinetSidebar } from '@e-pharmacy/ui/cabinet';
 
-import {
-  getPharmacyDashboardPath,
-  getPharmacyOrdersPath,
-} from '@e-pharmacy/config/pharmacy';
-
+import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getPharmacyOrders } from '@/lib/api/browser';
 import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
 
@@ -81,7 +77,7 @@ export function PharmacySidebar({
       items={PHARMACY_NAVIGATION}
       activePath={pathname}
       ariaLabel="Pharmacy navigation"
-      logoHref={getPharmacyDashboardPath()}
+      logoHref={PHARMACY_ROUTES.DASHBOARD}
       logoLabel="E-PHARMACY"
       logoAriaLabel="E-PHARMACY pharmacy dashboard"
       isCollapsed={isCollapsed}
@@ -97,7 +93,7 @@ export function PharmacySidebar({
         <Link href={href} className={className} {...props}>
           {children}
           {!isCollapsed &&
-          item.href === getPharmacyOrdersPath() &&
+          item.href === PHARMACY_ROUTES.ORDERS &&
           (orderCounts.new > 0 || orderCounts.inProgress > 0) ? (
             <span
               className={css.orderCounters}

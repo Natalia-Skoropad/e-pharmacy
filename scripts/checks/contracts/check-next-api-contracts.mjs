@@ -14,7 +14,7 @@ const frontendBff = await read(
 );
 
 const backendBff = await read('apps/api/src/constants/bff.ts');
-const frontendCookies = await read('packages/config/src/auth/auth-cookies.ts');
+const frontendCookies = await read('packages/config/src/auth/cookie-names.ts');
 const backendCookies = await read('apps/api/src/constants/auth.ts');
 const backendEnv = await read('apps/api/src/config/env.ts');
 const nextApiEnv = await read('packages/next-api/src/internal/env.ts');

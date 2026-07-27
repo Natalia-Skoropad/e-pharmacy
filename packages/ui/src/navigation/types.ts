@@ -1,4 +1,12 @@
-export type {
-  BreadcrumbItem,
-  NavigationItem,
-} from '@e-pharmacy/config/navigation';
+export type BreadcrumbItem = Readonly<{
+  label: string;
+  href?: string;
+}>;
+
+export type NavigationItem<TIcon = unknown> = Readonly<{
+  label: string;
+  href: string;
+  icon?: TIcon;
+  exact?: boolean;
+  disabled?: boolean;
+}>;

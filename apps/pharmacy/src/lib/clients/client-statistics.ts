@@ -1,8 +1,8 @@
-import { type ClientStatisticsCounts } from '@e-pharmacy/config/clients';
 import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/core';
 
 import { getPharmacyClients } from '@/lib/api/browser';
 import { DEFAULT_CLIENT_STATISTICS } from '@/lib/statistics/defaults';
+import { type ClientStatisticsCounts } from '@/lib/statistics/config';
 
 //===================================================================
 
@@ -21,14 +21,8 @@ export async function getPharmacyClientStatistics(
           },
           options
         ),
-        getPharmacyClients(
-          { page: 1, perPage: 1, status: 'active' },
-          options
-        ),
-        getPharmacyClients(
-          { page: 1, perPage: 1, status: 'blocked' },
-          options
-        ),
+        getPharmacyClients({ page: 1, perPage: 1, status: 'active' }, options),
+        getPharmacyClients({ page: 1, perPage: 1, status: 'blocked' }, options),
       ]);
 
     return {

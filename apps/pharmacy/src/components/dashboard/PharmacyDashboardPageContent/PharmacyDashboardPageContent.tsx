@@ -9,6 +9,7 @@ import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/core';
+import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   AllProductStatisticsKey,
@@ -24,20 +25,14 @@ import {
 import {
   type ClientStatisticsCounts,
   type ClientStatisticsKey,
-} from '@e-pharmacy/config/clients';
+} from '@/lib/statistics/config';
 
 import {
   DEFAULT_PRODUCT_REQUEST_STATISTICS,
   type ProductRequestStatisticsCounts,
 } from '@/lib/product-requests/product-requests';
 
-import {
-  getPharmacyAllProductsPath,
-  getPharmacyClientsPath,
-  getPharmacyOrdersPath,
-  getPharmacyProductsPath,
-  getPharmacyProductRequestsPath,
-} from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import {
   getPharmacyOrderSalesStatistics,
@@ -82,7 +77,7 @@ import {
   type SalesPeriodMonth,
 } from '@/components/sales';
 
-import { StatusBanner } from '@/components/common/StatusPresentation';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import css from './PharmacyDashboardPageContent.module.css';
@@ -261,12 +256,13 @@ function PharmacyDashboardPageContent() {
     DEFAULT_ORDER_SALES_STATISTICS
   );
   const [isSalesLoading, setIsSalesLoading] = useState(true);
-  const [dashboardSnapshot, setDashboardSnapshot] =
-    useState<DashboardSnapshot>({
+  const [dashboardSnapshot, setDashboardSnapshot] = useState<DashboardSnapshot>(
+    {
       requestKey: null,
       data: DEFAULT_DATA,
       isLoading: false,
-    });
+    }
+  );
 
   const pharmacyId = pharmacyProfile?.id ?? null;
   const pharmacyStatus = pharmacyProfile?.status ?? null;
@@ -392,7 +388,7 @@ function PharmacyDashboardPageContent() {
       return getPharmacyClientsFilterPath({ 'successful-orders': 'repeat' });
     }
 
-    return getPharmacyClientsPath();
+    return PHARMACY_ROUTES.CLIENTS;
   };
 
   const getProductStatisticHref = (key: OwnProductStatisticsKey) => {
@@ -412,7 +408,7 @@ function PharmacyDashboardPageContent() {
       return getPharmacyProductsFilterPath({ stock: 'in-stock' });
     }
 
-    return getPharmacyProductsPath();
+    return PHARMACY_ROUTES.PRODUCTS;
   };
 
   const getAllProductStatisticHref = (key: AllProductStatisticsKey) => {
@@ -460,7 +456,7 @@ function PharmacyDashboardPageContent() {
       });
     }
 
-    return getPharmacyAllProductsPath();
+    return PHARMACY_ROUTES.ALL_PRODUCTS;
   };
 
   return (
@@ -475,9 +471,8 @@ function PharmacyDashboardPageContent() {
 
           {!isLoading && banner ? (
             <StatusBanner
-              status={banner.status}
+              {...PHARMACY_STATUS_PRESENTATION[banner.status]}
               title={banner.title}
-              label={banner.label}
               message={banner.message}
             />
           ) : null}
@@ -507,7 +502,7 @@ function PharmacyDashboardPageContent() {
 
                 <LinkButton
                   className={css.sectionButton}
-                  href={getPharmacyOrdersPath()}
+                  href={PHARMACY_ROUTES.ORDERS}
                   variant="secondary"
                   renderLink={({ href, className, children, ...props }) => (
                     <Link href={href} className={className} {...props}>
@@ -578,7 +573,7 @@ function PharmacyDashboardPageContent() {
 
                 <LinkButton
                   className={css.sectionButton}
-                  href={getPharmacyClientsPath()}
+                  href={PHARMACY_ROUTES.CLIENTS}
                   variant="secondary"
                   renderLink={({ href, className, children, ...props }) => (
                     <Link href={href} className={className} {...props}>
@@ -624,7 +619,7 @@ function PharmacyDashboardPageContent() {
 
                 <LinkButton
                   className={css.sectionButton}
-                  href={getPharmacyProductsPath()}
+                  href={PHARMACY_ROUTES.PRODUCTS}
                   variant="secondary"
                   renderLink={({ href, className, children, ...props }) => (
                     <Link href={href} className={className} {...props}>
@@ -677,7 +672,7 @@ function PharmacyDashboardPageContent() {
 
                 <LinkButton
                   className={css.sectionButton}
-                  href={getPharmacyAllProductsPath()}
+                  href={PHARMACY_ROUTES.ALL_PRODUCTS}
                   variant="secondary"
                   renderLink={({ href, className, children, ...props }) => (
                     <Link href={href} className={className} {...props}>
@@ -712,7 +707,7 @@ function PharmacyDashboardPageContent() {
                 </div>
                 <LinkButton
                   className={css.sectionButton}
-                  href={getPharmacyProductRequestsPath()}
+                  href={PHARMACY_ROUTES.PRODUCT_REQUESTS}
                   variant="secondary"
                   renderLink={({ href, className, children, ...props }) => (
                     <Link href={href} className={className} {...props}>

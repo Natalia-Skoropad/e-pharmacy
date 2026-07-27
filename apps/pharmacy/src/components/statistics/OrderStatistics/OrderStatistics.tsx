@@ -6,6 +6,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
+import { ORDER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+
 import type {
   OrderStatisticsCounts,
   OrderStatus,
@@ -16,6 +18,7 @@ import {
   StatsGrid,
   type StatsCardTone,
 } from '@e-pharmacy/ui/statistics';
+
 import { formatMoney } from '@e-pharmacy/utils/money';
 
 //===================================================================
@@ -37,10 +40,30 @@ type OrderStatisticsProps = Readonly<{
 //===================================================================
 
 const ORDER_STATISTICS_CONFIG: readonly OrderStatisticConfig[] = [
-  { key: 'new', title: 'New orders', tone: 'blue', icon: ClipboardList },
-  { key: 'in_progress', title: 'In progress', tone: 'yellow', icon: Clock3 },
-  { key: 'successful', title: 'Successful', tone: 'green', icon: CheckCircle2 },
-  { key: 'rejected', title: 'Rejected', tone: 'red', icon: XCircle },
+  {
+    key: 'new',
+    title: `${ORDER_STATUS_PRESENTATION.new.label} orders`,
+    tone: 'blue',
+    icon: ClipboardList,
+  },
+  {
+    key: 'in_progress',
+    title: ORDER_STATUS_PRESENTATION.in_progress.label,
+    tone: 'yellow',
+    icon: Clock3,
+  },
+  {
+    key: 'successful',
+    title: ORDER_STATUS_PRESENTATION.successful.label,
+    tone: 'green',
+    icon: CheckCircle2,
+  },
+  {
+    key: 'rejected',
+    title: ORDER_STATUS_PRESENTATION.rejected.label,
+    tone: 'red',
+    icon: XCircle,
+  },
 ];
 
 //===================================================================

@@ -1,4 +1,4 @@
-import type { ClientStatisticsCounts } from '@e-pharmacy/config/clients';
+import type { ClientStatisticsCounts } from '@/lib/statistics/config';
 
 import type {
   OrderSalesStatistics,

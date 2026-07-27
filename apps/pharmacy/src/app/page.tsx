@@ -1,11 +1,11 @@
 import { redirect } from 'next/navigation';
 
-import { getPharmacyDashboardPath } from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 //===================================================================
 
 function PharmacyRootPage() {
-  redirect(getPharmacyDashboardPath());
+  redirect(PHARMACY_ROUTES.DASHBOARD);
 }
 
 export default PharmacyRootPage;

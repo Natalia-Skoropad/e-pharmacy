@@ -6,7 +6,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { ALL_PRODUCT_STATISTICS_LABELS } from '@e-pharmacy/config/products';
+import { ALL_PRODUCT_STATISTICS_LABELS } from '@/lib/statistics/config';
 
 import type {
   AllProductStatisticsCounts,

@@ -6,7 +6,7 @@ import { SvgIcon } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
-import { formatProductCategoryLabel } from '@e-pharmacy/config/products';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
 import { formatMoneyRange, getNumericRange } from '@e-pharmacy/utils/money';
 import { useToast } from '@e-pharmacy/ui/feedback';
@@ -117,7 +117,7 @@ function ProductCard({
       <div className={css.content}>
         <div className={css.metaRow}>
           <span className={css.category}>
-            {formatProductCategoryLabel(product.category)}
+            {PRODUCT_CATEGORY_LABELS[product.category]}
           </span>
 
           <RatingSummary

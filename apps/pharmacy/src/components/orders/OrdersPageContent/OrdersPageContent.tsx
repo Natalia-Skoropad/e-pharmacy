@@ -7,6 +7,7 @@ import { ShoppingBag } from 'lucide-react';
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
+import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   RowsPerPageSelect,
@@ -17,13 +18,12 @@ import {
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { getPharmacyNewOrderPath } from '@e-pharmacy/config/pharmacy';
 
+import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getPharmacyOrders } from '@/lib/api/browser';
 import { getPharmacyOrdersFilterPath } from '@/lib/layout/routes';
 
 import {
-  getLockedFeatureBannerLabel,
   getLockedFeatureBannerStatus,
   useCurrentPharmacyStatus,
 } from '@/lib/pharmacies/current-pharmacy-status';
@@ -42,7 +42,7 @@ import type {
 } from '@/lib/orders/orders';
 
 import { OrderStatistics } from '@/components/statistics';
-import { StatusBanner } from '@/components/common/StatusPresentation';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { OrdersFiltersDrawer } from '@/components/orders/OrdersFiltersDrawer';
 import { OrdersTable } from '@/components/orders/OrdersTable/OrdersTable';
 
@@ -183,9 +183,6 @@ function OrdersPageContent({
 
   const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
-  const bannerLabel = bannerStatus
-    ? getLockedFeatureBannerLabel(bannerStatus)
-    : null;
 
   return (
     <main className={css.page} aria-labelledby="orders-page-title">
@@ -198,8 +195,7 @@ function OrdersPageContent({
 
         {bannerStatus ? (
           <StatusBanner
-            status={bannerStatus}
-            label={bannerLabel ?? undefined}
+            {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
             title="Verification is required"
             message={
               bannerStatus === 'on_verification'
@@ -276,7 +272,7 @@ function OrdersPageContent({
             type="button"
             size="md"
             disabled={Boolean(bannerStatus)}
-            onClick={() => router.push(getPharmacyNewOrderPath())}
+            onClick={() => router.push(PHARMACY_ROUTES.ORDER_NEW)}
           >
             Create order
           </Button>

@@ -1,0 +1,21 @@
+import type { ProductRequestStatus } from '@e-pharmacy/types/product-requests';
+
+//===================================================================
+
+export const PRODUCT_REQUEST_STATUS_PRESENTATION = {
+  draft: { label: 'Draft', tone: 'neutral' },
+  new: { label: 'New', tone: 'info' },
+  in_progress: { label: 'In work', tone: 'pending' },
+  approved: { label: 'Approved', tone: 'success' },
+  rejected: { label: 'Rejected', tone: 'danger' },
+} as const satisfies Readonly<
+  Record<ProductRequestStatus, Readonly<{ label: string; tone: string }>>
+>;
+
+//===================================================================
+
+export function getProductRequestStatusPresentation(
+  status: ProductRequestStatus
+) {
+  return PRODUCT_REQUEST_STATUS_PRESENTATION[status];
+}

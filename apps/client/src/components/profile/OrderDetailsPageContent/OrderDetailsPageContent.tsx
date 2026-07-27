@@ -14,8 +14,8 @@ import {
   UserRound,
 } from 'lucide-react';
 
-import { ORDER_STATUS_LABELS } from '@e-pharmacy/config/orders';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/products';
+import { ORDER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { LoadingSpinner, SvgIcon } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
@@ -37,7 +37,7 @@ import {
 
 import { getOrderDetails } from '@/lib/api/browser';
 
-import { StatusBadge } from '@/components/common/StatusPresentation';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -168,10 +168,8 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
               </p>
             </div>
 
-            <StatusBadge
-              status={order.status}
-              label={ORDER_STATUS_LABELS[order.status]}
-            />
+            <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]}
+             />
           </div>
 
           {order.status === 'rejected' && order.rejectionReason ? (

@@ -47,7 +47,6 @@
     "@types/node": "latest"
   },
   "dependencies": {
-    "@e-pharmacy/config": "workspace:*",
     "@e-pharmacy/hooks": "workspace:*",
     "@e-pharmacy/types": "workspace:*",
     "@e-pharmacy/utils": "workspace:*",

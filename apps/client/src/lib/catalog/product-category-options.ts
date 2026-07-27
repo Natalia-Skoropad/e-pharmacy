@@ -1,9 +1,9 @@
-import type {
-  ProductDetails,
-  ProductCategory,
-} from '@e-pharmacy/types/products';
+import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 
-import { PRODUCT_CATEGORY_LABELS } from './category-labels';
+import type {
+  ProductCategory,
+  ProductDetails,
+} from '@e-pharmacy/types/products';
 
 //===================================================================
 
@@ -15,7 +15,8 @@ export type ProductCategoryOption = Readonly<{
 //===================================================================
 
 export function getProductCategoryOptions(
-  products: readonly Pick<ProductDetails, 'category'>[]
+  products: readonly Pick<ProductDetails, 'category'>[],
+  locale = 'en-GB'
 ): ProductCategoryOption[] {
   const categories = new Set(products.map((product) => product.category));
 
@@ -24,5 +25,5 @@ export function getProductCategoryOptions(
       value: category,
       label: PRODUCT_CATEGORY_LABELS[category],
     }))
-    .sort((first, second) => first.label.localeCompare(second.label, 'en-GB'));
+    .sort((first, second) => first.label.localeCompare(second.label, locale));
 }

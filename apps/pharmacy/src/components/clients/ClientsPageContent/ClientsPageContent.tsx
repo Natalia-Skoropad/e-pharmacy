@@ -8,6 +8,7 @@ import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { FiltersButton } from '@e-pharmacy/ui/primitives';
+import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   RowsPerPageSelect,
@@ -18,19 +19,18 @@ import {
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
-import { getPharmacyClientsPath } from '@e-pharmacy/config/pharmacy';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import {
   type ClientStatisticsCounts,
   type ClientStatisticsKey,
-} from '@e-pharmacy/config/clients';
+} from '@/lib/statistics/config';
 
 import { getPharmacyClients } from '@/lib/api/browser';
 import { getPharmacyClientStatistics } from '@/lib/clients/client-statistics';
 import { getPharmacyClientsFilterPath } from '@/lib/layout/routes';
 
 import {
-  getLockedFeatureBannerLabel,
   getLockedFeatureBannerStatus,
   useCurrentPharmacyStatus,
 } from '@/lib/pharmacies/current-pharmacy-status';
@@ -49,7 +49,7 @@ import type {
 import { DEFAULT_CLIENT_STATISTICS } from '@/lib/statistics/defaults';
 
 import { ClientStatistics } from '@/components/statistics';
-import { StatusBanner } from '@/components/common/StatusPresentation';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer/ClientsFiltersDrawer';
 import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
 
@@ -265,14 +265,11 @@ function ClientsPageContent({
       return getPharmacyClientsFilterPath({ 'successful-orders': 'repeat' });
     }
 
-    return getPharmacyClientsPath();
+    return PHARMACY_ROUTES.CLIENTS;
   };
 
   const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
-  const bannerLabel = bannerStatus
-    ? getLockedFeatureBannerLabel(bannerStatus)
-    : null;
 
   return (
     <main className={css.page} aria-labelledby="clients-page-title">
@@ -305,8 +302,7 @@ function ClientsPageContent({
 
         {bannerStatus ? (
           <StatusBanner
-            status={bannerStatus}
-            label={bannerLabel ?? undefined}
+            {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
             title="Verification is required"
             message={
               bannerStatus === 'on_verification'

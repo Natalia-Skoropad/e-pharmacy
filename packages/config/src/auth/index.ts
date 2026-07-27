@@ -1,2 +1,2 @@
-export * from './auth-cookies';
+export * from './cookie-names';
 export * from './domain-values';

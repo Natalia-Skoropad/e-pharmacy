@@ -8,16 +8,17 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/data-display';
 
+import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
-import { getPharmacyClientPath } from '@e-pharmacy/config/pharmacy';
+import { getPharmacyClientPath } from '@/lib/routes';
 import { formatAmount } from '@e-pharmacy/utils/money';
 
 import type { PharmacyClientRow } from '@/lib/clients/clients';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import { StatusBadge } from '@/components/common/StatusPresentation';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import css from './ClientsTable.module.css';
 
@@ -124,7 +125,9 @@ function ClientsTable({
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Client', 'status']} />,
-        render: (client) => <StatusBadge status={client.status} />,
+        render: (client) => (
+          <StatusBadge {...USER_STATUS_PRESENTATION[client.status]} />
+        ),
       },
     ],
     []
