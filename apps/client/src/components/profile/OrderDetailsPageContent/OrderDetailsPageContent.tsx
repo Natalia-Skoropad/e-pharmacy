@@ -14,8 +14,13 @@ import {
   UserRound,
 } from 'lucide-react';
 
-import { ORDER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
+import {
+  DELIVERY_METHOD_LABELS,
+  ORDER_STATUS_PRESENTATION,
+  PAYMENT_METHOD_LABELS,
+  PRODUCT_CATEGORY_LABELS,
+} from '@e-pharmacy/config/presentation';
+
 import { LoadingSpinner, SvgIcon } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
@@ -46,22 +51,6 @@ import css from './OrderDetailsPageContent.module.css';
 type OrderDetailsPageContentProps = {
   orderId: string;
 };
-
-//===================================================================
-
-function formatPaymentMethod(method: ClientOrder['paymentMethod']): string {
-  return method === 'bank_transfer'
-    ? 'Bank transfer'
-    : 'Cash on pickup / delivery';
-}
-
-//===================================================================
-
-function formatDeliveryMethod(method: ClientOrder['delivery']['method']): string {
-  return method === 'postal_delivery'
-    ? 'Postal delivery'
-    : 'Pickup from pharmacy';
-}
 
 //===================================================================
 
@@ -108,7 +97,6 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       controller.abort();
     };
   }, [cleanOrderId, isAuthenticated, isAuthReady]);
-
 
   const breadcrumbs = useMemo<BreadcrumbItem[]>(
     () => [
@@ -168,8 +156,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
               </p>
             </div>
 
-            <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]}
-             />
+            <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
           </div>
 
           {order.status === 'rejected' && order.rejectionReason ? (
@@ -294,13 +281,13 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                   <dt>
                     <CreditCard size={16} aria-hidden="true" /> Payment method
                   </dt>
-                  <dd>{formatPaymentMethod(order.paymentMethod)}</dd>
+                  <dd>{PAYMENT_METHOD_LABELS[order.paymentMethod]}</dd>
                 </div>
                 <div>
                   <dt>
                     <Truck size={16} aria-hidden="true" /> Delivery method
                   </dt>
-                  <dd>{formatDeliveryMethod(order.delivery.method)}</dd>
+                  <dd>{DELIVERY_METHOD_LABELS[order.delivery.method]}</dd>
                 </div>
 
                 {hasDeliveryDetails && order.delivery.details?.recipientName ? (

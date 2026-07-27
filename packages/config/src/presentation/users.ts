@@ -18,9 +18,3 @@ export const USER_STATUS_PRESENTATION = {
 } as const satisfies Readonly<
   Record<UserStatus, StatusPresentation>
 >;
-
-//===================================================================
-
-export function getUserStatusPresentation(status: UserStatus) {
-  return USER_STATUS_PRESENTATION[status];
-}

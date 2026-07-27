@@ -10,8 +10,8 @@ import {
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
-import { CLIENT_SUCCESSFUL_ORDERS_FILTERS } from '@/lib/clients/config';
-import { CLIENT_SUCCESSFUL_ORDERS_FILTER_LABELS } from '@/lib/clients/config';
+import { CLIENT_SUCCESSFUL_ORDER_FILTER_VALUES } from '@/lib/clients/config';
+import { CLIENT_SUCCESSFUL_ORDER_FILTER_LABELS } from '@/lib/clients/config';
 import type { ClientsFilterState } from '@/lib/clients/client-paths';
 
 //===================================================================
@@ -40,9 +40,9 @@ const SUCCESSFUL_ORDERS_OPTIONS: Array<
   SelectOption<ClientsFilterState['successfulOrders']>
 > = [
   { value: 'all', label: 'All' },
-  ...CLIENT_SUCCESSFUL_ORDERS_FILTERS.map((filter) => ({
+  ...CLIENT_SUCCESSFUL_ORDER_FILTER_VALUES.map((filter) => ({
     value: filter,
-    label: CLIENT_SUCCESSFUL_ORDERS_FILTER_LABELS[filter],
+    label: CLIENT_SUCCESSFUL_ORDER_FILTER_LABELS[filter],
   })),
 ];
 

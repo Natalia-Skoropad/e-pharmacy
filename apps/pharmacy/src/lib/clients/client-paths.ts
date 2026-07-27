@@ -13,8 +13,8 @@ import {
 } from '@e-pharmacy/validation/url';
 
 import {
-  CLIENT_SUCCESSFUL_ORDERS_FILTERS,
-  type ClientSuccessfulOrdersValue,
+  CLIENT_SUCCESSFUL_ORDER_FILTER_VALUES,
+  type ClientSuccessfulOrdersFilter,
 } from '@/lib/clients/config';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
@@ -34,7 +34,9 @@ const CLIENT_SLUG_OPTIONS = {
 
 export type ClientStatusFilter = 'all' | ClientStatus;
 
-export type ClientSuccessfulOrdersFilter = 'all' | ClientSuccessfulOrdersValue;
+export type ClientSuccessfulOrdersRouteFilter =
+  | 'all'
+  | ClientSuccessfulOrdersFilter;
 
 //===================================================================
 
@@ -47,7 +49,7 @@ export type ClientsFilterState = Readonly<{
   clientId: string;
   contact: string;
   status: ClientStatusFilter;
-  successfulOrders: ClientSuccessfulOrdersFilter;
+  successfulOrders: ClientSuccessfulOrdersRouteFilter;
 }>;
 
 //===================================================================
@@ -82,8 +84,8 @@ type ClientsFilterDraft = {
 
 function normalizeSuccessfulOrdersSegment(
   value: string
-): Exclude<ClientSuccessfulOrdersFilter, 'all'> | null {
-  return normalizeSlugEnumValue(value, CLIENT_SUCCESSFUL_ORDERS_FILTERS);
+): Exclude<ClientSuccessfulOrdersRouteFilter, 'all'> | null {
+  return normalizeSlugEnumValue(value, CLIENT_SUCCESSFUL_ORDER_FILTER_VALUES);
 }
 
 //===================================================================

@@ -1,3 +1,8 @@
+import {
+  DELIVERY_METHOD_LABELS,
+  PAYMENT_METHOD_LABELS,
+} from '@e-pharmacy/config/presentation';
+
 import { ROUTES } from '@/lib/routes';
 
 //===================================================================
@@ -27,28 +32,28 @@ export const DELIVERY_PAYMENT_INFO = {
       ],
     },
     {
-      title: 'Pickup from pharmacy',
+      title: DELIVERY_METHOD_LABELS.pickup,
       content: [
         'When pickup is selected, the order is prepared by the chosen pharmacy. The client can review the pharmacy address, phone number, working hours, and order summary before confirmation.',
         'The pharmacy may contact the client to clarify availability, pickup time, or order details.',
       ],
     },
     {
-      title: 'Postal delivery',
+      title: DELIVERY_METHOD_LABELS.postal_delivery,
       content: [
-        'Postal delivery can be selected during checkout when the pharmacy supports it. The client provides name, phone number, delivery address or post office details, and any useful order comment.',
+        `${DELIVERY_METHOD_LABELS.postal_delivery} can be selected during checkout when the pharmacy supports it. The client provides name, phone number, delivery address or post office details, and any useful order comment.`,
         'The pharmacy confirms the address and delivery details before handing the order to a carrier. Delivery price depends on the selected carrier and pharmacy conditions.',
       ],
     },
     {
-      title: 'Payment on receipt',
+      title: PAYMENT_METHOD_LABELS.cash,
       content: [
-        'Payment on receipt means the client pays when the order is received or picked up, according to the payment methods available at the selected pharmacy.',
+        `${PAYMENT_METHOD_LABELS.cash} means the client pays when the order is received or picked up, according to the payment methods available at the selected pharmacy.`,
         'The client should check the final amount and product list before payment, especially when the order contains items from more than one pharmacy.',
       ],
     },
     {
-      title: 'Payment by bank details',
+      title: PAYMENT_METHOD_LABELS.bank_transfer,
       content: [
         'Some pharmacies can provide bank account details for payment. In this case, the payment information is shown in the pharmacy details or checkout flow when available.',
         'The payment purpose, recipient, and account details should be copied carefully. If something looks unclear, the client should contact the pharmacy before paying.',

@@ -8,9 +8,6 @@ export const ACCESS_TOKEN_COOKIE_NAME = 'e_pharmacy_access_token';
 export const REFRESH_TOKEN_COOKIE_NAME = 'e_pharmacy_refresh_token';
 export const LEGACY_AUTH_COOKIE_NAME = 'e_pharmacy_auth_token';
 
-// Client-readable auth hint used only for auth bootstrap and redirects.
+// Client-readable bootstrap hint. The Next.js BFF owns its value, attributes,
+// lifetime, and cleanup; browser code may only read it.
 export const AUTH_READY_COOKIE_NAME = 'e_pharmacy_auth_ready';
-
-//===================================================================
-
-export const AUTH_READY_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;

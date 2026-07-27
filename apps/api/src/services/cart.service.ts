@@ -2,6 +2,7 @@ import mongoose, { Types } from 'mongoose';
 
 import {
   CART_ITEM_TTL_DAYS,
+  CART_PHARMACY_LIMIT_ERROR_CODE,
   MAX_PHARMACY_GROUPS_PER_CART,
 } from '../constants/cart';
 
@@ -303,7 +304,9 @@ export async function addCartItemService(
         ) {
           throw httpError(
             HTTP_STATUS.BAD_REQUEST,
-            `The cart can contain products from no more than ${MAX_PHARMACY_GROUPS_PER_CART} pharmacies. Confirm existing orders before adding products from another pharmacy.`
+            `The cart can contain products from no more than ${MAX_PHARMACY_GROUPS_PER_CART} pharmacies. Confirm existing orders before adding products from another pharmacy.`,
+            undefined,
+            CART_PHARMACY_LIMIT_ERROR_CODE
           );
         }
       }

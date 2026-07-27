@@ -55,6 +55,7 @@ export const errorMiddleware: ErrorRequestHandler = (error, req, res, next) => {
     status: 'error',
     message,
     ...(res.locals.requestId ? { requestId: res.locals.requestId } : {}),
+    ...(isHttpError(error) && error.code ? { code: error.code } : {}),
     ...(isHttpError(error) && error.details ? { details: error.details } : {}),
     ...(!isProduction && error instanceof Error && error.stack
       ? { stack: error.stack }

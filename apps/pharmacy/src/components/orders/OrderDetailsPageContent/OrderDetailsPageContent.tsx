@@ -26,7 +26,12 @@ import {
   Wallet,
 } from 'lucide-react';
 
-import { ORDER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import {
+  DELIVERY_METHOD_LABELS,
+  ORDER_STATUS_PRESENTATION,
+  PAYMENT_METHOD_LABELS,
+} from '@e-pharmacy/config/presentation';
+
 import { isCompletePharmacyBankDetails } from '@e-pharmacy/validation/pharmacy';
 
 import {
@@ -858,7 +863,7 @@ function DeliveryTab({
             name="delivery-method"
             value="pickup"
             checked={deliveryMethod === 'pickup'}
-            label="Pickup from pharmacy"
+            label={DELIVERY_METHOD_LABELS.pickup}
             disabled={!isEditable || isUpdating}
             onChange={onDeliveryMethodChange}
           />
@@ -867,7 +872,7 @@ function DeliveryTab({
             name="delivery-method"
             value="postal_delivery"
             checked={deliveryMethod === 'postal_delivery'}
-            label="Postal delivery"
+            label={DELIVERY_METHOD_LABELS.postal_delivery}
             disabled={!isEditable || isUpdating}
             onChange={onDeliveryMethodChange}
           />
@@ -1035,7 +1040,7 @@ function PaymentTab({
             name="payment-method"
             value="cash"
             checked={paymentMethod === 'cash'}
-            label="Cash on pickup / delivery"
+            label={PAYMENT_METHOD_LABELS.cash}
             disabled={!isEditable || isUpdating}
             onChange={onPaymentMethodChange}
           />
@@ -1044,7 +1049,7 @@ function PaymentTab({
             name="payment-method"
             value="bank_transfer"
             checked={paymentMethod === 'bank_transfer'}
-            label="Bank transfer"
+            label={PAYMENT_METHOD_LABELS.bank_transfer}
             disabled={!isEditable || isUpdating || !bankDetails}
             onChange={onPaymentMethodChange}
           />

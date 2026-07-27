@@ -1,5 +1,6 @@
 import { Copy, CreditCard, Mail, Wallet } from 'lucide-react';
 
+import { PAYMENT_METHOD_LABELS } from '@e-pharmacy/config/presentation';
 import { RadioOption } from '@e-pharmacy/ui/forms';
 import type { PublicPaymentBankDetails } from '@e-pharmacy/types/pharmacies';
 import type { PaymentMethod } from '@e-pharmacy/types/orders';
@@ -43,7 +44,7 @@ function CheckoutPaymentMethod({
             name="payment"
             value="cash"
             checked={paymentMethod === 'cash'}
-            label="Cash on pickup / delivery"
+            label={PAYMENT_METHOD_LABELS.cash}
             disabled={disabled}
             onChange={onPaymentMethodChange}
           />
@@ -52,7 +53,7 @@ function CheckoutPaymentMethod({
             name="payment"
             value="bank_transfer"
             checked={paymentMethod === 'bank_transfer'}
-            label="Bank transfer"
+            label={PAYMENT_METHOD_LABELS.bank_transfer}
             disabled={disabled || !bankDetails}
             onChange={onPaymentMethodChange}
           />

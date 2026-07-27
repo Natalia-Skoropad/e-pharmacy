@@ -37,6 +37,11 @@ const pharmacyAuthProvider = await read(
   'apps/pharmacy/src/providers/AuthProvider/AuthProvider.tsx'
 );
 
+const authSessionPublicApi = await read('packages/auth/src/session/index.ts');
+const authSessionCore = await read(
+  'packages/auth/src/core/AuthProviderCore.tsx'
+);
+
 const frontendRequestHeaders = await read(
   'packages/next-api/src/internal/request-headers.ts'
 );
@@ -194,6 +199,26 @@ if (
   violations.push(
     'Backend cookie writer does not use auth token expiry metadata'
   );
+}
+
+if (/AUTH_READY_COOKIE_MAX_AGE_SECONDS/.test(frontendCookies)) {
+  violations.push('Frontend config still defines a fixed auth-hint lifetime');
+}
+
+if (
+  /setBrowserAuthSessionHint|clearBrowserAuthSessionHint|browserAuthSessionHintStorage|createBrowserAuthSessionHintStorage/.test(
+    authSessionPublicApi
+  )
+) {
+  violations.push('Auth package still exposes browser-owned auth-hint writers');
+}
+
+if (/\.clearHint\(|\.setHint\(/.test(authSessionCore)) {
+  violations.push('Auth provider core still mutates the server-owned auth hint');
+}
+
+if (!/maxAge:\s*tokens\.refreshTokenExpiresIn/.test(frontendAuthCookieRuntime)) {
+  violations.push('BFF auth-ready hint does not use refresh-token expiry metadata');
 }
 
 if (

@@ -18,9 +18,13 @@
   "scripts": {
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "pnpm run clean && tsc -p tsconfig.build.json",
     "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs test",
-    "check:public-api": "node ../../scripts/checks/config/check-config-public-api.mjs"
+    "check:public-api": "node ../../scripts/checks/config/check-config-public-api.mjs",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "check:boundaries": "node ../../scripts/checks/config/check-config-boundaries.mjs",
+    "check:unused-exports": "node ../../scripts/checks/config/check-config-unused-exports.mjs",
+    "check:contracts": "node ../../scripts/checks/config/check-config-contracts.mjs"
   },
   "devDependencies": {
     "typescript": "^5"

@@ -1,4 +1,4 @@
-export const CLIENT_SUCCESSFUL_ORDERS_FILTERS = [
+export const CLIENT_SUCCESSFUL_ORDER_FILTER_VALUES = [
   'repeat',
   'successful',
   'other',
@@ -6,13 +6,13 @@ export const CLIENT_SUCCESSFUL_ORDERS_FILTERS = [
 
 //===================================================================
 
-export type ClientSuccessfulOrdersValue =
-  (typeof CLIENT_SUCCESSFUL_ORDERS_FILTERS)[number];
+export type ClientSuccessfulOrdersFilter =
+  (typeof CLIENT_SUCCESSFUL_ORDER_FILTER_VALUES)[number];
 
 //===================================================================
 
-export const CLIENT_SUCCESSFUL_ORDERS_FILTER_LABELS = {
+export const CLIENT_SUCCESSFUL_ORDER_FILTER_LABELS = {
   repeat: 'Repeat clients',
   successful: 'Clients with successful orders',
   other: 'Other clients',
-} as const satisfies Readonly<Record<ClientSuccessfulOrdersValue, string>>;
+} as const satisfies Readonly<Record<ClientSuccessfulOrdersFilter, string>>;

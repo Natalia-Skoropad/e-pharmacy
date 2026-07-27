@@ -72,8 +72,6 @@ class AuthBootstrapTimeoutError extends Error {
 
 const noopSessionHintStorage: AuthSessionHintStorage = {
   hasHint: () => false,
-  setHint: () => undefined,
-  clearHint: () => undefined,
 };
 
 //===================================================================
@@ -206,7 +204,6 @@ export function AuthProviderCore({
     (publishSessionEvent = true) => {
       cancelBootstrapTimeout();
       cancelRefreshRetries();
-      sessionHintStorageRef.current.clearHint();
       setAuthError(null);
       setIsRefreshingUser(false);
       setUser(null);

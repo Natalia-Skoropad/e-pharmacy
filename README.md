@@ -1,6 +1,6 @@
 # E-PHARMACY
 
-E-PHARMACY is a full-stack e-commerce project for an online pharmacy. The project is organized as a monorepo with a client storefront, a shared backend API, shared workspace packages, and planned app boundaries for pharmacy and admin panels.
+E-PHARMACY is a full-stack e-commerce project for an online pharmacy. The project is organized as a monorepo with a client storefront, a pharmacy cabinet, a shared backend API, shared workspace packages, and a planned admin application boundary.
 
 ## Live Demo
 
@@ -12,15 +12,15 @@ E-PHARMACY is a full-stack e-commerce project for an online pharmacy. The projec
 Implemented:
 
 - `apps/client` — client storefront
+- `apps/pharmacy` — pharmacy cabinet
 - `apps/api` — shared Express/MongoDB API
-- `packages/*` — shared types, utilities, validation, config, and small UI contracts
+- `packages/*` — shared types, utilities, validation, config, auth, API helpers, hooks, and UI contracts
 
 Planned:
 
-- `apps/pharmacy` — pharmacy/pharmacy cabinet
 - `apps/admin` — admin dashboard
 
-Pharmacy and admin folders are kept as planned app boundaries. They are not completed applications yet.
+Admin routes and navigation are intentionally created only together with a runnable admin application.
 
 ## Main Features
 
@@ -98,10 +98,10 @@ Pharmacy and admin folders are kept as planned app boundaries. They are not comp
 
 ```txt
 apps/
-  client/   # client storefront
-  api/      # shared backend API
-  pharmacy/   # planned pharmacy cabinet
-  admin/    # planned admin dashboard
+  client/    # client storefront
+  pharmacy/  # pharmacy cabinet
+  api/       # shared backend API
+  admin/     # planned admin dashboard
 
 packages/
   api-client/
@@ -117,7 +117,7 @@ packages/
 Current shared packages are intentionally small and are used where reuse already makes sense.
 
 - `@e-pharmacy/api-client` — HTTP contracts and normalization of external API responses, including strict pagination parsing
-- `@e-pharmacy/config` — shared application configuration, route builders, navigation values, and explicit presentation labels for domain enums
+- `@e-pharmacy/config` — explicit shared runtime contracts, safe cookie names, business limits, and typed domain presentation maps
 - `@e-pharmacy/types` — shared TypeScript domain and API contract types
 - `@e-pharmacy/ui` — shared React 19/Next.js 16 UI system with explicit primitives, forms, navigation, overlays, layout, cabinet, media, feedback, status-page, and statistics entrypoints
 - `@e-pharmacy/utils` — pure environment-independent utilities for money, dates, numbers, strings, collections, and type guards
@@ -126,9 +126,10 @@ Current shared packages are intentionally small and are used where reuse already
 Dependency rules:
 
 - `packages/utils` must not depend on React, Next.js, browser globals, API transport, or application code.
-- API response parsing belongs to `packages/api-client`; route configuration belongs to `packages/config`.
+- API response parsing belongs to `packages/api-client`; application routes and navigation stay inside their owning app.
+- Cross-application links use environment-owned origins rather than shared pathname constants.
 - Canonical working-hours parsing belongs to `packages/validation/pharmacy`.
-- Presentation labels belong to `packages/config`; `packages/types` contains data contracts and domain types only.
+- Typed domain presentation maps belong to the explicit `@e-pharmacy/config/presentation` entrypoint; `packages/types` contains data contracts and domain types only.
 - Calendar dates (`YYYY-MM-DD`) and API instants are separate contracts: instants must include `Z` or an explicit offset, while date-only values use the calendar-date formatter.
 - Data/API layers must not import UI types; reusable data contracts live in `packages/types`.
 - Backend-only helpers remain inside `apps/api` and must not import workspace packages.
@@ -139,6 +140,7 @@ Use app-level examples as the source of truth:
 
 ```txt
 apps/client/.env.example
+apps/pharmacy/.env.example
 apps/api/.env.example
 ```
 
@@ -176,6 +178,7 @@ Create env files:
 
 ```txt
 apps/client/.env.local
+apps/pharmacy/.env.local
 apps/api/.env
 ```
 
@@ -191,6 +194,12 @@ Run the client:
 pnpm dev:client
 ```
 
+Run the pharmacy cabinet:
+
+```bash
+pnpm dev:pharmacy
+```
+
 Seed the database when needed:
 
 ```bash
@@ -202,21 +211,33 @@ pnpm seed:api
 ```bash
 pnpm lint
 pnpm type-check
+pnpm test
 pnpm build
+pnpm check:before-deploy
+```
+
+Config-specific architecture and parity checks:
+
+```bash
+pnpm check:config-boundaries
+pnpm check:config-public-api
+pnpm check:config-unused-exports
+pnpm check:config-contracts
 ```
 
 Useful scoped checks:
 
 ```bash
 pnpm check:client
+pnpm check:pharmacy
 pnpm check:api
 ```
 
 ## Implementation Notes
 
-The strongest completed parts of the project are the client storefront, backend API, SEO routing, cookie-based auth flow, cart/checkout/order logic, and shared monorepo structure.
+The strongest completed parts of the project are the client storefront, pharmacy cabinet, backend API, SEO routing, cookie-based auth flow, cart/checkout/order logic, and shared monorepo structure.
 
-Pharmacy and admin apps are planned ecosystem extensions, not completed modules yet.
+The admin app remains a planned ecosystem extension and does not publish speculative routes or navigation contracts.
 
 ## Canonical cart, stock, and order rules
 

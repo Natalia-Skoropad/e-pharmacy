@@ -1,5 +1,7 @@
 import { WalletCards } from 'lucide-react';
 
+import { PAYMENT_METHOD_LABELS } from '@e-pharmacy/config/presentation';
+
 import css from './PaymentInfoCard.module.css';
 
 //===================================================================
@@ -11,8 +13,8 @@ function PaymentInfoCard() {
       <div>
         <h2 className={css.title}>Payment</h2>
         <ul className={css.list}>
-          <li>Payment on receipt.</li>
-          <li>Payment by pharmacy bank account details.</li>
+          <li>{PAYMENT_METHOD_LABELS.cash}.</li>
+          <li>{PAYMENT_METHOD_LABELS.bank_transfer}.</li>
         </ul>
       </div>
     </article>

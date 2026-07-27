@@ -11,7 +11,7 @@ import type { StatusPresentation } from './types';
 
 export const DELIVERY_METHOD_LABELS = {
   pickup: 'Pickup from pharmacy',
-  postal_delivery: 'Post delivery',
+  postal_delivery: 'Postal delivery',
 } as const satisfies Readonly<Record<DeliveryMethod, string>>;
 
 //===================================================================
@@ -38,9 +38,3 @@ export const ORDER_STATUS_PRESENTATION = {
 } as const satisfies Readonly<
   Record<OrderStatus, StatusPresentation>
 >;
-
-//===================================================================
-
-export function getOrderStatusPresentation(status: OrderStatus) {
-  return ORDER_STATUS_PRESENTATION[status];
-}

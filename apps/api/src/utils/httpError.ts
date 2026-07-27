@@ -9,12 +9,14 @@ import type {
 export function httpError(
   status: HttpErrorStatus,
   message: string,
-  details?: ValidationErrorDetails
+  details?: ValidationErrorDetails,
+  code?: string
 ): HttpError {
   const error = new Error(message) as HttpError;
 
   error.status = status;
   error.details = details;
+  error.code = code;
 
   return error;
 }

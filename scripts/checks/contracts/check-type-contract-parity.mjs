@@ -580,8 +580,7 @@ const [
     'src',
     'lib',
     'clients',
-    'config',
-    'successful-order-filters.ts'
+    'client-filter-contracts.ts'
   ),
 
   readSource('packages', 'config', 'src', 'cart', 'limits.ts'),
@@ -722,7 +721,7 @@ assertSameValues(
   'Client successful-order filters',
   extractArrayValues(
     frontendClientFilters,
-    'CLIENT_SUCCESSFUL_ORDERS_FILTERS'
+    'CLIENT_SUCCESSFUL_ORDER_FILTER_VALUES'
   ),
   extractZodEnumValues(backendClientSchema, 'successfulOrders')
 );

@@ -51,7 +51,7 @@ export type PharmacyClientsQueryParams = Readonly<{
   phone?: string;
   address?: string;
   status?: ClientStatus;
-  successfulOrders?: import('./config').ClientSuccessfulOrdersValue;
+  successfulOrders?: import('./client-filter-contracts').ClientSuccessfulOrdersFilter;
 }>;
 
 export type PharmacyClientsResponse = Readonly<

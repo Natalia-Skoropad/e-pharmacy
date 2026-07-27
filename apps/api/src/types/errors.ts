@@ -9,4 +9,5 @@ export type ValidationErrorDetails = Record<string, string[]>;
 export type HttpError = Error & {
   status: HttpErrorStatus;
   details?: ValidationErrorDetails;
+  code?: string;
 };

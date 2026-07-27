@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { Clock, Info, MapPin, Phone, Truck } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
+import { DELIVERY_METHOD_LABELS } from '@e-pharmacy/config/presentation';
 import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RadioOption } from '@e-pharmacy/ui/forms';
@@ -288,7 +289,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                         name="delivery"
                         value="pickup"
                         checked={deliveryMethod === 'pickup'}
-                        label="Pickup from pharmacy"
+                        label={DELIVERY_METHOD_LABELS.pickup}
                         disabled={isSubmitting}
                         onChange={setDeliveryMethod}
                       />
@@ -297,7 +298,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                         name="delivery"
                         value="postal_delivery"
                         checked={deliveryMethod === 'postal_delivery'}
-                        label="Postal delivery"
+                        label={DELIVERY_METHOD_LABELS.postal_delivery}
                         disabled={isSubmitting}
                         onChange={setDeliveryMethod}
                       />
