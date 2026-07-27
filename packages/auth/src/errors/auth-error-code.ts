@@ -3,8 +3,6 @@ export type AuthErrorCode =
   | 'email_conflict'
   | 'phone_conflict'
   | 'account_blocked'
-  | 'account_pending'
-  | 'account_rejected'
   | 'session_invalid'
   | 'session_revoked'
   | 'invalid_reset_token'

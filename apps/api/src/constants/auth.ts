@@ -41,3 +41,20 @@ export const REFRESH_TOKEN_COOKIE_NAME = 'e_pharmacy_refresh_token';
 // Legacy access-token cookie name from the previous single-JWT implementation.
 // Keep it only for reading/clearing old browser cookies during migration.
 export const AUTH_COOKIE_NAME = 'e_pharmacy_auth_token';
+
+//===============================================================
+
+export const AUTH_ERROR_CODES = {
+  INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS',
+  SESSION_INVALID: 'AUTH_SESSION_INVALID',
+  SESSION_REVOKED: 'AUTH_SESSION_REVOKED',
+  USER_BLOCKED: 'AUTH_USER_BLOCKED',
+  FORBIDDEN_ORIGIN: 'AUTH_FORBIDDEN_ORIGIN',
+  CSRF_FAILED: 'AUTH_CSRF_FAILED',
+  EMAIL_CONFLICT: 'AUTH_EMAIL_CONFLICT',
+  PHONE_CONFLICT: 'AUTH_PHONE_CONFLICT',
+  RESET_TOKEN_INVALID: 'AUTH_RESET_TOKEN_INVALID',
+  RATE_LIMITED: 'AUTH_RATE_LIMITED',
+  INVALID_RESPONSE: 'AUTH_INVALID_RESPONSE',
+  SERVICE_UNAVAILABLE: 'AUTH_SERVICE_UNAVAILABLE',
+} as const;

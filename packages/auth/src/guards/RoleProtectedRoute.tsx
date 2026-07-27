@@ -8,9 +8,15 @@ import type { UserRole } from '@e-pharmacy/types/auth';
 import { useAuth } from '../core/AuthProviderCore';
 import { buildLoginRedirectPath } from '../routing/redirects';
 
+import {
+  buildCurrentLocation,
+  resolveGuardNavigationDestination,
+  type TrustedExternalRedirectResolver,
+} from './guard-navigation';
+
 //===================================================================
 
-export type RoleProtectedRouteProps = {
+export type RoleProtectedRouteProps = Readonly<{
   children: ReactNode;
   allowedRoles: readonly UserRole[];
   loginPath: string;
@@ -19,7 +25,8 @@ export type RoleProtectedRouteProps = {
   authUnavailableFallback?: ReactNode;
   redirectingFallback?: ReactNode;
   forbiddenFallback?: ReactNode;
-};
+  resolveExternalRedirect?: TrustedExternalRedirectResolver;
+}>;
 
 //===================================================================
 
@@ -29,9 +36,10 @@ export function RoleProtectedRoute({
   loginPath,
   forbiddenPath = '/',
   loadingFallback = null,
-  authUnavailableFallback = loadingFallback,
+  authUnavailableFallback = null,
   redirectingFallback = null,
   forbiddenFallback = null,
+  resolveExternalRedirect,
 }: RoleProtectedRouteProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -51,19 +59,28 @@ export function RoleProtectedRoute({
 
     if (!isAuthenticated) {
       const hash = typeof window === 'undefined' ? '' : window.location.hash;
-      const currentPath = `${pathname}${queryString ? `?${queryString}` : ''}${hash}`;
+      const currentPath = buildCurrentLocation({
+        pathname,
+        queryString,
+        hash,
+      });
 
       router.replace(buildLoginRedirectPath(currentPath, loginPath));
       return;
     }
 
     if (!hasAllowedRole) {
-      if (/^https?:\/\//i.test(forbiddenPath)) {
-        window.location.replace(forbiddenPath);
+      const destination = resolveGuardNavigationDestination({
+        candidate: forbiddenPath,
+        resolveExternalRedirect,
+      });
+
+      if (destination.type === 'external') {
+        window.location.replace(destination.href);
         return;
       }
 
-      router.replace(forbiddenPath);
+      router.replace(destination.href);
     }
   }, [
     forbiddenPath,
@@ -74,6 +91,7 @@ export function RoleProtectedRoute({
     loginPath,
     pathname,
     queryString,
+    resolveExternalRedirect,
     router,
   ]);
 

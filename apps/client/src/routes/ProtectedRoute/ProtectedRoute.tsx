@@ -8,7 +8,11 @@ import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { ErrorPage } from '@e-pharmacy/ui/status-pages';
 
 import { ROUTES } from '@/lib/routes';
-import { resolveLoginDestination } from '@/lib/auth';
+
+import {
+  resolveLoginDestination,
+  resolveTrustedClientAuthExternalRedirect,
+} from '@/lib/auth';
 
 //===================================================================
 
@@ -45,10 +49,13 @@ function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
       allowedRoles={['client']}
       loginPath={ROUTES.LOGIN}
       forbiddenPath={pharmacyRedirect}
+      resolveExternalRedirect={resolveTrustedClientAuthExternalRedirect}
       loadingFallback={<LoadingSpinner label="Checking your session..." />}
       authUnavailableFallback={<AuthUnavailableState />}
       redirectingFallback={<LoadingSpinner label="Redirecting to login..." />}
-      forbiddenFallback={<LoadingSpinner label="Opening the right cabinet..." />}
+      forbiddenFallback={
+        <LoadingSpinner label="Opening the right cabinet..." />
+      }
     >
       {children}
     </RoleProtectedRoute>

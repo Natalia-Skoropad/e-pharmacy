@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 
 import type { HttpMethod } from '@e-pharmacy/api-client/core';
 
+import { responseInvalidatesAuthSession } from '../internal/auth-error-code';
 import { executeBackendFetch } from '../internal/backend-fetch';
 import { validateBackendJsonResponse } from '../internal/backend-response';
 
@@ -114,11 +115,18 @@ export async function proxyBackendRequest({
   const refreshToken = getRequestRefreshToken(request);
 
   if (!refreshToken) {
+    const shouldClearAuthCookies = await responseInvalidatesAuthSession(
+      response
+    );
     const nextResponse = createProxyResponse(response, {
       cacheControl: 'no-store',
       requestId,
     });
-    clearClientAuthCookies(nextResponse, request);
+
+    if (shouldClearAuthCookies) {
+      clearClientAuthCookies(nextResponse, request);
+    }
+
     return nextResponse;
   }
 
@@ -152,10 +160,7 @@ export async function proxyBackendRequest({
       requestId,
     });
 
-    if (
-      refreshResult.response.status === 401 ||
-      refreshResult.response.status === 403
-    ) {
+    if (await responseInvalidatesAuthSession(refreshResult.response)) {
       clearClientAuthCookies(nextResponse, request);
     }
 
@@ -206,7 +211,7 @@ export async function proxyBackendRequest({
     requestId,
   });
 
-  if (retryResponse.status === 401 || retryResponse.status === 403) {
+  if (await responseInvalidatesAuthSession(retryResponse)) {
     clearClientAuthCookies(nextResponse, request);
   } else {
     setClientAuthCookies(nextResponse, request, refreshResult.tokens);

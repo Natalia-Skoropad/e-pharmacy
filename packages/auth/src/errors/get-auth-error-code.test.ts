@@ -5,7 +5,7 @@ import { getAuthErrorCode } from './get-auth-error-code';
 
 //===================================================================
 
-test('uses stable backend business codes before mutable messages', () => {
+test('uses stable backend business codes before mutable copy', () => {
   assert.equal(
     getAuthErrorCode({
       status: 403,
@@ -27,24 +27,51 @@ test('uses stable backend business codes before mutable messages', () => {
 
 //===================================================================
 
-test('classifies transport failures by stable transport code', () => {
-  assert.equal(getAuthErrorCode({ code: 'TIMEOUT' }), 'timeout');
+test('classifies stable transport codes', () => {
+  assert.equal(getAuthErrorCode({ code: 'GATEWAY_TIMEOUT' }), 'timeout');
   assert.equal(
-    getAuthErrorCode({ code: 'INVALID_RESPONSE' }),
+    getAuthErrorCode({ code: 'INVALID_BACKEND_RESPONSE' }),
     'invalid_response'
   );
-  assert.equal(getAuthErrorCode({ code: 'NETWORK_ERROR' }), 'network_error');
+  assert.equal(getAuthErrorCode({ code: 'BAD_GATEWAY' }), 'service_unavailable');
+  assert.equal(
+    getAuthErrorCode({ code: 'CSRF_VALIDATION_FAILED' }),
+    'csrf_failed'
+  );
 });
 
 //===================================================================
 
-test('keeps message matching only as a legacy fallback', () => {
+test('does not classify arbitrary 403 copy as a blocked session', () => {
   assert.equal(
-    getAuthErrorCode({ status: 403, message: 'Account is blocked.' }),
-    'account_blocked'
+    getAuthErrorCode({ status: 403, message: 'Role access is forbidden.' }),
+    'unknown'
   );
+  assert.equal(
+    getAuthErrorCode({ status: 403, message: 'Request origin is not allowed' }),
+    'forbidden_origin'
+  );
+});
+
+//===================================================================
+
+test('uses narrow context fallbacks for legacy responses', () => {
   assert.equal(
     getAuthErrorCode({ status: 401, message: 'Wrong password.' }, 'login'),
     'invalid_credentials'
+  );
+  assert.equal(
+    getAuthErrorCode(
+      { status: 409, field: 'phone', message: 'Conflict.' },
+      'register'
+    ),
+    'phone_conflict'
+  );
+  assert.equal(
+    getAuthErrorCode(
+      { status: 400, message: 'Old reset response.' },
+      'reset-password'
+    ),
+    'invalid_reset_token'
   );
 });

@@ -6,7 +6,12 @@ import { useEffect, type ReactNode } from 'react';
 import type { AuthUser } from '@e-pharmacy/types/auth';
 
 import { useAuth } from '../core/AuthProviderCore';
-import { getSafeRedirectPath } from '../routing/redirects';
+import { getSafeLocalRedirectPath } from '../routing/redirects';
+
+import {
+  resolveGuardNavigationDestination,
+  type TrustedExternalRedirectResolver,
+} from './guard-navigation';
 
 //===================================================================
 
@@ -14,12 +19,14 @@ type AuthenticatedRedirectPath =
   | string
   | ((user: AuthUser, requestedRedirect: string | null) => string);
 
-export type GuestOnlyRouteProps = {
+export type GuestOnlyRouteProps = Readonly<{
   children: ReactNode;
   authenticatedRedirectPath: AuthenticatedRedirectPath;
   loadingFallback?: ReactNode;
   authUnavailableFallback?: ReactNode;
-};
+  allowGuestContentWhenUnavailable?: boolean;
+  resolveExternalRedirect?: TrustedExternalRedirectResolver;
+}>;
 
 //===================================================================
 
@@ -29,7 +36,10 @@ function resolveAuthenticatedRedirectPath(
   requestedRedirect: string | null
 ): string {
   if (typeof authenticatedRedirectPath === 'string') {
-    return authenticatedRedirectPath;
+    return getSafeLocalRedirectPath(
+      requestedRedirect,
+      authenticatedRedirectPath
+    );
   }
 
   return user ? authenticatedRedirectPath(user, requestedRedirect) : '/';
@@ -41,7 +51,9 @@ export function GuestOnlyRoute({
   children,
   authenticatedRedirectPath,
   loadingFallback = null,
-  authUnavailableFallback = children,
+  authUnavailableFallback = null,
+  allowGuestContentWhenUnavailable = false,
+  resolveExternalRedirect,
 }: GuestOnlyRouteProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -52,38 +64,40 @@ export function GuestOnlyRoute({
   useEffect(() => {
     if (isBootstrapping || isUnavailable || !isAuthenticated) return;
 
-    const fallbackRedirectPath = resolveAuthenticatedRedirectPath(
+    const candidate = resolveAuthenticatedRedirectPath(
       authenticatedRedirectPath,
       user,
       requestedRedirect
     );
 
-    if (
-      typeof authenticatedRedirectPath === 'function' &&
-      /^https?:\/\//i.test(fallbackRedirectPath)
-    ) {
-      window.location.replace(fallbackRedirectPath);
+    const destination = resolveGuardNavigationDestination({
+      candidate,
+      resolveExternalRedirect,
+    });
+
+    if (destination.type === 'external') {
+      window.location.replace(destination.href);
       return;
     }
 
-    const redirectTo =
-      typeof authenticatedRedirectPath === 'function'
-        ? getSafeRedirectPath(fallbackRedirectPath)
-        : getSafeRedirectPath(requestedRedirect, fallbackRedirectPath);
-
-    router.replace(redirectTo);
+    router.replace(destination.href);
   }, [
     authenticatedRedirectPath,
     isAuthenticated,
     isBootstrapping,
     isUnavailable,
-    router,
     requestedRedirect,
+    resolveExternalRedirect,
+    router,
     user,
   ]);
 
   if (isBootstrapping) return loadingFallback;
-  if (isUnavailable) return authUnavailableFallback;
+  if (isUnavailable) {
+    return allowGuestContentWhenUnavailable
+      ? children
+      : authUnavailableFallback;
+  }
   if (isAuthenticated) return null;
 
   return children;

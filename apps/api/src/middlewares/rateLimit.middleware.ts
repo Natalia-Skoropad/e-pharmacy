@@ -1,5 +1,6 @@
 import rateLimit from 'express-rate-limit';
 
+import { AUTH_ERROR_CODES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
 //===============================================================
@@ -8,7 +9,7 @@ const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 
 //===============================================================
 
-function createRateLimit(max: number, message: string) {
+function createRateLimit(max: number, message: string, code?: string) {
   return rateLimit({
     windowMs: RATE_LIMIT_WINDOW_MS,
     max,
@@ -18,6 +19,7 @@ function createRateLimit(max: number, message: string) {
     message: {
       status: 'error',
       message,
+      ...(code ? { code } : {}),
     },
   });
 }
@@ -26,14 +28,16 @@ function createRateLimit(max: number, message: string) {
 
 export const authRateLimit = createRateLimit(
   20,
-  'Too many authentication attempts. Please try again later.'
+  'Too many authentication attempts. Please try again later.',
+  AUTH_ERROR_CODES.RATE_LIMITED
 );
 
 //===============================================================
 
 export const passwordResetRateLimit = createRateLimit(
   5,
-  'Too many password reset requests. Please try again later.'
+  'Too many password reset requests. Please try again later.',
+  AUTH_ERROR_CODES.RATE_LIMITED
 );
 
 //===============================================================

@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
 import { useAuth } from '@e-pharmacy/auth/react';
@@ -9,14 +9,10 @@ import { ErrorPage, PageLoader } from '@e-pharmacy/ui/status-pages';
 import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import {
+  getClientAppHomeUrl,
   getSharedLoginUrl,
   getSharedLoginUrlForCurrentPharmacyPage,
 } from '@/lib/auth/shared-auth';
-
-//===================================================================
-
-const CLIENT_APP_FALLBACK_PATH = '/';
-const ADMIN_APP_FALLBACK_PATH = '/admin/dashboard';
 
 //===================================================================
 
@@ -26,18 +22,10 @@ type PharmacyProtectedRouteProps = Readonly<{
 
 //===================================================================
 
-function getForbiddenRedirectPath(role?: string) {
-  if (role === 'admin') return ADMIN_APP_FALLBACK_PATH;
-  return CLIENT_APP_FALLBACK_PATH;
-}
-
-//===================================================================
-
 export function PharmacyProtectedRoute({
   children,
 }: PharmacyProtectedRouteProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
 
@@ -65,14 +53,20 @@ export function PharmacyProtectedRoute({
     }
 
     if (!isPharmacy) {
-      router.replace(getForbiddenRedirectPath(user?.role));
+      // Admin has no deployed application yet. Until it does, every
+      // non-pharmacy account returns to the trusted client application.
+      window.location.assign(getClientAppHomeUrl());
       return;
     }
 
     if (isBlocked) {
-      void logout().finally(() => {
-        window.location.assign(getSharedLoginUrl(PHARMACY_ROUTES.DASHBOARD));
-      });
+      void logout()
+        .catch(() => undefined)
+        .finally(() => {
+          window.location.assign(
+            getSharedLoginUrl(PHARMACY_ROUTES.DASHBOARD)
+          );
+        });
     }
   }, [
     isAuthenticated,
@@ -83,8 +77,6 @@ export function PharmacyProtectedRoute({
     logout,
     pathname,
     queryString,
-    router,
-    user?.role,
   ]);
 
   if (isBootstrapping) {

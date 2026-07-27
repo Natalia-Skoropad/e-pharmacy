@@ -1,5 +1,7 @@
 import type { NextRequest } from 'next/server';
 
+import { responseInvalidatesAuthSession } from '../internal/auth-error-code';
+
 import {
   clearClientAuthCookies,
   setClientAuthCookies,
@@ -132,9 +134,8 @@ export async function proxyOptionalAuthBackendRequest({
             !refreshResult.tokens
           ) {
             shouldClearAuthCookies =
-              refreshResult.response.status === 401 ||
-              refreshResult.response.status === 403 ||
-              refreshResult.invalidTokenResponse;
+              refreshResult.invalidTokenResponse ||
+              (await responseInvalidatesAuthSession(refreshResult.response));
 
             response = await executePublicFallback(
               backendPath,
@@ -159,7 +160,8 @@ export async function proxyOptionalAuthBackendRequest({
               retryResponse.status === 401 ||
               retryResponse.status === 403
             ) {
-              shouldClearAuthCookies = true;
+              shouldClearAuthCookies =
+                await responseInvalidatesAuthSession(retryResponse);
               response = await executePublicFallback(
                 backendPath,
                 request,

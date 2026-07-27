@@ -39,7 +39,10 @@ export function createBrowserAuthSessionSync(): AuthSessionSync {
 
   channel.addEventListener('message', (message: MessageEvent<unknown>) => {
     const event = message.data;
-    if (typeof event !== 'string' || !AUTH_SESSION_EVENTS.has(event as AuthSessionEvent)) {
+    if (
+      typeof event !== 'string' ||
+      !AUTH_SESSION_EVENTS.has(event as AuthSessionEvent)
+    ) {
       return;
     }
 

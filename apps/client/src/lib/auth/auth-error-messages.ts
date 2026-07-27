@@ -7,9 +7,6 @@ const CLIENT_AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
   email_conflict: 'This email is already in use.',
   phone_conflict: 'This phone number is already in use.',
   account_blocked: 'This account is blocked. Contact support for assistance.',
-  account_pending: 'This account is awaiting approval.',
-  account_rejected:
-    'This account could not be approved. Contact support for details.',
   session_invalid: 'Your session has expired. Please sign in again.',
   session_revoked: 'This session is no longer active. Please sign in again.',
   invalid_reset_token: 'This password reset link is invalid or has expired.',

@@ -307,10 +307,12 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
     [startBootstrap]
   );
 
-  const reloadCurrentUser = useCallback(
-    () => executeCurrentUserAttempt('reload'),
-    [executeCurrentUserAttempt]
-  );
+  const reloadCurrentUser = useCallback(async () => {
+    const nextUser = await executeCurrentUserAttempt('reload');
+
+    if (nextUser) publishSessionEvent('revalidate');
+    return nextUser;
+  }, [executeCurrentUserAttempt, publishSessionEvent]);
 
   const login = useMemo<AuthContextValue['login']>(() => {
     if (!loginService) return undefined;
@@ -417,9 +419,23 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
     });
 
     const handleFocusRevalidation = () => {
-      if (document.visibilityState === 'visible' && stateRef.current.user) {
-        void executeCurrentUserAttempt('reload');
+      if (
+        document.visibilityState !== 'visible' ||
+        stateRef.current.status === 'bootstrapping'
+      ) {
+        return;
       }
+
+      // BroadcastChannel is same-origin only. Revalidate both authenticated
+      // and unauthenticated memory state so client and pharmacy applications
+      // can observe login/logout changes after focus or visibility returns.
+      const hadAuthenticatedUser = Boolean(stateRef.current.user);
+
+      void executeCurrentUserAttempt('reload').then((nextUser) => {
+        if (nextUser && !hadAuthenticatedUser) {
+          publishSessionEvent('authenticated');
+        }
+      });
     };
 
     if (revalidateOnFocus) {
@@ -443,6 +459,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
   }, [
     clearAuthState,
     executeCurrentUserAttempt,
+    publishSessionEvent,
     revalidateOnFocus,
     transition,
   ]);

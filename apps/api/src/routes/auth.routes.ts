@@ -122,7 +122,7 @@ authRoutes.patch(
 
 //=================================================================================
 
-authRoutes.post('/logout', authenticate, ctrlWrapper(logoutUser));
+authRoutes.post('/logout', ctrlWrapper(logoutUser));
 
 //=================================================================================
 

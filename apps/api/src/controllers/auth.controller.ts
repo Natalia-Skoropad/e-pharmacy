@@ -1,6 +1,9 @@
 import type { Request, Response } from 'express';
 
-import { REFRESH_TOKEN_COOKIE_NAME } from '../constants/auth';
+import {
+  AUTH_ERROR_CODES,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from '../constants/auth';
 
 import {
   BFF_AUTH_PROXY_HEADER_NAME,
@@ -19,7 +22,7 @@ import {
   requestPasswordResetService,
   resetPasswordService,
   revokeAllUserSessionsService,
-  revokeCurrentSessionService,
+  revokeSessionByRefreshTokenService,
   getActiveSessionsService,
   revokeUserSessionService,
   updateUserPasswordService,
@@ -117,10 +120,19 @@ function getCookieValues(req: Request, name: string): string[] {
 //===============================================================
 
 function getRefreshTokensFromCookies(req: Request): string[] {
-  const refreshTokens = getCookieValues(req, REFRESH_TOKEN_COOKIE_NAME);
+  return getCookieValues(req, REFRESH_TOKEN_COOKIE_NAME);
+}
+
+function requireRefreshTokensFromCookies(req: Request): string[] {
+  const refreshTokens = getRefreshTokensFromCookies(req);
 
   if (!refreshTokens.length) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.AUTH_REQUIRED);
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.AUTH_REQUIRED,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_INVALID
+    );
   }
 
   return refreshTokens;
@@ -172,7 +184,7 @@ export async function refreshAuthSession(
   req: Request,
   res: Response
 ): Promise<void> {
-  const refreshTokens = getRefreshTokensFromCookies(req);
+  const refreshTokens = requireRefreshTokensFromCookies(req);
   const context = getSessionContext(req);
   let data: Awaited<ReturnType<typeof refreshAuthSessionService>> | null = null;
   let lastError: unknown;
@@ -294,7 +306,14 @@ export async function updateCurrentUserPassword(
 //===============================================================
 
 export async function logoutUser(req: Request, res: Response): Promise<void> {
-  await revokeCurrentSessionService(req.authSessionId);
+  const refreshTokens = getRefreshTokensFromCookies(req);
+
+  await Promise.all(
+    refreshTokens.map((refreshToken) =>
+      revokeSessionByRefreshTokenService(refreshToken)
+    )
+  );
+
   clearAuthCookies(res);
 
   sendSuccessResponse({

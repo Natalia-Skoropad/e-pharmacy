@@ -1,6 +1,11 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { ACCESS_TOKEN_COOKIE_NAME, AUTH_COOKIE_NAME } from '../constants/auth';
+import {
+  ACCESS_TOKEN_COOKIE_NAME,
+  AUTH_COOKIE_NAME,
+  AUTH_ERROR_CODES,
+} from '../constants/auth';
+
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
@@ -17,6 +22,7 @@ import { verifyToken } from '../utils/jwt';
 type ErrorWithStatus = {
   status?: unknown;
   name?: unknown;
+  code?: unknown;
 };
 
 //===============================================================
@@ -34,6 +40,18 @@ function isAuthenticationCandidateError(error: unknown): boolean {
     name === 'JsonWebTokenError' ||
     name === 'TokenExpiredError' ||
     name === 'NotBeforeError'
+  );
+}
+
+//===============================================================
+
+function hasPreservedAuthLifecycleCode(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const code = (error as ErrorWithStatus).code;
+
+  return (
+    code === AUTH_ERROR_CODES.SESSION_REVOKED ||
+    code === AUTH_ERROR_CODES.USER_BLOCKED
   );
 }
 
@@ -97,8 +115,15 @@ async function authenticateToken(req: Request): Promise<void> {
   const tokens = getTokensFromRequest(req);
 
   if (!tokens.length) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.AUTH_REQUIRED);
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.AUTH_REQUIRED,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_INVALID
+    );
   }
+
+  let lastCandidateError: unknown;
 
   for (const token of tokens) {
     try {
@@ -116,6 +141,7 @@ async function authenticateToken(req: Request): Promise<void> {
       return;
     } catch (error) {
       if (!isAuthenticationCandidateError(error)) throw error;
+      lastCandidateError = error;
 
       // Keep checking the remaining cookie candidates. Browsers can send
       // duplicate auth cookies after deployments or domain/path changes, and
@@ -123,7 +149,16 @@ async function authenticateToken(req: Request): Promise<void> {
     }
   }
 
-  throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_TOKEN);
+  if (hasPreservedAuthLifecycleCode(lastCandidateError)) {
+    throw lastCandidateError;
+  }
+
+  throw httpError(
+    HTTP_STATUS.UNAUTHORIZED,
+    API_MESSAGES.INVALID_TOKEN,
+    undefined,
+    AUTH_ERROR_CODES.SESSION_INVALID
+  );
 }
 
 //===============================================================
@@ -139,7 +174,18 @@ export async function authenticate(
     next();
   } catch (error) {
     if (isAuthenticationCandidateError(error)) {
-      next(httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_TOKEN));
+      if (hasPreservedAuthLifecycleCode(error)) {
+        next(error);
+      } else {
+        next(
+          httpError(
+            HTTP_STATUS.UNAUTHORIZED,
+            API_MESSAGES.INVALID_TOKEN,
+            undefined,
+            AUTH_ERROR_CODES.SESSION_INVALID
+          )
+        );
+      }
       return;
     }
 

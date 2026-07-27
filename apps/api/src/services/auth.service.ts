@@ -3,7 +3,8 @@ import type { HydratedDocument } from 'mongoose';
 
 import { env } from '../config/env';
 
-import { USER_ROLES, USER_STATUSES } from '../constants/auth';
+import { AUTH_ERROR_CODES, USER_ROLES, USER_STATUSES } from '../constants/auth';
+
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
@@ -52,9 +53,7 @@ const REFRESH_TOKEN_BYTES = 64;
 
 const ACCESS_TOKEN_TTL_SECONDS = Math.max(
   1,
-  Math.floor(
-    parseDurationMs(String(env.JWT_EXPIRES_IN), 15 * 60 * 1000) / 1000
-  )
+  Math.floor(parseDurationMs(String(env.JWT_EXPIRES_IN), 15 * 60 * 1000) / 1000)
 );
 
 const REFRESH_TOKEN_TTL_MS = parseDurationMs(
@@ -131,7 +130,12 @@ async function ensurePhoneIsAvailable(
   });
 
   if (existingPhoneOwner) {
-    throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      API_MESSAGES.PHONE_IN_USE,
+      undefined,
+      AUTH_ERROR_CODES.PHONE_CONFLICT
+    );
   }
 }
 
@@ -191,7 +195,12 @@ export async function registerUserService(
   const existingUserWithEmail = await User.exists({ email: input.email });
 
   if (existingUserWithEmail) {
-    throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      API_MESSAGES.EMAIL_IN_USE,
+      undefined,
+      AUTH_ERROR_CODES.EMAIL_CONFLICT
+    );
   }
 
   await ensurePhoneIsAvailable(phone);
@@ -225,11 +234,21 @@ export async function registerUserService(
     return buildAuthSessionResult(user, context);
   } catch (error) {
     if (isDuplicateEmailError(error)) {
-      throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        API_MESSAGES.EMAIL_IN_USE,
+        undefined,
+        AUTH_ERROR_CODES.EMAIL_CONFLICT
+      );
     }
 
     if (isDuplicatePhoneError(error)) {
-      throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        API_MESSAGES.PHONE_IN_USE,
+        undefined,
+        AUTH_ERROR_CODES.PHONE_CONFLICT
+      );
     }
 
     throw error;
@@ -245,7 +264,12 @@ export async function loginUserService(
   const user = await User.findOne({ email: input.email }).select('+password');
 
   if (!user || user.isDefaultPharmacyClient) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_CREDENTIALS);
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.INVALID_CREDENTIALS,
+      undefined,
+      AUTH_ERROR_CODES.INVALID_CREDENTIALS
+    );
   }
 
   if (input.application && user.role !== input.application) {
@@ -256,13 +280,23 @@ export async function loginUserService(
   }
 
   if (user.status === USER_STATUSES.BLOCKED) {
-    throw httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.USER_BLOCKED);
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      API_MESSAGES.USER_BLOCKED,
+      undefined,
+      AUTH_ERROR_CODES.USER_BLOCKED
+    );
   }
 
   const isPasswordValid = await comparePassword(input.password, user.password);
 
   if (!isPasswordValid) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_CREDENTIALS);
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.INVALID_CREDENTIALS,
+      undefined,
+      AUTH_ERROR_CODES.INVALID_CREDENTIALS
+    );
   }
 
   return buildAuthSessionResult(user, context);
@@ -293,7 +327,21 @@ export async function refreshAuthSessionService(
   }
 
   if (!session) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_TOKEN);
+    const knownSession = await Session.findOne({
+      $or: [
+        { refreshTokenHash },
+        { previousRefreshTokenHash: refreshTokenHash },
+      ],
+    }).select('revokedAt expiresAt');
+
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.INVALID_TOKEN,
+      undefined,
+      knownSession?.revokedAt
+        ? AUTH_ERROR_CODES.SESSION_REVOKED
+        : AUTH_ERROR_CODES.SESSION_INVALID
+    );
   }
 
   const user = await User.findById(session.userId);
@@ -302,7 +350,12 @@ export async function refreshAuthSessionService(
     session.revokedAt = new Date();
     await session.save();
 
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.USER_NOT_FOUND);
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.USER_NOT_FOUND,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_INVALID
+    );
   }
 
   if (user.status === USER_STATUSES.BLOCKED) {
@@ -310,7 +363,12 @@ export async function refreshAuthSessionService(
     session.revokedReason = 'user_blocked';
     await session.save();
 
-    throw httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.USER_BLOCKED);
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      API_MESSAGES.USER_BLOCKED,
+      undefined,
+      AUTH_ERROR_CODES.USER_BLOCKED
+    );
   }
 
   const safeContext = sanitizeSessionContext(context);
@@ -361,15 +419,18 @@ export async function refreshAuthSessionService(
 
 //===============================================================
 
-export async function revokeCurrentSessionService(
-  sessionId?: string,
+export async function revokeSessionByRefreshTokenService(
+  refreshToken: string,
   reason: SessionRevokedReason = 'logout'
 ): Promise<void> {
-  if (!sessionId) return;
+  const refreshTokenHash = hashRefreshToken(refreshToken);
 
   await Session.findOneAndUpdate(
     {
-      _id: sessionId,
+      $or: [
+        { refreshTokenHash },
+        { previousRefreshTokenHash: refreshTokenHash },
+      ],
       revokedAt: undefined,
     },
     {
@@ -409,15 +470,29 @@ export async function assertActiveSessionService(
   sessionId: string,
   userId: string
 ): Promise<void> {
-  const session = await Session.exists({
+  const session = await Session.findOne({
     _id: sessionId,
     userId,
-    revokedAt: undefined,
-    expiresAt: { $gt: new Date() },
-  });
+  })
+    .select('revokedAt expiresAt')
+    .lean();
 
-  if (!session) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.INVALID_TOKEN);
+  if (!session || session.expiresAt <= new Date()) {
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.INVALID_TOKEN,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_INVALID
+    );
+  }
+
+  if (session.revokedAt) {
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.INVALID_TOKEN,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_REVOKED
+    );
   }
 }
 
@@ -536,7 +611,9 @@ export async function resetPasswordService(
   if (!user || user.status === USER_STATUSES.BLOCKED) {
     throw httpError(
       HTTP_STATUS.BAD_REQUEST,
-      API_MESSAGES.PASSWORD_RESET_TOKEN_INVALID
+      API_MESSAGES.PASSWORD_RESET_TOKEN_INVALID,
+      undefined,
+      AUTH_ERROR_CODES.RESET_TOKEN_INVALID
     );
   }
 
@@ -557,11 +634,21 @@ export async function getUserByIdService(
   const user = await User.findById(userId);
 
   if (!user) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.USER_NOT_FOUND);
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.USER_NOT_FOUND,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_INVALID
+    );
   }
 
   if (user.status === USER_STATUSES.BLOCKED) {
-    throw httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.USER_BLOCKED);
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      API_MESSAGES.USER_BLOCKED,
+      undefined,
+      AUTH_ERROR_CODES.USER_BLOCKED
+    );
   }
 
   return toAuthUserResponse(user);
@@ -608,13 +695,23 @@ export async function updateUserProfileService(
     });
 
     if (!user) {
-      throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.USER_NOT_FOUND);
+      throw httpError(
+        HTTP_STATUS.UNAUTHORIZED,
+        API_MESSAGES.USER_NOT_FOUND,
+        undefined,
+        AUTH_ERROR_CODES.SESSION_INVALID
+      );
     }
 
     return toAuthUserResponse(user);
   } catch (error) {
     if (isDuplicatePhoneError(error)) {
-      throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        API_MESSAGES.PHONE_IN_USE,
+        undefined,
+        AUTH_ERROR_CODES.PHONE_CONFLICT
+      );
     }
 
     throw error;
@@ -630,7 +727,12 @@ export async function updateUserPasswordService(
   const user = await User.findById(userId).select('+password');
 
   if (!user) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.USER_NOT_FOUND);
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.USER_NOT_FOUND,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_INVALID
+    );
   }
 
   const isCurrentPasswordValid = await comparePassword(
@@ -639,7 +741,12 @@ export async function updateUserPasswordService(
   );
 
   if (!isCurrentPasswordValid) {
-    throw httpError(HTTP_STATUS.UNAUTHORIZED, 'Current password is incorrect');
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      'Current password is incorrect',
+      undefined,
+      AUTH_ERROR_CODES.INVALID_CREDENTIALS
+    );
   }
 
   user.password = await hashPassword(input.newPassword);

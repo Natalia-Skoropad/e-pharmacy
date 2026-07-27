@@ -1,2 +1,10 @@
-export { getSafeApplicationRedirectPath } from './redirects';
-export type { SafeApplicationRedirectOptions } from './redirects';
+export {
+  getSafeApplicationRedirectPath,
+  getSafeLocalRedirectPath,
+  getTrustedExternalRedirectUrl,
+} from './redirects';
+
+export type {
+  SafeApplicationRedirectOptions,
+  TrustedExternalRedirectOptions,
+} from './redirects';

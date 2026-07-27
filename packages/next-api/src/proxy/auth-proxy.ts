@@ -11,6 +11,11 @@ import {
   setClientAuthCookies,
 } from '../internal/auth-cookies';
 
+import {
+  getAuthErrorCodeFromBody,
+  isInvalidatingAuthErrorCode,
+} from '../internal/auth-error-code';
+
 import { transformAuthResponseBody } from '../internal/auth-tokens';
 import { createTextProxyResponse } from '../internal/proxy-response';
 import { readProxyRequestBody } from '../internal/request-body';
@@ -126,6 +131,7 @@ export async function proxyAuthRequest({
   }
 
   const safeBody = transformed.body || rawBody;
+  const authErrorCode = getAuthErrorCodeFromBody(safeBody);
 
   const nextResponse = createTextProxyResponse(response, safeBody, {
     cacheControl: 'no-store',
@@ -137,7 +143,7 @@ export async function proxyAuthRequest({
     setClientAuthCookies(nextResponse, request, transformed.tokens);
   } else if (
     markerAction === 'set' &&
-    (response.status === 401 || response.status === 403)
+    isInvalidatingAuthErrorCode(authErrorCode)
   ) {
     clearClientAuthCookies(nextResponse, request);
   }

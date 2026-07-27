@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
 import { env } from '../config/env';
+import { AUTH_ERROR_CODES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
 import { httpError } from '../utils/httpError';
@@ -57,5 +58,12 @@ export function validateMutationOrigin(
     return;
   }
 
-  next(httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.FORBIDDEN_ORIGIN));
+  next(
+    httpError(
+      HTTP_STATUS.FORBIDDEN,
+      API_MESSAGES.FORBIDDEN_ORIGIN,
+      undefined,
+      AUTH_ERROR_CODES.FORBIDDEN_ORIGIN
+    )
+  );
 }

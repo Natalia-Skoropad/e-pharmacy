@@ -32,3 +32,12 @@ test('bootstrap policy is explicit and no silent no-hint default remains', () =>
   assert.match(source, /bootstrapMode === 'session-hint'/);
   assert.doesNotMatch(source, /noopSessionHintStorage/);
 });
+
+//===================================================================
+
+test('focus and profile revalidation synchronize without direct refresh', () => {
+  assert.match(source, /document\.visibilityState !== 'visible'/);
+  assert.match(source, /executeCurrentUserAttempt\('reload'\)/);
+  assert.match(source, /publishSessionEvent\('revalidate'\)/);
+  assert.match(source, /publishSessionEvent\('authenticated'\)/);
+});

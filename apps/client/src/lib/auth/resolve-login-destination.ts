@@ -1,4 +1,7 @@
-import { getSafeApplicationRedirectPath } from '@e-pharmacy/auth/routing';
+import {
+  getSafeApplicationRedirectPath,
+  getTrustedExternalRedirectUrl,
+} from '@e-pharmacy/auth/routing';
 import type { AuthUser } from '@e-pharmacy/types/auth';
 
 import { ROUTES, CLIENT_ALLOWED_REDIRECT_PREFIXES } from '@/lib/routes';
@@ -6,21 +9,48 @@ import { ROUTES, CLIENT_ALLOWED_REDIRECT_PREFIXES } from '@/lib/routes';
 //===================================================================
 
 const PHARMACY_DASHBOARD_PATH = '/pharmacy/dashboard';
+const DEVELOPMENT_PHARMACY_APP_URL = 'http://localhost:3002';
+
+//===================================================================
+
+function getPharmacyAppOrigin(): string | null {
+  const configuredUrl = process.env.NEXT_PUBLIC_PHARMACY_APP_URL?.trim();
+  const candidate =
+    configuredUrl ||
+    (process.env.NODE_ENV !== 'production'
+      ? DEVELOPMENT_PHARMACY_APP_URL
+      : null);
+
+  if (!candidate) return null;
+
+  try {
+    return new URL(candidate).origin;
+  } catch {
+    return null;
+  }
+}
 
 //===================================================================
 
 export function getPharmacyDashboardUrl(): string {
-  const pharmacyAppUrl = process.env.NEXT_PUBLIC_PHARMACY_APP_URL?.trim();
+  const pharmacyOrigin = getPharmacyAppOrigin();
+  return pharmacyOrigin
+    ? new URL(PHARMACY_DASHBOARD_PATH, pharmacyOrigin).toString()
+    : ROUTES.HOME;
+}
 
-  if (pharmacyAppUrl) {
-    return new URL(PHARMACY_DASHBOARD_PATH, pharmacyAppUrl).toString();
-  }
+//===================================================================
 
-  if (process.env.NODE_ENV !== 'production') {
-    return `http://localhost:3002${PHARMACY_DASHBOARD_PATH}`;
-  }
+export function resolveTrustedClientAuthExternalRedirect(
+  candidate: string
+): string | null {
+  const pharmacyOrigin = getPharmacyAppOrigin();
+  if (!pharmacyOrigin) return null;
 
-  return PHARMACY_DASHBOARD_PATH;
+  return getTrustedExternalRedirectUrl(candidate, {
+    allowedOrigins: [pharmacyOrigin],
+    allowedPathPrefixes: ['/pharmacy'],
+  });
 }
 
 //===================================================================
