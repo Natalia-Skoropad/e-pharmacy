@@ -1,13 +1,11 @@
 import { copyFile, mkdir, readdir, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 //===================================================================
 
-const repositoryRoot = process.cwd();
-const requestedOutput = process.argv[2] ?? '.artifacts/e-pharmacy-source';
-const outputRoot = path.resolve(repositoryRoot, requestedOutput);
-
-const excludedDirectories = new Set([
+export const SOURCE_ARCHIVE_EXCLUDED_DIRECTORIES = new Set([
+  '.artifacts',
   '.git',
   '.next',
   '.turbo',
@@ -18,7 +16,7 @@ const excludedDirectories = new Set([
   'out',
 ]);
 
-const excludedFilePatterns = [
+export const SOURCE_ARCHIVE_EXCLUDED_FILE_PATTERNS = [
   /\.zip$/i,
   /\.tsbuildinfo$/i,
   /(?:^|\/)npm-debug\.log/i,
@@ -28,57 +26,86 @@ const excludedFilePatterns = [
 
 //===================================================================
 
-function isInsideOutput(absolutePath) {
-  const relative = path.relative(outputRoot, absolutePath);
-  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+function isPathInside(parentPath, candidatePath) {
+  const relative = path.relative(parentPath, candidatePath);
+
+  return (
+    relative === '' ||
+    (!relative.startsWith('..') && !path.isAbsolute(relative))
+  );
 }
 
 //===================================================================
 
-function shouldExcludeFile(relativePath) {
+export function shouldExcludeSourceArchiveFile(relativePath) {
   const normalized = relativePath.replaceAll('\\', '/');
-  return excludedFilePatterns.some((pattern) => pattern.test(normalized));
+
+  return SOURCE_ARCHIVE_EXCLUDED_FILE_PATTERNS.some((pattern) =>
+    pattern.test(normalized)
+  );
 }
 
 //===================================================================
 
-async function copySourceTree(sourceDirectory, targetDirectory) {
-  await mkdir(targetDirectory, { recursive: true });
-  const entries = await readdir(sourceDirectory, { withFileTypes: true });
+export async function prepareSourceArchive({
+  repositoryRoot = process.cwd(),
+  outputPath = '.artifacts/e-pharmacy-source',
+} = {}) {
+  const resolvedRepositoryRoot = path.resolve(repositoryRoot);
+  const outputRoot = path.resolve(resolvedRepositoryRoot, outputPath);
 
-  for (const entry of entries) {
-    if (excludedDirectories.has(entry.name)) continue;
-
-    const source = path.join(sourceDirectory, entry.name);
-    const target = path.join(targetDirectory, entry.name);
-
-    if (isInsideOutput(source)) continue;
-
-    if (entry.isDirectory()) {
-      await copySourceTree(source, target);
-      continue;
-    }
-
-    if (!entry.isFile()) continue;
-
-    const relative = path.relative(repositoryRoot, source);
-    if (shouldExcludeFile(relative)) continue;
-
-    await mkdir(path.dirname(target), { recursive: true });
-    await copyFile(source, target);
+  if (outputRoot === resolvedRepositoryRoot) {
+    throw new Error('Source archive output must not replace the repository root.');
   }
+
+  async function copySourceTree(sourceDirectory, targetDirectory) {
+    await mkdir(targetDirectory, { recursive: true });
+    const entries = await readdir(sourceDirectory, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (SOURCE_ARCHIVE_EXCLUDED_DIRECTORIES.has(entry.name)) continue;
+
+      const source = path.join(sourceDirectory, entry.name);
+      const target = path.join(targetDirectory, entry.name);
+
+      if (isPathInside(outputRoot, source)) continue;
+
+      if (entry.isDirectory()) {
+        await copySourceTree(source, target);
+        continue;
+      }
+
+      if (!entry.isFile()) continue;
+
+      const relative = path.relative(resolvedRepositoryRoot, source);
+      if (shouldExcludeSourceArchiveFile(relative)) continue;
+
+      await mkdir(path.dirname(target), { recursive: true });
+      await copyFile(source, target);
+    }
+  }
+
+  await rm(outputRoot, { recursive: true, force: true });
+  await copySourceTree(resolvedRepositoryRoot, outputRoot);
+
+  const outputStats = await stat(outputRoot);
+  if (!outputStats.isDirectory()) {
+    throw new Error('Source archive staging failed.');
+  }
+
+  return outputRoot;
 }
 
 //===================================================================
 
-if (outputRoot === repositoryRoot) {
-  throw new Error('Source archive output must not replace the repository root.');
+const isMainModule =
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
+
+if (isMainModule) {
+  const outputRoot = await prepareSourceArchive({
+    outputPath: process.argv[2] ?? '.artifacts/e-pharmacy-source',
+  });
+
+  console.log(`Clean source tree prepared at ${outputRoot}`);
 }
-
-await rm(outputRoot, { recursive: true, force: true });
-await copySourceTree(repositoryRoot, outputRoot);
-
-const outputStats = await stat(outputRoot);
-if (!outputStats.isDirectory()) throw new Error('Source archive staging failed.');
-
-console.log(`Clean source tree prepared at ${outputRoot}`);

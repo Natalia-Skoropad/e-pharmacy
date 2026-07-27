@@ -4,7 +4,7 @@ import clsx from 'clsx';
 
 import type { ButtonSize, ButtonVariant } from '../../primitives/Button/Button';
 
-import css from '../../primitiv../../primitives/Button/Button.module.css';
+import css from '../../primitives/Button/Button.module.css';
 
 //===================================================================
 

@@ -32,10 +32,10 @@ Prepare a clean source tree before creating an audit or deployment archive:
 pnpm archive:source
 ```
 
-Verify the repository policy with:
+Verify both the archive policy and the actual staged source-tree content with:
 
 ```bash
 pnpm check:archive-hygiene
 ```
 
-The staged source tree is written to `.artifacts/e-pharmacy-source` and intentionally excludes `node_modules`, `.turbo`, `.next`, `dist`, `coverage`, logs, TypeScript build info, and nested ZIP archives.
+The staged source tree is written to `.artifacts/e-pharmacy-source` and intentionally excludes `.artifacts`, `node_modules`, `.turbo`, `.next`, `dist`, `coverage`, logs, TypeScript build info, and nested ZIP archives. The hygiene check builds a temporary source tree and recursively verifies its real contents, so a broken exclusion can no longer pass merely because the policy text looks correct.
