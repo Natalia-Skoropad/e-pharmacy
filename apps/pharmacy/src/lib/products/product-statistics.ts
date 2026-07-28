@@ -3,12 +3,11 @@ import {
   OwnProductStatisticsCounts,
 } from '@e-pharmacy/types/products';
 
-import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/core';
+import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
 import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { DEFAULT_ALL_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
-
 import { getPharmacyProducts, getProducts } from '@/lib/api/browser';
 
 import type { PharmacyProductRow } from './products';

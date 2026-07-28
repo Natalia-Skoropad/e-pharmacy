@@ -116,14 +116,14 @@ export async function executeHttpRequest(
     body,
     headers,
     cache,
-    next,
     credentials,
     signal,
     timeoutMs,
     retry,
     redirect,
     responseType = 'json',
-  }: RequestOptions = {}
+  }: RequestOptions = {},
+  fetchInit: RequestInit = {}
 ): Promise<HttpRequestResult<unknown>> {
   const context = { url, method };
 
@@ -154,11 +154,11 @@ export async function executeHttpRequest(
   const execution = await executeFetchWithRetry(url, {
     method,
     init: {
+      ...fetchInit,
       headers: requestHeaders,
       body: requestBody,
       cache,
-      next,
-      credentials,
+        credentials,
       redirect,
     },
     signal,

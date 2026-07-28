@@ -1,15 +1,13 @@
 import 'client-only';
 
-import { getResponseData } from '@e-pharmacy/api-client/core';
+import {
+  parseApiEmptyResponse,
+  parseApiResponseData,
+} from '@e-pharmacy/api-client/response';
 
-import type {
-  ApiEmptySuccessResponse,
-  ApiSuccessResponse,
-} from '@e-pharmacy/types/api';
-
-import type { AuthResponse } from '@e-pharmacy/types/auth';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { parseAuthResponse } from '@e-pharmacy/validation/auth';
+import type { AuthResponse } from '@e-pharmacy/types/auth';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
@@ -18,12 +16,13 @@ import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharm
 export async function getCurrentUser(options?: {
   signal?: AbortSignal;
 }): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    PHARMACY_API_ROUTES.auth.current,
-    { signal: options?.signal }
-  );
+  const path = PHARMACY_API_ROUTES.auth.current;
 
-  return parseAuthResponse(getResponseData(response));
+  return parseApiResponseData(
+    await localApiRequest(path, { signal: options?.signal }),
+    parseAuthResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
@@ -31,11 +30,12 @@ export async function getCurrentUser(options?: {
 export async function logoutUser(options?: {
   signal?: AbortSignal;
 }): Promise<void> {
-  await localApiRequest<ApiEmptySuccessResponse>(
-    PHARMACY_API_ROUTES.auth.logout,
-    {
+  const path = PHARMACY_API_ROUTES.auth.logout;
+  parseApiEmptyResponse(
+    await localApiRequest(path, {
       method: 'POST',
       signal: options?.signal,
-    }
+    }),
+    { url: path, method: 'POST' }
   );
 }

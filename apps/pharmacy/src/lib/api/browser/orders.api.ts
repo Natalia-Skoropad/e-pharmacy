@@ -1,19 +1,23 @@
 import 'client-only';
 
 import {
+  ApiError,
   appendQueryParams,
-  getResponseData,
   type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/core';
+} from '@e-pharmacy/api-client/transport';
 
-import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
+import {
+  parseApiResponseData,
+  parseMessageResponse,
+  type ApiResponseContext,
+} from '@e-pharmacy/api-client/response';
+
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
+import { isRecord } from '@e-pharmacy/utils/guards';
 
 import type {
   CreateOrderManagerCommentPayload,
-  CreateOrderManagerCommentResponse,
   DeliveryMethod,
-  OrderManagerCommentsResponse,
   PaymentMethod,
   UpdateOrderStatusPayload,
 } from '@e-pharmacy/types/orders';
@@ -43,36 +47,69 @@ export type CreatePharmacyOrderPayload = Readonly<{
   clientId: string;
   items: Array<{ productOfferId: string; quantity: number }>;
   deliveryMethod: DeliveryMethod;
+
   deliveryDetails?: {
     recipientName: string;
     recipientPhone: string;
     address: string;
   };
+
   paymentMethod: PaymentMethod;
   comment?: string;
 }>;
 
 //===================================================================
 
-export async function createPharmacyOrder(
-  payload: CreatePharmacyOrderPayload
-): Promise<PharmacyOrderDetails> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    PHARMACY_API_ROUTES.orders.list,
-    {
-      method: 'POST',
-      body: payload,
-    }
-  );
-
-  const responsePayload = getResponseData(response) as { order?: unknown };
-  const order = normalizePharmacyOrderDetails(responsePayload.order);
+function parseOrderData(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyOrderDetails {
+  const payload = isRecord(value) ? value.order : undefined;
+  const order = normalizePharmacyOrderDetails(payload);
 
   if (!order) {
-    throw new Error('Order could not be created.');
+    throw new ApiError('Order response does not match its contract.', {
+      transportCode: 'INVALID_RESPONSE',
+      payload: value,
+      ...context,
+    });
   }
 
   return order;
+}
+
+//===================================================================
+
+function parseCreatedComment(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyOrderManagerComment {
+  const payload = isRecord(value) ? value.comment : undefined;
+  const comment = normalizePharmacyOrderManagerComment(payload);
+
+  if (!comment) {
+    throw new ApiError('Order comment response does not match its contract.', {
+      transportCode: 'INVALID_RESPONSE',
+      payload: value,
+      ...context,
+    });
+  }
+
+  return comment;
+}
+
+//===================================================================
+
+export async function createPharmacyOrder(
+  payload: CreatePharmacyOrderPayload
+): Promise<PharmacyOrderDetails> {
+  const path = PHARMACY_API_ROUTES.orders.list;
+
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'POST', body: payload }),
+    parseOrderData,
+    { url: path, method: 'POST' }
+  );
 }
 
 //===================================================================
@@ -81,12 +118,13 @@ export async function getPharmacyOrders(
   params: PharmacyOrdersQueryParams = {},
   options?: JsonResponseRequestOptions
 ): Promise<PharmacyOrdersResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    appendQueryParams(PHARMACY_API_ROUTES.orders.list, params),
-    options
-  );
+  const path = appendQueryParams(PHARMACY_API_ROUTES.orders.list, params);
 
-  return normalizePharmacyOrdersResponse(getResponseData(response));
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    normalizePharmacyOrdersResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
@@ -95,19 +133,13 @@ export async function getPharmacyOrderDetails(
   orderId: string,
   options?: JsonResponseRequestOptions
 ): Promise<PharmacyOrderDetails> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    PHARMACY_API_ROUTES.orders.details(orderId),
-    options
+  const path = PHARMACY_API_ROUTES.orders.details(orderId);
+
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseOrderData,
+    { url: path, method: 'GET' }
   );
-
-  const responsePayload = getResponseData(response) as { order?: unknown };
-  const order = normalizePharmacyOrderDetails(responsePayload.order);
-
-  if (!order) {
-    throw new Error('Order could not be loaded.');
-  }
-
-  return order;
 }
 
 //===================================================================
@@ -125,22 +157,13 @@ export async function updatePharmacyOrder(
     paymentMethod?: PaymentMethod;
   }
 ): Promise<PharmacyOrderDetails> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    PHARMACY_API_ROUTES.orders.details(orderId),
-    {
-      method: 'PATCH',
-      body: payload,
-    }
+  const path = PHARMACY_API_ROUTES.orders.details(orderId);
+
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'PATCH', body: payload }),
+    parseOrderData,
+    { url: path, method: 'PATCH' }
   );
-
-  const responsePayload = getResponseData(response) as { order?: unknown };
-  const order = normalizePharmacyOrderDetails(responsePayload.order);
-
-  if (!order) {
-    throw new Error('Order could not be updated.');
-  }
-
-  return order;
 }
 
 //===================================================================
@@ -149,22 +172,13 @@ export async function updatePharmacyOrderStatus(
   orderId: string,
   payload: UpdateOrderStatusPayload
 ): Promise<PharmacyOrderDetails> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    PHARMACY_API_ROUTES.orders.status(orderId),
-    {
-      method: 'PATCH',
-      body: payload,
-    }
+  const path = PHARMACY_API_ROUTES.orders.status(orderId);
+
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'PATCH', body: payload }),
+    parseOrderData,
+    { url: path, method: 'PATCH' }
   );
-
-  const responsePayload = getResponseData(response) as { order?: unknown };
-  const order = normalizePharmacyOrderDetails(responsePayload.order);
-
-  if (!order) {
-    throw new Error('Order could not be updated.');
-  }
-
-  return order;
 }
 
 //===================================================================
@@ -174,15 +188,15 @@ export async function getPharmacyOrderComments(
   params: { page?: number; perPage?: number } = {},
   options?: JsonResponseRequestOptions
 ): Promise<PharmacyOrderManagerCommentsResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<OrderManagerCommentsResponse>
-  >(
-    appendQueryParams(PHARMACY_API_ROUTES.orders.comments(orderId), params),
-    options
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.orders.comments(orderId),
+    params
   );
 
-  return normalizePharmacyOrderManagerCommentsResponse(
-    getResponseData(response)
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    normalizePharmacyOrderManagerCommentsResponse,
+    { url: path, method: 'GET' }
   );
 }
 
@@ -192,20 +206,14 @@ export async function createPharmacyOrderComment(
   orderId: string,
   text: string
 ): Promise<PharmacyOrderManagerComment> {
+  const path = PHARMACY_API_ROUTES.orders.comments(orderId);
   const payload: CreateOrderManagerCommentPayload = { text };
-  const response = await localApiRequest<
-    ApiSuccessResponse<CreateOrderManagerCommentResponse>
-  >(PHARMACY_API_ROUTES.orders.comments(orderId), {
-    method: 'POST',
-    body: payload,
-  });
 
-  const data = getResponseData(response);
-  const comment = normalizePharmacyOrderManagerComment(data.comment);
-
-  if (!comment) throw new Error('Comment could not be created.');
-
-  return comment;
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'POST', body: payload }),
+    parseCreatedComment,
+    { url: path, method: 'POST' }
+  );
 }
 
 //===================================================================
@@ -214,9 +222,11 @@ export async function deletePharmacyOrderComment(
   orderId: string,
   commentId: string
 ): Promise<void> {
-  await localApiRequest<ApiSuccessResponse<unknown>>(
-    PHARMACY_API_ROUTES.orders.comment(orderId, commentId),
-    { method: 'DELETE' }
+  const path = PHARMACY_API_ROUTES.orders.comment(orderId, commentId);
+  parseApiResponseData(
+    await localApiRequest(path, { method: 'DELETE' }),
+    parseMessageResponse,
+    { url: path, method: 'DELETE' }
   );
 }
 
@@ -226,10 +236,14 @@ export async function getPharmacyOrderSalesStatistics(
   params: PharmacyOrderSalesStatisticsQueryParams = {},
   options?: JsonResponseRequestOptions
 ) {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    appendQueryParams(PHARMACY_API_ROUTES.orders.salesStatistics, params),
-    options
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.orders.salesStatistics,
+    params
   );
 
-  return normalizeOrderSalesStatistics(getResponseData(response));
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    normalizeOrderSalesStatistics,
+    { url: path, method: 'GET' }
+  );
 }

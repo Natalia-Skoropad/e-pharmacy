@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { CART_PHARMACY_LIMIT_ERROR_CODE } from '@e-pharmacy/config/cart';
-import { ApiError } from '@e-pharmacy/api-client/core';
+import { ApiError } from '@e-pharmacy/api-client/transport';
 
 import { isCartOrderLimitError } from './order-limit';
 

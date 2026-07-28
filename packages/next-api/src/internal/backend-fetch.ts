@@ -5,7 +5,7 @@ import {
   type FetchExecutionResult,
   type HttpMethod,
   type RequestOptions,
-} from '@e-pharmacy/api-client/core';
+} from '@e-pharmacy/api-client/transport';
 
 import { createTrustedBackendApiUrl } from './backend-url';
 import type { AuthCookieForwardMode } from './cookie-header';

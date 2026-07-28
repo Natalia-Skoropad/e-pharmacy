@@ -1,7 +1,7 @@
 import 'server-only';
 import type { Metadata } from 'next';
 
-import { ApiError } from '@e-pharmacy/api-client/core';
+import { ApiError } from '@e-pharmacy/api-client/transport';
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 
 import { buildPharmacyPath, getIdFromSlugId } from '@/lib/routes';

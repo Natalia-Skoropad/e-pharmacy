@@ -56,24 +56,24 @@ const browserApiRequest = await read(
 );
 
 const sharedApiRequest = await read(
-  'packages/api-client/src/core/api-request.ts'
+  'packages/api-client/src/transport/api-request.ts'
 );
 
 const sharedRequestExecutor = await read(
-  'packages/api-client/src/core/request-executor.ts'
+  'packages/api-client/src/transport/request-executor.ts'
 );
 
 const sharedFetchExecutor = await read(
-  'packages/api-client/src/core/fetch-executor.ts'
+  'packages/api-client/src/transport/fetch-executor.ts'
 );
 
-const sharedApiUrl = await read('packages/api-client/src/core/api-url.ts');
+const sharedApiUrl = await read('packages/api-client/src/transport/api-url.ts');
 const sharedRequestUtils = await read(
-  'packages/api-client/src/core/request-utils.ts'
+  'packages/api-client/src/transport/request-utils.ts'
 );
 
 const sharedRequestTypes = await read(
-  'packages/api-client/src/core/types.ts'
+  'packages/api-client/src/transport/types.ts'
 );
 
 const backendAuthController = await read(

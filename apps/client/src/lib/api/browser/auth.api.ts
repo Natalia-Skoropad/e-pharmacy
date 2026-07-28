@@ -1,19 +1,18 @@
 import 'client-only';
 
+import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
+
+import {
+  parseActiveSessionsResponse,
+  parseApiEmptyResponse,
+  parseApiResponseData,
+} from '@e-pharmacy/api-client/response';
+
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { parseAuthResponse } from '@e-pharmacy/validation/auth';
 
-import {
-  getResponseData,
-  type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/core';
-
 import type {
-  ApiEmptySuccessResponse,
-  ApiSuccessResponse,
-} from '@e-pharmacy/types/api';
-
-import type {
+  ActiveSessionsResponse,
   AuthResponse,
   ForgotPasswordPayload,
   LoginPayload,
@@ -21,7 +20,6 @@ import type {
   ResetPasswordPayload,
   UpdatePasswordPayload,
   UpdateProfilePayload,
-  ActiveSessionsResponse,
 } from '@e-pharmacy/types/auth';
 
 import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
@@ -32,16 +30,17 @@ export async function registerUser(
   payload: RegisterPayload,
   options?: { signal?: AbortSignal }
 ): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    CLIENT_API_ROUTES.auth.register,
-    {
+  const path = CLIENT_API_ROUTES.auth.register;
+
+  return parseApiResponseData(
+    await localApiRequest(path, {
       method: 'POST',
       body: payload,
       signal: options?.signal,
-    }
+    }),
+    parseAuthResponse,
+    { url: path, method: 'POST' }
   );
-
-  return parseAuthResponse(getResponseData(response));
 }
 
 //===================================================================
@@ -50,16 +49,17 @@ export async function loginUser(
   payload: LoginPayload,
   options?: { signal?: AbortSignal }
 ): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    CLIENT_API_ROUTES.auth.login,
-    {
+  const path = CLIENT_API_ROUTES.auth.login;
+
+  return parseApiResponseData(
+    await localApiRequest(path, {
       method: 'POST',
       body: payload,
       signal: options?.signal,
-    }
+    }),
+    parseAuthResponse,
+    { url: path, method: 'POST' }
   );
-
-  return parseAuthResponse(getResponseData(response));
 }
 
 //===================================================================
@@ -67,12 +67,10 @@ export async function loginUser(
 export async function requestPasswordReset(
   payload: ForgotPasswordPayload
 ): Promise<void> {
-  await localApiRequest<ApiEmptySuccessResponse>(
-    CLIENT_API_ROUTES.auth.passwordResetRequest,
-    {
-      method: 'POST',
-      body: payload,
-    }
+  const path = CLIENT_API_ROUTES.auth.passwordResetRequest;
+  parseApiEmptyResponse(
+    await localApiRequest(path, { method: 'POST', body: payload }),
+    { url: path, method: 'POST' }
   );
 }
 
@@ -81,51 +79,50 @@ export async function requestPasswordReset(
 export async function resetPassword(
   payload: ResetPasswordPayload
 ): Promise<void> {
-  await localApiRequest<ApiEmptySuccessResponse>(
-    CLIENT_API_ROUTES.auth.passwordResetConfirm,
-    {
-      method: 'POST',
-      body: payload,
-    }
+  const path = CLIENT_API_ROUTES.auth.passwordResetConfirm;
+  parseApiEmptyResponse(
+    await localApiRequest(path, { method: 'POST', body: payload }),
+    { url: path, method: 'POST' }
   );
 }
 
 //===================================================================
 
-export async function getCurrentUser(
-  options?: { signal?: AbortSignal }
-): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    CLIENT_API_ROUTES.auth.current,
-    { signal: options?.signal }
-  );
+export async function getCurrentUser(options?: {
+  signal?: AbortSignal;
+}): Promise<AuthResponse> {
+  const path = CLIENT_API_ROUTES.auth.current;
 
-  return parseAuthResponse(getResponseData(response));
+  return parseApiResponseData(
+    await localApiRequest(path, { signal: options?.signal }),
+    parseAuthResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
 
-export async function logoutUser(
-  options?: { signal?: AbortSignal }
-): Promise<void> {
-  await localApiRequest<ApiEmptySuccessResponse>(
-    CLIENT_API_ROUTES.auth.logout,
-    {
+export async function logoutUser(options?: {
+  signal?: AbortSignal;
+}): Promise<void> {
+  const path = CLIENT_API_ROUTES.auth.logout;
+  parseApiEmptyResponse(
+    await localApiRequest(path, {
       method: 'POST',
       signal: options?.signal,
-    }
+    }),
+    { url: path, method: 'POST' }
   );
 }
 
 //===================================================================
 
 export async function logoutAllUserSessions(): Promise<void> {
-  await localApiRequest<ApiEmptySuccessResponse>(
-    CLIENT_API_ROUTES.auth.logoutAll,
-    {
-      method: 'POST',
-    }
-  );
+  const path = CLIENT_API_ROUTES.auth.logoutAll;
+  parseApiEmptyResponse(await localApiRequest(path, { method: 'POST' }), {
+    url: path,
+    method: 'POST',
+  });
 }
 
 //===================================================================
@@ -133,15 +130,13 @@ export async function logoutAllUserSessions(): Promise<void> {
 export async function updateCurrentUser(
   payload: UpdateProfilePayload
 ): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    CLIENT_API_ROUTES.auth.current,
-    {
-      method: 'PATCH',
-      body: payload,
-    }
-  );
+  const path = CLIENT_API_ROUTES.auth.current;
 
-  return parseAuthResponse(getResponseData(response));
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'PATCH', body: payload }),
+    parseAuthResponse,
+    { url: path, method: 'PATCH' }
+  );
 }
 
 //===================================================================
@@ -149,12 +144,10 @@ export async function updateCurrentUser(
 export async function updateCurrentUserPassword(
   payload: UpdatePasswordPayload
 ): Promise<void> {
-  await localApiRequest<ApiEmptySuccessResponse>(
-    CLIENT_API_ROUTES.auth.password,
-    {
-      method: 'PATCH',
-      body: payload,
-    }
+  const path = CLIENT_API_ROUTES.auth.password;
+  parseApiEmptyResponse(
+    await localApiRequest(path, { method: 'PATCH', body: payload }),
+    { url: path, method: 'PATCH' }
   );
 }
 
@@ -163,17 +156,21 @@ export async function updateCurrentUserPassword(
 export async function getActiveSessions(
   options?: JsonResponseRequestOptions
 ): Promise<ActiveSessionsResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<ActiveSessionsResponse>
-  >(CLIENT_API_ROUTES.auth.sessions, options);
-  return getResponseData(response);
+  const path = CLIENT_API_ROUTES.auth.sessions;
+
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseActiveSessionsResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
 
 export async function revokeActiveSession(sessionId: string): Promise<void> {
-  await localApiRequest<ApiEmptySuccessResponse>(
-    CLIENT_API_ROUTES.auth.session(sessionId),
-    { method: 'DELETE' }
-  );
+  const path = CLIENT_API_ROUTES.auth.session(sessionId);
+  parseApiEmptyResponse(await localApiRequest(path, { method: 'DELETE' }), {
+    url: path,
+    method: 'DELETE',
+  });
 }

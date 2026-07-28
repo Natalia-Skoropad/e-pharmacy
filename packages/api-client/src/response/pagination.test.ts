@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { ApiError } from '../core/api-error';
+import { ApiError } from '../transport/api-error';
 
 import {
   normalizePaginatedResponse,

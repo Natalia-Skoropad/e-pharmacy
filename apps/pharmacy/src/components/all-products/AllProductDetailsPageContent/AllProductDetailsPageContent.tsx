@@ -57,7 +57,7 @@ import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { isApiError } from '@e-pharmacy/api-client/core';
+import { isApiError } from '@e-pharmacy/api-client/transport';
 import { OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
 import type { OrderStatus } from '@e-pharmacy/types/orders';
 

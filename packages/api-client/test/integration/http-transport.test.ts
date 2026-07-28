@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import test from 'node:test';
 
-import { ApiError, createApiClient } from '../../src/core/index';
+import { ApiError, createApiClient } from '../../src/transport/index';
 
 //===================================================================
 

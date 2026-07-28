@@ -3,7 +3,7 @@ import {
   MAX_PHARMACY_GROUPS_PER_CART,
 } from '@e-pharmacy/config/cart';
 
-import { ApiError } from '@e-pharmacy/api-client/core';
+import { ApiError } from '@e-pharmacy/api-client/transport';
 
 //===================================================================
 

@@ -14,8 +14,8 @@ const sourceRoot = path.join(repositoryRoot, 'packages/api-client/src');
 
 const barrels = (
   await Promise.all(
-    ['contracts/index.ts', 'core/index.ts', 'response/index.ts'].map((file) =>
-      readFile(path.join(sourceRoot, file), 'utf8')
+    ['contracts/index.ts', 'transport/index.ts', 'response/index.ts'].map(
+      (file) => readFile(path.join(sourceRoot, file), 'utf8')
     )
   )
 ).join('\n');
@@ -24,6 +24,7 @@ const removedOrInternalCandidates = [
   'API_HEADERS',
   'storefrontRoutes',
   'createApiUrl',
+  'getResponseData',
   'getNullableResponseData',
   'assertSuccessfulEmptyResponse',
   'isNativeRequestBody',
@@ -52,6 +53,7 @@ const deletedFiles = [
   'contracts/local-api-routes.ts',
   'contracts/storefront-routes.ts',
   'core/build-query-string.ts',
+  'core/get-response-data.ts',
   'core/parse-json-safe.ts',
   'index.ts',
 ];

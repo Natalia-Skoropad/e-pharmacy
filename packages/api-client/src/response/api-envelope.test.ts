@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { ApiError } from '../core/api-error';
-import { getApiErrorMessage } from '../core/get-api-error-message';
+import { ApiError } from '../transport/api-error';
+import { getApiErrorMessage } from '../transport/get-api-error-message';
 
 import {
   parseApiEmptySuccessEnvelope,

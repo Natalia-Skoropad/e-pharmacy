@@ -112,6 +112,8 @@ function createAbortError(signal: AbortSignal): unknown {
   return new DOMException('The operation was aborted.', 'AbortError');
 }
 
+//===================================================================
+
 export function wait(ms: number, signal?: AbortSignal): Promise<void> {
   assertFiniteNonNegative(ms, 'Delay');
 
@@ -144,6 +146,8 @@ function hasErrorName(error: unknown, name: string): boolean {
     (error as { name?: unknown }).name === name
   );
 }
+
+//===================================================================
 
 export function toTransportError(
   error: unknown,

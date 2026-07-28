@@ -57,6 +57,8 @@ const INTENTIONALLY_PUBLIC = new Set([
   'pharmacies:PendingPharmacyReviewTarget',
   'pharmacies:PharmacyPendingModeration',
   'product-requests:ProductRequestHistoryResponseDto',
+  'product-requests:ProductRequestResponseDto',
+  'product-requests:ProductRequestsResponseDto',
   'products:PendingProductReviewTarget',
   'products:ProductsSortOption',
   'products:ProductSummary',

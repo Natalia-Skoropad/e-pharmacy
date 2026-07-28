@@ -3,26 +3,18 @@ import 'client-only';
 import {
   ApiError,
   appendQueryParams,
-  getResponseData,
   type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/core';
+} from '@e-pharmacy/api-client/transport';
 
-import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
+import {
+  parseApiResponseData,
+  parseMessageResponse,
+  type ApiResponseContext,
+} from '@e-pharmacy/api-client/response';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
+
 import { isRecord } from '@e-pharmacy/utils/guards';
-
-import type {
-  ProductRequestFormPayload,
-  ProductRequestResponseDto,
-  ProductRequestsResponseDto,
-} from '@e-pharmacy/types/product-requests';
-
-import type {
-  ProductRequestDetailsViewModel,
-  ProductRequestRowViewModel,
-  ProductRequestsQueryParams,
-  ProductRequestsViewModelResponse,
-} from '@/lib/product-requests/product-requests';
+import type { ProductRequestFormPayload } from '@e-pharmacy/types/product-requests';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
@@ -30,6 +22,10 @@ import {
   normalizeProductRequest,
   normalizeProductRequestDetails,
   normalizeProductRequestsResponse,
+  type ProductRequestDetailsViewModel,
+  type ProductRequestRowViewModel,
+  type ProductRequestsQueryParams,
+  type ProductRequestsViewModelResponse,
 } from '@/lib/product-requests/product-requests';
 
 //===================================================================
@@ -42,12 +38,14 @@ type ArticleAvailabilityResult = Readonly<{
 //===================================================================
 
 function parseArticleAvailabilityResponse(
-  value: unknown
+  value: unknown,
+  context?: ApiResponseContext
 ): ArticleAvailabilityResult {
   if (!isRecord(value) || typeof value.available !== 'boolean') {
     throw new ApiError('Article availability response is invalid.', {
       transportCode: 'INVALID_RESPONSE',
       payload: value,
+      ...context,
     });
   }
 
@@ -55,6 +53,7 @@ function parseArticleAvailabilityResponse(
     throw new ApiError('Article availability response message is invalid.', {
       transportCode: 'INVALID_RESPONSE',
       payload: value,
+      ...context,
     });
   }
 
@@ -66,24 +65,60 @@ function parseArticleAvailabilityResponse(
 
 //===================================================================
 
+function parseProductRequestRow(
+  value: unknown,
+  context?: ApiResponseContext
+): ProductRequestRowViewModel {
+  const payload = isRecord(value) ? value.request : undefined;
+  const request = normalizeProductRequest(payload);
+
+  if (!request) {
+    throw new ApiError(
+      'Product request response does not match its contract.',
+      {
+        transportCode: 'INVALID_RESPONSE',
+        payload: value,
+        ...context,
+      }
+    );
+  }
+  return request;
+}
+
+//===================================================================
+
+function parseProductRequestDetails(
+  value: unknown,
+  context?: ApiResponseContext
+): ProductRequestDetailsViewModel {
+  const payload = isRecord(value) ? value.request : undefined;
+  const request = normalizeProductRequestDetails(payload);
+
+  if (!request) {
+    throw new ApiError(
+      'Product request response does not match its contract.',
+      {
+        transportCode: 'INVALID_RESPONSE',
+        payload: value,
+        ...context,
+      }
+    );
+  }
+  return request;
+}
+
+//===================================================================
+
 export async function createPharmacyProductRequest(
   payload: ProductRequestFormPayload
 ): Promise<ProductRequestRowViewModel> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<{ request?: ProductRequestResponseDto }>
-  >(PHARMACY_API_ROUTES.productRequests.list, {
-    method: 'POST',
-    body: payload,
-  });
+  const path = PHARMACY_API_ROUTES.productRequests.list;
 
-  const data = getResponseData(response);
-  const request = normalizeProductRequest(data.request);
-
-  if (!request) {
-    throw new Error('Product request could not be created.');
-  }
-
-  return request;
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'POST', body: payload }),
+    parseProductRequestRow,
+    { url: path, method: 'POST' }
+  );
 }
 
 //===================================================================
@@ -92,16 +127,17 @@ export async function checkPharmacyProductRequestArticle(
   article: string,
   excludeRequestId?: string,
   options?: JsonResponseRequestOptions
-): Promise<{ available: boolean; message?: string }> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    appendQueryParams(
-      PHARMACY_API_ROUTES.productRequests.articleAvailability,
-      { article, excludeRequestId }
-    ),
-    options
+): Promise<ArticleAvailabilityResult> {
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.productRequests.articleAvailability,
+    { article, excludeRequestId }
   );
 
-  return parseArticleAvailabilityResponse(getResponseData(response));
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseArticleAvailabilityResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
@@ -110,14 +146,16 @@ export async function getPharmacyProductRequests(
   params: ProductRequestsQueryParams = {},
   options?: JsonResponseRequestOptions
 ): Promise<ProductRequestsViewModelResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<ProductRequestsResponseDto>
-  >(
-    appendQueryParams(PHARMACY_API_ROUTES.productRequests.list, params),
-    options
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.productRequests.list,
+    params
   );
 
-  return normalizeProductRequestsResponse(getResponseData(response));
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    normalizeProductRequestsResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
@@ -126,18 +164,13 @@ export async function getPharmacyProductRequest(
   requestId: string,
   options?: JsonResponseRequestOptions
 ): Promise<ProductRequestDetailsViewModel> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<{ request?: ProductRequestResponseDto }>
-  >(PHARMACY_API_ROUTES.productRequests.details(requestId), options);
+  const path = PHARMACY_API_ROUTES.productRequests.details(requestId);
 
-  const data = getResponseData(response);
-  const request = normalizeProductRequestDetails(data.request);
-
-  if (!request) {
-    throw new Error('Product request could not be loaded.');
-  }
-
-  return request;
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseProductRequestDetails,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
@@ -146,21 +179,13 @@ export async function updatePharmacyProductRequest(
   requestId: string,
   payload: ProductRequestFormPayload
 ): Promise<ProductRequestDetailsViewModel> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<{ request?: ProductRequestResponseDto }>
-  >(PHARMACY_API_ROUTES.productRequests.details(requestId), {
-    method: 'PATCH',
-    body: payload,
-  });
+  const path = PHARMACY_API_ROUTES.productRequests.details(requestId);
 
-  const data = getResponseData(response);
-  const request = normalizeProductRequestDetails(data.request);
-
-  if (!request) {
-    throw new Error('Product request could not be updated.');
-  }
-
-  return request;
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'PATCH', body: payload }),
+    parseProductRequestDetails,
+    { url: path, method: 'PATCH' }
+  );
 }
 
 //===================================================================
@@ -168,8 +193,11 @@ export async function updatePharmacyProductRequest(
 export async function deletePharmacyProductRequest(
   requestId: string
 ): Promise<void> {
-  await localApiRequest(
-    PHARMACY_API_ROUTES.productRequests.details(requestId),
-    { method: 'DELETE' }
+  const path = PHARMACY_API_ROUTES.productRequests.details(requestId);
+
+  parseApiResponseData(
+    await localApiRequest(path, { method: 'DELETE' }),
+    parseMessageResponse,
+    { url: path, method: 'DELETE' }
   );
 }

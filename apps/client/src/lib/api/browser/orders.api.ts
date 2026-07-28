@@ -1,13 +1,15 @@
 import 'client-only';
 
-import { localApiRequest } from '@e-pharmacy/next-api/browser';
+import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
 
 import {
-  getResponseData,
-  type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/core';
+  parseApiResponseData,
+  parseCheckoutOrderResponse,
+  parseClientOrderDetailsResponse,
+  parseClientOrdersResponse,
+} from '@e-pharmacy/api-client/response';
 
-import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
+import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
   CheckoutOrderPayload,
@@ -24,15 +26,13 @@ export async function checkoutOrder(
   payload: CheckoutOrderPayload,
   options: JsonResponseRequestOptions = {}
 ): Promise<CheckoutOrderResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<CheckoutOrderResponse>
-  >(CLIENT_API_ROUTES.orders.checkout, {
-    ...options,
-    method: 'POST',
-    body: payload,
-  });
+  const path = CLIENT_API_ROUTES.orders.checkout;
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, { ...options, method: 'POST', body: payload }),
+    parseCheckoutOrderResponse,
+    { url: path, method: 'POST' }
+  );
 }
 
 //===================================================================
@@ -40,11 +40,13 @@ export async function checkoutOrder(
 export async function getOrders(
   options?: JsonResponseRequestOptions
 ): Promise<ClientOrdersResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<ClientOrdersResponse>
-  >(CLIENT_API_ROUTES.orders.list, options);
+  const path = CLIENT_API_ROUTES.orders.list;
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseClientOrdersResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
@@ -53,9 +55,11 @@ export async function getOrderDetails(
   orderId: string,
   options?: JsonResponseRequestOptions
 ): Promise<ClientOrderDetailsResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<ClientOrderDetailsResponse>
-  >(CLIENT_API_ROUTES.orders.details(orderId), options);
+  const path = CLIENT_API_ROUTES.orders.details(orderId);
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseClientOrderDetailsResponse,
+    { url: path, method: 'GET' }
+  );
 }

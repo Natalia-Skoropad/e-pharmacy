@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 
-import type { HttpMethod } from '@e-pharmacy/api-client/core';
+import type { HttpMethod } from '@e-pharmacy/api-client/transport';
 
 import type { AuthCookieForwardMode } from '../internal/cookie-header';
 import { validateBffMutationRequest } from '../internal/csrf';

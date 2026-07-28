@@ -1,17 +1,17 @@
 import 'client-only';
 
+import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
+
 import {
-  getResponseData,
-  type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/core';
+  parseActiveSessionsResponse,
+  parseApiEmptyResponse,
+  parseApiResponseData,
+  parsePharmacyProfileResponse,
+  parseSendPharmacyForVerificationResponse,
+} from '@e-pharmacy/api-client/response';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { parseAuthResponse } from '@e-pharmacy/validation/auth';
-
-import type {
-  ApiEmptySuccessResponse,
-  ApiSuccessResponse,
-} from '@e-pharmacy/types/api';
 
 import type {
   ActiveSessionsResponse,
@@ -33,11 +33,13 @@ import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharm
 export async function getMyPharmacyProfile(
   options?: JsonResponseRequestOptions
 ): Promise<PharmacyProfileResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<PharmacyProfileResponse>
-  >(PHARMACY_API_ROUTES.pharmacies.myProfile, options);
+  const path = PHARMACY_API_ROUTES.pharmacies.myProfile;
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parsePharmacyProfileResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
@@ -45,27 +47,25 @@ export async function getMyPharmacyProfile(
 export async function updateMyPharmacyProfile(
   payload: UpdateMyPharmacyProfilePayload
 ): Promise<PharmacyProfileResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<PharmacyProfileResponse>
-  >(PHARMACY_API_ROUTES.pharmacies.myProfile, {
-    method: 'PATCH',
-    body: payload,
-  });
+  const path = PHARMACY_API_ROUTES.pharmacies.myProfile;
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'PATCH', body: payload }),
+    parsePharmacyProfileResponse,
+    { url: path, method: 'PATCH' }
+  );
 }
 
 //===================================================================
 
 export async function sendMyPharmacyForVerification(): Promise<SendPharmacyForVerificationResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<SendPharmacyForVerificationResponse>
-  >(PHARMACY_API_ROUTES.pharmacies.sendMyProfileForVerification, {
-    method: 'POST',
-    body: {},
-  });
+  const path = PHARMACY_API_ROUTES.pharmacies.sendMyProfileForVerification;
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'POST', body: {} }),
+    parseSendPharmacyForVerificationResponse,
+    { url: path, method: 'POST' }
+  );
 }
 
 //===================================================================
@@ -73,15 +73,13 @@ export async function sendMyPharmacyForVerification(): Promise<SendPharmacyForVe
 export async function updateCurrentUser(
   payload: UpdateProfilePayload
 ): Promise<AuthResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    PHARMACY_API_ROUTES.auth.current,
-    {
-      method: 'PATCH',
-      body: payload,
-    }
-  );
+  const path = PHARMACY_API_ROUTES.auth.current;
 
-  return parseAuthResponse(getResponseData(response));
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'PATCH', body: payload }),
+    parseAuthResponse,
+    { url: path, method: 'PATCH' }
+  );
 }
 
 //===================================================================
@@ -89,12 +87,11 @@ export async function updateCurrentUser(
 export async function updateCurrentUserPassword(
   payload: UpdatePasswordPayload
 ): Promise<void> {
-  await localApiRequest<ApiEmptySuccessResponse>(
-    PHARMACY_API_ROUTES.auth.password,
-    {
-      method: 'PATCH',
-      body: payload,
-    }
+  const path = PHARMACY_API_ROUTES.auth.password;
+
+  parseApiEmptyResponse(
+    await localApiRequest(path, { method: 'PATCH', body: payload }),
+    { url: path, method: 'PATCH' }
   );
 }
 
@@ -103,20 +100,22 @@ export async function updateCurrentUserPassword(
 export async function getActiveSessions(
   options?: JsonResponseRequestOptions
 ): Promise<ActiveSessionsResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<ActiveSessionsResponse>
-  >(PHARMACY_API_ROUTES.auth.sessions, options);
+  const path = PHARMACY_API_ROUTES.auth.sessions;
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseActiveSessionsResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
 
 export async function revokeActiveSession(sessionId: string): Promise<void> {
-  await localApiRequest<ApiEmptySuccessResponse>(
-    PHARMACY_API_ROUTES.auth.session(sessionId),
-    {
-      method: 'DELETE',
-    }
-  );
+  const path = PHARMACY_API_ROUTES.auth.session(sessionId);
+
+  parseApiEmptyResponse(await localApiRequest(path, { method: 'DELETE' }), {
+    url: path,
+    method: 'DELETE',
+  });
 }

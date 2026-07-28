@@ -1,8 +1,13 @@
-import { ApiError } from '../core/api-error';
+import { ApiError } from '../transport/api-error';
+import type { ApiErrorOptions } from '../transport/api-error';
 
 //===================================================================
 
 type UnknownRecord = Record<PropertyKey, unknown>;
+
+export type ApiResponseContext = Readonly<
+  Pick<ApiErrorOptions, 'url' | 'method' | 'requestId'>
+>;
 
 export type ApiSuccessEnvelope<TData> = Readonly<{
   status: 'success';
@@ -37,10 +42,15 @@ function hasOwn(value: UnknownRecord, key: PropertyKey): boolean {
 
 //===================================================================
 
-function invalidEnvelope(message: string, payload: unknown): ApiError {
+function invalidEnvelope(
+  message: string,
+  payload: unknown,
+  context: ApiResponseContext = {}
+): ApiError {
   return new ApiError(message, {
     transportCode: 'INVALID_RESPONSE',
     payload,
+    ...context,
   });
 }
 
@@ -48,11 +58,16 @@ function invalidEnvelope(message: string, payload: unknown): ApiError {
 
 function parseOptionalMessage(
   value: UnknownRecord,
-  payload: unknown
+  payload: unknown,
+  context: ApiResponseContext
 ): string | undefined {
   if (!hasOwn(value, 'message')) return undefined;
   if (typeof value.message !== 'string') {
-    throw invalidEnvelope('API response message must be a string.', payload);
+    throw invalidEnvelope(
+      'API response message must be a string.',
+      payload,
+      context
+    );
   }
 
   return value.message;
@@ -61,21 +76,30 @@ function parseOptionalMessage(
 //===================================================================
 
 export function parseApiSuccessEnvelope(
-  value: unknown
+  value: unknown,
+  context: ApiResponseContext = {}
 ): ApiSuccessEnvelope<unknown> {
   if (!isRecord(value)) {
-    throw invalidEnvelope('API success response must be an object.', value);
+    throw invalidEnvelope(
+      'API success response must be an object.',
+      value,
+      context
+    );
   }
 
   if (!hasOwn(value, 'status') || value.status !== 'success') {
-    throw invalidEnvelope('API response status is not success.', value);
+    throw invalidEnvelope('API response status is not success.', value, context);
   }
 
   if (!hasOwn(value, 'data')) {
-    throw invalidEnvelope('API success response data field is missing.', value);
+    throw invalidEnvelope(
+      'API success response data field is missing.',
+      value,
+      context
+    );
   }
 
-  const message = parseOptionalMessage(value, value);
+  const message = parseOptionalMessage(value, value, context);
 
   return {
     status: 'success',
@@ -87,35 +111,39 @@ export function parseApiSuccessEnvelope(
 //===================================================================
 
 export function parseApiNullableSuccessEnvelope(
-  value: unknown
+  value: unknown,
+  context: ApiResponseContext = {}
 ): ApiSuccessEnvelope<unknown | null> {
-  return parseApiSuccessEnvelope(value);
+  return parseApiSuccessEnvelope(value, context);
 }
 
 //===================================================================
 
 export function parseApiEmptySuccessEnvelope(
-  value: unknown
+  value: unknown,
+  context: ApiResponseContext = {}
 ): ApiEmptySuccessEnvelope {
   if (!isRecord(value)) {
     throw invalidEnvelope(
       'API empty success response must be an object.',
-      value
+      value,
+      context
     );
   }
 
   if (!hasOwn(value, 'status') || value.status !== 'success') {
-    throw invalidEnvelope('API response status is not success.', value);
+    throw invalidEnvelope('API response status is not success.', value, context);
   }
 
   if (hasOwn(value, 'data')) {
     throw invalidEnvelope(
       'API empty success response must not contain a data field.',
-      value
+      value,
+      context
     );
   }
 
-  const message = parseOptionalMessage(value, value);
+  const message = parseOptionalMessage(value, value, context);
 
   return {
     status: 'success',

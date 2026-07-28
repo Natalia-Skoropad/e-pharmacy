@@ -12,11 +12,6 @@ export type ApiRequestBody = JsonRequestBody | TextRequestBody;
 
 //===================================================================
 
-export type NextRequestOptions = Readonly<{
-  revalidate?: number | false;
-  tags?: readonly string[];
-}>;
-
 export type ApiRetryConfig = Readonly<{
   attempts?: number;
   statuses?: readonly number[];
@@ -30,7 +25,6 @@ export type RequestOptions = {
   body?: ApiRequestBody;
   headers?: HeadersInit;
   cache?: RequestCache;
-  next?: NextRequestOptions;
   credentials?: RequestCredentials;
   signal?: AbortSignal;
   timeoutMs?: number;

@@ -75,6 +75,9 @@
       ],
       "@e-pharmacy/next-api/proxy": [
         "../../packages/next-api/src/proxy/index.ts"
+      ],
+      "@e-pharmacy/next-api/contracts": [
+        "../../packages/next-api/src/contracts/index.ts"
       ]
     }
   },

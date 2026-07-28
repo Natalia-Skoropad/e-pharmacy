@@ -4,7 +4,7 @@ import {
   type JsonResponseRequestOptions,
   type NoContentResponseRequestOptions,
   type RequestOptions,
-} from '@e-pharmacy/api-client/core';
+} from '@e-pharmacy/api-client/transport';
 
 import {
   BFF_CSRF_HEADER_NAME,
@@ -28,10 +28,10 @@ export function localApiRequest(
   options: NoContentResponseRequestOptions
 ): Promise<void>;
 
-export function localApiRequest<TData>(
+export function localApiRequest(
   path: string,
   options?: JsonResponseRequestOptions
-): Promise<TData>;
+): Promise<unknown>;
 
 export async function localApiRequest(
   path: string,

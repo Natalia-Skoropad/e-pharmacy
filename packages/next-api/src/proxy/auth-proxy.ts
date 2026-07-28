@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 
-import type { HttpMethod } from '@e-pharmacy/api-client/core';
+import type { HttpMethod } from '@e-pharmacy/api-client/transport';
 
 import { executeBackendFetch } from '../internal/backend-fetch';
 import { isJsonContentType } from '../internal/backend-response';

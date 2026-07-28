@@ -1,4 +1,4 @@
-import { isApiError } from '@e-pharmacy/api-client/core';
+import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import { APP_ERROR_MESSAGES } from './error-messages';
 

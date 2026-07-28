@@ -1,10 +1,15 @@
 import {
   appendQueryParams,
-  getResponseData,
   type RequestOptions,
-} from '@e-pharmacy/api-client/core';
+} from '@e-pharmacy/api-client/transport';
 
-import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
+import {
+  parseApiResponseData,
+  parseProductDetailsResponse,
+  parseProductFilterOptionsResponse,
+  parseProductsResponse,
+  parseReviewsResponse,
+} from '@e-pharmacy/api-client/response';
 
 import type {
   CatalogProductsQueryParams,
@@ -22,10 +27,10 @@ export type ProductFiltersQueryParams = Pick<
   'pharmacyId' | 'inStock'
 >;
 
-export type ApiReaderRequester<TOptions extends RequestOptions> = <TData>(
+export type ApiReaderRequester<TOptions extends RequestOptions> = (
   path: string,
   options?: TOptions
-) => Promise<TData>;
+) => Promise<unknown>;
 
 export type PublicProductReadRoutes = Readonly<{
   list: string;
@@ -45,11 +50,12 @@ export function createPublicProductsReader<TOptions extends RequestOptions>(
       params: CatalogProductsQueryParams = {},
       options?: TOptions
     ): Promise<ProductsResponse> {
-      return getResponseData(
-        await request<ApiSuccessResponse<ProductsResponse>>(
-          appendQueryParams(routes.list, params),
-          options
-        )
+      const path = appendQueryParams(routes.list, params);
+
+      return parseApiResponseData(
+        await request(path, options),
+        parseProductsResponse,
+        { url: path, method: 'GET' }
       );
     },
 
@@ -57,11 +63,12 @@ export function createPublicProductsReader<TOptions extends RequestOptions>(
       params: ProductFiltersQueryParams = {},
       options?: TOptions
     ): Promise<ProductFilterOptionsResponse> {
-      return getResponseData(
-        await request<ApiSuccessResponse<ProductFilterOptionsResponse>>(
-          appendQueryParams(routes.filters, params),
-          options
-        )
+      const path = appendQueryParams(routes.filters, params);
+
+      return parseApiResponseData(
+        await request(path, options),
+        parseProductFilterOptionsResponse,
+        { url: path, method: 'GET' }
       );
     },
 
@@ -69,20 +76,22 @@ export function createPublicProductsReader<TOptions extends RequestOptions>(
       id: string,
       options?: TOptions
     ): Promise<ProductDetailsResponse> {
-      return getResponseData(
-        await request<ApiSuccessResponse<ProductDetailsResponse>>(
-          routes.details(id),
-          options
-        )
+      const path = routes.details(id);
+
+      return parseApiResponseData(
+        await request(path, options),
+        parseProductDetailsResponse,
+        { url: path, method: 'GET' }
       );
     },
 
     async getReviews(id: string, options?: TOptions): Promise<ReviewsResponse> {
-      return getResponseData(
-        await request<ApiSuccessResponse<ReviewsResponse>>(
-          routes.reviews(id),
-          options
-        )
+      const path = routes.reviews(id);
+
+      return parseApiResponseData(
+        await request(path, options),
+        parseReviewsResponse,
+        { url: path, method: 'GET' }
       );
     },
   } as const;

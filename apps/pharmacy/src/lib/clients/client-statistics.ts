@@ -1,4 +1,4 @@
-import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/core';
+import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
 
 import { getPharmacyClients } from '@/lib/api/browser';
 import { DEFAULT_CLIENT_STATISTICS } from '@/lib/statistics/defaults';

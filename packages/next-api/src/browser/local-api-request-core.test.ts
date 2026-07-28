@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { ApiError } from '@e-pharmacy/api-client/core';
+import { ApiError } from '@e-pharmacy/api-client/transport';
 
 import { localApiRequest } from './local-api-request-core.ts';
 

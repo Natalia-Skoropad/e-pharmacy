@@ -1,5 +1,5 @@
 import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
-import { ApiError } from '../core/api-error';
+import { ApiError } from '../transport/api-error';
 
 //===================================================================
 

@@ -8,7 +8,7 @@ import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
-import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/core';
+import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {

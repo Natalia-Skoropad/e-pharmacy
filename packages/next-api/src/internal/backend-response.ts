@@ -1,4 +1,4 @@
-import { isJsonContentType } from '@e-pharmacy/api-client/core';
+import { isJsonContentType } from '@e-pharmacy/api-client/transport';
 
 //===================================================================
 
@@ -12,6 +12,8 @@ export class InvalidBackendResponseError extends Error {
 //===================================================================
 
 export { isJsonContentType };
+
+//===================================================================
 
 export async function validateBackendJsonResponse(
   response: Response

@@ -47,6 +47,10 @@ Response
 `application/problem+json` and other structured `+json` media types are treated
 as JSON. Valid JSON `null`, non-JSON and malformed JSON remain distinct states.
 
+JSON requesters return `unknown`. A domain type appears only after
+`parseApiResponseData()` validates the success envelope and invokes an explicit
+endpoint DTO parser. Application view-model normalization remains app-local.
+
 ## Transport policy
 
 - `apiRequest` requires a configured `baseUrl`; `createApiClient` is preferred.
@@ -55,6 +59,8 @@ as JSON. Valid JSON `null`, non-JSON and malformed JSON remain distinct states.
 - retry delays are abortable and retry responses are cancelled before reuse.
 - a caller `AbortSignal` does not disable retry; aborting it ends the operation.
 - server adapters must use `redirect: 'manual'`.
+- Next.js `revalidate` and `tags` options belong to `@e-pharmacy/next-api/server`,
+  not to the framework-neutral transport contract.
 - `429` and `Retry-After` are not retried automatically without product policy.
 
 ## Request bodies
@@ -95,7 +101,7 @@ shape (`totalPages: 1`) is accepted only with
 
 ```text
 @e-pharmacy/api-client/contracts
-@e-pharmacy/api-client/core
+@e-pharmacy/api-client/transport
 @e-pharmacy/api-client/response
 ```
 
@@ -110,7 +116,7 @@ It cleans `dist` and emits only API-client declarations:
 
 ```text
 dist/contracts/**
-dist/core/**
+dist/transport/**
 dist/response/**
 ```
 

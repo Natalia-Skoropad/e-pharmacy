@@ -1,4 +1,4 @@
-import type { HttpMethod } from '@e-pharmacy/api-client/core';
+import type { HttpMethod } from '@e-pharmacy/api-client/transport';
 
 import { BFF_CSRF_HEADER_NAME, BFF_CSRF_HEADER_VALUE } from './bff-contract';
 

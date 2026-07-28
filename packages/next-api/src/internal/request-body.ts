@@ -1,4 +1,4 @@
-import type { HttpMethod } from '@e-pharmacy/api-client/core';
+import type { HttpMethod } from '@e-pharmacy/api-client/transport';
 
 import { MAX_PROXY_REQUEST_BODY_BYTES } from './transport-policy';
 

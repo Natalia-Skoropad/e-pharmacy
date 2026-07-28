@@ -2,13 +2,20 @@ import 'client-only';
 
 import {
   appendQueryParams,
-  getResponseData,
   type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/core';
+} from '@e-pharmacy/api-client/transport';
+
+import {
+  parseApiResponseData,
+  parsePharmacyProductMutationResponse,
+  parseProductDetailsResponse,
+  parseProductsResponse,
+  parseProductStockMovementsResponse,
+  parseReviewsResponse,
+} from '@e-pharmacy/api-client/response';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
-import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 import type { ReviewsResponse } from '@e-pharmacy/types/reviews';
 
 import type {
@@ -35,12 +42,13 @@ export async function getProducts(
   params: PharmacyProductsApiQueryParams = {},
   options: JsonResponseRequestOptions = {}
 ): Promise<ProductsResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<ProductsResponse>>(
-    appendQueryParams(PHARMACY_API_ROUTES.products.list, params),
-    options
-  );
+  const path = appendQueryParams(PHARMACY_API_ROUTES.products.list, params);
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseProductsResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
@@ -49,17 +57,15 @@ export async function getPharmacyProducts(
   params: PharmacyProductsQueryParams = {},
   options?: JsonResponseRequestOptions
 ): Promise<PharmacyProductsResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    appendQueryParams(
-      PHARMACY_API_ROUTES.products.list,
-      getOwnProductBackendQuery(params)
-    ),
-    options
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.products.list,
+    getOwnProductBackendQuery(params)
   );
 
-  return normalizePharmacyProductsResponse(
-    getResponseData(response),
-    params.pharmacyId
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    (value) => normalizePharmacyProductsResponse(value, params.pharmacyId),
+    { url: path, method: 'GET' }
   );
 }
 
@@ -69,11 +75,13 @@ export async function getProductDetails(
   productId: ProductDetails['id'],
   options?: JsonResponseRequestOptions
 ): Promise<ProductDetailsResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<ProductDetailsResponse>
-  >(PHARMACY_API_ROUTES.products.details(productId), options);
+  const path = PHARMACY_API_ROUTES.products.details(productId);
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseProductDetailsResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
@@ -81,13 +89,13 @@ export async function getProductDetails(
 export async function addProductToMyPharmacy(
   productId: ProductDetails['id']
 ): Promise<PharmacyProductMutationResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<PharmacyProductMutationResponse>
-  >(PHARMACY_API_ROUTES.products.myPharmacy(productId), {
-    method: 'POST',
-  });
+  const path = PHARMACY_API_ROUTES.products.myPharmacy(productId);
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'POST' }),
+    parsePharmacyProductMutationResponse,
+    { url: path, method: 'POST' }
+  );
 }
 
 //===================================================================
@@ -95,13 +103,13 @@ export async function addProductToMyPharmacy(
 export async function removeProductFromMyPharmacy(
   productId: ProductDetails['id']
 ): Promise<PharmacyProductMutationResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<PharmacyProductMutationResponse>
-  >(PHARMACY_API_ROUTES.products.myPharmacy(productId), {
-    method: 'DELETE',
-  });
+  const path = PHARMACY_API_ROUTES.products.myPharmacy(productId);
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'DELETE' }),
+    parsePharmacyProductMutationResponse,
+    { url: path, method: 'DELETE' }
+  );
 }
 
 //===================================================================
@@ -110,11 +118,13 @@ export async function getProductStockMovements(
   productId: ProductDetails['id'],
   options?: JsonResponseRequestOptions
 ): Promise<ProductStockMovementsResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<ProductStockMovementsResponse>
-  >(PHARMACY_API_ROUTES.products.stockMovements(productId), options);
+  const path = PHARMACY_API_ROUTES.products.stockMovements(productId);
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseProductStockMovementsResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
@@ -123,9 +133,11 @@ export async function getProductReviews(
   productId: ProductDetails['id'],
   options?: JsonResponseRequestOptions
 ): Promise<ReviewsResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<ReviewsResponse>
-  >(PHARMACY_API_ROUTES.products.reviews(productId), options);
+  const path = PHARMACY_API_ROUTES.products.reviews(productId);
 
-  return getResponseData(response);
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseReviewsResponse,
+    { url: path, method: 'GET' }
+  );
 }

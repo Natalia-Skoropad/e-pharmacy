@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { NextRequest } from 'next/server';
 
-import { ApiError } from '@e-pharmacy/api-client/core';
+import { ApiError } from '@e-pharmacy/api-client/transport';
 
 import { localApiRequest } from '../../src/browser/local-api-request-core';
 import { createPublicGetProxyRoute } from '../../src/proxy/route-factories';

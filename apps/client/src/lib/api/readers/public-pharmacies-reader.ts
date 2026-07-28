@@ -1,10 +1,16 @@
 import {
   appendQueryParams,
-  getResponseData,
   type RequestOptions,
-} from '@e-pharmacy/api-client/core';
+} from '@e-pharmacy/api-client/transport';
 
-import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
+import {
+  parseApiResponseData,
+  parsePharmaciesResponse,
+  parsePharmacyDetailsResponse,
+  parsePharmacyFilterOptionsResponse,
+  parsePharmacyOptionsResponse,
+  parseReviewsResponse,
+} from '@e-pharmacy/api-client/response';
 
 import type {
   PharmaciesQueryParams,
@@ -39,31 +45,30 @@ export function createPublicPharmaciesReader<TOptions extends RequestOptions>(
       params: PharmaciesQueryParams = {},
       options?: TOptions
     ): Promise<PharmaciesResponse> {
-      return getResponseData(
-        await request<ApiSuccessResponse<PharmaciesResponse>>(
-          appendQueryParams(routes.list, params),
-          options
-        )
+      const path = appendQueryParams(routes.list, params);
+
+      return parseApiResponseData(
+        await request(path, options),
+        parsePharmaciesResponse,
+        { url: path, method: 'GET' }
       );
     },
 
     async getOptions(options?: TOptions): Promise<PharmacyOptionsResponse> {
-      return getResponseData(
-        await request<ApiSuccessResponse<PharmacyOptionsResponse>>(
-          routes.options,
-          options
-        )
+      return parseApiResponseData(
+        await request(routes.options, options),
+        parsePharmacyOptionsResponse,
+        { url: routes.options, method: 'GET' }
       );
     },
 
     async getFilters(
       options?: TOptions
     ): Promise<PharmacyFilterOptionsResponse> {
-      return getResponseData(
-        await request<ApiSuccessResponse<PharmacyFilterOptionsResponse>>(
-          routes.filters,
-          options
-        )
+      return parseApiResponseData(
+        await request(routes.filters, options),
+        parsePharmacyFilterOptionsResponse,
+        { url: routes.filters, method: 'GET' }
       );
     },
 
@@ -71,20 +76,22 @@ export function createPublicPharmaciesReader<TOptions extends RequestOptions>(
       id: string,
       options?: TOptions
     ): Promise<PharmacyDetailsResponse> {
-      return getResponseData(
-        await request<ApiSuccessResponse<PharmacyDetailsResponse>>(
-          routes.details(id),
-          options
-        )
+      const path = routes.details(id);
+
+      return parseApiResponseData(
+        await request(path, options),
+        parsePharmacyDetailsResponse,
+        { url: path, method: 'GET' }
       );
     },
 
     async getReviews(id: string, options?: TOptions): Promise<ReviewsResponse> {
-      return getResponseData(
-        await request<ApiSuccessResponse<ReviewsResponse>>(
-          routes.reviews(id),
-          options
-        )
+      const path = routes.reviews(id);
+
+      return parseApiResponseData(
+        await request(path, options),
+        parseReviewsResponse,
+        { url: path, method: 'GET' }
       );
     },
   } as const;

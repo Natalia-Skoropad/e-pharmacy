@@ -2,6 +2,13 @@ import type { MetadataRoute } from 'next';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
 import { createTrustedBackendApiUrl } from '@e-pharmacy/next-api/server';
+
+import {
+  appendQueryParams,
+  parseJsonResponse,
+} from '@e-pharmacy/api-client/transport';
+
+import { parseApiResponseData } from '@e-pharmacy/api-client/response';
 import { SITEMAP_INDEXABLE_ROUTES } from '@/lib/seo';
 
 import {
@@ -15,12 +22,10 @@ import { buildProductPath, buildPharmacyPath } from '@/lib/routes';
 
 //===================================================================
 
-type SitemapApiResponse<TItem> = {
-  data?: {
-    items?: TItem[];
-    totalPages?: number;
-  };
-};
+type SitemapPage<TItem> = Readonly<{
+  items: readonly TItem[];
+  totalPages: number;
+}>;
 
 type SitemapProduct = {
   id: string;
@@ -52,18 +57,126 @@ const SITEMAP_FETCH_BATCH_SIZE = 5;
 
 //===================================================================
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+//===================================================================
+
+function parseSitemapProduct(value: unknown): SitemapProduct {
+  if (
+    !isRecord(value) ||
+    typeof value.id !== 'string' ||
+    typeof value.name !== 'string'
+  ) {
+    throw new TypeError('Sitemap item must contain string id and name fields.');
+  }
+
+  if (value.updatedAt !== undefined && typeof value.updatedAt !== 'string') {
+    throw new TypeError(
+      'Sitemap item updatedAt must be a string when present.'
+    );
+  }
+
+  if (value.inStock !== undefined && typeof value.inStock !== 'boolean') {
+    throw new TypeError(
+      'Product sitemap item inStock must be boolean when present.'
+    );
+  }
+
+  return {
+    id: value.id,
+    name: value.name,
+    ...(typeof value.updatedAt === 'string'
+      ? { updatedAt: value.updatedAt }
+      : {}),
+    ...(typeof value.inStock === 'boolean' ? { inStock: value.inStock } : {}),
+  };
+}
+
+//===================================================================
+
+function parseSitemapPharmacy(value: unknown): SitemapPharmacy {
+  if (
+    !isRecord(value) ||
+    typeof value.id !== 'string' ||
+    typeof value.name !== 'string'
+  ) {
+    throw new TypeError('Sitemap item must contain string id and name fields.');
+  }
+
+  if (value.updatedAt !== undefined && typeof value.updatedAt !== 'string') {
+    throw new TypeError(
+      'Sitemap item updatedAt must be a string when present.'
+    );
+  }
+
+  if (value.isActive !== undefined && typeof value.isActive !== 'boolean') {
+    throw new TypeError(
+      'Pharmacy sitemap item isActive must be boolean when present.'
+    );
+  }
+
+  return {
+    id: value.id,
+    name: value.name,
+    ...(typeof value.updatedAt === 'string'
+      ? { updatedAt: value.updatedAt }
+      : {}),
+    ...(typeof value.isActive === 'boolean'
+      ? { isActive: value.isActive }
+      : {}),
+  };
+}
+
+//===================================================================
+
+function parseSitemapPageData<TItem>(
+  value: unknown,
+  parseItem: (item: unknown) => TItem
+): SitemapPage<TItem> {
+  if (!isRecord(value) || !Array.isArray(value.items)) {
+    throw new TypeError('Sitemap response data must contain an items array.');
+  }
+
+  if (!Number.isSafeInteger(value.totalPages) || Number(value.totalPages) < 0) {
+    throw new TypeError(
+      'Sitemap response totalPages must be a non-negative safe integer.'
+    );
+  }
+
+  return {
+    items: value.items.map(parseItem),
+    totalPages: Number(value.totalPages),
+  };
+}
+
+//===================================================================
+
 async function fetchSitemapPage<TItem>(
-  path: string
-): Promise<SitemapApiResponse<TItem> | null> {
+  path: string,
+  parseItem: (item: unknown) => TItem
+): Promise<SitemapPage<TItem> | null> {
   try {
-    const response = await fetch(createTrustedBackendApiUrl(path), {
+    const url = createTrustedBackendApiUrl(path);
+    const response = await fetch(url, {
       next: { revalidate: SITEMAP_REVALIDATE_SECONDS },
       redirect: 'manual',
     });
 
     if (!response.ok) return null;
 
-    return (await response.json()) as SitemapApiResponse<TItem>;
+    const json = await parseJsonResponse(response);
+    if (!json.success) return null;
+
+    return parseApiResponseData(
+      json.value,
+      (value) => parseSitemapPageData(value, parseItem),
+      {
+        url,
+        method: 'GET',
+      }
+    );
   } catch {
     return null;
   }
@@ -73,15 +186,17 @@ async function fetchSitemapPage<TItem>(
 
 async function fetchAllSitemapItems<TItem>(
   resourcePath: string,
-  perPage: number
+  perPage: number,
+  parseItem: (item: unknown) => TItem
 ): Promise<TItem[]> {
-  const firstPage = await fetchSitemapPage<TItem>(
-    `${resourcePath}?page=1&perPage=${perPage}`
+  const firstPage = await fetchSitemapPage(
+    appendQueryParams(resourcePath, { page: 1, perPage }),
+    parseItem
   );
 
-  const allItems = [...(firstPage?.data?.items ?? [])];
+  const allItems = [...(firstPage?.items ?? [])];
   const totalPages = Math.min(
-    firstPage?.data?.totalPages ?? 1,
+    firstPage?.totalPages ?? 1,
     SITEMAP_FETCH_SAFETY_MAX_PAGES
   );
 
@@ -98,14 +213,18 @@ async function fetchAllSitemapItems<TItem>(
     );
     const pages = await Promise.all(
       Array.from({ length: pageEnd - pageStart + 1 }, (_, index) =>
-        fetchSitemapPage<TItem>(
-          `${resourcePath}?page=${pageStart + index}&perPage=${perPage}`
+        fetchSitemapPage(
+          appendQueryParams(resourcePath, {
+            page: pageStart + index,
+            perPage,
+          }),
+          parseItem
         )
       )
     );
 
     pages.forEach((page) => {
-      allItems.push(...(page?.data?.items ?? []));
+      allItems.push(...(page?.items ?? []));
     });
   }
 
@@ -116,10 +235,15 @@ async function fetchAllSitemapItems<TItem>(
 
 async function getDynamicSitemapEntries(): Promise<SitemapEntry[]> {
   const [products, pharmacies] = await Promise.all([
-    fetchAllSitemapItems<SitemapProduct>('/products', PRODUCT_SITEMAP_PER_PAGE),
+    fetchAllSitemapItems(
+      '/products',
+      PRODUCT_SITEMAP_PER_PAGE,
+      parseSitemapProduct
+    ),
     fetchAllSitemapItems<SitemapPharmacy>(
       '/pharmacies',
-      PHARMACY_SITEMAP_PER_PAGE
+      PHARMACY_SITEMAP_PER_PAGE,
+      parseSitemapPharmacy
     ),
   ]);
 

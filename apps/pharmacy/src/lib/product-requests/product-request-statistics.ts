@@ -1,5 +1,5 @@
 import { PRODUCT_REQUEST_STATUSES } from '@e-pharmacy/config/product-requests';
-import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/core';
+import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
 
 import { getPharmacyProductRequests } from '@/lib/api/browser/product-requests.api';
 

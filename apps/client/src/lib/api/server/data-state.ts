@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { ApiError } from '@e-pharmacy/api-client/core';
+import { ApiError } from '@e-pharmacy/api-client/transport';
 
 //===================================================================
 

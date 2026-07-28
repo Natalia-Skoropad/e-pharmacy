@@ -2,14 +2,20 @@ import 'client-only';
 
 import {
   appendQueryParams,
-  getResponseData,
   type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/core';
+} from '@e-pharmacy/api-client/transport';
+
+import {
+  parseApiResponseData,
+  parseFavoriteIdsResponse,
+  parseFavoriteMutationResponse,
+  parseProductsResponse,
+  parseReviewMutationResponse,
+} from '@e-pharmacy/api-client/response';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
-  ApiSuccessResponse,
   FavoriteIdsResponse,
   FavoriteMutationResponse,
 } from '@e-pharmacy/types/api';
@@ -29,12 +35,11 @@ import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
 
 //===================================================================
 
-const publicProductsReader = createPublicProductsReader<
-  JsonResponseRequestOptions
->(
-  (path, options) => localApiRequest(path, options),
-  ROUTES.products
-);
+const publicProductsReader =
+  createPublicProductsReader<JsonResponseRequestOptions>(
+    (path, options) => localApiRequest(path, options),
+    ROUTES.products
+  );
 
 export const getProductsFromClientApi = publicProductsReader.getProducts;
 export const getProductFiltersFromClientApi = publicProductsReader.getFilters;
@@ -47,11 +52,13 @@ export async function getFavoriteProductsFromClientApi(
   params: CatalogProductsQueryParams = {},
   options?: JsonResponseRequestOptions
 ): Promise<ProductsResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<ProductsResponse>>(
-    appendQueryParams(ROUTES.products.favorites, params),
-    options
+  const path = appendQueryParams(ROUTES.products.favorites, params);
+
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseProductsResponse,
+    { url: path, method: 'GET' }
   );
-  return getResponseData(response);
 }
 
 //===================================================================
@@ -59,10 +66,13 @@ export async function getFavoriteProductsFromClientApi(
 export async function getFavoriteProductIdsFromClientApi(
   options?: JsonResponseRequestOptions
 ): Promise<FavoriteIdsResponse> {
-  const response = await localApiRequest<
-    ApiSuccessResponse<FavoriteIdsResponse>
-  >(ROUTES.products.favoriteIds, options);
-  return getResponseData(response);
+  const path = ROUTES.products.favoriteIds;
+
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseFavoriteIdsResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================
@@ -71,11 +81,12 @@ export async function createProductReview(
   id: string,
   payload: CreateReviewPayload
 ): Promise<ReviewMutationResponse> {
-  return getResponseData(
-    await localApiRequest<ApiSuccessResponse<ReviewMutationResponse>>(
-      ROUTES.products.reviews(id),
-      { method: 'POST', body: payload }
-    )
+  const path = ROUTES.products.reviews(id);
+
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'POST', body: payload }),
+    parseReviewMutationResponse,
+    { url: path, method: 'POST' }
   );
 }
 
@@ -84,11 +95,12 @@ export async function createProductReview(
 export async function addFavoriteProduct(
   id: string
 ): Promise<FavoriteMutationResponse> {
-  return getResponseData(
-    await localApiRequest<ApiSuccessResponse<FavoriteMutationResponse>>(
-      ROUTES.products.favorite(id),
-      { method: 'PUT' }
-    )
+  const path = ROUTES.products.favorite(id);
+
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'PUT' }),
+    parseFavoriteMutationResponse,
+    { url: path, method: 'PUT' }
   );
 }
 
@@ -97,10 +109,11 @@ export async function addFavoriteProduct(
 export async function removeFavoriteProduct(
   id: string
 ): Promise<FavoriteMutationResponse> {
-  return getResponseData(
-    await localApiRequest<ApiSuccessResponse<FavoriteMutationResponse>>(
-      ROUTES.products.favorite(id),
-      { method: 'DELETE' }
-    )
+  const path = ROUTES.products.favorite(id);
+
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'DELETE' }),
+    parseFavoriteMutationResponse,
+    { url: path, method: 'DELETE' }
   );
 }

@@ -1,29 +1,31 @@
 import 'client-only';
 
 import {
+  ApiError,
   appendQueryParams,
-  getResponseData,
   type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/core';
+} from '@e-pharmacy/api-client/transport';
 
 import {
   normalizePaginatedResponse,
+  parseApiResponseData,
+  parseMessageResponse,
   requirePaginatedResponse,
+  type ApiResponseContext,
 } from '@e-pharmacy/api-client/response';
 
-import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
+import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
 import { isISODateTimeString } from '@e-pharmacy/validation/dates';
-import { localApiRequest } from '@e-pharmacy/next-api/browser';
-
-import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
 import type {
   PharmacyNote,
   PharmacyNoteEntityType,
   PharmacyNotesResponse,
 } from '@e-pharmacy/types/notes';
+
+import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
 //===================================================================
 
@@ -41,6 +43,26 @@ function normalizeComment(value: unknown): PharmacyNote | null {
 
 //===================================================================
 
+function parseCreatedNote(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyNote {
+  const note = normalizeComment(
+    isRecord(value) && 'note' in value ? value.note : value
+  );
+
+  if (!note) {
+    throw new ApiError('Created pharmacy note response is invalid.', {
+      transportCode: 'INVALID_RESPONSE',
+      payload: value,
+      ...context,
+    });
+  }
+  return note;
+}
+
+//===================================================================
+
 export async function getPharmacyNotes(
   type: PharmacyNoteEntityType,
   entityId: string,
@@ -51,24 +73,19 @@ export async function getPharmacyNotes(
     PHARMACY_API_ROUTES.pharmacyNotes.list(type, entityId),
     { page, perPage: 10 }
   );
-  const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    path,
-    options
-  );
 
-  const pagination = requirePaginatedResponse(
-    normalizePaginatedResponse(getResponseData(response), {
-      legacyEmptyPage: 'normalize-to-zero',
-      normalizeItem: normalizeComment,
-    }),
-    {
-      label: 'pharmacy notes response',
-      url: path,
-      method: 'GET',
-    }
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    (value) =>
+      requirePaginatedResponse(
+        normalizePaginatedResponse(value, {
+          legacyEmptyPage: 'normalize-to-zero',
+          normalizeItem: normalizeComment,
+        }),
+        { label: 'pharmacy notes response', url: path, method: 'GET' }
+      ),
+    { url: path, method: 'GET' }
   );
-
-  return pagination;
 }
 
 //===================================================================
@@ -78,10 +95,13 @@ export async function createPharmacyNote(
   entityId: string,
   text: string
 ): Promise<void> {
-  await localApiRequest(PHARMACY_API_ROUTES.pharmacyNotes.list(type, entityId), {
-    method: 'POST',
-    body: { text },
-  });
+  const path = PHARMACY_API_ROUTES.pharmacyNotes.list(type, entityId);
+
+  parseApiResponseData(
+    await localApiRequest(path, { method: 'POST', body: { text } }),
+    parseCreatedNote,
+    { url: path, method: 'POST' }
+  );
 }
 
 //===================================================================
@@ -91,10 +111,15 @@ export async function deletePharmacyNote(
   entityId: string,
   noteId: string
 ): Promise<void> {
-  await localApiRequest(
-    PHARMACY_API_ROUTES.pharmacyNotes.details(type, entityId, noteId),
-    {
-      method: 'DELETE',
-    }
+  const path = PHARMACY_API_ROUTES.pharmacyNotes.details(
+    type,
+    entityId,
+    noteId
+  );
+
+  parseApiResponseData(
+    await localApiRequest(path, { method: 'DELETE' }),
+    parseMessageResponse,
+    { url: path, method: 'DELETE' }
   );
 }

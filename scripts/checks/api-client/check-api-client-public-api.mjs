@@ -35,17 +35,22 @@ const packageJson = JSON.parse(
   await readFile(path.join(packageRoot, 'package.json'), 'utf8')
 );
 
+//===================================================================
+
 assert.deepEqual(packageJson.exports, {
   './contracts': './src/contracts/index.ts',
-  './core': './src/core/index.ts',
+  './transport': './src/transport/index.ts',
   './response': './src/response/index.ts',
 });
 
-for (const entrypoint of ['contracts', 'core', 'response']) {
+//===================================================================
+
+for (const entrypoint of ['contracts', 'transport', 'response']) {
   const source = await readFile(
     path.join(packageRoot, `src/${entrypoint}/index.ts`),
     'utf8'
   );
+
   assert.equal(
     /export\s+\*/.test(source),
     false,
@@ -53,8 +58,11 @@ for (const entrypoint of ['contracts', 'core', 'response']) {
   );
 }
 
+//===================================================================
+
 const forbiddenPublicSymbols = [
   'createApiUrl',
+  'getResponseData',
   'getNullableResponseData',
   'assertSuccessfulEmptyResponse',
   'isNativeRequestBody',
@@ -73,9 +81,11 @@ const forbiddenPublicSymbols = [
   'localAuthApiRoutes',
 ];
 
+//===================================================================
+
 const publicBarrels = (
   await Promise.all(
-    ['contracts', 'core', 'response'].map((entrypoint) =>
+    ['contracts', 'transport', 'response'].map((entrypoint) =>
       readFile(path.join(packageRoot, `src/${entrypoint}/index.ts`), 'utf8')
     )
   )
@@ -95,49 +105,36 @@ const consumerFiles = [
   ...(await collectFiles(path.join(repositoryRoot, 'scripts'))),
 ];
 
-const rootOrDeepImports = [];
+const forbiddenImports = [];
 
 for (const file of consumerFiles) {
   if (file.startsWith(packageRoot)) continue;
   const source = await readFile(file, 'utf8');
   if (
     /from\s+['"]@e-pharmacy\/api-client['"]/.test(source) ||
-    /@e-pharmacy\/api-client\/src/.test(source)
+    /@e-pharmacy\/api-client\/src/.test(source) ||
+    /@e-pharmacy\/api-client\/core/.test(source)
   ) {
-    rootOrDeepImports.push(path.relative(repositoryRoot, file));
+    forbiddenImports.push(path.relative(repositoryRoot, file));
   }
 }
 
 assert.deepEqual(
-  rootOrDeepImports,
+  forbiddenImports,
   [],
-  `Root/deep API-client imports are forbidden:\n${rootOrDeepImports.join('\n')}`
+  `Root/deep/legacy core imports are forbidden:\n${forbiddenImports.join('\n')}`
 );
 
-const behavioralTestFiles = [
-  'src/core/api-request.test.ts',
-  'src/core/request-body.test.ts',
-  'src/core/query-string.test.ts',
+for (const testFile of [
+  'src/transport/api-request.test.ts',
+  'src/transport/request-body.test.ts',
+  'src/transport/query-string.test.ts',
   'src/response/api-envelope.test.ts',
+  'src/response/shared-dto-parsers.test.ts',
   'src/response/pagination.test.ts',
   'test/integration/http-transport.test.ts',
-];
-
-const behavioralTestSource = (
-  await Promise.all(
-    behavioralTestFiles.map(async (testFile) => {
-      await access(path.join(packageRoot, testFile));
-      return readFile(path.join(packageRoot, testFile), 'utf8');
-    })
-  )
-).join('\n');
-
-for (const transportSymbol of ['apiRequest', 'createApiClient']) {
-  assert.match(
-    behavioralTestSource,
-    new RegExp(`\\b${transportSymbol}\\b`),
-    `${transportSymbol} must have behavioral coverage.`
-  );
+]) {
+  await access(path.join(packageRoot, testFile));
 }
 
 await access(

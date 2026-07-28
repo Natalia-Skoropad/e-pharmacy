@@ -26,7 +26,6 @@ export type {
   CheckoutOrderResponse,
   ClientOrderDetailsResponse,
   ClientOrdersResponse,
-  CreateOrderManagerCommentResponse,
   OrderManagerCommentsResponse,
 } from './responses';
 

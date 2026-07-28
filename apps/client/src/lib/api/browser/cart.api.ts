@@ -1,13 +1,13 @@
 import 'client-only';
 
-import { localApiRequest } from '@e-pharmacy/next-api/browser';
+import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
 
 import {
-  getResponseData,
-  type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/core';
+  parseApiResponseData,
+  parseCartResponse,
+} from '@e-pharmacy/api-client/response';
 
-import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
+import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
   AddCartItemPayload,
@@ -19,82 +19,58 @@ import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 
 //===================================================================
 
-export function getCartResponseData(
-  response: ApiSuccessResponse<CartResponse>
-): CartResponse {
-  return getResponseData(response);
-}
-
-//===================================================================
-
-export async function getCart(
+async function requestCart(
+  path: string,
   options?: JsonResponseRequestOptions
 ): Promise<CartResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.current,
-    options
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseCartResponse,
+    { url: path, method: options?.method ?? 'GET' }
   );
-
-  return getCartResponseData(response);
 }
 
 //===================================================================
 
-export async function addCartItem(
+export function getCart(
+  options?: JsonResponseRequestOptions
+): Promise<CartResponse> {
+  return requestCart(CLIENT_API_ROUTES.cart.current, options);
+}
+
+//===================================================================
+
+export function addCartItem(
   payload: AddCartItemPayload
 ): Promise<CartResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.addItem,
-    {
-      method: 'POST',
-      body: payload,
-    }
-  );
-
-  return getCartResponseData(response);
+  return requestCart(CLIENT_API_ROUTES.cart.addItem, {
+    method: 'POST',
+    body: payload,
+  });
 }
 
 //===================================================================
 
-export async function updateCartItem(
+export function updateCartItem(
   cartItemId: string,
   payload: UpdateCartItemPayload
 ): Promise<CartResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.item(cartItemId),
-    {
-      method: 'PATCH',
-      body: payload,
-    }
-  );
-
-  return getCartResponseData(response);
+  return requestCart(CLIENT_API_ROUTES.cart.item(cartItemId), {
+    method: 'PATCH',
+    body: payload,
+  });
 }
 
 //===================================================================
 
-export async function removeCartItem(
-  cartItemId: string
-): Promise<CartResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.item(cartItemId),
-    {
-      method: 'DELETE',
-    }
-  );
-
-  return getCartResponseData(response);
+export function removeCartItem(cartItemId: string): Promise<CartResponse> {
+  return requestCart(CLIENT_API_ROUTES.cart.item(cartItemId), {
+    method: 'DELETE',
+  });
 }
 
 //===================================================================
 
-export async function clearCart(): Promise<CartResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.clear,
-    {
-      method: 'DELETE',
-    }
-  );
-
-  return getCartResponseData(response);
+export function clearCart(): Promise<CartResponse> {
+  return requestCart(CLIENT_API_ROUTES.cart.clear, { method: 'DELETE' });
 }

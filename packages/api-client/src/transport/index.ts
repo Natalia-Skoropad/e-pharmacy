@@ -1,5 +1,4 @@
 export { ApiError, isApiError } from './api-error';
-
 export type {
   ApiErrorCode,
   ApiErrorOptions,
@@ -14,7 +13,6 @@ export { InvalidQueryParameterError, appendQueryParams } from './query-string';
 export type { QueryParams, QueryPrimitive, QueryValue } from './query-string';
 
 export { getApiErrorMessage } from './get-api-error-message';
-export { getResponseData } from './get-response-data';
 
 export { executeFetchWithRetry } from './fetch-executor';
 
@@ -24,6 +22,7 @@ export type {
 } from './fetch-executor';
 
 export { isJsonContentType, parseJsonResponse } from './json-response';
+
 export type { JsonParseResult } from './json-response';
 
 export { executeHttpRequest } from './request-executor';

@@ -1,14 +1,17 @@
 import 'server-only';
 
-import type { RequestOptions } from '@e-pharmacy/api-client/core';
 import { apiRoutes as ROUTES } from '@e-pharmacy/api-client/contracts';
-import { publicBackendApiRequest } from '@e-pharmacy/next-api/server';
+
+import {
+  publicBackendApiRequest,
+  type PublicBackendRequestOptions,
+} from '@e-pharmacy/next-api/server';
 
 import { createPublicPharmaciesReader } from '@/lib/api/readers/public-pharmacies-reader';
 
 //===================================================================
 
-const publicPharmaciesReader = createPublicPharmaciesReader<RequestOptions>(
+const publicPharmaciesReader = createPublicPharmaciesReader<PublicBackendRequestOptions>(
   (path, options) => publicBackendApiRequest(path, options),
   ROUTES.pharmacies
 );

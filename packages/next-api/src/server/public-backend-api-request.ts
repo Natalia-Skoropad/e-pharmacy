@@ -2,12 +2,11 @@ import 'server-only';
 
 import {
   ApiError,
-  apiRequest,
+  executeHttpRequest,
   type RequestOptions,
-} from '@e-pharmacy/api-client/core';
+} from '@e-pharmacy/api-client/transport';
 
 import { createTrustedBackendApiUrl } from '../internal/backend-url';
-import { getNextApiServerEnvironment } from '../internal/env';
 import { REQUEST_ID_HEADER_NAME } from '../internal/bff-contract';
 import { createRequestId } from '../internal/request-id';
 import { logTransportRequest } from '../observability/logger';
@@ -16,34 +15,60 @@ import { logTransportRequest } from '../observability/logger';
 
 export { createTrustedBackendApiUrl } from '../internal/backend-url';
 
+export type NextServerRequestOptions = Readonly<{
+  revalidate?: number | false;
+  tags?: readonly string[];
+}>;
+
+export type PublicBackendRequestOptions = Omit<
+  RequestOptions,
+  'responseType'
+> & {
+  next?: NextServerRequestOptions;
+};
+
+type NextExtendedRequestInit = RequestInit & {
+  next?: {
+    revalidate?: number | false;
+    tags?: string[];
+  };
+};
+
 //===================================================================
 
-type PublicBackendRequestOptions = Omit<RequestOptions, 'responseType'>;
-
-//===================================================================
-
-export async function publicBackendApiRequest<TData>(
+export async function publicBackendApiRequest(
   path: string,
   { method = 'GET', cache, next, ...options }: PublicBackendRequestOptions = {}
-): Promise<TData> {
+): Promise<unknown> {
   const requestId = createRequestId();
   const startedAt = Date.now();
-  createTrustedBackendApiUrl(path);
+  const url = createTrustedBackendApiUrl(path);
   const resolvedCache =
     cache ?? (next?.revalidate === undefined ? 'no-store' : undefined);
   const requestHeaders = new Headers(options.headers);
   requestHeaders.set(REQUEST_ID_HEADER_NAME, requestId);
 
+  const nextFetchInit: NextExtendedRequestInit = next
+    ? {
+        next: {
+          revalidate: next.revalidate,
+          tags: next.tags ? [...next.tags] : undefined,
+        },
+      }
+    : {};
+
   try {
-    const data = await apiRequest<TData>(path, {
-      ...options,
-      baseUrl: getNextApiServerEnvironment().apiBaseUrl,
-      method,
-      headers: requestHeaders,
-      cache: resolvedCache,
-      next,
-      redirect: 'manual',
-    });
+    const result = await executeHttpRequest(
+      url,
+      {
+        ...options,
+        method,
+        headers: requestHeaders,
+        cache: resolvedCache,
+        redirect: 'manual',
+      },
+      nextFetchInit
+    );
 
     logTransportRequest({
       requestId,
@@ -51,12 +76,14 @@ export async function publicBackendApiRequest<TData>(
       path,
       destination: 'backend',
       durationMs: Date.now() - startedAt,
+      status: result.status,
+      retryCount: result.retryCount,
       cachePolicy: resolvedCache ?? `revalidate:${String(next?.revalidate)}`,
       authMode: 'public',
       source: 'server-api',
     });
 
-    return data;
+    return result.data;
   } catch (error) {
     logTransportRequest({
       requestId,

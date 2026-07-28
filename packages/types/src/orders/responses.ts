@@ -30,7 +30,3 @@ export type ClientOrderDetailsResponse = Readonly<{
 export type OrderManagerCommentsResponse = Readonly<
   ApiPaginationResponse<OrderManagerCommentResponseDto>
 >;
-
-export type CreateOrderManagerCommentResponse = Readonly<{
-  comment: OrderManagerCommentResponseDto;
-}>;

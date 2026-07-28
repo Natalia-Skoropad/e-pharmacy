@@ -21,9 +21,7 @@ export type FetchExecutionResult = Readonly<{
 
 export type FetchExecutorOptions = Readonly<{
   method: HttpMethod;
-  init: Omit<RequestInit, 'method' | 'signal' | 'next'> & {
-    next?: RequestOptions['next'];
-  };
+  init: Omit<RequestInit, 'method' | 'signal'>;
   signal?: AbortSignal;
   timeoutMs?: number;
   retry?: RequestOptions['retry'];
@@ -62,18 +60,8 @@ export async function executeFetchWithRetry(
       let response: Response;
 
       try {
-        const fetchInit = {
+        const fetchInit: RequestInit = {
           ...init,
-          next:
-            init.next === undefined
-              ? undefined
-              : {
-                  revalidate: init.next.revalidate,
-                  tags:
-                    init.next.tags === undefined
-                      ? undefined
-                      : [...init.next.tags],
-                },
           method,
           signal: operation.signal,
         };

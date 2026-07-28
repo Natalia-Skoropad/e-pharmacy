@@ -19,10 +19,10 @@ export function apiRequest(
 
 //===================================================================
 
-export function apiRequest<TData>(
+export function apiRequest(
   path: string,
   options: ApiJsonResponseRequestOptions
-): Promise<TData>;
+): Promise<unknown>;
 
 //===================================================================
 
@@ -54,10 +54,10 @@ export type ApiClient = Readonly<{
     path: string,
     options: NoContentResponseRequestOptions
   ): Promise<void>;
-  request<TData>(
+  request(
     path: string,
     options?: JsonResponseRequestOptions
-  ): Promise<TData>;
+  ): Promise<unknown>;
 }>;
 
 //===================================================================

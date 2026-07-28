@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { isApiError } from '@e-pharmacy/api-client/core';
+import { isApiError } from '@e-pharmacy/api-client/transport';
 import type { ApiErrorResponse } from '@e-pharmacy/types/api';
 
 import { clearClientAuthCookies } from './auth-cookies';
