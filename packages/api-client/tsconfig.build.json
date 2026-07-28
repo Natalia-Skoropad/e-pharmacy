@@ -3,8 +3,26 @@
   "compilerOptions": {
     "noEmit": false,
     "declaration": true,
-    "emitDeclarationOnly": false,
-    "outDir": "dist"
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "paths": {
+      "@e-pharmacy/types": [
+        "../types/dist/index.d.ts"
+      ],
+      "@e-pharmacy/types/*": [
+        "../types/dist/*/index.d.ts",
+        "../types/dist/*.d.ts"
+      ]
+    }
   },
-  "exclude": ["dist", "node_modules", "src/**/*.test.ts"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "src/**/*.test.ts"
+  ]
 }

@@ -256,7 +256,7 @@ export function normalizePharmacyProductsResponse(
     normalizePaginatedResponse(payload, {
       normalizeItem: (item) => normalizePharmacyProduct(item, pharmacyId),
     }),
-    'pharmacy products response'
+    { label: 'pharmacy products response' }
   );
 
   return {

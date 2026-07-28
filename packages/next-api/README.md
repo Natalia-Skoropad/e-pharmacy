@@ -17,6 +17,7 @@ Edge route handlers are not supported because the proxy layer depends on Node/Ne
 
 ```ts
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
+import { localAuthApiRoutes } from '@e-pharmacy/next-api/contracts';
 
 import {
   createTrustedBackendApiUrl,
@@ -31,6 +32,8 @@ import {
   createPublicGetProxyRoute,
 } from '@e-pharmacy/next-api/proxy';
 ```
+
+`@e-pharmacy/next-api/contracts` owns only shared same-origin Next.js auth routes. Canonical backend routes remain in `@e-pharmacy/api-client/contracts`; all other `/api/*` paths remain app-local in client, pharmacy, or future admin.
 
 Low-level proxy executors, cookie functions, headers, environment parsing, logging, and request-body helpers are internal.
 
@@ -195,7 +198,7 @@ The package also provides real ESLint, type-check, build, unit/integration/secur
 
 ## Response body contract
 
-JSON requests require a valid JSON response. A `204` response is accepted only when the caller explicitly passes `responseType: 'empty'`; this keeps the return type honest instead of casting an empty response to arbitrary `TData`.
+JSON requests require a valid JSON response. A `204` or `205` response is accepted only when the caller explicitly passes `responseType: 'no-content'`; successful JSON envelopes remain a separate response contract.
 
 ## Trusted client IP
 

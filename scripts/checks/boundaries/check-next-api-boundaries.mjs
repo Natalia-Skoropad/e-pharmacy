@@ -64,6 +64,14 @@ for (const file of tsFiles) {
   }
 
   if (
+    rel.startsWith('packages/next-api/src/contracts/') &&
+    !rel.endsWith('.test.ts') &&
+    /server-only|client-only|next\/server|from ['"]node:/.test(source)
+  ) {
+    violations.push(`${rel}: contracts entrypoint must remain runtime-neutral`);
+  }
+
+  if (
     rel.startsWith('apps/') &&
     source.includes("'use client'") &&
     /@e-pharmacy\/next-api\/(server|proxy)/.test(source)
@@ -109,7 +117,7 @@ const packageJson = JSON.parse(
 );
 
 const exportsList = Object.keys(packageJson.exports ?? {}).sort();
-const expectedExports = ['./browser', './proxy', './server'];
+const expectedExports = ['./browser', './contracts', './proxy', './server'];
 
 //===================================================================
 

@@ -79,6 +79,10 @@ test('validates base URLs and preserves their pathname', () => {
     createApiUrl('/products?page=2', 'https://api.example/v1'),
     'https://api.example/v1/products?page=2'
   );
+  assert.equal(
+    createApiUrl('/products?page=2', 'https://api.example/v1/'),
+    'https://api.example/v1/products?page=2'
+  );
 
   for (const baseUrl of [
     '',
@@ -103,6 +107,7 @@ test('rejects unsafe API paths including fragments', async () => {
     '//external.example/resource',
     '/products/../admin',
     '/products/%2e%2e/admin',
+    '/products/%ZZ',
     '/products#details',
   ]) {
     await assert.rejects(
@@ -227,6 +232,135 @@ test('separates backend error semantics from transport errors', async () => {
         error.backendCode === 'ARTICLE_EXISTS' &&
         error.requestId === 'request-123' &&
         error.details !== undefined
+    );
+  } finally {
+    restoreFetch();
+  }
+});
+
+//===================================================================
+
+test('retries the default GET status allowlist and network failures', async () => {
+  try {
+    for (const status of [502, 503, 504]) {
+      let calls = 0;
+      globalThis.fetch = async () => {
+        calls += 1;
+        return calls === 1
+          ? jsonResponse({ status: 'error', message: 'Unavailable' }, status)
+          : jsonResponse({ ok: true });
+      };
+
+      assert.deepEqual(
+        await apiRequest('/resource', {
+          baseUrl: requestOptions.baseUrl,
+          retry: { attempts: 2, delayMs: 0 },
+        }),
+        { ok: true }
+      );
+      assert.equal(calls, 2);
+    }
+
+    const networkCause = new TypeError('temporary network failure');
+    let networkCalls = 0;
+    globalThis.fetch = async () => {
+      networkCalls += 1;
+      if (networkCalls === 1) throw networkCause;
+      return jsonResponse({ ok: true });
+    };
+
+    assert.deepEqual(
+      await apiRequest('/resource', {
+        baseUrl: requestOptions.baseUrl,
+        retry: { attempts: 2, delayMs: 0 },
+      }),
+      { ok: true }
+    );
+    assert.equal(networkCalls, 2);
+  } finally {
+    restoreFetch();
+  }
+});
+
+//===================================================================
+
+test('does not retry mutations even when retry options are supplied', async () => {
+  let calls = 0;
+
+  try {
+    globalThis.fetch = async () => {
+      calls += 1;
+      return jsonResponse({ status: 'error', message: 'Unavailable' }, 503);
+    };
+
+    await assert.rejects(
+      apiRequest('/resource', {
+        baseUrl: requestOptions.baseUrl,
+        method: 'POST',
+        body: { name: 'test' },
+        retry: { attempts: 3, delayMs: 0 },
+      }),
+      (error: unknown) =>
+        error instanceof ApiError && error.httpStatus === 503
+    );
+    assert.equal(calls, 1);
+  } finally {
+    restoreFetch();
+  }
+});
+
+//===================================================================
+
+test('classifies an already aborted external signal and preserves its reason', async () => {
+  const controller = new AbortController();
+  const reason = new Error('navigation changed');
+  controller.abort(reason);
+  let calls = 0;
+
+  try {
+    globalThis.fetch = async () => {
+      calls += 1;
+      throw reason;
+    };
+
+    await assert.rejects(
+      apiRequest('/resource', {
+        baseUrl: requestOptions.baseUrl,
+        signal: controller.signal,
+        retry: { attempts: 2, delayMs: 0 },
+      }),
+      (error: unknown) =>
+        error instanceof ApiError &&
+        error.transportCode === 'ABORTED' &&
+        error.cause === reason
+    );
+    assert.equal(calls, 1);
+  } finally {
+    restoreFetch();
+  }
+});
+
+//===================================================================
+
+test('times out a pending first attempt within the overall deadline', async () => {
+  try {
+    globalThis.fetch = async (_input, init) =>
+      new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener(
+          'abort',
+          () => reject(init.signal?.reason),
+          { once: true }
+        );
+      });
+
+    await assert.rejects(
+      apiRequest('/resource', {
+        baseUrl: requestOptions.baseUrl,
+        timeoutMs: 10,
+        retry: false,
+      }),
+      (error: unknown) =>
+        error instanceof ApiError && error.transportCode === 'TIMEOUT'
     );
   } finally {
     restoreFetch();

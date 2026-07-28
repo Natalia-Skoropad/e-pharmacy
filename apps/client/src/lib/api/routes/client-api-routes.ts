@@ -1,7 +1,5 @@
-import {
-  encodeRouteSegment,
-  localAuthApiRoutes,
-} from '@e-pharmacy/api-client/contracts';
+import { encodeRouteSegment } from '@e-pharmacy/api-client/contracts';
+import { localAuthApiRoutes } from '@e-pharmacy/next-api/contracts';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
 //===================================================================

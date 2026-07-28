@@ -1,9 +1,14 @@
+import { encodeRouteSegment } from '@e-pharmacy/api-client/contracts';
 import type { EntityId } from '@e-pharmacy/types/primitives';
-
-import { encodeRouteSegment } from './route-segment';
 
 //===================================================================
 
+/**
+ * Shared same-origin Next.js BFF routes for authentication.
+ *
+ * Backend `/auth/*` contracts belong to `@e-pharmacy/api-client/contracts`.
+ * Application-specific `/api/*` routes remain owned by each application.
+ */
 export const localAuthApiRoutes = {
   register: '/api/auth/register',
   login: '/api/auth/login',

@@ -309,7 +309,7 @@ export async function getClientsService(userId: string, query: ClientsQuery) {
   if (!pharmacyId) {
     return {
       items: [],
-      page: query.page,
+      page: 1,
       perPage: query.perPage,
       total: 0,
       totalPages: 0,
@@ -334,7 +334,7 @@ export async function getClientsService(userId: string, query: ClientsQuery) {
 
   return {
     items,
-    page: query.page,
+    page: clients.length === 0 ? 1 : query.page,
     perPage: query.perPage,
     total: clients.length,
     totalPages: Math.ceil(clients.length / query.perPage),
@@ -443,7 +443,7 @@ export async function getClientPurchasedProductsService(
 
     return {
       items: [],
-      page: query.page,
+      page: 1,
       perPage: query.perPage,
       total: 0,
       totalPages: 0,
@@ -498,7 +498,7 @@ export async function getClientPurchasedProductsService(
 
   return {
     items,
-    page: query.page,
+    page: rows.length === 0 ? 1 : query.page,
     perPage: query.perPage,
     total: rows.length,
     totalPages: Math.ceil(rows.length / query.perPage),

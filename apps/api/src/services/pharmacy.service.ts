@@ -273,7 +273,7 @@ export async function getFavoritePharmaciesService(
         favoriteIds
       )
     ),
-    page: query.page,
+    page: total === 0 ? 1 : query.page,
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
@@ -344,7 +344,7 @@ export async function getPharmaciesService(
         favoriteIds
       )
     ),
-    page: query.page,
+    page: total === 0 ? 1 : query.page,
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
@@ -511,7 +511,7 @@ export async function getPendingPharmacyReviewsService(
 
   return {
     items,
-    page: query.page,
+    page: total === 0 ? 1 : query.page,
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),

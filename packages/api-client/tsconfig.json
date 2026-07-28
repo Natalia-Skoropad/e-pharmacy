@@ -1,7 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "include": [
-    "src"
+    "src",
+    "test"
   ],
   "exclude": [
     "node_modules",
@@ -15,10 +16,6 @@
       "@e-pharmacy/types/*": [
         "../types/src/*/index.ts",
         "../types/src/*.ts"
-      ],
-      "@e-pharmacy/utils/*": [
-        "../utils/src/*/index.ts",
-        "../utils/src/*.ts"
       ]
     }
   }

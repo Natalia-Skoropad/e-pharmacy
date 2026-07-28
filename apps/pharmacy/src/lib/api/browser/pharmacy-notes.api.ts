@@ -1,7 +1,7 @@
 import 'client-only';
 
 import {
-  buildQueryString,
+  appendQueryParams,
   getResponseData,
   type JsonResponseRequestOptions,
 } from '@e-pharmacy/api-client/core';
@@ -47,19 +47,25 @@ export async function getPharmacyNotes(
   page = 1,
   options?: JsonResponseRequestOptions
 ): Promise<PharmacyNotesResponse> {
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.pharmacyNotes.list(type, entityId),
+    { page, perPage: 10 }
+  );
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    `${PHARMACY_API_ROUTES.pharmacyNotes.list(
-      type,
-      entityId
-    )}${buildQueryString({ page, perPage: 10 })}`,
+    path,
     options
   );
 
   const pagination = requirePaginatedResponse(
     normalizePaginatedResponse(getResponseData(response), {
+      legacyEmptyPage: 'normalize-to-zero',
       normalizeItem: normalizeComment,
     }),
-    'pharmacy notes response'
+    {
+      label: 'pharmacy notes response',
+      url: path,
+      method: 'GET',
+    }
   );
 
   return pagination;

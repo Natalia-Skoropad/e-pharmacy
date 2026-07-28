@@ -33,10 +33,6 @@ import type { ProductCategory } from '@e-pharmacy/types/products';
 
 import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 
-
-
-
-
 //===================================================================
 
 export type PharmacyOrderItem = Readonly<{
@@ -491,9 +487,10 @@ export function normalizePharmacyOrderManagerCommentsResponse(
 ): PharmacyOrderManagerCommentsResponse {
   return requirePaginatedResponse(
     normalizePaginatedResponse(payload, {
+      legacyEmptyPage: 'normalize-to-zero',
       normalizeItem: normalizePharmacyOrderManagerComment,
     }),
-    'pharmacy order comments response'
+    { label: 'pharmacy order comments response' }
   );
 }
 
@@ -631,7 +628,7 @@ export function normalizePharmacyOrdersResponse(
     normalizePaginatedResponse(payload, {
       normalizeItem: normalizePharmacyOrder,
     }),
-    'pharmacy orders response'
+    { label: 'pharmacy orders response' }
   );
 
   return {

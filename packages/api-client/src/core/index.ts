@@ -1,10 +1,41 @@
-export * from './api-error';
-export * from './api-request';
-export * from './api-url';
-export * from './build-query-string';
-export * from './get-api-error-message';
-export * from './get-response-data';
-export * from './fetch-executor';
-export * from './json-response';
-export * from './request-executor';
-export * from './types';
+export { ApiError, isApiError } from './api-error';
+
+export type {
+  ApiErrorCode,
+  ApiErrorOptions,
+  ApiTransportErrorCode,
+} from './api-error';
+
+export { apiRequest, createApiClient } from './api-request';
+export type { ApiClient } from './api-request';
+
+export { InvalidQueryParameterError, appendQueryParams } from './query-string';
+
+export type { QueryParams, QueryPrimitive, QueryValue } from './query-string';
+
+export { getApiErrorMessage } from './get-api-error-message';
+export { getResponseData } from './get-response-data';
+
+export { executeFetchWithRetry } from './fetch-executor';
+
+export type {
+  FetchExecutionResult,
+  FetchExecutorOptions,
+} from './fetch-executor';
+
+export { isJsonContentType, parseJsonResponse } from './json-response';
+export type { JsonParseResult } from './json-response';
+
+export { executeHttpRequest } from './request-executor';
+export type { HttpRequestResult } from './request-executor';
+
+export type {
+  ApiClientConfig,
+  ApiJsonResponseRequestOptions,
+  ApiNoContentResponseRequestOptions,
+  ApiRequestOptions,
+  HttpMethod,
+  JsonResponseRequestOptions,
+  NoContentResponseRequestOptions,
+  RequestOptions,
+} from './types';

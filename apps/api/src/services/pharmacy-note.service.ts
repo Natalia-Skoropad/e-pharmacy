@@ -89,8 +89,8 @@ export async function getPharmacyNotesService(
     entityId: new Types.ObjectId(entityId),
   };
   const total = await PharmacyNote.countDocuments(filter);
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
-  const safePage = Math.min(page, totalPages);
+  const totalPages = Math.ceil(total / perPage);
+  const safePage = totalPages === 0 ? 1 : Math.min(page, totalPages);
   const notes = await PharmacyNote.find(filter)
     .sort({ createdAt: -1 })
     .skip((safePage - 1) * perPage)

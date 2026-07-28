@@ -359,10 +359,10 @@ export function normalizeProductRequestsResponse(
 ): ProductRequestsViewModelResponse {
   const response = requirePaginatedResponse(
     normalizePaginatedResponse(payload, {
-      itemKeys: ['items', 'requests'],
+      legacyItemKeys: ['requests'],
       normalizeItem: normalizeProductRequest,
     }),
-    'product requests response'
+    { label: 'product requests response' }
   );
   const earliestCreatedAt = isRecord(payload)
     ? getTrimmedString(payload.earliestCreatedAt)

@@ -277,10 +277,10 @@ export function normalizePharmacyClientsResponse(
 ): PharmacyClientsResponse {
   const response = requirePaginatedResponse(
     normalizePaginatedResponse(payload, {
-      itemKeys: ['items', 'clients'],
+      legacyItemKeys: ['clients'],
       normalizeItem: normalizePharmacyClient,
     }),
-    'pharmacy clients response'
+    { label: 'pharmacy clients response' }
   );
 
   return {
@@ -348,10 +348,10 @@ export function normalizePharmacyClientProductsResponse(
 ): PharmacyClientProductsResponse {
   const response = requirePaginatedResponse(
     normalizePaginatedResponse(payload, {
-      itemKeys: ['items', 'products'],
+      legacyItemKeys: ['products'],
       normalizeItem: normalizePharmacyClientPurchasedProduct,
     }),
-    'pharmacy client products response'
+    { label: 'pharmacy client products response' }
   );
 
   return {

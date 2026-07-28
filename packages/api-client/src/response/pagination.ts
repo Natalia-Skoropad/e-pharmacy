@@ -1,17 +1,35 @@
 import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
-import { isRecord } from '@e-pharmacy/utils/guards';
-import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
-
 import { ApiError } from '../core/api-error';
+
+//===================================================================
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+//===================================================================
+
+function getFiniteNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : undefined;
+}
 
 //===================================================================
 
 export type PaginationNormalizationIssueCode =
   | 'invalid-payload'
   | 'missing-items'
+  | 'duplicate-items-key'
   | 'invalid-item'
   | 'item-normalizer-error'
   | 'invalid-page'
+  | 'invalid-empty-page'
   | 'invalid-per-page'
   | 'invalid-total'
   | 'invalid-total-pages'
@@ -29,6 +47,12 @@ export type PaginationNormalizationIssue = Readonly<{
   index?: number;
 }>;
 
+export type PaginationLegacyMetadata = Readonly<{
+  sourceItemKey: string;
+  usedLegacyItemKey: boolean;
+  normalizedLegacyEmptyPage: boolean;
+}>;
+
 //===================================================================
 
 export type PaginationNormalizationResult<TItem> =
@@ -36,18 +60,36 @@ export type PaginationNormalizationResult<TItem> =
       success: true;
       data: ApiPaginationResponse<TItem>;
       issues: readonly [];
+      metadata: PaginationLegacyMetadata;
     }>
   | Readonly<{
       success: false;
       data: null;
       issues: readonly PaginationNormalizationIssue[];
+      metadata: null;
     }>;
 
 //===================================================================
 
 export type NormalizePaginationOptions<TItem> = Readonly<{
-  itemKeys?: readonly string[];
+  /**
+   * Canonical payloads must use `items`. Add only documented legacy aliases.
+   */
+  legacyItemKeys?: readonly string[];
+  /**
+   * Explicit rolling-migration support for old APIs returning one empty page.
+   * The output is normalized to the canonical `totalPages: 0` contract.
+   */
+  legacyEmptyPage?: 'normalize-to-zero';
   normalizeItem: (item: unknown, index: number) => TItem | null;
+}>;
+
+export type RequirePaginationContext = Readonly<{
+  label?: string;
+  url?: string;
+  method?: string;
+  requestId?: string;
+  onLegacyContract?: (metadata: PaginationLegacyMetadata) => void;
 }>;
 
 //===================================================================
@@ -64,31 +106,79 @@ function getInteger(value: unknown, minimum: number): number | undefined {
 
 //===================================================================
 
-function getRawItems(
-  payload: Record<string, unknown>,
-  itemKeys: readonly string[]
-): { items: unknown[]; key: string } | null {
-  for (const key of itemKeys) {
-    const value = payload[key];
+function validateLegacyItemKeys(keys: readonly string[]): readonly string[] {
+  const seen = new Set<string>();
 
-    if (Array.isArray(value)) {
-      return { items: value, key };
+  for (const key of keys) {
+    if (!key.trim() || key === 'items' || seen.has(key)) {
+      throw new TypeError(
+        'legacyItemKeys must contain unique, non-empty aliases other than "items".'
+      );
     }
+
+    seen.add(key);
   }
 
-  return null;
+  return keys;
+}
+
+//===================================================================
+
+function getRawItems(
+  payload: Record<string, unknown>,
+  legacyItemKeys: readonly string[]
+):
+  | { success: true; items: unknown[]; key: string }
+  | { success: false; issue: PaginationNormalizationIssue } {
+  const candidateKeys = ['items', ...legacyItemKeys];
+  const matches = candidateKeys.filter((key) => Array.isArray(payload[key]));
+
+  if (matches.length === 0) {
+    return {
+      success: false,
+      issue: {
+        code: 'missing-items',
+        path: '$',
+        message:
+          legacyItemKeys.length === 0
+            ? 'Expected the canonical items array'
+            : `Expected the canonical items array or one explicit legacy alias: ${legacyItemKeys.join(', ')}`,
+      },
+    };
+  }
+
+  if (matches.length > 1) {
+    return {
+      success: false,
+      issue: {
+        code: 'duplicate-items-key',
+        path: '$',
+        message: `Pagination payload contains multiple item arrays: ${matches.join(', ')}`,
+      },
+    };
+  }
+
+  const key = matches[0]!;
+  return { success: true, items: payload[key] as unknown[], key };
 }
 
 //===================================================================
 
 export function normalizePaginatedResponse<TItem>(
   payload: unknown,
-  { itemKeys = ['items'], normalizeItem }: NormalizePaginationOptions<TItem>
+  {
+    legacyItemKeys = [],
+    legacyEmptyPage,
+    normalizeItem,
+  }: NormalizePaginationOptions<TItem>
 ): PaginationNormalizationResult<TItem> {
+  const validatedLegacyItemKeys = validateLegacyItemKeys(legacyItemKeys);
+
   if (!isRecord(payload)) {
     return {
       success: false,
       data: null,
+      metadata: null,
       issues: [
         {
           code: 'invalid-payload',
@@ -100,19 +190,14 @@ export function normalizePaginatedResponse<TItem>(
   }
 
   const issues: PaginationNormalizationIssue[] = [];
-  const rawItemsResult = getRawItems(payload, itemKeys);
+  const rawItemsResult = getRawItems(payload, validatedLegacyItemKeys);
 
-  if (!rawItemsResult) {
+  if (!rawItemsResult.success) {
     return {
       success: false,
       data: null,
-      issues: [
-        {
-          code: 'missing-items',
-          path: '$',
-          message: `Expected an array in one of: ${itemKeys.join(', ')}`,
-        },
-      ],
+      metadata: null,
+      issues: [rawItemsResult.issue],
     };
   }
 
@@ -146,12 +231,12 @@ export function normalizePaginatedResponse<TItem>(
     }
   });
 
-  const page = getInteger(payload.page, 1);
+  const rawPage = getInteger(payload.page, 1);
   const perPage = getInteger(payload.perPage, 1);
   const total = getInteger(payload.total, 0);
-  const totalPages = getInteger(payload.totalPages, 0);
+  const rawTotalPages = getInteger(payload.totalPages, 0);
 
-  if (page === undefined) {
+  if (rawPage === undefined) {
     issues.push({
       code: 'invalid-page',
       path: 'page',
@@ -175,11 +260,27 @@ export function normalizePaginatedResponse<TItem>(
     });
   }
 
-  if (totalPages === undefined) {
+  if (rawTotalPages === undefined) {
     issues.push({
       code: 'invalid-total-pages',
       path: 'totalPages',
       message: 'totalPages must be a non-negative integer',
+    });
+  }
+
+  const normalizedLegacyEmptyPage =
+    total === 0 &&
+    rawTotalPages === 1 &&
+    legacyEmptyPage === 'normalize-to-zero';
+
+  const totalPages = normalizedLegacyEmptyPage ? 0 : rawTotalPages;
+  const page = normalizedLegacyEmptyPage ? 1 : rawPage;
+
+  if (total === 0 && totalPages === 0 && page !== undefined && page !== 1) {
+    issues.push({
+      code: 'invalid-empty-page',
+      path: 'page',
+      message: 'An empty pagination response must use page=1',
     });
   }
 
@@ -189,9 +290,8 @@ export function normalizePaginatedResponse<TItem>(
     totalPages !== undefined
   ) {
     const expectedTotalPages = Math.ceil(total / perPage);
-    const allowsSingleEmptyPage = total === 0 && totalPages === 1;
 
-    if (totalPages !== expectedTotalPages && !allowsSingleEmptyPage) {
+    if (totalPages !== expectedTotalPages) {
       issues.push({
         code: 'inconsistent-total-pages',
         path: 'totalPages',
@@ -236,13 +336,18 @@ export function normalizePaginatedResponse<TItem>(
     total === undefined ||
     totalPages === undefined
   ) {
-    return { success: false, data: null, issues };
+    return { success: false, data: null, issues, metadata: null };
   }
 
   return {
     success: true,
     data: { items, page, perPage, total, totalPages },
     issues: [],
+    metadata: {
+      sourceItemKey: rawItemsResult.key,
+      usedLegacyItemKey: rawItemsResult.key !== 'items',
+      normalizedLegacyEmptyPage,
+    },
   };
 }
 
@@ -250,14 +355,31 @@ export function normalizePaginatedResponse<TItem>(
 
 export function requirePaginatedResponse<TItem>(
   result: PaginationNormalizationResult<TItem>,
-  context = 'pagination response'
+  {
+    label = 'pagination response',
+    url,
+    method,
+    requestId,
+    onLegacyContract,
+  }: RequirePaginationContext = {}
 ): ApiPaginationResponse<TItem> {
-  if (result.success) return result.data;
+  if (result.success) {
+    if (
+      result.metadata.usedLegacyItemKey ||
+      result.metadata.normalizedLegacyEmptyPage
+    ) {
+      onLegacyContract?.(result.metadata);
+    }
 
-  throw new ApiError(
-    `Invalid ${context}`,
-    502,
-    { issues: result.issues },
-    { code: 'INVALID_RESPONSE' }
-  );
+    return result.data;
+  }
+
+  throw new ApiError(`Invalid ${label}`, {
+    transportCode: 'INVALID_RESPONSE',
+    requestId,
+    details: { issues: result.issues },
+    payload: { issues: result.issues },
+    url,
+    method,
+  });
 }

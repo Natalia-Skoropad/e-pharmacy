@@ -1,7 +1,7 @@
 import 'client-only';
 
 import {
-  buildQueryString,
+  appendQueryParams,
   getResponseData,
   type JsonResponseRequestOptions,
 } from '@e-pharmacy/api-client/core';
@@ -10,13 +10,11 @@ import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
   ApiSuccessResponse,
-  FavoriteMutationResponse,
   FavoriteIdsResponse,
+  FavoriteMutationResponse,
 } from '@e-pharmacy/types/api';
 
 import type {
-  ProductDetailsResponse,
-  ProductFilterOptionsResponse,
   CatalogProductsQueryParams,
   ProductsResponse,
 } from '@e-pharmacy/types/products';
@@ -24,52 +22,24 @@ import type {
 import type {
   CreateReviewPayload,
   ReviewMutationResponse,
-  ReviewsResponse,
 } from '@e-pharmacy/types/reviews';
 
+import { createPublicProductsReader } from '@/lib/api/readers/public-products-reader';
 import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
 
 //===================================================================
 
-type ProductFiltersQueryParams = Pick<
-  CatalogProductsQueryParams,
-  'pharmacyId' | 'inStock'
->;
+const publicProductsReader = createPublicProductsReader<
+  JsonResponseRequestOptions
+>(
+  (path, options) => localApiRequest(path, options),
+  ROUTES.products
+);
 
-//===================================================================
-
-function isRequestOptions(
-  value: unknown
-): value is JsonResponseRequestOptions {
-  if (!value || typeof value !== 'object') return false;
-
-  return [
-    'method',
-    'body',
-    'headers',
-    'cache',
-    'next',
-    'credentials',
-    'signal',
-    'baseUrl',
-    'timeoutMs',
-    'retry',
-    'responseType',
-  ].some((key) => key in value);
-}
-
-//===================================================================
-
-export async function getProductsFromClientApi(
-  params: CatalogProductsQueryParams = {},
-  options?: JsonResponseRequestOptions
-): Promise<ProductsResponse> {
-  const response = await localApiRequest<ApiSuccessResponse<ProductsResponse>>(
-    `${ROUTES.products.list}${buildQueryString(params)}`,
-    options
-  );
-  return getResponseData(response);
-}
+export const getProductsFromClientApi = publicProductsReader.getProducts;
+export const getProductFiltersFromClientApi = publicProductsReader.getFilters;
+export const getProductDetailsFromClientApi = publicProductsReader.getDetails;
+export const getProductReviewsFromClientApi = publicProductsReader.getReviews;
 
 //===================================================================
 
@@ -78,7 +48,7 @@ export async function getFavoriteProductsFromClientApi(
   options?: JsonResponseRequestOptions
 ): Promise<ProductsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<ProductsResponse>>(
-    `${ROUTES.products.favorites}${buildQueryString(params)}`,
+    appendQueryParams(ROUTES.products.favorites, params),
     options
   );
   return getResponseData(response);
@@ -93,55 +63,6 @@ export async function getFavoriteProductIdsFromClientApi(
     ApiSuccessResponse<FavoriteIdsResponse>
   >(ROUTES.products.favoriteIds, options);
   return getResponseData(response);
-}
-
-//===================================================================
-
-export async function getProductFiltersFromClientApi(
-  paramsOrOptions: ProductFiltersQueryParams | JsonResponseRequestOptions = {},
-  options?: JsonResponseRequestOptions
-): Promise<ProductFilterOptionsResponse> {
-  const params = isRequestOptions(paramsOrOptions)
-    ? {}
-    : paramsOrOptions;
-  const requestOptions = isRequestOptions(paramsOrOptions)
-    ? paramsOrOptions
-    : options;
-
-  return getResponseData(
-    await localApiRequest<ApiSuccessResponse<ProductFilterOptionsResponse>>(
-      `${ROUTES.products.filters}${buildQueryString(params)}`,
-      requestOptions
-    )
-  );
-}
-
-//===================================================================
-
-export async function getProductDetailsFromClientApi(
-  id: string,
-  options?: JsonResponseRequestOptions
-): Promise<ProductDetailsResponse> {
-  return getResponseData(
-    await localApiRequest<ApiSuccessResponse<ProductDetailsResponse>>(
-      ROUTES.products.details(id),
-      options
-    )
-  );
-}
-
-//===================================================================
-
-export async function getProductReviewsFromClientApi(
-  id: string,
-  options?: JsonResponseRequestOptions
-): Promise<ReviewsResponse> {
-  return getResponseData(
-    await localApiRequest<ApiSuccessResponse<ReviewsResponse>>(
-      ROUTES.products.reviews(id),
-      options
-    )
-  );
 }
 
 //===================================================================

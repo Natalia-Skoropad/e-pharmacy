@@ -488,7 +488,7 @@ export async function getProductRequestsService(
   if (!pharmacyId) {
     return {
       items: [],
-      page: query.page,
+      page: 1,
       perPage: query.perPage,
       total: 0,
       totalPages: 0,
@@ -544,7 +544,7 @@ export async function getProductRequestsService(
 
   return {
     items: requests.map((request) => serializeProductRequest(request)),
-    page: query.page,
+    page: total === 0 ? 1 : query.page,
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),

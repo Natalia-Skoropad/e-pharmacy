@@ -227,9 +227,6 @@ importers:
       '@e-pharmacy/types':
         specifier: workspace:*
         version: link:../types
-      '@e-pharmacy/utils':
-        specifier: workspace:*
-        version: link:../utils
     devDependencies:
       '@types/node':
         specifier: latest

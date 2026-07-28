@@ -1,7 +1,7 @@
 import 'client-only';
 
 import {
-  buildQueryString,
+  appendQueryParams,
   getResponseData,
   type JsonResponseRequestOptions,
 } from '@e-pharmacy/api-client/core';
@@ -10,40 +10,39 @@ import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
   ApiSuccessResponse,
-  FavoriteMutationResponse,
   FavoriteIdsResponse,
+  FavoriteMutationResponse,
 } from '@e-pharmacy/types/api';
 
 import type {
-  PharmacyCheckoutDetailsResponse,
-  PharmacyDetailsResponse,
-  PharmacyFilterOptionsResponse,
   PharmaciesQueryParams,
   PharmaciesResponse,
-  PharmacyOptionsResponse,
+  PharmacyCheckoutDetailsResponse,
 } from '@e-pharmacy/types/pharmacies';
 
 import type {
   CreateReviewPayload,
   ReviewMutationResponse,
-  ReviewsResponse,
 } from '@e-pharmacy/types/reviews';
 
+import { createPublicPharmaciesReader } from '@/lib/api/readers/public-pharmacies-reader';
 import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
 
 //===================================================================
 
-export async function getPharmaciesFromClientApi(
-  params: PharmaciesQueryParams = {},
-  options?: JsonResponseRequestOptions
-): Promise<PharmaciesResponse> {
-  return getResponseData(
-    await localApiRequest<ApiSuccessResponse<PharmaciesResponse>>(
-      `${ROUTES.pharmacies.list}${buildQueryString(params)}`,
-      options
-    )
-  );
-}
+const publicPharmaciesReader = createPublicPharmaciesReader<
+  JsonResponseRequestOptions
+>(
+  (path, options) => localApiRequest(path, options),
+  ROUTES.pharmacies
+);
+
+export const getPharmaciesFromClientApi =
+  publicPharmaciesReader.getPharmacies;
+export const getPharmacyOptionsFromClientApi = publicPharmaciesReader.getOptions;
+export const getPharmacyFiltersFromClientApi = publicPharmaciesReader.getFilters;
+export const getPharmacyDetailsFromClientApi = publicPharmaciesReader.getDetails;
+export const getPharmacyReviewsFromClientApi = publicPharmaciesReader.getReviews;
 
 //===================================================================
 
@@ -53,20 +52,7 @@ export async function getFavoritePharmaciesFromClientApi(
 ): Promise<PharmaciesResponse> {
   return getResponseData(
     await localApiRequest<ApiSuccessResponse<PharmaciesResponse>>(
-      `${ROUTES.pharmacies.favorites}${buildQueryString(params)}`,
-      options
-    )
-  );
-}
-
-//===================================================================
-
-export async function getPharmacyOptionsFromClientApi(
-  options?: JsonResponseRequestOptions
-): Promise<PharmacyOptionsResponse> {
-  return getResponseData(
-    await localApiRequest<ApiSuccessResponse<PharmacyOptionsResponse>>(
-      ROUTES.pharmacies.options,
+      appendQueryParams(ROUTES.pharmacies.favorites, params),
       options
     )
   );
@@ -85,33 +71,6 @@ export async function getFavoritePharmacyIdsFromClientApi(
 
 //===================================================================
 
-export async function getPharmacyFiltersFromClientApi(
-  options?: JsonResponseRequestOptions
-): Promise<PharmacyFilterOptionsResponse> {
-  return getResponseData(
-    await localApiRequest<ApiSuccessResponse<PharmacyFilterOptionsResponse>>(
-      ROUTES.pharmacies.filters,
-      options
-    )
-  );
-}
-
-//===================================================================
-
-export async function getPharmacyDetailsFromClientApi(
-  id: string,
-  options?: JsonResponseRequestOptions
-): Promise<PharmacyDetailsResponse> {
-  return getResponseData(
-    await localApiRequest<ApiSuccessResponse<PharmacyDetailsResponse>>(
-      ROUTES.pharmacies.details(id),
-      options
-    )
-  );
-}
-
-//===================================================================
-
 export async function getPharmacyCheckoutDetails(
   id: string,
   options?: JsonResponseRequestOptions
@@ -119,20 +78,6 @@ export async function getPharmacyCheckoutDetails(
   return getResponseData(
     await localApiRequest<ApiSuccessResponse<PharmacyCheckoutDetailsResponse>>(
       ROUTES.pharmacies.checkoutDetails(id),
-      options
-    )
-  );
-}
-
-//===================================================================
-
-export async function getPharmacyReviewsFromClientApi(
-  id: string,
-  options?: JsonResponseRequestOptions
-): Promise<ReviewsResponse> {
-  return getResponseData(
-    await localApiRequest<ApiSuccessResponse<ReviewsResponse>>(
-      ROUTES.pharmacies.reviews(id),
       options
     )
   );

@@ -18,7 +18,7 @@
     "type-check:api": "pnpm --filter @e-pharmacy/api type-check",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check:before-deploy": "pnpm check:auth-boundaries && pnpm check:auth-public-api && pnpm check:auth-lifecycle && pnpm check:auth-contracts && pnpm check:api-boundaries && pnpm check:hooks-boundaries && pnpm check:hooks-public-api && pnpm check:hooks-lifecycle && pnpm check:next-api-boundaries && pnpm check:next-api-routes && pnpm check:next-api-contracts && pnpm check:config-boundaries && pnpm check:config-public-api && pnpm check:config-unused-exports && pnpm check:config-contracts && pnpm check:validation-contracts && pnpm check:type-contracts && pnpm check:ui-boundaries && pnpm check:ui-styles && pnpm check:archive-hygiene && pnpm lint && pnpm type-check && pnpm test && pnpm build",
+    "check:before-deploy": "pnpm check:auth-boundaries && pnpm check:auth-public-api && pnpm check:auth-lifecycle && pnpm check:auth-contracts && pnpm check:api-boundaries && pnpm check:api-client-boundaries && pnpm check:api-client-public-api && pnpm check:api-client-unused-exports && pnpm check:api-client-contracts && pnpm check:api-client-routes && pnpm check:hooks-boundaries && pnpm check:hooks-public-api && pnpm check:hooks-lifecycle && pnpm check:next-api-boundaries && pnpm check:next-api-routes && pnpm check:next-api-contracts && pnpm check:config-boundaries && pnpm check:config-public-api && pnpm check:config-unused-exports && pnpm check:config-contracts && pnpm check:validation-contracts && pnpm check:type-contracts && pnpm check:ui-boundaries && pnpm check:ui-styles && pnpm check:archive-hygiene && pnpm lint && pnpm type-check && pnpm test && pnpm build",
     "check:client": "pnpm --filter @e-pharmacy/client lint && pnpm --filter @e-pharmacy/client type-check && pnpm --filter @e-pharmacy/client build",
     "check:api": "pnpm check:api-boundaries && pnpm --filter @e-pharmacy/api lint && pnpm --filter @e-pharmacy/api type-check && pnpm --filter @e-pharmacy/api test && pnpm --filter @e-pharmacy/api build",
     "lint:packages": "turbo lint --filter='./packages/*'",
@@ -51,7 +51,12 @@
     "check:auth-boundaries": "node scripts/checks/auth/check-auth-boundaries.mjs",
     "check:auth-public-api": "node scripts/checks/auth/check-auth-public-api.mjs",
     "check:auth-lifecycle": "node scripts/checks/auth/check-auth-lifecycle.mjs",
-    "check:auth-contracts": "node scripts/checks/auth/check-auth-contracts.mjs"
+    "check:auth-contracts": "node scripts/checks/auth/check-auth-contracts.mjs",
+    "check:api-client-boundaries": "node scripts/checks/api-client/check-api-client-boundaries.mjs",
+    "check:api-client-public-api": "node scripts/checks/api-client/check-api-client-public-api.mjs",
+    "check:api-client-unused-exports": "node scripts/checks/api-client/check-api-client-unused-exports.mjs",
+    "check:api-client-contracts": "node scripts/checks/api-client/check-api-client-contracts.mjs",
+    "check:api-client-routes": "node scripts/checks/api-client/check-api-client-routes.mjs"
   },
   "devDependencies": {
     "turbo": "latest",

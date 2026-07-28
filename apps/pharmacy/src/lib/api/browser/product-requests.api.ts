@@ -2,7 +2,7 @@ import 'client-only';
 
 import {
   ApiError,
-  buildQueryString,
+  appendQueryParams,
   getResponseData,
   type JsonResponseRequestOptions,
 } from '@e-pharmacy/api-client/core';
@@ -94,12 +94,10 @@ export async function checkPharmacyProductRequestArticle(
   options?: JsonResponseRequestOptions
 ): Promise<{ available: boolean; message?: string }> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    `${PHARMACY_API_ROUTES.productRequests.articleAvailability}${buildQueryString(
-      {
-        article,
-        excludeRequestId,
-      }
-    )}`,
+    appendQueryParams(
+      PHARMACY_API_ROUTES.productRequests.articleAvailability,
+      { article, excludeRequestId }
+    ),
     options
   );
 
@@ -115,7 +113,7 @@ export async function getPharmacyProductRequests(
   const response = await localApiRequest<
     ApiSuccessResponse<ProductRequestsResponseDto>
   >(
-    `${PHARMACY_API_ROUTES.productRequests.list}${buildQueryString(params)}`,
+    appendQueryParams(PHARMACY_API_ROUTES.productRequests.list, params),
     options
   );
 

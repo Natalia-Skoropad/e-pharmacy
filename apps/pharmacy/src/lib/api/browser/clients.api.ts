@@ -1,7 +1,7 @@
 import 'client-only';
 
 import {
-  buildQueryString,
+  appendQueryParams,
   getResponseData,
   type JsonResponseRequestOptions,
 } from '@e-pharmacy/api-client/core';
@@ -54,7 +54,7 @@ export async function getPharmacyClients(
   options?: JsonResponseRequestOptions
 ): Promise<PharmacyClientsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    `${PHARMACY_API_ROUTES.clients.list}${buildQueryString(params)}`,
+    appendQueryParams(PHARMACY_API_ROUTES.clients.list, params),
     options
   );
 
@@ -69,7 +69,7 @@ export async function getPharmacyClientProducts(
   options?: JsonResponseRequestOptions
 ): Promise<PharmacyClientProductsResponse> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    `${PHARMACY_API_ROUTES.clients.products(clientId)}${buildQueryString(params)}`,
+    appendQueryParams(PHARMACY_API_ROUTES.clients.products(clientId), params),
     options
   );
 

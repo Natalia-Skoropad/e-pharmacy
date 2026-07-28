@@ -6,7 +6,9 @@ export type JsonRequestBody =
   | Readonly<Record<string, unknown>>
   | readonly unknown[];
 
-export type ApiRequestBody = BodyInit | JsonRequestBody;
+export type TextRequestBody = string | URLSearchParams;
+
+export type ApiRequestBody = JsonRequestBody | TextRequestBody;
 
 //===================================================================
 

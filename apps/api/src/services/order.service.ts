@@ -1453,8 +1453,8 @@ export async function getOrderManagerCommentsService(
 
     const comments = serializeManagerComments(order);
     const total = comments.length;
-    const totalPages = Math.max(1, Math.ceil(total / query.perPage));
-    const page = Math.min(query.page, totalPages);
+    const totalPages = Math.ceil(total / query.perPage);
+    const page = totalPages === 0 ? 1 : Math.min(query.page, totalPages);
     const start = (page - 1) * query.perPage;
 
     return {
@@ -2039,7 +2039,7 @@ export async function getOrdersService(
     if (!pharmacyId) {
       return {
         items: [],
-        page: query.page,
+        page: 1,
         perPage: query.perPage,
         total: 0,
         totalPages: 0,
@@ -2167,7 +2167,7 @@ export async function getOrdersService(
 
   return {
     items: orders.map((order) => serializeOrder(order, undefined, clientMap)),
-    page: query.page,
+    page: total === 0 ? 1 : query.page,
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),

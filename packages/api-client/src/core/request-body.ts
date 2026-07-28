@@ -1,37 +1,19 @@
 import { ApiError } from './api-error';
 import { isJsonContentType } from './json-response';
+import type { ApiRequestBody, JsonRequestBody } from './types';
 
 //===================================================================
 
-function isReadableStream(value: unknown): value is ReadableStream<Uint8Array> {
-  return (
-    typeof ReadableStream !== 'undefined' && value instanceof ReadableStream
-  );
+function invalidRequestBody(message: string, cause?: unknown): ApiError {
+  return new ApiError(message, {
+    transportCode: 'INVALID_REQUEST_BODY',
+    cause,
+  });
 }
 
 //===================================================================
 
-export function isNativeRequestBody(body: unknown): body is BodyInit {
-  if (typeof body === 'string') return true;
-  if (body instanceof ArrayBuffer || ArrayBuffer.isView(body)) return true;
-  if (typeof FormData !== 'undefined' && body instanceof FormData) return true;
-  if (
-    typeof URLSearchParams !== 'undefined' &&
-    body instanceof URLSearchParams
-  ) {
-    return true;
-  }
-  if (typeof Blob !== 'undefined' && body instanceof Blob) return true;
-  if (isReadableStream(body)) return true;
-
-  return false;
-}
-
-//===================================================================
-
-function isJsonSerializableContainer(
-  value: unknown
-): value is Readonly<Record<string, unknown>> | readonly unknown[] {
+function isJsonSerializableContainer(value: unknown): value is JsonRequestBody {
   if (Array.isArray(value)) return true;
   if (!value || typeof value !== 'object') return false;
 
@@ -41,35 +23,73 @@ function isJsonSerializableContainer(
 
 //===================================================================
 
+function hasCustomToJson(value: JsonRequestBody): boolean {
+  return Object.hasOwn(value, 'toJSON');
+}
+
+//===================================================================
+
+function isUrlEncodedContentType(contentType: string): boolean {
+  return contentType
+    .split(';', 1)[0]
+    ?.trim()
+    .toLowerCase() === 'application/x-www-form-urlencoded';
+}
+
+//===================================================================
+
+function assertNotMultipart(headers: Headers): void {
+  const contentType = headers.get('Content-Type');
+
+  if (contentType?.trim().toLowerCase().startsWith('multipart/form-data')) {
+    throw invalidRequestBody(
+      'Multipart request bodies are not supported by this transport.'
+    );
+  }
+}
+
+//===================================================================
+
 export function prepareRequestBody(
-  body: unknown,
+  body: ApiRequestBody | null | undefined,
   headers: Headers
 ): BodyInit | undefined {
   if (body === undefined || body === null) return undefined;
 
-  if (typeof FormData !== 'undefined' && body instanceof FormData) {
-    if (headers.has('Content-Type')) {
-      throw new ApiError(
-        'Do not set Content-Type manually for FormData requests.',
-        { transportCode: 'INVALID_REQUEST_BODY' }
+  assertNotMultipart(headers);
+
+  if (typeof body === 'string') return body;
+
+  if (body instanceof URLSearchParams) {
+    const configuredContentType = headers.get('Content-Type');
+
+    if (
+      configuredContentType &&
+      !isUrlEncodedContentType(configuredContentType)
+    ) {
+      throw invalidRequestBody(
+        'URLSearchParams request bodies require application/x-www-form-urlencoded.'
       );
     }
+
     return body;
   }
 
-  if (isNativeRequestBody(body)) return body;
-
   if (!isJsonSerializableContainer(body)) {
-    throw new ApiError('The request body format is not supported.', {
-      transportCode: 'INVALID_REQUEST_BODY',
-    });
+    throw invalidRequestBody('The request body format is not supported.');
+  }
+
+  if (hasCustomToJson(body)) {
+    throw invalidRequestBody(
+      'Request bodies with a custom toJSON method are not supported.'
+    );
   }
 
   const configuredContentType = headers.get('Content-Type');
   if (configuredContentType && !isJsonContentType(configuredContentType)) {
-    throw new ApiError('Object request bodies require a JSON Content-Type.', {
-      transportCode: 'INVALID_REQUEST_BODY',
-    });
+    throw invalidRequestBody(
+      'Object request bodies require a JSON Content-Type.'
+    );
   }
 
   if (!configuredContentType) {
@@ -79,9 +99,9 @@ export function prepareRequestBody(
   try {
     return JSON.stringify(body);
   } catch (error) {
-    throw new ApiError('The request body could not be serialized as JSON.', {
-      transportCode: 'INVALID_REQUEST_BODY',
-      cause: error,
-    });
+    throw invalidRequestBody(
+      'The request body could not be serialized as JSON.',
+      error
+    );
   }
 }

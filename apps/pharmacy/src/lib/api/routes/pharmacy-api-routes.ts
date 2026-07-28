@@ -1,7 +1,5 @@
-import {
-  encodeRouteSegment,
-  localAuthApiRoutes,
-} from '@e-pharmacy/api-client/contracts';
+import { encodeRouteSegment } from '@e-pharmacy/api-client/contracts';
+import { localAuthApiRoutes } from '@e-pharmacy/next-api/contracts';
 
 import type { PharmacyNoteEntityType } from '@e-pharmacy/types/notes';
 
@@ -68,5 +66,13 @@ export const pharmacyApiRoutes = {
       '/api/pharmacies/me/profile/send-for-verification',
   },
 
-  auth: localAuthApiRoutes,
+  auth: {
+    current: localAuthApiRoutes.current,
+    logout: localAuthApiRoutes.logout,
+    logoutAll: localAuthApiRoutes.logoutAll,
+    refresh: localAuthApiRoutes.refresh,
+    password: localAuthApiRoutes.password,
+    sessions: localAuthApiRoutes.sessions,
+    session: localAuthApiRoutes.session,
+  },
 } as const;

@@ -594,7 +594,7 @@ export async function getProductsService(
 
   return {
     items,
-    page: query.page,
+    page: total === 0 ? 1 : query.page,
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
@@ -665,7 +665,7 @@ export async function getFavoriteProductsService(
         favoriteIds
       )
     ),
-    page: query.page,
+    page: total === 0 ? 1 : query.page,
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
@@ -974,7 +974,7 @@ export async function getPendingProductReviewsService(
 
   return {
     items,
-    page: query.page,
+    page: total === 0 ? 1 : query.page,
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),

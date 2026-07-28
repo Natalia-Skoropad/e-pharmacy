@@ -51,7 +51,7 @@ export async function loadProductCatalogPageData(
         )
       ),
       resolveServerDataState(getPharmacyOptions(PUBLIC_API_CACHE_OPTIONS)),
-      resolveServerDataState(getProductFilters(PUBLIC_API_CACHE_OPTIONS)),
+      resolveServerDataState(getProductFilters({}, PUBLIC_API_CACHE_OPTIONS)),
     ]);
 
   const productsData =
