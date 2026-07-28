@@ -61,7 +61,7 @@ export async function updateCartItem(
   payload: UpdateCartItemPayload
 ): Promise<CartResponse> {
   const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.updateItem(cartItemId),
+    CLIENT_API_ROUTES.cart.item(cartItemId),
     {
       method: 'PATCH',
       body: payload,
@@ -77,7 +77,7 @@ export async function removeCartItem(
   cartItemId: string
 ): Promise<CartResponse> {
   const response = await localApiRequest<ApiSuccessResponse<CartResponse>>(
-    CLIENT_API_ROUTES.cart.removeItem(cartItemId),
+    CLIENT_API_ROUTES.cart.item(cartItemId),
     {
       method: 'DELETE',
     }

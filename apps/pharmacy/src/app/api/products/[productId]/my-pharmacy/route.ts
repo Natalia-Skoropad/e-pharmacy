@@ -11,7 +11,7 @@ type ProductMyPharmacyRouteParams = {
 
 export const POST = createPrivateProxyRoute<ProductMyPharmacyRouteParams>({
   backendPath: ({ productId }) =>
-    API_ROUTES.products.addToMyPharmacy(productId),
+    API_ROUTES.products.myPharmacy(productId),
   method: 'POST',
 });
 
@@ -19,6 +19,6 @@ export const POST = createPrivateProxyRoute<ProductMyPharmacyRouteParams>({
 
 export const DELETE = createPrivateProxyRoute<ProductMyPharmacyRouteParams>({
   backendPath: ({ productId }) =>
-    API_ROUTES.products.removeFromMyPharmacy(productId),
+    API_ROUTES.products.myPharmacy(productId),
   method: 'DELETE',
 });

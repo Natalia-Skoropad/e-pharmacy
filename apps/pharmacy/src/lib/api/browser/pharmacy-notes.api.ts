@@ -17,6 +17,8 @@ import { getTrimmedString } from '@e-pharmacy/utils/strings';
 import { isISODateTimeString } from '@e-pharmacy/validation/dates';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
+import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
+
 import type {
   PharmacyNote,
   PharmacyNoteEntityType,
@@ -46,7 +48,10 @@ export async function getPharmacyNotes(
   options?: JsonResponseRequestOptions
 ): Promise<PharmacyNotesResponse> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    `/api/pharmacy-notes/${type}/${entityId}${buildQueryString({ page, perPage: 10 })}`,
+    `${PHARMACY_API_ROUTES.pharmacyNotes.list(
+      type,
+      entityId
+    )}${buildQueryString({ page, perPage: 10 })}`,
     options
   );
 
@@ -67,7 +72,7 @@ export async function createPharmacyNote(
   entityId: string,
   text: string
 ): Promise<void> {
-  await localApiRequest(`/api/pharmacy-notes/${type}/${entityId}`, {
+  await localApiRequest(PHARMACY_API_ROUTES.pharmacyNotes.list(type, entityId), {
     method: 'POST',
     body: { text },
   });
@@ -80,7 +85,10 @@ export async function deletePharmacyNote(
   entityId: string,
   noteId: string
 ): Promise<void> {
-  await localApiRequest(`/api/pharmacy-notes/${type}/${entityId}/${noteId}`, {
-    method: 'DELETE',
-  });
+  await localApiRequest(
+    PHARMACY_API_ROUTES.pharmacyNotes.details(type, entityId, noteId),
+    {
+      method: 'DELETE',
+    }
+  );
 }

@@ -9,28 +9,23 @@ const segment = (value: string): string => encodeRouteSegment(value);
 
 //===================================================================
 
-export const storefrontRoutes = {
+export const backendRoutes = {
   health: '/health',
 
   pharmacies: {
     list: '/pharmacies',
     myProfile: '/pharmacies/me/profile',
-
     sendMyProfileForVerification:
       '/pharmacies/me/profile/send-for-verification',
-
     options: '/pharmacies/options',
     favorites: '/pharmacies/favorites',
     favoriteIds: '/pharmacies/favorites/ids',
     filters: '/pharmacies/filters',
     details: (pharmacyId: EntityId) => `/pharmacies/${segment(pharmacyId)}`,
-
     checkoutDetails: (pharmacyId: EntityId) =>
       `/pharmacies/${segment(pharmacyId)}/checkout-details`,
-
     reviews: (pharmacyId: EntityId) =>
       `/pharmacies/${segment(pharmacyId)}/reviews`,
-
     favorite: (pharmacyId: EntityId) =>
       `/pharmacies/${segment(pharmacyId)}/favorite`,
   },
@@ -41,18 +36,11 @@ export const storefrontRoutes = {
     favoriteIds: '/products/favorites/ids',
     filters: '/products/filters',
     details: (productId: EntityId) => `/products/${segment(productId)}`,
-
-    addToMyPharmacy: (productId: EntityId) =>
+    myPharmacy: (productId: EntityId) =>
       `/products/${segment(productId)}/my-pharmacy`,
-
-    removeFromMyPharmacy: (productId: EntityId) =>
-      `/products/${segment(productId)}/my-pharmacy`,
-
     stockMovements: (productId: EntityId) =>
       `/products/${segment(productId)}/stock-movements`,
-
     reviews: (productId: EntityId) => `/products/${segment(productId)}/reviews`,
-
     favorite: (productId: EntityId) =>
       `/products/${segment(productId)}/favorite`,
   },
@@ -60,8 +48,7 @@ export const storefrontRoutes = {
   cart: {
     current: '/cart',
     addItem: '/cart/items',
-    updateItem: (cartItemId: EntityId) => `/cart/items/${segment(cartItemId)}`,
-    removeItem: (cartItemId: EntityId) => `/cart/items/${segment(cartItemId)}`,
+    item: (cartItemId: EntityId) => `/cart/items/${segment(cartItemId)}`,
     clear: '/cart/clear',
   },
 
@@ -72,7 +59,6 @@ export const storefrontRoutes = {
     details: (orderId: EntityId) => `/orders/${segment(orderId)}`,
     status: (orderId: EntityId) => `/orders/${segment(orderId)}/status`,
     comments: (orderId: EntityId) => `/orders/${segment(orderId)}/comments`,
-
     comment: (orderId: EntityId, commentId: EntityId) =>
       `/orders/${segment(orderId)}/comments/${segment(commentId)}`,
   },
@@ -85,13 +71,13 @@ export const storefrontRoutes = {
 
   productRequests: {
     list: '/product-requests',
+    articleAvailability: '/product-requests/article-availability',
     details: (requestId: EntityId) => `/product-requests/${segment(requestId)}`,
   },
 
   pharmacyNotes: {
     list: (entityType: PharmacyNoteEntityType, entityId: EntityId) =>
       `/pharmacy-notes/${segment(entityType)}/${segment(entityId)}`,
-
     details: (
       entityType: PharmacyNoteEntityType,
       entityId: EntityId,

@@ -2,20 +2,24 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 //===================================================================
 
-export type ApiRequestBody = BodyInit | Record<string, unknown> | unknown;
+export type JsonRequestBody =
+  | Readonly<Record<string, unknown>>
+  | readonly unknown[];
+
+export type ApiRequestBody = BodyInit | JsonRequestBody;
 
 //===================================================================
 
-export type NextRequestOptions = {
+export type NextRequestOptions = Readonly<{
   revalidate?: number | false;
-  tags?: string[];
-};
+  tags?: readonly string[];
+}>;
 
-export type ApiRetryConfig = {
+export type ApiRetryConfig = Readonly<{
   attempts?: number;
-  statuses?: number[];
+  statuses?: readonly number[];
   delayMs?: number;
-};
+}>;
 
 //===================================================================
 
@@ -27,11 +31,14 @@ export type RequestOptions = {
   next?: NextRequestOptions;
   credentials?: RequestCredentials;
   signal?: AbortSignal;
-  baseUrl?: string;
   timeoutMs?: number;
   retry?: false | ApiRetryConfig;
   redirect?: RequestRedirect;
-  responseType?: 'json' | 'empty';
+  responseType?: 'json' | 'no-content';
+};
+
+export type ApiRequestOptions = RequestOptions & {
+  baseUrl: string;
 };
 
 //===================================================================
@@ -43,11 +50,27 @@ export type JsonResponseRequestOptions = Omit<
   responseType?: 'json';
 };
 
+export type ApiJsonResponseRequestOptions = JsonResponseRequestOptions & {
+  baseUrl: string;
+};
+
 //===================================================================
 
-export type EmptyResponseRequestOptions = Omit<
+export type NoContentResponseRequestOptions = Omit<
   RequestOptions,
   'responseType'
 > & {
-  responseType: 'empty';
+  responseType: 'no-content';
 };
+
+export type ApiNoContentResponseRequestOptions =
+  NoContentResponseRequestOptions & {
+    baseUrl: string;
+  };
+
+//===================================================================
+
+export type ApiClientConfig = Readonly<{
+  baseUrl: string;
+  defaults?: Omit<RequestOptions, 'body' | 'signal' | 'responseType'>;
+}>;

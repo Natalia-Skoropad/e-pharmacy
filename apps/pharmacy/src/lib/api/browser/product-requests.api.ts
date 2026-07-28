@@ -1,6 +1,7 @@
 import 'client-only';
 
 import {
+  ApiError,
   buildQueryString,
   getResponseData,
   type JsonResponseRequestOptions,
@@ -8,6 +9,7 @@ import {
 
 import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
+import { isRecord } from '@e-pharmacy/utils/guards';
 
 import type {
   ProductRequestFormPayload,
@@ -29,6 +31,38 @@ import {
   normalizeProductRequestDetails,
   normalizeProductRequestsResponse,
 } from '@/lib/product-requests/product-requests';
+
+//===================================================================
+
+type ArticleAvailabilityResult = Readonly<{
+  available: boolean;
+  message?: string;
+}>;
+
+//===================================================================
+
+function parseArticleAvailabilityResponse(
+  value: unknown
+): ArticleAvailabilityResult {
+  if (!isRecord(value) || typeof value.available !== 'boolean') {
+    throw new ApiError('Article availability response is invalid.', {
+      transportCode: 'INVALID_RESPONSE',
+      payload: value,
+    });
+  }
+
+  if (value.message !== undefined && typeof value.message !== 'string') {
+    throw new ApiError('Article availability response message is invalid.', {
+      transportCode: 'INVALID_RESPONSE',
+      payload: value,
+    });
+  }
+
+  return {
+    available: value.available,
+    ...(typeof value.message === 'string' ? { message: value.message } : {}),
+  };
+}
 
 //===================================================================
 
@@ -60,7 +94,7 @@ export async function checkPharmacyProductRequestArticle(
   options?: JsonResponseRequestOptions
 ): Promise<{ available: boolean; message?: string }> {
   const response = await localApiRequest<ApiSuccessResponse<unknown>>(
-    `${PHARMACY_API_ROUTES.productRequests.list}/article-availability${buildQueryString(
+    `${PHARMACY_API_ROUTES.productRequests.articleAvailability}${buildQueryString(
       {
         article,
         excludeRequestId,
@@ -69,15 +103,7 @@ export async function checkPharmacyProductRequestArticle(
     options
   );
 
-  const data = getResponseData(response) as {
-    available?: unknown;
-    message?: unknown;
-  };
-
-  return {
-    available: data.available === true,
-    ...(typeof data.message === 'string' ? { message: data.message } : {}),
-  };
+  return parseArticleAvailabilityResponse(getResponseData(response));
 }
 
 //===================================================================

@@ -59,9 +59,21 @@ const sharedApiRequest = await read(
   'packages/api-client/src/core/api-request.ts'
 );
 
+const sharedRequestExecutor = await read(
+  'packages/api-client/src/core/request-executor.ts'
+);
+
+const sharedFetchExecutor = await read(
+  'packages/api-client/src/core/fetch-executor.ts'
+);
+
 const sharedApiUrl = await read('packages/api-client/src/core/api-url.ts');
 const sharedRequestUtils = await read(
   'packages/api-client/src/core/request-utils.ts'
+);
+
+const sharedRequestTypes = await read(
+  'packages/api-client/src/core/types.ts'
 );
 
 const backendAuthController = await read(
@@ -275,18 +287,27 @@ if (
   violations.push('Refresh-aware optional-auth flow is missing');
 }
 
-for (const [label, source] of [
-  ['browser BFF request', browserApiRequest],
-  ['shared API request', sharedApiRequest],
-]) {
-  if (
-    !source.includes("responseType === 'empty'") ||
-    !source.includes('empty response where JSON was required')
-  ) {
-    violations.push(
-      `${label} does not enforce an explicit empty-response contract`
-    );
-  }
+if (!browserApiRequest.includes('executeHttpRequest')) {
+  violations.push(
+    'browser BFF request does not use the shared framework-neutral executor'
+  );
+}
+
+if (
+  !sharedRequestExecutor.includes("responseType === 'no-content'") ||
+  !sharedRequestExecutor.includes('no content where JSON was required') ||
+  !sharedRequestExecutor.includes('no-content contract')
+) {
+  violations.push(
+    'Shared API request does not separate JSON and no-content contracts'
+  );
+}
+
+if (
+  !sharedRequestTypes.includes('baseUrl: string') ||
+  sharedRequestTypes.includes('baseUrl?: string')
+) {
+  violations.push('Shared API request still allows an optional baseUrl');
 }
 
 if (
@@ -299,9 +320,14 @@ if (
   );
 }
 
-if (!sharedRequestUtils.includes('AbortSignal.any')) {
+if (
+  !sharedRequestUtils.includes('createOperationSignal') ||
+  !sharedRequestUtils.includes("addEventListener('abort'") ||
+  !sharedFetchExecutor.includes('operation.signal') ||
+  !sharedFetchExecutor.includes('wait(retryConfig.delayMs, operation.signal)')
+) {
   violations.push(
-    'Shared API requests do not combine caller cancellation with timeout enforcement'
+    'Shared API requests do not combine cancellation, overall timeout, and abortable retry delay'
   );
 }
 

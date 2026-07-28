@@ -13,11 +13,24 @@ export class InvalidApiPathError extends Error {
 
 //===================================================================
 
+export class InvalidApiBaseUrlError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidApiBaseUrlError';
+  }
+}
+
+//===================================================================
+
 function assertRelativeApiPath(path: string): void {
   if (!path || CONTROL_CHARACTER_PATTERN.test(path)) {
     throw new InvalidApiPathError(
       'API path must be non-empty and must not contain control characters.'
     );
+  }
+
+  if (path.includes('#')) {
+    throw new InvalidApiPathError('API paths must not contain fragments.');
   }
 
   if (path.startsWith('//') || ABSOLUTE_SCHEME_PATTERN.test(path)) {
@@ -26,7 +39,7 @@ function assertRelativeApiPath(path: string): void {
     );
   }
 
-  const pathWithoutQuery = path.split(/[?#]/, 1)[0] ?? '';
+  const pathWithoutQuery = path.split('?', 1)[0] ?? '';
   let decodedPath: string;
 
   try {
@@ -47,13 +60,50 @@ function assertRelativeApiPath(path: string): void {
 
 //===================================================================
 
+function parseApiBaseUrl(baseUrl: string): URL {
+  if (!baseUrl?.trim()) {
+    throw new InvalidApiBaseUrlError('API base URL is not configured.');
+  }
+
+  let parsed: URL;
+
+  try {
+    parsed = new URL(baseUrl);
+  } catch {
+    throw new InvalidApiBaseUrlError('API base URL is invalid.');
+  }
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new InvalidApiBaseUrlError('API base URL must use HTTP or HTTPS.');
+  }
+
+  if (parsed.username || parsed.password) {
+    throw new InvalidApiBaseUrlError(
+      'API base URL must not contain credentials.'
+    );
+  }
+
+  if (parsed.search || parsed.hash) {
+    throw new InvalidApiBaseUrlError(
+      'API base URL must not contain query parameters or fragments.'
+    );
+  }
+
+  return parsed;
+}
+
+//===================================================================
+
 export function createApiUrl(path: string, baseUrl: string): string {
   assertRelativeApiPath(path);
 
-  if (!baseUrl?.trim()) {
-    throw new Error('API base URL is not configured. Pass baseUrl explicitly.');
-  }
+  const parsedBaseUrl = parseApiBaseUrl(baseUrl);
+  const basePath = parsedBaseUrl.pathname.endsWith('/')
+    ? parsedBaseUrl.pathname
+    : `${parsedBaseUrl.pathname}/`;
 
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return new URL(normalizedPath, baseUrl).toString();
+  parsedBaseUrl.pathname = basePath;
+  const relativePath = path.startsWith('/') ? path.slice(1) : path;
+
+  return new URL(relativePath, parsedBaseUrl).toString();
 }

@@ -1,9 +1,12 @@
-import { localAuthApiRoutes } from '@e-pharmacy/api-client/contracts';
+import {
+  encodeRouteSegment,
+  localAuthApiRoutes,
+} from '@e-pharmacy/api-client/contracts';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
 //===================================================================
 
-const segment = (value: string): string => encodeURIComponent(value);
+const segment = (value: string): string => encodeRouteSegment(value);
 
 //===================================================================
 
@@ -39,8 +42,7 @@ export const clientApiRoutes = {
   cart: {
     current: '/api/cart',
     addItem: '/api/cart/items',
-    updateItem: (id: EntityId) => `/api/cart/items/${segment(id)}`,
-    removeItem: (id: EntityId) => `/api/cart/items/${segment(id)}`,
+    item: (id: EntityId) => `/api/cart/items/${segment(id)}`,
     clear: '/api/cart/clear',
   },
 

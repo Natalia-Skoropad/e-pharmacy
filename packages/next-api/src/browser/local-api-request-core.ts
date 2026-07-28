@@ -1,15 +1,8 @@
 import {
-  ApiError,
-  DEFAULT_API_REQUEST_TIMEOUT_MS,
-  getApiErrorMessage,
-  getRequestSignal,
-  getRetryConfig,
-  parseJsonSafe,
-  prepareRequestBody,
-  toTransportError,
-  wait,
-  type EmptyResponseRequestOptions,
+  executeHttpRequest,
+  isApiError,
   type JsonResponseRequestOptions,
+  type NoContentResponseRequestOptions,
   type RequestOptions,
 } from '@e-pharmacy/api-client/core';
 
@@ -32,166 +25,76 @@ function isMutationMethod(method: string): boolean {
 
 export function localApiRequest(
   path: string,
-  options: EmptyResponseRequestOptions
+  options: NoContentResponseRequestOptions
 ): Promise<void>;
-
-//===================================================================
 
 export function localApiRequest<TData>(
   path: string,
   options?: JsonResponseRequestOptions
 ): Promise<TData>;
 
-//===================================================================
-
 export async function localApiRequest(
   path: string,
   {
     method = 'GET',
-    body,
     headers,
     cache = 'no-store',
-    signal,
     credentials = 'same-origin',
-    timeoutMs = DEFAULT_API_REQUEST_TIMEOUT_MS,
-    retry,
     redirect = 'manual',
-    responseType = 'json',
+    ...options
   }: RequestOptions = {}
 ): Promise<unknown> {
   assertLocalApiPath(path);
 
   const requestId = createRequestId();
   const requestHeaders = new Headers(headers);
+  const startedAt = Date.now();
 
   if (isMutationMethod(method)) {
     requestHeaders.set(BFF_CSRF_HEADER_NAME, BFF_CSRF_HEADER_VALUE);
   }
 
-  const requestBody = prepareRequestBody(body, requestHeaders);
-  const retryConfig = getRetryConfig(method, retry);
-  const startedAt = Date.now();
-  let response: Response;
-  let retryCount = 0;
+  try {
+    const result = await executeHttpRequest(path, {
+      ...options,
+      method,
+      headers: requestHeaders,
+      cache,
+      credentials,
+      redirect,
+    });
 
-  for (let attempt = 1; ; attempt += 1) {
-    try {
-      response = await fetch(path, {
-        method,
-        headers: requestHeaders,
-        body: requestBody,
-        cache,
-        redirect,
-        signal: getRequestSignal(signal, timeoutMs),
-        credentials,
-      });
-    } catch (error) {
-      if (attempt < retryConfig.attempts && !signal) {
-        retryCount += 1;
-        await wait(retryConfig.delayMs);
-        continue;
-      }
-
-      const transportError = toTransportError(error, { url: path, method });
-
-      logTransportRequest({
-        requestId,
-        method,
-        path,
-        destination: 'bff',
-        durationMs: Date.now() - startedAt,
-        status: transportError.status,
-        retryCount,
-        cachePolicy: cache,
-        authMode: 'private',
-        transportErrorCode: transportError.code,
-        source: 'browser-api',
-      });
-
-      throw transportError;
-    }
-
-    if (
-      attempt >= retryConfig.attempts ||
-      !retryConfig.statuses.includes(response.status)
-    ) {
-      break;
-    }
-
-    retryCount += 1;
-    await wait(retryConfig.delayMs);
-  }
-
-  if (responseType === 'empty') {
     logTransportRequest({
       requestId,
       method,
       path,
       destination: 'bff',
       durationMs: Date.now() - startedAt,
-      status: response.status,
-      retryCount,
+      status: result.status,
+      retryCount: result.retryCount,
       cachePolicy: cache,
       authMode: 'private',
       source: 'browser-api',
     });
 
-    if (!response.ok) {
-      const payload = await parseJsonSafe(response);
-      throw new ApiError(
-        getApiErrorMessage(payload, response.statusText),
-        response.status,
-        payload,
-        { url: path, method, code: 'HTTP_ERROR' }
-      );
-    }
+    return result.data;
+  } catch (error) {
+    logTransportRequest({
+      requestId,
+      method,
+      path,
+      destination: 'bff',
+      durationMs: Date.now() - startedAt,
+      status: isApiError(error) ? error.httpStatus : undefined,
+      retryCount: 0,
+      cachePolicy: cache,
+      authMode: 'private',
+      transportErrorCode: isApiError(error)
+        ? error.transportCode
+        : undefined,
+      source: 'browser-api',
+    });
 
-    return undefined;
+    throw error;
   }
-
-  if (response.status === 204) {
-    throw new ApiError(
-      'The API returned an empty response where JSON was required.',
-      502,
-      null,
-      { url: path, method, code: 'INVALID_RESPONSE' }
-    );
-  }
-
-  const contentType = response.headers.get('content-type') ?? '';
-  const isJson = /(^|\/)json(?:;|$)|\+json(?:;|$)/i.test(contentType);
-  const payload = isJson ? await parseJsonSafe(response) : null;
-
-  logTransportRequest({
-    requestId,
-    method,
-    path,
-    destination: 'bff',
-    durationMs: Date.now() - startedAt,
-    status: response.status,
-    retryCount,
-    cachePolicy: cache,
-    authMode: 'private',
-    source: 'browser-api',
-  });
-
-  if (!response.ok) {
-    throw new ApiError(
-      getApiErrorMessage(payload, response.statusText),
-      response.status,
-      payload,
-      { url: path, method, code: 'HTTP_ERROR' }
-    );
-  }
-
-  if (!isJson || payload === null) {
-    throw new ApiError(
-      'The API returned an invalid JSON response.',
-      502,
-      null,
-      { url: path, method, code: 'INVALID_RESPONSE' }
-    );
-  }
-
-  return payload;
 }

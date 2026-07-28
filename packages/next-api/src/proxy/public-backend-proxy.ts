@@ -1,8 +1,6 @@
 import type { NextRequest } from 'next/server';
 
-import { wait } from '@e-pharmacy/api-client/core';
-
-import { executeBackendFetch } from '../internal/backend-fetch';
+import { executeBackendFetchWithRetry } from '../internal/backend-fetch';
 
 import {
   createPublicCacheControl,
@@ -45,53 +43,41 @@ export async function proxyPublicBackendRequest({
 }: PublicBackendProxyOptions) {
   const startedAt = Date.now();
   const resolvedRevalidate = resolvePublicRevalidate(revalidate);
-  let response: Response | undefined;
-  let lastError: unknown;
-  let retryCount = 0;
 
-  for (
-    let attempt = 1;
-    attempt <= PUBLIC_READ_RETRY_POLICY.attempts;
-    attempt += 1
-  ) {
-    try {
-      response = await executeBackendFetch({
-        request,
-        backendPath,
-        method: 'GET',
-        requestId,
-        timeoutMs: NEXT_API_TIMEOUTS_MS.publicRead,
-        authCookieMode: 'none',
-        forwardAccept: true,
-      });
-      await validateBackendJsonResponse(response);
+  try {
+    const execution = await executeBackendFetchWithRetry({
+      request,
+      backendPath,
+      method: 'GET',
+      requestId,
+      timeoutMs: NEXT_API_TIMEOUTS_MS.publicRead,
+      authCookieMode: 'none',
+      forwardAccept: true,
+      retry: PUBLIC_READ_RETRY_POLICY,
+      validateResponse: validateBackendJsonResponse,
+    });
 
-      if (
-        attempt < PUBLIC_READ_RETRY_POLICY.attempts &&
-        PUBLIC_READ_RETRY_POLICY.statuses.includes(
-          response.status as (typeof PUBLIC_READ_RETRY_POLICY.statuses)[number]
-        )
-      ) {
-        retryCount += 1;
-        await wait(PUBLIC_READ_RETRY_POLICY.delayMs);
-        continue;
-      }
+    const cacheControl = execution.response.ok
+      ? createPublicCacheControl(resolvedRevalidate, staleWhileRevalidate)
+      : 'no-store';
 
-      break;
-    } catch (error) {
-      response = undefined;
-      lastError = error;
+    logTransportRequest({
+      requestId,
+      method: 'GET',
+      path: backendPath,
+      destination: 'backend',
+      durationMs: Date.now() - startedAt,
+      status: execution.response.status,
+      retryCount: execution.retryCount,
+      authMode: 'public',
+      cachePolicy: cacheControl,
+      source: 'public-proxy',
+    });
 
-      if (attempt < PUBLIC_READ_RETRY_POLICY.attempts) {
-        retryCount += 1;
-        await wait(PUBLIC_READ_RETRY_POLICY.delayMs);
-        continue;
-      }
-    }
-  }
-
-  if (!response) {
-    const descriptor = describeProxyError(lastError);
+    execution.cleanup();
+    return createProxyResponse(execution.response, { cacheControl, requestId });
+  } catch (error) {
+    const descriptor = describeProxyError(error);
 
     logTransportRequest({
       requestId,
@@ -100,7 +86,7 @@ export async function proxyPublicBackendRequest({
       destination: 'backend',
       durationMs: Date.now() - startedAt,
       status: descriptor.status,
-      retryCount,
+      retryCount: PUBLIC_READ_RETRY_POLICY.attempts - 1,
       authMode: 'public',
       transportErrorCode: descriptor.code,
       source: 'public-proxy',
@@ -108,23 +94,4 @@ export async function proxyPublicBackendRequest({
 
     return createProxyErrorResponse({ descriptor, requestId, request });
   }
-
-  const cacheControl = response.ok
-    ? createPublicCacheControl(resolvedRevalidate, staleWhileRevalidate)
-    : 'no-store';
-
-  logTransportRequest({
-    requestId,
-    method: 'GET',
-    path: backendPath,
-    destination: 'backend',
-    durationMs: Date.now() - startedAt,
-    status: response.status,
-    retryCount,
-    authMode: 'public',
-    cachePolicy: cacheControl,
-    source: 'public-proxy',
-  });
-
-  return createProxyResponse(response, { cacheControl, requestId });
 }

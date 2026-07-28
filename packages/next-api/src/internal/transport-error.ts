@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { isApiError } from '@e-pharmacy/api-client/core';
 import type { ApiErrorResponse } from '@e-pharmacy/types/api';
 
 import { clearClientAuthCookies } from './auth-cookies';
@@ -39,6 +40,30 @@ export type ProxyErrorDescriptor = Readonly<{
 //===================================================================
 
 export function describeProxyError(error: unknown): ProxyErrorDescriptor {
+  if (isApiError(error)) {
+    if (error.transportCode === 'TIMEOUT') {
+      return {
+        status: 504,
+        code: 'GATEWAY_TIMEOUT',
+        message: 'The upstream service did not respond in time.',
+      };
+    }
+
+    if (error.transportCode === 'INVALID_RESPONSE') {
+      return {
+        status: 502,
+        code: 'INVALID_BACKEND_RESPONSE',
+        message: 'The upstream service returned an invalid response.',
+      };
+    }
+
+    return {
+      status: 502,
+      code: 'BAD_GATEWAY',
+      message: 'The upstream service could not be reached.',
+    };
+  }
+
   if (error instanceof ProxyRequestBodyError) {
     return { status: error.status, code: error.code, message: error.message };
   }

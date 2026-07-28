@@ -1,3 +1,7 @@
+import { isJsonContentType } from '@e-pharmacy/api-client/core';
+
+//===================================================================
+
 export class InvalidBackendResponseError extends Error {
   constructor(message = 'The upstream service returned an invalid response.') {
     super(message);
@@ -7,11 +11,7 @@ export class InvalidBackendResponseError extends Error {
 
 //===================================================================
 
-export function isJsonContentType(contentType: string | null): boolean {
-  return /(^|\/)json(?:;|$)|\+json(?:;|$)/i.test(contentType ?? '');
-}
-
-//===================================================================
+export { isJsonContentType };
 
 export async function validateBackendJsonResponse(
   response: Response

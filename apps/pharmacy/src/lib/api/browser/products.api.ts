@@ -82,7 +82,7 @@ export async function addProductToMyPharmacy(
 ): Promise<PharmacyProductMutationResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<PharmacyProductMutationResponse>
-  >(PHARMACY_API_ROUTES.products.addToMyPharmacy(productId), {
+  >(PHARMACY_API_ROUTES.products.myPharmacy(productId), {
     method: 'POST',
   });
 
@@ -96,7 +96,7 @@ export async function removeProductFromMyPharmacy(
 ): Promise<PharmacyProductMutationResponse> {
   const response = await localApiRequest<
     ApiSuccessResponse<PharmacyProductMutationResponse>
-  >(PHARMACY_API_ROUTES.products.removeFromMyPharmacy(productId), {
+  >(PHARMACY_API_ROUTES.products.myPharmacy(productId), {
     method: 'DELETE',
   });
 

@@ -2,18 +2,27 @@ import type { ApiSuccessResponse } from '@e-pharmacy/types/api';
 
 import { ApiError } from './api-error';
 
+import {
+  parseApiEmptySuccessEnvelope,
+  parseApiNullableSuccessEnvelope,
+  parseApiSuccessEnvelope,
+} from '../response/api-envelope';
+
 //===================================================================
 
 export function getResponseData<TData>(
   response: ApiSuccessResponse<TData>
 ): TData {
-  if (response.data === undefined || response.data === null) {
-    throw new ApiError('API response data is missing', 500, response, {
-      code: 'INVALID_RESPONSE',
+  const envelope = parseApiSuccessEnvelope(response);
+
+  if (envelope.data === undefined || envelope.data === null) {
+    throw new ApiError('API response data is missing.', {
+      transportCode: 'INVALID_RESPONSE',
+      payload: response,
     });
   }
 
-  return response.data;
+  return envelope.data as TData;
 }
 
 //===================================================================
@@ -21,17 +30,12 @@ export function getResponseData<TData>(
 export function getNullableResponseData<TData>(
   response: ApiSuccessResponse<TData | null>
 ): TData | null {
-  return response.data ?? null;
+  const envelope = parseApiNullableSuccessEnvelope(response);
+  return envelope.data as TData | null;
 }
 
 //===================================================================
 
-export function assertSuccessfulEmptyResponse(
-  response: Pick<ApiSuccessResponse<unknown>, 'status'>
-): void {
-  if (response.status !== 'success') {
-    throw new ApiError('API response is not successful', 500, response, {
-      code: 'INVALID_RESPONSE',
-    });
-  }
+export function assertSuccessfulEmptyResponse(response: unknown): void {
+  parseApiEmptySuccessEnvelope(response);
 }

@@ -10,13 +10,13 @@ type CartItemRouteParams = {
 //===================================================================
 
 export const PATCH = createPrivateProxyRoute<CartItemRouteParams>({
-  backendPath: ({ cartItemId }) => API_ROUTES.cart.updateItem(cartItemId),
+  backendPath: ({ cartItemId }) => API_ROUTES.cart.item(cartItemId),
   method: 'PATCH',
 });
 
 //===================================================================
 
 export const DELETE = createPrivateProxyRoute<CartItemRouteParams>({
-  backendPath: ({ cartItemId }) => API_ROUTES.cart.removeItem(cartItemId),
+  backendPath: ({ cartItemId }) => API_ROUTES.cart.item(cartItemId),
   method: 'DELETE',
 });

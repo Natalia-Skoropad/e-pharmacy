@@ -1,20 +1,12 @@
-import { ApiError } from './api-error';
-import { createApiUrl } from './api-url';
-import { getApiErrorMessage } from './get-api-error-message';
-import { parseJsonSafe } from './parse-json-safe';
-import { prepareRequestBody } from './request-body';
-
-import {
-  DEFAULT_API_REQUEST_TIMEOUT_MS,
-  getRequestSignal,
-  getRetryConfig,
-  toTransportError,
-  wait,
-} from './request-utils';
+import { createApiUrl, InvalidApiBaseUrlError } from './api-url';
+import { executeHttpRequest } from './request-executor';
 
 import type {
-  EmptyResponseRequestOptions,
+  ApiClientConfig,
+  ApiJsonResponseRequestOptions,
+  ApiNoContentResponseRequestOptions,
   JsonResponseRequestOptions,
+  NoContentResponseRequestOptions,
   RequestOptions,
 } from './types';
 
@@ -22,115 +14,86 @@ import type {
 
 export function apiRequest(
   path: string,
-  options: EmptyResponseRequestOptions
+  options: ApiNoContentResponseRequestOptions
 ): Promise<void>;
 
 //===================================================================
 
 export function apiRequest<TData>(
   path: string,
-  options?: JsonResponseRequestOptions
+  options: ApiJsonResponseRequestOptions
 ): Promise<TData>;
 
 //===================================================================
 
 export async function apiRequest(
   path: string,
-  {
-    method = 'GET',
-    body,
-    headers,
-    cache = 'no-store',
-    next,
-    credentials = 'include',
-    signal,
-    baseUrl,
-    timeoutMs = DEFAULT_API_REQUEST_TIMEOUT_MS,
-    retry,
-    redirect = 'follow',
-    responseType = 'json',
-  }: RequestOptions = {}
+  requestOptions?:
+    | ApiJsonResponseRequestOptions
+    | ApiNoContentResponseRequestOptions
 ): Promise<unknown> {
-  const url = createApiUrl(path, baseUrl ?? '');
-  const requestHeaders = new Headers(headers);
-  const requestBody = prepareRequestBody(body, requestHeaders);
-  const retryConfig = getRetryConfig(method, retry);
-
-  let response: Response;
-
-  for (let attempt = 1; ; attempt += 1) {
-    try {
-      response = await fetch(url, {
-        method,
-        headers: requestHeaders,
-        body: requestBody,
-        cache,
-        next,
-        credentials,
-        redirect,
-        signal: getRequestSignal(signal, timeoutMs),
-      } as RequestInit & { next?: RequestOptions['next'] });
-    } catch (error) {
-      if (attempt < retryConfig.attempts && !signal) {
-        await wait(retryConfig.delayMs);
-        continue;
-      }
-
-      throw toTransportError(error, { url, method });
-    }
-
-    if (
-      attempt >= retryConfig.attempts ||
-      !retryConfig.statuses.includes(response.status)
-    ) {
-      break;
-    }
-
-    await wait(retryConfig.delayMs);
-  }
-
-  if (responseType === 'empty') {
-    if (!response.ok) {
-      const payload = await parseJsonSafe(response);
-      throw new ApiError(
-        getApiErrorMessage(payload, response.statusText),
-        response.status,
-        payload,
-        { url, method, code: 'HTTP_ERROR' }
-      );
-    }
-
-    return undefined;
-  }
-
-  if (response.status === 204) {
-    throw new ApiError(
-      'The API returned an empty response where JSON was required.',
-      502,
-      null,
-      { url, method, code: 'INVALID_RESPONSE' }
+  if (!requestOptions) {
+    throw new InvalidApiBaseUrlError(
+      'apiRequest requires a configured baseUrl. Use createApiClient or pass baseUrl explicitly.'
     );
   }
 
-  const payload = await parseJsonSafe(response);
+  const { baseUrl, ...options } = requestOptions;
+  const url = createApiUrl(path, baseUrl);
+  const result = await executeHttpRequest(url, {
+    ...options,
+    redirect: options.redirect ?? 'manual',
+  });
+  return result.data;
+}
 
-  if (!response.ok) {
-    throw new ApiError(
-      getApiErrorMessage(payload, response.statusText),
-      response.status,
-      payload,
-      { url, method, code: 'HTTP_ERROR' }
-    );
-  }
+//===================================================================
 
-  if (payload === null) {
-    throw new ApiError(
-      'The API returned an invalid JSON response.',
-      502,
-      null,
-      { url, method, code: 'INVALID_RESPONSE' }
-    );
-  }
+export type ApiClient = Readonly<{
+  request(
+    path: string,
+    options: NoContentResponseRequestOptions
+  ): Promise<void>;
+  request<TData>(
+    path: string,
+    options?: JsonResponseRequestOptions
+  ): Promise<TData>;
+}>;
 
-  return payload;
+//===================================================================
+
+function mergeHeaders(
+  defaults: HeadersInit | undefined,
+  overrides: HeadersInit | undefined
+): Headers {
+  const headers = new Headers(defaults);
+  new Headers(overrides).forEach((value, key) => headers.set(key, value));
+  return headers;
+}
+
+//===================================================================
+
+export function createApiClient({
+  baseUrl,
+  defaults = {},
+}: ApiClientConfig): ApiClient {
+  createApiUrl('/', baseUrl);
+
+  const request = async (
+    path: string,
+    options: RequestOptions = {}
+  ): Promise<unknown> => {
+    const mergedOptions: RequestOptions = {
+      ...defaults,
+      ...options,
+      headers: mergeHeaders(defaults.headers, options.headers),
+      redirect: options.redirect ?? defaults.redirect ?? 'manual',
+    };
+
+    const url = createApiUrl(path, baseUrl);
+    const result = await executeHttpRequest(url, mergedOptions);
+    return result.data;
+  };
+
+  return { request } as ApiClient;
 }

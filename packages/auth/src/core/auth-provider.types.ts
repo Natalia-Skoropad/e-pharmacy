@@ -11,6 +11,8 @@ import type {
 
 export type AuthBootstrapMode = 'always' | 'session-hint';
 
+//===================================================================
+
 type AuthSessionHintReader = Readonly<{
   hasHint: () => boolean;
 }>;
@@ -20,9 +22,7 @@ export type AuthServiceRequestOptions = Readonly<{
 }>;
 
 export type AuthProviderSessionServices = Readonly<{
-  getCurrentUser: (
-    options: AuthServiceRequestOptions
-  ) => Promise<AuthResponse>;
+  getCurrentUser: (options: AuthServiceRequestOptions) => Promise<AuthResponse>;
   logout: (options: AuthServiceRequestOptions) => Promise<void>;
 }>;
 
@@ -51,6 +51,8 @@ export type AuthUnauthenticatedReason =
   | 'password_changed'
   | 'password_reset'
   | 'external_session_event';
+
+//===================================================================
 
 export type AuthState =
   | Readonly<{

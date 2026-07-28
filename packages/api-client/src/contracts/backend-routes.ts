@@ -1,17 +1,9 @@
 import { authRoutes } from './auth-routes';
-import { storefrontRoutes } from './storefront-routes';
-
-//===================================================================
-
-export const API_HEADERS = {
-  json: {
-    'Content-Type': 'application/json',
-  },
-} as const;
+import { backendRoutes } from './backend-resource-routes';
 
 //===================================================================
 
 export const apiRoutes = {
-  ...storefrontRoutes,
+  ...backendRoutes,
   auth: authRoutes,
 } as const;

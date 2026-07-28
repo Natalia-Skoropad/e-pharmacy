@@ -1,8 +1,13 @@
-import { localAuthApiRoutes } from '@e-pharmacy/api-client/contracts';
+import {
+  encodeRouteSegment,
+  localAuthApiRoutes,
+} from '@e-pharmacy/api-client/contracts';
+
+import type { PharmacyNoteEntityType } from '@e-pharmacy/types/notes';
 
 //===================================================================
 
-const segment = (value: string): string => encodeURIComponent(value);
+const segment = (value: string): string => encodeRouteSegment(value);
 
 //===================================================================
 
@@ -10,16 +15,10 @@ export const pharmacyApiRoutes = {
   products: {
     list: '/api/products',
     details: (productId: string) => `/api/products/${segment(productId)}`,
-
-    addToMyPharmacy: (productId: string) =>
+    myPharmacy: (productId: string) =>
       `/api/products/${segment(productId)}/my-pharmacy`,
-
-    removeFromMyPharmacy: (productId: string) =>
-      `/api/products/${segment(productId)}/my-pharmacy`,
-
     stockMovements: (productId: string) =>
       `/api/products/${segment(productId)}/stock-movements`,
-
     reviews: (productId: string) =>
       `/api/products/${segment(productId)}/reviews`,
   },
@@ -45,14 +44,26 @@ export const pharmacyApiRoutes = {
 
   productRequests: {
     list: '/api/product-requests',
+    articleAvailability: '/api/product-requests/article-availability',
 
     details: (requestId: string) =>
       `/api/product-requests/${segment(requestId)}`,
   },
 
+  pharmacyNotes: {
+    list: (entityType: PharmacyNoteEntityType, entityId: string) =>
+      `/api/pharmacy-notes/${segment(entityType)}/${segment(entityId)}`,
+
+    details: (
+      entityType: PharmacyNoteEntityType,
+      entityId: string,
+      noteId: string
+    ) =>
+      `/api/pharmacy-notes/${segment(entityType)}/${segment(entityId)}/${segment(noteId)}`,
+  },
+
   pharmacies: {
     myProfile: '/api/pharmacies/me/profile',
-
     sendMyProfileForVerification:
       '/api/pharmacies/me/profile/send-for-verification',
   },

@@ -41,7 +41,7 @@ test('returns JSON and requires an explicit empty-response contract for 204', as
 
     globalThis.fetch = async () => new Response(null, { status: 204 });
     assert.equal(
-      await localApiRequest('/api/example', { responseType: 'empty' }),
+      await localApiRequest('/api/example', { responseType: 'no-content' }),
       undefined
     );
   } finally {
@@ -70,6 +70,27 @@ test('rejects invalid JSON and HTML success responses', async () => {
           error instanceof ApiError && error.code === 'INVALID_RESPONSE'
       );
     }
+  } finally {
+    restoreFetch();
+  }
+});
+
+//===================================================================
+
+test('supports structured +json responses through the shared parser', async () => {
+  try {
+    globalThis.fetch = async () =>
+      new Response(JSON.stringify({ status: 'success', data: null }), {
+        status: 200,
+        headers: {
+          'content-type': 'application/problem+json; charset=utf-8',
+        },
+      });
+
+    assert.deepEqual(await localApiRequest('/api/problem-json'), {
+      status: 'success',
+      data: null,
+    });
   } finally {
     restoreFetch();
   }
@@ -154,8 +175,11 @@ test('retries GET status and network failures but never retries mutations', asyn
         : jsonResponse({ ok: true });
     };
 
+    const controller = new AbortController();
+
     assert.deepEqual(
       await localApiRequest('/api/retry-status', {
+        signal: controller.signal,
         retry: { attempts: 2, delayMs: 0 },
       }),
       { ok: true }

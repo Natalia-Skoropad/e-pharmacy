@@ -64,11 +64,11 @@ export async function publicBackendApiRequest<TData>(
       path,
       destination: 'backend',
       durationMs: Date.now() - startedAt,
-      status: error instanceof ApiError ? error.status : undefined,
+      status: error instanceof ApiError ? error.httpStatus : undefined,
       cachePolicy: resolvedCache ?? `revalidate:${String(next?.revalidate)}`,
       authMode: 'public',
       transportErrorCode:
-        error instanceof ApiError ? error.code : undefined,
+        error instanceof ApiError ? error.transportCode : undefined,
       source: 'server-api',
     });
 

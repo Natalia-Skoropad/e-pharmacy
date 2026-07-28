@@ -1,6 +1,11 @@
 import type { NextRequest } from 'next/server';
 
-import type { HttpMethod } from '@e-pharmacy/api-client/core';
+import {
+  executeFetchWithRetry,
+  type FetchExecutionResult,
+  type HttpMethod,
+  type RequestOptions,
+} from '@e-pharmacy/api-client/core';
 
 import { createTrustedBackendApiUrl } from './backend-url';
 import type { AuthCookieForwardMode } from './cookie-header';
@@ -23,21 +28,28 @@ type ExecuteBackendFetchOptions = Readonly<{
   forwardSearchParams?: boolean;
 }>;
 
+type ExecuteBackendFetchWithRetryOptions = ExecuteBackendFetchOptions &
+  Readonly<{
+    retry?: RequestOptions['retry'];
+    validateResponse?: (response: Response) => void | Promise<void>;
+  }>;
+
 //===================================================================
 
-export function executeBackendFetch({
+function createBackendFetchTarget({
   request,
   backendPath,
-  method,
   requestId,
-  timeoutMs,
   authCookieMode,
   body,
   cookieHeaderOverride,
   forwardAccept = false,
   includeAuthProxyMarker = false,
   forwardSearchParams = true,
-}: ExecuteBackendFetchOptions): Promise<Response> {
+}: ExecuteBackendFetchOptions): {
+  url: string;
+  init: Omit<RequestInit, 'method' | 'signal'>;
+} {
   const pathWithSearch = forwardSearchParams
     ? appendSearchParams(backendPath, request.nextUrl.search)
     : backendPath;
@@ -52,12 +64,43 @@ export function executeBackendFetch({
 
   if (cookieHeaderOverride) headers.set('Cookie', cookieHeaderOverride);
 
-  return fetch(createTrustedBackendApiUrl(pathWithSearch), {
-    method,
-    headers,
-    body,
-    cache: 'no-store',
-    redirect: 'manual',
-    signal: AbortSignal.timeout(timeoutMs),
+  return {
+    url: createTrustedBackendApiUrl(pathWithSearch),
+    init: {
+      headers,
+      body,
+      cache: 'no-store',
+      redirect: 'manual',
+    },
+  };
+}
+
+//===================================================================
+
+export function executeBackendFetch(
+  options: ExecuteBackendFetchOptions
+): Promise<Response> {
+  const { url, init } = createBackendFetchTarget(options);
+
+  return fetch(url, {
+    ...init,
+    method: options.method,
+    signal: AbortSignal.timeout(options.timeoutMs),
+  });
+}
+
+//===================================================================
+
+export function executeBackendFetchWithRetry(
+  options: ExecuteBackendFetchWithRetryOptions
+): Promise<FetchExecutionResult> {
+  const { url, init } = createBackendFetchTarget(options);
+
+  return executeFetchWithRetry(url, {
+    method: options.method,
+    init,
+    timeoutMs: options.timeoutMs,
+    retry: options.retry,
+    validateResponse: options.validateResponse,
   });
 }

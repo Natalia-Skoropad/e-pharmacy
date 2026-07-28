@@ -273,7 +273,7 @@ const [
     fromRoot('packages', 'config', 'src', 'auth', 'cookie-names.ts'),
     'utf8'
   ),
-  readFile(fromRoot('packages', 'auth', 'src', 'react', 'index.ts'), 'utf8'),
+  readFile(fromRoot('packages', 'auth', 'src', 'react.ts'), 'utf8'),
   readFile(
     fromRoot('packages', 'next-api', 'src', 'internal', 'auth-cookies.ts'),
     'utf8'
