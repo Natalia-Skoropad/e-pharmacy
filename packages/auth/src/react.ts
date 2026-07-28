@@ -1,4 +1,4 @@
-export { AuthProviderCore, useAuth } from '../core/AuthProviderCore';
+export { AuthProviderCore, useAuth } from './core/AuthProviderCore';
 
 export type {
   AuthBootstrapMode,
@@ -12,4 +12,4 @@ export type {
   AuthState,
   AuthStatus,
   AuthUnauthenticatedReason,
-} from '../core/auth-provider.types';
+} from './core/auth-provider.types';

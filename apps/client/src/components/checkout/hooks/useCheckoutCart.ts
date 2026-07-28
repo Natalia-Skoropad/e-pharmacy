@@ -4,7 +4,10 @@ import { useCart } from '@/providers/CartProvider';
 
 //===================================================================
 
-export function useCheckoutCart(isAuthReady: boolean, isAuthenticated: boolean) {
+export function useCheckoutCart(
+  isAuthSettled: boolean,
+  isAuthenticated: boolean
+) {
   const {
     cart,
     isLoading: isCartLoading,
@@ -13,12 +16,12 @@ export function useCheckoutCart(isAuthReady: boolean, isAuthenticated: boolean) 
   } = useCart();
 
   const [error, setError] = useState('');
-  const canUseCart = isAuthReady && isAuthenticated;
+  const canUseCart = isAuthSettled && isAuthenticated;
 
   return {
     cart,
     error: canUseCart ? error || cartLoadError : '',
-    isLoading: !isAuthReady || (isAuthenticated && isCartLoading),
+    isLoading: !isAuthSettled || (isAuthenticated && isCartLoading),
     setCart,
     setError,
   };

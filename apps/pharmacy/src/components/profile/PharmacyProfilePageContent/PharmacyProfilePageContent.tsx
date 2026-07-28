@@ -420,7 +420,7 @@ function hasProfilePayloadChanges(
 //===================================================================
 
 function PharmacyProfilePageContent() {
-  const { user, isAuthReady } = useAuth();
+  const { user, isBootstrapping } = useAuth();
   const {
     profile,
     isLoading: isProfileLoading,
@@ -428,7 +428,7 @@ function PharmacyProfilePageContent() {
     syncProfile,
   } = usePharmacyProfile();
 
-  if (!isAuthReady || !user || isProfileLoading) {
+  if (isBootstrapping || !user || isProfileLoading) {
     return <PageLoader label="Loading pharmacy profile..." />;
   }
 

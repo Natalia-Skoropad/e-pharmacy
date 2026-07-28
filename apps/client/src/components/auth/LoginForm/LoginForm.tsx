@@ -67,7 +67,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { login, isAuthReady } = useAuth();
+  const { login, isBootstrapping } = useAuth();
   const toast = useToast();
 
   const [accountType, setAccountType] = useState<AuthAccountType>('client');
@@ -227,7 +227,7 @@ function LoginForm() {
         type="submit"
         fullWidth
         disabled={
-          isSubmitting || isRedirecting || !isAuthReady || !loginFormIsValid
+          isSubmitting || isRedirecting || isBootstrapping || !loginFormIsValid
         }
       >
         {isSubmitting || isRedirecting

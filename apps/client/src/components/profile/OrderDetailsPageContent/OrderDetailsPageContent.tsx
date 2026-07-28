@@ -55,7 +55,7 @@ type OrderDetailsPageContentProps = {
 //===================================================================
 
 function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
-  const { isAuthenticated, isAuthReady } = useAuth();
+  const { isAuthenticated, isBootstrapping } = useAuth();
   const [order, setOrder] = useState<ClientOrder | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState('');
@@ -65,7 +65,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     const controller = new AbortController();
 
     async function fetchOrder() {
-      if (!isAuthReady) return;
+      if (isBootstrapping) return;
 
       if (!isAuthenticated) {
         setOrder(null);
@@ -96,7 +96,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     return () => {
       controller.abort();
     };
-  }, [cleanOrderId, isAuthenticated, isAuthReady]);
+  }, [cleanOrderId, isAuthenticated, isBootstrapping]);
 
   const breadcrumbs = useMemo<BreadcrumbItem[]>(
     () => [

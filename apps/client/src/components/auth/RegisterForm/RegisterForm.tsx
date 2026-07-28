@@ -95,7 +95,7 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { register, isAuthReady } = useAuth();
+  const { register, isBootstrapping } = useAuth();
   const toast = useToast();
 
   const [accountType, setAccountType] = useState<RegisterAccountType>('client');
@@ -345,7 +345,7 @@ function RegisterForm() {
         type="submit"
         fullWidth
         disabled={
-          isSubmitting || !isAuthReady || !register || !registerFormIsValid
+          isSubmitting || isBootstrapping || !register || !registerFormIsValid
         }
       >
         {isSubmitting ? selectedCopy.loading : selectedCopy.button}

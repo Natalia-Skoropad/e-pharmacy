@@ -41,11 +41,14 @@ const PharmacyProfileContext =
 //===================================================================
 
 export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
-  const { user, isAuthReady } = useAuth();
-  const identity = user?.role === 'pharmacy' ? user.id : null;
+  const { user, isBootstrapping, canRenderAuthenticatedContent } = useAuth();
 
-  const [snapshot, setSnapshot] =
-    useState<PharmacyProfileSnapshot | null>(null);
+  const identity =
+    canRenderAuthenticatedContent && user?.role === 'pharmacy' ? user.id : null;
+
+  const [snapshot, setSnapshot] = useState<PharmacyProfileSnapshot | null>(
+    null
+  );
 
   const identityRef = useRef(identity);
   const requestVersionRef = useRef(0);
@@ -121,9 +124,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
     setSnapshot((currentSnapshot) => ({
       identity,
       profile:
-        currentSnapshot?.identity === identity
-          ? currentSnapshot.profile
-          : null,
+        currentSnapshot?.identity === identity ? currentSnapshot.profile : null,
       isLoading: true,
       error: null,
     }));
@@ -160,7 +161,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
   }, [identity, requestProfile]);
 
   useEffect(() => {
-    if (!isAuthReady) return;
+    if (isBootstrapping) return;
 
     if (!identity) {
       requestVersionRef.current += 1;
@@ -196,7 +197,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
           error: cause,
         });
       });
-  }, [identity, isAuthReady, requestProfile]);
+  }, [identity, isBootstrapping, requestProfile]);
 
   useEffect(
     () => () => {
@@ -214,9 +215,8 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
     () => ({
       profile: hasCurrentSnapshot ? snapshot.profile : null,
       isLoading:
-        !isAuthReady ||
-        (identity !== null &&
-          (!hasCurrentSnapshot || snapshot.isLoading)),
+        isBootstrapping ||
+        (identity !== null && (!hasCurrentSnapshot || snapshot.isLoading)),
       error: hasCurrentSnapshot ? snapshot.error : null,
       refresh,
       syncProfile,
@@ -224,7 +224,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
     [
       hasCurrentSnapshot,
       identity,
-      isAuthReady,
+      isBootstrapping,
       refresh,
       snapshot,
       syncProfile,

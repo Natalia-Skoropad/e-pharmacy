@@ -54,7 +54,7 @@ const RECOVERY_COPY: Record<
 
 function PasswordRecoveryForm() {
   const toast = useToast();
-  const { isAuthReady } = useAuth();
+  const { isBootstrapping } = useAuth();
 
   const [accountType, setAccountType] = useState<RecoveryAccountType>('client');
 
@@ -166,7 +166,7 @@ function PasswordRecoveryForm() {
       <Button
         type="submit"
         fullWidth
-        disabled={isSubmitting || !isAuthReady || !formIsValid}
+        disabled={isSubmitting || isBootstrapping || !formIsValid}
       >
         {isSubmitting ? 'Sending reset link...' : 'Send reset link'}
       </Button>

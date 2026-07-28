@@ -487,7 +487,6 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
       isUnavailable,
       canRenderAuthenticatedContent: isAuthenticated,
       canRenderGuestContent: state.status === 'unauthenticated',
-      isAuthReady: !isBootstrapping,
       login,
       register,
       logout,

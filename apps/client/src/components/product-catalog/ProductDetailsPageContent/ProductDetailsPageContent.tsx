@@ -945,8 +945,7 @@ function ProductDetailsPageContent({
                   reviewTouchedFields={reviewTouchedFields}
                   isReviewSubmitting={isReviewSubmitting}
                   isAuthenticated={canSubmitReview}
-                  isAuthReady={!isBootstrapping}
-                  isUnavailable={areReviewsUnavailable}
+                    isUnavailable={areReviewsUnavailable}
                   emptyText="ProductDetails reviews will appear here after clients share their feedback."
                   textareaId="product-review"
                   maxLength={USER_REVIEW_COMMENT_MAX_LENGTH}

@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./react": "./src/react/index.ts",
-    "./next": "./src/next/index.ts",
+    "./react": "./src/react.ts",
+    "./next": "./src/next.ts",
     "./errors": "./src/errors/index.ts",
     "./routing": "./src/routing/index.ts"
   },

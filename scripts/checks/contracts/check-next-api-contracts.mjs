@@ -37,7 +37,7 @@ const pharmacyAuthProvider = await read(
   'apps/pharmacy/src/providers/AuthProvider/AuthProvider.tsx'
 );
 
-const authReactPublicApi = await read('packages/auth/src/react/index.ts');
+const authReactPublicApi = await read('packages/auth/src/react.ts');
 const authPackage = JSON.parse(await read('packages/auth/package.json'));
 const authSessionCore = await read(
   'packages/auth/src/core/AuthProviderCore.tsx'

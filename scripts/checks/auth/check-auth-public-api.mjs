@@ -9,8 +9,8 @@ const CURRENT_FILE = fileURLToPath(import.meta.url);
 const ROOT_DIR = path.resolve(path.dirname(CURRENT_FILE), '..', '..', '..');
 const AUTH_DIR = path.join(ROOT_DIR, 'packages', 'auth');
 const EXPECTED_EXPORTS = {
-  './react': './src/react/index.ts',
-  './next': './src/next/index.ts',
+  './react': './src/react.ts',
+  './next': './src/next.ts',
   './errors': './src/errors/index.ts',
   './routing': './src/routing/index.ts',
 };
@@ -73,29 +73,38 @@ for (const filePath of publicIndexFiles) {
   );
 }
 
-const reactIndex = await readFile(
-  path.join(AUTH_DIR, 'src/react/index.ts'),
+for (const legacyEntrypoint of ['src/react/index.ts', 'src/next/index.ts']) {
+  assert.equal(
+    await exists(path.join(AUTH_DIR, legacyEntrypoint)),
+    false,
+    `${legacyEntrypoint} must not recreate one-file entrypoint folders`
+  );
+}
+
+const reactEntry = await readFile(
+  path.join(AUTH_DIR, 'src/react.ts'),
   'utf8'
 );
-assert.match(reactIndex, /AuthProviderCore/);
-assert.match(reactIndex, /useAuth/);
+assert.match(reactEntry, /AuthProviderCore/);
+assert.match(reactEntry, /useAuth/);
 assert.doesNotMatch(
-  reactIndex,
+  reactEntry,
   /GuestOnlyRoute|RoleProtectedRoute|AuthSessionSync/
 );
 
-const nextIndex = await readFile(
-  path.join(AUTH_DIR, 'src/next/index.ts'),
+const nextEntry = await readFile(
+  path.join(AUTH_DIR, 'src/next.ts'),
   'utf8'
 );
-assert.match(nextIndex, /GuestOnlyRouteProps/);
-assert.match(nextIndex, /RoleProtectedRouteProps/);
+assert.match(nextEntry, /GuestOnlyRouteProps/);
+assert.match(nextEntry, /RoleProtectedRouteProps/);
 
 const providerSource = await readFile(
   path.join(AUTH_DIR, 'src/core/AuthProviderCore.tsx'),
   'utf8'
 );
 assert.match(providerSource, /export function useAuth\(\): AuthContextValue/);
+assert.doesNotMatch(providerSource, /isAuthReady/);
 
 const sourceFiles = [
   ...(await collectFiles(path.join(ROOT_DIR, 'apps'))),

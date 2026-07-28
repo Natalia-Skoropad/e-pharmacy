@@ -41,7 +41,7 @@ type ResetPasswordFormProps = {
 function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
   const toast = useToast();
   const router = useRouter();
-  const { isAuthReady, invalidateSession } = useAuth();
+  const { isBootstrapping, invalidateSession } = useAuth();
 
   const [values, setValues] = useState<ResetPasswordFormValues>(
     RESET_PASSWORD_INITIAL_VALUES
@@ -182,7 +182,7 @@ function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
       <Button
         type="submit"
         fullWidth
-        disabled={isSubmitting || !isAuthReady || !formIsValid}
+        disabled={isSubmitting || isBootstrapping || !formIsValid}
       >
         {isSubmitting ? 'Saving new password...' : 'Save new password'}
       </Button>

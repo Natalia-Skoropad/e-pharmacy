@@ -135,14 +135,14 @@ const ORDERS_VISIBLE_STEP = 15;
 
 function ProfilePageContent() {
   const {
-    isAuthenticated,
-    isAuthReady,
+    canRenderAuthenticatedContent,
     user,
     reloadCurrentUser,
     invalidateSession,
   } = useAuth();
+
   const toast = useToast();
-  const canUseAuthFeatures = isAuthReady && isAuthenticated;
+  const canUseAuthFeatures = canRenderAuthenticatedContent;
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
 
   const [profileValues, setProfileValues] = useState<DataProfileFormValues>(

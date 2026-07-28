@@ -94,8 +94,6 @@ export type AuthContextValue = Readonly<{
   isUnavailable: boolean;
   canRenderAuthenticatedContent: boolean;
   canRenderGuestContent: boolean;
-  /** @deprecated Use isBootstrapping/isUnavailable or the render selectors. */
-  isAuthReady: boolean;
   login?: (payload: LoginPayload) => Promise<AuthUser | null>;
   register?: (payload: RegisterPayload) => Promise<AuthUser | null>;
   logout: () => Promise<void>;

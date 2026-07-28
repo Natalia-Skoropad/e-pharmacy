@@ -580,7 +580,6 @@ function PharmacyDetailsPageContent({
                 reviewTouchedFields={reviewTouchedFields}
                 isReviewSubmitting={isReviewSubmitting}
                 isAuthenticated={canSubmitReview}
-                isAuthReady={!isBootstrapping}
                 isUnavailable={areReviewsUnavailable}
                 emptyText="Pharmacy reviews will appear here after clients share their feedback."
                 textareaId="pharmacy-review"

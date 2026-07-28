@@ -38,6 +38,7 @@ const provider = await read(
   'core',
   'AuthProviderCore.tsx'
 );
+
 const providerTypes = await read(
   'packages',
   'auth',
@@ -45,6 +46,7 @@ const providerTypes = await read(
   'core',
   'auth-provider.types.ts'
 );
+
 const pharmacyProvider = await read(
   'apps',
   'pharmacy',
@@ -53,6 +55,7 @@ const pharmacyProvider = await read(
   'AuthProvider',
   'AuthProvider.tsx'
 );
+
 const clientProfile = await read(
   'apps',
   'client',
@@ -62,6 +65,7 @@ const clientProfile = await read(
   'ProfilePageContent',
   'ProfilePageContent.tsx'
 );
+
 const pharmacyProfile = await read(
   'apps',
   'pharmacy',
@@ -71,6 +75,7 @@ const pharmacyProfile = await read(
   'PharmacyProfilePageContent',
   'PharmacyProfilePageContent.tsx'
 );
+
 const clientProtected = await read(
   'apps',
   'client',
@@ -79,6 +84,7 @@ const clientProtected = await read(
   'ProtectedRoute',
   'ProtectedRoute.tsx'
 );
+
 const pharmacyProtected = await read(
   'apps',
   'pharmacy',
@@ -87,6 +93,7 @@ const pharmacyProtected = await read(
   'auth',
   'PharmacyProtectedRoute.tsx'
 );
+
 const clientAuthApi = await read(
   'apps',
   'client',
@@ -96,6 +103,7 @@ const clientAuthApi = await read(
   'browser',
   'auth.api.ts'
 );
+
 const pharmacyAuthApi = await read(
   'apps',
   'pharmacy',
@@ -112,16 +120,39 @@ assert.doesNotMatch(provider, /WeakMap|currentUserPromises|refreshPromises/);
 assert.doesNotMatch(provider, /setInterval|refreshSession/);
 assert.match(provider, /new AuthRequestManager\(\)/);
 assert.match(provider, /retryAuthBootstrap/);
+assert.doesNotMatch(provider, /isAuthReady/);
+assert.doesNotMatch(providerTypes, /isAuthReady/);
+
 assert.doesNotMatch(
   pharmacyProvider,
   /Use the shared E-PHARMACY login page|async\s+login/
 );
+
 assert.match(clientProfile, /invalidateSession\('password_changed'\)/);
 assert.match(pharmacyProfile, /invalidateSession\('password_changed'\)/);
 assert.match(clientProtected, /retryAuthBootstrap/);
 assert.match(pharmacyProtected, /retryAuthBootstrap/);
 assert.match(clientAuthApi, /parseAuthResponse/);
 assert.match(pharmacyAuthApi, /parseAuthResponse/);
+
+const authTestFiles = (
+  await collectFiles(path.join(ROOT_DIR, 'packages', 'auth', 'src'))
+).filter((filePath) => /\.test\.tsx?$/.test(filePath));
+const sourceReadingTests = [];
+for (const filePath of authTestFiles) {
+  const source = await readFile(filePath, 'utf8');
+  if (/readFile\s*\(|assert\.match\(\s*source/.test(source)) {
+    sourceReadingTests.push(
+      path.relative(ROOT_DIR, filePath).replaceAll('\\', '/')
+    );
+  }
+}
+
+assert.deepEqual(
+  sourceReadingTests,
+  [],
+  `Auth package tests must verify behavior rather than source text:\n${sourceReadingTests.join('\n')}`
+);
 
 const appFiles = [
   ...(await collectFiles(path.join(ROOT_DIR, 'apps', 'client', 'src'))),

@@ -26,7 +26,6 @@ type ReviewsSectionProps = Readonly<{
   reviewTouchedFields: ReviewTouchedFields;
   isReviewSubmitting: boolean;
   isAuthenticated: boolean;
-  isAuthReady: boolean;
   isUnavailable?: boolean;
   emptyTitle?: string;
   emptyText?: string;

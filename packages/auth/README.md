@@ -40,7 +40,7 @@ Private application guards render a recoverable unavailable state with `retryAut
 
 ## Public entrypoints
 
-The package intentionally has no root export. Use only:
+The package intentionally has no root export. The React and Next entrypoints are flat source files (`src/react.ts` and `src/next.ts`), not empty feature folders. Use only:
 
 - `@e-pharmacy/auth/react` for `AuthProviderCore`, `useAuth`, and stable provider/context types;
 - `@e-pharmacy/auth/next` for Next.js guards;
@@ -61,7 +61,7 @@ Client and pharmacy `AuthProvider` wrappers remain application adapters because 
 - `canOpenPharmacyCabinet`;
 - the small set of lifecycle fields required by client features.
 
-It does not spread the entire shared auth context or expose login/logout actions to unrelated feature hooks.
+It does not spread the entire shared auth context or expose login/logout actions to unrelated feature hooks. The public context also avoids the ambiguous `isAuthReady` alias; consumers use `isBootstrapping`, `isUnavailable`, or the explicit render selectors.
 
 The public header and mobile menu consume one discriminated view model with loading, unavailable, guest, authenticated-client, authenticated-pharmacy, and authenticated-other modes. Unavailable state never doubles as guest state and exposes a real retry action.
 
@@ -96,7 +96,7 @@ Repository checks enforce:
 - explicit bootstrap capabilities and unavailable recovery;
 - frontend/backend values, cookie names, user/session shapes, error codes, token-expiry metadata, and password invalidation contracts.
 
-Source-contract tests remain supplementary. Request-manager, timeout, state-transition, redirect, session-sync, guard-decision, client view-model, and runtime-parser tests verify behavior directly.
+Source-reading tests are not part of the package test suite. Repository checks own static architectural invariants, while request-manager, timeout, state-transition, redirect, session-sync, guard-decision, client view-model, and runtime-parser tests verify behavior directly.
 
 ## Build policy
 
