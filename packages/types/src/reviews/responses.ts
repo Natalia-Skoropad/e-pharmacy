@@ -13,7 +13,11 @@ export type PendingReviewsResponse<TTarget extends object> = Readonly<
   ApiPaginationResponse<PendingReview<TTarget>>
 >;
 
+//===================================================================
+
 export type ReviewMutationResponse = Readonly<{ message: string }>;
+
+//===================================================================
 
 export type ReviewModerationResponse = Readonly<{
   message: string;

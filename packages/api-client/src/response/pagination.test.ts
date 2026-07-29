@@ -31,6 +31,7 @@ test('normalizes the canonical pagination response and empty-page contract', () 
     success: true,
     data: { items: [], page: 1, perPage: 20, total: 0, totalPages: 0 },
     issues: [],
+
     metadata: {
       sourceItemKey: 'items',
       usedLegacyItemKey: false,
@@ -157,6 +158,7 @@ test('does not silently turn malformed payloads or items into an empty page', ()
 test('rejects unsafe integers, overflow and inconsistent pagination metadata', () => {
   for (const payload of [
     { items: [], page: 1, perPage: 1.5, total: 0, totalPages: 0 },
+
     {
       items: [],
       page: Number.MAX_SAFE_INTEGER + 1,
@@ -164,6 +166,7 @@ test('rejects unsafe integers, overflow and inconsistent pagination metadata', (
       total: 0,
       totalPages: 0,
     },
+
     { items: ['a', 'b'], page: 1, perPage: 1, total: 2, totalPages: 2 },
     { items: ['a'], page: 2, perPage: 1, total: 1, totalPages: 1 },
   ]) {

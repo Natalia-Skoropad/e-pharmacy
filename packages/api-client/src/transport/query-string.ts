@@ -1,5 +1,7 @@
 export type QueryPrimitive = string | number | boolean;
 
+//===================================================================
+
 export type QueryValue =
   | QueryPrimitive
   | readonly QueryPrimitive[]
@@ -39,7 +41,10 @@ function assertPath(path: string): void {
 
 //===================================================================
 
-function serializeQueryValue(key: string, value: QueryPrimitive): string | null {
+function serializeQueryValue(
+  key: string,
+  value: QueryPrimitive
+): string | null {
   if (typeof value === 'string') return value === '' ? null : value;
 
   if (typeof value === 'number') {

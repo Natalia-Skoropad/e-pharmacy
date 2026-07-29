@@ -76,6 +76,7 @@ export async function refreshAuthSession(
         invalidTokenResponse: !transformed.tokens,
       };
     })
+
     .finally(() => {
       refreshPromises.delete(fingerprint);
     });

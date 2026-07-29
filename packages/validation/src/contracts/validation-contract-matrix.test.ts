@@ -138,6 +138,7 @@ function readContractCases(): ContractCase[] {
     'contracts',
     'validation-contract-cases.json'
   );
+
   const parsed: unknown = JSON.parse(readFileSync(fixturePath, 'utf8'));
 
   if (!isRecord(parsed) || !Array.isArray(parsed.cases)) {

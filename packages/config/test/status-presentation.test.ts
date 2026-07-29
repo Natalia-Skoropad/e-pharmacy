@@ -18,6 +18,8 @@ const {
   USER_STATUS_PRESENTATION,
 } = presentation;
 
+//===================================================================
+
 const ALLOWED_TONES = new Set([
   'info',
   'pending',

@@ -32,9 +32,11 @@ test('logout forwards refresh identity and always clears browser cookies', async
     backendRoutes,
     /authRoutes\.post\('\/logout', ctrlWrapper\(logoutUser\)\)/
   );
+
   assert.doesNotMatch(
     backendRoutes,
     /authRoutes\.post\('\/logout', authenticate/
   );
+
   assert.match(controller, /revokeSessionByRefreshTokenService/);
 });

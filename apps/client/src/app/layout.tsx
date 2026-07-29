@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 
 import AppShell from '@/components/layout/AppShell';
-import { AuthProvider, CartProvider, FavoritesProvider } from '@/providers';
-import { ToastProvider } from '@e-pharmacy/ui/feedback';
+import { ClientProviders } from '@/providers';
 
 import {
   DEFAULT_OG_IMAGE,
@@ -69,15 +68,9 @@ function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
-        <ToastProvider>
-          <AuthProvider>
-            <FavoritesProvider>
-              <CartProvider>
-                <AppShell>{children}</AppShell>
-              </CartProvider>
-            </FavoritesProvider>
-          </AuthProvider>
-        </ToastProvider>
+        <ClientProviders>
+          <AppShell>{children}</AppShell>
+        </ClientProviders>
       </body>
     </html>
   );

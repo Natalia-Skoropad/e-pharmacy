@@ -14,6 +14,8 @@ import {
 
 const originalFetch = globalThis.fetch;
 
+//===================================================================
+
 const requestOptions = {
   baseUrl: 'https://api.example',
   retry: false as const,
@@ -79,6 +81,7 @@ test('validates base URLs and preserves their pathname', () => {
     createApiUrl('/products?page=2', 'https://api.example/v1'),
     'https://api.example/v1/products?page=2'
   );
+
   assert.equal(
     createApiUrl('/products?page=2', 'https://api.example/v1/'),
     'https://api.example/v1/products?page=2'
@@ -145,6 +148,7 @@ test('distinguishes non-JSON and malformed JSON responses', async () => {
         status: 200,
         headers: { 'content-type': 'text/html' },
       }),
+
       new Response('{', {
         status: 200,
         headers: { 'content-type': 'application/problem+json' },
@@ -179,6 +183,7 @@ test('separates strict no-content from JSON success envelopes', async () => {
     );
 
     globalThis.fetch = async () => new Response(null, { status: 204 });
+
     assert.equal(
       await apiRequest('/resource', {
         ...requestOptions,
@@ -300,9 +305,9 @@ test('does not retry mutations even when retry options are supplied', async () =
         body: { name: 'test' },
         retry: { attempts: 3, delayMs: 0 },
       }),
-      (error: unknown) =>
-        error instanceof ApiError && error.httpStatus === 503
+      (error: unknown) => error instanceof ApiError && error.httpStatus === 503
     );
+
     assert.equal(calls, 1);
   } finally {
     restoreFetch();
@@ -518,6 +523,7 @@ test('does not retry 429 without an explicit product policy', async () => {
         baseUrl: requestOptions.baseUrl,
         retry: { attempts: 3, delayMs: 0 },
       }),
+
       (error: unknown) =>
         error instanceof ApiError &&
         error.httpStatus === 429 &&

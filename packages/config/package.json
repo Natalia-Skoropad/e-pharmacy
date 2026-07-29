@@ -16,8 +16,8 @@
     "./presentation": "./src/presentation/index.ts"
   },
   "scripts": {
-    "lint": "eslint src --ext .ts",
-    "type-check": "tsc --noEmit",
+    "lint": "eslint src test --ext .ts",
+    "type-check": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit",
     "build": "pnpm run clean && tsc -p tsconfig.build.json",
     "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs test",
     "check:public-api": "node ../../scripts/checks/config/check-config-public-api.mjs",
@@ -27,6 +27,7 @@
     "check:contracts": "node ../../scripts/checks/config/check-config-contracts.mjs"
   },
   "devDependencies": {
+    "@types/node": "latest",
     "typescript": "^5"
   },
   "dependencies": {

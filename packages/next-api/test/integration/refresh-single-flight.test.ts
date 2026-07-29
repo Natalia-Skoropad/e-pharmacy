@@ -97,6 +97,7 @@ test('concurrent private requests share one refresh call', async () => {
         requestId: 'request-a',
         backendPath: '/private-resource',
       }),
+
       proxyBackendRequest({
         request: createPrivateRequest(),
         requestId: 'request-b',

@@ -7,6 +7,8 @@ import { createBrowserAuthSessionSync } from './browser-auth-session-sync';
 
 type MessageListener = (event: MessageEvent<unknown>) => void;
 
+//===================================================================
+
 class MockBroadcastChannel {
   static instances: MockBroadcastChannel[] = [];
 
@@ -51,6 +53,7 @@ test('publishes only non-sensitive auth lifecycle events', () => {
     configurable: true,
     value: {},
   });
+
   Object.defineProperty(globalThis, 'BroadcastChannel', {
     configurable: true,
     value: MockBroadcastChannel,
@@ -78,6 +81,7 @@ test('publishes only non-sensitive auth lifecycle events', () => {
       configurable: true,
       value: originalWindow,
     });
+
     Object.defineProperty(globalThis, 'BroadcastChannel', {
       configurable: true,
       value: originalBroadcastChannel,
@@ -95,6 +99,7 @@ test('ignores invalid messages and supports unsubscribe', () => {
     configurable: true,
     value: {},
   });
+
   Object.defineProperty(globalThis, 'BroadcastChannel', {
     configurable: true,
     value: MockBroadcastChannel,
@@ -121,6 +126,7 @@ test('ignores invalid messages and supports unsubscribe', () => {
       configurable: true,
       value: originalWindow,
     });
+
     Object.defineProperty(globalThis, 'BroadcastChannel', {
       configurable: true,
       value: originalBroadcastChannel,
@@ -138,6 +144,7 @@ test('falls back to a no-op adapter without browser channel support', () => {
     configurable: true,
     value: undefined,
   });
+
   Object.defineProperty(globalThis, 'BroadcastChannel', {
     configurable: true,
     value: undefined,
@@ -157,6 +164,7 @@ test('falls back to a no-op adapter without browser channel support', () => {
       configurable: true,
       value: originalWindow,
     });
+
     Object.defineProperty(globalThis, 'BroadcastChannel', {
       configurable: true,
       value: originalBroadcastChannel,

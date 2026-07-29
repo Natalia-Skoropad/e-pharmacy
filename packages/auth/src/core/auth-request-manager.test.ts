@@ -8,10 +8,12 @@ import { AuthRequestManager } from './auth-request-manager';
 function createDeferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
+
   const promise = new Promise<T>((nextResolve, nextReject) => {
     resolve = nextResolve;
     reject = nextReject;
   });
+
   return { promise, resolve, reject };
 }
 
@@ -52,16 +54,16 @@ test('single-flight is scoped to one manager lifecycle', async () => {
 test('advancing lifecycle aborts an obsolete bootstrap and creates a fresh retry', async () => {
   const manager = new AuthRequestManager();
   const oldRequest = createDeferred<string>();
+
   const first = manager.start('current-user', () => oldRequest.promise, {
     singleFlight: true,
   });
 
   manager.advanceLifecycle();
-  const second = manager.start(
-    'current-user',
-    () => Promise.resolve('fresh'),
-    { singleFlight: true }
-  );
+
+  const second = manager.start('current-user', () => Promise.resolve('fresh'), {
+    singleFlight: true,
+  });
 
   assert.equal(first.controller.signal.aborted, true);
   assert.notEqual(first.id, second.id);

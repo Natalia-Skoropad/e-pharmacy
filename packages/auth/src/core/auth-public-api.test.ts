@@ -8,6 +8,7 @@ import * as routingApi from '../routing';
 //===================================================================
 
 const require = createRequire(import.meta.url);
+
 const packageJson = require('../../package.json') as {
   exports: Record<string, string>;
 };

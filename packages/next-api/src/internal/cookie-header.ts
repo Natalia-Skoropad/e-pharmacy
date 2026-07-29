@@ -6,10 +6,9 @@ import {
 
 //===================================================================
 
-export type AuthCookieForwardMode =
-  | 'access-only'
-  | 'refresh-only'
-  | 'none';
+export type AuthCookieForwardMode = 'access-only' | 'refresh-only' | 'none';
+
+//===================================================================
 
 const ACCESS_COOKIE_NAMES = new Set([
   ACCESS_TOKEN_COOKIE_NAME,
@@ -31,7 +30,8 @@ export function parseCookieHeader(cookieHeader: string): Map<string, string> {
 
       const name = cookie.slice(0, separatorIndex).trim();
       const value = cookie.slice(separatorIndex + 1);
-      if (!name || !value || /[\r\n]/.test(name) || /[\r\n]/.test(value)) return;
+      if (!name || !value || /[\r\n]/.test(name) || /[\r\n]/.test(value))
+        return;
 
       // Last duplicate wins so freshly written auth cookies are not shadowed.
       cookies.delete(name);

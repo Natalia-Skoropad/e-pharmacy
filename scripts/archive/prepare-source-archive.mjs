@@ -1,6 +1,14 @@
-import { copyFile, mkdir, readdir, rm, stat } from 'node:fs/promises';
+import {
+  copyFile,
+  lstat,
+  mkdir,
+  readdir,
+  readlink,
+  rm,
+  symlink,
+} from 'node:fs/promises';
+
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 //===================================================================
 
@@ -10,6 +18,7 @@ export const SOURCE_ARCHIVE_EXCLUDED_DIRECTORIES = new Set([
   '.next',
   '.turbo',
   '.vercel',
+  'build',
   'coverage',
   'dist',
   'node_modules',
@@ -17,18 +26,35 @@ export const SOURCE_ARCHIVE_EXCLUDED_DIRECTORIES = new Set([
 ]);
 
 export const SOURCE_ARCHIVE_EXCLUDED_FILE_PATTERNS = [
-  /\.zip$/i,
+  /(^|\/)\.env(?:\..*)?$/i,
+  /(^|\/)(?:npm|pnpm|yarn)-debug\.log(?:\..*)?$/i,
+  /(^|\/)\.DS_Store$/,
+  /(^|\/)Thumbs\.db$/i,
   /\.tsbuildinfo$/i,
-  /(?:^|\/)npm-debug\.log/i,
-  /(?:^|\/)pnpm-debug\.log/i,
-  /(?:^|\/)yarn-(?:debug|error)\.log/i,
+  /\.zip$/i,
 ];
 
 //===================================================================
 
-function isPathInside(parentPath, candidatePath) {
-  const relative = path.relative(parentPath, candidatePath);
+function normalizeRelativePath(value) {
+  return value.replaceAll('\\', '/');
+}
 
+//===================================================================
+
+function isExcludedFile(relativePath) {
+  const normalized = normalizeRelativePath(relativePath);
+
+  return SOURCE_ARCHIVE_EXCLUDED_FILE_PATTERNS.some((pattern) => {
+    pattern.lastIndex = 0;
+    return pattern.test(normalized);
+  });
+}
+
+//===================================================================
+
+function isInside(parentPath, candidatePath) {
+  const relative = path.relative(parentPath, candidatePath);
   return (
     relative === '' ||
     (!relative.startsWith('..') && !path.isAbsolute(relative))
@@ -37,75 +63,82 @@ function isPathInside(parentPath, candidatePath) {
 
 //===================================================================
 
-export function shouldExcludeSourceArchiveFile(relativePath) {
-  const normalized = relativePath.replaceAll('\\', '/');
+async function copySourceTree({
+  sourceRoot,
+  destinationRoot,
+  currentDirectory,
+}) {
+  const entries = await readdir(currentDirectory, { withFileTypes: true });
 
-  return SOURCE_ARCHIVE_EXCLUDED_FILE_PATTERNS.some((pattern) =>
-    pattern.test(normalized)
-  );
-}
+  for (const entry of entries) {
+    const sourcePath = path.join(currentDirectory, entry.name);
 
-//===================================================================
+    if (isInside(destinationRoot, sourcePath)) continue;
 
-export async function prepareSourceArchive({
-  repositoryRoot = process.cwd(),
-  outputPath = '.artifacts/e-pharmacy-source',
-} = {}) {
-  const resolvedRepositoryRoot = path.resolve(repositoryRoot);
-  const outputRoot = path.resolve(resolvedRepositoryRoot, outputPath);
+    const relativePath = path.relative(sourceRoot, sourcePath);
+    const destinationPath = path.join(destinationRoot, relativePath);
 
-  if (outputRoot === resolvedRepositoryRoot) {
-    throw new Error('Source archive output must not replace the repository root.');
-  }
-
-  async function copySourceTree(sourceDirectory, targetDirectory) {
-    await mkdir(targetDirectory, { recursive: true });
-    const entries = await readdir(sourceDirectory, { withFileTypes: true });
-
-    for (const entry of entries) {
+    if (entry.isDirectory()) {
       if (SOURCE_ARCHIVE_EXCLUDED_DIRECTORIES.has(entry.name)) continue;
 
-      const source = path.join(sourceDirectory, entry.name);
-      const target = path.join(targetDirectory, entry.name);
+      await mkdir(destinationPath, { recursive: true });
+      await copySourceTree({
+        sourceRoot,
+        destinationRoot,
+        currentDirectory: sourcePath,
+      });
+      continue;
+    }
 
-      if (isPathInside(outputRoot, source)) continue;
+    if (entry.isFile()) {
+      if (isExcludedFile(relativePath)) continue;
 
-      if (entry.isDirectory()) {
-        await copySourceTree(source, target);
-        continue;
+      await mkdir(path.dirname(destinationPath), { recursive: true });
+      await copyFile(sourcePath, destinationPath);
+      continue;
+    }
+
+    if (entry.isSymbolicLink()) {
+      const target = await readlink(sourcePath);
+      const resolvedTarget = path.resolve(path.dirname(sourcePath), target);
+
+      if (!isInside(sourceRoot, resolvedTarget)) {
+        throw new Error(
+          `Source archive cannot include an external symlink: ${normalizeRelativePath(relativePath)}.`
+        );
       }
 
-      if (!entry.isFile()) continue;
-
-      const relative = path.relative(resolvedRepositoryRoot, source);
-      if (shouldExcludeSourceArchiveFile(relative)) continue;
-
-      await mkdir(path.dirname(target), { recursive: true });
-      await copyFile(source, target);
+      await mkdir(path.dirname(destinationPath), { recursive: true });
+      await symlink(target, destinationPath);
     }
   }
-
-  await rm(outputRoot, { recursive: true, force: true });
-  await copySourceTree(resolvedRepositoryRoot, outputRoot);
-
-  const outputStats = await stat(outputRoot);
-  if (!outputStats.isDirectory()) {
-    throw new Error('Source archive staging failed.');
-  }
-
-  return outputRoot;
 }
 
 //===================================================================
 
-const isMainModule =
-  process.argv[1] &&
-  path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
+export async function prepareSourceArchive({ repositoryRoot, outputPath }) {
+  const sourceRoot = path.resolve(repositoryRoot);
+  const destinationRoot = path.resolve(outputPath);
 
-if (isMainModule) {
-  const outputRoot = await prepareSourceArchive({
-    outputPath: process.argv[2] ?? '.artifacts/e-pharmacy-source',
+  const sourceStats = await lstat(sourceRoot);
+  if (!sourceStats.isDirectory()) {
+    throw new Error(`Repository root is not a directory: ${sourceRoot}`);
+  }
+
+  if (destinationRoot === sourceRoot) {
+    throw new Error(
+      'Source archive staging path cannot equal the repository root.'
+    );
+  }
+
+  await rm(destinationRoot, { recursive: true, force: true });
+  await mkdir(destinationRoot, { recursive: true });
+
+  await copySourceTree({
+    sourceRoot,
+    destinationRoot,
+    currentDirectory: sourceRoot,
   });
 
-  console.log(`Clean source tree prepared at ${outputRoot}`);
+  return destinationRoot;
 }

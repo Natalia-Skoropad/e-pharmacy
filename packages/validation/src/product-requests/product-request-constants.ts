@@ -32,6 +32,7 @@ export const PRODUCT_REQUEST_ATTACHMENT_RULES = {
   maxSizeBytes: 5 * 1024 * 1024,
   maxTotalSizeBytes: 20 * 1024 * 1024,
   maxDataUrlLength: 7 * 1024 * 1024,
+
   mimeTypes: [
     'application/pdf',
     'application/msword',
@@ -136,8 +137,7 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
     article: 'Use English letters, numbers, dot, slash, underscore or hyphen',
     shortText: 'Use English letters, numbers, spaces and basic punctuation',
 
-    longText:
-      'Use English letters, numbers, line breaks and basic punctuation',
+    longText: 'Use English letters, numbers, line breaks and basic punctuation',
 
     productImage: 'Choose a JPG, PNG, or WEBP image',
     attachment: 'Choose a PDF, DOC, DOCX, JPG, PNG, or WEBP file',

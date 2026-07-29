@@ -99,6 +99,7 @@ test('draft validation requires name and article', () => {
     isProductRequestDraftValid(PRODUCT_REQUEST_INITIAL_VALUES),
     false
   );
+
   assert.equal(isProductRequestDraftValid(createDraftValues()), true);
 });
 
@@ -156,6 +157,7 @@ test('custom category is required only for the other category', () => {
     createDraftValues({ category: 'other', customCategory: '   ' }),
     'draft'
   );
+
   const regularCategory = validateProductRequestForm(
     createDraftValues({ category: 'medicine', customCategory: '' }),
     'draft'
@@ -169,6 +171,7 @@ test('custom category is required only for the other category', () => {
 
 test('moderation validation requires complete data and product image', () => {
   assert.equal(isProductRequestSubmissionValid(createDraftValues()), false);
+
   assert.equal(
     isProductRequestSubmissionValid(createSubmissionValues(), {
       productImage: validImage,
@@ -181,6 +184,7 @@ test('moderation validation requires complete data and product image', () => {
 
 test('product image validation checks MIME, extension and size', () => {
   assert.equal(validateProductRequestImageFile(validImage), '');
+
   assert.notEqual(
     validateProductRequestImageFile({
       name: 'product.gif',

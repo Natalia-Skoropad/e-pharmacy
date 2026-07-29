@@ -55,6 +55,7 @@ test('turns cyclic and BigInt serialization failures into controlled errors', ()
 
 test('rejects custom toJSON, content-type mismatches and multipart bodies', () => {
   let customToJsonCalled = false;
+
   const custom = {
     value: 'secret',
     toJSON() {
@@ -134,6 +135,7 @@ test('forbids GET bodies at compile time intent and runtime boundary', async () 
         method: 'GET',
         body: { secret: 'hidden' },
       }),
+
       (error: unknown) =>
         isInvalidBody(error) &&
         error.url === 'https://api.example/resource' &&

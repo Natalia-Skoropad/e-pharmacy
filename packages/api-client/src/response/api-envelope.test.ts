@@ -19,6 +19,7 @@ test('parses success envelopes and rejects HTTP-200 error envelopes', () => {
       data: { items: [] },
       message: 'Loaded',
     }),
+
     {
       status: 'success',
       data: { items: [] },
@@ -59,6 +60,7 @@ test('parses empty JSON success separately from data envelopes', () => {
       status: 'success',
       message: 'Deleted',
     }),
+
     { status: 'success', message: 'Deleted' }
   );
 

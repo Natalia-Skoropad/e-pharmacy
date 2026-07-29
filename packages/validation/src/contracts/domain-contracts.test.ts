@@ -160,6 +160,7 @@ test('pharmacy payment normalization lowercases email and uppercases IBAN', () =
       },
       'verification'
     ),
+
     {
       recipientName: 'Health Pharmacy LLC',
       taxId: '12345678',
@@ -182,6 +183,7 @@ test('pharmacy document validation checks count, MIME, extension and size', () =
 
   assert.equal(validatePharmacyDocuments([validDocument]), '');
   assert.equal(validatePharmacyDocuments([{ ...validDocument, type: '' }]), '');
+
   assert.notEqual(
     validatePharmacyDocuments([
       { name: 'license.exe', type: 'application/octet-stream', size: 1024 },

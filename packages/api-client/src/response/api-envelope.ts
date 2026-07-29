@@ -5,9 +5,13 @@ import type { ApiErrorOptions } from '../transport/api-error';
 
 type UnknownRecord = Record<PropertyKey, unknown>;
 
+//===================================================================
+
 export type ApiResponseContext = Readonly<
   Pick<ApiErrorOptions, 'url' | 'method' | 'requestId'>
 >;
+
+//===================================================================
 
 export type ApiSuccessEnvelope<TData> = Readonly<{
   status: 'success';
@@ -88,7 +92,11 @@ export function parseApiSuccessEnvelope(
   }
 
   if (!hasOwn(value, 'status') || value.status !== 'success') {
-    throw invalidEnvelope('API response status is not success.', value, context);
+    throw invalidEnvelope(
+      'API response status is not success.',
+      value,
+      context
+    );
   }
 
   if (!hasOwn(value, 'data')) {
@@ -132,7 +140,11 @@ export function parseApiEmptySuccessEnvelope(
   }
 
   if (!hasOwn(value, 'status') || value.status !== 'success') {
-    throw invalidEnvelope('API response status is not success.', value, context);
+    throw invalidEnvelope(
+      'API response status is not success.',
+      value,
+      context
+    );
   }
 
   if (hasOwn(value, 'data')) {

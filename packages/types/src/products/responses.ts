@@ -85,6 +85,8 @@ export type ProductsResponse = Readonly<
 
 export type ProductDetailsResponse = Readonly<{ product: ProductDetails }>;
 
+//===================================================================
+
 export type PharmacyProductMutationResponse = Readonly<
   ProductDetailsResponse & {
     message: string;

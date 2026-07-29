@@ -130,23 +130,29 @@ export function buildWorkingHoursError(
   if (!workingHours) {
     return options.required ? VALIDATION_MESSAGES.required.workingHours : '';
   }
+
   if (workingHours.length > WORKING_HOURS_MAX_LENGTH) {
     return VALIDATION_MESSAGES.limits.workingHoursMax;
   }
+
   if (!WORKING_HOURS_PATTERN.test(workingHours)) {
     return VALIDATION_MESSAGES.format.workingHours;
   }
 
   const validationIssue = getWorkingHoursValidationIssue(workingHours);
+
   if (validationIssue === 'missing-days') {
     return VALIDATION_MESSAGES.format.workingHoursMissingDays;
   }
+
   if (validationIssue === 'duplicate-days') {
     return VALIDATION_MESSAGES.format.workingHoursDuplicateDays;
   }
+
   if (validationIssue === 'range') {
     return VALIDATION_MESSAGES.format.workingHoursRange;
   }
+
   if (validationIssue === 'format') {
     return VALIDATION_MESSAGES.format.workingHours;
   }
@@ -189,9 +195,11 @@ export function buildPaymentPurposeError(
   if (!paymentPurpose) {
     return options.required ? VALIDATION_MESSAGES.required.paymentPurpose : '';
   }
+
   if (paymentPurpose.length > PAYMENT_PURPOSE_MAX_LENGTH) {
     return VALIDATION_MESSAGES.limits.paymentPurposeMax;
   }
+
   if (!PAYMENT_PURPOSE_PATTERN.test(paymentPurpose)) {
     return VALIDATION_MESSAGES.format.paymentPurpose;
   }

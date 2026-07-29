@@ -40,6 +40,7 @@ export async function apiRequest(
 
   const { baseUrl, ...options } = requestOptions;
   const url = createApiUrl(path, baseUrl);
+
   const result = await executeHttpRequest(url, {
     ...options,
     redirect: options.redirect ?? 'manual',
@@ -54,10 +55,8 @@ export type ApiClient = Readonly<{
     path: string,
     options: NoContentResponseRequestOptions
   ): Promise<void>;
-  request(
-    path: string,
-    options?: JsonResponseRequestOptions
-  ): Promise<unknown>;
+
+  request(path: string, options?: JsonResponseRequestOptions): Promise<unknown>;
 }>;
 
 //===================================================================

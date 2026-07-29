@@ -2,6 +2,7 @@ export const PHARMACY_DOCUMENT_RULES = {
   maxFiles: 6,
   maxSizeBytes: 10 * 1024 * 1024,
   fileNameMaxLength: 180,
+
   mimeTypes: [
     'application/pdf',
     'application/msword',
@@ -10,6 +11,7 @@ export const PHARMACY_DOCUMENT_RULES = {
     'image/png',
     'image/webp',
   ],
+
   extensions: ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.webp'],
 } as const;
 

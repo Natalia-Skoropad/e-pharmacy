@@ -131,10 +131,12 @@ test('secret mismatch or missing/malformed tokens becomes a controlled 502', asy
       });
 
       assert.equal(response.status, 502);
+
       const payload = (await response.json()) as {
         status: string;
         code: string;
       };
+
       assert.equal(payload.status, 'error');
       assert.equal(payload.code, 'INVALID_BACKEND_RESPONSE');
       assert.doesNotMatch(response.headers.get('set-cookie') ?? '', /access=/);

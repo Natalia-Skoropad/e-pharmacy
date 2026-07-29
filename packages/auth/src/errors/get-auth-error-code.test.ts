@@ -29,11 +29,17 @@ test('uses stable backend business codes before mutable copy', () => {
 
 test('classifies stable transport codes', () => {
   assert.equal(getAuthErrorCode({ code: 'GATEWAY_TIMEOUT' }), 'timeout');
+
   assert.equal(
     getAuthErrorCode({ code: 'INVALID_BACKEND_RESPONSE' }),
     'invalid_response'
   );
-  assert.equal(getAuthErrorCode({ code: 'BAD_GATEWAY' }), 'service_unavailable');
+
+  assert.equal(
+    getAuthErrorCode({ code: 'BAD_GATEWAY' }),
+    'service_unavailable'
+  );
+
   assert.equal(
     getAuthErrorCode({ code: 'CSRF_VALIDATION_FAILED' }),
     'csrf_failed'
@@ -47,6 +53,7 @@ test('does not classify arbitrary 403 copy as a blocked session', () => {
     getAuthErrorCode({ status: 403, message: 'Role access is forbidden.' }),
     'unknown'
   );
+
   assert.equal(
     getAuthErrorCode({ status: 403, message: 'Request origin is not allowed' }),
     'forbidden_origin'
@@ -60,6 +67,7 @@ test('uses narrow context fallbacks for legacy responses', () => {
     getAuthErrorCode({ status: 401, message: 'Wrong password.' }, 'login'),
     'invalid_credentials'
   );
+
   assert.equal(
     getAuthErrorCode(
       { status: 409, field: 'phone', message: 'Conflict.' },
@@ -67,6 +75,7 @@ test('uses narrow context fallbacks for legacy responses', () => {
     ),
     'phone_conflict'
   );
+
   assert.equal(
     getAuthErrorCode(
       { status: 400, message: 'Old reset response.' },

@@ -1,8 +1,6 @@
-export type AuthRequestKind =
-  | 'current-user'
-  | 'login'
-  | 'register'
-  | 'logout';
+export type AuthRequestKind = 'current-user' | 'login' | 'register' | 'logout';
+
+//===================================================================
 
 export type AuthRequestAttempt<TValue> = Readonly<{
   id: number;
@@ -11,6 +9,8 @@ export type AuthRequestAttempt<TValue> = Readonly<{
   controller: AbortController;
   promise: Promise<TValue>;
 }>;
+
+//===================================================================
 
 type RequestFactory<TValue> = (signal: AbortSignal) => Promise<TValue>;
 
@@ -23,6 +23,7 @@ export class AuthRequestManager {
     AuthRequestKind,
     AuthRequestAttempt<unknown>
   >();
+
   private readonly latestAttemptIds = new Map<AuthRequestKind, number>();
 
   getCurrentLifecycleId(): number {

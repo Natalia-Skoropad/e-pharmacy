@@ -21,6 +21,8 @@ type AuthenticatedRedirectPath =
   | string
   | ((user: AuthUser, requestedRedirect: string | null) => string);
 
+//===================================================================
+
 export type GuestOnlyRouteProps = Readonly<{
   children: ReactNode;
   authenticatedRedirectPath: AuthenticatedRedirectPath;
@@ -62,6 +64,7 @@ export function GuestOnlyRoute({
   const requestedRedirect = searchParams.get('redirect');
 
   const { user, isAuthenticated, isBootstrapping, isUnavailable } = useAuth();
+
   const decision = getGuestGuardDecision({
     isBootstrapping,
     isUnavailable,

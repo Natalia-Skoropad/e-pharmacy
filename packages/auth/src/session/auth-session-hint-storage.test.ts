@@ -52,7 +52,6 @@ test('does not match cookie-name prefixes', () => {
   );
 });
 
-
 //===================================================================
 
 test('handles cookie whitespace and a non-browser environment', () => {
@@ -60,5 +59,6 @@ test('handles cookie whitespace and a non-browser environment', () => {
     hasExactCookieValue(`  ${COOKIE_NAME}=1  ; other=value`, COOKIE_NAME, '1'),
     true
   );
+
   assert.equal(hasBrowserAuthSessionHint(), false);
 });

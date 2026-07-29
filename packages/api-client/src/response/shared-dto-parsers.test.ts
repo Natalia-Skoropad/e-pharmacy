@@ -66,6 +66,7 @@ test('validates shared pagination response contracts', () => {
       totalPages: 0,
       earliestCreatedAt: null,
     }),
+
     {
       items: [],
       page: 1,
@@ -97,6 +98,7 @@ test('distinguishes empty success envelopes from data envelopes', () => {
     parseApiEmptyResponse({ status: 'success', message: 'Done' }),
     undefined
   );
+
   assert.throws(
     () => parseApiEmptyResponse({ status: 'success', data: null }),
     ApiError
@@ -109,6 +111,7 @@ test('validates active sessions at runtime', () => {
   assert.deepEqual(parseActiveSessionsResponse({ sessions: [] }), {
     sessions: [],
   });
+
   assert.throws(
     () => parseActiveSessionsResponse({ sessions: 'invalid' }),
     ApiError

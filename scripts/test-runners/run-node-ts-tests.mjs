@@ -4,10 +4,32 @@ import { spawnSync } from 'node:child_process';
 
 //===================================================================
 
-const roots = process.argv.slice(2);
+const rawArguments = process.argv.slice(2);
+const roots = [];
+let matchSuffixes = ['.test.ts', '.test.tsx'];
+
+//===================================================================
+
+for (const argument of rawArguments) {
+  if (argument.startsWith('--match=')) {
+    matchSuffixes = argument
+      .slice('--match='.length)
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+    continue;
+  }
+
+  roots.push(argument);
+}
 
 if (roots.length === 0) {
-  console.error('Provide at least one directory containing .test.ts files.');
+  console.error('Provide at least one directory containing test files.');
+  process.exit(1);
+}
+
+if (matchSuffixes.length === 0) {
+  console.error('Provide at least one non-empty --match suffix.');
   process.exit(1);
 }
 
@@ -18,12 +40,15 @@ async function findTests(directory) {
   const tests = [];
 
   for (const entry of entries) {
-    const path = resolve(directory, entry.name);
+    const targetPath = resolve(directory, entry.name);
 
     if (entry.isDirectory()) {
-      tests.push(...(await findTests(path)));
-    } else if (entry.isFile() && entry.name.endsWith('.test.ts')) {
-      tests.push(path);
+      tests.push(...(await findTests(targetPath)));
+    } else if (
+      entry.isFile() &&
+      matchSuffixes.some((suffix) => entry.name.endsWith(suffix))
+    ) {
+      tests.push(targetPath);
     }
   }
 
@@ -37,7 +62,9 @@ const tests = (await Promise.all(roots.map((root) => findTests(resolve(root)))))
   .sort();
 
 if (tests.length === 0) {
-  console.error(`No .test.ts files found in: ${roots.join(', ')}`);
+  console.error(
+    `No test files matching ${matchSuffixes.join(', ')} found in: ${roots.join(', ')}`
+  );
   process.exit(1);
 }
 
@@ -52,13 +79,7 @@ const resolverRegisterUrl = new URL(
 
 const result = spawnSync(
   process.execPath,
-  [
-    '--experimental-strip-types',
-    '--import',
-    resolverRegisterUrl,
-    '--test',
-    ...tests,
-  ],
+  ['--import', resolverRegisterUrl, '--test', ...tests],
   { stdio: 'inherit' }
 );
 

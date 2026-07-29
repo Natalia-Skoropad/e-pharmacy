@@ -219,6 +219,7 @@ export function createPublicGetPrivatePostProxyRoute<
       staleWhileRevalidate,
       enumParams,
     }),
+
     POST: createPrivateProxyRoute({
       backendPath,
       method: 'POST',

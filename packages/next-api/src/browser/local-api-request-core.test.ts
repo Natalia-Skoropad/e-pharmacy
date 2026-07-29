@@ -40,6 +40,7 @@ test('returns JSON and requires an explicit empty-response contract for 204', as
     );
 
     globalThis.fetch = async () => new Response(null, { status: 204 });
+
     assert.equal(
       await localApiRequest('/api/example', { responseType: 'no-content' }),
       undefined
@@ -58,12 +59,14 @@ test('rejects invalid JSON and HTML success responses', async () => {
         status: 200,
         headers: { 'content-type': 'application/json' },
       }),
+
       new Response('<html></html>', {
         status: 200,
         headers: { 'content-type': 'text/html' },
       }),
     ]) {
       globalThis.fetch = async () => response.clone();
+
       await assert.rejects(
         localApiRequest('/api/example'),
         (error: unknown) =>
@@ -148,10 +151,12 @@ test('classifies timeout and caller abort separately', async () => {
     );
 
     const controller = new AbortController();
+
     const request = localApiRequest('/api/abort', {
       signal: controller.signal,
       timeoutMs: 10_000,
     });
+
     controller.abort();
 
     await assert.rejects(
@@ -184,6 +189,7 @@ test('retries GET status and network failures but never retries mutations', asyn
       }),
       { ok: true }
     );
+
     assert.equal(statusCalls, 2);
 
     let networkCalls = 0;
@@ -196,6 +202,7 @@ test('retries GET status and network failures but never retries mutations', asyn
     await localApiRequest('/api/retry-network', {
       retry: { attempts: 2, delayMs: 0 },
     });
+
     assert.equal(networkCalls, 2);
 
     let mutationCalls = 0;

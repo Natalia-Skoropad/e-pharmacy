@@ -89,6 +89,7 @@ function serializeExpiredCookie(
   domain?: string
 ): string {
   const configured = getAuthCookieBaseOptions(request);
+
   const attributes = [
     `${name}=`,
     'Path=/',
@@ -130,6 +131,7 @@ function clearCookieVariants(
   httpOnly: boolean
 ): void {
   const environment = getNextApiServerEnvironment();
+
   const domains = [
     undefined,
     environment.authCookieDomain,

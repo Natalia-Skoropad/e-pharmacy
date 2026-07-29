@@ -19,11 +19,13 @@ export function getGuestGuardDecision({
   allowGuestContentWhenUnavailable: boolean;
 }): GuestGuardDecision {
   if (isBootstrapping) return 'loading';
+
   if (isUnavailable) {
     return allowGuestContentWhenUnavailable
       ? 'unavailable-guest-content'
       : 'unavailable-fallback';
   }
+
   if (isAuthenticated) return 'redirect-authenticated';
   return 'allow-guest';
 }

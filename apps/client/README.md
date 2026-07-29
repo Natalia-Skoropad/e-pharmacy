@@ -428,6 +428,19 @@ This BFF layer keeps browser requests same-origin and forwards only the required
 
 The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker for redirects and auth bootstrap. It is not a security token and does not authorize backend data access.
 
+### Lifecycle ownership map
+
+| Layer | Owner | Identity / concurrency policy |
+| --- | --- | --- |
+| Auth capability | `selectClientAuthCapabilities` + `useClientAuthCapabilities` | Pure selector stays separate from the React adapter |
+| Session lifecycle | `ClientSessionScopeProvider` | Every authenticated, unavailable, logout, account-switch, and same-user relogin lifecycle receives a new owner key |
+| Favorites | `FavoritesProvider` | Product/pharmacy ID sets are single-flight, session-keyed, abortable, and updated by one mutation owner |
+| Reviews | `useReviewForm` | Ephemeral draft keyed by session owner and `product:*` or `pharmacy:*` target |
+| Cart | `CartProvider` | Discriminated read state, one serialized mutation queue, session cancellation, retry/refresh |
+| Route access | `ClientProtectedRoute` / `ClientGuestOnlyRoute` | Client-specific UX boundary; backend remains the security boundary |
+
+App-specific lifecycle hooks remain in `apps/client`; `packages/hooks` contains only environment-agnostic infrastructure. Source-pattern checks are architecture lint only. Behavioral coverage lives in pure controller/store tests plus the React provider-stack render test.
+
 ### Client architecture boundaries
 
 - Browser API helpers live in `src/lib/api/browser` and are marked as client-only. They are low-level same-origin BFF request wrappers and should not be imported by server components, metadata helpers, sitemap, robots, or server route handlers.
@@ -531,7 +544,17 @@ pnpm build
 pnpm start
 pnpm lint
 pnpm type-check
+pnpm test
+pnpm test:react
+pnpm test:integration
 ```
+
+Test layers:
+
+- `test` runs pure selectors, state machines, stores, route/config decisions, and API-reader contracts.
+- `test:react` renders the real `ClientProviders` stack with React and verifies that application content is mounted inside the required provider order.
+- `test:integration` covers cart serialization/partial-failure recovery and cross-application auth redirect configuration.
+- `check:client-hooks`, `check:client-providers`, `check:client-routes`, `check:client-user-state`, `check:client-cart`, and `check:client-noop-wrappers` are architecture checks included in `check:before-deploy`.
 
 ## Security Notes
 

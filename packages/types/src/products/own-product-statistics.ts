@@ -11,6 +11,8 @@ type OwnProductStatisticsValue = Readonly<{
   amount?: number;
 }>;
 
+//===================================================================
+
 export type OwnProductStatisticsCounts = Record<
   OwnProductStatisticsKey,
   OwnProductStatisticsValue

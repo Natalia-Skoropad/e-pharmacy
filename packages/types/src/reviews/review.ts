@@ -14,6 +14,8 @@ export type Review = Readonly<{
   createdAt: ISODateTimeString;
 }>;
 
+//===================================================================
+
 export type PendingReview<TTarget extends object> = Readonly<
   TTarget & {
     reviewId: EntityId;

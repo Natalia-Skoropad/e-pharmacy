@@ -312,18 +312,23 @@ export function normalizePharmacyPaymentForm(
   }
 
   const result: Partial<PharmacyPaymentFormValues> = {};
+
   if (normalized.recipientName !== undefined) {
     result.recipientName = normalized.recipientName;
   }
+
   if (normalized.taxId !== undefined) result.taxId = normalized.taxId;
   if (normalized.iban !== undefined) result.iban = normalized.iban;
   if (normalized.bankName !== undefined) result.bankName = normalized.bankName;
+
   if (normalized.receiptEmail !== undefined) {
     result.receiptEmail = normalized.receiptEmail;
   }
+
   if (normalized.paymentPurpose !== undefined) {
     result.paymentPurpose = normalized.paymentPurpose;
   }
+
   return result;
 }
 

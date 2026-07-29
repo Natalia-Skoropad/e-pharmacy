@@ -14,6 +14,7 @@ export type AuthSessionSync = {
 //===================================================================
 
 const AUTH_SESSION_CHANNEL = 'e-pharmacy-auth-session';
+
 const AUTH_SESSION_EVENTS = new Set<AuthSessionEvent>([
   'authenticated',
   'unauthenticated',
@@ -55,6 +56,7 @@ export function createBrowserAuthSessionSync(): AuthSessionSync {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
+
     close: () => {
       listeners.clear();
       channel.close();

@@ -14,6 +14,7 @@ test('accepts valid JSON and empty 204 responses', async () => {
       headers: { 'content-type': 'application/json; charset=utf-8' },
     })
   );
+
   await validateBackendJsonResponse(new Response(null, { status: 204 }));
 });
 
@@ -27,6 +28,7 @@ test('rejects HTML and malformed JSON backend responses', async () => {
         headers: { 'content-type': 'text/html' },
       })
     ),
+
     InvalidBackendResponseError
   );
 
@@ -36,6 +38,7 @@ test('rejects HTML and malformed JSON backend responses', async () => {
         headers: { 'content-type': 'application/json' },
       })
     ),
+
     InvalidBackendResponseError
   );
 });

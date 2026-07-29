@@ -22,6 +22,7 @@ const validRegistration = {
 
 test('registration, login and password recovery use the same auth boundaries', () => {
   assert.equal(isRegisterFormValid(validRegistration), true);
+
   assert.equal(
     isRegisterFormValid({ ...validRegistration, password: 'short' }),
     false
@@ -37,10 +38,7 @@ test('registration, login and password recovery use the same auth boundaries', (
     false
   );
 
-  assert.equal(
-    isForgotPasswordFormValid({ email: 'user@example.com' }),
-    true
-  );
+  assert.equal(isForgotPasswordFormValid({ email: 'user@example.com' }), true);
 });
 
 //===================================================================

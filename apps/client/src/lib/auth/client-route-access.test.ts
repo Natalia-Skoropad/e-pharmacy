@@ -27,10 +27,12 @@ test('allows only active client accounts', () => {
     canAccessClientPrivateRoutes(createUser({ status: 'blocked' })),
     false
   );
+
   assert.equal(
     canAccessClientPrivateRoutes(createUser({ role: 'pharmacy' })),
     false
   );
+
   assert.equal(
     canAccessClientPrivateRoutes(createUser({ role: 'admin' })),
     false

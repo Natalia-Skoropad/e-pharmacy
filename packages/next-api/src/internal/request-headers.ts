@@ -29,7 +29,8 @@ type ProxyHeadersOptions = Readonly<{
 //===================================================================
 
 const SAFE_HEADER_VALUE_PATTERN = /^[ -~]+$/;
-const TRACEPARENT_PATTERN = /^(?!ff)[\da-f]{2}-(?!0{32})[\da-f]{32}-(?!0{16})[\da-f]{16}-[\da-f]{2}$/i;
+const TRACEPARENT_PATTERN =
+  /^(?!ff)[\da-f]{2}-(?!0{32})[\da-f]{32}-(?!0{16})[\da-f]{16}-[\da-f]{2}$/i;
 const TRACESTATE_PATTERN = /^[a-z0-9_\-*/@=,.; ]+$/i;
 
 //===================================================================
@@ -39,6 +40,7 @@ function getSafeHeaderValue(
   maximumLength = 512
 ): string | undefined {
   const normalized = value?.trim();
+
   return normalized &&
     normalized.length <= maximumLength &&
     SAFE_HEADER_VALUE_PATTERN.test(normalized)
@@ -69,6 +71,7 @@ function getSafeHttpUrlHeader(
 
 function getTrustedClientIp(request: NextRequest): string | undefined {
   const { trustedProxyProvider } = getNextApiServerEnvironment();
+
   const candidate =
     trustedProxyProvider === 'vercel'
       ? request.headers.get('x-vercel-forwarded-for')
@@ -116,10 +119,12 @@ export function createProxyRequestHeaders(
   const origin = getSafeHttpUrlHeader(request.headers.get('origin'), true);
   const referer = getSafeHttpUrlHeader(request.headers.get('referer'), false);
   const userAgent = getSafeHeaderValue(request.headers.get('user-agent'), 500);
+
   const deviceName = getSafeHeaderValue(
     request.headers.get(DEVICE_NAME_HEADER_NAME),
     120
   );
+
   const clientIp = getTrustedClientIp(request);
   const cookie = createAllowedAuthCookieHeader(
     request.headers.get('cookie'),
@@ -127,8 +132,10 @@ export function createProxyRequestHeaders(
   );
 
   if (forwardAccept && accept) headers.set('Accept', accept);
+
   if (forwardContentType && contentType)
     headers.set('Content-Type', contentType);
+
   if (cookie) headers.set('Cookie', cookie);
   if (origin) headers.set('Origin', origin);
   if (referer) headers.set('Referer', referer);

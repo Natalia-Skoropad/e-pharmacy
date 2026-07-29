@@ -44,9 +44,11 @@ export function buildUserNameError(
   if (name.length < USER_NAME_MIN_LENGTH) {
     return VALIDATION_MESSAGES.limits.nameMin;
   }
+
   if (name.length > USER_NAME_MAX_LENGTH) {
     return VALIDATION_MESSAGES.limits.nameMax;
   }
+
   if (!USER_NAME_PATTERN.test(name)) return VALIDATION_MESSAGES.format.name;
 
   return '';
@@ -61,6 +63,7 @@ export function buildEmailError(value: string): string {
   if (email.length > USER_EMAIL_MAX_LENGTH) {
     return VALIDATION_MESSAGES.limits.emailMax;
   }
+
   if (!EMAIL_PATTERN.test(email)) return VALIDATION_MESSAGES.format.email;
 
   return '';
@@ -78,6 +81,7 @@ export function buildPhoneError(
   if (phone.length > USER_PHONE_MAX_LENGTH) {
     return VALIDATION_MESSAGES.limits.phoneMax;
   }
+
   if (!PHONE_PATTERN.test(phone)) return VALIDATION_MESSAGES.format.phone;
 
   return '';
@@ -90,9 +94,11 @@ export function buildPasswordError(value: string): string {
   if (value.length < USER_PASSWORD_MIN_LENGTH) {
     return VALIDATION_MESSAGES.limits.passwordMin;
   }
+
   if (value.length > USER_PASSWORD_MAX_LENGTH) {
     return VALIDATION_MESSAGES.limits.passwordMax;
   }
+
   if (!PASSWORD_PATTERN.test(value)) {
     return VALIDATION_MESSAGES.format.password;
   }
@@ -120,12 +126,15 @@ export function buildAddressError(
   if (!address) {
     return options.required ? VALIDATION_MESSAGES.required.address : '';
   }
+
   if (address.length < USER_ADDRESS_MIN_LENGTH) {
     return VALIDATION_MESSAGES.limits.addressMin;
   }
+
   if (address.length > USER_ADDRESS_MAX_LENGTH) {
     return VALIDATION_MESSAGES.limits.addressMax;
   }
+
   if (!ADDRESS_PATTERN.test(address)) {
     return VALIDATION_MESSAGES.format.address;
   }
@@ -144,12 +153,15 @@ export function buildReviewCommentError(
   if (!comment) {
     return options.required ? VALIDATION_MESSAGES.required.reviewComment : '';
   }
+
   if (comment.length < USER_REVIEW_COMMENT_MIN_LENGTH) {
     return VALIDATION_MESSAGES.limits.reviewCommentMin;
   }
+
   if (comment.length > USER_REVIEW_COMMENT_MAX_LENGTH) {
     return VALIDATION_MESSAGES.limits.reviewCommentMax;
   }
+
   if (!REVIEW_COMMENT_PATTERN.test(comment)) {
     return VALIDATION_MESSAGES.format.reviewComment;
   }
@@ -178,9 +190,11 @@ export function buildOrderCommentError(
   if (!comment) {
     return options.required ? VALIDATION_MESSAGES.required.orderComment : '';
   }
+
   if (comment.length > USER_ORDER_COMMENT_MAX_LENGTH) {
     return VALIDATION_MESSAGES.limits.orderCommentMax;
   }
+
   if (!ORDER_COMMENT_PATTERN.test(comment)) {
     return VALIDATION_MESSAGES.format.orderComment;
   }
@@ -199,9 +213,11 @@ export function buildTextEditorError(
   if (!text) {
     return options.required ? VALIDATION_MESSAGES.required.textEditor : '';
   }
+
   if (text.length > TEXT_EDITOR_MAX_LENGTH) {
     return VALIDATION_MESSAGES.limits.textEditorMax;
   }
+
   if (!TEXT_EDITOR_PATTERN.test(text)) {
     return VALIDATION_MESSAGES.format.textEditor;
   }

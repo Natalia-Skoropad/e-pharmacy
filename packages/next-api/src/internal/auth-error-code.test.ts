@@ -16,8 +16,12 @@ test('reads only structured auth codes from JSON response bodies', () => {
     ),
     'AUTH_SESSION_REVOKED'
   );
+
   assert.equal(getAuthErrorCodeFromBody('not-json'), null);
-  assert.equal(getAuthErrorCodeFromBody(JSON.stringify({ message: 'blocked' })), null);
+  assert.equal(
+    getAuthErrorCodeFromBody(JSON.stringify({ message: 'blocked' })),
+    null
+  );
 });
 
 //===================================================================
@@ -34,10 +38,10 @@ test('invalidates cookies only for stable session lifecycle codes', () => {
 //===================================================================
 
 test('evaluates backend responses by code rather than HTTP status alone', async () => {
-  const blocked = new Response(
-    JSON.stringify({ code: 'AUTH_USER_BLOCKED' }),
-    { status: 403 }
-  );
+  const blocked = new Response(JSON.stringify({ code: 'AUTH_USER_BLOCKED' }), {
+    status: 403,
+  });
+
   const forbiddenOrigin = new Response(
     JSON.stringify({ code: 'AUTH_FORBIDDEN_ORIGIN' }),
     { status: 403 }

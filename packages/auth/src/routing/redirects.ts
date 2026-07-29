@@ -209,6 +209,8 @@ export type TrustedExternalRedirectOptions = Readonly<{
   allowedPathPrefixes?: readonly string[];
 }>;
 
+//===================================================================
+
 function normalizeAllowedOrigin(origin: string): string | null {
   try {
     const url = new URL(origin);

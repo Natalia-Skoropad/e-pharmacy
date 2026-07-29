@@ -19,6 +19,8 @@ export type FetchExecutionResult = Readonly<{
   cleanup: () => void;
 }>;
 
+//===================================================================
+
 export type FetchExecutorOptions = Readonly<{
   method: HttpMethod;
   init: Omit<RequestInit, 'method' | 'signal'>;

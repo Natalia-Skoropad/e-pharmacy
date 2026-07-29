@@ -31,6 +31,7 @@ export function resolvePublicRevalidate(
   value: number | false | undefined
 ): number | false {
   if (value === false) return false;
+  
   return validateCacheSeconds(
     value ?? DEFAULT_PUBLIC_REVALIDATE_SECONDS,
     'Public revalidate'

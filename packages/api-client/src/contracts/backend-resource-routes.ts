@@ -15,17 +15,22 @@ export const backendRoutes = {
   pharmacies: {
     list: '/pharmacies',
     myProfile: '/pharmacies/me/profile',
+
     sendMyProfileForVerification:
       '/pharmacies/me/profile/send-for-verification',
+
     options: '/pharmacies/options',
     favorites: '/pharmacies/favorites',
     favoriteIds: '/pharmacies/favorites/ids',
     filters: '/pharmacies/filters',
     details: (pharmacyId: EntityId) => `/pharmacies/${segment(pharmacyId)}`,
+
     checkoutDetails: (pharmacyId: EntityId) =>
       `/pharmacies/${segment(pharmacyId)}/checkout-details`,
+
     reviews: (pharmacyId: EntityId) =>
       `/pharmacies/${segment(pharmacyId)}/reviews`,
+
     favorite: (pharmacyId: EntityId) =>
       `/pharmacies/${segment(pharmacyId)}/favorite`,
   },
@@ -36,11 +41,15 @@ export const backendRoutes = {
     favoriteIds: '/products/favorites/ids',
     filters: '/products/filters',
     details: (productId: EntityId) => `/products/${segment(productId)}`,
+
     myPharmacy: (productId: EntityId) =>
       `/products/${segment(productId)}/my-pharmacy`,
+
     stockMovements: (productId: EntityId) =>
       `/products/${segment(productId)}/stock-movements`,
+
     reviews: (productId: EntityId) => `/products/${segment(productId)}/reviews`,
+
     favorite: (productId: EntityId) =>
       `/products/${segment(productId)}/favorite`,
   },
@@ -59,6 +68,7 @@ export const backendRoutes = {
     details: (orderId: EntityId) => `/orders/${segment(orderId)}`,
     status: (orderId: EntityId) => `/orders/${segment(orderId)}/status`,
     comments: (orderId: EntityId) => `/orders/${segment(orderId)}/comments`,
+
     comment: (orderId: EntityId, commentId: EntityId) =>
       `/orders/${segment(orderId)}/comments/${segment(commentId)}`,
   },
@@ -78,6 +88,7 @@ export const backendRoutes = {
   pharmacyNotes: {
     list: (entityType: PharmacyNoteEntityType, entityId: EntityId) =>
       `/pharmacy-notes/${segment(entityType)}/${segment(entityId)}`,
+
     details: (
       entityType: PharmacyNoteEntityType,
       entityId: EntityId,

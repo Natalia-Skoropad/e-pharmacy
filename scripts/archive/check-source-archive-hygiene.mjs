@@ -9,6 +9,11 @@ import {
   prepareSourceArchive,
 } from './prepare-source-archive.mjs';
 
+import {
+  createSourceArchiveZip,
+  verifySourceArchiveZip,
+} from './source-archive-zip.mjs';
+
 //===================================================================
 
 const repositoryRoot = path.resolve(
@@ -135,6 +140,20 @@ try {
 
   const contentViolations = await collectStagedArchiveViolations(stagedRoot);
   failures.push(...contentViolations);
+
+  const finalArchivePath = path.join(temporaryRoot, 'e-pharmacy-source.zip');
+
+  await createSourceArchiveZip(stagedRoot, finalArchivePath);
+
+  try {
+    await verifySourceArchiveZip(finalArchivePath, {
+      requiredFiles: requiredStagedFiles,
+    });
+  } catch (error) {
+    failures.push(
+      error instanceof Error ? error.message : String(error)
+    );
+  }
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true });
 }
@@ -153,5 +172,5 @@ if (failures.length > 0) {
 //===================================================================
 
 console.log(
-  'Source archive hygiene check passed (policy and staged content verified).'
+  'Source archive hygiene check passed (policy, staged tree, and final ZIP entries verified recursively).'
 );

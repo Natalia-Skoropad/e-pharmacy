@@ -2,6 +2,8 @@ export type OutsidePointerTarget = Readonly<{
   current: EventTarget | null;
 }>;
 
+//===================================================================
+
 export type OutsidePointerSubscriptionOptions = Readonly<{
   target: Pick<Document, 'addEventListener' | 'removeEventListener'> | null;
   getRefs: () => readonly OutsidePointerTarget[];

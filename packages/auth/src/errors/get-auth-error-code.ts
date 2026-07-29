@@ -8,6 +8,8 @@ type AuthErrorContext =
   | 'forgot-password'
   | 'reset-password';
 
+//===================================================================
+
 type ErrorLike = {
   status?: unknown;
   message?: unknown;
@@ -37,6 +39,8 @@ const BUSINESS_CODE_MAP: Readonly<Record<string, AuthErrorCode>> = {
   AUTH_INVALID_RESPONSE: 'invalid_response',
 };
 
+//===================================================================
+
 const TRANSPORT_CODE_MAP: Readonly<Record<string, AuthErrorCode>> = {
   NETWORK_ERROR: 'network_error',
   BAD_GATEWAY: 'service_unavailable',
@@ -46,6 +50,8 @@ const TRANSPORT_CODE_MAP: Readonly<Record<string, AuthErrorCode>> = {
   INVALID_BACKEND_RESPONSE: 'invalid_response',
   CSRF_VALIDATION_FAILED: 'csrf_failed',
 };
+
+//===================================================================
 
 const LEGACY_MESSAGE_MAP: Readonly<Record<string, AuthErrorCode>> = {
   'email or password is invalid': 'invalid_credentials',

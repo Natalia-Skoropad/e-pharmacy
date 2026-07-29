@@ -55,12 +55,14 @@ export class ApiError extends Error {
   readonly code: ApiErrorCode | string;
 
   constructor(message: string, options?: ApiErrorOptions);
+
   constructor(
     message: string,
     status?: number,
     payload?: unknown,
     meta?: LegacyApiErrorMeta
   );
+
   constructor(
     message: string,
     optionsOrStatus: ApiErrorOptions | number = {},

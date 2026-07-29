@@ -15,6 +15,8 @@ import { logTransportRequest } from '../observability/logger';
 
 export { createTrustedBackendApiUrl } from '../internal/backend-url';
 
+//===================================================================
+
 export type NextServerRequestOptions = Readonly<{
   revalidate?: number | false;
   tags?: readonly string[];
@@ -43,8 +45,10 @@ export async function publicBackendApiRequest(
   const requestId = createRequestId();
   const startedAt = Date.now();
   const url = createTrustedBackendApiUrl(path);
+
   const resolvedCache =
     cache ?? (next?.revalidate === undefined ? 'no-store' : undefined);
+
   const requestHeaders = new Headers(options.headers);
   requestHeaders.set(REQUEST_ID_HEADER_NAME, requestId);
 

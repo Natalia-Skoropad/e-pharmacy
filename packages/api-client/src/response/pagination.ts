@@ -84,6 +84,8 @@ export type NormalizePaginationOptions<TItem> = Readonly<{
   normalizeItem: (item: unknown, index: number) => TItem | null;
 }>;
 
+//===================================================================
+
 export type RequirePaginationContext = Readonly<{
   label?: string;
   url?: string;

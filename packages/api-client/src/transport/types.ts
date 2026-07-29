@@ -6,8 +6,9 @@ export type JsonRequestBody =
   | Readonly<Record<string, unknown>>
   | readonly unknown[];
 
-export type TextRequestBody = string | URLSearchParams;
+//===================================================================
 
+export type TextRequestBody = string | URLSearchParams;
 export type ApiRequestBody = JsonRequestBody | TextRequestBody;
 
 //===================================================================
@@ -33,6 +34,8 @@ export type RequestOptions = {
   responseType?: 'json' | 'no-content';
 };
 
+//===================================================================
+
 export type ApiRequestOptions = RequestOptions & {
   baseUrl: string;
 };
@@ -46,6 +49,8 @@ export type JsonResponseRequestOptions = Omit<
   responseType?: 'json';
 };
 
+//===================================================================
+
 export type ApiJsonResponseRequestOptions = JsonResponseRequestOptions & {
   baseUrl: string;
 };
@@ -58,6 +63,8 @@ export type NoContentResponseRequestOptions = Omit<
 > & {
   responseType: 'no-content';
 };
+
+//===================================================================
 
 export type ApiNoContentResponseRequestOptions =
   NoContentResponseRequestOptions & {

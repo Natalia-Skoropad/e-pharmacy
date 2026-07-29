@@ -51,6 +51,7 @@ export function RoleProtectedRoute({
   const queryString = searchParams.toString();
 
   const { isAuthenticated, isBootstrapping, isUnavailable, user } = useAuth();
+
   const hasAllowedRole = Boolean(
     user &&
     allowedRoles.includes(user.role) &&

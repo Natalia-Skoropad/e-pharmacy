@@ -18,6 +18,7 @@ test('uses an explicit English locale and Kyiv business timezone', () => {
   assert.equal(DISPLAY_LOCALE, 'en-GB');
   assert.equal(BUSINESS_TIME_ZONE, 'Europe/Kyiv');
   assert.equal(formatShortDate('2026-07-22'), '22 Jul 2026');
+
   assert.equal(
     formatDateTime('2026-07-21T22:30:00.000Z'),
     '22 July 2026 at 01:30'

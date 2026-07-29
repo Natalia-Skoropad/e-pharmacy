@@ -28,6 +28,7 @@ const PRODUCT_REQUEST_FILE_MIME_TYPES_BY_EXTENSION: Readonly<
 
 function getFileExtension(fileName: string): string {
   const extensionIndex = fileName.lastIndexOf('.');
+
   return extensionIndex >= 0
     ? fileName.slice(extensionIndex).toLowerCase()
     : '';

@@ -32,6 +32,7 @@ test('accepts same-origin mutations with the BFF CSRF header', () => {
 
 test('rejects missing header and cross-site requests', () => {
   assert.throws(() => validateBffMutationRequest(createRequest(), 'POST'));
+
   assert.throws(() =>
     validateBffMutationRequest(
       createRequest({

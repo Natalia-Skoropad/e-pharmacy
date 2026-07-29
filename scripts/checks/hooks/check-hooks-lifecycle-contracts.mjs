@@ -4,6 +4,7 @@ import path from 'node:path';
 //===================================================================
 
 const repositoryRoot = process.cwd();
+
 const ignoredDirectories = new Set([
   '.git',
   '.next',
@@ -335,7 +336,6 @@ for (const checkName of [
   'check:hooks-boundaries',
   'check:hooks-public-api',
   'check:hooks-lifecycle',
-  'check:archive-hygiene',
 ]) {
   if (!beforeDeploy.includes(checkName)) {
     failures.push(`check:before-deploy must include ${checkName}.`);

@@ -65,6 +65,7 @@ export function validateProductRequestForm(
     values.name,
     PRODUCT_REQUEST_VALIDATION_MESSAGES.required.name
   );
+
   const requiredArticleError = buildRequiredError(
     values.article,
     PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article

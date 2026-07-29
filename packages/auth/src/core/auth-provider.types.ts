@@ -26,6 +26,8 @@ export type AuthProviderSessionServices = Readonly<{
   logout: (options: AuthServiceRequestOptions) => Promise<void>;
 }>;
 
+//===================================================================
+
 export type AuthProviderInteractiveServices = Readonly<{
   login: (
     payload: LoginPayload,
@@ -36,6 +38,8 @@ export type AuthProviderInteractiveServices = Readonly<{
     options: AuthServiceRequestOptions
   ) => Promise<AuthResponse>;
 }>;
+
+//===================================================================
 
 export type AuthProviderServices = AuthProviderSessionServices &
   Partial<AuthProviderInteractiveServices>;
@@ -78,12 +82,18 @@ export type AuthState =
       error: unknown;
     }>;
 
+//===================================================================
+
 export type AuthStatus = AuthState['status'];
+
+//===================================================================
 
 export type AuthCapabilities = Readonly<{
   canLogin: boolean;
   canRegister: boolean;
 }>;
+
+//===================================================================
 
 export type AuthContextValue = Readonly<{
   state: AuthState;
@@ -113,6 +123,8 @@ type AuthProviderCoreBaseProps = AuthProviderServices &
     bootstrapTimeoutMs?: number;
     revalidateOnFocus?: boolean;
   }>;
+
+//===================================================================
 
 export type AuthProviderCoreProps =
   | (AuthProviderCoreBaseProps &

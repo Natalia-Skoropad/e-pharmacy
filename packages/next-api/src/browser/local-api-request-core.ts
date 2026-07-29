@@ -28,10 +28,14 @@ export function localApiRequest(
   options: NoContentResponseRequestOptions
 ): Promise<void>;
 
+//===================================================================
+
 export function localApiRequest(
   path: string,
   options?: JsonResponseRequestOptions
 ): Promise<unknown>;
+
+//===================================================================
 
 export async function localApiRequest(
   path: string,
@@ -89,9 +93,7 @@ export async function localApiRequest(
       retryCount: 0,
       cachePolicy: cache,
       authMode: 'private',
-      transportErrorCode: isApiError(error)
-        ? error.transportCode
-        : undefined,
+      transportErrorCode: isApiError(error) ? error.transportCode : undefined,
       source: 'browser-api',
     });
 

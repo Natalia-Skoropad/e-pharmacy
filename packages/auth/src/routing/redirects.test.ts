@@ -49,10 +49,12 @@ test('enforces application route roots without prefix collisions', () => {
     getSafeApplicationRedirectPath('/profile/orders/1', options),
     '/profile/orders/1'
   );
+
   assert.equal(
     getSafeApplicationRedirectPath('/profile-admin', options),
     '/profile'
   );
+
   assert.equal(
     getSafeApplicationRedirectPath('/profile/../admin', options),
     '/profile'
@@ -72,6 +74,7 @@ test('allows only trusted external origins and path roots', () => {
       'https://pharmacy.example.com/pharmacy/dashboard?tab=orders',
       options
     ),
+
     'https://pharmacy.example.com/pharmacy/dashboard?tab=orders'
   );
 
@@ -80,6 +83,7 @@ test('allows only trusted external origins and path roots', () => {
       'https://pharmacy.example.com/pharmacy/dashboard?redirect=https%3A%2F%2Fclient.example.com%2Fprofile',
       options
     ),
+
     'https://pharmacy.example.com/pharmacy/dashboard?redirect=https%3A%2F%2Fclient.example.com%2Fprofile'
   );
 

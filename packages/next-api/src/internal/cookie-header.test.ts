@@ -56,7 +56,6 @@ test('private retry never copies unrelated or refresh cookies', () => {
   );
 });
 
-
 //===================================================================
 
 test('last duplicate wins and cookie values may contain equals signs', () => {
@@ -65,6 +64,7 @@ test('last duplicate wins and cookie values may contain equals signs', () => {
   );
 
   assert.equal(parsed.get(ACCESS_TOKEN_COOKIE_NAME), 'new==');
+
   assert.equal(
     createAllowedAuthCookieHeader(
       `${REFRESH_TOKEN_COOKIE_NAME}=refresh==; locale=uk`,

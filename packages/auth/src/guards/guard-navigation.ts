@@ -6,9 +6,10 @@ export type TrustedExternalRedirectResolver = (
   candidate: string
 ) => string | null;
 
+//===================================================================
+
 export type GuardNavigationDestination = Readonly<
-  | { type: 'local'; href: string }
-  | { type: 'external'; href: string }
+  { type: 'local'; href: string } | { type: 'external'; href: string }
 >;
 
 //===================================================================
@@ -21,6 +22,8 @@ function isAbsoluteHttpUrl(value: string): boolean {
     return false;
   }
 }
+
+//===================================================================
 
 export function resolveGuardNavigationDestination({
   candidate,

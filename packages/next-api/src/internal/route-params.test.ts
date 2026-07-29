@@ -32,6 +32,7 @@ test('accepts only declared enum route segments', () => {
     ),
     'product_request'
   );
+
   assert.throws(() =>
     parseEnumRouteSegment('admin', ['client', 'product_request'], 'entityType')
   );

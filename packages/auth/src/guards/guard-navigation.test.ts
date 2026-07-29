@@ -35,6 +35,7 @@ test('keeps local destinations local and normalized', () => {
       candidate: '/profile/../admin',
       localFallback: '/',
     }),
+
     { type: 'local', href: '/' }
   );
 });
@@ -56,6 +57,7 @@ test('requires an application resolver for external navigation', () => {
       resolveExternalRedirect: (value) =>
         value.startsWith('https://pharmacy.example.com/') ? value : null,
     }),
+
     { type: 'external', href: candidate }
   );
 });

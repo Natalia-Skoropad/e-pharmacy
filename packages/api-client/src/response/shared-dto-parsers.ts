@@ -7,6 +7,7 @@ import type {
   ActiveSession,
   ActiveSessionsResponse,
 } from '@e-pharmacy/types/auth';
+
 import type { Cart, CartItem, CartResponse } from '@e-pharmacy/types/cart';
 
 import type {
@@ -272,6 +273,7 @@ export function parsePharmacyProductMutationResponse(
     { message: 'string' },
     context
   );
+
   return checked<PharmacyProductMutationResponse>({
     product: parseProductDetails(record.product, context),
     message: record.message,
@@ -288,6 +290,7 @@ function parseFilterOption(value: unknown, context?: ApiResponseContext) {
     { value: 'string', label: 'string' },
     context
   );
+
   return { value: record.value, label: record.label };
 }
 
@@ -309,12 +312,14 @@ export function parseProductFilterOptionsResponse(
       parseFilterOption,
       context
     ),
+
     availability: parseArray(
       record.availability,
       'availability',
       parseFilterOption,
       context
     ),
+
     sort: parseArray(record.sort, 'sort', parseFilterOption, context),
   });
 }
@@ -344,6 +349,7 @@ function parseProductStockMovement(
       movementValue: 'number',
       comment: 'string',
     },
+
     context
   );
   return checked<ProductStockMovement>(record);
@@ -356,6 +362,7 @@ export function parseProductStockMovementsResponse(
   context?: ApiResponseContext
 ): ProductStockMovementsResponse {
   const record = requireRecord(value, 'stock movements response', context);
+
   const pagination = requirePaginatedResponse(
     normalizePaginatedResponse(record, {
       normalizeItem: (item) => {
@@ -368,7 +375,9 @@ export function parseProductStockMovementsResponse(
     }),
     { label: 'stock movements response', ...context }
   );
+
   const stock = requireRecord(record.stock, 'stock balance', context);
+
   requireFields(
     stock,
     'stock balance',
@@ -379,12 +388,14 @@ export function parseProductStockMovementsResponse(
     },
     context
   );
+
   const earliestCreatedAt = requireNullableString(
     record,
     'earliestCreatedAt',
     'stock movements response',
     context
   );
+
   return checked<ProductStockMovementsResponse>({
     ...pagination,
     stock,
@@ -414,6 +425,7 @@ function parsePublicPharmacy(
     },
     context
   );
+
   return checked<PublicPharmacy>(record);
 }
 
@@ -444,12 +456,14 @@ function parsePharmacyOption(
   context?: ApiResponseContext
 ): PharmacyOption {
   const record = requireRecord(value, 'pharmacy option', context);
+
   requireFields(
     record,
     'pharmacy option',
     { id: 'string', name: 'string' },
     context
   );
+
   return checked<PharmacyOption>({ id: record.id, name: record.name });
 }
 
@@ -460,6 +474,7 @@ export function parsePharmacyOptionsResponse(
   context?: ApiResponseContext
 ): PharmacyOptionsResponse {
   const record = requireRecord(value, 'pharmacy options response', context);
+
   return {
     items: parseArray(record.items, 'items', parsePharmacyOption, context),
   };
@@ -476,6 +491,7 @@ export function parsePharmacyFilterOptionsResponse(
     'pharmacy filter options response',
     context
   );
+
   return checked<PharmacyFilterOptionsResponse>({
     cities: parseArray(record.cities, 'cities', parseFilterOption, context),
     sort: parseArray(record.sort, 'sort', parseFilterOption, context),
@@ -509,6 +525,7 @@ function parsePharmacyCheckoutDetails(
     },
     context
   );
+
   return checked<PharmacyCheckoutDetails>(record);
 }
 
@@ -523,6 +540,7 @@ export function parsePharmacyCheckoutDetailsResponse(
     'pharmacy checkout details response',
     context
   );
+
   return { pharmacy: parsePharmacyCheckoutDetails(record.pharmacy, context) };
 }
 
@@ -533,6 +551,7 @@ function parsePharmacyProfile(
   context?: ApiResponseContext
 ): PharmacyProfile {
   const record = requireRecord(value, 'pharmacy profile', context);
+
   requireFields(
     record,
     'pharmacy profile',
@@ -548,6 +567,7 @@ function parsePharmacyProfile(
     },
     context
   );
+
   return checked<PharmacyProfile>(record);
 }
 
@@ -572,6 +592,7 @@ export function parseSendPharmacyForVerificationResponse(
     'send pharmacy for verification response',
     context
   );
+
   requireFields(
     record,
     'send pharmacy for verification response',
@@ -580,6 +601,7 @@ export function parseSendPharmacyForVerificationResponse(
     },
     context
   );
+
   return checked<SendPharmacyForVerificationResponse>({
     pharmacy: parsePharmacyProfile(record.pharmacy, context),
     message: record.message,
@@ -602,6 +624,7 @@ function parseReview(value: unknown, context?: ApiResponseContext): Review {
     },
     context
   );
+
   return checked<Review>(record);
 }
 
@@ -613,6 +636,7 @@ export function parseReviewsResponse(
 ): ReviewsResponse {
   const record = requireRecord(value, 'reviews response', context);
   requireFields(record, 'reviews response', { total: 'number' }, context);
+
   return checked<ReviewsResponse>({
     items: parseArray(record.items, 'items', parseReview, context),
     total: record.total,
@@ -626,12 +650,14 @@ export function parseReviewMutationResponse(
   context?: ApiResponseContext
 ): ReviewMutationResponse {
   const record = requireRecord(value, 'review mutation response', context);
+
   requireFields(
     record,
     'review mutation response',
     { message: 'string' },
     context
   );
+
   return checked<ReviewMutationResponse>({ message: record.message });
 }
 
@@ -642,6 +668,7 @@ export function parseFavoriteIdsResponse(
   context?: ApiResponseContext
 ): FavoriteIdsResponse {
   const record = requireRecord(value, 'favorite ids response', context);
+
   const ids = parseArray(
     record.ids,
     'ids',
@@ -653,6 +680,7 @@ export function parseFavoriteIdsResponse(
     },
     context
   );
+
   return { ids };
 }
 
@@ -663,6 +691,7 @@ export function parseFavoriteMutationResponse(
   context?: ApiResponseContext
 ): FavoriteMutationResponse {
   const record = requireRecord(value, 'favorite mutation response', context);
+
   requireFields(
     record,
     'favorite mutation response',
@@ -672,6 +701,7 @@ export function parseFavoriteMutationResponse(
     },
     context
   );
+
   return checked<FavoriteMutationResponse>({
     isFavorite: record.isFavorite,
     message: record.message,
@@ -715,6 +745,7 @@ function parseCartItem(value: unknown, context?: ApiResponseContext): CartItem {
     },
     context
   );
+
   return checked<CartItem>(record);
 }
 
@@ -722,12 +753,14 @@ function parseCartItem(value: unknown, context?: ApiResponseContext): CartItem {
 
 function parseCart(value: unknown, context?: ApiResponseContext): Cart {
   const record = requireRecord(value, 'cart', context);
+
   requireFields(
     record,
     'cart',
     { totalItems: 'number', totalPrice: 'number' },
     context
   );
+
   return checked<Cart>({
     items: parseArray(record.items, 'items', parseCartItem, context),
     totalItems: record.totalItems,
@@ -775,6 +808,7 @@ function parseClientOrder(
     },
     context
   );
+
   return checked<ClientOrder>(record);
 }
 
@@ -785,6 +819,7 @@ export function parseClientOrdersResponse(
   context?: ApiResponseContext
 ): ClientOrdersResponse {
   const record = requireRecord(value, 'client orders response', context);
+
   const pagination = requirePaginatedResponse(
     normalizePaginatedResponse(record, {
       normalizeItem: (item) => {
@@ -797,17 +832,20 @@ export function parseClientOrdersResponse(
     }),
     { label: 'client orders response', ...context }
   );
+
   const statistics = requireRecord(
     record.statistics,
     'order statistics',
     context
   );
+
   const earliestCreatedAt = requireNullableString(
     record,
     'earliestCreatedAt',
     'client orders response',
     context
   );
+
   return checked<ClientOrdersResponse>({
     ...pagination,
     statistics,
@@ -832,6 +870,7 @@ export function parseCheckoutOrderResponse(
   context?: ApiResponseContext
 ): CheckoutOrderResponse {
   const record = requireRecord(value, 'checkout response', context);
+
   return {
     order: parseClientOrder(record.order, context),
     cart: parseCart(record.cart, context),
@@ -872,6 +911,7 @@ function parseActiveSession(
   context?: ApiResponseContext
 ): ActiveSession {
   const record = requireRecord(value, 'active session', context);
+
   requireFields(
     record,
     'active session',
@@ -884,6 +924,7 @@ function parseActiveSession(
     },
     context
   );
+
   requireOptionalFields(
     record,
     'active session',
@@ -895,6 +936,7 @@ function parseActiveSession(
     },
     context
   );
+
   return checked<ActiveSession>(record);
 }
 
@@ -905,6 +947,7 @@ export function parseActiveSessionsResponse(
   context?: ApiResponseContext
 ): ActiveSessionsResponse {
   const record = requireRecord(value, 'active sessions response', context);
+
   return {
     sessions: parseArray(
       record.sessions,

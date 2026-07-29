@@ -98,6 +98,7 @@ export function createApiUrl(path: string, baseUrl: string): string {
   assertRelativeApiPath(path);
 
   const parsedBaseUrl = parseApiBaseUrl(baseUrl);
+
   const basePath = parsedBaseUrl.pathname.endsWith('/')
     ? parsedBaseUrl.pathname
     : `${parsedBaseUrl.pathname}/`;

@@ -1,10 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {
-  getGuestGuardDecision,
-  getRoleGuardDecision,
-} from './guard-state';
+import { getGuestGuardDecision, getRoleGuardDecision } from './guard-state';
 
 //===================================================================
 
@@ -16,6 +13,7 @@ test('guest guard makes auth-unavailable behavior explicit', () => {
       isAuthenticated: false,
       allowGuestContentWhenUnavailable: false,
     }),
+
     'unavailable-fallback'
   );
 
@@ -26,6 +24,7 @@ test('guest guard makes auth-unavailable behavior explicit', () => {
       isAuthenticated: false,
       allowGuestContentWhenUnavailable: true,
     }),
+
     'unavailable-guest-content'
   );
 });

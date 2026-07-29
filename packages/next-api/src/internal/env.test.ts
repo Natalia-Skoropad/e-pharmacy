@@ -41,7 +41,6 @@ test('production requires an HTTPS backend URL and BFF proxy secret', () => {
   }
 });
 
-
 //===================================================================
 
 test('rejects invalid SameSite and cookie-domain configuration', () => {
@@ -59,6 +58,7 @@ test('rejects invalid SameSite and cookie-domain configuration', () => {
 
     delete process.env.AUTH_COOKIE_DOMAIN;
     process.env.AUTH_COOKIE_LEGACY_DOMAINS = '.old.example.com,old.example.com';
+
     assert.deepEqual(getNextApiServerEnvironment().authCookieLegacyDomains, [
       '.old.example.com',
       'old.example.com',
@@ -67,10 +67,10 @@ test('rejects invalid SameSite and cookie-domain configuration', () => {
     for (const key of Object.keys(process.env)) {
       if (!(key in previous)) delete process.env[key];
     }
+
     Object.assign(process.env, previous);
   }
 });
-
 
 //===================================================================
 
@@ -102,6 +102,7 @@ test('trusted client IP forwarding requires an explicit proxy provider', () => {
     for (const key of Object.keys(process.env)) {
       if (!(key in previous)) delete process.env[key];
     }
+
     Object.assign(process.env, previous);
   }
 });

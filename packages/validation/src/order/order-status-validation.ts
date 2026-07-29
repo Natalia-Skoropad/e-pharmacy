@@ -13,6 +13,8 @@ export type UpdatableOrderStatus = Extract<
   'in_progress' | 'successful' | 'rejected'
 >;
 
+//===================================================================
+
 export type OrderStatusChangeValues = Readonly<{
   status: UpdatableOrderStatus;
   rejectionReason?: string;

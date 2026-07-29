@@ -18,6 +18,7 @@ export function createTextProxyResponse(
 ): NextResponse {
   return new NextResponse(body || null, {
     status: response.status,
+
     headers: createProxyResponseHeaders(
       response.headers,
       options.cacheControl,
@@ -34,6 +35,7 @@ export function createProxyResponse(
 ): NextResponse {
   return new NextResponse(response.body, {
     status: response.status,
+
     headers: createProxyResponseHeaders(
       response.headers,
       options.cacheControl,

@@ -149,6 +149,7 @@ Main local values:
 ```env
 # apps/client
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_PHARMACY_APP_URL=http://localhost:3002
 API_BASE_URL=http://localhost:4000
 BFF_PROXY_SECRET=
 
@@ -215,6 +216,25 @@ pnpm test
 pnpm build
 pnpm check:before-deploy
 ```
+
+
+## Clean Source Archive
+
+Create the final source ZIP with the repository-owned command:
+
+```bash
+pnpm archive:source
+```
+
+The command stages the source tree, creates `.artifacts/e-pharmacy-source.zip`, and verifies the **actual ZIP entries**. The verifier rejects generated directories and files such as `node_modules`, `.turbo`, `.next`, `dist`, coverage output, `*.tsbuildinfo`, and nested ZIP archives containing forbidden content.
+
+Verify an existing final artifact explicitly:
+
+```bash
+pnpm check:archive-artifact -- path/to/e-pharmacy-source.zip
+```
+
+Do not assemble release archives by zipping the working directory or by nesting app ZIP files manually; use `archive:source` so the final artifact follows the same policy checked by `check:before-deploy`.
 
 Config-specific architecture and parity checks:
 
