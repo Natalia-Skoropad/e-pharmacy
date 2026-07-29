@@ -11,46 +11,129 @@ import {
   type ReactNode,
 } from 'react';
 
-import type { Cart } from '@e-pharmacy/types/cart';
-
-import { getCart } from '@/lib/api/browser';
-import { useClientAuthCapabilities } from '@/hooks/useClientAuthCapabilities';
-import { useClientSessionScope } from '@/providers/AuthProvider';
+import type {
+  AddCartItemPayload,
+  Cart,
+  CartResponse,
+  UpdateCartItemPayload,
+} from '@e-pharmacy/types/cart';
 
 import {
-  CART_UPDATED_EVENT,
-  type CartUpdatedEventDetail,
-} from '@/lib/cart/cart-events';
+  addCartItem,
+  clearCart,
+  getCart,
+  removeCartItem,
+  updateCartItem,
+} from '@/lib/api/browser/cart.api';
+import { useClientAuthCapabilities } from '@/hooks/useClientAuthCapabilities';
+import { isAbortError } from '@/lib/async/is-abort-error';
+import { removeCartItemsSequentially } from '@/lib/cart/cart-pharmacy-removal';
+
+import {
+  createCartMutationQueue,
+  type CartMutationQueue,
+} from '@/lib/cart/cart-mutation-queue';
+
+import {
+  beginCartLoad,
+  completeCartLoad,
+  createInitialCartState,
+  failCartLoad,
+  getCartStateCart,
+  type CartState,
+} from '@/lib/cart/cart-state';
+
+import { useClientSessionScope } from '@/providers/AuthProvider';
 
 //===================================================================
 
 const EMPTY_CART: Cart = { items: [], totalItems: 0, totalPrice: 0 };
+const CART_LOAD_ERROR_MESSAGE = 'Could not load cart.';
 
 //===================================================================
 
-type CartContextValue = {
+type OfferMutationOptions = Readonly<{
+  offerId?: string;
+}>;
+
+export type CartContextValue = Readonly<{
   cart: Cart;
+  status: CartState['status'];
   isLoaded: boolean;
   isLoading: boolean;
+  isRefreshing: boolean;
+  loadError: unknown | null;
   error: string;
-  loadCart: () => Promise<Cart>;
-  setCart: (cart: Cart) => void;
-  invalidateCart: () => void;
-};
-
-type CartSnapshot = Readonly<{
-  ownerKey: string;
-  cart: Cart;
-  isLoaded: boolean;
-  error: string;
+  pendingItemIds: ReadonlySet<string>;
+  pendingOfferIds: ReadonlySet<string>;
+  isClearing: boolean;
+  loadCart: () => Promise<Cart | null>;
+  refreshCart: () => Promise<Cart | null>;
+  retryCart: () => Promise<Cart | null>;
+  replaceCartFromServer: (cart: Cart) => void;
+  addProductToCart: (
+    payload: AddCartItemPayload,
+    options?: OfferMutationOptions
+  ) => Promise<CartResponse | null>;
+  updateItemQuantity: (
+    cartItemId: string,
+    payload: UpdateCartItemPayload,
+    options?: OfferMutationOptions
+  ) => Promise<CartResponse | null>;
+  removeItemFromCart: (
+    cartItemId: string,
+    options?: OfferMutationOptions
+  ) => Promise<CartResponse | null>;
+  clearAllCart: () => Promise<CartResponse | null>;
+  removePharmacyOrder: (pharmacyId: string) => Promise<Cart | null>;
 }>;
 
 type ActiveCartLoad = Readonly<{
   ownerKey: string;
-  generation: number;
   controller: AbortController;
-  promise: Promise<Cart>;
+  promise: Promise<Cart | null>;
 }>;
+
+//===================================================================
+
+function getCartWithUpdatedQuantity(
+  cart: Cart,
+  cartItemId: string,
+  quantity: number
+): Cart {
+  const nextItems = cart.items.map((item) =>
+    item.id === cartItemId
+      ? {
+          ...item,
+          quantity,
+          totalPrice: item.unitPrice * quantity,
+        }
+      : item
+  );
+
+  return {
+    items: nextItems,
+    totalItems: nextItems.reduce((total, item) => total + item.quantity, 0),
+    totalPrice: nextItems.reduce((total, item) => total + item.totalPrice, 0),
+  };
+}
+
+//===================================================================
+
+function addSetValue(current: ReadonlySet<string>, value: string): Set<string> {
+  const next = new Set(current);
+  next.add(value);
+  return next;
+}
+
+function removeSetValue(
+  current: ReadonlySet<string>,
+  value: string
+): Set<string> {
+  const next = new Set(current);
+  next.delete(value);
+  return next;
+}
 
 //===================================================================
 
@@ -58,199 +141,398 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 //===================================================================
 
-export function CartProvider({ children }: { children: ReactNode }) {
+export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
   const { user, isBootstrapping, canUseClientFeatures } =
     useClientAuthCapabilities();
   const { ownerKey: sessionOwnerKey } = useClientSessionScope();
 
   const clientOwnerKey = canUseClientFeatures && user ? sessionOwnerKey : null;
 
-  const [snapshot, setSnapshot] = useState<CartSnapshot | null>(null);
-  const [loadingOwnerKey, setLoadingOwnerKey] = useState<string | null>(null);
-
-  const ownerKeyRef = useRef<string | null>(clientOwnerKey);
-  const loadGenerationRef = useRef(0);
-  const activeLoadRef = useRef<ActiveCartLoad | null>(null);
-
-  const currentSnapshot =
-    snapshot?.ownerKey === clientOwnerKey ? snapshot : null;
-
-  const cart = currentSnapshot?.cart ?? EMPTY_CART;
-  const isLoaded = clientOwnerKey ? Boolean(currentSnapshot?.isLoaded) : true;
-  const isLoading = Boolean(
-    clientOwnerKey && loadingOwnerKey === clientOwnerKey
+  const [state, setState] = useState<CartState>(() =>
+    createInitialCartState(clientOwnerKey)
   );
-  const error = currentSnapshot?.error ?? '';
+  const [pendingItemIds, setPendingItemIds] = useState<ReadonlySet<string>>(
+    () => new Set()
+  );
+  const [pendingOfferIds, setPendingOfferIds] = useState<ReadonlySet<string>>(
+    () => new Set()
+  );
+  const [isClearing, setIsClearing] = useState(false);
 
-  const setCart = useCallback(
-    (nextCart: Cart) => {
-      const ownerKey = clientOwnerKey;
-      if (!ownerKey || ownerKeyRef.current !== ownerKey) return;
+  const stateRef = useRef(state);
+  const pendingItemIdsRef = useRef(new Set<string>());
+  const pendingOfferIdsRef = useRef(new Set<string>());
+  const clearingRef = useRef(false);
+  const activeLoadRef = useRef<ActiveCartLoad | null>(null);
+  const lifecycleActiveRef = useRef(true);
+  const mutationQueue = useMemo<CartMutationQueue>(
+    () => createCartMutationQueue(),
+    []
+  );
 
-      setSnapshot({
-        ownerKey,
-        cart: nextCart,
-        isLoaded: true,
-        error: '',
+  const updateState = useCallback(
+    (updater: (current: CartState) => CartState): void => {
+      if (!lifecycleActiveRef.current) return;
+
+      setState((current) => {
+        const next = updater(current);
+        stateRef.current = next;
+        return next;
       });
     },
-    [clientOwnerKey]
+    []
   );
 
-  const loadCart = useCallback(async () => {
-    const ownerKey = clientOwnerKey;
+  const replaceCartFromServer = useCallback(
+    (nextCart: Cart): void => {
+      const ownerKey = clientOwnerKey;
+      if (!ownerKey || !lifecycleActiveRef.current) return;
 
-    if (!ownerKey) return EMPTY_CART;
+      updateState(() => completeCartLoad(ownerKey, nextCart));
+    },
+    [clientOwnerKey, updateState]
+  );
+
+  const performCartLoad = useCallback(async (): Promise<Cart | null> => {
+    const ownerKey = clientOwnerKey;
+    if (!ownerKey || !lifecycleActiveRef.current) return null;
 
     const activeLoad = activeLoadRef.current;
     if (activeLoad?.ownerKey === ownerKey) return activeLoad.promise;
 
     activeLoad?.controller.abort();
 
-    const generation = loadGenerationRef.current + 1;
-    loadGenerationRef.current = generation;
     const controller = new AbortController();
-    setLoadingOwnerKey(ownerKey);
+    updateState((current) => beginCartLoad(current, ownerKey));
 
     const promise = getCart({ signal: controller.signal })
       .then((response) => {
-        if (
-          controller.signal.aborted ||
-          ownerKeyRef.current !== ownerKey ||
-          loadGenerationRef.current !== generation
-        ) {
-          return EMPTY_CART;
+        if (controller.signal.aborted || !lifecycleActiveRef.current) {
+          return null;
         }
 
-        setSnapshot({
-          ownerKey,
-          cart: response.cart,
-          isLoaded: true,
-          error: '',
-        });
-
+        updateState(() => completeCartLoad(ownerKey, response.cart));
         return response.cart;
       })
-      .catch((cause: unknown) => {
+      .catch((error: unknown) => {
         if (
           controller.signal.aborted ||
-          ownerKeyRef.current !== ownerKey ||
-          loadGenerationRef.current !== generation
+          isAbortError(error) ||
+          !lifecycleActiveRef.current
         ) {
-          return EMPTY_CART;
+          return null;
         }
 
-        setSnapshot((current) => ({
-          ownerKey,
-          cart: current?.ownerKey === ownerKey ? current.cart : EMPTY_CART,
-          isLoaded: true,
-          error: 'Could not load cart.',
-        }));
-
-        throw cause;
+        updateState((current) => failCartLoad(current, ownerKey, error));
+        throw error;
       })
       .finally(() => {
-        const currentLoad = activeLoadRef.current;
-
-        if (
-          currentLoad?.ownerKey === ownerKey &&
-          currentLoad.generation === generation
-        ) {
+        if (activeLoadRef.current?.controller === controller) {
           activeLoadRef.current = null;
-          setLoadingOwnerKey((current) =>
-            current === ownerKey ? null : current
-          );
         }
       });
 
-    activeLoadRef.current = {
-      ownerKey,
-      generation,
-      controller,
-      promise,
-    };
-
+    activeLoadRef.current = { ownerKey, controller, promise };
     return promise;
-  }, [clientOwnerKey]);
+  }, [clientOwnerKey, updateState]);
 
-  const invalidateCart = useCallback(() => {
-    if (!clientOwnerKey) return;
+  const loadCart = useCallback(async (): Promise<Cart | null> => {
+    const confirmedCart = getCartStateCart(stateRef.current);
+    return confirmedCart ?? performCartLoad();
+  }, [performCartLoad]);
 
-    setSnapshot((current) => ({
-      ownerKey: clientOwnerKey,
-      cart: current?.ownerKey === clientOwnerKey ? current.cart : EMPTY_CART,
-      isLoaded: false,
-      error: '',
-    }));
-  }, [clientOwnerKey]);
+  const markItemPending = useCallback((cartItemId: string): void => {
+    pendingItemIdsRef.current.add(cartItemId);
+    setPendingItemIds((current) => addSetValue(current, cartItemId));
+  }, []);
 
-  useEffect(() => {
-    if (isBootstrapping || !clientOwnerKey || isLoaded) return;
-    if (activeLoadRef.current?.ownerKey === clientOwnerKey) return;
+  const unmarkItemPending = useCallback((cartItemId: string): void => {
+    pendingItemIdsRef.current.delete(cartItemId);
+    if (!lifecycleActiveRef.current) return;
+    setPendingItemIds((current) => removeSetValue(current, cartItemId));
+  }, []);
 
-    void loadCart().catch(() => undefined);
-  }, [clientOwnerKey, isBootstrapping, isLoaded, loadCart]);
+  const markOfferPending = useCallback((offerId?: string): void => {
+    if (!offerId) return;
+    pendingOfferIdsRef.current.add(offerId);
+    setPendingOfferIds((current) => addSetValue(current, offerId));
+  }, []);
 
-  useEffect(
-    () => () => {
-      loadGenerationRef.current += 1;
-      activeLoadRef.current?.controller.abort();
-      activeLoadRef.current = null;
+  const unmarkOfferPending = useCallback((offerId?: string): void => {
+    if (!offerId) return;
+    pendingOfferIdsRef.current.delete(offerId);
+    if (!lifecycleActiveRef.current) return;
+    setPendingOfferIds((current) => removeSetValue(current, offerId));
+  }, []);
+
+  const addProductToCart = useCallback(
+    async (
+      payload: AddCartItemPayload,
+      options: OfferMutationOptions = {}
+    ): Promise<CartResponse | null> => {
+      if (!clientOwnerKey || clearingRef.current) return null;
+      if (options.offerId && pendingOfferIdsRef.current.has(options.offerId)) {
+        return null;
+      }
+
+      markOfferPending(options.offerId);
+
+      try {
+        return await mutationQueue.enqueue(async (signal) => {
+          const response = await addCartItem(payload, { signal });
+          if (signal.aborted || !lifecycleActiveRef.current) return response;
+          replaceCartFromServer(response.cart);
+          return response;
+        });
+      } finally {
+        unmarkOfferPending(options.offerId);
+      }
     },
-    []
+    [
+      clientOwnerKey,
+      markOfferPending,
+      mutationQueue,
+      replaceCartFromServer,
+      unmarkOfferPending,
+    ]
+  );
+
+  const updateItemQuantity = useCallback(
+    async (
+      cartItemId: string,
+      payload: UpdateCartItemPayload,
+      options: OfferMutationOptions = {}
+    ): Promise<CartResponse | null> => {
+      if (!clientOwnerKey || clearingRef.current || payload.quantity < 1) {
+        return null;
+      }
+      if (pendingItemIdsRef.current.has(cartItemId)) return null;
+
+      markItemPending(cartItemId);
+      markOfferPending(options.offerId);
+
+      try {
+        return await mutationQueue.enqueue(async (signal) => {
+          const previousCart = getCartStateCart(stateRef.current) ?? EMPTY_CART;
+
+          replaceCartFromServer(
+            getCartWithUpdatedQuantity(
+              previousCart,
+              cartItemId,
+              payload.quantity
+            )
+          );
+
+          try {
+            const response = await updateCartItem(cartItemId, payload, {
+              signal,
+            });
+
+            if (!signal.aborted && lifecycleActiveRef.current) {
+              replaceCartFromServer(response.cart);
+            }
+
+            return response;
+          } catch (error) {
+            if (!signal.aborted && lifecycleActiveRef.current) {
+              replaceCartFromServer(previousCart);
+            }
+            throw error;
+          }
+        });
+      } finally {
+        unmarkItemPending(cartItemId);
+        unmarkOfferPending(options.offerId);
+      }
+    },
+    [
+      clientOwnerKey,
+      markItemPending,
+      markOfferPending,
+      mutationQueue,
+      replaceCartFromServer,
+      unmarkItemPending,
+      unmarkOfferPending,
+    ]
+  );
+
+  const removeItemFromCart = useCallback(
+    async (
+      cartItemId: string,
+      options: OfferMutationOptions = {}
+    ): Promise<CartResponse | null> => {
+      if (!clientOwnerKey || clearingRef.current) return null;
+      if (pendingItemIdsRef.current.has(cartItemId)) return null;
+
+      markItemPending(cartItemId);
+      markOfferPending(options.offerId);
+
+      try {
+        return await mutationQueue.enqueue(async (signal) => {
+          const response = await removeCartItem(cartItemId, { signal });
+          if (!signal.aborted && lifecycleActiveRef.current) {
+            replaceCartFromServer(response.cart);
+          }
+          return response;
+        });
+      } finally {
+        unmarkItemPending(cartItemId);
+        unmarkOfferPending(options.offerId);
+      }
+    },
+    [
+      clientOwnerKey,
+      markItemPending,
+      markOfferPending,
+      mutationQueue,
+      replaceCartFromServer,
+      unmarkItemPending,
+      unmarkOfferPending,
+    ]
+  );
+
+  const clearAllCart = useCallback(async (): Promise<CartResponse | null> => {
+    if (
+      !clientOwnerKey ||
+      clearingRef.current ||
+      pendingItemIdsRef.current.size > 0 ||
+      pendingOfferIdsRef.current.size > 0
+    ) {
+      return null;
+    }
+
+    clearingRef.current = true;
+    setIsClearing(true);
+
+    try {
+      return await mutationQueue.enqueue(async (signal) => {
+        const response = await clearCart({ signal });
+        if (!signal.aborted && lifecycleActiveRef.current) {
+          replaceCartFromServer(response.cart);
+        }
+        return response;
+      });
+    } finally {
+      clearingRef.current = false;
+      if (lifecycleActiveRef.current) setIsClearing(false);
+    }
+  }, [clientOwnerKey, mutationQueue, replaceCartFromServer]);
+
+  const removePharmacyOrder = useCallback(
+    async (pharmacyId: string): Promise<Cart | null> => {
+      if (
+        !clientOwnerKey ||
+        clearingRef.current ||
+        pendingItemIdsRef.current.size > 0 ||
+        pendingOfferIdsRef.current.size > 0
+      ) {
+        return null;
+      }
+
+      clearingRef.current = true;
+      setIsClearing(true);
+
+      try {
+        return await mutationQueue.enqueue(async (signal) => {
+          const pharmacyItems = (
+            getCartStateCart(stateRef.current) ?? EMPTY_CART
+          ).items.filter((item) => item.pharmacyId === pharmacyId);
+
+          return removeCartItemsSequentially({
+            itemIds: pharmacyItems.map((item) => item.id),
+            initialCart: getCartStateCart(stateRef.current) ?? EMPTY_CART,
+            signal,
+            removeItem: (cartItemId, requestSignal) =>
+              removeCartItem(cartItemId, { signal: requestSignal }),
+            refreshCart: (requestSignal) => getCart({ signal: requestSignal }),
+            onConfirmedCart: (confirmedCart) => {
+              if (!signal.aborted && lifecycleActiveRef.current) {
+                replaceCartFromServer(confirmedCart);
+              }
+            },
+          });
+        });
+      } finally {
+        clearingRef.current = false;
+        if (lifecycleActiveRef.current) setIsClearing(false);
+      }
+    },
+    [clientOwnerKey, mutationQueue, replaceCartFromServer]
   );
 
   useEffect(() => {
-    const onCartUpdated = (event: Event) => {
-      if (!ownerKeyRef.current) return;
+    if (isBootstrapping || !clientOwnerKey || state.status !== 'idle') return;
+    void performCartLoad().catch(() => undefined);
+  }, [clientOwnerKey, isBootstrapping, performCartLoad, state.status]);
 
-      const detail = (event as CustomEvent<CartUpdatedEventDetail>).detail;
+  useEffect(
+    () => () => {
+      lifecycleActiveRef.current = false;
+      activeLoadRef.current?.controller.abort();
+      activeLoadRef.current = null;
+      mutationQueue.close(
+        new DOMException('Cart session ended.', 'AbortError')
+      );
+      pendingItemIdsRef.current.clear();
+      pendingOfferIdsRef.current.clear();
+      clearingRef.current = false;
+    },
+    [mutationQueue]
+  );
 
-      if (detail?.cart) {
-        setCart(detail.cart);
-        return;
-      }
+  const stateCart = getCartStateCart(state);
+  const cart = stateCart ?? EMPTY_CART;
+  const isLoading = state.status === 'loading';
+  const isRefreshing = state.status === 'refreshing';
+  const isLoaded =
+    state.status === 'success' ||
+    state.status === 'refreshing' ||
+    state.status === 'error';
+  const loadError = state.status === 'error' ? state.error : null;
+  const error = loadError ? CART_LOAD_ERROR_MESSAGE : '';
 
-      if (typeof detail?.totalItems === 'number') {
-        setSnapshot((current) => {
-          const ownerKey = ownerKeyRef.current;
-
-          if (!ownerKey) return current;
-
-          const currentCart =
-            current?.ownerKey === ownerKey ? current.cart : EMPTY_CART;
-
-          return {
-            ownerKey,
-            cart: {
-              ...currentCart,
-              totalItems: detail.totalItems,
-            },
-            isLoaded: true,
-            error: '',
-          };
-        });
-      }
-    };
-
-    window.addEventListener(CART_UPDATED_EVENT, onCartUpdated);
-
-    return () => {
-      window.removeEventListener(CART_UPDATED_EVENT, onCartUpdated);
-    };
-  }, [setCart]);
-
-  const value = useMemo(
+  const value = useMemo<CartContextValue>(
     () => ({
       cart,
+      status: state.status,
       isLoaded,
       isLoading,
+      isRefreshing,
+      loadError,
       error,
+      pendingItemIds,
+      pendingOfferIds,
+      isClearing,
       loadCart,
-      setCart,
-      invalidateCart,
+      refreshCart: performCartLoad,
+      retryCart: performCartLoad,
+      replaceCartFromServer,
+      addProductToCart,
+      updateItemQuantity,
+      removeItemFromCart,
+      clearAllCart,
+      removePharmacyOrder,
     }),
-    [cart, isLoaded, isLoading, error, loadCart, setCart, invalidateCart]
+    [
+      addProductToCart,
+      cart,
+      clearAllCart,
+      error,
+      isClearing,
+      isLoaded,
+      isLoading,
+      isRefreshing,
+      loadError,
+      loadCart,
+      performCartLoad,
+      pendingItemIds,
+      pendingOfferIds,
+      removeItemFromCart,
+      removePharmacyOrder,
+      replaceCartFromServer,
+      state.status,
+      updateItemQuantity,
+    ]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
@@ -258,7 +540,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
 //===================================================================
 
-export function useCart() {
+export function useCart(): CartContextValue {
   const context = useContext(CartContext);
 
   if (!context) throw new Error('useCart must be used inside CartProvider.');

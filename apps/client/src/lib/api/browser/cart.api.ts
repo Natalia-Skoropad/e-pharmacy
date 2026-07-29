@@ -19,6 +19,12 @@ import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
 
 //===================================================================
 
+type CartRequestOptions = Readonly<{
+  signal?: AbortSignal;
+}>;
+
+//===================================================================
+
 async function requestCart(
   path: string,
   options?: JsonResponseRequestOptions
@@ -41,11 +47,13 @@ export function getCart(
 //===================================================================
 
 export function addCartItem(
-  payload: AddCartItemPayload
+  payload: AddCartItemPayload,
+  options: CartRequestOptions = {}
 ): Promise<CartResponse> {
   return requestCart(CLIENT_API_ROUTES.cart.addItem, {
     method: 'POST',
     body: payload,
+    signal: options.signal,
   });
 }
 
@@ -53,24 +61,35 @@ export function addCartItem(
 
 export function updateCartItem(
   cartItemId: string,
-  payload: UpdateCartItemPayload
+  payload: UpdateCartItemPayload,
+  options: CartRequestOptions = {}
 ): Promise<CartResponse> {
   return requestCart(CLIENT_API_ROUTES.cart.item(cartItemId), {
     method: 'PATCH',
     body: payload,
+    signal: options.signal,
   });
 }
 
 //===================================================================
 
-export function removeCartItem(cartItemId: string): Promise<CartResponse> {
+export function removeCartItem(
+  cartItemId: string,
+  options: CartRequestOptions = {}
+): Promise<CartResponse> {
   return requestCart(CLIENT_API_ROUTES.cart.item(cartItemId), {
     method: 'DELETE',
+    signal: options.signal,
   });
 }
 
 //===================================================================
 
-export function clearCart(): Promise<CartResponse> {
-  return requestCart(CLIENT_API_ROUTES.cart.clear, { method: 'DELETE' });
+export function clearCart(
+  options: CartRequestOptions = {}
+): Promise<CartResponse> {
+  return requestCart(CLIENT_API_ROUTES.cart.clear, {
+    method: 'DELETE',
+    signal: options.signal,
+  });
 }

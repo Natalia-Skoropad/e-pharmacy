@@ -21,8 +21,8 @@ import { CART_DESCRIPTION, CART_TITLE } from '@/lib/seo';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 import { ROUTES } from '@/lib/routes';
 import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
-import { useCartMutations } from '@/lib/cart/useCartMutations';
-import { useClientAuthCapabilities } from '@/hooks';
+import { useClientAuthCapabilities } from '@/hooks/useClientAuthCapabilities';
+import { isPartialCartMutationError } from '@/lib/cart/cart-errors';
 import { useCart } from '@/providers/CartProvider';
 
 import {
@@ -49,21 +49,19 @@ function CartPageContent() {
 
   const {
     cart,
-    setCart,
     isLoaded,
     isLoading,
+    isRefreshing,
     error: cartLoadError,
-  } = useCart();
-  const [error, setError] = useState('');
-
-  const {
+    retryCart,
     pendingItemIds,
     isClearing,
     updateItemQuantity,
     removeItemFromCart,
     clearAllCart,
     removePharmacyOrder,
-  } = useCartMutations({ canUseCart });
+  } = useCart();
+  const [error, setError] = useState('');
 
   const [continueShoppingPharmacy, setContinueShoppingPharmacy] =
     useState<CartPharmacyGroup | null>(null);
@@ -140,6 +138,13 @@ function CartPageContent() {
       setError('');
       await removePharmacyOrder(pharmacyId);
     } catch (error) {
+      if (isPartialCartMutationError(error)) {
+        setError(
+          `Some products were removed before the request failed. The cart was refreshed (${error.removedItems}/${error.totalItems}).`
+        );
+        return;
+      }
+
       setError(
         getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.cart.removeOrder,
@@ -203,11 +208,22 @@ function CartPageContent() {
 
           {visibleError ? (
             <div className={css.notice} role="alert">
-              {visibleError}
+              <p>{visibleError}</p>
+              {cartLoadError ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={isLoading || isRefreshing}
+                  onClick={() => void retryCart().catch(() => undefined)}
+                >
+                  Retry loading cart
+                </Button>
+              ) : null}
             </div>
           ) : null}
 
-          {!shouldShowLoading && visibleCart.items.length === 0 ? (
+          {!shouldShowLoading && !visibleError && visibleCart.items.length === 0 ? (
             <div className={css.empty}>
               <h2 className={css.emptyTitle}>Your cart is empty</h2>
 
@@ -317,7 +333,6 @@ function CartPageContent() {
               pharmacyName={continueShoppingPharmacy.pharmacyName}
               cartItems={visibleCart.items}
               onClose={() => setContinueShoppingPharmacy(null)}
-              onCartChange={setCart}
             />
           ) : null}
 

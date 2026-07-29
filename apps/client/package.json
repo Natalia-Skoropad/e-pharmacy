@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "eslint .",
     "type-check": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\" && tsc --noEmit",
-    "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src"
+    "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src",
+    "test:react": "node ../../scripts/test-runners/run-node-ts-tests.mjs src/hooks src/providers",
+    "test:integration": "node ../../scripts/test-runners/run-node-ts-tests.mjs src/lib/cart src/lib/auth"
   },
   "dependencies": {
     "@e-pharmacy/api-client": "workspace:*",

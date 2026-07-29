@@ -84,7 +84,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const copiedEmailTimerRef = useRef<number | null>(null);
 
-  const { cart, error, isLoading, setCart, setError } = useCheckoutCart(
+  const { cart, error, isLoading, replaceCartFromServer, setError } = useCheckoutCart(
     !isBootstrapping,
     canUseClientFeatures
   );
@@ -160,7 +160,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     deliveryAddressValue: deliveryAddress,
     comment,
     canSubmit,
-    setCart,
+    replaceCartFromServer,
     setError,
   });
 

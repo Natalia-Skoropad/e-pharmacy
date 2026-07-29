@@ -432,8 +432,9 @@ The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker f
 
 - Browser API helpers live in `src/lib/api/browser` and are marked as client-only. They are low-level same-origin BFF request wrappers and should not be imported by server components, metadata helpers, sitemap, robots, or server route handlers.
 - Server reads for catalog, SEO, sitemap, robots, and detail metadata use `src/lib/api/server`. Proxy route handlers use `src/lib/api/proxy`.
-- Cart reads use `getCart` from `src/lib/api/browser/cart.api.ts`. Cart mutations go through `src/lib/cart/cart-commands.ts`, which dispatches the cart update event after successful writes. Components should not call cart mutation API helpers directly.
-- `CartProvider` is the single source of cart state in the browser. Its snapshot is keyed by the shared client session generation and is cleared on logout, account switch, and same-user relogin.
+- `CartProvider` is the single cart read/write controller in the browser. It owns the cart state machine, one serialized mutation queue, pending item/offer state, retry/refresh commands, and authoritative server commits. Components do not call cart mutation API helpers directly.
+- Cart state is keyed by the shared client session generation and is destroyed on logout, account switch, blocked/unavailable auth transitions, and same-user relogin. Cancelled or stale reads return `null`; they are never represented as a valid empty cart.
+- Quantity updates are optimistic inside the serialized queue. Add/remove/clear operations are server-authoritative. Multi-item pharmacy removal refreshes the cart after partial failure and reports a structured partial-mutation error.
 - `FavoritesProvider` owns product and pharmacy favorite ID collections. Collection reads are single-flight per session owner, mutations are abortable, and cards never issue one favorite-ID request per item.
 - Auth route guards in `src/routes` are client-specific wrappers around the shared auth guards. The private route-group layout requires an active client capability, while login, registration, and password recovery inherit one guest-preferred layout. Reset-password remains a token route and is not guest-only.
 - Product and pharmacy detail server composition lives under `src/lib/details/server` and is exported through a server-only details barrel.
@@ -464,6 +465,7 @@ Create an `.env.local` file inside `apps/client`. The source of truth for client
 
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_PHARMACY_APP_URL=http://localhost:3002
 API_BASE_URL=http://localhost:4000
 BFF_PROXY_SECRET=
 ```
@@ -473,10 +475,11 @@ BFF_PROXY_SECRET=
 | Variable | Used for | Example |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | canonical URLs, metadata, sitemap, robots, absolute public URLs | `http://localhost:3000` |
+| `NEXT_PUBLIC_PHARMACY_APP_URL` | pharmacy application base URL used for trusted cross-application redirects | `http://localhost:3002` |
 | `API_BASE_URL` | backend URL used only by Next.js server-side data fetches and BFF route handlers | `http://localhost:4000` |
 | `BFF_PROXY_SECRET` | optional shared secret sent by Next.js BFF handlers to the Express API | `local-secret` |
 
-For production, replace these values with the deployed client and API URLs. `NEXT_PUBLIC_SITE_URL` is required for real production deploys so sitemap, robots, canonical URLs, and social metadata do not fall back to localhost. Local builds may use the localhost fallback when this variable is not set.
+For production, replace these values with the deployed client, pharmacy, and API URLs. `NEXT_PUBLIC_PHARMACY_APP_URL` must be an HTTPS application base URL without credentials, query, hash, or the client origin. A configured base path is preserved when `/pharmacy/dashboard` is appended. Invalid production configuration is shown as a controlled application error and never falls back silently to the client home page. `NEXT_PUBLIC_SITE_URL` is required for real production deploys so sitemap, robots, canonical URLs, and social metadata do not fall back to localhost. Local builds may use the localhost fallback when this variable is not set.
 
 For production, set the same `BFF_PROXY_SECRET` value in the client app and API app when the API enforces BFF proxy authentication.
 
@@ -515,6 +518,8 @@ pnpm dev:client
 pnpm build:client
 pnpm lint:client
 pnpm type-check:client
+pnpm --filter @e-pharmacy/client test:react
+pnpm --filter @e-pharmacy/client test:integration
 pnpm check:client
 ```
 
@@ -530,7 +535,7 @@ pnpm type-check
 
 ## Security Notes
 
-- Client-side browser API helpers and cart commands call same-origin `/api/*` route handlers instead of writing directly to the external backend URL.
+- Client-side browser API helpers and the provider-owned cart controller call same-origin `/api/*` route handlers instead of writing directly to the external backend URL.
 - Auth tokens are not stored in `localStorage`; the real auth session is represented by backend-managed httpOnly cookies.
 - The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker and is not used to authorize backend data access.
 - `ClientProtectedRoute` and `ClientGuestOnlyRoute` improve navigation UX, while real authorization stays on the backend. Private routes require an active client account, not merely the `client` role.
@@ -547,6 +552,7 @@ pnpm check:client
 Recommended production checklist:
 
 - set production `NEXT_PUBLIC_SITE_URL`
+- set a valid HTTPS `NEXT_PUBLIC_PHARMACY_APP_URL` that does not reuse the client origin
 - set production `API_BASE_URL`
 - verify API CORS, cookie, and Origin/Referer settings
 - verify private auth/cart/order/review/favorite flows go through same-origin `/api/*` route handlers

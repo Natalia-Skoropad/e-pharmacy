@@ -38,6 +38,9 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
   const authActions = usePublicAuthActionsState();
   const isClientMode = authActions.mode === 'authenticated-client';
   const isPharmacyMode = authActions.mode === 'authenticated-pharmacy';
+  const pharmacyDashboardUrl = isPharmacyMode
+    ? getPharmacyDashboardUrl()
+    : null;
   const logoutAction =
     'logout' in authActions ? authActions.logout : null;
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
@@ -130,15 +133,27 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
           />
         ) : null}
 
-        {isPharmacyMode ? (
+        {isPharmacyMode && pharmacyDashboardUrl ? (
           <LinkButton
-            href={getPharmacyDashboardUrl()}
+            href={pharmacyDashboardUrl}
             variant="secondary"
             fullWidth
             onClick={onClose}
           >
             Pharmacy cabinet
           </LinkButton>
+        ) : null}
+
+        {isPharmacyMode && !pharmacyDashboardUrl ? (
+          <Button
+            type="button"
+            variant="secondary"
+            fullWidth
+            disabled
+            title="The pharmacy application URL is not configured correctly."
+          >
+            Pharmacy cabinet unavailable
+          </Button>
         ) : null}
 
         {logoutAction ? (

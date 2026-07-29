@@ -8,6 +8,8 @@ export type ClientSessionLifecycle = Readonly<{
   generation: number;
 }>;
 
+let nextSessionGeneration = 0;
+
 //===================================================================
 
 export function createClientAuthIdentity(
@@ -19,15 +21,14 @@ export function createClientAuthIdentity(
 
 //===================================================================
 
-export function advanceClientSessionLifecycle(
-  current: ClientSessionLifecycle,
+export function createClientSessionLifecycle(
   authIdentity: string
 ): ClientSessionLifecycle {
-  if (current.authIdentity === authIdentity) return current;
+  nextSessionGeneration += 1;
 
   return {
     authIdentity,
-    generation: current.generation + 1,
+    generation: nextSessionGeneration,
   };
 }
 

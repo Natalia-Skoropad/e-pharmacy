@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useMemo,
+  useState,
   type ReactNode,
 } from 'react';
 
@@ -11,6 +12,7 @@ import { useAuth } from '@e-pharmacy/auth/react';
 
 import {
   createClientAuthIdentity,
+  createClientSessionLifecycle,
   createClientSessionOwnerKey,
 } from './client-session-lifecycle';
 
@@ -36,14 +38,17 @@ function ClientSessionScopeBoundary({
   authIdentity,
   children,
 }: ClientSessionScopeBoundaryProps) {
-  const value = useMemo<ClientSessionScope>(() => {
-    const lifecycle = { authIdentity, generation: 0 } as const;
+  const [lifecycle] = useState(() =>
+    createClientSessionLifecycle(authIdentity)
+  );
 
-    return {
+  const value = useMemo<ClientSessionScope>(
+    () => ({
       ownerKey: createClientSessionOwnerKey(lifecycle),
       generation: lifecycle.generation,
-    };
-  }, [authIdentity]);
+    }),
+    [lifecycle]
+  );
 
   return (
     <ClientSessionScopeContext.Provider value={value}>

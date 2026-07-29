@@ -9,11 +9,14 @@ import { ErrorPage } from '@e-pharmacy/ui/status-pages';
 
 import { ROUTES } from '@/lib/routes';
 import { canAccessClientPrivateRoutes } from '@/lib/auth/client-route-access';
+import { getPharmacyAppConfiguration } from '@/lib/auth/pharmacy-app-config';
 
 import {
   resolveLoginDestination,
   resolveTrustedClientAuthExternalRedirect,
 } from '@/lib/auth';
+
+import { PharmacyAppConfigurationState } from '../PharmacyAppConfigurationState';
 
 //===================================================================
 
@@ -41,7 +44,20 @@ function AuthUnavailableState() {
 
 function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
   const { user } = useAuth();
-  const pharmacyRedirect = user
+  const pharmacyConfiguration =
+    user?.role === 'pharmacy' && user.status === 'active'
+      ? getPharmacyAppConfiguration()
+      : null;
+
+  if (pharmacyConfiguration && !pharmacyConfiguration.ok) {
+    return (
+      <PharmacyAppConfigurationState
+        message={pharmacyConfiguration.message}
+      />
+    );
+  }
+
+  const forbiddenPath = user
     ? resolveLoginDestination({ user, requestedRedirect: null })
     : ROUTES.HOME;
 
@@ -50,7 +66,7 @@ function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
       allowedRoles={['client']}
       authorizeUser={canAccessClientPrivateRoutes}
       loginPath={ROUTES.LOGIN}
-      forbiddenPath={pharmacyRedirect}
+      forbiddenPath={forbiddenPath}
       resolveExternalRedirect={resolveTrustedClientAuthExternalRedirect}
       loadingFallback={<LoadingSpinner label="Checking your session..." />}
       authUnavailableFallback={<AuthUnavailableState />}

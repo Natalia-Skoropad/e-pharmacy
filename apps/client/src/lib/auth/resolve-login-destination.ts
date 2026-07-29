@@ -6,37 +6,16 @@ import type { AuthUser } from '@e-pharmacy/types/auth';
 
 import { ROUTES, CLIENT_ALLOWED_REDIRECT_PREFIXES } from '@/lib/routes';
 
-//===================================================================
-
-const PHARMACY_DASHBOARD_PATH = '/pharmacy/dashboard';
-const DEVELOPMENT_PHARMACY_APP_URL = 'http://localhost:3002';
-
-//===================================================================
-
-function getPharmacyAppOrigin(): string | null {
-  const configuredUrl = process.env.NEXT_PUBLIC_PHARMACY_APP_URL?.trim();
-  const candidate =
-    configuredUrl ||
-    (process.env.NODE_ENV !== 'production'
-      ? DEVELOPMENT_PHARMACY_APP_URL
-      : null);
-
-  if (!candidate) return null;
-
-  try {
-    return new URL(candidate).origin;
-  } catch {
-    return null;
-  }
-}
+import {
+  getPharmacyAppConfiguration,
+  requirePharmacyAppConfiguration,
+} from './pharmacy-app-config';
 
 //===================================================================
 
-export function getPharmacyDashboardUrl(): string {
-  const pharmacyOrigin = getPharmacyAppOrigin();
-  return pharmacyOrigin
-    ? new URL(PHARMACY_DASHBOARD_PATH, pharmacyOrigin).toString()
-    : ROUTES.HOME;
+export function getPharmacyDashboardUrl(): string | null {
+  const result = getPharmacyAppConfiguration();
+  return result.ok ? result.config.dashboardUrl : null;
 }
 
 //===================================================================
@@ -44,12 +23,12 @@ export function getPharmacyDashboardUrl(): string {
 export function resolveTrustedClientAuthExternalRedirect(
   candidate: string
 ): string | null {
-  const pharmacyOrigin = getPharmacyAppOrigin();
-  if (!pharmacyOrigin) return null;
+  const result = getPharmacyAppConfiguration();
+  if (!result.ok) return null;
 
   return getTrustedExternalRedirectUrl(candidate, {
-    allowedOrigins: [pharmacyOrigin],
-    allowedPathPrefixes: ['/pharmacy'],
+    allowedOrigins: [result.config.origin],
+    allowedPathPrefixes: [result.config.allowedPathPrefix],
   });
 }
 
@@ -67,7 +46,7 @@ export function resolveLoginDestination({
   }
 
   if (user.role === 'pharmacy') {
-    return getPharmacyDashboardUrl();
+    return requirePharmacyAppConfiguration().dashboardUrl;
   }
 
   if (user.role !== 'client') {

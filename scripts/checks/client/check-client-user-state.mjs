@@ -50,6 +50,9 @@ for (const removedPath of [
   'apps/client/src/hooks/useFavoriteRefresh.ts',
   'apps/client/src/hooks/useFavoriteStatusRefresh.ts',
   'apps/client/src/hooks/hooks-lifecycle-contracts.test.ts',
+  'apps/client/src/lib/cart/useCartMutations.ts',
+  'apps/client/src/lib/cart/cart-commands.ts',
+  'apps/client/src/lib/cart/cart-events.ts',
 ]) {
   assert.equal(
     await exists(removedPath),
@@ -81,7 +84,7 @@ const favoritesProvider = await read(
 
 for (const contract of [
   'useClientSessionScope',
-  'activeCollectionRef',
+  'createFavoriteCollectionRequestRegistry',
   'activeMutationsRef',
   'loadCollection',
   'toggleFavorite',
@@ -116,8 +119,19 @@ const cartProvider = await read(
   'apps/client/src/providers/CartProvider/CartProvider.tsx'
 );
 
-assert.match(cartProvider, /useClientSessionScope/);
-assert.match(cartProvider, /ownerKeyRef\.current !== ownerKey/);
+for (const contract of [
+  'useClientSessionScope',
+  'createCartMutationQueue',
+  'createInitialCartState',
+  'refreshCart: performCartLoad',
+  'retryCart: performCartLoad',
+  'replaceCartFromServer',
+]) {
+  assert.match(cartProvider, new RegExp(contract));
+}
+
+assert.doesNotMatch(cartProvider, /CART_UPDATED_EVENT|dispatchCartUpdated/);
+assert.doesNotMatch(cartProvider, /invalidateCart/);
 
 const sessionScope = await read(
   'apps/client/src/providers/AuthProvider/ClientSessionScope.tsx'
@@ -133,5 +147,5 @@ const authProvider = await read(
 assert.match(authProvider, /ClientSessionScopeProvider/);
 
 console.log(
-  'Client user-state check passed (keyed session boundary, one favorite collection owner, scoped reviews, cart remount on session change).'
+  'Client user-state check passed (keyed session boundary, one favorite collection owner, scoped reviews, serialized cart controller).'
 );

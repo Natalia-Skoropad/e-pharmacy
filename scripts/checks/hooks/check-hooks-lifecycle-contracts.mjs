@@ -45,8 +45,8 @@ const mutationContracts = [
     ['submitLockRef'],
   ],
   [
-    'apps/client/src/lib/cart/useCartMutations.ts',
-    ['mutationVersionRef', 'clearingLockRef'],
+    'apps/client/src/providers/CartProvider/CartProvider.tsx',
+    ['createCartMutationQueue', 'pendingItemIdsRef', 'clearingRef'],
   ],
 ];
 
@@ -200,7 +200,7 @@ const favoritesProvider = await readRepositoryFile(
 
 for (const contract of [
   'useClientSessionScope',
-  'activeCollectionRef',
+  'createFavoriteCollectionRequestRegistry',
   'activeMutationsRef',
   'AbortController',
 ]) {
@@ -230,9 +230,9 @@ for (const contract of ['ClientSessionScopeBoundary', 'key={authIdentity}']) {
 for (const contract of [
   'clientOwnerKey',
   'useClientSessionScope',
-  'loadGenerationRef',
-  'AbortController',
-  'ownerKeyRef.current !== ownerKey',
+  'activeLoadRef',
+  'createCartMutationQueue',
+  'lifecycleActiveRef',
 ]) {
   if (!cartProvider.includes(contract)) {
     failures.push(

@@ -12,7 +12,7 @@ export function useCheckoutCart(
     cart,
     isLoading: isCartLoading,
     error: cartLoadError,
-    setCart,
+    replaceCartFromServer,
   } = useCart();
 
   const [error, setError] = useState('');
@@ -22,7 +22,7 @@ export function useCheckoutCart(
     cart,
     error: canUseCart ? error || cartLoadError : '',
     isLoading: !isAuthSettled || (isAuthenticated && isCartLoading),
-    setCart,
+    replaceCartFromServer,
     setError,
   };
 }

@@ -32,7 +32,7 @@ import type {
 
 import { getProducts } from '@/lib/api/browser';
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
-import { addCartItem } from '@/lib/cart/cart-commands';
+import { useCart } from '@/providers/CartProvider';
 
 import { CartOrderLimitModal } from '@/components/common';
 
@@ -45,7 +45,6 @@ type ContinueShoppingModalProps = {
   pharmacyName: string;
   cartItems: Cart['items'];
   onClose: () => void;
-  onCartChange: (cart: Cart) => void;
 };
 
 //===================================================================
@@ -72,7 +71,6 @@ function ContinueShoppingModal({
   pharmacyName,
   cartItems,
   onClose,
-  onCartChange,
 }: ContinueShoppingModalProps) {
   const titleId = useId();
   const searchId = useId();
@@ -88,11 +86,10 @@ function ContinueShoppingModal({
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<ProductDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [addingProductIds, setAddingProductIds] = useState<Set<string>>(
-    () => new Set()
-  );
   const [error, setError] = useState('');
   const [orderLimitMessage, setOrderLimitMessage] = useState('');
+
+  const { addProductToCart, pendingOfferIds } = useCart();
 
   const cartProductIds = useMemo(() => {
     return new Set(
@@ -185,36 +182,26 @@ function ContinueShoppingModal({
   }, [searchValue, selectedCategory, pharmacyId]);
 
   const handleAddProduct = async (productId: string) => {
-    if (addingProductIds.has(productId)) return;
-
-    setAddingProductIds((current) => {
-      const next = new Set(current);
-      next.add(productId);
-      return next;
-    });
+    const operationKey = `${pharmacyId}:${productId}`;
+    if (pendingOfferIds.has(operationKey)) return;
 
     try {
       setError('');
 
-      const response = await addCartItem({
-        productId,
-        pharmacyId,
-        quantity: 1,
-      });
-
-      onCartChange(response.cart);
+      await addProductToCart(
+        {
+          productId,
+          pharmacyId,
+          quantity: 1,
+        },
+        { offerId: operationKey }
+      );
     } catch (error) {
       if (isCartOrderLimitError(error)) {
         setOrderLimitMessage('limit');
       } else {
         setError('Could not add this product to the order.');
       }
-    } finally {
-      setAddingProductIds((current) => {
-        const next = new Set(current);
-        next.delete(productId);
-        return next;
-      });
     }
   };
 
@@ -306,7 +293,7 @@ function ContinueShoppingModal({
             <ul className={css.productList}>
               {products.map((product) => {
                 const isInCart = cartProductIds.has(product.id);
-                const isAdding = addingProductIds.has(product.id);
+                const isAdding = pendingOfferIds.has(`${pharmacyId}:${product.id}`);
                 const categoryLabel =
                   PRODUCT_CATEGORY_LABELS[product.category] ?? product.category;
 

@@ -11,12 +11,10 @@ import {
 
 import {
   REVIEW_FORM_FIELDS,
-  REVIEW_INITIAL_VALUES,
   hasValidationErrors,
   isReviewFormValid,
   markAllFieldsTouched,
   validateReviewForm,
-  type ReviewFormValues,
   type ReviewTouchedFields,
 } from '@e-pharmacy/validation/reviews';
 
@@ -24,6 +22,11 @@ import { isAbortError } from '@/lib/async/is-abort-error';
 import { useClientSessionScope } from '@/providers/AuthProvider';
 
 import { useClientAuthCapabilities } from './useClientAuthCapabilities';
+
+import {
+  createReviewFormStore,
+  type ReviewFormState,
+} from './review-form-store';
 
 //===================================================================
 
@@ -55,20 +58,6 @@ type UseReviewFormParams = Readonly<{
   clientAccountRequiredMessage: string;
 }>;
 
-type ReviewFormState = Readonly<{
-  ownerKey: string;
-  values: ReviewFormValues;
-  touchedFields: ReviewTouchedFields;
-  isSubmitting: boolean;
-}>;
-
-type ReviewFormStore = Readonly<{
-  getSnapshot: () => ReviewFormState;
-  subscribe: (listener: () => void) => () => void;
-  update: (update: (current: ReviewFormState) => ReviewFormState) => void;
-  reset: () => void;
-}>;
-
 export type ReviewFormController = Readonly<{
   reviewText: string;
   reviewRating: number;
@@ -83,47 +72,6 @@ export type ReviewFormController = Readonly<{
   handleReviewRatingChange: (rating: number) => void;
   handleReviewSubmit: () => Promise<void>;
 }>;
-
-//===================================================================
-
-function createReviewFormState(ownerKey: string): ReviewFormState {
-  return {
-    ownerKey,
-    values: REVIEW_INITIAL_VALUES,
-    touchedFields: {},
-    isSubmitting: false,
-  };
-}
-
-//===================================================================
-
-function createReviewFormStore(ownerKey: string): ReviewFormStore {
-  let state = createReviewFormState(ownerKey);
-  const listeners = new Set<() => void>();
-
-  const emit = (): void => {
-    for (const listener of listeners) listener();
-  };
-
-  return {
-    getSnapshot: () => state,
-    subscribe: (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    update: (update) => {
-      const nextState = update(state);
-      if (nextState === state) return;
-
-      state = nextState;
-      emit();
-    },
-    reset: () => {
-      state = createReviewFormState(ownerKey);
-      emit();
-    },
-  };
-}
 
 //===================================================================
 

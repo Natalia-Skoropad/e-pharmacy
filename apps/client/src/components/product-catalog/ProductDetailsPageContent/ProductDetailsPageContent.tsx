@@ -65,7 +65,6 @@ import {
 import { createProductReview, getProductDetails } from '@/lib/api/browser';
 
 import { useCart } from '@/providers/CartProvider';
-import { useCartMutations } from '@/lib/cart/useCartMutations';
 
 import {
   DeliveryInfoCard,
@@ -153,15 +152,15 @@ function ProductDetailsPageContent({
     isActivePharmacyUser,
   } = useClientAuthCapabilities();
   const canUseCart = canUseClientFeatures;
-  const { cart, loadCart } = useCart();
-
   const {
+    cart,
+    loadCart,
     pendingItemIds,
     pendingOfferIds,
     addProductToCart,
     updateItemQuantity,
     removeItemFromCart,
-  } = useCartMutations({ canUseCart });
+  } = useCart();
 
   const [productDetails, setProductDetails] = useState(product);
   const [activeTab, setActiveTab] = useState<ProductTab>('about');

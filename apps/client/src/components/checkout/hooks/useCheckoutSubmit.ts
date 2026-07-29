@@ -6,7 +6,6 @@ import type { CheckoutOrderPayload } from '@e-pharmacy/types/orders';
 import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types/orders';
 import { normalizePhoneInput } from '@e-pharmacy/validation/order';
 
-import { dispatchCartUpdated } from '@/lib/cart/cart-events';
 import { groupCartByPharmacy } from '@/lib/cart/cart-groups';
 import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 import { getStockValidationError } from '@/lib/checkout';
@@ -26,7 +25,7 @@ type UseCheckoutSubmitParams = {
   deliveryAddressValue: string;
   comment: string;
   canSubmit: boolean;
-  setCart: (cart: Cart) => void;
+  replaceCartFromServer: (cart: Cart) => void;
   setError: (message: string) => void;
 };
 
@@ -42,7 +41,7 @@ export function useCheckoutSubmit({
   deliveryAddressValue,
   comment,
   canSubmit,
-  setCart,
+  replaceCartFromServer,
   setError,
 }: UseCheckoutSubmitParams) {
   const router = useRouter();
@@ -86,7 +85,7 @@ export function useCheckoutSubmit({
       );
 
       if (!latestOrderGroup) {
-        setCart(latestCartResponse.cart);
+        replaceCartFromServer(latestCartResponse.cart);
         setError(APP_ERROR_MESSAGES.checkout.staleOrder);
         return;
       }
@@ -94,7 +93,7 @@ export function useCheckoutSubmit({
       const stockError = getStockValidationError(latestOrderGroup);
 
       if (stockError) {
-        setCart(latestCartResponse.cart);
+        replaceCartFromServer(latestCartResponse.cart);
         setError(stockError);
         return;
       }
@@ -126,8 +125,7 @@ export function useCheckoutSubmit({
 
       if (controller.signal.aborted || !mountedRef.current) return;
 
-      setCart(response.cart);
-      dispatchCartUpdated(response.cart);
+      replaceCartFromServer(response.cart);
       shouldResetSubmitting = false;
       router.push(buildOrderPath(response.order));
     } catch (error) {

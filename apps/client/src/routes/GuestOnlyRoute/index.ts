@@ -1,1 +1,1 @@
-export { default } from './GuestOnlyRoute';
+export { default as ClientGuestOnlyRoute } from './GuestOnlyRoute';

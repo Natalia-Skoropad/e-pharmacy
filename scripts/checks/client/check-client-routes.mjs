@@ -108,6 +108,36 @@ for (const routeName of ['LOGIN', 'REGISTER', 'PASSWORD_RECOVERY']) {
 assert.match(accessPolicy, /CLIENT_TOKEN_ACCESS_ROUTES/);
 assert.match(accessPolicy, /ROUTES\.RESET_PASSWORD/);
 
+
+const routeBarrel = await readFile(
+  path.join(root, 'apps/client/src/routes/index.ts'),
+  'utf8'
+);
+assert.match(routeBarrel, /ClientProtectedRoute/);
+assert.match(routeBarrel, /ClientGuestOnlyRoute/);
+assert.doesNotMatch(routeBarrel, /export \{ default \} from/);
+
+const pharmacyConfig = await readFile(
+  path.join(root, 'apps/client/src/lib/auth/pharmacy-app-config-core.ts'),
+  'utf8'
+);
+for (const contract of [
+  'INSECURE_PRODUCTION_URL',
+  'CREDENTIALS_NOT_ALLOWED',
+  'SAME_ORIGIN_NOT_ALLOWED',
+  'allowedPathPrefix',
+  'dashboardUrl',
+]) {
+  assert.match(pharmacyConfig, new RegExp(contract));
+}
+
+const loginDestination = await readFile(
+  path.join(root, 'apps/client/src/lib/auth/resolve-login-destination.ts'),
+  'utf8'
+);
+assert.match(loginDestination, /requirePharmacyAppConfiguration/);
+assert.doesNotMatch(loginDestination, /\? ROUTES\.HOME/);
+
 console.log(
   `Client route-access check passed (${privatePages.length} private pages, 3 guest-preferred routes, reset-password token policy).`
 );

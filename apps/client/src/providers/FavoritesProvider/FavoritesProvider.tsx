@@ -24,6 +24,11 @@ import { isAbortError } from '@/lib/async/is-abort-error';
 import { useClientAuthCapabilities } from '@/hooks/useClientAuthCapabilities';
 import { useClientSessionScope } from '@/providers/AuthProvider';
 
+import {
+  createFavoriteCollectionRequestRegistry,
+  type FavoriteCollectionRequestRegistry,
+} from './favorite-collection-request-registry';
+
 //===================================================================
 
 export type FavoriteEntityType = 'product' | 'pharmacy';
@@ -45,13 +50,6 @@ type FavoritesState = Readonly<{
   product: FavoriteCollectionState;
   pharmacy: FavoriteCollectionState;
   pendingKeys: ReadonlySet<string>;
-}>;
-
-type ActiveCollectionRequest = Readonly<{
-  scope: string;
-  generation: number;
-  controller: AbortController;
-  promise: Promise<ReadonlySet<string> | null>;
 }>;
 
 type ActiveMutation = Readonly<{
@@ -152,12 +150,10 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   );
 
   const stateRef = useRef(state);
-  const activeCollectionRef = useRef<
-    Record<FavoriteEntityType, ActiveCollectionRequest | null>
-  >({
-    product: null,
-    pharmacy: null,
-  });
+  const collectionRequests = useMemo<FavoriteCollectionRequestRegistry>(
+    () => createFavoriteCollectionRequestRegistry(),
+    []
+  );
 
   const activeMutationsRef = useRef(new Map<string, ActiveMutation>());
 
@@ -186,18 +182,17 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         generation: lifecycleRef.current.generation + 1,
       };
 
-      for (const request of Object.values(activeCollectionRef.current)) {
-        request?.controller.abort();
-      }
+      collectionRequests.abortAll(
+        new DOMException('Favorite session ended.', 'AbortError')
+      );
 
       for (const mutation of activeMutationsRef.current.values()) {
         mutation.controller.abort();
       }
 
-      activeCollectionRef.current = { product: null, pharmacy: null };
       activeMutationsRef.current.clear();
     },
-    []
+    [collectionRequests]
   );
 
   const loadCollection = useCallback(
@@ -219,17 +214,11 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         return currentCollection.ids;
       }
 
-      const activeRequest = activeCollectionRef.current[entityType];
-      if (
-        activeRequest?.scope === scope &&
-        activeRequest.generation === generation
-      ) {
-        return activeRequest.promise;
-      }
-
-      activeRequest?.controller.abort();
-
-      const controller = new AbortController();
+      const activeRequest = collectionRequests.get<ReadonlySet<string> | null>(
+        entityType,
+        scope
+      );
+      if (activeRequest) return activeRequest;
 
       updateState(scope, (current) => ({
         ...current,
@@ -240,14 +229,14 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         },
       }));
 
-      const promise = (
-        entityType === 'product'
-          ? getFavoriteProductIds({ signal: controller.signal })
-          : getFavoritePharmacyIds({ signal: controller.signal })
-      )
-        .then((response) => {
+      return collectionRequests.load(entityType, scope, async (signal) => {
+        try {
+          const response = await (entityType === 'product'
+            ? getFavoriteProductIds({ signal })
+            : getFavoritePharmacyIds({ signal }));
+
           if (
-            controller.signal.aborted ||
+            signal.aborted ||
             lifecycleRef.current.scope !== scope ||
             lifecycleRef.current.generation !== generation
           ) {
@@ -266,10 +255,9 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
           }));
 
           return ids;
-        })
-        .catch((error: unknown) => {
+        } catch (error) {
           if (
-            controller.signal.aborted ||
+            signal.aborted ||
             isAbortError(error) ||
             lifecycleRef.current.scope !== scope ||
             lifecycleRef.current.generation !== generation
@@ -287,29 +275,10 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
           }));
 
           throw error;
-        })
-        .finally(() => {
-          const currentRequest = activeCollectionRef.current[entityType];
-
-          if (
-            currentRequest?.scope === scope &&
-            currentRequest.generation === generation &&
-            currentRequest.controller === controller
-          ) {
-            activeCollectionRef.current[entityType] = null;
-          }
-        });
-
-      activeCollectionRef.current[entityType] = {
-        scope,
-        generation,
-        controller,
-        promise,
-      };
-
-      return promise;
+        }
+      });
     },
-    [authScope, ownerId, updateState]
+    [authScope, collectionRequests, ownerId, updateState]
   );
 
   const toggleFavorite = useCallback(

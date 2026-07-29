@@ -43,7 +43,12 @@ import {
   validatePharmacyDocuments,
 } from '@e-pharmacy/validation/files';
 
-import { getClientAuthErrorMessage, resolveLoginDestination } from '@/lib/auth';
+import {
+  getClientAuthErrorMessage,
+  isPharmacyAppConfigurationError,
+  resolveLoginDestination,
+} from '@/lib/auth';
+
 import { ROUTES } from '@/lib/routes';
 import { REGISTER_TITLE } from '@/lib/seo';
 
@@ -104,9 +109,9 @@ function RegisterForm() {
     REGISTER_INITIAL_VALUES
   );
 
-  const [pharmacyDocuments, setPharmacyDocuments] = useState<BrowserUploadFile[]>(
-    []
-  );
+  const [pharmacyDocuments, setPharmacyDocuments] = useState<
+    BrowserUploadFile[]
+  >([]);
 
   const [errors, setErrors] = useState<PharmacyRegisterErrors>({});
   const [touchedFields, setTouchedFields] =
@@ -233,7 +238,9 @@ function RegisterForm() {
       router.replace(destination);
     } catch (error) {
       toast.error(
-        getClientAuthErrorMessage(getAuthErrorCode(error, 'register'))
+        isPharmacyAppConfigurationError(error)
+          ? error.message
+          : getClientAuthErrorMessage(getAuthErrorCode(error, 'register'))
       );
     } finally {
       setIsSubmitting(false);
@@ -256,6 +263,7 @@ function RegisterForm() {
             label="I am a client"
             onChange={handleAccountTypeChange}
           />
+
           <RadioOption
             name="register-account-type"
             value="pharmacy"

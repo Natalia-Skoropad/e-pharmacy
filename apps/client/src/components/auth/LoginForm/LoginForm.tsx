@@ -27,7 +27,12 @@ import {
 
 import { ROUTES } from '@/lib/routes';
 import { LOGIN_TITLE } from '@/lib/seo';
-import { getClientAuthErrorMessage, resolveLoginDestination } from '@/lib/auth';
+
+import {
+  getClientAuthErrorMessage,
+  isPharmacyAppConfigurationError,
+  resolveLoginDestination,
+} from '@/lib/auth';
 
 import css from '../shared/AuthForm.module.css';
 
@@ -149,10 +154,11 @@ function LoginForm() {
 
       router.replace(destination);
     } catch (error) {
-      const message =
-        error instanceof Error &&
-        (error.message.includes('Pharmacy account') ||
-          error.message.includes('Client account'))
+      const message = isPharmacyAppConfigurationError(error)
+        ? error.message
+        : error instanceof Error &&
+            (error.message.includes('Pharmacy account') ||
+              error.message.includes('Client account'))
           ? error.message
           : getClientAuthErrorMessage(getAuthErrorCode(error, 'login'));
 
@@ -178,6 +184,7 @@ function LoginForm() {
             label="I am a client"
             onChange={setAccountType}
           />
+
           <RadioOption
             name="login-account-type"
             value="pharmacy"

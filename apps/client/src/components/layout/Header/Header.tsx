@@ -34,6 +34,10 @@ function Header() {
   const isClientMode = authActions.mode === 'authenticated-client';
   const isPharmacyMode = authActions.mode === 'authenticated-pharmacy';
 
+  const pharmacyDashboardUrl = isPharmacyMode
+    ? getPharmacyDashboardUrl()
+    : null;
+
   const logoutAction = 'logout' in authActions ? authActions.logout : null;
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -124,15 +128,27 @@ function Header() {
             />
           ) : null}
 
-          {isPharmacyMode ? (
+          {isPharmacyMode && pharmacyDashboardUrl ? (
             <LinkButton
               className={css.pharmacyCabinetLink}
-              href={getPharmacyDashboardUrl()}
+              href={pharmacyDashboardUrl}
               variant="secondary"
               size="sm"
             >
               Pharmacy cabinet
             </LinkButton>
+          ) : null}
+
+          {isPharmacyMode && !pharmacyDashboardUrl ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled
+              title="The pharmacy application URL is not configured correctly."
+            >
+              Pharmacy cabinet unavailable
+            </Button>
           ) : null}
 
           {logoutAction ? (

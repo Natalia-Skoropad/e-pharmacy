@@ -4,8 +4,8 @@ import test from 'node:test';
 import type { AuthUser } from '@e-pharmacy/types/auth';
 
 import {
-  advanceClientSessionLifecycle,
   createClientAuthIdentity,
+  createClientSessionLifecycle,
   createClientSessionOwnerKey,
 } from './client-session-lifecycle';
 
@@ -22,32 +22,35 @@ const ACTIVE_CLIENT: AuthUser = {
 
 //===================================================================
 
-test('same-user relogin receives a new session owner key', () => {
-  const authenticated = createClientAuthIdentity(
+test('same auth identity receives a new owner key for every mounted session', () => {
+  const authIdentity = createClientAuthIdentity(
     'authenticated',
     ACTIVE_CLIENT
   );
-  const unauthenticated = createClientAuthIdentity('unauthenticated', null);
 
-  const initial = { authIdentity: authenticated, generation: 0 } as const;
-  const afterLogout = advanceClientSessionLifecycle(initial, unauthenticated);
-  const afterRelogin = advanceClientSessionLifecycle(
-    afterLogout,
-    authenticated
-  );
+  const firstSession = createClientSessionLifecycle(authIdentity);
+  const secondSession = createClientSessionLifecycle(authIdentity);
 
   assert.notEqual(
-    createClientSessionOwnerKey(initial),
-    createClientSessionOwnerKey(afterRelogin)
+    createClientSessionOwnerKey(firstSession),
+    createClientSessionOwnerKey(secondSession)
   );
-  assert.equal(afterRelogin.generation, 2);
+  assert.ok(secondSession.generation > firstSession.generation);
 });
 
 //===================================================================
 
-test('stable auth identity keeps the same generation', () => {
-  const identity = createClientAuthIdentity('authenticated', ACTIVE_CLIENT);
-  const lifecycle = { authIdentity: identity, generation: 4 } as const;
+test('auth identity includes authentication, role and account status', () => {
+  assert.notEqual(
+    createClientAuthIdentity('authenticated', ACTIVE_CLIENT),
+    createClientAuthIdentity('unauthenticated', null)
+  );
 
-  assert.equal(advanceClientSessionLifecycle(lifecycle, identity), lifecycle);
+  assert.notEqual(
+    createClientAuthIdentity('authenticated', ACTIVE_CLIENT),
+    createClientAuthIdentity('authenticated', {
+      ...ACTIVE_CLIENT,
+      status: 'blocked',
+    })
+  );
 });
