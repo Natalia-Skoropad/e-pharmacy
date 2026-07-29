@@ -1,7 +1,5 @@
 import { CART_DESCRIPTION, CART_TITLE, createPageMetadata } from '@/lib/seo';
 import { ROUTES } from '@/lib/routes';
-import { ProtectedRoute } from '@/routes';
-
 import { CartPageContent } from '@/components/cart';
 
 //===================================================================
@@ -16,11 +14,7 @@ export const metadata = createPageMetadata({
 //===================================================================
 
 function CartPage() {
-  return (
-    <ProtectedRoute>
-      <CartPageContent />
-    </ProtectedRoute>
-  );
+  return <CartPageContent />;
 }
 
 export default CartPage;

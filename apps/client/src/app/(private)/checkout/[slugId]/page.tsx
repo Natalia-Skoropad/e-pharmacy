@@ -8,8 +8,6 @@ import {
 } from '@/lib/seo';
 
 import { ROUTES, getIdFromSlugId } from '@/lib/routes';
-import { ProtectedRoute } from '@/routes';
-
 import { CheckoutPageContent } from '@/components/checkout';
 
 //===================================================================
@@ -47,11 +45,7 @@ async function CheckoutPharmacyPage({ params }: CheckoutPharmacyPageProps) {
 
   const selectedPharmacyId = checkoutPharmacyId as string;
 
-  return (
-    <ProtectedRoute>
-      <CheckoutPageContent checkoutPharmacyId={selectedPharmacyId} />
-    </ProtectedRoute>
-  );
+  return <CheckoutPageContent checkoutPharmacyId={selectedPharmacyId} />;
 }
 
 export default CheckoutPharmacyPage;

@@ -5,8 +5,6 @@ import {
 } from '@/lib/seo';
 
 import { ROUTES } from '@/lib/routes';
-import { ProtectedRoute } from '@/routes';
-
 import { ProfilePageContent } from '@/components/profile';
 
 //===================================================================
@@ -21,11 +19,7 @@ export const metadata = createPageMetadata({
 //===================================================================
 
 function ProfilePage() {
-  return (
-    <ProtectedRoute>
-      <ProfilePageContent />
-    </ProtectedRoute>
-  );
+  return <ProfilePageContent />;
 }
 
 export default ProfilePage;

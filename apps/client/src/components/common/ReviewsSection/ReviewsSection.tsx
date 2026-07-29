@@ -25,7 +25,9 @@ type ReviewsSectionProps = Readonly<{
   reviewError?: string;
   reviewTouchedFields: ReviewTouchedFields;
   isReviewSubmitting: boolean;
-  isAuthenticated: boolean;
+  canCreateReview: boolean;
+  reviewAccessMessage?: string;
+  isAuthUnavailable?: boolean;
   isUnavailable?: boolean;
   emptyTitle?: string;
   emptyText?: string;
@@ -50,7 +52,9 @@ function ReviewsSection({
   reviewError,
   reviewTouchedFields,
   isReviewSubmitting,
-  isAuthenticated,
+  canCreateReview,
+  reviewAccessMessage = '',
+  isAuthUnavailable = false,
   isUnavailable = false,
   emptyTitle = 'No reviews yet',
   emptyText = 'Reviews will appear here after clients share their feedback.',
@@ -111,15 +115,18 @@ function ReviewsSection({
           <Button
             type="submit"
             className={css.reviewSubmitButton}
-            disabled={!isReviewValid || isReviewSubmitting || !isAuthenticated}
+            disabled={
+              !isReviewValid ||
+              isReviewSubmitting ||
+              isAuthUnavailable ||
+              !canCreateReview
+            }
           >
             {isReviewSubmitting ? 'Sending...' : 'Send review'}
           </Button>
 
-          {!isAuthenticated ? (
-            <p className={css.authNote}>
-              Only logged-in users can submit reviews.
-            </p>
+          {reviewAccessMessage ? (
+            <p className={css.authNote}>{reviewAccessMessage}</p>
           ) : null}
         </div>
       </form>

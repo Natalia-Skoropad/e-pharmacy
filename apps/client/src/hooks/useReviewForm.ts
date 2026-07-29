@@ -1,7 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useClientAuthCapabilities } from './useClientAuthCapabilities';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 
 import {
   REVIEW_FORM_FIELDS,
@@ -14,38 +20,75 @@ import {
   type ReviewTouchedFields,
 } from '@e-pharmacy/validation/reviews';
 
+import { isAbortError } from '@/lib/async/is-abort-error';
+import { useClientSessionScope } from '@/providers/AuthProvider';
+
+import { useClientAuthCapabilities } from './useClientAuthCapabilities';
+
 //===================================================================
 
-type ReviewPayload = {
+type ReviewPayload = Readonly<{
   rating: number;
   comment: string;
-};
+}>;
 
-type ReviewNotifier = {
+type ReviewRequestOptions = Readonly<{
+  signal: AbortSignal;
+}>;
+
+type ReviewNotifier = Readonly<{
   success: (message: string) => void;
   error: (message: string) => void;
-};
+}>;
 
-type UseReviewFormParams = {
-  createReview: (payload: ReviewPayload) => Promise<unknown>;
+type UseReviewFormParams = Readonly<{
+  scopeKey: string;
+  createReview: (
+    payload: ReviewPayload,
+    options: ReviewRequestOptions
+  ) => Promise<unknown>;
   notifier: ReviewNotifier;
   successMessage: string;
   errorMessage: string;
-  authRequiredMessage?: string;
-};
+  authRequiredMessage: string;
+  authUnavailableMessage: string;
+  clientAccountRequiredMessage: string;
+}>;
 
 type ReviewFormState = Readonly<{
-  identity: string | null;
+  ownerKey: string;
   values: ReviewFormValues;
   touchedFields: ReviewTouchedFields;
   isSubmitting: boolean;
 }>;
 
+type ReviewFormStore = Readonly<{
+  getSnapshot: () => ReviewFormState;
+  subscribe: (listener: () => void) => () => void;
+  update: (update: (current: ReviewFormState) => ReviewFormState) => void;
+  reset: () => void;
+}>;
+
+export type ReviewFormController = Readonly<{
+  reviewText: string;
+  reviewRating: number;
+  reviewErrors: ReturnType<typeof validateReviewForm>;
+  reviewTouchedFields: ReviewTouchedFields;
+  isReviewValid: boolean;
+  canCreateReview: boolean;
+  isAuthUnavailable: boolean;
+  reviewAccessMessage: string;
+  isReviewSubmitting: boolean;
+  handleReviewTextChange: (value: string) => void;
+  handleReviewRatingChange: (rating: number) => void;
+  handleReviewSubmit: () => Promise<void>;
+}>;
+
 //===================================================================
 
-function createReviewFormState(identity: string | null): ReviewFormState {
+function createReviewFormState(ownerKey: string): ReviewFormState {
   return {
-    identity,
+    ownerKey,
     values: REVIEW_INITIAL_VALUES,
     touchedFields: {},
     isSubmitting: false,
@@ -54,39 +97,71 @@ function createReviewFormState(identity: string | null): ReviewFormState {
 
 //===================================================================
 
+function createReviewFormStore(ownerKey: string): ReviewFormStore {
+  let state = createReviewFormState(ownerKey);
+  const listeners = new Set<() => void>();
+
+  const emit = (): void => {
+    for (const listener of listeners) listener();
+  };
+
+  return {
+    getSnapshot: () => state,
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    update: (update) => {
+      const nextState = update(state);
+      if (nextState === state) return;
+
+      state = nextState;
+      emit();
+    },
+    reset: () => {
+      state = createReviewFormState(ownerKey);
+      emit();
+    },
+  };
+}
+
+//===================================================================
+
 export function useReviewForm({
+  scopeKey,
   createReview,
   notifier,
   successMessage,
   errorMessage,
   authRequiredMessage,
-}: UseReviewFormParams) {
+  authUnavailableMessage,
+  clientAccountRequiredMessage,
+}: UseReviewFormParams): ReviewFormController {
   const {
-    user,
     isAuthenticated,
     isBootstrapping,
+    isUnavailable,
     canUseClientFeatures,
-    isActivePharmacyUser,
   } = useClientAuthCapabilities();
 
-  const identity = user?.id ?? null;
+  const { ownerKey: sessionOwnerKey } = useClientSessionScope();
+  const ownerKey = `${sessionOwnerKey}:${scopeKey}`;
 
-  const [formState, setFormState] = useState<ReviewFormState>(() =>
-    createReviewFormState(identity)
+  const formStore = useMemo(() => createReviewFormStore(ownerKey), [ownerKey]);
+  const formState = useSyncExternalStore(
+    formStore.subscribe,
+    formStore.getSnapshot,
+    formStore.getSnapshot
   );
 
-  const mountedRef = useRef(true);
+  const ownerKeyRef = useRef(ownerKey);
   const submitLockRef = useRef(false);
   const submissionVersionRef = useRef(0);
+  const activeControllerRef = useRef<AbortController | null>(null);
 
-  const currentFormState =
-    formState.identity === identity
-      ? formState
-      : createReviewFormState(identity);
-
-  const reviewValues = currentFormState.values;
-  const reviewTouchedFields = currentFormState.touchedFields;
-  const isReviewSubmitting = currentFormState.isSubmitting;
+  const reviewValues = formState.values;
+  const reviewTouchedFields = formState.touchedFields;
+  const isReviewSubmitting = formState.isSubmitting;
 
   const reviewErrors = useMemo(
     () => validateReviewForm(reviewValues),
@@ -95,62 +170,66 @@ export function useReviewForm({
 
   const reviewFormIsValid = isReviewFormValid(reviewValues);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    ownerKeyRef.current = ownerKey;
     submissionVersionRef.current += 1;
     submitLockRef.current = false;
-  }, [identity]);
+    activeControllerRef.current?.abort();
+    activeControllerRef.current = null;
+  }, [ownerKey]);
 
-  useEffect(() => {
-    mountedRef.current = true;
-
-    return () => {
-      mountedRef.current = false;
+  useEffect(
+    () => () => {
       submissionVersionRef.current += 1;
       submitLockRef.current = false;
-    };
-  }, []);
+      activeControllerRef.current?.abort();
+      activeControllerRef.current = null;
+    },
+    []
+  );
 
-  const updateCurrentFormState = (
-    update: (current: ReviewFormState) => ReviewFormState
-  ) => {
-    setFormState((current) =>
-      update(
-        current.identity === identity
-          ? current
-          : createReviewFormState(identity)
-      )
-    );
-  };
+  const updateCurrentFormState = useCallback(
+    (update: (current: ReviewFormState) => ReviewFormState): void => {
+      formStore.update(update);
+    },
+    [formStore]
+  );
 
-  const handleReviewTextChange = (value: string) => {
-    updateCurrentFormState((current) => ({
-      ...current,
-      values: {
-        ...current.values,
-        comment: value,
-      },
-      touchedFields: {
-        ...current.touchedFields,
-        comment: true,
-      },
-    }));
-  };
+  const handleReviewTextChange = useCallback(
+    (value: string): void => {
+      updateCurrentFormState((current) => ({
+        ...current,
+        values: {
+          ...current.values,
+          comment: value,
+        },
+        touchedFields: {
+          ...current.touchedFields,
+          comment: true,
+        },
+      }));
+    },
+    [updateCurrentFormState]
+  );
 
-  const handleReviewRatingChange = (rating: number) => {
-    updateCurrentFormState((current) => ({
-      ...current,
-      values: {
-        ...current.values,
-        rating,
-      },
-      touchedFields: {
-        ...current.touchedFields,
-        rating: true,
-      },
-    }));
-  };
+  const handleReviewRatingChange = useCallback(
+    (rating: number): void => {
+      updateCurrentFormState((current) => ({
+        ...current,
+        values: {
+          ...current.values,
+          rating,
+        },
+        touchedFields: {
+          ...current.touchedFields,
+          rating: true,
+        },
+      }));
+    },
+    [updateCurrentFormState]
+  );
 
-  const handleReviewSubmit = async () => {
+  const handleReviewSubmit = useCallback(async (): Promise<void> => {
     if (submitLockRef.current) return;
 
     const nextErrors = validateReviewForm(reviewValues);
@@ -163,21 +242,24 @@ export function useReviewForm({
       return;
     }
 
-    if (isBootstrapping || !isAuthenticated) {
+    if (isBootstrapping) return;
+
+    if (isUnavailable) {
+      notifier.error(authUnavailableMessage);
+      return;
+    }
+
+    if (!isAuthenticated) {
       updateCurrentFormState((current) => ({
         ...current,
         touchedFields: markAllFieldsTouched(REVIEW_FORM_FIELDS),
       }));
-      if (authRequiredMessage) notifier.error(authRequiredMessage);
+      notifier.error(authRequiredMessage);
       return;
     }
 
     if (!canUseClientFeatures) {
-      notifier.error(
-        isActivePharmacyUser
-          ? 'Reviews are available only for client accounts.'
-          : (authRequiredMessage ?? errorMessage)
-      );
+      notifier.error(clientAccountRequiredMessage);
       return;
     }
 
@@ -185,60 +267,95 @@ export function useReviewForm({
     const submissionVersion = submissionVersionRef.current + 1;
     submissionVersionRef.current = submissionVersion;
 
+    const submissionOwnerKey = ownerKey;
+    const controller = new AbortController();
+    activeControllerRef.current?.abort();
+    activeControllerRef.current = controller;
+
     updateCurrentFormState((current) => ({
       ...current,
       isSubmitting: true,
     }));
 
     try {
-      await createReview({
-        rating: reviewValues.rating,
-        comment: reviewValues.comment.trim(),
-      });
+      await createReview(
+        {
+          rating: reviewValues.rating,
+          comment: reviewValues.comment.trim(),
+        },
+        { signal: controller.signal }
+      );
 
       if (
-        !mountedRef.current ||
+        controller.signal.aborted ||
+        ownerKeyRef.current !== submissionOwnerKey ||
         submissionVersionRef.current !== submissionVersion
       ) {
         return;
       }
 
-      setFormState((current) =>
-        current.identity === identity
-          ? createReviewFormState(identity)
-          : current
-      );
+      formStore.reset();
       notifier.success(successMessage);
-    } catch {
+    } catch (error) {
       if (
-        mountedRef.current &&
-        submissionVersionRef.current === submissionVersion
+        controller.signal.aborted ||
+        isAbortError(error) ||
+        ownerKeyRef.current !== submissionOwnerKey ||
+        submissionVersionRef.current !== submissionVersion
       ) {
-        notifier.error(errorMessage);
+        return;
       }
+
+      notifier.error(errorMessage);
     } finally {
       if (
-        mountedRef.current &&
+        activeControllerRef.current === controller &&
+        ownerKeyRef.current === submissionOwnerKey &&
         submissionVersionRef.current === submissionVersion
       ) {
+        activeControllerRef.current = null;
         submitLockRef.current = false;
-        setFormState((current) =>
-          current.identity === identity
-            ? { ...current, isSubmitting: false }
-            : current
-        );
+        formStore.update((current) => ({
+          ...current,
+          isSubmitting: false,
+        }));
       }
     }
-  };
+  }, [
+    authRequiredMessage,
+    authUnavailableMessage,
+    canUseClientFeatures,
+    clientAccountRequiredMessage,
+    createReview,
+    errorMessage,
+    formStore,
+    isAuthenticated,
+    isBootstrapping,
+    isUnavailable,
+    notifier,
+    ownerKey,
+    reviewValues,
+    successMessage,
+    updateCurrentFormState,
+  ]);
+
+  const reviewAccessMessage = isUnavailable
+    ? authUnavailableMessage
+    : canUseClientFeatures
+      ? ''
+      : isAuthenticated
+        ? clientAccountRequiredMessage
+        : authRequiredMessage;
 
   return {
-    reviewValues,
     reviewText: reviewValues.comment,
     reviewRating: reviewValues.rating,
     reviewErrors,
     reviewTouchedFields,
     isReviewValid: reviewFormIsValid,
-    canSubmitReview: canUseClientFeatures,
+    canCreateReview: canUseClientFeatures,
+    isAuthUnavailable: isUnavailable,
+    reviewAccessMessage,
     isReviewSubmitting,
     handleReviewTextChange,
     handleReviewRatingChange,

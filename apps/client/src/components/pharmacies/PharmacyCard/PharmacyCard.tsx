@@ -8,16 +8,10 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 
-import { addFavoritePharmacy, removeFavoritePharmacy } from '@/lib/api/browser';
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
 import { buildPharmacyPath } from '@/lib/routes';
 
-import {
-  useClientAuthCapabilities,
-  useFavoriteActions,
-  usePharmacyFavoriteRefresh,
-} from '@/hooks';
-
+import { useClientAuthCapabilities, useFavoriteActions } from '@/hooks';
 import { FavoriteToggleButton } from '@/components/common';
 
 import css from './PharmacyCard.module.css';
@@ -26,47 +20,37 @@ import css from './PharmacyCard.module.css';
 
 type PharmacyCardProps = {
   pharmacy: PublicPharmacy;
-  skipFavoriteRefresh?: boolean;
   onFavoriteChange?: (pharmacyId: string, isFavorite: boolean) => void;
 };
 
 //===================================================================
 
-function PharmacyCard({
-  pharmacy,
-  skipFavoriteRefresh = false,
-  onFavoriteChange,
-}: PharmacyCardProps) {
+function PharmacyCard({ pharmacy, onFavoriteChange }: PharmacyCardProps) {
   const { isAuthenticated, isBootstrapping, canUseClientFeatures } =
     useClientAuthCapabilities();
   const toast = useToast();
 
-  const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
-    useFavoriteActions({
-      id: pharmacy.id,
-      initialIsFavorite: Boolean(pharmacy.isFavorite),
-      notifier: toast,
-      loginMessage: 'Please log in to add pharmacies to favorites.',
-      addedMessage: 'Pharmacy was added to favorites.',
-      removedMessage: 'Pharmacy was removed from favorites.',
-      errorMessage: 'Could not update pharmacy favorites.',
-      addFavorite: addFavoritePharmacy,
-      removeFavorite: removeFavoritePharmacy,
-      onFavoriteChange: (pharmacyId, nextIsFavorite) => {
-        onFavoriteChange?.(pharmacyId, nextIsFavorite);
-      },
-    });
+  const { isFavorite, isFavoriteLoading, toggleFavorite } = useFavoriteActions({
+    entityType: 'pharmacy',
+    id: pharmacy.id,
+    notifier: toast,
+    loginMessage: 'Please log in to add pharmacies to favorites.',
+    unavailableMessage:
+      'We could not verify your session. Please try again shortly.',
+    clientAccountRequiredMessage:
+      'Favorites are available only for active client accounts.',
+    addedMessage: 'Pharmacy was added to favorites.',
+    removedMessage: 'Pharmacy was removed from favorites.',
+    errorMessage: 'Could not update pharmacy favorites.',
+    onFavoriteChange: (pharmacyId, nextIsFavorite) => {
+      onFavoriteChange?.(pharmacyId, nextIsFavorite);
+    },
+  });
 
   const productsHref = buildProductCatalogPath({ pharmacyId: pharmacy.id }, [
     pharmacy,
   ]);
   const pharmacyHref = buildPharmacyPath(pharmacy.name, pharmacy.id);
-
-  usePharmacyFavoriteRefresh({
-    id: pharmacy.id,
-    isEnabled: !skipFavoriteRefresh && canUseClientFeatures,
-    onRefresh: setIsFavorite,
-  });
 
   return (
     <article
@@ -92,7 +76,7 @@ function PharmacyCard({
             <FavoriteToggleButton
               isActive={isFavorite}
               disabled={isFavoriteLoading}
-              onClick={handleFavoriteClick}
+              onClick={() => void toggleFavorite()}
               activeLabel="Remove pharmacy from favorites"
               inactiveLabel="Add pharmacy to favorites"
             />

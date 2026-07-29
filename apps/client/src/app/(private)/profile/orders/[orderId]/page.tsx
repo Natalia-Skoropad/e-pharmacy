@@ -7,8 +7,6 @@ import {
 } from '@/lib/seo';
 
 import { getOrderIdFromPathParam, isValidObjectId, ROUTES } from '@/lib/routes';
-import { ProtectedRoute } from '@/routes';
-
 import { OrderDetailsPageContent } from '@/components/profile';
 
 //===================================================================
@@ -41,11 +39,7 @@ async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
 
   if (!isValidObjectId(cleanOrderId)) notFound();
 
-  return (
-    <ProtectedRoute>
-      <OrderDetailsPageContent orderId={cleanOrderId} />
-    </ProtectedRoute>
-  );
+  return <OrderDetailsPageContent orderId={cleanOrderId} />;
 }
 
 export default OrderDetailsPage;

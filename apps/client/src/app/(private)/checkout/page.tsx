@@ -5,8 +5,6 @@ import {
 } from '@/lib/seo';
 
 import { ROUTES } from '@/lib/routes';
-import { ProtectedRoute } from '@/routes';
-
 import { CheckoutPageContent } from '@/components/checkout';
 
 //===================================================================
@@ -21,11 +19,7 @@ export const metadata = createPageMetadata({
 //===================================================================
 
 function CheckoutPage() {
-  return (
-    <ProtectedRoute>
-      <CheckoutPageContent />
-    </ProtectedRoute>
-  );
+  return <CheckoutPageContent />;
 }
 
 export default CheckoutPage;

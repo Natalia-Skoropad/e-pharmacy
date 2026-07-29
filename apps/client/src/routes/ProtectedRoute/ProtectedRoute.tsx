@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { ErrorPage } from '@e-pharmacy/ui/status-pages';
 
 import { ROUTES } from '@/lib/routes';
+import { canAccessClientPrivateRoutes } from '@/lib/auth/client-route-access';
 
 import {
   resolveLoginDestination,
@@ -47,6 +48,7 @@ function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
   return (
     <RoleProtectedRoute
       allowedRoles={['client']}
+      authorizeUser={canAccessClientPrivateRoutes}
       loginPath={ROUTES.LOGIN}
       forbiddenPath={pharmacyRedirect}
       resolveExternalRedirect={resolveTrustedClientAuthExternalRedirect}

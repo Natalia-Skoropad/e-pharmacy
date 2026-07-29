@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
-import type { UserRole } from '@e-pharmacy/types/auth';
+import type { AuthUser, UserRole } from '@e-pharmacy/types/auth';
 
 import { useAuth } from '../core/AuthProviderCore';
 import { buildLoginRedirectPath } from '../routing/redirects';
@@ -28,6 +28,7 @@ export type RoleProtectedRouteProps = Readonly<{
   redirectingFallback?: ReactNode;
   forbiddenFallback?: ReactNode;
   resolveExternalRedirect?: TrustedExternalRedirectResolver;
+  authorizeUser?: (user: AuthUser) => boolean;
 }>;
 
 //===================================================================
@@ -42,6 +43,7 @@ export function RoleProtectedRoute({
   redirectingFallback = null,
   forbiddenFallback = null,
   resolveExternalRedirect,
+  authorizeUser,
 }: RoleProtectedRouteProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -49,7 +51,12 @@ export function RoleProtectedRoute({
   const queryString = searchParams.toString();
 
   const { isAuthenticated, isBootstrapping, isUnavailable, user } = useAuth();
-  const hasAllowedRole = Boolean(user && allowedRoles.includes(user.role));
+  const hasAllowedRole = Boolean(
+    user &&
+    allowedRoles.includes(user.role) &&
+    (authorizeUser ? authorizeUser(user) : true)
+  );
+
   const decision = getRoleGuardDecision({
     isBootstrapping,
     isUnavailable,

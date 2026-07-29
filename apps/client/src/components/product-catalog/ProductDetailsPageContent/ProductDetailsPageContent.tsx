@@ -62,12 +62,7 @@ import {
   type ProductOfferSort,
 } from '@/lib/catalog/product-offers';
 
-import {
-  createProductReview,
-  getProductDetails,
-  addFavoriteProduct,
-  removeFavoriteProduct,
-} from '@/lib/api/browser';
+import { createProductReview, getProductDetails } from '@/lib/api/browser';
 
 import { useCart } from '@/providers/CartProvider';
 import { useCartMutations } from '@/lib/cart/useCartMutations';
@@ -362,17 +357,19 @@ function ProductDetailsPageContent({
     }, 250);
   };
 
-  const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
+  const { isFavorite, isFavoriteLoading, toggleFavorite } =
     useFavoriteActions({
+      entityType: 'product',
       id: productDetails.id,
-      initialIsFavorite: Boolean(product.isFavorite),
       notifier: toast,
       loginMessage: 'Please log in to add products to favorites.',
-      addedMessage: 'ProductDetails was added to favorites.',
-      removedMessage: 'ProductDetails was removed from favorites.',
+      unavailableMessage:
+        'We could not verify your session. Please try again shortly.',
+      clientAccountRequiredMessage:
+        'Favorites are available only for active client accounts.',
+      addedMessage: 'Product was added to favorites.',
+      removedMessage: 'Product was removed from favorites.',
       errorMessage: 'Could not update favorites.',
-      addFavorite: addFavoriteProduct,
-      removeFavorite: removeFavoriteProduct,
     });
 
   const {
@@ -382,16 +379,24 @@ function ProductDetailsPageContent({
     reviewTouchedFields,
     isReviewValid,
     isReviewSubmitting,
-    canSubmitReview,
+    canCreateReview,
+    isAuthUnavailable,
+    reviewAccessMessage,
     handleReviewTextChange,
     handleReviewRatingChange,
     handleReviewSubmit,
   } = useReviewForm({
-    createReview: (payload) => createProductReview(productDetails.id, payload),
+    scopeKey: `product:${productDetails.id}`,
+    createReview: (payload, options) =>
+      createProductReview(productDetails.id, payload, options),
     notifier: toast,
     successMessage: 'Review was accepted and will be visible after moderation.',
     errorMessage: 'Could not submit review.',
     authRequiredMessage: 'Please log in to submit a review.',
+    authUnavailableMessage:
+      'We could not verify your session. Please try again shortly.',
+    clientAccountRequiredMessage:
+      'Reviews are available only for active client accounts.',
   });
 
   useEffect(() => {
@@ -404,7 +409,6 @@ function ProductDetailsPageContent({
         if (controller.signal.aborted) return;
 
         setProductDetails(response.product);
-        setIsFavorite(Boolean(response.product.isFavorite));
       })
       .catch(() => undefined);
 
@@ -421,7 +425,7 @@ function ProductDetailsPageContent({
     return () => {
       controller.abort();
     };
-  }, [canUseClientFeatures, loadCart, productDetails.id, setIsFavorite, toast]);
+  }, [canUseClientFeatures, loadCart, productDetails.id, toast]);
 
   const handleAddUnit = async (offer: ProductOffer) => {
     if (!canUseCart || !offer.inStock) return;
@@ -629,7 +633,7 @@ function ProductDetailsPageContent({
                     <FavoriteToggleButton
                       isActive={isFavorite}
                       disabled={isFavoriteLoading}
-                      onClick={handleFavoriteClick}
+                      onClick={() => void toggleFavorite()}
                       activeLabel="Remove product from favorites"
                       inactiveLabel="Add product to favorites"
                     />
@@ -944,8 +948,10 @@ function ProductDetailsPageContent({
                   reviewError={reviewErrors.comment}
                   reviewTouchedFields={reviewTouchedFields}
                   isReviewSubmitting={isReviewSubmitting}
-                  isAuthenticated={canSubmitReview}
-                    isUnavailable={areReviewsUnavailable}
+                  canCreateReview={canCreateReview}
+                  reviewAccessMessage={reviewAccessMessage}
+                  isAuthUnavailable={isAuthUnavailable}
+                  isUnavailable={areReviewsUnavailable}
                   emptyText="ProductDetails reviews will appear here after clients share their feedback."
                   textareaId="product-review"
                   maxLength={USER_REVIEW_COMMENT_MAX_LENGTH}

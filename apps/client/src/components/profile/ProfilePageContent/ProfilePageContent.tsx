@@ -1033,7 +1033,6 @@ function ProfilePageContent() {
                           <ProductCard
                             key={product.id}
                             product={product}
-                            skipFavoriteRefresh
                             onFavoriteChange={(
                               productId: string,
                               isFavoriteProduct: boolean
@@ -1124,7 +1123,6 @@ function ProfilePageContent() {
                           <PharmacyCard
                             key={pharmacy.id}
                             pharmacy={pharmacy}
-                            skipFavoriteRefresh
                             onFavoriteChange={(
                               pharmacyId: string,
                               isFavoritePharmacy: boolean

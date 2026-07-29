@@ -1,190 +1,153 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+
+import {
+  useFavorites,
+  type FavoriteEntityType,
+} from '@/providers/FavoritesProvider';
+
+import { useClientSessionScope } from '@/providers/AuthProvider';
 
 import { useClientAuthCapabilities } from './useClientAuthCapabilities';
 
 //===================================================================
 
-type FavoriteResponse = {
-  isFavorite: boolean;
-};
-
-type FavoriteNotifier = {
+type FavoriteNotifier = Readonly<{
   info: (message: string) => void;
   success: (message: string) => void;
   error: (message: string) => void;
-};
+}>;
 
-type UseFavoriteActionsParams<TId extends string> = {
-  id: TId;
-  initialIsFavorite?: boolean;
+type UseFavoriteActionsParams = Readonly<{
+  entityType: FavoriteEntityType;
+  id: string;
   notifier: FavoriteNotifier;
   loginMessage: string;
+  unavailableMessage: string;
+  clientAccountRequiredMessage: string;
   addedMessage: string;
   removedMessage: string;
   errorMessage: string;
-  addFavorite: (id: TId) => Promise<FavoriteResponse>;
-  removeFavorite: (id: TId) => Promise<FavoriteResponse>;
-  onFavoriteChange?: (id: TId, isFavorite: boolean) => void;
-};
-
-type FavoriteState<TId extends string> = Readonly<{
-  id: TId;
-  baseline: boolean;
-  value: boolean;
+  onFavoriteChange?: (id: string, isFavorite: boolean) => void;
 }>;
 
-type ActiveFavoriteMutation<TId extends string> = Readonly<{
-  id: TId;
-  version: number;
+export type FavoriteActions = Readonly<{
+  isFavorite: boolean;
+  isFavoriteLoading: boolean;
+  toggleFavorite: () => Promise<void>;
 }>;
 
 //===================================================================
 
-export function useFavoriteActions<TId extends string>({
+export function useFavoriteActions({
+  entityType,
   id,
-  initialIsFavorite = false,
   notifier,
   loginMessage,
+  unavailableMessage,
+  clientAccountRequiredMessage,
   addedMessage,
   removedMessage,
   errorMessage,
-  addFavorite,
-  removeFavorite,
   onFavoriteChange,
-}: UseFavoriteActionsParams<TId>) {
+}: UseFavoriteActionsParams): FavoriteActions {
   const {
     isAuthenticated,
     isBootstrapping,
+    isUnavailable,
     canUseClientFeatures,
-    isActivePharmacyUser,
   } = useClientAuthCapabilities();
+  const { ownerKey } = useClientSessionScope();
 
-  const [favoriteState, setFavoriteState] = useState<FavoriteState<TId>>({
-    id,
-    baseline: initialIsFavorite,
-    value: initialIsFavorite,
-  });
+  const {
+    getCollectionStatus,
+    isFavorite: readIsFavorite,
+    isPending,
+    loadCollection,
+    toggleFavorite: toggleFavoriteInStore,
+  } = useFavorites();
 
-  const [loadingMutation, setLoadingMutation] =
-    useState<ActiveFavoriteMutation<TId> | null>(null);
-
-  const mountedRef = useRef(true);
-  const mutationVersionRef = useRef(0);
-  const activeMutationRef = useRef<ActiveFavoriteMutation<TId> | null>(null);
-
-  const hasCurrentFavoriteState =
-    favoriteState.id === id &&
-    favoriteState.baseline === initialIsFavorite;
-
-  const isFavorite = hasCurrentFavoriteState
-    ? favoriteState.value
-    : initialIsFavorite;
-
-  const isFavoriteLoading = loadingMutation?.id === id;
-
-  const setIsFavorite = useCallback(
-    (nextValue: boolean) => {
-      setFavoriteState({
-        id,
-        baseline: initialIsFavorite,
-        value: nextValue,
-      });
-    },
-    [id, initialIsFavorite]
-  );
+  const activeControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    mountedRef.current = true;
+    activeControllerRef.current?.abort();
+    activeControllerRef.current = null;
 
     return () => {
-      mountedRef.current = false;
-      mutationVersionRef.current += 1;
-      activeMutationRef.current = null;
+      activeControllerRef.current?.abort();
+      activeControllerRef.current = null;
     };
-  }, []);
+  }, [entityType, id, ownerKey]);
 
-  const handleFavoriteClick = useCallback(async () => {
-    if (isBootstrapping || !isAuthenticated) {
+  useEffect(() => {
+    if (!canUseClientFeatures) return;
+
+    void loadCollection(entityType).catch(() => undefined);
+  }, [canUseClientFeatures, entityType, loadCollection]);
+
+  const isFavorite = readIsFavorite(entityType, id);
+  const isFavoriteLoading =
+    isPending(entityType, id) || getCollectionStatus(entityType) === 'loading';
+
+  const toggleFavorite = useCallback(async (): Promise<void> => {
+    if (isBootstrapping) return;
+
+    if (isUnavailable) {
+      notifier.error(unavailableMessage);
+      return;
+    }
+
+    if (!isAuthenticated) {
       notifier.info(loginMessage);
       return;
     }
 
     if (!canUseClientFeatures) {
-      notifier.info(
-        isActivePharmacyUser
-          ? 'Favorites are available only for client accounts.'
-          : loginMessage
-      );
+      notifier.info(clientAccountRequiredMessage);
       return;
     }
 
-    if (activeMutationRef.current?.id === id) return;
-
-    const activeMutation = {
-      id,
-      version: mutationVersionRef.current + 1,
-    } as const;
-
-    mutationVersionRef.current = activeMutation.version;
-    activeMutationRef.current = activeMutation;
-    setLoadingMutation(activeMutation);
+    const controller = new AbortController();
+    activeControllerRef.current?.abort();
+    activeControllerRef.current = controller;
 
     try {
-      const response = isFavorite
-        ? await removeFavorite(id)
-        : await addFavorite(id);
+      const result = await toggleFavoriteInStore(entityType, id, {
+        signal: controller.signal,
+      });
+      if (!result) return;
 
-      if (
-        !mountedRef.current ||
-        activeMutationRef.current !== activeMutation
-      ) {
-        return;
-      }
-
-      setIsFavorite(response.isFavorite);
-      onFavoriteChange?.(id, response.isFavorite);
-      notifier.success(response.isFavorite ? addedMessage : removedMessage);
+      onFavoriteChange?.(id, result.isFavorite);
+      notifier.success(result.isFavorite ? addedMessage : removedMessage);
     } catch {
-      if (
-        mountedRef.current &&
-        activeMutationRef.current === activeMutation
-      ) {
-        notifier.error(errorMessage);
-      }
+      if (!controller.signal.aborted) notifier.error(errorMessage);
     } finally {
-      if (
-        mountedRef.current &&
-        activeMutationRef.current === activeMutation
-      ) {
-        activeMutationRef.current = null;
-        setLoadingMutation(null);
+      if (activeControllerRef.current === controller) {
+        activeControllerRef.current = null;
       }
     }
   }, [
-    addFavorite,
     addedMessage,
     canUseClientFeatures,
+    clientAccountRequiredMessage,
+    entityType,
     errorMessage,
     id,
-    isBootstrapping,
     isAuthenticated,
-    isFavorite,
-    isActivePharmacyUser,
+    isBootstrapping,
+    isUnavailable,
     loginMessage,
     notifier,
     onFavoriteChange,
-    removeFavorite,
     removedMessage,
-    setIsFavorite,
+    toggleFavoriteInStore,
+    unavailableMessage,
   ]);
 
   return {
-    canUseFavorites: canUseClientFeatures,
     isFavorite,
     isFavoriteLoading,
-    handleFavoriteClick,
-    setIsFavorite,
+    toggleFavorite,
   };
 }

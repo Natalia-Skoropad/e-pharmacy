@@ -5,15 +5,7 @@ import {
   REFRESH_TOKEN_COOKIE_NAME,
 } from '@e-pharmacy/config/auth';
 
-import { ROUTES } from '@/lib/routes';
-
-//===================================================================
-
-const PROTECTED_ROUTE_PREFIXES = [
-  ROUTES.CART,
-  ROUTES.CHECKOUT,
-  ROUTES.PROFILE,
-] as const;
+import { CLIENT_PRIVATE_ROUTE_PREFIXES, ROUTES } from '@/lib/routes';
 
 //===================================================================
 
@@ -24,7 +16,7 @@ function isRouteMatch(pathname: string, route: string): boolean {
 //===================================================================
 
 function isProtectedRoute(pathname: string): boolean {
-  return PROTECTED_ROUTE_PREFIXES.some((route) =>
+  return CLIENT_PRIVATE_ROUTE_PREFIXES.some((route) =>
     isRouteMatch(pathname, route)
   );
 }

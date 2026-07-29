@@ -5,7 +5,6 @@ import {
 } from '@/lib/seo';
 
 import { createBreadcrumbs, ROUTES } from '@/lib/routes';
-import { GuestOnlyRoute } from '@/routes';
 
 import { AuthFormShell, ResetPasswordForm } from '@/components/auth';
 
@@ -32,20 +31,18 @@ async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
   const { token = '' } = await searchParams;
 
   return (
-    <GuestOnlyRoute>
-      <AuthFormShell
+    <AuthFormShell
+      title={RESET_PASSWORD_TITLE}
+      text={PASSWORD_RECOVERY_DESCRIPTION}
+      breadcrumbs={createBreadcrumbs(RESET_PASSWORD_TITLE)}
+      showHeader={false}
+    >
+      <ResetPasswordForm
+        token={token}
         title={RESET_PASSWORD_TITLE}
         text={PASSWORD_RECOVERY_DESCRIPTION}
-        breadcrumbs={createBreadcrumbs(RESET_PASSWORD_TITLE)}
-        showHeader={false}
-      >
-        <ResetPasswordForm
-          token={token}
-          title={RESET_PASSWORD_TITLE}
-          text={PASSWORD_RECOVERY_DESCRIPTION}
-        />
-      </AuthFormShell>
-    </GuestOnlyRoute>
+      />
+    </AuthFormShell>
   );
 }
 

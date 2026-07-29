@@ -5,7 +5,6 @@ import {
 } from '@/lib/seo';
 
 import { createBreadcrumbs, ROUTES } from '@/lib/routes';
-import { GuestOnlyRoute } from '@/routes';
 
 import { AuthFormShell, PasswordRecoveryForm } from '@/components/auth';
 
@@ -22,16 +21,14 @@ export const metadata = createPageMetadata({
 
 function PasswordRecoveryPage() {
   return (
-    <GuestOnlyRoute>
-      <AuthFormShell
-        title={PASSWORD_RECOVERY_TITLE}
-        text={PASSWORD_RECOVERY_DESCRIPTION}
-        breadcrumbs={createBreadcrumbs(PASSWORD_RECOVERY_TITLE)}
-        showDescription={false}
-      >
-        <PasswordRecoveryForm />
-      </AuthFormShell>
-    </GuestOnlyRoute>
+    <AuthFormShell
+      title={PASSWORD_RECOVERY_TITLE}
+      text={PASSWORD_RECOVERY_DESCRIPTION}
+      breadcrumbs={createBreadcrumbs(PASSWORD_RECOVERY_TITLE)}
+      showDescription={false}
+    >
+      <PasswordRecoveryForm />
+    </AuthFormShell>
   );
 }
 

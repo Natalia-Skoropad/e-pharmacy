@@ -1,6 +1,5 @@
 import { LOGIN_DESCRIPTION, LOGIN_TITLE, createPageMetadata } from '@/lib/seo';
 import { ROUTES, createBreadcrumbs } from '@/lib/routes';
-import { GuestOnlyRoute } from '@/routes';
 
 import { AuthFormShell, LoginForm } from '@/components/auth';
 
@@ -17,16 +16,14 @@ export const metadata = createPageMetadata({
 
 function LoginPage() {
   return (
-    <GuestOnlyRoute>
-      <AuthFormShell
-        title={LOGIN_TITLE}
-        text={LOGIN_DESCRIPTION}
-        breadcrumbs={createBreadcrumbs(LOGIN_TITLE)}
-        showHeader={false}
-      >
-        <LoginForm />
-      </AuthFormShell>
-    </GuestOnlyRoute>
+    <AuthFormShell
+      title={LOGIN_TITLE}
+      text={LOGIN_DESCRIPTION}
+      breadcrumbs={createBreadcrumbs(LOGIN_TITLE)}
+      showHeader={false}
+    >
+      <LoginForm />
+    </AuthFormShell>
   );
 }
 

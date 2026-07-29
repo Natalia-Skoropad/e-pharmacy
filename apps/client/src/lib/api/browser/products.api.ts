@@ -35,6 +35,13 @@ import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
 
 //===================================================================
 
+type MutationRequestOptions = Omit<
+  JsonResponseRequestOptions,
+  'method' | 'body'
+>;
+
+//===================================================================
+
 const publicProductsReader =
   createPublicProductsReader<JsonResponseRequestOptions>(
     (path, options) => localApiRequest(path, options),
@@ -79,12 +86,13 @@ export async function getFavoriteProductIdsFromClientApi(
 
 export async function createProductReview(
   id: string,
-  payload: CreateReviewPayload
+  payload: CreateReviewPayload,
+  options?: MutationRequestOptions
 ): Promise<ReviewMutationResponse> {
   const path = ROUTES.products.reviews(id);
 
   return parseApiResponseData(
-    await localApiRequest(path, { method: 'POST', body: payload }),
+    await localApiRequest(path, { ...options, method: 'POST', body: payload }),
     parseReviewMutationResponse,
     { url: path, method: 'POST' }
   );
@@ -93,12 +101,13 @@ export async function createProductReview(
 //===================================================================
 
 export async function addFavoriteProduct(
-  id: string
+  id: string,
+  options?: MutationRequestOptions
 ): Promise<FavoriteMutationResponse> {
   const path = ROUTES.products.favorite(id);
 
   return parseApiResponseData(
-    await localApiRequest(path, { method: 'PUT' }),
+    await localApiRequest(path, { ...options, method: 'PUT' }),
     parseFavoriteMutationResponse,
     { url: path, method: 'PUT' }
   );
@@ -107,12 +116,13 @@ export async function addFavoriteProduct(
 //===================================================================
 
 export async function removeFavoriteProduct(
-  id: string
+  id: string,
+  options?: MutationRequestOptions
 ): Promise<FavoriteMutationResponse> {
   const path = ROUTES.products.favorite(id);
 
   return parseApiResponseData(
-    await localApiRequest(path, { method: 'DELETE' }),
+    await localApiRequest(path, { ...options, method: 'DELETE' }),
     parseFavoriteMutationResponse,
     { url: path, method: 'DELETE' }
   );

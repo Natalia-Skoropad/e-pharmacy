@@ -5,7 +5,6 @@ import {
 } from '@/lib/seo';
 
 import { ROUTES, createBreadcrumbs } from '@/lib/routes';
-import { GuestOnlyRoute } from '@/routes';
 
 import { AuthFormShell, RegisterForm } from '@/components/auth';
 
@@ -22,16 +21,14 @@ export const metadata = createPageMetadata({
 
 function RegisterPage() {
   return (
-    <GuestOnlyRoute>
-      <AuthFormShell
-        title={REGISTER_TITLE}
-        text={REGISTER_DESCRIPTION}
-        breadcrumbs={createBreadcrumbs(REGISTER_TITLE)}
-        showHeader={false}
-      >
-        <RegisterForm />
-      </AuthFormShell>
-    </GuestOnlyRoute>
+    <AuthFormShell
+      title={REGISTER_TITLE}
+      text={REGISTER_DESCRIPTION}
+      breadcrumbs={createBreadcrumbs(REGISTER_TITLE)}
+      showHeader={false}
+    >
+      <RegisterForm />
+    </AuthFormShell>
   );
 }
 

@@ -200,15 +200,18 @@ apps/client/
   src/
     app/
       (private)/
+        layout.tsx
         cart/
         checkout/[slugId]/
         profile/
           orders/[orderId]/
       (public)/
         (auth)/
-          login/
-          register/
-          password-recovery/
+          (guest)/
+            layout.tsx
+            login/
+            register/
+            password-recovery/
           reset-password/
         (info)/
           delivery-and-payment/
@@ -430,11 +433,12 @@ The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker f
 - Browser API helpers live in `src/lib/api/browser` and are marked as client-only. They are low-level same-origin BFF request wrappers and should not be imported by server components, metadata helpers, sitemap, robots, or server route handlers.
 - Server reads for catalog, SEO, sitemap, robots, and detail metadata use `src/lib/api/server`. Proxy route handlers use `src/lib/api/proxy`.
 - Cart reads use `getCart` from `src/lib/api/browser/cart.api.ts`. Cart mutations go through `src/lib/cart/cart-commands.ts`, which dispatches the cart update event after successful writes. Components should not call cart mutation API helpers directly.
-- `CartProvider` is the single source of cart state in the browser. `src/lib/cart/cart-events.ts` is only a sync bridge between cart commands and the provider.
-- Auth route guards in `src/routes` are client-specific wrappers around the shared auth guards. They provide storefront login paths, loading fallback, and redirect destination rules.
+- `CartProvider` is the single source of cart state in the browser. Its snapshot is keyed by the shared client session generation and is cleared on logout, account switch, and same-user relogin.
+- `FavoritesProvider` owns product and pharmacy favorite ID collections. Collection reads are single-flight per session owner, mutations are abortable, and cards never issue one favorite-ID request per item.
+- Auth route guards in `src/routes` are client-specific wrappers around the shared auth guards. The private route-group layout requires an active client capability, while login, registration, and password recovery inherit one guest-preferred layout. Reset-password remains a token route and is not guest-only.
 - Product and pharmacy detail server composition lives under `src/lib/details/server` and is exported through a server-only details barrel.
 - Storefront route builders live in `src/lib/routes`. Product, pharmacy, checkout, and order paths should not be recreated in feature modules.
-- Review form state stays in client hooks, while validation rules come from the shared validation package. User-facing review messages are passed to the hook by the consuming UI.
+- Review form state stays in client hooks, while validation rules come from the shared validation package. Drafts and submissions are keyed by the shared session generation plus the review target, and obsolete submissions are aborted.
 
 Main API areas used by the client:
 
@@ -452,7 +456,7 @@ Main API areas used by the client:
 - Remote image patterns are configured in `next.config.ts` for deployed backend image assets.
 - Seed product and pharmacy images are client-owned runtime assets under `public/images/seed/**`; backend seed DTOs return same-origin relative paths for this portfolio deployment.
 - CSS Modules keep component styling scoped.
-- `AuthProvider` checks the client-readable auth marker before calling `/api/auth/me`, so anonymous public pages avoid unnecessary auth bootstrap requests.
+- `AuthProvider` uses `bootstrapMode="always"`; the client-readable marker is not a source of truth. A shared client session generation scopes cart, favorites, and review drafts across logout and relogin transitions.
 
 ## Environment Variables
 
@@ -529,7 +533,7 @@ pnpm type-check
 - Client-side browser API helpers and cart commands call same-origin `/api/*` route handlers instead of writing directly to the external backend URL.
 - Auth tokens are not stored in `localStorage`; the real auth session is represented by backend-managed httpOnly cookies.
 - The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker and is not used to authorize backend data access.
-- `ProtectedRoute` and `GuestOnlyRoute` improve navigation UX, while real authorization stays on the backend.
+- `ClientProtectedRoute` and `ClientGuestOnlyRoute` improve navigation UX, while real authorization stays on the backend. Private routes require an active client account, not merely the `client` role.
 - Private pages are marked noindex and are excluded from sitemap generation.
 
 ## Deployment Notes

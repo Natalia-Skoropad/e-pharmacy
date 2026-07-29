@@ -105,7 +105,6 @@ async function FeaturedPharmaciesSection() {
             <PharmacyCard
               key={pharmacy.id}
               pharmacy={pharmacy}
-              skipFavoriteRefresh
             />
           ))}
         </div>
@@ -134,7 +133,6 @@ async function FeaturedProductsSection() {
             <ProductCard
               key={product.id}
               product={product}
-              skipFavoriteRefresh
             />
           ))}
         </div>

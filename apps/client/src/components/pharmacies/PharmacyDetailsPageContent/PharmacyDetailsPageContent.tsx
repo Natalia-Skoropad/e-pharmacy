@@ -32,7 +32,6 @@ import {
   useClientAuthCapabilities,
   useFavoriteActions,
   useReviewForm,
-  usePharmacyFavoriteRefresh,
 } from '@/hooks';
 
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
@@ -40,8 +39,6 @@ import { ROUTES } from '@/lib/routes';
 
 import {
   createPharmacyReview,
-  addFavoritePharmacy,
-  removeFavoritePharmacy,
   getPharmacyCheckoutDetails,
 } from '@/lib/api/browser';
 
@@ -239,24 +236,20 @@ function PharmacyDetailsPageContent({
     };
   }, [canShowBankDetailsTab, currentTab, paymentDetails, pharmacy.id]);
 
-  const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
+  const { isFavorite, isFavoriteLoading, toggleFavorite } =
     useFavoriteActions({
+      entityType: 'pharmacy',
       id: pharmacy.id,
-      initialIsFavorite: Boolean(pharmacy.isFavorite),
       notifier: toast,
       loginMessage: 'Please log in to add pharmacies to favorites.',
+      unavailableMessage:
+        'We could not verify your session. Please try again shortly.',
+      clientAccountRequiredMessage:
+        'Favorites are available only for active client accounts.',
       addedMessage: 'Pharmacy was added to favorites.',
       removedMessage: 'Pharmacy was removed from favorites.',
       errorMessage: 'Could not update pharmacy favorites.',
-      addFavorite: addFavoritePharmacy,
-      removeFavorite: removeFavoritePharmacy,
     });
-
-  usePharmacyFavoriteRefresh({
-    id: pharmacy.id,
-    isEnabled: canUseClientFeatures,
-    onRefresh: setIsFavorite,
-  });
 
   const {
     reviewText,
@@ -265,16 +258,24 @@ function PharmacyDetailsPageContent({
     reviewTouchedFields,
     isReviewValid,
     isReviewSubmitting,
-    canSubmitReview,
+    canCreateReview,
+    isAuthUnavailable,
+    reviewAccessMessage,
     handleReviewTextChange,
     handleReviewRatingChange,
     handleReviewSubmit,
   } = useReviewForm({
-    createReview: (payload) => createPharmacyReview(pharmacy.id, payload),
+    scopeKey: `pharmacy:${pharmacy.id}`,
+    createReview: (payload, options) =>
+      createPharmacyReview(pharmacy.id, payload, options),
     notifier: toast,
     successMessage: 'Review was accepted and will be visible after moderation.',
     errorMessage: 'Could not submit review.',
     authRequiredMessage: 'Please log in to submit a review.',
+    authUnavailableMessage:
+      'We could not verify your session. Please try again shortly.',
+    clientAccountRequiredMessage:
+      'Reviews are available only for active client accounts.',
   });
 
   const handleTabChange = (nextTab: PharmacyTab) => {
@@ -364,7 +365,7 @@ function PharmacyDetailsPageContent({
                     <FavoriteToggleButton
                       isActive={isFavorite}
                       disabled={isFavoriteLoading}
-                      onClick={handleFavoriteClick}
+                      onClick={() => void toggleFavorite()}
                       activeLabel="Remove pharmacy from favorites"
                       inactiveLabel="Add pharmacy to favorites"
                     />
@@ -579,7 +580,9 @@ function PharmacyDetailsPageContent({
                 reviewError={reviewErrors.comment}
                 reviewTouchedFields={reviewTouchedFields}
                 isReviewSubmitting={isReviewSubmitting}
-                isAuthenticated={canSubmitReview}
+                canCreateReview={canCreateReview}
+                reviewAccessMessage={reviewAccessMessage}
+                isAuthUnavailable={isAuthUnavailable}
                 isUnavailable={areReviewsUnavailable}
                 emptyText="Pharmacy reviews will appear here after clients share their feedback."
                 textareaId="pharmacy-review"

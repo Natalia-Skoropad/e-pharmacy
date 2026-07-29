@@ -14,6 +14,8 @@ import {
   registerUser,
 } from '@/lib/api/browser';
 
+import { ClientSessionScopeProvider } from './ClientSessionScope';
+
 //===================================================================
 
 const clientAuthServices = {
@@ -34,7 +36,7 @@ type AuthProviderProps = {
 function AuthProvider({ children }: AuthProviderProps) {
   return (
     <AuthProviderCore {...clientAuthServices} bootstrapMode="always">
-      {children}
+      <ClientSessionScopeProvider>{children}</ClientSessionScopeProvider>
     </AuthProviderCore>
   );
 }

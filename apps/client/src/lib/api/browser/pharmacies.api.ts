@@ -37,6 +37,13 @@ import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
 
 //===================================================================
 
+type MutationRequestOptions = Omit<
+  JsonResponseRequestOptions,
+  'method' | 'body'
+>;
+
+//===================================================================
+
 const publicPharmaciesReader =
   createPublicPharmaciesReader<JsonResponseRequestOptions>(
     (path, options) => localApiRequest(path, options),
@@ -101,12 +108,13 @@ export async function getPharmacyCheckoutDetails(
 
 export async function createPharmacyReview(
   id: string,
-  payload: CreateReviewPayload
+  payload: CreateReviewPayload,
+  options?: MutationRequestOptions
 ): Promise<ReviewMutationResponse> {
   const path = ROUTES.pharmacies.reviews(id);
 
   return parseApiResponseData(
-    await localApiRequest(path, { method: 'POST', body: payload }),
+    await localApiRequest(path, { ...options, method: 'POST', body: payload }),
     parseReviewMutationResponse,
     { url: path, method: 'POST' }
   );
@@ -115,12 +123,13 @@ export async function createPharmacyReview(
 //===================================================================
 
 export async function addFavoritePharmacy(
-  id: string
+  id: string,
+  options?: MutationRequestOptions
 ): Promise<FavoriteMutationResponse> {
   const path = ROUTES.pharmacies.favorite(id);
 
   return parseApiResponseData(
-    await localApiRequest(path, { method: 'PUT' }),
+    await localApiRequest(path, { ...options, method: 'PUT' }),
     parseFavoriteMutationResponse,
     { url: path, method: 'PUT' }
   );
@@ -129,12 +138,13 @@ export async function addFavoritePharmacy(
 //===================================================================
 
 export async function removeFavoritePharmacy(
-  id: string
+  id: string,
+  options?: MutationRequestOptions
 ): Promise<FavoriteMutationResponse> {
   const path = ROUTES.pharmacies.favorite(id);
 
   return parseApiResponseData(
-    await localApiRequest(path, { method: 'DELETE' }),
+    await localApiRequest(path, { ...options, method: 'DELETE' }),
     parseFavoriteMutationResponse,
     { url: path, method: 'DELETE' }
   );

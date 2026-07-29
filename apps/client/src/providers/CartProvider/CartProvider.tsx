@@ -14,7 +14,8 @@ import {
 import type { Cart } from '@e-pharmacy/types/cart';
 
 import { getCart } from '@/lib/api/browser';
-import { useClientAuthCapabilities } from '@/hooks';
+import { useClientAuthCapabilities } from '@/hooks/useClientAuthCapabilities';
+import { useClientSessionScope } from '@/providers/AuthProvider';
 
 import {
   CART_UPDATED_EVENT,
@@ -38,14 +39,14 @@ type CartContextValue = {
 };
 
 type CartSnapshot = Readonly<{
-  identity: string;
+  ownerKey: string;
   cart: Cart;
   isLoaded: boolean;
   error: string;
 }>;
 
 type ActiveCartLoad = Readonly<{
-  identity: string;
+  ownerKey: string;
   generation: number;
   controller: AbortController;
   promise: Promise<Cart>;
@@ -60,74 +61,69 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user, isBootstrapping, canUseClientFeatures } =
     useClientAuthCapabilities();
+  const { ownerKey: sessionOwnerKey } = useClientSessionScope();
 
-  const clientIdentity = canUseClientFeatures ? (user?.id ?? null) : null;
+  const clientOwnerKey = canUseClientFeatures && user ? sessionOwnerKey : null;
 
   const [snapshot, setSnapshot] = useState<CartSnapshot | null>(null);
-  const [loadingIdentity, setLoadingIdentity] = useState<string | null>(null);
+  const [loadingOwnerKey, setLoadingOwnerKey] = useState<string | null>(null);
 
-  const identityRef = useRef<string | null>(clientIdentity);
+  const ownerKeyRef = useRef<string | null>(clientOwnerKey);
   const loadGenerationRef = useRef(0);
   const activeLoadRef = useRef<ActiveCartLoad | null>(null);
 
   const currentSnapshot =
-    snapshot?.identity === clientIdentity ? snapshot : null;
+    snapshot?.ownerKey === clientOwnerKey ? snapshot : null;
 
   const cart = currentSnapshot?.cart ?? EMPTY_CART;
-  const isLoaded = clientIdentity ? Boolean(currentSnapshot?.isLoaded) : true;
+  const isLoaded = clientOwnerKey ? Boolean(currentSnapshot?.isLoaded) : true;
   const isLoading = Boolean(
-    clientIdentity && loadingIdentity === clientIdentity
+    clientOwnerKey && loadingOwnerKey === clientOwnerKey
   );
   const error = currentSnapshot?.error ?? '';
 
-  useEffect(() => {
-    identityRef.current = clientIdentity;
-    loadGenerationRef.current += 1;
-    activeLoadRef.current?.controller.abort();
-    activeLoadRef.current = null;
-  }, [clientIdentity]);
-
   const setCart = useCallback(
     (nextCart: Cart) => {
-      if (!clientIdentity) return;
+      const ownerKey = clientOwnerKey;
+      if (!ownerKey || ownerKeyRef.current !== ownerKey) return;
 
       setSnapshot({
-        identity: clientIdentity,
+        ownerKey,
         cart: nextCart,
         isLoaded: true,
         error: '',
       });
     },
-    [clientIdentity]
+    [clientOwnerKey]
   );
 
   const loadCart = useCallback(async () => {
-    const identity = clientIdentity;
+    const ownerKey = clientOwnerKey;
 
-    if (!identity) return EMPTY_CART;
+    if (!ownerKey) return EMPTY_CART;
 
     const activeLoad = activeLoadRef.current;
-    if (activeLoad?.identity === identity) return activeLoad.promise;
+    if (activeLoad?.ownerKey === ownerKey) return activeLoad.promise;
 
     activeLoad?.controller.abort();
 
     const generation = loadGenerationRef.current + 1;
     loadGenerationRef.current = generation;
     const controller = new AbortController();
-    setLoadingIdentity(identity);
+    setLoadingOwnerKey(ownerKey);
 
     const promise = getCart({ signal: controller.signal })
       .then((response) => {
         if (
           controller.signal.aborted ||
-          identityRef.current !== identity ||
+          ownerKeyRef.current !== ownerKey ||
           loadGenerationRef.current !== generation
         ) {
           return EMPTY_CART;
         }
 
         setSnapshot({
-          identity,
+          ownerKey,
           cart: response.cart,
           isLoaded: true,
           error: '',
@@ -138,15 +134,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       .catch((cause: unknown) => {
         if (
           controller.signal.aborted ||
-          identityRef.current !== identity ||
+          ownerKeyRef.current !== ownerKey ||
           loadGenerationRef.current !== generation
         ) {
           return EMPTY_CART;
         }
 
         setSnapshot((current) => ({
-          identity,
-          cart: current?.identity === identity ? current.cart : EMPTY_CART,
+          ownerKey,
+          cart: current?.ownerKey === ownerKey ? current.cart : EMPTY_CART,
           isLoaded: true,
           error: 'Could not load cart.',
         }));
@@ -157,43 +153,43 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const currentLoad = activeLoadRef.current;
 
         if (
-          currentLoad?.identity === identity &&
+          currentLoad?.ownerKey === ownerKey &&
           currentLoad.generation === generation
         ) {
           activeLoadRef.current = null;
-          setLoadingIdentity((current) =>
-            current === identity ? null : current
+          setLoadingOwnerKey((current) =>
+            current === ownerKey ? null : current
           );
         }
       });
 
     activeLoadRef.current = {
-      identity,
+      ownerKey,
       generation,
       controller,
       promise,
     };
 
     return promise;
-  }, [clientIdentity]);
+  }, [clientOwnerKey]);
 
   const invalidateCart = useCallback(() => {
-    if (!clientIdentity) return;
+    if (!clientOwnerKey) return;
 
     setSnapshot((current) => ({
-      identity: clientIdentity,
-      cart: current?.identity === clientIdentity ? current.cart : EMPTY_CART,
+      ownerKey: clientOwnerKey,
+      cart: current?.ownerKey === clientOwnerKey ? current.cart : EMPTY_CART,
       isLoaded: false,
       error: '',
     }));
-  }, [clientIdentity]);
+  }, [clientOwnerKey]);
 
   useEffect(() => {
-    if (isBootstrapping || !clientIdentity || isLoaded) return;
-    if (activeLoadRef.current?.identity === clientIdentity) return;
+    if (isBootstrapping || !clientOwnerKey || isLoaded) return;
+    if (activeLoadRef.current?.ownerKey === clientOwnerKey) return;
 
     void loadCart().catch(() => undefined);
-  }, [clientIdentity, isBootstrapping, isLoaded, loadCart]);
+  }, [clientOwnerKey, isBootstrapping, isLoaded, loadCart]);
 
   useEffect(
     () => () => {
@@ -206,7 +202,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const onCartUpdated = (event: Event) => {
-      if (!identityRef.current) return;
+      if (!ownerKeyRef.current) return;
 
       const detail = (event as CustomEvent<CartUpdatedEventDetail>).detail;
 
@@ -217,15 +213,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (typeof detail?.totalItems === 'number') {
         setSnapshot((current) => {
-          const identity = identityRef.current;
+          const ownerKey = ownerKeyRef.current;
 
-          if (!identity) return current;
+          if (!ownerKey) return current;
 
           const currentCart =
-            current?.identity === identity ? current.cart : EMPTY_CART;
+            current?.ownerKey === ownerKey ? current.cart : EMPTY_CART;
 
           return {
-            identity,
+            ownerKey,
             cart: {
               ...currentCart,
               totalItems: detail.totalItems,

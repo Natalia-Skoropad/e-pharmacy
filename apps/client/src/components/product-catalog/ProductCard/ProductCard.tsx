@@ -12,13 +12,7 @@ import { formatMoneyRange, getNumericRange } from '@e-pharmacy/utils/money';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import type { ProductDetails } from '@e-pharmacy/types/products';
 
-import {
-  useClientAuthCapabilities,
-  useFavoriteActions,
-  useProductFavoriteRefresh,
-} from '@/hooks';
-
-import { addFavoriteProduct, removeFavoriteProduct } from '@/lib/api/browser';
+import { useClientAuthCapabilities, useFavoriteActions } from '@/hooks';
 import { buildProductPath } from '@/lib/routes';
 
 import { FavoriteToggleButton } from '@/components/common';
@@ -29,36 +23,32 @@ import css from './ProductCard.module.css';
 
 type ProductCardProps = {
   product: ProductDetails;
-  skipFavoriteRefresh?: boolean;
   onFavoriteChange?: (productId: string, isFavorite: boolean) => void;
 };
 
 //===================================================================
 
-function ProductCard({
-  product,
-  skipFavoriteRefresh = false,
-  onFavoriteChange,
-}: ProductCardProps) {
+function ProductCard({ product, onFavoriteChange }: ProductCardProps) {
   const { isAuthenticated, isBootstrapping, canUseClientFeatures } =
     useClientAuthCapabilities();
   const toast = useToast();
 
-  const { isFavorite, isFavoriteLoading, handleFavoriteClick, setIsFavorite } =
-    useFavoriteActions({
-      id: product.id,
-      initialIsFavorite: Boolean(product.isFavorite),
-      notifier: toast,
-      loginMessage: 'Please log in to add products to favorites.',
-      addedMessage: 'ProductDetails was added to favorites.',
-      removedMessage: 'ProductDetails was removed from favorites.',
-      errorMessage: 'Could not update favorites.',
-      addFavorite: addFavoriteProduct,
-      removeFavorite: removeFavoriteProduct,
-      onFavoriteChange: (productId, nextIsFavorite) => {
-        onFavoriteChange?.(productId, nextIsFavorite);
-      },
-    });
+  const { isFavorite, isFavoriteLoading, toggleFavorite } = useFavoriteActions({
+    entityType: 'product',
+    id: product.id,
+    notifier: toast,
+    loginMessage: 'Please log in to add products to favorites.',
+    unavailableMessage:
+      'We could not verify your session. Please try again shortly.',
+    clientAccountRequiredMessage:
+      'Favorites are available only for active client accounts.',
+    addedMessage: 'Product was added to favorites.',
+    removedMessage: 'Product was removed from favorites.',
+    errorMessage: 'Could not update favorites.',
+    onFavoriteChange: (productId, nextIsFavorite) => {
+      onFavoriteChange?.(productId, nextIsFavorite);
+    },
+  });
 
   const productHref = buildProductPath(product.name, product.id);
 
@@ -75,12 +65,6 @@ function ProductCard({
       ? (formatMoneyRange(priceRange) ?? '—')
       : 'No pharmacy prices yet';
   }, [product.offers]);
-
-  useProductFavoriteRefresh({
-    id: product.id,
-    isEnabled: !skipFavoriteRefresh && canUseClientFeatures,
-    onRefresh: setIsFavorite,
-  });
 
   return (
     <article
@@ -106,7 +90,7 @@ function ProductCard({
             <FavoriteToggleButton
               isActive={isFavorite}
               disabled={isFavoriteLoading}
-              onClick={handleFavoriteClick}
+              onClick={() => void toggleFavorite()}
               activeLabel="Remove product from favorites"
               inactiveLabel="Add product to favorites"
             />

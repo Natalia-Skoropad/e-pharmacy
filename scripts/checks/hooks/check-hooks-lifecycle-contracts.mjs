@@ -34,9 +34,12 @@ const debounceConsumers = [
 const mutationContracts = [
   [
     'apps/client/src/hooks/useFavoriteActions.ts',
-    ['activeMutationRef', 'mutationVersionRef'],
+    ['activeControllerRef', 'toggleFavoriteInStore'],
   ],
-  ['apps/client/src/hooks/useReviewForm.ts', ['submitLockRef']],
+  [
+    'apps/client/src/hooks/useReviewForm.ts',
+    ['submitLockRef', 'activeControllerRef', 'useClientSessionScope'],
+  ],
   [
     'apps/client/src/components/checkout/hooks/useCheckoutSubmit.ts',
     ['submitLockRef'],
@@ -191,23 +194,45 @@ if (
   failures.push('Favorite ID promises must not be cached globally.');
 }
 
-const favoriteStatus = await readRepositoryFile(
-  'apps/client/src/hooks/useFavoriteStatusRefresh.ts'
+const favoritesProvider = await readRepositoryFile(
+  'apps/client/src/providers/FavoritesProvider/FavoritesProvider.tsx'
 );
 
-if (!favoriteStatus.includes('[id, user?.id]')) {
-  failures.push('Favorite refresh must be scoped to the active auth identity.');
+for (const contract of [
+  'useClientSessionScope',
+  'activeCollectionRef',
+  'activeMutationsRef',
+  'AbortController',
+]) {
+  if (!favoritesProvider.includes(contract)) {
+    failures.push(
+      `FavoritesProvider is missing session-scoped async protection: ${contract}.`
+    );
+  }
 }
 
 const cartProvider = await readRepositoryFile(
   'apps/client/src/providers/CartProvider/CartProvider.tsx'
 );
 
+const clientSessionScope = await readRepositoryFile(
+  'apps/client/src/providers/AuthProvider/ClientSessionScope.tsx'
+);
+
+for (const contract of ['ClientSessionScopeBoundary', 'key={authIdentity}']) {
+  if (!clientSessionScope.includes(contract)) {
+    failures.push(
+      `ClientSessionScope is missing keyed lifecycle reset: ${contract}.`
+    );
+  }
+}
+
 for (const contract of [
-  'clientIdentity',
+  'clientOwnerKey',
+  'useClientSessionScope',
   'loadGenerationRef',
   'AbortController',
-  'identityRef.current !== identity',
+  'ownerKeyRef.current !== ownerKey',
 ]) {
   if (!cartProvider.includes(contract)) {
     failures.push(
