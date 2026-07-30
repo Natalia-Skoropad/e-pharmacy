@@ -1,4 +1,4 @@
-import { createPageMetadata } from '@/lib/seo';
+import { createPageMetadata } from '@/lib/seo/server';
 
 import { InfoPage } from '@/components/info';
 import { PERSONAL_DATA_NOTICE_INFO } from '@/components/info/config';

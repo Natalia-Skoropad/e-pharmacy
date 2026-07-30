@@ -48,8 +48,10 @@ function ReviewsList({
   onVisibleCountChange,
 }: ReviewsListProps) {
   const titleId = useId();
+
   const [internalVisibleCount, setInternalVisibleCount] =
     useState(initialVisibleCount);
+
   const resolvedVisibleCount = visibleCount ?? internalVisibleCount;
   const visibleReviews = reviews.slice(0, resolvedVisibleCount);
 
@@ -101,6 +103,7 @@ function ReviewsList({
                   <div className={css.cardHeader}>
                     <div>
                       <h3 className={css.author}>{review.userName}</h3>
+
                       <time className={css.date} dateTime={review.createdAt}>
                         {formatShortDate(review.createdAt) ?? '—'}
                       </time>

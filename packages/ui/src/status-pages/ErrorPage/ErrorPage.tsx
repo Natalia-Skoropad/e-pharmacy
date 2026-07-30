@@ -47,6 +47,7 @@ function ErrorPage({
           <Button type="button" size="lg" onClick={onRetry}>
             {retryLabel}
           </Button>
+
           <LinkButton href={homeHref} variant="secondary" size="lg">
             {homeLabel}
           </LinkButton>

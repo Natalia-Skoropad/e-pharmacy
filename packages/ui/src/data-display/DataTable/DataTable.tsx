@@ -13,6 +13,8 @@ export type DataTableColumn<TItem> = Readonly<{
   render: (item: TItem) => ReactNode;
 }>;
 
+//===================================================================
+
 export type DataTableLabels = Readonly<{
   loading?: string;
   empty?: string;

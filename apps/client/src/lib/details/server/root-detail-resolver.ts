@@ -9,7 +9,9 @@ import { isReservedRootSlug } from '@/lib/routes';
 import { buildProductPath, buildPharmacyPath } from '@/lib/routes';
 import { lookupProductBySlugId } from '@/lib/details/server/product-detail-page';
 import { lookupPharmacyBySlugId } from '@/lib/details/server/pharmacy-detail-page';
-import type { DataUnavailableReason } from '@/lib/api/server';
+import type { ServerDataErrorContext } from '@/lib/api/server';
+
+import { selectRootDetail } from './root-detail-policy';
 
 //===================================================================
 
@@ -36,7 +38,7 @@ export type RootDetail = ProductRootDetail | PharmacyRootDetail;
 export type RootDetailResolveResult =
   | { status: 'found'; detail: RootDetail }
   | { status: 'not_found' }
-  | { status: 'unavailable'; reason: DataUnavailableReason };
+  | ({ status: 'unavailable' } & ServerDataErrorContext);
 
 //===================================================================
 
@@ -87,33 +89,42 @@ export const resolveRootDetailBySlugId = cache(
       productResult.status === 'found'
         ? createProductRootDetail(slugId, productResult.product)
         : null,
+
       pharmacyResult.status === 'found'
         ? createPharmacyRootDetail(slugId, pharmacyResult.pharmacy)
         : null,
     ].filter((detail): detail is RootDetail => Boolean(detail));
 
-    if (details.length > 0) {
-      const exactCanonicalMatch = details.find(
-        (detail) => detail.isCanonicalSlug
-      );
+    const selection = selectRootDetail(details);
 
-      if (exactCanonicalMatch) {
-        return { status: 'found', detail: exactCanonicalMatch };
-      }
-
-      if (details.length === 1) {
-        return { status: 'found', detail: details[0] };
-      }
-
+    if (selection.status === 'collision') {
       return { status: 'not_found' };
     }
 
+    if (selection.status === 'found') {
+      return { status: 'found', detail: selection.detail };
+    }
+
     if (productResult.status === 'unavailable') {
-      return { status: 'unavailable', reason: productResult.reason };
+      console.error('Root product detail unavailable', {
+        slugId,
+        reason: productResult.reason,
+        requestId: productResult.requestId,
+        httpStatus: productResult.httpStatus,
+        backendCode: productResult.backendCode,
+      });
+      return productResult;
     }
 
     if (pharmacyResult.status === 'unavailable') {
-      return { status: 'unavailable', reason: pharmacyResult.reason };
+      console.error('Root pharmacy detail unavailable', {
+        slugId,
+        reason: pharmacyResult.reason,
+        requestId: pharmacyResult.requestId,
+        httpStatus: pharmacyResult.httpStatus,
+        backendCode: pharmacyResult.backendCode,
+      });
+      return pharmacyResult;
     }
 
     return { status: 'not_found' };

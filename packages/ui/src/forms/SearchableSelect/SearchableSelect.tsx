@@ -69,6 +69,7 @@ function SearchableSelect<TValue extends string = string>({
   const inputId = id ?? `searchable-select-${generatedId}`;
   const listboxId = `${inputId}-listbox`;
   const errorId = error ? `${inputId}-error` : undefined;
+
   const ariaDescribedBy =
     [describedBy, errorId].filter(Boolean).join(' ') || undefined;
 
@@ -105,6 +106,7 @@ function SearchableSelect<TValue extends string = string>({
   } = useListboxNavigation(filteredOptions.length, 0, isOptionDisabled);
   const activeOption =
     activeIndex >= 0 ? filteredOptions[activeIndex] : undefined;
+
   const activeOptionId =
     isOpen && activeIndex >= 0
       ? `${listboxId}-option-${activeIndex}`

@@ -22,11 +22,11 @@ import type {
 
 import type { ReviewsResponse } from '@e-pharmacy/types/reviews';
 
-import type { ApiReaderRequester } from './public-products-reader';
+import type { ApiReaderRequester } from './types';
 
 //===================================================================
 
-export type PublicPharmacyReadRoutes = Readonly<{
+type PublicPharmacyReadRoutes = Readonly<{
   list: string;
   options: string;
   filters: string;

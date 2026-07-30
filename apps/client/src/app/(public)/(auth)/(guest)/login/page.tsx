@@ -1,4 +1,4 @@
-import { LOGIN_DESCRIPTION, LOGIN_TITLE, createPageMetadata } from '@/lib/seo';
+import { LOGIN_DESCRIPTION, LOGIN_TITLE, createPageMetadata } from '@/lib/seo/server';
 import { ROUTES, createBreadcrumbs } from '@/lib/routes';
 
 import { AuthFormShell, LoginForm } from '@/components/auth';

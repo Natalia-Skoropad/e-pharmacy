@@ -7,6 +7,8 @@ import css from './Container.module.css';
 
 export type ContainerVariant = 'page';
 
+//===================================================================
+
 export type ContainerOwnProps<TElement extends ElementType> = {
   as?: TElement;
   children: ReactNode;
@@ -40,5 +42,4 @@ function Container<TElement extends ElementType = 'div'>({
 }
 
 export default Container;
-
 export { Container };

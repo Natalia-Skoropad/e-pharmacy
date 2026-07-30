@@ -13,10 +13,7 @@ export const PRODUCT_OFFERS_PER_PAGE = 10;
 
 //===================================================================
 
-export const PRODUCT_OFFER_SORT_OPTIONS: {
-  value: ProductOfferSort;
-  label: string;
-}[] = [
+export const PRODUCT_OFFER_SORT_OPTIONS = [
   { value: 'newest', label: 'Newest first' },
   { value: 'rating-desc', label: 'Rating: highest first' },
   { value: 'rating-asc', label: 'Rating: lowest first' },
@@ -24,4 +21,7 @@ export const PRODUCT_OFFER_SORT_OPTIONS: {
   { value: 'name-desc', label: 'Name: Z to A' },
   { value: 'price-asc', label: 'Price: low to high' },
   { value: 'price-desc', label: 'Price: high to low' },
-];
+] as const satisfies readonly Readonly<{
+  value: ProductOfferSort;
+  label: string;
+}>[];

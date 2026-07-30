@@ -2,7 +2,7 @@ import {
   CHECKOUT_DESCRIPTION,
   CHECKOUT_TITLE,
   createPageMetadata,
-} from '@/lib/seo';
+} from '@/lib/seo/server';
 
 import { ROUTES } from '@/lib/routes';
 import { CheckoutPageContent } from '@/components/checkout';

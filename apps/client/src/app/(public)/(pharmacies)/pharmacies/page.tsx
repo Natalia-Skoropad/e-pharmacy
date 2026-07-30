@@ -8,7 +8,7 @@ import {
 } from '@/lib/catalog/pharmacies-catalog';
 
 import { loadPharmaciesCatalogPageData } from '@/lib/catalog/pharmacies-catalog-server';
-import { createPageMetadata } from '@/lib/seo';
+import { createPageMetadata } from '@/lib/seo/server';
 
 import { PharmaciesPageContent } from '@/components/pharmacies';
 

@@ -81,7 +81,9 @@ for (const operation of [
   assert.match(cartApi, new RegExp(`export function ${operation}`));
 }
 
-assert.match(cartApi, /signal: options\.signal/);
+assert.match(cartApi, /MutationRequestOptions/);
+assert.match(cartApi, /\.\.\.options/);
+assert.doesNotMatch(cartApi, /JsonResponseRequestOptions/);
 
 console.log(
   'Client cart check passed (state machine, serialized mutations, abortable API writes, no event/wrapper layer).'

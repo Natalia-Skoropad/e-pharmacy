@@ -1,7 +1,5 @@
 import 'client-only';
 
-import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
-
 import {
   parseApiResponseData,
   parseCartResponse,
@@ -15,46 +13,46 @@ import type {
   UpdateCartItemPayload,
 } from '@e-pharmacy/types/cart';
 
-import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
+import { clientApiRoutes as ROUTES } from '@/lib/api/routes/client-api-routes';
 
-//===================================================================
-
-type CartRequestOptions = Readonly<{
-  signal?: AbortSignal;
-}>;
+import type {
+  MutationRequestOptions,
+  ReadRequestOptions,
+} from '@/lib/api/request-options';
 
 //===================================================================
 
 async function requestCart(
   path: string,
-  options?: JsonResponseRequestOptions
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  options: ReadRequestOptions | MutationRequestOptions = {},
+  body?: AddCartItemPayload | UpdateCartItemPayload
 ): Promise<CartResponse> {
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, {
+      ...options,
+      method,
+      ...(body === undefined ? {} : { body }),
+    }),
+
     parseCartResponse,
-    { url: path, method: options?.method ?? 'GET' }
+    { url: path, method }
   );
 }
 
 //===================================================================
 
-export function getCart(
-  options?: JsonResponseRequestOptions
-): Promise<CartResponse> {
-  return requestCart(CLIENT_API_ROUTES.cart.current, options);
+export function getCart(options?: ReadRequestOptions): Promise<CartResponse> {
+  return requestCart(ROUTES.cart.current, 'GET', options);
 }
 
 //===================================================================
 
 export function addCartItem(
   payload: AddCartItemPayload,
-  options: CartRequestOptions = {}
+  options: MutationRequestOptions = {}
 ): Promise<CartResponse> {
-  return requestCart(CLIENT_API_ROUTES.cart.addItem, {
-    method: 'POST',
-    body: payload,
-    signal: options.signal,
-  });
+  return requestCart(ROUTES.cart.addItem, 'POST', options, payload);
 }
 
 //===================================================================
@@ -62,34 +60,24 @@ export function addCartItem(
 export function updateCartItem(
   cartItemId: string,
   payload: UpdateCartItemPayload,
-  options: CartRequestOptions = {}
+  options: MutationRequestOptions = {}
 ): Promise<CartResponse> {
-  return requestCart(CLIENT_API_ROUTES.cart.item(cartItemId), {
-    method: 'PATCH',
-    body: payload,
-    signal: options.signal,
-  });
+  return requestCart(ROUTES.cart.item(cartItemId), 'PATCH', options, payload);
 }
 
 //===================================================================
 
 export function removeCartItem(
   cartItemId: string,
-  options: CartRequestOptions = {}
+  options: MutationRequestOptions = {}
 ): Promise<CartResponse> {
-  return requestCart(CLIENT_API_ROUTES.cart.item(cartItemId), {
-    method: 'DELETE',
-    signal: options.signal,
-  });
+  return requestCart(ROUTES.cart.item(cartItemId), 'DELETE', options);
 }
 
 //===================================================================
 
 export function clearCart(
-  options: CartRequestOptions = {}
+  options: MutationRequestOptions = {}
 ): Promise<CartResponse> {
-  return requestCart(CLIENT_API_ROUTES.cart.clear, {
-    method: 'DELETE',
-    signal: options.signal,
-  });
+  return requestCart(ROUTES.cart.clear, 'DELETE', options);
 }

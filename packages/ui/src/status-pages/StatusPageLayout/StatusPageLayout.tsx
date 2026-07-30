@@ -52,6 +52,7 @@ function StatusPageLayout({
             <div className={css.content}>
               {eyebrow ? <p className={css.eyebrow}>{eyebrow}</p> : null}
               <h1 className={css.title}>{title}</h1>
+
               <p className={css.text}>{description}</p>
               {actions ? <div className={css.actions}>{actions}</div> : null}
             </div>

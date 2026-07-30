@@ -34,6 +34,8 @@ type ClientSessionScopeBoundaryProps = Readonly<{
   children: ReactNode;
 }>;
 
+//===================================================================
+
 function ClientSessionScopeBoundary({
   authIdentity,
   children,
@@ -66,10 +68,7 @@ export function ClientSessionScopeProvider({
   const authIdentity = createClientAuthIdentity(status, user);
 
   return (
-    <ClientSessionScopeBoundary
-      key={authIdentity}
-      authIdentity={authIdentity}
-    >
+    <ClientSessionScopeBoundary key={authIdentity} authIdentity={authIdentity}>
       {children}
     </ClientSessionScopeBoundary>
   );

@@ -34,9 +34,11 @@ test('working hours are exposed as a labelled field group', async () => {
 
 test('data table preserves consumer order and alignment classes are truthful', async () => {
   const component = await readSource('../data-display/DataTable/DataTable.tsx');
+
   const styles = await readSource(
     '../data-display/DataTable/DataTable.module.css'
   );
+
   assert.doesNotMatch(component, /newestFirst|getSortDateValue/);
   assert.match(styles, /\.alignRight\s*\{[\s\S]*?text-align:\s*right/);
   assert.match(styles, /\.alignCenter\s*\{[\s\S]*?text-align:\s*center/);
@@ -81,6 +83,7 @@ test('date filter uses business calendar dates and synchronizes draft state', as
 
 test('select foundations expose safe option ids and complete navigation keys', async () => {
   const select = await readSource('../forms/SelectField/SelectField.tsx');
+
   const searchable = await readSource(
     '../forms/SearchableSelect/SearchableSelect.tsx'
   );
@@ -116,6 +119,7 @@ test('status pages have one image API and truthful image semantics', async () =>
   );
 
   const errorPage = await readSource('../status-pages/ErrorPage/ErrorPage.tsx');
+
   const notFoundPage = await readSource(
     '../status-pages/NotFoundPage/NotFoundPage.tsx'
   );

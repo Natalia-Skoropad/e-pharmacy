@@ -1,5 +1,19 @@
 import 'server-only';
 
-export * from './server/product-detail-page';
-export * from './server/root-detail-resolver';
-export * from './server/pharmacy-detail-page';
+export {
+  createProductDetailMetadata,
+  lookupProductBySlugId,
+  type ProductDetailLookupResult,
+} from './server/product-detail-page';
+
+export {
+  createPharmacyDetailMetadata,
+  lookupPharmacyBySlugId,
+  type PharmacyDetailLookupResult,
+} from './server/pharmacy-detail-page';
+
+export {
+  resolveRootDetailBySlugId,
+  type RootDetail,
+  type RootDetailResolveResult,
+} from './server/root-detail-resolver';

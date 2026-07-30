@@ -2,7 +2,7 @@ import {
   REGISTER_DESCRIPTION,
   REGISTER_TITLE,
   createPageMetadata,
-} from '@/lib/seo';
+} from '@/lib/seo/server';
 
 import { ROUTES, createBreadcrumbs } from '@/lib/routes';
 

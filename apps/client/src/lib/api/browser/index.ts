@@ -1,27 +1,50 @@
 import 'client-only';
 
-export * from './auth.api';
-export * from './cart.api';
-export * from './health.api';
-export * from './orders.api';
-export * from './products.api';
-export * from './pharmacies.api';
+export {
+  getActiveSessions,
+  getCurrentUser,
+  loginUser,
+  logoutUser,
+  registerUser,
+  requestPasswordReset,
+  resetPassword,
+  revokeActiveSession,
+  updateCurrentUser,
+  updateCurrentUserPassword,
+} from './auth.api';
 
 export {
-  getProductsFromClientApi as getProducts,
-  getFavoriteProductsFromClientApi as getFavoriteProducts,
-  getFavoriteProductIdsFromClientApi as getFavoriteProductIds,
-  getProductFiltersFromClientApi as getProductFilters,
-  getProductDetailsFromClientApi as getProductDetails,
-  getProductReviewsFromClientApi as getProductReviews,
+  addCartItem,
+  clearCart,
+  getCart,
+  removeCartItem,
+  updateCartItem,
+} from './cart.api';
+
+export { checkoutOrder, getOrderDetails, getOrders } from './orders.api';
+
+export {
+  addFavoriteProduct,
+  createProductReview,
+  getFavoriteProductIds,
+  getFavoriteProducts,
+  getProductDetails,
+  getProductFilters,
+  getProductReviews,
+  getProducts,
+  removeFavoriteProduct,
 } from './products.api';
 
 export {
-  getPharmaciesFromClientApi as getPharmacies,
-  getFavoritePharmaciesFromClientApi as getFavoritePharmacies,
-  getFavoritePharmacyIdsFromClientApi as getFavoritePharmacyIds,
-  getPharmacyOptionsFromClientApi as getPharmacyOptions,
-  getPharmacyFiltersFromClientApi as getPharmacyFilters,
-  getPharmacyDetailsFromClientApi as getPharmacyDetails,
-  getPharmacyReviewsFromClientApi as getPharmacyReviews,
+  addFavoritePharmacy,
+  createPharmacyReview,
+  getFavoritePharmacies,
+  getFavoritePharmacyIds,
+  getPharmacies,
+  getPharmacyCheckoutDetails,
+  getPharmacyDetails,
+  getPharmacyFilters,
+  getPharmacyOptions,
+  getPharmacyReviews,
+  removeFavoritePharmacy,
 } from './pharmacies.api';

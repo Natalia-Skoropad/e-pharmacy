@@ -8,6 +8,8 @@ export type ClientSessionLifecycle = Readonly<{
   generation: number;
 }>;
 
+//===================================================================
+
 let nextSessionGeneration = 0;
 
 //===================================================================

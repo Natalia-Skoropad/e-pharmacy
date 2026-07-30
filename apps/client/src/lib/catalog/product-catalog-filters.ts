@@ -4,27 +4,42 @@ import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
 
 import type {
-  ProductCategory,
-  ProductFilterOptionsResponse,
   CatalogProductsQueryParams,
+  ProductCategory,
+  ProductsSortOption,
 } from '@e-pharmacy/types/products';
 
 import {
+  isValidObjectId,
   sanitizeArticleParam,
   sanitizeTextParam,
 } from '@e-pharmacy/validation/url';
-
-import { isValidObjectId } from '@/lib/routes';
 
 import { parsePositivePageParam } from './catalog-param-utils';
 
 //===================================================================
 
-export const PRODUCTS_CATALOG_PER_PAGE = 24;
+const PRODUCT_AVAILABILITY_VALUES = [
+  'all',
+  'in-stock',
+  'out-of-stock',
+] as const;
+
+const PRODUCT_SORT_VALUES = [
+  'newest',
+  'rating-desc',
+  'rating-asc',
+  'name-asc',
+  'name-desc',
+] as const satisfies readonly ProductsSortOption[];
 
 //===================================================================
 
-export const FALLBACK_PRODUCT_FILTER_OPTIONS: ProductFilterOptionsResponse = {
+const PRODUCTS_CATALOG_PER_PAGE = 24;
+
+//===================================================================
+
+export const FALLBACK_PRODUCT_FILTER_OPTIONS = {
   categories: [
     { value: 'all', label: 'All categories' },
     ...PRODUCT_CATEGORIES.map((value) => ({
@@ -46,25 +61,23 @@ export const FALLBACK_PRODUCT_FILTER_OPTIONS: ProductFilterOptionsResponse = {
     { value: 'name-asc', label: 'Name: A to Z' },
     { value: 'name-desc', label: 'Name: Z to A' },
   ],
-};
+} as const;
 
 //===================================================================
 
-export type ProductCategoryFilter =
-  ProductFilterOptionsResponse['categories'][number]['value'];
+export type ProductCategoryFilter = 'all' | ProductCategory;
+
+//===================================================================
 
 export type ProductAvailabilityFilter =
-  ProductFilterOptionsResponse['availability'][number]['value'];
+  (typeof PRODUCT_AVAILABILITY_VALUES)[number];
 
-export type ProductSortFilter =
-  ProductFilterOptionsResponse['sort'][number]['value'];
+export type ProductSortFilter = (typeof PRODUCT_SORT_VALUES)[number];
 
 export type ProductCatalogSeoContext = {
   categoryLabel?: string;
   pharmacyName?: string;
 };
-
-//===================================================================
 
 export type ProductCatalogSearchParams = {
   name?: string;
@@ -92,24 +105,10 @@ export type ProductCatalogFilters = {
 
 //===================================================================
 
-const CATEGORY_VALUES = FALLBACK_PRODUCT_FILTER_OPTIONS.categories.map(
-  (option) => option.value
-);
-
-const AVAILABILITY_VALUES = FALLBACK_PRODUCT_FILTER_OPTIONS.availability.map(
-  (option) => option.value
-);
-
-const SORT_VALUES = FALLBACK_PRODUCT_FILTER_OPTIONS.sort.map(
-  (option) => option.value
-);
-
-//===================================================================
-
 export function isProductCategoryFilter(
   value?: string
 ): value is ProductCategoryFilter {
-  return CATEGORY_VALUES.includes(value as ProductCategoryFilter);
+  return value === 'all' || PRODUCT_CATEGORIES.some((item) => item === value);
 }
 
 //===================================================================
@@ -117,7 +116,7 @@ export function isProductCategoryFilter(
 export function isProductAvailabilityFilter(
   value?: string
 ): value is ProductAvailabilityFilter {
-  return AVAILABILITY_VALUES.includes(value as ProductAvailabilityFilter);
+  return PRODUCT_AVAILABILITY_VALUES.some((item) => item === value);
 }
 
 //===================================================================
@@ -125,7 +124,7 @@ export function isProductAvailabilityFilter(
 export function isProductSortFilter(
   value?: string
 ): value is ProductSortFilter {
-  return SORT_VALUES.includes(value as ProductSortFilter);
+  return PRODUCT_SORT_VALUES.some((item) => item === value);
 }
 
 //===================================================================
@@ -133,7 +132,7 @@ export function isProductSortFilter(
 export function getProductCategoryLabel(
   filters: ProductCatalogFilters,
   fallback?: string
-) {
+): string | undefined {
   return (
     fallback ??
     FALLBACK_PRODUCT_FILTER_OPTIONS.categories.find(
@@ -158,34 +157,21 @@ export function parseProductCatalogSearchParams(
   return {
     name: sanitizeTextParam(params.name),
     article: sanitizeArticleParam(params.article),
+
     category: isProductCategoryFilter(params.category)
       ? params.category
       : 'all',
+
     availability: isProductAvailabilityFilter(params.availability)
       ? params.availability
       : 'all',
+
     sort: isProductSortFilter(params.sort) ? params.sort : 'newest',
     page: parsePositivePageParam(params.page),
     ...(isValidObjectId(params.pharmacyId)
       ? { pharmacyId: params.pharmacyId }
       : {}),
   };
-}
-
-//===================================================================
-
-export function hasLegacyProductCatalogSearchParams(
-  params: ProductCatalogSearchParams = {}
-): boolean {
-  return Boolean(
-    params.name ||
-    params.article ||
-    params.category ||
-    params.availability ||
-    params.sort ||
-    params.page ||
-    params.pharmacyId
-  );
 }
 
 //===================================================================
@@ -220,14 +206,13 @@ export function buildProductCatalogApiParams(
     perPage: PRODUCTS_CATALOG_PER_PAGE,
     nameKeyword: filters.name || undefined,
     articleKeyword: filters.article || undefined,
-    category:
-      filters.category === 'all'
-        ? undefined
-        : (filters.category as ProductCategory),
+    category: filters.category === 'all' ? undefined : filters.category,
+
     inStock:
       filters.availability === 'all'
         ? undefined
         : filters.availability === 'in-stock',
+
     sort: filters.sort,
     pharmacyId: filters.pharmacyId,
   };
@@ -246,28 +231,6 @@ export function getProductCatalogActiveFiltersCount(
     Boolean(filters.pharmacyId)
   );
 }
-
-//===================================================================
-
-export function hasActiveProductCatalogFilters(
-  filters: ProductCatalogFilters
-): boolean {
-  return getProductCatalogActiveFiltersCount(filters) > 0;
-}
-
-//===================================================================
-
-export function hasActiveProductCatalogState(
-  filters: ProductCatalogFilters
-): boolean {
-  return (
-    hasActiveProductCatalogFilters(filters) ||
-    filters.sort !== 'newest' ||
-    filters.page > 1
-  );
-}
-
-//===================================================================
 
 export function isProductCatalogNoIndex(
   filters: ProductCatalogFilters

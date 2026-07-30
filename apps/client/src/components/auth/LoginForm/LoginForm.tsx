@@ -26,7 +26,7 @@ import {
 } from '@e-pharmacy/validation/auth';
 
 import { ROUTES } from '@/lib/routes';
-import { LOGIN_TITLE } from '@/lib/seo';
+import { LOGIN_TITLE } from '@/lib/seo/content';
 
 import {
   getClientAuthErrorMessage,

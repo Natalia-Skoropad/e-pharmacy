@@ -54,6 +54,7 @@ function StatsCardContent({
         {icon ? <span className={css.icon}>{icon}</span> : null}
         {!icon && status ? <StatusBadge {...status} /> : null}
       </div>
+
       <p className={css.value}>{value}</p>
       {description ? <p className={css.description}>{description}</p> : null}
       {meta ? <span className={css.meta}>{meta}</span> : null}
@@ -70,6 +71,7 @@ export function StatsCard({
   ...contentProps
 }: StatsCardProps) {
   const isInteractive = Boolean(href || onClick);
+
   const classNames = clsx(
     css.card,
     css[tone],

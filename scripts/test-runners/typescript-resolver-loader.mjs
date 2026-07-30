@@ -10,6 +10,31 @@ const RELATIVE_SPECIFIER_PATTERN = /^\.{1,2}\//;
 const EXPLICIT_EXTENSION_PATTERN = /\.[a-z0-9]+$/i;
 const TYPESCRIPT_MODULE_PATTERN = /\.(?:ts|tsx|mts)$/i;
 
+const APPLICATION_ALIAS_PREFIX = '@/';
+
+//===================================================================
+
+function resolveApplicationAlias(specifier, parentURL) {
+  if (!parentURL || !specifier.startsWith(APPLICATION_ALIAS_PREFIX)) {
+    return null;
+  }
+
+  const parentPath = fileURLToPath(parentURL).replaceAll('\\', '/');
+  const applicationMatch = parentPath.match(
+    /\/(apps\/(?:client|pharmacy))\/src\//
+  );
+  if (!applicationMatch) return null;
+
+  const sourceRoot = new URL(
+    `../../${applicationMatch[1]}/src/`,
+    import.meta.url
+  );
+  return new URL(specifier.slice(APPLICATION_ALIAS_PREFIX.length), sourceRoot)
+    .href;
+}
+
+//===================================================================
+
 const TYPESCRIPT_CANDIDATES = [
   '.ts',
   '.tsx',
@@ -41,6 +66,22 @@ async function resolveExistingCandidate(specifier, parentURL) {
 //===================================================================
 
 export async function resolve(specifier, context, nextResolve) {
+  const applicationAlias = resolveApplicationAlias(
+    specifier,
+    context.parentURL
+  );
+
+  if (applicationAlias) {
+    const resolvedURL = await resolveExistingCandidate(
+      applicationAlias,
+      import.meta.url
+    );
+
+    if (resolvedURL) {
+      return { url: resolvedURL, shortCircuit: true };
+    }
+  }
+
   if (
     context.parentURL &&
     RELATIVE_SPECIFIER_PATTERN.test(specifier) &&

@@ -5,9 +5,10 @@ import {
   CHECKOUT_DESCRIPTION,
   CHECKOUT_TITLE,
   createPageMetadata,
-} from '@/lib/seo';
+} from '@/lib/seo/server';
 
-import { ROUTES, getIdFromSlugId } from '@/lib/routes';
+import { ROUTES } from '@/lib/routes';
+import { getIdFromSlugId } from '@e-pharmacy/validation/url';
 import { CheckoutPageContent } from '@/components/checkout';
 
 //===================================================================

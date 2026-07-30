@@ -1,9 +1,6 @@
 import 'client-only';
 
-import {
-  appendQueryParams,
-  type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/transport';
+import { appendQueryParams } from '@e-pharmacy/api-client/transport';
 
 import {
   parseApiResponseData,
@@ -31,33 +28,32 @@ import type {
 } from '@e-pharmacy/types/reviews';
 
 import { createPublicProductsReader } from '@/lib/api/readers/public-products-reader';
-import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
+import { clientApiRoutes as ROUTES } from '@/lib/api/routes/client-api-routes';
+
+import type {
+  MutationRequestOptions,
+  ReadRequestOptions,
+} from '@/lib/api/request-options';
 
 //===================================================================
 
-type MutationRequestOptions = Omit<
-  JsonResponseRequestOptions,
-  'method' | 'body'
->;
+const publicProductsReader = createPublicProductsReader<ReadRequestOptions>(
+  (path, options) => localApiRequest(path, options),
+  ROUTES.products
+);
 
 //===================================================================
 
-const publicProductsReader =
-  createPublicProductsReader<JsonResponseRequestOptions>(
-    (path, options) => localApiRequest(path, options),
-    ROUTES.products
-  );
-
-export const getProductsFromClientApi = publicProductsReader.getProducts;
-export const getProductFiltersFromClientApi = publicProductsReader.getFilters;
-export const getProductDetailsFromClientApi = publicProductsReader.getDetails;
-export const getProductReviewsFromClientApi = publicProductsReader.getReviews;
+export const getProducts = publicProductsReader.getProducts;
+export const getProductFilters = publicProductsReader.getFilters;
+export const getProductDetails = publicProductsReader.getDetails;
+export const getProductReviews = publicProductsReader.getReviews;
 
 //===================================================================
 
-export async function getFavoriteProductsFromClientApi(
+export async function getFavoriteProducts(
   params: CatalogProductsQueryParams = {},
-  options?: JsonResponseRequestOptions
+  options?: ReadRequestOptions
 ): Promise<ProductsResponse> {
   const path = appendQueryParams(ROUTES.products.favorites, params);
 
@@ -70,8 +66,8 @@ export async function getFavoriteProductsFromClientApi(
 
 //===================================================================
 
-export async function getFavoriteProductIdsFromClientApi(
-  options?: JsonResponseRequestOptions
+export async function getFavoriteProductIds(
+  options?: ReadRequestOptions
 ): Promise<FavoriteIdsResponse> {
   const path = ROUTES.products.favoriteIds;
 

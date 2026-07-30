@@ -15,12 +15,13 @@ import { SearchInput } from '@e-pharmacy/ui/forms';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 
-import {
-  getProductCategoryOptions,
-  type ProductCategoryOption,
-} from '@/lib/catalog/product-category-options';
-
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
+
+import {
+  createUniqueLabeledOptions,
+  type LabeledOption,
+} from '@e-pharmacy/utils/collections';
+
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatStockLabel } from '@e-pharmacy/utils/numbers';
 import type { Cart } from '@e-pharmacy/types/cart';
@@ -81,7 +82,7 @@ function ContinueShoppingModal({
   >('all');
 
   const [categoryOptions, setCategoryOptions] = useState<
-    ProductCategoryOption[]
+    readonly LabeledOption<ProductCategory>[]
   >([]);
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<ProductDetails[]>([]);
@@ -116,7 +117,10 @@ function ContinueShoppingModal({
           }
         );
 
-        const nextOptions = getProductCategoryOptions(response.items);
+        const nextOptions = createUniqueLabeledOptions(
+          response.items.map((product) => product.category),
+          (category) => PRODUCT_CATEGORY_LABELS[category]
+        );
 
         setCategoryOptions(nextOptions);
 
@@ -293,7 +297,9 @@ function ContinueShoppingModal({
             <ul className={css.productList}>
               {products.map((product) => {
                 const isInCart = cartProductIds.has(product.id);
-                const isAdding = pendingOfferIds.has(`${pharmacyId}:${product.id}`);
+                const isAdding = pendingOfferIds.has(
+                  `${pharmacyId}:${product.id}`
+                );
                 const categoryLabel =
                   PRODUCT_CATEGORY_LABELS[product.category] ?? product.category;
 

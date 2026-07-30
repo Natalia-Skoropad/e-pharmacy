@@ -28,8 +28,10 @@ export function selectClientAuthCapabilities(
   auth: ClientAuthSource
 ): ClientAuthCapabilities {
   const isActiveUser = auth.user?.status === 'active';
+
   const isActiveClient =
     auth.isAuthenticated && auth.user?.role === 'client' && isActiveUser;
+
   const isActivePharmacyUser =
     auth.isAuthenticated && auth.user?.role === 'pharmacy' && isActiveUser;
 

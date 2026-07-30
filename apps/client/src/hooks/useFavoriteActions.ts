@@ -87,6 +87,7 @@ export function useFavoriteActions({
   }, [canUseClientFeatures, entityType, loadCollection]);
 
   const isFavorite = readIsFavorite(entityType, id);
+
   const isFavoriteLoading =
     isPending(entityType, id) || getCollectionStatus(entityType) === 'loading';
 

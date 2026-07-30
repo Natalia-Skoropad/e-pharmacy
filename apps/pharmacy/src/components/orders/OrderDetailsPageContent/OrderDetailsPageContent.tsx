@@ -85,6 +85,12 @@ import type {
 } from '@e-pharmacy/types/products';
 
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
+
+import {
+  createUniqueLabeledOptions,
+  type LabeledOption,
+} from '@e-pharmacy/utils/collections';
+
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import { formatStockLabel } from '@e-pharmacy/utils/numbers';
@@ -122,11 +128,6 @@ import {
   updatePharmacyOrder,
   updatePharmacyOrderStatus,
 } from '@/lib/api/browser';
-
-import {
-  getProductCategoryOptions,
-  type ProductCategoryOption,
-} from '@/lib/products/product-category-options';
 
 import type { PharmacyClientRow } from '@/lib/clients/clients';
 
@@ -434,12 +435,15 @@ function ProductPickerModal({
   const titleId = useId();
   const searchId = useId();
   const [searchValue, setSearchValue] = useState('');
+
   const [selectedCategory, setSelectedCategory] = useState<
     ProductCategory | 'all'
   >('all');
+
   const [categoryOptions, setCategoryOptions] = useState<
-    ProductCategoryOption[]
+    readonly LabeledOption<ProductCategory>[]
   >([]);
+
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<ProductDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -463,7 +467,12 @@ function ProductPickerModal({
           { signal: controller.signal }
         );
 
-        setCategoryOptions(getProductCategoryOptions(response.items));
+        setCategoryOptions(
+          createUniqueLabeledOptions(
+            response.items.map((product) => product.category),
+            (category) => PRODUCT_CATEGORY_LABELS[category]
+          )
+        );
       } catch {
         if (!controller.signal.aborted) {
           setError('Could not load product categories for this pharmacy.');
@@ -626,13 +635,17 @@ function ProductPickerModal({
             <ul className={css.productModalList}>
               {products.map((product) => {
                 const offer = getProductOffer(product, order.pharmacyId);
+
                 const isInOrder = Boolean(
                   offer &&
                   order.items.some((item) => item.productOfferId === offer.id)
                 );
+
                 const isAdding = addingProductIds.has(product.id);
+
                 const categoryLabel =
                   PRODUCT_CATEGORY_LABELS[product.category] ?? product.category;
+
                 const imageSrc = getProductImageSrc(product.imageUrl);
 
                 return (
@@ -659,6 +672,7 @@ function ProductPickerModal({
                     <div className={css.productModalInfo}>
                       <h3 className={css.productModalName}>{product.name}</h3>
                       <p className={css.productModalMeta}>{categoryLabel}</p>
+
                       {product.manufacturer ? (
                         <p className={css.productModalManufacturer}>
                           {product.manufacturer}
@@ -750,6 +764,7 @@ function OrderProductsTab({
                   Add at least one available product before saving the order.
                 </p>
               </div>
+
               <Button
                 type="button"
                 disabled={!isEditable || isUpdating}
@@ -1076,18 +1091,22 @@ function PaymentTab({
                     <dt>Recipient</dt>
                     <dd>{bankDetails.recipientName}</dd>
                   </div>
+
                   <div>
                     <dt>EDRPOU / Tax ID</dt>
                     <dd>{bankDetails.taxId}</dd>
                   </div>
+
                   <div>
                     <dt>IBAN</dt>
                     <dd>{bankDetails.iban}</dd>
                   </div>
+
                   <div>
                     <dt>Bank</dt>
                     <dd>{bankDetails.bankName}</dd>
                   </div>
+
                   <div>
                     <dt>Payment purpose</dt>
                     <dd>{bankDetails.paymentPurpose}</dd>
@@ -1103,10 +1122,12 @@ function PaymentTab({
               {bankDetails && receiptEmail ? (
                 <div className={css.emailNote}>
                   <Mail size={18} aria-hidden="true" />
+
                   <p>
                     After payment, the client should send the receipt to the
                     pharmacy email for faster processing.
                   </p>
+
                   <button
                     className={css.copyButton}
                     type="button"
@@ -1224,9 +1245,11 @@ function HistoryTab({
                   <strong>
                     {ORDER_STATUS_PRESENTATION[entry.status].label}
                   </strong>
+
                   <time dateTime={entry.changedAt}>
                     {formatDateTime(entry.changedAt) ?? '—'}
                   </time>
+
                   {entry.comment ? <p>{entry.comment}</p> : null}
                   {entry.status === 'rejected' && rejectionReason ? (
                     <p className={css.historyRejectionReason}>
@@ -1240,8 +1263,10 @@ function HistoryTab({
 
           const activity = historyEntry.entry;
           const isIncrease = activity.quantityDelta > 0;
+
           const priceChanged =
             activity.previousUnitPrice !== activity.unitPrice;
+
           const ActivityIcon =
             activity.type === 'product_added'
               ? ShoppingCart

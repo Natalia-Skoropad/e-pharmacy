@@ -71,9 +71,12 @@ function ToastProvider({ children }: ToastProviderProps) {
       show,
       success: (message, duration) =>
         show({ message, duration, variant: 'success' }),
+
       error: (message, duration) =>
         show({ message, duration, variant: 'error' }),
+
       info: (message, duration) => show({ message, duration, variant: 'info' }),
+
       warning: (message, duration) =>
         show({ message, duration, variant: 'warning' }),
     }),
@@ -99,6 +102,5 @@ function ToastProvider({ children }: ToastProviderProps) {
 }
 
 export default ToastProvider;
-
 export { useToast } from './useToast';
 export { ToastProvider };

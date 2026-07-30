@@ -31,9 +31,7 @@ function isInsideDisabledFieldset(element: HTMLElement): boolean {
 //===================================================================
 
 function hasHiddenAncestor(element: HTMLElement): boolean {
-  return Boolean(
-    element.closest('[hidden], [inert], [aria-hidden="true"]')
-  );
+  return Boolean(element.closest('[hidden], [inert], [aria-hidden="true"]'));
 }
 
 //===================================================================
@@ -45,6 +43,7 @@ export function isFocusableElement(
   if (element.hasAttribute('disabled')) return false;
   if (element.getAttribute('aria-disabled') === 'true') return false;
   if (element.tabIndex < 0 && !element.isContentEditable) return false;
+
   if (hasHiddenAncestor(element) || isInsideDisabledFieldset(element)) {
     return false;
   }

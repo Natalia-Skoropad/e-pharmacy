@@ -82,6 +82,7 @@ export function PaginationView({
           }
 
           const isCurrent = item === state.currentPage;
+
           return (
             <li key={item}>
               <button

@@ -16,6 +16,8 @@ import {
 
 export type OverlayId = symbol;
 
+//===================================================================
+
 type OverlayEntry = Readonly<{
   id: OverlayId;
   container: HTMLElement;
@@ -36,6 +38,7 @@ type BackgroundState = Readonly<{
 
 const overlayStack: OverlayEntry[] = [];
 const backgroundStates = new Map<HTMLElement, BackgroundState>();
+
 let isDocumentListenerAttached = false;
 let backgroundObserver: MutationObserver | null = null;
 

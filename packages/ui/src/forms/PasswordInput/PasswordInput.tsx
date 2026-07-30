@@ -31,6 +31,7 @@ function PasswordInput({
   onToggleVisibility,
 }: PasswordFieldProps) {
   const hasError = Boolean(isTouched && error);
+
   const describedBy =
     [
       hint ? `${id}-hint` : null,
@@ -68,6 +69,7 @@ function PasswordInput({
           aria-describedby={describedBy}
           onChange={onChange}
         />
+
         {typeof maxLength === 'number' ? (
           <span className={css.passwordCounter} aria-hidden="true">
             {value.length}/{maxLength}

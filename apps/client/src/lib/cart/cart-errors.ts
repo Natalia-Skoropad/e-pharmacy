@@ -1,24 +1,46 @@
+import type { Cart } from '@e-pharmacy/types/cart';
+import { isApiError } from '@e-pharmacy/api-client/transport';
+
+//===================================================================
+
 export class PartialCartMutationError extends Error {
   readonly code = 'PARTIAL_CART_MUTATION';
   readonly removedItems: number;
   readonly totalItems: number;
+  readonly latestConfirmedCart: Cart;
+  readonly refreshFailed: boolean;
+  readonly refreshCause?: unknown;
+  readonly requestId?: string;
+  readonly requiresReload: boolean;
 
   constructor({
     removedItems,
     totalItems,
+    latestConfirmedCart,
     cause,
+    refreshCause,
   }: Readonly<{
     removedItems: number;
     totalItems: number;
+    latestConfirmedCart: Cart;
     cause: unknown;
+    refreshCause?: unknown;
   }>) {
-    super(
-      `Removed ${removedItems} of ${totalItems} cart items before the operation failed.`,
-      { cause }
-    );
+    super('Cart items were only partially removed.', { cause });
     this.name = 'PartialCartMutationError';
     this.removedItems = removedItems;
     this.totalItems = totalItems;
+    this.latestConfirmedCart = latestConfirmedCart;
+    this.refreshFailed = refreshCause !== undefined;
+    this.refreshCause = refreshCause;
+
+    this.requestId = isApiError(refreshCause)
+      ? refreshCause.requestId
+      : isApiError(cause)
+        ? cause.requestId
+        : undefined;
+
+    this.requiresReload = refreshCause !== undefined;
   }
 }
 

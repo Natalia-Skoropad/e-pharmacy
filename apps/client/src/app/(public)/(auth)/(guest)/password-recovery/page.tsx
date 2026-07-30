@@ -2,7 +2,7 @@ import {
   PASSWORD_RECOVERY_DESCRIPTION,
   PASSWORD_RECOVERY_TITLE,
   createPageMetadata,
-} from '@/lib/seo';
+} from '@/lib/seo/server';
 
 import { createBreadcrumbs, ROUTES } from '@/lib/routes';
 

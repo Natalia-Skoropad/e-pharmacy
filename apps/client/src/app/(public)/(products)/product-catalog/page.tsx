@@ -9,7 +9,7 @@ import {
 } from '@/lib/catalog/product-catalog';
 
 import { loadProductCatalogPageData } from '@/lib/catalog/product-catalog-server';
-import { createPageMetadata } from '@/lib/seo';
+import { createPageMetadata } from '@/lib/seo/server';
 
 import { ProductCatalogPageContent } from '@/components/product-catalog';
 

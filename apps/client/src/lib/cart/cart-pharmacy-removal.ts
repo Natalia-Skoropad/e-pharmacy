@@ -47,21 +47,25 @@ export async function removeCartItemsSequentially({
   } catch (error) {
     if (signal.aborted) return null;
 
+    let refreshCause: unknown;
+
     try {
       const authoritative = await refreshCart(signal);
       if (!signal.aborted) {
         latestCart = authoritative.cart;
         onConfirmedCart(authoritative.cart);
       }
-    } catch {
-      // Keep the latest confirmed DELETE response when refresh also fails.
+    } catch (refreshError) {
+      refreshCause = refreshError;
     }
 
     if (removedItems > 0) {
       throw new PartialCartMutationError({
         removedItems,
         totalItems: itemIds.length,
+        latestConfirmedCart: latestCart,
         cause: error,
+        refreshCause,
       });
     }
 

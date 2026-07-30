@@ -140,6 +140,7 @@ assert.deepEqual(
     frontendPresentationProducts,
     'PRODUCT_CATEGORY_LABELS'
   ),
+
   getVariableLiteral(ts, backendCategories, 'PRODUCT_CATEGORY_LABELS'),
   'Product category labels differ between frontend and backend'
 );
@@ -264,8 +265,9 @@ const [
   backendErrorMiddlewareSource,
   clientCartLimitSource,
   productCategoriesSource,
-  clientCategoryAdapterSource,
-  pharmacyCategoryAdapterSource,
+  categoryOptionsHelperSource,
+  clientCategoryConsumerSource,
+  pharmacyCategoryConsumerSource,
   clientStatisticsSource,
   orderCopyConsumersSource,
 ] = await Promise.all([
@@ -273,49 +275,70 @@ const [
     fromRoot('packages', 'config', 'src', 'auth', 'cookie-names.ts'),
     'utf8'
   ),
+
   readFile(fromRoot('packages', 'auth', 'src', 'react.ts'), 'utf8'),
   readFile(
     fromRoot('packages', 'next-api', 'src', 'internal', 'auth-cookies.ts'),
     'utf8'
   ),
+
   readFile(
     fromRoot('apps', 'api', 'src', 'services', 'cart.service.ts'),
     'utf8'
   ),
+
   readFile(
     fromRoot('apps', 'api', 'src', 'middlewares', 'error.middleware.ts'),
     'utf8'
   ),
+
   readFile(
     fromRoot('apps', 'client', 'src', 'lib', 'cart', 'order-limit.ts'),
     'utf8'
   ),
+
   readFile(
     fromRoot('packages', 'config', 'src', 'products', 'categories.ts'),
     'utf8'
   ),
+
+  readFile(
+    fromRoot(
+      'packages',
+      'utils',
+      'src',
+      'collections',
+      'create-unique-labeled-options.ts'
+    ),
+    'utf8'
+  ),
+
   readFile(
     fromRoot(
       'apps',
       'client',
       'src',
-      'lib',
-      'catalog',
-      'product-category-options.ts'
+      'components',
+      'cart',
+      'ContinueShoppingModal',
+      'ContinueShoppingModal.tsx'
     ),
     'utf8'
   ),
+
   readFile(
     fromRoot(
       'apps',
       'pharmacy',
       'src',
-      'lib',
-      'products',
-      'product-category-options.ts'
+      'components',
+      'orders',
+      'OrderDetailsPageContent',
+      'OrderDetailsPageContent.tsx'
     ),
     'utf8'
   ),
+
   readFile(
     fromRoot(
       'apps',
@@ -328,6 +351,7 @@ const [
     ),
     'utf8'
   ),
+
   Promise.all([
     readFile(
       fromRoot(
@@ -341,6 +365,7 @@ const [
       ),
       'utf8'
     ),
+
     readFile(
       fromRoot(
         'apps',
@@ -353,6 +378,7 @@ const [
       ),
       'utf8'
     ),
+
     readFile(
       fromRoot(
         'apps',
@@ -365,6 +391,7 @@ const [
       ),
       'utf8'
     ),
+
     readFile(
       fromRoot(
         'apps',
@@ -377,6 +404,7 @@ const [
       ),
       'utf8'
     ),
+
     readFile(
       fromRoot(
         'apps',
@@ -389,6 +417,7 @@ const [
       ),
       'utf8'
     ),
+
     readFile(
       fromRoot(
         'apps',
@@ -401,6 +430,7 @@ const [
       ),
       'utf8'
     ),
+
     readFile(
       fromRoot(
         'apps',
@@ -417,6 +447,7 @@ const [
 ]);
 
 assert.doesNotMatch(cookieNamesSource, /AUTH_READY_COOKIE_MAX_AGE_SECONDS/);
+
 assert.doesNotMatch(
   authSessionSource,
   /setBrowserAuthSessionHint|clearBrowserAuthSessionHint|browserAuthSessionHintStorage/
@@ -424,6 +455,7 @@ assert.doesNotMatch(
 
 assert.match(nextApiCookiesSource, /maxAge:\s*tokens\.refreshTokenExpiresIn/);
 assert.match(backendCartServiceSource, /CART_PHARMACY_LIMIT_ERROR_CODE/);
+
 assert.match(
   backendErrorMiddlewareSource,
   /error\.code\s*\?\s*\{\s*code:\s*error\.code\s*\}/
@@ -431,9 +463,9 @@ assert.match(
 
 assert.match(
   clientCartLimitSource,
-  /payload[\s\S]*CART_PHARMACY_LIMIT_ERROR_CODE/
+  /backendCode\s*===\s*CART_PHARMACY_LIMIT_ERROR_CODE/
 );
-assert.doesNotMatch(clientCartLimitSource, /message\.includes/);
+assert.doesNotMatch(clientCartLimitSource, /payload\s+as|message\.includes/);
 
 assert.doesNotMatch(
   productCategoriesSource,
@@ -441,13 +473,16 @@ assert.doesNotMatch(
   'Product category config must not expose formatter aliases or process runtime product data'
 );
 
-for (const adapterSource of [
-  clientCategoryAdapterSource,
-  pharmacyCategoryAdapterSource,
+assert.match(categoryOptionsHelperSource, /locale\s*=\s*'en-GB'/);
+assert.match(categoryOptionsHelperSource, /new\s+Set/);
+assert.match(categoryOptionsHelperSource, /localeCompare/);
+
+for (const consumerSource of [
+  clientCategoryConsumerSource,
+  pharmacyCategoryConsumerSource,
 ]) {
-  assert.match(adapterSource, /PRODUCT_CATEGORY_LABELS/);
-  assert.match(adapterSource, /locale\s*=\s*'en-GB'/);
-  assert.match(adapterSource, /new\s+Set/);
+  assert.match(consumerSource, /createUniqueLabeledOptions/);
+  assert.match(consumerSource, /PRODUCT_CATEGORY_LABELS/);
 }
 
 assert.match(clientStatisticsSource, /export type ClientStatisticsCounts/);

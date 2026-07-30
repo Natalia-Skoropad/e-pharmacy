@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-import { createClientRobotsConfig, ROBOTS_DISALLOW_ROUTES } from '@/lib/seo';
+import { createClientRobotsConfig, ROBOTS_DISALLOW_ROUTES } from '@/lib/seo/server';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
 

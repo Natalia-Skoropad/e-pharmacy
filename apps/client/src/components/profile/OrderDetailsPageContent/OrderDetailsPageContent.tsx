@@ -37,7 +37,6 @@ import {
   ROUTES,
   buildProductPath,
   buildPharmacyPath,
-  getOrderIdFromPathParam,
 } from '@/lib/routes';
 
 import { getOrderDetails } from '@/lib/api/browser';
@@ -59,7 +58,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const [order, setOrder] = useState<ClientOrder | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState('');
-  const cleanOrderId = getOrderIdFromPathParam(orderId);
+  const cleanOrderId = orderId;
 
   useEffect(() => {
     const controller = new AbortController();

@@ -15,6 +15,8 @@ import css from './CabinetSidebar.module.css';
 
 type SideMenuItem = NavigationItem<ReactNode>;
 
+//===================================================================
+
 type CabinetSidebarLogoRenderProps = {
   href: string;
   className: string;
@@ -117,12 +119,15 @@ function CabinetSidebar({
             const active = isActive
               ? isActive(item.href, activePath ?? '', item)
               : isNavigationItemActive(item, activePath);
+
             const linkClassName = clsx(
               css.link,
               active && css.active,
               item.disabled && css.disabled
             );
+
             const title = isCollapsed ? item.label : undefined;
+
             const content = (
               <>
                 {item.icon ? (

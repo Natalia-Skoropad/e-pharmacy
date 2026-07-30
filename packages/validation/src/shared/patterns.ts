@@ -14,7 +14,7 @@ export const EMAIL_PATTERN =
 export const PHONE_PATTERN = /^\+380\d{9}$/;
 export const PASSWORD_PATTERN = /^\S+$/;
 export const ADDRESS_PATTERN = /^[A-Za-z0-9 .,'’/#&()\-]+$/;
-export const SEARCH_TEXT_PATTERN = /^[A-Za-z0-9 .,'’/#&()\-]*$/;
+export const SEARCH_TEXT_PATTERN = /^[\p{L}\p{N} .,'’/#&()\-]*$/u;
 
 export const REVIEW_COMMENT_PATTERN =
   /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*]+$/;

@@ -61,6 +61,7 @@ function ModalBase({
 }: ModalBaseProps) {
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const overlayIdRef = useRef(Symbol('modal-overlay'));
+
   const backdropPointerHandlers = useBackdropPointer({
     overlayId: overlayIdRef.current,
     enabled: closeOnBackdrop,

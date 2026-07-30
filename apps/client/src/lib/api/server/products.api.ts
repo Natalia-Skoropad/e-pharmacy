@@ -8,16 +8,22 @@ import {
 } from '@e-pharmacy/next-api/server';
 
 import { createPublicProductsReader } from '@/lib/api/readers/public-products-reader';
+import type { PublicReadRequestOptions } from '@/lib/api/request-options';
 
 //===================================================================
 
-const publicProductsReader =
-  createPublicProductsReader<PublicBackendRequestOptions>(
-    (path, options) => publicBackendApiRequest(path, options),
-    ROUTES.products
-  );
+type ServerReadOptions = PublicReadRequestOptions<PublicBackendRequestOptions>;
 
-export const getProductsFromBackend = publicProductsReader.getProducts;
-export const getProductFiltersFromBackend = publicProductsReader.getFilters;
-export const getProductDetailsFromBackend = publicProductsReader.getDetails;
-export const getProductReviewsFromBackend = publicProductsReader.getReviews;
+//===================================================================
+
+const publicProductsReader = createPublicProductsReader<ServerReadOptions>(
+  (path, options) => publicBackendApiRequest(path, options),
+  ROUTES.products
+);
+
+//===================================================================
+
+export const getProducts = publicProductsReader.getProducts;
+export const getProductFilters = publicProductsReader.getFilters;
+export const getProductDetails = publicProductsReader.getDetails;
+export const getProductReviews = publicProductsReader.getReviews;

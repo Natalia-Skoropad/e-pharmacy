@@ -50,6 +50,7 @@ export function BreadcrumbTrail({
         {items.map((item, index) => {
           const isFirst = index === 0;
           const isLast = index === items.length - 1;
+          
           const content = (
             <>
               {isFirst && leadingIcon ? (

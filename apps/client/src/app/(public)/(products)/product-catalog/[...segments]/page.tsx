@@ -6,7 +6,6 @@ import {
   FALLBACK_PRODUCT_FILTER_OPTIONS,
   getProductCatalogDescription,
   getProductCatalogTitle,
-  hasLegacyProductCatalogSegments,
   isProductCatalogNoIndex,
   mergeProductCatalogFilters,
   parseProductCatalogSearchParams,
@@ -16,7 +15,7 @@ import {
 } from '@/lib/catalog/product-catalog';
 
 import { loadProductCatalogPageData } from '@/lib/catalog/product-catalog-server';
-import { createPageMetadata } from '@/lib/seo';
+import { createPageMetadata } from '@/lib/seo/server';
 
 import { ProductCatalogPageContent } from '@/components/product-catalog';
 
@@ -34,7 +33,7 @@ export async function generateMetadata({
   searchParams,
 }: ProductCatalogPageProps) {
   const filters = mergeProductCatalogFilters(
-    parseProductCatalogSegments(await params),
+    parseProductCatalogSegments(await params).filters,
     parseProductCatalogSearchParams(await searchParams)
   );
 
@@ -62,12 +61,13 @@ async function ProductCatalogSegmentsPage({
 }: ProductCatalogPageProps) {
   const resolvedParams = await params;
 
+  const routeResult = parseProductCatalogSegments(resolvedParams);
   const filters = mergeProductCatalogFilters(
-    parseProductCatalogSegments(resolvedParams),
+    routeResult.filters,
     parseProductCatalogSearchParams(await searchParams)
   );
 
-  if (hasLegacyProductCatalogSegments(resolvedParams)) {
+  if (!routeResult.isCanonical) {
     redirect(buildProductCatalogPath(filters));
   }
 

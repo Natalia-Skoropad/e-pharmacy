@@ -9,14 +9,14 @@ import {
 } from '@e-pharmacy/api-client/transport';
 
 import { parseApiResponseData } from '@e-pharmacy/api-client/response';
-import { SITEMAP_INDEXABLE_ROUTES } from '@/lib/seo';
+import { SITEMAP_INDEXABLE_ROUTES } from '@/lib/seo/server';
 
 import {
   createSitemapRoutes,
   createStaticSitemapEntries,
   dedupeSitemapEntries,
   parseSitemapDate,
-} from '@/lib/seo';
+} from '@/lib/seo/server';
 
 import { buildProductPath, buildPharmacyPath } from '@/lib/routes';
 

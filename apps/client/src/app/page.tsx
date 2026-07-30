@@ -14,7 +14,7 @@ import {
   STEPS,
 } from '@/lib/content/home';
 
-import { HOME_DESCRIPTION, HOME_TITLE, createPageMetadata } from '@/lib/seo';
+import { HOME_DESCRIPTION, HOME_TITLE, createPageMetadata } from '@/lib/seo/server';
 import { ROUTES } from '@/lib/routes';
 
 import {
@@ -341,7 +341,7 @@ async function HomePage() {
       <section className={css.section} aria-labelledby="products-title">
         <Container>
           <div className={css.sectionHead}>
-            <p className={css.kicker}>ProductDetails catalog</p>
+            <p className={css.kicker}>Product catalog</p>
             <h2 className={css.sectionTitle} id="products-title">
               Browse products available in pharmacies
             </h2>

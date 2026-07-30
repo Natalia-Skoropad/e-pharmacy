@@ -3,14 +3,14 @@ import { USER_SEARCH_MAX_LENGTH } from '../shared/limits';
 
 //===================================================================
 
-export const URL_TEXT_PARAM_DISALLOWED_CHARS_PATTERN = /[^A-Za-z0-9 .-]/g;
+export const URL_TEXT_PARAM_DISALLOWED_CHARS_PATTERN = /[^\p{L}\p{N} .,'’/#&()\-]/gu;
 export const URL_ARTICLE_PARAM_DISALLOWED_CHARS_PATTERN = /[^A-Za-z0-9.-]/g;
 
 export const URL_CLIENT_TEXT_PARAM_DISALLOWED_CHARS_PATTERN =
   /[^A-Za-z0-9 .@_+-]/g;
 
-export const SLUG_SEGMENT_SEPARATOR_PATTERN = /[^a-z0-9]+/g;
-export const CLIENT_SLUG_SEGMENT_SEPARATOR_PATTERN = /[^a-z0-9.@_+]+/g;
+export const SLUG_SEGMENT_SEPARATOR_PATTERN = /[^\p{L}\p{N}]+/gu;
+export const CLIENT_SLUG_SEGMENT_SEPARATOR_PATTERN = /[^\p{L}\p{N}.@_+]+/gu;
 
 //===================================================================
 

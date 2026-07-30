@@ -1,13 +1,15 @@
 import type { ClientOrder } from '@e-pharmacy/types/orders';
 
+import {
+  buildSlugId,
+  getIdFromSlugId,
+  isValidObjectId,
+} from '@e-pharmacy/validation/url';
+
 import { ROUTES } from './routes';
-import { buildSlugId } from '@e-pharmacy/validation/url';
 
 //===================================================================
 
-// Product and pharmacy details intentionally use root-level SEO URLs. Keep
-// reserved root slugs protected in root-detail-resolver when adding new public
-// pages.
 export function buildProductPath(name: string, id: string): string {
   return `/${buildSlugId(name, id)}`;
 }
@@ -25,7 +27,6 @@ export function buildCheckoutPath(
   pharmacyId: string
 ): string {
   const safePharmacyName = pharmacyName?.trim() ? pharmacyName : 'pharmacy';
-
   return `${ROUTES.CHECKOUT}/${buildSlugId(safePharmacyName, pharmacyId)}`;
 }
 
@@ -34,16 +35,18 @@ export function buildCheckoutPath(
 export function buildOrderPath(
   order: Pick<ClientOrder, 'id' | 'orderNumber'>
 ): string {
-  const safeNumber = order.orderNumber
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+  if (!isValidObjectId(order.id)) {
+    throw new TypeError('Order route requires a valid entity ID.');
+  }
 
-  return `${ROUTES.PROFILE}/orders/${safeNumber}--${order.id}`;
+  return `${ROUTES.PROFILE}/orders/${buildSlugId(
+    order.orderNumber.trim() || 'order',
+    order.id
+  )}`;
 }
 
 //===================================================================
 
-export function getOrderIdFromPathParam(orderId: string): string {
-  return orderId.split('--').at(-1) ?? orderId;
+export function getOrderIdFromPathParam(orderSlugId: string): string | null {
+  return getIdFromSlugId(orderSlugId);
 }

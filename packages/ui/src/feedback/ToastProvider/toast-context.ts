@@ -12,6 +12,8 @@ export type ToastInput = {
   duration?: number;
 };
 
+//===================================================================
+
 export type ToastContextValue = {
   show: (toast: ToastInput) => void;
   success: (message: string, duration?: number) => void;

@@ -3,12 +3,13 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import {
   createProductDetailMetadata,
   createPharmacyDetailMetadata,
-  renderProductDetailPage,
-  renderPharmacyDetailPage,
   resolveRootDetailBySlugId,
 } from '@/lib/details';
 
-import { createPageMetadata } from '@/lib/seo';
+import { createPageMetadata } from '@/lib/seo/server';
+import { ProductDetailPage } from '@/components/product-catalog/server/ProductDetailPage';
+import { PharmacyDetailPage } from '@/components/pharmacies/server/PharmacyDetailPage';
+
 import RootDetailsUnavailablePage from './RootDetailsUnavailablePage';
 
 import type { Metadata } from 'next';
@@ -89,10 +90,15 @@ async function RootDetailsPage({ params, searchParams }: RootDetailsPageProps) {
   }
 
   if (detail.type === 'product') {
-    return renderProductDetailPage(detail.product, resolvedSearchParams);
+    return (
+      <ProductDetailPage
+        product={detail.product}
+        pharmacyId={resolvedSearchParams?.pharmacyId}
+      />
+    );
   }
 
-  return renderPharmacyDetailPage(detail.pharmacy);
+  return <PharmacyDetailPage pharmacy={detail.pharmacy} />;
 }
 
 export default RootDetailsPage;

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import CloseIconButton from '../../primitives/CloseIconButton/CloseIconButton';
 import ResetFiltersButton from '../../primitives/ResetFiltersButton/ResetFiltersButton';
+
 import ModalBase from '../ModalBase/ModalBase';
 import ModalRoot from '../ModalRoot/ModalRoot';
 

@@ -53,10 +53,6 @@ for (const removedPath of [
 }
 
 const files = await listFiles(clientRoot);
-const intentionalSharedReexportAllowlist = new Set([
-  'apps/client/src/lib/routes/index.ts',
-]);
-
 const suspiciousSharedReexports = [];
 
 for (const file of files) {
@@ -64,8 +60,7 @@ for (const file of files) {
   const relative = path.relative(root, file).replaceAll('\\', '/');
 
   if (
-    /^export\s+(?:\*|\{[^}]+\})\s+from\s+['"]@e-pharmacy\//m.test(source) &&
-    !intentionalSharedReexportAllowlist.has(relative)
+    /^export\s+(?:\*|\{[^}]+\})\s+from\s+['"]@e-pharmacy\//m.test(source)
   ) {
     suspiciousSharedReexports.push(relative);
   }

@@ -444,7 +444,7 @@ App-specific lifecycle hooks remain in `apps/client`; `packages/hooks` contains 
 ### Client architecture boundaries
 
 - Browser API helpers live in `src/lib/api/browser` and are marked as client-only. They are low-level same-origin BFF request wrappers and should not be imported by server components, metadata helpers, sitemap, robots, or server route handlers.
-- Server reads for catalog, SEO, sitemap, robots, and detail metadata use `src/lib/api/server`. Proxy route handlers use `src/lib/api/proxy`.
+- Server reads for catalog, SEO, sitemap, robots, and detail metadata use `src/lib/api/server`. Proxy route handlers use the shared `@e-pharmacy/next-api` package.
 - `CartProvider` is the single cart read/write controller in the browser. It owns the cart state machine, one serialized mutation queue, pending item/offer state, retry/refresh commands, and authoritative server commits. Components do not call cart mutation API helpers directly.
 - Cart state is keyed by the shared client session generation and is destroyed on logout, account switch, blocked/unavailable auth transitions, and same-user relogin. Cancelled or stale reads return `null`; they are never represented as a valid empty cart.
 - Quantity updates are optimistic inside the serialized queue. Add/remove/clear operations are server-authoritative. Multi-item pharmacy removal refreshes the cart after partial failure and reports a structured partial-mutation error.
@@ -464,7 +464,7 @@ Main API areas used by the client:
 
 ## Performance Notes
 
-- Public catalog pages are rendered on the server and use cached/revalidated public API reads.
+- Public catalog pages are rendered on the server and use a 120-second Next.js revalidation policy for public reads.
 - `apps/client/src/lib/api/server/cache-options.ts` centralizes public API revalidation settings.
 - `packages/next-api` provides the shared public/private/optional-auth/auth proxy factories, cache policy, security checks, and auth-cookie handling.
 - Remote image patterns are configured in `next.config.ts` for deployed backend image assets.

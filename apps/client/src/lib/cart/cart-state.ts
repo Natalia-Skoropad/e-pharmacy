@@ -60,7 +60,8 @@ export function getCartStateCart(state: CartState): Cart | null {
 //===================================================================
 
 export function beginCartLoad(state: CartState, ownerKey: string): CartState {
-  const currentCart = getCartStateCart(state);
+  const currentCart =
+    state.ownerKey === ownerKey ? getCartStateCart(state) : null;
 
   return currentCart
     ? { status: 'refreshing', ownerKey, cart: currentCart }
@@ -83,7 +84,7 @@ export function failCartLoad(
   return {
     status: 'error',
     ownerKey,
-    cart: getCartStateCart(state),
+    cart: state.ownerKey === ownerKey ? getCartStateCart(state) : null,
     error,
   };
 }

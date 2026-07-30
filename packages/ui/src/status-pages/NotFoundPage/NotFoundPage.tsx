@@ -49,6 +49,7 @@ function NotFoundPage({
           <LinkButton href={homeHref} size="lg">
             {homeLabel}
           </LinkButton>
+
           {secondaryAction ? (
             <LinkButton
               href={secondaryAction.href}

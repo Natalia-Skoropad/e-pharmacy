@@ -25,6 +25,7 @@ import {
   removeCartItem,
   updateCartItem,
 } from '@/lib/api/browser/cart.api';
+
 import { useClientAuthCapabilities } from '@/hooks/useClientAuthCapabilities';
 import { isAbortError } from '@/lib/async/is-abort-error';
 import { removeCartItemsSequentially } from '@/lib/cart/cart-pharmacy-removal';
@@ -55,6 +56,8 @@ const CART_LOAD_ERROR_MESSAGE = 'Could not load cart.';
 type OfferMutationOptions = Readonly<{
   offerId?: string;
 }>;
+
+//===================================================================
 
 export type CartContextValue = Readonly<{
   cart: Cart;
@@ -87,6 +90,8 @@ export type CartContextValue = Readonly<{
   clearAllCart: () => Promise<CartResponse | null>;
   removePharmacyOrder: (pharmacyId: string) => Promise<Cart | null>;
 }>;
+
+//===================================================================
 
 type ActiveCartLoad = Readonly<{
   ownerKey: string;
@@ -126,6 +131,8 @@ function addSetValue(current: ReadonlySet<string>, value: string): Set<string> {
   return next;
 }
 
+//===================================================================
+
 function removeSetValue(
   current: ReadonlySet<string>,
   value: string
@@ -144,6 +151,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
   const { user, isBootstrapping, canUseClientFeatures } =
     useClientAuthCapabilities();
+
   const { ownerKey: sessionOwnerKey } = useClientSessionScope();
 
   const clientOwnerKey = canUseClientFeatures && user ? sessionOwnerKey : null;
@@ -151,12 +159,15 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [state, setState] = useState<CartState>(() =>
     createInitialCartState(clientOwnerKey)
   );
+
   const [pendingItemIds, setPendingItemIds] = useState<ReadonlySet<string>>(
     () => new Set()
   );
+
   const [pendingOfferIds, setPendingOfferIds] = useState<ReadonlySet<string>>(
     () => new Set()
   );
+
   const [isClearing, setIsClearing] = useState(false);
 
   const stateRef = useRef(state);
@@ -165,6 +176,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
   const clearingRef = useRef(false);
   const activeLoadRef = useRef<ActiveCartLoad | null>(null);
   const lifecycleActiveRef = useRef(true);
+
   const mutationQueue = useMemo<CartMutationQueue>(
     () => createCartMutationQueue(),
     []
@@ -280,8 +292,10 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       try {
         return await mutationQueue.enqueue(async (signal) => {
           const response = await addCartItem(payload, { signal });
+
           if (signal.aborted || !lifecycleActiveRef.current) return response;
           replaceCartFromServer(response.cart);
+
           return response;
         });
       } finally {
@@ -407,9 +421,11 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
     try {
       return await mutationQueue.enqueue(async (signal) => {
         const response = await clearCart({ signal });
+
         if (!signal.aborted && lifecycleActiveRef.current) {
           replaceCartFromServer(response.cart);
         }
+
         return response;
       });
     } finally {
@@ -442,9 +458,12 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
             itemIds: pharmacyItems.map((item) => item.id),
             initialCart: getCartStateCart(stateRef.current) ?? EMPTY_CART,
             signal,
+
             removeItem: (cartItemId, requestSignal) =>
               removeCartItem(cartItemId, { signal: requestSignal }),
+
             refreshCart: (requestSignal) => getCart({ signal: requestSignal }),
+
             onConfirmedCart: (confirmedCart) => {
               if (!signal.aborted && lifecycleActiveRef.current) {
                 replaceCartFromServer(confirmedCart);
@@ -470,9 +489,11 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       lifecycleActiveRef.current = false;
       activeLoadRef.current?.controller.abort();
       activeLoadRef.current = null;
+
       mutationQueue.close(
         new DOMException('Cart session ended.', 'AbortError')
       );
+
       pendingItemIdsRef.current.clear();
       pendingOfferIdsRef.current.clear();
       clearingRef.current = false;
@@ -484,10 +505,12 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
   const cart = stateCart ?? EMPTY_CART;
   const isLoading = state.status === 'loading';
   const isRefreshing = state.status === 'refreshing';
+
   const isLoaded =
     state.status === 'success' ||
     state.status === 'refreshing' ||
     state.status === 'error';
+
   const loadError = state.status === 'error' ? state.error : null;
   const error = loadError ? CART_LOAD_ERROR_MESSAGE : '';
 

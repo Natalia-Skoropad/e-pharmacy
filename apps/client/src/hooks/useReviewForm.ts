@@ -96,6 +96,7 @@ export function useReviewForm({
   const ownerKey = `${sessionOwnerKey}:${scopeKey}`;
 
   const formStore = useMemo(() => createReviewFormStore(ownerKey), [ownerKey]);
+
   const formState = useSyncExternalStore(
     formStore.subscribe,
     formStore.getSnapshot,

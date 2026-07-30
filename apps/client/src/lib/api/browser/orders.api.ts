@@ -1,7 +1,5 @@
 import 'client-only';
 
-import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
-
 import {
   parseApiResponseData,
   parseCheckoutOrderResponse,
@@ -18,15 +16,20 @@ import type {
   ClientOrdersResponse,
 } from '@e-pharmacy/types/orders';
 
-import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
+import { clientApiRoutes as ROUTES } from '@/lib/api/routes/client-api-routes';
+
+import type {
+  MutationRequestOptions,
+  ReadRequestOptions,
+} from '@/lib/api/request-options';
 
 //===================================================================
 
 export async function checkoutOrder(
   payload: CheckoutOrderPayload,
-  options: JsonResponseRequestOptions = {}
+  options: MutationRequestOptions = {}
 ): Promise<CheckoutOrderResponse> {
-  const path = CLIENT_API_ROUTES.orders.checkout;
+  const path = ROUTES.orders.checkout;
 
   return parseApiResponseData(
     await localApiRequest(path, { ...options, method: 'POST', body: payload }),
@@ -38,9 +41,9 @@ export async function checkoutOrder(
 //===================================================================
 
 export async function getOrders(
-  options?: JsonResponseRequestOptions
+  options?: ReadRequestOptions
 ): Promise<ClientOrdersResponse> {
-  const path = CLIENT_API_ROUTES.orders.list;
+  const path = ROUTES.orders.list;
 
   return parseApiResponseData(
     await localApiRequest(path, options),
@@ -53,9 +56,9 @@ export async function getOrders(
 
 export async function getOrderDetails(
   orderId: string,
-  options?: JsonResponseRequestOptions
+  options?: ReadRequestOptions
 ): Promise<ClientOrderDetailsResponse> {
-  const path = CLIENT_API_ROUTES.orders.details(orderId);
+  const path = ROUTES.orders.details(orderId);
 
   return parseApiResponseData(
     await localApiRequest(path, options),

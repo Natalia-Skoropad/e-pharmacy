@@ -1,9 +1,6 @@
 import 'client-only';
 
-import {
-  appendQueryParams,
-  type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/transport';
+import { appendQueryParams } from '@e-pharmacy/api-client/transport';
 
 import {
   parseApiResponseData,
@@ -33,38 +30,33 @@ import type {
 } from '@e-pharmacy/types/reviews';
 
 import { createPublicPharmaciesReader } from '@/lib/api/readers/public-pharmacies-reader';
-import { clientApiRoutes as ROUTES } from '@/lib/api/routes';
+import { clientApiRoutes as ROUTES } from '@/lib/api/routes/client-api-routes';
+
+import type {
+  MutationRequestOptions,
+  ReadRequestOptions,
+} from '@/lib/api/request-options';
 
 //===================================================================
 
-type MutationRequestOptions = Omit<
-  JsonResponseRequestOptions,
-  'method' | 'body'
->;
+const publicPharmaciesReader = createPublicPharmaciesReader<ReadRequestOptions>(
+  (path, options) => localApiRequest(path, options),
+  ROUTES.pharmacies
+);
 
 //===================================================================
 
-const publicPharmaciesReader =
-  createPublicPharmaciesReader<JsonResponseRequestOptions>(
-    (path, options) => localApiRequest(path, options),
-    ROUTES.pharmacies
-  );
-
-export const getPharmaciesFromClientApi = publicPharmaciesReader.getPharmacies;
-export const getPharmacyOptionsFromClientApi =
-  publicPharmaciesReader.getOptions;
-export const getPharmacyFiltersFromClientApi =
-  publicPharmaciesReader.getFilters;
-export const getPharmacyDetailsFromClientApi =
-  publicPharmaciesReader.getDetails;
-export const getPharmacyReviewsFromClientApi =
-  publicPharmaciesReader.getReviews;
+export const getPharmacies = publicPharmaciesReader.getPharmacies;
+export const getPharmacyOptions = publicPharmaciesReader.getOptions;
+export const getPharmacyFilters = publicPharmaciesReader.getFilters;
+export const getPharmacyDetails = publicPharmaciesReader.getDetails;
+export const getPharmacyReviews = publicPharmaciesReader.getReviews;
 
 //===================================================================
 
-export async function getFavoritePharmaciesFromClientApi(
+export async function getFavoritePharmacies(
   params: PharmaciesQueryParams = {},
-  options?: JsonResponseRequestOptions
+  options?: ReadRequestOptions
 ): Promise<PharmaciesResponse> {
   const path = appendQueryParams(ROUTES.pharmacies.favorites, params);
 
@@ -77,8 +69,8 @@ export async function getFavoritePharmaciesFromClientApi(
 
 //===================================================================
 
-export async function getFavoritePharmacyIdsFromClientApi(
-  options?: JsonResponseRequestOptions
+export async function getFavoritePharmacyIds(
+  options?: ReadRequestOptions
 ): Promise<FavoriteIdsResponse> {
   const path = ROUTES.pharmacies.favoriteIds;
 
@@ -93,7 +85,7 @@ export async function getFavoritePharmacyIdsFromClientApi(
 
 export async function getPharmacyCheckoutDetails(
   id: string,
-  options?: JsonResponseRequestOptions
+  options?: ReadRequestOptions
 ): Promise<PharmacyCheckoutDetailsResponse> {
   const path = ROUTES.pharmacies.checkoutDetails(id);
 

@@ -48,6 +48,7 @@ function Logo({
   renderLink,
 }: LogoProps) {
   const classNames = clsx(css.logo, css[variant], css[size], className);
+
   const content = (
     <>
       <span className={css.iconWrap} aria-hidden="true">
@@ -57,6 +58,7 @@ function Logo({
       {showText ? <span className={css.text}>{label}</span> : null}
     </>
   );
+
   const accessibleLabel = ariaLabel ?? (href ? `${label} home` : label);
 
   if (!href) {

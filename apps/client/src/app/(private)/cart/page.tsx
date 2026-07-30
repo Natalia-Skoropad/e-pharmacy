@@ -1,4 +1,4 @@
-import { CART_DESCRIPTION, CART_TITLE, createPageMetadata } from '@/lib/seo';
+import { CART_DESCRIPTION, CART_TITLE, createPageMetadata } from '@/lib/seo/server';
 import { ROUTES } from '@/lib/routes';
 import { CartPageContent } from '@/components/cart';
 

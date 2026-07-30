@@ -12,7 +12,6 @@
     opacity var(--transition-base);
 }
 
-
 .sm {
   gap: 8px;
   font-size: var(--fz-16);

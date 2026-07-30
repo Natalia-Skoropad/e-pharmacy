@@ -14,6 +14,8 @@ import css from './SideMenu.module.css';
 
 type SideMenuItem = NavigationItem<ReactNode>;
 
+//===================================================================
+
 type SideMenuLinkRenderProps = {
   item: SideMenuItem;
   href: string;
@@ -59,11 +61,13 @@ function SideMenu({
           const active = isActive
             ? isActive(item.href, activePath ?? '', item)
             : isNavigationItemActive(item, activePath);
+
           const linkClassName = clsx(
             css.link,
             active && css.active,
             item.disabled && css.disabled
           );
+
           const content = (
             <>
               {item.icon ? (

@@ -73,6 +73,7 @@ export function LinkPagination({
           }
 
           const isCurrent = item === state.currentPage;
+
           return (
             <li key={item}>
               {isCurrent ? (

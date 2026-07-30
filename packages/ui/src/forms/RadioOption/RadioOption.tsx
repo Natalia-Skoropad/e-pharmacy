@@ -38,6 +38,7 @@ function RadioOption<TValue extends string>({
         disabled={disabled}
         onChange={() => onChange(value)}
       />
+
       <span className={css.control} aria-hidden="true" />
       <span className={css.label}>{label}</span>
     </label>

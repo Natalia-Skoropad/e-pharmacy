@@ -1,7 +1,5 @@
 import 'client-only';
 
-import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
-
 import {
   parseActiveSessionsResponse,
   parseApiEmptyResponse,
@@ -22,22 +20,28 @@ import type {
   UpdateProfilePayload,
 } from '@e-pharmacy/types/auth';
 
-import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes';
+import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes/client-api-routes';
+
+import type {
+  MutationRequestOptions,
+  ReadRequestOptions,
+} from '@/lib/api/request-options';
 
 //===================================================================
 
 export async function registerUser(
   payload: RegisterPayload,
-  options?: { signal?: AbortSignal }
+  options?: MutationRequestOptions
 ): Promise<AuthResponse> {
   const path = CLIENT_API_ROUTES.auth.register;
 
   return parseApiResponseData(
     await localApiRequest(path, {
+      ...options,
       method: 'POST',
       body: payload,
-      signal: options?.signal,
     }),
+
     parseAuthResponse,
     { url: path, method: 'POST' }
   );
@@ -47,16 +51,17 @@ export async function registerUser(
 
 export async function loginUser(
   payload: LoginPayload,
-  options?: { signal?: AbortSignal }
+  options?: MutationRequestOptions
 ): Promise<AuthResponse> {
   const path = CLIENT_API_ROUTES.auth.login;
 
   return parseApiResponseData(
     await localApiRequest(path, {
+      ...options,
       method: 'POST',
       body: payload,
-      signal: options?.signal,
     }),
+
     parseAuthResponse,
     { url: path, method: 'POST' }
   );
@@ -65,11 +70,12 @@ export async function loginUser(
 //===================================================================
 
 export async function requestPasswordReset(
-  payload: ForgotPasswordPayload
+  payload: ForgotPasswordPayload,
+  options?: MutationRequestOptions
 ): Promise<void> {
   const path = CLIENT_API_ROUTES.auth.passwordResetRequest;
   parseApiEmptyResponse(
-    await localApiRequest(path, { method: 'POST', body: payload }),
+    await localApiRequest(path, { ...options, method: 'POST', body: payload }),
     { url: path, method: 'POST' }
   );
 }
@@ -77,24 +83,26 @@ export async function requestPasswordReset(
 //===================================================================
 
 export async function resetPassword(
-  payload: ResetPasswordPayload
+  payload: ResetPasswordPayload,
+  options?: MutationRequestOptions
 ): Promise<void> {
   const path = CLIENT_API_ROUTES.auth.passwordResetConfirm;
+
   parseApiEmptyResponse(
-    await localApiRequest(path, { method: 'POST', body: payload }),
+    await localApiRequest(path, { ...options, method: 'POST', body: payload }),
     { url: path, method: 'POST' }
   );
 }
 
 //===================================================================
 
-export async function getCurrentUser(options?: {
-  signal?: AbortSignal;
-}): Promise<AuthResponse> {
+export async function getCurrentUser(
+  options?: ReadRequestOptions
+): Promise<AuthResponse> {
   const path = CLIENT_API_ROUTES.auth.current;
 
   return parseApiResponseData(
-    await localApiRequest(path, { signal: options?.signal }),
+    await localApiRequest(path, options),
     parseAuthResponse,
     { url: path, method: 'GET' }
   );
@@ -102,38 +110,31 @@ export async function getCurrentUser(options?: {
 
 //===================================================================
 
-export async function logoutUser(options?: {
-  signal?: AbortSignal;
-}): Promise<void> {
+export async function logoutUser(
+  options?: MutationRequestOptions
+): Promise<void> {
   const path = CLIENT_API_ROUTES.auth.logout;
+
   parseApiEmptyResponse(
     await localApiRequest(path, {
+      ...options,
       method: 'POST',
-      signal: options?.signal,
     }),
+
     { url: path, method: 'POST' }
   );
 }
 
 //===================================================================
 
-export async function logoutAllUserSessions(): Promise<void> {
-  const path = CLIENT_API_ROUTES.auth.logoutAll;
-  parseApiEmptyResponse(await localApiRequest(path, { method: 'POST' }), {
-    url: path,
-    method: 'POST',
-  });
-}
-
-//===================================================================
-
 export async function updateCurrentUser(
-  payload: UpdateProfilePayload
+  payload: UpdateProfilePayload,
+  options?: MutationRequestOptions
 ): Promise<AuthResponse> {
   const path = CLIENT_API_ROUTES.auth.current;
 
   return parseApiResponseData(
-    await localApiRequest(path, { method: 'PATCH', body: payload }),
+    await localApiRequest(path, { ...options, method: 'PATCH', body: payload }),
     parseAuthResponse,
     { url: path, method: 'PATCH' }
   );
@@ -142,11 +143,13 @@ export async function updateCurrentUser(
 //===================================================================
 
 export async function updateCurrentUserPassword(
-  payload: UpdatePasswordPayload
+  payload: UpdatePasswordPayload,
+  options?: MutationRequestOptions
 ): Promise<void> {
   const path = CLIENT_API_ROUTES.auth.password;
+
   parseApiEmptyResponse(
-    await localApiRequest(path, { method: 'PATCH', body: payload }),
+    await localApiRequest(path, { ...options, method: 'PATCH', body: payload }),
     { url: path, method: 'PATCH' }
   );
 }
@@ -154,7 +157,7 @@ export async function updateCurrentUserPassword(
 //===================================================================
 
 export async function getActiveSessions(
-  options?: JsonResponseRequestOptions
+  options?: ReadRequestOptions
 ): Promise<ActiveSessionsResponse> {
   const path = CLIENT_API_ROUTES.auth.sessions;
 
@@ -167,10 +170,14 @@ export async function getActiveSessions(
 
 //===================================================================
 
-export async function revokeActiveSession(sessionId: string): Promise<void> {
+export async function revokeActiveSession(
+  sessionId: string,
+  options?: MutationRequestOptions
+): Promise<void> {
   const path = CLIENT_API_ROUTES.auth.session(sessionId);
-  parseApiEmptyResponse(await localApiRequest(path, { method: 'DELETE' }), {
-    url: path,
-    method: 'DELETE',
-  });
+
+  parseApiEmptyResponse(
+    await localApiRequest(path, { ...options, method: 'DELETE' }),
+    { url: path, method: 'DELETE' }
+  );
 }

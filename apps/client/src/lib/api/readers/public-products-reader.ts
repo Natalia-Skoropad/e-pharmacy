@@ -20,19 +20,18 @@ import type {
 
 import type { ReviewsResponse } from '@e-pharmacy/types/reviews';
 
+import type { ApiReaderRequester } from './types';
+
 //===================================================================
 
-export type ProductFiltersQueryParams = Pick<
+type ProductFiltersQueryParams = Pick<
   CatalogProductsQueryParams,
   'pharmacyId' | 'inStock'
 >;
 
-export type ApiReaderRequester<TOptions extends RequestOptions> = (
-  path: string,
-  options?: TOptions
-) => Promise<unknown>;
+//===================================================================
 
-export type PublicProductReadRoutes = Readonly<{
+type PublicProductReadRoutes = Readonly<{
   list: string;
   filters: string;
   details: (id: string) => string;

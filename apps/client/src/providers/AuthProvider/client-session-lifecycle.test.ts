@@ -23,10 +23,7 @@ const ACTIVE_CLIENT: AuthUser = {
 //===================================================================
 
 test('same auth identity receives a new owner key for every mounted session', () => {
-  const authIdentity = createClientAuthIdentity(
-    'authenticated',
-    ACTIVE_CLIENT
-  );
+  const authIdentity = createClientAuthIdentity('authenticated', ACTIVE_CLIENT);
 
   const firstSession = createClientSessionLifecycle(authIdentity);
   const secondSession = createClientSessionLifecycle(authIdentity);
@@ -35,6 +32,7 @@ test('same auth identity receives a new owner key for every mounted session', ()
     createClientSessionOwnerKey(firstSession),
     createClientSessionOwnerKey(secondSession)
   );
+
   assert.ok(secondSession.generation > firstSession.generation);
 });
 
@@ -48,6 +46,7 @@ test('auth identity includes authentication, role and account status', () => {
 
   assert.notEqual(
     createClientAuthIdentity('authenticated', ACTIVE_CLIENT),
+
     createClientAuthIdentity('authenticated', {
       ...ACTIVE_CLIENT,
       status: 'blocked',

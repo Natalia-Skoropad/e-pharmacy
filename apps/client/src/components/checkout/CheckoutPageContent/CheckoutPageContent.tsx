@@ -38,9 +38,9 @@ import {
   getPharmacyEmail,
   getPharmacyPhone,
   getPharmacyWorkingHours,
-} from '@/lib/checkout';
+} from '@/lib/checkout/checkout-utils';
 
-import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo';
+import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo/content';
 import { ROUTES } from '@/lib/routes';
 import { useClientAuthCapabilities } from '@/hooks';
 

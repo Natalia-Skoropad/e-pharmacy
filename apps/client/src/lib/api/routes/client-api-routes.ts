@@ -4,10 +4,6 @@ import type { EntityId } from '@e-pharmacy/types/primitives';
 
 //===================================================================
 
-const segment = (value: string): string => encodeRouteSegment(value);
-
-//===================================================================
-
 export const clientApiRoutes = {
   health: '/api/health',
   auth: localAuthApiRoutes,
@@ -18,13 +14,13 @@ export const clientApiRoutes = {
     favorites: '/api/pharmacies/favorites',
     favoriteIds: '/api/pharmacies/favorites/ids',
     filters: '/api/pharmacies/filters',
-    details: (id: EntityId) => `/api/pharmacies/${segment(id)}`,
+    details: (id: EntityId) => `/api/pharmacies/${encodeRouteSegment(id)}`,
 
     checkoutDetails: (id: EntityId) =>
-      `/api/pharmacies/${segment(id)}/checkout-details`,
+      `/api/pharmacies/${encodeRouteSegment(id)}/checkout-details`,
 
-    reviews: (id: EntityId) => `/api/pharmacies/${segment(id)}/reviews`,
-    favorite: (id: EntityId) => `/api/pharmacies/${segment(id)}/favorite`,
+    reviews: (id: EntityId) => `/api/pharmacies/${encodeRouteSegment(id)}/reviews`,
+    favorite: (id: EntityId) => `/api/pharmacies/${encodeRouteSegment(id)}/favorite`,
   },
 
   products: {
@@ -32,21 +28,21 @@ export const clientApiRoutes = {
     favorites: '/api/products/favorites',
     favoriteIds: '/api/products/favorites/ids',
     filters: '/api/products/filters',
-    details: (id: EntityId | string) => `/api/products/${segment(id)}`,
-    reviews: (id: EntityId) => `/api/products/${segment(id)}/reviews`,
-    favorite: (id: EntityId) => `/api/products/${segment(id)}/favorite`,
+    details: (id: EntityId) => `/api/products/${encodeRouteSegment(id)}`,
+    reviews: (id: EntityId) => `/api/products/${encodeRouteSegment(id)}/reviews`,
+    favorite: (id: EntityId) => `/api/products/${encodeRouteSegment(id)}/favorite`,
   },
 
   cart: {
     current: '/api/cart',
     addItem: '/api/cart/items',
-    item: (id: EntityId) => `/api/cart/items/${segment(id)}`,
+    item: (id: EntityId) => `/api/cart/items/${encodeRouteSegment(id)}`,
     clear: '/api/cart/clear',
   },
 
   orders: {
     checkout: '/api/orders/checkout',
     list: '/api/orders',
-    details: (id: EntityId) => `/api/orders/${segment(id)}`,
+    details: (id: EntityId) => `/api/orders/${encodeRouteSegment(id)}`,
   },
 } as const;

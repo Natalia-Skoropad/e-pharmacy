@@ -20,6 +20,8 @@ type TextActionButtonAsButton = TextActionButtonBaseProps &
     href?: never;
   };
 
+//===========================================================================
+
 type TextActionButtonAsLink = TextActionButtonBaseProps &
   LinkProps &
   Omit<
@@ -28,6 +30,8 @@ type TextActionButtonAsLink = TextActionButtonBaseProps &
   > & {
     href: LinkProps['href'];
   };
+
+//===========================================================================
 
 type TextActionButtonProps = TextActionButtonAsButton | TextActionButtonAsLink;
 

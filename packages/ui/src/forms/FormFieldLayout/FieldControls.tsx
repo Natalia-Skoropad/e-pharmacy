@@ -104,6 +104,7 @@ export function TextInputControl({
           aria-describedby={describedBy}
           onChange={onChange}
         />
+
         {typeof maxLength === 'number' ? (
           <span className={css.inputCounter} aria-hidden="true">
             {value.length}/{maxLength}
@@ -176,6 +177,7 @@ export function TextareaControl({
           aria-describedby={describedBy}
           onChange={onChange}
         />
+
         {typeof maxLength === 'number' ? (
           <span className={css.textareaCounter} aria-hidden="true">
             {value.length}/{maxLength}

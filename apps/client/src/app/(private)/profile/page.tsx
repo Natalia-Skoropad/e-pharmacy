@@ -2,7 +2,7 @@ import {
   PROFILE_DESCRIPTION,
   PROFILE_TITLE,
   createPageMetadata,
-} from '@/lib/seo';
+} from '@/lib/seo/server';
 
 import { ROUTES } from '@/lib/routes';
 import { ProfilePageContent } from '@/components/profile';

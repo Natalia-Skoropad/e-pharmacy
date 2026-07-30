@@ -16,6 +16,8 @@ type LinkButtonRenderProps = Omit<
   className: string;
 };
 
+//===================================================================
+
 export type LinkButtonProps = {
   children: ReactNode;
   variant?: ButtonVariant;
@@ -47,6 +49,7 @@ function LinkButton({
     fullWidth && css.fullWidth,
     className
   );
+
   const content = (
     <>
       {iconLeft}

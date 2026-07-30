@@ -1,29 +1,34 @@
 import { sanitizeTextParam } from '@e-pharmacy/validation/url';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 
-import type {
-  PublicPharmacy,
-  PharmaciesSortFilter,
-} from '@e-pharmacy/types/pharmacies';
+import type { PharmaciesSortFilter } from '@e-pharmacy/types/pharmacies';
 
 import { parsePositivePageParam } from './catalog-param-utils';
 
 //===================================================================
 
-export const PHARMACIES_PER_PAGE = 24;
+const PHARMACY_SORT_VALUES = [
+  'newest',
+  'rating-desc',
+  'rating-asc',
+  'name-asc',
+  'name-desc',
+] as const satisfies readonly PharmaciesSortFilter[];
 
 //===================================================================
 
-export const PHARMACIES_SORT_OPTIONS: Array<{
-  value: PharmaciesSortFilter;
-  label: string;
-}> = [
+export const PHARMACIES_SORT_OPTIONS = [
   { value: 'newest', label: 'Newest first' },
   { value: 'rating-desc', label: 'Rating: highest first' },
   { value: 'rating-asc', label: 'Rating: lowest first' },
   { value: 'name-asc', label: 'Name: A to Z' },
   { value: 'name-desc', label: 'Name: Z to A' },
-];
+] as const satisfies readonly Readonly<{
+  value: PharmaciesSortFilter;
+  label: string;
+}>[];
+
+const PHARMACIES_PER_PAGE = 24;
 
 //===================================================================
 
@@ -58,53 +63,39 @@ export type PharmacyApiParams = {
 
 //===================================================================
 
-const SORT_VALUES = PHARMACIES_SORT_OPTIONS.map((option) => option.value);
-
-//===================================================================
-
 export function isPharmacySortFilter(
   value?: string
 ): value is PharmaciesSortFilter {
-  return SORT_VALUES.includes(value as PharmaciesSortFilter);
+  return PHARMACY_SORT_VALUES.some((item) => item === value);
 }
 
 //===================================================================
 
-function normalizeCityKey(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+export function normalizeCityKey(value: string): string {
+  return value
+    .normalize('NFKC')
+    .toLocaleLowerCase('uk-UA')
+    .replace(/[^\p{L}\p{N}]/gu, '');
 }
 
 //===================================================================
 
 function capitalizeCityWord(value: string): string {
-  return value ? value[0].toUpperCase() + value.slice(1).toLowerCase() : '';
+  if (!value) return '';
+
+  return `${value[0].toLocaleUpperCase('uk-UA')}${value
+    .slice(1)
+    .toLocaleLowerCase('uk-UA')}`;
 }
 
 //===================================================================
 
 function formatCityFallback(value: string): string {
   return value
+    .normalize('NFKC')
     .split(/([ -]+)/)
-    .map((part) => (/^[A-Za-z]+$/.test(part) ? capitalizeCityWord(part) : part))
+    .map((part) => (/^\p{L}+$/u.test(part) ? capitalizeCityWord(part) : part))
     .join('');
-}
-
-//===================================================================
-
-export function sortCities(cities: string[]): string[] {
-  return [...cities].sort((a, b) => a.localeCompare(b, 'en'));
-}
-
-//===================================================================
-
-export function getUniquePharmacyCities(
-  pharmacies: PublicPharmacy[]
-): string[] {
-  const cities = pharmacies
-    .map((pharmacy) => pharmacy.city?.trim())
-    .filter((city): city is string => Boolean(city));
-
-  return sortCities([...new Set(cities)]);
 }
 
 //===================================================================
@@ -114,6 +105,7 @@ export function resolvePharmacyCity(value: string, cities: string[]): string {
   if (!sanitizedCity) return '';
 
   const normalizedCity = normalizeCityKey(sanitizedCity);
+
   const matchedCity = cities.find(
     (city) => normalizeCityKey(city) === normalizedCity
   );

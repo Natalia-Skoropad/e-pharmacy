@@ -93,7 +93,7 @@ function ProductCatalogPageContent({
             items={[
               { label: 'Home', href: ROUTES.HOME },
               {
-                label: 'ProductDetails catalog',
+                label: 'Product catalog',
                 href: ROUTES.PRODUCTS_CATALOG,
               },
               ...(filters.category !== 'all' && seoContext.categoryLabel
@@ -135,7 +135,7 @@ function ProductCatalogPageContent({
             getPageHref={(page) =>
               buildProductsPageHref(filters, page, pharmacies)
             }
-            ariaLabel="ProductDetails catalog pagination"
+            ariaLabel="Product catalog pagination"
           />
 
           {showSeoText ? (

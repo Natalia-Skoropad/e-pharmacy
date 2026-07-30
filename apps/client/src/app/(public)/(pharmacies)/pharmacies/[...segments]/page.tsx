@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation';
+
 import {
   buildPharmacyPath,
   getPharmacyDescription,
@@ -8,7 +10,7 @@ import {
 } from '@/lib/catalog/pharmacies-catalog';
 
 import { loadPharmaciesCatalogPageData } from '@/lib/catalog/pharmacies-catalog-server';
-import { createPageMetadata } from '@/lib/seo';
+import { createPageMetadata } from '@/lib/seo/server';
 
 import { PharmaciesPageContent } from '@/components/pharmacies';
 
@@ -23,7 +25,7 @@ type PharmaciesSegmentsPageProps = {
 export async function generateMetadata({
   params,
 }: PharmaciesSegmentsPageProps) {
-  const parsedFilters = parsePharmacySegments(await params);
+  const parsedFilters = parsePharmacySegments(await params).filters;
 
   return createPageMetadata({
     title: getPharmacyTitle(parsedFilters),
@@ -36,8 +38,13 @@ export async function generateMetadata({
 //===================================================================
 
 async function PharmaciesSegmentsPage({ params }: PharmaciesSegmentsPageProps) {
-  const parsedFilters = parsePharmacySegments(await params);
-  const pageData = await loadPharmaciesCatalogPageData(parsedFilters);
+  const routeResult = parsePharmacySegments(await params);
+
+  if (!routeResult.isCanonical) {
+    redirect(buildPharmacyPath(routeResult.filters));
+  }
+
+  const pageData = await loadPharmaciesCatalogPageData(routeResult.filters);
 
   return <PharmaciesPageContent {...pageData} />;
 }

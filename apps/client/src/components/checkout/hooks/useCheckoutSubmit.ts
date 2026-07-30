@@ -8,7 +8,7 @@ import { normalizePhoneInput } from '@e-pharmacy/validation/order';
 
 import { groupCartByPharmacy } from '@/lib/cart/cart-groups';
 import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
-import { getStockValidationError } from '@/lib/checkout';
+import { getStockValidationError } from '@/lib/checkout/checkout-utils';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 import { buildOrderPath } from '@/lib/routes';
 import { checkoutOrder, getCart } from '@/lib/api/browser';

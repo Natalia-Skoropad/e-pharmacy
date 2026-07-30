@@ -8,7 +8,7 @@ import {
   DEFAULT_OG_IMAGE_ALT,
   HOME_DESCRIPTION,
   SITE_NAME,
-} from '@/lib/seo';
+} from '@/lib/seo/server';
 
 import { CLIENT_ENV } from '@/lib/constants/env';
 

@@ -18,7 +18,7 @@ export function getPharmacyDescription(filters: PharmacyFilters): string {
     return `Find active E-PHARMACY pharmacies in ${filters.city}, compare ratings, addresses, phone numbers, and available products before choosing a pharmacy.`;
   }
 
-  return 'Find active E-PHARMACY pharmacies, compare ratings, addresses, phone numbers, and available products before choosing where to pharmacy.';
+  return 'Find active E-PHARMACY pharmacies, compare ratings, addresses, phone numbers, and available products before choosing a pharmacy.';
 }
 
 //===================================================================

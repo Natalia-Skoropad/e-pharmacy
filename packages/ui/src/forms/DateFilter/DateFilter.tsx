@@ -82,9 +82,11 @@ export function DateFilter({
   const toId = `${id}-to`;
   const requiresFullRange = rangeMode === 'full';
   const hasAnyDate = Boolean(currentValue.from || currentValue.to);
+
   const hasRequiredDates = requiresFullRange
     ? Boolean(currentValue.from && currentValue.to)
     : hasAnyDate;
+
   const isApplyDisabled =
     disabled ||
     !hasRequiredDates ||
@@ -118,6 +120,7 @@ export function DateFilter({
       <div className={css.grid}>
         <label className={css.dateField} htmlFor={fromId}>
           <span className={css.dateLabel}>{fromLabel}</span>
+
           <input
             ref={fromInputRef}
             id={fromId}
@@ -142,6 +145,7 @@ export function DateFilter({
 
         <label className={css.dateField} htmlFor={toId}>
           <span className={css.dateLabel}>{toLabel}</span>
+
           <input
             ref={toInputRef}
             id={toId}

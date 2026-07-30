@@ -74,3 +74,34 @@ test('closing the session aborts the active write and drops queued writes', asyn
   assert.equal(await queued, null);
   assert.equal(queue.isClosed(), true);
 });
+
+//===================================================================
+
+test('close settles an active task even when the task ignores AbortSignal', async () => {
+  const queue = createCartMutationQueue();
+  const started = deferred<void>();
+
+  const result = queue.enqueue(async () => {
+    started.resolve();
+    await new Promise(() => undefined);
+    return 'never';
+  });
+
+  await started.promise;
+  queue.close();
+
+  assert.equal(await result, null);
+  assert.equal(await queue.enqueue(async () => 'late'), null);
+  queue.close();
+  assert.equal(queue.isClosed(), true);
+});
+
+test('a rejected task does not block the next queued task', async () => {
+  const queue = createCartMutationQueue();
+
+  await assert.rejects(queue.enqueue(async () => {
+    throw new Error('failed');
+  }));
+
+  assert.equal(await queue.enqueue(async () => 'next'), 'next');
+});

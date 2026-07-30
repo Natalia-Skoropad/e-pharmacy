@@ -9,10 +9,9 @@ import { isCartOrderLimitError } from './order-limit';
 //===================================================================
 
 test('detects the cart pharmacy limit by stable API error code', () => {
-  const error = new ApiError('Translated or changed backend message', 400, {
-    status: 'error',
-    message: 'Translated or changed backend message',
-    code: CART_PHARMACY_LIMIT_ERROR_CODE,
+  const error = new ApiError('Translated or changed backend message', {
+    httpStatus: 400,
+    backendCode: CART_PHARMACY_LIMIT_ERROR_CODE,
   });
 
   assert.equal(isCartOrderLimitError(error), true);

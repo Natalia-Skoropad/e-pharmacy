@@ -96,6 +96,7 @@ function DocumentUpload({
   const limitId = `${id}-limit`;
   const metaId = `${id}-meta`;
   const hasError = Boolean(isTouched && error);
+
   const describedBy = useMemo(
     () =>
       [hint ? hintId : null, metaId, hasError ? errorId : null]
@@ -129,6 +130,7 @@ function DocumentUpload({
     }
 
     const selectionError = validateSelection?.(selection.files) ?? '';
+
     if (selectionError) {
       onSelectionError?.(selectionError);
       return;
@@ -222,6 +224,7 @@ function DocumentUpload({
           {value.map((file) => (
             <li className={css.fileItem} key={file.id}>
               <FileText className={css.fileIcon} size={18} aria-hidden="true" />
+
               <div className={css.fileMeta}>
                 {file.dataUrl ? (
                   <a

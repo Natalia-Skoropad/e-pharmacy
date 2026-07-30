@@ -63,6 +63,7 @@ const VIEWPORT_GUTTER = 12;
 
 function getMoreMenuPosition(button: HTMLButtonElement): MoreMenuPosition {
   const rect = button.getBoundingClientRect();
+
   const maximumLeft = Math.max(
     VIEWPORT_GUTTER,
     window.innerWidth - MORE_MENU_WIDTH - VIEWPORT_GUTTER
@@ -89,6 +90,7 @@ function Tabs<TValue extends string = string>({
   labels,
 }: TabsProps<TValue>) {
   const [moreMenuMode, setMoreMenuMode] = useState<MoreMenuMode>(null);
+
   const [moreMenuPosition, setMoreMenuPosition] =
     useState<MoreMenuPosition | null>(null);
 

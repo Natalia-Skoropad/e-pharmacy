@@ -24,6 +24,7 @@ import { CATALOG_SEARCH_UPDATE_DELAY } from '@/lib/catalog/catalog-config';
 import {
   buildProductCatalogPath,
   getProductCatalogActiveFiltersCount,
+  isProductSortFilter,
   type ProductCatalogFilters,
   type ProductAvailabilityFilter,
   type ProductCategoryFilter,
@@ -134,8 +135,10 @@ function ProductCatalogFiltersForm({
   const productCatalogSortOptions = useMemo(
     () =>
       filterOptions.sort.filter(
-        (option) =>
-          option.value !== 'price-asc' && option.value !== 'price-desc'
+        (option): option is Readonly<{
+          value: ProductSortFilter;
+          label: string;
+        }> => isProductSortFilter(option.value)
       ),
     [filterOptions.sort]
   );

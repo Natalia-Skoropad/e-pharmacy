@@ -1,12 +1,6 @@
-// A cart write is authoritative only while the owning client session is alive.
-// The queue serializes all writes so an older response can never overwrite a
-// newer cart snapshot from another item operation.
+export type CartMutationTask<T> = (signal: AbortSignal) => Promise<T>;
 
 //===================================================================
-
-export type CartMutationTask<T> = (
-  signal: AbortSignal
-) => Promise<T>;
 
 export type CartMutationQueue = Readonly<{
   enqueue: <T>(task: CartMutationTask<T>) => Promise<T | null>;
@@ -28,11 +22,21 @@ export function createCartMutationQueue(): CartMutationQueue {
       const controller = new AbortController();
       controllers.add(controller);
 
+      const aborted = new Promise<null>((resolve) => {
+        controller.signal.addEventListener('abort', () => resolve(null), {
+          once: true,
+        });
+      });
+
+      const taskResult = task(controller.signal)
+        .then<T | null>((value) => value)
+        .catch((error) => {
+          if (controller.signal.aborted) return null;
+          throw error;
+        });
+
       try {
-        return await task(controller.signal);
-      } catch (error) {
-        if (controller.signal.aborted) return null;
-        throw error;
+        return await Promise.race([taskResult, aborted]);
       } finally {
         controllers.delete(controller);
       }
@@ -54,9 +58,5 @@ export function createCartMutationQueue(): CartMutationQueue {
     controllers.clear();
   };
 
-  return {
-    enqueue,
-    close,
-    isClosed: () => closed,
-  };
+  return { enqueue, close, isClosed: () => closed };
 }

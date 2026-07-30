@@ -50,7 +50,7 @@ import {
 } from '@/lib/auth';
 
 import { ROUTES } from '@/lib/routes';
-import { REGISTER_TITLE } from '@/lib/seo';
+import { REGISTER_TITLE } from '@/lib/seo/content';
 
 import css from '../shared/AuthForm.module.css';
 

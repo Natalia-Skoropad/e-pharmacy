@@ -1,10 +1,6 @@
 import type { Metadata } from 'next';
 
-import {
-  DEFAULT_OG_IMAGE,
-  DEFAULT_OG_IMAGE_ALT,
-  SITE_NAME,
-} from './metadata';
+import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_ALT, SITE_NAME } from './content';
 
 import { createClientAbsoluteUrl } from './url';
 
@@ -34,6 +30,7 @@ export function createPageMetadata({
   return {
     title,
     description,
+
     alternates: {
       canonical: absoluteUrl,
     },
@@ -44,6 +41,7 @@ export function createPageMetadata({
       title,
       description,
       url: absoluteUrl,
+
       images: [
         {
           url: image,

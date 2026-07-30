@@ -40,6 +40,7 @@ test('load failure preserves the last confirmed cart only', () => {
   const success = completeCartLoad('session-a', CART);
   const error = new Error('offline');
   const failedRefresh = failCartLoad(success, 'session-a', error);
+  
   const failedInitialLoad = failCartLoad(
     createInitialCartState('session-a'),
     'session-a',
@@ -60,4 +61,18 @@ test('a new session starts idle without resurrecting the previous cart', () => {
   assert.equal(getCartStateCart(previousSession), CART);
   assert.equal(reloggedSession.status, 'idle');
   assert.equal(getCartStateCart(reloggedSession), null);
+});
+
+//===================================================================
+
+test('does not carry a previous owner cart into loading or error state', () => {
+  const previous = completeCartLoad('session-a', CART);
+
+  const loading = beginCartLoad(previous, 'session-b');
+  const failed = failCartLoad(previous, 'session-b', new Error('offline'));
+
+  assert.equal(loading.status, 'loading');
+  assert.equal(getCartStateCart(loading), null);
+  assert.equal(failed.status, 'error');
+  assert.equal(getCartStateCart(failed), null);
 });

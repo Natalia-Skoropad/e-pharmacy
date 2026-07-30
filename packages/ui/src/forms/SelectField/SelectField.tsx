@@ -91,6 +91,7 @@ function SelectField<TValue extends string>({
     isOptionDisabled
   );
   const activeOption = activeIndex >= 0 ? options[activeIndex] : undefined;
+
   const activeOptionId =
     isOpen && activeIndex >= 0
       ? `${listboxId}-option-${activeIndex}`

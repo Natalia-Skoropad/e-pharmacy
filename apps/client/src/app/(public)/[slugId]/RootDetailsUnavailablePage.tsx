@@ -5,7 +5,15 @@ import { ROUTES } from '@/lib/routes';
 
 //===================================================================
 
-type DataUnavailableReason = 'timeout' | 'server_error' | 'network';
+type DataUnavailableReason =
+  | 'timeout'
+  | 'network'
+  | 'rate_limit'
+  | 'service_unavailable'
+  | 'invalid_response'
+  | 'unauthorized'
+  | 'forbidden'
+  | 'server_error';
 
 //===================================================================
 
@@ -22,6 +30,14 @@ function getDescription(reason: DataUnavailableReason): string {
 
   if (reason === 'network') {
     return 'Service temporarily unavailable. We could not reach the backend API right now. Please try again.';
+  }
+
+  if (reason === 'rate_limit') {
+    return 'Too many requests were made. Please wait a moment and try again.';
+  }
+
+  if (reason === 'invalid_response') {
+    return 'The service returned an invalid response. Please try again later.';
   }
 
   return 'Service temporarily unavailable. We could not load product or pharmacy details right now. Please try again.';

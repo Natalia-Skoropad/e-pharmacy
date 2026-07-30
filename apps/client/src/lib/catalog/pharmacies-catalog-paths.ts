@@ -1,6 +1,14 @@
-import { deslugifyNameSegment, slugifySegment } from '@e-pharmacy/validation/url';
+import {
+  deslugifyNameSegment,
+  slugifySegment,
+} from '@e-pharmacy/validation/url';
 
-import { parsePositivePageParam } from './catalog-param-utils';
+import { ROUTES } from '@/lib/routes';
+
+import {
+  isCanonicalPositivePageParam,
+  parsePositivePageParam,
+} from './catalog-param-utils';
 
 import {
   isPharmacySortFilter,
@@ -8,11 +16,21 @@ import {
   type PharmacyRouteParams,
 } from './pharmacies-catalog-filters';
 
+import type { CatalogSegmentIssue } from './product-catalog-paths';
+
+//===================================================================
+
+export type PharmacyCatalogParseResult = Readonly<{
+  filters: PharmacyFilters;
+  issues: readonly CatalogSegmentIssue[];
+  isCanonical: boolean;
+}>;
+
 //===================================================================
 
 export function parsePharmacySegments(
   params: PharmacyRouteParams = {}
-): PharmacyFilters {
+): PharmacyCatalogParseResult {
   const filters: PharmacyFilters = {
     name: '',
     address: '',
@@ -21,35 +39,86 @@ export function parsePharmacySegments(
     page: 1,
   };
 
-  for (const segment of params.segments ?? []) {
+  const issues: CatalogSegmentIssue[] = [];
+  const seen = new Set<string>();
+
+  const apply = (
+    key: string,
+    segment: string,
+    index: number,
+    update: () => boolean
+  ) => {
+    if (seen.has(key)) {
+      issues.push({ code: 'duplicate', segment, index });
+      return;
+    }
+
+    seen.add(key);
+    if (!update()) issues.push({ code: 'malformed', segment, index });
+  };
+
+  for (const [index, segment] of (params.segments ?? []).entries()) {
     if (segment.startsWith('search-name-')) {
-      filters.name = deslugifyNameSegment(segment.replace('search-name-', ''));
+      apply('name', segment, index, () => {
+        const value = deslugifyNameSegment(
+          segment.slice('search-name-'.length)
+        );
+
+        if (!value) return false;
+        filters.name = value;
+        return true;
+      });
       continue;
     }
 
     if (segment.startsWith('address-')) {
-      filters.address = deslugifyNameSegment(segment.replace('address-', ''));
+      apply('address', segment, index, () => {
+        const value = deslugifyNameSegment(segment.slice('address-'.length));
+        if (!value) return false;
+        filters.address = value;
+        return true;
+      });
       continue;
     }
 
     if (segment.startsWith('city-')) {
-      filters.city = deslugifyNameSegment(segment.replace('city-', ''));
+      apply('city', segment, index, () => {
+        const value = deslugifyNameSegment(segment.slice('city-'.length));
+        if (!value) return false;
+        filters.city = value;
+        return true;
+      });
       continue;
     }
 
     if (segment.startsWith('sort-')) {
-      const sort = segment.replace('sort-', '');
-
-      if (isPharmacySortFilter(sort)) filters.sort = sort;
+      apply('sort', segment, index, () => {
+        const value = segment.slice('sort-'.length);
+        if (!isPharmacySortFilter(value) || value === 'newest') return false;
+        filters.sort = value;
+        return true;
+      });
       continue;
     }
 
     if (segment.startsWith('page-')) {
-      filters.page = parsePositivePageParam(segment.replace('page-', ''));
+      apply('page', segment, index, () => {
+        const value = segment.slice('page-'.length);
+        if (!isCanonicalPositivePageParam(value) || value === '1') return false;
+        filters.page = parsePositivePageParam(value);
+        return true;
+      });
+      continue;
     }
+
+    issues.push({ code: 'unknown', segment, index });
   }
 
-  return filters;
+  return {
+    filters,
+    issues,
+    isCanonical: issues.length === 0,
+  };
 }
 
 //===================================================================
@@ -57,18 +126,34 @@ export function parsePharmacySegments(
 export function buildPharmacyPath(filters: Partial<PharmacyFilters>): string {
   const segments: string[] = [];
 
-  if (filters.name)
-    segments.push(`search-name-${slugifySegment(filters.name)}`);
-  if (filters.address)
-    segments.push(`address-${slugifySegment(filters.address)}`);
-  if (filters.city)
-    segments.push(`city-${slugifySegment(filters.city)}`);
-  if (filters.sort && filters.sort !== 'newest') {
+  if (filters.name) {
+    const value = slugifySegment(filters.name);
+    if (value) segments.push(`search-name-${value}`);
+  }
+
+  if (filters.address) {
+    const value = slugifySegment(filters.address);
+    if (value) segments.push(`address-${value}`);
+  }
+
+  if (filters.city) {
+    const value = slugifySegment(filters.city);
+    if (value) segments.push(`city-${value}`);
+  }
+
+  if (
+    filters.sort &&
+    filters.sort !== 'newest' &&
+    isPharmacySortFilter(filters.sort)
+  ) {
     segments.push(`sort-${filters.sort}`);
   }
-  if (filters.page && filters.page > 1) segments.push(`page-${filters.page}`);
 
-  return segments.length > 0
-    ? `/pharmacies/${segments.join('/')}`
-    : '/pharmacies';
+  if (filters.page && filters.page > 1 && Number.isSafeInteger(filters.page)) {
+    segments.push(`page-${filters.page}`);
+  }
+
+  return segments.length
+    ? `${ROUTES.PHARMACIES}/${segments.join('/')}`
+    : ROUTES.PHARMACIES;
 }

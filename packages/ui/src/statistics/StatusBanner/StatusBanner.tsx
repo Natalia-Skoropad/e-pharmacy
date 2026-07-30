@@ -32,6 +32,7 @@ export function StatusBanner({
         <h2 className={css.title}>{title}</h2>
         {label ? <StatusBadge tone={tone} label={label} /> : null}
       </div>
+
       <p className={css.message}>{message}</p>
       {meta ? <div className={css.meta}>{meta}</div> : null}
     </section>

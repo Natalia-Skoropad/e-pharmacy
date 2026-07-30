@@ -4,9 +4,9 @@ import {
   ORDER_DETAILS_DESCRIPTION,
   ORDER_DETAILS_TITLE,
   createPageMetadata,
-} from '@/lib/seo';
+} from '@/lib/seo/server';
 
-import { getOrderIdFromPathParam, isValidObjectId, ROUTES } from '@/lib/routes';
+import { getOrderIdFromPathParam, ROUTES } from '@/lib/routes';
 import { OrderDetailsPageContent } from '@/components/profile';
 
 //===================================================================
@@ -26,7 +26,9 @@ export async function generateMetadata({ params }: OrderDetailsPageProps) {
   return createPageMetadata({
     title: ORDER_DETAILS_TITLE,
     description: ORDER_DETAILS_DESCRIPTION,
-    path: `${ROUTES.PROFILE}/orders/${cleanOrderId}`,
+    path: cleanOrderId
+      ? `${ROUTES.PROFILE}/orders/${orderId}`
+      : ROUTES.PROFILE,
     noIndex: true,
   });
 }
@@ -37,7 +39,7 @@ async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   const { orderId } = await params;
   const cleanOrderId = getOrderIdFromPathParam(orderId);
 
-  if (!isValidObjectId(cleanOrderId)) notFound();
+  if (!cleanOrderId) notFound();
 
   return <OrderDetailsPageContent orderId={cleanOrderId} />;
 }

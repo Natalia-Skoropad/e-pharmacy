@@ -60,6 +60,7 @@ function insertSnippet({
   const { selectionStart, selectionEnd } = textarea;
   const selectedText = value.slice(selectionStart, selectionEnd);
   const nextText = snippet.replace('$text', selectedText || 'text');
+
   const nextValue = getLimitedValue(
     `${value.slice(0, selectionStart)}${nextText}${value.slice(selectionEnd)}`,
     maxLength
@@ -104,6 +105,7 @@ function MarkdownTextarea({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const hasError = Boolean(isTouched && error);
+
   const describedBy =
     [hint ? `${id}-hint` : null, hasError ? `${id}-error` : null]
       .filter(Boolean)
@@ -150,6 +152,7 @@ function MarkdownTextarea({
           >
             <Bold size={16} aria-hidden="true" />
           </button>
+
           <button
             className={css.toolButton}
             type="button"
@@ -159,6 +162,7 @@ function MarkdownTextarea({
           >
             <Italic size={16} aria-hidden="true" />
           </button>
+
           <button
             className={css.toolButton}
             type="button"
@@ -168,6 +172,7 @@ function MarkdownTextarea({
           >
             <List size={16} aria-hidden="true" />
           </button>
+
           <button
             className={css.toolButton}
             type="button"
@@ -194,6 +199,7 @@ function MarkdownTextarea({
             aria-describedby={describedBy}
             onChange={(event) => onValueChange(event.target.value)}
           />
+
           {typeof maxLength === 'number' ? (
             <span className={css.counter} aria-hidden="true">
               {value.length}/{maxLength}

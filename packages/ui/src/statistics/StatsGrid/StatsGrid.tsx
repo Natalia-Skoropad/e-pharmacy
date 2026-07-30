@@ -10,6 +10,8 @@ type StatsGridStyle = CSSProperties & {
   '--stats-grid-tablet-columns'?: string;
 };
 
+//===================================================================
+
 export type StatsGridProps = Readonly<{
   children: ReactNode;
   className?: string;

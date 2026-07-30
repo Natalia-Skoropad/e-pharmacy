@@ -42,5 +42,4 @@ function SvgIcon({
 }
 
 export default SvgIcon;
-
 export { SvgIcon };

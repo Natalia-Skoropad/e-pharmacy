@@ -138,6 +138,7 @@ class FakeDocument extends EventTarget {
     super();
     this.body.setConnected(true);
     this.documentElement.setConnected(true);
+
     Object.defineProperty(this.documentElement, 'clientWidth', {
       value: 980,
       configurable: true,
@@ -217,6 +218,8 @@ export function dispatchBubblingKeyboardEvent(
   }
 }
 
+//===================================================================
+
 let nextFrameId = 1;
 const frameCallbacks = new Map<number, FrameRequestCallback>();
 
@@ -224,15 +227,18 @@ const frameCallbacks = new Map<number, FrameRequestCallback>();
 
 export const fakeWindow = {
   innerWidth: 1000,
+
   requestAnimationFrame(callback: FrameRequestCallback): number {
     const id = nextFrameId;
     nextFrameId += 1;
     frameCallbacks.set(id, callback);
     return id;
   },
+
   cancelAnimationFrame(id: number): void {
     frameCallbacks.delete(id);
   },
+
   getComputedStyle(element: FakeElement) {
     return {
       display: element.display,

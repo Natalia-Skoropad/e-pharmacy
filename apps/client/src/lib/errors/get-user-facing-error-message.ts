@@ -5,11 +5,15 @@ import { APP_ERROR_MESSAGES } from './error-messages';
 //===================================================================
 
 type StatusMessageMap = Partial<Record<number, string>>;
+type BackendCodeMessageMap = Readonly<Record<string, string>>;
+
+//===================================================================
 
 type GetUserFacingErrorMessageOptions = {
   fallback?: string;
   statusMessages?: StatusMessageMap;
-  preferApiMessage?: boolean;
+  backendCodeMessages?: BackendCodeMessageMap;
+  allowApiMessage?: boolean;
 };
 
 //===================================================================
@@ -20,26 +24,17 @@ const COMMON_STATUS_MESSAGES: StatusMessageMap = {
   403: APP_ERROR_MESSAGES.common.forbidden,
   404: APP_ERROR_MESSAGES.common.notFound,
   409: APP_ERROR_MESSAGES.common.conflict,
+  429: 'Too many requests. Please wait and try again.',
   500: APP_ERROR_MESSAGES.common.server,
+  502: APP_ERROR_MESSAGES.common.server,
+  503: APP_ERROR_MESSAGES.common.server,
+  504: APP_ERROR_MESSAGES.common.server,
 };
 
 //===================================================================
 
-function isNetworkError(error: unknown): boolean {
-  return (
-    error instanceof TypeError &&
-    (error.message === 'Failed to fetch' || error.message === 'fetch failed')
-  );
-}
-
-//===================================================================
-
 function getErrorMessage(error: unknown): string | null {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message;
-  }
-
-  return null;
+  return error instanceof Error && error.message.trim() ? error.message : null;
 }
 
 //===================================================================
@@ -51,24 +46,35 @@ export function getUserFacingErrorMessage(
   const {
     fallback = APP_ERROR_MESSAGES.common.default,
     statusMessages,
-    preferApiMessage = true,
+    backendCodeMessages = {},
+    allowApiMessage = false,
   } = options;
 
-  if (isNetworkError(error)) {
+  if (!isApiError(error)) return getErrorMessage(error) ?? fallback;
+
+  if (error.transportCode === 'ABORTED') return '';
+  if (error.transportCode === 'NETWORK_ERROR') {
     return APP_ERROR_MESSAGES.common.network;
   }
 
-  if (isApiError(error)) {
-    const mappedMessage =
-      statusMessages?.[error.status] ?? COMMON_STATUS_MESSAGES[error.status];
-    const apiMessage = getErrorMessage(error);
-
-    if (preferApiMessage && apiMessage) return apiMessage;
-    if (mappedMessage) return mappedMessage;
-    if (apiMessage) return apiMessage;
-
-    return fallback;
+  if (error.transportCode === 'TIMEOUT') {
+    return 'The request took too long. Please try again.';
   }
 
-  return getErrorMessage(error) ?? fallback;
+  if (error.transportCode === 'INVALID_RESPONSE') {
+    return 'The server returned an invalid response. Please try again later.';
+  }
+
+  if (error.backendCode && backendCodeMessages[error.backendCode]) {
+    return backendCodeMessages[error.backendCode];
+  }
+
+  const mappedMessage =
+    (error.httpStatus === undefined
+      ? undefined
+      : (statusMessages?.[error.httpStatus] ??
+        COMMON_STATUS_MESSAGES[error.httpStatus])) ?? fallback;
+
+  if (allowApiMessage) return getErrorMessage(error) ?? mappedMessage;
+  return mappedMessage;
 }
