@@ -18,7 +18,7 @@ import {
   type ReviewTouchedFields,
 } from '@e-pharmacy/validation/reviews';
 
-import { isAbortError } from '@/lib/async/is-abort-error';
+import { isAbortError } from '@e-pharmacy/utils/guards';
 import { useClientSessionScope } from '@/providers/AuthProvider';
 
 import { useClientAuthCapabilities } from './useClientAuthCapabilities';
@@ -46,10 +46,12 @@ type ReviewNotifier = Readonly<{
 
 type UseReviewFormParams = Readonly<{
   scopeKey: string;
+
   createReview: (
     payload: ReviewPayload,
     options: ReviewRequestOptions
   ) => Promise<unknown>;
+
   notifier: ReviewNotifier;
   successMessage: string;
   errorMessage: string;

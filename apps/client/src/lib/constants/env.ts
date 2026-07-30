@@ -1,26 +1,48 @@
-const LOCAL_SITE_URL = 'http://localhost:3000';
+import {
+  resolveClientPublicEnvironment,
+  type ClientPublicEnvironment,
+} from './public-environment';
 
 //===================================================================
 
-const isProductionDeploy =
-  process.env.VERCEL_ENV === 'production' || process.env.CI === 'true';
+let cachedEnvironment: ClientPublicEnvironment | undefined;
 
 //===================================================================
 
-function resolveSiteUrl(): string {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-
-  if (siteUrl) return siteUrl;
-
-  if (isProductionDeploy) {
-    throw new Error('NEXT_PUBLIC_SITE_URL is required for production deploys.');
-  }
-
-  return LOCAL_SITE_URL;
+function getBrowserOrigin(): string | undefined {
+  return typeof window === 'undefined' ? undefined : window.location.origin;
 }
 
 //===================================================================
 
-export const CLIENT_ENV = {
-  siteUrl: resolveSiteUrl(),
-} as const;
+function getDeploymentSiteUrl(): string | undefined {
+  return (
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL
+  );
+}
+
+//===================================================================
+
+export function getClientEnvironment(): ClientPublicEnvironment {
+  if (cachedEnvironment) return cachedEnvironment;
+
+  const result = resolveClientPublicEnvironment({
+    configuredSiteUrl: process.env.NEXT_PUBLIC_SITE_URL,
+    runtimeSiteUrl: getBrowserOrigin(),
+    deploymentSiteUrl: getDeploymentSiteUrl(),
+    nodeEnv: process.env.NODE_ENV,
+  });
+
+  if (!result.ok) {
+    throw new Error(`[${result.code}] ${result.message}`);
+  }
+
+  cachedEnvironment = result.environment;
+  return cachedEnvironment;
+}
+
+//===================================================================
+
+export function getClientSiteUrl(): string {
+  return getClientEnvironment().siteUrl;
+}

@@ -4,7 +4,7 @@ import type { PublicBackendRequestOptions } from '@e-pharmacy/next-api/server';
 
 //===================================================================
 
-export const PUBLIC_API_REVALIDATE_SECONDS = 120;
+const PUBLIC_API_REVALIDATE_SECONDS = 120;
 const PUBLIC_API_TIMEOUT_MS = 6_000;
 
 //===================================================================

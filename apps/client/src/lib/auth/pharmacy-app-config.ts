@@ -1,4 +1,4 @@
-import { CLIENT_ENV } from '@/lib/constants/env';
+import { getClientSiteUrl } from '@/lib/constants/env';
 
 import {
   PharmacyAppConfigurationError,
@@ -24,7 +24,7 @@ export function getPharmacyAppConfiguration(): PharmacyAppConfigurationResult {
   return resolvePharmacyAppConfiguration({
     configuredUrl: process.env.NEXT_PUBLIC_PHARMACY_APP_URL,
     nodeEnv: process.env.NODE_ENV,
-    clientSiteUrl: CLIENT_ENV.siteUrl,
+    clientSiteUrl: getClientSiteUrl(),
   });
 }
 

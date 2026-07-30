@@ -2,15 +2,6 @@ import type { Cart } from '@e-pharmacy/types/cart';
 
 //===================================================================
 
-export type CartLoadStatus =
-  | 'idle'
-  | 'loading'
-  | 'success'
-  | 'refreshing'
-  | 'error';
-
-//===================================================================
-
 export type CartState =
   | Readonly<{
       status: 'idle';

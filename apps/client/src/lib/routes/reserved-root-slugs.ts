@@ -8,7 +8,7 @@ import { ROUTE_SEGMENTS } from './route-segments';
  * Every static top-level client route and reserved application prefix must stay
  * here so dynamic details never accidentally capture those URLs.
  */
-export const RESERVED_ROOT_SLUGS = [
+const RESERVED_ROOT_SLUGS = [
   ROUTE_SEGMENTS.cart,
   ROUTE_SEGMENTS.checkout,
   ROUTE_SEGMENTS.profile,

@@ -26,10 +26,6 @@ export const LOGIN_TITLE = 'Log In';
 export const LOGIN_DESCRIPTION =
   'Use one E-PHARMACY sign-in page for both client and pharmacy accounts. Enter your email and password — the system checks your role and opens the right cabinet automatically.';
 
-export const LOGIN_BENEFITS = [
-  'Track your orders, profile details, delivery information, and saved account data in one secure place.',
-  'Return to your cart, favorite products, and trusted pharmacies faster after signing in.',
-] as const;
 
 //===================================================================
 
@@ -37,18 +33,11 @@ export const PASSWORD_RECOVERY_TITLE = 'Recover password';
 export const PASSWORD_RECOVERY_DESCRIPTION =
   'Restore access to your E-PHARMACY account by entering your account email and creating a new password.';
 
-export const PASSWORD_RECOVERY_BENEFITS = [
-  'Use the email linked to your account and set a new password that meets the security requirements.',
-] as const;
 
 //===================================================================
 
 export const RESET_PASSWORD_TITLE = 'Reset password';
 
-export const RESET_PASSWORD_BENEFITS = [
-  'Create a new secure password from the email reset link.',
-  'After changing the password, sign in again with your updated credentials.',
-] as const;
 
 //===================================================================
 
@@ -56,11 +45,6 @@ export const REGISTER_TITLE = 'Register';
 export const REGISTER_DESCRIPTION =
   'Create one E-PHARMACY account as a client or register a pharmacy owner account with the extra details needed for verification.';
 
-export const REGISTER_BENEFITS = [
-  'Save your profile details once and use them again during checkout.',
-  'Keep favorite products and pharmacies organized in your personal account.',
-  'View your order history and quickly return to the products and pharmacies you use most.',
-] as const;
 
 //===================================================================
 

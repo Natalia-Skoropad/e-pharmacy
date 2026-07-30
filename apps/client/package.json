@@ -11,7 +11,7 @@
     "type-check": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\" && tsc --noEmit",
     "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.test.ts",
     "test:react": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.react.test.tsx",
-    "test:integration": "node ../../scripts/test-runners/run-node-ts-tests.mjs src/lib/cart src/lib/auth --match=.test.ts"
+    "test:integration": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.integration.test.ts"
   },
   "dependencies": {
     "@e-pharmacy/api-client": "workspace:*",

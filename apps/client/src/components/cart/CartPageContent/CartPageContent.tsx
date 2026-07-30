@@ -17,7 +17,7 @@ import {
   type CartPharmacyGroup,
 } from '@/lib/cart/cart-groups';
 
-import { CART_DESCRIPTION, CART_TITLE } from '@/lib/seo/content';
+import { CART_DESCRIPTION, CART_TITLE } from '@/lib/seo/metadata-copy';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 import { ROUTES } from '@/lib/routes';
 import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';

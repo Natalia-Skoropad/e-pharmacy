@@ -13,6 +13,7 @@ async function readComponent(relativePath: string): Promise<string> {
 test('keeps client order and user presentation domain-specific', async () => {
   const [profile, orderDetails] = await Promise.all([
     readComponent('./profile/ProfilePageContent/ProfilePageContent.tsx'),
+
     readComponent(
       './profile/OrderDetailsPageContent/OrderDetailsPageContent.tsx'
     ),
@@ -22,6 +23,7 @@ test('keeps client order and user presentation domain-specific', async () => {
   assert.match(profile, /USER_STATUS_PRESENTATION\[user\.status\]/);
   assert.match(orderDetails, /ORDER_STATUS_PRESENTATION\[order\.status\]/);
   assert.match(orderDetails, /PAYMENT_METHOD_LABELS\[order\.paymentMethod\]/);
+
   assert.match(
     orderDetails,
     /DELIVERY_METHOD_LABELS\[order\.delivery\.method\]/
@@ -37,9 +39,7 @@ test('keeps client delivery and payment copy on canonical maps', async () => {
     readComponent('./info/config/delivery-payment.ts'),
     readComponent('./common/DeliveryInfoCard/DeliveryInfoCard.tsx'),
     readComponent('./common/PaymentInfoCard/PaymentInfoCard.tsx'),
-    readComponent(
-      './checkout/CheckoutPaymentMethod/CheckoutPaymentMethod.tsx'
-    ),
+    readComponent('./checkout/CheckoutPaymentMethod/CheckoutPaymentMethod.tsx'),
     readComponent('./checkout/CheckoutPageContent/CheckoutPageContent.tsx'),
   ]);
 

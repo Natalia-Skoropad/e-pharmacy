@@ -78,7 +78,7 @@ import type { ClientOrder } from '@e-pharmacy/types/orders';
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 import type { ProductDetails } from '@e-pharmacy/types/products';
 
-import { PROFILE_TITLE } from '@/lib/seo/content';
+import { PROFILE_TITLE } from '@/lib/seo/metadata-copy';
 
 import {
   ROUTES,

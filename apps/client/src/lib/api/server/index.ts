@@ -1,15 +1,11 @@
 import 'server-only';
 
-export {
-  PUBLIC_API_CACHE_OPTIONS,
-  PUBLIC_API_REVALIDATE_SECONDS,
-} from './cache-options';
+export { PUBLIC_API_CACHE_OPTIONS } from './cache-options';
 
 export {
   getDataUnavailableReason,
   getServerDataErrorContext,
   resolveServerDataState,
-  type DataUnavailableReason,
   type ServerDataErrorContext,
   type ServerDataState,
 } from './data-state';

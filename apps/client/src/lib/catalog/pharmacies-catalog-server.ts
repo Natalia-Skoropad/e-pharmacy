@@ -1,13 +1,12 @@
 import 'server-only';
 
-import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
+import { PUBLIC_API_CACHE_OPTIONS, resolveServerDataState } from '@/lib/api/server';
+import { getPharmacyFilters, getPharmacies } from '@/lib/api/server';
 
 import {
-  PUBLIC_API_CACHE_OPTIONS,
-  resolveServerDataState,
-} from '@/lib/api/server';
-
-import { getPharmacyFilters, getPharmacies } from '@/lib/api/server';
+  createPharmaciesCatalogPageData,
+  type PharmaciesCatalogPageData,
+} from './catalog-page-data';
 
 import {
   buildPharmacyApiParams,
@@ -17,21 +16,10 @@ import {
 
 //===================================================================
 
-type PharmaciesCatalogPageData = {
-  pharmacies: PublicPharmacy[];
-  total: number;
-  totalPages: number;
-  filters: PharmacyFilters;
-  cityOptions: string[];
-  isUnavailable: boolean;
-};
-
-//===================================================================
-
 export async function loadPharmaciesCatalogPageData(
   parsedFilters: PharmacyFilters
 ): Promise<PharmaciesCatalogPageData> {
-  const [pharmacyFiltersState, initialPharmaciesState] = await Promise.all([
+  const [filterState, initialPharmaciesState] = await Promise.all([
     resolveServerDataState(getPharmacyFilters(PUBLIC_API_CACHE_OPTIONS)),
     resolveServerDataState(
       getPharmacies(
@@ -42,12 +30,11 @@ export async function loadPharmaciesCatalogPageData(
   ]);
 
   const cityOptions =
-    pharmacyFiltersState.status === 'success'
-      ? pharmacyFiltersState.data.cities.map((city) => city.value)
+    filterState.status === 'success'
+      ? filterState.data.cities.map((city) => city.value)
       : [];
 
   const filters = normalizePharmacyFiltersCity(parsedFilters, cityOptions);
-
   const shouldRefetchWithNormalizedCity = filters.city !== parsedFilters.city;
 
   const pharmaciesState = shouldRefetchWithNormalizedCity
@@ -56,15 +43,9 @@ export async function loadPharmaciesCatalogPageData(
       )
     : initialPharmaciesState;
 
-  const pharmaciesData =
-    pharmaciesState.status === 'success' ? pharmaciesState.data : null;
-
-  return {
-    pharmacies: [...(pharmaciesData?.items ?? [])],
-    total: pharmaciesData?.total ?? 0,
-    totalPages: pharmaciesData?.totalPages ?? 0,
+  return createPharmaciesCatalogPageData({
     filters,
-    cityOptions,
-    isUnavailable: pharmaciesState.status === 'unavailable',
-  };
+    pharmaciesState,
+    filterState,
+  });
 }

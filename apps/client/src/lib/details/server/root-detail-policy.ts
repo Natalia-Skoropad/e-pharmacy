@@ -1,3 +1,5 @@
+import 'server-only';
+
 import type { RootDetail } from './root-detail-resolver';
 
 //===================================================================

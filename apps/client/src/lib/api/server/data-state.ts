@@ -1,42 +1,23 @@
 import 'server-only';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
+import { isAbortError } from '@e-pharmacy/utils/guards';
+
+import type {
+  DataUnavailableReason,
+  ResolvedDataState,
+  ServerDataErrorContext,
+} from '../resource-state';
+
+export type {
+  DataUnavailableReason,
+  ResolvedDataState,
+  ServerDataErrorContext,
+} from '../resource-state';
 
 //===================================================================
 
-export type DataUnavailableReason =
-  | 'timeout'
-  | 'network'
-  | 'rate_limit'
-  | 'service_unavailable'
-  | 'invalid_response'
-  | 'unauthorized'
-  | 'forbidden'
-  | 'server_error';
-
-//===================================================================
-
-export type ServerDataErrorContext = Readonly<{
-  reason: DataUnavailableReason;
-  requestId?: string;
-  httpStatus?: number;
-  backendCode?: string;
-}>;
-
-//===================================================================
-
-export type ServerDataState<TData> =
-  | { status: 'success'; data: TData }
-  | ({ status: 'unavailable' } & ServerDataErrorContext);
-
-//===================================================================
-
-function isAbortError(error: unknown): boolean {
-  return (
-    (isApiError(error) && error.transportCode === 'ABORTED') ||
-    (error instanceof DOMException && error.name === 'AbortError')
-  );
-}
+export type ServerDataState<TData> = ResolvedDataState<TData>;
 
 //===================================================================
 

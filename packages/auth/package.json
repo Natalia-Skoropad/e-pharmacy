@@ -24,7 +24,8 @@
   },
   "dependencies": {
     "@e-pharmacy/config": "workspace:*",
-    "@e-pharmacy/types": "workspace:*"
+    "@e-pharmacy/types": "workspace:*",
+    "@e-pharmacy/utils": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19",

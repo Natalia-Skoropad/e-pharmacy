@@ -27,7 +27,7 @@ import {
 } from '@/lib/api/browser/cart.api';
 
 import { useClientAuthCapabilities } from '@/hooks/useClientAuthCapabilities';
-import { isAbortError } from '@/lib/async/is-abort-error';
+import { isAbortError } from '@e-pharmacy/utils/guards';
 import { removeCartItemsSequentially } from '@/lib/cart/cart-pharmacy-removal';
 
 import {
@@ -74,19 +74,23 @@ export type CartContextValue = Readonly<{
   refreshCart: () => Promise<Cart | null>;
   retryCart: () => Promise<Cart | null>;
   replaceCartFromServer: (cart: Cart) => void;
+
   addProductToCart: (
     payload: AddCartItemPayload,
     options?: OfferMutationOptions
   ) => Promise<CartResponse | null>;
+
   updateItemQuantity: (
     cartItemId: string,
     payload: UpdateCartItemPayload,
     options?: OfferMutationOptions
   ) => Promise<CartResponse | null>;
+
   removeItemFromCart: (
     cartItemId: string,
     options?: OfferMutationOptions
   ) => Promise<CartResponse | null>;
+
   clearAllCart: () => Promise<CartResponse | null>;
   removePharmacyOrder: (pharmacyId: string) => Promise<Cart | null>;
 }>;
@@ -387,6 +391,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
           if (!signal.aborted && lifecycleActiveRef.current) {
             replaceCartFromServer(response.cart);
           }
+
           return response;
         });
       } finally {

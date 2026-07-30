@@ -1,4 +1,4 @@
-export type CartMutationTask<T> = (signal: AbortSignal) => Promise<T>;
+type CartMutationTask<T> = (signal: AbortSignal) => Promise<T>;
 
 //===================================================================
 

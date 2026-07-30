@@ -9,6 +9,8 @@ import type {
   ProductFilterOptionsResponse,
 } from '@e-pharmacy/types/products';
 
+import type { ResourceState } from '@/lib/api/resource-state';
+
 import {
   buildProductCatalogPath,
   getProductCatalogDescription,
@@ -35,7 +37,9 @@ type ProductCatalogPageContentProps = {
   total: number;
   totalPages: number;
   filters: ProductCatalogFilters;
-  isUnavailable?: boolean;
+  catalogState: ResourceState;
+  pharmacyOptionsState: ResourceState;
+  filtersState: ResourceState;
 };
 
 //===================================================================
@@ -77,7 +81,9 @@ function ProductCatalogPageContent({
   total,
   totalPages,
   filters,
-  isUnavailable = false,
+  catalogState,
+  pharmacyOptionsState,
+  filtersState,
 }: ProductCatalogPageContentProps) {
   const seoContext = createSeoContext(filters, pharmacies, filterOptions);
   const pageTitle = getProductCatalogTitle(filters, seoContext);
@@ -120,10 +126,18 @@ function ProductCatalogPageContent({
             productsCount={total}
           />
 
-          {isUnavailable ? (
+          {catalogState.status === 'unavailable' ? (
             <div className={css.notice} role="status">
               Products are temporarily unavailable. Please check that the
               backend API is running.
+            </div>
+          ) : null}
+
+          {pharmacyOptionsState.status === 'unavailable' ||
+          filtersState.status === 'unavailable' ? (
+            <div className={css.notice} role="status">
+              Some catalog filters are temporarily unavailable. Product
+              results remain available with fallback filter options.
             </div>
           ) : null}
 

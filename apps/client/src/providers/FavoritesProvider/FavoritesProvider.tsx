@@ -20,7 +20,7 @@ import {
   removeFavoriteProduct,
 } from '@/lib/api/browser';
 
-import { isAbortError } from '@/lib/async/is-abort-error';
+import { isAbortError } from '@e-pharmacy/utils/guards';
 import { useClientAuthCapabilities } from '@/hooks/useClientAuthCapabilities';
 import { useClientSessionScope } from '@/providers/AuthProvider';
 
@@ -66,14 +66,18 @@ export type FavoriteToggleResult = Readonly<{
 
 export type FavoritesContextValue = Readonly<{
   isAuthUnavailable: boolean;
+
   getCollectionStatus: (
     entityType: FavoriteEntityType
   ) => FavoriteCollectionStatus;
+
   isFavorite: (entityType: FavoriteEntityType, id: string) => boolean;
   isPending: (entityType: FavoriteEntityType, id: string) => boolean;
+
   loadCollection: (
     entityType: FavoriteEntityType
   ) => Promise<ReadonlySet<string> | null>;
+
   toggleFavorite: (
     entityType: FavoriteEntityType,
     id: string,
@@ -140,6 +144,7 @@ const FavoritesContext = createContext<FavoritesContextValue | null>(null);
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   const { user, canUseClientFeatures, isUnavailable } =
     useClientAuthCapabilities();
+
   const { ownerKey: authScope, generation } = useClientSessionScope();
   const ownerId = canUseClientFeatures ? (user?.id ?? null) : null;
 
@@ -150,6 +155,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   );
 
   const stateRef = useRef(state);
+
   const collectionRequests = useMemo<FavoriteCollectionRequestRegistry>(
     () => createFavoriteCollectionRequestRegistry(),
     []
@@ -167,6 +173,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
       setState((current) => {
         const scopedCurrent =
           current.scope === scope ? current : createFavoritesState(scope);
+
         const next = updater(scopedCurrent);
         stateRef.current = next;
         return next;
@@ -208,6 +215,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         stateRef.current.scope === scope
           ? stateRef.current
           : createFavoritesState(scope);
+
       const currentCollection = currentState[entityType];
 
       if (currentCollection.status === 'ready') {
@@ -218,6 +226,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         entityType,
         scope
       );
+
       if (activeRequest) return activeRequest;
 
       updateState(scope, (current) => ({
@@ -309,6 +318,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
       const controller = new AbortController();
       const abortFromCaller = () => controller.abort(options.signal?.reason);
+
       options.signal?.addEventListener('abort', abortFromCaller, {
         once: true,
       });
@@ -389,14 +399,17 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     () => ({
       isAuthUnavailable: isUnavailable,
       getCollectionStatus: (entityType) => visibleState[entityType].status,
+
       isFavorite: (entityType, id) => {
         if (!canUseClientFeatures) return false;
 
         const collection = visibleState[entityType];
         return collection.status === 'ready' && collection.ids.has(id);
       },
+
       isPending: (entityType, id) =>
         visibleState.pendingKeys.has(getMutationKey(entityType, id)),
+
       loadCollection,
       toggleFavorite,
     }),

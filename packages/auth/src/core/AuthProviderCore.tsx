@@ -10,6 +10,8 @@ import {
   useState,
 } from 'react';
 
+import { isAbortError } from '@e-pharmacy/utils/guards';
+
 import type {
   AuthUser,
   LoginPayload,
@@ -47,10 +49,14 @@ import type {
 const AuthContext = createContext<AuthContextValue | null>(null);
 const DEFAULT_AUTH_BOOTSTRAP_TIMEOUT_MS = 4_000;
 
+//===================================================================
+
 const INVALID_SESSION_CODES = new Set([
   'AUTH_SESSION_INVALID',
   'AUTH_SESSION_REVOKED',
 ]);
+
+//===================================================================
 
 const BLOCKED_USER_CODES = new Set(['AUTH_USER_BLOCKED']);
 
@@ -80,6 +86,7 @@ function getErrorStatus(error: unknown): number | null {
   const value = error as ErrorLike;
 
   if (typeof value.status === 'number') return value.status;
+
   if (value.response && typeof value.response === 'object') {
     const responseStatus = (value.response as ErrorLike).status;
     if (typeof responseStatus === 'number') return responseStatus;
@@ -137,13 +144,6 @@ function getInvalidSessionReason(
   return getErrorStatus(error) === 401 ? 'session_invalid' : null;
 }
 
-function isAbortError(error: unknown): boolean {
-  return (
-    (error instanceof DOMException && error.name === 'AbortError') ||
-    (error instanceof Error && error.name === 'AbortError')
-  );
-}
-
 //===================================================================
 
 export function AuthProviderCore(props: AuthProviderCoreProps) {
@@ -196,6 +196,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
 
       if (publish) publishSessionEvent('unauthenticated');
     },
+
     [publishSessionEvent, transition]
   );
 
@@ -213,6 +214,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
     ): Promise<AuthUser | null> => {
       const manager = requestManagerRef.current;
       const previousState = stateRef.current;
+
       const preservedUser =
         mode === 'reload' && previousState.user ? previousState.user : null;
 
@@ -329,6 +331,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
         const response = await attempt.promise;
         if (!manager.isCurrent(attempt)) return null;
         applyAuthenticatedUser(response.user);
+
         return response.user;
       } catch (error) {
         if (!manager.isCurrent(attempt) || isAbortError(error)) return null;
@@ -478,10 +481,12 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
       user: state.user,
       status: state.status,
       authError: state.status === 'unavailable' ? state.error : null,
+
       capabilities: {
         canLogin: Boolean(login),
         canRegister: Boolean(register),
       },
+
       isAuthenticated,
       isBootstrapping,
       isUnavailable,
@@ -491,8 +496,10 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
       register,
       logout,
       invalidateSession,
+
       isRefreshingUser:
         state.status === 'authenticated' && state.isRevalidating,
+
       reloadCurrentUser,
       retryAuthBootstrap,
     };

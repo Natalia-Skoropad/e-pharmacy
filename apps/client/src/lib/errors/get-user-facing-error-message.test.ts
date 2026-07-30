@@ -13,7 +13,7 @@ test('maps transport failures without exposing raw backend copy', () => {
       new ApiError('socket detail', { transportCode: 'NETWORK_ERROR' })
     ),
 
-    'Cannot connect to the server. Please check that the API is running.'
+    'Cannot connect to the server. Please check your connection and try again.'
   );
 
   assert.equal(
@@ -43,6 +43,8 @@ test('uses backend semantic codes only through an explicit allowlist', () => {
     'This phone number is already used.'
   );
 });
+
+//===================================================================
 
 test('returns an empty message for aborted requests', () => {
   assert.equal(

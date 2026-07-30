@@ -3,6 +3,8 @@ import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 import { LinkPagination } from '@e-pharmacy/ui/navigation';
 
+import type { ResourceState } from '@/lib/api/resource-state';
+
 import {
   buildPharmacyPath,
   getPharmacyDescription,
@@ -27,7 +29,8 @@ type PharmaciesPageContentProps = {
   totalPages: number;
   filters: PharmacyFilters;
   cityOptions: string[];
-  isUnavailable?: boolean;
+  catalogState: ResourceState;
+  filtersState: ResourceState;
 };
 
 //===================================================================
@@ -44,7 +47,8 @@ function PharmaciesPageContent({
   totalPages,
   filters,
   cityOptions,
-  isUnavailable = false,
+  catalogState,
+  filtersState,
 }: PharmaciesPageContentProps) {
   const pageTitle = getPharmacyTitle(filters);
   const pageDescription = getPharmacyDescription(filters);
@@ -80,10 +84,17 @@ function PharmaciesPageContent({
             pharmaciesCount={total}
           />
 
-          {isUnavailable ? (
+          {catalogState.status === 'unavailable' ? (
             <div className={css.notice} role="status">
               Pharmacies are temporarily unavailable. Please check that the
               backend API is running.
+            </div>
+          ) : null}
+
+          {filtersState.status === 'unavailable' ? (
+            <div className={css.notice} role="status">
+              City filters are temporarily unavailable. The pharmacy list is
+              still shown without city normalization.
             </div>
           ) : null}
 

@@ -1,19 +1,25 @@
+import 'server-only';
+
 import type { Metadata } from 'next';
 
-import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_ALT, SITE_NAME } from './content';
+import {
+  DEFAULT_OG_IMAGE,
+  DEFAULT_OG_IMAGE_ALT,
+  SITE_NAME,
+} from '../metadata-copy';
 
 import { createClientAbsoluteUrl } from './url';
 
 //===================================================================
 
-type CreatePageMetadataParams = {
+type CreatePageMetadataParams = Readonly<{
   title: string;
   description: string;
   path: string;
   image?: string;
   imageAlt?: string;
   noIndex?: boolean;
-};
+}>;
 
 //===================================================================
 
@@ -30,10 +36,7 @@ export function createPageMetadata({
   return {
     title,
     description,
-
-    alternates: {
-      canonical: absoluteUrl,
-    },
+    alternates: { canonical: absoluteUrl },
 
     openGraph: {
       type: 'website',
@@ -41,15 +44,7 @@ export function createPageMetadata({
       title,
       description,
       url: absoluteUrl,
-
-      images: [
-        {
-          url: image,
-          width: 1200,
-          height: 630,
-          alt: imageAlt,
-        },
-      ],
+      images: [{ url: image, width: 1200, height: 630, alt: imageAlt }],
     },
 
     twitter: {
@@ -60,13 +55,7 @@ export function createPageMetadata({
     },
 
     robots: noIndex
-      ? {
-          index: false,
-          follow: true,
-        }
-      : {
-          index: true,
-          follow: true,
-        },
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
   };
 }

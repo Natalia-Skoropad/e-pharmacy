@@ -9,10 +9,8 @@ import { Container } from '@e-pharmacy/ui/layout';
 import {
   BENEFITS,
   HOME_PREVIEW_LIMIT,
-  REVIEWS,
-  STATS,
   STEPS,
-} from '@/lib/content/home';
+} from '@/components/home/config/home-content';
 
 import { HOME_DESCRIPTION, HOME_TITLE, createPageMetadata } from '@/lib/seo/server';
 import { ROUTES } from '@/lib/routes';
@@ -23,7 +21,7 @@ import {
   PUBLIC_API_CACHE_OPTIONS,
 } from '@/lib/api/server';
 
-import { HomeFeatureCards, HomeReviewsSlider } from '@/components/home';
+import { HomeFeatureCards } from '@/components/home';
 import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
 
@@ -199,19 +197,6 @@ async function HomePage() {
         </Container>
       </section>
 
-      <section className={css.statsSection} aria-label="E-PHARMACY highlights">
-        <Container>
-          <ul className={css.statsList}>
-            {STATS.map((stat, index) => (
-              <li className={css.statCard} key={stat.label}>
-                <span className={css.statNumber}>{index + 1}</span>
-                <strong>{stat.value}</strong>
-                <span>{stat.label}</span>
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </section>
 
       <section className={css.section} aria-labelledby="pharmacies-title">
         <Container>
@@ -376,18 +361,6 @@ async function HomePage() {
         </Container>
       </section>
 
-      <section className={css.section} aria-labelledby="reviews-title">
-        <Container>
-          <div className={css.sectionHead}>
-            <p className={css.kicker}>Client reviews</p>
-            <h2 className={css.sectionTitle} id="reviews-title">
-              A calmer way to manage products
-            </h2>
-          </div>
-
-          <HomeReviewsSlider reviews={REVIEWS} />
-        </Container>
-      </section>
     </main>
   );
 }

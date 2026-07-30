@@ -56,14 +56,7 @@ import {
   sanitizeCatalogTextSearch,
 } from '@/lib/catalog/search-sanitizers';
 
-import {
-  PRODUCT_OFFER_SORT_OPTIONS,
-  PRODUCT_OFFERS_PER_PAGE,
-  type ProductOfferSort,
-} from '@/lib/catalog/product-offers';
-
 import { createProductReview, getProductDetails } from '@/lib/api/browser';
-
 import { useCart } from '@/providers/CartProvider';
 
 import {
@@ -74,6 +67,12 @@ import {
   StockAvailability,
   CartOrderLimitModal,
 } from '@/components/common';
+
+import {
+  PRODUCT_OFFER_SORT_OPTIONS,
+  PRODUCT_OFFERS_PER_PAGE,
+  type ProductOfferSort,
+} from '@/components/product-catalog/config/product-offers';
 
 import css from './ProductDetailsPageContent.module.css';
 
@@ -356,20 +355,19 @@ function ProductDetailsPageContent({
     }, 250);
   };
 
-  const { isFavorite, isFavoriteLoading, toggleFavorite } =
-    useFavoriteActions({
-      entityType: 'product',
-      id: productDetails.id,
-      notifier: toast,
-      loginMessage: 'Please log in to add products to favorites.',
-      unavailableMessage:
-        'We could not verify your session. Please try again shortly.',
-      clientAccountRequiredMessage:
-        'Favorites are available only for active client accounts.',
-      addedMessage: 'Product was added to favorites.',
-      removedMessage: 'Product was removed from favorites.',
-      errorMessage: 'Could not update favorites.',
-    });
+  const { isFavorite, isFavoriteLoading, toggleFavorite } = useFavoriteActions({
+    entityType: 'product',
+    id: productDetails.id,
+    notifier: toast,
+    loginMessage: 'Please log in to add products to favorites.',
+    unavailableMessage:
+      'We could not verify your session. Please try again shortly.',
+    clientAccountRequiredMessage:
+      'Favorites are available only for active client accounts.',
+    addedMessage: 'Product was added to favorites.',
+    removedMessage: 'Product was removed from favorites.',
+    errorMessage: 'Could not update favorites.',
+  });
 
   const {
     reviewText,
@@ -554,7 +552,7 @@ function ProductDetailsPageContent({
             isOfferPending ||
             (cartItem ? pendingItemIds.has(cartItem.id) : false)
           }
-          ariaLabel="ProductDetails quantity controls"
+          ariaLabel="Product quantity controls"
           onIncrement={() => handleAddUnit(offer)}
           onDecrement={() => handleRemoveUnit(offer)}
         />
@@ -599,7 +597,7 @@ function ProductDetailsPageContent({
           <Tabs
             items={tabs}
             activeValue={activeTab}
-            ariaLabel="ProductDetails information tabs"
+            ariaLabel="Product information tabs"
             onChange={setActiveTab}
           />
 
@@ -628,7 +626,8 @@ function ProductDetailsPageContent({
                     {PRODUCT_CATEGORY_LABELS[productDetails.category]}
                   </p>
 
-                  {!isBootstrapping && (!isAuthenticated || canUseClientFeatures) ? (
+                  {!isBootstrapping &&
+                  (!isAuthenticated || canUseClientFeatures) ? (
                     <FavoriteToggleButton
                       isActive={isFavorite}
                       disabled={isFavoriteLoading}
@@ -843,7 +842,7 @@ function ProductDetailsPageContent({
                             {renderQuantityControl(offer)}
 
                             <p className={css.cartNote}>
-                              ProductDetails stays in the cart for 3 days and is
+                              The product stays in the cart for 3 days and is
                               removed if the order is not confirmed.
                             </p>
 
@@ -905,9 +904,7 @@ function ProductDetailsPageContent({
 
                   <div className={css.detailItem}>
                     <dt>Category</dt>
-                    <dd>
-                      {PRODUCT_CATEGORY_LABELS[productDetails.category]}
-                    </dd>
+                    <dd>{PRODUCT_CATEGORY_LABELS[productDetails.category]}</dd>
                   </div>
                 </dl>
 
@@ -951,7 +948,7 @@ function ProductDetailsPageContent({
                   reviewAccessMessage={reviewAccessMessage}
                   isAuthUnavailable={isAuthUnavailable}
                   isUnavailable={areReviewsUnavailable}
-                  emptyText="ProductDetails reviews will appear here after clients share their feedback."
+                  emptyText="Product reviews will appear here after clients share their feedback."
                   textareaId="product-review"
                   maxLength={USER_REVIEW_COMMENT_MAX_LENGTH}
                   onReviewTextChange={handleReviewTextChange}

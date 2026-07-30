@@ -40,7 +40,7 @@ import {
   getPharmacyWorkingHours,
 } from '@/lib/checkout/checkout-utils';
 
-import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo/content';
+import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo/metadata-copy';
 import { ROUTES } from '@/lib/routes';
 import { useClientAuthCapabilities } from '@/hooks';
 

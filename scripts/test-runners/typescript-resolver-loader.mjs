@@ -23,12 +23,14 @@ function resolveApplicationAlias(specifier, parentURL) {
   const applicationMatch = parentPath.match(
     /\/(apps\/(?:client|pharmacy))\/src\//
   );
+
   if (!applicationMatch) return null;
 
   const sourceRoot = new URL(
     `../../${applicationMatch[1]}/src/`,
     import.meta.url
   );
+
   return new URL(specifier.slice(APPLICATION_ALIAS_PREFIX.length), sourceRoot)
     .href;
 }
@@ -66,6 +68,13 @@ async function resolveExistingCandidate(specifier, parentURL) {
 //===================================================================
 
 export async function resolve(specifier, context, nextResolve) {
+  if (specifier === 'server-only' || specifier === 'client-only') {
+    return {
+      url: `data:text/javascript,export default {};`,
+      shortCircuit: true,
+    };
+  }
+
   const applicationAlias = resolveApplicationAlias(
     specifier,
     context.parentURL
@@ -112,6 +121,7 @@ export async function load(url, context, nextLoad) {
     const source = await readFile(fileURLToPath(url), 'utf8');
     const transpiled = ts.transpileModule(source, {
       fileName: fileURLToPath(url),
+
       compilerOptions: {
         target: ts.ScriptTarget.ES2022,
         module: ts.ModuleKind.ESNext,

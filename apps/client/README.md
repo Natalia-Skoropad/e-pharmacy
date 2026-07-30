@@ -256,7 +256,7 @@ apps/client/
     lib/
       api/
         browser/
-        proxy/
+        readers/
         routes/
         server/
       auth/
@@ -269,6 +269,8 @@ apps/client/
       errors/
       routes/
       seo/
+        metadata-copy.ts
+        server/
     providers/
     routes/
 ```
@@ -314,11 +316,12 @@ The client app has a dedicated SEO layer for public pages. The goal is to keep u
 ### SEO architecture
 
 ```txt
-src/lib/seo/metadata.ts             -> site name, default metadata, OG image
-src/lib/seo/sitemap.ts              -> sitemap routes and dynamic sitemap helpers
-src/lib/seo/robots.ts               -> robots rules
-src/lib/seo/create-page-metadata.ts -> shared metadata builder
-src/lib/seo/url.ts                  -> absolute URL helper based on CLIENT_ENV.siteUrl
+src/lib/seo/metadata-copy.ts             -> client-safe titles, descriptions, and OG copy
+src/lib/seo/server/create-page-metadata.ts -> server-only metadata builder
+src/lib/seo/server/route-policy.ts         -> sitemap and robots route classification
+src/lib/seo/server/sitemap.ts              -> strict dates, dedupe, and absolute URLs
+src/lib/seo/server/sitemap-data.ts         -> paged backend loading with partial-failure reporting
+src/lib/seo/server/robots.ts               -> robots response builder
 src/app/sitemap.ts                  -> dynamic sitemap generation
 src/app/robots.ts                   -> robots.txt rules
 src/lib/catalog/*                   -> catalog URL, canonical, title, description, noindex logic
@@ -492,7 +495,7 @@ BFF_PROXY_SECRET=
 | `API_BASE_URL` | backend URL used only by Next.js server-side data fetches and BFF route handlers | `http://localhost:4000` |
 | `BFF_PROXY_SECRET` | optional shared secret sent by Next.js BFF handlers to the Express API | `local-secret` |
 
-For production, replace these values with the deployed client, pharmacy, and API URLs. `NEXT_PUBLIC_PHARMACY_APP_URL` must be an HTTPS application base URL without credentials, query, hash, or the client origin. A configured base path is preserved when `/pharmacy/dashboard` is appended. Invalid production configuration is shown as a controlled application error and never falls back silently to the client home page. `NEXT_PUBLIC_SITE_URL` is required for real production deploys so sitemap, robots, canonical URLs, and social metadata do not fall back to localhost. Local builds may use the localhost fallback when this variable is not set.
+For production, replace these values with the deployed client, pharmacy, and API URLs. `NEXT_PUBLIC_PHARMACY_APP_URL` must be an HTTPS application base URL without credentials, query, hash, or the client origin. A configured pharmacy base path is preserved when `/pharmacy/dashboard` is appended. Invalid production configuration is shown as a controlled application error and never falls back silently to the client home page. `NEXT_PUBLIC_SITE_URL` is required in production and must be an origin-only HTTPS URL such as `https://client.example.com`; application base paths, credentials, query strings, and hashes are rejected. Local development may use the localhost fallback.
 
 For production, set the same `BFF_PROXY_SECRET` value in the client app and API app when the API enforces BFF proxy authentication.
 
@@ -553,7 +556,7 @@ Test layers:
 
 - `test` runs pure selectors, state machines, stores, route/config decisions, and API-reader contracts.
 - `test:react` renders the real `ClientProviders` stack with React and verifies that application content is mounted inside the required provider order.
-- `test:integration` covers cart serialization/partial-failure recovery and cross-application auth redirect configuration.
+- `test:integration` covers structured server-data degradation and sitemap partial-failure behavior with injected HTTP responses.
 - `check:client-hooks`, `check:client-providers`, `check:client-routes`, `check:client-user-state`, `check:client-cart`, and `check:client-noop-wrappers` are architecture checks included in `check:before-deploy`.
 
 ## Security Notes
