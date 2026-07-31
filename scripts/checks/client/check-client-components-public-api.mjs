@@ -56,6 +56,32 @@ for (const root of AUDITED_ROOTS) {
   }
 }
 
+// A component must not import the barrel of its own top-level feature. The
+// barrel commonly exports that same component, which creates a real cycle and
+// makes the dependency direction depend on export order.
+for (const file of await collect(COMPONENT_ROOT)) {
+  if (extname(file) !== '.ts' && extname(file) !== '.tsx') continue;
+  if (file.endsWith('/index.ts')) continue;
+
+  const componentRelativePath = relative(COMPONENT_ROOT, file).replaceAll(
+    '\\',
+    '/'
+  );
+
+  const [featureRoot] = componentRelativePath.split('/');
+  const source = await readFile(file, 'utf8');
+
+  const ownBarrelImport = new RegExp(
+    `from\\s+['"]@/components/${featureRoot}['"]`
+  );
+
+  if (ownBarrelImport.test(source)) {
+    violations.push(
+      `${relative(ROOT, file)}: component must not import its own feature barrel @/components/${featureRoot}.`
+    );
+  }
+}
+
 for (const removedPath of [
   'common/DeliveryInfoCard',
   'common/PaymentInfoCard',

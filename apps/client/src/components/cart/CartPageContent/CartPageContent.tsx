@@ -25,11 +25,9 @@ import { useClientAuthCapabilities } from '@/hooks/useClientAuthCapabilities';
 import { isPartialCartMutationError } from '@/lib/cart/cart-errors';
 import { useCart } from '@/providers/CartProvider';
 
-import {
-  CartItemCard,
-  CartSummary,
-  ContinueShoppingModal,
-} from '@/components/cart';
+import CartItemCard from '@/components/cart/CartItemCard/CartItemCard';
+import CartSummary from '@/components/cart/CartSummary/CartSummary';
+import ContinueShoppingModal from '@/components/cart/ContinueShoppingModal/ContinueShoppingModal';
 
 import css from './CartPageContent.module.css';
 
@@ -74,7 +72,6 @@ function CartPageContent() {
   >(null);
 
   const isUpdating = pendingItemIds.size > 0 || isClearing;
-
   const visibleError = error || cartLoadError;
 
   const handleQuantityChange = async (cartItemId: string, quantity: number) => {
@@ -223,7 +220,9 @@ function CartPageContent() {
             </div>
           ) : null}
 
-          {!shouldShowLoading && !visibleError && visibleCart.items.length === 0 ? (
+          {!shouldShowLoading &&
+          !visibleError &&
+          visibleCart.items.length === 0 ? (
             <div className={css.empty}>
               <h2 className={css.emptyTitle}>Your cart is empty</h2>
 

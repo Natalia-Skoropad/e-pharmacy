@@ -79,3 +79,16 @@ test('does not publish placeholder social links or developer diagnostics', async
 
   assert.doesNotMatch(combined, /backend API|API is running|localhost/i);
 });
+
+//===================================================================
+
+test('keeps CartPageContent outside its own feature barrel cycle', async () => {
+  const [pageContent, cartBarrel] = await Promise.all([
+    readComponent('./cart/CartPageContent/CartPageContent.tsx'),
+    readComponent('./cart/index.ts'),
+  ]);
+
+  assert.doesNotMatch(pageContent, /from ['"]@\/components\/cart['"]/);
+
+  assert.match(cartBarrel, /from ['"]\.\/CartPageContent\/CartPageContent['"]/);
+});
