@@ -65,7 +65,7 @@ async function LegacyProductDetailsPage({
   if (result.status === 'not_found') notFound();
   if (result.status === 'unavailable') {
     return (
-      <DetailsUnavailablePage entityLabel="product" reason={result.reason} />
+      <DetailsUnavailablePage entityLabel="product" error={result} />
     );
   }
 

@@ -44,6 +44,7 @@ test('public reader injects transport while keeping route/query/envelope logic s
     totalPages: 0,
     earliestCreatedAt: null,
   });
+
   assert.equal(calls[0]?.path, '/products?locale=uk&page=2&inStock=false');
 });
 

@@ -69,21 +69,21 @@
   color: var(--color-white-alpha-82);
 }
 
-.featureAction {
+.featureCard .featureAction {
   position: relative;
   z-index: 1;
   width: 100%;
   margin-top: 24px;
-  color: var(--color-accent) !important;
-  background-color: var(--color-white-alpha-92) !important;
-  border-color: var(--color-white-alpha-92) !important;
+  color: var(--color-accent);
+  background-color: var(--color-white-alpha-92);
+  border-color: var(--color-white-alpha-92);
 }
 
-.featureAction:hover,
-.featureAction:focus-visible {
-  color: var(--color-accent-hover) !important;
-  background-color: var(--color-white) !important;
-  border-color: var(--color-white) !important;
+.featureCard .featureAction:hover,
+.featureCard .featureAction:focus-visible {
+  color: var(--color-accent-hover);
+  background-color: var(--color-white);
+  border-color: var(--color-white);
 }
 
 @media only screen and (min-width: 768px) {
@@ -101,9 +101,17 @@
     padding: 32px;
   }
 
-  .featureAction {
+  .featureCard .featureAction {
     width: 190px;
     padding-top: 12px;
     padding-bottom: 12px;
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .featureCard::after,
+  .featureCard .featureAction {
+    transition: none;
   }
 }

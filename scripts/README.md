@@ -39,3 +39,15 @@ pnpm check:archive-hygiene
 ```
 
 The staged source tree is written to `.artifacts/e-pharmacy-source` and intentionally excludes `.artifacts`, `node_modules`, `.turbo`, `.next`, `dist`, `coverage`, logs, TypeScript build info, and nested ZIP archives. The hygiene check builds a temporary source tree and recursively verifies its real contents, so a broken exclusion can no longer pass merely because the policy text looks correct.
+
+## Client component checks
+
+```bash
+pnpm check:client-components-boundaries
+pnpm check:client-components-public-api
+pnpm check:client-components-a11y
+pnpm check:client-components-styles
+pnpm check:client-content-contracts
+```
+
+These checks cover the audited `common`, `home`, `info`, and `layout` layers. They reject cross-layer feature imports, no-op shared re-exports, one-line nested barrels, duplicate or stale CSS, `!important`, invisible desktop modal hiding, missing skip/dialog/rating/pending semantics, invalid revision metadata, generated title anchors, misleading home claims, and placeholder social URLs. Product-details presentation CSS is included where it owns the local order-information card.

@@ -177,6 +177,7 @@ assertSameValues(
     clientFilters,
     'CLIENT_SUCCESSFUL_ORDER_FILTER_VALUES'
   ),
+
   findPropertyCallStringArray(ts, backendClientSchema, 'successfulOrders')
 );
 
@@ -411,9 +412,9 @@ const [
         'client',
         'src',
         'components',
-        'common',
-        'DeliveryInfoCard',
-        'DeliveryInfoCard.tsx'
+        'product-catalog',
+        'ProductDetailsPageContent',
+        'ProductOrderInfoCard.tsx'
       ),
       'utf8'
     ),
@@ -424,9 +425,9 @@ const [
         'client',
         'src',
         'components',
-        'common',
-        'PaymentInfoCard',
-        'PaymentInfoCard.tsx'
+        'product-catalog',
+        'ProductDetailsPageContent',
+        'ProductDetailsPageContent.tsx'
       ),
       'utf8'
     ),

@@ -115,7 +115,7 @@ async function PublicDetailsPage({
 
     if (result.status === 'unavailable') {
       return (
-        <DetailsUnavailablePage entityLabel="product" reason={result.reason} />
+        <DetailsUnavailablePage entityLabel="product" error={result} />
       );
     }
 
@@ -146,7 +146,7 @@ async function PublicDetailsPage({
 
   if (result.status === 'unavailable') {
     return (
-      <DetailsUnavailablePage entityLabel="pharmacy" reason={result.reason} />
+      <DetailsUnavailablePage entityLabel="pharmacy" error={result} />
     );
   }
 

@@ -53,6 +53,7 @@ export function getUserFacingErrorMessage(
   if (!isApiError(error)) return getErrorMessage(error) ?? fallback;
 
   if (error.transportCode === 'ABORTED') return '';
+
   if (error.transportCode === 'NETWORK_ERROR') {
     return APP_ERROR_MESSAGES.common.network;
   }

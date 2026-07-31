@@ -93,6 +93,7 @@ export function parseProductCatalogSegments(
         filters.category = value;
         return true;
       });
+
       continue;
     }
 
@@ -104,6 +105,7 @@ export function parseProductCatalogSegments(
         filters.availability = value;
         return true;
       });
+
       continue;
     }
 
@@ -114,6 +116,7 @@ export function parseProductCatalogSegments(
         filters.sort = value;
         return true;
       });
+
       continue;
     }
 
@@ -124,6 +127,7 @@ export function parseProductCatalogSegments(
         filters.page = parsePositivePageParam(value);
         return true;
       });
+
       continue;
     }
 
@@ -137,6 +141,7 @@ export function parseProductCatalogSegments(
         filters.name = value;
         return true;
       });
+
       continue;
     }
 
@@ -147,6 +152,7 @@ export function parseProductCatalogSegments(
         filters.article = value;
         return true;
       });
+
       continue;
     }
 
@@ -157,6 +163,7 @@ export function parseProductCatalogSegments(
         filters.pharmacyId = pharmacyId;
         return true;
       });
+
       continue;
     }
 

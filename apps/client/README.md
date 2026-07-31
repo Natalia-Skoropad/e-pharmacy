@@ -1,6 +1,6 @@
 # E-PHARMACY Client
 
-> A responsive client storefront for browsing pharmacies, finding products, managing a cart, and creating online orders.
+> A responsive client storefront for browsing pharmacies, finding products, managing a cart, and preparing pharmacy order requests.
 
 ![E-PHARMACY client cover](./public/og/og-cover.jpg)
 
@@ -15,7 +15,7 @@ The client app allows clients to:
 - open detailed product and pharmacy pages with SEO-friendly URLs
 - add products and pharmacies to favorites
 - manage cart items grouped by pharmacy
-- complete checkout with pickup or delivery details
+- prepare an order request with pickup or delivery details
 - view profile information and confirmed orders
 - read and submit product or pharmacy reviews
 
@@ -123,7 +123,7 @@ https://e-pharmacy-client-ten.vercel.app
 - quantity controls with stock limits
 - order-level summaries
 - checkout with pickup or postal delivery
-- order creation through the backend API
+- order-request submission through the backend API
 - delivery address and client comment in order details
 
 ### Profile and orders
@@ -606,3 +606,42 @@ Backend development, Frontend development, UI/UX design
 - ProductOffer prices remain live while products are in the Cart and update on the next Cart response. Price is frozen only in the confirmed Order.
 - Canonical checkout types are `PaymentMethod` and `DeliveryMethod`; postal delivery is `postal_delivery`.
 - Favorites use idempotent PUT to add and DELETE to remove.
+
+## Public component architecture
+
+The public client UI is split by ownership rather than by visual similarity:
+
+- `components/common` contains client-specific primitives used by multiple independent features, such as favorite actions, reviews, stock presentation, and client error states.
+- `components/home` contains landing-page presentation and marketing copy only. Server preview limits live separately from presentation content.
+- `components/info` is server-first. Information documents use one typed data contract with explicit anchor IDs and structured revision metadata.
+- `components/layout` owns the application shell, navigation, cart indicator, and one shared desktop/mobile auth-action controller.
+- feature-only presentation stays with its feature. Product delivery/payment information is therefore owned by `ProductDetailsPageContent`, not `common` or `packages/ui`.
+
+Local components must not exist solely to re-export a shared UI component. Nested one-line barrels are avoided; stable application barrels may export leaf components directly when they provide a meaningful public API.
+
+### Auth and mobile overlay lifecycle
+
+Header and mobile navigation render separate layouts from one controller model. Logout is single-flight, always completes local navigation even if remote invalidation fails, and disables both desktop and mobile actions together. Every mobile navigation action closes the offcanvas directly. Moving to the desktop breakpoint closes and unmounts the overlay instead of hiding an active modal through CSS.
+The footer year remains server-rendered at build/request time; the application does not add client hydration solely to update that label.
+
+### Accessibility policy
+
+The shell provides a first-focusable “Skip to main content” link. Informational dialogs use one dismiss action. Review ratings use native radio inputs with grouped validation semantics. Unknown stock is never announced as zero, favorite mutations expose pending state, and service error pages retain a main landmark and support-friendly request reference.
+
+### Public content ownership
+
+Home copy describes E-PHARMACY as a platform for finding products and preparing order requests; the selected pharmacy confirms availability, sale, pickup, or delivery. Information documents include typed version, effective-date, revision, owner, approval, legal-entity, support-route, and review-ID fields. Unknown legal or contact values remain `null`, and documents remain marked `unreviewed` until formal approval is recorded.
+
+### Required checks
+
+Run these checks before deployment:
+
+```bash
+pnpm check:client-components-boundaries
+pnpm check:client-components-public-api
+pnpm check:client-components-a11y
+pnpm check:client-components-styles
+pnpm check:client-content-contracts
+```
+
+They are included in `check:client` and `check:before-deploy`. Source archives must be produced with `pnpm archive:source`; verify any file prepared for transfer with `pnpm check:archive-artifact <path>`. Do not send a manually zipped workspace containing `node_modules`, `.turbo`, `dist`, `.next`, nested ZIP files, or `*.tsbuildinfo` artifacts.

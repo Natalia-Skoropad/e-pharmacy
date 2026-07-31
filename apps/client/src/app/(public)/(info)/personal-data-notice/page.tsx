@@ -1,6 +1,6 @@
 import { createPageMetadata } from '@/lib/seo/server';
 
-import { InfoPage } from '@/components/info';
+import InfoPage from '@/components/info/InfoPage/InfoPage';
 import { PERSONAL_DATA_NOTICE_INFO } from '@/components/info/config';
 
 //===================================================================
@@ -15,13 +15,7 @@ export const metadata = createPageMetadata({
 
 function PersonalDataNoticePage() {
   return (
-    <InfoPage
-      title={PERSONAL_DATA_NOTICE_INFO.title}
-      description={PERSONAL_DATA_NOTICE_INFO.description}
-      activePath={PERSONAL_DATA_NOTICE_INFO.path}
-      updatedAt={PERSONAL_DATA_NOTICE_INFO.updatedAt}
-      sections={PERSONAL_DATA_NOTICE_INFO.sections}
-    />
+    <InfoPage data={PERSONAL_DATA_NOTICE_INFO} />
   );
 }
 

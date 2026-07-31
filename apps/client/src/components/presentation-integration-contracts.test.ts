@@ -34,11 +34,18 @@ test('keeps client order and user presentation domain-specific', async () => {
 
 //===================================================================
 
-test('keeps client delivery and payment copy on canonical maps', async () => {
+test('keeps product order information and checkout copy on canonical maps', async () => {
   const sources = await Promise.all([
     readComponent('./info/config/delivery-payment.ts'),
-    readComponent('./common/DeliveryInfoCard/DeliveryInfoCard.tsx'),
-    readComponent('./common/PaymentInfoCard/PaymentInfoCard.tsx'),
+
+    readComponent(
+      './product-catalog/ProductDetailsPageContent/ProductOrderInfoCard.tsx'
+    ),
+
+    readComponent(
+      './product-catalog/ProductDetailsPageContent/ProductDetailsPageContent.tsx'
+    ),
+
     readComponent('./checkout/CheckoutPaymentMethod/CheckoutPaymentMethod.tsx'),
     readComponent('./checkout/CheckoutPageContent/CheckoutPageContent.tsx'),
   ]);

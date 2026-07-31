@@ -142,3 +142,21 @@
 .pharmacyCabinetLink {
   white-space: nowrap;
 }
+
+.authStatus {
+  display: inline-flex;
+  align-items: center;
+}
+
+.accountNotice {
+  max-width: 220px;
+  font-size: var(--fz-12);
+  line-height: 1.35;
+  color: var(--color-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .authSkeleton {
+    animation: none;
+  }
+}

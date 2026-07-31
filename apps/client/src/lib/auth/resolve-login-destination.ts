@@ -2,6 +2,7 @@ import {
   getSafeApplicationRedirectPath,
   getTrustedExternalRedirectUrl,
 } from '@e-pharmacy/auth/routing';
+
 import type { AuthUser } from '@e-pharmacy/types/auth';
 
 import { ROUTES, CLIENT_ALLOWED_REDIRECT_PREFIXES } from '@/lib/routes';

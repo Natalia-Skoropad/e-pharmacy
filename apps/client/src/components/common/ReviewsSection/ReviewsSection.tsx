@@ -1,28 +1,25 @@
 'use client';
 
-import { Star } from 'lucide-react';
-
-import { Button } from '@e-pharmacy/ui/primitives';
-
 import {
   ReviewsList,
   DEFAULT_VISIBLE_REVIEWS_COUNT,
   type ReviewsListItem,
 } from '@e-pharmacy/ui/data-display';
 
-import { CommentInput } from '@e-pharmacy/ui/forms';
 import type { ReviewTouchedFields } from '@e-pharmacy/validation/reviews';
 
+import { ReviewComposer } from './ReviewComposer';
 import css from './ReviewsSection.module.css';
 
 //===================================================================
 
-type ReviewsSectionProps = Readonly<{
+export type ReviewsSectionProps = Readonly<{
   reviews: readonly ReviewsListItem[];
   reviewText: string;
   reviewRating: number;
   isReviewValid: boolean;
-  reviewError?: string;
+  commentError?: string;
+  ratingError?: string;
   reviewTouchedFields: ReviewTouchedFields;
   isReviewSubmitting: boolean;
   canCreateReview: boolean;
@@ -49,7 +46,8 @@ function ReviewsSection({
   reviewText,
   reviewRating,
   isReviewValid,
-  reviewError,
+  commentError,
+  ratingError,
   reviewTouchedFields,
   isReviewSubmitting,
   canCreateReview,
@@ -70,71 +68,27 @@ function ReviewsSection({
 }: ReviewsSectionProps) {
   return (
     <>
-      <form
-        className={css.reviewForm}
-        onSubmit={(event) => {
-          event.preventDefault();
-          onReviewSubmit();
-        }}
-      >
-        <CommentInput
-          id={textareaId}
-          name="review"
-          label="Your review"
-          value={reviewText}
-          required
-          error={reviewError}
-          errorClassName={css.reviewCommentError}
-          isTouched={Boolean(reviewTouchedFields.comment)}
-          maxLength={maxLength}
-          placeholder="Write 10–500 characters using latin letters."
-          onChange={(event) => onReviewTextChange(event.target.value)}
-        />
-
-        <fieldset className={css.ratingFieldset}>
-          <legend className={css.reviewLabel}>Rating</legend>
-
-          <div className={css.ratingButtons}>
-            {[1, 2, 3, 4, 5].map((rating) => (
-              <button
-                className={
-                  reviewRating >= rating ? css.starButtonActive : css.starButton
-                }
-                key={rating}
-                type="button"
-                onClick={() => onReviewRatingChange(rating)}
-                aria-label={`Set rating ${rating}`}
-              >
-                <Star size={20} aria-hidden="true" />
-              </button>
-            ))}
-          </div>
-        </fieldset>
-
-        <div className={css.reviewActions}>
-          <Button
-            type="submit"
-            className={css.reviewSubmitButton}
-            disabled={
-              !isReviewValid ||
-              isReviewSubmitting ||
-              isAuthUnavailable ||
-              !canCreateReview
-            }
-          >
-            {isReviewSubmitting ? 'Sending...' : 'Send review'}
-          </Button>
-
-          {reviewAccessMessage ? (
-            <p className={css.authNote}>{reviewAccessMessage}</p>
-          ) : null}
-        </div>
-      </form>
+      <ReviewComposer
+        reviewText={reviewText}
+        reviewRating={reviewRating}
+        isReviewValid={isReviewValid}
+        commentError={commentError}
+        ratingError={ratingError}
+        reviewTouchedFields={reviewTouchedFields}
+        isReviewSubmitting={isReviewSubmitting}
+        canCreateReview={canCreateReview}
+        reviewAccessMessage={reviewAccessMessage}
+        isAuthUnavailable={isAuthUnavailable}
+        textareaId={textareaId}
+        maxLength={maxLength}
+        onReviewTextChange={onReviewTextChange}
+        onReviewRatingChange={onReviewRatingChange}
+        onReviewSubmit={onReviewSubmit}
+      />
 
       {isUnavailable ? (
-        <div className={css.notice} role="alert">
-          Reviews are temporarily unavailable. Please check that the backend API
-          is running.
+        <div className={css.notice} role="status">
+          Reviews are temporarily unavailable. Please try again later.
         </div>
       ) : (
         <ReviewsList

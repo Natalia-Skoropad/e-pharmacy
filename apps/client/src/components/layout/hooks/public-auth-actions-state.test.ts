@@ -8,6 +8,8 @@ import { selectPublicAuthActionsState } from './public-auth-actions-state';
 const logout = async () => undefined;
 const retryAuthBootstrap = async () => null;
 
+//===================================================================
+
 const CLIENT_USER = {
   id: '507f1f77bcf86cd799439011',
   name: 'Client User',
@@ -38,7 +40,7 @@ test('uses one explicit mode for loading, unavailable, and guest states', () => 
   });
 
   assert.equal(unavailable.mode, 'unavailable');
-  assert.equal(unavailable.canRetry, true);
+  assert.equal(unavailable.retryAuthBootstrap, retryAuthBootstrap);
   assert.equal('logout' in unavailable, false);
 
   assert.equal(
@@ -82,7 +84,27 @@ test('maps authenticated users to role-specific presentation modes', () => {
       logout,
       retryAuthBootstrap,
     }).mode,
-    'authenticated-other'
+    'authenticated-admin'
+  );
+
+  assert.equal(
+    selectPublicAuthActionsState({
+      user: { ...CLIENT_USER, status: 'blocked' },
+      status: 'authenticated',
+      logout,
+      retryAuthBootstrap,
+    }).mode,
+    'blocked-account'
+  );
+
+  assert.equal(
+    selectPublicAuthActionsState({
+      user: { ...CLIENT_USER, role: 'future-role' as never },
+      status: 'authenticated',
+      logout,
+      retryAuthBootstrap,
+    }).mode,
+    'authenticated-unsupported'
   );
 });
 

@@ -33,3 +33,14 @@
 .favoriteActive svg {
   fill: currentColor;
 }
+
+
+.spinner {
+  animation: favorite-toggle-spin 800ms linear infinite;
+}
+
+@keyframes favorite-toggle-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -35,6 +35,7 @@ type UseFavoriteActionsParams = Readonly<{
 export type FavoriteActions = Readonly<{
   isFavorite: boolean;
   isFavoriteLoading: boolean;
+  isFavoritePending: boolean;
   toggleFavorite: () => Promise<void>;
 }>;
 
@@ -87,9 +88,10 @@ export function useFavoriteActions({
   }, [canUseClientFeatures, entityType, loadCollection]);
 
   const isFavorite = readIsFavorite(entityType, id);
+  const isFavoritePending = isPending(entityType, id);
 
   const isFavoriteLoading =
-    isPending(entityType, id) || getCollectionStatus(entityType) === 'loading';
+    isFavoritePending || getCollectionStatus(entityType) === 'loading';
 
   const toggleFavorite = useCallback(async (): Promise<void> => {
     if (isBootstrapping) return;
@@ -149,6 +151,7 @@ export function useFavoriteActions({
   return {
     isFavorite,
     isFavoriteLoading,
+    isFavoritePending,
     toggleFavorite,
   };
 }

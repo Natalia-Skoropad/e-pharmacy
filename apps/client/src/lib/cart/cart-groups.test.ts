@@ -66,11 +66,13 @@ test('groups cart totals once and exposes immutable output', () => {
 test('does not silently trust inconsistent pharmacy metadata', () => {
   const groups = groupCartItemsByPharmacy([
     createItem(),
+
     createItem({
       id: '507f1f77bcf86cd799439015',
       pharmacyName: 'Beta Pharmacy',
       pharmacyRating: 4.8,
       pharmacyReviewsCount: 13,
+
       product: {
         ...createItem().product,
         pharmacyName: 'Beta Pharmacy',

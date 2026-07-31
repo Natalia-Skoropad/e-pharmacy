@@ -1,6 +1,6 @@
 import { createPageMetadata } from '@/lib/seo/server';
 
-import { InfoPage } from '@/components/info';
+import InfoPage from '@/components/info/InfoPage/InfoPage';
 import { RETURN_POLICY_INFO } from '@/components/info/config';
 
 //===================================================================
@@ -15,13 +15,7 @@ export const metadata = createPageMetadata({
 
 function ReturnPolicyPage() {
   return (
-    <InfoPage
-      title={RETURN_POLICY_INFO.title}
-      description={RETURN_POLICY_INFO.description}
-      activePath={RETURN_POLICY_INFO.path}
-      updatedAt={RETURN_POLICY_INFO.updatedAt}
-      sections={RETURN_POLICY_INFO.sections}
-    />
+    <InfoPage data={RETURN_POLICY_INFO} />
   );
 }
 

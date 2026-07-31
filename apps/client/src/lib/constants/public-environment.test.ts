@@ -48,6 +48,7 @@ test('allows localhost during an optimized local build', () => {
       configuredSiteUrl: undefined,
       nodeEnv: 'production',
     }),
+
     {
       ok: true,
       environment: { siteUrl: 'http://localhost:3000' },
@@ -59,6 +60,7 @@ test('allows localhost during an optimized local build', () => {
       configuredSiteUrl: 'http://localhost:3000',
       nodeEnv: 'production',
     }),
+
     {
       ok: true,
       environment: { siteUrl: 'http://localhost:3000' },
@@ -76,6 +78,7 @@ test('uses the browser or deployment origin when the explicit URL is absent', ()
       deploymentSiteUrl: 'ignored.example.com',
       nodeEnv: 'production',
     }),
+
     {
       ok: true,
       environment: { siteUrl: 'https://preview.example.com' },
@@ -88,6 +91,7 @@ test('uses the browser or deployment origin when the explicit URL is absent', ()
       deploymentSiteUrl: 'client-production.vercel.app',
       nodeEnv: 'production',
     }),
+
     {
       ok: true,
       environment: { siteUrl: 'https://client-production.vercel.app' },

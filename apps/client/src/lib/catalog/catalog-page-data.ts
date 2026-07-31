@@ -64,6 +64,7 @@ export function createProductCatalogPageData({
 
   return {
     products: [...(productsData?.items ?? [])],
+
     pharmacies: sortPharmaciesByName(
       pharmaciesState.status === 'success' ? pharmaciesState.data.items : []
     ),

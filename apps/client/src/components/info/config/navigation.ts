@@ -1,28 +1,12 @@
 import { FileText, RotateCcw, ShieldCheck, Truck } from 'lucide-react';
 
-import { ROUTES } from '@/lib/routes';
+import { INFO_LINKS } from './links';
 
 //===================================================================
 
-export const INFO_NAV_LINKS = [
-  {
-    label: 'Personal data notice',
-    href: ROUTES.PERSONAL_DATA_NOTICE,
-    icon: ShieldCheck,
-  },
-  {
-    label: 'User agreement',
-    href: ROUTES.USER_AGREEMENT,
-    icon: FileText,
-  },
-  {
-    label: 'Delivery and payment',
-    href: ROUTES.DELIVERY_PAYMENT,
-    icon: Truck,
-  },
-  {
-    label: 'Return policy',
-    href: ROUTES.RETURN_POLICY,
-    icon: RotateCcw,
-  },
-] as const;
+const INFO_ICONS = [ShieldCheck, FileText, Truck, RotateCcw] as const;
+
+export const INFO_SIDE_MENU_ITEMS = INFO_LINKS.map((link, index) => ({
+  ...link,
+  icon: INFO_ICONS[index],
+}));

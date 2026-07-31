@@ -107,7 +107,7 @@ async function PharmaciesSegmentsPage({ params }: PharmaciesSegmentsPageProps) {
 
     if (result.status === 'unavailable') {
       return (
-        <DetailsUnavailablePage entityLabel="pharmacy" reason={result.reason} />
+        <DetailsUnavailablePage entityLabel="pharmacy" error={result} />
       );
     }
 

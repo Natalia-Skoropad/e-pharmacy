@@ -68,6 +68,7 @@ export function parsePharmacySegments(
         filters.name = value;
         return true;
       });
+
       continue;
     }
 
@@ -78,6 +79,7 @@ export function parsePharmacySegments(
         filters.address = value;
         return true;
       });
+
       continue;
     }
 
@@ -88,6 +90,7 @@ export function parsePharmacySegments(
         filters.city = value;
         return true;
       });
+
       continue;
     }
 
@@ -108,6 +111,7 @@ export function parsePharmacySegments(
         filters.page = parsePositivePageParam(value);
         return true;
       });
+
       continue;
     }
 

@@ -34,6 +34,7 @@ test('refreshes the authoritative cart after a partial pharmacy removal', async 
       refreshCart: async () => ({ cart: cart(2) }),
       onConfirmedCart: (nextCart) => confirmed.push(nextCart),
     }),
+
     (error: unknown) => {
       assert.equal(isPartialCartMutationError(error), true);
       if (!isPartialCartMutationError(error)) return false;
@@ -96,6 +97,7 @@ test('reports authoritative refresh failure after partial removal', async () => 
 
       onConfirmedCart: () => undefined,
     }),
+
     (error: unknown) => {
       assert.equal(isPartialCartMutationError(error), true);
       if (!isPartialCartMutationError(error)) return false;

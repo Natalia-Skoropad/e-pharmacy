@@ -23,10 +23,8 @@ test('preserves a configured pharmacy application base path', () => {
     result.config.dashboardUrl,
     'https://apps.example.com/pharmacy-app/pharmacy/dashboard'
   );
-  assert.equal(
-    result.config.allowedPathPrefix,
-    '/pharmacy-app/pharmacy'
-  );
+
+  assert.equal(result.config.allowedPathPrefix, '/pharmacy-app/pharmacy');
 });
 
 //===================================================================
@@ -75,6 +73,7 @@ test('uses the local pharmacy origin only outside production', () => {
 
   assert.equal(result.ok, true);
   if (!result.ok) return;
+
   assert.equal(
     result.config.dashboardUrl,
     'http://localhost:3002/pharmacy/dashboard'

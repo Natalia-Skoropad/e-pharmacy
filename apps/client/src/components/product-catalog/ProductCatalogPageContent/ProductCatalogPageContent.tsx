@@ -128,8 +128,7 @@ function ProductCatalogPageContent({
 
           {catalogState.status === 'unavailable' ? (
             <div className={css.notice} role="status">
-              Products are temporarily unavailable. Please check that the
-              backend API is running.
+              Products are temporarily unavailable. Please try again later.
             </div>
           ) : null}
 

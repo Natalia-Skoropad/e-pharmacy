@@ -86,8 +86,7 @@ function PharmaciesPageContent({
 
           {catalogState.status === 'unavailable' ? (
             <div className={css.notice} role="status">
-              Pharmacies are temporarily unavailable. Please check that the
-              backend API is running.
+              Pharmacies are temporarily unavailable. Please try again later.
             </div>
           ) : null}
 

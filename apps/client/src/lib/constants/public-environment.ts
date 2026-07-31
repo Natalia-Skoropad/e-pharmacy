@@ -69,6 +69,7 @@ export function resolveClientPublicEnvironment({
     LOCAL_SITE_URL;
 
   let url: URL;
+
   try {
     url = new URL(candidate);
   } catch {

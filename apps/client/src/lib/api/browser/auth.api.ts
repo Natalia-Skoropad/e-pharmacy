@@ -74,6 +74,7 @@ export async function requestPasswordReset(
   options?: MutationRequestOptions
 ): Promise<void> {
   const path = CLIENT_API_ROUTES.auth.passwordResetRequest;
+
   parseApiEmptyResponse(
     await localApiRequest(path, { ...options, method: 'POST', body: payload }),
     { url: path, method: 'POST' }

@@ -158,6 +158,7 @@ function requireNullableString(
       context
     );
   }
+
   return value;
 }
 
@@ -190,6 +191,99 @@ function checked<TValue>(value: unknown): TValue {
 
 //===================================================================
 
+function requireSafeNonNegativeInteger(
+  record: UnknownRecord,
+  key: string,
+  label: string,
+  context?: ApiResponseContext
+): number {
+  const value = record[key];
+
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+    throw invalidDto(
+      `${label}.${key} must be a safe non-negative integer.`,
+      record,
+      context
+    );
+  }
+
+  return value;
+}
+
+//===================================================================
+
+function parseProductOffer(
+  value: unknown,
+  context?: ApiResponseContext
+): ProductDetails['offers'][number] {
+  const record = requireRecord(value, 'product offer', context);
+
+  requireFields(
+    record,
+    'product offer',
+    {
+      id: 'string',
+      pharmacyId: 'string',
+      pharmacyName: 'string',
+      pharmacyRating: 'number',
+      pharmacyReviewsCount: 'number',
+      pharmacyIsFavorite: 'boolean',
+      price: 'number',
+      totalQuantity: 'number',
+      availableQuantity: 'number',
+      reservedQuantity: 'number',
+      inStock: 'boolean',
+      createdAt: 'string',
+      updatedAt: 'string',
+    },
+    context
+  );
+
+  requireOptionalFields(
+    record,
+    'product offer',
+    {
+      pharmacyCity: 'string',
+      pharmacyAddress: 'string',
+      pharmacyPhone: 'string',
+      pharmacyImageUrl: 'string',
+      hasRelatedOrders: 'boolean',
+    },
+    context
+  );
+
+  requireSafeNonNegativeInteger(
+    record,
+    'pharmacyReviewsCount',
+    'product offer',
+    context
+  );
+
+  requireSafeNonNegativeInteger(
+    record,
+    'totalQuantity',
+    'product offer',
+    context
+  );
+
+  requireSafeNonNegativeInteger(
+    record,
+    'availableQuantity',
+    'product offer',
+    context
+  );
+
+  requireSafeNonNegativeInteger(
+    record,
+    'reservedQuantity',
+    'product offer',
+    context
+  );
+
+  return checked<ProductDetails['offers'][number]>(record);
+}
+
+//===================================================================
 export function parseProductDetails(
   value: unknown,
   context?: ApiResponseContext
@@ -218,7 +312,43 @@ export function parseProductDetails(
     },
     context
   );
-  return checked<ProductDetails>(record);
+
+  requireSafeNonNegativeInteger(
+    record,
+    'foundInPharmaciesCount',
+    'product',
+    context
+  );
+
+  requireSafeNonNegativeInteger(
+    record,
+    'availableInPharmaciesCount',
+    'product',
+    context
+  );
+
+  requireSafeNonNegativeInteger(record, 'reviewsCount', 'product', context);
+
+  requireOptionalFields(
+    record,
+    'product',
+    {
+      slug: 'string',
+      imageUrl: 'string',
+      manufacturer: 'string',
+      dosage: 'string',
+      packageQuantity: 'string',
+      description: 'string',
+      pharmacyId: 'string',
+      pharmacyName: 'string',
+    },
+    context
+  );
+
+  return checked<ProductDetails>({
+    ...record,
+    offers: parseArray(record.offers, 'offers', parseProductOffer, context),
+  });
 }
 
 //===================================================================
@@ -230,13 +360,7 @@ export function parseProductsResponse(
   const record = requireRecord(value, 'products response', context);
   const pagination = requirePaginatedResponse(
     normalizePaginatedResponse(record, {
-      normalizeItem: (item) => {
-        try {
-          return parseProductDetails(item, context);
-        } catch {
-          return null;
-        }
-      },
+      normalizeItem: (item) => parseProductDetails(item, context),
     }),
     { label: 'products response', ...context }
   );

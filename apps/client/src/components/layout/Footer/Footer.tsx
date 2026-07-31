@@ -1,23 +1,16 @@
 import Link from 'next/link';
-import { Facebook, Instagram, Youtube } from 'lucide-react';
 
 import { Logo } from '@e-pharmacy/ui/media';
 import { Container } from '@e-pharmacy/ui/layout';
 
 import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
-import { INFO_NAV_LINKS } from '@/components/info/config/navigation';
+import { INFO_LINKS } from '@/components/info/config/links';
 
 import css from './Footer.module.css';
 
 //===================================================================
 
 const currentYear = new Date().getFullYear();
-
-const SOCIAL_LINKS = [
-  { label: 'Facebook', href: 'https://www.facebook.com/', icon: Facebook },
-  { label: 'Instagram', href: 'https://www.instagram.com/', icon: Instagram },
-  { label: 'YouTube', href: 'https://www.youtube.com/', icon: Youtube },
-] as const;
 
 //===================================================================
 
@@ -31,7 +24,7 @@ function Footer() {
 
             <p className={css.text}>
               E-PHARMACY helps clients explore pharmacies, find products, and
-              prepare online orders.
+              prepare order requests for pharmacy confirmation.
             </p>
           </div>
 
@@ -46,22 +39,6 @@ function Footer() {
               ))}
             </ul>
           </nav>
-
-          <ul className={css.socialList} aria-label="Social links">
-            {SOCIAL_LINKS.map(({ label, href, icon: Icon }) => (
-              <li key={label}>
-                <a
-                  className={css.socialLink}
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={label}
-                >
-                  <Icon size={18} aria-hidden="true" />
-                </a>
-              </li>
-            ))}
-          </ul>
         </div>
 
         <div className={css.bottomRow}>
@@ -71,7 +48,7 @@ function Footer() {
 
           <nav className={css.infoNav} aria-label="Footer legal navigation">
             <ul className={css.infoList}>
-              {INFO_NAV_LINKS.map(({ label, href }) => (
+              {INFO_LINKS.map(({ label, href }) => (
                 <li key={href}>
                   <Link className={css.infoLink} href={href}>
                     {label}

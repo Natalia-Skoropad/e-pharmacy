@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { ShoppingCart } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -12,14 +12,15 @@ import { Logo } from '@e-pharmacy/ui/media';
 import { UserBadge } from '@e-pharmacy/ui/data-display';
 import { Container } from '@e-pharmacy/ui/layout';
 import { BurgerButton } from '@e-pharmacy/ui/cabinet';
+import { formatCountLabel } from '@e-pharmacy/utils/numbers';
 
 import { ROUTES, isActiveRoute } from '@/lib/routes';
-import { getPharmacyDashboardUrl } from '@/lib/auth';
 import { useCart } from '@/providers/CartProvider';
 
-import { usePublicAuthActionsState } from '@/components/layout/hooks/usePublicAuthActionsState';
+import { subscribeToDesktopBreakpoint } from '@/components/layout/hooks/desktop-breakpoint-lifecycle';
+import { usePublicHeaderController } from '@/components/layout/hooks/usePublicHeaderController';
 import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
-import MobileOffcanvas from '@/components/layout/MobileOffcanvas';
+import MobileOffcanvas from '@/components/layout/MobileOffcanvas/MobileOffcanvas';
 
 import css from './Header.module.css';
 
@@ -27,43 +28,26 @@ import css from './Header.module.css';
 
 function Header() {
   const pathname = usePathname();
-  const router = useRouter();
   const mobileNavigationId = useId();
-
-  const authActions = usePublicAuthActionsState();
-  const isClientMode = authActions.mode === 'authenticated-client';
-  const isPharmacyMode = authActions.mode === 'authenticated-pharmacy';
-
-  const pharmacyDashboardUrl = isPharmacyMode
-    ? getPharmacyDashboardUrl()
-    : null;
-
-  const logoutAction = 'logout' in authActions ? authActions.logout : null;
-
+  const controller = usePublicHeaderController();
+  const authState = controller.authState;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
   const { cart } = useCart();
-  const visibleCartItemsCount = isClientMode ? cart.totalItems : 0;
 
-  const handleToggleMobileMenu = () => {
-    setIsMobileMenuOpen((prev) => !prev);
-  };
+  const visibleCartItemsCount = controller.isClientMode ? cart.totalItems : 0;
+  const cartCountLabel =
+    formatCountLabel(visibleCartItemsCount, 'item') ?? 'items unavailable';
 
-  const handleCloseMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
+  useEffect(
+    () =>
+      subscribeToDesktopBreakpoint(
+        window.matchMedia('(min-width: 1440px)'),
+        () => setIsMobileMenuOpen(false)
+      ),
+    []
+  );
 
-  const handleLogout = async () => {
-    if (!logoutAction) return;
-
-    try {
-      setIsLogoutLoading(true);
-      await logoutAction();
-      router.replace(ROUTES.HOME);
-    } finally {
-      setIsLogoutLoading(false);
-    }
-  };
+  const handleCloseMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
     <header className={css.header}>
@@ -91,13 +75,13 @@ function Header() {
         </nav>
 
         <div className={css.actions}>
-          {isClientMode ? (
+          {controller.isClientMode ? (
             <LinkButton
               className={css.cartLink}
               href={ROUTES.CART}
               variant="ghost"
               size="sm"
-              aria-label={`Cart with ${visibleCartItemsCount} items`}
+              aria-label={`Cart with ${cartCountLabel}`}
             >
               <ShoppingCart size={18} aria-hidden="true" />
               <span className={css.cartText}>Cart</span>
@@ -105,33 +89,41 @@ function Header() {
             </LinkButton>
           ) : null}
 
-          {authActions.mode === 'loading' ? (
-            <div className={css.authSkeleton} aria-hidden="true" />
+          {authState.mode === 'loading' ? (
+            <>
+              <span className="visually-hidden" role="status">
+                Checking your session
+              </span>
+              <div className={css.authSkeleton} aria-hidden="true" />
+            </>
           ) : null}
 
-          {authActions.mode === 'unavailable' ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => void authActions.retryAuthBootstrap()}
-            >
-              Retry session
-            </Button>
+          {authState.mode === 'unavailable' ? (
+            <div className={css.authStatus}>
+              <span className="visually-hidden">Session check unavailable.</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void authState.retryAuthBootstrap()}
+              >
+                Retry session check
+              </Button>
+            </div>
           ) : null}
 
-          {isClientMode ? (
+          {authState.mode === 'authenticated-client' ? (
             <UserBadge
               className={css.profileLink}
               href={ROUTES.PROFILE}
-              name={authActions.user.name}
-              pictureUrl={authActions.user.pictureUrl}
+              name={authState.user.name}
+              pictureUrl={authState.user.pictureUrl}
             />
           ) : null}
 
-          {isPharmacyMode && pharmacyDashboardUrl ? (
+          {controller.isPharmacyMode && controller.pharmacyDashboardUrl ? (
             <LinkButton
               className={css.pharmacyCabinetLink}
-              href={pharmacyDashboardUrl}
+              href={controller.pharmacyDashboardUrl}
               variant="secondary"
               size="sm"
             >
@@ -139,32 +131,41 @@ function Header() {
             </LinkButton>
           ) : null}
 
-          {isPharmacyMode && !pharmacyDashboardUrl ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled
-              title="The pharmacy application URL is not configured correctly."
-            >
+          {controller.isPharmacyMode && !controller.pharmacyDashboardUrl ? (
+            <Button type="button" variant="secondary" size="sm" disabled>
               Pharmacy cabinet unavailable
             </Button>
           ) : null}
 
-          {logoutAction ? (
+          {authState.mode === 'blocked-account' ? (
+            <p className={css.accountNotice}>Account access is blocked.</p>
+          ) : null}
+
+          {authState.mode === 'authenticated-admin' ? (
+            <p className={css.accountNotice}>
+              Use the admin application for account tools.
+            </p>
+          ) : null}
+
+          {authState.mode === 'authenticated-unsupported' ? (
+            <p className={css.accountNotice}>
+              This account is not supported in the client application.
+            </p>
+          ) : null}
+
+          {'logout' in authState ? (
             <LogoutButton
-              isLoading={isLogoutLoading}
-              disabled={isLogoutLoading}
-              onClick={handleLogout}
+              isLoading={controller.isLogoutPending}
+              disabled={controller.isLogoutPending}
+              onClick={() => void controller.logout()}
             />
           ) : null}
 
-          {authActions.mode === 'guest' ? (
+          {authState.mode === 'guest' ? (
             <>
               <LinkButton href={ROUTES.LOGIN} variant="ghost" size="sm">
                 Log in
               </LinkButton>
-
               <LinkButton href={ROUTES.REGISTER} size="sm">
                 Register
               </LinkButton>
@@ -172,13 +173,13 @@ function Header() {
           ) : null}
         </div>
 
-        {isClientMode ? (
+        {controller.isClientMode ? (
           <LinkButton
             className={css.mobileCartLink}
             href={ROUTES.CART}
             variant="ghost"
             size="sm"
-            aria-label={`Cart with ${visibleCartItemsCount} items`}
+            aria-label={`Cart with ${cartCountLabel}`}
           >
             <ShoppingCart size={18} aria-hidden="true" />
             <span className={css.cartCount}>{visibleCartItemsCount}</span>
@@ -188,13 +189,15 @@ function Header() {
         <BurgerButton
           controlsId={mobileNavigationId}
           isOpen={isMobileMenuOpen}
-          onClick={handleToggleMobileMenu}
+          onClick={() => setIsMobileMenuOpen((isOpen) => !isOpen)}
         />
       </Container>
 
       <MobileOffcanvas
         id={mobileNavigationId}
         isOpen={isMobileMenuOpen}
+        pathname={pathname}
+        controller={controller}
         onClose={handleCloseMobileMenu}
       />
     </header>

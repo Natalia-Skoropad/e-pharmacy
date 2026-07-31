@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import AppShell from '@/components/layout/AppShell';
+import AppShell from '@/components/layout/AppShell/AppShell';
 import { ClientProviders } from '@/providers';
 
 import {

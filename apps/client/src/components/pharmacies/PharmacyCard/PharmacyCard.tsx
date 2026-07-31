@@ -30,7 +30,12 @@ function PharmacyCard({ pharmacy, onFavoriteChange }: PharmacyCardProps) {
     useClientAuthCapabilities();
   const toast = useToast();
 
-  const { isFavorite, isFavoriteLoading, toggleFavorite } = useFavoriteActions({
+  const {
+    isFavorite,
+    isFavoriteLoading,
+    isFavoritePending,
+    toggleFavorite,
+  } = useFavoriteActions({
     entityType: 'pharmacy',
     id: pharmacy.id,
     notifier: toast,
@@ -81,7 +86,8 @@ function PharmacyCard({ pharmacy, onFavoriteChange }: PharmacyCardProps) {
             <FavoriteToggleButton
               isActive={isFavorite}
               disabled={isFavoriteLoading}
-              onClick={() => void toggleFavorite()}
+              isPending={isFavoritePending}
+              onClick={toggleFavorite}
               activeLabel="Remove pharmacy from favorites"
               inactiveLabel="Add pharmacy to favorites"
             />

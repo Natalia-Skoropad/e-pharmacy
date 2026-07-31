@@ -1,15 +1,34 @@
 import { ROUTES } from '@/lib/routes';
 
+import type { InfoPageData } from './types';
+
 //===================================================================
 
 export const USER_AGREEMENT_INFO = {
   path: ROUTES.USER_AGREEMENT,
   title: 'User Agreement',
+
   description:
     'These terms explain how clients may use E-PHARMACY, what the platform provides, and which responsibilities belong to users and partner pharmacies.',
-  updatedAt: 'May 2026',
+
+  metadata: {
+    version: 'draft-2026-05',
+    effectiveAt: null,
+    updatedAt: {
+      iso: '2026-05',
+      label: 'May 2026',
+    },
+
+    contentOwner: null,
+    approvalStatus: 'unreviewed',
+    legalEntity: null,
+    supportRoute: null,
+    reviewId: null,
+  },
+
   sections: [
     {
+      id: 'general-terms',
       title: 'General terms',
       content: [
         'This User Agreement applies to the E-PHARMACY website and related client services. By using the platform, the user confirms that they have read and accepted these terms.',
@@ -17,6 +36,7 @@ export const USER_AGREEMENT_INFO = {
       ],
     },
     {
+      id: 'platform-purpose',
       title: 'Purpose of the platform',
       content: [
         'E-PHARMACY is an information and order-preparation service. It helps users search for products, view pharmacy information, compare offers, add products to cart, and prepare checkout details.',
@@ -24,6 +44,7 @@ export const USER_AGREEMENT_INFO = {
       ],
     },
     {
+      id: 'partner-pharmacies',
       title: 'Partner pharmacies',
       content: [
         'Products, prices, availability, working hours, payment details, and delivery conditions are provided by partner pharmacies or generated from their available data.',
@@ -31,6 +52,7 @@ export const USER_AGREEMENT_INFO = {
       ],
     },
     {
+      id: 'user-account',
       title: 'User account',
       content: [
         'A user may create an account to manage profile information, favorite products, favorite pharmacies, cart items, and order history.',
@@ -38,6 +60,7 @@ export const USER_AGREEMENT_INFO = {
       ],
     },
     {
+      id: 'order-requests',
       title: 'Orders and checkout',
       content: [
         'An order created through E-PHARMACY is a request sent to the selected pharmacy. The final purchase is completed between the client and the pharmacy that supplies the product.',
@@ -45,6 +68,7 @@ export const USER_AGREEMENT_INFO = {
       ],
     },
     {
+      id: 'liability-limitations',
       title: 'Limitations of liability',
       content: [
         'E-PHARMACY works to keep the platform clear, stable, and helpful, but cannot guarantee that every product or price will remain unchanged at the moment of pharmacy confirmation.',
@@ -52,6 +76,7 @@ export const USER_AGREEMENT_INFO = {
       ],
     },
     {
+      id: 'agreement-updates',
       title: 'Updates to the agreement',
       content: [
         'E-PHARMACY may update this agreement to reflect platform changes, legal requirements, or service improvements.',
@@ -59,4 +84,4 @@ export const USER_AGREEMENT_INFO = {
       ],
     },
   ],
-} as const;
+} as const satisfies InfoPageData;

@@ -72,7 +72,11 @@ export type ProductCategoryFilter = 'all' | ProductCategory;
 export type ProductAvailabilityFilter =
   (typeof PRODUCT_AVAILABILITY_VALUES)[number];
 
+//===================================================================
+
 export type ProductSortFilter = (typeof PRODUCT_SORT_VALUES)[number];
+
+//===================================================================
 
 export type ProductCatalogSeoContext = {
   categoryLabel?: string;

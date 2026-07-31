@@ -59,7 +59,8 @@ test('closing the session aborts the active write and drops queued writes', asyn
         started.resolve();
         signal.addEventListener(
           'abort',
-          () => reject(signal.reason ?? new DOMException('Aborted', 'AbortError')),
+          () =>
+            reject(signal.reason ?? new DOMException('Aborted', 'AbortError')),
           { once: true }
         );
       })
@@ -96,12 +97,16 @@ test('close settles an active task even when the task ignores AbortSignal', asyn
   assert.equal(queue.isClosed(), true);
 });
 
+//===================================================================
+
 test('a rejected task does not block the next queued task', async () => {
   const queue = createCartMutationQueue();
 
-  await assert.rejects(queue.enqueue(async () => {
-    throw new Error('failed');
-  }));
+  await assert.rejects(
+    queue.enqueue(async () => {
+      throw new Error('failed');
+    })
+  );
 
   assert.equal(await queue.enqueue(async () => 'next'), 'next');
 });

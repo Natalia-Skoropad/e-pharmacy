@@ -236,7 +236,7 @@ function PharmacyDetailsPageContent({
     };
   }, [canShowBankDetailsTab, currentTab, paymentDetails, pharmacy.id]);
 
-  const { isFavorite, isFavoriteLoading, toggleFavorite } =
+  const { isFavorite, isFavoriteLoading, isFavoritePending, toggleFavorite } =
     useFavoriteActions({
       entityType: 'pharmacy',
       id: pharmacy.id,
@@ -365,7 +365,8 @@ function PharmacyDetailsPageContent({
                     <FavoriteToggleButton
                       isActive={isFavorite}
                       disabled={isFavoriteLoading}
-                      onClick={() => void toggleFavorite()}
+                      isPending={isFavoritePending}
+                      onClick={toggleFavorite}
                       activeLabel="Remove pharmacy from favorites"
                       inactiveLabel="Add pharmacy to favorites"
                     />
@@ -549,7 +550,7 @@ function PharmacyDetailsPageContent({
               <div className={css.descriptionText}>
                 {renderDescriptionMarkdown(
                   pharmacy.description ??
-                    `${pharmacy.name} is an active E-PHARMACY partner in ${pharmacy.city ?? 'your city'}, created for clients who want to compare products calmly before placing an order. The pharmacy page brings together the most useful details: address, phone, email, working hours, rating, client reviews, and a direct catalog link with products from this exact pharmacy. You can quickly check whether the needed product is available, compare offers, and decide whether pickup or delivery will be more convenient. The pharmacy keeps product information clear, so clients do not have to jump between random tabs, screenshots, and notes. Reviews help you understand service quality, while the catalog filter helps you move from pharmacy details straight to the right product list. It is a practical page for everyday orders, urgent purchases, planned family medicine refills, and simple price comparison. In short, ${pharmacy.name} works like a tidy digital pharmacy counter: all important information is visible, the next action is obvious, and the shopping flow stays friendly instead of turning into a mini quest with a white coat.`
+                    `${pharmacy.name} is an active E-PHARMACY partner in ${pharmacy.city ?? 'your city'}, created for clients who want to compare products calmly before preparing an order request. The pharmacy page brings together the most useful details: address, phone, email, working hours, rating, client reviews, and a direct catalog link with products from this exact pharmacy. You can quickly check whether the needed product is available, compare offers, and request pickup or delivery for pharmacy confirmation. The pharmacy keeps product information clear, so clients do not have to jump between random tabs, screenshots, and notes. Reviews help you understand service quality, while the catalog filter helps you move from pharmacy details straight to the right product list. It is a practical page for everyday order requests, planned purchases, and simple price comparison. In short, ${pharmacy.name} works like a tidy digital pharmacy profile: all important information is visible, the next action is obvious, and the shopping flow stays friendly instead of turning into a mini quest with a white coat.`
                 )}
               </div>
             </div>
@@ -577,7 +578,8 @@ function PharmacyDetailsPageContent({
                 reviewText={reviewText}
                 reviewRating={reviewRating}
                 isReviewValid={isReviewValid}
-                reviewError={reviewErrors.comment}
+                commentError={reviewErrors.comment}
+                ratingError={reviewErrors.rating}
                 reviewTouchedFields={reviewTouchedFields}
                 isReviewSubmitting={isReviewSubmitting}
                 canCreateReview={canCreateReview}

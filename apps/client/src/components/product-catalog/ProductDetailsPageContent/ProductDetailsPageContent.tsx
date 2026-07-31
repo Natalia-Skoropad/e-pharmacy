@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { Car, ChevronDown, ChevronUp, Filter, WalletCards } from 'lucide-react';
 
 import {
   DEFAULT_VISIBLE_REVIEWS_COUNT,
@@ -21,7 +21,13 @@ import {
 
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { Tabs } from '@e-pharmacy/ui/navigation';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
+
+import {
+  DELIVERY_METHOD_LABELS,
+  PAYMENT_METHOD_LABELS,
+  PRODUCT_CATEGORY_LABELS,
+} from '@e-pharmacy/config/presentation';
+
 import { type TabItem } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { Container } from '@e-pharmacy/ui/layout';
@@ -60,9 +66,7 @@ import { createProductReview, getProductDetails } from '@/lib/api/browser';
 import { useCart } from '@/providers/CartProvider';
 
 import {
-  DeliveryInfoCard,
   FavoriteToggleButton,
-  PaymentInfoCard,
   ReviewsSection,
   StockAvailability,
   CartOrderLimitModal,
@@ -73,6 +77,8 @@ import {
   PRODUCT_OFFERS_PER_PAGE,
   type ProductOfferSort,
 } from '@/components/product-catalog/config/product-offers';
+
+import { ProductOrderInfoCard } from './ProductOrderInfoCard';
 
 import css from './ProductDetailsPageContent.module.css';
 
@@ -355,19 +361,20 @@ function ProductDetailsPageContent({
     }, 250);
   };
 
-  const { isFavorite, isFavoriteLoading, toggleFavorite } = useFavoriteActions({
-    entityType: 'product',
-    id: productDetails.id,
-    notifier: toast,
-    loginMessage: 'Please log in to add products to favorites.',
-    unavailableMessage:
-      'We could not verify your session. Please try again shortly.',
-    clientAccountRequiredMessage:
-      'Favorites are available only for active client accounts.',
-    addedMessage: 'Product was added to favorites.',
-    removedMessage: 'Product was removed from favorites.',
-    errorMessage: 'Could not update favorites.',
-  });
+  const { isFavorite, isFavoriteLoading, isFavoritePending, toggleFavorite } =
+    useFavoriteActions({
+      entityType: 'product',
+      id: productDetails.id,
+      notifier: toast,
+      loginMessage: 'Please log in to add products to favorites.',
+      unavailableMessage:
+        'We could not verify your session. Please try again shortly.',
+      clientAccountRequiredMessage:
+        'Favorites are available only for active client accounts.',
+      addedMessage: 'Product was added to favorites.',
+      removedMessage: 'Product was removed from favorites.',
+      errorMessage: 'Could not update favorites.',
+    });
 
   const {
     reviewText,
@@ -631,7 +638,8 @@ function ProductDetailsPageContent({
                     <FavoriteToggleButton
                       isActive={isFavorite}
                       disabled={isFavoriteLoading}
-                      onClick={() => void toggleFavorite()}
+                      isPending={isFavoritePending}
+                      onClick={toggleFavorite}
                       activeLabel="Remove product from favorites"
                       inactiveLabel="Add product to favorites"
                     />
@@ -673,8 +681,23 @@ function ProductDetailsPageContent({
                 </dl>
 
                 <div className={css.infoGrid}>
-                  <DeliveryInfoCard />
-                  <PaymentInfoCard />
+                  <ProductOrderInfoCard
+                    icon={<Car size={22} />}
+                    title="Delivery"
+                    items={[
+                      `${DELIVERY_METHOD_LABELS.pickup}.`,
+                      `${DELIVERY_METHOD_LABELS.postal_delivery} after a pharmacy confirms the address.`,
+                    ]}
+                    notice="Delivery availability and price depend on pharmacy and carrier confirmation."
+                  />
+                  <ProductOrderInfoCard
+                    icon={<WalletCards size={22} />}
+                    title="Payment"
+                    items={[
+                      `${PAYMENT_METHOD_LABELS.cash}.`,
+                      `${PAYMENT_METHOD_LABELS.bank_transfer}.`,
+                    ]}
+                  />
                 </div>
 
                 <Button
@@ -682,7 +705,7 @@ function ProductDetailsPageContent({
                   type="button"
                   onClick={() => setActiveTab('prices')}
                 >
-                  Buy product
+                  Find pharmacy offers
                 </Button>
               </div>
             </div>
@@ -916,7 +939,8 @@ function ProductDetailsPageContent({
                     available quantity, read client reviews, and make sure the
                     selected offer matches your needs. Information on this page
                     helps clients quickly understand the product, its main
-                    properties, and where it can be bought online.
+                    properties, and which pharmacy offers can be included in an
+                    order request.
                   </p>
                 </div>
               </div>
@@ -941,7 +965,8 @@ function ProductDetailsPageContent({
                   reviewText={reviewText}
                   reviewRating={reviewRating}
                   isReviewValid={isReviewValid}
-                  reviewError={reviewErrors.comment}
+                  commentError={reviewErrors.comment}
+                  ratingError={reviewErrors.rating}
                   reviewTouchedFields={reviewTouchedFields}
                   isReviewSubmitting={isReviewSubmitting}
                   canCreateReview={canCreateReview}

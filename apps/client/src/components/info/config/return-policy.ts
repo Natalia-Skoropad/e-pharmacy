@@ -1,15 +1,34 @@
 import { ROUTES } from '@/lib/routes';
 
+import type { InfoPageData } from './types';
+
 //===================================================================
 
 export const RETURN_POLICY_INFO = {
   path: ROUTES.RETURN_POLICY,
   title: 'Return Policy',
+
   description:
     'Read the main return rules for products and medical goods ordered through the E-PHARMACY platform.',
-  updatedAt: 'May 2026',
+
+  metadata: {
+    version: 'draft-2026-05',
+    effectiveAt: null,
+    updatedAt: {
+      iso: '2026-05',
+      label: 'May 2026',
+    },
+
+    contentOwner: null,
+    approvalStatus: 'unreviewed',
+    legalEntity: null,
+    supportRoute: null,
+    reviewId: null,
+  },
+
   sections: [
     {
+      id: 'eligible-products',
       title: 'Products and medical goods',
       content: [
         'Products and medical-purpose goods of proper quality are usually not subject to return after purchase from a pharmacy. This rule exists because such products require strict storage, safety, and quality control conditions.',
@@ -17,6 +36,7 @@ export const RETURN_POLICY_INFO = {
       ],
     },
     {
+      id: 'defective-products',
       title: 'Defective or improper-quality product',
       content: [
         'If the client discovers a significant defect within the allowed period, the client should contact the pharmacy where the product was purchased and provide proof of purchase.',
@@ -24,6 +44,7 @@ export const RETURN_POLICY_INFO = {
       ],
     },
     {
+      id: 'return-documents',
       title: 'Documents needed for a return request',
       content: [
         'To review a return request, the pharmacy may ask for the fiscal receipt, order details, product packaging, and documents confirming the issue with the product.',
@@ -31,6 +52,7 @@ export const RETURN_POLICY_INFO = {
       ],
     },
     {
+      id: 'return-request-route',
       title: 'Where to send the request',
       content: [
         'Return questions should be sent to the pharmacy that supplied the product. The pharmacy is responsible for checking the purchase and explaining the next steps.',
@@ -38,4 +60,4 @@ export const RETURN_POLICY_INFO = {
       ],
     },
   ],
-} as const;
+} as const satisfies InfoPageData;

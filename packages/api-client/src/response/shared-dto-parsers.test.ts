@@ -152,6 +152,60 @@ test('requires backend-provided typed public slug IDs', () => {
     ApiError
   );
 
+
+  const validOffer = {
+    id: '6a5f5242d9c46211621ad70b',
+    pharmacyId: '6a5f5244a3defb1d037f06e7',
+    pharmacyName: 'Pharmacy Care Pharmacy Lviv',
+    pharmacyRating: 5,
+    pharmacyReviewsCount: 2,
+    pharmacyIsFavorite: false,
+    price: 100,
+    totalQuantity: 10,
+    availableQuantity: 8,
+    reservedQuantity: 2,
+    inStock: true,
+    createdAt: '2026-07-31T00:00:00.000Z',
+    updatedAt: '2026-07-31T00:00:00.000Z',
+  };
+
+  assert.equal(
+    parseProductDetails({ ...product, offers: [validOffer] }).offers[0]
+      ?.availableQuantity,
+    8
+  );
+
+  for (const invalidQuantity of [-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+    assert.throws(
+      () =>
+        parseProductDetails({
+          ...product,
+          offers: [{ ...validOffer, availableQuantity: invalidQuantity }],
+        }),
+      (error: unknown) =>
+        error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
+    );
+  }
+
+  assert.throws(
+    () =>
+      parseProductsResponse({
+        items: [
+          {
+            ...product,
+            offers: [{ ...validOffer, totalQuantity: undefined }],
+          },
+        ],
+        page: 1,
+        perPage: 10,
+        total: 1,
+        totalPages: 1,
+        earliestCreatedAt: null,
+      }),
+    (error: unknown) =>
+      error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
+  );
+
   const pharmacy = {
     id: '6a5f5244a3defb1d037f06e7',
     name: 'Pharmacy Care Pharmacy Lviv',

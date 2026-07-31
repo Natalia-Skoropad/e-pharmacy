@@ -6,11 +6,8 @@ import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 import type { ProductDetails } from '@e-pharmacy/types/products';
 import { Container } from '@e-pharmacy/ui/layout';
 
-import {
-  BENEFITS,
-  HOME_PREVIEW_LIMIT,
-  STEPS,
-} from '@/components/home/config/home-content';
+import { BENEFITS, STEPS } from '@/components/home/config/content';
+import { HOME_PREVIEW_LIMIT } from '@/components/home/config/data';
 
 import { HOME_DESCRIPTION, HOME_TITLE, createPageMetadata } from '@/lib/seo/server';
 import { ROUTES } from '@/lib/routes';
@@ -21,7 +18,7 @@ import {
   PUBLIC_API_CACHE_OPTIONS,
 } from '@/lib/api/server';
 
-import { HomeFeatureCards } from '@/components/home';
+import HomeFeatureCards from '@/components/home/HomeFeatureCards/HomeFeatureCards';
 import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
 
@@ -107,7 +104,7 @@ async function FeaturedPharmaciesSection() {
           ))}
         </div>
       ) : pharmaciesResult.hasError ? (
-        <div className={css.sectionError} role="alert">
+        <div className={css.sectionError}>
           Pharmacies are temporarily unavailable. Please try again shortly.
         </div>
       ) : (
@@ -135,7 +132,7 @@ async function FeaturedProductsSection() {
           ))}
         </div>
       ) : productsResult.hasError ? (
-        <div className={css.sectionError} role="alert">
+        <div className={css.sectionError}>
           Products are temporarily unavailable. Please try again shortly.
         </div>
       ) : (
@@ -157,18 +154,17 @@ async function HomePage() {
               <p className={css.kicker}>Online pharmacy platform</p>
 
               <h1 className={css.heroTitle} id="home-title">
-                Your medication delivered with care
+                Find products and prepare pharmacy order requests
               </h1>
 
               <p className={css.heroText}>
-                Order products online, compare pharmacy offers, manage your cart
-                by pharmacy, and keep health essentials organized in one calm
-                digital place.
+                Find products, compare pharmacy offers, prepare an order request,
+                and choose pickup or delivery for pharmacy confirmation.
               </p>
 
               <div className={css.actions}>
                 <LinkButton href={ROUTES.PRODUCTS_CATALOG} size="lg">
-                  Buy product
+                  Find products
                 </LinkButton>
 
                 <LinkButton
@@ -207,8 +203,8 @@ async function HomePage() {
             </h2>
             <p className={css.sectionText}>
               Explore pharmacies, compare ratings, check contacts and available
-              products, then open the pharmacy that feels right before placing
-              an order.
+              products, then open the pharmacy that feels right before preparing
+              a request.
             </p>
           </div>
 
@@ -236,7 +232,7 @@ async function HomePage() {
 
             <ol className={css.stepsList}>
               {STEPS.map((step, index) => (
-                <li className={css.stepCard} key={step.title}>
+                <li className={css.stepCard} key={step.id}>
                   <span>{index + 1}</span>
                   <div>
                     <h3>{step.title}</h3>
@@ -253,14 +249,14 @@ async function HomePage() {
         <Container>
           <div className={css.banner}>
             <div className={css.bannerContent}>
-              <p className={css.kicker}>Quick online orders</p>
+              <p className={css.kicker}>Order preparation</p>
               <h2 className={css.bannerTitle} id="banner-title">
-                Add the products you need online now
+                Prepare a request for the products you need
               </h2>
               <p>
-                Build your cart by pharmacy, control available quantities, and
-                prepare pickup or postal delivery without the usual
-                pharmacy-queue side quest.
+                Build your cart by pharmacy, review available quantities, and
+                request pickup or postal delivery. The selected pharmacy
+                confirms the final order and fulfillment details.
               </p>
               <LinkButton href={ROUTES.PRODUCTS_CATALOG} variant="secondary">
                 Browse catalog
@@ -296,18 +292,18 @@ async function HomePage() {
               <div className={css.benefitsAccentCard}>
                 <span className={css.benefitsBadge}>One account</span>
                 <strong>
-                  Search, compare, save, and confirm orders without losing
+                  Search, compare, save, and prepare requests without losing
                   important details.
                 </strong>
                 <p>
-                  E-PHARMACY keeps product search, pharmacy choice, cart orders,
+                  E-PHARMACY keeps product search, pharmacy choice, cart requests,
                   profile data, and order history connected in one clear flow.
                 </p>
               </div>
 
               <ul className={css.benefitsList}>
-                {BENEFITS.map(({ title, text, icon: Icon }) => (
-                  <li key={title}>
+                {BENEFITS.map(({ id, title, text, icon: Icon }) => (
+                  <li key={id}>
                     <span className={css.benefitIcon} aria-hidden="true">
                       <Icon size={22} />
                     </span>

@@ -10,7 +10,6 @@ import {
 } from '@e-pharmacy/api-client/transport';
 
 import { createTrustedBackendApiUrl } from '@e-pharmacy/next-api/server';
-
 import { buildPharmacyPath, buildProductPath } from '@/lib/routes';
 
 import { STATIC_SITEMAP_ENTRIES } from './route-policy';
@@ -100,9 +99,11 @@ export function parseSitemapProduct(value: unknown): SitemapProduct {
     id: value.id,
     name: value.name,
     publicSlugId: value.publicSlugId,
+
     ...(typeof value.updatedAt === 'string'
       ? { updatedAt: value.updatedAt }
       : {}),
+
     ...(typeof value.inStock === 'boolean' ? { inStock: value.inStock } : {}),
   };
 }
@@ -200,6 +201,7 @@ async function fetchSitemapPage<TItem>({
   } catch (error) {
     return {
       status: 'failure',
+
       failure: {
         resourcePath,
         page,
@@ -223,6 +225,7 @@ async function fetchSitemapPage<TItem>({
           page,
           reason: 'http_error',
           httpStatus: response.status,
+
           ...(response.headers.get('x-request-id')
             ? { requestId: response.headers.get('x-request-id') ?? undefined }
             : {}),
@@ -240,6 +243,7 @@ async function fetchSitemapPage<TItem>({
 
     return {
       status: 'success',
+
       page: parseApiResponseData(
         json.value,
         (value) => parseSitemapPageData(value, parseItem),
@@ -249,6 +253,7 @@ async function fetchSitemapPage<TItem>({
   } catch (error) {
     return {
       status: 'failure',
+
       failure: {
         resourcePath,
         page,
@@ -303,8 +308,10 @@ async function fetchAllSitemapItems<TItem>({
 
   const items = [...firstResult.page.items];
   const failures: SitemapFetchFailure[] = [];
+
   const truncated =
     firstResult.page.totalPages > SITEMAP_FETCH_SAFETY_MAX_PAGES;
+
   const totalPages = Math.min(
     firstResult.page.totalPages,
     SITEMAP_FETCH_SAFETY_MAX_PAGES
@@ -393,6 +400,7 @@ export async function buildClientSitemap({
           pharmacy.id,
           pharmacy.publicSlugId
         ),
+
         priority: 0.7,
         changeFrequency: 'daily' as const,
         lastModified: parseSitemapDate(pharmacy.updatedAt),
@@ -400,6 +408,7 @@ export async function buildClientSitemap({
   ];
 
   const failures = [...productsResult.failures, ...pharmaciesResult.failures];
+
   const truncatedResources = [
     ...(productsResult.truncated ? [apiRoutes.products.list] : []),
     ...(pharmaciesResult.truncated ? [apiRoutes.pharmacies.list] : []),

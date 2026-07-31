@@ -1,0 +1,25 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: var(--fz-24);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.closeButton {
+  flex-shrink: 0;
+}
+
+.description {
+  margin-bottom: 24px;
+  font-size: var(--fz-16);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}

@@ -9,6 +9,7 @@ import ts from 'typescript';
 const RELATIVE_SPECIFIER_PATTERN = /^\.{1,2}\//;
 const EXPLICIT_EXTENSION_PATTERN = /\.[a-z0-9]+$/i;
 const TYPESCRIPT_MODULE_PATTERN = /\.(?:ts|tsx|mts)$/i;
+const CSS_MODULE_PATTERN = /\.module\.css$/i;
 
 const APPLICATION_ALIAS_PREFIX = '@/';
 
@@ -75,6 +76,10 @@ export async function resolve(specifier, context, nextResolve) {
     };
   }
 
+  if (/^next\/[a-z0-9-]+$/i.test(specifier)) {
+    return nextResolve(`${specifier}.js`, context);
+  }
+
   const applicationAlias = resolveApplicationAlias(
     specifier,
     context.parentURL
@@ -117,6 +122,15 @@ export async function resolve(specifier, context, nextResolve) {
 //===================================================================
 
 export async function load(url, context, nextLoad) {
+  if (url.startsWith('file:') && CSS_MODULE_PATTERN.test(url)) {
+    return {
+      format: 'module',
+      source:
+        "export default new Proxy({}, { get: (_target, key) => String(key) });",
+      shortCircuit: true,
+    };
+  }
+
   if (url.startsWith('file:') && TYPESCRIPT_MODULE_PATTERN.test(url)) {
     const source = await readFile(fileURLToPath(url), 'utf8');
     const transpiled = ts.transpileModule(source, {

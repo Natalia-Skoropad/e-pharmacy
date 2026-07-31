@@ -9,6 +9,7 @@
 }
 
 .icon {
+  display: inline-flex;
   color: var(--color-accent);
 }
 
@@ -44,18 +45,10 @@
   border-radius: 50%;
 }
 
-.notice,
-.text {
+.notice {
   margin-top: 10px;
   font-size: var(--fz-14);
-  line-height: var(--lh-base);
-}
-
-.notice {
   font-weight: var(--fw-bold);
+  line-height: var(--lh-base);
   color: var(--color-text-primary);
-}
-
-.text {
-  color: var(--color-text-secondary);
 }

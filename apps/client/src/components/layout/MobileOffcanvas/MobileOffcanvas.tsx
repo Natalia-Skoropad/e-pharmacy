@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
 import clsx from 'clsx';
 
-import { Button, CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
+import {
+  Button,
+  CloseIconButton,
+  LogoutButton,
+} from '@e-pharmacy/ui/primitives';
 
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { Logo } from '@e-pharmacy/ui/media';
@@ -13,57 +15,33 @@ import { UserBadge } from '@e-pharmacy/ui/data-display';
 import { MobileOffcanvasBase } from '@e-pharmacy/ui/overlays';
 
 import { ROUTES, isActiveRoute } from '@/lib/routes';
-import { getPharmacyDashboardUrl } from '@/lib/auth';
-
 import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
-import { usePublicAuthActionsState } from '@/components/layout/hooks/usePublicAuthActionsState';
+import type { usePublicHeaderController } from '@/components/layout/hooks/usePublicHeaderController';
 
 import css from './MobileOffcanvas.module.css';
 
 //===================================================================
 
-type MobileOffcanvasProps = {
+type PublicHeaderController = ReturnType<typeof usePublicHeaderController>;
+
+export type MobileOffcanvasProps = Readonly<{
   id: string;
   isOpen: boolean;
+  pathname: string;
+  controller: PublicHeaderController;
   onClose: () => void;
-};
+}>;
 
 //===================================================================
 
-function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const previousPathnameRef = useRef(pathname);
-
-  const authActions = usePublicAuthActionsState();
-  const isClientMode = authActions.mode === 'authenticated-client';
-  const isPharmacyMode = authActions.mode === 'authenticated-pharmacy';
-  const pharmacyDashboardUrl = isPharmacyMode
-    ? getPharmacyDashboardUrl()
-    : null;
-  const logoutAction =
-    'logout' in authActions ? authActions.logout : null;
-  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
-
-  const handleLogout = async () => {
-    if (!logoutAction) return;
-
-    try {
-      setIsLogoutLoading(true);
-      await logoutAction();
-      onClose();
-      router.replace(ROUTES.HOME);
-    } finally {
-      setIsLogoutLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (previousPathnameRef.current === pathname) return;
-
-    previousPathnameRef.current = pathname;
-    onClose();
-  }, [pathname, onClose]);
+function MobileOffcanvas({
+  id,
+  isOpen,
+  pathname,
+  controller,
+  onClose,
+}: MobileOffcanvasProps) {
+  const authState = controller.authState;
 
   return (
     <MobileOffcanvasBase
@@ -78,7 +56,10 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
       }}
     >
       <div className={css.head}>
-        <Logo variant="white" />
+        <Logo
+          variant="white"
+          renderLink={(props) => <Link {...props} onClick={onClose} />}
+        />
 
         <CloseIconButton
           className={css.closeButton}
@@ -99,6 +80,7 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
                   className={clsx(css.navLink, isActive && css.active)}
                   href={href}
                   aria-current={isActive ? 'page' : undefined}
+                  onClick={onClose}
                 >
                   {label}
                 </Link>
@@ -109,33 +91,41 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
       </nav>
 
       <div className={css.actions}>
-        {authActions.mode === 'loading' ? (
-          <div className={css.authSkeleton} aria-hidden="true" />
+        {authState.mode === 'loading' ? (
+          <>
+            <span className="visually-hidden" role="status">
+              Checking your session
+            </span>
+            <div className={css.authSkeleton} aria-hidden="true" />
+          </>
         ) : null}
 
-        {authActions.mode === 'unavailable' ? (
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={() => void authActions.retryAuthBootstrap()}
-          >
-            Retry session
-          </Button>
+        {authState.mode === 'unavailable' ? (
+          <div className={css.statusGroup}>
+            <p>Session check is temporarily unavailable.</p>
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={() => void authState.retryAuthBootstrap()}
+            >
+              Retry session check
+            </Button>
+          </div>
         ) : null}
 
-        {isClientMode ? (
+        {authState.mode === 'authenticated-client' ? (
           <UserBadge
             href={ROUTES.PROFILE}
-            name={authActions.user.name}
-            pictureUrl={authActions.user.pictureUrl}
+            name={authState.user.name}
+            pictureUrl={authState.user.pictureUrl}
             variant="dark"
             onClick={onClose}
           />
         ) : null}
 
-        {isPharmacyMode && pharmacyDashboardUrl ? (
+        {controller.isPharmacyMode && controller.pharmacyDashboardUrl ? (
           <LinkButton
-            href={pharmacyDashboardUrl}
+            href={controller.pharmacyDashboardUrl}
             variant="secondary"
             fullWidth
             onClick={onClose}
@@ -144,35 +134,46 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
           </LinkButton>
         ) : null}
 
-        {isPharmacyMode && !pharmacyDashboardUrl ? (
-          <Button
-            type="button"
-            variant="secondary"
-            fullWidth
-            disabled
-            title="The pharmacy application URL is not configured correctly."
-          >
+        {controller.isPharmacyMode && !controller.pharmacyDashboardUrl ? (
+          <Button type="button" variant="secondary" fullWidth disabled>
             Pharmacy cabinet unavailable
           </Button>
         ) : null}
 
-        {logoutAction ? (
+        {authState.mode === 'blocked-account' ? (
+          <p className={css.accountNotice}>Account access is blocked.</p>
+        ) : null}
+
+        {authState.mode === 'authenticated-admin' ? (
+          <p className={css.accountNotice}>
+            Use the admin application for account tools.
+          </p>
+        ) : null}
+
+        {authState.mode === 'authenticated-unsupported' ? (
+          <p className={css.accountNotice}>
+            This account is not supported in the client application.
+          </p>
+        ) : null}
+
+        {'logout' in authState ? (
           <LogoutButton
             fullWidth
             tone="inverse"
-            isLoading={isLogoutLoading}
-            disabled={isLogoutLoading}
-            onClick={handleLogout}
+            isLoading={controller.isLogoutPending}
+            disabled={controller.isLogoutPending}
+            onClick={() => void controller.logout(onClose)}
           />
         ) : null}
 
-        {authActions.mode === 'guest' ? (
+        {authState.mode === 'guest' ? (
           <>
             <LinkButton
               className={css.loginLink}
               href={ROUTES.LOGIN}
               variant="primary"
               fullWidth
+              onClick={onClose}
             >
               Log in
             </LinkButton>
@@ -182,6 +183,7 @@ function MobileOffcanvas({ id, isOpen, onClose }: MobileOffcanvasProps) {
               href={ROUTES.REGISTER}
               variant="secondary"
               fullWidth
+              onClick={onClose}
             >
               Register
             </LinkButton>
