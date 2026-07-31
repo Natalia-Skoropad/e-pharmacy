@@ -224,7 +224,6 @@ apps/client/
         (pharmacies)/
           pharmacies/[[...segments]]
           pharmacies/[slugId]/
-        [slugId]/
       api/
         auth/
         cart/
@@ -325,7 +324,7 @@ src/lib/seo/server/robots.ts               -> robots response builder
 src/app/sitemap.ts                  -> dynamic sitemap generation
 src/app/robots.ts                   -> robots.txt rules
 src/lib/catalog/*                   -> catalog URL, canonical, title, description, noindex logic
-src/lib/details/server/*            -> product/pharmacy detail metadata and canonical resolver
+src/lib/details/server/*            -> entity-specific detail lookup and metadata
 ```
 
 ### Public indexable routes
@@ -368,21 +367,18 @@ This prevents client account data, checkout states, auth pages, and future priva
 
 ### Product and pharmacy detail routes
 
-Each product and pharmacy has a clean root-level URL:
+Products and pharmacies use short root-level canonical URLs with a typed ID suffix:
 
 ```txt
-/paracetamol-max-500-mg-60-6a01bcd0b2ed6525cedea937
-/wellness-hub-pharmacy-chernihiv-91-6a01bcd0b2ed6525cedea940
+/paracetamol-max-500-mg-60-pr6a01bcd0b2ed6525cedea937
+/wellness-hub-pharmacy-chernihiv-91-ph6a01bcd0b2ed6525cedea940
 ```
 
-Legacy paths are still supported, but they redirect permanently to the canonical URL:
+The human-readable slug keeps the important SEO terms close to the domain. The `pr` and `ph` prefixes identify the entity before a backend request, so the root route performs exactly one product or pharmacy lookup and cannot resolve an ObjectId from the wrong collection.
 
-```txt
-/products/[slugId]    -> /[slugId]
-/pharmacies/[slugId]  -> /[slugId]
-```
+The backend serializes the canonical `publicSlugId`; frontend runtime parsers validate it before cards, metadata and sitemap use it. Legacy `/products/:slugId` and `/pharmacies/:slugId` addresses are permanent redirects only and are never canonical.
 
-If a user opens a detail page with an outdated or incorrect slug, the app resolves the entity by id and redirects to the canonical slug. If the entity does not exist, the page returns the not-found state and noindex metadata.
+If a user opens a detail page with an outdated or incorrect name segment, the app resolves the entity by typed id and permanently redirects to the backend-provided canonical root path. If the entity does not exist, the page returns the not-found state and noindex metadata.
 
 ### Catalog routing
 

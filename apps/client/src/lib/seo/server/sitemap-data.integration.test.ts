@@ -38,6 +38,8 @@ test('keeps static routes and reports partial dynamic sitemap failure', async ()
             {
               id: '507f1f77bcf86cd799439011',
               name: 'Аптека Київ',
+              publicSlugId:
+                'apteka-kyiv-ph507f1f77bcf86cd799439011',
               isActive: true,
               updatedAt: '2026-07-30T12:00:00Z',
             },
@@ -56,8 +58,8 @@ test('keeps static routes and reports partial dynamic sitemap failure', async ()
   assert.ok(
     report.routes.some(
       (route) =>
-        route.url.includes('apteka-kyiv') ||
-        route.url.includes('507f1f77bcf86cd799439011')
+        route.url ===
+        'https://example.com/apteka-kyiv-ph507f1f77bcf86cd799439011'
     )
   );
 

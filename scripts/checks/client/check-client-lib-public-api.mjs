@@ -44,6 +44,9 @@ for (const removed of [
   'apps/client/src/lib/api/routes/index.ts',
   'apps/client/src/lib/checkout/index.ts',
   'apps/client/src/lib/async/is-abort-error.ts',
+  'apps/client/src/lib/details/server/root-detail-resolver.ts',
+  'apps/client/src/lib/details/server/root-detail-policy.ts',
+  'apps/client/src/lib/routes/reserved-root-slugs.ts',
 ]) {
   assert.equal(await exists(removed), false, `${removed} must stay deleted.`);
 }
@@ -87,7 +90,6 @@ for (const internalName of [
   'CartLoadStatus',
   'CartMutationTask',
   'PUBLIC_API_REVALIDATE_SECONDS',
-  'RESERVED_ROOT_SLUGS',
 ]) {
   assert.doesNotMatch(
     source,

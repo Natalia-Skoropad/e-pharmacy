@@ -50,7 +50,12 @@ function PharmacyCard({ pharmacy, onFavoriteChange }: PharmacyCardProps) {
   const productsHref = buildProductCatalogPath({ pharmacyId: pharmacy.id }, [
     pharmacy,
   ]);
-  const pharmacyHref = buildPharmacyPath(pharmacy.name, pharmacy.id);
+
+  const pharmacyHref = buildPharmacyPath(
+    pharmacy.name,
+    pharmacy.id,
+    pharmacy.publicSlugId
+  );
 
   return (
     <article

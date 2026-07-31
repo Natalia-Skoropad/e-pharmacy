@@ -1,6 +1,7 @@
 import type { ClientOrder } from '@e-pharmacy/types/orders';
 
 import {
+  buildPublicEntitySlugId,
   buildSlugId,
   getIdFromSlugId,
   isValidObjectId,
@@ -10,14 +11,26 @@ import { ROUTES } from './routes';
 
 //===================================================================
 
-export function buildProductPath(name: string, id: string): string {
-  return `/${buildSlugId(name, id)}`;
+export function buildProductPath(
+  name: string,
+  id: string,
+  publicSlugId?: string
+): string {
+  const slugId = publicSlugId ?? buildPublicEntitySlugId('product', name, id);
+
+  return `/${slugId}`;
 }
 
 //===================================================================
 
-export function buildPharmacyPath(name: string, id: string): string {
-  return `/${buildSlugId(name, id)}`;
+export function buildPharmacyPath(
+  name: string,
+  id: string,
+  publicSlugId?: string
+): string {
+  const slugId = publicSlugId ?? buildPublicEntitySlugId('pharmacy', name, id);
+
+  return `/${slugId}`;
 }
 
 //===================================================================

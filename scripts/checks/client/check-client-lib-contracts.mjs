@@ -9,6 +9,46 @@ const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
 
 //===================================================================
 
+const publicSlugValidation = await read(
+  'packages/validation/src/url/slug-id.ts'
+);
+
+const backendPublicSlug = await read('apps/api/src/utils/public-slug-id.ts');
+
+for (const prefix of ["product: 'pr'", "pharmacy: 'ph'"]) {
+  const pattern = new RegExp(prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+
+  assert.match(publicSlugValidation, pattern);
+  assert.match(backendPublicSlug, pattern);
+}
+
+assert.match(publicSlugValidation, /parsePublicEntitySlugId/);
+assert.match(backendPublicSlug, /buildPublicEntitySlugId/);
+
+const backendProductService = await read(
+  'apps/api/src/services/product.service.ts'
+);
+
+const backendPharmacyService = await read(
+  'apps/api/src/services/pharmacy.service.ts'
+);
+
+const sharedDtoParsers = await read(
+  'packages/api-client/src/response/shared-dto-parsers.ts'
+);
+
+assert.match(
+  backendProductService,
+  /publicSlugId:\s*buildPublicEntitySlugId\([\s\S]*?'product'/
+);
+
+assert.match(
+  backendPharmacyService,
+  /publicSlugId:\s*buildPublicEntitySlugId\([\s\S]*?'pharmacy'/
+);
+
+assert.match(sharedDtoParsers, /publicSlugId:\s*'string'/);
+
 const requestOptions = await read('apps/client/src/lib/api/request-options.ts');
 
 assert.match(
@@ -59,6 +99,10 @@ assert.match(
   cartState,
   /state\.ownerKey === ownerKey \? getCartStateCart\(state\) : null/
 );
+
+const cartErrors = await read('apps/client/src/lib/cart/cart-errors.ts');
+assert.match(cartErrors, /super\('PARTIAL_CART_MUTATION'/);
+assert.doesNotMatch(cartErrors, /partially removed/i);
 
 const sitemapData = await read(
   'apps/client/src/lib/seo/server/sitemap-data.ts'

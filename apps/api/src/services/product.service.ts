@@ -33,6 +33,7 @@ import { getEndOfDay, getStartOfDay } from '../utils/date-range';
 import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
 
 import { requireISODateTime } from '../utils/date-contract';
+import { buildPublicEntitySlugId } from '../utils/public-slug-id';
 
 //===============================================================
 
@@ -201,9 +202,16 @@ function serializeProduct(
     ? Math.min(...availableOffers.map((offer) => offer.price))
     : (product.price ?? 0);
 
+  const productId = String(product._id);
+
   return {
-    id: String(product._id),
+    id: productId,
     name: product.name,
+    publicSlugId: buildPublicEntitySlugId(
+      'product',
+      product.slug ?? product.name,
+      productId
+    ),
     ...(product.slug ? { slug: product.slug } : {}),
     article: product.article ?? '',
     ...(product.description ? { description: product.description } : {}),

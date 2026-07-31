@@ -38,19 +38,27 @@ function ProductCard({ product, onFavoriteChange }: ProductCardProps) {
     id: product.id,
     notifier: toast,
     loginMessage: 'Please log in to add products to favorites.',
+
     unavailableMessage:
       'We could not verify your session. Please try again shortly.',
+
     clientAccountRequiredMessage:
       'Favorites are available only for active client accounts.',
+
     addedMessage: 'Product was added to favorites.',
     removedMessage: 'Product was removed from favorites.',
     errorMessage: 'Could not update favorites.',
+
     onFavoriteChange: (productId, nextIsFavorite) => {
       onFavoriteChange?.(productId, nextIsFavorite);
     },
   });
 
-  const productHref = buildProductPath(product.name, product.id);
+  const productHref = buildProductPath(
+    product.name,
+    product.id,
+    product.publicSlugId
+  );
 
   const isAvailable = product.inStock && product.foundInPharmaciesCount > 0;
 

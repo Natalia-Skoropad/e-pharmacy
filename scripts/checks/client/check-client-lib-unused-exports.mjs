@@ -30,10 +30,6 @@ const internalCandidates = new Map([
     ['PUBLIC_API_REVALIDATE_SECONDS', 'PUBLIC_API_TIMEOUT_MS'],
   ],
   ['apps/client/src/lib/cart/cart-mutation-queue.ts', ['CartMutationTask']],
-  [
-    'apps/client/src/lib/routes/reserved-root-slugs.ts',
-    ['RESERVED_ROOT_SLUGS'],
-  ],
 ]);
 
 //===================================================================
@@ -79,6 +75,8 @@ function exportedNames(source, fileName) {
   return names;
 }
 
+//===================================================================
+
 const libFiles = [];
 
 //===================================================================
@@ -96,6 +94,7 @@ async function walk(directory) {
 //===================================================================
 
 await walk(path.join(root, 'apps/client/src/lib'));
+
 //===================================================================
 
 const combined = (

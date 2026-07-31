@@ -1,31 +1,25 @@
 'use client';
 
 import { ErrorPage } from '@e-pharmacy/ui/status-pages';
+
+import type { DataUnavailableReason } from '@/lib/api/resource-state';
 import { ROUTES } from '@/lib/routes';
 
 //===================================================================
 
-type DataUnavailableReason =
-  | 'timeout'
-  | 'network'
-  | 'rate_limit'
-  | 'service_unavailable'
-  | 'invalid_response'
-  | 'unauthorized'
-  | 'forbidden'
-  | 'server_error';
-
-//===================================================================
-
-type RootDetailsUnavailablePageProps = {
+type DetailsUnavailablePageProps = Readonly<{
+  entityLabel: 'product' | 'pharmacy';
   reason: DataUnavailableReason;
-};
+}>;
 
 //===================================================================
 
-function getDescription(reason: DataUnavailableReason): string {
+function getDescription(
+  entityLabel: DetailsUnavailablePageProps['entityLabel'],
+  reason: DataUnavailableReason
+): string {
   if (reason === 'timeout') {
-    return 'Service temporarily unavailable. The product or pharmacy details did not load in time. Please try again.';
+    return `Service temporarily unavailable. The ${entityLabel} details did not load in time. Please try again.`;
   }
 
   if (reason === 'network') {
@@ -40,18 +34,19 @@ function getDescription(reason: DataUnavailableReason): string {
     return 'The service returned an invalid response. Please try again later.';
   }
 
-  return 'Service temporarily unavailable. We could not load product or pharmacy details right now. Please try again.';
+  return `Service temporarily unavailable. We could not load the ${entityLabel} details right now. Please try again.`;
 }
 
 //===================================================================
 
-function RootDetailsUnavailablePage({
+export function DetailsUnavailablePage({
+  entityLabel,
   reason,
-}: RootDetailsUnavailablePageProps) {
+}: DetailsUnavailablePageProps) {
   return (
     <ErrorPage
       title="Service temporarily unavailable"
-      description={getDescription(reason)}
+      description={getDescription(entityLabel, reason)}
       onRetry={() => window.location.reload()}
       homeHref={ROUTES.HOME}
       homeLabel="Back to home"
@@ -59,5 +54,3 @@ function RootDetailsUnavailablePage({
     />
   );
 }
-
-export default RootDetailsUnavailablePage;

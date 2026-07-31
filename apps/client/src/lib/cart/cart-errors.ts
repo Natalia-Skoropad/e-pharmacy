@@ -26,7 +26,7 @@ export class PartialCartMutationError extends Error {
     cause: unknown;
     refreshCause?: unknown;
   }>) {
-    super('Cart items were only partially removed.', { cause });
+    super('PARTIAL_CART_MUTATION', { cause });
     this.name = 'PartialCartMutationError';
     this.removedItems = removedItems;
     this.totalItems = totalItems;

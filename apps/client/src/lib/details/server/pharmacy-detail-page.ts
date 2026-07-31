@@ -3,7 +3,11 @@ import type { Metadata } from 'next';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
-import { getIdFromSlugId } from '@e-pharmacy/validation/url';
+
+import {
+  getIdFromSlugId,
+  getPharmacyIdFromPublicSlugId,
+} from '@e-pharmacy/validation/url';
 
 import {
   getServerDataErrorContext,
@@ -27,7 +31,8 @@ export type PharmacyDetailLookupResult =
 export async function lookupPharmacyBySlugId(
   slugId: string
 ): Promise<PharmacyDetailLookupResult> {
-  const pharmacyId = getIdFromSlugId(slugId);
+  const pharmacyId =
+    getPharmacyIdFromPublicSlugId(slugId) ?? getIdFromSlugId(slugId);
   if (!pharmacyId) return { status: 'not_found' };
 
   try {
@@ -60,7 +65,8 @@ export function createPharmacyDetailMetadata(
       pharmacy.description ??
       `View ${pharmacy.name} address, phone number, email, working hours, rating, reviews, and available products on E-PHARMACY.`,
 
-    path: buildPharmacyPath(pharmacy.name, pharmacy.id),
+    path: buildPharmacyPath(pharmacy.name, pharmacy.id, pharmacy.publicSlugId),
+
     image: pharmacy.imageUrl,
     imageAlt: `${pharmacy.name} pharmacy storefront`,
   });

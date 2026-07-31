@@ -27,10 +27,6 @@ for (const check of [
 
 //===================================================================
 
-const reserved = await read(
-  'apps/client/src/lib/routes/reserved-root-slugs.ts'
-);
-
 const routePolicy = await read(
   'apps/client/src/lib/seo/server/route-policy.ts'
 );
@@ -61,8 +57,36 @@ for (const privateRoute of [
   assert.match(routePolicy, new RegExp(`ROUTES\\.${privateRoute}\\b`));
 }
 
-assert.doesNotMatch(reserved, /export const RESERVED_ROOT_SLUGS/);
 assert.match(routes, /CLIENT_RESERVED_APP_PREFIXES/);
+
+const routeBuilders = await read(
+  'apps/client/src/lib/routes/route-builders.ts'
+);
+
+assert.match(routeBuilders, /buildPublicEntitySlugId\('product'/);
+assert.match(routeBuilders, /buildPublicEntitySlugId\('pharmacy'/);
+
+const rootDetailRoute = await read(
+  'apps/client/src/app/(public)/[slugId]/page.tsx'
+);
+
+const productDetailRoute = await read(
+  'apps/client/src/app/(public)/(products)/products/[slugId]/page.tsx'
+);
+
+const pharmacySegmentsRoute = await read(
+  'apps/client/src/app/(public)/(pharmacies)/pharmacies/[...segments]/page.tsx'
+);
+
+assert.match(rootDetailRoute, /parsePublicEntitySlugId/);
+assert.match(rootDetailRoute, /parsed\.entityType === 'product'/);
+assert.match(rootDetailRoute, /lookupProductBySlugId/);
+assert.match(rootDetailRoute, /lookupPharmacyBySlugId/);
+assert.doesNotMatch(rootDetailRoute, /Promise\.all/);
+
+assert.match(productDetailRoute, /permanentRedirect/);
+assert.match(pharmacySegmentsRoute, /permanentRedirect\(canonicalPath\)/);
+assert.match(pharmacySegmentsRoute, /getDetailSlugId/);
 
 const catalogFiles = [];
 

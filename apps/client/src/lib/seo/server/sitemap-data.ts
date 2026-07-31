@@ -33,6 +33,7 @@ type SitemapPage<TItem> = Readonly<{
 type SitemapProduct = Readonly<{
   id: string;
   name: string;
+  publicSlugId: string;
   inStock?: boolean;
   updatedAt?: string;
 }>;
@@ -40,6 +41,7 @@ type SitemapProduct = Readonly<{
 type SitemapPharmacy = Readonly<{
   id: string;
   name: string;
+  publicSlugId: string;
   isActive?: boolean;
   updatedAt?: string;
 }>;
@@ -78,9 +80,12 @@ export function parseSitemapProduct(value: unknown): SitemapProduct {
   if (
     !isRecord(value) ||
     typeof value.id !== 'string' ||
-    typeof value.name !== 'string'
+    typeof value.name !== 'string' ||
+    typeof value.publicSlugId !== 'string'
   ) {
-    throw new TypeError('Sitemap product must contain string id and name.');
+    throw new TypeError(
+      'Sitemap product must contain string id, name and publicSlugId.'
+    );
   }
 
   if (value.updatedAt !== undefined && typeof value.updatedAt !== 'string') {
@@ -94,6 +99,7 @@ export function parseSitemapProduct(value: unknown): SitemapProduct {
   return {
     id: value.id,
     name: value.name,
+    publicSlugId: value.publicSlugId,
     ...(typeof value.updatedAt === 'string'
       ? { updatedAt: value.updatedAt }
       : {}),
@@ -107,9 +113,12 @@ export function parseSitemapPharmacy(value: unknown): SitemapPharmacy {
   if (
     !isRecord(value) ||
     typeof value.id !== 'string' ||
-    typeof value.name !== 'string'
+    typeof value.name !== 'string' ||
+    typeof value.publicSlugId !== 'string'
   ) {
-    throw new TypeError('Sitemap pharmacy must contain string id and name.');
+    throw new TypeError(
+      'Sitemap pharmacy must contain string id, name and publicSlugId.'
+    );
   }
 
   if (value.updatedAt !== undefined && typeof value.updatedAt !== 'string') {
@@ -123,6 +132,7 @@ export function parseSitemapPharmacy(value: unknown): SitemapPharmacy {
   return {
     id: value.id,
     name: value.name,
+    publicSlugId: value.publicSlugId,
 
     ...(typeof value.updatedAt === 'string'
       ? { updatedAt: value.updatedAt }
@@ -355,6 +365,7 @@ export async function buildClientSitemap({
       fetcher,
       resolveBackendUrl,
     }),
+
     fetchAllSitemapItems({
       resourcePath: apiRoutes.pharmacies.list,
       perPage: PHARMACY_SITEMAP_PER_PAGE,
@@ -368,15 +379,20 @@ export async function buildClientSitemap({
     ...productsResult.items
       .filter((product) => product.inStock !== false)
       .map((product) => ({
-        path: buildProductPath(product.name, product.id),
+        path: buildProductPath(product.name, product.id, product.publicSlugId),
         priority: 0.7,
         changeFrequency: 'daily' as const,
         lastModified: parseSitemapDate(product.updatedAt),
       })),
+
     ...pharmaciesResult.items
       .filter((pharmacy) => pharmacy.isActive !== false)
       .map((pharmacy) => ({
-        path: buildPharmacyPath(pharmacy.name, pharmacy.id),
+        path: buildPharmacyPath(
+          pharmacy.name,
+          pharmacy.id,
+          pharmacy.publicSlugId
+        ),
         priority: 0.7,
         changeFrequency: 'daily' as const,
         lastModified: parseSitemapDate(pharmacy.updatedAt),

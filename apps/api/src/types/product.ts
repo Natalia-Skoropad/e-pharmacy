@@ -69,6 +69,7 @@ export type ProductOfferResponseDto = {
 export type ProductResponseDto = {
   id: string;
   name: string;
+  publicSlugId: string;
   slug?: string;
   article: string;
   description?: string;
@@ -97,9 +98,12 @@ export type ProductFilterOptionDto<TValue extends string = string> = {
   label: string;
 };
 
+//===============================================================
+
 export type ProductFilterOptionsResponseDto = {
   categories: ProductFilterOptionDto<'all' | ProductCategory>[];
   availability: ProductFilterOptionDto<'all' | 'in-stock' | 'out-of-stock'>[];
+
   sort: ProductFilterOptionDto<
     | 'price-asc'
     | 'price-desc'
@@ -110,6 +114,8 @@ export type ProductFilterOptionsResponseDto = {
     | 'newest'
   >[];
 };
+
+//===============================================================
 
 export type ProductReviewResponseDto = {
   id: string;

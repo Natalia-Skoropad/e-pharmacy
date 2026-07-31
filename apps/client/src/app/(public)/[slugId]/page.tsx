@@ -1,33 +1,38 @@
+import { cache } from 'react';
 import { notFound, permanentRedirect } from 'next/navigation';
-
-import {
-  createProductDetailMetadata,
-  createPharmacyDetailMetadata,
-  resolveRootDetailBySlugId,
-} from '@/lib/details';
-
-import { createPageMetadata } from '@/lib/seo/server';
-import { ProductDetailPage } from '@/components/product-catalog/server/ProductDetailPage';
-import { PharmacyDetailPage } from '@/components/pharmacies/server/PharmacyDetailPage';
-
-import RootDetailsUnavailablePage from './RootDetailsUnavailablePage';
-
 import type { Metadata } from 'next';
 
+import { parsePublicEntitySlugId } from '@e-pharmacy/validation/url';
+
+import {
+  createPharmacyDetailMetadata,
+  createProductDetailMetadata,
+  lookupPharmacyBySlugId,
+  lookupProductBySlugId,
+} from '@/lib/details';
+
+import { buildPharmacyPath, buildProductPath } from '@/lib/routes';
+import { createPageMetadata } from '@/lib/seo/server';
+
+import { DetailsUnavailablePage } from '@/components/common/DetailsUnavailablePage';
+import { PharmacyDetailPage } from '@/components/pharmacies/server/PharmacyDetailPage';
+import { ProductDetailPage } from '@/components/product-catalog/server/ProductDetailPage';
+
 //===================================================================
 
-type RootDetailsPageProps = {
-  params: Promise<{
-    slugId: string;
-  }>;
-  searchParams?: Promise<{
-    pharmacyId?: string;
-  }>;
-};
+type PublicDetailsPageProps = Readonly<{
+  params: Promise<{ slugId: string }>;
+  searchParams?: Promise<{ pharmacyId?: string }>;
+}>;
 
 //===================================================================
 
-function createProductCanonicalQueryString(pharmacyId?: string): string {
+const resolveProduct = cache(lookupProductBySlugId);
+const resolvePharmacy = cache(lookupPharmacyBySlugId);
+
+//===================================================================
+
+function createProductQueryString(pharmacyId?: string): string {
   return pharmacyId ? `?pharmacyId=${encodeURIComponent(pharmacyId)}` : '';
 }
 
@@ -35,15 +40,49 @@ function createProductCanonicalQueryString(pharmacyId?: string): string {
 
 export async function generateMetadata({
   params,
-}: RootDetailsPageProps): Promise<Metadata> {
+}: PublicDetailsPageProps): Promise<Metadata> {
   const { slugId } = await params;
-  const result = await resolveRootDetailBySlugId(slugId);
+  const parsed = parsePublicEntitySlugId(slugId);
+
+  if (!parsed) {
+    return createPageMetadata({
+      title: 'Page Not Found',
+      description: 'The requested page could not be found.',
+      path: `/${slugId}`,
+      noIndex: true,
+    });
+  }
+
+  if (parsed.entityType === 'product') {
+    const result = await resolveProduct(slugId);
+
+    if (result.status === 'unavailable') {
+      return createPageMetadata({
+        title: 'Product temporarily unavailable',
+        description: 'The requested product could not be loaded right now.',
+        path: `/${slugId}`,
+        noIndex: true,
+      });
+    }
+
+    if (result.status === 'not_found') {
+      return createPageMetadata({
+        title: 'Product Not Found',
+        description: 'The requested product could not be found.',
+        path: `/${slugId}`,
+        noIndex: true,
+      });
+    }
+
+    return createProductDetailMetadata(result.product);
+  }
+
+  const result = await resolvePharmacy(slugId);
 
   if (result.status === 'unavailable') {
     return createPageMetadata({
-      title: 'Service temporarily unavailable',
-      description:
-        'The requested product or pharmacy could not be loaded right now.',
+      title: 'Pharmacy temporarily unavailable',
+      description: 'The requested pharmacy could not be loaded right now.',
       path: `/${slugId}`,
       noIndex: true,
     });
@@ -51,54 +90,79 @@ export async function generateMetadata({
 
   if (result.status === 'not_found') {
     return createPageMetadata({
-      title: 'Page Not Found',
-      description: 'The requested product or pharmacy could not be found.',
+      title: 'Pharmacy Not Found',
+      description: 'The requested pharmacy could not be found.',
       path: `/${slugId}`,
       noIndex: true,
     });
   }
 
-  if (result.detail.type === 'product') {
-    return createProductDetailMetadata(result.detail.product);
-  }
-
-  return createPharmacyDetailMetadata(result.detail.pharmacy);
+  return createPharmacyDetailMetadata(result.pharmacy);
 }
 
 //===================================================================
 
-async function RootDetailsPage({ params, searchParams }: RootDetailsPageProps) {
+async function PublicDetailsPage({
+  params,
+  searchParams,
+}: PublicDetailsPageProps) {
   const { slugId } = await params;
-  const resolvedSearchParams = await searchParams;
-  const result = await resolveRootDetailBySlugId(slugId);
+  const parsed = parsePublicEntitySlugId(slugId);
+  if (!parsed) notFound();
 
-  if (result.status === 'unavailable') {
-    return <RootDetailsUnavailablePage reason={result.reason} />;
-  }
+  if (parsed.entityType === 'product') {
+    const result = await resolveProduct(slugId);
 
-  if (result.status === 'not_found') notFound();
+    if (result.status === 'unavailable') {
+      return (
+        <DetailsUnavailablePage entityLabel="product" reason={result.reason} />
+      );
+    }
 
-  const { detail } = result;
+    if (result.status === 'not_found') notFound();
 
-  if (!detail.isCanonicalSlug) {
-    const queryString =
-      detail.type === 'product'
-        ? createProductCanonicalQueryString(resolvedSearchParams?.pharmacyId)
-        : '';
+    const resolvedSearchParams = await searchParams;
+    const canonicalPath = buildProductPath(
+      result.product.name,
+      result.product.id,
+      result.product.publicSlugId
+    );
 
-    permanentRedirect(`${detail.canonicalPath}${queryString}`);
-  }
+    if (canonicalPath !== `/${slugId}`) {
+      permanentRedirect(
+        `${canonicalPath}${createProductQueryString(resolvedSearchParams?.pharmacyId)}`
+      );
+    }
 
-  if (detail.type === 'product') {
     return (
       <ProductDetailPage
-        product={detail.product}
+        product={result.product}
         pharmacyId={resolvedSearchParams?.pharmacyId}
       />
     );
   }
 
-  return <PharmacyDetailPage pharmacy={detail.pharmacy} />;
+  const result = await resolvePharmacy(slugId);
+
+  if (result.status === 'unavailable') {
+    return (
+      <DetailsUnavailablePage entityLabel="pharmacy" reason={result.reason} />
+    );
+  }
+
+  if (result.status === 'not_found') notFound();
+
+  const canonicalPath = buildPharmacyPath(
+    result.pharmacy.name,
+    result.pharmacy.id,
+    result.pharmacy.publicSlugId
+  );
+
+  if (canonicalPath !== `/${slugId}`) {
+    permanentRedirect(canonicalPath);
+  }
+
+  return <PharmacyDetailPage pharmacy={result.pharmacy} />;
 }
 
-export default RootDetailsPage;
+export default PublicDetailsPage;

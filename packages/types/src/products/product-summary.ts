@@ -10,6 +10,7 @@ export type ProductStatus = 'new' | 'active' | 'blocked';
 export type ProductSummary = Readonly<{
   id: EntityId;
   name: string;
+  publicSlugId: string;
   slug?: string;
   article: string;
   category: ProductCategory;

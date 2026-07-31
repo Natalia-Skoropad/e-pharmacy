@@ -39,6 +39,7 @@ test('refreshes the authoritative cart after a partial pharmacy removal', async 
       if (!isPartialCartMutationError(error)) return false;
       assert.equal(error.removedItems, 1);
       assert.equal(error.totalItems, 3);
+      assert.equal(error.message, 'PARTIAL_CART_MUTATION');
       return true;
     }
   );

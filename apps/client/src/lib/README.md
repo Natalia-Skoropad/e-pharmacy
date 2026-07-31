@@ -48,7 +48,8 @@ components/**/server/**
 - `ROUTES` and `ROUTE_SEGMENTS` are the application source of truth.
 - Catalog parsers report malformed, duplicate and unknown segments and redirect to a canonical path.
 - Dynamic IDs are runtime validated before being encoded into a route.
-- Sitemap, robots, private routes and reserved root slugs are checked for parity.
+- Sitemap, robots, private routes and typed root-level detail paths are checked for parity.
+- Product and pharmacy public slugs end with `pr<ObjectId>` and `ph<ObjectId>`, so routing selects one backend resource before loading data.
 
 ## Error policy
 

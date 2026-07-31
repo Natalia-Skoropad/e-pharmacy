@@ -26,6 +26,7 @@ import type {
 import { httpError } from '../utils/httpError';
 import { createSafeRegExp } from '../utils/regexp';
 import { requireISODateTime } from '../utils/date-contract';
+import { buildPublicEntitySlugId } from '../utils/public-slug-id';
 
 //===============================================================
 
@@ -37,15 +38,23 @@ type PharmaciesQuery = {
   addressKeyword?: string;
   city?: string;
   sort?: 'newest' | 'rating-desc' | 'rating-asc' | 'name-asc' | 'name-desc';
+
+  //===============================================================
 };
 
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
+
+//===============================================================
 
 type PharmacyHydratedDocument = HydratedDocument<PharmacyEntity> & {
   _id: Types.ObjectId;
 };
 
+//===============================================================
+
 type PendingReviewsQuery = { page: number; perPage: number };
+
+//===============================================================
 
 type CreateReviewInput = {
   userId: string;
@@ -133,9 +142,16 @@ function serializePublicPharmacy(
   const shouldIncludeBankDetails =
     Boolean(options.includeBankDetails) && Boolean(completeBankDetails);
 
+  const pharmacyId = String(pharmacy._id);
+
   return {
-    id: String(pharmacy._id),
+    id: pharmacyId,
     name: pharmacy.name,
+    publicSlugId: buildPublicEntitySlugId(
+      'pharmacy',
+      pharmacy.name,
+      pharmacyId
+    ),
     ...(pharmacy.address ? { address: pharmacy.address } : {}),
     ...(pharmacy.city ? { city: pharmacy.city } : {}),
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
@@ -273,6 +289,7 @@ export async function getFavoritePharmaciesService(
         favoriteIds
       )
     ),
+
     page: total === 0 ? 1 : query.page,
     perPage: query.perPage,
     total,

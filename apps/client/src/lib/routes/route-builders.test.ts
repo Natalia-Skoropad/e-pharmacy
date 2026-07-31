@@ -1,11 +1,35 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { buildOrderPath, getOrderIdFromPathParam } from './route-builders';
+import {
+  buildOrderPath,
+  buildPharmacyPath,
+  buildProductPath,
+  getOrderIdFromPathParam,
+} from './route-builders';
+
+const ID = '507f1f77bcf86cd799439011';
 
 //===================================================================
 
-const ID = '507f1f77bcf86cd799439011';
+test('builds short root-level product and pharmacy detail paths with typed IDs', () => {
+  assert.equal(buildProductPath('Pain Relief', ID), `/pain-relief-pr${ID}`);
+  assert.equal(buildPharmacyPath('Health Hub', ID), `/health-hub-ph${ID}`);
+});
+
+//===================================================================
+
+test('uses the backend canonical public slug when it is provided', () => {
+  assert.equal(
+    buildProductPath('Ignored', ID, `canonical-product-pr${ID}`),
+    `/canonical-product-pr${ID}`
+  );
+
+  assert.equal(
+    buildPharmacyPath('Ignored', ID, `canonical-pharmacy-ph${ID}`),
+    `/canonical-pharmacy-ph${ID}`
+  );
+});
 
 //===================================================================
 

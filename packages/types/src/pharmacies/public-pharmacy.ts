@@ -6,6 +6,7 @@ import type { PublicPaymentBankDetails } from './bank-details';
 export type PublicPharmacy = Readonly<{
   id: EntityId;
   name: string;
+  publicSlugId: string;
   address?: string;
   city?: string;
   phone?: string;

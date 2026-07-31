@@ -201,6 +201,7 @@ export function parseProductDetails(
     {
       id: 'string',
       name: 'string',
+      publicSlugId: 'string',
       article: 'string',
       category: 'string',
       status: 'string',
@@ -352,6 +353,7 @@ function parseProductStockMovement(
 
     context
   );
+
   return checked<ProductStockMovement>(record);
 }
 
@@ -416,6 +418,7 @@ function parsePublicPharmacy(
     {
       id: 'string',
       name: 'string',
+      publicSlugId: 'string',
       rating: 'number',
       availableProductsCount: 'number',
       reviewsCount: 'number',
