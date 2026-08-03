@@ -1,9 +1,11 @@
 import {
   Building2,
   ClipboardList,
+  Clock3,
   Heart,
   MapPin,
   PackageSearch,
+  Pill,
   ReceiptText,
   SearchCheck,
   ShieldCheck,
@@ -36,6 +38,38 @@ type HomeStep = Readonly<{
   title: string;
   text: string;
 }>;
+
+//===================================================================
+
+export type HomeReview = Readonly<{
+  id: string;
+  author: string;
+  rating: number;
+  comment: string;
+}>;
+
+//===================================================================
+
+export const HOME_STATS = [
+  {
+    id: 'catalog-size',
+    value: '126+',
+    label: 'products in catalog',
+    icon: Pill,
+  },
+  {
+    id: 'pharmacy-network',
+    value: '98+',
+    label: 'partner pharmacy stores',
+    icon: Building2,
+  },
+  {
+    id: 'online-access',
+    value: '24/7',
+    label: 'online catalog access',
+    icon: Clock3,
+  },
+] as const;
 
 //===================================================================
 
@@ -128,3 +162,29 @@ export const STEPS = [
     text: 'Choose pickup or request delivery, add contact details, and send the request to the pharmacy.',
   },
 ] as const satisfies readonly HomeStep[];
+
+//===================================================================
+
+export const HOME_REVIEWS = [
+  {
+    id: 'natalia-catalog-review',
+    author: 'Natalia',
+    rating: 5,
+    comment:
+      'The order was processed quickly, the product page had clear details, and the pharmacy staff explained the pickup process very politely. I liked that the availability information matched the real stock, so there were no surprises when I arrived.',
+  },
+  {
+    id: 'olena-comparison-review',
+    author: 'Olena',
+    rating: 5,
+    comment:
+      'I checked several options and this one was the easiest to understand because the description, price, rating, and pharmacy information were all in one place. The product was prepared on time and the checkout flow felt simple.',
+  },
+  {
+    id: 'iryna-pharmacy-review',
+    author: 'Iryna',
+    rating: 5,
+    comment:
+      'The catalog helped me compare products, and the pharmacy page showed the address, phone number, rating, and available offers clearly. I could choose a pharmacy calmly without jumping between different tabs.',
+  },
+] as const satisfies readonly HomeReview[];

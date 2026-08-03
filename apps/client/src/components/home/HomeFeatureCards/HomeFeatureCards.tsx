@@ -14,6 +14,7 @@ function HomeFeatureCards() {
           <span className={css.iconWrap} aria-hidden="true">
             <Icon size={26} />
           </span>
+
           <h3>{feature.title}</h3>
           <p>{feature.text}</p>
 

@@ -6,7 +6,7 @@ import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 import type { ProductDetails } from '@e-pharmacy/types/products';
 import { Container } from '@e-pharmacy/ui/layout';
 
-import { BENEFITS, STEPS } from '@/components/home/config/content';
+import { BENEFITS, HOME_STATS, STEPS } from '@/components/home/config/content';
 import { HOME_PREVIEW_LIMIT } from '@/components/home/config/data';
 
 import { HOME_DESCRIPTION, HOME_TITLE, createPageMetadata } from '@/lib/seo/server';
@@ -19,6 +19,7 @@ import {
 } from '@/lib/api/server';
 
 import HomeFeatureCards from '@/components/home/HomeFeatureCards/HomeFeatureCards';
+import HomeReviewsSection from '@/components/home/HomeReviewsSection/HomeReviewsSection';
 import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
 
@@ -193,6 +194,21 @@ async function HomePage() {
         </Container>
       </section>
 
+      <section className={css.statsSection} aria-label="Platform advantages">
+        <Container>
+          <ul className={css.statsList}>
+            {HOME_STATS.map(({ id, value, label, icon: Icon }) => (
+              <li className={css.statCard} key={id}>
+                <span className={css.statIcon} aria-hidden="true">
+                  <Icon size={24} strokeWidth={1.8} />
+                </span>
+                <strong>{value}</strong>
+                <span>{label}</span>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </section>
 
       <section className={css.section} aria-labelledby="pharmacies-title">
         <Container>
@@ -357,6 +373,7 @@ async function HomePage() {
         </Container>
       </section>
 
+      <HomeReviewsSection />
     </main>
   );
 }

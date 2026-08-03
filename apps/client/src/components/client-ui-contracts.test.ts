@@ -92,3 +92,53 @@ test('keeps CartPageContent outside its own feature barrel cycle', async () => {
 
   assert.match(cartBarrel, /from ['"]\.\/CartPageContent\/CartPageContent['"]/);
 });
+
+//===================================================================
+
+test('keeps the restored home advantages and customer review sections', async () => {
+  const [homePage, homeContent, reviews] = await Promise.all([
+    readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
+    readComponent('./home/config/content.ts'),
+    readComponent('./home/HomeReviewsSection/HomeReviewsSection.tsx'),
+  ]);
+
+  assert.match(homePage, /HOME_STATS\.map/);
+  assert.match(homePage, /<HomeReviewsSection \/>/);
+  assert.match(homeContent, /icon: Pill/);
+  assert.match(homeContent, /icon: Building2/);
+  assert.match(homeContent, /icon: Clock3/);
+  assert.match(reviews, /aria-live="polite"/);
+  assert.match(reviews, /Show previous review/);
+  assert.match(reviews, /Show next review/);
+});
+
+//===================================================================
+
+test('keeps information navigation in the mobile drawer and hides draft copy', async () => {
+  const [mobileMenu, infoPage] = await Promise.all([
+    readComponent('./layout/MobileOffcanvas/MobileOffcanvas.tsx'),
+    readComponent('./info/InfoPage/InfoPage.tsx'),
+  ]);
+
+  assert.match(mobileMenu, /INFO_SIDE_MENU_ITEMS/);
+  assert.match(mobileMenu, /aria-label="Information pages"/);
+  assert.doesNotMatch(
+    infoPage,
+    /Draft document: formal approval is not recorded/
+  );
+  assert.doesNotMatch(infoPage, /Version \{metadata\.version\}/);
+  assert.match(infoPage, /Updated\{' '\}/);
+});
+
+//===================================================================
+
+test('uses the branded status layout for pharmacy application configuration errors', async () => {
+  const configurationState = await readFile(
+    new URL('../routes/PharmacyAppConfigurationState.tsx', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(configurationState, /variant="brand"/);
+  assert.match(configurationState, /image=\{STATUS_PAGE_IMAGE\}/);
+  assert.match(configurationState, /\/images\/status\/status-pills\.png/);
+});

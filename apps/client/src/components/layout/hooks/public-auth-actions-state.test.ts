@@ -64,6 +64,7 @@ test('maps authenticated users to role-specific presentation modes', () => {
       logout,
       retryAuthBootstrap,
     }).mode,
+
     'authenticated-client'
   );
 
@@ -74,6 +75,7 @@ test('maps authenticated users to role-specific presentation modes', () => {
       logout,
       retryAuthBootstrap,
     }).mode,
+
     'authenticated-pharmacy'
   );
 
@@ -84,6 +86,7 @@ test('maps authenticated users to role-specific presentation modes', () => {
       logout,
       retryAuthBootstrap,
     }).mode,
+
     'authenticated-admin'
   );
 
@@ -94,6 +97,7 @@ test('maps authenticated users to role-specific presentation modes', () => {
       logout,
       retryAuthBootstrap,
     }).mode,
+
     'blocked-account'
   );
 
@@ -104,6 +108,7 @@ test('maps authenticated users to role-specific presentation modes', () => {
       logout,
       retryAuthBootstrap,
     }).mode,
+
     'authenticated-unsupported'
   );
 });

@@ -132,7 +132,7 @@
   box-shadow: var(--shadow-card);
 }
 
-.statNumber {
+.statIcon {
   grid-row: span 2;
   display: inline-flex;
   align-items: center;
@@ -193,7 +193,6 @@
 
 .pharmacyCard,
 .featureCard,
-.reviewCard,
 .stepCard {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -222,7 +221,6 @@
 
 .pharmacyCard h3,
 .featureCard h3,
-.reviewCard h3,
 .stepCard h3 {
   font-size: var(--fz-18);
   font-weight: var(--fw-bold);
@@ -232,7 +230,6 @@
 
 .pharmacyCard p,
 .featureCard p,
-.reviewCard p,
 .stepCard p {
   margin-top: 8px;
   font-size: var(--fz-14);
@@ -488,27 +485,22 @@
   border-radius: 50%;
 }
 
-.reviewCard {
-  display: grid;
-  justify-items: center;
-  padding: 28px 22px;
+.sectionError,
+.sectionEmpty {
+  margin-top: 32px;
+  padding: 20px;
   text-align: center;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
 }
 
-.photo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  margin-bottom: 14px;
-  font-size: var(--fz-20);
-  font-weight: var(--fw-bold);
-  color: var(--color-white);
-  background-color: var(--color-accent);
-  border-radius: 50%;
-  box-shadow: var(--shadow-accent-picture);
+.sectionError {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.sectionEmpty {
+  color: var(--color-text-secondary);
 }
 
 @media only screen and (min-width: 768px) {
@@ -643,23 +635,4 @@
   .bannerMedia {
     min-height: 340px;
   }
-}
-
-
-.sectionError,
-.sectionEmpty {
-  margin-top: 32px;
-  padding: 20px;
-  text-align: center;
-  border-radius: var(--radius-lg);
-}
-
-.sectionError {
-  color: var(--color-text-primary);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-}
-
-.sectionEmpty {
-  color: var(--color-text-secondary);
 }

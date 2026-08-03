@@ -3,8 +3,8 @@
   inset: 0;
   z-index: var(--modal-z-index, var(--z-modal));
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: var(--modal-align-items, center);
+  justify-content: var(--modal-justify-content, center);
   padding: var(--modal-padding, 20px);
   background-color: var(--modal-backdrop, var(--color-backdrop-strong));
 }
@@ -14,8 +14,8 @@
   max-height: var(--modal-max-height, none);
   padding: var(--modal-dialog-padding, 24px);
   overflow: var(--modal-overflow, visible);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
+  background: var(--modal-dialog-background, var(--color-surface));
+  border: var(--modal-dialog-border, 1px solid var(--color-border));
+  border-radius: var(--modal-dialog-radius, var(--radius-xl));
+  box-shadow: var(--modal-dialog-shadow, var(--shadow-card));
 }

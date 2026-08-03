@@ -1,5 +1,5 @@
 .navigation {
-  padding: 18px;
+  padding: 12px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
@@ -8,18 +8,18 @@
 
 .list {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .link {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 48px;
-  padding: 10px 14px;
-  font-size: var(--fz-16);
+  gap: 10px;
+  min-height: 44px;
+  padding: 9px 12px;
+  font-size: var(--fz-15);
   font-weight: var(--fw-medium);
-  line-height: 1.4;
+  line-height: 1.35;
   color: var(--color-text-secondary);
   border-radius: var(--radius-lg);
   transition:
@@ -34,8 +34,3 @@
   background-color: var(--color-accent-light);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .link {
-    transition: none;
-  }
-}

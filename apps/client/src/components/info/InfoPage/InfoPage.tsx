@@ -45,28 +45,11 @@ function InfoPage({ data }: InfoPageProps) {
               </h1>
 
               <p className={css.updated}>
-                Version {metadata.version} · Updated{' '}
+                Updated{' '}
                 <time dateTime={metadata.updatedAt.iso}>
                   {metadata.updatedAt.label}
                 </time>
-                {metadata.effectiveAt ? (
-                  <>
-                    {' '}
-                    · Effective{' '}
-                    <time dateTime={metadata.effectiveAt.iso}>
-                      {metadata.effectiveAt.label}
-                    </time>
-                  </>
-                ) : null}
               </p>
-
-              {metadata.approvalStatus !== 'approved' ? (
-                <p className={css.documentStatus}>
-                  {metadata.approvalStatus === 'in_review'
-                    ? 'This document is under formal review.'
-                    : 'Draft document: formal approval is not recorded.'}
-                </p>
-              ) : null}
               <p className={css.description} id="info-page-description">
                 {description}
               </p>
