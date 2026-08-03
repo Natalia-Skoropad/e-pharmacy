@@ -1,7 +1,8 @@
 'use client';
 
 import {
-  KeyboardEvent as ReactKeyboardEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
   useEffect,
   useId,
   useRef,
@@ -34,7 +35,55 @@ type TabsProps<TValue extends string = string> = {
   mobileVisibleCount?: number;
   tabletVisibleCount?: number;
   labels?: TabsLabels;
+  idBase?: string;
 };
+
+//===================================================================
+
+export function getTabId(idBase: string, value: string): string {
+  return `${idBase}-tab-${value}`;
+}
+
+//===================================================================
+
+export function getTabPanelId(idBase: string, value: string): string {
+  return `${idBase}-panel-${value}`;
+}
+
+//===================================================================
+
+export type TabPanelProps<TValue extends string = string> = Readonly<{
+  idBase: string;
+  value: TValue;
+  activeValue: TValue;
+  className?: string;
+  children: ReactNode;
+}>;
+
+//===================================================================
+
+export function TabPanel<TValue extends string = string>({
+  idBase,
+  value,
+  activeValue,
+  className,
+  children,
+}: TabPanelProps<TValue>) {
+  const isActive = value === activeValue;
+
+  return (
+    <section
+      className={className}
+      id={getTabPanelId(idBase, value)}
+      role="tabpanel"
+      aria-labelledby={getTabId(idBase, value)}
+      hidden={!isActive}
+      tabIndex={0}
+    >
+      {children}
+    </section>
+  );
+}
 
 //===================================================================
 
@@ -47,6 +96,8 @@ const DEFAULT_LABELS: Required<TabsLabels> = {
 //===================================================================
 
 type MoreMenuMode = 'mobile' | 'tablet' | null;
+
+//===================================================================
 
 type MoreMenuPosition = Readonly<{
   top: number;
@@ -88,6 +139,7 @@ function Tabs<TValue extends string = string>({
   mobileVisibleCount = MOBILE_VISIBLE_TABS_COUNT,
   tabletVisibleCount,
   labels,
+  idBase,
 }: TabsProps<TValue>) {
   const [moreMenuMode, setMoreMenuMode] = useState<MoreMenuMode>(null);
 
@@ -100,8 +152,10 @@ function Tabs<TValue extends string = string>({
   const mobileMoreButtonRef = useRef<HTMLButtonElement>(null);
   const tabletMoreButtonRef = useRef<HTMLButtonElement>(null);
   const focusTimerRef = useRef<number | null>(null);
-  const mobileMoreMenuId = useId();
-  const tabletMoreMenuId = useId();
+  const generatedId = useId();
+  const resolvedIdBase = idBase ?? `tabs-${generatedId.replace(/:/g, '')}`;
+  const mobileMoreMenuId = `${resolvedIdBase}-mobile-menu`;
+  const tabletMoreMenuId = `${resolvedIdBase}-tablet-menu`;
   const mergedLabels = { ...DEFAULT_LABELS, ...labels };
   const isMoreOpen = moreMenuMode !== null;
 
@@ -342,6 +396,8 @@ function Tabs<TValue extends string = string>({
             }}
             type="button"
             role="tab"
+            id={getTabId(resolvedIdBase, item.value)}
+            aria-controls={getTabPanelId(resolvedIdBase, item.value)}
             aria-selected={isActive}
             tabIndex={isActive ? 0 : -1}
             onClick={() => handleTabClick(item.value)}

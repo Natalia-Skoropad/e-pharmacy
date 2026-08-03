@@ -31,6 +31,14 @@ const [
   catalogCard,
   catalogCardSemantics,
   catalogGrid,
+  productDetails,
+  productHero,
+  productOfferCard,
+  pharmacyDetails,
+  pharmacyHero,
+  pharmacyContact,
+  pharmacyBankDetails,
+  tabs,
 ] = await Promise.all([
   read('apps/client/src/components/layout/AppShell/AppShell.tsx'),
 
@@ -67,6 +75,36 @@ const [
   ),
 
   read('apps/client/src/components/catalog/CatalogGrid/CatalogGrid.tsx'),
+
+  read(
+    'apps/client/src/components/product-catalog/ProductDetailsPageContent/ProductDetailsPageContent.tsx'
+  ),
+
+  read(
+    'apps/client/src/components/product-catalog/ProductDetailsPageContent/ProductDetailsHero.tsx'
+  ),
+
+  read(
+    'apps/client/src/components/product-catalog/ProductDetailsPageContent/ProductOfferCard.tsx'
+  ),
+
+  read(
+    'apps/client/src/components/pharmacies/PharmacyDetailsPageContent/PharmacyDetailsPageContent.tsx'
+  ),
+
+  read(
+    'apps/client/src/components/pharmacies/PharmacyDetailsPageContent/PharmacyDetailsHero.tsx'
+  ),
+
+  read(
+    'apps/client/src/components/pharmacies/PharmacyDetailsPageContent/PharmacyContactPanel.tsx'
+  ),
+
+  read(
+    'apps/client/src/components/pharmacies/PharmacyDetailsPageContent/PharmacyBankDetailsPanel.tsx'
+  ),
+
+  read('packages/ui/src/navigation/Tabs/Tabs.tsx'),
 ]);
 
 //===================================================================
@@ -224,6 +262,61 @@ requirePattern(
   catalogGrid,
   /<li className=/,
   'CatalogGrid: catalog items must use list-item semantics.'
+);
+
+requirePattern(
+  productHero,
+  /<h1 className=\{css\.title\}>\{product\.name\}<\/h1>/,
+  'ProductDetails: visible product-name H1 is missing.'
+);
+
+requirePattern(
+  productOfferCard,
+  /href=\{phoneHref\}/,
+  'ProductOfferCard: valid pharmacy phones must use tel links.'
+);
+
+requirePattern(
+  productOfferCard,
+  /Quantity for \$\{productName\} from \$\{offer\.pharmacyName\}/,
+  'ProductOfferCard: quantity controls need offer-specific labels.'
+);
+
+requirePattern(
+  pharmacyHero,
+  /<h1 className=\{css\.title\}>\{pharmacy\.name\}<\/h1>/,
+  'PharmacyDetails: visible pharmacy-name H1 is missing.'
+);
+
+requirePattern(
+  pharmacyContact,
+  /mailto:\$\{pharmacy\.email\}/,
+  'PharmacyContactPanel: contact email must be a mailto link.'
+);
+
+requirePattern(
+  pharmacyBankDetails,
+  />\s*Retry\s*</,
+  'PharmacyBankDetailsPanel: retry action is missing.'
+);
+
+forbidPattern(
+  `${productDetails}
+${pharmacyDetails}`,
+  /aria-live="polite"[^>]*className=\{css\.tabSection\}/,
+  'Details pages: tab panels must not be broad live regions.'
+);
+
+requirePattern(
+  tabs,
+  /aria-controls=\{getTabPanelId/,
+  'Tabs: aria-controls relationship is missing.'
+);
+
+requirePattern(
+  tabs,
+  /role="tabpanel"/,
+  'Tabs: shared tabpanel primitive is missing.'
 );
 
 if (violations.length) {

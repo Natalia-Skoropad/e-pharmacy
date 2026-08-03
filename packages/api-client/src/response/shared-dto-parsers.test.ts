@@ -192,6 +192,21 @@ test('requires backend-provided typed public slug IDs', () => {
     );
   }
 
+
+  for (const invalidOffer of [
+    { ...validOffer, availableQuantity: 11 },
+    { ...validOffer, reservedQuantity: 11 },
+    { ...validOffer, availableQuantity: 9, reservedQuantity: 2 },
+    { ...validOffer, availableQuantity: 0, reservedQuantity: 2, inStock: true },
+    { ...validOffer, availableQuantity: 8, reservedQuantity: 2, inStock: false },
+  ]) {
+    assert.throws(
+      () => parseProductDetails({ ...product, offers: [invalidOffer] }),
+      (error: unknown) =>
+        error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
+    );
+  }
+
   const productSummary = {
     id: product.id,
     name: product.name,

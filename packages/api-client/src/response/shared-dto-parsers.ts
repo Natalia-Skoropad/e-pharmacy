@@ -304,26 +304,59 @@ function parseProductOffer(
     context
   );
 
-  requireSafeNonNegativeInteger(
+  const totalQuantity = requireSafeNonNegativeInteger(
     record,
     'totalQuantity',
     'product offer',
     context
   );
 
-  requireSafeNonNegativeInteger(
+  const availableQuantity = requireSafeNonNegativeInteger(
     record,
     'availableQuantity',
     'product offer',
     context
   );
 
-  requireSafeNonNegativeInteger(
+  const reservedQuantity = requireSafeNonNegativeInteger(
     record,
     'reservedQuantity',
     'product offer',
     context
   );
+
+  if (availableQuantity > totalQuantity) {
+    throw invalidDto(
+      'product offer.availableQuantity must not exceed totalQuantity.',
+      record,
+      context
+    );
+  }
+
+  if (reservedQuantity > totalQuantity) {
+    throw invalidDto(
+      'product offer.reservedQuantity must not exceed totalQuantity.',
+      record,
+      context
+    );
+  }
+
+  if (availableQuantity + reservedQuantity > totalQuantity) {
+    throw invalidDto(
+      'product offer available and reserved quantities exceed totalQuantity.',
+      record,
+      context
+    );
+  }
+
+  const expectedInStock = availableQuantity > 0;
+  if (record.inStock !== expectedInStock) {
+    throw invalidDto(
+      'product offer.inStock must equal availableQuantity > 0.',
+      record,
+      context
+    );
+  }
 
   return checked<ProductDetails['offers'][number]>(record);
 }

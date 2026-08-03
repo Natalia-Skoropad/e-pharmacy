@@ -7,9 +7,14 @@ import process from 'node:process';
 const ROOT = resolve(import.meta.dirname, '../../..');
 const COMPONENT_ROOT = resolve(ROOT, 'apps/client/src/components');
 
-const AUDITED_ROOTS = ['common', 'home', 'info', 'layout'].map((name) =>
-  resolve(COMPONENT_ROOT, name)
-);
+const AUDITED_ROOTS = [
+  'common',
+  'home',
+  'info',
+  'layout',
+  'product-catalog',
+  'pharmacies',
+].map((name) => resolve(COMPONENT_ROOT, name));
 
 const violations = [];
 

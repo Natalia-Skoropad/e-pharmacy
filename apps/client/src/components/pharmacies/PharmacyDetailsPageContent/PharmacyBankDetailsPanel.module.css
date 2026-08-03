@@ -1,0 +1,100 @@
+.panel {
+  padding: 20px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: var(--fz-24);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.notice {
+  padding: 14px 16px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-muted);
+  background-color: var(--color-accent-light);
+  border-radius: var(--radius-lg);
+}
+
+.errorState {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+
+.list {
+  display: grid;
+  gap: 12px;
+}
+
+.list div {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.list dt {
+  color: var(--color-text-secondary);
+}
+
+.list dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 64%;
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.list a,
+.copyValueButton,
+.copyActionButton {
+  transition: color var(--transition-base);
+}
+
+.list a:hover,
+.list a:focus-visible,
+.copyValueButton:hover,
+.copyValueButton:focus-visible,
+.copyActionButton:hover,
+.copyActionButton:focus-visible {
+  color: var(--color-accent);
+}
+
+.copyValueButton,
+.copyActionButton {
+  padding: 0;
+  font: inherit;
+  font-weight: var(--fw-medium);
+  color: inherit;
+  text-align: right;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.copyActionButton {
+  color: var(--color-accent);
+}
+
+@media only screen and (min-width: 768px) {
+  .panel {
+    padding: 24px;
+  }
+}

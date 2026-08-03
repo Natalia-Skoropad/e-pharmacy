@@ -1,0 +1,99 @@
+.list {
+  display: grid;
+  gap: 10px;
+  max-width: 100%;
+  margin-top: 24px;
+}
+
+.item {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.item dt {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.item dt svg {
+  flex-shrink: 0;
+}
+
+.item dd {
+  max-width: 58%;
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.item a {
+  transition: color var(--transition-base);
+}
+
+.item a:hover,
+.item a:focus-visible {
+  color: var(--color-accent);
+}
+
+.emailActions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.copyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  color: var(--color-accent);
+  cursor: pointer;
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.copyButton:hover,
+.copyButton:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.workingHours {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  justify-content: flex-end;
+}
+
+.workingHours span {
+  white-space: nowrap;
+}
+
+.workingHours strong {
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+}
+
+.link {
+  width: 100%;
+  margin-top: 20px;
+}
+
+@media only screen and (min-width: 768px) {
+  .link {
+    display: block;
+    width: 305px;
+    margin-left: auto;
+  }
+}

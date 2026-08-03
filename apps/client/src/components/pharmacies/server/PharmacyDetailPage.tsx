@@ -34,7 +34,7 @@ export async function PharmacyDetailPage({
   return (
     <PharmacyDetailsPageContent
       pharmacy={pharmacy}
-      reviews={[...(reviewsData?.items ?? [])]}
+      reviews={reviewsData?.items ?? []}
       reviewsTotal={reviewsData?.total ?? pharmacy.reviewsCount ?? 0}
       areReviewsUnavailable={reviewsState.status === 'unavailable'}
     />

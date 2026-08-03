@@ -1,146 +1,37 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
+import { useId, useState } from 'react';
 
-import {
-  DEFAULT_VISIBLE_REVIEWS_COUNT,
-  CountLabel,
-  RatingSummary,
-} from '@e-pharmacy/ui/data-display';
-
-import { SvgIcon } from '@e-pharmacy/ui/primitives';
-import { LinkButton } from '@e-pharmacy/ui/navigation';
-import { ShimmerImage } from '@e-pharmacy/ui/media';
-import { Tabs } from '@e-pharmacy/ui/navigation';
-import { type TabItem } from '@e-pharmacy/ui/navigation';
 import { Container } from '@e-pharmacy/ui/layout';
-import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
-import { useToast } from '@e-pharmacy/ui/feedback';
-import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
-import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
-import { USER_REVIEW_COMMENT_MAX_LENGTH } from '@e-pharmacy/validation/reviews';
+import { Breadcrumbs, TabPanel } from '@e-pharmacy/ui/navigation';
 
-import type {
-  PublicPharmacy,
-  PublicPaymentBankDetails,
-} from '@e-pharmacy/types/pharmacies';
-
+import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 import type { Review } from '@e-pharmacy/types/reviews';
 
-import {
-  useClientAuthCapabilities,
-  useFavoriteActions,
-  useReviewForm,
-} from '@/hooks';
-
+import { useClientAuthCapabilities, useClipboardAction } from '@/hooks';
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
-
-import {
-  getFavoriteActionCopy,
-  shouldRenderFavoriteControl,
-} from '@/lib/favorites/favorite-presentation';
-
 import { ROUTES } from '@/lib/routes';
 
+import { PharmacyAboutPanel } from './PharmacyAboutPanel';
+import { PharmacyBankDetailsPanel } from './PharmacyBankDetailsPanel';
+import { PharmacyDetailsHero } from './PharmacyDetailsHero';
 import {
-  createPharmacyReview,
-  getPharmacyCheckoutDetails,
-} from '@/lib/api/browser';
+  PharmacyDetailsTabs,
+  type PharmacyTab,
+} from './PharmacyDetailsTabs';
+import { PharmacyReviewsPanel } from './PharmacyReviewsPanel';
+import { usePharmacyBankDetails } from './usePharmacyBankDetails';
 
-import { FavoriteToggleButton, ReviewsSection } from '@/components/common';
-
-import css from './PharmacyDetailsPageContent.module.css';
-
-//===================================================================
-
-type PharmacyTab = 'details' | 'payment' | 'about' | 'reviews';
+import css from '@/components/catalog/detail-page.module.css';
 
 //===================================================================
 
-type PharmacyDetailsPageContentProps = {
+export type PharmacyDetailsPageContentProps = Readonly<{
   pharmacy: PublicPharmacy;
-  reviews: Review[];
+  reviews: readonly Review[];
   reviewsTotal: number;
   areReviewsUnavailable?: boolean;
-};
-
-//===================================================================
-
-function renderInlineMarkdown(text: string): ReactNode[] {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-
-  return parts.map((part, index) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={`${part}-${index}`}>{part.slice(2, -2)}</strong>;
-    }
-
-    return part;
-  });
-}
-
-//===================================================================
-
-function normalizeDescriptionMarkdown(text: string): string[] {
-  return text
-    .replace(/\r\n?/g, '\n')
-    .replace(/\s+-\s+/g, '\n- ')
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
-//===================================================================
-
-function renderDescriptionMarkdown(text: string) {
-  const lines = normalizeDescriptionMarkdown(text);
-  const nodes: ReactNode[] = [];
-  let paragraphLines: string[] = [];
-  let listLines: string[] = [];
-
-  const flushParagraph = () => {
-    if (!paragraphLines.length) return;
-
-    const content = paragraphLines.join(' ');
-    nodes.push(
-      <p className={css.descriptionParagraph} key={`paragraph-${nodes.length}`}>
-        {renderInlineMarkdown(content)}
-      </p>
-    );
-    paragraphLines = [];
-  };
-
-  const flushList = () => {
-    if (!listLines.length) return;
-
-    nodes.push(
-      <ul className={css.descriptionList} key={`list-${nodes.length}`}>
-        {listLines.map((line, lineIndex) => (
-          <li key={`${line}-${lineIndex}`}>
-            {renderInlineMarkdown(line.slice(2).trim())}
-          </li>
-        ))}
-      </ul>
-    );
-    listLines = [];
-  };
-
-  for (const line of lines) {
-    if (line.startsWith('- ')) {
-      flushParagraph();
-      listLines.push(line);
-      continue;
-    }
-
-    flushList();
-    paragraphLines.push(line);
-  }
-
-  flushParagraph();
-  flushList();
-
-  return nodes;
-}
+}>;
 
 //===================================================================
 
@@ -150,179 +41,48 @@ function PharmacyDetailsPageContent({
   reviewsTotal,
   areReviewsUnavailable = false,
 }: PharmacyDetailsPageContentProps) {
-  const { isAuthenticated, isBootstrapping, canUseClientFeatures } =
-    useClientAuthCapabilities();
-
+  const { canUseClientFeatures } = useClientAuthCapabilities();
   const [activeTab, setActiveTab] = useState<PharmacyTab>('details');
+  const generatedTabsId = useId();
+  const tabsIdBase = `pharmacy-details-${generatedTabsId.replace(/:/g, '')}`;
+  const clipboard = useClipboardAction();
 
-  const [visibleReviewsCount, setVisibleReviewsCount] = useState(
-    DEFAULT_VISIBLE_REVIEWS_COUNT
+  const bankDetails = usePharmacyBankDetails(
+    pharmacy.id,
+    pharmacy.bankDetails
   );
-
-  const [bankDetails, setBankDetails] = useState<
-    PublicPaymentBankDetails | null | undefined
-  >(pharmacy.bankDetails);
-
-  const bankDetailsRequestStatusRef = useRef<'idle' | 'loading' | 'done'>(
-    pharmacy.bankDetails ? 'done' : 'idle'
-  );
-
-  const [isBankDetailsLoading, setIsBankDetailsLoading] = useState(false);
-
-  const [areBankDetailsUnavailable, setAreBankDetailsUnavailable] =
-    useState(false);
-
-  const toast = useToast();
-
-  const canShowBankDetailsTab = canUseClientFeatures;
 
   const currentTab: PharmacyTab =
-    activeTab === 'payment' && !canShowBankDetailsTab ? 'details' : activeTab;
-
-  const tabs = useMemo<TabItem<PharmacyTab>[]>(() => {
-    const items: TabItem<PharmacyTab>[] = [
-      { value: 'details', label: 'Details' },
-    ];
-
-    if (canShowBankDetailsTab) {
-      items.push({ value: 'payment', label: 'Bank details' });
-    }
-
-    items.push(
-      { value: 'about', label: 'About pharmacy' },
-      { value: 'reviews', label: `Reviews (${reviewsTotal})` }
-    );
-
-    return items;
-  }, [canShowBankDetailsTab, reviewsTotal]);
+    activeTab === 'payment' && !canUseClientFeatures ? 'details' : activeTab;
 
   const productsHref = buildProductCatalogPath({ pharmacyId: pharmacy.id }, [
     pharmacy,
   ]);
 
-  const workingHours = pharmacy.workingHours?.trim() ?? '';
-  const paymentDetails = bankDetails ?? pharmacy.bankDetails;
-  const receiptEmail = pharmacy.email;
-
-  useEffect(() => {
-    if (currentTab !== 'payment') return;
-    if (!canShowBankDetailsTab) return;
-    if (paymentDetails || bankDetailsRequestStatusRef.current === 'done')
-      return;
-
-    const controller = new AbortController();
-
-    if (bankDetailsRequestStatusRef.current === 'idle') {
-      bankDetailsRequestStatusRef.current = 'loading';
-
-      queueMicrotask(() => {
-        if (controller.signal.aborted) return;
-
-        setIsBankDetailsLoading(true);
-        setAreBankDetailsUnavailable(false);
-      });
-    }
-
-    getPharmacyCheckoutDetails(pharmacy.id, {
-      signal: controller.signal,
-    })
-      .then((data) => {
-        if (!controller.signal.aborted) {
-          setBankDetails(data.pharmacy.bankDetails ?? null);
-        }
-      })
-
-      .catch(() => {
-        if (controller.signal.aborted) return;
-
-        setBankDetails(null);
-        setAreBankDetailsUnavailable(true);
-      })
-
-      .finally(() => {
-        if (controller.signal.aborted) return;
-
-        bankDetailsRequestStatusRef.current = 'done';
-        setIsBankDetailsLoading(false);
-      });
-
-    return () => {
-      controller.abort();
-    };
-  }, [canShowBankDetailsTab, currentTab, paymentDetails, pharmacy.id]);
-
-  const { isFavorite, isFavoriteLoading, isFavoritePending, toggleFavorite } =
-    useFavoriteActions({
-      entityType: 'pharmacy',
-      id: pharmacy.id,
-      notifier: toast,
-      ...getFavoriteActionCopy('pharmacy'),
-    });
-
-  const {
-    reviewText,
-    reviewRating,
-    reviewErrors,
-    reviewTouchedFields,
-    isReviewValid,
-    isReviewSubmitting,
-    canCreateReview,
-    isAuthUnavailable,
-    reviewAccessMessage,
-    handleReviewTextChange,
-    handleReviewRatingChange,
-    handleReviewSubmit,
-  } = useReviewForm({
-    scopeKey: `pharmacy:${pharmacy.id}`,
-    createReview: (payload, options) =>
-      createPharmacyReview(pharmacy.id, payload, options),
-    notifier: toast,
-    successMessage: 'Review was accepted and will be visible after moderation.',
-    errorMessage: 'Could not submit review.',
-    authRequiredMessage: 'Please log in to submit a review.',
-    authUnavailableMessage:
-      'We could not verify your session. Please try again shortly.',
-    clientAccountRequiredMessage:
-      'Reviews are available only for active client accounts.',
-  });
-
   const handleTabChange = (nextTab: PharmacyTab) => {
-    if (nextTab === 'payment' && !canShowBankDetailsTab) {
-      setActiveTab('details');
-      return;
+    if (currentTab === 'payment' && nextTab !== 'payment') {
+      bankDetails.cancel();
     }
 
-    if (
-      nextTab === 'payment' &&
-      !paymentDetails &&
-      bankDetailsRequestStatusRef.current === 'idle'
-    ) {
-      bankDetailsRequestStatusRef.current = 'loading';
-      setIsBankDetailsLoading(true);
-      setAreBankDetailsUnavailable(false);
+    if (nextTab === 'payment') {
+      if (!canUseClientFeatures) {
+        setActiveTab('details');
+        return;
+      }
+
+      void bankDetails.load();
     }
 
     setActiveTab(nextTab);
   };
 
-  const handleCopy = async (value: string, label: string) => {
-    try {
-      await navigator.clipboard.writeText(value);
-      toast.success(`${label} copied.`);
-    } catch {
-      toast.error(`Could not copy ${label.toLowerCase()}.`);
-    }
-  };
-
-  const handleEmailCopy = async () => {
-    if (!receiptEmail) return;
-
-    await handleCopy(receiptEmail, 'Email');
-  };
-
   return (
     <main className={css.page}>
-      <section className={css.hero} aria-labelledby="pharmacy-title">
+      <p className="visually-hidden" role="status" aria-live="polite">
+        {clipboard.statusMessage}
+      </p>
+
+      <section className={css.hero}>
         <Container>
           <Breadcrumbs
             items={[
@@ -333,282 +93,68 @@ function PharmacyDetailsPageContent({
             includeStructuredData
           />
 
-          <h1 className="visually-hidden" id="pharmacy-title">
-            {pharmacy.name} pharmacy pharmacy — address, products and reviews
-          </h1>
-
-          <Tabs
-            items={tabs}
+          <PharmacyDetailsTabs
+            idBase={tabsIdBase}
             activeValue={currentTab}
-            ariaLabel="Pharmacy information tabs"
+            reviewsTotal={reviewsTotal}
+            canShowBankDetails={canUseClientFeatures}
             onChange={handleTabChange}
           />
 
-          {currentTab === 'details' ? (
-            <div className={css.grid}>
-              <div className={css.imageCard}>
-                {pharmacy.imageUrl ? (
-                  <ShimmerImage
-                    className={css.image}
-                    src={pharmacy.imageUrl}
-                    alt={`${pharmacy.name} pharmacy storefront`}
-                    priority
-                    fetchPriority="high"
-                    sizes="(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 520px"
-                  />
-                ) : (
-                  <div className={css.imageFallback} aria-hidden="true">
-                    <SvgIcon name="icon-map-pin" size={52} />
-                  </div>
-                )}
-              </div>
-
-              <div className={css.content}>
-                <div className={css.topLine}>
-                  <p className={css.kicker}>
-                    {pharmacy.city ?? 'Pharmacy pharmacy'}
-                  </p>
-
-                  {shouldRenderFavoriteControl({
-                    isAuthenticated,
-                    isBootstrapping,
-                    canUseClientFeatures,
-                  }) ? (
-                    <FavoriteToggleButton
-                      isActive={isFavorite}
-                      disabled={isFavoriteLoading}
-                      isPending={isFavoritePending}
-                      onClick={toggleFavorite}
-                      activeLabel="Remove pharmacy from favorites"
-                      inactiveLabel="Add pharmacy to favorites"
-                    />
-                  ) : null}
-                </div>
-
-                <h2 className={css.title}>{pharmacy.name}</h2>
-
-                <RatingSummary
-                  className={css.ratingRow}
-                  rating={pharmacy.rating}
-                  reviewsCount={reviewsTotal}
-                />
-
-                <dl className={css.summaryList}>
-                  <div className={css.summaryItem}>
-                    <dt>
-                      <MapPin size={18} aria-hidden="true" />
-                      Address
-                    </dt>
-                    <dd>{pharmacy.address}</dd>
-                  </div>
-
-                  {pharmacy.phone ? (
-                    <div className={css.summaryItem}>
-                      <dt>
-                        <Phone size={18} aria-hidden="true" />
-                        Phone
-                      </dt>
-                      <dd>
-                        <a href={`tel:${pharmacy.phone}`}>{pharmacy.phone}</a>
-                      </dd>
-                    </div>
-                  ) : null}
-
-                  {receiptEmail ? (
-                    <div className={css.summaryItem}>
-                      <dt>
-                        <Mail size={18} aria-hidden="true" />
-                        Email
-                      </dt>
-                      <dd>
-                        <button
-                          className={css.copyEmailButton}
-                          type="button"
-                          onClick={handleEmailCopy}
-                        >
-                          {receiptEmail}
-                        </button>
-                      </dd>
-                    </div>
-                  ) : null}
-
-                  {workingHours ? (
-                    <div className={css.summaryItem}>
-                      <dt>
-                        <Clock size={18} aria-hidden="true" />
-                        Working hours
-                      </dt>
-                      <dd className={css.workingHoursValue}>
-                        {getWorkingHoursDisplayItems(workingHours)?.map(
-                          (item) => (
-                            <span key={item.day}>
-                              <strong>{item.label}</strong>: {item.hours}
-                            </span>
-                          )
-                        )}
-                      </dd>
-                    </div>
-                  ) : null}
-
-                  <div className={css.summaryItem}>
-                    <dt>
-                      <ShoppingBag size={18} aria-hidden="true" />
-                      Products
-                    </dt>
-                    <dd>
-                      {formatAvailableProductsCount(
-                        pharmacy.availableProductsCount
-                      )}
-                    </dd>
-                  </div>
-                </dl>
-
-                <LinkButton className={css.link} href={productsHref}>
-                  View products from this pharmacy
-                </LinkButton>
-              </div>
-            </div>
-          ) : null}
+          <TabPanel
+            idBase={tabsIdBase}
+            value="details"
+            activeValue={currentTab}
+          >
+            <PharmacyDetailsHero
+              pharmacy={pharmacy}
+              reviewsTotal={reviewsTotal}
+              productsHref={productsHref}
+              onCopy={clipboard.copy}
+            />
+          </TabPanel>
         </Container>
       </section>
 
-      {currentTab === 'payment' ? (
-        <section className={css.tabSection} aria-live="polite">
-          <Container>
-            <div className={css.panel}>
-              <div className={css.sectionHeader}>
-                <h2 className={css.panelTitle}>Bank details</h2>
-              </div>
+      <Container>
+        {canUseClientFeatures ? (
+          <TabPanel
+            className={css.tabSection}
+            idBase={tabsIdBase}
+            value="payment"
+            activeValue={currentTab}
+          >
+            <PharmacyBankDetailsPanel
+              state={bankDetails.state}
+              onRetry={() => void bankDetails.retry()}
+              onCopy={clipboard.copy}
+            />
+          </TabPanel>
+        ) : null}
 
-              {isBankDetailsLoading ? (
-                <p className={css.notice}>Loading bank details...</p>
-              ) : areBankDetailsUnavailable ? (
-                <p className={css.notice}>
-                  Bank details are temporarily unavailable. Please try again
-                  later.
-                </p>
-              ) : paymentDetails ? (
-                <dl className={css.paymentList}>
-                  <div>
-                    <dt>Recipient name</dt>
-                    <dd>{paymentDetails.recipientName}</dd>
-                  </div>
+        <TabPanel
+          className={css.tabSection}
+          idBase={tabsIdBase}
+          value="about"
+          activeValue={currentTab}
+        >
+          <PharmacyAboutPanel pharmacy={pharmacy} />
+        </TabPanel>
 
-                  <div>
-                    <dt>Tax ID / EDRPOU</dt>
-                    <dd>{paymentDetails.taxId}</dd>
-                  </div>
-
-                  <div>
-                    <dt>IBAN</dt>
-                    <dd>
-                      <button
-                        className={css.copyValueButton}
-                        type="button"
-                        onClick={() =>
-                          void handleCopy(paymentDetails.iban, 'IBAN')
-                        }
-                        aria-label="Copy IBAN"
-                      >
-                        {paymentDetails.iban}
-                      </button>
-                    </dd>
-                  </div>
-
-                  <div>
-                    <dt>Bank name</dt>
-                    <dd>{paymentDetails.bankName}</dd>
-                  </div>
-
-                  <div>
-                    <dt>Payment purpose</dt>
-                    <dd>{paymentDetails.paymentPurpose}</dd>
-                  </div>
-
-                  {receiptEmail ? (
-                    <div>
-                      <dt>Receipt email</dt>
-                      <dd>
-                        <button
-                          className={css.copyValueButton}
-                          type="button"
-                          onClick={() => void handleCopy(receiptEmail, 'Email')}
-                          aria-label="Copy receipt email"
-                        >
-                          {receiptEmail}
-                        </button>
-                      </dd>
-                    </div>
-                  ) : null}
-                </dl>
-              ) : (
-                <p className={css.notice}>
-                  Bank details are not available for this pharmacy yet.
-                </p>
-              )}
-            </div>
-          </Container>
-        </section>
-      ) : null}
-
-      {currentTab === 'about' ? (
-        <section className={css.tabSection} aria-live="polite">
-          <Container>
-            <div className={css.panel}>
-              <div className={css.sectionHeader}>
-                <h2 className={css.panelTitle}>About {pharmacy.name}</h2>
-              </div>
-
-              <div className={css.descriptionText}>
-                {renderDescriptionMarkdown(
-                  pharmacy.description ??
-                    `${pharmacy.name} is an active E-PHARMACY partner in ${pharmacy.city ?? 'your city'}, created for clients who want to compare products calmly before preparing an order request. The pharmacy page brings together the most useful details: address, phone, email, working hours, rating, client reviews, and a direct catalog link with products from this exact pharmacy. You can quickly check whether the needed product is available, compare offers, and request pickup or delivery for pharmacy confirmation. The pharmacy keeps product information clear, so clients do not have to jump between random tabs, screenshots, and notes. Reviews help you understand service quality, while the catalog filter helps you move from pharmacy details straight to the right product list. It is a practical page for everyday order requests, planned purchases, and simple price comparison. In short, ${pharmacy.name} works like a tidy digital pharmacy profile: all important information is visible, the next action is obvious, and the shopping flow stays friendly instead of turning into a mini quest with a white coat.`
-                )}
-              </div>
-            </div>
-          </Container>
-        </section>
-      ) : null}
-
-      {currentTab === 'reviews' ? (
-        <section className={css.tabSection} aria-live="polite">
-          <Container>
-            <div className={css.panel}>
-              <div className={css.sectionHeader}>
-                <h2 className={css.panelTitle}>Reviews</h2>
-                <CountLabel
-                  shown={Math.min(visibleReviewsCount, reviews.length)}
-                  total={reviewsTotal}
-                  label="reviews"
-                />
-              </div>
-
-              <ReviewsSection
-                reviews={reviews}
-                visibleCount={visibleReviewsCount}
-                onVisibleCountChange={setVisibleReviewsCount}
-                reviewText={reviewText}
-                reviewRating={reviewRating}
-                isReviewValid={isReviewValid}
-                commentError={reviewErrors.comment}
-                ratingError={reviewErrors.rating}
-                reviewTouchedFields={reviewTouchedFields}
-                isReviewSubmitting={isReviewSubmitting}
-                canCreateReview={canCreateReview}
-                reviewAccessMessage={reviewAccessMessage}
-                isAuthUnavailable={isAuthUnavailable}
-                isUnavailable={areReviewsUnavailable}
-                emptyText="Pharmacy reviews will appear here after clients share their feedback."
-                textareaId="pharmacy-review"
-                maxLength={USER_REVIEW_COMMENT_MAX_LENGTH}
-                onReviewTextChange={handleReviewTextChange}
-                onReviewRatingChange={handleReviewRatingChange}
-                onReviewSubmit={() => void handleReviewSubmit()}
-              />
-            </div>
-          </Container>
-        </section>
-      ) : null}
+        <TabPanel
+          className={css.tabSection}
+          idBase={tabsIdBase}
+          value="reviews"
+          activeValue={currentTab}
+        >
+          <PharmacyReviewsPanel
+            pharmacyId={pharmacy.id}
+            reviews={reviews}
+            reviewsTotal={reviewsTotal}
+            areReviewsUnavailable={areReviewsUnavailable}
+          />
+        </TabPanel>
+      </Container>
     </main>
   );
 }

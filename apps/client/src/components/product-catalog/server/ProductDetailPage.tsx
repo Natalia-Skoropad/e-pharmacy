@@ -42,8 +42,8 @@ export async function ProductDetailPage({
   return (
     <ProductDetailsPageContent
       product={product}
-      reviews={[...(reviewsData?.items ?? [])]}
-      reviewsTotal={reviewsData?.total ?? 0}
+      reviews={reviewsData?.items ?? []}
+      reviewsTotal={reviewsData?.total ?? product.reviewsCount ?? 0}
       contextPharmacyId={pharmacyId}
       areReviewsUnavailable={reviewsState.status === 'unavailable'}
     />

@@ -48,6 +48,7 @@ const [
   frontendOrders,
   frontendNotes,
   frontendCart,
+  frontendCartLifecycle,
   frontendPresentationOrders,
   frontendPresentationProducts,
   frontendPresentationPharmacies,
@@ -72,6 +73,7 @@ const [
   parse('packages', 'config', 'src', 'orders', 'domain-values.ts'),
   parse('packages', 'config', 'src', 'notes', 'entity-types.ts'),
   parse('packages', 'config', 'src', 'cart', 'limits.ts'),
+  parse('packages', 'config', 'src', 'cart', 'lifecycle.ts'),
   parse('packages', 'config', 'src', 'presentation', 'orders.ts'),
   parse('packages', 'config', 'src', 'presentation', 'products.ts'),
   parse('packages', 'config', 'src', 'presentation', 'pharmacies.ts'),
@@ -193,6 +195,12 @@ assert.equal(
   'Cart pharmacy-limit error codes differ between frontend and backend'
 );
 
+assert.equal(
+  getVariableLiteral(ts, frontendCartLifecycle, 'CART_ITEM_TTL_DAYS'),
+  getVariableLiteral(ts, backendCart, 'CART_ITEM_TTL_DAYS'),
+  'Cart item TTL differs between frontend and backend'
+);
+
 //===================================================================
 
 const semanticTones = new Set([
@@ -278,6 +286,7 @@ const [
   ),
 
   readFile(fromRoot('packages', 'auth', 'src', 'react.ts'), 'utf8'),
+
   readFile(
     fromRoot('packages', 'next-api', 'src', 'internal', 'auth-cookies.ts'),
     'utf8'

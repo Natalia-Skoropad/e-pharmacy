@@ -1,0 +1,18 @@
+.page {
+  min-height: 100%;
+  background-color: var(--color-background);
+}
+
+.hero {
+  padding-block: 20px 30px;
+}
+
+.tabSection {
+  padding-bottom: 72px;
+}
+
+@media only screen and (min-width: 768px) {
+  .tabSection {
+    padding-bottom: 80px;
+  }
+}
