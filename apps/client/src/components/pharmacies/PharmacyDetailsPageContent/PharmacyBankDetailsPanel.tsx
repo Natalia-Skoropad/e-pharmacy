@@ -2,7 +2,7 @@
 
 import { Button } from '@e-pharmacy/ui/primitives';
 
-import type { PharmacyBankDetailsState } from './usePharmacyBankDetails';
+import type { PharmacyBankDetailsState } from './pharmacy-bank-details-state';
 
 import css from './PharmacyBankDetailsPanel.module.css';
 

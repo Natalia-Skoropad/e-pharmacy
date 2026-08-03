@@ -595,8 +595,8 @@ Recommended production checklist:
 
 ## Author
 
-**Nataliia Skoropad**  
-Full-stack Developer  
+**Nataliia Skoropad**
+Full-stack Developer
 Backend development, Frontend development, UI/UX design
 
 ## Cart and checkout domain rules
@@ -619,6 +619,8 @@ The public client UI is split by ownership rather than by visual similarity:
 
 Local components must not exist solely to re-export a shared UI component. Nested one-line barrels are avoided; stable application barrels may export leaf components directly when they provide a meaningful public API.
 
+The catalog ownership, DTO, lifecycle, public API and verification rules are documented in [`src/components/catalog/README.md`](./src/components/catalog/README.md).
+
 ### Auth and mobile overlay lifecycle
 
 Header and mobile navigation render separate layouts from one controller model. Logout is single-flight, always completes local navigation even if remote invalidation fails, and disables both desktop and mobile actions together. Every mobile navigation action closes the offcanvas directly. Moving to the desktop breakpoint closes and unmounts the overlay instead of hiding an active modal through CSS.
@@ -637,6 +639,12 @@ Home copy describes E-PHARMACY as a platform for finding products and preparing 
 Run these checks before deployment:
 
 ```bash
+pnpm check:client-catalog-components
+pnpm check:client-catalog-contracts
+pnpm check:client-catalog-performance
+pnpm check:client-catalog-a11y
+pnpm check:client-catalog-styles
+pnpm check:client-detail-components
 pnpm check:client-components-boundaries
 pnpm check:client-components-public-api
 pnpm check:client-components-a11y

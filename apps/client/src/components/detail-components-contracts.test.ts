@@ -65,31 +65,36 @@ test('keeps Product Details split by lifecycle responsibility', async () => {
 //===================================================================
 
 test('keeps Pharmacy Details retryable and separates contact from receipt email', async () => {
-  const [page, hero, contact, bankPanel, bankHook, about] = await Promise.all([
-    readComponent(
-      './pharmacies/PharmacyDetailsPageContent/PharmacyDetailsPageContent.tsx'
-    ),
+  const [page, hero, contact, bankPanel, bankHook, bankState, about] =
+    await Promise.all([
+      readComponent(
+        './pharmacies/PharmacyDetailsPageContent/PharmacyDetailsPageContent.tsx'
+      ),
 
-    readComponent(
-      './pharmacies/PharmacyDetailsPageContent/PharmacyDetailsHero.tsx'
-    ),
+      readComponent(
+        './pharmacies/PharmacyDetailsPageContent/PharmacyDetailsHero.tsx'
+      ),
 
-    readComponent(
-      './pharmacies/PharmacyDetailsPageContent/PharmacyContactPanel.tsx'
-    ),
+      readComponent(
+        './pharmacies/PharmacyDetailsPageContent/PharmacyContactPanel.tsx'
+      ),
 
-    readComponent(
-      './pharmacies/PharmacyDetailsPageContent/PharmacyBankDetailsPanel.tsx'
-    ),
+      readComponent(
+        './pharmacies/PharmacyDetailsPageContent/PharmacyBankDetailsPanel.tsx'
+      ),
 
-    readComponent(
-      './pharmacies/PharmacyDetailsPageContent/usePharmacyBankDetails.ts'
-    ),
+      readComponent(
+        './pharmacies/PharmacyDetailsPageContent/usePharmacyBankDetails.ts'
+      ),
 
-    readComponent(
-      './pharmacies/PharmacyDetailsPageContent/PharmacyAboutPanel.tsx'
-    ),
-  ]);
+      readComponent(
+        './pharmacies/PharmacyDetailsPageContent/pharmacy-bank-details-state.ts'
+      ),
+
+      readComponent(
+        './pharmacies/PharmacyDetailsPageContent/PharmacyAboutPanel.tsx'
+      ),
+    ]);
 
   assert.ok(page.split(/\r?\n/).length < 190);
   assert.match(page, /PharmacyDetailsHero/);
@@ -104,7 +109,7 @@ test('keeps Pharmacy Details retryable and separates contact from receipt email'
   assert.match(contact, /Copy pharmacy email/);
   assert.match(bankPanel, /state\.data\.receiptEmail/);
   assert.match(bankPanel, /Retry/);
-  assert.match(bankHook, /status: 'error'/);
+  assert.match(bankState, /status: 'error'/);
   assert.match(bankHook, /controllerRef\.current\?\.abort\(\)/);
   assert.doesNotMatch(bankHook, /queueMicrotask/);
   assert.match(about, /has not added a public description yet/);

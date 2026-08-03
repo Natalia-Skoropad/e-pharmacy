@@ -6,21 +6,26 @@ import type { PublicPaymentBankDetails } from '@e-pharmacy/types/pharmacies';
 
 import { getPharmacyCheckoutDetails } from '@/lib/api/browser';
 
+import {
+  canLoadPharmacyBankDetails,
+  type PharmacyBankDetailsState,
+} from './pharmacy-bank-details-state';
+
 //===================================================================
 
-export type PharmacyBankDetailsState =
-  | Readonly<{ status: 'idle' }>
-  | Readonly<{ status: 'loading' }>
-  | Readonly<{ status: 'success'; data: PublicPaymentBankDetails }>
-  | Readonly<{ status: 'empty' }>
-  | Readonly<{ status: 'error'; error: unknown }>;
+export type PharmacyBankDetailsController = Readonly<{
+  state: PharmacyBankDetailsState;
+  load: (options?: Readonly<{ force?: boolean }>) => Promise<void>;
+  retry: () => Promise<void>;
+  cancel: () => void;
+}>;
 
 //===================================================================
 
 export function usePharmacyBankDetails(
   pharmacyId: string,
   initialBankDetails?: PublicPaymentBankDetails
-) {
+): PharmacyBankDetailsController {
   const [state, setState] = useState<PharmacyBankDetailsState>(() =>
     initialBankDetails
       ? { status: 'success', data: initialBankDetails }
@@ -40,14 +45,7 @@ export function usePharmacyBankDetails(
     async (options: Readonly<{ force?: boolean }> = {}) => {
       const current = stateRef.current;
 
-      if (current.status === 'loading') return;
-
-      if (
-        !options.force &&
-        (current.status === 'success' || current.status === 'empty')
-      ) {
-        return;
-      }
+      if (!canLoadPharmacyBankDetails(current, options.force)) return;
 
       controllerRef.current?.abort();
       const controller = new AbortController();
@@ -102,5 +100,5 @@ export function usePharmacyBankDetails(
     load,
     retry: () => load({ force: true }),
     cancel,
-  } as const;
+  };
 }

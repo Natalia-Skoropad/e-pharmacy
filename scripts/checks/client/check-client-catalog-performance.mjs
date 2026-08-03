@@ -29,6 +29,8 @@ const [
   continueShopping,
   parserTests,
   catalogConfig,
+  productDetails,
+  pharmacyCard,
 ] = await Promise.all([
   read('packages/types/src/products/responses.ts'),
   read('packages/types/src/pharmacies/responses.ts'),
@@ -53,6 +55,12 @@ const [
 
   read('packages/api-client/src/response/shared-dto-parsers.test.ts'),
   read('apps/client/src/lib/catalog/catalog-config.ts'),
+
+  read(
+    'apps/client/src/components/product-catalog/ProductDetailsPageContent/ProductDetailsPageContent.tsx'
+  ),
+
+  read('apps/client/src/components/pharmacies/PharmacyCard/PharmacyCard.tsx'),
 ]);
 
 //===================================================================
@@ -143,6 +151,23 @@ requirePattern(
   /bankDetails/,
   'Pharmacy summary parser tests must reject bank details.'
 );
+
+forbidPattern(
+  productDetails,
+  /getProductDetails|loadCart|setTimeout/,
+  'Product Details must not repeat the full SSR fetch, own cart bootstrap, or fake local loading.'
+);
+
+for (const [label, source] of [
+  ['ProductCard', productCard],
+  ['PharmacyCard', pharmacyCard],
+]) {
+  forbidPattern(
+    source,
+    /from ['"]@\/lib\/api\/(?:browser|server)|getFavorite(?:Product|Pharmacy|Ids)|fetchFavorite/,
+    `${label} must not issue per-card API or favorite collection requests.`
+  );
+}
 
 const productBudgetFixture = {
   id: '507f1f77bcf86cd799439011',
