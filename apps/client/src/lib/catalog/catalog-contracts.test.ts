@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { parsePositivePageParam } from './catalog-param-utils';
+import { getCatalogRedirectPage } from './catalog-resource-state';
 
 import {
   normalizeCityKey,
@@ -10,6 +11,8 @@ import {
 
 import { parsePharmacySegments } from './pharmacies-catalog-paths';
 import { parseProductCatalogSegments } from './product-catalog-paths';
+import { getPharmaciesSeoContent } from './pharmacies-catalog-seo';
+import { getProductCatalogSeoContent } from './product-catalog-seo';
 
 //===================================================================
 
@@ -78,4 +81,50 @@ test('reports duplicate and unknown pharmacy segments', () => {
   );
 
   assert.equal(result.filters.city, 'київ');
+});
+
+//===================================================================
+
+test('redirects stale catalog pages to the last available page', () => {
+  assert.equal(getCatalogRedirectPage(8, 3, { status: 'success' }), 3);
+
+  assert.equal(
+    getCatalogRedirectPage(8, 0, {
+      status: 'empty',
+      reason: 'catalog-empty',
+    }),
+    null
+  );
+
+  assert.equal(getCatalogRedirectPage(8, 3, { status: 'unavailable' }), null);
+});
+
+//===================================================================
+
+test('uses semantic, neutral catalog SEO content', () => {
+  const productContent = getProductCatalogSeoContent({
+    name: '',
+    article: '',
+    category: 'all',
+    availability: 'all',
+    sort: 'newest',
+    page: 1,
+  });
+
+  const pharmacyContent = getPharmaciesSeoContent({
+    name: '',
+    address: '',
+    city: '',
+    sort: 'newest',
+    page: 1,
+  });
+
+  for (const content of [productContent, pharmacyContent]) {
+    assert.equal(typeof content.intro, 'string');
+    assert.equal(typeof content.comparison, 'string');
+    assert.equal(typeof content.ordering, 'string');
+
+    const text = Object.values(content).join(' ');
+    assert.doesNotMatch(text, /tiny assistant|white coat|22:59/i);
+  }
 });

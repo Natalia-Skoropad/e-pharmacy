@@ -1,38 +1,25 @@
-import type { ProductDetails } from '@e-pharmacy/types/products';
+import type { ProductCardSummary } from '@e-pharmacy/types/products';
 
-import ProductCard from '@/components/product-catalog/ProductCard';
-
-import css from './ProductsList.module.css';
+import CatalogGrid from '@/components/catalog/CatalogGrid/CatalogGrid';
+import ProductCard from '@/components/product-catalog/ProductCard/ProductCard';
 
 //===================================================================
 
-type ProductsListProps = {
-  products: ProductDetails[];
-};
+export type ProductsListProps = Readonly<{
+  products: readonly ProductCardSummary[];
+}>;
 
 //===================================================================
 
 function ProductsList({ products }: ProductsListProps) {
-  if (products.length === 0) {
-    return (
-      <div className={css.empty}>
-        <h2 className={css.emptyTitle}>No products found</h2>
-        <p className={css.emptyText}>
-          Products will appear here after they are added to the selected
-          pharmacy pharmacy.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className={css.list}>
+    <CatalogGrid ariaLabel="Products">
       {products.map((product) => (
-        <div className={css.item} key={product.id}>
+        <CatalogGrid.Item key={product.id}>
           <ProductCard product={product} />
-        </div>
+        </CatalogGrid.Item>
       ))}
-    </div>
+    </CatalogGrid>
   );
 }
 

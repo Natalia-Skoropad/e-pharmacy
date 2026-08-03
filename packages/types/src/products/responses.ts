@@ -1,6 +1,7 @@
 import type { ApiPaginationResponse } from '../api';
 import type { CalendarDateString, EntityId } from '../primitives';
 import type { ProductCategory } from './category';
+import type { ProductCardSummary } from './product-card-summary';
 import type { ProductDetails } from './product-details';
 import type { ProductStatus } from './product-summary';
 
@@ -76,6 +77,12 @@ export type ProductFilterOptionsResponse = Readonly<{
 //===================================================================
 
 export type ProductsResponse = Readonly<
+  ApiPaginationResponse<ProductCardSummary> & {
+    earliestCreatedAt: CalendarDateString | null;
+  }
+>;
+
+export type ProductsWithOffersResponse = Readonly<
   ApiPaginationResponse<ProductDetails> & {
     earliestCreatedAt: CalendarDateString | null;
   }

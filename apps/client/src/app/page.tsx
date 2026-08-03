@@ -2,8 +2,8 @@ import { Suspense } from 'react';
 import Image from 'next/image';
 
 import { LinkButton } from '@e-pharmacy/ui/navigation';
-import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
-import type { ProductDetails } from '@e-pharmacy/types/products';
+import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
+import type { ProductCardSummary } from '@e-pharmacy/types/products';
 import { Container } from '@e-pharmacy/ui/layout';
 
 import { BENEFITS, HOME_STATS, STEPS } from '@/components/home/config/content';
@@ -40,7 +40,7 @@ type FeaturedResult<T> = { items: readonly T[]; hasError: boolean };
 //===================================================================
 
 async function getFeaturedPharmacies(): Promise<
-  FeaturedResult<PublicPharmacy>
+  FeaturedResult<PharmacyCardSummary>
 > {
   try {
     const response = await getPharmacies(
@@ -60,7 +60,7 @@ async function getFeaturedPharmacies(): Promise<
 
 //===================================================================
 
-async function getFeaturedProducts(): Promise<FeaturedResult<ProductDetails>> {
+async function getFeaturedProducts(): Promise<FeaturedResult<ProductCardSummary>> {
   try {
     const response = await getProducts(
       {
@@ -101,6 +101,7 @@ async function FeaturedPharmaciesSection() {
             <PharmacyCard
               key={pharmacy.id}
               pharmacy={pharmacy}
+              headingLevel={3}
             />
           ))}
         </div>
@@ -129,6 +130,7 @@ async function FeaturedProductsSection() {
             <ProductCard
               key={product.id}
               product={product}
+              headingLevel={3}
             />
           ))}
         </div>

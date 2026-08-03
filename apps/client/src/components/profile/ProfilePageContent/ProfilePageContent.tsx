@@ -75,8 +75,8 @@ import {
 
 import type { ActiveSession } from '@e-pharmacy/types/auth';
 import type { ClientOrder } from '@e-pharmacy/types/orders';
-import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
-import type { ProductDetails } from '@e-pharmacy/types/products';
+import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
+import type { ProductCardSummary } from '@e-pharmacy/types/products';
 
 import { PROFILE_TITLE } from '@/lib/seo/metadata-copy';
 
@@ -174,12 +174,12 @@ function ProfilePageContent() {
   const [ordersVisibleCount, setOrdersVisibleCount] =
     useState(ORDERS_VISIBLE_STEP);
 
-  const [favoriteProducts, setFavoriteProducts] = useState<ProductDetails[]>(
+  const [favoriteProducts, setFavoriteProducts] = useState<ProductCardSummary[]>(
     []
   );
 
   const [favoritePharmacies, setFavoritePharmacies] = useState<
-    PublicPharmacy[]
+    PharmacyCardSummary[]
   >([]);
 
   const [favoriteProductsError, setFavoriteProductsError] = useState('');
@@ -1033,6 +1033,7 @@ function ProfilePageContent() {
                           <ProductCard
                             key={product.id}
                             product={product}
+                            headingLevel={3}
                             onFavoriteChange={(
                               productId: string,
                               isFavoriteProduct: boolean
@@ -1123,6 +1124,7 @@ function ProfilePageContent() {
                           <PharmacyCard
                             key={pharmacy.id}
                             pharmacy={pharmacy}
+                            headingLevel={3}
                             onFavoriteChange={(
                               pharmacyId: string,
                               isFavoritePharmacy: boolean

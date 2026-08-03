@@ -1,3 +1,7 @@
+.region {
+  min-width: 0;
+}
+
 .searchCard {
   padding: 20px;
   margin-bottom: 24px;
@@ -12,28 +16,22 @@
   gap: 16px;
 }
 
-.desktopFilters {
-  display: none;
-}
-
-.desktopResetSlot {
+.desktopFilters,
+.desktopResetSlot,
+.desktopSort {
   display: none;
 }
 
 .catalogToolbar {
   display: flex;
+  gap: 16px;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
   margin-bottom: 24px;
 }
 
 .filterButton {
   flex-shrink: 0;
-}
-
-.desktopSort {
-  display: none;
 }
 
 @media only screen and (min-width: 768px) {
@@ -57,11 +55,16 @@
   }
 
   .searchGrid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(
-        0,
-        1fr
-      ) minmax(0, 1fr) auto;
     align-items: end;
+  }
+
+  .searchGridWide {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  }
+
+  .searchGridCompact {
+    grid-template-columns: repeat(3, minmax(220px, 240px)) auto;
+    justify-content: start;
   }
 
   .desktopFilters {
@@ -70,9 +73,16 @@
 
   .desktopResetSlot {
     display: flex;
-    justify-content: flex-end;
     min-height: 44px;
     margin-top: 4px;
+  }
+
+  .searchGridWide .desktopResetSlot {
+    justify-content: flex-end;
+  }
+
+  .searchGridCompact .desktopResetSlot {
+    justify-content: flex-start;
   }
 
   .catalogToolbar {

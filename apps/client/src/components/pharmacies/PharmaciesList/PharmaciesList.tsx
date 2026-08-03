@@ -1,37 +1,25 @@
-import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
+import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 
-import PharmacyCard from '@/components/pharmacies/PharmacyCard';
-
-import css from './PharmaciesList.module.css';
+import CatalogGrid from '@/components/catalog/CatalogGrid/CatalogGrid';
+import PharmacyCard from '@/components/pharmacies/PharmacyCard/PharmacyCard';
 
 //===================================================================
 
-type PharmaciesListProps = {
-  pharmacies: PublicPharmacy[];
-};
+export type PharmaciesListProps = Readonly<{
+  pharmacies: readonly PharmacyCardSummary[];
+}>;
 
 //===================================================================
 
 function PharmaciesList({ pharmacies }: PharmaciesListProps) {
-  if (pharmacies.length === 0) {
-    return (
-      <div className={css.empty}>
-        <h2 className={css.emptyTitle}>No pharmacies found</h2>
-        <p className={css.emptyText}>
-          Pharmacies will appear here after they are added in the backend.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <ul className={css.list}>
+    <CatalogGrid ariaLabel="Pharmacies">
       {pharmacies.map((pharmacy) => (
-        <li className={css.item} key={pharmacy.id}>
+        <CatalogGrid.Item key={pharmacy.id}>
           <PharmacyCard pharmacy={pharmacy} />
-        </li>
+        </CatalogGrid.Item>
       ))}
-    </ul>
+    </CatalogGrid>
   );
 }
 

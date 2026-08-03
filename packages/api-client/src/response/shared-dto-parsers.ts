@@ -20,6 +20,7 @@ import type {
 
 import type {
   PharmaciesResponse,
+  PharmacyCardSummary,
   PharmacyCheckoutDetails,
   PharmacyCheckoutDetailsResponse,
   PharmacyDetailsResponse,
@@ -34,12 +35,14 @@ import type {
 
 import type {
   PharmacyProductMutationResponse,
+  ProductCardSummary,
   ProductDetails,
   ProductDetailsResponse,
   ProductFilterOptionsResponse,
   ProductStockMovement,
   ProductStockMovementsResponse,
   ProductsResponse,
+  ProductsWithOffersResponse,
 } from '@e-pharmacy/types/products';
 
 import type {
@@ -154,6 +157,48 @@ function requireNullableString(
   if (value !== null && typeof value !== 'string') {
     throw invalidDto(
       `${label}.${key} must be a string or null.`,
+      record,
+      context
+    );
+  }
+
+  return value;
+}
+
+//===================================================================
+
+function rejectFields(
+  record: UnknownRecord,
+  keys: readonly string[],
+  label: string,
+  context?: ApiResponseContext
+): void {
+  const forbiddenKey = keys.find((key) => record[key] !== undefined);
+
+  if (forbiddenKey) {
+    throw invalidDto(
+      `${label}.${forbiddenKey} is not allowed in this response.`,
+      record,
+      context
+    );
+  }
+}
+
+//===================================================================
+
+function requireNullableNonNegativeNumber(
+  record: UnknownRecord,
+  key: string,
+  label: string,
+  context?: ApiResponseContext
+): number | null {
+  const value = record[key];
+
+  if (value === null) return null;
+
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    throw invalidDto(
+      `${label}.${key} must be a non-negative number or null.`,
       record,
       context
     );
@@ -284,6 +329,107 @@ function parseProductOffer(
 }
 
 //===================================================================
+
+export function parseProductCardSummary(
+  value: unknown,
+  context?: ApiResponseContext
+): ProductCardSummary {
+  const record = requireRecord(value, 'product card summary', context);
+
+  requireFields(
+    record,
+    'product card summary',
+    {
+      id: 'string',
+      name: 'string',
+      publicSlugId: 'string',
+      article: 'string',
+      category: 'string',
+      status: 'string',
+      price: 'number',
+      foundInPharmaciesCount: 'number',
+      availableInPharmaciesCount: 'number',
+      inStock: 'boolean',
+      rating: 'number',
+      reviewsCount: 'number',
+      isFavorite: 'boolean',
+      createdAt: 'string',
+      updatedAt: 'string',
+    },
+    context
+  );
+
+  requireOptionalFields(
+    record,
+    'product card summary',
+    {
+      imageUrl: 'string',
+      manufacturer: 'string',
+    },
+    context
+  );
+
+  const minPrice = requireNullableNonNegativeNumber(
+    record,
+    'minPrice',
+    'product card summary',
+    context
+  );
+
+  const maxPrice = requireNullableNonNegativeNumber(
+    record,
+    'maxPrice',
+    'product card summary',
+    context
+  );
+
+  if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+    throw invalidDto(
+      'product card summary.minPrice must not exceed maxPrice.',
+      record,
+      context
+    );
+  }
+
+  requireSafeNonNegativeInteger(
+    record,
+    'foundInPharmaciesCount',
+    'product card summary',
+    context
+  );
+
+  requireSafeNonNegativeInteger(
+    record,
+    'availableInPharmaciesCount',
+    'product card summary',
+    context
+  );
+
+  requireSafeNonNegativeInteger(
+    record,
+    'reviewsCount',
+    'product card summary',
+    context
+  );
+
+  rejectFields(
+    record,
+    [
+      'offers',
+      'description',
+      'dosage',
+      'packageQuantity',
+      'pharmacyId',
+      'pharmacyName',
+    ],
+    'product card summary',
+    context
+  );
+
+  return checked<ProductCardSummary>(record);
+}
+
+//===================================================================
 export function parseProductDetails(
   value: unknown,
   context?: ApiResponseContext
@@ -360,7 +506,7 @@ export function parseProductsResponse(
   const record = requireRecord(value, 'products response', context);
   const pagination = requirePaginatedResponse(
     normalizePaginatedResponse(record, {
-      normalizeItem: (item) => parseProductDetails(item, context),
+      normalizeItem: (item) => parseProductCardSummary(item, context),
     }),
     { label: 'products response', ...context }
   );
@@ -373,6 +519,33 @@ export function parseProductsResponse(
   );
 
   return checked<ProductsResponse>({ ...pagination, earliestCreatedAt });
+}
+
+//===================================================================
+
+export function parseProductsWithOffersResponse(
+  value: unknown,
+  context?: ApiResponseContext
+): ProductsWithOffersResponse {
+  const record = requireRecord(value, 'products with offers response', context);
+  const pagination = requirePaginatedResponse(
+    normalizePaginatedResponse(record, {
+      normalizeItem: (item) => parseProductDetails(item, context),
+    }),
+    { label: 'products with offers response', ...context }
+  );
+
+  const earliestCreatedAt = requireNullableString(
+    record,
+    'earliestCreatedAt',
+    'products with offers response',
+    context
+  );
+
+  return checked<ProductsWithOffersResponse>({
+    ...pagination,
+    earliestCreatedAt,
+  });
 }
 
 //===================================================================
@@ -531,6 +704,72 @@ export function parseProductStockMovementsResponse(
 
 //===================================================================
 
+export function parsePharmacyCardSummary(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyCardSummary {
+  const record = requireRecord(value, 'pharmacy card summary', context);
+
+  requireFields(
+    record,
+    'pharmacy card summary',
+    {
+      id: 'string',
+      name: 'string',
+      publicSlugId: 'string',
+      rating: 'number',
+      availableProductsCount: 'number',
+      reviewsCount: 'number',
+      isFavorite: 'boolean',
+    },
+    context
+  );
+
+  requireOptionalFields(
+    record,
+    'pharmacy card summary',
+    {
+      address: 'string',
+      city: 'string',
+      phone: 'string',
+      imageUrl: 'string',
+    },
+    context
+  );
+
+  requireSafeNonNegativeInteger(
+    record,
+    'availableProductsCount',
+    'pharmacy card summary',
+    context
+  );
+
+  requireSafeNonNegativeInteger(
+    record,
+    'reviewsCount',
+    'pharmacy card summary',
+    context
+  );
+
+  rejectFields(
+    record,
+    [
+      'email',
+      'workingHours',
+      'description',
+      'updatedAt',
+      'bankTransferAvailable',
+      'bankDetails',
+    ],
+    'pharmacy card summary',
+    context
+  );
+
+  return checked<PharmacyCardSummary>(record);
+}
+
+//===================================================================
+
 function parsePublicPharmacy(
   value: unknown,
   context?: ApiResponseContext
@@ -553,6 +792,31 @@ function parsePublicPharmacy(
     context
   );
 
+  requireOptionalFields(
+    record,
+    'pharmacy',
+    {
+      address: 'string',
+      city: 'string',
+      phone: 'string',
+      email: 'string',
+      workingHours: 'string',
+      imageUrl: 'string',
+      description: 'string',
+      bankDetails: 'record',
+    },
+    context
+  );
+
+  requireSafeNonNegativeInteger(
+    record,
+    'availableProductsCount',
+    'pharmacy',
+    context
+  );
+
+  requireSafeNonNegativeInteger(record, 'reviewsCount', 'pharmacy', context);
+
   return checked<PublicPharmacy>(record);
 }
 
@@ -566,7 +830,7 @@ export function parsePharmaciesResponse(
     normalizePaginatedResponse(value, {
       normalizeItem: (item) => {
         try {
-          return parsePublicPharmacy(item, context);
+          return parsePharmacyCardSummary(item, context);
         } catch {
           return null;
         }

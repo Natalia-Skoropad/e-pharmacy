@@ -13,7 +13,6 @@ export type {
 } from './api-envelope';
 
 export { parseApiEmptyResponse, parseApiResponseData } from './api-response';
-
 export type { ApiDataParser } from './api-response';
 
 export {
@@ -35,16 +34,19 @@ export {
   parseMessageResponse,
   parseOrderManagerCommentsResponse,
   parsePharmaciesResponse,
+  parsePharmacyCardSummary,
   parsePharmacyCheckoutDetailsResponse,
   parsePharmacyDetailsResponse,
   parsePharmacyFilterOptionsResponse,
   parsePharmacyOptionsResponse,
   parsePharmacyProfileResponse,
   parsePharmacyProductMutationResponse,
+  parseProductCardSummary,
   parseProductDetails,
   parseProductDetailsResponse,
   parseProductFilterOptionsResponse,
   parseProductsResponse,
+  parseProductsWithOffersResponse,
   parseProductStockMovementsResponse,
   parseReviewMutationResponse,
   parseSendPharmacyForVerificationResponse,

@@ -66,6 +66,28 @@ export type ProductOfferResponseDto = {
   updatedAt: ISODateTimeString;
 };
 
+export type ProductCardSummaryResponseDto = {
+  id: string;
+  name: string;
+  publicSlugId: string;
+  article: string;
+  category: ProductCategory;
+  status: ProductStatus;
+  price: number;
+  minPrice: number | null;
+  maxPrice: number | null;
+  imageUrl?: string;
+  manufacturer?: string;
+  foundInPharmaciesCount: number;
+  availableInPharmaciesCount: number;
+  inStock: boolean;
+  rating: number;
+  reviewsCount: number;
+  isFavorite: boolean;
+  createdAt: ISODateTimeString;
+  updatedAt: ISODateTimeString;
+};
+
 export type ProductResponseDto = {
   id: string;
   name: string;

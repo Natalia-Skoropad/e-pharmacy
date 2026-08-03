@@ -1,6 +1,6 @@
 import type {
   PharmacyOption,
-  PublicPharmacy,
+  PharmacyCardSummary,
 } from '@e-pharmacy/types/pharmacies';
 
 import type {
@@ -9,7 +9,7 @@ import type {
 } from '@e-pharmacy/types/pharmacies';
 
 import type {
-  ProductDetails,
+  ProductCardSummary,
   ProductFilterOptionsResponse,
   ProductsResponse,
 } from '@e-pharmacy/types/products';
@@ -22,22 +22,28 @@ import {
 
 import {
   FALLBACK_PRODUCT_FILTER_OPTIONS,
+  getProductCatalogActiveFiltersCount,
   sortPharmaciesByName,
   type ProductCatalogFilters,
 } from './product-catalog';
 
-import type { PharmacyFilters } from './pharmacies-catalog';
+import {
+  getPharmacyActiveFiltersCount,
+  type PharmacyFilters,
+} from './pharmacies-catalog';
+
+import type { CatalogResourceState } from './catalog-resource-state';
 
 //===================================================================
 
 export type ProductCatalogPageData = Readonly<{
-  products: ProductDetails[];
+  products: readonly ProductCardSummary[];
   pharmacies: PharmacyOption[];
   filterOptions: ProductFilterOptionsResponse;
   total: number;
   totalPages: number;
   filters: ProductCatalogFilters;
-  catalogState: ResourceState;
+  resourceState: CatalogResourceState;
   pharmacyOptionsState: ResourceState;
   filtersState: ResourceState;
 }>;
@@ -77,7 +83,20 @@ export function createProductCatalogPageData({
     total: productsData?.total ?? 0,
     totalPages: productsData?.totalPages ?? 0,
     filters,
-    catalogState: toResourceState(productsState),
+
+    resourceState:
+      productsState.status === 'unavailable'
+        ? { status: 'unavailable' }
+        : (productsData?.total ?? 0) === 0
+          ? {
+              status: 'empty',
+              reason:
+                getProductCatalogActiveFiltersCount(filters) > 0
+                  ? 'no-matches'
+                  : 'catalog-empty',
+            }
+          : { status: 'success' },
+
     pharmacyOptionsState: toResourceState(pharmaciesState),
     filtersState: toResourceState(filterOptionsState),
   };
@@ -86,12 +105,12 @@ export function createProductCatalogPageData({
 //===================================================================
 
 export type PharmaciesCatalogPageData = Readonly<{
-  pharmacies: PublicPharmacy[];
+  pharmacies: readonly PharmacyCardSummary[];
   total: number;
   totalPages: number;
   filters: PharmacyFilters;
   cityOptions: string[];
-  catalogState: ResourceState;
+  resourceState: CatalogResourceState;
   filtersState: ResourceState;
 }>;
 
@@ -120,7 +139,18 @@ export function createPharmaciesCatalogPageData({
         ? filterState.data.cities.map((city) => city.value)
         : [],
 
-    catalogState: toResourceState(pharmaciesState),
+    resourceState:
+      pharmaciesState.status === 'unavailable'
+        ? { status: 'unavailable' }
+        : (pharmaciesData?.total ?? 0) === 0
+          ? {
+              status: 'empty',
+              reason:
+                getPharmacyActiveFiltersCount(filters) > 0
+                  ? 'no-matches'
+                  : 'catalog-empty',
+            }
+          : { status: 'success' },
     filtersState: toResourceState(filterState),
   };
 }

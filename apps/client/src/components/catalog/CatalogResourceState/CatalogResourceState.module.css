@@ -1,10 +1,12 @@
-.list {
-  display: grid;
-  gap: 20px;
-}
-
-.item {
-  min-width: 0;
+.notice {
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-warning);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .empty {
@@ -23,7 +25,7 @@
 }
 
 .emptyText {
-  max-width: 440px;
+  max-width: 480px;
   margin: 12px auto 0;
   font-size: var(--fz-16);
   line-height: var(--lh-base);
@@ -31,18 +33,7 @@
 }
 
 @media only screen and (min-width: 768px) {
-  .list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px;
-  }
-
   .empty {
     padding: 48px 32px;
-  }
-}
-
-@media only screen and (min-width: 1440px) {
-  .list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

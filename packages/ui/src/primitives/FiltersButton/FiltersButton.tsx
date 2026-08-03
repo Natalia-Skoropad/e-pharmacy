@@ -11,6 +11,7 @@ export type FiltersButtonProps = Readonly<{
   className?: string;
   controlsId?: string;
   isExpanded?: boolean;
+  disabled?: boolean;
   onClick: () => void;
 }>;
 
@@ -22,15 +23,21 @@ function FiltersButton({
   className,
   controlsId,
   isExpanded,
+  disabled = false,
   onClick,
 }: FiltersButtonProps) {
   const normalizedCount = Math.max(0, activeCount);
 
   return (
     <button
-      className={clsx(css.button, normalizedCount > 0 && css.buttonActive, className)}
+      className={clsx(
+        css.button,
+        normalizedCount > 0 && css.buttonActive,
+        className
+      )}
       type="button"
       aria-controls={controlsId}
+      disabled={disabled}
       aria-expanded={typeof isExpanded === 'boolean' ? isExpanded : undefined}
       onClick={onClick}
     >
@@ -38,7 +45,10 @@ function FiltersButton({
       <span>{label}</span>
 
       {normalizedCount > 0 ? (
-        <span className={css.badge} aria-label={`${normalizedCount} active filters`}>
+        <span
+          className={css.badge}
+          aria-label={`${normalizedCount} active filters`}
+        >
           {normalizedCount}
         </span>
       ) : null}

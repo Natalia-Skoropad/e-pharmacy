@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useMemo, useState } from 'react';
 
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { FiltersButton, ResetFiltersButton } from '@e-pharmacy/ui/primitives';
@@ -13,20 +12,18 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
-import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
-
 import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
 import type { ProductFilterOptionsResponse } from '@e-pharmacy/types/products';
-
 import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
+
 import { CATALOG_SEARCH_UPDATE_DELAY } from '@/lib/catalog/catalog-config';
 
 import {
   buildProductCatalogPath,
   getProductCatalogActiveFiltersCount,
   isProductSortFilter,
-  type ProductCatalogFilters,
   type ProductAvailabilityFilter,
+  type ProductCatalogFilters,
   type ProductCategoryFilter,
   type ProductSortFilter,
 } from '@/lib/catalog/product-catalog';
@@ -36,27 +33,28 @@ import {
   sanitizeCatalogTextSearch,
 } from '@/lib/catalog/search-sanitizers';
 
-import css from './ProductCatalogFiltersForm.module.css';
+import CatalogFiltersShell from '@/components/catalog/CatalogFiltersShell/CatalogFiltersShell';
+import { useCatalogNavigation } from '@/components/catalog/hooks/useCatalogNavigation';
+import { useCatalogSearchDraft } from '@/components/catalog/hooks/useCatalogSearchDraft';
 
 //===================================================================
 
-type PharmacySelectValue = 'all' | string;
-
-//===================================================================
-
-type ProductCatalogFiltersFormProps = {
+type ProductCatalogFiltersFormProps = Readonly<{
   filters: ProductCatalogFilters;
   pharmacies: PharmacyOption[];
   filterOptions: ProductFilterOptionsResponse;
   visibleProductsCount: number;
   productsCount: number;
-};
-
-//===================================================================
+}>;
 
 type CatalogHrefFilters = Omit<ProductCatalogFilters, 'page'> & {
   page?: number;
 };
+
+type ProductSearchDraft = Readonly<{
+  name: string;
+  article: string;
+}>;
 
 //===================================================================
 
@@ -94,30 +92,49 @@ function ProductCatalogFiltersForm({
   visibleProductsCount,
   productsCount,
 }: ProductCatalogFiltersFormProps) {
-  const router = useRouter();
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const { isPending, navigate } = useCatalogNavigation();
 
-  const [searchDraft, setSearchDraft] = useState(() => ({
-    name: filters.name,
-    article: filters.article,
-    sourceName: filters.name,
-    sourceArticle: filters.article,
-  }));
-
-  const name =
-    searchDraft.sourceName === filters.name ? searchDraft.name : filters.name;
-  const article =
-    searchDraft.sourceArticle === filters.article
-      ? searchDraft.article
-      : filters.article;
-
-  const debouncedSearchDraft = useDebouncedValue(
-    searchDraft,
-    CATALOG_SEARCH_UPDATE_DELAY
+  const committedSearch = useMemo<ProductSearchDraft>(
+    () => ({ name: filters.name, article: filters.article }),
+    [filters.article, filters.name]
   );
 
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const normalizeSearch = useCallback(
+    (draft: ProductSearchDraft): ProductSearchDraft => ({
+      name: draft.name.trim(),
+      article: draft.article.trim(),
+    }),
+    []
+  );
 
-  const activeFiltersCount = getProductCatalogActiveFiltersCount(filters);
+  const commitSearch = useCallback(
+    (search: ProductSearchDraft) => {
+      navigate(
+        buildProductsFiltersHref({ ...filters, ...search, page: 1 }, pharmacies)
+      );
+    },
+    [filters, navigate, pharmacies]
+  );
+
+  const { draft, isDraftDirty, setDraft } = useCatalogSearchDraft({
+    committed: committedSearch,
+    delay: CATALOG_SEARCH_UPDATE_DELAY,
+    normalize: normalizeSearch,
+    onCommit: commitSearch,
+  });
+
+  const effectiveFilters = useMemo(
+    () => ({
+      ...filters,
+      name: draft.name.trim(),
+      article: draft.article.trim(),
+    }),
+    [draft.article, draft.name, filters]
+  );
+
+  const activeFiltersCount =
+    getProductCatalogActiveFiltersCount(effectiveFilters);
   const hasActiveFilters = activeFiltersCount > 0;
   const resetHref = createProductsResetFiltersHref(filters, pharmacies);
 
@@ -135,7 +152,9 @@ function ProductCatalogFiltersForm({
   const productCatalogSortOptions = useMemo(
     () =>
       filterOptions.sort.filter(
-        (option): option is Readonly<{
+        (
+          option
+        ): option is Readonly<{
           value: ProductSortFilter;
           label: string;
         }> => isProductSortFilter(option.value)
@@ -143,93 +162,13 @@ function ProductCatalogFiltersForm({
     [filterOptions.sort]
   );
 
-  useEffect(() => {
-    if (
-      debouncedSearchDraft !== searchDraft ||
-      debouncedSearchDraft.sourceName !== filters.name ||
-      debouncedSearchDraft.sourceArticle !== filters.article
-    ) {
-      return;
-    }
-
-    const trimmedName = debouncedSearchDraft.name.trim();
-    const trimmedArticle = debouncedSearchDraft.article.trim();
-
-    if (trimmedName === filters.name && trimmedArticle === filters.article) {
-      return;
-    }
-
-    router.replace(
-      buildProductsFiltersHref(
-        {
-          ...filters,
-          name: trimmedName,
-          article: trimmedArticle,
-          page: 1,
-        },
-        pharmacies
-      ),
-      { scroll: false }
-    );
-  }, [debouncedSearchDraft, filters, pharmacies, router, searchDraft]);
-
-  const handleNameChange = (nextName: string) => {
-    setSearchDraft({
-      name: nextName,
-      article,
-      sourceName: filters.name,
-      sourceArticle: filters.article,
-    });
-  };
-
-  const handleArticleChange = (nextArticle: string) => {
-    setSearchDraft({
-      name,
-      article: nextArticle,
-      sourceName: filters.name,
-      sourceArticle: filters.article,
-    });
-  };
-
-  const handleResetFilters = () => {
-    setSearchDraft({
-      name: '',
-      article: '',
-      sourceName: '',
-      sourceArticle: '',
-    });
+  const resetDraft = () => {
+    setDraft({ name: '', article: '' });
   };
 
   const updateCatalog = (nextFilters: CatalogHrefFilters) => {
-    router.replace(
-      buildProductsFiltersHref({ ...nextFilters, page: 1 }, pharmacies),
-      {
-        scroll: false,
-      }
-    );
-
+    navigate(buildProductsFiltersHref({ ...nextFilters, page: 1 }, pharmacies));
     setIsFiltersOpen(false);
-  };
-
-  const handleCategoryChange = (category: ProductCategoryFilter) => {
-    updateCatalog({ ...filters, category });
-  };
-
-  const handleAvailabilityChange = (
-    availability: ProductAvailabilityFilter
-  ) => {
-    updateCatalog({ ...filters, availability });
-  };
-
-  const handlePharmacyChange = (pharmacyId: PharmacySelectValue) => {
-    updateCatalog({
-      ...filters,
-      pharmacyId: pharmacyId === 'all' ? undefined : pharmacyId,
-    });
-  };
-
-  const handleSortChange = (sort: ProductSortFilter) => {
-    updateCatalog({ ...filters, sort });
   };
 
   const renderFiltersControls = (idSuffix: string) => (
@@ -240,7 +179,10 @@ function ProductCatalogFiltersForm({
         value={filters.category}
         options={filterOptions.categories}
         isActive={filters.category !== 'all'}
-        onChange={handleCategoryChange}
+        disabled={isPending}
+        onChange={(category: ProductCategoryFilter) =>
+          updateCatalog({ ...filters, category })
+        }
       />
 
       <SelectField
@@ -249,7 +191,10 @@ function ProductCatalogFiltersForm({
         value={filters.availability}
         options={filterOptions.availability}
         isActive={filters.availability !== 'all'}
-        onChange={handleAvailabilityChange}
+        disabled={isPending}
+        onChange={(availability: ProductAvailabilityFilter) =>
+          updateCatalog({ ...filters, availability })
+        }
       />
 
       <SearchableSelect
@@ -260,105 +205,109 @@ function ProductCatalogFiltersForm({
         placeholder="All pharmacies"
         emptyMessage="No pharmacies found"
         isActive={Boolean(filters.pharmacyId)}
+        disabled={isPending}
         maxLength={USER_SEARCH_MAX_LENGTH}
         sanitizeQuery={sanitizeCatalogTextSearch}
-        onChange={handlePharmacyChange}
+        onChange={(pharmacyId: string) =>
+          updateCatalog({
+            ...filters,
+            pharmacyId: pharmacyId === 'all' ? undefined : pharmacyId,
+          })
+        }
       />
     </>
   );
 
+  const sortControl = (id: string) => (
+    <SelectField
+      id={id}
+      label="Sort by"
+      value={filters.sort}
+      options={productCatalogSortOptions}
+      isActive={filters.sort !== 'newest'}
+      disabled={isPending}
+      onChange={(sort: ProductSortFilter) =>
+        updateCatalog({ ...filters, sort })
+      }
+    />
+  );
+
   return (
-    <>
-      <div className={css.searchCard}>
-        <div className={css.searchGrid}>
+    <CatalogFiltersShell
+      headingId="product-catalog-filters-title"
+      heading="Product catalog filters"
+      layout="wide"
+      isPending={isPending || isDraftDirty}
+      searchFields={
+        <>
           <SearchInput
             id="catalog-name-search"
             label="Search by name"
-            value={name}
+            value={draft.name}
             placeholder="Product name"
-            isActive={Boolean(filters.name)}
+            isActive={Boolean(draft.name.trim())}
             maxLength={USER_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogTextSearch}
-            onChange={handleNameChange}
+            onChange={(name) => setDraft({ ...draft, name })}
           />
 
           <SearchInput
             id="catalog-article-search"
             label="Search by article"
-            value={article}
+            value={draft.article}
             placeholder="Article"
-            isActive={Boolean(filters.article)}
+            isActive={Boolean(draft.article.trim())}
             maxLength={USER_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogArticleSearch}
-            onChange={handleArticleChange}
+            onChange={(article) => setDraft({ ...draft, article })}
           />
-
-          <div className={css.desktopFilters}>
-            {renderFiltersControls('desktop')}
-          </div>
-
-          <div className={css.desktopResetSlot}>
-            <ResetFiltersButton
-              href={resetHref}
-              isVisible={hasActiveFilters}
-              onClick={handleResetFilters}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className={css.catalogToolbar}>
+        </>
+      }
+      desktopFilterFields={renderFiltersControls('desktop')}
+      resetAction={
+        <ResetFiltersButton
+          href={resetHref}
+          isVisible={hasActiveFilters}
+          disabled={isPending}
+          onClick={resetDraft}
+        />
+      }
+      countLabel={
         <CountLabel
           shown={visibleProductsCount}
           total={productsCount}
           label="products"
         />
-
+      }
+      filterButton={
         <FiltersButton
-          className={css.filterButton}
           activeCount={activeFiltersCount}
           controlsId="catalog-filters-panel"
           isExpanded={isFiltersOpen}
+          disabled={isPending}
           onClick={() => setIsFiltersOpen(true)}
         />
-
-        <div className={css.desktopSort}>
-          <SelectField
-            id="catalog-sort-desktop"
-            label="Sort by"
-            value={filters.sort}
-            options={productCatalogSortOptions}
-            isActive={filters.sort !== 'newest'}
-            onChange={handleSortChange}
-          />
-        </div>
-      </div>
-
-      <FilterDrawer
-        id="catalog-filters-panel"
-        eyebrow="Catalog"
-        title="Filters and sorting"
-        isOpen={isFiltersOpen}
-        hasActiveFilters={hasActiveFilters}
-        resetHref={resetHref}
-        onClose={() => setIsFiltersOpen(false)}
-        onReset={() => {
-          handleResetFilters();
-          setIsFiltersOpen(false);
-        }}
-      >
-        {renderFiltersControls('mobile')}
-
-        <SelectField
-          id="catalog-sort-mobile"
-          label="Sort by"
-          value={filters.sort}
-          options={productCatalogSortOptions}
-          isActive={filters.sort !== 'newest'}
-          onChange={handleSortChange}
-        />
-      </FilterDrawer>
-    </>
+      }
+      desktopSort={sortControl('catalog-sort-desktop')}
+      drawer={
+        <FilterDrawer
+          id="catalog-filters-panel"
+          eyebrow="Catalog"
+          title="Filters and sorting"
+          isOpen={isFiltersOpen}
+          hasActiveFilters={hasActiveFilters}
+          resetHref={resetHref}
+          onClose={() => setIsFiltersOpen(false)}
+          onReset={() => {
+            resetDraft();
+            setIsFiltersOpen(false);
+          }}
+        >
+          {renderFiltersControls('mobile')}
+          {sortControl('catalog-sort-mobile')}
+        </FilterDrawer>
+      }
+    />
   );
 }
 

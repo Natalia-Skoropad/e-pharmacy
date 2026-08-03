@@ -7,6 +7,14 @@ import {
 
 //===================================================================
 
+export type ProductCatalogSeoContent = Readonly<{
+  intro: string;
+  comparison: string;
+  ordering: string;
+}>;
+
+//===================================================================
+
 export function getProductCatalogTitle(
   filters: ProductCatalogFilters,
   context: ProductCatalogSeoContext = {}
@@ -41,40 +49,42 @@ export function getProductCatalogDescription(
       : 'products';
 
   if (filters.category !== 'all' && context.pharmacyName) {
-    return `Explore ${categoryText} from ${context.pharmacyName}, compare availability, ratings, and details, then choose the right online pharmacy offer with confidence.`;
+    return `Explore ${categoryText} from ${context.pharmacyName}, compare availability, ratings, and details, then prepare an order request with the selected pharmacy.`;
   }
 
   if (filters.category !== 'all') {
-    return `Explore ${categoryText}, compare availability in active pharmacies, review ratings and product details, and choose a trusted online pharmacy offer.`;
+    return `Explore ${categoryText}, compare availability in active pharmacies, review ratings and product details, and prepare an order request with a selected pharmacy.`;
   }
 
   if (context.pharmacyName) {
-    return `Browse products from ${context.pharmacyName}, compare prices, availability, ratings, and product details before choosing a trusted online pharmacy offer.`;
+    return `Browse products from ${context.pharmacyName}, compare prices, availability, ratings, and product details before preparing an order request.`;
   }
 
-  return 'Search products by name or article, filter products by category and pharmacy, compare ratings and availability, and choose trusted online pharmacy offers.';
+  return 'Search products by name or article, filter by category and pharmacy, compare ratings and availability, and prepare an order request with a selected pharmacy.';
 }
 
 //===================================================================
 
-export function getProductCatalogSeoTextParts(
+export function getProductCatalogSeoContent(
   filters: ProductCatalogFilters,
   context: ProductCatalogSeoContext = {}
-): string[] {
+): ProductCatalogSeoContent {
   const categoryLabel = getProductCategoryLabel(filters, context.categoryLabel);
+
   const categoryText =
     filters.category !== 'all' && categoryLabel
       ? categoryLabel.toLowerCase()
       : 'products';
-  const pharmacyText = context.pharmacyName ?? 'active online pharmacies';
 
-  return [
-    'Find the right',
-    categoryText,
-    'without opening a dozen tabs. In the E-PHARMACY catalog, you can compare products from',
-    pharmacyText,
-    'check availability, review ratings, and move to the product details when something looks promising. Use the filters to narrow the list by category or pharmacy, search by name or article, and choose the offer that fits your needs faster. Calm, clear, and pharmacy-shopping friendly — almost like a tiny assistant in a white coat. Perfect for quick comparison before adding products to your cart.',
-  ];
+  const pharmacyText = context.pharmacyName ?? 'active pharmacies';
+
+  return {
+    intro: `Browse ${categoryText} available from ${pharmacyText}.`,
+    comparison:
+      'Compare pharmacy prices, current availability, ratings, and product information before opening a product page.',
+    ordering:
+      'Use search and filters to narrow the catalog, then choose a pharmacy offer and prepare an order request for pharmacy confirmation.',
+  };
 }
 
 //===================================================================

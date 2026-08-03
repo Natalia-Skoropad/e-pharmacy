@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { redirect } from 'next/navigation';
+
 import {
   PUBLIC_API_CACHE_OPTIONS,
   resolveServerDataState,
@@ -11,6 +13,8 @@ import {
   getProducts,
 } from '@/lib/api/server';
 
+import { getCatalogRedirectPage } from './catalog-resource-state';
+
 import {
   createProductCatalogPageData,
   type ProductCatalogPageData,
@@ -18,6 +22,7 @@ import {
 
 import {
   buildProductCatalogApiParams,
+  buildProductCatalogPath,
   type ProductCatalogFilters,
 } from './product-catalog';
 
@@ -39,10 +44,27 @@ export async function loadProductCatalogPageData(
       resolveServerDataState(getProductFilters({}, PUBLIC_API_CACHE_OPTIONS)),
     ]);
 
-  return createProductCatalogPageData({
+  const pageData = createProductCatalogPageData({
     filters,
     productsState,
     pharmaciesState,
     filterOptionsState,
   });
+
+  const redirectPage = getCatalogRedirectPage(
+    filters.page,
+    pageData.totalPages,
+    pageData.resourceState
+  );
+
+  if (redirectPage !== null) {
+    redirect(
+      buildProductCatalogPath(
+        { ...filters, page: redirectPage },
+        pageData.pharmacies
+      )
+    );
+  }
+
+  return pageData;
 }

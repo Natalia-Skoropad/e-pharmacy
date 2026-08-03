@@ -110,6 +110,20 @@ export type PharmacyFilterOptionsResponseDto = {
 
 //===============================================================
 
+export type PharmacyCardSummaryResponseDto = {
+  id: string;
+  name: string;
+  publicSlugId: string;
+  address?: string;
+  city?: string;
+  phone?: string;
+  rating: number;
+  imageUrl?: string;
+  availableProductsCount: number;
+  reviewsCount: number;
+  isFavorite: boolean;
+};
+
 export type PublicPharmacyResponseDto = {
   id: string;
   name: string;

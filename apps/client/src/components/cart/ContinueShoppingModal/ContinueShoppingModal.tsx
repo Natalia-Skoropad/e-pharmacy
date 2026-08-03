@@ -27,7 +27,7 @@ import { formatStockLabel } from '@e-pharmacy/utils/numbers';
 import type { Cart } from '@e-pharmacy/types/cart';
 
 import type {
-  ProductDetails,
+  ProductCardSummary,
   ProductCategory,
 } from '@e-pharmacy/types/products';
 
@@ -54,15 +54,8 @@ const PRODUCTS_LIMIT = 150;
 
 //===================================================================
 
-function getProductOfferPrice(
-  product: ProductDetails,
-  pharmacyId: string
-): number {
-  const pharmacyOffer = product.offers?.find(
-    (offer) => offer.pharmacyId === pharmacyId
-  );
-
-  return pharmacyOffer?.price ?? product.price;
+function getProductOfferPrice(product: ProductCardSummary): number {
+  return product.minPrice ?? product.price;
 }
 
 //===================================================================
@@ -85,7 +78,7 @@ function ContinueShoppingModal({
     readonly LabeledOption<ProductCategory>[]
   >([]);
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
-  const [products, setProducts] = useState<ProductDetails[]>([]);
+  const [products, setProducts] = useState<ProductCardSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [orderLimitMessage, setOrderLimitMessage] = useState('');
@@ -336,7 +329,7 @@ function ContinueShoppingModal({
                     </div>
 
                     <p className={css.productPrice}>
-                      {formatMoney(getProductOfferPrice(product, pharmacyId)) ??
+                      {formatMoney(getProductOfferPrice(product)) ??
                         '—'}
                     </p>
 

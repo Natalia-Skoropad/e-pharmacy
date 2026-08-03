@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 
@@ -12,6 +12,7 @@ export type ResetFiltersButtonProps = {
   label?: ReactNode;
   className?: string;
   isVisible?: boolean;
+  disabled?: boolean;
   onClick?: () => void;
 };
 
@@ -23,15 +24,26 @@ function ResetFiltersButton({
   label = 'Reset filters',
   className,
   isVisible = true,
+  disabled = false,
   onClick,
 }: ResetFiltersButtonProps) {
+  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (disabled) {
+      event.preventDefault();
+      return;
+    }
+
+    onClick?.();
+  };
+
   return (
     <Link
       className={clsx(css.button, !isVisible && css.hidden, className)}
       href={href}
       aria-hidden={!isVisible}
-      tabIndex={isVisible ? undefined : -1}
-      onClick={onClick}
+      aria-disabled={disabled || undefined}
+      tabIndex={isVisible && !disabled ? undefined : -1}
+      onClick={handleClick}
     >
       {children ?? label}
     </Link>

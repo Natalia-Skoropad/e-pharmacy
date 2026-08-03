@@ -22,14 +22,17 @@ const sourceRoots = {
   hooks: path.join(repositoryRoot, 'packages/hooks/src'),
 };
 
-const debounceConsumers = [
-  'apps/client/src/components/product-catalog/ProductCatalogFiltersForm/ProductCatalogFiltersForm.tsx',
-  'apps/client/src/components/pharmacies/PharmaciesCatalogFiltersForm/PharmaciesCatalogFiltersForm.tsx',
+const sharedDebounceConsumers = [
   'apps/pharmacy/src/components/orders/OrdersPageContent/OrdersPageContent.tsx',
   'apps/pharmacy/src/components/clients/ClientsPageContent/ClientsPageContent.tsx',
   'apps/pharmacy/src/components/product-requests/ProductRequestsPageContent/ProductRequestsPageContent.tsx',
   'apps/pharmacy/src/components/products/OwnProductsPageContent/OwnProductsPageContent.tsx',
   'apps/pharmacy/src/components/all-products/AllProductsPageContent/AllProductsPageContent.tsx',
+];
+
+const catalogDebounceConsumers = [
+  'apps/client/src/components/product-catalog/ProductCatalogFiltersForm/ProductCatalogFiltersForm.tsx',
+  'apps/client/src/components/pharmacies/PharmaciesCatalogFiltersForm/PharmaciesCatalogFiltersForm.tsx',
 ];
 
 const mutationContracts = [
@@ -266,7 +269,7 @@ for (const { file, source } of allSourceFiles) {
   }
 }
 
-for (const relativePath of debounceConsumers) {
+for (const relativePath of sharedDebounceConsumers) {
   const source = await readRepositoryFile(relativePath);
 
   if (
@@ -275,6 +278,56 @@ for (const relativePath of debounceConsumers) {
   ) {
     failures.push(
       `${relativePath} must use the shared useDebouncedValue hook.`
+    );
+  }
+}
+
+for (const relativePath of catalogDebounceConsumers) {
+  const source = await readRepositoryFile(relativePath);
+
+  if (
+    !source.includes(
+      "from '@/components/catalog/hooks/useCatalogSearchDraft'"
+    ) ||
+    !source.includes('useCatalogSearchDraft(')
+  ) {
+    failures.push(
+      `${relativePath} must use the shared catalog search-draft lifecycle.`
+    );
+  }
+}
+
+const catalogSearchDraftHook = await readRepositoryFile(
+  'apps/client/src/components/catalog/hooks/useCatalogSearchDraft.ts'
+);
+
+for (const contract of [
+  'createCatalogSearchScheduler',
+  'scheduler.schedule(',
+  'scheduler.cancel()',
+  'hasCommittedCatalogSearchChanged',
+]) {
+  if (!catalogSearchDraftHook.includes(contract)) {
+    failures.push(
+      `Catalog search draft lifecycle is missing cancellation contract: ${contract}.`
+    );
+  }
+}
+
+const catalogSearchSchedulerTest = await readRepositoryFile(
+  'apps/client/src/lib/catalog/catalog-search-scheduler.test.ts'
+);
+
+for (const requiredBehavior of [
+  'rapid typing commits only the latest draft',
+  'reset or unmount cancels a stale pending search',
+  'a later search can be scheduled after cancellation',
+  'detects committed route changes from Back or server navigation',
+  'cleanup remains idempotent under Strict Mode effect replay',
+]) {
+  if (!catalogSearchSchedulerTest.includes(requiredBehavior)) {
+    failures.push(
+      `Catalog search scheduler behavior test is missing: ${requiredBehavior}.`
     );
   }
 }

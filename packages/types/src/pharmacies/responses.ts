@@ -1,5 +1,6 @@
 import type { ApiPaginationResponse } from '../api';
 import type { EntityId } from '../primitives';
+import type { PharmacyCardSummary } from './pharmacy-card-summary';
 import type { PharmacyProfile } from './pharmacy-profile';
 
 import type {
@@ -30,7 +31,7 @@ export type PharmaciesQueryParams = Readonly<{
 
 //=============================================================================
 
-export type PharmaciesResponse = ApiPaginationResponse<PublicPharmacy>;
+export type PharmaciesResponse = ApiPaginationResponse<PharmacyCardSummary>;
 export type PharmacyOption = Readonly<{ id: EntityId; name: string }>;
 
 export type PharmacyOptionsResponse = Readonly<{

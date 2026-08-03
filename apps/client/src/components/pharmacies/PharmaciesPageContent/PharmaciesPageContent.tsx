@@ -1,14 +1,12 @@
-import { Container } from '@e-pharmacy/ui/layout';
-import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
-import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 import { LinkPagination } from '@e-pharmacy/ui/navigation';
+import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 
 import type { ResourceState } from '@/lib/api/resource-state';
+import type { CatalogResourceState } from '@/lib/catalog/catalog-resource-state';
 
 import {
   buildPharmacyPath,
-  getPharmacyDescription,
-  getPharmaciesSeoTextParts,
+  getPharmaciesSeoContent,
   getPharmacyTitle,
   shouldShowPharmaciesSeoText,
   type PharmacyFilters,
@@ -16,22 +14,23 @@ import {
 
 import { ROUTES } from '@/lib/routes';
 
-import PharmaciesList from '@/components/pharmacies/PharmaciesList';
-import { PharmaciesCatalogFiltersForm } from '@/components/pharmacies/PharmaciesCatalogFiltersForm';
-
-import css from './PharmaciesPageContent.module.css';
+import CatalogPageShell from '@/components/catalog/CatalogPageShell/CatalogPageShell';
+import CatalogResourceStateView from '@/components/catalog/CatalogResourceState/CatalogResourceState';
+import CatalogSeoCard from '@/components/catalog/CatalogSeoCard/CatalogSeoCard';
+import PharmaciesCatalogFiltersForm from '@/components/pharmacies/PharmaciesCatalogFiltersForm/PharmaciesCatalogFiltersForm';
+import PharmaciesList from '@/components/pharmacies/PharmaciesList/PharmaciesList';
 
 //===================================================================
 
-type PharmaciesPageContentProps = {
-  pharmacies: PublicPharmacy[];
+export type PharmaciesPageContentProps = Readonly<{
+  pharmacies: readonly PharmacyCardSummary[];
   total: number;
   totalPages: number;
   filters: PharmacyFilters;
   cityOptions: string[];
-  catalogState: ResourceState;
+  resourceState: CatalogResourceState;
   filtersState: ResourceState;
-};
+}>;
 
 //===================================================================
 
@@ -47,86 +46,81 @@ function PharmaciesPageContent({
   totalPages,
   filters,
   cityOptions,
-  catalogState,
+  resourceState,
   filtersState,
 }: PharmaciesPageContentProps) {
   const pageTitle = getPharmacyTitle(filters);
-  const pageDescription = getPharmacyDescription(filters);
   const showSeoText = total > 0 && shouldShowPharmaciesSeoText(filters);
-  const seoTextParts = getPharmaciesSeoTextParts(filters);
+  const seoContent = getPharmaciesSeoContent(filters);
+  const emptyIsFiltered =
+    resourceState.status === 'empty' && resourceState.reason === 'no-matches';
 
   return (
-    <main className={css.page}>
-      <section
-        className={css.pharmaciesSection}
-        aria-labelledby="pharmacies-title"
-      >
-        <Container>
-          <Breadcrumbs
-            items={[
-              { label: 'Home', href: ROUTES.HOME },
-              { label: 'Pharmacies', href: ROUTES.PHARMACIES },
-              ...(filters.city ? [{ label: filters.city }] : []),
-            ]}
-            includeStructuredData={showSeoText}
-          />
-
-          <div className={css.sectionHeader}>
-            <h1 className={css.sectionTitle} id="pharmacies-title">
-              {pageTitle}
-            </h1>
+    <CatalogPageShell
+      title={pageTitle}
+      titleId="pharmacies-title"
+      breadcrumbs={[
+        { label: 'Home', href: ROUTES.HOME },
+        { label: 'Pharmacies', href: ROUTES.PHARMACIES },
+        ...(filters.city ? [{ label: filters.city }] : []),
+      ]}
+      filters={
+        <PharmaciesCatalogFiltersForm
+          filters={filters}
+          cityOptions={cityOptions}
+          visiblePharmaciesCount={pharmacies.length}
+          pharmaciesCount={total}
+        />
+      }
+      notices={
+        filtersState.status === 'unavailable' ? (
+          <div role="status">
+            City filters are temporarily unavailable. The pharmacy list is still
+            shown without city normalization.
           </div>
-
-          <PharmaciesCatalogFiltersForm
-            filters={filters}
-            cityOptions={cityOptions}
-            visiblePharmaciesCount={pharmacies.length}
-            pharmaciesCount={total}
-          />
-
-          {catalogState.status === 'unavailable' ? (
-            <div className={css.notice} role="status">
-              Pharmacies are temporarily unavailable. Please try again later.
-            </div>
-          ) : null}
-
-          {filtersState.status === 'unavailable' ? (
-            <div className={css.notice} role="status">
-              City filters are temporarily unavailable. The pharmacy list is
-              still shown without city normalization.
-            </div>
-          ) : null}
-
+        ) : undefined
+      }
+      results={
+        <CatalogResourceStateView
+          state={resourceState}
+          emptyTitle={
+            emptyIsFiltered
+              ? 'No matching pharmacies'
+              : 'No pharmacies available'
+          }
+          emptyMessage={
+            emptyIsFiltered
+              ? 'No pharmacies match the selected city or search. Try changing or resetting the filters.'
+              : 'No pharmacies are available in the catalog yet.'
+          }
+          unavailableMessage="Pharmacies are temporarily unavailable. Please try again later."
+        >
           <PharmaciesList pharmacies={pharmacies} />
-
+        </CatalogResourceStateView>
+      }
+      pagination={
+        resourceState.status === 'success' && totalPages > 1 ? (
           <LinkPagination
             currentPage={filters.page}
             totalPages={totalPages}
             getPageHref={(page) => buildPharmacyPageHref(filters, page)}
             ariaLabel="Pharmacies pagination"
           />
-
-          {showSeoText ? (
-            <section
-              className={css.seoCard}
-              aria-labelledby="pharmacies-seo-title"
-            >
-              <h2 className={css.seoTitle} id="pharmacies-seo-title">
-                Choose a trusted pharmacy before you order
-              </h2>
-
-              <p className={css.sectionText}>
-                {seoTextParts[0]}{' '}
-                <strong className={css.seoAccent}>{seoTextParts[1]}</strong>{' '}
-                {seoTextParts[2]}
-              </p>
-
-              <p className="visually-hidden">{pageDescription}</p>
-            </section>
-          ) : null}
-        </Container>
-      </section>
-    </main>
+        ) : undefined
+      }
+      seo={
+        showSeoText ? (
+          <CatalogSeoCard
+            title="Choose a pharmacy before preparing an order request"
+            titleId="pharmacies-seo-title"
+          >
+            <p>{seoContent.intro}</p>
+            <p>{seoContent.comparison}</p>
+            <p>{seoContent.ordering}</p>
+          </CatalogSeoCard>
+        ) : undefined
+      }
+    />
   );
 }
 

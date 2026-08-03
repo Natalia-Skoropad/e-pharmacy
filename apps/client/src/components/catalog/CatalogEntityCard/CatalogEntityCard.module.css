@@ -1,0 +1,120 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.imageWrap {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  min-height: 210px;
+  overflow: hidden;
+  background-color: var(--color-accent-light);
+  contain: layout paint;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+}
+
+.imageContain {
+  padding: 16px;
+  object-fit: contain;
+}
+
+.imageCover {
+  object-fit: cover;
+}
+
+.imageFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 210px;
+  color: var(--color-accent);
+}
+
+.favoriteWrap {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.metaRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.metaStart {
+  min-width: 0;
+}
+
+.metaEnd {
+  flex-shrink: 0;
+  max-width: 155px;
+  text-align: right;
+}
+
+.title {
+  font-size: var(--fz-20);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.summaryList {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.summaryList > div {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+}
+
+.summaryList dt {
+  color: var(--color-text-muted);
+}
+
+.summaryList dd {
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+  text-align: right;
+}
+
+.footer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+@media only screen and (min-width: 768px) {
+  .content {
+    padding: 24px;
+  }
+}

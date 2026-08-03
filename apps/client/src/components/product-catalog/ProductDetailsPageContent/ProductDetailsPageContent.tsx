@@ -63,6 +63,12 @@ import {
 } from '@/lib/catalog/search-sanitizers';
 
 import { createProductReview, getProductDetails } from '@/lib/api/browser';
+
+import {
+  getFavoriteActionCopy,
+  shouldRenderFavoriteControl,
+} from '@/lib/favorites/favorite-presentation';
+
 import { useCart } from '@/providers/CartProvider';
 
 import {
@@ -184,12 +190,15 @@ function ProductDetailsPageContent({
   const [pharmacyAddressQuery, setPharmacyAddressQuery] = useState('');
   const [cityFilter, setCityFilter] = useState('all');
   const [offerSort, setOfferSort] = useState<ProductOfferSort>('newest');
+
   const [visibleOffersCount, setVisibleOffersCount] = useState(
     PRODUCT_OFFERS_PER_PAGE
   );
+
   const [isOffersLoadingMore, setIsOffersLoadingMore] = useState(false);
   const offersLoadMoreTimerRef = useRef<number | null>(null);
   const [areOfferFiltersOpen, setAreOfferFiltersOpen] = useState(false);
+
   const [visibleReviewsCount, setVisibleReviewsCount] = useState(
     DEFAULT_VISIBLE_REVIEWS_COUNT
   );
@@ -220,9 +229,11 @@ function ProductDetailsPageContent({
   const priceRange = getNumericRange(
     availableOffers.map((offer) => offer.price)
   );
+
   const priceRangeLabel = priceRange
     ? (formatMoneyRange(priceRange) ?? '—')
     : 'No pharmacy prices yet';
+
   const longDescription = getLongDescription(productDetails);
 
   const cityOptions = useMemo(
@@ -366,14 +377,7 @@ function ProductDetailsPageContent({
       entityType: 'product',
       id: productDetails.id,
       notifier: toast,
-      loginMessage: 'Please log in to add products to favorites.',
-      unavailableMessage:
-        'We could not verify your session. Please try again shortly.',
-      clientAccountRequiredMessage:
-        'Favorites are available only for active client accounts.',
-      addedMessage: 'Product was added to favorites.',
-      removedMessage: 'Product was removed from favorites.',
-      errorMessage: 'Could not update favorites.',
+      ...getFavoriteActionCopy('product'),
     });
 
   const {
@@ -633,8 +637,11 @@ function ProductDetailsPageContent({
                     {PRODUCT_CATEGORY_LABELS[productDetails.category]}
                   </p>
 
-                  {!isBootstrapping &&
-                  (!isAuthenticated || canUseClientFeatures) ? (
+                  {shouldRenderFavoriteControl({
+                    isAuthenticated,
+                    isBootstrapping,
+                    canUseClientFeatures,
+                  }) ? (
                     <FavoriteToggleButton
                       isActive={isFavorite}
                       disabled={isFavoriteLoading}

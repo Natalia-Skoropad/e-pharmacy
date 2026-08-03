@@ -14,6 +14,7 @@ import type {
   CompletePharmacyBankDetails,
   EditablePharmacyBankDetails,
   PharmacyEntity,
+  PharmacyCardSummaryResponseDto,
   PharmacyFilterOptionsResponseDto,
   PharmacyPendingModeration,
   PublicPharmacyResponseDto,
@@ -126,6 +127,34 @@ async function getAvailableProductsCountMap(pharmacyIds: Types.ObjectId[]) {
     { $group: { _id: '$pharmacyId', count: { $sum: 1 } } },
   ]);
   return new Map(rows.map((row) => [String(row._id), row.count]));
+}
+
+//===============================================================
+
+function serializePharmacyCardSummary(
+  pharmacy: PharmacyDocument,
+  availableProductsCount: number,
+  favoriteIds: Set<string>
+): PharmacyCardSummaryResponseDto {
+  const pharmacyId = String(pharmacy._id);
+
+  return {
+    id: pharmacyId,
+    name: pharmacy.name,
+    publicSlugId: buildPublicEntitySlugId(
+      'pharmacy',
+      pharmacy.name,
+      pharmacyId
+    ),
+    ...(pharmacy.address ? { address: pharmacy.address } : {}),
+    ...(pharmacy.city ? { city: pharmacy.city } : {}),
+    ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
+    rating: pharmacy.rating ?? 0,
+    ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+    availableProductsCount,
+    reviewsCount: pharmacy.reviewsCount ?? 0,
+    isFavorite: favoriteIds.has(pharmacyId),
+  };
 }
 
 //===============================================================
@@ -283,7 +312,7 @@ export async function getFavoritePharmaciesService(
 
   return {
     items: pharmacies.map((pharmacy) =>
-      serializePublicPharmacy(
+      serializePharmacyCardSummary(
         pharmacy,
         countMap.get(String(pharmacy._id)) ?? 0,
         favoriteIds
@@ -355,7 +384,7 @@ export async function getPharmaciesService(
 
   return {
     items: pharmacies.map((pharmacy) =>
-      serializePublicPharmacy(
+      serializePharmacyCardSummary(
         pharmacy,
         countMap.get(String(pharmacy._id)) ?? 0,
         favoriteIds

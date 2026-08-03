@@ -35,6 +35,12 @@ import {
 } from '@/hooks';
 
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
+
+import {
+  getFavoriteActionCopy,
+  shouldRenderFavoriteControl,
+} from '@/lib/favorites/favorite-presentation';
+
 import { ROUTES } from '@/lib/routes';
 
 import {
@@ -148,21 +154,28 @@ function PharmacyDetailsPageContent({
     useClientAuthCapabilities();
 
   const [activeTab, setActiveTab] = useState<PharmacyTab>('details');
+
   const [visibleReviewsCount, setVisibleReviewsCount] = useState(
     DEFAULT_VISIBLE_REVIEWS_COUNT
   );
+
   const [bankDetails, setBankDetails] = useState<
     PublicPaymentBankDetails | null | undefined
   >(pharmacy.bankDetails);
+
   const bankDetailsRequestStatusRef = useRef<'idle' | 'loading' | 'done'>(
     pharmacy.bankDetails ? 'done' : 'idle'
   );
+
   const [isBankDetailsLoading, setIsBankDetailsLoading] = useState(false);
+
   const [areBankDetailsUnavailable, setAreBankDetailsUnavailable] =
     useState(false);
+
   const toast = useToast();
 
   const canShowBankDetailsTab = canUseClientFeatures;
+
   const currentTab: PharmacyTab =
     activeTab === 'payment' && !canShowBankDetailsTab ? 'details' : activeTab;
 
@@ -218,12 +231,14 @@ function PharmacyDetailsPageContent({
           setBankDetails(data.pharmacy.bankDetails ?? null);
         }
       })
+
       .catch(() => {
         if (controller.signal.aborted) return;
 
         setBankDetails(null);
         setAreBankDetailsUnavailable(true);
       })
+
       .finally(() => {
         if (controller.signal.aborted) return;
 
@@ -241,14 +256,7 @@ function PharmacyDetailsPageContent({
       entityType: 'pharmacy',
       id: pharmacy.id,
       notifier: toast,
-      loginMessage: 'Please log in to add pharmacies to favorites.',
-      unavailableMessage:
-        'We could not verify your session. Please try again shortly.',
-      clientAccountRequiredMessage:
-        'Favorites are available only for active client accounts.',
-      addedMessage: 'Pharmacy was added to favorites.',
-      removedMessage: 'Pharmacy was removed from favorites.',
-      errorMessage: 'Could not update pharmacy favorites.',
+      ...getFavoriteActionCopy('pharmacy'),
     });
 
   const {
@@ -361,7 +369,11 @@ function PharmacyDetailsPageContent({
                     {pharmacy.city ?? 'Pharmacy pharmacy'}
                   </p>
 
-                  {!isBootstrapping && (!isAuthenticated || canUseClientFeatures) ? (
+                  {shouldRenderFavoriteControl({
+                    isAuthenticated,
+                    isBootstrapping,
+                    canUseClientFeatures,
+                  }) ? (
                     <FavoriteToggleButton
                       isActive={isFavorite}
                       disabled={isFavoriteLoading}

@@ -1,20 +1,17 @@
-import { Container } from '@e-pharmacy/ui/layout';
-import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import { LinkPagination } from '@e-pharmacy/ui/navigation';
-
 import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
 
 import type {
-  ProductDetails,
+  ProductCardSummary,
   ProductFilterOptionsResponse,
 } from '@e-pharmacy/types/products';
 
 import type { ResourceState } from '@/lib/api/resource-state';
+import type { CatalogResourceState } from '@/lib/catalog/catalog-resource-state';
 
 import {
   buildProductCatalogPath,
-  getProductCatalogDescription,
-  getProductCatalogSeoTextParts,
+  getProductCatalogSeoContent,
   getProductCatalogTitle,
   shouldShowProductCatalogSeoText,
   type ProductCatalogFilters,
@@ -23,24 +20,25 @@ import {
 
 import { ROUTES } from '@/lib/routes';
 
-import ProductsList from '@/components/product-catalog/ProductsList';
-import ProductCatalogFiltersForm from '@/components/product-catalog/ProductCatalogFiltersForm';
-
-import css from './ProductCatalogPageContent.module.css';
+import CatalogPageShell from '@/components/catalog/CatalogPageShell/CatalogPageShell';
+import CatalogResourceStateView from '@/components/catalog/CatalogResourceState/CatalogResourceState';
+import CatalogSeoCard from '@/components/catalog/CatalogSeoCard/CatalogSeoCard';
+import ProductCatalogFiltersForm from '@/components/product-catalog/ProductCatalogFiltersForm/ProductCatalogFiltersForm';
+import ProductsList from '@/components/product-catalog/ProductsList/ProductsList';
 
 //===================================================================
 
-type ProductCatalogPageContentProps = {
-  products: ProductDetails[];
+export type ProductCatalogPageContentProps = Readonly<{
+  products: readonly ProductCardSummary[];
   pharmacies: PharmacyOption[];
   filterOptions: ProductFilterOptionsResponse;
   total: number;
   totalPages: number;
   filters: ProductCatalogFilters;
-  catalogState: ResourceState;
+  resourceState: CatalogResourceState;
   pharmacyOptionsState: ResourceState;
   filtersState: ResourceState;
-};
+}>;
 
 //===================================================================
 
@@ -81,67 +79,69 @@ function ProductCatalogPageContent({
   total,
   totalPages,
   filters,
-  catalogState,
+  resourceState,
   pharmacyOptionsState,
   filtersState,
 }: ProductCatalogPageContentProps) {
   const seoContext = createSeoContext(filters, pharmacies, filterOptions);
   const pageTitle = getProductCatalogTitle(filters, seoContext);
-  const pageDescription = getProductCatalogDescription(filters, seoContext);
   const showSeoText = total > 0 && shouldShowProductCatalogSeoText(filters);
-  const seoTextParts = getProductCatalogSeoTextParts(filters, seoContext);
+  const seoContent = getProductCatalogSeoContent(filters, seoContext);
+
+  const emptyIsFiltered =
+    resourceState.status === 'empty' && resourceState.reason === 'no-matches';
+
+  const notices =
+    pharmacyOptionsState.status === 'unavailable' ||
+    filtersState.status === 'unavailable' ? (
+      <div role="status">
+        Some catalog filters are temporarily unavailable. Product results remain
+        available with fallback filter options.
+      </div>
+    ) : undefined;
 
   return (
-    <main className={css.page}>
-      <section className={css.productsSection} aria-labelledby="products-title">
-        <Container>
-          <Breadcrumbs
-            items={[
-              { label: 'Home', href: ROUTES.HOME },
-              {
-                label: 'Product catalog',
-                href: ROUTES.PRODUCTS_CATALOG,
-              },
-              ...(filters.category !== 'all' && seoContext.categoryLabel
-                ? [{ label: seoContext.categoryLabel }]
-                : []),
-              ...(filters.pharmacyId && seoContext.pharmacyName
-                ? [{ label: seoContext.pharmacyName }]
-                : []),
-            ]}
-            includeStructuredData={showSeoText}
-          />
-
-          <div className={css.sectionHeader}>
-            <h1 className={css.sectionTitle} id="products-title">
-              {pageTitle}
-            </h1>
-          </div>
-
-          <ProductCatalogFiltersForm
-            filters={filters}
-            pharmacies={pharmacies}
-            filterOptions={filterOptions}
-            visibleProductsCount={products.length}
-            productsCount={total}
-          />
-
-          {catalogState.status === 'unavailable' ? (
-            <div className={css.notice} role="status">
-              Products are temporarily unavailable. Please try again later.
-            </div>
-          ) : null}
-
-          {pharmacyOptionsState.status === 'unavailable' ||
-          filtersState.status === 'unavailable' ? (
-            <div className={css.notice} role="status">
-              Some catalog filters are temporarily unavailable. Product
-              results remain available with fallback filter options.
-            </div>
-          ) : null}
-
+    <CatalogPageShell
+      title={pageTitle}
+      titleId="products-title"
+      breadcrumbs={[
+        { label: 'Home', href: ROUTES.HOME },
+        { label: 'Product catalog', href: ROUTES.PRODUCTS_CATALOG },
+        ...(filters.category !== 'all' && seoContext.categoryLabel
+          ? [{ label: seoContext.categoryLabel }]
+          : []),
+        ...(filters.pharmacyId && seoContext.pharmacyName
+          ? [{ label: seoContext.pharmacyName }]
+          : []),
+      ]}
+      filters={
+        <ProductCatalogFiltersForm
+          filters={filters}
+          pharmacies={pharmacies}
+          filterOptions={filterOptions}
+          visibleProductsCount={products.length}
+          productsCount={total}
+        />
+      }
+      notices={notices}
+      results={
+        <CatalogResourceStateView
+          state={resourceState}
+          emptyTitle={
+            emptyIsFiltered ? 'No matching products' : 'No products available'
+          }
+          emptyMessage={
+            emptyIsFiltered
+              ? 'No products match the selected filters. Try changing or resetting the filters.'
+              : 'No products are available in the catalog yet.'
+          }
+          unavailableMessage="Products are temporarily unavailable. Please try again later."
+        >
           <ProductsList products={products} />
-
+        </CatalogResourceStateView>
+      }
+      pagination={
+        resourceState.status === 'success' && totalPages > 1 ? (
           <LinkPagination
             currentPage={filters.page}
             totalPages={totalPages}
@@ -150,30 +150,21 @@ function ProductCatalogPageContent({
             }
             ariaLabel="Product catalog pagination"
           />
-
-          {showSeoText ? (
-            <section
-              className={css.seoCard}
-              aria-labelledby="catalog-seo-title"
-            >
-              <h2 className={css.seoTitle} id="catalog-seo-title">
-                Compare trusted pharmacy offers in one place
-              </h2>
-
-              <p className={css.sectionText}>
-                {seoTextParts[0]}{' '}
-                <strong className={css.seoAccent}>{seoTextParts[1]}</strong>{' '}
-                {seoTextParts[2]}{' '}
-                <strong className={css.seoAccent}>{seoTextParts[3]}</strong>,{' '}
-                {seoTextParts[4]}
-              </p>
-
-              <p className="visually-hidden">{pageDescription}</p>
-            </section>
-          ) : null}
-        </Container>
-      </section>
-    </main>
+        ) : undefined
+      }
+      seo={
+        showSeoText ? (
+          <CatalogSeoCard
+            title="Compare pharmacy offers in one place"
+            titleId="catalog-seo-title"
+          >
+            <p>{seoContent.intro}</p>
+            <p>{seoContent.comparison}</p>
+            <p>{seoContent.ordering}</p>
+          </CatalogSeoCard>
+        ) : undefined
+      }
+    />
   );
 }
 

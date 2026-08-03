@@ -51,9 +51,15 @@ export async function getProducts(
   res: ValidatedResponse<unknown, unknown, ProductsQuery>
 ): Promise<void> {
   const { query } = res.locals.validated;
+
   const data = await getProductsService(
     query,
-    req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
+    req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined,
+    {
+      includeOffers:
+        req.user?.role === USER_ROLES.PHARMACY ||
+        req.user?.role === USER_ROLES.ADMIN,
+    }
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
@@ -103,6 +109,7 @@ export async function getProductStockMovements(
   res: ValidatedResponse<unknown, ProductIdParams>
 ): Promise<void> {
   const { productId } = res.locals.validated.params;
+
   const data = await getProductStockMovementsService(
     productId,
     req.user?.id ?? ''
@@ -118,6 +125,7 @@ export async function addProductToMyPharmacy(
   res: ValidatedResponse<unknown, ProductIdParams>
 ): Promise<void> {
   const { productId } = res.locals.validated.params;
+
   const data = await addProductToMyPharmacyService(
     productId,
     req.user?.id ?? ''

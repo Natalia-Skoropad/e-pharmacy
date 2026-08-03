@@ -12,6 +12,7 @@ import { ProductReview } from '../models/productReview.model';
 import { Order } from '../models/order.model';
 
 import type {
+  ProductCardSummaryResponseDto,
   ProductFilterOptionsResponseDto,
   ProductEntity,
   ProductOfferResponseDto,
@@ -190,7 +191,119 @@ async function getOffersByProductIds(
 
 //===============================================================
 
-function serializeProduct(
+type ProductOfferSummary = Readonly<{
+  minPrice: number;
+  maxPrice: number;
+  pharmaciesCount: number;
+}>;
+
+//===============================================================
+
+async function getOfferSummaryByProductIds(
+  productIds: Types.ObjectId[],
+  pharmacyId?: string
+): Promise<Map<string, ProductOfferSummary>> {
+  if (productIds.length === 0) return new Map();
+
+  const match: Record<string, unknown> = {
+    productId: { $in: productIds },
+    availableQuantity: { $gt: 0 },
+  };
+
+  if (pharmacyId) match.pharmacyId = new Types.ObjectId(pharmacyId);
+
+  const rows = await ProductOffer.aggregate<{
+    _id: Types.ObjectId;
+    minPrice: number;
+    maxPrice: number;
+    pharmaciesCount: number;
+  }>([
+    { $match: match },
+    {
+      $lookup: {
+        from: Pharmacy.collection.name,
+        localField: 'pharmacyId',
+        foreignField: '_id',
+        as: 'pharmacy',
+      },
+    },
+    { $unwind: '$pharmacy' },
+    {
+      $match: {
+        'pharmacy.status': { $in: ['active', 'on_moderation'] },
+      },
+    },
+    {
+      $group: {
+        _id: { productId: '$productId', pharmacyId: '$pharmacyId' },
+        minPrice: { $min: '$price' },
+        maxPrice: { $max: '$price' },
+      },
+    },
+    {
+      $group: {
+        _id: '$_id.productId',
+        minPrice: { $min: '$minPrice' },
+        maxPrice: { $max: '$maxPrice' },
+        pharmaciesCount: { $sum: 1 },
+      },
+    },
+  ]);
+
+  return new Map(
+    rows.map((row) => [
+      String(row._id),
+      {
+        minPrice: row.minPrice,
+        maxPrice: row.maxPrice,
+        pharmaciesCount: row.pharmaciesCount,
+      },
+    ])
+  );
+}
+
+//===============================================================
+
+function serializeProductCardSummary(
+  product: ProductDocument,
+  offerSummary: ProductOfferSummary | undefined,
+  favoriteIds: Set<string>
+): ProductCardSummaryResponseDto {
+  const productId = String(product._id);
+  const minPrice = offerSummary?.minPrice ?? null;
+  const maxPrice = offerSummary?.maxPrice ?? null;
+  const pharmaciesCount = offerSummary?.pharmaciesCount ?? 0;
+
+  return {
+    id: productId,
+    name: product.name,
+    publicSlugId: buildPublicEntitySlugId(
+      'product',
+      product.slug ?? product.name,
+      productId
+    ),
+    article: product.article ?? '',
+    category: product.category,
+    status: product.status,
+    price: minPrice ?? product.price ?? 0,
+    minPrice,
+    maxPrice,
+    ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+    ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
+    foundInPharmaciesCount: pharmaciesCount,
+    availableInPharmaciesCount: pharmaciesCount,
+    inStock: pharmaciesCount > 0,
+    rating: product.rating ?? 0,
+    reviewsCount: product.reviewsCount ?? 0,
+    isFavorite: favoriteIds.has(productId),
+    createdAt: requireISODateTime(product.createdAt, 'product.createdAt'),
+    updatedAt: requireISODateTime(product.updatedAt, 'product.updatedAt'),
+  };
+}
+
+//===============================================================
+
+function serializeProductDetails(
   product: ProductDocument,
   offers: ProductOfferResponseDto[],
   favoriteIds: Set<string>
@@ -233,7 +346,7 @@ function serializeProduct(
     inStock: availableOffers.length > 0,
     rating: product.rating ?? 0,
     reviewsCount: product.reviewsCount ?? 0,
-    isFavorite: favoriteIds.has(String(product._id)),
+    isFavorite: favoriteIds.has(productId),
     createdAt: requireISODateTime(product.createdAt, 'product.createdAt'),
     updatedAt: requireISODateTime(product.updatedAt, 'product.updatedAt'),
   };
@@ -437,7 +550,8 @@ async function getOwnProductStatistics(pharmacyId: string) {
 
 export async function getProductsService(
   query: ProductsQuery,
-  userId?: string
+  userId?: string,
+  options: Readonly<{ includeOffers?: boolean }> = {}
 ) {
   const filter: Record<string, unknown> = {};
   const tableStatusFilter =
@@ -584,18 +698,37 @@ export async function getProductsService(
     earliestCreatedAtQuery,
   ]);
 
-  const offerMap = await getOffersByProductIds(
-    products.map((product) => product._id),
-    favorites.pharmacies
-  );
+  const productIds = products.map((product) => product._id);
 
-  const items = products.map((product) =>
-    serializeProduct(
-      product,
-      offerMap.get(String(product._id)) ?? [],
-      favorites.products
-    )
-  );
+  const items = options.includeOffers
+    ? await (async () => {
+        const offerMap = await getOffersByProductIds(
+          productIds,
+          favorites.pharmacies
+        );
+
+        return products.map((product) =>
+          serializeProductDetails(
+            product,
+            offerMap.get(String(product._id)) ?? [],
+            favorites.products
+          )
+        );
+      })()
+    : await (async () => {
+        const summaryMap = await getOfferSummaryByProductIds(
+          productIds,
+          query.pharmacyId
+        );
+
+        return products.map((product) =>
+          serializeProductCardSummary(
+            product,
+            summaryMap.get(String(product._id)),
+            favorites.products
+          )
+        );
+      })();
 
   if (query.sort === 'price-asc') items.sort((a, b) => a.price - b.price);
   if (query.sort === 'price-desc') items.sort((a, b) => b.price - a.price);
@@ -639,10 +772,6 @@ export async function getFavoriteProductsService(
     } | null>();
 
   const favoriteProductIds = client?.favoriteProductIds ?? [];
-  const favoritePharmacyIds = new Set(
-    (client?.favoritePharmacyIds ?? []).map(String)
-  );
-
   const filter = {
     _id: { $in: favoriteProductIds },
     status: 'active',
@@ -658,18 +787,17 @@ export async function getFavoriteProductsService(
     Product.countDocuments(filter),
   ]);
 
-  const offerMap = await getOffersByProductIds(
-    products.map((product) => product._id),
-    favoritePharmacyIds
+  const summaryMap = await getOfferSummaryByProductIds(
+    products.map((product) => product._id)
   );
 
   const favoriteIds = new Set(favoriteProductIds.map(String));
 
   return {
     items: products.map((product) =>
-      serializeProduct(
+      serializeProductCardSummary(
         product,
-        offerMap.get(String(product._id)) ?? [],
+        summaryMap.get(String(product._id)),
         favoriteIds
       )
     ),
@@ -677,6 +805,7 @@ export async function getFavoriteProductsService(
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+    earliestCreatedAt: null,
   };
 }
 
@@ -703,7 +832,7 @@ export async function getProductDetailsService(
   );
 
   return {
-    product: serializeProduct(
+    product: serializeProductDetails(
       product,
       offerMap.get(String(product._id)) ?? [],
       favorites.products

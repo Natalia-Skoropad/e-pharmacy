@@ -9,13 +9,12 @@ import {
   parseApiResponseData,
   parsePharmacyProductMutationResponse,
   parseProductDetailsResponse,
-  parseProductsResponse,
+  parseProductsWithOffersResponse,
   parseProductStockMovementsResponse,
   parseReviewsResponse,
 } from '@e-pharmacy/api-client/response';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
-
 import type { ReviewsResponse } from '@e-pharmacy/types/reviews';
 
 import type {
@@ -24,7 +23,7 @@ import type {
   ProductDetailsResponse,
   ProductStockMovementsResponse,
   PharmacyProductsQueryParams as PharmacyProductsApiQueryParams,
-  ProductsResponse,
+  ProductsWithOffersResponse,
 } from '@e-pharmacy/types/products';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
@@ -41,12 +40,12 @@ import {
 export async function getProducts(
   params: PharmacyProductsApiQueryParams = {},
   options: JsonResponseRequestOptions = {}
-): Promise<ProductsResponse> {
+): Promise<ProductsWithOffersResponse> {
   const path = appendQueryParams(PHARMACY_API_ROUTES.products.list, params);
 
   return parseApiResponseData(
     await localApiRequest(path, options),
-    parseProductsResponse,
+    parseProductsWithOffersResponse,
     { url: path, method: 'GET' }
   );
 }

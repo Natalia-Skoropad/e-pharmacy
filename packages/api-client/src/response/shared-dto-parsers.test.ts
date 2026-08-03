@@ -8,6 +8,7 @@ import {
   parseActiveSessionsResponse,
   parseFavoriteMutationResponse,
   parseHealthResponse,
+  parsePharmaciesResponse,
   parsePharmacyDetailsResponse,
   parseProductDetails,
   parseProductsResponse,
@@ -152,7 +153,6 @@ test('requires backend-provided typed public slug IDs', () => {
     ApiError
   );
 
-
   const validOffer = {
     id: '6a5f5242d9c46211621ad70b',
     pharmacyId: '6a5f5244a3defb1d037f06e7',
@@ -175,7 +175,12 @@ test('requires backend-provided typed public slug IDs', () => {
     8
   );
 
-  for (const invalidQuantity of [-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+  for (const invalidQuantity of [
+    -1,
+    1.5,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+  ]) {
     assert.throws(
       () =>
         parseProductDetails({
@@ -187,13 +192,45 @@ test('requires backend-provided typed public slug IDs', () => {
     );
   }
 
+  const productSummary = {
+    id: product.id,
+    name: product.name,
+    publicSlugId: product.publicSlugId,
+    article: product.article,
+    category: product.category,
+    status: product.status,
+    price: 100,
+    minPrice: 90,
+    maxPrice: 110,
+    foundInPharmaciesCount: 3,
+    availableInPharmaciesCount: 3,
+    inStock: true,
+    rating: 5,
+    reviewsCount: 1,
+    isFavorite: false,
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
+  };
+
+  assert.equal(
+    parseProductsResponse({
+      items: [productSummary],
+      page: 1,
+      perPage: 10,
+      total: 1,
+      totalPages: 1,
+      earliestCreatedAt: null,
+    }).items[0]?.minPrice,
+    90
+  );
+
   assert.throws(
     () =>
       parseProductsResponse({
         items: [
           {
-            ...product,
-            offers: [{ ...validOffer, totalQuantity: undefined }],
+            ...productSummary,
+            offers: Array.from({ length: 25 }, () => validOffer),
           },
         ],
         page: 1,
@@ -202,6 +239,7 @@ test('requires backend-provided typed public slug IDs', () => {
         totalPages: 1,
         earliestCreatedAt: null,
       }),
+
     (error: unknown) =>
       error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
   );
@@ -217,6 +255,39 @@ test('requires backend-provided typed public slug IDs', () => {
     bankTransferAvailable: true,
     updatedAt: '2026-07-31T00:00:00.000Z',
   };
+
+  const pharmacySummary = {
+    id: pharmacy.id,
+    name: pharmacy.name,
+    publicSlugId: pharmacy.publicSlugId,
+    rating: pharmacy.rating,
+    availableProductsCount: pharmacy.availableProductsCount,
+    reviewsCount: pharmacy.reviewsCount,
+    isFavorite: false,
+  };
+
+  assert.equal(
+    parsePharmaciesResponse({
+      items: [pharmacySummary],
+      page: 1,
+      perPage: 10,
+      total: 1,
+      totalPages: 1,
+    }).items[0]?.name,
+    pharmacy.name
+  );
+
+  assert.throws(
+    () =>
+      parsePharmaciesResponse({
+        items: [{ ...pharmacySummary, bankDetails: { iban: 'UA00' } }],
+        page: 1,
+        perPage: 10,
+        total: 1,
+        totalPages: 1,
+      }),
+    ApiError
+  );
 
   assert.equal(
     parsePharmacyDetailsResponse({ pharmacy }).pharmacy.publicSlugId,

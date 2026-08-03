@@ -28,6 +28,9 @@ const [
   mobile,
   footer,
   infoPage,
+  catalogCard,
+  catalogCardSemantics,
+  catalogGrid,
 ] = await Promise.all([
   read('apps/client/src/components/layout/AppShell/AppShell.tsx'),
 
@@ -54,6 +57,16 @@ const [
   read('apps/client/src/components/layout/MobileOffcanvas/MobileOffcanvas.tsx'),
   read('apps/client/src/components/layout/Footer/Footer.tsx'),
   read('apps/client/src/components/info/InfoPage/InfoPage.tsx'),
+
+  read(
+    'apps/client/src/components/catalog/CatalogEntityCard/CatalogEntityCard.tsx'
+  ),
+
+  read(
+    'apps/client/src/components/catalog/CatalogEntityCard/CatalogCardSemantics.tsx'
+  ),
+
+  read('apps/client/src/components/catalog/CatalogGrid/CatalogGrid.tsx'),
 ]);
 
 //===================================================================
@@ -187,6 +200,30 @@ requirePattern(
   infoPage,
   /dateTime=\{metadata\.updatedAt\.iso\}/,
   'InfoPage: machine-readable revision date is missing.'
+);
+
+requirePattern(
+  catalogCardSemantics,
+  /useId\(\)/,
+  'CatalogEntityCard: each card instance must use a unique DOM ID.'
+);
+
+requirePattern(
+  catalogCard,
+  /headingLevel\?: CatalogCardHeadingLevel/,
+  'CatalogEntityCard: contextual heading-level contract is missing.'
+);
+
+requirePattern(
+  catalogGrid,
+  /<ul[^>]*aria-label=/,
+  'CatalogGrid: catalog collections must use list semantics.'
+);
+
+requirePattern(
+  catalogGrid,
+  /<li className=/,
+  'CatalogGrid: catalog items must use list-item semantics.'
 );
 
 if (violations.length) {

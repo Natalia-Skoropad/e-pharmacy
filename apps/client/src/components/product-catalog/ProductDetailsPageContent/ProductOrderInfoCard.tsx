@@ -27,11 +27,13 @@ export function ProductOrderInfoCard({
 
       <div>
         <h2 className={css.title}>{title}</h2>
+
         <ul className={css.list}>
           {items.map((item, index) => (
             <li key={`${title}-${index}`}>{item}</li>
           ))}
         </ul>
+
         {notice ? <p className={css.notice}>{notice}</p> : null}
       </div>
     </article>

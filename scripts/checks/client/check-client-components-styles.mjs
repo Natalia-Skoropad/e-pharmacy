@@ -12,7 +12,13 @@ const AUDITED_ROOTS = [
   ...['common', 'home', 'info', 'layout'].map((name) =>
     resolve(COMPONENT_ROOT, name)
   ),
+
   resolve(COMPONENT_ROOT, 'product-catalog/ProductDetailsPageContent'),
+  resolve(COMPONENT_ROOT, 'catalog'),
+  resolve(COMPONENT_ROOT, 'product-catalog/ProductCard'),
+  resolve(COMPONENT_ROOT, 'product-catalog/ProductsList'),
+  resolve(COMPONENT_ROOT, 'pharmacies/PharmacyCard'),
+  resolve(COMPONENT_ROOT, 'pharmacies/PharmaciesList'),
 ];
 
 const violations = [];

@@ -5,6 +5,14 @@ import {
 
 //===================================================================
 
+export type PharmaciesCatalogSeoContent = Readonly<{
+  intro: string;
+  comparison: string;
+  ordering: string;
+}>;
+
+//===================================================================
+
 export function getPharmacyTitle(filters: PharmacyFilters): string {
   if (filters.city) return `Choose a pharmacy in ${filters.city}`;
 
@@ -15,24 +23,30 @@ export function getPharmacyTitle(filters: PharmacyFilters): string {
 
 export function getPharmacyDescription(filters: PharmacyFilters): string {
   if (filters.city) {
-    return `Find active E-PHARMACY pharmacies in ${filters.city}, compare ratings, addresses, phone numbers, and available products before choosing a pharmacy.`;
+    return `Find active E-PHARMACY pharmacies in ${filters.city}, compare ratings, addresses, contact details, and available products before preparing an order request.`;
   }
 
-  return 'Find active E-PHARMACY pharmacies, compare ratings, addresses, phone numbers, and available products before choosing a pharmacy.';
+  return 'Find active E-PHARMACY pharmacies, compare ratings, addresses, contact details, and available products before preparing an order request.';
 }
 
 //===================================================================
 
-export function getPharmaciesSeoTextParts(filters: PharmacyFilters): string[] {
+export function getPharmaciesSeoContent(
+  filters: PharmacyFilters
+): PharmaciesCatalogSeoContent {
   const cityText = filters.city
     ? `pharmacies in ${filters.city}`
     : 'active pharmacies';
 
-  return [
-    'Choose trusted',
-    cityText,
-    'without bouncing between random tabs. In the E-PHARMACY pharmacy catalog, you can compare pharmacy ratings, addresses, contact details, and the number of products available before opening a pharmacy page. Use search by name or address, select a city, sort the list, and then move straight to the products from the pharmacy that looks right. Simple, tidy, and much less dramatic than hunting for a pharmacy at 22:59.',
-  ];
+  return {
+    intro: `Browse ${cityText} participating in E-PHARMACY.`,
+
+    comparison:
+      'Compare ratings, addresses, contact details, and the number of currently available products before opening a pharmacy page.',
+
+    ordering:
+      'Choose a pharmacy to view its catalog and prepare an order request. Availability, pickup, delivery, and final sale conditions are confirmed by the selected pharmacy.',
+  };
 }
 
 //===================================================================

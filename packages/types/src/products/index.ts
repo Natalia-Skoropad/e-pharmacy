@@ -1,6 +1,7 @@
 export type * from './all-product-statistics';
 export type * from './category';
 export type * from './own-product-statistics';
+export type * from './product-card-summary';
 export type * from './product-details';
 export type * from './product-offer';
 export type * from './product-summary';

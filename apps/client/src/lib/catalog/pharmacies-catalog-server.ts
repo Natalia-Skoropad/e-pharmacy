@@ -1,7 +1,15 @@
 import 'server-only';
 
-import { PUBLIC_API_CACHE_OPTIONS, resolveServerDataState } from '@/lib/api/server';
+import { redirect } from 'next/navigation';
+
+import {
+  PUBLIC_API_CACHE_OPTIONS,
+  resolveServerDataState,
+} from '@/lib/api/server';
+
 import { getPharmacyFilters, getPharmacies } from '@/lib/api/server';
+
+import { getCatalogRedirectPage } from './catalog-resource-state';
 
 import {
   createPharmaciesCatalogPageData,
@@ -10,6 +18,7 @@ import {
 
 import {
   buildPharmacyApiParams,
+  buildPharmacyPath,
   normalizePharmacyFiltersCity,
   type PharmacyFilters,
 } from './pharmacies-catalog';
@@ -43,9 +52,21 @@ export async function loadPharmaciesCatalogPageData(
       )
     : initialPharmaciesState;
 
-  return createPharmaciesCatalogPageData({
+  const pageData = createPharmaciesCatalogPageData({
     filters,
     pharmaciesState,
     filterState,
   });
+
+  const redirectPage = getCatalogRedirectPage(
+    filters.page,
+    pageData.totalPages,
+    pageData.resourceState
+  );
+
+  if (redirectPage !== null) {
+    redirect(buildPharmacyPath({ ...filters, page: redirectPage }));
+  }
+
+  return pageData;
 }
