@@ -110,6 +110,7 @@ test('keeps the restored home advantages and customer review sections', async ()
   assert.match(reviews, /aria-live="polite"/);
   assert.match(reviews, /Show previous review/);
   assert.match(reviews, /Show next review/);
+  assert.equal((homeContent.match(/id: '[^']+-review'/g) ?? []).length, 7);
 });
 
 //===================================================================
@@ -120,12 +121,17 @@ test('keeps information navigation in the mobile drawer and hides draft copy', a
     readComponent('./info/InfoPage/InfoPage.tsx'),
   ]);
 
+  assert.match(mobileMenu, /MOBILE_MAIN_NAV_ITEMS/);
+  assert.match(mobileMenu, />Main menu</);
   assert.match(mobileMenu, /INFO_SIDE_MENU_ITEMS/);
   assert.match(mobileMenu, /aria-label="Information pages"/);
+  assert.doesNotMatch(mobileMenu, /isInformationPage/);
+
   assert.doesNotMatch(
     infoPage,
     /Draft document: formal approval is not recorded/
   );
+
   assert.doesNotMatch(infoPage, /Version \{metadata\.version\}/);
   assert.match(infoPage, /Updated\{' '\}/);
 });
@@ -141,4 +147,6 @@ test('uses the branded status layout for pharmacy application configuration erro
   assert.match(configurationState, /variant="brand"/);
   assert.match(configurationState, /image=\{STATUS_PAGE_IMAGE\}/);
   assert.match(configurationState, /\/images\/status\/status-pills\.png/);
+  assert.doesNotMatch(configurationState, /description=\{message\}/);
+  assert.match(configurationState, /cannot be opened right now/);
 });

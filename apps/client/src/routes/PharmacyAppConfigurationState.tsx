@@ -18,6 +18,16 @@ const STATUS_PAGE_IMAGE = {
 
 //===================================================================
 
+function getConfigurationDescription(message: string): string {
+  if (message.toLowerCase().includes('required')) {
+    return 'The pharmacy application address has not been configured yet. Reload the configuration or return to the home page.';
+  }
+
+  return 'The pharmacy application cannot be opened right now. Reload the configuration or return to the home page.';
+}
+
+//===================================================================
+
 export function PharmacyAppConfigurationState({
   message,
 }: Readonly<{ message: string }>) {
@@ -27,7 +37,7 @@ export function PharmacyAppConfigurationState({
     <ErrorPage
       eyebrow="Application unavailable"
       title="The pharmacy application is unavailable"
-      description={message}
+      description={getConfigurationDescription(message)}
       homeHref={ROUTES.HOME}
       retryLabel="Reload configuration"
       onRetry={() => router.refresh()}

@@ -15,7 +15,7 @@ import { UserBadge } from '@e-pharmacy/ui/data-display';
 import { MobileOffcanvasBase } from '@e-pharmacy/ui/overlays';
 
 import { ROUTES, isActiveRoute } from '@/lib/routes';
-import { CLIENT_NAV_LINKS } from '@/components/layout/config/navigation';
+import { MOBILE_MAIN_NAV_ITEMS } from '@/components/layout/config/navigation';
 import { INFO_SIDE_MENU_ITEMS } from '@/components/info/config/navigation';
 import type { usePublicHeaderController } from '@/components/layout/hooks/usePublicHeaderController';
 
@@ -43,10 +43,6 @@ function MobileOffcanvas({
   onClose,
 }: MobileOffcanvasProps) {
   const authState = controller.authState;
-  const isInformationPage = INFO_SIDE_MENU_ITEMS.some(
-    ({ href }) => href === pathname
-  );
-
   return (
     <MobileOffcanvasBase
       id={id}
@@ -73,20 +69,22 @@ function MobileOffcanvas({
         />
       </div>
 
-      <nav className={css.nav} aria-label="Mobile main navigation">
-        <ul className={css.navList}>
-          {CLIENT_NAV_LINKS.map(({ label, href }) => {
+      <nav className={css.menuSection} aria-label="Mobile main navigation">
+        <p className={css.menuTitle}>Main menu</p>
+        <ul className={css.menuList}>
+          {MOBILE_MAIN_NAV_ITEMS.map(({ label, href, icon: Icon }) => {
             const isActive = isActiveRoute(pathname, href);
 
             return (
               <li key={href}>
                 <Link
-                  className={clsx(css.navLink, isActive && css.active)}
+                  className={clsx(css.menuLink, isActive && css.activeMenuLink)}
                   href={href}
                   aria-current={isActive ? 'page' : undefined}
                   onClick={onClose}
                 >
-                  {label}
+                  <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+                  <span>{label}</span>
                 </Link>
               </li>
             );
@@ -94,30 +92,28 @@ function MobileOffcanvas({
         </ul>
       </nav>
 
-      {isInformationPage ? (
-        <nav className={css.infoNav} aria-label="Information pages">
-          <p className={css.infoNavTitle}>Information</p>
-          <ul className={css.infoNavList}>
-            {INFO_SIDE_MENU_ITEMS.map(({ label, href, icon: Icon }) => {
-              const isActive = href === pathname;
+      <nav className={css.menuSection} aria-label="Information pages">
+        <p className={css.menuTitle}>Information</p>
+        <ul className={css.menuList}>
+          {INFO_SIDE_MENU_ITEMS.map(({ label, href, icon: Icon }) => {
+            const isActive = href === pathname;
 
-              return (
-                <li key={href}>
-                  <Link
-                    className={clsx(css.infoNavLink, isActive && css.activeInfoLink)}
-                    href={href}
-                    aria-current={isActive ? 'page' : undefined}
-                    onClick={onClose}
-                  >
-                    <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
-                    <span>{label}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      ) : null}
+            return (
+              <li key={href}>
+                <Link
+                  className={clsx(css.menuLink, isActive && css.activeMenuLink)}
+                  href={href}
+                  aria-current={isActive ? 'page' : undefined}
+                  onClick={onClose}
+                >
+                  <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+                  <span>{label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
 
       <div className={css.actions}>
         {authState.mode === 'loading' ? (

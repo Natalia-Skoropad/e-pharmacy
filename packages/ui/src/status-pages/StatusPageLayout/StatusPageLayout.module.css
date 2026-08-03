@@ -70,6 +70,7 @@
 }
 
 .content {
+  min-width: 0;
   max-width: 700px;
 }
 
@@ -109,6 +110,7 @@
 .text {
   max-width: 640px;
   margin-top: 20px;
+  overflow-wrap: anywhere;
   font-size: var(--fz-18);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
@@ -170,6 +172,18 @@
     padding: 42px;
   }
 
+  .actions {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .actions button,
+  .actions a {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+  }
+
   .visualCard {
     min-height: 340px;
   }
@@ -197,6 +211,7 @@
 
   .actions button,
   .actions a {
+    flex: 0 0 auto;
     width: fit-content;
   }
 

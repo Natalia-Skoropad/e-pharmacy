@@ -187,4 +187,32 @@ export const HOME_REVIEWS = [
     comment:
       'The catalog helped me compare products, and the pharmacy page showed the address, phone number, rating, and available offers clearly. I could choose a pharmacy calmly without jumping between different tabs.',
   },
+  {
+    id: 'kateryna-pickup-review',
+    author: 'Kateryna',
+    rating: 5,
+    comment:
+      'I found the product I needed, compared the pharmacy offers, and selected a convenient pickup point in a few minutes. The order-request details were clear, and the pharmacy confirmed everything without unnecessary calls.',
+  },
+  {
+    id: 'maksym-favorites-review',
+    author: 'Maksym',
+    rating: 4.8,
+    comment:
+      'Favorites make repeat searches much easier. I saved the products and pharmacies I use most often, then returned later and prepared a new request without searching through the catalog again.',
+  },
+  {
+    id: 'sofiia-delivery-review',
+    author: 'Sofiia',
+    rating: 5,
+    comment:
+      'The delivery information was easy to understand, and I could see which pharmacy would process the request before submitting it. The status updates helped me know what was happening at every step.',
+  },
+  {
+    id: 'andrii-mobile-review',
+    author: 'Andrii',
+    rating: 4.9,
+    comment:
+      'The mobile version is convenient and straightforward. Product information, pharmacy contacts, and the cart were easy to use, even when I needed to prepare an order request while away from home.',
+  },
 ] as const satisfies readonly HomeReview[];
