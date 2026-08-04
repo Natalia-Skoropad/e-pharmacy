@@ -56,12 +56,12 @@ function buildPharmacyFiltersHref(filters: PharmaciesHrefFilters) {
 
 //===================================================================
 
-function createPharmaciesResetFiltersHref(filters: PharmacyFilters) {
+function createPharmaciesResetFiltersHref() {
   return buildPharmacyFiltersHref({
     name: '',
     address: '',
     city: '',
-    sort: filters.sort,
+    sort: 'newest',
   });
 }
 
@@ -96,7 +96,7 @@ function PharmaciesCatalogFiltersForm({
     [filters, navigate]
   );
 
-  const { draft, isDraftDirty, setDraft } = useCatalogSearchDraft({
+  const { draft, isDraftDirty, setDraft, resetDraft } = useCatalogSearchDraft({
     committed: committedSearch,
     delay: CATALOG_SEARCH_UPDATE_DELAY,
     normalize: normalizeSearch,
@@ -114,7 +114,7 @@ function PharmaciesCatalogFiltersForm({
 
   const activeFiltersCount = getPharmacyActiveFiltersCount(effectiveFilters);
   const hasActiveFilters = activeFiltersCount > 0;
-  const resetHref = createPharmaciesResetFiltersHref(filters);
+  const resetHref = createPharmaciesResetFiltersHref();
 
   const citySelectOptions = useMemo(
     () => [
@@ -124,8 +124,8 @@ function PharmaciesCatalogFiltersForm({
     [cityOptions]
   );
 
-  const resetDraft = () => {
-    setDraft({ name: '', address: '' });
+  const clearSearchDraft = () => {
+    resetDraft({ name: '', address: '' });
   };
 
   const updateCatalog = (nextFilters: PharmaciesHrefFilters) => {
@@ -202,7 +202,7 @@ function PharmaciesCatalogFiltersForm({
           href={resetHref}
           isVisible={hasActiveFilters}
           disabled={isPending}
-          onClick={resetDraft}
+          onClick={clearSearchDraft}
         />
       }
       countLabel={
@@ -232,7 +232,7 @@ function PharmaciesCatalogFiltersForm({
           resetHref={resetHref}
           onClose={() => setIsFiltersOpen(false)}
           onReset={() => {
-            resetDraft();
+            clearSearchDraft();
             setIsFiltersOpen(false);
           }}
         >

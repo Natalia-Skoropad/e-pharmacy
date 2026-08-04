@@ -30,6 +30,7 @@ export function ProductOrderInformationPanel() {
           `${PAYMENT_METHOD_LABELS.cash}.`,
           `${PAYMENT_METHOD_LABELS.bank_transfer}.`,
         ]}
+        notice="Payment instructions and the final payment method are confirmed by the selected pharmacy."
       />
     </div>
   );

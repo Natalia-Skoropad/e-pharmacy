@@ -4,8 +4,8 @@ import type { PublicBackendRequestOptions } from '@e-pharmacy/next-api/server';
 
 //===================================================================
 
-const PUBLIC_API_REVALIDATE_SECONDS = 120;
-const PUBLIC_API_TIMEOUT_MS = 6_000;
+const PUBLIC_API_REVALIDATE_SECONDS = 3_600;
+const PUBLIC_API_TIMEOUT_MS = 20_000;
 
 //===================================================================
 
@@ -17,8 +17,8 @@ export const PUBLIC_API_CACHE_OPTIONS = {
   timeoutMs: PUBLIC_API_TIMEOUT_MS,
 
   retry: {
-    attempts: 2,
-    statuses: [502, 503, 504],
-    delayMs: 150,
+    attempts: 3,
+    statuses: [408, 429, 502, 503, 504],
+    delayMs: 500,
   },
 } satisfies Omit<PublicBackendRequestOptions, 'method' | 'body'>;

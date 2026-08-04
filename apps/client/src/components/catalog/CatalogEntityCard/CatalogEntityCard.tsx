@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 
 import { ShimmerImage } from '@e-pharmacy/ui/media';
@@ -44,6 +44,33 @@ export type CatalogEntityCardProps = Readonly<{
 
 //===================================================================
 
+function CatalogEntityImage({ image }: Readonly<{ image: CatalogCardImage }>) {
+  const [hasImageError, setHasImageError] = useState(false);
+
+  if (!image.src || hasImageError) {
+    return (
+      <div className={css.imageFallback} aria-hidden="true">
+        <SvgIcon name={image.fallbackIcon} size={34} />
+      </div>
+    );
+  }
+
+  return (
+    <ShimmerImage
+      className={clsx(
+        css.image,
+        image.fit === 'contain' ? css.imageContain : css.imageCover
+      )}
+      src={image.src}
+      alt={image.alt}
+      sizes={image.sizes}
+      onError={() => setHasImageError(true)}
+    />
+  );
+}
+
+//===================================================================
+
 function CatalogEntityCard({
   title,
   headingLevel = 2,
@@ -60,21 +87,7 @@ function CatalogEntityCard({
   return (
     <article className={css.card} aria-labelledby={titleId}>
       <div className={css.imageWrap}>
-        {image.src ? (
-          <ShimmerImage
-            className={clsx(
-              css.image,
-              image.fit === 'contain' ? css.imageContain : css.imageCover
-            )}
-            src={image.src}
-            alt={image.alt}
-            sizes={image.sizes}
-          />
-        ) : (
-          <div className={css.imageFallback} aria-hidden="true">
-            <SvgIcon name={image.fallbackIcon} size={34} />
-          </div>
-        )}
+        <CatalogEntityImage key={image.src ?? 'image-fallback'} image={image} />
 
         {favoriteAction ? (
           <div className={css.favoriteWrap}>{favoriteAction}</div>

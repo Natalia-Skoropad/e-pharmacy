@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { unstable_noStore as noStore } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import {
@@ -50,6 +51,10 @@ export async function loadProductCatalogPageData(
     pharmaciesState,
     filterOptionsState,
   });
+
+  if (pageData.resourceState.status === 'unavailable') {
+    noStore();
+  }
 
   const redirectPage = getCatalogRedirectPage(
     filters.page,

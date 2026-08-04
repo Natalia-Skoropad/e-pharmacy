@@ -24,7 +24,30 @@
   font-size: var(--fz-16);
   line-height: 1.7;
   color: var(--color-text-secondary);
-  white-space: pre-wrap;
+}
+
+.description h3 {
+  margin-top: 6px;
+  font-size: var(--fz-18);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-accent);
+}
+
+.description strong {
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+}
+
+.description ul {
+  display: grid;
+  gap: 8px;
+  padding-left: 24px;
+  list-style: disc;
+}
+
+.description li::marker {
+  color: var(--color-accent);
 }
 
 @media only screen and (min-width: 768px) {

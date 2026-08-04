@@ -47,7 +47,6 @@ function PharmaciesPageContent({
   filters,
   cityOptions,
   resourceState,
-  filtersState,
 }: PharmaciesPageContentProps) {
   const pageTitle = getPharmacyTitle(filters);
   const showSeoText = total > 0 && shouldShowPharmaciesSeoText(filters);
@@ -72,14 +71,7 @@ function PharmaciesPageContent({
           pharmaciesCount={total}
         />
       }
-      notices={
-        filtersState.status === 'unavailable' ? (
-          <div role="status">
-            City filters are temporarily unavailable. The pharmacy list is still
-            shown without city normalization.
-          </div>
-        ) : undefined
-      }
+      notices={undefined}
       results={
         <CatalogResourceStateView
           state={resourceState}
@@ -93,7 +85,8 @@ function PharmaciesPageContent({
               ? 'No pharmacies match the selected city or search. Try changing or resetting the filters.'
               : 'No pharmacies are available in the catalog yet.'
           }
-          unavailableMessage="Pharmacies are temporarily unavailable. Please try again later."
+          unavailableMessage="Pharmacies are loading."
+          recoveryLabel="pharmacies"
         >
           <PharmaciesList pharmacies={pharmacies} />
         </CatalogResourceStateView>
@@ -111,10 +104,19 @@ function PharmaciesPageContent({
       seo={
         showSeoText ? (
           <CatalogSeoCard
-            title="Choose a pharmacy before preparing an order request"
+            title="Choose a pharmacy for your order"
             titleId="pharmacies-seo-title"
           >
-            <p>{seoContent.intro}</p>
+            <p>
+              {filters.city ? (
+                <>
+                  Browse <strong>pharmacies in {filters.city}</strong>{' '}
+                  participating in E-PHARMACY.
+                </>
+              ) : (
+                seoContent.intro
+              )}
+            </p>
             <p>{seoContent.comparison}</p>
             <p>{seoContent.ordering}</p>
           </CatalogSeoCard>

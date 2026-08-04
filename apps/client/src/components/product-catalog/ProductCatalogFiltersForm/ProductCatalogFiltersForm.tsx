@@ -67,17 +67,15 @@ function buildProductsFiltersHref(
 
 //===================================================================
 
-function createProductsResetFiltersHref(
-  filters: ProductCatalogFilters,
-  pharmacies: PharmacyOption[]
-) {
+function createProductsResetFiltersHref(pharmacies: PharmacyOption[]) {
   return buildProductsFiltersHref(
     {
       name: '',
       article: '',
       category: 'all',
       availability: 'all',
-      sort: filters.sort,
+      pharmacyId: undefined,
+      sort: 'newest',
     },
     pharmacies
   );
@@ -117,7 +115,7 @@ function ProductCatalogFiltersForm({
     [filters, navigate, pharmacies]
   );
 
-  const { draft, isDraftDirty, setDraft } = useCatalogSearchDraft({
+  const { draft, isDraftDirty, setDraft, resetDraft } = useCatalogSearchDraft({
     committed: committedSearch,
     delay: CATALOG_SEARCH_UPDATE_DELAY,
     normalize: normalizeSearch,
@@ -136,7 +134,7 @@ function ProductCatalogFiltersForm({
   const activeFiltersCount =
     getProductCatalogActiveFiltersCount(effectiveFilters);
   const hasActiveFilters = activeFiltersCount > 0;
-  const resetHref = createProductsResetFiltersHref(filters, pharmacies);
+  const resetHref = createProductsResetFiltersHref(pharmacies);
 
   const pharmacyOptions = useMemo(
     () => [
@@ -162,8 +160,8 @@ function ProductCatalogFiltersForm({
     [filterOptions.sort]
   );
 
-  const resetDraft = () => {
-    setDraft({ name: '', article: '' });
+  const clearSearchDraft = () => {
+    resetDraft({ name: '', article: '' });
   };
 
   const updateCatalog = (nextFilters: CatalogHrefFilters) => {
@@ -269,7 +267,7 @@ function ProductCatalogFiltersForm({
           href={resetHref}
           isVisible={hasActiveFilters}
           disabled={isPending}
-          onClick={resetDraft}
+          onClick={clearSearchDraft}
         />
       }
       countLabel={
@@ -299,7 +297,7 @@ function ProductCatalogFiltersForm({
           resetHref={resetHref}
           onClose={() => setIsFiltersOpen(false)}
           onReset={() => {
-            resetDraft();
+            clearSearchDraft();
             setIsFiltersOpen(false);
           }}
         >

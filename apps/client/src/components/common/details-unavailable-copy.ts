@@ -2,7 +2,7 @@ import type { DataUnavailableReason } from '@/lib/api/resource-state';
 
 //===================================================================
 
-export type DetailsEntityLabel = 'product' | 'pharmacy';
+export type DetailsEntityLabel = 'product' | 'pharmacy' | 'page';
 
 //===================================================================
 
@@ -18,7 +18,8 @@ export function getDetailsUnavailableCopy(
   entityLabel: DetailsEntityLabel,
   reason: DataUnavailableReason
 ): DetailsUnavailableCopy {
-  const entityDetails = `${entityLabel} details`;
+  const entityDetails =
+    entityLabel === 'page' ? 'page' : `${entityLabel} details`;
 
   switch (reason) {
     case 'timeout':

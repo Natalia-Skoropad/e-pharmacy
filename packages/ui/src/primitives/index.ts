@@ -1,6 +1,7 @@
 export * from './Button';
 export * from './IconButton';
 export * from './CloseIconButton';
+export * from './CopyButton';
 export * from './FiltersButton';
 export * from './LazyLoadButton';
 export * from './LoadingSpinner';

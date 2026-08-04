@@ -77,7 +77,7 @@ export const HOME_FEATURES = [
   {
     id: 'catalog',
     title: 'Smart catalog',
-    text: 'Find products, use category and availability filters, and compare pharmacy offers.',
+    text: 'Find products, use category and availability filters, compare pharmacy offers, and check prices and stock before choosing a pharmacy.',
     href: ROUTES.PRODUCTS_CATALOG,
     actionLabel: 'Open catalog',
     icon: PackageSearch,
@@ -93,15 +93,15 @@ export const HOME_FEATURES = [
   {
     id: 'profile',
     title: 'Personal cabinet',
-    text: 'Keep profile details, delivery information, favorites, and order-request history together.',
+    text: 'Keep profile details, delivery information, favorites, and order history together.',
     href: ROUTES.PROFILE,
     actionLabel: 'Open profile',
     icon: ClipboardList,
   },
   {
     id: 'cart',
-    title: 'Order requests by pharmacy',
-    text: 'Cart items are grouped by pharmacy, so each request has its own total and confirmation flow.',
+    title: 'Orders by pharmacy',
+    text: 'Cart items are grouped by pharmacy, so each order has its own total and confirmation flow.',
     href: ROUTES.CART,
     actionLabel: 'Open cart',
     icon: ShoppingCart,
@@ -113,7 +113,7 @@ export const HOME_FEATURES = [
 export const BENEFITS = [
   {
     id: 'compare',
-    title: 'Compare before you request',
+    title: 'Compare before ordering',
     text: 'Check prices, ratings, pharmacy contacts, and available products before choosing a pharmacy.',
     icon: SearchCheck,
   },
@@ -125,13 +125,13 @@ export const BENEFITS = [
   },
   {
     id: 'order-control',
-    title: 'Control every request',
-    text: 'Cart items are grouped by pharmacy, with a clear total and confirmation flow for each request.',
+    title: 'Control every order',
+    text: 'Cart items are grouped by pharmacy, with a clear total and confirmation flow for each order.',
     icon: ReceiptText,
   },
   {
     id: 'fulfillment',
-    title: 'Request pickup or delivery',
+    title: 'Choose pickup or delivery',
     text: 'Choose pharmacy pickup or provide postal delivery details for pharmacy and carrier confirmation.',
     icon: MapPin,
   },
@@ -158,8 +158,8 @@ export const STEPS = [
   },
   {
     id: 'prepare-request',
-    title: 'Prepare an order request',
-    text: 'Choose pickup or request delivery, add contact details, and send the request to the pharmacy.',
+    title: 'Prepare an order',
+    text: 'Choose pickup or delivery, add contact details, and place the order with the pharmacy.',
   },
 ] as const satisfies readonly HomeStep[];
 
@@ -192,27 +192,27 @@ export const HOME_REVIEWS = [
     author: 'Kateryna',
     rating: 5,
     comment:
-      'I found the product I needed, compared the pharmacy offers, and selected a convenient pickup point in a few minutes. The order-request details were clear, and the pharmacy confirmed everything without unnecessary calls.',
+      'I found the product I needed, compared the pharmacy offers, and selected a convenient pickup point in a few minutes. The order details were clear, and the pharmacy confirmed everything without unnecessary calls.',
   },
   {
     id: 'maksym-favorites-review',
     author: 'Maksym',
     rating: 4.8,
     comment:
-      'Favorites make repeat searches much easier. I saved the products and pharmacies I use most often, then returned later and prepared a new request without searching through the catalog again.',
+      'Favorites make repeat searches much easier. I saved the products and pharmacies I use most often, then returned later and prepared a new order without searching through the catalog again.',
   },
   {
     id: 'sofiia-delivery-review',
     author: 'Sofiia',
     rating: 5,
     comment:
-      'The delivery information was easy to understand, and I could see which pharmacy would process the request before submitting it. The status updates helped me know what was happening at every step.',
+      'The delivery information was easy to understand, and I could see which pharmacy would process the order before submitting it. The status updates helped me know what was happening at every step.',
   },
   {
     id: 'andrii-mobile-review',
     author: 'Andrii',
     rating: 4.9,
     comment:
-      'The mobile version is convenient and straightforward. Product information, pharmacy contacts, and the cart were easy to use, even when I needed to prepare an order request while away from home.',
+      'The mobile version is convenient and straightforward. Product information, pharmacy contacts, and the cart were easy to use, even when I needed to prepare an order while away from home.',
   },
 ] as const satisfies readonly HomeReview[];

@@ -62,34 +62,12 @@
   overflow-wrap: anywhere;
 }
 
-.list a,
-.copyValueButton,
-.copyActionButton {
+.list a {
   transition: color var(--transition-base);
 }
 
 .list a:hover,
-.list a:focus-visible,
-.copyValueButton:hover,
-.copyValueButton:focus-visible,
-.copyActionButton:hover,
-.copyActionButton:focus-visible {
-  color: var(--color-accent);
-}
-
-.copyValueButton,
-.copyActionButton {
-  padding: 0;
-  font: inherit;
-  font-weight: var(--fw-medium);
-  color: inherit;
-  text-align: right;
-  cursor: pointer;
-  background: transparent;
-  border: 0;
-}
-
-.copyActionButton {
+.list a:focus-visible {
   color: var(--color-accent);
 }
 

@@ -2,7 +2,10 @@ import { cache } from 'react';
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import { parsePublicEntitySlugId } from '@e-pharmacy/validation/url';
+import {
+  getIdFromSlugId,
+  parsePublicEntitySlugId,
+} from '@e-pharmacy/validation/url';
 
 import {
   createPharmacyDetailMetadata,
@@ -38,6 +41,41 @@ function createProductQueryString(pharmacyId?: string): string {
 
 //===================================================================
 
+async function resolveLegacyPublicEntity(slugId: string) {
+  if (!getIdFromSlugId(slugId)) return null;
+
+  const productResult = await resolveProduct(slugId);
+
+  if (productResult.status === 'found') {
+    return { entityType: 'product' as const, result: productResult };
+  }
+
+  const pharmacyResult = await resolvePharmacy(slugId);
+
+  if (pharmacyResult.status === 'found') {
+    return { entityType: 'pharmacy' as const, result: pharmacyResult };
+  }
+
+  if (
+    productResult.status === 'unavailable' ||
+    pharmacyResult.status === 'unavailable'
+  ) {
+    return {
+      entityType: 'unavailable' as const,
+      result:
+        productResult.status === 'unavailable'
+          ? productResult
+          : pharmacyResult.status === 'unavailable'
+            ? pharmacyResult
+            : null,
+    };
+  }
+
+  return null;
+}
+
+//===================================================================
+
 export async function generateMetadata({
   params,
 }: PublicDetailsPageProps): Promise<Metadata> {
@@ -45,6 +83,16 @@ export async function generateMetadata({
   const parsed = parsePublicEntitySlugId(slugId);
 
   if (!parsed) {
+    const legacyEntity = await resolveLegacyPublicEntity(slugId);
+
+    if (legacyEntity?.entityType === 'product') {
+      return createProductDetailMetadata(legacyEntity.result.product);
+    }
+
+    if (legacyEntity?.entityType === 'pharmacy') {
+      return createPharmacyDetailMetadata(legacyEntity.result.pharmacy);
+    }
+
     return createPageMetadata({
       title: 'Page Not Found',
       description: 'The requested page could not be found.',
@@ -108,7 +156,41 @@ async function PublicDetailsPage({
 }: PublicDetailsPageProps) {
   const { slugId } = await params;
   const parsed = parsePublicEntitySlugId(slugId);
-  if (!parsed) notFound();
+  const resolvedSearchParams = await searchParams;
+
+  if (!parsed) {
+    const legacyEntity = await resolveLegacyPublicEntity(slugId);
+
+    if (legacyEntity?.entityType === 'product') {
+      const canonicalPath = buildProductPath(
+        legacyEntity.result.product.name,
+        legacyEntity.result.product.id,
+        legacyEntity.result.product.publicSlugId
+      );
+
+      permanentRedirect(
+        `${canonicalPath}${createProductQueryString(resolvedSearchParams?.pharmacyId)}`
+      );
+    }
+
+    if (legacyEntity?.entityType === 'pharmacy') {
+      permanentRedirect(
+        buildPharmacyPath(
+          legacyEntity.result.pharmacy.name,
+          legacyEntity.result.pharmacy.id,
+          legacyEntity.result.pharmacy.publicSlugId
+        )
+      );
+    }
+
+    if (legacyEntity?.entityType === 'unavailable' && legacyEntity.result) {
+      return (
+        <DetailsUnavailablePage entityLabel="page" error={legacyEntity.result} />
+      );
+    }
+
+    return notFound();
+  }
 
   if (parsed.entityType === 'product') {
     const result = await resolveProduct(slugId);
@@ -121,7 +203,6 @@ async function PublicDetailsPage({
 
     if (result.status === 'not_found') notFound();
 
-    const resolvedSearchParams = await searchParams;
     const canonicalPath = buildProductPath(
       result.product.name,
       result.product.id,

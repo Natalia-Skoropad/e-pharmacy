@@ -4,7 +4,6 @@ import { useId, useState } from 'react';
 
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs, TabPanel } from '@e-pharmacy/ui/navigation';
-
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 import type { Review } from '@e-pharmacy/types/reviews';
 
@@ -15,10 +14,7 @@ import { ROUTES } from '@/lib/routes';
 import { PharmacyAboutPanel } from './PharmacyAboutPanel';
 import { PharmacyBankDetailsPanel } from './PharmacyBankDetailsPanel';
 import { PharmacyDetailsHero } from './PharmacyDetailsHero';
-import {
-  PharmacyDetailsTabs,
-  type PharmacyTab,
-} from './PharmacyDetailsTabs';
+import { PharmacyDetailsTabs, type PharmacyTab } from './PharmacyDetailsTabs';
 import { PharmacyReviewsPanel } from './PharmacyReviewsPanel';
 import { usePharmacyBankDetails } from './usePharmacyBankDetails';
 
@@ -41,19 +37,19 @@ function PharmacyDetailsPageContent({
   reviewsTotal,
   areReviewsUnavailable = false,
 }: PharmacyDetailsPageContentProps) {
-  const { canUseClientFeatures } = useClientAuthCapabilities();
+  const { canUseClientFeatures, isActivePharmacyUser } =
+    useClientAuthCapabilities();
+
+  const canShowBankDetails = canUseClientFeatures || isActivePharmacyUser;
   const [activeTab, setActiveTab] = useState<PharmacyTab>('details');
   const generatedTabsId = useId();
   const tabsIdBase = `pharmacy-details-${generatedTabsId.replace(/:/g, '')}`;
   const clipboard = useClipboardAction();
 
-  const bankDetails = usePharmacyBankDetails(
-    pharmacy.id,
-    pharmacy.bankDetails
-  );
+  const bankDetails = usePharmacyBankDetails(pharmacy.id, pharmacy.bankDetails);
 
   const currentTab: PharmacyTab =
-    activeTab === 'payment' && !canUseClientFeatures ? 'details' : activeTab;
+    activeTab === 'payment' && !canShowBankDetails ? 'details' : activeTab;
 
   const productsHref = buildProductCatalogPath({ pharmacyId: pharmacy.id }, [
     pharmacy,
@@ -65,7 +61,7 @@ function PharmacyDetailsPageContent({
     }
 
     if (nextTab === 'payment') {
-      if (!canUseClientFeatures) {
+      if (!canShowBankDetails) {
         setActiveTab('details');
         return;
       }
@@ -97,7 +93,7 @@ function PharmacyDetailsPageContent({
             idBase={tabsIdBase}
             activeValue={currentTab}
             reviewsTotal={reviewsTotal}
-            canShowBankDetails={canUseClientFeatures}
+            canShowBankDetails={canShowBankDetails}
             onChange={handleTabChange}
           />
 
@@ -117,7 +113,7 @@ function PharmacyDetailsPageContent({
       </section>
 
       <Container>
-        {canUseClientFeatures ? (
+        {canShowBankDetails ? (
           <TabPanel
             className={css.tabSection}
             idBase={tabsIdBase}

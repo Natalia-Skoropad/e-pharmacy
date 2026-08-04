@@ -1,6 +1,6 @@
 export const HOME_TITLE = 'Online Pharmacy';
 export const HOME_DESCRIPTION =
-  'Find products, compare pharmacy offers, and prepare order requests with E-PHARMACY.';
+  'Find products, compare pharmacy offers, and prepare orders with E-PHARMACY.';
 
 //===================================================================
 

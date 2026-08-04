@@ -49,18 +49,18 @@ export function getProductCatalogDescription(
       : 'products';
 
   if (filters.category !== 'all' && context.pharmacyName) {
-    return `Explore ${categoryText} from ${context.pharmacyName}, compare availability, ratings, and details, then prepare an order request with the selected pharmacy.`;
+    return `Explore ${categoryText} from ${context.pharmacyName}, compare availability, ratings, and details, then prepare an order with the selected pharmacy.`;
   }
 
   if (filters.category !== 'all') {
-    return `Explore ${categoryText}, compare availability in active pharmacies, review ratings and product details, and prepare an order request with a selected pharmacy.`;
+    return `Explore ${categoryText}, compare availability in active pharmacies, review ratings and product details, and prepare an order with a selected pharmacy.`;
   }
 
   if (context.pharmacyName) {
-    return `Browse products from ${context.pharmacyName}, compare prices, availability, ratings, and product details before preparing an order request.`;
+    return `Browse products from ${context.pharmacyName}, compare prices, availability, ratings, and product details before preparing an order.`;
   }
 
-  return 'Search products by name or article, filter by category and pharmacy, compare ratings and availability, and prepare an order request with a selected pharmacy.';
+  return 'Search products by name or article, filter by category and pharmacy, compare ratings and availability, and prepare an order with a selected pharmacy.';
 }
 
 //===================================================================
@@ -83,7 +83,7 @@ export function getProductCatalogSeoContent(
     comparison:
       'Compare pharmacy prices, current availability, ratings, and product information before opening a product page.',
     ordering:
-      'Use search and filters to narrow the catalog, then choose a pharmacy offer and prepare an order request for pharmacy confirmation.',
+      'Use search and filters to narrow the catalog, then choose a pharmacy offer and prepare an order for pharmacy confirmation.',
   };
 }
 

@@ -63,7 +63,7 @@ export const USER_AGREEMENT_INFO = {
       id: 'order-requests',
       title: 'Orders and checkout',
       content: [
-        'An order created through E-PHARMACY is a request sent to the selected pharmacy. The final purchase is completed between the client and the pharmacy that supplies the product.',
+        'An order created through E-PHARMACY is sent to the selected pharmacy for confirmation. The final purchase is completed between the client and the pharmacy that supplies the product.',
         'The client should check product names, quantities, pharmacy address, delivery method, payment method, and contact details before confirming an order.',
       ],
     },

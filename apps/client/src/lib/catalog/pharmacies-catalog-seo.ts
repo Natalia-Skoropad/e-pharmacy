@@ -23,10 +23,10 @@ export function getPharmacyTitle(filters: PharmacyFilters): string {
 
 export function getPharmacyDescription(filters: PharmacyFilters): string {
   if (filters.city) {
-    return `Find active E-PHARMACY pharmacies in ${filters.city}, compare ratings, addresses, contact details, and available products before preparing an order request.`;
+    return `Find active E-PHARMACY pharmacies in ${filters.city}, compare ratings, addresses, contact details, and available products before preparing an order.`;
   }
 
-  return 'Find active E-PHARMACY pharmacies, compare ratings, addresses, contact details, and available products before preparing an order request.';
+  return 'Find active E-PHARMACY pharmacies, compare ratings, addresses, contact details, and available products before preparing an order.';
 }
 
 //===================================================================
@@ -45,7 +45,7 @@ export function getPharmaciesSeoContent(
       'Compare ratings, addresses, contact details, and the number of currently available products before opening a pharmacy page.',
 
     ordering:
-      'Choose a pharmacy to view its catalog and prepare an order request. Availability, pickup, delivery, and final sale conditions are confirmed by the selected pharmacy.',
+      'Choose a pharmacy to view its catalog and prepare an order. Availability, pickup, delivery, and final sale conditions are confirmed by the selected pharmacy.',
   };
 }
 

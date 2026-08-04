@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@e-pharmacy/ui/primitives';
+import { Button, CopyButton } from '@e-pharmacy/ui/primitives';
 
 import type { PharmacyBankDetailsState } from './pharmacy-bank-details-state';
 
@@ -53,39 +53,24 @@ export function PharmacyBankDetailsPanel({
 
       {state.status === 'success' ? (
         <dl className={css.list}>
-          <div>
-            <dt>Recipient name</dt>
-            <dd>{state.data.recipientName}</dd>
-          </div>
-
-          <div>
-            <dt>Tax ID / EDRPOU</dt>
-            <dd>{state.data.taxId}</dd>
-          </div>
-
-          <div>
-            <dt>IBAN</dt>
-            <dd>
-              <button
-                className={css.copyValueButton}
-                type="button"
-                onClick={() => void onCopy(state.data.iban, 'IBAN')}
-                aria-label={`Copy IBAN ${state.data.iban}`}
-              >
-                {state.data.iban}
-              </button>
-            </dd>
-          </div>
-
-          <div>
-            <dt>Bank name</dt>
-            <dd>{state.data.bankName}</dd>
-          </div>
-
-          <div>
-            <dt>Payment purpose</dt>
-            <dd>{state.data.paymentPurpose}</dd>
-          </div>
+          {[
+            ['Recipient name', state.data.recipientName],
+            ['Tax ID / EDRPOU', state.data.taxId],
+            ['IBAN', state.data.iban],
+            ['Bank name', state.data.bankName],
+            ['Payment purpose', state.data.paymentPurpose],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>
+                <span>{value}</span>
+                <CopyButton
+                  label={`Copy ${label} ${value}`}
+                  onClick={() => void onCopy(value, label)}
+                />
+              </dd>
+            </div>
+          ))}
 
           <div>
             <dt>Receipt email</dt>
@@ -93,16 +78,12 @@ export function PharmacyBankDetailsPanel({
               <a href={`mailto:${state.data.receiptEmail}`}>
                 {state.data.receiptEmail}
               </a>
-              <button
-                className={css.copyActionButton}
-                type="button"
+              <CopyButton
+                label={`Copy receipt email ${state.data.receiptEmail}`}
                 onClick={() =>
                   void onCopy(state.data.receiptEmail, 'Receipt email')
                 }
-                aria-label={`Copy receipt email ${state.data.receiptEmail}`}
-              >
-                Copy
-              </button>
+              />
             </dd>
           </div>
         </dl>

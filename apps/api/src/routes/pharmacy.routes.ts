@@ -48,7 +48,6 @@ export const pharmacyRoutes = Router();
 
 //===============================================================
 
-
 pharmacyRoutes.get(
   '/me/profile',
   authenticate,
@@ -81,9 +80,11 @@ pharmacyRoutes.post(
 pharmacyRoutes.get(
   '/',
   optionalAuthenticate,
+
   validate({
     query: pharmaciesQuerySchema,
   }),
+
   ctrlWrapper(getPharmacies)
 );
 
@@ -96,7 +97,6 @@ pharmacyRoutes.get('/filters', ctrlWrapper(getPharmacyFilters));
 pharmacyRoutes.get('/options', ctrlWrapper(getPharmacyOptions));
 
 //=================================================================================
-
 
 pharmacyRoutes.get(
   '/favorites/ids',
@@ -111,9 +111,11 @@ pharmacyRoutes.get(
   '/favorites',
   authenticate,
   authorizeRoles(USER_ROLES.CLIENT),
+
   validate({
     query: pharmaciesQuerySchema,
   }),
+
   ctrlWrapper(getFavoritePharmacies)
 );
 
@@ -123,9 +125,11 @@ pharmacyRoutes.get(
   '/reviews/pending',
   authenticate,
   authorizeRoles(USER_ROLES.ADMIN),
+
   validate({
     query: pendingPharmacyReviewsQuerySchema,
   }),
+
   ctrlWrapper(getPendingPharmacyReviews)
 );
 
@@ -134,7 +138,7 @@ pharmacyRoutes.get(
 pharmacyRoutes.get(
   '/:pharmacyId/checkout-details',
   authenticate,
-  authorizeRoles(USER_ROLES.CLIENT),
+  authorizeRoles(USER_ROLES.CLIENT, USER_ROLES.PHARMACY),
   validate({ params: pharmacyIdParamsSchema }),
   ctrlWrapper(getPharmacyCheckoutDetails)
 );
@@ -143,9 +147,11 @@ pharmacyRoutes.get(
 
 pharmacyRoutes.get(
   '/:pharmacyId/reviews',
+
   validate({
     params: pharmacyIdParamsSchema,
   }),
+
   ctrlWrapper(getPharmacyReviews)
 );
 
@@ -156,10 +162,12 @@ pharmacyRoutes.post(
   reviewRateLimit,
   authenticate,
   authorizeRoles(USER_ROLES.CLIENT),
+
   validate({
     params: pharmacyIdParamsSchema,
     body: createPharmacyReviewSchema,
   }),
+
   ctrlWrapper(createPharmacyReview)
 );
 
@@ -169,10 +177,12 @@ pharmacyRoutes.patch(
   '/:pharmacyId/reviews/:reviewId/moderation',
   authenticate,
   authorizeRoles(USER_ROLES.ADMIN),
+
   validate({
     params: pharmacyReviewParamsSchema,
     body: moderatePharmacyReviewSchema,
   }),
+
   ctrlWrapper(moderatePharmacyReview)
 );
 
@@ -182,9 +192,11 @@ pharmacyRoutes.put(
   '/:pharmacyId/favorite',
   authenticate,
   authorizeRoles(USER_ROLES.CLIENT),
+
   validate({
     params: pharmacyIdParamsSchema,
   }),
+
   ctrlWrapper(setFavoritePharmacy)
 );
 
@@ -194,9 +206,11 @@ pharmacyRoutes.delete(
   '/:pharmacyId/favorite',
   authenticate,
   authorizeRoles(USER_ROLES.CLIENT),
+
   validate({
     params: pharmacyIdParamsSchema,
   }),
+
   ctrlWrapper(setFavoritePharmacy)
 );
 
@@ -205,8 +219,10 @@ pharmacyRoutes.delete(
 pharmacyRoutes.get(
   '/:pharmacyId',
   optionalAuthenticate,
+
   validate({
     params: pharmacyIdParamsSchema,
   }),
+
   ctrlWrapper(getPharmacyDetails)
 );

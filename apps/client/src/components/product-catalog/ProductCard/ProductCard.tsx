@@ -76,7 +76,7 @@ function ProductCard({
         src: product.imageUrl,
         alt: product.name,
         fallbackIcon: 'icon-shopping-cart',
-        fit: 'contain',
+        fit: 'cover',
         sizes: '(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 33vw',
       }}
       favoriteAction={

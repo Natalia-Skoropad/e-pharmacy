@@ -24,7 +24,7 @@ function Footer() {
 
             <p className={css.text}>
               E-PHARMACY helps clients explore pharmacies, find products, and
-              prepare order requests for pharmacy confirmation.
+              place orders with a selected pharmacy.
             </p>
           </div>
 

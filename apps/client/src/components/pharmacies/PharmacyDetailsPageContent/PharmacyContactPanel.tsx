@@ -1,8 +1,9 @@
 'use client';
 
-import { Clock, Copy, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
+import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 
 import { LinkButton } from '@e-pharmacy/ui/navigation';
+import { CopyButton } from '@e-pharmacy/ui/primitives';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
 import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
@@ -69,14 +70,10 @@ export function PharmacyContactPanel({
 
             <dd className={css.emailActions}>
               <a href={`mailto:${pharmacy.email}`}>{pharmacy.email}</a>
-              <button
-                className={css.copyButton}
-                type="button"
-                aria-label={`Copy pharmacy email ${pharmacy.email}`}
+              <CopyButton
+                label={`Copy pharmacy email ${pharmacy.email}`}
                 onClick={() => void onCopy(pharmacy.email!, 'Pharmacy email')}
-              >
-                <Copy size={16} aria-hidden="true" />
-              </button>
+              />
             </dd>
           </div>
         ) : null}
@@ -91,7 +88,7 @@ export function PharmacyContactPanel({
             <dd className={css.workingHours}>
               {getWorkingHoursDisplayItems(workingHours)?.map((item) => (
                 <span key={item.day}>
-                  <strong>{item.label}</strong>: {item.hours}
+                  <strong>{item.day}</strong>: {item.hours}
                 </span>
               ))}
             </dd>

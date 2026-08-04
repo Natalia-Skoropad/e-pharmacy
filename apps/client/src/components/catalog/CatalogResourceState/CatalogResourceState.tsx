@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import CatalogAutoRecovery from '@/components/catalog/CatalogAutoRecovery/CatalogAutoRecovery';
+
 import css from './CatalogResourceState.module.css';
 
 import type { CatalogResourceState } from '@/lib/catalog/catalog-resource-state';
@@ -11,6 +13,7 @@ export type CatalogResourceStateProps = Readonly<{
   emptyTitle: string;
   emptyMessage: string;
   unavailableMessage: string;
+  recoveryLabel?: string;
   children: ReactNode;
 }>;
 
@@ -21,12 +24,14 @@ function CatalogResourceStateView({
   emptyTitle,
   emptyMessage,
   unavailableMessage,
+  recoveryLabel = 'catalog results',
   children,
 }: CatalogResourceStateProps) {
   if (state.status === 'unavailable') {
     return (
-      <div className={css.notice} role="status">
-        {unavailableMessage}
+      <div className={css.recovery}>
+        <CatalogAutoRecovery label={recoveryLabel} />
+        <p className="visually-hidden">{unavailableMessage}</p>
       </div>
     );
   }

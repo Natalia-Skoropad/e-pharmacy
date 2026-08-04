@@ -1,12 +1,5 @@
-.notice {
-  padding: 14px 16px;
+.recovery {
   margin-bottom: 20px;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-warning);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
 }
 
 .empty {

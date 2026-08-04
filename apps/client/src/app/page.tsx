@@ -1,15 +1,18 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
+import { unstable_noStore as noStore } from 'next/cache';
 
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 import type { ProductCardSummary } from '@e-pharmacy/types/products';
 import { Container } from '@e-pharmacy/ui/layout';
 
-import { BENEFITS, HOME_STATS, STEPS } from '@/components/home/config/content';
-import { HOME_PREVIEW_LIMIT } from '@/components/home/config/data';
+import {
+  HOME_DESCRIPTION,
+  HOME_TITLE,
+  createPageMetadata,
+} from '@/lib/seo/server';
 
-import { HOME_DESCRIPTION, HOME_TITLE, createPageMetadata } from '@/lib/seo/server';
 import { ROUTES } from '@/lib/routes';
 
 import {
@@ -18,10 +21,13 @@ import {
   PUBLIC_API_CACHE_OPTIONS,
 } from '@/lib/api/server';
 
-import HomeFeatureCards from '@/components/home/HomeFeatureCards/HomeFeatureCards';
-import HomeReviewsSection from '@/components/home/HomeReviewsSection/HomeReviewsSection';
+import CatalogAutoRecovery from '@/components/catalog/CatalogAutoRecovery/CatalogAutoRecovery';
 import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
+import { HOME_PREVIEW_LIMIT } from '@/components/home/config/data';
+import HomeFeatureCards from '@/components/home/HomeFeatureCards/HomeFeatureCards';
+import HomeReviewsSection from '@/components/home/HomeReviewsSection/HomeReviewsSection';
+import { BENEFITS, HOME_STATS, STEPS } from '@/components/home/config/content';
 
 import css from './page.module.css';
 
@@ -54,13 +60,16 @@ async function getFeaturedPharmacies(): Promise<
 
     return { items: response.items, hasError: false };
   } catch {
+    noStore();
     return { items: [], hasError: true };
   }
 }
 
 //===================================================================
 
-async function getFeaturedProducts(): Promise<FeaturedResult<ProductCardSummary>> {
+async function getFeaturedProducts(): Promise<
+  FeaturedResult<ProductCardSummary>
+> {
   try {
     const response = await getProducts(
       {
@@ -73,6 +82,7 @@ async function getFeaturedProducts(): Promise<FeaturedResult<ProductCardSummary>
 
     return { items: response.items, hasError: false };
   } catch {
+    noStore();
     return { items: [], hasError: true };
   }
 }
@@ -106,9 +116,7 @@ async function FeaturedPharmaciesSection() {
           ))}
         </div>
       ) : pharmaciesResult.hasError ? (
-        <div className={css.sectionError}>
-          Pharmacies are temporarily unavailable. Please try again shortly.
-        </div>
+        <CatalogAutoRecovery label="pharmacies" compact />
       ) : (
         <p className={css.sectionEmpty}>No pharmacies are available yet.</p>
       )}
@@ -127,17 +135,11 @@ async function FeaturedProductsSection() {
       {featuredProducts.length > 0 ? (
         <div className={css.previewGrid}>
           {featuredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              headingLevel={3}
-            />
+            <ProductCard key={product.id} product={product} headingLevel={3} />
           ))}
         </div>
       ) : productsResult.hasError ? (
-        <div className={css.sectionError}>
-          Products are temporarily unavailable. Please try again shortly.
-        </div>
+        <CatalogAutoRecovery label="products" compact />
       ) : (
         <p className={css.sectionEmpty}>No products are available yet.</p>
       )}
@@ -157,12 +159,12 @@ async function HomePage() {
               <p className={css.kicker}>Online pharmacy platform</p>
 
               <h1 className={css.heroTitle} id="home-title">
-                Find products and prepare pharmacy order requests
+                Find products and prepare pharmacy orders
               </h1>
 
               <p className={css.heroText}>
-                Find products, compare pharmacy offers, prepare an order request,
-                and choose pickup or delivery for pharmacy confirmation.
+                Find products, compare pharmacy offers, prepare an order, and
+                choose pickup or delivery for pharmacy confirmation.
               </p>
 
               <div className={css.actions}>
@@ -221,8 +223,8 @@ async function HomePage() {
             </h2>
             <p className={css.sectionText}>
               Explore pharmacies, compare ratings, check contacts and available
-              products, then open the pharmacy that feels right before preparing
-              a request.
+              products, then open the pharmacy that feels right before placing
+              an order.
             </p>
           </div>
 
@@ -269,12 +271,12 @@ async function HomePage() {
             <div className={css.bannerContent}>
               <p className={css.kicker}>Order preparation</p>
               <h2 className={css.bannerTitle} id="banner-title">
-                Prepare a request for the products you need
+                Prepare an order for the products you need
               </h2>
               <p>
                 Build your cart by pharmacy, review available quantities, and
-                request pickup or postal delivery. The selected pharmacy
-                confirms the final order and fulfillment details.
+                choose pickup or postal delivery. The selected pharmacy confirms
+                the final order and fulfillment details.
               </p>
               <LinkButton href={ROUTES.PRODUCTS_CATALOG} variant="secondary">
                 Browse catalog
@@ -310,11 +312,11 @@ async function HomePage() {
               <div className={css.benefitsAccentCard}>
                 <span className={css.benefitsBadge}>One account</span>
                 <strong>
-                  Search, compare, save, and prepare requests without losing
+                  Search, compare, save, and prepare orders without losing
                   important details.
                 </strong>
                 <p>
-                  E-PHARMACY keeps product search, pharmacy choice, cart requests,
+                  E-PHARMACY keeps product search, pharmacy choice, cart items,
                   profile data, and order history connected in one clear flow.
                 </p>
               </div>

@@ -26,7 +26,7 @@ import {
 //===================================================================
 
 export type CatalogSegmentIssue = Readonly<{
-  code: 'duplicate' | 'malformed' | 'unknown';
+  code: 'duplicate' | 'legacy' | 'malformed' | 'unknown';
   segment: string;
   index: number;
 }>;
@@ -50,7 +50,7 @@ function getPharmacySegment(
   const pharmacy = pharmacies.find((item) => item.id === pharmacyId);
   const pharmacySlug = pharmacy ? slugifySegment(pharmacy.name) : 'pharmacy';
 
-  return `pharmacy-${pharmacySlug}-${pharmacyId}`;
+  return `pharmacy-${pharmacySlug}-ph${pharmacyId}`;
 }
 
 //===================================================================
@@ -157,12 +157,27 @@ export function parseProductCatalogSegments(
     }
 
     if (segment.startsWith('pharmacy-')) {
-      apply('pharmacy', segment, index, () => {
-        const pharmacyId = segment.match(/-([a-f\d]{24})$/i)?.[1];
-        if (!isValidObjectId(pharmacyId)) return false;
-        filters.pharmacyId = pharmacyId;
-        return true;
-      });
+      if (seen.has('pharmacy')) {
+        issues.push({ code: 'duplicate', segment, index });
+        continue;
+      }
+
+      seen.add('pharmacy');
+
+      const typedPharmacyId = segment.match(/-ph([a-f\d]{24})$/i)?.[1];
+      const legacyPharmacyId = segment.match(/-([a-f\d]{24})$/i)?.[1];
+      const pharmacyId = typedPharmacyId ?? legacyPharmacyId;
+
+      if (!isValidObjectId(pharmacyId)) {
+        issues.push({ code: 'malformed', segment, index });
+        continue;
+      }
+
+      filters.pharmacyId = pharmacyId;
+
+      if (!typedPharmacyId) {
+        issues.push({ code: 'legacy', segment, index });
+      }
 
       continue;
     }

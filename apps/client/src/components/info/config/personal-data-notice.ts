@@ -32,7 +32,7 @@ export const PERSONAL_DATA_NOTICE_INFO = {
       title: 'Who controls personal data',
       content: [
         'E-PHARMACY processes personal data needed to provide client account features, cart features, checkout, order history, and communication related to orders.',
-        'Partner pharmacies may also process client data when they receive an order request or provide products and services to the client.',
+        'Partner pharmacies may also process client data when they receive an order or provide products and services to the client.',
       ],
     },
     {

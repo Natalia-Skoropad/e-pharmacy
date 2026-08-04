@@ -58,8 +58,12 @@ test('keeps public feature actions as real links and the shell keyboard-skippabl
 
 test('does not publish placeholder social links or developer diagnostics', async () => {
   const sources = await Promise.all([
+    readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
     readComponent('./layout/Footer/Footer.tsx'),
     readComponent('./common/ReviewsSection/ReviewsSection.tsx'),
+    readComponent('./home/config/content.ts'),
+    readComponent('./info/config/personal-data-notice.ts'),
+    readComponent('./info/config/user-agreement.ts'),
 
     readComponent(
       './product-catalog/ProductCatalogPageContent/ProductCatalogPageContent.tsx'
@@ -78,6 +82,7 @@ test('does not publish placeholder social links or developer diagnostics', async
   );
 
   assert.doesNotMatch(combined, /backend API|API is running|localhost/i);
+  assert.doesNotMatch(combined, /\border requests?\b/i);
 });
 
 //===================================================================

@@ -25,7 +25,7 @@ import type {
 } from '../types/pharmacy';
 
 import { httpError } from '../utils/httpError';
-import { createSafeRegExp } from '../utils/regexp';
+import { createFlexibleSearchRegExp } from '../utils/regexp';
 import { requireISODateTime } from '../utils/date-contract';
 import { buildPublicEntitySlugId } from '../utils/public-slug-id';
 
@@ -337,14 +337,14 @@ export async function getPharmaciesService(
   };
   if (query.keyword) {
     filter.$or = [
-      { name: createSafeRegExp(query.keyword) },
-      { address: createSafeRegExp(query.keyword) },
-      { city: createSafeRegExp(query.keyword) },
+      { name: createFlexibleSearchRegExp(query.keyword) },
+      { address: createFlexibleSearchRegExp(query.keyword) },
+      { city: createFlexibleSearchRegExp(query.keyword) },
     ];
   }
 
   if (query.nameKeyword) {
-    filter.name = createSafeRegExp(query.nameKeyword);
+    filter.name = createFlexibleSearchRegExp(query.nameKeyword);
   }
 
   if (query.addressKeyword) {
@@ -352,8 +352,8 @@ export async function getPharmaciesService(
       ...(Array.isArray(filter.$and) ? filter.$and : []),
       {
         $or: [
-          { address: createSafeRegExp(query.addressKeyword) },
-          { city: createSafeRegExp(query.addressKeyword) },
+          { address: createFlexibleSearchRegExp(query.addressKeyword) },
+          { city: createFlexibleSearchRegExp(query.addressKeyword) },
         ],
       },
     ];

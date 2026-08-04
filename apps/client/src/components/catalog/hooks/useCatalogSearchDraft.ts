@@ -34,6 +34,7 @@ export function useCatalogSearchDraft<TSearch extends object>({
   const [draft, setDraft] = useState<TSearch>(committed);
   const previousCommittedKeyRef = useRef(committedKey);
   const schedulerRef = useRef(createCatalogSearchScheduler<TSearch>());
+  const skipNextScheduleRef = useRef(false);
 
   useEffect(() => {
     if (
@@ -49,6 +50,12 @@ export function useCatalogSearchDraft<TSearch extends object>({
   }, [committed, committedKey]);
 
   useEffect(() => {
+    if (skipNextScheduleRef.current) {
+      skipNextScheduleRef.current = false;
+      schedulerRef.current.cancel();
+      return;
+    }
+
     const normalized = normalize(draft);
     if (serializeSearch(normalized) === committedKey) return;
 
@@ -58,7 +65,13 @@ export function useCatalogSearchDraft<TSearch extends object>({
     return () => scheduler.cancel();
   }, [committedKey, delay, draft, normalize, onCommit]);
 
+  const resetDraft = (nextDraft: TSearch) => {
+    schedulerRef.current.cancel();
+    skipNextScheduleRef.current = true;
+    setDraft(nextDraft);
+  };
+
   const isDraftDirty = serializeSearch(draft) !== committedKey;
 
-  return { draft, isDraftDirty, setDraft } as const;
+  return { draft, isDraftDirty, setDraft, resetDraft } as const;
 }

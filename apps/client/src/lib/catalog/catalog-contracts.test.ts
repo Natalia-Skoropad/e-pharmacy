@@ -10,7 +10,12 @@ import {
 } from './pharmacies-catalog-filters';
 
 import { parsePharmacySegments } from './pharmacies-catalog-paths';
-import { parseProductCatalogSegments } from './product-catalog-paths';
+
+import {
+  buildProductCatalogPath,
+  parseProductCatalogSegments,
+} from './product-catalog-paths';
+
 import { getPharmaciesSeoContent } from './pharmacies-catalog-seo';
 import { getProductCatalogSeoContent } from './product-catalog-seo';
 
@@ -81,6 +86,44 @@ test('reports duplicate and unknown pharmacy segments', () => {
   );
 
   assert.equal(result.filters.city, 'київ');
+});
+
+//===================================================================
+
+test('builds typed canonical pharmacy filter paths and recognizes legacy paths', () => {
+  const pharmacyId = '6a5f5244a3defb1d037f06e7';
+
+  const pharmacies = [
+    {
+      id: pharmacyId,
+      name: 'Care Pharmacy Lviv',
+    },
+  ] as const;
+
+  assert.equal(
+    buildProductCatalogPath({ pharmacyId }, pharmacies),
+    `/product-catalog/pharmacy-care-pharmacy-lviv-ph${pharmacyId}`
+  );
+
+  const legacyResult = parseProductCatalogSegments({
+    segments: [`pharmacy-care-pharmacy-lviv-${pharmacyId}`],
+  });
+
+  assert.equal(legacyResult.filters.pharmacyId, pharmacyId);
+  assert.equal(legacyResult.isCanonical, false);
+
+  assert.deepEqual(
+    legacyResult.issues.map((issue) => issue.code),
+    ['legacy']
+  );
+
+  const canonicalResult = parseProductCatalogSegments({
+    segments: [`pharmacy-care-pharmacy-lviv-ph${pharmacyId}`],
+  });
+
+  assert.equal(canonicalResult.filters.pharmacyId, pharmacyId);
+  assert.equal(canonicalResult.isCanonical, true);
+  assert.deepEqual(canonicalResult.issues, []);
 });
 
 //===================================================================

@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useRef } from 'react';
+import { ShoppingCart } from 'lucide-react';
 
 import { Button, CloseIconButton } from '@e-pharmacy/ui/primitives';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
@@ -34,6 +35,10 @@ function CartOrderLimitModal({ onClose }: CartOrderLimitModalProps) {
         onClose={onClose}
       >
         <div className={css.header}>
+          <span className={css.icon} aria-hidden="true">
+            <ShoppingCart size={24} />
+          </span>
+
           <h2 className={css.title} id={titleId}>
             {CART_ORDER_LIMIT_MODAL_TITLE}
           </h2>
@@ -50,9 +55,11 @@ function CartOrderLimitModal({ onClose }: CartOrderLimitModalProps) {
           {CART_ORDER_LIMIT_ERROR_MESSAGE}
         </p>
 
-        <Button ref={dismissButtonRef} type="button" onClick={onClose}>
-          Got it
-        </Button>
+        <div className={css.footer}>
+          <Button ref={dismissButtonRef} type="button" onClick={onClose}>
+            Got it
+          </Button>
+        </div>
       </ModalBase>
     </ModalRoot>
   );

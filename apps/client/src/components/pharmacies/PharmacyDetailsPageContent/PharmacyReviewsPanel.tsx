@@ -36,6 +36,7 @@ export function PharmacyReviewsPanel({
   areReviewsUnavailable = false,
 }: PharmacyReviewsPanelProps) {
   const toast = useToast();
+
   const [visibleReviewsCount, setVisibleReviewsCount] = useState(
     DEFAULT_VISIBLE_REVIEWS_COUNT
   );

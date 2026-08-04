@@ -12,10 +12,11 @@
 .imageWrap {
   position: relative;
   aspect-ratio: 16 / 10;
+  width: 100%;
+  min-width: 0;
   min-height: 210px;
   overflow: hidden;
   background-color: var(--color-accent-light);
-  contain: layout paint;
 }
 
 .image {

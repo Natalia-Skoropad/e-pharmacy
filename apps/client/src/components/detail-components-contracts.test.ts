@@ -106,8 +106,10 @@ test('keeps Pharmacy Details retryable and separates contact from receipt email'
   assert.match(hero, /<h1 className=\{css\.title\}>\{pharmacy\.name\}<\/h1>/);
   assert.doesNotMatch(hero, /pharmacy pharmacy/);
   assert.match(contact, /mailto:\$\{pharmacy\.email\}/);
+  assert.match(contact, /CopyButton/);
   assert.match(contact, /Copy pharmacy email/);
   assert.match(bankPanel, /state\.data\.receiptEmail/);
+  assert.ok((bankPanel.match(/<CopyButton/g) ?? []).length >= 2);
   assert.match(bankPanel, /Retry/);
   assert.match(bankState, /status: 'error'/);
   assert.match(bankHook, /controllerRef\.current\?\.abort\(\)/);

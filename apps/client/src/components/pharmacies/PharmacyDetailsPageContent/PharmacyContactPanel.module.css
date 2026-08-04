@@ -50,25 +50,6 @@
   justify-content: flex-end;
 }
 
-.copyButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
-  color: var(--color-accent);
-  cursor: pointer;
-  background-color: var(--color-accent-light);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-}
-
-.copyButton:hover,
-.copyButton:focus-visible {
-  border-color: var(--color-accent);
-}
-
 .workingHours {
   display: flex;
   flex-wrap: wrap;

@@ -80,8 +80,6 @@ function ProductCatalogPageContent({
   totalPages,
   filters,
   resourceState,
-  pharmacyOptionsState,
-  filtersState,
 }: ProductCatalogPageContentProps) {
   const seoContext = createSeoContext(filters, pharmacies, filterOptions);
   const pageTitle = getProductCatalogTitle(filters, seoContext);
@@ -91,14 +89,7 @@ function ProductCatalogPageContent({
   const emptyIsFiltered =
     resourceState.status === 'empty' && resourceState.reason === 'no-matches';
 
-  const notices =
-    pharmacyOptionsState.status === 'unavailable' ||
-    filtersState.status === 'unavailable' ? (
-      <div role="status">
-        Some catalog filters are temporarily unavailable. Product results remain
-        available with fallback filter options.
-      </div>
-    ) : undefined;
+  const notices = undefined;
 
   return (
     <CatalogPageShell
@@ -135,7 +126,8 @@ function ProductCatalogPageContent({
               ? 'No products match the selected filters. Try changing or resetting the filters.'
               : 'No products are available in the catalog yet.'
           }
-          unavailableMessage="Products are temporarily unavailable. Please try again later."
+          unavailableMessage="Products are loading."
+          recoveryLabel="products"
         >
           <ProductsList products={products} />
         </CatalogResourceStateView>
@@ -158,7 +150,21 @@ function ProductCatalogPageContent({
             title="Compare pharmacy offers in one place"
             titleId="catalog-seo-title"
           >
-            <p>{seoContent.intro}</p>
+            <p>
+              Browse{' '}
+              {filters.category !== 'all' && seoContext.categoryLabel ? (
+                <strong>{seoContext.categoryLabel.toLowerCase()}</strong>
+              ) : (
+                'products'
+              )}{' '}
+              available from{' '}
+              {seoContext.pharmacyName ? (
+                <strong>{seoContext.pharmacyName}</strong>
+              ) : (
+                'active pharmacies'
+              )}
+              .
+            </p>
             <p>{seoContent.comparison}</p>
             <p>{seoContent.ordering}</p>
           </CatalogSeoCard>
