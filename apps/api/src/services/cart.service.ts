@@ -34,7 +34,6 @@ type CartItemDocument = {
   _id: Types.ObjectId;
   productOfferId: Types.ObjectId;
   quantity: number;
-  unitPrice: number;
   expiresAt: Date;
 };
 
@@ -56,7 +55,6 @@ function getCartItemExpiresAt(): Date {
   return expiresAt;
 }
 
-
 //===============================================================
 
 async function replaceCartItemsOrThrow(
@@ -64,9 +62,16 @@ async function replaceCartItemsOrThrow(
   items: CartItemDocument[],
   session: mongoose.ClientSession
 ): Promise<number> {
+  const persistedItems = items.map((item) => ({
+    _id: item._id,
+    productOfferId: item.productOfferId,
+    quantity: item.quantity,
+    expiresAt: item.expiresAt,
+  }));
+
   const result = await Cart.updateOne(
     { _id: cart._id, revision: cart.revision },
-    { $set: { items }, $inc: { revision: 1 } },
+    { $set: { items: persistedItems }, $inc: { revision: 1 } },
     { session, runValidators: true }
   );
 
@@ -384,10 +389,7 @@ export async function addCartItemService(
         );
       }
 
-      if (
-        quantityToAdd < 1 ||
-        nextQuantity > offer.availableQuantity
-      ) {
+      if (quantityToAdd < 1 || nextQuantity > offer.availableQuantity) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
           'Available quantity has changed. Refresh the cart and try again.',
@@ -423,7 +425,6 @@ export async function addCartItemService(
         cart.items[itemIndex] = {
           ...currentItem,
           quantity: currentItem.quantity + quantityToAdd,
-          unitPrice: offer.price,
           expiresAt: getCartItemExpiresAt(),
         };
       } else {
@@ -431,7 +432,6 @@ export async function addCartItemService(
           _id: new Types.ObjectId(),
           productOfferId: offer._id,
           quantity: quantityToAdd,
-          unitPrice: offer.price,
           expiresAt: getCartItemExpiresAt(),
         });
       }
@@ -470,7 +470,19 @@ export async function updateCartItemService(
           'Product offer is unavailable'
         );
 
-      const nextQuantity = Math.max(1, quantity);
+      const nextQuantity = quantity;
+
+      if (
+        !Number.isSafeInteger(nextQuantity) ||
+        nextQuantity < 1 ||
+        nextQuantity > CART_ITEM_MAX_QUANTITY
+      ) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          `Cart item quantity must be an integer from 1 to ${CART_ITEM_MAX_QUANTITY}.`
+        );
+      }
+
       if (nextQuantity > offer.availableQuantity) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
@@ -483,7 +495,6 @@ export async function updateCartItemService(
       cart.items[itemIndex] = {
         ...currentItem,
         quantity: nextQuantity,
-        unitPrice: offer.price,
         expiresAt: getCartItemExpiresAt(),
       };
       await replaceCartItemsOrThrow(cart, cart.items, session);

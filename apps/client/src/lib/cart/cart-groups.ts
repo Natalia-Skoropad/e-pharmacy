@@ -12,40 +12,12 @@ export type CartPharmacyGroup = Readonly<{
   totalPrice: number;
   pharmacyRating?: number;
   pharmacyReviewsCount?: number;
-  hasInconsistentPharmacyMetadata: boolean;
 }>;
 
 //===================================================================
 
 function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
-}
-
-//===================================================================
-
-function getDistinctStrings(values: readonly (string | undefined)[]): string[] {
-  return [
-    ...new Set(
-      values
-        .map((value) => value?.trim())
-        .filter((value): value is string => Boolean(value))
-    ),
-  ].sort((a, b) => a.localeCompare(b, 'en'));
-}
-
-//===================================================================
-
-function getDistinctFiniteNumbers(
-  values: readonly (number | undefined)[]
-): number[] {
-  return [
-    ...new Set(
-      values.filter(
-        (value): value is number =>
-          typeof value === 'number' && Number.isFinite(value)
-      )
-    ),
-  ].sort((a, b) => a - b);
 }
 
 //===================================================================
@@ -63,46 +35,29 @@ export function groupCartItemsByPharmacy(
 
   return Object.freeze(
     [...itemsByPharmacy.entries()].map(([pharmacyId, groupItems]) => {
-      const pharmacyNames = getDistinctStrings(
-        groupItems.flatMap((item) => [
-          item.pharmacyName,
-          item.product.pharmacyName,
-        ])
-      );
+      const firstItem = groupItems[0];
 
-      const pharmacyRatings = getDistinctFiniteNumbers(
-        groupItems.map((item) => item.pharmacyRating)
-      );
-
-      const pharmacyReviewsCounts = getDistinctFiniteNumbers(
-        groupItems.map((item) => item.pharmacyReviewsCount)
-      );
+      if (!firstItem) {
+        throw new Error(`Cart pharmacy group ${pharmacyId} is empty.`);
+      }
 
       const group = {
         pharmacyId,
-        pharmacyName: pharmacyNames[0] ?? pharmacyId,
+        pharmacyName: firstItem.pharmacyName,
         items: Object.freeze([...groupItems]),
         totalItems: groupItems.reduce(
           (total, item) => total + item.quantity,
           0
         ),
-
         totalPrice: roundMoney(
           groupItems.reduce((total, item) => total + item.totalPrice, 0)
         ),
-
-        ...(pharmacyRatings.length === 1
-          ? { pharmacyRating: pharmacyRatings[0] }
+        ...(firstItem.pharmacyRating !== undefined
+          ? { pharmacyRating: firstItem.pharmacyRating }
           : {}),
-
-        ...(pharmacyReviewsCounts.length === 1
-          ? { pharmacyReviewsCount: pharmacyReviewsCounts[0] }
+        ...(firstItem.pharmacyReviewsCount !== undefined
+          ? { pharmacyReviewsCount: firstItem.pharmacyReviewsCount }
           : {}),
-
-        hasInconsistentPharmacyMetadata:
-          pharmacyNames.length > 1 ||
-          pharmacyRatings.length > 1 ||
-          pharmacyReviewsCounts.length > 1,
       } satisfies CartPharmacyGroup;
 
       return Object.freeze(group);
@@ -114,12 +69,6 @@ export function groupCartItemsByPharmacy(
 
 export function groupCartByPharmacy(cart: Cart): readonly CartPharmacyGroup[] {
   return groupCartItemsByPharmacy(cart.items);
-}
-
-//===================================================================
-
-export function getCartOrderTotal(group: CartPharmacyGroup): number {
-  return group.totalPrice;
 }
 
 //===================================================================

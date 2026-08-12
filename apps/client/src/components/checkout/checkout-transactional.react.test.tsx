@@ -14,7 +14,6 @@ test('checkout confirmation button follows the validated canSubmit state', () =>
     items: [],
     totalItems: 1,
     totalPrice: 100,
-    hasInconsistentPharmacyMetadata: false,
   };
 
   const blockedMarkup = renderToStaticMarkup(

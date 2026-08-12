@@ -199,7 +199,7 @@ async function migrate(): Promise<void> {
     await carts.dropIndex(legacyUserIdIndex.name);
   }
 
-  // Cart now references ProductOffer directly and uses clientUserId/unitPrice.
+  // Cart references ProductOffer directly; displayed prices always come from the live offer.
   for await (const cart of carts.find({})) {
     const clientUserId = cart.clientUserId ?? cart.userId;
 
@@ -222,12 +222,10 @@ async function migrate(): Promise<void> {
 
       if (!productOfferId) continue;
 
-      const offer = await productOffers.findOne({ _id: productOfferId });
       nextItems.push({
         _id: item._id ?? new Types.ObjectId(),
         productOfferId,
         quantity: item.quantity,
-        unitPrice: offer?.price ?? item.unitPrice ?? item.price ?? 0,
         expiresAt: item.expiresAt,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,

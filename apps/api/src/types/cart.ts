@@ -6,7 +6,6 @@ import type { ProductCategory } from './categories';
 export type CartItemEntity = {
   productOfferId: Types.ObjectId;
   quantity: number;
-  unitPrice: number;
   expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;

@@ -412,6 +412,41 @@ test('strictly validates transactional cart responses', async () => {
 
 //===================================================================
 
+test('rejects inconsistent pharmacy metadata across one cart group', async () => {
+  const { parseCartResponse } = await import('./shared-dto-parsers');
+  const valid = createValidCartResponse();
+  const firstItem = valid.items[0];
+
+  const secondItem = {
+    ...firstItem,
+    id: '507f1f77bcf86cd799439021',
+    productOfferId: '507f1f77bcf86cd799439022',
+    productId: '507f1f77bcf86cd799439023',
+    product: {
+      ...firstItem.product,
+      id: '507f1f77bcf86cd799439023',
+      pharmacyName: 'Changed Pharmacy Name',
+    },
+    pharmacyName: 'Changed Pharmacy Name',
+  };
+
+  assert.throws(
+    () =>
+      parseCartResponse({
+        cart: {
+          ...valid,
+          items: [firstItem, secondItem],
+          totalItems: firstItem.quantity + secondItem.quantity,
+          totalPrice: firstItem.totalPrice + secondItem.totalPrice,
+        },
+      }),
+    (error: unknown) =>
+      error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
+  );
+});
+
+//===================================================================
+
 test('validates cart cleanup issues instead of silently dropping them', async () => {
   const { parseCartResponse } = await import('./shared-dto-parsers');
   const valid = createValidCartResponse();

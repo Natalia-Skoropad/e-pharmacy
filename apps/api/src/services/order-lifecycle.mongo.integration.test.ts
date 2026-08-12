@@ -27,6 +27,7 @@ import {
 
 const TEST_MONGODB_URI = process.env.E_PHARMACY_TEST_MONGODB_URI;
 const shouldSkip = !TEST_MONGODB_URI;
+const CHECKOUT_OFFER_PRICE = 100;
 
 //===============================================================
 
@@ -112,7 +113,7 @@ async function createCheckoutFixture(options?: {
     _id: offerId,
     productId,
     pharmacyId,
-    price: 100,
+    price: CHECKOUT_OFFER_PRICE,
     totalQuantity: stock,
     availableQuantity: stock,
     reservedQuantity: 0,
@@ -125,7 +126,6 @@ async function createCheckoutFixture(options?: {
       {
         productOfferId: offerId,
         quantity: 1,
-        unitPrice: 100,
         expiresAt: new Date(Date.now() + 86_400_000),
       },
     ],
@@ -138,7 +138,6 @@ async function createCheckoutFixture(options?: {
       _id: Types.ObjectId;
       productOfferId: Types.ObjectId;
       quantity: number;
-      unitPrice: number;
     }>;
   } | null>();
 
@@ -153,7 +152,7 @@ async function createCheckoutFixture(options?: {
         id: cartItem._id,
         productOfferId: cartItem.productOfferId,
         quantity: cartItem.quantity,
-        unitPrice: cartItem.unitPrice,
+        unitPrice: CHECKOUT_OFFER_PRICE,
       },
     ],
   });
@@ -368,7 +367,6 @@ test(
         {
           productOfferId: first.offerId,
           quantity: 1,
-          unitPrice: 100,
           expiresAt: new Date(Date.now() + 86_400_000),
         },
       ],
@@ -380,7 +378,6 @@ test(
         _id: Types.ObjectId;
         productOfferId: Types.ObjectId;
         quantity: number;
-        unitPrice: number;
       }>;
     } | null>();
 
@@ -391,7 +388,7 @@ test(
         id: item._id,
         productOfferId: item.productOfferId,
         quantity: item.quantity,
-        unitPrice: item.unitPrice,
+        unitPrice: CHECKOUT_OFFER_PRICE,
       })),
     });
 

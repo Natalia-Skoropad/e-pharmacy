@@ -20,7 +20,6 @@ const cartItemSchema = new Schema(
       required: true,
     },
 
-    unitPrice: { type: Number, min: 0, required: true },
     expiresAt: { type: Date, required: true },
   },
   { _id: true, id: false, timestamps: true }

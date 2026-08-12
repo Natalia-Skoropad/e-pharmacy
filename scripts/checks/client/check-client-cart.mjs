@@ -88,6 +88,11 @@ assert.match(cartApi, /MutationRequestOptions/);
 assert.match(cartApi, /\.\.\.options/);
 assert.doesNotMatch(cartApi, /JsonResponseRequestOptions/);
 
+
+const cartGroups = await read('apps/client/src/lib/cart/cart-groups.ts');
+assert.doesNotMatch(cartGroups, /getCartOrderTotal/);
+assert.doesNotMatch(cartGroups, /hasInconsistentPharmacyMetadata/);
+
 const cartItemCard = await read(
   'apps/client/src/components/cart/CartItemCard/CartItemCard.tsx'
 );

@@ -18,7 +18,9 @@ test('cart add never silently clamps requested quantity and enforces the shared 
     service,
     /Math\.min\(input\.quantity, offer\.availableQuantity\)/
   );
-  
+
+  assert.doesNotMatch(service, /Math\.max\(1, quantity\)/);
+  assert.match(service, /nextQuantity < 1/);
   assert.match(service, /nextQuantity > CART_ITEM_MAX_QUANTITY/);
   assert.match(service, /nextQuantity > offer\.availableQuantity/);
   assert.match(service, /STOCK_CHANGED_ERROR_CODE/);

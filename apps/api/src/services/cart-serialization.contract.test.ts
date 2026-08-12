@@ -33,4 +33,7 @@ test('cart serialization cleans stale items transactionally and reports issues',
 
   assert.match(serializeSource, /return \{\s*revision,/s);
   assert.match(serializeSource, /issues,/);
+  assert.match(serializeSource, /pharmacyName: pharmacy\.name/);
+  assert.match(serializeSource, /pharmacyRating: pharmacy\.rating/);
+  assert.match(serializeSource, /pharmacyReviewsCount: pharmacy\.reviewsCount/);
 });

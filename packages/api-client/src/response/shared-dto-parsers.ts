@@ -1513,6 +1513,53 @@ function parseCartItem(value: unknown, context?: ApiResponseContext): CartItem {
 
 //===================================================================
 
+function assertCartPharmacyMetadataConsistency(
+  items: readonly CartItem[],
+  source: unknown,
+  context?: ApiResponseContext
+): void {
+  const metadataByPharmacy = new Map<
+    string,
+    Readonly<{
+      pharmacyName: string;
+      pharmacyRating?: number;
+      pharmacyReviewsCount?: number;
+    }>
+  >();
+
+  for (const item of items) {
+    const metadata = {
+      pharmacyName: item.pharmacyName,
+      ...(item.pharmacyRating !== undefined
+        ? { pharmacyRating: item.pharmacyRating }
+        : {}),
+      ...(item.pharmacyReviewsCount !== undefined
+        ? { pharmacyReviewsCount: item.pharmacyReviewsCount }
+        : {}),
+    };
+
+    const existing = metadataByPharmacy.get(item.pharmacyId);
+    if (!existing) {
+      metadataByPharmacy.set(item.pharmacyId, metadata);
+      continue;
+    }
+
+    if (
+      existing.pharmacyName !== metadata.pharmacyName ||
+      existing.pharmacyRating !== metadata.pharmacyRating ||
+      existing.pharmacyReviewsCount !== metadata.pharmacyReviewsCount
+    ) {
+      throw invalidDto(
+        'cart items for one pharmacy must share canonical pharmacy metadata.',
+        source,
+        context
+      );
+    }
+  }
+}
+
+//===================================================================
+
 function parseCartIssue(
   value: unknown,
   context?: ApiResponseContext
@@ -1565,6 +1612,7 @@ function parseCart(value: unknown, context?: ApiResponseContext): Cart {
   );
 
   const items = parseArray(record.items, 'items', parseCartItem, context);
+  assertCartPharmacyMetadataConsistency(items, record, context);
 
   const totalItems = requireSafeNonNegativeInteger(
     record,

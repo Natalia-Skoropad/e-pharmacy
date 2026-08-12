@@ -13,7 +13,6 @@ import { CART_CHANGED_ERROR_CODE, STOCK_CHANGED_ERROR_CODE } from '@e-pharmacy/c
 
 import {
   getCartOrderPath,
-  getCartOrderTotal,
   groupCartItemsByPharmacy,
   type CartPharmacyGroup,
 } from '@/lib/cart/cart-groups';
@@ -326,7 +325,7 @@ function CartPageContent() {
                     <CartSummary
                       pharmacyId={group.pharmacyId}
                       totalItems={group.totalItems}
-                      totalPrice={getCartOrderTotal(group)}
+                      totalPrice={group.totalPrice}
                       checkoutPath={getCartOrderPath(group)}
                       isUpdating={isUpdating}
                       hasStockConflict={hasCartGroupStockConflict(group)}
