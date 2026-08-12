@@ -19,8 +19,10 @@ import { ROUTES } from '@/lib/routes';
 
 type HomeFeature = Readonly<{
   id: string;
+  eyebrow: string;
   title: string;
   text: string;
+  highlights: readonly [string, string, string];
   href: string;
   actionLabel: string;
   icon: LucideIcon;
@@ -76,32 +78,56 @@ export const HOME_STATS = [
 export const HOME_FEATURES = [
   {
     id: 'catalog',
+    eyebrow: 'Discover',
     title: 'Smart catalog',
-    text: 'Find products, use category and availability filters, compare pharmacy offers, and check prices and stock before choosing a pharmacy.',
+    text: 'Move from a broad search to a suitable product and pharmacy offer without losing the important details.',
+    highlights: [
+      'Search by product name or article',
+      'Filter by category and availability',
+      'Compare prices, ratings, and stock',
+    ],
     href: ROUTES.PRODUCTS_CATALOG,
     actionLabel: 'Open catalog',
     icon: PackageSearch,
   },
   {
     id: 'pharmacies',
+    eyebrow: 'Compare',
     title: 'Pharmacy profiles',
-    text: 'Review pharmacy contacts, working hours, ratings, payment information, and available products.',
+    text: 'Check the pharmacy behind an offer before deciding where your order should be prepared.',
+    highlights: [
+      'See contacts and working hours',
+      'Review ratings and customer feedback',
+      'Open products available right now',
+    ],
     href: ROUTES.PHARMACIES,
     actionLabel: 'View pharmacies',
     icon: Building2,
   },
   {
     id: 'profile',
+    eyebrow: 'Personalize',
     title: 'Personal cabinet',
-    text: 'Keep profile details, delivery information, favorites, and order history together.',
+    text: 'Keep the information you use most often in one secure and convenient personal space.',
+    highlights: [
+      'Manage profile and delivery details',
+      'Return to favorite products and pharmacies',
+      'Follow current and previous orders',
+    ],
     href: ROUTES.PROFILE,
     actionLabel: 'Open profile',
     icon: ClipboardList,
   },
   {
     id: 'cart',
+    eyebrow: 'Order',
     title: 'Orders by pharmacy',
-    text: 'Cart items are grouped by pharmacy, so each order has its own total and confirmation flow.',
+    text: 'Prepare clear pharmacy-specific orders with transparent quantities, totals, and fulfillment details.',
+    highlights: [
+      'Keep products grouped by pharmacy',
+      'Review quantities and order totals',
+      'Choose pickup or postal delivery',
+    ],
     href: ROUTES.CART,
     actionLabel: 'Open cart',
     icon: ShoppingCart,

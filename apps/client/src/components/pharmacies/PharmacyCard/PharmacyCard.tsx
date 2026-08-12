@@ -14,7 +14,6 @@ import {
 } from '@/lib/favorites/favorite-presentation';
 
 import { buildPharmacyPath } from '@/lib/routes';
-
 import { useClientAuthCapabilities, useFavoriteActions } from '@/hooks';
 
 import CatalogEntityCard, {
@@ -55,9 +54,10 @@ function PharmacyCard({
       },
     });
 
-  const productsHref = buildProductCatalogPath({ pharmacyId: pharmacy.id }, [
-    pharmacy,
-  ]);
+  const productsHref = buildProductCatalogPath(
+    { pharmacyId: pharmacy.id, availability: 'in-stock' },
+    [pharmacy]
+  );
 
   const pharmacyHref = buildPharmacyPath(
     pharmacy.name,

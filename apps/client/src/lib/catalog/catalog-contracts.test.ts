@@ -5,11 +5,14 @@ import { parsePositivePageParam } from './catalog-param-utils';
 import { getCatalogRedirectPage } from './catalog-resource-state';
 
 import {
+  formatPharmacyCityLabel,
   normalizeCityKey,
   resolvePharmacyCity,
 } from './pharmacies-catalog-filters';
 
 import { parsePharmacySegments } from './pharmacies-catalog-paths';
+
+import { buildProductCatalogApiParams } from './product-catalog-filters';
 
 import {
   buildProductCatalogPath,
@@ -33,6 +36,15 @@ test('normalizes Ukrainian cities without collapsing distinct values', () => {
 
   assert.equal(
     resolvePharmacyCity('кам’янець-подільський', ['Кам’янець-Подільський']),
+    'Кам’янець-Подільський'
+  );
+
+  assert.equal(formatPharmacyCityLabel('cherkasy'), 'Cherkasy');
+
+  assert.equal(formatPharmacyCityLabel('ivano-frankivsk'), 'Ivano-Frankivsk');
+
+  assert.equal(
+    formatPharmacyCityLabel('кам’янець-подільський'),
     'Кам’янець-Подільський'
   );
 });
@@ -124,6 +136,40 @@ test('builds typed canonical pharmacy filter paths and recognizes legacy paths',
   assert.equal(canonicalResult.filters.pharmacyId, pharmacyId);
   assert.equal(canonicalResult.isCanonical, true);
   assert.deepEqual(canonicalResult.issues, []);
+});
+
+//===================================================================
+
+test('keeps availability independent from the selected pharmacy', () => {
+  const pharmacyId = '6a5f5244a3defb1d037f06e7';
+
+  const baseFilters = {
+    name: '',
+    article: '',
+    category: 'all',
+    availability: 'all',
+    sort: 'newest',
+    page: 1,
+    pharmacyId,
+  } as const;
+
+  assert.equal(buildProductCatalogApiParams(baseFilters).inStock, undefined);
+
+  assert.equal(
+    buildProductCatalogApiParams({
+      ...baseFilters,
+      availability: 'in-stock',
+    }).inStock,
+    true
+  );
+
+  assert.equal(
+    buildProductCatalogApiParams({
+      ...baseFilters,
+      availability: 'out-of-stock',
+    }).inStock,
+    false
+  );
 });
 
 //===================================================================

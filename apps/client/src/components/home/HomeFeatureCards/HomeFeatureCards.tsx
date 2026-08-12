@@ -11,20 +11,34 @@ function HomeFeatureCards() {
     <div className={css.featuresGrid}>
       {HOME_FEATURES.map(({ id, icon: Icon, ...feature }) => (
         <article className={css.featureCard} key={id}>
-          <span className={css.iconWrap} aria-hidden="true">
-            <Icon size={26} />
-          </span>
+          <div className={css.cardHeader}>
+            <span className={css.iconWrap} aria-hidden="true">
+              <Icon size={26} />
+            </span>
 
-          <h3>{feature.title}</h3>
+            <div className={css.headingGroup}>
+              <p className={css.eyebrow}>{feature.eyebrow}</p>
+              <h3>{feature.title}</h3>
+            </div>
+          </div>
+
           <p>{feature.text}</p>
 
-          <LinkButton
-            className={css.featureAction}
-            href={feature.href}
-            variant="secondary"
-          >
-            {feature.actionLabel}
-          </LinkButton>
+          <div className={css.cardFooter}>
+            <ul className={css.highlights}>
+              {feature.highlights.map((highlight) => (
+                <li key={highlight}>{highlight}</li>
+              ))}
+            </ul>
+
+            <LinkButton
+              className={css.featureAction}
+              href={feature.href}
+              variant="secondary"
+            >
+              {feature.actionLabel}
+            </LinkButton>
+          </div>
         </article>
       ))}
     </div>

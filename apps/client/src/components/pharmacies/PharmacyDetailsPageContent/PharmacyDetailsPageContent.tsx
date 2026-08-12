@@ -51,9 +51,10 @@ function PharmacyDetailsPageContent({
   const currentTab: PharmacyTab =
     activeTab === 'payment' && !canShowBankDetails ? 'details' : activeTab;
 
-  const productsHref = buildProductCatalogPath({ pharmacyId: pharmacy.id }, [
-    pharmacy,
-  ]);
+  const productsHref = buildProductCatalogPath(
+    { pharmacyId: pharmacy.id, availability: 'in-stock' },
+    [pharmacy]
+  );
 
   const handleTabChange = (nextTab: PharmacyTab) => {
     if (currentTab === 'payment' && nextTab !== 'payment') {

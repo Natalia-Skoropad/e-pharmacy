@@ -181,10 +181,17 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
   const activeLoadRef = useRef<ActiveCartLoad | null>(null);
   const lifecycleActiveRef = useRef(true);
 
-  const mutationQueue = useMemo<CartMutationQueue>(
-    () => createCartMutationQueue(),
-    []
-  );
+  const mutationQueueRef = useRef<CartMutationQueue | null>(null);
+
+  const getMutationQueue = useCallback((): CartMutationQueue => {
+    const currentQueue = mutationQueueRef.current;
+
+    if (currentQueue && !currentQueue.isClosed()) return currentQueue;
+
+    const nextQueue = createCartMutationQueue();
+    mutationQueueRef.current = nextQueue;
+    return nextQueue;
+  }, []);
 
   const updateState = useCallback(
     (updater: (current: CartState) => CartState): void => {
@@ -286,7 +293,13 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       payload: AddCartItemPayload,
       options: OfferMutationOptions = {}
     ): Promise<CartResponse | null> => {
-      if (!clientOwnerKey || clearingRef.current) return null;
+      if (
+        !clientOwnerKey ||
+        !lifecycleActiveRef.current ||
+        clearingRef.current
+      ) {
+        return null;
+      }
       if (options.offerId && pendingOfferIdsRef.current.has(options.offerId)) {
         return null;
       }
@@ -294,7 +307,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       markOfferPending(options.offerId);
 
       try {
-        return await mutationQueue.enqueue(async (signal) => {
+        return await getMutationQueue().enqueue(async (signal) => {
           const response = await addCartItem(payload, { signal });
 
           if (signal.aborted || !lifecycleActiveRef.current) return response;
@@ -309,7 +322,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
     [
       clientOwnerKey,
       markOfferPending,
-      mutationQueue,
+      getMutationQueue,
       replaceCartFromServer,
       unmarkOfferPending,
     ]
@@ -321,7 +334,12 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       payload: UpdateCartItemPayload,
       options: OfferMutationOptions = {}
     ): Promise<CartResponse | null> => {
-      if (!clientOwnerKey || clearingRef.current || payload.quantity < 1) {
+      if (
+        !clientOwnerKey ||
+        !lifecycleActiveRef.current ||
+        clearingRef.current ||
+        payload.quantity < 1
+      ) {
         return null;
       }
       if (pendingItemIdsRef.current.has(cartItemId)) return null;
@@ -330,7 +348,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       markOfferPending(options.offerId);
 
       try {
-        return await mutationQueue.enqueue(async (signal) => {
+        return await getMutationQueue().enqueue(async (signal) => {
           const previousCart = getCartStateCart(stateRef.current) ?? EMPTY_CART;
 
           replaceCartFromServer(
@@ -367,7 +385,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       clientOwnerKey,
       markItemPending,
       markOfferPending,
-      mutationQueue,
+      getMutationQueue,
       replaceCartFromServer,
       unmarkItemPending,
       unmarkOfferPending,
@@ -379,14 +397,20 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       cartItemId: string,
       options: OfferMutationOptions = {}
     ): Promise<CartResponse | null> => {
-      if (!clientOwnerKey || clearingRef.current) return null;
+      if (
+        !clientOwnerKey ||
+        !lifecycleActiveRef.current ||
+        clearingRef.current
+      ) {
+        return null;
+      }
       if (pendingItemIdsRef.current.has(cartItemId)) return null;
 
       markItemPending(cartItemId);
       markOfferPending(options.offerId);
 
       try {
-        return await mutationQueue.enqueue(async (signal) => {
+        return await getMutationQueue().enqueue(async (signal) => {
           const response = await removeCartItem(cartItemId, { signal });
           if (!signal.aborted && lifecycleActiveRef.current) {
             replaceCartFromServer(response.cart);
@@ -403,7 +427,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       clientOwnerKey,
       markItemPending,
       markOfferPending,
-      mutationQueue,
+      getMutationQueue,
       replaceCartFromServer,
       unmarkItemPending,
       unmarkOfferPending,
@@ -413,6 +437,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
   const clearAllCart = useCallback(async (): Promise<CartResponse | null> => {
     if (
       !clientOwnerKey ||
+      !lifecycleActiveRef.current ||
       clearingRef.current ||
       pendingItemIdsRef.current.size > 0 ||
       pendingOfferIdsRef.current.size > 0
@@ -424,7 +449,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
     setIsClearing(true);
 
     try {
-      return await mutationQueue.enqueue(async (signal) => {
+      return await getMutationQueue().enqueue(async (signal) => {
         const response = await clearCart({ signal });
 
         if (!signal.aborted && lifecycleActiveRef.current) {
@@ -437,12 +462,13 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       clearingRef.current = false;
       if (lifecycleActiveRef.current) setIsClearing(false);
     }
-  }, [clientOwnerKey, mutationQueue, replaceCartFromServer]);
+  }, [clientOwnerKey, getMutationQueue, replaceCartFromServer]);
 
   const removePharmacyOrder = useCallback(
     async (pharmacyId: string): Promise<Cart | null> => {
       if (
         !clientOwnerKey ||
+        !lifecycleActiveRef.current ||
         clearingRef.current ||
         pendingItemIdsRef.current.size > 0 ||
         pendingOfferIdsRef.current.size > 0
@@ -454,7 +480,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       setIsClearing(true);
 
       try {
-        return await mutationQueue.enqueue(async (signal) => {
+        return await getMutationQueue().enqueue(async (signal) => {
           const pharmacyItems = (
             getCartStateCart(stateRef.current) ?? EMPTY_CART
           ).items.filter((item) => item.pharmacyId === pharmacyId);
@@ -481,30 +507,47 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
         if (lifecycleActiveRef.current) setIsClearing(false);
       }
     },
-    [clientOwnerKey, mutationQueue, replaceCartFromServer]
+    [clientOwnerKey, getMutationQueue, replaceCartFromServer]
   );
 
   useEffect(() => {
-    if (isBootstrapping || !clientOwnerKey || state.status !== 'idle') return;
-    void performCartLoad().catch(() => undefined);
-  }, [clientOwnerKey, isBootstrapping, performCartLoad, state.status]);
+    lifecycleActiveRef.current = true;
+    getMutationQueue();
 
-  useEffect(
-    () => () => {
+    return () => {
       lifecycleActiveRef.current = false;
       activeLoadRef.current?.controller.abort();
       activeLoadRef.current = null;
 
-      mutationQueue.close(
-        new DOMException('Cart session ended.', 'AbortError')
-      );
+      const mutationQueue = mutationQueueRef.current;
+      mutationQueueRef.current = null;
+      if (mutationQueue) {
+        mutationQueue.close(
+          new DOMException('Cart session ended.', 'AbortError')
+        );
+      }
 
       pendingItemIdsRef.current.clear();
       pendingOfferIdsRef.current.clear();
       clearingRef.current = false;
-    },
-    [mutationQueue]
-  );
+    };
+  }, [getMutationQueue]);
+
+  useEffect(() => {
+    const shouldStartInitialLoad = state.status === 'idle';
+    const shouldRecoverInterruptedLoad =
+      state.status === 'loading' && !activeLoadRef.current;
+
+    if (
+      isBootstrapping ||
+      !clientOwnerKey ||
+      (!shouldStartInitialLoad && !shouldRecoverInterruptedLoad)
+    ) {
+      return;
+    }
+
+    void performCartLoad().catch(() => undefined);
+  }, [clientOwnerKey, isBootstrapping, performCartLoad, state.status]);
 
   const stateCart = getCartStateCart(state);
   const cart = stateCart ?? EMPTY_CART;

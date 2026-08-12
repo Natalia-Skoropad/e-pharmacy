@@ -34,7 +34,8 @@ function getUniqueOfferCities(offers: readonly ProductOffer[]): string[] {
 
 export function useProductOffersView(
   offers: readonly ProductOffer[],
-  contextPharmacyId?: string
+  contextPharmacyId?: string,
+  favoritePharmacyIds?: ReadonlySet<string>
 ) {
   const [pharmacyNameQuery, setPharmacyNameQuery] = useState('');
   const [pharmacyAddressQuery, setPharmacyAddressQuery] = useState('');
@@ -85,9 +86,15 @@ export function useProductOffersView(
         return nameMatches && addressMatches && cityMatches;
       })
       .sort((a, b) => {
-        if (a.offer.pharmacyIsFavorite !== b.offer.pharmacyIsFavorite) {
-          return a.offer.pharmacyIsFavorite ? -1 : 1;
-        }
+        const isAFavorite = favoritePharmacyIds
+          ? favoritePharmacyIds.has(a.offer.pharmacyId)
+          : a.offer.pharmacyIsFavorite;
+
+        const isBFavorite = favoritePharmacyIds
+          ? favoritePharmacyIds.has(b.offer.pharmacyId)
+          : b.offer.pharmacyIsFavorite;
+
+        if (isAFavorite !== isBFavorite) return isAFavorite ? -1 : 1;
 
         if (contextPharmacyId) {
           if (a.offer.pharmacyId === contextPharmacyId) return -1;
@@ -120,6 +127,7 @@ export function useProductOffersView(
     availableOffers,
     cityFilter,
     contextPharmacyId,
+    favoritePharmacyIds,
     offerSort,
     pharmacyAddressQuery,
     pharmacyNameQuery,

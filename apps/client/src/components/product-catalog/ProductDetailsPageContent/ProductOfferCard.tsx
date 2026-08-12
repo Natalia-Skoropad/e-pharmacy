@@ -1,5 +1,7 @@
 'use client';
 
+import { Heart } from 'lucide-react';
+
 import { CART_ITEM_TTL_DAYS } from '@e-pharmacy/config/cart';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { QuantityCounter } from '@e-pharmacy/ui/forms';
@@ -28,6 +30,7 @@ export type ProductOfferCardProps = Readonly<{
   isItemPending: boolean;
   canUseCart: boolean;
   canShowStock: boolean;
+  isFavoritePharmacy?: boolean;
   onIncrement: () => void;
   onDecrement: () => void;
 }>;
@@ -55,6 +58,7 @@ export function ProductOfferCard({
   isItemPending,
   canUseCart,
   canShowStock,
+  isFavoritePharmacy = offer.pharmacyIsFavorite,
   onIncrement,
   onDecrement,
 }: ProductOfferCardProps) {
@@ -65,6 +69,18 @@ export function ProductOfferCard({
     <article className={css.card}>
       <div className={css.main}>
         <div className={css.imageWrap}>
+          {isFavoritePharmacy ? (
+            <span className={css.favoriteBadge}>
+              <Heart
+                className={css.favoriteIcon}
+                size={14}
+                fill="currentColor"
+                aria-hidden="true"
+              />
+              Favorite pharmacy
+            </span>
+          ) : null}
+
           {offer.pharmacyImageUrl ? (
             <ShimmerImage
               className={css.image}
@@ -79,10 +95,6 @@ export function ProductOfferCard({
         </div>
 
         <div className={css.info}>
-          {offer.pharmacyIsFavorite ? (
-            <span className={css.favoriteBadge}>Favorite pharmacy</span>
-          ) : null}
-
           <h3 className={css.title}>{offer.pharmacyName}</h3>
 
           {getOfferAddress(offer) ? (

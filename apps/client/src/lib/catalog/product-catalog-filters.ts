@@ -210,6 +210,7 @@ export function buildProductCatalogApiParams(
     perPage: PRODUCTS_CATALOG_PER_PAGE,
     nameKeyword: filters.name || undefined,
     articleKeyword: filters.article || undefined,
+
     category: filters.category === 'all' ? undefined : filters.category,
 
     inStock:

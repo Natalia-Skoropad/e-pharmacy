@@ -40,10 +40,15 @@
 }
 
 .favoriteBadge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
   display: inline-flex;
-  max-width: 100%;
+  gap: 6px;
+  align-items: center;
+  max-width: calc(100% - 24px);
   padding: 6px 10px;
-  margin-bottom: 8px;
   overflow: hidden;
   font-size: var(--fz-12);
   font-weight: var(--fw-medium);
@@ -56,19 +61,25 @@
   border-radius: var(--radius-pill);
 }
 
+.favoriteIcon {
+  flex-shrink: 0;
+}
+
 .title {
   font-size: var(--fz-18);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
   color: var(--color-text-primary);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .address,
 .phone {
   display: block;
   margin-top: 4px;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
@@ -87,6 +98,7 @@
   display: grid;
   gap: 12px;
   justify-items: start;
+  width: 100%;
   min-width: 0;
 }
 
@@ -133,25 +145,39 @@
 }
 
 @media only screen and (min-width: 768px) {
+  .card {
+    grid-template-columns: minmax(0, 2fr) minmax(250px, 2fr);
+    gap: 20px;
+    align-items: stretch;
+  }
+
   .main {
-    grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
-    align-items: center;
+    align-content: start;
+  }
+
+  .info {
+    order: 1;
+  }
+
+  .imageWrap {
+    order: 2;
+    min-height: 150px;
   }
 
   .title {
     font-size: var(--fz-22);
   }
 
-  .card {
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
-    align-items: start;
-    gap: 24px;
+  .aside {
+    align-content: start;
+    gap: 15px;
   }
 }
 
 @media only screen and (min-width: 1440px) {
   .card {
-    grid-template-columns: minmax(0, 1fr) minmax(380px, auto);
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 400px);
+    gap: 28px;
     align-items: center;
   }
 
@@ -159,6 +185,11 @@
     grid-template-columns: 380px minmax(0, 1fr);
     gap: 30px;
     align-items: center;
+  }
+
+  .imageWrap,
+  .info {
+    order: initial;
   }
 
   .imageWrap {
@@ -170,5 +201,9 @@
 
   .link {
     width: fit-content;
+  }
+
+  .aside {
+    gap: 12px;
   }
 }

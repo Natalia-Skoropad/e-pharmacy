@@ -1,11 +1,14 @@
 'use client';
 
+import { useEffect, useMemo } from 'react';
+
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { LazyLoadButton } from '@e-pharmacy/ui/primitives';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import type { ProductDetails, ProductOffer } from '@e-pharmacy/types/products';
 
 import { useClientAuthCapabilities } from '@/hooks';
+import { useFavorites } from '@/providers/FavoritesProvider';
 
 import { CartOrderLimitModal } from '@/components/common';
 
@@ -32,7 +35,34 @@ export function ProductOffersPanel({
   const { canUseClientFeatures, isBootstrapping, isActivePharmacyUser } =
     useClientAuthCapabilities();
 
-  const view = useProductOffersView(product.offers, contextPharmacyId);
+  const { getCollectionStatus, isFavorite, loadCollection } = useFavorites();
+  const favoriteCollectionStatus = getCollectionStatus('pharmacy');
+
+  useEffect(() => {
+    if (!canUseClientFeatures) return;
+    void loadCollection('pharmacy').catch(() => undefined);
+  }, [canUseClientFeatures, loadCollection]);
+
+  const favoritePharmacyIds = useMemo(() => {
+    const useFavoriteCollection = favoriteCollectionStatus === 'ready';
+
+    return new Set(
+      product.offers
+        .filter((offer) =>
+          useFavoriteCollection
+            ? isFavorite('pharmacy', offer.pharmacyId)
+            : offer.pharmacyIsFavorite
+        )
+        .map((offer) => offer.pharmacyId)
+    );
+  }, [favoriteCollectionStatus, isFavorite, product.offers]);
+
+  const view = useProductOffersView(
+    product.offers,
+    contextPharmacyId,
+    favoritePharmacyIds
+  );
+
   const cart = useProductOfferCart(product.id, canUseClientFeatures);
 
   const isProductAvailable = view.availableOffers.length > 0;
@@ -58,6 +88,7 @@ export function ProductOffersPanel({
       isItemPending: cartItem ? cart.pendingItemIds.has(cartItem.id) : false,
       canUseCart: canUseClientFeatures,
       canShowStock: canUseClientFeatures,
+      isFavoritePharmacy: favoritePharmacyIds.has(offer.pharmacyId),
       onIncrement: () => void cart.addUnit(offer),
       onDecrement: () => void cart.removeUnit(offer),
     } as const;

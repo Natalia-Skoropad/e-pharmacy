@@ -64,8 +64,9 @@ function CatalogFiltersShell({
       </div>
 
       {isPending ? (
-        <p className="visually-hidden" role="status" aria-live="polite">
-          Updating catalog results.
+        <p className={css.pendingStatus} role="status" aria-live="polite">
+          <span className={css.pendingSpinner} aria-hidden="true" />
+          Updating catalog results…
         </p>
       ) : null}
 

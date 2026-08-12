@@ -129,7 +129,11 @@ function ProductCatalogPageContent({
           unavailableMessage="Products are loading."
           recoveryLabel="products"
         >
-          <ProductsList products={products} />
+          <ProductsList
+            products={products}
+            pharmacyId={filters.pharmacyId}
+            pharmacyName={seoContext.pharmacyName}
+          />
         </CatalogResourceStateView>
       }
       pagination={

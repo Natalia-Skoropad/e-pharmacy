@@ -79,22 +79,21 @@ export function normalizeCityKey(value: string): string {
 
 //===================================================================
 
-function capitalizeCityWord(value: string): string {
-  if (!value) return '';
-
-  return `${value[0].toLocaleUpperCase('uk-UA')}${value
-    .slice(1)
-    .toLocaleLowerCase('uk-UA')}`;
+function formatCityFallback(value: string): string {
+  return value
+    .normalize('NFKC')
+    .toLocaleLowerCase('uk-UA')
+    .replace(/(^|[\s-])(\p{L})/gu, (_match, separator, letter) => {
+      return `${separator}${letter.toLocaleUpperCase('uk-UA')}`;
+    });
 }
 
 //===================================================================
 
-function formatCityFallback(value: string): string {
-  return value
-    .normalize('NFKC')
-    .split(/([ -]+)/)
-    .map((part) => (/^\p{L}+$/u.test(part) ? capitalizeCityWord(part) : part))
-    .join('');
+export function formatPharmacyCityLabel(value: string): string {
+  const sanitizedCity = sanitizeTextParam(value);
+
+  return sanitizedCity ? formatCityFallback(sanitizedCity) : '';
 }
 
 //===================================================================
@@ -109,7 +108,7 @@ export function resolvePharmacyCity(value: string, cities: string[]): string {
     (city) => normalizeCityKey(city) === normalizedCity
   );
 
-  return matchedCity ?? formatCityFallback(sanitizedCity);
+  return matchedCity ?? formatPharmacyCityLabel(sanitizedCity);
 }
 
 //===================================================================
