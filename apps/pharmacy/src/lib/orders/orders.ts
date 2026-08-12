@@ -100,7 +100,7 @@ export type PharmacyOrderManagerComment = Readonly<{
 
 export type PharmacyOrderDetails = PharmacyOrderRow &
   Readonly<{
-    currency: 'UAH';
+    currency: '₴';
     deliveryAddress?: string;
     recipientName?: string;
     recipientPhone?: string;
@@ -546,7 +546,7 @@ export function normalizePharmacyOrderDetails(
 
   return {
     ...row,
-    currency: 'UAH',
+    currency: '₴',
     pharmacyId: getTrimmedString(payload.pharmacyId) ?? '',
     statusHistory: normalizeStatusHistory(payload.statusHistory),
     activityHistory: normalizeActivityHistory(payload.activityHistory),

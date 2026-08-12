@@ -119,7 +119,7 @@ function ClientsTable({
       },
       {
         key: 'successfulOrdersAmount',
-        title: <TableHeaderTitle parts={['Orders', ' amount, ', 'UAH']} />,
+        title: <TableHeaderTitle parts={['Orders', ' amount, ', '₴']} />,
         render: (client) => formatAmount(client.successfulOrdersAmount) ?? '—',
       },
       {

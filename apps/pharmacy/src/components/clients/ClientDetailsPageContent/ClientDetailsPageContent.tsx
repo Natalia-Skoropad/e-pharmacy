@@ -767,7 +767,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       },
       {
         key: 'amount',
-        title: <TableHeaderTitle parts={['Order', ' amount, ', 'UAH']} />,
+        title: <TableHeaderTitle parts={['Order', ' amount, ', '₴']} />,
         render: (order) => formatAmountValue(order.totalAmount),
       },
       {
@@ -836,7 +836,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       },
       {
         key: 'amount',
-        title: <TableHeaderTitle parts={['Purchased amount,', 'UAH']} />,
+        title: <TableHeaderTitle parts={['Purchased amount,', '₴']} />,
         render: (item) => formatAmountValue(item.totalAmount),
       },
       {

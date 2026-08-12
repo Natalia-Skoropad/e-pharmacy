@@ -549,9 +549,7 @@ function createBankDetails(pharmacyName: string, pharmacyNumber: number) {
 //===============================================================
 
 const PHARMACY_ACCOUNT_PASSWORD = '123456789';
-const ACTIVE_PHARMACY_FIRST_ACTIVATED_AT = new Date(
-  '2026-06-18T09:00:00.000Z'
-);
+const ACTIVE_PHARMACY_FIRST_ACTIVATED_AT = new Date('2026-06-18T09:00:00.000Z');
 const PHARMACY_ACCOUNT_DESCRIPTION_LENGTH = 5000;
 
 const PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL =
@@ -1393,7 +1391,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
         ],
         totalItems: config.quantity,
         totalPrice,
-        currency: 'UAH',
+        currency: '₴',
         paymentMethod:
           config.status === 'new' || config.status === 'rejected'
             ? 'cash'
@@ -1462,7 +1460,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
       reservedAfter: 0,
       availableAfter: 127,
       unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
-      comment: 'Stock arrival added 127 units at 1 968,00 UAH per unit.',
+      comment: 'Stock arrival added 127 units at 1 968,00 ₴ per unit.',
       occurredAt: new Date('2026-07-09T09:00:00.000Z'),
     },
     {
@@ -1603,7 +1601,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
       availableAfter: 170,
       unitPrice: STOCK_MOVEMENT_DEMO_CURRENT_PRICE,
       comment:
-        'Stock arrival added 50 units at the new price of 2 010,00 UAH per unit.',
+        'Stock arrival added 50 units at the new price of 2 010,00 ₴ per unit.',
       occurredAt: new Date('2026-07-14T09:00:00.000Z'),
     },
   ]);
@@ -2328,7 +2326,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
         items: selectedItems,
         totalItems,
         totalPrice,
-        currency: 'UAH',
+        currency: '₴',
         paymentMethod: orderIndex % 2 === 0 ? 'bank_transfer' : 'cash',
         delivery:
           orderIndex % 2 === 0
@@ -2625,9 +2623,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
     productOfferId: { $in: usableOfferIds },
   })
     .sort({ occurredAt: 1, _id: 1 })
-    .select(
-      'productOfferId occurredAt stockDelta reservedDelta availableDelta'
-    )
+    .select('productOfferId occurredAt stockDelta reservedDelta availableDelta')
     .lean<
       Array<{
         productOfferId: Types.ObjectId;
@@ -2769,13 +2765,11 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
 
     for (const candidateQuantity of [preferredQuantity, 1]) {
       for (let offset = 0; offset < usableOffers.length; offset += 1) {
-        const candidate =
-          usableOffers[(index + offset) % usableOffers.length];
+        const candidate = usableOffers[(index + offset) % usableOffers.length];
         const hasHistoricalPrice = (
           priceTimeline.get(String(candidate._id)) ?? []
         ).some(
-          (pricePoint) =>
-            pricePoint.occurredAt.getTime() <= createdAt.getTime()
+          (pricePoint) => pricePoint.occurredAt.getTime() <= createdAt.getTime()
         );
 
         if (
@@ -2816,9 +2810,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
       article: product.article,
       category: product.category,
       ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
-      ...(product.manufacturer
-        ? { manufacturer: product.manufacturer }
-        : {}),
+      ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
       ...(product.dosage ? { dosage: product.dosage } : {}),
       ...(product.packageQuantity
         ? { packageQuantity: String(product.packageQuantity) }
@@ -2844,7 +2836,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
       ],
       totalItems: quantity,
       totalPrice,
-      currency: 'UAH',
+      currency: '₴',
       paymentMethod: index % 3 === 0 ? 'bank_transfer' : 'cash',
       delivery: { method: 'pickup' },
       comment: `Walk-in counter purchase ${index + 1}.`,
@@ -2855,7 +2847,8 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
           status: 'in_progress',
           changedAt: createdAt,
           changedBy: pharmacy.ownerId,
-          comment: 'Order created by the pharmacy manager for a walk-in customer.',
+          comment:
+            'Order created by the pharmacy manager for a walk-in customer.',
         },
         {
           status: 'successful',
@@ -3502,7 +3495,6 @@ async function seedOwnProductManagerNotes(): Promise<number> {
   return notes.length;
 }
 
-
 const CLIENT_MANAGER_NOTE_TEMPLATES = [
   'Prefers concise updates about order readiness and pickup timing.',
   'Check previous successful purchases before suggesting a replacement product.',
@@ -3685,7 +3677,11 @@ function createProductRequestSeedHistory(
     });
   }
 
-  if (status === 'in_progress' || status === 'approved' || status === 'rejected') {
+  if (
+    status === 'in_progress' ||
+    status === 'approved' ||
+    status === 'rejected'
+  ) {
     entries.push({
       status: 'in_progress',
       title: 'Review started',
@@ -3698,7 +3694,8 @@ function createProductRequestSeedHistory(
     entries.push({
       status: 'approved',
       title: 'Request approved',
-      description: 'Admin approved the request and created or linked the product.',
+      description:
+        'Admin approved the request and created or linked the product.',
       createdAt: new Date(createdAt.getTime() + 3 * 60 * 60 * 1000),
     });
   }
@@ -3747,7 +3744,9 @@ async function seedProductRequests(): Promise<number> {
       status === 'approved' && approvedProducts.length > 0
         ? approvedProducts[index % approvedProducts.length]
         : undefined;
-    const createdAt = new Date(baseDate.getTime() + index * 24 * 60 * 60 * 1000);
+    const createdAt = new Date(
+      baseDate.getTime() + index * 24 * 60 * 60 * 1000
+    );
     const category =
       approvedProduct?.category ??
       PRODUCT_REQUEST_SEED_CATEGORIES[
@@ -3860,7 +3859,8 @@ async function seedProductRequestComments(): Promise<number> {
       );
       const template =
         PRODUCT_REQUEST_COMMENT_TEMPLATES[
-          (requestIndex + commentIndex) % PRODUCT_REQUEST_COMMENT_TEMPLATES.length
+          (requestIndex + commentIndex) %
+            PRODUCT_REQUEST_COMMENT_TEMPLATES.length
         ];
 
       return {

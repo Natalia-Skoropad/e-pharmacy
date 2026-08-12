@@ -1,18 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { ShoppingCart } from 'lucide-react';
 
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
-import { Button, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { Button } from '@e-pharmacy/ui/primitives';
 import { formatMoneyRange } from '@e-pharmacy/utils/money';
 import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
 import type { ProductCardSummary } from '@e-pharmacy/types/products';
 
 import { useClientAuthCapabilities, useFavoriteActions } from '@/hooks';
-
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 
@@ -27,6 +27,7 @@ import { useCart } from '@/providers/CartProvider';
 import CatalogEntityCard, {
   type CatalogCardHeadingLevel,
 } from '@/components/catalog/CatalogEntityCard/CatalogEntityCard';
+
 import { CartOrderLimitModal, FavoriteToggleButton } from '@/components/common';
 
 import css from './ProductCard.module.css';
@@ -78,6 +79,7 @@ function ProductCard({
 
   const isAvailable = product.inStock && product.foundInPharmaciesCount > 0;
   const isPharmacyScoped = Boolean(pharmacyId);
+
   const cartItem = pharmacyId
     ? cart.items.find(
         (item) =>
@@ -86,6 +88,7 @@ function ProductCard({
     : undefined;
 
   const isAlreadyInCart = Boolean(cartItem);
+
   const canAddToCart =
     authCapabilities.canUseClientFeatures &&
     isAvailable &&
@@ -219,11 +222,12 @@ function ProductCard({
                 <Button
                   className={css.cartButton}
                   type="button"
+                  variant="ghost"
                   size="sm"
                   disabled={!canAddToCart}
                   isLoading={isAddingToCart}
                   loadingLabel="Adding"
-                  iconLeft={<SvgIcon name="icon-shopping-cart" size={16} />}
+                  iconLeft={<ShoppingCart size={18} aria-hidden="true" />}
                   aria-label={
                     isAlreadyInCart
                       ? `${product.name} from ${pharmacyName ?? 'the selected pharmacy'} is already in the cart`
@@ -231,7 +235,7 @@ function ProductCard({
                   }
                   onClick={() => void handleAddToCart()}
                 >
-                  {isAlreadyInCart ? 'In cart' : 'Add to cart'}
+                  {isAlreadyInCart ? 'In cart' : 'To cart'}
                 </Button>
               ) : null}
 

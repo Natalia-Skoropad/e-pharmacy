@@ -31,7 +31,7 @@ export const DEFAULT_ORDER_STATISTICS: OrderStatisticsCounts = {
 //===================================================================
 
 export const DEFAULT_ORDER_SALES_STATISTICS: OrderSalesStatistics = {
-  currency: 'UAH',
+  currency: '₴',
   groupBy: 'month',
   categories: [],
   points: [],

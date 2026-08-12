@@ -204,7 +204,7 @@ const orderSchema = new Schema<OrderEntity>(
 
     totalItems: { type: Number, required: true, min: 1 },
     totalPrice: { type: Number, required: true, min: 0 },
-    currency: { type: String, enum: ['UAH'], default: 'UAH', required: true },
+    currency: { type: String, enum: ['₴'], default: '₴', required: true },
 
     paymentMethod: {
       type: String,

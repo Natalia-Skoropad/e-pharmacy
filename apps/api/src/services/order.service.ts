@@ -734,7 +734,7 @@ export async function checkoutOrderService(
             items: orderItems,
             totalItems,
             totalPrice,
-            currency: 'UAH',
+            currency: '₴',
             paymentMethod: input.paymentMethod,
             delivery:
               input.deliveryMethod === 'pickup'
@@ -997,7 +997,7 @@ export async function createManagerOrderService(
             items: orderItems,
             totalItems,
             totalPrice,
-            currency: 'UAH',
+            currency: '₴',
             paymentMethod: input.paymentMethod,
             delivery:
               input.deliveryMethod === 'pickup'
@@ -1959,7 +1959,7 @@ export async function getOrderSalesStatisticsService(
 
   if (!pharmacyId) {
     return {
-      currency: 'UAH',
+      currency: '₴',
       groupBy,
       categories: [],
       points: createSalesPoints({
@@ -2017,7 +2017,7 @@ export async function getOrderSalesStatisticsService(
   );
 
   return {
-    currency: 'UAH',
+    currency: '₴',
     groupBy,
     categories,
     points: createSalesPoints({ rows, dateFrom, dateTo, groupBy, categories }),

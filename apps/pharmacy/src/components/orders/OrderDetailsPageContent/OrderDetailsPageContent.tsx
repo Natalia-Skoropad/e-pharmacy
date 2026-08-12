@@ -1475,7 +1475,7 @@ function OrderDetailsPageContent({
             status: 'in_progress',
             createdByType: 'manager',
             items: [],
-            currency: 'UAH',
+            currency: '₴',
             statusHistory: [],
             activityHistory: [],
             managerCommentsCount: 0,

@@ -1108,12 +1108,12 @@ function AllProductDetailsPageContent({
       },
       {
         key: 'price',
-        title: <TableHeaderTitle parts={['Price,', 'UAH']} />,
+        title: <TableHeaderTitle parts={['Price,', '₴']} />,
         render: (row: StockMovementRow) => row.price,
       },
       {
         key: 'totalAmount',
-        title: <TableHeaderTitle parts={['Total', ' amount, ', 'UAH']} />,
+        title: <TableHeaderTitle parts={['Total', ' amount, ', '₴']} />,
         render: (row: StockMovementRow) => row.totalAmount,
       },
       {
@@ -1202,12 +1202,12 @@ function AllProductDetailsPageContent({
       },
       {
         key: 'fixedUnitPrice',
-        title: <TableHeaderTitle parts={['Fixed unit price,', 'UAH']} />,
+        title: <TableHeaderTitle parts={['Fixed unit price,', '₴']} />,
         render: (row: RelatedOrderRow) => row.fixedUnitPrice,
       },
       {
         key: 'amount',
-        title: <TableHeaderTitle parts={['Order amount,', 'UAH']} />,
+        title: <TableHeaderTitle parts={['Order amount,', '₴']} />,
         render: (row: RelatedOrderRow) => row.amount,
       },
       {

@@ -90,7 +90,7 @@ export function normalizeOrderSalesStatistics(
     : [];
 
   return {
-    currency: 'UAH',
+    currency: '₴',
     groupBy,
     categories,
     points,

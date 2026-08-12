@@ -111,7 +111,7 @@ function OrdersTable({
       },
       {
         key: 'totalAmount',
-        title: <TableHeaderTitle parts={['Total ', 'amount, ', 'UAH']} />,
+        title: <TableHeaderTitle parts={['Total ', 'amount, ', '₴']} />,
         render: (order) => formatAmount(order.totalAmount) ?? '—',
       },
       {

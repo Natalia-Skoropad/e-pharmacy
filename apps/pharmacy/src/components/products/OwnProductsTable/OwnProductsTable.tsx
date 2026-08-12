@@ -109,7 +109,7 @@ function OwnProductsTable({
       {
         key: 'currentPrice',
         width: '50px',
-        title: <TableHeaderTitle parts={['Current', ' price, ', 'UAH']} />,
+        title: <TableHeaderTitle parts={['Current', ' price, ', '₴']} />,
         render: (product) => formatAmount(product.currentPrice) ?? '—',
       },
       {

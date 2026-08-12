@@ -309,10 +309,7 @@ async function migrate(): Promise<void> {
   }
 
   const cartsWithoutClientUserId = await carts.countDocuments({
-    $or: [
-      { clientUserId: { $exists: false } },
-      { clientUserId: null },
-    ],
+    $or: [{ clientUserId: { $exists: false } }, { clientUserId: null }],
   });
 
   if (cartsWithoutClientUserId === 0) {
@@ -400,7 +397,7 @@ async function migrate(): Promise<void> {
       {
         $set: {
           items: nextItems,
-          currency: order.currency ?? 'UAH',
+          currency: order.currency ?? '₴',
           delivery,
           statusHistory,
         },

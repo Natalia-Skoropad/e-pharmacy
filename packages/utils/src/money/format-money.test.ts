@@ -14,8 +14,8 @@ test('formats finite amounts and money using the English UI locale', () => {
   assert.equal(formatAmount(0), '0.00');
   assert.equal(formatAmount(1.005), '1.01');
   assert.equal(formatAmount(-0), '0.00');
-  assert.equal(formatMoney(12.5), '12.50 UAH');
-  assert.equal(formatMoney(-12.5), '-12.50 UAH');
+  assert.equal(formatMoney(12.5), '12.50 ₴');
+  assert.equal(formatMoney(-12.5), '-12.50 ₴');
 });
 
 //===================================================================
@@ -30,8 +30,8 @@ test('rejects non-finite money values', () => {
 
 test('calculates and formats numeric ranges without UI fallback text', () => {
   assert.deepEqual(getNumericRange([10, 4, 7]), { min: 4, max: 10 });
-  assert.equal(formatMoneyRange({ min: 4, max: 10 }), '4.00 UAH – 10.00 UAH');
-  assert.equal(formatMoneyRange({ min: 4, max: 4 }), '4.00 UAH');
+  assert.equal(formatMoneyRange({ min: 4, max: 10 }), '4.00 ₴ – 10.00 ₴');
+  assert.equal(formatMoneyRange({ min: 4, max: 4 }), '4.00 ₴');
   assert.equal(getNumericRange([]), null);
   assert.equal(getNumericRange([10, Number.NaN]), null);
   assert.equal(getNumericRange([Number.POSITIVE_INFINITY]), null);

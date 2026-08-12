@@ -10,7 +10,7 @@ export type DeliveryMethod = 'pickup' | 'postal_delivery';
 
 //=============================================================================
 
-export type Currency = 'UAH';
+export type Currency = '₴';
 
 //=============================================================================
 

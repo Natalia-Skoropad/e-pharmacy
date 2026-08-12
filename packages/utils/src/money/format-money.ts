@@ -1,5 +1,5 @@
 export const MONEY_LOCALE = 'en-GB';
-export const MONEY_CURRENCY = 'UAH';
+export const MONEY_CURRENCY = '₴';
 
 //===================================================================
 

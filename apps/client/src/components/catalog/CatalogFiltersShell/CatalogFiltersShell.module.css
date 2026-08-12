@@ -38,16 +38,15 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  width: fit-content;
-  padding: 10px 14px;
-  margin: -12px 0 24px;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin: -8px 0 24px;
   font-size: var(--fz-14);
   font-weight: var(--fw-medium);
   line-height: var(--lh-base);
-  color: var(--color-accent);
-  background-color: var(--color-accent-light);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
+  color: var(--color-text-secondary);
+  text-align: center;
 }
 
 .pendingSpinner {
