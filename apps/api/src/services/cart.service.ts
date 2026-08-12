@@ -1,6 +1,8 @@
 import mongoose, { Types } from 'mongoose';
 
 import {
+  CART_CHANGED_ERROR_CODE,
+  CART_ITEM_MAX_QUANTITY,
   CART_ITEM_TTL_DAYS,
   CART_PHARMACY_LIMIT_ERROR_CODE,
   MAX_PHARMACY_GROUPS_PER_CART,
@@ -8,6 +10,7 @@ import {
 
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { STOCK_CHANGED_ERROR_CODE } from '../constants/stock';
 
 import { Cart } from '../models/cart.model';
 import { Product } from '../models/product.model';
@@ -53,11 +56,6 @@ function getCartItemExpiresAt(): Date {
   return expiresAt;
 }
 
-//===============================================================
-
-const CART_CLEANUP_THROTTLE_MS = 60_000;
-let lastCartCleanupAt = 0;
-let cartCleanupPromise: Promise<number> | null = null;
 
 //===============================================================
 
@@ -75,7 +73,9 @@ async function replaceCartItemsOrThrow(
   if (result.matchedCount !== 1) {
     throw httpError(
       HTTP_STATUS.CONFLICT,
-      'Cart was changed by another request. Please refresh and try again.'
+      'Cart was changed by another request. Please refresh and try again.',
+      undefined,
+      CART_CHANGED_ERROR_CODE
     );
   }
 
@@ -333,36 +333,12 @@ export async function cleanupExpiredCartItemsService(): Promise<number> {
 
 //===============================================================
 
-async function cleanupExpiredCartItemsIfDue(): Promise<void> {
-  const now = Date.now();
-
-  if (cartCleanupPromise) {
-    await cartCleanupPromise.catch(() => 0);
-    return;
-  }
-
-  if (now - lastCartCleanupAt < CART_CLEANUP_THROTTLE_MS) return;
-
-  lastCartCleanupAt = now;
-  cartCleanupPromise = cleanupExpiredCartItemsService().finally(() => {
-    cartCleanupPromise = null;
-  });
-
-  await cartCleanupPromise.catch(() => 0);
-}
-
-//===============================================================
-
 export async function getCartService(clientUserId: string) {
-  await cleanupExpiredCartItemsIfDue();
-
   const session = await mongoose.startSession();
   try {
-    let cartResponse: CartResponseDto | null = null;
-
-    await session.withTransaction(async () => {
+    const cartResponse = await session.withTransaction(async () => {
       const cart = await getCartDocument(clientUserId, session);
-      cartResponse = await serializeCartWithCleanup(cart, session);
+      return serializeCartWithCleanup(cart, session);
     });
 
     if (!cartResponse) {
@@ -398,14 +374,25 @@ export async function addCartItemService(
       );
       const currentQuantity =
         itemIndex >= 0 ? cart.items[itemIndex].quantity : 0;
-      const quantityToAdd = Math.min(input.quantity, offer.availableQuantity);
+      const quantityToAdd = input.quantity;
+      const nextQuantity = currentQuantity + quantityToAdd;
+
+      if (nextQuantity > CART_ITEM_MAX_QUANTITY) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          `Cart item quantity cannot exceed ${CART_ITEM_MAX_QUANTITY}.`
+        );
+      }
+
       if (
         quantityToAdd < 1 ||
-        currentQuantity + quantityToAdd > offer.availableQuantity
+        nextQuantity > offer.availableQuantity
       ) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
-          'Product quantity is no longer available.'
+          'Available quantity has changed. Refresh the cart and try again.',
+          undefined,
+          STOCK_CHANGED_ERROR_CODE
         );
       }
 
@@ -487,7 +474,9 @@ export async function updateCartItemService(
       if (nextQuantity > offer.availableQuantity) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
-          'Product quantity is no longer available.'
+          'Available quantity has changed. Refresh the cart and try again.',
+          undefined,
+          STOCK_CHANGED_ERROR_CODE
         );
       }
 

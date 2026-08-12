@@ -1,6 +1,7 @@
 import mongoose, { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { STOCK_CHANGED_ERROR_CODE } from '../constants/stock';
 import { ProductOffer } from '../models/productOffer.model';
 
 import {
@@ -79,7 +80,9 @@ export async function reserveOfferStock(
   if (!offer) {
     throw httpError(
       HTTP_STATUS.CONFLICT,
-      'Product quantity is no longer available. Please refresh and try again.'
+      'Available quantity has changed. Please refresh and try again.',
+      undefined,
+      STOCK_CHANGED_ERROR_CODE
     );
   }
 
@@ -118,7 +121,9 @@ export async function releaseOfferStock(
 
     throw httpError(
       HTTP_STATUS.CONFLICT,
-      'Product reservation could not be released. Please refresh and try again.'
+      'Product reservation could not be released. Please refresh and try again.',
+      undefined,
+      STOCK_CHANGED_ERROR_CODE
     );
   }
 
@@ -158,7 +163,9 @@ export async function commitReservedStock(
   if (!offer) {
     throw httpError(
       HTTP_STATUS.CONFLICT,
-      'Product reservation is no longer available. Please refresh and try again.'
+      'Product reservation is no longer available. Please refresh and try again.',
+      undefined,
+      STOCK_CHANGED_ERROR_CODE
     );
   }
 
@@ -234,7 +241,9 @@ export async function setPharmacyOfferStock(
   if (nextTotalQuantity < currentOffer.reservedQuantity) {
     throw httpError(
       HTTP_STATUS.CONFLICT,
-      'Stock cannot be lower than the quantity already reserved in client orders.'
+      'Stock cannot be lower than the quantity already reserved in client orders.',
+      undefined,
+      STOCK_CHANGED_ERROR_CODE
     );
   }
 

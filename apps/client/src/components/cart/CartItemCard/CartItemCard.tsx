@@ -3,6 +3,7 @@ import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { QuantityCounter } from '@e-pharmacy/ui/forms';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { CART_ITEM_MAX_QUANTITY } from '@e-pharmacy/config/cart';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import type { CartItem } from '@e-pharmacy/types/cart';
@@ -33,6 +34,7 @@ function CartItemCard({
 }: CartItemCardProps) {
   const productHref = buildProductPath(item.product.name, item.product.id);
   const hasStockConflict = hasCartItemStockConflict(item);
+  const maxQuantity = Math.min(item.stockQuantity, CART_ITEM_MAX_QUANTITY);
 
   return (
     <article className={css.card} aria-labelledby={`cart-item-${item.id}`}>
@@ -88,7 +90,7 @@ function CartItemCard({
             <QuantityCounter
               value={item.quantity}
               min={1}
-              max={item.stockQuantity}
+              max={maxQuantity}
               isLoading={isUpdating}
               ariaLabel={`Quantity controls for ${item.product.name}`}
               onDecrement={() => onQuantityChange(item.id, item.quantity - 1)}

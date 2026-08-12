@@ -106,8 +106,15 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     return orderGroups.length === 1 ? orderGroups[0] : null;
   }, [selectedPharmacyIdFromRoute, orderGroups]);
 
-  const { pharmacy, isPharmacyLoading } =
-    useCheckoutPharmacy(selectedOrderGroup);
+  const {
+    pharmacy,
+    pharmacyStatus,
+    pharmacyError,
+    isPharmacyLoading,
+  } = useCheckoutPharmacy(selectedOrderGroup);
+
+  const hasPharmacyLoadError =
+    pharmacyStatus === 'error' && pharmacyError !== null;
 
   const shouldSelectOrder =
     !isLoading && cart.items.length > 0 && !selectedOrderGroup;
@@ -154,6 +161,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
   const canSubmit =
     Boolean(selectedOrderGroup) &&
+    pharmacyStatus === 'success' &&
     !hasStockConflict &&
     isDeliveryFormValid &&
     canUseSelectedPayment;
@@ -325,6 +333,13 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                             </p>
                           ) : null}
 
+                          {hasPharmacyLoadError ? (
+                            <p className={css.deliveryMutedText} role="alert">
+                              Could not load pharmacy checkout details. Refresh
+                              the page before confirming this order.
+                            </p>
+                          ) : null}
+
                           {hasPharmacyContactDetails ? (
                             <ul className={css.deliveryIconList}>
                               {pharmacyPhone ? (
@@ -352,7 +367,8 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                             </ul>
                           ) : null}
 
-                          {!isPharmacyLoading && !hasPharmacyContactDetails ? (
+                          {pharmacyStatus === 'success' &&
+                          !hasPharmacyContactDetails ? (
                             <p className={css.deliveryMutedText}>
                               Pharmacy contact details are unavailable right
                               now.

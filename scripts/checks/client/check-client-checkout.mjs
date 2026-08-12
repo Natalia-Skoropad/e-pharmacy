@@ -36,6 +36,28 @@ assert.match(
   'Changed checkout snapshot must refresh the cart and stop before POST.'
 );
 
+for (const errorCode of [
+  'CHECKOUT_GROUP_MISSING_ERROR_CODE',
+  'STOCK_CHANGED_ERROR_CODE',
+  'PHARMACY_UNAVAILABLE_ERROR_CODE',
+  'PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE',
+]) {
+  assert.match(submit, new RegExp(errorCode));
+}
+
+const pharmacyResource = await read(
+  'apps/client/src/components/checkout/hooks/useCheckoutPharmacy.ts'
+);
+
+const checkoutPage = await read(
+  'apps/client/src/components/checkout/CheckoutPageContent/CheckoutPageContent.tsx'
+);
+
+assert.match(pharmacyResource, /'idle' \| 'loading' \| 'success' \| 'error'/);
+assert.match(pharmacyResource, /pharmacyError/);
+assert.match(checkoutPage, /pharmacyStatus === 'success'/);
+assert.match(checkoutPage, /hasPharmacyLoadError/);
+
 const browserOrders = await read(
   'apps/client/src/lib/api/browser/orders.api.ts'
 );

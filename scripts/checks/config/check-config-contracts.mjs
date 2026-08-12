@@ -222,6 +222,30 @@ assert.equal(
   'Cart item TTL differs between frontend and backend'
 );
 
+const frontendCartErrors = await parse(
+  'packages',
+  'config',
+  'src',
+  'cart',
+  'error-codes.ts'
+);
+
+const backendCartErrors = await parse(
+  'apps',
+  'api',
+  'src',
+  'constants',
+  'cart.ts'
+);
+
+const backendStockErrors = await parse(
+  'apps',
+  'api',
+  'src',
+  'constants',
+  'stock.ts'
+);
+
 const frontendCheckoutErrors = await parse(
   'packages',
   'config',
@@ -237,18 +261,51 @@ const backendCheckoutErrors = await parse(
   'order.ts'
 );
 
+const frontendOrderTransitions = await parse(
+  'packages',
+  'config',
+  'src',
+  'orders',
+  'transitions.ts'
+);
+
+const backendOrderService = await parse(
+  'apps',
+  'api',
+  'src',
+  'services',
+  'order.service.ts'
+);
+
 assert.equal(
-  getVariableLiteral(
-    ts,
-    frontendCheckoutErrors,
-    'CHECKOUT_CART_CHANGED_ERROR_CODE'
-  ),
-  getVariableLiteral(
-    ts,
-    backendCheckoutErrors,
-    'CHECKOUT_CART_CHANGED_ERROR_CODE'
-  ),
-  'Checkout cart-changed error codes differ between frontend and backend'
+  getVariableLiteral(ts, frontendCartErrors, 'CART_CHANGED_ERROR_CODE'),
+  getVariableLiteral(ts, backendCartErrors, 'CART_CHANGED_ERROR_CODE'),
+  'CART_CHANGED_ERROR_CODE differs between frontend and backend'
+);
+
+assert.equal(
+  getVariableLiteral(ts, frontendCartErrors, 'STOCK_CHANGED_ERROR_CODE'),
+  getVariableLiteral(ts, backendStockErrors, 'STOCK_CHANGED_ERROR_CODE'),
+  'STOCK_CHANGED_ERROR_CODE differs between frontend and backend'
+);
+
+for (const errorCodeName of [
+  'CHECKOUT_CART_CHANGED_ERROR_CODE',
+  'CHECKOUT_GROUP_MISSING_ERROR_CODE',
+  'PHARMACY_UNAVAILABLE_ERROR_CODE',
+  'PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE',
+]) {
+  assert.equal(
+    getVariableLiteral(ts, frontendCheckoutErrors, errorCodeName),
+    getVariableLiteral(ts, backendCheckoutErrors, errorCodeName),
+    `${errorCodeName} differs between frontend and backend`
+  );
+}
+
+assert.deepEqual(
+  getVariableLiteral(ts, frontendOrderTransitions, 'ORDER_STATUS_TRANSITIONS'),
+  getVariableLiteral(ts, backendOrderService, 'ORDER_STATUS_TRANSITIONS'),
+  'Order status transition graphs differ between shared config and backend'
 );
 
 //===================================================================
@@ -537,13 +594,12 @@ assert.match(categoryOptionsHelperSource, /locale\s*=\s*'en-GB'/);
 assert.match(categoryOptionsHelperSource, /new\s+Set/);
 assert.match(categoryOptionsHelperSource, /localeCompare/);
 
-for (const consumerSource of [
-  clientCategoryConsumerSource,
-  pharmacyCategoryConsumerSource,
-]) {
-  assert.match(consumerSource, /createUniqueLabeledOptions/);
-  assert.match(consumerSource, /PRODUCT_CATEGORY_LABELS/);
-}
+assert.match(clientCategoryConsumerSource, /getProductFilters/);
+assert.match(clientCategoryConsumerSource, /PRODUCT_CATEGORY_LABELS/);
+assert.doesNotMatch(clientCategoryConsumerSource, /PRODUCTS_LIMIT\s*=\s*150/);
+
+assert.match(pharmacyCategoryConsumerSource, /createUniqueLabeledOptions/);
+assert.match(pharmacyCategoryConsumerSource, /PRODUCT_CATEGORY_LABELS/);
 
 assert.match(clientStatisticsSource, /export type ClientStatisticsCounts/);
 assert.match(clientStatisticsSource, /CLIENT_STATISTICS_LABELS/);

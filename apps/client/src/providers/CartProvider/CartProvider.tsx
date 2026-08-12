@@ -11,6 +11,13 @@ import {
   type ReactNode,
 } from 'react';
 
+import {
+  CART_CHANGED_ERROR_CODE,
+  STOCK_CHANGED_ERROR_CODE,
+} from '@e-pharmacy/config/cart';
+
+import { isApiError } from '@e-pharmacy/api-client/transport';
+
 import type {
   AddCartItemPayload,
   Cart,
@@ -296,6 +303,42 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
     setPendingOfferIds((current) => removeSetValue(current, offerId));
   }, []);
 
+  const recoverAuthoritativeCartAfterConflict = useCallback(
+    async (
+      error: unknown,
+      signal: AbortSignal,
+      fallbackCart?: Cart
+    ): Promise<void> => {
+      const isRecoverableConflict =
+        isApiError(error) &&
+        (error.backendCode === CART_CHANGED_ERROR_CODE ||
+          error.backendCode === STOCK_CHANGED_ERROR_CODE);
+
+      if (
+        !isRecoverableConflict ||
+        signal.aborted ||
+        !lifecycleActiveRef.current
+      ) {
+        if (fallbackCart && !signal.aborted && lifecycleActiveRef.current) {
+          replaceCartFromServer(fallbackCart);
+        }
+        return;
+      }
+
+      try {
+        const response = await getCart({ signal });
+        if (!signal.aborted && lifecycleActiveRef.current) {
+          replaceCartFromServer(response.cart);
+        }
+      } catch {
+        if (fallbackCart && !signal.aborted && lifecycleActiveRef.current) {
+          replaceCartFromServer(fallbackCart);
+        }
+      }
+    },
+    [replaceCartFromServer]
+  );
+
   const addProductToCart = useCallback(
     async (
       payload: AddCartItemPayload,
@@ -316,12 +359,17 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
 
       try {
         return await getMutationQueue().enqueue(async (signal) => {
-          const response = await addCartItem(payload, { signal });
+          try {
+            const response = await addCartItem(payload, { signal });
 
-          if (signal.aborted || !lifecycleActiveRef.current) return response;
-          replaceCartFromServer(response.cart);
+            if (signal.aborted || !lifecycleActiveRef.current) return response;
+            replaceCartFromServer(response.cart);
 
-          return response;
+            return response;
+          } catch (error) {
+            await recoverAuthoritativeCartAfterConflict(error, signal);
+            throw error;
+          }
         });
       } finally {
         unmarkOfferPending(options.offerId);
@@ -331,6 +379,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       clientOwnerKey,
       markOfferPending,
       getMutationQueue,
+      recoverAuthoritativeCartAfterConflict,
       replaceCartFromServer,
       unmarkOfferPending,
     ]
@@ -378,9 +427,11 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
 
             return response;
           } catch (error) {
-            if (!signal.aborted && lifecycleActiveRef.current) {
-              replaceCartFromServer(previousCart);
-            }
+            await recoverAuthoritativeCartAfterConflict(
+              error,
+              signal,
+              previousCart
+            );
             throw error;
           }
         });
@@ -394,6 +445,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       markItemPending,
       markOfferPending,
       getMutationQueue,
+      recoverAuthoritativeCartAfterConflict,
       replaceCartFromServer,
       unmarkItemPending,
       unmarkOfferPending,
@@ -419,12 +471,17 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
 
       try {
         return await getMutationQueue().enqueue(async (signal) => {
-          const response = await removeCartItem(cartItemId, { signal });
-          if (!signal.aborted && lifecycleActiveRef.current) {
-            replaceCartFromServer(response.cart);
-          }
+          try {
+            const response = await removeCartItem(cartItemId, { signal });
+            if (!signal.aborted && lifecycleActiveRef.current) {
+              replaceCartFromServer(response.cart);
+            }
 
-          return response;
+            return response;
+          } catch (error) {
+            await recoverAuthoritativeCartAfterConflict(error, signal);
+            throw error;
+          }
         });
       } finally {
         unmarkItemPending(cartItemId);
@@ -436,6 +493,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       markItemPending,
       markOfferPending,
       getMutationQueue,
+      recoverAuthoritativeCartAfterConflict,
       replaceCartFromServer,
       unmarkItemPending,
       unmarkOfferPending,
@@ -458,19 +516,29 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
 
     try {
       return await getMutationQueue().enqueue(async (signal) => {
-        const response = await clearCart({ signal });
+        try {
+          const response = await clearCart({ signal });
 
-        if (!signal.aborted && lifecycleActiveRef.current) {
-          replaceCartFromServer(response.cart);
+          if (!signal.aborted && lifecycleActiveRef.current) {
+            replaceCartFromServer(response.cart);
+          }
+
+          return response;
+        } catch (error) {
+          await recoverAuthoritativeCartAfterConflict(error, signal);
+          throw error;
         }
-
-        return response;
       });
     } finally {
       clearingRef.current = false;
       if (lifecycleActiveRef.current) setIsClearing(false);
     }
-  }, [clientOwnerKey, getMutationQueue, replaceCartFromServer]);
+  }, [
+    clientOwnerKey,
+    getMutationQueue,
+    recoverAuthoritativeCartAfterConflict,
+    replaceCartFromServer,
+  ]);
 
   const removePharmacyOrder = useCallback(
     async (pharmacyId: string): Promise<Cart | null> => {
@@ -489,20 +557,30 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
 
       try {
         return await getMutationQueue().enqueue(async (signal) => {
-          const response = await removeCartPharmacy(pharmacyId, { signal });
+          try {
+            const response = await removeCartPharmacy(pharmacyId, { signal });
 
-          if (!signal.aborted && lifecycleActiveRef.current) {
-            replaceCartFromServer(response.cart);
+            if (!signal.aborted && lifecycleActiveRef.current) {
+              replaceCartFromServer(response.cart);
+            }
+
+            return signal.aborted ? null : response.cart;
+          } catch (error) {
+            await recoverAuthoritativeCartAfterConflict(error, signal);
+            throw error;
           }
-
-          return signal.aborted ? null : response.cart;
         });
       } finally {
         clearingRef.current = false;
         if (lifecycleActiveRef.current) setIsClearing(false);
       }
     },
-    [clientOwnerKey, getMutationQueue, replaceCartFromServer]
+    [
+      clientOwnerKey,
+      getMutationQueue,
+      recoverAuthoritativeCartAfterConflict,
+      replaceCartFromServer,
+    ]
   );
 
   useEffect(() => {

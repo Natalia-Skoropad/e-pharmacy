@@ -91,9 +91,22 @@ assert.doesNotMatch(cartApi, /JsonResponseRequestOptions/);
 const cartItemCard = await read(
   'apps/client/src/components/cart/CartItemCard/CartItemCard.tsx'
 );
-assert.match(cartItemCard, /max=\{item\.stockQuantity\}/);
+
+assert.match(cartItemCard, /CART_ITEM_MAX_QUANTITY/);
+
+assert.match(
+  cartItemCard,
+  /maxQuantity = Math\.min\(item\.stockQuantity, CART_ITEM_MAX_QUANTITY\)/
+);
+
+assert.match(cartItemCard, /max=\{maxQuantity\}/);
 assert.match(cartItemCard, /hasCartItemStockConflict\(item\)/);
-assert.match(cartItemCard, /onDecrement=\{\(\) => onQuantityChange\(item\.id, item\.quantity - 1\)\}/);
+
+assert.match(
+  cartItemCard,
+  /onDecrement=\{\(\) => onQuantityChange\(item\.id, item\.quantity - 1\)\}/
+);
+
 assert.doesNotMatch(cartItemCard, /Math\.max\([\s\S]*stockQuantity/);
 
 console.log(

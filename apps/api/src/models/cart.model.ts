@@ -1,5 +1,6 @@
 import { Schema, model, models } from 'mongoose';
 
+import { CART_ITEM_MAX_QUANTITY } from '../constants/cart';
 import type { CartEntity } from '../types/cart';
 
 //===============================================================
@@ -11,7 +12,14 @@ const cartItemSchema = new Schema(
       ref: 'ProductOffer',
       required: true,
     },
-    quantity: { type: Number, min: 1, required: true },
+
+    quantity: {
+      type: Number,
+      min: 1,
+      max: CART_ITEM_MAX_QUANTITY,
+      required: true,
+    },
+
     unitPrice: { type: Number, min: 0, required: true },
     expiresAt: { type: Date, required: true },
   },

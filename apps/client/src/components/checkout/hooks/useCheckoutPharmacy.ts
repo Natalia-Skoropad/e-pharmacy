@@ -7,9 +7,15 @@ import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 
 //===================================================================
 
-type CheckoutPharmacyState = Readonly<{
+type CheckoutPharmacyStatus = 'idle' | 'loading' | 'success' | 'error';
+
+//===================================================================
+
+type CheckoutPharmacyResource = Readonly<{
   pharmacyId: string;
+  status: 'success' | 'error';
   pharmacy: PharmacyCheckoutDetails | null;
+  error: unknown | null;
 }>;
 
 //===================================================================
@@ -17,8 +23,9 @@ type CheckoutPharmacyState = Readonly<{
 export function useCheckoutPharmacy(
   selectedOrderGroup: CartPharmacyGroup | null
 ) {
-  const [pharmacyState, setPharmacyState] =
-    useState<CheckoutPharmacyState | null>(null);
+  const [resource, setResource] = useState<CheckoutPharmacyResource | null>(
+    null
+  );
 
   const pharmacyId = selectedOrderGroup?.pharmacyId ?? null;
 
@@ -33,17 +40,21 @@ export function useCheckoutPharmacy(
       .then((response) => {
         if (controller.signal.aborted) return;
 
-        setPharmacyState({
+        setResource({
           pharmacyId,
+          status: 'success',
           pharmacy: response.pharmacy,
+          error: null,
         });
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (controller.signal.aborted) return;
 
-        setPharmacyState({
+        setResource({
           pharmacyId,
+          status: 'error',
           pharmacy: null,
+          error,
         });
       });
 
@@ -52,10 +63,16 @@ export function useCheckoutPharmacy(
     };
   }, [pharmacyId]);
 
-  const hasCurrentPharmacyState = pharmacyState?.pharmacyId === pharmacyId;
+  const currentResource = resource?.pharmacyId === pharmacyId ? resource : null;
+
+  const pharmacyStatus: CheckoutPharmacyStatus = !pharmacyId
+    ? 'idle'
+    : (currentResource?.status ?? 'loading');
 
   return {
-    pharmacy: hasCurrentPharmacyState ? pharmacyState.pharmacy : null,
-    isPharmacyLoading: Boolean(pharmacyId) && !hasCurrentPharmacyState,
-  };
+    pharmacy: currentResource?.pharmacy ?? null,
+    pharmacyStatus,
+    pharmacyError: currentResource?.error ?? null,
+    isPharmacyLoading: pharmacyStatus === 'loading',
+  } as const;
 }

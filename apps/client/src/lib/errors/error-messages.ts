@@ -23,6 +23,10 @@ export const APP_ERROR_MESSAGES = {
     removeOrder: 'Could not remove pharmacy order.',
     itemsChanged:
       'Some expired or unavailable products were removed from your cart. Please review the updated cart before checkout.',
+    changed:
+      'Your cart changed in another request. Review the cart before continuing; refresh if the latest state could not be loaded.',
+    stockChanged:
+      'Available quantity has changed. Review the current quantity before continuing; refresh if the latest state could not be loaded.',
   },
 
   checkout: {
@@ -33,6 +37,14 @@ export const APP_ERROR_MESSAGES = {
 
     cartChanged:
       'Your cart changed after this checkout was shown. We updated the checkout data; please review the products, quantities, and prices, then confirm again.',
+    groupMissing:
+      'This pharmacy order is empty or expired. Return to the cart and choose an active order.',
+    stockChanged:
+      'Available quantity changed before confirmation. Review the updated cart before confirming again.',
+    pharmacyUnavailable:
+      'This pharmacy is currently unavailable for checkout.',
+    paymentUnavailable:
+      'The selected payment method is no longer available for this pharmacy.',
   },
 
   products: {

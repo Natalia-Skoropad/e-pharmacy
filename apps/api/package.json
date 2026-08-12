@@ -11,7 +11,8 @@
     "type-check": "tsc --noEmit",
     "lint": "node ../../scripts/checks/boundaries/check-api-package-boundaries.mjs && eslint src --ext .ts",
     "migrate:domain": "tsx src/scripts/migrate-domain-entities.ts",
-    "test": "node ../../scripts/test-runners/run-tsx-tests.mjs src"
+    "test": "node ../../scripts/test-runners/run-tsx-tests.mjs src",
+    "cart:cleanup-expired": "tsx src/scripts/cleanup-expired-cart-items.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

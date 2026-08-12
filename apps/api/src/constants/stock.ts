@@ -1,0 +1,1 @@
+export const STOCK_CHANGED_ERROR_CODE = 'STOCK_CHANGED';

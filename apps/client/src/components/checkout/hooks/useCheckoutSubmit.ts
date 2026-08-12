@@ -5,7 +5,15 @@ import type { Cart } from '@e-pharmacy/types/cart';
 import type { CheckoutOrderPayload } from '@e-pharmacy/types/orders';
 import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types/orders';
 import { normalizePhoneInput } from '@e-pharmacy/validation/order';
-import { CHECKOUT_CART_CHANGED_ERROR_CODE } from '@e-pharmacy/config/orders';
+
+import {
+  CHECKOUT_CART_CHANGED_ERROR_CODE,
+  CHECKOUT_GROUP_MISSING_ERROR_CODE,
+  PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
+  PHARMACY_UNAVAILABLE_ERROR_CODE,
+} from '@e-pharmacy/config/orders';
+
+import { STOCK_CHANGED_ERROR_CODE } from '@e-pharmacy/config/cart';
 import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import { groupCartByPharmacy } from '@/lib/cart/cart-groups';
@@ -171,6 +179,16 @@ export function useCheckoutSubmit({
       setError(
         getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.checkout.confirm,
+          backendCodeMessages: {
+            [CHECKOUT_GROUP_MISSING_ERROR_CODE]:
+              APP_ERROR_MESSAGES.checkout.groupMissing,
+            [STOCK_CHANGED_ERROR_CODE]:
+              APP_ERROR_MESSAGES.checkout.stockChanged,
+            [PHARMACY_UNAVAILABLE_ERROR_CODE]:
+              APP_ERROR_MESSAGES.checkout.pharmacyUnavailable,
+            [PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE]:
+              APP_ERROR_MESSAGES.checkout.paymentUnavailable,
+          },
         })
       );
     } finally {

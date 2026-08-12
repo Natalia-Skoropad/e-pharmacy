@@ -6,9 +6,7 @@ import { fileURLToPath } from 'node:url';
 //===================================================================
 
 const CURRENT_FILE = fileURLToPath(import.meta.url);
-
 const ROOT_DIR = path.resolve(path.dirname(CURRENT_FILE), '..', '..', '..');
-
 const CONFIG_DIR = path.join(ROOT_DIR, 'packages', 'config');
 const CONFIG_SRC_DIR = path.join(CONFIG_DIR, 'src');
 

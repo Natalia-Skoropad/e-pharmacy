@@ -84,6 +84,7 @@ import type {
   ProductCategory,
 } from '@e-pharmacy/types/products';
 
+import { getOrderStatusTransitions } from '@e-pharmacy/config/orders';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 
 import {
@@ -1636,13 +1637,8 @@ function OrderDetailsPageContent({
     if (!order || isCreateMode) {
       return [] as Array<PendingStatusChange['status']>;
     }
-    if (order.status === 'new') {
-      return ['in_progress'] as Array<PendingStatusChange['status']>;
-    }
-    if (order.status === 'in_progress') {
-      return ['successful', 'rejected'] as Array<PendingStatusChange['status']>;
-    }
-    return [] as Array<PendingStatusChange['status']>;
+
+    return getOrderStatusTransitions(order.status);
   }, [isCreateMode, order]);
 
   const syncOrderState = (updatedOrder: PharmacyOrderDetails) => {

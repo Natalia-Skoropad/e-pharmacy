@@ -3,7 +3,14 @@ import mongoose, { Types } from 'mongoose';
 import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { CHECKOUT_CART_CHANGED_ERROR_CODE } from '../constants/order';
+import { STOCK_CHANGED_ERROR_CODE } from '../constants/stock';
+
+import {
+  CHECKOUT_CART_CHANGED_ERROR_CODE,
+  CHECKOUT_GROUP_MISSING_ERROR_CODE,
+  PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
+  PHARMACY_UNAVAILABLE_ERROR_CODE,
+} from '../constants/order';
 
 import { Cart } from '../models/cart.model';
 import { Order } from '../models/order.model';
@@ -165,41 +172,6 @@ function hasCompleteBankDetails(
 }
 
 //===============================================================
-
-async function hydrateOrderPharmacyDetails(
-  order: OrderDocument
-): Promise<OrderDocument> {
-  const pharmacy = await Pharmacy.findById(order.pharmacyId)
-    .select('bankDetails email phone address city workingHours')
-    .lean<Pick<
-      PharmacyDocument,
-      'bankDetails' | 'email' | 'phone' | 'address' | 'city' | 'workingHours'
-    > | null>();
-
-  if (!pharmacy) return order;
-
-  const snapshotBankDetails = hasCompleteBankDetails(
-    order.pharmacySnapshot.bankDetails
-  )
-    ? order.pharmacySnapshot.bankDetails
-    : undefined;
-  const bankDetails = hasCompleteBankDetails(pharmacy.bankDetails)
-    ? pharmacy.bankDetails
-    : snapshotBankDetails;
-
-  return {
-    ...order,
-    pharmacySnapshot: {
-      ...order.pharmacySnapshot,
-      ...(pharmacy.email ? { email: pharmacy.email } : {}),
-      ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
-      ...(pharmacy.address ? { address: pharmacy.address } : {}),
-      ...(pharmacy.city ? { city: pharmacy.city } : {}),
-      ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
-      ...(bankDetails ? { bankDetails } : {}),
-    },
-  };
-}
 
 //===============================================================
 
@@ -516,14 +488,18 @@ function validateCheckoutCartItemsOrThrow({
     if (offer.availableQuantity < cartItem.quantity) {
       throw httpError(
         HTTP_STATUS.CONFLICT,
-        'Product quantity is no longer available. Please refresh and try again.'
+        'Available quantity has changed. Please review the order and try again.',
+        undefined,
+        STOCK_CHANGED_ERROR_CODE
       );
     }
 
     if (offer.totalQuantity < cartItem.quantity) {
       throw httpError(
         HTTP_STATUS.CONFLICT,
-        'Product quantity is no longer available. Please refresh and try again.'
+        'Available quantity has changed. Please review the order and try again.',
+        undefined,
+        STOCK_CHANGED_ERROR_CODE
       );
     }
 
@@ -556,9 +532,7 @@ export async function checkoutOrderService(
   const session = await mongoose.startSession();
 
   try {
-    let createdOrder: OrderDocument | null = null;
-
-    await session.withTransaction(async () => {
+    const createdOrder = await session.withTransaction(async () => {
       const cart = await Cart.findOne({ clientUserId })
         .session(session)
         .lean<CartDocument | null>();
@@ -597,9 +571,9 @@ export async function checkoutOrderService(
       if (!orderCartItems.length) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
-          'Selected pharmacy order changed or expired. Please review the cart and confirm again.',
+          'Selected pharmacy order is empty or expired. Please return to the cart.',
           undefined,
-          CHECKOUT_CART_CHANGED_ERROR_CODE
+          CHECKOUT_GROUP_MISSING_ERROR_CODE
         );
       }
 
@@ -640,7 +614,12 @@ export async function checkoutOrderService(
         .lean<PharmacyDocument | null>();
 
       if (!pharmacy || !isCheckoutPharmacyStatus(pharmacy.status)) {
-        throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found');
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Pharmacy is unavailable for checkout.',
+          undefined,
+          PHARMACY_UNAVAILABLE_ERROR_CODE
+        );
       }
 
       if (
@@ -649,7 +628,9 @@ export async function checkoutOrderService(
       ) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
-          'Bank transfer is unavailable for this pharmacy until bank details are completed.'
+          'Bank transfer is unavailable until bank details are completed.',
+          undefined,
+          PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE
         );
       }
 
@@ -820,7 +801,7 @@ export async function checkoutOrderService(
         { session }
       );
 
-      createdOrder = order[0].toObject() as OrderDocument;
+      const createdOrderDocument = order[0].toObject() as OrderDocument;
 
       const selectedIds = new Set(
         orderCartItems.map((item) => String(item._id))
@@ -847,6 +828,8 @@ export async function checkoutOrderService(
           CHECKOUT_CART_CHANGED_ERROR_CODE
         );
       }
+
+      return createdOrderDocument;
     });
 
     if (!createdOrder) {
@@ -937,7 +920,9 @@ export async function createManagerOrderService(
       ) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
-          'Bank transfer is unavailable until bank details are completed.'
+          'Bank transfer is unavailable until bank details are completed.',
+          undefined,
+          PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE
         );
       }
 
@@ -1194,9 +1179,7 @@ export async function updateOrderDetailsService(
   const session = await mongoose.startSession();
 
   try {
-    let updatedOrder: OrderDocument | null = null;
-
-    await session.withTransaction(async () => {
+    const updatedOrder = await session.withTransaction(async () => {
       const order = await Order.findById(orderId)
         .session(session)
         .lean<OrderDocument | null>();
@@ -1217,6 +1200,18 @@ export async function updateOrderDetailsService(
       let activityHistoryEntries: OrderActivityHistoryItem[] = [];
 
       if (input.paymentMethod) {
+        if (
+          input.paymentMethod === 'bank_transfer' &&
+          !hasCompleteBankDetails(order.pharmacySnapshot.bankDetails)
+        ) {
+          throw httpError(
+            HTTP_STATUS.CONFLICT,
+            'Bank transfer is unavailable for this order because confirmed bank details are missing.',
+            undefined,
+            PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE
+          );
+        }
+
         set.paymentMethod = input.paymentMethod;
       }
 
@@ -1441,7 +1436,7 @@ export async function updateOrderDetailsService(
           : {}),
       };
 
-      updatedOrder = await Order.findByIdAndUpdate(orderId, update, {
+      return Order.findByIdAndUpdate(orderId, update, {
         returnDocument: 'after',
         runValidators: true,
         session,
@@ -1454,8 +1449,6 @@ export async function updateOrderDetailsService(
         'Order was not updated'
       );
     }
-
-    updatedOrder = await hydrateOrderPharmacyDetails(updatedOrder);
 
     const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
       getOrderProductFallbacks(updatedOrder),
@@ -1651,9 +1644,7 @@ export async function updateOrderStatusService(
   const session = await mongoose.startSession();
 
   try {
-    let updatedOrder: OrderDocument | null = null;
-
-    await session.withTransaction(async () => {
+    const updatedOrder = await session.withTransaction(async () => {
       const order = await Order.findById(orderId)
         .session(session)
         .lean<OrderDocument | null>();
@@ -1731,7 +1722,7 @@ export async function updateOrderStatusService(
         set.rejectedBy = new Types.ObjectId(actor.id);
       }
 
-      updatedOrder = await Order.findByIdAndUpdate(
+      return Order.findByIdAndUpdate(
         orderId,
         {
           $set: set,
@@ -1754,8 +1745,6 @@ export async function updateOrderStatusService(
         'Order was not updated'
       );
     }
-
-    updatedOrder = await hydrateOrderPharmacyDetails(updatedOrder);
 
     const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
       getOrderProductFallbacks(updatedOrder),
@@ -2262,11 +2251,9 @@ export async function getOrderByIdService(
 
   if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
 
-  const hydratedOrder = await hydrateOrderPharmacyDetails(order);
-
   const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
-    getOrderProductFallbacks(hydratedOrder),
-    getOrderOfferFallbacks(hydratedOrder),
+    getOrderProductFallbacks(order),
+    getOrderOfferFallbacks(order),
     User.findById(order.userId)
       .select(
         'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
@@ -2279,11 +2266,6 @@ export async function getOrderByIdService(
     : undefined;
 
   return {
-    order: serializeOrder(
-      hydratedOrder,
-      productFallbacks,
-      clientMap,
-      offerFallbacks
-    ),
+    order: serializeOrder(order, productFallbacks, clientMap, offerFallbacks),
   };
 }

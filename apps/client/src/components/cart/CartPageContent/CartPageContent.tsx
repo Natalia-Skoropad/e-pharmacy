@@ -9,6 +9,7 @@ import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import type { Cart } from '@e-pharmacy/types/cart';
+import { CART_CHANGED_ERROR_CODE, STOCK_CHANGED_ERROR_CODE } from '@e-pharmacy/config/cart';
 
 import {
   getCartOrderPath,
@@ -30,6 +31,13 @@ import CartSummary from '@/components/cart/CartSummary/CartSummary';
 import ContinueShoppingModal from '@/components/cart/ContinueShoppingModal/ContinueShoppingModal';
 
 import css from './CartPageContent.module.css';
+
+//===================================================================
+
+const CART_BACKEND_CODE_MESSAGES = {
+  [CART_CHANGED_ERROR_CODE]: APP_ERROR_MESSAGES.cart.changed,
+  [STOCK_CHANGED_ERROR_CODE]: APP_ERROR_MESSAGES.cart.stockChanged,
+} as const;
 
 //===================================================================
 
@@ -86,6 +94,7 @@ function CartPageContent() {
       setError(
         getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.cart.update,
+          backendCodeMessages: CART_BACKEND_CODE_MESSAGES,
         })
       );
     }
@@ -101,6 +110,7 @@ function CartPageContent() {
       setError(
         getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.cart.remove,
+          backendCodeMessages: CART_BACKEND_CODE_MESSAGES,
         })
       );
     }
@@ -116,6 +126,7 @@ function CartPageContent() {
       setError(
         getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.cart.clear,
+          backendCodeMessages: CART_BACKEND_CODE_MESSAGES,
         })
       );
     }
@@ -140,6 +151,7 @@ function CartPageContent() {
       setError(
         getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.cart.removeOrder,
+          backendCodeMessages: CART_BACKEND_CODE_MESSAGES,
         })
       );
     }
