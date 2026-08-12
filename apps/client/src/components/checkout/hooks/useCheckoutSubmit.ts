@@ -5,10 +5,13 @@ import type { Cart } from '@e-pharmacy/types/cart';
 import type { CheckoutOrderPayload } from '@e-pharmacy/types/orders';
 import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types/orders';
 import { normalizePhoneInput } from '@e-pharmacy/validation/order';
+import { CHECKOUT_CART_CHANGED_ERROR_CODE } from '@e-pharmacy/config/orders';
+import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import { groupCartByPharmacy } from '@/lib/cart/cart-groups';
 import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 import { getStockValidationError } from '@/lib/checkout/checkout-utils';
+import { createCheckoutGroupFingerprint } from '@/lib/checkout/checkout-group-fingerprint';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 import { buildOrderPath } from '@/lib/routes';
 import { checkoutOrder, getCart } from '@/lib/api/browser';
@@ -90,6 +93,17 @@ export function useCheckoutSubmit({
         return;
       }
 
+      const shownGroupFingerprint =
+        createCheckoutGroupFingerprint(selectedOrderGroup);
+      const latestGroupFingerprint =
+        createCheckoutGroupFingerprint(latestOrderGroup);
+
+      if (shownGroupFingerprint !== latestGroupFingerprint) {
+        replaceCartFromServer(latestCartResponse.cart);
+        setError(APP_ERROR_MESSAGES.checkout.cartChanged);
+        return;
+      }
+
       const stockError = getStockValidationError(latestOrderGroup);
 
       if (stockError) {
@@ -103,6 +117,8 @@ export function useCheckoutSubmit({
         deliveryMethod === 'postal_delivery'
           ? {
               pharmacyId: latestOrderGroup.pharmacyId,
+              expectedCartRevision: latestCartResponse.cart.revision,
+              groupFingerprint: latestGroupFingerprint,
               paymentMethod,
               deliveryMethod,
               deliveryDetails: {
@@ -114,6 +130,8 @@ export function useCheckoutSubmit({
             }
           : {
               pharmacyId: latestOrderGroup.pharmacyId,
+              expectedCartRevision: latestCartResponse.cart.revision,
+              groupFingerprint: latestGroupFingerprint,
               paymentMethod,
               deliveryMethod,
               ...(trimmedComment ? { comment: trimmedComment } : {}),
@@ -130,6 +148,25 @@ export function useCheckoutSubmit({
       router.push(buildOrderPath(response.order));
     } catch (error) {
       if (controller.signal.aborted || !mountedRef.current) return;
+
+      if (
+        isApiError(error) &&
+        error.backendCode === CHECKOUT_CART_CHANGED_ERROR_CODE
+      ) {
+        try {
+          const refreshedCart = await getCart({ signal: controller.signal });
+          if (!controller.signal.aborted && mountedRef.current) {
+            replaceCartFromServer(refreshedCart.cart);
+          }
+        } catch {
+          // Preserve the checkout conflict as the primary user-facing error.
+        }
+
+        if (!controller.signal.aborted && mountedRef.current) {
+          setError(APP_ERROR_MESSAGES.checkout.cartChanged);
+        }
+        return;
+      }
 
       setError(
         getUserFacingErrorMessage(error, {

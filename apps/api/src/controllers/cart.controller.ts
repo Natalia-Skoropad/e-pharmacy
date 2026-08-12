@@ -5,6 +5,7 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import type {
   AddCartItemInput,
   CartItemParams,
+  CartPharmacyParams,
   UpdateCartItemInput,
 } from '../schemas/cart.schema';
 
@@ -13,6 +14,7 @@ import {
   clearCartService,
   getCartService,
   removeCartItemService,
+  removeCartPharmacyService,
   updateCartItemService,
 } from '../services/cart.service';
 
@@ -65,6 +67,18 @@ export async function removeCartItem(
 ): Promise<void> {
   const { cartItemId } = res.locals.validated.params;
   const data = await removeCartItemService(req.user?.id ?? '', cartItemId);
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function removeCartPharmacy(
+  req: Request,
+  res: ValidatedResponse<unknown, CartPharmacyParams>
+): Promise<void> {
+  const { pharmacyId } = res.locals.validated.params;
+  const data = await removeCartPharmacyService(req.user?.id ?? '', pharmacyId);
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

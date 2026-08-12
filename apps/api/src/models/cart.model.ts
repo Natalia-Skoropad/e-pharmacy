@@ -29,6 +29,7 @@ const cartSchema = new Schema<CartEntity>(
       unique: true,
     },
     items: { type: [cartItemSchema], default: [] },
+    revision: { type: Number, min: 0, default: 0, required: true },
   },
   { timestamps: true, versionKey: false }
 );

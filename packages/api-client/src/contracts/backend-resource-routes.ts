@@ -58,6 +58,10 @@ export const backendRoutes = {
     current: '/cart',
     addItem: '/cart/items',
     item: (cartItemId: EntityId) => `/cart/items/${segment(cartItemId)}`,
+
+    pharmacy: (pharmacyId: EntityId) =>
+      `/cart/pharmacies/${segment(pharmacyId)}`,
+
     clear: '/cart/clear',
   },
 

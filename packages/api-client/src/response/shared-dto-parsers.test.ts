@@ -192,13 +192,17 @@ test('requires backend-provided typed public slug IDs', () => {
     );
   }
 
-
   for (const invalidOffer of [
     { ...validOffer, availableQuantity: 11 },
     { ...validOffer, reservedQuantity: 11 },
     { ...validOffer, availableQuantity: 9, reservedQuantity: 2 },
     { ...validOffer, availableQuantity: 0, reservedQuantity: 2, inStock: true },
-    { ...validOffer, availableQuantity: 8, reservedQuantity: 2, inStock: false },
+    {
+      ...validOffer,
+      availableQuantity: 8,
+      reservedQuantity: 2,
+      inStock: false,
+    },
   ]) {
     assert.throws(
       () => parseProductDetails({ ...product, offers: [invalidOffer] }),
@@ -307,5 +311,144 @@ test('requires backend-provided typed public slug IDs', () => {
   assert.equal(
     parsePharmacyDetailsResponse({ pharmacy }).pharmacy.publicSlugId,
     pharmacy.publicSlugId
+  );
+});
+
+//===================================================================
+
+function createValidCartResponse() {
+  return {
+    revision: 7,
+    items: [
+      {
+        id: '507f1f77bcf86cd799439011',
+        productOfferId: '507f1f77bcf86cd799439012',
+        productId: '507f1f77bcf86cd799439013',
+        pharmacyId: '507f1f77bcf86cd799439014',
+
+        product: {
+          id: '507f1f77bcf86cd799439013',
+          name: 'Aspirin',
+          article: 'ASP-100',
+          category: 'medicine',
+          price: 100,
+          pharmacyName: 'Health Pharmacy',
+          inStock: true,
+          rating: 4.8,
+          reviewsCount: 12,
+        },
+
+        pharmacyName: 'Health Pharmacy',
+        pharmacyRating: 4.9,
+        pharmacyReviewsCount: 25,
+        stockQuantity: 3,
+        quantity: 2,
+        unitPrice: 100,
+        totalPrice: 200,
+        expiresAt: '2026-08-15T10:00:00.000Z',
+      },
+    ],
+
+    totalItems: 2,
+    totalPrice: 200,
+    issues: [],
+  };
+}
+
+//===================================================================
+
+test('strictly validates transactional cart responses', async () => {
+  const { parseCartResponse } = await import('./shared-dto-parsers');
+  const valid = createValidCartResponse();
+
+  assert.equal(parseCartResponse({ cart: valid }).cart.revision, 7);
+
+  const invalidCarts = [
+    {
+      ...valid,
+      items: [{ ...valid.items[0], id: 'not-an-object-id' }],
+    },
+    {
+      ...valid,
+      items: [{ ...valid.items[0], quantity: 1.5 }],
+    },
+    {
+      ...valid,
+      items: [{ ...valid.items[0], quantity: 100 }],
+    },
+    {
+      ...valid,
+      items: [{ ...valid.items[0], stockQuantity: -1 }],
+    },
+    {
+      ...valid,
+      items: [{ ...valid.items[0], expiresAt: '2026-08-15' }],
+    },
+    {
+      ...valid,
+      items: [
+        {
+          ...valid.items[0],
+          product: { ...valid.items[0].product, category: 'invalid-category' },
+        },
+      ],
+    },
+    {
+      ...valid,
+      items: [{ ...valid.items[0], totalPrice: 199 }],
+    },
+    { ...valid, totalItems: 3 },
+    { ...valid, totalPrice: 201 },
+  ];
+
+  for (const cart of invalidCarts) {
+    assert.throws(
+      () => parseCartResponse({ cart }),
+      (error: unknown) =>
+        error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
+    );
+  }
+});
+
+//===================================================================
+
+test('validates cart cleanup issues instead of silently dropping them', async () => {
+  const { parseCartResponse } = await import('./shared-dto-parsers');
+  const valid = createValidCartResponse();
+
+  const parsed = parseCartResponse({
+    cart: {
+      ...valid,
+      items: [],
+      totalItems: 0,
+      totalPrice: 0,
+      issues: [
+        {
+          cartItemId: '507f1f77bcf86cd799439011',
+          reason: 'product_unavailable',
+        },
+      ],
+    },
+  });
+
+  assert.equal(parsed.cart.issues[0]?.reason, 'product_unavailable');
+
+  assert.throws(
+    () =>
+      parseCartResponse({
+        cart: {
+          ...valid,
+          items: [],
+          totalItems: 0,
+          totalPrice: 0,
+          issues: [
+            {
+              cartItemId: '507f1f77bcf86cd799439011',
+              reason: 'unknown',
+            },
+          ],
+        },
+      }),
+    ApiError
   );
 });

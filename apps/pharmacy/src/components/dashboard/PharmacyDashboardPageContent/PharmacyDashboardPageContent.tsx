@@ -11,13 +11,13 @@ import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
-import {
+import type {
   AllProductStatisticsKey,
   OwnProductStatisticsCounts,
   OwnProductStatisticsKey,
 } from '@e-pharmacy/types/products';
 
-import {
+import type {
   OrderSalesStatistics,
   OrderStatisticsCounts,
 } from '@e-pharmacy/types/orders';

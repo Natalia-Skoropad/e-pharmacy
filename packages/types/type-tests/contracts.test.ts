@@ -45,6 +45,8 @@ declare const postalDetails: {
 
 const pickup: CheckoutOrderPayload = {
   pharmacyId,
+  expectedCartRevision: 4,
+  groupFingerprint: '{\"cart\":\"reviewed\"}',
   paymentMethod: 'cash',
   deliveryMethod: 'pickup',
 };

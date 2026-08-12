@@ -23,12 +23,12 @@ import {
   clearCart,
   getCart,
   removeCartItem,
+  removeCartPharmacy,
   updateCartItem,
 } from '@/lib/api/browser/cart.api';
 
 import { useClientAuthCapabilities } from '@/hooks/useClientAuthCapabilities';
 import { isAbortError } from '@e-pharmacy/utils/guards';
-import { removeCartItemsSequentially } from '@/lib/cart/cart-pharmacy-removal';
 
 import {
   createCartMutationQueue,
@@ -48,7 +48,14 @@ import { useClientSessionScope } from '@/providers/AuthProvider';
 
 //===================================================================
 
-const EMPTY_CART: Cart = { items: [], totalItems: 0, totalPrice: 0 };
+const EMPTY_CART: Cart = {
+  revision: 0,
+  items: [],
+  totalItems: 0,
+  totalPrice: 0,
+  issues: [],
+};
+
 const CART_LOAD_ERROR_MESSAGE = 'Could not load cart.';
 
 //===================================================================
@@ -121,6 +128,7 @@ function getCartWithUpdatedQuantity(
   );
 
   return {
+    ...cart,
     items: nextItems,
     totalItems: nextItems.reduce((total, item) => total + item.quantity, 0),
     totalPrice: nextItems.reduce((total, item) => total + item.totalPrice, 0),
@@ -481,26 +489,13 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
 
       try {
         return await getMutationQueue().enqueue(async (signal) => {
-          const pharmacyItems = (
-            getCartStateCart(stateRef.current) ?? EMPTY_CART
-          ).items.filter((item) => item.pharmacyId === pharmacyId);
+          const response = await removeCartPharmacy(pharmacyId, { signal });
 
-          return removeCartItemsSequentially({
-            itemIds: pharmacyItems.map((item) => item.id),
-            initialCart: getCartStateCart(stateRef.current) ?? EMPTY_CART,
-            signal,
+          if (!signal.aborted && lifecycleActiveRef.current) {
+            replaceCartFromServer(response.cart);
+          }
 
-            removeItem: (cartItemId, requestSignal) =>
-              removeCartItem(cartItemId, { signal: requestSignal }),
-
-            refreshCart: (requestSignal) => getCart({ signal: requestSignal }),
-
-            onConfirmedCart: (confirmedCart) => {
-              if (!signal.aborted && lifecycleActiveRef.current) {
-                replaceCartFromServer(confirmedCart);
-              }
-            },
-          });
+          return signal.aborted ? null : response.cart;
         });
       } finally {
         clearingRef.current = false;
@@ -513,6 +508,9 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
   useEffect(() => {
     lifecycleActiveRef.current = true;
     getMutationQueue();
+
+    const pendingItemIdsForSession = pendingItemIdsRef.current;
+    const pendingOfferIdsForSession = pendingOfferIdsRef.current;
 
     return () => {
       lifecycleActiveRef.current = false;
@@ -527,8 +525,8 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
         );
       }
 
-      pendingItemIdsRef.current.clear();
-      pendingOfferIdsRef.current.clear();
+      pendingItemIdsForSession.clear();
+      pendingOfferIdsForSession.clear();
       clearingRef.current = false;
     };
   }, [getMutationQueue]);

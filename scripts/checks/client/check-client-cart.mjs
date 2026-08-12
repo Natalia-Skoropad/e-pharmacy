@@ -29,6 +29,8 @@ for (const removedPath of [
   'apps/client/src/lib/cart/useCartMutations.ts',
   'apps/client/src/lib/cart/cart-commands.ts',
   'apps/client/src/lib/cart/cart-events.ts',
+  'apps/client/src/lib/cart/cart-pharmacy-removal.ts',
+  'apps/client/src/lib/cart/cart-errors.ts',
 ]) {
   assert.equal(
     await exists(removedPath),
@@ -49,7 +51,7 @@ for (const contract of [
   'failCartLoad',
   'refreshCart: performCartLoad',
   'retryCart: performCartLoad',
-  'removeCartItemsSequentially',
+  'removeCartPharmacy',
   'mutationQueue.close',
 ]) {
   assert.match(provider, new RegExp(contract));
@@ -76,6 +78,7 @@ for (const operation of [
   'addCartItem',
   'updateCartItem',
   'removeCartItem',
+  'removeCartPharmacy',
   'clearCart',
 ]) {
   assert.match(cartApi, new RegExp(`export function ${operation}`));
@@ -85,6 +88,14 @@ assert.match(cartApi, /MutationRequestOptions/);
 assert.match(cartApi, /\.\.\.options/);
 assert.doesNotMatch(cartApi, /JsonResponseRequestOptions/);
 
+const cartItemCard = await read(
+  'apps/client/src/components/cart/CartItemCard/CartItemCard.tsx'
+);
+assert.match(cartItemCard, /max=\{item\.stockQuantity\}/);
+assert.match(cartItemCard, /hasCartItemStockConflict\(item\)/);
+assert.match(cartItemCard, /onDecrement=\{\(\) => onQuantityChange\(item\.id, item\.quantity - 1\)\}/);
+assert.doesNotMatch(cartItemCard, /Math\.max\([\s\S]*stockQuantity/);
+
 console.log(
-  'Client cart check passed (state machine, serialized mutations, abortable API writes, no event/wrapper layer).'
+  'Client cart check passed (state machine, serialized mutations, atomic pharmacy-group delete, abortable API writes, no event/wrapper layer).'
 );

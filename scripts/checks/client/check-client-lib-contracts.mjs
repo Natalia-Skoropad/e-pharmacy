@@ -100,9 +100,13 @@ assert.match(
   /state\.ownerKey === ownerKey \? getCartStateCart\(state\) : null/
 );
 
-const cartErrors = await read('apps/client/src/lib/cart/cart-errors.ts');
-assert.match(cartErrors, /super\('PARTIAL_CART_MUTATION'/);
-assert.doesNotMatch(cartErrors, /partially removed/i);
+await assert.rejects(
+  access(path.join(root, 'apps/client/src/lib/cart/cart-errors.ts')),
+  (error) => error?.code === 'ENOENT'
+);
+
+const cartApi = await read('apps/client/src/lib/api/browser/cart.api.ts');
+assert.match(cartApi, /export function removeCartPharmacy/);
 
 const sitemapData = await read(
   'apps/client/src/lib/seo/server/sitemap-data.ts'
@@ -137,5 +141,5 @@ for (const requiredTest of [
 }
 
 console.log(
-  'Client-lib contract check passed (request semantics, environment, cache, server data, errors, cart ownership and sitemap policy).'
+  'Client-lib contract check passed (request semantics, environment, cache, server data, atomic cart-group removal, cart ownership and sitemap policy).'
 );

@@ -18,11 +18,11 @@ import {
 } from '@/lib/cart/cart-groups';
 
 import { CART_DESCRIPTION, CART_TITLE } from '@/lib/seo/metadata-copy';
+import { hasCartGroupStockConflict } from '@/lib/cart/cart-stock';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 import { ROUTES } from '@/lib/routes';
 import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
 import { useClientAuthCapabilities } from '@/hooks/useClientAuthCapabilities';
-import { isPartialCartMutationError } from '@/lib/cart/cart-errors';
 import { useCart } from '@/providers/CartProvider';
 
 import CartItemCard from '@/components/cart/CartItemCard/CartItemCard';
@@ -34,9 +34,11 @@ import css from './CartPageContent.module.css';
 //===================================================================
 
 const EMPTY_CART: Cart = {
+  revision: 0,
   items: [],
   totalItems: 0,
   totalPrice: 0,
+  issues: [],
 };
 
 //===================================================================
@@ -135,13 +137,6 @@ function CartPageContent() {
       setError('');
       await removePharmacyOrder(pharmacyId);
     } catch (error) {
-      if (isPartialCartMutationError(error)) {
-        setError(
-          `Some products were removed before the request failed. The cart was refreshed (${error.removedItems}/${error.totalItems}).`
-        );
-        return;
-      }
-
       setError(
         getUserFacingErrorMessage(error, {
           fallback: APP_ERROR_MESSAGES.cart.removeOrder,
@@ -217,6 +212,12 @@ function CartPageContent() {
                   Retry loading cart
                 </Button>
               ) : null}
+            </div>
+          ) : null}
+
+          {visibleCart.issues.length > 0 ? (
+            <div className={css.notice} role="status">
+              <p>{APP_ERROR_MESSAGES.cart.itemsChanged}</p>
             </div>
           ) : null}
 
@@ -316,6 +317,7 @@ function CartPageContent() {
                       totalPrice={getCartOrderTotal(group)}
                       checkoutPath={getCartOrderPath(group)}
                       isUpdating={isUpdating}
+                      hasStockConflict={hasCartGroupStockConflict(group)}
                       onContinueShopping={() =>
                         setContinueShoppingPharmacy(group)
                       }

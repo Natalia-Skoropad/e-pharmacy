@@ -14,6 +14,7 @@ type CartSummaryProps = {
   totalPrice: number;
   checkoutPath: string;
   isUpdating?: boolean;
+  hasStockConflict?: boolean;
   onContinueShopping: () => void;
 };
 
@@ -25,6 +26,7 @@ function CartSummary({
   totalPrice,
   checkoutPath,
   isUpdating = false,
+  hasStockConflict = false,
   onContinueShopping,
 }: CartSummaryProps) {
   return (
@@ -54,9 +56,15 @@ function CartSummary({
       </div>
 
       <div className={css.actions}>
-        <LinkButton href={checkoutPath} fullWidth>
-          Confirm order
-        </LinkButton>
+        {hasStockConflict ? (
+          <Button type="button" fullWidth disabled>
+            Confirm order
+          </Button>
+        ) : (
+          <LinkButton href={checkoutPath} fullWidth>
+            Confirm order
+          </LinkButton>
+        )}
 
         <Button
           type="button"

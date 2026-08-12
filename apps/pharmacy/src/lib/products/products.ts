@@ -1,6 +1,6 @@
 import { PRODUCT_STATUSES } from '@e-pharmacy/config/products';
 import { isProductCategory } from '@e-pharmacy/validation/products';
-import { OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
+import type { OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
 
 import {
   normalizePaginatedResponse,

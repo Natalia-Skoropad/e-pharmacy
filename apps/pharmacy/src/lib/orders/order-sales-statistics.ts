@@ -3,14 +3,14 @@ import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
 
-import {
+import type {
   OrderSalesStatistics,
   OrderSalesStatisticsGroupBy,
   OrderSalesStatisticsPoint,
   OrderSalesStatisticsValue,
 } from '@e-pharmacy/types/orders';
 
-import { ProductCategory } from '@e-pharmacy/types/products';
+import type { ProductCategory } from '@e-pharmacy/types/products';
 
 import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
 

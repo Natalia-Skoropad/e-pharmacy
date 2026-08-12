@@ -76,6 +76,15 @@ export function removeCartItem(
 
 //===================================================================
 
+export function removeCartPharmacy(
+  pharmacyId: string,
+  options: MutationRequestOptions = {}
+): Promise<CartResponse> {
+  return requestCart(ROUTES.cart.pharmacy(pharmacyId), 'DELETE', options);
+}
+
+//===================================================================
+
 export function clearCart(
   options: MutationRequestOptions = {}
 ): Promise<CartResponse> {

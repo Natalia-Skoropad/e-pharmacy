@@ -36,8 +36,23 @@ export type CartItem = Readonly<{
 
 //===================================================================
 
+type CartIssueReason =
+  | 'expired'
+  | 'offer_unavailable'
+  | 'product_unavailable'
+  | 'pharmacy_unavailable';
+
+export type CartIssue = Readonly<{
+  cartItemId: EntityId;
+  reason: CartIssueReason;
+}>;
+
+//===================================================================
+
 export type Cart = Readonly<{
+  revision: number;
   items: readonly CartItem[];
   totalItems: number;
   totalPrice: number;
+  issues: readonly CartIssue[];
 }>;

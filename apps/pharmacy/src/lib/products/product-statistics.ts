@@ -1,4 +1,4 @@
-import {
+import type {
   AllProductStatisticsCounts,
   OwnProductStatisticsCounts,
 } from '@e-pharmacy/types/products';

@@ -8,6 +8,8 @@ import {
   PAYMENT_METHODS,
 } from '@e-pharmacy/config/orders';
 
+import { ApiError } from '@e-pharmacy/api-client/transport';
+
 import {
   normalizePaginatedResponse,
   requirePaginatedResponse,
@@ -16,7 +18,7 @@ import {
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
-import { OrderStatisticsCounts } from '@e-pharmacy/types/orders';
+import type { OrderStatisticsCounts } from '@e-pharmacy/types/orders';
 import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
 
 import type {
@@ -190,6 +192,107 @@ function isOrderActivityType(value: unknown): value is OrderActivityType {
 
 //===================================================================
 
+const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
+
+//===================================================================
+
+function invalidOrderContract(message: string, payload: unknown): never {
+  throw new ApiError(message, {
+    transportCode: 'INVALID_RESPONSE',
+    payload,
+  });
+}
+
+//===================================================================
+
+function requireObjectId(value: unknown, label: string, payload: unknown): EntityId {
+  const id = getTrimmedString(value);
+  if (!id || !OBJECT_ID_PATTERN.test(id)) {
+    invalidOrderContract(`${label} must be a Mongo ObjectId string.`, payload);
+  }
+
+  return id;
+}
+
+//===================================================================
+
+function requireIsoDateTime(
+  value: unknown,
+  label: string,
+  payload: unknown
+): ISODateTimeString {
+  if (!isISODateTimeString(value)) {
+    invalidOrderContract(`${label} must be a canonical ISO datetime string.`, payload);
+  }
+
+  return value;
+}
+
+//===================================================================
+
+function requireText(value: unknown, label: string, payload: unknown): string {
+  const text = getTrimmedString(value);
+  if (!text) invalidOrderContract(`${label} must be a non-empty string.`, payload);
+  return text;
+}
+
+//===================================================================
+
+function requirePositiveInteger(
+  value: unknown,
+  label: string,
+  payload: unknown
+): number {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1) {
+    invalidOrderContract(`${label} must be a safe positive integer.`, payload);
+  }
+
+  return value;
+}
+
+//===================================================================
+
+function requireNonNegativeInteger(
+  value: unknown,
+  label: string,
+  payload: unknown
+): number {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+    invalidOrderContract(`${label} must be a safe non-negative integer.`, payload);
+  }
+
+  return value;
+}
+
+//===================================================================
+
+function requireNonNegativeNumber(
+  value: unknown,
+  label: string,
+  payload: unknown
+): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    invalidOrderContract(`${label} must be a finite non-negative number.`, payload);
+  }
+
+  return value;
+}
+
+//===================================================================
+
+function assertMoneyEqual(
+  actual: number,
+  expected: number,
+  label: string,
+  payload: unknown
+): void {
+  if (Math.abs(actual - expected) > 1e-9) {
+    invalidOrderContract(`${label} is inconsistent with order item totals.`, payload);
+  }
+}
+
+//===================================================================
+
 function getNestedRecord(
   source: Record<string, unknown>,
   key: string
@@ -252,7 +355,7 @@ function getDeliveryMethod(order: Record<string, unknown>): DeliveryMethod {
     return delivery.method;
   }
 
-  return 'pickup';
+  return invalidOrderContract('order.delivery.method is invalid.', order);
 }
 
 //===================================================================
@@ -281,19 +384,82 @@ function getClientName(order: Record<string, unknown>): string {
 
 //===================================================================
 
-function normalizePharmacyOrderItem(
-  rawItem: unknown
-): PharmacyOrderItem | null {
-  if (!isRecord(rawItem)) return null;
+function normalizePharmacyOrderItem(rawItem: unknown): PharmacyOrderItem {
+  if (!isRecord(rawItem)) {
+    return invalidOrderContract('order item must be an object.', rawItem);
+  }
 
-  const id = getTrimmedString(rawItem.id) ?? getTrimmedString(rawItem._id);
-  const productId = getTrimmedString(rawItem.productId);
-  const productOfferId = getTrimmedString(rawItem.productOfferId);
-  const name = getTrimmedString(rawItem.name) ?? 'Product';
-  const article = getTrimmedString(rawItem.article) ?? '—';
-  const category = rawItem.category;
+  const id = requireObjectId(rawItem.id, 'order item.id', rawItem);
+  const productId = requireObjectId(
+    rawItem.productId,
+    'order item.productId',
+    rawItem
+  );
+  const productOfferId = requireObjectId(
+    rawItem.productOfferId,
+    'order item.productOfferId',
+    rawItem
+  );
+  const name = requireText(rawItem.name, 'order item.name', rawItem);
+  const article = requireText(rawItem.article, 'order item.article', rawItem);
+  const quantity = requirePositiveInteger(
+    rawItem.quantity,
+    'order item.quantity',
+    rawItem
+  );
+  const unitPrice = requireNonNegativeNumber(
+    rawItem.unitPrice,
+    'order item.unitPrice',
+    rawItem
+  );
+  const totalPrice = requireNonNegativeNumber(
+    rawItem.totalPrice,
+    'order item.totalPrice',
+    rawItem
+  );
 
-  if (!id || !productId || !productOfferId) return null;
+  assertMoneyEqual(
+    totalPrice,
+    quantity * unitPrice,
+    'order item.totalPrice',
+    rawItem
+  );
+
+  const category =
+    rawItem.category === undefined
+      ? undefined
+      : isProductCategory(rawItem.category)
+        ? rawItem.category
+        : invalidOrderContract('order item.category is invalid.', rawItem);
+
+  const rating =
+    rawItem.rating === undefined
+      ? undefined
+      : requireNonNegativeNumber(rawItem.rating, 'order item.rating', rawItem);
+  const reviewsCount =
+    rawItem.reviewsCount === undefined
+      ? undefined
+      : requireNonNegativeInteger(
+          rawItem.reviewsCount,
+          'order item.reviewsCount',
+          rawItem
+        );
+  const availableQuantity =
+    rawItem.availableQuantity === undefined
+      ? undefined
+      : requireNonNegativeInteger(
+          rawItem.availableQuantity,
+          'order item.availableQuantity',
+          rawItem
+        );
+  const currentPrice =
+    rawItem.currentPrice === undefined
+      ? undefined
+      : requireNonNegativeNumber(
+          rawItem.currentPrice,
+          'order item.currentPrice',
+          rawItem
+        );
 
   return {
     id,
@@ -301,79 +467,101 @@ function normalizePharmacyOrderItem(
     productOfferId,
     name,
     article,
-    ...(isProductCategory(category) ? { category } : {}),
+    ...(category !== undefined ? { category } : {}),
     ...(getTrimmedString(rawItem.imageUrl)
       ? { imageUrl: getTrimmedString(rawItem.imageUrl) }
       : {}),
-    ...(typeof getFiniteNumber(rawItem.rating) === 'number'
-      ? { rating: getFiniteNumber(rawItem.rating) }
-      : {}),
-    ...(typeof getFiniteNumber(rawItem.reviewsCount) === 'number'
-      ? { reviewsCount: getFiniteNumber(rawItem.reviewsCount) }
-      : {}),
-    quantity: getFiniteNumber(rawItem.quantity) ?? 0,
-    unitPrice: getFiniteNumber(rawItem.unitPrice) ?? 0,
-    totalPrice: getFiniteNumber(rawItem.totalPrice) ?? 0,
-    ...(typeof getFiniteNumber(rawItem.availableQuantity) === 'number'
-      ? { availableQuantity: getFiniteNumber(rawItem.availableQuantity) }
-      : {}),
-    ...(typeof getFiniteNumber(rawItem.currentPrice) === 'number'
-      ? { currentPrice: getFiniteNumber(rawItem.currentPrice) }
-      : {}),
+    ...(rating !== undefined ? { rating } : {}),
+    ...(reviewsCount !== undefined ? { reviewsCount } : {}),
+    quantity,
+    unitPrice,
+    totalPrice,
+    ...(availableQuantity !== undefined ? { availableQuantity } : {}),
+    ...(currentPrice !== undefined ? { currentPrice } : {}),
   };
 }
 
 //===================================================================
 
-export function normalizePharmacyOrder(
-  rawOrder: unknown
-): PharmacyOrderRow | null {
-  if (!isRecord(rawOrder)) return null;
+export function normalizePharmacyOrder(rawOrder: unknown): PharmacyOrderRow {
+  if (!isRecord(rawOrder)) {
+    return invalidOrderContract('order must be an object.', rawOrder);
+  }
 
-  const id = getTrimmedString(rawOrder.id);
-  const orderNumber = getTrimmedString(rawOrder.orderNumber) ?? id;
-  const orderDate =
-    getTrimmedString(rawOrder.orderDate) ??
-    getTrimmedString(rawOrder.createdAt);
+  const id = requireObjectId(rawOrder.id, 'order.id', rawOrder);
+  const orderNumber = requireText(
+    rawOrder.orderNumber,
+    'order.orderNumber',
+    rawOrder
+  );
+  const orderDate = requireIsoDateTime(
+    rawOrder.orderDate ?? rawOrder.createdAt,
+    'order.createdAt',
+    rawOrder
+  );
 
-  if (!id || !orderNumber || !orderDate) return null;
+  if (!isPaymentMethod(rawOrder.paymentMethod)) {
+    invalidOrderContract('order.paymentMethod is invalid.', rawOrder);
+  }
+  if (!isOrderStatus(rawOrder.status)) {
+    invalidOrderContract('order.status is invalid.', rawOrder);
+  }
+  if (!isOrderCreatedByType(rawOrder.createdByType)) {
+    invalidOrderContract('order.createdByType is invalid.', rawOrder);
+  }
+  if (!Array.isArray(rawOrder.items)) {
+    invalidOrderContract('order.items must be an array.', rawOrder);
+  }
 
-  const paymentMethod = isPaymentMethod(rawOrder.paymentMethod)
-    ? rawOrder.paymentMethod
-    : 'cash';
-  const status = isOrderStatus(rawOrder.status) ? rawOrder.status : 'new';
-  const items = Array.isArray(rawOrder.items)
-    ? rawOrder.items
-        .map(normalizePharmacyOrderItem)
-        .filter((item): item is PharmacyOrderItem => Boolean(item))
-    : [];
+  const items = rawOrder.items.map(normalizePharmacyOrderItem);
+  const totalQuantity = requireNonNegativeInteger(
+    rawOrder.totalItems,
+    'order.totalItems',
+    rawOrder
+  );
+  const totalAmount = requireNonNegativeNumber(
+    rawOrder.totalPrice,
+    'order.totalPrice',
+    rawOrder
+  );
+  const expectedQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  const expectedAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
+
+  if (totalQuantity !== expectedQuantity) {
+    invalidOrderContract(
+      'order.totalItems must equal the sum of item quantities.',
+      rawOrder
+    );
+  }
+  assertMoneyEqual(totalAmount, expectedAmount, 'order.totalPrice', rawOrder);
+
+  const clientId = getClientId(rawOrder);
+  if (clientId && !OBJECT_ID_PATTERN.test(clientId)) {
+    invalidOrderContract('order.clientId is invalid.', rawOrder);
+  }
 
   return {
     id,
     orderNumber,
     orderDate,
-    pharmacyName: getTrimmedString(rawOrder.pharmacyName) ?? 'Pharmacy',
+    pharmacyName: requireText(
+      rawOrder.pharmacyName,
+      'order.pharmacyName',
+      rawOrder
+    ),
     client: getClientName(rawOrder),
-    clientId: getClientId(rawOrder),
+    clientId,
     clientPhotoUrl: getClientPhotoUrl(rawOrder),
     deliveryMethod: getDeliveryMethod(rawOrder),
-    paymentMethod,
+    paymentMethod: rawOrder.paymentMethod,
     clientComment:
       getTrimmedString(rawOrder.clientComment) ??
       getTrimmedString(rawOrder.comment) ??
       '',
-    totalQuantity:
-      getFiniteNumber(rawOrder.totalQuantity) ??
-      getFiniteNumber(rawOrder.totalItems) ??
-      0,
-    totalAmount:
-      getFiniteNumber(rawOrder.totalAmount) ??
-      getFiniteNumber(rawOrder.totalPrice) ??
-      0,
-    status,
-    createdByType: isOrderCreatedByType(rawOrder.createdByType)
-      ? rawOrder.createdByType
-      : 'client',
+    totalQuantity,
+    totalAmount,
+    status: rawOrder.status,
+    createdByType: rawOrder.createdByType,
     items,
   };
 }
@@ -383,28 +571,32 @@ export function normalizePharmacyOrder(
 function normalizeStatusHistory(
   payload: unknown
 ): PharmacyOrderStatusHistoryItem[] {
-  if (!Array.isArray(payload)) return [];
+  if (!Array.isArray(payload)) {
+    return invalidOrderContract('order.statusHistory must be an array.', payload);
+  }
 
-  return payload
-    .map((entry) => {
-      if (!isRecord(entry)) return null;
+  return payload.map((entry) => {
+    if (!isRecord(entry) || !isOrderStatus(entry.status)) {
+      return invalidOrderContract('order.statusHistory entry is invalid.', entry);
+    }
 
-      const status = isOrderStatus(entry.status) ? entry.status : null;
-      const changedAt = getTrimmedString(entry.changedAt);
-      const changedBy = getTrimmedString(entry.changedBy);
-
-      if (!status || !changedAt || !changedBy) return null;
-
-      return {
-        status,
-        changedAt,
-        changedBy,
-        ...(getTrimmedString(entry.comment)
-          ? { comment: getTrimmedString(entry.comment) }
-          : {}),
-      };
-    })
-    .filter((entry): entry is PharmacyOrderStatusHistoryItem => Boolean(entry));
+    return {
+      status: entry.status,
+      changedAt: requireIsoDateTime(
+        entry.changedAt,
+        'order.statusHistory.changedAt',
+        entry
+      ),
+      changedBy: requireObjectId(
+        entry.changedBy,
+        'order.statusHistory.changedBy',
+        entry
+      ),
+      ...(getTrimmedString(entry.comment)
+        ? { comment: getTrimmedString(entry.comment) }
+        : {}),
+    };
+  });
 }
 
 //===================================================================
@@ -412,55 +604,75 @@ function normalizeStatusHistory(
 function normalizeActivityHistory(
   payload: unknown
 ): PharmacyOrderActivityHistoryItem[] {
-  if (!Array.isArray(payload)) return [];
+  if (!Array.isArray(payload)) {
+    return invalidOrderContract('order.activityHistory must be an array.', payload);
+  }
 
-  return payload
-    .map((entry) => {
-      if (!isRecord(entry) || !isOrderActivityType(entry.type)) return null;
+  return payload.map((entry) => {
+    if (!isRecord(entry) || !isOrderActivityType(entry.type)) {
+      return invalidOrderContract('order.activityHistory entry is invalid.', entry);
+    }
 
-      const occurredAt = getTrimmedString(entry.occurredAt);
-      const changedBy = getTrimmedString(entry.changedBy);
-      const productId = getTrimmedString(entry.productId);
-      const productOfferId = getTrimmedString(entry.productOfferId);
-      const productName = getTrimmedString(entry.productName);
-      const previousQuantity = getFiniteNumber(entry.previousQuantity);
-      const quantity = getFiniteNumber(entry.quantity);
-      const quantityDelta = getFiniteNumber(entry.quantityDelta);
-      const previousUnitPrice = getFiniteNumber(entry.previousUnitPrice);
-      const unitPrice = getFiniteNumber(entry.unitPrice);
-
-      if (
-        !occurredAt ||
-        !changedBy ||
-        !productId ||
-        !productOfferId ||
-        !productName ||
-        previousQuantity === undefined ||
-        quantity === undefined ||
-        quantityDelta === undefined ||
-        previousUnitPrice === undefined ||
-        unitPrice === undefined
-      ) {
-        return null;
-      }
-
-      return {
-        type: entry.type,
-        occurredAt,
-        changedBy,
-        productId,
-        productOfferId,
-        productName,
-        previousQuantity,
-        quantity,
-        quantityDelta,
-        previousUnitPrice,
-        unitPrice,
-      };
-    })
-    .filter((entry): entry is PharmacyOrderActivityHistoryItem =>
-      Boolean(entry)
+    const previousQuantity = requireNonNegativeInteger(
+      entry.previousQuantity,
+      'order.activityHistory.previousQuantity',
+      entry
     );
+    const quantity = requireNonNegativeInteger(
+      entry.quantity,
+      'order.activityHistory.quantity',
+      entry
+    );
+    const quantityDelta = entry.quantityDelta;
+    if (typeof quantityDelta !== 'number' || !Number.isSafeInteger(quantityDelta)) {
+      invalidOrderContract(
+        'order.activityHistory.quantityDelta must be a safe integer.',
+        entry
+      );
+    }
+
+    return {
+      type: entry.type,
+      occurredAt: requireIsoDateTime(
+        entry.occurredAt,
+        'order.activityHistory.occurredAt',
+        entry
+      ),
+      changedBy: requireObjectId(
+        entry.changedBy,
+        'order.activityHistory.changedBy',
+        entry
+      ),
+      productId: requireObjectId(
+        entry.productId,
+        'order.activityHistory.productId',
+        entry
+      ),
+      productOfferId: requireObjectId(
+        entry.productOfferId,
+        'order.activityHistory.productOfferId',
+        entry
+      ),
+      productName: requireText(
+        entry.productName,
+        'order.activityHistory.productName',
+        entry
+      ),
+      previousQuantity,
+      quantity,
+      quantityDelta,
+      previousUnitPrice: requireNonNegativeNumber(
+        entry.previousUnitPrice,
+        'order.activityHistory.previousUnitPrice',
+        entry
+      ),
+      unitPrice: requireNonNegativeNumber(
+        entry.unitPrice,
+        'order.activityHistory.unitPrice',
+        entry
+      ),
+    };
+  });
 }
 
 //===================================================================
@@ -499,33 +711,34 @@ export function normalizePharmacyOrderManagerCommentsResponse(
 function normalizeBankDetails(
   payload: unknown
 ): CompletePharmacyBankDetails | null {
-  if (!isRecord(payload)) return null;
-
-  const recipientName = getTrimmedString(payload.recipientName);
-  const taxId = getTrimmedString(payload.taxId);
-  const iban = getTrimmedString(payload.iban);
-  const bankName = getTrimmedString(payload.bankName);
-  const receiptEmail = getTrimmedString(payload.receiptEmail);
-  const paymentPurpose = getTrimmedString(payload.paymentPurpose);
-
-  if (
-    !recipientName ||
-    !taxId ||
-    !iban ||
-    !bankName ||
-    !receiptEmail ||
-    !paymentPurpose
-  ) {
-    return null;
+  if (payload === undefined || payload === null) return null;
+  if (!isRecord(payload)) {
+    return invalidOrderContract('order.bankDetails must be an object.', payload);
   }
 
   return {
-    recipientName,
-    taxId,
-    iban,
-    bankName,
-    receiptEmail,
-    paymentPurpose,
+    recipientName: requireText(
+      payload.recipientName,
+      'order.bankDetails.recipientName',
+      payload
+    ),
+    taxId: requireText(payload.taxId, 'order.bankDetails.taxId', payload),
+    iban: requireText(payload.iban, 'order.bankDetails.iban', payload),
+    bankName: requireText(
+      payload.bankName,
+      'order.bankDetails.bankName',
+      payload
+    ),
+    receiptEmail: requireText(
+      payload.receiptEmail,
+      'order.bankDetails.receiptEmail',
+      payload
+    ),
+    paymentPurpose: requireText(
+      payload.paymentPurpose,
+      'order.bankDetails.paymentPurpose',
+      payload
+    ),
   };
 }
 
@@ -547,16 +760,14 @@ export function normalizePharmacyOrderDetails(
   return {
     ...row,
     currency: '₴',
-    pharmacyId: getTrimmedString(payload.pharmacyId) ?? '',
+    pharmacyId: requireObjectId(payload.pharmacyId, 'order.pharmacyId', payload),
     statusHistory: normalizeStatusHistory(payload.statusHistory),
     activityHistory: normalizeActivityHistory(payload.activityHistory),
-    managerCommentsCount:
-      getFiniteNumber(payload.managerCommentsCount) ??
-      (Array.isArray(payload.managerComments)
-        ? payload.managerComments.length
-        : getTrimmedString(payload.managerComment)
-          ? 1
-          : 0),
+    managerCommentsCount: requireNonNegativeInteger(
+      payload.managerCommentsCount,
+      'order.managerCommentsCount',
+      payload
+    ),
     ...(getTrimmedString(payload.clientPhone)
       ? { clientPhone: getTrimmedString(payload.clientPhone) }
       : {}),

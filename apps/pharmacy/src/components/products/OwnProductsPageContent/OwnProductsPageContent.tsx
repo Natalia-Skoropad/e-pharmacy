@@ -23,7 +23,7 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
-import {
+import type {
   OwnProductStatisticsCounts,
   OwnProductStatisticsKey,
 } from '@e-pharmacy/types/products';

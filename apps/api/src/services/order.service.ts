@@ -3,6 +3,7 @@ import mongoose, { Types } from 'mongoose';
 import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { CHECKOUT_CART_CHANGED_ERROR_CODE } from '../constants/order';
 
 import { Cart } from '../models/cart.model';
 import { Order } from '../models/order.model';
@@ -22,6 +23,7 @@ import {
 } from './stock.service';
 
 import { getCartService } from './cart.service';
+import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
 
 import type {
   CheckoutOrderInput,
@@ -88,6 +90,7 @@ type CartDocument = {
   _id: Types.ObjectId;
   clientUserId: Types.ObjectId;
   items: CartItemDocument[];
+  revision: number;
   updatedAt: Date;
 };
 
@@ -503,8 +506,10 @@ function validateCheckoutCartItemsOrThrow({
 
     if (cartItem.expiresAt.getTime() <= now) {
       throw httpError(
-        HTTP_STATUS.BAD_REQUEST,
-        'Selected pharmacy order is empty or expired'
+        HTTP_STATUS.CONFLICT,
+        'Selected pharmacy order changed or expired. Please review the updated cart and confirm again.',
+        undefined,
+        CHECKOUT_CART_CHANGED_ERROR_CODE
       );
     }
 
@@ -562,6 +567,15 @@ export async function checkoutOrderService(
         throw httpError(HTTP_STATUS.BAD_REQUEST, 'Cart is empty');
       }
 
+      if (cart.revision !== input.expectedCartRevision) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Cart changed after checkout review. Please review the updated order and confirm again.',
+          undefined,
+          CHECKOUT_CART_CHANGED_ERROR_CODE
+        );
+      }
+
       const offers = await ProductOffer.find({
         _id: { $in: cart.items.map((item) => item.productOfferId) },
       })
@@ -582,8 +596,42 @@ export async function checkoutOrderService(
 
       if (!orderCartItems.length) {
         throw httpError(
-          HTTP_STATUS.BAD_REQUEST,
-          'Selected pharmacy order is empty or expired'
+          HTTP_STATUS.CONFLICT,
+          'Selected pharmacy order changed or expired. Please review the cart and confirm again.',
+          undefined,
+          CHECKOUT_CART_CHANGED_ERROR_CODE
+        );
+      }
+
+      const currentGroupFingerprint = createCheckoutGroupFingerprint({
+        pharmacyId: input.pharmacyId,
+        items: orderCartItems.map((item) => {
+          const offer = initialOfferMap.get(String(item.productOfferId));
+
+          if (!offer) {
+            throw httpError(
+              HTTP_STATUS.CONFLICT,
+              'Selected pharmacy order changed. Please review the cart and confirm again.',
+              undefined,
+              CHECKOUT_CART_CHANGED_ERROR_CODE
+            );
+          }
+
+          return {
+            id: item._id,
+            productOfferId: item.productOfferId,
+            quantity: item.quantity,
+            unitPrice: offer.price,
+          };
+        }),
+      });
+
+      if (currentGroupFingerprint !== input.groupFingerprint) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Selected pharmacy order changed. Please review the updated order and confirm again.',
+          undefined,
+          CHECKOUT_CART_CHANGED_ERROR_CODE
         );
       }
 
@@ -779,13 +827,14 @@ export async function checkoutOrderService(
       );
 
       const cartUpdateResult = await Cart.updateOne(
-        { _id: cart._id, updatedAt: cart.updatedAt },
+        { _id: cart._id, revision: input.expectedCartRevision },
         {
           $set: {
             items: cart.items.filter(
               (item) => !selectedIds.has(String(item._id))
             ),
           },
+          $inc: { revision: 1 },
         },
         { session, runValidators: true }
       );
@@ -793,7 +842,9 @@ export async function checkoutOrderService(
       if (cartUpdateResult.matchedCount !== 1) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
-          'Cart was changed by another request. Please refresh and try again.'
+          'Cart changed during checkout. Please review the updated order and confirm again.',
+          undefined,
+          CHECKOUT_CART_CHANGED_ERROR_CODE
         );
       }
     });

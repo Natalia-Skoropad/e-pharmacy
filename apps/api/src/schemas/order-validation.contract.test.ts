@@ -22,6 +22,8 @@ const deliveryDetails = {
 test('checkout delivery is discriminated by delivery method', () => {
   const base = {
     pharmacyId: '507f1f77bcf86cd799439011',
+    expectedCartRevision: 4,
+    groupFingerprint: '{\"cart\":\"reviewed\"}',
     paymentMethod: 'cash' as const,
   };
 

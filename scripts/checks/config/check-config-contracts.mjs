@@ -62,6 +62,7 @@ const [
   backendNotes,
   backendClientSchema,
   backendCart,
+  apiClientCartParser,
   clientFilters,
 ] = await Promise.all([
   parse('packages', 'config', 'src', 'auth', 'domain-values.ts'),
@@ -87,6 +88,8 @@ const [
   parse('apps', 'api', 'src', 'models', 'pharmacyNote.model.ts'),
   parse('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
   parse('apps', 'api', 'src', 'constants', 'cart.ts'),
+
+  parse('packages', 'api-client', 'src', 'response', 'shared-dto-parsers.ts'),
 
   parse(
     'apps',
@@ -189,6 +192,24 @@ assert.equal(
   'Cart pharmacy-group limits differ between frontend and backend'
 );
 
+const cartItemMaxQuantity = getVariableLiteral(
+  ts,
+  frontendCart,
+  'CART_ITEM_MAX_QUANTITY'
+);
+
+assert.equal(
+  cartItemMaxQuantity,
+  getVariableLiteral(ts, backendCart, 'CART_ITEM_MAX_QUANTITY'),
+  'Cart item quantity limits differ between frontend and backend'
+);
+
+assert.equal(
+  cartItemMaxQuantity,
+  getVariableLiteral(ts, apiClientCartParser, 'CART_ITEM_MAX_QUANTITY'),
+  'API-client cart parser quantity limit differs from the canonical cart limit'
+);
+
 assert.equal(
   getVariableLiteral(ts, frontendCart, 'CART_PHARMACY_LIMIT_ERROR_CODE'),
   getVariableLiteral(ts, backendCart, 'CART_PHARMACY_LIMIT_ERROR_CODE'),
@@ -199,6 +220,35 @@ assert.equal(
   getVariableLiteral(ts, frontendCartLifecycle, 'CART_ITEM_TTL_DAYS'),
   getVariableLiteral(ts, backendCart, 'CART_ITEM_TTL_DAYS'),
   'Cart item TTL differs between frontend and backend'
+);
+
+const frontendCheckoutErrors = await parse(
+  'packages',
+  'config',
+  'src',
+  'orders',
+  'error-codes.ts'
+);
+const backendCheckoutErrors = await parse(
+  'apps',
+  'api',
+  'src',
+  'constants',
+  'order.ts'
+);
+
+assert.equal(
+  getVariableLiteral(
+    ts,
+    frontendCheckoutErrors,
+    'CHECKOUT_CART_CHANGED_ERROR_CODE'
+  ),
+  getVariableLiteral(
+    ts,
+    backendCheckoutErrors,
+    'CHECKOUT_CART_CHANGED_ERROR_CODE'
+  ),
+  'Checkout cart-changed error codes differ between frontend and backend'
 );
 
 //===================================================================

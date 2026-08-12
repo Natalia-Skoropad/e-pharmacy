@@ -68,7 +68,7 @@ import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 
-import { OrderStatisticsCounts } from '@e-pharmacy/types/orders';
+import type { OrderStatisticsCounts } from '@e-pharmacy/types/orders';
 
 import type {
   DeliveryMethod,
@@ -76,7 +76,7 @@ import type {
   PaymentMethod,
 } from '@e-pharmacy/types/orders';
 
-import { ProductCategory, ProductStatus } from '@e-pharmacy/types/products';
+import type { ProductCategory, ProductStatus } from '@e-pharmacy/types/products';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { formatAmount } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';

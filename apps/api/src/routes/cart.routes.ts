@@ -5,6 +5,7 @@ import {
   clearCart,
   getCart,
   removeCartItem,
+  removeCartPharmacy,
   updateCartItem,
 } from '../controllers/cart.controller';
 
@@ -16,6 +17,7 @@ import { validate } from '../middlewares/validate.middleware';
 import {
   addCartItemSchema,
   cartItemParamsSchema,
+  cartPharmacyParamsSchema,
   updateCartItemSchema,
 } from '../schemas/cart.schema';
 
@@ -62,6 +64,17 @@ cartRoutes.delete(
     params: cartItemParamsSchema,
   }),
   ctrlWrapper(removeCartItem)
+);
+
+//=================================================================================
+
+cartRoutes.delete(
+  '/pharmacies/:pharmacyId',
+  validate({
+    params: cartPharmacyParamsSchema,
+  }),
+
+  ctrlWrapper(removeCartPharmacy)
 );
 
 cartRoutes.delete('/clear', ctrlWrapper(clearCart));

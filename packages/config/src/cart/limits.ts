@@ -1,3 +1,6 @@
+/** Maximum quantity of one product offer stored in a client cart item. */
+export const CART_ITEM_MAX_QUANTITY = 99;
+
 /**
  * A multi-pharmacy cart creates one order per pharmacy. Keep this value aligned
  * with the backend-local cart constant through contract parity checks.

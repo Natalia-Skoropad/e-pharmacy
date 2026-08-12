@@ -5,6 +5,7 @@ import type {
 } from '@e-pharmacy/types/pharmacies';
 
 import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
+import { hasCartGroupStockConflict } from '@/lib/cart/cart-stock';
 
 //===================================================================
 
@@ -54,18 +55,16 @@ export function getPharmacyBankDetails(
 //===================================================================
 
 export function getStockValidationError(group: CartPharmacyGroup): string {
-  const unavailableItems = group.items.filter(
-    (item) => item.stockQuantity <= 0 || item.quantity > item.stockQuantity
-  );
+  if (!hasCartGroupStockConflict(group)) return '';
 
-  if (unavailableItems.length === 0) return '';
+  const unavailableItems = group.items.filter(
+    (item) => item.quantity > item.stockQuantity
+  );
 
   const productNames = unavailableItems
     .map((item) => item.product.name)
     .slice(0, 3)
     .join(', ');
 
-  return `Sorry, we cannot confirm this order right now. While you were placing the order, ${productNames} ${
-    unavailableItems.length === 1 ? 'was' : 'were'
-  } reserved by another client. Please update the cart and choose the available quantity again.`;
+  return `Available quantity has changed for ${productNames}. Please update the cart quantity to the currently available amount before confirming the order.`;
 }

@@ -122,6 +122,14 @@
   color: var(--color-accent);
 }
 
+.stockWarning {
+  max-width: 320px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  color: var(--color-error);
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

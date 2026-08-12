@@ -3,15 +3,22 @@ import type { PaymentMethod } from './status';
 
 //=============================================================================
 
+type CheckoutConcurrencyContract = Readonly<{
+  expectedCartRevision: number;
+  groupFingerprint: string;
+}>;
+
+//=============================================================================
+
 export type CheckoutOrderPayload =
-  | {
+  | (CheckoutConcurrencyContract & {
       pharmacyId: EntityId;
       paymentMethod: PaymentMethod;
       deliveryMethod: 'pickup';
       deliveryDetails?: never;
       comment?: string;
-    }
-  | {
+    })
+  | (CheckoutConcurrencyContract & {
       pharmacyId: EntityId;
       paymentMethod: PaymentMethod;
       deliveryMethod: 'postal_delivery';
@@ -21,4 +28,4 @@ export type CheckoutOrderPayload =
         address: string;
       };
       comment?: string;
-    };
+    });

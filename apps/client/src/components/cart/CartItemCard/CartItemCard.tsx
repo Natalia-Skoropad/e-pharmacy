@@ -8,6 +8,7 @@ import { formatMoney } from '@e-pharmacy/utils/money';
 import type { CartItem } from '@e-pharmacy/types/cart';
 
 import { buildProductPath } from '@/lib/routes';
+import { hasCartItemStockConflict } from '@/lib/cart/cart-stock';
 
 import { StockAvailability } from '@/components/common';
 
@@ -31,10 +32,7 @@ function CartItemCard({
   onRemove,
 }: CartItemCardProps) {
   const productHref = buildProductPath(item.product.name, item.product.id);
-  const stockQuantity = Math.max(
-    item.stockQuantity ?? item.quantity,
-    item.quantity
-  );
+  const hasStockConflict = hasCartItemStockConflict(item);
 
   return (
     <article className={css.card} aria-labelledby={`cart-item-${item.id}`}>
@@ -90,7 +88,7 @@ function CartItemCard({
             <QuantityCounter
               value={item.quantity}
               min={1}
-              max={stockQuantity}
+              max={item.stockQuantity}
               isLoading={isUpdating}
               ariaLabel={`Quantity controls for ${item.product.name}`}
               onDecrement={() => onQuantityChange(item.id, item.quantity - 1)}
@@ -99,8 +97,15 @@ function CartItemCard({
 
             <StockAvailability
               className={css.stock}
-              stockQuantity={stockQuantity}
+              stockQuantity={item.stockQuantity}
             />
+
+            {hasStockConflict ? (
+              <p className={css.stockWarning} role="alert">
+                Only {item.stockQuantity} available. Decrease the quantity to
+                continue to checkout.
+              </p>
+            ) : null}
           </div>
 
           <div className={css.actions}>

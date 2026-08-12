@@ -1,3 +1,4 @@
+export const CART_ITEM_MAX_QUANTITY = 99;
 export const CART_ITEM_TTL_DAYS = 3;
 
 // A multi-pharmacy cart creates one order per pharmacy. Limiting the number of

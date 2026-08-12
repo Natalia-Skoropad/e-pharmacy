@@ -28,7 +28,7 @@ import type {
   ProductDetails,
 } from '@e-pharmacy/types/products';
 
-import {
+import type {
   AllProductStatisticsCounts,
   AllProductStatisticsKey,
 } from '@e-pharmacy/types/products';

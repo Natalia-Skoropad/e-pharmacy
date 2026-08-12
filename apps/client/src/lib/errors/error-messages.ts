@@ -21,13 +21,18 @@ export const APP_ERROR_MESSAGES = {
     remove: 'Could not remove cart item.',
     clear: 'Could not clear cart.',
     removeOrder: 'Could not remove pharmacy order.',
+    itemsChanged:
+      'Some expired or unavailable products were removed from your cart. Please review the updated cart before checkout.',
   },
 
   checkout: {
     confirm: 'Could not confirm order.',
 
     staleOrder:
-      'Sorry, we cannot confirm this order right now. While you were placing the order, these products were reserved by another client. Please update the cart and try again.',
+      'This pharmacy order is no longer available. The cart has been updated. Please review it before confirming again.',
+
+    cartChanged:
+      'Your cart changed after this checkout was shown. We updated the checkout data; please review the products, quantities, and prices, then confirm again.',
   },
 
   products: {

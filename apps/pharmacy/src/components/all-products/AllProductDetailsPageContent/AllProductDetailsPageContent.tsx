@@ -58,7 +58,7 @@ import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/transport';
-import { OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
+import type { OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
 import type { OrderStatus } from '@e-pharmacy/types/orders';
 
 import type {
@@ -76,7 +76,7 @@ import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { formatAmount, formatMoney } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
 
-import {
+import type {
   OrderSalesStatistics,
   OrderStatisticsCounts,
 } from '@e-pharmacy/types/orders';

@@ -31,6 +31,7 @@ import {
 } from '@e-pharmacy/validation/order';
 
 import { groupCartByPharmacy } from '@/lib/cart/cart-groups';
+import { hasCartGroupStockConflict } from '@/lib/cart/cart-stock';
 
 import {
   getPharmacyAddress,
@@ -147,8 +148,15 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     pharmacyPhone || pharmacyWorkingHours || pharmacyAddress
   );
 
+  const hasStockConflict = selectedOrderGroup
+    ? hasCartGroupStockConflict(selectedOrderGroup)
+    : false;
+
   const canSubmit =
-    Boolean(selectedOrderGroup) && isDeliveryFormValid && canUseSelectedPayment;
+    Boolean(selectedOrderGroup) &&
+    !hasStockConflict &&
+    isDeliveryFormValid &&
+    canUseSelectedPayment;
 
   const { isSubmitting, handleSubmit } = useCheckoutSubmit({
     isAuthenticated: canUseClientFeatures,

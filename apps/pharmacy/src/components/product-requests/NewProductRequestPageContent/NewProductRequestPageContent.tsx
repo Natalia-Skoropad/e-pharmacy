@@ -42,7 +42,7 @@ import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 
-import {
+import type {
   ProductRequestFormPayload,
   ProductRequestFile,
   ProductRequestStatus,

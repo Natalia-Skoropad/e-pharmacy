@@ -123,6 +123,14 @@
   },
   {
     "app": "client",
+    "route": "/cart/pharmacies/[pharmacyId]",
+    "backend": "/cart/pharmacies/:pharmacyId",
+    "methods": {
+      "DELETE": "private"
+    }
+  },
+  {
+    "app": "client",
     "route": "/health",
     "backend": "/health",
     "methods": {

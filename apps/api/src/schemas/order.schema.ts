@@ -115,6 +115,8 @@ export const orderSalesStatisticsQuerySchema = z
 const baseCheckoutSchema = z.object({
   pharmacyId: mongoIdSchema,
   paymentMethod: z.enum(['cash', 'bank_transfer']),
+  expectedCartRevision: z.number().int().min(0),
+  groupFingerprint: z.string().min(1).max(20_000),
   comment: sharedOrderCommentSchema,
 });
 

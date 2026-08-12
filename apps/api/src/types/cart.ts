@@ -15,6 +15,7 @@ export type CartItemEntity = {
 export type CartEntity = {
   clientUserId: Types.ObjectId;
   items: CartItemEntity[];
+  revision: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -50,8 +51,21 @@ export type CartItemResponseDto = {
   expiresAt: string;
 };
 
+export type CartIssueReason =
+  | 'expired'
+  | 'offer_unavailable'
+  | 'product_unavailable'
+  | 'pharmacy_unavailable';
+
+export type CartIssueResponseDto = {
+  cartItemId: string;
+  reason: CartIssueReason;
+};
+
 export type CartResponseDto = {
+  revision: number;
   items: CartItemResponseDto[];
   totalItems: number;
   totalPrice: number;
+  issues: CartIssueResponseDto[];
 };

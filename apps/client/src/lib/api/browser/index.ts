@@ -18,6 +18,7 @@ export {
   clearCart,
   getCart,
   removeCartItem,
+  removeCartPharmacy,
   updateCartItem,
 } from './cart.api';
 

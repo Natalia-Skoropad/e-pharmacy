@@ -19,8 +19,10 @@ export const clientApiRoutes = {
     checkoutDetails: (id: EntityId) =>
       `/api/pharmacies/${encodeRouteSegment(id)}/checkout-details`,
 
-    reviews: (id: EntityId) => `/api/pharmacies/${encodeRouteSegment(id)}/reviews`,
-    favorite: (id: EntityId) => `/api/pharmacies/${encodeRouteSegment(id)}/favorite`,
+    reviews: (id: EntityId) =>
+      `/api/pharmacies/${encodeRouteSegment(id)}/reviews`,
+    favorite: (id: EntityId) =>
+      `/api/pharmacies/${encodeRouteSegment(id)}/favorite`,
   },
 
   products: {
@@ -29,14 +31,20 @@ export const clientApiRoutes = {
     favoriteIds: '/api/products/favorites/ids',
     filters: '/api/products/filters',
     details: (id: EntityId) => `/api/products/${encodeRouteSegment(id)}`,
-    reviews: (id: EntityId) => `/api/products/${encodeRouteSegment(id)}/reviews`,
-    favorite: (id: EntityId) => `/api/products/${encodeRouteSegment(id)}/favorite`,
+    reviews: (id: EntityId) =>
+      `/api/products/${encodeRouteSegment(id)}/reviews`,
+    favorite: (id: EntityId) =>
+      `/api/products/${encodeRouteSegment(id)}/favorite`,
   },
 
   cart: {
     current: '/api/cart',
     addItem: '/api/cart/items',
     item: (id: EntityId) => `/api/cart/items/${encodeRouteSegment(id)}`,
+
+    pharmacy: (id: EntityId) =>
+      `/api/cart/pharmacies/${encodeRouteSegment(id)}`,
+
     clear: '/api/cart/clear',
   },
 

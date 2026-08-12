@@ -8,7 +8,15 @@ import type {
   ActiveSessionsResponse,
 } from '@e-pharmacy/types/auth';
 
-import type { Cart, CartItem, CartResponse } from '@e-pharmacy/types/cart';
+import type {
+  Cart,
+  CartIssue,
+  CartItem,
+  CartResponse,
+} from '@e-pharmacy/types/cart';
+
+// Kept backend/config-aligned by check-config-contracts.mjs; api-client must not depend on config.
+const CART_ITEM_MAX_QUANTITY = 99;
 
 import type {
   CheckoutOrderResponse,
@@ -257,6 +265,137 @@ function requireSafeNonNegativeInteger(
 
 //===================================================================
 
+const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
+
+const PRODUCT_CATEGORIES = new Set([
+  'medicine',
+  'vitamins',
+  'beauty',
+  'hygiene',
+  'medical_devices',
+  'other',
+]);
+
+const CART_ISSUE_REASONS = new Set([
+  'expired',
+  'offer_unavailable',
+  'product_unavailable',
+  'pharmacy_unavailable',
+]);
+
+//===================================================================
+
+function requireObjectId(
+  record: UnknownRecord,
+  key: string,
+  label: string,
+  context?: ApiResponseContext
+): string {
+  const value = record[key];
+
+  if (typeof value !== 'string' || !OBJECT_ID_PATTERN.test(value)) {
+    throw invalidDto(
+      `${label}.${key} must be a Mongo ObjectId string.`,
+      record,
+      context
+    );
+  }
+
+  return value;
+}
+
+//===================================================================
+
+function requireCanonicalIsoDateTime(
+  record: UnknownRecord,
+  key: string,
+  label: string,
+  context?: ApiResponseContext
+): string {
+  const value = record[key];
+
+  if (typeof value !== 'string') {
+    throw invalidDto(
+      `${label}.${key} must be an ISO datetime string.`,
+      record,
+      context
+    );
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString() !== value) {
+    throw invalidDto(
+      `${label}.${key} must be a canonical ISO datetime string.`,
+      record,
+      context
+    );
+  }
+
+  return value;
+}
+
+//===================================================================
+
+function requireNonNegativeFiniteNumber(
+  record: UnknownRecord,
+  key: string,
+  label: string,
+  context?: ApiResponseContext
+): number {
+  const value = record[key];
+
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    throw invalidDto(
+      `${label}.${key} must be a finite non-negative number.`,
+      record,
+      context
+    );
+  }
+
+  return value;
+}
+
+//===================================================================
+
+function requireSafePositiveInteger(
+  record: UnknownRecord,
+  key: string,
+  label: string,
+  context?: ApiResponseContext
+): number {
+  const value = record[key];
+
+  if (
+    typeof value !== 'number' ||
+    !Number.isSafeInteger(value) ||
+    value < 1 ||
+    value > CART_ITEM_MAX_QUANTITY
+  ) {
+    throw invalidDto(
+      `${label}.${key} must be an integer from 1 to ${CART_ITEM_MAX_QUANTITY}.`,
+      record,
+      context
+    );
+  }
+
+  return value;
+}
+
+//===================================================================
+
+function assertMoneyEqual(
+  actual: number,
+  expected: number,
+  message: string,
+  value: unknown,
+  context?: ApiResponseContext
+): void {
+  if (Math.abs(actual - expected) > 1e-9) {
+    throw invalidDto(message, value, context);
+  }
+}
+
+//===================================================================
 function parseProductOffer(
   value: unknown,
   context?: ApiResponseContext
@@ -1149,6 +1288,67 @@ export function parseMessageResponse(
 
 //===================================================================
 
+function parseCartProduct(
+  value: unknown,
+  context?: ApiResponseContext
+): CartItem['product'] {
+  const record = requireRecord(value, 'cart product', context);
+
+  requireFields(
+    record,
+    'cart product',
+    {
+      id: 'string',
+      name: 'string',
+      article: 'string',
+      category: 'string',
+      price: 'number',
+      inStock: 'boolean',
+    },
+    context
+  );
+
+  requireOptionalFields(
+    record,
+    'cart product',
+    {
+      imageUrl: 'string',
+      pharmacyName: 'string',
+      rating: 'number',
+      reviewsCount: 'number',
+    },
+    context
+  );
+
+  requireObjectId(record, 'id', 'cart product', context);
+  requireNonNegativeFiniteNumber(record, 'price', 'cart product', context);
+
+  if (!PRODUCT_CATEGORIES.has(String(record.category))) {
+    throw invalidDto(
+      'cart product.category is not supported.',
+      record,
+      context
+    );
+  }
+
+  if (record.rating !== undefined) {
+    requireNonNegativeFiniteNumber(record, 'rating', 'cart product', context);
+  }
+
+  if (record.reviewsCount !== undefined) {
+    requireSafeNonNegativeInteger(
+      record,
+      'reviewsCount',
+      'cart product',
+      context
+    );
+  }
+
+  return checked<CartItem['product']>(record);
+}
+
+//===================================================================
+
 function parseCartItem(value: unknown, context?: ApiResponseContext): CartItem {
   const record = requireRecord(value, 'cart item', context);
   requireFields(
@@ -1170,7 +1370,173 @@ function parseCartItem(value: unknown, context?: ApiResponseContext): CartItem {
     context
   );
 
-  return checked<CartItem>(record);
+  requireOptionalFields(
+    record,
+    'cart item',
+    {
+      pharmacyRating: 'number',
+      pharmacyReviewsCount: 'number',
+    },
+    context
+  );
+
+  const id = requireObjectId(record, 'id', 'cart item', context);
+
+  const productOfferId = requireObjectId(
+    record,
+    'productOfferId',
+    'cart item',
+    context
+  );
+
+  const productId = requireObjectId(record, 'productId', 'cart item', context);
+
+  const pharmacyId = requireObjectId(
+    record,
+    'pharmacyId',
+    'cart item',
+    context
+  );
+
+  const stockQuantity = requireSafeNonNegativeInteger(
+    record,
+    'stockQuantity',
+    'cart item',
+    context
+  );
+
+  const quantity = requireSafePositiveInteger(
+    record,
+    'quantity',
+    'cart item',
+    context
+  );
+
+  const unitPrice = requireNonNegativeFiniteNumber(
+    record,
+    'unitPrice',
+    'cart item',
+    context
+  );
+
+  const totalPrice = requireNonNegativeFiniteNumber(
+    record,
+    'totalPrice',
+    'cart item',
+    context
+  );
+
+  const expiresAt = requireCanonicalIsoDateTime(
+    record,
+    'expiresAt',
+    'cart item',
+    context
+  );
+
+  const product = parseCartProduct(record.product, context);
+
+  if (product.id !== productId) {
+    throw invalidDto(
+      'cart item.product.id must equal productId.',
+      record,
+      context
+    );
+  }
+
+  if (product.price !== unitPrice) {
+    throw invalidDto(
+      'cart item.product.price must equal unitPrice.',
+      record,
+      context
+    );
+  }
+
+  if (
+    product.pharmacyName !== undefined &&
+    product.pharmacyName !== record.pharmacyName
+  ) {
+    throw invalidDto(
+      'cart item.product.pharmacyName must equal pharmacyName when present.',
+      record,
+      context
+    );
+  }
+
+  if (product.inStock !== stockQuantity > 0) {
+    throw invalidDto(
+      'cart item.product.inStock must equal stockQuantity > 0.',
+      record,
+      context
+    );
+  }
+
+  if (record.pharmacyRating !== undefined) {
+    requireNonNegativeFiniteNumber(
+      record,
+      'pharmacyRating',
+      'cart item',
+      context
+    );
+  }
+
+  if (record.pharmacyReviewsCount !== undefined) {
+    requireSafeNonNegativeInteger(
+      record,
+      'pharmacyReviewsCount',
+      'cart item',
+      context
+    );
+  }
+
+  assertMoneyEqual(
+    totalPrice,
+    quantity * unitPrice,
+    'cart item.totalPrice must equal quantity * unitPrice.',
+    record,
+    context
+  );
+
+  return checked<CartItem>({
+    ...record,
+    id,
+    productOfferId,
+    productId,
+    pharmacyId,
+    product,
+    stockQuantity,
+    quantity,
+    unitPrice,
+    totalPrice,
+    expiresAt,
+  });
+}
+
+//===================================================================
+
+function parseCartIssue(
+  value: unknown,
+  context?: ApiResponseContext
+): CartIssue {
+  const record = requireRecord(value, 'cart issue', context);
+  requireFields(
+    record,
+    'cart issue',
+    { cartItemId: 'string', reason: 'string' },
+    context
+  );
+
+  const cartItemId = requireObjectId(
+    record,
+    'cartItemId',
+    'cart issue',
+    context
+  );
+
+  if (!CART_ISSUE_REASONS.has(String(record.reason))) {
+    throw invalidDto('cart issue.reason is not supported.', record, context);
+  }
+
+  return checked<CartIssue>({ cartItemId, reason: record.reason });
 }
 
 //===================================================================
@@ -1181,15 +1547,68 @@ function parseCart(value: unknown, context?: ApiResponseContext): Cart {
   requireFields(
     record,
     'cart',
-    { totalItems: 'number', totalPrice: 'number' },
+    {
+      revision: 'number',
+      items: 'array',
+      totalItems: 'number',
+      totalPrice: 'number',
+      issues: 'array',
+    },
     context
   );
 
-  return checked<Cart>({
-    items: parseArray(record.items, 'items', parseCartItem, context),
-    totalItems: record.totalItems,
-    totalPrice: record.totalPrice,
-  });
+  const revision = requireSafeNonNegativeInteger(
+    record,
+    'revision',
+    'cart',
+    context
+  );
+
+  const items = parseArray(record.items, 'items', parseCartItem, context);
+
+  const totalItems = requireSafeNonNegativeInteger(
+    record,
+    'totalItems',
+    'cart',
+    context
+  );
+
+  const totalPrice = requireNonNegativeFiniteNumber(
+    record,
+    'totalPrice',
+    'cart',
+    context
+  );
+
+  const issues = parseArray(record.issues, 'issues', parseCartIssue, context);
+
+  const expectedTotalItems = items.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
+  if (totalItems !== expectedTotalItems) {
+    throw invalidDto(
+      'cart.totalItems must equal the sum of item quantities.',
+      record,
+      context
+    );
+  }
+
+  const expectedTotalPrice = items.reduce(
+    (sum, item) => sum + item.totalPrice,
+    0
+  );
+
+  assertMoneyEqual(
+    totalPrice,
+    expectedTotalPrice,
+    'cart.totalPrice must equal the sum of item totalPrice values.',
+    record,
+    context
+  );
+
+  return checked<Cart>({ revision, items, totalItems, totalPrice, issues });
 }
 
 //===================================================================
