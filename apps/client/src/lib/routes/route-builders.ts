@@ -4,6 +4,7 @@ import {
   buildPublicEntitySlugId,
   buildSlugId,
   getIdFromSlugId,
+  getPharmacyIdFromPublicSlugId,
   isValidObjectId,
 } from '@e-pharmacy/validation/url';
 
@@ -40,7 +41,35 @@ export function buildCheckoutPath(
   pharmacyId: string
 ): string {
   const safePharmacyName = pharmacyName?.trim() ? pharmacyName : 'pharmacy';
-  return `${ROUTES.CHECKOUT}/${buildSlugId(safePharmacyName, pharmacyId)}`;
+  return `${ROUTES.CHECKOUT}/${buildPublicEntitySlugId(
+    'pharmacy',
+    safePharmacyName,
+    pharmacyId
+  )}`;
+}
+
+//===================================================================
+
+export function getCheckoutPharmacyIdFromPathParam(
+  slugId: string
+): string | null {
+  return getPharmacyIdFromPublicSlugId(slugId);
+}
+
+//===================================================================
+
+export function getLegacyCheckoutRedirectPath(slugId: string): string | null {
+  if (getCheckoutPharmacyIdFromPathParam(slugId)) return null;
+
+  const legacyId = getIdFromSlugId(slugId);
+  if (!legacyId) return null;
+
+  const suffix = `-${legacyId}`;
+  const pharmacyName = slugId.endsWith(suffix)
+    ? slugId.slice(0, -suffix.length)
+    : 'pharmacy';
+
+  return buildCheckoutPath(pharmacyName || 'pharmacy', legacyId);
 }
 
 //===================================================================

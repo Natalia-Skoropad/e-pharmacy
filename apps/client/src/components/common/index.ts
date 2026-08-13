@@ -10,3 +10,6 @@ export type {
   StockAvailabilityProps,
   StockAvailabilityState,
 } from './StockAvailability/StockAvailability';
+
+export { default as WorkingHours } from './WorkingHours/WorkingHours';
+export type { WorkingHoursProps } from './WorkingHours/WorkingHours';

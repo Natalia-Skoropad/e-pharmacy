@@ -1,7 +1,8 @@
-import { Copy, CreditCard, Mail, Wallet } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 
 import { PAYMENT_METHOD_LABELS } from '@e-pharmacy/config/presentation';
 import { RadioOption } from '@e-pharmacy/ui/forms';
+import { CopyButton } from '@e-pharmacy/ui/primitives';
 import type { PublicPaymentBankDetails } from '@e-pharmacy/types/pharmacies';
 import type { PaymentMethod } from '@e-pharmacy/types/orders';
 
@@ -12,11 +13,9 @@ import css from './CheckoutPaymentMethod.module.css';
 type PaymentMethodProps = {
   paymentMethod: PaymentMethod;
   bankDetails: PublicPaymentBankDetails | null;
-  pharmacyEmail: string;
-  copiedEmail: boolean;
   disabled?: boolean;
   onPaymentMethodChange: (value: PaymentMethod) => void;
-  onCopyEmail: () => void;
+  onCopy: (value: string, label: string) => Promise<boolean>;
 };
 
 //===================================================================
@@ -24,12 +23,20 @@ type PaymentMethodProps = {
 function CheckoutPaymentMethod({
   paymentMethod,
   bankDetails,
-  pharmacyEmail,
-  copiedEmail,
   disabled = false,
   onPaymentMethodChange,
-  onCopyEmail,
+  onCopy,
 }: PaymentMethodProps) {
+  const bankRows = bankDetails
+    ? ([
+        ['Recipient name', bankDetails.recipientName],
+        ['Tax ID / EDRPOU', bankDetails.taxId],
+        ['IBAN', bankDetails.iban],
+        ['Bank name', bankDetails.bankName],
+        ['Payment purpose', bankDetails.paymentPurpose],
+      ] as const)
+    : [];
+
   return (
     <section className={css.card} aria-labelledby="payment-title">
       <h2 className={css.title} id="payment-title">
@@ -71,64 +78,37 @@ function CheckoutPaymentMethod({
             </div>
           ) : (
             <div className={css.bankCard}>
-              <CreditCard size={20} aria-hidden="true" />
               <h3 className={css.infoTitle}>Bank details</h3>
 
               {bankDetails ? (
-                <dl className={css.bankList}>
-                  <div>
-                    <dt>Recipient</dt>
-                    <dd>{bankDetails.recipientName}</dd>
-                  </div>
+                <>
+                  <dl className={css.bankList}>
+                    {bankRows.map(([label, value]) => (
+                      <div key={label}>
+                        <dt>{label}</dt>
+                        <dd>
+                          <span>{value}</span>
+                          <CopyButton
+                            label={`Copy ${label} ${value}`}
+                            disabled={disabled}
+                            onClick={() => void onCopy(value, label)}
+                          />
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
 
-                  <div>
-                    <dt>EDRPOU / Tax ID</dt>
-                    <dd>{bankDetails.taxId}</dd>
-                  </div>
-
-                  <div>
-                    <dt>IBAN</dt>
-                    <dd>{bankDetails.iban}</dd>
-                  </div>
-
-                  <div>
-                    <dt>Bank</dt>
-                    <dd>{bankDetails.bankName}</dd>
-                  </div>
-
-                  <div>
-                    <dt>Payment purpose</dt>
-                    <dd>{bankDetails.paymentPurpose}</dd>
-                  </div>
-                </dl>
+                  <p className={css.emailNote}>
+                    After payment, send the receipt to the pharmacy email for
+                    faster processing.
+                  </p>
+                </>
               ) : (
                 <p className={css.mutedText}>
                   Bank transfer is unavailable because the pharmacy has not
                   provided bank details yet.
                 </p>
               )}
-
-              {bankDetails && pharmacyEmail ? (
-                <div className={css.emailNote}>
-                  <Mail size={18} aria-hidden="true" />
-                  <p>
-                    After payment, send the receipt to the pharmacy email for
-                    faster processing.
-                  </p>
-                  <button
-                    className={css.copyButton}
-                    type="button"
-                    disabled={disabled || !pharmacyEmail}
-                    onClick={onCopyEmail}
-                  >
-                    <span>{pharmacyEmail}</span>
-                    <Copy size={16} aria-hidden="true" />
-                  </button>
-                  {copiedEmail ? (
-                    <span className={css.copiedText}>Copied</span>
-                  ) : null}
-                </div>
-              ) : null}
             </div>
           )}
         </div>

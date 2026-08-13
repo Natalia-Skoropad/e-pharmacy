@@ -2,9 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  buildCheckoutPath,
   buildOrderPath,
   buildPharmacyPath,
   buildProductPath,
+  getCheckoutPharmacyIdFromPathParam,
+  getLegacyCheckoutRedirectPath,
   getOrderIdFromPathParam,
 } from './route-builders';
 
@@ -31,6 +34,26 @@ test('uses the backend canonical public slug when it is provided', () => {
     buildPharmacyPath('Ignored', ID, `canonical-pharmacy-ph${ID}`),
     `/canonical-pharmacy-ph${ID}`
   );
+});
+
+//===================================================================
+
+test('builds typed checkout pharmacy paths and redirects legacy checkout slugs', () => {
+  const canonical = buildCheckoutPath('PharmaPlus Kharkiv 61', ID);
+
+  assert.equal(canonical, `/checkout/pharmaplus-kharkiv-61-ph${ID}`);
+
+  assert.equal(
+    getCheckoutPharmacyIdFromPathParam(`pharmaplus-kharkiv-61-ph${ID}`),
+    ID
+  );
+
+  assert.equal(
+    getLegacyCheckoutRedirectPath(`pharmaplus-kharkiv-61-${ID}`),
+    canonical
+  );
+
+  assert.equal(getLegacyCheckoutRedirectPath(`pharmaplus-pr${ID}`), null);
 });
 
 //===================================================================

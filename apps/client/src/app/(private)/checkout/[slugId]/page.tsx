@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import {
@@ -7,8 +7,12 @@ import {
   createPageMetadata,
 } from '@/lib/seo/server';
 
-import { ROUTES } from '@/lib/routes';
-import { getIdFromSlugId } from '@e-pharmacy/validation/url';
+import {
+  ROUTES,
+  getCheckoutPharmacyIdFromPathParam,
+  getLegacyCheckoutRedirectPath,
+} from '@/lib/routes';
+
 import { CheckoutPageContent } from '@/components/checkout';
 
 //===================================================================
@@ -29,7 +33,8 @@ export async function generateMetadata({
   return createPageMetadata({
     title: CHECKOUT_TITLE,
     description: CHECKOUT_DESCRIPTION,
-    path: `${ROUTES.CHECKOUT}/${slugId}`,
+    path:
+      getLegacyCheckoutRedirectPath(slugId) ?? `${ROUTES.CHECKOUT}/${slugId}`,
     noIndex: true,
   });
 }
@@ -38,15 +43,19 @@ export async function generateMetadata({
 
 async function CheckoutPharmacyPage({ params }: CheckoutPharmacyPageProps) {
   const { slugId } = await params;
-  const checkoutPharmacyId = getIdFromSlugId(slugId);
+  const checkoutPharmacyId = getCheckoutPharmacyIdFromPathParam(slugId);
 
-  if (!checkoutPharmacyId) {
-    notFound();
+  if (checkoutPharmacyId) {
+    return <CheckoutPageContent checkoutPharmacyId={checkoutPharmacyId} />;
   }
 
-  const selectedPharmacyId = checkoutPharmacyId as string;
+  const legacyRedirectPath = getLegacyCheckoutRedirectPath(slugId);
 
-  return <CheckoutPageContent checkoutPharmacyId={selectedPharmacyId} />;
+  if (legacyRedirectPath) {
+    permanentRedirect(legacyRedirectPath);
+  }
+
+  notFound();
 }
 
 export default CheckoutPharmacyPage;

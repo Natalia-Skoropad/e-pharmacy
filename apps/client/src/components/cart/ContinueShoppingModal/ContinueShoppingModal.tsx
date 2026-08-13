@@ -14,10 +14,8 @@ import {
 import { SearchInput } from '@e-pharmacy/ui/forms';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
-
 import { STOCK_CHANGED_ERROR_CODE } from '@e-pharmacy/config/cart';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
-
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatStockLabel } from '@e-pharmacy/utils/numbers';
 import type { Cart } from '@e-pharmacy/types/cart';
@@ -123,7 +121,9 @@ function ContinueShoppingModal({
         });
       } catch {
         if (controller.signal.aborted) return;
-        setCategoryError('Could not load product categories for this pharmacy.');
+        setCategoryError(
+          'Could not load product categories for this pharmacy.'
+        );
       }
     }
 
@@ -355,30 +355,31 @@ function ContinueShoppingModal({
                       ) : null}
                     </div>
 
-                    <p className={css.productPrice}>
-                      {formatMoney(getProductOfferPrice(product)) ??
-                        '—'}
-                    </p>
+                    <div className={css.productActions}>
+                      <p className={css.productPrice}>
+                        {formatMoney(getProductOfferPrice(product)) ?? '—'}
+                      </p>
 
-                    <Button
-                      className={isInCart ? css.inCartButton : css.addButton}
-                      type="button"
-                      size="sm"
-                      variant={isInCart ? 'secondary' : 'primary'}
-                      disabled={isInCart || isAdding}
-                      onClick={() => void handleAddProduct(product.id)}
-                    >
-                      {isInCart ? (
-                        'In cart'
-                      ) : isAdding ? (
-                        'Adding...'
-                      ) : (
-                        <>
-                          <ShoppingCart size={18} aria-hidden="true" />
-                          Add
-                        </>
-                      )}
-                    </Button>
+                      <Button
+                        className={isInCart ? css.inCartButton : css.addButton}
+                        type="button"
+                        size="sm"
+                        variant={isInCart ? 'secondary' : 'primary'}
+                        disabled={isInCart || isAdding}
+                        onClick={() => void handleAddProduct(product.id)}
+                      >
+                        {isInCart ? (
+                          'In cart'
+                        ) : isAdding ? (
+                          'Adding...'
+                        ) : (
+                          <>
+                            <ShoppingCart size={18} aria-hidden="true" />
+                            Add
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </li>
                 );
               })}

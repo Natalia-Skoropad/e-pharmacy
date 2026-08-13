@@ -5,10 +5,10 @@ import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { CopyButton } from '@e-pharmacy/ui/primitives';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
-import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 
 import { getTelephoneHref } from '@/lib/contact/telephone';
+import { WorkingHours } from '@/components/common';
 
 import css from './PharmacyContactPanel.module.css';
 
@@ -85,12 +85,8 @@ export function PharmacyContactPanel({
               Working hours
             </dt>
 
-            <dd className={css.workingHours}>
-              {getWorkingHoursDisplayItems(workingHours)?.map((item) => (
-                <span key={item.day}>
-                  <strong>{item.day}</strong>: {item.hours}
-                </span>
-              ))}
+            <dd>
+              <WorkingHours value={workingHours} />
             </dd>
           </div>
         ) : null}
@@ -107,9 +103,11 @@ export function PharmacyContactPanel({
         </div>
       </dl>
 
-      <LinkButton className={css.link} href={productsHref}>
-        View products from this pharmacy
-      </LinkButton>
+      <div className={css.linkRow}>
+        <LinkButton className={css.link} href={productsHref}>
+          View products from this pharmacy
+        </LinkButton>
+      </div>
     </>
   );
 }

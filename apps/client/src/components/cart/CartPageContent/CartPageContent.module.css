@@ -249,9 +249,20 @@
     padding: 18px 20px;
   }
 
+  .emptyButton {
+    width: fit-content;
+  }
+
   .pharmacyActions {
     flex: 0 0 auto;
+    flex-wrap: nowrap;
+    justify-self: end;
+    width: auto;
     justify-content: flex-end;
+  }
+
+  .pharmacyActions > * {
+    width: auto;
   }
 
   .confirmActions {

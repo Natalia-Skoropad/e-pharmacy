@@ -50,31 +50,21 @@
   justify-content: flex-end;
 }
 
-.workingHours {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  justify-content: flex-end;
-}
-
-.workingHours span {
-  white-space: nowrap;
-}
-
-.workingHours strong {
-  font-weight: var(--fw-bold);
-  color: var(--color-accent);
+.linkRow {
+  margin-top: 20px;
 }
 
 .link {
   width: 100%;
-  margin-top: 20px;
 }
 
 @media only screen and (min-width: 768px) {
+  .linkRow {
+    display: flex;
+    justify-content: flex-end;
+  }
+
   .link {
-    display: block;
     width: 305px;
-    margin-left: auto;
   }
 }

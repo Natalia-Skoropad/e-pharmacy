@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { Clock, Info, MapPin, Phone, Truck } from 'lucide-react';
+import { useMemo, useState, type ChangeEvent } from 'react';
+import { Clock, Info, Mail, MapPin, Phone, Truck } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 import { DELIVERY_METHOD_LABELS } from '@e-pharmacy/config/presentation';
-import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { CopyButton, LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RadioOption } from '@e-pharmacy/ui/forms';
 
@@ -43,7 +43,9 @@ import {
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo/metadata-copy';
 import { ROUTES } from '@/lib/routes';
-import { useClientAuthCapabilities } from '@/hooks';
+import { useClientAuthCapabilities, useClipboardAction } from '@/hooks';
+
+import { WorkingHours } from '@/components/common';
 
 import CheckoutOrderPanel from '../CheckoutOrderPanel';
 import CheckoutPaymentMethod from '../CheckoutPaymentMethod/CheckoutPaymentMethod';
@@ -82,13 +84,10 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>('pickup');
 
-  const [copiedEmail, setCopiedEmail] = useState(false);
-  const copiedEmailTimerRef = useRef<number | null>(null);
+  const clipboard = useClipboardAction();
 
-  const { cart, error, isLoading, replaceCartFromServer, setError } = useCheckoutCart(
-    !isBootstrapping,
-    canUseClientFeatures
-  );
+  const { cart, error, isLoading, replaceCartFromServer, setError } =
+    useCheckoutCart(!isBootstrapping, canUseClientFeatures);
 
   const orderGroups = useMemo(() => groupCartByPharmacy(cart), [cart]);
 
@@ -106,12 +105,8 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     return orderGroups.length === 1 ? orderGroups[0] : null;
   }, [selectedPharmacyIdFromRoute, orderGroups]);
 
-  const {
-    pharmacy,
-    pharmacyStatus,
-    pharmacyError,
-    isPharmacyLoading,
-  } = useCheckoutPharmacy(selectedOrderGroup);
+  const { pharmacy, pharmacyStatus, pharmacyError, isPharmacyLoading } =
+    useCheckoutPharmacy(selectedOrderGroup);
 
   const hasPharmacyLoadError =
     pharmacyStatus === 'error' && pharmacyError !== null;
@@ -151,8 +146,9 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const pharmacyPhone = getPharmacyPhone(pharmacy);
   const pharmacyWorkingHours = getPharmacyWorkingHours(pharmacy);
   const pharmacyAddress = getPharmacyAddress(pharmacy);
+
   const hasPharmacyContactDetails = Boolean(
-    pharmacyPhone || pharmacyWorkingHours || pharmacyAddress
+    pharmacyPhone || pharmacyEmail || pharmacyWorkingHours || pharmacyAddress
   );
 
   const hasStockConflict = selectedOrderGroup
@@ -185,15 +181,6 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     setDeliveryFieldValue('recipientName', event.target.value);
   };
 
-  useEffect(
-    () => () => {
-      if (copiedEmailTimerRef.current !== null) {
-        window.clearTimeout(copiedEmailTimerRef.current);
-      }
-    },
-    []
-  );
-
   const handleRecipientPhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (isSubmitting) return;
     setDeliveryFieldValue('recipientPhone', event.target.value);
@@ -209,30 +196,6 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     if (isSubmitting) return;
     setDeliveryFieldValue('comment', event.target.value);
-  };
-
-  const handleCopyEmail = async () => {
-    try {
-      if (isSubmitting || !pharmacyEmail) return;
-
-      await navigator.clipboard.writeText(pharmacyEmail);
-
-      if (copiedEmailTimerRef.current !== null) {
-        window.clearTimeout(copiedEmailTimerRef.current);
-      }
-
-      setCopiedEmail(true);
-      copiedEmailTimerRef.current = window.setTimeout(() => {
-        copiedEmailTimerRef.current = null;
-        setCopiedEmail(false);
-      }, 1800);
-    } catch {
-      if (copiedEmailTimerRef.current !== null) {
-        window.clearTimeout(copiedEmailTimerRef.current);
-        copiedEmailTimerRef.current = null;
-      }
-      setCopiedEmail(false);
-    }
   };
 
   const handleCheckoutSubmit = async () => {
@@ -253,6 +216,10 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
   return (
     <main className={css.page}>
+      <p className="visually-hidden" role="status" aria-live="polite">
+        {clipboard.statusMessage}
+      </p>
+
       <section className={css.section} aria-labelledby="checkout-title">
         <Container>
           <Breadcrumbs items={CHECKOUT_BREADCRUMBS} />
@@ -351,10 +318,34 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                                 </li>
                               ) : null}
 
+                              {pharmacyEmail ? (
+                                <li>
+                                  <Mail size={18} aria-hidden="true" />
+                                  <span className={css.emailActions}>
+                                    <a href={`mailto:${pharmacyEmail}`}>
+                                      {pharmacyEmail}
+                                    </a>
+                                    <CopyButton
+                                      label={`Copy pharmacy email ${pharmacyEmail}`}
+                                      disabled={isSubmitting}
+                                      onClick={() =>
+                                        void clipboard.copy(
+                                          pharmacyEmail,
+                                          'Pharmacy email'
+                                        )
+                                      }
+                                    />
+                                  </span>
+                                </li>
+                              ) : null}
+
                               {pharmacyWorkingHours ? (
                                 <li>
                                   <Clock size={18} aria-hidden="true" />
-                                  <span>{pharmacyWorkingHours}</span>
+                                  <WorkingHours
+                                    className={css.checkoutWorkingHours}
+                                    value={pharmacyWorkingHours}
+                                  />
                                 </li>
                               ) : null}
 
@@ -447,11 +438,9 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                 <CheckoutPaymentMethod
                   paymentMethod={paymentMethod}
                   bankDetails={bankDetails}
-                  pharmacyEmail={pharmacyEmail}
-                  copiedEmail={copiedEmail}
                   disabled={isSubmitting}
                   onPaymentMethodChange={setPaymentMethod}
-                  onCopyEmail={() => void handleCopyEmail()}
+                  onCopy={clipboard.copy}
                 />
 
                 <section className={css.card} aria-labelledby="comment-title">
@@ -496,7 +485,9 @@ function CheckoutSelectOrderState({ message }: { message: string }) {
       <h2 className={css.emptyTitle}>Choose a pharmacy order</h2>
       <p className={css.emptyText}>{message}</p>
       <div className={css.emptyActions}>
-        <LinkButton href={ROUTES.CART}>Back to cart</LinkButton>
+        <LinkButton className={css.selectOrderButton} href={ROUTES.CART}>
+          Back to cart
+        </LinkButton>
       </div>
     </div>
   );

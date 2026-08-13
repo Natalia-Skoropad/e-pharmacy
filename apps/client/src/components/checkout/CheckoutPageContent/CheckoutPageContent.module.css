@@ -164,6 +164,23 @@
   color: var(--color-accent);
 }
 
+.emailActions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.emailActions a {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.checkoutWorkingHours {
+  min-width: 0;
+  justify-content: flex-start;
+}
+
 .deliveryNoteCard,
 .deliveryNoteCardAccent {
   display: grid;
@@ -199,6 +216,10 @@
 
   .deliveryFieldWide {
     grid-column: 1 / -1;
+  }
+
+  .selectOrderButton {
+    width: fit-content;
   }
 }
 

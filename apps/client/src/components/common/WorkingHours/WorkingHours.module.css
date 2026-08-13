@@ -1,0 +1,15 @@
+.workingHours {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  justify-content: flex-end;
+}
+
+.workingHours span {
+  white-space: nowrap;
+}
+
+.workingHours strong {
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+}

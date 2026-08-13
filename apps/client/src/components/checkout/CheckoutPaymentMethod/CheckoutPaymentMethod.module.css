@@ -38,8 +38,7 @@
   border-radius: var(--radius-lg);
 }
 
-.infoCard > svg,
-.bankCard > svg {
+.infoCard > svg {
   color: var(--color-accent);
 }
 
@@ -62,8 +61,8 @@
 
 .bankList div {
   display: flex;
-  justify-content: space-between;
   gap: 16px;
+  justify-content: space-between;
 }
 
 .bankList dt {
@@ -71,68 +70,40 @@
 }
 
 .bankList dd {
-  max-width: 62%;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 68%;
   font-weight: var(--fw-medium);
   color: var(--color-text-primary);
   text-align: right;
   overflow-wrap: anywhere;
 }
 
-.emailNote {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
-  padding-top: 4px;
-}
-
-.emailNote svg {
-  flex: 0 0 auto;
-  margin-top: 1px;
-  color: var(--color-accent);
-}
-
-.emailNote p,
-.emailNote .copyButton,
-.emailNote .copiedText {
-  grid-column: 2;
-}
-
-.copyButton {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  justify-self: start;
-  max-width: 100%;
-  padding: 8px 10px;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  color: var(--color-accent);
-  cursor: pointer;
-  background-color: var(--color-accent-selected);
-  border: 1px solid var(--color-accent-border);
-  border-radius: var(--radius-md);
-  transition:
-    background-color var(--transition-base),
-    border-color var(--transition-base);
-}
-
-.copyButton:hover,
-.copyButton:focus-visible {
-  background-color: var(--color-accent-hover-soft);
-  border-color: var(--color-accent-border-hover);
-}
-
-.copyButton span {
+.bankList dd span {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
-.copiedText {
-  font-size: var(--fz-12);
-  font-weight: var(--fw-medium);
-  color: var(--color-accent);
+.emailNote {
+  padding-top: 4px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.optionsGrid {
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+@media only screen and (min-width: 768px) {
+  .card {
+    padding: 24px;
+  }
 }
 
 @media only screen and (min-width: 1440px) {
@@ -144,21 +115,4 @@
   .optionsGrid {
     max-width: 340px;
   }
-}
-
-.optionsGrid {
-  padding: 0;
-  margin: 0;
-  border: 0;
-}
-
-.copyButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
-.copyButton:disabled:hover,
-.copyButton:disabled:focus-visible {
-  background-color: var(--color-accent-selected);
-  border-color: var(--color-accent-border);
 }
