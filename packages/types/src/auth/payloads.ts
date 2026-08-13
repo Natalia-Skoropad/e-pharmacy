@@ -1,4 +1,4 @@
-import type { FileMetadata } from '../primitives';
+import type { PharmacyRegistrationDocumentClaim } from '../pharmacies/verification-document';
 import type { AuthApplication } from './application';
 import type { UserRole } from './role';
 
@@ -11,7 +11,7 @@ export type RegisterPayload = {
   phone: string;
   address?: string;
   role?: Extract<UserRole, 'client' | 'pharmacy'>;
-  pharmacyDocuments?: FileMetadata[];
+  pharmacyDocuments?: PharmacyRegistrationDocumentClaim[];
 };
 
 //===================================================================

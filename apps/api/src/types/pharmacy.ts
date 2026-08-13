@@ -16,9 +16,12 @@ export type ReviewModerationStatus = 'on_moderation' | 'approved' | 'rejected';
 //===============================================================
 
 export type PharmacyVerificationDocumentMetadata = {
+  id: string;
   name: string;
   size: number;
   type: string;
+  sha256: string;
+  uploadedAt: ISODateTimeString;
 };
 
 export type EditablePharmacyBankDetails = Partial<{

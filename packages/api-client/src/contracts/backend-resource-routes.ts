@@ -15,6 +15,10 @@ export const backendRoutes = {
   pharmacies: {
     list: '/pharmacies',
     myProfile: '/pharmacies/me/profile',
+    myDocumentUpload: '/pharmacies/me/documents',
+
+    myDocument: (documentId: EntityId) =>
+      `/pharmacies/me/documents/${segment(documentId)}`,
 
     sendMyProfileForVerification:
       '/pharmacies/me/profile/send-for-verification',

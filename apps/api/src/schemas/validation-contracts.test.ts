@@ -8,7 +8,11 @@ import {
   orderSalesStatisticsQuerySchema,
 } from './order.schema';
 
-import { updateMyPharmacyProfileSchema } from './pharmacy.schema';
+import {
+  updateMyPharmacyProfileSchema,
+  uploadMyPharmacyDocumentSchema,
+} from './pharmacy.schema';
+
 import { productsQuerySchema } from './product.schema';
 import { sharedWorkingHoursSchema } from './shared-validation.schema';
 
@@ -57,6 +61,7 @@ test('query schemas validate real calendar dates and ordered ranges', () => {
 
   assert.equal(ordersQuerySchema.safeParse(invalidCalendarDate).success, false);
   assert.equal(ordersQuerySchema.safeParse(invertedRange).success, false);
+
   assert.equal(
     orderSalesStatisticsQuerySchema.safeParse(invertedRange).success,
     false
@@ -105,38 +110,47 @@ test('empty nested bank details do not count as a profile change', () => {
 
 //===============================================================
 
-test('pharmacy documents enforce count, MIME, extension and size', () => {
+test('pharmacy document upload validates content while profile stores references', () => {
   const validDocument = {
     name: 'license.pdf',
     type: 'application/pdf' as const,
-    size: 1024,
+    size: 9,
+    dataUrl: 'data:application/pdf;base64,JVBERi0xLjQ=',
   };
 
   assert.equal(
-    updateMyPharmacyProfileSchema.safeParse({ documents: [validDocument] })
-      .success,
+    uploadMyPharmacyDocumentSchema.safeParse(validDocument).success,
+    true
+  );
+
+  assert.equal(
+    uploadMyPharmacyDocumentSchema.safeParse({
+      ...validDocument,
+      name: 'license.exe',
+    }).success,
+    false
+  );
+
+  assert.equal(
+    uploadMyPharmacyDocumentSchema.safeParse({
+      ...validDocument,
+      size: 10 * 1024 * 1024 + 1,
+    }).success,
+    false
+  );
+
+  assert.equal(
+    updateMyPharmacyProfileSchema.safeParse({
+      documents: [{ documentId: '507f1f77bcf86cd799439011' }],
+    }).success,
     true
   );
 
   assert.equal(
     updateMyPharmacyProfileSchema.safeParse({
-      documents: [
-        { ...validDocument, name: 'license.exe', type: 'application/pdf' },
-      ],
-    }).success,
-    false
-  );
-
-  assert.equal(
-    updateMyPharmacyProfileSchema.safeParse({
-      documents: [{ ...validDocument, size: 10 * 1024 * 1024 + 1 }],
-    }).success,
-    false
-  );
-
-  assert.equal(
-    updateMyPharmacyProfileSchema.safeParse({
-      documents: Array.from({ length: 7 }, () => validDocument),
+      documents: Array.from({ length: 7 }, (_, index) => ({
+        documentId: `507f1f77bcf86cd7994390${String(index + 11).padStart(2, '0')}`,
+      })),
     }).success,
     false
   );

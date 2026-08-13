@@ -6,6 +6,8 @@ import {
   parseActiveSessionsResponse,
   parseApiEmptyResponse,
   parseApiResponseData,
+  parsePharmacyDocumentContentResponse,
+  parsePharmacyProfileDocumentUploadResponse,
   parsePharmacyProfileResponse,
   parseSendPharmacyForVerificationResponse,
 } from '@e-pharmacy/api-client/response';
@@ -21,12 +23,46 @@ import type {
 } from '@e-pharmacy/types/auth';
 
 import type {
+  PharmacyDocumentContentResponse,
+  PharmacyDocumentUploadPayload,
+  PharmacyProfileDocumentUploadResponse,
   PharmacyProfileResponse,
   SendPharmacyForVerificationResponse,
   UpdateMyPharmacyProfilePayload,
 } from '@e-pharmacy/types/pharmacies';
 
+import type { EntityId } from '@e-pharmacy/types/primitives';
+
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
+
+//===================================================================
+
+export async function uploadMyPharmacyDocument(
+  payload: PharmacyDocumentUploadPayload
+): Promise<PharmacyProfileDocumentUploadResponse> {
+  const path = PHARMACY_API_ROUTES.pharmacies.myDocumentUpload;
+
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'POST', body: payload }),
+    parsePharmacyProfileDocumentUploadResponse,
+    { url: path, method: 'POST' }
+  );
+}
+
+//===================================================================
+
+export async function getMyPharmacyDocument(
+  documentId: EntityId,
+  options?: JsonResponseRequestOptions
+): Promise<PharmacyDocumentContentResponse> {
+  const path = PHARMACY_API_ROUTES.pharmacies.myDocument(documentId);
+
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parsePharmacyDocumentContentResponse,
+    { url: path, method: 'GET' }
+  );
+}
 
 //===================================================================
 

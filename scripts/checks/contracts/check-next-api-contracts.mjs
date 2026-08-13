@@ -20,6 +20,7 @@ const backendEnv = await read('apps/api/src/config/env.ts');
 const nextApiEnv = await read('packages/next-api/src/internal/env.ts');
 
 const backendAuthTypes = await read('apps/api/src/types/auth.ts');
+
 const frontendAuthTokens = await read(
   'packages/next-api/src/internal/auth-tokens.ts'
 );
@@ -181,7 +182,9 @@ for (const [label, source] of [
   ['pharmacy', pharmacyAuthProvider],
 ]) {
   if (!/bootstrapMode="(?:always|session-hint)"/.test(source)) {
-    violations.push(`${label} auth provider does not choose an explicit bootstrap mode`);
+    violations.push(
+      `${label} auth provider does not choose an explicit bootstrap mode`
+    );
   }
 
   if (/NEXT_PUBLIC_AUTH_COOKIE_(?:DOMAIN|SAME_SITE)/.test(source)) {
@@ -228,15 +231,23 @@ if (
   Object.hasOwn(authPackage.exports ?? {}, '.') ||
   Object.hasOwn(authPackage.exports ?? {}, './session')
 ) {
-  violations.push('Auth package still exposes a broad root or session entrypoint');
+  violations.push(
+    'Auth package still exposes a broad root or session entrypoint'
+  );
 }
 
 if (/\.clearHint\(|\.setHint\(/.test(authSessionCore)) {
-  violations.push('Auth provider core still mutates the server-owned auth hint');
+  violations.push(
+    'Auth provider core still mutates the server-owned auth hint'
+  );
 }
 
-if (!/maxAge:\s*tokens\.refreshTokenExpiresIn/.test(frontendAuthCookieRuntime)) {
-  violations.push('BFF auth-ready hint does not use refresh-token expiry metadata');
+if (
+  !/maxAge:\s*tokens\.refreshTokenExpiresIn/.test(frontendAuthCookieRuntime)
+) {
+  violations.push(
+    'BFF auth-ready hint does not use refresh-token expiry metadata'
+  );
 }
 
 if (

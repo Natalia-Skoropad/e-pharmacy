@@ -23,6 +23,7 @@ function createUser(overrides: Partial<AuthUser> = {}): AuthUser {
 
 test('allows only active client accounts', () => {
   assert.equal(canAccessClientPrivateRoutes(createUser()), true);
+
   assert.equal(
     canAccessClientPrivateRoutes(createUser({ status: 'blocked' })),
     false

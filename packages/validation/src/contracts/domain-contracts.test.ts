@@ -198,5 +198,10 @@ test('pharmacy document validation checks count, MIME, extension and size', () =
     ''
   );
 
+  assert.notEqual(
+    validatePharmacyDocuments([{ ...validDocument, size: 0 }]),
+    ''
+  );
+
   assert.notEqual(validatePharmacyDocuments([], { required: true }), '');
 });

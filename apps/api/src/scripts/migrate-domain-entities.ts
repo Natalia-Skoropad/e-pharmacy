@@ -16,6 +16,22 @@ const LEGACY_POSTAL_DELIVERY_METHOD = ['po', 'st'].join('');
 
 //===============================================================
 
+function hasCanonicalVerificationDocument(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false;
+  const document = value as Record<string, unknown>;
+
+  return (
+    typeof document.id === 'string' &&
+    /^[a-f\d]{24}$/i.test(document.id) &&
+    typeof document.sha256 === 'string' &&
+    /^[a-f\d]{64}$/i.test(document.sha256) &&
+    typeof document.uploadedAt === 'string' &&
+    !Number.isNaN(new Date(document.uploadedAt).getTime())
+  );
+}
+
+//===============================================================
+
 /**
  * One-time migration for the canonical domain model.
  * Run after deploying the new models and before removing legacy data backups.
@@ -153,11 +169,40 @@ async function migrate(): Promise<void> {
     }
 
     const status = pharmacy.status === 'inactive' ? 'blocked' : pharmacy.status;
+
+    const legacyDocuments = Array.isArray(pharmacy.documents)
+      ? pharmacy.documents.some(
+          (document: unknown) => !hasCanonicalVerificationDocument(document)
+        )
+      : false;
+
+    const pendingDocuments = pharmacy.pendingModeration?.documents;
+
+    const legacyPendingDocuments = Array.isArray(pendingDocuments)
+      ? pendingDocuments.some(
+          (document: unknown) => !hasCanonicalVerificationDocument(document)
+        )
+      : false;
+
+    // Historical metadata-only “documents” never contained verification file
+    // content, so they cannot be promoted into trusted references. Clear only
+    // that legacy evidence and require an explicit re-upload instead of
+    // fabricating hashes/storage IDs during migration.
     await pharmacies.updateOne(
       { _id: pharmacy._id },
       {
-        $set: { status, managerUserIds: pharmacy.managerUserIds ?? [] },
-        $unset: { reviews: '', isActive: '' },
+        $set: {
+          status,
+          managerUserIds: pharmacy.managerUserIds ?? [],
+          ...(legacyDocuments ? { documents: [] } : {}),
+        },
+        $unset: {
+          reviews: '',
+          isActive: '',
+          ...(legacyPendingDocuments
+            ? { 'pendingModeration.documents': '' }
+            : {}),
+        },
       }
     );
   }

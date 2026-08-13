@@ -9,6 +9,7 @@ const CURRENT_FILE = fileURLToPath(import.meta.url);
 const ROOT_DIR = path.resolve(path.dirname(CURRENT_FILE), '..', '..', '..');
 
 const AUTH_SRC_DIR = path.join(ROOT_DIR, 'packages', 'auth', 'src');
+
 const IGNORED = new Set([
   'node_modules',
   'dist',

@@ -114,9 +114,12 @@
     },
     "verificationDocument": {
       "required": [
+        "id",
         "name",
+        "sha256",
         "size",
-        "type"
+        "type",
+        "uploadedAt"
       ],
       "optional": []
     },

@@ -42,7 +42,79 @@ import {
 } from '../constants/pharmacy-document-validation';
 
 import { getWorkingHoursValidationIssue } from '../utils/validation/working-hours';
-import type { PharmacyEntity } from '../types/pharmacy';
+
+import type {
+  PharmacyEntity,
+  PharmacyVerificationDocumentMetadata,
+} from '../types/pharmacy';
+
+//===============================================================
+
+const pharmacyVerificationDocumentSchema =
+  new Schema<PharmacyVerificationDocumentMetadata>(
+    {
+      id: {
+        type: String,
+        required: true,
+        match: /^[a-f\d]{24}$/i,
+      },
+
+      name: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: [
+          PHARMACY_DOCUMENT_RULES.fileNameMaxLength,
+          PHARMACY_DOCUMENT_VALIDATION_MESSAGES.nameLength,
+        ],
+        match: [
+          PHARMACY_DOCUMENT_RULES.fileNamePattern,
+          PHARMACY_DOCUMENT_VALIDATION_MESSAGES.format,
+        ],
+      },
+
+      size: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: [
+          PHARMACY_DOCUMENT_RULES.maxSizeBytes,
+          PHARMACY_DOCUMENT_VALIDATION_MESSAGES.size,
+        ],
+      },
+
+      type: {
+        type: String,
+        required: true,
+        trim: true,
+        enum: {
+          values: [...PHARMACY_DOCUMENT_RULES.mimeTypes],
+          message: PHARMACY_DOCUMENT_VALIDATION_MESSAGES.format,
+        },
+      },
+
+      sha256: {
+        type: String,
+        required: true,
+        match: /^[a-f\d]{64}$/i,
+      },
+
+      uploadedAt: {
+        type: String,
+        required: true,
+        validate: {
+          validator: (value: string) => {
+            const parsed = new Date(value);
+            return (
+              !Number.isNaN(parsed.getTime()) && parsed.toISOString() === value
+            );
+          },
+          message: 'Document uploadedAt must be a canonical ISO datetime.',
+        },
+      },
+    },
+    { _id: false, id: false }
+  );
 
 //===============================================================
 
@@ -76,14 +148,17 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       type: String,
       required: false,
       trim: true,
+
       minlength: [
         USER_ADDRESS_MIN_LENGTH,
         VALIDATION_MESSAGES.limits.addressMin,
       ],
+
       maxlength: [
         USER_ADDRESS_MAX_LENGTH,
         VALIDATION_MESSAGES.limits.addressMax,
       ],
+
       match: [ADDRESS_PATTERN, VALIDATION_MESSAGES.format.address],
       default: undefined,
     },
@@ -116,16 +191,20 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     workingHours: {
       type: String,
       trim: true,
+
       maxlength: [
         WORKING_HOURS_MAX_LENGTH,
         VALIDATION_MESSAGES.limits.workingHoursMax,
       ],
+
       match: [WORKING_HOURS_PATTERN, VALIDATION_MESSAGES.format.workingHours],
+
       validate: {
         validator: (value?: string) =>
           !value || getWorkingHoursValidationIssue(value) === null,
         message: VALIDATION_MESSAGES.format.workingHours,
       },
+
       default: undefined,
     },
 
@@ -134,10 +213,12 @@ const pharmacySchema = new Schema<PharmacyEntity>(
         type: String,
         required: false,
         trim: true,
+
         maxlength: [
           BANK_RECIPIENT_NAME_MAX_LENGTH,
           VALIDATION_MESSAGES.limits.bankRecipientNameMax,
         ],
+
         validate: [
           {
             validator: (value?: string) =>
@@ -193,10 +274,12 @@ const pharmacySchema = new Schema<PharmacyEntity>(
         type: String,
         required: false,
         trim: true,
+
         maxlength: [
           PAYMENT_PURPOSE_MAX_LENGTH,
           VALIDATION_MESSAGES.limits.paymentPurposeMax,
         ],
+
         match: [
           PAYMENT_PURPOSE_PATTERN,
           VALIDATION_MESSAGES.format.paymentPurpose,
@@ -248,7 +331,10 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     description: {
       type: String,
       trim: true,
-      maxlength: [TEXT_EDITOR_MAX_LENGTH, VALIDATION_MESSAGES.limits.textEditorMax],
+      maxlength: [
+        TEXT_EDITOR_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.textEditorMax,
+      ],
       match: [TEXT_EDITOR_PATTERN, VALIDATION_MESSAGES.format.textEditor],
       default: undefined,
     },
@@ -286,43 +372,9 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     },
 
     documents: {
-      type: [
-        {
-          name: {
-            type: String,
-            required: true,
-            trim: true,
-            maxlength: [
-              PHARMACY_DOCUMENT_RULES.fileNameMaxLength,
-              PHARMACY_DOCUMENT_VALIDATION_MESSAGES.nameLength,
-            ],
-            match: [
-              PHARMACY_DOCUMENT_RULES.fileNamePattern,
-              PHARMACY_DOCUMENT_VALIDATION_MESSAGES.format,
-            ],
-          },
-          size: {
-            type: Number,
-            required: true,
-            min: 0,
-            max: [
-              PHARMACY_DOCUMENT_RULES.maxSizeBytes,
-              PHARMACY_DOCUMENT_VALIDATION_MESSAGES.size,
-            ],
-          },
-          type: {
-            type: String,
-            required: true,
-            trim: true,
-            enum: {
-              values: [...PHARMACY_DOCUMENT_RULES.mimeTypes],
-              message: PHARMACY_DOCUMENT_VALIDATION_MESSAGES.format,
-            },
-          },
-        },
-      ],
+      type: [pharmacyVerificationDocumentSchema],
       validate: {
-        validator: (documents: unknown[]) =>
+        validator: (documents: PharmacyVerificationDocumentMetadata[]) =>
           documents.length <= PHARMACY_DOCUMENT_RULES.maxFiles,
         message: PHARMACY_DOCUMENT_VALIDATION_MESSAGES.count,
       },

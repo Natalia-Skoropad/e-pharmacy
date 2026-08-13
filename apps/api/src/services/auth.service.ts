@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import type { HydratedDocument } from 'mongoose';
+import mongoose, { type ClientSession, type HydratedDocument } from 'mongoose';
 
 import { env } from '../config/env';
 
@@ -46,10 +46,17 @@ import { comparePassword, hashPassword } from '../utils/password';
 import { logger } from '../utils/logger';
 import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
 import { toAuthUserResponse } from '../utils/userResponse';
+import { claimRegistrationPharmacyDocuments } from './pharmacy-document.service';
 
 //===============================================================
 
 const REFRESH_TOKEN_BYTES = 64;
+
+// Use one valid bcrypt hash for unknown-account login attempts so credential
+// verification has the same expensive code path without revealing whether an
+// email exists. The hash does not correspond to a real account.
+const DUMMY_PASSWORD_HASH =
+  '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
 
 const ACCESS_TOKEN_TTL_SECONDS = Math.max(
   1,
@@ -106,14 +113,6 @@ type UserDocument = HydratedDocument<UserEntity>;
 
 function normalizePhoneForLookup(phone: string): string {
   return phone.trim();
-}
-
-//===============================================================
-
-function getAccountNotFoundMessage(application: 'client' | 'pharmacy'): string {
-  return application === 'pharmacy'
-    ? API_MESSAGES.PHARMACY_ACCOUNT_NOT_FOUND
-    : API_MESSAGES.CLIENT_ACCOUNT_NOT_FOUND;
 }
 
 //===============================================================
@@ -206,32 +205,59 @@ export async function registerUserService(
   await ensurePhoneIsAvailable(phone);
 
   const hashedPassword = await hashPassword(input.password);
+  const mongoSession = await mongoose.startSession();
+  let user: UserDocument | null = null;
 
   try {
-    const user = await User.create({
-      name: input.name,
-      email: input.email,
-      password: hashedPassword,
-      role: input.role || USER_ROLES.CLIENT,
-      phone,
-      address: input.address,
-    });
+    user =
+      (await mongoSession.withTransaction(async () => {
+        const [createdUser] = await User.create(
+          [
+            {
+              name: input.name,
+              email: input.email,
+              password: hashedPassword,
+              role: input.role || USER_ROLES.CLIENT,
+              phone,
+              address: input.address,
+            },
+          ],
+          { session: mongoSession }
+        );
 
-    if (user.role === USER_ROLES.CLIENT) {
-      await Client.create({ userId: user._id });
-    } else if (user.role === USER_ROLES.PHARMACY) {
-      await Pharmacy.create({
-        ownerId: user._id,
-        managerUserIds: [],
-        name: '',
-        phone: user.phone,
-        email: user.email,
-        documents: input.pharmacyDocuments ?? [],
-        status: 'new',
-      });
-    }
+        if (createdUser.role === USER_ROLES.CLIENT) {
+          await Client.create([{ userId: createdUser._id }], {
+            session: mongoSession,
+          });
+        } else if (createdUser.role === USER_ROLES.PHARMACY) {
+          const [createdPharmacy] = await Pharmacy.create(
+            [
+              {
+                ownerId: createdUser._id,
+                managerUserIds: [],
+                name: '',
+                phone: createdUser.phone,
+                email: createdUser.email,
+                documents: [],
+                status: 'new',
+              },
+            ],
+            { session: mongoSession }
+          );
 
-    return buildAuthSessionResult(user, context);
+          const documents = await claimRegistrationPharmacyDocuments(
+            input.pharmacyDocuments ?? [],
+            createdPharmacy._id,
+            createdUser._id,
+            mongoSession
+          );
+
+          createdPharmacy.documents = documents;
+          await createdPharmacy.save({ session: mongoSession });
+        }
+
+        return createdUser;
+      })) ?? null;
   } catch (error) {
     if (isDuplicateEmailError(error)) {
       throw httpError(
@@ -252,6 +278,31 @@ export async function registerUserService(
     }
 
     throw error;
+  } finally {
+    await mongoSession.endSession();
+  }
+
+  if (!user) {
+    throw new Error('Registration transaction completed without a user.');
+  }
+
+  try {
+    // Session creation intentionally happens after the identity transaction.
+    // A transient session write failure must not roll back a successfully
+    // registered User + Client/Pharmacy pair; the user can sign in normally.
+    return await buildAuthSessionResult(user, context);
+  } catch (error) {
+    logger.error('[auth] Registration succeeded but session creation failed', {
+      userId: String(user._id),
+      error,
+    });
+
+    throw httpError(
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      API_MESSAGES.REGISTRATION_SESSION_FAILED,
+      undefined,
+      AUTH_ERROR_CODES.REGISTRATION_SESSION_FAILED
+    );
   }
 }
 
@@ -262,8 +313,19 @@ export async function loginUserService(
   context?: SessionContext
 ): Promise<AuthSessionResult> {
   const user = await User.findOne({ email: input.email }).select('+password');
+  const passwordHash =
+    user && !user.isDefaultPharmacyClient ? user.password : DUMMY_PASSWORD_HASH;
+  const isPasswordValid = await comparePassword(input.password, passwordHash);
 
-  if (!user || user.isDefaultPharmacyClient) {
+  // Do not expose whether an email exists or which application owns it.
+  // Application mismatch is intentionally indistinguishable from an unknown
+  // account or wrong password.
+  if (
+    !user ||
+    user.isDefaultPharmacyClient ||
+    !isPasswordValid ||
+    (input.application !== undefined && user.role !== input.application)
+  ) {
     throw httpError(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_CREDENTIALS,
@@ -272,30 +334,14 @@ export async function loginUserService(
     );
   }
 
-  if (input.application && user.role !== input.application) {
-    throw httpError(
-      HTTP_STATUS.NOT_FOUND,
-      getAccountNotFoundMessage(input.application)
-    );
-  }
-
+  // Blocked status is exposed only after the caller has proved knowledge of
+  // the account password, avoiding status enumeration with arbitrary secrets.
   if (user.status === USER_STATUSES.BLOCKED) {
     throw httpError(
       HTTP_STATUS.FORBIDDEN,
       API_MESSAGES.USER_BLOCKED,
       undefined,
       AUTH_ERROR_CODES.USER_BLOCKED
-    );
-  }
-
-  const isPasswordValid = await comparePassword(input.password, user.password);
-
-  if (!isPasswordValid) {
-    throw httpError(
-      HTTP_STATUS.UNAUTHORIZED,
-      API_MESSAGES.INVALID_CREDENTIALS,
-      undefined,
-      AUTH_ERROR_CODES.INVALID_CREDENTIALS
     );
   }
 
@@ -447,7 +493,8 @@ export async function revokeSessionByRefreshTokenService(
 
 export async function revokeAllUserSessionsService(
   userId: string,
-  reason: SessionRevokedReason = 'logout_all'
+  reason: SessionRevokedReason = 'logout_all',
+  session?: ClientSession
 ): Promise<void> {
   await Session.updateMany(
     {
@@ -460,7 +507,8 @@ export async function revokeAllUserSessionsService(
         revokedReason: reason,
         lastUsedAt: new Date(),
       },
-    }
+    },
+    { session }
   );
 }
 
@@ -600,30 +648,53 @@ export async function resetPasswordService(
   input: ResetPasswordInput
 ): Promise<void> {
   const tokenHash = hashPasswordResetToken(input.token);
+  const hashedPassword = await hashPassword(input.newPassword);
+  const session = await mongoose.startSession();
 
-  const user = await User.findOne({
-    resetPasswordTokenHash: tokenHash,
-    resetPasswordExpiresAt: { $gt: new Date() },
-  }).select(
-    '+password +resetPasswordTokenHash +resetPasswordExpiresAt +resetPasswordApplication'
-  );
+  try {
+    await session.withTransaction(async () => {
+      // Compare-and-consume the reset token in the same transaction that
+      // changes the password and revokes sessions. Two concurrent requests
+      // with the same token cannot both commit successfully.
+      const user = await User.findOneAndUpdate(
+        {
+          resetPasswordTokenHash: tokenHash,
+          resetPasswordExpiresAt: { $gt: new Date() },
+          status: { $ne: USER_STATUSES.BLOCKED },
+        },
+        {
+          $set: { password: hashedPassword },
+          $unset: {
+            resetPasswordTokenHash: '',
+            resetPasswordExpiresAt: '',
+            resetPasswordApplication: '',
+          },
+        },
+        {
+          new: true,
+          runValidators: true,
+          session,
+        }
+      );
 
-  if (!user || user.status === USER_STATUSES.BLOCKED) {
-    throw httpError(
-      HTTP_STATUS.BAD_REQUEST,
-      API_MESSAGES.PASSWORD_RESET_TOKEN_INVALID,
-      undefined,
-      AUTH_ERROR_CODES.RESET_TOKEN_INVALID
-    );
+      if (!user) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          API_MESSAGES.PASSWORD_RESET_TOKEN_INVALID,
+          undefined,
+          AUTH_ERROR_CODES.RESET_TOKEN_INVALID
+        );
+      }
+
+      await revokeAllUserSessionsService(
+        String(user._id),
+        'password_changed',
+        session
+      );
+    });
+  } finally {
+    await session.endSession();
   }
-
-  user.password = await hashPassword(input.newPassword);
-  user.resetPasswordTokenHash = undefined;
-  user.resetPasswordExpiresAt = undefined;
-  user.resetPasswordApplication = undefined;
-
-  await user.save();
-  await revokeAllUserSessionsService(String(user._id), 'password_changed');
 }
 
 //===============================================================
@@ -724,34 +795,47 @@ export async function updateUserPasswordService(
   userId: string,
   input: UpdatePasswordInput
 ): Promise<void> {
-  const user = await User.findById(userId).select('+password');
+  const hashedPassword = await hashPassword(input.newPassword);
+  const session = await mongoose.startSession();
 
-  if (!user) {
-    throw httpError(
-      HTTP_STATUS.UNAUTHORIZED,
-      API_MESSAGES.USER_NOT_FOUND,
-      undefined,
-      AUTH_ERROR_CODES.SESSION_INVALID
-    );
+  try {
+    await session.withTransaction(async () => {
+      const user = await User.findById(userId).select('+password').session(session);
+
+      if (!user) {
+        throw httpError(
+          HTTP_STATUS.UNAUTHORIZED,
+          API_MESSAGES.USER_NOT_FOUND,
+          undefined,
+          AUTH_ERROR_CODES.SESSION_INVALID
+        );
+      }
+
+      const isCurrentPasswordValid = await comparePassword(
+        input.currentPassword,
+        user.password
+      );
+
+      if (!isCurrentPasswordValid) {
+        throw httpError(
+          HTTP_STATUS.UNAUTHORIZED,
+          'Current password is incorrect',
+          undefined,
+          AUTH_ERROR_CODES.INVALID_CREDENTIALS
+        );
+      }
+
+      user.password = hashedPassword;
+      await user.save({ session });
+      await revokeAllUserSessionsService(
+        userId,
+        'password_changed',
+        session
+      );
+    });
+  } finally {
+    await session.endSession();
   }
-
-  const isCurrentPasswordValid = await comparePassword(
-    input.currentPassword,
-    user.password
-  );
-
-  if (!isCurrentPasswordValid) {
-    throw httpError(
-      HTTP_STATUS.UNAUTHORIZED,
-      'Current password is incorrect',
-      undefined,
-      AUTH_ERROR_CODES.INVALID_CREDENTIALS
-    );
-  }
-
-  user.password = await hashPassword(input.newPassword);
-  await user.save();
-  await revokeAllUserSessionsService(userId, 'password_changed');
 }
 
 //===============================================================

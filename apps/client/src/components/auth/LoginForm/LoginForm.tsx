@@ -156,11 +156,7 @@ function LoginForm() {
     } catch (error) {
       const message = isPharmacyAppConfigurationError(error)
         ? error.message
-        : error instanceof Error &&
-            (error.message.includes('Pharmacy account') ||
-              error.message.includes('Client account'))
-          ? error.message
-          : getClientAuthErrorMessage(getAuthErrorCode(error, 'login'));
+        : getClientAuthErrorMessage(getAuthErrorCode(error, 'login'));
 
       toast.error(message);
     } finally {

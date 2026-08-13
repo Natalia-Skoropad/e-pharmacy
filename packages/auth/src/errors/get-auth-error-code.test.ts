@@ -23,6 +23,15 @@ test('uses stable backend business codes before mutable copy', () => {
     }),
     'phone_conflict'
   );
+
+  assert.equal(
+    getAuthErrorCode({
+      status: 500,
+      message: 'Automatic sign-in failed.',
+      payload: { code: 'AUTH_REGISTRATION_SESSION_FAILED' },
+    }),
+    'registration_session_failed'
+  );
 });
 
 //===================================================================

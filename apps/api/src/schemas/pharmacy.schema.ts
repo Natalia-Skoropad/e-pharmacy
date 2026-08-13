@@ -8,7 +8,10 @@ import {
   hasMeaningfulValue,
 } from './shared';
 
-import { pharmacyDocumentsSchema } from './shared/pharmacy-document.schema';
+import {
+  pharmacyDocumentUploadSchema,
+  pharmacyProfileDocumentSelectionsSchema,
+} from './shared/pharmacy-document.schema';
 
 import {
   sharedReviewCommentSchema,
@@ -67,6 +70,12 @@ export const pharmacyReviewParamsSchema = z.object({
 
 //===============================================================
 
+export const pharmacyDocumentParamsSchema = z.object({
+  documentId: mongoIdSchema,
+});
+
+//===============================================================
+
 export const pendingPharmacyReviewsQuerySchema = z.preprocess(
   normalizePaginationQuery,
   z.object({
@@ -101,7 +110,7 @@ export const updateMyPharmacyProfileSchema = z
     workingHours: sharedOptionalWorkingHoursSchema,
     imageUrl: sharedPictureUrlSchema,
     description: sharedOptionalTextEditorSchema,
-    documents: pharmacyDocumentsSchema.optional(),
+    documents: pharmacyProfileDocumentSelectionsSchema.optional(),
 
     bankDetails: z
       .object({
@@ -121,6 +130,10 @@ export const updateMyPharmacyProfileSchema = z
 
 //===============================================================
 
+export const uploadMyPharmacyDocumentSchema = pharmacyDocumentUploadSchema;
+
+//===============================================================
+
 export const sendMyPharmacyForVerificationSchema = z.object({
   comment: z.string().trim().max(500).optional(),
 });
@@ -130,6 +143,7 @@ export const sendMyPharmacyForVerificationSchema = z.object({
 export type PharmaciesQuery = z.infer<typeof pharmaciesQuerySchema>;
 export type PharmacyIdParams = z.infer<typeof pharmacyIdParamsSchema>;
 export type PharmacyReviewParams = z.infer<typeof pharmacyReviewParamsSchema>;
+export type PharmacyDocumentParams = z.infer<typeof pharmacyDocumentParamsSchema>;
 
 export type PendingPharmacyReviewsQuery = z.infer<
   typeof pendingPharmacyReviewsQuerySchema

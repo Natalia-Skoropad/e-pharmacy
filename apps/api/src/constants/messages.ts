@@ -18,8 +18,10 @@ export const API_MESSAGES = {
   EMAIL_IN_USE: 'Email is already in use',
   PHONE_IN_USE: 'Phone number is already in use',
   INVALID_CREDENTIALS: 'Email or password is invalid',
-  CLIENT_ACCOUNT_NOT_FOUND: 'Client account was not found for this email',
-  PHARMACY_ACCOUNT_NOT_FOUND: 'Pharmacy account was not found for this email',
+
+  REGISTRATION_SESSION_FAILED:
+    'Account was created, but automatic sign-in failed. Please sign in.',
+
   AUTH_REQUIRED: 'Authorization token is required',
   INVALID_TOKEN: 'Authorization token is invalid',
   USER_NOT_FOUND: 'User not found',

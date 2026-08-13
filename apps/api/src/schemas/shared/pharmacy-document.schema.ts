@@ -5,9 +5,11 @@ import {
   PHARMACY_DOCUMENT_VALIDATION_MESSAGES,
 } from '../../constants/pharmacy-document-validation';
 
+import { mongoIdSchema } from './id.schema';
+
 //===============================================================
 
-export const pharmacyDocumentSchema = z.object({
+const documentMetadataShape = {
   name: z
     .string()
     .trim()
@@ -24,20 +26,76 @@ export const pharmacyDocumentSchema = z.object({
   size: z
     .number()
     .int()
-    .nonnegative()
+    .positive()
     .max(
       PHARMACY_DOCUMENT_RULES.maxSizeBytes,
       PHARMACY_DOCUMENT_VALIDATION_MESSAGES.size
     ),
 
   type: z.enum(PHARMACY_DOCUMENT_RULES.mimeTypes),
+};
+
+//===============================================================
+
+export const pharmacyDocumentUploadSchema = z.object({
+  ...documentMetadataShape,
+  dataUrl: z
+    .string()
+    .min(1, 'Document content is required')
+    .max(
+      Math.ceil((PHARMACY_DOCUMENT_RULES.maxSizeBytes * 4) / 3) + 256,
+      PHARMACY_DOCUMENT_VALIDATION_MESSAGES.size
+    )
+    .regex(
+      /^data:[^;,]+;base64,[A-Za-z0-9+/=]+$/,
+      'Document content must be a base64 data URL'
+    ),
 });
 
 //===============================================================
 
-export const pharmacyDocumentsSchema = z
-  .array(pharmacyDocumentSchema)
+export const pharmacyRegistrationDocumentClaimSchema = z.object({
+  documentId: mongoIdSchema,
+  claimToken: z
+    .string()
+    .trim()
+    .regex(/^[a-f\d]{64}$/i),
+});
+
+//===============================================================
+
+export const pharmacyRegistrationDocumentClaimsSchema = z
+  .array(pharmacyRegistrationDocumentClaimSchema)
   .max(
     PHARMACY_DOCUMENT_RULES.maxFiles,
     PHARMACY_DOCUMENT_VALIDATION_MESSAGES.count
   );
+
+//===============================================================
+
+export const pharmacyProfileDocumentSelectionSchema = z.object({
+  documentId: mongoIdSchema,
+});
+
+//===============================================================
+
+export const pharmacyProfileDocumentSelectionsSchema = z
+  .array(pharmacyProfileDocumentSelectionSchema)
+  .max(
+    PHARMACY_DOCUMENT_RULES.maxFiles,
+    PHARMACY_DOCUMENT_VALIDATION_MESSAGES.count
+  );
+
+//===============================================================
+
+export type PharmacyDocumentUploadInput = z.infer<
+  typeof pharmacyDocumentUploadSchema
+>;
+
+export type PharmacyRegistrationDocumentClaimInput = z.infer<
+  typeof pharmacyRegistrationDocumentClaimSchema
+>;
+
+export type PharmacyProfileDocumentSelectionInput = z.infer<
+  typeof pharmacyProfileDocumentSelectionSchema
+>;

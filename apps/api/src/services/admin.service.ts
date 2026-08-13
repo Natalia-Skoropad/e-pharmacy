@@ -4,8 +4,9 @@ import { API_MESSAGES } from '../constants/messages';
 
 import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
+import type { CreatePharmacyUserInput } from '../schemas/auth.schema';
 
-import type { HydratedDocument } from 'mongoose';
+import mongoose, { type HydratedDocument } from 'mongoose';
 
 import type {
   PharmacyEntity,
@@ -22,6 +23,7 @@ import {
 } from '../utils/mongoError';
 
 import { hashPassword } from '../utils/password';
+import { claimRegistrationPharmacyDocuments } from './pharmacy-document.service';
 
 //===============================================================
 
@@ -69,14 +71,6 @@ function serializePharmacyProfile(
 
 //===============================================================
 
-type CreatePharmacyUserInput = {
-  name: string;
-  email: string;
-  password: string;
-  phone: string;
-  address?: string;
-};
-
 type UpdatePharmacyStatusInput = {
   status: PharmacyStatus;
   reason?: string;
@@ -102,35 +96,62 @@ export async function createPharmacyUserByAdminService(
   }
 
   const hashedPassword = await hashPassword(input.password);
+  const session = await mongoose.startSession();
 
   try {
-    const user = await User.create({
-      name: input.name,
-      email: input.email,
-      password: hashedPassword,
-      role: USER_ROLES.PHARMACY,
-      phone,
-      address: input.address,
-      createdBy: adminUserId,
+    const pharmacy = await session.withTransaction(async () => {
+      const [user] = await User.create(
+        [
+          {
+            name: input.name,
+            email: input.email,
+            password: hashedPassword,
+            role: USER_ROLES.PHARMACY,
+            phone,
+            address: input.address,
+            createdBy: adminUserId,
+          },
+        ],
+        { session }
+      );
+
+      const [createdPharmacy] = await Pharmacy.create(
+        [
+          {
+            ownerId: user._id,
+            managerUserIds: [],
+            name: input.pharmacyName ?? user.name,
+            address: user.address ?? 'Address pending verification',
+            phone: user.phone,
+            email: user.email,
+            documents: [],
+            status: PHARMACY_STATUSES.NEW,
+            createdBy: adminUserId,
+          },
+        ],
+        { session }
+      );
+
+      const documents = await claimRegistrationPharmacyDocuments(
+        input.pharmacyDocuments ?? [],
+        createdPharmacy._id,
+        user._id,
+        session
+      );
+
+      createdPharmacy.documents = documents;
+      await createdPharmacy.save({ session });
+
+      return createdPharmacy;
     });
 
-    try {
-      const pharmacy = await Pharmacy.create({
-        ownerId: user._id,
-        managerUserIds: [],
-        name: user.name,
-        address: user.address ?? 'Address pending verification',
-        phone: user.phone,
-        email: user.email,
-        status: PHARMACY_STATUSES.NEW,
-        createdBy: adminUserId,
-      });
-
-      return serializePharmacyProfile(pharmacy);
-    } catch (error) {
-      await User.findByIdAndDelete(user._id);
-      throw error;
+    if (!pharmacy) {
+      throw new Error(
+        'Admin pharmacy registration transaction returned no pharmacy.'
+      );
     }
+
+    return serializePharmacyProfile(pharmacy);
   } catch (error) {
     if (isDuplicateEmailError(error)) {
       throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
@@ -141,6 +162,8 @@ export async function createPharmacyUserByAdminService(
     }
 
     throw error;
+  } finally {
+    await session.endSession();
   }
 }
 

@@ -28,6 +28,9 @@ const CLIENT_AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
 
   invalid_response: 'The authentication service returned an invalid response.',
 
+  registration_session_failed:
+    'Your account was created, but automatic sign-in failed. Please sign in.',
+
   server_error:
     'The server is temporarily unavailable. Please try again later.',
 

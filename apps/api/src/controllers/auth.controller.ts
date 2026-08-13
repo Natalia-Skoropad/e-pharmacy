@@ -1,9 +1,6 @@
 import type { Request, Response } from 'express';
 
-import {
-  AUTH_ERROR_CODES,
-  REFRESH_TOKEN_COOKIE_NAME,
-} from '../constants/auth';
+import { AUTH_ERROR_CODES, REFRESH_TOKEN_COOKIE_NAME } from '../constants/auth';
 
 import {
   BFF_AUTH_PROXY_HEADER_NAME,
@@ -29,6 +26,8 @@ import {
   updateUserProfileService,
 } from '../services/auth.service';
 
+import { createRegistrationPharmacyDocumentUploadService } from '../services/pharmacy-document.service';
+
 import type {
   ForgotPasswordInput,
   LoginInput,
@@ -38,6 +37,7 @@ import type {
   UpdateProfileInput,
 } from '../types/auth';
 
+import type { PharmacyDocumentUploadInput } from '../schemas/shared/pharmacy-document.schema';
 import type { SessionContext } from '../types/session';
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
@@ -48,11 +48,13 @@ import { httpError } from '../utils/httpError';
 
 function getSessionContext(req: Request): SessionContext {
   const forwardedFor = req.headers['x-forwarded-for'];
+
   const ip = Array.isArray(forwardedFor)
     ? forwardedFor[0]
     : forwardedFor?.split(',')[0]?.trim() || req.ip;
 
   const deviceNameHeader = req.headers['x-device-name'];
+
   const deviceName = Array.isArray(deviceNameHeader)
     ? deviceNameHeader[0]
     : deviceNameHeader;
@@ -123,6 +125,8 @@ function getRefreshTokensFromCookies(req: Request): string[] {
   return getCookieValues(req, REFRESH_TOKEN_COOKIE_NAME);
 }
 
+//===============================================================
+
 function requireRefreshTokensFromCookies(req: Request): string[] {
   const refreshTokens = getRefreshTokensFromCookies(req);
 
@@ -136,6 +140,22 @@ function requireRefreshTokensFromCookies(req: Request): string[] {
   }
 
   return refreshTokens;
+}
+
+//===============================================================
+
+export async function uploadRegistrationPharmacyDocument(
+  _req: Request,
+  res: ValidatedResponse<PharmacyDocumentUploadInput>
+): Promise<void> {
+  const input = res.locals.validated.body;
+  const data = await createRegistrationPharmacyDocumentUploadService(input);
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.CREATED,
+    data,
+  });
 }
 
 //===============================================================

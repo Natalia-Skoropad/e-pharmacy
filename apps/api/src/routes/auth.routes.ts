@@ -16,6 +16,7 @@ import {
   refreshAuthSession,
   requestPasswordReset,
   registerUser,
+  uploadRegistrationPharmacyDocument,
   resetPassword,
   updateCurrentUser,
   updateCurrentUserPassword,
@@ -38,6 +39,7 @@ import {
   resetPasswordSchema,
   updatePasswordSchema,
   updateProfileSchema,
+  uploadRegistrationPharmacyDocumentSchema,
 } from '../schemas/auth.schema';
 
 import { ctrlWrapper } from '../utils/ctrlWrapper';
@@ -47,6 +49,16 @@ import { ctrlWrapper } from '../utils/ctrlWrapper';
 export const authRoutes = Router();
 
 //===============================================================
+
+
+authRoutes.post(
+  '/pharmacy-documents',
+  authRateLimit,
+  validate({ body: uploadRegistrationPharmacyDocumentSchema }),
+  ctrlWrapper(uploadRegistrationPharmacyDocument)
+);
+
+//=================================================================================
 
 authRoutes.post(
   '/register',

@@ -10,6 +10,13 @@ export const pharmacyIdParamsSchema = z.object({
 
 //===============================================================
 
+export const adminPharmacyDocumentParamsSchema = z.object({
+  pharmacyId: mongoIdSchema,
+  documentId: mongoIdSchema,
+});
+
+//===============================================================
+
 export const updateAdminPharmacyStatusSchema = z.object({
   status: z.enum([
     PHARMACY_STATUSES.NEW,
@@ -27,4 +34,8 @@ export type AdminPharmacyParams = z.infer<typeof pharmacyIdParamsSchema>;
 
 export type UpdateAdminPharmacyStatusInput = z.infer<
   typeof updateAdminPharmacyStatusSchema
+>;
+
+export type AdminPharmacyDocumentParams = z.infer<
+  typeof adminPharmacyDocumentParamsSchema
 >;

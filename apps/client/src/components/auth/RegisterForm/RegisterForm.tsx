@@ -7,6 +7,8 @@ import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { DocumentUpload, RadioOption } from '@e-pharmacy/ui/forms';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
+import { readFileAsDataUrl } from '@e-pharmacy/ui/media';
+import type { PharmacyRegistrationDocumentClaim } from '@e-pharmacy/types/pharmacies';
 
 import {
   EmailInput,
@@ -51,6 +53,7 @@ import {
 
 import { ROUTES } from '@/lib/routes';
 import { REGISTER_TITLE } from '@/lib/seo/metadata-copy';
+import { uploadPharmacyRegistrationDocument } from '@/lib/api/browser';
 
 import css from '../shared/AuthForm.module.css';
 
@@ -93,6 +96,41 @@ const REGISTER_COPY: Record<
     loading: 'Creating pharmacy account...',
   },
 };
+
+//===================================================================
+
+async function uploadRegistrationDocuments(
+  files: readonly BrowserUploadFile[]
+): Promise<PharmacyRegistrationDocumentClaim[]> {
+  const claims: PharmacyRegistrationDocumentClaim[] = [];
+
+  // Upload one document per request so the 10 MB per-file rule remains below
+  // the BFF request-body limit even after base64 encoding.
+  for (const file of files) {
+    if (!file.file) {
+      throw new Error(
+        'Select the pharmacy document again before registration.'
+      );
+    }
+
+    const metadata = normalizePharmacyDocument(file);
+    const rawDataUrl = await readFileAsDataUrl(file.file);
+    const base64Payload = rawDataUrl.slice(rawDataUrl.indexOf(',') + 1);
+    const dataUrl = `data:${metadata.type};base64,${base64Payload}`;
+
+    const uploaded = await uploadPharmacyRegistrationDocument({
+      ...metadata,
+      dataUrl,
+    });
+
+    claims.push({
+      documentId: uploaded.document.id,
+      claimToken: uploaded.claimToken,
+    });
+  }
+
+  return claims;
+}
 
 //===================================================================
 
@@ -211,16 +249,18 @@ function RegisterForm() {
     try {
       setIsSubmitting(true);
 
+      const pharmacyDocumentClaims =
+        accountType === 'pharmacy'
+          ? await uploadRegistrationDocuments(pharmacyDocuments)
+          : undefined;
+
       const user = await register({
         name: values.name.trim(),
         email: values.email.trim(),
         phone: values.phone.trim(),
         password: values.password,
         role: accountType,
-        pharmacyDocuments:
-          accountType === 'pharmacy'
-            ? pharmacyDocuments.map(normalizePharmacyDocument)
-            : undefined,
+        pharmacyDocuments: pharmacyDocumentClaims,
       });
 
       const destination = user
@@ -237,11 +277,17 @@ function RegisterForm() {
 
       router.replace(destination);
     } catch (error) {
+      const errorCode = getAuthErrorCode(error, 'register');
+
       toast.error(
         isPharmacyAppConfigurationError(error)
           ? error.message
-          : getClientAuthErrorMessage(getAuthErrorCode(error, 'register'))
+          : getClientAuthErrorMessage(errorCode)
       );
+
+      if (errorCode === 'registration_session_failed') {
+        router.replace(ROUTES.LOGIN);
+      }
     } finally {
       setIsSubmitting(false);
     }

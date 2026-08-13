@@ -15,5 +15,6 @@ export type AuthErrorCode =
   | 'timeout'
   | 'service_unavailable'
   | 'invalid_response'
+  | 'registration_session_failed'
   | 'server_error'
   | 'unknown';

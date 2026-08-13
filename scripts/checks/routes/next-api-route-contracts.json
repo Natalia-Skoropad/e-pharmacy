@@ -58,6 +58,14 @@
   },
   {
     "app": "client",
+    "route": "/auth/pharmacy-documents",
+    "backend": "/auth/pharmacy-documents",
+    "methods": {
+      "POST": "auth"
+    }
+  },
+  {
+    "app": "client",
     "route": "/auth/refresh",
     "backend": "/auth/refresh",
     "methods": {
@@ -429,6 +437,22 @@
   },
   {
     "app": "pharmacy",
+    "route": "/pharmacies/me/documents",
+    "backend": "/pharmacies/me/documents",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/documents/[documentId]",
+    "backend": "/pharmacies/me/documents/:documentId",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/pharmacies/me/profile",
     "backend": "/pharmacies/me/profile",
     "methods": {
@@ -472,20 +496,20 @@
   },
   {
     "app": "pharmacy",
-    "route": "/product-requests/article-availability",
-    "backend": "/product-requests/article-availability",
-    "methods": {
-      "GET": "private"
-    }
-  },
-  {
-    "app": "pharmacy",
     "route": "/product-requests/[requestId]",
     "backend": "/product-requests/:requestId",
     "methods": {
       "GET": "private",
       "PATCH": "private",
       "DELETE": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/product-requests/article-availability",
+    "backend": "/product-requests/article-availability",
+    "methods": {
+      "GET": "private"
     }
   },
   {

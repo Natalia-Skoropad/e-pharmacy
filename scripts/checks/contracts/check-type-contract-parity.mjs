@@ -233,13 +233,8 @@ async function assertActualTypeShapes(frontendFixture) {
     ],
     [
       'verificationDocument',
-      'packages/types/src/primitives/file-metadata.ts',
-      'FileMetadata',
-    ],
-    [
-      'fileMetadata',
-      'packages/types/src/primitives/file-metadata.ts',
-      'FileMetadata',
+      'packages/types/src/pharmacies/verification-document.ts',
+      'PharmacyVerificationDocument',
     ],
     [
       'productRequestFile',
@@ -339,11 +334,6 @@ async function assertActualTypeShapes(frontendFixture) {
     ],
     [
       'verificationDocument',
-      'apps/api/src/types/pharmacy.ts',
-      'PharmacyVerificationDocumentMetadata',
-    ],
-    [
-      'fileMetadata',
       'apps/api/src/types/pharmacy.ts',
       'PharmacyVerificationDocumentMetadata',
     ],

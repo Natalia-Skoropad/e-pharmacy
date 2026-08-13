@@ -116,8 +116,14 @@
   gap: 6px;
   align-items: center;
   max-width: 100%;
+  padding: 0;
+  border: 0;
+  font: inherit;
   color: var(--color-text-primary);
+  text-align: left;
   text-decoration: none;
+  background: transparent;
+  cursor: pointer;
 }
 
 .fileLink:hover,

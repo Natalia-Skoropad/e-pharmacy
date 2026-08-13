@@ -1,12 +1,13 @@
 import type { ChangeEventHandler, ReactNode } from 'react';
 
-import type { FileMetadata } from '@e-pharmacy/types/primitives';
+import type { EntityId, FileMetadata } from '@e-pharmacy/types/primitives';
 
 //===================================================================
 
 export type BrowserUploadFile = FileMetadata &
   Readonly<{
     id: string;
+    documentId?: EntityId;
     file?: File;
     dataUrl?: string;
   }>;

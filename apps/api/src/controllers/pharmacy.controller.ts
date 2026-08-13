@@ -8,11 +8,14 @@ import type {
   ModeratePharmacyReviewInput,
   PendingPharmacyReviewsQuery,
   PharmaciesQuery,
+  PharmacyDocumentParams,
   PharmacyIdParams,
   PharmacyReviewParams,
   SendMyPharmacyForVerificationInput,
   UpdateMyPharmacyProfileInput,
 } from '../schemas/pharmacy.schema';
+
+import type { PharmacyDocumentUploadInput } from '../schemas/shared/pharmacy-document.schema';
 
 import {
   createPharmacyReviewService,
@@ -32,8 +35,44 @@ import {
   updateMyPharmacyProfileService,
 } from '../services/pharmacy.service';
 
+import {
+  createPrivatePharmacyDocumentUploadService,
+  getPrivatePharmacyDocumentContentService,
+} from '../services/pharmacy-document.service';
+
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
+
+//===============================================================
+
+export async function uploadMyPharmacyDocument(
+  req: Request,
+  res: ValidatedResponse<PharmacyDocumentUploadInput>
+): Promise<void> {
+  const input = res.locals.validated.body;
+  const data = await createPrivatePharmacyDocumentUploadService(
+    req.user?.id ?? '',
+    input
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
+}
+
+//===============================================================
+
+export async function getMyPharmacyDocument(
+  req: Request,
+  res: ValidatedResponse<unknown, PharmacyDocumentParams>
+): Promise<void> {
+  const { documentId } = res.locals.validated.params;
+
+  const data = await getPrivatePharmacyDocumentContentService(
+    req.user?.id ?? '',
+    documentId
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
 
 //===============================================================
 

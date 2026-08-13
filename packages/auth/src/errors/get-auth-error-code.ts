@@ -37,6 +37,7 @@ const BUSINESS_CODE_MAP: Readonly<Record<string, AuthErrorCode>> = {
   AUTH_RESOURCE_NOT_FOUND: 'not_found',
   AUTH_SERVICE_UNAVAILABLE: 'service_unavailable',
   AUTH_INVALID_RESPONSE: 'invalid_response',
+  AUTH_REGISTRATION_SESSION_FAILED: 'registration_session_failed',
 };
 
 //===================================================================

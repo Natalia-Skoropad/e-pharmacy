@@ -6,6 +6,7 @@ export {
   loginUser,
   logoutUser,
   registerUser,
+  uploadPharmacyRegistrationDocument,
   requestPasswordReset,
   resetPassword,
   revokeActiveSession,

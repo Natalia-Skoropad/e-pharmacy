@@ -13,7 +13,7 @@ import {
 } from '@e-pharmacy/ui/primitives';
 
 import { DocumentUpload, MarkdownTextarea } from '@e-pharmacy/ui/forms';
-import { PictureCard } from '@e-pharmacy/ui/media';
+import { PictureCard, readFileAsDataUrl } from '@e-pharmacy/ui/media';
 import { WorkingHoursInput } from '../WorkingHoursInput';
 import { ReviewsList } from '@e-pharmacy/ui/data-display';
 import { Tabs } from '@e-pharmacy/ui/navigation';
@@ -113,12 +113,14 @@ import {
   createPharmacyNote,
   deletePharmacyNote,
   getActiveSessions,
+  getMyPharmacyDocument,
   getPharmacyNotes,
   revokeActiveSession,
   sendMyPharmacyForVerification,
   updateCurrentUser,
   updateCurrentUserPassword,
   updateMyPharmacyProfile,
+  uploadMyPharmacyDocument,
 } from '@/lib/api/browser';
 
 import {
@@ -261,6 +263,7 @@ function createDocumentValues(
 ): BrowserUploadFile[] {
   return documents.map((document, index) => ({
     id: createDocumentId(document, index),
+    documentId: document.id,
     name: document.name,
     size: document.size,
     type: document.type ?? '',
@@ -270,7 +273,10 @@ function createDocumentValues(
 //===================================================================
 
 function normalizeDocumentValues(files: BrowserUploadFile[]) {
-  return files.map(normalizePharmacyDocument);
+  return files.map((file) => ({
+    ...(file.documentId ? { documentId: file.documentId } : {}),
+    ...normalizePharmacyDocument(file),
+  }));
 }
 
 //===================================================================
@@ -401,12 +407,34 @@ function buildPaymentPayload(
 
 //===================================================================
 
-function buildDocumentsPayload(
+async function buildDocumentsPayload(
   files: BrowserUploadFile[]
-): UpdateMyPharmacyProfilePayload {
-  return {
-    documents: normalizeDocumentValues(files),
-  };
+): Promise<UpdateMyPharmacyProfilePayload> {
+  const documents: NonNullable<UpdateMyPharmacyProfilePayload['documents']> = [];
+
+  for (const file of files) {
+    if (file.documentId) {
+      documents.push({ documentId: file.documentId });
+      continue;
+    }
+
+    if (!file.file) {
+      throw new Error('Select the pharmacy document again before saving.');
+    }
+
+    const metadata = normalizePharmacyDocument(file);
+    const rawDataUrl = await readFileAsDataUrl(file.file);
+    const base64Payload = rawDataUrl.slice(rawDataUrl.indexOf(',') + 1);
+    const dataUrl = `data:${metadata.type};base64,${base64Payload}`;
+    const uploaded = await uploadMyPharmacyDocument({
+      ...metadata,
+      dataUrl,
+    });
+
+    documents.push({ documentId: uploaded.document.id });
+  }
+
+  return { documents };
 }
 
 //===================================================================
@@ -1054,6 +1082,22 @@ function PharmacyProfilePage({
     setDocumentsError('');
   };
 
+  const handleDocumentDownload = async (
+    file: BrowserUploadFile
+  ): Promise<string> => {
+    if (file.dataUrl) return file.dataUrl;
+    if (!file.documentId) return '';
+
+    try {
+      return (await getMyPharmacyDocument(file.documentId)).dataUrl;
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to download the document.'));
+      return '';
+    }
+  };
+
+  //===================================================================
+
   const handleDocumentsSubmit = async () => {
     setDocumentsTouched(true);
 
@@ -1072,7 +1116,7 @@ function PharmacyProfilePage({
 
     try {
       const response = await updateMyPharmacyProfile(
-        buildDocumentsPayload(documentValues)
+        await buildDocumentsPayload(documentValues)
       );
       const nextDocumentValues = createDocumentValues(
         response.pharmacy.documents
@@ -1096,7 +1140,7 @@ function PharmacyProfilePage({
     }
   };
 
-  const buildModerationPayload = (): UpdateMyPharmacyProfilePayload => {
+  const buildModerationPayload = async (): Promise<UpdateMyPharmacyProfilePayload> => {
     const payload: UpdateMyPharmacyProfilePayload = {};
 
     if (pharmacyFormIsDirty) {
@@ -1122,7 +1166,7 @@ function PharmacyProfilePage({
     }
 
     if (documentsFormIsDirty) {
-      Object.assign(payload, buildDocumentsPayload(documentValues));
+      Object.assign(payload, await buildDocumentsPayload(documentValues));
     }
 
     return payload;
@@ -1161,13 +1205,13 @@ function PharmacyProfilePage({
 
     if (!canSendForModeration) return;
 
-    const payload = buildModerationPayload();
-
-    if (!hasProfilePayloadChanges(payload)) return;
-
     setIsSendingVerification(true);
 
     try {
+      const payload = await buildModerationPayload();
+
+      if (!hasProfilePayloadChanges(payload)) return;
+
       await updateMyPharmacyProfile(payload);
       const response = await sendMyPharmacyForVerification();
       applyPharmacyFormState(response.pharmacy);
@@ -1961,6 +2005,7 @@ function PharmacyProfilePage({
                       }
                       confirmRemove
                       onSelectionError={setDocumentsError}
+                      onDownloadFile={handleDocumentDownload}
                       onChange={handleDocumentsChange}
                     />
 

@@ -3,6 +3,7 @@ import { USER_ROLES } from '../constants/auth';
 
 import {
   createPharmacyUserByAdmin,
+  getAdminPharmacyDocument,
   updatePharmacyStatusByAdmin,
 } from '../controllers/admin.controller';
 
@@ -11,6 +12,7 @@ import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
 
 import {
+  adminPharmacyDocumentParamsSchema,
   pharmacyIdParamsSchema,
   updateAdminPharmacyStatusSchema,
 } from '../schemas/admin.schema';
@@ -32,6 +34,14 @@ adminRoutes.post(
   '/pharmacies',
   validate({ body: createPharmacyUserSchema }),
   ctrlWrapper(createPharmacyUserByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacies/:pharmacyId/documents/:documentId',
+  validate({ params: adminPharmacyDocumentParamsSchema }),
+  ctrlWrapper(getAdminPharmacyDocument)
 );
 
 //=================================================================================

@@ -41,6 +41,7 @@ export type DocumentUploadProps = {
   onChange: (files: BrowserUploadFile[]) => void;
   validateSelection?: (files: readonly BrowserUploadFile[]) => string;
   onSelectionError?: (message: string) => void;
+  onDownloadFile?: (file: BrowserUploadFile) => Promise<string>;
 };
 
 //===================================================================
@@ -85,6 +86,7 @@ function DocumentUpload({
   onChange,
   validateSelection,
   onSelectionError,
+  onDownloadFile,
 }: DocumentUploadProps) {
   const [pendingRemoveFileId, setPendingRemoveFileId] = useState<string | null>(
     null
@@ -163,6 +165,18 @@ function DocumentUpload({
     setPendingRemoveFileId(null);
   };
 
+  const handleDownload = async (file: BrowserUploadFile) => {
+    if (!onDownloadFile) return;
+    const dataUrl = await onDownloadFile(file);
+    if (!dataUrl) return;
+
+    const anchor = document.createElement('a');
+    anchor.href = dataUrl;
+    anchor.download = file.name;
+    anchor.rel = 'noopener';
+    anchor.click();
+  };
+
   return (
     <div className={clsx(css.field, className)}>
       <label className={css.label} htmlFor={id}>
@@ -235,6 +249,15 @@ function DocumentUpload({
                     <span className={css.fileName}>{file.name}</span>
                     <Download size={14} aria-hidden="true" />
                   </a>
+                ) : onDownloadFile ? (
+                  <button
+                    className={css.fileLink}
+                    type="button"
+                    onClick={() => void handleDownload(file)}
+                  >
+                    <span className={css.fileName}>{file.name}</span>
+                    <Download size={14} aria-hidden="true" />
+                  </button>
                 ) : (
                   <p className={css.fileName}>{file.name}</p>
                 )}

@@ -10,6 +10,9 @@ import {
   parseHealthResponse,
   parsePharmaciesResponse,
   parsePharmacyDetailsResponse,
+  parsePharmacyDocumentContentResponse,
+  parsePharmacyProfileResponse,
+  parsePharmacyRegistrationDocumentUploadResponse,
   parseProductDetails,
   parseProductsResponse,
 } from './shared-dto-parsers';
@@ -483,6 +486,130 @@ test('validates cart cleanup issues instead of silently dropping them', async ()
             },
           ],
         },
+      }),
+    ApiError
+  );
+});
+
+//===================================================================
+
+test('strictly validates pharmacy profile documents, status, dates and nested data', () => {
+  const document = {
+    id: '6a5f5240d9c46211621acf16',
+    name: 'license.pdf',
+    size: 1024,
+    type: 'application/pdf',
+    sha256: 'a'.repeat(64),
+    uploadedAt: '2026-08-13T08:00:00.000Z',
+  };
+
+  const profile = {
+    id: '6a5f5240d9c46211621acef3',
+    name: '',
+    bankTransferAvailable: false,
+    documents: [document],
+    status: 'new',
+    rating: 0,
+    reviewsCount: 0,
+    updatedAt: '2026-08-13T08:00:00.000Z',
+    bankDetails: {
+      iban: 'UA123456789012345678901234567',
+      receiptEmail: 'billing@example.com',
+    },
+    pendingModeration: {
+      phone: '+380501234567',
+      documents: [document],
+    },
+  };
+
+  assert.equal(
+    parsePharmacyProfileResponse({ pharmacy: profile }).pharmacy.documents[0]
+      ?.id,
+    document.id
+  );
+
+  for (const invalidProfile of [
+    { ...profile, id: 'bad-id' },
+    { ...profile, status: 'something_new' },
+    { ...profile, updatedAt: 'yesterday' },
+    { ...profile, documents: [123] },
+    { ...profile, documents: [{ ...document, sha256: 'bad' }] },
+    { ...profile, documents: [{ ...document, size: 10 * 1024 * 1024 + 1 }] },
+    { ...profile, documents: Array.from({ length: 7 }, () => document) },
+    { ...profile, documents: [document, document] },
+    { ...profile, bankDetails: { iban: 123 } },
+    { ...profile, bankDetails: { iban: 'UA123' } },
+    { ...profile, email: 'not-an-email' },
+    { ...profile, phone: '0501234567' },
+    { ...profile, workingHours: 'Open every day' },
+    { ...profile, imageUrl: 'javascript:alert(1)' },
+    { ...profile, pendingModeration: { documents: [null] } },
+    { ...profile, pendingModeration: { phone: '0501234567' } },
+  ]) {
+    assert.throws(
+      () => parsePharmacyProfileResponse({ pharmacy: invalidProfile }),
+      (error: unknown) =>
+        error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
+    );
+  }
+});
+
+//===================================================================
+
+test('validates controlled pharmacy registration upload responses', () => {
+  const document = {
+    id: '6a5f5240d9c46211621acf16',
+    name: 'license.pdf',
+    size: 1024,
+    type: 'application/pdf',
+    sha256: 'b'.repeat(64),
+    uploadedAt: '2026-08-13T08:00:00.000Z',
+  };
+
+  assert.equal(
+    parsePharmacyRegistrationDocumentUploadResponse({
+      document,
+      claimToken: 'c'.repeat(64),
+    }).document.id,
+    document.id
+  );
+
+  assert.throws(
+    () =>
+      parsePharmacyRegistrationDocumentUploadResponse({
+        document,
+        claimToken: 'short',
+      }),
+    ApiError
+  );
+});
+
+
+//===================================================================
+
+test('validates controlled pharmacy document content responses', () => {
+  const document = {
+    id: '6a5f5240d9c46211621acf16',
+    name: 'license.pdf',
+    size: 8,
+    type: 'application/pdf',
+    sha256: 'd'.repeat(64),
+    uploadedAt: '2026-08-13T08:00:00.000Z',
+  };
+
+  assert.equal(
+    parsePharmacyDocumentContentResponse({
+      document,
+      dataUrl: 'data:application/pdf;base64,JVBERi0xLjQ=',
+    }).document.id,
+    document.id
+  );
+
+  assert.throws(
+    () =>
+      parsePharmacyDocumentContentResponse({
+        document,
+        dataUrl: 'data:image/png;base64,JVBERi0xLjQ=',
       }),
     ApiError
   );

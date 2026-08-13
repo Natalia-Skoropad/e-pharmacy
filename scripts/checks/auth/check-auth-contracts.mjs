@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const CURRENT_FILE = fileURLToPath(import.meta.url);
 const ROOT_DIR = path.resolve(path.dirname(CURRENT_FILE), '..', '..', '..');
+
 const read = (...segments) =>
   readFile(path.join(ROOT_DIR, ...segments), 'utf8');
 
@@ -16,6 +17,7 @@ function extractQuotedValues(source, declarationName) {
   const match = source.match(
     new RegExp(`${declarationName}\\s*=\\s*\\[([\\s\\S]*?)\\]`)
   );
+
   assert.ok(match, `Could not find ${declarationName}`);
   return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map((item) => item[1]);
 }
@@ -26,6 +28,7 @@ function extractObjectStringValues(source, declarationName) {
   const match = source.match(
     new RegExp(`${declarationName}\\s*=\\s*\\{([\\s\\S]*?)\\}\\s*as const`)
   );
+
   assert.ok(match, `Could not find ${declarationName}`);
   return [...match[1].matchAll(/:\s*['"]([^'"]+)['"]/g)].map((item) => item[1]);
 }
@@ -59,6 +62,7 @@ function extractZodObjectFields(source, declarationName) {
   );
 
   const body = source.slice(openingBraceIndex + 1, closingBraceIndex);
+
   return [...body.matchAll(/^\s{2,4}([A-Za-z][A-Za-z0-9]*):/gm)]
     .map((item) => item[1])
     .sort();
@@ -72,7 +76,9 @@ function extractTypeFields(source, typeName) {
       String.raw`type\s+${typeName}\s*=\s*(?:Readonly<)?\{([\s\S]*?)\}(?:>)?;`
     )
   );
+
   assert.ok(match, `Could not find type ${typeName}`);
+
   return [...match[1].matchAll(/^\s*([A-Za-z][A-Za-z0-9]*)(?:\?)?:/gm)]
     .map((item) => item[1])
     .sort();
@@ -87,6 +93,7 @@ const frontendAuthValues = await read(
   'auth',
   'domain-values.ts'
 );
+
 const frontendUserValues = await read(
   'packages',
   'config',
@@ -94,6 +101,7 @@ const frontendUserValues = await read(
   'users',
   'domain-values.ts'
 );
+
 const backendConstants = await read(
   'apps',
   'api',
@@ -106,10 +114,12 @@ assert.deepEqual(
   extractQuotedValues(frontendAuthValues, 'AUTH_APPLICATIONS').sort(),
   extractObjectStringValues(backendConstants, 'AUTH_APPLICATIONS').sort()
 );
+
 assert.deepEqual(
   extractQuotedValues(frontendAuthValues, 'USER_ROLES').sort(),
   extractObjectStringValues(backendConstants, 'USER_ROLES').sort()
 );
+
 assert.deepEqual(
   extractQuotedValues(frontendUserValues, 'USER_STATUSES').sort(),
   extractObjectStringValues(backendConstants, 'USER_STATUSES').sort()
@@ -132,6 +142,7 @@ for (const value of [
 }
 
 assert.match(frontendCookies, /e_pharmacy_auth_ready/);
+
 const nextApiCookies = await read(
   'packages',
   'next-api',
@@ -139,6 +150,7 @@ const nextApiCookies = await read(
   'internal',
   'auth-cookies.ts'
 );
+
 assert.match(nextApiCookies, /AUTH_READY_COOKIE_NAME/);
 
 const frontendPayloads = await read(
@@ -148,6 +160,7 @@ const frontendPayloads = await read(
   'auth',
   'payloads.ts'
 );
+
 const backendAuthSchema = await read(
   'apps',
   'api',
@@ -172,11 +185,14 @@ for (const [frontendType, backendSchema] of [
 }
 
 assert.match(frontendPayloads, /application\?:\s*Extract<AuthApplication/);
+
 assert.match(
   backendAuthSchema,
   /loginSchema[\s\S]*?application:[\s\S]*?\.optional\(\)/
 );
+
 assert.match(frontendPayloads, /role\?:\s*Extract<UserRole/);
+
 assert.match(
   backendAuthSchema,
   /registerSchema[\s\S]*?role:[\s\S]*?\.default\(/
@@ -189,6 +205,7 @@ const frontendAuthTypes = await read(
   'auth',
   'user.ts'
 );
+
 const frontendResponses = await read(
   'packages',
   'types',
@@ -196,11 +213,14 @@ const frontendResponses = await read(
   'auth',
   'responses.ts'
 );
+
 const backendAuthTypes = await read('apps', 'api', 'src', 'types', 'auth.ts');
+
 assert.deepEqual(
   extractTypeFields(frontendAuthTypes, 'AuthUser'),
   extractTypeFields(backendAuthTypes, 'AuthUserResponse')
 );
+
 assert.match(frontendResponses, /user:\s*AuthUser/);
 assert.match(backendAuthTypes, /user:\s*AuthUserResponse/);
 
@@ -211,7 +231,9 @@ const frontendSessions = await read(
   'auth',
   'session.ts'
 );
+
 const backendSessions = await read('apps', 'api', 'src', 'types', 'session.ts');
+
 assert.deepEqual(
   extractTypeFields(frontendSessions, 'ActiveSession'),
   extractTypeFields(backendSessions, 'SessionResponseDto')
@@ -224,6 +246,7 @@ const authErrorSource = await read(
   'errors',
   'get-auth-error-code.ts'
 );
+
 for (const code of extractObjectStringValues(
   backendConstants,
   'AUTH_ERROR_CODES'
@@ -242,6 +265,7 @@ const nextApiTokens = await read(
   'internal',
   'auth-tokens.ts'
 );
+
 assert.match(nextApiTokens, /accessTokenExpiresIn/);
 assert.match(nextApiTokens, /refreshTokenExpiresIn/);
 
@@ -252,7 +276,9 @@ const authService = await read(
   'services',
   'auth.service.ts'
 );
+
 assert.match(authService, /password_changed/);
+
 assert.ok(
   (authService.match(/revokeAllUserSessionsService\(/g) ?? []).length >= 3,
   'Password change and reset flows must revoke existing sessions'
@@ -268,6 +294,7 @@ const clientPasswordRoute = await read(
   'password',
   'route.ts'
 );
+
 const clientResetRoute = await read(
   'apps',
   'client',
@@ -279,7 +306,24 @@ const clientResetRoute = await read(
   'confirm',
   'route.ts'
 );
+
 assert.match(clientPasswordRoute, /clearAuthCookiesOnSuccess:\s*true/);
 assert.match(clientResetRoute, /markerAction:\s*'delete'/);
+
+const clientLoginForm = await read(
+  'apps',
+  'client',
+  'src',
+  'components',
+  'auth',
+  'LoginForm',
+  'LoginForm.tsx'
+);
+
+assert.doesNotMatch(
+  clientLoginForm,
+  /error\.message(?:\.toLowerCase\(\))?\.includes\(/,
+  'Login business behavior must use stable auth codes instead of backend copy'
+);
 
 console.log('Auth contract parity check passed.');

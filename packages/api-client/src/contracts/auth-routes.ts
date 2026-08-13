@@ -6,6 +6,7 @@ import { encodeRouteSegment } from './route-segment';
 
 export const authRoutes = {
   register: '/auth/register',
+  pharmacyDocumentUpload: '/auth/pharmacy-documents',
   login: '/auth/login',
   logout: '/auth/logout',
   logoutAll: '/auth/logout-all',

@@ -4,6 +4,7 @@ import {
   createPharmacyReview,
   getFavoritePharmacyIds,
   getFavoritePharmacies,
+  getMyPharmacyDocument,
   getMyPharmacyProfile,
   getPendingPharmacyReviews,
   getPharmacyCheckoutDetails,
@@ -16,6 +17,7 @@ import {
   sendMyPharmacyForVerification,
   setFavoritePharmacy,
   updateMyPharmacyProfile,
+  uploadMyPharmacyDocument,
 } from '../controllers/pharmacy.controller';
 
 import { USER_ROLES } from '../constants/auth';
@@ -33,11 +35,13 @@ import {
   createPharmacyReviewSchema,
   moderatePharmacyReviewSchema,
   pendingPharmacyReviewsQuerySchema,
+  pharmacyDocumentParamsSchema,
   pharmacyIdParamsSchema,
   pharmacyReviewParamsSchema,
   pharmaciesQuerySchema,
   sendMyPharmacyForVerificationSchema,
   updateMyPharmacyProfileSchema,
+  uploadMyPharmacyDocumentSchema,
 } from '../schemas/pharmacy.schema';
 
 import { ctrlWrapper } from '../utils/ctrlWrapper';
@@ -47,6 +51,27 @@ import { ctrlWrapper } from '../utils/ctrlWrapper';
 export const pharmacyRoutes = Router();
 
 //===============================================================
+
+
+pharmacyRoutes.post(
+  '/me/documents',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ body: uploadMyPharmacyDocumentSchema }),
+  ctrlWrapper(uploadMyPharmacyDocument)
+);
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/me/documents/:documentId',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ params: pharmacyDocumentParamsSchema }),
+  ctrlWrapper(getMyPharmacyDocument)
+);
+
+//=================================================================================
 
 pharmacyRoutes.get(
   '/me/profile',

@@ -3,6 +3,7 @@ import type { Request } from 'express';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
 import type {
+  AdminPharmacyDocumentParams,
   AdminPharmacyParams,
   UpdateAdminPharmacyStatusInput,
 } from '../schemas/admin.schema';
@@ -13,6 +14,8 @@ import {
   createPharmacyUserByAdminService,
   updatePharmacyStatusByAdminService,
 } from '../services/admin.service';
+
+import { getAdminPharmacyDocumentContentService } from '../services/pharmacy-document.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
@@ -36,6 +39,20 @@ export async function createPharmacyUserByAdmin(
     message: 'Pharmacy was created successfully.',
     data: { pharmacy },
   });
+}
+
+//===============================================================
+
+export async function getAdminPharmacyDocument(
+  _req: Request,
+  res: ValidatedResponse<unknown, AdminPharmacyDocumentParams>
+): Promise<void> {
+  const { pharmacyId, documentId } = res.locals.validated.params;
+  const data = await getAdminPharmacyDocumentContentService(
+    pharmacyId,
+    documentId
+  );
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================

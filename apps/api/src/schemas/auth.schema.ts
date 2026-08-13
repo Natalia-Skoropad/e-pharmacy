@@ -14,7 +14,12 @@ import {
 } from './shared-validation.schema';
 
 import { AUTH_APPLICATIONS, USER_ROLES } from '../constants/auth';
-import { pharmacyDocumentsSchema } from './shared/pharmacy-document.schema';
+
+import {
+  pharmacyDocumentUploadSchema,
+  pharmacyRegistrationDocumentClaimsSchema,
+} from './shared/pharmacy-document.schema';
+
 import { hasMeaningfulValue } from './shared/meaningful-value';
 
 //===============================================================
@@ -43,7 +48,7 @@ export const registerSchema = z
 
     phone: sharedRequiredPhoneSchema,
     address: sharedOptionalAddressSchema,
-    pharmacyDocuments: pharmacyDocumentsSchema.optional(),
+    pharmacyDocuments: pharmacyRegistrationDocumentClaimsSchema.optional(),
   })
 
   .superRefine((data, ctx) => {
@@ -68,7 +73,7 @@ export const createPharmacyUserSchema = z
     phone: sharedRequiredPhoneSchema,
     address: sharedOptionalAddressSchema,
     pharmacyName: sharedPharmacyNameSchema.optional(),
-    pharmacyDocuments: pharmacyDocumentsSchema.optional(),
+    pharmacyDocuments: pharmacyRegistrationDocumentClaimsSchema.optional(),
   })
 
   .superRefine((data, ctx) => {
@@ -80,6 +85,11 @@ export const createPharmacyUserSchema = z
       });
     }
   });
+
+//===============================================================
+
+export const uploadRegistrationPharmacyDocumentSchema =
+  pharmacyDocumentUploadSchema;
 
 //===============================================================
 

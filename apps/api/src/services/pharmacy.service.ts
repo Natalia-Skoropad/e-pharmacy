@@ -1,12 +1,12 @@
 import { Types, type HydratedDocument } from 'mongoose';
 
-import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
+import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
+import { PHARMACY_PROFILE_MISSING_ERROR_CODE } from '../constants/pharmacy-profile';
 
 import { Client } from '../models/client.model';
 import { Pharmacy } from '../models/pharmacy.model';
-import { User } from '../models/user.model';
 import { PharmacyReview } from '../models/pharmacyReview.model';
 import { ProductOffer } from '../models/productOffer.model';
 
@@ -28,6 +28,7 @@ import { httpError } from '../utils/httpError';
 import { createFlexibleSearchRegExp } from '../utils/regexp';
 import { requireISODateTime } from '../utils/date-contract';
 import { buildPublicEntitySlugId } from '../utils/public-slug-id';
+import { resolvePrivatePharmacyDocumentSelections } from './pharmacy-document.service';
 
 //===============================================================
 
@@ -49,6 +50,13 @@ type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
 
 type PharmacyHydratedDocument = HydratedDocument<PharmacyEntity> & {
   _id: Types.ObjectId;
+};
+
+type ResolvedPharmacyProfileUpdate = Omit<
+  UpdateMyPharmacyProfileInput,
+  'documents'
+> & {
+  documents?: PharmacyEntity['documents'];
 };
 
 //===============================================================
@@ -654,54 +662,20 @@ export async function setFavoritePharmacyService(
 
 //===============================================================
 
-async function createMissingOwnerPharmacyProfile(
-  userId: string
-): Promise<PharmacyHydratedDocument | null> {
-  const user = await User.findById(userId);
-
-  if (!user || user.role !== USER_ROLES.PHARMACY) {
-    return null;
-  }
-
-  const pharmacy = await Pharmacy.findOneAndUpdate(
-    { ownerId: user._id },
-    {
-      $setOnInsert: {
-        ownerId: user._id,
-        managerUserIds: [],
-        name: '',
-        phone: user.phone,
-        email: user.email,
-        ...(user.address ? { address: user.address } : {}),
-        documents: [],
-        status: PHARMACY_STATUSES.NEW,
-        createdBy: user._id,
-        updatedBy: user._id,
-      },
-    },
-    {
-      new: true,
-      upsert: true,
-      setDefaultsOnInsert: true,
-      runValidators: true,
-    }
-  );
-
-  return pharmacy as PharmacyHydratedDocument;
-}
-
-//===============================================================
-
 async function findMyPharmacy(
   userId: string
 ): Promise<PharmacyHydratedDocument> {
-  const pharmacy =
-    (await Pharmacy.findOne({
-      $or: [{ ownerId: userId }, { managerUserIds: userId }],
-    })) ?? (await createMissingOwnerPharmacyProfile(userId));
+  const pharmacy = await Pharmacy.findOne({
+    $or: [{ ownerId: userId }, { managerUserIds: userId }],
+  });
 
   if (!pharmacy) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'Pharmacy profile is missing for this pharmacy account.',
+      undefined,
+      PHARMACY_PROFILE_MISSING_ERROR_CODE
+    );
   }
 
   if (pharmacy.status === PHARMACY_STATUSES.BLOCKED) {
@@ -762,7 +736,7 @@ export async function getMyPharmacyProfileService(
 //===============================================================
 
 function hasModeratedProfileChanges(
-  input: UpdateMyPharmacyProfileInput
+  input: ResolvedPharmacyProfileUpdate
 ): boolean {
   return Boolean(
     input.name !== undefined ||
@@ -782,7 +756,7 @@ function hasModeratedProfileChanges(
 
 function buildPendingModerationPayload(
   current: PharmacyPendingModeration | undefined,
-  input: UpdateMyPharmacyProfileInput
+  input: ResolvedPharmacyProfileUpdate
 ): PharmacyPendingModeration {
   const pending: PharmacyPendingModeration = { ...(current ?? {}) };
 
@@ -815,6 +789,19 @@ export async function updateMyPharmacyProfileService(
 ): Promise<{ pharmacy: PharmacyProfileResponseDto }> {
   const pharmacy = await findMyPharmacy(userId);
 
+  const { documents: documentSelections, ...profileFields } = input;
+  const resolvedInput: ResolvedPharmacyProfileUpdate = {
+    ...profileFields,
+    ...(documentSelections !== undefined
+      ? {
+          documents: await resolvePrivatePharmacyDocumentSelections(
+            pharmacy._id,
+            documentSelections
+          ),
+        }
+      : {}),
+  };
+
   if (
     pharmacy.status === PHARMACY_STATUSES.ON_VERIFICATION ||
     pharmacy.status === PHARMACY_STATUSES.ON_MODERATION
@@ -827,11 +814,11 @@ export async function updateMyPharmacyProfileService(
 
   if (
     pharmacy.status === PHARMACY_STATUSES.ACTIVE &&
-    hasModeratedProfileChanges(input)
+    hasModeratedProfileChanges(resolvedInput)
   ) {
     const pendingModeration = buildPendingModerationPayload(
       pharmacy.pendingModeration,
-      input
+      resolvedInput
     );
 
     const updatedPharmacy = await Pharmacy.findByIdAndUpdate(
@@ -859,19 +846,23 @@ export async function updateMyPharmacyProfileService(
     updatedBy: userId,
   };
 
-  if (input.name !== undefined) update.name = input.name;
-  if (input.address !== undefined) update.address = input.address;
-  if (input.city !== undefined) update.city = input.city;
-  if (input.phone !== undefined) update.phone = input.phone;
-  if (input.email !== undefined) update.email = input.email;
-  if (input.workingHours !== undefined)
-    update.workingHours = input.workingHours;
-  if (input.imageUrl !== undefined) update.imageUrl = input.imageUrl;
-  if (input.description !== undefined) update.description = input.description;
-  if (input.documents !== undefined) update.documents = input.documents;
+  if (resolvedInput.name !== undefined) update.name = resolvedInput.name;
+  if (resolvedInput.address !== undefined)
+    update.address = resolvedInput.address;
+  if (resolvedInput.city !== undefined) update.city = resolvedInput.city;
+  if (resolvedInput.phone !== undefined) update.phone = resolvedInput.phone;
+  if (resolvedInput.email !== undefined) update.email = resolvedInput.email;
+  if (resolvedInput.workingHours !== undefined)
+    update.workingHours = resolvedInput.workingHours;
+  if (resolvedInput.imageUrl !== undefined)
+    update.imageUrl = resolvedInput.imageUrl;
+  if (resolvedInput.description !== undefined)
+    update.description = resolvedInput.description;
+  if (resolvedInput.documents !== undefined)
+    update.documents = resolvedInput.documents;
 
-  if (input.bankDetails) {
-    for (const [key, value] of Object.entries(input.bankDetails)) {
+  if (resolvedInput.bankDetails) {
+    for (const [key, value] of Object.entries(resolvedInput.bankDetails)) {
       if (value !== undefined) {
         update[`bankDetails.${key}`] = value;
       }

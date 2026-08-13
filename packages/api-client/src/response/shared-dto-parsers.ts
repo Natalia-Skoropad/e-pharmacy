@@ -32,11 +32,15 @@ import type {
   PharmacyCheckoutDetails,
   PharmacyCheckoutDetailsResponse,
   PharmacyDetailsResponse,
+  PharmacyDocumentContentResponse,
   PharmacyFilterOptionsResponse,
   PharmacyOption,
   PharmacyOptionsResponse,
   PharmacyProfile,
   PharmacyProfileResponse,
+  PharmacyProfileDocumentUploadResponse,
+  PharmacyRegistrationDocumentUploadResponse,
+  PharmacyVerificationDocument,
   PublicPharmacy,
   SendPharmacyForVerificationResponse,
 } from '@e-pharmacy/types/pharmacies';
@@ -282,6 +286,48 @@ const CART_ISSUE_REASONS = new Set([
   'product_unavailable',
   'pharmacy_unavailable',
 ]);
+
+const PHARMACY_STATUSES = new Set([
+  'new',
+  'on_verification',
+  'on_moderation',
+  'active',
+  'blocked',
+]);
+
+// Mirrors the shared pharmacy verification-document contract. The config parity
+// checks protect the source-of-truth value without coupling api-client to config.
+const PHARMACY_DOCUMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+
+const PHARMACY_DOCUMENT_MIME_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]);
+
+const SHA256_PATTERN = /^[a-f\d]{64}$/i;
+const PROFILE_PHARMACY_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 '’&().,/\-]*$/;
+const PROFILE_ADDRESS_PATTERN = /^[A-Za-z0-9 .,'’/#&()\-]+$/;
+const PROFILE_SEARCH_TEXT_PATTERN = /^[\p{L}\p{N} .,'’/#&()\-]*$/u;
+const PROFILE_TEXT_EDITOR_PATTERN = /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*\n\r]+$/;
+const PROFILE_BANK_TEXT_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 '’&().,/\-]*$/;
+const PROFILE_PAYMENT_PURPOSE_PATTERN = /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*]+$/;
+
+const PROFILE_EMAIL_PATTERN =
+  /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;
+
+const PROFILE_PHONE_PATTERN = /^\+380\d{9}$/;
+const PROFILE_TAX_ID_PATTERN = /^\d{8,10}$/;
+const PROFILE_IBAN_PATTERN = /^UA\d{27}$/;
+
+const PROFILE_WORKING_HOURS_PATTERN =
+  /^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(?:Closed|(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d)(?:;\s*(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(?:Closed|(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d))*$/;
+
+const PROFILE_PICTURE_DATA_URL_PATTERN =
+  /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 
 //===================================================================
 
@@ -1109,29 +1155,652 @@ export function parsePharmacyCheckoutDetailsResponse(
 
 //===================================================================
 
+function parsePharmacyVerificationDocument(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyVerificationDocument {
+  const record = requireRecord(
+    value,
+    'pharmacy verification document',
+    context
+  );
+
+  const id = requireObjectId(
+    record,
+    'id',
+    'pharmacy verification document',
+    context
+  );
+
+  const uploadedAt = requireCanonicalIsoDateTime(
+    record,
+    'uploadedAt',
+    'pharmacy verification document',
+    context
+  );
+
+  const size = requireSafeNonNegativeInteger(
+    record,
+    'size',
+    'pharmacy verification document',
+    context
+  );
+
+  if (size < 1 || size > PHARMACY_DOCUMENT_MAX_SIZE_BYTES) {
+    throw invalidDto(
+      'pharmacy verification document.size is outside the allowed range.',
+      record,
+      context
+    );
+  }
+
+  if (typeof record.name !== 'string' || !record.name.trim()) {
+    throw invalidDto(
+      'pharmacy verification document.name must be a non-empty string.',
+      record,
+      context
+    );
+  }
+
+  if (
+    typeof record.type !== 'string' ||
+    !PHARMACY_DOCUMENT_MIME_TYPES.has(record.type)
+  ) {
+    throw invalidDto(
+      'pharmacy verification document.type is invalid.',
+      record,
+      context
+    );
+  }
+
+  if (
+    typeof record.sha256 !== 'string' ||
+    !SHA256_PATTERN.test(record.sha256)
+  ) {
+    throw invalidDto(
+      'pharmacy verification document.sha256 is invalid.',
+      record,
+      context
+    );
+  }
+
+  return {
+    id,
+    name: record.name,
+    size,
+    type: record.type,
+    sha256: record.sha256,
+    uploadedAt: checked<PharmacyVerificationDocument['uploadedAt']>(uploadedAt),
+  };
+}
+
+//===================================================================
+
+function parsePharmacyVerificationDocuments(
+  value: unknown,
+  label: string,
+  context?: ApiResponseContext
+): readonly PharmacyVerificationDocument[] {
+  const documents = parseArray(
+    value,
+    label,
+    parsePharmacyVerificationDocument,
+    context
+  );
+
+  if (documents.length > 6) {
+    throw invalidDto(
+      `${label} must contain at most 6 documents.`,
+      value,
+      context
+    );
+  }
+
+  if (
+    new Set(documents.map((document) => document.id)).size !== documents.length
+  ) {
+    throw invalidDto(
+      `${label} must not contain duplicate document IDs.`,
+      value,
+      context
+    );
+  }
+
+  return documents;
+}
+
+//===================================================================
+
+function isHttpPictureUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function hasCompleteWorkingHours(value: string): boolean {
+  if (!PROFILE_WORKING_HOURS_PATTERN.test(value)) return false;
+
+  const expectedDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const actualDays = value.split('; ').map((entry) => entry.slice(0, 3));
+
+  return (
+    actualDays.length === expectedDays.length &&
+    expectedDays.every((day, index) => actualDays[index] === day)
+  );
+}
+
+//===================================================================
+
+function validateProfileStringPattern(
+  value: unknown,
+  label: string,
+  pattern: RegExp,
+  record: UnknownRecord,
+  context?: ApiResponseContext
+): void {
+  if (typeof value !== 'string' || !pattern.test(value)) {
+    throw invalidDto(`${label} is invalid.`, record, context);
+  }
+}
+
+//===================================================================
+
+function validateOptionalPharmacyProfileSemantics(
+  record: UnknownRecord,
+  context?: ApiResponseContext
+): void {
+  if (
+    typeof record.name !== 'string' ||
+    (record.name.length > 0 && !PROFILE_PHARMACY_NAME_PATTERN.test(record.name))
+  ) {
+    throw invalidDto('pharmacy profile.name is invalid.', record, context);
+  }
+
+  if (record.address !== undefined) {
+    validateProfileStringPattern(
+      record.address,
+      'pharmacy profile.address',
+      PROFILE_ADDRESS_PATTERN,
+      record,
+      context
+    );
+  }
+
+  if (
+    record.city !== undefined &&
+    (typeof record.city !== 'string' ||
+      !PROFILE_SEARCH_TEXT_PATTERN.test(record.city))
+  ) {
+    throw invalidDto('pharmacy profile.city is invalid.', record, context);
+  }
+
+  if (
+    record.description !== undefined &&
+    (typeof record.description !== 'string' ||
+      !PROFILE_TEXT_EDITOR_PATTERN.test(record.description))
+  ) {
+    throw invalidDto(
+      'pharmacy profile.description is invalid.',
+      record,
+      context
+    );
+  }
+
+  if (record.email !== undefined) {
+    validateProfileStringPattern(
+      record.email,
+      'pharmacy profile.email',
+      PROFILE_EMAIL_PATTERN,
+      record,
+      context
+    );
+  }
+
+  if (record.phone !== undefined) {
+    validateProfileStringPattern(
+      record.phone,
+      'pharmacy profile.phone',
+      PROFILE_PHONE_PATTERN,
+      record,
+      context
+    );
+  }
+
+  if (
+    record.workingHours !== undefined &&
+    (typeof record.workingHours !== 'string' ||
+      !hasCompleteWorkingHours(record.workingHours))
+  ) {
+    throw invalidDto(
+      'pharmacy profile.workingHours is invalid.',
+      record,
+      context
+    );
+  }
+
+  if (
+    record.imageUrl !== undefined &&
+    (typeof record.imageUrl !== 'string' ||
+      (!PROFILE_PICTURE_DATA_URL_PATTERN.test(record.imageUrl) &&
+        !isHttpPictureUrl(record.imageUrl)))
+  ) {
+    throw invalidDto('pharmacy profile.imageUrl is invalid.', record, context);
+  }
+}
+
+//===================================================================
+
+function parseEditablePharmacyBankDetails(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyProfile['bankDetails'] {
+  if (value === undefined) return undefined;
+  const record = requireRecord(value, 'pharmacy bank details', context);
+  const result: Record<string, string> = {};
+
+  for (const key of [
+    'recipientName',
+    'taxId',
+    'iban',
+    'bankName',
+    'receiptEmail',
+    'paymentPurpose',
+  ] as const) {
+    const fieldValue = record[key];
+    if (fieldValue === undefined) continue;
+    if (typeof fieldValue !== 'string') {
+      throw invalidDto(
+        `pharmacy bank details.${key} must be a string when present.`,
+        record,
+        context
+      );
+    }
+    result[key] = fieldValue;
+  }
+
+  for (const key of ['recipientName', 'bankName'] as const) {
+    const value = result[key];
+    if (value !== undefined && !PROFILE_BANK_TEXT_PATTERN.test(value)) {
+      throw invalidDto(
+        `pharmacy bank details.${key} is invalid.`,
+        record,
+        context
+      );
+    }
+  }
+  if (
+    result.paymentPurpose !== undefined &&
+    !PROFILE_PAYMENT_PURPOSE_PATTERN.test(result.paymentPurpose)
+  ) {
+    throw invalidDto(
+      'pharmacy bank details.paymentPurpose is invalid.',
+      record,
+      context
+    );
+  }
+
+  if (
+    result.taxId !== undefined &&
+    !PROFILE_TAX_ID_PATTERN.test(result.taxId)
+  ) {
+    throw invalidDto(
+      'pharmacy bank details.taxId is invalid.',
+      record,
+      context
+    );
+  }
+  if (result.iban !== undefined && !PROFILE_IBAN_PATTERN.test(result.iban)) {
+    throw invalidDto('pharmacy bank details.iban is invalid.', record, context);
+  }
+  if (
+    result.receiptEmail !== undefined &&
+    !PROFILE_EMAIL_PATTERN.test(result.receiptEmail)
+  ) {
+    throw invalidDto(
+      'pharmacy bank details.receiptEmail is invalid.',
+      record,
+      context
+    );
+  }
+
+  return checked<NonNullable<PharmacyProfile['bankDetails']>>(result);
+}
+
+//===================================================================
+
+function parsePharmacyPendingModeration(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyProfile['pendingModeration'] {
+  if (value === undefined) return undefined;
+  const record = requireRecord(value, 'pharmacy pending moderation', context);
+  const result: Record<string, unknown> = {};
+
+  for (const key of [
+    'name',
+    'address',
+    'city',
+    'phone',
+    'email',
+    'workingHours',
+    'description',
+  ] as const) {
+    const fieldValue = record[key];
+    if (fieldValue === undefined) continue;
+    if (typeof fieldValue !== 'string') {
+      throw invalidDto(
+        `pharmacy pending moderation.${key} must be a string when present.`,
+        record,
+        context
+      );
+    }
+    result[key] = fieldValue;
+  }
+
+  if (
+    record.name !== undefined &&
+    (typeof record.name !== 'string' ||
+      (record.name.length > 0 &&
+        !PROFILE_PHARMACY_NAME_PATTERN.test(record.name)))
+  ) {
+    throw invalidDto(
+      'pharmacy pending moderation.name is invalid.',
+      record,
+      context
+    );
+  }
+  if (record.address !== undefined) {
+    validateProfileStringPattern(
+      record.address,
+      'pharmacy pending moderation.address',
+      PROFILE_ADDRESS_PATTERN,
+      record,
+      context
+    );
+  }
+  if (
+    record.city !== undefined &&
+    (typeof record.city !== 'string' ||
+      !PROFILE_SEARCH_TEXT_PATTERN.test(record.city))
+  ) {
+    throw invalidDto(
+      'pharmacy pending moderation.city is invalid.',
+      record,
+      context
+    );
+  }
+  if (
+    record.description !== undefined &&
+    (typeof record.description !== 'string' ||
+      !PROFILE_TEXT_EDITOR_PATTERN.test(record.description))
+  ) {
+    throw invalidDto(
+      'pharmacy pending moderation.description is invalid.',
+      record,
+      context
+    );
+  }
+
+  if (record.email !== undefined) {
+    validateProfileStringPattern(
+      record.email,
+      'pharmacy pending moderation.email',
+      PROFILE_EMAIL_PATTERN,
+      record,
+      context
+    );
+  }
+  if (record.phone !== undefined) {
+    validateProfileStringPattern(
+      record.phone,
+      'pharmacy pending moderation.phone',
+      PROFILE_PHONE_PATTERN,
+      record,
+      context
+    );
+  }
+  if (
+    record.workingHours !== undefined &&
+    (typeof record.workingHours !== 'string' ||
+      !hasCompleteWorkingHours(record.workingHours))
+  ) {
+    throw invalidDto(
+      'pharmacy pending moderation.workingHours is invalid.',
+      record,
+      context
+    );
+  }
+
+  if (record.imageUrl !== undefined) {
+    if (record.imageUrl !== null && typeof record.imageUrl !== 'string') {
+      throw invalidDto(
+        'pharmacy pending moderation.imageUrl must be a string or null.',
+        record,
+        context
+      );
+    }
+    if (
+      typeof record.imageUrl === 'string' &&
+      !PROFILE_PICTURE_DATA_URL_PATTERN.test(record.imageUrl) &&
+      !isHttpPictureUrl(record.imageUrl)
+    ) {
+      throw invalidDto(
+        'pharmacy pending moderation.imageUrl is invalid.',
+        record,
+        context
+      );
+    }
+    result.imageUrl = record.imageUrl;
+  }
+
+  if (record.documents !== undefined) {
+    result.documents = parsePharmacyVerificationDocuments(
+      record.documents,
+      'pharmacy pending moderation.documents',
+      context
+    );
+  }
+
+  if (record.bankDetails !== undefined) {
+    result.bankDetails = parseEditablePharmacyBankDetails(
+      record.bankDetails,
+      context
+    );
+  }
+
+  return checked<NonNullable<PharmacyProfile['pendingModeration']>>(result);
+}
+
+//===================================================================
+
 function parsePharmacyProfile(
   value: unknown,
   context?: ApiResponseContext
 ): PharmacyProfile {
   const record = requireRecord(value, 'pharmacy profile', context);
+  const id = requireObjectId(record, 'id', 'pharmacy profile', context);
+  const updatedAt = requireCanonicalIsoDateTime(
+    record,
+    'updatedAt',
+    'pharmacy profile',
+    context
+  );
 
   requireFields(
     record,
     'pharmacy profile',
     {
-      id: 'string',
       name: 'string',
       bankTransferAvailable: 'boolean',
       documents: 'array',
       status: 'string',
       rating: 'number',
       reviewsCount: 'number',
-      updatedAt: 'string',
     },
     context
   );
 
-  return checked<PharmacyProfile>(record);
+  requireOptionalFields(
+    record,
+    'pharmacy profile',
+    {
+      address: 'string',
+      city: 'string',
+      phone: 'string',
+      email: 'string',
+      workingHours: 'string',
+      imageUrl: 'string',
+      description: 'string',
+      statusReason: 'string',
+    },
+    context
+  );
+
+  validateOptionalPharmacyProfileSemantics(record, context);
+
+  if (!PHARMACY_STATUSES.has(record.status as string)) {
+    throw invalidDto('pharmacy profile.status is invalid.', record, context);
+  }
+
+  const rating = requireNonNegativeFiniteNumber(
+    record,
+    'rating',
+    'pharmacy profile',
+    context
+  );
+  if (rating > 5) {
+    throw invalidDto(
+      'pharmacy profile.rating must not exceed 5.',
+      record,
+      context
+    );
+  }
+
+  const reviewsCount = requireSafeNonNegativeInteger(
+    record,
+    'reviewsCount',
+    'pharmacy profile',
+    context
+  );
+
+  return {
+    id,
+    name: record.name as string,
+    ...(record.address !== undefined
+      ? { address: record.address as string }
+      : {}),
+    ...(record.city !== undefined ? { city: record.city as string } : {}),
+    ...(record.phone !== undefined ? { phone: record.phone as string } : {}),
+    ...(record.email !== undefined ? { email: record.email as string } : {}),
+    ...(record.workingHours !== undefined
+      ? { workingHours: record.workingHours as string }
+      : {}),
+    ...(record.bankDetails !== undefined
+      ? {
+          bankDetails: parseEditablePharmacyBankDetails(
+            record.bankDetails,
+            context
+          ),
+        }
+      : {}),
+    bankTransferAvailable: record.bankTransferAvailable as boolean,
+    documents: parsePharmacyVerificationDocuments(
+      record.documents,
+      'pharmacy profile.documents',
+      context
+    ),
+    status: checked<PharmacyProfile['status']>(record.status),
+    rating,
+    ...(record.imageUrl !== undefined
+      ? { imageUrl: record.imageUrl as string }
+      : {}),
+    ...(record.description !== undefined
+      ? { description: record.description as string }
+      : {}),
+    ...(record.statusReason !== undefined
+      ? { statusReason: record.statusReason as string }
+      : {}),
+    ...(record.pendingModeration !== undefined
+      ? {
+          pendingModeration: parsePharmacyPendingModeration(
+            record.pendingModeration,
+            context
+          )!,
+        }
+      : {}),
+    reviewsCount,
+    updatedAt: checked<PharmacyProfile['updatedAt']>(updatedAt),
+  };
+}
+
+//===================================================================
+
+export function parsePharmacyRegistrationDocumentUploadResponse(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyRegistrationDocumentUploadResponse {
+  const record = requireRecord(
+    value,
+    'pharmacy registration document upload response',
+    context
+  );
+  if (
+    typeof record.claimToken !== 'string' ||
+    !/^[a-f\d]{64}$/i.test(record.claimToken)
+  ) {
+    throw invalidDto(
+      'pharmacy document claimToken is invalid.',
+      record,
+      context
+    );
+  }
+  return {
+    document: parsePharmacyVerificationDocument(record.document, context),
+    claimToken: record.claimToken,
+  };
+}
+
+//===================================================================
+
+export function parsePharmacyDocumentContentResponse(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyDocumentContentResponse {
+  const record = requireRecord(
+    value,
+    'pharmacy document content response',
+    context
+  );
+  const document = parsePharmacyVerificationDocument(record.document, context);
+
+  if (
+    typeof record.dataUrl !== 'string' ||
+    !record.dataUrl.startsWith(`data:${document.type};base64,`) ||
+    record.dataUrl.length <= `data:${document.type};base64,`.length
+  ) {
+    throw invalidDto('pharmacy document dataUrl is invalid.', record, context);
+  }
+
+  return { document, dataUrl: record.dataUrl };
+}
+
+//===================================================================
+
+export function parsePharmacyProfileDocumentUploadResponse(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyProfileDocumentUploadResponse {
+  const record = requireRecord(
+    value,
+    'pharmacy profile document upload response',
+    context
+  );
+  return {
+    document: parsePharmacyVerificationDocument(record.document, context),
+  };
 }
 
 //===================================================================

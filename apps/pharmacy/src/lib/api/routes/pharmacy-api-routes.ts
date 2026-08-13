@@ -62,6 +62,9 @@ export const pharmacyApiRoutes = {
 
   pharmacies: {
     myProfile: '/api/pharmacies/me/profile',
+    myDocumentUpload: '/api/pharmacies/me/documents',
+    myDocument: (documentId: string) =>
+      `/api/pharmacies/me/documents/${segment(documentId)}`,
     sendMyProfileForVerification:
       '/api/pharmacies/me/profile/send-for-verification',
   },

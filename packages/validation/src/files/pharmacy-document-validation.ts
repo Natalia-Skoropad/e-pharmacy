@@ -114,7 +114,7 @@ export function validatePharmacyDocuments(
       return 'Choose a PDF, DOC, DOCX, JPG, PNG, or WEBP document';
     }
 
-    if (!Number.isInteger(normalized.size) || normalized.size < 0) {
+    if (!Number.isInteger(normalized.size) || normalized.size <= 0) {
       return 'Document size is invalid';
     }
 
