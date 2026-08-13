@@ -174,90 +174,123 @@ export async function updatePharmacyStatusByAdminService(
   input: UpdatePharmacyStatusInput,
   adminUserId: string
 ) {
-  const pharmacy = await Pharmacy.findById(pharmacyId);
+  const session = await mongoose.startSession();
 
-  if (!pharmacy) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
-  }
+  try {
+    const updatedPharmacy = await session.withTransaction(async () => {
+      const pharmacy = await Pharmacy.findById(pharmacyId).session(session);
 
-  if (
-    input.status === PHARMACY_STATUSES.ON_VERIFICATION &&
-    (pharmacy.status === PHARMACY_STATUSES.ACTIVE || pharmacy.approvedAt)
-  ) {
-    throw httpError(
-      HTTP_STATUS.BAD_REQUEST,
-      'Activated pharmacy cannot be returned to On verification.'
-    );
-  }
+      if (!pharmacy) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+      }
 
-  if (
-    input.status === PHARMACY_STATUSES.NEW &&
-    (pharmacy.status === PHARMACY_STATUSES.ON_VERIFICATION ||
-      pharmacy.status === PHARMACY_STATUSES.ON_MODERATION) &&
-    !input.reason?.trim()
-  ) {
-    throw httpError(
-      HTTP_STATUS.BAD_REQUEST,
-      'Reason is required when returning pharmacy to New status.'
-    );
-  }
+      if (
+        input.status === PHARMACY_STATUSES.ON_VERIFICATION &&
+        (pharmacy.status === PHARMACY_STATUSES.ACTIVE || pharmacy.approvedAt)
+      ) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'Activated pharmacy cannot be returned to On verification.'
+        );
+      }
 
-  const nextUpdate: Record<string, unknown> = {
-    status: input.status,
-    updatedBy: adminUserId,
-  };
+      if (
+        input.status === PHARMACY_STATUSES.NEW &&
+        (pharmacy.status === PHARMACY_STATUSES.ON_VERIFICATION ||
+          pharmacy.status === PHARMACY_STATUSES.ON_MODERATION) &&
+        !input.reason?.trim()
+      ) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'Reason is required when returning pharmacy to New status.'
+        );
+      }
 
-  const unsetFields: Record<string, string> = {};
+      const nextUpdate: Record<string, unknown> = {
+        status: input.status,
+        updatedBy: adminUserId,
+      };
 
-  if (input.status === PHARMACY_STATUSES.ACTIVE) {
-    const pendingModeration = pharmacy.pendingModeration ?? {};
-    const { bankDetails, ...pendingRootFields } = pendingModeration;
-    const approvedAt = new Date();
+      const unsetFields: Record<string, string> = {};
 
-    Object.assign(nextUpdate, {
-      ...pendingRootFields,
-      ...(bankDetails
-        ? { bankDetails: { ...(pharmacy.bankDetails ?? {}), ...bankDetails } }
-        : {}),
-      approvedBy: adminUserId,
-      approvedAt,
-      activatedAt: pharmacy.activatedAt ?? approvedAt,
+      if (input.status === PHARMACY_STATUSES.ACTIVE) {
+        const pendingModeration = pharmacy.pendingModeration ?? {};
+        const { bankDetails, ...pendingRootFields } = pendingModeration;
+        const approvedAt = new Date();
+
+        Object.assign(nextUpdate, {
+          ...pendingRootFields,
+          ...(bankDetails
+            ? {
+                bankDetails: {
+                  ...(pharmacy.bankDetails ?? {}),
+                  ...bankDetails,
+                },
+              }
+            : {}),
+          approvedBy: adminUserId,
+          approvedAt,
+          activatedAt: pharmacy.activatedAt ?? approvedAt,
+        });
+        unsetFields.pendingModeration = '';
+        unsetFields.statusReason = '';
+      } else if (input.status === PHARMACY_STATUSES.NEW) {
+        nextUpdate.approvedBy = undefined;
+        nextUpdate.approvedAt = undefined;
+        nextUpdate.statusReason = input.reason?.trim();
+        unsetFields.pendingModeration = '';
+      } else {
+        nextUpdate.approvedBy = undefined;
+        nextUpdate.approvedAt = undefined;
+        if (input.reason?.trim()) {
+          nextUpdate.statusReason = input.reason.trim();
+        } else {
+          unsetFields.statusReason = '';
+        }
+      }
+
+      const updateQuery: Record<string, unknown> = { $set: nextUpdate };
+      if (Object.keys(unsetFields).length > 0) {
+        updateQuery.$unset = unsetFields;
+      }
+
+      const updated = await Pharmacy.findByIdAndUpdate(
+        pharmacyId,
+        updateQuery,
+        {
+          new: true,
+          runValidators: true,
+          session,
+        }
+      );
+
+      if (!updated) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+      }
+
+      if (input.status === PHARMACY_STATUSES.ACTIVE) {
+        const defaultClient = await ensureDefaultPharmacyClient(
+          updated._id,
+          adminUserId,
+          session
+        );
+
+        if (!defaultClient) {
+          throw new Error(
+            'Default pharmacy client could not be created during activation.'
+          );
+        }
+      }
+
+      return updated;
     });
-    unsetFields.pendingModeration = '';
-    unsetFields.statusReason = '';
-  } else if (input.status === PHARMACY_STATUSES.NEW) {
-    nextUpdate.approvedBy = undefined;
-    nextUpdate.approvedAt = undefined;
-    nextUpdate.statusReason = input.reason?.trim();
-    unsetFields.pendingModeration = '';
-  } else {
-    nextUpdate.approvedBy = undefined;
-    nextUpdate.approvedAt = undefined;
-    if (input.reason?.trim()) {
-      nextUpdate.statusReason = input.reason.trim();
-    } else {
-      unsetFields.statusReason = '';
+
+    if (!updatedPharmacy) {
+      throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
     }
+
+    return serializePharmacyProfile(updatedPharmacy);
+  } finally {
+    await session.endSession();
   }
-
-  const updateQuery: Record<string, unknown> = { $set: nextUpdate };
-  if (Object.keys(unsetFields).length > 0) {
-    updateQuery.$unset = unsetFields;
-  }
-
-  const updatedPharmacy = await Pharmacy.findByIdAndUpdate(
-    pharmacyId,
-    updateQuery,
-    { new: true, runValidators: true }
-  );
-
-  if (!updatedPharmacy) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
-  }
-
-  if (input.status === PHARMACY_STATUSES.ACTIVE) {
-    await ensureDefaultPharmacyClient(updatedPharmacy._id, adminUserId);
-  }
-
-  return serializePharmacyProfile(updatedPharmacy);
 }

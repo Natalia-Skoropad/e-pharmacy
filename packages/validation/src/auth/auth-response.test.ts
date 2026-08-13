@@ -50,10 +50,17 @@ test('rejects malformed users before they reach AuthProviderCore', () => {
     {},
     { user: null },
     { user: { ...VALID_RESPONSE.user, id: '' } },
+    { user: { ...VALID_RESPONSE.user, id: 'not-an-object-id' } },
     { user: { ...VALID_RESPONSE.user, email: 42 } },
+    { user: { ...VALID_RESPONSE.user, email: 'not-an-email' } },
+    { user: { ...VALID_RESPONSE.user, email: ' Test@Example.com ' } },
+    { user: { ...VALID_RESPONSE.user, phone: '0501112233' } },
+    { user: { ...VALID_RESPONSE.user, phone: ' +380501112233 ' } },
     { user: { ...VALID_RESPONSE.user, role: 'supplier' } },
     { user: { ...VALID_RESPONSE.user, status: 'pending' } },
     { user: { ...VALID_RESPONSE.user, pictureUrl: false } },
+    { user: { ...VALID_RESPONSE.user, pictureUrl: 'javascript:alert(1)' } },
+    { user: { ...VALID_RESPONSE.user, pictureUrl: '' } },
   ];
 
   for (const response of malformedResponses) {

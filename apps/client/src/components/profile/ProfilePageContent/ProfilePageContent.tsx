@@ -50,7 +50,6 @@ import {
   USER_PASSWORD_MAX_LENGTH,
   USER_PHONE_MAX_LENGTH,
   DATA_PROFILE_FORM_FIELDS,
-  DATA_PROFILE_INITIAL_VALUES,
   hasValidationErrors,
   isChangePasswordFormDirty,
   isChangePasswordFormValid,
@@ -73,12 +72,13 @@ import {
   buildPictureUrlError,
 } from '@e-pharmacy/validation/files';
 
-import type { ActiveSession } from '@e-pharmacy/types/auth';
+import type { ActiveSession, AuthUser } from '@e-pharmacy/types/auth';
 import type { ClientOrder } from '@e-pharmacy/types/orders';
 import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 import type { ProductCardSummary } from '@e-pharmacy/types/products';
 
 import { PROFILE_TITLE } from '@/lib/seo/metadata-copy';
+import { getUserFacingErrorMessage } from '@/lib/errors/get-user-facing-error-message';
 
 import {
   ROUTES,
@@ -100,6 +100,7 @@ import {
 import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
 
 import css from './ProfilePageContent.module.css';
 
@@ -133,10 +134,13 @@ const ORDERS_VISIBLE_STEP = 15;
 
 //===================================================================
 
-function ProfilePageContent() {
+function AuthenticatedProfilePageContent({
+  user,
+}: Readonly<{
+  user: AuthUser;
+}>) {
   const {
     canRenderAuthenticatedContent,
-    user,
     reloadCurrentUser,
     invalidateSession,
   } = useAuth();
@@ -145,12 +149,21 @@ function ProfilePageContent() {
   const canUseAuthFeatures = canRenderAuthenticatedContent;
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
 
-  const [profileValues, setProfileValues] = useState<DataProfileFormValues>(
-    DATA_PROFILE_INITIAL_VALUES
+  const serverProfileValues = useMemo<DataProfileFormValues>(
+    () => ({
+      name: user.name ?? '',
+      phone: user.phone ?? '',
+      address: user.address ?? '',
+    }),
+    [user.address, user.name, user.phone]
   );
 
-  const [initialProfileValues, setInitialProfileValues] =
-    useState<DataProfileFormValues>(DATA_PROFILE_INITIAL_VALUES);
+  const [profileDraft, setProfileDraft] = useState<{
+    values: DataProfileFormValues;
+    baseline: DataProfileFormValues;
+  } | null>(null);
+
+  const profileValues = profileDraft?.values ?? serverProfileValues;
 
   const [profileTouchedFields, setProfileTouchedFields] =
     useState<DataProfileTouchedFields>({});
@@ -165,7 +178,11 @@ function ProfilePageContent() {
     useState(false);
 
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
-  const [picturePreview, setPicturePreview] = useState<string | null>(null);
+  const [pictureDraft, setPictureDraft] = useState<
+    string | null | undefined
+  >(undefined);
+  const picturePreview =
+    pictureDraft === undefined ? (user.pictureUrl ?? null) : pictureDraft;
   const [orders, setOrders] = useState<ClientOrder[]>([]);
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
   const [isSessionsLoading, setIsSessionsLoading] = useState(false);
@@ -208,25 +225,6 @@ function ProfilePageContent() {
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isPictureSaving, setIsPictureSaving] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
-
-    const timeoutId = window.setTimeout(() => {
-      const nextProfileValues = {
-        name: user.name ?? '',
-        phone: user.phone ?? '',
-        address: user.address ?? '',
-      };
-
-      setProfileValues(nextProfileValues);
-      setInitialProfileValues(nextProfileValues);
-      setProfileTouchedFields({});
-      setPicturePreview(user.pictureUrl ?? null);
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [user]);
-
   const profileErrors = useMemo(
     () => validateDataProfileForm(profileValues),
     [profileValues]
@@ -239,10 +237,7 @@ function ProfilePageContent() {
 
   const profileFormIsValid = isDataProfileFormValid(profileValues);
 
-  const profileFormIsDirty = isDataProfileFormDirty(
-    profileValues,
-    initialProfileValues
-  );
+  const profileFormIsDirty = profileDraft !== null;
 
   const passwordFormIsDirty = isChangePasswordFormDirty(passwordValues);
   const passwordFormIsValid = isChangePasswordFormValid(passwordValues);
@@ -540,30 +535,6 @@ function ProfilePageContent() {
     }
   };
 
-  if (!user) {
-    return (
-      <main className={css.page}>
-        <section className={css.section} aria-labelledby="profile-title">
-          <Container>
-            <Breadcrumbs items={createBreadcrumbs(PROFILE_TITLE)} />
-
-            <div className={css.emptyCard}>
-              <h1 className={css.title} id="profile-title">
-                Profile is not available
-              </h1>
-
-              <p className={css.text}>
-                We could not load your profile data. Please log in again.
-              </p>
-
-              <LinkButton href={ROUTES.LOGIN}>Go to login</LinkButton>
-            </div>
-          </Container>
-        </section>
-      </main>
-    );
-  }
-
   const handleProfileChange = (
     field: keyof DataProfileFormValues,
     value: string
@@ -573,10 +544,17 @@ function ProfilePageContent() {
       [field]: true,
     }));
 
-    setProfileValues((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setProfileDraft((current) => {
+      const baseline = current?.baseline ?? serverProfileValues;
+      const nextValues = {
+        ...(current?.values ?? serverProfileValues),
+        [field]: value,
+      };
+
+      return isDataProfileFormDirty(nextValues, baseline)
+        ? { values: nextValues, baseline }
+        : null;
+    });
   };
 
   const handlePictureError = (message: string) => {
@@ -586,25 +564,25 @@ function ProfilePageContent() {
   const handlePictureChange = async (pictureUrl: string | null) => {
     if (!canUseAuthFeatures) return;
 
-    const previousPictureUrl = picturePreview;
+    const previousPictureDraft = pictureDraft;
 
     try {
       setIsPictureSaving(true);
-      setPicturePreview(pictureUrl);
+      setPictureDraft(pictureUrl);
 
-      await updateCurrentUser({ pictureUrl: pictureUrl });
+      await updateCurrentUser({ pictureUrl });
       await reloadCurrentUser();
+      setPictureDraft(undefined);
       toast.success(
         pictureUrl ? 'Profile photo was updated.' : 'Profile photo was removed.'
       );
     } catch (error) {
-      const message =
-        error instanceof Error && error.message
-          ? error.message
-          : 'Could not update profile photo.';
-
-      toast.error(message);
-      setPicturePreview(previousPictureUrl);
+      toast.error(
+        getUserFacingErrorMessage(error, {
+          fallback: 'Could not update profile photo.',
+        })
+      );
+      setPictureDraft(previousPictureDraft);
     } finally {
       setIsPictureSaving(false);
     }
@@ -629,18 +607,19 @@ function ProfilePageContent() {
 
       await updateCurrentUser(nextProfileValues);
       await reloadCurrentUser();
-      setInitialProfileValues(nextProfileValues);
+      setProfileDraft(null);
       setProfileTouchedFields({});
       toast.success('Profile data was updated.');
     } catch (error) {
-      const message =
-        error instanceof Error && error.message.toLowerCase().includes('phone')
-          ? 'This phone number is already used by another account.'
-          : error instanceof Error && error.message
-            ? error.message
-            : 'Could not update profile data.';
-
-      toast.error(message);
+      toast.error(
+        getUserFacingErrorMessage(error, {
+          fallback: 'Could not update profile data.',
+          backendCodeMessages: {
+            AUTH_PHONE_CONFLICT:
+              'This phone number is already used by another account.',
+          },
+        })
+      );
     } finally {
       setIsProfileSaving(false);
     }
@@ -1184,6 +1163,44 @@ function ProfilePageContent() {
                 </div>
               ) : null}
             </div>
+          </div>
+        </Container>
+      </section>
+    </main>
+  );
+}
+
+//===================================================================
+
+function ProfilePageContent() {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <ProfileUnavailable />;
+  }
+
+  return <AuthenticatedProfilePageContent key={user.id} user={user} />;
+}
+
+//===================================================================
+
+function ProfileUnavailable() {
+  return (
+    <main className={css.page}>
+      <section className={css.section} aria-labelledby="profile-title">
+        <Container>
+          <Breadcrumbs items={createBreadcrumbs(PROFILE_TITLE)} />
+
+          <div className={css.emptyCard}>
+            <h1 className={css.title} id="profile-title">
+              Profile is not available
+            </h1>
+
+            <p className={css.text}>
+              We could not load your profile data. Please log in again.
+            </p>
+
+            <LinkButton href={ROUTES.LOGIN}>Go to login</LinkButton>
           </div>
         </Container>
       </section>

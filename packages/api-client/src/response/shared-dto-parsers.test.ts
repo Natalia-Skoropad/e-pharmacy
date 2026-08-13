@@ -121,6 +121,36 @@ test('validates active sessions at runtime', () => {
     sessions: [],
   });
 
+  const validSession = {
+    id: '507f1f77bcf86cd799439011',
+    roleAtLogin: 'client',
+    lastUsedAt: '2026-08-13T12:00:00.000Z',
+    expiresAt: '2026-08-20T12:00:00.000Z',
+    createdAt: '2026-08-13T11:00:00.000Z',
+    isCurrent: true,
+    deviceName: 'Chrome on Windows',
+    userAgent: 'Mozilla/5.0',
+    ip: '127.0.0.1',
+  } as const;
+
+  assert.deepEqual(
+    parseActiveSessionsResponse({ sessions: [validSession] }),
+    { sessions: [validSession] }
+  );
+
+  for (const session of [
+    { ...validSession, id: 'invalid' },
+    { ...validSession, roleAtLogin: 'superadmin' },
+    { ...validSession, lastUsedAt: 'tomorrow' },
+    { ...validSession, expiresAt: '2026-08-20' },
+    { ...validSession, createdAt: 'not-a-date' },
+  ]) {
+    assert.throws(
+      () => parseActiveSessionsResponse({ sessions: [session] }),
+      ApiError
+    );
+  }
+
   assert.throws(
     () => parseActiveSessionsResponse({ sessions: 'invalid' }),
     ApiError

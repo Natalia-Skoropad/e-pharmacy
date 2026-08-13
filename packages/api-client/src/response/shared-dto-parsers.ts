@@ -295,6 +295,8 @@ const PHARMACY_STATUSES = new Set([
   'blocked',
 ]);
 
+const USER_ROLES = new Set(['client', 'pharmacy', 'admin']);
+
 // Mirrors the shared pharmacy verification-document contract. The config parity
 // checks protect the source-of-truth value without coupling api-client to config.
 const PHARMACY_DOCUMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
@@ -2497,7 +2499,61 @@ function parseActiveSession(
     context
   );
 
-  return checked<ActiveSession>(record);
+  const id = requireObjectId(record, 'id', 'active session', context);
+  const roleAtLogin = record.roleAtLogin;
+
+  if (typeof roleAtLogin !== 'string' || !USER_ROLES.has(roleAtLogin)) {
+    throw invalidDto(
+      'active session.roleAtLogin must be a declared user role.',
+      record,
+      context
+    );
+  }
+
+  const lastUsedAt = requireCanonicalIsoDateTime(
+    record,
+    'lastUsedAt',
+    'active session',
+    context
+  );
+
+  const expiresAt = requireCanonicalIsoDateTime(
+    record,
+    'expiresAt',
+    'active session',
+    context
+  );
+
+  const createdAt =
+    record.createdAt === undefined
+      ? undefined
+      : requireCanonicalIsoDateTime(
+          record,
+          'createdAt',
+          'active session',
+          context
+        );
+
+  return {
+    id,
+    roleAtLogin: checked<ActiveSession['roleAtLogin']>(roleAtLogin),
+    lastUsedAt: checked<ActiveSession['lastUsedAt']>(lastUsedAt),
+    expiresAt: checked<ActiveSession['expiresAt']>(expiresAt),
+    isCurrent: record.isCurrent as boolean,
+    ...(record.deviceName !== undefined
+      ? { deviceName: record.deviceName as string }
+      : {}),
+    ...(record.userAgent !== undefined
+      ? { userAgent: record.userAgent as string }
+      : {}),
+    ...(record.ip !== undefined ? { ip: record.ip as string } : {}),
+    ...(createdAt !== undefined
+      ? {
+          createdAt:
+            checked<NonNullable<ActiveSession['createdAt']>>(createdAt),
+        }
+      : {}),
+  };
 }
 
 //===================================================================

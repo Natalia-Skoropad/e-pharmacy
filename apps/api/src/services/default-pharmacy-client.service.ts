@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 
 import { USER_ROLES, USER_STATUSES } from '../constants/auth';
 import { Client } from '../models/client.model';
@@ -32,22 +32,27 @@ function getDefaultClientEmail(pharmacyId: Types.ObjectId): string {
 
 export async function ensureDefaultPharmacyClient(
   pharmacyId: Types.ObjectId | string,
-  createdBy?: Types.ObjectId | string
+  createdBy?: Types.ObjectId | string,
+  session?: ClientSession
 ) {
   const resolvedPharmacyId =
     pharmacyId instanceof Types.ObjectId
       ? pharmacyId
       : new Types.ObjectId(pharmacyId);
 
-  const pharmacy = await Pharmacy.findById(resolvedPharmacyId)
-    .select('_id ownerId activatedAt approvedAt createdAt')
-    .lean<{
-      _id: Types.ObjectId;
-      ownerId: Types.ObjectId;
-      activatedAt?: Date;
-      approvedAt?: Date;
-      createdAt: Date;
-    } | null>();
+  const pharmacyQuery = Pharmacy.findById(resolvedPharmacyId).select(
+    '_id ownerId activatedAt approvedAt createdAt'
+  );
+
+  if (session) pharmacyQuery.session(session);
+
+  const pharmacy = await pharmacyQuery.lean<{
+    _id: Types.ObjectId;
+    ownerId: Types.ObjectId;
+    activatedAt?: Date;
+    approvedAt?: Date;
+    createdAt: Date;
+  } | null>();
 
   if (!pharmacy) return null;
 
@@ -77,11 +82,13 @@ export async function ensureDefaultPharmacyClient(
         defaultClientPharmacyId: pharmacy._id,
         updatedBy: actorId,
       },
+
       $unset: {
         address: '',
         pictureUrl: '',
         statusReason: '',
       },
+
       $setOnInsert: {
         createdBy: actorId,
         createdAt: activatedAt,
@@ -92,6 +99,7 @@ export async function ensureDefaultPharmacyClient(
       returnDocument: 'after',
       runValidators: true,
       setDefaultsOnInsert: true,
+      ...(session ? { session } : {}),
     }
   );
 
@@ -99,7 +107,8 @@ export async function ensureDefaultPharmacyClient(
 
   await User.updateOne(
     { _id: user._id },
-    { $set: { createdAt: activatedAt } }
+    { $set: { createdAt: activatedAt } },
+    session ? { session } : undefined
   );
 
   await Client.findOneAndUpdate(
@@ -111,7 +120,12 @@ export async function ensureDefaultPharmacyClient(
         favoritePharmacyIds: [],
       },
     },
-    { upsert: true, runValidators: true, setDefaultsOnInsert: true }
+    {
+      upsert: true,
+      runValidators: true,
+      setDefaultsOnInsert: true,
+      ...(session ? { session } : {}),
+    }
   );
 
   return user;

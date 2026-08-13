@@ -123,6 +123,8 @@ import {
   uploadMyPharmacyDocument,
 } from '@/lib/api/browser';
 
+import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
+
 import {
   StatusBadge,
   StatusBanner,
@@ -302,14 +304,6 @@ function createTouchedUpdater<TValues extends object>(
 
 //===================================================================
 
-function getErrorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error && error.message ? error.message : fallback;
-}
-
-
-
-//===================================================================
-
 function isReadonlyStatus(status: PharmacyStatus): boolean {
   return status === 'on_verification' || status === 'on_moderation';
 }
@@ -472,7 +466,7 @@ function PharmacyProfilePageContent() {
               title="Pharmacy profile could not be loaded"
               message={
                 profileError
-                  ? getErrorMessage(
+                  ? getProfileErrorMessage(
                       profileError,
                       'Could not load pharmacy profile.'
                     )
@@ -492,7 +486,10 @@ function PharmacyProfilePageContent() {
       initialPharmacy={profile}
       initialLoadError={
         profileError
-          ? getErrorMessage(profileError, 'Could not load pharmacy profile.')
+          ? getProfileErrorMessage(
+              profileError,
+              'Could not load pharmacy profile.'
+            )
           : null
       }
       syncProfile={syncProfile}
@@ -871,7 +868,9 @@ function PharmacyProfilePage({
           : 'Profile photo was removed.'
       );
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not update profile photo.'));
+      toast.error(
+        getProfileErrorMessage(error, 'Could not update profile photo.')
+      );
     } finally {
       setIsOwnerPictureSaving(false);
     }
@@ -906,7 +905,9 @@ function PharmacyProfilePage({
           : 'Pharmacy photo was removed.'
       );
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not update pharmacy photo.'));
+      toast.error(
+        getProfileErrorMessage(error, 'Could not update pharmacy photo.')
+      );
     } finally {
       setIsPharmacyPictureSaving(false);
     }
@@ -933,7 +934,9 @@ function PharmacyProfilePage({
       await reloadCurrentUser();
       toast.success('Owner data saved successfully.');
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not save owner data.'));
+      toast.error(
+        getProfileErrorMessage(error, 'Could not save owner data.')
+      );
     } finally {
       setIsOwnerSaving(false);
     }
@@ -957,7 +960,9 @@ function PharmacyProfilePage({
       toast.success('Password changed. Sign in again.');
       window.location.assign(getSharedLoginUrl());
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not change password.'));
+      toast.error(
+        getProfileErrorMessage(error, 'Could not change password.')
+      );
     } finally {
       setIsPasswordSaving(false);
     }
@@ -993,7 +998,9 @@ function PharmacyProfilePage({
           : 'Pharmacy data saved successfully.'
       );
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not save pharmacy data.'));
+      toast.error(
+        getProfileErrorMessage(error, 'Could not save pharmacy data.')
+      );
     } finally {
       setIsPharmacySaving(false);
     }
@@ -1028,7 +1035,9 @@ function PharmacyProfilePage({
           : 'About pharmacy saved successfully.'
       );
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not save about pharmacy.'));
+      toast.error(
+        getProfileErrorMessage(error, 'Could not save about pharmacy.')
+      );
     } finally {
       setIsPharmacySaving(false);
     }
@@ -1063,7 +1072,9 @@ function PharmacyProfilePage({
           : 'Payment details saved successfully.'
       );
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not save payment details.'));
+      toast.error(
+        getProfileErrorMessage(error, 'Could not save payment details.')
+      );
     } finally {
       setIsPharmacySaving(false);
     }
@@ -1091,7 +1102,9 @@ function PharmacyProfilePage({
     try {
       return (await getMyPharmacyDocument(file.documentId)).dataUrl;
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Failed to download the document.'));
+      toast.error(
+        getProfileErrorMessage(error, 'Failed to download the document.')
+      );
       return '';
     }
   };
@@ -1134,7 +1147,9 @@ function PharmacyProfilePage({
           : 'Documents saved successfully.'
       );
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not save documents.'));
+      toast.error(
+        getProfileErrorMessage(error, 'Could not save documents.')
+      );
     } finally {
       setIsDocumentsSaving(false);
     }
@@ -1218,7 +1233,7 @@ function PharmacyProfilePage({
       toast.success(response.message);
     } catch (error) {
       toast.error(
-        getErrorMessage(
+        getProfileErrorMessage(
           error,
           'Could not send pharmacy changes for moderation.'
         )
@@ -1245,7 +1260,10 @@ function PharmacyProfilePage({
       toast.success(response.message);
     } catch (error) {
       toast.error(
-        getErrorMessage(error, 'Could not send pharmacy for verification.')
+        getProfileErrorMessage(
+          error,
+          'Could not send pharmacy for verification.'
+        )
       );
     } finally {
       setIsSendingVerification(false);
@@ -1262,7 +1280,9 @@ function PharmacyProfilePage({
       );
       toast.success('Session was revoked.');
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not revoke session.'));
+      toast.error(
+        getProfileErrorMessage(error, 'Could not revoke session.')
+      );
     } finally {
       setRevokingSessionId(null);
     }

@@ -16,6 +16,8 @@ import type { PharmacyProfile } from '@e-pharmacy/types/pharmacies';
 
 import { getMyPharmacyProfile } from '@/lib/api/browser';
 
+import { isCurrentPharmacyProfileRequest } from './pharmacy-profile-request';
+
 //===================================================================
 
 type PharmacyProfileContextValue = Readonly<{
@@ -72,9 +74,13 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
         });
 
         if (
-          controller.signal.aborted ||
-          identityRef.current !== requestIdentity ||
-          requestVersionRef.current !== requestVersion
+          !isCurrentPharmacyProfileRequest({
+            currentIdentity: identityRef.current,
+            requestIdentity,
+            currentVersion: requestVersionRef.current,
+            requestVersion,
+            aborted: controller.signal.aborted,
+          })
         ) {
           return null;
         }
@@ -82,9 +88,13 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
         return response.pharmacy;
       } catch (cause) {
         if (
-          controller.signal.aborted ||
-          identityRef.current !== requestIdentity ||
-          requestVersionRef.current !== requestVersion
+          !isCurrentPharmacyProfileRequest({
+            currentIdentity: identityRef.current,
+            requestIdentity,
+            currentVersion: requestVersionRef.current,
+            requestVersion,
+            aborted: controller.signal.aborted,
+          })
         ) {
           return null;
         }

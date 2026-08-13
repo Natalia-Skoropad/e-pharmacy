@@ -326,4 +326,42 @@ assert.doesNotMatch(
   'Login business behavior must use stable auth codes instead of backend copy'
 );
 
+const authResponseParser = await read(
+  'packages',
+  'validation',
+  'src',
+  'auth',
+  'auth-response.ts'
+);
+
+assert.match(authResponseParser, /OBJECT_ID_PATTERN/);
+assert.match(authResponseParser, /buildEmailError\(email\)/);
+assert.match(authResponseParser, /buildPhoneError\(phone,/);
+assert.match(authResponseParser, /buildPictureUrlError\(pictureUrl\)/);
+
+const sharedDtoParsers = await read(
+  'packages',
+  'api-client',
+  'src',
+  'response',
+  'shared-dto-parsers.ts'
+);
+
+assert.match(
+  sharedDtoParsers,
+  /requireObjectId\(record, 'id', 'active session'/
+);
+
+assert.match(sharedDtoParsers, /USER_ROLES\.has\(roleAtLogin\)/);
+
+assert.match(
+  sharedDtoParsers,
+  /requireCanonicalIsoDateTime\([\s\S]*?'lastUsedAt'/
+);
+
+assert.match(
+  sharedDtoParsers,
+  /requireCanonicalIsoDateTime\([\s\S]*?'expiresAt'/
+);
+
 console.log('Auth contract parity check passed.');

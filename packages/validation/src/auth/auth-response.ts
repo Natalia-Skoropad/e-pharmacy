@@ -1,6 +1,9 @@
 import { USER_ROLES } from '@e-pharmacy/config/auth';
 import { USER_STATUSES } from '@e-pharmacy/config/users';
 
+import { buildEmailError, buildPhoneError } from '../shared';
+import { buildPictureUrlError } from '../files/picture-validation';
+
 import type {
   AuthResponse,
   AuthUser,
@@ -11,6 +14,7 @@ import type {
 //===================================================================
 
 const AUTH_INVALID_RESPONSE_CODE = 'AUTH_INVALID_RESPONSE' as const;
+const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
 
 //===================================================================
 
@@ -102,15 +106,52 @@ export function parseAuthResponse(value: unknown): AuthResponse {
     );
   }
 
+  const id = readRequiredString(source, 'id');
+  const email = readRequiredString(source, 'email');
+  const phone = readRequiredString(source, 'phone');
   const address = readOptionalString(source, 'address');
   const pictureUrl = readOptionalString(source, 'pictureUrl');
 
+  if (!OBJECT_ID_PATTERN.test(id)) {
+    throw new InvalidAuthResponseError(
+      'Authentication response contains an invalid user id.'
+    );
+  }
+
+  if (
+    buildEmailError(email) ||
+    email !== email.trim() ||
+    email !== email.toLowerCase()
+  ) {
+    throw new InvalidAuthResponseError(
+      'Authentication response contains an invalid email.'
+    );
+  }
+
+  if (
+    buildPhoneError(phone, { required: true }) ||
+    phone !== phone.trim()
+  ) {
+    throw new InvalidAuthResponseError(
+      'Authentication response contains an invalid phone.'
+    );
+  }
+
+  if (
+    pictureUrl !== undefined &&
+    (!pictureUrl.trim() || buildPictureUrlError(pictureUrl))
+  ) {
+    throw new InvalidAuthResponseError(
+      'Authentication response contains an invalid picture URL.'
+    );
+  }
+
   return {
     user: {
-      id: readRequiredString(source, 'id'),
+      id,
       name: readRequiredString(source, 'name'),
-      email: readRequiredString(source, 'email'),
-      phone: readRequiredString(source, 'phone'),
+      email,
+      phone,
       role,
       status,
       ...(address !== undefined ? { address } : {}),

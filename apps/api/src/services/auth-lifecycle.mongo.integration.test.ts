@@ -11,7 +11,11 @@ import { PharmacyDocumentFile } from '../models/pharmacyDocumentFile.model';
 import { Session } from '../models/session.model';
 import { User } from '../models/user.model';
 import { comparePassword, hashPassword } from '../utils/password';
-import { createPharmacyUserByAdminService } from './admin.service';
+
+import {
+  createPharmacyUserByAdminService,
+  updatePharmacyStatusByAdminService,
+} from './admin.service';
 
 import {
   createPrivatePharmacyDocumentUploadService,
@@ -22,6 +26,7 @@ import {
 
 import {
   getMyPharmacyProfileService,
+  sendMyPharmacyForVerificationService,
   updateMyPharmacyProfileService,
 } from './pharmacy.service';
 
@@ -30,7 +35,10 @@ import {
   refreshAuthSessionService,
   registerUserService,
   resetPasswordService,
+  revokeAllUserSessionsService,
+  revokeSessionByRefreshTokenService,
   updateUserPasswordService,
+  updateUserProfileService,
 } from './auth.service';
 
 //===============================================================
@@ -205,6 +213,7 @@ test(
           password: 'SecurePassword123!',
           role: 'client',
         }),
+
         registerUserService({
           name: 'Duplicate B',
           email: identity.email,
@@ -218,6 +227,7 @@ test(
         results.filter((result) => result.status === 'fulfilled').length,
         1
       );
+
       assert.equal(await User.countDocuments({ email: identity.email }), 1);
     } finally {
       await cleanup(identity.email);
@@ -245,6 +255,7 @@ test(
           password: 'SecurePassword123!',
           role: 'client',
         }),
+
         registerUserService({
           name: 'Phone B',
           email: secondEmail,
@@ -258,6 +269,7 @@ test(
         results.filter((result) => result.status === 'fulfilled').length,
         1
       );
+
       assert.equal(await User.countDocuments({ phone: identity.phone }), 1);
     } finally {
       await cleanup(identity.email);
@@ -287,6 +299,7 @@ test(
         password: await hashPassword(oldPassword),
         role: 'client',
       });
+
       await Client.create({ userId: user._id });
 
       Object.defineProperty(Session, 'updateMany', {
@@ -308,10 +321,12 @@ test(
 
       const persisted = await User.findById(user._id).select('+password');
       assert.ok(persisted);
+
       assert.equal(
         await comparePassword(oldPassword, persisted.password),
         true
       );
+
       assert.equal(
         await comparePassword(newPassword, persisted.password),
         false
@@ -322,6 +337,7 @@ test(
         writable: true,
         value: originalUpdateMany,
       });
+
       await cleanup(identity.email);
       await mongoose.disconnect();
     }
@@ -336,6 +352,7 @@ test(
   async () => {
     await mongoose.connect(getTestMongoUri());
     const identity = uniqueIdentity('reset-race');
+
     const token =
       new Types.ObjectId().toHexString() + new Types.ObjectId().toHexString();
     const tokenHash = createHash('sha256').update(token).digest('hex');
@@ -351,6 +368,7 @@ test(
         resetPasswordExpiresAt: new Date(Date.now() + 60_000),
         resetPasswordApplication: 'client',
       });
+
       await Client.create({ userId: user._id });
 
       const results = await Promise.allSettled([
@@ -362,6 +380,7 @@ test(
         results.filter((result) => result.status === 'fulfilled').length,
         1
       );
+
       assert.equal(
         results.filter((result) => result.status === 'rejected').length,
         1
@@ -398,6 +417,7 @@ test(
         password: oldPassword,
         application: 'client',
       });
+
       const second = await loginUserService({
         email: identity.email,
         password: oldPassword,
@@ -412,6 +432,7 @@ test(
       await assert.rejects(() =>
         refreshAuthSessionService(first.tokens.refreshToken)
       );
+
       await assert.rejects(() =>
         refreshAuthSessionService(second.tokens.refreshToken)
       );
@@ -617,6 +638,7 @@ test(
       const pharmacy = await Pharmacy.findOne({
         ownerId: registration.user.id,
       });
+
       assert.ok(pharmacy);
       assert.equal(pharmacy.documents.length, 1);
       assert.equal(pharmacy.documents[0]?.sha256, uploaded.document.sha256);
@@ -755,6 +777,316 @@ test(
       await updateMyPharmacyProfileService(String(user._id), { documents: [] });
       persisted = await Pharmacy.findById(pharmacy._id);
       assert.deepEqual(persisted?.documents, []);
+    } finally {
+      await cleanup(identity.email);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'pharmacy activation rolls back when default User creation fails',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const ownerIdentity = uniqueIdentity('activation-user-rollback');
+    const conflictIdentity = uniqueIdentity('activation-user-conflict');
+    let conflictEmail = '';
+
+    try {
+      const owner = await User.create({
+        name: 'Activation Owner',
+        email: ownerIdentity.email,
+        phone: ownerIdentity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'pharmacy',
+      });
+
+      const pharmacy = await Pharmacy.create({
+        ownerId: owner._id,
+        name: 'Activation Rollback Pharmacy',
+        email: ownerIdentity.email,
+        phone: ownerIdentity.phone,
+        status: 'new',
+      });
+
+      conflictEmail = `walk-in+${String(pharmacy._id)}@e-pharmacy.local`;
+
+      await User.create({
+        name: 'Default Email Conflict',
+        email: conflictEmail,
+        phone: conflictIdentity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'client',
+      });
+
+      await assert.rejects(() =>
+        updatePharmacyStatusByAdminService(
+          String(pharmacy._id),
+          { status: 'active' },
+          new Types.ObjectId().toHexString()
+        )
+      );
+
+      const persisted = await Pharmacy.findById(pharmacy._id).lean<{
+        status: string;
+        approvedAt?: Date;
+        activatedAt?: Date;
+      } | null>();
+
+      assert.equal(persisted?.status, 'new');
+      assert.equal(persisted?.approvedAt, undefined);
+      assert.equal(persisted?.activatedAt, undefined);
+
+      assert.equal(
+        await User.exists({
+          isDefaultPharmacyClient: true,
+          defaultClientPharmacyId: pharmacy._id,
+        }),
+        null
+      );
+    } finally {
+      await User.deleteMany({
+        email: {
+          $in: [ownerIdentity.email, conflictIdentity.email, conflictEmail],
+        },
+      });
+      await Pharmacy.deleteMany({ email: ownerIdentity.email });
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'pharmacy activation rolls back User and pharmacy status when Client creation fails',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const ownerIdentity = uniqueIdentity('activation-client-rollback');
+    const originalFindOneAndUpdate = Client.findOneAndUpdate;
+
+    try {
+      const owner = await User.create({
+        name: 'Activation Client Rollback',
+        email: ownerIdentity.email,
+        phone: ownerIdentity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'pharmacy',
+      });
+
+      const pharmacy = await Pharmacy.create({
+        ownerId: owner._id,
+        name: 'Activation Client Rollback Pharmacy',
+        email: ownerIdentity.email,
+        phone: ownerIdentity.phone,
+        status: 'new',
+      });
+
+      Object.defineProperty(Client, 'findOneAndUpdate', {
+        configurable: true,
+        writable: true,
+        value: async () => {
+          throw new Error('forced default client creation failure');
+        },
+      });
+
+      await assert.rejects(
+        () =>
+          updatePharmacyStatusByAdminService(
+            String(pharmacy._id),
+            { status: 'active' },
+            new Types.ObjectId().toHexString()
+          ),
+        /forced default client creation failure/
+      );
+
+      const persisted = await Pharmacy.findById(pharmacy._id).lean<{
+        status: string;
+      } | null>();
+
+      assert.equal(persisted?.status, 'new');
+
+      assert.equal(
+        await User.exists({
+          isDefaultPharmacyClient: true,
+          defaultClientPharmacyId: pharmacy._id,
+        }),
+        null
+      );
+    } finally {
+      Object.defineProperty(Client, 'findOneAndUpdate', {
+        configurable: true,
+        writable: true,
+        value: originalFindOneAndUpdate,
+      });
+
+      await cleanup(ownerIdentity.email);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'logout revokes only the current refresh session while logout-all revokes every device',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const identity = uniqueIdentity('logout-lifecycle');
+    const password = 'SecurePassword123!';
+
+    try {
+      const user = await User.create({
+        name: 'Logout Lifecycle',
+        email: identity.email,
+        phone: identity.phone,
+        password: await hashPassword(password),
+        role: 'client',
+      });
+
+      await Client.create({ userId: user._id });
+
+      const first = await loginUserService({
+        email: identity.email,
+        password,
+        application: 'client',
+      });
+
+      const second = await loginUserService({
+        email: identity.email,
+        password,
+        application: 'client',
+      });
+
+      await revokeSessionByRefreshTokenService(first.tokens.refreshToken);
+
+      await assert.rejects(() =>
+        refreshAuthSessionService(first.tokens.refreshToken)
+      );
+
+      await refreshAuthSessionService(second.tokens.refreshToken);
+      await revokeAllUserSessionsService(String(user._id));
+
+      await assert.rejects(() =>
+        refreshAuthSessionService(second.tokens.refreshToken)
+      );
+    } finally {
+      await cleanup(identity.email);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'profile update cannot mass-assign role or status',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const identity = uniqueIdentity('profile-mass-assignment');
+
+    try {
+      const user = await User.create({
+        name: 'Profile Security',
+        email: identity.email,
+        phone: identity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'client',
+        status: 'active',
+      });
+
+      await Client.create({ userId: user._id });
+
+      await updateUserProfileService(String(user._id), {
+        name: 'Updated Profile Security',
+        role: 'admin',
+        status: 'blocked',
+      } as never);
+
+      const persisted = await User.findById(user._id).lean<{
+        name: string;
+        role: string;
+        status: string;
+      } | null>();
+
+      assert.equal(persisted?.name, 'Updated Profile Security');
+      assert.equal(persisted?.role, 'client');
+      assert.equal(persisted?.status, 'active');
+    } finally {
+      await cleanup(identity.email);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'active pharmacy edits stay pending until moderation submission',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const identity = uniqueIdentity('moderation-lifecycle');
+
+    try {
+      const owner = await User.create({
+        name: 'Moderation Lifecycle',
+        email: identity.email,
+        phone: identity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'pharmacy',
+      });
+
+      const pharmacy = await Pharmacy.create({
+        ownerId: owner._id,
+        name: 'Moderation Lifecycle Pharmacy',
+        email: identity.email,
+        phone: identity.phone,
+        description: 'Approved description',
+        status: 'active',
+        approvedAt: new Date(),
+        activatedAt: new Date(),
+      });
+
+      const updateResponse = await updateMyPharmacyProfileService(
+        String(owner._id),
+        { description: 'Pending description' }
+      );
+
+      assert.equal(updateResponse.pharmacy.description, 'Approved description');
+      assert.equal(
+        updateResponse.pharmacy.pendingModeration?.description,
+        'Pending description'
+      );
+
+      const submitted = await sendMyPharmacyForVerificationService(
+        String(owner._id)
+      );
+
+      assert.equal(submitted.pharmacy.status, 'on_moderation');
+      assert.equal(
+        submitted.pharmacy.pendingModeration?.description,
+        'Pending description'
+      );
+
+      const persisted = await Pharmacy.findById(pharmacy._id).lean<{
+        description?: string;
+        status: string;
+        pendingModeration?: { description?: string };
+      } | null>();
+
+      assert.equal(persisted?.description, 'Approved description');
+      assert.equal(persisted?.status, 'on_moderation');
+      assert.equal(
+        persisted?.pendingModeration?.description,
+        'Pending description'
+      );
     } finally {
       await cleanup(identity.email);
       await mongoose.disconnect();

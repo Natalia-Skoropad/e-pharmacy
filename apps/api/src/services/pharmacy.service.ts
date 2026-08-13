@@ -3,7 +3,13 @@ import { Types, type HydratedDocument } from 'mongoose';
 import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
-import { PHARMACY_PROFILE_MISSING_ERROR_CODE } from '../constants/pharmacy-profile';
+import {
+  PHARMACY_NO_PENDING_CHANGES_ERROR_CODE,
+  PHARMACY_PROFILE_BLOCKED_ERROR_CODE,
+  PHARMACY_PROFILE_INCOMPLETE_ERROR_CODE,
+  PHARMACY_PROFILE_LOCKED_ERROR_CODE,
+  PHARMACY_PROFILE_MISSING_ERROR_CODE,
+} from '../constants/pharmacy-profile';
 
 import { Client } from '../models/client.model';
 import { Pharmacy } from '../models/pharmacy.model';
@@ -679,7 +685,12 @@ async function findMyPharmacy(
   }
 
   if (pharmacy.status === PHARMACY_STATUSES.BLOCKED) {
-    throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy is blocked.');
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Pharmacy is blocked.',
+      undefined,
+      PHARMACY_PROFILE_BLOCKED_ERROR_CODE
+    );
   }
 
   return pharmacy as PharmacyHydratedDocument;
@@ -716,7 +727,8 @@ function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
       'Complete pharmacy profile before verification.',
       {
         missingFields,
-      }
+      },
+      PHARMACY_PROFILE_INCOMPLETE_ERROR_CODE
     );
   }
 }
@@ -808,7 +820,9 @@ export async function updateMyPharmacyProfileService(
   ) {
     throw httpError(
       HTTP_STATUS.BAD_REQUEST,
-      'Profile fields are locked until Admin reviews the submitted pharmacy data.'
+      'Profile fields are locked until Admin reviews the submitted pharmacy data.',
+      undefined,
+      PHARMACY_PROFILE_LOCKED_ERROR_CODE
     );
   }
 
@@ -902,7 +916,9 @@ export async function sendMyPharmacyForVerificationService(
     ) {
       throw httpError(
         HTTP_STATUS.BAD_REQUEST,
-        'There are no pharmacy changes to send for moderation.'
+        'There are no pharmacy changes to send for moderation.',
+        undefined,
+        PHARMACY_NO_PENDING_CHANGES_ERROR_CODE
       );
     }
 
