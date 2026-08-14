@@ -36,6 +36,7 @@ import type {
   PharmacyFilterOptionsResponse,
   PharmacyOption,
   PharmacyOptionsResponse,
+  MyPharmacyProfile,
   PharmacyProfile,
   PharmacyProfileResponse,
   PharmacyProfileDocumentUploadResponse,
@@ -296,6 +297,7 @@ const PHARMACY_STATUSES = new Set([
 ]);
 
 const USER_ROLES = new Set(['client', 'pharmacy', 'admin']);
+const PHARMACY_MEMBERSHIP_ROLES = new Set(['owner', 'manager']);
 
 // Mirrors the shared pharmacy verification-document contract. The config parity
 // checks protect the source-of-truth value without coupling api-client to config.
@@ -1621,7 +1623,7 @@ function parsePharmacyPendingModeration(
 function parsePharmacyProfile(
   value: unknown,
   context?: ApiResponseContext
-): PharmacyProfile {
+): MyPharmacyProfile {
   const record = requireRecord(value, 'pharmacy profile', context);
   const id = requireObjectId(record, 'id', 'pharmacy profile', context);
   const updatedAt = requireCanonicalIsoDateTime(
@@ -1636,6 +1638,7 @@ function parsePharmacyProfile(
     'pharmacy profile',
     {
       name: 'string',
+      membershipRole: 'string',
       bankTransferAvailable: 'boolean',
       documents: 'array',
       status: 'string',
@@ -1662,6 +1665,14 @@ function parsePharmacyProfile(
   );
 
   validateOptionalPharmacyProfileSemantics(record, context);
+
+  if (!PHARMACY_MEMBERSHIP_ROLES.has(record.membershipRole as string)) {
+    throw invalidDto(
+      'pharmacy profile.membershipRole is invalid.',
+      record,
+      context
+    );
+  }
 
   if (!PHARMACY_STATUSES.has(record.status as string)) {
     throw invalidDto('pharmacy profile.status is invalid.', record, context);
@@ -1690,6 +1701,9 @@ function parsePharmacyProfile(
 
   return {
     id,
+    membershipRole: checked<MyPharmacyProfile['membershipRole']>(
+      record.membershipRole
+    ),
     name: record.name as string,
     ...(record.address !== undefined
       ? { address: record.address as string }

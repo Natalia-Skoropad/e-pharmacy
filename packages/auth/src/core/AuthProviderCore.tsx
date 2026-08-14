@@ -37,6 +37,11 @@ import {
 
 import { AuthRequestManager } from './auth-request-manager';
 
+import {
+  AuthInteractiveSingleFlight,
+  createAuthInteractiveRequestKey,
+} from './auth-interactive-single-flight';
+
 import type {
   AuthContextValue,
   AuthProviderCoreProps,
@@ -153,6 +158,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
     login: loginService,
     register: registerService,
     logout: logoutService,
+    logoutAll: logoutAllService,
     bootstrapMode,
     bootstrapTimeoutMs = DEFAULT_AUTH_BOOTSTRAP_TIMEOUT_MS,
     revalidateOnFocus = true,
@@ -169,6 +175,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
   const stateRef = useRef<AuthState>(initialState);
   const mountedRef = useRef(true);
   const requestManagerRef = useRef(new AuthRequestManager());
+  const interactiveSingleFlightRef = useRef(new AuthInteractiveSingleFlight());
   const bootstrapPromiseRef = useRef<Promise<AuthUser | null> | null>(null);
   const sessionSyncRef = useRef<AuthSessionSync | null>(null);
 
@@ -319,53 +326,64 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
   const login = useMemo<AuthContextValue['login']>(() => {
     if (!loginService) return undefined;
 
-    return async (payload: LoginPayload) => {
-      const manager = requestManagerRef.current;
-      manager.advanceLifecycle();
+    return (payload: LoginPayload) =>
+      interactiveSingleFlightRef.current.run(
+        'login',
+        createAuthInteractiveRequestKey(payload),
+        async () => {
+          const manager = requestManagerRef.current;
+          manager.advanceLifecycle();
 
-      const attempt = manager.start('login', (signal) =>
-        loginService(payload, { signal })
+          const attempt = manager.start('login', (signal) =>
+            loginService(payload, { signal })
+          );
+
+          try {
+            const response = await attempt.promise;
+            if (!manager.isCurrent(attempt)) return null;
+            applyAuthenticatedUser(response.user);
+
+            return response.user;
+          } catch (error) {
+            if (!manager.isCurrent(attempt) || isAbortError(error)) return null;
+            throw error;
+          }
+        }
       );
-
-      try {
-        const response = await attempt.promise;
-        if (!manager.isCurrent(attempt)) return null;
-        applyAuthenticatedUser(response.user);
-
-        return response.user;
-      } catch (error) {
-        if (!manager.isCurrent(attempt) || isAbortError(error)) return null;
-        throw error;
-      }
-    };
   }, [applyAuthenticatedUser, loginService]);
 
   const register = useMemo<AuthContextValue['register']>(() => {
     if (!registerService) return undefined;
 
-    return async (payload: RegisterPayload) => {
-      const manager = requestManagerRef.current;
-      manager.advanceLifecycle();
+    return (payload: RegisterPayload) =>
+      interactiveSingleFlightRef.current.run(
+        'register',
+        createAuthInteractiveRequestKey(payload),
+        async () => {
+          const manager = requestManagerRef.current;
+          manager.advanceLifecycle();
 
-      const attempt = manager.start('register', (signal) =>
-        registerService(payload, { signal })
+          const attempt = manager.start('register', (signal) =>
+            registerService(payload, { signal })
+          );
+
+          try {
+            const response = await attempt.promise;
+            if (!manager.isCurrent(attempt)) return null;
+            applyAuthenticatedUser(response.user);
+            return response.user;
+          } catch (error) {
+            if (!manager.isCurrent(attempt) || isAbortError(error)) return null;
+            throw error;
+          }
+        }
       );
-
-      try {
-        const response = await attempt.promise;
-        if (!manager.isCurrent(attempt)) return null;
-        applyAuthenticatedUser(response.user);
-        return response.user;
-      } catch (error) {
-        if (!manager.isCurrent(attempt) || isAbortError(error)) return null;
-        throw error;
-      }
-    };
   }, [applyAuthenticatedUser, registerService]);
 
   const invalidateSession = useCallback(
     (reason: AuthUnauthenticatedReason = 'session_invalid') => {
       requestManagerRef.current.advanceLifecycle();
+      interactiveSingleFlightRef.current.clear();
       bootstrapPromiseRef.current = null;
       clearAuthState(reason);
     },
@@ -375,6 +393,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
   const logout = useCallback(async () => {
     const manager = requestManagerRef.current;
     manager.advanceLifecycle();
+    interactiveSingleFlightRef.current.clear();
     bootstrapPromiseRef.current = null;
     clearAuthState('logout');
 
@@ -389,13 +408,37 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
     }
   }, [clearAuthState, logoutService]);
 
+  const logoutAll = useMemo<AuthContextValue['logoutAll']>(() => {
+    if (!logoutAllService) return undefined;
+
+    return async () => {
+      const manager = requestManagerRef.current;
+      manager.advanceLifecycle();
+      interactiveSingleFlightRef.current.clear();
+      bootstrapPromiseRef.current = null;
+      clearAuthState('logout_all');
+
+      const attempt = manager.start('logout-all', (signal) =>
+        logoutAllService({ signal })
+      );
+
+      try {
+        await attempt.promise;
+      } catch (error) {
+        if (!isAbortError(error) && manager.isCurrent(attempt)) throw error;
+      }
+    };
+  }, [clearAuthState, logoutAllService]);
+
   useEffect(() => {
     const requestManager = requestManagerRef.current;
+    const interactiveSingleFlight = interactiveSingleFlightRef.current;
 
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
       requestManager.advanceLifecycle();
+      interactiveSingleFlight.clear();
       bootstrapPromiseRef.current = null;
     };
   }, []);
@@ -406,6 +449,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
 
     const unsubscribe = sync.subscribe((event) => {
       requestManagerRef.current.advanceLifecycle();
+      interactiveSingleFlightRef.current.clear();
       bootstrapPromiseRef.current = null;
 
       if (event === 'unauthenticated') {
@@ -495,6 +539,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
       login,
       register,
       logout,
+      logoutAll,
       invalidateSession,
 
       isRefreshingUser:
@@ -507,6 +552,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
     invalidateSession,
     login,
     logout,
+    logoutAll,
     register,
     reloadCurrentUser,
     retryAuthBootstrap,

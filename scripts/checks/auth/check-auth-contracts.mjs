@@ -364,4 +364,143 @@ assert.match(
   /requireCanonicalIsoDateTime\([\s\S]*?'expiresAt'/
 );
 
+const authProviderCore = await read(
+  'packages',
+  'auth',
+  'src',
+  'core',
+  'AuthProviderCore.tsx'
+);
+
+const interactiveSingleFlight = await read(
+  'packages',
+  'auth',
+  'src',
+  'core',
+  'auth-interactive-single-flight.ts'
+);
+
+assert.match(interactiveSingleFlight, /class AuthInteractiveSingleFlight/);
+
+assert.match(
+  authProviderCore,
+  /interactiveSingleFlightRef\.current\.run\(\s*['"]login['"]/
+);
+
+assert.match(
+  authProviderCore,
+  /interactiveSingleFlightRef\.current\.run\(\s*['"]register['"]/
+);
+
+const clientLogoutAllRoute = await read(
+  'apps',
+  'client',
+  'src',
+  'app',
+  'api',
+  'auth',
+  'logout-all',
+  'route.ts'
+);
+
+const pharmacyLogoutAllRoute = await read(
+  'apps',
+  'pharmacy',
+  'src',
+  'app',
+  'api',
+  'auth',
+  'logout-all',
+  'route.ts'
+);
+
+for (const routeSource of [clientLogoutAllRoute, pharmacyLogoutAllRoute]) {
+  assert.match(routeSource, /authCookieMode:\s*['"]refresh-only['"]/);
+  assert.match(routeSource, /markerAction:\s*['"]delete['"]/);
+}
+
+const clientBrowserAuth = await read(
+  'apps',
+  'client',
+  'src',
+  'lib',
+  'api',
+  'browser',
+  'auth.api.ts'
+);
+
+const pharmacyBrowserAuth = await read(
+  'apps',
+  'pharmacy',
+  'src',
+  'lib',
+  'api',
+  'browser',
+  'auth.api.ts'
+);
+
+assert.match(clientBrowserAuth, /export async function logoutAllUser\(/);
+assert.match(pharmacyBrowserAuth, /export async function logoutAllUser\(/);
+
+const clientAuthProvider = await read(
+  'apps',
+  'client',
+  'src',
+  'providers',
+  'AuthProvider',
+  'AuthProvider.tsx'
+);
+
+const pharmacyAuthProvider = await read(
+  'apps',
+  'pharmacy',
+  'src',
+  'providers',
+  'AuthProvider',
+  'AuthProvider.tsx'
+);
+
+assert.match(clientAuthProvider, /logoutAll:\s*logoutAllUser/);
+assert.match(pharmacyAuthProvider, /logoutAll:\s*logoutAllUser/);
+assert.match(authProviderCore, /clearAuthState\(['"]logout_all['"]\)/);
+assert.match(authProviderCore, /manager\.start\(['"]logout-all['"]/);
+
+const backendAuthRoutes = await read(
+  'apps',
+  'api',
+  'src',
+  'routes',
+  'auth.routes.ts'
+);
+
+const logoutAllRouteBlock = backendAuthRoutes.match(
+  /authRoutes\.post\(\s*['"]\/logout-all['"][\s\S]*?\);/
+);
+
+assert.ok(logoutAllRouteBlock, 'Could not find backend logout-all route');
+
+assert.doesNotMatch(
+  logoutAllRouteBlock[0],
+  /\bauthenticate\b/,
+  'Logout-all must use the refresh token as its browser identity proof.'
+);
+
+const backendAuthController = await read(
+  'apps',
+  'api',
+  'src',
+  'controllers',
+  'auth.controller.ts'
+);
+
+assert.match(
+  backendAuthController,
+  /logoutAllUserSessions[\s\S]*?getRefreshTokensFromCookies\(req\)[\s\S]*?revokeAllUserSessionsByRefreshTokensService/
+);
+
+assert.match(
+  authService,
+  /revokeAllUserSessionsByRefreshTokensService[\s\S]*?revokedAt:\s*undefined[\s\S]*?expiresAt:\s*\{\s*\$gt:\s*new Date\(\)\s*\}/
+);
+
 console.log('Auth contract parity check passed.');

@@ -24,6 +24,7 @@ export type AuthServiceRequestOptions = Readonly<{
 export type AuthProviderSessionServices = Readonly<{
   getCurrentUser: (options: AuthServiceRequestOptions) => Promise<AuthResponse>;
   logout: (options: AuthServiceRequestOptions) => Promise<void>;
+  logoutAll?: (options: AuthServiceRequestOptions) => Promise<void>;
 }>;
 
 //===================================================================
@@ -52,6 +53,7 @@ export type AuthUnauthenticatedReason =
   | 'session_revoked'
   | 'user_blocked'
   | 'logout'
+  | 'logout_all'
   | 'password_changed'
   | 'password_reset'
   | 'external_session_event';
@@ -109,6 +111,7 @@ export type AuthContextValue = Readonly<{
   login?: (payload: LoginPayload) => Promise<AuthUser | null>;
   register?: (payload: RegisterPayload) => Promise<AuthUser | null>;
   logout: () => Promise<void>;
+  logoutAll?: () => Promise<void>;
   invalidateSession: (reason?: AuthUnauthenticatedReason) => void;
   isRefreshingUser: boolean;
   reloadCurrentUser: () => Promise<AuthUser | null>;

@@ -1,30 +1,54 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-
-import { shouldSyncProfileForm } from './profile-form-sync';
 
 //===================================================================
 
-test('background auth revalidation preserves a dirty profile draft', () => {
-  assert.equal(
-    shouldSyncProfileForm({
-      previousUserId: '507f1f77bcf86cd799439011',
-      nextUserId: '507f1f77bcf86cd799439011',
-      isDirty: true,
-    }),
-    false
+async function readProfileSource(): Promise<string> {
+  return readFile(new URL('./ProfilePageContent.tsx', import.meta.url), 'utf8');
+}
+
+//===================================================================
+
+test('background auth revalidation preserves a dirty client profile draft', async () => {
+  const source = await readProfileSource();
+
+  assert.match(
+    source,
+    /const profileValues = profileDraft\?\.values \?\? serverProfileValues/
+  );
+
+  assert.match(
+    source,
+    /const baseline = current\?\.baseline \?\? serverProfileValues/
+  );
+
+  assert.doesNotMatch(
+    source,
+    /useEffect\([\s\S]{0,1200}setProfileDraft\([\s\S]{0,400}\[user\]/
   );
 });
 
 //===================================================================
 
-test('account switching resets profile state even when the previous draft is dirty', () => {
-  assert.equal(
-    shouldSyncProfileForm({
-      previousUserId: '507f1f77bcf86cd799439011',
-      nextUserId: '507f1f77bcf86cd799439012',
-      isDirty: true,
-    }),
-    true
+test('successful save returns the form to canonical AuthUser-backed state', async () => {
+  const source = await readProfileSource();
+
+  assert.match(
+    source,
+    /await updateCurrentUser\(nextProfileValues\);[\s\S]*?await reloadCurrentUser\(\);[\s\S]*?setProfileDraft\(null\)/
+  );
+
+  assert.match(source, /setProfileTouchedFields\(\{\}\)/);
+});
+
+//===================================================================
+
+test('account switching remounts private profile state for the next identity', async () => {
+  const source = await readProfileSource();
+
+  assert.match(
+    source,
+    /<AuthenticatedProfilePageContent key=\{user\.id\} user=\{user\} \/>/
   );
 });

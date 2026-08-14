@@ -101,7 +101,6 @@ import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
-
 import css from './ProfilePageContent.module.css';
 
 //===================================================================
@@ -143,6 +142,7 @@ function AuthenticatedProfilePageContent({
     canRenderAuthenticatedContent,
     reloadCurrentUser,
     invalidateSession,
+    logoutAll,
   } = useAuth();
 
   const toast = useToast();
@@ -178,9 +178,9 @@ function AuthenticatedProfilePageContent({
     useState(false);
 
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
-  const [pictureDraft, setPictureDraft] = useState<
-    string | null | undefined
-  >(undefined);
+  const [pictureDraft, setPictureDraft] = useState<string | null | undefined>(
+    undefined
+  );
   const picturePreview =
     pictureDraft === undefined ? (user.pictureUrl ?? null) : pictureDraft;
   const [orders, setOrders] = useState<ClientOrder[]>([]);
@@ -191,9 +191,9 @@ function AuthenticatedProfilePageContent({
   const [ordersVisibleCount, setOrdersVisibleCount] =
     useState(ORDERS_VISIBLE_STEP);
 
-  const [favoriteProducts, setFavoriteProducts] = useState<ProductCardSummary[]>(
-    []
-  );
+  const [favoriteProducts, setFavoriteProducts] = useState<
+    ProductCardSummary[]
+  >([]);
 
   const [favoritePharmacies, setFavoritePharmacies] = useState<
     PharmacyCardSummary[]
@@ -532,6 +532,18 @@ function AuthenticatedProfilePageContent({
       toast.success('Session was revoked.');
     } catch {
       setSessionsError('Could not revoke the session.');
+    }
+  };
+
+  const handleLogoutAllSessions = async () => {
+    if (!logoutAll) return;
+
+    try {
+      await logoutAll();
+    } catch {
+      toast.error(
+        'This browser was signed out, but other device sessions could not be revoked.'
+      );
     }
   };
 
@@ -936,6 +948,17 @@ function AuthenticatedProfilePageContent({
                         ))}
                       </ul>
                     )}
+
+                    {logoutAll ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => void handleLogoutAllSessions()}
+                      >
+                        Sign out all devices
+                      </Button>
+                    ) : null}
                   </section>
                 </div>
               ) : null}

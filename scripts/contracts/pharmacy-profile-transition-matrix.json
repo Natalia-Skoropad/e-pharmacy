@@ -1,0 +1,7 @@
+{
+  "new": ["edit", "submit_for_verification"],
+  "on_verification": [],
+  "on_moderation": [],
+  "active": ["edit", "submit_for_moderation"],
+  "blocked": []
+}

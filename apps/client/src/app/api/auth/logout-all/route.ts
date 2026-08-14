@@ -6,5 +6,5 @@ import { createAuthProxyRoute } from '@e-pharmacy/next-api/proxy';
 export const POST = createAuthProxyRoute({
   backendPath: authRoutes.logoutAll,
   markerAction: 'delete',
-  authCookieMode: 'access-only',
+  authCookieMode: 'refresh-only',
 });

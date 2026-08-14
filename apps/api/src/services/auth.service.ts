@@ -491,6 +491,45 @@ export async function revokeSessionByRefreshTokenService(
 
 //===============================================================
 
+export async function revokeAllUserSessionsByRefreshTokensService(
+  refreshTokens: readonly string[]
+): Promise<void> {
+  const refreshTokenHashes = Array.from(
+    new Set(refreshTokens.filter(Boolean).map(hashRefreshToken))
+  );
+
+  if (refreshTokenHashes.length === 0) {
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.INVALID_TOKEN,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_INVALID
+    );
+  }
+
+  const activeSession = await Session.findOne({
+    $or: [
+      { refreshTokenHash: { $in: refreshTokenHashes } },
+      { previousRefreshTokenHash: { $in: refreshTokenHashes } },
+    ],
+    revokedAt: undefined,
+    expiresAt: { $gt: new Date() },
+  }).select('userId');
+
+  if (!activeSession) {
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.INVALID_TOKEN,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_INVALID
+    );
+  }
+
+  await revokeAllUserSessionsService(String(activeSession.userId));
+}
+
+//===============================================================
+
 export async function revokeAllUserSessionsService(
   userId: string,
   reason: SessionRevokedReason = 'logout_all',
@@ -800,7 +839,9 @@ export async function updateUserPasswordService(
 
   try {
     await session.withTransaction(async () => {
-      const user = await User.findById(userId).select('+password').session(session);
+      const user = await User.findById(userId)
+        .select('+password')
+        .session(session);
 
       if (!user) {
         throw httpError(
@@ -827,11 +868,7 @@ export async function updateUserPasswordService(
 
       user.password = hashedPassword;
       await user.save({ session });
-      await revokeAllUserSessionsService(
-        userId,
-        'password_changed',
-        session
-      );
+      await revokeAllUserSessionsService(userId, 'password_changed', session);
     });
   } finally {
     await session.endSession();

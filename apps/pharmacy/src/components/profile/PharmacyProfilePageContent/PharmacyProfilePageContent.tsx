@@ -5,6 +5,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { KeyRound, MonitorSmartphone } from 'lucide-react';
 
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import { canPharmacyProfilePerformAction } from '@e-pharmacy/config/pharmacies';
 
 import {
   Button,
@@ -38,6 +39,7 @@ import { formatDateTime } from '@e-pharmacy/utils/date';
 import type { ActiveSession } from '@e-pharmacy/types/auth';
 
 import type {
+  MyPharmacyProfile,
   PharmacyProfile,
   PharmacyStatus,
   UpdateMyPharmacyProfilePayload,
@@ -305,7 +307,7 @@ function createTouchedUpdater<TValues extends object>(
 //===================================================================
 
 function isReadonlyStatus(status: PharmacyStatus): boolean {
-  return status === 'on_verification' || status === 'on_moderation';
+  return !canPharmacyProfilePerformAction(status, 'edit');
 }
 
 //===================================================================
@@ -501,9 +503,9 @@ function PharmacyProfilePageContent() {
 
 type PharmacyProfilePageProps = Readonly<{
   user: AuthUser;
-  initialPharmacy: PharmacyProfile;
+  initialPharmacy: MyPharmacyProfile;
   initialLoadError: string | null;
-  syncProfile: (profile: PharmacyProfile) => void;
+  syncProfile: (profile: MyPharmacyProfile) => void;
 }>;
 
 //===================================================================
@@ -515,7 +517,7 @@ function PharmacyProfilePage({
   syncProfile,
 }: PharmacyProfilePageProps) {
   const toast = useToast();
-  const { reloadCurrentUser, invalidateSession } = useAuth();
+  const { reloadCurrentUser, invalidateSession, logoutAll } = useAuth();
 
   const profileUserDefaults = useMemo<ProfileUserDefaults>(
     () => ({
@@ -527,7 +529,7 @@ function PharmacyProfilePage({
   );
 
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
-  const [pharmacy, setPharmacy] = useState<PharmacyProfile | null>(
+  const [pharmacy, setPharmacy] = useState<MyPharmacyProfile | null>(
     initialPharmacy
   );
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
@@ -742,7 +744,9 @@ function PharmacyProfilePage({
   const pharmacyPictureIsDirty =
     (pharmacyPictureUrl ?? '') !== (initialPharmacyPictureUrl ?? '');
 
-  const isProfileReadonly = isReadonlyStatus(pharmacyStatus);
+  const isProfileOwner = pharmacy?.membershipRole === 'owner';
+  const isProfileReadonly =
+    !isProfileOwner || isReadonlyStatus(pharmacyStatus);
   const pharmacyDocumentsError = validatePharmacyDocuments(documentValues, {
     required: true,
   });
@@ -753,7 +757,11 @@ function PharmacyProfilePage({
 
   const canSendForVerification =
     Boolean(pharmacy) &&
-    pharmacyStatus === 'new' &&
+    isProfileOwner &&
+    canPharmacyProfilePerformAction(
+      pharmacyStatus,
+      'submit_for_verification'
+    ) &&
     pharmacyDocumentsAreReady &&
     pharmacyPictureIsReady &&
     !hasValidationErrors(pharmacyVerificationErrors) &&
@@ -784,7 +792,8 @@ function PharmacyProfilePage({
 
   const canSendForModeration =
     Boolean(pharmacy) &&
-    pharmacyStatus === 'active' &&
+    isProfileOwner &&
+    canPharmacyProfilePerformAction(pharmacyStatus, 'submit_for_moderation') &&
     moderationFormHasChanges &&
     moderationFormIsValid &&
     !isPharmacySaving &&
@@ -1187,7 +1196,7 @@ function PharmacyProfilePage({
     return payload;
   };
 
-  const applyPharmacyFormState = (nextPharmacy: PharmacyProfile) => {
+  const applyPharmacyFormState = (nextPharmacy: MyPharmacyProfile) => {
     const nextPharmacyValues = createPharmacyInitialValues(user, nextPharmacy);
     const nextAboutValues = createAboutInitialValues(nextPharmacy);
     const nextPaymentValues = createPaymentInitialValues(user, nextPharmacy);
@@ -1288,6 +1297,18 @@ function PharmacyProfilePage({
     }
   };
 
+  const handleLogoutAllSessions = async () => {
+    if (!logoutAll) return;
+
+    try {
+      await logoutAll();
+    } catch {
+      toast.error(
+        'This browser was signed out, but other device sessions could not be revoked.'
+      );
+    }
+  };
+
   if (isLoadingProfile) {
     return (
       <main className={css.page}>
@@ -1355,7 +1376,9 @@ function PharmacyProfilePage({
               <dl className={css.compactDetails}>
                 <div>
                   <dt>Role</dt>
-                  <dd>Pharmacy</dd>
+                  <dd>
+                    {isProfileOwner ? 'Pharmacy owner' : 'Pharmacy manager'}
+                  </dd>
                 </div>
                 <div>
                   <dt>Status</dt>
@@ -1371,7 +1394,16 @@ function PharmacyProfilePage({
                 {pharmacy.status === 'new' && pharmacy.statusReason ? (
                   <p className={css.statusReason}>{pharmacy.statusReason}</p>
                 ) : null}
-                {pharmacy.status === 'new' && !pharmacy.statusReason ? (
+                {!isProfileOwner ? (
+                  <p>
+                    Manager access is read-only for verification profile data.
+                    Bank details, verification documents, profile edits, and
+                    moderation submission are owner-only.
+                  </p>
+                ) : null}
+                {isProfileOwner &&
+                pharmacy.status === 'new' &&
+                !pharmacy.statusReason ? (
                   <p>
                     New pharmacies can edit registration data and complete
                     required fields. Sales, orders, own products, clients, and
@@ -1392,7 +1424,7 @@ function PharmacyProfilePage({
                 ) : null}
               </div>
 
-              {pharmacy.status === 'new' ? (
+              {isProfileOwner && pharmacy.status === 'new' ? (
                 <Button
                   type="button"
                   fullWidth
@@ -1405,7 +1437,7 @@ function PharmacyProfilePage({
                 </Button>
               ) : null}
 
-              {pharmacy.status === 'active' ? (
+              {isProfileOwner && pharmacy.status === 'active' ? (
                 <Button
                   type="button"
                   fullWidth
@@ -2146,6 +2178,17 @@ function PharmacyProfilePage({
                             )
                           }
                         />
+
+                        {logoutAll ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => void handleLogoutAllSessions()}
+                          >
+                            Sign out all devices
+                          </Button>
+                        ) : null}
                       </>
                     ) : (
                       <div className={css.emptyState}>

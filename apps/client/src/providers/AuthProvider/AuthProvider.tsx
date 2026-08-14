@@ -10,6 +10,7 @@ import {
 import {
   getCurrentUser,
   loginUser,
+  logoutAllUser,
   logoutUser,
   registerUser,
 } from '@/lib/api/browser';
@@ -23,6 +24,7 @@ const clientAuthServices = {
   login: loginUser,
   register: registerUser,
   logout: logoutUser,
+  logoutAll: logoutAllUser,
 } satisfies AuthProviderServices;
 
 //===================================================================

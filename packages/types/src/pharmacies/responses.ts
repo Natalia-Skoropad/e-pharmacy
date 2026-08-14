@@ -1,7 +1,7 @@
 import type { ApiPaginationResponse } from '../api';
 import type { EntityId } from '../primitives';
 import type { PharmacyCardSummary } from './pharmacy-card-summary';
-import type { PharmacyProfile } from './pharmacy-profile';
+import type { MyPharmacyProfile } from './pharmacy-profile';
 
 import type {
   PharmacyCheckoutDetails,
@@ -68,10 +68,10 @@ export type PendingPharmacyReviewTarget = Readonly<{
 }>;
 
 export type PharmacyProfileResponse = Readonly<{
-  pharmacy: PharmacyProfile;
+  pharmacy: MyPharmacyProfile;
 }>;
 
 export type SendPharmacyForVerificationResponse = Readonly<{
-  pharmacy: PharmacyProfile;
+  pharmacy: MyPharmacyProfile;
   message: string;
 }>;

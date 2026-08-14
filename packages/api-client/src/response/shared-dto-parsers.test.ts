@@ -133,10 +133,9 @@ test('validates active sessions at runtime', () => {
     ip: '127.0.0.1',
   } as const;
 
-  assert.deepEqual(
-    parseActiveSessionsResponse({ sessions: [validSession] }),
-    { sessions: [validSession] }
-  );
+  assert.deepEqual(parseActiveSessionsResponse({ sessions: [validSession] }), {
+    sessions: [validSession],
+  });
 
   for (const session of [
     { ...validSession, id: 'invalid' },
@@ -535,6 +534,7 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
 
   const profile = {
     id: '6a5f5240d9c46211621acef3',
+    membershipRole: 'owner',
     name: '',
     bankTransferAvailable: false,
     documents: [document],
@@ -558,8 +558,24 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
     document.id
   );
 
+  const managerProfile = parsePharmacyProfileResponse({
+    pharmacy: {
+      ...profile,
+      membershipRole: 'manager',
+      documents: [],
+      bankDetails: undefined,
+      pendingModeration: undefined,
+    },
+  }).pharmacy;
+
+  assert.equal(managerProfile.membershipRole, 'manager');
+  assert.equal(managerProfile.bankDetails, undefined);
+  assert.deepEqual(managerProfile.documents, []);
+  assert.equal(managerProfile.pendingModeration, undefined);
+
   for (const invalidProfile of [
     { ...profile, id: 'bad-id' },
+    { ...profile, membershipRole: 'viewer' },
     { ...profile, status: 'something_new' },
     { ...profile, updatedAt: 'yesterday' },
     { ...profile, documents: [123] },
@@ -613,7 +629,6 @@ test('validates controlled pharmacy registration upload responses', () => {
     ApiError
   );
 });
-
 
 //===================================================================
 

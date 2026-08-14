@@ -12,7 +12,7 @@ import {
 } from 'react';
 
 import { useAuth } from '@e-pharmacy/auth/react';
-import type { PharmacyProfile } from '@e-pharmacy/types/pharmacies';
+import type { MyPharmacyProfile } from '@e-pharmacy/types/pharmacies';
 
 import { getMyPharmacyProfile } from '@/lib/api/browser';
 
@@ -21,16 +21,16 @@ import { isCurrentPharmacyProfileRequest } from './pharmacy-profile-request';
 //===================================================================
 
 type PharmacyProfileContextValue = Readonly<{
-  profile: PharmacyProfile | null;
+  profile: MyPharmacyProfile | null;
   isLoading: boolean;
   error: unknown;
-  refresh: () => Promise<PharmacyProfile | null>;
-  syncProfile: (profile: PharmacyProfile) => void;
+  refresh: () => Promise<MyPharmacyProfile | null>;
+  syncProfile: (profile: MyPharmacyProfile) => void;
 }>;
 
 type PharmacyProfileSnapshot = Readonly<{
   identity: string;
-  profile: PharmacyProfile | null;
+  profile: MyPharmacyProfile | null;
   isLoading: boolean;
   error: unknown;
 }>;
@@ -61,7 +61,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
   }, [identity]);
 
   const requestProfile = useCallback(
-    async (requestIdentity: string): Promise<PharmacyProfile | null> => {
+    async (requestIdentity: string): Promise<MyPharmacyProfile | null> => {
       activeControllerRef.current?.abort();
       const controller = new AbortController();
       activeControllerRef.current = controller;
@@ -113,7 +113,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
   );
 
   const syncProfile = useCallback(
-    (profile: PharmacyProfile) => {
+    (profile: MyPharmacyProfile) => {
       if (!identity) return;
 
       setSnapshot({

@@ -35,7 +35,6 @@ import type {
 
 //===================================================================
 
-
 export async function uploadPharmacyRegistrationDocument(
   payload: PharmacyDocumentUploadPayload,
   options?: MutationRequestOptions
@@ -148,6 +147,22 @@ export async function logoutUser(
       method: 'POST',
     }),
 
+    { url: path, method: 'POST' }
+  );
+}
+
+//===================================================================
+
+export async function logoutAllUser(
+  options?: MutationRequestOptions
+): Promise<void> {
+  const path = CLIENT_API_ROUTES.auth.logoutAll;
+
+  parseApiEmptyResponse(
+    await localApiRequest(path, {
+      ...options,
+      method: 'POST',
+    }),
     { url: path, method: 'POST' }
   );
 }

@@ -18,7 +18,7 @@ import {
   registerUserService,
   requestPasswordResetService,
   resetPasswordService,
-  revokeAllUserSessionsService,
+  revokeAllUserSessionsByRefreshTokensService,
   revokeSessionByRefreshTokenService,
   getActiveSessionsService,
   revokeUserSessionService,
@@ -349,11 +349,9 @@ export async function logoutAllUserSessions(
   req: Request,
   res: Response
 ): Promise<void> {
-  const userId = req.user?.id;
+  const refreshTokens = getRefreshTokensFromCookies(req);
 
-  if (!userId) return;
-
-  await revokeAllUserSessionsService(userId);
+  await revokeAllUserSessionsByRefreshTokensService(refreshTokens);
   clearAuthCookies(res);
 
   sendSuccessResponse({

@@ -19,6 +19,33 @@ test('maps profile business codes without exposing backend copy', () => {
   );
 });
 
+
+//===================================================================
+
+test('maps moderation and owner-only profile codes through controlled copy', () => {
+  assert.equal(
+    getProfileErrorMessage(
+      new ApiError('backend wording must not matter', {
+        httpStatus: 409,
+        backendCode: 'PHARMACY_PROFILE_ALREADY_SUBMITTED',
+      }),
+      'Fallback'
+    ),
+    'This pharmacy profile is already submitted for review.'
+  );
+
+  assert.equal(
+    getProfileErrorMessage(
+      new ApiError('backend wording must not matter', {
+        httpStatus: 403,
+        backendCode: 'PHARMACY_OWNER_REQUIRED',
+      }),
+      'Fallback'
+    ),
+    'Only the pharmacy owner can change verification profile data.'
+  );
+});
+
 //===================================================================
 
 test('does not expose unknown API or technical messages', () => {

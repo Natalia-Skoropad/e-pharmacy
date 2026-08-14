@@ -5,6 +5,10 @@ import type { PharmacyStatus } from './status';
 
 //=============================================================================
 
+type PharmacyMembershipRole = 'owner' | 'manager';
+
+//=============================================================================
+
 export type PharmacyPendingModeration = Readonly<{
   name?: string;
   address?: string;
@@ -40,6 +44,13 @@ export type PharmacyProfile = Readonly<{
   reviewsCount: number;
   updatedAt: ISODateTimeString;
 }>;
+
+//=============================================================================
+
+export type MyPharmacyProfile = PharmacyProfile &
+  Readonly<{
+    membershipRole: PharmacyMembershipRole;
+  }>;
 
 //=============================================================================
 

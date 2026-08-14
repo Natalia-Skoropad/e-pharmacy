@@ -3,9 +3,6 @@ import type { ClientSession, Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { PHARMACY_DOCUMENT_RULES } from '../constants/pharmacy-document-validation';
-import { PHARMACY_STATUSES } from '../constants/auth';
-import { PHARMACY_PROFILE_MISSING_ERROR_CODE } from '../constants/pharmacy-profile';
-import { Pharmacy } from '../models/pharmacy.model';
 import { PharmacyDocumentFile } from '../models/pharmacyDocumentFile.model';
 
 import type {
@@ -16,6 +13,7 @@ import type {
 
 import type { PharmacyVerificationDocumentMetadata } from '../types/pharmacy';
 import { httpError } from '../utils/httpError';
+import { findPharmacyForProfileAccess } from './pharmacy-membership.service';
 
 //===================================================================
 
@@ -285,34 +283,17 @@ export async function claimRegistrationPharmacyDocuments(
 
 //===================================================================
 
-async function findPrivatePharmacyForUser(userId: string) {
-  const pharmacy = await Pharmacy.findOne({
-    $or: [{ ownerId: userId }, { managerUserIds: userId }],
-  });
-
-  if (!pharmacy) {
-    throw httpError(
-      HTTP_STATUS.CONFLICT,
-      'Pharmacy profile is missing for this pharmacy account.',
-      undefined,
-      PHARMACY_PROFILE_MISSING_ERROR_CODE
-    );
-  }
-
-  if (pharmacy.status === PHARMACY_STATUSES.BLOCKED) {
-    throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy is blocked.');
-  }
-
-  return pharmacy;
-}
-
 //===================================================================
 
 export async function createPrivatePharmacyDocumentUploadService(
   userId: string,
   input: PharmacyDocumentUploadInput
 ): Promise<{ document: PharmacyVerificationDocumentMetadata }> {
-  const pharmacy = await findPrivatePharmacyForUser(userId);
+  const { pharmacy } = await findPharmacyForProfileAccess(
+    userId,
+    'manage_documents'
+  );
+
   const verified = decodeAndVerifyUpload(input);
 
   const document = await PharmacyDocumentFile.create({
@@ -343,12 +324,14 @@ export async function resolvePrivatePharmacyDocumentSelections(
     _id: { $in: ids },
     pharmacyId,
   });
+
   if (session) query.session(session);
   const documents = await query;
 
   const byId = new Map(
     documents.map((document) => [String(document._id), document])
   );
+
   const ordered = ids.map((id) => byId.get(id));
 
   if (ordered.some((document) => !document)) {
@@ -379,7 +362,11 @@ export async function getPrivatePharmacyDocumentContentService(
   document: PharmacyVerificationDocumentMetadata;
   dataUrl: string;
 }> {
-  const pharmacy = await findPrivatePharmacyForUser(userId);
+  const { pharmacy } = await findPharmacyForProfileAccess(
+    userId,
+    'manage_documents'
+  );
+
   const document = await PharmacyDocumentFile.findOne({
     _id: documentId,
     pharmacyId: pharmacy._id,

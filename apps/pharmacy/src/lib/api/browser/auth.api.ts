@@ -39,3 +39,19 @@ export async function logoutUser(options?: {
     { url: path, method: 'POST' }
   );
 }
+
+//===================================================================
+
+export async function logoutAllUser(options?: {
+  signal?: AbortSignal;
+}): Promise<void> {
+  const path = PHARMACY_API_ROUTES.auth.logoutAll;
+
+  parseApiEmptyResponse(
+    await localApiRequest(path, {
+      method: 'POST',
+      signal: options?.signal,
+    }),
+    { url: path, method: 'POST' }
+  );
+}

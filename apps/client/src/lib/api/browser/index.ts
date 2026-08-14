@@ -4,6 +4,7 @@ export {
   getActiveSessions,
   getCurrentUser,
   loginUser,
+  logoutAllUser,
   logoutUser,
   registerUser,
   uploadPharmacyRegistrationDocument,

@@ -11,6 +11,10 @@ export type PharmacyStatus =
 
 //===============================================================
 
+export type PharmacyMembershipRole = 'owner' | 'manager';
+
+//===============================================================
+
 export type ReviewModerationStatus = 'on_moderation' | 'approved' | 'rejected';
 
 //===============================================================
@@ -174,6 +178,11 @@ export type PharmacyProfileResponseDto = {
   pendingModeration?: PharmacyPendingModeration;
   reviewsCount: number;
   updatedAt: ISODateTimeString;
+};
+
+
+export type MyPharmacyProfileResponseDto = PharmacyProfileResponseDto & {
+  membershipRole: PharmacyMembershipRole;
 };
 
 //===============================================================

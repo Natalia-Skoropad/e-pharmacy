@@ -35,7 +35,7 @@ import {
   refreshAuthSessionService,
   registerUserService,
   resetPasswordService,
-  revokeAllUserSessionsService,
+  revokeAllUserSessionsByRefreshTokensService,
   revokeSessionByRefreshTokenService,
   updateUserPasswordService,
   updateUserProfileService,
@@ -970,7 +970,9 @@ test(
       );
 
       await refreshAuthSessionService(second.tokens.refreshToken);
-      await revokeAllUserSessionsService(String(user._id));
+      await revokeAllUserSessionsByRefreshTokensService([
+        second.tokens.refreshToken,
+      ]);
 
       await assert.rejects(() =>
         refreshAuthSessionService(second.tokens.refreshToken)
@@ -1087,6 +1089,148 @@ test(
         persisted?.pendingModeration?.description,
         'Pending description'
       );
+    } finally {
+      await cleanup(identity.email);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'pharmacy managers can read the profile but cannot edit verification data or submit moderation',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const ownerIdentity = uniqueIdentity('profile-owner');
+    const managerIdentity = uniqueIdentity('profile-manager');
+
+    try {
+      const owner = await User.create({
+        name: 'Profile Owner',
+        email: ownerIdentity.email,
+        phone: ownerIdentity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'pharmacy',
+      });
+
+      const manager = await User.create({
+        name: 'Profile Manager',
+        email: managerIdentity.email,
+        phone: managerIdentity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'pharmacy',
+      });
+
+      await Pharmacy.create({
+        ownerId: owner._id,
+        managerUserIds: [manager._id],
+        name: 'Membership Pharmacy',
+        email: ownerIdentity.email,
+        phone: ownerIdentity.phone,
+        status: 'active',
+        approvedAt: new Date(),
+        activatedAt: new Date(),
+        bankDetails: {
+          recipientName: 'Membership Pharmacy LLC',
+          taxId: '12345678',
+          iban: 'UA123456789012345678901234567',
+          bankName: 'Example Bank',
+          paymentPurpose: 'Payment for medicines',
+          receiptEmail: ownerIdentity.email,
+        },
+        pendingModeration: {
+          description: 'Owner-only pending change',
+        },
+      });
+
+      const managerProfile = await getMyPharmacyProfileService(
+        String(manager._id)
+      );
+
+      assert.equal(managerProfile.pharmacy.membershipRole, 'manager');
+      assert.equal(managerProfile.pharmacy.bankDetails, undefined);
+      assert.deepEqual(managerProfile.pharmacy.documents, []);
+      assert.equal(managerProfile.pharmacy.pendingModeration, undefined);
+
+      await assert.rejects(
+        () =>
+          updateMyPharmacyProfileService(String(manager._id), {
+            description: 'Manager must not change this',
+          }),
+        (error: unknown) =>
+          typeof error === 'object' &&
+          error !== null &&
+          'code' in error &&
+          error.code === 'PHARMACY_OWNER_REQUIRED'
+      );
+
+      await assert.rejects(
+        () => sendMyPharmacyForVerificationService(String(manager._id)),
+        (error: unknown) =>
+          typeof error === 'object' &&
+          error !== null &&
+          'code' in error &&
+          error.code === 'PHARMACY_OWNER_REQUIRED'
+      );
+
+      const ownerProfile = await getMyPharmacyProfileService(String(owner._id));
+      assert.equal(ownerProfile.pharmacy.membershipRole, 'owner');
+      assert.equal(
+        ownerProfile.pharmacy.bankDetails?.recipientName,
+        'Membership Pharmacy LLC'
+      );
+      assert.equal(
+        ownerProfile.pharmacy.pendingModeration?.description,
+        'Owner-only pending change'
+      );
+    } finally {
+      await cleanup(ownerIdentity.email);
+      await cleanup(managerIdentity.email);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'pharmacy profiles already under review reject repeated submission explicitly',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const identity = uniqueIdentity('repeat-moderation-submit');
+
+    try {
+      const owner = await User.create({
+        name: 'Repeat Submit Owner',
+        email: identity.email,
+        phone: identity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'pharmacy',
+      });
+
+      const pharmacy = await Pharmacy.create({
+        ownerId: owner._id,
+        name: 'Repeat Submit Pharmacy',
+        email: identity.email,
+        phone: identity.phone,
+        status: 'on_verification',
+      });
+
+      for (const status of ['on_verification', 'on_moderation'] as const) {
+        await Pharmacy.updateOne({ _id: pharmacy._id }, { $set: { status } });
+
+        await assert.rejects(
+          () => sendMyPharmacyForVerificationService(String(owner._id)),
+          (error: unknown) =>
+            typeof error === 'object' &&
+            error !== null &&
+            'code' in error &&
+            error.code === 'PHARMACY_PROFILE_ALREADY_SUBMITTED'
+        );
+      }
     } finally {
       await cleanup(identity.email);
       await mongoose.disconnect();

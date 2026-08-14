@@ -18,6 +18,12 @@ const [
   backendErrorCodesSource,
   clientProfileSource,
   pharmacyProfileSource,
+  frontendTransitionsSource,
+  backendTransitionsSource,
+  transitionFixtureSource,
+  membershipServiceSource,
+  pharmacyTypesSource,
+  pharmacyDocumentServiceSource,
 ] = await Promise.all([
   read('packages/api-client/src/response/shared-dto-parsers.ts'),
   read('apps/api/src/services/pharmacy.service.ts'),
@@ -33,7 +39,32 @@ const [
   read(
     'apps/pharmacy/src/components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
   ),
+  read('packages/config/src/pharmacies/profile-transitions.ts'),
+  read('apps/api/src/constants/pharmacy-profile.ts'),
+  read('scripts/contracts/pharmacy-profile-transition-matrix.json'),
+  read('apps/api/src/services/pharmacy-membership.service.ts'),
+  read('packages/types/src/pharmacies/pharmacy-profile.ts'),
+  read('apps/api/src/services/pharmacy-document.service.ts'),
 ]);
+
+//===================================================================
+
+function extractTransitionMatrix(source) {
+  const match = source.match(
+    /PHARMACY_PROFILE_ACTIONS_BY_STATUS\s*=\s*\{([\s\S]*?)\}\s*as const/
+  );
+
+  assert.ok(match, 'Could not find PHARMACY_PROFILE_ACTIONS_BY_STATUS');
+
+  return Object.fromEntries(
+    [...match[1].matchAll(/^\s*([a-z_]+):\s*\[([^\]]*)\]/gm)].map(
+      ([, status, actionsSource]) => [
+        status,
+        [...actionsSource.matchAll(/['"]([^'"]+)['"]/g)].map((item) => item[1]),
+      ]
+    )
+  );
+}
 
 //===================================================================
 
@@ -41,6 +72,8 @@ assert.match(parserSource, /function parsePharmacyVerificationDocument\(/);
 assert.match(parserSource, /requireObjectId\(record, 'id', 'pharmacy profile'/);
 assert.match(parserSource, /requireCanonicalIsoDateTime\(/);
 assert.match(parserSource, /PHARMACY_STATUSES\.has/);
+assert.match(parserSource, /PHARMACY_MEMBERSHIP_ROLES\.has/);
+assert.match(parserSource, /membershipRole:/);
 assert.match(parserSource, /parseEditablePharmacyBankDetails\(/);
 assert.match(parserSource, /parsePharmacyPendingModeration\(/);
 
@@ -56,7 +89,7 @@ assert.doesNotMatch(
   'GET /pharmacies/me/profile must not repair a missing domain profile.'
 );
 
-assert.match(pharmacyServiceSource, /PHARMACY_PROFILE_MISSING_ERROR_CODE/);
+assert.match(membershipServiceSource, /PHARMACY_PROFILE_MISSING_ERROR_CODE/);
 
 assert.match(
   authTypesSource,
@@ -85,6 +118,8 @@ const profileErrorCodes = [
   'PHARMACY_PROFILE_LOCKED',
   'PHARMACY_PROFILE_INCOMPLETE',
   'PHARMACY_NO_PENDING_CHANGES',
+  'PHARMACY_PROFILE_ALREADY_SUBMITTED',
+  'PHARMACY_OWNER_REQUIRED',
 ];
 
 for (const code of profileErrorCodes) {
@@ -104,6 +139,64 @@ assert.doesNotMatch(
   'Pharmacy profile must not expose raw backend error messages.'
 );
 
+const expectedTransitionMatrix = JSON.parse(transitionFixtureSource);
+
+assert.deepEqual(
+  extractTransitionMatrix(frontendTransitionsSource),
+  expectedTransitionMatrix,
+  'Frontend pharmacy-profile transition matrix differs from the parity fixture.'
+);
+
+assert.deepEqual(
+  extractTransitionMatrix(backendTransitionsSource),
+  expectedTransitionMatrix,
+  'Backend pharmacy-profile transition matrix differs from the parity fixture.'
+);
+
+assert.match(
+  pharmacyTypesSource,
+  /PharmacyMembershipRole\s*=\s*['"]owner['"]\s*\|\s*['"]manager['"]/
+);
+
+assert.match(
+  membershipServiceSource,
+  /owner:[\s\S]*?'read_profile'[\s\S]*?'edit_profile'[\s\S]*?'manage_documents'[\s\S]*?'submit_profile'/
+);
+
+assert.match(membershipServiceSource, /manager:\s*\[['"]read_profile['"]\]/);
+
+assert.match(
+  pharmacyServiceSource,
+  /findPharmacyForProfileAccess\([\s\S]*?['"]read_profile['"]/
+);
+
+assert.match(
+  pharmacyServiceSource,
+  /findPharmacyForProfileAccess\([\s\S]*?['"]edit_profile['"]/
+);
+
+assert.match(
+  pharmacyServiceSource,
+  /findPharmacyForProfileAccess\([\s\S]*?['"]submit_profile['"]/
+);
+
+assert.match(
+  pharmacyServiceSource,
+  /membershipRole === ['"]manager['"] \? \[\]/
+);
+
+assert.match(
+  pharmacyDocumentServiceSource,
+  /findPharmacyForProfileAccess\([\s\S]*?['"]manage_documents['"]/
+);
+
+assert.match(
+  pharmacyProfileSource,
+  /pharmacy\?\.membershipRole === ['"]owner['"]/
+);
+
+assert.match(pharmacyProfileSource, /canPharmacyProfilePerformAction\(/);
+
 console.log(
-  'Profile contract check passed (strict PharmacyProfile parsing, explicit missing-profile semantics, and server-backed verification documents).'
+  'Profile contract check passed (strict parsing, transition parity, explicit membership capabilities, missing-profile semantics, and server-backed verification documents).'
 );

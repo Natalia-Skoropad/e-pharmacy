@@ -2,6 +2,8 @@ import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import {
   PHARMACY_NO_PENDING_CHANGES_ERROR_CODE,
+  PHARMACY_OWNER_REQUIRED_ERROR_CODE,
+  PHARMACY_PROFILE_ALREADY_SUBMITTED_ERROR_CODE,
   PHARMACY_PROFILE_BLOCKED_ERROR_CODE,
   PHARMACY_PROFILE_INCOMPLETE_ERROR_CODE,
   PHARMACY_PROFILE_LOCKED_ERROR_CODE,
@@ -21,6 +23,10 @@ const PROFILE_ERROR_MESSAGES: Readonly<Record<string, string>> = {
     'Complete all required pharmacy fields before verification.',
   [PHARMACY_NO_PENDING_CHANGES_ERROR_CODE]:
     'There are no pharmacy changes to send for moderation.',
+  [PHARMACY_PROFILE_ALREADY_SUBMITTED_ERROR_CODE]:
+    'This pharmacy profile is already submitted for review.',
+  [PHARMACY_OWNER_REQUIRED_ERROR_CODE]:
+    'Only the pharmacy owner can change verification profile data.',
 };
 
 //===================================================================

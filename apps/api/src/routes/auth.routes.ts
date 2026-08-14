@@ -150,11 +150,7 @@ authRoutes.delete(
 
 //=================================================================================
 
-authRoutes.post(
-  '/logout-all',
-  authenticate,
-  ctrlWrapper(logoutAllUserSessions)
-);
+authRoutes.post('/logout-all', ctrlWrapper(logoutAllUserSessions));
 
 //===============================================================
 

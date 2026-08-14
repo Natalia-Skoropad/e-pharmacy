@@ -3,12 +3,13 @@ import { Types, type HydratedDocument } from 'mongoose';
 import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
+
 import {
   PHARMACY_NO_PENDING_CHANGES_ERROR_CODE,
-  PHARMACY_PROFILE_BLOCKED_ERROR_CODE,
+  PHARMACY_PROFILE_ALREADY_SUBMITTED_ERROR_CODE,
   PHARMACY_PROFILE_INCOMPLETE_ERROR_CODE,
   PHARMACY_PROFILE_LOCKED_ERROR_CODE,
-  PHARMACY_PROFILE_MISSING_ERROR_CODE,
+  canPharmacyProfilePerformAction,
 } from '../constants/pharmacy-profile';
 
 import { Client } from '../models/client.model';
@@ -24,7 +25,8 @@ import type {
   PharmacyFilterOptionsResponseDto,
   PharmacyPendingModeration,
   PublicPharmacyResponseDto,
-  PharmacyProfileResponseDto,
+  MyPharmacyProfileResponseDto,
+  PharmacyMembershipRole,
   PharmacyReviewResponseDto,
   ReviewModerationStatus,
   UpdateMyPharmacyProfileInput,
@@ -35,6 +37,7 @@ import { createFlexibleSearchRegExp } from '../utils/regexp';
 import { requireISODateTime } from '../utils/date-contract';
 import { buildPublicEntitySlugId } from '../utils/public-slug-id';
 import { resolvePrivatePharmacyDocumentSelections } from './pharmacy-document.service';
+import { findPharmacyForProfileAccess } from './pharmacy-membership.service';
 
 //===============================================================
 
@@ -217,10 +220,12 @@ function serializePublicPharmacy(
 //===============================================================
 
 function serializePharmacyProfile(
-  pharmacy: PharmacyDocument
-): PharmacyProfileResponseDto {
+  pharmacy: PharmacyDocument,
+  membershipRole: PharmacyMembershipRole
+): MyPharmacyProfileResponseDto {
   return {
     id: String(pharmacy._id),
+    membershipRole,
     name: pharmacy.name,
     ...(pharmacy.address ? { address: pharmacy.address } : {}),
     ...(pharmacy.city ? { city: pharmacy.city } : {}),
@@ -228,14 +233,16 @@ function serializePharmacyProfile(
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
     bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
-    ...(pharmacy.bankDetails ? { bankDetails: pharmacy.bankDetails } : {}),
-    documents: pharmacy.documents ?? [],
+    ...(membershipRole !== 'manager' && pharmacy.bankDetails
+      ? { bankDetails: pharmacy.bankDetails }
+      : {}),
+    documents: membershipRole === 'manager' ? [] : (pharmacy.documents ?? []),
     status: pharmacy.status,
     rating: pharmacy.rating ?? 0,
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
     ...(pharmacy.statusReason ? { statusReason: pharmacy.statusReason } : {}),
-    ...(pharmacy.pendingModeration
+    ...(membershipRole !== 'manager' && pharmacy.pendingModeration
       ? { pendingModeration: pharmacy.pendingModeration }
       : {}),
     reviewsCount: pharmacy.reviewsCount ?? 0,
@@ -668,34 +675,6 @@ export async function setFavoritePharmacyService(
 
 //===============================================================
 
-async function findMyPharmacy(
-  userId: string
-): Promise<PharmacyHydratedDocument> {
-  const pharmacy = await Pharmacy.findOne({
-    $or: [{ ownerId: userId }, { managerUserIds: userId }],
-  });
-
-  if (!pharmacy) {
-    throw httpError(
-      HTTP_STATUS.CONFLICT,
-      'Pharmacy profile is missing for this pharmacy account.',
-      undefined,
-      PHARMACY_PROFILE_MISSING_ERROR_CODE
-    );
-  }
-
-  if (pharmacy.status === PHARMACY_STATUSES.BLOCKED) {
-    throw httpError(
-      HTTP_STATUS.FORBIDDEN,
-      'Pharmacy is blocked.',
-      undefined,
-      PHARMACY_PROFILE_BLOCKED_ERROR_CODE
-    );
-  }
-
-  return pharmacy as PharmacyHydratedDocument;
-}
-
 //===============================================================
 
 function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
@@ -737,11 +716,17 @@ function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
 
 export async function getMyPharmacyProfileService(
   userId: string
-): Promise<{ pharmacy: PharmacyProfileResponseDto }> {
-  const pharmacy = await findMyPharmacy(userId);
+): Promise<{ pharmacy: MyPharmacyProfileResponseDto }> {
+  const { pharmacy, membershipRole } = await findPharmacyForProfileAccess(
+    userId,
+    'read_profile'
+  );
 
   return {
-    pharmacy: serializePharmacyProfile(pharmacy),
+    pharmacy: serializePharmacyProfile(
+      pharmacy as PharmacyDocument,
+      membershipRole
+    ),
   };
 }
 
@@ -798,8 +783,11 @@ function buildPendingModerationPayload(
 export async function updateMyPharmacyProfileService(
   userId: string,
   input: UpdateMyPharmacyProfileInput
-): Promise<{ pharmacy: PharmacyProfileResponseDto }> {
-  const pharmacy = await findMyPharmacy(userId);
+): Promise<{ pharmacy: MyPharmacyProfileResponseDto }> {
+  const { pharmacy, membershipRole } = await findPharmacyForProfileAccess(
+    userId,
+    'edit_profile'
+  );
 
   const { documents: documentSelections, ...profileFields } = input;
   const resolvedInput: ResolvedPharmacyProfileUpdate = {
@@ -814,10 +802,7 @@ export async function updateMyPharmacyProfileService(
       : {}),
   };
 
-  if (
-    pharmacy.status === PHARMACY_STATUSES.ON_VERIFICATION ||
-    pharmacy.status === PHARMACY_STATUSES.ON_MODERATION
-  ) {
+  if (!canPharmacyProfilePerformAction(pharmacy.status, 'edit')) {
     throw httpError(
       HTTP_STATUS.BAD_REQUEST,
       'Profile fields are locked until Admin reviews the submitted pharmacy data.',
@@ -852,7 +837,10 @@ export async function updateMyPharmacyProfileService(
     }
 
     return {
-      pharmacy: serializePharmacyProfile(updatedPharmacy as PharmacyDocument),
+      pharmacy: serializePharmacyProfile(
+        updatedPharmacy as PharmacyDocument,
+        membershipRole
+      ),
     };
   }
 
@@ -894,7 +882,10 @@ export async function updateMyPharmacyProfileService(
   }
 
   return {
-    pharmacy: serializePharmacyProfile(updatedPharmacy as PharmacyDocument),
+    pharmacy: serializePharmacyProfile(
+      updatedPharmacy as PharmacyDocument,
+      membershipRole
+    ),
   };
 }
 
@@ -902,8 +893,23 @@ export async function updateMyPharmacyProfileService(
 
 export async function sendMyPharmacyForVerificationService(
   userId: string
-): Promise<{ pharmacy: PharmacyProfileResponseDto; message: string }> {
-  const pharmacy = await findMyPharmacy(userId);
+): Promise<{ pharmacy: MyPharmacyProfileResponseDto; message: string }> {
+  const { pharmacy, membershipRole } = await findPharmacyForProfileAccess(
+    userId,
+    'submit_profile'
+  );
+
+  if (
+    pharmacy.status === PHARMACY_STATUSES.ON_VERIFICATION ||
+    pharmacy.status === PHARMACY_STATUSES.ON_MODERATION
+  ) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'Pharmacy profile is already submitted for review.',
+      undefined,
+      PHARMACY_PROFILE_ALREADY_SUBMITTED_ERROR_CODE
+    );
+  }
 
   if (pharmacy.status === PHARMACY_STATUSES.NEW) {
     assertReadyForVerification(pharmacy);
@@ -923,13 +929,29 @@ export async function sendMyPharmacyForVerificationService(
     }
 
     pharmacy.status = PHARMACY_STATUSES.ON_MODERATION;
+  } else if (
+    !canPharmacyProfilePerformAction(
+      pharmacy.status,
+      'submit_for_verification'
+    ) &&
+    !canPharmacyProfilePerformAction(pharmacy.status, 'submit_for_moderation')
+  ) {
+    throw httpError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Pharmacy profile cannot be submitted from its current status.',
+      undefined,
+      PHARMACY_PROFILE_LOCKED_ERROR_CODE
+    );
   }
 
   pharmacy.updatedBy = new Types.ObjectId(userId);
   await pharmacy.save();
 
   return {
-    pharmacy: serializePharmacyProfile(pharmacy),
+    pharmacy: serializePharmacyProfile(
+      pharmacy as PharmacyDocument,
+      membershipRole
+    ),
     message:
       pharmacy.status === PHARMACY_STATUSES.ON_VERIFICATION
         ? 'Pharmacy was sent for verification.'

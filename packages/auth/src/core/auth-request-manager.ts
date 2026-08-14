@@ -1,4 +1,9 @@
-export type AuthRequestKind = 'current-user' | 'login' | 'register' | 'logout';
+export type AuthRequestKind =
+  | 'current-user'
+  | 'login'
+  | 'register'
+  | 'logout'
+  | 'logout-all';
 
 //===================================================================
 
