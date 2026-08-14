@@ -63,6 +63,11 @@ const sessionSchema = new Schema<SessionEntity>(
       required: true,
     },
 
+    absoluteExpiresAt: {
+      type: Date,
+      default: undefined,
+    },
+
     lastUsedAt: {
       type: Date,
       required: true,
@@ -98,6 +103,7 @@ const sessionSchema = new Schema<SessionEntity>(
 //===============================================================
 
 sessionSchema.index({ userId: 1, revokedAt: 1, expiresAt: 1 });
+sessionSchema.index({ userId: 1, revokedAt: 1, absoluteExpiresAt: 1 });
 sessionSchema.index({ refreshTokenHash: 1 }, { unique: true });
 sessionSchema.index({
   previousRefreshTokenHash: 1,

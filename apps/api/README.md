@@ -74,11 +74,24 @@ The API is currently client-ready. Pharmacy and admin modules are planned extens
 - Centralized error handling
 - Not-found middleware
 - Controller wrapper utility
-- Rate limiting
+- Distributed Mongo-backed auth rate limiting and progressive delays
 - Helmet
 - CORS allowlist
 - Origin/Referer validation for non-safe cookie-based mutations
 - MongoDB duplicate error normalization
+
+### Auth abuse protection
+
+Credential-sensitive auth limits use Mongo fixed-window counters with TTL rather
+than process-local memory. Replicas therefore share the same IP/account/token
+budgets, and process restarts do not reset the active window. Raw e-mail, IP,
+user-id and reset-token values are not stored as bucket identifiers; the store
+uses one-way SHA-256 bucket ids. Progressive delay counters use the same shared
+store.
+
+Public pharmacy registration documents require a one-hour upload session. A
+session is limited to six documents and 30 MB total; only the upload-session
+token hash is stored. Individual unclaimed documents keep their existing TTL.
 
 ## Tech Stack
 
@@ -92,7 +105,6 @@ The API is currently client-ready. Pharmacy and admin modules are planned extens
 - bcryptjs
 - helmet
 - cors
-- express-rate-limit
 - Nodemailer
 - Handlebars
 - pnpm workspaces
@@ -132,6 +144,8 @@ POST /health/echo
 ### Auth
 
 ```txt
+POST  /auth/pharmacy-documents/session
+POST  /auth/pharmacy-documents
 POST  /auth/register
 POST  /auth/login
 POST  /auth/password-reset/request

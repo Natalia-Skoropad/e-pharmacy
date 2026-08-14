@@ -17,6 +17,7 @@ import {
   requestPasswordReset,
   registerUser,
   uploadRegistrationPharmacyDocument,
+  createRegistrationPharmacyDocumentUploadSession,
   resetPassword,
   updateCurrentUser,
   updateCurrentUserPassword,
@@ -37,6 +38,7 @@ import {
   passwordResetTokenRateLimit,
   registrationAccountRateLimit,
   registrationDocumentIpRateLimit,
+  registrationDocumentSessionIpRateLimit,
   registrationIpRateLimit,
 } from '../middlewares/rateLimit.middleware';
 
@@ -69,6 +71,14 @@ function validateAuth(schemas: Parameters<typeof validate>[0]) {
 }
 
 //===============================================================
+
+authRoutes.post(
+  '/pharmacy-documents/session',
+  registrationDocumentSessionIpRateLimit,
+  ctrlWrapper(createRegistrationPharmacyDocumentUploadSession)
+);
+
+//=================================================================================
 
 authRoutes.post(
   '/pharmacy-documents',

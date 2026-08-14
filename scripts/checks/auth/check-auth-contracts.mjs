@@ -227,12 +227,20 @@ for (const [frontendType, backendSchema] of [
   );
 }
 
-assert.match(frontendPayloads, /application\?:\s*Extract<AuthApplication/);
+assert.match(frontendPayloads, /application:\s*Extract<AuthApplication/);
 
-assert.match(
-  backendAuthSchema,
-  /loginSchema[\s\S]*?application:[\s\S]*?\.optional\(\)/
-);
+const loginSchemaBlock = backendAuthSchema.match(
+  /export const loginSchema = z\.object\(\{([\s\S]*?)\n\}\);/
+)?.[1];
+assert.ok(loginSchemaBlock, 'Could not parse loginSchema');
+assert.match(loginSchemaBlock, /application:\s*z\.enum/);
+assert.doesNotMatch(loginSchemaBlock, /application:[\s\S]*?\.optional\(\)/);
+
+const forgotPasswordSchemaBlock = backendAuthSchema.match(
+  /export const forgotPasswordSchema = z\.object\(\{([\s\S]*?)\n\}\);/
+)?.[1];
+assert.ok(forgotPasswordSchemaBlock, 'Could not parse forgotPasswordSchema');
+assert.doesNotMatch(forgotPasswordSchemaBlock, /AUTH_APPLICATIONS\.ADMIN/);
 
 assert.match(frontendPayloads, /role\?:\s*Extract<UserRole/);
 
@@ -618,7 +626,7 @@ assert.match(
 
 assert.match(
   authService,
-  /revokeAllUserSessionsByRefreshTokensService[\s\S]*?revokedAt:\s*undefined[\s\S]*?expiresAt:\s*\{\s*\$gt:\s*new Date\(\)\s*\}/
+  /revokeAllUserSessionsByRefreshTokensService[\s\S]*?const now = new Date\(\)[\s\S]*?revokedAt:\s*undefined[\s\S]*?expiresAt:\s*\{\s*\$gt:\s*now\s*\}[\s\S]*?absoluteExpiresAt/
 );
 
 const resetPasswordPage = await read(

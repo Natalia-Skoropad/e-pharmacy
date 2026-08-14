@@ -11,6 +11,7 @@ type PharmacyDocumentFileEntity = {
   sha256: string;
   content: Buffer;
   claimTokenHash?: string;
+  registrationUploadSessionId?: Types.ObjectId;
   pharmacyId?: Types.ObjectId;
   uploadedByUserId?: Types.ObjectId;
   attachedAt?: Date;
@@ -59,6 +60,13 @@ const pharmacyDocumentFileSchema = new Schema<PharmacyDocumentFileEntity>(
     claimTokenHash: {
       type: String,
       select: false,
+      default: undefined,
+    },
+
+    registrationUploadSessionId: {
+      type: Schema.Types.ObjectId,
+      ref: 'PharmacyRegistrationUploadSession',
+      index: true,
       default: undefined,
     },
 

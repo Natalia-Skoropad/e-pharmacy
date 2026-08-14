@@ -1,6 +1,7 @@
 export const PHARMACY_DOCUMENT_RULES = {
   maxFiles: 6,
   maxSizeBytes: 10 * 1024 * 1024,
+  maxTotalSizeBytes: 30 * 1024 * 1024,
   fileNameMaxLength: 180,
 
   mimeTypes: [
@@ -92,6 +93,11 @@ export function validatePharmacyDocuments(
 
   if (files.length > PHARMACY_DOCUMENT_RULES.maxFiles) {
     return `You can upload up to ${PHARMACY_DOCUMENT_RULES.maxFiles} documents`;
+  }
+
+  const totalSizeBytes = files.reduce((sum, file) => sum + file.size, 0);
+  if (totalSizeBytes > PHARMACY_DOCUMENT_RULES.maxTotalSizeBytes) {
+    return 'Pharmacy documents must be no larger than 30 MB in total';
   }
 
   for (const file of files) {

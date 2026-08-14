@@ -26,7 +26,10 @@ import {
   updateUserProfileService,
 } from '../services/auth.service';
 
-import { createRegistrationPharmacyDocumentUploadService } from '../services/pharmacy-document.service';
+import {
+  createRegistrationPharmacyDocumentUploadService,
+  createRegistrationPharmacyDocumentUploadSessionService,
+} from '../services/pharmacy-document.service';
 
 import type {
   ForgotPasswordInput,
@@ -37,7 +40,7 @@ import type {
   UpdateProfileInput,
 } from '../types/auth';
 
-import type { PharmacyDocumentUploadInput } from '../schemas/shared/pharmacy-document.schema';
+import type { PharmacyRegistrationDocumentUploadInput } from '../schemas/shared/pharmacy-document.schema';
 import type { SessionContext } from '../types/session';
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
@@ -144,9 +147,24 @@ function requireRefreshTokensFromCookies(req: Request): string[] {
 
 //===============================================================
 
+export async function createRegistrationPharmacyDocumentUploadSession(
+  _req: Request,
+  res: Response
+): Promise<void> {
+  const data = await createRegistrationPharmacyDocumentUploadSessionService();
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.CREATED,
+    data,
+  });
+}
+
+//===============================================================
+
 export async function uploadRegistrationPharmacyDocument(
   _req: Request,
-  res: ValidatedResponse<PharmacyDocumentUploadInput>
+  res: ValidatedResponse<PharmacyRegistrationDocumentUploadInput>
 ): Promise<void> {
   const input = res.locals.validated.body;
   const data = await createRegistrationPharmacyDocumentUploadService(input);
@@ -211,7 +229,11 @@ export async function refreshAuthSession(
 
   for (const refreshToken of refreshTokens) {
     try {
-      data = await refreshAuthSessionService(refreshToken, context);
+      data = await refreshAuthSessionService(
+        refreshToken,
+        context,
+        refreshTokens
+      );
       break;
     } catch (error) {
       lastError = error;

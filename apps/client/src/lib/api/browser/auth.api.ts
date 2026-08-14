@@ -5,6 +5,7 @@ import {
   parseApiEmptyResponse,
   parseApiResponseData,
   parsePharmacyRegistrationDocumentUploadResponse,
+  parsePharmacyRegistrationUploadSessionResponse,
 } from '@e-pharmacy/api-client/response';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
@@ -22,8 +23,9 @@ import type {
 } from '@e-pharmacy/types/auth';
 
 import type {
-  PharmacyDocumentUploadPayload,
+  PharmacyRegistrationDocumentUploadPayload,
   PharmacyRegistrationDocumentUploadResponse,
+  PharmacyRegistrationUploadSessionResponse,
 } from '@e-pharmacy/types/pharmacies';
 
 import { clientApiRoutes as CLIENT_API_ROUTES } from '@/lib/api/routes/client-api-routes';
@@ -35,8 +37,25 @@ import type {
 
 //===================================================================
 
+export async function createPharmacyRegistrationUploadSession(
+  options?: MutationRequestOptions
+): Promise<PharmacyRegistrationUploadSessionResponse> {
+  const path = CLIENT_API_ROUTES.auth.pharmacyDocumentUploadSession;
+
+  return parseApiResponseData(
+    await localApiRequest(path, {
+      ...options,
+      method: 'POST',
+    }),
+    parsePharmacyRegistrationUploadSessionResponse,
+    { url: path, method: 'POST' }
+  );
+}
+
+//===================================================================
+
 export async function uploadPharmacyRegistrationDocument(
-  payload: PharmacyDocumentUploadPayload,
+  payload: PharmacyRegistrationDocumentUploadPayload,
   options?: MutationRequestOptions
 ): Promise<PharmacyRegistrationDocumentUploadResponse> {
   const path = CLIENT_API_ROUTES.auth.pharmacyDocumentUpload;

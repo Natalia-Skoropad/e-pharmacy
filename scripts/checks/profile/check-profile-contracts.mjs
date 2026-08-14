@@ -24,6 +24,8 @@ const [
   membershipServiceSource,
   pharmacyTypesSource,
   pharmacyDocumentServiceSource,
+  frontendDocumentValidationSource,
+  backendDocumentValidationSource,
 ] = await Promise.all([
   read('packages/api-client/src/response/shared-dto-parsers.ts'),
   read('apps/api/src/services/pharmacy.service.ts'),
@@ -45,6 +47,8 @@ const [
   read('apps/api/src/services/pharmacy-membership.service.ts'),
   read('packages/types/src/pharmacies/pharmacy-profile.ts'),
   read('apps/api/src/services/pharmacy-document.service.ts'),
+  read('packages/validation/src/files/pharmacy-document-validation.ts'),
+  read('apps/api/src/constants/pharmacy-document-validation.ts'),
 ]);
 
 //===================================================================
@@ -111,6 +115,25 @@ for (const requiredField of [
 }
 
 assert.match(fileModelSource, /expireAfterSeconds:\s*0/);
+
+for (const documentValidationSource of [
+  frontendDocumentValidationSource,
+  backendDocumentValidationSource,
+]) {
+  assert.match(
+    documentValidationSource,
+    /maxTotalSizeBytes:\s*30\s*\*\s*1024\s*\*\s*1024/,
+    'Frontend and backend pharmacy document rules must enforce the 30 MB aggregate quota.'
+  );
+}
+
+assert.match(
+  pharmacyDocumentServiceSource,
+  /createRegistrationPharmacyDocumentUploadSessionService/
+);
+
+assert.match(pharmacyDocumentServiceSource, /uploadedFiles/);
+assert.match(pharmacyDocumentServiceSource, /uploadedBytes/);
 
 const profileErrorCodes = [
   'PHARMACY_PROFILE_MISSING',

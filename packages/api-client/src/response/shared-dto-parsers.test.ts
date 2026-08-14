@@ -13,6 +13,7 @@ import {
   parsePharmacyDocumentContentResponse,
   parsePharmacyProfileResponse,
   parsePharmacyRegistrationDocumentUploadResponse,
+  parsePharmacyRegistrationUploadSessionResponse,
   parseProductDetails,
   parseProductsResponse,
 } from './shared-dto-parsers';
@@ -596,6 +597,34 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
       () => parsePharmacyProfileResponse({ pharmacy: invalidProfile }),
       (error: unknown) =>
         error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
+    );
+  }
+});
+
+//===================================================================
+
+test('validates pharmacy registration upload-session responses', () => {
+  const parsed = parsePharmacyRegistrationUploadSessionResponse({
+    uploadSessionId: '6a5f5240d9c46211621acf17',
+    uploadToken: 'a'.repeat(64),
+    expiresAt: '2026-08-13T09:00:00.000Z',
+    maxFiles: 6,
+    maxTotalSizeBytes: 30 * 1024 * 1024,
+  });
+
+  assert.equal(parsed.maxFiles, 6);
+  assert.equal(parsed.uploadToken.length, 64);
+
+  for (const invalid of [
+    { ...parsed, uploadSessionId: 'bad-id' },
+    { ...parsed, uploadToken: 'short' },
+    { ...parsed, expiresAt: 'tomorrow' },
+    { ...parsed, maxFiles: 0 },
+    { ...parsed, maxTotalSizeBytes: 0 },
+  ]) {
+    assert.throws(
+      () => parsePharmacyRegistrationUploadSessionResponse(invalid),
+      ApiError
     );
   }
 });

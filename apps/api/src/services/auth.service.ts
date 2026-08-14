@@ -1,4 +1,10 @@
-import { createHash, randomBytes } from 'node:crypto';
+import {
+  createHash,
+  createHmac,
+  randomBytes,
+  timingSafeEqual,
+} from 'node:crypto';
+
 import mongoose, { type ClientSession, type HydratedDocument } from 'mongoose';
 
 import { env } from '../config/env';
@@ -52,6 +58,9 @@ import { claimRegistrationPharmacyDocuments } from './pharmacy-document.service'
 //===============================================================
 
 const REFRESH_TOKEN_BYTES = 64;
+const REFRESH_TOKEN_VERSION = 'rt1';
+const REFRESH_TOKEN_ROTATION_GRACE_MS = 10_000;
+const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
 
 // Use one valid bcrypt hash for unknown-account login attempts so credential
 // verification has the same expensive code path without revealing whether an
@@ -69,15 +78,74 @@ const REFRESH_TOKEN_TTL_MS = parseDurationMs(
   30 * 24 * 60 * 60 * 1000
 );
 
-const REFRESH_TOKEN_TTL_SECONDS = Math.max(
-  1,
-  Math.floor(REFRESH_TOKEN_TTL_MS / 1000)
+const SESSION_ABSOLUTE_TTL_MS = parseDurationMs(
+  String(env.SESSION_ABSOLUTE_EXPIRES_IN),
+  90 * 24 * 60 * 60 * 1000
 );
 
 //===============================================================
 
-function createRefreshToken(): string {
-  return randomBytes(REFRESH_TOKEN_BYTES).toString('hex');
+function signRefreshTokenValue(sessionId: string, secret: string): string {
+  const payload = `${REFRESH_TOKEN_VERSION}.${sessionId}.${secret}`;
+  const signature = createHmac('sha256', env.JWT_SECRET)
+    .update(payload)
+    .digest('hex');
+  return `${payload}.${signature}`;
+}
+
+//===============================================================
+
+function createRefreshToken(sessionId: string): string {
+  return signRefreshTokenValue(
+    sessionId,
+    randomBytes(REFRESH_TOKEN_BYTES).toString('hex')
+  );
+}
+
+//===============================================================
+
+function deriveRotatedRefreshToken(
+  previousToken: string,
+  sessionId: string
+): string {
+  const secret = createHmac('sha512', env.JWT_SECRET)
+    .update(`refresh-rotation:${sessionId}:${previousToken}`)
+    .digest('hex');
+
+  return signRefreshTokenValue(sessionId, secret);
+}
+
+//===============================================================
+
+function getSignedRefreshTokenSessionId(token: string): string | null {
+  const [version, sessionId, secret, signature, ...rest] = token.split('.');
+
+  if (
+    rest.length > 0 ||
+    version !== REFRESH_TOKEN_VERSION ||
+    !sessionId ||
+    !OBJECT_ID_PATTERN.test(sessionId) ||
+    !secret ||
+    !/^[a-f\d]+$/i.test(secret) ||
+    !signature ||
+    !/^[a-f\d]{64}$/i.test(signature)
+  ) {
+    return null;
+  }
+
+  const expected = createHmac('sha256', env.JWT_SECRET)
+    .update(`${version}.${sessionId}.${secret}`)
+    .digest();
+  const received = Buffer.from(signature, 'hex');
+
+  if (
+    expected.length !== received.length ||
+    !timingSafeEqual(expected, received)
+  ) {
+    return null;
+  }
+
+  return sessionId;
 }
 
 //===============================================================
@@ -88,8 +156,25 @@ function hashRefreshToken(token: string): string {
 
 //===============================================================
 
-function getRefreshTokenExpiresAt(): Date {
-  return new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
+function getSessionAbsoluteExpiresAt(nowMs = Date.now()): Date {
+  return new Date(nowMs + SESSION_ABSOLUTE_TTL_MS);
+}
+
+//===============================================================
+
+function getRefreshTokenExpiresAt(
+  absoluteExpiresAt: Date,
+  nowMs = Date.now()
+): Date {
+  return new Date(
+    Math.min(nowMs + REFRESH_TOKEN_TTL_MS, absoluteExpiresAt.getTime())
+  );
+}
+
+//===============================================================
+
+function getRefreshTokenExpiresInSeconds(expiresAt: Date): number {
+  return Math.max(1, Math.ceil((expiresAt.getTime() - Date.now()) / 1000));
 }
 
 //===============================================================
@@ -145,17 +230,22 @@ async function createAuthSession(
   user: UserDocument,
   context?: SessionContext
 ): Promise<AuthTokens> {
-  const refreshToken = createRefreshToken();
   const safeContext = sanitizeSessionContext(context);
+  const absoluteExpiresAt = getSessionAbsoluteExpiresAt();
+  const expiresAt = getRefreshTokenExpiresAt(absoluteExpiresAt);
 
-  const session = await Session.create({
+  const session = new Session({
     userId: user._id,
-    refreshTokenHash: hashRefreshToken(refreshToken),
     roleAtLogin: user.role,
-    expiresAt: getRefreshTokenExpiresAt(),
+    expiresAt,
+    absoluteExpiresAt,
     lastUsedAt: new Date(),
     ...safeContext,
   });
+
+  const refreshToken = createRefreshToken(String(session._id));
+  session.refreshTokenHash = hashRefreshToken(refreshToken);
+  await session.save();
 
   const accessToken = signToken({
     userId: String(user._id),
@@ -167,7 +257,7 @@ async function createAuthSession(
     accessToken,
     refreshToken,
     accessTokenExpiresIn: ACCESS_TOKEN_TTL_SECONDS,
-    refreshTokenExpiresIn: REFRESH_TOKEN_TTL_SECONDS,
+    refreshTokenExpiresIn: getRefreshTokenExpiresInSeconds(expiresAt),
   };
 }
 
@@ -325,7 +415,7 @@ export async function loginUserService(
     !user ||
     user.isDefaultPharmacyClient ||
     !isPasswordValid ||
-    (input.application !== undefined && user.role !== input.application)
+    user.role !== input.application
   ) {
     throw httpError(
       HTTP_STATUS.UNAUTHORIZED,
@@ -353,49 +443,131 @@ export async function loginUserService(
 
 export async function refreshAuthSessionService(
   refreshToken: string,
-  context?: SessionContext
+  context?: SessionContext,
+  siblingRefreshTokens: readonly string[] = []
 ): Promise<AuthSessionResult> {
   const refreshTokenHash = hashRefreshToken(refreshToken);
+  const signedSessionId = getSignedRefreshTokenSessionId(refreshToken);
   const now = new Date();
+  const sessionSelect =
+    '+refreshTokenHash +previousRefreshTokenHash revokedAt revokedReason expiresAt absoluteExpiresAt previousRefreshTokenValidUntil userId';
 
-  let session = await Session.findOne({
-    refreshTokenHash,
-    revokedAt: undefined,
-    expiresAt: { $gt: now },
-  }).select('+refreshTokenHash +previousRefreshTokenHash');
+  let session = await Session.findOne({ refreshTokenHash }).select(
+    sessionSelect
+  );
 
   if (!session) {
     session = await Session.findOne({
       previousRefreshTokenHash: refreshTokenHash,
-      previousRefreshTokenValidUntil: { $gt: now },
-      revokedAt: undefined,
-      expiresAt: { $gt: now },
-    }).select('+refreshTokenHash +previousRefreshTokenHash');
+    }).select(sessionSelect);
+  }
+
+  // New-format refresh tokens are signed and contain their session id. This
+  // lets the backend recognize an older token from the same family even after
+  // it is no longer the single previous-token slot, without trusting an
+  // attacker-controlled session id.
+  if (!session && signedSessionId) {
+    session = await Session.findById(signedSessionId).select(sessionSelect);
   }
 
   if (!session) {
-    const knownSession = await Session.findOne({
-      $or: [
-        { refreshTokenHash },
-        { previousRefreshTokenHash: refreshTokenHash },
-      ],
-    }).select('revokedAt expiresAt');
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.INVALID_TOKEN,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_INVALID
+    );
+  }
+
+  if (session.revokedAt) {
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.INVALID_TOKEN,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_REVOKED
+    );
+  }
+
+  const absoluteExpiresAt = session.absoluteExpiresAt ?? session.expiresAt;
+
+  if (session.expiresAt <= now || absoluteExpiresAt <= now) {
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.INVALID_TOKEN,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_INVALID
+    );
+  }
+
+  const matchesCurrentToken = session.refreshTokenHash === refreshTokenHash;
+  const matchesPreviousToken =
+    session.previousRefreshTokenHash === refreshTokenHash;
+
+  if (
+    matchesPreviousToken &&
+    (!session.previousRefreshTokenValidUntil ||
+      session.previousRefreshTokenValidUntil <= now)
+  ) {
+    const siblingHashes = new Set(
+      siblingRefreshTokens
+        .filter((candidate) => candidate && candidate !== refreshToken)
+        .map(hashRefreshToken)
+    );
+
+    // Duplicate cookie candidates are a compatibility surface during path/domain
+    // migrations. If the same request also carries the current token for this
+    // session, fail this stale predecessor without revoking the valid device
+    // session; the controller will continue with the remaining candidates.
+    if (siblingHashes.has(session.refreshTokenHash)) {
+      throw httpError(
+        HTTP_STATUS.UNAUTHORIZED,
+        API_MESSAGES.INVALID_TOKEN,
+        undefined,
+        AUTH_ERROR_CODES.SESSION_INVALID
+      );
+    }
+
+    await Session.updateOne(
+      { _id: session._id, revokedAt: undefined },
+      {
+        $set: {
+          revokedAt: now,
+          revokedReason: 'token_reuse',
+          lastUsedAt: now,
+        },
+      }
+    );
 
     throw httpError(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_TOKEN,
       undefined,
-      knownSession?.revokedAt
-        ? AUTH_ERROR_CODES.SESSION_REVOKED
-        : AUTH_ERROR_CODES.SESSION_INVALID
+      AUTH_ERROR_CODES.SESSION_REVOKED
+    );
+  }
+
+  if (!matchesCurrentToken && !matchesPreviousToken) {
+    // A valid-but-older family token can legitimately arrive as a duplicate
+    // stale cookie after a path/domain migration. It must never authenticate,
+    // but it also must not revoke the valid current cookie before the
+    // controller gets a chance to try the remaining cookie candidates. Reuse
+    // revocation is reserved for the immediate predecessor after its grace
+    // window, where the backend can prove the token was recently rotated.
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.INVALID_TOKEN,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_INVALID
     );
   }
 
   const user = await User.findById(session.userId);
 
   if (!user) {
-    session.revokedAt = new Date();
-    await session.save();
+    await Session.updateOne(
+      { _id: session._id, revokedAt: undefined },
+      { $set: { revokedAt: now, lastUsedAt: now } }
+    );
 
     throw httpError(
       HTTP_STATUS.UNAUTHORIZED,
@@ -406,9 +578,16 @@ export async function refreshAuthSessionService(
   }
 
   if (user.status === USER_STATUSES.BLOCKED) {
-    session.revokedAt = new Date();
-    session.revokedReason = 'user_blocked';
-    await session.save();
+    await Session.updateOne(
+      { _id: session._id, revokedAt: undefined },
+      {
+        $set: {
+          revokedAt: now,
+          revokedReason: 'user_blocked',
+          lastUsedAt: now,
+        },
+      }
+    );
 
     throw httpError(
       HTTP_STATUS.FORBIDDEN,
@@ -419,48 +598,128 @@ export async function refreshAuthSessionService(
   }
 
   const safeContext = sanitizeSessionContext(context);
-
-  session.lastUsedAt = new Date();
-  if (safeContext.userAgent) session.userAgent = safeContext.userAgent;
-  if (safeContext.ip) session.ip = safeContext.ip;
-  if (safeContext.deviceName) session.deviceName = safeContext.deviceName;
-
-  const tokens: AuthTokens = {
-    accessToken: signToken({
-      userId: String(user._id),
-      role: user.role,
-      sessionId: String(session._id),
-    }),
-    refreshToken,
-    accessTokenExpiresIn: ACCESS_TOKEN_TTL_SECONDS,
-    refreshTokenExpiresIn: REFRESH_TOKEN_TTL_SECONDS,
+  const sessionContextUpdate = {
+    lastUsedAt: now,
+    ...(safeContext.userAgent ? { userAgent: safeContext.userAgent } : {}),
+    ...(safeContext.ip ? { ip: safeContext.ip } : {}),
+    ...(safeContext.deviceName ? { deviceName: safeContext.deviceName } : {}),
   };
 
-  // Keep the refresh token stable for the lifetime of this device session.
-  //
-  // The earlier implementation rotated the refresh token on every refresh and
-  // accepted the previous token only for a short grace window. That is a good
-  // security pattern when the server can safely return the latest raw refresh
-  // token to every parallel request. Here we only store token hashes, so a
-  // parallel request that arrived with the previous token could refresh the
-  // access token but could not receive the already-rotated refresh token.
-  // If that response was the last one applied by the browser, the browser kept
-  // the stale refresh cookie and the next refresh failed with
-  // "Authorization token is invalid".
-  //
-  // A stable per-device refresh token avoids that race and allows the same
-  // account to stay signed in on several devices at the same time. Logout still
-  // revokes only the current session, while logout-all/password reset/password
-  // change revoke all sessions intentionally.
-  session.previousRefreshTokenHash = undefined;
-  session.previousRefreshTokenValidUntil = undefined;
-  session.expiresAt = getRefreshTokenExpiresAt();
+  const rotatedRefreshToken = deriveRotatedRefreshToken(
+    refreshToken,
+    String(session._id)
+  );
+  let effectiveSession = session;
 
-  await session.save();
+  if (matchesCurrentToken) {
+    const nextExpiresAt = getRefreshTokenExpiresAt(
+      absoluteExpiresAt,
+      now.getTime()
+    );
+    const previousRefreshTokenValidUntil = new Date(
+      Math.min(
+        now.getTime() + REFRESH_TOKEN_ROTATION_GRACE_MS,
+        nextExpiresAt.getTime(),
+        absoluteExpiresAt.getTime()
+      )
+    );
+
+    const rotated = await Session.findOneAndUpdate(
+      {
+        _id: session._id,
+        refreshTokenHash,
+        revokedAt: undefined,
+        expiresAt: { $gt: now },
+        $or: [
+          { absoluteExpiresAt: { $gt: now } },
+          { absoluteExpiresAt: { $exists: false } },
+        ],
+      },
+      {
+        $set: {
+          refreshTokenHash: hashRefreshToken(rotatedRefreshToken),
+          previousRefreshTokenHash: refreshTokenHash,
+          previousRefreshTokenValidUntil,
+          expiresAt: nextExpiresAt,
+          absoluteExpiresAt,
+          ...sessionContextUpdate,
+        },
+      },
+      { new: true }
+    ).select(sessionSelect);
+
+    if (rotated) {
+      effectiveSession = rotated;
+    } else {
+      // Another request rotated the same token first. Re-read the one-token
+      // grace state and return the exact same deterministic successor token.
+      const raced = await Session.findOne({
+        _id: session._id,
+        previousRefreshTokenHash: refreshTokenHash,
+        previousRefreshTokenValidUntil: { $gt: new Date() },
+        revokedAt: undefined,
+      }).select(sessionSelect);
+
+      if (!raced) {
+        throw httpError(
+          HTTP_STATUS.UNAUTHORIZED,
+          API_MESSAGES.INVALID_TOKEN,
+          undefined,
+          AUTH_ERROR_CODES.SESSION_INVALID
+        );
+      }
+
+      effectiveSession = raced;
+    }
+  } else {
+    // Grace retry of the previous token must not rotate again or extend the
+    // session. Because the successor is derived from the previous raw token,
+    // every parallel request receives the same current refresh token without
+    // storing raw refresh secrets in Mongo.
+    if (
+      hashRefreshToken(rotatedRefreshToken) !==
+      effectiveSession.refreshTokenHash
+    ) {
+      await Session.updateOne(
+        { _id: effectiveSession._id, revokedAt: undefined },
+        {
+          $set: {
+            revokedAt: new Date(),
+            revokedReason: 'token_reuse',
+          },
+        }
+      );
+
+      throw httpError(
+        HTTP_STATUS.UNAUTHORIZED,
+        API_MESSAGES.INVALID_TOKEN,
+        undefined,
+        AUTH_ERROR_CODES.SESSION_REVOKED
+      );
+    }
+
+    await Session.updateOne(
+      { _id: effectiveSession._id, revokedAt: undefined },
+      { $set: sessionContextUpdate }
+    );
+  }
+
+  const accessToken = signToken({
+    userId: String(user._id),
+    role: user.role,
+    sessionId: String(effectiveSession._id),
+  });
 
   return {
     user: toAuthUserResponse(user),
-    tokens,
+    tokens: {
+      accessToken,
+      refreshToken: rotatedRefreshToken,
+      accessTokenExpiresIn: ACCESS_TOKEN_TTL_SECONDS,
+      refreshTokenExpiresIn: getRefreshTokenExpiresInSeconds(
+        effectiveSession.expiresAt
+      ),
+    },
   };
 }
 
@@ -508,13 +767,24 @@ export async function revokeAllUserSessionsByRefreshTokensService(
     );
   }
 
+  const now = new Date();
   const activeSession = await Session.findOne({
-    $or: [
-      { refreshTokenHash: { $in: refreshTokenHashes } },
-      { previousRefreshTokenHash: { $in: refreshTokenHashes } },
-    ],
     revokedAt: undefined,
-    expiresAt: { $gt: new Date() },
+    expiresAt: { $gt: now },
+    $and: [
+      {
+        $or: [
+          { refreshTokenHash: { $in: refreshTokenHashes } },
+          { previousRefreshTokenHash: { $in: refreshTokenHashes } },
+        ],
+      },
+      {
+        $or: [
+          { absoluteExpiresAt: { $gt: now } },
+          { absoluteExpiresAt: { $exists: false } },
+        ],
+      },
+    ],
   }).select('userId');
 
   if (!activeSession) {
@@ -562,10 +832,16 @@ export async function assertActiveSessionService(
     _id: sessionId,
     userId,
   })
-    .select('revokedAt expiresAt')
+    .select('revokedAt expiresAt absoluteExpiresAt')
     .lean();
 
-  if (!session || session.expiresAt <= new Date()) {
+  const now = new Date();
+  if (
+    !session ||
+    session.expiresAt <= now ||
+    (session.absoluteExpiresAt !== undefined &&
+      session.absoluteExpiresAt <= now)
+  ) {
     throw httpError(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_TOKEN,
@@ -591,8 +867,7 @@ function getPasswordResetAppUrl(
 ): string {
   const appUrls = {
     client: env.CLIENT_APP_URL,
-    pharmacy: env.CLIENT_APP_URL,
-    admin: env.ADMIN_APP_URL,
+    pharmacy: env.PHARMACY_APP_URL || env.CLIENT_APP_URL,
   } satisfies Record<ForgotPasswordInput['application'], string | undefined>;
 
   const appUrl = appUrls[application];
@@ -878,10 +1153,15 @@ export async function getActiveSessionsService(
   userId: string,
   currentSessionId?: string
 ): Promise<{ sessions: SessionResponseDto[] }> {
+  const now = new Date();
   const sessions = await Session.find({
     userId,
     revokedAt: undefined,
-    expiresAt: { $gt: new Date() },
+    expiresAt: { $gt: now },
+    $or: [
+      { absoluteExpiresAt: { $gt: now } },
+      { absoluteExpiresAt: { $exists: false } },
+    ],
   })
     .sort({ lastUsedAt: -1 })
     .lean();

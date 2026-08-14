@@ -53,7 +53,10 @@ import {
 
 import { ROUTES } from '@/lib/routes';
 import { REGISTER_TITLE } from '@/lib/seo/metadata-copy';
-import { uploadPharmacyRegistrationDocument } from '@/lib/api/browser';
+import {
+  createPharmacyRegistrationUploadSession,
+  uploadPharmacyRegistrationDocument,
+} from '@/lib/api/browser';
 
 import css from '../shared/AuthForm.module.css';
 
@@ -103,9 +106,21 @@ async function uploadRegistrationDocuments(
   files: readonly BrowserUploadFile[]
 ): Promise<PharmacyRegistrationDocumentClaim[]> {
   const claims: PharmacyRegistrationDocumentClaim[] = [];
+  const uploadSession = await createPharmacyRegistrationUploadSession();
+
+  if (
+    files.length > uploadSession.maxFiles ||
+    files.reduce((sum, file) => sum + file.size, 0) >
+      uploadSession.maxTotalSizeBytes
+  ) {
+    throw new Error(
+      'Selected pharmacy documents exceed the upload session quota.'
+    );
+  }
 
   // Upload one document per request so the 10 MB per-file rule remains below
-  // the BFF request-body limit even after base64 encoding.
+  // the BFF request-body limit even after base64 encoding. Every request is
+  // bound to the same short-lived server-side registration upload session.
   for (const file of files) {
     if (!file.file) {
       throw new Error(
@@ -121,6 +136,8 @@ async function uploadRegistrationDocuments(
     const uploaded = await uploadPharmacyRegistrationDocument({
       ...metadata,
       dataUrl,
+      uploadSessionId: uploadSession.uploadSessionId,
+      uploadToken: uploadSession.uploadToken,
     });
 
     claims.push({
@@ -382,7 +399,7 @@ function RegisterForm() {
             confirmRemove
             maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
             accept={PHARMACY_DOCUMENT_ACCEPT}
-            hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
+            hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each and 30 MB total.`}
             validateSelection={(files) => validatePharmacyDocuments(files)}
             onSelectionError={(message) =>
               setErrors((prev) => ({

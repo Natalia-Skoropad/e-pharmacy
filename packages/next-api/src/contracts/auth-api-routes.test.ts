@@ -10,6 +10,11 @@ test('owns shared same-origin auth BFF routes in next-api', () => {
   assert.equal(localAuthApiRoutes.current, '/api/auth/me');
 
   assert.equal(
+    localAuthApiRoutes.pharmacyDocumentUploadSession,
+    '/api/auth/pharmacy-documents/session'
+  );
+
+  assert.equal(
     localAuthApiRoutes.session('64b64b64b64b64b64b64b64b'),
     '/api/auth/sessions/64b64b64b64b64b64b64b64b'
   );

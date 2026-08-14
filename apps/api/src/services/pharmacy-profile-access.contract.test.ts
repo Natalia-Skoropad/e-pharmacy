@@ -92,7 +92,7 @@ test('profile and document services enforce the membership capability matrix', a
 
   assert.match(
     profileService,
-    /findPharmacyForProfileAccess\(\s*userId,\s*'edit_profile'\s*\)/
+    /findPharmacyForProfileAccess\(\s*userId,\s*'edit_profile',\s*mongoSession\s*\)/
   );
 
   assert.match(

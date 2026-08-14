@@ -1,12 +1,14 @@
 import { createHash, randomBytes } from 'node:crypto';
-import type { ClientSession, Types } from 'mongoose';
+import mongoose, { type ClientSession, type Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { PHARMACY_DOCUMENT_RULES } from '../constants/pharmacy-document-validation';
 import { PharmacyDocumentFile } from '../models/pharmacyDocumentFile.model';
+import { PharmacyRegistrationUploadSession } from '../models/pharmacyRegistrationUploadSession.model';
 
 import type {
   PharmacyDocumentUploadInput,
+  PharmacyRegistrationDocumentUploadInput,
   PharmacyProfileDocumentSelectionInput,
   PharmacyRegistrationDocumentClaimInput,
 } from '../schemas/shared/pharmacy-document.schema';
@@ -20,10 +22,17 @@ import { findPharmacyForProfileAccess } from './pharmacy-membership.service';
 const REGISTRATION_UPLOAD_TTL_MS = 60 * 60 * 1000;
 const PRIVATE_UPLOAD_TTL_MS = 24 * 60 * 60 * 1000;
 const CLAIM_TOKEN_BYTES = 32;
+const UPLOAD_SESSION_TOKEN_BYTES = 32;
 
 //===================================================================
 
 function hashClaimToken(value: string): string {
+  return createHash('sha256').update(value).digest('hex');
+}
+
+//===================================================================
+
+function hashUploadSessionToken(value: string): string {
   return createHash('sha256').update(value).digest('hex');
 }
 
@@ -214,24 +223,101 @@ function serializeDocumentContent(document: {
 
 //===================================================================
 
+export async function createRegistrationPharmacyDocumentUploadSessionService(): Promise<{
+  uploadSessionId: string;
+  uploadToken: string;
+  expiresAt: string;
+  maxFiles: number;
+  maxTotalSizeBytes: number;
+}> {
+  const uploadToken = randomBytes(UPLOAD_SESSION_TOKEN_BYTES).toString('hex');
+  const expiresAt = new Date(Date.now() + REGISTRATION_UPLOAD_TTL_MS);
+
+  const uploadSession = await PharmacyRegistrationUploadSession.create({
+    tokenHash: hashUploadSessionToken(uploadToken),
+    uploadedFiles: 0,
+    uploadedBytes: 0,
+    expiresAt,
+  });
+
+  return {
+    uploadSessionId: String(uploadSession._id),
+    uploadToken,
+    expiresAt: expiresAt.toISOString(),
+    maxFiles: PHARMACY_DOCUMENT_RULES.maxFiles,
+    maxTotalSizeBytes: PHARMACY_DOCUMENT_RULES.maxTotalSizeBytes,
+  };
+}
+
+//===================================================================
+
 export async function createRegistrationPharmacyDocumentUploadService(
-  input: PharmacyDocumentUploadInput
+  input: PharmacyRegistrationDocumentUploadInput
 ): Promise<{
   document: PharmacyVerificationDocumentMetadata;
   claimToken: string;
 }> {
   const verified = decodeAndVerifyUpload(input);
   const claimToken = randomBytes(CLAIM_TOKEN_BYTES).toString('hex');
+  const mongoSession = await mongoose.startSession();
+  let document: PharmacyVerificationDocumentMetadata | null = null;
 
-  const document = await PharmacyDocumentFile.create({
-    name: input.name,
-    ...verified,
-    claimTokenHash: hashClaimToken(claimToken),
-    expiresAt: new Date(Date.now() + REGISTRATION_UPLOAD_TTL_MS),
-  });
+  try {
+    await mongoSession.withTransaction(async () => {
+      const now = new Date();
+      const maxBytesBeforeUpload =
+        PHARMACY_DOCUMENT_RULES.maxTotalSizeBytes - verified.size;
+
+      const uploadSession =
+        await PharmacyRegistrationUploadSession.findOneAndUpdate(
+          {
+            _id: input.uploadSessionId,
+            tokenHash: hashUploadSessionToken(input.uploadToken),
+            expiresAt: { $gt: now },
+            uploadedFiles: { $lt: PHARMACY_DOCUMENT_RULES.maxFiles },
+            uploadedBytes: { $lte: maxBytesBeforeUpload },
+          },
+          {
+            $inc: {
+              uploadedFiles: 1,
+              uploadedBytes: verified.size,
+            },
+          },
+          { new: true, session: mongoSession }
+        );
+
+      if (!uploadSession) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'Pharmacy registration upload session is invalid, expired, or has reached its document quota.'
+        );
+      }
+
+      const [createdDocument] = await PharmacyDocumentFile.create(
+        [
+          {
+            name: input.name,
+            ...verified,
+            claimTokenHash: hashClaimToken(claimToken),
+            registrationUploadSessionId: uploadSession._id,
+            expiresAt: new Date(Date.now() + REGISTRATION_UPLOAD_TTL_MS),
+          },
+        ],
+        { session: mongoSession }
+      );
+
+      document = serializeDocument(createdDocument);
+    });
+  } finally {
+    await mongoSession.endSession();
+  }
+
+  if (!document) {
+    throw new Error('Registration document upload transaction did not commit.');
+  }
 
   return {
-    document: serializeDocument(document),
+    document,
     claimToken,
   };
 }
@@ -245,6 +331,8 @@ export async function claimRegistrationPharmacyDocuments(
   session: ClientSession
 ): Promise<PharmacyVerificationDocumentMetadata[]> {
   const documents: PharmacyVerificationDocumentMetadata[] = [];
+  let uploadSessionId: string | null | undefined;
+  let totalSizeBytes = 0;
 
   for (const claim of claims) {
     const document = await PharmacyDocumentFile.findOneAndUpdate(
@@ -275,13 +363,39 @@ export async function claimRegistrationPharmacyDocuments(
       );
     }
 
+    const documentUploadSessionId = document.registrationUploadSessionId
+      ? String(document.registrationUploadSessionId)
+      : null;
+
+    if (uploadSessionId === undefined) {
+      uploadSessionId = documentUploadSessionId;
+    } else if (uploadSessionId !== documentUploadSessionId) {
+      throw httpError(
+        HTTP_STATUS.BAD_REQUEST,
+        'Pharmacy registration documents must belong to one upload session.'
+      );
+    }
+
+    totalSizeBytes += document.size;
+    if (totalSizeBytes > PHARMACY_DOCUMENT_RULES.maxTotalSizeBytes) {
+      throw httpError(
+        HTTP_STATUS.BAD_REQUEST,
+        'Pharmacy registration documents exceed the total upload quota.'
+      );
+    }
+
     documents.push(serializeDocument(document));
+  }
+
+  if (uploadSessionId) {
+    await PharmacyRegistrationUploadSession.deleteOne(
+      { _id: uploadSessionId },
+      { session }
+    );
   }
 
   return documents;
 }
-
-//===================================================================
 
 //===================================================================
 

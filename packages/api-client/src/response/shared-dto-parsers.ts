@@ -41,6 +41,7 @@ import type {
   PharmacyProfileResponse,
   PharmacyProfileDocumentUploadResponse,
   PharmacyRegistrationDocumentUploadResponse,
+  PharmacyRegistrationUploadSessionResponse,
   PharmacyVerificationDocument,
   PublicPharmacy,
   SendPharmacyForVerificationResponse,
@@ -1749,6 +1750,76 @@ function parsePharmacyProfile(
       : {}),
     reviewsCount,
     updatedAt: checked<PharmacyProfile['updatedAt']>(updatedAt),
+  };
+}
+
+//===================================================================
+
+export function parsePharmacyRegistrationUploadSessionResponse(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyRegistrationUploadSessionResponse {
+  const record = requireRecord(
+    value,
+    'pharmacy registration upload session response',
+    context
+  );
+
+  const uploadSessionId = requireObjectId(
+    record,
+    'uploadSessionId',
+    'pharmacy registration upload session response',
+    context
+  );
+
+  const expiresAt = requireCanonicalIsoDateTime(
+    record,
+    'expiresAt',
+    'pharmacy registration upload session response',
+    context
+  );
+
+  if (
+    typeof record.uploadToken !== 'string' ||
+    !/^[a-f\d]{64}$/i.test(record.uploadToken)
+  ) {
+    throw invalidDto(
+      'pharmacy registration upload session response.uploadToken is invalid.',
+      record,
+      context
+    );
+  }
+
+  const maxFiles = requireSafeNonNegativeInteger(
+    record,
+    'maxFiles',
+    'pharmacy registration upload session response',
+    context
+  );
+
+  const maxTotalSizeBytes = requireSafeNonNegativeInteger(
+    record,
+    'maxTotalSizeBytes',
+    'pharmacy registration upload session response',
+    context
+  );
+
+  if (maxFiles < 1 || maxTotalSizeBytes < 1) {
+    throw invalidDto(
+      'pharmacy registration upload session limits are invalid.',
+      record,
+      context
+    );
+  }
+
+  return {
+    uploadSessionId,
+    uploadToken: record.uploadToken,
+    expiresAt: checked<
+      PharmacyRegistrationUploadSessionResponse['expiresAt']
+    >(expiresAt),
+    maxFiles,
+    maxTotalSizeBytes,
   };
 }
 

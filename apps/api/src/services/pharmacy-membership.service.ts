@@ -1,4 +1,4 @@
-import type { HydratedDocument, Types } from 'mongoose';
+import type { ClientSession, HydratedDocument, Types } from 'mongoose';
 
 import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
@@ -79,14 +79,19 @@ export function canPharmacyMembershipUseProfileCapability(
 
 export async function findPharmacyForProfileAccess(
   userId: string,
-  capability: PharmacyProfileCapability
+  capability: PharmacyProfileCapability,
+  session?: ClientSession
 ): Promise<{
   pharmacy: PharmacyHydratedDocument;
   membershipRole: PharmacyMembershipRole;
 }> {
-  const pharmacy = (await Pharmacy.findOne({
+  const query = Pharmacy.findOne({
     $or: [{ ownerId: userId }, { managerUserIds: userId }],
-  })) as PharmacyHydratedDocument | null;
+  });
+
+  if (session) query.session(session);
+
+  const pharmacy = (await query) as PharmacyHydratedDocument | null;
 
   if (!pharmacy) {
     throw httpError(

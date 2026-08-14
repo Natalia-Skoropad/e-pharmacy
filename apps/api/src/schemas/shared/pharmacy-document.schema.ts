@@ -54,6 +54,17 @@ export const pharmacyDocumentUploadSchema = z.object({
 
 //===============================================================
 
+export const pharmacyRegistrationDocumentUploadSchema =
+  pharmacyDocumentUploadSchema.extend({
+    uploadSessionId: mongoIdSchema,
+    uploadToken: z
+      .string()
+      .trim()
+      .regex(/^[a-f\d]{64}$/i),
+  });
+
+//===============================================================
+
 export const pharmacyRegistrationDocumentClaimSchema = z.object({
   documentId: mongoIdSchema,
   claimToken: z
@@ -90,6 +101,10 @@ export const pharmacyProfileDocumentSelectionsSchema = z
 
 export type PharmacyDocumentUploadInput = z.infer<
   typeof pharmacyDocumentUploadSchema
+>;
+
+export type PharmacyRegistrationDocumentUploadInput = z.infer<
+  typeof pharmacyRegistrationDocumentUploadSchema
 >;
 
 export type PharmacyRegistrationDocumentClaimInput = z.infer<

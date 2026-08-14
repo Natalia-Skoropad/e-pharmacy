@@ -1,6 +1,7 @@
 export const PHARMACY_DOCUMENT_RULES = {
   maxFiles: 6,
   maxSizeBytes: 10 * 1024 * 1024,
+  maxTotalSizeBytes: 30 * 1024 * 1024,
   fileNameMaxLength: 180,
   mimeTypes: [
     'application/pdf',
@@ -20,5 +21,6 @@ export const PHARMACY_DOCUMENT_VALIDATION_MESSAGES = {
   format: 'Choose a PDF, DOC, DOCX, JPG, PNG, or WEBP document',
   size: 'Document must be no larger than 10 MB',
   count: `A pharmacy profile can contain at most ${PHARMACY_DOCUMENT_RULES.maxFiles} documents`,
+  totalSize: 'Pharmacy documents must be no larger than 30 MB in total',
   nameLength: `Document name must be at most ${PHARMACY_DOCUMENT_RULES.fileNameMaxLength} characters`,
 } as const;

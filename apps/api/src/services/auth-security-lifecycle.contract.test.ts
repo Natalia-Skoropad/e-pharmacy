@@ -77,3 +77,21 @@ test('login does not branch on application-specific copy before credential proof
   const blockedBranch = login.indexOf('USER_STATUSES.BLOCKED');
   assert.ok(passwordComparison >= 0 && blockedBranch > passwordComparison);
 });
+
+//===================================================================
+
+test('refresh rotates tokens, caps sliding expiry with an absolute lifetime, and keeps stale-cookie fallback safe', () => {
+  const refresh = source.slice(
+    source.indexOf('export async function refreshAuthSessionService'),
+    source.indexOf('export async function revokeSessionByRefreshTokenService')
+  );
+
+  assert.match(refresh, /deriveRotatedRefreshToken/);
+  assert.match(refresh, /previousRefreshTokenHash/);
+  assert.match(refresh, /previousRefreshTokenValidUntil/);
+  assert.match(refresh, /absoluteExpiresAt/);
+  assert.match(refresh, /revokedReason:\s*'token_reuse'/);
+  assert.match(refresh, /!matchesCurrentToken && !matchesPreviousToken/);
+  assert.match(refresh, /AUTH_ERROR_CODES\.SESSION_INVALID/);
+  assert.doesNotMatch(refresh, /session\.expiresAt\s*=\s*getRefreshTokenExpiresAt/);
+});

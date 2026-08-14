@@ -12,7 +12,7 @@ async function collectFiles(directory, predicate = () => true) {
   const files = [];
 
   for (const entry of entries) {
-    if (['node_modules', '.next', '.turbo', 'dist'].includes(entry.name))
+    if (['node_modules', '.next', '.turbo', 'dist', '.artifacts'].includes(entry.name))
       continue;
     const absolute = path.join(directory, entry.name);
 

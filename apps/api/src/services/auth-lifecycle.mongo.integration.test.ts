@@ -4,10 +4,12 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { PHARMACY_DOCUMENT_RULES } from '../constants/pharmacy-document-validation';
 import { Client } from '../models/client.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import type { PharmacyVerificationDocumentMetadata } from '../types/pharmacy';
 import { PharmacyDocumentFile } from '../models/pharmacyDocumentFile.model';
+import { PharmacyRegistrationUploadSession } from '../models/pharmacyRegistrationUploadSession.model';
 import { Session } from '../models/session.model';
 import { User } from '../models/user.model';
 import { comparePassword, hashPassword } from '../utils/password';
@@ -20,6 +22,7 @@ import {
 import {
   createPrivatePharmacyDocumentUploadService,
   createRegistrationPharmacyDocumentUploadService,
+  createRegistrationPharmacyDocumentUploadSessionService,
   getAdminPharmacyDocumentContentService,
   getPrivatePharmacyDocumentContentService,
 } from './pharmacy-document.service';
@@ -74,11 +77,20 @@ async function cleanup(email: string): Promise<void> {
     _id: Types.ObjectId;
   } | null>();
   if (!user) return;
+
+  const registrationUploadSessionIds = await PharmacyDocumentFile.find({
+    uploadedByUserId: user._id,
+    registrationUploadSessionId: { $exists: true },
+  }).distinct('registrationUploadSessionId');
+
   await Promise.all([
     Client.deleteMany({ userId: user._id }),
     Pharmacy.deleteMany({ ownerId: user._id }),
     Session.deleteMany({ userId: user._id }),
     PharmacyDocumentFile.deleteMany({ uploadedByUserId: user._id }),
+    PharmacyRegistrationUploadSession.deleteMany({
+      _id: { $in: registrationUploadSessionIds },
+    }),
   ]);
   await User.deleteOne({ _id: user._id });
 }
@@ -451,6 +463,7 @@ test(
   async () => {
     await mongoose.connect(getTestMongoUri());
     const identity = uniqueIdentity('login-enumeration');
+    const pharmacyIdentity = uniqueIdentity('login-enumeration-pharmacy');
     const password = 'SecurePassword123!';
 
     try {
@@ -462,6 +475,14 @@ test(
         role: 'client',
       });
       await Client.create({ userId: user._id });
+
+      await User.create({
+        name: 'Login Enumeration Pharmacy',
+        email: pharmacyIdentity.email,
+        phone: pharmacyIdentity.phone,
+        password: await hashPassword(password),
+        role: 'pharmacy',
+      });
 
       const attempts = [
         () =>
@@ -481,6 +502,12 @@ test(
             email: identity.email,
             password,
             application: 'pharmacy',
+          }),
+        () =>
+          loginUserService({
+            email: pharmacyIdentity.email,
+            password,
+            application: 'client',
           }),
       ];
 
@@ -526,6 +553,7 @@ test(
       );
     } finally {
       await cleanup(identity.email);
+      await cleanup(pharmacyIdentity.email);
       await mongoose.disconnect();
     }
   }
@@ -606,6 +634,106 @@ test(
 //===============================================================
 
 test(
+  'pharmacy profile document attachment is status-checked and atomic with the Pharmacy update',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const identity = uniqueIdentity('profile-document-atomicity');
+    const content = Buffer.from('%PDF-1.4');
+    const originalFindByIdAndUpdate = Pharmacy.findByIdAndUpdate.bind(Pharmacy);
+
+    try {
+      const user = await User.create({
+        name: 'Profile Document Atomicity',
+        email: identity.email,
+        phone: identity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'pharmacy',
+      });
+
+      const pharmacy = await Pharmacy.create({
+        ownerId: user._id,
+        managerUserIds: [],
+        name: '',
+        phone: user.phone,
+        email: user.email,
+        documents: [],
+        status: 'new',
+      });
+
+      const uploaded = await createPrivatePharmacyDocumentUploadService(
+        String(user._id),
+        {
+          name: 'atomic-license.pdf',
+          size: content.byteLength,
+          type: 'application/pdf',
+          dataUrl: `data:application/pdf;base64,${content.toString('base64')}`,
+        }
+      );
+
+      pharmacy.status = 'on_verification';
+      await pharmacy.save();
+
+      await assert.rejects(
+        () =>
+          updateMyPharmacyProfileService(String(user._id), {
+            documents: [{ documentId: uploaded.document.id }],
+          }),
+        (error: unknown) =>
+          error instanceof Error &&
+          'code' in error &&
+          error.code === 'PHARMACY_PROFILE_LOCKED'
+      );
+
+      let stored = await PharmacyDocumentFile.findById(uploaded.document.id);
+      assert.ok(stored?.expiresAt);
+      assert.equal(stored.attachedAt, undefined);
+
+      pharmacy.status = 'new';
+      await pharmacy.save();
+
+      Pharmacy.findByIdAndUpdate = (async () => {
+        throw new Error('forced pharmacy profile write failure');
+      }) as unknown as typeof Pharmacy.findByIdAndUpdate;
+
+      await assert.rejects(
+        () =>
+          updateMyPharmacyProfileService(String(user._id), {
+            documents: [{ documentId: uploaded.document.id }],
+          }),
+        /forced pharmacy profile write failure/
+      );
+
+      stored = await PharmacyDocumentFile.findById(uploaded.document.id);
+      assert.ok(stored?.expiresAt);
+      assert.equal(stored.attachedAt, undefined);
+
+      Pharmacy.findByIdAndUpdate =
+        originalFindByIdAndUpdate as typeof Pharmacy.findByIdAndUpdate;
+
+      const saved = await updateMyPharmacyProfileService(String(user._id), {
+        documents: [{ documentId: uploaded.document.id }],
+      });
+
+      assert.equal(saved.pharmacy.documents.length, 1);
+      assert.equal(saved.pharmacy.documents[0]?.id, uploaded.document.id);
+
+      stored = await PharmacyDocumentFile.findById(uploaded.document.id);
+      assert.ok(stored?.attachedAt);
+      assert.equal(stored.expiresAt, undefined);
+    } finally {
+      Pharmacy.findByIdAndUpdate =
+        originalFindByIdAndUpdate as typeof Pharmacy.findByIdAndUpdate;
+      await cleanup(identity.email);
+      await PharmacyDocumentFile.deleteMany({ name: 'atomic-license.pdf' });
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
   'pharmacy registration stores verified binary evidence and exposes it only through controlled access services',
   { skip: shouldSkip },
   async () => {
@@ -614,11 +742,15 @@ test(
     const content = Buffer.from('%PDF-1.4');
 
     try {
+      const uploadSession =
+        await createRegistrationPharmacyDocumentUploadSessionService();
       const uploaded = await createRegistrationPharmacyDocumentUploadService({
         name: 'license.pdf',
         size: content.byteLength,
         type: 'application/pdf',
         dataUrl: `data:application/pdf;base64,${content.toString('base64')}`,
+        uploadSessionId: uploadSession.uploadSessionId,
+        uploadToken: uploadSession.uploadToken,
       });
 
       const registration = await registerUserService({
@@ -642,6 +774,12 @@ test(
       assert.ok(pharmacy);
       assert.equal(pharmacy.documents.length, 1);
       assert.equal(pharmacy.documents[0]?.sha256, uploaded.document.sha256);
+      assert.equal(
+        await PharmacyRegistrationUploadSession.exists({
+          _id: uploadSession.uploadSessionId,
+        }),
+        null
+      );
 
       const stored = await PharmacyDocumentFile.findById(
         uploaded.document.id
@@ -682,14 +820,21 @@ test(
   async () => {
     await mongoose.connect(getTestMongoUri());
     const content = Buffer.from('%PDF-1.4');
+    let uploadSessionId: string | undefined;
 
     try {
+      const uploadSession =
+        await createRegistrationPharmacyDocumentUploadSessionService();
+      uploadSessionId = uploadSession.uploadSessionId;
+
       await assert.rejects(() =>
         createRegistrationPharmacyDocumentUploadService({
           name: 'license.png',
           size: content.byteLength,
           type: 'image/png',
           dataUrl: `data:image/png;base64,${content.toString('base64')}`,
+          uploadSessionId: uploadSession.uploadSessionId,
+          uploadToken: uploadSession.uploadToken,
         })
       );
 
@@ -699,9 +844,208 @@ test(
           size: content.byteLength + 1,
           type: 'application/pdf',
           dataUrl: `data:application/pdf;base64,${content.toString('base64')}`,
+          uploadSessionId: uploadSession.uploadSessionId,
+          uploadToken: uploadSession.uploadToken,
         })
       );
     } finally {
+      if (uploadSessionId) {
+        await PharmacyRegistrationUploadSession.deleteOne({
+          _id: uploadSessionId,
+        });
+      }
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'registration upload sessions enforce file-count, aggregate-byte and expiry quotas',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const content = Buffer.from('%PDF-1.4');
+    const uploadSessionIds: string[] = [];
+
+    try {
+      const countSession =
+        await createRegistrationPharmacyDocumentUploadSessionService();
+      uploadSessionIds.push(countSession.uploadSessionId);
+
+      await assert.rejects(() =>
+        createRegistrationPharmacyDocumentUploadService({
+          name: 'wrong-token.pdf',
+          size: content.byteLength,
+          type: 'application/pdf',
+          dataUrl: `data:application/pdf;base64,${content.toString('base64')}`,
+          uploadSessionId: countSession.uploadSessionId,
+          uploadToken: '0'.repeat(64),
+        })
+      );
+
+      for (
+        let index = 0;
+        index < PHARMACY_DOCUMENT_RULES.maxFiles;
+        index += 1
+      ) {
+        await createRegistrationPharmacyDocumentUploadService({
+          name: `license-${index}.pdf`,
+          size: content.byteLength,
+          type: 'application/pdf',
+          dataUrl: `data:application/pdf;base64,${content.toString('base64')}`,
+          uploadSessionId: countSession.uploadSessionId,
+          uploadToken: countSession.uploadToken,
+        });
+      }
+
+      await assert.rejects(() =>
+        createRegistrationPharmacyDocumentUploadService({
+          name: 'license-seventh.pdf',
+          size: content.byteLength,
+          type: 'application/pdf',
+          dataUrl: `data:application/pdf;base64,${content.toString('base64')}`,
+          uploadSessionId: countSession.uploadSessionId,
+          uploadToken: countSession.uploadToken,
+        })
+      );
+
+      const bytesSession =
+        await createRegistrationPharmacyDocumentUploadSessionService();
+      uploadSessionIds.push(bytesSession.uploadSessionId);
+      await PharmacyRegistrationUploadSession.updateOne(
+        { _id: bytesSession.uploadSessionId },
+        {
+          $set: {
+            uploadedBytes:
+              PHARMACY_DOCUMENT_RULES.maxTotalSizeBytes -
+              content.byteLength +
+              1,
+          },
+        }
+      );
+
+      await assert.rejects(() =>
+        createRegistrationPharmacyDocumentUploadService({
+          name: 'over-total.pdf',
+          size: content.byteLength,
+          type: 'application/pdf',
+          dataUrl: `data:application/pdf;base64,${content.toString('base64')}`,
+          uploadSessionId: bytesSession.uploadSessionId,
+          uploadToken: bytesSession.uploadToken,
+        })
+      );
+
+      const expiredSession =
+        await createRegistrationPharmacyDocumentUploadSessionService();
+      uploadSessionIds.push(expiredSession.uploadSessionId);
+      await PharmacyRegistrationUploadSession.updateOne(
+        { _id: expiredSession.uploadSessionId },
+        { $set: { expiresAt: new Date(Date.now() - 1_000) } }
+      );
+
+      await assert.rejects(() =>
+        createRegistrationPharmacyDocumentUploadService({
+          name: 'expired.pdf',
+          size: content.byteLength,
+          type: 'application/pdf',
+          dataUrl: `data:application/pdf;base64,${content.toString('base64')}`,
+          uploadSessionId: expiredSession.uploadSessionId,
+          uploadToken: expiredSession.uploadToken,
+        })
+      );
+    } finally {
+      await PharmacyDocumentFile.deleteMany({
+        registrationUploadSessionId: { $in: uploadSessionIds },
+      });
+      await PharmacyRegistrationUploadSession.deleteMany({
+        _id: { $in: uploadSessionIds },
+      });
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'pharmacy registration rejects document claims from different upload sessions atomically',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const identity = uniqueIdentity('cross-upload-session');
+    const content = Buffer.from('%PDF-1.4');
+    const uploadSessionIds: string[] = [];
+    const documentIds: string[] = [];
+
+    try {
+      const firstSession =
+        await createRegistrationPharmacyDocumentUploadSessionService();
+      const secondSession =
+        await createRegistrationPharmacyDocumentUploadSessionService();
+      uploadSessionIds.push(
+        firstSession.uploadSessionId,
+        secondSession.uploadSessionId
+      );
+
+      const first = await createRegistrationPharmacyDocumentUploadService({
+        name: 'first-license.pdf',
+        size: content.byteLength,
+        type: 'application/pdf',
+        dataUrl: `data:application/pdf;base64,${content.toString('base64')}`,
+        uploadSessionId: firstSession.uploadSessionId,
+        uploadToken: firstSession.uploadToken,
+      });
+      const second = await createRegistrationPharmacyDocumentUploadService({
+        name: 'second-license.pdf',
+        size: content.byteLength,
+        type: 'application/pdf',
+        dataUrl: `data:application/pdf;base64,${content.toString('base64')}`,
+        uploadSessionId: secondSession.uploadSessionId,
+        uploadToken: secondSession.uploadToken,
+      });
+      documentIds.push(first.document.id, second.document.id);
+
+      await assert.rejects(() =>
+        registerUserService({
+          name: 'Cross Upload Session',
+          email: identity.email,
+          phone: identity.phone,
+          password: 'SecurePassword123!',
+          role: 'pharmacy',
+          pharmacyDocuments: [
+            { documentId: first.document.id, claimToken: first.claimToken },
+            { documentId: second.document.id, claimToken: second.claimToken },
+          ],
+        })
+      );
+
+      assert.equal(await User.exists({ email: identity.email }), null);
+      assert.equal(await Pharmacy.exists({ email: identity.email }), null);
+
+      const storedDocuments = await PharmacyDocumentFile.find({
+        _id: { $in: documentIds },
+      });
+      assert.equal(storedDocuments.length, 2);
+      for (const document of storedDocuments) {
+        assert.equal(document.claimedByPharmacyId, undefined);
+        assert.equal(document.uploadedByUserId, undefined);
+        assert.ok(document.expiresAt);
+      }
+
+      assert.equal(
+        await PharmacyRegistrationUploadSession.countDocuments({
+          _id: { $in: uploadSessionIds },
+        }),
+        2
+      );
+    } finally {
+      await PharmacyDocumentFile.deleteMany({ _id: { $in: documentIds } });
+      await PharmacyRegistrationUploadSession.deleteMany({
+        _id: { $in: uploadSessionIds },
+      });
+      await cleanup(identity.email);
       await mongoose.disconnect();
     }
   }
@@ -976,6 +1320,141 @@ test(
 
       await assert.rejects(() =>
         refreshAuthSessionService(second.tokens.refreshToken)
+      );
+    } finally {
+      await cleanup(identity.email);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'refresh rotation is race-safe, bounded by an absolute lifetime, and revokes reuse after grace',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const identity = uniqueIdentity('refresh-rotation');
+    const password = 'SecurePassword123!';
+
+    try {
+      const user = await User.create({
+        name: 'Refresh Rotation',
+        email: identity.email,
+        phone: identity.phone,
+        password: await hashPassword(password),
+        role: 'client',
+      });
+      await Client.create({ userId: user._id });
+
+      const login = await loginUserService({
+        email: identity.email,
+        password,
+        application: 'client',
+      });
+
+      const before = await Session.findOne({ userId: user._id }).select(
+        '+refreshTokenHash +previousRefreshTokenHash absoluteExpiresAt expiresAt'
+      );
+      assert.ok(before?.absoluteExpiresAt);
+      const absoluteBefore = before.absoluteExpiresAt.getTime();
+
+      const [firstRefresh, parallelRefresh] = await Promise.all([
+        refreshAuthSessionService(login.tokens.refreshToken),
+        refreshAuthSessionService(login.tokens.refreshToken),
+      ]);
+
+      assert.notEqual(
+        firstRefresh.tokens.refreshToken,
+        login.tokens.refreshToken
+      );
+      assert.equal(
+        parallelRefresh.tokens.refreshToken,
+        firstRefresh.tokens.refreshToken
+      );
+
+      const after = await Session.findById(before._id).select(
+        '+refreshTokenHash +previousRefreshTokenHash previousRefreshTokenValidUntil absoluteExpiresAt expiresAt'
+      );
+      assert.ok(after?.absoluteExpiresAt);
+      assert.equal(after.absoluteExpiresAt.getTime(), absoluteBefore);
+      assert.ok(after.expiresAt <= after.absoluteExpiresAt);
+      assert.equal(
+        after.refreshTokenHash,
+        createHash('sha256')
+          .update(firstRefresh.tokens.refreshToken)
+          .digest('hex')
+      );
+      assert.equal(
+        after.previousRefreshTokenHash,
+        createHash('sha256').update(login.tokens.refreshToken).digest('hex')
+      );
+
+      await Session.updateOne(
+        { _id: after._id },
+        {
+          $set: {
+            previousRefreshTokenValidUntil: new Date(Date.now() - 1_000),
+          },
+        }
+      );
+
+      await assert.rejects(
+        () =>
+          refreshAuthSessionService(login.tokens.refreshToken, undefined, [
+            login.tokens.refreshToken,
+            firstRefresh.tokens.refreshToken,
+          ]),
+        (error: unknown) =>
+          error instanceof Error &&
+          'code' in error &&
+          error.code === 'AUTH_SESSION_INVALID'
+      );
+
+      const afterStaleCookie = await Session.findById(after._id).select(
+        'revokedAt'
+      );
+      assert.equal(afterStaleCookie?.revokedAt, undefined);
+
+      const secondRotation = await refreshAuthSessionService(
+        firstRefresh.tokens.refreshToken
+      );
+
+      const afterSecondRotation = await Session.findById(after._id).select(
+        'revokedAt +previousRefreshTokenHash previousRefreshTokenValidUntil'
+      );
+      assert.equal(afterSecondRotation?.revokedAt, undefined);
+      assert.equal(
+        afterSecondRotation?.previousRefreshTokenHash,
+        createHash('sha256')
+          .update(firstRefresh.tokens.refreshToken)
+          .digest('hex')
+      );
+
+      await Session.updateOne(
+        { _id: after._id },
+        {
+          $set: {
+            previousRefreshTokenValidUntil: new Date(Date.now() - 1_000),
+          },
+        }
+      );
+
+      await assert.rejects(
+        () => refreshAuthSessionService(firstRefresh.tokens.refreshToken),
+        (error: unknown) =>
+          error instanceof Error &&
+          'code' in error &&
+          error.code === 'AUTH_SESSION_REVOKED'
+      );
+
+      await assert.rejects(
+        () => refreshAuthSessionService(secondRotation.tokens.refreshToken),
+        (error: unknown) =>
+          error instanceof Error &&
+          'code' in error &&
+          error.code === 'AUTH_SESSION_REVOKED'
       );
     } finally {
       await cleanup(identity.email);

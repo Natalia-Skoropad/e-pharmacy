@@ -72,6 +72,11 @@ test('logout-all also uses refresh identity and clears local cookies without a l
 
   assert.match(
     authService,
-    /revokeAllUserSessionsByRefreshTokensService\([\s\S]*?expiresAt:\s*\{\s*\$gt: new Date\(\)\s*\}/
+    /revokeAllUserSessionsByRefreshTokensService\([\s\S]*?const now = new Date\(\);[\s\S]*?expiresAt:\s*\{\s*\$gt:\s*now\s*\}/
+  );
+
+  assert.match(
+    authService,
+    /revokeAllUserSessionsByRefreshTokensService\([\s\S]*?absoluteExpiresAt:\s*\{\s*\$gt:\s*now\s*\}[\s\S]*?absoluteExpiresAt:\s*\{\s*\$exists:\s*false\s*\}/
   );
 });

@@ -11,6 +11,7 @@ import type { EntityId } from '@e-pharmacy/types/primitives';
  */
 export const localAuthApiRoutes = {
   register: '/api/auth/register',
+  pharmacyDocumentUploadSession: '/api/auth/pharmacy-documents/session',
   pharmacyDocumentUpload: '/api/auth/pharmacy-documents',
   login: '/api/auth/login',
   logout: '/api/auth/logout',

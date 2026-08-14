@@ -1,8 +1,16 @@
 import type { NextFunction, Request, Response } from 'express';
-import rateLimit from 'express-rate-limit';
 
 import { AUTH_ERROR_CODES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
+
+import {
+  decrementRateLimitCounter,
+  getRateLimitCounter,
+  incrementRateLimitCounter,
+  incrementRateLimitCounterInWindow,
+  resetRateLimitCounter,
+} from '../services/rate-limit-store.service';
+
 import { logger } from '../utils/logger';
 
 import {
@@ -14,19 +22,7 @@ import {
 
 //===============================================================
 
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
-const MAX_PROGRESSIVE_DELAY_BUCKETS = 10_000;
-
-//===============================================================
-
 type RateLimitKeyResolver = (req: Request, res: Response) => string | null;
-
-type ProgressiveDelayBucket = {
-  failures: number;
-  resetAt: number;
-};
-
-const progressiveDelayBuckets = new Map<string, ProgressiveDelayBucket>();
 
 //===============================================================
 
@@ -62,49 +58,20 @@ function getAuthenticatedUserKey(req: Request): string | null {
 
 //===============================================================
 
-function pruneProgressiveDelayBuckets(now: number): void {
-  if (progressiveDelayBuckets.size < MAX_PROGRESSIVE_DELAY_BUCKETS) return;
-
-  for (const [key, bucket] of progressiveDelayBuckets) {
-    if (bucket.resetAt <= now) progressiveDelayBuckets.delete(key);
-  }
+function getIpKey(req: Request): string | null {
+  return req.ip ? `ip:${req.ip}` : null;
 }
 
 //===============================================================
 
-function getProgressiveFailureCount(key: string, now: number): number {
-  const bucket = progressiveDelayBuckets.get(key);
-
-  if (!bucket || bucket.resetAt <= now) {
-    progressiveDelayBuckets.delete(key);
-    return 0;
-  }
-
-  return bucket.failures;
-}
-
-//===============================================================
-
-function recordProgressiveAttempt(
-  key: string,
-  statusCode: number,
-  now: number
-): void {
-  if (statusCode >= 200 && statusCode < 400) {
-    progressiveDelayBuckets.delete(key);
-    return;
-  }
-
-  if (statusCode < 400 || statusCode >= 500) return;
-
-  const previousFailures = getProgressiveFailureCount(key, now);
-
-  progressiveDelayBuckets.set(key, {
-    failures: previousFailures + 1,
-    resetAt: now + RATE_LIMIT_WINDOW_MS,
+function runAfterResponse(res: Response, operation: () => Promise<void>): void {
+  res.once('finish', () => {
+    void operation().catch((error) => {
+      logger.error('[security] Failed to update distributed rate-limit state', {
+        error,
+      });
+    });
   });
-
-  pruneProgressiveDelayBuckets(now);
 }
 
 //===============================================================
@@ -113,7 +80,11 @@ function createProgressiveDelay(
   policy: string,
   resolveKey: RateLimitKeyResolver
 ) {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     const key = resolveKey(req, res);
 
     if (!key) {
@@ -121,29 +92,40 @@ function createProgressiveDelay(
       return;
     }
 
-    const now = Date.now();
-    const failures = getProgressiveFailureCount(key, now);
-    const delayMs = getProgressiveDelayMs(failures);
+    try {
+      const counter = await getRateLimitCounter(`progressive:${policy}`, key);
+      const failures = counter.hits;
+      const delayMs = getProgressiveDelayMs(failures);
 
-    res.once('finish', () => {
-      recordProgressiveAttempt(key, res.statusCode, Date.now());
-    });
+      runAfterResponse(res, async () => {
+        if (res.statusCode >= 200 && res.statusCode < 400) {
+          await resetRateLimitCounter(counter.window);
+          return;
+        }
 
-    if (delayMs <= 0) {
-      next();
-      return;
+        if (res.statusCode >= 400 && res.statusCode < 500) {
+          await incrementRateLimitCounterInWindow(counter.window);
+        }
+      });
+
+      if (delayMs <= 0) {
+        next();
+        return;
+      }
+
+      logger.security({
+        action: 'auth_progressive_delay',
+        policy,
+        delayMs,
+        failures,
+        accountFingerprint: fingerprintRateLimitKey(key),
+        ipFingerprint: fingerprintRateLimitKey(req.ip),
+      });
+
+      setTimeout(() => next(), delayMs);
+    } catch (error) {
+      next(error);
     }
-
-    logger.security({
-      action: 'auth_progressive_delay',
-      policy,
-      delayMs,
-      failures,
-      accountFingerprint: fingerprintRateLimitKey(key),
-      ipFingerprint: fingerprintRateLimitKey(req.ip),
-    });
-
-    setTimeout(() => next(), delayMs);
   };
 }
 
@@ -166,26 +148,51 @@ function createRateLimit(options: {
     skipSuccessfulRequests = false,
   } = options;
 
-  return rateLimit({
-    windowMs: RATE_LIMIT_WINDOW_MS,
-    limit,
-    standardHeaders: true,
-    legacyHeaders: false,
-    skipSuccessfulRequests,
-    ...(resolveKey
-      ? {
-          skip: (req, res) => resolveKey(req, res) === null,
-          keyGenerator: (req, res) => resolveKey(req, res) ?? 'missing-key',
-        }
-      : {}),
-    statusCode: HTTP_STATUS.TOO_MANY_REQUESTS,
-    handler: (req, res) => {
-      const resolvedKey = resolveKey?.(req, res);
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    const key = resolveKey ? resolveKey(req, res) : getIpKey(req);
+
+    if (!key) {
+      next();
+      return;
+    }
+
+    try {
+      const counter = await incrementRateLimitCounter(policy, key);
+      const remaining = Math.max(0, limit - counter.hits);
+      const resetSeconds = Math.max(
+        1,
+        Math.ceil((counter.window.resetAt.getTime() - Date.now()) / 1000)
+      );
+
+      res.setHeader('RateLimit-Limit', String(limit));
+      res.setHeader('RateLimit-Remaining', String(remaining));
+      res.setHeader('RateLimit-Reset', String(resetSeconds));
+
+      if (skipSuccessfulRequests) {
+        runAfterResponse(res, async () => {
+          if (res.statusCode >= 200 && res.statusCode < 400) {
+            await decrementRateLimitCounter(counter.window);
+          }
+        });
+      }
+
+      if (counter.hits <= limit) {
+        next();
+        return;
+      }
+
+      res.setHeader('Retry-After', String(resetSeconds));
 
       logger.security({
         action: 'auth_rate_limited',
         policy,
-        accountFingerprint: fingerprintRateLimitKey(resolvedKey),
+        accountFingerprint: fingerprintRateLimitKey(
+          resolveKey ? key : undefined
+        ),
         ipFingerprint: fingerprintRateLimitKey(req.ip),
       });
 
@@ -194,11 +201,19 @@ function createRateLimit(options: {
         message,
         ...(code ? { code } : {}),
       });
-    },
-  });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 //===============================================================
+
+export const registrationDocumentSessionIpRateLimit = createRateLimit({
+  policy: 'registration-document-session-ip',
+  limit: 5,
+  message: 'Too many document upload sessions. Please try again later.',
+});
 
 export const registrationDocumentIpRateLimit = createRateLimit({
   policy: 'registration-document-ip',

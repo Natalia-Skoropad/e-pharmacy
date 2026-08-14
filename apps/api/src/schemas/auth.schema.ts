@@ -16,7 +16,7 @@ import {
 import { AUTH_APPLICATIONS, USER_ROLES } from '../constants/auth';
 
 import {
-  pharmacyDocumentUploadSchema,
+  pharmacyRegistrationDocumentUploadSchema,
   pharmacyRegistrationDocumentClaimsSchema,
 } from './shared/pharmacy-document.schema';
 
@@ -89,7 +89,7 @@ export const createPharmacyUserSchema = z
 //===============================================================
 
 export const uploadRegistrationPharmacyDocumentSchema =
-  pharmacyDocumentUploadSchema;
+  pharmacyRegistrationDocumentUploadSchema;
 
 //===============================================================
 
@@ -97,20 +97,14 @@ export const loginSchema = z.object({
   email: sharedEmailSchema,
   password: sharedRequiredPasswordSchema,
 
-  application: z
-    .enum([AUTH_APPLICATIONS.CLIENT, AUTH_APPLICATIONS.PHARMACY])
-    .optional(),
+  application: z.enum([AUTH_APPLICATIONS.CLIENT, AUTH_APPLICATIONS.PHARMACY]),
 });
 
 //===============================================================
 
 export const forgotPasswordSchema = z.object({
   email: sharedEmailSchema,
-  application: z.enum([
-    AUTH_APPLICATIONS.CLIENT,
-    AUTH_APPLICATIONS.PHARMACY,
-    AUTH_APPLICATIONS.ADMIN,
-  ]),
+  application: z.enum([AUTH_APPLICATIONS.CLIENT, AUTH_APPLICATIONS.PHARMACY]),
 });
 
 //===============================================================

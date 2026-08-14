@@ -26,6 +26,8 @@ export type SessionEntity = {
   createdAt?: Date;
   updatedAt?: Date;
   expiresAt: Date;
+  /** Optional only for sessions created before absolute-lifetime migration. */
+  absoluteExpiresAt?: Date;
   lastUsedAt: Date;
   revokedAt?: Date;
   revokedReason?: SessionRevokedReason;

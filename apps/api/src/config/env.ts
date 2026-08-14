@@ -190,6 +190,9 @@ export const env = {
   REFRESH_TOKEN_EXPIRES_IN: (process.env.REFRESH_TOKEN_EXPIRES_IN ||
     '30d') as StringValue,
 
+  SESSION_ABSOLUTE_EXPIRES_IN: (process.env.SESSION_ABSOLUTE_EXPIRES_IN ||
+    '90d') as StringValue,
+
   CLIENT_ORIGINS: getClientOrigins(),
   CLIENT_APP_URL: getClientAppUrl(),
   PHARMACY_APP_URL: process.env.PHARMACY_APP_URL,

@@ -45,10 +45,40 @@ test('progressive delay grows after repeated failures and stays bounded', () => 
 
 //===================================================================
 
+test('distributed auth rate limiting uses Mongo instead of process-local buckets', () => {
+  const middleware = readFileSync(
+    path.join(__dirname, 'rateLimit.middleware.ts'),
+    'utf8'
+  );
+
+  const store = readFileSync(
+    path.join(__dirname, '../services/rate-limit-store.service.ts'),
+    'utf8'
+  );
+
+  const model = readFileSync(
+    path.join(__dirname, '../models/rateLimitBucket.model.ts'),
+    'utf8'
+  );
+
+  assert.doesNotMatch(middleware, /new Map[<(]/);
+  assert.doesNotMatch(middleware, /MAX_PROGRESSIVE_DELAY_BUCKETS/);
+  assert.match(middleware, /incrementRateLimitCounter/);
+  assert.match(store, /findOneAndUpdate/);
+  assert.match(model, /expireAfterSeconds:\s*0/);
+});
+
+//===================================================================
+
 test('auth routes combine IP and account dimensions for credential-sensitive flows', () => {
   const routes = readFileSync(
     path.join(__dirname, '../routes/auth.routes.ts'),
     'utf8'
+  );
+
+  assert.match(
+    routes,
+    /['"]\/pharmacy-documents\/session['"][\s\S]*?registrationDocumentSessionIpRateLimit/
   );
 
   assert.match(

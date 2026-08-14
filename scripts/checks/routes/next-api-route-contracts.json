@@ -66,6 +66,14 @@
   },
   {
     "app": "client",
+    "route": "/auth/pharmacy-documents/session",
+    "backend": "/auth/pharmacy-documents/session",
+    "methods": {
+      "POST": "auth"
+    }
+  },
+  {
+    "app": "client",
     "route": "/auth/refresh",
     "backend": "/auth/refresh",
     "methods": {

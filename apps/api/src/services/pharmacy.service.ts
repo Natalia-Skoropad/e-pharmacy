@@ -1,4 +1,4 @@
-import { Types, type HydratedDocument } from 'mongoose';
+import mongoose, { Types, type HydratedDocument } from 'mongoose';
 
 import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
@@ -784,109 +784,130 @@ export async function updateMyPharmacyProfileService(
   userId: string,
   input: UpdateMyPharmacyProfileInput
 ): Promise<{ pharmacy: MyPharmacyProfileResponseDto }> {
-  const { pharmacy, membershipRole } = await findPharmacyForProfileAccess(
-    userId,
-    'edit_profile'
-  );
+  const mongoSession = await mongoose.startSession();
+  let result: { pharmacy: MyPharmacyProfileResponseDto } | null = null;
 
-  const { documents: documentSelections, ...profileFields } = input;
-  const resolvedInput: ResolvedPharmacyProfileUpdate = {
-    ...profileFields,
-    ...(documentSelections !== undefined
-      ? {
-          documents: await resolvePrivatePharmacyDocumentSelections(
-            pharmacy._id,
-            documentSelections
-          ),
-        }
-      : {}),
-  };
+  try {
+    await mongoSession.withTransaction(async () => {
+      const { pharmacy, membershipRole } = await findPharmacyForProfileAccess(
+        userId,
+        'edit_profile',
+        mongoSession
+      );
 
-  if (!canPharmacyProfilePerformAction(pharmacy.status, 'edit')) {
-    throw httpError(
-      HTTP_STATUS.BAD_REQUEST,
-      'Profile fields are locked until Admin reviews the submitted pharmacy data.',
-      undefined,
-      PHARMACY_PROFILE_LOCKED_ERROR_CODE
-    );
-  }
-
-  if (
-    pharmacy.status === PHARMACY_STATUSES.ACTIVE &&
-    hasModeratedProfileChanges(resolvedInput)
-  ) {
-    const pendingModeration = buildPendingModerationPayload(
-      pharmacy.pendingModeration,
-      resolvedInput
-    );
-
-    const updatedPharmacy = await Pharmacy.findByIdAndUpdate(
-      pharmacy._id,
-      {
-        $set: {
-          pendingModeration,
-          updatedBy: userId,
-        },
-        $unset: { statusReason: '' },
-      },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedPharmacy) {
-      throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
-    }
-
-    return {
-      pharmacy: serializePharmacyProfile(
-        updatedPharmacy as PharmacyDocument,
-        membershipRole
-      ),
-    };
-  }
-
-  const update: Record<string, unknown> = {
-    updatedBy: userId,
-  };
-
-  if (resolvedInput.name !== undefined) update.name = resolvedInput.name;
-  if (resolvedInput.address !== undefined)
-    update.address = resolvedInput.address;
-  if (resolvedInput.city !== undefined) update.city = resolvedInput.city;
-  if (resolvedInput.phone !== undefined) update.phone = resolvedInput.phone;
-  if (resolvedInput.email !== undefined) update.email = resolvedInput.email;
-  if (resolvedInput.workingHours !== undefined)
-    update.workingHours = resolvedInput.workingHours;
-  if (resolvedInput.imageUrl !== undefined)
-    update.imageUrl = resolvedInput.imageUrl;
-  if (resolvedInput.description !== undefined)
-    update.description = resolvedInput.description;
-  if (resolvedInput.documents !== undefined)
-    update.documents = resolvedInput.documents;
-
-  if (resolvedInput.bankDetails) {
-    for (const [key, value] of Object.entries(resolvedInput.bankDetails)) {
-      if (value !== undefined) {
-        update[`bankDetails.${key}`] = value;
+      // Capability/status checks must run before temporary document uploads are
+      // attached. Otherwise a rejected profile update could make those files
+      // permanent even though Pharmacy itself was never changed.
+      if (!canPharmacyProfilePerformAction(pharmacy.status, 'edit')) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'Profile fields are locked until Admin reviews the submitted pharmacy data.',
+          undefined,
+          PHARMACY_PROFILE_LOCKED_ERROR_CODE
+        );
       }
-    }
+
+      const { documents: documentSelections, ...profileFields } = input;
+      const resolvedInput: ResolvedPharmacyProfileUpdate = {
+        ...profileFields,
+        ...(documentSelections !== undefined
+          ? {
+              documents: await resolvePrivatePharmacyDocumentSelections(
+                pharmacy._id,
+                documentSelections,
+                mongoSession
+              ),
+            }
+          : {}),
+      };
+
+      if (
+        pharmacy.status === PHARMACY_STATUSES.ACTIVE &&
+        hasModeratedProfileChanges(resolvedInput)
+      ) {
+        const pendingModeration = buildPendingModerationPayload(
+          pharmacy.pendingModeration,
+          resolvedInput
+        );
+
+        const updatedPharmacy = await Pharmacy.findByIdAndUpdate(
+          pharmacy._id,
+          {
+            $set: {
+              pendingModeration,
+              updatedBy: userId,
+            },
+            $unset: { statusReason: '' },
+          },
+          { new: true, runValidators: true, session: mongoSession }
+        );
+
+        if (!updatedPharmacy) {
+          throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+        }
+
+        result = {
+          pharmacy: serializePharmacyProfile(
+            updatedPharmacy as PharmacyDocument,
+            membershipRole
+          ),
+        };
+        return;
+      }
+
+      const update: Record<string, unknown> = {
+        updatedBy: userId,
+      };
+
+      if (resolvedInput.name !== undefined) update.name = resolvedInput.name;
+      if (resolvedInput.address !== undefined)
+        update.address = resolvedInput.address;
+      if (resolvedInput.city !== undefined) update.city = resolvedInput.city;
+      if (resolvedInput.phone !== undefined) update.phone = resolvedInput.phone;
+      if (resolvedInput.email !== undefined) update.email = resolvedInput.email;
+      if (resolvedInput.workingHours !== undefined)
+        update.workingHours = resolvedInput.workingHours;
+      if (resolvedInput.imageUrl !== undefined)
+        update.imageUrl = resolvedInput.imageUrl;
+      if (resolvedInput.description !== undefined)
+        update.description = resolvedInput.description;
+      if (resolvedInput.documents !== undefined)
+        update.documents = resolvedInput.documents;
+
+      if (resolvedInput.bankDetails) {
+        for (const [key, value] of Object.entries(resolvedInput.bankDetails)) {
+          if (value !== undefined) {
+            update[`bankDetails.${key}`] = value;
+          }
+        }
+      }
+
+      const updatedPharmacy = await Pharmacy.findByIdAndUpdate(
+        pharmacy._id,
+        { $set: update },
+        { new: true, runValidators: true, session: mongoSession }
+      );
+
+      if (!updatedPharmacy) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+      }
+
+      result = {
+        pharmacy: serializePharmacyProfile(
+          updatedPharmacy as PharmacyDocument,
+          membershipRole
+        ),
+      };
+    });
+  } finally {
+    await mongoSession.endSession();
   }
 
-  const updatedPharmacy = await Pharmacy.findByIdAndUpdate(
-    pharmacy._id,
-    { $set: update },
-    { new: true, runValidators: true }
-  );
-
-  if (!updatedPharmacy) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+  if (!result) {
+    throw new Error('Pharmacy profile update transaction did not commit.');
   }
 
-  return {
-    pharmacy: serializePharmacyProfile(
-      updatedPharmacy as PharmacyDocument,
-      membershipRole
-    ),
-  };
+  return result;
 }
 
 //===============================================================

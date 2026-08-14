@@ -43,6 +43,7 @@ export {
   parsePharmacyDocumentContentResponse,
   parsePharmacyProfileDocumentUploadResponse,
   parsePharmacyRegistrationDocumentUploadResponse,
+  parsePharmacyRegistrationUploadSessionResponse,
   parsePharmacyProductMutationResponse,
   parseProductCardSummary,
   parseProductDetails,

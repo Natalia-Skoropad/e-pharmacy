@@ -29,6 +29,21 @@ export type PharmacyDocumentUploadPayload = FileMetadata &
     dataUrl: string;
   }>;
 
+export type PharmacyRegistrationUploadSessionResponse = Readonly<{
+  uploadSessionId: EntityId;
+  uploadToken: string;
+  expiresAt: ISODateTimeString;
+  maxFiles: number;
+  maxTotalSizeBytes: number;
+}>;
+
+export type PharmacyRegistrationDocumentUploadPayload =
+  PharmacyDocumentUploadPayload &
+    Readonly<{
+      uploadSessionId: EntityId;
+      uploadToken: string;
+    }>;
+
 export type PharmacyRegistrationDocumentUploadResponse = Readonly<{
   document: PharmacyVerificationDocument;
   claimToken: string;
