@@ -36,10 +36,22 @@ test('successful save returns the form to canonical AuthUser-backed state', asyn
 
   assert.match(
     source,
-    /await updateCurrentUser\(nextProfileValues\);[\s\S]*?await reloadCurrentUser\(\);[\s\S]*?setProfileDraft\(null\)/
+    /const response = await updateCurrentUser\(\{[\s\S]*?expectedRevision: user\.revision[\s\S]*?\}\);[\s\S]*?applyCurrentUser\(response\.user\);[\s\S]*?setProfileDraft\(null\)/
   );
 
+  assert.doesNotMatch(source, /reloadCurrentUser/);
   assert.match(source, /setProfileTouchedFields\(\{\}\)/);
+});
+
+//===================================================================
+
+test('picture PATCH success is applied directly without a second current-user request', async () => {
+  const source = await readProfileSource();
+
+  assert.match(
+    source,
+    /const response = await updateCurrentUser\(\{\s*pictureUrl,[\s\S]*?expectedRevision: user\.revision[\s\S]*?\}\);[\s\S]*?applyCurrentUser\(response\.user\)/
+  );
 });
 
 //===================================================================

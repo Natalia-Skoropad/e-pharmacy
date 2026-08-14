@@ -16,6 +16,8 @@ import {
 import { productsQuerySchema } from './product.schema';
 import { sharedWorkingHoursSchema } from './shared-validation.schema';
 
+const EXPECTED_REVISION = '2026-08-14T12:00:00.000Z';
+
 const validWorkingHours = [
   'Mon: 09:00-18:00',
   'Tue: 09:00-18:00',
@@ -93,11 +95,15 @@ test('query schemas validate real calendar dates and ordered ranges', () => {
 
 test('empty nested bank details do not count as a profile change', () => {
   assert.equal(
-    updateMyPharmacyProfileSchema.safeParse({ bankDetails: {} }).success,
+    updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
+      bankDetails: {},
+    }).success,
     false
   );
 
   const normalized = updateMyPharmacyProfileSchema.parse({
+    expectedRevision: EXPECTED_REVISION,
     bankDetails: {
       iban: ' ua123456789012345678901234567 ',
       receiptEmail: ' Billing@Example.COM ',
@@ -106,6 +112,25 @@ test('empty nested bank details do not count as a profile change', () => {
 
   assert.equal(normalized.bankDetails?.iban, 'UA123456789012345678901234567');
   assert.equal(normalized.bankDetails?.receiptEmail, 'billing@example.com');
+});
+
+//===============================================================
+
+test('profile updates use null for explicit clears and reject empty-string clear ambiguity', () => {
+  const clearResult = updateMyPharmacyProfileSchema.safeParse({
+    expectedRevision: EXPECTED_REVISION,
+    description: null,
+    bankDetails: { receiptEmail: null },
+  });
+
+  assert.equal(clearResult.success, true);
+  assert.equal(
+    updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
+      description: '',
+    }).success,
+    false
+  );
 });
 
 //===============================================================
@@ -141,6 +166,7 @@ test('pharmacy document upload validates content while profile stores references
 
   assert.equal(
     updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
       documents: [{ documentId: '507f1f77bcf86cd799439011' }],
     }).success,
     true
@@ -148,6 +174,7 @@ test('pharmacy document upload validates content while profile stores references
 
   assert.equal(
     updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
       documents: Array.from({ length: 7 }, (_, index) => ({
         documentId: `507f1f77bcf86cd7994390${String(index + 11).padStart(2, '0')}`,
       })),

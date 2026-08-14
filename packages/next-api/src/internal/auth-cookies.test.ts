@@ -19,6 +19,7 @@ function configureEnvironment(): () => void {
   const previous = { ...process.env };
   process.env.NODE_ENV = 'test';
   process.env.API_BASE_URL = 'http://backend.example';
+  process.env.BFF_PROXY_SECRET = 'test-secret';
   process.env.AUTH_COOKIE_DOMAIN = '.example.com';
   process.env.AUTH_COOKIE_LEGACY_DOMAINS = '.old.example.com';
   process.env.AUTH_COOKIE_SAME_SITE = 'strict';

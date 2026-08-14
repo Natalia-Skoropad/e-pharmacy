@@ -30,6 +30,7 @@ import {
 import {
   getMyPharmacyProfileService,
   sendMyPharmacyForVerificationService,
+  submitMyPharmacyModerationService,
   updateMyPharmacyProfileService,
 } from './pharmacy.service';
 
@@ -678,6 +679,7 @@ test(
         () =>
           updateMyPharmacyProfileService(String(user._id), {
             documents: [{ documentId: uploaded.document.id }],
+            expectedRevision: pharmacy.updatedAt.toISOString(),
           }),
         (error: unknown) =>
           error instanceof Error &&
@@ -700,6 +702,7 @@ test(
         () =>
           updateMyPharmacyProfileService(String(user._id), {
             documents: [{ documentId: uploaded.document.id }],
+            expectedRevision: pharmacy.updatedAt.toISOString(),
           }),
         /forced pharmacy profile write failure/
       );
@@ -713,6 +716,7 @@ test(
 
       const saved = await updateMyPharmacyProfileService(String(user._id), {
         documents: [{ documentId: uploaded.document.id }],
+        expectedRevision: pharmacy.updatedAt.toISOString(),
       });
 
       assert.equal(saved.pharmacy.documents.length, 1);
@@ -1101,12 +1105,14 @@ test(
         }
       );
 
-      await updateMyPharmacyProfileService(String(user._id), {
+      const firstUpdate = await updateMyPharmacyProfileService(String(user._id), {
         documents: [{ documentId: first.document.id }],
+        expectedRevision: pharmacy.updatedAt.toISOString(),
       });
 
-      await updateMyPharmacyProfileService(String(user._id), {
+      const secondUpdate = await updateMyPharmacyProfileService(String(user._id), {
         documents: [{ documentId: second.document.id }],
+        expectedRevision: firstUpdate.pharmacy.updatedAt,
       });
 
       let persisted = await Pharmacy.findById(pharmacy._id);
@@ -1118,7 +1124,10 @@ test(
         [second.document.id]
       );
 
-      await updateMyPharmacyProfileService(String(user._id), { documents: [] });
+      await updateMyPharmacyProfileService(String(user._id), {
+        documents: [],
+        expectedRevision: secondUpdate.pharmacy.updatedAt,
+      });
       persisted = await Pharmacy.findById(pharmacy._id);
       assert.deepEqual(persisted?.documents, []);
     } finally {
@@ -1486,6 +1495,7 @@ test(
 
       await updateUserProfileService(String(user._id), {
         name: 'Updated Profile Security',
+        expectedRevision: user.updatedAt.toISOString(),
         role: 'admin',
         status: 'blocked',
       } as never);
@@ -1509,7 +1519,58 @@ test(
 //===============================================================
 
 test(
-  'active pharmacy edits stay pending until moderation submission',
+  'stale client profile revisions cannot overwrite a newer saved profile',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const identity = uniqueIdentity('profile-revision-conflict');
+
+    try {
+      const user = await User.create({
+        name: 'Initial Profile',
+        email: identity.email,
+        phone: identity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'client',
+        status: 'active',
+      });
+
+      await Client.create({ userId: user._id });
+      const initialRevision = user.updatedAt.toISOString();
+
+      const newer = await updateUserProfileService(String(user._id), {
+        name: 'Saved In Tab B',
+        expectedRevision: initialRevision,
+      });
+
+      assert.equal(newer.name, 'Saved In Tab B');
+      assert.notEqual(newer.revision, initialRevision);
+
+      await assert.rejects(
+        () =>
+          updateUserProfileService(String(user._id), {
+            name: 'Stale Tab A',
+            expectedRevision: initialRevision,
+          }),
+        (error: unknown) =>
+          error instanceof Error &&
+          'code' in error &&
+          error.code === 'AUTH_PROFILE_CONFLICT'
+      );
+
+      const persisted = await User.findById(user._id).lean<{ name: string } | null>();
+      assert.equal(persisted?.name, 'Saved In Tab B');
+    } finally {
+      await cleanup(identity.email);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'active pharmacy moderation submission atomically stores pending changes and transitions status',
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
@@ -1535,21 +1596,15 @@ test(
         activatedAt: new Date(),
       });
 
-      const updateResponse = await updateMyPharmacyProfileService(
+      const submitted = await submitMyPharmacyModerationService(
         String(owner._id),
-        { description: 'Pending description' }
+        {
+          changes: { description: 'Pending description' },
+          expectedRevision: pharmacy.updatedAt.toISOString(),
+        }
       );
 
-      assert.equal(updateResponse.pharmacy.description, 'Approved description');
-      assert.equal(
-        updateResponse.pharmacy.pendingModeration?.description,
-        'Pending description'
-      );
-
-      const submitted = await sendMyPharmacyForVerificationService(
-        String(owner._id)
-      );
-
+      assert.equal(submitted.pharmacy.description, 'Approved description');
       assert.equal(submitted.pharmacy.status, 'on_moderation');
       assert.equal(
         submitted.pharmacy.pendingModeration?.description,
@@ -1567,6 +1622,72 @@ test(
       assert.equal(
         persisted?.pendingModeration?.description,
         'Pending description'
+      );
+    } finally {
+      await cleanup(identity.email);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'stale pharmacy profile revisions cannot overwrite newer pending moderation data',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const identity = uniqueIdentity('pharmacy-profile-revision-conflict');
+
+    try {
+      const owner = await User.create({
+        name: 'Pharmacy Revision Owner',
+        email: identity.email,
+        phone: identity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'pharmacy',
+      });
+
+      const pharmacy = await Pharmacy.create({
+        ownerId: owner._id,
+        name: 'Revision Pharmacy',
+        email: identity.email,
+        phone: identity.phone,
+        status: 'active',
+        approvedAt: new Date(),
+        activatedAt: new Date(),
+      });
+
+      const initialRevision = pharmacy.updatedAt.toISOString();
+      const newer = await updateMyPharmacyProfileService(String(owner._id), {
+        description: 'Saved in Tab B',
+        expectedRevision: initialRevision,
+      });
+
+      assert.equal(
+        newer.pharmacy.pendingModeration?.description,
+        'Saved in Tab B'
+      );
+
+      await assert.rejects(
+        () =>
+          updateMyPharmacyProfileService(String(owner._id), {
+            description: 'Stale Tab A',
+            expectedRevision: initialRevision,
+          }),
+        (error: unknown) =>
+          error instanceof Error &&
+          'code' in error &&
+          error.code === 'PHARMACY_PROFILE_CONFLICT'
+      );
+
+      const persisted = await Pharmacy.findById(pharmacy._id).lean<{
+        pendingModeration?: { description?: string | null };
+      } | null>();
+
+      assert.equal(
+        persisted?.pendingModeration?.description,
+        'Saved in Tab B'
       );
     } finally {
       await cleanup(identity.email);
@@ -1602,7 +1723,7 @@ test(
         role: 'pharmacy',
       });
 
-      await Pharmacy.create({
+      const membershipPharmacy = await Pharmacy.create({
         ownerId: owner._id,
         managerUserIds: [manager._id],
         name: 'Membership Pharmacy',
@@ -1637,6 +1758,7 @@ test(
         () =>
           updateMyPharmacyProfileService(String(manager._id), {
             description: 'Manager must not change this',
+            expectedRevision: membershipPharmacy.updatedAt.toISOString(),
           }),
         (error: unknown) =>
           typeof error === 'object' &&
@@ -1698,18 +1820,39 @@ test(
         status: 'on_verification',
       });
 
-      for (const status of ['on_verification', 'on_moderation'] as const) {
-        await Pharmacy.updateOne({ _id: pharmacy._id }, { $set: { status } });
+      await assert.rejects(
+        () => sendMyPharmacyForVerificationService(String(owner._id)),
+        (error: unknown) =>
+          typeof error === 'object' &&
+          error !== null &&
+          'code' in error &&
+          error.code === 'PHARMACY_PROFILE_ALREADY_SUBMITTED'
+      );
 
-        await assert.rejects(
-          () => sendMyPharmacyForVerificationService(String(owner._id)),
-          (error: unknown) =>
-            typeof error === 'object' &&
-            error !== null &&
-            'code' in error &&
-            error.code === 'PHARMACY_PROFILE_ALREADY_SUBMITTED'
-        );
-      }
+      const onModeration = await Pharmacy.findByIdAndUpdate(
+        pharmacy._id,
+        {
+          $set: {
+            status: 'on_moderation',
+            pendingModeration: { description: 'Already submitted' },
+          },
+        },
+        { new: true }
+      );
+      assert.ok(onModeration);
+
+      await assert.rejects(
+        () =>
+          submitMyPharmacyModerationService(String(owner._id), {
+            changes: {},
+            expectedRevision: onModeration.updatedAt.toISOString(),
+          }),
+        (error: unknown) =>
+          typeof error === 'object' &&
+          error !== null &&
+          'code' in error &&
+          error.code === 'PHARMACY_PROFILE_ALREADY_SUBMITTED'
+      );
     } finally {
       await cleanup(identity.email);
       await mongoose.disconnect();

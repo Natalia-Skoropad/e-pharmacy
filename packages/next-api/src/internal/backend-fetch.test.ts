@@ -14,6 +14,7 @@ function configureEnvironment(): () => void {
   const previous = { ...process.env };
   process.env.NODE_ENV = 'test';
   process.env.API_BASE_URL = 'http://backend.example';
+  process.env.BFF_PROXY_SECRET = 'test-secret';
 
   return () => {
     globalThis.fetch = originalFetch;

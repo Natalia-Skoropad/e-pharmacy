@@ -49,8 +49,18 @@ import {
   isPictureDataUrl,
 } from '../constants/validation';
 
-import { optionalSchema } from './shared/optional-text.schema';
+import { clearableSchema, optionalSchema } from './shared/optional-text.schema';
 import { getWorkingHoursValidationIssue } from '../utils/validation/working-hours';
+
+//===============================================================
+
+export const sharedExpectedRevisionSchema = z.string().refine(
+  (value) => {
+    const parsed = new Date(value);
+    return !Number.isNaN(parsed.getTime()) && parsed.toISOString() === value;
+  },
+  { message: 'Expected revision must be an ISO date-time string.' }
+);
 
 //===============================================================
 
@@ -146,6 +156,13 @@ export const sharedOptionalAddressSchema = z.preprocess((value) => {
   const normalizedValue = value.trim();
   return normalizedValue === '' ? undefined : normalizedValue;
 }, sharedRequiredAddressSchema.optional());
+
+//===============================================================
+
+export const sharedClearableAddressSchema = z.preprocess(
+  (value) => (typeof value === 'string' ? value.trim() : value),
+  z.union([sharedRequiredAddressSchema, z.null()]).optional()
+);
 
 //===============================================================
 
@@ -299,5 +316,19 @@ export const sharedOptionalTaxIdSchema = optionalSchema(sharedTaxIdSchema);
 export const sharedOptionalIbanSchema = optionalSchema(sharedIbanSchema);
 
 export const sharedOptionalPaymentPurposeSchema = optionalSchema(
+  sharedPaymentPurposeSchema
+);
+
+export const sharedClearableWorkingHoursSchema = clearableSchema(
+  sharedWorkingHoursSchema
+);
+export const sharedClearableTextEditorSchema = clearableSchema(
+  sharedTextEditorSchema
+);
+
+export const sharedClearableTaxIdSchema = clearableSchema(sharedTaxIdSchema);
+export const sharedClearableIbanSchema = clearableSchema(sharedIbanSchema);
+
+export const sharedClearablePaymentPurposeSchema = clearableSchema(
   sharedPaymentPurposeSchema
 );

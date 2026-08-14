@@ -6,7 +6,9 @@ import {
   sharedEmailSchema,
   sharedUserNameSchema,
   sharedPharmacyNameSchema,
+  sharedClearableAddressSchema,
   sharedOptionalAddressSchema,
+  sharedExpectedRevisionSchema,
   sharedPasswordSchema,
   sharedRequiredPasswordSchema,
   sharedPictureUrlSchema,
@@ -120,13 +122,18 @@ export const updateProfileSchema = z
   .object({
     name: sharedUserNameSchema.optional(),
     phone: optionalPhoneSchema,
-    address: sharedOptionalAddressSchema,
+    address: sharedClearableAddressSchema,
     pictureUrl: sharedPictureUrlSchema,
+    expectedRevision: sharedExpectedRevisionSchema,
   })
 
-  .refine((data) => Object.values(data).some(hasMeaningfulValue), {
-    message: VALIDATION_MESSAGES.object.atLeastOneField,
-  });
+  .refine(
+    (data) =>
+      Object.entries(data).some(
+        ([key, value]) => key !== 'expectedRevision' && hasMeaningfulValue(value)
+      ),
+    { message: VALIDATION_MESSAGES.object.atLeastOneField }
+  );
 
 //===============================================================
 

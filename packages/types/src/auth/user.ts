@@ -1,4 +1,4 @@
-import type { EntityId } from '../primitives';
+import type { EntityId, ISODateTimeString } from '../primitives';
 import type { UserRole, UserStatus } from './role';
 
 //===================================================================
@@ -12,4 +12,5 @@ export type AuthUser = Readonly<{
   phone: string;
   address?: string;
   pictureUrl?: string;
+  revision: ISODateTimeString;
 }>;

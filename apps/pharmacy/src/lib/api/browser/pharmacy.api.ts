@@ -28,6 +28,7 @@ import type {
   PharmacyProfileDocumentUploadResponse,
   PharmacyProfileResponse,
   SendPharmacyForVerificationResponse,
+  SubmitMyPharmacyModerationPayload,
   UpdateMyPharmacyProfilePayload,
 } from '@e-pharmacy/types/pharmacies';
 
@@ -89,6 +90,20 @@ export async function updateMyPharmacyProfile(
     await localApiRequest(path, { method: 'PATCH', body: payload }),
     parsePharmacyProfileResponse,
     { url: path, method: 'PATCH' }
+  );
+}
+
+//===================================================================
+
+export async function submitMyPharmacyModeration(
+  payload: SubmitMyPharmacyModerationPayload
+): Promise<SendPharmacyForVerificationResponse> {
+  const path = PHARMACY_API_ROUTES.pharmacies.submitMyProfileForModeration;
+
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'POST', body: payload }),
+    parseSendPharmacyForVerificationResponse,
+    { url: path, method: 'POST' }
   );
 }
 

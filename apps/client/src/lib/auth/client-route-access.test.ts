@@ -15,6 +15,7 @@ function createUser(overrides: Partial<AuthUser> = {}): AuthUser {
     phone: '+380501234567',
     role: 'client',
     status: 'active',
+    revision: '2026-08-14T12:00:00.000Z',
     ...overrides,
   } as AuthUser;
 }

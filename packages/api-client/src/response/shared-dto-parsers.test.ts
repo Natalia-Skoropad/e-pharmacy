@@ -548,7 +548,9 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
       receiptEmail: 'billing@example.com',
     },
     pendingModeration: {
-      phone: '+380501234567',
+      phone: null,
+      description: null,
+      bankDetails: { receiptEmail: null },
       documents: [document],
     },
   };
@@ -558,6 +560,12 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
       ?.id,
     document.id
   );
+
+
+  const ownerProfile = parsePharmacyProfileResponse({ pharmacy: profile }).pharmacy;
+  assert.equal(ownerProfile.pendingModeration?.phone, null);
+  assert.equal(ownerProfile.pendingModeration?.description, null);
+  assert.equal(ownerProfile.pendingModeration?.bankDetails?.receiptEmail, null);
 
   const managerProfile = parsePharmacyProfileResponse({
     pharmacy: {

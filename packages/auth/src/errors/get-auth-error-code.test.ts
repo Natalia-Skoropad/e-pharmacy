@@ -32,6 +32,15 @@ test('uses stable backend business codes before mutable copy or status', () => {
     }),
     'registration_session_failed'
   );
+
+  assert.equal(
+    getAuthErrorCode({
+      status: 409,
+      message: 'Profile changed elsewhere.',
+      payload: { code: 'AUTH_PROFILE_CONFLICT' },
+    }),
+    'profile_conflict'
+  );
 });
 
 //===================================================================

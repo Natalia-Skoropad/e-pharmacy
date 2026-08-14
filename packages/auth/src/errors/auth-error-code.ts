@@ -2,6 +2,7 @@ export type AuthErrorCode =
   | 'invalid_credentials'
   | 'email_conflict'
   | 'phone_conflict'
+  | 'profile_conflict'
   | 'account_blocked'
   | 'session_invalid'
   | 'session_revoked'

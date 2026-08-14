@@ -1324,7 +1324,7 @@ function validateOptionalPharmacyProfileSemantics(
     throw invalidDto('pharmacy profile.name is invalid.', record, context);
   }
 
-  if (record.address !== undefined) {
+  if (typeof record.address === 'string') {
     validateProfileStringPattern(
       record.address,
       'pharmacy profile.address',
@@ -1335,16 +1335,16 @@ function validateOptionalPharmacyProfileSemantics(
   }
 
   if (
-    record.city !== undefined &&
-    (typeof record.city !== 'string' ||
+    typeof record.city === 'string' &&
+    (
       !PROFILE_SEARCH_TEXT_PATTERN.test(record.city))
   ) {
     throw invalidDto('pharmacy profile.city is invalid.', record, context);
   }
 
   if (
-    record.description !== undefined &&
-    (typeof record.description !== 'string' ||
+    typeof record.description === 'string' &&
+    (
       !PROFILE_TEXT_EDITOR_PATTERN.test(record.description))
   ) {
     throw invalidDto(
@@ -1354,7 +1354,7 @@ function validateOptionalPharmacyProfileSemantics(
     );
   }
 
-  if (record.email !== undefined) {
+  if (typeof record.email === 'string') {
     validateProfileStringPattern(
       record.email,
       'pharmacy profile.email',
@@ -1364,7 +1364,7 @@ function validateOptionalPharmacyProfileSemantics(
     );
   }
 
-  if (record.phone !== undefined) {
+  if (typeof record.phone === 'string') {
     validateProfileStringPattern(
       record.phone,
       'pharmacy profile.phone',
@@ -1375,8 +1375,8 @@ function validateOptionalPharmacyProfileSemantics(
   }
 
   if (
-    record.workingHours !== undefined &&
-    (typeof record.workingHours !== 'string' ||
+    typeof record.workingHours === 'string' &&
+    (
       !hasCompleteWorkingHours(record.workingHours))
   ) {
     throw invalidDto(
@@ -1476,6 +1476,48 @@ function parseEditablePharmacyBankDetails(
 
 //===================================================================
 
+function parsePendingPharmacyBankDetails(
+  value: unknown,
+  context?: ApiResponseContext
+): NonNullable<PharmacyProfile['pendingModeration']>['bankDetails'] {
+  if (value === undefined) return undefined;
+  const record = requireRecord(value, 'pending pharmacy bank details', context);
+  const result: Record<string, string | null> = {};
+
+  for (const key of [
+    'recipientName',
+    'taxId',
+    'iban',
+    'bankName',
+    'receiptEmail',
+    'paymentPurpose',
+  ] as const) {
+    const fieldValue = record[key];
+    if (fieldValue === undefined) continue;
+    if (fieldValue !== null && typeof fieldValue !== 'string') {
+      throw invalidDto(
+        `pending pharmacy bank details.${key} must be a string or null when present.`,
+        record,
+        context
+      );
+    }
+    result[key] = fieldValue;
+  }
+
+  const stringOnly = Object.fromEntries(
+    Object.entries(result).filter((entry): entry is [string, string] =>
+      typeof entry[1] === 'string'
+    )
+  );
+  parseEditablePharmacyBankDetails(stringOnly, context);
+
+  return checked<
+    NonNullable<NonNullable<PharmacyProfile['pendingModeration']>['bankDetails']>
+  >(result);
+}
+
+//===================================================================
+
 function parsePharmacyPendingModeration(
   value: unknown,
   context?: ApiResponseContext
@@ -1495,9 +1537,9 @@ function parsePharmacyPendingModeration(
   ] as const) {
     const fieldValue = record[key];
     if (fieldValue === undefined) continue;
-    if (typeof fieldValue !== 'string') {
+    if (fieldValue !== null && typeof fieldValue !== 'string') {
       throw invalidDto(
-        `pharmacy pending moderation.${key} must be a string when present.`,
+        `pharmacy pending moderation.${key} must be a string or null when present.`,
         record,
         context
       );
@@ -1506,8 +1548,8 @@ function parsePharmacyPendingModeration(
   }
 
   if (
-    record.name !== undefined &&
-    (typeof record.name !== 'string' ||
+    typeof record.name === 'string' &&
+    (
       (record.name.length > 0 &&
         !PROFILE_PHARMACY_NAME_PATTERN.test(record.name)))
   ) {
@@ -1517,7 +1559,7 @@ function parsePharmacyPendingModeration(
       context
     );
   }
-  if (record.address !== undefined) {
+  if (typeof record.address === 'string') {
     validateProfileStringPattern(
       record.address,
       'pharmacy pending moderation.address',
@@ -1527,8 +1569,8 @@ function parsePharmacyPendingModeration(
     );
   }
   if (
-    record.city !== undefined &&
-    (typeof record.city !== 'string' ||
+    typeof record.city === 'string' &&
+    (
       !PROFILE_SEARCH_TEXT_PATTERN.test(record.city))
   ) {
     throw invalidDto(
@@ -1538,8 +1580,8 @@ function parsePharmacyPendingModeration(
     );
   }
   if (
-    record.description !== undefined &&
-    (typeof record.description !== 'string' ||
+    typeof record.description === 'string' &&
+    (
       !PROFILE_TEXT_EDITOR_PATTERN.test(record.description))
   ) {
     throw invalidDto(
@@ -1549,7 +1591,7 @@ function parsePharmacyPendingModeration(
     );
   }
 
-  if (record.email !== undefined) {
+  if (typeof record.email === 'string') {
     validateProfileStringPattern(
       record.email,
       'pharmacy pending moderation.email',
@@ -1558,7 +1600,7 @@ function parsePharmacyPendingModeration(
       context
     );
   }
-  if (record.phone !== undefined) {
+  if (typeof record.phone === 'string') {
     validateProfileStringPattern(
       record.phone,
       'pharmacy pending moderation.phone',
@@ -1568,8 +1610,8 @@ function parsePharmacyPendingModeration(
     );
   }
   if (
-    record.workingHours !== undefined &&
-    (typeof record.workingHours !== 'string' ||
+    typeof record.workingHours === 'string' &&
+    (
       !hasCompleteWorkingHours(record.workingHours))
   ) {
     throw invalidDto(
@@ -1610,7 +1652,7 @@ function parsePharmacyPendingModeration(
   }
 
   if (record.bankDetails !== undefined) {
-    result.bankDetails = parseEditablePharmacyBankDetails(
+    result.bankDetails = parsePendingPharmacyBankDetails(
       record.bankDetails,
       context
     );

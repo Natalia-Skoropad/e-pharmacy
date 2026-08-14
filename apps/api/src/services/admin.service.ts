@@ -218,16 +218,20 @@ export async function updatePharmacyStatusByAdminService(
         const { bankDetails, ...pendingRootFields } = pendingModeration;
         const approvedAt = new Date();
 
+        for (const [key, value] of Object.entries(pendingRootFields)) {
+          if (value === null) unsetFields[key] = '';
+          else if (value !== undefined) nextUpdate[key] = value;
+        }
+
+        if (bankDetails) {
+          for (const [key, value] of Object.entries(bankDetails)) {
+            const path = `bankDetails.${key}`;
+            if (value === null) unsetFields[path] = '';
+            else if (value !== undefined) nextUpdate[path] = value;
+          }
+        }
+
         Object.assign(nextUpdate, {
-          ...pendingRootFields,
-          ...(bankDetails
-            ? {
-                bankDetails: {
-                  ...(pharmacy.bankDetails ?? {}),
-                  ...bankDetails,
-                },
-              }
-            : {}),
           approvedBy: adminUserId,
           approvedAt,
           activatedAt: pharmacy.activatedAt ?? approvedAt,

@@ -42,7 +42,7 @@ import type {
   MyPharmacyProfile,
   PharmacyProfile,
   PharmacyStatus,
-  UpdateMyPharmacyProfilePayload,
+  PharmacyProfileUpdateChanges,
 } from '@e-pharmacy/types/pharmacies';
 
 import {
@@ -119,6 +119,7 @@ import {
   getPharmacyNotes,
   revokeActiveSession,
   sendMyPharmacyForVerification,
+  submitMyPharmacyModeration,
   updateCurrentUser,
   updateCurrentUserPassword,
   updateMyPharmacyProfile,
@@ -376,27 +377,30 @@ function formatSessionDate(value: string): string {
 
 function buildProfilePayload(
   values: PharmacyContactFormValues,
-  mode: PharmacyValidationMode
-): UpdateMyPharmacyProfilePayload {
-  return normalizePharmacyContactForm(values, mode);
+  mode: PharmacyValidationMode,
+  baseline?: PharmacyContactFormValues
+): PharmacyProfileUpdateChanges {
+  return normalizePharmacyContactForm(values, mode, baseline);
 }
 
 //===================================================================
 
 function buildAboutPayload(
   values: PharmacyAboutFormValues,
-  mode: PharmacyValidationMode
-): UpdateMyPharmacyProfilePayload {
-  return normalizePharmacyAboutForm(values, mode);
+  mode: PharmacyValidationMode,
+  baseline?: PharmacyAboutFormValues
+): PharmacyProfileUpdateChanges {
+  return normalizePharmacyAboutForm(values, mode, baseline);
 }
 
 //===================================================================
 
 function buildPaymentPayload(
   values: PharmacyPaymentFormValues,
-  mode: PharmacyValidationMode
-): UpdateMyPharmacyProfilePayload {
-  const bankDetails = normalizePharmacyPaymentForm(values, mode);
+  mode: PharmacyValidationMode,
+  baseline?: PharmacyPaymentFormValues
+): PharmacyProfileUpdateChanges {
+  const bankDetails = normalizePharmacyPaymentForm(values, mode, baseline);
 
   return Object.keys(bankDetails).length > 0 ? { bankDetails } : {};
 }
@@ -405,8 +409,8 @@ function buildPaymentPayload(
 
 async function buildDocumentsPayload(
   files: BrowserUploadFile[]
-): Promise<UpdateMyPharmacyProfilePayload> {
-  const documents: NonNullable<UpdateMyPharmacyProfilePayload['documents']> = [];
+): Promise<PharmacyProfileUpdateChanges> {
+  const documents: NonNullable<PharmacyProfileUpdateChanges['documents']> = [];
 
   for (const file of files) {
     if (file.documentId) {
@@ -432,16 +436,6 @@ async function buildDocumentsPayload(
 
   return { documents };
 }
-
-//===================================================================
-
-function hasProfilePayloadChanges(
-  payload: UpdateMyPharmacyProfilePayload
-): boolean {
-  return Object.keys(payload).length > 0;
-}
-
-//===================================================================
 
 function PharmacyProfilePageContent() {
   const { user, isBootstrapping } = useAuth();
@@ -517,7 +511,7 @@ function PharmacyProfilePage({
   syncProfile,
 }: PharmacyProfilePageProps) {
   const toast = useToast();
-  const { reloadCurrentUser, invalidateSession, logoutAll } = useAuth();
+  const { applyCurrentUser, invalidateSession, logoutAll } = useAuth();
 
   const profileUserDefaults = useMemo<ProfileUserDefaults>(
     () => ({
@@ -776,12 +770,18 @@ function PharmacyProfilePage({
     !isDocumentsSaving &&
     !isSendingVerification;
 
+  const hasExistingPendingModeration = Boolean(
+    pharmacy?.pendingModeration &&
+      Object.keys(pharmacy.pendingModeration).length > 0
+  );
+
   const moderationFormHasChanges =
     pharmacyFormIsDirty ||
     aboutFormIsDirty ||
     paymentFormIsDirty ||
     documentsFormIsDirty ||
-    pharmacyPictureIsDirty;
+    pharmacyPictureIsDirty ||
+    hasExistingPendingModeration;
 
   const moderationFormIsValid =
     pharmacyPictureIsReady &&
@@ -867,10 +867,11 @@ function PharmacyProfilePage({
     try {
       const response = await updateCurrentUser({
         pictureUrl: nextPictureUrl,
+        expectedRevision: user.revision,
       });
 
       setOwnerPictureUrl(response.user.pictureUrl ?? null);
-      await reloadCurrentUser();
+      applyCurrentUser(response.user);
       toast.success(
         nextPictureUrl
           ? 'Profile photo was updated.'
@@ -903,6 +904,7 @@ function PharmacyProfilePage({
     try {
       const response = await updateMyPharmacyProfile({
         imageUrl: nextPictureUrl,
+        expectedRevision: pharmacy.updatedAt,
       });
       setPharmacy(response.pharmacy);
       syncProfile(response.pharmacy);
@@ -933,6 +935,7 @@ function PharmacyProfilePage({
       const response = await updateCurrentUser({
         name: ownerValues.name.trim(),
         phone: ownerValues.phone.trim(),
+        expectedRevision: user.revision,
       });
 
       const nextValues = createOwnerInitialValues(response.user);
@@ -940,7 +943,7 @@ function PharmacyProfilePage({
       setOwnerValues(nextValues);
       setInitialOwnerValues(nextValues);
       setOwnerTouched({});
-      await reloadCurrentUser();
+      applyCurrentUser(response.user);
       toast.success('Owner data saved successfully.');
     } catch (error) {
       toast.error(
@@ -992,9 +995,14 @@ function PharmacyProfilePage({
     setIsPharmacySaving(true);
 
     try {
-      const response = await updateMyPharmacyProfile(
-        buildProfilePayload(pharmacyValues, pharmacyValidationMode)
-      );
+      const response = await updateMyPharmacyProfile({
+        ...buildProfilePayload(
+          pharmacyValues,
+          pharmacyValidationMode,
+          initialPharmacyValues
+        ),
+        expectedRevision: pharmacy.updatedAt,
+      });
       const nextValues = createPharmacyInitialValues(user, response.pharmacy);
       setPharmacy(response.pharmacy);
       syncProfile(response.pharmacy);
@@ -1029,9 +1037,14 @@ function PharmacyProfilePage({
     setIsPharmacySaving(true);
 
     try {
-      const response = await updateMyPharmacyProfile(
-        buildAboutPayload(aboutValues, pharmacyValidationMode)
-      );
+      const response = await updateMyPharmacyProfile({
+        ...buildAboutPayload(
+          aboutValues,
+          pharmacyValidationMode,
+          initialAboutValues
+        ),
+        expectedRevision: pharmacy.updatedAt,
+      });
       const nextValues = createAboutInitialValues(response.pharmacy);
       setPharmacy(response.pharmacy);
       syncProfile(response.pharmacy);
@@ -1066,9 +1079,14 @@ function PharmacyProfilePage({
     setIsPharmacySaving(true);
 
     try {
-      const response = await updateMyPharmacyProfile(
-        buildPaymentPayload(paymentValues, pharmacyValidationMode)
-      );
+      const response = await updateMyPharmacyProfile({
+        ...buildPaymentPayload(
+          paymentValues,
+          pharmacyValidationMode,
+          initialPaymentValues
+        ),
+        expectedRevision: pharmacy.updatedAt,
+      });
       const nextValues = createPaymentInitialValues(user, response.pharmacy);
       setPharmacy(response.pharmacy);
       syncProfile(response.pharmacy);
@@ -1137,9 +1155,10 @@ function PharmacyProfilePage({
     setIsDocumentsSaving(true);
 
     try {
-      const response = await updateMyPharmacyProfile(
-        await buildDocumentsPayload(documentValues)
-      );
+      const response = await updateMyPharmacyProfile({
+        ...(await buildDocumentsPayload(documentValues)),
+        expectedRevision: pharmacy.updatedAt,
+      });
       const nextDocumentValues = createDocumentValues(
         response.pharmacy.documents
       );
@@ -1164,13 +1183,13 @@ function PharmacyProfilePage({
     }
   };
 
-  const buildModerationPayload = async (): Promise<UpdateMyPharmacyProfilePayload> => {
-    const payload: UpdateMyPharmacyProfilePayload = {};
+  const buildModerationPayload = async (): Promise<PharmacyProfileUpdateChanges> => {
+    const payload: PharmacyProfileUpdateChanges = {};
 
     if (pharmacyFormIsDirty) {
       Object.assign(
         payload,
-        buildProfilePayload(pharmacyValues, 'verification')
+        buildProfilePayload(pharmacyValues, 'draft', initialPharmacyValues)
       );
     }
 
@@ -1179,13 +1198,13 @@ function PharmacyProfilePage({
     }
 
     if (aboutFormIsDirty) {
-      Object.assign(payload, buildAboutPayload(aboutValues, 'verification'));
+      Object.assign(payload, buildAboutPayload(aboutValues, 'draft', initialAboutValues));
     }
 
     if (paymentFormIsDirty) {
       Object.assign(
         payload,
-        buildPaymentPayload(paymentValues, 'verification')
+        buildPaymentPayload(paymentValues, 'draft', initialPaymentValues)
       );
     }
 
@@ -1233,11 +1252,10 @@ function PharmacyProfilePage({
 
     try {
       const payload = await buildModerationPayload();
-
-      if (!hasProfilePayloadChanges(payload)) return;
-
-      await updateMyPharmacyProfile(payload);
-      const response = await sendMyPharmacyForVerification();
+      const response = await submitMyPharmacyModeration({
+        changes: payload,
+        expectedRevision: pharmacy.updatedAt,
+      });
       applyPharmacyFormState(response.pharmacy);
       toast.success(response.message);
     } catch (error) {

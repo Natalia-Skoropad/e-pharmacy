@@ -1,4 +1,5 @@
 import type { PharmacyRegistrationDocumentClaim } from '../pharmacies/verification-document';
+import type { ISODateTimeString } from '../primitives';
 import type { AuthApplication } from './application';
 import type { UserRole } from './role';
 
@@ -37,8 +38,9 @@ export type ResetPasswordPayload = {
 export type UpdateProfilePayload = {
   name?: string;
   phone?: string;
-  address?: string;
+  address?: string | null;
   pictureUrl?: string | null;
+  expectedRevision: ISODateTimeString;
 };
 
 export type UpdatePasswordPayload = {

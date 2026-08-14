@@ -12,6 +12,7 @@ import type {
   PharmacyIdParams,
   PharmacyReviewParams,
   SendMyPharmacyForVerificationInput,
+  SubmitMyPharmacyModerationInput,
   UpdateMyPharmacyProfileInput,
 } from '../schemas/pharmacy.schema';
 
@@ -31,6 +32,7 @@ import {
   getPharmacyReviewsService,
   moderatePharmacyReviewService,
   sendMyPharmacyForVerificationService,
+  submitMyPharmacyModerationService,
   setFavoritePharmacyService,
   updateMyPharmacyProfileService,
 } from '../services/pharmacy.service';
@@ -92,6 +94,18 @@ export async function updateMyPharmacyProfile(
 ): Promise<void> {
   const { body } = res.locals.validated;
   const data = await updateMyPharmacyProfileService(req.user?.id ?? '', body);
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function submitMyPharmacyModeration(
+  req: Request,
+  res: ValidatedResponse<SubmitMyPharmacyModerationInput>
+): Promise<void> {
+  const { body } = res.locals.validated;
+  const data = await submitMyPharmacyModerationService(req.user?.id ?? '', body);
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

@@ -19,5 +19,6 @@ export function toAuthUserResponse(user: UserDocument): AuthUserResponse {
     phone: user.phone,
     address: user.address,
     pictureUrl: user.pictureUrl,
+    revision: user.updatedAt.toISOString(),
   };
 }

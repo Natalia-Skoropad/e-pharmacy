@@ -5,7 +5,7 @@ import { getNextApiServerEnvironment } from './env.ts';
 
 //===================================================================
 
-test('production requires an HTTPS backend URL and BFF proxy secret', () => {
+test('every environment requires the BFF proxy secret and production also requires HTTPS', () => {
   const previous = {
     NODE_ENV: process.env.NODE_ENV,
     API_BASE_URL: process.env.API_BASE_URL,
@@ -28,6 +28,20 @@ test('production requires an HTTPS backend URL and BFF proxy secret', () => {
       'deployment-secret'
     );
 
+    process.env.NODE_ENV = 'development';
+    delete process.env.BFF_PROXY_SECRET;
+    assert.throws(
+      () => getNextApiServerEnvironment(),
+      /BFF_PROXY_SECRET is required/
+    );
+
+    process.env.BFF_PROXY_SECRET = 'development-secret';
+    assert.equal(
+      getNextApiServerEnvironment().bffProxySecret,
+      'development-secret'
+    );
+
+    process.env.NODE_ENV = 'production';
     process.env.API_BASE_URL = 'http://api.example.com';
     assert.throws(
       () => getNextApiServerEnvironment(),
@@ -49,6 +63,7 @@ test('rejects invalid SameSite and cookie-domain configuration', () => {
   try {
     process.env.NODE_ENV = 'test';
     process.env.API_BASE_URL = 'http://backend.example';
+    process.env.BFF_PROXY_SECRET = 'test-secret';
     process.env.AUTH_COOKIE_SAME_SITE = 'sometimes';
     assert.throws(() => getNextApiServerEnvironment(), /AUTH_COOKIE_SAME_SITE/);
 
@@ -80,6 +95,7 @@ test('trusted client IP forwarding requires an explicit proxy provider', () => {
   try {
     process.env.NODE_ENV = 'test';
     process.env.API_BASE_URL = 'http://backend.example';
+    process.env.BFF_PROXY_SECRET = 'test-secret';
 
     delete process.env.BFF_TRUSTED_PROXY_PROVIDER;
     assert.equal(getNextApiServerEnvironment().trustedProxyProvider, 'none');

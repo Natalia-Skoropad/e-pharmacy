@@ -44,7 +44,6 @@ import type { PharmacyRegistrationDocumentUploadInput } from '../schemas/shared/
 import type { SessionContext } from '../types/session';
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
-import { clearAuthCookies, setAuthCookies } from '../utils/authCookie';
 import { httpError } from '../utils/httpError';
 
 //===============================================================
@@ -74,15 +73,24 @@ function getSessionContext(req: Request): SessionContext {
 function isNextAuthProxyRequest(req: Request): boolean {
   const marker = req.headers[BFF_AUTH_PROXY_HEADER_NAME];
   const secret = req.headers[BFF_PROXY_SECRET_HEADER_NAME];
-  const configuredSecret = env.BFF_PROXY_SECRET?.trim();
+  const configuredSecret = env.BFF_PROXY_SECRET.trim();
 
   if (marker !== BFF_AUTH_PROXY_MARKER_VALUE) return false;
 
-  if (!configuredSecret) {
-    return env.NODE_ENV !== 'production';
-  }
+  return typeof secret === 'string' && secret === configuredSecret;
+}
 
-  return secret === configuredSecret;
+//===============================================================
+
+function assertNextAuthProxyRequest(req: Request): void {
+  if (isNextAuthProxyRequest(req)) return;
+
+  throw httpError(
+    HTTP_STATUS.FORBIDDEN,
+    'Authentication session endpoints are available only through the trusted BFF.',
+    undefined,
+    AUTH_ERROR_CODES.FORBIDDEN_ORIGIN
+  );
 }
 
 //===============================================================
@@ -183,10 +191,9 @@ export async function registerUser(
   res: ValidatedResponse<RegisterInput>
 ): Promise<void> {
   const input = res.locals.validated.body;
+  assertNextAuthProxyRequest(req);
 
   const data = await registerUserService(input, getSessionContext(req));
-
-  if (!isNextAuthProxyRequest(req)) setAuthCookies(res, data.tokens);
 
   sendSuccessResponse({
     res,
@@ -203,10 +210,9 @@ export async function loginUser(
   res: ValidatedResponse<LoginInput>
 ): Promise<void> {
   const input = res.locals.validated.body;
+  assertNextAuthProxyRequest(req);
 
   const data = await loginUserService(input, getSessionContext(req));
-
-  if (!isNextAuthProxyRequest(req)) setAuthCookies(res, data.tokens);
 
   sendSuccessResponse({
     res,
@@ -222,6 +228,7 @@ export async function refreshAuthSession(
   req: Request,
   res: Response
 ): Promise<void> {
+  assertNextAuthProxyRequest(req);
   const refreshTokens = requireRefreshTokensFromCookies(req);
   const context = getSessionContext(req);
   let data: Awaited<ReturnType<typeof refreshAuthSessionService>> | null = null;
@@ -244,7 +251,6 @@ export async function refreshAuthSession(
     throw lastError;
   }
 
-  if (!isNextAuthProxyRequest(req)) setAuthCookies(res, data.tokens);
 
   sendSuccessResponse({
     res,
@@ -280,7 +286,6 @@ export async function resetPassword(
   const input = res.locals.validated.body;
 
   await resetPasswordService(input);
-  clearAuthCookies(res);
 
   sendSuccessResponse({
     res,
@@ -336,7 +341,6 @@ export async function updateCurrentUserPassword(
   if (!userId) return;
 
   await updateUserPasswordService(userId, input);
-  clearAuthCookies(res);
 
   sendSuccessResponse({
     res,
@@ -356,7 +360,6 @@ export async function logoutUser(req: Request, res: Response): Promise<void> {
     )
   );
 
-  clearAuthCookies(res);
 
   sendSuccessResponse({
     res,
@@ -374,7 +377,6 @@ export async function logoutAllUserSessions(
   const refreshTokens = getRefreshTokensFromCookies(req);
 
   await revokeAllUserSessionsByRefreshTokensService(refreshTokens);
-  clearAuthCookies(res);
 
   sendSuccessResponse({
     res,

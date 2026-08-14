@@ -200,10 +200,10 @@ export const env = {
   AUTH_COOKIE_DOMAIN: process.env.AUTH_COOKIE_DOMAIN,
   AUTH_COOKIE_SAME_SITE: getAuthCookieSameSite(),
 
-  BFF_PROXY_SECRET:
-    NODE_ENV === 'production'
-      ? getRequiredEnv('BFF_PROXY_SECRET').trim()
-      : process.env.BFF_PROXY_SECRET?.trim(),
+  // The backend never issues browser auth cookies directly. Every token-bearing
+  // auth response is server-to-server and must be authenticated with this
+  // shared BFF secret in development, test, staging, and production.
+  BFF_PROXY_SECRET: getRequiredEnv('BFF_PROXY_SECRET').trim(),
 
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: getOptionalNumberEnv('SMTP_PORT', 587),

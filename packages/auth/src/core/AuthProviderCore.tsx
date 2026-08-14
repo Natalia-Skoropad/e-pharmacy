@@ -323,6 +323,23 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
     return nextUser;
   }, [executeCurrentUserAttempt, publishSessionEvent]);
 
+  const applyCurrentUser = useCallback(
+    (nextUser: AuthUser) => {
+      const currentUser = stateRef.current.user;
+
+      // Profile mutations may update only the already-authenticated identity.
+      // Ignore mismatched identities rather than turning this into an app-level
+      // identity switch primitive.
+      if (!currentUser || currentUser.id !== nextUser.id) return;
+
+      requestManagerRef.current.advanceLifecycle();
+      bootstrapPromiseRef.current = null;
+      applyAuthenticatedUser(nextUser, false);
+      publishSessionEvent('revalidate');
+    },
+    [applyAuthenticatedUser, publishSessionEvent]
+  );
+
   const login = useMemo<AuthContextValue['login']>(() => {
     if (!loginService) return undefined;
 
@@ -545,10 +562,12 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
       isRefreshingUser:
         state.status === 'authenticated' && state.isRevalidating,
 
+      applyCurrentUser,
       reloadCurrentUser,
       retryAuthBootstrap,
     };
   }, [
+    applyCurrentUser,
     invalidateSession,
     login,
     logout,

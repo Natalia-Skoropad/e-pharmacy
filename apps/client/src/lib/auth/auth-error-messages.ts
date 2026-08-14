@@ -6,6 +6,10 @@ const CLIENT_AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
   invalid_credentials: 'Invalid email or password.',
   email_conflict: 'This email is already in use.',
   phone_conflict: 'This phone number is already in use.',
+
+  profile_conflict:
+    'Your profile changed in another tab. Reload the latest data and try again.',
+
   account_blocked: 'This account is blocked. Contact support for assistance.',
   session_invalid: 'Your session has expired. Please sign in again.',
   session_revoked: 'This session is no longer active. Please sign in again.',

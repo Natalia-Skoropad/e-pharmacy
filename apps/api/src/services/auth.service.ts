@@ -55,6 +55,11 @@ import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
 import { toAuthUserResponse } from '../utils/userResponse';
 import { claimRegistrationPharmacyDocuments } from './pharmacy-document.service';
 
+import {
+  enforcePasswordResetResponseTiming,
+  startPasswordResetResponseTiming,
+} from './auth-response-timing';
+
 //===============================================================
 
 const REFRESH_TOKEN_BYTES = 64;
@@ -916,41 +921,50 @@ function getPasswordResetExpiresAt(): Date {
 export async function requestPasswordResetService(
   input: ForgotPasswordInput
 ): Promise<void> {
-  const user = await User.findOne({ email: input.email });
+  const responseStartedAt = startPasswordResetResponseTiming();
 
-  // Anti user enumeration: the controller returns the same 200 response
-  // whether the account exists or not. The selected application still scopes
-  // the reset token, so a client login cannot reset a pharmacy account and
-  // vice versa.
-  if (
-    !user ||
-    user.status === USER_STATUSES.BLOCKED ||
-    user.role !== input.application
-  ) {
-    return;
+  try {
+    const user = await User.findOne({ email: input.email });
+
+    // Anti user enumeration: the controller returns the same 200 response
+    // whether the account exists or not. The selected application still scopes
+    // the reset token, so a client login cannot reset a pharmacy account and
+    // vice versa.
+    if (
+      !user ||
+      user.status === USER_STATUSES.BLOCKED ||
+      user.role !== input.application
+    ) {
+      return;
+    }
+
+    const resetToken = createPasswordResetToken();
+
+    user.resetPasswordTokenHash = hashPasswordResetToken(resetToken);
+    user.resetPasswordExpiresAt = getPasswordResetExpiresAt();
+    user.resetPasswordApplication = input.application;
+
+    await user.save();
+
+    const resetUrl = createPasswordResetUrl(resetToken, input.application);
+
+    // Do not keep the password recovery request open while SMTP connects.
+    // The reset token is already saved, so the API can return the same
+    // anti-enumeration success response immediately. SMTP failures are logged
+    // for diagnostics without blocking the user-facing flow.
+    void sendPasswordResetEmail({
+      to: user.email,
+      name: user.name,
+      resetUrl,
+    }).catch((error) => {
+      logger.error('[auth] Password reset email sending failed', error);
+    });
+  } finally {
+    // Existing, unknown, blocked, and wrong-application accounts share the
+    // same minimum response floor plus bounded jitter. This keeps the outward
+    // 200 envelope generic without making tests depend on real wall-clock waits.
+    await enforcePasswordResetResponseTiming(responseStartedAt);
   }
-
-  const resetToken = createPasswordResetToken();
-
-  user.resetPasswordTokenHash = hashPasswordResetToken(resetToken);
-  user.resetPasswordExpiresAt = getPasswordResetExpiresAt();
-  user.resetPasswordApplication = input.application;
-
-  await user.save();
-
-  const resetUrl = createPasswordResetUrl(resetToken, input.application);
-
-  // Do not keep the password recovery request open while SMTP connects.
-  // The reset token is already saved, so the API can return the same
-  // anti-enumeration success response immediately. SMTP failures are logged
-  // for diagnostics without blocking the user-facing flow.
-  void sendPasswordResetEmail({
-    to: user.email,
-    name: user.name,
-    resetUrl,
-  }).catch((error) => {
-    logger.error('[auth] Password reset email sending failed', error);
-  });
 }
 
 //===============================================================
@@ -1055,9 +1069,9 @@ export async function updateUserProfileService(
     update.phone = phone;
   }
 
-  if (typeof input.address === 'string') {
-    if (input.address) update.address = input.address;
-    else unset.address = '';
+  if ('address' in input) {
+    if (typeof input.address === 'string') update.address = input.address;
+    else if (input.address === null) unset.address = '';
   }
 
   if ('pictureUrl' in input) {
@@ -1070,13 +1084,30 @@ export async function updateUserProfileService(
   if (Object.keys(update).length > 0) updateQuery.$set = update;
   if (Object.keys(unset).length > 0) updateQuery.$unset = unset;
 
+  const expectedRevision = new Date(input.expectedRevision);
+
   try {
-    const user = await User.findByIdAndUpdate(userId, updateQuery, {
-      returnDocument: 'after',
-      runValidators: true,
-    });
+    const user = await User.findOneAndUpdate(
+      { _id: userId, updatedAt: expectedRevision },
+      updateQuery,
+      {
+        returnDocument: 'after',
+        runValidators: true,
+      }
+    );
 
     if (!user) {
+      const userExists = await User.exists({ _id: userId });
+
+      if (userExists) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Profile changed in another session. Reload the latest data and try again.',
+          undefined,
+          AUTH_ERROR_CODES.PROFILE_CONFLICT
+        );
+      }
+
       throw httpError(
         HTTP_STATUS.UNAUTHORIZED,
         API_MESSAGES.USER_NOT_FOUND,

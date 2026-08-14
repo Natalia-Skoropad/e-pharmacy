@@ -137,8 +137,8 @@ export function getNextApiServerEnvironment(): NextApiServerEnvironment {
   const bffProxySecret = process.env.BFF_PROXY_SECRET?.trim() || undefined;
   const authCookieDomain = getCookieDomain();
 
-  if (nodeEnv === 'production' && !bffProxySecret) {
-    throw new Error('BFF_PROXY_SECRET is required in production.');
+  if (!bffProxySecret) {
+    throw new Error('BFF_PROXY_SECRET is required for trusted auth proxying.');
   }
 
   return {

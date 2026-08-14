@@ -15,6 +15,7 @@ import {
   getPharmacies,
   moderatePharmacyReview,
   sendMyPharmacyForVerification,
+  submitMyPharmacyModeration,
   setFavoritePharmacy,
   updateMyPharmacyProfile,
   uploadMyPharmacyDocument,
@@ -40,6 +41,7 @@ import {
   pharmacyReviewParamsSchema,
   pharmaciesQuerySchema,
   sendMyPharmacyForVerificationSchema,
+  submitMyPharmacyModerationSchema,
   updateMyPharmacyProfileSchema,
   uploadMyPharmacyDocumentSchema,
 } from '../schemas/pharmacy.schema';
@@ -88,6 +90,16 @@ pharmacyRoutes.patch(
   authorizeRoles(USER_ROLES.PHARMACY),
   validate({ body: updateMyPharmacyProfileSchema }),
   ctrlWrapper(updateMyPharmacyProfile)
+);
+
+//=================================================================================
+
+pharmacyRoutes.post(
+  '/me/profile/moderation-submission',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ body: submitMyPharmacyModerationSchema }),
+  ctrlWrapper(submitMyPharmacyModeration)
 );
 
 //=================================================================================

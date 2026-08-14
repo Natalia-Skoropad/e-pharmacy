@@ -36,3 +36,31 @@ export function optionalTrimmedTextSchema({
 export function optionalSchema<TSchema extends z.ZodType>(schema: TSchema) {
   return z.preprocess(emptyStringToUndefined, schema.optional());
 }
+//===================================================================
+
+export function clearableTrimmedTextSchema({
+  maxLength,
+  maxMessage,
+  pattern,
+  patternMessage,
+}: Readonly<{
+  maxLength: number;
+  maxMessage: string;
+  pattern?: RegExp;
+  patternMessage?: string;
+}>) {
+  let schema = z.string().trim().min(1).max(maxLength, maxMessage);
+
+  if (pattern && patternMessage) {
+    schema = schema.regex(pattern, patternMessage);
+  }
+
+  return z.union([schema, z.null()]).optional();
+}
+
+//===================================================================
+
+export function clearableSchema<TSchema extends z.ZodType>(schema: TSchema) {
+  return z.union([schema, z.null()]).optional();
+}
+

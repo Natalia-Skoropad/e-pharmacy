@@ -19,7 +19,8 @@ const user: AuthUser = {
   phone: '+380000000000',
   role: 'client',
   status: 'active',
-};
+  revision: '2026-08-14T12:00:00.000Z',
+} as AuthUser;
 
 //===================================================================
 

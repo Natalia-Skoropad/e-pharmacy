@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import path from 'node:path';
+import { resolve } from 'node:path';
 import test from 'node:test';
 
 import {
@@ -47,17 +47,17 @@ test('progressive delay grows after repeated failures and stays bounded', () => 
 
 test('distributed auth rate limiting uses Mongo instead of process-local buckets', () => {
   const middleware = readFileSync(
-    path.join(__dirname, 'rateLimit.middleware.ts'),
+    resolve(__dirname, './rateLimit.middleware.ts'),
     'utf8'
   );
 
   const store = readFileSync(
-    path.join(__dirname, '../services/rate-limit-store.service.ts'),
+    resolve(__dirname, '../services/rate-limit-store.service.ts'),
     'utf8'
   );
 
   const model = readFileSync(
-    path.join(__dirname, '../models/rateLimitBucket.model.ts'),
+    resolve(__dirname, '../models/rateLimitBucket.model.ts'),
     'utf8'
   );
 
@@ -72,8 +72,22 @@ test('distributed auth rate limiting uses Mongo instead of process-local buckets
 
 test('auth routes combine IP and account dimensions for credential-sensitive flows', () => {
   const routes = readFileSync(
-    path.join(__dirname, '../routes/auth.routes.ts'),
+    resolve(__dirname, '../routes/auth.routes.ts'),
     'utf8'
+  );
+
+  const middleware = readFileSync(
+    resolve(__dirname, './rateLimit.middleware.ts'),
+    'utf8'
+  );
+
+  assert.match(
+    middleware,
+    /function getEmailIpKey[\s\S]*?getEmailKey\(req, res\)[\s\S]*?getIpKey\(req\)[\s\S]*?emailKey && ipKey/
+  );
+  assert.doesNotMatch(
+    middleware,
+    /export const loginAccountRateLimit/
   );
 
   assert.match(
@@ -83,7 +97,7 @@ test('auth routes combine IP and account dimensions for credential-sensitive flo
 
   assert.match(
     routes,
-    /['"]\/login['"][\s\S]*?loginIpRateLimit[\s\S]*?validateAuth[\s\S]*?loginProgressiveDelay[\s\S]*?loginAccountRateLimit/
+    /['"]\/login['"][\s\S]*?loginIpRateLimit[\s\S]*?validateAuth[\s\S]*?loginProgressiveDelay[\s\S]*?loginAccountIpRateLimit/
   );
 
   assert.match(

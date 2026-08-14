@@ -97,7 +97,17 @@ test('profile and document services enforce the membership capability matrix', a
 
   assert.match(
     profileService,
-    /findPharmacyForProfileAccess\(\s*userId,\s*'submit_profile'\s*\)/
+    /findPharmacyForProfileAccess\(\s*userId,\s*'submit_profile',\s*mongoSession\s*\)/
+  );
+
+  assert.match(
+    profileService,
+    /submitMyPharmacyModerationService[\s\S]*?withTransaction[\s\S]*?status:\s*PHARMACY_STATUSES\.ON_MODERATION/
+  );
+
+  assert.match(
+    profileService,
+    /updatedAt:\s*new Date\(input\.expectedRevision\)/
   );
 
   assert.match(

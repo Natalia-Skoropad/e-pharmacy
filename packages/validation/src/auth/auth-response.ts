@@ -3,6 +3,7 @@ import { USER_STATUSES } from '@e-pharmacy/config/users';
 
 import { buildEmailError, buildPhoneError } from '../shared';
 import { buildPictureUrlError } from '../files/picture-validation';
+import { isISODateTimeString } from '../dates';
 
 import type {
   AuthResponse,
@@ -109,6 +110,7 @@ export function parseAuthResponse(value: unknown): AuthResponse {
   const id = readRequiredString(source, 'id');
   const email = readRequiredString(source, 'email');
   const phone = readRequiredString(source, 'phone');
+  const revision = readRequiredString(source, 'revision');
   const address = readOptionalString(source, 'address');
   const pictureUrl = readOptionalString(source, 'pictureUrl');
 
@@ -125,6 +127,12 @@ export function parseAuthResponse(value: unknown): AuthResponse {
   ) {
     throw new InvalidAuthResponseError(
       'Authentication response contains an invalid email.'
+    );
+  }
+
+  if (!isISODateTimeString(revision)) {
+    throw new InvalidAuthResponseError(
+      'Authentication response contains an invalid revision timestamp.'
     );
   }
 
@@ -154,6 +162,7 @@ export function parseAuthResponse(value: unknown): AuthResponse {
       phone,
       role,
       status,
+      revision,
       ...(address !== undefined ? { address } : {}),
       ...(pictureUrl !== undefined ? { pictureUrl } : {}),
     },

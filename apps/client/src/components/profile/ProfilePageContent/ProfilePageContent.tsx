@@ -56,7 +56,7 @@ import {
   isDataProfileFormDirty,
   isDataProfileFormValid,
   markAllFieldsTouched,
-  normalizeDataProfileValues,
+  normalizeDataProfileUpdateValues,
   normalizePhoneInput,
   validateChangePasswordForm,
   validateDataProfileForm,
@@ -140,7 +140,7 @@ function AuthenticatedProfilePageContent({
 }>) {
   const {
     canRenderAuthenticatedContent,
-    reloadCurrentUser,
+    applyCurrentUser,
     invalidateSession,
     logoutAll,
   } = useAuth();
@@ -582,8 +582,11 @@ function AuthenticatedProfilePageContent({
       setIsPictureSaving(true);
       setPictureDraft(pictureUrl);
 
-      await updateCurrentUser({ pictureUrl });
-      await reloadCurrentUser();
+      const response = await updateCurrentUser({
+        pictureUrl,
+        expectedRevision: user.revision,
+      });
+      applyCurrentUser(response.user);
       setPictureDraft(undefined);
       toast.success(
         pictureUrl ? 'Profile photo was updated.' : 'Profile photo was removed.'
@@ -615,10 +618,13 @@ function AuthenticatedProfilePageContent({
     try {
       setIsProfileSaving(true);
 
-      const nextProfileValues = normalizeDataProfileValues(profileValues);
+      const nextProfileValues = normalizeDataProfileUpdateValues(profileValues);
 
-      await updateCurrentUser(nextProfileValues);
-      await reloadCurrentUser();
+      const response = await updateCurrentUser({
+        ...nextProfileValues,
+        expectedRevision: user.revision,
+      });
+      applyCurrentUser(response.user);
       setProfileDraft(null);
       setProfileTouchedFields({});
       toast.success('Profile data was updated.');
@@ -629,6 +635,8 @@ function AuthenticatedProfilePageContent({
           backendCodeMessages: {
             AUTH_PHONE_CONFLICT:
               'This phone number is already used by another account.',
+            AUTH_PROFILE_CONFLICT:
+              'Your profile changed in another tab. Reload the latest data and try again.',
           },
         })
       );

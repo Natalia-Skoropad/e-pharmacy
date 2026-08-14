@@ -7,19 +7,23 @@ import type { PharmacyStatus } from './status';
 
 type PharmacyMembershipRole = 'owner' | 'manager';
 
+type ClearableEditablePharmacyBankDetails = Partial<{
+  [Field in keyof EditablePharmacyBankDetails]: string | null;
+}>;
+
 //=============================================================================
 
 export type PharmacyPendingModeration = Readonly<{
   name?: string;
-  address?: string;
-  city?: string;
-  phone?: string;
-  email?: string;
-  workingHours?: string;
+  address?: string | null;
+  city?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  workingHours?: string | null;
   imageUrl?: string | null;
-  description?: string;
+  description?: string | null;
   documents?: readonly PharmacyVerificationDocument[];
-  bankDetails?: EditablePharmacyBankDetails;
+  bankDetails?: ClearableEditablePharmacyBankDetails;
 }>;
 
 //=============================================================================
@@ -54,15 +58,24 @@ export type MyPharmacyProfile = PharmacyProfile &
 
 //=============================================================================
 
-export type UpdateMyPharmacyProfilePayload = {
+export type PharmacyProfileUpdateChanges = {
   name?: string;
-  address?: string;
-  city?: string;
-  phone?: string;
-  email?: string;
-  workingHours?: string;
+  address?: string | null;
+  city?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  workingHours?: string | null;
   imageUrl?: string | null;
-  description?: string;
+  description?: string | null;
   documents?: Array<Readonly<{ documentId: EntityId }>>;
-  bankDetails?: EditablePharmacyBankDetails;
+  bankDetails?: ClearableEditablePharmacyBankDetails;
+};
+
+export type UpdateMyPharmacyProfilePayload = PharmacyProfileUpdateChanges & {
+  expectedRevision: ISODateTimeString;
+};
+
+export type SubmitMyPharmacyModerationPayload = {
+  changes: PharmacyProfileUpdateChanges;
+  expectedRevision: ISODateTimeString;
 };

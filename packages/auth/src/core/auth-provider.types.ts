@@ -114,6 +114,7 @@ export type AuthContextValue = Readonly<{
   logoutAll?: () => Promise<void>;
   invalidateSession: (reason?: AuthUnauthenticatedReason) => void;
   isRefreshingUser: boolean;
+  applyCurrentUser: (user: AuthUser) => void;
   reloadCurrentUser: () => Promise<AuthUser | null>;
   retryAuthBootstrap: () => Promise<AuthUser | null>;
 }>;

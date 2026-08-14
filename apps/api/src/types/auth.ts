@@ -31,6 +31,7 @@ export type AuthUserResponse = {
   phone: string;
   address?: string;
   pictureUrl?: string;
+  revision: string;
 };
 
 //===============================================================

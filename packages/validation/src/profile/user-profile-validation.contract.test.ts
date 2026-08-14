@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   isChangePasswordFormValid,
   isDataProfileFormValid,
+  normalizeDataProfileUpdateValues,
   normalizeDataProfileValues,
   validateChangePasswordForm,
 } from './user-profile-validation';
@@ -24,6 +25,23 @@ test('user profile validation trims values without changing their meaning', () =
     phone: '+380501234567',
     address: 'Kyiv, Main Street 10',
   });
+});
+
+//===================================================================
+
+test('user profile updates use null to explicitly clear an existing address', () => {
+  assert.deepEqual(
+    normalizeDataProfileUpdateValues({
+      name: 'Natalia',
+      phone: '+380501234567',
+      address: '   ',
+    }),
+    {
+      name: 'Natalia',
+      phone: '+380501234567',
+      address: null,
+    }
+  );
 });
 
 //===================================================================

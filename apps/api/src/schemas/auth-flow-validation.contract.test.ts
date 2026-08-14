@@ -11,6 +11,10 @@ import {
 
 //===============================================================
 
+const EXPECTED_REVISION = '2026-08-14T12:00:00.000Z';
+
+//===============================================================
+
 test('login validates email but does not re-apply registration password rules', () => {
   assert.equal(
     loginSchema.safeParse({
@@ -69,11 +73,22 @@ test('profile updates reject payloads without meaningful values', () => {
   );
   assert.equal(
     updateProfileSchema.safeParse({ pictureUrl: null }).success,
+    false
+  );
+
+  assert.equal(
+    updateProfileSchema.safeParse({
+      pictureUrl: null,
+      expectedRevision: EXPECTED_REVISION,
+    }).success,
     true
   );
 
   assert.equal(
-    updateProfileSchema.safeParse({ name: 'Natalia' }).success,
+    updateProfileSchema.safeParse({
+      name: 'Natalia',
+      expectedRevision: EXPECTED_REVISION,
+    }).success,
     true
   );
 });

@@ -142,6 +142,8 @@ const profileErrorCodes = [
   'PHARMACY_PROFILE_INCOMPLETE',
   'PHARMACY_NO_PENDING_CHANGES',
   'PHARMACY_PROFILE_ALREADY_SUBMITTED',
+  'PHARMACY_PROFILE_CONFLICT',
+  'PHARMACY_MODERATION_SUBMISSION_REQUIRED',
   'PHARMACY_OWNER_REQUIRED',
 ];
 
@@ -154,6 +156,30 @@ assert.doesNotMatch(
   clientProfileSource,
   /error\.message\.toLowerCase\(\)\.includes\(['"]phone['"]\)/,
   'Client profile conflicts must branch on stable backend codes, not English copy.'
+);
+
+assert.match(
+  authTypesSource,
+  /expectedRevision:\s*ISODateTimeString/,
+  'Client profile PATCH must carry an explicit server revision.'
+);
+
+assert.match(
+  pharmacyTypesSource,
+  /expectedRevision:\s*ISODateTimeString/,
+  'Pharmacy profile mutations must carry an explicit server revision.'
+);
+
+assert.match(
+  clientProfileSource,
+  /applyCurrentUser\(response\.user\)/,
+  'Client profile PATCH must apply the canonical AuthUser returned by the mutation.'
+);
+
+assert.doesNotMatch(
+  clientProfileSource,
+  /reloadCurrentUser/,
+  'Client profile save must not turn a successful PATCH into a failure through a second GET.'
 );
 
 assert.doesNotMatch(
@@ -220,6 +246,30 @@ assert.match(
 
 assert.match(pharmacyProfileSource, /canPharmacyProfilePerformAction\(/);
 
+assert.match(
+  pharmacyServiceSource,
+  /submitMyPharmacyModerationService[\s\S]*?withTransaction[\s\S]*?status:\s*PHARMACY_STATUSES\.ON_MODERATION/,
+  'Active pharmacy moderation must merge changes and transition status atomically.'
+);
+
+assert.match(
+  pharmacyServiceSource,
+  /updatedAt:\s*new Date\(input\.expectedRevision\)/,
+  'Pharmacy profile writes must compare the expected server revision.'
+);
+
+assert.match(
+  pharmacyProfileSource,
+  /submitMyPharmacyModeration\(\{[\s\S]*?changes:\s*payload,[\s\S]*?expectedRevision:\s*pharmacy\.updatedAt/,
+  'Pharmacy UI must use the atomic moderation-submission command.'
+);
+
+assert.doesNotMatch(
+  pharmacyProfileSource,
+  /handleSendForModeration[\s\S]*?await updateMyPharmacyProfile\([\s\S]*?await sendMyPharmacyForVerification\(/,
+  'Active moderation must not be split into save-then-submit browser mutations.'
+);
+
 console.log(
-  'Profile contract check passed (strict parsing, transition parity, explicit membership capabilities, missing-profile semantics, and server-backed verification documents).'
+  'Profile contract check passed (strict parsing, revision conflicts, atomic moderation, explicit membership capabilities, missing-profile semantics, and server-backed verification documents).'
 );

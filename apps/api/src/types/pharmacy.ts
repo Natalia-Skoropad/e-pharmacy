@@ -1,6 +1,11 @@
 import type { Types } from 'mongoose';
 import type { PHARMACY_STATUSES } from '../constants/auth';
-import type { updateMyPharmacyProfileSchema } from '../schemas/pharmacy.schema';
+
+import type {
+  submitMyPharmacyModerationSchema,
+  updateMyPharmacyProfileSchema,
+} from '../schemas/pharmacy.schema';
+
 import type { z } from 'zod';
 import type { ISODateTimeString } from './date';
 
@@ -37,6 +42,15 @@ export type EditablePharmacyBankDetails = Partial<{
   paymentPurpose: string;
 }>;
 
+export type EditablePharmacyBankDetailsPatch = Partial<{
+  recipientName: string | null;
+  taxId: string | null;
+  iban: string | null;
+  bankName: string | null;
+  receiptEmail: string | null;
+  paymentPurpose: string | null;
+}>;
+
 export type CompletePharmacyBankDetails = {
   recipientName: string;
   taxId: string;
@@ -57,15 +71,15 @@ export type PublicPaymentBankDetails = {
 
 export type PharmacyPendingModeration = {
   name?: string;
-  address?: string;
-  city?: string;
-  phone?: string;
-  email?: string;
-  workingHours?: string;
+  address?: string | null;
+  city?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  workingHours?: string | null;
   imageUrl?: string | null;
-  description?: string;
+  description?: string | null;
   documents?: PharmacyVerificationDocumentMetadata[];
-  bankDetails?: EditablePharmacyBankDetails;
+  bankDetails?: EditablePharmacyBankDetailsPatch;
 };
 
 export type PharmacyEntity = {
@@ -189,4 +203,8 @@ export type MyPharmacyProfileResponseDto = PharmacyProfileResponseDto & {
 
 export type UpdateMyPharmacyProfileInput = z.infer<
   typeof updateMyPharmacyProfileSchema
+>;
+
+export type SubmitMyPharmacyModerationInput = z.infer<
+  typeof submitMyPharmacyModerationSchema
 >;

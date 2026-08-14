@@ -22,6 +22,8 @@ export const backendRoutes = {
 
     sendMyProfileForVerification:
       '/pharmacies/me/profile/send-for-verification',
+    submitMyProfileForModeration:
+      '/pharmacies/me/profile/moderation-submission',
 
     options: '/pharmacies/options',
     favorites: '/pharmacies/favorites',

@@ -24,6 +24,7 @@ const BUSINESS_CODE_MAP: Readonly<Record<string, AuthErrorCode>> = {
   AUTH_INVALID_CREDENTIALS: 'invalid_credentials',
   AUTH_EMAIL_CONFLICT: 'email_conflict',
   AUTH_PHONE_CONFLICT: 'phone_conflict',
+  AUTH_PROFILE_CONFLICT: 'profile_conflict',
   AUTH_USER_BLOCKED: 'account_blocked',
   AUTH_SESSION_INVALID: 'session_invalid',
   AUTH_SESSION_REVOKED: 'session_revoked',

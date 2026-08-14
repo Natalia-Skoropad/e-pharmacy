@@ -59,6 +59,27 @@ export type PharmacyPaymentFormValues = {
   paymentPurpose: string;
 };
 
+export type PharmacyContactPatch = {
+  name?: string;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  workingHours?: string | null;
+};
+
+export type PharmacyAboutPatch = {
+  description?: string | null;
+};
+
+export type PharmacyPaymentPatch = Partial<{
+  recipientName: string | null;
+  taxId: string | null;
+  iban: string | null;
+  bankName: string | null;
+  receiptEmail: string | null;
+  paymentPurpose: string | null;
+}>;
+
 //===================================================================
 
 export type PharmacyContactFormErrors = FormErrors<PharmacyContactFormValues>;
@@ -182,10 +203,21 @@ export function validatePharmacyContactForm(
 
 //===================================================================
 
+function clearableDraftValue(
+  normalizedValue: string | undefined,
+  baselineValue: string | undefined
+): string | null | undefined {
+  if (normalizedValue !== undefined) return normalizedValue;
+  return baselineValue !== undefined ? null : undefined;
+}
+
+//===================================================================
+
 export function normalizePharmacyContactForm(
   values: PharmacyContactFormValues,
-  mode: PharmacyValidationMode = 'verification'
-): Partial<PharmacyContactFormValues> {
+  mode: PharmacyValidationMode = 'verification',
+  baseline?: PharmacyContactFormValues
+): PharmacyContactPatch {
   const normalized = {
     name: normalizeOptionalText(values.name),
     address: normalizeOptionalText(values.address),
@@ -208,14 +240,35 @@ export function normalizePharmacyContactForm(
     };
   }
 
-  const result: Partial<PharmacyContactFormValues> = {};
+  const baselineNormalized = baseline
+    ? {
+        address: normalizeOptionalText(baseline.address),
+        phone: normalizeOptionalText(baseline.phone)
+          ? normalizePhoneInput(baseline.phone)
+          : undefined,
+        email: normalizeOptionalText(baseline.email)
+          ? normalizeEmail(baseline.email)
+          : undefined,
+        workingHours: normalizeOptionalText(baseline.workingHours),
+      }
+    : {};
+
+  const result: PharmacyContactPatch = {};
   if (normalized.name !== undefined) result.name = normalized.name;
-  if (normalized.address !== undefined) result.address = normalized.address;
-  if (normalized.phone !== undefined) result.phone = normalized.phone;
-  if (normalized.email !== undefined) result.email = normalized.email;
-  if (normalized.workingHours !== undefined) {
-    result.workingHours = normalized.workingHours;
-  }
+
+  const address = clearableDraftValue(normalized.address, baselineNormalized.address);
+  const phone = clearableDraftValue(normalized.phone, baselineNormalized.phone);
+  const email = clearableDraftValue(normalized.email, baselineNormalized.email);
+  const workingHours = clearableDraftValue(
+    normalized.workingHours,
+    baselineNormalized.workingHours
+  );
+
+  if (address !== undefined) result.address = address;
+  if (phone !== undefined) result.phone = phone;
+  if (email !== undefined) result.email = email;
+  if (workingHours !== undefined) result.workingHours = workingHours;
+
   return result;
 }
 
@@ -238,12 +291,22 @@ export function validatePharmacyAboutForm(
 
 export function normalizePharmacyAboutForm(
   values: PharmacyAboutFormValues,
-  mode: PharmacyValidationMode = 'verification'
-): Partial<PharmacyAboutFormValues> {
+  mode: PharmacyValidationMode = 'verification',
+  baseline?: PharmacyAboutFormValues
+): PharmacyAboutPatch {
   const description = normalizeOptionalText(values.description);
 
   if (mode === 'verification') return { description: description ?? '' };
-  return description ? { description } : {};
+
+  const baselineDescription = baseline
+    ? normalizeOptionalText(baseline.description)
+    : undefined;
+  const nextDescription = clearableDraftValue(
+    description,
+    baselineDescription
+  );
+
+  return nextDescription !== undefined ? { description: nextDescription } : {};
 }
 
 //===================================================================
@@ -285,8 +348,9 @@ export function validatePharmacyPaymentForm(
 
 export function normalizePharmacyPaymentForm(
   values: PharmacyPaymentFormValues,
-  mode: PharmacyValidationMode = 'verification'
-): Partial<PharmacyPaymentFormValues> {
+  mode: PharmacyValidationMode = 'verification',
+  baseline?: PharmacyPaymentFormValues
+): PharmacyPaymentPatch {
   const normalized = {
     recipientName: normalizeOptionalText(values.recipientName),
     taxId: normalizeOptionalText(values.taxId),
@@ -311,23 +375,48 @@ export function normalizePharmacyPaymentForm(
     };
   }
 
-  const result: Partial<PharmacyPaymentFormValues> = {};
+  const baselineNormalized = baseline
+    ? {
+        recipientName: normalizeOptionalText(baseline.recipientName),
+        taxId: normalizeOptionalText(baseline.taxId),
+        iban: normalizeOptionalText(baseline.iban)
+          ? normalizeIban(baseline.iban)
+          : undefined,
+        bankName: normalizeOptionalText(baseline.bankName),
+        receiptEmail: normalizeOptionalText(baseline.receiptEmail)
+          ? normalizeEmail(baseline.receiptEmail)
+          : undefined,
+        paymentPurpose: normalizeOptionalText(baseline.paymentPurpose),
+      }
+    : {};
 
-  if (normalized.recipientName !== undefined) {
-    result.recipientName = normalized.recipientName;
-  }
+  const result: PharmacyPaymentPatch = {};
 
-  if (normalized.taxId !== undefined) result.taxId = normalized.taxId;
-  if (normalized.iban !== undefined) result.iban = normalized.iban;
-  if (normalized.bankName !== undefined) result.bankName = normalized.bankName;
+  const recipientName = clearableDraftValue(
+    normalized.recipientName,
+    baselineNormalized.recipientName
+  );
+  const taxId = clearableDraftValue(normalized.taxId, baselineNormalized.taxId);
+  const iban = clearableDraftValue(normalized.iban, baselineNormalized.iban);
+  const bankName = clearableDraftValue(
+    normalized.bankName,
+    baselineNormalized.bankName
+  );
+  const receiptEmail = clearableDraftValue(
+    normalized.receiptEmail,
+    baselineNormalized.receiptEmail
+  );
+  const paymentPurpose = clearableDraftValue(
+    normalized.paymentPurpose,
+    baselineNormalized.paymentPurpose
+  );
 
-  if (normalized.receiptEmail !== undefined) {
-    result.receiptEmail = normalized.receiptEmail;
-  }
-
-  if (normalized.paymentPurpose !== undefined) {
-    result.paymentPurpose = normalized.paymentPurpose;
-  }
+  if (recipientName !== undefined) result.recipientName = recipientName;
+  if (taxId !== undefined) result.taxId = taxId;
+  if (iban !== undefined) result.iban = iban;
+  if (bankName !== undefined) result.bankName = bankName;
+  if (receiptEmail !== undefined) result.receiptEmail = receiptEmail;
+  if (paymentPurpose !== undefined) result.paymentPurpose = paymentPurpose;
 
   return result;
 }

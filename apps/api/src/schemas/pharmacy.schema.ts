@@ -8,6 +8,8 @@ import {
   hasMeaningfulValue,
 } from './shared';
 
+import { clearableSchema } from './shared/optional-text.schema';
+
 import {
   pharmacyDocumentUploadSchema,
   pharmacyProfileDocumentSelectionsSchema,
@@ -24,11 +26,12 @@ import {
   sharedRequiredAddressSchema,
   sharedRequiredPhoneSchema,
   sharedPictureUrlSchema,
-  sharedOptionalWorkingHoursSchema,
-  sharedOptionalTextEditorSchema,
-  sharedOptionalTaxIdSchema,
-  sharedOptionalIbanSchema,
-  sharedOptionalPaymentPurposeSchema,
+  sharedClearableWorkingHoursSchema,
+  sharedClearableTextEditorSchema,
+  sharedClearableTaxIdSchema,
+  sharedClearableIbanSchema,
+  sharedClearablePaymentPurposeSchema,
+  sharedExpectedRevisionSchema,
 } from './shared-validation.schema';
 
 //===============================================================
@@ -100,33 +103,47 @@ export const createPharmacyReviewSchema = z.object({
 
 //===============================================================
 
-export const updateMyPharmacyProfileSchema = z
-  .object({
-    name: sharedPharmacyNameSchema.optional(),
-    address: sharedRequiredAddressSchema.optional(),
-    city: sharedSearchSchema,
-    phone: sharedRequiredPhoneSchema.optional(),
-    email: sharedEmailSchema.optional(),
-    workingHours: sharedOptionalWorkingHoursSchema,
-    imageUrl: sharedPictureUrlSchema,
-    description: sharedOptionalTextEditorSchema,
-    documents: pharmacyProfileDocumentSelectionsSchema.optional(),
+const pharmacyProfileUpdateChangesSchema = z.object({
+  name: sharedPharmacyNameSchema.optional(),
+  address: clearableSchema(sharedRequiredAddressSchema),
+  city: clearableSchema(sharedSearchSchema.unwrap()),
+  phone: clearableSchema(sharedRequiredPhoneSchema),
+  email: clearableSchema(sharedEmailSchema),
+  workingHours: sharedClearableWorkingHoursSchema,
+  imageUrl: sharedPictureUrlSchema,
+  description: sharedClearableTextEditorSchema,
+  documents: pharmacyProfileDocumentSelectionsSchema.optional(),
 
-    bankDetails: z
-      .object({
-        recipientName: sharedBankRecipientNameSchema.optional(),
-        taxId: sharedOptionalTaxIdSchema,
-        iban: sharedOptionalIbanSchema,
-        bankName: sharedBankNameSchema.optional(),
-        receiptEmail: sharedEmailSchema.optional(),
-        paymentPurpose: sharedOptionalPaymentPurposeSchema,
-      })
-      .optional(),
-  })
+  bankDetails: z
+    .object({
+      recipientName: clearableSchema(sharedBankRecipientNameSchema),
+      taxId: sharedClearableTaxIdSchema,
+      iban: sharedClearableIbanSchema,
+      bankName: clearableSchema(sharedBankNameSchema),
+      receiptEmail: clearableSchema(sharedEmailSchema),
+      paymentPurpose: sharedClearablePaymentPurposeSchema,
+    })
+    .optional(),
+});
 
-  .refine((data) => Object.values(data).some(hasMeaningfulValue), {
-    message: 'At least one field is required',
-  });
+//===============================================================
+
+export const updateMyPharmacyProfileSchema = pharmacyProfileUpdateChangesSchema
+  .extend({ expectedRevision: sharedExpectedRevisionSchema })
+  .refine(
+    (data) =>
+      Object.entries(data).some(
+        ([key, value]) => key !== 'expectedRevision' && hasMeaningfulValue(value)
+      ),
+    { message: 'At least one field is required' }
+  );
+
+//===============================================================
+
+export const submitMyPharmacyModerationSchema = z.object({
+  changes: pharmacyProfileUpdateChangesSchema,
+  expectedRevision: sharedExpectedRevisionSchema,
+});
 
 //===============================================================
 
@@ -151,6 +168,10 @@ export type PendingPharmacyReviewsQuery = z.infer<
 
 export type UpdateMyPharmacyProfileInput = z.infer<
   typeof updateMyPharmacyProfileSchema
+>;
+
+export type SubmitMyPharmacyModerationInput = z.infer<
+  typeof submitMyPharmacyModerationSchema
 >;
 
 export type SendMyPharmacyForVerificationInput = z.infer<

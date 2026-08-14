@@ -26,7 +26,7 @@ import {
 import { authenticate } from '../middlewares/auth.middleware';
 
 import {
-  loginAccountRateLimit,
+  loginAccountIpRateLimit,
   loginIpRateLimit,
   loginProgressiveDelay,
   passwordChangeAccountRateLimit,
@@ -108,7 +108,7 @@ authRoutes.post(
     body: loginSchema,
   }),
   loginProgressiveDelay,
-  loginAccountRateLimit,
+  loginAccountIpRateLimit,
   ctrlWrapper(loginUser)
 );
 

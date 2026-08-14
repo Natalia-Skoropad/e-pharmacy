@@ -580,7 +580,7 @@ assert.match(
 
 for (const limiter of [
   'loginIpRateLimit',
-  'loginAccountRateLimit',
+  'loginAccountIpRateLimit',
   'loginProgressiveDelay',
   'registrationIpRateLimit',
   'registrationAccountRateLimit',

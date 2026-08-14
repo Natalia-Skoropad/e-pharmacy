@@ -9,6 +9,8 @@ import {
   PHARMACY_PROFILE_ALREADY_SUBMITTED_ERROR_CODE,
   PHARMACY_PROFILE_INCOMPLETE_ERROR_CODE,
   PHARMACY_PROFILE_LOCKED_ERROR_CODE,
+  PHARMACY_PROFILE_CONFLICT_ERROR_CODE,
+  PHARMACY_MODERATION_SUBMISSION_REQUIRED_ERROR_CODE,
   canPharmacyProfilePerformAction,
 } from '../constants/pharmacy-profile';
 
@@ -29,6 +31,7 @@ import type {
   PharmacyMembershipRole,
   PharmacyReviewResponseDto,
   ReviewModerationStatus,
+  SubmitMyPharmacyModerationInput,
   UpdateMyPharmacyProfileInput,
 } from '../types/pharmacy';
 
@@ -63,7 +66,7 @@ type PharmacyHydratedDocument = HydratedDocument<PharmacyEntity> & {
 
 type ResolvedPharmacyProfileUpdate = Omit<
   UpdateMyPharmacyProfileInput,
-  'documents'
+  'documents' | 'expectedRevision'
 > & {
   documents?: PharmacyEntity['documents'];
 };
@@ -780,6 +783,28 @@ function buildPendingModerationPayload(
 
 //===============================================================
 
+function throwPharmacyProfileConflict(): never {
+  throw httpError(
+    HTTP_STATUS.CONFLICT,
+    'Pharmacy profile changed in another session. Reload the latest data and try again.',
+    undefined,
+    PHARMACY_PROFILE_CONFLICT_ERROR_CODE
+  );
+}
+
+//===============================================================
+
+function assertPharmacyProfileRevision(
+  pharmacy: Pick<PharmacyEntity, 'updatedAt'>,
+  expectedRevision: string
+): void {
+  if (pharmacy.updatedAt.toISOString() !== expectedRevision) {
+    throwPharmacyProfileConflict();
+  }
+}
+
+//===============================================================
+
 export async function updateMyPharmacyProfileService(
   userId: string,
   input: UpdateMyPharmacyProfileInput
@@ -795,9 +820,6 @@ export async function updateMyPharmacyProfileService(
         mongoSession
       );
 
-      // Capability/status checks must run before temporary document uploads are
-      // attached. Otherwise a rejected profile update could make those files
-      // permanent even though Pharmacy itself was never changed.
       if (!canPharmacyProfilePerformAction(pharmacy.status, 'edit')) {
         throw httpError(
           HTTP_STATUS.BAD_REQUEST,
@@ -807,7 +829,13 @@ export async function updateMyPharmacyProfileService(
         );
       }
 
-      const { documents: documentSelections, ...profileFields } = input;
+      assertPharmacyProfileRevision(pharmacy, input.expectedRevision);
+
+      const {
+        documents: documentSelections,
+        expectedRevision,
+        ...profileFields
+      } = input;
       const resolvedInput: ResolvedPharmacyProfileUpdate = {
         ...profileFields,
         ...(documentSelections !== undefined
@@ -830,8 +858,8 @@ export async function updateMyPharmacyProfileService(
           resolvedInput
         );
 
-        const updatedPharmacy = await Pharmacy.findByIdAndUpdate(
-          pharmacy._id,
+        const updatedPharmacy = await Pharmacy.findOneAndUpdate(
+          { _id: pharmacy._id, updatedAt: new Date(expectedRevision) },
           {
             $set: {
               pendingModeration,
@@ -842,9 +870,7 @@ export async function updateMyPharmacyProfileService(
           { new: true, runValidators: true, session: mongoSession }
         );
 
-        if (!updatedPharmacy) {
-          throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
-        }
+        if (!updatedPharmacy) throwPharmacyProfileConflict();
 
         result = {
           pharmacy: serializePharmacyProfile(
@@ -855,42 +881,44 @@ export async function updateMyPharmacyProfileService(
         return;
       }
 
-      const update: Record<string, unknown> = {
-        updatedBy: userId,
+      const update: Record<string, unknown> = { updatedBy: userId };
+      const unset: Record<string, ''> = {};
+
+      const applyClearableField = (key: string, value: unknown) => {
+        if (value === undefined) return;
+        if (value === null) unset[key] = '';
+        else update[key] = value;
       };
 
       if (resolvedInput.name !== undefined) update.name = resolvedInput.name;
-      if (resolvedInput.address !== undefined)
-        update.address = resolvedInput.address;
-      if (resolvedInput.city !== undefined) update.city = resolvedInput.city;
-      if (resolvedInput.phone !== undefined) update.phone = resolvedInput.phone;
-      if (resolvedInput.email !== undefined) update.email = resolvedInput.email;
-      if (resolvedInput.workingHours !== undefined)
-        update.workingHours = resolvedInput.workingHours;
-      if (resolvedInput.imageUrl !== undefined)
-        update.imageUrl = resolvedInput.imageUrl;
-      if (resolvedInput.description !== undefined)
-        update.description = resolvedInput.description;
+      applyClearableField('address', resolvedInput.address);
+      applyClearableField('city', resolvedInput.city);
+      applyClearableField('phone', resolvedInput.phone);
+      applyClearableField('email', resolvedInput.email);
+      applyClearableField('workingHours', resolvedInput.workingHours);
+      applyClearableField('imageUrl', resolvedInput.imageUrl);
+      applyClearableField('description', resolvedInput.description);
       if (resolvedInput.documents !== undefined)
         update.documents = resolvedInput.documents;
 
       if (resolvedInput.bankDetails) {
         for (const [key, value] of Object.entries(resolvedInput.bankDetails)) {
-          if (value !== undefined) {
-            update[`bankDetails.${key}`] = value;
-          }
+          const path = `bankDetails.${key}`;
+          if (value === null) unset[path] = '';
+          else if (value !== undefined) update[path] = value;
         }
       }
 
-      const updatedPharmacy = await Pharmacy.findByIdAndUpdate(
-        pharmacy._id,
-        { $set: update },
+      const updateQuery: Record<string, unknown> = { $set: update };
+      if (Object.keys(unset).length > 0) updateQuery.$unset = unset;
+
+      const updatedPharmacy = await Pharmacy.findOneAndUpdate(
+        { _id: pharmacy._id, updatedAt: new Date(expectedRevision) },
+        updateQuery,
         { new: true, runValidators: true, session: mongoSession }
       );
 
-      if (!updatedPharmacy) {
-        throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
-      }
+      if (!updatedPharmacy) throwPharmacyProfileConflict();
 
       result = {
         pharmacy: serializePharmacyProfile(
@@ -905,6 +933,122 @@ export async function updateMyPharmacyProfileService(
 
   if (!result) {
     throw new Error('Pharmacy profile update transaction did not commit.');
+  }
+
+  return result;
+}
+
+//===============================================================
+
+export async function submitMyPharmacyModerationService(
+  userId: string,
+  input: SubmitMyPharmacyModerationInput
+): Promise<{ pharmacy: MyPharmacyProfileResponseDto; message: string }> {
+  const mongoSession = await mongoose.startSession();
+  let result: {
+    pharmacy: MyPharmacyProfileResponseDto;
+    message: string;
+  } | null = null;
+
+  try {
+    await mongoSession.withTransaction(async () => {
+      const { pharmacy, membershipRole } = await findPharmacyForProfileAccess(
+        userId,
+        'submit_profile',
+        mongoSession
+      );
+
+      if (pharmacy.status === PHARMACY_STATUSES.ON_MODERATION) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Pharmacy profile is already submitted for review.',
+          undefined,
+          PHARMACY_PROFILE_ALREADY_SUBMITTED_ERROR_CODE
+        );
+      }
+
+      if (pharmacy.status !== PHARMACY_STATUSES.ACTIVE) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'Pharmacy changes can be submitted for moderation only from active status.',
+          undefined,
+          PHARMACY_PROFILE_LOCKED_ERROR_CODE
+        );
+      }
+
+      assertPharmacyProfileRevision(pharmacy, input.expectedRevision);
+
+      const { documents: documentSelections, ...profileFields } = input.changes;
+      const resolvedChanges: ResolvedPharmacyProfileUpdate = {
+        ...profileFields,
+        ...(documentSelections !== undefined
+          ? {
+              documents: await resolvePrivatePharmacyDocumentSelections(
+                pharmacy._id,
+                documentSelections,
+                mongoSession
+              ),
+            }
+          : {}),
+      };
+
+      const hasNewChanges = hasModeratedProfileChanges(resolvedChanges);
+      const hasExistingPendingChanges = Boolean(
+        pharmacy.pendingModeration &&
+        Object.keys(pharmacy.pendingModeration).length > 0
+      );
+
+      if (!hasNewChanges && !hasExistingPendingChanges) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'There are no pharmacy changes to send for moderation.',
+          undefined,
+          PHARMACY_NO_PENDING_CHANGES_ERROR_CODE
+        );
+      }
+
+      const pendingModeration = hasNewChanges
+        ? buildPendingModerationPayload(
+            pharmacy.pendingModeration,
+            resolvedChanges
+          )
+        : pharmacy.pendingModeration;
+
+      const updatedPharmacy = await Pharmacy.findOneAndUpdate(
+        {
+          _id: pharmacy._id,
+          status: PHARMACY_STATUSES.ACTIVE,
+          updatedAt: new Date(input.expectedRevision),
+        },
+        {
+          $set: {
+            pendingModeration,
+            status: PHARMACY_STATUSES.ON_MODERATION,
+            updatedBy: userId,
+          },
+          $unset: { statusReason: '' },
+        },
+        { new: true, runValidators: true, session: mongoSession }
+      );
+
+      if (!updatedPharmacy) throwPharmacyProfileConflict();
+
+      result = {
+        pharmacy: serializePharmacyProfile(
+          updatedPharmacy as PharmacyDocument,
+          membershipRole
+        ),
+        message: 'Pharmacy changes were sent for moderation.',
+      };
+    });
+  } finally {
+    await mongoSession.endSession();
+  }
+
+  if (!result) {
+    throw new Error(
+      'Pharmacy moderation submission transaction did not commit.'
+    );
   }
 
   return result;
@@ -937,19 +1081,12 @@ export async function sendMyPharmacyForVerificationService(
     pharmacy.status = PHARMACY_STATUSES.ON_VERIFICATION;
     pharmacy.statusReason = undefined;
   } else if (pharmacy.status === PHARMACY_STATUSES.ACTIVE) {
-    if (
-      !pharmacy.pendingModeration ||
-      Object.keys(pharmacy.pendingModeration).length === 0
-    ) {
-      throw httpError(
-        HTTP_STATUS.BAD_REQUEST,
-        'There are no pharmacy changes to send for moderation.',
-        undefined,
-        PHARMACY_NO_PENDING_CHANGES_ERROR_CODE
-      );
-    }
-
-    pharmacy.status = PHARMACY_STATUSES.ON_MODERATION;
+    throw httpError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Use the atomic moderation-submission endpoint for active pharmacy changes.',
+      undefined,
+      PHARMACY_MODERATION_SUBMISSION_REQUIRED_ERROR_CODE
+    );
   } else if (
     !canPharmacyProfilePerformAction(
       pharmacy.status,
@@ -973,9 +1110,6 @@ export async function sendMyPharmacyForVerificationService(
       pharmacy as PharmacyDocument,
       membershipRole
     ),
-    message:
-      pharmacy.status === PHARMACY_STATUSES.ON_VERIFICATION
-        ? 'Pharmacy was sent for verification.'
-        : 'Pharmacy changes were sent for moderation.',
+    message: 'Pharmacy was sent for verification.',
   };
 }

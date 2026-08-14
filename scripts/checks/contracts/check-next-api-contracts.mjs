@@ -29,7 +29,6 @@ const frontendAuthCookieRuntime = await read(
   'packages/next-api/src/internal/auth-cookies.ts'
 );
 
-const backendAuthCookieRuntime = await read('apps/api/src/utils/authCookie.ts');
 const clientAuthProvider = await read(
   'apps/client/src/providers/AuthProvider/AuthProvider.tsx'
 );
@@ -206,15 +205,6 @@ if (
   violations.push('BFF refresh cookie does not use backend expiry metadata');
 }
 
-if (
-  !/tokens\.accessTokenExpiresIn/.test(backendAuthCookieRuntime) ||
-  !/tokens\.refreshTokenExpiresIn/.test(backendAuthCookieRuntime)
-) {
-  violations.push(
-    'Backend cookie writer does not use auth token expiry metadata'
-  );
-}
-
 if (/AUTH_READY_COOKIE_MAX_AGE_SECONDS/.test(frontendCookies)) {
   violations.push('Frontend config still defines a fixed auth-hint lifetime');
 }
@@ -342,13 +332,28 @@ if (
   );
 }
 
-const directCookieGuards = backendAuthController.match(
-  /if \(!isNextAuthProxyRequest\(req\)\) setAuthCookies\(res, data\.tokens\);/g
+if (
+  /setAuthCookies|clearAuthCookies|utils\/authCookie/.test(backendAuthController)
+) {
+  violations.push(
+    'Backend auth controller still owns browser auth cookies instead of the BFF'
+  );
+}
+
+if (
+  !/BFF_PROXY_SECRET:\s*getRequiredEnv\(['"]BFF_PROXY_SECRET['"]\)/.test(backendEnv) ||
+  !/if \(!bffProxySecret\)\s*\{[\s\S]*BFF_PROXY_SECRET is required/.test(nextApiEnv)
+) {
+  violations.push('BFF proxy secret must be required in every runtime environment');
+}
+
+const trustedAuthAssertions = backendAuthController.match(
+  /assertNextAuthProxyRequest\(req\);/g
 );
 
-if ((directCookieGuards?.length ?? 0) !== 3) {
+if ((trustedAuthAssertions?.length ?? 0) < 3) {
   violations.push(
-    'Backend login/register/refresh must not emit API-domain auth cookies for trusted BFF requests'
+    'Backend register/login/refresh must require the trusted BFF before returning tokens'
   );
 }
 

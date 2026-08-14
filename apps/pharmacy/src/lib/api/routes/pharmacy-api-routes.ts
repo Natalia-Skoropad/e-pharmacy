@@ -67,6 +67,8 @@ export const pharmacyApiRoutes = {
       `/api/pharmacies/me/documents/${segment(documentId)}`,
     sendMyProfileForVerification:
       '/api/pharmacies/me/profile/send-for-verification',
+    submitMyProfileForModeration:
+      '/api/pharmacies/me/profile/moderation-submission',
   },
 
   auth: {

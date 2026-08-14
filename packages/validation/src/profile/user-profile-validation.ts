@@ -23,6 +23,12 @@ export type DataProfileFormValues = {
   address: string;
 };
 
+export type DataProfileUpdateValues = {
+  name: string;
+  phone: string;
+  address: string | null;
+};
+
 export type ChangePasswordFormValues = {
   currentPassword: string;
   newPassword: string;
@@ -77,6 +83,19 @@ export function normalizeDataProfileValues(
     name: normalizeDataProfileValue(values.name),
     phone: normalizePhoneInput(values.phone),
     address: normalizeDataProfileValue(values.address),
+  };
+}
+
+//===================================================================
+
+export function normalizeDataProfileUpdateValues(
+  values: DataProfileFormValues
+): DataProfileUpdateValues {
+  const normalized = normalizeDataProfileValues(values);
+
+  return {
+    ...normalized,
+    address: normalized.address || null,
   };
 }
 

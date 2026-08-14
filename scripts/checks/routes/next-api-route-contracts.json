@@ -470,6 +470,14 @@
   },
   {
     "app": "pharmacy",
+    "route": "/pharmacies/me/profile/moderation-submission",
+    "backend": "/pharmacies/me/profile/moderation-submission",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/pharmacies/me/profile/send-for-verification",
     "backend": "/pharmacies/me/profile/send-for-verification",
     "methods": {

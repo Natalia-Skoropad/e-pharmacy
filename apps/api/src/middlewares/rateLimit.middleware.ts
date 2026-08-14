@@ -64,6 +64,15 @@ function getIpKey(req: Request): string | null {
 
 //===============================================================
 
+function getEmailIpKey(req: Request, res: Response): string | null {
+  const emailKey = getEmailKey(req, res);
+  const ipKey = getIpKey(req);
+
+  return emailKey && ipKey ? `${emailKey}|${ipKey}` : null;
+}
+
+//===============================================================
+
 function runAfterResponse(res: Response, operation: () => Promise<void>): void {
   res.once('finish', () => {
     void operation().catch((error) => {
@@ -242,11 +251,11 @@ export const loginIpRateLimit = createRateLimit({
   message: 'Too many login attempts. Please try again later.',
 });
 
-export const loginAccountRateLimit = createRateLimit({
-  policy: 'login-account',
+export const loginAccountIpRateLimit = createRateLimit({
+  policy: 'login-account-ip',
   limit: 8,
-  message: 'Too many login attempts. Please try again later.',
-  resolveKey: getEmailKey,
+  message: 'Too many login attempts from this network. Please try again later.',
+  resolveKey: getEmailIpKey,
   skipSuccessfulRequests: true,
 });
 

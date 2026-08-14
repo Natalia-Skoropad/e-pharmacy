@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import type { AuthUser } from '@e-pharmacy/types/auth';
+
 import { selectClientAuthCapabilities } from './client-auth-capabilities';
 
 //===================================================================
@@ -12,7 +14,8 @@ const CLIENT_USER = {
   phone: '+380501112233',
   role: 'client',
   status: 'active',
-} as const;
+  revision: '2026-08-14T12:00:00.000Z',
+} as AuthUser;
 
 //===================================================================
 
