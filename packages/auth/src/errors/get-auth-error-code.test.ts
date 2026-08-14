@@ -5,7 +5,7 @@ import { getAuthErrorCode } from './get-auth-error-code';
 
 //===================================================================
 
-test('uses stable backend business codes before mutable copy', () => {
+test('uses stable backend business codes before mutable copy or status', () => {
   assert.equal(
     getAuthErrorCode({
       status: 403,
@@ -36,7 +36,7 @@ test('uses stable backend business codes before mutable copy', () => {
 
 //===================================================================
 
-test('classifies stable transport codes', () => {
+test('classifies stable transport codes and infrastructure status fallbacks', () => {
   assert.equal(getAuthErrorCode({ code: 'GATEWAY_TIMEOUT' }), 'timeout');
 
   assert.equal(
@@ -53,28 +53,23 @@ test('classifies stable transport codes', () => {
     getAuthErrorCode({ code: 'CSRF_VALIDATION_FAILED' }),
     'csrf_failed'
   );
+
+  assert.equal(getAuthErrorCode({ status: 429 }), 'rate_limited');
+  assert.equal(getAuthErrorCode({ status: 503 }), 'service_unavailable');
+  assert.equal(getAuthErrorCode({ status: 504 }), 'timeout');
 });
 
 //===================================================================
 
-test('does not classify arbitrary 403 copy as a blocked session', () => {
+test('does not infer auth business semantics from legacy messages or statuses', () => {
   assert.equal(
-    getAuthErrorCode({ status: 403, message: 'Role access is forbidden.' }),
+    getAuthErrorCode({ status: 403, message: 'Request origin is not allowed' }),
     'unknown'
   );
 
   assert.equal(
-    getAuthErrorCode({ status: 403, message: 'Request origin is not allowed' }),
-    'forbidden_origin'
-  );
-});
-
-//===================================================================
-
-test('uses narrow context fallbacks for legacy responses', () => {
-  assert.equal(
     getAuthErrorCode({ status: 401, message: 'Wrong password.' }, 'login'),
-    'invalid_credentials'
+    'unknown'
   );
 
   assert.equal(
@@ -82,7 +77,7 @@ test('uses narrow context fallbacks for legacy responses', () => {
       { status: 409, field: 'phone', message: 'Conflict.' },
       'register'
     ),
-    'phone_conflict'
+    'unknown'
   );
 
   assert.equal(
@@ -90,6 +85,28 @@ test('uses narrow context fallbacks for legacy responses', () => {
       { status: 400, message: 'Old reset response.' },
       'reset-password'
     ),
-    'invalid_reset_token'
+    'validation_error'
+  );
+
+  assert.equal(
+    getAuthErrorCode({
+      status: 401,
+      message: 'Authorization token is invalid',
+    }),
+    'unknown'
+  );
+});
+
+//===================================================================
+
+test('maps explicit validation and resource codes without status inference', () => {
+  assert.equal(
+    getAuthErrorCode({ status: 400, code: 'AUTH_VALIDATION_FAILED' }),
+    'validation_error'
+  );
+
+  assert.equal(
+    getAuthErrorCode({ status: 404, code: 'AUTH_RESOURCE_NOT_FOUND' }),
+    'not_found'
   );
 });

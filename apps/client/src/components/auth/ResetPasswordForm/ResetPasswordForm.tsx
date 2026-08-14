@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
@@ -23,6 +23,7 @@ import {
 } from '@e-pharmacy/validation/auth';
 
 import { getClientAuthErrorMessage } from '@/lib/auth';
+import { captureResetPasswordToken } from '@/lib/auth/reset-password-token';
 import { ROUTES } from '@/lib/routes';
 import { resetPassword } from '@/lib/api/browser';
 
@@ -31,14 +32,13 @@ import css from '../shared/AuthForm.module.css';
 //===================================================================
 
 type ResetPasswordFormProps = {
-  token: string;
   title: string;
   text: string;
 };
 
 //===================================================================
 
-function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
+function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
   const toast = useToast();
   const router = useRouter();
   const { isBootstrapping, invalidateSession } = useAuth();
@@ -46,10 +46,17 @@ function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
   const [values, setValues] = useState<ResetPasswordFormValues>(
     RESET_PASSWORD_INITIAL_VALUES
   );
+
   const [errors, setErrors] = useState<ResetPasswordFormErrors>({});
 
   const [touchedFields, setTouchedFields] =
     useState<ResetPasswordTouchedFields>({});
+
+  const [token] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+
+    return captureResetPasswordToken(window.location.href).token;
+  });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -58,7 +65,20 @@ function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
     useState(false);
 
-  const formIsValid = isResetPasswordFormValid(values, token);
+  useEffect(() => {
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const captured = captureResetPasswordToken(window.location.href);
+
+    if (captured.sanitizedUrl !== currentUrl) {
+      window.history.replaceState(
+        window.history.state,
+        '',
+        captured.sanitizedUrl
+      );
+    }
+  }, []);
+
+  const formIsValid = token !== null && isResetPasswordFormValid(values, token);
 
   const handleChange =
     (field: keyof ResetPasswordFormValues) =>
@@ -80,7 +100,7 @@ function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
 
     const nextErrors = validateResetPasswordForm(values);
 
-    if (!token || hasValidationErrors(nextErrors)) {
+    if (token === null || !token || hasValidationErrors(nextErrors)) {
       setTouchedFields(markAllFieldsTouched(RESET_PASSWORD_FORM_FIELDS));
       setErrors(nextErrors);
       return;
@@ -139,7 +159,7 @@ function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
         <p className={css.text}>{text}</p>
       </div>
 
-      {!token ? (
+      {token !== null && !token ? (
         <p className={css.submitError} role="alert">
           Password reset link is missing. Please request a new link.
         </p>
@@ -182,7 +202,9 @@ function ResetPasswordForm({ token, title, text }: ResetPasswordFormProps) {
       <Button
         type="submit"
         fullWidth
-        disabled={isSubmitting || isBootstrapping || !formIsValid}
+        disabled={
+          token === null || isSubmitting || isBootstrapping || !formIsValid
+        }
       >
         {isSubmitting ? 'Saving new password...' : 'Save new password'}
       </Button>

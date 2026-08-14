@@ -13,6 +13,7 @@ type ValidateSchemas = {
   body?: ZodType;
   params?: ZodType;
   query?: ZodType;
+  errorCode?: string;
 };
 
 //===============================================================
@@ -63,7 +64,8 @@ export function validate(schemas: ValidateSchemas) {
         httpError(
           HTTP_STATUS.BAD_REQUEST,
           API_MESSAGES.VALIDATION_ERROR,
-          getValidationErrorDetails(error)
+          getValidationErrorDetails(error),
+          schemas.errorCode
         )
       );
     }

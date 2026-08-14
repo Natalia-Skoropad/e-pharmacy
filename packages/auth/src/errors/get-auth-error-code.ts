@@ -12,8 +12,6 @@ type AuthErrorContext =
 
 type ErrorLike = {
   status?: unknown;
-  message?: unknown;
-  field?: unknown;
   code?: unknown;
   payload?: unknown;
   data?: unknown;
@@ -50,19 +48,6 @@ const TRANSPORT_CODE_MAP: Readonly<Record<string, AuthErrorCode>> = {
   INVALID_RESPONSE: 'invalid_response',
   INVALID_BACKEND_RESPONSE: 'invalid_response',
   CSRF_VALIDATION_FAILED: 'csrf_failed',
-};
-
-//===================================================================
-
-const LEGACY_MESSAGE_MAP: Readonly<Record<string, AuthErrorCode>> = {
-  'email or password is invalid': 'invalid_credentials',
-  'email is already in use': 'email_conflict',
-  'phone number is already in use': 'phone_conflict',
-  'user is blocked': 'account_blocked',
-  'authorization token is invalid': 'session_invalid',
-  'authorization token is required': 'session_invalid',
-  'password reset link is invalid or expired': 'invalid_reset_token',
-  'request origin is not allowed': 'forbidden_origin',
 };
 
 //===================================================================
@@ -110,22 +95,6 @@ function getStructuredCode(error: unknown): string | null {
 
 //===================================================================
 
-function getLegacyMessage(error: unknown): string | null {
-  if (!error || typeof error !== 'object') return null;
-  const message = (error as ErrorLike).message;
-  return typeof message === 'string' ? message.trim().toLowerCase() : null;
-}
-
-//===================================================================
-
-function getField(error: unknown): string | null {
-  if (!error || typeof error !== 'object') return null;
-  const field = (error as ErrorLike).field;
-  return typeof field === 'string' ? field.trim().toLowerCase() : null;
-}
-
-//===================================================================
-
 function isNetworkError(error: unknown): boolean {
   if (error instanceof TypeError) return true;
   if (!(error instanceof Error)) return false;
@@ -142,7 +111,7 @@ function isNetworkError(error: unknown): boolean {
 
 export function getAuthErrorCode(
   error: unknown,
-  context?: AuthErrorContext
+  _context?: AuthErrorContext
 ): AuthErrorCode {
   const structuredCode = getStructuredCode(error);
 
@@ -156,37 +125,17 @@ export function getAuthErrorCode(
 
   if (isNetworkError(error)) return 'network_error';
 
+  // HTTP status is intentionally used only for transport/infrastructure
+  // fallbacks. Auth business semantics must come from a stable structured code;
+  // otherwise a backend contract regression must surface as `unknown` instead
+  // of silently reviving the old status/message protocol.
   const status = getStatus(error);
-  const legacyMessage = getLegacyMessage(error);
-  const legacyCode = legacyMessage
-    ? LEGACY_MESSAGE_MAP[legacyMessage]
-    : undefined;
-
-  if (legacyCode) return legacyCode;
 
   if (status === 429) return 'rate_limited';
   if (status === 502 || status === 503) return 'service_unavailable';
   if (status === 504) return 'timeout';
   if (status && status >= 500) return 'server_error';
-
-  if (context === 'login' && (status === 400 || status === 401)) {
-    return 'invalid_credentials';
-  }
-
-  if (context === 'register' && status === 409) {
-    return getField(error) === 'phone' ? 'phone_conflict' : 'email_conflict';
-  }
-
-  if (
-    context === 'reset-password' &&
-    (status === 400 || status === 401 || status === 404)
-  ) {
-    return 'invalid_reset_token';
-  }
-
-  if (status === 422 || status === 400) return 'validation_error';
-  if (status === 404) return 'not_found';
-  if (status === 401) return 'session_invalid';
+  if (status === 400 || status === 422) return 'validation_error';
 
   return 'unknown';
 }

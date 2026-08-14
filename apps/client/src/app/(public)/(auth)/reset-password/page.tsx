@@ -10,14 +10,6 @@ import { AuthFormShell, ResetPasswordForm } from '@/components/auth';
 
 //===================================================================
 
-type ResetPasswordPageProps = {
-  searchParams: Promise<{
-    token?: string;
-  }>;
-};
-
-//===================================================================
-
 export const metadata = createPageMetadata({
   title: RESET_PASSWORD_TITLE,
   description: PASSWORD_RECOVERY_DESCRIPTION,
@@ -27,9 +19,7 @@ export const metadata = createPageMetadata({
 
 //===================================================================
 
-async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
-  const { token = '' } = await searchParams;
-
+function ResetPasswordPage() {
   return (
     <AuthFormShell
       title={RESET_PASSWORD_TITLE}
@@ -38,7 +28,6 @@ async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
       showHeader={false}
     >
       <ResetPasswordForm
-        token={token}
         title={RESET_PASSWORD_TITLE}
         text={PASSWORD_RECOVERY_DESCRIPTION}
       />

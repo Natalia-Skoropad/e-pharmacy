@@ -86,6 +86,49 @@ function extractTypeFields(source, typeName) {
 
 //===================================================================
 
+function extractFunctionCalls(source, functionName) {
+  const calls = [];
+  const marker = `${functionName}(`;
+  let searchIndex = 0;
+
+  while (searchIndex < source.length) {
+    const startIndex = source.indexOf(marker, searchIndex);
+    if (startIndex === -1) break;
+
+    let depth = 1;
+    let quote = null;
+    let escaped = false;
+    let index = startIndex + marker.length;
+
+    for (; index < source.length && depth > 0; index += 1) {
+      const character = source[index];
+
+      if (quote) {
+        if (escaped) escaped = false;
+        else if (character === '\\') escaped = true;
+        else if (character === quote) quote = null;
+        continue;
+      }
+
+      if (character === "'" || character === '"' || character === '`') {
+        quote = character;
+      } else if (character === '(') {
+        depth += 1;
+      } else if (character === ')') {
+        depth -= 1;
+      }
+    }
+
+    assert.equal(depth, 0, `Could not parse ${functionName} call`);
+    calls.push(source.slice(startIndex, index));
+    searchIndex = index;
+  }
+
+  return calls;
+}
+
+//===================================================================
+
 const frontendAuthValues = await read(
   'packages',
   'config',
@@ -258,6 +301,12 @@ for (const code of extractObjectStringValues(
   );
 }
 
+assert.doesNotMatch(
+  authErrorSource,
+  /LEGACY_MESSAGE_MAP|getLegacyMessage|status === 401|status === 404|status === 409/,
+  'Auth error mapping must not infer business semantics from legacy messages/statuses'
+);
+
 const nextApiTokens = await read(
   'packages',
   'next-api',
@@ -276,6 +325,48 @@ const authService = await read(
   'services',
   'auth.service.ts'
 );
+
+const authController = await read(
+  'apps',
+  'api',
+  'src',
+  'controllers',
+  'auth.controller.ts'
+);
+
+const authMiddleware = await read(
+  'apps',
+  'api',
+  'src',
+  'middlewares',
+  'auth.middleware.ts'
+);
+
+const originMiddleware = await read(
+  'apps',
+  'api',
+  'src',
+  'middlewares',
+  'origin.middleware.ts'
+);
+
+for (const [label, source] of [
+  ['auth service', authService],
+  ['auth controller', authController],
+  ['auth middleware', authMiddleware],
+  ['origin middleware', originMiddleware],
+]) {
+  const authHttpErrors = extractFunctionCalls(source, 'httpError');
+  assert.ok(authHttpErrors.length > 0, `No httpError calls found in ${label}`);
+
+  for (const call of authHttpErrors) {
+    assert.match(
+      call,
+      /AUTH_ERROR_CODES\./,
+      `${label} httpError must expose a stable AUTH_ERROR_CODES code: ${call}`
+    );
+  }
+}
 
 assert.match(authService, /password_changed/);
 
@@ -473,6 +564,33 @@ const backendAuthRoutes = await read(
   'auth.routes.ts'
 );
 
+assert.match(
+  backendAuthRoutes,
+  /errorCode:\s*AUTH_ERROR_CODES\.VALIDATION_FAILED/,
+  'Auth validation errors must expose a stable backend code'
+);
+
+for (const limiter of [
+  'loginIpRateLimit',
+  'loginAccountRateLimit',
+  'loginProgressiveDelay',
+  'registrationIpRateLimit',
+  'registrationAccountRateLimit',
+  'passwordResetRequestIpRateLimit',
+  'passwordResetAccountRateLimit',
+  'passwordResetConfirmIpRateLimit',
+  'passwordResetTokenRateLimit',
+  'passwordChangeIpRateLimit',
+  'passwordChangeAccountRateLimit',
+  'passwordChangeProgressiveDelay',
+]) {
+  assert.match(
+    backendAuthRoutes,
+    new RegExp(limiter),
+    `Missing auth rate-limit dimension: ${limiter}`
+  );
+}
+
 const logoutAllRouteBlock = backendAuthRoutes.match(
   /authRoutes\.post\(\s*['"]\/logout-all['"][\s\S]*?\);/
 );
@@ -501,6 +619,51 @@ assert.match(
 assert.match(
   authService,
   /revokeAllUserSessionsByRefreshTokensService[\s\S]*?revokedAt:\s*undefined[\s\S]*?expiresAt:\s*\{\s*\$gt:\s*new Date\(\)\s*\}/
+);
+
+const resetPasswordPage = await read(
+  'apps',
+  'client',
+  'src',
+  'app',
+  '(public)',
+  '(auth)',
+  'reset-password',
+  'page.tsx'
+);
+
+const resetPasswordForm = await read(
+  'apps',
+  'client',
+  'src',
+  'components',
+  'auth',
+  'ResetPasswordForm',
+  'ResetPasswordForm.tsx'
+);
+
+const clientNextConfig = await read('apps', 'client', 'next.config.ts');
+
+assert.doesNotMatch(
+  resetPasswordPage,
+  /searchParams|token=/,
+  'Reset token must not be serialized from the server page into client props'
+);
+
+assert.match(resetPasswordForm, /window\.history\.replaceState/);
+assert.doesNotMatch(resetPasswordForm, /localStorage|sessionStorage/);
+
+assert.match(
+  clientNextConfig,
+  /Referrer-Policy['"],\s*value:\s*['"]no-referrer/
+);
+
+assert.match(authService, /createPasswordResetUrl/);
+
+assert.doesNotMatch(
+  authService,
+  /searchParams\.set\(['"]token['"]/,
+  'New reset links must keep raw secrets out of the HTTP query string'
 );
 
 console.log('Auth contract parity check passed.');

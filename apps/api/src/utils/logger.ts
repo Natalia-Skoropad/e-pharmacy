@@ -25,7 +25,15 @@ export const logger = {
   },
 
   request(meta: LogMeta): void {
-    process.stdout.write(`${JSON.stringify({ event: 'api_request', ...meta })}\n`);
+    process.stdout.write(
+      `${JSON.stringify({ event: 'api_request', ...meta })}\n`
+    );
+  },
+
+  security(meta: LogMeta): void {
+    process.stdout.write(
+      `${JSON.stringify({ event: 'security_event', ...meta })}\n`
+    );
   },
 
   error(message: string, error?: unknown): void {

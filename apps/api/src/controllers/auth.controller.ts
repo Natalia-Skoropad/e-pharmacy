@@ -425,7 +425,9 @@ export async function revokeActiveSession(
   if (req.authSessionId && sessionId === req.authSessionId) {
     throw httpError(
       HTTP_STATUS.CONFLICT,
-      'Use the logout endpoint to revoke the current session.'
+      'Use the logout endpoint to revoke the current session.',
+      undefined,
+      AUTH_ERROR_CODES.VALIDATION_FAILED
     );
   }
 

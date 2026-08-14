@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import { env } from '../config/env';
-import { USER_ROLES } from '../constants/auth';
+import { AUTH_ERROR_CODES, USER_ROLES } from '../constants/auth';
 
 import {
   getAdminOnlyTest,
@@ -25,8 +25,19 @@ import {
 import { authenticate } from '../middlewares/auth.middleware';
 
 import {
-  authRateLimit,
-  passwordResetRateLimit,
+  loginAccountRateLimit,
+  loginIpRateLimit,
+  loginProgressiveDelay,
+  passwordChangeAccountRateLimit,
+  passwordChangeIpRateLimit,
+  passwordChangeProgressiveDelay,
+  passwordResetAccountRateLimit,
+  passwordResetConfirmIpRateLimit,
+  passwordResetRequestIpRateLimit,
+  passwordResetTokenRateLimit,
+  registrationAccountRateLimit,
+  registrationDocumentIpRateLimit,
+  registrationIpRateLimit,
 } from '../middlewares/rateLimit.middleware';
 
 import { authorizeRoles } from '../middlewares/role.middleware';
@@ -50,11 +61,19 @@ export const authRoutes = Router();
 
 //===============================================================
 
+function validateAuth(schemas: Parameters<typeof validate>[0]) {
+  return validate({
+    ...schemas,
+    errorCode: AUTH_ERROR_CODES.VALIDATION_FAILED,
+  });
+}
+
+//===============================================================
 
 authRoutes.post(
   '/pharmacy-documents',
-  authRateLimit,
-  validate({ body: uploadRegistrationPharmacyDocumentSchema }),
+  registrationDocumentIpRateLimit,
+  validateAuth({ body: uploadRegistrationPharmacyDocumentSchema }),
   ctrlWrapper(uploadRegistrationPharmacyDocument)
 );
 
@@ -62,10 +81,11 @@ authRoutes.post(
 
 authRoutes.post(
   '/register',
-  authRateLimit,
-  validate({
+  registrationIpRateLimit,
+  validateAuth({
     body: registerSchema,
   }),
+  registrationAccountRateLimit,
   ctrlWrapper(registerUser)
 );
 
@@ -73,10 +93,12 @@ authRoutes.post(
 
 authRoutes.post(
   '/login',
-  authRateLimit,
-  validate({
+  loginIpRateLimit,
+  validateAuth({
     body: loginSchema,
   }),
+  loginProgressiveDelay,
+  loginAccountRateLimit,
   ctrlWrapper(loginUser)
 );
 
@@ -88,10 +110,11 @@ authRoutes.post('/refresh', ctrlWrapper(refreshAuthSession));
 
 authRoutes.post(
   '/password-reset/request',
-  passwordResetRateLimit,
-  validate({
+  passwordResetRequestIpRateLimit,
+  validateAuth({
     body: forgotPasswordSchema,
   }),
+  passwordResetAccountRateLimit,
   ctrlWrapper(requestPasswordReset)
 );
 
@@ -99,10 +122,11 @@ authRoutes.post(
 
 authRoutes.post(
   '/password-reset/confirm',
-  passwordResetRateLimit,
-  validate({
+  passwordResetConfirmIpRateLimit,
+  validateAuth({
     body: resetPasswordSchema,
   }),
+  passwordResetTokenRateLimit,
   ctrlWrapper(resetPassword)
 );
 
@@ -115,7 +139,7 @@ authRoutes.get('/current', authenticate, ctrlWrapper(getCurrentUser));
 authRoutes.patch(
   '/current',
   authenticate,
-  validate({
+  validateAuth({
     body: updateProfileSchema,
   }),
   ctrlWrapper(updateCurrentUser)
@@ -126,9 +150,12 @@ authRoutes.patch(
 authRoutes.patch(
   '/current/password',
   authenticate,
-  validate({
+  passwordChangeIpRateLimit,
+  validateAuth({
     body: updatePasswordSchema,
   }),
+  passwordChangeProgressiveDelay,
+  passwordChangeAccountRateLimit,
   ctrlWrapper(updateCurrentUserPassword)
 );
 

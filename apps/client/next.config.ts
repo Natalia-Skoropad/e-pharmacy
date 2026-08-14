@@ -15,6 +15,15 @@ const nextConfig: NextConfig = {
     '@e-pharmacy/validation',
   ],
 
+  async headers() {
+    return [
+      {
+        source: '/reset-password',
+        headers: [{ key: 'Referrer-Policy', value: 'no-referrer' }],
+      },
+    ];
+  },
+
   async redirects() {
     return [
       {

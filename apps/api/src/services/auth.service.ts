@@ -44,6 +44,7 @@ import {
 
 import { comparePassword, hashPassword } from '../utils/password';
 import { logger } from '../utils/logger';
+import { buildPasswordResetUrl } from '../utils/password-reset-url';
 import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
 import { toAuthUserResponse } from '../utils/userResponse';
 import { claimRegistrationPharmacyDocuments } from './pharmacy-document.service';
@@ -607,15 +608,11 @@ function getPasswordResetAppUrl(
 
 //===============================================================
 
-function buildPasswordResetUrl(
+function createPasswordResetUrl(
   token: string,
   application: ForgotPasswordInput['application']
 ): string {
-  const url = new URL('/reset-password', getPasswordResetAppUrl(application));
-
-  url.searchParams.set('token', token);
-
-  return url.toString();
+  return buildPasswordResetUrl(getPasswordResetAppUrl(application), token);
 }
 
 //===============================================================
@@ -666,7 +663,7 @@ export async function requestPasswordResetService(
 
   await user.save();
 
-  const resetUrl = buildPasswordResetUrl(resetToken, input.application);
+  const resetUrl = createPasswordResetUrl(resetToken, input.application);
 
   // Do not keep the password recovery request open while SMTP connects.
   // The reset token is already saved, so the API can return the same
@@ -924,6 +921,11 @@ export async function revokeUserSessionService(
   );
 
   if (result.matchedCount !== 1) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Active session was not found.');
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      'Active session was not found.',
+      undefined,
+      AUTH_ERROR_CODES.RESOURCE_NOT_FOUND
+    );
   }
 }
