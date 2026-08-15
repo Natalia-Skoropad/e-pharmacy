@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { RadioOption } from '@e-pharmacy/ui/forms';
@@ -68,6 +68,7 @@ function PasswordRecoveryForm() {
     useState<ForgotPasswordTouchedFields>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitInFlightRef = useRef(false);
   const formIsValid = isForgotPasswordFormValid(values);
   const selectedCopy = RECOVERY_COPY[accountType];
 
@@ -94,6 +95,9 @@ function PasswordRecoveryForm() {
       return;
     }
 
+    if (submitInFlightRef.current) return;
+    submitInFlightRef.current = true;
+
     try {
       setIsSubmitting(true);
 
@@ -109,16 +113,11 @@ function PasswordRecoveryForm() {
         'If an account with that email exists, you will receive password reset instructions shortly. Please check your inbox.'
       );
     } catch (error) {
-      const fallbackMessage = getClientAuthErrorMessage(
-        getAuthErrorCode(error, 'forgot-password')
+      toast.error(
+        getClientAuthErrorMessage(getAuthErrorCode(error, 'forgot-password'))
       );
-      const message =
-        error instanceof Error && error.message
-          ? error.message
-          : fallbackMessage;
-
-      toast.error(message);
     } finally {
+      submitInFlightRef.current = false;
       setIsSubmitting(false);
     }
   };

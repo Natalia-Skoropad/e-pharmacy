@@ -43,6 +43,27 @@ const CLIENT_AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
 
 //===================================================================
 
+const CLIENT_PASSWORD_CHANGE_ERROR_MESSAGES: Partial<
+  Record<AuthErrorCode, string>
+> = {
+  invalid_credentials: 'Current password is incorrect.',
+  validation_error:
+    'Check your current password and new password, then try again.',
+};
+
+//===================================================================
+
 export function getClientAuthErrorMessage(code: AuthErrorCode): string {
   return CLIENT_AUTH_ERROR_MESSAGES[code];
+}
+
+//===================================================================
+
+export function getClientPasswordChangeErrorMessage(
+  code: AuthErrorCode
+): string {
+  return (
+    CLIENT_PASSWORD_CHANGE_ERROR_MESSAGES[code] ??
+    CLIENT_AUTH_ERROR_MESSAGES[code]
+  );
 }

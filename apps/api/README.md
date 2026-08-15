@@ -265,10 +265,10 @@ JWT_SECRET=your-super-secret-jwt-key
 JWT_EXPIRES_IN=7d
 JWT_RESET_EXPIRES_IN=15m
 
-CLIENT_ORIGINS=http://localhost:3000,http://localhost:3002,http://localhost:3001
 CLIENT_APP_URL=http://localhost:3000
 PHARMACY_APP_URL=http://localhost:3002
 ADMIN_APP_URL=http://localhost:3001
+TRUSTED_APP_ORIGINS=
 
 SMTP_HOST=smtp-relay.brevo.com
 SMTP_PORT=587
@@ -281,6 +281,8 @@ AUTH_COOKIE_SAME_SITE=lax
 ```
 
 For the current Vercel client + Render API setup through the Next.js BFF, `AUTH_COOKIE_SAME_SITE=lax` is the preferred default.
+
+CORS and mutation Origin/Referer validation use the same startup-derived trusted-origin set. The set always includes the configured client, pharmacy, and admin application URLs. `TRUSTED_APP_ORIGINS` adds explicit extra origins; invalid, credentialed, or non-HTTP(S) values fail startup validation. `CLIENT_ORIGINS` and the older CORS/frontend variables remain migration aliases when `TRUSTED_APP_ORIGINS` is not set.
 
 ## Run Locally
 
@@ -334,7 +336,8 @@ Production checklist:
 - Set `MONGODB_URI`
 - Set a strong `JWT_SECRET`
 - Configure SMTP credentials
-- Configure `CLIENT_ORIGINS` and `CLIENT_APP_URL`
+- Configure `CLIENT_APP_URL`, `PHARMACY_APP_URL`, and `ADMIN_APP_URL` for every deployed application; their origins are trusted automatically
+- Use `TRUSTED_APP_ORIGINS` only for additional explicit origins such as preview deployments
 - Choose cookie settings for the deployment model
 - Verify CORS and Origin/Referer validation
 - Verify password reset links

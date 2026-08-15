@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
@@ -173,6 +173,7 @@ function RegisterForm() {
     useState<PharmacyRegisterTouchedFields>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitInFlightRef = useRef(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const selectedCopy = REGISTER_COPY[accountType];
@@ -263,6 +264,9 @@ function RegisterForm() {
       return;
     }
 
+    if (submitInFlightRef.current) return;
+    submitInFlightRef.current = true;
+
     try {
       setIsSubmitting(true);
 
@@ -306,6 +310,7 @@ function RegisterForm() {
         router.replace(ROUTES.LOGIN);
       }
     } finally {
+      submitInFlightRef.current = false;
       setIsSubmitting(false);
     }
   };

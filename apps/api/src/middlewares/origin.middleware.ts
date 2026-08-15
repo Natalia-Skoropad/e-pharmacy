@@ -31,11 +31,7 @@ function getRequestOrigin(req: Request): string | null {
 //===============================================================
 
 function getAllowedOrigins(): Set<string> {
-  const origins = [env.CLIENT_APP_URL, ...env.CLIENT_ORIGINS]
-    .map(toOrigin)
-    .filter((origin): origin is string => Boolean(origin));
-
-  return new Set(origins);
+  return new Set(env.TRUSTED_APP_ORIGINS);
 }
 
 //===============================================================

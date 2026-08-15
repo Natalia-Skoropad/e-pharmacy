@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { KeyRound, MonitorSmartphone } from 'lucide-react';
 
@@ -128,10 +128,7 @@ import {
 
 import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
 
-import {
-  StatusBadge,
-  StatusBanner,
-} from '@e-pharmacy/ui/statistics';
+import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 
@@ -458,7 +455,9 @@ function PharmacyProfilePageContent() {
           aria-labelledby="pharmacy-profile-title"
         >
           <Container className={css.profileContainer}>
-            <StatusBanner tone="danger" label="Error"
+            <StatusBanner
+              tone="danger"
+              label="Error"
               title="Pharmacy profile could not be loaded"
               message={
                 profileError
@@ -577,8 +576,8 @@ function PharmacyProfilePage({
   const [pharmacyTouched, setPharmacyTouched] =
     useState<PharmacyContactTouchedFields>({});
 
-  const [aboutValues, setAboutValues] = useState<PharmacyAboutFormValues>(
-    () => createAboutInitialValues(initialPharmacy)
+  const [aboutValues, setAboutValues] = useState<PharmacyAboutFormValues>(() =>
+    createAboutInitialValues(initialPharmacy)
   );
 
   const [initialAboutValues, setInitialAboutValues] =
@@ -618,6 +617,10 @@ function PharmacyProfilePage({
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(
     null
   );
+  const ownerMutationInFlightRef = useRef(false);
+  const passwordMutationInFlightRef = useRef(false);
+  const pharmacyMutationInFlightRef = useRef(false);
+  const sessionMutationInFlightRef = useRef(false);
 
   useEffect(() => {
     if (!pharmacy?.id) return;
@@ -739,8 +742,7 @@ function PharmacyProfilePage({
     (pharmacyPictureUrl ?? '') !== (initialPharmacyPictureUrl ?? '');
 
   const isProfileOwner = pharmacy?.membershipRole === 'owner';
-  const isProfileReadonly =
-    !isProfileOwner || isReadonlyStatus(pharmacyStatus);
+  const isProfileReadonly = !isProfileOwner || isReadonlyStatus(pharmacyStatus);
   const pharmacyDocumentsError = validatePharmacyDocuments(documentValues, {
     required: true,
   });
@@ -772,7 +774,7 @@ function PharmacyProfilePage({
 
   const hasExistingPendingModeration = Boolean(
     pharmacy?.pendingModeration &&
-      Object.keys(pharmacy.pendingModeration).length > 0
+    Object.keys(pharmacy.pendingModeration).length > 0
   );
 
   const moderationFormHasChanges =
@@ -862,6 +864,8 @@ function PharmacyProfilePage({
   const handlePictureError = (message: string) => toast.error(message);
 
   const handleOwnerPictureChange = async (nextPictureUrl: string | null) => {
+    if (ownerMutationInFlightRef.current) return;
+    ownerMutationInFlightRef.current = true;
     setIsOwnerPictureSaving(true);
 
     try {
@@ -882,12 +886,14 @@ function PharmacyProfilePage({
         getProfileErrorMessage(error, 'Could not update profile photo.')
       );
     } finally {
+      ownerMutationInFlightRef.current = false;
       setIsOwnerPictureSaving(false);
     }
   };
 
   const handlePharmacyPictureChange = async (nextPictureUrl: string | null) => {
-    if (!pharmacy || isProfileReadonly) return;
+    if (!pharmacy || isProfileReadonly || pharmacyMutationInFlightRef.current)
+      return;
 
     if (pharmacy.status === 'active') {
       setPharmacyPictureUrl(nextPictureUrl);
@@ -899,6 +905,7 @@ function PharmacyProfilePage({
       return;
     }
 
+    pharmacyMutationInFlightRef.current = true;
     setIsPharmacyPictureSaving(true);
 
     try {
@@ -920,6 +927,7 @@ function PharmacyProfilePage({
         getProfileErrorMessage(error, 'Could not update pharmacy photo.')
       );
     } finally {
+      pharmacyMutationInFlightRef.current = false;
       setIsPharmacyPictureSaving(false);
     }
   };
@@ -927,8 +935,14 @@ function PharmacyProfilePage({
   const handleOwnerSubmit = async () => {
     setOwnerTouched(markAllFieldsTouched(DATA_PROFILE_FORM_FIELDS));
 
-    if (!ownerFormIsValid || !ownerFormIsDirty) return;
+    if (
+      !ownerFormIsValid ||
+      !ownerFormIsDirty ||
+      ownerMutationInFlightRef.current
+    )
+      return;
 
+    ownerMutationInFlightRef.current = true;
     setIsOwnerSaving(true);
 
     try {
@@ -946,10 +960,9 @@ function PharmacyProfilePage({
       applyCurrentUser(response.user);
       toast.success('Owner data saved successfully.');
     } catch (error) {
-      toast.error(
-        getProfileErrorMessage(error, 'Could not save owner data.')
-      );
+      toast.error(getProfileErrorMessage(error, 'Could not save owner data.'));
     } finally {
+      ownerMutationInFlightRef.current = false;
       setIsOwnerSaving(false);
     }
   };
@@ -957,8 +970,14 @@ function PharmacyProfilePage({
   const handlePasswordSubmit = async () => {
     setPasswordTouched(markAllFieldsTouched(CHANGE_PASSWORD_FORM_FIELDS));
 
-    if (!passwordFormIsValid || !passwordFormIsDirty) return;
+    if (
+      !passwordFormIsValid ||
+      !passwordFormIsDirty ||
+      passwordMutationInFlightRef.current
+    )
+      return;
 
+    passwordMutationInFlightRef.current = true;
     setIsPasswordSaving(true);
 
     try {
@@ -972,10 +991,9 @@ function PharmacyProfilePage({
       toast.success('Password changed. Sign in again.');
       window.location.assign(getSharedLoginUrl());
     } catch (error) {
-      toast.error(
-        getProfileErrorMessage(error, 'Could not change password.')
-      );
+      toast.error(getProfileErrorMessage(error, 'Could not change password.'));
     } finally {
+      passwordMutationInFlightRef.current = false;
       setIsPasswordSaving(false);
     }
   };
@@ -987,11 +1005,13 @@ function PharmacyProfilePage({
       !pharmacy ||
       hasValidationErrors(pharmacyErrors) ||
       !pharmacyFormIsDirty ||
-      isProfileReadonly
+      isProfileReadonly ||
+      pharmacyMutationInFlightRef.current
     ) {
       return;
     }
 
+    pharmacyMutationInFlightRef.current = true;
     setIsPharmacySaving(true);
 
     try {
@@ -1019,6 +1039,7 @@ function PharmacyProfilePage({
         getProfileErrorMessage(error, 'Could not save pharmacy data.')
       );
     } finally {
+      pharmacyMutationInFlightRef.current = false;
       setIsPharmacySaving(false);
     }
   };
@@ -1030,10 +1051,12 @@ function PharmacyProfilePage({
       !pharmacy ||
       hasValidationErrors(aboutErrors) ||
       !aboutFormIsDirty ||
-      isProfileReadonly
+      isProfileReadonly ||
+      pharmacyMutationInFlightRef.current
     )
       return;
 
+    pharmacyMutationInFlightRef.current = true;
     setIsPharmacySaving(true);
 
     try {
@@ -1061,6 +1084,7 @@ function PharmacyProfilePage({
         getProfileErrorMessage(error, 'Could not save about pharmacy.')
       );
     } finally {
+      pharmacyMutationInFlightRef.current = false;
       setIsPharmacySaving(false);
     }
   };
@@ -1072,10 +1096,12 @@ function PharmacyProfilePage({
       !pharmacy ||
       hasValidationErrors(paymentErrors) ||
       !paymentFormIsDirty ||
-      isProfileReadonly
+      isProfileReadonly ||
+      pharmacyMutationInFlightRef.current
     )
       return;
 
+    pharmacyMutationInFlightRef.current = true;
     setIsPharmacySaving(true);
 
     try {
@@ -1103,6 +1129,7 @@ function PharmacyProfilePage({
         getProfileErrorMessage(error, 'Could not save payment details.')
       );
     } finally {
+      pharmacyMutationInFlightRef.current = false;
       setIsPharmacySaving(false);
     }
   };
@@ -1148,10 +1175,12 @@ function PharmacyProfilePage({
       !pharmacy ||
       validationError ||
       !documentsFormIsDirty ||
-      isProfileReadonly
+      isProfileReadonly ||
+      pharmacyMutationInFlightRef.current
     )
       return;
 
+    pharmacyMutationInFlightRef.current = true;
     setIsDocumentsSaving(true);
 
     try {
@@ -1175,45 +1204,48 @@ function PharmacyProfilePage({
           : 'Documents saved successfully.'
       );
     } catch (error) {
-      toast.error(
-        getProfileErrorMessage(error, 'Could not save documents.')
-      );
+      toast.error(getProfileErrorMessage(error, 'Could not save documents.'));
     } finally {
+      pharmacyMutationInFlightRef.current = false;
       setIsDocumentsSaving(false);
     }
   };
 
-  const buildModerationPayload = async (): Promise<PharmacyProfileUpdateChanges> => {
-    const payload: PharmacyProfileUpdateChanges = {};
+  const buildModerationPayload =
+    async (): Promise<PharmacyProfileUpdateChanges> => {
+      const payload: PharmacyProfileUpdateChanges = {};
 
-    if (pharmacyFormIsDirty) {
-      Object.assign(
-        payload,
-        buildProfilePayload(pharmacyValues, 'draft', initialPharmacyValues)
-      );
-    }
+      if (pharmacyFormIsDirty) {
+        Object.assign(
+          payload,
+          buildProfilePayload(pharmacyValues, 'draft', initialPharmacyValues)
+        );
+      }
 
-    if (pharmacyPictureIsDirty) {
-      payload.imageUrl = pharmacyPictureUrl;
-    }
+      if (pharmacyPictureIsDirty) {
+        payload.imageUrl = pharmacyPictureUrl;
+      }
 
-    if (aboutFormIsDirty) {
-      Object.assign(payload, buildAboutPayload(aboutValues, 'draft', initialAboutValues));
-    }
+      if (aboutFormIsDirty) {
+        Object.assign(
+          payload,
+          buildAboutPayload(aboutValues, 'draft', initialAboutValues)
+        );
+      }
 
-    if (paymentFormIsDirty) {
-      Object.assign(
-        payload,
-        buildPaymentPayload(paymentValues, 'draft', initialPaymentValues)
-      );
-    }
+      if (paymentFormIsDirty) {
+        Object.assign(
+          payload,
+          buildPaymentPayload(paymentValues, 'draft', initialPaymentValues)
+        );
+      }
 
-    if (documentsFormIsDirty) {
-      Object.assign(payload, await buildDocumentsPayload(documentValues));
-    }
+      if (documentsFormIsDirty) {
+        Object.assign(payload, await buildDocumentsPayload(documentValues));
+      }
 
-    return payload;
-  };
+      return payload;
+    };
 
   const applyPharmacyFormState = (nextPharmacy: MyPharmacyProfile) => {
     const nextPharmacyValues = createPharmacyInitialValues(user, nextPharmacy);
@@ -1246,8 +1278,9 @@ function PharmacyProfilePage({
     setPaymentTouched(markAllFieldsTouched(PHARMACY_PAYMENT_FORM_FIELDS));
     setDocumentsTouched(true);
 
-    if (!canSendForModeration) return;
+    if (!canSendForModeration || pharmacyMutationInFlightRef.current) return;
 
+    pharmacyMutationInFlightRef.current = true;
     setIsSendingVerification(true);
 
     try {
@@ -1266,6 +1299,7 @@ function PharmacyProfilePage({
         )
       );
     } finally {
+      pharmacyMutationInFlightRef.current = false;
       setIsSendingVerification(false);
     }
   };
@@ -1276,8 +1310,9 @@ function PharmacyProfilePage({
     setPaymentTouched(markAllFieldsTouched(PHARMACY_PAYMENT_FORM_FIELDS));
     setDocumentsTouched(true);
 
-    if (!canSendForVerification) return;
+    if (!canSendForVerification || pharmacyMutationInFlightRef.current) return;
 
+    pharmacyMutationInFlightRef.current = true;
     setIsSendingVerification(true);
 
     try {
@@ -1293,11 +1328,14 @@ function PharmacyProfilePage({
         )
       );
     } finally {
+      pharmacyMutationInFlightRef.current = false;
       setIsSendingVerification(false);
     }
   };
 
   const handleRevokeSession = async (sessionId: string) => {
+    if (sessionMutationInFlightRef.current) return;
+    sessionMutationInFlightRef.current = true;
     setRevokingSessionId(sessionId);
 
     try {
@@ -1307,16 +1345,16 @@ function PharmacyProfilePage({
       );
       toast.success('Session was revoked.');
     } catch (error) {
-      toast.error(
-        getProfileErrorMessage(error, 'Could not revoke session.')
-      );
+      toast.error(getProfileErrorMessage(error, 'Could not revoke session.'));
     } finally {
+      sessionMutationInFlightRef.current = false;
       setRevokingSessionId(null);
     }
   };
 
   const handleLogoutAllSessions = async () => {
-    if (!logoutAll) return;
+    if (!logoutAll || sessionMutationInFlightRef.current) return;
+    sessionMutationInFlightRef.current = true;
 
     try {
       await logoutAll();
@@ -1324,6 +1362,8 @@ function PharmacyProfilePage({
       toast.error(
         'This browser was signed out, but other device sessions could not be revoked.'
       );
+    } finally {
+      sessionMutationInFlightRef.current = false;
     }
   };
 
@@ -1349,7 +1389,9 @@ function PharmacyProfilePage({
           aria-labelledby="pharmacy-profile-title"
         >
           <Container className={css.profileContainer}>
-            <StatusBanner tone="danger" label="Error"
+            <StatusBanner
+              tone="danger"
+              label="Error"
               title="Pharmacy profile could not be loaded"
               message={loadError ?? 'Please refresh the page and try again.'}
             />
@@ -1407,7 +1449,9 @@ function PharmacyProfilePage({
               <div className={getStatusNoteClassName(pharmacy.status)}>
                 <div className={css.statusNoteHeader}>
                   <h3>Profile status</h3>
-                  <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
+                  <StatusBadge
+                    {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]}
+                  />
                 </div>
                 {pharmacy.status === 'new' && pharmacy.statusReason ? (
                   <p className={css.statusReason}>{pharmacy.statusReason}</p>

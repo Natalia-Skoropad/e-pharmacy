@@ -3,6 +3,7 @@ import type { Transporter } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 import { env } from '../config/env';
+import { createSafeEmailLogMetadata } from './email-log-metadata';
 import { logger } from './logger';
 
 //===============================================================
@@ -147,10 +148,10 @@ async function sendViaSmtp(options: SendEmailOptions): Promise<void> {
 //===============================================================
 
 export async function sendEmail(options: SendEmailOptions): Promise<void> {
-  const fallbackLogPayload = {
-    from: env.SMTP_FROM || 'not-configured',
-    ...options,
-  };
+  const fallbackLogPayload = createSafeEmailLogMetadata(
+    env.SMTP_FROM || 'not-configured',
+    options
+  );
 
   if (!primaryTransporter || !env.SMTP_FROM) {
     logger.info('[email:local-preview]', fallbackLogPayload);

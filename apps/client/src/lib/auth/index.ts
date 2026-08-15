@@ -13,4 +13,7 @@ export {
   PharmacyAppConfigurationError,
 } from './pharmacy-app-config';
 
-export { getClientAuthErrorMessage } from './auth-error-messages';
+export {
+  getClientAuthErrorMessage,
+  getClientPasswordChangeErrorMessage,
+} from './auth-error-messages';

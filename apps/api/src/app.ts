@@ -37,7 +37,7 @@ app.use(
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || env.CLIENT_ORIGINS.includes(origin)) {
+      if (!origin || env.TRUSTED_APP_ORIGINS.includes(origin)) {
         callback(null, true);
         return;
       }

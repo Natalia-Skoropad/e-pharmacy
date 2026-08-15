@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 import type { StringValue } from 'ms';
 
+import { buildTrustedAppOrigins } from './trusted-app-origins';
+
 //===============================================================
 
 dotenv.config();
@@ -19,7 +21,8 @@ const PRODUCTION_CLIENT_URL = 'https://e-pharmacy-client-ten.vercel.app';
 
 //===============================================================
 
-const CLIENT_ORIGIN_ENV_NAMES = [
+const TRUSTED_ORIGIN_ENV_NAMES = [
+  'TRUSTED_APP_ORIGINS',
   'CLIENT_ORIGINS',
   'CORS_ORIGIN',
   'CLIENT_URL',
@@ -97,32 +100,21 @@ function getEnvValue(names: readonly string[]): string | undefined {
 
 //===============================================================
 
-function getLocalClientOrigins(): string[] {
+function getLocalTrustedOrigins(): string[] {
   return [LOCAL_CLIENT_URL, LOCAL_ADMIN_URL, LOCAL_PHARMACY_URL];
 }
 
 //===============================================================
 
-function uniqueOrigins(origins: string[]): string[] {
-  return Array.from(new Set(origins.filter(Boolean)));
-}
+function getConfiguredTrustedOriginExtras(): string[] {
+  const value = getEnvValue(TRUSTED_ORIGIN_ENV_NAMES);
 
-//===============================================================
-
-function getClientOrigins(): string[] {
-  const value = getEnvValue(CLIENT_ORIGIN_ENV_NAMES);
-  const configuredOrigins = value
+  return value
     ? value
         .split(',')
         .map((origin) => origin.trim())
         .filter(Boolean)
-    : [getFallbackClientUrl()];
-
-  return uniqueOrigins(
-    NODE_ENV === 'production'
-      ? configuredOrigins
-      : [...configuredOrigins, ...getLocalClientOrigins()]
-  );
+    : [];
 }
 
 //===============================================================
@@ -177,6 +169,18 @@ function getOptionalNumberListEnv(name: string): number[] {
 
 //===============================================================
 
+const CLIENT_APP_URL = getClientAppUrl();
+const PHARMACY_APP_URL = process.env.PHARMACY_APP_URL?.trim() || undefined;
+const ADMIN_APP_URL = process.env.ADMIN_APP_URL?.trim() || undefined;
+
+const TRUSTED_APP_ORIGINS = buildTrustedAppOrigins({
+  appUrls: [CLIENT_APP_URL, PHARMACY_APP_URL, ADMIN_APP_URL],
+  extraOrigins: getConfiguredTrustedOriginExtras(),
+  localOrigins: NODE_ENV === 'production' ? [] : getLocalTrustedOrigins(),
+});
+
+//===============================================================
+
 export const env = {
   NODE_ENV,
   PORT: getPort(),
@@ -193,10 +197,10 @@ export const env = {
   SESSION_ABSOLUTE_EXPIRES_IN: (process.env.SESSION_ABSOLUTE_EXPIRES_IN ||
     '90d') as StringValue,
 
-  CLIENT_ORIGINS: getClientOrigins(),
-  CLIENT_APP_URL: getClientAppUrl(),
-  PHARMACY_APP_URL: process.env.PHARMACY_APP_URL,
-  ADMIN_APP_URL: process.env.ADMIN_APP_URL,
+  TRUSTED_APP_ORIGINS,
+  CLIENT_APP_URL,
+  PHARMACY_APP_URL,
+  ADMIN_APP_URL,
   AUTH_COOKIE_DOMAIN: process.env.AUTH_COOKIE_DOMAIN,
   AUTH_COOKIE_SAME_SITE: getAuthCookieSameSite(),
 

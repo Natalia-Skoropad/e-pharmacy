@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { Building2, Heart, KeyRound, MonitorSmartphone } from 'lucide-react';
 
@@ -35,6 +35,7 @@ import {
   PhoneInput,
 } from '@e-pharmacy/ui/forms';
 
+import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { useAuth } from '@e-pharmacy/auth/react';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { Container } from '@e-pharmacy/ui/layout';
@@ -77,6 +78,7 @@ import type { ClientOrder } from '@e-pharmacy/types/orders';
 import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 import type { ProductCardSummary } from '@e-pharmacy/types/products';
 
+import { getClientPasswordChangeErrorMessage } from '@/lib/auth';
 import { PROFILE_TITLE } from '@/lib/seo/metadata-copy';
 import { getUserFacingErrorMessage } from '@/lib/errors/get-user-facing-error-message';
 
@@ -224,6 +226,9 @@ function AuthenticatedProfilePageContent({
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isPictureSaving, setIsPictureSaving] = useState(false);
+  const profileMutationInFlightRef = useRef(false);
+  const passwordMutationInFlightRef = useRef(false);
+  const sessionMutationInFlightRef = useRef(false);
 
   const profileErrors = useMemo(
     () => validateDataProfileForm(profileValues),
@@ -523,6 +528,9 @@ function AuthenticatedProfilePageContent({
   }, [activeTab, canUseAuthFeatures]);
 
   const handleRevokeSession = async (sessionId: string) => {
+    if (sessionMutationInFlightRef.current) return;
+    sessionMutationInFlightRef.current = true;
+
     try {
       setSessionsError('');
       await revokeActiveSession(sessionId);
@@ -532,11 +540,14 @@ function AuthenticatedProfilePageContent({
       toast.success('Session was revoked.');
     } catch {
       setSessionsError('Could not revoke the session.');
+    } finally {
+      sessionMutationInFlightRef.current = false;
     }
   };
 
   const handleLogoutAllSessions = async () => {
-    if (!logoutAll) return;
+    if (!logoutAll || sessionMutationInFlightRef.current) return;
+    sessionMutationInFlightRef.current = true;
 
     try {
       await logoutAll();
@@ -544,6 +555,8 @@ function AuthenticatedProfilePageContent({
       toast.error(
         'This browser was signed out, but other device sessions could not be revoked.'
       );
+    } finally {
+      sessionMutationInFlightRef.current = false;
     }
   };
 
@@ -574,7 +587,8 @@ function AuthenticatedProfilePageContent({
   };
 
   const handlePictureChange = async (pictureUrl: string | null) => {
-    if (!canUseAuthFeatures) return;
+    if (!canUseAuthFeatures || profileMutationInFlightRef.current) return;
+    profileMutationInFlightRef.current = true;
 
     const previousPictureDraft = pictureDraft;
 
@@ -599,6 +613,7 @@ function AuthenticatedProfilePageContent({
       );
       setPictureDraft(previousPictureDraft);
     } finally {
+      profileMutationInFlightRef.current = false;
       setIsPictureSaving(false);
     }
   };
@@ -610,10 +625,13 @@ function AuthenticatedProfilePageContent({
     if (
       !canUseAuthFeatures ||
       hasValidationErrors(nextErrors) ||
-      !profileFormIsDirty
+      !profileFormIsDirty ||
+      profileMutationInFlightRef.current
     ) {
       return;
     }
+
+    profileMutationInFlightRef.current = true;
 
     try {
       setIsProfileSaving(true);
@@ -641,6 +659,7 @@ function AuthenticatedProfilePageContent({
         })
       );
     } finally {
+      profileMutationInFlightRef.current = false;
       setIsProfileSaving(false);
     }
   };
@@ -668,10 +687,13 @@ function AuthenticatedProfilePageContent({
     if (
       !canUseAuthFeatures ||
       hasValidationErrors(nextErrors) ||
-      !passwordFormIsDirty
+      !passwordFormIsDirty ||
+      passwordMutationInFlightRef.current
     ) {
       return;
     }
+
+    passwordMutationInFlightRef.current = true;
 
     try {
       setIsPasswordSaving(true);
@@ -684,13 +706,14 @@ function AuthenticatedProfilePageContent({
       toast.success('Password changed. Sign in again.');
       window.location.assign(ROUTES.LOGIN);
     } catch (error) {
-      const message =
-        error instanceof Error && error.message
-          ? error.message
-          : 'Could not change password. Check the current password and try again.';
+      const message = getClientPasswordChangeErrorMessage(
+        getAuthErrorCode(error)
+      );
 
+      setPasswordSubmitError(message);
       toast.error(message);
     } finally {
+      passwordMutationInFlightRef.current = false;
       setIsPasswordSaving(false);
     }
   };

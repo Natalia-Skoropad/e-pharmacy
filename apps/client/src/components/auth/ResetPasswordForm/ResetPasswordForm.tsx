@@ -1,6 +1,12 @@
 'use client';
 
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
@@ -59,6 +65,7 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitInFlightRef = useRef(false);
   const [isDone, setIsDone] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -106,6 +113,9 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
       return;
     }
 
+    if (submitInFlightRef.current) return;
+    submitInFlightRef.current = true;
+
     try {
       setIsSubmitting(true);
 
@@ -125,6 +135,7 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
         getClientAuthErrorMessage(getAuthErrorCode(error, 'reset-password'))
       );
     } finally {
+      submitInFlightRef.current = false;
       setIsSubmitting(false);
     }
   };

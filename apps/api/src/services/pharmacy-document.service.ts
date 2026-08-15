@@ -434,10 +434,17 @@ export async function resolvePrivatePharmacyDocumentSelections(
     throw httpError(HTTP_STATUS.BAD_REQUEST, 'Duplicate pharmacy document.');
   }
 
-  const query = PharmacyDocumentFile.find({
+  const now = new Date();
+  const selectableDocumentFilter = {
     _id: { $in: ids },
     pharmacyId,
-  });
+    $or: [
+      { attachedAt: { $exists: true } },
+      { expiresAt: { $gt: now } },
+    ],
+  };
+
+  const query = PharmacyDocumentFile.find(selectableDocumentFilter);
 
   if (session) query.session(session);
   const documents = await query;
@@ -456,9 +463,9 @@ export async function resolvePrivatePharmacyDocumentSelections(
   }
 
   await PharmacyDocumentFile.updateMany(
-    { _id: { $in: ids }, pharmacyId },
+    selectableDocumentFilter,
     {
-      $set: { attachedAt: new Date() },
+      $set: { attachedAt: now },
       $unset: { expiresAt: '' },
     },
     { session }
@@ -484,6 +491,10 @@ export async function getPrivatePharmacyDocumentContentService(
   const document = await PharmacyDocumentFile.findOne({
     _id: documentId,
     pharmacyId: pharmacy._id,
+    $or: [
+      { attachedAt: { $exists: true } },
+      { expiresAt: { $gt: new Date() } },
+    ],
   }).select('+content');
 
   if (!document?.content) {

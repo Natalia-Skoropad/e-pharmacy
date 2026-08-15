@@ -714,6 +714,42 @@ test(
       Pharmacy.findByIdAndUpdate =
         originalFindByIdAndUpdate as typeof Pharmacy.findByIdAndUpdate;
 
+      // Mongo TTL cleanup is asynchronous. An expired-but-not-yet-deleted
+      // private upload must be rejected by the selection query itself instead
+      // of being resurrected by unsetting expiresAt during profile save.
+      await PharmacyDocumentFile.updateOne(
+        { _id: uploaded.document.id },
+        { $set: { expiresAt: new Date(Date.now() - 60_000) } }
+      );
+
+      await assert.rejects(
+        () =>
+          updateMyPharmacyProfileService(String(user._id), {
+            documents: [{ documentId: uploaded.document.id }],
+            expectedRevision: pharmacy.updatedAt.toISOString(),
+          }),
+        /One or more pharmacy documents are unavailable/
+      );
+
+      stored = await PharmacyDocumentFile.findById(uploaded.document.id);
+      assert.ok(stored?.expiresAt);
+      assert.ok(stored.expiresAt.getTime() < Date.now());
+      assert.equal(stored.attachedAt, undefined);
+
+      await assert.rejects(
+        () =>
+          getPrivatePharmacyDocumentContentService(
+            String(user._id),
+            uploaded.document.id
+          ),
+        /Pharmacy document was not found/
+      );
+
+      await PharmacyDocumentFile.updateOne(
+        { _id: uploaded.document.id },
+        { $set: { expiresAt: new Date(Date.now() + 60_000) } }
+      );
+
       const saved = await updateMyPharmacyProfileService(String(user._id), {
         documents: [{ documentId: uploaded.document.id }],
         expectedRevision: pharmacy.updatedAt.toISOString(),

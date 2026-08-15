@@ -44,3 +44,34 @@ test('active pharmacy moderation uses one atomic browser command and supports al
     /handleSendForModeration[\s\S]*?await updateMyPharmacyProfile\([\s\S]*?await sendMyPharmacyForVerification\(/
   );
 });
+
+//===================================================================
+
+test('pharmacy profile mutations use scoped synchronous mutex refs', async () => {
+  const source = await readProfileSource();
+
+  assert.match(source, /const ownerMutationInFlightRef = useRef\(false\)/);
+  assert.match(source, /const passwordMutationInFlightRef = useRef\(false\)/);
+  assert.match(source, /const pharmacyMutationInFlightRef = useRef\(false\)/);
+  assert.match(source, /const sessionMutationInFlightRef = useRef\(false\)/);
+
+  assert.match(
+    source,
+    /handleDocumentsSubmit[\s\S]*?pharmacyMutationInFlightRef\.current = true[\s\S]*?await buildDocumentsPayload/
+  );
+
+  assert.match(
+    source,
+    /handleSendForModeration[\s\S]*?pharmacyMutationInFlightRef\.current = true[\s\S]*?await buildModerationPayload/
+  );
+
+  assert.match(
+    source,
+    /handleRevokeSession[\s\S]*?if \(sessionMutationInFlightRef\.current\) return;/
+  );
+
+  assert.match(
+    source,
+    /handleLogoutAllSessions[\s\S]*?sessionMutationInFlightRef\.current/
+  );
+});
